@@ -97,7 +97,7 @@ namespace Barotrauma
                 float probability = element.GetAttributeFloat("probability", 0.0f);
                 MinProbability = element.GetAttributeFloat("minprobability", probability);
                 MaxProbability = element.GetAttributeFloat("maxprobability", probability);
-                MaxDistanceFromFactionOutpost = element.GetAttributeInt("maxdistance", int.MaxValue);
+                MaxDistanceFromFactionOutpost = element.GetAttributeInt(nameof(MaxDistanceFromFactionOutpost), int.MaxValue);
                 DisallowBetweenOtherFactionOutposts = element.GetAttributeBool(nameof(DisallowBetweenOtherFactionOutposts), false);
             }
         }

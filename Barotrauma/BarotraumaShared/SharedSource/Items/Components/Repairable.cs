@@ -234,6 +234,7 @@ namespace Barotrauma.Items.Components
         public float RepairDegreeOfSuccess(Character character, List<Skill> skills)
         {
             if (skills.Count == 0) { return 1.0f; }
+            if (character == null) { return 0.0f; }
 
             float skillSum = (from t in skills let characterLevel = character.GetSkillLevel(t.Identifier) select (characterLevel - (t.Level * SkillRequirementMultiplier))).Sum();
             float average = skillSum / skills.Count;
@@ -243,6 +244,7 @@ namespace Barotrauma.Items.Components
 
         public void RepairBoost(bool qteSuccess)
         {
+            if (CurrentFixer == null) { return; }
             if (qteSuccess)
             {
                 item.Condition += RepairDegreeOfSuccess(CurrentFixer, requiredSkills) * 3 * (currentFixerAction == FixActions.Repair ? 1.0f : -1.0f);

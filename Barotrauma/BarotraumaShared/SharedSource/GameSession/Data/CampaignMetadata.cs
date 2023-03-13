@@ -55,10 +55,11 @@ namespace Barotrauma
         {
             DebugConsole.Log($"Set the value \"{identifier}\" to {value}");
 
+            SteamAchievementManager.OnCampaignMetadataSet(identifier, value, unlockClients: true);
+
             if (!data.ContainsKey(identifier))
             {
                 data.Add(identifier, value);
-                SteamAchievementManager.OnCampaignMetadataSet(identifier, value);
                 return;
             }
 

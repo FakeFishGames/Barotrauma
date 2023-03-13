@@ -76,6 +76,7 @@ namespace Barotrauma
 
         partial void UpdateProjSpecific()
         {
+            if (boss == null || boss.Removed) { return; }
             if (Phase is MissionPhase.Initial or MissionPhase.NoItemsDestroyed or MissionPhase.SomeItemsDestroyed)
             {
                 // Put asleep.

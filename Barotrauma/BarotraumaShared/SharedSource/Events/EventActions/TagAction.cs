@@ -21,6 +21,9 @@ namespace Barotrauma
         [Serialize(true, IsPropertySaveable.Yes)]
         public bool IgnoreIncapacitatedCharacters { get; set; }
 
+        [Serialize(false, IsPropertySaveable.Yes)]
+        public bool AllowHiddenItems { get; set; }
+
         private bool isFinished = false;
 
         public TagAction(ScriptedEvent parentEvent, ContentXElement element) : base(parentEvent, element)
@@ -139,7 +142,7 @@ namespace Barotrauma
 
         private bool IsValidItem(Item it)
         {
-            return !it.HiddenInGame && SubmarineTypeMatches(it.Submarine);
+            return (!it.HiddenInGame || AllowHiddenItems) && SubmarineTypeMatches(it.Submarine);
         }
 
         private bool SubmarineTypeMatches(Submarine sub)

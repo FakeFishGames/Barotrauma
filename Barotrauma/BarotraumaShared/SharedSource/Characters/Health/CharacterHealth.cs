@@ -754,6 +754,7 @@ namespace Barotrauma
                 Math.Min(newAffliction.Prefab.MaxStrength, newAffliction.Strength * (100.0f / MaxVitality) * (1f - GetResistance(newAffliction.Prefab))),
                 newAffliction.Source);
             afflictions.Add(copyAffliction, limbHealth);
+            SteamAchievementManager.OnAfflictionReceived(copyAffliction, Character);
             MedicalClinic.OnAfflictionCountChanged(Character);
 
             Character.HealthUpdateInterval = 0.0f;

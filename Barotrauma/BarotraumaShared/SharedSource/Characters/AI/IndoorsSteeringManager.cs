@@ -26,7 +26,7 @@ namespace Barotrauma
 
         private float findPathTimer;
 
-        private const float buttonPressCooldown = 3;
+        private const float ButtonPressCooldown = 1;
         private float checkDoorsTimer;
         private float buttonPressTimer;
 
@@ -342,7 +342,7 @@ namespace Barotrauma
                 CheckDoorsInPath();
                 doorsChecked = true;
             }
-            if (buttonPressTimer > 0 && lastDoor.door != null && lastDoor.shouldBeOpen && lastDoor.door.IsOpening)
+            if (buttonPressTimer > 0 && lastDoor.door != null && lastDoor.shouldBeOpen && !lastDoor.door.IsFullyOpen)
             {
                 // We have pressed the button and are waiting for the door to open -> Hold still until we can press the button again.
                 Reset();
@@ -694,7 +694,7 @@ namespace Barotrauma
                                 if (door.Item.TryInteract(character, forceSelectKey: true))
                                 {
                                     lastDoor = (door, shouldBeOpen);
-                                    buttonPressTimer = shouldBeOpen ? buttonPressCooldown : 0;
+                                    buttonPressTimer = shouldBeOpen ? ButtonPressCooldown : 0;
                                 }
                                 else
                                 {
@@ -712,7 +712,7 @@ namespace Barotrauma
                                     if (closestButton.Item.TryInteract(character, forceSelectKey: true))
                                     {
                                         lastDoor = (door, shouldBeOpen);
-                                        buttonPressTimer = shouldBeOpen ? buttonPressCooldown : 0;
+                                        buttonPressTimer = shouldBeOpen ? ButtonPressCooldown : 0;
                                     }
                                     else
                                     {

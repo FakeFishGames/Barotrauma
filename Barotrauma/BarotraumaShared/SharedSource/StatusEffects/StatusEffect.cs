@@ -1444,7 +1444,6 @@ namespace Barotrauma
                 if (target == null) { continue; }
                 foreach (Affliction affliction in Afflictions)
                 {
-                    if (Rand.Value(Rand.RandSync.Unsynced) > affliction.Probability) { continue; }
                     Affliction newAffliction = affliction;
                     if (target is Character character)
                     {

@@ -432,6 +432,9 @@ namespace Barotrauma
         public readonly float BurnOverlayAlpha;
         public readonly float DamageOverlayAlpha;
 
+        //steam achievement given when the controlled character receives the affliction
+        public readonly Identifier AchievementOnReceived;
+
         //steam achievement given when the affliction is removed from the controlled character
         public readonly Identifier AchievementOnRemoved;
 
@@ -560,6 +563,7 @@ namespace Barotrauma
 
             IconColors = element.GetAttributeColorArray(nameof(IconColors), null);
             AfflictionOverlayAlphaIsLinear = element.GetAttributeBool(nameof(AfflictionOverlayAlphaIsLinear), false);
+            AchievementOnReceived = element.GetAttributeIdentifier(nameof(AchievementOnReceived), "");
             AchievementOnRemoved = element.GetAttributeIdentifier(nameof(AchievementOnRemoved), "");
 
             TargetSpecies = element.GetAttributeIdentifierArray("targets", Array.Empty<Identifier>(), trim: true);

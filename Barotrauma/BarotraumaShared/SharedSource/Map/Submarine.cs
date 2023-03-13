@@ -1379,6 +1379,24 @@ namespace Barotrauma
                 Info = new SubmarineInfo(info);
 
                 ConnectedDockingPorts = new Dictionary<Submarine, DockingPort>();
+
+                //place the sub above the top of the level
+                HiddenSubPosition = HiddenSubStartPosition;
+                if (GameMain.GameSession?.LevelData != null)
+                {
+                    HiddenSubPosition += Vector2.UnitY * GameMain.GameSession.LevelData.Size.Y;
+                }
+
+                for (int i = 0; i < loaded.Count; i++)
+                {
+                    Submarine sub = loaded[i];
+                    HiddenSubPosition =
+                        new Vector2(
+                            //1st sub on the left side, 2nd on the right, etc
+                            HiddenSubPosition.X * (i % 2 == 0 ? 1 : -1),
+                            HiddenSubPosition.Y + sub.Borders.Height + 5000.0f);
+                }
+
                 IdOffset = IdRemap.DetermineNewOffset();
 
                 List<MapEntity> newEntities = new List<MapEntity>();
@@ -1406,6 +1424,7 @@ namespace Barotrauma
 
                 Vector2 center = Vector2.Zero;
                 var matchingHulls = Hull.HullList.FindAll(h => h.Submarine == this);
+
                 if (matchingHulls.Any())
                 {
                     Vector2 topLeft = new Vector2(matchingHulls[0].Rect.X, matchingHulls[0].Rect.Y);
@@ -1427,17 +1446,6 @@ namespace Barotrauma
                 }
 
                 subBody = new SubmarineBody(this, showErrorMessages);
-
-                //place the sub above the top of the level
-                HiddenSubPosition = HiddenSubStartPosition;
-                if (GameMain.GameSession != null && GameMain.GameSession.LevelData != null)
-                {
-                    HiddenSubPosition += Vector2.UnitY * GameMain.GameSession.LevelData.Size.Y;
-                }
-                foreach (Submarine sub in loaded)
-                {
-                    HiddenSubPosition += Vector2.UnitY * (sub.Borders.Height + 5000.0f);
-                }
                 Vector2 pos = ConvertUnits.ToSimUnits(HiddenSubPosition);
                 subBody.Body.FarseerBody.SetTransformIgnoreContacts(ref pos, 0.0f);
 

@@ -476,10 +476,15 @@ namespace Barotrauma
             }
             set
             {
-                if (info != null && info != value) info.Remove();
-
+                if (info != null && info != value)
+                {
+                    info.Remove();
+                }
                 info = value;
-                if (info != null) info.Character = this;
+                if (info != null)
+                {
+                    info.Character = this;
+                }
             }
         }
 
@@ -1064,7 +1069,7 @@ namespace Barotrauma
 
         public bool InWater => AnimController is AnimController { InWater: true };
 
-        public bool IsLowInOxygen => NeedsOxygen && OxygenAvailable < CharacterHealth.LowOxygenThreshold;
+        public bool IsLowInOxygen => CharacterHealth.OxygenAmount < 100;
 
         public bool GodMode = false;
 

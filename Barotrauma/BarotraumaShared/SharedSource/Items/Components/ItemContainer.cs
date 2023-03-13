@@ -360,10 +360,12 @@ namespace Barotrauma.Items.Components
             }
 
             var relatedItem = FindContainableItem(containedItem);
+            drawableContainedItems.RemoveAll(d => d.Item == containedItem);
             drawableContainedItems.Add(new DrawableContainedItem(containedItem, 
                 Hide: relatedItem?.Hide ?? false, 
                 ItemPos: relatedItem?.ItemPos, 
                 Rotation: relatedItem?.Rotation ?? 0.0f));
+            drawableContainedItems.Sort((DrawableContainedItem it1, DrawableContainedItem it2) => Inventory.FindIndex(it1.Item).CompareTo(Inventory.FindIndex(it2.Item)));
 
             if (item.GetComponent<Planter>() != null)
             {

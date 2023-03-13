@@ -175,16 +175,6 @@ namespace Barotrauma.Items.Components
         }
         public bool IsClosed => !IsOpen;
 
-        /// <summary>
-        /// Is the door opening, but not yet fully opened? Returns false both when it's closed and when it's fully open.
-        /// </summary>
-        public bool IsOpening => IsOpen && !IsFullyOpen;
-
-        /// <summary>
-        /// Is the door closing, but not yet fully closed? Returns false both when the door is open and when it's fully closed.
-        /// </summary>
-        public bool IsClosing => IsClosed && !IsFullyClosed;
-
         public bool IsFullyOpen => IsOpen && OpenState >= 1.0f;
 
         public bool IsFullyClosed => IsClosed && OpenState <= 0f;

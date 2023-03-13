@@ -401,6 +401,7 @@ namespace Barotrauma
         private static readonly List<MapEntity> tempHighlightedEntities = new List<MapEntity>();
         public static void ClearHighlightedEntities()
         {
+            highlightedEntities.RemoveWhere(e => e.Removed);
             tempHighlightedEntities.Clear();
             tempHighlightedEntities.AddRange(highlightedEntities);
             foreach (var entity in tempHighlightedEntities)

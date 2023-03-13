@@ -611,10 +611,6 @@ namespace Barotrauma
 
                 GameMain.Client?.Draw(spriteBatch);
 
-                string factionWaterMark = "FACTION/ENDGAME TEST VERSION - please do not publicly share any material you see here!".ToUpper();
-                DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2, 100 * yScale) - GUIStyle.SubHeadingFont.MeasureString(factionWaterMark) / 2, factionWaterMark,
-                    GUIStyle.Red * 0.5f, font: GUIStyle.SubHeadingFont, backgroundColor: Color.Black * 0.5f, backgroundPadding: 10);
-
                 if (Character.Controlled?.Inventory != null)
                 {
                     if (Character.Controlled.Stun < 0.1f && !Character.Controlled.IsDead)

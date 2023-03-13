@@ -85,7 +85,7 @@ namespace Barotrauma
                 }
             }
 
-            public abstract bool IsDuplicate(BossProgressBar progressBar);
+            public abstract bool IsDuplicate(object targetObject);
         }
 
         class BossHealthBar : BossProgressBar
@@ -109,9 +109,9 @@ namespace Barotrauma
                 Character = character;
             }
 
-            public override bool IsDuplicate(BossProgressBar progressBar)
+            public override bool IsDuplicate(object targetObject)
             {
-                return progressBar is BossHealthBar bossHealthBar && bossHealthBar.Character == Character;
+                return targetObject is Character character && Character == character;
             }
         }
 
@@ -136,9 +136,9 @@ namespace Barotrauma
                 Mission = mission;
             }
 
-            public override bool IsDuplicate(BossProgressBar progressBar)
+            public override bool IsDuplicate(object targetObject)
             {
-                return progressBar is MissionProgressBar missionProgressBar && missionProgressBar.Mission == Mission;
+                return targetObject is Mission mission && Mission == mission;
             }
         }
 
@@ -150,7 +150,7 @@ namespace Barotrauma
         private static readonly List<Item> brokenItems = new List<Item>();
         private static float brokenItemsCheckTimer;
 
-        private static readonly List<BossProgressBar> bossHealthBars = new List<BossProgressBar>();
+        private static readonly List<BossProgressBar> bossProgressBars = new List<BossProgressBar>();
 
         private static readonly Dictionary<Identifier, LocalizedString> cachedHudTexts = new Dictionary<Identifier, LocalizedString>();
 
@@ -747,44 +747,44 @@ namespace Barotrauma
         public static void ShowBossHealthBar(Character character, float damage)
         {
             if (character == null || character.IsDead || character.Removed) { return; }
-            AddBossProgressBar(new BossHealthBar(character), damage);
+            if (bossProgressBars.Any(b => b.IsDuplicate(character))) { return; }
+            AddBossProgressBar(new BossHealthBar(character));
         }
 
         public static void ShowMissionProgressBar(Mission mission)
         {
             if (mission == null || mission.Completed || mission.Failed) { return; }
+            if (bossProgressBars.Any(b => b.IsDuplicate(mission))) { return; }
             AddBossProgressBar(new MissionProgressBar(mission));
         }
 
-        public static void ClearBossHealthBars()
+        public static void ClearBossProgressBars()
         {
-            bossHealthBars.Clear();
+            for (int i = bossProgressBars.Count - 1; i>= 0; i--)
+            {
+                RemoveBossProgressBar(bossProgressBars[i]);
+            }
+            bossProgressBars.Clear();
         }
 
-        private static void AddBossProgressBar(BossProgressBar progressBar, float damage = 0.0f)
+        private static void RemoveBossProgressBar(BossProgressBar progressBar)
+        {
+            progressBar.SideContainer.Parent?.RemoveChild(progressBar.SideContainer);
+            progressBar.TopContainer.Parent?.RemoveChild(progressBar.TopContainer);
+            bossProgressBars.Remove(progressBar);
+        }
+
+        private static void AddBossProgressBar(BossProgressBar progressBar)
         {
             var healthBarMode = GameMain.NetworkMember?.ServerSettings.ShowEnemyHealthBars ?? GameSettings.CurrentConfig.ShowEnemyHealthBars;
             if (healthBarMode == EnemyHealthBarMode.HideAll)
             {
                 return;
             }
-
-            var existingBar = bossHealthBars.Find(b => b.IsDuplicate(progressBar));
-            if (existingBar != null)
+            if (bossProgressBars.Count > 5)
             {
-                existingBar.FadeTimer = BossHealthBarDuration;
-                if (damage > 0)
-                {
-                    // Show the most recent target at the top of the screen
-                    bossHealthBars.Remove(existingBar);
-                    bossHealthBars.Add(existingBar);
-                }
-                return;
-            }
-            if (bossHealthBars.Count > 5)
-            {
-                BossProgressBar oldestHealthBar = bossHealthBars.First();
-                foreach (var bar in bossHealthBars)
+                BossProgressBar oldestHealthBar = bossProgressBars.First();
+                foreach (var bar in bossProgressBars)
                 {
                     if (bar.TopHealthBar.BarSize < oldestHealthBar.TopHealthBar.BarSize)
                     {
@@ -793,18 +793,18 @@ namespace Barotrauma
                 }
                 oldestHealthBar.FadeTimer = Math.Min(oldestHealthBar.FadeTimer, 1.0f);
             }
-            bossHealthBars.Add(progressBar);
+            bossProgressBars.Add(progressBar);
         }
 
         public static void UpdateBossProgressBars(float deltaTime)
         {
             var healthBarMode = GameMain.NetworkMember?.ServerSettings.ShowEnemyHealthBars ?? GameSettings.CurrentConfig.ShowEnemyHealthBars;
 
-            for (int i = 0; i < bossHealthBars.Count; i++)
+            for (int i = 0; i < bossProgressBars.Count; i++)
             {
-                var bossHealthBar = bossHealthBars[i];
+                var bossHealthBar = bossProgressBars[i];
 
-                bool showTopBar = i == bossHealthBars.Count - 1;
+                bool showTopBar = i == bossProgressBars.Count - 1;
                 if (showTopBar && !bossHealthBar.TopContainer.Visible)
                 {
                     bossHealthBar.SideContainer.SetAsLastChild();
@@ -848,14 +848,14 @@ namespace Barotrauma
                 }
                 bossHealthBar.FadeTimer -= deltaTime;
             }
-            for (int i = bossHealthBars.Count - 1; i >= 0 ; i--)
+            for (int i = bossProgressBars.Count - 1; i >= 0 ; i--)
             {
-                var bossHealthBar = bossHealthBars[i];
+                var bossHealthBar = bossProgressBars[i];
                 if (bossHealthBar.FadeTimer <= 0 || healthBarMode == EnemyHealthBarMode.HideAll)
                 {
                     bossHealthBar.SideContainer.Parent?.RemoveChild(bossHealthBar.SideContainer);
                     bossHealthBar.TopContainer.Parent?.RemoveChild(bossHealthBar.TopContainer);
-                    bossHealthBars.RemoveAt(i);
+                    bossProgressBars.RemoveAt(i);
                     bossHealthContainer.Recalculate();
                 }
             }

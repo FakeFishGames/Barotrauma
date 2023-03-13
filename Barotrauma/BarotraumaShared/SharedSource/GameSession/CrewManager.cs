@@ -248,23 +248,7 @@ namespace Barotrauma
             List<WayPoint> spawnWaypoints = null;
             List<WayPoint> mainSubWaypoints = WayPoint.SelectCrewSpawnPoints(characterInfos, Submarine.MainSub).ToList();
 
-            bool hostileOutpost = false;
-            if (Level.IsLoadedOutpost)
-            {
-                if (Submarine.Loaded.Any(s => s.Info.Type == SubmarineType.Outpost && (s.Info.OutpostGenerationParams?.SpawnCrewInsideOutpost ?? false)))
-                {
-                    hostileOutpost = true;
-                }
-                else if (GameMain.GameSession?.GameMode is CampaignMode campaign)
-                {
-                    var reputation = campaign.Map?.CurrentLocation?.Reputation;
-                    if (reputation != null && reputation.NormalizedValue < Reputation.HostileThreshold)
-                    {
-                        hostileOutpost = true;
-                    }
-                }
-            }
-            if (hostileOutpost)
+            if (Level.Loaded != null && Level.Loaded.ShouldSpawnCrewInsideOutpost())
             {
                 spawnWaypoints = WayPoint.WayPointList.FindAll(wp =>
                     wp.SpawnType == SpawnType.Human &&
@@ -278,7 +262,7 @@ namespace Barotrauma
                 while (spawnWaypoints.Any() && spawnWaypoints.Count < characterInfos.Count)
                 {
                     spawnWaypoints.Add(spawnWaypoints[Rand.Int(spawnWaypoints.Count)]);
-                }
+                }                
             }
             if (spawnWaypoints == null || !spawnWaypoints.Any())
             {

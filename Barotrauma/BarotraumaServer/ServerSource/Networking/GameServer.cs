@@ -2367,10 +2367,7 @@ namespace Barotrauma.Networking
 
                 List<WayPoint> spawnWaypoints = null;
                 List<WayPoint> mainSubWaypoints = WayPoint.SelectCrewSpawnPoints(characterInfos, Submarine.MainSubs[n]).ToList();
-                if (Level.Loaded?.StartOutpost != null &&
-                    Level.Loaded.Type == LevelData.LevelType.Outpost &&
-                    (Level.Loaded.StartOutpost.Info.OutpostGenerationParams?.SpawnCrewInsideOutpost ?? false) &&
-                    Level.Loaded.StartOutpost.GetConnectedSubs().Any(s => s.Info.Type == SubmarineType.Player))
+                if (Level.Loaded != null && Level.Loaded.ShouldSpawnCrewInsideOutpost())
                 {
                     spawnWaypoints = WayPoint.WayPointList.FindAll(wp =>
                         wp.SpawnType == SpawnType.Human &&
@@ -3313,12 +3310,13 @@ namespace Barotrauma.Networking
 
             if (checkActiveVote && Voting.ActiveVote != null)
             {
+#warning TODO: this is mostly the same as Voting.Update, deduplicate (if/when refactoring the Voting class?)
                 var inGameClients = GameMain.Server.ConnectedClients.Where(c => c.InGame);
-                if (inGameClients.Count() == 1)
+                if (inGameClients.Count() == 1 && inGameClients.First() == Voting.ActiveVote.VoteStarter)
                 {
                     Voting.ActiveVote.Finish(Voting, passed: true);
                 }
-                else
+                else if (inGameClients.Any())
                 {
                     var eligibleClients = inGameClients.Where(c => c != Voting.ActiveVote.VoteStarter);
                     int yes = eligibleClients.Count(c => c.GetVote<int>(Voting.ActiveVote.VoteType) == 2);

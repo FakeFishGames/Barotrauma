@@ -328,19 +328,21 @@ namespace Barotrauma
                             case VoteType.PurchaseAndSwitchSub:
                             case VoteType.SwitchSub:
                                 string subName2 = inc.ReadString();
-                                var submarineInfo = GameMain.GameSession.OwnedSubmarines.FirstOrDefault(s => s.Name == subName2) ?? GameMain.Client.ServerSubmarines.FirstOrDefault(s => s.Name == subName2);
                                 bool transferItems = inc.ReadBoolean();
-                                if (submarineInfo == null)
+                                if (GameMain.GameSession != null)
                                 {
-                                    DebugConsole.ThrowError("Failed to find a matching submarine, vote aborted");
-                                    return;
+                                    var submarineInfo = GameMain.GameSession.OwnedSubmarines.FirstOrDefault(s => s.Name == subName2) ?? GameMain.Client.ServerSubmarines.FirstOrDefault(s => s.Name == subName2);
+                                    if (submarineInfo == null)
+                                    {
+                                        DebugConsole.ThrowError("Failed to find a matching submarine, vote aborted");
+                                        return;
+                                    }
+                                    submarineVoteInfo = new SubmarineVoteInfo(submarineInfo, transferItems);
                                 }
-                                submarineVoteInfo = new SubmarineVoteInfo(submarineInfo, transferItems);
                                 break;
                         }
 
-                        GameMain.Client.VotingInterface?.EndVote(passed, yesClientCount, noClientCount);                        
-
+                        GameMain.Client.VotingInterface?.EndVote(passed, yesClientCount, noClientCount);
                         if (passed && submarineVoteInfo.SubmarineInfo is { } subInfo)
                         {
                             switch (voteType)

@@ -1043,7 +1043,15 @@ namespace Barotrauma
 
             if (backgroundSprite == null)
             {
+#if UNSTABLE
                 backgroundSprite = new Sprite("Content/UnstableBackground.png", sourceRectangle: null);
+#endif
+                if (GUIStyle.GetComponentStyle("MainMenuBackground") is { } mainMenuStyle &&
+                     mainMenuStyle.Sprites.TryGetValue(GUIComponent.ComponentState.None, out var sprites))
+                {
+                    backgroundSprite = sprites.GetRandomUnsynced()?.Sprite;
+                }
+                backgroundSprite ??= LocationType.Prefabs.GetRandomUnsynced()?.GetPortrait(0);
             }
 
             var vignette = GUIStyle.GetComponentStyle("mainmenuvignette")?.GetDefaultSprite();

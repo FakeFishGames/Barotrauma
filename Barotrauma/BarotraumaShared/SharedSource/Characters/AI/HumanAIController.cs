@@ -546,12 +546,11 @@ namespace Barotrauma
 
             bool NeedsDivingGearOnPath(AIObjectiveGoTo gotoObjective)
             {
-                if (Character.IsImmuneToPressure) { return false; }
                 bool insideSteering = SteeringManager == PathSteering && PathSteering.CurrentPath != null && !PathSteering.IsPathDirty;
                 Hull targetHull = gotoObjective.GetTargetHull();
-                return gotoObjective.Target != null && targetHull == null ||
+                return (gotoObjective.Target != null && targetHull == null && !Character.IsImmuneToPressure) ||
                     NeedsDivingGear(targetHull, out _) ||
-                    insideSteering && (PathSteering.CurrentPath.HasOutdoorsNodes || PathSteering.CurrentPath.Nodes.Any(n => NeedsDivingGear(n.CurrentHull, out _)));
+                    (insideSteering && ((PathSteering.CurrentPath.HasOutdoorsNodes && !Character.IsImmuneToPressure) || PathSteering.CurrentPath.Nodes.Any(n => NeedsDivingGear(n.CurrentHull, out _))));
             }
 
             if (isCarrying)
@@ -1550,23 +1549,19 @@ namespace Barotrauma
 
         public bool NeedsDivingGear(Hull hull, out bool needsSuit)
         {
-            if (Character.IsImmuneToPressure) 
-            {
-                needsSuit = false;
-                return false; 
-            }
             needsSuit = false;
+            bool needsAir = Character.NeedsAir && Character.CharacterHealth.OxygenLowResistance < 1;
             if (hull == null || 
                 hull.WaterPercentage > 90 || 
                 hull.LethalPressure > 0 || 
                 hull.ConnectedGaps.Any(gap => !gap.IsRoomToRoom && gap.Open > 0.9f))
             {
-                needsSuit = true;
-                return true;
+                needsSuit = !Character.IsProtectedFromPressure;
+                return needsAir || needsSuit;
             }
-            if (Character.CharacterHealth.OxygenLowResistance < 1 && (hull.WaterPercentage > 60 || hull.OxygenPercentage < HULL_LOW_OXYGEN_PERCENTAGE + 1))
+            if (hull.WaterPercentage > 60 || hull.OxygenPercentage < HULL_LOW_OXYGEN_PERCENTAGE + 1)
             {
-                return true;
+                return needsAir;
             }
             return false;
         }
@@ -1943,7 +1938,7 @@ namespace Barotrauma
                 visibleHulls = VisibleHulls;
             }
             bool ignoreFire = objectiveManager.CurrentOrder is AIObjectiveExtinguishFires extinguishOrder && extinguishOrder.Priority > 0 || objectiveManager.HasActiveObjective<AIObjectiveExtinguishFire>();
-            bool ignoreOxygen = character.IsProtectedFromPressure || HasDivingGear(character);
+            bool ignoreOxygen =  HasDivingGear(character);
             bool ignoreEnemies = ObjectiveManager.IsCurrentOrder<AIObjectiveFightIntruders>() || ObjectiveManager.IsCurrentObjective<AIObjectiveFightIntruders>();
             float safety = CalculateHullSafety(hull, visibleHulls, character, ignoreWater: false, ignoreOxygen, ignoreFire, ignoreEnemies);
             if (isCurrentHull)
@@ -1976,7 +1971,7 @@ namespace Barotrauma
                     waterFactor = MathHelper.Lerp(1, HULL_SAFETY_THRESHOLD / 2 / 100, relativeWaterVolume);
                 }
             }
-            if (character.CharacterHealth.OxygenLowResistance >= 1)
+            if (!character.NeedsOxygen || character.CharacterHealth.OxygenLowResistance >= 1)
             {
                 oxygenFactor = 1;
             }

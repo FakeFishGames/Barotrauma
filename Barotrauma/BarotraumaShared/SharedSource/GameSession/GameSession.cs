@@ -540,6 +540,8 @@ namespace Barotrauma
                 existingRoundSummary.ContinueButton.Visible = true;
             }
 
+            CharacterHUD.ClearBossProgressBars();
+
             RoundSummary = new RoundSummary(GameMode, Missions, StartLocation, EndLocation);
 
             if (GameMode is not TutorialMode && GameMode is not TestGameMode)
@@ -549,14 +551,15 @@ namespace Barotrauma
                 {
                     GUI.AddMessage(levelData.Biome.DisplayName, Color.Lerp(Color.CadetBlue, Color.DarkRed, levelData.Difficulty / 100.0f), 5.0f, playSound: false);
                     GUI.AddMessage(TextManager.AddPunctuation(':', TextManager.Get("Destination"), EndLocation.Name), Color.CadetBlue, playSound: false);
-                    if (missions.Count > 1)
+                    var missionsToShow = missions.Where(m => m.Prefab.ShowStartMessage);
+                    if (missionsToShow.Count() > 1)
                     {
                         string joinedMissionNames = string.Join(", ", missions.Select(m => m.Name));
                         GUI.AddMessage(TextManager.AddPunctuation(':', TextManager.Get("Mission"), joinedMissionNames), Color.CadetBlue, playSound: false);
                     }
                     else
                     {
-                        var mission = missions.FirstOrDefault();
+                        var mission = missionsToShow.FirstOrDefault();
                         GUI.AddMessage(TextManager.AddPunctuation(':', TextManager.Get("Mission"), mission?.Name ?? TextManager.Get("None")), Color.CadetBlue, playSound: false);
                     }
                 }
@@ -898,7 +901,7 @@ namespace Barotrauma
                 TabMenu.OnRoundEnded();
                 GUIMessageBox.MessageBoxes.RemoveAll(mb => mb.UserData as string == "ConversationAction" || ReadyCheck.IsReadyCheck(mb));
                 ObjectiveManager.ResetUI();
-                CharacterHUD.ClearBossHealthBars();
+                CharacterHUD.ClearBossProgressBars();
 #endif
                 SteamAchievementManager.OnRoundEnded(this);
 

@@ -52,7 +52,7 @@ namespace Barotrauma
                     objectiveManager.HasOrder<AIObjectiveReturn>(o => o.Priority > 0) ||
                     objectiveManager.HasActiveObjective<AIObjectiveRescue>() ||
                     objectiveManager.Objectives.Any(o => o is AIObjectiveCombat && o.Priority > 0))
-                    && character.IsProtectedFromPressure ? 0 : 100;
+                    && ((character.IsImmuneToPressure && !character.IsLowInOxygen)|| HumanAIController.HasDivingSuit(character)) ? 0 : 100;
             }
             else
             {

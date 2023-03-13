@@ -510,8 +510,11 @@ namespace Barotrauma
 
         public List<Order> CurrentOrders { get; } = new List<Order>();
 
-        //unique ID given to character infos in MP
-        //used by clients to identify which infos are the same to prevent duplicate characters in round summary
+
+        /// <summary>
+        /// Unique ID given to character infos in MP. Non-persistent.
+        /// Used by clients to identify which infos are the same to prevent duplicate characters in round summary.
+        /// </summary>
         public ushort ID;
 
         public List<Identifier> SpriteTags
@@ -922,17 +925,25 @@ namespace Barotrauma
             }
         }
 
+        /// <summary>
+        /// Returns a presumably (not guaranteed) unique hash using the (current) Name, appearence, and job.
+        /// So unless there's another character with the exactly same name, job, and appearance, the hash should be unique.
+        /// </summary>
         public int GetIdentifier()
         {
-            return GetIdentifier(Name);
+            return GetIdentifierHash(Name);
         }
 
+        /// <summary>
+        /// Returns a presumably (not guaranteed) unique hash using the OriginalName, appearence, and job.
+        /// So unless there's another character with the exactly same name, job, and appearance, the hash should be unique.
+        /// </summary>
         public int GetIdentifierUsingOriginalName()
         {
-            return GetIdentifier(OriginalName);
+            return GetIdentifierHash(OriginalName);
         }
 
-        private int GetIdentifier(string name)
+        private int GetIdentifierHash(string name)
         {
             int id = ToolBox.StringToInt(name + string.Join("", Head.Preset.TagSet.OrderBy(s => s)));
             id ^= Head.HairIndex << 12;
@@ -1512,7 +1523,7 @@ namespace Barotrauma
                 }
                 if (order.OrderGiver != null)
                 {
-                    orderElement.Add(new XAttribute("ordergiverinfoid", order.OrderGiver.Info.ID));
+                    orderElement.Add(new XAttribute("ordergiver", order.OrderGiver.Info?.GetIdentifier()));
                 }
                 if (order.TargetSpatialEntity?.Submarine is Submarine targetSub)
                 {
@@ -1606,8 +1617,8 @@ namespace Barotrauma
                     continue;
                 }
                 var targetType = (Order.OrderTargetType)orderElement.GetAttributeInt("targettype", 0);
-                int orderGiverInfoId = orderElement.GetAttributeInt("ordergiverinfoid", -1);
-                var orderGiver = orderGiverInfoId >= 0 ? Character.CharacterList.FirstOrDefault(c => c.Info?.ID == orderGiverInfoId) : null;
+                int orderGiverInfoId = orderElement.GetAttributeInt("ordergiver", -1);
+                var orderGiver = orderGiverInfoId >= 0 ? Character.CharacterList.FirstOrDefault(c => c.Info?.GetIdentifier() == orderGiverInfoId) : null;
                 Entity targetEntity = null;
                 switch (targetType)
                 {

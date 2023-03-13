@@ -214,8 +214,7 @@ namespace Barotrauma
             CharacterInfo characterInfo;
             if (characterElement == null)
             {
-                characterInfo = new CharacterInfo(CharacterPrefab.HumanSpeciesName, jobOrJobPrefab: GetJobPrefab(randSync), npcIdentifier: Identifier);
-            }
+                characterInfo = new CharacterInfo(CharacterPrefab.HumanSpeciesName, jobOrJobPrefab: GetJobPrefab(randSync), npcIdentifier: Identifier, randSync: randSync);}
             else
             {
                 characterInfo = new CharacterInfo(characterElement, Identifier);

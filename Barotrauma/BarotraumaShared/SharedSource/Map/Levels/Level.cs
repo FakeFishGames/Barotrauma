@@ -461,6 +461,19 @@ namespace Barotrauma
             borders = new Rectangle(Point.Zero, levelData.Size);
         }
 
+        public bool ShouldSpawnCrewInsideOutpost()
+        {
+            if (StartOutpost != null &&
+                Type == LevelData.LevelType.Outpost &&
+                (StartOutpost.Info.OutpostGenerationParams?.SpawnCrewInsideOutpost ?? false) &&
+                StartOutpost.GetConnectedSubs().Any(s => s.Info.Type == SubmarineType.Player))
+            {
+                var reputation = GameMain.GameSession?.Campaign?.Map?.CurrentLocation?.Reputation;
+                return reputation == null || reputation.NormalizedValue >= Reputation.HostileThreshold;
+            }
+            return false;
+        }
+
         public static Level Generate(LevelData levelData, bool mirror, Location startLocation, Location endLocation, SubmarineInfo startOutpost = null, SubmarineInfo endOutpost = null)
         {
             Debug.Assert(levelData.Biome != null);
