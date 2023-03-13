@@ -207,11 +207,12 @@ namespace Barotrauma
             cargoManager.OnItemsInSellFromSubCrateChanged.RegisterOverwriteExisting(refreshStoreId, _ => needsSellingFromSubRefresh = true);
         }
 
-        public void SelectStore(Identifier identifier)
+        public void SelectStore(Character merchant)
         {
+            Identifier storeIdentifier = merchant?.MerchantIdentifier ?? Identifier.Empty;
             if (CurrentLocation?.Stores != null)
             {
-                if (!identifier.IsEmpty && CurrentLocation.GetStore(identifier) is { } store)
+                if (!storeIdentifier.IsEmpty && CurrentLocation.GetStore(storeIdentifier) is { } store)
                 {
                     ActiveStore = store;
                     if (storeNameBlock != null)
@@ -223,12 +224,13 @@ namespace Barotrauma
                         } 
                         storeNameBlock.SetRichText(storeName);
                     }
+                    ActiveStore.SetMerchantFaction(merchant.Faction);
                 }
                 else
                 {
                     ActiveStore = null;
                     string errorId, msg;
-                    if (identifier.IsEmpty)
+                    if (storeIdentifier.IsEmpty)
                     {
                         errorId = "Store.SelectStore:IdentifierEmpty";
                         msg = $"Error selecting store at {CurrentLocation}: identifier is empty.";
@@ -236,7 +238,7 @@ namespace Barotrauma
                     else
                     {
                         errorId = "Store.SelectStore:StoreDoesntExist";
-                        msg = $"Error selecting store with identifier \"{identifier}\" at {CurrentLocation}: store with the identifier doesn't exist at the location.";
+                        msg = $"Error selecting store with identifier \"{storeIdentifier}\" at {CurrentLocation}: store with the identifier doesn't exist at the location.";
                     }
                     DebugConsole.LogError(msg);
                     GameAnalyticsManager.AddErrorEventOnce(errorId, GameAnalyticsManager.ErrorSeverity.Error, msg);
@@ -249,17 +251,17 @@ namespace Barotrauma
                 if (campaignUI.Campaign.Map == null)
                 {
                     errorId = "Store.SelectStore:MapNull";
-                    msg = $"Error selecting store with identifier \"{identifier}\": Map is null.";
+                    msg = $"Error selecting store with identifier \"{storeIdentifier}\": Map is null.";
                 }
                 else if (CurrentLocation == null)
                 {
                     errorId = "Store.SelectStore:CurrentLocationNull";
-                    msg = $"Error selecting store with identifier \"{identifier}\": CurrentLocation is null.";
+                    msg = $"Error selecting store with identifier \"{storeIdentifier}\": CurrentLocation is null.";
                 }
                 else if (CurrentLocation.Stores == null)
                 {
                     errorId = "Store.SelectStore:StoresNull";
-                    msg = $"Error selecting store with identifier \"{identifier}\": CurrentLocation.Stores is null.";
+                    msg = $"Error selecting store with identifier \"{storeIdentifier}\": CurrentLocation.Stores is null.";
                 }
                 if (!msg.IsNullOrEmpty())
                 {
@@ -406,11 +408,11 @@ namespace Barotrauma
                 TextScale = 1.1f,
                 TextGetter = () =>
                 {
-                    if (CurrentLocation != null)
+                    if (ActiveStore is not null)
                     {
                         Color textColor = GUIStyle.ColorReputationNeutral;
                         string sign = "";
-                        int reputationModifier = (int)MathF.Round((CurrentLocation.GetStoreReputationModifier(activeTab == StoreTab.Buy) - 1) * 100);
+                        int reputationModifier = (int)MathF.Round((ActiveStore.GetReputationModifier(activeTab == StoreTab.Buy) - 1) * 100);
                         if (reputationModifier > 0)
                         {
                             textColor = IsBuying ? GUIStyle.ColorReputationLow : GUIStyle.ColorReputationHigh;
@@ -727,7 +729,7 @@ namespace Barotrauma
                 ChangeStoreTab(StoreTab.Buy);
                 if (newLocation?.Reputation != null)
                 {
-                    CurrentLocation.Reputation.OnReputationValueChanged.RegisterOverwriteExisting("RefreshStore".ToIdentifier(), _ => { SetNeedsRefresh(); });
+                    newLocation.Reputation.OnReputationValueChanged.RegisterOverwriteExisting("RefreshStore".ToIdentifier(), _ => { SetNeedsRefresh(); });
                 }
             }
 
@@ -855,6 +857,28 @@ namespace Barotrauma
             FilterStoreItems(category, searchBox.Text);
         }
 
+        private static KeyValuePair<Identifier, float>? GetReputationRequirement(PriceInfo priceInfo)
+        {
+            return GameMain.GameSession?.Campaign is not null
+               ? priceInfo.MinReputation.FirstOrNull()
+               : null;
+        }
+
+        private static KeyValuePair<Identifier, float>? GetTooLowReputation(PriceInfo priceInfo)
+        {
+            if (GameMain.GameSession?.Campaign is CampaignMode campaign)
+            {
+                foreach (var minRep in priceInfo.MinReputation)
+                {
+                    if (campaign.GetReputation(minRep.Key) < minRep.Value)
+                    {
+                        return minRep;
+                    }
+                }
+            }
+            return null;
+        }
+
         int prevDailySpecialCount, prevRequestedGoodsCount, prevSubRequestedGoodsCount;
 
         private void RefreshStoreBuyList()
@@ -898,6 +922,7 @@ namespace Barotrauma
             {
                 if (itemPrefab.CanBeBoughtFrom(ActiveStore, out PriceInfo priceInfo) && itemPrefab.CanCharacterBuy())
                 {
+
                     bool isDailySpecial = ActiveStore.DailySpecials.Contains(itemPrefab);
                     var itemFrame = isDailySpecial ?
                         storeDailySpecialsGroup.FindChild(c => c.UserData is PurchasedItem pi && pi.ItemPrefab == itemPrefab) :
@@ -922,7 +947,8 @@ namespace Barotrauma
                         SetOwnedText(itemFrame);
                         SetPriceGetters(itemFrame, true);
                     }
-                    SetItemFrameStatus(itemFrame, hasPermissions && quantity > 0);
+
+                    SetItemFrameStatus(itemFrame, hasPermissions && quantity > 0 && !GetTooLowReputation(priceInfo).HasValue);
                     existingItemFrames.Add(itemFrame);
                 }
             }
@@ -1317,6 +1343,8 @@ namespace Barotrauma
                 {
                     if (x.GUIComponent.UserData is PurchasedItem itemX && y.GUIComponent.UserData is PurchasedItem itemY)
                     {
+                        int reputationCompare = CompareByReputationRestriction(itemX, itemY);
+                        if (reputationCompare != 0) { return reputationCompare; }
                         int sortResult = itemX.ItemPrefab.Name != itemY.ItemPrefab.Name ?
                             itemX.ItemPrefab.Name.CompareTo(itemY.ItemPrefab.Name) :
                             itemX.ItemPrefab.Identifier.CompareTo(itemY.ItemPrefab.Identifier);
@@ -1345,6 +1373,8 @@ namespace Barotrauma
                     {
                         if (x.GUIComponent.UserData is PurchasedItem itemX && y.GUIComponent.UserData is PurchasedItem itemY)
                         {
+                            int reputationCompare = CompareByReputationRestriction(itemX, itemY);
+                            if (reputationCompare != 0) { return reputationCompare; }
                             int sortResult = ActiveStore.GetAdjustedItemSellPrice(itemX.ItemPrefab).CompareTo(
                                 ActiveStore.GetAdjustedItemSellPrice(itemY.ItemPrefab));
                             if (sortingMethod == SortingMethod.PriceDesc) { sortResult *= -1; }
@@ -1369,6 +1399,8 @@ namespace Barotrauma
                     {
                         if (x.GUIComponent.UserData is PurchasedItem itemX && y.GUIComponent.UserData is PurchasedItem itemY)
                         {
+                            int reputationCompare = CompareByReputationRestriction(itemX, itemY);
+                            if (reputationCompare != 0) { return reputationCompare; }
                             int sortResult = ActiveStore.GetAdjustedItemBuyPrice(itemX.ItemPrefab).CompareTo(
                                 ActiveStore.GetAdjustedItemBuyPrice(itemY.ItemPrefab));
                             if (sortingMethod == SortingMethod.PriceDesc) { sortResult *= -1; }
@@ -1391,10 +1423,12 @@ namespace Barotrauma
                     specialsGroup.Recalculate();
                 }
 
-                static int CompareByCategory(RectTransform x, RectTransform y)
+                int CompareByCategory(RectTransform x, RectTransform y)
                 {
                     if (x.GUIComponent.UserData is PurchasedItem itemX && y.GUIComponent.UserData is PurchasedItem itemY)
                     {
+                        int reputationCompare = CompareByReputationRestriction(itemX, itemY);
+                        if (reputationCompare != 0) { return reputationCompare; }
                         return itemX.ItemPrefab.Category.CompareTo(itemY.ItemPrefab.Category);
                     }
                     else
@@ -1422,6 +1456,19 @@ namespace Barotrauma
                 {
                     return null;
                 }
+            }
+
+            int CompareByReputationRestriction(PurchasedItem item1, PurchasedItem item2)
+            {
+                PriceInfo priceInfo1 = item1.ItemPrefab.GetPriceInfo(ActiveStore);
+                PriceInfo priceInfo2 = item2.ItemPrefab.GetPriceInfo(ActiveStore);
+                if (priceInfo1 != null && priceInfo2 != null)
+                {
+                    var requiredReputation1 = GetTooLowReputation(priceInfo1)?.Value ?? 0.0f;
+                    var requiredReputation2 = GetTooLowReputation(priceInfo2)?.Value ?? 0.0f;
+                    return requiredReputation1.CompareTo(requiredReputation2);
+                }
+                return 0;                
             }
 
             static int CompareByElement(RectTransform x, RectTransform y)
@@ -1753,7 +1800,7 @@ namespace Barotrauma
             {
                 if (pi.ItemPrefab?.InventoryIcon != null)
                 {
-                    icon.Color = pi.ItemPrefab.InventoryIconColor * (enabled ? 1.0f: 0.5f);
+                    icon.Color = pi.ItemPrefab.InventoryIconColor * (enabled ? 1.0f : 0.5f);
                 }
                 else if (pi.ItemPrefab?.Sprite != null)
                 {
@@ -1858,7 +1905,7 @@ namespace Barotrauma
                 LocalizedString toolTip = string.Empty;
                 if (purchasedItem.ItemPrefab != null)
                 {
-                    toolTip = purchasedItem.ItemPrefab.GetTooltip();
+                    toolTip = purchasedItem.ItemPrefab.GetTooltip(Character.Controlled);
                     if (itemQuantity != null)
                     {
                         if (itemQuantity.AllNonEmpty)
@@ -1869,6 +1916,23 @@ namespace Barotrauma
                         {
                             toolTip += $"\n\n{TextManager.GetWithVariable("campaignstore.ownednonempty", "[amount]", itemQuantity.NonEmpty.ToString())}";
                             toolTip += $"\n{TextManager.GetWithVariable("campaignstore.ownedtotal", "[amount]", itemQuantity.Total.ToString())}";
+                        }
+                    }
+
+                    PriceInfo priceInfo = purchasedItem.ItemPrefab.GetPriceInfo(ActiveStore);
+                    var campaign = GameMain.GameSession?.Campaign;
+                    if (priceInfo != null && campaign != null)
+                    {
+                        var requiredReputation = GetReputationRequirement(priceInfo);
+                        if (requiredReputation != null)
+                        {
+                            var repStr = TextManager.GetWithVariables(
+                                            "campaignstore.reputationrequired",
+                                            ("[amount]", ((int)requiredReputation.Value.Value).ToString()),
+                                            ("[faction]", TextManager.Get("faction." + requiredReputation.Value.Key).Value));
+                            Color color = campaign.GetReputation(requiredReputation.Value.Key) < requiredReputation.Value.Value ?
+                                GUIStyle.Orange : GUIStyle.Green;
+                            toolTip += $"\n‖color:{color.ToStringHex()}‖{repStr}‖color:end‖";
                         }
                     }
                 }

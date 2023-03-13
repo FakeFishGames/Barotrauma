@@ -17,6 +17,9 @@ namespace Barotrauma
         [Serialize(100.0f, IsPropertySaveable.Yes), Editable]
         public float MaxLevelDifficulty { get; set; }
 
+        [Serialize(Level.PlacementType.Bottom, IsPropertySaveable.Yes), Editable]
+        public Level.PlacementType Placement { get; set; }
+
         public string Name { get; private set; }
 
         public Dictionary<Identifier, SerializableProperty> SerializableProperties { get; private set; }

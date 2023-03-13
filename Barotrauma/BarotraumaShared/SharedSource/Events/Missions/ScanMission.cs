@@ -32,25 +32,20 @@ namespace Barotrauma
             }
         } 
 
-        public override IEnumerable<Vector2> SonarPositions
+        public override IEnumerable<(LocalizedString Label, Vector2 Position)> SonarLabels
         {
             get
             {
-                if (State > 0)
+                if (State > 0 || scanTargets.None())
                 {
-                    return Enumerable.Empty<Vector2>();
-                }
-                else if (scanTargets.Any())
-                {
-                    return scanTargets
-                        .Where(kvp => !kvp.Value)
-                        .Select(kvp => kvp.Key.WorldPosition);
+                    return Enumerable.Empty<(LocalizedString Label, Vector2 Position)>();
                 }
                 else
                 {
-                    return Enumerable.Empty<Vector2>();
-                }
-                
+                    return scanTargets
+                        .Where(kvp => !kvp.Value)
+                        .Select(kvp => (Prefab.SonarLabel, kvp.Key.WorldPosition));
+                }             
             }
         }
 

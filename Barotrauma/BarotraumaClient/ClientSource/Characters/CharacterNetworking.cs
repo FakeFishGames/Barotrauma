@@ -593,6 +593,7 @@ namespace Barotrauma
                 {
                     character.MerchantIdentifier = inc.ReadIdentifier();
                 }
+                character.Faction = inc.ReadIdentifier();
                 character.HumanPrefabHealthMultiplier = humanPrefabHealthMultiplier;
                 character.Wallet.Balance = balance;
                 character.Wallet.RewardDistribution = rewardDistribution;

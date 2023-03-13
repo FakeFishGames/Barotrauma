@@ -585,7 +585,7 @@ namespace Barotrauma
                 if (!gap.IsRoomToRoom)
                 {
                     if (!IsWearingDivingSuit()) { continue; }
-                    if (Character.Controlled.IsProtectedFromPressure()) { continue; }
+                    if (Character.Controlled.IsProtectedFromPressure) { continue; }
                     if (DisplayHint("divingsuitwarning".ToIdentifier(), extendTextTag: false)) { return; }
                     continue;
                 }

@@ -648,11 +648,11 @@ namespace Barotrauma
                 {
                     statusEffects = statusEffects.Concat(hitEffects);
                 }
-                float afflictionsStun = attack.Afflictions.Keys.Sum(a => a.Identifier == "stun" ? a.Strength : 0);
+                float afflictionsStun = attack.Afflictions.Keys.Sum(a => a.Identifier == AfflictionPrefab.StunType ? a.Strength : 0);
                 float effectsStun = statusEffects.None() ? 0 : statusEffects.Max(se =>
                 {
                     float stunAmount = 0;
-                    var stunAffliction = se.Afflictions.Find(a => a.Identifier == "stun");
+                    var stunAffliction = se.Afflictions.Find(a => a.Identifier == AfflictionPrefab.StunType);
                     if (stunAffliction != null)
                     {
                         stunAmount = stunAffliction.Strength;
@@ -1176,30 +1176,31 @@ namespace Barotrauma
                     if (sqrDistance > repairTool.Range * repairTool.Range) { return; }
                 }
                 float aimFactor = MathHelper.PiOver2 * (1 - AimAccuracy);
-                if (VectorExtensions.Angle(VectorExtensions.Forward(Weapon.body.TransformedRotation), Enemy.Position - Weapon.Position) < MathHelper.PiOver4 + aimFactor)
+                if (VectorExtensions.Angle(VectorExtensions.Forward(Weapon.body.TransformedRotation), Enemy.WorldPosition - Weapon.WorldPosition) < MathHelper.PiOver4 + aimFactor)
                 {
                     if (myBodies == null)
                     {
                         myBodies = character.AnimController.Limbs.Select(l => l.body.FarseerBody);
                     }
-                    var collisionCategories = Physics.CollisionCharacter | Physics.CollisionWall | Physics.CollisionLevel;
-                    var pickedBody = Submarine.PickBody(Weapon.SimPosition, Enemy.SimPosition, myBodies, collisionCategories, allowInsideFixture: true);
-                    if (pickedBody != null)
+                    // Check that we don't hit friendlies. No need to check the walls, because there's a separate check for that at 1096 (which intentionally has a small delay)
+                    var pickedBodies = Submarine.PickBodies(Weapon.SimPosition, Character.GetRelativeSimPosition(from: Weapon, to: Enemy), myBodies, Physics.CollisionCharacter);
+                    foreach (var body in pickedBodies)
                     {
                         Character target = null;
-                        if (pickedBody.UserData is Character c)
+                        if (body.UserData is Character c)
                         {
                             target = c;
                         }
-                        else if (pickedBody.UserData is Limb limb)
+                        else if (body.UserData is Limb limb)
                         {
                             target = limb.character;
                         }
-                        if (target != null && (target == Enemy || !HumanAIController.IsFriendly(target)))
+                        if (target != null && (target != Enemy || HumanAIController.IsFriendly(target)))
                         {
-                            UseWeapon(deltaTime);
+                            return;
                         }
                     }
+                    UseWeapon(deltaTime);
                 }
             }
         }

@@ -66,7 +66,7 @@ namespace Barotrauma
         /// <summary>
         /// Only affects when ItemContainer.hideItems is false. Doesn't override the value.
         /// </summary>
-        public bool? Hide;
+        public bool Hide;
 
         public float Rotation;
 
@@ -197,11 +197,14 @@ namespace Barotrauma
             bool isEmpty = parentItem.OwnInventory.IsEmpty();
             if (RequireEmpty && !isEmpty) { return false; }
             if (MatchOnEmpty && isEmpty) { return true; }
-            foreach (Item contained in parentItem.ContainedItems)
+            foreach (var container in parentItem.GetComponents<Items.Components.ItemContainer>())
             {
-                if (TargetSlot > -1 && parentItem.OwnInventory.FindIndex(contained) != TargetSlot) { continue; }
-                if ((!ExcludeBroken || contained.Condition > 0.0f) && (!ExcludeFullCondition || !contained.IsFullCondition) && MatchesItem(contained)) { return true; }
-                if (CheckContained(contained)) { return true; }
+                foreach (Item contained in container.Inventory.AllItems)
+                {
+                    if (TargetSlot > -1 && parentItem.OwnInventory.FindIndex(contained) != TargetSlot) { continue; }
+                    if ((!ExcludeBroken || contained.Condition > 0.0f) && (!ExcludeFullCondition || !contained.IsFullCondition) && MatchesItem(contained)) { return true; }
+                    if (CheckContained(contained)) { return true; }
+                }
             }
             return false;
         }
@@ -221,9 +224,9 @@ namespace Barotrauma
                 new XAttribute("rotation", Rotation),
                 new XAttribute("setactive", SetActive));
 
-            if (Hide.HasValue)
+            if (Hide)
             {
-                element.Add(new XAttribute(nameof(Hide), Hide.Value));
+                element.Add(new XAttribute(nameof(Hide), true));
             }
             if (ItemPos.HasValue)
             {

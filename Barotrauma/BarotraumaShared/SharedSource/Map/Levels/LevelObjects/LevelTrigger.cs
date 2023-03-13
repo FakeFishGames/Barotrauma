@@ -215,7 +215,7 @@ namespace Barotrauma
                 PhysicsBody.FarseerBody.SetIsSensor(element.GetAttributeBool("sensor", true));
                 PhysicsBody.FarseerBody.BodyType = BodyType.Static;
 
-                ColliderRadius = ConvertUnits.ToDisplayUnits(Math.Max(Math.Max(PhysicsBody.radius, PhysicsBody.width / 2.0f), PhysicsBody.height / 2.0f));
+                ColliderRadius = ConvertUnits.ToDisplayUnits(Math.Max(Math.Max(PhysicsBody.Radius, PhysicsBody.Width / 2.0f), PhysicsBody.Height / 2.0f));
 
                 PhysicsBody.SetTransform(ConvertUnits.ToSimUnits(position), rotation);
             }
@@ -747,7 +747,7 @@ namespace Barotrauma
             Vector2 baseVel = GetWaterFlowVelocity();
             if (baseVel.LengthSquared() < 0.1f) return Vector2.Zero;
 
-            float triggerSize = ConvertUnits.ToDisplayUnits(Math.Max(Math.Max(PhysicsBody.radius, PhysicsBody.width / 2.0f), PhysicsBody.height / 2.0f));
+            float triggerSize = ConvertUnits.ToDisplayUnits(Math.Max(Math.Max(PhysicsBody.Radius, PhysicsBody.Width / 2.0f), PhysicsBody.Height / 2.0f));
             float dist = Vector2.Distance(viewPosition, WorldPosition);
             if (dist > triggerSize) return Vector2.Zero;
 

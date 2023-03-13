@@ -200,7 +200,7 @@ namespace Barotrauma
             }
         }
 
-        private int[] GetEndingOptions()
+        public int[] GetEndingOptions()
         {
             List<int> endings = Options.Where(group => !group.Actions.Any() || group.EndConversation).Select(group => Options.IndexOf(group)).ToList();
             if (!ContinueConversation) { endings.Add(-1); }

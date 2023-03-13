@@ -82,7 +82,13 @@ namespace Barotrauma.Extensions
                 return count == 0 ? default : source.ElementAt(Rand.Range(0, count, Rand.RandSync.Unsynced));
             }
         }
-        
+
+        public static T GetRandom<T>(this IEnumerable<T> source, Random rand)
+            where T : PrefabWithUintIdentifier
+        {
+            return source.OrderBy(p => p.UintIdentifier).ToArray().GetRandom(rand);
+        }
+
         public static T GetRandom<T>(this IEnumerable<T> source, Rand.RandSync randSync)
             where T : PrefabWithUintIdentifier
         {
@@ -305,11 +311,14 @@ namespace Barotrauma.Extensions
             => source
                 .Where(nullable => nullable.HasValue)
                 .Select(nullable => nullable.Value);
-        
+
         public static IEnumerable<T> NotNone<T>(this IEnumerable<Option<T>> source)
-            => source
-                .OfType<Some<T>>()
-                .Select(some => some.Value);
+        {
+            foreach (var o in source)
+            {
+                if (o.TryUnwrap(out var v)) { yield return v; }
+            }
+        }
 
         public static IEnumerable<TSuccess> Successes<TSuccess, TFailure>(
             this IEnumerable<Result<TSuccess, TFailure>> source)

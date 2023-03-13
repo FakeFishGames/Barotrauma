@@ -11,11 +11,14 @@ namespace Barotrauma
     {
         public static CampaignSettings Empty => new CampaignSettings(element: null);
 
+#if CLIENT
+        public static CampaignSettings CurrentSettings = new CampaignSettings(GameSettings.CurrentConfig.SavedCampaignSettings);
+#endif
         public string Name => "CampaignSettings";
 
         public const string LowerCaseSaveElementName = "campaignsettings";
 
-        [Serialize("", IsPropertySaveable.Yes)]
+        [Serialize("Normal", IsPropertySaveable.Yes)]
         public string PresetName { get; set; } = string.Empty;
 
         [Serialize(true, IsPropertySaveable.Yes)]
@@ -53,7 +56,6 @@ namespace Barotrauma
                     return definition.GetInt(StartingBalanceAmount.ToIdentifier());
                 }
                 return 8000;
-                
             }
         }
 
@@ -65,7 +67,7 @@ namespace Barotrauma
                 {
                     return definition.GetFloat(Difficulty.ToIdentifier());
                 }
-                return 0;                
+                return 0;
             }
         }
 
@@ -82,7 +84,7 @@ namespace Barotrauma
         }
 
         public const int DefaultMaxMissionCount = 2;
-        public const int MaxMissionCountLimit = 3;
+        public const int MaxMissionCountLimit = 10;
         public const int MinMissionCountLimit = 1;
 
         public Dictionary<Identifier, SerializableProperty> SerializableProperties { get; private set;  }

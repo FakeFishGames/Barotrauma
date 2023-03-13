@@ -185,6 +185,7 @@ namespace Barotrauma.Items.Components
                         RefreshActivateButtonText();
                         if (GameMain.Client != null)
                         {
+                            pendingFabricatedItem = null;
                             item.CreateClientEvent(this);
                         }
                         return true;
@@ -336,8 +337,11 @@ namespace Barotrauma.Items.Components
 
                 int calculatePlacement(FabricationRecipe recipe)
                 {
+                    if (recipe.RequiresRecipe && !AnyOneHasRecipeForItem(character, recipe.TargetItem))
+                    {
+                        return -2;
+                    }
                     int placement = FabricationDegreeOfSuccess(character, recipe.RequiredSkills) >= 0.5f ? 0 : -1;
-                    placement += recipe.RequiresRecipe && !AnyOneHasRecipeForItem(character, recipe.TargetItem) ? -2 : 0;
                     return placement;
                 }
 

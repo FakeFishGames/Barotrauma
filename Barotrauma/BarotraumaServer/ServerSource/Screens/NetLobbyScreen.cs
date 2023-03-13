@@ -204,20 +204,24 @@ namespace Barotrauma
 
         public void RandomizeSettings()
         {
-            if (GameMain.Server.ServerSettings.RandomizeSeed) LevelSeed = ToolBox.RandomSeed(8);
+            if (GameMain.Server.ServerSettings.RandomizeSeed) { LevelSeed = ToolBox.RandomSeed(8); }
 
-            if (GameMain.Server.ServerSettings.SubSelectionMode == SelectionMode.Random)
+            //don't touch any of these settings if a campaign is running!
+            if (GameMain.GameSession?.Campaign == null)
             {
-                var nonShuttles = SubmarineInfo.SavedSubmarines.Where(c => !c.HasTag(SubmarineTag.Shuttle) && !c.HasTag(SubmarineTag.HideInMenus) && c.IsPlayer).ToList();
-                SelectedSub = nonShuttles[Rand.Range(0, nonShuttles.Count)];
-            }
-            if (GameMain.Server.ServerSettings.ModeSelectionMode == SelectionMode.Random)
-            {
-                var allowedGameModes = Array.FindAll(GameModes, m => !m.IsSinglePlayer && m != GameModePreset.MultiPlayerCampaign);
-                SelectedModeIdentifier = allowedGameModes[Rand.Range(0, allowedGameModes.Length)].Identifier;
-            }
+                if (GameMain.Server.ServerSettings.SubSelectionMode == SelectionMode.Random)
+                {
+                    var nonShuttles = SubmarineInfo.SavedSubmarines.Where(c => !c.HasTag(SubmarineTag.Shuttle) && !c.HasTag(SubmarineTag.HideInMenus) && c.IsPlayer).ToList();
+                    SelectedSub = nonShuttles[Rand.Range(0, nonShuttles.Count)];
+                }
+                if (GameMain.Server.ServerSettings.ModeSelectionMode == SelectionMode.Random)
+                {
+                    var allowedGameModes = Array.FindAll(GameModes, m => !m.IsSinglePlayer && m != GameModePreset.MultiPlayerCampaign);
+                    SelectedModeIdentifier = allowedGameModes[Rand.Range(0, allowedGameModes.Length)].Identifier;
+                }
 
-            GameMain.Server.ServerSettings.SelectNonHiddenSubmarine();
+                GameMain.Server.ServerSettings.SelectNonHiddenSubmarine();
+            }
         }
     }
 }

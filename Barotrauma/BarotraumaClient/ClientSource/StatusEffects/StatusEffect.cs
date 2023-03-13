@@ -72,8 +72,9 @@ namespace Barotrauma
                 float angle = 0.0f;
                 float particleRotation = 0.0f;
                 bool mirrorAngle = false;
-                if (emitter.Prefab.Properties.CopyEntityAngle)
+                if (emitter.Prefab.Properties.CopyEntityAngle || emitter.Prefab.Properties.CopyTargetAngle)
                 {
+                    bool entityAngleAssigned = false;
                     Limb targetLimb = null;
                     if (entity is Item item && item.body != null)
                     {
@@ -84,19 +85,23 @@ namespace Barotrauma
                             particleRotation += MathHelper.Pi;
                             mirrorAngle = true;
                         }
+                        entityAngleAssigned = true;
                     }
-                    else if (entity is Character c && !c.Removed && targetLimbs?.FirstOrDefault(l => l != LimbType.None) is LimbType l)
+                    if (emitter.Prefab.Properties.CopyTargetAngle || !entityAngleAssigned)
                     {
-                        targetLimb = c.AnimController.GetLimb(l);
-                    }
-                    else
-                    {
-                        for (int i = 0; i < targets.Count; i++)
+                        if (entity is Character c && !c.Removed && targetLimbs?.FirstOrDefault(l => l != LimbType.None) is LimbType l)
                         {
-                            if (targets[i] is Limb limb)
+                            targetLimb = c.AnimController.GetLimb(l);
+                        }
+                        else
+                        {
+                            for (int i = 0; i < targets.Count; i++)
                             {
-                                targetLimb = limb;
-                                break;
+                                if (targets[i] is Limb limb)
+                                {
+                                    targetLimb = limb;
+                                    break;
+                                }
                             }
                         }
                     }
@@ -108,14 +113,19 @@ namespace Barotrauma
                         particleRotation += offset;
                         if (emitter.Prefab.Properties.CopyEntityDir && targetLimb.body.Dir < 0.0f)
                         {
-                            particleRotation += MathHelper.Pi;
-                            mirrorAngle = true;
+                            angle = targetLimb.body.Rotation + ((targetLimb.body.Dir > 0.0f) ? 0.0f : MathHelper.Pi);
+                            particleRotation = -targetLimb.body.Rotation;
+                            if (targetLimb.body.Dir < 0.0f)
+                            {
+                                particleRotation += MathHelper.Pi;
+                                mirrorAngle = true;
+                            }
                         }
                     }
                 }
 
                 emitter.Emit(deltaTime, worldPosition, hull, angle: angle, particleRotation: particleRotation, mirrorAngle: mirrorAngle);
-            }            
+            }
         }
 
         private bool ignoreMuffling;

@@ -116,7 +116,9 @@ namespace Barotrauma.Networking
                     bool spectating = Character.Controlled == null;
                     float rangeMultiplier = spectating ? 2.0f : 1.0f;
                     WifiComponent radio = null;
-                    var messageType = !client.VoipQueue.ForceLocal && ChatMessage.CanUseRadio(client.Character, out radio) ? ChatMessageType.Radio : ChatMessageType.Default;
+                    var messageType = 
+                        !client.VoipQueue.ForceLocal && ChatMessage.CanUseRadio(client.Character, out radio) && ChatMessage.CanUseRadio(Character.Controlled) ? 
+                        ChatMessageType.Radio : ChatMessageType.Default;
                     client.Character.ShowSpeechBubble(1.25f, ChatMessage.MessageColor[(int)messageType]);
 
                     client.VoipSound.UseRadioFilter = messageType == ChatMessageType.Radio && !GameSettings.CurrentConfig.Audio.DisableVoiceChatFilters;

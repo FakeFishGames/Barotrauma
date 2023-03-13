@@ -108,6 +108,7 @@ namespace Barotrauma.Items.Components
                     {
                         startPos += new Vector2((float)Math.Cos(turret.Rotation), (float)Math.Sin(turret.Rotation)) * turret.BarrelSprite.size.Y * turret.BarrelSprite.RelativeOrigin.Y * item.Scale * 0.9f;
                     }
+                    startPos -= turret.GetRecoilOffset();
                 }
                 else if (weapon != null)
                 {

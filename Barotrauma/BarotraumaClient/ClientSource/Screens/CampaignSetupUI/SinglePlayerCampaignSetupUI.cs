@@ -194,7 +194,7 @@ namespace Barotrauma
             {
                 TextGetter = () =>
                 {
-                    int initialMoney = CurrentSettings.InitialMoney;
+                    int initialMoney = CampaignSettings.CurrentSettings.InitialMoney;
                     if (subList.SelectedData is SubmarineInfo subInfo)
                     {
                         initialMoney -= subInfo.Price;
@@ -208,15 +208,15 @@ namespace Barotrauma
             {
                 OnClicked = (tb, userdata) =>
                 {
-                    CreateCustomizeWindow(CurrentSettings, settings =>
+                    CreateCustomizeWindow(CampaignSettings.CurrentSettings, settings =>
                     {
-                        CampaignSettings prevSettings = CurrentSettings;
-                        CurrentSettings = settings;
+                        CampaignSettings prevSettings = CampaignSettings.CurrentSettings;
+                        CampaignSettings.CurrentSettings = settings;
                         if (prevSettings.InitialMoney != settings.InitialMoney)
                         {
                             object selectedData = subList.SelectedData;
                             UpdateSubList(SubmarineInfo.SavedSubmarines);
-                            if (selectedData is SubmarineInfo selectedSub && selectedSub.Price <= CurrentSettings.InitialMoney)
+                            if (selectedData is SubmarineInfo selectedSub && selectedSub.Price <= CampaignSettings.CurrentSettings.InitialMoney)
                             {
                                 subList.Select(selectedData);
                             }
@@ -375,6 +375,7 @@ namespace Barotrauma
             {
 
                 onClosed?.Invoke(elements.CreateSettings());
+                GameSettings.SaveCurrentConfig();
                 return CampaignCustomizeSettings.Close(button, o);
             };
         }
@@ -399,7 +400,7 @@ namespace Barotrauma
 
             SubmarineInfo selectedSub = null;
 
-            if (!(subList.SelectedData is SubmarineInfo)) { return false; }
+            if (subList.SelectedData is not SubmarineInfo) { return false; }
             selectedSub = subList.SelectedData as SubmarineInfo;
             
             if (selectedSub.SubmarineClass == SubmarineClass.Undefined)
@@ -419,7 +420,7 @@ namespace Barotrauma
             string savePath = SaveUtil.CreateSavePath(SaveUtil.SaveType.Singleplayer, saveNameBox.Text);
             bool hasRequiredContentPackages = selectedSub.RequiredContentPackagesInstalled;
 
-            CampaignSettings settings = CurrentSettings;
+            CampaignSettings settings = CampaignSettings.CurrentSettings;
 
             if (selectedSub.HasTag(SubmarineTag.Shuttle) || !hasRequiredContentPackages)
             {
@@ -476,7 +477,7 @@ namespace Barotrauma
         {
             foreach (GUIComponent child in subList.Content.Children)
             {
-                if (!(child.UserData is SubmarineInfo sub)) { return; }
+                if (child.UserData is not SubmarineInfo sub) { return; }
                 child.Visible = string.IsNullOrEmpty(filter) || sub.DisplayName.Contains(filter.ToLower(), StringComparison.OrdinalIgnoreCase);
             }
         }
@@ -487,9 +488,9 @@ namespace Barotrauma
             (subPreviewContainer.Parent as GUILayoutGroup)?.Recalculate();
             subPreviewContainer.ClearChildren();
 
-            if (!(obj is SubmarineInfo sub)) { return true; }
+            if (obj is not SubmarineInfo sub) { return true; }
 #if !DEBUG
-            if (sub.Price > CurrentSettings.InitialMoney && !GameMain.DebugDraw)
+            if (sub.Price > CampaignSettings.CurrentSettings.InitialMoney && !GameMain.DebugDraw)
             {
                 SetPage(0);
                 nextButton.Enabled = false;
@@ -551,7 +552,7 @@ namespace Barotrauma
                 new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.5f), infoContainer.RectTransform),
                     TextManager.GetWithVariable("currencyformat", "[credits]", string.Format(CultureInfo.InvariantCulture, "{0:N0}", sub.Price)), textAlignment: Alignment.BottomRight, font: GUIStyle.SmallFont)
                 {
-                    TextColor = sub.Price > CurrentSettings.InitialMoney ? GUIStyle.Red : textBlock.TextColor * 0.8f,
+                    TextColor = sub.Price > CampaignSettings.CurrentSettings.InitialMoney ? GUIStyle.Red : textBlock.TextColor * 0.8f,
                     ToolTip = textBlock.ToolTip
                 };
                 new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.5f), infoContainer.RectTransform),
@@ -563,7 +564,7 @@ namespace Barotrauma
 #if !DEBUG
                 if (!GameMain.DebugDraw)
                 {
-                    if (sub.Price > CurrentSettings.InitialMoney || !sub.IsCampaignCompatible)
+                    if (sub.Price > CampaignSettings.CurrentSettings.InitialMoney || !sub.IsCampaignCompatible)
                     {
                         textBlock.CanBeFocused = false;
                         textBlock.TextColor *= 0.5f;
@@ -573,7 +574,7 @@ namespace Barotrauma
             }
             if (SubmarineInfo.SavedSubmarines.Any())
             {
-                var validSubs = subsToShow.Where(s => s.IsCampaignCompatible && s.Price <= CurrentSettings.InitialMoney).ToList();
+                var validSubs = subsToShow.Where(s => s.IsCampaignCompatible && s.Price <= CampaignSettings.CurrentSettings.InitialMoney).ToList();
                 if (validSubs.Count > 0)
                 {
                     subList.Select(validSubs[Rand.Int(validSubs.Count)]);

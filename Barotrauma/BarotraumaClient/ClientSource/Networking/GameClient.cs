@@ -326,7 +326,7 @@ namespace Barotrauma.Networking
             return serverEndpoint switch
                 {
                 LidgrenEndpoint lidgrenEndpoint => new LidgrenClientPeer(lidgrenEndpoint, callbacks, ownerKey),
-                SteamP2PEndpoint _ when ownerKey is Some<int> { Value: var key } => new SteamP2POwnerPeer(callbacks, key),
+                SteamP2PEndpoint _ when ownerKey.TryUnwrap(out var key) => new SteamP2POwnerPeer(callbacks, key),
                 SteamP2PEndpoint steamP2PServerEndpoint when ownerKey.IsNone() => new SteamP2PClientPeer(steamP2PServerEndpoint, callbacks),
                 _ => throw new ArgumentOutOfRangeException()
             };
@@ -988,7 +988,7 @@ namespace Barotrauma.Networking
                 GameMain.ModDownloadScreen.Reset();
                 ContentPackageManager.EnabledPackages.Restore();
 
-                CampaignMode.StartRoundCancellationToken?.Cancel();
+                GameMain.GameSession?.Campaign?.CancelStartRound();
 
                 if (SteamManager.IsInitialized)
                 {
@@ -2623,7 +2623,13 @@ namespace Barotrauma.Networking
             using (var segmentTable = SegmentTableWriter<ClientNetSegment>.StartWriting(msg))
             {
                 segmentTable.StartNewSegment(ClientNetSegment.Vote);
-                Voting.ClientWrite(msg, voteType, data);
+                bool succeeded = Voting.ClientWrite(msg, voteType, data);
+                if (!succeeded)
+                {
+                    throw new Exception(
+                        $"Failed to write vote of type {voteType}: " +
+                        $"data was of invalid type {data?.GetType().Name ?? "NULL"}");
+                }
             }
 
             ClientPeer.Send(msg, DeliveryMethod.Reliable);

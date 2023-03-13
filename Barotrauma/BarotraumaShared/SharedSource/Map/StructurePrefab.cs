@@ -175,7 +175,7 @@ namespace Barotrauma
 #endif
             foreach (var subElement in element.Elements())
             {
-                switch (subElement.Name.ToString())
+                switch (subElement.Name.ToString().ToLowerInvariant())
                 {
                     case "sprite":
                         Sprite = new Sprite(subElement, lazyLoad: true);

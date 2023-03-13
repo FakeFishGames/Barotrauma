@@ -128,7 +128,7 @@ namespace Barotrauma.Items.Components
 
             if (body != null)
             {
-                trigger = new PhysicsBody(body.width, body.height, body.radius, 
+                trigger = new PhysicsBody(body.Width, body.Height, body.Radius, 
                     body.Density,
                     BodyType.Static,
                     Physics.CollisionWall,

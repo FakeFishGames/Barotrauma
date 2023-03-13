@@ -17,7 +17,6 @@ namespace Barotrauma
 
         private AIObjectiveGoTo goToObjective;
         private AIObjectiveContainItem refuelObjective;
-        private float previousCondition = -1;
         private RepairTool repairTool;
 
         private const float WaitTimeBeforeRepair = 0.5f;
@@ -196,15 +195,7 @@ namespace Barotrauma
                                 Abandon = true;
                             }
                         }
-                        if (previousCondition == -1)
-                        {
-                            previousCondition = Item.Condition;
-                        }
-                        else if (Item.Condition < previousCondition)
-                        {
-                            // If the current condition is less than the previous condition, we can't complete the task, so let's abandon it. The item is probably deteriorating at a greater speed than we can repair it.
-                            Abandon = true;
-                        }
+                        CheckPreviousCondition(deltaTime);
                     }
                     if (Abandon)
                     {
@@ -229,7 +220,6 @@ namespace Barotrauma
                 TryAddSubObjective(ref goToObjective,
                     constructor: () =>
                     {
-                        previousCondition = -1;
                         var objective = new AIObjectiveGoTo(Item, character, objectiveManager)
                         {
                             TargetName = Item.Name
@@ -248,6 +238,27 @@ namespace Barotrauma
                             character.Speak(TextManager.GetWithVariable("DialogCannotRepair", "[itemname]", Item.Name, FormatCapitals.Yes).Value, null, 0.0f, "cannotrepair".ToIdentifier(), 10.0f);
                         }
                     });
+            }
+        }
+
+        private const float conditionCheckDelay = 1;
+        private float conditionCheckTimer;
+        private float previousCondition;
+        private void CheckPreviousCondition(float deltaTime)
+        {
+            if (Item == null || Item.Removed) { return; }
+            conditionCheckTimer -= deltaTime;
+            if (conditionCheckTimer > 0) { return; }
+            conditionCheckTimer = conditionCheckDelay;
+            if (previousCondition > -1 && Item.Condition < previousCondition)
+            {
+                // If the current condition is less than the previous condition, we can't complete the task, so let's abandon it. The item is probably deteriorating at a greater speed than we can repair it.
+                Abandon = true;
+            }
+            else
+            {
+                // If the previous condition is not yet stored or if it's valid (greater or equal to current condition), save the condition for the next check here.
+                previousCondition = Item.Condition;
             }
         }
 
@@ -303,7 +314,6 @@ namespace Barotrauma
             base.Reset();
             goToObjective = null;
             refuelObjective = null;
-            previousCondition = -1;
             repairTool = null;
         }
     }

@@ -99,7 +99,18 @@ namespace Barotrauma
         private bool hasComponentsToDraw;
 
         public PhysicsBody body;
-        private float waterDragCoefficient;
+        private readonly float originalWaterDragCoefficient;
+        private float? overrideWaterDragCoefficient;
+        public float WaterDragCoefficient
+        {
+            get => overrideWaterDragCoefficient ?? originalWaterDragCoefficient;
+            set => overrideWaterDragCoefficient = value;
+        }
+
+        /// <summary>
+        /// Removes the override value -> falls back to using the original value defined in the xml.
+        /// </summary>
+        public void ResetWaterDragCoefficient() => overrideWaterDragCoefficient = null;
 
         public readonly XElement StaticBodyConfig;
 
@@ -141,6 +152,8 @@ namespace Barotrauma
         //a dictionary containing lists of the status effects in all the components of the item
         private readonly bool[] hasStatusEffectsOfType = new bool[Enum.GetValues(typeof(ActionType)).Length];
         private readonly Dictionary<ActionType, List<StatusEffect>> statusEffectLists;
+
+        public Action OnInteract;
 
         public Dictionary<Identifier, SerializableProperty> SerializableProperties { get; protected set; }
 
@@ -423,8 +436,6 @@ namespace Barotrauma
             }
         }
 
-        public Color? HighlightColor;
-
         /// <summary>
         /// Can be used by status effects or conditionals to check whether the item is contained inside something
         /// </summary>
@@ -459,6 +470,8 @@ namespace Barotrauma
             }
         }
 
+        public Color? HighlightColor;
+
         [Serialize("", IsPropertySaveable.Yes)]
 
         /// <summary>
@@ -471,7 +484,8 @@ namespace Barotrauma
             {
                 if (AiTarget != null)
                 {
-                    AiTarget.SonarLabel = !string.IsNullOrEmpty(value) && value.Length > 200 ? value.Substring(200) : value;
+                    string trimmedStr = !string.IsNullOrEmpty(value) && value.Length > 250 ? value.Substring(250) : value;
+                    AiTarget.SonarLabel = TextManager.Get(trimmedStr).Fallback(trimmedStr);
                 }
             }
         }
@@ -948,7 +962,7 @@ namespace Barotrauma
                         {                            
                             if (!Physics.TryParseCollisionCategory(collisionCategoryStr, out Category cat))
                             {
-                                DebugConsole.ThrowError("Invalid collision category in item \"" + Name+"\" (" + collisionCategoryStr + ")");
+                                DebugConsole.ThrowError("Invalid collision category in item \"" + Name + "\" (" + collisionCategoryStr + ")");
                             }
                             else
                             {
@@ -987,6 +1001,7 @@ namespace Barotrauma
                     case "infectedsprite":
                     case "damagedinfectedsprite":
                     case "swappableitem":
+                    case "skillrequirementhint":
                         break;
                     case "staticbody":
                         StaticBodyConfig = subElement;
@@ -1055,8 +1070,7 @@ namespace Barotrauma
             if (body != null)
             {
                 body.Submarine = submarine;
-                waterDragCoefficient = bodyElement.GetAttributeFloat("waterdragcoefficient", 
-                    GetComponent<Projectile>() != null || GetComponent<Throwable>() != null ? 0.1f : 1.0f);
+                originalWaterDragCoefficient = bodyElement.GetAttributeFloat("waterdragcoefficient", 5.0f);
             }
 
             //cache connections into a dictionary for faster lookups
@@ -1653,7 +1667,7 @@ namespace Barotrauma
 
                     if (effect.TargetSlot > -1)
                     {
-                        if (OwnInventory.FindIndex(containedItem) != effect.TargetSlot) { continue; }
+                        if (!OwnInventory.GetItemsAt(effect.TargetSlot).Contains(containedItem)) { continue; }
                     }
 
                     hasTargets = true;
@@ -1708,8 +1722,15 @@ namespace Barotrauma
                 {
                     targets.AddRange(character.AnimController.Limbs.ToList());
                 }
+                if (effect.HasTargetType(StatusEffect.TargetType.Limb) && limb == null && effect.targetLimbs != null)
+                {
+                    foreach (var characterLimb in character.AnimController.Limbs)
+                    {
+                        if (effect.targetLimbs.Contains(characterLimb.type)) { targets.Add(characterLimb); }
+                    }
+                }
             }
-            if (effect.HasTargetType(StatusEffect.TargetType.Limb))
+            if (effect.HasTargetType(StatusEffect.TargetType.Limb) && limb != null)
             {
                 targets.Add(limb);
             }
@@ -1724,7 +1745,7 @@ namespace Barotrauma
         {
             if (Indestructible || InvulnerableToDamage) { return new AttackResult(); }
 
-            float damageAmount = attack.GetItemDamage(deltaTime);
+            float damageAmount = attack.GetItemDamage(deltaTime, Prefab.ItemDamageMultiplier);
             Condition -= damageAmount;
 
             if (damageAmount >= Prefab.OnDamagedThreshold)
@@ -1972,7 +1993,10 @@ namespace Barotrauma
 
                 if (Math.Abs(body.LinearVelocity.X) > 0.01f || Math.Abs(body.LinearVelocity.Y) > 0.01f || transformDirty)
                 {
-                    UpdateTransform();
+                    if (body.CollisionCategories != Category.None)
+                    {
+                        UpdateTransform();
+                    }
                     if (CurrentHull == null && Level.Loaded != null && body.SimPosition.Y < ConvertUnits.ToSimUnits(Level.MaxEntityDepth))
                     {
                         Spawner?.AddItemToRemoveQueue(this);
@@ -1991,8 +2015,7 @@ namespace Barotrauma
             if (needsWaterCheck)
             {
                 bool wasInWater = inWater;
-                inWater = IsInWater();
-                bool waterProof = WaterProof;
+                inWater = IsInWater() && !WaterProof;
                 if (inWater)
                 {
                     //the item has gone through the surface of the water
@@ -2007,15 +2030,19 @@ namespace Barotrauma
                     }
 
                     Item container = this.Container;
-                    while (!waterProof && container != null)
+                    while (container != null)
                     {
-                        waterProof = container.WaterProof;
+                        if (container.WaterProof)
+                        {
+                            inWater = false;
+                            break;
+                        }
                         container = container.Container;
                     }
                 }
                 if (hasWaterStatusEffects && condition > 0.0f)
                 {
-                    ApplyStatusEffects(!waterProof && inWater ? ActionType.InWater : ActionType.NotInWater, deltaTime);
+                    ApplyStatusEffects(inWater ? ActionType.InWater : ActionType.NotInWater, deltaTime);
                 }
             }
             else
@@ -2141,7 +2168,7 @@ namespace Barotrauma
                 Vector2 frontVel = body.FarseerBody.GetLinearVelocityFromLocalPoint(localFront);
 
                 float speed = frontVel.Length();
-                float drag = speed * speed * waterDragCoefficient * volume * Physics.NeutralDensity;
+                float drag = speed * speed * WaterDragCoefficient * volume * Physics.NeutralDensity;
                 //very small drag on active projectiles to prevent affecting their trajectories much
                 if (body.FarseerBody.IsBullet) { drag *= 0.1f; }
                 Vector2 dragVec = -frontVel / speed * drag;
@@ -2628,11 +2655,13 @@ namespace Barotrauma
                     if (user == Character.Controlled) { GUI.ForceMouseOn(null); }
                     if (tempRequiredSkill != null) { requiredSkill = tempRequiredSkill; }
 #endif
-                    if (ic.CanBeSelected && !(ic is Door)) { selected = true; }
+                    if (ic.CanBeSelected && ic is not Door) { selected = true; }
                 }
             }
 
             if (!picked) { return false; }
+
+            OnInteract?.Invoke();
 
             if (user != null)
             {
