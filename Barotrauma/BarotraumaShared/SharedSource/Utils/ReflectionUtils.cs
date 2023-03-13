@@ -68,14 +68,5 @@ namespace Barotrauma
             result += $"<{string.Join(", ", t.GetGenericArguments().Select(NameWithGenerics))}>";
             return result;
         }
-
-        public static string NameWithGenerics(this Type t)
-        {
-            if (!t.IsGenericType) { return t.Name; }
-            
-            string result = t.Name[..t.Name.IndexOf('`')];
-            result += $"<{string.Join(", ", t.GetGenericArguments().Select(NameWithGenerics))}>";
-            return result;
-        }
     }
 }

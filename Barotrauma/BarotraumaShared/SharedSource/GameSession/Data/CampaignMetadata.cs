@@ -60,7 +60,6 @@ namespace Barotrauma
             if (!data.ContainsKey(identifier))
             {
                 data.Add(identifier, value);
-                SteamAchievementManager.OnCampaignMetadataSet(identifier, value);
                 return;
             }
 
