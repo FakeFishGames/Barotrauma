@@ -37,22 +37,26 @@ public sealed class SerializableDateTimeTests
     {
         Prop.ForAll<SerializableDateTime>(EqualityCheck).QuickCheckThrowOnFailure();
     }
-    
+
     [Fact]
     public void ParseTest()
     {
-        var parseTest = "9369Y 09M 06D 03HR 43MIN 09SEC UTC+8:49";
-        SerializableDateTime.Parse(parseTest);
         Prop.ForAll<SerializableDateTime>(ParseCheck).QuickCheckThrowOnFailure();
     }
-    
+
+    [Fact]
+    public void ToLocalTest()
+    {
+        Prop.ForAll<SerializableDateTime>(ToLocalCheck).QuickCheckThrowOnFailure();
+    }
+
     private static void EqualityCheck(SerializableDateTime original)
     {
         var local = original.ToLocal();
         var utc = original.ToUtc();
-        original.Should().BeEquivalentTo(local);
-        original.Should().BeEquivalentTo(utc);
-        local.Should().BeEquivalentTo(utc);
+        original.Should().BeEquivalentTo(local, because: "original must equal local");
+        original.Should().BeEquivalentTo(utc, because: "original must equal utc");
+        local.Should().BeEquivalentTo(utc, because: "local must equal utc");
     }
 
     private static void ParseCheck(SerializableDateTime original)
@@ -60,5 +64,12 @@ public sealed class SerializableDateTimeTests
         var str = original.ToString();
         SerializableDateTime.Parse(str).TryUnwrap(out var parsedTime).Should().BeTrue();
         parsedTime.Should().BeEquivalentTo(original);
+    }
+
+    private static void ToLocalCheck(SerializableDateTime original)
+    {
+        var localNow = SerializableDateTime.LocalNow;
+        var convertedDateTime = original.ToLocal();
+        localNow.TimeZone.Should().BeEquivalentTo(convertedDateTime.TimeZone);
     }
 }

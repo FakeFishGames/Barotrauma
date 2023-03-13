@@ -110,8 +110,8 @@ namespace Barotrauma.Items.Components
             if (HighlightedWire != null)
             {
                 HighlightedWire.Item.IsHighlighted = true;
-                if (HighlightedWire.Connections[0] != null && HighlightedWire.Connections[0].Item != null) HighlightedWire.Connections[0].Item.IsHighlighted = true;
-                if (HighlightedWire.Connections[1] != null && HighlightedWire.Connections[1].Item != null) HighlightedWire.Connections[1].Item.IsHighlighted = true;
+                if (HighlightedWire.Connections[0] != null && HighlightedWire.Connections[0].Item != null) { HighlightedWire.Connections[0].Item.IsHighlighted = true; }
+                if (HighlightedWire.Connections[1] != null && HighlightedWire.Connections[1].Item != null) { HighlightedWire.Connections[1].Item.IsHighlighted = true; }
             }
         }
 

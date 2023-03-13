@@ -131,6 +131,8 @@ namespace Barotrauma
             if (character.Info.GetTotalTalentPoints() - selectedTalents.Count <= 0) { return false; }
             if (!JobTalentTrees.TryGet(character.Info.Job.Prefab.Identifier, out TalentTree talentTree)) { return false; }
 
+            if (IsTalentLocked(talentIdentifier)) { return false; }
+
             foreach (var subTree in talentTree!.TalentSubTrees)
             {
                 if (subTree.AllTalentIdentifiers.Contains(talentIdentifier) && subTree.HasMaxTalents(selectedTalents)) { return false; }
@@ -147,6 +149,18 @@ namespace Barotrauma
                         break;
                     }
                 }
+            }
+
+            return false;
+        }
+
+        public static bool IsTalentLocked(Identifier talentIdentifier, ImmutableHashSet<Character> characterList = null)
+        {
+            characterList ??= GameSession.GetSessionCrewCharacters(CharacterType.Both);
+
+            foreach (Character c in characterList)
+            {
+                if (c.Info.GetSavedStatValue(StatTypes.LockedTalents, talentIdentifier) >= 1) { return true; }
             }
 
             return false;

@@ -245,17 +245,10 @@ namespace Barotrauma.Items.Components
         [Serialize(0, IsPropertySaveable.Yes, alwaysUseInstanceValues: true)]
         public int ManuallySelectedSound { get; private set; }
 
-
         /// <summary>
         /// Can be used by status effects or conditionals to the speed of the item
         /// </summary>
-        public float Speed
-        {
-            get
-            {
-                return item.Speed;
-            }
-        }
+        public float Speed => item.Speed;
 
         public readonly bool InheritStatusEffects;
 
@@ -450,7 +443,7 @@ namespace Barotrauma.Items.Components
         public virtual void Drop(Character dropper) { }
 
         /// <returns>true if the operation was completed</returns>
-        public virtual bool AIOperate(float deltaTime, Character character, AIObjectiveOperateItem objective)
+        public virtual bool CrewAIOperate(float deltaTime, Character character, AIObjectiveOperateItem objective)
         {
             return false;
         }

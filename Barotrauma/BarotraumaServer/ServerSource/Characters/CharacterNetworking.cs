@@ -692,6 +692,7 @@ namespace Barotrauma
             {
                 msg.WriteIdentifier(MerchantIdentifier);
             }
+            msg.WriteIdentifier(Faction);
 
             int msgLengthBeforeOrders = msg.LengthBytes;
             // Current orders

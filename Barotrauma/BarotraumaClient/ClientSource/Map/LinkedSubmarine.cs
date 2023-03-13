@@ -70,9 +70,9 @@ namespace Barotrauma
 
             Vector2 position = cam.ScreenToWorld(PlayerInput.MousePosition);
 
-            foreach (MapEntity entity in mapEntityList)
+            foreach (MapEntity entity in HighlightedEntities)
             {
-                if (entity == this || !entity.IsHighlighted || !(entity is Item) || !entity.IsMouseOn(position)) { continue; }
+                if (entity == this|| entity is not Item || !entity.IsMouseOn(position)) { continue; }
                 if (((Item)entity).GetComponent<DockingPort>() == null) { continue; }
                 if (linkedTo.Contains(entity))
                 {

@@ -1,0 +1,22 @@
+<options>
+<option label="Português brasileiro" identifier="Brazilian Portuguese" />
+<option label="中文" identifier="Chinese" mapsFrom="Simplified Chinese, Traditional Chinese" />
+<option label="Čeština" identifier="Czech" />
+<option label="Dansk" identifier="Danish" />
+<option label="Nederlands" identifier="Dutch" />
+<option label="English" identifier="English" />
+<option label="Suomi" identifier="Finnish" />
+<option label="Français" identifier="French" />
+<option label="Deutsch" identifier="German" />
+<option label="Italiano" identifier="Italian" />
+<option label="日本語" identifier="Japanese" />
+<option label="한국어" identifier="Korean" />
+<option label="Norska" identifier="Norwegian" />
+<option label="Polski" identifier="Polish" />
+<option label="Português europeu" identifier="European Portuguese" />
+<option label="Русский" identifier="Russian" />
+<option label="Español" identifier="Spanish" mapsFrom="Castilian Spanish, Latinamerican Spanish" />
+<option label="Svenska" identifier="Swedish" />
+<option label="Türkçe" identifier="Turkish" />
+<option label="украї́нська" identifier="Ukrainian" />
+</options>

@@ -99,12 +99,14 @@ namespace Barotrauma
                     float newAngularVelocity = Collider.AngularVelocity;
                     Collider.CorrectPosition(character.MemState, out newPosition, out newVelocity, out newRotation, out newAngularVelocity);
 
-                    newVelocity = newVelocity.ClampLength(100.0f);
-                    if (!MathUtils.IsValid(newVelocity)) { newVelocity = Vector2.Zero; }
-                    overrideTargetMovement = newVelocity.LengthSquared() > 0.01f ? newVelocity : Vector2.Zero;
-
-                    Collider.LinearVelocity = newVelocity;
-                    Collider.AngularVelocity = newAngularVelocity;
+                    if (Collider.BodyType == BodyType.Dynamic)
+                    {
+                        newVelocity = newVelocity.ClampLength(100.0f);
+                        if (!MathUtils.IsValid(newVelocity)) { newVelocity = Vector2.Zero; }
+                        overrideTargetMovement = newVelocity.LengthSquared() > 0.01f ? newVelocity : Vector2.Zero;
+                        Collider.LinearVelocity = newVelocity;
+                        Collider.AngularVelocity = newAngularVelocity;
+                    }
 
                     float distSqrd = Vector2.DistanceSquared(newPosition, Collider.SimPosition);
                     float errorTolerance = character.CanMove && !character.IsRagdolled ? 0.01f : 0.2f;

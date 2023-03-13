@@ -1,8 +1,6 @@
-using Barotrauma.Networking;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Xml.Linq;
 
 namespace Barotrauma
 {
@@ -12,7 +10,7 @@ namespace Barotrauma
         public Identifier NPCTag { get; set; }
 
         [Serialize(CharacterTeamType.None, IsPropertySaveable.Yes)]
-        public CharacterTeamType TeamTag { get; set; }
+        public CharacterTeamType TeamID { get; set; }
 
         [Serialize(false, IsPropertySaveable.Yes)]
         public bool AddToCrew { get; set; }
@@ -24,10 +22,13 @@ namespace Barotrauma
 
         public NPCChangeTeamAction(ScriptedEvent parentEvent, ContentXElement element) : base(parentEvent, element) 
         {
+            //backwards compatibility
+            TeamID = element.GetAttributeEnum("teamtag", element.GetAttributeEnum<CharacterTeamType>("team", TeamID));
+
             var enums = Enum.GetValues(typeof(CharacterTeamType)).Cast<CharacterTeamType>();
-            if (!enums.Contains(TeamTag))
+            if (!enums.Contains(TeamID))
             {
-                DebugConsole.ThrowError($"Error in {nameof(NPCChangeTeamAction)} in the event {ParentEvent.Prefab.Identifier}. \"{TeamTag}\" is not a valid Team ID. Valid values are {string.Join(',', Enum.GetNames(typeof(CharacterTeamType)))}.");
+                DebugConsole.ThrowError($"Error in {nameof(NPCChangeTeamAction)} in the event {ParentEvent.Prefab.Identifier}. \"{TeamID}\" is not a valid Team ID. Valid values are {string.Join(',', Enum.GetNames(typeof(CharacterTeamType)))}.");
             }
         }
 
@@ -41,27 +42,34 @@ namespace Barotrauma
             foreach (var npc in affectedNpcs)
             {
                 // characters will still remain on friendlyNPC team for rest of the tick
-                npc.SetOriginalTeam(TeamTag);
-
-                if (AddToCrew && (TeamTag == CharacterTeamType.Team1 || TeamTag == CharacterTeamType.Team2))
+                npc.SetOriginalTeam(TeamID);
+                foreach (Item item in npc.Inventory.AllItems)
+                {
+                    var idCard = item.GetComponent<Items.Components.IdCard>();
+                    if (idCard != null)
+                    {
+                        idCard.TeamID = TeamID;
+                    }
+                }
+                if (AddToCrew && (TeamID == CharacterTeamType.Team1 || TeamID == CharacterTeamType.Team2))
                 {
                     npc.Info.StartItemsGiven = true;
                     GameMain.GameSession.CrewManager.AddCharacter(npc);
                     ChangeItemTeam(Submarine.MainSub, true);
                     if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer)
                     {
-                        GameMain.NetworkMember.CreateEntityEvent(npc, new Character.AddToCrewEventData(TeamTag, npc.Inventory.AllItems));
+                        GameMain.NetworkMember.CreateEntityEvent(npc, new Character.AddToCrewEventData(TeamID, npc.Inventory.AllItems));
                     }                  
                 }
                 else if (RemoveFromCrew && (npc.TeamID == CharacterTeamType.Team1 || npc.TeamID == CharacterTeamType.Team2))
                 {
                     npc.Info.StartItemsGiven = true;
                     GameMain.GameSession.CrewManager.RemoveCharacter(npc, removeInfo: true);
-                    var sub = Submarine.Loaded.FirstOrDefault(s => s.TeamID == TeamTag);
+                    var sub = Submarine.Loaded.FirstOrDefault(s => s.TeamID == TeamID);
                     ChangeItemTeam(sub, false);
                     if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer)
                     {
-                        GameMain.NetworkMember.CreateEntityEvent(npc, new Character.RemoveFromCrewEventData(TeamTag, npc.Inventory.AllItems));
+                        GameMain.NetworkMember.CreateEntityEvent(npc, new Character.RemoveFromCrewEventData(TeamID, npc.Inventory.AllItems));
                     }
                 }
 
@@ -72,11 +80,10 @@ namespace Barotrauma
                         item.AllowStealing = allowStealing;
                         if (item.GetComponent<Items.Components.WifiComponent>() is { } wifiComponent)
                         {
-                            wifiComponent.TeamID = TeamTag;
+                            wifiComponent.TeamID = TeamID;
                         }
                         if (item.GetComponent<Items.Components.IdCard>() is { } idCard)
                         {
-                            idCard.TeamID = TeamTag;
                             idCard.SubmarineSpecificID = 0;
                         }
                     }

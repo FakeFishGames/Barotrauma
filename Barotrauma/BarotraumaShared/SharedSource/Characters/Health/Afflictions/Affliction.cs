@@ -19,6 +19,10 @@ namespace Barotrauma
 
         private float fluctuationTimer;
 
+        private AfflictionPrefab.Effect activeEffect;
+        private float prevActiveEffectStrength;
+        protected bool activeEffectDirty = true;
+
         protected float _strength;
 
         [Serialize(0f, IsPropertySaveable.Yes), Editable]
@@ -46,6 +50,7 @@ namespace Barotrauma
                     Duration = Prefab.Duration;
                 }
                 _strength = newValue;
+                activeEffectDirty = true;
             }
         }
 
@@ -147,7 +152,16 @@ namespace Barotrauma
                 MathHelper.Clamp((int)Math.Floor(strength / maxStrength * strengthTexts.Length), 0, strengthTexts.Length - 1)];
         }
 
-        public AfflictionPrefab.Effect GetActiveEffect() => Prefab.GetActiveEffect(Strength);
+        public AfflictionPrefab.Effect GetActiveEffect()
+        {
+            if (activeEffectDirty)
+            {
+                activeEffect = Prefab.GetActiveEffect(_strength);
+                prevActiveEffectStrength = _strength;
+                activeEffectDirty = false;
+            }
+            return activeEffect;
+        }
 
         public float GetVitalityDecrease(CharacterHealth characterHealth)
         {
@@ -158,7 +172,7 @@ namespace Barotrauma
         {
             if (strength < Prefab.ActivationThreshold) { return 0.0f; }
             strength = MathHelper.Clamp(strength, 0.0f, Prefab.MaxStrength);
-            AfflictionPrefab.Effect currentEffect = Prefab.GetActiveEffect(strength);
+            AfflictionPrefab.Effect currentEffect = GetActiveEffect();
             if (currentEffect == null) { return 0.0f; }
             if (currentEffect.MaxStrength - currentEffect.MinStrength <= 0.0f) { return 0.0f; }
 
@@ -349,7 +363,7 @@ namespace Barotrauma
 
         public float GetStatValue(StatTypes statType)
         {
-            if (!(GetViableEffect() is AfflictionPrefab.Effect currentEffect)) { return 0.0f; }
+            if (GetViableEffect() is not AfflictionPrefab.Effect currentEffect) { return 0.0f; }
 
             if (currentEffect.AfflictionStatValues.TryGetValue(statType, out var value))
             {
@@ -363,7 +377,7 @@ namespace Barotrauma
 
         public bool HasFlag(AbilityFlags flagType)
         {
-            if (!(GetViableEffect() is AfflictionPrefab.Effect currentEffect)) { return false; }
+            if (GetViableEffect() is not AfflictionPrefab.Effect currentEffect) { return false; }
             return currentEffect.AfflictionAbilityFlags.HasFlag(flagType);
         }
 
@@ -415,6 +429,7 @@ namespace Barotrauma
             }
             // Don't use the property, because it's virtual and some afflictions like husk overload it for external use.
             _strength = MathHelper.Clamp(_strength, 0.0f, Prefab.MaxStrength);
+            activeEffectDirty |= !MathUtils.NearlyEqual(prevActiveEffectStrength, _strength);
 
             foreach (StatusEffect statusEffect in currentEffect.StatusEffects)
             {
@@ -442,7 +457,10 @@ namespace Barotrauma
             var currentEffect = GetActiveEffect();
             if (currentEffect != null)
             {
-                currentEffect.StatusEffects.ForEach(se => ApplyStatusEffect(type, se, deltaTime, characterHealth, targetLimb));
+                foreach (var statusEffect in currentEffect.StatusEffects)
+                {
+                    ApplyStatusEffect(type, statusEffect, deltaTime, characterHealth, targetLimb);
+                }
             }
         }
 
@@ -481,6 +499,7 @@ namespace Barotrauma
         {
             _nonClampedStrength = strength;
             _strength = _nonClampedStrength;
+            activeEffectDirty |= !MathUtils.NearlyEqual(_strength, prevActiveEffectStrength);
         }
 
         public bool ShouldShowIcon(Character afflictedCharacter)

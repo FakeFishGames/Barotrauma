@@ -232,9 +232,8 @@ namespace Barotrauma
             }
 
             GameSettings.Init();
+            CreatureMetrics.Init();
             
-            Md5Hash.Cache.Load();
-
             ConsoleArguments = args;
 
             try
@@ -747,7 +746,7 @@ namespace Barotrauma
                 }
                 else if (HasLoaded)
                 {
-                    if (ConnectCommand is Some<ConnectCommand> { Value: var connectCommand })
+                    if (ConnectCommand.TryUnwrap(out var connectCommand))
                     {
                         if (Client != null)
                         {
@@ -1069,6 +1068,7 @@ namespace Barotrauma
 
         public static void QuitToMainMenu(bool save)
         {
+            CreatureMetrics.Save();
             if (save)
             {
                 GUI.SetSavingIndicatorState(true);
@@ -1174,6 +1174,7 @@ namespace Barotrauma
         protected override void OnExiting(object sender, EventArgs args)
         {
             exiting = true;
+            CreatureMetrics.Save();
             DebugConsole.NewMessage("Exiting...");
             Client?.Quit();
             SteamManager.ShutDown();

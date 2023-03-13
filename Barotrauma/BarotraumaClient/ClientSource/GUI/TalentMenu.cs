@@ -727,7 +727,7 @@ namespace Barotrauma
                     talentStages.Add(GetTalentState(character, button.Identifier, selectedTalents));
                 }
 
-                TalentStages collectiveStage = talentStages.Any(static stage => stage is Locked)
+                TalentStages collectiveStage = talentStages.All(static stage => stage is Locked)
                     ? Locked
                     : Available;
 

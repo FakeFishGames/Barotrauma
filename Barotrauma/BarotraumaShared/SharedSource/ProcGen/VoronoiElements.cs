@@ -201,15 +201,26 @@ namespace Voronoi2
 
         public bool IsPointInside(Vector2 point)
         {
+            if (!IsPointInsideAABB(point, margin: 0.0f)) { return false; }
             Vector2 transformedPoint = point - Translation;
-            if (Edges.All(e => e.Point1.X < transformedPoint.X && e.Point2.X < transformedPoint.X)) { return false; }
-            if (Edges.All(e => e.Point1.Y < transformedPoint.Y && e.Point2.Y < transformedPoint.Y)) { return false; }
-            if (Edges.All(e => e.Point1.X > transformedPoint.X && e.Point2.X > transformedPoint.X)) { return false; }
-            if (Edges.All(e => e.Point1.Y > transformedPoint.Y && e.Point2.Y > transformedPoint.Y)) { return false; }
             foreach (GraphEdge edge in Edges)
             {
                 if (MathUtils.LinesIntersect(transformedPoint, Center - Translation, edge.Point1, edge.Point2)) { return false; }
             }
+            return true;
+        }
+
+        public bool IsPointInsideAABB(Vector2 point2, float margin)
+        {
+            Vector2 transformedPoint = point2 - Translation;
+            Vector2 max = transformedPoint + Vector2.One * margin;
+            Vector2 min = transformedPoint - Vector2.One * margin;
+
+            if (Edges.All(e => e.Point1.X < min.X && e.Point2.X < min.X)) { return false; }
+            if (Edges.All(e => e.Point1.Y < min.Y && e.Point2.Y < min.Y)) { return false; }
+            if (Edges.All(e => e.Point1.X > max.X && e.Point2.X > max.X)) { return false; }
+            if (Edges.All(e => e.Point1.Y > max.Y && e.Point2.Y > max.Y)) { return false; }
+
             return true;
         }
     }

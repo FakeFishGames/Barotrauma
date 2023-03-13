@@ -1,4 +1,6 @@
-﻿namespace Barotrauma
+﻿using System;
+
+namespace Barotrauma
 {
     partial class GoToMission : Mission
     {
@@ -11,7 +13,7 @@
         {
             if (Level.Loaded?.Type == LevelData.LevelType.Outpost)
             {
-                State = 1;
+                State = Math.Max(1, State);
             }
         }
 
