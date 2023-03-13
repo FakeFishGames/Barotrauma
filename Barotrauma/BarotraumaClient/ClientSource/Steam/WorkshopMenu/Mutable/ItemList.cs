@@ -773,7 +773,7 @@ namespace Barotrauma.Steam
             #endregion
 
             var descriptionListBox = new GUIListBox(new RectTransform((1.0f, 0.38f), verticalLayout.RectTransform));
-            CreateBBCodeElement(workshopItem.Description, descriptionListBox);
+            CreateBBCodeElement(workshopItem, descriptionListBox);
 
             var showInSteamContainer
                 = new GUIFrame(new RectTransform((1.0f, 0.05f), verticalLayout.RectTransform), style: null);

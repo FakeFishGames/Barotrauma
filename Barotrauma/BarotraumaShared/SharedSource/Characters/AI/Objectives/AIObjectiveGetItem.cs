@@ -54,7 +54,7 @@ namespace Barotrauma
         public bool AllowVariants { get; set; }
         public bool Equip { get; set; }
         public bool Wear { get; set; }
-        public bool RequireLoaded { get; set; }
+        public bool RequireNonEmpty { get; set; }
         public bool EvaluateCombatPriority { get; set; }
         public bool CheckPathForEachItem { get; set; }
         public bool SpeakIfFails { get; set; }
@@ -123,6 +123,11 @@ namespace Barotrauma
             return ignoredTags;
         }
 
+        public static Func<PathNode, bool> CreateEndNodeFilter(ISpatialEntity targetEntity)
+        {
+            return n => (n.Waypoint.Ladders == null || n.Waypoint.IsInWater) && Vector2.DistanceSquared(n.Waypoint.WorldPosition, targetEntity.WorldPosition) <= MathUtils.Pow2(DefaultReach);
+        }
+
         private bool CheckInventory()
         {
             if (IdentifiersOrTags == null) { return false; }
@@ -155,11 +160,6 @@ namespace Barotrauma
                 Abandon = true;
                 return;
             }
-            if (character.Submarine == null)
-            {
-                Abandon = true;
-                return;
-            }
             if (IdentifiersOrTags != null && !isDoneSeeking)
             {
                 if (checkInventory)
@@ -171,9 +171,14 @@ namespace Barotrauma
                 }
                 if (!isDoneSeeking)
                 {
+                    if (character.Submarine == null)
+                    {
+                        Abandon = true;
+                        return;
+                    }
                     if (!AllowDangerousPressure)
                     {
-                        bool dangerousPressure = character.CurrentHull == null || character.CurrentHull.LethalPressure > 0 && character.PressureProtection <= 0;
+                        bool dangerousPressure = !character.IsProtectedFromPressure && (character.CurrentHull == null || character.CurrentHull.LethalPressure > 0);
                         if (dangerousPressure)
                         {
 #if DEBUG
@@ -191,6 +196,11 @@ namespace Barotrauma
                     }
                     return;
                 }
+            }
+            else if (character.Submarine == null)
+            {
+                Abandon = true;
+                return;
             }
             if (targetItem == null || targetItem.Removed)
             {
@@ -307,7 +317,8 @@ namespace Barotrauma
                         {
                             // If the root container changes, the item is no longer where it was (taken by someone -> need to find another item)
                             AbortCondition = obj => targetItem == null || targetItem.GetRootInventoryOwner() != moveToTarget,
-                            SpeakIfFails = false
+                            SpeakIfFails = false,
+                            endNodeFilter = CreateEndNodeFilter(moveToTarget)
                         };
                     },
                     onAbandon: () =>
@@ -391,10 +402,10 @@ namespace Barotrauma
                 {
                     if (!itemInventory.Container.HasRequiredItems(character, addMessage: false)) { continue; }
                 }
-                float itemPriority = 1;
+                float itemPriority = item.Prefab.BotPriority;
                 if (GetItemPriority != null)
                 {
-                    itemPriority = GetItemPriority(item);
+                    itemPriority *= GetItemPriority(item);
                 }
                 Entity rootInventoryOwner = item.GetRootInventoryOwner();
                 if (rootInventoryOwner is Item ownerItem)
@@ -513,7 +524,7 @@ namespace Barotrauma
             float lowestCost = float.MaxValue;
             foreach (MapEntityPrefab prefab in MapEntityPrefab.List)
             {
-                if (!(prefab is ItemPrefab itemPrefab)) { continue; }
+                if (prefab is not ItemPrefab itemPrefab) { continue; }
                 if (IdentifiersOrTags.Any(id => id == prefab.Identifier || prefab.Tags.Contains(id)))
                 {
                     float cost = itemPrefab.DefaultPrice != null && itemPrefab.CanBeBought ?
@@ -561,7 +572,7 @@ namespace Barotrauma
             if (ignoredIdentifiersOrTags != null && CheckItemIdentifiersOrTags(item, ignoredIdentifiersOrTags)) { return false; }
             if (item.Condition < TargetCondition) { return false; }
             if (ItemFilter != null && !ItemFilter(item)) { return false; }
-            if (RequireLoaded && item.Components.Any(i => !i.IsLoaded(character))) { return false; }
+            if (RequireNonEmpty && item.Components.Any(i => !i.IsNotEmpty(character))) { return false; }
             return CheckItemIdentifiersOrTags(item, IdentifiersOrTags) || (AllowVariants && !item.Prefab.VariantOf.IsEmpty && IdentifiersOrTags.Contains(item.Prefab.VariantOf));
         }
 

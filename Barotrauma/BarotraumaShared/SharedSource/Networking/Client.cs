@@ -197,7 +197,7 @@ namespace Barotrauma.Networking
 
         public T GetVote<T>(VoteType voteType)
         {
-            return (votes[(int)voteType] is T) ? (T)votes[(int)voteType] : default(T);
+            return (votes[(int)voteType] is T t) ? t : default;
         }
 
         public void SetVote(VoteType voteType, object value)

@@ -10,6 +10,7 @@ namespace Barotrauma
     [Flags]
     enum MapEntityCategory
     {
+        None = 0,
         Structure = 1, 
         Decorative = 2,
         Machine = 4,
@@ -172,6 +173,9 @@ namespace Barotrauma
                 : (MapEntityPrefab)null;
         
         public abstract Sprite Sprite { get; }
+
+        public virtual bool CanSpriteFlipX { get; } = false;
+        public virtual bool CanSpriteFlipY { get; } = false;
 
         public abstract string OriginalName { get; }
 

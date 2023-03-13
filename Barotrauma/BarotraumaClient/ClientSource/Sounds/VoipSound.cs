@@ -1,10 +1,8 @@
-﻿using Barotrauma.IO;
-using Barotrauma.Networking;
+﻿using Barotrauma.Networking;
 using Concentus.Structs;
 using Microsoft.Xna.Framework;
 using OpenAL;
 using System;
-using System.Collections.Generic;
 
 namespace Barotrauma.Sounds
 {
@@ -26,12 +24,12 @@ namespace Barotrauma.Sounds
             }
         }
 
-        private VoipQueue queue;
+        private readonly VoipQueue queue;
         private int bufferID = 0;
         
         private SoundChannel soundChannel;
 
-        private OpusDecoder decoder;
+        private readonly OpusDecoder decoder;
 
         public bool UseRadioFilter;
         public bool UseMuffleFilter;
@@ -39,11 +37,11 @@ namespace Barotrauma.Sounds
         public float Near { get; private set; }
         public float Far { get; private set; }
 
-        private BiQuad[] muffleFilters = new BiQuad[]
+        private readonly BiQuad[] muffleFilters = new BiQuad[]
         {
             new LowpassFilter(VoipConfig.FREQUENCY, 800)
         };
-        private BiQuad[] radioFilters = new BiQuad[]
+        private readonly BiQuad[] radioFilters = new BiQuad[]
         {
             new BandpassFilter(VoipConfig.FREQUENCY, 2000)
         };
@@ -101,13 +99,14 @@ namespace Barotrauma.Sounds
 
         public void ApplyFilters(short[] buffer, int readSamples)
         {
+            float finalGain = gain * GameSettings.CurrentConfig.Audio.VoiceChatVolume;
             for (int i = 0; i < readSamples; i++)
             {
                 float fVal = ShortToFloat(buffer[i]);
 
-                if (gain * GameSettings.CurrentConfig.Audio.VoiceChatVolume > 1.0f) //TODO: take distance into account?
+                if (finalGain > 1.0f) //TODO: take distance into account?
                 {
-                    fVal = Math.Clamp(fVal * gain * GameSettings.CurrentConfig.Audio.VoiceChatVolume, -1f, 1f);
+                    fVal = Math.Clamp(fVal * finalGain, -1f, 1f);
                 }
 
                 if (UseMuffleFilter)

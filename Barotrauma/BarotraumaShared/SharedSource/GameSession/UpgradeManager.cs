@@ -179,12 +179,39 @@ namespace Barotrauma
 
             int price = prefab.Price.GetBuyPrice(GetUpgradeLevel(prefab, category), Campaign.Map?.CurrentLocation);
             int currentLevel = GetUpgradeLevel(prefab, category);
+            int newLevel = currentLevel + 1;
 
             int maxLevel = prefab.GetMaxLevelForCurrentSub();
             if (currentLevel + 1 > maxLevel)
             {
-                DebugConsole.ThrowError($"Tried to purchase \"{prefab.Name}\" over the max level! ({currentLevel + 1} > {maxLevel}). The transaction has been cancelled.");
+                DebugConsole.ThrowError($"Tried to purchase \"{prefab.Name}\" over the max level! ({newLevel} > {maxLevel}). The transaction has been cancelled.");
                 return;
+            }
+
+            bool TryTakeResources(Character character)
+            {
+                bool result = prefab.TryTakeResources(character, newLevel);
+                if (!result)
+                {
+                    DebugConsole.ThrowError($"Tried to purchase \"{prefab.Name}\" but the player does not have the required resources.");
+                }
+                return result;
+            }
+
+            switch (GameMain.NetworkMember)
+            {
+                case null when Character.Controlled is { } controlled: // singleplayer
+                    if (!TryTakeResources(controlled)) { return; }
+                    break;
+                case { IsClient: true }:
+                    if (!prefab.HasResourcesToUpgrade(Character.Controlled, newLevel)) { return; }
+                    break;
+                case { IsServer: true } when client?.Character is { } character:
+                    if (!TryTakeResources(character)) { return; }
+                    break;
+                default:
+                    DebugConsole.ThrowError($"Tried to purchase \"{prefab.Name}\" without a player.");
+                    return;
             }
 
             if (price < 0)
@@ -207,7 +234,7 @@ namespace Barotrauma
                 price = 0;
             }
 
-            if (Campaign.TryPurchase(client, price))
+            if (force || Campaign.TryPurchase(client, price))
             {
                 if (GameMain.NetworkMember == null || GameMain.NetworkMember.IsServer)
                 {
@@ -574,6 +601,7 @@ namespace Barotrauma
             }
         }
 
+        private readonly static HashSet<Submarine> upgradedSubs = new HashSet<Submarine>();
         /// <summary>
         /// Applies an upgrade on the submarine, should be called by <see cref="ApplyUpgrades"/> when the round starts.
         /// </summary>
@@ -584,6 +612,12 @@ namespace Barotrauma
         /// <returns>New level that was applied, -1 if no upgrades were applied.</returns>
         private static int BuyUpgrade(UpgradePrefab prefab, UpgradeCategory category, Submarine submarine, int level = 1, Submarine? parentSub = null)
         {
+            if (parentSub == null)
+            {
+                upgradedSubs.Clear();
+            }
+            upgradedSubs.Add(submarine);
+
             int? newLevel = null;
             if (category.IsWallUpgrade)
             {
@@ -619,9 +653,12 @@ namespace Barotrauma
                 }
             }
 
-            foreach (Submarine loadedSub in Submarine.Loaded.Where(sub => sub != submarine))
+            foreach (Submarine loadedSub in Submarine.Loaded)
             {
-                if (loadedSub == parentSub) { continue; }
+                if (loadedSub == parentSub || loadedSub == submarine) { continue; }
+                if (loadedSub.Info?.Type != SubmarineType.Player) { continue; }
+                if (upgradedSubs.Contains(loadedSub)) { continue; }
+
                 XElement? root = loadedSub.Info?.SubmarineElement;
                 if (root == null) { continue; }
 
@@ -630,8 +667,8 @@ namespace Barotrauma
                     if (root.Attribute("location") == null) { continue; }
 
                     // Check if this is our linked submarine
-                    ushort dockingPortID = (ushort) root.GetAttributeInt("originallinkedto", 0);
-                    if (dockingPortID > 0 && submarine.GetItems(true).Any(item => item.ID == dockingPortID))
+                    ushort dockingPortID = (ushort)root.GetAttributeInt("originallinkedto", 0);
+                    if (dockingPortID > 0 && submarine.GetItems(alsoFromConnectedSubs: true).Any(item => item.ID == dockingPortID))
                     {
                         BuyUpgrade(prefab, category, loadedSub, level, submarine);
                     }
@@ -655,11 +692,13 @@ namespace Barotrauma
         /// Gets the progress that is shown on the store interface.
         /// Includes values stored in the metadata and <see cref="PendingUpgrades"/>, and takes submarine tier and class restrictions into account
         /// </summary>
-        public int GetUpgradeLevel(UpgradePrefab prefab, UpgradeCategory category)
+        /// <param name="info">Submarine used to determine the upgrade limit. If not defined, will default to the current sub.</param>
+        public int GetUpgradeLevel(UpgradePrefab prefab, UpgradeCategory category, SubmarineInfo? info = null)
         {
             if (!Metadata.HasKey(FormatIdentifier(prefab, category))) { return GetPendingLevel(); }
 
-            return Math.Min(GetRealUpgradeLevel(prefab, category) + GetPendingLevel(), prefab.GetMaxLevelForCurrentSub());
+            int maxLevel = info is null ? prefab.GetMaxLevelForCurrentSub() : prefab.GetMaxLevel(info);
+            return Math.Min(GetRealUpgradeLevel(prefab, category) + GetPendingLevel(), maxLevel);
 
             int GetPendingLevel()
             {
@@ -674,6 +713,14 @@ namespace Barotrauma
         public int GetRealUpgradeLevel(UpgradePrefab prefab, UpgradeCategory category)
         {
             return !Metadata.HasKey(FormatIdentifier(prefab, category)) ? 0 : Metadata.GetInt(FormatIdentifier(prefab, category), 0);
+        }
+
+        /// <summary>
+        /// Gets the level of the upgrade that is stored in the metadata. Takes into account the limits of the provided submarine.
+        /// </summary>
+        public int GetRealUpgradeLevelForSub(UpgradePrefab prefab, UpgradeCategory category, SubmarineInfo info)
+        {
+            return Math.Min(GetRealUpgradeLevel(prefab, category), prefab.GetMaxLevel(info));
         }
 
         /// <summary>

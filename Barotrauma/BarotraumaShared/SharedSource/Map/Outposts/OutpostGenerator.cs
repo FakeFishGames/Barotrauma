@@ -124,9 +124,18 @@ namespace Barotrauma
                     int eventCount = GameMain.Server.EntityEventManager.Events.Count();
                     int uniqueEventCount = GameMain.Server.EntityEventManager.UniqueEvents.Count();
 #endif
-                    List<MapEntity> entities = MapEntity.mapEntityList.FindAll(e => e.Submarine == sub);
+                    HashSet<Submarine> connectedSubs = new HashSet<Submarine>() { sub };
+                    foreach (Submarine otherSub in Submarine.Loaded)
+                    {
+                        //remove linked subs too
+                        if (otherSub.Submarine == sub) { connectedSubs.Add(otherSub); }
+                    }
+                    List<MapEntity> entities = MapEntity.mapEntityList.FindAll(e => connectedSubs.Contains(e.Submarine));
                     entities.ForEach(e => e.Remove());
-                    sub.Remove();
+                    foreach (Submarine otherSub in connectedSubs)
+                    {
+                        otherSub.Remove();
+                    }
 #if SERVER
                     //remove any events created during the removal of the entities
                     GameMain.Server.EntityEventManager.Events.RemoveRange(eventCount, GameMain.Server.EntityEventManager.Events.Count - eventCount);
@@ -141,11 +150,14 @@ namespace Barotrauma
 
                 selectedModules.Clear();
                 //select which module types the outpost should consist of
-                List<Identifier> pendingModuleFlags  =
-                    onlyEntrance ? 
-                    generationParams.ModuleCounts.First().Identifier.ToEnumerable().ToList() :
-                    SelectModules(outpostModules, generationParams);
-                
+                List<Identifier> pendingModuleFlags = new List<Identifier>();
+                if (generationParams.ModuleCounts.Any())
+                {
+                    pendingModuleFlags = onlyEntrance ?
+                        generationParams.ModuleCounts[0].Identifier.ToEnumerable().ToList() :
+                        SelectModules(outpostModules, location, generationParams);
+                }
+
                 foreach (Identifier flag in pendingModuleFlags)
                 {
                     if (flag == "none") { continue; }
@@ -237,15 +249,21 @@ namespace Barotrauma
                             wp.FindHull();
                         }
                     }
+                    EnableFactionSpecificEntities(sub, location);
                     return sub; 
                 }
                 remainingTries--;
             }
 
+#if DEBUG
+            DebugConsole.ThrowError("Failed to generate an outpost without overlapping modules. Trying to use a pre-built outpost instead...");
+#else
             DebugConsole.NewMessage("Failed to generate an outpost without overlapping modules. Trying to use a pre-built outpost instead...");
+#endif
 
             var outpostFiles = ContentPackageManager.EnabledPackages.All
                 .SelectMany(p => p.GetFiles<OutpostFile>())
+                .Where(f => !TutorialPrefab.Prefabs.Any(tp => tp.OutpostPath == f.Path))
                 .OrderBy(f => f.UintIdentifier).ToArray();
             if (!outpostFiles.Any())
             {
@@ -258,6 +276,7 @@ namespace Barotrauma
             sub = new Submarine(prebuiltOutpostInfo);
             sub.Info.OutpostGenerationParams = generationParams;
             location?.RemoveTakenItems();
+            EnableFactionSpecificEntities(sub, location);
             return sub;
 
             List<MapEntity> loadEntities(Submarine sub)
@@ -296,18 +315,27 @@ namespace Barotrauma
                         hull.SetModuleTags(selectedModule.Info.OutpostModuleInfo.ModuleFlags);
                     }
                     
-                    selectedModule.HullBounds = new Rectangle(
-                        hullEntities.Min(e => e.WorldRect.X), hullEntities.Min(e => e.WorldRect.Y - e.WorldRect.Height),
-                        hullEntities.Max(e => e.WorldRect.Right), hullEntities.Max(e => e.WorldRect.Y));
-                    selectedModule.HullBounds = new Rectangle(
-                        selectedModule.HullBounds.X, selectedModule.HullBounds.Y,
-                        selectedModule.HullBounds.Width - selectedModule.HullBounds.X, selectedModule.HullBounds.Height - selectedModule.HullBounds.Y);
-                    selectedModule.Bounds = new Rectangle(
-                        wallEntities.Min(e => e.WorldRect.X), wallEntities.Min(e => e.WorldRect.Y - e.WorldRect.Height),
-                        wallEntities.Max(e => e.WorldRect.Right), wallEntities.Max(e => e.WorldRect.Y));
-                    selectedModule.Bounds = new Rectangle(
-                        selectedModule.Bounds.X, selectedModule.Bounds.Y,
-                        selectedModule.Bounds.Width - selectedModule.Bounds.X, selectedModule.Bounds.Height - selectedModule.Bounds.Y);
+                    if (!hullEntities.Any())
+                    {
+                        selectedModule.HullBounds = new Rectangle(Point.Zero, Submarine.GridSize.ToPoint());
+                    }
+                    else
+                    {
+                        Point min = new Point(hullEntities.Min(e => e.WorldRect.X), hullEntities.Min(e => e.WorldRect.Y - e.WorldRect.Height));
+                        Point max = new Point(hullEntities.Max(e => e.WorldRect.Right), hullEntities.Max(e => e.WorldRect.Y));
+                        selectedModule.HullBounds = new Rectangle(min, max - min);
+                    }
+
+                    if (!wallEntities.Any())
+                    {
+                        selectedModule.Bounds = new Rectangle(Point.Zero, Submarine.GridSize.ToPoint());
+                    }
+                    else
+                    {
+                        Point min = new Point(wallEntities.Min(e => e.WorldRect.X), wallEntities.Min(e => e.WorldRect.Y - e.WorldRect.Height));
+                        Point max = new Point(wallEntities.Max(e => e.WorldRect.Right), wallEntities.Max(e => e.WorldRect.Y));
+                        selectedModule.Bounds = new Rectangle(min, max - min);
+                    }
 
                     if (selectedModule.PreviousModule != null)
                     {
@@ -396,6 +424,23 @@ namespace Barotrauma
                     {
                         LockUnusedDoors(selectedModules, entities, generationParams.RemoveUnusedGaps);
                     }
+                    if (generationParams.DrawBehindSubs)
+                    {
+                        foreach (var entity in allEntities)
+                        {
+                            if (entity is Structure structure)
+                            {
+                                //eww
+                                structure.SpriteDepth = MathHelper.Lerp(0.999f, 0.9999f, structure.SpriteDepth);
+#if CLIENT
+                                foreach (var light in structure.Lights)
+                                {
+                                    light.IsBackground = true;
+                                }
+#endif
+                            }
+                        }
+                    }
                     AlignLadders(selectedModules, entities);
                     PowerUpOutpost(entities.SelectMany(e => e.Value));
                     if (generationParams.MaxWaterPercentage > 0.0f)
@@ -426,7 +471,7 @@ namespace Barotrauma
         /// <summary>
         /// Select the number and types of the modules to use in the outpost
         /// </summary>
-        private static List<Identifier> SelectModules(IEnumerable<SubmarineInfo> modules, OutpostGenerationParams generationParams)
+        private static List<Identifier> SelectModules(IEnumerable<SubmarineInfo> modules, Location location, OutpostGenerationParams generationParams)
         {
             int totalModuleCount = generationParams.TotalModuleCount;
             var pendingModuleFlags = new List<Identifier>();
@@ -437,23 +482,29 @@ namespace Barotrauma
             while (pendingModuleFlags.Count < totalModuleCount && availableModulesFound)
             {
                 availableModulesFound = false;
-                foreach (var moduleFlag in generationParams.ModuleCounts)
+                foreach (var moduleCount in generationParams.ModuleCounts)
                 {
-                    if (pendingModuleFlags.Count(m => m == moduleFlag.Identifier) >= generationParams.GetModuleCount(moduleFlag.Identifier))
+                    if (!moduleCount.RequiredFaction.IsEmpty && 
+                        location.Faction?.Prefab.Identifier != moduleCount.RequiredFaction && 
+                        location.SecondaryFaction?.Prefab.Identifier != moduleCount.RequiredFaction)
                     {
                         continue;
                     }
-                    if (!modules.Any(m => m.OutpostModuleInfo.ModuleFlags.Contains(moduleFlag.Identifier)))
+                    if (pendingModuleFlags.Count(m => m == moduleCount.Identifier) >= generationParams.GetModuleCount(moduleCount.Identifier))
                     {
-                        DebugConsole.ThrowError($"Failed to add a module to the outpost (no modules with the flag \"{moduleFlag.Identifier}\" found).");
+                        continue;
+                    }
+                    if (!modules.Any(m => m.OutpostModuleInfo.ModuleFlags.Contains(moduleCount.Identifier)))
+                    {
+                        DebugConsole.ThrowError($"Failed to add a module to the outpost (no modules with the flag \"{moduleCount.Identifier}\" found).");
                         continue;
                     }
                     availableModulesFound = true;
-                    pendingModuleFlags.Add(moduleFlag.Identifier);
+                    pendingModuleFlags.Add(moduleCount.Identifier);
                 }
             }
-            pendingModuleFlags.OrderBy(f => generationParams.ModuleCounts.First(m => m.Identifier == f)).ThenBy(f => Rand.Value(Rand.RandSync.ServerAndClient));
-            while (pendingModuleFlags.Count < totalModuleCount)
+            pendingModuleFlags.OrderBy(f => generationParams.ModuleCounts.First(m => m.Identifier == f).Order).ThenBy(f => Rand.Value(Rand.RandSync.ServerAndClient));
+            while (pendingModuleFlags.Count < totalModuleCount && generationParams.AppendToReachTotalModuleCount)
             {
                 //don't place "none" modules at the end because
                 // a. "filler rooms" at the end of a hallway are pointless
@@ -504,12 +555,8 @@ namespace Barotrauma
                 foreach (OutpostModuleInfo.GapPosition gapPosition in GapPositions.Randomize(Rand.RandSync.ServerAndClient))
                 {
                     if (currentModule.UsedGapPositions.HasFlag(gapPosition)) { continue; }
-                    if (!allowExtendBelowInitialModule)
-                    {
-                        //don't continue downwards if it'd extend below the airlock
-                        if (gapPosition == OutpostModuleInfo.GapPosition.Bottom && currentModule.Offset.Y <= 1) { continue; }
-                    }
-                    
+                    if (DisallowBelowAirlock(allowExtendBelowInitialModule, gapPosition, currentModule)) { continue; }
+
                     PlacedModule newModule = null;
                     //try appending to the current module if possible
                     if (currentModule.Info.OutpostModuleInfo.GapPositions.HasFlag(gapPosition))
@@ -530,6 +577,7 @@ namespace Barotrauma
                             foreach (OutpostModuleInfo.GapPosition otherGapPosition in 
                                 GapPositions.Where(g => !otherModule.UsedGapPositions.HasFlag(g) && otherModule.Info.OutpostModuleInfo.GapPositions.HasFlag(g)))
                             {
+                                if (DisallowBelowAirlock(allowExtendBelowInitialModule, otherGapPosition, otherModule)) { continue; }
                                 newModule = AppendModule(otherModule, GetOpposingGapPosition(otherGapPosition), availableModules, pendingModuleFlags, selectedModules, locationType, allowDifferentLocationType);
                                 if (newModule != null)
                                 {
@@ -577,6 +625,16 @@ namespace Barotrauma
             void assertAllPreviousModulesPresent()
             {
                 System.Diagnostics.Debug.Assert(selectedModules.All(m => m.PreviousModule == null || selectedModules.Contains(m.PreviousModule)));
+            }
+
+            static bool DisallowBelowAirlock(bool allowExtendBelowInitialModule, OutpostModuleInfo.GapPosition gapPosition, PlacedModule currentModule)
+            {
+                if (!allowExtendBelowInitialModule)
+                {
+                    //don't continue downwards if it'd extend below the airlock
+                    if (gapPosition == OutpostModuleInfo.GapPosition.Bottom && currentModule.Offset.Y <= 1) { return true; }
+                }
+                return false;
             }
         }
 
@@ -696,6 +754,14 @@ namespace Barotrauma
                 rect.Location += (module.Offset + module.MoveOffset).ToPoint();
                 rect.Y += module.Bounds.Height;
 
+                Vector2? selfGapPos1 = null; 
+                Vector2? selfGapPos2 = null;
+                if (module.PreviousModule != null)
+                {
+                    selfGapPos1 = module.Offset + module.ThisGap.Position + module.MoveOffset;
+                    selfGapPos2 = module.PreviousModule.Offset + module.PreviousGap.Position + module.PreviousModule.MoveOffset;
+                }
+
                 foreach (PlacedModule otherModule in modules)
                 {
                     if (otherModule == module || otherModule.PreviousModule == null || otherModule.PreviousModule == module) { continue; }
@@ -710,7 +776,17 @@ namespace Barotrauma
 
                         Vector2 gapPos1 = otherModule.Offset + otherModule.ThisGap.Position + gapEdgeOffset + otherModule.MoveOffset;
                         Vector2 gapPos2 = otherModule.PreviousModule.Offset + otherModule.PreviousGap.Position + gapEdgeOffset + otherModule.PreviousModule.MoveOffset;
-                        if (Submarine.RectContains(rect, gapPos1) || Submarine.RectContains(rect, gapPos2) || MathUtils.GetLineRectangleIntersection(gapPos1, gapPos2, rect, out _))
+                        if (Submarine.RectContains(rect, gapPos1) || 
+                            Submarine.RectContains(rect, gapPos2) || 
+                            MathUtils.GetLineRectangleIntersection(gapPos1, gapPos2, rect, out _))
+                        {
+                            return true;
+                        }
+
+                        //check if the connection overlaps with this module's connection
+                        if (selfGapPos1.HasValue && selfGapPos2.HasValue &&
+                            !gapPos1.NearlyEquals(gapPos2) && !selfGapPos1.Value.NearlyEquals(selfGapPos2.Value) &&
+                            MathUtils.LinesIntersect(gapPos1, gapPos2, selfGapPos1.Value, selfGapPos2.Value))
                         {
                             return true;
                         }
@@ -1362,6 +1438,31 @@ namespace Barotrauma
             }
         }
 
+        private static void EnableFactionSpecificEntities(Submarine sub, Location location)
+        {
+            foreach (MapEntity me in MapEntity.mapEntityList)
+            {
+                if (string.IsNullOrEmpty(me.Layer) || me.Submarine != sub) { continue; }
+
+                var layerAsIdentifier = me.Layer.ToIdentifier();
+                if (FactionPrefab.Prefabs.ContainsKey(layerAsIdentifier))
+                {
+                    me.HiddenInGame = 
+                        location?.Faction?.Prefab != FactionPrefab.Prefabs[layerAsIdentifier];
+#if CLIENT
+                    //normally this is handled in LightComponent.OnMapLoaded, but this method is called after that
+                    if (me.HiddenInGame && me is Item item)
+                    {
+                        foreach (var lightComponent in item.GetComponents<LightComponent>())
+                        {
+                            lightComponent.Light.Enabled = false;
+                        }
+                    }
+#endif
+                }
+            }            
+        }
+
         private static void LockUnusedDoors(IEnumerable<PlacedModule> placedModules, Dictionary<PlacedModule, List<MapEntity>> entities, bool removeUnusedGaps)
         {
             foreach (PlacedModule module in placedModules)
@@ -1564,7 +1665,12 @@ namespace Barotrauma
             List<HumanPrefab> killedCharacters = new List<HumanPrefab>();
             List<(HumanPrefab HumanPrefab, CharacterInfo CharacterInfo)> selectedCharacters
                 = new List<(HumanPrefab HumanPrefab, CharacterInfo CharacterInfo)>();
-            var humanPrefabs = outpost.Info.OutpostGenerationParams.GetHumanPrefabs(Rand.RandSync.ServerAndClient);
+
+            List<FactionPrefab> factions = new List<FactionPrefab>();
+            if (location?.Faction != null) { factions.Add(location.Faction.Prefab); }
+            if (location?.SecondaryFaction != null) { factions.Add(location.SecondaryFaction.Prefab); }
+
+            var humanPrefabs = outpost.Info.OutpostGenerationParams.GetHumanPrefabs(factions, Rand.RandSync.ServerAndClient);
             foreach (HumanPrefab humanPrefab in humanPrefabs)
             {
                 if (humanPrefab is null) { continue; }
@@ -1583,7 +1689,7 @@ namespace Barotrauma
                 for (int tries = 0; tries < 100; tries++)
                 {
                     var characterInfo = killedCharacter.CreateCharacterInfo(Rand.RandSync.ServerAndClient);
-                    if (!location.KilledCharacterIdentifiers.Contains(characterInfo.GetIdentifier()))
+                    if (location != null && !location.KilledCharacterIdentifiers.Contains(characterInfo.GetIdentifier()))
                     {
                         selectedCharacters.Add((killedCharacter, characterInfo));
                         break;
@@ -1605,22 +1711,21 @@ namespace Barotrauma
                 npc.AnimController.FindHull(gotoTarget.WorldPosition, setSubmarine: true);
                 npc.TeamID = CharacterTeamType.FriendlyNPC;
                 npc.HumanPrefab = humanPrefab;
-                if (!outpost.Info.OutpostNPCs.ContainsKey(humanPrefab.Identifier))
+                outpost.Info.AddOutpostNPCIdentifierOrTag(npc, humanPrefab.Identifier);
+                foreach (Identifier tag in humanPrefab.GetTags())
                 {
-                    outpost.Info.OutpostNPCs.Add(humanPrefab.Identifier, new List<Character>());
+                    outpost.Info.AddOutpostNPCIdentifierOrTag(npc, tag);
                 }
-                outpost.Info.OutpostNPCs[humanPrefab.Identifier].Add(npc);
                 if (GameMain.NetworkMember?.ServerSettings != null && !GameMain.NetworkMember.ServerSettings.KillableNPCs)
                 {
                     npc.CharacterHealth.Unkillable = true;
                 }
-                humanPrefab.GiveItems(npc, outpost, Rand.RandSync.ServerAndClient);
+                humanPrefab.GiveItems(npc, outpost, gotoTarget as WayPoint, Rand.RandSync.ServerAndClient);
                 foreach (Item item in npc.Inventory.FindAllItems(it => it != null, recursive: true))
                 {
                     item.AllowStealing = outpost.Info.OutpostGenerationParams.AllowStealing;
                     item.SpawnedInCurrentOutpost = true;
                 }
-                npc.GiveIdCardTags(gotoTarget as WayPoint);
                 humanPrefab.InitializeCharacter(npc, gotoTarget);
             }
         }

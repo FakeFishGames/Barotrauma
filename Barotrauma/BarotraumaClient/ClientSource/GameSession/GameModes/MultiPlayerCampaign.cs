@@ -216,51 +216,35 @@ namespace Barotrauma
             }
 
             Character prevControlled = Character.Controlled;
-            if (prevControlled?.AIController != null)
-            {
-                prevControlled.AIController.Enabled = false;
-            }
             GUI.DisableHUD = true;
             if (IsFirstRound)
             {
-                Character.Controlled = null;
+                if (SlideshowPrefab.Prefabs.TryGet("campaignstart".ToIdentifier(), out var slideshow))
+                {
+                    SlideshowPlayer = new SlideshowPlayer(GUICanvas.Instance, slideshow);
+                }
 
+                Character.Controlled = null;
                 prevControlled?.ClearInputs();
 
                 overlayColor = Color.LightGray;
                 overlaySprite = Map.CurrentLocation.Type.GetPortrait(Map.CurrentLocation.PortraitId);
-                overlayTextColor = Color.Transparent;
-                overlayText = TextManager.GetWithVariables("campaignstart",
-                    ("xxxx", Map.CurrentLocation.Name), ("yyyy", TextManager.Get($"submarineclass.{Submarine.MainSub.Info.SubmarineClass}")));
-                float fadeInDuration = 1.0f;
-                float textDuration = 10.0f;
-                float timer = 0.0f;
-                while (timer < textDuration)
-                {
-                    if (GameMain.GameSession == null || Screen.Selected != GameMain.GameScreen)
-                    {
-                        GUI.DisableHUD = false;
-                        yield return CoroutineStatus.Success;
-                    }
-                    // Try to grab the controlled here to prevent inputs, assigned late on multiplayer
-                    if (Character.Controlled != null)
-                    {
-                        prevControlled = Character.Controlled;
-                        Character.Controlled = null;
-                        prevControlled.ClearInputs();
-                    }
-                    GameMain.GameScreen.Cam.Freeze = true;
-                    overlayTextColor = Color.Lerp(Color.Transparent, Color.White, (timer - 1.0f) / fadeInDuration);
-                    timer = Math.Min(timer + CoroutineManager.DeltaTime, textDuration);
-                    yield return CoroutineStatus.Running;
-                }
+
                 var outpost = GameMain.GameSession.Level.StartOutpost;
                 var borders = outpost.GetDockedBorders();
                 borders.Location += outpost.WorldPosition.ToPoint();
                 GameMain.GameScreen.Cam.Position = new Vector2(borders.X + borders.Width / 2, borders.Y - borders.Height / 2);
                 float startZoom = 0.8f /
                     ((float)Math.Max(borders.Width, borders.Height) / (float)GameMain.GameScreen.Cam.Resolution.X);
-                GameMain.GameScreen.Cam.MinZoom = Math.Min(startZoom, GameMain.GameScreen.Cam.MinZoom);
+                GameMain.GameScreen.Cam.Zoom = GameMain.GameScreen.Cam.MinZoom = Math.Min(startZoom, GameMain.GameScreen.Cam.MinZoom);
+                while (SlideshowPlayer != null && !SlideshowPlayer.LastTextShown)
+                {
+                    GUI.PreventPauseMenuToggle = true;
+                    yield return CoroutineStatus.Running;
+                }
+                GUI.PreventPauseMenuToggle = false;
+                prevControlled ??= Character.Controlled;
+                GameMain.LightManager.LosAlpha = 0.0f;
                 var transition = new CameraTransition(prevControlled, GameMain.GameScreen.Cam,
                     null, null,
                     fadeOut: false,
@@ -272,16 +256,6 @@ namespace Barotrauma
                     AllowInterrupt = true,
                     RemoveControlFromCharacter = false
                 };
-                fadeInDuration = 1.0f;
-                timer = 0.0f;
-                overlayTextColor = Color.Transparent;
-                overlayText = "";
-                while (timer < fadeInDuration)
-                {
-                    overlayColor = Color.Lerp(Color.LightGray, Color.Transparent, timer / fadeInDuration);
-                    timer += CoroutineManager.DeltaTime;
-                    yield return CoroutineStatus.Running;
-                }
                 overlayColor = Color.Transparent;
                 while (transition.Running)
                 {
@@ -409,6 +383,8 @@ namespace Barotrauma
 
             base.Update(deltaTime);
 
+            SlideshowPlayer?.UpdateManually(deltaTime);
+
             if (PlayerInput.SecondaryMouseButtonClicked() ||
                 PlayerInput.KeyHit(Microsoft.Xna.Framework.Input.Keys.Escape))
             {
@@ -442,7 +418,8 @@ namespace Barotrauma
                         CampaignUI.SelectTab(InteractionType.Map);
                     }
                 }
-                else
+                //end biome is handled by the server (automatic transition without a map screen when the end of the level is reached)
+                else if (!Level.Loaded.IsEndBiome)
                 {
                     //wasn't initially docked (sub doesn't have a docking port?)
                     // -> choose a destination when the sub is far enough from the start outpost
@@ -467,11 +444,17 @@ namespace Barotrauma
             }
         }
 
+        public override void UpdateWhilePaused(float deltaTime)
+        {
+            SlideshowPlayer?.UpdateManually(deltaTime);
+        }
+
         public override void End(TransitionType transitionType = TransitionType.None)
         {
             base.End(transitionType);
             ForceMapUI = ShowCampaignUI = false;
-            
+            SlideshowPlayer?.Finish();
+
             // remove all event dialogue boxes
             GUIMessageBox.MessageBoxes.ForEachMod(mb =>
             {
@@ -501,39 +484,14 @@ namespace Barotrauma
             {
                 GUIMessageBox.MessageBoxes.Remove(GUIMessageBox.VisibleBox);
             }
-            CoroutineManager.StartCoroutine(DoEndCampaignCameraTransition(), "DoEndCampaignCameraTransition");
+            GameMain.CampaignEndScreen.Select();
+            GUI.DisableHUD = false;
             GameMain.CampaignEndScreen.OnFinished = () =>
             {
                 GameMain.NetLobbyScreen.Select();
                 if (GameMain.NetLobbyScreen.ContinueCampaignButton != null) { GameMain.NetLobbyScreen.ContinueCampaignButton.Enabled = false; }
                 if (GameMain.NetLobbyScreen.QuitCampaignButton != null) { GameMain.NetLobbyScreen.QuitCampaignButton.Enabled = false; }
             };
-        }
-
-        private IEnumerable<CoroutineStatus> DoEndCampaignCameraTransition()
-        {
-            Character controlled = Character.Controlled;
-            if (controlled != null)
-            {
-                controlled.AIController.Enabled = false;
-            }
-
-            GUI.DisableHUD = true;
-            ISpatialEntity endObject = Level.Loaded.LevelObjectManager.GetAllObjects().FirstOrDefault(obj => obj.Prefab.SpawnPos == LevelObjectPrefab.SpawnPosType.LevelEnd);
-            var transition = new CameraTransition(endObject ?? Submarine.MainSub, GameMain.GameScreen.Cam,
-                null, Alignment.Center,
-                fadeOut: true,
-                panDuration: 10,
-                startZoom: null, endZoom: 0.2f);
-
-            while (transition.Running)
-            {
-                yield return CoroutineStatus.Running;
-            }
-            GameMain.CampaignEndScreen.Select();
-            GUI.DisableHUD = false;
-
-            yield return CoroutineStatus.Success;
         }
 
         public void ClientWrite(IWriteMessage msg)
@@ -694,8 +652,18 @@ namespace Barotrauma
 
                 if (ShouldApply(NetFlags.SubList, id, requireUpToDateSave: false))
                 {
-                    foreach (int ownedSubIndex in ownedSubIndices)
+                    foreach (ushort ownedSubIndex in ownedSubIndices)
                     {
+                        if (ownedSubIndex >= GameMain.Client.ServerSubmarines.Count)
+                        {
+                            string errorMsg = $"Error in {nameof(MultiPlayerCampaign.ClientRead)}. Owned submarine index was out of bounds. Index: {ownedSubIndex}, submarines: {string.Join(", ", GameMain.Client.ServerSubmarines.Select(s => s.Name))}";
+                            DebugConsole.ThrowError(errorMsg);
+                            GameAnalyticsManager.AddErrorEventOnce(
+                                "MultiPlayerCampaign.ClientRead.OwnerSubIndexOutOfBounds" + ownedSubIndex,
+                                GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
+                            continue;
+                        }
+
                         SubmarineInfo sub = GameMain.Client.ServerSubmarines[ownedSubIndex];
                         if (GameMain.NetLobbyScreen.CheckIfCampaignSubMatches(sub, NetLobbyScreen.SubmarineDeliveryData.Owned))
                         {
@@ -834,8 +802,6 @@ namespace Barotrauma
             {
                 DebugConsole.Log("Received campaign update (Reputation)");
                 UInt16 id = msg.ReadUInt16();
-                float? reputation = null;
-                if (msg.ReadBoolean()) { reputation = msg.ReadSingle(); }
                 Dictionary<Identifier, float> factionReps = new Dictionary<Identifier, float>();
                 byte factionsCount = msg.ReadByte();
                 for (int i = 0; i < factionsCount; i++)
@@ -844,11 +810,6 @@ namespace Barotrauma
                 }
                 if (ShouldApply(NetFlags.Reputation, id, requireUpToDateSave: true))
                 {
-                    if (reputation.HasValue)
-                    {
-                        campaign.Map.CurrentLocation.Reputation.SetReputation(reputation.Value);
-                        campaign?.CampaignUI?.UpgradeStore?.RequestRefresh();
-                    }
                     foreach (var (identifier, rep) in factionReps)
                     {
                         Faction faction = campaign.Factions.FirstOrDefault(f => f.Prefab.Identifier == identifier);
@@ -861,6 +822,7 @@ namespace Barotrauma
                             DebugConsole.ThrowError($"Received an update for a faction that doesn't exist \"{identifier}\".");
                         }
                     }
+                    campaign?.CampaignUI?.UpgradeStore?.RequestRefresh();
                 }
             }
             if (requiredFlags.HasFlag(NetFlags.CharacterInfo))
@@ -1000,25 +962,20 @@ namespace Barotrauma
             foreach (NetWalletTransaction transaction in update.Transactions)
             {
                 WalletInfo info = transaction.Info;
-                switch (transaction.CharacterID)
+                if (transaction.CharacterID.TryUnwrap(out var charID))
                 {
-                    case Some<ushort> { Value: var charID }:
-                    {
-                        Character targetCharacter = Character.CharacterList?.FirstOrDefault(c => c.ID == charID);
-                        if (targetCharacter is null) { break; }
-                        Wallet wallet = targetCharacter.Wallet;
+                    Character targetCharacter = Character.CharacterList?.FirstOrDefault(c => c.ID == charID);
+                    if (targetCharacter is null) { break; }
+                    Wallet wallet = targetCharacter.Wallet;
 
-                        wallet.Balance = info.Balance;
-                        wallet.RewardDistribution = info.RewardDistribution;
-                        TryInvokeEvent(wallet, transaction.ChangedData, info);
-                        break;
-                    }
-                    case None<ushort> _:
-                    {
-                        Bank.Balance = info.Balance;
-                        TryInvokeEvent(Bank, transaction.ChangedData, info);
-                        break;
-                    }
+                    wallet.Balance = info.Balance;
+                    wallet.RewardDistribution = info.RewardDistribution;
+                    TryInvokeEvent(wallet, transaction.ChangedData, info);
+                }
+                else
+                {
+                    Bank.Balance = info.Balance;
+                    TryInvokeEvent(Bank, transaction.ChangedData, info);
                 }
             }
 
@@ -1033,7 +990,7 @@ namespace Barotrauma
 
         public override bool TryPurchase(Client client, int price)
         {
-            if (!AllowedToManageCampaign(ClientPermissions.ManageCampaign))
+            if (!AllowedToManageCampaign(ClientPermissions.ManageMoney))
             {
                 return PersonalWallet.TryDeduct(price);
             }

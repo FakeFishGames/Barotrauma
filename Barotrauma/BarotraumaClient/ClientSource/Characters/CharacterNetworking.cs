@@ -113,9 +113,9 @@ namespace Barotrauma
             }
         }
 
-        public void ClientWriteInput(IWriteMessage msg)
+        public void ClientWriteInput(in SegmentTableWriter<ClientNetSegment> segmentTableWriter, IWriteMessage msg)
         {
-            msg.WriteByte((byte)ClientNetObject.CHARACTER_INPUT);
+            segmentTableWriter.StartNewSegment(ClientNetSegment.CharacterInput);
 
             if (memInput.Count > 60)
             {
@@ -501,7 +501,7 @@ namespace Barotrauma
                     info?.ClearSavedStatValues(statType);                        
                     for (int i = 0; i < savedStatValueCount; i++)
                     {
-                        string statIdentifier = msg.ReadString();
+                        Identifier statIdentifier = msg.ReadIdentifier();
                         float statValue = msg.ReadSingle();
                         bool removeOnDeath = msg.ReadBoolean();
                         info?.ChangeSavedStatValue(statType, statValue, statIdentifier, removeOnDeath, setValue: true);
@@ -593,6 +593,7 @@ namespace Barotrauma
                 {
                     character.MerchantIdentifier = inc.ReadIdentifier();
                 }
+                character.Faction = inc.ReadIdentifier();
                 character.HumanPrefabHealthMultiplier = humanPrefabHealthMultiplier;
                 character.Wallet.Balance = balance;
                 character.Wallet.RewardDistribution = rewardDistribution;

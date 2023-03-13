@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Xml.Linq;
-using Barotrauma.Extensions;
+using static Barotrauma.LocationTypeChange;
 
 namespace Barotrauma
 {
@@ -58,7 +58,7 @@ namespace Barotrauma
             public Requirement(XElement element, LocationTypeChange change)
             {
                 RequiredLocations = element.GetAttributeIdentifierArray("requiredlocations", element.GetAttributeIdentifierArray("requiredadjacentlocations", Array.Empty<Identifier>())).ToImmutableArray();
-                RequiredProximity = Math.Max(element.GetAttributeInt("requiredproximity", 1), 1);
+                RequiredProximity = Math.Max(element.GetAttributeInt("requiredproximity", 1), 0);
                 ProximityProbabilityIncrease = element.GetAttributeFloat("proximityprobabilityincrease", 0.0f);
                 RequiredProximityForProbabilityIncrease = element.GetAttributeInt("requiredproximityforprobabilityincrease", -1);
                 RequireBeaconStation = element.GetAttributeBool("requirebeaconstation", false);
@@ -91,37 +91,30 @@ namespace Barotrauma
                 }
             }
 
+            public bool AnyWithinDistance(Location startLocation, int distance)
+            {
+                return Map.LocationOrConnectionWithinDistance(
+                    startLocation,
+                    maxDistance: distance,
+                    criteria: MatchesLocation,
+                    connectionCriteria: MatchesConnection);
+            }
+
             public bool MatchesLocation(Location location)
             {
                 return RequiredLocations.Contains(location.Type.Identifier) && !location.IsCriticallyRadiated();
             }
 
-            public bool AnyWithinDistance(Location location, int maxDistance, int currentDistance = 0, HashSet<Location> checkedLocations = null)
+            public bool MatchesConnection(LocationConnection connection)
             {
-                if (currentDistance > maxDistance) { return false; }
-                if (currentDistance > 0 && MatchesLocation(location)) { return true; }
-
-                checkedLocations ??= new HashSet<Location>();
-                checkedLocations.Add(location);
-
-                foreach (var connection in location.Connections)
+                if (RequireBeaconStation && connection.LevelData.HasBeaconStation && connection.LevelData.IsBeaconActive)
                 {
-                    if (RequireBeaconStation && connection.LevelData.HasBeaconStation && connection.LevelData.IsBeaconActive)
-                    {
-                        return true;
-                    }
-                    if (RequireHuntingGrounds && connection.LevelData.HasHuntingGrounds)
-                    {
-                        return true;
-                    }
-
-                    var otherLocation = connection.OtherLocation(location);
-                    if (!checkedLocations.Contains(otherLocation))
-                    {
-                        if (AnyWithinDistance(otherLocation, maxDistance, currentDistance + 1, checkedLocations)) { return true; }
-                    }
+                    return true;
                 }
-
+                if (RequireHuntingGrounds && connection.LevelData.HasHuntingGrounds)
+                {
+                    return true;
+                }
                 return false;
             }
         }
@@ -141,24 +134,25 @@ namespace Barotrauma
 
         private readonly bool requireChangeMessages;
         private readonly string messageTag;
-        private ImmutableArray<string>? messages = null;
-        public IReadOnlyList<string> Messages
-        {
-            get
-            {
-                if (!messages.HasValue)
-                {
-                    messages = TextManager.GetAll(messageTag).ToImmutableArray();
-                    if (messages.Value.None())
-                    {
-                        if (requireChangeMessages)
-                        {
-                            DebugConsole.ThrowError($"No messages defined for the location type change {CurrentType} -> {ChangeToType}");
-                        }
-                    }
-                }
 
-                return messages.Value;
+        public IReadOnlyList<string> GetMessages(Faction faction)
+        {
+            if (faction != null && TextManager.ContainsTag(messageTag + "." + faction.Prefab.Identifier))
+            {
+                return TextManager.GetAll(messageTag + "." + faction.Prefab.Identifier).ToImmutableArray();
+            }
+
+            if (TextManager.ContainsTag(messageTag))
+            {
+                return TextManager.GetAll(messageTag).ToImmutableArray();
+            }
+            else
+            {
+                if (requireChangeMessages)
+                {
+                    DebugConsole.ThrowError($"No messages defined for the location type change {CurrentType} -> {ChangeToType}");
+                }
+                return Enumerable.Empty<string>().ToImmutableArray();
             }
         }
 
@@ -226,8 +220,9 @@ namespace Barotrauma
             if (location.LocationTypeChangeCooldown > 0) { return 0.0f; }
             if (location.IsGateBetweenBiomes) { return 0.0f; }
          
-            if (DisallowedAdjacentLocations.Any() && 
-                AnyWithinDistance(location, DisallowedProximity, (otherLocation) => { return DisallowedAdjacentLocations.Contains(otherLocation.Type.Identifier); }))
+            if (DisallowedAdjacentLocations.Any() &&
+                Map.LocationOrConnectionWithinDistance(location, DisallowedProximity, 
+                    (otherLocation) => { return DisallowedAdjacentLocations.Contains(otherLocation.Type.Identifier); }))
             {
                 return 0.0f;
             }
@@ -246,7 +241,6 @@ namespace Barotrauma
                         probability *= requirement.Probability;
                     }
                 }
-
                 if (location.ProximityTimer.ContainsKey(requirement))
                 {
                     if (requirement.AnyWithinDistance(location, requirement.RequiredProximityForProbabilityIncrease))
@@ -264,26 +258,6 @@ namespace Barotrauma
             }
 
             return probability;
-        }
-
-        private bool AnyWithinDistance(Location location, int maxDistance, Func<Location, bool> predicate, int currentDistance = 0, HashSet<Location> checkedLocations = null)
-        {
-            if (currentDistance > maxDistance) { return false; }
-            if (currentDistance > 0 && predicate(location)) { return true; }
-
-            checkedLocations ??= new HashSet<Location>();
-            checkedLocations.Add(location);
-
-            foreach (var connection in location.Connections)
-            {
-                var otherLocation = connection.OtherLocation(location);
-                if (!checkedLocations.Contains(otherLocation)) 
-                {
-                    if (AnyWithinDistance(otherLocation, maxDistance, predicate, currentDistance + 1, checkedLocations)) { return true; }
-                }
-            }
-
-            return false;
         }
     }
 }

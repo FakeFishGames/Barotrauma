@@ -23,6 +23,11 @@ namespace Barotrauma
         private AIObjectiveGoTo goToObjective;
         private AIObjectiveGetItem getItemObjective;
 
+        /// <summary>
+        /// If undefined, a default filter will be used.
+        /// </summary>
+        public Func<PathNode, bool> EndNodeFilter;
+
         public bool Override { get; set; } = true;
 
         public override bool CanBeCompleted => base.CanBeCompleted && (!useController || controller != null);
@@ -222,7 +227,7 @@ namespace Barotrauma
                     {
                         target.Item.TryInteract(character, forceSelectKey: true);
                     }
-                    if (component.AIOperate(deltaTime, character, this))
+                    if (component.CrewAIOperate(deltaTime, character, this))
                     {
                         isDoneOperating = completionCondition == null || completionCondition();
                     }
@@ -232,7 +237,7 @@ namespace Barotrauma
                     TryAddSubObjective(ref goToObjective, () => new AIObjectiveGoTo(target.Item, character, objectiveManager, closeEnough: 50)
                     {
                         TargetName = target.Item.Name,
-                        endNodeFilter = node => node.Waypoint.Ladders == null
+                        endNodeFilter = EndNodeFilter ?? AIObjectiveGetItem.CreateEndNodeFilter(target.Item)
                     },
                         onAbandon: () => Abandon = true,
                         onCompleted: () => RemoveSubObjective(ref goToObjective));
@@ -290,7 +295,7 @@ namespace Barotrauma
                         }
                         return;
                     }
-                    if (component.AIOperate(deltaTime, character, this))
+                    if (component.CrewAIOperate(deltaTime, character, this))
                     {
                         isDoneOperating = completionCondition == null || completionCondition();
                     }

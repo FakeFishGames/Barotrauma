@@ -141,7 +141,18 @@ namespace Barotrauma
                     }
                 }
                 if (items.Contains(item)) { return; }
-                items.Add(item);
+
+                //keep lowest-condition items at the top of the stack
+                int index = 0;
+                for (int i = 0; i < items.Count; i++)
+                {
+                    if (items[i].Condition > item.Condition)
+                    {
+                        break;
+                    }
+                    index++;
+                }
+                items.Insert(index, item);
             }
 
             /// <summary>
@@ -226,6 +237,14 @@ namespace Barotrauma
                 {
                     foreach (var item in slots[i].Items)
                     {
+                        if (item == null)
+                        {
+#if DEBUG
+                            DebugConsole.ThrowError($"Null item in inventory {Owner.ToString() ?? "null"}, slot {i}!");
+#endif
+                            continue;
+                        }
+
                         bool duplicateFound = false;
                         for (int j = 0; j < i; j++)
                         {
@@ -259,6 +278,8 @@ namespace Barotrauma
         {
             get { return capacity; }
         }
+
+        public int EmptySlotCount => slots.Count(i => !i.Empty());
 
         public bool AllowSwappingContainedItems = true;
 
@@ -568,11 +589,15 @@ namespace Barotrauma
                 if (selectedSlot?.Inventory == this) { selectedSlot.ForceTooltipRefresh = true; }
             }
 #endif
+            CharacterHUD.RecreateHudTextsIfControlling(user);
 
             if (item.body != null)
             {
                 item.body.Enabled = false;
                 item.body.BodyType = FarseerPhysics.BodyType.Dynamic;
+                item.SetTransform(item.SimPosition, rotation: 0.0f, findNewHull: false);
+                //update to refresh the interpolated draw rotation and position (update doesn't run on disabled bodies)
+                item.body.Update();
             }
             
 #if SERVER
@@ -877,10 +902,7 @@ namespace Barotrauma
                 }
                 if (recursive)
                 {
-                    if (item.OwnInventory != null)
-                    {
-                        item.OwnInventory.FindAllItems(predicate, recursive: true, list);
-                    }
+                    item.OwnInventory?.FindAllItems(predicate, recursive: true, list);
                 }
             }
             return list;
@@ -916,6 +938,7 @@ namespace Barotrauma
                     if (selectedSlot?.Inventory == this) { selectedSlot.ForceTooltipRefresh = true; }
                 }
 #endif
+                CharacterHUD.RecreateHudTextsIfFocused(item);
             }
         }
 
@@ -940,6 +963,12 @@ namespace Barotrauma
         public void ForceRemoveFromSlot(Item item, int index)
         {
             slots[index].RemoveItem(item);
+        }
+
+        public bool IsInSlot(Item item, int index)
+        {
+            if (index < 0 || index >= slots.Length) { return false; }
+            return slots[index].Contains(item);
         }
 
         public void SharedRead(IReadMessage msg, out List<ushort>[] newItemIds)

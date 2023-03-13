@@ -431,7 +431,7 @@ namespace Barotrauma.Items.Components
             //disable flipping for 0.5 seconds, because flipping the character when it's in a weird pose (e.g. lying in bed) can mess up the ragdoll
             if (character.AnimController is HumanoidAnimController humanoidAnim)
             {
-                humanoidAnim.LockFlippingUntil = (float)Timing.TotalTime + 0.5f;
+                humanoidAnim.LockFlipping(0.5f);
             }
 
             if (character.SelectedItem == item) { character.SelectedItem = null; }
@@ -450,6 +450,7 @@ namespace Barotrauma.Items.Components
         public override bool Select(Character activator)
         {
             if (activator == null || activator.Removed) { return false; }
+            if (Item.Condition <= 0.0f && !UpdateWhenInactive) { return false; }
 
             if (UsableIn == UseEnvironment.Water && !activator.AnimController.InWater ||
                 UsableIn == UseEnvironment.Air && activator.AnimController.InWater)

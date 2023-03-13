@@ -201,7 +201,7 @@ namespace Barotrauma
                 { 
                     continue; 
                 }
-                if (Level.Loaded.ExtraWalls.Any(w => w.IsPointInside(position.Position.ToVector2())))
+                if (Level.Loaded.IsPositionInsideWall(position.Position.ToVector2()))
                 {
                     removals.Add(position);
                 }
@@ -594,7 +594,7 @@ namespace Barotrauma
                         {
                             GameAnalyticsManager.AddDesignEvent(
                                 $"MonsterSpawn:{GameMain.GameSession.GameMode?.Preset?.Identifier.Value ?? "none"}:{Level.Loaded?.LevelData?.Biome?.Identifier.Value ?? "none"}:{SpawnPosType}:{SpeciesName}",
-                                value: Timing.TotalTime - GameMain.GameSession.RoundStartTime);
+                                value: GameMain.GameSession.RoundDuration);
                         }
                     }, delayBetweenSpawns * i);
                     i++;

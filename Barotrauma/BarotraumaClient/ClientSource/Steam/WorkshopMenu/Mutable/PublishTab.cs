@@ -218,6 +218,20 @@ namespace Barotrauma.Steam
                 var descriptionTextBox
                     = ScrollableTextBox(rightTop, 6.0f, workshopItem.Description ?? string.Empty);
 
+                if (workshopItem.Id != 0)
+                {
+                    TaskPool.Add(
+                        $"GetFullDescription{workshopItem.Id}",
+                        SteamManager.Workshop.GetItemAsap(workshopItem.Id.Value, withLongDescription: true),
+                        t =>
+                        {
+                            if (!t.TryGetResult(out Steamworks.Ugc.Item? itemWithDescription)) { return; }
+
+                            descriptionTextBox.Text = itemWithDescription?.Description ?? descriptionTextBox.Text;
+                            descriptionTextBox.Deselect();
+                        });
+                }
+
                 var (leftBottom, _, rightBottom)
                     = CreateSidebars(mainLayout, leftWidth: 0.49f, centerWidth: 0.01f, rightWidth: 0.5f, height: 0.5f);
                 leftBottom.Stretch = true;
@@ -294,10 +308,11 @@ namespace Barotrauma.Steam
                     {
                         //Reload the package to force hash recalculation
                         string packageName = localPackage.Name;
-                        localPackage = ContentPackageManager.ReloadContentPackage(localPackage);
-                        if (localPackage is null)
+                        var result = ContentPackageManager.ReloadContentPackage(localPackage);
+                        if (!result.TryUnwrapSuccess(out localPackage))
                         {
-                            throw new Exception($"\"{packageName}\" was removed upon reload");
+                            throw new Exception($"\"{packageName}\" was removed upon reload",
+                                result.TryUnwrapFailure(out var exception) ? exception : null);
                         }
 
                         //Set up the Ugc.Editor object that we'll need to publish

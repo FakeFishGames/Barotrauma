@@ -5,6 +5,7 @@ using Barotrauma.Steam;
 using FarseerPhysics;
 using Microsoft.Xna.Framework;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Globalization;
@@ -15,12 +16,12 @@ using Barotrauma.MapCreatures.Behavior;
 
 namespace Barotrauma
 {
-    struct ColoredText
+    readonly struct ColoredText
     {
-        public string Text;
-        public Color Color;
-		public bool IsCommand;
-        public bool IsError;
+        public readonly string Text;
+        public readonly Color Color;
+        public readonly bool IsCommand;
+        public readonly bool IsError;
 
         public readonly string Time;
 
@@ -31,7 +32,7 @@ namespace Barotrauma
 			this.IsCommand = isCommand;
             this.IsError = isError;
 
-            Time = DateTime.Now.ToString();
+            Time = DateTime.Now.ToString(CultureInfo.InvariantCulture);
         }
     }
 
@@ -71,7 +72,7 @@ namespace Barotrauma
 
                 bool allowCheats = false;
 #if CLIENT
-                allowCheats = GameMain.NetworkMember == null && (GameMain.GameSession?.GameMode is TestGameMode || Screen.Selected is EditorScreen);
+                allowCheats = GameMain.NetworkMember == null && (GameMain.GameSession?.GameMode is TestGameMode || Screen.Selected is { IsEditor: true });
 #endif
                 if (!allowCheats && !CheatsEnabled && IsCheat)
                 {
@@ -91,13 +92,57 @@ namespace Barotrauma
             }
         }
 
-        private static readonly Queue<ColoredText> queuedMessages = new Queue<ColoredText>();
+        private static readonly ConcurrentQueue<ColoredText> queuedMessages
+            = new ConcurrentQueue<ColoredText>();
 
+        public static readonly NamedEvent<ColoredText> MessageHandler = new NamedEvent<ColoredText>();
+
+        public struct ErrorCatcher : IDisposable
+        {
+            private readonly List<ColoredText> errors;
+            private readonly bool wasConsoleOpen;
+            private Identifier handlerId;
+            public IReadOnlyList<ColoredText> Errors => errors;
+
+            private ErrorCatcher(Identifier handlerId)
+            {
+                this.handlerId = handlerId;
+#if CLIENT
+                this.wasConsoleOpen = IsOpen;
+#else
+                this.wasConsoleOpen = false;
+#endif
+                this.errors = new List<ColoredText>();
+
+                //create a local variable that can be captured by lambdas
+                var errs = this.errors;
+                
+                MessageHandler.Register(handlerId, msg =>
+                {
+                    if (!msg.IsError) { return; }
+                    errs.Add(msg);
+                });
+            }
+            
+            public static ErrorCatcher Create()
+                => new ErrorCatcher(ToolBox.RandomSeed(25).ToIdentifier());
+
+            public void Dispose()
+            {
+                if (handlerId.IsEmpty) { return; }
+                MessageHandler.Deregister(handlerId);
+                handlerId = Identifier.Empty;
+#if CLIENT
+                DebugConsole.IsOpen = wasConsoleOpen;
+#endif
+            }
+        }
+        
         static partial void ShowHelpMessage(Command command);
         
         const int MaxMessages = 300;
 
-        public static List<ColoredText> Messages = new List<ColoredText>();
+        public static readonly List<ColoredText> Messages = new List<ColoredText>();
 
         public delegate void QuestionCallback(string answer);
         private static QuestionCallback activeQuestionCallback;
@@ -844,7 +889,15 @@ namespace Barotrauma
                     ThrowError("Please specify an identifier and a value.");
                     return;
                 }
-                SetDataAction.PerformOperation(campaign.CampaignMetadata, args[0].ToIdentifier(), args[1], SetDataAction.OperationType.Set);
+                if (float.TryParse(args[1], out float floatVal))
+                {
+                    SetDataAction.PerformOperation(campaign.CampaignMetadata, args[0].ToIdentifier(), floatVal, SetDataAction.OperationType.Set);
+                }
+                else
+                {
+                    SetDataAction.PerformOperation(campaign.CampaignMetadata, args[0].ToIdentifier(), args[1], SetDataAction.OperationType.Set);
+                }
+
             }, isCheat: true));
 
             commands.Add(new Command("setskill", "setskill [all/identifier] [max/level] [character]: Set your skill level.", (string[] args) =>
@@ -1046,11 +1099,6 @@ namespace Barotrauma
             commands.Add(new Command("teleportsub", "teleportsub [start/end/cursor]: Teleport the submarine to the position of the cursor, or the start or end of the level. WARNING: does not take outposts into account, so often leads to physics glitches. Only use for debugging.", (string[] args) =>
             {
                 if (Submarine.MainSub == null) { return; }
-                if (Level.Loaded?.Type == LevelData.LevelType.Outpost && GameMain.GameSession != null)
-                {
-                    NewMessage("The teleportsub command is unavailable in outpost levels!", Color.Red);
-                    return;
-                }
 
                 if (args.Length == 0 || args[0].Equals("cursor", StringComparison.OrdinalIgnoreCase))
                 {
@@ -1215,6 +1263,22 @@ namespace Barotrauma
             }
 #endif
 
+            commands.Add(new Command("showreputation", "showreputation: List the current reputation values.", (string[] args) =>
+            {
+                if (GameMain.GameSession?.GameMode is CampaignMode campaign)
+                {
+                    NewMessage("Reputation:");
+                    foreach (var faction in campaign.Factions)
+                    {
+                        NewMessage($" - {faction.Prefab.Name}: {faction.Reputation.Value}");
+                    }
+                }
+                else
+                {
+                    ThrowError("Could not show reputation (no active campaign).");
+                }
+            }, null));
+
             commands.Add(new Command("setlocationreputation", "setlocationreputation [value]: Set the reputation in the current location to the specified value.", (string[] args) =>
             {
                 if (GameMain.GameSession?.GameMode is CampaignMode campaign)
@@ -1222,7 +1286,7 @@ namespace Barotrauma
                     if (args.Length == 0) { return; }
                     if (float.TryParse(args[0], NumberStyles.Any, CultureInfo.InvariantCulture, out float reputation))
                     {
-                        campaign.Map.CurrentLocation.Reputation.SetReputation(reputation);
+                        campaign.Map.CurrentLocation.Reputation?.SetReputation(reputation);
                     }
                     else
                     {
@@ -1267,10 +1331,10 @@ namespace Barotrauma
                 }
             }, () =>
             {
-                return new[] 
-                { 
-                    FactionPrefab.Prefabs.Select(f => f.Identifier.Value).ToArray(), 
-                    GameMain.GameSession?.Campaign.Factions.Select(f => f.Prefab.Identifier.ToString()).ToArray() ?? Array.Empty<string>()
+                return new[]
+                {
+                    FactionPrefab.Prefabs.Select(static f => f.Identifier.Value).ToArray(),
+                    GameMain.GameSession?.Campaign?.Factions.Select(static f => f.Prefab.Identifier.ToString()).ToArray() ?? Array.Empty<string>()
                 };
             }, true));
 
@@ -1379,7 +1443,7 @@ namespace Barotrauma
             commands.Add(new Command("kill", "kill [character]: Immediately kills the specified character.", (string[] args) =>
             {
                 Character killedCharacter = (args.Length == 0) ? Character.Controlled : FindMatchingCharacter(args);
-                killedCharacter?.SetAllDamage(200.0f, 0.0f, 0.0f);
+                killedCharacter?.Kill(CauseOfDeathType.Unknown, causeOfDeathAffliction: null);
             },
             () =>
             {
@@ -1750,6 +1814,17 @@ namespace Barotrauma
                 NewMessage("Set minimum loading time to " + time + " seconds.", Color.White);
             }));
 
+
+            commands.Add(new Command("resetcharacternetstate", "resetcharacternetstate [character name]: A debug-only command that resets a character's network state, intended for diagnosing character syncing issues.", null,
+            () =>
+            {
+                if (GameMain.NetworkMember == null) { return null; }
+                return new string[][]
+                {
+                    Character.CharacterList.Select(c => c.Name).Distinct().OrderBy(n => n).ToArray()
+                };
+            }));
+
             commands.Add(new Command("storeinfo", "", (string[] args) =>
             {
                 if (GameMain.GameSession?.Map?.CurrentLocation is Location location)
@@ -1803,6 +1878,7 @@ namespace Barotrauma
             commands.Add(new Command("lighting|lights", "Toggle lighting on/off (client-only).", null, isCheat: true));
             commands.Add(new Command("ambientlight", "ambientlight [color]: Change the color of the ambient light in the level.", null, isCheat: true));
             commands.Add(new Command("debugdraw", "Toggle the debug drawing mode on/off (client-only).", null, isCheat: true));
+            commands.Add(new Command("debugdrawlocalization", "Toggle the localization debug drawing mode on/off (client-only). Colors all text that hasn't been fetched from a localization file magenta, making it easier to spot hard-coded or missing texts.", null, isCheat: false));
             commands.Add(new Command("togglevoicechatfilters", "Toggle the radio/muffle filters in the voice chat (client-only).", null, isCheat: false));
             commands.Add(new Command("togglehud|hud", "Toggle the character HUD (inventories, icons, buttons, etc) on/off (client-only).", null));
             commands.Add(new Command("toggleupperhud", "Toggle the upper part of the ingame HUD (chatbox, crewmanager) on/off (client-only).", null));
@@ -1811,6 +1887,9 @@ namespace Barotrauma
             commands.Add(new Command("followsub", "Toggle whether the camera should follow the nearest submarine (client-only).", null));
             commands.Add(new Command("toggleaitargets|aitargets", "Toggle the visibility of AI targets (= targets that enemies can detect and attack/escape from) (client-only).", null, isCheat: true));
             commands.Add(new Command("debugai", "Toggle the ai debug mode on/off (works properly only in single player).", null, isCheat: true));
+            commands.Add(new Command("devmode", "Toggle the dev mode on/off (client-only).", null, isCheat: true));
+            commands.Add(new Command("showmonsters", "Permanently unlocks all the monsters in the character editor. Use \"hidemonsters\" to undo.", null, isCheat: true));
+            commands.Add(new Command("hidemonsters", "Permanently hides in the character editor all the monsters that haven't been encountered in the game. Use \"showmonsters\" to undo.", null, isCheat: true));
 
             InitProjectSpecific();
 
@@ -2187,7 +2266,7 @@ namespace Barotrauma
                         //Dont do a thing, random is basically Human points anyways - its in the help description.
                         break;
                     default:
-                        var matchingCharacter = FindMatchingCharacter(args.Skip(1).ToArray());
+                        var matchingCharacter = FindMatchingCharacter(args.Skip(1).Take(1).ToArray());
                         if (matchingCharacter != null){ spawnInventory = matchingCharacter.Inventory; }
                         break;
                 }
@@ -2275,11 +2354,10 @@ namespace Barotrauma
         private static void NewMessage(string msg, Color color, bool isCommand, bool isError)
         {
             if (string.IsNullOrEmpty(msg)) { return; }
-            
-            lock (queuedMessages)
-            {
-                queuedMessages.Enqueue(new ColoredText(msg, color, isCommand, isError));
-            }
+
+            var newMsg = new ColoredText(msg, color, isCommand, isError);
+            queuedMessages.Enqueue(newMsg);
+            MessageHandler.Invoke(newMsg);
         }
 
         public static void ShowQuestionPrompt(string question, QuestionCallback onAnswered, string[] args = null, int argCount = -1)

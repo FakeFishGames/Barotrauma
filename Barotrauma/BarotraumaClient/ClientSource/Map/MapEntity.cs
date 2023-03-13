@@ -36,7 +36,7 @@ namespace Barotrauma
 
         public static List<MapEntity> CopiedList = new List<MapEntity>();
 
-        private static List<MapEntity> highlightedList = new List<MapEntity>();
+        private static List<MapEntity> highlightedInEditorList = new List<MapEntity>();
 
         private static float highlightTimer;
 
@@ -99,9 +99,22 @@ namespace Barotrauma
         {
             float depth = baseDepth
                 //take texture into account to get entities with (roughly) the same base depth and texture to render consecutively to minimize texture swaps
-                + (sprite?.Texture?.SortingKey ?? 0) % 100 * 0.00001f
-                + ID % 100 * 0.000001f;
+                + (sprite?.Texture?.SortingKey ?? 0) % 100 * 0.000001f
+                + ID % 100 * 0.0000001f;
             return Math.Min(depth, 1.0f);
+        }
+
+        protected Vector2 GetCollapseEffectOffset()
+        {
+            if (Level.Loaded?.Renderer?.CollapseEffectStrength is float collapseEffectStrength and > 0.0f && Submarine is not { Info.Type: SubmarineType.Player })
+            {
+                   Vector2 noisePos = new Vector2(
+                    (float)PerlinNoise.GetPerlin((float)(Timing.TotalTime + ID) * 0.1f, (float)(Timing.TotalTime + ID) * 0.5f) - 0.5f,
+                    (float)PerlinNoise.GetPerlin((float)(Timing.TotalTime + ID) * 0.1f, (float)(Timing.TotalTime + ID) * 0.1f) - 0.5f);
+                Vector2 offsetFromOrigin = Level.Loaded.Renderer.CollapseEffectOrigin - DrawPosition;
+                return offsetFromOrigin * MathF.Pow(collapseEffectStrength, MathHelper.Lerp(1, 4, ID % 1000 / 1000.0f)) + (noisePos * 100.0f * collapseEffectStrength);                
+            }
+            return Vector2.Zero;
         }
 
         /// <summary>
@@ -118,10 +131,7 @@ namespace Barotrauma
                 return;
             }
 
-            foreach (MapEntity e in mapEntityList)
-            {
-                e.isHighlighted = false;
-            }
+            ClearHighlightedEntities();
 
             if (DisableSelect)
             {
@@ -249,11 +259,10 @@ namespace Barotrauma
                             if (i == 0) highLightedEntity = e;
                         }
                     }
-
                     UpdateHighlighting(highlightedEntities);
                 }
 
-                if (highLightedEntity != null) highLightedEntity.isHighlighted = true;
+                if (highLightedEntity != null) { highLightedEntity.IsHighlighted = true; }
             }
 
             if (GUI.KeyboardDispatcher.Subscriber == null)
@@ -275,7 +284,6 @@ namespace Barotrauma
             if (startMovingPos != Vector2.Zero)
             {
                 Item targetContainer = GetPotentialContainer(position, SelectedList);
-
                 if (targetContainer != null) { targetContainer.IsHighlighted = true; }
 
                 if (PlayerInput.PrimaryMouseButtonReleased())
@@ -515,11 +523,11 @@ namespace Barotrauma
             Item targetContainer = null;
             bool isShiftDown = PlayerInput.IsShiftDown();
 
-            if (!isShiftDown) return null;
+            if (!isShiftDown) { return null; }
 
             foreach (MapEntity e in mapEntityList)
             {
-                if (!e.SelectableInEditor ||!(e is Item potentialContainer)) { continue; }
+                if (!e.SelectableInEditor || e is not Item potentialContainer) { continue; }
 
                 if (e.IsMouseOn(position))
                 {
@@ -597,10 +605,10 @@ namespace Barotrauma
             if (highlightedListBox != null)
             {
                 if (GUI.MouseOn == highlightedListBox || highlightedListBox.IsParentOf(GUI.MouseOn)) return;
-                if (highlightedEntities.SequenceEqual(highlightedList)) return;
+                if (highlightedEntities.SequenceEqual(highlightedInEditorList)) return;
             }
 
-            highlightedList = highlightedEntities;
+            highlightedInEditorList = highlightedEntities;
 
             highlightedListBox = new GUIListBox(new RectTransform(new Point(180, highlightedEntities.Count * 18 + 5), GUI.Canvas)
             {
@@ -1042,19 +1050,11 @@ namespace Barotrauma
 
         protected static void PositionEditingHUD()
         {
-            int maxHeight = 100;
-            if (Screen.Selected == GameMain.SubEditorScreen)
-            {
-                editingHUD.RectTransform.SetPosition(Anchor.TopRight);
-                editingHUD.RectTransform.AbsoluteOffset = new Point(0, GameMain.SubEditorScreen.TopPanel.Rect.Bottom);
-                maxHeight = (GameMain.GraphicsHeight - GameMain.SubEditorScreen.EntityMenu.Rect.Height) - GameMain.SubEditorScreen.TopPanel.Rect.Bottom * 2 - 20;
-            }
-            else
-            {
-                editingHUD.RectTransform.SetPosition(Anchor.TopRight);
-                editingHUD.RectTransform.RelativeOffset = new Vector2(0.0f, (HUDLayoutSettings.CrewArea.Bottom + 10.0f) / (editingHUD.RectTransform.Parent ?? GUI.Canvas).Rect.Height);
-                maxHeight = HUDLayoutSettings.InventoryAreaLower.Y - HUDLayoutSettings.CrewArea.Bottom - 10;
-            }
+            int maxHeight = 
+                Screen.Selected == GameMain.SubEditorScreen ?
+                    GameMain.GraphicsHeight - GameMain.SubEditorScreen.EntityMenu.Rect.Height - GameMain.SubEditorScreen.TopPanel.Rect.Bottom * 2 - 20 :
+                    HUDLayoutSettings.InventoryAreaLower.Y - HUDLayoutSettings.CrewArea.Bottom - 10;
+
 
             var listBox = editingHUD.GetChild<GUIListBox>();
             if (listBox != null)
@@ -1074,13 +1074,24 @@ namespace Barotrauma
                         MathHelper.Clamp(contentHeight + padding * 2, 50, maxHeight)), resizeChildren: false);
                 listBox.RectTransform.Resize(new Point(listBox.RectTransform.NonScaledSize.X, editingHUD.RectTransform.NonScaledSize.Y - padding * 2), resizeChildren: false);
             }
+            editingHUD.RectTransform.SetPosition(Anchor.TopRight);
+            if (Screen.Selected == GameMain.SubEditorScreen)
+            {
+                editingHUD.RectTransform.AbsoluteOffset = new Point(0, GameMain.SubEditorScreen.TopPanel.Rect.Bottom);
+            }
+            else
+            {
+                editingHUD.RectTransform.AbsoluteOffset = new Point(
+                    0, 
+                    HUDLayoutSettings.HealthBarAfflictionArea.Y - editingHUD.Rect.Height - GUI.IntScale(10));
+            }
         }
 
         public virtual void DrawEditing(SpriteBatch spriteBatch, Camera cam) { }
 
         private void UpdateResizing(Camera cam)
         {
-            isHighlighted = true;
+            IsHighlighted = true;
 
             int startX = ResizeHorizontal ? -1 : 0;
             int StartY = ResizeVertical ? -1 : 0;
@@ -1181,7 +1192,7 @@ namespace Barotrauma
 
         private void DrawResizing(SpriteBatch spriteBatch, Camera cam)
         {
-            isHighlighted = true;
+            IsHighlighted = true;
 
             int startX = ResizeHorizontal ? -1 : 0;
             int StartY = ResizeVertical ? -1 : 0;

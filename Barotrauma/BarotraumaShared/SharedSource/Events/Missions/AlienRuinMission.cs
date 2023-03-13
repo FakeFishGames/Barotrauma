@@ -18,17 +18,19 @@ namespace Barotrauma
 
         private Ruin TargetRuin { get; set; }
 
-        public override IEnumerable<Vector2> SonarPositions
+        public override IEnumerable<(LocalizedString Label, Vector2 Position)> SonarLabels
         {
             get
             {
                 if (State == 0)
                 {
-                    return allTargets.Where(t => (t is Item i && !IsItemDestroyed(i)) || (t is Character c && !IsEnemyDefeated(c))).Select(t => t.WorldPosition);
+                    return allTargets
+                        .Where(t => (t is Item i && !IsItemDestroyed(i)) || (t is Character c && !IsEnemyDefeated(c)))
+                        .Select(t => (Prefab.SonarLabel, t.WorldPosition));
                 }
                 else
                 {
-                    return Enumerable.Empty<Vector2>();
+                    return Enumerable.Empty<(LocalizedString Label, Vector2 Position)>();
                 }
             }
         }
@@ -164,7 +166,7 @@ namespace Barotrauma
         {
             bool exitingLevel = GameMain.GameSession?.GameMode is CampaignMode campaign ?
                 campaign.GetAvailableTransition() != CampaignMode.TransitionType.None :
-                Submarine.MainSub is { } sub && (sub.AtEndExit || sub.AtStartExit);
+                Submarine.MainSub is { } sub && sub.AtEitherExit;
 
             return State > 0 && exitingLevel;            
         }

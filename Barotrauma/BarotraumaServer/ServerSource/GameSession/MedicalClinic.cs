@@ -2,7 +2,9 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
+using Barotrauma.Extensions;
 using Barotrauma.Networking;
 
 namespace Barotrauma
@@ -22,7 +24,11 @@ namespace Barotrauma
             public DateTimeOffset Expiry;
         }
 
-        private readonly Dictionary<Client, RateLimitInfo> rateLimits = new Dictionary<Client, RateLimitInfo>();
+        private readonly record struct AfflictionSubscriber(Client Subscriber, CharacterInfo Target, DateTimeOffset Expiry);
+
+        private readonly List<AfflictionSubscriber> afflictionSubscribers = new();
+
+        private readonly Dictionary<Client, RateLimitInfo> rateLimits = new();
 
         public void ServerRead(IReadMessage inc, Client sender)
         {
@@ -30,6 +36,12 @@ namespace Barotrauma
 
             switch (header)
             {
+                case NetworkHeader.ADD_EVERYTHING_TO_PENDING:
+                    ProcessAddEverything(sender);
+                    break;
+                case NetworkHeader.UNSUBSCRIBE_ME:
+                    RemoveClientSubscription(sender);
+                    break;
                 case NetworkHeader.REQUEST_AFFLICTIONS:
                     ProcessRequestedAfflictions(inc, sender);
                     break;
@@ -57,7 +69,25 @@ namespace Barotrauma
 
             NetCrewMember newCrewMember = INetSerializableStruct.Read<NetCrewMember>(inc);
             InsertPendingCrewMember(newCrewMember);
-            ServerSend(newCrewMember, NetworkHeader.ADD_PENDING, DeliveryMethod.Reliable, reponseClient: client);
+            ServerSend(new NetCollection<NetCrewMember>(newCrewMember), NetworkHeader.ADD_PENDING, DeliveryMethod.Reliable, reponseClient: client);
+        }
+
+        private void ProcessAddEverything(Client client)
+        {
+            if (CheckRateLimit(client) == RateLimitResult.LimitReached) { return; }
+            AddEverythingToPending();
+            ServerSend(PendingHeals.ToNetCollection(), NetworkHeader.ADD_PENDING, DeliveryMethod.Reliable, reponseClient: client);
+        }
+
+        private void RemoveClientSubscription(Client client)
+        {
+            foreach (AfflictionSubscriber sub in afflictionSubscribers.ToList())
+            {
+                if (sub.Subscriber == client || sub.Expiry < DateTimeOffset.Now)
+                {
+                    afflictionSubscribers.Remove(sub);
+                }
+            }
         }
 
         private void ProcessNewRemoval(IReadMessage inc, Client client)
@@ -73,12 +103,7 @@ namespace Barotrauma
         {
             if (CheckRateLimit(client) == RateLimitResult.LimitReached) { return; }
 
-            INetSerializableStruct writeCrewMember = new NetPendingCrew
-            {
-                CrewMembers = PendingHeals.ToArray()
-            };
-
-            ServerSend(writeCrewMember, NetworkHeader.REQUEST_PENDING, DeliveryMethod.Reliable, targetClient: client);
+            ServerSend(PendingHeals.ToNetCollection(), NetworkHeader.REQUEST_PENDING, DeliveryMethod.Reliable, targetClient: client);
         }
 
         private void ProcessHealing(Client client)
@@ -107,10 +132,10 @@ namespace Barotrauma
 
             CharacterInfo? foundInfo = crewMember.FindCharacterInfo(GetCrewCharacters());
 
-            NetAffliction[] pendingAfflictions = Array.Empty<NetAffliction>();
+            ImmutableArray<NetAffliction> pendingAfflictions = ImmutableArray<NetAffliction>.Empty;
             int infoId = 0;
 
-            if (foundInfo is { Character: { CharacterHealth: { } health } })
+            if (foundInfo is { Character.CharacterHealth: { } health })
             {
                 pendingAfflictions = GetAllAfflictions(health);
                 infoId = foundInfo.GetIdentifierUsingOriginalName();
@@ -121,6 +146,14 @@ namespace Barotrauma
                 CharacterInfoID = infoId,
                 Afflictions = pendingAfflictions
             };
+
+            if (foundInfo is not null)
+            {
+                RemoveClientSubscription(client);
+
+                // the client subscribes to the afflictions of the crew member for the next minute
+                afflictionSubscribers.Add(new AfflictionSubscriber(client, foundInfo, DateTimeOffset.Now.AddMinutes(1)));
+            }
 
             ServerSend(writeCrewMember, NetworkHeader.REQUEST_AFFLICTIONS, DeliveryMethod.Unreliable, client);
         }

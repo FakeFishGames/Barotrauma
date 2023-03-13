@@ -13,6 +13,12 @@ namespace Barotrauma
         [Serialize("", IsPropertySaveable.Yes)]
         public Identifier ObjectiveTag { get; set; }
 
+        [Serialize(true, IsPropertySaveable.Yes)]
+        public bool CanBeCompleted { get; set; }
+
+        [Serialize("", IsPropertySaveable.Yes)]
+        public Identifier ParentObjectiveId { get; set; }
+
         [Serialize(false, IsPropertySaveable.Yes)]
         public bool AutoPlayVideo { get; set; }
 

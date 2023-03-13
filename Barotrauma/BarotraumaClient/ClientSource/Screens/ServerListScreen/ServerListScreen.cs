@@ -7,8 +7,6 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
-using System.Net;
-using System.Net.Sockets;
 using System.Xml.Linq;
 
 namespace Barotrauma
@@ -241,6 +239,7 @@ namespace Barotrauma
         private GUITickBox filterPassword;
         private GUITickBox filterFull;
         private GUITickBox filterEmpty;
+        private GUIDropDown languageDropdown;
         private Dictionary<Identifier, GUIDropDown> ternaryFilters;
         private Dictionary<Identifier, GUITickBox> filterTickBoxes;
         private Dictionary<Identifier, GUITickBox> playStyleTickBoxes;
@@ -255,6 +254,7 @@ namespace Barotrauma
         private TernaryOption filterModdedValue = TernaryOption.Any;
 
         private ColumnLabel sortedBy;
+        private bool sortedAscending = true;
 
         private const float sidebarWidth = 0.2f;
         public ServerListScreen()
@@ -425,10 +425,13 @@ namespace Barotrauma
             ternaryFilters = new Dictionary<Identifier, GUIDropDown>();
             filterTickBoxes = new Dictionary<Identifier, GUITickBox>();
 
+            RectTransform createFilterRectT()
+                => new RectTransform(new Vector2(1.0f, elementHeight), filters.Content.RectTransform);
+            
             GUITickBox addTickBox(Identifier key, LocalizedString text = null, bool defaultState = false, bool addTooltip = false)
             {
                 text ??= TextManager.Get(key);
-                var tickBox = new GUITickBox(new RectTransform(new Vector2(1.0f, elementHeight), filters.Content.RectTransform), text)
+                var tickBox = new GUITickBox(createFilterRectT(), text)
                 {
                     UserData = text,
                     Selected = defaultState,
@@ -450,6 +453,109 @@ namespace Barotrauma
             filterEmpty = addTickBox("FilterEmptyServers".ToIdentifier());
             filterOffensive = addTickBox("FilterOffensiveServers".ToIdentifier());
 
+            // Language filter
+            if (ServerLanguageOptions.Options.Any())
+            {
+                var languageKey = "Language".ToIdentifier();
+                var allLanguagesKey = "AllLanguages".ToIdentifier();
+
+                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), filters.Content.RectTransform), TextManager.Get(languageKey), font: GUIStyle.SubHeadingFont)
+                {
+                    CanBeFocused = false
+                };
+
+                languageDropdown = new GUIDropDown(createFilterRectT(), selectMultiple: true);
+
+                languageDropdown.AddItem(TextManager.Get(allLanguagesKey), allLanguagesKey);
+                var allTickbox = languageDropdown.ListBox.Content.FindChild(allLanguagesKey)?.GetChild<GUITickBox>();
+
+                // Spacer between "All" and the individual languages
+                new GUIFrame(new RectTransform(new Vector2(1.0f, 0.0f), languageDropdown.ListBox.Content.RectTransform)
+                {
+                    MinSize = new Point(0, GUI.IntScaleCeiling(2))
+                }, style: null)
+                {
+                    Color = Color.DarkGray,
+                    CanBeFocused = false
+                };
+                
+                var selectedLanguages
+                    = ServerListFilters.Instance.GetAttributeLanguageIdentifierArray(
+                        languageKey,
+                        Array.Empty<LanguageIdentifier>());
+                foreach (var (label, identifier, _) in ServerLanguageOptions.Options)
+                {
+                    languageDropdown.AddItem(label, identifier);
+                }
+
+                if (!selectedLanguages.Any())
+                {
+                    selectedLanguages = ServerLanguageOptions.Options.Select(o => o.Identifier).ToArray();
+                }
+
+                foreach (var lang in selectedLanguages)
+                {
+                    languageDropdown.SelectItem(lang);
+                }
+
+                if (ServerLanguageOptions.Options.All(o => selectedLanguages.Any(l => o.Identifier == l)))
+                {
+                    languageDropdown.SelectItem(allLanguagesKey);
+                    languageDropdown.Text = TextManager.Get(allLanguagesKey);
+                }
+
+                var langTickboxes = languageDropdown.ListBox.Content.Children
+                    .Where(c => c.UserData is LanguageIdentifier)
+                    .Select(c => c.GetChild<GUITickBox>())
+                    .ToArray();
+
+                bool inSelectedCall = false;
+                languageDropdown.OnSelected = (_, userData) =>
+                {
+                    if (inSelectedCall) { return true; }
+                    try
+                    {
+                        inSelectedCall = true;
+
+                        if (Equals(allLanguagesKey, userData))
+                        {
+                            foreach (var tb in langTickboxes)
+                            {
+                                tb.Selected = allTickbox.Selected;
+                            }
+                        }
+
+                        bool noneSelected = langTickboxes.All(tb => !tb.Selected);
+                        bool allSelected = langTickboxes.All(tb => tb.Selected);
+
+                        if (allSelected != allTickbox.Selected)
+                        {
+                            allTickbox.Selected = allSelected;
+                        }
+
+                        if (allSelected)
+                        {
+                            languageDropdown.Text = TextManager.Get(allLanguagesKey);
+                        }
+                        else if (noneSelected)
+                        {
+                            languageDropdown.Text = TextManager.Get("None");
+                        }
+
+                        var languages = languageDropdown.SelectedDataMultiple.OfType<LanguageIdentifier>();
+
+                        ServerListFilters.Instance.SetAttribute(languageKey, string.Join(", ", languages));
+                        GameSettings.SaveCurrentConfig();
+                        return true;
+                    }
+                    finally
+                    {
+                        inSelectedCall = false;
+                        FilterServers();
+                    }
+                };
+            }
+            
             // Filter Tags
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), filters.Content.RectTransform), TextManager.Get("servertags"), font: GUIStyle.SubHeadingFont)
             {
@@ -713,7 +819,7 @@ namespace Barotrauma
 
         private void SortList(ColumnLabel sortBy, bool toggle)
         {
-            if (!(labelHolder.GetChildByUserData(sortBy) is GUIButton button)) { return; }
+            if (labelHolder.GetChildByUserData(sortBy) is not GUIButton button) { return; }
 
             sortedBy = sortBy;
 
@@ -730,50 +836,73 @@ namespace Barotrauma
                 }
             }
 
-            bool ascending = arrowUp.Visible;
+            sortedAscending = arrowUp.Visible;
             if (toggle)
             {
-                ascending = !ascending;
+                sortedAscending = !sortedAscending;
             }
 
-            arrowUp.Visible = ascending;
-            arrowDown.Visible = !ascending;
+            arrowUp.Visible = sortedAscending;
+            arrowDown.Visible = !sortedAscending;
             serverList.Content.RectTransform.SortChildren((c1, c2) => 
             {
-                if (!(c1.GUIComponent.UserData is ServerInfo s1)) { return 0; }
-                if (!(c2.GUIComponent.UserData is ServerInfo s2)) { return 0; }
-
-                switch (sortBy)
-                {
-                    case ColumnLabel.ServerListCompatible:                        
-                        bool s1Compatible = NetworkMember.IsCompatible(GameMain.Version, s1.GameVersion);
-                        bool s2Compatible = NetworkMember.IsCompatible(GameMain.Version, s2.GameVersion);
-
-                        if (s1Compatible == s2Compatible) { return 0; }
-                        return (s1Compatible ? 1 : -1) * (ascending ? 1 : -1);
-                    case ColumnLabel.ServerListHasPassword:
-                        if (s1.HasPassword == s2.HasPassword) { return 0; }
-                        return (s1.HasPassword ? 1 : -1) * (ascending ? 1 : -1);
-                    case ColumnLabel.ServerListName:
-                        // I think we actually want culture-specific sorting here?
-                        return string.Compare(s1.ServerName, s2.ServerName, StringComparison.CurrentCulture) * (ascending ? 1 : -1);
-                    case ColumnLabel.ServerListRoundStarted:
-                        if (s1.GameStarted == s2.GameStarted) { return 0; }
-                        return (s1.GameStarted ? 1 : -1) * (ascending ? 1 : -1);
-                    case ColumnLabel.ServerListPlayers:
-                        return s2.PlayerCount.CompareTo(s1.PlayerCount) * (ascending ? 1 : -1);
-                    case ColumnLabel.ServerListPing:
-                        return (s1.Ping.TryUnwrap(out var s1Ping), s2.Ping.TryUnwrap(out var s2Ping)) switch
-                        {
-                            (false, false) => 0,
-                            (true, true) => s2Ping.CompareTo(s1Ping) * (ascending ? 1 : -1),
-                            (false, true) => 1,
-                            (true, false) => -1
-                        };
-                    default:
-                        return 0;
-                }
+                if (c1.GUIComponent.UserData is not ServerInfo s1) { return 0; }
+                if (c2.GUIComponent.UserData is not ServerInfo s2) { return 0; }
+                int comparison = sortedAscending ? 1 : -1;
+                return CompareServer(sortBy, s1, s2) * comparison;
             });
+        }
+
+        private void InsertServer(ServerInfo serverInfo, GUIComponent component)
+        {
+            var children = serverList.Content.RectTransform.Children.Reverse().ToList();
+
+            int comparison = sortedAscending ? 1 : -1;
+            foreach (var child in children)
+            {
+                if (child.GUIComponent.UserData is not ServerInfo serverInfo2 || serverInfo.Equals(serverInfo2)) { continue; }
+                if (CompareServer(sortedBy, serverInfo, serverInfo2) * comparison >= 0)
+                {
+                    var index = serverList.Content.RectTransform.GetChildIndex(child);
+                    component.RectTransform.RepositionChildInHierarchy(index + 1);
+                    return;
+                }
+            }
+            component.RectTransform.SetAsFirstChild();
+        }
+
+        private static int CompareServer(ColumnLabel sortBy, ServerInfo s1, ServerInfo s2)
+        {
+            switch (sortBy)
+            {
+                case ColumnLabel.ServerListCompatible:
+                    bool s1Compatible = NetworkMember.IsCompatible(GameMain.Version, s1.GameVersion);
+                    bool s2Compatible = NetworkMember.IsCompatible(GameMain.Version, s2.GameVersion);
+
+                    if (s1Compatible == s2Compatible) { return 0; }
+                    return s1Compatible ? -1 : 1;
+                case ColumnLabel.ServerListHasPassword:
+                    if (s1.HasPassword == s2.HasPassword) { return 0; }
+                    return s1.HasPassword ? 1 : -1;
+                case ColumnLabel.ServerListName:
+                    // I think we actually want culture-specific sorting here?
+                    return string.Compare(s1.ServerName, s2.ServerName, StringComparison.CurrentCulture);
+                case ColumnLabel.ServerListRoundStarted:
+                    if (s1.GameStarted == s2.GameStarted) { return 0; }
+                    return s1.GameStarted ? 1 : -1;
+                case ColumnLabel.ServerListPlayers:
+                    return s2.PlayerCount.CompareTo(s1.PlayerCount);
+                case ColumnLabel.ServerListPing:
+                    return (s1.Ping.TryUnwrap(out var s1Ping), s2.Ping.TryUnwrap(out var s2Ping)) switch
+                    {
+                        (false, false) => 0,
+                        (true, true) => s2Ping.CompareTo(s1Ping),
+                        (false, true) => 1,
+                        (true, false) => -1
+                    };
+                default:
+                    return 0;
+            }
         }
         
         public override void Select()
@@ -821,6 +950,7 @@ namespace Barotrauma
 
             UpdateFriendsList();
             panelAnimator?.Update();
+
             scanServersButton.Enabled = (DateTime.Now - lastRefreshTime) >= AllowedRefreshInterval;
 
             if (PlayerInput.PrimaryMouseButtonClicked())
@@ -840,7 +970,7 @@ namespace Barotrauma
             RemoveMsgFromServerList(MsgUserData.NoMatchingServers);
             foreach (GUIComponent child in serverList.Content.Children)
             {
-                if (!(child.UserData is ServerInfo serverInfo)) { continue; }
+                if (child.UserData is not ServerInfo serverInfo) { continue; }
                 child.Visible = ShouldShowServer(serverInfo);
             }
 
@@ -851,6 +981,20 @@ namespace Barotrauma
             serverList.UpdateScrollBarSize();
         }
 
+        private bool AllLanguagesVisible
+        {
+            get
+            {
+                if (languageDropdown is null) { return true; }
+
+                // CountChildren-1 because there's a separator element in there that can't be selected
+                int tickBoxCount = languageDropdown.ListBox.Content.CountChildren - 1;
+                int selectedCount = languageDropdown.SelectedIndexMultiple.Count();
+                
+                return selectedCount >= tickBoxCount;
+            }
+        }
+        
         private bool ShouldShowServer(ServerInfo serverInfo)
         {
 #if !DEBUG
@@ -913,6 +1057,14 @@ namespace Barotrauma
             {
                 var playStyle = (PlayStyle)tickBox.UserData;
                 if (!tickBox.Selected && serverInfo.PlayStyle == playStyle)
+                {
+                    return false;
+                }
+            }
+
+            if (!AllLanguagesVisible)
+            {
+                if (!languageDropdown.SelectedDataMultiple.OfType<LanguageIdentifier>().Contains(serverInfo.Language))
                 {
                     return false;
                 }
@@ -1031,8 +1183,8 @@ namespace Barotrauma
             if (!(userdata is FriendInfo { IsInServer: true } info)) { return false; }
 
             if (info.IsInServer
-                && info.ConnectCommand is Some<ConnectCommand> { Value: { EndpointOrLobby: var endpointOrLobby } }
-                && endpointOrLobby.TryGet(out ConnectCommand.NameAndEndpoint nameAndEndpoint))
+                && info.ConnectCommand.TryUnwrap(out var command)
+                && command.EndpointOrLobby.TryGet(out ConnectCommand.NameAndEndpoint nameAndEndpoint))
             {
                 const int framePadding = 5;
 
@@ -1270,7 +1422,7 @@ namespace Barotrauma
             serverPreview.Content.ClearChildren();
             panelAnimator.RightEnabled = false;
             joinButton.Enabled = false;
-            selectedServer = null;
+            selectedServer = Option.None;
 
             if (selectedTab == TabEnum.All)
             {
@@ -1352,6 +1504,10 @@ namespace Barotrauma
 
         private void AddToServerList(ServerInfo serverInfo, bool skipPing = false)
         {
+            if (serverInfo.PlayerCount > serverInfo.MaxPlayers) { return; }
+            if (serverInfo.PlayerCount < 0) { return; }
+            if (serverInfo.MaxPlayers <= 0) { return; }
+
             RemoveMsgFromServerList(MsgUserData.RefreshingServerList);
             RemoveMsgFromServerList(MsgUserData.NoServers);
             var serverFrame = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.06f), serverList.Content.RectTransform) { MinSize = new Point(0, 35) },
@@ -1366,8 +1522,7 @@ namespace Barotrauma
             UpdateServerInfoUI(serverInfo);
             if (!skipPing) { PingUtils.GetServerPing(serverInfo, UpdateServerInfoUI); }
 
-            SortList(sortedBy, toggle: false);
-            FilterServers();
+            InsertServer(serverInfo, serverFrame);
         }
 
         private void UpdateServerInfoUI(ServerInfo serverInfo)
@@ -1625,7 +1780,7 @@ namespace Barotrauma
 #endif
         }
         
-        private Color GetPingTextColor(int ping)
+        private static Color GetPingTextColor(int ping)
         {
             if (ping < 0) { return Color.DarkRed; }
             return ToolBox.GradientLerp(ping / 200.0f, GUIStyle.Green, GUIStyle.Orange, GUIStyle.Red);
@@ -1636,12 +1791,10 @@ namespace Barotrauma
             graphics.Clear(Color.CornflowerBlue);
 
             GameMain.TitleScreen.DrawLoadingText = false;
-            GameMain.MainMenuScreen.DrawBackground(graphics, spriteBatch);
 
             spriteBatch.Begin(SpriteSortMode.Deferred, null, GUI.SamplerState, null, GameMain.ScissorTestEnable);
-            
+            GameMain.MainMenuScreen.DrawBackground(graphics, spriteBatch);            
             GUI.Draw(Cam, spriteBatch);
-
             spriteBatch.End();
         }
 
@@ -1662,6 +1815,7 @@ namespace Barotrauma
             {
                 ServerListFilters.Instance.SetAttribute(ternaryFilter.Key, ternaryFilter.Value.SelectedData.ToString());
             }
+            GameSettings.SaveCurrentConfig();
         }
 
         public void LoadServerFilters()

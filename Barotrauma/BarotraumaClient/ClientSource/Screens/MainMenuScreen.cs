@@ -46,8 +46,14 @@ namespace Barotrauma
 
         private GUITextBox serverNameBox, passwordBox, maxPlayersBox;
         private GUITickBox isPublicBox, wrongPasswordBanBox, karmaBox;
-        private GUIDropDown serverExecutableDropdown;
-        private readonly GUIButton joinServerButton, hostServerButton, steamWorkshopButton;
+        private GUIDropDown languageDropdown, serverExecutableDropdown;
+        private readonly GUIButton joinServerButton, hostServerButton;
+
+        private readonly GUIFrame modsButtonContainer;
+        private readonly GUIButton modsButton, modUpdatesButton;
+        private (DateTime WhenToRefresh, int Count) modUpdateStatus = (DateTime.Now, 0);
+        private static readonly TimeSpan ModUpdateInterval = TimeSpan.FromSeconds(60.0f);
+        
         private readonly GameMain game;
 
         private GUIImage playstyleBanner;
@@ -268,15 +274,29 @@ namespace Barotrauma
                 RelativeSpacing = 0.035f
             };
 
-#if USE_STEAM
-            steamWorkshopButton = new GUIButton(new RectTransform(new Vector2(1.0f, 1.0f), customizeList.RectTransform), TextManager.Get("SteamWorkshopButton"), textAlignment: Alignment.Left, style: "MainMenuGUIButton")
+            modsButtonContainer = new GUIFrame(new RectTransform(Vector2.One, customizeList.RectTransform),
+                style: null);
+            
+            modsButton = new GUIButton(new RectTransform(Vector2.One, modsButtonContainer.RectTransform),
+                TextManager.Get("settingstab.mods"), textAlignment: Alignment.Left, style: "MainMenuGUIButton")
             {
                 ForceUpperCase = ForceUpperCase.Yes,
                 Enabled = true,
                 UserData = Tab.SteamWorkshop,
                 OnClicked = SelectTab
             };
-#endif
+
+            modUpdatesButton = new GUIButton(new RectTransform(Vector2.One * 0.95f, modsButtonContainer.RectTransform, scaleBasis: ScaleBasis.BothHeight),
+                style: "GUIUpdateButton")
+            {
+                ToolTip = TextManager.Get("ModUpdatesAvailable"),
+                OnClicked = (_, _) =>
+                {
+                    BulkDownloader.PrepareUpdates();
+                    return false;
+                },
+                Visible = false
+            };
             
             new GUIButton(new RectTransform(new Vector2(1.0f, 1.0f), customizeList.RectTransform), TextManager.Get("SubEditorButton"), textAlignment: Alignment.Left, style: "MainMenuGUIButton")
             {
@@ -334,7 +354,7 @@ namespace Barotrauma
                 OnClicked = (button, userData) =>
                 {
                     string url = TextManager.Get("EditorDisclaimerWikiUrl").Fallback("https://barotraumagame.com/wiki").Value;
-                    GameMain.Instance.ShowOpenUrlInWebBrowserPrompt(url, promptExtensionTag: "wikinotice");
+                    GameMain.ShowOpenUrlInWebBrowserPrompt(url, promptExtensionTag: "wikinotice");
                     return true;
                 }
             };
@@ -446,6 +466,11 @@ namespace Barotrauma
 
             var creditsContainer = new GUIFrame(new RectTransform(new Vector2(0.75f, 1.5f), menuTabs[Tab.Credits].RectTransform, Anchor.CenterRight), style: "OuterGlow", color: Color.Black * 0.8f);
             creditsPlayer = new CreditsPlayer(new RectTransform(Vector2.One, creditsContainer.RectTransform), "Content/Texts/Credits.xml");
+            creditsPlayer.CloseButton.OnClicked = (btn, userdata) =>
+            {
+                SelectTab(Tab.Empty);
+                return true;
+            };
         }
 
         private void CreateTutorialTab()
@@ -463,13 +488,17 @@ namespace Barotrauma
                 }
             };
             var tutorialPreview = new GUILayoutGroup(new RectTransform(new Vector2(0.6f, 1.0f), tutorialContent.RectTransform)) { RelativeSpacing = 0.05f, Stretch = true };
-            var imageContainer = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.6f), tutorialPreview.RectTransform), style: "InnerFrame");
+            var imageContainer = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.5f), tutorialPreview.RectTransform), style: "InnerFrame");
             tutorialBanner = new GUIImage(new RectTransform(Vector2.One, imageContainer.RectTransform), style: null, scaleToFit: true);
 
-            var infoContainer = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.4f), tutorialPreview.RectTransform), style: "GUIFrameListBox");
-            var infoContent = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.9f), infoContainer.RectTransform, Anchor.Center), childAnchor: Anchor.TopCenter);
+            var infoContainer = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.5f), tutorialPreview.RectTransform), style: "GUIFrameListBox");
+            var infoContent = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.9f), infoContainer.RectTransform, Anchor.Center), childAnchor: Anchor.TopLeft)
+            {
+                AbsoluteSpacing = GUI.IntScale(10)
+            };
 
-            tutorialHeader = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.75f), infoContent.RectTransform), string.Empty, font: GUIStyle.SubHeadingFont, textAlignment: Alignment.Center);
+            tutorialHeader = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), infoContent.RectTransform), string.Empty, font: GUIStyle.SubHeadingFont);
+            tutorialDescription = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), infoContent.RectTransform), string.Empty, wrap: true);
 
             var startButton = new GUIButton(new RectTransform(new Vector2(0.5f, 0.0f), infoContent.RectTransform, Anchor.BottomRight), text: TextManager.Get("startgamebutton")) 
             { 
@@ -500,6 +529,10 @@ namespace Barotrauma
         private void SelectTutorial(Tutorial tutorial)
         {
             tutorialHeader.Text = tutorial.DisplayName;
+            tutorialHeader.CalculateHeightFromText();
+            tutorialDescription.Text = tutorial.Description;
+            tutorialDescription.CalculateHeightFromText();
+            (tutorialDescription.Parent as GUILayoutGroup)?.Recalculate();
             tutorial.TutorialPrefab.Banner?.EnsureLazyLoaded();
             tutorialBanner.Sprite = tutorial.TutorialPrefab.Banner;
             tutorialBanner.Color = tutorial.TutorialPrefab.Banner == null ? Color.Black : Color.White;
@@ -517,6 +550,8 @@ namespace Barotrauma
         #region Selection
         public override void Select()
         {
+            ResetModUpdateButton();
+            
             if (WorkshopItemsToUpdate.Any())
             {
                 while (WorkshopItemsToUpdate.TryDequeue(out ulong workshopId))
@@ -703,6 +738,12 @@ namespace Barotrauma
         }
 #endregion
 
+        public void ResetModUpdateButton()
+        {
+            modUpdateStatus = (DateTime.Now, 0);
+            modUpdatesButton.Visible = false;
+        }
+
         public void QuickStart(bool fixedSeed = false, Identifier sub = default, float difficulty = 50, LevelGenerationParams levelGenerationParams = null)
         {
             if (fixedSeed)
@@ -837,14 +878,34 @@ namespace Barotrauma
             GameMain.ResetNetLobbyScreen();
             try
             {
-                string exeName = serverExecutableDropdown.SelectedComponent?.UserData is ServerExecutableFile f ? f.Path.Value : "DedicatedServer";
+                string fileName;
+                if (serverExecutableDropdown.SelectedComponent?.UserData is ServerExecutableFile f && 
+                    f.ContentPackage != GameMain.VanillaContent)
+                {
+                    fileName = Path.Combine(
+                        Path.GetDirectoryName(f.Path.Value),
+                        Path.GetFileNameWithoutExtension(f.Path.Value));
+#if WINDOWS
+                    fileName += ".exe";
+#endif
+                }
+                else
+                {
+#if WINDOWS
+                    fileName = "DedicatedServer.exe";
+#else
+                    fileName = "./DedicatedServer";
+#endif
+                }
 
-                string arguments = "-name \"" + ToolBox.EscapeCharacters(name) + "\"" +
-                                   " -public " + isPublicBox.Selected.ToString() +
-                                   " -playstyle " + ((PlayStyle)playstyleBanner.UserData).ToString()  +
-                                   " -banafterwrongpassword " + wrongPasswordBanBox.Selected.ToString() +
-                                   " -karmaenabled " + (!karmaBox.Selected).ToString() +
-                                   " -maxplayers " + maxPlayersBox.Text;
+                string arguments =
+                    "-name \"" + ToolBox.EscapeCharacters(name) + "\"" +
+                    " -public " + isPublicBox.Selected.ToString() +
+                    " -playstyle " + ((PlayStyle)playstyleBanner.UserData).ToString()  +
+                    " -banafterwrongpassword " + wrongPasswordBanBox.Selected.ToString() +
+                    " -karmaenabled " + (!karmaBox.Selected).ToString() +
+                    " -maxplayers " + maxPlayersBox.Text +
+                    $" -language \"{(LanguageIdentifier)languageDropdown.SelectedData}\"";
 
                 if (!string.IsNullOrWhiteSpace(passwordBox.Text))
                 {
@@ -861,19 +922,10 @@ namespace Barotrauma
                 }
                 int ownerKey = Math.Max(CryptoRandom.Instance.Next(), 1);
                 arguments += " -ownerkey " + ownerKey;
-
-                string filename = Path.Combine(
-                    Path.GetDirectoryName(exeName),
-                    Path.GetFileNameWithoutExtension(exeName));
-#if WINDOWS
-                filename += ".exe";
-#else
-                filename = "./" + exeName;
-#endif
-                
+                                
                 var processInfo = new ProcessStartInfo
                 {
-                    FileName = filename,
+                    FileName = fileName,
                     Arguments = arguments,
                     WorkingDirectory = Directory.GetCurrentDirectory(),
 #if !DEBUG
@@ -920,17 +972,63 @@ namespace Barotrauma
             }
         }
 
+        private void UpdateOutOfDateWorkshopItemCount()
+        {
+            if (DateTime.Now < modUpdateStatus.WhenToRefresh) { return; }
+            if (!SteamManager.IsInitialized) { return; }
+
+            var installedPackages = ContentPackageManager.WorkshopPackages;
+
+            var ids = SteamManager.Workshop.GetSubscribedItemIds()
+                .Select(id => id.Value)
+                .Union(installedPackages
+                    .Select(pkg => pkg.UgcId)
+                    .NotNone()
+                    .OfType<SteamWorkshopId>()
+                    .Select(id => id.Value));
+            var count = ids
+                // Deliberately construct Steamworks.Ugc.Item directly
+                // to not immediately generate a Workshop data request
+                .Select(id => new Steamworks.Ugc.Item(id))
+                .Count(item =>
+                    installedPackages.FirstOrDefault(p
+                        => p.UgcId.TryUnwrap(out SteamWorkshopId id) && id.Value == item.Id)
+                        is { } pkg
+                    // Checking that this item is downloading, waiting to be downloaded
+                    // or is newer than the currently installed copy should be good enough,
+                    // and should still not make a Workshop data request
+                    && (item.IsDownloading
+                        || item.IsDownloadPending
+                        || (item.InstallTime.TryGetValue(out var workshopInstallTime)
+                            && pkg.InstallTime.TryUnwrap(out var localInstallTime)
+                            && localInstallTime.ToUtcValue() < workshopInstallTime)));
+
+            modUpdateStatus = (DateTime.Now + ModUpdateInterval, count);
+        }
+
         public override void Update(double deltaTime)
         {
-#if !DEBUG && USE_STEAM
+#if DEBUG
+            hostServerButton.Enabled = true;
+#else
             if (GameSettings.CurrentConfig.UseSteamMatchmaking)
             {
-                hostServerButton.Enabled = Steam.SteamManager.IsInitialized;
+                hostServerButton.Enabled = SteamManager.IsInitialized;
             }
-            steamWorkshopButton.Enabled = Steam.SteamManager.IsInitialized;
-#elif USE_STEAM
-            steamWorkshopButton.Enabled = true;
 #endif
+
+            UpdateOutOfDateWorkshopItemCount();
+            modUpdatesButton.Visible = modUpdateStatus.Count > 0;
+
+            if (modUpdatesButton.Visible)
+            {
+                var modButtonLabelSize =
+                    modsButton.Font.MeasureString(modsButton.Text).ToPoint()
+                    + new Point(GUI.IntScale(25));
+                modUpdatesButton.RectTransform.AbsoluteOffset =
+                    (modButtonLabelSize.X, modsButton.Rect.Height / 2 - modUpdatesButton.Rect.Height / 2);
+            }
+            
             switch (selectedTab)
             {
                 case Tab.NewGame:
@@ -948,22 +1046,29 @@ namespace Barotrauma
 #if UNSTABLE
                 backgroundSprite = new Sprite("Content/UnstableBackground.png", sourceRectangle: null);
 #endif
-                backgroundSprite ??= (LocationType.Prefabs.Where(l => l.UseInMainMenu).GetRandomUnsynced())?.GetPortrait(0);
-            }
-
-            if (backgroundSprite != null)
-            {
-                GUI.DrawBackgroundSprite(spriteBatch, backgroundSprite,
-                    aberrationStrength: 0.0f);
+                if (GUIStyle.GetComponentStyle("MainMenuBackground") is { } mainMenuStyle &&
+                     mainMenuStyle.Sprites.TryGetValue(GUIComponent.ComponentState.None, out var sprites))
+                {
+                    backgroundSprite = sprites.GetRandomUnsynced()?.Sprite;
+                }
+                backgroundSprite ??= LocationType.Prefabs.GetRandomUnsynced()?.GetPortrait(0);
             }
 
             var vignette = GUIStyle.GetComponentStyle("mainmenuvignette")?.GetDefaultSprite();
+            float vignetteScale = Math.Min(GameMain.GraphicsWidth / vignette.size.X, GameMain.GraphicsHeight / vignette.size.Y);
+
+            Rectangle drawArea = new Rectangle(
+                (int)(vignette.size.X * vignetteScale / 2), 0,
+                (int)(GameMain.GraphicsWidth - vignette.size.X * vignetteScale / 2), GameMain.GraphicsHeight);
+
+            if (backgroundSprite?.Texture != null)
+            {
+                GUI.DrawBackgroundSprite(spriteBatch, backgroundSprite, Color.White, drawArea);
+            }
+
             if (vignette != null)
             {
-                spriteBatch.Begin(blendState: BlendState.NonPremultiplied);
-                vignette.Draw(spriteBatch, Vector2.Zero, Color.White, Vector2.Zero, 0.0f, 
-                    new Vector2(GameMain.GraphicsWidth / vignette.size.X, GameMain.GraphicsHeight / vignette.size.Y));
-                spriteBatch.End();
+                vignette.Draw(spriteBatch, Vector2.Zero, Color.White, Vector2.Zero, 0.0f, vignetteScale);
             }
         }
 
@@ -976,9 +1081,9 @@ namespace Barotrauma
 
         public override void Draw(double deltaTime, GraphicsDevice graphics, SpriteBatch spriteBatch)
         {
-            DrawBackground(graphics, spriteBatch);
-
             spriteBatch.Begin(SpriteSortMode.Deferred, null, GUI.SamplerState, null, GameMain.ScissorTestEnable);
+
+            DrawBackground(graphics, spriteBatch);
 
             GUI.Draw(Cam, spriteBatch);
 
@@ -1009,9 +1114,9 @@ namespace Barotrauma
                     if (i == 0)
                     {
                         GUI.DrawLine(spriteBatch, textPos, textPos - Vector2.UnitX * textSize.X, mouseOn ? Color.White : Color.White * 0.7f);
-                        if (mouseOn && PlayerInput.PrimaryMouseButtonClicked())
+                        if (mouseOn && PlayerInput.PrimaryMouseButtonClicked() && GUI.MouseOn == null)
                         {
-                            GameMain.Instance.ShowOpenUrlInWebBrowserPrompt("http://privacypolicy.daedalic.com");
+                            GameMain.ShowOpenUrlInWebBrowserPrompt("http://privacypolicy.daedalic.com");
                         }
                     }
                     textPos.Y -= textSize.Y;
@@ -1114,45 +1219,28 @@ namespace Barotrauma
         {
             menuTabs[Tab.HostServer].ClearChildren();
 
-            string name = "";
-            string password = "";
-            int maxPlayers = 8;
-            bool isPublic = true;
-            bool banAfterWrongPassword = false;
-            bool karmaEnabled = true;
-            string selectedKarmaPreset = "";
-            PlayStyle selectedPlayStyle = PlayStyle.Casual;
-            if (File.Exists(ServerSettings.SettingsFile))
+            var serverSettings = XMLExtensions.TryLoadXml(ServerSettings.SettingsFile, out _)?.Root ?? new XElement("serversettings");
+
+            var name = serverSettings.GetAttributeString("name", "");
+            var password = serverSettings.GetAttributeString("password", "");
+            var isPublic = serverSettings.GetAttributeBool("IsPublic", true);
+            var banAfterWrongPassword = serverSettings.GetAttributeBool("banafterwrongpassword", false);
+
+            int maxPlayersElement = serverSettings.GetAttributeInt("maxplayers", 8);
+            if (maxPlayersElement > NetConfig.MaxPlayers)
             {
-                XDocument settingsDoc = XMLExtensions.TryLoadXml(ServerSettings.SettingsFile);
-                if (settingsDoc != null)
-                {
-                    name = settingsDoc.Root.GetAttributeString("name", name);
-                    password = settingsDoc.Root.GetAttributeString("password", password);
-                    isPublic = settingsDoc.Root.GetAttributeBool("public", isPublic);
-                    banAfterWrongPassword = settingsDoc.Root.GetAttributeBool("banafterwrongpassword", banAfterWrongPassword);
-
-                    int maxPlayersElement = settingsDoc.Root.GetAttributeInt("maxplayers", maxPlayers);
-                    if (maxPlayersElement > NetConfig.MaxPlayers)
-                    {
-                        DebugConsole.IsOpen = true;
-                        DebugConsole.NewMessage($"Setting the maximum amount of players to {maxPlayersElement} failed due to exceeding the limit of {NetConfig.MaxPlayers} players per server. Using the maximum of {NetConfig.MaxPlayers} instead.", Color.Red);
-                        maxPlayersElement = NetConfig.MaxPlayers;
-                    }
-
-                    maxPlayers = maxPlayersElement;
-                    karmaEnabled = settingsDoc.Root.GetAttributeBool("karmaenabled", true);
-                    selectedKarmaPreset = settingsDoc.Root.GetAttributeString("karmapreset", "default");
-                    string playStyleStr = settingsDoc.Root.GetAttributeString("playstyle", "Casual");
-                    Enum.TryParse(playStyleStr, out selectedPlayStyle);
-                }
+                DebugConsole.AddWarning($"Setting the maximum amount of players to {maxPlayersElement} failed due to exceeding the limit of {NetConfig.MaxPlayers} players per server. Using the maximum of {NetConfig.MaxPlayers} instead.");
             }
+            int maxPlayers = Math.Clamp(maxPlayersElement, min: 1, max: NetConfig.MaxPlayers);
+
+            var karmaEnabled = serverSettings.GetAttributeBool("karmaenabled", true);
+            var selectedPlayStyle = serverSettings.GetAttributeEnum("playstyle", PlayStyle.Casual);
 
             Vector2 textLabelSize = new Vector2(1.0f, 0.05f);
             Alignment textAlignment = Alignment.CenterLeft;
             Vector2 textFieldSize = new Vector2(0.5f, 1.0f);
             Vector2 tickBoxSize = new Vector2(0.4f, 0.04f);
-            var content = new GUILayoutGroup(new RectTransform(new Vector2(0.7f, 0.9f), menuTabs[Tab.HostServer].RectTransform, Anchor.Center), childAnchor: Anchor.TopCenter)
+            var content = new GUILayoutGroup(new RectTransform(new Vector2(0.7f, 0.95f), menuTabs[Tab.HostServer].RectTransform, Anchor.Center), childAnchor: Anchor.TopCenter)
             {
                 RelativeSpacing = 0.01f,
                 Stretch = true
@@ -1230,7 +1318,7 @@ namespace Barotrauma
             //other settings -----------------------------------------------------
 
             //spacing
-            new GUIFrame(new RectTransform(new Vector2(1.0f, 0.05f), content.RectTransform), style: null);
+            new GUIFrame(new RectTransform(new Vector2(1.0f, 0.025f), content.RectTransform), style: null);
 
             var label = new GUITextBlock(new RectTransform(textLabelSize, parent.RectTransform), TextManager.Get("ServerName"), textAlignment: textAlignment);
             serverNameBox = new GUITextBox(new RectTransform(textFieldSize, label.RectTransform, Anchor.CenterRight), text: name, textAlignment: textAlignment)
@@ -1281,6 +1369,21 @@ namespace Barotrauma
                 Censor = true
             };
             label.RectTransform.IsFixedSize = true;
+
+            var languageLabel = new GUITextBlock(new RectTransform(textLabelSize, parent.RectTransform),
+                TextManager.Get("Language"), textAlignment: textAlignment);
+            languageDropdown = new GUIDropDown(new RectTransform(textFieldSize, languageLabel.RectTransform, Anchor.CenterRight));
+            foreach (var language in ServerLanguageOptions.Options)
+            {
+                languageDropdown.AddItem(language.Label, language.Identifier);
+            }
+            var defaultLanguage = ServerLanguageOptions.PickLanguage(GameSettings.CurrentConfig.Language);
+            var settingsLanguage = serverSettings.GetAttributeIdentifier("language", defaultLanguage.Value).ToLanguageIdentifier();
+            if (!ServerLanguageOptions.Options.Any(o => o.Identifier == settingsLanguage))
+            {
+                settingsLanguage = defaultLanguage;
+            }
+            languageDropdown.Select(ServerLanguageOptions.Options.FindIndex(o => o.Identifier == settingsLanguage));
 
             var serverExecutableLabel = new GUITextBlock(new RectTransform(textLabelSize, parent.RectTransform),
                 TextManager.Get("ServerExecutable"), textAlignment: textAlignment);

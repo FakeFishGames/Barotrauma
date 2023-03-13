@@ -20,8 +20,8 @@ namespace Barotrauma
 
         public readonly ContentXElement ConfigElement;
 
-        public readonly bool CanSpriteFlipX;
-        public readonly bool CanSpriteFlipY;
+        public override bool CanSpriteFlipX { get; }
+        public override bool CanSpriteFlipY { get; }
 
         /// <summary>
         /// If null, the orientation is determined automatically based on the dimensions of the structure instances
@@ -175,7 +175,7 @@ namespace Barotrauma
 #endif
             foreach (var subElement in element.Elements())
             {
-                switch (subElement.Name.ToString())
+                switch (subElement.Name.ToString().ToLowerInvariant())
                 {
                     case "sprite":
                         Sprite = new Sprite(subElement, lazyLoad: true);

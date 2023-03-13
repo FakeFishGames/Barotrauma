@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
+using Barotrauma.Steam;
 
 namespace Barotrauma.Networking
 {
@@ -78,7 +79,7 @@ namespace Barotrauma.Networking
             }
         }
         private Dictionary<Identifier, bool> tempMonsterEnabled;
-        
+
         partial void InitProjSpecific()
         {
             var properties = TypeDescriptor.GetProperties(GetType()).Cast<PropertyDescriptor>();
@@ -140,7 +141,7 @@ namespace Barotrauma.Networking
             MaxPlayers = incMsg.ReadByte();
             HasPassword = incMsg.ReadBoolean();
             IsPublic = incMsg.ReadBoolean();
-            GameMain.NetLobbyScreen.SetPublic(IsPublic);
+            GameMain.Client?.SetLobbyPublic(IsPublic);
             AllowFileTransfers = incMsg.ReadBoolean();
             incMsg.ReadPadBits();
             TickRate = incMsg.ReadRangedInteger(1, 60);
@@ -367,6 +368,26 @@ namespace Barotrauma.Networking
 
             //***********************************************
 
+            // Language
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), serverTab.RectTransform), TextManager.Get("Language"), font: GUIStyle.SubHeadingFont);
+            var languageDD = new GUIDropDown(new RectTransform(new Vector2(1.0f, 0.02f), serverTab.RectTransform));
+            foreach (var language in ServerLanguageOptions.Options)
+            {
+                languageDD.AddItem(language.Label, language.Identifier);
+            }
+            GetPropertyData(nameof(Language)).AssignGUIComponent(languageDD);
+
+            //changing server visibility on the fly is not supported in dedicated servers
+            if (GameMain.Client?.ClientPeer is not LidgrenClientPeer)
+            {
+                var isPublic = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.05f), serverTab.RectTransform),
+                    TextManager.Get("publicserver"))
+                {
+                    ToolTip = TextManager.Get("publicservertooltip")
+                };
+                GetPropertyData(nameof(IsPublic)).AssignGUIComponent(isPublic);
+            }
+
             // Sub Selection
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), serverTab.RectTransform), TextManager.Get("ServerSettingsSubSelection"), font: GUIStyle.SubHeadingFont);
             var selectionFrame = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.02f), serverTab.RectTransform), isHorizontal: true)
@@ -475,9 +496,10 @@ namespace Barotrauma.Networking
             //                              game settings 
             //--------------------------------------------------------------------------------
 
-            var roundsTab = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.95f), settingsTabs[(int)SettingsTab.Rounds].RectTransform, Anchor.Center)) { };
+            var roundsTab = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.95f), settingsTabs[(int)SettingsTab.Rounds].RectTransform, Anchor.Center));
+            var roundsContent = new GUIListBox(new RectTransform(Vector2.One, roundsTab.RectTransform, Anchor.Center), style: "GUIListBoxNoBorder").Content;
 
-            GUILayoutGroup playStyleLayout = new GUILayoutGroup(new RectTransform(new Vector2(1f, 0.2f), roundsTab.RectTransform));
+            GUILayoutGroup playStyleLayout = new GUILayoutGroup(new RectTransform(new Vector2(1f, 0.2f), roundsContent.RectTransform));
             // Play Style Selection
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.2f), playStyleLayout.RectTransform), TextManager.Get("ServerSettingsPlayStyle"), font: GUIStyle.SubHeadingFont);
             var playstyleList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.7f), playStyleLayout.RectTransform))
@@ -502,7 +524,7 @@ namespace Barotrauma.Networking
             GUITextBlock.AutoScaleAndNormalize(playStyleTickBoxes.Select(t => t.TextBlock));
             playstyleList.RectTransform.MinSize = new Point(0, (int)(playstyleList.Content.Children.First().Rect.Height * 2.0f + playstyleList.Padding.Y + playstyleList.Padding.W));
 
-            GUILayoutGroup sliderLayout = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.35f), roundsTab.RectTransform))
+            GUILayoutGroup sliderLayout = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.35f), roundsContent.RectTransform))
             {
                 Stretch = true
             };
@@ -608,7 +630,7 @@ namespace Barotrauma.Networking
             };
             slider.OnMoved(slider, slider.BarScroll);
 
-            GUILayoutGroup losModeLayout = new GUILayoutGroup(new RectTransform(new Vector2(1f, 0.14f), roundsTab.RectTransform));
+            GUILayoutGroup losModeLayout = new GUILayoutGroup(new RectTransform(new Vector2(1f, 0.14f), roundsContent.RectTransform));
 
             var losModeLabel = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.4f), losModeLayout.RectTransform),
                 TextManager.Get("LosEffect"));
@@ -629,7 +651,30 @@ namespace Barotrauma.Networking
             }
             GetPropertyData(nameof(LosMode)).AssignGUIComponent(losModeRadioButtonGroup);
 
-            GUILayoutGroup numberLayout = new GUILayoutGroup(new RectTransform(new Vector2(1f, 0.3f), roundsTab.RectTransform))
+            GUILayoutGroup healthBarModeLayout = new GUILayoutGroup(new RectTransform(new Vector2(1f, 0.14f), roundsContent.RectTransform));
+
+            var healthBarModeLabel = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.4f), healthBarModeLayout.RectTransform),
+                TextManager.Get("ShowEnemyHealthBars"));
+
+            var healthBarModeRadioButtonLayout
+                = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.6f), healthBarModeLayout.RectTransform),
+                    isHorizontal: true)
+                {
+                    Stretch = true
+                };
+
+            var healthBarModeRadioButtonGroup = new GUIRadioButtonGroup();
+            EnemyHealthBarMode[] healthBarModeModes = Enum.GetValues<EnemyHealthBarMode>();
+            for (int i = 0; i < healthBarModeModes.Length; i++)
+            {
+                var losTick = new GUITickBox(new RectTransform(new Vector2(0.3f, 1.0f), healthBarModeRadioButtonLayout.RectTransform), 
+                    TextManager.Get($"ShowEnemyHealthBars.{healthBarModeModes[i]}"), 
+                    font: GUIStyle.SmallFont, style: "GUIRadioButton");
+                healthBarModeRadioButtonGroup.AddRadioButton(i, losTick);
+            }
+            GetPropertyData(nameof(ShowEnemyHealthBars)).AssignGUIComponent(healthBarModeRadioButtonGroup);
+
+            GUILayoutGroup numberLayout = new GUILayoutGroup(new RectTransform(new Vector2(1f, 0.3f), roundsContent.RectTransform))
             {
                 Stretch = true
             };
@@ -651,7 +696,7 @@ namespace Barotrauma.Networking
             var disableBotConversationsBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.05f), numberLayout.RectTransform), TextManager.Get("ServerSettingsDisableBotConversations"));
             GetPropertyData(nameof(DisableBotConversations)).AssignGUIComponent(disableBotConversationsBox);
 
-            GUILayoutGroup buttonHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.1f), roundsTab.RectTransform), isHorizontal: true)
+            GUILayoutGroup buttonHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.1f), roundsContent.RectTransform), isHorizontal: true)
             {
                 Stretch = true,
                 RelativeSpacing = 0.05f

@@ -82,6 +82,12 @@ namespace Barotrauma.Particles
         [Editable, Serialize(false, IsPropertySaveable.Yes)]
         public bool CopyEntityAngle { get; set; }
 
+        [Editable, Serialize(true, IsPropertySaveable.Yes, description: "Should the entity heading direction be applied to the particle rotation? Only affects after flipping the texture and when CopyEntityAngle is true.")]
+        public bool CopyEntityDir { get; set; }
+
+        [Editable, Serialize(false, IsPropertySaveable.Yes, description: "Only relevant for status effects. Makes the emitter copy the angle from the target of the effect instead of the entity applying the effect.")]
+        public bool CopyTargetAngle { get; set; }
+
         [Editable, Serialize("1,1,1,1", IsPropertySaveable.Yes)]
         public Color ColorMultiplier { get; set; }
 
@@ -200,7 +206,7 @@ namespace Barotrauma.Particles
                 position += dir * Rand.Range(Prefab.Properties.DistanceMin, Prefab.Properties.DistanceMax);
             }
 
-            var particle = GameMain.ParticleManager.CreateParticle(particlePrefab, position, velocity, particleRotation, hullGuess, Prefab.DrawOnTop, lifeTimeMultiplier: Prefab.Properties.LifeTimeMultiplier, tracerPoints: tracerPoints);
+            var particle = GameMain.ParticleManager.CreateParticle(particlePrefab, position, velocity, particleRotation, hullGuess, lifeTimeMultiplier: Prefab.Properties.LifeTimeMultiplier, tracerPoints: tracerPoints);
 
             if (particle != null)
             {

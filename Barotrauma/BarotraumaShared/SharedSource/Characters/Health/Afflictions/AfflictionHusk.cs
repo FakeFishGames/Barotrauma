@@ -22,7 +22,7 @@ namespace Barotrauma
 
         private Character character;
 
-        private bool stun = true;
+        private bool stun = false;
 
         private readonly List<Affliction> huskInfection = new List<Affliction>();
 
@@ -43,6 +43,7 @@ namespace Barotrauma
                     DeactivateHusk();
                     highestStrength = 0;
                 }
+                activeEffectDirty = true;
             }
         }
         private float highestStrength;
@@ -216,7 +217,8 @@ namespace Barotrauma
         private void DeactivateHusk()
         {
             if (character?.AnimController == null || character.Removed) { return; }
-            if (Prefab is AfflictionPrefabHusk { NeedsAir: false })
+            if (Prefab is AfflictionPrefabHusk { NeedsAir: false } && 
+                !character.CharacterHealth.GetAllAfflictions().Any(a => a != this && a.Prefab is AfflictionPrefabHusk { NeedsAir: false }))
             {
                 character.NeedsAir = character.Params.MainElement.GetAttributeBool("needsair", false);
             }
@@ -405,45 +407,53 @@ namespace Barotrauma
 
             var root = doc.Root.FromPackage(pathToAppendage.ContentPackage);
             var limbElements = root.GetChildElements("limb").ToDictionary(e => e.GetAttributeString("id", null), e => e);
+            //the IDs may need to be offset if the character has other extra appendages (e.g. from gene splicing)
+            //that take up the IDs of this appendage
+            int idOffset = 0;
             foreach (var jointElement in root.GetChildElements("joint"))
             {
-                if (limbElements.TryGetValue(jointElement.GetAttributeString("limb2", null), out ContentXElement limbElement))
+                if (!limbElements.TryGetValue(jointElement.GetAttributeString("limb2", null), out ContentXElement limbElement)) { continue; }
+                
+                var jointParams = new RagdollParams.JointParams(jointElement, ragdoll.RagdollParams);
+                Limb attachLimb = null;
+                if (matchingAffliction.AttachLimbId > -1)
                 {
-                    var jointParams = new RagdollParams.JointParams(jointElement, ragdoll.RagdollParams);
-                    Limb attachLimb = null;
-                    if (matchingAffliction.AttachLimbId > -1)
-                    {
-                        attachLimb = ragdoll.Limbs.FirstOrDefault(l => !l.IsSevered && l.Params.ID == matchingAffliction.AttachLimbId);
-                    }
-                    else if (matchingAffliction.AttachLimbName != null)
-                    {
-                        attachLimb = ragdoll.Limbs.FirstOrDefault(l => !l.IsSevered && l.Name == matchingAffliction.AttachLimbName);
-                    }
-                    else if (matchingAffliction.AttachLimbType != LimbType.None)
-                    {
-                        attachLimb = ragdoll.Limbs.FirstOrDefault(l => !l.IsSevered && l.type == matchingAffliction.AttachLimbType);
-                    }
-                    if (attachLimb == null)
-                    {
-                        attachLimb = ragdoll.Limbs.FirstOrDefault(l => !l.IsSevered && l.Params.ID == jointParams.Limb1);
-                    }
-                    if (attachLimb != null)
-                    {
-                        jointParams.Limb1 = attachLimb.Params.ID;
-                        var appendageLimbParams = new RagdollParams.LimbParams(limbElement, ragdoll.RagdollParams)
-                        {
-                            // Ensure that we have a valid id for the new limb
-                            ID = ragdoll.Limbs.Length
-                        };
-                        jointParams.Limb2 = appendageLimbParams.ID;
-                        Limb huskAppendage = new Limb(ragdoll, character, appendageLimbParams);
-                        huskAppendage.body.Submarine = character.Submarine;
-                        huskAppendage.body.SetTransform(attachLimb.SimPosition, attachLimb.Rotation);
-                        ragdoll.AddLimb(huskAppendage);
-                        ragdoll.AddJoint(jointParams);
-                        appendage.Add(huskAppendage);
-                    }
+                    attachLimb = ragdoll.Limbs.FirstOrDefault(l => !l.IsSevered && l.Params.ID == matchingAffliction.AttachLimbId);
                 }
+                else if (matchingAffliction.AttachLimbName != null)
+                {
+                    attachLimb = ragdoll.Limbs.FirstOrDefault(l => !l.IsSevered && l.Name == matchingAffliction.AttachLimbName);
+                }
+                else if (matchingAffliction.AttachLimbType != LimbType.None)
+                {
+                    attachLimb = ragdoll.Limbs.FirstOrDefault(l => !l.IsSevered && l.type == matchingAffliction.AttachLimbType);
+                }
+                if (attachLimb == null)
+                {
+                    attachLimb = ragdoll.Limbs.FirstOrDefault(l => !l.IsSevered && l.Params.ID == jointParams.Limb1);
+                }
+                if (attachLimb != null)
+                {
+                    jointParams.Limb1 = attachLimb.Params.ID;
+                    //the joint attaches to a limb outside the character's normal limb count = to another part of the appendage
+                    // -> if the appendage's IDs have been offset, we need to take that into account to attach to the correct limb
+                    if (jointParams.Limb1 >= ragdoll.RagdollParams.Limbs.Count)
+                    {
+                        jointParams.Limb1 += idOffset;
+                    }
+                    var appendageLimbParams = new RagdollParams.LimbParams(limbElement, ragdoll.RagdollParams);
+                    if (idOffset == 0)
+                    {
+                        idOffset = ragdoll.Limbs.Length - appendageLimbParams.ID;
+                    }
+                    jointParams.Limb2 = appendageLimbParams.ID = ragdoll.Limbs.Length;
+                    Limb huskAppendage = new Limb(ragdoll, character, appendageLimbParams);
+                    huskAppendage.body.Submarine = character.Submarine;
+                    huskAppendage.body.SetTransform(attachLimb.SimPosition, attachLimb.Rotation);
+                    ragdoll.AddLimb(huskAppendage);
+                    ragdoll.AddJoint(jointParams);
+                    appendage.Add(huskAppendage);
+                }                
             }
             return appendage;
         }

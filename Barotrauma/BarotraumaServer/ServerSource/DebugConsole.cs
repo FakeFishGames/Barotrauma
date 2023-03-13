@@ -82,53 +82,49 @@ namespace Barotrauma
             }
 
             //dequeue messages
-            lock (queuedMessages)
+            if (queuedMessages.Count > 0)
             {
-                if (queuedMessages.Count > 0)
+
+                if (!Console.IsOutputRedirected)
                 {
-
-                    if (!Console.IsOutputRedirected)
+                    Console.CursorLeft = 0;
+                }
+                while (queuedMessages.TryDequeue(out var msg))
+                {
+                    Messages.Add(msg);
+                    if (GameSettings.CurrentConfig.SaveDebugConsoleLogs || GameSettings.CurrentConfig.VerboseLogging)
                     {
-                        Console.CursorLeft = 0;
-                    }
-                    while (queuedMessages.Count > 0)
-                    {
-                        ColoredText msg = queuedMessages.Dequeue();
-                        Messages.Add(msg);
-                        if (GameSettings.CurrentConfig.SaveDebugConsoleLogs || GameSettings.CurrentConfig.VerboseLogging)
+                        unsavedMessages.Add(msg);
+                        if (unsavedMessages.Count >= messagesPerFile)
                         {
-                            unsavedMessages.Add(msg);
-                            if (unsavedMessages.Count >= messagesPerFile)
-                            {
-                                SaveLogs();
-                                unsavedMessages.Clear();
-                            }
+                            SaveLogs();
+                            unsavedMessages.Clear();
                         }
-
-                        string msgTxt = msg.Text;
-
-                        if (msg.IsCommand) commandMemory.Add(msgTxt);
-
-                        if(!Console.IsOutputRedirected)
-                        {
-                            int paddingLen = consoleWidth - (msg.Text.Length % consoleWidth) - 1;
-                            msgTxt += new string(' ', paddingLen > 0 ? paddingLen : 0);
-
-                            Console.ForegroundColor = XnaToConsoleColor.Convert(msg.Color);
-                        }
-                        Console.WriteLine(msgTxt);
-
-                        if (sw.ElapsedMilliseconds >= maxTime) { break; }
                     }
+
+                    string msgTxt = msg.Text;
+
+                    if (msg.IsCommand) commandMemory.Add(msgTxt);
+
                     if(!Console.IsOutputRedirected)
                     {
-                        RewriteInputToCommandLine(input);
+                        int paddingLen = consoleWidth - (msg.Text.Length % consoleWidth) - 1;
+                        msgTxt += new string(' ', paddingLen > 0 ? paddingLen : 0);
+
+                        Console.ForegroundColor = XnaToConsoleColor.Convert(msg.Color);
                     }
+                    Console.WriteLine(msgTxt);
+
+                    if (sw.ElapsedMilliseconds >= maxTime) { break; }
                 }
-                if (Messages.Count > MaxMessages)
+                if (!Console.IsOutputRedirected)
                 {
-                    Messages.RemoveRange(0, Messages.Count - MaxMessages);
+                    RewriteInputToCommandLine(input);
                 }
+            }
+            if (Messages.Count > MaxMessages)
+            {
+                Messages.RemoveRange(0, Messages.Count - MaxMessages);
             }
 
             // No good way to display input when console output is redirected, and can't read from redirected input using KeyAvailable.
@@ -272,26 +268,22 @@ namespace Barotrauma
 
         public static void Clear()
         {
-            lock (queuedMessages)
+            while (queuedMessages.TryDequeue(out var msg))
             {
-                while (queuedMessages.Count > 0)
+                Messages.Add(msg);
+                if (GameSettings.CurrentConfig.SaveDebugConsoleLogs || GameSettings.CurrentConfig.VerboseLogging)
                 {
-                    var msg = queuedMessages.Dequeue();
-                    Messages.Add(msg);
-                    if (GameSettings.CurrentConfig.SaveDebugConsoleLogs || GameSettings.CurrentConfig.VerboseLogging)
+                    unsavedMessages.Add(msg);
+                    if (unsavedMessages.Count >= messagesPerFile)
                     {
-                        unsavedMessages.Add(msg);
-                        if (unsavedMessages.Count >= messagesPerFile)
-                        {
-                            SaveLogs();
-                            unsavedMessages.Clear();
-                        }
+                        SaveLogs();
+                        unsavedMessages.Clear();
                     }
                 }
-                if (Messages.Count > MaxMessages)
-                {
-                    Messages.RemoveRange(0, Messages.Count - MaxMessages);
-                }
+            }
+            if (Messages.Count > MaxMessages)
+            {
+                Messages.RemoveRange(0, Messages.Count - MaxMessages);
             }
         }
         
@@ -1382,7 +1374,7 @@ namespace Barotrauma
                         MultiPlayerCampaign.StartCampaignSetup();
                         return;
                     }
-                    if (!GameMain.Server.StartGame()) { NewMessage("Failed to start a new round", Color.Yellow); }
+                    if (!GameMain.Server.TryStartGame()) { NewMessage("Failed to start a new round", Color.Yellow); }
                 }
             }));
 
@@ -1407,6 +1399,59 @@ namespace Barotrauma
             {
                 GameMain.Server.PrintSenderTransters();
             }));
+
+
+            commands.Add(new Command("forcelocationtypechange", "", (string[] args) =>
+            {
+                if (GameMain.Server == null || GameMain.GameSession?.Campaign == null) { return; }
+
+                if (args.Length < 2)
+                {
+                    ThrowError("Invalid parameters. The command should be formatted as \"forcelocationtypechange [locationname] [locationtype]\". If the names consist of multiple words, you should surround them with quotation marks.");
+                    return;
+                }
+
+                var location = GameMain.GameSession.Campaign.Map.Locations.FirstOrDefault(l => l.Name.Equals(args[0], StringComparison.OrdinalIgnoreCase));
+                if (location == null)
+                {
+                    ThrowError($"Could not find a location with the name {args[0]}.");
+                    return;
+                }
+
+                var locationType = LocationType.Prefabs.FirstOrDefault(lt => 
+                    lt.Name.Equals(args[1], StringComparison.OrdinalIgnoreCase) || lt.Identifier == args[1]);
+                if (location == null)
+                {
+                    ThrowError($"Could not find the location type {args[1]}.");
+                    return;
+                }
+
+                location.ChangeType(GameMain.GameSession.Campaign, locationType);
+            },
+            () =>
+            {
+                if (GameMain.GameSession?.Campaign == null) { return null; }
+
+                return new string[][]
+                {
+                    GameMain.GameSession.Campaign.Map.Locations.Select(l => l.Name).ToArray(),
+                    LocationType.Prefabs.Select(lt => lt.Name.Value).ToArray()
+                };
+            }));
+
+            AssignOnExecute("resetcharacternetstate", (string[] args) =>
+            {
+                if (GameMain.Server == null) { return; }
+
+                if (args.Length < 1)
+                {
+                    ThrowError("Invalid parameters. The command should be formatted as \"resetcharacternetstate [character]\". If the names consist of multiple words, you should surround them with quotation marks.");
+                    return;
+                }
+
+                var character = FindMatchingCharacter(args.Skip(1).ToArray(), false);
+                character?.ResetNetState();
+            });
 
             commands.Add(new Command("eventdata", "", (string[] args) =>
             {
@@ -1665,13 +1710,7 @@ namespace Barotrauma
                 "teleportsub",
                 (Client client, Vector2 cursorWorldPos, string[] args) =>
                 {
-                    if (Submarine.MainSub == null || Level.Loaded == null) return;
-                    if (Level.Loaded.Type == LevelData.LevelType.Outpost)
-                    {
-                        GameMain.Server.SendConsoleMessage("The teleportsub command is unavailable in outpost levels!", client, Color.Red);
-                        return;
-                    }
-
+                    if (Submarine.MainSub == null || Level.Loaded == null) { return; }
                     if (args.Length == 0 || args[0].Equals("cursor", StringComparison.OrdinalIgnoreCase))
                     {
                         Submarine.MainSub.SetPosition(cursorWorldPos);
@@ -1927,7 +1966,7 @@ namespace Barotrauma
                     {
                         GameMain.Server.SendConsoleMessage("Could not find the specified character.", client, Color.Red);
                     }
-                    killedCharacter?.SetAllDamage(200.0f, 0.0f, 0.0f);
+                    killedCharacter?.Kill(CauseOfDeathType.Unknown, causeOfDeathAffliction: null);
                 }
             );
 

@@ -8,8 +8,9 @@ namespace Barotrauma
 {
     partial class Character
     {
-        public Address OwnerClientAddress;
-        public string OwnerClientName;
+        private Address ownerClientAddress;
+        private Option<AccountId> ownerClientAccountId;
+
         public bool ClientDisconnected;
         public float KillDisconnectedTimer;
 
@@ -18,6 +19,35 @@ namespace Barotrauma
         private double LastInputTime;
 
         public bool HealthUpdatePending;
+
+        public void SetOwnerClient(Client client)
+        {
+            if (client == null)
+            {
+                ownerClientAddress = null;
+                ownerClientAccountId = Option<AccountId>.None();
+                IsRemotePlayer = false;
+            }
+            else
+            {
+                ownerClientAddress = client.Connection.Endpoint.Address;
+                ownerClientAccountId = client.AccountId;
+                IsRemotePlayer = true;
+            }
+        }
+
+        public bool IsClientOwner(Client client)
+        {
+            if (ownerClientAccountId.TryUnwrap(out var accountId)
+                && client.AccountId.TryUnwrap(out var clientId))
+            {
+                return accountId == clientId;
+            }
+            else
+            {
+                return ownerClientAddress == client.Connection.Endpoint.Address;
+            }            
+        }
 
         public float GetPositionUpdateInterval(Client recipient)
         {
@@ -219,9 +249,9 @@ namespace Barotrauma
             else if (NetIdUtils.Difference(networkUpdateID, LastNetworkUpdateID) > 500)
             {
 #if DEBUG || UNSTABLE
-                DebugConsole.AddWarning($"Large disrepancy between a client character's network update ID server-side and client-side (client: {networkUpdateID}, server: {LastNetworkUpdateID}). Resetting the ID.");
+                DebugConsole.AddWarning($"Large discrepancy between a client character's network update ID server-side and client-side (client: {networkUpdateID}, server: {LastNetworkUpdateID}). Resetting the ID.");
 #endif
-                LastNetworkUpdateID = networkUpdateID;
+                LastNetworkUpdateID = LastProcessedID = networkUpdateID;
             }
             if (memInput.Count > 60)
             {
@@ -269,10 +299,13 @@ namespace Barotrauma
                 case EventType.UpdateTalents:
                     if (c.Character != this)
                     {
+                        if (!IsBot || !c.HasPermission(ClientPermissions.ManageBotTalents))
+                        {
 #if DEBUG
-                        DebugConsole.Log("Received a character update message from a client who's not controlling the character");
+                            DebugConsole.Log("Received a character update message from a client who's not controlling the character");
 #endif
-                        return;
+                            return;
+                        }
                     }
 
                     // get the full list of talents from the player, only give the ones
@@ -299,12 +332,8 @@ namespace Barotrauma
             }
         }
 
-        public void ServerWritePosition(IWriteMessage msg, Client c)
+        public void ServerWritePosition(ReadWriteMessage tempBuffer, Client c)
         {
-            msg.WriteUInt16(ID);
-
-            IWriteMessage tempBuffer = new WriteOnlyMessage();
-
             if (this == c.Character)
             {
                 tempBuffer.WriteBoolean(true);
@@ -402,11 +431,6 @@ namespace Barotrauma
                 AIController?.ServerWrite(tempBuffer);
                 HealthUpdatePending = false;
             }
-
-            tempBuffer.WritePadBits();
-
-            msg.WriteVariableUInt32((uint)tempBuffer.LengthBytes);
-            msg.WriteBytes(tempBuffer.Buffer, 0, tempBuffer.LengthBytes);
         }
 
         public virtual void ServerEventWrite(IWriteMessage msg, Client c, NetEntityEvent.IData extraData = null)
@@ -549,7 +573,7 @@ namespace Barotrauma
                         msg.WriteByte((byte)statType);
                         foreach (var savedStatValue in Info.SavedStatValues[statType])
                         {
-                            msg.WriteString(savedStatValue.StatIdentifier);
+                            msg.WriteIdentifier(savedStatValue.StatIdentifier);
                             msg.WriteSingle(savedStatValue.StatValue);
                             msg.WriteBoolean(savedStatValue.RemoveOnDeath);
                         }
@@ -668,6 +692,7 @@ namespace Barotrauma
             {
                 msg.WriteIdentifier(MerchantIdentifier);
             }
+            msg.WriteIdentifier(Faction);
 
             int msgLengthBeforeOrders = msg.LengthBytes;
             // Current orders

@@ -1026,7 +1026,7 @@ namespace Barotrauma.MapCreatures.Behavior
                 branch.DamageVisualizationTimer = 1.0f;
             }
 
-            if (branch.IsRootGrowth && root != null && root.Health > 0.0f) { return; }
+            if (branch.IsRootGrowth && root is { Health: > 0.0f }) { return; }
 
             if (type != AttackType.Other && type != AttackType.CutFromRoot)
             {
@@ -1035,7 +1035,7 @@ namespace Barotrauma.MapCreatures.Behavior
             }
 
             if (GameMain.NetworkMember != null)
-            { 
+            {
                 // damage is handled server side
                 if (GameMain.NetworkMember.IsClient)
                 {
@@ -1059,6 +1059,11 @@ namespace Barotrauma.MapCreatures.Behavior
 
             if (type == AttackType.Fire)
             {
+                if (attacker is not null)
+                {
+                    damage *= 1f + attacker.GetStatValue(StatTypes.BallastFloraDamageMultiplier);
+                }
+
                 if (IsInWater(branch))
                 {
                     damage *= 1f - SubmergedWaterResistance;
@@ -1066,7 +1071,7 @@ namespace Barotrauma.MapCreatures.Behavior
 
                 if (defenseCooldown <= 0)
                 {
-                    if (!(StateMachine.State is DefendWithPumpState))
+                    if (StateMachine.State is not DefendWithPumpState)
                     {
                         StateMachine.EnterState(new DefendWithPumpState(branch, ClaimedTargets, attacker));
                         defenseCooldown = 180f;

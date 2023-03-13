@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using System.Xml.Linq;
 using Barotrauma.Extensions;
+using System.Collections.Immutable;
 
 namespace Barotrauma
 {
@@ -67,7 +68,6 @@ namespace Barotrauma
             }
             // Remove "[speciesname]" for backward support (we don't use it anymore)
             HuskedSpeciesName = HuskedSpeciesName.Remove("[speciesname]").ToIdentifier();
-            TargetSpecies = element.GetAttributeIdentifierArray("targets", Array.Empty<Identifier>(), trim: true);
             if (TargetSpecies.Length == 0)
             {
                 DebugConsole.NewMessage($"No 'targets' defined for the husk affliction ({Identifier}) in {element}", Color.Orange);
@@ -109,7 +109,6 @@ namespace Barotrauma
         public float TransformThresholdOnDeath;
 
         public readonly Identifier HuskedSpeciesName;
-        public readonly Identifier[] TargetSpecies;
 
         public readonly bool TransferBuffs;
         public readonly bool SendMessages;
@@ -214,7 +213,6 @@ namespace Barotrauma
             [Serialize("", IsPropertySaveable.No)]
             public Identifier DialogFlag { get; private set; }
 
-
             [Serialize("", IsPropertySaveable.No)]
             public Identifier Tag { get; private set; }
 
@@ -276,10 +274,52 @@ namespace Barotrauma
             }
         }
 
+        public class Description
+        {
+            public enum TargetType
+            {
+                Any,
+                Self,
+                OtherCharacter
+            }
+
+            public readonly LocalizedString Text;
+            public readonly Identifier TextTag;
+            public readonly float MinStrength, MaxStrength;
+            public readonly TargetType Target;
+
+            public Description(ContentXElement element, AfflictionPrefab affliction)
+            {
+                TextTag = element.GetAttributeIdentifier("textidentifier", Identifier.Empty);
+                if (!TextTag.IsEmpty)
+                {
+                    Text = TextManager.Get(TextTag);
+                }
+                string text = element.GetAttributeString("text", string.Empty);
+                if (!text.IsNullOrEmpty())
+                {
+                    Text = Text?.Fallback(text) ?? text;
+                }
+                else if (TextTag.IsEmpty)
+                {
+                    DebugConsole.ThrowError($"Error in affliction \"{affliction.Identifier}\" - no text defined for one of the descriptions.");
+                }
+
+                MinStrength = element.GetAttributeFloat(nameof(MinStrength), 0.0f);
+                MaxStrength = element.GetAttributeFloat(nameof(MaxStrength), 100.0f);
+                if (MinStrength >= MaxStrength)
+                {
+                    DebugConsole.ThrowError($"Error in affliction \"{affliction.Identifier}\" - max strength is not larger than min.");
+                }
+                Target = element.GetAttributeEnum(nameof(Target), TargetType.Any);
+            }
+        }
+
         public class PeriodicEffect
         {
             public readonly List<StatusEffect> StatusEffects = new List<StatusEffect>();
             public readonly float MinInterval, MaxInterval;
+            public readonly float MinStrength, MaxStrength;
 
             public PeriodicEffect(ContentXElement element, string parentDebugName)
             {
@@ -294,26 +334,40 @@ namespace Barotrauma
                 }
                 else
                 {
-                    MinInterval = Math.Max(element.GetAttributeFloat("mininterval", 1.0f), 1.0f);
-                    MaxInterval = Math.Max(element.GetAttributeFloat("maxinterval", 1.0f), MinInterval);
+                    MinInterval = Math.Max(element.GetAttributeFloat(nameof(MinInterval), 1.0f), 1.0f);
+                    MaxInterval = Math.Max(element.GetAttributeFloat(nameof(MaxInterval), 1.0f), MinInterval);
+                    MinStrength = Math.Max(element.GetAttributeFloat(nameof(MinStrength), 0f), 0f);
+                    MaxStrength = Math.Max(element.GetAttributeFloat(nameof(MaxStrength), MinStrength), MinStrength);
                 }
             }
         }
 
+        public static readonly Identifier DamageType = "damage".ToIdentifier();
+        public static readonly Identifier BurnType = "burn".ToIdentifier();
+        public static readonly Identifier BleedingType = "bleeding".ToIdentifier();
+        public static readonly Identifier ParalysisType = "paralysis".ToIdentifier();
+        public static readonly Identifier PoisonType = "poison".ToIdentifier();
+        public static readonly Identifier StunType = "stun".ToIdentifier();
+        public static readonly Identifier EMPType = "emp".ToIdentifier();
+        public static readonly Identifier SpaceHerpesType = "spaceherpes".ToIdentifier();
+        public static readonly Identifier AlienInfectedType = "alieninfected".ToIdentifier();
+        public static readonly Identifier InvertControlsType = "invertcontrols".ToIdentifier();
+        public static readonly Identifier HuskInfectionType = "huskinfection".ToIdentifier();
+
         public static AfflictionPrefab InternalDamage => Prefabs["internaldamage"];
         public static AfflictionPrefab BiteWounds => Prefabs["bitewounds"];
         public static AfflictionPrefab ImpactDamage => Prefabs["blunttrauma"];
-        public static AfflictionPrefab Bleeding => Prefabs["bleeding"];
-        public static AfflictionPrefab Burn => Prefabs["burn"];
+        public static AfflictionPrefab Bleeding => Prefabs[BleedingType];
+        public static AfflictionPrefab Burn => Prefabs[BurnType];
         public static AfflictionPrefab OxygenLow => Prefabs["oxygenlow"];
         public static AfflictionPrefab Bloodloss => Prefabs["bloodloss"];
         public static AfflictionPrefab Pressure => Prefabs["pressure"];
-        public static AfflictionPrefab Stun => Prefabs["stun"];
+        public static AfflictionPrefab Stun => Prefabs[StunType];
         public static AfflictionPrefab RadiationSickness => Prefabs["radiationsickness"];
+
 
         public static readonly PrefabCollection<AfflictionPrefab> Prefabs = new PrefabCollection<AfflictionPrefab>();
 
-        private bool disposed = false;
         public override void Dispose() { }
 
         public static IEnumerable<AfflictionPrefab> List => Prefabs;
@@ -330,14 +384,21 @@ namespace Barotrauma
         //(e.g. mental health problems on head, lack of oxygen on torso...)
         public readonly LimbType IndicatorLimb;
 
-        public readonly LocalizedString Name, Description;
+        public readonly LocalizedString Name;
         public readonly Identifier TranslationIdentifier;
         public readonly bool IsBuff;
+        public readonly bool AffectMachines;
         public readonly bool HealableInMedicalClinic;
         public readonly float HealCostMultiplier;
         public readonly int BaseHealCost;
+        public readonly bool ShowBarInHealthMenu;
 
         public readonly LocalizedString CauseOfDeathDescription, SelfCauseOfDeathDescription;
+
+        private readonly LocalizedString defaultDescription;
+        public readonly ImmutableList<Description> Descriptions;
+
+        public readonly bool HideIconAfterDelay;
 
         //how high the strength has to be for the affliction to take affect
         public readonly float ActivationThreshold = 0.0f;
@@ -356,6 +417,11 @@ namespace Barotrauma
         public readonly float TreatmentThreshold = 5.0f;
 
         /// <summary>
+        /// Bots will not try to treat the affliction if the character has any of these afflictions
+        /// </summary>
+        public ImmutableHashSet<Identifier> IgnoreTreatmentIfAfflictedBy;
+
+        /// <summary>
         /// The affliction is automatically removed after this time. 0 = unlimited
         /// </summary>
         public readonly float Duration;
@@ -363,8 +429,11 @@ namespace Barotrauma
         //how much karma changes when a player applies this affliction to someone (per strength of the affliction)
         public float KarmaChangeOnApplied;
 
-        public float BurnOverlayAlpha;
-        public float DamageOverlayAlpha;
+        public readonly float BurnOverlayAlpha;
+        public readonly float DamageOverlayAlpha;
+
+        //steam achievement given when the controlled character receives the affliction
+        public readonly Identifier AchievementOnReceived;
 
         //steam achievement given when the affliction is removed from the controlled character
         public readonly Identifier AchievementOnRemoved;
@@ -375,6 +444,20 @@ namespace Barotrauma
         public readonly Sprite AfflictionOverlay;
         public readonly bool AfflictionOverlayAlphaIsLinear;
 
+        public readonly bool DamageParticles;
+
+        /// <summary>
+        /// An arbitrary modifier that affects how much medical skill is increased when you apply the affliction on a target. 
+        /// If the affliction causes damage or is of type poison or paralysis, the skill is increased only when the target is hostile. 
+        /// If the affliction is of type buff, the skill is increased only when the target is friendly.
+        /// </summary>
+        public readonly float MedicalSkillGain;
+        /// <summary>
+        /// An arbitrary modifier that affects how much weapons skill is increased when you apply the affliction on a target. 
+        /// The skill is increased only when the target is hostile. 
+        /// </summary>
+        public readonly float WeaponsSkillGain;
+
         private readonly List<Effect> effects = new List<Effect>();
         private readonly List<PeriodicEffect> periodicEffects = new List<PeriodicEffect>();
 
@@ -383,6 +466,10 @@ namespace Barotrauma
         public IList<PeriodicEffect> PeriodicEffects => periodicEffects;
 
         private readonly ConstructorInfo constructor;
+
+        public Identifier[] TargetSpecies { get; protected set; }
+
+        public readonly bool ResetBetweenRounds;
 
         public IEnumerable<KeyValuePair<Identifier, float>> TreatmentSuitability
         {
@@ -411,13 +498,16 @@ namespace Barotrauma
             {
                 Name = Name.Fallback(fallbackName);
             }                
-            Description = TextManager.Get($"AfflictionDescription.{TranslationIdentifier}");
+            defaultDescription = TextManager.Get($"AfflictionDescription.{TranslationIdentifier}");
             string fallbackDescription = element.GetAttributeString("description", "");
             if (!string.IsNullOrEmpty(fallbackDescription))
             {
-                Description = Description.Fallback(fallbackDescription);
+                defaultDescription = defaultDescription.Fallback(fallbackDescription);
             }
-            IsBuff = element.GetAttributeBool("isbuff", false);
+            IsBuff = element.GetAttributeBool(nameof(IsBuff), false);
+            AffectMachines = element.GetAttributeBool(nameof(AffectMachines), true);
+
+            ShowBarInHealthMenu = element.GetAttributeBool("showbarinhealthmenu", true);
 
             HealableInMedicalClinic = element.GetAttributeBool("healableinmedicalclinic", 
                 !IsBuff && 
@@ -425,6 +515,8 @@ namespace Barotrauma
                 AfflictionType != "geneticmaterialdebuff");
             HealCostMultiplier = element.GetAttributeFloat(nameof(HealCostMultiplier), 1f);
             BaseHealCost = element.GetAttributeInt(nameof(BaseHealCost), 0);
+
+            IgnoreTreatmentIfAfflictedBy = element.GetAttributeIdentifierArray(nameof(IgnoreTreatmentIfAfflictedBy), Array.Empty<Identifier>()).ToImmutableHashSet();
 
             Duration = element.GetAttributeFloat(nameof(Duration), 0.0f);
 
@@ -443,28 +535,46 @@ namespace Barotrauma
                 }
             }
 
-            ActivationThreshold = element.GetAttributeFloat("activationthreshold", 0.0f);
-            ShowIconThreshold   = element.GetAttributeFloat("showiconthreshold", Math.Max(ActivationThreshold, 0.05f));
-            ShowIconToOthersThreshold   = element.GetAttributeFloat("showicontoothersthreshold", ShowIconThreshold);
-            MaxStrength         = element.GetAttributeFloat("maxstrength", 100.0f);
-            GrainBurst          = element.GetAttributeFloat(nameof(GrainBurst).ToLowerInvariant(), 0.0f);
+            HideIconAfterDelay = element.GetAttributeBool(nameof(HideIconAfterDelay), false);
 
-            ShowInHealthScannerThreshold = element.GetAttributeFloat("showinhealthscannerthreshold", 
+            ActivationThreshold = element.GetAttributeFloat(nameof(ActivationThreshold), 0.0f);
+            ShowIconThreshold   = element.GetAttributeFloat(nameof(ShowIconThreshold), Math.Max(ActivationThreshold, 0.05f));
+            ShowIconToOthersThreshold   = element.GetAttributeFloat(nameof(ShowIconToOthersThreshold), ShowIconThreshold);
+            MaxStrength         = element.GetAttributeFloat(nameof(MaxStrength), 100.0f);
+            GrainBurst          = element.GetAttributeFloat(nameof(GrainBurst), 0.0f);
+
+            ShowInHealthScannerThreshold = element.GetAttributeFloat(nameof(ShowInHealthScannerThreshold), 
                 Math.Max(ActivationThreshold, AfflictionType == "talentbuff" ? float.MaxValue : ShowIconToOthersThreshold));
-            TreatmentThreshold = element.GetAttributeFloat("treatmentthreshold", Math.Max(ActivationThreshold, 5.0f));
+            TreatmentThreshold = element.GetAttributeFloat(nameof(TreatmentThreshold), Math.Max(ActivationThreshold, 5.0f));
 
-            DamageOverlayAlpha  = element.GetAttributeFloat("damageoverlayalpha", 0.0f);
-            BurnOverlayAlpha    = element.GetAttributeFloat("burnoverlayalpha", 0.0f);
+            DamageOverlayAlpha  = element.GetAttributeFloat(nameof(DamageOverlayAlpha), 0.0f);
+            BurnOverlayAlpha    = element.GetAttributeFloat(nameof(BurnOverlayAlpha), 0.0f);
 
-            KarmaChangeOnApplied = element.GetAttributeFloat("karmachangeonapplied", 0.0f);
+            KarmaChangeOnApplied = element.GetAttributeFloat(nameof(KarmaChangeOnApplied), 0.0f);
 
-            CauseOfDeathDescription     = TextManager.Get($"AfflictionCauseOfDeath.{TranslationIdentifier}").Fallback(element.GetAttributeString("causeofdeathdescription", ""));
-            SelfCauseOfDeathDescription = TextManager.Get($"AfflictionCauseOfDeathSelf.{TranslationIdentifier}").Fallback(element.GetAttributeString("selfcauseofdeathdescription", ""));
+            CauseOfDeathDescription     = 
+                TextManager.Get($"AfflictionCauseOfDeath.{TranslationIdentifier}")
+                .Fallback(TextManager.Get(element.GetAttributeString("causeofdeathdescription", "")))
+                .Fallback(element.GetAttributeString("causeofdeathdescription", ""));
+            SelfCauseOfDeathDescription = 
+                TextManager.Get($"AfflictionCauseOfDeathSelf.{TranslationIdentifier}")
+                .Fallback(TextManager.Get(element.GetAttributeString("selfcauseofdeathdescription", "")))
+                .Fallback(element.GetAttributeString("selfcauseofdeathdescription", ""));
 
-            IconColors = element.GetAttributeColorArray("iconcolors", null);
-            AfflictionOverlayAlphaIsLinear = element.GetAttributeBool("afflictionoverlayalphaislinear", false);
-            AchievementOnRemoved = element.GetAttributeIdentifier("achievementonremoved", "");
+            IconColors = element.GetAttributeColorArray(nameof(IconColors), null);
+            AfflictionOverlayAlphaIsLinear = element.GetAttributeBool(nameof(AfflictionOverlayAlphaIsLinear), false);
+            AchievementOnReceived = element.GetAttributeIdentifier(nameof(AchievementOnReceived), "");
+            AchievementOnRemoved = element.GetAttributeIdentifier(nameof(AchievementOnRemoved), "");
 
+            TargetSpecies = element.GetAttributeIdentifierArray("targets", Array.Empty<Identifier>(), trim: true);
+
+            ResetBetweenRounds = element.GetAttributeBool("resetbetweenrounds", false);
+
+            DamageParticles = element.GetAttributeBool(nameof(DamageParticles), true);
+            WeaponsSkillGain = element.GetAttributeFloat(nameof(WeaponsSkillGain), 0.0f);
+            MedicalSkillGain = element.GetAttributeFloat(nameof(MedicalSkillGain), 0.0f);
+
+            List<Description> descriptions = new List<Description>();
             foreach (var subElement in element.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
@@ -481,13 +591,36 @@ namespace Barotrauma
                     case "effect":
                     case "periodiceffect":
                         break;
+                    case "description":
+                        descriptions.Add(new Description(subElement, this));
+                        break;
                     default:
                         DebugConsole.AddWarning($"Unrecognized element in affliction \"{Identifier}\" ({subElement.Name})");
                         break;
                 }
             }
+            Descriptions = descriptions.ToImmutableList();
 
             constructor = type.GetConstructor(new[] { typeof(AfflictionPrefab), typeof(float) });
+        }
+
+        public LocalizedString GetDescription(float strength, Description.TargetType targetType)
+        {
+            foreach (var description in Descriptions)
+            {
+                if (strength < description.MinStrength || strength > description.MaxStrength) { continue; }
+                switch (targetType)
+                {
+                    case Description.TargetType.Self:
+                        if (description.Target == Description.TargetType.OtherCharacter) { continue; }
+                        break;
+                    case Description.TargetType.OtherCharacter:
+                        if (description.Target == Description.TargetType.Self) { continue; }
+                        break;
+                }
+                return description.Text;
+            }
+            return defaultDescription;
         }
 
         public static void LoadAllEffects()
@@ -513,6 +646,18 @@ namespace Barotrauma
                     case "periodiceffect":
                         periodicEffects.Add(new PeriodicEffect(subElement, Name.Value));
                         break;
+                }
+            }
+            for (int i = 0; i < effects.Count; i++)
+            {
+                for (int j = i + 1; j < effects.Count; j++)
+                {
+                    var a = effects[i];
+                    var b = effects[j];
+                    if (a.MinStrength < b.MaxStrength && b.MinStrength < a.MaxStrength)
+                    {
+                        DebugConsole.AddWarning($"Affliction \"{Identifier}\" contains effects with overlapping strength ranges. Only one effect can be active at a time, meaning one of the effects won't work.");
+                    }
                 }
             }
         }

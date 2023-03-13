@@ -356,7 +356,7 @@ namespace Barotrauma
                 ShipIssueWorkers.Add(new ShipIssueWorkerSteer(this, order));
             }
 
-            foreach (Item item in CommandedSubmarine.GetItems(true).FindAll(i => i.HasTag("turret")))
+            foreach (Item item in CommandedSubmarine.GetItems(true).FindAll(i => i.HasTag("turret") && !i.HasTag("hardpoint")))
             {
                 var order = new Order(OrderPrefab.Prefabs["operateweapons"], item, item.GetComponent<Turret>());
                 ShipIssueWorkers.Add(new ShipIssueWorkerOperateWeapons(this, order));

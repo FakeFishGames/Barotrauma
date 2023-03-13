@@ -38,15 +38,15 @@ namespace Barotrauma.Networking
         READY_CHECK,
         READY_TO_SPAWN
     }
-    enum ClientNetObject
+
+    enum ClientNetSegment
     {
-        END_OF_MESSAGE, //self-explanatory
-        SYNC_IDS,       //ids of the last changes the client knows about
-        CHAT_MESSAGE,   //also self-explanatory
-        VOTE,           //you get the idea
-        CHARACTER_INPUT,
-        ENTITY_STATE,
-        SPECTATING_POS
+        SyncIds,       //ids of the last changes the client knows about
+        ChatMessage,   //also self-explanatory
+        Vote,          //you get the idea
+        CharacterInput,
+        EntityState,
+        SpectatingPos
     }
 
     enum ClientNetError
@@ -88,16 +88,28 @@ namespace Barotrauma.Networking
         MONEY,
         READY_CHECK         //start, end and update a ready check
     }
-    enum ServerNetObject
+    enum ServerNetSegment
     {
-        END_OF_MESSAGE,
-        SYNC_IDS,
-        CHAT_MESSAGE,
-        VOTE,
-        CLIENT_LIST,
-        ENTITY_POSITION,
-        ENTITY_EVENT,
-        ENTITY_EVENT_INITIAL
+        SyncIds,
+        ChatMessage,
+        Vote,
+        ClientList,
+        EntityPosition,
+        EntityEvent,
+        EntityEventInitial
+    }
+
+    [NetworkSerialize]
+    readonly record struct EntityPositionHeader(
+        bool IsItem,
+        UInt32 PrefabUintIdentifier,
+        UInt16 EntityId) : INetSerializableStruct
+    {
+        public static EntityPositionHeader FromEntity(Entity entity)
+            => new (
+                IsItem: entity is Item,
+                PrefabUintIdentifier: entity is MapEntity me ? me.Prefab.UintIdentifier : 0,
+                EntityId: entity.ID);
     }
 
     enum TraitorMessageType

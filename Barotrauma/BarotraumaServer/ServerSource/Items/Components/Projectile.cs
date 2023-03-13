@@ -8,10 +8,12 @@ namespace Barotrauma.Items.Components
         private readonly struct EventData : IEventData
         {
             public readonly bool Launch;
+            public readonly byte SpreadCounter;
             
-            public EventData(bool launch)
+            public EventData(bool launch, byte spreadCounter = 0)
             {
                 Launch = launch;
+                SpreadCounter = spreadCounter;
             }
         }
         
@@ -28,10 +30,11 @@ namespace Barotrauma.Items.Components
             msg.WriteBoolean(launch);
             if (launch)
             {
-                msg.WriteUInt16(User.ID);
+                msg.WriteUInt16(User?.ID ?? Entity.NullEntityID);
                 msg.WriteSingle(launchPos.X);
                 msg.WriteSingle(launchPos.Y);
                 msg.WriteSingle(launchRot);
+                msg.WriteByte(eventData.SpreadCounter);
             }
 
             bool stuck = StickTarget != null && !item.Removed && !StickTargetRemoved();

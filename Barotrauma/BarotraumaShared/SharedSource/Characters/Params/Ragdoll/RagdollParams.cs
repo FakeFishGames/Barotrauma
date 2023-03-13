@@ -6,6 +6,7 @@ using System.Linq;
 using Barotrauma.IO;
 using System.Xml;
 using Barotrauma.Extensions;
+using FarseerPhysics;
 #if CLIENT
 using Barotrauma.SpriteDeformations;
 #endif
@@ -621,13 +622,13 @@ namespace Barotrauma
             [Serialize(0f, IsPropertySaveable.Yes), Editable(MinValueFloat = 0, MaxValueFloat = 500)]
             public float SteerForce { get; set; }
 
-            [Serialize(0f, IsPropertySaveable.Yes, description: "Radius of the collider."), Editable(MinValueFloat = 0, MaxValueFloat = 1000)]
+            [Serialize(0f, IsPropertySaveable.Yes, description: "Radius of the collider."), Editable(MinValueFloat = 0, MaxValueFloat = 2048)]
             public float Radius { get; set; }
 
-            [Serialize(0f, IsPropertySaveable.Yes, description: "Height of the collider."), Editable(MinValueFloat = 0, MaxValueFloat = 1000)]
+            [Serialize(0f, IsPropertySaveable.Yes, description: "Height of the collider."), Editable(MinValueFloat = 0, MaxValueFloat = 2048)]
             public float Height { get; set; }
 
-            [Serialize(0f, IsPropertySaveable.Yes, description: "Width of the collider."), Editable(MinValueFloat = 0, MaxValueFloat = 1000)]
+            [Serialize(0f, IsPropertySaveable.Yes, description: "Width of the collider."), Editable(MinValueFloat = 0, MaxValueFloat = 2048)]
             public float Width { get; set; }
 
             [Serialize(10f, IsPropertySaveable.Yes, description: "The more the density the heavier the limb is."), Editable(MinValueFloat = 0.01f, MaxValueFloat = 100, DecimalCount = 2)]
@@ -705,6 +706,15 @@ namespace Barotrauma
 
             [Serialize(false, IsPropertySaveable.Yes), Editable]
             public bool OnlyBlinkInWater { get; set; }
+
+            [Serialize(false, IsPropertySaveable.Yes), Editable]
+            public bool UseTextureOffsetForBlinking { get; set; }
+
+            [Serialize("0.5, 0.5", IsPropertySaveable.Yes), Editable(DecimalCount = 2, MinValueFloat = 0f, MaxValueFloat = 1f)]
+            public Vector2 BlinkTextureOffsetIn { get; set; }
+
+            [Serialize("0.5, 0.5", IsPropertySaveable.Yes), Editable(DecimalCount = 2, MinValueFloat = 0f, MaxValueFloat = 1f)]
+            public Vector2 BlinkTextureOffsetOut { get; set; }
 
             [Serialize(TransitionMode.Linear, IsPropertySaveable.Yes), Editable]
             public TransitionMode BlinkTransitionIn { get; private set; }
@@ -1026,14 +1036,17 @@ namespace Barotrauma
                 }
             }
 
-            [Serialize(0f, IsPropertySaveable.Yes), Editable(MinValueFloat = 0, MaxValueFloat = 1000)]
+            [Serialize(0f, IsPropertySaveable.Yes), Editable(MinValueFloat = 0, MaxValueFloat = 2048)]
             public float Radius { get; set; }
 
-            [Serialize(0f, IsPropertySaveable.Yes), Editable(MinValueFloat = 0, MaxValueFloat = 1000)]
+            [Serialize(0f, IsPropertySaveable.Yes), Editable(MinValueFloat = 0, MaxValueFloat = 2048)]
             public float Height { get; set; }
 
-            [Serialize(0f, IsPropertySaveable.Yes), Editable(MinValueFloat = 0, MaxValueFloat = 1000)]
+            [Serialize(0f, IsPropertySaveable.Yes), Editable(MinValueFloat = 0, MaxValueFloat = 2048)]
             public float Width { get; set; }
+
+            [Serialize(BodyType.Dynamic, IsPropertySaveable.Yes), Editable]
+            public BodyType BodyType { get; set; }
 
             public ColliderParams(ContentXElement element, RagdollParams ragdoll, string name = null) : base(element, ragdoll)
             {

@@ -164,7 +164,11 @@ namespace Barotrauma.Networking
             return command;
         }
 
-        public static float GetGarbleAmount(Entity listener, Entity sender, float range, float obstructionmult = 2.0f)
+        /// <summary>
+        /// How much messages sent by <paramref name="sender"/> should get garbled. Takes the distance between the entities and optionally the obstructions between them into account (see <paramref name="obstructionMultiplier"/>).
+        /// </summary>
+        /// <param name="obstructionMultiplier">Values greater than or equal to 1 cause the message to get garbled more heavily when there's some obstruction between the characters. Values smaller than 1 mean the garbling only depends on distance.</param>
+        public static float GetGarbleAmount(Entity listener, Entity sender, float range, float obstructionMultiplier = 2.0f)
         {
             if (listener == null || sender == null)
             {
@@ -177,12 +181,12 @@ namespace Barotrauma.Networking
 
             Hull listenerHull = listener == null ? null : Hull.FindHull(listener.WorldPosition);
             Hull sourceHull = sender == null ? null : Hull.FindHull(sender.WorldPosition);
-            if (sourceHull != listenerHull)
+            if (sourceHull != listenerHull && obstructionMultiplier >= 1.0f)
             {
                 if ((sourceHull == null || !sourceHull.GetConnectedHulls(includingThis: false, searchDepth: 2, ignoreClosedGaps: true).Contains(listenerHull)) &&
                     Submarine.CheckVisibility(listener.SimPosition, sender.SimPosition) != null) 
                 { 
-                    dist = (dist + 100f) * obstructionmult; 
+                    dist = (dist + 100f) * obstructionMultiplier; 
                 }
             }
             if (dist > range) { return 1.0f; }
@@ -197,9 +201,9 @@ namespace Barotrauma.Networking
             return ApplyDistanceEffect(listener, Sender, Text, SpeakRange);
         }
 
-        public static string ApplyDistanceEffect(Entity listener, Entity sender, string text, float range, float obstructionmult = 2.0f)
+        public static string ApplyDistanceEffect(Entity listener, Entity sender, string text, float range, float obstructionMultiplier = 2.0f)
         {
-            return ApplyDistanceEffect(text, GetGarbleAmount(listener, sender, range, obstructionmult));
+            return ApplyDistanceEffect(text, GetGarbleAmount(listener, sender, range, obstructionMultiplier));
         }
 
         public static string ApplyDistanceEffect(string text, float garbleAmount)
@@ -252,7 +256,7 @@ namespace Barotrauma.Networking
                                 var senderRadio = senderItem.GetComponent<WifiComponent>();
                                 if (!receiverRadio.CanReceive(senderRadio)) { continue; }
 
-                                string msg = ApplyDistanceEffect(receiverItem, senderItem, message, senderRadio.Range);
+                                string msg = ApplyDistanceEffect(receiverItem, senderItem, message, senderRadio.Range, obstructionMultiplier: 0);
                                 if (sender.SpeechImpediment > 0.0f)
                                 {
                                     //speech impediment doesn't reduce the range when using a radio, but adds extra garbling

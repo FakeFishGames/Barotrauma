@@ -14,12 +14,12 @@ namespace Barotrauma
 
             foreach (Event ev in activeEvents)
             {
-                if (!(ev is ScriptedEvent scriptedEvent)) { continue; }
+                if (ev is not ScriptedEvent scriptedEvent) { continue; }
                 
                 var actions = FindActions(scriptedEvent);
                 foreach (EventAction action in actions.Select(a => a.Item2))
                 {
-                    if (!(action is ConversationAction convAction) || convAction.Identifier != actionId) { continue; }
+                    if (action is not ConversationAction convAction || convAction.Identifier != actionId) { continue; }
                     if (!convAction.TargetClients.Contains(sender))
                     {
 #if DEBUG || UNSTABLE
@@ -31,7 +31,7 @@ namespace Barotrauma
                     if (convAction.SelectedOption > -1)
                     {
                         //someone else already chose an option for this conversation: interrupt for this client
-                        convAction.ServerWrite(convAction.speaker, sender, interrupt: true);
+                        convAction.ServerWrite(convAction.Speaker, sender, interrupt: true);
                     }
                     else
                     {
@@ -42,6 +42,14 @@ namespace Barotrauma
                         else
                         {
                             convAction.SelectedOption = selectedOption;
+                            if (convAction.Options.Any() && !convAction.GetEndingOptions().Contains(selectedOption))
+                            {
+                                foreach (Client c in convAction.TargetClients)
+                                {
+                                    if (c == sender) { continue; }                                    
+                                    convAction.ServerWriteSelectedOption(c);                                    
+                                }
+                            }
                         }
                     }
                     return;

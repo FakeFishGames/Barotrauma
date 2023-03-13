@@ -77,16 +77,21 @@ namespace Barotrauma
             {
                 if (Level.Loaded.Type == LevelData.LevelType.LocationConnection)
                 {
-                    if (Timing.TotalTime < GameMain.GameSession.RoundStartTime + 30.0f) { currentFlags.Add("Initial".ToIdentifier()); }
+                    if (GameMain.GameSession.RoundDuration < 30.0f) { currentFlags.Add("Initial".ToIdentifier()); }
                 }
                 else if (Level.Loaded.Type == LevelData.LevelType.Outpost)
                 {
-                    if (Timing.TotalTime < GameMain.GameSession.RoundStartTime + 120.0f && 
+                    if (GameMain.GameSession.RoundDuration < 120.0f && 
                         speaker?.CurrentHull != null && 
+                        GameMain.GameSession.Map?.CurrentLocation?.Reputation?.Value >= 0.0f &&
                         (speaker.TeamID == CharacterTeamType.FriendlyNPC || speaker.TeamID == CharacterTeamType.None) && 
                         Character.CharacterList.Any(c => c.TeamID != speaker.TeamID && c.CurrentHull == speaker.CurrentHull)) 
                     {
                         currentFlags.Add("EnterOutpost".ToIdentifier()); 
+                    }
+                    if (Level.Loaded.IsEndBiome)
+                    {
+                        currentFlags.Add("EndLevel".ToIdentifier());
                     }
                 }
                 if (GameMain.GameSession.EventManager.CurrentIntensity <= 0.2f)
@@ -126,6 +131,10 @@ namespace Barotrauma
                 if (speaker.TeamID == CharacterTeamType.FriendlyNPC && speaker.Submarine != null && speaker.Submarine.Info.IsOutpost)
                 {
                     currentFlags.Add("OutpostNPC".ToIdentifier());
+                    if (GameMain.GameSession?.Level?.StartLocation?.Faction is Faction faction)
+                    {
+                        currentFlags.Add($"OutpostNPC{faction.Prefab.Identifier}".ToIdentifier());
+                    }
                 }
                 if (speaker.CampaignInteractionType != CampaignMode.InteractionType.None)
                 {

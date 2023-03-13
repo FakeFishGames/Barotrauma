@@ -2,7 +2,6 @@
 using Barotrauma.Items.Components;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using SharpFont;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -12,28 +11,14 @@ namespace Barotrauma.Lights
 {
     class ConvexHullList
     {
-        private List<ConvexHull> list;
-        public HashSet<ConvexHull> IsHidden;
 
         public readonly Submarine Submarine;
-        public List<ConvexHull> List
-        {
-            get { return list; }
-            set
-            {
-                Debug.Assert(value != null);
-                Debug.Assert(!list.Contains(null));
-                list = value;
-                IsHidden.RemoveWhere(ch => !list.Contains(ch));
-            }
-        }
-        
+        public HashSet<ConvexHull> IsHidden = new HashSet<ConvexHull>();
+        public readonly List<ConvexHull> List = new List<ConvexHull>();
 
         public ConvexHullList(Submarine submarine)
         {
             Submarine = submarine;
-            list = new List<ConvexHull>();
-            IsHidden = new HashSet<ConvexHull>();
         }
     }
 
@@ -354,7 +339,7 @@ namespace Barotrauma.Lights
             }
         }
 
-        public bool IsSegmentAInB(Segment a, Segment b)
+        public static bool IsSegmentAInB(Segment a, Segment b)
         {
             if (Vector2.DistanceSquared(a.Start.Pos, a.End.Pos) > Vector2.DistanceSquared(b.Start.Pos, b.End.Pos))
             {
@@ -362,14 +347,15 @@ namespace Barotrauma.Lights
             }
 
             Vector2 min = new Vector2(Math.Min(b.Start.Pos.X, b.End.Pos.X), Math.Min(b.Start.Pos.Y, b.End.Pos.Y));
-            Vector2 max = new Vector2(Math.Max(b.Start.Pos.X, b.End.Pos.X), Math.Max(b.Start.Pos.Y, b.End.Pos.Y));
             min.X -= 1.0f; min.Y -= 1.0f;
-            max.X += 1.0f; max.Y += 1.0f;
 
             if (a.Start.Pos.X < min.X) { return false; }
             if (a.Start.Pos.Y < min.Y) { return false; }
             if (a.End.Pos.X < min.X) { return false; }
             if (a.End.Pos.Y < min.Y) { return false; }
+
+            Vector2 max = new Vector2(Math.Max(b.Start.Pos.X, b.End.Pos.X), Math.Max(b.Start.Pos.Y, b.End.Pos.Y));
+            max.X += 1.0f; max.Y += 1.0f;
 
             if (a.Start.Pos.X > max.X) { return false; }
             if (a.Start.Pos.Y > max.Y) { return false; }
@@ -628,7 +614,7 @@ namespace Barotrauma.Lights
         {            
             for (int i = 0; i < 4; i++)
             {
-                if (ignoreEdge[i] && ignoreEdges) continue;
+                if (ignoreEdge[i] && ignoreEdges) { continue; }
 
                 Vector2 pos1 = vertices[i].WorldPos;
                 Vector2 pos2 = vertices[(i + 1) % 4].WorldPos;

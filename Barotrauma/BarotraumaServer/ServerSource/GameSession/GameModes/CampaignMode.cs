@@ -23,18 +23,13 @@ namespace Barotrauma
             return
                 client.HasPermission(permissions) ||
                 client.HasPermission(ClientPermissions.ManageCampaign) ||
-                GameMain.Server.ConnectedClients.Count == 1 ||
                 IsOwner(client) ||
-                //allow managing if no-one with permissions is alive
-                GameMain.Server.ConnectedClients.None(c => c.InGame && c.Character is { IsIncapacitated: false, IsDead: false } &&  (IsOwner(c) || c.HasPermission(permissions)));
+                AnyOneAllowedToManageCampaign(permissions);
         }
 
-        public bool AllowedToManageWallets(Client client)
+        public static bool AllowedToManageWallets(Client client)
         {
-            return
-                client.HasPermission(ClientPermissions.ManageCampaign) ||
-                client.HasPermission(ClientPermissions.ManageMoney) ||
-                IsOwner(client);
+            return AllowedToManageCampaign(client, ClientPermissions.ManageMoney);
         }
 
         public override void ShowStartMessage()

@@ -29,6 +29,14 @@ namespace Barotrauma
 
         public readonly Sprite Banner;
 
+        public readonly EndMessageInfo EndMessage;
+
+        public enum EndType { None, Continue, Restart }
+
+        public readonly record struct EndMessageInfo(
+            EndType EndType,
+            Identifier NextTutorialIdentifier);
+
         public TutorialPrefab(ContentFile file, ContentXElement element) : base(file, element.GetAttributeIdentifier("identifier", ""))
         {
             Order = element.GetAttributeInt("order", int.MaxValue);
@@ -59,6 +67,13 @@ namespace Barotrauma
             }
 
             EventIdentifier = element.GetChildElement("scriptedevent")?.GetAttributeIdentifier("identifier", "") ?? Identifier.Empty;
+
+            if (element.GetChildElement("endmessage") is ContentXElement endMessageElement)
+            {
+                EndMessage = new EndMessageInfo(
+                    EndType: endMessageElement.GetAttributeEnum("type", EndType.None),
+                    NextTutorialIdentifier: endMessageElement.GetAttributeIdentifier("nexttutorial", Identifier.Empty));
+            }
         }
 
         public CharacterInfo GetTutorialCharacterInfo()

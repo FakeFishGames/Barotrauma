@@ -44,7 +44,16 @@ namespace Barotrauma
         }
         public LimbType Limb { get; private set; }
         public bool HideLimb { get; private set; }
-        public bool HideOtherWearables { get; private set; }
+
+        public enum ObscuringMode
+        {
+            None,
+            Hide,
+            AlphaClip
+        }
+        public ObscuringMode ObscureOtherWearables { get; private set; }
+        public bool HideOtherWearables => ObscureOtherWearables == ObscuringMode.Hide;
+        public bool AlphaClipOtherWearables => ObscureOtherWearables == ObscuringMode.AlphaClip;
         public bool CanBeHiddenByOtherWearables { get; private set; }
         public List<WearableType> HideWearablesOfType { get; private set; }
         public bool InheritLimbDepth { get; private set; }
@@ -130,7 +139,7 @@ namespace Barotrauma
                 case WearableType.Husk:
                 case WearableType.Herpes:
                     Limb = LimbType.Head;
-                    HideOtherWearables = false;
+                    ObscureOtherWearables = ObscuringMode.None;
                     InheritLimbDepth = true;
                     InheritScale = true;
                     InheritOrigin = true;
@@ -202,7 +211,16 @@ namespace Barotrauma
             Sprite = new Sprite(SourceElement, file: SpritePath);
             Limb = (LimbType)Enum.Parse(typeof(LimbType), SourceElement.GetAttributeString("limb", "Head"), true);
             HideLimb = SourceElement.GetAttributeBool("hidelimb", false);
-            HideOtherWearables = SourceElement.GetAttributeBool("hideotherwearables", false);
+
+            foreach (var mode in Enum.GetValues<ObscuringMode>())
+            {
+                if (mode == ObscuringMode.None) { continue; }
+                if (SourceElement.GetAttributeBool($"{mode}OtherWearables", false))
+                {
+                    ObscureOtherWearables = mode;
+                }
+            }
+
             CanBeHiddenByOtherWearables = SourceElement.GetAttributeBool("canbehiddenbyotherwearables", true);
             InheritLimbDepth = SourceElement.GetAttributeBool("inheritlimbdepth", true);
             var scale = SourceElement.GetAttribute("inheritscale");
@@ -269,6 +287,9 @@ namespace Barotrauma.Items.Components
 
         public bool AutoEquipWhenFull { get; private set; }
         public bool DisplayContainedStatus { get; private set; }
+
+        [Serialize(false, IsPropertySaveable.No, description: "Can the item be used (assuming it has components that are usable in some way) when worn."), Editable(MinValueFloat = -1000.0f, MaxValueFloat = 1000.0f)]
+        public bool AllowUseWhenWorn { get; set; }
 
         public readonly int Variants;
 
@@ -506,14 +527,17 @@ namespace Barotrauma.Items.Components
 
         public override void Update(float deltaTime, Camera cam)
         {
-            if (picker.Removed)
+            if (picker == null || picker.Removed)
             {
                 IsActive = false;
                 return;
             }
 
-            item.SetTransform(picker.SimPosition, 0.0f);
-            
+            //if the item is also being held, let the Holdable component control the position
+            if (item.GetComponent<Holdable>() is not { IsActive: true })
+            {
+                item.SetTransform(picker.SimPosition, 0.0f);
+            }
             item.ApplyStatusEffects(ActionType.OnWearing, deltaTime, picker);
 
 #if CLIENT

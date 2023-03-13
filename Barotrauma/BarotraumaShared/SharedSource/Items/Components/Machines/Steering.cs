@@ -144,6 +144,11 @@ namespace Barotrauma.Items.Components
             }
         }
 
+        public float TargetVelocityLengthSquared
+        {
+            get => TargetVelocity.LengthSquared();
+        }
+
         public Vector2 SteeringInput
         {
             get { return steeringInput; }
@@ -715,7 +720,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public override bool AIOperate(float deltaTime, Character character, AIObjectiveOperateItem objective)
+        public override bool CrewAIOperate(float deltaTime, Character character, AIObjectiveOperateItem objective)
         {
             character.AIController.SteeringManager.Reset();
             if (objective.Override)
@@ -808,7 +813,7 @@ namespace Barotrauma.Items.Components
                 }
             }
 
-            sonar?.AIOperate(deltaTime, character, objective);
+            sonar?.CrewAIOperate(deltaTime, character, objective);
             if (!MaintainPos && showIceSpireWarning && character.IsOnPlayerTeam)
             {
                 character.Speak(TextManager.Get("dialogicespirespottedsonar").Value, null, 0.0f, "icespirespottedsonar".ToIdentifier(), 60.0f);

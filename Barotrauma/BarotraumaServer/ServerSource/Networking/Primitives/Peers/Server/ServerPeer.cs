@@ -71,7 +71,7 @@ namespace Barotrauma.Networking
         protected List<NetworkConnection> connectedClients = null!;
         protected List<PendingClient> pendingClients = null!;
         protected ServerSettings serverSettings = null!;
-        protected Option<int> ownerKey = null!;
+        protected Option<int> ownerKey = Option.None;
         protected NetworkConnection? OwnerConnection;
 
         protected void ReadConnectionInitializationStep(PendingClient pendingClient, IReadMessage inc, ConnectionInitialization initializationStep)
@@ -246,11 +246,13 @@ namespace Barotrauma.Networking
             {
                 case ConnectionInitialization.ContentPackageOrder:
 
-                    DateTime timeNow = DateTime.UtcNow;
+                    SerializableDateTime timeNow = SerializableDateTime.UtcNow;
                     structToSend = new ServerPeerContentPackageOrderPacket
                     {
                         ServerName = GameMain.Server.ServerName,
-                        ContentPackages = ContentPackageManager.EnabledPackages.All.Where(cp => cp.HasMultiplayerSyncedContent || cp.Files.All(f => f is SubmarineFile))
+                        ContentPackages = ContentPackageManager.EnabledPackages.All
+                            .Where(cp => cp.Files.Any())
+                            .Where(cp => cp.HasMultiplayerSyncedContent || cp.Files.All(f => f is SubmarineFile))
                             .Select(contentPackage => new ServerContentPackage(contentPackage, timeNow))
                             .ToImmutableArray()
                     };
@@ -288,7 +290,7 @@ namespace Barotrauma.Networking
 
                 pendingClients.Remove(pendingClient);
 
-                if (pendingClient.AuthSessionStarted && pendingClient.AccountInfo.AccountId is Some<AccountId> { Value: SteamId steamId })
+                if (pendingClient.AuthSessionStarted && pendingClient.AccountInfo.AccountId.TryUnwrap<SteamId>(out var steamId))
                 {
                     Steam.SteamManager.StopAuthSession(steamId);
                     pendingClient.Connection.SetAccountInfo(AccountInfo.None);

@@ -1,18 +1,26 @@
-﻿using System;
+﻿using Barotrauma.Extensions;
+using System;
+using System.Collections.Immutable;
 using System.Linq;
-using System.Xml.Linq;
 
 namespace Barotrauma.Abilities
 {
     class AbilityConditionItem : AbilityConditionData
     {
-        private readonly string[] identifiers;
-        private readonly string[] tags;
+        private readonly ImmutableArray<Identifier> identifiers;
+        private readonly ImmutableArray<Identifier> tags;
+        private readonly MapEntityCategory category = MapEntityCategory.None;
 
         public AbilityConditionItem(CharacterTalent characterTalent, ContentXElement conditionElement) : base(characterTalent, conditionElement)
         {
-            identifiers = conditionElement.GetAttributeStringArray("identifiers", Array.Empty<string>(), convertToLowerInvariant: true);
-            tags = conditionElement.GetAttributeStringArray("tags", Array.Empty<string>(), convertToLowerInvariant: true);
+            identifiers = conditionElement.GetAttributeIdentifierArray("identifiers", Array.Empty<Identifier>()).ToImmutableArray();
+            tags = conditionElement.GetAttributeIdentifierArray("tags", Array.Empty<Identifier>()).ToImmutableArray();
+            category = conditionElement.GetAttributeEnum("category", MapEntityCategory.None);
+
+            if (identifiers.None() && tags.None() && category == MapEntityCategory.None)
+            {
+                DebugConsole.ThrowError($"Error in talent \"{characterTalent}\". No identifiers, tags or category defined.");
+            }
         }
 
         protected override bool MatchesConditionSpecific(AbilityObject abilityObject)
@@ -29,21 +37,30 @@ namespace Barotrauma.Abilities
 
             if (itemPrefab != null)
             {
-                if (identifiers.Any())
-                {
-                    if (!identifiers.Any(t => itemPrefab.Identifier == t))
-                    {
-                        return false;
-                    }
-                }
-
-                return !tags.Any() || tags.Any(t => itemPrefab.Tags.Any(p => t == p));
+                return MatchesItem(itemPrefab);
             }
             else
             {
                 LogAbilityConditionError(abilityObject, typeof(IAbilityItemPrefab));
                 return false;
             }
+        }
+
+        public bool MatchesItem(ItemPrefab itemPrefab)
+        {
+            if (category != MapEntityCategory.None)
+            {
+                if (!itemPrefab.Category.HasFlag(category)) { return false; }
+            }
+
+            if (identifiers.Any())
+            {
+                if (!identifiers.Any(t => itemPrefab.Identifier == t))
+                {
+                    return false;
+                }
+            }
+            return !tags.Any() || tags.Any(t => itemPrefab.Tags.Any(p => t == p));
         }
     }
 }

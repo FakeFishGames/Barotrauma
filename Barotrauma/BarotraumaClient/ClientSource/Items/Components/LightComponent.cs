@@ -14,7 +14,12 @@ namespace Barotrauma.Items.Components
         private CoroutineHandle resetPredictionCoroutine;
         private float resetPredictionTimer;
 
-        private float currentBrightness;
+        /// <summary>
+        /// The current multiplier for the light color (usually equal to <see cref="lightBrightness"/>, but in the case of e.g. blinking lights the multiplier
+        /// doesn't go to 0 when the light turns off, because otherwise it'd take a while for it turn back on based on the lightBrightness which is interpolated
+        /// towards the current voltage).
+        /// </summary>
+        private float lightColorMultiplier;
 
         public Vector2 DrawSize
         {
@@ -33,10 +38,10 @@ namespace Barotrauma.Items.Components
         {
             if (Light == null) { return; }
             Light.Enabled = enabled;
-            currentBrightness = brightness;
+            lightColorMultiplier = brightness;
             if (enabled)
             {
-                Light.Color = LightColor.Multiply(brightness);
+                Light.Color = LightColor.Multiply(lightColorMultiplier);
             }
         }
 
@@ -73,20 +78,27 @@ namespace Barotrauma.Items.Components
 
         public void Draw(SpriteBatch spriteBatch, bool editing = false, float itemDepth = -1)
         {
-            if (Light.LightSprite != null && (item.body == null || item.body.Enabled) && lightBrightness > 0.0f && IsOn && Light.Enabled)
+            if (Light?.LightSprite == null) { return; }
+            if ((item.body == null || item.body.Enabled) && lightBrightness > 0.0f && IsOn && Light.Enabled)
             {
                 Vector2 origin = Light.LightSprite.Origin;
                 if ((Light.LightSpriteEffect & SpriteEffects.FlipHorizontally) == SpriteEffects.FlipHorizontally) { origin.X = Light.LightSprite.SourceRect.Width - origin.X; }
                 if ((Light.LightSpriteEffect & SpriteEffects.FlipVertically) == SpriteEffects.FlipVertically) { origin.Y = Light.LightSprite.SourceRect.Height - origin.Y; }
 
                 Vector2 drawPos = item.body?.DrawPosition ?? item.DrawPosition;
-                Light.LightSprite.Draw(spriteBatch, new Vector2(drawPos.X, -drawPos.Y), lightColor * lightBrightness, origin, -Light.Rotation, item.Scale, Light.LightSpriteEffect, itemDepth - 0.0001f);
+
+                Color color = lightColor;
+                if (Light.OverrideLightSpriteAlpha.HasValue)
+                {
+                    color = new Color(lightColor, Light.OverrideLightSpriteAlpha.Value);
+                }
+                Light.LightSprite.Draw(spriteBatch, new Vector2(drawPos.X, -drawPos.Y), color * lightBrightness, origin, -Light.Rotation, item.Scale, Light.LightSpriteEffect, itemDepth - 0.0001f);
             }
         }
 
         public override void FlipX(bool relativeToSub)
         {
-            if (Light?.LightSprite != null && item.Prefab.CanSpriteFlipX && item.body == null)
+            if (Light?.LightSprite != null && item.Prefab.CanSpriteFlipX)
             {
                 Light.LightSpriteEffect = Light.LightSpriteEffect == SpriteEffects.None ?
                     SpriteEffects.FlipHorizontally : SpriteEffects.None;
