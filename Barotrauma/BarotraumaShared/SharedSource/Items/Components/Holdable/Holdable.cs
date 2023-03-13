@@ -226,7 +226,7 @@ namespace Barotrauma.Items.Components
             Pusher = null;
             if (element.GetAttributeBool("blocksplayers", false))
             {
-                Pusher = new PhysicsBody(item.body.width, item.body.height, item.body.radius, 
+                Pusher = new PhysicsBody(item.body.Width, item.body.Height, item.body.Radius, 
                     item.body.Density,
                     BodyType.Dynamic,
                     Physics.CollisionItemBlocking, 
@@ -427,10 +427,11 @@ namespace Barotrauma.Items.Components
                 return;
             }
 
+            //cannot hold and wear an item at the same time
+            //(unless the slot in which it's held and worn are equal - e.g. a suit with built-in tool or weapon on one hand)
             var wearable = item.GetComponent<Wearable>();
-            if (wearable != null)
+            if (wearable != null && !wearable.AllowedSlots.SequenceEqual(allowedSlots))
             {
-                //cannot hold and wear an item at the same time
                 wearable.Unequip(character);
             }
 
@@ -558,10 +559,16 @@ namespace Barotrauma.Items.Components
 
         public override bool OnPicked(Character picker)
         {
+#if CLIENT
             if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient)
             {
+                if (!picker.Inventory.CanBeAutoMovedToCorrectSlots(item))
+                {
+                    picker.Inventory.FlashAllowedSlots(item, Color.Red);
+                }
                 return false;
             }
+#endif
             bool wasAttached = IsAttached;
             if (base.OnPicked(picker))
             {

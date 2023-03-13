@@ -268,7 +268,7 @@ namespace Barotrauma
                     Buttons.Clear();
                 }
 
-                Header = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), Content.RectTransform), headerText, wrap: true);
+                Header = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), Content.RectTransform), headerText, wrap: true, textColor: GUIStyle.TextColorBright);
                 GUIStyle.Apply(Header, "", this);
                 Header.RectTransform.MinSize = new Point(0, Header.Rect.Height);
 

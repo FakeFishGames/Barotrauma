@@ -219,7 +219,7 @@ namespace Barotrauma
                     currentLevelData = LevelData.CreateRandom(seedBox.Text, generationParams: selectedParams);
                     currentLevelData.ForceOutpostGenerationParams = outpostParamsList.SelectedData as OutpostGenerationParams;
                     currentLevelData.AllowInvalidOutpost = allowInvalidOutpost.Selected;
-                    var dummyLocations = GameSession.CreateDummyLocations(seed: currentLevelData.Seed);
+                    var dummyLocations = GameSession.CreateDummyLocations(currentLevelData);
                     Level.Generate(currentLevelData, mirror: mirrorLevel.Selected, startLocation: dummyLocations[0], endLocation: dummyLocations[1]);
                     Submarine.MainSub?.SetPosition(Level.Loaded.StartPosition);
                     GameMain.LightManager.AddLight(pointerLightSource);

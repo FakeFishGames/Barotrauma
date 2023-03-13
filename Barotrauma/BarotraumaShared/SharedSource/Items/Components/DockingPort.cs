@@ -543,8 +543,8 @@ namespace Barotrauma.Items.Components
             System.Diagnostics.Debug.Assert(doorBody == null);
 
             doorBody = GameMain.World.CreateRectangle(
-                DockingTarget.Door.Body.width,
-                DockingTarget.Door.Body.height,
+                DockingTarget.Door.Body.Width,
+                DockingTarget.Door.Body.Height,
                 1.0f,
                 position);
             doorBody.UserData = DockingTarget.Door;

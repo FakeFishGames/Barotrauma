@@ -14,45 +14,51 @@ namespace Barotrauma.Abilities
         {
             string[] missionTypeStrings = conditionElement.GetAttributeStringArray("missiontype", new []{ "None" })!;
             HashSet<MissionType> missionTypes = new HashSet<MissionType>();
+            isAffiliated = conditionElement.GetAttributeBool("isaffiliated", false);
+
             foreach (string missionTypeString in missionTypeStrings)
             {
                 if (!Enum.TryParse(missionTypeString, out MissionType parsedMission) || parsedMission is MissionType.None)
                 {
-                    DebugConsole.ThrowError($"Error in AbilityConditionMission \"{characterTalent.DebugIdentifier}\" - \"{missionTypeString}\" is not a valid mission type.");
-                    return;
+                    if (!isAffiliated)
+                    {
+                        DebugConsole.ThrowError($"Error in AbilityConditionMission \"{characterTalent.DebugIdentifier}\" - \"{missionTypeString}\" is not a valid mission type.");
+                    }
+                    continue;
                 }
 
                 missionTypes.Add(parsedMission);
             }
 
             missionType = missionTypes.ToImmutableHashSet();
-            isAffiliated = conditionElement.GetAttributeBool("isaffiliated", false);
         }
 
         protected override bool MatchesConditionSpecific(AbilityObject abilityObject)
         {
             if (abilityObject is IAbilityMission { Mission: { } mission })
             {
-                if (isAffiliated)
+                if (!isAffiliated) { return CheckMissionType(); }
+
+                if (GameMain.GameSession?.Campaign?.Factions is not { } factions) { return false; }
+
+                foreach (var (factionIdentifier, amount) in mission.ReputationRewards)
                 {
-                    if (GameMain.GameSession?.Campaign?.Factions is not { } factions) { return false; }
-
-                    foreach (var (factionIdentifier, amount) in mission.ReputationRewards)
+                    if (amount <= 0) { continue; }
+                    if (GetMatchingFaction(factionIdentifier) is { } faction &&
+                        Faction.GetPlayerAffiliationStatus(faction) is FactionAffiliation.Positive)
                     {
-                        if (amount <= 0) { continue; }
-
-                        Faction faction = factions.FirstOrDefault(faction => factionIdentifier == faction.Prefab.Identifier);
-
-                        if (faction?.GetPlayerAffiliationStatus() is FactionAffiliation.Affiliated)
-                        {
-                            return true;
-                        }
+                        return CheckMissionType();
                     }
-
-                    return false;
                 }
 
-                return missionType.Contains(mission.Prefab.Type);
+                return false;
+
+                Faction GetMatchingFaction(Identifier factionIdentifier) =>
+                    factionIdentifier == "location"
+                        ? mission.OriginLocation?.Faction
+                        : factions.FirstOrDefault(f => factionIdentifier == f.Prefab.Identifier);
+
+                bool CheckMissionType() => missionType.IsEmpty || missionType.Contains(mission.Prefab.Type);
             }
 
             LogAbilityConditionError(abilityObject, typeof(IAbilityMission));

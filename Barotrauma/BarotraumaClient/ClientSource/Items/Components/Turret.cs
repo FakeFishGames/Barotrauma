@@ -333,15 +333,9 @@ namespace Barotrauma.Items.Components
 
             crosshairPointerPos = PlayerInput.MousePosition;
         }
-        
-        public void Draw(SpriteBatch spriteBatch, bool editing = false, float itemDepth = -1)
-        {
-            if (!MathUtils.NearlyEqual(item.Rotation, prevBaseRotation) || !MathUtils.NearlyEqual(item.Scale, prevScale))
-            {
-                UpdateTransformedBarrelPos();
-            }
-            Vector2 drawPos = GetDrawPos();
 
+        public Vector2 GetRecoilOffset()
+        {
             float recoilOffset = 0.0f;
             if (Math.Abs(RecoilDistance) > 0.0f && recoilTimer > 0.0f)
             {
@@ -362,6 +356,17 @@ namespace Barotrauma.Items.Components
                     recoilOffset = RecoilDistance;
                 }
             }
+            return new Vector2((float)Math.Cos(rotation), (float)Math.Sin(rotation)) * recoilOffset;
+        }
+        
+        public void Draw(SpriteBatch spriteBatch, bool editing = false, float itemDepth = -1)
+        {
+            if (!MathUtils.NearlyEqual(item.Rotation, prevBaseRotation) || !MathUtils.NearlyEqual(item.Scale, prevScale))
+            {
+                UpdateTransformedBarrelPos();
+            }
+            Vector2 drawPos = GetDrawPos();
+
 
             railSprite?.Draw(spriteBatch,
                 drawPos,
@@ -370,7 +375,7 @@ namespace Barotrauma.Items.Components
                 SpriteEffects.None, item.SpriteDepth + (railSprite.Depth - item.Sprite.Depth));
 
             barrelSprite?.Draw(spriteBatch,
-                drawPos - new Vector2((float)Math.Cos(rotation), (float)Math.Sin(rotation)) * recoilOffset * item.Scale,
+                drawPos - GetRecoilOffset() * item.Scale,
                 item.SpriteColor,
                 rotation + MathHelper.PiOver2, item.Scale,
                 SpriteEffects.None, item.SpriteDepth + (barrelSprite.Depth - item.Sprite.Depth));

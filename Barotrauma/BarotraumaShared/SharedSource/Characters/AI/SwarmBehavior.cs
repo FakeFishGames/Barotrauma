@@ -13,6 +13,7 @@ namespace Barotrauma
         private readonly float minDistFromClosest;
         private readonly float maxDistFromCenter;
         private readonly float cohesion;
+        public bool ForceActive { get; private set; }
 
         public List<AICharacter> Members { get; private set; } = new List<AICharacter>();
         public HashSet<AICharacter> ActiveMembers { get; private set; } = new HashSet<AICharacter>();
@@ -26,9 +27,10 @@ namespace Barotrauma
         public SwarmBehavior(XElement element, EnemyAIController ai)
         {
             this.ai = ai;
-            minDistFromClosest = ConvertUnits.ToSimUnits(element.GetAttributeFloat("mindistfromclosest", 10.0f));
-            maxDistFromCenter = ConvertUnits.ToSimUnits(element.GetAttributeFloat("maxdistfromcenter", 1000.0f));
-            cohesion = element.GetAttributeFloat("cohesion", 1) / 10;
+            minDistFromClosest = ConvertUnits.ToSimUnits(element.GetAttributeFloat(nameof(minDistFromClosest), 10.0f));
+            maxDistFromCenter = ConvertUnits.ToSimUnits(element.GetAttributeFloat(nameof(maxDistFromCenter), 1000.0f));
+            cohesion = element.GetAttributeFloat(nameof(cohesion), 1) / 10;
+            ForceActive = element.GetAttributeBool(nameof(ForceActive), false);
         }
 
         public static void CreateSwarm(IEnumerable<AICharacter> swarm)

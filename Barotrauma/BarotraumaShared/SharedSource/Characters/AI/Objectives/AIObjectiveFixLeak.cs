@@ -155,17 +155,21 @@ namespace Barotrauma
             bool canOperate = toLeak.LengthSquared() < reach * reach;
             if (canOperate)
             {
-                TryAddSubObjective(ref operateObjective, () => new AIObjectiveOperateItem(repairTool, character, objectiveManager, option: Identifier.Empty, requireEquip: true, operateTarget: Leak), 
-                    onAbandon: () => Abandon = true,
-                    onCompleted: () =>
+                TryAddSubObjective(ref operateObjective, () => new AIObjectiveOperateItem(repairTool, character, objectiveManager, option: Identifier.Empty, requireEquip: true, operateTarget: Leak)
+                {
+                    // Use an empty filter to override the default
+                    EndNodeFilter = n => true
+                }, 
+                onAbandon: () => Abandon = true,
+                onCompleted: () =>
+                {
+                    if (CheckObjectiveSpecific()) { IsCompleted = true; }
+                    else
                     {
-                        if (CheckObjectiveSpecific()) { IsCompleted = true; }
-                        else
-                        {
-                            // Failed to operate. Probably too far.
-                            Abandon = true;
-                        }
-                    });
+                        // Failed to operate. Probably too far.
+                        Abandon = true;
+                    }
+                });
             }
             else
             {

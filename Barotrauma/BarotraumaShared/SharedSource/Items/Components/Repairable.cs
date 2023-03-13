@@ -1,12 +1,11 @@
-﻿using Barotrauma.Extensions;
+﻿using Barotrauma.Abilities;
+using Barotrauma.Extensions;
 using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using System.Xml.Linq;
-using Barotrauma.Abilities;
 
 namespace Barotrauma.Items.Components
 {
@@ -16,6 +15,9 @@ namespace Barotrauma.Items.Components
 
         private float deteriorationTimer;
         private float deteriorateAlwaysResetTimer;
+
+        private int updateDeteriorationCounter;
+        private const int UpdateDeteriorationInterval = 10;
 
         private int prevSentConditionValue;
         private string conditionSignal;
@@ -232,6 +234,7 @@ namespace Barotrauma.Items.Components
         public float RepairDegreeOfSuccess(Character character, List<Skill> skills)
         {
             if (skills.Count == 0) { return 1.0f; }
+            if (character == null) { return 0.0f; }
 
             float skillSum = (from t in skills let characterLevel = character.GetSkillLevel(t.Identifier) select (characterLevel - (t.Level * SkillRequirementMultiplier))).Sum();
             float average = skillSum / skills.Count;
@@ -241,6 +244,7 @@ namespace Barotrauma.Items.Components
 
         public void RepairBoost(bool qteSuccess)
         {
+            if (CurrentFixer == null) { return; }
             if (qteSuccess)
             {
                 item.Condition += RepairDegreeOfSuccess(CurrentFixer, requiredSkills) * 3 * (currentFixerAction == FixActions.Repair ? 1.0f : -1.0f);
@@ -404,26 +408,11 @@ namespace Barotrauma.Items.Components
 #endif
                     }
                 }
-                if (!ShouldDeteriorate()) { return; }
-                if (item.Condition > 0.0f)
+                updateDeteriorationCounter++;
+                if (updateDeteriorationCounter >= UpdateDeteriorationInterval)
                 {
-                    if (deteriorationTimer > 0.0f)
-                    {
-                        if (GameMain.NetworkMember == null || !GameMain.NetworkMember.IsClient)
-                        {
-                            deteriorationTimer -= deltaTime * GetDeteriorationDelayMultiplier();
-#if SERVER
-                            if (deteriorationTimer <= 0.0f) { item.CreateServerEvent(this); }
-#endif
-                        }
-                        return;
-                    }
-
-                    if (item.ConditionPercentage > MinDeteriorationCondition)
-                    {
-                        float deteriorationSpeed = item.StatManager.GetAdjustedValue(ItemTalentStats.DetoriationSpeed, DeteriorationSpeed);
-                        item.Condition -= deteriorationSpeed * deltaTime;
-                    }
+                    UpdateDeterioration(deltaTime * UpdateDeteriorationInterval);
+                    updateDeteriorationCounter = 0;
                 }
                 return;
             }
@@ -557,6 +546,30 @@ namespace Barotrauma.Items.Components
             {
                 throw new NotImplementedException(currentFixerAction.ToString());
             }
+        }
+
+        private void UpdateDeterioration(float deltaTime)
+        {
+            if (item.Condition <= 0.0f) { return; }
+            if (!ShouldDeteriorate()) { return; }
+
+            if (deteriorationTimer > 0.0f)
+            {
+                if (GameMain.NetworkMember == null || !GameMain.NetworkMember.IsClient)
+                {
+                    deteriorationTimer -= deltaTime * GetDeteriorationDelayMultiplier();
+#if SERVER
+                    if (deteriorationTimer <= 0.0f) { item.CreateServerEvent(this); }
+#endif
+                }
+                return;
+            }
+
+            if (item.ConditionPercentage > MinDeteriorationCondition)
+            {
+                float deteriorationSpeed = item.StatManager.GetAdjustedValue(ItemTalentStats.DetoriationSpeed, DeteriorationSpeed);
+                item.Condition -= deteriorationSpeed * deltaTime;
+            }            
         }
 
         private float GetMaxRepairConditionMultiplier(Character character)

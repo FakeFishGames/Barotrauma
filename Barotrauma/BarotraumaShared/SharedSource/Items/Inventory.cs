@@ -141,7 +141,18 @@ namespace Barotrauma
                     }
                 }
                 if (items.Contains(item)) { return; }
-                items.Add(item);
+
+                //keep lowest-condition items at the top of the stack
+                int index = 0;
+                for (int i = 0; i < items.Count; i++)
+                {
+                    if (items[i].Condition > item.Condition)
+                    {
+                        break;
+                    }
+                    index++;
+                }
+                items.Insert(index, item);
             }
 
             /// <summary>

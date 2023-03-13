@@ -116,7 +116,7 @@ namespace Barotrauma
             {
                 foreach (Entity entity in Entity.GetEntities())
                 {
-                    if (targetPredicates[tag].Any(p => p(entity)))
+                    if (targetPredicates[tag].Any(p => p(entity)) && !targetsToReturn.Contains(entity))
                     {
                         targetsToReturn.Add(entity);
                     }
@@ -131,7 +131,7 @@ namespace Barotrauma
             {
                 foreach (Character npc in outpostNPCs)
                 {
-                    if (npc.Removed) { continue; }
+                    if (npc.Removed || targetsToReturn.Contains(npc)) { continue; }
                     targetsToReturn.Add(npc);
                 }
             }

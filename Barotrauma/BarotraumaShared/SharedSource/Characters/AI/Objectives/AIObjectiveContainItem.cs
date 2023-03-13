@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
+using Microsoft.Xna.Framework;
 
 namespace Barotrauma
 {
@@ -200,7 +201,8 @@ namespace Barotrauma
                             (container.Item.GetRootContainer()?.OwnInventory?.Locked ?? false) ||
                             ItemToContain == null || ItemToContain.Removed ||
                             !ItemToContain.IsOwnedBy(character) || container.Item.GetRootInventoryOwner() is Character c && c != character,
-                        SpeakIfFails = !objectiveManager.IsCurrentOrder<AIObjectiveCleanupItems>()
+                        SpeakIfFails = !objectiveManager.IsCurrentOrder<AIObjectiveCleanupItems>(),
+                        endNodeFilter = n => Vector2.DistanceSquared(n.Waypoint.WorldPosition, container.Item.WorldPosition) <= MathUtils.Pow2(AIObjectiveGetItem.DefaultReach)
                     },
                     onAbandon: () => Abandon = true,
                     onCompleted: () => RemoveSubObjective(ref goToObjective));

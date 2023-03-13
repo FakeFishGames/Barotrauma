@@ -280,7 +280,7 @@ namespace Barotrauma.Items.Components
 
         private static readonly Dictionary<string, List<Character>> targetGroups = new Dictionary<string, List<Character>>();
 
-        public override bool AIOperate(float deltaTime, Character character, AIObjectiveOperateItem objective)
+        public override bool CrewAIOperate(float deltaTime, Character character, AIObjectiveOperateItem objective)
         {
             if (!aiPingCheckPending) { return false; }
 

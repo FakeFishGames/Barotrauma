@@ -123,6 +123,11 @@ namespace Barotrauma
             return ignoredTags;
         }
 
+        public static Func<PathNode, bool> CreateEndNodeFilter(ISpatialEntity targetEntity)
+        {
+            return n => (n.Waypoint.Ladders == null || n.Waypoint.IsInWater) && Vector2.DistanceSquared(n.Waypoint.WorldPosition, targetEntity.WorldPosition) <= MathUtils.Pow2(DefaultReach);
+        }
+
         private bool CheckInventory()
         {
             if (IdentifiersOrTags == null) { return false; }
@@ -155,11 +160,6 @@ namespace Barotrauma
                 Abandon = true;
                 return;
             }
-            if (character.Submarine == null)
-            {
-                Abandon = true;
-                return;
-            }
             if (IdentifiersOrTags != null && !isDoneSeeking)
             {
                 if (checkInventory)
@@ -171,9 +171,14 @@ namespace Barotrauma
                 }
                 if (!isDoneSeeking)
                 {
+                    if (character.Submarine == null)
+                    {
+                        Abandon = true;
+                        return;
+                    }
                     if (!AllowDangerousPressure)
                     {
-                        bool dangerousPressure = character.CurrentHull == null || character.CurrentHull.LethalPressure > 0 && character.PressureProtection <= 0;
+                        bool dangerousPressure = !character.IsProtectedFromPressure && (character.CurrentHull == null || character.CurrentHull.LethalPressure > 0);
                         if (dangerousPressure)
                         {
 #if DEBUG
@@ -191,6 +196,11 @@ namespace Barotrauma
                     }
                     return;
                 }
+            }
+            else if (character.Submarine == null)
+            {
+                Abandon = true;
+                return;
             }
             if (targetItem == null || targetItem.Removed)
             {
@@ -307,7 +317,8 @@ namespace Barotrauma
                         {
                             // If the root container changes, the item is no longer where it was (taken by someone -> need to find another item)
                             AbortCondition = obj => targetItem == null || targetItem.GetRootInventoryOwner() != moveToTarget,
-                            SpeakIfFails = false
+                            SpeakIfFails = false,
+                            endNodeFilter = CreateEndNodeFilter(moveToTarget)
                         };
                     },
                     onAbandon: () =>

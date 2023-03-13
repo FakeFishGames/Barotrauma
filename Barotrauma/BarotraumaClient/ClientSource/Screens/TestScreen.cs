@@ -49,7 +49,7 @@ namespace Barotrauma
             }
 
             dummyCharacter = Character.Create(CharacterPrefab.HumanSpeciesName, Vector2.Zero, "", id: Entity.DummyID, hasAi: false);
-            dummyCharacter.Info.Job = new Job(JobPrefab.Prefabs.FirstOrDefault(static jp => jp.Identifier == "assistant"));
+            dummyCharacter.Info.Job = new Job(JobPrefab.Prefabs.FirstOrDefault(static jp => jp.Identifier == "captain"));
             dummyCharacter.Info.Name = "Galldren";
             dummyCharacter.Inventory.CreateSlots();
             dummyCharacter.Info.GiveExperience(999999);

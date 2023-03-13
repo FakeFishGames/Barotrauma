@@ -1083,7 +1083,7 @@ namespace Barotrauma
                 if (g.ConnectedDoor != null && !g.ConnectedDoor.IsBroken)
                 {
                     //gap blocked if the door is not open or the predicted state is not open
-                    if ((!g.ConnectedDoor.IsOpen && !g.ConnectedDoor.IsBroken) || (g.ConnectedDoor.PredictedState.HasValue && !g.ConnectedDoor.PredictedState.Value))
+                    if ((g.ConnectedDoor.IsClosed && !g.ConnectedDoor.IsBroken) || (g.ConnectedDoor.PredictedState.HasValue && !g.ConnectedDoor.PredictedState.Value))
                     {
                         if (g.ConnectedDoor.OpenState < 0.1f)
                         {

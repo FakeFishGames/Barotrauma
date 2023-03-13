@@ -36,6 +36,10 @@ namespace Barotrauma
 
         public bool IdFreed { get; private set; }
 
+        /// <summary>
+        /// Unique, but non-persistent identifier.
+        /// Stays the same if the entities are created in the exactly same order, but doesn't persist e.g. between the rounds.
+        /// </summary>
         public readonly ushort ID;
 
         public virtual Vector2 SimPosition => Vector2.Zero;

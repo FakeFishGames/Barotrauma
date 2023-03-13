@@ -313,7 +313,9 @@ namespace Barotrauma
                     break;
             }
 
-            RectTransform.MinSize = TextBox.RectTransform.MinSize;
+            RectTransform.MinSize = new Point(
+                Math.Max(rectT.MinSize.X, TextBox.RectTransform.MinSize.X), 
+                Math.Max(rectT.MinSize.Y, TextBox.RectTransform.MinSize.Y));
             LayoutGroup.Recalculate();
         }
 

@@ -68,7 +68,6 @@ namespace Barotrauma
             }
             // Remove "[speciesname]" for backward support (we don't use it anymore)
             HuskedSpeciesName = HuskedSpeciesName.Remove("[speciesname]").ToIdentifier();
-            TargetSpecies = element.GetAttributeIdentifierArray("targets", Array.Empty<Identifier>(), trim: true);
             if (TargetSpecies.Length == 0)
             {
                 DebugConsole.NewMessage($"No 'targets' defined for the husk affliction ({Identifier}) in {element}", Color.Orange);
@@ -110,7 +109,6 @@ namespace Barotrauma
         public float TransformThresholdOnDeath;
 
         public readonly Identifier HuskedSpeciesName;
-        public readonly Identifier[] TargetSpecies;
 
         public readonly bool TransferBuffs;
         public readonly bool SendMessages;
@@ -344,16 +342,29 @@ namespace Barotrauma
             }
         }
 
+        public static readonly Identifier DamageType = "damage".ToIdentifier();
+        public static readonly Identifier BurnType = "burn".ToIdentifier();
+        public static readonly Identifier BleedingType = "bleeding".ToIdentifier();
+        public static readonly Identifier ParalysisType = "paralysis".ToIdentifier();
+        public static readonly Identifier PoisonType = "poison".ToIdentifier();
+        public static readonly Identifier StunType = "stun".ToIdentifier();
+        public static readonly Identifier EMPType = "emp".ToIdentifier();
+        public static readonly Identifier SpaceHerpesType = "spaceherpes".ToIdentifier();
+        public static readonly Identifier AlienInfectedType = "alieninfected".ToIdentifier();
+        public static readonly Identifier InvertControlsType = "invertcontrols".ToIdentifier();
+        public static readonly Identifier HuskInfectionType = "huskinfection".ToIdentifier();
+
         public static AfflictionPrefab InternalDamage => Prefabs["internaldamage"];
         public static AfflictionPrefab BiteWounds => Prefabs["bitewounds"];
         public static AfflictionPrefab ImpactDamage => Prefabs["blunttrauma"];
-        public static AfflictionPrefab Bleeding => Prefabs["bleeding"];
-        public static AfflictionPrefab Burn => Prefabs["burn"];
+        public static AfflictionPrefab Bleeding => Prefabs[BleedingType];
+        public static AfflictionPrefab Burn => Prefabs[BurnType];
         public static AfflictionPrefab OxygenLow => Prefabs["oxygenlow"];
         public static AfflictionPrefab Bloodloss => Prefabs["bloodloss"];
         public static AfflictionPrefab Pressure => Prefabs["pressure"];
-        public static AfflictionPrefab Stun => Prefabs["stun"];
+        public static AfflictionPrefab Stun => Prefabs[StunType];
         public static AfflictionPrefab RadiationSickness => Prefabs["radiationsickness"];
+
 
         public static readonly PrefabCollection<AfflictionPrefab> Prefabs = new PrefabCollection<AfflictionPrefab>();
 
@@ -421,6 +432,9 @@ namespace Barotrauma
         public readonly float BurnOverlayAlpha;
         public readonly float DamageOverlayAlpha;
 
+        //steam achievement given when the controlled character receives the affliction
+        public readonly Identifier AchievementOnReceived;
+
         //steam achievement given when the affliction is removed from the controlled character
         public readonly Identifier AchievementOnRemoved;
 
@@ -452,6 +466,8 @@ namespace Barotrauma
         public IList<PeriodicEffect> PeriodicEffects => periodicEffects;
 
         private readonly ConstructorInfo constructor;
+
+        public Identifier[] TargetSpecies { get; protected set; }
 
         public readonly bool ResetBetweenRounds;
 
@@ -536,12 +552,21 @@ namespace Barotrauma
 
             KarmaChangeOnApplied = element.GetAttributeFloat(nameof(KarmaChangeOnApplied), 0.0f);
 
-            CauseOfDeathDescription     = TextManager.Get($"AfflictionCauseOfDeath.{TranslationIdentifier}").Fallback(element.GetAttributeString("causeofdeathdescription", ""));
-            SelfCauseOfDeathDescription = TextManager.Get($"AfflictionCauseOfDeathSelf.{TranslationIdentifier}").Fallback(element.GetAttributeString("selfcauseofdeathdescription", ""));
+            CauseOfDeathDescription     = 
+                TextManager.Get($"AfflictionCauseOfDeath.{TranslationIdentifier}")
+                .Fallback(TextManager.Get(element.GetAttributeString("causeofdeathdescription", "")))
+                .Fallback(element.GetAttributeString("causeofdeathdescription", ""));
+            SelfCauseOfDeathDescription = 
+                TextManager.Get($"AfflictionCauseOfDeathSelf.{TranslationIdentifier}")
+                .Fallback(TextManager.Get(element.GetAttributeString("selfcauseofdeathdescription", "")))
+                .Fallback(element.GetAttributeString("selfcauseofdeathdescription", ""));
 
             IconColors = element.GetAttributeColorArray(nameof(IconColors), null);
             AfflictionOverlayAlphaIsLinear = element.GetAttributeBool(nameof(AfflictionOverlayAlphaIsLinear), false);
+            AchievementOnReceived = element.GetAttributeIdentifier(nameof(AchievementOnReceived), "");
             AchievementOnRemoved = element.GetAttributeIdentifier(nameof(AchievementOnRemoved), "");
+
+            TargetSpecies = element.GetAttributeIdentifierArray("targets", Array.Empty<Identifier>(), trim: true);
 
             ResetBetweenRounds = element.GetAttributeBool("resetbetweenrounds", false);
 
