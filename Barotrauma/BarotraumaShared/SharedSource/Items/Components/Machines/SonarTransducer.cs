@@ -1,6 +1,4 @@
-﻿using System.Xml.Linq;
-
-namespace Barotrauma.Items.Components
+﻿namespace Barotrauma.Items.Components
 {
     class SonarTransducer : Powered
     {
@@ -32,12 +30,9 @@ namespace Barotrauma.Items.Components
 
         public override float GetCurrentPowerConsumption(Connection connection = null)
         {
-            if (connection != powerIn || !IsActive)
-            {
-                return 0;
-            }
+            if (connection != powerIn || !IsActive || ConnectedSonar == null) { return 0; }
 
-            return ConnectedSonar?.CurrentMode == Sonar.Mode.Active ? PowerConsumption : PowerConsumption * ConnectedSonar.PassivePowerConsumptionMultiplier;
+            return ConnectedSonar.CurrentMode == Sonar.Mode.Active ? PowerConsumption : PowerConsumption * ConnectedSonar.PassivePowerConsumptionMultiplier;
         }
     }
 }
