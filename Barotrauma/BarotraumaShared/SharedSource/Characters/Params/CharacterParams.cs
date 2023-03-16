@@ -142,7 +142,7 @@ namespace Barotrauma
 
         public override ContentXElement MainElement => base.MainElement.IsOverride() ? base.MainElement.FirstElement() : base.MainElement;
 
-        public static void CreateVariantXml_callback(ContentXElement newXml, ContentXElement variantXML, ContentXElement baseXML)
+        public static void CreateVariantXml_callback(XElement newXml, XElement variantXML, XElement baseXML)
         {
             XElement variantAi = variantXML.GetChildElement("ai");
             XElement baseAi = baseXML.GetChildElement("ai");
@@ -152,7 +152,7 @@ namespace Barotrauma
                 return;
             }
             // CreateVariantXML seems to merge the ai targets so that in the new xml we have both the old and the new target definitions.
-            var finalAiElement = newXml.GetChildElement("ai").Element;
+            var finalAiElement = newXml.GetChildElement("ai");
             var processedTags = new HashSet<string>();
             foreach (var aiTarget in finalAiElement.Elements().ToArray())
             {

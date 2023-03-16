@@ -1392,8 +1392,8 @@ namespace Barotrauma
 
         public void InheritFrom(ItemPrefab parent)
         {
-            ConfigElement = (this as IImplementsVariants<ItemPrefab>).DoInherit(null);
-            ParseConfigElement(parent);
+			ConfigElement = (this as IImplementsVariants<ItemPrefab>).DoInherit(CheckXML);
+			ParseConfigElement(parent);
 
             void CheckXML(XElement originalElement, XElement variantElement, XElement result)
             {

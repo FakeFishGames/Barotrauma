@@ -71,7 +71,7 @@ namespace Barotrauma
 
         public T GetPrevious(Identifier id);
 
-        public ContentXElement DoInherit(Action<ContentXElement, ContentXElement, ContentXElement> create_callback)
+        public ContentXElement DoInherit(VariantExtensions.VariantXMLChecker create_callback)
         {
             Stack<ContentXElement> preprocessed = new Stack<ContentXElement>();
             var last_elem = originalElement.FromContent((this as T).FilePath);
@@ -199,6 +199,9 @@ namespace Barotrauma
             }
         }
 
+        public delegate void VariantXMLChecker(XElement originalElement, XElement variantElement, XElement result);
+
+
         public static ContentXElement PreprocessInherit(this ContentXElement variantElement, ContentXElement baseElement, bool is_post_process) {
             ContentXElement newElement;
             if(is_post_process){
@@ -317,7 +320,7 @@ namespace Barotrauma
             return newElement;
         }
 
-        public static ContentXElement CreateVariantXML(this ContentXElement variantElement, ContentXElement baseElement, Action<ContentXElement, ContentXElement, ContentXElement> create_callback)
+        public static ContentXElement CreateVariantXML(this ContentXElement variantElement, ContentXElement baseElement, VariantXMLChecker create_callback)
         {
             // As of 0.18.15.1, grep -r "Content/" yields only texture="xxx" and file="yyy" attributes.
             // This means for config feature set vanilla is using, replacing can be safely done via these two attributes.

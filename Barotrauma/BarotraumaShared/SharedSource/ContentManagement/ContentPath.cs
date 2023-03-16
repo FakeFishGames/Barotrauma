@@ -105,7 +105,7 @@ namespace Barotrauma
                     if (!UInt64.TryParse(cachedPackageName, out UInt64 workshopId)) { workshopId = 0; }
                     ContentPackage? otherMod =
                         allPackages.FirstOrDefault(p => {
-                            return p.UgcId.TryUnwrap(out ContentPackageId other_id) && other_id.ToString().Equals(cachedPackageName);
+                            return p.UgcId.TryUnwrap(out ContentPackageId? other_id) && other_id.ToString().Equals(cachedPackageName);
                         })
                         ?? allPackages.FirstOrDefault(p => p.Name == cachedPackageName)
                         ?? allPackages.FirstOrDefault(p => p.NameMatches(cachedPackageName!))
