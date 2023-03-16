@@ -1195,7 +1195,7 @@ namespace Barotrauma
                         {
                             target = limb.character;
                         }
-                        if (target != null && (target != Enemy || HumanAIController.IsFriendly(target)))
+                        if (target != null && target != Enemy && HumanAIController.IsFriendly(target))
                         {
                             return;
                         }
