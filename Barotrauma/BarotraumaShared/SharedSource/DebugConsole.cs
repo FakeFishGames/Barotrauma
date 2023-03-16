@@ -892,7 +892,15 @@ namespace Barotrauma
                     ThrowError("Please specify an identifier and a value.");
                     return;
                 }
-                SetDataAction.PerformOperation(campaign.CampaignMetadata, args[0].ToIdentifier(), args[1], SetDataAction.OperationType.Set);
+                if (float.TryParse(args[1], out float floatVal))
+                {
+                    SetDataAction.PerformOperation(campaign.CampaignMetadata, args[0].ToIdentifier(), floatVal, SetDataAction.OperationType.Set);
+                }
+                else
+                {
+                    SetDataAction.PerformOperation(campaign.CampaignMetadata, args[0].ToIdentifier(), args[1], SetDataAction.OperationType.Set);
+                }
+
             }, isCheat: true));
 
             commands.Add(new Command("setskill", "setskill [all/identifier] [max/level] [character]: Set your skill level.", (string[] args) =>
@@ -1094,11 +1102,6 @@ namespace Barotrauma
             commands.Add(new Command("teleportsub", "teleportsub [start/end/cursor]: Teleport the submarine to the position of the cursor, or the start or end of the level. WARNING: does not take outposts into account, so often leads to physics glitches. Only use for debugging.", (string[] args) =>
             {
                 if (Submarine.MainSub == null) { return; }
-                if (Level.Loaded?.Type == LevelData.LevelType.Outpost && GameMain.GameSession != null)
-                {
-                    NewMessage("The teleportsub command is unavailable in outpost levels!", Color.Red);
-                    return;
-                }
 
                 if (args.Length == 0 || args[0].Equals("cursor", StringComparison.OrdinalIgnoreCase))
                 {
@@ -1263,6 +1266,22 @@ namespace Barotrauma
             }
 #endif
 
+            commands.Add(new Command("showreputation", "showreputation: List the current reputation values.", (string[] args) =>
+            {
+                if (GameMain.GameSession?.GameMode is CampaignMode campaign)
+                {
+                    NewMessage("Reputation:");
+                    foreach (var faction in campaign.Factions)
+                    {
+                        NewMessage($" - {faction.Prefab.Name}: {faction.Reputation.Value}");
+                    }
+                }
+                else
+                {
+                    ThrowError("Could not show reputation (no active campaign).");
+                }
+            }, null));
+
             commands.Add(new Command("setlocationreputation", "setlocationreputation [value]: Set the reputation in the current location to the specified value.", (string[] args) =>
             {
                 if (GameMain.GameSession?.GameMode is CampaignMode campaign)
@@ -1270,7 +1289,7 @@ namespace Barotrauma
                     if (args.Length == 0) { return; }
                     if (float.TryParse(args[0], NumberStyles.Any, CultureInfo.InvariantCulture, out float reputation))
                     {
-                        campaign.Map.CurrentLocation.Reputation.SetReputation(reputation);
+                        campaign.Map.CurrentLocation.Reputation?.SetReputation(reputation);
                     }
                     else
                     {
@@ -1427,7 +1446,7 @@ namespace Barotrauma
             commands.Add(new Command("kill", "kill [character]: Immediately kills the specified character.", (string[] args) =>
             {
                 Character killedCharacter = (args.Length == 0) ? Character.Controlled : FindMatchingCharacter(args);
-                killedCharacter?.SetAllDamage(200.0f, 0.0f, 0.0f);
+                killedCharacter?.Kill(CauseOfDeathType.Unknown, causeOfDeathAffliction: null);
             },
             () =>
             {
@@ -1872,6 +1891,8 @@ namespace Barotrauma
             commands.Add(new Command("toggleaitargets|aitargets", "Toggle the visibility of AI targets (= targets that enemies can detect and attack/escape from) (client-only).", null, isCheat: true));
             commands.Add(new Command("debugai", "Toggle the ai debug mode on/off (works properly only in single player).", null, isCheat: true));
             commands.Add(new Command("devmode", "Toggle the dev mode on/off (client-only).", null, isCheat: true));
+            commands.Add(new Command("showmonsters", "Permanently unlocks all the monsters in the character editor. Use \"hidemonsters\" to undo.", null, isCheat: true));
+            commands.Add(new Command("hidemonsters", "Permanently hides in the character editor all the monsters that haven't been encountered in the game. Use \"showmonsters\" to undo.", null, isCheat: true));
 
             commands.Add(new Command("dump_prefab_id", "dump_prefab_id [prefab type] [identifier] [file (optional)]", (string[] args) =>
             {

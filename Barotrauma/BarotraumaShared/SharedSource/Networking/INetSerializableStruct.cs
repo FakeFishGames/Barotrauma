@@ -348,12 +348,7 @@ namespace Barotrauma
         }
 
         private static T? ReadNullable<T>(IReadMessage inc, NetworkSerialize attribute, ReadOnlyBitField bitField) where T : struct =>
-            ReadOption<T>(inc, attribute, bitField) switch
-            {
-                Some<T> { Value: var value } => value,
-                None<T> _ => null,
-                _ => throw new ArgumentOutOfRangeException()
-            };
+            ReadOption<T>(inc, attribute, bitField).TryUnwrap(out var value) ? value : null;
 
         private static void WriteNullable<T>(T? value, NetworkSerialize attribute, IWriteMessage msg, WriteOnlyBitField bitField) where T : struct =>
             WriteOption<T>(value.HasValue ? Option<T>.Some(value.Value) : Option<T>.None(), attribute, msg, bitField);
@@ -378,7 +373,7 @@ namespace Barotrauma
         {
             ToolBox.ThrowIfNull(option);
 
-            if (option.TryUnwrap(out T value))
+            if (option.TryUnwrap(out T? value))
             {
                 bitField.WriteBoolean(true);
                 if (TryFindBehavior(out ReadWriteBehavior<T> behavior))

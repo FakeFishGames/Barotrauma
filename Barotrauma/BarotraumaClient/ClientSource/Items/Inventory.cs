@@ -53,11 +53,11 @@ namespace Barotrauma
             get
             {
                 // Returns a point off-screen, Rectangle.Empty places buttons in the top left of the screen
-                if (IsMoving) return offScreenRect;
+                if (IsMoving) { return offScreenRect; }
 
                 int buttonDir = Math.Sign(SubInventoryDir);
 
-                float sizeY = Inventory.UnequippedIndicator.size.Y * Inventory.UIScale * Inventory.IndicatorScaleAdjustment;
+                float sizeY = Inventory.UnequippedIndicator.size.Y * Inventory.UIScale;
 
                 Vector2 equipIndicatorPos = new Vector2(Rect.Left, Rect.Center.Y + (Rect.Height / 2 + 15 * Inventory.UIScale) * buttonDir - sizeY / 2f);
                 equipIndicatorPos += DrawOffset;
@@ -176,14 +176,6 @@ namespace Barotrauma
         public static Sprite DraggableIndicator;
         public static Sprite UnequippedIndicator, UnequippedHoverIndicator, UnequippedClickedIndicator, EquippedIndicator, EquippedHoverIndicator, EquippedClickedIndicator;
 
-        public static float IndicatorScaleAdjustment
-        {
-            get
-            {
-                return !GUI.IsFourByThree() ? 0.8f : 0.7f;
-            }
-        }
-       
         public static Inventory DraggingInventory;
 
         public Inventory ReplacedBy;
@@ -249,11 +241,11 @@ namespace Barotrauma
                 {
                     itemsInSlot = ParentInventory.GetItemsAt(SlotIndex);
                 }
-                Tooltip = GetTooltip(Item, itemsInSlot);
+                Tooltip = GetTooltip(Item, itemsInSlot, Character.Controlled);
                 tooltipDisplayedCondition = (int)Item.ConditionPercentage;
             }
 
-            private RichString GetTooltip(Item item, IEnumerable<Item> itemsInSlot)
+            private static RichString GetTooltip(Item item, IEnumerable<Item> itemsInSlot, Character character)
             {
                 if (item == null) { return null; }
 
@@ -348,10 +340,12 @@ namespace Barotrauma
                 }
                 if (itemsInSlot.Count() > 1)
                 {
-                    string colorStr = XMLExtensions.ColorToString(GUIStyle.Blue);
-                    toolTip += $"\n‖color:{colorStr}‖[{GameSettings.CurrentConfig.KeyMap.KeyBindText(InputType.TakeOneFromInventorySlot)}] {TextManager.Get("inputtype.takeonefrominventoryslot")}‖color:end‖";
-                    colorStr = XMLExtensions.ColorToString(GUIStyle.Blue);
-                    toolTip += $"\n‖color:{colorStr}‖[{GameSettings.CurrentConfig.KeyMap.KeyBindText(InputType.TakeHalfFromInventorySlot)}] {TextManager.Get("inputtype.takehalffrominventoryslot")}‖color:end‖";
+                    toolTip += $"\n‖color:gui.blue‖[{GameSettings.CurrentConfig.KeyMap.KeyBindText(InputType.TakeOneFromInventorySlot)}] {TextManager.Get("inputtype.takeonefrominventoryslot")}‖color:end‖";
+                    toolTip += $"\n‖color:gui.blue‖[{GameSettings.CurrentConfig.KeyMap.KeyBindText(InputType.TakeHalfFromInventorySlot)}] {TextManager.Get("inputtype.takehalffrominventoryslot")}‖color:end‖";
+                }
+                if (item.Prefab.SkillRequirementHints != null && item.Prefab.SkillRequirementHints.Any())
+                {
+                    toolTip += item.Prefab.GetSkillRequirementHints(character);
                 }
                 return RichString.Rich(toolTip);
             }
@@ -576,7 +570,7 @@ namespace Barotrauma
                 }
             }
             
-            if (PlayerInput.LeftButtonHeld() && PlayerInput.RightButtonHeld())
+            if (PlayerInput.PrimaryMouseButtonHeld() && PlayerInput.SecondaryMouseButtonHeld())
             {
                 mouseOn = false;
             }
@@ -727,14 +721,7 @@ namespace Barotrauma
             Rectangle subRect = slot.Rect;
             Vector2 spacing;
 
-            if (GUI.IsFourByThree())
-            {
-                spacing = new Vector2(5 * UIScale, (5 + UnequippedIndicator.size.Y) * UIScale);
-            }
-            else
-            {
-                spacing = new Vector2(10 * UIScale, (10 + UnequippedIndicator.size.Y) * UIScale);
-            }
+            spacing = new Vector2(10 * UIScale, (10 + UnequippedIndicator.size.Y) * UIScale * GUI.AspectRatioAdjustment);            
 
             int columns = MathHelper.Clamp((int)Math.Floor(Math.Sqrt(itemCapacity)), 1, container.SlotsPerRow);
             while (itemCapacity / columns * (subRect.Height + spacing.Y) > GameMain.GraphicsHeight * 0.5f)
@@ -1535,16 +1522,6 @@ namespace Barotrauma
             {
                 Sprite slotSprite = slot.SlotSprite ?? SlotSpriteSmall;
 
-                /*if (inventory != null && (CharacterInventory.PersonalSlots.HasFlag(type) || (inventory.isSubInventory && (inventory.Owner as Item) != null 
-                    && (inventory.Owner as Item).AllowedSlots.Any(a => CharacterInventory.PersonalSlots.HasFlag(a)))))
-                {
-                    slotColor = slot.IsHighlighted ? GUIStyle.EquipmentSlotColor : GUIStyle.EquipmentSlotColor * 0.8f;
-                }
-                else
-                {
-                    slotColor = slot.IsHighlighted ? GUIStyle.InventorySlotColor : GUIStyle.InventorySlotColor * 0.8f;
-                }*/
-
                 if (inventory != null && inventory.Locked) { slotColor = Color.Gray * 0.5f; }
                 spriteBatch.Draw(slotSprite.Texture, rect, slotSprite.SourceRect, slotColor);
                 
@@ -1731,7 +1708,17 @@ namespace Barotrauma
                 slot.InventoryKeyIndex < GameSettings.CurrentConfig.InventoryKeyMap.Bindings.Length)
             {
                 spriteBatch.Draw(slotHotkeySprite.Texture, rect.ScaleSize(1.15f), slotHotkeySprite.SourceRect, slotColor);
-                GUI.DrawString(spriteBatch, rect.Location.ToVector2() + new Vector2((int)(4.25f * UIScale), (int)Math.Ceiling(-1.5f * UIScale)), GameSettings.CurrentConfig.InventoryKeyMap.Bindings[slot.InventoryKeyIndex].Name, Color.Black, font: GUIStyle.HotkeyFont);
+
+                GUIStyle.HotkeyFont.DrawString(
+                    spriteBatch,
+                    GameSettings.CurrentConfig.InventoryKeyMap.Bindings[slot.InventoryKeyIndex].Name,
+                    rect.Location.ToVector2() + new Vector2((int)(4.25f * UIScale), (int)Math.Ceiling(-1.5f * UIScale)),
+                    Color.Black,
+                    rotation: 0.0f,
+                    origin: Vector2.Zero,
+                    scale: Vector2.One * GUI.AspectRatioAdjustment,
+                    SpriteEffects.None,
+                    layerDepth: 0.0f);
             }
         }
 

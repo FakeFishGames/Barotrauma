@@ -208,16 +208,8 @@ namespace Barotrauma
                 AimSpreadRad = MathHelper.ToRadians(element.GetAttributeFloat("aimspread", 0f));
                 Equip = element.GetAttributeBool("equip", false);
 
-                string spawnTypeStr = element.GetAttributeString("spawnposition", "This");
-                if (!Enum.TryParse(spawnTypeStr, ignoreCase: true, out SpawnPosition))
-                {
-                    DebugConsole.ThrowError("Error in StatusEffect config - \"" + spawnTypeStr + "\" is not a valid spawn position.");
-                }
-                string rotationTypeStr = element.GetAttributeString("rotationtype", RotationRad != 0 ? "Fixed" : "Target");
-                if (!Enum.TryParse(rotationTypeStr, ignoreCase: true, out RotationType))
-                {
-                    DebugConsole.ThrowError("Error in StatusEffect config - \"" + rotationTypeStr + "\" is not a valid rotation type.");
-                }
+                SpawnPosition = element.GetAttributeEnum("spawnposition", SpawnPositionType.This);
+                RotationType = element.GetAttributeEnum("rotationtype", RotationRad != 0 ? SpawnRotationType.Fixed : SpawnRotationType.Target);
             }
         }
 
@@ -347,6 +339,8 @@ namespace Barotrauma
 
         public Dictionary<Entity, float> intervalTimers = new Dictionary<Entity, float>();
 
+        private readonly bool oneShot;
+
         public static readonly List<DurationListElement> DurationList = new List<DurationListElement>();
 
         /// <summary>
@@ -389,7 +383,8 @@ namespace Barotrauma
 
         private readonly List<EventPrefab> triggeredEvents;
         private readonly Identifier triggeredEventTargetTag = "statuseffecttarget".ToIdentifier(), 
-                                triggeredEventEntityTag = "statuseffectentity".ToIdentifier();
+                                triggeredEventEntityTag = "statuseffectentity".ToIdentifier(),
+                                triggeredEventUserTag = "statuseffectuser".ToIdentifier();
 
         private Character user;
 
@@ -466,6 +461,8 @@ namespace Barotrauma
                 }
             }
         }
+
+        public bool Disabled { get; private set; }
 
         public static StatusEffect Load(ContentXElement element, string parentDebugName)
         {
@@ -621,6 +618,9 @@ namespace Barotrauma
                         {
                             propertyAttributes.Add(attribute);
                         }
+                        break;
+                    case "oneshot":
+                        oneShot = attribute.GetAttributeBool(false);
                         break;
                     default:
                         propertyAttributes.Add(attribute);
@@ -1148,6 +1148,7 @@ namespace Barotrauma
 
         public virtual void Apply(ActionType type, float deltaTime, Entity entity, ISerializableEntity target, Vector2? worldPosition = null)
         {
+            if (Disabled) { return; }
             if (this.type != type || !HasRequiredItems(entity)) { return; }
 
             if (!IsValidTarget(target)) { return; }
@@ -1172,6 +1173,7 @@ namespace Barotrauma
         protected readonly List<ISerializableEntity> currentTargets = new List<ISerializableEntity>();
         public virtual void Apply(ActionType type, float deltaTime, Entity entity, IReadOnlyList<ISerializableEntity> targets, Vector2? worldPosition = null)
         {
+            if (Disabled) { return; }
             if (this.type != type) { return; }
             if (ShouldWaitForInterval(entity, deltaTime)) { return; }
 
@@ -1271,6 +1273,7 @@ namespace Barotrauma
 
         protected void Apply(float deltaTime, Entity entity, IReadOnlyList<ISerializableEntity> targets, Vector2? worldPosition = null)
         {
+            if (Disabled) { return; }
             if (lifeTime > 0)
             {
                 lifeTimer -= deltaTime;
@@ -1441,7 +1444,6 @@ namespace Barotrauma
                 if (target == null) { continue; }
                 foreach (Affliction affliction in Afflictions)
                 {
-                    if (Rand.Value(Rand.RandSync.Unsynced) > affliction.Probability) { continue; }
                     Affliction newAffliction = affliction;
                     if (target is Character character)
                     {
@@ -1635,17 +1637,19 @@ namespace Barotrauma
                     {
                         if (!triggeredEventTargetTag.IsEmpty)
                         {
-                            List<Entity> eventTargets = targets.Where(t => t is Entity).Cast<Entity>().ToList();
-
-                            if (eventTargets.Count > 0)
+                            IEnumerable<ISerializableEntity> eventTargets = targets.Where(t => t is Entity);
+                            if (eventTargets.Any())
                             {
-                                scriptedEvent.Targets.Add(triggeredEventTargetTag, eventTargets);
+                                scriptedEvent.Targets.Add(triggeredEventTargetTag, eventTargets.Cast<Entity>().ToList());
                             }
                         }
-
                         if (!triggeredEventEntityTag.IsEmpty && entity != null)
                         {
                             scriptedEvent.Targets.Add(triggeredEventEntityTag, new List<Entity> { entity });
+                        }
+                        if (!triggeredEventUserTag.IsEmpty && user != null)
+                        {
+                            scriptedEvent.Targets.Add(triggeredEventUserTag, new List<Entity> { user });
                         }
                     }
                 }
@@ -1745,7 +1749,10 @@ namespace Barotrauma
 
                 if (spawnItemRandomly)
                 {
-                    SpawnItem(spawnItems.GetRandomUnsynced());
+                    if (spawnItems.Count > 0)
+                    {
+                        SpawnItem(spawnItems.GetRandomUnsynced());
+                    }
                 }
                 else
                 {
@@ -1886,9 +1893,15 @@ namespace Barotrauma
                                 }
                                 else if (entity is Item item)
                                 {
-                                    var itemContainer = item.GetComponent<ItemContainer>();
-                                    inventory = itemContainer?.Inventory;
-                                    if (!chosenItemSpawnInfo.SpawnIfCantBeContained && !itemContainer.CanBeContained(chosenItemSpawnInfo.ItemPrefab))
+                                    foreach (ItemContainer itemContainer in item.GetComponents<ItemContainer>())
+                                    {
+                                        if (itemContainer.CanBeContained(chosenItemSpawnInfo.ItemPrefab))
+                                        {
+                                            inventory = itemContainer?.Inventory;
+                                            break;
+                                        }
+                                    }
+                                    if (!chosenItemSpawnInfo.SpawnIfCantBeContained && inventory == null)
                                     {
                                         return;
                                     }
@@ -1971,6 +1984,10 @@ namespace Barotrauma
 
             ApplyProjSpecific(deltaTime, entity, targets, hull, position, playSound: true);
 
+            if (oneShot)
+            {
+                Disabled = true;
+            }
             if (Interval > 0.0f && entity != null)
             {
                 intervalTimers[entity] = Interval;
@@ -2144,18 +2161,23 @@ namespace Barotrauma
 
         private float GetAfflictionMultiplier(Entity entity, Character targetCharacter, float deltaTime)
         {
-            float multiplier = !setValue && !disableDeltaTime ? deltaTime : 1.0f;
-            if (entity is Item sourceItem && sourceItem.HasTag("medical"))
+            float afflictionMultiplier = !setValue && !disableDeltaTime ? deltaTime : 1.0f;
+            if (entity is Item sourceItem)
             {
-                multiplier *= 1 + targetCharacter.GetStatValue(StatTypes.MedicalItemEffectivenessMultiplier);
-
-                if (user is not null)
+                if (sourceItem.HasTag("medical"))
                 {
-                    multiplier *= 1 + user.GetStatValue(StatTypes.MedicalItemApplyingMultiplier);
+                    afflictionMultiplier *= 1 + targetCharacter.GetStatValue(StatTypes.MedicalItemEffectivenessMultiplier);
+                    if (user is not null)
+                    {
+                        afflictionMultiplier *= 1 + user.GetStatValue(StatTypes.MedicalItemApplyingMultiplier);
+                    }
+                }
+                else if (sourceItem.HasTag(AfflictionPrefab.PoisonType) && user is not null)
+                {
+                    afflictionMultiplier *= 1 + user.GetStatValue(StatTypes.PoisonMultiplier);
                 }
             }
-
-            return multiplier * AfflictionMultiplier;
+            return afflictionMultiplier * AfflictionMultiplier;
         }
 
         private Affliction GetMultipliedAffliction(Affliction affliction, Entity entity, Character targetCharacter, float deltaTime, bool? multiplyByMaxVitality)
@@ -2165,19 +2187,17 @@ namespace Barotrauma
             {
                 afflictionMultiplier *= targetCharacter.MaxVitality / 100f;
             }
-
             if (user is not null)
             {
                 if (affliction.Prefab.IsBuff)
                 {
                     afflictionMultiplier *= 1 + user.GetStatValue(StatTypes.MedicalItemDurationMultiplier);
                 }
-                else if (affliction.Prefab.AfflictionType == "poison" || affliction.Prefab.AfflictionType == "paralysis")
+                else if (affliction.Prefab.Identifier == "organdamage" && targetCharacter.CharacterHealth.GetActiveAfflictionTags().Any(t => t == "poisoned"))
                 {
                     afflictionMultiplier *= 1 + user.GetStatValue(StatTypes.PoisonMultiplier);
                 }
             }
-
             if (!MathUtils.NearlyEqual(afflictionMultiplier, 1.0f))
             {
                 return affliction.CreateMultiplied(afflictionMultiplier, affliction);

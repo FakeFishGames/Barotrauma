@@ -16,17 +16,20 @@ namespace Barotrauma
         private readonly Level.PositionType spawnPosType;
         private Vector2? spawnPos = null;
 
-        public override IEnumerable<Vector2> SonarPositions
+        public override IEnumerable<(LocalizedString Label, Vector2 Position)> SonarLabels
         {
             get
             {
                 if (State > 0)
                 {
-                    return Enumerable.Empty<Vector2>();
+                    yield break;
                 }
                 else
                 {
-                    return sonarPositions;
+                    foreach (Vector2 sonarPos in sonarPositions)
+                    {
+                        yield return (Prefab.SonarLabel, sonarPos);
+                    }
                 }
             }
         }

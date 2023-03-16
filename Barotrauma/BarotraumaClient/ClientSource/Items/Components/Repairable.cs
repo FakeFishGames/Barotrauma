@@ -262,9 +262,11 @@ namespace Barotrauma.Items.Components
                 }
             }
 
+            float conditionPercentage = item.Condition / (item.MaxCondition / item.MaxRepairConditionMultiplier) * 100f;
+
             for (int i = 0; i < particleEmitters.Count; i++)
             {
-                if ((item.ConditionPercentage >= particleEmitterConditionRanges[i].X && item.ConditionPercentage <= particleEmitterConditionRanges[i].Y) || FakeBrokenTimer > 0.0f)
+                if ((conditionPercentage >= particleEmitterConditionRanges[i].X && conditionPercentage <= particleEmitterConditionRanges[i].Y) || FakeBrokenTimer > 0.0f)
                 {
                     particleEmitters[i].Emit(deltaTime, item.WorldPosition, item.CurrentHull);
                 }
@@ -436,11 +438,15 @@ namespace Barotrauma.Items.Components
             ushort currentFixerID = msg.ReadUInt16();
             currentFixerAction = (FixActions)msg.ReadRangedInteger(0, 2);
             CurrentFixer = currentFixerID != 0 ? Entity.FindEntityByID(currentFixerID) as Character : null;
-            item.MaxRepairConditionMultiplier = GetMaxRepairConditionMultiplier(CurrentFixer);
-            if (CurrentFixer == null)
+
+            if (CurrentFixer is null)
             {
                 qteTimer = QteDuration;
                 qteCooldown = 0.0f;
+            }
+            else
+            {
+                item.MaxRepairConditionMultiplier = GetMaxRepairConditionMultiplier(CurrentFixer);
             }
         }
 

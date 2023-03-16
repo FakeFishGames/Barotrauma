@@ -141,9 +141,8 @@ namespace Barotrauma
 
         public SerializableDateTime ToLocal()
             => new SerializableDateTime(
-                DateTime.SpecifyKind(
-                    value - TimeZone.Value + SerializableTimeZone.LocalTimeZone.Value,
-                    DateTimeKind.Local));
+                new DateTime(ticks: value.Ticks) - TimeZone.Value + SerializableTimeZone.LocalTimeZone.Value,
+                SerializableTimeZone.LocalTimeZone);
 
         public long Ticks => value.Ticks;
         

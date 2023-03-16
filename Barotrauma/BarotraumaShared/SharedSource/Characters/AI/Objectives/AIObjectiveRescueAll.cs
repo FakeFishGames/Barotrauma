@@ -71,11 +71,11 @@ namespace Barotrauma
             {
                 float strength = character.CharacterHealth.GetPredictedStrength(affliction, predictFutureDuration: 10.0f);
                 vitality -= affliction.GetVitalityDecrease(character.CharacterHealth, strength) / character.MaxVitality * 100;
-                if (affliction.Prefab.AfflictionType == "paralysis")
+                if (affliction.Prefab.AfflictionType == AfflictionPrefab.ParalysisType)
                 {
                     vitality -= affliction.Strength;
                 }
-                else if (affliction.Prefab.AfflictionType == "poison")
+                else if (affliction.Prefab.AfflictionType == AfflictionPrefab.PoisonType)
                 {
                     vitality -= affliction.Strength;
                 }

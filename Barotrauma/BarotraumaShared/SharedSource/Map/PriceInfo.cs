@@ -34,6 +34,13 @@ namespace Barotrauma
         /// </summary>
         public const int DefaultAmount = 5;
 
+        private readonly Dictionary<Identifier, float> minReputation = new Dictionary<Identifier, float>();
+
+        /// <summary>
+        /// Minimum reputation needed to buy the item (Key = faction ID, Value = min rep)
+        /// </summary>
+        public IReadOnlyDictionary<Identifier, float> MinReputation => minReputation;
+
         /// <summary>
         /// Support for the old style of determining item prices
         /// when there were individual Price elements for each location type
@@ -68,6 +75,19 @@ namespace Barotrauma
             DisplayNonEmpty = displayNonEmpty;
             StoreIdentifier = new Identifier(storeIdentifier);
             RequiresUnlock = requiresUnlock;
+        }
+
+        private void LoadReputationRestrictions(XElement priceInfoElement)
+        {
+            foreach (XElement childElement in priceInfoElement.GetChildElements("reputation"))
+            {
+                Identifier factionId = childElement.GetAttributeIdentifier("faction", Identifier.Empty);
+                float rep = childElement.GetAttributeFloat("min", 0.0f);
+                if (!factionId.IsEmpty && rep > 0)
+                {
+                    minReputation.Add(factionId, rep);
+                }
+            }
         }
 
         public static List<PriceInfo> CreatePriceInfos(XElement element, out PriceInfo defaultPrice)
@@ -106,6 +126,7 @@ namespace Barotrauma
                     displayNonEmpty: displayNonEmpty,
                     requiresUnlock: requiresUnlock,
                     storeIdentifier: storeIdentifier);
+                priceInfo.LoadReputationRestrictions(childElement);
                 priceInfos.Add(priceInfo);
             }
             bool soldElsewhere = soldByDefault && element.GetAttributeBool("soldelsewhere", element.GetAttributeBool("soldeverywhere", false));
@@ -117,7 +138,8 @@ namespace Barotrauma
                 minLevelDifficulty: minLevelDifficulty,
                 buyingPriceMultiplier: buyingPriceMultiplier,
                 displayNonEmpty: displayNonEmpty,
-            requiresUnlock: requiresUnlock);
+                requiresUnlock: requiresUnlock);
+            defaultPrice.LoadReputationRestrictions(element);
             return priceInfos;
         }
 

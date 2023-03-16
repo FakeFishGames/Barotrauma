@@ -106,6 +106,11 @@ namespace Barotrauma
         public static float VerticalAspectRatio => GameMain.GraphicsHeight / (float)GameMain.GraphicsWidth;
         public static float RelativeHorizontalAspectRatio => HorizontalAspectRatio / (ReferenceResolution.X / ReferenceResolution.Y);
         public static float RelativeVerticalAspectRatio => VerticalAspectRatio / (ReferenceResolution.Y / ReferenceResolution.X);
+        /// <summary>
+        /// A horizontal scaling factor for low aspect ratios (small width relative to height)
+        /// </summary>
+        public static float AspectRatioAdjustment => HorizontalAspectRatio < 1.4f ? (1.0f - (1.4f - HorizontalAspectRatio)) : 1.0f;
+
         public static bool IsUltrawide => HorizontalAspectRatio > 2.0f;
 
         public static int UIWidth
@@ -140,13 +145,20 @@ namespace Barotrauma
         public static Texture2D WhiteTexture => solidWhiteTexture;
         private static GUICursor MouseCursorSprites => GUIStyle.CursorSprite;
 
-        private static bool debugDrawSounds, debugDrawEvents, debugDrawMetadata;
-        private static int debugDrawMetadataOffset;
-        private static readonly string[] ignoredMetadataInfo = { string.Empty, string.Empty, string.Empty, string.Empty };
+        private static bool debugDrawSounds, debugDrawEvents;
+
+        private static DebugDrawMetaData debugDrawMetaData;
+
+        public struct DebugDrawMetaData
+        {
+            public bool Enabled;
+            public bool FactionMetadata, UpgradeLevels, UpgradePrices;
+            public int Offset;
+        }
 
         public static GraphicsDevice GraphicsDevice => GameMain.Instance.GraphicsDevice;
 
-        private static List<GUIMessage> messages = new List<GUIMessage>();
+        private static readonly List<GUIMessage> messages = new List<GUIMessage>();
 
         public static GUIFrame PauseMenu { get; private set; }
         public static GUIFrame SettingsMenuContainer { get; private set; }
@@ -195,8 +207,9 @@ namespace Barotrauma
                     SettingsMenuOpen ||
                     DebugConsole.IsOpen ||
                     GameSession.IsTabMenuOpen ||
-                    (GameMain.GameSession?.GameMode?.Paused ?? false) ||
-                    CharacterHUD.IsCampaignInterfaceOpen;
+                    GameMain.GameSession?.GameMode is { Paused: true } ||
+                    CharacterHUD.IsCampaignInterfaceOpen ||
+                    GameMain.GameSession?.Campaign is { SlideshowPlayer: { Finished: false, Visible: true } };
             }
         }
 
@@ -533,18 +546,17 @@ namespace Barotrauma
                     if (GameMain.GameSession?.GameMode is CampaignMode campaignMode)
                     {
                         // TODO: TEST THIS
-                        if (debugDrawMetadata)
+                        if (debugDrawMetaData.Enabled)
                         {
                             string text = "Ctrl+M to hide campaign metadata debug info\n\n" +
-                                          $"Ctrl+1 to {(string.IsNullOrWhiteSpace(ignoredMetadataInfo[0]) ? "hide" : "show")} outpost reputations, \n" +
-                                          $"Ctrl+2 to {(string.IsNullOrWhiteSpace(ignoredMetadataInfo[1]) ? "hide" : "show")} faction reputations, \n" +
-                                          $"Ctrl+3 to {(string.IsNullOrWhiteSpace(ignoredMetadataInfo[2]) ? "hide" : "show")} upgrade levels, \n" +
-                                          $"Ctrl+4 to {(string.IsNullOrWhiteSpace(ignoredMetadataInfo[3]) ? "hide" : "show")} upgrade prices";
+                                          $"Ctrl+1 to {(debugDrawMetaData.FactionMetadata ? "hide" : "show")} faction reputations, \n" +
+                                          $"Ctrl+2 to {(debugDrawMetaData.UpgradeLevels ? "hide" : "show")} upgrade levels, \n" +
+                                          $"Ctrl+3 to {(debugDrawMetaData.UpgradePrices ? "hide" : "show")} upgrade prices";
                             Vector2 textSize = GUIStyle.SmallFont.MeasureString(text);
                             Vector2 pos = new Vector2(GameMain.GraphicsWidth - (textSize.X + 10), 300);
                             DrawString(spriteBatch, pos, text, Color.White, Color.Black * 0.5f, 0, GUIStyle.SmallFont);
                             pos.Y += textSize.Y + 8;
-                            campaignMode.CampaignMetadata?.DebugDraw(spriteBatch, pos, debugDrawMetadataOffset, ignoredMetadataInfo);
+                            campaignMode.CampaignMetadata?.DebugDraw(spriteBatch, pos, campaignMode, debugDrawMetaData);
                         }
                         else
                         {
@@ -684,37 +696,24 @@ namespace Barotrauma
             }
         }
 
-        public static void DrawBackgroundSprite(SpriteBatch spriteBatch, Sprite backgroundSprite, float aberrationStrength = 1.0f)
+        public static void DrawBackgroundSprite(SpriteBatch spriteBatch, Sprite backgroundSprite, Color color, Rectangle? drawArea = null, SpriteEffects spriteEffects = SpriteEffects.None)
         {
-            double aberrationT = (Timing.TotalTime * 0.5f);
-            GameMain.GameScreen.PostProcessEffect.Parameters["blurDistance"].SetValue(0.001f * aberrationStrength);
-            GameMain.GameScreen.PostProcessEffect.Parameters["chromaticAberrationStrength"].SetValue(new Vector3(-0.025f, -0.01f, -0.05f) *
-                (float)(PerlinNoise.CalculatePerlin(aberrationT, aberrationT, 0) + 0.5f) * aberrationStrength);
-
-            Matrix.CreateOrthographicOffCenter(0, GameMain.GraphicsWidth, GameMain.GraphicsHeight, 0, 0, -1, out Matrix projection);
-
-            GameMain.GameScreen.PostProcessEffect.Parameters["MatrixTransform"].SetValue(projection);
-            GameMain.GameScreen.PostProcessEffect.CurrentTechnique = GameMain.GameScreen.PostProcessEffect.Techniques["BlurChromaticAberration"];
-            GameMain.GameScreen.PostProcessEffect.CurrentTechnique.Passes[0].Apply();
-
-            spriteBatch.Begin(SpriteSortMode.Immediate, effect: GameMain.GameScreen.PostProcessEffect);
+            Rectangle area = drawArea ?? new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight);
 
             float scale = Math.Max(
-                (float)GameMain.GraphicsWidth / backgroundSprite.SourceRect.Width,
-                (float)GameMain.GraphicsHeight / backgroundSprite.SourceRect.Height) * 1.1f;
-            float paddingX = backgroundSprite.SourceRect.Width * scale - GameMain.GraphicsWidth;
-            float paddingY = backgroundSprite.SourceRect.Height * scale - GameMain.GraphicsHeight;
+                (float)area.Width / backgroundSprite.SourceRect.Width,
+                (float)area.Height / backgroundSprite.SourceRect.Height) * 1.1f;
+            float paddingX = backgroundSprite.SourceRect.Width * scale - area.Width;
+            float paddingY = backgroundSprite.SourceRect.Height * scale - area.Height;
 
-            double noiseT = (Timing.TotalTime * 0.02f);
+            double noiseT = Timing.TotalTime * 0.02f;
             Vector2 pos = new Vector2((float)PerlinNoise.CalculatePerlin(noiseT, noiseT, 0) - 0.5f, (float)PerlinNoise.CalculatePerlin(noiseT, noiseT, 0.5f) - 0.5f);
             pos = new Vector2(pos.X * paddingX, pos.Y * paddingY);
 
             spriteBatch.Draw(backgroundSprite.Texture,
-                new Vector2(GameMain.GraphicsWidth, GameMain.GraphicsHeight) / 2 + pos,
-                null, Color.White, 0.0f, backgroundSprite.size / 2,
-                scale, SpriteEffects.None, 0.0f);
-
-            spriteBatch.End();
+                area.Center.ToVector2() + pos,
+                null, color, 0.0f, backgroundSprite.size / 2,
+                scale, spriteEffects, 0.0f);
         }
 
         #region Update list
@@ -1206,48 +1205,37 @@ namespace Barotrauma
                 }
                 if (PlayerInput.IsCtrlDown() && PlayerInput.KeyHit(Keys.M))
                 {
-                    debugDrawMetadata = !debugDrawMetadata;
+                    debugDrawMetaData.Enabled = !debugDrawMetaData.Enabled;
                 }
 
-                if (debugDrawMetadata)
+                if (debugDrawMetaData.Enabled)
                 {
                     if (PlayerInput.KeyHit(Keys.Up))
                     {
-                        debugDrawMetadataOffset--;
+                        debugDrawMetaData.Offset--;
                     }
-
                     if (PlayerInput.KeyHit(Keys.Down))
                     {
-                        debugDrawMetadataOffset++;
+                        debugDrawMetaData.Offset++;
                     }
-
                     if (PlayerInput.IsCtrlDown())
                     {
                         if (PlayerInput.KeyHit(Keys.D1))
                         {
-                            ignoredMetadataInfo[0] = ignoredMetadataInfo[0] == string.Empty ? "reputation.location" : string.Empty;
-                            debugDrawMetadataOffset = 0;
+                            debugDrawMetaData.FactionMetadata = !debugDrawMetaData.FactionMetadata;
+                            debugDrawMetaData.Offset = 0;
                         }
-
                         if (PlayerInput.KeyHit(Keys.D2))
                         {
-                            ignoredMetadataInfo[1] = ignoredMetadataInfo[1] == string.Empty ? "reputation.faction" : string.Empty;
-                            debugDrawMetadataOffset = 0;
+                            debugDrawMetaData.UpgradeLevels = !debugDrawMetaData.UpgradeLevels;
+                            debugDrawMetaData.Offset = 0;
                         }
-
                         if (PlayerInput.KeyHit(Keys.D3))
                         {
-                            ignoredMetadataInfo[2] = ignoredMetadataInfo[2] == string.Empty ? "upgrade." : string.Empty;
-                            debugDrawMetadataOffset = 0;
-                        }
-
-                        if (PlayerInput.KeyHit(Keys.D4))
-                        {
-                            ignoredMetadataInfo[3] = ignoredMetadataInfo[3] == string.Empty ? "upgradeprice." : string.Empty;
-                            debugDrawMetadataOffset = 0;
+                            debugDrawMetaData.UpgradePrices = !debugDrawMetaData.UpgradePrices;
+                            debugDrawMetaData.Offset = 0;
                         }
                     }
-
                 }
 
                 HandlePersistingElements(deltaTime);
@@ -2599,8 +2587,11 @@ namespace Barotrauma
 
         public static void AddMessage(string message, Color color, float? lifeTime = null, bool playSound = true, GUIFont font = null)
         {
-            if (messages.Any(msg => msg.Text == message)) { return; }
-            messages.Add(new GUIMessage(message, color, lifeTime ?? MathHelper.Clamp(message.Length / 5.0f, 3.0f, 10.0f), font ?? GUIStyle.LargeFont));
+            lock (mutex)
+            {
+                if (messages.Any(msg => msg.Text == message)) { return; }
+                messages.Add(new GUIMessage(message, color, lifeTime ?? MathHelper.Clamp(message.Length / 5.0f, 3.0f, 10.0f), font ?? GUIStyle.LargeFont));
+            }
             if (playSound) { SoundPlayer.PlayUISound(GUISoundType.UIMessage); }
         }
 
@@ -2610,34 +2601,37 @@ namespace Barotrauma
 
             var newMessage = new GUIMessage(message, color, pos, velocity, lifeTime, Alignment.Center, GUIStyle.Font, sub: sub);
             if (playSound) { SoundPlayer.PlayUISound(soundType); }
-            bool overlapFound = true;
-            int tries = 0;
-            while (overlapFound)
-            {
-                overlapFound = false;
-                foreach (var otherMessage in messages)
-                {
-                    float xDiff = otherMessage.Pos.X - newMessage.Pos.X;
-                    if (Math.Abs(xDiff) > (newMessage.Size.X + otherMessage.Size.X) / 2) { continue; }
-                    float yDiff = otherMessage.Pos.Y - newMessage.Pos.Y;
-                    if (Math.Abs(yDiff) > (newMessage.Size.Y + otherMessage.Size.Y) / 2) { continue; }
-                    Vector2 moveDir = -(new Vector2(xDiff, yDiff) + Rand.Vector(1.0f));
-                    if (moveDir.LengthSquared() > 0.0001f)
-                    {
-                        moveDir = Vector2.Normalize(moveDir);
-                    }
-                    else
-                    {
-                        moveDir = Rand.Vector(1.0f);
-                    }
-                    moveDir.Y = -Math.Abs(moveDir.Y);
-                    newMessage.Pos -= Vector2.UnitY * 10;
-                }
-                tries++;
-                if (tries > 20) { break; }
-            }
 
-            messages.Add(newMessage);
+            lock (mutex)
+            {
+                bool overlapFound = true;
+                int tries = 0;
+                while (overlapFound)
+                {
+                    overlapFound = false;
+                    foreach (var otherMessage in messages)
+                    {
+                        float xDiff = otherMessage.Pos.X - newMessage.Pos.X;
+                        if (Math.Abs(xDiff) > (newMessage.Size.X + otherMessage.Size.X) / 2) { continue; }
+                        float yDiff = otherMessage.Pos.Y - newMessage.Pos.Y;
+                        if (Math.Abs(yDiff) > (newMessage.Size.Y + otherMessage.Size.Y) / 2) { continue; }
+                        Vector2 moveDir = -(new Vector2(xDiff, yDiff) + Rand.Vector(1.0f));
+                        if (moveDir.LengthSquared() > 0.0001f)
+                        {
+                            moveDir = Vector2.Normalize(moveDir);
+                        }
+                        else
+                        {
+                            moveDir = Rand.Vector(1.0f);
+                        }
+                        moveDir.Y = -Math.Abs(moveDir.Y);
+                        newMessage.Pos -= Vector2.UnitY * 10;
+                    }
+                    tries++;
+                    if (tries > 20) { break; }
+                }
+                messages.Add(newMessage);
+            }
         }
 
         public static void ClearMessages()

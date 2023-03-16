@@ -182,7 +182,7 @@ namespace Barotrauma.Items.Components
             if (brokenSprite == null)
             {
                 //broken doors turn black if no broken sprite has been configured
-                color *= (item.Condition / item.MaxCondition);
+                color = color.Multiply(item.Condition / item.MaxCondition);
                 color.A = 255;
             }
             

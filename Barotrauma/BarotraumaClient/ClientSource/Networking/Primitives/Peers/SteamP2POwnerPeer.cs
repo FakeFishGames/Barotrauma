@@ -156,7 +156,7 @@ namespace Barotrauma.Networking
 
                     var packet = INetSerializableStruct.Read<ClientSteamTicketAndVersionPacket>(inc);
 
-                    packet.SteamAuthTicket.TryUnwrap(out byte[] ticket);
+                    packet.SteamAuthTicket.TryUnwrap(out var ticket);
 
                     Steamworks.BeginAuthResult authSessionStartState = SteamManager.StartAuthSession(ticket, steamId);
                     if (authSessionStartState != Steamworks.BeginAuthResult.OK)

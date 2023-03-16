@@ -1,20 +1,18 @@
 ﻿#nullable enable
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Xml.Linq;
 
 namespace Barotrauma
 {
-    #warning TODO: implement properly
     public class ServerListFilters
     {
         private readonly Dictionary<Identifier, string> attributes = new Dictionary<Identifier, string>();
 
-        private ServerListFilters() { }
-
-        private ServerListFilters(XElement elem)
+        private ServerListFilters(XElement? elem)
         {
-            if (elem == null) { return; }
+            if (elem is null) { return; }
             foreach (var attr in elem.Attributes())
             {
                 attributes.Add(attr.NameAsIdentifier(), attr.Value);
@@ -23,8 +21,6 @@ namespace Barotrauma
         
         public static void Init(XElement? elem)
         {
-            if (elem is null) { return; }
-            
             Instance = new ServerListFilters(elem);
         }
 
@@ -50,10 +46,20 @@ namespace Barotrauma
         {
             if (attributes.TryGetValue(key, out string? val))
             {
-                if (Enum.TryParse(val, out T result)) { return result; }
+                if (Enum.TryParse(val, ignoreCase: true, out T result)) { return result; }
             }
 
             return def;
+        }
+
+        public LanguageIdentifier[] GetAttributeLanguageIdentifierArray(Identifier key, LanguageIdentifier[] def)
+        {
+            return attributes.TryGetValue(key, out string? val)
+                ? val.Split(",")
+                    .Select(static s => s.Trim())
+                    .Where(static s => !s.IsNullOrWhiteSpace())
+                    .Select(static s => s.ToLanguageIdentifier()).ToArray()
+                : def;
         }
 
         public void SetAttribute(Identifier key, string val)
@@ -61,6 +67,6 @@ namespace Barotrauma
             attributes[key] = val;
         }
 
-        public static ServerListFilters Instance { get; private set; } = new ServerListFilters();
+        public static ServerListFilters Instance { get; private set; } = new ServerListFilters(null);
     }
 }

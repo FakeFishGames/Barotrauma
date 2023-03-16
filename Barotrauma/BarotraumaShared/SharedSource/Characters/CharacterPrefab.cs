@@ -1,10 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.Linq;
 using System.Xml.Linq;
 using Microsoft.Xna.Framework;
-using static Barotrauma.CharacterInfo;
 
 namespace Barotrauma
 {
@@ -18,6 +16,9 @@ namespace Barotrauma
         }
 
         public string Name => Identifier.Value;
+        public Identifier VariantOf { get; }
+        public CharacterPrefab ParentPrefab { get; set; }
+
         public void InheritFrom(CharacterPrefab parent)
         {
             ConfigElement = (this as IImplementsVariants<CharacterPrefab>).DoInherit(CharacterParams.CreateVariantXml_callback);
@@ -48,10 +49,6 @@ namespace Barotrauma
         public static CharacterFile HumanConfigFile => HumanPrefab.ContentFile as CharacterFile;
         public static CharacterPrefab HumanPrefab => FindBySpeciesName(HumanSpeciesName);
 
-        /// <summary>
-        /// Searches for a character config file from all currently selected content packages, 
-        /// or from a specific package if the contentPackage parameter is given.
-        /// </summary>
         public static CharacterPrefab FindBySpeciesName(Identifier speciesName)
         {
             if (!Prefabs.ContainsKey(speciesName)) { return null; }

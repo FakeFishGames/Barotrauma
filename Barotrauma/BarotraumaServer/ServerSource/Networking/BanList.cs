@@ -140,8 +140,7 @@ namespace Barotrauma.Networking
                 return Option<BannedPlayer>.Some(new BannedPlayer(name, addressOrAccountId, reason, expirationTime));
             }
             
-            bannedPlayers.AddRange(doc.Root.Elements().Select(loadFromElement)
-                .OfType<Some<BannedPlayer>>().Select(o => o.Value));
+            bannedPlayers.AddRange(doc.Root.Elements().Select(loadFromElement).NotNone());
         }
         
         private void RemoveExpired()

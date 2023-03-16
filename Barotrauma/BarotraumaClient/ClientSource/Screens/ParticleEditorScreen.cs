@@ -166,7 +166,7 @@ namespace Barotrauma
         {
             prefabList.ClearChildren();
 
-            var particlePrefabs = GameMain.ParticleManager.GetPrefabList();
+            var particlePrefabs = ParticleManager.GetPrefabList();
             foreach (ParticlePrefab particlePrefab in particlePrefabs)
             {
                 new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), prefabList.Content.RectTransform) { MinSize = new Point(0, 20) },
@@ -204,7 +204,7 @@ namespace Barotrauma
                 XDocument doc = XMLExtensions.TryLoadXml(configFile.Path);
                 if (doc == null) { continue; }
 
-                var prefabList = GameMain.ParticleManager.GetPrefabList();
+                var prefabList = ParticleManager.GetPrefabList();
                 foreach (ParticlePrefab prefab in prefabList)
                 {
                     foreach (XElement element in doc.Root.Elements())
@@ -273,7 +273,7 @@ namespace Barotrauma
                 XDocument doc = XMLExtensions.TryLoadXml(configFile.Path);
                 if (doc == null) { continue; }
 
-                var prefabList = GameMain.ParticleManager.GetPrefabList();
+                var prefabList = ParticleManager.GetPrefabList();
                 foreach (ParticlePrefab otherPrefab in prefabList)
                 {
                     foreach (var subElement in doc.Root.Elements())

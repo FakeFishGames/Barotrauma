@@ -69,15 +69,7 @@ namespace Barotrauma
             }
         }
 
-        public override LocalizedString SonarLabel
-        {
-            get
-            {
-                return base.SonarLabel.IsNullOrEmpty() ? sonarLabel : base.SonarLabel;
-            }
-        }
-
-        public override IEnumerable<Vector2> SonarPositions
+        public override IEnumerable<(LocalizedString Label, Vector2 Position)> SonarLabels
         {
             get
             {
@@ -85,7 +77,12 @@ namespace Barotrauma
                 {
                     yield break;
                 }
-                yield return level.BeaconStation.WorldPosition;                
+                else
+                {
+                    yield return (
+                            Prefab.SonarLabel.IsNullOrEmpty() ? sonarLabel : Prefab.SonarLabel,
+                            level.BeaconStation.WorldPosition);
+                }
             }
         }
 

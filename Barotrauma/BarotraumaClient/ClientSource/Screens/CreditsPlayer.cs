@@ -1,6 +1,4 @@
 ﻿using Microsoft.Xna.Framework;
-using System;
-using System.Xml.Linq;
 
 namespace Barotrauma
 {
@@ -8,7 +6,7 @@ namespace Barotrauma
     {
         private GUIListBox listBox;
 
-        private ContentXElement configElement;
+        private readonly ContentXElement configElement;
 
         private float scrollSpeed;
 
@@ -37,6 +35,8 @@ namespace Barotrauma
             set { listBox.BarScroll = value; }
         }
 
+        public readonly GUIButton CloseButton;
+
 
         public CreditsPlayer(RectTransform rectT, string configFile) : base(null, rectT)
         {
@@ -51,6 +51,10 @@ namespace Barotrauma
             configElement = doc.Root.FromContent(ContentPath.FromRaw(configFile));
 
             Load();
+
+            CloseButton = new GUIButton(new RectTransform(new Vector2(0.1f), RectTransform, Anchor.BottomRight, maxSize: new Point(GUI.IntScale(300), GUI.IntScale(50))) 
+                { AbsoluteOffset = new Point(GUI.IntScale(20), GUI.IntScale(20) + (Rect.Bottom - GameMain.GraphicsHeight)) },
+                TextManager.Get("close"));
         }
 
         private void Load()

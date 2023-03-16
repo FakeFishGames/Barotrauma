@@ -116,7 +116,7 @@ namespace Barotrauma
                     bool isMouseOnComponent = GUI.MouseOn == component;
                     camera.MoveCamera(deltaTime, allowZoom: isMouseOnComponent, followSub: false);
                     if (isMouseOnComponent &&
-                        (PlayerInput.MidButtonHeld() || PlayerInput.LeftButtonHeld()))
+                        (PlayerInput.MidButtonHeld() || PlayerInput.PrimaryMouseButtonHeld()))
                     {
                         Vector2 moveSpeed = PlayerInput.MouseSpeed * (float)deltaTime * 60.0f / camera.Zoom;
                         moveSpeed.X = -moveSpeed.X;

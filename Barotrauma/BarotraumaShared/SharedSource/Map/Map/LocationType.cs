@@ -13,8 +13,8 @@ namespace Barotrauma
     {
         public static readonly PrefabCollection<LocationType> Prefabs = new PrefabCollection<LocationType>();
 
-        private readonly List<string> names;
-        private readonly List<Sprite> portraits = new List<Sprite>();
+        private readonly ImmutableArray<string> names;
+        private readonly ImmutableArray<Sprite> portraits;
 
         //<name, commonness>
         private readonly ImmutableArray<(Identifier Name, float Commonness)> hireableJobs;
@@ -25,6 +25,8 @@ namespace Barotrauma
 
         public readonly LocalizedString Name;
         public readonly LocalizedString Description;
+
+        public readonly LocalizedString ForceLocationName;
 
         public readonly float BeaconStationChance;
 
@@ -39,7 +41,12 @@ namespace Barotrauma
 
         public bool IsEnterable { get; private set; }
 
-        public bool UseInMainMenu
+        /// <summary>
+        /// Can this location type be used in the random, non-campaign levels that don't take place in any specific zone
+        /// </summary>
+        public bool AllowInRandomLevels { get; private set; }
+
+        public bool UsePortraitInRandomLoadingScreens
         {
             get;
             private set;
@@ -96,6 +103,8 @@ namespace Barotrauma
         public int DailySpecialsCount { get; } = 1;
         public int RequestedGoodsCount { get; } = 1;
 
+        public readonly bool ShowSonarMarker = true;
+
         public override string ToString()
         {
             return $"LocationType (" + Identifier + ")";
@@ -108,9 +117,12 @@ namespace Barotrauma
 
             BeaconStationChance = element.GetAttributeFloat("beaconstationchance", 0.0f);
 
-            UseInMainMenu = element.GetAttributeBool("useinmainmenu", false);
+            UsePortraitInRandomLoadingScreens = element.GetAttributeBool(nameof(UsePortraitInRandomLoadingScreens), true);
             HasOutpost = element.GetAttributeBool("hasoutpost", true);
             IsEnterable = element.GetAttributeBool("isenterable", HasOutpost);
+            AllowInRandomLevels = element.GetAttributeBool(nameof(AllowInRandomLevels), true);
+
+            ShowSonarMarker = element.GetAttributeBool("showsonarmarker", true);
 
             MissionIdentifiers = element.GetAttributeIdentifierArray("missionidentifiers", Array.Empty<Identifier>()).ToImmutableArray();
             MissionTags = element.GetAttributeIdentifierArray("missiontags", Array.Empty<Identifier>()).ToImmutableArray();
@@ -126,23 +138,31 @@ namespace Barotrauma
             string teamStr = element.GetAttributeString("outpostteam", "FriendlyNPC");
             Enum.TryParse(teamStr, out OutpostTeam);
 
-            string[] rawNamePaths = element.GetAttributeStringArray("namefile", new string[] { "Content/Map/locationNames.txt" });
-            names = new List<string>();
-            foreach (string rawPath in rawNamePaths)
+            if (element.GetAttribute("name") != null)
             {
-                try
-                {
-                    var path = ContentPath.FromRaw(element.ContentPath, rawPath.Trim());
-                    names.AddRange(File.ReadAllLines(path.Value).ToList());
-                }
-                catch (Exception e)
-                {
-                    DebugConsole.ThrowError($"Failed to read name file \"rawPath\" for location type \"{Identifier}\"!", e);
-                }
+                ForceLocationName = TextManager.Get(element.GetAttributeString("name", string.Empty));
             }
-            if (!names.Any())
+            else
             {
-                names.Add("ERROR: No names found");
+                string[] rawNamePaths = element.GetAttributeStringArray("namefile", new string[] { "Content/Map/locationNames.txt" });
+                var names = new List<string>();
+                foreach (string rawPath in rawNamePaths)
+                {
+                    try
+                    {
+                        var path = ContentPath.FromRaw(element.ContentPackage, rawPath.Trim());
+                        names.AddRange(File.ReadAllLines(path.Value).ToList());
+                    }
+                    catch (Exception e)
+                    {
+                        DebugConsole.ThrowError($"Failed to read name file \"rawPath\" for location type \"{Identifier}\"!", e);
+                    }
+                }
+                if (!names.Any())
+                {
+                    names.Add("ERROR: No names found");
+                }
+                this.names = names.ToImmutableArray();
             }
 
             string[] commonnessPerZoneStrs = element.GetAttributeStringArray("commonnessperzone", Array.Empty<string>());
@@ -172,7 +192,7 @@ namespace Barotrauma
                 }
                 MinCountPerZone[zoneIndex] = minCount;
             }
-
+            var portraits = new List<Sprite>();
             var hireableJobs = new List<(Identifier, float)>();
             foreach (var subElement in element.Elements())
             {
@@ -213,6 +233,7 @@ namespace Barotrauma
                         break;
                 }
             }
+            this.portraits = portraits.ToImmutableArray();
             this.hireableJobs = hireableJobs.ToImmutableArray();
         }
 
@@ -229,10 +250,10 @@ namespace Barotrauma
             return null;
         }
 
-        public Sprite GetPortrait(int portraitId)
+        public Sprite GetPortrait(int randomSeed)
         {
-            if (portraits.Count == 0) { return null; }
-            return portraits[Math.Abs(portraitId) % portraits.Count];
+            if (portraits.Length == 0) { return null; }
+            return portraits[Math.Abs(randomSeed) % portraits.Length];
         }
 
         public string GetRandomName(Random rand, IEnumerable<Location> existingLocations)
@@ -245,16 +266,33 @@ namespace Barotrauma
                     return unusedNames[rand.Next() % unusedNames.Count];
                 }
             }
-            return names[rand.Next() % names.Count];
+            return names[rand.Next() % names.Length];
         }
 
-        public static LocationType Random(Random rand, int? zone = null, bool requireOutpost = false)
+        public static LocationType Random(Random rand, int? zone = null, bool requireOutpost = false, Func<LocationType, bool> predicate = null)
         {
             Debug.Assert(Prefabs.Any(), "LocationType.list.Count == 0, you probably need to initialize LocationTypes");
 
             LocationType[] allowedLocationTypes =
-                Prefabs.Where(lt => (!zone.HasValue || lt.CommonnessPerZone.ContainsKey(zone.Value)) && (!requireOutpost || lt.HasOutpost))
+                Prefabs.Where(lt =>
+                    (predicate == null || predicate(lt)) && IsValid(lt))
                     .OrderBy(p => p.UintIdentifier).ToArray();
+
+            bool IsValid(LocationType lt)
+            {
+                if (requireOutpost && !lt.HasOutpost) { return false; }
+                if (zone.HasValue)
+                {
+                    if (!lt.CommonnessPerZone.ContainsKey(zone.Value)) { return false; }
+                }
+                //if zone is not defined, this is a "random" (non-campaign) level
+                //-> don't choose location types that aren't allowed in those
+                else if (!lt.AllowInRandomLevels)
+                {
+                    return false;
+                }
+                return true;
+            }
 
             if (allowedLocationTypes.Length == 0)
             {

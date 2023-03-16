@@ -1,6 +1,3 @@
-using System;
-using System.Xml.Linq;
-
 namespace Barotrauma
 {
     class WaitAction : EventAction

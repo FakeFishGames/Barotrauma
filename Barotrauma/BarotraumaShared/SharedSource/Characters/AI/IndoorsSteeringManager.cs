@@ -26,7 +26,7 @@ namespace Barotrauma
 
         private float findPathTimer;
 
-        private const float buttonPressCooldown = 3;
+        private const float ButtonPressCooldown = 1;
         private float checkDoorsTimer;
         private float buttonPressTimer;
 
@@ -96,7 +96,7 @@ namespace Barotrauma
             base.Update(speed);
             float step = 1.0f / 60.0f;
             checkDoorsTimer -= step;
-            if (lastDoor.door == null || !lastDoor.shouldBeOpen || lastDoor.door.IsOpen)
+            if (lastDoor.door == null || !lastDoor.shouldBeOpen || lastDoor.door.IsFullyOpen)
             {
                 buttonPressTimer = 0;
             }
@@ -211,7 +211,7 @@ namespace Barotrauma
                     currentTarget = target;
                     Vector2 currentPos = host.SimPosition;
                     pathFinder.InsideSubmarine = character.Submarine != null && !character.Submarine.Info.IsRuin;
-                    pathFinder.ApplyPenaltyToOutsideNodes = character.Submarine != null && character.PressureProtection <= 0;
+                    pathFinder.ApplyPenaltyToOutsideNodes = character.Submarine != null && !character.IsProtectedFromPressure;
                     var newPath = pathFinder.FindPath(currentPos, target, character.Submarine, "(Character: " + character.Name + ")", minGapSize, startNodeFilter, endNodeFilter, nodeFilter, checkVisibility: checkVisibility);
                     bool useNewPath = needsNewPath || currentPath == null || currentPath.CurrentNode == null || character.Submarine != null && findPathTimer < -1 && Math.Abs(character.AnimController.TargetMovement.Combine()) <= 0;
                     if (!useNewPath && currentPath?.CurrentNode != null && newPath.Nodes.Any() && !newPath.Unreachable)
@@ -310,7 +310,7 @@ namespace Barotrauma
             // Only humanoids can climb ladders
             bool canClimb = character.AnimController is HumanoidAnimController;
             //if not in water and the waypoint is between the top and bottom of the collider, no need to move vertically
-            if (canClimb && !character.AnimController.InWater && !character.IsClimbing && diff.Y < collider.height / 2 + collider.radius)
+            if (canClimb && !character.AnimController.InWater && !character.IsClimbing && diff.Y < collider.Height / 2 + collider.Radius)
             {
                 diff.Y = 0.0f;
             }
@@ -342,7 +342,7 @@ namespace Barotrauma
                 CheckDoorsInPath();
                 doorsChecked = true;
             }
-            if (buttonPressTimer > 0 && lastDoor.door != null && lastDoor.shouldBeOpen && !lastDoor.door.IsOpen)
+            if (buttonPressTimer > 0 && lastDoor.door != null && lastDoor.shouldBeOpen && !lastDoor.door.IsFullyOpen)
             {
                 // We have pressed the button and are waiting for the door to open -> Hold still until we can press the button again.
                 Reset();
@@ -395,7 +395,7 @@ namespace Barotrauma
                 }
                 //at the same height as the waypoint
                 float heightDiff = Math.Abs(collider.SimPosition.Y - currentPath.CurrentNode.SimPosition.Y);
-                float colliderSize = (collider.height / 2 + collider.radius) * 1.25f;
+                float colliderSize = (collider.Height / 2 + collider.Radius) * 1.25f;
                 if (heightDiff < colliderSize)
                 {
                     float heightFromFloor = character.AnimController.GetHeightFromFloor();
@@ -510,7 +510,7 @@ namespace Barotrauma
         private bool CanAccessDoor(Door door, Func<Controller, bool> buttonFilter = null)
         {
             if (door.IsBroken) { return true; }
-            if (!door.IsOpen)
+            if (door.IsClosed)
             {
                 if (!door.Item.IsInteractable(character)) { return false; }
                 if (!ShouldBreakDoor(door))
@@ -536,7 +536,7 @@ namespace Barotrauma
                 }
                 foreach (var linked in door.Item.linkedTo)
                 {
-                    if (!(linked is Item linkedItem)) { continue; }
+                    if (linked is not Item linkedItem) { continue; }
                     var button = linkedItem.GetComponent<Controller>();
                     if (button == null) { continue; }
                     if (button.HasAccess(character) && (buttonFilter == null || buttonFilter(button)))
@@ -694,7 +694,7 @@ namespace Barotrauma
                                 if (door.Item.TryInteract(character, forceSelectKey: true))
                                 {
                                     lastDoor = (door, shouldBeOpen);
-                                    buttonPressTimer = shouldBeOpen ? buttonPressCooldown : 0;
+                                    buttonPressTimer = shouldBeOpen ? ButtonPressCooldown : 0;
                                 }
                                 else
                                 {
@@ -712,7 +712,7 @@ namespace Barotrauma
                                     if (closestButton.Item.TryInteract(character, forceSelectKey: true))
                                     {
                                         lastDoor = (door, shouldBeOpen);
-                                        buttonPressTimer = shouldBeOpen ? buttonPressCooldown : 0;
+                                        buttonPressTimer = shouldBeOpen ? ButtonPressCooldown : 0;
                                     }
                                     else
                                     {
@@ -785,7 +785,7 @@ namespace Barotrauma
                 {
                     if (hull.WaterVolume / hull.Rect.Width > 100.0f)
                     {
-                        if (!HumanAIController.HasDivingSuit(character))
+                        if (!HumanAIController.HasDivingSuit(character) && character.CharacterHealth.OxygenLowResistance < 1)
                         {
                             penalty += 500.0f;
                         }
@@ -808,7 +808,7 @@ namespace Barotrauma
 
         private float? GetSingleNodePenalty(PathNode node)
         {
-            if (node.Waypoint.isObstructed) { return null; }
+            if (!node.Waypoint.IsTraversable) { return null; }
             if (node.IsBlocked()) { return null; }
             float penalty = 0.0f;
             if (node.Waypoint.ConnectedGap != null && node.Waypoint.ConnectedGap.Open < 0.9f)
