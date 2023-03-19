@@ -1147,12 +1147,14 @@ namespace Barotrauma
                             unlockFaction = GameMain.GameSession.Campaign.Factions.Find(f => f.Prefab.Identifier == unlockEvent.Faction);
                             unlockReputation = unlockFaction?.Reputation;
                         }
-
-                        DrawIcon(
-                            "LockedLocationConnection", (int)(28 * zoom),
-                            RichString.Rich(TextManager.GetWithVariables(unlockEvent.UnlockPathTooltip ?? "LockedPathTooltip",
-                              ("[requiredreputation]", Reputation.GetFormattedReputationText(MathUtils.InverseLerp(unlockReputation.MinReputation, unlockReputation.MaxReputation, unlockEvent.UnlockPathReputation), unlockEvent.UnlockPathReputation, addColorTags: true)),
-                              ("[currentreputation]", unlockReputation.GetFormattedReputationText(addColorTags: true)))));
+                        if (unlockReputation != null)
+                        {
+                            DrawIcon(
+                                "LockedLocationConnection", (int)(28 * zoom),
+                                RichString.Rich(TextManager.GetWithVariables(unlockEvent.UnlockPathTooltip ?? "LockedPathTooltip",
+                                  ("[requiredreputation]", Reputation.GetFormattedReputationText(MathUtils.InverseLerp(unlockReputation.MinReputation, unlockReputation.MaxReputation, unlockEvent.UnlockPathReputation), unlockEvent.UnlockPathReputation, addColorTags: true)),
+                                  ("[currentreputation]", unlockReputation.GetFormattedReputationText(addColorTags: true)))));
+                        }
                     }
                     else
                     {
