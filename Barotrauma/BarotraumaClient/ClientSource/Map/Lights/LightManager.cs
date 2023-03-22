@@ -1,6 +1,5 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using Microsoft.Xna.Framework.Content;
 using System.Collections.Generic;
 using System.Linq;
 using System;
@@ -73,12 +72,14 @@ namespace Barotrauma.Lights
 
         private int recalculationCount;
 
+        private float time;
+
         public IEnumerable<LightSource> Lights
         {
             get { return lights; }
         }
 
-        public LightManager(GraphicsDevice graphics, ContentManager content)
+        public LightManager(GraphicsDevice graphics)
         {
             lights = new List<LightSource>(100);
 
@@ -96,13 +97,8 @@ namespace Barotrauma.Lights
             {
                 CreateRenderTargets(graphics);
 
-#if WINDOWS
-                LosEffect = content.Load<Effect>("Effects/losshader");
-                SolidColorEffect = content.Load<Effect>("Effects/solidcolor");
-#else
-                LosEffect = content.Load<Effect>("Effects/losshader_opengl");
-                SolidColorEffect = content.Load<Effect>("Effects/solidcolor_opengl");
-#endif
+                LosEffect = EffectLoader.Load("Effects/losshader");
+                SolidColorEffect = EffectLoader.Load("Effects/solidcolor");
 
                 if (lightEffect == null)
                 {
@@ -171,10 +167,12 @@ namespace Barotrauma.Lights
 
         public void Update(float deltaTime)
         {
+            //wrap around if the timer gets very large, otherwise we'd start running into floating point accuracy issues
+            time = (time + deltaTime) % 100000.0f;
             foreach (LightSource light in activeLights)
             {
                 if (!light.Enabled) { continue; }
-                light.Update(deltaTime);
+                light.Update(time);
             }
         }
 
@@ -451,9 +449,9 @@ namespace Barotrauma.Lights
                 {
                     highlightedEntities.Add(Character.Controlled.FocusedCharacter);
                 }
-                foreach (Item item in Item.ItemList)
+                foreach (MapEntity me in MapEntity.HighlightedEntities)
                 {
-                    if ((item.IsHighlighted || item.IconStyle != null) && !highlightedEntities.Contains(item))
+                    if (me is Item item && item != Character.Controlled.FocusedItem)
                     {
                         highlightedEntities.Add(item);
                     }

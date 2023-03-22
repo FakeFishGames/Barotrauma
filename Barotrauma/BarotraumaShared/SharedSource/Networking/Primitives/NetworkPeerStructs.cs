@@ -171,6 +171,8 @@ namespace Barotrauma.Networking
         public bool ShouldCreateAnalyticsEvent
             => DisconnectReason is not (
                    DisconnectReason.Disconnected
+                   or DisconnectReason.ServerShutdown
+                   or DisconnectReason.ServerFull
                    or DisconnectReason.Banned
                    or DisconnectReason.Kicked
                    or DisconnectReason.TooManyFailedLogins
@@ -300,7 +302,7 @@ namespace Barotrauma.Networking
 
         public ServerContentPackage() { }
         
-        public ServerContentPackage(ContentPackage contentPackage, DateTime referenceTime)
+        public ServerContentPackage(ContentPackage contentPackage, SerializableDateTime referenceTime)
         {
             Name = contentPackage.Name;
             Hash = contentPackage.Hash;

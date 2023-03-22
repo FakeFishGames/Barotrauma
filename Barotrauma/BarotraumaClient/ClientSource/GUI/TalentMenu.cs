@@ -727,7 +727,7 @@ namespace Barotrauma
                     talentStages.Add(GetTalentState(character, button.Identifier, selectedTalents));
                 }
 
-                TalentStages collectiveStage = talentStages.Any(static stage => stage is Locked)
+                TalentStages collectiveStage = talentStages.All(static stage => stage is Locked)
                     ? Locked
                     : Available;
 
@@ -796,7 +796,7 @@ namespace Barotrauma
             CharacterInfo? ownCharacterInfo = Character.Controlled?.Info ?? GameMain.Client?.CharacterInfo;
             if (ownCharacterInfo is null) { return false; }
 
-            return info == ownCharacterInfo;
+            return info.GetIdentifierUsingOriginalName() == ownCharacterInfo.GetIdentifierUsingOriginalName();
         }
 
         public static bool CanManageTalents(CharacterInfo targetInfo)

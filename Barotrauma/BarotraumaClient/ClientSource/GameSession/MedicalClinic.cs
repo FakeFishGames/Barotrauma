@@ -11,6 +11,8 @@ namespace Barotrauma
 {
     internal sealed partial class MedicalClinic
     {
+        private MedicalClinicUI? ui => campaign?.CampaignUI?.MedicalClinic;
+
         public enum RequestResult
         {
             Undecided,
@@ -303,6 +305,12 @@ namespace Barotrauma
             }
         }
 
+        private void AfflictionUpdateReceived(IReadMessage inc)
+        {
+            NetCrewMember crewMember = INetSerializableStruct.Read<NetCrewMember>(inc);
+            ui?.UpdateAfflictions(crewMember);
+        }
+
         private void PendingRequestReceived(IReadMessage inc)
         {
             var pendingCrew = INetSerializableStruct.Read<NetCollection<NetCrewMember>>(inc);
@@ -311,6 +319,10 @@ namespace Barotrauma
                 callback(new PendingRequest(RequestResult.Success, pendingCrew));
             }
         }
+
+        public static void SendUnsubscribeRequest() => ClientSend(null,
+            header: NetworkHeader.UNSUBSCRIBE_ME,
+            deliveryMethod: DeliveryMethod.Reliable);
 
         private static IWriteMessage StartSending()
         {
@@ -336,6 +348,9 @@ namespace Barotrauma
             {
                 case NetworkHeader.REQUEST_AFFLICTIONS:
                     AfflictionRequestReceived(inc);
+                    break;
+                case NetworkHeader.AFFLICTION_UPDATE:
+                    AfflictionUpdateReceived(inc);
                     break;
                 case NetworkHeader.REQUEST_PENDING:
                     PendingRequestReceived(inc);

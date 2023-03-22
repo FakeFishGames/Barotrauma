@@ -68,7 +68,6 @@ namespace Barotrauma
             }
             // Remove "[speciesname]" for backward support (we don't use it anymore)
             HuskedSpeciesName = HuskedSpeciesName.Remove("[speciesname]").ToIdentifier();
-            TargetSpecies = element.GetAttributeIdentifierArray("targets", Array.Empty<Identifier>(), trim: true);
             if (TargetSpecies.Length == 0)
             {
                 DebugConsole.NewMessage($"No 'targets' defined for the husk affliction ({Identifier}) in {element}", Color.Orange);
@@ -110,7 +109,6 @@ namespace Barotrauma
         public float TransformThresholdOnDeath;
 
         public readonly Identifier HuskedSpeciesName;
-        public readonly Identifier[] TargetSpecies;
 
         public readonly bool TransferBuffs;
         public readonly bool SendMessages;
@@ -321,6 +319,7 @@ namespace Barotrauma
         {
             public readonly List<StatusEffect> StatusEffects = new List<StatusEffect>();
             public readonly float MinInterval, MaxInterval;
+            public readonly float MinStrength, MaxStrength;
 
             public PeriodicEffect(ContentXElement element, string parentDebugName)
             {
@@ -335,22 +334,37 @@ namespace Barotrauma
                 }
                 else
                 {
-                    MinInterval = Math.Max(element.GetAttributeFloat("mininterval", 1.0f), 1.0f);
-                    MaxInterval = Math.Max(element.GetAttributeFloat("maxinterval", 1.0f), MinInterval);
+                    MinInterval = Math.Max(element.GetAttributeFloat(nameof(MinInterval), 1.0f), 1.0f);
+                    MaxInterval = Math.Max(element.GetAttributeFloat(nameof(MaxInterval), 1.0f), MinInterval);
+                    MinStrength = Math.Max(element.GetAttributeFloat(nameof(MinStrength), 0f), 0f);
+                    MaxStrength = Math.Max(element.GetAttributeFloat(nameof(MaxStrength), MinStrength), MinStrength);
                 }
             }
         }
 
+        public static readonly Identifier DamageType = "damage".ToIdentifier();
+        public static readonly Identifier BurnType = "burn".ToIdentifier();
+        public static readonly Identifier BleedingType = "bleeding".ToIdentifier();
+        public static readonly Identifier ParalysisType = "paralysis".ToIdentifier();
+        public static readonly Identifier PoisonType = "poison".ToIdentifier();
+        public static readonly Identifier StunType = "stun".ToIdentifier();
+        public static readonly Identifier EMPType = "emp".ToIdentifier();
+        public static readonly Identifier SpaceHerpesType = "spaceherpes".ToIdentifier();
+        public static readonly Identifier AlienInfectedType = "alieninfected".ToIdentifier();
+        public static readonly Identifier InvertControlsType = "invertcontrols".ToIdentifier();
+        public static readonly Identifier HuskInfectionType = "huskinfection".ToIdentifier();
+
         public static AfflictionPrefab InternalDamage => Prefabs["internaldamage"];
         public static AfflictionPrefab BiteWounds => Prefabs["bitewounds"];
         public static AfflictionPrefab ImpactDamage => Prefabs["blunttrauma"];
-        public static AfflictionPrefab Bleeding => Prefabs["bleeding"];
-        public static AfflictionPrefab Burn => Prefabs["burn"];
+        public static AfflictionPrefab Bleeding => Prefabs[BleedingType];
+        public static AfflictionPrefab Burn => Prefabs[BurnType];
         public static AfflictionPrefab OxygenLow => Prefabs["oxygenlow"];
         public static AfflictionPrefab Bloodloss => Prefabs["bloodloss"];
         public static AfflictionPrefab Pressure => Prefabs["pressure"];
-        public static AfflictionPrefab Stun => Prefabs["stun"];
+        public static AfflictionPrefab Stun => Prefabs[StunType];
         public static AfflictionPrefab RadiationSickness => Prefabs["radiationsickness"];
+
 
         public static readonly PrefabCollection<AfflictionPrefab> Prefabs = new PrefabCollection<AfflictionPrefab>();
 
@@ -415,8 +429,11 @@ namespace Barotrauma
         //how much karma changes when a player applies this affliction to someone (per strength of the affliction)
         public float KarmaChangeOnApplied;
 
-        public float BurnOverlayAlpha;
-        public float DamageOverlayAlpha;
+        public readonly float BurnOverlayAlpha;
+        public readonly float DamageOverlayAlpha;
+
+        //steam achievement given when the controlled character receives the affliction
+        public readonly Identifier AchievementOnReceived;
 
         //steam achievement given when the affliction is removed from the controlled character
         public readonly Identifier AchievementOnRemoved;
@@ -427,6 +444,20 @@ namespace Barotrauma
         public readonly Sprite AfflictionOverlay;
         public readonly bool AfflictionOverlayAlphaIsLinear;
 
+        public readonly bool DamageParticles;
+
+        /// <summary>
+        /// An arbitrary modifier that affects how much medical skill is increased when you apply the affliction on a target. 
+        /// If the affliction causes damage or is of type poison or paralysis, the skill is increased only when the target is hostile. 
+        /// If the affliction is of type buff, the skill is increased only when the target is friendly.
+        /// </summary>
+        public readonly float MedicalSkillGain;
+        /// <summary>
+        /// An arbitrary modifier that affects how much weapons skill is increased when you apply the affliction on a target. 
+        /// The skill is increased only when the target is hostile. 
+        /// </summary>
+        public readonly float WeaponsSkillGain;
+
         private readonly List<Effect> effects = new List<Effect>();
         private readonly List<PeriodicEffect> periodicEffects = new List<PeriodicEffect>();
 
@@ -435,6 +466,8 @@ namespace Barotrauma
         public IList<PeriodicEffect> PeriodicEffects => periodicEffects;
 
         private readonly ConstructorInfo constructor;
+
+        public Identifier[] TargetSpecies { get; protected set; }
 
         public readonly bool ResetBetweenRounds;
 
@@ -519,14 +552,27 @@ namespace Barotrauma
 
             KarmaChangeOnApplied = element.GetAttributeFloat(nameof(KarmaChangeOnApplied), 0.0f);
 
-            CauseOfDeathDescription     = TextManager.Get($"AfflictionCauseOfDeath.{TranslationIdentifier}").Fallback(element.GetAttributeString("causeofdeathdescription", ""));
-            SelfCauseOfDeathDescription = TextManager.Get($"AfflictionCauseOfDeathSelf.{TranslationIdentifier}").Fallback(element.GetAttributeString("selfcauseofdeathdescription", ""));
+            CauseOfDeathDescription     = 
+                TextManager.Get($"AfflictionCauseOfDeath.{TranslationIdentifier}")
+                .Fallback(TextManager.Get(element.GetAttributeString("causeofdeathdescription", "")))
+                .Fallback(element.GetAttributeString("causeofdeathdescription", ""));
+            SelfCauseOfDeathDescription = 
+                TextManager.Get($"AfflictionCauseOfDeathSelf.{TranslationIdentifier}")
+                .Fallback(TextManager.Get(element.GetAttributeString("selfcauseofdeathdescription", "")))
+                .Fallback(element.GetAttributeString("selfcauseofdeathdescription", ""));
 
             IconColors = element.GetAttributeColorArray(nameof(IconColors), null);
             AfflictionOverlayAlphaIsLinear = element.GetAttributeBool(nameof(AfflictionOverlayAlphaIsLinear), false);
+            AchievementOnReceived = element.GetAttributeIdentifier(nameof(AchievementOnReceived), "");
             AchievementOnRemoved = element.GetAttributeIdentifier(nameof(AchievementOnRemoved), "");
 
+            TargetSpecies = element.GetAttributeIdentifierArray("targets", Array.Empty<Identifier>(), trim: true);
+
             ResetBetweenRounds = element.GetAttributeBool("resetbetweenrounds", false);
+
+            DamageParticles = element.GetAttributeBool(nameof(DamageParticles), true);
+            WeaponsSkillGain = element.GetAttributeFloat(nameof(WeaponsSkillGain), 0.0f);
+            MedicalSkillGain = element.GetAttributeFloat(nameof(MedicalSkillGain), 0.0f);
 
             List<Description> descriptions = new List<Description>();
             foreach (var subElement in element.Elements())
@@ -600,6 +646,18 @@ namespace Barotrauma
                     case "periodiceffect":
                         periodicEffects.Add(new PeriodicEffect(subElement, Name.Value));
                         break;
+                }
+            }
+            for (int i = 0; i < effects.Count; i++)
+            {
+                for (int j = i + 1; j < effects.Count; j++)
+                {
+                    var a = effects[i];
+                    var b = effects[j];
+                    if (a.MinStrength < b.MaxStrength && b.MinStrength < a.MaxStrength)
+                    {
+                        DebugConsole.AddWarning($"Affliction \"{Identifier}\" contains effects with overlapping strength ranges. Only one effect can be active at a time, meaning one of the effects won't work.");
+                    }
                 }
             }
         }

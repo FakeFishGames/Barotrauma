@@ -200,12 +200,10 @@ namespace Barotrauma.Lights
 
         private static Texture2D lightTexture;
 
-        private float blinkTimer, flickerState, pulseState;
-
         private VertexPositionColorTexture[] vertices;
         private short[] indices;
 
-        private readonly List<ConvexHullList> hullsInRange;
+        private readonly List<ConvexHullList> convexHullsInRange;
 
         public Texture2D texture;
 
@@ -236,7 +234,7 @@ namespace Barotrauma.Lights
             {
                 if (!needsRecalculation && value)
                 {
-                    foreach (ConvexHullList chList in hullsInRange)
+                    foreach (ConvexHullList chList in convexHullsInRange)
                     {
                         chList.IsHidden.Clear();
                     }
@@ -476,7 +474,7 @@ namespace Barotrauma.Lights
 
         public LightSource(Vector2 position, float range, Color color, Submarine submarine, bool addLight=true)
         {
-            hullsInRange = new List<ConvexHullList>();
+            convexHullsInRange = new List<ConvexHullList>();
             this.ParentSub = submarine;
             this.position = position;
             lightSourceParams = new LightSourceParams(range, color);
@@ -486,12 +484,12 @@ namespace Barotrauma.Lights
             if (addLight) { GameMain.LightManager.AddLight(this); }
         }
 
-        public void Update(float deltaTime)
+        public void Update(float time)
         {
             float brightness = 1.0f;
             if (lightSourceParams.BlinkFrequency > 0.0f)
             {
-                blinkTimer = (blinkTimer + deltaTime * lightSourceParams.BlinkFrequency) % 1.0f;
+                float blinkTimer = (time * lightSourceParams.BlinkFrequency) % 1.0f;
                 if (blinkTimer > 0.5f)
                 {
                     CurrentBrightness = 0.0f;
@@ -500,14 +498,13 @@ namespace Barotrauma.Lights
             }
             if (lightSourceParams.PulseFrequency > 0.0f && lightSourceParams.PulseAmount > 0.0f)
             {
-                pulseState = (pulseState + deltaTime * lightSourceParams.PulseFrequency) % 1.0f;
+                float pulseState = (time * lightSourceParams.PulseFrequency) % 1.0f;
                 //oscillate between 0-1
                 brightness *= 1.0f - (float)(Math.Sin(pulseState * MathHelper.TwoPi) + 1.0f) / 2.0f * lightSourceParams.PulseAmount;
             }
-            if (lightSourceParams.Flicker > 0.0f)
+            if (lightSourceParams.Flicker > 0.0f && lightSourceParams.FlickerSpeed > 0.0f)
             {
-                flickerState += deltaTime * lightSourceParams.FlickerSpeed;
-                flickerState %= 255;
+                float flickerState = (time * lightSourceParams.FlickerSpeed) % 255;
                 brightness *= 1.0f - PerlinNoise.GetPerlin(flickerState, flickerState * 0.5f) * lightSourceParams.Flicker;
             }
             CurrentBrightness = brightness;
@@ -518,19 +515,25 @@ namespace Barotrauma.Lights
         /// </summary>
         private void RefreshConvexHullList(ConvexHullList chList, Vector2 lightPos, Submarine sub)
         {
-            var fullChList = ConvexHull.HullLists.Find(x => x.Submarine == sub);
+            var fullChList = ConvexHull.HullLists.FirstOrDefault(chList => chList.Submarine == sub);
             if (fullChList == null) { return; }
 
-            chList.List = fullChList.List.FindAll(ch => ch.Enabled && MathUtils.CircleIntersectsRectangle(lightPos, TextureRange, ch.BoundingBox));
-
-            NeedsHullCheck = true;
+            chList.List.Clear();
+            foreach (var convexHull in fullChList.List)
+            {
+                if (!convexHull.Enabled) { continue; }
+                if (!MathUtils.CircleIntersectsRectangle(lightPos, TextureRange, convexHull.BoundingBox)) { continue; }
+                chList.List.Add(convexHull);
+            }
+            chList.IsHidden.RemoveWhere(ch => !chList.List.Contains(ch));
+            NeedsHullCheck = false;
         }
 
         /// <summary>
         /// Recheck which convex hulls are in range (if needed),
         /// and check if we need to recalculate vertices due to changes in the convex hulls
         /// </summary>
-        private void CheckHullsInRange()
+        private void CheckConvexHullsInRange()
         {
             foreach (Submarine sub in Submarine.Loaded)
             {
@@ -543,21 +546,13 @@ namespace Barotrauma.Lights
         private void CheckHullsInRange(Submarine sub)
         {
             //find the list of convexhulls that belong to the sub
-            ConvexHullList chList = null; 
-            foreach (var ch in hullsInRange)
-            {
-                if (ch.Submarine == sub)
-                {
-                    chList = ch;
-                    break;
-                }
-            }
-                
+            ConvexHullList chList = convexHullsInRange.FirstOrDefault(chList => chList.Submarine == sub);
+            
             //not found -> create one
             if (chList == null)
             {
                 chList = new ConvexHullList(sub);
-                hullsInRange.Add(chList);
+                convexHullsInRange.Add(chList);
                 NeedsRecalculation = true;
             }
 
@@ -649,6 +644,10 @@ namespace Barotrauma.Lights
             }            
         }
 
+        private static readonly List<Segment> visibleSegments = new List<Segment>();
+        private static readonly List<SegmentPoint> points = new List<SegmentPoint>();
+        private static readonly List<Vector2> output = new List<Vector2>();
+        private static readonly SegmentPoint[] boundaryCorners = new SegmentPoint[4];
         private List<Vector2> FindRaycastHits()
         {
             if (!CastShadows || Range < 1.0f || Color.A < 1) { return null; }
@@ -656,27 +655,22 @@ namespace Barotrauma.Lights
             Vector2 drawPos = position;
             if (ParentSub != null) { drawPos += ParentSub.DrawPosition; }
 
-            var hulls = new List<ConvexHull>();
-            foreach (ConvexHullList chList in hullsInRange)
+            visibleSegments.Clear();
+            foreach (ConvexHullList chList in convexHullsInRange)
             {
                 foreach (ConvexHull hull in chList.List)
                 {
-                    if (!chList.IsHidden.Contains(hull)) { hulls.Add(hull); }
+                    if (!chList.IsHidden.Contains(hull)) 
+                    {
+                        //find convexhull segments that are close enough and facing towards the light source
+                        hull.RefreshWorldPositions();
+                        hull.GetVisibleSegments(drawPos, visibleSegments, ignoreEdges: false);                  
+                    }
                 }
                 foreach (ConvexHull hull in chList.List)
                 {
                     chList.IsHidden.Add(hull);
                 }
-            }
-
-            float bounds = TextureRange;
-            //find convexhull segments that are close enough and facing towards the light source
-            List<Segment> visibleSegments = new List<Segment>();
-            List<SegmentPoint> points = new List<SegmentPoint>();
-            foreach (ConvexHull hull in hulls)
-            {
-                hull.RefreshWorldPositions();
-                hull.GetVisibleSegments(drawPos, visibleSegments, ignoreEdges: false);
             }
 
             //add a square-shaped boundary to make sure we've got something to construct the triangles from
@@ -685,7 +679,7 @@ namespace Barotrauma.Lights
             //(might be more effective to calculate if we actually need these extra points)
 
             Vector2 drawOffset = Vector2.Zero;
-            float boundsExtended = bounds;
+            float boundsExtended = TextureRange;
             if (OverrideLightTexture != null)
             {
                 float cosAngle = (float)Math.Cos(Rotation);
@@ -709,12 +703,12 @@ namespace Barotrauma.Lights
                 drawOffset.Y = origin.X * sinAngle + origin.Y * cosAngle;
             }
 
-            var boundaryCorners = new SegmentPoint[] {
-                new SegmentPoint(new Vector2(drawPos.X + drawOffset.X + boundsExtended, drawPos.Y + drawOffset.Y + boundsExtended), null),
-                new SegmentPoint(new Vector2(drawPos.X + drawOffset.X + boundsExtended, drawPos.Y + drawOffset.Y - boundsExtended), null),
-                new SegmentPoint(new Vector2(drawPos.X + drawOffset.X - boundsExtended, drawPos.Y + drawOffset.Y - boundsExtended), null),
-                new SegmentPoint(new Vector2(drawPos.X + drawOffset.X - boundsExtended, drawPos.Y + drawOffset.Y + boundsExtended), null)
-            };
+            Vector2 boundsMin = drawPos + drawOffset + new Vector2(-boundsExtended, -boundsExtended);
+            Vector2 boundsMax = drawPos + drawOffset + new Vector2(boundsExtended, boundsExtended);
+            boundaryCorners[0] = new SegmentPoint(boundsMax, null);
+            boundaryCorners[1] = new SegmentPoint(new Vector2(boundsMax.X, boundsMin.Y), null);
+            boundaryCorners[2] = new SegmentPoint(boundsMin, null);
+            boundaryCorners[3] = new SegmentPoint(new Vector2(boundsMin.X, boundsMax.Y), null);
 
             for (int i = 0; i < 4; i++)
             {
@@ -798,6 +792,7 @@ namespace Barotrauma.Lights
                 }
             }
 
+            points.Clear();
             //remove segments that fall out of bounds
             for (int i = 0; i < visibleSegments.Count; i++)
             {
@@ -817,7 +812,18 @@ namespace Barotrauma.Lights
                 }
             }
 
-            visibleSegments = visibleSegments.OrderBy(s => MathUtils.LineToPointDistanceSquared(s.Start.WorldPos, s.End.WorldPos, drawPos)).ToList();
+            //remove points that are very close to each other
+            for (int i = 0; i < points.Count; i++)
+            {
+                for (int j = Math.Min(i + 4, points.Count-1); j > i; j--)
+                {
+                    if (Math.Abs(points[i].WorldPos.X - points[j].WorldPos.X) < 6 &&
+                        Math.Abs(points[i].WorldPos.Y - points[j].WorldPos.Y) < 6)
+                    {
+                        points.RemoveAt(j);
+                    }
+                }
+            }
 
             var compareCCW = new CompareSegmentPointCW(drawPos);
             try
@@ -833,23 +839,12 @@ namespace Barotrauma.Lights
                 }
                 DebugConsole.ThrowError(sb.ToString(), e);
             }
+                        
+            visibleSegments.Sort((s1, s2) => 
+                MathUtils.LineToPointDistanceSquared(s1.Start.WorldPos, s1.End.WorldPos, drawPos)
+                .CompareTo(MathUtils.LineToPointDistanceSquared(s2.Start.WorldPos, s2.End.WorldPos, drawPos)));
 
-            List<Vector2> output = new List<Vector2>();
-            //List<Pair<int, Vector2>> preOutput = new List<Pair<int, Vector2>>();
-
-            //remove points that are very close to each other
-            for (int i = 0; i < points.Count; i++)
-            {
-                for (int j = Math.Min(i + 4, points.Count-1); j > i; j--)
-                {
-                    if (Math.Abs(points[i].WorldPos.X - points[j].WorldPos.X) < 6 &&
-                        Math.Abs(points[i].WorldPos.Y - points[j].WorldPos.Y) < 6)
-                    {
-                        points.RemoveAt(j);
-                    }
-                }
-            }
-
+            output.Clear();
             foreach (SegmentPoint p in points)
             {
                 Vector2 dir = Vector2.Normalize(p.WorldPos - drawPos);
@@ -857,10 +852,10 @@ namespace Barotrauma.Lights
 
                 //do two slightly offset raycasts to hit the segment itself and whatever's behind it
                 var intersection1 = RayCast(drawPos, drawPos + dir * boundsExtended * 2 - dirNormal, visibleSegments);
+                if (intersection1.index < 0) { return null; }
                 var intersection2 = RayCast(drawPos, drawPos + dir * boundsExtended * 2 + dirNormal, visibleSegments);
+                if (intersection2.index < 0) { return null; }
 
-                if (intersection1.index < 0) return null;
-                if (intersection2.index < 0) return null;
                 Segment seg1 = visibleSegments[intersection1.index];
                 Segment seg2 = visibleSegments[intersection2.index];
 
@@ -872,7 +867,7 @@ namespace Barotrauma.Lights
                     //hit at the current segmentpoint -> place the segmentpoint into the list
                     output.Add(p.WorldPos);
 
-                    foreach (ConvexHullList hullList in hullsInRange)
+                    foreach (ConvexHullList hullList in convexHullsInRange)
                     {
                         hullList.IsHidden.Remove(p.ConvexHull);
                         hullList.IsHidden.Remove(seg1.ConvexHull);
@@ -886,7 +881,7 @@ namespace Barotrauma.Lights
                     output.Add(isPoint1 ? p.WorldPos : intersection1.pos);
                     output.Add(isPoint2 ? p.WorldPos : intersection2.pos);
 
-                    foreach (ConvexHullList hullList in hullsInRange)
+                    foreach (ConvexHullList hullList in convexHullsInRange)
                     {
                         hullList.IsHidden.Remove(p.ConvexHull);
                         hullList.IsHidden.Remove(seg1.ConvexHull);
@@ -914,7 +909,7 @@ namespace Barotrauma.Lights
             return output;
         }
 
-        private (int index, Vector2 pos) RayCast(Vector2 rayStart, Vector2 rayEnd, List<Segment> segments)
+        private static (int index, Vector2 pos) RayCast(Vector2 rayStart, Vector2 rayEnd, List<Segment> segments)
         {
             Vector2? closestIntersection = null;
             int segment = -1;
@@ -939,13 +934,13 @@ namespace Barotrauma.Lights
                 //same for the x-axis
                 if (s.Start.WorldPos.X > s.End.WorldPos.X)
                 {
-                    if (s.Start.WorldPos.X < minX) continue;
-                    if (s.End.WorldPos.X > maxX) continue;
+                    if (s.Start.WorldPos.X < minX) { continue; }
+                    if (s.End.WorldPos.X > maxX) { continue; }
                 }
                 else
                 {
-                    if (s.End.WorldPos.X < minX) continue;
-                    if (s.Start.WorldPos.X > maxX) continue;
+                    if (s.End.WorldPos.X < minX) { continue; }
+                    if (s.Start.WorldPos.X > maxX) { continue; }
                 }
 
                 bool intersects;
@@ -1338,7 +1333,7 @@ namespace Barotrauma.Lights
                 return;
             }
 
-            CheckHullsInRange();
+            CheckConvexHullsInRange();
 
             if (NeedsRecalculation && allowRecalculation)
             {
@@ -1390,7 +1385,7 @@ namespace Barotrauma.Lights
 
         public void Reset()
         {
-            hullsInRange.Clear();
+            convexHullsInRange.Clear();
             diffToSub.Clear();
             NeedsHullCheck = true;
             NeedsRecalculation = true;

@@ -17,6 +17,14 @@ namespace Barotrauma.Abilities
             tags = abilityElement.GetAttributeIdentifierImmutableHashSet("tags", ImmutableHashSet<Identifier>.Empty);
         }
 
+        public override void InitializeAbility(bool addingFirstTime)
+        {
+            if (addingFirstTime)
+            {
+                VerifyState(conditionsMatched: true, timeSinceLastUpdate: 0.0f);
+            }
+        }
+
         protected override void VerifyState(bool conditionsMatched, float timeSinceLastUpdate)
         {
             if (conditionsMatched)

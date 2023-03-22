@@ -125,8 +125,8 @@ namespace Barotrauma.Items.Components
             get { return drawable; }
             set
             {
-                if (value == drawable) return;
-                if (!(this is IDrawableComponent))
+                if (value == drawable) { return; }
+                if (this is not IDrawableComponent)
                 {
                     DebugConsole.ThrowError("Couldn't make \"" + this + "\" drawable (the component doesn't implement the IDrawableComponent interface)");
                     return;
@@ -236,10 +236,7 @@ namespace Barotrauma.Items.Components
             set;
         }
 
-        /// <summary>
-        /// How useful the item is in combat? Used by AI to decide which item it should use as a weapon. For the sake of clarity, use a value between 0 and 100 (not enforced).
-        /// </summary>
-        [Serialize(0f, IsPropertySaveable.No, description: "How useful the item is in combat? Used by AI to decide which item it should use as a weapon. For the sake of clarity, use a value between 0 and 100 (not enforced).")]
+        [Serialize(0f, IsPropertySaveable.No, description: "How useful the item is in combat? Used by AI to decide which item it should use as a weapon. For the sake of clarity, use a value between 0 and 100 (not enforced). Note that there's also a generic BotPriority for all item prefabs.")]
         public float CombatPriority { get; private set; }
 
         /// <summary>
@@ -248,17 +245,10 @@ namespace Barotrauma.Items.Components
         [Serialize(0, IsPropertySaveable.Yes, alwaysUseInstanceValues: true)]
         public int ManuallySelectedSound { get; private set; }
 
-
         /// <summary>
         /// Can be used by status effects or conditionals to the speed of the item
         /// </summary>
-        public float Speed
-        {
-            get
-            {
-                return item.Speed;
-            }
-        }
+        public float Speed => item.Speed;
 
         public readonly bool InheritStatusEffects;
 
@@ -453,7 +443,7 @@ namespace Barotrauma.Items.Components
         public virtual void Drop(Character dropper) { }
 
         /// <returns>true if the operation was completed</returns>
-        public virtual bool AIOperate(float deltaTime, Character character, AIObjectiveOperateItem objective)
+        public virtual bool CrewAIOperate(float deltaTime, Character character, AIObjectiveOperateItem objective)
         {
             return false;
         }
@@ -697,7 +687,7 @@ namespace Barotrauma.Items.Components
 
         public virtual void FlipY(bool relativeToSub) { }
 
-        public bool IsLoaded(Character user, bool checkContainedItems = true) =>
+        public bool IsNotEmpty(Character user, bool checkContainedItems = true) =>
             HasRequiredContainedItems(user, addMessage: false) &&
             (!checkContainedItems || Item.OwnInventory == null || Item.OwnInventory.AllItems.Any(i => i.Condition > 0));
 
@@ -856,7 +846,13 @@ namespace Barotrauma.Items.Components
                 if (broken && !effect.AllowWhenBroken && effect.type != ActionType.OnBroken) { continue; }
                 if (user != null) { effect.SetUser(user); }
                 effect.AfflictionMultiplier = afflictionMultiplier;
-                item.ApplyStatusEffect(effect, type, deltaTime, character, targetLimb, useTarget, isNetworkEvent: false, checkCondition: false, worldPosition);
+                var c = character;
+                if (user != null && effect.HasTargetType(StatusEffect.TargetType.Character) && !effect.HasTargetType(StatusEffect.TargetType.UseTarget))
+                {
+                    // A bit hacky, but fixes MeleeWeapons targeting the use target instead of the attacker. Also applies to Projectiles and Throwables, or other callers that passes the user.
+                    c = user;
+                }
+                item.ApplyStatusEffect(effect, type, deltaTime, c, targetLimb, useTarget, isNetworkEvent: false, checkCondition: false, worldPosition);
                 effect.AfflictionMultiplier = 1.0f;
                 reducesCondition |= effect.ReducesItemCondition();
             }

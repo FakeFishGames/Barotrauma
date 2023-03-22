@@ -1,5 +1,4 @@
 using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
@@ -65,15 +64,9 @@ namespace Barotrauma
 
         public Texture2D WaterTexture { get; }
 
-        public WaterRenderer(GraphicsDevice graphicsDevice, ContentManager content)
+        public WaterRenderer(GraphicsDevice graphicsDevice)
         {
-#if WINDOWS
-            WaterEffect = content.Load<Effect>("Effects/watershader");
-#endif
-#if LINUX || OSX
-
-            WaterEffect = content.Load<Effect>("Effects/watershader_opengl");
-#endif
+            WaterEffect = EffectLoader.Load("Effects/watershader");
 
             WaterTexture = TextureLoader.FromFile("Content/Effects/waterbump.png");
             WaterEffect.Parameters["xWaterBumpMap"].SetValue(WaterTexture);

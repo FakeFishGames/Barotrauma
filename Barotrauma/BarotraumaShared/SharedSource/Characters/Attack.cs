@@ -181,13 +181,13 @@ namespace Barotrauma
         [Serialize(0.0f, IsPropertySaveable.Yes), Editable(MinValueFloat = 0.0f, MaxValueFloat = 1000.0f)]
         public float LevelWallDamage { get; set; }
 
-        [Serialize(false, IsPropertySaveable.Yes)]
+        [Serialize(false, IsPropertySaveable.Yes), Editable]
         public bool Ranged { get; set; }
 
-        [Serialize(false, IsPropertySaveable.Yes, description:"Only affects ranged attacks.")]
+        [Serialize(false, IsPropertySaveable.Yes, description:"Only affects ranged attacks."), Editable]
         public bool AvoidFriendlyFire { get; set; }
 
-        [Serialize(20f, IsPropertySaveable.Yes)]
+        [Serialize(20f, IsPropertySaveable.Yes, description: "Only affects ranged attacks."), Editable]
         public float RequiredAngle { get; set; }
 
         [Serialize(0f, IsPropertySaveable.Yes, description: "By default uses the same value as RequiredAngle. Use if you want to allow selecting the attack but not shooting until the angle is smaller. Only affects ranged attacks."), Editable]
@@ -198,6 +198,12 @@ namespace Barotrauma
 
         [Serialize(-1, IsPropertySaveable.Yes, description: "Reference to the limb we apply the aim rotation to. By default same as the attack limb. Only affects ranged attacks."), Editable]
         public int RotationLimbIndex { get; set; }
+
+        [Serialize(0f, IsPropertySaveable.Yes, description:"How much the held weapon is swayed back and forth while aiming. Only affects monsters using ranged weapons (items). Default 0 means the weapon is not swayed at all."), Editable]
+        public float SwayAmount { get; set; }
+
+        [Serialize(5f, IsPropertySaveable.Yes, description: "How fast the held weapon is swayed back and forth while aiming. Only affects monsters using ranged weapons (items)."), Editable]
+        public float SwayFrequency { get; set; }
 
         /// <summary>
         /// Legacy support. Use Afflictions.
@@ -337,9 +343,10 @@ namespace Barotrauma
             return (Duration == 0.0f) ? LevelWallDamage : LevelWallDamage * deltaTime;
         }
 
-        public float GetItemDamage(float deltaTime)
+        public float GetItemDamage(float deltaTime, float multiplier = 1)
         {
-            return (Duration == 0.0f) ? ItemDamage : ItemDamage * deltaTime;
+            float dmg = ItemDamage * multiplier;
+            return (Duration == 0.0f) ? dmg : dmg * deltaTime;
         }
 
         public float GetTotalDamage(bool includeStructureDamage = false)
@@ -492,37 +499,52 @@ namespace Barotrauma
             DamageParticles(deltaTime, worldPosition);
             
             var attackResult = target?.AddDamage(attacker, worldPosition, this, deltaTime, playSound) ?? new AttackResult();
-            var effectType = attackResult.Damage > 0.0f ? ActionType.OnUse : ActionType.OnFailure;
+            var conditionalEffectType = attackResult.Damage > 0.0f ? ActionType.OnSuccess : ActionType.OnFailure;
+            var additionalEffectType = ActionType.OnUse;
             if (targetCharacter != null && targetCharacter.IsDead)
             {
-                effectType = ActionType.OnEating;
+                additionalEffectType = ActionType.OnEating;
             }
 
             foreach (StatusEffect effect in statusEffects)
             {
                 effect.sourceBody = sourceBody;
-                if (effect.HasTargetType(StatusEffect.TargetType.This))
+                if (effect.HasTargetType(StatusEffect.TargetType.This) || effect.HasTargetType(StatusEffect.TargetType.Character))
                 {
-                    // TODO: do we want to apply the effect at the world position or the entity positions in each cases? -> go through also other cases where status effects are applied
-                    effect.Apply(effectType, deltaTime, attacker, sourceLimb ?? attacker as ISerializableEntity, worldPosition);
+                    var t = sourceLimb ?? attacker as ISerializableEntity;
+                    if (additionalEffectType != ActionType.OnEating)
+                    {
+                        effect.Apply(conditionalEffectType, deltaTime, attacker, t, worldPosition);
+                    }
+                    effect.Apply(additionalEffectType, deltaTime, attacker, t, worldPosition);
                 }
                 if (effect.HasTargetType(StatusEffect.TargetType.Parent))
                 {
-                    effect.Apply(effectType, deltaTime, attacker, attacker);
+                    if (additionalEffectType != ActionType.OnEating)
+                    {
+                        effect.Apply(conditionalEffectType, deltaTime, attacker, attacker);
+                    }
+                    effect.Apply(additionalEffectType, deltaTime, attacker, attacker);
                 }
                 if (targetCharacter != null)
                 {
-                    if (effect.HasTargetType(StatusEffect.TargetType.Character))
-                    {
-                        effect.Apply(effectType, deltaTime, targetCharacter, targetCharacter);
-                    }
                     if (effect.HasTargetType(StatusEffect.TargetType.Limb))
                     {
-                        effect.Apply(effectType, deltaTime, targetCharacter, attackResult.HitLimb);
+                        if (additionalEffectType != ActionType.OnEating)
+                        {
+                            effect.Apply(conditionalEffectType, deltaTime, targetCharacter, attackResult.HitLimb);
+                        }
+                        effect.Apply(additionalEffectType, deltaTime, targetCharacter, attackResult.HitLimb);
                     }                    
                     if (effect.HasTargetType(StatusEffect.TargetType.AllLimbs))
                     {
-                        effect.Apply(effectType, deltaTime, targetCharacter, targetCharacter.AnimController.Limbs.Cast<ISerializableEntity>().ToList());
+                        // TODO: do we need the conversion to list here? It generates garbage.
+                        var targets = targetCharacter.AnimController.Limbs.Cast<ISerializableEntity>().ToList();
+                        if (additionalEffectType != ActionType.OnEating)
+                        {
+                            effect.Apply(conditionalEffectType, deltaTime, targetCharacter, targets);
+                        }
+                        effect.Apply(additionalEffectType, deltaTime, targetCharacter, targets);
                     }
                 }
                 if (target is Entity targetEntity)
@@ -532,18 +554,30 @@ namespace Barotrauma
                     {
                         targets.Clear();
                         effect.AddNearbyTargets(worldPosition, targets);
-                        effect.Apply(effectType, deltaTime, targetEntity, targets);
+                        if (additionalEffectType != ActionType.OnEating)
+                        {
+                            effect.Apply(conditionalEffectType, deltaTime, targetEntity, targets);
+                        }
+                        effect.Apply(additionalEffectType, deltaTime, targetEntity, targets);
                     }
                     if (effect.HasTargetType(StatusEffect.TargetType.UseTarget))
                     {
-                        effect.Apply(effectType, deltaTime, targetEntity, attacker, worldPosition);
+                        if (additionalEffectType != ActionType.OnEating)
+                        {
+                            effect.Apply(conditionalEffectType, deltaTime, targetEntity, targetEntity as ISerializableEntity, worldPosition);
+                        }
+                        effect.Apply(additionalEffectType, deltaTime, targetEntity, targetEntity as ISerializableEntity, worldPosition);
                     }
                 }
                 if (effect.HasTargetType(StatusEffect.TargetType.Contained))
                 {
                     targets.Clear();
                     targets.AddRange(attacker.Inventory.AllItems);
-                    effect.Apply(effectType, deltaTime, attacker, targets);
+                    if (additionalEffectType != ActionType.OnEating)
+                    {
+                        effect.Apply(conditionalEffectType, deltaTime, attacker, targets);
+                    }
+                    effect.Apply(additionalEffectType, deltaTime, attacker, targets);
                 }
             }
 
@@ -579,47 +613,52 @@ namespace Barotrauma
             }
 
             var attackResult = targetLimb.character.ApplyAttack(attacker, worldPosition, this, deltaTime, playSound, targetLimb, penetration);
-            var effectType = attackResult.Damage > 0.0f ? ActionType.OnUse : ActionType.OnFailure;
+            var conditionalEffectType = attackResult.Damage > 0.0f ? ActionType.OnSuccess : ActionType.OnFailure;
 
             foreach (StatusEffect effect in statusEffects)
             {
                 effect.sourceBody = sourceBody;
-                if (effect.HasTargetType(StatusEffect.TargetType.This))
+                if (effect.HasTargetType(StatusEffect.TargetType.This) || effect.HasTargetType(StatusEffect.TargetType.Character))
                 {
-                    effect.Apply(effectType, deltaTime, attacker, sourceLimb ?? attacker as ISerializableEntity);
+                    effect.Apply(conditionalEffectType, deltaTime, attacker, sourceLimb ?? attacker as ISerializableEntity);
+                    effect.Apply(ActionType.OnUse, deltaTime, attacker, sourceLimb ?? attacker as ISerializableEntity);
                 }
                 if (effect.HasTargetType(StatusEffect.TargetType.Parent))
                 {
-                    effect.Apply(effectType, deltaTime, attacker, attacker);
+                    effect.Apply(conditionalEffectType, deltaTime, attacker, attacker);
+                    effect.Apply(ActionType.OnUse, deltaTime, attacker, attacker);
                 }
-                if (effect.HasTargetType(StatusEffect.TargetType.Character))
+                if (effect.HasTargetType(StatusEffect.TargetType.UseTarget))
                 {
-                    effect.Apply(effectType, deltaTime, targetLimb.character, targetLimb.character);
+                    effect.Apply(conditionalEffectType, deltaTime, targetLimb.character, targetLimb.character);
+                    effect.Apply(ActionType.OnUse, deltaTime, targetLimb.character, targetLimb.character);
                 }
                 if (effect.HasTargetType(StatusEffect.TargetType.Limb))
                 {
-                    effect.Apply(effectType, deltaTime, targetLimb.character, targetLimb);
+                    effect.Apply(conditionalEffectType, deltaTime, targetLimb.character, targetLimb);
+                    effect.Apply(ActionType.OnUse, deltaTime, targetLimb.character, targetLimb);
                 }
                 if (effect.HasTargetType(StatusEffect.TargetType.AllLimbs))
                 {
-                    effect.Apply(effectType, deltaTime, targetLimb.character, targetLimb.character.AnimController.Limbs.Cast<ISerializableEntity>().ToList());
+                    // TODO: do we need the conversion to list here? It generates garbage.
+                    var targets = targetLimb.character.AnimController.Limbs.Cast<ISerializableEntity>().ToList();
+                    effect.Apply(conditionalEffectType, deltaTime, targetLimb.character, targets);
+                    effect.Apply(ActionType.OnUse, deltaTime, targetLimb.character, targets);
                 }
                 if (effect.HasTargetType(StatusEffect.TargetType.NearbyItems) ||
                     effect.HasTargetType(StatusEffect.TargetType.NearbyCharacters))
                 {
                     targets.Clear();
                     effect.AddNearbyTargets(worldPosition, targets);                
-                    effect.Apply(effectType, deltaTime, targetLimb.character, targets);
-                }
-                if (effect.HasTargetType(StatusEffect.TargetType.UseTarget))
-                {
-                    effect.Apply(effectType, deltaTime, targetLimb.character, attacker, worldPosition);
+                    effect.Apply(conditionalEffectType, deltaTime, targetLimb.character, targets);
+                    effect.Apply(ActionType.OnUse, deltaTime, targetLimb.character, targets);
                 }
                 if (effect.HasTargetType(StatusEffect.TargetType.Contained))
                 {
                     targets.Clear();
                     targets.AddRange(attacker.Inventory.AllItems);
-                    effect.Apply(effectType, deltaTime, attacker, targets);
+                    effect.Apply(conditionalEffectType, deltaTime, attacker, targets);
+                    effect.Apply(ActionType.OnUse, deltaTime, attacker, targets);
                 }
             }
 

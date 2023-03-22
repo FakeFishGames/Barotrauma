@@ -320,10 +320,10 @@ namespace Barotrauma
                     foreach (KeyValuePair<Identifier, float> treatmentSuitability in currentTreatmentSuitabilities)
                     {
                         if (treatmentSuitability.Value <= cprSuitability) { continue; }
-                        if (MapEntityPrefab.Find(null, treatmentSuitability.Key, showErrorMessages: false) is ItemPrefab itemPrefab)
+                        if (ItemPrefab.Prefabs.TryGet(treatmentSuitability.Key, out ItemPrefab itemPrefab))
                         {
-                            if (!Item.ItemList.Any(it => ((MapEntity)it).Prefab.Identifier == treatmentSuitability.Key)) { continue; }
-                            suitableItemIdentifiers.Add(treatmentSuitability.Key);
+                            if (Item.ItemList.None(it => it.Prefab.Identifier == treatmentSuitability.Key)) { continue; }
+                            suitableItemIdentifiers.Add(itemPrefab.Identifier);
                             //only list the first 4 items
                             if (itemNameList.Count < 4)
                             {
@@ -413,7 +413,7 @@ namespace Barotrauma
                 }
             }
         }
-         
+
         private void ApplyTreatment(Affliction affliction, Item item)
         {
             item.ApplyTreatment(character, targetCharacter, targetCharacter.CharacterHealth.GetAfflictionLimb(affliction));
@@ -481,18 +481,6 @@ namespace Barotrauma
         }
 
         public static IEnumerable<Affliction> GetSortedAfflictions(Character character, bool excludeBuffs = true) => CharacterHealth.SortAfflictionsBySeverity(character.CharacterHealth.GetAllAfflictions(), excludeBuffs);
-
-        public static IEnumerable<Affliction> GetTreatableAfflictions(Character character)
-        {
-            var allAfflictions = character.CharacterHealth.GetAllAfflictions();
-            foreach (Affliction affliction in allAfflictions)
-            {
-                if (affliction.Prefab.IsBuff || affliction.Strength < affliction.Prefab.TreatmentThreshold) { continue; }
-                if (!affliction.Prefab.TreatmentSuitability.Any(kvp => kvp.Value > 0)) { continue; }
-                if (allAfflictions.Any(otherAffliction => affliction.Prefab.IgnoreTreatmentIfAfflictedBy.Contains(otherAffliction.Identifier))) { continue; }
-                yield return affliction;
-            }
-        }
 
         public override void Reset()
         {

@@ -218,7 +218,10 @@ namespace Barotrauma.Networking
 
             foreach (Door door in shuttleDoors)
             {
-                if (door.IsOpen) door.TrySetState(false, false, true);
+                if (door.IsOpen)
+                {
+                    door.TrySetState(open: false, isNetworkMessage: false, sendNetworkMessage: true);
+                }
             }
 
             var shuttleGaps = Gap.GapList.FindAll(g => g.Submarine == RespawnShuttle && g.ConnectedWall != null);
@@ -439,8 +442,7 @@ namespace Barotrauma.Networking
                     }
 
                     clients[i].Character = character;
-                    character.OwnerClientAddress = clients[i].Connection.Endpoint.Address;
-                    character.OwnerClientName = clients[i].Name;
+                    character.SetOwnerClient(clients[i]);
                     GameServer.Log(
                         $"Respawning {GameServer.ClientLogName(clients[i])} ({clients[i].Connection.Endpoint}) as {characterInfos[i].Job.Name}", ServerLog.MessageType.Spawning);
                 }

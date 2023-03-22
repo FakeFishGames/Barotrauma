@@ -1,13 +1,10 @@
 ﻿using Barotrauma.Particles;
+using Barotrauma.Sounds;
 using FarseerPhysics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
-using Barotrauma.IO;
-using System.Text;
-using System.Xml.Linq;
-using Barotrauma.Sounds;
 using System.Linq;
 
 namespace Barotrauma.Items.Components
@@ -169,11 +166,11 @@ namespace Barotrauma.Items.Components
         partial void LaunchProjSpecific()
         {
             Vector2 particlePos = item.WorldPosition + ConvertUnits.ToDisplayUnits(TransformedBarrelPos);
-            float rotation = -item.body.Rotation;
+            float rotation = item.body.Rotation;
 			if (item.body.Dir < 0.0f) { rotation += MathHelper.Pi; }
             foreach (ParticleEmitter emitter in particleEmitters)
             {
-                emitter.Emit(1.0f, particlePos, hullGuess: item.CurrentHull, angle: rotation, particleRotation: rotation);
+                emitter.Emit(1.0f, particlePos, hullGuess: item.CurrentHull, angle: rotation, particleRotation: -rotation);
             }
         }
 

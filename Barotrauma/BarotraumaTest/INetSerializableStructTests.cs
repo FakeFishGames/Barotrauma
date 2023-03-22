@@ -217,6 +217,9 @@ namespace TestProject
             public T NotSerializedFunction() => throw new NotImplementedException();
         }
 
+        [NetworkSerialize]
+        private readonly record struct TestRecord<T>(T Value) : INetSerializableStruct;
+
         private struct TupleNullableStruct<T, U> : INetSerializableStruct
         {
             [NetworkSerialize]
@@ -248,24 +251,35 @@ namespace TestProject
             readStruct.IntValue.Should().Be(intValue);
         }
 
-        private static void SerializeDeserialize<T>(T arg) where T : notnull
+        private static void SerializeDeserializeImpl<T>(T toWrite) where T : INetSerializableStruct
         {
             ReadWriteMessage msg = new ReadWriteMessage();
-            TestStruct<T> writeStruct = new TestStruct<T>
-            {
-                Value = arg
-            };
 
-            msg.WriteNetSerializableStruct(writeStruct);
+            msg.WriteNetSerializableStruct(toWrite);
             msg.BitPosition = 0;
 
-            TestStruct<T> readStruct = INetSerializableStruct.Read<TestStruct<T>>(msg);
+            T read = INetSerializableStruct.Read<T>(msg);
 
-            readStruct.Should().BeEquivalentTo(writeStruct, options => options
-                .ComparingByMembers<TestStruct<T>>()
+            read.Should().BeEquivalentTo(toWrite, options => options
+                .ComparingByMembers<T>()
                 .ComparingByMembers(typeof(Option<>)));
         }
 
+        private static void SerializeDeserializeStruct<T>(T arg) where T : notnull
+            => SerializeDeserializeImpl(new TestStruct<T>
+            {
+                Value = arg
+            });
+
+        private static void SerializeDeserializeRecord<T>(T arg) where T : notnull
+            => SerializeDeserializeImpl(new TestRecord<T>(arg));
+
+        private static void SerializeDeserialize<T>(T arg) where T : notnull
+        {
+            SerializeDeserializeStruct(arg);
+            SerializeDeserializeRecord(arg);
+        }
+        
         private static void SerializeDeserializeNullableTuple<T, U>(T arg1, U arg2)
         {
             ReadWriteMessage msg = new ReadWriteMessage();

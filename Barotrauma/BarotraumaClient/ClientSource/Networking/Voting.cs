@@ -13,13 +13,11 @@ namespace Barotrauma
         {
             public SubmarineInfo SubmarineInfo { get; set; }
             public bool TransferItems { get; set; }
-            public int DeliveryFee { get; set; }
 
-            public SubmarineVoteInfo(SubmarineInfo submarineInfo, bool transferItems, int deliveryFee)
+            public SubmarineVoteInfo(SubmarineInfo submarineInfo, bool transferItems)
             {
                 SubmarineInfo = submarineInfo;
                 TransferItems = transferItems;
-                DeliveryFee = deliveryFee;
             }
         }
 
@@ -98,16 +96,15 @@ namespace Barotrauma
             foreach (GUIComponent comp in listBox.Content.Children)
             {
                 if (comp.UserData != userData) { continue; }
-                if (!(comp.FindChild("votes") is GUITextBlock voteText))
+                if (comp.FindChild("votes") is not GUITextBlock voteText)
                 {
-                    voteText = new GUITextBlock(new RectTransform(new Point(30, comp.Rect.Height), comp.RectTransform, Anchor.CenterRight),
-                        "", textAlignment: Alignment.CenterRight)
+                    voteText = new GUITextBlock(new RectTransform(new Point(GUI.IntScale(30), comp.Rect.Height), comp.RectTransform, Anchor.CenterRight),
+                        "", textAlignment: Alignment.Center)
                     {
                         Padding = Vector4.Zero,
                         UserData = "votes"
                     };
                 }
-
                 voteText.Text = votes == 0 ? "" : votes.ToString();
             }
         }
@@ -129,64 +126,72 @@ namespace Barotrauma
             UpdateVoteTexts(connectedClients, VoteType.Sub);
         }
 
-        public void ClientWrite(IWriteMessage msg, VoteType voteType, object data)
+        /// <summary>
+        /// Returns true if the given data is valid for the given vote type,
+        /// returns false otherwise. If it returns false, the message must
+        /// be discarded or reset by the caller, as it is now malformed :)
+        /// </summary>
+        public bool ClientWrite(IWriteMessage msg, VoteType voteType, object data)
         {
             msg.WriteByte((byte)voteType);
 
             switch (voteType)
             {
                 case VoteType.Sub:
-                    if (!(data is SubmarineInfo sub)) { return; }
+                    if (data is not SubmarineInfo sub) { return false; }
                     msg.WriteInt32(sub.EqualityCheckVal);
-                    if (sub.EqualityCheckVal == 0)
+                    if (sub.EqualityCheckVal <= 0)
                     {
                         //sub doesn't exist client-side, use hash to let the server know which one we voted for
                         msg.WriteString(sub.MD5Hash.StringRepresentation);
                     }
                     break;
                 case VoteType.Mode:
-                    if (!(data is GameModePreset gameMode)) { return; }
+                    if (data is not GameModePreset gameMode) { return false; }
                     msg.WriteIdentifier(gameMode.Identifier);
                     break;
                 case VoteType.EndRound:
-                    if (!(data is bool)) { return; }
-                    msg.WriteBoolean((bool)data);
+                    if (data is not bool endRound) { return false; }
+                    msg.WriteBoolean(endRound);
                     break;
                 case VoteType.Kick:
-                    if (!(data is Client votedClient)) { return; }
+                    if (data is not Client votedClient) { return false; }
 
                     msg.WriteByte(votedClient.SessionId);
                     break;
                 case VoteType.StartRound:
-                    if (!(data is bool)) { return; }
-                    msg.WriteBoolean((bool)data);
+                    if (data is not bool startRound) { return false; }
+                    msg.WriteBoolean(startRound);
                     break;
                 case VoteType.PurchaseAndSwitchSub:
                 case VoteType.PurchaseSub:
                 case VoteType.SwitchSub:
-                    if (data is (SubmarineInfo voteSub, bool transferItems))
-                    { 
-                        //initiate sub vote
-                        msg.WriteBoolean(true);
-                        msg.WriteString(voteSub.Name);
-                        msg.WriteBoolean(transferItems);
-                    }
-                    else
+                    switch (data)
                     {
-                        // vote
-                        if (!(data is int)) { return; }
-                        msg.WriteBoolean(false);
-                        msg.WriteInt32((int)data);
+                        case (SubmarineInfo voteSub, bool transferItems):
+                            //initiate sub vote
+                            msg.WriteBoolean(true);
+                            msg.WriteString(voteSub.Name);
+                            msg.WriteBoolean(transferItems);
+                            break;
+                        case int vote:
+                            // vote
+                            msg.WriteBoolean(false);
+                            msg.WriteInt32(vote);
+                            break;
+                        default:
+                            return false;
                     }
                     break;
                 case VoteType.TransferMoney:
-                    if (!(data is int)) { return; }
+                    if (data is not int money) { return false; }
                     msg.WriteBoolean(false); //not initiating a vote
-                    msg.WriteInt32((int)data);
+                    msg.WriteInt32(money);
                     break;
             }
 
             msg.WritePadBits();
+            return true;
         }
         
         public void ClientRead(IReadMessage inc)
@@ -323,33 +328,34 @@ namespace Barotrauma
                             case VoteType.PurchaseAndSwitchSub:
                             case VoteType.SwitchSub:
                                 string subName2 = inc.ReadString();
-                                var submarineInfo = GameMain.GameSession.OwnedSubmarines.FirstOrDefault(s => s.Name == subName2) ?? GameMain.Client.ServerSubmarines.FirstOrDefault(s => s.Name == subName2);
                                 bool transferItems = inc.ReadBoolean();
-                                int deliveryFee = inc.ReadInt16();
-                                if (submarineInfo == null)
+                                if (GameMain.GameSession != null)
                                 {
-                                    DebugConsole.ThrowError("Failed to find a matching submarine, vote aborted");
-                                    return;
+                                    var submarineInfo = GameMain.GameSession.OwnedSubmarines.FirstOrDefault(s => s.Name == subName2) ?? GameMain.Client.ServerSubmarines.FirstOrDefault(s => s.Name == subName2);
+                                    if (submarineInfo == null)
+                                    {
+                                        DebugConsole.ThrowError("Failed to find a matching submarine, vote aborted");
+                                        return;
+                                    }
+                                    submarineVoteInfo = new SubmarineVoteInfo(submarineInfo, transferItems);
                                 }
-                                submarineVoteInfo = new SubmarineVoteInfo(submarineInfo, transferItems, deliveryFee);
                                 break;
                         }
 
-                        GameMain.Client.VotingInterface?.EndVote(passed, yesClientCount, noClientCount);                        
-
+                        GameMain.Client.VotingInterface?.EndVote(passed, yesClientCount, noClientCount);
                         if (passed && submarineVoteInfo.SubmarineInfo is { } subInfo)
                         {
                             switch (voteType)
                             {
                                 case VoteType.PurchaseAndSwitchSub:
                                     GameMain.GameSession.PurchaseSubmarine(subInfo);
-                                    GameMain.GameSession.SwitchSubmarine(subInfo, submarineVoteInfo.TransferItems, 0);
+                                    GameMain.GameSession.SwitchSubmarine(subInfo, submarineVoteInfo.TransferItems);
                                     break;
                                 case VoteType.PurchaseSub:
                                     GameMain.GameSession.PurchaseSubmarine(subInfo);
                                     break;
                                 case VoteType.SwitchSub:
-                                    GameMain.GameSession.SwitchSubmarine(subInfo, submarineVoteInfo.TransferItems, submarineVoteInfo.DeliveryFee);
+                                    GameMain.GameSession.SwitchSubmarine(subInfo, submarineVoteInfo.TransferItems);
                                     break;
                             }
 

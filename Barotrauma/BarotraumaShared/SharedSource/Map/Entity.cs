@@ -18,9 +18,9 @@ namespace Barotrauma
 
         public const ushort ReservedIDStart = ushort.MaxValue - 3;
 
-        public const ushort MaxEntityCount = ushort.MaxValue - 2; //ushort.MaxValue - 2 because 0 and ushort.MaxValue are reserved values
+        public const ushort MaxEntityCount = ushort.MaxValue - 4; //ushort.MaxValue - 4 because the 4 values above are reserved values
 
-        private static Dictionary<ushort, Entity> dictionary = new Dictionary<ushort, Entity>();
+        private static readonly Dictionary<ushort, Entity> dictionary = new Dictionary<ushort, Entity>();
         public static IReadOnlyCollection<Entity> GetEntities()
         {
             return dictionary.Values;
@@ -36,6 +36,10 @@ namespace Barotrauma
 
         public bool IdFreed { get; private set; }
 
+        /// <summary>
+        /// Unique, but non-persistent identifier.
+        /// Stays the same if the entities are created in the exactly same order, but doesn't persist e.g. between the rounds.
+        /// </summary>
         public readonly ushort ID;
 
         public virtual Vector2 SimPosition => Vector2.Zero;
@@ -84,6 +88,28 @@ namespace Barotrauma
         {
             this.Submarine = submarine;
             spawnTime = Timing.TotalTime;
+
+            if (dictionary.Count >= MaxEntityCount)
+            {
+                Dictionary<Identifier, int> entityCounts = new Dictionary<Identifier, int>();
+                foreach (var entity in dictionary)
+                {
+                    if (entity.Value is MapEntity me)
+                    {
+                        if (entityCounts.ContainsKey(me.Prefab.Identifier))
+                        {
+                            entityCounts[me.Prefab.Identifier]++;
+                        }
+                        else
+                        {
+                            entityCounts[me.Prefab.Identifier] = 1;
+                        }
+                    }
+                }
+                string errorMsg = $"Maximum amount of entities ({MaxEntityCount}) exceeded! Largest numbers of entities: " +
+                  string.Join(", ", entityCounts.OrderByDescending(kvp => kvp.Value).Take(10).Select(kvp => $"{kvp.Key}: {kvp.Value}"));
+                throw new Exception(errorMsg);
+            }
 
             //give a unique ID
             ID = DetermineID(id, submarine);

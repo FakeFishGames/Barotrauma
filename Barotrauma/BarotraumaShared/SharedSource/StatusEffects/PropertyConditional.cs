@@ -75,6 +75,7 @@ namespace Barotrauma
                 case "targetgrandparent":
                 case "targetcontaineditem":
                 case "skillrequirement":
+                case "targetslot":
                     return false;
                 default:
                     return true;
@@ -267,7 +268,7 @@ namespace Barotrauma
                     {
                         if (target == null) { return Operator == OperatorType.NotEquals; }
                         if (!(target is Character targetCharacter)) { return false; }
-                        return (Operator == OperatorType.Equals) == targetCharacter.Params.CompareGroup(AttributeValue.ToIdentifier());
+                        return (Operator == OperatorType.Equals) == CharacterParams.CompareGroup(AttributeValue.ToIdentifier(), targetCharacter.Group);
                     }
                 case ConditionType.EntityType:
                     switch (AttributeValue)

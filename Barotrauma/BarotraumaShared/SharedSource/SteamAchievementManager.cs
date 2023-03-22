@@ -219,10 +219,10 @@ namespace Barotrauma
             UnlockAchievement($"discover{biome.Identifier.Value.Replace(" ", "")}".ToIdentifier());
         }
 
-        public static void OnCampaignMetadataSet(Identifier identifier, object value)
+        public static void OnCampaignMetadataSet(Identifier identifier, object value, bool unlockClients = false)
         {
             if (identifier.IsEmpty || value is null) { return; }
-            UnlockAchievement($"campaignmetadata_{identifier}_{value}".ToIdentifier());
+            UnlockAchievement($"campaignmetadata_{identifier}_{value}".ToIdentifier(), unlockClients);
         }
 
         public static void OnItemRepaired(Item item, Character fixer)
@@ -234,6 +234,15 @@ namespace Barotrauma
             
             UnlockAchievement(fixer, "repairdevice".ToIdentifier());
             UnlockAchievement(fixer, $"repair{item.Prefab.Identifier}".ToIdentifier());
+        }
+
+        public static void OnAfflictionReceived(Affliction affliction, Character character)
+        {
+            if (affliction.Prefab.AchievementOnReceived.IsEmpty) { return; }
+#if CLIENT
+            if (GameMain.Client != null) { return; }
+#endif
+            UnlockAchievement(character, affliction.Prefab.AchievementOnReceived);
         }
 
         public static void OnAfflictionRemoved(Affliction affliction, Character character)
@@ -302,6 +311,7 @@ namespace Barotrauma
                 UnlockAchievement(causeOfDeath.Killer, "killclown".ToIdentifier());
             }
 
+            // TODO: should we change this? Morbusine used to be the strongest poison. Now Cyanide is strongest.
             if (character.CharacterHealth?.GetAffliction("morbusinepoisoning") != null)
             {
                 UnlockAchievement(causeOfDeath.Killer, "killpoison".ToIdentifier());
@@ -315,6 +325,7 @@ namespace Barotrauma
                 }
                 else
                 {
+                    // TODO: should we change this? Morbusine used to be the strongest poison. Now Cyanide is strongest.
                     if (item.Prefab.Identifier == "morbusine")
                     {
                         UnlockAchievement(causeOfDeath.Killer, "killpoison".ToIdentifier());

@@ -188,7 +188,6 @@ namespace Barotrauma
 
         public float GetRotation(ref float rotationState, float randomRotationFactor)
         {
-            RotationSpeed = -Math.Abs(RotationSpeed);
             switch (RotationAnim)
             {
                 case AnimationType.Sine:

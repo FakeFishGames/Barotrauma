@@ -23,7 +23,21 @@ namespace Barotrauma
 
         private readonly List<SerializableEntityEditor> activeEditors = new List<SerializableEntityEditor>();
 
-        public GUIComponentStyle IconStyle { get; private set; } = null;
+
+        private GUIComponentStyle iconStyle;
+        public GUIComponentStyle IconStyle 
+        { 
+            get { return iconStyle; }
+            private set
+            {
+                if (IconStyle != value)
+                {
+                    iconStyle = value;
+                    CheckIsHighlighted();
+                }
+            }
+        }
+
         partial void AssignCampaignInteractionTypeProjSpecific(CampaignMode.InteractionType interactionType)
         {
             if (interactionType == CampaignMode.InteractionType.None)
@@ -143,6 +157,18 @@ namespace Barotrauma
             return color;
         }
 
+        protected override void CheckIsHighlighted()
+        {
+            if (IsHighlighted || ExternalHighlight || IconStyle != null)
+            {
+                highlightedEntities.Add(this);
+            }
+            else
+            {
+                highlightedEntities.Remove(this);
+            }
+        }
+
         public Color GetInventoryIconColor()
         {
             Color color = InventoryIconColor;
@@ -203,7 +229,7 @@ namespace Barotrauma
             }
         }
 
-        partial void InitProjSpecific()
+        public void InitSpriteStates()
         {
             Prefab.Sprite?.EnsureLazyLoaded();
             Prefab.InventoryIcon?.EnsureLazyLoaded();
@@ -211,7 +237,6 @@ namespace Barotrauma
             {
                 brokenSprite.Sprite.EnsureLazyLoaded();
             }
-
             foreach (var decorativeSprite in Prefab.DecorativeSprites)
             {
                 decorativeSprite.Sprite.EnsureLazyLoaded();
@@ -219,6 +244,11 @@ namespace Barotrauma
             }
             SetActiveSprite();
             UpdateSpriteStates(0.0f);
+        }
+
+        partial void InitProjSpecific()
+        {
+            InitSpriteStates();
         }
 
         private Rectangle? cachedVisibleExtents;
@@ -277,7 +307,8 @@ namespace Barotrauma
                 cachedVisibleExtents = extents = new Rectangle(min.ToPoint(), max.ToPoint());
             }
 
-            Vector2 worldPosition = WorldPosition;
+            Vector2 worldPosition = WorldPosition + GetCollapseEffectOffset();
+
             if (worldPosition.X + extents.X > worldView.Right || worldPosition.X + extents.Width < worldView.X) { return false; }
             if (worldPosition.Y + extents.Height < worldView.Y - worldView.Height || worldPosition.Y + extents.Y > worldView.Y) { return false; }
 
@@ -306,7 +337,9 @@ namespace Barotrauma
             BrokenItemSprite fadeInBrokenSprite = null;
             float fadeInBrokenSpriteAlpha = 0.0f;
             float displayCondition = FakeBroken ? 0.0f : ConditionPercentage;
-            Vector2 drawOffset = Vector2.Zero;
+            Vector2 drawOffset = GetCollapseEffectOffset();
+            drawOffset.Y = -drawOffset.Y;            
+
             if (displayCondition < MaxCondition)
             {
                 for (int i = 0; i < Prefab.BrokenSprites.Length; i++)
@@ -422,6 +455,8 @@ namespace Barotrauma
                     var holdable = GetComponent<Holdable>();
                     if (holdable != null && holdable.Picker?.AnimController != null)
                     {
+                        //don't draw the item on hands if it's also being worn
+                        if (GetComponent<Wearable>() is { IsActive: true }) { return; }
                         if (!back) { return; }
                         float depthStep = 0.000001f;
                         if (holdable.Picker.Inventory?.GetItemInLimbSlot(InvSlotType.RightHand) == this)
@@ -724,7 +759,7 @@ namespace Barotrauma
             if (!lClick && !rClick) { return; }
 
             Vector2 position = cam.ScreenToWorld(PlayerInput.MousePosition);
-            var otherEntity = mapEntityList.FirstOrDefault(e => e != this && e.IsHighlighted && e.IsMouseOn(position));
+            var otherEntity = highlightedEntities.FirstOrDefault(e => e != this && e.IsMouseOn(position));
             if (otherEntity != null)
             {
                 if (linkedTo.Contains(otherEntity))
@@ -1409,7 +1444,7 @@ namespace Barotrauma
 
                         if (targetComponent == null)
                         {
-                            ApplyStatusEffects(actionType, 1.0f, targetCharacter, targetLimb, useTarget, true, worldPosition: worldPosition);
+                            ApplyStatusEffects(actionType, 1.0f, targetCharacter, targetLimb, useTarget, isNetworkEvent: true, worldPosition: worldPosition);
                         }
                         else
                         {
@@ -1668,25 +1703,24 @@ namespace Barotrauma
             bool hasIdCard          = msg.ReadBoolean();
             string ownerName = "", ownerTags = "";
             int ownerBeardIndex = -1, ownerHairIndex = -1, ownerMoustacheIndex = -1, ownerFaceAttachmentIndex = -1;
-            Color ownerHairColor = Microsoft.Xna.Framework.Color.White,
-                ownerFacialHairColor = Microsoft.Xna.Framework.Color.White,
-                ownerSkinColor = Microsoft.Xna.Framework.Color.White;
+            Color ownerHairColor = Color.White,
+                ownerFacialHairColor = Color.White,
+                ownerSkinColor = Color.White;
             Identifier ownerJobId = Identifier.Empty;
             Vector2 ownerSheetIndex = Vector2.Zero;
+            int submarineSpecificId = 0;
             if (hasIdCard)
             {
+                submarineSpecificId = msg.ReadInt32();
                 ownerName = msg.ReadString();
-                ownerTags = msg.ReadString();
-                
+                ownerTags = msg.ReadString();                
                 ownerBeardIndex = msg.ReadByte() - 1;
                 ownerHairIndex = msg.ReadByte() - 1;
                 ownerMoustacheIndex = msg.ReadByte() - 1;
-                ownerFaceAttachmentIndex = msg.ReadByte() - 1;
-                
+                ownerFaceAttachmentIndex = msg.ReadByte() - 1;                
                 ownerHairColor = msg.ReadColorR8G8B8();
                 ownerFacialHairColor = msg.ReadColorR8G8B8();
-                ownerSkinColor = msg.ReadColorR8G8B8();
-                
+                ownerSkinColor = msg.ReadColorR8G8B8();                
                 ownerJobId = msg.ReadIdentifier();
                 
                 int x = msg.ReadByte();
@@ -1790,6 +1824,7 @@ namespace Barotrauma
             }
             foreach (IdCard idCard in item.GetComponents<IdCard>())
             {
+                idCard.SubmarineSpecificID = submarineSpecificId;
                 idCard.TeamID = (CharacterTeamType)teamID;
                 idCard.OwnerName = ownerName;
                 idCard.OwnerTags = ownerTags;

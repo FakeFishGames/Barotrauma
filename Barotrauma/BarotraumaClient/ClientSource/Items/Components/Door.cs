@@ -182,7 +182,7 @@ namespace Barotrauma.Items.Components
             if (brokenSprite == null)
             {
                 //broken doors turn black if no broken sprite has been configured
-                color *= (item.Condition / item.MaxCondition);
+                color = color.Multiply(item.Condition / item.MaxCondition);
                 color.A = 255;
             }
             
@@ -216,16 +216,19 @@ namespace Barotrauma.Items.Components
 
             if (brokenSprite == null || !IsBroken)
             {
-                spriteBatch.Draw(doorSprite.Texture, pos,
-                    getSourceRect(doorSprite, openState, IsHorizontal),
-                    color, 0.0f, doorSprite.Origin, item.Scale, item.SpriteEffects, doorSprite.Depth);
+                if (doorSprite?.Texture != null)
+                {
+                    spriteBatch.Draw(doorSprite.Texture, pos,
+                        getSourceRect(doorSprite, openState, IsHorizontal),
+                        color, 0.0f, doorSprite.Origin, item.Scale, item.SpriteEffects, doorSprite.Depth);
+                }
             }
 
             float maxCondition = item.Repairables.Any() ? 
                 item.Repairables.Min(r => r.RepairThreshold) / 100.0f * item.MaxCondition : 
                 item.MaxCondition;
             float healthRatio = item.Health / maxCondition;
-            if (brokenSprite != null && healthRatio < 1.0f)
+            if (brokenSprite?.Texture != null && healthRatio < 1.0f)
             {
                 Vector2 scale = scaleBrokenSprite ? new Vector2(1.0f - healthRatio) : Vector2.One;
                 if (IsHorizontal) { scale.X = 1; } else { scale.Y = 1; }
@@ -285,34 +288,45 @@ namespace Barotrauma.Items.Components
                 //sent by the server, or reverting it back to its old state if no msg from server was received
                 PredictedState = open;
                 resetPredictionTimer = CorrectionDelay;
-                if (stateChanged) PlaySound(forcedOpen ? ActionType.OnPicked : ActionType.OnUse);
+                if (stateChanged && !IsBroken)
+                {
+                    PlayInteractionSound();
+                }
             }
             else
             {
                 isOpen = open;
                 if (!isNetworkMessage || open != PredictedState)
                 {
-                    StopPicking(null);
-                    ActionType actionType = ActionType.OnUse;
-                    if (forcedOpen)
+                    StopPicking(null); 
+                    if (!IsBroken)
                     {
-                        actionType = ActionType.OnPicked;
+                        PlayInteractionSound();
                     }
-                    else
-                    {
-                        if (open && HasSoundsOfType[(int)ActionType.OnOpen])
-                        {
-                            actionType = ActionType.OnOpen;
-                        }
-                        else if (!open && HasSoundsOfType[(int)ActionType.OnClose])
-                        {
-                            actionType = ActionType.OnClose;
-                        }
-                    }
-                    PlaySound(actionType);
                     if (isOpen) { stuck = MathHelper.Clamp(stuck - StuckReductionOnOpen, 0.0f, 100.0f); }
                 }
-            }       
+            }
+            
+            void PlayInteractionSound()
+            {
+                ActionType actionType = ActionType.OnUse;
+                if (forcedOpen)
+                {
+                    actionType = ActionType.OnPicked;
+                }
+                else
+                {
+                    if (open && HasSoundsOfType[(int)ActionType.OnOpen])
+                    {
+                        actionType = ActionType.OnOpen;
+                    }
+                    else if (!open && HasSoundsOfType[(int)ActionType.OnClose])
+                    {
+                        actionType = ActionType.OnClose;
+                    }
+                }
+                PlaySound(actionType);
+            }
         }
 
         public override void ClientEventRead(IReadMessage msg, float sendingTime)

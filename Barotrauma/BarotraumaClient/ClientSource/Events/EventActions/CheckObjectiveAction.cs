@@ -8,7 +8,8 @@ partial class CheckObjectiveAction : BinaryOptionAction
     public enum CheckType
     {
         Added,
-        Completed
+        Completed,
+        Incomplete
     }
 
     [Serialize(CheckType.Completed, IsPropertySaveable.Yes)]
@@ -30,8 +31,13 @@ partial class CheckObjectiveAction : BinaryOptionAction
             {
                 CheckType.Added => true,
                 CheckType.Completed => segment.IsCompleted,
+                CheckType.Incomplete => !segment.IsCompleted,
                 _ => false
             };
+        }
+        else if (Type == CheckType.Incomplete)
+        {
+            success = true;
         }
     }
 }

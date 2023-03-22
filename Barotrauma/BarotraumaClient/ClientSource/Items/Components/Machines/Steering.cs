@@ -340,6 +340,10 @@ namespace Barotrauma.Items.Components
                         centerText = $"({TextManager.Get("Meter")})";
                         rightTextGetter = () =>
                         {
+                            if (Level.Loaded is { IsEndBiome: true })
+                            {
+                                return Timing.TotalTime % 5.0f < 0.5f ? Rand.Range(-9000, 9000).ToString() : "ERROR";
+                            }
                             float realWorldDepth = controlledSub == null ? -1000.0f : controlledSub.RealWorldDepth;
                             return ((int)realWorldDepth).ToString();
                         };

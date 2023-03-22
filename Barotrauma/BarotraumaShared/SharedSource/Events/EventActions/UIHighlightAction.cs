@@ -19,7 +19,9 @@ partial class UIHighlightAction : EventAction
         TurbineOutputSlider,
         DeconstructButton,
         RechargeSpeedSlider,
-        CPRButton
+        CPRButton,
+        CloseButton,
+        MessageBoxCloseButton
     }
 
     [Serialize(ElementId.None, IsPropertySaveable.Yes)]

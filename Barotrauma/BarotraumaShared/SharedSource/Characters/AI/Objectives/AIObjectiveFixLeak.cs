@@ -155,17 +155,21 @@ namespace Barotrauma
             bool canOperate = toLeak.LengthSquared() < reach * reach;
             if (canOperate)
             {
-                TryAddSubObjective(ref operateObjective, () => new AIObjectiveOperateItem(repairTool, character, objectiveManager, option: Identifier.Empty, requireEquip: true, operateTarget: Leak), 
-                    onAbandon: () => Abandon = true,
-                    onCompleted: () =>
+                TryAddSubObjective(ref operateObjective, () => new AIObjectiveOperateItem(repairTool, character, objectiveManager, option: Identifier.Empty, requireEquip: true, operateTarget: Leak)
+                {
+                    // Use an empty filter to override the default
+                    EndNodeFilter = n => true
+                }, 
+                onAbandon: () => Abandon = true,
+                onCompleted: () =>
+                {
+                    if (CheckObjectiveSpecific()) { IsCompleted = true; }
+                    else
                     {
-                        if (CheckObjectiveSpecific()) { IsCompleted = true; }
-                        else
-                        {
-                            // Failed to operate. Probably too far.
-                            Abandon = true;
-                        }
-                    });
+                        // Failed to operate. Probably too far.
+                        Abandon = true;
+                    }
+                });
             }
             else
             {
@@ -178,7 +182,7 @@ namespace Barotrauma
                     requiredCondition = () => 
                         Leak.Submarine == character.Submarine &&
                         Leak.linkedTo.Any(e => e is Hull h && (character.CurrentHull == h || h.linkedTo.Contains(character.CurrentHull))),
-                    endNodeFilter = n => n.Waypoint.CurrentHull != null && Leak.linkedTo.Any(e => e is Hull h && h == n.Waypoint.CurrentHull),
+                    endNodeFilter = IsSuitableEndNode,
                     // The Go To objective can be abandoned if the leak is fixed (in which case we don't want to use the dialogue)
                     SpeakCannotReachCondition = () => !CheckObjectiveSpecific()
                 },
@@ -197,6 +201,14 @@ namespace Barotrauma
                     }
                 },
                 onCompleted: () => RemoveSubObjective(ref gotoObjective));
+
+                bool IsSuitableEndNode(PathNode n)
+                {
+                    if (n.Waypoint.CurrentHull is null) { return false; }
+                    if (n.Waypoint.CurrentHull.ConnectedGaps.Contains(Leak)) { return true; }
+                    // Accept also nodes located in the linked hulls (multi-hull rooms)
+                    return Leak.linkedTo.Any(e => e is Hull h && h.linkedTo.Contains(n.Waypoint.CurrentHull));
+                }
             }
         }
 

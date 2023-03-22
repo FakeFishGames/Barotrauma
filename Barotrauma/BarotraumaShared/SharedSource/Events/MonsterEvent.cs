@@ -201,7 +201,7 @@ namespace Barotrauma
                 { 
                     continue; 
                 }
-                if (Level.Loaded.ExtraWalls.Any(w => w.IsPointInside(position.Position.ToVector2())))
+                if (Level.Loaded.IsPositionInsideWall(position.Position.ToVector2()))
                 {
                     removals.Add(position);
                 }

@@ -2,7 +2,7 @@
 
 The MIT License (MIT)
 
-Copyright (c) 2013-2019 Riley Labrecque
+Copyright (c) 2013-2022 Riley Labrecque
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -25,48 +25,60 @@ THE SOFTWARE.
 **/
 
 using System;
-using System.Net;
 using System.Runtime.InteropServices;
 
 namespace Steamworks
 {
     //-----------------------------------------------------------------------------
-    // Purpose: Callback interface for receiving responses after pinging an individual server 
+    // Purpose: Callback interface for receiving responses after requesting rules
+    // details on a particular server.
     //
     // These callbacks all occur in response to querying an individual server
-    // via the ISteamMatchmakingServers()->PingServer() call below.  If you are 
-    // destructing an object that implements this interface then you should call 
+    // via the ISteamMatchmakingServers()->ServerRules() call below.  If you are
+    // destructing an object that implements this interface then you should call
     // ISteamMatchmakingServers()->CancelServerQuery() passing in the handle to the query
     // which is in progress.  Failure to cancel in progress queries when destructing
     // a callback handler may result in a crash when a callback later occurs.
     //-----------------------------------------------------------------------------
-    public class SteamMatchmakingPingResponse
+    public class SteamMatchmakingRulesResponse
     {
-        // Server has responded successfully and has updated data
-        public delegate void ServerResponded(Steamworks.Data.ServerInfo server);
+        // Got data on a rule on the server -- you'll get one of these per rule defined on
+        // the server you are querying
+        public delegate void RulesResponded(string pchRule, string pchValue);
 
-        // Server failed to respond to the ping request
-        public delegate void ServerFailedToRespond();
+        // The server failed to respond to the request for rule details
+        public delegate void RulesFailedToRespond();
 
-        private VTable m_VTable;
-        private IntPtr m_pVTable;
+        // The server has finished responding to the rule details request
+        // (ie, you won't get anymore RulesResponded callbacks)
+        public delegate void RulesRefreshComplete();
+
+        private readonly VTable m_VTable;
+        private readonly IntPtr m_pVTable;
         private GCHandle m_pGCHandle;
-        private ServerResponded m_ServerResponded;
-        private ServerFailedToRespond m_ServerFailedToRespond;
+        private readonly RulesResponded m_RulesResponded;
+        private readonly RulesFailedToRespond m_RulesFailedToRespond;
+        private readonly RulesRefreshComplete m_RulesRefreshComplete;
 
-        public SteamMatchmakingPingResponse(ServerResponded onServerResponded, ServerFailedToRespond onServerFailedToRespond)
+        public SteamMatchmakingRulesResponse(
+            RulesResponded onRulesResponded,
+            RulesFailedToRespond onRulesFailedToRespond,
+            RulesRefreshComplete onRulesRefreshComplete)
         {
-            if (onServerResponded == null || onServerFailedToRespond == null)
+            if (onRulesResponded == null || onRulesFailedToRespond == null || onRulesRefreshComplete == null)
             {
                 throw new ArgumentNullException();
             }
-            m_ServerResponded = onServerResponded;
-            m_ServerFailedToRespond = onServerFailedToRespond;
+
+            m_RulesResponded = onRulesResponded;
+            m_RulesFailedToRespond = onRulesFailedToRespond;
+            m_RulesRefreshComplete = onRulesRefreshComplete;
 
             m_VTable = new VTable()
             {
-                m_VTServerResponded = InternalOnServerResponded,
-                m_VTServerFailedToRespond = InternalOnServerFailedToRespond,
+                m_VTRulesResponded = InternalOnRulesResponded,
+                m_VTRulesFailedToRespond = InternalOnRulesFailedToRespond,
+                m_VTRulesRefreshComplete = InternalOnRulesRefreshComplete
             };
             m_pVTable = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(VTable)));
             Marshal.StructureToPtr(m_VTable, m_pVTable, false);
@@ -74,21 +86,7 @@ namespace Steamworks
             m_pGCHandle = GCHandle.Alloc(m_pVTable, GCHandleType.Pinned);
         }
 
-        private Data.HServerQuery hserverPing = 0;
-        public bool QueryActive { get { return hserverPing != 0; } }
-
-        public void Cancel()
-        {
-            if (hserverPing != 0) { ServerList.Base.Internal.CancelServerQuery(hserverPing); }
-            hserverPing = 0;
-        }
-
-        public void HQueryPing(IPAddress ip, int port)
-        {
-            hserverPing = ServerList.Base.Internal.PingServer(ip.IpToInt32(), (ushort)port, (IntPtr)this);
-        }
-
-        ~SteamMatchmakingPingResponse()
+        ~SteamMatchmakingRulesResponse()
         {
             if (m_pVTable != IntPtr.Zero)
             {
@@ -102,48 +100,69 @@ namespace Steamworks
         }
 
 #if NOTHISPTR
-		[UnmanagedFunctionPointer(CallingConvention.StdCall)]
-		private delegate void InternalServerResponded(gameserveritem_t server);
-		[UnmanagedFunctionPointer(CallingConvention.StdCall)]
-		private delegate void InternalServerFailedToRespond();
-		private void InternalOnServerResponded(gameserveritem_t server) {
-			m_ServerResponded(server);
-		}
-		private void InternalOnServerFailedToRespond() {
-			m_ServerFailedToRespond();
-		}
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        public delegate void InternalRulesResponded(IntPtr pchRule, IntPtr pchValue);
+
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        public delegate void InternalRulesFailedToRespond();
+
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        public delegate void InternalRulesRefreshComplete();
+
+        private void InternalOnRulesResponded(IntPtr pchRule, IntPtr pchValue)
+        {
+            m_RulesResponded(Helpers.MemoryToString(pchRule), Helpers.MemoryToString(pchValue));
+        }
+
+        private void InternalOnRulesFailedToRespond()
+        {
+            m_RulesFailedToRespond();
+        }
+
+        private void InternalOnRulesRefreshComplete()
+        {
+            m_RulesRefreshComplete();
+        }
 #else
         [UnmanagedFunctionPointer(CallingConvention.ThisCall)]
-        private delegate void InternalServerResponded(IntPtr thisptr, Steamworks.Data.gameserveritem_t server);
+        public delegate void InternalRulesResponded(IntPtr thisptr, IntPtr pchRule, IntPtr pchValue);
+
         [UnmanagedFunctionPointer(CallingConvention.ThisCall)]
-        private delegate void InternalServerFailedToRespond(IntPtr thisptr);
-        private void InternalOnServerResponded(IntPtr thisptr, Steamworks.Data.gameserveritem_t server)
-        {
-            hserverPing = 0;
+        public delegate void InternalRulesFailedToRespond(IntPtr thisptr);
 
-            m_ServerResponded(Steamworks.Data.ServerInfo.From(server));
+        [UnmanagedFunctionPointer(CallingConvention.ThisCall)]
+        public delegate void InternalRulesRefreshComplete(IntPtr thisptr);
+
+        private void InternalOnRulesResponded(IntPtr thisptr, IntPtr pchRule, IntPtr pchValue)
+        {
+            m_RulesResponded(Helpers.MemoryToString(pchRule), Helpers.MemoryToString(pchValue));
         }
-        private void InternalOnServerFailedToRespond(IntPtr thisptr)
-        {
-            hserverPing = 0;
 
-            m_ServerFailedToRespond();
+        private void InternalOnRulesFailedToRespond(IntPtr thisptr)
+        {
+            m_RulesFailedToRespond();
+        }
+
+        private void InternalOnRulesRefreshComplete(IntPtr thisptr)
+        {
+            m_RulesRefreshComplete();
         }
 #endif
 
         [StructLayout(LayoutKind.Sequential)]
         private class VTable
         {
-            [NonSerialized]
-            [MarshalAs(UnmanagedType.FunctionPtr)]
-            public InternalServerResponded m_VTServerResponded;
+            [NonSerialized] [MarshalAs(UnmanagedType.FunctionPtr)]
+            public InternalRulesResponded m_VTRulesResponded;
 
-            [NonSerialized]
-            [MarshalAs(UnmanagedType.FunctionPtr)]
-            public InternalServerFailedToRespond m_VTServerFailedToRespond;
+            [NonSerialized] [MarshalAs(UnmanagedType.FunctionPtr)]
+            public InternalRulesFailedToRespond m_VTRulesFailedToRespond;
+
+            [NonSerialized] [MarshalAs(UnmanagedType.FunctionPtr)]
+            public InternalRulesRefreshComplete m_VTRulesRefreshComplete;
         }
 
-        public static explicit operator System.IntPtr(SteamMatchmakingPingResponse that)
+        public static explicit operator System.IntPtr(SteamMatchmakingRulesResponse that)
         {
             return that.m_pGCHandle.AddrOfPinnedObject();
         }

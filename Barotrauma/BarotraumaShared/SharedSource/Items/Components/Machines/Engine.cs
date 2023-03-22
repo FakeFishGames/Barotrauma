@@ -116,7 +116,7 @@ namespace Barotrauma.Items.Components
             {
                 float voltageFactor = MinVoltage <= 0.0f ? 1.0f : Math.Min(Voltage, MaxOverVoltageFactor);
                 float currForce = force * voltageFactor;
-                float condition = item.Condition / item.MaxCondition;
+                float condition = item.MaxCondition <= 0.0f ? 0.0f : item.Condition / item.MaxCondition;
                 // Broken engine makes more noise.
                 float noise = Math.Abs(currForce) * MathHelper.Lerp(1.5f, 1f, condition);
                 UpdateAITargets(noise);

@@ -31,17 +31,17 @@ namespace Barotrauma
         private Vector2 nestPosition;
 
 
-        public override IEnumerable<Vector2> SonarPositions
+        public override IEnumerable<(LocalizedString Label, Vector2 Position)> SonarLabels
         {
             get
             {
                 if (State > 0)
                 {
-                    Enumerable.Empty<Vector2>();
+                    yield break;
                 }
                 else
                 {
-                    yield return nestPosition;
+                    yield return (Prefab.SonarLabel, nestPosition);
                 }
             }
         }
@@ -274,7 +274,7 @@ namespace Barotrauma
                    
                     break;
                 case 1:
-                    if (!Submarine.MainSub.AtEndExit && !Submarine.MainSub.AtStartExit) { return; }
+                    if (!Submarine.MainSub.AtEitherExit) { return; }
                     State = 2;
                     break;
             }

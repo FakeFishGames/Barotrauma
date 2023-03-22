@@ -1,6 +1,5 @@
 #nullable enable
 using System.Linq;
-using Barotrauma.Extensions;
 using Barotrauma.Items.Components;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -34,7 +33,7 @@ namespace Barotrauma
                 {
                     BlueprintEffect.Dispose();
                     GameMain.Instance.Content.Unload();
-                    BlueprintEffect = GameMain.Instance.Content.Load<Effect>("Effects/blueprintshader_opengl");
+                    BlueprintEffect = EffectLoader.Load("Effects/blueprintshader");
                     GameMain.GameScreen.BlueprintEffect = BlueprintEffect;
                     return true;
                 }
@@ -50,7 +49,7 @@ namespace Barotrauma
             }
 
             dummyCharacter = Character.Create(CharacterPrefab.HumanSpeciesName, Vector2.Zero, "", id: Entity.DummyID, hasAi: false);
-            dummyCharacter.Info.Job = new Job(JobPrefab.Prefabs.FirstOrDefault(static jp => jp.Identifier == "assistant"));
+            dummyCharacter.Info.Job = new Job(JobPrefab.Prefabs.FirstOrDefault(static jp => jp.Identifier == "captain"));
             dummyCharacter.Info.Name = "Galldren";
             dummyCharacter.Inventory.CreateSlots();
             dummyCharacter.Info.GiveExperience(999999);

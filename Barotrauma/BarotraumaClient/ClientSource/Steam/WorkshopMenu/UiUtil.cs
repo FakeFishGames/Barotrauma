@@ -68,10 +68,13 @@ namespace Barotrauma.Steam
         }
 
         protected static void SwapDropdownValues<T>(
-            GUIDropDown dropdown, Func<T, LocalizedString> textFunc, IReadOnlyList<T> values, T currentValue,
+            GUIDropDown dropdown,
+            Func<T, LocalizedString> textFunc,
+            IReadOnlyList<T> values,
+            T currentValue,
             Action<T> setter)
         {
-            if (dropdown.ListBox.Content.Children.Any(c => !(c.UserData is T)))
+            if (dropdown.ListBox.Content.Children.Any(c => c.UserData is not T))
             {
                 throw new Exception("SwapValues must preserve the type of the dropdown's userdata");
             }

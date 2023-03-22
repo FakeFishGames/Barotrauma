@@ -49,7 +49,6 @@ namespace Barotrauma
         OnUseRangedWeapon,
         OnReduceAffliction,
         OnAddDamageAffliction,
-        OnSelfRagdoll,
         OnRagdoll,
         OnRoundEnd,
         OnLootCharacter,
@@ -147,6 +146,8 @@ namespace Barotrauma
         StoreSellMultiplier,
         StoreBuyMultiplierAffiliated,
         StoreBuyMultiplier,
+        ShipyardBuyMultiplierAffiliated,
+        ShipyardBuyMultiplier,
         MaxAttachableCount,
         ExplosionRadiusMultiplier,
         ExplosionDamageMultiplier,
@@ -155,7 +156,8 @@ namespace Barotrauma
         HoldBreathMultiplier,
         Apprenticeship,
         Affiliation,
-        CPRBoost
+        CPRBoost,
+        LockedTalents
     }
 
     internal enum ItemTalentStats

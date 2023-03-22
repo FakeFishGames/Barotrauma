@@ -398,12 +398,9 @@ namespace Barotrauma
 
         public override void Draw(double deltaTime, GraphicsDevice graphics, SpriteBatch spriteBatch)
         {
-            GameMain.MainMenuScreen.DrawBackground(graphics, spriteBatch); //wtf
-
             spriteBatch.Begin(SpriteSortMode.Deferred, null, GUI.SamplerState, null, GameMain.ScissorTestEnable);
-            
+            GameMain.MainMenuScreen.DrawBackground(graphics, spriteBatch);            
             GUI.Draw(Cam, spriteBatch);
-
             spriteBatch.End();
         }
     }

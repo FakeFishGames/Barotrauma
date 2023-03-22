@@ -14,6 +14,8 @@ namespace Barotrauma
         public enum NetworkHeader
         {
             REQUEST_AFFLICTIONS,
+            AFFLICTION_UPDATE,
+            UNSUBSCRIBE_ME,
             REQUEST_PENDING,
             ADD_PENDING,
             REMOVE_PENDING,
@@ -295,6 +297,42 @@ namespace Barotrauma
             static int GetHealPrice(Affliction affliction) => (int)(affliction.Prefab.BaseHealCost + (affliction.Prefab.HealCostMultiplier * affliction.Strength));
         }
 
+        public static void OnAfflictionCountChanged(Character character) =>
+            GameMain.GameSession?.Campaign?.MedicalClinic?.OnAfflictionCountChangedPrivate(character);
+
+        private void OnAfflictionCountChangedPrivate(Character character)
+        {
+            if (character is not { CharacterHealth: { } health, Info: { } info }) { return; }
+
+            ImmutableArray<NetAffliction> afflictions = GetAllAfflictions(health);
+
+#if CLIENT
+            if (GameMain.NetworkMember is null)
+            {
+                ui?.UpdateAfflictions(new NetCrewMember(info, afflictions));
+            }
+
+            ui?.UpdateCrewPanel();
+#elif SERVER
+            foreach (AfflictionSubscriber sub in afflictionSubscribers.ToList())
+            {
+                if (sub.Expiry < DateTimeOffset.Now)
+                {
+                    afflictionSubscribers.Remove(sub);
+                    continue;
+                }
+
+                if (sub.Target == info)
+                {
+                    ServerSend(new NetCrewMember(info, afflictions),
+                        header: NetworkHeader.AFFLICTION_UPDATE,
+                        deliveryMethod: DeliveryMethod.Unreliable,
+                        targetClient: sub.Subscriber);
+                }
+            }
+#endif
+        }
+
         public int GetTotalCost() => PendingHeals.SelectMany(static h => h.Afflictions).Aggregate(0, static (current, affliction) => current + affliction.Price);
 
         private int GetAdjustedPrice(int price) => campaign?.Map?.CurrentLocation is { Type: { HasOutpost: true } } currentLocation ? currentLocation.GetAdjustedHealCost(price) : int.MaxValue;
@@ -330,7 +368,7 @@ namespace Barotrauma
             new NetAffliction { Identifier = "internaldamage".ToIdentifier(), Strength = 80, Price = 10 },
             new NetAffliction { Identifier = "blunttrauma".ToIdentifier(), Strength = 50, Price = 10 },
             new NetAffliction { Identifier = "lacerations".ToIdentifier(), Strength = 20, Price = 10 },
-            new NetAffliction { Identifier = "burn".ToIdentifier(), Strength = 10, Price = 10 }
+            new NetAffliction { Identifier = AfflictionPrefab.DamageType, Strength = 10, Price = 10 }
         };
 #endif
     }

@@ -836,7 +836,7 @@ namespace Barotrauma
                 Identifier eventIdentifier = new Identifier($"{nameof(CreateWalletCrewFrame)}.{character.ID}");
                 campaign.OnMoneyChanged.RegisterOverwriteExisting(eventIdentifier, e =>
                 {
-                    if (!(e.Owner is Some<Character> { Value: var owner }) || owner != character) { return; }
+                    if (!e.Owner.TryUnwrap(out var owner) || owner != character) { return; }
                     SetWalletText(walletBlock, e.Wallet, icon, largeIcon);
                 });
                 registeredEvents.Add(eventIdentifier);
@@ -1502,27 +1502,9 @@ namespace Barotrauma
                 AbsoluteSpacing = GUI.IntScale(10)
             };
 
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), locationInfoContainer.RectTransform), location.Name, font: GUIStyle.LargeFont);
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), locationInfoContainer.RectTransform), location.Type.Name, font: GUIStyle.SubHeadingFont);
-
-            var biomeLabel = new GUITextBlock(new RectTransform(new Vector2(0.5f, 0.0f), locationInfoContainer.RectTransform),
-                TextManager.Get("Biome", "location"), font: GUIStyle.SubHeadingFont, textAlignment: Alignment.CenterLeft);
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 1.0f), biomeLabel.RectTransform), Level.Loaded.LevelData.Biome.DisplayName, textAlignment: Alignment.CenterRight);
-            var difficultyLabel = new GUITextBlock(new RectTransform(new Vector2(0.5f, 0.0f), locationInfoContainer.RectTransform),
-                TextManager.Get("LevelDifficulty"), font: GUIStyle.SubHeadingFont, textAlignment: Alignment.CenterLeft);
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 1.0f), difficultyLabel.RectTransform), ((int)Level.Loaded.LevelData.Difficulty) + " %", textAlignment: Alignment.CenterRight);
-
-            new GUIFrame(new RectTransform(new Vector2(1.0f, 0.01f), missionFrameContent.RectTransform) { AbsoluteOffset = new Point(0, locationInfoContainer.Rect.Height + padding) }, style: "HorizontalLine")
-            {
-                CanBeFocused = false
-            };
-
-            int locationInfoYOffset = locationInfoContainer.Rect.Height + padding * 2;
-
             Sprite portrait = location.Type.GetPortrait(location.PortraitId);
             bool hasPortrait = portrait != null && portrait.SourceRect.Width > 0 && portrait.SourceRect.Height > 0;
             int contentWidth = missionFrameContent.Rect.Width;
-
             if (hasPortrait)
             {
                 float portraitAspectRatio = portrait.SourceRect.Width / portrait.SourceRect.Height;
@@ -1533,6 +1515,30 @@ namespace Barotrauma
                 locationInfoContainer.Recalculate();
                 portraitImage.RectTransform.NonScaledSize = new Point(Math.Min((int)(portraitImage.Rect.Size.Y * portraitAspectRatio), portraitImage.Rect.Width), portraitImage.Rect.Size.Y);
             }
+
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), locationInfoContainer.RectTransform), location.Name, font: GUIStyle.LargeFont);
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), locationInfoContainer.RectTransform), location.Type.Name, font: GUIStyle.SubHeadingFont);
+
+            if (location.Faction?.Prefab != null)
+            {
+                var factionLabel = new GUITextBlock(new RectTransform(new Vector2(0.5f, 0.0f), locationInfoContainer.RectTransform),
+                    TextManager.Get("Faction"), font: GUIStyle.SubHeadingFont, textAlignment: Alignment.CenterLeft);
+                new GUITextBlock(new RectTransform(new Vector2(1.0f, 1.0f), factionLabel.RectTransform), location.Faction.Prefab.Name, textAlignment: Alignment.CenterRight);
+            }
+            var biomeLabel = new GUITextBlock(new RectTransform(new Vector2(0.5f, 0.0f), locationInfoContainer.RectTransform),
+                TextManager.Get("Biome", "location"), font: GUIStyle.SubHeadingFont, textAlignment: Alignment.CenterLeft);
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 1.0f), biomeLabel.RectTransform), Level.Loaded.LevelData.Biome.DisplayName, textAlignment: Alignment.CenterRight);
+            var difficultyLabel = new GUITextBlock(new RectTransform(new Vector2(0.5f, 0.0f), locationInfoContainer.RectTransform),
+                TextManager.Get("LevelDifficulty"), font: GUIStyle.SubHeadingFont, textAlignment: Alignment.CenterLeft);
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 1.0f), difficultyLabel.RectTransform), TextManager.GetWithVariable("percentageformat", "[value]", ((int)Level.Loaded.LevelData.Difficulty).ToString()), textAlignment: Alignment.CenterRight);
+
+            new GUIFrame(new RectTransform(new Vector2(1.0f, 0.01f), missionFrameContent.RectTransform) { AbsoluteOffset = new Point(0, locationInfoContainer.Rect.Height + padding) }, style: "HorizontalLine")
+            {
+                CanBeFocused = false
+            };
+
+            int locationInfoYOffset = locationInfoContainer.Rect.Height + padding * 2;
+
 
             GUIListBox missionList = new GUIListBox(new RectTransform(new Point(contentWidth, missionFrameContent.Rect.Height - locationInfoYOffset), missionFrameContent.RectTransform, Anchor.TopCenter) { AbsoluteOffset = new Point(0, locationInfoYOffset) });
             missionList.ContentBackground.Color = Color.Transparent;
@@ -1545,6 +1551,7 @@ namespace Barotrauma
 
                 foreach (Mission mission in GameMain.GameSession.Missions)
                 {
+                    if (!mission.Prefab.ShowInMenus) { continue; }
                     GUIFrame missionDescriptionHolder = new GUIFrame(new RectTransform(Vector2.One, missionList.Content.RectTransform), style: null);
                     GUILayoutGroup missionTextGroup = new GUILayoutGroup(new RectTransform(new Vector2(0.744f, 0f), missionDescriptionHolder.RectTransform, Anchor.CenterLeft) { AbsoluteOffset = new Point(iconSize + spacing, 0) }, false, childAnchor: Anchor.TopLeft)
                     {
@@ -1556,7 +1563,7 @@ namespace Barotrauma
                         descriptionText += "\n\n" + missionMessage;
                     }
                     RichString rewardText = mission.GetMissionRewardText(Submarine.MainSub);
-                    RichString reputationText = mission.GetReputationRewardText(mission.Locations[0]);
+                    RichString reputationText = mission.GetReputationRewardText();
 
                     Func<string, string> wrapMissionText(GUIFont font)
                     {
@@ -1766,7 +1773,7 @@ namespace Barotrauma
                     {
                         foreach (UpgradePrefab prefab in categoryData.Prefabs)
                         {
-                            var frame = UpgradeStore.CreateUpgradeFrame(prefab, categoryData.Category, campaign, new RectTransform(new Vector2(1f, 0.3f), upgradePanel.Content.RectTransform), addBuyButton: false);
+                            var frame = UpgradeStore.CreateUpgradeFrame(prefab, categoryData.Category, campaign, new RectTransform(new Vector2(1f, 0.3f), upgradePanel.Content.RectTransform), addBuyButton: false).Frame;
                             UpgradeStore.UpdateUpgradeEntry(frame, prefab, categoryData.Category, campaign);
                         }
                     }
@@ -1779,7 +1786,10 @@ namespace Barotrauma
                 {
                     CurrentSelectMode = GUIListBox.SelectMode.None
                 };
-                sub.Info.CreateSpecsWindow(specsListBox, GUIStyle.Font, includeTitle: false, includeClass: false, includeDescription: true);
+                sub.Info.CreateSpecsWindow(specsListBox, GUIStyle.Font,
+                    includeTitle: false,
+                    includeClass: false,
+                    includeDescription: true);
             }
         }
 
