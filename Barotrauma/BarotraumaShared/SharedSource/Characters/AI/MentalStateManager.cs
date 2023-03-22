@@ -107,7 +107,6 @@ namespace Barotrauma
             {
                 return MentalType.Normal;
             }
-            // test this later
             int psychosisIndex = (int)(affliction.Strength / (affliction.Prefab.MaxStrength / MentalTypeCount) * Rand.Range(1f, 1.2f));
             psychosisIndex = Math.Clamp(psychosisIndex, 0, 4);
             MentalType mentalType = psychosisIndex switch

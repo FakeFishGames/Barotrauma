@@ -43,15 +43,32 @@ namespace Barotrauma
             }
         }
 
-        public int GetBuyPrice(int level, Location? location = null)
+        public int GetBuyPrice(int level, Location? location = null, ImmutableHashSet<Character>? characterList = null)
         {
-            int maxLevel = Prefab.GetMaxLevelForCurrentSub();
+            float price = BasePrice;
 
-            if (level > maxLevel) { maxLevel = level; }
+            int maxLevel = Prefab.MaxLevel;
 
-            int price = BasePrice;
-            price += (int)(price * MathHelper.Lerp(IncreaseLow, IncreaseHigh, level / (float)maxLevel) / 100);
-            return location?.GetAdjustedMechanicalCost(price) ?? price;
+            float lerpAmount = maxLevel is 0
+                ? level // avoid division by 0
+                : level / (float)maxLevel;
+
+            float priceMultiplier = MathHelper.Lerp(IncreaseLow, IncreaseHigh, lerpAmount);
+            price += price * (priceMultiplier / 100f);
+
+            price = location?.GetAdjustedMechanicalCost((int)price) ?? price;
+
+            characterList ??= GameSession.GetSessionCrewCharacters(CharacterType.Both);
+
+            if (characterList.Any())
+            {
+                if (location?.Faction is { } faction && Faction.GetPlayerAffiliationStatus(faction) is FactionAffiliation.Positive)
+                {
+                    price *= 1f - characterList.Max(static c => c.GetStatValue(StatTypes.ShipyardBuyMultiplierAffiliated));
+                }
+                price *= 1f - characterList.Max(static c => c.GetStatValue(StatTypes.ShipyardBuyMultiplier));
+            }
+            return (int)price;
         }
     }
 
@@ -194,11 +211,10 @@ namespace Barotrauma
                 _ => throw new ArgumentOutOfRangeException()
             };
 
-        public bool AppliesTo(SubmarineInfo sub)
+        public bool AppliesTo(SubmarineClass subClass, int subTier)
         {
             if (type is MaxLevelModType.Invalid) { return false; }
 
-            int subTier = sub.Tier;
             if (GameMain.GameSession?.Campaign?.CampaignMetadata is { } metadata)
             {
                 int modifier = metadata.GetInt(new Identifier("tiermodifieroverride"), 0);
@@ -211,9 +227,9 @@ namespace Barotrauma
                 return subTier == tier;
             }
 
-            if (tierOrClass.TryGet(out SubmarineClass subClass))
+            if (tierOrClass.TryGet(out SubmarineClass targetClass))
             {
-                return sub.SubmarineClass == subClass;
+                return subClass == targetClass;
             }
 
             return false;
@@ -492,15 +508,19 @@ namespace Barotrauma
         {
             int level = MaxLevel;
 
-            foreach (UpgradeMaxLevelMod mod in MaxLevelsMods)
-            {
-                if (mod.AppliesTo(info)) { level = mod.GetLevelAfter(level); }
-            }
+            int tier = info.Tier;
 
             if (GameMain.GameSession?.Campaign?.CampaignMetadata is { } metadata)
             {
                 int modifier = metadata.GetInt(new Identifier($"tiermodifiers.{Identifier}"), 0);
-                level += modifier;
+                tier += modifier;
+            }
+
+            tier = Math.Clamp(tier, 1, SubmarineInfo.HighestTier);
+
+            foreach (UpgradeMaxLevelMod mod in MaxLevelsMods)
+            {
+                if (mod.AppliesTo(info.SubmarineClass, tier)) { level = mod.GetLevelAfter(level); }
             }
 
             return level;

@@ -117,6 +117,7 @@ namespace Barotrauma.Steam
             currentLobby?.SetData("gamestarted", GameMain.Client.GameStarted.ToString());
             currentLobby?.SetData("playstyle", serverSettings.PlayStyle.ToString());
             currentLobby?.SetData("gamemode", GameMain.NetLobbyScreen?.SelectedMode?.Identifier.Value ?? "");
+            currentLobby?.SetData("language", serverSettings.Language.ToString());
 
             DebugConsole.Log("Lobby updated!");
         }

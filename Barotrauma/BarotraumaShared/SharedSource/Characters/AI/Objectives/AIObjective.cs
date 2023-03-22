@@ -256,7 +256,9 @@ namespace Barotrauma
                 if (!AllowOutsideSubmarine && character.Submarine == null) { return false; }
                 if (AllowInAnySub) { return true; }
                 if ((AllowInFriendlySubs && character.Submarine.TeamID == CharacterTeamType.FriendlyNPC) || character.IsEscorted) { return true; }
-                return character.Submarine.TeamID == character.TeamID || character.Submarine.DockedTo.Any(sub => sub.TeamID == character.TeamID);
+                return character.Submarine.TeamID == character.TeamID || 
+                        character.Submarine.TeamID == character.OriginalTeamID || 
+                        character.Submarine.DockedTo.Any(sub => sub.TeamID == character.TeamID || sub.TeamID == character.OriginalTeamID);
             }
         }
 

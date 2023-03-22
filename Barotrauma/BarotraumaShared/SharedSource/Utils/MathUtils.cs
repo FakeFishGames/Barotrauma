@@ -155,7 +155,6 @@ namespace Barotrauma
         
         public static float CurveAngle(float from, float to, float step)
         {
-
             from = WrapAngleTwoPi(from);
             to = WrapAngleTwoPi(to);
 
@@ -189,13 +188,7 @@ namespace Barotrauma
             {
                 return 0.0f;
             }
-
-            while (angle < 0)
-                angle += MathHelper.TwoPi;
-            while (angle >= MathHelper.TwoPi)
-                angle -= MathHelper.TwoPi;
-
-            return angle;
+            return PositiveModulo(angle, MathHelper.TwoPi);
         }
 
         /// <summary>
@@ -207,13 +200,9 @@ namespace Barotrauma
             {
                 return 0.0f;
             }
-            // Ensure that -pi <= angle < pi for both "from" and "to" 
-            while (angle < -MathHelper.Pi)
-                angle += MathHelper.TwoPi;
-            while (angle >= MathHelper.Pi)
-                angle -= MathHelper.TwoPi;
-
-            return angle;
+            float min = -MathHelper.Pi;
+            float diffFromMin = angle - min;
+            return diffFromMin - (MathF.Floor(diffFromMin / MathHelper.TwoPi) * MathHelper.TwoPi) + min;
         }
 
         public static float GetShortestAngle(float from, float to)
@@ -342,13 +331,13 @@ namespace Barotrauma
 
                 if (axisAligned1.Y < axisAligned2.Y)
                 {
-                    if (y < axisAligned1.Y) return false;
-                    if (y > axisAligned2.Y) return false;
+                    if (y < axisAligned1.Y) { return false; }
+                    if (y > axisAligned2.Y) { return false; }
                 }
                 else
                 {
-                    if (y > axisAligned1.Y) return false;
-                    if (y < axisAligned2.Y) return false;
+                    if (y > axisAligned1.Y) { return false; }
+                    if (y < axisAligned2.Y) { return false; }
                 }
                 
                 intersection = new Vector2(axisAligned1.X, y);
@@ -364,13 +353,13 @@ namespace Barotrauma
 
                 if (axisAligned1.X < axisAligned2.X)
                 {
-                    if (x < axisAligned1.X) return false;
-                    if (x > axisAligned2.X) return false;
+                    if (x < axisAligned1.X) { return false; }
+                    if (x > axisAligned2.X) { return false; }
                 }
                 else
                 {
-                    if (x > axisAligned1.X) return false;
-                    if (x < axisAligned2.X) return false;
+                    if (x > axisAligned1.X) { return false; }
+                    if (x < axisAligned2.X) { return false; }
                 }
                 
                 intersection = new Vector2(x, axisAligned1.Y);
@@ -901,23 +890,30 @@ namespace Barotrauma
         // https://stackoverflow.com/questions/3874627/floating-point-comparison-functions-for-c-sharp
         public static bool NearlyEqual(float a, float b, float epsilon = 0.0001f)
         {
-            float diff = Math.Abs(a - b);
             if (a == b)
             {
-                // shortcut, handles infinities
+                //shortcut, handles infinities
                 return true;
             }
-            else if (a == 0 || b == 0 || diff < float.Epsilon)
+
+            if (a == 0 || b == 0)
             {
-                // a or b is zero or both are extremely close to it
-                // relative error is less meaningful here
-                return diff < epsilon;
+                //if a or b is zero, relative error is less meaningful
+                return Math.Abs(a - b) < epsilon;
             }
-            else
+
+            float absA = Math.Abs(a);
+            float absB = Math.Abs(b);
+            float absAB = absA + absB;
+            if (absAB < epsilon)
             {
-                // use relative error
-                return diff / (Math.Abs(a) + Math.Abs(b)) < epsilon;
+                // a and b extremely close to zero, relative error is less meaningful
+                return true;
             }
+
+            float diff = Math.Abs(a - b);
+            // use relative error
+            return diff / absAB < epsilon;            
         }
 
         /// <summary>

@@ -4,6 +4,7 @@ using FarseerPhysics.Dynamics;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Xml.Linq;
 
 namespace Barotrauma
@@ -51,7 +52,6 @@ namespace Barotrauma
         //can ambient light get through the gap even if it's not open
         public bool PassAmbientLight;
 
-
         //a collider outside the gap (for example an ice wall next to the sub)
         //used by ragdolls to prevent them from ending up inside colliders when teleporting out of the sub
         private Body outsideCollisionBlocker;
@@ -63,8 +63,43 @@ namespace Barotrauma
             set
             {
                 if (float.IsNaN(value)) { return; }
-                if (value > open) { openedTimer = 1.0f; }
+                if (value > open)
+                {
+                    openedTimer = 1.0f;
+                }
+                if (connectedDoor == null && !IsHorizontal && linkedTo.Any(e => e is Hull))
+                {
+                    if (value > open && value >= 1.0f)
+                    {
+                        InformWaypointsAboutGapState(this, open: true);
+                    }
+                    else if (value < open && open >= 1.0f)
+                    {
+                        InformWaypointsAboutGapState(this, open: false);
+                    }
+                }
                 open = MathHelper.Clamp(value, 0.0f, 1.0f);
+
+                static void InformWaypointsAboutGapState(Gap gap, bool open)
+                {
+                    foreach (var wp in WayPoint.WayPointList)
+                    {
+                        if (IsWaypointRightAboveGap(gap, wp))
+                        {
+                            wp.OnGapStateChanged(open, gap);
+                        }
+                    }
+                }
+
+                static bool IsWaypointRightAboveGap(Gap gap, WayPoint wp)
+                {
+                    if (wp.SpawnType != SpawnType.Path) { return false; }
+                    if (!gap.linkedTo.Contains(wp.CurrentHull)) { return false; }
+                    if (wp.Position.Y < gap.Rect.Top) { return false; }
+                    if (wp.Position.X > gap.Rect.Right) { return false; }
+                    if (wp.Position.X < gap.Rect.Left) { return false; }
+                    return true;
+                }
             }
         }
 

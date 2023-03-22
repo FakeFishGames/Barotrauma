@@ -449,9 +449,9 @@ namespace Barotrauma.Lights
                 {
                     highlightedEntities.Add(Character.Controlled.FocusedCharacter);
                 }
-                foreach (Item item in Item.ItemList)
+                foreach (MapEntity me in MapEntity.HighlightedEntities)
                 {
-                    if ((item.IsHighlighted || item.IconStyle != null) && !highlightedEntities.Contains(item))
+                    if (me is Item item && item != Character.Controlled.FocusedItem)
                     {
                         highlightedEntities.Add(item);
                     }

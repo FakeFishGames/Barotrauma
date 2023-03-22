@@ -127,6 +127,7 @@ namespace Barotrauma
                 hull.AddDecal(decal, worldPosition, decalSize, isNetworkEvent: false);
             }
 
+            Attack.DamageMultiplier = 1.0f;
             float displayRange = Attack.Range;
             if (damageSource is Item sourceItem)
             {
@@ -156,6 +157,10 @@ namespace Barotrauma
             {
                 Color flashColor = Color.Lerp(Color.Transparent, screenColor, Math.Max((screenColorRange - cameraDist) / screenColorRange, 0.0f));
                 Screen.Selected.ColorFade(flashColor, Color.Transparent, screenColorDuration);
+            }
+            foreach (Item item in Item.ItemList)
+            {
+                item.GetComponent<Sonar>()?.RegisterExplosion(this, worldPosition);
             }
 #endif
 
@@ -201,7 +206,7 @@ namespace Barotrauma
                         powerContainer.Charge -= powerContainer.GetCapacity() * EmpStrength * distFactor;
                     }
                 }
-                static float CalculateDistanceFactor(float distSqr, float displayRange) => 1.0f - (float)Math.Sqrt(distSqr) / displayRange;
+                static float CalculateDistanceFactor(float distSqr, float displayRange) => 1.0f - MathF.Sqrt(distSqr) / displayRange;
             }
 
             if (itemRepairStrength > 0.0f)
@@ -210,7 +215,7 @@ namespace Barotrauma
                 foreach (Item item in Item.ItemList)
                 {
                     float distSqr = Vector2.DistanceSquared(item.WorldPosition, worldPosition);
-                    if (distSqr > displayRangeSqr) continue;
+                    if (distSqr > displayRangeSqr) { continue; }
 
                     float distFactor = 1.0f - (float)Math.Sqrt(distSqr) / displayRange;
                     //repair repairable items
@@ -266,7 +271,7 @@ namespace Barotrauma
                     if (item.Prefab.DamagedByExplosions && !item.Indestructible)
                     {
                         float distFactor = 1.0f - dist / displayRange;
-                        float damageAmount = Attack.GetItemDamage(1.0f) * item.Prefab.ExplosionDamageMultiplier;
+                        float damageAmount = Attack.GetItemDamage(1.0f, item.Prefab.ExplosionDamageMultiplier);
 
                         Vector2 explosionPos = worldPosition;
                         if (item.Submarine != null) { explosionPos -= item.Submarine.Position; }
@@ -354,7 +359,7 @@ namespace Barotrauma
                         if (affliction.DivideByLimbCount)
                         {
                             float limbCountFactor = distFactors.Count;
-                            if (affliction.Prefab.LimbSpecific && affliction.Prefab.AfflictionType == "damage")
+                            if (affliction.Prefab.LimbSpecific && affliction.Prefab.AfflictionType == AfflictionPrefab.DamageType)
                             {
                                 // Shouldn't go above 15, or the damage can be unexpectedly low -> doesn't break armor
                                 // Effectively this makes large explosions more effective against large creatures (because more limbs are affected), but I don't think that's necessarily a bad thing.
@@ -396,9 +401,12 @@ namespace Barotrauma
                     if (attack.StatusEffects != null && attack.StatusEffects.Any())
                     {
                         attack.SetUser(attacker);
-                        var statusEffectTargets = new List<ISerializableEntity>() { c, limb };
+                        var statusEffectTargets = new List<ISerializableEntity>();
                         foreach (StatusEffect statusEffect in attack.StatusEffects)
                         {
+                            statusEffectTargets.Clear();
+                            if (statusEffect.HasTargetType(StatusEffect.TargetType.Character)) { statusEffectTargets.Add(c); }
+                            if (statusEffect.HasTargetType(StatusEffect.TargetType.Limb)) { statusEffectTargets.Add(limb); }
                             statusEffect.Apply(ActionType.OnUse, 1.0f, damageSource, statusEffectTargets);
                             statusEffect.Apply(ActionType.Always, 1.0f, damageSource, statusEffectTargets);
                             statusEffect.Apply(underWater ? ActionType.InWater : ActionType.NotInWater, 1.0f, damageSource, statusEffectTargets);

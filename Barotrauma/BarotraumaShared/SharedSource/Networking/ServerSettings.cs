@@ -111,27 +111,24 @@ namespace Barotrauma.Networking
                 switch (typeString)
                 {
                     case "float":
-                        if (!(a is float?)) return false;
-                        if (!(b is float?)) return false;
-                        return MathUtils.NearlyEqual((float)a, (float)b);
+                        if (a is not float fa) { return false; }
+                        if (b is not float fb) { return false; }
+                        return MathUtils.NearlyEqual(fa, fb);
                     case "int":
-                        if (!(a is int?)) return false;
-                        if (!(b is int?)) return false;
-                        return (int)a == (int)b;
+                        if (a is not int ia) { return false; }
+                        if (b is not int ib) { return false; }
+                        return ia == ib;
                     case "bool":
-                        if (!(a is bool?)) return false;
-                        if (!(b is bool?)) return false;
-                        return (bool)a == (bool)b;
+                        if (a is not bool ba) { return false; }
+                        if (b is not bool bb) { return false; }
+                        return ba == bb;
                     case "Enum":
-                        if (!(a is Enum)) return false;
-                        if (!(b is Enum)) return false;
-                        return ((Enum)a).Equals((Enum)b);
+                        if (a is not Enum ea) { return false; }
+                        if (b is not Enum eb) { return false; }
+                        return ea.Equals(eb);
                     default:
-                        if (a == null || b == null)
-                        {
-                            return (a == null) == (b == null);
-                        }
-                        return a.ToString().Equals(b.ToString(), StringComparison.OrdinalIgnoreCase);
+                        return ReferenceEquals(a,b)
+                            || string.Equals(a?.ToString(), b?.ToString(), StringComparison.OrdinalIgnoreCase);
                 }
             }
 
@@ -204,7 +201,7 @@ namespace Barotrauma.Networking
 
             public void Write(IWriteMessage msg, object overrideValue = null)
             {
-                if (overrideValue == null) { overrideValue = Value; }
+                overrideValue ??= Value;
                 switch (typeString)
                 {
                     case "float":
@@ -293,10 +290,7 @@ namespace Barotrauma.Networking
                 var saveProperties = SerializableProperty.GetProperties<Serialize>(this);
                 foreach (var property in saveProperties)
                 {
-                    object value = property.GetValue(this);
-                    if (value == null) { continue; }
-
-                    string typeName = SerializableProperty.GetSupportedTypeName(value.GetType());
+                    string typeName = SerializableProperty.GetSupportedTypeName(property.PropertyType);
                     if (typeName != null || property.PropertyType.IsEnum)
                     {
                         NetPropertyData netPropertyData = new NetPropertyData(this, property, typeName);
@@ -754,6 +748,9 @@ namespace Barotrauma.Networking
             get;
             set;
         }
+        
+        [Serialize(defaultValue: "", IsPropertySaveable.Yes)]
+        public LanguageIdentifier Language { get; set; }
 
         private SelectionMode subSelectionMode;
         [Serialize(SelectionMode.Manual, IsPropertySaveable.Yes)]

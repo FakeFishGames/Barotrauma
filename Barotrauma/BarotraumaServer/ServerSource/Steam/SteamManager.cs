@@ -71,6 +71,7 @@ namespace Barotrauma.Steam
             Steamworks.SteamServer.SetKey("gamestarted", server.GameStarted.ToString());
             Steamworks.SteamServer.SetKey("gamemode", server.ServerSettings.GameModeIdentifier.Value);
             Steamworks.SteamServer.SetKey("playstyle", server.ServerSettings.PlayStyle.ToString());
+            Steamworks.SteamServer.SetKey("language", server.ServerSettings.Language.ToString());
 
             Steamworks.SteamServer.DedicatedServer = true;
 

@@ -31,7 +31,7 @@ namespace Barotrauma.Networking
         /// </summary>
         public OrderChatMessage(Order order, Character targetCharacter, Character sender, bool isNewOrder = true)
             : this(order,
-                   order?.GetChatMessage(targetCharacter?.Name, sender?.CurrentHull?.DisplayName?.Value, givingOrderToSelf: targetCharacter == sender, orderOption: order.Option, isNewOrder: isNewOrder),
+                   order?.GetChatMessage(targetCharacter?.Name, (order.TargetEntity as Hull ?? sender?.CurrentHull)?.DisplayName?.Value, givingOrderToSelf: targetCharacter == sender, orderOption: order.Option, isNewOrder: isNewOrder),
                    targetCharacter, sender, isNewOrder)
         {
             
@@ -110,7 +110,7 @@ namespace Barotrauma.Networking
             WriteOrder(msg, Order, TargetCharacter, IsNewOrder);
         }
 
-        public struct OrderMessageInfo
+        public readonly struct OrderMessageInfo
         {
             public Identifier OrderIdentifier { get; }
             public OrderPrefab OrderPrefab => OrderPrefab.Prefabs[OrderIdentifier];

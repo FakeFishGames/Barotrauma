@@ -445,7 +445,7 @@ namespace Barotrauma.Items.Components
                             targetItem.Condition / targetItem.MaxCondition,
                             emptyColor: GUIStyle.HealthBarColorLow,
                             fullColor: GUIStyle.HealthBarColorHigh,
-                            textTag: targetItem.Name);
+                            textTag: targetItem.Prefab.ShowNameInHealthBar ? targetItem.Name : string.Empty);
                     }
 #endif
                 }

@@ -1,3 +1,4 @@
+using System;
 using Barotrauma.Extensions;
 using System.Collections.Generic;
 using System.Collections.Immutable;
@@ -13,10 +14,13 @@ namespace Barotrauma
         public readonly LocalizedString Description;
 
         public readonly bool IsEndBiome;
+        public readonly int EndBiomeLocationCount;
+
         public readonly float MinDifficulty;
         private readonly float maxDifficulty;
         public float ActualMaxDifficulty => maxDifficulty;
         public float AdjustedMaxDifficulty => maxDifficulty - 0.1f;
+
 
         public readonly ImmutableHashSet<int> AllowedZones;
 
@@ -41,6 +45,8 @@ namespace Barotrauma
                 element.GetAttributeString("description", ""));
 
             IsEndBiome = element.GetAttributeBool("endbiome", false);
+            EndBiomeLocationCount = Math.Max(1, element.GetAttributeInt("endbiomelocationcount", 1));
+
             AllowedZones = element.GetAttributeIntArray("AllowedZones", new int[] { 1, 2, 3, 4, 5, 6, 7, 8, 9 }).ToImmutableHashSet();
             MinDifficulty = element.GetAttributeFloat("MinDifficulty", 0);
             maxDifficulty = element.GetAttributeFloat("MaxDifficulty", 100);

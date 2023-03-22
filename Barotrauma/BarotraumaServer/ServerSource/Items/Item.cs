@@ -253,6 +253,7 @@ namespace Barotrauma
             msg.WriteBoolean(hasIdCard);
             if (hasIdCard)
             {
+                msg.WriteInt32(idCardComponent.SubmarineSpecificID);
                 msg.WriteString(idCardComponent.OwnerName);
                 msg.WriteString(idCardComponent.OwnerTags);
                 msg.WriteByte((byte)Math.Max(0, idCardComponent.OwnerBeardIndex+1));

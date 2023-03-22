@@ -248,11 +248,11 @@ namespace Barotrauma
             List<WayPoint> spawnWaypoints = null;
             List<WayPoint> mainSubWaypoints = WayPoint.SelectCrewSpawnPoints(characterInfos, Submarine.MainSub).ToList();
 
-            if (Level.IsLoadedOutpost && Submarine.Loaded.Any(s => s.Info.Type == SubmarineType.Outpost && (s.Info.OutpostGenerationParams?.SpawnCrewInsideOutpost ?? false)))
+            if (Level.Loaded != null && Level.Loaded.ShouldSpawnCrewInsideOutpost())
             {
-                spawnWaypoints = WayPoint.WayPointList.FindAll(wp => 
+                spawnWaypoints = WayPoint.WayPointList.FindAll(wp =>
                     wp.SpawnType == SpawnType.Human &&
-                    wp.Submarine == Level.Loaded.StartOutpost && 
+                    wp.Submarine == Level.Loaded.StartOutpost &&
                     wp.CurrentHull != null &&
                     wp.CurrentHull.OutpostModuleTags.Contains("airlock".ToIdentifier()));
                 while (spawnWaypoints.Count > characterInfos.Count)
@@ -262,9 +262,8 @@ namespace Barotrauma
                 while (spawnWaypoints.Any() && spawnWaypoints.Count < characterInfos.Count)
                 {
                     spawnWaypoints.Add(spawnWaypoints[Rand.Int(spawnWaypoints.Count)]);
-                }
+                }                
             }
-
             if (spawnWaypoints == null || !spawnWaypoints.Any())
             {
                 spawnWaypoints = mainSubWaypoints;
@@ -290,6 +289,16 @@ namespace Barotrauma
                     else if (!character.Info.StartItemsGiven)
                     {
                         character.GiveJobItems(mainSubWaypoints[i]);
+                        foreach (Item item in character.Inventory.AllItems)
+                        {
+                            //if the character is loaded from a human prefab with preconfigured items, its ID card gets assigned to the sub it spawns in
+                            //we don't want that in this case, the crew's cards shouldn't be submarine-specific
+                            var idCard = item.GetComponent<Items.Components.IdCard>();
+                            if (idCard != null)
+                            {
+                                idCard.SubmarineSpecificID = 0;
+                            }
+                        }
                     }
                     if (character.Info.HealthData != null)
                     {
@@ -298,6 +307,7 @@ namespace Barotrauma
 
                     character.LoadTalents();
 
+                    character.GiveIdCardTags(mainSubWaypoints[i]);
                     character.GiveIdCardTags(spawnWaypoints[i]);
                     character.Info.StartItemsGiven = true;
                     if (character.Info.OrderData != null)

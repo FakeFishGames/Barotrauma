@@ -12,6 +12,7 @@ namespace Barotrauma
         public enum NetworkEventType
         {
             CONVERSATION,
+            CONVERSATION_SELECTED_OPTION,
             STATUSEFFECT,
             MISSION,
             UNLOCKPATH
@@ -71,8 +72,8 @@ namespace Barotrauma
 
         private readonly List<Event> activeEvents = new List<Event>();
 
-        private readonly HashSet<Event> finishedEvents = new HashSet<Event>();
-        private readonly HashSet<EventPrefab> nonRepeatableEvents = new HashSet<EventPrefab>();
+        private readonly HashSet<Identifier> finishedEvents = new HashSet<Identifier>();
+        private readonly HashSet<Identifier> nonRepeatableEvents = new HashSet<Identifier>();
         private readonly HashSet<EventSet> usedUniqueSets = new HashSet<EventSet>();
 
 
@@ -134,7 +135,9 @@ namespace Barotrauma
             pendingEventSets.Clear();
             selectedEvents.Clear();
             activeEvents.Clear();
-
+#if SERVER
+            MissionAction.ResetMissionsUnlockedThisRound();
+#endif
             pathFinder = new PathFinder(WayPoint.WayPointList, false);
             totalPathLength = 0.0f;
             if (level != null)
@@ -151,7 +154,7 @@ namespace Barotrauma
                 seed = ToolBox.StringToInt(level.Seed);
                 foreach (var previousEvent in level.LevelData.EventHistory)
                 {
-                    seed ^= ToolBox.IdentifierToInt(previousEvent.Identifier);
+                    seed ^= ToolBox.IdentifierToInt(previousEvent);
                 }
             }
             rand = new MTRandom(seed);
@@ -188,14 +191,7 @@ namespace Barotrauma
                     //if the outpost is connected to a locked connection, create an event to unlock it
                     if (level.StartLocation?.Connections.Any(c => c.Locked && level.StartLocation.MapPosition.X < c.OtherLocation(level.StartLocation).MapPosition.X) ?? false)
                     {
-                        var unlockPathPrefabs = EventPrefab.Prefabs.Where(e => e.UnlockPathEvent);
-                        var unlockPathPrefabsForBiome = unlockPathPrefabs.Where(e =>
-                            e.BiomeIdentifier.IsEmpty ||
-                            e.BiomeIdentifier == level.LevelData.Biome.Identifier);
-
-                        var unlockPathEventPrefab = unlockPathPrefabsForBiome.Any() ?
-                            ToolBox.SelectWeightedRandom(unlockPathPrefabsForBiome, b => b.Commonness, rand) :
-                            ToolBox.SelectWeightedRandom(unlockPathPrefabs, b => b.Commonness, rand);
+                        var unlockPathEventPrefab = EventPrefab.GetUnlockPathEvent(level.LevelData.Biome.Identifier, level.StartLocation.Faction);
                         if (unlockPathEventPrefab != null)
                         {
                             var newEvent = unlockPathEventPrefab.CreateInstance();
@@ -216,7 +212,7 @@ namespace Barotrauma
                     {
                         foreach (EventPrefab ep in eventSet.EventPrefabs.SelectMany(e => e.EventPrefabs))
                         {
-                            nonRepeatableEvents.Add(ep);                                
+                            nonRepeatableEvents.Add(ep.Identifier);                                
                         }
                     }
                     foreach (EventSet childSet in eventSet.ChildSets)
@@ -374,10 +370,10 @@ namespace Barotrauma
         {
             if (level?.LevelData == null) { return; }
 
-            level.LevelData.EventsExhausted = true;
             if (level.LevelData.Type == LevelData.LevelType.Outpost)
             {
-                level.LevelData.EventHistory.AddRange(selectedEvents.Values.SelectMany(v => v).Select(e => e.Prefab).Where(e => !level.LevelData.EventHistory.Contains(e)));
+                level.LevelData.EventsExhausted = true;
+                level.LevelData.EventHistory.AddRange(selectedEvents.Values.SelectMany(v => v).Select(e => e.Prefab.Identifier).Where(e => !level.LevelData.EventHistory.Contains(e)));
                 if (level.LevelData.EventHistory.Count > MaxEventHistory)
                 {
                     level.LevelData.EventHistory.RemoveRange(0, level.LevelData.EventHistory.Count - MaxEventHistory);
@@ -393,9 +389,9 @@ namespace Barotrauma
 
         private float CalculateCommonness(EventPrefab eventPrefab, float baseCommonness)
         {
-            if (level.LevelData.NonRepeatableEvents.Contains(eventPrefab)) { return 0.0f; }
+            if (level.LevelData.NonRepeatableEvents.Contains(eventPrefab.Identifier)) { return 0.0f; }
             float retVal = baseCommonness;
-            if (level.LevelData.EventHistory.Contains(eventPrefab)) { retVal *= 0.1f; }
+            if (level.LevelData.EventHistory.Contains(eventPrefab.Identifier)) { retVal *= 0.1f; }
             return retVal;
         }
 
@@ -436,9 +432,13 @@ namespace Barotrauma
                 }
             }
 
-            bool isPrefabSuitable(EventPrefab e)
-                => (e.BiomeIdentifier.IsEmpty || e.BiomeIdentifier == level.LevelData?.Biome?.Identifier) &&
-                    !level.LevelData.NonRepeatableEvents.Contains(e);
+            bool isPrefabSuitable(EventPrefab e) =>
+                (e.BiomeIdentifier.IsEmpty || e.BiomeIdentifier == level.LevelData?.Biome?.Identifier) &&
+                !level.LevelData.NonRepeatableEvents.Contains(e.Identifier) &&
+                isFactionSuitable(e.Faction);
+
+            bool isFactionSuitable(Identifier factionId) =>
+                factionId.IsEmpty || factionId == level.StartLocation?.Faction?.Prefab.Identifier || factionId == level.StartLocation?.SecondaryFaction?.Prefab.Identifier;
 
             foreach (var subEventPrefab in eventSet.EventPrefabs)
             {
@@ -447,9 +447,9 @@ namespace Barotrauma
                     DebugConsole.ThrowError($"Error in event set \"{eventSet.Identifier}\" ({eventSet.ContentFile?.ContentPackage?.Name ?? "null"}) - could not find an event prefab with the identifier \"{missingId}\".");
                 }
             }
-            
+
             var suitablePrefabSubsets = eventSet.EventPrefabs.Where(
-                e => e.EventPrefabs.Any(isPrefabSuitable)).ToArray();
+                e => isFactionSuitable(e.Faction) && e.EventPrefabs.Any(isPrefabSuitable)).ToArray();
 
             for (int i = 0; i < applyCount; i++)
             {
@@ -601,6 +601,10 @@ namespace Barotrauma
         private bool IsValidForLocation(EventSet eventSet, Location location)
         {
             if (location is null) { return true; }
+            if (!eventSet.Faction.IsEmpty)
+            {
+                if (eventSet.Faction != location.Faction?.Prefab.Identifier && eventSet.Faction != location.SecondaryFaction?.Prefab.Identifier) { return false; }
+            }
             var locationType = location.GetLocationType();
             bool includeGenericEvents = level.Type == LevelData.LevelType.LocationConnection || !locationType.IgnoreGenericEvents;
             if (includeGenericEvents && eventSet.LocationTypeIdentifiers == null) { return true; }
@@ -728,53 +732,50 @@ namespace Barotrauma
                 calculateDistanceTraveledTimer = CalculateDistanceTraveledInterval;
             }
 
-            if (currentIntensity < eventThreshold)
+            bool recheck = false;
+            do
             {
-                bool recheck = false;
-                do
+                recheck = false;
+                //activate pending event sets that can be activated
+                for (int i = pendingEventSets.Count - 1; i >= 0; i--)
                 {
-                    recheck = false;
-                    //activate pending event sets that can be activated
-                    for (int i = pendingEventSets.Count - 1; i >= 0; i--)
+                    var eventSet = pendingEventSets[i];
+                    if (eventCoolDown > 0.0f && !eventSet.IgnoreCoolDown) { continue; }
+                    if (currentIntensity > eventThreshold && !eventSet.IgnoreIntensity) { continue; }
+                    if (!CanStartEventSet(eventSet)) { continue; }
+
+                    pendingEventSets.RemoveAt(i);
+
+                    if (selectedEvents.ContainsKey(eventSet))
                     {
-                        var eventSet = pendingEventSets[i];
-                        if (eventCoolDown > 0.0f && !eventSet.IgnoreCoolDown) { continue; }
-
-                        if (!CanStartEventSet(eventSet)) { continue; }
-
-                        pendingEventSets.RemoveAt(i);
-
-                        if (selectedEvents.ContainsKey(eventSet))
+                        //start events in this set
+                        foreach (Event ev in selectedEvents[eventSet])
                         {
-                            //start events in this set
-                            foreach (Event ev in selectedEvents[eventSet])
+                            activeEvents.Add(ev);
+                            eventThreshold = settings.DefaultEventThreshold;
+                            if (eventSet.TriggerEventCooldown && selectedEvents[eventSet].Any(e => e.Prefab.TriggerEventCooldown))
                             {
-                                activeEvents.Add(ev);
-                                eventThreshold = settings.DefaultEventThreshold;
-                                if (eventSet.TriggerEventCooldown && selectedEvents[eventSet].Any(e => e.Prefab.TriggerEventCooldown))
+                                eventCoolDown = settings.EventCooldown;
+                            }
+                            if (eventSet.ResetTime > 0)
+                            {
+                                ev.Finished += () =>
                                 {
-                                    eventCoolDown = settings.EventCooldown;
-                                }
-                                if (eventSet.ResetTime > 0)
-                                {
-                                    ev.Finished += () =>
-                                    {
-                                        pendingEventSets.Add(eventSet);
-                                        CreateEvents(eventSet);
-                                    };
-                                }
+                                    pendingEventSets.Add(eventSet);
+                                    CreateEvents(eventSet);
+                                };
                             }
                         }
-
-                        //add child event sets to pending
-                        foreach (EventSet childEventSet in eventSet.ChildSets)
-                        {
-                            pendingEventSets.Add(childEventSet);
-                            recheck = true;
-                        }
                     }
-                } while (recheck);
-            }
+
+                    //add child event sets to pending
+                    foreach (EventSet childEventSet in eventSet.ChildSets)
+                    {
+                        pendingEventSets.Add(childEventSet);
+                        recheck = true;
+                    }
+                }
+            } while (recheck);
 
             foreach (Event ev in activeEvents)
             {
@@ -782,13 +783,13 @@ namespace Barotrauma
                 { 
                     ev.Update(deltaTime); 
                 }
-                else if (!finishedEvents.Contains(ev))
+                else if (ev.Prefab != null && !finishedEvents.Contains(ev.Prefab.Identifier))
                 {
                     if (level?.LevelData != null && level.LevelData.Type == LevelData.LevelType.Outpost)
                     {
-                        if (!level.LevelData.EventHistory.Contains(ev.Prefab)) { level.LevelData.EventHistory.Add(ev.Prefab); }
+                        if (!level.LevelData.EventHistory.Contains(ev.Prefab.Identifier)) { level.LevelData.EventHistory.Add(ev.Prefab.Identifier); }
                     }
-                    finishedEvents.Add(ev);
+                    finishedEvents.Add(ev.Prefab.Identifier);
                 }
             }
 
@@ -832,7 +833,7 @@ namespace Barotrauma
             monsterStrength = 0;
             foreach (Character character in Character.CharacterList)
             {
-                if (character.IsIncapacitated || !character.Enabled || character.IsPet || character.Params.CompareGroup(CharacterPrefab.HumanSpeciesName)) { continue; }
+                if (character.IsIncapacitated || !character.Enabled || character.IsPet || CharacterParams.CompareGroup(CharacterPrefab.HumanSpeciesName, character.Group)) { continue; }
 
                 if (!(character.AIController is EnemyAIController enemyAI)) { continue; }
 

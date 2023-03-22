@@ -254,7 +254,7 @@ namespace Barotrauma
             if (!DefaultPrice.RequiresUnlock) { return true; }
             return Character.Controlled is not null && Character.Controlled.HasStoreAccessForItem(this);
         }
-        public LocalizedString GetTooltip()
+        public LocalizedString GetTooltip(Character character)
         {
             LocalizedString tooltip = $"‖color:{XMLExtensions.ToStringHex(GUIStyle.TextColorBright)}‖{Name}‖color:end‖";
             if (!Description.IsNullOrEmpty())
@@ -264,6 +264,10 @@ namespace Barotrauma
             if (wearableDamageModifiers.Any() || wearableSkillModifiers.Any())
             {
                 Wearable.AddTooltipInfo(wearableDamageModifiers, wearableSkillModifiers, ref tooltip);
+            }
+            if (SkillRequirementHints != null && SkillRequirementHints.Any())
+            {
+                tooltip += GetSkillRequirementHints(character);
             }
             return tooltip;
         }
@@ -375,6 +379,32 @@ namespace Barotrauma
             {
                 Sprite.DrawTiled(spriteBatch, new Vector2(placeRect.X, -placeRect.Y), placeRect.Size.ToVector2(), SpriteColor * 0.8f);
             }
+        }
+
+        public LocalizedString GetSkillRequirementHints(Character character)
+        {
+            LocalizedString text = "";
+            if (SkillRequirementHints != null && SkillRequirementHints.Any() && character != null)
+            {
+                Color orange = GUIStyle.Orange;
+                // Reuse an existing, localized, text because it's what we want here: "Required skills:"
+                text = "\n\n" + $"‖color:{orange.ToStringHex()}‖{TextManager.Get("requiredrepairskills")}‖color:end‖";
+                foreach (var hint in SkillRequirementHints)
+                {
+                    int skillLevel = (int)character.GetSkillLevel(hint.Skill);
+                    Color levelColor = GUIStyle.Yellow;
+                    if (skillLevel >= hint.Level)
+                    {
+                        levelColor = GUIStyle.Green;
+                    }
+                    else if (skillLevel < hint.Level / 2)
+                    {
+                        levelColor = GUIStyle.Red;
+                    }
+                    text += "\n" + hint.GetFormattedText(skillLevel, levelColor.ToStringHex());
+                }
+            }
+            return text;
         }
     }
 }

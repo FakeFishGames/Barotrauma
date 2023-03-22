@@ -158,7 +158,7 @@ namespace Barotrauma
                 else if (client.Karma < 40.0f)
                     herpesStrength = 30.0f;
                 
-                var existingAffliction = client.Character.CharacterHealth.GetAffliction<AfflictionSpaceHerpes>("spaceherpes");
+                var existingAffliction = client.Character.CharacterHealth.GetAffliction<AfflictionSpaceHerpes>(AfflictionPrefab.SpaceHerpesType);
                 if (existingAffliction == null && herpesStrength > 0.0f)
                 {
                     client.Character.CharacterHealth.ApplyAffliction(null, new Affliction(herpesAffliction, herpesStrength));
@@ -170,7 +170,7 @@ namespace Barotrauma
                     existingAffliction.Strength = herpesStrength;
                     if (herpesStrength <= 0.0f)
                     {
-                        client.Character.CharacterHealth.ReduceAfflictionOnAllLimbs("invertcontrols".ToIdentifier(), 100.0f);
+                        client.Character.CharacterHealth.ReduceAfflictionOnAllLimbs(AfflictionPrefab.InvertControlsType, 100.0f);
                     }
                 }
 
@@ -358,8 +358,8 @@ namespace Barotrauma
                 }
             }
 
-            bool targetIsHusk = target.CharacterHealth?.GetAffliction<AfflictionHusk>("huskinfection")?.State == AfflictionHusk.InfectionState.Active;
-            bool attackerIsHusk = attacker.CharacterHealth?.GetAffliction<AfflictionHusk>("huskinfection")?.State == AfflictionHusk.InfectionState.Active;
+            bool targetIsHusk = target.CharacterHealth?.GetAffliction<AfflictionHusk>(AfflictionPrefab.HuskInfectionType)?.State == AfflictionHusk.InfectionState.Active;
+            bool attackerIsHusk = attacker.CharacterHealth?.GetAffliction<AfflictionHusk>(AfflictionPrefab.HuskInfectionType)?.State == AfflictionHusk.InfectionState.Active;
             //huskified characters count as enemies to healthy characters and vice versa
             if (targetIsHusk != attackerIsHusk) { isEnemy = true; }
 
@@ -614,7 +614,7 @@ namespace Barotrauma
 
             if (amount < 0.0f)
             {
-                float? herpesStrength = client.Character?.CharacterHealth.GetAfflictionStrength("spaceherpes");
+                float? herpesStrength = client.Character?.CharacterHealth.GetAfflictionStrength(AfflictionPrefab.SpaceHerpesType);
                 var clientMemory = GetClientMemory(client);
                 clientMemory.KarmaDecreasesInPastMinute.RemoveAll(ta => ta.Time + 60.0f < Timing.TotalTime);
                 float aggregate = clientMemory.KarmaDecreasesInPastMinute.Select(ta => ta.Amount).DefaultIfEmpty().Aggregate((a, b) => a + b);

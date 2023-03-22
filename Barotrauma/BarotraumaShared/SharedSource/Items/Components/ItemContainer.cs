@@ -12,20 +12,9 @@ namespace Barotrauma.Items.Components
 {
     partial class ItemContainer : ItemComponent, IDrawableComponent
     {
-        class ActiveContainedItem
-        {
-            public readonly Item Item;
-            public readonly StatusEffect StatusEffect;
-            public readonly bool ExcludeBroken;
-            public readonly bool ExcludeFullCondition;
-            public ActiveContainedItem(Item item, StatusEffect statusEffect, bool excludeBroken, bool excludeFullCondition)
-            {
-                Item = item;
-                StatusEffect = statusEffect;
-                ExcludeBroken = excludeBroken;
-                ExcludeFullCondition = excludeFullCondition;
-            }
-        }
+        readonly record struct ActiveContainedItem(Item Item, StatusEffect StatusEffect, bool ExcludeBroken, bool ExcludeFullCondition);
+
+        readonly record struct DrawableContainedItem(Item Item, bool Hide, Vector2? ItemPos, float Rotation);
 
         class SlotRestrictions
         {
@@ -63,7 +52,9 @@ namespace Barotrauma.Items.Components
         public readonly ItemInventory Inventory;
 
         private readonly List<ActiveContainedItem> activeContainedItems = new List<ActiveContainedItem>();
-        
+
+        private readonly List<DrawableContainedItem> drawableContainedItems = new List<DrawableContainedItem>();
+
         private List<ushort>[] itemIds;
 
         //how many items can be contained
@@ -351,8 +342,6 @@ namespace Barotrauma.Items.Components
 
         public void OnItemContained(Item containedItem)
         {
-            item.SetContainedItemPositions();
-
             int index = Inventory.FindIndex(containedItem);
             if (index >= 0 && index < slotRestrictions.Length)
             {
@@ -370,6 +359,14 @@ namespace Barotrauma.Items.Components
                 }
             }
 
+            var relatedItem = FindContainableItem(containedItem);
+            drawableContainedItems.RemoveAll(d => d.Item == containedItem);
+            drawableContainedItems.Add(new DrawableContainedItem(containedItem, 
+                Hide: relatedItem?.Hide ?? false, 
+                ItemPos: relatedItem?.ItemPos, 
+                Rotation: relatedItem?.Rotation ?? 0.0f));
+            drawableContainedItems.Sort((DrawableContainedItem it1, DrawableContainedItem it2) => Inventory.FindIndex(it1.Item).CompareTo(Inventory.FindIndex(it2.Item)));
+
             if (item.GetComponent<Planter>() != null)
             {
                 GameAnalyticsManager.AddDesignEvent("MicroInteraction:" + (GameMain.GameSession?.GameMode?.Preset.Identifier.Value ?? "null") + ":GardeningPlanted:" + containedItem.Prefab.Identifier);
@@ -384,6 +381,7 @@ namespace Barotrauma.Items.Components
                 // Set the contained items active if there's an item inserted inside the container. Enables e.g. the rifle flashlight when it's attached to the rifle (put inside of it).
                 SetContainedActive(true);
             }
+            item.SetContainedItemPositions();
             CharacterHUD.RecreateHudTextsIfFocused(item, containedItem);
             OnContainedItemsChanged.Invoke(this);
         }
@@ -396,6 +394,7 @@ namespace Barotrauma.Items.Components
         public void OnItemRemoved(Item containedItem)
         {
             activeContainedItems.RemoveAll(i => i.Item == containedItem);
+            drawableContainedItems.RemoveAll(i => i.Item == containedItem);
             //deactivate if the inventory is empty
             IsActive = activeContainedItems.Count > 0 || Inventory.AllItems.Any(it => it.body != null);
             CharacterHUD.RecreateHudTextsIfFocused(item, containedItem);
@@ -486,8 +485,8 @@ namespace Barotrauma.Items.Components
                             item.ApplyStatusEffects(ActionType.OnSuccess, 1.0f, ownerCharacter);
                             item.ApplyStatusEffects(ActionType.OnUse, 1.0f, ownerCharacter);
                             item.GetComponent<GeneticMaterial>()?.Equip(ownerCharacter);
-                            autoInjectCooldown = AutoInjectInterval;
                         }
+                        autoInjectCooldown = AutoInjectInterval;
                     }
                 }
 
@@ -512,10 +511,18 @@ namespace Barotrauma.Items.Components
                 if (activeContainedItem.ExcludeFullCondition && contained.IsFullCondition) { continue; }
                 StatusEffect effect = activeContainedItem.StatusEffect;
 
-                if (effect.HasTargetType(StatusEffect.TargetType.This))                 
+                if (effect.HasTargetType(StatusEffect.TargetType.This))
+                {
                     effect.Apply(ActionType.OnContaining, deltaTime, item, item.AllPropertyObjects);
-                if (effect.HasTargetType(StatusEffect.TargetType.Contained)) 
+                }
+                if (effect.HasTargetType(StatusEffect.TargetType.Contained))
+                {
                     effect.Apply(ActionType.OnContaining, deltaTime, item, contained.AllPropertyObjects);
+                }
+                if (effect.HasTargetType(StatusEffect.TargetType.Character) && item.ParentInventory?.Owner is Character character)
+                {
+                    effect.Apply(ActionType.OnContaining, deltaTime, item, character);
+                }
                 if (effect.HasTargetType(StatusEffect.TargetType.NearbyItems) ||
                     effect.HasTargetType(StatusEffect.TargetType.NearbyCharacters))
                 {
@@ -759,54 +766,50 @@ namespace Barotrauma.Items.Components
 
             int i = 0;
             Vector2 currentItemPos = transformedItemPos;
-            foreach (Item contained in Inventory.AllItems)
+            foreach (DrawableContainedItem contained in drawableContainedItems)
             {
                 Vector2 itemPos = currentItemPos;
-                var relatedItem = FindContainableItem(contained);
-                if (relatedItem != null)
+                if (contained.ItemPos.HasValue)
                 {
-                    if (relatedItem.ItemPos.HasValue)
+                    Vector2 pos = contained.ItemPos.Value;
+                    if (item.body != null)
                     {
-                        Vector2 pos = relatedItem.ItemPos.Value;
-                        if (item.body != null)
+                        Matrix transform = Matrix.CreateRotationZ(item.body.Rotation);
+                        pos.X *= item.body.Dir;
+                        itemPos = Vector2.Transform(pos, transform) + item.body.Position;
+                    }
+                    else
+                    {
+                        itemPos = pos;
+                        // This code is aped based on above. Not tested.
+                        if (item.FlippedX)
                         {
-                            Matrix transform = Matrix.CreateRotationZ(item.body.Rotation);
-                            pos.X *= item.body.Dir;
-                            itemPos = Vector2.Transform(pos, transform) + item.body.Position;
+                            itemPos.X = -itemPos.X;
+                            itemPos.X += item.Rect.Width;
                         }
-                        else
+                        if (item.FlippedY)
                         {
-                            itemPos = pos;
-                            // This code is aped based on above. Not tested.
-                            if (item.FlippedX)
-                            {
-                                itemPos.X = -itemPos.X;
-                                itemPos.X += item.Rect.Width;
-                            }
-                            if (item.FlippedY)
-                            {
-                                itemPos.Y = -itemPos.Y;
-                                itemPos.Y -= item.Rect.Height;
-                            }
-                            itemPos += new Vector2(item.Rect.X, item.Rect.Y);
-                            if (Math.Abs(item.RotationRad) > 0.01f)
-                            {
-                                Matrix transform = Matrix.CreateRotationZ(item.RotationRad);
-                                itemPos = Vector2.Transform(itemPos - item.Position, transform) + item.Position;
-                            }
+                            itemPos.Y = -itemPos.Y;
+                            itemPos.Y -= item.Rect.Height;
+                        }
+                        itemPos += new Vector2(item.Rect.X, item.Rect.Y);
+                        if (Math.Abs(item.RotationRad) > 0.01f)
+                        {
+                            Matrix transform = Matrix.CreateRotationZ(item.RotationRad);
+                            itemPos = Vector2.Transform(itemPos - item.Position, transform) + item.Position;
                         }
                     }
-                }
+                }                
 
-                if (contained.body != null)
+                if (contained.Item.body != null)
                 {
                     try
                     {
                         Vector2 simPos = ConvertUnits.ToSimUnits(itemPos);
                         float rotation = itemRotation;
-                        if (relatedItem != null && relatedItem.Rotation != 0)
+                        if (contained.Rotation != 0)
                         {
-                            rotation = MathHelper.ToRadians(relatedItem.Rotation);
+                            rotation = MathHelper.ToRadians(contained.Rotation);
                         }
                         if (item.body != null)
                         {
@@ -817,29 +820,29 @@ namespace Barotrauma.Items.Components
                         {
                             rotation += -item.RotationRad;
                         }
-                        contained.body.FarseerBody.SetTransformIgnoreContacts(ref simPos, rotation);
-                        contained.body.SetPrevTransform(contained.body.SimPosition, contained.body.Rotation);
-                        contained.body.UpdateDrawPosition();
+                        contained.Item.body.FarseerBody.SetTransformIgnoreContacts(ref simPos, rotation);
+                        contained.Item.body.SetPrevTransform(contained.Item.body.SimPosition, contained.Item.body.Rotation);
+                        contained.Item.body.UpdateDrawPosition();
                     }
                     catch (Exception e)
                     {
                         DebugConsole.Log("SetTransformIgnoreContacts threw an exception in SetContainedItemPositions (" + e.Message + ")\n" + e.StackTrace.CleanupStackTrace());
-                        GameAnalyticsManager.AddErrorEventOnce("ItemContainer.SetContainedItemPositions.InvalidPosition:" + contained.Name,
+                        GameAnalyticsManager.AddErrorEventOnce("ItemContainer.SetContainedItemPositions.InvalidPosition:" + contained.Item.Name,
                             GameAnalyticsManager.ErrorSeverity.Error,
                             "SetTransformIgnoreContacts threw an exception in SetContainedItemPositions (" + e.Message + ")\n" + e.StackTrace.CleanupStackTrace());
                     }
-                    contained.body.Submarine = item.Submarine;
+                    contained.Item.body.Submarine = item.Submarine;
                 }
 
-                contained.Rect =
+                contained.Item.Rect =
                     new Rectangle(
-                        (int)(itemPos.X - contained.Rect.Width / 2.0f),
-                        (int)(itemPos.Y + contained.Rect.Height / 2.0f),
-                        contained.Rect.Width, contained.Rect.Height);
+                        (int)(itemPos.X - contained.Item.Rect.Width / 2.0f),
+                        (int)(itemPos.Y + contained.Item.Rect.Height / 2.0f),
+                        contained.Item.Rect.Width, contained.Item.Rect.Height);
 
-                contained.Submarine = item.Submarine;
-                contained.CurrentHull = item.CurrentHull;
-                contained.SetContainedItemPositions();
+                contained.Item.Submarine = item.Submarine;
+                contained.Item.CurrentHull = item.CurrentHull;
+                contained.Item.SetContainedItemPositions();
 
                 i++;
                 if (Math.Abs(ItemInterval.X) > 0.001f && Math.Abs(ItemInterval.Y) > 0.001f)

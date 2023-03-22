@@ -1,6 +1,5 @@
 ﻿using Microsoft.Xna.Framework;
 using System;
-using System.Xml.Linq;
 using Barotrauma.Networking;
 using Barotrauma.Extensions;
 #if CLIENT
@@ -13,6 +12,9 @@ namespace Barotrauma.Items.Components
     partial class LightComponent : Powered, IServerSerializable, IDrawableComponent
     {
         private Color lightColor;
+        /// <summary>
+        /// The current brightness of the light source, affected by powerconsumption/voltage
+        /// </summary>
         private float lightBrightness;
         private float blinkFrequency;
         private float pulseFrequency, pulseAmount;
@@ -94,7 +96,7 @@ namespace Barotrauma.Items.Components
                 if (isOn == value && IsActive == value) { return; }
 
                 IsActive = isOn = value;
-                SetLightSourceState(value);
+                SetLightSourceState(value, value ? lightBrightness : 0.0f);
                 OnStateChanged();
             }
         }
@@ -174,7 +176,7 @@ namespace Barotrauma.Items.Components
 #if CLIENT
                 if (Light != null)
                 {
-                    Light.Color = IsOn ? lightColor.Multiply(lightBrightness) : Color.Transparent;
+                    Light.Color = IsOn ? lightColor.Multiply(lightColorMultiplier) : Color.Transparent;
                 }
 #endif
             }
@@ -187,7 +189,7 @@ namespace Barotrauma.Items.Components
             set;
         }
 
-        [Serialize(false, IsPropertySaveable.No, description: "Should the light sprite be drawn on the item using alpha blending, in addition to being rendered in the light map? Can be used to make the light sprite stand out more.")]
+        [Serialize(true, IsPropertySaveable.No, description: "Should the light sprite be drawn on the item using alpha blending, in addition to being rendered in the light map? Can be used to make the light sprite stand out more.")]
         public bool AlphaBlend
         {
             get;
@@ -214,7 +216,7 @@ namespace Barotrauma.Items.Components
             {
                 if (base.IsActive == value) { return; }
                 base.IsActive = isOn = value;
-                SetLightSourceState(value);
+                SetLightSourceState(value, value ? lightBrightness : 0.0f);                
             }
         }
 
@@ -245,7 +247,7 @@ namespace Barotrauma.Items.Components
         public override void OnItemLoaded()
         {
             base.OnItemLoaded();
-            SetLightSourceState(IsActive);
+            SetLightSourceState(IsActive, lightBrightness);
             turret = item.GetComponent<Turret>();
 #if CLIENT
             Drawable = AlphaBlend && Light.LightSprite != null;
@@ -258,6 +260,12 @@ namespace Barotrauma.Items.Components
 
         public override void OnMapLoaded()
         {
+#if CLIENT
+            if (item.HiddenInGame)
+            {
+                Light.Enabled = false;
+            }
+#endif
             CheckIfNeedsUpdate();
         }
 
@@ -273,7 +281,8 @@ namespace Barotrauma.Items.Components
                 (statusEffectLists == null || !statusEffectLists.ContainsKey(ActionType.OnActive)) &&
                 (IsActiveConditionals == null || IsActiveConditionals.Count == 0))
             {
-                SetLightSourceState(true);
+                lightBrightness = 1.0f;
+                SetLightSourceState(true, lightBrightness);
                 SetLightSourceTransformProjSpecific();
                 base.IsActive = false;
                 isOn = true;
@@ -302,7 +311,8 @@ namespace Barotrauma.Items.Components
 #endif
             if (item.Container != null && item.GetRootInventoryOwner() is not Character)
             {
-                SetLightSourceState(false);
+                lightBrightness = 0.0f;
+                SetLightSourceState(false, 0.0f);
                 return;
             }
 
@@ -311,7 +321,8 @@ namespace Barotrauma.Items.Components
             PhysicsBody body = ParentBody ?? item.body;
             if (body != null && !body.Enabled)
             {
-                SetLightSourceState(false);
+                lightBrightness = 0.0f;
+                SetLightSourceState(false, 0.0f);
                 return;
             }
 
@@ -338,7 +349,7 @@ namespace Barotrauma.Items.Components
 
         public override void UpdateBroken(float deltaTime, Camera cam)
         {
-            SetLightSourceState(false);
+            SetLightSourceState(false, 0.0f);
         }
 
         public override bool Use(float deltaTime, Character character = null)
@@ -370,7 +381,7 @@ namespace Barotrauma.Items.Components
                     {
                         LightColor = XMLExtensions.ParseColor(signal.value, false);
 #if CLIENT
-                        SetLightSourceState(Light.Enabled);
+                        SetLightSourceState(Light.Enabled, lightColorMultiplier);
 #endif
                         prevColorSignal = signal.value;
                     }
@@ -388,7 +399,7 @@ namespace Barotrauma.Items.Components
             target.SightRange = Math.Max(target.SightRange, target.MaxSightRange * lightBrightness);
         }
 
-        partial void SetLightSourceState(bool enabled, float? brightness = null);
+        partial void SetLightSourceState(bool enabled, float brightness);
 
         public void SetLightSourceTransform()
         {

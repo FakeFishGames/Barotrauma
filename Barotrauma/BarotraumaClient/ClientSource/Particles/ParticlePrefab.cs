@@ -185,6 +185,9 @@ namespace Barotrauma.Particles
         [Editable, Serialize(false, IsPropertySaveable.No, description: "Should the particle be always rendered on top of entities?")]
         public bool DrawOnTop { get; private set; }
 
+        [Editable, Serialize(false, IsPropertySaveable.No, description: "Draw the particle even when it's calculated to be outside of view (the formula doesn't take scales into account). ")]
+        public bool DrawAlways { get; private set; }
+
         [Editable, Serialize(ParticleBlendState.AlphaBlend, IsPropertySaveable.No, description: "The type of blending to use when rendering the particle.")]
         public ParticleBlendState BlendState { get; private set; }
 
