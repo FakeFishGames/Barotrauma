@@ -298,7 +298,7 @@ namespace Barotrauma.Networking
         {
             if (netServer == null) { return; }
 
-            PendingClient? pendingClient = pendingClients.Find(c => c.AccountInfo.AccountId is Some<AccountId> { Value: SteamId id } && id.Value == steamId);
+            PendingClient? pendingClient = pendingClients.Find(c => c.AccountInfo.AccountId.TryUnwrap<SteamId>(out var id) && id.Value == steamId);
             DebugConsole.Log($"{steamId} validation: {status}, {(pendingClient != null)}");
 
             if (pendingClient is null)
@@ -306,7 +306,7 @@ namespace Barotrauma.Networking
                 if (status == Steamworks.AuthResponse.OK) { return; }
 
                 if (connectedClients.Find(c
-                        => c.AccountInfo.AccountId is Some<AccountId> { Value: SteamId id } && id.Value == steamId)
+                        => c.AccountInfo.AccountId.TryUnwrap<SteamId>(out var id) && id.Value == steamId)
                     is LidgrenConnection connection)
                 {
                     Disconnect(connection,  PeerDisconnectPacket.SteamAuthError(status));
@@ -380,7 +380,7 @@ namespace Barotrauma.Networking
                 lidgrenConn.Status = NetworkConnectionStatus.Disconnected;
                 connectedClients.Remove(lidgrenConn);
                 callbacks.OnDisconnect.Invoke(conn, peerDisconnectPacket);
-                if (conn.AccountInfo.AccountId is Some<AccountId> { Value: SteamId steamId }) { SteamManager.StopAuthSession(steamId); }
+                if (conn.AccountInfo.AccountId.TryUnwrap<SteamId>(out var steamId)) { SteamManager.StopAuthSession(steamId); }
             }
 
             lidgrenConn.NetConnection.Disconnect(peerDisconnectPacket.ToLidgrenStringRepresentation());

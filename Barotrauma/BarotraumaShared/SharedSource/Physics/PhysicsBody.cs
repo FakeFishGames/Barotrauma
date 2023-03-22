@@ -119,7 +119,9 @@ namespace Barotrauma
         }
 
         private Shape bodyShape;
-        public float height, width, radius;
+        public float Height { get; private set; }
+        public float Width { get; private set; }
+        public float Radius { get; private set; }
         
         private readonly float density;
 
@@ -385,7 +387,7 @@ namespace Barotrauma
             float height = ConvertUnits.ToSimUnits(colliderParams.Height) * colliderParams.Ragdoll.LimbScale;
             float width = ConvertUnits.ToSimUnits(colliderParams.Width) * colliderParams.Ragdoll.LimbScale;
             density = Physics.NeutralDensity;
-            CreateBody(width, height, radius, density, BodyType.Dynamic,
+            CreateBody(width, height, radius, density, colliderParams.BodyType,
                 Physics.CollisionCharacter,
                 Physics.CollisionWall | Physics.CollisionLevel, 
                 findNewContacts);
@@ -434,9 +436,17 @@ namespace Barotrauma
             float width = ConvertUnits.ToSimUnits(element.GetAttributeFloat("width", 0.0f)) * scale;
             density = Math.Max(forceDensity ?? element.GetAttributeFloat("density", Physics.NeutralDensity), MinDensity);
             Enum.TryParse(element.GetAttributeString("bodytype", "Dynamic"), out BodyType bodyType);
-            CreateBody(width, height, radius, density, bodyType, collisionCategory, collidesWith, findNewContacts);
-            _collisionCategories = collisionCategory;
-            _collidesWith = collidesWith;
+            if (element.GetAttributeBool("ignorecollision", false))
+            {
+                _collisionCategories = Category.None;
+                _collidesWith = Category.None;
+            }
+            else
+            {
+                _collisionCategories = collisionCategory;
+                _collidesWith = collidesWith;
+            }
+            CreateBody(width, height, radius, density, bodyType, _collisionCategories, _collidesWith, findNewContacts);
             FarseerBody.Friction = element.GetAttributeFloat("friction", 0.5f);
             FarseerBody.Restitution = element.GetAttributeFloat("restitution", 0.05f);                    
             FarseerBody.UserData = this;
@@ -472,9 +482,9 @@ namespace Barotrauma
             {
                 DebugConsole.ThrowError("Invalid physics body dimensions (width: " + width + ", height: " + height + ", radius: " + radius + ")");
             }
-            this.width = width;
-            this.height = height;
-            this.radius = radius;
+            Width = width;
+            Height = height;
+            Radius = radius;
             _collisionCategories = collisionCategory;
             _collidesWith = collidesWith;
         }
@@ -492,16 +502,16 @@ namespace Barotrauma
             switch (bodyShape)
             {
                 case Shape.Capsule:
-                    pos = new Vector2(0.0f, height / 2 + radius);
+                    pos = new Vector2(0.0f, Height / 2 + Radius);
                     break;
                 case Shape.HorizontalCapsule:
-                    pos = new Vector2(width / 2 + radius, 0.0f);
+                    pos = new Vector2(Width / 2 + Radius, 0.0f);
                     break;
                 case Shape.Circle:
-                    pos = new Vector2(0.0f, radius);
+                    pos = new Vector2(0.0f, Radius);
                     break;
                 case Shape.Rectangle:
-                    pos = height > width ? new Vector2(0, height / 2) : new Vector2(width / 2, 0);
+                    pos = Height > Width ? new Vector2(0, Height / 2) : new Vector2(Width / 2, 0);
                     break;
                 default:
                     throw new NotImplementedException();
@@ -514,13 +524,13 @@ namespace Barotrauma
             switch (bodyShape)
             {
                 case Shape.Capsule:
-                    return height / 2 + radius;
+                    return Height / 2 + Radius;
                 case Shape.HorizontalCapsule:
-                    return width / 2 + radius;
+                    return Width / 2 + Radius;
                 case Shape.Circle:
-                    return radius;
+                    return Radius;
                 case Shape.Rectangle:
-                    return new Vector2(width * 0.5f, height * 0.5f).Length();
+                    return new Vector2(Width * 0.5f, Height * 0.5f).Length();
                 default:
                     throw new NotImplementedException();
             }
@@ -531,13 +541,13 @@ namespace Barotrauma
             switch (bodyShape)
             {
                 case Shape.Capsule:
-                    return new Vector2(radius * 2, height + radius * 2);
+                    return new Vector2(Radius * 2, Height + Radius * 2);
                 case Shape.HorizontalCapsule:
-                    return new Vector2(width + radius * 2, radius * 2);
+                    return new Vector2(Width + Radius * 2, Radius * 2);
                 case Shape.Circle:
-                    return new Vector2(radius * 2);
+                    return new Vector2(Radius * 2);
                 case Shape.Rectangle:
-                    return new Vector2(width, height);
+                    return new Vector2(Width, Height);
                 default:
                     throw new NotImplementedException();
             }
@@ -548,24 +558,24 @@ namespace Barotrauma
             switch (bodyShape)
             {
                 case Shape.Capsule:
-                    radius = Math.Max(size.X / 2, 0);
-                    height = Math.Max(size.Y - size.X, 0);
-                    width = 0;
+                    Radius = Math.Max(size.X / 2, 0);
+                    Height = Math.Max(size.Y - size.X, 0);
+                    Width = 0;
                     break;
                 case Shape.HorizontalCapsule:
-                    radius = Math.Max(size.Y / 2, 0);
-                    width = Math.Max(size.X - size.Y, 0);
-                    height = 0;
+                    Radius = Math.Max(size.Y / 2, 0);
+                    Width = Math.Max(size.X - size.Y, 0);
+                    Height = 0;
                     break;
                 case Shape.Circle:
-                    radius = Math.Max(Math.Min(size.X, size.Y) / 2, 0);
-                    width = 0;
-                    height = 0;
+                    Radius = Math.Max(Math.Min(size.X, size.Y) / 2, 0);
+                    Width = 0;
+                    Height = 0;
                     break;
                 case Shape.Rectangle:
-                    width = Math.Max(size.X, 0);
-                    height = Math.Max(size.Y, 0);
-                    radius = 0;
+                    Width = Math.Max(size.X, 0);
+                    Height = Math.Max(size.Y, 0);
+                    Radius = 0;
                     break;
                 default:
                     throw new NotImplementedException();
@@ -830,7 +840,7 @@ namespace Barotrauma
                 Vector2 velDir = LinearVelocity / speed;
 
                 float vel = speed * 2.0f;
-                float drag = vel * vel * Math.Max(height + radius * 2, height);
+                float drag = vel * vel * Math.Max(Height + Radius * 2, Height);
                 dragForce = Math.Min(drag, Mass * 500.0f) * -velDir;
             }
 

@@ -403,7 +403,7 @@ namespace Barotrauma.Steam
                     var ids = items.Select(it => it.Id.Value).ToHashSet();
                     var toUninstall = ContentPackageManager.WorkshopPackages
                         .Where(pkg
-                            => !pkg.UgcId.TryUnwrap(out SteamWorkshopId workshopId)
+                            => !pkg.UgcId.TryUnwrap<SteamWorkshopId>(out var workshopId)
                                || !ids.Contains(workshopId.Value))
                         .ToArray();
                     if (toUninstall.Any())

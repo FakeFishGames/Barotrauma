@@ -527,14 +527,17 @@ namespace Barotrauma.Items.Components
 
         public override void Update(float deltaTime, Camera cam)
         {
-            if (picker.Removed)
+            if (picker == null || picker.Removed)
             {
                 IsActive = false;
                 return;
             }
 
-            item.SetTransform(picker.SimPosition, 0.0f);
-            
+            //if the item is also being held, let the Holdable component control the position
+            if (item.GetComponent<Holdable>() is not { IsActive: true })
+            {
+                item.SetTransform(picker.SimPosition, 0.0f);
+            }
             item.ApplyStatusEffects(ActionType.OnWearing, deltaTime, picker);
 
 #if CLIENT

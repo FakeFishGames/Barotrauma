@@ -1,5 +1,6 @@
 ﻿#nullable enable
 
+using Barotrauma.Extensions;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -69,6 +70,9 @@ namespace Barotrauma.Networking
         
         [Serialize(PlayStyle.Casual, IsPropertySaveable.Yes)]
         public PlayStyle PlayStyle { get; set; }
+        
+        [Serialize("", IsPropertySaveable.Yes)]
+        public LanguageIdentifier Language { get; set; }
 
         public Version GameVersion { get; set; } = new Version(0, 0, 0, 0);
 
@@ -281,7 +285,7 @@ namespace Barotrauma.Networking
 
             // -----------------------------------------------------------------------------
 
-            float elementHeight = 0.075f;
+            const float elementHeight = 0.075f;
 
             // Spacing
             new GUIFrame(new RectTransform(new Vector2(1.0f, 0.025f), content.RectTransform), style: null);
@@ -293,6 +297,11 @@ namespace Barotrauma.Networking
             };
             serverMsg.Content.RectTransform.SizeChanged += () => { msgText.CalculateHeightFromText(); };
             msgText.RectTransform.SizeChanged += () => { serverMsg.UpdateScrollBarSize(); };
+
+            var languageLabel = new GUITextBlock(new RectTransform(new Vector2(1.0f, elementHeight), content.RectTransform), TextManager.Get("Language"));
+            new GUITextBlock(new RectTransform(Vector2.One, languageLabel.RectTransform),
+                ServerLanguageOptions.Options.FirstOrNull(o => o.Identifier == Language)?.Label ?? TextManager.Get("Unknown"),
+                textAlignment: Alignment.Right);
 
             var gameMode = new GUITextBlock(new RectTransform(new Vector2(1.0f, elementHeight), content.RectTransform), TextManager.Get("GameMode"));
             new GUITextBlock(new RectTransform(Vector2.One, gameMode.RectTransform),
@@ -363,7 +372,7 @@ namespace Barotrauma.Networking
                             packageText.Selected = true;
                         }
                         //workshop download link found
-                        else if (package.Id is Some<ContentPackageId> { Value: var ugcId } && ugcId is SteamWorkshopId)
+                        else if (package.Id.TryUnwrap(out var ugcId) && ugcId is SteamWorkshopId)
                         {
                             packageText.ToolTip = TextManager.GetWithVariable("ServerListIncompatibleContentPackageWorkshopAvailable", "[contentpackage]", package.Name);
                         }
@@ -417,6 +426,7 @@ namespace Barotrauma.Networking
             GameMode = valueGetter("gamemode")?.ToIdentifier() ?? Identifier.Empty;
             if (Enum.TryParse(valueGetter("traitors"), out YesNoMaybe traitorsEnabled)) { TraitorsEnabled = traitorsEnabled; }
             if (Enum.TryParse(valueGetter("playstyle"), out PlayStyle playStyle)) { PlayStyle = playStyle; }
+            Language = valueGetter("language")?.ToLanguageIdentifier() ?? LanguageIdentifier.None;
 
             ContentPackages = ExtractContentPackageInfo(valueGetter).ToImmutableArray();
             

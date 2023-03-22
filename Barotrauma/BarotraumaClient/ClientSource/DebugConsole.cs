@@ -639,7 +639,7 @@ namespace Barotrauma
             {
                 if (Submarine.MainSub == null) { return; }
                 MapEntity.SelectedList.Clear();
-                MapEntity.mapEntityList.ForEach(me => me.IsHighlighted = false);
+                MapEntity.ClearHighlightedEntities();
                 WikiImage.Create(Submarine.MainSub);
             }));
 
@@ -752,7 +752,7 @@ namespace Barotrauma
                      state = !GameMain.LightManager.LosEnabled;
                  }
                  GameMain.LightManager.LosEnabled = state;
-                 NewMessage("Line of sight effect " + (GameMain.LightManager.LosEnabled ? "enabled" : "disabled"), Color.White);
+                 NewMessage("Line of sight effect " + (GameMain.LightManager.LosEnabled ? "enabled" : "disabled"), Color.Yellow);
              });
             AssignRelayToServer("los", false);
 
@@ -763,7 +763,7 @@ namespace Barotrauma
                     state = !GameMain.LightManager.LightingEnabled;
                 }
                 GameMain.LightManager.LightingEnabled = state;
-                NewMessage("Lighting " + (GameMain.LightManager.LightingEnabled ? "enabled" : "disabled"), Color.White);
+                NewMessage("Lighting " + (GameMain.LightManager.LightingEnabled ? "enabled" : "disabled"), Color.Yellow);
             });
             AssignRelayToServer("lighting|lights", false);
 
@@ -781,7 +781,7 @@ namespace Barotrauma
                             hull.OriginalAmbientLight = null;
                         }
                     }
-                    NewMessage("Restored all hull ambient lights", Color.White);
+                    NewMessage("Restored all hull ambient lights", Color.Yellow);
                     return;
                 }
 
@@ -803,11 +803,11 @@ namespace Barotrauma
 
                 if (add)
                 {
-                    NewMessage($"Set ambient light color to {color}.", Color.White);
+                    NewMessage($"Set ambient light color to {color}.", Color.Yellow);
                 }
                 else
                 {
-                    NewMessage($"Increased ambient light by {color}.", Color.White);
+                    NewMessage($"Increased ambient light by {color}.", Color.Yellow);
                 }
             });
             AssignRelayToServer("ambientlight", false);
@@ -1124,7 +1124,7 @@ namespace Barotrauma
                     state = !GameMain.DebugDraw;
                 }
                 GameMain.DebugDraw = state;
-                NewMessage("Debug draw mode " + (GameMain.DebugDraw ? "enabled" : "disabled"), Color.White);
+                NewMessage("Debug draw mode " + (GameMain.DebugDraw ? "enabled" : "disabled"), Color.Yellow);
             });
             AssignRelayToServer("debugdraw", false);
 
@@ -1157,7 +1157,7 @@ namespace Barotrauma
                     state = !TextManager.DebugDraw;
                 }
                 TextManager.DebugDraw = state;
-                NewMessage("Localization debug draw mode " + (TextManager.DebugDraw ? "enabled" : "disabled"), Color.White);
+                NewMessage("Localization debug draw mode " + (TextManager.DebugDraw ? "enabled" : "disabled"), Color.Yellow);
             });
             AssignRelayToServer("debugdraw", false);
 
@@ -1170,19 +1170,19 @@ namespace Barotrauma
                 var config = GameSettings.CurrentConfig;
                 config.Audio.DisableVoiceChatFilters = state;
                 GameSettings.SetCurrentConfig(config);
-                NewMessage("Voice chat filters " + (GameSettings.CurrentConfig.Audio.DisableVoiceChatFilters ? "disabled" : "enabled"), Color.White);
+                NewMessage("Voice chat filters " + (GameSettings.CurrentConfig.Audio.DisableVoiceChatFilters ? "disabled" : "enabled"), Color.Yellow);
             });
             AssignRelayToServer("togglevoicechatfilters", false);
 
             commands.Add(new Command("fpscounter", "fpscounter: Toggle the FPS counter.", (string[] args) =>
             {
                 GameMain.ShowFPS = !GameMain.ShowFPS;
-                NewMessage("FPS counter " + (GameMain.DebugDraw ? "enabled" : "disabled"), Color.White);
+                NewMessage("FPS counter " + (GameMain.DebugDraw ? "enabled" : "disabled"), Color.Yellow);
             }));
             commands.Add(new Command("showperf", "showperf: Toggle performance statistics on/off.", (string[] args) =>
             {
                 GameMain.ShowPerf = !GameMain.ShowPerf;
-                NewMessage("Performance statistics " + (GameMain.ShowPerf ? "enabled" : "disabled"), Color.White);
+                NewMessage("Performance statistics " + (GameMain.ShowPerf ? "enabled" : "disabled"), Color.Yellow);
             }));
 
             AssignOnClientExecute("netstats", (string[] args) =>
@@ -1194,55 +1194,55 @@ namespace Barotrauma
             commands.Add(new Command("hudlayoutdebugdraw|debugdrawhudlayout", "hudlayoutdebugdraw: Toggle the debug drawing mode of HUD layout areas on/off.", (string[] args) =>
             {
                 HUDLayoutSettings.DebugDraw = !HUDLayoutSettings.DebugDraw;
-                NewMessage("HUD layout debug draw mode " + (HUDLayoutSettings.DebugDraw ? "enabled" : "disabled"), Color.White);
+                NewMessage("HUD layout debug draw mode " + (HUDLayoutSettings.DebugDraw ? "enabled" : "disabled"), Color.Yellow);
             }));
 
             commands.Add(new Command("interactdebugdraw|debugdrawinteract", "interactdebugdraw: Toggle the debug drawing mode of item interaction ranges on/off.", (string[] args) =>
             {
                 Character.DebugDrawInteract = !Character.DebugDrawInteract;
-                NewMessage("Interact debug draw mode " + (Character.DebugDrawInteract ? "enabled" : "disabled"), Color.White);
+                NewMessage("Interact debug draw mode " + (Character.DebugDrawInteract ? "enabled" : "disabled"), Color.Yellow);
             }, isCheat: true));
 
             AssignOnExecute("togglehud|hud", (string[] args) =>
             {
                 GUI.DisableHUD = !GUI.DisableHUD;
                 GameMain.Instance.IsMouseVisible = !GameMain.Instance.IsMouseVisible;
-                NewMessage(GUI.DisableHUD ? "Disabled HUD" : "Enabled HUD", Color.White);
+                NewMessage(GUI.DisableHUD ? "Disabled HUD" : "Enabled HUD", Color.Yellow);
             });
             AssignRelayToServer("togglehud|hud", false);
 
             AssignOnExecute("toggleupperhud", (string[] args) =>
             {
                 GUI.DisableUpperHUD = !GUI.DisableUpperHUD;
-                NewMessage(GUI.DisableUpperHUD ? "Disabled upper HUD" : "Enabled upper HUD", Color.White);
+                NewMessage(GUI.DisableUpperHUD ? "Disabled upper HUD" : "Enabled upper HUD", Color.Yellow);
             });
             AssignRelayToServer("toggleupperhud", false);
 
             AssignOnExecute("toggleitemhighlights", (string[] args) =>
             {
                 GUI.DisableItemHighlights = !GUI.DisableItemHighlights;
-                NewMessage(GUI.DisableItemHighlights ? "Disabled item highlights" : "Enabled item highlights", Color.White);
+                NewMessage(GUI.DisableItemHighlights ? "Disabled item highlights" : "Enabled item highlights", Color.Yellow);
             });
             AssignRelayToServer("toggleitemhighlights", false);
 
             AssignOnExecute("togglecharacternames", (string[] args) =>
             {
                 GUI.DisableCharacterNames = !GUI.DisableCharacterNames;
-                NewMessage(GUI.DisableCharacterNames ? "Disabled character names" : "Enabled character names", Color.White);
+                NewMessage(GUI.DisableCharacterNames ? "Disabled character names" : "Enabled character names", Color.Yellow);
             });
             AssignRelayToServer("togglecharacternames", false);
 
             AssignOnExecute("followsub", (string[] args) =>
             {
                 Camera.FollowSub = !Camera.FollowSub;
-                NewMessage(Camera.FollowSub ? "Set the camera to follow the closest submarine" : "Disabled submarine following.", Color.White);
+                NewMessage(Camera.FollowSub ? "Set the camera to follow the closest submarine" : "Disabled submarine following.", Color.Yellow);
             });
             AssignRelayToServer("followsub", false);
 
             AssignOnExecute("toggleaitargets|aitargets", (string[] args) =>
             {
                 AITarget.ShowAITargets = !AITarget.ShowAITargets;
-                NewMessage(AITarget.ShowAITargets ? "Enabled AI target drawing" : "Disabled AI target drawing", Color.White);
+                NewMessage(AITarget.ShowAITargets ? "Enabled AI target drawing" : "Disabled AI target drawing", Color.Yellow);
             });
             AssignRelayToServer("toggleaitargets|aitargets", false);
 
@@ -1264,9 +1264,35 @@ namespace Barotrauma
                     GameMain.LightManager.LosEnabled = true;
                     GameMain.LightManager.LosAlpha = 1f;
                 }
-                NewMessage(HumanAIController.debugai ? "AI debug info visible" : "AI debug info hidden", Color.White);
+                NewMessage(HumanAIController.debugai ? "AI debug info visible" : "AI debug info hidden", Color.Yellow);
             });
             AssignRelayToServer("debugai", false);
+
+            AssignOnExecute("showmonsters", (string[] args) =>
+            {
+                CreatureMetrics.UnlockAll = true;
+                CreatureMetrics.Save();
+                NewMessage("All monsters are now visible in the character editor.", Color.Yellow);
+                if (Screen.Selected == GameMain.CharacterEditorScreen)
+                {
+                    GameMain.CharacterEditorScreen.Deselect();
+                    GameMain.CharacterEditorScreen.Select();
+                }
+            });
+            AssignRelayToServer("showmonsters", false);
+
+            AssignOnExecute("hidemonsters", (string[] args) =>
+            {
+                CreatureMetrics.UnlockAll = false;
+                CreatureMetrics.Save();
+                NewMessage("All monsters that haven't yet been encountered in the game are now hidden in the character editor.", Color.Yellow);
+                if (Screen.Selected == GameMain.CharacterEditorScreen)
+                {
+                    GameMain.CharacterEditorScreen.Deselect();
+                    GameMain.CharacterEditorScreen.Select();
+                }
+            });
+            AssignRelayToServer("hidemonsters", false);
 
             AssignRelayToServer("water|editwater", false);
             AssignRelayToServer("fire|editfire", false);
@@ -2991,7 +3017,7 @@ namespace Barotrauma
                     ThrowError($"Could not find the location type \"{args[0]}\".");
                     return;
                 }
-                GameMain.GameSession.Campaign.Map.CurrentLocation.ChangeType(locationType);
+                GameMain.GameSession.Campaign.Map.CurrentLocation.ChangeType(GameMain.GameSession.Campaign, locationType);
             },
             () =>
             {

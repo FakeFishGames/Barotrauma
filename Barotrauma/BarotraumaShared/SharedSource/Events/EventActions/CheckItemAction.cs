@@ -33,7 +33,7 @@ namespace Barotrauma
         public int ItemContainerIndex { get; set; }
 
         private readonly IReadOnlyList<PropertyConditional> conditionals;
-        
+
         private readonly Identifier[] itemIdentifierSplit;
         private readonly Identifier[] itemTags;
 

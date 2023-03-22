@@ -22,7 +22,7 @@ namespace Barotrauma
 
         private Character character;
 
-        private bool stun = true;
+        private bool stun = false;
 
         private readonly List<Affliction> huskInfection = new List<Affliction>();
 
@@ -43,6 +43,7 @@ namespace Barotrauma
                     DeactivateHusk();
                     highestStrength = 0;
                 }
+                activeEffectDirty = true;
             }
         }
         private float highestStrength;
@@ -216,7 +217,8 @@ namespace Barotrauma
         private void DeactivateHusk()
         {
             if (character?.AnimController == null || character.Removed) { return; }
-            if (Prefab is AfflictionPrefabHusk { NeedsAir: false })
+            if (Prefab is AfflictionPrefabHusk { NeedsAir: false } && 
+                !character.CharacterHealth.GetAllAfflictions().Any(a => a != this && a.Prefab is AfflictionPrefabHusk { NeedsAir: false }))
             {
                 character.NeedsAir = character.Params.MainElement.GetAttributeBool("needsair", false);
             }

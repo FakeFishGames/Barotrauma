@@ -105,15 +105,21 @@ namespace Barotrauma
 
                 string slotString = subElement.GetAttributeString("slot", "None");
                 InvSlotType slot = Enum.TryParse(slotString, ignoreCase: true, out InvSlotType s) ? s : InvSlotType.None;
-                Entity.Spawner?.AddItemToSpawnQueue(itemPrefab, this, ignoreLimbSlots: subElement.GetAttributeBool("forcetoslot", false), slot: slot, onSpawned: (Item item) =>
+
+                bool forceToSlot = subElement.GetAttributeBool("forcetoslot", false);
+                int amount = subElement.GetAttributeInt("amount", 1);
+                for (int i = 0; i < amount; i++)
                 {
-                    if (item != null && item.ParentInventory != this)
+                    Entity.Spawner?.AddItemToSpawnQueue(itemPrefab, this, ignoreLimbSlots: forceToSlot, slot: slot, onSpawned: (Item item) =>
                     {
-                        string errorMsg = $"Failed to spawn the initial item \"{item.Prefab.Identifier}\" in the inventory of \"{character.SpeciesName}\".";
-                        DebugConsole.ThrowError(errorMsg);
-                        GameAnalyticsManager.AddErrorEventOnce("CharacterInventory:FailedToSpawnInitialItem", GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
-                    }
-                });
+                        if (item != null && item.ParentInventory != this)
+                        {
+                            string errorMsg = $"Failed to spawn the initial item \"{item.Prefab.Identifier}\" in the inventory of \"{character.SpeciesName}\".";
+                            DebugConsole.ThrowError(errorMsg);
+                            GameAnalyticsManager.AddErrorEventOnce("CharacterInventory:FailedToSpawnInitialItem", GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
+                        }
+                    });
+                }
             }
         }
 
@@ -170,21 +176,6 @@ namespace Barotrauma
             return 
                 base.CanBePutInSlot(itemPrefab, i, condition, quality) &&
                 (SlotTypes[i] == InvSlotType.Any || slots[i].Items.Count < 1);
-        }
-
-        public bool CanBeAutoMovedToCorrectSlots(Item item)
-        {
-            if (item == null) { return false; }
-            foreach (var allowedSlot in item.AllowedSlots)
-            {
-                InvSlotType slotsFree = InvSlotType.None;
-                for (int i = 0; i < slots.Length; i++)
-                {
-                    if (allowedSlot.HasFlag(SlotTypes[i]) && slots[i].Empty()) { slotsFree |= SlotTypes[i]; }
-                }
-                if (allowedSlot == slotsFree) { return true; }
-            }
-            return false;
         }
 
         public override void RemoveItem(Item item)

@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
+using Barotrauma.Steam;
 
 namespace Barotrauma.Networking
 {
@@ -78,7 +79,7 @@ namespace Barotrauma.Networking
             }
         }
         private Dictionary<Identifier, bool> tempMonsterEnabled;
-        
+
         partial void InitProjSpecific()
         {
             var properties = TypeDescriptor.GetProperties(GetType()).Cast<PropertyDescriptor>();
@@ -366,6 +367,15 @@ namespace Barotrauma.Networking
             };
 
             //***********************************************
+
+            // Language
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), serverTab.RectTransform), TextManager.Get("Language"), font: GUIStyle.SubHeadingFont);
+            var languageDD = new GUIDropDown(new RectTransform(new Vector2(1.0f, 0.02f), serverTab.RectTransform));
+            foreach (var language in ServerLanguageOptions.Options)
+            {
+                languageDD.AddItem(language.Label, language.Identifier);
+            }
+            GetPropertyData(nameof(Language)).AssignGUIComponent(languageDD);
 
             //changing server visibility on the fly is not supported in dedicated servers
             if (GameMain.Client?.ClientPeer is not LidgrenClientPeer)

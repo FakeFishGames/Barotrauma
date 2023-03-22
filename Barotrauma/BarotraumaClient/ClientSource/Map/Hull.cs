@@ -129,20 +129,15 @@ namespace Barotrauma
 
             Vector2 position = cam.ScreenToWorld(PlayerInput.MousePosition);
 
-            foreach (MapEntity entity in mapEntityList)
+            foreach (MapEntity entity in HighlightedEntities)
             {
-                if (entity == this || !entity.IsHighlighted) { continue; }
+                if (entity == this) { continue; }
                 if (!entity.IsMouseOn(position)) { continue; }
                 if (entity.linkedTo == null || !entity.Linkable) { continue; }
                 if (entity.linkedTo.Contains(this) || linkedTo.Contains(entity) || rClick)
                 {
-                    if (entity == this || !entity.IsHighlighted) { continue; }
-                    if (!entity.IsMouseOn(position)) { continue; }
-                    if (entity.linkedTo.Contains(this))
-                    {
-                        entity.linkedTo.Remove(this);
-                        linkedTo.Remove(entity);
-                    }
+                    entity.linkedTo.Remove(this);
+                    linkedTo.Remove(entity);                    
                 }
                 else
                 {
