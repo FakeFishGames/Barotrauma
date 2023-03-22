@@ -1,7 +1,9 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
+using System.Collections;
 using System.Linq;
+using static Barotrauma.Inventory;
 
 namespace Barotrauma.Items.Components
 {
@@ -250,6 +252,80 @@ namespace Barotrauma.Items.Components
             return true;
         }
 
+
+        public float GetContainedIndicatorState()
+        {
+            if (ShowConditionInContainedStateIndicator)
+            {
+                return item.Condition / item.MaxCondition;
+            }
+
+            int targetSlot = Math.Max(ContainedStateIndicatorSlot, 0);
+            if (targetSlot >= Inventory.Capacity) { return 0.0f; }
+
+            var containedItems = Inventory.GetItemsAt(targetSlot);            
+            if (containedItems == null) { return 0.0f; }
+            
+            Item containedItem = containedItems.FirstOrDefault();
+            if (ShowTotalStackCapacityInContainedStateIndicator)
+            {
+                // No item on the defined slot, check if the items on other slots can be used.
+                containedItem ??= 
+                    containedItems.FirstOrDefault() ?? 
+                    Inventory.AllItems.FirstOrDefault(it => CanBeContained(it, targetSlot));
+                if (containedItem == null) { return 0.0f; }
+                
+                int ignoredItemCount = 0;
+                var subContainableItems = AllSubContainableItems;
+                float targetSlotCapacity = GetMaxStackSize(targetSlot);
+                float capacity = targetSlotCapacity * MainContainerCapacity;
+                if (subContainableItems != null)
+                {
+                    bool useMainContainerCapacity = true;
+                    foreach (Item it in Inventory.AllItems)
+                    {
+                        // Ignore all items in the sub containers.
+                        foreach (RelatedItem ri in subContainableItems)
+                        {
+                            if (ri.MatchesItem(containedItem))
+                            {
+                                // The target item is in a subcontainer -> inverse the logic.
+                                useMainContainerCapacity = false;
+                                break;
+                            }
+                            if (ri.MatchesItem(it))
+                            {
+                                ignoredItemCount++;
+                            }
+                        }
+                        if (!useMainContainerCapacity) { break; }
+                    }
+                    if (!useMainContainerCapacity)
+                    {
+                        // Ignore all items in the main container.
+                        ignoredItemCount = Inventory.AllItems.Count(it => subContainableItems.Any(ri => !ri.MatchesItem(it)));
+                        capacity = targetSlotCapacity * (Capacity - MainContainerCapacity);
+                    }
+                }
+                int itemCount = Inventory.AllItems.Count() - ignoredItemCount;
+                return Math.Min(itemCount / Math.Max(capacity, 1), 1);                
+            }
+            else
+            {
+                if (containedItem != null && (Inventory.Capacity == 1 || HasSubContainers))
+                {
+                    int maxStackSize = Math.Min(containedItem.Prefab.MaxStackSize, GetMaxStackSize(targetSlot));
+                    if (maxStackSize > 1 || containedItem.Prefab.HideConditionBar)
+                    {
+                        return containedItems.Count() / (float)maxStackSize;
+                    }
+                }
+                return Inventory.Capacity == 1 || ContainedStateIndicatorSlot > -1 ?
+                    (containedItem == null ? 0.0f : containedItem.Condition / containedItem.MaxCondition) :
+                    Inventory.EmptySlotCount / (float)Inventory.Capacity;
+            }                  
+        }
+
         public void Draw(SpriteBatch spriteBatch, bool editing = false, float itemDepth = -1)
         {
             if (hideItems || (item.body != null && !item.body.Enabled)) { return; }
@@ -309,53 +385,97 @@ namespace Barotrauma.Items.Components
 
             Vector2 currentItemPos = transformedItemPos;
 
-            SpriteEffects spriteEffects = SpriteEffects.None;
-            if ((item.body != null && item.body.Dir == -1) || item.FlippedX) 
-            { 
-                spriteEffects |= MathUtils.NearlyEqual(ItemRotation % 180, 90.0f) ? SpriteEffects.FlipVertically : SpriteEffects.FlipHorizontally;
-            }
-            if (item.FlippedY)
-            {
-                spriteEffects |= MathUtils.NearlyEqual(ItemRotation % 180, 90.0f) ? SpriteEffects.FlipHorizontally : SpriteEffects.FlipVertically;
-            }
-
             bool isWiringMode = SubEditorScreen.TransparentWiringMode && SubEditorScreen.IsWiringMode();
 
             int i = 0;
-            foreach (Item containedItem in Inventory.AllItems)
+            foreach (DrawableContainedItem contained in drawableContainedItems)
             {
-                if (containedItem?.Sprite == null) { continue; }
+                Vector2 itemPos = currentItemPos;
 
+                if (contained.Item?.Sprite == null) { continue; }
+
+                if (contained.Hide) { continue; }
+                if (contained.ItemPos.HasValue)
+                {
+                    Vector2 pos = contained.ItemPos.Value;
+                    if (item.body != null)
+                    {
+                        Matrix transform = Matrix.CreateRotationZ(item.body.DrawRotation);
+                        pos.X *= item.body.Dir;
+                        itemPos = Vector2.Transform(pos, transform) + item.body.DrawPosition;
+                    }
+                    else
+                    {
+                        itemPos = pos;
+                        // This code is aped based on above. Not tested.
+                        if (item.FlippedX)
+                        {
+                            itemPos.X = -itemPos.X;
+                            itemPos.X += item.Rect.Width;
+                        }
+                        if (item.FlippedY)
+                        {
+                            itemPos.Y = -itemPos.Y;
+                            itemPos.Y -= item.Rect.Height;
+                        }
+                        itemPos += new Vector2(item.Rect.X, item.Rect.Y);
+                        if (item.Submarine != null)
+                        {
+                            itemPos += item.Submarine.DrawPosition;
+                        }
+                        if (Math.Abs(item.RotationRad) > 0.01f)
+                        {
+                            Matrix transform = Matrix.CreateRotationZ(-item.RotationRad);
+                            itemPos = Vector2.Transform(itemPos - item.DrawPosition, transform) + item.DrawPosition;
+                        }
+                    }
+                }
+                
                 if (AutoInteractWithContained)
                 {
-                    containedItem.IsHighlighted = item.IsHighlighted;
+                    contained.Item.IsHighlighted = item.IsHighlighted;
                     item.IsHighlighted = false;
                 }
 
-                Vector2 origin = containedItem.Sprite.Origin;
-                if (item.FlippedX) { origin.X = containedItem.Sprite.SourceRect.Width - origin.X; }
-                if (item.FlippedY) { origin.Y = containedItem.Sprite.SourceRect.Height - origin.Y; }
+                Vector2 origin = contained.Item.Sprite.Origin;
+                if (item.FlippedX) { origin.X = contained.Item.Sprite.SourceRect.Width - origin.X; }
+                if (item.FlippedY) { origin.Y = contained.Item.Sprite.SourceRect.Height - origin.Y; }
 
-                float containedSpriteDepth = ContainedSpriteDepth < 0.0f ? containedItem.Sprite.Depth : ContainedSpriteDepth;
+                float containedSpriteDepth = ContainedSpriteDepth < 0.0f ? contained.Item.Sprite.Depth : ContainedSpriteDepth;
                 if (i < containedSpriteDepths.Length)
                 {
                     containedSpriteDepth = containedSpriteDepths[i];
                 }
                 containedSpriteDepth = itemDepth + (containedSpriteDepth - (item.Sprite?.Depth ?? item.SpriteDepth)) / 10000.0f;
 
-                containedItem.Sprite.Draw(
+                SpriteEffects spriteEffects = SpriteEffects.None;
+                float spriteRotation = ItemRotation;
+                if (contained.Rotation != 0)
+                {
+                    spriteRotation = contained.Rotation;
+                }
+                if ((item.body != null && item.body.Dir == -1) || item.FlippedX)
+                {
+                    spriteEffects |= MathUtils.NearlyEqual(spriteRotation % 180, 90.0f) ? SpriteEffects.FlipVertically : SpriteEffects.FlipHorizontally;
+                }
+                if (item.FlippedY)
+                {
+                    spriteEffects |= MathUtils.NearlyEqual(spriteRotation % 180, 90.0f) ? SpriteEffects.FlipHorizontally : SpriteEffects.FlipVertically;
+                }
+
+                contained.Item.Sprite.Draw(
                     spriteBatch,
-                    new Vector2(currentItemPos.X, -currentItemPos.Y),
-                    isWiringMode ? containedItem.GetSpriteColor(withHighlight: true) * 0.15f : containedItem.GetSpriteColor(withHighlight: true),
+                    new Vector2(itemPos.X, -itemPos.Y),
+                    isWiringMode ? contained.Item.GetSpriteColor(withHighlight: true) * 0.15f : contained.Item.GetSpriteColor(withHighlight: true),
                     origin,
-                    -(containedItem.body == null ? 0.0f : containedItem.body.DrawRotation ),
-                    containedItem.Scale,
+                    -(contained.Item.body == null ? 0.0f : contained.Item.body.DrawRotation),
+                    contained.Item.Scale,
                     spriteEffects,
                     depth: containedSpriteDepth);
 
-                foreach (ItemContainer ic in containedItem.GetComponents<ItemContainer>())
+                foreach (ItemContainer ic in contained.Item.GetComponents<ItemContainer>())
                 {
-                    if (ic.hideItems) continue;
+                    if (ic.hideItems) { continue; }
                     ic.DrawContainedItems(spriteBatch, containedSpriteDepth);
                 }
 

@@ -35,10 +35,19 @@ namespace Barotrauma
         Activity
     }
 
+    public enum EnemyHealthBarMode
+    {
+        ShowAll,
+        BossHealthBarsOnly,
+        HideAll
+    }
+
     public static class GameSettings
     {
         public struct Config
         {
+            public const float DefaultAimAssist = 0.05f;
+
             public static Config GetDefault()
             {
                 Config config = new Config
@@ -50,11 +59,11 @@ namespace Barotrauma
                     SubEditorBackground = new Color(13, 37, 69, 255),
                     EnableSplashScreen = true,
                     PauseOnFocusLost = true,
-                    AimAssistAmount = 0.5f,
+                    AimAssistAmount = DefaultAimAssist,
+                    ShowEnemyHealthBars = EnemyHealthBarMode.ShowAll,
                     EnableMouseLook = true,
                     ChatOpen = true,
                     CrewMenuOpen = true,
-                    EditorDisclaimerShown = false,
                     ShowOffensiveServerPrompt = true,
                     TutorialSkipWarning = true,
                     CorpseDespawnDelay = 600,
@@ -101,6 +110,7 @@ namespace Barotrauma
 #if CLIENT
                 retVal.KeyMap = new KeyMapping(element.GetChildElements("keymapping"), retVal.KeyMap);
                 retVal.InventoryKeyMap = new InventoryKeyMapping(element.GetChildElements("inventorykeymapping"), retVal.InventoryKeyMap);
+                retVal.SavedCampaignSettings = element.GetChildElement("campaignsettings");
                 LoadSubEditorImages(element);
 #endif
 
@@ -110,6 +120,7 @@ namespace Barotrauma
             public LanguageIdentifier Language;
             public bool VerboseLogging;
             public bool SaveDebugConsoleLogs;
+            public string SavePath;
             public int SubEditorUndoBuffer;
             public int MaxAutoSaves;
             public int AutoSaveIntervalSeconds;
@@ -118,9 +129,9 @@ namespace Barotrauma
             public bool PauseOnFocusLost;
             public float AimAssistAmount;
             public bool EnableMouseLook;
+            public EnemyHealthBarMode ShowEnemyHealthBars;
             public bool ChatOpen;
             public bool CrewMenuOpen;
-            public bool EditorDisclaimerShown;
             public bool ShowOffensiveServerPrompt;
             public bool TutorialSkipWarning;
             public int CorpseDespawnDelay;
@@ -129,6 +140,9 @@ namespace Barotrauma
             public bool DisableInGameHints;
             public bool EnableSubmarineAutoSave;
             public Identifier QuickStartSub;
+#if CLIENT
+            public XElement SavedCampaignSettings;
+#endif
 #if DEBUG
             public bool UseSteamMatchmaking;
             public bool RequireSteamAuthentication;
@@ -220,7 +234,7 @@ namespace Barotrauma
                         SoundVolume = 0.5f,
                         UiVolume = 0.3f,
                         VoiceChatVolume = 0.5f,
-                        VoiceChatCutoffPrevention = 0,
+                        VoiceChatCutoffPrevention = 200,
                         MicrophoneVolume = 5,
                         MuteOnFocusLost = false,
                         DynamicRangeCompressionEnabled = true,
@@ -608,6 +622,8 @@ namespace Barotrauma
             root.Add(inventoryKeyMappingElement);
 
             SubEditorScreen.ImageManager.Save(root);
+
+            root.Add(CampaignSettings.CurrentSettings.Save());
 #endif
 
             configDoc.SaveSafe(PlayerConfigPath);

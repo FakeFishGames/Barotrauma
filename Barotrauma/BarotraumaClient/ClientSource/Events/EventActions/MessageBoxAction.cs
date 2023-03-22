@@ -11,11 +11,13 @@ partial class MessageBoxAction : EventAction
         if (Type == ActionType.Create || Type == ActionType.ConnectObjective)
         {
             CreateMessageBox();
-            if (!ObjectiveTag.IsEmpty && GameMain.GameSession?.GameMode is TutorialMode tutorialMode)
+            if (!ObjectiveTag.IsEmpty)
             {
                 Identifier id = Identifier.IfEmpty(Text);
-                var segment = Tutorial.Segment.CreateMessageBoxSegment(id, ObjectiveTag, CreateMessageBox);
-                tutorialMode.Tutorial?.TriggerTutorialSegment(segment, connectObjective: Type == ActionType.ConnectObjective);
+                var segment = ObjectiveManager.Segment.CreateMessageBoxSegment(id, ObjectiveTag, CreateMessageBox);
+                segment.CanBeCompleted = ObjectiveCanBeCompleted;
+                segment.ParentId = ParentObjectiveId;
+                ObjectiveManager.TriggerTutorialSegment(segment, connectObjective: Type == ActionType.ConnectObjective);
             }
         }
         else if (Type == ActionType.Close)

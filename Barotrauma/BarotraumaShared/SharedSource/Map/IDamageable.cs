@@ -9,7 +9,7 @@ namespace Barotrauma
         Vector2 WorldPosition { get; }
         float Health { get; }
         
-        AttackResult AddDamage(Character attacker, Vector2 worldPosition, Attack attack, float deltaTime, bool playSound=true);
+        AttackResult AddDamage(Character attacker, Vector2 worldPosition, Attack attack, float deltaTime, bool playSound = true);
         
         
         public readonly struct AttackEventData

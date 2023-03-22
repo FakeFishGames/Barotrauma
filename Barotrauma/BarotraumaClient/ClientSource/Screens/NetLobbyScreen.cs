@@ -103,6 +103,10 @@ namespace Barotrauma
         public GUIFrame JobPreferenceContainer;
         public GUIListBox JobList;
 
+        private Identifier micIconStyle;
+        private float micCheckTimer;
+        const float MicCheckInterval = 1.0f;
+
         private float autoRestartTimer;
 
         //persistent characterinfo provided by the server
@@ -185,7 +189,8 @@ namespace Barotrauma
         }
 
         public IReadOnlyList<SubmarineInfo> GetSubList()
-            => SubList.Content.Children.Select(c => c.UserData as SubmarineInfo).ToArray();
+            => (IReadOnlyList<SubmarineInfo>)GameMain.Client?.ServerSubmarines
+               ?? Array.Empty<SubmarineInfo>();
 
         public readonly GUIListBox PlayerList;
 
@@ -296,7 +301,7 @@ namespace Barotrauma
                 levelSeed = value;
 
                 int intSeed = ToolBox.StringToInt(levelSeed);
-                backgroundSprite = LocationType.Random(new MTRandom(intSeed))?.GetPortrait(intSeed);
+                backgroundSprite = LocationType.Random(new MTRandom(intSeed), predicate: lt => lt.UsePortraitInRandomLoadingScreens)?.GetPortrait(intSeed);
                 SeedBox.Text = levelSeed;
             }
         }
@@ -925,6 +930,8 @@ namespace Barotrauma
 
                 var modeTitle = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), modeContent.RectTransform), mode.Name, font: GUIStyle.SubHeadingFont);
                 var modeDescription = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), modeContent.RectTransform), mode.Description, font: GUIStyle.SmallFont, wrap: true);
+                //leave some padding for the vote count text
+                modeDescription.Padding = new Vector4(modeDescription.Padding.X, modeDescription.Padding.Y, GUI.IntScale(30), modeDescription.Padding.W);
                 modeTitle.HoverColor = modeDescription.HoverColor = modeTitle.SelectedColor = modeDescription.SelectedColor = Color.Transparent;
                 modeTitle.HoverTextColor = modeDescription.HoverTextColor = modeTitle.TextColor;
                 modeTitle.TextColor = modeDescription.TextColor = modeTitle.TextColor * 0.5f;
@@ -977,7 +984,7 @@ namespace Barotrauma
                     }
                     else
                     {
-                        GameMain.Client.RequestSelectMode(ModeList.Content.GetChildIndex(ModeList.Content.GetChildByUserData(GameModePreset.Sandbox)));
+                        GameMain.Client.RequestRoundEnd(save: false, quitCampaign: true);
                     }
                     return true;
                 }
@@ -1927,7 +1934,7 @@ namespace Barotrauma
                     var selectedSub = component.UserData as SubmarineInfo;
                     if (SelectedMode == GameModePreset.MultiPlayerCampaign && CampaignSetupUI != null)
                     {
-                        if (selectedSub.Price > CampaignSetupUI.CurrentSettings.InitialMoney)
+                        if (selectedSub.Price > CampaignSettings.CurrentSettings.InitialMoney)
                         {
                             new GUIMessageBox(TextManager.Get("warning"), TextManager.Get("campaignsubtooexpensive"));
                         }
@@ -2656,27 +2663,9 @@ namespace Barotrauma
 
         public override void Update(double deltaTime)
         {
-            base.Update(deltaTime);
-
             if (GameMain.Client == null) { return; }
 
-            Identifier currMicStyle = micIcon.Style.Element.NameAsIdentifier();
-
-            Identifier targetMicStyle = "GUIMicrophoneEnabled".ToIdentifier();
-            var voipCaptureDeviceNames = VoipCapture.CaptureDeviceNames;
-            if (voipCaptureDeviceNames.Count == 0)
-            {
-                targetMicStyle = "GUIMicrophoneUnavailable".ToIdentifier();
-            }
-            else if (GameSettings.CurrentConfig.Audio.VoiceSetting == VoiceMode.Disabled)
-            {
-                targetMicStyle = "GUIMicrophoneDisabled".ToIdentifier();
-            }
-
-            if (targetMicStyle != currMicStyle)
-            {
-                GUIStyle.Apply(micIcon, targetMicStyle);
-            }
+            UpdateMicIcon((float)deltaTime);
 
             foreach (GUIComponent child in PlayerList.Content.Children)
             {
@@ -2738,14 +2727,41 @@ namespace Barotrauma
                 if (!mouseRect.Contains(PlayerInput.MousePosition)) { jobVariantTooltip = null; }
             }
         }
+        
+        private void UpdateMicIcon(float deltaTime)
+        {
+            micCheckTimer -= deltaTime;
+            if (micCheckTimer > 0.0f) { return; }
+
+            Identifier newMicIconStyle = "GUIMicrophoneEnabled".ToIdentifier();
+            if (GameSettings.CurrentConfig.Audio.VoiceSetting == VoiceMode.Disabled)
+            {
+                newMicIconStyle = "GUIMicrophoneDisabled".ToIdentifier();
+            }
+            else
+            {
+                var voipCaptureDeviceNames = VoipCapture.GetCaptureDeviceNames();
+                if (voipCaptureDeviceNames.Count == 0)
+                {
+                    newMicIconStyle = "GUIMicrophoneUnavailable".ToIdentifier();
+                }
+            }
+
+            if (newMicIconStyle != micIconStyle)
+            {
+                micIconStyle = newMicIconStyle;
+                GUIStyle.Apply(micIcon, newMicIconStyle);
+            }
+
+            micCheckTimer = MicCheckInterval;
+        }
+
         public override void Draw(double deltaTime, GraphicsDevice graphics, SpriteBatch spriteBatch)
         {
+            if (backgroundSprite?.Texture == null) { return; }
             graphics.Clear(Color.Black);
-
-            GUI.DrawBackgroundSprite(spriteBatch, backgroundSprite);
-
             spriteBatch.Begin(SpriteSortMode.Deferred, samplerState: GUI.SamplerState, rasterizerState: GameMain.ScissorTestEnable);
-
+            GUI.DrawBackgroundSprite(spriteBatch, backgroundSprite, Color.White);
             GUI.Draw(Cam, spriteBatch);
             spriteBatch.End();
         }
@@ -3276,16 +3292,15 @@ namespace Barotrauma
                 {
                     //campaign running
                     settingsBlocker.Visible = true;
-                    CampaignFrame.Visible = GameMain.Client.HasPermission(ClientPermissions.ManageCampaign);
-                    ContinueCampaignButton.Enabled = !GameMain.Client.GameStarted && (GameMain.Client.HasPermission(ClientPermissions.ManageCampaign) || GameMain.Client.HasPermission(ClientPermissions.ManageRound));
-                    QuitCampaignButton.Enabled = GameMain.Client.HasPermission(ClientPermissions.ManageCampaign);
+                    CampaignFrame.Visible = QuitCampaignButton.Enabled = CampaignMode.AllowedToManageCampaign(ClientPermissions.ManageRound);
+                    ContinueCampaignButton.Enabled = !GameMain.Client.GameStarted && CampaignFrame.Visible;
                     CampaignSetupFrame.Visible = false;
                 }
                 else
                 {
                     CampaignFrame.Visible = false;
                     CampaignSetupFrame.Visible = true;
-                    if (!GameMain.Client.HasPermission(ClientPermissions.ManageCampaign))
+                    if (!CampaignMode.AllowedToManageCampaign(ClientPermissions.ManageRound))
                     {
                         CampaignSetupFrame.ClearChildren();
                         new GUITextBlock(new RectTransform(new Vector2(0.8f, 0.5f), CampaignSetupFrame.RectTransform, Anchor.Center),
@@ -3298,7 +3313,7 @@ namespace Barotrauma
                     foreach (var subElement in SubList.Content.Children)
                     {
                         var sub = subElement.UserData as SubmarineInfo;
-                        bool tooExpensive = sub.Price > CampaignSetupUI.CurrentSettings.InitialMoney;
+                        bool tooExpensive = sub.Price > CampaignSettings.CurrentSettings.InitialMoney;
                         if (tooExpensive || !sub.IsCampaignCompatible)
                         {
                             foreach (var textBlock in subElement.GetAllChildren<GUITextBlock>())
@@ -3349,7 +3364,7 @@ namespace Barotrauma
                 CampaignFrame.Visible = CampaignSetupFrame.Visible = false;
             }
             RefreshEnabledElements();
-            if (enabled)
+            if (enabled && SelectedMode != GameModePreset.MultiPlayerCampaign)
             {
                 ModeList.Select(GameModePreset.MultiPlayerCampaign, GUIListBox.Force.Yes);
             }

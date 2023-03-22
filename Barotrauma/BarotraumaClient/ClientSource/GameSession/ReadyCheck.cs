@@ -1,6 +1,7 @@
 ﻿#nullable enable
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
@@ -39,7 +40,7 @@ namespace Barotrauma
 
         private void CreateMessageBox(string author)
         {
-            Vector2 relativeSize = new Vector2(GUI.IsFourByThree() ? 0.3f : 0.2f, 0.15f);
+            Vector2 relativeSize = new Vector2(0.3f * GUI.AspectRatioAdjustment, 0.15f);
             Point minSize = new Point(300, 200);
             msgBox = new GUIMessageBox(readyCheckHeader, readyCheckBody(author), new[] { yesButton, noButton }, relativeSize, minSize, type: GUIMessageBox.Type.Vote) { UserData = PromptData, Draggable = true };
 
@@ -117,7 +118,7 @@ namespace Barotrauma
         private void UpdateBar()
         {
             double elapsedTime = (DateTime.Now - startTime).TotalSeconds;
-            if (msgBox != null && !msgBox.Closed && GUIMessageBox.MessageBoxes.Contains(msgBox))
+            if (msgBox is { Closed: false } && GUIMessageBox.MessageBoxes.Contains(msgBox))
             {
                 if (msgBox.FindChild(TimerData, true) is GUIProgressBar bar)
                 {
@@ -129,11 +130,24 @@ namespace Barotrauma
             int second = (int)Math.Ceiling(elapsedTime);
             if (second > lastSecond)
             {
-                if (msgBox != null && !msgBox.Closed)
+                if (msgBox is { Closed: false })
                 {
                     SoundPlayer.PlayUISound(GUISoundType.PopupMenu);
                 }
                 lastSecond = second;
+            }
+        }
+
+        private static void CloseLingeringPopups()
+        {
+            foreach (GUIComponent box in GUIMessageBox.MessageBoxes.ToImmutableArray())
+            {
+                if (box is not GUIMessageBox msgBox) { continue; }
+
+                if (msgBox.UserData is PromptData or ResultData)
+                {
+                    msgBox.Close();
+                }
             }
         }
 
@@ -154,6 +168,8 @@ namespace Barotrauma
             switch (state)
             {
                 case ReadyCheckState.Start:
+                    CloseLingeringPopups();
+
                     bool isOwn = false;
                     byte authorId = 0;
 
@@ -175,8 +191,8 @@ namespace Barotrauma
                         clients.Add(inc.ReadByte());
                     }
 
-                    ReadyCheck rCheck = new ReadyCheck(clients, 
-                        DateTimeOffset.FromUnixTimeSeconds(startTime).LocalDateTime, 
+                    ReadyCheck rCheck = new ReadyCheck(clients,
+                        DateTimeOffset.FromUnixTimeSeconds(startTime).LocalDateTime,
                         DateTimeOffset.FromUnixTimeSeconds(endTime).LocalDateTime);
                     crewManager.ActiveReadyCheck = rCheck;
 
@@ -224,7 +240,7 @@ namespace Barotrauma
             if (IsFinished) { return; }
             IsFinished = true;
 
-            int readyCount = Clients.Count(pair => pair.Value == ReadyStatus.Yes);
+            int readyCount = Clients.Count(static pair => pair.Value == ReadyStatus.Yes);
             int totalCount = Clients.Count;
             GameMain.Client.AddChatMessage(ChatMessage.Create(string.Empty, readyCheckStatus(readyCount, totalCount).Value, ChatMessageType.Server, null));
         }
@@ -238,31 +254,29 @@ namespace Barotrauma
 
             if (resultsBox == null || resultsBox.Closed || !GUIMessageBox.MessageBoxes.Contains(resultsBox)) { return; }
 
-            if (resultsBox.Content.FindChild(UserListData) is GUIListBox userList)
+            if (resultsBox.Content.FindChild(UserListData) is not GUIListBox userList) { return; }
+
+            // for some reason FindChild doesn't work here?
+            foreach (GUIComponent child in userList.Content.Children)
             {
-                // for some reason FindChild doesn't work here?
-                foreach (GUIComponent child in userList.Content.Children)
+                if (child.UserData is not byte b || b != id) { continue; }
+
+                if (child.GetChild<GUILayoutGroup>().FindChild(ReadySpriteData) is not GUIImage image) { continue; }
+
+                string style;
+                switch (status)
                 {
-                    if (!(child.UserData is byte b) || b != id) { continue; }
-
-                    if (child.GetChild<GUILayoutGroup>().FindChild(ReadySpriteData) is GUIImage image)
-                    {
-                        string style;
-                        switch (status)
-                        {
-                            case ReadyStatus.Yes:
-                                style = "MissionCompletedIcon";
-                                break;
-                            case ReadyStatus.No:
-                                style = "MissionFailedIcon";
-                                break;
-                            default:
-                                return;
-                        }
-
-                        image.ApplyStyle(GUIStyle.GetComponentStyle(style));
-                    }
+                    case ReadyStatus.Yes:
+                        style = "MissionCompletedIcon";
+                        break;
+                    case ReadyStatus.No:
+                        style = "MissionFailedIcon";
+                        break;
+                    default:
+                        return;
                 }
+
+                image.ApplyStyle(GUIStyle.GetComponentStyle(style));
             }
         }
 

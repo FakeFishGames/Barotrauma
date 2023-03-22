@@ -1,6 +1,4 @@
-﻿using System.Xml.Linq;
-
-namespace Barotrauma.Abilities
+﻿namespace Barotrauma.Abilities
 {
     class CharacterAbilityGiveAffliction : CharacterAbility
     {
@@ -18,7 +16,7 @@ namespace Barotrauma.Abilities
 
             if (afflictionId.IsEmpty)
             {
-                DebugConsole.ThrowError("Error in CharacterAbilityGiveAffliction - affliction identifier not set.");
+                DebugConsole.ThrowError($"Error in talent {CharacterTalent.DebugIdentifier}, CharacterAbilityGiveAffliction - affliction identifier not set.");
             }
         }
 

@@ -171,6 +171,8 @@ namespace Barotrauma.Networking
         public bool ShouldCreateAnalyticsEvent
             => DisconnectReason is not (
                    DisconnectReason.Disconnected
+                   or DisconnectReason.ServerShutdown
+                   or DisconnectReason.ServerFull
                    or DisconnectReason.Banned
                    or DisconnectReason.Kicked
                    or DisconnectReason.TooManyFailedLogins
@@ -272,6 +274,9 @@ namespace Barotrauma.Networking
         [NetworkSerialize]
         public bool IsMandatory;
 
+        [NetworkSerialize]
+        public bool IsVanilla;
+
         private Md5Hash? cachedHash;
         private DateTime? cachedDateTime;
 
@@ -297,7 +302,7 @@ namespace Barotrauma.Networking
 
         public ServerContentPackage() { }
         
-        public ServerContentPackage(ContentPackage contentPackage, DateTime referenceTime)
+        public ServerContentPackage(ContentPackage contentPackage, SerializableDateTime referenceTime)
         {
             Name = contentPackage.Name;
             Hash = contentPackage.Hash;
@@ -305,6 +310,7 @@ namespace Barotrauma.Networking
                 ? ugcId.StringRepresentation
                 : "";
             IsMandatory = !contentPackage.Files.All(f => f is SubmarineFile);
+            IsVanilla = contentPackage == ContentPackageManager.VanillaCorePackage;
             InstallTimeDiffInSeconds =
                 contentPackage.InstallTime.TryUnwrap(out var installTime)
                     ? (uint)(installTime - referenceTime).TotalSeconds

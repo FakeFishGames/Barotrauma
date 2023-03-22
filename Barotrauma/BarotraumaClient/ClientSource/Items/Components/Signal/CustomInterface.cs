@@ -329,6 +329,7 @@ namespace Barotrauma.Items.Components
 
         partial void UpdateSignalsProjSpecific()
         {
+            if (signals == null) { return; }
             for (int i = 0; i < signals.Length && i < uiElements.Count; i++)
             {
                 if (uiElements[i] is GUITextBox tb)

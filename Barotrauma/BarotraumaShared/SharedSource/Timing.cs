@@ -37,8 +37,9 @@ namespace Barotrauma
 
         public static float InterpolateRotation(float previous, float current)
         {
+            //use a somewhat high epsilon - very small differences aren't visible
+            if (MathUtils.NearlyEqual(previous, current, epsilon: 0.02f)) { return current; }
             float angleDiff = MathUtils.GetShortestAngle(previous, current);
-
             return previous + angleDiff * (float)alpha;
         }
 

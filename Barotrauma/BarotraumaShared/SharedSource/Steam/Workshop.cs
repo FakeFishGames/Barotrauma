@@ -1,26 +1,20 @@
 ﻿#nullable enable
 using Barotrauma.IO;
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 using Barotrauma.Extensions;
-using Steamworks.Data;
 using WorkshopItemSet = System.Collections.Generic.ISet<Steamworks.Ugc.Item>;
 
 namespace Barotrauma.Steam
 {
     static partial class SteamManager
     {
-        public const string WorkshopItemPreviewImageFolder = "Workshop";
-        public const string PreviewImageName = "PreviewImage.png";
-        public const string DefaultPreviewImagePath = "Content/DefaultWorkshopPreviewImage.png";
-
         public static bool TryExtractSteamWorkshopId(this ContentPackage contentPackage, [NotNullWhen(true)]out SteamWorkshopId? workshopId)
         {
             workshopId = null;
@@ -47,23 +41,42 @@ namespace Barotrauma.Steam
             private static async Task<WorkshopItemSet> GetWorkshopItems(Steamworks.Ugc.Query query, int? maxPages = null)
             {
                 if (!IsInitialized) { return new HashSet<Steamworks.Ugc.Item>(); }
-
+                
                 await Task.Yield();
-                query = query.WithKeyValueTags(true).WithLongDescription(true);
                 var set = new HashSet<Steamworks.Ugc.Item>(ItemEqualityComparer.Instance);
                 int prevSize = 0;
-                for (int i = 1; maxPages is null || i <= maxPages; i++)
+                for (int i = 1; i <= (maxPages ?? int.MaxValue); i++)
                 {
-                    Steamworks.Ugc.ResultPage? page = await query.GetPageAsync(i);
-                    if (page is null || !page.Value.Entries.Any()) { break; }
-                    set.UnionWith(page.Value.Entries);
+                    using Steamworks.Ugc.ResultPage? page = await query.GetPageAsync(i);
+                    if (page is not { Entries: var entries }) { break; }
+                    
+                    // This queries the results on the i-th page and stores them,
+                    // using page.Entries directly would result in two GetQueryUGCResult calls
+                    entries = entries.ToArray();
+
+                    if (entries.None()) { break; }
+                    
+                    set.UnionWith(entries);
                     
                     if (set.Count == prevSize) { break; }
                     prevSize = set.Count;
                 }
+                
+                // Remove items that do not have the correct consumer app ID,
+                // which can happen on items that are not visible to the currently
+                // logged in player (i.e. private & friends-only items)
+                set.RemoveWhere(it => it.ConsumerApp != AppID);
+
                 return set;
             }
 
+            public static ImmutableHashSet<Steamworks.Data.PublishedFileId> GetSubscribedItemIds()
+            {
+                return IsInitialized
+                    ? Steamworks.SteamUGC.GetSubscribedItems().ToImmutableHashSet()
+                    : ImmutableHashSet<Steamworks.Data.PublishedFileId>.Empty;
+            }
+            
             public static async Task<WorkshopItemSet> GetAllSubscribedItems()
             {
                 if (!IsInitialized) { return new HashSet<Steamworks.Ugc.Item>(); }
@@ -92,14 +105,86 @@ namespace Barotrauma.Steam
                     .WhereUserPublished());
             }
 
-            public static async Task<Steamworks.Ugc.Item?> GetItem(UInt64 itemId)
+            private static class SingleItemRequestPool
+            {
+                private static readonly object mutex = new();
+                private static readonly TimeSpan delayAfterNewRequest = TimeSpan.FromSeconds(0.5);
+                private static readonly HashSet<UInt64> ids = new();
+
+                private static Task<WorkshopItemSet>? currentBatch = null;
+
+                private static async Task<WorkshopItemSet> PrepareNewBatch()
+                {
+                    // Wait for a bunch of requests to be made
+                    await Task.Delay(delayAfterNewRequest);
+                    
+                    Task<WorkshopItemSet> queryTask;
+                    lock (mutex)
+                    {
+                        DebugConsole.Log(
+                            $"{nameof(SteamManager)}.{nameof(Workshop)}.{nameof(SingleItemRequestPool)}: " +
+                            $"Running batch of {ids.Count} requests");
+                        
+                        queryTask = GetWorkshopItems(
+                            Steamworks.Ugc.Query.All
+                                .WithFileId(
+                                    ids
+                                    .Select(id => (Steamworks.Data.PublishedFileId)id)
+                                    .ToArray()));
+                        ids.Clear();
+
+                        // Immediately clear the current batch so the next request starts a new one
+                        currentBatch = null;
+                    }
+
+                    return await queryTask;
+                }
+                
+                public static async Task<Steamworks.Ugc.Item?> MakeRequest(UInt64 id)
+                {
+                    Task<WorkshopItemSet> ourTask;
+                    lock (mutex)
+                    {
+                        ids.Add(id);
+                        if (currentBatch is not { IsCompleted: false })
+                        {
+                            // There is no currently pending batch, start a new one
+                            currentBatch = Task.Run(PrepareNewBatch);
+                        }
+                        ourTask = currentBatch;
+                    }
+
+                    var items = await ourTask;
+                    var result = items.FirstOrNull(it => it.Id == id);
+                    return result;
+                }
+            }
+            
+            /// <summary>
+            /// Fetches a Workshop item's metadata. This is batched to minimize Steamworks API calls.
+            /// The description of the returned item is truncated to save bandwidth.
+            /// </summary>
+            /// <param name="itemId">Workshop Item ID</param>
+            public static Task<Steamworks.Ugc.Item?> GetItem(UInt64 itemId)
+                => SingleItemRequestPool.MakeRequest(itemId);
+
+            /// <summary>
+            /// Fetches a Workshop item's metadata in its own API call instead of batching.
+            /// This minimizes delay but needs to be used with caution to prevent rate limiting.
+            /// </summary>
+            /// <param name="itemId">Workshop Item ID</param>
+            /// <param name="withLongDescription">
+            /// If true, ask for the item's entire description, otherwise it'll be truncated.
+            /// </param>
+            public static async Task<Steamworks.Ugc.Item?> GetItemAsap(UInt64 itemId, bool withLongDescription = false)
             {
                 if (!IsInitialized) { return null; }
 
                 var items = await GetWorkshopItems(
                     Steamworks.Ugc.Query.All
-                        .WithFileId(itemId));
-                return items.Any() ? items.First() : (Steamworks.Ugc.Item?)null;
+                        .WithFileId(itemId)
+                        .WithLongDescription(withLongDescription));
+                return items.Any() ? items.First() : null;
             }
             
             public static async Task ForceRedownload(UInt64 itemId)
@@ -276,6 +361,62 @@ namespace Barotrauma.Steam
                     }
                 }
             }
+
+            public static ISet<ulong> GetInstalledItems()
+                => ContentPackageManager.WorkshopPackages
+                    .Select(p => p.UgcId)
+                    .NotNone()
+                    .OfType<SteamWorkshopId>()
+                    .Select(id => id.Value)
+                    .ToHashSet();
+            
+            public static async Task<ISet<Steamworks.Ugc.Item>> GetPublishedAndSubscribedItems()
+            {
+                var allItems = (await GetAllSubscribedItems()).ToHashSet();
+                allItems.UnionWith(await GetPublishedItems());
+
+                // This is a hack that eliminates subscribed mods that have been
+                // made private. Players cannot download updates for these, so
+                // we treat them as if they were deleted.
+                allItems = (await Task.WhenAll(allItems.Select(it => GetItem(it.Id.Value))))
+                    .NotNull()
+                    .Where(it => it.ConsumerApp == AppID)
+                    .ToHashSet();
+
+                return allItems;
+            }
+            
+            public static void DeleteUnsubscribedMods(Action<ContentPackage[]>? callback = null)
+            {
+#if SERVER
+                // Servers do not run this because they can't subscribe to anything
+                return;
+#endif
+                //If Steamworks isn't initialized then we can't know what the user has unsubscribed from
+                if (!IsInitialized) { return; }
+                if (!Steamworks.SteamClient.IsValid) { return; }
+                if (!Steamworks.SteamClient.IsLoggedOn) { return; }
+                
+                TaskPool.Add("DeleteUnsubscribedMods", GetPublishedAndSubscribedItems().WaitForLoadingScreen(), t =>
+                {
+                    if (!t.TryGetResult(out ISet<Steamworks.Ugc.Item> items)) { return; }
+                    var ids = items.Select(it => it.Id.Value).ToHashSet();
+                    var toUninstall = ContentPackageManager.WorkshopPackages
+                        .Where(pkg
+                            => !pkg.UgcId.TryUnwrap<SteamWorkshopId>(out var workshopId)
+                               || !ids.Contains(workshopId.Value))
+                        .ToArray();
+                    if (toUninstall.Any())
+                    {
+                        foreach (var pkg in toUninstall)
+                        {
+                            Directory.TryDelete(pkg.Dir, recursive: true);
+                        }
+                        ContentPackageManager.UpdateContentPackageList();
+                    }
+                    callback?.Invoke(toUninstall);
+                });
+            }
             
             public static bool IsInstallingToPath(string path)
                 => File.Exists(Path.Combine(Path.GetDirectoryName(path)!, ContentPackageManager.CopyIndicatorFileName));
@@ -310,7 +451,7 @@ namespace Barotrauma.Steam
                     + "unexpected deletion of your hard work.\n"
                     + "Instead, modify a copy of your mod in LocalMods.\n";
 
-                string workshopModDirReadmeLocation = Path.Combine(SaveUtil.SaveFolder, "WorkshopMods", "README.txt");
+                string workshopModDirReadmeLocation = Path.Combine(SaveUtil.DefaultSaveFolder, "WorkshopMods", "README.txt");
                 if (!File.Exists(workshopModDirReadmeLocation))
                 {
                     Directory.CreateDirectory(Path.GetDirectoryName(workshopModDirReadmeLocation)!);
@@ -354,7 +495,8 @@ namespace Barotrauma.Steam
                         new XAttribute("corepackage", isCorePackage),
                         new XAttribute("modversion", modVersion),
                         new XAttribute("gameversion", gameVersion),
-                        new XAttribute("installtime", ToolBox.Epoch.FromDateTime(updateTime)));
+                        #warning TODO: stop writing Unix time after this gets on main
+                        new XAttribute("installtime", new SerializableDateTime(updateTime).ToUnixTime()));
                     if ((modPathDirName ?? modName).ToIdentifier() != itemTitle)
                     {
                         root.Add(new XAttribute("altnames", modPathDirName ?? modName));
@@ -457,7 +599,7 @@ namespace Barotrauma.Steam
                     }
                     catch (Exception e)
                     {
-                        DebugConsole.ThrowError(
+                        DebugConsole.AddWarning(
                             $"An exception was thrown when attempting to copy \"{from}\" to \"{to}\": {e.Message}\n{e.StackTrace}");
                     }
                 }

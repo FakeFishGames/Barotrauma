@@ -129,20 +129,15 @@ namespace Barotrauma
 
             Vector2 position = cam.ScreenToWorld(PlayerInput.MousePosition);
 
-            foreach (MapEntity entity in mapEntityList)
+            foreach (MapEntity entity in HighlightedEntities)
             {
-                if (entity == this || !entity.IsHighlighted) { continue; }
+                if (entity == this) { continue; }
                 if (!entity.IsMouseOn(position)) { continue; }
                 if (entity.linkedTo == null || !entity.Linkable) { continue; }
                 if (entity.linkedTo.Contains(this) || linkedTo.Contains(entity) || rClick)
                 {
-                    if (entity == this || !entity.IsHighlighted) { continue; }
-                    if (!entity.IsMouseOn(position)) { continue; }
-                    if (entity.linkedTo.Contains(this))
-                    {
-                        entity.linkedTo.Remove(this);
-                        linkedTo.Remove(entity);
-                    }
+                    entity.linkedTo.Remove(this);
+                    linkedTo.Remove(entity);                    
                 }
                 else
                 {
@@ -293,11 +288,11 @@ namespace Barotrauma
             GUI.DrawRectangle(spriteBatch,
                 new Vector2(drawRect.X, -drawRect.Y),
                 new Vector2(rect.Width, rect.Height),
-                Color.Blue * alpha, false, (ID % 255) * 0.000001f, (int)Math.Max(1.5f / Screen.Selected.Cam.Zoom, 1.0f));
+                Color.Blue * alpha, false, (ID % 255) * 0.000001f, (int)Math.Max(MathF.Ceiling(1.5f / Screen.Selected.Cam.Zoom), 1.0f));
 
             GUI.DrawRectangle(spriteBatch,
                 new Rectangle(drawRect.X, -drawRect.Y, rect.Width, rect.Height),
-                GUIStyle.Red * ((100.0f - OxygenPercentage) / 400.0f) * alpha, true, 0, (int)Math.Max(1.5f / Screen.Selected.Cam.Zoom, 1.0f));
+                GUIStyle.Red * ((100.0f - OxygenPercentage) / 400.0f) * alpha, true, 0, (int)Math.Max(MathF.Ceiling(1.5f / Screen.Selected.Cam.Zoom), 1.0f));
 
             if (GameMain.DebugDraw)
             {

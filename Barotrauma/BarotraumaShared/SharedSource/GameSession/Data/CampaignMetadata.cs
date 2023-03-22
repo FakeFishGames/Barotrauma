@@ -8,19 +8,15 @@ namespace Barotrauma
 {
     internal partial class CampaignMetadata
     {
-        public CampaignMode Campaign { get; }
-
         private readonly Dictionary<Identifier, object> data = new Dictionary<Identifier, object>();
 
-        public CampaignMetadata(CampaignMode campaign)
+        public CampaignMetadata()
         {
-            Campaign = campaign;
         }
 
-        public CampaignMetadata(CampaignMode campaign, XElement element)
+        public void Load(XElement element)
         {
-            Campaign = campaign;
-
+            data.Clear();
             foreach (var subElement in element.Elements())
             {
                 if (string.Equals(subElement.Name.ToString(), "data", StringComparison.InvariantCultureIgnoreCase))
@@ -58,6 +54,8 @@ namespace Barotrauma
         public void SetValue(Identifier identifier, object value)
         {
             DebugConsole.Log($"Set the value \"{identifier}\" to {value}");
+
+            SteamAchievementManager.OnCampaignMetadataSet(identifier, value, unlockClients: true);
 
             if (!data.ContainsKey(identifier))
             {

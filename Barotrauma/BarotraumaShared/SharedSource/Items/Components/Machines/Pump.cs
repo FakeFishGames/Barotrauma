@@ -57,8 +57,8 @@ namespace Barotrauma.Items.Components
         [Editable, Serialize(80.0f, IsPropertySaveable.No, description: "How fast the item pumps water in/out when operating at 100%.", alwaysUseInstanceValues: true)]
         public float MaxFlow
         {
-            get { return maxFlow; }
-            set { maxFlow = value; } 
+            get => maxFlow;
+            set => maxFlow = value;
         }
 
         [Editable, Serialize(true, IsPropertySaveable.Yes, alwaysUseInstanceValues: true)]
@@ -92,13 +92,16 @@ namespace Barotrauma.Items.Components
         }
 
         partial void InitProjSpecific(ContentXElement element);
-        
+
         public override void Update(float deltaTime, Camera cam)
         {
             pumpSpeedLockTimer -= deltaTime;
             isActiveLockTimer -= deltaTime;
 
-            if (!IsActive) { return; }
+            if (!IsActive)
+            {
+                return;
+            }
 
             currFlow = 0.0f;
 
@@ -122,7 +125,10 @@ namespace Barotrauma.Items.Components
                 FlowPercentage = ((float)TargetLevel - hullPercentage) * 10.0f;
             }
 
-            if (!HasPower) { return; }
+            if (!HasPower)
+            {
+                return;
+            }
 
             UpdateProjSpecific(deltaTime);
 
@@ -132,12 +138,14 @@ namespace Barotrauma.Items.Components
 
             float powerFactor = Math.Min(currPowerConsumption <= 0.0f || MinVoltage <= 0.0f ? 1.0f : Voltage, MaxOverVoltageFactor);
 
-            currFlow = flowPercentage / 100.0f * maxFlow * powerFactor;
+            currFlow = flowPercentage / 100.0f * item.StatManager.GetAdjustedValue(ItemTalentStats.PumpMaxFlow, MaxFlow) * powerFactor;
 
-            if (item.GetComponent<Repairable>() is Repairable repairable && repairable.IsTinkering)
+            if (item.GetComponent<Repairable>() is { IsTinkering: true } repairable)
             {
                 currFlow *= 1f + repairable.TinkeringStrength * TinkeringSpeedIncrease;
             }
+
+            currFlow = item.StatManager.GetAdjustedValue(ItemTalentStats.PumpSpeed, currFlow);
 
             //less effective when in a bad condition
             currFlow *= MathHelper.Lerp(0.5f, 1.0f, item.Condition / item.MaxCondition);
@@ -227,7 +235,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public override bool AIOperate(float deltaTime, Character character, AIObjectiveOperateItem objective)
+        public override bool CrewAIOperate(float deltaTime, Character character, AIObjectiveOperateItem objective)
         {
 #if CLIENT
             if (GameMain.Client != null) { return false; }

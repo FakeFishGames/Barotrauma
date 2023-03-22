@@ -24,7 +24,7 @@ namespace Barotrauma
         public bool IsAiming => wasAiming;
         public bool IsAimingMelee => wasAimingMelee;
 
-        protected bool Aiming => aiming || aimingMelee || LockFlippingUntil > Timing.TotalTime && character.IsKeyDown(InputType.Aim);
+        protected bool Aiming => aiming || aimingMelee || FlipLockTime > Timing.TotalTime && character.IsKeyDown(InputType.Aim);
 
         public float ArmLength => upperArmLength + forearmLength;
 
@@ -87,7 +87,7 @@ namespace Barotrauma
         }
 
         public bool CanWalk => RagdollParams.CanWalk;
-        public bool IsMovingBackwards => !InWater && Math.Sign(targetMovement.X) == -Math.Sign(Dir);
+        public bool IsMovingBackwards => !InWater && Math.Sign(targetMovement.X) == -Math.Sign(Dir) && CurrentAnimationParams is not FishGroundedParams { Flip: false };
 
         // TODO: define death anim duration in XML
         protected float deathAnimTimer, deathAnimDuration = 5.0f;
@@ -278,7 +278,11 @@ namespace Barotrauma
         // We need some margin, because if a hatch has closed, it's possible that the height from floor is slightly negative.
         public bool IsAboveFloor => GetHeightFromFloor() > -0.1f;
 
-        public float LockFlippingUntil;
+        public float FlipLockTime { get; private set; }
+        public void LockFlipping(float time = 0.2f)
+        {
+            FlipLockTime = (float)Timing.TotalTime + time;
+        }
 
         public void UpdateUseItem(bool allowMovement, Vector2 handWorldPos)
         {
@@ -537,11 +541,11 @@ namespace Barotrauma
             float wobbleStrength = 0.0f;
             if (character.Inventory?.GetItemInLimbSlot(InvSlotType.RightHand) == heldItem)
             {
-                wobbleStrength += Character.CharacterHealth.GetLimbDamage(rightHand, afflictionType: "damage");
+                wobbleStrength += Character.CharacterHealth.GetLimbDamage(rightHand, afflictionType: AfflictionPrefab.DamageType);
             }
             if (character.Inventory?.GetItemInLimbSlot(InvSlotType.LeftHand) == heldItem)
             {
-                wobbleStrength += Character.CharacterHealth.GetLimbDamage(leftHand, afflictionType: "damage");
+                wobbleStrength += Character.CharacterHealth.GetLimbDamage(leftHand, afflictionType: AfflictionPrefab.DamageType);
             }
             if (wobbleStrength <= 0.1f) { return 0.0f; }
             wobbleStrength = (float)Math.Min(wobbleStrength, 1.0f);

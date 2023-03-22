@@ -160,7 +160,8 @@ namespace Barotrauma
                 { typeof(Identifier), new ReadWriteBehavior<Identifier>(ReadIdentifier, WriteIdentifier) },
                 { typeof(AccountId), new ReadWriteBehavior<AccountId>(ReadAccountId, WriteAccountId) },
                 { typeof(Color), new ReadWriteBehavior<Color>(ReadColor, WriteColor) },
-                { typeof(Vector2), new ReadWriteBehavior<Vector2>(ReadVector2, WriteVector2) }
+                { typeof(Vector2), new ReadWriteBehavior<Vector2>(ReadVector2, WriteVector2) },
+                { typeof(SerializableDateTime), new ReadWriteBehavior<SerializableDateTime>(ReadSerializableDateTime, WriteSerializableDateTime) }
             };
 
         private static readonly ImmutableDictionary<Predicate<Type>, Func<Type, IReadWriteBehavior>> BehaviorFactories = new Dictionary<Predicate<Type>, Func<Type, IReadWriteBehavior>>
@@ -347,12 +348,7 @@ namespace Barotrauma
         }
 
         private static T? ReadNullable<T>(IReadMessage inc, NetworkSerialize attribute, ReadOnlyBitField bitField) where T : struct =>
-            ReadOption<T>(inc, attribute, bitField) switch
-            {
-                Some<T> { Value: var value } => value,
-                None<T> _ => null,
-                _ => throw new ArgumentOutOfRangeException()
-            };
+            ReadOption<T>(inc, attribute, bitField).TryUnwrap(out var value) ? value : null;
 
         private static void WriteNullable<T>(T? value, NetworkSerialize attribute, IWriteMessage msg, WriteOnlyBitField bitField) where T : struct =>
             WriteOption<T>(value.HasValue ? Option<T>.Some(value.Value) : Option<T>.None(), attribute, msg, bitField);
@@ -377,7 +373,7 @@ namespace Barotrauma
         {
             ToolBox.ThrowIfNull(option);
 
-            if (option.TryUnwrap(out T value))
+            if (option.TryUnwrap(out T? value))
             {
                 bitField.WriteBoolean(true);
                 if (TryFindBehavior(out ReadWriteBehavior<T> behavior))
@@ -512,6 +508,41 @@ namespace Barotrauma
             WriteSingle(y, attribute, msg, bitField);
         }
 
+        private static readonly Range<Int64> ValidTickRange
+            = new Range<Int64>(
+                start: DateTime.MinValue.Ticks,
+                end: DateTime.MaxValue.Ticks);
+        private static readonly Range<Int16> ValidTimeZoneMinuteRange
+            = new Range<Int16>(
+                start: (Int16)TimeSpan.FromHours(-12).TotalMinutes,
+                end: (Int16)TimeSpan.FromHours(14).TotalMinutes);
+
+        private static SerializableDateTime ReadSerializableDateTime(
+            IReadMessage inc, NetworkSerialize attribute, ReadOnlyBitField bitField)
+        {
+            var ticks = inc.ReadInt64();
+            var timezone = inc.ReadInt16();
+
+            if (!ValidTickRange.Contains(ticks))
+            {
+                throw new Exception($"Incoming SerializableDateTime ticks out of range (ticks: {ticks}, timezone: {timezone})");
+            }
+            if (!ValidTimeZoneMinuteRange.Contains(timezone))
+            {
+                throw new Exception($"Incoming SerializableDateTime timezone out of range (ticks: {ticks}, timezone: {timezone})");
+            }
+
+            return new SerializableDateTime(new DateTime(ticks),
+                new SerializableTimeZone(TimeSpan.FromMinutes(timezone)));
+        }
+
+        private static void WriteSerializableDateTime(
+            SerializableDateTime dateTime, NetworkSerialize attribute, IWriteMessage msg, WriteOnlyBitField bitField)
+        {
+            msg.WriteInt64(dateTime.Ticks);
+            msg.WriteInt16((Int16)(dateTime.TimeZone.Value.Ticks / TimeSpan.TicksPerMinute));
+        }
+        
         private static bool IsRanged(float minValue, float maxValue) => minValue > float.MinValue || maxValue < float.MaxValue;
         private static bool IsRanged(int minValue, int maxValue) => minValue > int.MinValue || maxValue < int.MaxValue;
 

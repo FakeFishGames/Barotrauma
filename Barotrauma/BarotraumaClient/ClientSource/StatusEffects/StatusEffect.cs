@@ -21,6 +21,13 @@ namespace Barotrauma
         private Entity soundEmitter;
         private double loopStartTime;
         private bool loopSound;
+        /// <summary>
+        /// Each new sound overrides the existing sounds that were launched with this status effect, meaning the old sound will be faded out and disposed and the new sound will be played instead of the old.
+        /// Normally the call to play the sound is ignored if there's an existing sound playing when the effect triggers.
+        /// Used for example for ensuring that rapid playing sounds restart playing even when the previous clip(s) have not yet stopped.
+        /// Use with caution.
+        /// </summary>
+        private bool forcePlaySounds;
 
         partial void InitProjSpecific(ContentXElement element, string parentDebugName)
         {
@@ -50,6 +57,7 @@ namespace Barotrauma
                         break;
                 }
             }
+            forcePlaySounds = element.GetAttributeBool(nameof(forcePlaySounds), false);
         }
 
         partial void ApplyProjSpecific(float deltaTime, Entity entity, IReadOnlyList<ISerializableEntity> targets, Hull hull, Vector2 worldPosition, bool playSound)
@@ -64,31 +72,36 @@ namespace Barotrauma
                 float angle = 0.0f;
                 float particleRotation = 0.0f;
                 bool mirrorAngle = false;
-                if (emitter.Prefab.Properties.CopyEntityAngle)
+                if (emitter.Prefab.Properties.CopyEntityAngle || emitter.Prefab.Properties.CopyTargetAngle)
                 {
+                    bool entityAngleAssigned = false;
                     Limb targetLimb = null;
                     if (entity is Item item && item.body != null)
                     {
                         angle = item.body.Rotation + ((item.body.Dir > 0.0f) ? 0.0f : MathHelper.Pi);
                         particleRotation = -item.body.Rotation;
-                        if (item.body.Dir < 0.0f)
+                        if (emitter.Prefab.Properties.CopyEntityDir && item.body.Dir < 0.0f)
                         {
                             particleRotation += MathHelper.Pi;
                             mirrorAngle = true;
                         }
+                        entityAngleAssigned = true;
                     }
-                    else if (entity is Character c && !c.Removed && targetLimbs?.FirstOrDefault(l => l != LimbType.None) is LimbType l)
+                    if (emitter.Prefab.Properties.CopyTargetAngle || !entityAngleAssigned)
                     {
-                        targetLimb = c.AnimController.GetLimb(l);
-                    }
-                    else
-                    {
-                        for (int i = 0; i < targets.Count; i++)
+                        if (entity is Character c && !c.Removed && targetLimbs?.FirstOrDefault(l => l != LimbType.None) is LimbType l)
                         {
-                            if (targets[i] is Limb limb)
+                            targetLimb = c.AnimController.GetLimb(l);
+                        }
+                        else
+                        {
+                            for (int i = 0; i < targets.Count; i++)
                             {
-                                targetLimb = limb;
-                                break;
+                                if (targets[i] is Limb limb)
+                                {
+                                    targetLimb = limb;
+                                    break;
+                                }
                             }
                         }
                     }
@@ -98,26 +111,35 @@ namespace Barotrauma
                         particleRotation = -targetLimb.body.Rotation;
                         float offset = targetLimb.Params.GetSpriteOrientation() - MathHelper.PiOver2;
                         particleRotation += offset;
-                        if (targetLimb.body.Dir < 0.0f)
+                        if (emitter.Prefab.Properties.CopyEntityDir && targetLimb.body.Dir < 0.0f)
                         {
-                            particleRotation += MathHelper.Pi;
-                            mirrorAngle = true;
+                            angle = targetLimb.body.Rotation + ((targetLimb.body.Dir > 0.0f) ? 0.0f : MathHelper.Pi);
+                            particleRotation = -targetLimb.body.Rotation;
+                            if (targetLimb.body.Dir < 0.0f)
+                            {
+                                particleRotation += MathHelper.Pi;
+                                mirrorAngle = true;
+                            }
                         }
                     }
                 }
 
                 emitter.Emit(deltaTime, worldPosition, hull, angle: angle, particleRotation: particleRotation, mirrorAngle: mirrorAngle);
-            }            
+            }
         }
 
         private bool ignoreMuffling;
 
         private void PlaySound(Entity entity, Hull hull, Vector2 worldPosition)
         {
-            if (sounds.Count == 0) return;
+            if (sounds.Count == 0) { return; }
 
-            if (soundChannel == null || !soundChannel.IsPlaying)
+            if (soundChannel == null || !soundChannel.IsPlaying || forcePlaySounds)
             {
+                if (soundChannel != null && soundChannel.IsPlaying)
+                {
+                    soundChannel.FadeOutAndDispose();
+                }
                 if (soundSelectionMode == SoundSelectionMode.All)
                 {
                     foreach (RoundSound sound in sounds)
@@ -128,7 +150,7 @@ namespace Barotrauma
                             GameAnalyticsManager.AddErrorEventOnce("StatusEffect.ApplyProjSpecific:SoundNull1" + Environment.StackTrace.CleanupStackTrace(), GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
                             return;
                         }
-                        soundChannel = SoundPlayer.PlaySound(sound.Sound, worldPosition, sound.Volume, sound.Range, hullGuess: hull, ignoreMuffling: sound.IgnoreMuffling);
+                        soundChannel = SoundPlayer.PlaySound(sound.Sound, worldPosition, sound.Volume, sound.Range, hullGuess: hull, ignoreMuffling: sound.IgnoreMuffling, freqMult: sound.GetRandomFrequencyMultiplier());
                         ignoreMuffling = sound.IgnoreMuffling;
                         if (soundChannel != null) { soundChannel.Looping = loopSound; }
                     }
@@ -155,7 +177,7 @@ namespace Barotrauma
                         GameAnalyticsManager.AddErrorEventOnce("StatusEffect.ApplyProjSpecific:SoundNull2" + Environment.StackTrace.CleanupStackTrace(), GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
                         return;
                     }
-                    soundChannel = SoundPlayer.PlaySound(selectedSound.Sound, worldPosition, selectedSound.Volume, selectedSound.Range, hullGuess: hull, ignoreMuffling: selectedSound.IgnoreMuffling);
+                    soundChannel = SoundPlayer.PlaySound(selectedSound.Sound, worldPosition, selectedSound.Volume, selectedSound.Range, hullGuess: hull, ignoreMuffling: selectedSound.IgnoreMuffling, freqMult: selectedSound.GetRandomFrequencyMultiplier());
                     ignoreMuffling = selectedSound.IgnoreMuffling;
                     if (soundChannel != null) { soundChannel.Looping = loopSound; }
                 }

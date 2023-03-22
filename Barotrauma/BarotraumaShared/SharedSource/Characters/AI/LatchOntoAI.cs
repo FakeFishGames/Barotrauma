@@ -244,7 +244,7 @@ namespace Barotrauma
                     else
                     {
                         float squaredDistance = Vector2.DistanceSquared(character.SimPosition, _attachPos);
-                        float targetDistance = Math.Max(Math.Max(character.AnimController.Collider.radius, character.AnimController.Collider.width), character.AnimController.Collider.height) * 1.2f;
+                        float targetDistance = Math.Max(Math.Max(character.AnimController.Collider.Radius, character.AnimController.Collider.Width), character.AnimController.Collider.Height) * 1.2f;
                         if (squaredDistance < targetDistance * targetDistance)
                         {
                             //close enough to a wall -> attach

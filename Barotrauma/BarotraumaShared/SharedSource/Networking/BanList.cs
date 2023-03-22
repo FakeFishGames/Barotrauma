@@ -12,7 +12,7 @@ namespace Barotrauma.Networking
         public readonly Either<Address, AccountId> AddressOrAccountId;
 
         public readonly string Reason;
-        public DateTime? ExpirationTime;
+        public Option<SerializableDateTime> ExpirationTime;
         public readonly UInt32 UniqueIdentifier;
     }
 

@@ -7,22 +7,25 @@ namespace Steamworks
 		public byte[] Data;
 		public uint Handle;
 
-		/// <summary>
-		/// Cancels a ticket. 
-		/// You should cancel your ticket when you close the game or leave a server.
-		/// </summary>
-		public void Cancel()
-		{
-			if ( Handle != 0 )
-			{
-				SteamUser.Internal.CancelAuthTicket( Handle );
-			}
+		public bool Canceled { get; private set; }
 
-			Handle = 0;
-			Data = null;
-		}
+        /// <summary>
+        /// Cancels a ticket. 
+        /// You should cancel your ticket when you close the game or leave a server.
+        /// </summary>
+        public void Cancel()
+        {
+            if (Handle != 0)
+            {
+                SteamUser.Internal.CancelAuthTicket(Handle);
+            }
 
-		public void Dispose()
+            Handle = 0;
+            Data = null;
+            Canceled = true;
+        }
+
+        public void Dispose()
 		{
 			Cancel();
 		}

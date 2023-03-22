@@ -25,7 +25,7 @@ namespace Barotrauma
                 if (!Done) { Mre.WaitOne(); }
             }
         }
-        private static List<Task> enqueuedTasks;
+        private static readonly List<Task> enqueuedTasks;
 
         static CrossThread() { enqueuedTasks = new List<Task>(); }
 

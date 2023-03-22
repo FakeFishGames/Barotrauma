@@ -10,9 +10,15 @@ namespace TestProject
         {
             public static Arbitrary<Vector2> Vector2Generator()
             {
-                return Arb.From(from int x in Arb.Generate<int>()
-                                from int y in Arb.Generate<int>()
+                return Arb.From(from float x in Arb.Generate<float>().Where(f => !float.IsNaN(f) && !float.IsInfinity(f))
+                                from float y in Arb.Generate<float>().Where(f => !float.IsNaN(f) && !float.IsInfinity(f))
                                 select new Vector2(x, y));
+            }
+
+            public static Arbitrary<Identifier> IdentifierGenerator()
+            {
+                return Arb.From(from string value in Arb.Generate<string>().Where(static s => s != null)
+                                select new Identifier(value));
             }
 
             public static Arbitrary<Color> ColorGenerator()

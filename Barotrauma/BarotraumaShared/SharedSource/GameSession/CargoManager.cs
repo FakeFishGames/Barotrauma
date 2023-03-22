@@ -8,6 +8,7 @@ using System.Linq;
 using System.Text;
 using System.Xml.Linq;
 using Barotrauma.Networking;
+using System.Collections;
 #if SERVER
 using Barotrauma.Networking;
 #endif
@@ -156,6 +157,16 @@ namespace Barotrauma
         public CargoManager(CampaignMode campaign)
         {
             this.campaign = campaign;
+        }
+
+        public static bool HasUnlockedStoreItem(ItemPrefab prefab)
+        {
+            foreach (Character character in GameSession.GetSessionCrewCharacters(CharacterType.Both))
+            {
+                if (character.HasStoreAccessForItem(prefab)) { return true; }
+            }
+
+            return false;
         }
 
         private List<T> GetItems<T>(Identifier identifier, Dictionary<Identifier, List<T>> items, bool create = false)
@@ -461,6 +472,21 @@ namespace Barotrauma
             return true;
         }
 
+        public static IEnumerable<Hull> FindCargoRooms(IEnumerable<Submarine> subs) => subs.SelectMany(s => FindCargoRooms(s));
+
+        public static IEnumerable<Hull> FindCargoRooms(Submarine sub) => WayPoint.WayPointList
+            .Where(wp => wp.Submarine == sub && wp.SpawnType == SpawnType.Cargo)
+            .Select(wp => wp.CurrentHull)
+            .Distinct();
+
+        public static IEnumerable<Item> FilterCargoCrates(IEnumerable<Item> items, Func<Item, bool> conditional = null)
+            => items.Where(it => it.HasTag("crate") && !it.NonInteractable && !it.NonPlayerTeamInteractable && !it.HiddenInGame && !it.Removed && (conditional == null || conditional(it)));
+
+        public static IEnumerable<ItemContainer> FindReusableCargoContainers(IEnumerable<Submarine> subs, IEnumerable<Hull> cargoRooms = null) =>
+            FilterCargoCrates(Item.ItemList, it => subs.Contains(it.Submarine) && (cargoRooms == null || cargoRooms.Contains(it.CurrentHull)))
+                .Select(it => it.GetComponent<ItemContainer>())
+                .Where(c => c != null);
+
         public static ItemContainer GetOrCreateCargoContainerFor(ItemPrefab item, ISpatialEntity cargoRoomOrSpawnPoint, ref List<ItemContainer> availableContainers)
         {
             ItemContainer itemContainer = null;
@@ -543,8 +569,8 @@ namespace Barotrauma
                 }
 #endif
             }
-
-            List<ItemContainer> availableContainers = new List<ItemContainer>();
+            var connectedSubs = sub.GetConnectedSubs().Where(s => s.Info.Type == SubmarineType.Player);
+            List<ItemContainer> availableContainers = FindReusableCargoContainers(connectedSubs, FindCargoRooms(connectedSubs)).ToList();
             foreach (PurchasedItem pi in itemsToSpawn)
             {
                 Vector2 position = GetCargoPos(cargoRoom, pi.ItemPrefab);

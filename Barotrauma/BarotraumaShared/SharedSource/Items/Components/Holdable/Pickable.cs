@@ -26,6 +26,8 @@ namespace Barotrauma.Items.Components
             get { return allowedSlots; }
         }
 
+        public bool PickingDone => pickTimer >= PickingTime;
+
         public Character Picker
         {
             get 

@@ -1,16 +1,25 @@
 ﻿using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
 using System.Linq;
-using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
 {
     class Throwable : Holdable
     {
-        private float throwPos;
-        private bool throwing, throwDone;
+        enum ThrowState
+        {
+            None,
+            Initiated,
+            Throwing
+        }
+
+        private const float ThrowAngleStart = -MathHelper.PiOver2, ThrowAngleEnd = MathHelper.PiOver2;
+        private float throwAngle = ThrowAngleStart;
 
         private bool midAir;
+
+        private ThrowState throwState;
+
 
         //continuous collision detection is used while the item is moving faster than this
         const float ContinuousCollisionThreshold = 5.0f;
@@ -27,31 +36,32 @@ namespace Barotrauma.Items.Components
         public Throwable(Item item, ContentXElement element)
             : base(item, element)
         {
-            //throwForce = ToolBox.GetAttributeFloat(element, "throwforce", 1.0f);
             if (aimPos == Vector2.Zero)
             {
                 aimPos = new Vector2(0.6f, 0.1f);
             }
         }
 
+        public const float WaterDragCoefficient = 0.5f;
+
         public override bool Use(float deltaTime, Character character = null)
         {
-            return characterUsable || character == null; //We do the actual throwing in Aim because Use might be used by chems
+            //actual throwing logic is handled in Update
+            return characterUsable || character == null;
         }
 
         public override bool SecondaryUse(float deltaTime, Character character = null)
         {
-            if (!throwDone) return false; //This should only be triggered in update
-            throwDone = false;
-            return true;
+            //actual throwing logic is handled in Update - SecondaryUse only triggers when the item is thrown
+            return false;
         }
 
         public override void Drop(Character dropper)
         {
             base.Drop(dropper);
-
-            throwing = false;
-            throwPos = 0.0f;
+            throwState = ThrowState.None;
+            throwAngle = ThrowAngleStart;
+            Item.ResetWaterDragCoefficient();
         }
 
         public override void UpdateBroken(float deltaTime, Camera cam)
@@ -90,6 +100,7 @@ namespace Barotrauma.Items.Components
                     }
                     item.body.CollidesWith = Physics.CollisionWall | Physics.CollisionLevel | Physics.CollisionPlatform;
                     midAir = false;
+                    Item.ResetWaterDragCoefficient();
                 }
                 return;
             }
@@ -100,13 +111,22 @@ namespace Barotrauma.Items.Components
                 return;
             }
 
-            if (picker.IsKeyDown(InputType.Aim) && picker.IsKeyHit(InputType.Shoot)) { throwing = true; }
-            if (!picker.IsKeyDown(InputType.Aim) && !throwing) { throwPos = 0.0f; }
-            bool aim = picker.IsKeyDown(InputType.Aim) && picker.CanAim;
+            if (throwState != ThrowState.Throwing)
+            {
+                if (picker.IsKeyDown(InputType.Aim)) 
+                {
+                    if (picker.IsKeyDown(InputType.Shoot)) { throwState = ThrowState.Initiated; }
+                }
+                else if (throwState != ThrowState.Initiated)
+                { 
+                    throwAngle = ThrowAngleStart; 
+                }
+            }
 
+            bool aim = picker.IsKeyDown(InputType.Aim) && picker.CanAim;
             if (picker.IsDead || !picker.AllowInput)
             {
-                throwing = false;
+                throwState = ThrowState.None;
                 aim = false;
             }
 
@@ -124,25 +144,29 @@ namespace Barotrauma.Items.Components
 
             item.Submarine = picker.Submarine;
 
-            if (!throwing)
+            if (throwState != ThrowState.Throwing)
             {
-                if (aim)
+                if (aim || throwState == ThrowState.Initiated)
                 {
-                    throwPos = MathUtils.WrapAnglePi(System.Math.Min(throwPos + deltaTime * 5.0f, MathHelper.PiOver2));
-                    ac.HoldItem(deltaTime, item, handlePos, aimPos, Vector2.Zero, aim: false, throwPos);
+                    throwAngle = System.Math.Min(throwAngle + deltaTime * 8.0f, ThrowAngleEnd);
+                    ac.HoldItem(deltaTime, item, handlePos, aimPos, Vector2.Zero, aim: false, throwAngle);
+                    if (throwAngle >= ThrowAngleEnd && throwState == ThrowState.Initiated)
+                    {
+                        throwState = ThrowState.Throwing;
+                    }
                 }
                 else
                 {
-                    throwPos = 0;
+                    throwAngle = ThrowAngleStart;
                     ac.HoldItem(deltaTime, item, handlePos, holdPos, Vector2.Zero, aim: false, holdAngle);
                 }
             }
             else
             {
-                throwPos = MathUtils.WrapAnglePi(throwPos - deltaTime * 15.0f);
-                ac.HoldItem(deltaTime, item, handlePos, aimPos, Vector2.Zero, aim: false, throwPos);
+                throwAngle = MathUtils.WrapAnglePi(throwAngle - deltaTime * 15.0f);
+                ac.HoldItem(deltaTime, item, handlePos, aimPos, Vector2.Zero, aim: false, throwAngle);
 
-                if (throwPos < 0)
+                if (throwAngle < 0)
                 {
                     Vector2 throwVector = Vector2.Normalize(picker.CursorWorldPosition - picker.WorldPosition);
                     //throw upwards if cursor is at the position of the character
@@ -168,6 +192,7 @@ namespace Barotrauma.Items.Components
                     }
 
                     item.Drop(CurrentThrower, createNetworkEvent: GameMain.NetworkMember == null || GameMain.NetworkMember.IsServer);
+                    item.WaterDragCoefficient = WaterDragCoefficient;
                     item.body.ApplyLinearImpulse(throwVector * ThrowForce * item.body.Mass * 3.0f, maxVelocity: NetConfig.MaxPhysicsBodyVelocity);
 
                     //disable platform collisions until the item comes back to rest again
@@ -180,20 +205,19 @@ namespace Barotrauma.Items.Components
 
                     Limb rightHand = ac.GetLimb(LimbType.RightHand);
                     item.body.AngularVelocity = rightHand.body.AngularVelocity;
-                    throwPos = 0;
-                    throwDone = true;
+                    throwAngle = ThrowAngleStart;
                     IsActive = true;
 
                     if (GameMain.NetworkMember is { IsServer: true })
                     {
-                        GameMain.NetworkMember.CreateEntityEvent(item, new Item.ApplyStatusEffectEventData(ActionType.OnSecondaryUse, this, CurrentThrower));
+                        GameMain.NetworkMember.CreateEntityEvent(item, new Item.ApplyStatusEffectEventData(ActionType.OnSecondaryUse, this, targetCharacter: CurrentThrower));
                     }
                     if (!(GameMain.NetworkMember is { IsClient: true }))
                     {
                         //Stun grenades, flares, etc. all have their throw-related things handled in "onSecondaryUse"
-                        ApplyStatusEffects(ActionType.OnSecondaryUse, deltaTime, CurrentThrower, user: CurrentThrower);
+                        ApplyStatusEffects(ActionType.OnSecondaryUse, deltaTime, character: CurrentThrower, user: CurrentThrower);
                     }
-                    throwing = false;
+                    throwState = ThrowState.None;
                 }
             }
         }    

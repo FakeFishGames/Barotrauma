@@ -3,9 +3,11 @@ using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Diagnostics.CodeAnalysis;
 using Barotrauma.IO;
 using System.Linq;
+using System.Net;
 using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
@@ -27,49 +29,6 @@ namespace Barotrauma
 
     static partial class ToolBox
     {
-        internal static class Epoch
-        {
-            private static readonly DateTime epoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
-
-            /// <summary>
-            /// Returns the current Unix Epoch (Coordinated Universal Time)
-            /// </summary>
-            public static int NowUTC
-            {
-                get
-                {
-                    return (int)(DateTime.UtcNow.Subtract(epoch).TotalSeconds);
-                }
-            }
-
-            /// <summary>
-            /// Returns the current Unix Epoch (user's current time)
-            /// </summary>
-            public static int NowLocal
-            {
-                get
-                {
-                    return (int)(DateTime.Now.Subtract(epoch).TotalSeconds);
-                }
-            }
-
-            /// <summary>
-            /// Convert an epoch to a datetime
-            /// </summary>
-            public static DateTime ToDateTime(decimal unixTime)
-            {
-                return epoch.AddSeconds((long)unixTime);
-            }
-
-            /// <summary>
-            /// Convert a DateTime to a unix time
-            /// </summary>
-            public static uint FromDateTime(DateTime dt)
-            {
-                return (uint)(dt.Subtract(epoch).TotalSeconds);
-            }
-        }
-
         public static bool IsProperFilenameCase(string filename)
         {
             //File case only matters on Linux where the filesystem is case-sensitive, so we don't need these errors in release builds.
@@ -101,7 +60,7 @@ namespace Barotrauma
 
             string startPath = directory ?? "";
 
-            string saveFolder = SaveUtil.SaveFolder.Replace('\\', '/');
+            string saveFolder = SaveUtil.DefaultSaveFolder.Replace('\\', '/');
             if (originalFilename.Replace('\\', '/').StartsWith(saveFolder))
             {
                 //paths that lead to the save folder might have incorrect case,
@@ -720,6 +679,133 @@ namespace Barotrauma
         public static string GetFormattedPercentage(float v)
         {
             return TextManager.GetWithVariable("percentageformat", "[value]", ((int)MathF.Round(v * 100)).ToString()).Value;
+        }
+
+        private static readonly ImmutableHashSet<char> affectedCharacters = ImmutableHashSet.Create('%', '+', '％');
+
+        /// <summary>
+        /// Extends % and + characters to color tags in talent name tooltips to make them look nicer.
+        /// This obviously does not work in languages like French where a non breaking space is used
+        /// so it's just a a bit extra for the languages it works with.
+        /// </summary>
+        /// <param name="original"></param>
+        /// <returns></returns>
+        public static string ExtendColorToPercentageSigns(string original)
+        {
+            const string colorEnd = "‖color:end‖",
+                         colorStart = "‖color:";
+
+            const char definitionIndicator = '‖';
+
+            char[] chars = original.ToCharArray();
+
+            for (int i = 0; i < chars.Length; i++)
+            {
+                if (!TryGetAt(i, chars, out char currentChar) || !affectedCharacters.Contains(currentChar)) { continue; }
+
+                // look behind
+                if (TryGetAt(i - 1, chars, out char c) && c is definitionIndicator)
+                {
+                    int offset = colorEnd.Length;
+
+                    if (MatchesSequence(i - offset, colorEnd, chars))
+                    {
+                        // push the color end tag forwards until the character is within the tag
+                        char prev = currentChar;
+                        for (int k = i - offset; k <= i; k++)
+                        {
+                            if (!TryGetAt(k, chars, out c)) { continue; }
+
+                            chars[k] = prev;
+                            prev = c;
+                        }
+                        continue;
+                    }
+                }
+
+                // look ahead
+                if (TryGetAt(i + 1, chars, out c) && c is definitionIndicator)
+                {
+                    if (!MatchesSequence(i + 1, colorStart, chars)) { continue; }
+
+                    int offset = FindNextDefinitionOffset(i, colorStart.Length, chars);
+
+                    // we probably reached the end of the string
+                    if (offset > chars.Length) { continue; }
+
+                    // push the color start tag back until the character is within the tag
+                    char prev = currentChar;
+                    for (int k = i + offset; k >= i; k--)
+                    {
+                        if (!TryGetAt(k, chars, out c)) { continue; }
+
+                        chars[k] = prev;
+                        prev = c;
+                    }
+
+                    // skip needlessly checking this section again since we already know what's ahead
+                    i += offset;
+                }
+            }
+
+            static int FindNextDefinitionOffset(int index, int initialOffset, char[] chars)
+            {
+                int offset = initialOffset;
+                while (TryGetAt(index + offset, chars, out char c) && c is not definitionIndicator) { offset++; }
+                return offset;
+            }
+
+            static bool MatchesSequence(int index, string sequence, char[] chars)
+            {
+                for (int i = 0; i < sequence.Length; i++)
+                {
+                    if (!TryGetAt(index + i, chars, out char c) || c != sequence[i]) { return false; }
+                }
+
+                return true;
+            }
+
+            static bool TryGetAt(int i, char[] chars, out char c)
+            {
+                if (i >= 0 && i < chars.Length)
+                {
+                    c = chars[i];
+                    return true;
+                }
+
+                c = default;
+                return false;
+            }
+
+            return new string(chars);
+        }
+
+        public static bool StatIdentifierMatches(Identifier original, Identifier match)
+        {
+            if (original == match) { return true; }
+            return Matches(original, match) || Matches(match, original);
+
+            static bool Matches(Identifier a, Identifier b)
+            {
+                for (int i = 0; i < b.Value.Length; i++)
+                {
+                    if (i >= a.Value.Length) { return b[i] is '~'; }
+                    if (!CharEquals(a[i], b[i])) { return false; }
+                }
+                return false;
+            }
+
+            static bool CharEquals(char a, char b) => char.ToLowerInvariant(a) == char.ToLowerInvariant(b);
+        }
+
+        public static bool EquivalentTo(this IPEndPoint self, IPEndPoint other)
+            => self.Address.EquivalentTo(other.Address) && self.Port == other.Port;
+
+        public static bool EquivalentTo(this IPAddress self, IPAddress other)
+        {
+            if (self.IsIPv4MappedToIPv6) { self = self.MapToIPv4(); }
+            if (other.IsIPv4MappedToIPv6) { other = other.MapToIPv4(); }
+            return self.Equals(other);
         }
     }
 }

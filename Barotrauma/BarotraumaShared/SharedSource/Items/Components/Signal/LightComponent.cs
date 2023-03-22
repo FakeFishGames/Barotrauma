@@ -1,6 +1,5 @@
 ﻿using Microsoft.Xna.Framework;
 using System;
-using System.Xml.Linq;
 using Barotrauma.Networking;
 using Barotrauma.Extensions;
 #if CLIENT
@@ -13,6 +12,9 @@ namespace Barotrauma.Items.Components
     partial class LightComponent : Powered, IServerSerializable, IDrawableComponent
     {
         private Color lightColor;
+        /// <summary>
+        /// The current brightness of the light source, affected by powerconsumption/voltage
+        /// </summary>
         private float lightBrightness;
         private float blinkFrequency;
         private float pulseFrequency, pulseAmount;
@@ -174,7 +176,7 @@ namespace Barotrauma.Items.Components
 #if CLIENT
                 if (Light != null)
                 {
-                    Light.Color = IsOn ? lightColor.Multiply(currentBrightness) : Color.Transparent;
+                    Light.Color = IsOn ? lightColor.Multiply(lightColorMultiplier) : Color.Transparent;
                 }
 #endif
             }
@@ -186,6 +188,15 @@ namespace Barotrauma.Items.Components
             get;
             set;
         }
+
+        [Serialize(true, IsPropertySaveable.No, description: "Should the light sprite be drawn on the item using alpha blending, in addition to being rendered in the light map? Can be used to make the light sprite stand out more.")]
+        public bool AlphaBlend
+        {
+            get;
+            set;
+        }
+
+        public float TemporaryFlickerTimer;
 
         public override void Move(Vector2 amount, bool ignoreContacts = false)
         {
@@ -239,6 +250,7 @@ namespace Barotrauma.Items.Components
             SetLightSourceState(IsActive, lightBrightness);
             turret = item.GetComponent<Turret>();
 #if CLIENT
+            Drawable = AlphaBlend && Light.LightSprite != null;
             if (Screen.Selected.IsEditor)
             {
                 OnMapLoaded();
@@ -248,6 +260,12 @@ namespace Barotrauma.Items.Components
 
         public override void OnMapLoaded()
         {
+#if CLIENT
+            if (item.HiddenInGame)
+            {
+                Light.Enabled = false;
+            }
+#endif
             CheckIfNeedsUpdate();
         }
 
@@ -285,12 +303,15 @@ namespace Barotrauma.Items.Components
                 UpdateAITarget(item.AiTarget);
             }
             UpdateOnActiveEffects(deltaTime);
+            //something in UpdateOnActiveEffects may deactivate the light -> return so we don't turn it back on
+            if (!IsActive) { return; }
 
 #if CLIENT
             Light.ParentSub = item.Submarine;
 #endif
-            if (item.Container != null)
+            if (item.Container != null && item.GetRootInventoryOwner() is not Character)
             {
+                lightBrightness = 0.0f;
                 SetLightSourceState(false, 0.0f);
                 return;
             }
@@ -300,12 +321,15 @@ namespace Barotrauma.Items.Components
             PhysicsBody body = ParentBody ?? item.body;
             if (body != null && !body.Enabled)
             {
+                lightBrightness = 0.0f;
                 SetLightSourceState(false, 0.0f);
-                return;                
+                return;
             }
 
+            TemporaryFlickerTimer -= deltaTime;
+
             //currPowerConsumption = powerConsumption;
-            if (Rand.Range(0.0f, 1.0f) < 0.05f && Voltage < Rand.Range(0.0f, MinVoltage))
+            if (Rand.Range(0.0f, 1.0f) < 0.05f && (Voltage < Rand.Range(0.0f, MinVoltage) || TemporaryFlickerTimer > 0.0f))
             {
 #if CLIENT
                 if (Voltage > 0.1f)
@@ -357,7 +381,7 @@ namespace Barotrauma.Items.Components
                     {
                         LightColor = XMLExtensions.ParseColor(signal.value, false);
 #if CLIENT
-                        SetLightSourceState(Light.Enabled, currentBrightness);
+                        SetLightSourceState(Light.Enabled, lightColorMultiplier);
 #endif
                         prevColorSignal = signal.value;
                     }

@@ -1,4 +1,5 @@
-﻿using Barotrauma.Networking;
+﻿using Barotrauma.Extensions;
+using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
 using System.Linq;
 using System.Xml.Linq;
@@ -24,7 +25,9 @@ namespace Barotrauma.Items.Components
 
         partial void InitProjSpecific(XElement element)
         {
-            var layoutGroup = new GUILayoutGroup(new RectTransform(GuiFrame.Rect.Size - GUIStyle.ItemFrameMargin, GuiFrame.RectTransform, Anchor.Center) { AbsoluteOffset = GUIStyle.ItemFrameOffset })
+            float marginMultiplier = element.GetAttributeFloat("marginmultiplier", 1.0f);
+
+            var layoutGroup = new GUILayoutGroup(new RectTransform(GuiFrame.Rect.Size - GUIStyle.ItemFrameMargin.Multiply(marginMultiplier), GuiFrame.RectTransform, Anchor.Center) { AbsoluteOffset = GUIStyle.ItemFrameOffset.Multiply(marginMultiplier) })
             {
                 ChildAnchor = Anchor.TopCenter,
                 RelativeSpacing = 0.02f,
@@ -33,31 +36,34 @@ namespace Barotrauma.Items.Components
 
             historyBox = new GUIListBox(new RectTransform(new Vector2(1, .9f), layoutGroup.RectTransform), style: null)
             {
-                AutoHideScrollBar = false
+                AutoHideScrollBar = this.AutoHideScrollbar
             };
 
-            CreateFillerBlock();
-
-            new GUIFrame(new RectTransform(new Vector2(0.9f, 0.01f), layoutGroup.RectTransform), style: "HorizontalLine");
-
-            inputBox = new GUITextBox(new RectTransform(new Vector2(1, .1f), layoutGroup.RectTransform), textColor: TextColor)
+            if (!Readonly)
             {
-                MaxTextLength = MaxMessageLength,
-                OverflowClip = true,
-                OnEnterPressed = (GUITextBox textBox, string text) =>
+                CreateFillerBlock();
+
+                new GUIFrame(new RectTransform(new Vector2(0.9f, 0.01f), layoutGroup.RectTransform), style: "HorizontalLine");
+
+                inputBox = new GUITextBox(new RectTransform(new Vector2(1, .1f), layoutGroup.RectTransform), textColor: TextColor)
                 {
-                    if (GameMain.NetworkMember == null)
+                    MaxTextLength = MaxMessageLength,
+                    OverflowClip = true,
+                    OnEnterPressed = (GUITextBox textBox, string text) =>
                     {
-                        SendOutput(text);
+                        if (GameMain.NetworkMember == null)
+                        {
+                            SendOutput(text);
+                        }
+                        else
+                        {
+                            item.CreateClientEvent(this, new ClientEventData(text));
+                        }
+                        textBox.Text = string.Empty;
+                        return true;
                     }
-                    else
-                    {
-                        item.CreateClientEvent(this, new ClientEventData(text));
-                    }
-                    textBox.Text = string.Empty;
-                    return true;
-                }
-            };
+                };
+            }
 
             layoutGroup.Recalculate();
         }
@@ -101,7 +107,7 @@ namespace Barotrauma.Items.Components
 
             GUITextBlock newBlock = new GUITextBlock(
                     new RectTransform(new Vector2(1, 0), historyBox.Content.RectTransform, anchor: Anchor.TopCenter),
-                    "> " + input,
+                    LineStartSymbol + TextManager.Get(input).Fallback(input),
                     textColor: color, wrap: true, font: UseMonospaceFont ? GUIStyle.MonospacedFont : GUIStyle.Font)
             {
                 CanBeFocused = false
@@ -123,7 +129,10 @@ namespace Barotrauma.Items.Components
 
             historyBox.RecalculateChildren();
             historyBox.UpdateScrollBarSize();
-            historyBox.ScrollBar.BarScrollValue = 1;
+            if (AutoScrollToBottom)
+            {
+                historyBox.ScrollBar.BarScrollValue = 1;
+            }
         }
 
         public override bool Select(Character character)
@@ -138,7 +147,7 @@ namespace Barotrauma.Items.Components
         public override void AddToGUIUpdateList(int order = 0)
         {
             base.AddToGUIUpdateList(order: order);
-            if (shouldSelectInputBox)
+            if (shouldSelectInputBox && !Readonly)
             {
                 inputBox.Select();
                 shouldSelectInputBox = false;

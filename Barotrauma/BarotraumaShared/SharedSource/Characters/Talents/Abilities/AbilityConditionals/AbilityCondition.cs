@@ -1,8 +1,5 @@
-﻿using Microsoft.Xna.Framework;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Xml.Linq;
 
 namespace Barotrauma.Abilities
 {
@@ -33,7 +30,7 @@ namespace Barotrauma.Abilities
             NotSelf = 3,
             Alive = 4,
             Monster = 5,
-            InFriendlySubmarine = 6,
+            InFriendlySubmarine = 6
         };
 
         protected List<TargetType> ParseTargetTypes(string[] targetTypeStrings)
@@ -41,8 +38,7 @@ namespace Barotrauma.Abilities
             List<TargetType> targetTypes = new List<TargetType>();
             foreach (string targetTypeString in targetTypeStrings)
             {
-                TargetType targetType = TargetType.Any;
-                if (!Enum.TryParse(targetTypeString, true, out targetType))
+                if (!Enum.TryParse(targetTypeString, true, out TargetType targetType))
                 {
                     DebugConsole.ThrowError("Invalid target type type \"" + targetTypeString + "\" in CharacterTalent (" + characterTalent.DebugIdentifier + ")");
                 }

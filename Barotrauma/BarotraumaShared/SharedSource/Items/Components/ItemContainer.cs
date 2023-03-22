@@ -12,20 +12,9 @@ namespace Barotrauma.Items.Components
 {
     partial class ItemContainer : ItemComponent, IDrawableComponent
     {
-        class ActiveContainedItem
-        {
-            public readonly Item Item;
-            public readonly StatusEffect StatusEffect;
-            public readonly bool ExcludeBroken;
-            public readonly bool ExcludeFullCondition;
-            public ActiveContainedItem(Item item, StatusEffect statusEffect, bool excludeBroken, bool excludeFullCondition)
-            {
-                Item = item;
-                StatusEffect = statusEffect;
-                ExcludeBroken = excludeBroken;
-                ExcludeFullCondition = excludeFullCondition;
-            }
-        }
+        readonly record struct ActiveContainedItem(Item Item, StatusEffect StatusEffect, bool ExcludeBroken, bool ExcludeFullCondition);
+
+        readonly record struct DrawableContainedItem(Item Item, bool Hide, Vector2? ItemPos, float Rotation);
 
         class SlotRestrictions
         {
@@ -47,6 +36,13 @@ namespace Barotrauma.Items.Components
             {
                 return ContainableItems == null || ContainableItems.Count == 0 || ContainableItems.Any(c => c.MatchesItem(itemPrefab));
             }
+
+            public bool MatchesItem(Identifier identifierOrTag)
+            {
+                return 
+                    ContainableItems == null || ContainableItems.Count == 0 || 
+                    ContainableItems.Any(c => c.Identifiers.Contains(identifierOrTag) && !c.ExcludedIdentifiers.Contains(identifierOrTag));
+            }
         }
 
         public readonly NamedEvent<ItemContainer> OnContainedItemsChanged = new NamedEvent<ItemContainer>();
@@ -56,7 +52,9 @@ namespace Barotrauma.Items.Components
         public readonly ItemInventory Inventory;
 
         private readonly List<ActiveContainedItem> activeContainedItems = new List<ActiveContainedItem>();
-        
+
+        private readonly List<DrawableContainedItem> drawableContainedItems = new List<DrawableContainedItem>();
+
         private List<ushort>[] itemIds;
 
         //how many items can be contained
@@ -65,8 +63,16 @@ namespace Barotrauma.Items.Components
         public int Capacity
         {
             get { return capacity; }
-            set { capacity = Math.Max(value, 0); }
+            private set
+            {
+                capacity = Math.Max(value, 0);
+                MainContainerCapacity = value;
+            }
         }
+        /// <summary>
+        /// The capacity of the main container without taking the sub containers into account. Only differs when there's a sub container defined for the component.
+        /// </summary>
+        public int MainContainerCapacity { get; private set; }
 
         //how many items can be contained
         private int maxStackSize;
@@ -229,6 +235,9 @@ namespace Barotrauma.Items.Components
         public ImmutableHashSet<Identifier> ContainableItemIdentifiers => containableItemIdentifiers;
 
         public List<RelatedItem> ContainableItems { get; }
+        public List<RelatedItem> AllSubContainableItems { get; }
+
+        public readonly bool HasSubContainers;
 
         public ItemContainer(Item item, ContentXElement element)
             : base(item, element)
@@ -251,6 +260,7 @@ namespace Barotrauma.Items.Components
                         break;
                     case "subcontainer":
                         totalCapacity += subElement.GetAttributeInt("capacity", 1);
+                        HasSubContainers = true;
                         break;
                 }
             }
@@ -270,7 +280,7 @@ namespace Barotrauma.Items.Components
                 int subCapacity = subElement.GetAttributeInt("capacity", 1);
                 int subMaxStackSize = subElement.GetAttributeInt("maxstacksize", maxStackSize);
 
-                List<RelatedItem> subContainableItems = null;
+                var subContainableItems = new List<RelatedItem>();
                 foreach (var subSubElement in subElement.Elements())
                 {
                     if (subSubElement.Name.ToString().ToLowerInvariant() != "containable") { continue; }
@@ -281,8 +291,9 @@ namespace Barotrauma.Items.Components
                         DebugConsole.ThrowError("Error in item config \"" + item.ConfigFilePath + "\" - containable with no identifiers.");
                         continue;
                     }
-                    subContainableItems ??= new List<RelatedItem>();
                     subContainableItems.Add(containable);
+                    AllSubContainableItems ??= new List<RelatedItem>();
+                    AllSubContainableItems.Add(containable);
                 }
 
                 for (int i = subContainerIndex; i < subContainerIndex + subCapacity; i++)
@@ -331,8 +342,6 @@ namespace Barotrauma.Items.Components
 
         public void OnItemContained(Item containedItem)
         {
-            item.SetContainedItemPositions();
-
             int index = Inventory.FindIndex(containedItem);
             if (index >= 0 && index < slotRestrictions.Length)
             {
@@ -350,6 +359,14 @@ namespace Barotrauma.Items.Components
                 }
             }
 
+            var relatedItem = FindContainableItem(containedItem);
+            drawableContainedItems.RemoveAll(d => d.Item == containedItem);
+            drawableContainedItems.Add(new DrawableContainedItem(containedItem, 
+                Hide: relatedItem?.Hide ?? false, 
+                ItemPos: relatedItem?.ItemPos, 
+                Rotation: relatedItem?.Rotation ?? 0.0f));
+            drawableContainedItems.Sort((DrawableContainedItem it1, DrawableContainedItem it2) => Inventory.FindIndex(it1.Item).CompareTo(Inventory.FindIndex(it2.Item)));
+
             if (item.GetComponent<Planter>() != null)
             {
                 GameAnalyticsManager.AddDesignEvent("MicroInteraction:" + (GameMain.GameSession?.GameMode?.Preset.Identifier.Value ?? "null") + ":GardeningPlanted:" + containedItem.Prefab.Identifier);
@@ -357,6 +374,15 @@ namespace Barotrauma.Items.Components
 
             //no need to Update() if this item has no statuseffects and no physics body
             IsActive = activeContainedItems.Count > 0 || Inventory.AllItems.Any(it => it.body != null);
+
+            if (IsActive && item.GetRootInventoryOwner() is Character owner && 
+                owner.HasEquippedItem(item, predicate: slot => slot.HasFlag(InvSlotType.LeftHand) || slot.HasFlag(InvSlotType.RightHand)))
+            {
+                // Set the contained items active if there's an item inserted inside the container. Enables e.g. the rifle flashlight when it's attached to the rifle (put inside of it).
+                SetContainedActive(true);
+            }
+            item.SetContainedItemPositions();
+            CharacterHUD.RecreateHudTextsIfFocused(item, containedItem);
             OnContainedItemsChanged.Invoke(this);
         }
 
@@ -368,9 +394,10 @@ namespace Barotrauma.Items.Components
         public void OnItemRemoved(Item containedItem)
         {
             activeContainedItems.RemoveAll(i => i.Item == containedItem);
-
+            drawableContainedItems.RemoveAll(i => i.Item == containedItem);
             //deactivate if the inventory is empty
             IsActive = activeContainedItems.Count > 0 || Inventory.AllItems.Any(it => it.body != null);
+            CharacterHUD.RecreateHudTextsIfFocused(item, containedItem);
             OnContainedItemsChanged.Invoke(this);
         }
 
@@ -409,6 +436,20 @@ namespace Barotrauma.Items.Components
             return false;
         }
 
+        public override void FlipX(bool relativeToSub)
+        {
+            base.FlipX(relativeToSub);
+            if (HideItems) { return; }
+            if (item.body == null) { return; }
+            foreach (Item containedItem in Inventory.AllItems)
+            {
+                if (containedItem.body != null && containedItem.body.Enabled && containedItem.body.Dir != item.body.Dir)
+                {
+                    containedItem.FlipX(relativeToSub);
+                }
+            }
+        }
+
         public override void Update(float deltaTime, Camera cam)
         {
             if (!string.IsNullOrEmpty(SpawnWithId) && !alwaysContainedItemsSpawned)
@@ -441,10 +482,11 @@ namespace Barotrauma.Items.Components
                     {
                         foreach (Item item in Inventory.AllItemsMod)
                         {
+                            item.ApplyStatusEffects(ActionType.OnSuccess, 1.0f, ownerCharacter);
                             item.ApplyStatusEffects(ActionType.OnUse, 1.0f, ownerCharacter);
                             item.GetComponent<GeneticMaterial>()?.Equip(ownerCharacter);
-                            autoInjectCooldown = AutoInjectInterval;
                         }
+                        autoInjectCooldown = AutoInjectInterval;
                     }
                 }
 
@@ -469,15 +511,23 @@ namespace Barotrauma.Items.Components
                 if (activeContainedItem.ExcludeFullCondition && contained.IsFullCondition) { continue; }
                 StatusEffect effect = activeContainedItem.StatusEffect;
 
-                if (effect.HasTargetType(StatusEffect.TargetType.This))                 
+                if (effect.HasTargetType(StatusEffect.TargetType.This))
+                {
                     effect.Apply(ActionType.OnContaining, deltaTime, item, item.AllPropertyObjects);
-                if (effect.HasTargetType(StatusEffect.TargetType.Contained)) 
+                }
+                if (effect.HasTargetType(StatusEffect.TargetType.Contained))
+                {
                     effect.Apply(ActionType.OnContaining, deltaTime, item, contained.AllPropertyObjects);
+                }
+                if (effect.HasTargetType(StatusEffect.TargetType.Character) && item.ParentInventory?.Owner is Character character)
+                {
+                    effect.Apply(ActionType.OnContaining, deltaTime, item, character);
+                }
                 if (effect.HasTargetType(StatusEffect.TargetType.NearbyItems) ||
                     effect.HasTargetType(StatusEffect.TargetType.NearbyCharacters))
                 {
                     targets.Clear();
-                    targets.AddRange(effect.GetNearbyTargets(item.WorldPosition, targets));
+                    effect.AddNearbyTargets(item.WorldPosition, targets);
                     effect.Apply(ActionType.OnActive, deltaTime, item, targets);
                 }
             }
@@ -582,11 +632,65 @@ namespace Barotrauma.Items.Components
         public override void Drop(Character dropper)
         {
             IsActive = true;
+            SetContainedActive(false);
         }
 
         public override void Equip(Character character)
         {
             IsActive = true;
+            if (character != null && character.HasEquippedItem(item, predicate: slot => slot.HasFlag(InvSlotType.LeftHand) || slot.HasFlag(InvSlotType.RightHand)))
+            {
+                SetContainedActive(true);
+            }
+        }
+
+        private void SetContainedActive(bool active)
+        {
+            foreach (Item containedItem in Inventory.AllItems)
+            {
+                RelatedItem containableItem = FindContainableItem(containedItem);
+                if (containableItem != null && containableItem.SetActive)
+                {
+                    foreach (var ic in containedItem.Components)
+                    {
+                        ic.IsActive = active;
+                    }
+                    if (containedItem.body != null)
+                    {
+                        containedItem.body.Enabled = active;
+                        if (active)
+                        {
+                            containedItem.body.PhysEnabled = false;
+                        }
+                    }
+                }
+            }
+            if (active)
+            {
+                FlipX(false);
+            }
+        }
+
+        private RelatedItem FindContainableItem(Item item)
+        {
+            var relatedItem = ContainableItems?.FirstOrDefault(ci => ci.MatchesItem(item));
+            if (relatedItem == null && AllSubContainableItems != null)
+            {
+                relatedItem = AllSubContainableItems.FirstOrDefault(ci => ci.MatchesItem(item));
+            }
+            return relatedItem;
+        }
+
+        /// <summary>
+        /// Returns the index of the first slot whose restrictions match the specified tag or identifier
+        /// </summary>
+        public int? FindSuitableSubContainerIndex(Identifier itemTagOrIdentifier)
+        {
+            for (int i = 0; i < slotRestrictions.Length; i++)
+            {
+                if (slotRestrictions[i].MatchesItem(itemTagOrIdentifier)) { return i; }
+            }
+            return null;
         }
 
         public override void ReceiveSignal(Signal signal, Connection connection)
@@ -604,6 +708,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
+#warning There's some code duplication here and in DrawContainedItems() method, but it's not straightforward to get rid of it, because of slightly different logic and the usage of draw positions vs. positions etc. Should probably be splitted into smaller methods.
         public void SetContainedItemPositions()
         {
             Vector2 transformedItemPos = ItemPos * item.Scale;
@@ -657,51 +762,87 @@ namespace Barotrauma.Items.Components
                     transformedItemIntervalHorizontal = Vector2.Transform(transformedItemIntervalHorizontal, transform);
                     transformedItemPos += item.Position;
                 }
-            }            
-
-            float currentRotation = itemRotation;
-            if (item.body != null)
-            {
-                currentRotation *= item.body.Dir;
-                currentRotation += item.body.Rotation;
-            }
-            else
-            {
-                currentRotation += -item.RotationRad;
             }
 
             int i = 0;
             Vector2 currentItemPos = transformedItemPos;
-            foreach (Item contained in Inventory.AllItems)
+            foreach (DrawableContainedItem contained in drawableContainedItems)
             {
-                if (contained.body != null)
+                Vector2 itemPos = currentItemPos;
+                if (contained.ItemPos.HasValue)
+                {
+                    Vector2 pos = contained.ItemPos.Value;
+                    if (item.body != null)
+                    {
+                        Matrix transform = Matrix.CreateRotationZ(item.body.Rotation);
+                        pos.X *= item.body.Dir;
+                        itemPos = Vector2.Transform(pos, transform) + item.body.Position;
+                    }
+                    else
+                    {
+                        itemPos = pos;
+                        // This code is aped based on above. Not tested.
+                        if (item.FlippedX)
+                        {
+                            itemPos.X = -itemPos.X;
+                            itemPos.X += item.Rect.Width;
+                        }
+                        if (item.FlippedY)
+                        {
+                            itemPos.Y = -itemPos.Y;
+                            itemPos.Y -= item.Rect.Height;
+                        }
+                        itemPos += new Vector2(item.Rect.X, item.Rect.Y);
+                        if (Math.Abs(item.RotationRad) > 0.01f)
+                        {
+                            Matrix transform = Matrix.CreateRotationZ(item.RotationRad);
+                            itemPos = Vector2.Transform(itemPos - item.Position, transform) + item.Position;
+                        }
+                    }
+                }                
+
+                if (contained.Item.body != null)
                 {
                     try
                     {
-                        Vector2 simPos = ConvertUnits.ToSimUnits(currentItemPos);
-                        contained.body.FarseerBody.SetTransformIgnoreContacts(ref simPos, currentRotation);
-                        contained.body.SetPrevTransform(contained.body.SimPosition, contained.body.Rotation);
-                        contained.body.UpdateDrawPosition();
+                        Vector2 simPos = ConvertUnits.ToSimUnits(itemPos);
+                        float rotation = itemRotation;
+                        if (contained.Rotation != 0)
+                        {
+                            rotation = MathHelper.ToRadians(contained.Rotation);
+                        }
+                        if (item.body != null)
+                        {
+                            rotation *= item.body.Dir;
+                            rotation += item.body.Rotation;
+                        }
+                        else
+                        {
+                            rotation += -item.RotationRad;
+                        }
+                        contained.Item.body.FarseerBody.SetTransformIgnoreContacts(ref simPos, rotation);
+                        contained.Item.body.SetPrevTransform(contained.Item.body.SimPosition, contained.Item.body.Rotation);
+                        contained.Item.body.UpdateDrawPosition();
                     }
                     catch (Exception e)
                     {
                         DebugConsole.Log("SetTransformIgnoreContacts threw an exception in SetContainedItemPositions (" + e.Message + ")\n" + e.StackTrace.CleanupStackTrace());
-                        GameAnalyticsManager.AddErrorEventOnce("ItemContainer.SetContainedItemPositions.InvalidPosition:" + contained.Name,
+                        GameAnalyticsManager.AddErrorEventOnce("ItemContainer.SetContainedItemPositions.InvalidPosition:" + contained.Item.Name,
                             GameAnalyticsManager.ErrorSeverity.Error,
                             "SetTransformIgnoreContacts threw an exception in SetContainedItemPositions (" + e.Message + ")\n" + e.StackTrace.CleanupStackTrace());
                     }
-                    contained.body.Submarine = item.Submarine;
+                    contained.Item.body.Submarine = item.Submarine;
                 }
 
-                contained.Rect =
+                contained.Item.Rect =
                     new Rectangle(
-                        (int)(currentItemPos.X - contained.Rect.Width / 2.0f),
-                        (int)(currentItemPos.Y + contained.Rect.Height / 2.0f),
-                        contained.Rect.Width, contained.Rect.Height);
+                        (int)(itemPos.X - contained.Item.Rect.Width / 2.0f),
+                        (int)(itemPos.Y + contained.Item.Rect.Height / 2.0f),
+                        contained.Item.Rect.Width, contained.Item.Rect.Height);
 
-                contained.Submarine = item.Submarine;
-                contained.CurrentHull = item.CurrentHull;
-                contained.SetContainedItemPositions();
+                contained.Item.Submarine = item.Submarine;
+                contained.Item.CurrentHull = item.CurrentHull;
+                contained.Item.SetContainedItemPositions();
 
                 i++;
                 if (Math.Abs(ItemInterval.X) > 0.001f && Math.Abs(ItemInterval.Y) > 0.001f)

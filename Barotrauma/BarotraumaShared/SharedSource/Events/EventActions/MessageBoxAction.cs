@@ -49,6 +49,12 @@ namespace Barotrauma
         [Serialize("", IsPropertySaveable.Yes)]
         public Identifier ObjectiveTag { get; set; }
 
+        [Serialize(true, IsPropertySaveable.Yes)]
+        public bool ObjectiveCanBeCompleted { get; set; }
+
+        [Serialize("", IsPropertySaveable.Yes)]
+        public Identifier ParentObjectiveId { get; set; }
+
         private bool isFinished = false;
 
         public MessageBoxAction(ScriptedEvent parentEvent, ContentXElement element) : base(parentEvent, element)

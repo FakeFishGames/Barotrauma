@@ -83,6 +83,7 @@ namespace Barotrauma
                     GUIListBox conversationList = lastMessageBox.FindChild("conversationlist", true) as GUIListBox;
                     Debug.Assert(conversationList != null);
 
+                    DisableButtons(conversationList.Content.GetAllChildren<GUIButton>(), selectedButton: null);
                     // gray out the last text block
                     if (conversationList.Content.Children.LastOrDefault() is GUILayoutGroup lastElement)
                     {
@@ -269,14 +270,7 @@ namespace Barotrauma
                         if (actionInstance != null)
                         {
                             actionInstance.selectedOption = selectedOption;
-                            foreach (GUIButton otherButton in optionButtons)
-                            {
-                                otherButton.CanBeFocused = false;
-                                if (otherButton != btn)
-                                {
-                                    otherButton.TextBlock.OverrideTextColor(Color.DarkGray * 0.8f);
-                                }
-                            }
+                            DisableButtons(optionButtons, btn);
                             btn.ExternalHighlight = true;
                             return true;
                         }
@@ -286,14 +280,7 @@ namespace Barotrauma
                             SendResponse(actionId.Value, selectedOption);
                             btn.CanBeFocused = false;
                             btn.ExternalHighlight = true;
-                            foreach (GUIButton otherButton in optionButtons)
-                            {
-                                otherButton.CanBeFocused = false;
-                                if (otherButton != btn)
-                                {
-                                    otherButton.TextBlock.OverrideTextColor(Color.DarkGray * 0.8f);
-                                }
-                            }
+                            DisableButtons(optionButtons, btn);
                             return true;
                         }
                         //should not happen
@@ -302,6 +289,18 @@ namespace Barotrauma
 
                     if (closingOptions.Contains(i)) { optionButtons[i].OnClicked += target.Close; }
                 }
+            }
+        }
+
+        public static void SelectOption(ushort actionId, int option)
+        {
+            if (lastMessageBox.UserData is Pair<string, ushort> userData)
+            {
+                if (userData.Second != actionId) { return; }
+
+                GUIListBox conversationList = lastMessageBox.FindChild("conversationlist", true) as GUIListBox;
+                Debug.Assert(conversationList != null);
+                DisableButtons(conversationList.Content.GetAllChildren<GUIButton>(), (btn) => btn.UserData is int i && i == option);
             }
         }
 
@@ -323,7 +322,10 @@ namespace Barotrauma
                 AlwaysOverrideCursor = true
             };
 
-            LocalizedString translatedText = TextManager.ParseInputTypes(TextManager.Get(text)).Fallback(text);
+            LocalizedString translatedText = speaker?.DisplayName is not null ?
+                TextManager.GetWithVariable(text, "[speakername]", speaker?.DisplayName) :
+                TextManager.Get(text);
+            translatedText = TextManager.ParseInputTypes(translatedText).Fallback(text);
 
             if (speaker?.Info != null && drawChathead)
             {
@@ -378,6 +380,30 @@ namespace Barotrauma
             //content.RectTransform.MinSize = new Point(0, textContent.Rect.Height);
 
             return buttons;
+        }
+
+        private static void DisableButtons(IEnumerable<GUIButton> buttons, GUIButton selectedButton)
+        {
+            DisableButtons(buttons, (btn) => btn == selectedButton);
+        }
+
+        private static void DisableButtons(IEnumerable<GUIButton> buttons, Func<GUIButton, bool> isSelectedButton)
+        {
+            foreach (GUIButton btn in buttons)
+            {
+                if (btn.CanBeFocused)
+                {
+                    btn.CanBeFocused = false;
+                    if (isSelectedButton(btn))
+                    {
+                        btn.Selected = true;
+                    }
+                    else
+                    {
+                        btn.TextBlock.OverrideTextColor(Color.DarkGray * 0.8f);
+                    }
+                }
+            }
         }
 
         private static void SendResponse(UInt16 actionId, int selectedOption)

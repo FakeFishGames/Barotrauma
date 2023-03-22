@@ -19,6 +19,9 @@ namespace Barotrauma
 
     static class MathUtils
     {
+        public static Vector2 DiscardZ(this Vector3 vector)
+            => new Vector2(vector.X, vector.Y);
+
         public static float Percentage(float portion, float total)
         {
             return portion / total * 100;
@@ -104,6 +107,8 @@ namespace Barotrauma
                 (float)Math.Floor(value / div) * div;
         }
 
+        public static int RoundToInt(float v) => (int)MathF.Round(v);
+
         public static float RoundTowardsClosest(float value, float div)
         {
             return (float)Math.Round(value / div) * div;
@@ -150,7 +155,6 @@ namespace Barotrauma
         
         public static float CurveAngle(float from, float to, float step)
         {
-
             from = WrapAngleTwoPi(from);
             to = WrapAngleTwoPi(to);
 
@@ -184,13 +188,7 @@ namespace Barotrauma
             {
                 return 0.0f;
             }
-
-            while (angle < 0)
-                angle += MathHelper.TwoPi;
-            while (angle >= MathHelper.TwoPi)
-                angle -= MathHelper.TwoPi;
-
-            return angle;
+            return PositiveModulo(angle, MathHelper.TwoPi);
         }
 
         /// <summary>
@@ -202,13 +200,9 @@ namespace Barotrauma
             {
                 return 0.0f;
             }
-            // Ensure that -pi <= angle < pi for both "from" and "to" 
-            while (angle < -MathHelper.Pi)
-                angle += MathHelper.TwoPi;
-            while (angle >= MathHelper.Pi)
-                angle -= MathHelper.TwoPi;
-
-            return angle;
+            float min = -MathHelper.Pi;
+            float diffFromMin = angle - min;
+            return diffFromMin - (MathF.Floor(diffFromMin / MathHelper.TwoPi) * MathHelper.TwoPi) + min;
         }
 
         public static float GetShortestAngle(float from, float to)
@@ -337,13 +331,13 @@ namespace Barotrauma
 
                 if (axisAligned1.Y < axisAligned2.Y)
                 {
-                    if (y < axisAligned1.Y) return false;
-                    if (y > axisAligned2.Y) return false;
+                    if (y < axisAligned1.Y) { return false; }
+                    if (y > axisAligned2.Y) { return false; }
                 }
                 else
                 {
-                    if (y > axisAligned1.Y) return false;
-                    if (y < axisAligned2.Y) return false;
+                    if (y > axisAligned1.Y) { return false; }
+                    if (y < axisAligned2.Y) { return false; }
                 }
                 
                 intersection = new Vector2(axisAligned1.X, y);
@@ -359,13 +353,13 @@ namespace Barotrauma
 
                 if (axisAligned1.X < axisAligned2.X)
                 {
-                    if (x < axisAligned1.X) return false;
-                    if (x > axisAligned2.X) return false;
+                    if (x < axisAligned1.X) { return false; }
+                    if (x > axisAligned2.X) { return false; }
                 }
                 else
                 {
-                    if (x > axisAligned1.X) return false;
-                    if (x < axisAligned2.X) return false;
+                    if (x > axisAligned1.X) { return false; }
+                    if (x < axisAligned2.X) { return false; }
                 }
                 
                 intersection = new Vector2(x, axisAligned1.Y);
@@ -560,35 +554,45 @@ namespace Barotrauma
 
         public static double LineSegmentToPointDistanceSquared(Point lineA, Point lineB, Point point)
         {
-            double xDiff = lineB.X - lineA.X;
-            double yDiff = lineB.Y - lineA.Y;
+            return LineSegmentToPointDistanceSquared(lineA.X, lineA.Y, lineB.X, lineB.Y, point.X, point.Y);
+        }
+
+        public static float LineSegmentToPointDistanceSquared(Vector2 lineA, Vector2 lineB, Vector2 point)
+        {
+            return (float)LineSegmentToPointDistanceSquared(lineA.X, lineA.Y, lineB.X, lineB.Y, point.X, point.Y);
+        }
+
+        private static double LineSegmentToPointDistanceSquared(double line1X, double line1Y, double line2X, double line2Y, double pointX, double pointY)
+        {
+            double xDiff = line2X - line1X;
+            double yDiff = line2Y - line1Y;
 
             if (xDiff == 0 && yDiff == 0)
             {
-                double v1 = lineA.X - point.X;
-                double v2 = lineA.Y - point.Y;
+                double v1 = line1X - pointX;
+                double v2 = line1Y - pointY;
                 return (v1 * v1) + (v2 * v2);
             }
 
             // Calculate the t that minimizes the distance.
-            double t = ((point.X - lineA.X) * xDiff + (point.Y - lineA.Y) * yDiff) / (xDiff * xDiff + yDiff * yDiff);
+            double t = ((pointX - line1X) * xDiff + (pointY - line1Y) * yDiff) / (xDiff * xDiff + yDiff * yDiff);
 
             // See if this represents one of the segment's
             // end points or a point in the middle.
             if (t < 0)
             {
-                xDiff = point.X - lineA.X;
-                yDiff = point.Y - lineA.Y;
+                xDiff = pointX - line1X;
+                yDiff = pointY - line1Y;
             }
             else if (t > 1)
             {
-                xDiff = point.X - lineB.X;
-                yDiff = point.Y - lineB.Y;
+                xDiff = pointX - line2X;
+                yDiff = pointY - line2Y;
             }
             else
             {
-                xDiff = point.X - (lineA.X + t * xDiff);
-                yDiff = point.Y - (lineA.Y + t * yDiff);
+                xDiff = pointX - (line1X + t * xDiff);
+                yDiff = pointY - (line1Y + t * yDiff);
             }
 
             return xDiff * xDiff + yDiff * yDiff;
@@ -886,23 +890,30 @@ namespace Barotrauma
         // https://stackoverflow.com/questions/3874627/floating-point-comparison-functions-for-c-sharp
         public static bool NearlyEqual(float a, float b, float epsilon = 0.0001f)
         {
-            float diff = Math.Abs(a - b);
             if (a == b)
             {
-                // shortcut, handles infinities
+                //shortcut, handles infinities
                 return true;
             }
-            else if (a == 0 || b == 0 || diff < float.Epsilon)
+
+            if (a == 0 || b == 0)
             {
-                // a or b is zero or both are extremely close to it
-                // relative error is less meaningful here
-                return diff < epsilon;
+                //if a or b is zero, relative error is less meaningful
+                return Math.Abs(a - b) < epsilon;
             }
-            else
+
+            float absA = Math.Abs(a);
+            float absB = Math.Abs(b);
+            float absAB = absA + absB;
+            if (absAB < epsilon)
             {
-                // use relative error
-                return diff / (Math.Abs(a) + Math.Abs(b)) < epsilon;
+                // a and b extremely close to zero, relative error is less meaningful
+                return true;
             }
+
+            float diff = Math.Abs(a - b);
+            // use relative error
+            return diff / absAB < epsilon;            
         }
 
         /// <summary>

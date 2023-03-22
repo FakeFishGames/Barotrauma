@@ -465,6 +465,10 @@ namespace Barotrauma
         public readonly OrderTarget TargetPosition;
 
         private ISpatialEntity targetSpatialEntity;
+
+        /// <summary>
+        /// Note this property doesn't return the follow target of the Follow objective, as expected!
+        /// </summary>
         public ISpatialEntity TargetSpatialEntity
         {
             get

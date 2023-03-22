@@ -30,7 +30,7 @@ namespace Barotrauma
                         Data = data,
                         OnClick = (GUITextBlock component, GUITextBlock.ClickableArea area) =>
                         {
-                            GameMain.Instance.ShowOpenUrlInWebBrowserPrompt("https://gameanalytics.com/privacy/");
+                            GameMain.ShowOpenUrlInWebBrowserPrompt("https://gameanalytics.com/privacy/");
                         }
                     });
                 }

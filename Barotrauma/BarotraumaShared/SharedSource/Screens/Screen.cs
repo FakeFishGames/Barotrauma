@@ -35,6 +35,7 @@
                 {
                     GUI.DisableSavingIndicatorDelayed();
                 }
+                GameMain.ResetIMEWorkaround();
 #endif
             }
 

@@ -30,11 +30,8 @@ namespace Barotrauma.Items.Components
         Serialize(500.0f, IsPropertySaveable.Yes, description: "The amount of force exerted on the submarine when the engine is operating at full power.")]
         public float MaxForce
         {
-            get { return maxForce; }
-            set
-            {
-                maxForce = Math.Max(0.0f, value);
-            }
+            get => maxForce;
+            set => maxForce = Math.Max(0.0f, value);
         }
 
         [Editable, Serialize("0.0,0.0", IsPropertySaveable.Yes, 
@@ -94,7 +91,7 @@ namespace Barotrauma.Items.Components
         }
 
         partial void InitProjSpecific(ContentXElement element);
-    
+
         public override void Update(float deltaTime, Camera cam)
         {
             UpdateOnActiveEffects(deltaTime);
@@ -119,7 +116,7 @@ namespace Barotrauma.Items.Components
             {
                 float voltageFactor = MinVoltage <= 0.0f ? 1.0f : Math.Min(Voltage, MaxOverVoltageFactor);
                 float currForce = force * voltageFactor;
-                float condition = item.Condition / item.MaxCondition;
+                float condition = item.MaxCondition <= 0.0f ? 0.0f : item.Condition / item.MaxCondition;
                 // Broken engine makes more noise.
                 float noise = Math.Abs(currForce) * MathHelper.Lerp(1.5f, 1f, condition);
                 UpdateAITargets(noise);
@@ -129,11 +126,13 @@ namespace Barotrauma.Items.Components
                 {
                     forceMultiplier *= MathHelper.Lerp(0.5f, 2.0f, (float)Math.Sqrt(User.GetSkillLevel("helm") / 100));
                 }
-                currForce *= maxForce * forceMultiplier;
-                if (item.GetComponent<Repairable>() is Repairable repairable && repairable.IsTinkering)
+                currForce *= item.StatManager.GetAdjustedValue(ItemTalentStats.EngineMaxSpeed, MaxForce) * forceMultiplier;
+                if (item.GetComponent<Repairable>() is { IsTinkering: true } repairable)
                 {
                     currForce *= 1f + repairable.TinkeringStrength * TinkeringForceIncrease;
                 }
+
+                currForce = item.StatManager.GetAdjustedValue(ItemTalentStats.EngineSpeed, currForce);
 
                 //less effective when in a bad condition
                 currForce *= MathHelper.Lerp(0.5f, 2.0f, condition);

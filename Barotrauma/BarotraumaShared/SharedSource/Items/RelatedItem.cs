@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Xml.Linq;
+using Microsoft.Xna.Framework;
+using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
@@ -21,9 +23,11 @@ namespace Barotrauma
 
         public bool MatchOnEmpty { get; set; }
 
+        public bool RequireEmpty { get; set; }
+
         public bool IgnoreInEditor { get; set; }
 
-        private ImmutableHashSet<Identifier> excludedIdentifiers;
+        public ImmutableHashSet<Identifier> ExcludedIdentifiers { get; private set; }
 
         private RelationType type;
 
@@ -54,6 +58,20 @@ namespace Barotrauma
         /// </summary>
         public int TargetSlot = -1;
 
+        /// <summary>
+        /// Overrides the position defined in ItemContainer.
+        /// </summary>
+        public Vector2? ItemPos;
+
+        /// <summary>
+        /// Only affects when ItemContainer.hideItems is false. Doesn't override the value.
+        /// </summary>
+        public bool Hide;
+
+        public float Rotation;
+
+        public bool SetActive;
+
         public string JoinedIdentifiers
         {
             get { return string.Join(",", Identifiers); }
@@ -69,20 +87,20 @@ namespace Barotrauma
 
         public string JoinedExcludedIdentifiers
         {
-            get { return string.Join(",", excludedIdentifiers); }
+            get { return string.Join(",", ExcludedIdentifiers); }
             set
             {
                 if (value == null) return;
 
-                excludedIdentifiers = value.Split(',').Select(s => s.Trim()).ToIdentifiers().ToImmutableHashSet();
+                ExcludedIdentifiers = value.Split(',').Select(s => s.Trim()).ToIdentifiers().ToImmutableHashSet();
             }
         }
 
         public bool MatchesItem(Item item)
         {
             if (item == null) { return false; }
-            if (excludedIdentifiers.Contains(item.Prefab.Identifier)) { return false; }
-            foreach (var excludedIdentifier in excludedIdentifiers)
+            if (ExcludedIdentifiers.Contains(item.Prefab.Identifier)) { return false; }
+            foreach (var excludedIdentifier in ExcludedIdentifiers)
             {
                 if (item.HasTag(excludedIdentifier)) { return false; }
             }
@@ -100,8 +118,8 @@ namespace Barotrauma
         public bool MatchesItem(ItemPrefab itemPrefab)
         {
             if (itemPrefab == null) { return false; }
-            if (excludedIdentifiers.Contains(itemPrefab.Identifier)) { return false; }
-            foreach (var excludedIdentifier in excludedIdentifiers)
+            if (ExcludedIdentifiers.Contains(itemPrefab.Identifier)) { return false; }
+            foreach (var excludedIdentifier in ExcludedIdentifiers)
             {
                 if (itemPrefab.Tags.Contains(excludedIdentifier)) { return false; }
             }
@@ -120,7 +138,7 @@ namespace Barotrauma
         public RelatedItem(Identifier[] identifiers, Identifier[] excludedIdentifiers)
         {
             this.Identifiers = identifiers.Select(id => id.Value.Trim().ToIdentifier()).ToImmutableHashSet();
-            this.excludedIdentifiers = excludedIdentifiers.Select(id => id.Value.Trim().ToIdentifier()).ToImmutableHashSet();
+            this.ExcludedIdentifiers = excludedIdentifiers.Select(id => id.Value.Trim().ToIdentifier()).ToImmutableHashSet();
 
             statusEffects = new List<StatusEffect>();
         }
@@ -133,27 +151,42 @@ namespace Barotrauma
                     if (parentItem == null) { return false; }
                     return CheckContained(parentItem);
                 case RelationType.Container:
-                    if (parentItem == null || parentItem.Container == null) { return MatchOnEmpty; }
-                    return (!ExcludeBroken || parentItem.Container.Condition > 0.0f) && (!ExcludeFullCondition || !parentItem.Container.IsFullCondition) && MatchesItem(parentItem.Container);
+                    if (parentItem == null || parentItem.Container == null) { return MatchOnEmpty || RequireEmpty; }
+                    return CheckItem(parentItem.Container, this);
                 case RelationType.Equipped:
                     if (character == null) { return false; }
-                    if (MatchOnEmpty && !character.HeldItems.Any()) { return true; }
-                    foreach (Item equippedItem in character.HeldItems)
+                    var heldItems = character.HeldItems;
+                    if ((RequireEmpty || MatchOnEmpty) && heldItems.None()) { return true; }
+                    foreach (Item equippedItem in heldItems)
                     {
                         if (equippedItem == null) { continue; }
-                        if ((!ExcludeBroken || equippedItem.Condition > 0.0f) && (!ExcludeFullCondition || !equippedItem.IsFullCondition) && MatchesItem(equippedItem)) { return true; }
+                        if (CheckItem(equippedItem, this))
+                        {
+                            if (RequireEmpty && equippedItem.Condition > 0) { return false; }
+                            return true;
+                        }
                     }
                     break;
                 case RelationType.Picked:
-                    if (character == null || character.Inventory == null) { return false; }
-                    foreach (Item pickedItem in character.Inventory.AllItems)
+                    if (character == null) { return false; }
+                    if (character.Inventory == null) { return MatchOnEmpty || RequireEmpty; }
+                    var allItems = character.Inventory.AllItems;
+                    if ((RequireEmpty || MatchOnEmpty) && allItems.None()) { return true; }
+                    foreach (Item pickedItem in allItems)
                     {
-                        if (MatchesItem(pickedItem)) { return true; }
+                        if (pickedItem == null) { continue; }
+                        if (CheckItem(pickedItem, this))
+                        {
+                            if (RequireEmpty && pickedItem.Condition > 0) { return false; }
+                            return true;
+                        }
                     }
                     break;
                 default:
                     return true;
             }
+
+            static bool CheckItem(Item i, RelatedItem ri) => (!ri.ExcludeBroken || ri.RequireEmpty || i.Condition > 0.0f) && (!ri.ExcludeFullCondition || !i.IsFullCondition) && ri.MatchesItem(i);
 
             return false;
         }
@@ -161,17 +194,17 @@ namespace Barotrauma
         private bool CheckContained(Item parentItem)
         {
             if (parentItem.OwnInventory == null) { return false; }
-
-            if (MatchOnEmpty && parentItem.OwnInventory.IsEmpty())
+            bool isEmpty = parentItem.OwnInventory.IsEmpty();
+            if (RequireEmpty && !isEmpty) { return false; }
+            if (MatchOnEmpty && isEmpty) { return true; }
+            foreach (var container in parentItem.GetComponents<Items.Components.ItemContainer>())
             {
-                return true;
-            }
-
-            foreach (Item contained in parentItem.ContainedItems)
-            {
-                if (TargetSlot > -1 && parentItem.OwnInventory.FindIndex(contained) != TargetSlot) { continue; }
-                if ((!ExcludeBroken || contained.Condition > 0.0f) && (!ExcludeFullCondition || !contained.IsFullCondition) && MatchesItem(contained)) { return true; }
-                if (CheckContained(contained)) { return true; }
+                foreach (Item contained in container.Inventory.AllItems)
+                {
+                    if (TargetSlot > -1 && parentItem.OwnInventory.FindIndex(contained) != TargetSlot) { continue; }
+                    if ((!ExcludeBroken || contained.Condition > 0.0f) && (!ExcludeFullCondition || !contained.IsFullCondition) && MatchesItem(contained)) { return true; }
+                    if (CheckContained(contained)) { return true; }
+                }
             }
             return false;
         }
@@ -184,11 +217,23 @@ namespace Barotrauma
                 new XAttribute("optional", IsOptional),
                 new XAttribute("ignoreineditor", IgnoreInEditor),
                 new XAttribute("excludebroken", ExcludeBroken),
+                new XAttribute("requireempty", RequireEmpty),
                 new XAttribute("excludefullcondition", ExcludeFullCondition),
                 new XAttribute("targetslot", TargetSlot),
-                new XAttribute("allowvariants", AllowVariants));
+                new XAttribute("allowvariants", AllowVariants),
+                new XAttribute("rotation", Rotation),
+                new XAttribute("setactive", SetActive));
 
-            if (excludedIdentifiers.Count > 0)
+            if (Hide)
+            {
+                element.Add(new XAttribute(nameof(Hide), true));
+            }
+            if (ItemPos.HasValue)
+            {
+                element.Add(new XAttribute(nameof(ItemPos), ItemPos.Value));
+            }
+
+            if (ExcludedIdentifiers.Count > 0)
             {
                 element.Add(new XAttribute("excludedidentifiers", JoinedExcludedIdentifiers));
             }
@@ -249,9 +294,20 @@ namespace Barotrauma
             RelatedItem ri = new RelatedItem(identifiers, excludedIdentifiers)
             {
                 ExcludeBroken = element.GetAttributeBool("excludebroken", true),
+                RequireEmpty = element.GetAttributeBool("requireempty", false),
                 ExcludeFullCondition = element.GetAttributeBool("excludefullcondition", false),
-                AllowVariants = element.GetAttributeBool("allowvariants", true)
+                AllowVariants = element.GetAttributeBool("allowvariants", true),
+                Rotation = element.GetAttributeFloat("rotation", 0f),
+                SetActive = element.GetAttributeBool("setactive", false)
             };
+            if (element.GetAttribute(nameof(Hide)) != null)
+            {
+                ri.Hide = element.GetAttributeBool(nameof(Hide), false);
+            }
+            if (element.GetAttribute(nameof(ItemPos)) != null)
+            {
+                ri.ItemPos = element.GetAttributeVector2(nameof(ItemPos), Vector2.Zero);
+            }
             string typeStr = element.GetAttributeString("type", "");
             if (string.IsNullOrEmpty(typeStr))
             {

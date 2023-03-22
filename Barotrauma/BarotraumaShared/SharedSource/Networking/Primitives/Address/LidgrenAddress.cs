@@ -17,14 +17,9 @@ namespace Barotrauma.Networking
 
         public LidgrenAddress(IPAddress netAddress)
         {
-            if (IPAddress.IsLoopback(netAddress))
-            {
-                NetAddress = IPAddress.Loopback;
-            }
-            else
-            {
-                NetAddress = netAddress;
-            }
+            if (IPAddress.IsLoopback(netAddress)) { netAddress = IPAddress.Loopback; }
+            if (netAddress.IsIPv4MappedToIPv6) { netAddress = netAddress.MapToIPv4(); }
+            NetAddress = netAddress;
         }
 
         public new static Option<LidgrenAddress> Parse(string endpointStr)

@@ -21,6 +21,9 @@ namespace Barotrauma
         [Serialize(true, IsPropertySaveable.Yes)]
         public bool IgnoreIncapacitatedCharacters { get; set; }
 
+        [Serialize(false, IsPropertySaveable.Yes)]
+        public bool AllowHiddenItems { get; set; }
+
         private bool isFinished = false;
 
         public TagAction(ScriptedEvent parentEvent, ContentXElement element) : base(parentEvent, element)
@@ -32,11 +35,13 @@ namespace Barotrauma
                 ("bot", v => TagBots(playerCrewOnly: false)),
                 ("crew", v => TagCrew()),
                 ("humanprefabidentifier", TagHumansByIdentifier),
+                ("jobidentifier", TagHumansByJobIdentifier),
                 ("structureidentifier", TagStructuresByIdentifier),
                 ("structurespecialtag", TagStructuresBySpecialTag),
                 ("itemidentifier", TagItemsByIdentifier),
                 ("itemtag", TagItemsByTag),
-                ("hullname", TagHullsByName)
+                ("hullname", TagHullsByName),
+                ("submarine", TagSubmarinesByType),
             }.Select(t => (t.k.ToIdentifier(), t.v)).ToImmutableDictionary();
         }
 
@@ -93,6 +98,18 @@ namespace Barotrauma
                 }
             }
         }
+
+        private void TagHumansByJobIdentifier(Identifier jobIdentifier)
+        {
+            foreach (Character c in Character.CharacterList)
+            {
+                if (c.HasJob(jobIdentifier))
+                {
+                    ParentEvent.AddTarget(Tag, c);
+                }
+            }
+        }
+
         private void TagStructuresByIdentifier(Identifier identifier)
         {
             ParentEvent.AddTargetPredicate(Tag, e => e is Structure s && SubmarineTypeMatches(s.Submarine) && s.Prefab.Identifier == identifier);
@@ -105,17 +122,27 @@ namespace Barotrauma
 
         private void TagItemsByIdentifier(Identifier identifier)
         {
-            ParentEvent.AddTargetPredicate(Tag, e => e is Item it && SubmarineTypeMatches(it.Submarine) && it.Prefab.Identifier == identifier);
+            ParentEvent.AddTargetPredicate(Tag, e => e is Item it && IsValidItem(it) && it.Prefab.Identifier == identifier);
         }
 
         private void TagItemsByTag(Identifier tag)
         {
-            ParentEvent.AddTargetPredicate(Tag, e => e is Item it && SubmarineTypeMatches(it.Submarine) && it.HasTag(tag));
+            ParentEvent.AddTargetPredicate(Tag, e => e is Item it && IsValidItem(it) && it.HasTag(tag));
         }
 
         private void TagHullsByName(Identifier name)
         {
             ParentEvent.AddTargetPredicate(Tag, e => e is Hull h && SubmarineTypeMatches(h.Submarine) && h.RoomName.Contains(name.Value, StringComparison.OrdinalIgnoreCase));
+        }
+
+        private void TagSubmarinesByType(Identifier type)
+        {
+            ParentEvent.AddTargetPredicate(Tag, e => e is Submarine s && SubmarineTypeMatches(s) && (type.IsEmpty || type == s.Info?.Type.ToIdentifier()));
+        }
+
+        private bool IsValidItem(Item it)
+        {
+            return (!it.HiddenInGame || AllowHiddenItems) && SubmarineTypeMatches(it.Submarine);
         }
 
         private bool SubmarineTypeMatches(Submarine sub)

@@ -111,6 +111,7 @@ namespace Barotrauma
         }
         public void ReceiveTextInput(string text) { }
         public void ReceiveCommandInput(char command) { }
+        public void ReceiveEditingInput(string text, int start, int length) {  }
 
         public void ReceiveSpecialInput(Keys key)
         {
@@ -121,9 +122,7 @@ namespace Barotrauma
                     listBox.ReceiveSpecialInput(key);
                     GUI.KeyboardDispatcher.Subscriber = this;
                     break;
-                case Keys.Enter:
-                case Keys.Space:
-                case Keys.Escape:
+                default:
                     GUI.KeyboardDispatcher.Subscriber = null;
                     break;
             }
@@ -245,18 +244,16 @@ namespace Barotrauma
             return parentHierarchy.Last();
         }
                 
-        public void AddItem(LocalizedString text, object userData = null, LocalizedString toolTip = null)
+        public GUIComponent AddItem(LocalizedString text, object userData = null, LocalizedString toolTip = null, Color? color = null, Color? textColor = null)
         {
             toolTip ??= "";
             if (selectMultiple)
             {
-                var frame = new GUIFrame(new RectTransform(new Point(button.Rect.Width, button.Rect.Height), listBox.Content.RectTransform)
-                { IsFixedSize = false }, style: "ListBoxElement")
+                var frame = new GUIFrame(new RectTransform(new Point(button.Rect.Width, button.Rect.Height), listBox.Content.RectTransform) { IsFixedSize = false }, style: "ListBoxElement", color: color)
                 {
                     UserData = userData,
                     ToolTip = toolTip
                 };
-
                 new GUITickBox(new RectTransform(new Vector2(1.0f, 0.8f), frame.RectTransform, anchor: Anchor.CenterLeft) { MaxSize = new Point(int.MaxValue, (int)(button.Rect.Height * 0.8f)) }, text)
                 {
                     UserData = userData,
@@ -276,7 +273,7 @@ namespace Barotrauma
                         foreach (GUIComponent child in ListBox.Content.Children)
                         {
                             var tickBox = child.GetChild<GUITickBox>();
-                            if (tickBox.Selected)
+                            if (tickBox is { Selected: true })
                             {
                                 selectedDataMultiple.Add(child.UserData);
                                 selectedIndexMultiple.Add(i);
@@ -290,11 +287,11 @@ namespace Barotrauma
                         return true;
                     }
                 };
+                return frame;
             }
             else
             {
-                new GUITextBlock(new RectTransform(new Point(button.Rect.Width, button.Rect.Height), listBox.Content.RectTransform)
-                { IsFixedSize = false }, text, style: "ListBoxElement")
+                return new GUITextBlock(new RectTransform(new Point(button.Rect.Width, button.Rect.Height), listBox.Content.RectTransform) { IsFixedSize = false }, text, style: "ListBoxElement", color: color, textColor: textColor)
                 {
                     UserData = userData,
                     ToolTip = toolTip
@@ -324,7 +321,7 @@ namespace Barotrauma
             }
             else
             {
-                if (!(component is GUITextBlock textBlock))
+                if (component is not GUITextBlock textBlock)
                 {
                     textBlock = component.GetChild<GUITextBlock>();
                     if (textBlock is null && !AllowNonText) { return false; }

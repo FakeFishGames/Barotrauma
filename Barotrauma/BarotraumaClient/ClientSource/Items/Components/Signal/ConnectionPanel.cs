@@ -35,6 +35,13 @@ namespace Barotrauma.Items.Components
             if (GuiFrame == null) { return; }
             originalMaxSize = GuiFrame.RectTransform.MaxSize;
             originalRelativeSize = GuiFrame.RectTransform.RelativeSize;
+            CreateGUI();
+        }
+
+        protected override void CreateGUI()
+        {
+            if (GuiFrame == null) { return; }
+
             CheckForLabelOverlap();
             var content = new GUICustomComponent(new RectTransform(Vector2.One, GuiFrame.RectTransform), DrawConnections, null)
             {
@@ -43,8 +50,8 @@ namespace Barotrauma.Items.Components
             content.RectTransform.SetAsFirstChild();
 
             //prevents inputs from going through the GUICustomComponent to the drag handle
-            dragArea = new GUIFrame(new RectTransform(GuiFrame.Rect.Size - GUIStyle.ItemFrameMargin, GuiFrame.RectTransform, Anchor.Center) 
-                { AbsoluteOffset = GUIStyle.ItemFrameOffset }, style: null);
+            dragArea = new GUIFrame(new RectTransform(GuiFrame.Rect.Size - GUIStyle.ItemFrameMargin, GuiFrame.RectTransform, Anchor.Center)
+            { AbsoluteOffset = GUIStyle.ItemFrameOffset }, style: null);
         }
 
         public void TriggerRewiringSound()
@@ -103,8 +110,8 @@ namespace Barotrauma.Items.Components
             if (HighlightedWire != null)
             {
                 HighlightedWire.Item.IsHighlighted = true;
-                if (HighlightedWire.Connections[0] != null && HighlightedWire.Connections[0].Item != null) HighlightedWire.Connections[0].Item.IsHighlighted = true;
-                if (HighlightedWire.Connections[1] != null && HighlightedWire.Connections[1].Item != null) HighlightedWire.Connections[1].Item.IsHighlighted = true;
+                if (HighlightedWire.Connections[0] != null && HighlightedWire.Connections[0].Item != null) { HighlightedWire.Connections[0].Item.IsHighlighted = true; }
+                if (HighlightedWire.Connections[1] != null && HighlightedWire.Connections[1].Item != null) { HighlightedWire.Connections[1].Item.IsHighlighted = true; }
             }
         }
 
@@ -119,12 +126,6 @@ namespace Barotrauma.Items.Components
             {
                 sprite.Draw(spriteBatch, GuiFrame.Rect, Color.White, SpriteEffects.None);
             }
-        }
-
-        protected override void OnResolutionChanged()
-        {
-            if (GuiFrame == null) { return; }
-            CheckForLabelOverlap();
         }
 
         private void CheckForLabelOverlap()

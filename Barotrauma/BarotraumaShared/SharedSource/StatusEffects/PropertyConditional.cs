@@ -24,7 +24,8 @@ namespace Barotrauma
             HasSpecifierTag,
             Affliction,
             EntityType,
-            LimbType
+            LimbType,
+            SkillRequirement
         }
 
         public enum Comparison
@@ -73,6 +74,8 @@ namespace Barotrauma
                 case "targetcontainer":
                 case "targetgrandparent":
                 case "targetcontaineditem":
+                case "skillrequirement":
+                case "targetslot":
                     return false;
                 default:
                     return true;
@@ -109,6 +112,11 @@ namespace Barotrauma
             if (!Enum.TryParse(AttributeName.Value, true, out Type))
             {
                 Type = ConditionType.Uncertain;
+            }
+
+            if (attribute.Parent.GetAttributeBool("skillrequirement", false))
+            {
+                Type = ConditionType.SkillRequirement;
             }
             
             AttributeValue = valueString;
@@ -260,7 +268,7 @@ namespace Barotrauma
                     {
                         if (target == null) { return Operator == OperatorType.NotEquals; }
                         if (!(target is Character targetCharacter)) { return false; }
-                        return (Operator == OperatorType.Equals) == targetCharacter.Params.CompareGroup(AttributeValue.ToIdentifier());
+                        return (Operator == OperatorType.Equals) == CharacterParams.CompareGroup(AttributeValue.ToIdentifier(), targetCharacter.Group);
                     }
                 case ConditionType.EntityType:
                     switch (AttributeValue)
@@ -305,31 +313,50 @@ namespace Barotrauma
                             if (health == null) { return false; }
                             var affliction = health.GetAffliction(AttributeName.ToIdentifier());
                             float afflictionStrength = affliction == null ? 0.0f : affliction.Strength;
-                            if (FloatValue.HasValue)
-                            {
-                                float value = FloatValue.Value;
-                                switch (Operator)
-                                {
-                                    case OperatorType.Equals:
-                                        return afflictionStrength == value;
-                                    case OperatorType.GreaterThan:
-                                        return afflictionStrength > value;
-                                    case OperatorType.GreaterThanEquals:
-                                        return afflictionStrength >= value;
-                                    case OperatorType.LessThan:
-                                        return afflictionStrength < value;
-                                    case OperatorType.LessThanEquals:
-                                        return afflictionStrength <= value;
-                                    case OperatorType.NotEquals:
-                                        return afflictionStrength != value;
-                                }
-                            }
+
+                            return ValueMatchesRequirement(afflictionStrength);
+                        }
+                    }
+                    return false;
+                case ConditionType.SkillRequirement:
+                    {
+                        if (target == null) { return Operator == OperatorType.NotEquals; }
+
+                        if (target is Character targetChar)
+                        {
+                            float skillLevel = targetChar.GetSkillLevel(AttributeName.ToIdentifier());
+
+                            return ValueMatchesRequirement(skillLevel);
                         }
                     }
                     return false;
                 default:
                     return false;
             }
+        }
+
+        private bool ValueMatchesRequirement(float testedValue)
+        {
+            if (FloatValue.HasValue)
+            {
+                float value = FloatValue.Value;
+                switch (Operator)
+                {
+                    case OperatorType.Equals:
+                        return testedValue == value;
+                    case OperatorType.GreaterThan:
+                        return testedValue > value;
+                    case OperatorType.GreaterThanEquals:
+                        return testedValue >= value;
+                    case OperatorType.LessThan:
+                        return testedValue < value;
+                    case OperatorType.LessThanEquals:
+                        return testedValue <= value;
+                    case OperatorType.NotEquals:
+                        return testedValue != value;
+                }
+            }
+            return false;
         }
 
         private bool MatchesTagCondition(ISerializableEntity target)
@@ -390,22 +417,26 @@ namespace Barotrauma
                 return false;
             }
 
-
             switch (Operator)
             {
                 case OperatorType.Equals:
-                    if (type == typeof(bool))
                     {
-                        return property.GetBoolValue(target) == (AttributeValue == "true" || AttributeValue == "True");
+                        if (type == typeof(bool))
+                        {
+                            return property.GetBoolValue(target) == (AttributeValue == "true" || AttributeValue == "True");
+                        }
+                        var value = property.GetValue(target);
+                        return Equals(value, AttributeValue);
                     }
-                    return property.GetValue(target).ToString().Equals(AttributeValue);
-
                 case OperatorType.NotEquals:
-                    if (type == typeof(bool))
                     {
-                        return property.GetBoolValue(target) != (AttributeValue == "true" || AttributeValue == "True");
+                        if (type == typeof(bool))
+                        {
+                            return property.GetBoolValue(target) != (AttributeValue == "true" || AttributeValue == "True");
+                        }
+                        var value = property.GetValue(target);
+                        return !Equals(value, AttributeValue);
                     }
-                    return !property.GetValue(target).ToString().Equals(AttributeValue);
                 case OperatorType.GreaterThan:
                 case OperatorType.LessThanEquals:
                 case OperatorType.LessThan:
@@ -415,6 +446,18 @@ namespace Barotrauma
                     break;
             }
             return false;
+
+            static bool Equals(object value, string desiredValue)
+            {
+                if (value == null)
+                {
+                    return desiredValue.Equals("null", StringComparison.OrdinalIgnoreCase);
+                }
+                else
+                {
+                    return value.ToString().Equals(desiredValue);
+                }
+            }
         }
     }
 

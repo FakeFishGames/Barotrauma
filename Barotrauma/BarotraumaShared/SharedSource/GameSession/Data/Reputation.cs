@@ -1,17 +1,16 @@
 ﻿using Microsoft.Xna.Framework;
 using System;
-using System.Linq;
 
 namespace Barotrauma
 {
     class Reputation
     {
         public const float HostileThreshold = 0.2f;
-        public const float ReputationLossPerNPCDamage = 0.1f;
-        public const float ReputationLossPerStolenItemPrice = 0.01f;
-        public const float ReputationLossPerWallDamage = 0.1f;
-        public const float MinReputationLossPerStolenItem = 0.5f;
-        public const float MaxReputationLossPerStolenItem = 10.0f;
+        public const float ReputationLossPerNPCDamage = 0.05f;
+        public const float ReputationLossPerWallDamage = 0.05f;
+        public const float ReputationLossPerStolenItemPrice = 0.005f;
+        public const float MinReputationLossPerStolenItem = 0.05f;
+        public const float MaxReputationLossPerStolenItem = 1.0f;
 
         public Identifier Identifier { get; }
         public int MinReputation { get; }
@@ -59,18 +58,34 @@ namespace Barotrauma
             Value = newReputation;
         }
 
-        public void AddReputation(float reputationChange)
+        public float GetReputationChangeMultiplier(float reputationChange)
         {
             if (reputationChange > 0f)
             {
                 float reputationGainMultiplier = 1f;
                 foreach (Character character in GameSession.GetSessionCrewCharacters(CharacterType.Both))
                 {
-                    reputationGainMultiplier += character.GetStatValue(StatTypes.ReputationGainMultiplier);
+                    reputationGainMultiplier *= 1f + character.GetStatValue(StatTypes.ReputationGainMultiplier, includeSaved: false);
+                    reputationGainMultiplier *= 1f + character.Info?.GetSavedStatValue(StatTypes.ReputationGainMultiplier, Identifier) ?? 0;
                 }
-                reputationChange *= reputationGainMultiplier;
+                return reputationGainMultiplier;
             }
-            Value += reputationChange;
+            else if (reputationChange < 0f)
+            {
+                float reputationLossMultiplier = 1f;
+                foreach (Character character in GameSession.GetSessionCrewCharacters(CharacterType.Both))
+                {
+                    reputationLossMultiplier *= 1f + character.GetStatValue(StatTypes.ReputationLossMultiplier, includeSaved: false);
+                    reputationLossMultiplier *= 1f + character.Info?.GetSavedStatValue(StatTypes.ReputationLossMultiplier, Identifier) ?? 0;
+                }
+                return reputationLossMultiplier;
+            }
+            return 1.0f;
+        }
+
+        public void AddReputation(float reputationChange)
+        {
+            Value += reputationChange * GetReputationChangeMultiplier(reputationChange);
         }
 
         public readonly NamedEvent<Reputation> OnReputationValueChanged = new NamedEvent<Reputation>();

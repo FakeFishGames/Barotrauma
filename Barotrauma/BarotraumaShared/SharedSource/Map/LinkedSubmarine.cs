@@ -405,7 +405,7 @@ namespace Barotrauma
                     if (wall.Submarine != sub) { continue; }
                     for (int i = 0; i < wall.SectionCount; i++)
                     {
-                        wall.SetDamage(i, 0, createNetworkEvent: false);
+                        wall.SetDamage(i, 0, createNetworkEvent: false, createExplosionEffect: false);
                     }                    
                 }
                 foreach (Hull hull in Hull.HullList)
@@ -476,7 +476,7 @@ namespace Barotrauma
                 bool leaveBehind = false;
                 if (sub.Submarine != null && !sub.DockedTo.Contains(sub.Submarine))
                 {
-                    System.Diagnostics.Debug.Assert(Submarine.MainSub.AtEndExit || Submarine.MainSub.AtStartExit);
+                    System.Diagnostics.Debug.Assert(Submarine.MainSub.AtEitherExit);
                     if (Submarine.MainSub.AtEndExit)
                     {
                         leaveBehind = sub.AtEndExit != Submarine.MainSub.AtEndExit;

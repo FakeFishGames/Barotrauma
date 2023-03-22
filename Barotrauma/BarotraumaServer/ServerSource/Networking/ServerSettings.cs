@@ -51,7 +51,7 @@ namespace Barotrauma.Networking
             => LastUpdateIdForFlag.Keys
                 .Where(k => IsFlagRequired(c, k))
                 .Aggregate(NetFlags.None, (f1, f2) => f1 | f2);
-        
+
         partial void InitProjSpecific()
         {
             LoadSettings();
@@ -176,7 +176,11 @@ namespace Barotrauma.Networking
                         netProperties[key].Read(incMsg);
                         if (!netProperties[key].PropEquals(prevValue, netProperties[key]))
                         {
-                            GameServer.Log(GameServer.ClientLogName(c) + " changed " + netProperties[key].Name + " to " + netProperties[key].Value.ToString(), ServerLog.MessageType.ServerMessage);
+                            GameServer.Log(
+                                NetworkMember.ClientLogName(c)
+                                + $" changed {netProperties[key].Name}"
+                                + $" to {netProperties[key].Value}",
+                                ServerLog.MessageType.ServerMessage);
                         }
                         propertiesChanged = true;
                     }
@@ -272,7 +276,6 @@ namespace Barotrauma.Networking
             XDocument doc = new XDocument(new XElement("serversettings"));
 
             doc.Root.SetAttributeValue("name", ServerName);
-            doc.Root.SetAttributeValue("public", IsPublic);
             doc.Root.SetAttributeValue("port", Port);
 #if USE_STEAM
             doc.Root.SetAttributeValue("queryport", QueryPort);
@@ -330,6 +333,10 @@ namespace Barotrauma.Networking
             if (string.IsNullOrEmpty(doc.Root.GetAttributeString("losmode", "")))
             {
                 LosMode = GameSettings.CurrentConfig.Graphics.LosMode;
+            }
+            if (string.IsNullOrEmpty(doc.Root.GetAttributeString("language", "")))
+            {
+                Language = ServerLanguageOptions.PickLanguage(GameSettings.CurrentConfig.Language);
             }
 
             AutoRestart = doc.Root.GetAttributeBool("autorestart", false);

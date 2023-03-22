@@ -19,7 +19,9 @@ partial class UIHighlightAction : EventAction
         TurbineOutputSlider,
         DeconstructButton,
         RechargeSpeedSlider,
-        CPRButton
+        CPRButton,
+        CloseButton,
+        MessageBoxCloseButton
     }
 
     [Serialize(ElementId.None, IsPropertySaveable.Yes)]
@@ -42,6 +44,9 @@ partial class UIHighlightAction : EventAction
 
     [Serialize(true, IsPropertySaveable.Yes)]
     public bool Bounce { get; set; }
+
+    [Serialize(false, IsPropertySaveable.Yes)]
+    public bool HighlightMultiple { get; set; }
 
     private bool isFinished;
 

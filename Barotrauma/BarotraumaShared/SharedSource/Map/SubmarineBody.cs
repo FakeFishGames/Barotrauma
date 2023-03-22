@@ -18,6 +18,13 @@ namespace Barotrauma
     {
         public const float NeutralBallastPercentage = 0.07f;
 
+        public const Category CollidesWith =
+                Physics.CollisionItem |
+                Physics.CollisionLevel |
+                Physics.CollisionCharacter |
+                Physics.CollisionProjectile |
+                Physics.CollisionWall;
+
         const float HorizontalDrag = 0.01f;
         const float VerticalDrag = 0.05f;
         const float MaxDrag = 0.1f;
@@ -39,6 +46,7 @@ namespace Barotrauma
         }
 
         private float depthDamageTimer = 10.0f;
+        private float damageSoundTimer = 10.0f;
 
         private readonly Submarine submarine;
 
@@ -109,7 +117,7 @@ namespace Barotrauma
             get { return submarine; }
         }
 
-        public SubmarineBody(Submarine sub, bool showWarningMessages = true)
+        public SubmarineBody(Submarine sub, bool showErrorMessages = true)
         {
             this.submarine = sub;
 
@@ -119,9 +127,9 @@ namespace Barotrauma
             if (!Hull.HullList.Any(h => h.Submarine == sub))
             {
                 farseerBody = GameMain.World.CreateRectangle(1.0f, 1.0f, 1.0f);
-                if (showWarningMessages)
+                if (showErrorMessages)
                 {
-                    DebugConsole.ThrowError("WARNING: no hulls found, generating a physics body for the submarine failed.");
+                    DebugConsole.ThrowError($"No hulls found in the submarine \"{sub.Info.Name}\". Generating a physics body for the submarine failed.");
                 }
             }
             else
@@ -146,9 +154,13 @@ namespace Barotrauma
                 farseerBody.CollidesWith = collidesWith;
                 farseerBody.Enabled = false;
                 farseerBody.UserData = this;
+                if (sub.Info.IsOutpost)
+                {
+                    farseerBody.BodyType = BodyType.Static;
+                }
                 foreach (var mapEntity in MapEntity.mapEntityList)
                 {
-                    if (mapEntity.Submarine != submarine || !(mapEntity is Structure wall)) { continue; }
+                    if (mapEntity.Submarine != submarine || mapEntity is not Structure wall) { continue; }
 
                     bool hasCollider = wall.HasBody && !wall.IsPlatform && wall.StairDirection == Direction.None;
                     Rectangle rect = wall.Rect;
@@ -185,13 +197,20 @@ namespace Barotrauma
                 foreach (Item item in Item.ItemList)
                 {
                     if (item.Submarine != submarine) { continue; }
-                    if (item.StaticBodyConfig == null || item.Submarine != submarine) { continue; }
+
+                    Vector2 simPos  = ConvertUnits.ToSimUnits(item.Position);
+                    if (item.GetComponent<Door>() is Door door)
+                    {
+                        door.OutsideSubmarineFixture = farseerBody.CreateRectangle(door.Body.Width, door.Body.Height, 5.0f, simPos, collisionCategory, collidesWith);
+                        door.OutsideSubmarineFixture.UserData = item;
+                    }
+
+                    if (item.StaticBodyConfig == null) { continue; }
 
                     float radius    = item.StaticBodyConfig.GetAttributeFloat("radius", 0.0f) * item.Scale;
                     float width     = item.StaticBodyConfig.GetAttributeFloat("width", 0.0f) * item.Scale;
                     float height    = item.StaticBodyConfig.GetAttributeFloat("height", 0.0f) * item.Scale;
 
-                    Vector2 simPos  = ConvertUnits.ToSimUnits(item.Position);
                     float simRadius = ConvertUnits.ToSimUnits(radius);
                     float simWidth  = ConvertUnits.ToSimUnits(width);
                     float simHeight = ConvertUnits.ToSimUnits(height);
@@ -489,36 +508,58 @@ namespace Barotrauma
             if (Level.Loaded == null) { return; }
 
             //camera shake and sounds start playing 500 meters before crush depth
-            float depthEffectThreshold = 500.0f;
-            if (Submarine.RealWorldDepth < Level.Loaded.RealWorldCrushDepth - depthEffectThreshold || Submarine.RealWorldDepth < Submarine.RealWorldCrushDepth - depthEffectThreshold)
+            const float CosmeticEffectThreshold = -500.0f;
+            //breaches won't get any more severe 500 meters below crush depth
+            const float MaxEffectThreshold = 500.0f;
+            const float MinWallDamageProbability = 0.1f;
+            const float MaxWallDamageProbability = 1.0f;
+            const float MinWallDamage = 50f;
+            const float MaxWallDamage = 500.0f;
+            const float MinCameraShake = 5f;
+            const float MaxCameraShake = 50.0f;
+
+            if (Submarine.RealWorldDepth < Level.Loaded.RealWorldCrushDepth + CosmeticEffectThreshold || Submarine.RealWorldDepth < Submarine.RealWorldCrushDepth + CosmeticEffectThreshold)
             {
                 return;
             }
 
-            depthDamageTimer -= deltaTime;
-            if (depthDamageTimer > 0.0f) { return; }
-
-#if CLIENT
-            SoundPlayer.PlayDamageSound("pressure", Rand.Range(0.0f, 100.0f), submarine.WorldPosition + Rand.Vector(Rand.Range(0.0f, Math.Min(submarine.Borders.Width, submarine.Borders.Height))), 20000.0f);
-#endif
-
-            foreach (Structure wall in Structure.WallList)
+            damageSoundTimer -= deltaTime;
+            if (damageSoundTimer <= 0.0f)
             {
-                if (wall.Submarine != submarine) { continue; }
-
-                float wallCrushDepth = wall.CrushDepth;
-                float pastCrushDepth = submarine.RealWorldDepth - wallCrushDepth;
-                if (pastCrushDepth > 0)
-                {
-                    Explosion.RangedStructureDamage(wall.WorldPosition, 100.0f, pastCrushDepth * 0.1f, levelWallDamage: 0.0f);
-                }
-                if (Character.Controlled != null && Character.Controlled.Submarine == submarine)
-                {
-                    GameMain.GameScreen.Cam.Shake = Math.Max(GameMain.GameScreen.Cam.Shake, MathHelper.Clamp(pastCrushDepth * 0.001f, 1.0f, 50.0f));
-                }
+#if CLIENT
+                SoundPlayer.PlayDamageSound("pressure", Rand.Range(0.0f, 100.0f), submarine.WorldPosition + Rand.Vector(Rand.Range(0.0f, Math.Min(submarine.Borders.Width, submarine.Borders.Height))), 20000.0f);
+#endif
+                damageSoundTimer = Rand.Range(5.0f, 10.0f);
             }
 
-            depthDamageTimer = 10.0f;
+            depthDamageTimer -= deltaTime;
+            if (depthDamageTimer <= 0.0f)
+            {
+                foreach (Structure wall in Structure.WallList)
+                {
+                    if (wall.Submarine != submarine) { continue; }
+
+                    float wallCrushDepth = wall.CrushDepth;
+                    float pastCrushDepth = submarine.RealWorldDepth - wallCrushDepth;
+                    float pastCrushDepthRatio = Math.Clamp(pastCrushDepth / MaxEffectThreshold, 0.0f, 1.0f);
+
+                    if (Rand.Range(0.0f, 1.0f) > MathHelper.Lerp(MinWallDamageProbability, MaxWallDamageProbability, pastCrushDepthRatio)) { continue; }
+
+                    float damage = MathHelper.Lerp(MinWallDamage, MaxWallDamage, pastCrushDepthRatio);
+                    if (pastCrushDepth > 0)
+                    {
+                        Explosion.RangedStructureDamage(wall.WorldPosition, 100.0f, damage, levelWallDamage: 0.0f);
+#if CLIENT
+                        SoundPlayer.PlayDamageSound("StructureBlunt", Rand.Range(0.0f, 100.0f), wall.WorldPosition, 2000.0f);
+#endif
+                    }
+                    if (Character.Controlled != null && Character.Controlled.Submarine == submarine)
+                    {
+                        GameMain.GameScreen.Cam.Shake = Math.Max(GameMain.GameScreen.Cam.Shake, MathHelper.Lerp(MinCameraShake, MaxCameraShake, pastCrushDepthRatio));
+                    }
+                }
+                depthDamageTimer = Rand.Range(5.0f, 10.0f);
+            }
         }
 
         public void FlipX()
@@ -623,7 +664,7 @@ namespace Barotrauma
                 attackMultiplier = enemyAI.ActiveAttack.SubmarineImpactMultiplier;
             }
 
-            if (impactMass * attackMultiplier > MinImpactLimbMass)
+            if (impactMass * attackMultiplier > MinImpactLimbMass && Body.BodyType != BodyType.Static)
             {
                 Vector2 normal = 
                     Vector2.DistanceSquared(Body.SimPosition, limb.SimPosition) < 0.0001f ?
@@ -720,7 +761,7 @@ namespace Barotrauma
 
         private void HandleLevelCollision(Impact impact, VoronoiCell cell = null)
         {
-            if (GameMain.GameSession != null && Timing.TotalTime < GameMain.GameSession.RoundStartTime + 10)
+            if (GameMain.GameSession != null && GameMain.GameSession.RoundDuration < 10)
             {
                 //ignore level collisions for the first 10 seconds of the round in case the sub spawns in a way that causes it to hit a wall 
                 //(e.g. level without outposts to dock to and an incorrectly configured ballast that makes the sub go up)
