@@ -2587,10 +2587,11 @@ namespace Barotrauma
 
         public static void AddMessage(string message, Color color, float? lifeTime = null, bool playSound = true, GUIFont font = null)
         {
+            var guiMessage = new GUIMessage(message, color, lifeTime ?? MathHelper.Clamp(message.Length / 5.0f, 3.0f, 10.0f), font ?? GUIStyle.LargeFont);
             lock (mutex)
             {
                 if (messages.Any(msg => msg.Text == message)) { return; }
-                messages.Add(new GUIMessage(message, color, lifeTime ?? MathHelper.Clamp(message.Length / 5.0f, 3.0f, 10.0f), font ?? GUIStyle.LargeFont));
+                messages.Add(guiMessage);
             }
             if (playSound) { SoundPlayer.PlayUISound(GUISoundType.UIMessage); }
         }
