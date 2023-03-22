@@ -1,4 +1,14 @@
 ---------------------------------------------------------------------------------------------------------
+v1.0.8.0
+---------------------------------------------------------------------------------------------------------
+
+- Fixed loading screens sometimes getting stuck when playing in Chinese, Japanese or Korean.
+- Fixed certain mods that override outpost generation parameters causing crashes due to missing outpost NPC prefabs.
+- Fixed outpost NPCs never attacking you (just aiming their guns at you) if you attack them, but your reputation is not low enough to turn the outpost hostile. 
+- Fixed broken dialog line in the waytoascension1 event.
+- Fixed healing your crewmates causing your karma to decrease.
+
+---------------------------------------------------------------------------------------------------------
 v1.0.7.0
 ---------------------------------------------------------------------------------------------------------
 

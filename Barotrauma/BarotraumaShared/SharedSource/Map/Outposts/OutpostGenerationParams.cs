@@ -198,6 +198,7 @@ namespace Barotrauma
             {
                 foreach (var entry in entries)
                 {
+                    if (entry == null) { continue; }
                     yield return entry.HumanPrefab;
                 }
             }
@@ -330,7 +331,7 @@ namespace Barotrauma
             {
                 foreach (var prefab in collection)
                 {
-                    if (prefab.CampaignInteractionType == interactionType)
+                    if (prefab != null && prefab.CampaignInteractionType == interactionType)
                     {
                         return true;
                     }
