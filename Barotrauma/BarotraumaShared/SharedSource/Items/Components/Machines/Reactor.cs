@@ -35,6 +35,8 @@ namespace Barotrauma.Items.Components
         private float minUpdatePowerOut;
         private float maxUpdatePowerOut;
 
+        private float coolingEfficiency;
+        
         private bool unsentChanges;
         private float sendUpdateTimer;
 
@@ -99,6 +101,13 @@ namespace Barotrauma.Items.Components
         {
             get => maxPowerOutput;
             set => maxPowerOutput = Math.Max(0.0f, value);
+        }
+        
+        [Editable(0.0f, float.MaxValue), Serialize(1.0f, IsPropertySaveable.Yes, description: "How efficiently the turbine reduces heat. Higher values mean more heat is needed to generate power.", alwaysUseInstanceValues: true)]
+        public float CoolingEfficiency
+        {
+            get => coolingEfficiency;
+            set => coolingEfficiency = Math.Max(0.0f, value);
         }
         
         [Editable(0.0f, float.MaxValue), Serialize(120.0f, IsPropertySaveable.Yes, description: "How long the temperature has to stay critical until a meltdown occurs.")]
@@ -308,7 +317,7 @@ namespace Barotrauma.Items.Components
 
             float heatAmount = GetGeneratedHeat(fissionRate);
 
-            float temperatureDiff = (heatAmount - turbineOutput) - Temperature;
+            float temperatureDiff = heatAmount - turbineOutput * CoolingEfficiency - Temperature;
             Temperature += MathHelper.Clamp(Math.Sign(temperatureDiff) * 10.0f * deltaTime, -Math.Abs(temperatureDiff), Math.Abs(temperatureDiff));
             temperatureBoost = adjustValueWithoutOverShooting(temperatureBoost, 0.0f, deltaTime);
 #if CLIENT
