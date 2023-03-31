@@ -33,7 +33,7 @@ namespace Barotrauma
         public int ItemContainerIndex { get; set; }
 
         private readonly IReadOnlyList<PropertyConditional> conditionals;
-        
+
         private readonly Identifier[] itemIdentifierSplit;
         private readonly Identifier[] itemTags;
 
@@ -44,13 +44,7 @@ namespace Barotrauma
             var conditionalList = new List<PropertyConditional>();
             foreach (ContentXElement subElement in element.GetChildElements("conditional"))
             {
-                foreach (XAttribute attribute in subElement.Attributes())
-                {
-                    if (PropertyConditional.IsValid(attribute))
-                    {
-                        conditionalList.Add(new PropertyConditional(attribute));
-                    }
-                }
+                conditionalList.AddRange(PropertyConditional.FromXElement(subElement));
                 break;
             }
             conditionals = conditionalList;

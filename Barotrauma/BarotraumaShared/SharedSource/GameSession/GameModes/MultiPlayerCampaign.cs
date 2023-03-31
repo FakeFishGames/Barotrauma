@@ -1,4 +1,5 @@
-﻿using Barotrauma.IO;
+﻿using Barotrauma.Extensions;
+using Barotrauma.IO;
 using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
 using System;
@@ -53,7 +54,7 @@ namespace Barotrauma
             }
         }
 
-        private bool ValidateFlag(NetFlags flag)
+        private static bool ValidateFlag(NetFlags flag)
         {
             if (MathHelper.IsPowerOfTwo((int)flag)) { return true; }
 #if DEBUG
@@ -105,9 +106,8 @@ namespace Barotrauma
 #endif
             }
             CampaignID = currentCampaignID;
-            CampaignMetadata = new CampaignMetadata(this);
             UpgradeManager = new UpgradeManager(this);
-            InitCampaignData();
+            InitFactions();
         }
 
         public static MultiPlayerCampaign StartNew(string mapSeed, CampaignSettings settings)
@@ -190,11 +190,20 @@ namespace Barotrauma
                             //map already created, update it
                             //if we're not downloading the initial save file (LastSaveID > 0), 
                             //show notifications about location type changes
-                            map.LoadState(subElement, LastSaveID > 0);
+                            map.LoadState(this, subElement, LastSaveID > 0);
                         }
                         break;
                     case "metadata":
-                        CampaignMetadata = new CampaignMetadata(this, subElement);
+                        var prevReputations = Factions.ToDictionary(k => k, v => v.Reputation.Value);
+                        CampaignMetadata.Load(subElement);
+                        foreach (var faction in Factions)
+                        {
+                            if (!MathUtils.NearlyEqual(prevReputations[faction], faction.Reputation.Value))
+                            {
+                                faction.Reputation.OnReputationValueChanged?.Invoke(faction.Reputation);
+                                Reputation.OnAnyReputationValueChanged.Invoke(faction.Reputation);
+                            }
+                        }
                         break;
                     case "upgrademanager":
                     case "pendingupgrades":
@@ -213,6 +222,9 @@ namespace Barotrauma
                         break;
                     case "stats":
                         LoadStats(subElement);
+                        break;
+                    case "eventmanager":
+                        GameMain.GameSession.EventManager.Load(subElement);
                         break;
                     case Wallet.LowerCaseSaveElementName:
                         Bank = new Wallet(Option<Character>.None(), subElement);
@@ -237,10 +249,8 @@ namespace Barotrauma
                 };
             }
 
-            CampaignMetadata ??= new CampaignMetadata(this);
             UpgradeManager ??= new UpgradeManager(this);
 
-            InitCampaignData();
 #if SERVER
             characterData.Clear();
             string characterDataPath = GetCharacterDataSavePath();

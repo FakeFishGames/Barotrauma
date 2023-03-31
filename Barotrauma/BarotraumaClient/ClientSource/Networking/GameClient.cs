@@ -76,6 +76,8 @@ namespace Barotrauma.Networking
             Interrupted
         }
 
+        private UInt16? debugStartGameCampaignSaveID;
+
         private RoundInitStatus roundInitStatus = RoundInitStatus.NotStarted;
 
         public bool RoundStarting => roundInitStatus == RoundInitStatus.Starting || roundInitStatus == RoundInitStatus.WaitingForStartGameFinalize;
@@ -326,7 +328,7 @@ namespace Barotrauma.Networking
             return serverEndpoint switch
                 {
                 LidgrenEndpoint lidgrenEndpoint => new LidgrenClientPeer(lidgrenEndpoint, callbacks, ownerKey),
-                SteamP2PEndpoint _ when ownerKey is Some<int> { Value: var key } => new SteamP2POwnerPeer(callbacks, key),
+                SteamP2PEndpoint _ when ownerKey.TryUnwrap(out var key) => new SteamP2POwnerPeer(callbacks, key),
                 SteamP2PEndpoint steamP2PServerEndpoint when ownerKey.IsNone() => new SteamP2PClientPeer(steamP2PServerEndpoint, callbacks),
                 _ => throw new ArgumentOutOfRangeException()
             };
@@ -859,17 +861,24 @@ namespace Barotrauma.Networking
                 ContentFile file = ContentPackageManager.EnabledPackages.All
                     .Select(p =>
                         p.Files.FirstOrDefault(f => f.Path == filePath))
-                    .FirstOrDefault(f => !(f is null));
+                    .FirstOrDefault(f => f is not null);
                 contentToPreload.AddIfNotNull(file);
             }
+
+            string campaignErrorInfo = string.Empty;
+            if (GameMain.GameSession?.Campaign is MultiPlayerCampaign campaign)
+            {
+                campaignErrorInfo = $" Round start save ID: {debugStartGameCampaignSaveID}, last save id: {campaign.LastSaveID}, pending save id: {campaign.PendingSaveID}.";
+            }            
 
             GameMain.GameSession.EventManager.PreloadContent(contentToPreload);
 
             int subEqualityCheckValue = inc.ReadInt32();
             if (subEqualityCheckValue != (Submarine.MainSub?.Info?.EqualityCheckVal ?? 0))
             {
-                string errorMsg = "Submarine equality check failed. The submarine loaded at your end doesn't match the one loaded by the server." +
-                    " There may have been an error in receiving the up-to-date submarine file from the server.";
+                string errorMsg =
+                    "Submarine equality check failed. The submarine loaded at your end doesn't match the one loaded by the server. " +
+                    $"There may have been an error in receiving the up-to-date submarine file from the server. Round init status: {roundInitStatus}." + campaignErrorInfo;
                 GameAnalyticsManager.AddErrorEventOnce("GameClient.StartGame:SubsDontMatch" + Level.Loaded.Seed, GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
                 throw new Exception(errorMsg);
             }
@@ -886,7 +895,7 @@ namespace Barotrauma.Networking
                     $"Mission equality check failed. Mission count doesn't match the server. " +
                     $"Server: {string.Join(", ", serverMissionIdentifiers)}, " +
                     $"client: {string.Join(", ", GameMain.GameSession.GameMode.Missions.Select(m => m.Prefab.Identifier))}, " +
-                    $"game session: {string.Join(", ", GameMain.GameSession.Missions.Select(m => m.Prefab.Identifier))})";
+                    $"game session: {string.Join(", ", GameMain.GameSession.Missions.Select(m => m.Prefab.Identifier))}). Round init status: {roundInitStatus}." + campaignErrorInfo;
                 GameAnalyticsManager.AddErrorEventOnce("GameClient.StartGame:MissionsCountMismatch" + Level.Loaded.Seed, GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
                 throw new Exception(errorMsg);
             }
@@ -899,7 +908,7 @@ namespace Barotrauma.Networking
                         $"Mission equality check failed. The mission selected at your end doesn't match the one loaded by the server " +
                         $"Server: {string.Join(", ", serverMissionIdentifiers)}, " +
                         $"client: {string.Join(", ", GameMain.GameSession.GameMode.Missions.Select(m => m.Prefab.Identifier))}, " +
-                        $"game session: {string.Join(", ", GameMain.GameSession.Missions.Select(m => m.Prefab.Identifier))})";
+                        $"game session: {string.Join(", ", GameMain.GameSession.Missions.Select(m => m.Prefab.Identifier))}). Round init status: {roundInitStatus}." + campaignErrorInfo;
                     GameAnalyticsManager.AddErrorEventOnce("GameClient.StartGame:MissionsDontMatch" + Level.Loaded.Seed, GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
                     throw new Exception(errorMsg);
                 }
@@ -922,7 +931,7 @@ namespace Barotrauma.Networking
                         ", level value count: " + levelEqualityCheckValues.Count +
                         ", seed: " + Level.Loaded.Seed +
                         ", sub: " + Submarine.MainSub.Info.Name + " (" + Submarine.MainSub.Info.MD5Hash.ShortRepresentation + ")" +
-                        ", mirrored: " + Level.Loaded.Mirrored + ").";
+                        ", mirrored: " + Level.Loaded.Mirrored + "). Round init status: {roundInitStatus}." + campaignErrorInfo;
                     GameAnalyticsManager.AddErrorEventOnce("GameClient.StartGame:LevelsDontMatch" + Level.Loaded.Seed, GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
                     throw new Exception(errorMsg);
                 }
@@ -988,7 +997,7 @@ namespace Barotrauma.Networking
                 GameMain.ModDownloadScreen.Reset();
                 ContentPackageManager.EnabledPackages.Restore();
 
-                CampaignMode.StartRoundCancellationToken?.Cancel();
+                GameMain.GameSession?.Campaign?.CancelStartRound();
 
                 if (SteamManager.IsInitialized)
                 {
@@ -1322,6 +1331,8 @@ namespace Barotrauma.Networking
             eventErrorWritten = false;
             GameMain.NetLobbyScreen.StopWaitingForStartRound();
 
+            debugStartGameCampaignSaveID = null;
+
             while (CoroutineManager.IsCoroutineRunning("EndGame"))
             {
                 EndCinematic?.Stop();
@@ -1471,19 +1482,12 @@ namespace Barotrauma.Networking
                     roundInitStatus = RoundInitStatus.Interrupted;
                     yield return CoroutineStatus.Failure;
                 }
-                else if (campaign.Map == null)
-                {
-                    GameStarted = true;
-                    DebugConsole.ThrowError("Failed to start campaign round (campaign map not loaded yet).");
-                    GameMain.NetLobbyScreen.Select();
-                    roundInitStatus = RoundInitStatus.Interrupted;
-                    yield return CoroutineStatus.Failure;
-                }
 
-                if (NetIdUtils.IdMoreRecent(campaignSaveID, campaign.PendingSaveID))
+                if (NetIdUtils.IdMoreRecent(campaign.PendingSaveID, campaign.LastSaveID) ||
+                    NetIdUtils.IdMoreRecent(campaignSaveID, campaign.PendingSaveID))
                 {
                     campaign.PendingSaveID = campaignSaveID;
-                    DateTime saveFileTimeOut = DateTime.Now + new TimeSpan(0,0,60);
+                    DateTime saveFileTimeOut = DateTime.Now + new TimeSpan(0, 0, 60);
                     while (NetIdUtils.IdMoreRecent(campaignSaveID, campaign.LastSaveID))
                     {
                         if (DateTime.Now > saveFileTimeOut)
@@ -1494,8 +1498,17 @@ namespace Barotrauma.Networking
                             roundInitStatus = RoundInitStatus.Interrupted;
                             yield return CoroutineStatus.Failure;
                         }
-                        yield return new WaitForSeconds(0.1f); 
+                        yield return new WaitForSeconds(0.1f);
                     }
+                }
+
+                if (campaign.Map == null)
+                {
+                    GameStarted = true;
+                    DebugConsole.ThrowError("Failed to start campaign round (campaign map not loaded yet).");
+                    GameMain.NetLobbyScreen.Select();
+                    roundInitStatus = RoundInitStatus.Interrupted;
+                    yield return CoroutineStatus.Failure;
                 }
 
                 campaign.Map.SelectLocation(selectedLocationIndex);
@@ -1503,6 +1516,8 @@ namespace Barotrauma.Networking
                 LevelData levelData = nextLocationIndex > -1 ?
                     campaign.Map.Locations[nextLocationIndex].LevelData :
                     campaign.Map.Connections[nextConnectionIndex].LevelData;
+
+                debugStartGameCampaignSaveID = campaign.LastSaveID;
 
                 if (roundSummary != null)
                 {
@@ -2587,31 +2602,24 @@ namespace Barotrauma.Networking
         public void WriteCharacterInfo(IWriteMessage msg, string newName = null)
         {
             msg.WriteBoolean(characterInfo == null);
+            msg.WritePadBits();
             if (characterInfo == null) { return; }
 
-            msg.WriteString(newName ?? string.Empty);
+            var head = characterInfo.Head;
 
-            msg.WriteByte((byte)characterInfo.Head.Preset.TagSet.Count);
-            foreach (Identifier tag in characterInfo.Head.Preset.TagSet)
-            {
-                msg.WriteIdentifier(tag);
-            }
-            msg.WriteByte((byte)characterInfo.Head.HairIndex);
-            msg.WriteByte((byte)characterInfo.Head.BeardIndex);
-            msg.WriteByte((byte)characterInfo.Head.MoustacheIndex);
-            msg.WriteByte((byte)characterInfo.Head.FaceAttachmentIndex);
-            msg.WriteColorR8G8B8(characterInfo.Head.SkinColor);
-            msg.WriteColorR8G8B8(characterInfo.Head.HairColor);
-            msg.WriteColorR8G8B8(characterInfo.Head.FacialHairColor);
+           var netInfo = new NetCharacterInfo(
+               NewName: newName ?? string.Empty,
+               Tags: head.Preset.TagSet.ToImmutableArray(),
+               HairIndex: (byte)head.HairIndex,
+               BeardIndex: (byte)head.BeardIndex,
+               MoustacheIndex: (byte)head.MoustacheIndex,
+               FaceAttachmentIndex: (byte)head.FaceAttachmentIndex,
+               SkinColor: head.SkinColor,
+               HairColor: head.HairColor,
+               FacialHairColor: head.FacialHairColor,
+               JobVariants: GameMain.NetLobbyScreen.JobPreferences.Select(NetJobVariant.FromJobVariant).ToImmutableArray());
 
-            var jobPreferences = GameMain.NetLobbyScreen.JobPreferences;
-            int count = Math.Min(jobPreferences.Count, 3);
-            msg.WriteByte((byte)count);
-            for (int i = 0; i < count; i++)
-            {
-                msg.WriteIdentifier(jobPreferences[i].Prefab.Identifier);
-                msg.WriteByte((byte)jobPreferences[i].Variant);
-            }
+            msg.WriteNetSerializableStruct(netInfo);
         }
 
         public void Vote(VoteType voteType, object data)
@@ -2623,7 +2631,13 @@ namespace Barotrauma.Networking
             using (var segmentTable = SegmentTableWriter<ClientNetSegment>.StartWriting(msg))
             {
                 segmentTable.StartNewSegment(ClientNetSegment.Vote);
-                Voting.ClientWrite(msg, voteType, data);
+                bool succeeded = Voting.ClientWrite(msg, voteType, data);
+                if (!succeeded)
+                {
+                    throw new Exception(
+                        $"Failed to write vote of type {voteType}: " +
+                        $"data was of invalid type {data?.GetType().Name ?? "NULL"}");
+                }
             }
 
             ClientPeer.Send(msg, DeliveryMethod.Reliable);

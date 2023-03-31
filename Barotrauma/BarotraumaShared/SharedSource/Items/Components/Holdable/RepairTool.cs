@@ -100,6 +100,9 @@ namespace Barotrauma.Items.Components
         [Serialize(false, IsPropertySaveable.No, description: "Can the item hit broken doors.")]
         public bool HitBrokenDoors { get; set; }
 
+        [Serialize(false, IsPropertySaveable.No, description: "Should the tool ignore characters? Enabled e.g. for fire extinguisher.")]
+        public bool IgnoreCharacters { get; set; }
+
         [Serialize(0.0f, IsPropertySaveable.No, description: "The probability of starting a fire somewhere along the ray fired from the barrel (for example, 0.1 = 10% chance to start a fire during a second of use).")]
         public float FireProbability { get; set; }
 
@@ -313,7 +316,11 @@ namespace Barotrauma.Items.Components
         private readonly List<FireSource> fireSourcesInRange = new List<FireSource>();
         private void Repair(Vector2 rayStart, Vector2 rayEnd, float deltaTime, Character user, float degreeOfSuccess, List<Body> ignoredBodies)
         {
-            var collisionCategories = Physics.CollisionWall | Physics.CollisionCharacter | Physics.CollisionItem | Physics.CollisionLevel | Physics.CollisionRepair;
+            var collisionCategories = Physics.CollisionWall | Physics.CollisionItem | Physics.CollisionLevel | Physics.CollisionRepair;
+            if (!IgnoreCharacters)
+            {
+                collisionCategories |= Physics.CollisionCharacter;
+            }
 
             //if the item can cut off limbs, activate nearby bodies to allow the raycast to hit them
             if (statusEffectLists != null)
@@ -703,7 +710,7 @@ namespace Barotrauma.Items.Components
         private float repairTimer;
         private Gap previousGap;
         private readonly float repairTimeOut = 5;
-        public override bool AIOperate(float deltaTime, Character character, AIObjectiveOperateItem objective)
+        public override bool CrewAIOperate(float deltaTime, Character character, AIObjectiveOperateItem objective)
         {
             if (!(objective.OperateTarget is Gap leak))
             {
@@ -901,17 +908,16 @@ namespace Barotrauma.Items.Components
                 // A general purpose system could be better, but it would most likely require changes in the way we define the status effects in xml.
                 foreach (ISerializableEntity target in currentTargets)
                 {
-                    if (!(target is Door door)) { continue; }                    
+                    if (target is not Door door) { continue; }                    
                     if (!door.CanBeWelded || !door.Item.IsInteractable(user)) { continue; }
-                    for (int i = 0; i < effect.propertyNames.Length; i++)
+                    foreach (var propertyEffect in effect.PropertyEffects)
                     {
-                        Identifier propertyName = effect.propertyNames[i];
-                        if (propertyName != "stuck") { continue; }
-                        if (door.SerializableProperties == null || !door.SerializableProperties.TryGetValue(propertyName, out SerializableProperty property)) { continue; }
+                        if (propertyEffect.propertyName != "stuck") { continue; }
+                        if (door.SerializableProperties == null || !door.SerializableProperties.TryGetValue(propertyEffect.propertyName, out SerializableProperty property)) { continue; }
                         object value = property.GetValue(target);
                         if (door.Stuck > 0)
                         {
-                            bool isCutting = effect.propertyEffects[i].GetType() == typeof(float) && (float)effect.propertyEffects[i] < 0;
+                            bool isCutting = propertyEffect.value is float and < 0;
                             var progressBar = user.UpdateHUDProgressBar(door, door.Item.WorldPosition, door.Stuck / 100, Color.DarkGray * 0.5f, Color.White,
                                 textTag: isCutting ? "progressbar.cutting" : "progressbar.welding");
                             if (progressBar != null) { progressBar.Size = new Vector2(60.0f, 20.0f); }

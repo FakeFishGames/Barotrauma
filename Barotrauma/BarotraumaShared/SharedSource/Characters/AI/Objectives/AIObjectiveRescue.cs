@@ -139,14 +139,14 @@ namespace Barotrauma
                                 recursive: true);
                         }
                     }
-                    if (character.Submarine != null)
+                    if (character.Submarine != null && targetCharacter.CurrentHull != null)
                     {
                         if (HumanAIController.GetHullSafety(targetCharacter.CurrentHull, targetCharacter) < HumanAIController.HULL_SAFETY_THRESHOLD)
                         {
                             // Incapacitated target is not in a safe place -> Move to a safe place first
                             if (character.SelectedCharacter != targetCharacter)
                             {
-                                if (targetCharacter.CurrentHull != null && HumanAIController.VisibleHulls.Contains(targetCharacter.CurrentHull) && targetCharacter.CurrentHull.DisplayName != null)
+                                if (HumanAIController.VisibleHulls.Contains(targetCharacter.CurrentHull) && targetCharacter.CurrentHull.DisplayName != null)
                                 {
                                     character.Speak(TextManager.GetWithVariables("DialogFoundUnconsciousTarget",
                                         ("[targetname]", targetCharacter.Name, FormatCapitals.No),

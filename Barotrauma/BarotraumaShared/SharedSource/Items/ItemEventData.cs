@@ -82,6 +82,13 @@ namespace Barotrauma
         private readonly struct ItemStatusEventData : IEventData
         {
             public EventType EventType => EventType.Status;
+
+            public readonly bool LoadingRound;
+
+            public ItemStatusEventData(bool loadingRound)
+            {
+                LoadingRound = loadingRound;
+            }
         }
         
         private readonly struct AssignCampaignInteractionEventData : IEventData

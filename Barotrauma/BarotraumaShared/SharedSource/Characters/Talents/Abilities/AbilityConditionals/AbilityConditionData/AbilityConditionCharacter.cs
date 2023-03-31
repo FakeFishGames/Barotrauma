@@ -19,15 +19,9 @@ namespace Barotrauma.Abilities
 
             foreach (XElement subElement in conditionElement.Elements())
             {
-                if (subElement.Name.ToString().Equals("conditional", StringComparison.OrdinalIgnoreCase))
+                if (subElement.NameAsIdentifier() == "conditional")
                 {
-                    foreach (XAttribute attribute in subElement.Attributes())
-                    {
-                        if (PropertyConditional.IsValid(attribute))
-                        {
-                            conditionals.Add(new PropertyConditional(attribute));
-                        }
-                    }
+                    conditionals.AddRange(PropertyConditional.FromXElement(subElement));
                 }
             }
 

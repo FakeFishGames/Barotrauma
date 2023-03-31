@@ -5,9 +5,7 @@ using FarseerPhysics.Dynamics;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
-using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
 {
@@ -98,6 +96,9 @@ namespace Barotrauma.Items.Components
             private set;
         }
 
+        private readonly IReadOnlySet<Identifier> suitableProjectiles;
+
+
         private enum ChargingState
         {
             Inactive,
@@ -130,12 +131,11 @@ namespace Barotrauma.Items.Components
             // TODO: should define this in xml if we have ranged weapons that don't require aim to use
             item.RequireAimToUse = true;
             characterUsable = true;
-
+            suitableProjectiles = element.GetAttributeIdentifierArray(nameof(suitableProjectiles), Array.Empty<Identifier>()).ToHashSet();
             if (ReloadSkillRequirement > 0 && ReloadNoSkill <= reload)
             {
                 DebugConsole.AddWarning($"Invalid XML at {item.Name}: ReloadNoSkill is lower or equal than it's reload skill, despite having ReloadSkillRequirement.");
             }
-
             InitProjSpecific(element);
         }
 
@@ -143,7 +143,8 @@ namespace Barotrauma.Items.Components
 
         public override void Equip(Character character)
         {
-            ReloadTimer = Math.Min(reload, 1.0f);
+            //clamp above 1 to prevent rapid-firing by swapping weapons
+            ReloadTimer = Math.Max(Math.Min(reload, 1.0f), ReloadTimer);
             IsActive = true;
         }
 
@@ -259,7 +260,8 @@ namespace Barotrauma.Items.Components
                 {
                     Vector2 barrelPos = TransformedBarrelPos + item.body.SimPosition;
                     float rotation = (Item.body.Dir == 1.0f) ? Item.body.Rotation : Item.body.Rotation - MathHelper.Pi;
-                    float spread = GetSpread(character) * Rand.Range(-0.5f, 0.5f);
+                    float spread = GetSpread(character) * Projectile.GetSpreadFromPool();
+
                     var lastProjectile = LastProjectile;
                     if (lastProjectile != projectile)
                     {
@@ -275,7 +277,7 @@ namespace Barotrauma.Items.Components
                         {
                             Item.body.ApplyLinearImpulse(new Vector2((float)Math.Cos(projectile.Item.body.Rotation), (float)Math.Sin(projectile.Item.body.Rotation)) * Item.body.Mass * -50.0f, maxVelocity: NetConfig.MaxPhysicsBodyVelocity);
                         }
-                        projectile.Item.body.ApplyTorque(projectile.Item.body.Mass * degreeOfFailure * Rand.Range(-10.0f, 10.0f));
+                        projectile.Item.body.ApplyTorque(projectile.Item.body.Mass * degreeOfFailure * 20.0f * Projectile.GetSpreadFromPool());
                     }
                     Item.RemoveContained(projectile.Item);
                 }
@@ -294,37 +296,39 @@ namespace Barotrauma.Items.Components
 
         public Projectile FindProjectile(bool triggerOnUseOnContainers = false)
         {
-            var containedItems = item.OwnInventory?.AllItemsMod;
-            if (containedItems == null) { return null; }
-
-            foreach (Item item in containedItems)
+            foreach (ItemContainer container in item.GetComponents<ItemContainer>())
             {
-                if (item == null) { continue; }
-                Projectile projectile = item.GetComponent<Projectile>();
-                if (projectile != null) { return projectile; }
-            }
-
-            //projectile not found, see if one of the contained items contains projectiles
-            foreach (Item it in containedItems)
-            {
-                if (it == null) { continue; }
-                var containedSubItems = it.OwnInventory?.AllItemsMod;
-                if (containedSubItems == null) { continue; }
-                foreach (Item subItem in containedSubItems)
+                foreach (Item containedItem in container.Inventory.AllItemsMod)
                 {
-                    if (subItem == null) { continue; }
-                    Projectile projectile = subItem.GetComponent<Projectile>();
-                    //apply OnUse statuseffects to the container in case it has to react to it somehow
-                    //(play a sound, spawn more projectiles, reduce condition...)
-                    if (triggerOnUseOnContainers && subItem.Condition > 0.0f)
+                    if (containedItem == null) { continue; }
+                    Projectile projectile = containedItem.GetComponent<Projectile>();
+                    if (IsSuitableProjectile(projectile)) { return projectile; }
+
+                    //projectile not found, see if the contained item contains projectiles
+                    var containedSubItems = containedItem.OwnInventory?.AllItemsMod;
+                    if (containedSubItems == null) { continue; }
+                    foreach (Item subItem in containedSubItems)
                     {
-                        subItem.GetComponent<ItemContainer>()?.Item.ApplyStatusEffects(ActionType.OnUse, 1.0f);
-                    }
-                    if (projectile != null) { return projectile; }
+                        if (subItem == null) { continue; }
+                        Projectile subProjectile = subItem.GetComponent<Projectile>();
+                        //apply OnUse statuseffects to the container in case it has to react to it somehow
+                        //(play a sound, spawn more projectiles, reduce condition...)
+                        if (triggerOnUseOnContainers && subItem.Condition > 0.0f)
+                        {
+                            subItem.GetComponent<ItemContainer>()?.Item.ApplyStatusEffects(ActionType.OnUse, 1.0f);
+                        }
+                        if (IsSuitableProjectile(subProjectile)) { return subProjectile; }
+                    }                    
                 }
             }
-            
             return null;
+        }
+
+        private bool IsSuitableProjectile(Projectile projectile)
+        {
+            if (projectile?.Item == null) { return false; }
+            if (!suitableProjectiles.Any()) { return true; }
+            return suitableProjectiles.Any(s => projectile.Item.Prefab.Identifier == s || projectile.Item.HasTag(s));
         }
 
         partial void LaunchProjSpecific();

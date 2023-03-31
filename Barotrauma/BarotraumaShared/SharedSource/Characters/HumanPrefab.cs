@@ -27,6 +27,32 @@ namespace Barotrauma
         [Serialize(1f, IsPropertySaveable.No)]
         public float AimAccuracy { get; protected set; }
 
+        [Serialize(1f, IsPropertySaveable.No)]
+        public float SkillMultiplier { get; protected set; }
+
+        [Serialize(0, IsPropertySaveable.No)]
+        public int ExperiencePoints { get; private set; }
+
+        private readonly HashSet<Identifier> tags = new HashSet<Identifier>();
+
+        [Serialize("", IsPropertySaveable.Yes)]
+        public string Tags
+        {
+            get => string.Join(",", tags);
+            set
+            {
+                tags.Clear();
+                if (!string.IsNullOrWhiteSpace(value))
+                {
+                    string[] splitTags = value.Split(',');
+                    foreach (var tag in splitTags)
+                    {
+                        tags.Add(tag.ToIdentifier());
+                    }
+                }
+            }
+        }
+
         private readonly HashSet<Identifier> moduleFlags = new HashSet<Identifier>();
 
         [Serialize("", IsPropertySaveable.Yes, "What outpost module tags does the NPC prefer to spawn in.")]
@@ -79,6 +105,15 @@ namespace Barotrauma
 
         public Identifier[] PreferredOutpostModuleTypes { get; protected set; }
 
+        [Serialize("", IsPropertySaveable.No)]
+        public Identifier Faction { get; set; }
+
+        [Serialize("", IsPropertySaveable.No)]
+        public Identifier Group { get; set; }
+
+        [Serialize(false, IsPropertySaveable.No)]
+        public bool AllowDraggingIndefinitely { get; set; }
+
         public XElement Element { get; protected set; }
         
 
@@ -95,6 +130,11 @@ namespace Barotrauma
             element.GetChildElements("character").ForEach(e => CustomCharacterInfos.Add((e, e.GetAttributeFloat("commonness", 1))));
             PreferredOutpostModuleTypes = element.GetAttributeIdentifierArray("preferredoutpostmoduletypes", Array.Empty<Identifier>());
             this.NpcSetIdentifier = npcSetIdentifier;
+        }
+
+        public IEnumerable<Identifier> GetTags()
+        {
+            return tags;
         }
 
         public IEnumerable<Identifier> GetModuleFlags()
@@ -148,7 +188,7 @@ namespace Barotrauma
             }
         }
 
-        public bool GiveItems(Character character, Submarine submarine, Rand.RandSync randSync = Rand.RandSync.Unsynced, bool createNetworkEvents = true)
+        public bool GiveItems(Character character, Submarine submarine, WayPoint spawnPoint, Rand.RandSync randSync = Rand.RandSync.Unsynced, bool createNetworkEvents = true)
         {
             if (ItemSets == null || !ItemSets.Any()) { return false; }
             var spawnItems = ToolBox.SelectWeightedRandom(ItemSets, it => it.commonness, randSync).element;
@@ -159,7 +199,7 @@ namespace Barotrauma
                     int amount = itemElement.GetAttributeInt("amount", 1);
                     for (int i = 0; i < amount; i++)
                     {
-                        InitializeItem(character, itemElement, submarine, this, createNetworkEvents: createNetworkEvents);
+                        InitializeItem(character, itemElement, submarine, this, spawnPoint, createNetworkEvents: createNetworkEvents);
                     }
                 }
             }
@@ -177,17 +217,27 @@ namespace Barotrauma
             CharacterInfo characterInfo;
             if (characterElement == null)
             {
-                characterInfo= new CharacterInfo(CharacterPrefab.HumanSpeciesName, jobOrJobPrefab: GetJobPrefab(randSync), npcIdentifier: Identifier);
+                characterInfo = new CharacterInfo(CharacterPrefab.HumanSpeciesName, jobOrJobPrefab: GetJobPrefab(randSync), npcIdentifier: Identifier, randSync: randSync);
             }
             else
             {
                 characterInfo = new CharacterInfo(characterElement, Identifier);
             }
+            if (characterInfo.Job != null && !MathUtils.NearlyEqual(SkillMultiplier, 1.0f))
+            {
+                foreach (var skill in characterInfo.Job.GetSkills())
+                {
+                    float newSkill = skill.Level * SkillMultiplier;
+                    skill.IncreaseSkill(newSkill - skill.Level, increasePastMax: false);
+                }
+                characterInfo.Salary = characterInfo.CalculateSalary();
+            }
             characterInfo.HumanPrefabIds = (NpcSetIdentifier, Identifier);
+            characterInfo.GiveExperience(ExperiencePoints);
             return characterInfo;
         }
 
-        public static void InitializeItem(Character character, XElement itemElement, Submarine submarine, HumanPrefab humanPrefab, Item parentItem = null, bool createNetworkEvents = true)
+        public static void InitializeItem(Character character, XElement itemElement, Submarine submarine, HumanPrefab humanPrefab, WayPoint spawnPoint = null, Item parentItem = null, bool createNetworkEvents = true)
         {
             ItemPrefab itemPrefab;
             string itemIdentifier = itemElement.GetAttributeString("identifier", "");
@@ -231,7 +281,7 @@ namespace Barotrauma
             IdCard idCardComponent = item.GetComponent<IdCard>();
             if (idCardComponent != null)
             {
-                idCardComponent.Initialize(null, character);
+                idCardComponent.Initialize(spawnPoint, character);
                 if (submarine != null && (submarine.Info.IsWreck || submarine.Info.IsOutpost))
                 {
                     idCardComponent.SubmarineSpecificID = submarine.SubmarineSpecificIDTag;
@@ -254,7 +304,7 @@ namespace Barotrauma
                 int amount = childItemElement.GetAttributeInt("amount", 1);
                 for (int i = 0; i < amount; i++)
                 {
-                    InitializeItem(character, childItemElement, submarine, humanPrefab, item, createNetworkEvents);
+                    InitializeItem(character, childItemElement, submarine, humanPrefab, spawnPoint, item, createNetworkEvents);
                 }
             }
         }

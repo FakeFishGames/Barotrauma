@@ -73,16 +73,16 @@ namespace Steamworks
 
 
 
-		public Relationship Relationship => SteamFriends.Internal.GetFriendRelationship( Id );
-		public FriendState State => SteamFriends.Internal.GetFriendPersonaState( Id );
-		public string Name => SteamFriends.Internal.GetFriendPersonaName( Id );
+		public Relationship Relationship => SteamFriends.Internal?.GetFriendRelationship( Id ) ?? Relationship.None;
+		public FriendState State => SteamFriends.Internal?.GetFriendPersonaState( Id ) ?? FriendState.Offline;
+		public string? Name => SteamFriends.Internal?.GetFriendPersonaName( Id );
 		public IEnumerable<string> NameHistory
 		{
 			get
 			{
 				for( int i=0; i<32; i++ )
 				{
-					var n = SteamFriends.Internal.GetFriendPersonaNameHistory( Id, i );
+					var n = SteamFriends.Internal?.GetFriendPersonaNameHistory( Id, i );
 					if ( string.IsNullOrEmpty( n ) )
 						break;
 
@@ -91,7 +91,7 @@ namespace Steamworks
 			}
 		}
 
-		public int SteamLevel => SteamFriends.Internal.GetFriendSteamLevel( Id );
+		public int SteamLevel => SteamFriends.Internal?.GetFriendSteamLevel( Id ) ?? 0;
 
 
 
@@ -100,7 +100,7 @@ namespace Steamworks
 			get
 			{
 				FriendGameInfo_t gameInfo = default;
-				if ( !SteamFriends.Internal.GetFriendGamePlayed( Id, ref gameInfo ) )
+				if ( SteamFriends.Internal is null || !SteamFriends.Internal.GetFriendGamePlayed( Id, ref gameInfo ) )
 					return null;
 
 				return FriendGameInfo.From( gameInfo );
@@ -109,7 +109,7 @@ namespace Steamworks
 
 		public bool IsIn( SteamId group_or_room )
 		{
-			return SteamFriends.Internal.IsUserInSource( Id, group_or_room );
+			return SteamFriends.Internal != null && SteamFriends.Internal.IsUserInSource( Id, group_or_room );
 		}
 
 		public struct FriendGameInfo
@@ -161,9 +161,9 @@ namespace Steamworks
 			return await SteamFriends.GetLargeAvatarAsync( Id );
 		}
 
-		public string GetRichPresence( string key )
+		public string? GetRichPresence( string key )
 		{
-			var val = SteamFriends.Internal.GetFriendRichPresence( Id, key );
+			var val = SteamFriends.Internal?.GetFriendRichPresence( Id, key );
 			if ( string.IsNullOrEmpty( val ) ) return null;
 			return val;
 		}
@@ -173,7 +173,7 @@ namespace Steamworks
 		/// </summary>
 		public bool InviteToGame( string Text )
 		{
-			return SteamFriends.Internal.InviteUserToGame( Id, Text );
+			return SteamFriends.Internal != null && SteamFriends.Internal.InviteUserToGame( Id, Text );
 		}
 
 		/// <summary>
@@ -181,7 +181,7 @@ namespace Steamworks
 		/// </summary>
 		public bool SendMessage( string message )
 		{
-			return SteamFriends.Internal.ReplyToFriendMessage( Id, message );
+			return SteamFriends.Internal != null && SteamFriends.Internal.ReplyToFriendMessage( Id, message );
 		}
 
 
@@ -191,8 +191,9 @@ namespace Steamworks
 		/// <returns>True if successful, False if failure</returns>
 		public async Task<bool> RequestUserStatsAsync()
 		{
+			if (SteamUserStats.Internal is null) { return false; }
 			var result = await SteamUserStats.Internal.RequestUserStats( Id );
-			return result.HasValue && result.Value.Result == Result.OK;
+			return result?.Result == Result.OK;
 		}
 
 		/// <summary>
@@ -205,7 +206,7 @@ namespace Steamworks
 		{
 			var val = defult;
 
-			if ( !SteamUserStats.Internal.GetUserStat( Id, statName, ref val ) )
+			if ( SteamUserStats.Internal is null || !SteamUserStats.Internal.GetUserStat( Id, statName, ref val ) )
 				return defult;
 
 			return val;
@@ -221,7 +222,7 @@ namespace Steamworks
 		{
 			var val = defult;
 
-			if ( !SteamUserStats.Internal.GetUserStat( Id, statName, ref val ) )
+			if ( SteamUserStats.Internal is null || !SteamUserStats.Internal.GetUserStat( Id, statName, ref val ) )
 				return defult;
 
 			return val;
@@ -237,7 +238,7 @@ namespace Steamworks
 		{
 			var val = defult;
 
-			if ( !SteamUserStats.Internal.GetUserAchievement( Id, statName, ref val ) )
+			if ( SteamUserStats.Internal is null || !SteamUserStats.Internal.GetUserAchievement( Id, statName, ref val ) )
 				return defult;
 
 			return val;
@@ -253,7 +254,7 @@ namespace Steamworks
 			bool val = false;
 			uint time = 0;
 
-			if ( !SteamUserStats.Internal.GetUserAchievementAndUnlockTime( Id, statName, ref val, ref time ) || !val )
+			if ( SteamUserStats.Internal is null || !SteamUserStats.Internal.GetUserAchievementAndUnlockTime( Id, statName, ref val, ref time ) || !val )
 				return DateTime.MinValue;
 
 			return Epoch.ToDateTime( time );

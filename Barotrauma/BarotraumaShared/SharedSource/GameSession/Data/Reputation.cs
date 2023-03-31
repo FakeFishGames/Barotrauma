@@ -1,23 +1,33 @@
 ﻿using Microsoft.Xna.Framework;
 using System;
-using System.Linq;
 
 namespace Barotrauma
 {
     class Reputation
     {
         public const float HostileThreshold = 0.2f;
-        public const float ReputationLossPerNPCDamage = 0.1f;
-        public const float ReputationLossPerStolenItemPrice = 0.01f;
-        public const float ReputationLossPerWallDamage = 0.1f;
-        public const float MinReputationLossPerStolenItem = 0.5f;
-        public const float MaxReputationLossPerStolenItem = 10.0f;
+        public const float ReputationLossPerNPCDamage = 0.025f;
+        public const float ReputationLossPerWallDamage = 0.025f;
+        public const float ReputationLossPerStolenItemPrice = 0.0025f;
+        public const float MinReputationLossPerStolenItem = 0.025f;
+        public const float MaxReputationLossPerStolenItem = 0.5f;
+
+        /// <summary>
+        /// Maximum amount of reputation loss you can get from damaging outpost NPCs per round
+        /// </summary>
+        public const float MaxReputationLossFromNPCDamage = 10.0f;
+        /// <summary>
+        /// Maximum amount of reputation loss you can get from damaging outpost walls per round
+        /// </summary>
+        public const float MaxReputationLossFromWallDamage = 10.0f;
 
         public Identifier Identifier { get; }
         public int MinReputation { get; }
         public int MaxReputation { get; }
         public int InitialReputation { get; }
         public CampaignMetadata Metadata { get; }
+
+        public float ReputationAtRoundStart { get; set; }
 
         private readonly Identifier metaDataIdentifier;
 
@@ -59,27 +69,47 @@ namespace Barotrauma
             Value = newReputation;
         }
 
-        public void AddReputation(float reputationChange)
+        public float GetReputationChangeMultiplier(float reputationChange)
         {
             if (reputationChange > 0f)
             {
                 float reputationGainMultiplier = 1f;
                 foreach (Character character in GameSession.GetSessionCrewCharacters(CharacterType.Both))
                 {
-                    reputationGainMultiplier += character.GetStatValue(StatTypes.ReputationGainMultiplier);
+                    reputationGainMultiplier *= 1f + character.GetStatValue(StatTypes.ReputationGainMultiplier, includeSaved: false);
+                    reputationGainMultiplier *= 1f + character.Info?.GetSavedStatValue(StatTypes.ReputationGainMultiplier, Identifier) ?? 0;
                 }
-                reputationChange *= reputationGainMultiplier;
+                return reputationGainMultiplier;
             }
             else if (reputationChange < 0f)
             {
                 float reputationLossMultiplier = 1f;
                 foreach (Character character in GameSession.GetSessionCrewCharacters(CharacterType.Both))
                 {
-                    reputationLossMultiplier += character.GetStatValue(StatTypes.ReputationLossMultiplier);
+                    reputationLossMultiplier *= 1f + character.GetStatValue(StatTypes.ReputationLossMultiplier, includeSaved: false);
+                    reputationLossMultiplier *= 1f + character.Info?.GetSavedStatValue(StatTypes.ReputationLossMultiplier, Identifier) ?? 0;
                 }
-                reputationChange *= reputationLossMultiplier;
+                return reputationLossMultiplier;
             }
-            Value += reputationChange;
+            return 1.0f;
+        }
+
+        public void AddReputation(float reputationChange, float maxReputationChangePerRound = float.MaxValue)
+        {
+            float currentValue = Value;
+            float currentReputationChange = currentValue - ReputationAtRoundStart;
+            if (Math.Abs(currentReputationChange) >= maxReputationChangePerRound &&
+                Math.Sign(currentReputationChange) == Math.Sign(reputationChange)) 
+            { 
+                return; 
+            }
+            float newValue = Value + reputationChange * GetReputationChangeMultiplier(reputationChange);
+            if (Math.Abs(newValue - ReputationAtRoundStart) > maxReputationChangePerRound && 
+                Math.Sign(newValue - currentValue) == Math.Sign(newValue - ReputationAtRoundStart))
+            {
+                newValue = ReputationAtRoundStart + maxReputationChangePerRound * Math.Sign(reputationChange);
+            }
+            Value = newValue;
         }
 
         public readonly NamedEvent<Reputation> OnReputationValueChanged = new NamedEvent<Reputation>();
@@ -108,6 +138,7 @@ namespace Barotrauma
             metaDataIdentifier = $"reputation.{Identifier}".ToIdentifier();
             MinReputation = minReputation;
             MaxReputation = maxReputation;
+            ReputationAtRoundStart = initialReputation;
             InitialReputation = initialReputation;
             Faction = faction;
             Location = location;

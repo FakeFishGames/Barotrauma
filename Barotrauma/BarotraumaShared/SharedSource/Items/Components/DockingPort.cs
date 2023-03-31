@@ -507,9 +507,9 @@ namespace Barotrauma.Items.Components
             wire.RemoveConnection(DockingTarget.item);
 
             powerConnection.TryAddLink(wire);
-            wire.Connect(powerConnection, false, false);
+            wire.TryConnect(powerConnection, addNode: false);
             recipient.TryAddLink(wire);
-            wire.Connect(recipient, false, false);
+            wire.TryConnect(recipient, addNode: false);
 
             //Flag connections to be updated
             Powered.ChangedConnections.Add(powerConnection);
@@ -543,8 +543,8 @@ namespace Barotrauma.Items.Components
             System.Diagnostics.Debug.Assert(doorBody == null);
 
             doorBody = GameMain.World.CreateRectangle(
-                DockingTarget.Door.Body.width,
-                DockingTarget.Door.Body.height,
+                DockingTarget.Door.Body.Width,
+                DockingTarget.Door.Body.Height,
                 1.0f,
                 position);
             doorBody.UserData = DockingTarget.Door;

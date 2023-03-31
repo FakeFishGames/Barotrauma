@@ -259,7 +259,7 @@ namespace Barotrauma.Items.Components
                         {
                             bool alreadyConnected = DraggingConnected.IsConnectedTo(panel.Item);
                             DraggingConnected.RemoveConnection(panel.Item);
-                            if (DraggingConnected.Connect(this, !alreadyConnected, true))
+                            if (DraggingConnected.TryConnect(this, !alreadyConnected, true))
                             {
                                 var otherConnection = DraggingConnected.OtherConnection(this);
                                 ConnectWire(DraggingConnected);

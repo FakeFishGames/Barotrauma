@@ -1059,6 +1059,7 @@ namespace Barotrauma
 
             GUIComponent child = Content.GetChild(childIndex);
             if (child is null) { return; }
+            if (!child.Enabled) { return; }
 
             bool wasSelected = true;
             if (OnSelected != null)

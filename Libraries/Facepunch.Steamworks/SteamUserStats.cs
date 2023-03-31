@@ -9,7 +9,7 @@ namespace Steamworks
 {
 	public class SteamUserStats : SteamClientClass<SteamUserStats>
 	{
-		internal static ISteamUserStats Internal => Interface as ISteamUserStats;
+		internal static ISteamUserStats? Internal => Interface as ISteamUserStats;
 
 		internal override void InitializeInterface( bool server )
 		{
@@ -40,31 +40,31 @@ namespace Steamworks
 		/// <summary>
 		/// called when the achivement icon is loaded
 		/// </summary>
-		internal static event Action<string, int> OnAchievementIconFetched;
+		internal static event Action<string, int>? OnAchievementIconFetched;
 
 		/// <summary>
 		/// called when the latests stats and achievements have been received
 		///	from the server
 		/// </summary>
-		public static event Action<SteamId, Result> OnUserStatsReceived;
+		public static event Action<SteamId, Result>? OnUserStatsReceived;
 
 		/// <summary>
 		/// result of a request to store the user stats for a game
 		/// </summary>
-		public static event Action<Result> OnUserStatsStored;
+		public static event Action<Result>? OnUserStatsStored;
 
 		/// <summary>
 		/// result of a request to store the achievements for a game, or an 
 		///	"indicate progress" call. If both m_nCurProgress and m_nMaxProgress
 		///	are zero, that means the achievement has been fully unlocked
 		/// </summary>
-		public static event Action<Achievement, int, int> OnAchievementProgress;
+		public static event Action<Achievement, int, int>? OnAchievementProgress;
 
 
 		/// <summary>
 		/// Callback indicating that a user's stats have been unloaded
 		/// </summary>
-		public static event Action<SteamId> OnUserStatsUnloaded;
+		public static event Action<SteamId>? OnUserStatsUnloaded;
 
 		/// <summary>
 		/// Get the available achievements
@@ -73,8 +73,11 @@ namespace Steamworks
 		{
 			get
 			{
-				for( int i=0; i< Internal.GetNumAchievements(); i++  )
+				if (Internal is null) { yield break; }
+				uint numAchievements = Internal.GetNumAchievements();
+				for( int i=0; i < numAchievements; i++  )
 				{
+					if (Internal is null) { yield break; }
 					yield return new Achievement( Internal.GetAchievementName( (uint) i ) );
 				}
 			}
@@ -88,6 +91,8 @@ namespace Steamworks
 		/// </summary>
 		public static bool IndicateAchievementProgress( string achName, int curProg, int maxProg )
 		{
+			if (Internal is null) { return false; }
+
 			if ( string.IsNullOrEmpty( achName ) )
 				throw new ArgumentNullException( "Achievement string is null or empty" );
 
@@ -103,6 +108,8 @@ namespace Steamworks
 		/// </summary>
 		public static async Task<int> PlayerCountAsync()
 		{
+			if (Internal is null) { return -1; }
+
 			var result = await Internal.GetNumberOfCurrentPlayers();
 			if ( !result.HasValue || result.Value.Success == 0 )
 				return -1;
@@ -122,7 +129,7 @@ namespace Steamworks
 		/// </summary>
 		public static bool StoreStats()
 		{
-			return Internal.StoreStats();
+			return Internal != null && Internal.StoreStats();
 		}
 
 		/// <summary>
@@ -133,7 +140,7 @@ namespace Steamworks
 		/// </summary>
 		public static bool RequestCurrentStats()
 		{
-			return Internal.RequestCurrentStats();
+			return Internal != null && Internal.RequestCurrentStats();
 		}
 
 		/// <summary>
@@ -146,6 +153,7 @@ namespace Steamworks
 		/// <returns>OK indicates success, InvalidState means you need to call RequestCurrentStats first, Fail means the remote call failed</returns>
 		public static async Task<Result> RequestGlobalStatsAsync( int days )
 		{
+			if (Internal is null) { return Result.Fail; }
 			var result = await SteamUserStats.Internal.RequestGlobalStats( days );
 			if ( !result.HasValue ) return Result.Fail;
 			return result.Value.Result;
@@ -162,6 +170,7 @@ namespace Steamworks
 		/// </summary>
 		public static async Task<Leaderboard?> FindOrCreateLeaderboardAsync( string name, LeaderboardSort sort, LeaderboardDisplay display )
 		{
+			if (Internal is null) { return null; }
 			var result = await Internal.FindOrCreateLeaderboard( name, sort, display );
 			if ( !result.HasValue || result.Value.LeaderboardFound == 0 )
 				return null;
@@ -172,6 +181,7 @@ namespace Steamworks
 
 		public static async Task<Leaderboard?> FindLeaderboardAsync( string name )
 		{
+			if (Internal is null) { return null; }
 			var result = await Internal.FindLeaderboard( name );
 			if ( !result.HasValue || result.Value.LeaderboardFound == 0 )
 				return null;
@@ -211,7 +221,7 @@ namespace Steamworks
 		/// </summary>
 		public static bool SetStat( string name, int value )
 		{
-			return Internal.SetStat( name, value );
+			return Internal != null && Internal.SetStat( name, value );
 		}
 
 		/// <summary>
@@ -220,7 +230,7 @@ namespace Steamworks
 		/// </summary>
 		public static bool SetStat( string name, float value )
 		{
-			return Internal.SetStat( name, value );
+			return Internal != null && Internal.SetStat( name, value );
 		}
 
 		/// <summary>
@@ -229,7 +239,7 @@ namespace Steamworks
 		public static int GetStatInt( string name )
 		{
 			int data = 0;
-			Internal.GetStat( name, ref data );
+			Internal?.GetStat( name, ref data );
 			return data;
 		}
 
@@ -239,7 +249,7 @@ namespace Steamworks
 		public static float GetStatFloat( string name )
 		{
 			float data = 0;
-			Internal.GetStat( name, ref data );
+			Internal?.GetStat( name, ref data );
 			return data;
 		}
 
@@ -250,7 +260,7 @@ namespace Steamworks
 		/// <returns></returns>
 		public static bool ResetAll( bool includeAchievements )
 		{
-			return Internal.ResetAllStats( includeAchievements );
+			return Internal != null && Internal.ResetAllStats( includeAchievements );
 		}
 	}
 }

@@ -170,7 +170,7 @@ namespace Barotrauma
         {
             get
             {
-                float shoulderHeight = Collider.height / 2.0f;
+                float shoulderHeight = Collider.Height / 2.0f;
                 if (inWater)
                 {
                     shoulderHeight += 0.4f;
@@ -308,7 +308,7 @@ namespace Barotrauma
 
                 Collider.SetTransform(new Vector2(
                     Collider.SimPosition.X,
-                    Math.Max(lowestLimb.SimPosition.Y + (Collider.radius + Collider.height / 2), Collider.SimPosition.Y)),
+                    Math.Max(lowestLimb.SimPosition.Y + (Collider.Radius + Collider.Height / 2), Collider.SimPosition.Y)),
                     Collider.Rotation);
                 
                 Collider.FarseerBody.ResetDynamics();
@@ -459,7 +459,8 @@ namespace Barotrauma
 
         void UpdateStanding()
         {
-            if (CurrentGroundedParams == null) { return; }
+            var currentGroundedParams = CurrentGroundedParams;
+            if (currentGroundedParams == null) { return; }
             Vector2 handPos;
 
             Limb leftFoot = GetLimb(LimbType.LeftFoot);
@@ -482,7 +483,7 @@ namespace Barotrauma
                 walkCycleMultiplier *= 1.5f;                
             }
 
-            float getUpForce = CurrentGroundedParams.GetUpForce / RagdollParams.JointScale;
+            float getUpForce = currentGroundedParams.GetUpForce / RagdollParams.JointScale;
 
             Vector2 colliderPos = GetColliderBottom();
             if (Math.Abs(TargetMovement.X) > 1.0f)
@@ -583,7 +584,7 @@ namespace Barotrauma
                 }
                 
                 float stepLift = TargetMovement.X == 0.0f ? 0 : 
-                    (float)Math.Sin(WalkPos * CurrentGroundedParams.StepLiftFrequency + MathHelper.Pi * CurrentGroundedParams.StepLiftOffset) * (CurrentGroundedParams.StepLiftAmount / 100);
+                    (float)Math.Sin(WalkPos * currentGroundedParams.StepLiftFrequency + MathHelper.Pi * currentGroundedParams.StepLiftOffset) * (currentGroundedParams.StepLiftAmount / 100);
 
                 float y = colliderPos.Y + stepLift;
 
@@ -598,7 +599,7 @@ namespace Barotrauma
 
                 if (!head.Disabled)
                 {
-                    y = colliderPos.Y + stepLift * CurrentGroundedParams.StepLiftHeadMultiplier;
+                    y = colliderPos.Y + stepLift * currentGroundedParams.StepLiftHeadMultiplier;
                     if (HeadPosition.HasValue) { y += HeadPosition.Value; }
                     if (Crouching && !movingHorizontally) { y -= HumanCrouchParams.MoveDownAmountWhenStationary; }
                     head.PullJointWorldAnchorB =
@@ -615,18 +616,18 @@ namespace Barotrauma
             if (TorsoAngle.HasValue && !torso.Disabled)
             {
                 float torsoAngle = TorsoAngle.Value;
-                float herpesStrength = character.CharacterHealth.GetAfflictionStrength("spaceherpes");
+                float herpesStrength = character.CharacterHealth.GetAfflictionStrength(AfflictionPrefab.SpaceHerpesType);
                 if (Crouching && !movingHorizontally && !Aiming) { torsoAngle -= HumanCrouchParams.ExtraTorsoAngleWhenStationary; }
                 torsoAngle -= herpesStrength / 150.0f;
-                torso.body.SmoothRotate(torsoAngle * Dir, CurrentGroundedParams.TorsoTorque);
+                torso.body.SmoothRotate(torsoAngle * Dir, currentGroundedParams.TorsoTorque);
             }
             if (!head.Disabled)
             {
-                if (!Aiming && CurrentGroundedParams.FixedHeadAngle && HeadAngle.HasValue)
+                if (!Aiming && currentGroundedParams.FixedHeadAngle && HeadAngle.HasValue)
                 {
                     float headAngle = HeadAngle.Value;
                     if (Crouching && !movingHorizontally) { headAngle -= HumanCrouchParams.ExtraHeadAngleWhenStationary; }
-                    head.body.SmoothRotate(headAngle * Dir, CurrentGroundedParams.HeadTorque);
+                    head.body.SmoothRotate(headAngle * Dir, currentGroundedParams.HeadTorque);
                 }
                 else
                 {
@@ -665,16 +666,16 @@ namespace Barotrauma
                     if (footPos.Y < 0.0f) { footPos.Y = -0.15f; }
 
                     //make the character limp if the feet are damaged
-                    float footAfflictionStrength = character.CharacterHealth.GetAfflictionStrength("damage", foot, true);
+                    float footAfflictionStrength = character.CharacterHealth.GetAfflictionStrength(AfflictionPrefab.DamageType, foot, true);
                     footPos.X *= MathHelper.Lerp(1.0f, 0.75f, MathHelper.Clamp(footAfflictionStrength / 50.0f, 0.0f, 1.0f));
 
-                    if (CurrentGroundedParams.FootLiftHorizontalFactor > 0)
+                    if (currentGroundedParams.FootLiftHorizontalFactor > 0)
                     {
                         // Calculate the foot y dynamically based on the foot position relative to the waist,
                         // so that the foot aims higher when it's behind the waist and lower when it's in the front.
                         float xDiff = (foot.SimPosition.X - waistPos.X + FootMoveOffset.X) * Dir;
-                        float min = MathUtils.InverseLerp(1, 0, CurrentGroundedParams.FootLiftHorizontalFactor);
-                        float max = 1 + MathUtils.InverseLerp(0, 1, CurrentGroundedParams.FootLiftHorizontalFactor);
+                        float min = MathUtils.InverseLerp(1, 0, currentGroundedParams.FootLiftHorizontalFactor);
+                        float max = 1 + MathUtils.InverseLerp(0, 1, currentGroundedParams.FootLiftHorizontalFactor);
                         float xFactor = MathHelper.Lerp(min, max, MathUtils.InverseLerp(RagdollParams.JointScale, -RagdollParams.JointScale, xDiff));
                         footPos.Y *= xFactor;
                     }
@@ -698,19 +699,19 @@ namespace Barotrauma
                     {
                         foot.DebugRefPos = colliderPos;
                         foot.DebugTargetPos = colliderPos + footPos;
-                        MoveLimb(foot, colliderPos + footPos, CurrentGroundedParams.FootMoveStrength);
+                        MoveLimb(foot, colliderPos + footPos, currentGroundedParams.FootMoveStrength);
                         FootIK(foot, colliderPos + footPos, 
-                            CurrentGroundedParams.LegBendTorque, CurrentGroundedParams.FootTorque, CurrentGroundedParams.FootAngleInRadians);
+                            currentGroundedParams.LegBendTorque, currentGroundedParams.FootTorque, currentGroundedParams.FootAngleInRadians);
                     }
                 }
 
                 //calculate the positions of hands
                 handPos = torso.SimPosition;
-                handPos.X = -walkPosX * CurrentGroundedParams.HandMoveAmount.X;
+                handPos.X = -walkPosX * currentGroundedParams.HandMoveAmount.X;
 
-                float lowerY = CurrentGroundedParams.HandClampY;
+                float lowerY = currentGroundedParams.HandClampY;
 
-                handPos.Y = lowerY + (float)(Math.Abs(Math.Sin(WalkPos - Math.PI * 1.5f) * CurrentGroundedParams.HandMoveAmount.Y));
+                handPos.Y = lowerY + (float)(Math.Abs(Math.Sin(WalkPos - Math.PI * 1.5f) * currentGroundedParams.HandMoveAmount.Y));
 
                 Vector2 posAddition = new Vector2(Math.Sign(movement.X) * HandMoveOffset.X, HandMoveOffset.Y);
 
@@ -718,13 +719,13 @@ namespace Barotrauma
                 {
                     HandIK(rightHand,
                         torso.SimPosition + posAddition + new Vector2(-handPos.X, (Math.Sign(walkPosX) == Math.Sign(Dir)) ? handPos.Y : lowerY),
-                        CurrentGroundedParams.ArmMoveStrength, CurrentGroundedParams.HandMoveStrength);
+                        currentGroundedParams.ArmMoveStrength, currentGroundedParams.HandMoveStrength);
                 }
                 if (leftHand != null && !leftHand.Disabled)
                 {
                     HandIK(leftHand,
                         torso.SimPosition + posAddition + new Vector2(handPos.X, (Math.Sign(walkPosX) == Math.Sign(-Dir)) ? handPos.Y : lowerY),
-                        CurrentGroundedParams.ArmMoveStrength, CurrentGroundedParams.HandMoveStrength);
+                        currentGroundedParams.ArmMoveStrength, currentGroundedParams.HandMoveStrength);
                 }
             }
             else
@@ -755,8 +756,8 @@ namespace Barotrauma
                     {
                         foot.DebugRefPos = colliderPos;
                         foot.DebugTargetPos = footPos;
-                        float footMoveForce = CurrentGroundedParams.FootMoveStrength;
-                        float legBendTorque = CurrentGroundedParams.LegBendTorque;
+                        float footMoveForce = currentGroundedParams.FootMoveStrength;
+                        float legBendTorque = currentGroundedParams.LegBendTorque;
                         if (Crouching)
                         {
                             // Keeps the pose
@@ -764,7 +765,7 @@ namespace Barotrauma
                             footMoveForce *= 2;
                         }
                         MoveLimb(foot, footPos, footMoveForce);
-                        FootIK(foot, footPos, legBendTorque, CurrentGroundedParams.FootTorque, CurrentGroundedParams.FootAngleInRadians);
+                        FootIK(foot, footPos, legBendTorque, currentGroundedParams.FootTorque, currentGroundedParams.FootAngleInRadians);
                     }
                 }
 
@@ -780,7 +781,7 @@ namespace Barotrauma
                     var arm = GetLimb(armType);
                     if (arm != null && Math.Abs(arm.body.AngularVelocity) < 10.0f)
                     {
-                        arm.body.SmoothRotate(MathHelper.Clamp(-arm.body.AngularVelocity, -0.5f, 0.5f), arm.Mass * 50.0f * CurrentGroundedParams.ArmMoveStrength);
+                        arm.body.SmoothRotate(MathHelper.Clamp(-arm.body.AngularVelocity, -0.5f, 0.5f), arm.Mass * 50.0f * currentGroundedParams.ArmMoveStrength);
                     }
 
                     //get the elbow to a neutral rotation
@@ -791,14 +792,14 @@ namespace Barotrauma
                         if (elbow != null)
                         {
                             float diff = elbow.JointAngle - (Dir > 0 ? elbow.LowerLimit : elbow.UpperLimit);
-                            forearm.body.ApplyTorque(MathHelper.Clamp(-diff, -MathHelper.PiOver2, MathHelper.PiOver2) * forearm.Mass * 100.0f * CurrentGroundedParams.ArmMoveStrength);
+                            forearm.body.ApplyTorque(MathHelper.Clamp(-diff, -MathHelper.PiOver2, MathHelper.PiOver2) * forearm.Mass * 100.0f * currentGroundedParams.ArmMoveStrength);
                         }
                     }
                     // Try to keep the wrist straight
                     LimbJoint wrist = GetJointBetweenLimbs(foreArmType, hand.type);
                     if (wrist != null)
                     {
-                        hand.body.ApplyTorque(MathHelper.Clamp(-wrist.JointAngle, -MathHelper.PiOver2, MathHelper.PiOver2) * hand.Mass * 100f * CurrentGroundedParams.HandMoveStrength);
+                        hand.body.ApplyTorque(MathHelper.Clamp(-wrist.JointAngle, -MathHelper.PiOver2, MathHelper.PiOver2) * hand.Mass * 100f * currentGroundedParams.HandMoveStrength);
                     }
                 }
             }
@@ -840,14 +841,11 @@ namespace Barotrauma
             if (head == null) { return; }
             if (torso == null) { return; }
 
-            const float DisableMovementAboveSurfaceThreshold = 50.0f;
-
             if (currentHull != null && character.CurrentHull != null)
             {
                 float surfacePos = GetSurfaceY();
                 float surfaceThreshold = ConvertUnits.ToDisplayUnits(Collider.SimPosition.Y + 1.0f);
                 surfaceLimiter = Math.Max(1.0f, surfaceThreshold - surfacePos);
-                if (surfaceLimiter > DisableMovementAboveSurfaceThreshold) { return; }  
             }          
 
             Limb leftHand = GetLimb(LimbType.LeftHand);
@@ -917,6 +915,7 @@ namespace Barotrauma
                 RotateHead(head);
             }
 
+            const float DisableMovementAboveSurfaceThreshold = 50.0f;
             //dont try to move upwards if head is already out of water
             if (surfaceLimiter > 1.0f && TargetMovement.Y > 0.0f)
             {
@@ -936,8 +935,8 @@ namespace Barotrauma
                     //turn head above the water
                     head.body.ApplyTorque(Dir);
                 }
+                movement.Y *= Math.Max(0, 1.0f - ((surfaceLimiter - 1.0f) / DisableMovementAboveSurfaceThreshold));
 
-                movement.Y = movement.Y * (1.0f - ((surfaceLimiter - 1.0f) / DisableMovementAboveSurfaceThreshold));
             }
 
             bool isNotRemote = true;
@@ -956,7 +955,13 @@ namespace Barotrauma
                         t = MathHelper.Clamp((1 + dot) / 10, 0.01f, 0.1f);
                     }
                 }
-                Collider.LinearVelocity = Vector2.Lerp(Collider.LinearVelocity, movement, t);
+                Vector2 targetVelocity = movement;
+                //if we're too high above the surface, don't touch the vertical velocity of the collider unless we're heading down
+                if (surfaceLimiter > DisableMovementAboveSurfaceThreshold)
+                {
+                    targetVelocity.Y = Math.Min(Collider.LinearVelocity.Y, movement.Y);
+                };
+                Collider.LinearVelocity = Vector2.Lerp(Collider.LinearVelocity, targetVelocity, t);
             }
 
             WalkPos += movement.Length();
@@ -1130,7 +1135,7 @@ namespace Barotrauma
                 ladderSimPos -= currentHull.Submarine.SimPosition;
             }
 
-            float bottomPos = Collider.SimPosition.Y - ColliderHeightFromFloor - Collider.radius - Collider.height / 2.0f;
+            float bottomPos = Collider.SimPosition.Y - ColliderHeightFromFloor - Collider.Radius - Collider.Height / 2.0f;
             float torsoPos = TorsoPosition ?? 0;
             MoveLimb(torso, new Vector2(ladderSimPos.X - 0.35f * Dir, bottomPos + torsoPos), 10.5f);
             float headPos = HeadPosition ?? 0;
@@ -1225,7 +1230,7 @@ namespace Barotrauma
 
             if (character.SimPosition.Y > ladderSimPos.Y) { climbForce.Y = Math.Min(0.0f, climbForce.Y); }
             //reached the bottom -> can't go further down
-            float minHeightFromFloor = ColliderHeightFromFloor / 2 + Collider.height;
+            float minHeightFromFloor = ColliderHeightFromFloor / 2 + Collider.Height;
             if (floorFixture != null && 
                 !floorFixture.CollisionCategories.HasFlag(Physics.CollisionStairs) &&
                 !floorFixture.CollisionCategories.HasFlag(Physics.CollisionPlatform) &&
@@ -1524,13 +1529,15 @@ namespace Barotrauma
             Limb leftHand = GetLimb(LimbType.LeftHand);
             Limb rightHand = GetLimb(LimbType.RightHand);
 
-            Limb targetLeftHand = target.AnimController.GetLimb(LimbType.LeftForearm);
-            if (targetLeftHand == null) { targetLeftHand = target.AnimController.GetLimb(LimbType.Torso); }
-            if (targetLeftHand == null) { targetLeftHand = target.AnimController.MainLimb; }
+            Limb targetLeftHand = 
+                target.AnimController.GetLimb(LimbType.LeftForearm) ?? 
+                target.AnimController.GetLimb(LimbType.Torso) ?? 
+                target.AnimController.MainLimb;
 
-            Limb targetRightHand = target.AnimController.GetLimb(LimbType.RightForearm);
-            if (targetRightHand == null) { targetRightHand = target.AnimController.GetLimb(LimbType.Torso); }
-            if (targetRightHand == null) { targetRightHand = target.AnimController.MainLimb; }
+            Limb targetRightHand = 
+                target.AnimController.GetLimb(LimbType.RightForearm) ??
+                target.AnimController.GetLimb(LimbType.Torso) ?? 
+                target.AnimController.MainLimb;
 
             if (!target.AllowInput)
             {
@@ -1546,10 +1553,7 @@ namespace Barotrauma
                     return;
                 }
                 Limb targetTorso = target.AnimController.GetLimb(LimbType.Torso);
-                if (targetTorso == null)
-                {
-                    targetTorso = target.AnimController.MainLimb;
-                }
+                targetTorso ??= target.AnimController.MainLimb;
                 if (target.AnimController.Dir != Dir)
                 {
                     target.AnimController.Flip();

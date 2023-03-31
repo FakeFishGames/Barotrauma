@@ -1,6 +1,7 @@
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.ComponentModel;
 #if DEBUG
 using System.IO;
@@ -478,7 +479,6 @@ namespace Barotrauma
             hashTask = new Task(() =>
             {
                 hash = Md5Hash.CalculateForString(doc.ToString(), Md5Hash.StringHashOptions.IgnoreWhitespace);
-                Md5Hash.Cache.Add(FilePath, hash, DateTime.UtcNow);
             });
             hashTask.Start();
         }
@@ -559,6 +559,14 @@ namespace Barotrauma
             }
             return structureCrushDepthsDefined;
         }
+        public void AddOutpostNPCIdentifierOrTag(Character npc, Identifier idOrTag)
+        {
+            if (!OutpostNPCs.ContainsKey(idOrTag))
+            {
+                OutpostNPCs.Add(idOrTag, new List<Character>());
+            }
+            OutpostNPCs[idOrTag].Add(npc);
+        }
 
         //saving/loading ----------------------------------------------------
         public void SaveAs(string filePath, System.IO.MemoryStream previewImage = null)
@@ -590,7 +598,6 @@ namespace Barotrauma
             }
 
             SaveUtil.CompressStringToFile(filePath, doc.ToString());
-            Md5Hash.Cache.Remove(filePath);
         }
 
         public static void AddToSavedSubs(SubmarineInfo subInfo)
@@ -750,6 +757,36 @@ namespace Barotrauma
             }
 
             return doc;
+        }
+
+        public int GetPrice(Location location = null, ImmutableHashSet<Character> characterList = null)
+        {
+            if (location is null)
+            {
+                if (GameMain.GameSession?.Campaign?.Map?.CurrentLocation is { } currentLocation)
+                {
+                    location = currentLocation;
+                }
+                else
+                {
+
+                    return Price;
+                }
+            }
+
+            characterList ??= GameSession.GetSessionCrewCharacters(CharacterType.Both);
+
+            float price = Price;
+            if (characterList.Any())
+            {
+                if (location.Faction is { } faction && Faction.GetPlayerAffiliationStatus(faction) is FactionAffiliation.Positive)
+                {
+                    price *= 1f - characterList.Max(static c => c.GetStatValue(StatTypes.ShipyardBuyMultiplierAffiliated));
+                }
+                price *= 1f - characterList.Max(static c => c.GetStatValue(StatTypes.ShipyardBuyMultiplier));
+            }
+
+            return (int)price;
         }
 
         public static int GetDefaultTier(int price) => price > 20000 ? HighestTier : price > 10000 ? 2 : 1;

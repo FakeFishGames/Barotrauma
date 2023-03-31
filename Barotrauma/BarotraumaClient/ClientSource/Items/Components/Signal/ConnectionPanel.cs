@@ -110,8 +110,8 @@ namespace Barotrauma.Items.Components
             if (HighlightedWire != null)
             {
                 HighlightedWire.Item.IsHighlighted = true;
-                if (HighlightedWire.Connections[0] != null && HighlightedWire.Connections[0].Item != null) HighlightedWire.Connections[0].Item.IsHighlighted = true;
-                if (HighlightedWire.Connections[1] != null && HighlightedWire.Connections[1].Item != null) HighlightedWire.Connections[1].Item.IsHighlighted = true;
+                if (HighlightedWire.Connections[0] != null && HighlightedWire.Connections[0].Item != null) { HighlightedWire.Connections[0].Item.IsHighlighted = true; }
+                if (HighlightedWire.Connections[1] != null && HighlightedWire.Connections[1].Item != null) { HighlightedWire.Connections[1].Item.IsHighlighted = true; }
             }
         }
 
@@ -225,7 +225,7 @@ namespace Barotrauma.Items.Components
                 foreach (var wire in newWires.Where(w => !connection.Wires.Contains(w)).ToArray())
                 {
                     connection.ConnectWire(wire);
-                    wire.Connect(connection, false);
+                    wire.TryConnect(connection, false);
                 }
             }
 

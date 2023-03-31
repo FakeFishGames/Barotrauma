@@ -1,4 +1,5 @@
 using Barotrauma.Extensions;
+using Barotrauma.Lights;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -14,9 +15,9 @@ namespace Barotrauma
         private RenderTarget2D renderTargetWater;
         private RenderTarget2D renderTargetFinal;
 
-        private Effect damageEffect;
-        private Texture2D damageStencil;
-        private Texture2D distortTexture;        
+        public readonly Effect DamageEffect;
+        private readonly Texture2D damageStencil;
+        private readonly Texture2D distortTexture;        
 
         private float fadeToBlackState;
 
@@ -38,7 +39,7 @@ namespace Barotrauma
             };
 
             //var blurEffect = LoadEffect("Effects/blurshader");
-            damageEffect = EffectLoader.Load("Effects/damageshader");
+            DamageEffect = EffectLoader.Load("Effects/damageshader");
             PostProcessEffect = EffectLoader.Load("Effects/postprocess");
             GradientEffect = EffectLoader.Load("Effects/gradientshader");
             GrainEffect = EffectLoader.Load("Effects/grainshader");
@@ -46,9 +47,9 @@ namespace Barotrauma
             BlueprintEffect = EffectLoader.Load("Effects/blueprintshader");
 
             damageStencil = TextureLoader.FromFile("Content/Map/walldamage.png");
-            damageEffect.Parameters["xStencil"].SetValue(damageStencil);
-            damageEffect.Parameters["aMultiplier"].SetValue(50.0f);
-            damageEffect.Parameters["cMultiplier"].SetValue(200.0f);
+            DamageEffect.Parameters["xStencil"].SetValue(damageStencil);
+            DamageEffect.Parameters["aMultiplier"].SetValue(50.0f);
+            DamageEffect.Parameters["cMultiplier"].SetValue(200.0f);
 
             distortTexture = TextureLoader.FromFile("Content/Effects/distortnormals.png");
             PostProcessEffect.Parameters["xDistortTexture"].SetValue(distortTexture);
@@ -105,13 +106,13 @@ namespace Barotrauma
                 c.DoVisibilityCheck(cam);
                 if (c.IsVisible != wasVisible)
                 {
-                    c.AnimController.Limbs.ForEach(l =>
+                    foreach (var limb in c.AnimController.Limbs)
                     {
-                        if (l.LightSource != null)
+                        if (limb.LightSource is LightSource light)
                         {
-                            l.LightSource.Enabled = c.IsVisible;
+                            light.Enabled = c.IsVisible;
                         }
-                    });
+                    }
                 }
             }
 
@@ -187,6 +188,10 @@ namespace Barotrauma
             GameMain.PerformanceCounter.AddElapsedTicks("Draw:Map:LOS", sw.ElapsedTicks);
             sw.Restart();
 
+
+            static bool IsFromOutpostDrawnBehindSubs(Entity e)
+                => e.Submarine is { Info.OutpostGenerationParams.DrawBehindSubs: true };
+
             //------------------------------------------------------------------------
             graphics.SetRenderTarget(renderTarget);
             graphics.Clear(Color.Transparent);
@@ -194,7 +199,7 @@ namespace Barotrauma
             //(= the background texture that's revealed when a wall is destroyed) into the background render target
             //These will be visible through the LOS effect.
             spriteBatch.Begin(SpriteSortMode.BackToFront, BlendState.NonPremultiplied, null, DepthStencilState.None, null, null, cam.Transform);
-            Submarine.DrawBack(spriteBatch, false, e => e is Structure s && (e.SpriteDepth >= 0.9f || s.Prefab.BackgroundSprite != null));
+            Submarine.DrawBack(spriteBatch, false, e => e is Structure s && (e.SpriteDepth >= 0.9f || s.Prefab.BackgroundSprite != null) && !IsFromOutpostDrawnBehindSubs(e));
             Submarine.DrawPaintedColors(spriteBatch, false);
             spriteBatch.End();
 
@@ -221,7 +226,11 @@ namespace Barotrauma
                 Level.Loaded.DrawBack(graphics, spriteBatch, cam);
             }
 
-			//draw alpha blended particles that are in water and behind subs
+            spriteBatch.Begin(SpriteSortMode.BackToFront, BlendState.NonPremultiplied, null, DepthStencilState.None, null, null, cam.Transform);
+            Submarine.DrawBack(spriteBatch, false, e => e is Structure s && (e.SpriteDepth >= 0.9f || s.Prefab.BackgroundSprite != null) && IsFromOutpostDrawnBehindSubs(e));
+            spriteBatch.End();
+
+            //draw alpha blended particles that are in water and behind subs
 #if LINUX || OSX
 			spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.NonPremultiplied, null, DepthStencilState.None, null, null, cam.Transform);
 #else
@@ -336,12 +345,13 @@ namespace Barotrauma
             GameMain.PerformanceCounter.AddElapsedTicks("Draw:Map:FrontParticles", sw.ElapsedTicks);
             sw.Restart();
 
+            DamageEffect.CurrentTechnique = DamageEffect.Techniques["StencilShader"];
             spriteBatch.Begin(SpriteSortMode.Immediate,
                 BlendState.NonPremultiplied, SamplerState.LinearWrap,
                 null, null,
-                damageEffect,
+                DamageEffect,
                 cam.Transform);
-            Submarine.DrawDamageable(spriteBatch, damageEffect, false);
+            Submarine.DrawDamageable(spriteBatch, DamageEffect, false);
             spriteBatch.End();
 
             sw.Stop();
@@ -368,7 +378,7 @@ namespace Barotrauma
 			{
                 graphics.DepthStencilState = DepthStencilState.None;
                 graphics.SamplerStates[0] = SamplerState.LinearWrap;
-                graphics.BlendState = Lights.CustomBlendStates.Multiplicative;
+                graphics.BlendState = CustomBlendStates.Multiplicative;
                 Quad.UseBasicEffect(GameMain.LightManager.LightMap);
                 Quad.Render();
             }
@@ -399,12 +409,13 @@ namespace Barotrauma
             {
                 GameMain.LightManager.LosEffect.CurrentTechnique = GameMain.LightManager.LosEffect.Techniques["LosShader"];
 
+                GameMain.LightManager.LosEffect.Parameters["blurDistance"].SetValue(0.005f);
                 GameMain.LightManager.LosEffect.Parameters["xTexture"].SetValue(renderTargetBackground);
                 GameMain.LightManager.LosEffect.Parameters["xLosTexture"].SetValue(GameMain.LightManager.LosTexture);
                 GameMain.LightManager.LosEffect.Parameters["xLosAlpha"].SetValue(GameMain.LightManager.LosAlpha);
 
                 Color losColor;
-                if (GameMain.LightManager.LosMode == LosMode.Transparent)
+                if (GameMain.LightManager.LosMode is LosMode.Transparent or LosMode.BlockOutsideView)
                 {
                     //convert the los color to HLS and make sure the luminance of the color is always the same
                     //as the luminance of the ambient light color
@@ -446,6 +457,11 @@ namespace Barotrauma
             float DistortStrength = 0.0f;
             Vector3 chromaticAberrationStrength = GameSettings.CurrentConfig.Graphics.ChromaticAberration ?
                 new Vector3(-0.02f, -0.01f, 0.0f) : Vector3.Zero;
+
+            if (Level.Loaded?.Renderer != null)
+            {
+                chromaticAberrationStrength += new Vector3(-0.03f, -0.015f, 0.0f) * Level.Loaded.Renderer.ChromaticAberrationStrength;
+            }
 
             if (Character.Controlled != null)
             {
@@ -502,6 +518,11 @@ namespace Barotrauma
                 spriteBatch.Begin(SpriteSortMode.Deferred);
                 GUI.DrawRectangle(spriteBatch, new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight), Color.Lerp(Color.TransparentBlack, Color.Black, fadeToBlackState), isFilled: true);
                 spriteBatch.End();
+            }
+
+            if (GameMain.LightManager.DebugLos)
+            {
+                GameMain.LightManager.DebugDrawLos(spriteBatch, cam);
             }
 
             sw.Stop();

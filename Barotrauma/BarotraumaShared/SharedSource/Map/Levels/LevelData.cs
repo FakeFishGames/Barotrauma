@@ -24,7 +24,7 @@ namespace Barotrauma
 
         public readonly Biome Biome;
 
-        public readonly LevelGenerationParams GenerationParams;
+        public LevelGenerationParams GenerationParams { get; private set; }
 
         public bool HasBeaconStation;
         public bool IsBeaconActive;
@@ -60,12 +60,14 @@ namespace Barotrauma
         /// <summary>
         /// Events that have previously triggered in this level. Used for making events the player hasn't seen yet more likely to trigger when re-entering the level. Has a maximum size of <see cref="EventManager.MaxEventHistory"/>.
         /// </summary>
-        public readonly List<EventPrefab> EventHistory = new List<EventPrefab>();
+        public readonly List<Identifier> EventHistory = new List<Identifier>();
 
         /// <summary>
         /// Events that have already triggered in this level and can never trigger again. <see cref="EventSet.OncePerLevel"/>.
         /// </summary>
-        public readonly List<EventPrefab> NonRepeatableEvents = new List<EventPrefab>();
+        public readonly List<Identifier> NonRepeatableEvents = new List<Identifier>();
+
+        public readonly Dictionary<EventSet, int> FinishedEvents = new Dictionary<EventSet, int>();
 
         /// <summary>
         /// 'Exhaustible' sets won't appear in the same level until after one world step (~10 min, see Map.ProgressWorld) has passed. <see cref="EventSet.Exhaustible"/>.
@@ -150,10 +152,51 @@ namespace Barotrauma
             }
 
             string[] prefabNames = element.GetAttributeStringArray("eventhistory", Array.Empty<string>());
-            EventHistory.AddRange(EventPrefab.Prefabs.Where(p => prefabNames.Any(n => p.Identifier == n)));
+            EventHistory.AddRange(EventPrefab.Prefabs.Where(p => prefabNames.Any(n => p.Identifier == n)).Select(p => p.Identifier));
 
             string[] nonRepeatablePrefabNames = element.GetAttributeStringArray("nonrepeatableevents", Array.Empty<string>());
-            NonRepeatableEvents.AddRange(EventPrefab.Prefabs.Where(p => nonRepeatablePrefabNames.Any(n => p.Identifier == n)));
+            NonRepeatableEvents.AddRange(EventPrefab.Prefabs.Where(p => nonRepeatablePrefabNames.Any(n => p.Identifier == n)).Select(p => p.Identifier));
+
+            string finishedEventsName = nameof(FinishedEvents);
+            if (element.GetChildElement(finishedEventsName) is { } finishedEventsElement)
+            {
+                foreach (var childElement in finishedEventsElement.GetChildElements(finishedEventsName))
+                {
+                    Identifier eventSetIdentifier = childElement.GetAttributeIdentifier("set", Identifier.Empty);
+                    if (eventSetIdentifier.IsEmpty) { continue; }
+                    if (!EventSet.Prefabs.TryGet(eventSetIdentifier, out EventSet eventSet))
+                    {
+                        foreach (var prefab in EventSet.Prefabs)
+                        {
+                            if (FindSetRecursive(prefab, eventSetIdentifier) is { } foundSet)
+                            {
+                                eventSet = foundSet;
+                                break;
+                            }
+                        }
+                    }
+                    if (eventSet is null) { continue; }
+                    int count = childElement.GetAttributeInt("count", 0);
+                    if (count < 1) { continue; }
+                    FinishedEvents.Add(eventSet, count);
+                }
+
+                static EventSet FindSetRecursive(EventSet parentSet, Identifier setIdentifier)
+                {
+                    foreach (var childSet in parentSet.ChildSets)
+                    {
+                        if (childSet.Identifier == setIdentifier)
+                        {
+                            return childSet;
+                        }
+                        if (FindSetRecursive(childSet, setIdentifier) is { } foundSet)
+                        {
+                            return foundSet;
+                        }
+                    }
+                    return null;
+                }
+            }
 
             EventsExhausted = element.GetAttributeBool(nameof(EventsExhausted).ToLower(), false);
         }
@@ -163,7 +206,7 @@ namespace Barotrauma
         /// </summary>
         public LevelData(LocationConnection locationConnection)
         {
-            Seed = locationConnection.Locations[0].BaseName + locationConnection.Locations[1].BaseName;
+            Seed = locationConnection.Locations[0].LevelData.Seed + locationConnection.Locations[1].LevelData.Seed;
             Biome = locationConnection.Biome;
             Type = LevelType.LocationConnection;
             Difficulty = locationConnection.Difficulty;
@@ -196,9 +239,9 @@ namespace Barotrauma
         /// <summary>
         /// Instantiates level data using the properties of the location
         /// </summary>
-        public LevelData(Location location, float difficulty)
+        public LevelData(Location location, Map map, float difficulty)
         {
-            Seed = location.BaseName;
+            Seed = location.BaseName + map.Locations.IndexOf(location);
             Biome = location.Biome;
             Type = LevelType.Outpost;
             Difficulty = difficulty;
@@ -254,14 +297,22 @@ namespace Barotrauma
             return levelData;
         }
 
+        public void ReassignGenerationParams(string seed)
+        {
+            GenerationParams = LevelGenerationParams.GetRandom(seed, Type, Difficulty, Biome.Identifier);
+        }
         public bool OutpostGenerationParamsExist => ForceOutpostGenerationParams != null || OutpostGenerationParams.OutpostParams.Any();
 
-        public static IEnumerable<OutpostGenerationParams> GetSuitableOutpostGenerationParams(Location location)
+        public static IEnumerable<OutpostGenerationParams> GetSuitableOutpostGenerationParams(Location location, LevelData levelData)
         {
-            var suitableParams = OutpostGenerationParams.OutpostParams.Where(p => location == null || p.AllowedLocationTypes.Contains(location.Type.Identifier));
+            var suitableParams = OutpostGenerationParams.OutpostParams
+                    .Where(p => p.LevelType == null || levelData.Type == p.LevelType)
+                    .Where(p => location == null || p.AllowedLocationTypes.Contains(location.Type.Identifier));
             if (!suitableParams.Any())
             {
-                suitableParams = OutpostGenerationParams.OutpostParams.Where(p => location == null || !p.AllowedLocationTypes.Any());
+                suitableParams = OutpostGenerationParams.OutpostParams
+                    .Where(p => p.LevelType == null || levelData.Type == p.LevelType)
+                    .Where(p => location == null || !p.AllowedLocationTypes.Any());
                 if (!suitableParams.Any())
                 {
                     DebugConsole.ThrowError($"No suitable outpost generation parameters found for the location type \"{location.Type.Identifier}\". Selecting random parameters.");
@@ -305,11 +356,23 @@ namespace Barotrauma
             {
                 if (EventHistory.Any())
                 {
-                    newElement.Add(new XAttribute("eventhistory", string.Join(',', EventHistory.Select(p => p.Identifier))));
+                    newElement.Add(new XAttribute("eventhistory", string.Join(',', EventHistory)));
                 }
                 if (NonRepeatableEvents.Any())
                 {
-                    newElement.Add(new XAttribute("nonrepeatableevents", string.Join(',', NonRepeatableEvents.Select(p => p.Identifier))));
+                    newElement.Add(new XAttribute("nonrepeatableevents", string.Join(',', NonRepeatableEvents)));
+                }
+                if (FinishedEvents.Any())
+                {
+                    var finishedEventsElement = new XElement(nameof(FinishedEvents));
+                    foreach (var (set, count) in FinishedEvents)
+                    {
+                        var element = new XElement(nameof(FinishedEvents),
+                            new XAttribute("set", set.Identifier),
+                            new XAttribute("count", count));
+                        finishedEventsElement.Add(element);
+                    }
+                    newElement.Add(finishedEventsElement);
                 }
             }
 

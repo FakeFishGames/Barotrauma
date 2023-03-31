@@ -143,14 +143,13 @@ namespace Barotrauma
             }
             int healthBarHeight = (int)(50f * GUI.Scale);
             HealthBarArea = new Rectangle(BottomRightInfoArea.Right - healthBarWidth + (int)Math.Floor(1 / GUI.Scale), BottomRightInfoArea.Y - healthBarHeight + GUI.IntScale(10), healthBarWidth, healthBarHeight);
-            HealthBarAfflictionArea = new Rectangle(HealthBarArea.X, HealthBarArea.Y - Padding - afflictionAreaHeight, HealthBarArea.Width, afflictionAreaHeight);            
+            HealthBarAfflictionArea = new Rectangle(HealthBarArea.X, HealthBarArea.Y - Padding - afflictionAreaHeight, HealthBarArea.Width, afflictionAreaHeight);
 
 
             int messageAreaWidth = GameMain.GraphicsWidth / 3;
             MessageAreaTop = new Rectangle((GameMain.GraphicsWidth - messageAreaWidth) / 2, ButtonAreaTop.Bottom + ButtonAreaTop.Height, messageAreaWidth, ButtonAreaTop.Height);
 
-            bool isFourByThree = GUI.IsFourByThree();
-            int chatBoxWidth = !isFourByThree ? (int)(475 * GUI.Scale) : (int)(375 * GUI.Scale);
+            int chatBoxWidth = (int)(475 * GUI.Scale * GUI.AspectRatioAdjustment);
             int chatBoxHeight = (int)Math.Max(GameMain.GraphicsHeight * 0.25f, 150);
             ChatBoxArea = new Rectangle(Padding, GameMain.GraphicsHeight - Padding - chatBoxHeight, chatBoxWidth, chatBoxHeight);
 
@@ -160,8 +159,9 @@ namespace Barotrauma
 
             int crewAreaY = ButtonAreaTop.Bottom + Padding;
             int crewAreaHeight = ObjectiveAnchor.Top - Padding - crewAreaY;
-            CrewArea = new Rectangle(Padding, crewAreaY, (int)Math.Max(400 * GUI.Scale, 220), crewAreaHeight);
 
+            float crewAreaWidthMultiplier = GUI.IsUltrawide ? GUI.HorizontalAspectRatio : 1.0f;
+            CrewArea = new Rectangle(Padding, crewAreaY, (int)(Math.Max(400 * GUI.Scale, 220) * crewAreaWidthMultiplier), crewAreaHeight);
             InventoryAreaLower = new Rectangle(ChatBoxArea.Right + Padding * 7, inventoryTopY, GameMain.GraphicsWidth - Padding * 9 - ChatBoxArea.Width, GameMain.GraphicsHeight - inventoryTopY);
 
             int healthWindowWidth = (int)(GameMain.GraphicsWidth * 0.5f);
@@ -187,19 +187,26 @@ namespace Barotrauma
 
         public static void Draw(SpriteBatch spriteBatch)
         {
-            DrawRectangle(ButtonAreaTop, Color.White * 0.5f);
-            DrawRectangle(TutorialObjectiveListArea, GUIStyle.Blue * 0.5f);
-            DrawRectangle(MessageAreaTop, GUIStyle.Orange * 0.5f);
-            DrawRectangle(CrewArea, Color.Blue * 0.5f);
-            DrawRectangle(ChatBoxArea, Color.Cyan * 0.5f);
-            DrawRectangle(HealthBarArea, Color.Red * 0.5f);
-            DrawRectangle(HealthBarAfflictionArea, Color.Red * 0.5f);
-            DrawRectangle(InventoryAreaLower, Color.Yellow * 0.5f);
-            DrawRectangle(HealthWindowAreaLeft, Color.Red * 0.5f);
-            DrawRectangle(BottomRightInfoArea, Color.Green * 0.5f);
-            DrawRectangle(ItemHUDArea, Color.Magenta * 0.3f);
+            DrawRectangle(nameof(ButtonAreaTop), ButtonAreaTop, Color.White * 0.5f);
+            DrawRectangle(nameof(TutorialObjectiveListArea), TutorialObjectiveListArea, GUIStyle.Blue * 0.5f);
+            DrawRectangle(nameof(MessageAreaTop), MessageAreaTop, GUIStyle.Orange * 0.5f);
+            DrawRectangle(nameof(CrewArea), CrewArea, Color.Blue * 0.5f);
+            DrawRectangle(nameof(ChatBoxArea), ChatBoxArea, Color.Cyan * 0.5f);
+            DrawRectangle(nameof(HealthBarArea), HealthBarArea, Color.Red * 0.5f);
+            DrawRectangle(nameof(HealthBarAfflictionArea), HealthBarAfflictionArea, Color.Red * 0.5f);
+            DrawRectangle(nameof(InventoryAreaLower), InventoryAreaLower, Color.Yellow * 0.5f);
+            DrawRectangle(nameof(HealthWindowAreaLeft), HealthWindowAreaLeft, Color.Red * 0.5f);
+            DrawRectangle(nameof(BottomRightInfoArea), BottomRightInfoArea, Color.Green * 0.5f);
+            DrawRectangle(nameof(ItemHUDArea), ItemHUDArea, Color.Magenta * 0.3f);
 
-            void DrawRectangle(Rectangle r, Color c) => GUI.DrawRectangle(spriteBatch, r, c);
+            void DrawRectangle(string label, Rectangle r, Color c)
+            {
+                if (!label.IsNullOrEmpty())
+                {
+                    GUI.DrawString(spriteBatch, r.Location.ToVector2() + Vector2.One * 3, label, c, font: GUIStyle.SmallFont);
+                }
+                GUI.DrawRectangle(spriteBatch, r, c);
+            }
         }
     }
 

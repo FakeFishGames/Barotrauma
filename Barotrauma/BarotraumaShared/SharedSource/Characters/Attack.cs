@@ -181,13 +181,13 @@ namespace Barotrauma
         [Serialize(0.0f, IsPropertySaveable.Yes), Editable(MinValueFloat = 0.0f, MaxValueFloat = 1000.0f)]
         public float LevelWallDamage { get; set; }
 
-        [Serialize(false, IsPropertySaveable.Yes)]
+        [Serialize(false, IsPropertySaveable.Yes), Editable]
         public bool Ranged { get; set; }
 
-        [Serialize(false, IsPropertySaveable.Yes, description:"Only affects ranged attacks.")]
+        [Serialize(false, IsPropertySaveable.Yes, description:"Only affects ranged attacks."), Editable]
         public bool AvoidFriendlyFire { get; set; }
 
-        [Serialize(20f, IsPropertySaveable.Yes)]
+        [Serialize(20f, IsPropertySaveable.Yes, description: "Only affects ranged attacks."), Editable]
         public float RequiredAngle { get; set; }
 
         [Serialize(0f, IsPropertySaveable.Yes, description: "By default uses the same value as RequiredAngle. Use if you want to allow selecting the attack but not shooting until the angle is smaller. Only affects ranged attacks."), Editable]
@@ -198,6 +198,12 @@ namespace Barotrauma
 
         [Serialize(-1, IsPropertySaveable.Yes, description: "Reference to the limb we apply the aim rotation to. By default same as the attack limb. Only affects ranged attacks."), Editable]
         public int RotationLimbIndex { get; set; }
+
+        [Serialize(0f, IsPropertySaveable.Yes, description:"How much the held weapon is swayed back and forth while aiming. Only affects monsters using ranged weapons (items). Default 0 means the weapon is not swayed at all."), Editable]
+        public float SwayAmount { get; set; }
+
+        [Serialize(5f, IsPropertySaveable.Yes, description: "How fast the held weapon is swayed back and forth while aiming. Only affects monsters using ranged weapons (items)."), Editable]
+        public float SwayFrequency { get; set; }
 
         /// <summary>
         /// Legacy support. Use Afflictions.
@@ -337,9 +343,10 @@ namespace Barotrauma
             return (Duration == 0.0f) ? LevelWallDamage : LevelWallDamage * deltaTime;
         }
 
-        public float GetItemDamage(float deltaTime)
+        public float GetItemDamage(float deltaTime, float multiplier = 1)
         {
-            return (Duration == 0.0f) ? ItemDamage : ItemDamage * deltaTime;
+            float dmg = ItemDamage * multiplier;
+            return (Duration == 0.0f) ? dmg : dmg * deltaTime;
         }
 
         public float GetTotalDamage(bool includeStructureDamage = false)
@@ -421,13 +428,7 @@ namespace Barotrauma
                         }
                         break;
                     case "conditional":
-                        foreach (XAttribute attribute in subElement.Attributes())
-                        {
-                            if (PropertyConditional.IsValid(attribute))
-                            {
-                                Conditionals.Add(new PropertyConditional(attribute));
-                            }
-                        }
+                        Conditionals.AddRange(PropertyConditional.FromXElement(subElement));
                         break;
                 }
             }

@@ -111,8 +111,9 @@ namespace Barotrauma.Items.Components
 
         private bool drawable = true;
 
-        [Serialize(PropertyConditional.Comparison.And, IsPropertySaveable.No)]
-        public PropertyConditional.Comparison IsActiveConditionalComparison
+        #warning TODO: misnomer - should be IsActiveConditionalLogicalOperator
+        [Serialize(PropertyConditional.LogicalOperatorType.And, IsPropertySaveable.No)]
+        public PropertyConditional.LogicalOperatorType IsActiveConditionalComparison
         {
             get;
             set;
@@ -245,17 +246,10 @@ namespace Barotrauma.Items.Components
         [Serialize(0, IsPropertySaveable.Yes, alwaysUseInstanceValues: true)]
         public int ManuallySelectedSound { get; private set; }
 
-
         /// <summary>
         /// Can be used by status effects or conditionals to the speed of the item
         /// </summary>
-        public float Speed
-        {
-            get
-            {
-                return item.Speed;
-            }
-        }
+        public float Speed => item.Speed;
 
         public readonly bool InheritStatusEffects;
 
@@ -346,14 +340,8 @@ namespace Barotrauma.Items.Components
                 {
                     case "activeconditional":
                     case "isactive":
-                        IsActiveConditionals = IsActiveConditionals ?? new List<PropertyConditional>();
-                        foreach (XAttribute attribute in subElement.Attributes())
-                        {
-                            if (PropertyConditional.IsValid(attribute))
-                            {
-                                IsActiveConditionals.Add(new PropertyConditional(attribute));
-                            }
-                        }
+                        IsActiveConditionals ??= new List<PropertyConditional>();
+                        IsActiveConditionals.AddRange(PropertyConditional.FromXElement(subElement));
                         break;
                     case "requireditem":
                     case "requireditems":
@@ -450,7 +438,7 @@ namespace Barotrauma.Items.Components
         public virtual void Drop(Character dropper) { }
 
         /// <returns>true if the operation was completed</returns>
-        public virtual bool AIOperate(float deltaTime, Character character, AIObjectiveOperateItem objective)
+        public virtual bool CrewAIOperate(float deltaTime, Character character, AIObjectiveOperateItem objective)
         {
             return false;
         }
@@ -1033,7 +1021,7 @@ namespace Barotrauma.Items.Components
                             prevRequiredItems[newRequiredItem.Type].Find(ri => ri.JoinedIdentifiers == newRequiredItem.JoinedIdentifiers) : null;
                         if (prevRequiredItem != null)
                         {
-                            newRequiredItem.statusEffects = prevRequiredItem.statusEffects;
+                            newRequiredItem.StatusEffects = prevRequiredItem.StatusEffects;
                             newRequiredItem.Msg = prevRequiredItem.Msg;
                             newRequiredItem.IsOptional = prevRequiredItem.IsOptional;
                             newRequiredItem.IgnoreInEditor = prevRequiredItem.IgnoreInEditor;

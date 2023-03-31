@@ -28,13 +28,11 @@ namespace Barotrauma
 
             public SubmarineInfo Sub;
             public bool TransferItems;
-            public int DeliveryFee;
 
-            public SubmarineVote(Client starter, SubmarineInfo subInfo, bool transferItems, int deliveryFee, VoteType voteType)
+            public SubmarineVote(Client starter, SubmarineInfo subInfo, bool transferItems, VoteType voteType)
             {
                 Sub = subInfo;
                 TransferItems = transferItems;
-                DeliveryFee = deliveryFee;
                 VoteType = voteType;
                 State = VoteState.Started;
                 VoteStarter = starter;
@@ -81,10 +79,10 @@ namespace Barotrauma
                 if (passed)
                 {
                     Wallet fromWallet = From == null ? (GameMain.GameSession.GameMode as MultiPlayerCampaign)?.Bank : From.Character?.Wallet;
-                    if (fromWallet.TryDeduct(TransferAmount))
+                    if (fromWallet != null && fromWallet.TryDeduct(TransferAmount))
                     {
                         Wallet toWallet = To == null ? (GameMain.GameSession.GameMode as MultiPlayerCampaign)?.Bank : To.Character?.Wallet;
-                        toWallet.Give(TransferAmount);
+                        toWallet?.Give(TransferAmount);
                     }
                 }
                 else
@@ -109,7 +107,6 @@ namespace Barotrauma
                 sender,
                 subInfo,
                 transferItems,
-                voteType == VoteType.SwitchSub ? GameMain.GameSession.Map.DistanceToClosestLocationWithOutpost(GameMain.GameSession.Map.CurrentLocation, out Location endLocation) : 0,
                 voteType);
             StartOrEnqueueVote(subVote);
             GameMain.Server.UpdateVoteStatus(checkActiveVote: false);
@@ -206,12 +203,16 @@ namespace Barotrauma
                 // Do not take unanswered into account for total
                 int yes = eligibleClients.Count(c => c.GetVote<int>(ActiveVote.VoteType) == 2);
                 int no = eligibleClients.Count(c => c.GetVote<int>(ActiveVote.VoteType) == 1);
-                int total = Math.Max(yes + no, 1);
+                int total = yes + no;
 
-                bool passed = 
-                    yes / (float)total >= GameMain.NetworkMember.ServerSettings.VoteRequiredRatio || 
-                    inGameClients.Count() == 1; 
-
+                bool passed = false;
+                //total can be zero if the client who initiated the vote has left
+                if (total > 0)
+                {
+                    passed = 
+                        yes / (float)total >= GameMain.NetworkMember.ServerSettings.VoteRequiredRatio ||
+                        inGameClients.Count() == 1;
+                }
                 ActiveVote.Finish(this, passed);
             }
         }
@@ -224,7 +225,7 @@ namespace Barotrauma
             }
         }
 
-        public void ServerRead(IReadMessage inc, Client sender)
+        public void ServerRead(IReadMessage inc, Client sender, DoSProtection dosProtection)
         {
             if (GameMain.Server == null || sender == null) { return; }
 
@@ -336,7 +337,10 @@ namespace Barotrauma
 
             inc.ReadPadBits();
 
-            GameMain.Server.UpdateVoteStatus();
+            using (dosProtection.Pause(sender))
+            {
+                GameMain.Server.UpdateVoteStatus();
+            }
         }
 
         public void ServerWrite(IWriteMessage msg)
@@ -436,7 +440,6 @@ namespace Barotrauma
                                     var subVote = ActiveVote as SubmarineVote;
                                     msg.WriteString(subVote.Sub.Name);
                                     msg.WriteBoolean(subVote.TransferItems);
-                                    msg.WriteInt16((short)subVote.DeliveryFee);
                                     break;
                             }
                             break;

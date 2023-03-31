@@ -5,7 +5,7 @@ namespace Steamworks
 {
 	public struct PartyBeacon
 	{
-		static ISteamParties Internal => SteamParties.Internal;
+		static ISteamParties? Internal => SteamParties.Internal;
 
 		internal PartyBeaconID_t Id;
 
@@ -18,7 +18,7 @@ namespace Steamworks
 			{
 				var owner = default( SteamId );
 				var location = default( SteamPartyBeaconLocation_t );
-				Internal.GetBeaconDetails( Id, ref owner, ref location, out _ );
+				Internal?.GetBeaconDetails( Id, ref owner, ref location, out _ );
 				return owner;
 			}
 		}
@@ -26,13 +26,14 @@ namespace Steamworks
 		/// <summary>
 		/// Creator of the beacon
 		/// </summary>
-		public string MetaData
+		public string? MetaData
 		{
 			get
 			{
 				var owner = default( SteamId );
 				var location = default( SteamPartyBeaconLocation_t );
-				_ = Internal.GetBeaconDetails( Id, ref owner, ref location, out var strVal );
+				string? strVal = null;
+				_ = Internal?.GetBeaconDetails( Id, ref owner, ref location, out strVal );
 				return strVal;
 			}
 		}
@@ -41,8 +42,10 @@ namespace Steamworks
 		/// Will attempt to join the party. If successful will return a connection string.
 		/// If failed, will return null
 		/// </summary>
-		public async Task<string> JoinAsync()
+		public async Task<string?> JoinAsync()
 		{
+			if (Internal is null) { return null; }
+
 			var result = await Internal.JoinParty( Id );
 			if ( !result.HasValue || result.Value.Result != Result.OK )
 				return null;
@@ -56,7 +59,7 @@ namespace Steamworks
 		/// </summary>
 		public void OnReservationCompleted( SteamId steamid )
 		{
-			Internal.OnReservationCompleted( Id, steamid );
+			Internal?.OnReservationCompleted( Id, steamid );
 		}
 
 		/// <summary>
@@ -66,7 +69,7 @@ namespace Steamworks
 		/// </summary>
 		public void CancelReservation( SteamId steamid )
 		{
-			Internal.CancelReservation( Id, steamid );
+			Internal?.CancelReservation( Id, steamid );
 		}
 
 		/// <summary>
@@ -74,7 +77,7 @@ namespace Steamworks
 		/// </summary>
 		public bool Destroy()
 		{
-			return Internal.DestroyBeacon( Id );
+			return Internal != null && Internal.DestroyBeacon( Id );
 		}
 	}
 }

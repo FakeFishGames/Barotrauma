@@ -42,6 +42,8 @@ namespace Barotrauma.Items.Components
             }
         }
 
+        public const float WaterDragCoefficient = 0.5f;
+
         public override bool Use(float deltaTime, Character character = null)
         {
             //actual throwing logic is handled in Update
@@ -59,6 +61,7 @@ namespace Barotrauma.Items.Components
             base.Drop(dropper);
             throwState = ThrowState.None;
             throwAngle = ThrowAngleStart;
+            Item.ResetWaterDragCoefficient();
         }
 
         public override void UpdateBroken(float deltaTime, Camera cam)
@@ -97,6 +100,7 @@ namespace Barotrauma.Items.Components
                     }
                     item.body.CollidesWith = Physics.CollisionWall | Physics.CollisionLevel | Physics.CollisionPlatform;
                     midAir = false;
+                    Item.ResetWaterDragCoefficient();
                 }
                 return;
             }
@@ -188,6 +192,7 @@ namespace Barotrauma.Items.Components
                     }
 
                     item.Drop(CurrentThrower, createNetworkEvent: GameMain.NetworkMember == null || GameMain.NetworkMember.IsServer);
+                    item.WaterDragCoefficient = WaterDragCoefficient;
                     item.body.ApplyLinearImpulse(throwVector * ThrowForce * item.body.Mass * 3.0f, maxVelocity: NetConfig.MaxPhysicsBodyVelocity);
 
                     //disable platform collisions until the item comes back to rest again

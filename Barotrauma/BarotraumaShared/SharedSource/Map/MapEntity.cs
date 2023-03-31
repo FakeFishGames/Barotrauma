@@ -19,9 +19,6 @@ namespace Barotrauma
         protected List<ushort> linkedToID;
         public List<ushort> unresolvedLinkedToID;
 
-        private const int GapUpdateInterval = 4;
-        private static int gapUpdateTimer;
-
         /// <summary>
         /// List of upgrades this item has
         /// </summary>
@@ -59,7 +56,24 @@ namespace Barotrauma
         //the position and dimensions of the entity
         protected Rectangle rect;
 
-        public bool ExternalHighlight = false;
+        protected static readonly HashSet<MapEntity> highlightedEntities = new HashSet<MapEntity>();
+
+        public static IEnumerable<MapEntity> HighlightedEntities => highlightedEntities;
+
+
+        private bool externalHighlight = false;
+        public bool ExternalHighlight
+        {
+            get { return externalHighlight; }
+            set
+            {
+                if (value != externalHighlight)
+                {
+                    externalHighlight = value;
+                    CheckIsHighlighted();
+                }
+            }
+        }
 
         //is the mouse inside the rect
         private bool isHighlighted;
@@ -67,7 +81,14 @@ namespace Barotrauma
         public bool IsHighlighted
         {
             get { return isHighlighted || ExternalHighlight; }
-            set { isHighlighted = value; }
+            set 
+            { 
+                if (value != IsHighlighted)
+                {
+                    isHighlighted = value; 
+                    CheckIsHighlighted();
+                }
+            }
         }
 
         public virtual Rectangle Rect
@@ -158,7 +179,7 @@ namespace Barotrauma
             {
                 if (!float.IsNaN(value))
                 {
-                    _spriteOverrideDepth = MathHelper.Clamp(value, 0.001f, 0.999f);
+                    _spriteOverrideDepth = MathHelper.Clamp(value, 0.001f, 0.999999f);
                     if (this is Item) { _spriteOverrideDepth = Math.Min(_spriteOverrideDepth, 0.9f); }
                     SpriteDepthOverrideIsSet = true;
                 }
@@ -362,6 +383,31 @@ namespace Barotrauma
             return true;
         }
 
+        protected virtual void CheckIsHighlighted()
+        {
+            if (IsHighlighted || ExternalHighlight)
+            {
+                highlightedEntities.Add(this);
+            }
+            else
+            {
+                highlightedEntities.Remove(this);
+            }
+        }
+
+        private static readonly List<MapEntity> tempHighlightedEntities = new List<MapEntity>();
+        public static void ClearHighlightedEntities()
+        {
+            highlightedEntities.RemoveWhere(e => e.Removed);
+            tempHighlightedEntities.Clear();
+            tempHighlightedEntities.AddRange(highlightedEntities);
+            foreach (var entity in tempHighlightedEntities)
+            {
+                entity.IsHighlighted = false;
+            }
+        }
+
+
         public abstract MapEntity Clone();
 
         public static List<MapEntity> Clone(List<MapEntity> entitiesToClone)
@@ -458,7 +504,7 @@ namespace Barotrauma
                     }
 
                     (clones[itemIndex] as Item).Connections[connectionIndex].TryAddLink(cloneWire);
-                    cloneWire.Connect((clones[itemIndex] as Item).Connections[connectionIndex], false);
+                    cloneWire.Connect((clones[itemIndex] as Item).Connections[connectionIndex], n, addNode: false);
                 }
 
                 if ((cloneWire.Connections[0] == null || cloneWire.Connections[1] == null) && cloneItem.GetComponent<DockingPort>() == null)
@@ -579,14 +625,9 @@ namespace Barotrauma
             //the water/air will always tend to flow through the first gap in the list,
             //which may lead to weird behavior like water draining down only through
             //one gap in a room even if there are several
-            gapUpdateTimer++;
-            if (gapUpdateTimer >= GapUpdateInterval)
+            foreach (Gap gap in Gap.GapList.OrderBy(g => Rand.Int(int.MaxValue)))
             {
-                foreach (Gap gap in Gap.GapList.OrderBy(g => Rand.Int(int.MaxValue)))
-                {
-                    gap.Update(deltaTime * GapUpdateInterval, cam);
-                }
-                gapUpdateTimer = 0;
+                gap.Update(deltaTime, cam);
             }
 
 #if CLIENT
@@ -649,6 +690,9 @@ namespace Barotrauma
             List<MapEntity> entities = new List<MapEntity>();
             foreach (var element in parentElement.Elements())
             {
+#if CLIENT
+                GameMain.GameSession?.Campaign?.ThrowIfStartRoundCancellationRequested();
+#endif
                 string typeName = element.Name.ToString();
 
                 Type t;

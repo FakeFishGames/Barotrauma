@@ -213,6 +213,16 @@ namespace Barotrauma
             return splitValue;
         }
 
+        public static Identifier[] GetAttributeIdentifierArray(this XElement element, Identifier[] defaultValue, params string[] matchingAttributeName)
+        {
+            if (element == null) { return defaultValue; }
+            foreach (string name in matchingAttributeName)
+            {
+                var value = element.GetAttributeIdentifierArray(name, defaultValue);
+                if (value != defaultValue) { return value; }
+            }
+            return defaultValue;
+        }
 
         public static Identifier[] GetAttributeIdentifierArray(this XElement element, string name, Identifier[] defaultValue, bool trim = true)
         {
@@ -484,9 +494,18 @@ namespace Barotrauma
         {
             var attr = element?.GetAttribute(name);
             if (attr == null) { return defaultValue; }
-            return Enum.TryParse(attr.Value, true, out T result) ? result :
-                   int.TryParse(attr.Value, NumberStyles.Any, CultureInfo.InvariantCulture, out int resultInt) ? Unsafe.As<int, T>(ref resultInt) :
-                   defaultValue;
+
+            if (Enum.TryParse(attr.Value, true, out T result))
+            {
+                return result;
+            }
+            else if (int.TryParse(attr.Value, NumberStyles.Any, CultureInfo.InvariantCulture, out int resultInt))
+            {
+                return Unsafe.As<int, T>(ref resultInt);
+            }
+            DebugConsole.ThrowError($"Error in {attr}! \"{attr}\" is not a valid {typeof(T).Name} value");
+            return default;
+            
         }
 
         public static bool GetAttributeBool(this XElement element, string name, bool defaultValue)
@@ -608,9 +627,17 @@ namespace Barotrauma
                 return mouseButton;
             }
             else if (int.TryParse(strValue, NumberStyles.Any, CultureInfo.InvariantCulture, out int mouseButtonInt) &&
-                     (Enum.GetValues(typeof(MouseButton)) as MouseButton[]).Contains((MouseButton)mouseButtonInt))
+                     Enum.GetValues<MouseButton>().Contains((MouseButton)mouseButtonInt))
             {
                 return (MouseButton)mouseButtonInt;
+            }
+            else if (string.Equals(strValue, "LeftMouse", StringComparison.OrdinalIgnoreCase))
+            {
+                return !PlayerInput.MouseButtonsSwapped() ? MouseButton.PrimaryMouse : MouseButton.SecondaryMouse;
+            }
+            else if (string.Equals(strValue, "RightMouse", StringComparison.OrdinalIgnoreCase))
+            {
+                return !PlayerInput.MouseButtonsSwapped() ? MouseButton.SecondaryMouse : MouseButton.PrimaryMouse;
             }
             return defaultValue;
         }
@@ -807,7 +834,15 @@ namespace Barotrauma
 #endif
                 return Color.White;
             }
-
+            if (stringColor.StartsWith("faction.", StringComparison.OrdinalIgnoreCase))
+            {
+                Identifier factionId = stringColor.Substring(8).ToIdentifier();
+                if (FactionPrefab.Prefabs.TryGet(factionId, out var faction))
+                {
+                    return faction.IconColor;
+                }
+                return Color.White;
+            }
 
             string[] strComponents = stringColor.Split(',');
 

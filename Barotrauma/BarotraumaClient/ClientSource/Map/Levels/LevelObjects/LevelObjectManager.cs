@@ -56,62 +56,83 @@ namespace Barotrauma
 
             float minSizeToDraw = MathHelper.Lerp(10.0f, 5.0f, Math.Min(zoom * 20.0f, 1.0f));
 
+            //start from the grid cell at the center of the view
+            //(if objects needs to be culled, better to cull at the edges of the view)
+            int midIndexX = (currentIndices.X + currentIndices.Width) / 2;
+            int midIndexY = (currentIndices.Y + currentIndices.Height) / 2;
+            CheckIndex(midIndexX, midIndexY);
+
             for (int x = currentIndices.X; x <= currentIndices.Width; x++)
             {
                 for (int y = currentIndices.Y; y <= currentIndices.Height; y++)
                 {
-                    if (objectGrid[x, y] == null) { continue; }
-                    foreach (LevelObject obj in objectGrid[x, y])
+                    if (x != midIndexX || y != midIndexY) { CheckIndex(x, y); }
+                }
+            }
+
+            void CheckIndex(int x, int y)
+            {
+                if (objectGrid[x, y] == null) { return; }
+                foreach (LevelObject obj in objectGrid[x, y])
+                {
+                    if (!obj.CanBeVisible) { continue; }
+                    if (obj.Prefab.HideWhenBroken && obj.Health <= 0.0f) { continue; }
+
+                    if (zoom < 0.05f)
                     {
-                        if (obj.Prefab.HideWhenBroken && obj.Health <= 0.0f) { continue; }
-
-                        if (zoom < 0.05f)
+                        //hide if the sprite is very small when zoomed this far out
+                        if ((obj.Sprite != null && Math.Min(obj.Sprite.size.X * zoom, obj.Sprite.size.Y * zoom) < 5.0f) ||
+                            (obj.ActivePrefab?.DeformableSprite != null && Math.Min(obj.ActivePrefab.DeformableSprite.Sprite.size.X * zoom, obj.ActivePrefab.DeformableSprite.Sprite.size.Y * zoom) < minSizeToDraw))
                         {
-                            //hide if the sprite is very small when zoomed this far out
-                            if ((obj.Sprite != null && Math.Min(obj.Sprite.size.X * zoom, obj.Sprite.size.Y * zoom) < 5.0f) ||
-                                (obj.ActivePrefab?.DeformableSprite != null && Math.Min(obj.ActivePrefab.DeformableSprite.Sprite.size.X * zoom, obj.ActivePrefab.DeformableSprite.Sprite.size.Y * zoom) < minSizeToDraw))
-                            {
-                                continue;
-                            }
-
-                            float zCutoff = MathHelper.Lerp(5000.0f, 500.0f, (0.05f - zoom) * 20.0f);
-                            if (obj.Position.Z > zCutoff)
-                            {
-                                continue;
-                            }
+                            continue;
                         }
 
-                        var objectList = 
-                            obj.Position.Z >= 0 ? 
-                                visibleObjectsBack : 
-                                (obj.Position.Z < -1 ? visibleObjectsFront : visibleObjectsMid);
-                        int drawOrderIndex = 0;
-                        for (int i = 0; i < objectList.Count; i++)
+                        float zCutoff = MathHelper.Lerp(5000.0f, 500.0f, (0.05f - zoom) * 20.0f);
+                        if (obj.Position.Z > zCutoff)
                         {
-                            if (objectList[i] == obj)
-                            {
-                                drawOrderIndex = -1;
-                                break;
-                            }
+                            continue;
+                        }
+                    }
 
-                            if (objectList[i].Position.Z < obj.Position.Z)
-                            {
-                                break;
-                            }
-                            else
-                            {
-                                drawOrderIndex = i + 1;
-                            }
+                    var objectList =
+                        obj.Position.Z >= 0 ?
+                            visibleObjectsBack :
+                            (obj.Position.Z < -1 ? visibleObjectsFront : visibleObjectsMid);
+                    if (objectList.Count >= MaxVisibleObjects) { continue; }
+
+                    int drawOrderIndex = 0;
+                    for (int i = 0; i < objectList.Count; i++)
+                    {
+                        if (objectList[i] == obj)
+                        {
+                            drawOrderIndex = -1;
+                            break;
                         }
 
-                        if (drawOrderIndex >= 0)
+                        if (objectList[i].Position.Z > obj.Position.Z)
                         {
-                            objectList.Insert(drawOrderIndex, obj);
-                            if (objectList.Count >= MaxVisibleObjects) { break; }
+                            break;
                         }
+                        else
+                        {
+                            drawOrderIndex = i + 1;
+                            if (drawOrderIndex >= MaxVisibleObjects) { break; }
+                        }
+                    }
+
+                    if (drawOrderIndex >= 0 && drawOrderIndex < MaxVisibleObjects)
+                    {
+                        objectList.Insert(drawOrderIndex, obj);
                     }
                 }
             }
+
+            //object grid is sorted in an ascending order
+            //(so we prefer the objects in the foreground instead of ones in the background if some need to be culled)
+            //rendering needs to be done in a descending order though to get the background objects to be drawn first -> reverse the lists
+            visibleObjectsBack.Reverse();
+            visibleObjectsMid.Reverse();
+            visibleObjectsFront.Reverse();
 
             currentGridIndices = currentIndices;
         }
@@ -144,14 +165,14 @@ namespace Barotrauma
         {
             Rectangle indices = Rectangle.Empty;
             indices.X = (int)Math.Floor(cam.WorldView.X / (float)GridSize);
-            if (indices.X >= objectGrid.GetLength(0)) return;
+            if (indices.X >= objectGrid.GetLength(0)) { return; }
             indices.Y = (int)Math.Floor((cam.WorldView.Y - cam.WorldView.Height - Level.Loaded.BottomPos) / (float)GridSize);
-            if (indices.Y >= objectGrid.GetLength(1)) return;
+            if (indices.Y >= objectGrid.GetLength(1)) { return; }
 
             indices.Width = (int)Math.Floor(cam.WorldView.Right / (float)GridSize) + 1;
-            if (indices.Width < 0) return;
+            if (indices.Width < 0) { return; }
             indices.Height = (int)Math.Floor((cam.WorldView.Y - Level.Loaded.BottomPos) / (float)GridSize) + 1;
-            if (indices.Height < 0) return;
+            if (indices.Height < 0) { return; }
 
             indices.X = Math.Max(indices.X, 0);
             indices.Y = Math.Max(indices.Y, 0);

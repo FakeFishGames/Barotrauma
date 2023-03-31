@@ -143,32 +143,31 @@ namespace Barotrauma
         {
             public readonly MedicalClinic.NetAffliction Target;
             public readonly ImmutableArray<GUIComponent> ElementsToDisable;
+            public readonly GUIComponent TargetElement;
 
-            public PopupAffliction(ImmutableArray<GUIComponent> elementsToDisable, MedicalClinic.NetAffliction target)
+            public PopupAffliction(ImmutableArray<GUIComponent> elementsToDisable, GUIComponent component, MedicalClinic.NetAffliction target)
             {
                 Target = target;
                 ElementsToDisable = elementsToDisable;
+                TargetElement = component;
             }
         }
 
         private readonly struct PopupAfflictionList
         {
             public readonly MedicalClinic.NetCrewMember Target;
+            public readonly GUIListBox ListElement;
             public readonly GUIButton TreatAllButton;
-            public readonly List<PopupAffliction> Afflictions;
+            public readonly HashSet<PopupAffliction> Afflictions;
 
-            public PopupAfflictionList(MedicalClinic.NetCrewMember crewMember, GUIButton treatAllButton)
+            public PopupAfflictionList(MedicalClinic.NetCrewMember crewMember, GUIListBox listElement, GUIButton treatAllButton)
             {
+                ListElement = listElement;
                 Target = crewMember;
                 TreatAllButton = treatAllButton;
-                Afflictions = new List<PopupAffliction>();
+                Afflictions = new HashSet<PopupAffliction>();
             }
         }
-
-        // private enum SortMode
-        // {
-        //     Severity
-        // }
 
         private readonly MedicalClinic medicalClinic;
         private readonly GUIComponent container;
@@ -221,22 +220,21 @@ namespace Barotrauma
 
         private void UpdatePopupAfflictions()
         {
-            if (selectedCrewAfflictionList is { } afflictionList)
-            {
-                foreach (PopupAffliction popupAffliction in afflictionList.Afflictions)
-                {
-                    ToggleElements(ElementState.Enabled, popupAffliction.ElementsToDisable);
-                    if (medicalClinic.IsAfflictionPending(afflictionList.Target, popupAffliction.Target))
-                    {
-                        ToggleElements(ElementState.Disabled, popupAffliction.ElementsToDisable);
-                    }
-                }
+            if (selectedCrewAfflictionList is not { } afflictionList) { return; }
 
-                afflictionList.TreatAllButton.Enabled = true;
-                if (afflictionList.Afflictions.All(a => medicalClinic.IsAfflictionPending(afflictionList.Target, a.Target)))
+            foreach (PopupAffliction popupAffliction in afflictionList.Afflictions)
+            {
+                ToggleElements(ElementState.Enabled, popupAffliction.ElementsToDisable);
+                if (medicalClinic.IsAfflictionPending(afflictionList.Target, popupAffliction.Target))
                 {
-                    afflictionList.TreatAllButton.Enabled = false;
+                    ToggleElements(ElementState.Disabled, popupAffliction.ElementsToDisable);
                 }
+            }
+
+            afflictionList.TreatAllButton.Enabled = true;
+            if (afflictionList.Afflictions.All(a => medicalClinic.IsAfflictionPending(afflictionList.Target, a.Target)))
+            {
+                afflictionList.TreatAllButton.Enabled = false;
             }
         }
 
@@ -309,7 +307,7 @@ namespace Barotrauma
             }
         }
 
-        private void UpdateCrewPanel()
+        public void UpdateCrewPanel()
         {
             if (crewHealList is not { } healList) { return; }
 
@@ -502,7 +500,7 @@ namespace Barotrauma
                     return true;
                 }
             };
-            
+
             crewHealList = new CrewHealList(crewList, parent, treatAllButton);
 
             void OnReceived(MedicalClinic.CallbackOnlyRequest obj)
@@ -526,7 +524,7 @@ namespace Barotrauma
 
             new GUITextBlock(new RectTransform(Vector2.One, healthLayout.RectTransform), string.Empty, textAlignment: Alignment.Center, font: GUIStyle.SubHeadingFont)
             {
-                TextGetter = () => TextManager.GetWithVariable("percentageformat", "[value]", $"{(int)(info.Character?.HealthPercentage ?? 100f)}"),
+                TextGetter = () => TextManager.GetWithVariable("percentageformat", "[value]", $"{(int)MathF.Round(info.Character?.HealthPercentage ?? 100f)}"),
                 TextColor = GUIStyle.Green
             };
 
@@ -789,7 +787,7 @@ namespace Barotrauma
 
             GUIListBox afflictionList = new GUIListBox(new RectTransform(new Vector2(1f, 0.8f), mainLayout.RectTransform)) { Visible = false };
 
-            PopupAfflictionList popupAfflictionList = new PopupAfflictionList(crewMember, treatAllButton);
+            PopupAfflictionList popupAfflictionList = new PopupAfflictionList(crewMember, afflictionList, treatAllButton);
             selectedCrewElement = mainFrame;
             selectedCrewAfflictionList = popupAfflictionList;
 
@@ -810,9 +808,9 @@ namespace Barotrauma
                 List<GUIComponent> allComponents = new List<GUIComponent>();
                 foreach (MedicalClinic.NetAffliction affliction in request.Afflictions)
                 {
-                    ImmutableArray<GUIComponent> createdComponents = CreatePopupAffliction(afflictionList.Content, crewMember, affliction);
-                    allComponents.AddRange(createdComponents);
-                    popupAfflictionList.Afflictions.Add(new PopupAffliction(createdComponents, affliction));
+                    CreatedPopupAfflictionElement createdComponents = CreatePopupAffliction(afflictionList.Content, crewMember, affliction);
+                    allComponents.AddRange(createdComponents.AllCreatedElements);
+                    popupAfflictionList.Afflictions.Add(new PopupAffliction(createdComponents.AllCreatedElements, createdComponents.MainElement, affliction));
                 }
 
                 allComponents.Add(treatAllButton);
@@ -832,9 +830,11 @@ namespace Barotrauma
             }
         }
 
-        private ImmutableArray<GUIComponent> CreatePopupAffliction(GUIComponent parent, MedicalClinic.NetCrewMember crewMember, MedicalClinic.NetAffliction affliction)
+        private readonly record struct CreatedPopupAfflictionElement(GUIComponent MainElement, ImmutableArray<GUIComponent> AllCreatedElements);
+
+        private CreatedPopupAfflictionElement CreatePopupAffliction(GUIComponent parent, MedicalClinic.NetCrewMember crewMember, MedicalClinic.NetAffliction affliction)
         {
-            if (!(affliction.Prefab is { } prefab)) { return ImmutableArray<GUIComponent>.Empty; }
+            ToolBox.ThrowIfNull(affliction.Prefab);
 
             GUIFrame backgroundFrame = new GUIFrame(new RectTransform(new Vector2(1f, 0.33f), parent.RectTransform), style: "ListBoxElement");
             new GUIFrame(new RectTransform(new Vector2(1.0f, 0.01f), backgroundFrame.RectTransform, Anchor.BottomCenter), style: "HorizontalLine");
@@ -846,9 +846,9 @@ namespace Barotrauma
 
             GUILayoutGroup topLayout = new GUILayoutGroup(new RectTransform(new Vector2(1f, 0.33f), mainLayout.RectTransform), isHorizontal: true) { Stretch = true };
 
-            Color iconColor = CharacterHealth.GetAfflictionIconColor(prefab, affliction.Strength);
+            Color iconColor = CharacterHealth.GetAfflictionIconColor(affliction.Prefab, affliction.Strength);
 
-            GUIImage icon = new GUIImage(new RectTransform(Vector2.One, topLayout.RectTransform, scaleBasis: ScaleBasis.BothHeight), prefab.Icon, scaleToFit: true)
+            GUIImage icon = new GUIImage(new RectTransform(Vector2.One, topLayout.RectTransform, scaleBasis: ScaleBasis.BothHeight), affliction.Prefab.Icon, scaleToFit: true)
             {
                 Color = iconColor,
                 DisabledColor = iconColor * 0.5f
@@ -856,7 +856,7 @@ namespace Barotrauma
 
             GUILayoutGroup topTextLayout = new GUILayoutGroup(new RectTransform(Vector2.One, topLayout.RectTransform), isHorizontal: true);
 
-            GUITextBlock prefabBlock = new GUITextBlock(new RectTransform(new Vector2(0.5f, 1f), topTextLayout.RectTransform), prefab.Name, font: GUIStyle.SubHeadingFont);
+            GUITextBlock prefabBlock = new GUITextBlock(new RectTransform(new Vector2(0.5f, 1f), topTextLayout.RectTransform), affliction.Prefab.Name, font: GUIStyle.SubHeadingFont);
 
             Color textColor = Color.Lerp(GUIStyle.Orange, GUIStyle.Red, affliction.Strength / affliction.Prefab.MaxStrength);
 
@@ -878,7 +878,7 @@ namespace Barotrauma
                 AutoScaleHorizontal = true
             };
 
-            EnsureTextDoesntOverflow(prefab.Name.Value, prefabBlock, prefabBlock.Rect, ImmutableArray.Create(mainLayout, topLayout, topTextLayout));
+            EnsureTextDoesntOverflow(affliction.Prefab.Name.Value, prefabBlock, prefabBlock.Rect, ImmutableArray.Create(mainLayout, topLayout, topTextLayout));
 
             GUILayoutGroup bottomLayout = new GUILayoutGroup(new RectTransform(new Vector2(1f, 0.66f), mainLayout.RectTransform), isHorizontal: true, childAnchor: Anchor.CenterLeft);
 
@@ -923,7 +923,7 @@ namespace Barotrauma
                 return true;
             };
 
-            return elementsToDisable;
+            return new CreatedPopupAfflictionElement(backgroundFrame, elementsToDisable);
         }
 
         private void AddPending(ImmutableArray<GUIComponent> elementsToDisable, MedicalClinic.NetCrewMember crewMember, ImmutableArray<MedicalClinic.NetAffliction> afflictions)
@@ -1033,11 +1033,53 @@ namespace Barotrauma
             }
         }
 
+        public void UpdateAfflictions(MedicalClinic.NetCrewMember crewMember)
+        {
+            if (selectedCrewAfflictionList is not { } afflictionList || !afflictionList.Target.CharacterEquals(crewMember)) { return; }
+
+            List<GUIComponent> allComponents = new List<GUIComponent>();
+            foreach (PopupAffliction existingAffliction in afflictionList.Afflictions.ToHashSet())
+            {
+                if (crewMember.Afflictions.None(received => received.AfflictionEquals(existingAffliction.Target)))
+                {
+                    // remove from UI
+                    existingAffliction.TargetElement.RectTransform.Parent = null;
+                    afflictionList.Afflictions.Remove(existingAffliction);
+                }
+                else
+                {
+                    allComponents.AddRange(existingAffliction.ElementsToDisable);
+                }
+            }
+
+            foreach (MedicalClinic.NetAffliction received in crewMember.Afflictions)
+            {
+                // we're not that concerned about updating the strength of the afflictions
+                if (afflictionList.Afflictions.Any(existing => existing.Target.AfflictionEquals(received))) { continue; }
+
+                CreatedPopupAfflictionElement createdComponents = CreatePopupAffliction(afflictionList.ListElement.Content, crewMember, received);
+                allComponents.AddRange(createdComponents.AllCreatedElements);
+                afflictionList.Afflictions.Add(new PopupAffliction(createdComponents.AllCreatedElements, createdComponents.MainElement, received));
+            }
+
+            allComponents.Add(afflictionList.TreatAllButton);
+            afflictionList.TreatAllButton.OnClicked = (_, _) =>
+            {
+                var afflictions = crewMember.Afflictions.Where(a => !medicalClinic.IsAfflictionPending(crewMember, a)).ToImmutableArray();
+                if (!afflictions.Any()) { return true; }
+
+                AddPending(allComponents.ToImmutableArray(), crewMember, afflictions);
+                return true;
+            };
+
+            UpdatePopupAfflictions();
+        }
+
         public void ClosePopup()
         {
             if (selectedCrewElement is { } popup)
             {
-                popup.Parent?.RemoveChild(selectedCrewElement);
+                popup.RectTransform.Parent = null;
             }
 
             selectedCrewElement = null;
@@ -1095,6 +1137,15 @@ namespace Barotrauma
                 UpdateCrewPanel();
                 refreshTimer = 0;
             }
+        }
+
+        public void OnDeselected()
+        {
+            if (GameMain.NetworkMember is not null)
+            {
+                MedicalClinic.SendUnsubscribeRequest();
+            }
+            ClosePopup();
         }
     }
 }

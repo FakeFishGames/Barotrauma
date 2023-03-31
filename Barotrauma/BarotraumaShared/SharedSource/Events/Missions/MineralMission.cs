@@ -11,20 +11,7 @@ namespace Barotrauma
 {
     partial class MineralMission : Mission
     {
-        private struct ResourceCluster
-        {
-            public int Amount;
-            public float Rotation;
-
-            public ResourceCluster(int amount, float rotation)
-            {
-                Amount = amount;
-                Rotation = rotation;
-            }
-            
-            public static implicit operator ResourceCluster((int amount, float rotation) tuple) => new ResourceCluster(tuple.amount, tuple.rotation);
-        }
-        private readonly Dictionary<Identifier, ResourceCluster> resourceClusters  = new Dictionary<Identifier, ResourceCluster>();
+        private readonly Dictionary<Identifier, int> resourceAmounts  = new Dictionary<Identifier, int>();
         private readonly Dictionary<Identifier, List<Item>> spawnedResources = new Dictionary<Identifier, List<Item>>();
         private readonly Dictionary<Identifier, Item[]> relevantLevelResources = new Dictionary<Identifier, Item[]>();
         private readonly List<(Identifier Identifier, Vector2 Position)> missionClusterPositions = new List<(Identifier Identifier, Vector2 Position)>();
@@ -50,13 +37,13 @@ namespace Barotrauma
         /// </summary>
         private readonly float resourceHandoverAmount;
 
-        public override IEnumerable<Vector2> SonarPositions
+        public override IEnumerable<(LocalizedString Label, Vector2 Position)> SonarLabels
         {
             get
             {
                 return missionClusterPositions
-                    .Where(p => spawnedResources.ContainsKey(p.Item1) && AnyAreUncollected(spawnedResources[p.Item1]))
-                    .Select(p => p.Item2);
+                    .Where(p => spawnedResources.ContainsKey(p.Identifier) && AnyAreUncollected(spawnedResources[p.Identifier]))
+                    .Select(p => (ModifyMessage(Prefab.SonarLabel, color: false), p.Position));
             }
         }
 
@@ -64,7 +51,6 @@ namespace Barotrauma
         public override LocalizedString FailureMessage => ModifyMessage(base.FailureMessage);
         public override LocalizedString Description => ModifyMessage(description);
         public override LocalizedString Name => ModifyMessage(base.Name, false);
-        public override LocalizedString SonarLabel => ModifyMessage(base.SonarLabel, false);
 
         public MineralMission(MissionPrefab prefab, Location[] locations, Submarine sub) : base(prefab, locations, sub)
         {
@@ -82,13 +68,13 @@ namespace Barotrauma
             {
                 var identifier = c.GetAttributeIdentifier("identifier", Identifier.Empty);
                 if (identifier.IsEmpty) { continue; }
-                if (resourceClusters.ContainsKey(identifier))
+                if (resourceAmounts.ContainsKey(identifier))
                 {
-                    resourceClusters[identifier] = (resourceClusters[identifier].Amount + 1, resourceClusters[identifier].Rotation);
+                    resourceAmounts[identifier]++;
                 }
                 else
                 {
-                    resourceClusters.Add(identifier, (1, 0.0f));
+                    resourceAmounts.Add(identifier, 1);
                 }
             }
         }
@@ -129,7 +115,7 @@ namespace Barotrauma
 
             if (IsClient) { return; }
 
-            foreach ((Identifier identifier, ResourceCluster cluster) in resourceClusters)
+            foreach ((Identifier identifier, int amount) in resourceAmounts)
             {
                 if (MapEntityPrefab.FindByIdentifier(identifier) is not ItemPrefab prefab)
                 {
@@ -137,10 +123,10 @@ namespace Barotrauma
                     continue;
                 }
 
-                var spawnedResources = level.GenerateMissionResources(prefab, cluster.Amount, positionType, out float rotation, caves);
-                if (spawnedResources.Count < cluster.Amount)
+                var spawnedResources = level.GenerateMissionResources(prefab, amount, positionType, caves);
+                if (spawnedResources.Count < amount)
                 {
-                    DebugConsole.ThrowError($"Error in MineralMission: spawned only {spawnedResources.Count}/{cluster.Amount} of {prefab.Name}");
+                    DebugConsole.ThrowError($"Error in MineralMission: spawned only {spawnedResources.Count}/{amount} of {prefab.Name}");
                 }
 
                 if (spawnedResources.None()) { continue; }
@@ -175,7 +161,7 @@ namespace Barotrauma
                     State = 1;
                     break;
                 case 1:
-                    if (!Submarine.MainSub.AtEndExit && !Submarine.MainSub.AtStartExit) { return; }
+                    if (!Submarine.MainSub.AtEitherExit) { return; }
                     State = 2;
                     break;
             }
@@ -195,7 +181,7 @@ namespace Barotrauma
                 {
                     // When mission is completed successfully, half of the resources will be removed from the player (i.e. given to the outpost as a part of the mission)
                     var handoverResources = new List<Item>();
-                    foreach (Identifier identifier in resourceClusters.Keys)
+                    foreach (Identifier identifier in resourceAmounts.Keys)
                     {
                         if (relevantLevelResources.TryGetValue(identifier, out var availableResources))
                         {
@@ -232,11 +218,11 @@ namespace Barotrauma
         private void FindRelevantLevelResources()
         {
             relevantLevelResources.Clear();
-            foreach (var identifier in resourceClusters.Keys)
+            foreach (var identifier in resourceAmounts.Keys)
             {
                 var items = Item.ItemList.Where(i => i.Prefab.Identifier == identifier &&
                     i.Submarine == null && i.ParentInventory == null &&
-                    (!(i.GetComponent<Holdable>() is Holdable h) || (h.Attachable && h.Attached)))
+                    (i.GetComponent<Holdable>() is not Holdable h || (h.Attachable && h.Attached)))
                     .ToArray();
                 relevantLevelResources.Add(identifier, items);
             }
@@ -244,12 +230,12 @@ namespace Barotrauma
 
         private bool EnoughHaveBeenCollected()
         {
-            foreach (var kvp in resourceClusters)
+            foreach (var kvp in resourceAmounts)
             {
                 if (relevantLevelResources.TryGetValue(kvp.Key, out var availableResources))
                 {
                     var collected = availableResources.Count(HasBeenCollected);
-                    var needed = kvp.Value.Amount;
+                    var needed = kvp.Value;
                     if (collected < needed) { return false; }
                 }
                 else
@@ -300,10 +286,10 @@ namespace Barotrauma
         protected override LocalizedString ModifyMessage(LocalizedString message, bool color = true)
         {
             int i = 1;
-            foreach ((Identifier identifier, ResourceCluster cluster) in resourceClusters)
+            foreach ((Identifier identifier, int amount) in resourceAmounts)
             {
                 Replace($"[resourcename{i}]", ItemPrefab.FindByIdentifier(identifier)?.Name.Value ?? "");
-                Replace($"[resourcequantity{i}]", cluster.Amount.ToString());
+                Replace($"[resourcequantity{i}]", amount.ToString());
                 i++;
             }
             Replace("[handoverpercentage]", ToolBox.GetFormattedPercentage(resourceHandoverAmount));

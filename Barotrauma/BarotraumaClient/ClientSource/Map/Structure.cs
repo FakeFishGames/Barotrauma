@@ -55,21 +55,14 @@ namespace Barotrauma
         {
             if (!CastShadow) { return; }
 
-            if (convexHulls == null)
+            convexHulls ??= new List<ConvexHull>();
+            var h = new ConvexHull(
+                new Rectangle((position - size / 2).ToPoint(), size.ToPoint()),
+                IsHorizontal,
+                this)
             {
-                convexHulls = new List<ConvexHull>();
-            }
-
-            Vector2 halfSize = size / 2;
-            Vector2[] verts = new Vector2[]
-            {
-                position + new Vector2(-halfSize.X, halfSize.Y),
-                position + new Vector2(halfSize.X, halfSize.Y),
-                position + new Vector2(halfSize.X, -halfSize.Y),
-                position + new Vector2(-halfSize.X, -halfSize.Y),
+                IsExteriorWall = IsExteriorWall
             };
-
-            var h = new ConvexHull(verts, Color.Black, this);
             if (Math.Abs(rotation) > 0.001f)
             {
                 h.Rotate(position, rotation);
@@ -226,6 +219,9 @@ namespace Barotrauma
                 min.Y = Math.Min(worldPos.Y - decorativeSprite.Sprite.size.Y * (1.0f - decorativeSprite.Sprite.RelativeOrigin.Y) * scale, min.Y);
                 max.Y = Math.Max(worldPos.Y + decorativeSprite.Sprite.size.Y * decorativeSprite.Sprite.RelativeOrigin.Y * scale, max.Y);
             }
+            Vector2 offset = GetCollapseEffectOffset();
+            min += offset;
+            max += offset;
 
             if (min.X > worldView.Right || max.X < worldView.X) { return false; }
             if (min.Y > worldView.Y || max.Y < worldView.Y - worldView.Height) { return false; }
@@ -295,6 +291,7 @@ namespace Barotrauma
             if (isWiringMode) { color *= 0.15f; }
 
             Vector2 drawOffset = Submarine == null ? Vector2.Zero : Submarine.DrawPosition;
+            drawOffset += GetCollapseEffectOffset();
 
             float depth = GetDrawDepth();
 
@@ -504,7 +501,7 @@ namespace Barotrauma
 
         private bool ConditionalMatches(PropertyConditional conditional)
         {
-            if (!string.IsNullOrEmpty(conditional.TargetItemComponentName))
+            if (!string.IsNullOrEmpty(conditional.TargetItemComponent))
             {
                 return false;
             }
@@ -533,7 +530,7 @@ namespace Barotrauma
                 float damage = msg.ReadRangedSingle(0.0f, 1.0f, 8) * MaxHealth;
                 if (!invalidMessage && i < Sections.Length)
                 {
-                    SetDamage(i, damage);
+                    SetDamage(i, damage, isNetworkEvent: true);
                 }
             }
         }

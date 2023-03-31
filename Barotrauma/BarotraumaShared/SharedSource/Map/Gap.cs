@@ -4,11 +4,12 @@ using FarseerPhysics.Dynamics;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Xml.Linq;
 
 namespace Barotrauma
 {
-    partial class Gap : MapEntity
+    partial class Gap : MapEntity, ISerializableEntity
     {
         public static List<Gap> GapList = new List<Gap>();
 
@@ -31,6 +32,8 @@ namespace Barotrauma
         /// </summary>
         public bool IsDiagonal { get; }
 
+        public readonly float GlowEffectT;
+
         //a value between 0.0f-1.0f (0.0 = closed, 1.0f = open)
         private float open;
 
@@ -51,7 +54,6 @@ namespace Barotrauma
         //can ambient light get through the gap even if it's not open
         public bool PassAmbientLight;
 
-
         //a collider outside the gap (for example an ice wall next to the sub)
         //used by ragdolls to prevent them from ending up inside colliders when teleporting out of the sub
         private Body outsideCollisionBlocker;
@@ -63,8 +65,43 @@ namespace Barotrauma
             set
             {
                 if (float.IsNaN(value)) { return; }
-                if (value > open) { openedTimer = 1.0f; }
+                if (value > open)
+                {
+                    openedTimer = 1.0f;
+                }
+                if (connectedDoor == null && !IsHorizontal && linkedTo.Any(e => e is Hull))
+                {
+                    if (value > open && value >= 1.0f)
+                    {
+                        InformWaypointsAboutGapState(this, open: true);
+                    }
+                    else if (value < open && open >= 1.0f)
+                    {
+                        InformWaypointsAboutGapState(this, open: false);
+                    }
+                }
                 open = MathHelper.Clamp(value, 0.0f, 1.0f);
+
+                static void InformWaypointsAboutGapState(Gap gap, bool open)
+                {
+                    foreach (var wp in WayPoint.WayPointList)
+                    {
+                        if (IsWaypointRightAboveGap(gap, wp))
+                        {
+                            wp.OnGapStateChanged(open, gap);
+                        }
+                    }
+                }
+
+                static bool IsWaypointRightAboveGap(Gap gap, WayPoint wp)
+                {
+                    if (wp.SpawnType != SpawnType.Path) { return false; }
+                    if (!gap.linkedTo.Contains(wp.CurrentHull)) { return false; }
+                    if (wp.Position.Y < gap.Rect.Top) { return false; }
+                    if (wp.Position.X > gap.Rect.Right) { return false; }
+                    if (wp.Position.X < gap.Rect.Left) { return false; }
+                    return true;
+                }
             }
         }
 
@@ -118,12 +155,12 @@ namespace Barotrauma
             }
         }
 
-        public override string Name
+        public override string Name => "Gap";
+
+        public readonly Dictionary<Identifier, SerializableProperty> properties;
+        public Dictionary<Identifier, SerializableProperty> SerializableProperties
         {
-            get
-            {
-                return "Gap";
-            }
+            get { return properties; }
         }
 
         public Gap(Rectangle rectangle)
@@ -150,9 +187,13 @@ namespace Barotrauma
             IsDiagonal = isDiagonal;
             open = 1.0f;
 
+            properties = SerializableProperty.GetProperties(this);
+
             FindHulls();
             GapList.Add(this);
             InsertToList();
+
+            GlowEffectT = Rand.Range(0.0f, 1.0f);
 
             float blockerSize = ConvertUnits.ToSimUnits(Math.Max(rect.Width, rect.Height)) / 2;
             outsideCollisionBlocker = GameMain.World.CreateEdge(-Vector2.UnitX * blockerSize, Vector2.UnitX * blockerSize, 
@@ -272,30 +313,51 @@ namespace Barotrauma
             for (int i = 0; i < 2; i++)
             {
                 hulls[i] = Hull.FindHullUnoptimized(searchPos[i], null, false);
-                if (hulls[i] == null) hulls[i] = Hull.FindHullUnoptimized(searchPos[i], null, false, true);
+                if (hulls[i] == null) { hulls[i] = Hull.FindHullUnoptimized(searchPos[i], null, false, true); }
             }
 
-            if (hulls[0] == null && hulls[1] == null) { return; }
+            if (hulls[0] != null || hulls[1] != null) 
+            { 
+                if (hulls[0] == null && hulls[1] != null)
+                {
+                    (hulls[1], hulls[0]) = (hulls[0], hulls[1]);
+                }
 
-            if (hulls[0] == null && hulls[1] != null)
-            {
-                Hull temp = hulls[0];
-                hulls[0] = hulls[1];
-                hulls[1] = temp;
+                flowTargetHull = hulls[0];
+
+                for (int i = 0; i < 2; i++)
+                {
+                    if (hulls[i] == null) { continue; }
+                    linkedTo.Add(hulls[i]);
+                    if (!hulls[i].ConnectedGaps.Contains(this)) { hulls[i].ConnectedGaps.Add(this); }
+                }
             }
 
-            flowTargetHull = hulls[0];
-
-            for (int i = 0; i < 2; i++)
-            {
-                if (hulls[i] == null) { continue; }
-                linkedTo.Add(hulls[i]);
-                if (!hulls[i].ConnectedGaps.Contains(this)) hulls[i].ConnectedGaps.Add(this);
-            }
+            RefreshOutsideCollider();
         }
+
+        private int updateCount;
 
         public override void Update(float deltaTime, Camera cam)
         {
+            int updateInterval = 4;
+            float flowMagnitude = flowForce.LengthSquared();
+            if (flowMagnitude < 1.0f)
+            {
+                //very sparse updates if there's practically no water moving
+                updateInterval = 8;
+            }
+            else if (linkedTo.Count == 2 && flowMagnitude > 10.0f)
+            {
+                //frequent updates if water is moving between hulls
+                updateInterval = 1;
+            }
+
+            updateCount++;
+            if (updateCount < updateInterval) { return; }
+            deltaTime *= updateCount;
+            updateCount = 0;
+
             flowForce = Vector2.Zero;
 
             outsideColliderRaycastTimer -= deltaTime;
@@ -593,7 +655,12 @@ namespace Barotrauma
 
         public bool RefreshOutsideCollider()
         {
-            if (IsRoomToRoom || Submarine == null || open <= 0.0f || linkedTo.Count == 0 || !(linkedTo[0] is Hull)) return false;
+            if (outsideCollisionBlocker == null) { return false; }
+            if (IsRoomToRoom || Submarine == null || open <= 0.0f || linkedTo.Count == 0 || linkedTo[0] is not Hull) 
+            {
+                outsideCollisionBlocker.Enabled = false;
+                return false; 
+            }
 
             if (outsideColliderRaycastTimer <= 0.0f)
             {
@@ -740,8 +807,7 @@ namespace Barotrauma
 
         public static Gap Load(ContentXElement element, Submarine submarine, IdRemap idRemap)
         {
-            Rectangle rect = Rectangle.Empty;
-
+            Rectangle rect;
             if (element.GetAttribute("rect") != null)
             {
                 rect = element.GetAttributeRect("rect", Rectangle.Empty);

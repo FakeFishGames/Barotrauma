@@ -6,6 +6,8 @@ namespace Barotrauma
 {
     class CameraTransition
     {
+        private static List<CameraTransition> activeTransitions = new List<CameraTransition>();
+
         public bool Running
         {
             get;
@@ -19,6 +21,7 @@ namespace Barotrauma
         private readonly float? endZoom;
 
         public readonly float WaitDuration;
+        public float EndWaitDuration = 0.1f;
         public readonly float PanDuration;
         public readonly bool FadeOut;
         public readonly bool LosFadeIn;
@@ -29,6 +32,8 @@ namespace Barotrauma
 
         public bool AllowInterrupt = false;
         public bool RemoveControlFromCharacter = true;
+
+        public bool RunWhilePaused = true;
         
         public CameraTransition(ISpatialEntity targetEntity, Camera cam, Alignment? cameraStartPos, Alignment? cameraEndPos, bool fadeOut = true, bool losFadeIn = false, float waitDuration = 0f, float panDuration = 10.0f, float? startZoom = null, float? endZoom = null)
         {
@@ -45,8 +50,19 @@ namespace Barotrauma
             if (targetEntity == null) { return; }
 
             Running = true;
-            CoroutineManager.StopCoroutines("CameraTransition");
+
+            prevControlled = Character.Controlled;
+            activeTransitions.RemoveAll(a => !CoroutineManager.IsCoroutineRunning(a.updateCoroutine));
+            foreach (var activeTransition in activeTransitions)
+            {
+                if (activeTransition.prevControlled != null)
+                {
+                    prevControlled ??= activeTransition.prevControlled;
+                }
+                activeTransition.Stop();
+            }
             updateCoroutine = CoroutineManager.StartCoroutine(Update(targetEntity, cam), "CameraTransition");
+            activeTransitions.Add(this);
         }
 
         public void Stop()
@@ -62,11 +78,13 @@ namespace Barotrauma
 #endif
         }
 
+        private float DeltaTime => CoroutineManager.Paused && !RunWhilePaused ? 0 : CoroutineManager.DeltaTime;
+
         private IEnumerable<CoroutineStatus> Update(ISpatialEntity targetEntity, Camera cam)
         {
             if (targetEntity == null || (targetEntity is Entity e && e.Removed)) { yield return CoroutineStatus.Success; }
 
-            prevControlled = Character.Controlled;
+            prevControlled ??= Character.Controlled;
             if (RemoveControlFromCharacter)
             {
 #if CLIENT
@@ -80,6 +98,7 @@ namespace Barotrauma
             float endZoom = this.endZoom ?? 0.5f;
             Vector2 initialCameraPos = cam.Position;
             Vector2? initialTargetPos = targetEntity?.WorldPosition;
+            Vector2 endPos = cam.Position;
 
             float timer = -WaitDuration;
 
@@ -137,13 +156,13 @@ namespace Barotrauma
                 {
                     startPos += targetEntity.WorldPosition - initialTargetPos.Value;
                 }
-                Vector2 endPos = cameraEndPos.HasValue ?                    
+                endPos = cameraEndPos.HasValue ?                    
                     new Vector2(
                         MathHelper.Lerp(minPos.X, maxPos.X, (cameraEndPos.Value.ToVector2().X + 1.0f) / 2.0f),
                         MathHelper.Lerp(maxPos.Y, minPos.Y, (cameraEndPos.Value.ToVector2().Y + 1.0f) / 2.0f)) :
                     prevControlled?.WorldPosition ?? targetEntity.WorldPosition;
 
-                Vector2 cameraPos = Vector2.SmoothStep(startPos, endPos, clampedTimer / PanDuration);
+                Vector2 cameraPos = Vector2.SmoothStep(startPos, endPos, clampedTimer / PanDuration) + cam.ShakePosition;
                 cam.Translate(cameraPos - cam.Position);
                 
 #if CLIENT
@@ -162,14 +181,21 @@ namespace Barotrauma
                     Lights.LightManager.ViewTarget = prevControlled ?? (targetEntity as Entity);
                 }
 #endif
-                timer += CoroutineManager.DeltaTime;
+                timer += DeltaTime;
 
                 yield return CoroutineStatus.Running;
             }
 
-            Running = false;
+            float endTimer = 0.0f;
+            while (endTimer <= EndWaitDuration)
+            {
+                cam.Translate(endPos - cam.Position);
+                cam.Zoom = endZoom;
+                endTimer += DeltaTime;
+                yield return CoroutineStatus.Running;
+            }
 
-            yield return new WaitForSeconds(0.1f);
+            Running = false;
 
 #if CLIENT
             GUI.ScreenOverlayColor = Color.TransparentBlack;

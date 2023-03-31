@@ -33,6 +33,11 @@ namespace Barotrauma
         public bool DebugLogWhenFails { get; set; } = true;
         public bool UsePathingOutside { get; set; } = true;
 
+        /// <summary>
+        /// Which event action created this objective (if any)
+        /// </summary>
+        public EventAction SourceEventAction;
+
         public float ExtraDistanceWhileSwimming;
         public float ExtraDistanceOutsideSub;
         private float _closeEnoughMultiplier = 1;
@@ -45,6 +50,7 @@ namespace Barotrauma
         private readonly float minDistance = 50;
         private readonly float seekGapsInterval = 1;
         private float seekGapsTimer;
+        private bool cantFindDivingGear;
 
         /// <summary>
         /// Display units
@@ -85,7 +91,7 @@ namespace Barotrauma
         /// </summary>
         public bool UseDistanceRelativeToAimSourcePos { get; set; } = false;
 
-        public override bool AbandonWhenCannotCompleteSubjectives => !repeat;
+        public override bool AbandonWhenCannotCompleteSubjectives => false;
 
         public override bool AllowOutsideSubmarine => AllowGoingOutside;
         public override bool AllowInAnySub => true;
@@ -258,48 +264,73 @@ namespace Barotrauma
             }
             if (!Abandon)
             {
-                if (getDivingGearIfNeeded && !character.LockHands)
+                if (getDivingGearIfNeeded)
                 {
                     Character followTarget = Target as Character;
-                    bool needsDivingSuit = (!isInside || hasOutdoorNodes) && character.NeedsAir && !character.HasAbilityFlag(AbilityFlags.ImmuneToPressure);
-                    bool needsDivingGear = needsDivingSuit || HumanAIController.NeedsDivingGear(targetHull, out needsDivingSuit);
-                    if (Mimic)
+                    bool needsDivingSuit = (!isInside || hasOutdoorNodes) && !character.IsImmuneToPressure;
+                    bool tryToGetDivingGear = needsDivingSuit || HumanAIController.NeedsDivingGear(targetHull, out needsDivingSuit);
+                    bool tryToGetDivingSuit = needsDivingSuit;
+                    if (Mimic && !character.IsImmuneToPressure)
                     {
                         if (HumanAIController.HasDivingSuit(followTarget))
                         {
-                            needsDivingGear = true;
-                            needsDivingSuit = true;
+                            tryToGetDivingGear = true;
+                            tryToGetDivingSuit = true;
                         }
-                        else if (HumanAIController.HasDivingMask(followTarget))
+                        else if (HumanAIController.HasDivingMask(followTarget) && character.CharacterHealth.OxygenLowResistance < 1)
                         {
-                            needsDivingGear = true;
+                            tryToGetDivingGear = true;
                         }
                     }
                     bool needsEquipment = false;
                     float minOxygen = AIObjectiveFindDivingGear.GetMinOxygen(character);
-                    if (needsDivingSuit)
+                    if (tryToGetDivingSuit)
                     {
                         needsEquipment = !HumanAIController.HasDivingSuit(character, minOxygen);
                     }
-                    else if (needsDivingGear)
+                    else if (tryToGetDivingGear)
                     {
                         needsEquipment = !HumanAIController.HasDivingGear(character, minOxygen);
                     }
-                    if (needsEquipment)
+                    if (character.LockHands)
+                    {
+                        cantFindDivingGear = true;
+                    }
+                    if (cantFindDivingGear && needsDivingSuit)
+                    {
+                        // Don't try to reach the target without a suit because it's lethal.
+                        Abandon = true;
+                        return;
+                    }
+                    if (needsEquipment && !cantFindDivingGear)
                     {
                         SteeringManager.Reset();
-                        if (findDivingGear != null && !findDivingGear.CanBeCompleted)
-                        {
-                            TryAddSubObjective(ref findDivingGear, () => new AIObjectiveFindDivingGear(character, needsDivingSuit: false, objectiveManager),
-                                onAbandon: () => Abandon = true,
-                                onCompleted: () => RemoveSubObjective(ref findDivingGear));
-                        }
-                        else
-                        {
-                            TryAddSubObjective(ref findDivingGear, () => new AIObjectiveFindDivingGear(character, needsDivingSuit, objectiveManager),
-                                onAbandon: () => Abandon = true,
-                                onCompleted: () => RemoveSubObjective(ref findDivingGear));
-                        }
+                        TryAddSubObjective(ref findDivingGear, () => new AIObjectiveFindDivingGear(character, needsDivingSuit: tryToGetDivingSuit, objectiveManager),
+                            onAbandon: () =>
+                            {
+                            cantFindDivingGear = true;
+                            if (needsDivingSuit)
+                            {
+                                // Shouldn't try to reach the target without a suit, because it's lethal.
+                                Abandon = true;
+                            }
+                            else
+                            {
+                                // Try again without requiring the diving suit
+                                RemoveSubObjective(ref findDivingGear);
+                                TryAddSubObjective(ref findDivingGear, () => new AIObjectiveFindDivingGear(character, needsDivingSuit: false, objectiveManager),
+                                    onAbandon: () =>
+                                    {
+                                        Abandon = character.CurrentHull != null && (objectiveManager.CurrentOrder != this || Target.Submarine == null);
+                                        RemoveSubObjective(ref findDivingGear);
+                                    },
+                                    onCompleted: () =>
+                                    {
+                                        RemoveSubObjective(ref findDivingGear);
+                                    });
+                                }
+                            },
+                            onCompleted: () => RemoveSubObjective(ref findDivingGear));
                         return;
                     }
                 }
@@ -593,7 +624,7 @@ namespace Barotrauma
             }
             else if (target is Character c)
             {
-                return c.CurrentHull;
+                return c.CurrentHull ?? c.AnimController.CurrentHull;
             }
             else if (target is Structure structure)
             {

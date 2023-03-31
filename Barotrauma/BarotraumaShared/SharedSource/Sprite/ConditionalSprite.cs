@@ -1,7 +1,5 @@
 ﻿using System.Collections.Generic;
-using System.Xml.Linq;
 using System.Linq;
-using System;
 
 namespace Barotrauma
 {
@@ -10,7 +8,7 @@ namespace Barotrauma
         public readonly List<PropertyConditional> conditionals = new List<PropertyConditional>();
         public bool IsActive { get; private set; } = true;
 
-        public readonly PropertyConditional.Comparison Comparison;
+        public readonly PropertyConditional.LogicalOperatorType LogicalOperator;
         public readonly bool Exclusive;
         public ISerializableEntity Target { get; private set; }
         public Sprite Sprite { get; private set; }
@@ -21,23 +19,14 @@ namespace Barotrauma
         {
             Target = target;
             Exclusive = element.GetAttributeBool("exclusive", Exclusive);
-            string comparison = element.GetAttributeString("comparison", null);
-            if (comparison != null)
-            {
-                Enum.TryParse(comparison, ignoreCase: true, out Comparison);
-            }
+            LogicalOperator = element.GetAttributeEnum(nameof(LogicalOperator),
+                element.GetAttributeEnum("comparison", LogicalOperator));
             foreach (var subElement in element.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
                     case "conditional":
-                        foreach (XAttribute attribute in subElement.Attributes())
-                        {
-                            if (PropertyConditional.IsValid(attribute))
-                            {
-                                conditionals.Add(new PropertyConditional(attribute));
-                            }
-                        }
+                        conditionals.AddRange(PropertyConditional.FromXElement(subElement));
                         break;
                     case "sprite":
                         Sprite = new Sprite(subElement, file: file, lazyLoad: lazyLoad);
@@ -57,7 +46,7 @@ namespace Barotrauma
             }
             else
             {
-                IsActive = Comparison == PropertyConditional.Comparison.And ? conditionals.All(c => c.Matches(Target)) : conditionals.Any(c => c.Matches(Target));
+                IsActive = LogicalOperator == PropertyConditional.LogicalOperatorType.And ? conditionals.All(c => c.Matches(Target)) : conditionals.Any(c => c.Matches(Target));
             }
         }
     }

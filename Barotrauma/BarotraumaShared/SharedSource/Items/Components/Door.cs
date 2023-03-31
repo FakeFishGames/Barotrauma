@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using FarseerPhysics.Dynamics;
 #if CLIENT
 using Barotrauma.Lights;
 #endif
@@ -13,6 +14,10 @@ namespace Barotrauma.Items.Components
 {
     partial class Door : Pickable, IDrawableComponent, IServerSerializable
     {
+        private static readonly HashSet<Door> doorList = new HashSet<Door>();
+
+        public static IReadOnlyCollection<Door> DoorList { get { return doorList; } }
+
         private Gap linkedGap;
         private bool isOpen;
 
@@ -89,6 +94,9 @@ namespace Barotrauma.Items.Components
 
         public PhysicsBody Body { get; private set; }
 
+        //the fixture that's part of the submarine's collider (= fixture that things outside the sub can collide with if the door is outside hulls)
+        public Fixture OutsideSubmarineFixture;
+
         private float RepairThreshold
         {
             get { return item.GetComponent<Repairable>() == null ? 0.0f : item.MaxCondition; }
@@ -162,9 +170,14 @@ namespace Barotrauma.Items.Components
             set 
             {
                 isOpen = value;
-                OpenState = (isOpen) ? 1.0f : 0.0f;
+                OpenState = isOpen ? 1.0f : 0.0f;
             }
         }
+        public bool IsClosed => !IsOpen;
+
+        public bool IsFullyOpen => IsOpen && OpenState >= 1.0f;
+
+        public bool IsFullyClosed => IsClosed && OpenState <= 0f;
 
         [Serialize(false, IsPropertySaveable.No, description: "If the door has integrated buttons, it can be opened by interacting with it directly (instead of using buttons wired to it).")]
         public bool HasIntegratedButtons { get; private set; }
@@ -226,6 +239,7 @@ namespace Barotrauma.Items.Components
             }
                         
             IsActive = true;
+            doorList.Add(this);
         }
 
         public override void OnItemLoaded()
@@ -394,11 +408,20 @@ namespace Barotrauma.Items.Components
             if (isClosing)
             {
                 if (OpenState < 0.9f) { PushCharactersAway(); }
+                if (CheckSubmarinesInDoorWay())
+                {
+                    PredictedState = null;
+                    isOpen = true;
+                }
             }
             else
             {
                 bool wasEnabled = Body.Enabled;
                 Body.Enabled = Impassable || openState < 1.0f;
+                if (OutsideSubmarineFixture != null)
+                {
+                    OutsideSubmarineFixture.CollidesWith = Body.Enabled ? SubmarineBody.CollidesWith : Category.None;
+                }
                 if (wasEnabled && !Body.Enabled && IsHorizontal)
                 {
                     //when opening a hatch, force characters above it to refresh the floor position
@@ -442,6 +465,10 @@ namespace Barotrauma.Items.Components
                 }
                 PushCharactersAway();
             }
+            if (OutsideSubmarineFixture != null && Body.Enabled)
+            {
+                OutsideSubmarineFixture.CollidesWith = SubmarineBody.CollidesWith;
+            }
 #if CLIENT
             UpdateConvexHulls();
 #endif
@@ -462,10 +489,16 @@ namespace Barotrauma.Items.Components
                     ce = ce.Next;
                 }
             }
+
+            if (OutsideSubmarineFixture != null)
+            {
+                OutsideSubmarineFixture.CollidesWith = Category.None;
+            }
             if (linkedGap != null)
             {
                 linkedGap.Open = 1.0f;
             }
+
             IsOpen = false;
 #if CLIENT
             if (convexHull != null) { convexHull.Enabled = false; }
@@ -488,11 +521,8 @@ namespace Barotrauma.Items.Components
         {
             RefreshLinkedGap();
 #if CLIENT
-            Vector2[] corners = GetConvexHullCorners(Rectangle.Empty);
-
-            convexHull = new ConvexHull(corners, Color.Black, item);
-            if (Window != Rectangle.Empty) convexHull2 = new ConvexHull(corners, Color.Black, item);
-
+            convexHull = new ConvexHull(Rectangle.Empty, !IsHorizontal, item);
+            if (Window != Rectangle.Empty) { convexHull2 = new ConvexHull(Rectangle.Empty, !IsHorizontal, item); }
             UpdateConvexHulls();
 #endif
         }
@@ -540,6 +570,36 @@ namespace Barotrauma.Items.Components
             convexHull?.Remove();
             convexHull2?.Remove();
 #endif
+
+            doorList.Remove(this);
+        }
+
+        private bool CheckSubmarinesInDoorWay()
+        {
+            if (linkedGap != null && linkedGap.IsRoomToRoom) { return false; }
+
+            Rectangle doorRect = item.WorldRect;
+            if (IsHorizontal)
+            {
+                doorRect.Width = (int)(item.Rect.Width * (1.0f - openState));
+            }
+            else
+            {
+                doorRect.Height = (int)(item.Rect.Height * (1.0f - openState));
+            }
+
+            foreach (Submarine sub in Submarine.Loaded)
+            {
+                if (sub == item.Submarine || sub.DockedTo.Contains(item.Submarine)) { continue; }
+                Rectangle worldBorders = sub.Borders;
+                worldBorders.Location += sub.WorldPosition.ToPoint();
+                if (!Submarine.RectsOverlap(worldBorders, doorRect)) { continue; }                
+                foreach (Hull hull in sub.GetHulls(alsoFromConnectedSubs: false))
+                {
+                    if (Submarine.RectsOverlap(hull.WorldRect, doorRect)) { return true; }
+                }
+            }
+            return false;
         }
 
         bool itemPosErrorShown;
@@ -563,7 +623,6 @@ namespace Barotrauma.Items.Components
             Vector2 currSize = IsHorizontal ?
                 new Vector2(item.Rect.Width * (1.0f - openState), doorSprite.size.Y * item.Scale) :
                 new Vector2(doorSprite.size.X * item.Scale, item.Rect.Height * (1.0f - openState));
-
             Vector2 simSize = ConvertUnits.ToSimUnits(currSize);
 
             foreach (Character c in Character.CharacterList)

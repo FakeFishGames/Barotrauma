@@ -541,11 +541,11 @@ namespace Barotrauma
             float wobbleStrength = 0.0f;
             if (character.Inventory?.GetItemInLimbSlot(InvSlotType.RightHand) == heldItem)
             {
-                wobbleStrength += Character.CharacterHealth.GetLimbDamage(rightHand, afflictionType: "damage");
+                wobbleStrength += Character.CharacterHealth.GetLimbDamage(rightHand, afflictionType: AfflictionPrefab.DamageType);
             }
             if (character.Inventory?.GetItemInLimbSlot(InvSlotType.LeftHand) == heldItem)
             {
-                wobbleStrength += Character.CharacterHealth.GetLimbDamage(leftHand, afflictionType: "damage");
+                wobbleStrength += Character.CharacterHealth.GetLimbDamage(leftHand, afflictionType: AfflictionPrefab.DamageType);
             }
             if (wobbleStrength <= 0.1f) { return 0.0f; }
             wobbleStrength = (float)Math.Min(wobbleStrength, 1.0f);

@@ -41,7 +41,7 @@ namespace Barotrauma
                         clientsToRemove.Add(k);
                     }
                 }
-                if (!(clientsToRemove is null))
+                if (clientsToRemove is not null)
                 {
                     foreach (var k in clientsToRemove)
                     {
@@ -62,7 +62,7 @@ namespace Barotrauma
         {
             foreach (Entity e in targets)
             {
-                if (!(e is Character character) || !character.IsRemotePlayer) { continue; }
+                if (e is not Character character || !character.IsRemotePlayer) { continue; }
                 Client targetClient = GameMain.Server.ConnectedClients.Find(c => c.Character == character);
                 if (targetClient != null)
                 {
@@ -85,7 +85,7 @@ namespace Barotrauma
                 IEnumerable<Entity> entities = ParentEvent.GetTargets(TargetTag);
                 foreach (Entity e in entities)
                 {
-                    if (!(e is Character character) || !character.IsRemotePlayer) { continue; }
+                    if (e is not Character character || !character.IsRemotePlayer) { continue; }
                     Client targetClient = GameMain.Server.ConnectedClients.Find(c => c.Character == character);
                     if (targetClient != null) 
                     {
@@ -147,6 +147,16 @@ namespace Barotrauma
                     outmsg.WriteByte((byte)end);
                 }
             }
+            GameMain.Server?.ServerPeer?.Send(outmsg, client.Connection, DeliveryMethod.Reliable);
+        }
+
+        public void ServerWriteSelectedOption(Client client)
+        {
+            IWriteMessage outmsg = new WriteOnlyMessage();
+            outmsg.WriteByte((byte)ServerPacketHeader.EVENTACTION);
+            outmsg.WriteByte((byte)EventManager.NetworkEventType.CONVERSATION_SELECTED_OPTION);
+            outmsg.WriteUInt16(Identifier);
+            outmsg.WriteByte((byte)(selectedOption + 1));
             GameMain.Server?.ServerPeer?.Send(outmsg, client.Connection, DeliveryMethod.Reliable);
         }
     }

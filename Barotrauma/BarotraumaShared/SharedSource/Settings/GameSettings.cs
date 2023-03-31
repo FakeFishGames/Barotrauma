@@ -25,7 +25,8 @@ namespace Barotrauma
     {
         None = 0,
         Transparent = 1,
-        Opaque = 2
+        Opaque = 2,
+        BlockOutsideView = 3
     }
 
     public enum VoiceMode
@@ -110,6 +111,7 @@ namespace Barotrauma
 #if CLIENT
                 retVal.KeyMap = new KeyMapping(element.GetChildElements("keymapping"), retVal.KeyMap);
                 retVal.InventoryKeyMap = new InventoryKeyMapping(element.GetChildElements("inventorykeymapping"), retVal.InventoryKeyMap);
+                retVal.SavedCampaignSettings = element.GetChildElement("campaignsettings");
                 LoadSubEditorImages(element);
 #endif
 
@@ -139,6 +141,9 @@ namespace Barotrauma
             public bool DisableInGameHints;
             public bool EnableSubmarineAutoSave;
             public Identifier QuickStartSub;
+#if CLIENT
+            public XElement SavedCampaignSettings;
+#endif
 #if DEBUG
             public bool UseSteamMatchmaking;
             public bool RequireSteamAuthentication;
@@ -230,7 +235,7 @@ namespace Barotrauma
                         SoundVolume = 0.5f,
                         UiVolume = 0.3f,
                         VoiceChatVolume = 0.5f,
-                        VoiceChatCutoffPrevention = 0,
+                        VoiceChatCutoffPrevention = 200,
                         MicrophoneVolume = 5,
                         MuteOnFocusLost = false,
                         DynamicRangeCompressionEnabled = true,
@@ -618,6 +623,8 @@ namespace Barotrauma
             root.Add(inventoryKeyMappingElement);
 
             SubEditorScreen.ImageManager.Save(root);
+
+            root.Add(CampaignSettings.CurrentSettings.Save());
 #endif
 
             configDoc.SaveSafe(PlayerConfigPath);

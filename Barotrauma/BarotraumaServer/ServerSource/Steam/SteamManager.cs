@@ -5,12 +5,13 @@ namespace Barotrauma.Steam
 {
     partial class SteamManager
     {
-        private static void InitializeProjectSpecific() { IsInitialized = true; }
+        private static void InitializeProjectSpecific() { }
+
+        private static bool IsInitializedProjectSpecific
+            => Steamworks.SteamServer.IsValid;
 
         public static bool CreateServer(Networking.GameServer server, bool isPublic)
         {
-            IsInitialized = true;
-
             Steamworks.SteamServerInit options = new Steamworks.SteamServerInit("Barotrauma", "Barotrauma")
             {
                 GamePort = (ushort)server.Port,
@@ -56,10 +57,15 @@ namespace Barotrauma.Steam
             Steamworks.SteamServer.SetKey("message", server.ServerSettings.ServerMessageText);
             Steamworks.SteamServer.SetKey("version", GameMain.Version.ToString());
             Steamworks.SteamServer.SetKey("playercount", server.ConnectedClients.Count.ToString());
-            Steamworks.SteamServer.SetKey("contentpackage", string.Join(",", contentPackages.Select(cp => cp.Name)));
-            Steamworks.SteamServer.SetKey("contentpackagehash", string.Join(",", contentPackages.Select(cp => cp.Hash.StringRepresentation)));
-            Steamworks.SteamServer.SetKey("contentpackageid", string.Join(",", contentPackages.Select(cp
-                => cp.UgcId.TryUnwrap(out var ugcId) ? ugcId.StringRepresentation : "")));
+            int index = 0;
+            foreach (var contentPackage in contentPackages)
+            {
+                string ugcIdStr = contentPackage.UgcId.TryUnwrap(out var ugcId) ? ugcId.StringRepresentation : string.Empty;
+                Steamworks.SteamServer.SetKey(
+                    $"contentpackage{index}", 
+                    contentPackage.Name+","+ contentPackage.Hash.StringRepresentation + "," + ugcIdStr);
+                index++;
+            }
             Steamworks.SteamServer.SetKey("modeselectionmode", server.ServerSettings.ModeSelectionMode.ToString());
             Steamworks.SteamServer.SetKey("subselectionmode", server.ServerSettings.SubSelectionMode.ToString());
             Steamworks.SteamServer.SetKey("voicechatenabled", server.ServerSettings.VoiceChatEnabled.ToString());
@@ -71,6 +77,7 @@ namespace Barotrauma.Steam
             Steamworks.SteamServer.SetKey("gamestarted", server.GameStarted.ToString());
             Steamworks.SteamServer.SetKey("gamemode", server.ServerSettings.GameModeIdentifier.Value);
             Steamworks.SteamServer.SetKey("playstyle", server.ServerSettings.PlayStyle.ToString());
+            Steamworks.SteamServer.SetKey("language", server.ServerSettings.Language.ToString());
 
             Steamworks.SteamServer.DedicatedServer = true;
 

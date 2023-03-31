@@ -32,7 +32,7 @@ namespace Barotrauma.Items.Components
         
         public readonly List<StatusEffect> Effects;
 
-        public readonly List<ushort> LoadedWireIds;
+        public readonly List<(ushort wireId, int? connectionIndex)> LoadedWires;
 
         //The grid the connection is a part of
         public GridInfo Grid;
@@ -151,16 +151,20 @@ namespace Barotrauma.Items.Components
             IsPower = Name == "power_in" || Name == "power" || Name == "power_out";
 
 
-            LoadedWireIds = new List<ushort>();
+            LoadedWires = new List<(ushort wireId, int? connectionIndex)>();
             foreach (var subElement in element.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
                     case "link":
                         int id = subElement.GetAttributeInt("w", 0);
+                        int? i = null;                        
+                        if (subElement.GetAttribute("i") != null)
+                        {
+                            i = subElement.GetAttributeInt("i", 0); 
+                        }                       
                         if (id < 0) { id = 0; }
-                        if (LoadedWireIds.Count < MaxWires) { LoadedWireIds.Add(idRemap.GetOffsetId(id)); }
-
+                        if (LoadedWires.Count < MaxWires) { LoadedWires.Add((idRemap.GetOffsetId(id), i)); }
                         break;
                     case "statuseffect":
                         Effects ??= new List<StatusEffect>();
@@ -351,22 +355,29 @@ namespace Barotrauma.Items.Components
         
         public void InitializeFromLoaded()
         {
-            if (LoadedWireIds.Count == 0) { return; }
+            if (LoadedWires.Count == 0) { return; }
             
-            for (int i = 0; i < LoadedWireIds.Count; i++)
+            foreach ((ushort wireId, int? connectionIndex) in LoadedWires)
             {
-                if (!(Entity.FindEntityByID(LoadedWireIds[i]) is Item wireItem)) { continue; }
+                if (Entity.FindEntityByID(wireId) is not Item wireItem) { continue; }
 
                 var wire = wireItem.GetComponent<Wire>();
                 if (wire != null && TryAddLink(wire))
                 {
-                    if (wire.Item.body != null) wire.Item.body.Enabled = false;
-                    wire.Connect(this, false, false);
+                    if (wire.Item.body != null) { wire.Item.body.Enabled = false; }
+                    if (connectionIndex.HasValue)
+                    {
+                        wire.Connect(this, connectionIndex.Value, addNode: false, sendNetworkEvent: false);
+                    }
+                    else
+                    {
+                        wire.TryConnect(this, addNode: false, sendNetworkEvent: false);
+                    }
                     wire.FixNodeEnds();
                     recipientsDirty = true;
                 }
             }
-            LoadedWireIds.Clear();
+            LoadedWires.Clear();
         }
 
 
@@ -377,7 +388,8 @@ namespace Barotrauma.Items.Components
             foreach (var wire in wires.OrderBy(w => w.Item.ID))
             {
                 newElement.Add(new XElement("link",
-                    new XAttribute("w", wire.Item.ID.ToString())));
+                    new XAttribute("w", wire.Item.ID.ToString()),
+                    new XAttribute("i", wire.Connections[0] == this ? 0 : 1)));
             }
 
             parentElement.Add(newElement);

@@ -288,7 +288,7 @@ namespace Barotrauma.Items.Components
         public bool AutoEquipWhenFull { get; private set; }
         public bool DisplayContainedStatus { get; private set; }
 
-        [Serialize(false, IsPropertySaveable.No, description: "Can the item be used (assuming it has components that are usable in some way) when worn."), Editable(MinValueFloat = -1000.0f, MaxValueFloat = 1000.0f)]
+        [Serialize(false, IsPropertySaveable.No, description: "Can the item be used (assuming it has components that are usable in some way) when worn.")]
         public bool AllowUseWhenWorn { get; set; }
 
         public readonly int Variants;
@@ -527,14 +527,17 @@ namespace Barotrauma.Items.Components
 
         public override void Update(float deltaTime, Camera cam)
         {
-            if (picker.Removed)
+            if (picker == null || picker.Removed)
             {
                 IsActive = false;
                 return;
             }
 
-            item.SetTransform(picker.SimPosition, 0.0f);
-            
+            //if the item is also being held, let the Holdable component control the position
+            if (item.GetComponent<Holdable>() is not { IsActive: true })
+            {
+                item.SetTransform(picker.SimPosition, 0.0f);
+            }
             item.ApplyStatusEffects(ActionType.OnWearing, deltaTime, picker);
 
 #if CLIENT

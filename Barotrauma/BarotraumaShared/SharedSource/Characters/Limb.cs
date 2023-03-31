@@ -666,13 +666,13 @@ namespace Barotrauma
                             switch (body.BodyShape)
                             {
                                 case PhysicsBody.Shape.Circle:
-                                    attack.DamageRange = body.radius;
+                                    attack.DamageRange = body.Radius;
                                     break;
                                 case PhysicsBody.Shape.Capsule:
-                                    attack.DamageRange = body.height / 2 + body.radius;
+                                    attack.DamageRange = body.Height / 2 + body.Radius;
                                     break;
                                 case PhysicsBody.Shape.Rectangle:
-                                    attack.DamageRange = new Vector2(body.width / 2.0f, body.height / 2.0f).Length();
+                                    attack.DamageRange = new Vector2(body.Width / 2.0f, body.Height / 2.0f).Length();
                                     break;
                             }
                             attack.DamageRange = ConvertUnits.ToDisplayUnits(attack.DamageRange);
@@ -786,11 +786,12 @@ namespace Barotrauma
                 }
                 if (!foundMatchingModifier && random > affliction.Probability) { continue; }
                 float finalDamageModifier = damageMultiplier;
-                if (character.EmpVulnerability > 0 && affliction.Prefab.AfflictionType == "emp")
+                if (character.EmpVulnerability > 0 && affliction.Prefab.AfflictionType == AfflictionPrefab.EMPType)
                 {
                     finalDamageModifier *= character.EmpVulnerability;
                 }
-                if (!character.Params.Health.PoisonImmunity && (affliction.Prefab.AfflictionType == "poison" || affliction.Prefab.AfflictionType == "paralysis"))
+                if (!character.Params.Health.PoisonImmunity && 
+                    (affliction.Prefab.AfflictionType == AfflictionPrefab.PoisonType || affliction.Prefab.AfflictionType == AfflictionPrefab.ParalysisType))
                 {
                     finalDamageModifier *= character.PoisonVulnerability;
                 }
@@ -1108,7 +1109,7 @@ namespace Barotrauma
             Vector2 forceWorld = attack.CalculateAttackPhase(attack.RootTransitionEasing);
             forceWorld.X *= character.AnimController.Dir;
             character.AnimController.MainLimb.body.ApplyLinearImpulse(character.Mass * forceWorld, character.SimPosition, maxVelocity: NetConfig.MaxPhysicsBodyVelocity);
-            if (!attack.IsRunning)
+            if (!attack.IsRunning && !attack.Ranged)
             {
                 // Set the main collider where the body lands after the attack
                 if (Vector2.DistanceSquared(character.AnimController.Collider.SimPosition, character.AnimController.MainLimb.body.SimPosition) > 0.1f * 0.1f)
@@ -1225,7 +1226,7 @@ namespace Barotrauma
                 if (statusEffect.type == ActionType.OnDamaged)
                 {
                     if (!statusEffect.HasRequiredAfflictions(character.LastDamage)) { continue; }
-                    if (statusEffect.OnlyPlayerTriggered)
+                    if (statusEffect.OnlyWhenDamagedByPlayer)
                     {
                         if (character.LastAttacker == null || !character.LastAttacker.IsPlayer)
                         {
@@ -1303,7 +1304,8 @@ namespace Barotrauma
         }
 
         private float blinkTimer;
-        private float blinkPhase;
+        public float BlinkPhase;
+        public bool FreezeBlinkState;
 
         private float TotalBlinkDurationOut => Params.BlinkDurationOut + Params.BlinkHoldTime;
 
@@ -1316,16 +1318,25 @@ namespace Barotrauma
         {
             if (blinkTimer > -TotalBlinkDurationOut)
             {
-                blinkPhase -= deltaTime;
-                if (blinkPhase > 0)
+                if (!FreezeBlinkState)
+                {
+                    BlinkPhase -= deltaTime;
+                }
+                if (BlinkPhase > 0)
                 {
                     // in
-                    float t = ToolBox.GetEasing(Params.BlinkTransitionIn, MathUtils.InverseLerp(1, 0, blinkPhase / Params.BlinkDurationIn));
+                    float t = ToolBox.GetEasing(Params.BlinkTransitionIn, MathUtils.InverseLerp(1, 0, BlinkPhase / Params.BlinkDurationIn));
                     body.SmoothRotate(referenceRotation + MathHelper.ToRadians(Params.BlinkRotationIn) * Dir, Mass * Params.BlinkForce * t, wrapAngle: true);
+                    if (Params.UseTextureOffsetForBlinking)
+                    {
+#if CLIENT
+                        ActiveSprite.RelativeOrigin = Vector2.Lerp(Params.BlinkTextureOffsetOut, Params.BlinkTextureOffsetIn, t);
+#endif
+                    }
                 }
                 else
                 {
-                    if (Math.Abs(blinkPhase) < Params.BlinkHoldTime)
+                    if (Math.Abs(BlinkPhase) < Params.BlinkHoldTime)
                     {
                         // hold
                         body.SmoothRotate(referenceRotation + MathHelper.ToRadians(Params.BlinkRotationIn) * Dir, Mass * Params.BlinkForce, wrapAngle: true);
@@ -1333,15 +1344,25 @@ namespace Barotrauma
                     else
                     {
                         // out
-                        float t = ToolBox.GetEasing(Params.BlinkTransitionOut, MathUtils.InverseLerp(0, 1, -blinkPhase / TotalBlinkDurationOut));
+                        //float t = ToolBox.GetEasing(Params.BlinkTransitionOut, MathUtils.InverseLerp(0, 1, -blinkPhase / TotalBlinkDurationOut));
+                        float t = ToolBox.GetEasing(Params.BlinkTransitionOut, MathUtils.InverseLerp(0, 1, (-BlinkPhase - Params.BlinkHoldTime) / Params.BlinkDurationOut));
                         body.SmoothRotate(referenceRotation + MathHelper.ToRadians(Params.BlinkRotationOut) * Dir, Mass * Params.BlinkForce * t, wrapAngle: true);
+                        if (Params.UseTextureOffsetForBlinking)
+                        {
+#if CLIENT
+                            ActiveSprite.RelativeOrigin = Vector2.Lerp(Params.BlinkTextureOffsetIn, Params.BlinkTextureOffsetOut, t);
+#endif
+                        }
                     }
                 }
             }
             else
             {
                 // out
-                blinkPhase = Params.BlinkDurationIn;
+                if (!FreezeBlinkState)
+                {
+                    BlinkPhase = Params.BlinkDurationIn;
+                }
                 body.SmoothRotate(referenceRotation + MathHelper.ToRadians(Params.BlinkRotationOut) * Dir, Mass * Params.BlinkForce, wrapAngle: true);
             }
         }

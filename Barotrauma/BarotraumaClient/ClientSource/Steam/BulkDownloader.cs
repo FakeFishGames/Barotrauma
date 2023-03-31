@@ -94,7 +94,7 @@ namespace Barotrauma.Steam
                     CanBeFocused = false
                 };
                 var itemTitle = new GUITextBlock(new RectTransform(Vector2.One, itemFrame.RectTransform),
-                    text: item.Title);
+                    text: item.Title ?? "");
                 var itemDownloadProgress
                     = new GUIProgressBar(new RectTransform((0.5f, 0.75f),
                             itemFrame.RectTransform, Anchor.CenterRight), 0.0f)

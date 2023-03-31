@@ -10,6 +10,7 @@ namespace Steamworks.ServerList
 	{
 		internal override void LaunchQuery()
 		{
+			if (Internal is null) { return; }
 			var filters = GetFilters();
 			request = Internal.RequestFavoritesServerList( AppId.Value, ref filters, (uint)filters.Length, IntPtr.Zero );
 		}

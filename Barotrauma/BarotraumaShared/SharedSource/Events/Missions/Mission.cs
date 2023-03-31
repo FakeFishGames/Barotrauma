@@ -22,7 +22,7 @@ namespace Barotrauma
         public virtual int State
         {
             get { return state; }
-            protected set
+            set
             {
                 if (state != value)
                 {
@@ -30,6 +30,11 @@ namespace Barotrauma
                     TryTriggerEvents(state);
 #if SERVER
                     GameMain.Server?.UpdateMissionState(this);
+#elif CLIENT
+                    if (Prefab.ShowProgressBar)
+                    {
+                        CharacterHUD.ShowMissionProgressBar(this);
+                    }
 #endif
                     ShowMessage(State);
                     OnMissionStateChanged?.Invoke(this);
@@ -37,12 +42,20 @@ namespace Barotrauma
             }
         }
 
+        public int TimesAttempted { get; set; }
+
         protected static bool IsClient => GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient;
 
         private readonly CheckDataAction completeCheckDataAction;
 
         public readonly ImmutableArray<LocalizedString> Headers;
         public readonly ImmutableArray<LocalizedString> Messages;
+
+        /// <summary>
+        /// The reward that was actually given from completing the mission, taking any talent bonuses into account 
+        /// (some of which may not be possible to determine in advance)
+        /// </summary>
+        private int? finalReward;
 
         public virtual LocalizedString Name => Prefab.Name;
 
@@ -113,14 +126,18 @@ namespace Barotrauma
             get { return null; }
         }
 
-        public virtual IEnumerable<Vector2> SonarPositions
+        public virtual IEnumerable<(LocalizedString Label, Vector2 Position)> SonarLabels
         {
-            get { return Enumerable.Empty<Vector2>(); }
+            get { return Enumerable.Empty<(LocalizedString Label, Vector2 Position)>(); }
         }
 
-        public virtual LocalizedString SonarLabel => Prefab.SonarLabel;
-
         public Identifier SonarIconIdentifier => Prefab.SonarIconIdentifier;
+
+        /// <summary>
+        /// Where was this mission received from? Affects which faction we give reputation for if the mission is configured to give reputation for the faction that gave the mission.
+        /// Defaults to Locations[0]
+        /// </summary>
+        public Location OriginLocation;
 
         public readonly Location[] Locations;
 
@@ -141,7 +158,7 @@ namespace Barotrauma
             }
         }
 
-        private List<DelayedTriggerEvent> delayedTriggerEvents = new List<DelayedTriggerEvent>();
+        private readonly List<DelayedTriggerEvent> delayedTriggerEvents = new List<DelayedTriggerEvent>();
 
         public Action<Mission> OnMissionStateChanged;
 
@@ -157,12 +174,13 @@ namespace Barotrauma
             Headers = prefab.Headers;
             var messages = prefab.Messages.ToArray();
 
+            OriginLocation = locations[0];
             Locations = locations;
 
             var endConditionElement = prefab.ConfigElement.GetChildElement(nameof(completeCheckDataAction));
             if (endConditionElement != null)
             {
-                completeCheckDataAction = new CheckDataAction(endConditionElement, $"Mission ({prefab.Identifier.ToString()})");
+                completeCheckDataAction = new CheckDataAction(endConditionElement, $"Mission ({prefab.Identifier})");
             }
 
             for (int n = 0; n < 2; n++)
@@ -307,7 +325,7 @@ namespace Barotrauma
         private void TryTriggerEvent(MissionPrefab.TriggerEvent trigger)
         {
             if (trigger.CampaignOnly && GameMain.GameSession?.Campaign == null) { return; }
-            if (trigger.Delay > 0)
+            if (trigger.Delay > 0 || trigger.State == 0)
             {
                 if (!delayedTriggerEvents.Any(t => t.TriggerEvent == trigger))
                 {
@@ -357,6 +375,8 @@ namespace Barotrauma
                 GiveReward();
             }
 
+            TimesAttempted++;
+
             EndMissionSpecific(completed);
         }
 
@@ -364,6 +384,27 @@ namespace Barotrauma
 
         protected virtual void EndMissionSpecific(bool completed) { }
 
+        /// <summary>
+        /// Get the final reward, taking talent bonuses into account if the mission has concluded and the talents modified the reward accordingly.
+        /// </summary>
+        public int GetFinalReward(Submarine sub)
+        {
+            return finalReward ?? GetReward(sub);
+        }
+
+        /// <summary>
+        /// Calculates the final reward after talent bonuses have been applied. Note that this triggers talent effects of the type OnGainMissionMoney, 
+        /// and should only be called once when the mission is completed!
+        /// </summary>
+        private void CalculateFinalReward(Submarine sub)
+        {
+            int reward = GetReward(sub);
+            IEnumerable<Character> crewCharacters = GameSession.GetSessionCrewCharacters(CharacterType.Both);
+            var missionMoneyGainMultiplier = new AbilityMissionMoneyGainMultiplier(this, 1f);
+            crewCharacters.ForEach(c => c.CheckTalents(AbilityEffectType.OnGainMissionMoney, missionMoneyGainMultiplier));
+            crewCharacters.ForEach(c => missionMoneyGainMultiplier.Value += c.GetStatValue(StatTypes.MissionMoneyGainMultiplier));
+            finalReward = (int)(reward * missionMoneyGainMultiplier.Value);
+        }
 
         private void GiveReward()
         {
@@ -407,39 +448,35 @@ namespace Barotrauma
                 info?.GiveExperience((int)((experienceGain * experienceGainMultiplier.Value) * experienceGainMultiplierIndividual.Value));
             }
 
-            // apply money gains afterwards to prevent them from affecting XP gains
-            var missionMoneyGainMultiplier = new AbilityMissionMoneyGainMultiplier(this, 1f);
-            crewCharacters.ForEach(c => c.CheckTalents(AbilityEffectType.OnGainMissionMoney, missionMoneyGainMultiplier));
-            crewCharacters.ForEach(c => missionMoneyGainMultiplier.Value += c.GetStatValue(StatTypes.MissionMoneyGainMultiplier));
-
-            int totalReward = (int)(reward * missionMoneyGainMultiplier.Value);
-            GameAnalyticsManager.AddMoneyGainedEvent(totalReward, GameAnalyticsManager.MoneySource.MissionReward, Prefab.Identifier.Value);
-
+            CalculateFinalReward(Submarine.MainSub);
 #if SERVER
-            totalReward = DistributeRewardsToCrew(GameSession.GetSessionCrewCharacters(CharacterType.Player), totalReward);
+            finalReward = DistributeRewardsToCrew(GameSession.GetSessionCrewCharacters(CharacterType.Player), finalReward.Value);
 #endif
             bool isSingleplayerOrServer = GameMain.IsSingleplayer || GameMain.NetworkMember is { IsServer: true };
-            if (isSingleplayerOrServer && totalReward > 0)
+            if (isSingleplayerOrServer)
             {
-                campaign.Bank.Give(totalReward);
-            }
-
-            foreach (Character character in crewCharacters)
-            {
-                character.Info.MissionsCompletedSinceDeath++;
-            }
-
-            foreach (KeyValuePair<Identifier, float> reputationReward in ReputationRewards)
-            {
-                if (reputationReward.Key == "location")
+                if (finalReward > 0)
                 {
-                    Locations[0].Reputation.AddReputation(reputationReward.Value);
-                    Locations[1].Reputation.AddReputation(reputationReward.Value);
+                    campaign.Bank.Give(finalReward.Value);
                 }
-                else
+
+                foreach (Character character in crewCharacters)
                 {
-                    Faction faction = campaign.Factions.Find(faction1 => faction1.Prefab.Identifier == reputationReward.Key);
-                    if (faction != null) { faction.Reputation.AddReputation(reputationReward.Value); }
+                    character.Info.MissionsCompletedSinceDeath++;
+                }
+
+                foreach (KeyValuePair<Identifier, float> reputationReward in ReputationRewards)
+                {
+                    if (reputationReward.Key == "location")
+                    {
+                        OriginLocation.Reputation?.AddReputation(reputationReward.Value);
+                    }
+                    else
+                    {
+                        Faction faction = campaign.Factions.Find(faction1 => faction1.Prefab.Identifier == reputationReward.Key);
+                           float prevValue = faction.Reputation.Value;
+                        faction?.Reputation.AddReputation(reputationReward.Value);
+                    }
                 }
             }
 
@@ -484,18 +521,15 @@ namespace Barotrauma
             float rewardWeight = sum > 100 ? rewardDistribution / sum : rewardDistribution / 100f;
             int rewardPercentage = (int)(rewardWeight * 100);
 
-            return reward switch
-            {
-                Some<int> { Value: var amount } => ((int)(amount * rewardWeight), rewardPercentage, sum),
-                None<int> _ => (0, rewardPercentage, sum),
-                _ => throw new ArgumentOutOfRangeException()
-            };
+            int amount = reward.TryUnwrap(out var a) ? a : 0;
+
+            return ((int)(amount * rewardWeight), rewardPercentage, sum);
         }
 
         protected void ChangeLocationType(LocationTypeChange change)
         {
             if (change == null) { throw new ArgumentException(); }
-            if (GameMain.GameSession.GameMode is CampaignMode && !IsClient)
+            if (GameMain.GameSession.GameMode is CampaignMode campaign && !IsClient)
             {
                 int srcIndex = -1;
                 for (int i = 0; i < Locations.Length; i++)
@@ -509,13 +543,15 @@ namespace Barotrauma
                 if (srcIndex == -1) { return; }
                 var location = Locations[srcIndex];
 
+                if (location.LocationTypeChangesBlocked) { return; }
+
                 if (change.RequiredDurationRange.X > 0)
                 {
                     location.PendingLocationTypeChange = (change, Rand.Range(change.RequiredDurationRange.X, change.RequiredDurationRange.Y), Prefab);
                 }
                 else
                 {
-                    location.ChangeType(LocationType.Prefabs[change.ChangeToType]);
+                    location.ChangeType(campaign, LocationType.Prefabs[change.ChangeToType]);
                     location.LocationTypeChangeCooldown = change.CooldownAfterChange;
                 }
             }
@@ -529,7 +565,6 @@ namespace Barotrauma
             if (element.Attribute("name") != null)
             {
                 DebugConsole.ThrowError("Error in mission \"" + Name + "\" - use character identifiers instead of names to configure the characters.");
-
                 return null;
             }
 
@@ -538,7 +573,7 @@ namespace Barotrauma
             HumanPrefab humanPrefab = NPCSet.Get(characterFrom, characterIdentifier);
             if (humanPrefab == null)
             {
-                DebugConsole.ThrowError("Couldn't spawn character for mission: character prefab \"" + characterIdentifier + "\" not found");
+                DebugConsole.ThrowError($"Couldn't spawn character for mission: character prefab \"{characterIdentifier}\" not found in the NPC set \"{characterFrom}\".");
                 return null;
             }
 
@@ -557,8 +592,7 @@ namespace Barotrauma
             Character spawnedCharacter = Character.Create(characterInfo.SpeciesName, positionToStayIn.WorldPosition, ToolBox.RandomSeed(8), characterInfo, createNetworkEvent: false);
             spawnedCharacter.HumanPrefab = humanPrefab;
             humanPrefab.InitializeCharacter(spawnedCharacter, positionToStayIn);
-            humanPrefab.GiveItems(spawnedCharacter, submarine, Rand.RandSync.ServerAndClient, createNetworkEvents: false);
-
+            humanPrefab.GiveItems(spawnedCharacter, submarine, positionToStayIn as WayPoint, Rand.RandSync.ServerAndClient, createNetworkEvents: false);
             characters.Add(spawnedCharacter);
             characterItems.Add(spawnedCharacter, spawnedCharacter.Inventory.FindAllItems(recursive: true));
 

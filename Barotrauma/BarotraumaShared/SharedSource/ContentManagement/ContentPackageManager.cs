@@ -116,9 +116,12 @@ namespace Barotrauma
             public static void ThrowIfDuplicates(IEnumerable<ContentPackage> pkgs)
             {
                 var contentPackages = pkgs as IList<ContentPackage> ?? pkgs.ToArray();
-                if (contentPackages.Any(p1 => contentPackages.AtLeast(2, p2 => p1 == p2)))
+                foreach (ContentPackage cp in contentPackages)
                 {
-                    throw new InvalidOperationException($"Input contains duplicate packages");
+                    if (contentPackages.AtLeast(2, cp2 => cp == cp2))
+                    {
+                        throw new InvalidOperationException($"Input contains duplicate packages (\"{cp.Name}\", hash: {cp.Hash?.ShortRepresentation ?? "none"})");
+                    }
                 }
             }
 

@@ -1,60 +1,83 @@
 #nullable enable
 using System;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Barotrauma
 {
-    /// <summary>
-    /// Implementation of <a href="https://en.wikipedia.org/wiki/Option_type">Option type</a>.
-    /// </summary>
-    /// <remarks>
-    /// Credit <a href="https://github.com/Jlobblet/FunctionalStuff/tree/main/src/FunctionalStuff/Option">Jlobblet</a>
-    /// </remarks>
-    public abstract class Option<T>
+    public readonly struct Option<T> where T : notnull
     {
-        public static Option<T> Some(T value) => Some<T>.Create(value);
-        public static Option<T> None() => None<T>.Create();
-        public bool IsNone() => this is None<T>;
-        public bool IsSome() => this is Some<T>;
+        private readonly bool hasValue;
+        private readonly T? value;
 
-        public bool TryUnwrap(out T outValue) => TryUnwrap<T>(out outValue);
-
-        public bool TryUnwrap<T1>(out T1 outValue) where T1 : T
+        private Option(bool hasValue, T? value)
         {
-            switch (this)
-            {
-                case Some<T> { Value: T1 value }:
-                    outValue = value;
-                    return true;
-                default:
-                    outValue = default!;
-                    return false;
-            }
+            this.hasValue = hasValue;
+            this.value = value;
         }
 
-        public Option<TType> Select<TType>(Func<T, TType> selector) =>
-            this switch
+        public bool IsSome() => hasValue;
+        public bool IsNone() => !IsSome();
+
+        public bool TryUnwrap<T1>([NotNullWhen(returnValue: true)] out T1? outValue) where T1 : T
+        {
+            bool hasValueOfGivenType = false;
+            outValue = default;
+
+            if (hasValue && value is T1 t1)
             {
-                Some<T> { Value: var value } => Option<TType>.Some(selector.Invoke(value)),
-                None<T> _ => Option<TType>.None(),
-                _ => throw new ArgumentOutOfRangeException()
+                hasValueOfGivenType = true;
+                outValue = t1;
+            }
+
+            return hasValueOfGivenType;
+        }
+
+        public bool TryUnwrap([NotNullWhen(returnValue: true)] out T? outValue)
+            => TryUnwrap<T>(out outValue);
+
+        public Option<TType> Select<TType>(Func<T, TType> selector) where TType : notnull
+            => TryUnwrap(out T? selfValue) ? Option.Some(selector(selfValue)) : Option.None;
+
+        public Option<TType> Bind<TType>(Func<T, Option<TType>> binder) where TType : notnull
+            => TryUnwrap(out T? selfValue) ? binder(selfValue) : Option.None;
+
+        public T Fallback(T fallback)
+            => TryUnwrap(out var v) ? v : fallback;
+
+        public Option<T> Fallback(Option<T> fallback)
+            => IsSome() ? this : fallback;
+
+        public static Option<T> Some(T value)
+            => typeof(T) switch
+            {
+                var t when t == typeof(bool)
+                    => throw new Exception("Option type rejects booleans"),
+                {IsConstructedGenericType: true} t when t.GetGenericTypeDefinition() == typeof(Option<>)
+                    => throw new Exception("Option type rejects nested Option"),
+                {IsConstructedGenericType: true} t when t.GetGenericTypeDefinition() == typeof(Nullable<>)
+                    => throw new Exception("Option type rejects Nullable"),
+                _
+                    => new Option<T>(hasValue: true, value: value ?? throw new Exception("Option type rejects null"))
             };
-
-        public abstract Option<T> Fallback(Option<T> fallback);
-        public abstract T Fallback(T fallback);
-
-        public abstract bool ValueEquals(T value);
 
         public override bool Equals(object? obj)
             => obj switch
             {
-                Some<T> { Value: var value } => this is Some<T> { Value: { } selfValue } && selfValue.Equals(value),
-                None<T> _ => IsNone(),
-                T value => this is Some<T> { Value: { } selfValue } && selfValue.Equals(value),
-                _ => false
+                Option<T> otherOption when otherOption.IsNone()
+                    => IsNone(),
+                Option<T> otherOption when otherOption.TryUnwrap(out var otherValue)
+                    => ValueEquals(otherValue),
+                T otherValue
+                    => ValueEquals(otherValue),
+                _
+                    => false
             };
 
+        public bool ValueEquals(T otherValue)
+            => TryUnwrap(out T? selfValue) && selfValue.Equals(otherValue);
+        
         public override int GetHashCode()
-            => this is Some<T> { Value: { } value } ? value.GetHashCode() : 0;
+            => TryUnwrap(out T? selfValue) ? selfValue.GetHashCode() : 0;
 
         public static bool operator ==(Option<T> a, Option<T> b)
             => a.Equals(b);
@@ -62,22 +85,28 @@ namespace Barotrauma
         public static bool operator !=(Option<T> a, Option<T> b)
             => !(a == b);
 
-        public abstract override string ToString();
-        
-        public static implicit operator Option<T>(Option.UnspecifiedNone _)
+        public static Option<T> None()
+            => default;
+
+        public static implicit operator Option<T>(in Option.UnspecifiedNone _)
             => None();
+
+        public override string ToString()
+            => TryUnwrap(out var selfValue)
+                ? $"Some<{typeof(T).Name}>({selfValue})"
+                : $"None<{typeof(T).Name}>";
     }
 
     public static class Option
     {
-        public sealed class UnspecifiedNone
+        public static Option<T> Some<T>(T value) where T : notnull
+            => Option<T>.Some(value);
+
+        public static UnspecifiedNone None
+            => default;
+
+        public readonly ref struct UnspecifiedNone
         {
-            private UnspecifiedNone() { }
-            internal static readonly UnspecifiedNone Instance = new();
         }
-        
-        public static UnspecifiedNone None => UnspecifiedNone.Instance;
-        
-        public static Option<T> Some<T>(T value) => Option<T>.Some(value);
     }
 }

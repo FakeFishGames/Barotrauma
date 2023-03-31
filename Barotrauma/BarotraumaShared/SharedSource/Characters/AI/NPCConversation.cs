@@ -83,10 +83,15 @@ namespace Barotrauma
                 {
                     if (GameMain.GameSession.RoundDuration < 120.0f && 
                         speaker?.CurrentHull != null && 
+                        GameMain.GameSession.Map?.CurrentLocation?.Reputation?.Value >= 0.0f &&
                         (speaker.TeamID == CharacterTeamType.FriendlyNPC || speaker.TeamID == CharacterTeamType.None) && 
                         Character.CharacterList.Any(c => c.TeamID != speaker.TeamID && c.CurrentHull == speaker.CurrentHull)) 
                     {
                         currentFlags.Add("EnterOutpost".ToIdentifier()); 
+                    }
+                    if (Level.Loaded.IsEndBiome)
+                    {
+                        currentFlags.Add("EndLevel".ToIdentifier());
                     }
                 }
                 if (GameMain.GameSession.EventManager.CurrentIntensity <= 0.2f)
@@ -117,7 +122,7 @@ namespace Barotrauma
                 foreach (Affliction affliction in afflictions)
                 {
                     var currentEffect = affliction.GetActiveEffect();
-                    if (currentEffect != null && !string.IsNullOrEmpty(currentEffect.DialogFlag.Value) && !currentFlags.Contains(currentEffect.DialogFlag))
+                    if (currentEffect is { DialogFlag.IsEmpty: false } && !currentFlags.Contains(currentEffect.DialogFlag))
                     {
                         currentFlags.Add(currentEffect.DialogFlag);
                     }
@@ -126,6 +131,10 @@ namespace Barotrauma
                 if (speaker.TeamID == CharacterTeamType.FriendlyNPC && speaker.Submarine != null && speaker.Submarine.Info.IsOutpost)
                 {
                     currentFlags.Add("OutpostNPC".ToIdentifier());
+                    if (GameMain.GameSession?.Level?.StartLocation?.Faction is Faction faction)
+                    {
+                        currentFlags.Add($"OutpostNPC{faction.Prefab.Identifier}".ToIdentifier());
+                    }
                 }
                 if (speaker.CampaignInteractionType != CampaignMode.InteractionType.None)
                 {

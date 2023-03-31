@@ -1,14 +1,12 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Barotrauma.Extensions;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using System.Linq;
-using System.Text;
 using System.Xml.Linq;
-using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
@@ -19,6 +17,26 @@ namespace Barotrauma
         protected override Identifier DetermineIdentifier(XElement element)
         {
             return element.NameAsIdentifier();
+        }
+
+        protected int ParseSize(XElement element, string attributeName)
+        {
+            string valueStr = element.GetAttributeString(attributeName, string.Empty);
+            bool relativeToWidth = valueStr.EndsWith("vw");
+            bool relativeToHeight = valueStr.EndsWith("vh");
+            if (relativeToWidth || relativeToHeight)
+            {
+                string floatStr = valueStr.Substring(0, valueStr.Length - 2);
+                if (!float.TryParse(floatStr, NumberStyles.Any, CultureInfo.InvariantCulture, out float relativeHeight))
+                {
+                    DebugConsole.ThrowError($"Error while parsing a {nameof(GUIComponentStyle)}: {valueStr} is not a valid size.");
+                }
+                return (int)(relativeHeight / 100.0f * (relativeToWidth ? GameMain.GraphicsWidth : GameMain.GraphicsHeight));
+            }
+            else
+            {
+                return element.GetAttributeInt(attributeName, 0);
+            }
         }
     }
 
@@ -166,7 +184,8 @@ namespace Barotrauma
                 Point maxResolution = subElement.GetAttributePoint("maxresolution", new Point(int.MaxValue, int.MaxValue));
                 if (GameMain.GraphicsWidth <= maxResolution.X && GameMain.GraphicsHeight <= maxResolution.Y)
                 {
-                    return (uint)Math.Round(subElement.GetAttributeInt("size", 14) * GameSettings.CurrentConfig.Graphics.TextScale);
+                    int rawSize = ParseSize(subElement, "size");
+                    return (uint)Math.Round(rawSize * GameSettings.CurrentConfig.Graphics.TextScale);
                 }
             }
             return (uint)Math.Round(defaultSize * GameSettings.CurrentConfig.Graphics.TextScale);

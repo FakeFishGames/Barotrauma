@@ -14,6 +14,16 @@ namespace Barotrauma.Items.Components
         private CoroutineHandle resetPredictionCoroutine;
         private float resetPredictionTimer;
 
+        /// <summary>
+        /// The current multiplier for the light color (usually equal to <see cref="lightBrightness"/>, but in the case of e.g. blinking lights the multiplier
+        /// doesn't go to 0 when the light turns off, because otherwise it'd take a while for it turn back on based on the lightBrightness which is interpolated
+        /// towards the current voltage).
+        /// </summary>
+        private float lightColorMultiplier;
+
+        [Serialize(1.0f, IsPropertySaveable.Yes, description: "The scale of the light sprite.")]
+        public float LightSpriteScale { get; set; }
+
         public Vector2 DrawSize
         {
             get { return new Vector2(Light.Range * 2, Light.Range * 2); }
@@ -27,21 +37,14 @@ namespace Barotrauma.Items.Components
             Light.Position = ParentBody != null ? ParentBody.Position : item.Position;
         }
 
-        partial void SetLightSourceState(bool enabled, float? brightness)
+        partial void SetLightSourceState(bool enabled, float brightness)
         {
             if (Light == null) { return; }
             Light.Enabled = enabled;
-            if (brightness.HasValue)
-            {
-                lightBrightness = brightness.Value;
-            }
-            else
-            {
-                lightBrightness = enabled ? 1.0f : 0.0f;
-            }
+            lightColorMultiplier = brightness;
             if (enabled)
             {
-                Light.Color = LightColor.Multiply(lightBrightness);
+                Light.Color = LightColor.Multiply(lightColorMultiplier);
             }
         }
 
@@ -92,7 +95,13 @@ namespace Barotrauma.Items.Components
                 {
                     color = new Color(lightColor, Light.OverrideLightSpriteAlpha.Value);
                 }
-                Light.LightSprite.Draw(spriteBatch, new Vector2(drawPos.X, -drawPos.Y), color * lightBrightness, origin, -Light.Rotation, item.Scale, Light.LightSpriteEffect, itemDepth - 0.0001f);
+                Light.LightSprite.Draw(spriteBatch, 
+                    new Vector2(drawPos.X, -drawPos.Y), 
+                    color * lightBrightness, 
+                    origin, 
+                    -Light.Rotation, 
+                    item.Scale * LightSpriteScale, 
+                    Light.LightSpriteEffect, itemDepth - 0.0001f);
             }
         }
 

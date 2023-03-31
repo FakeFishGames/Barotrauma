@@ -9,7 +9,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
-using Barotrauma.Steam;
 
 namespace Barotrauma
 {
@@ -194,7 +193,7 @@ namespace Barotrauma
                 };
             }
 
-            var reports = OrderPrefab.Prefabs.Where(o => o.IsReport && o.SymbolSprite != null && !o.Hidden).ToArray();
+            var reports = OrderPrefab.Prefabs.Where(o => o.IsReport && o.SymbolSprite != null && !o.Hidden).OrderBy(o => o.Identifier).ToArray();
             if (reports.None())
             {
                 DebugConsole.ThrowError("No valid orders for report buttons found! Cannot create report buttons. The orders for the report buttons must have 'targetallcharacters' attribute enabled and a valid 'symbolsprite' defined.");
@@ -377,6 +376,7 @@ namespace Barotrauma
                 - (0.1f * iconRelativeWidth)
                 // Spacing
                 - (7 * layoutGroup.RelativeSpacing);
+            nameRelativeWidth = Math.Max(nameRelativeWidth, 0.25f);
 
             var font = layoutGroup.Rect.Width < 150 ? GUIStyle.SmallFont : GUIStyle.Font;
             var nameBlock = new GUITextBlock(
@@ -1403,8 +1403,7 @@ namespace Barotrauma
                 bool hitDeselect = PlayerInput.KeyHit(InputType.Deselect) &&
                     (!PlayerInput.SecondaryMouseButtonClicked() || (!isMouseOnOptionNode && !isMouseOnShortcutNode));
 
-                bool isBoundToPrimaryMouse = GameSettings.CurrentConfig.KeyMap.Bindings[InputType.Command].MouseButton is MouseButton mouseButton &&
-                    (mouseButton == MouseButton.PrimaryMouse || mouseButton == (PlayerInput.MouseButtonsSwapped() ? MouseButton.RightMouse : MouseButton.LeftMouse));
+                bool isBoundToPrimaryMouse = GameSettings.CurrentConfig.KeyMap.Bindings[InputType.Command].MouseButton == MouseButton.PrimaryMouse;
                 bool canToggleInterface = !isBoundToPrimaryMouse ||
                     (!isMouseOnOptionNode && !isMouseOnShortcutNode && extraOptionNodes.None(n => GUI.IsMouseOn(n)) && !GUI.IsMouseOn(returnNode));
 
@@ -2796,8 +2795,8 @@ namespace Barotrauma
             var orderName = GetOrderNameBasedOnContextuality(order);
             var icon = CreateNodeIcon(Vector2.One, node.RectTransform, order.SymbolSprite, order.Color,
                 tooltip: !showAssignmentTooltip ? orderName : orderName +
-                    "\n" + (!PlayerInput.MouseButtonsSwapped() ? TextManager.Get("input.leftmouse") : TextManager.Get("input.rightmouse")) + ": " + TextManager.Get("commandui.quickassigntooltip") +
-                    "\n" + (!PlayerInput.MouseButtonsSwapped() ? TextManager.Get("input.rightmouse") : TextManager.Get("input.leftmouse")) + ": " + TextManager.Get("commandui.manualassigntooltip"));
+                    "\n" + PlayerInput.PrimaryMouseLabel + ": " + TextManager.Get("commandui.quickassigntooltip") +
+                    "\n" + PlayerInput.SecondaryMouseLabel + ": " + TextManager.Get("commandui.manualassigntooltip"));
             
             if (disableNode)
             {
@@ -2999,8 +2998,8 @@ namespace Barotrauma
                 var showAssignmentTooltip = characterContext == null && !order.MustManuallyAssign && !order.TargetAllCharacters;
                 icon = CreateNodeIcon(Vector2.One, node.RectTransform, sprite, order.Color,
                     tooltip: characterContext != null ? optionName : optionName +
-                        "\n" + (!PlayerInput.MouseButtonsSwapped() ? TextManager.Get("input.leftmouse") : TextManager.Get("input.rightmouse")) + ": " + TextManager.Get("commandui.quickassigntooltip") +
-                        "\n" + (!PlayerInput.MouseButtonsSwapped() ? TextManager.Get("input.rightmouse") : TextManager.Get("input.leftmouse")) + ": " + TextManager.Get("commandui.manualassigntooltip"));
+                        "\n" + PlayerInput.PrimaryMouseLabel + ": " + TextManager.Get("commandui.quickassigntooltip") +
+                        "\n" + PlayerInput.SecondaryMouseLabel + ": " + TextManager.Get("commandui.manualassigntooltip"));
             }
             if (!CanCharacterBeHeard())
             {

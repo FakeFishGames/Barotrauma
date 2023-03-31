@@ -136,6 +136,12 @@ namespace Barotrauma
         public bool IsEscorted { get; set; }
         public Identifier JobIdentifier => Info?.Job?.Prefab.Identifier ?? Identifier.Empty;
 
+        public bool DoesBleed
+        {
+            get => Params.Health.DoesBleed;
+            set => Params.Health.DoesBleed = value;
+        }
+
         public readonly Dictionary<Identifier, SerializableProperty> Properties;
         public Dictionary<Identifier, SerializableProperty> SerializableProperties
         {
@@ -173,6 +179,13 @@ namespace Barotrauma
             }
         }
 
+        private Identifier? faction;
+        public Identifier Faction
+        {
+            get { return faction ?? HumanPrefab?.Faction ?? Identifier.Empty; }
+            set { faction = value; }
+        }
+
         private CharacterTeamType teamID;
         public CharacterTeamType TeamID
         {
@@ -182,6 +195,13 @@ namespace Barotrauma
                 teamID = value;
                 if (info != null) { info.TeamID = value; }
             }
+        }
+
+
+        private CharacterTeamType? originalTeamID;
+        public CharacterTeamType OriginalTeamID
+        {
+            get { return originalTeamID ?? teamID; }
         }
 
         private Wallet wallet;
@@ -205,7 +225,7 @@ namespace Barotrauma
 
         protected readonly Dictionary<string, ActiveTeamChange> activeTeamChanges = new Dictionary<string, ActiveTeamChange>();
         protected ActiveTeamChange currentTeamChange;
-        const string OriginalTeamIdentifier = "original";
+        private const string OriginalChangeTeamIdentifier = "original";
 
         private void ThrowIfAccessingWalletsInSingleplayer()
         {
@@ -220,20 +240,16 @@ namespace Barotrauma
 
         public void SetOriginalTeam(CharacterTeamType newTeam)
         {
-            TryRemoveTeamChange(OriginalTeamIdentifier);
+            TryRemoveTeamChange(OriginalChangeTeamIdentifier);
             currentTeamChange = new ActiveTeamChange(newTeam, ActiveTeamChange.TeamChangePriorities.Base);
-            TryAddNewTeamChange(OriginalTeamIdentifier, currentTeamChange);
+            TryAddNewTeamChange(OriginalChangeTeamIdentifier, currentTeamChange);
         }
 
-        protected void ChangeTeam(CharacterTeamType newTeam)
+        private void ChangeTeam(CharacterTeamType newTeam)
         {
-            if (newTeam == teamID)
-            {
-                return;
-            }
-            teamID = newTeam;
-            if (info != null) { info.TeamID = newTeam; }
-
+            if (newTeam == teamID) { return; }
+            if (originalTeamID == null) { originalTeamID = teamID; }
+            TeamID = newTeam;
             if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient)
             {
                 return;
@@ -277,7 +293,7 @@ namespace Barotrauma
             {
                 if (currentTeamChange == removedTeamChange)
                 {
-                    currentTeamChange = activeTeamChanges[OriginalTeamIdentifier];
+                    currentTeamChange = activeTeamChanges[OriginalChangeTeamIdentifier];
                 }
             }
             return activeTeamChanges.Remove(identifier);
@@ -311,7 +327,9 @@ namespace Barotrauma
             }
         }
 
-        public bool IsOnPlayerTeam => TeamID == CharacterTeamType.Team1 || TeamID == CharacterTeamType.Team2;
+        public bool IsOnPlayerTeam => teamID == CharacterTeamType.Team1 || teamID == CharacterTeamType.Team2;
+
+        public bool IsOriginallyOnPlayerTeam => originalTeamID == CharacterTeamType.Team1 || originalTeamID == CharacterTeamType.Team2;
 
         public bool IsInstigator => CombatAction != null && CombatAction.IsInstigator;
         public CombatAction CombatAction;
@@ -360,7 +378,7 @@ namespace Barotrauma
 
         public Identifier SpeciesName => Params?.SpeciesName ?? "null".ToIdentifier();
 
-        public Identifier Group => Params.Group;
+        public Identifier Group => HumanPrefab is HumanPrefab humanPrefab && !humanPrefab.Group.IsEmpty ? humanPrefab.Group : Params.Group;
 
         public bool IsHumanoid => Params.Humanoid;
 
@@ -458,10 +476,15 @@ namespace Barotrauma
             }
             set
             {
-                if (info != null && info != value) info.Remove();
-
+                if (info != null && info != value)
+                {
+                    info.Remove();
+                }
                 info = value;
-                if (info != null) info.Character = this;
+                if (info != null)
+                {
+                    info.Character = this;
+                }
             }
         }
 
@@ -521,8 +544,13 @@ namespace Barotrauma
             }
             set
             {
+                bool wasHidden = HideFace;
                 hideFaceTimer = MathHelper.Clamp(hideFaceTimer + (value ? 1.0f : -0.5f), 0.0f, 10.0f);
-                if (info != null && info.IsDisguisedAsAnother != HideFace) info.CheckDisguiseStatus(true);
+                bool isHidden = HideFace;
+                if (isHidden != wasHidden && info != null && info.IsDisguisedAsAnother != isHidden)
+                {
+                    info.CheckDisguiseStatus(true);
+                }
             }
         }
 
@@ -728,7 +756,7 @@ namespace Barotrauma
         /// </summary>
         public bool InPressure
         {
-            get { return CurrentHull == null || CurrentHull.LethalPressure > 5.0f; }
+            get { return CurrentHull == null || CurrentHull.LethalPressure > 0.0f; }
         }
 
         /// <summary>
@@ -752,7 +780,7 @@ namespace Barotrauma
             get
             {
                 if (IsUnconscious) { return true; }
-                return CharacterHealth.GetAllAfflictions().Any(a => a.Prefab.Identifier == "paralysis" && a.Strength >= a.Prefab.MaxStrength);
+                return CharacterHealth.GetAllAfflictions().Any(a => a.Prefab.AfflictionType == AfflictionPrefab.ParalysisType && a.Strength >= a.Prefab.MaxStrength);
             }
         }
 
@@ -836,7 +864,7 @@ namespace Barotrauma
 
         public float Bleeding
         {
-            get { return CharacterHealth.GetAfflictionStrength("bleeding", true); }
+            get { return CharacterHealth.GetAfflictionStrength(AfflictionPrefab.BleedingType, true); }
         }
 
         private bool speechImpedimentSet;
@@ -1041,7 +1069,7 @@ namespace Barotrauma
 
         public bool InWater => AnimController is AnimController { InWater: true };
 
-        public bool IsLowInOxygen => NeedsOxygen && OxygenAvailable < CharacterHealth.LowOxygenThreshold;
+        public bool IsLowInOxygen => CharacterHealth.OxygenAmount < 100;
 
         public bool GodMode = false;
 
@@ -1098,6 +1126,12 @@ namespace Barotrauma
         public HashSet<Identifier> MarkedAsLooted = new();
 
         public bool IsInFriendlySub => Submarine != null && Submarine.TeamID == TeamID;
+
+        public float AITurretPriority
+        {
+            get => Params.AITurretPriority;
+            private set => Params.AITurretPriority = value;
+        }
 
         public delegate void OnDeathHandler(Character character, CauseOfDeath causeOfDeath);
         public OnDeathHandler OnDeath;
@@ -1619,7 +1653,7 @@ namespace Barotrauma
                 {
                     DebugConsole.ThrowError($"Failed to give job items for the character \"{Name}\" - could not find human prefab with the id \"{info.HumanPrefabIds.NpcIdentifier}\" from \"{info.HumanPrefabIds.NpcSetIdentifier}\".");
                 }
-                else if (humanPrefab.GiveItems(this, Submarine))
+                else if (humanPrefab.GiveItems(this, spawnPoint?.Submarine ?? Submarine, spawnPoint))
                 {
                     return;
                 }
@@ -1691,7 +1725,7 @@ namespace Barotrauma
                             if (wearable.SkillModifiers.TryGetValue(skillIdentifier, out float skillValue))
                             {
                                 skillLevel += skillValue;
-                                    break;
+                                break;
                             }
                         }
 
@@ -1700,9 +1734,7 @@ namespace Barotrauma
             }
 
             skillLevel += GetStatValue(GetSkillStatType(skillIdentifier));
-
-
-            return skillLevel;
+            return Math.Max(skillLevel, 0);
         }
 
         // TODO: reposition? there's also the overrideTargetMovement variable, but it's not in the same manner
@@ -1791,20 +1823,8 @@ namespace Barotrauma
 
         public void StackSpeedMultiplier(float val)
         {
-            if (val < 1f)
-            {
-                if (val < greatestNegativeSpeedMultiplier)
-                {
-                    greatestNegativeSpeedMultiplier = val;
-                }
-            }
-            else
-            {
-                if (val > greatestPositiveSpeedMultiplier)
-                {
-                    greatestPositiveSpeedMultiplier = val;
-                }
-            }
+            greatestNegativeSpeedMultiplier = Math.Min(val, greatestNegativeSpeedMultiplier);
+            greatestPositiveSpeedMultiplier = Math.Max(val, greatestPositiveSpeedMultiplier);
         }
 
         public void ResetSpeedMultiplier()
@@ -1827,20 +1847,8 @@ namespace Barotrauma
 
         public void StackHealthMultiplier(float val)
         {
-            if (val < 1f)
-            {
-                if (val < greatestNegativeHealthMultiplier)
-                {
-                    greatestNegativeHealthMultiplier = val;
-                }
-            }
-            else
-            {
-                if (val > greatestPositiveHealthMultiplier)
-                {
-                    greatestPositiveHealthMultiplier = val;
-                }
-            }
+            greatestNegativeHealthMultiplier = Math.Min(val, greatestNegativeHealthMultiplier);
+            greatestPositiveHealthMultiplier = Math.Max(val, greatestPositiveHealthMultiplier);
         }
 
         private void CalculateHealthMultiplier()
@@ -1900,7 +1908,7 @@ namespace Barotrauma
         {
             if (limb != null)
             {
-                sum += MathHelper.Lerp(0, max, CharacterHealth.GetLimbDamage(limb, afflictionType: "damage"));
+                sum += MathHelper.Lerp(0, max, CharacterHealth.GetLimbDamage(limb, afflictionType: AfflictionPrefab.DamageType));
             }
             return Math.Clamp(sum, 0, 1f);
         }
@@ -2196,24 +2204,7 @@ namespace Barotrauma
 
             if (SelectedItem != null)
             {
-                if (IsKeyDown(InputType.Aim) || !SelectedItem.RequireAimToSecondaryUse)
-                {
-                    SelectedItem.SecondaryUse(deltaTime, this);
-                }
-                if (IsKeyDown(InputType.Use) && SelectedItem != null && !SelectedItem.IsShootable)
-                {
-                    if (!SelectedItem.RequireAimToUse || IsKeyDown(InputType.Aim))
-                    {
-                        SelectedItem.Use(deltaTime, this);
-                    }
-                }
-                if (IsKeyDown(InputType.Shoot) && SelectedItem != null && SelectedItem.IsShootable)
-                {
-                    if (!SelectedItem.RequireAimToUse || IsKeyDown(InputType.Aim))
-                    {
-                        SelectedItem.Use(deltaTime, this);
-                    }
-                }
+                tryUseItem(SelectedItem, deltaTime);
             }
 
             if (SelectedCharacter != null)
@@ -2695,7 +2686,7 @@ namespace Barotrauma
                 //character is outside but cursor position inside
                 if (cursorPosition.Y > Level.Loaded.Size.Y)
                 {
-                    var sub = Submarine.FindContaining(cursorPosition);
+                    var sub = Submarine.FindContainingInLocalCoordinates(cursorPosition);
                     if (sub != null) cursorPosition += sub.Position;
                 }
             }
@@ -2872,7 +2863,7 @@ namespace Barotrauma
                     }
 #endif
                 }
-                else
+                else if (!IsClimbing)
                 {
 #if CLIENT
                     if (Controlled == this)
@@ -2920,9 +2911,9 @@ namespace Barotrauma
                 CharacterHealth.OpenHealthWindow = null;
 #endif
             }
-            else if (IsKeyHit(InputType.Health) && (SelectedItem != null || SelectedSecondaryItem != null))
+            else if (IsKeyHit(InputType.Health) && SelectedItem != null)
             {
-                SelectedItem = SelectedSecondaryItem = null;
+                SelectedItem = null;
             }
             else if (focusedItem != null)
             {
@@ -3017,7 +3008,9 @@ namespace Barotrauma
 
             for (int i = 0; i < CharacterList.Count; i++)
             {
-                CharacterList[i].Update(deltaTime, cam);
+                var character = CharacterList[i];
+                System.Diagnostics.Debug.Assert(character != null && !character.Removed);
+                character.Update(deltaTime, cam);
             }
         }
 
@@ -3108,8 +3101,7 @@ namespace Barotrauma
             if (NeedsAir)
             {
                 //implode if not protected from pressure, and either outside or in a high-pressure hull
-                if (!IsProtectedFromPressure() &&
-                    (AnimController.CurrentHull == null || AnimController.CurrentHull.LethalPressure >= 80.0f))
+                if (!IsProtectedFromPressure && (AnimController.CurrentHull == null || AnimController.CurrentHull.LethalPressure >= 80.0f))
                 {
                     if (CharacterHealth.PressureKillDelay <= 0.0f)
                     {
@@ -3136,15 +3128,17 @@ namespace Barotrauma
                     PressureTimer = 0.0f;
                 }
             }
-            else if ((GameMain.NetworkMember == null || !GameMain.NetworkMember.IsClient) &&
-                PressureProtection < (Level.Loaded?.GetRealWorldDepth(WorldPosition.Y) ?? 1.0f) &&
-                WorldPosition.Y < CharacterHealth.CrushDepth && !HasAbilityFlag(AbilityFlags.ImmuneToPressure))
+            else if ((GameMain.NetworkMember == null || !GameMain.NetworkMember.IsClient) && !IsProtectedFromPressure)
             {
-                //implode if below crush depth, and either outside or in a high-pressure hull                
-                if (AnimController.CurrentHull == null || AnimController.CurrentHull.LethalPressure >= 80.0f)
+                float realWorldDepth = Level.Loaded?.GetRealWorldDepth(WorldPosition.Y) ?? 0.0f;
+                if (PressureProtection < realWorldDepth && realWorldDepth > CharacterHealth.CrushDepth)
                 {
-                    Implode();
-                    if (IsDead) { return; }
+                    //implode if below crush depth, and either outside or in a high-pressure hull                
+                    if (AnimController.CurrentHull == null || AnimController.CurrentHull.LethalPressure >= 80.0f)
+                    {
+                        Implode();
+                        if (IsDead) { return; }
+                    }
                 }
             }
 
@@ -4064,17 +4058,7 @@ namespace Barotrauma
             CheckTalents(AbilityEffectType.OnKillCharacter, abilityCharacterKill);
 
             if (!IsOnPlayerTeam) { return; }
-            if (CreatureMetrics.Instance.Killed.Contains(target.SpeciesName)) { return; }
-            CreatureMetrics.Instance.Killed.Add(target.SpeciesName);
-            AddEncounter(target);
-        }
-
-        public void AddEncounter(Character other)
-        {
-            if (!IsOnPlayerTeam) { return; }
-            if (CreatureMetrics.Instance.Encountered.Contains(other.SpeciesName)) { return; }
-            CreatureMetrics.Instance.Encountered.Add(other.SpeciesName);
-            CreatureMetrics.Instance.RecentlyEncountered.Add(other.SpeciesName);
+            CreatureMetrics.RecordKill(target.SpeciesName);
         }
 
         public AttackResult DamageLimb(Vector2 worldPosition, Limb hitLimb, IEnumerable<Affliction> afflictions, float stun, bool playSound, float attackImpulse, Character attacker = null, float damageMultiplier = 1, bool allowStacking = true, float penetration = 0f, bool shouldImplode = false)
@@ -4108,13 +4092,6 @@ namespace Barotrauma
                     if (!afflictions.Any()) { return new AttackResult(); }                   
                 }
             }
-
-#if CLIENT
-            if (Params.UseBossHealthBar && Controlled != null && Controlled.teamID == attacker?.teamID)
-            {
-                CharacterHUD.ShowBossHealthBar(this);
-            }
-#endif
 
             Vector2 dir = hitLimb.WorldPosition - worldPosition;
             if (Math.Abs(attackImpulse) > 0.0f)
@@ -4157,13 +4134,24 @@ namespace Barotrauma
                 if (attacker != null && attacker != this && !attacker.Removed)
                 {
                     AddAttacker(attacker, attackResult.Damage);
-                    AddEncounter(attacker);
-                    attacker.AddEncounter(this);
+                    if (IsOnPlayerTeam)
+                    {
+                        CreatureMetrics.AddEncounter(attacker.SpeciesName);
+                    }
+                    if (attacker.IsOnPlayerTeam)
+                    {
+                        CreatureMetrics.AddEncounter(SpeciesName);
+                    }
                 }
                 ApplyStatusEffects(ActionType.OnDamaged, 1.0f);
                 hitLimb.ApplyStatusEffects(ActionType.OnDamaged, 1.0f);
             }
-
+#if CLIENT
+            if (Params.UseBossHealthBar && Controlled != null && Controlled.teamID == attacker?.teamID)
+            {
+                CharacterHUD.ShowBossHealthBar(this, attackResult.Damage);
+            }
+#endif
             return attackResult;
         }
 
@@ -4181,7 +4169,8 @@ namespace Barotrauma
             {
                 if (affliction.Prefab.IsBuff) { continue; }
                 if (Params.IsMachine && !affliction.Prefab.AffectMachines) { continue; }
-                if (affliction.Prefab.AfflictionType == "poison" || affliction.Prefab.AfflictionType == "paralysis")
+                if (affliction.Prefab.AfflictionType == AfflictionPrefab.PoisonType || 
+                    affliction.Prefab.AfflictionType == AfflictionPrefab.ParalysisType)
                 {
                     if (!Params.Health.PoisonImmunity)
                     {
@@ -4261,7 +4250,7 @@ namespace Barotrauma
             if (Screen.Selected != GameMain.GameScreen) { return; }
             if (newStun > 0 && Params.Health.StunImmunity)
             {
-                if (EmpVulnerability <= 0 || CharacterHealth.GetAfflictionStrength("emp", allowLimbAfflictions: false) <= 0)
+                if (EmpVulnerability <= 0 || CharacterHealth.GetAfflictionStrength(AfflictionPrefab.EMPType, allowLimbAfflictions: false) <= 0)
                 {
                     return;
                 }
@@ -4288,7 +4277,7 @@ namespace Barotrauma
                 float eatingRegen = Params.Health.HealthRegenerationWhenEating;
                 if (eatingRegen > 0)
                 {
-                    CharacterHealth.ReduceAfflictionOnAllLimbs("damage".ToIdentifier(), eatingRegen * deltaTime);
+                    CharacterHealth.ReduceAfflictionOnAllLimbs(AfflictionPrefab.DamageType, eatingRegen * deltaTime);
                 }
             }
             if (statusEffects.TryGetValue(actionType, out var statusEffectList))
@@ -4298,7 +4287,7 @@ namespace Barotrauma
                     if (statusEffect.type == ActionType.OnDamaged)
                     {
                         if (!statusEffect.HasRequiredAfflictions(LastDamage)) { continue; }
-                        if (statusEffect.OnlyPlayerTriggered)
+                        if (statusEffect.OnlyWhenDamagedByPlayer)
                         {
                             if (LastAttacker == null || !LastAttacker.IsPlayer)
                             {
@@ -4355,6 +4344,10 @@ namespace Barotrauma
                     if (statusEffect.HasTargetType(StatusEffect.TargetType.This) || statusEffect.HasTargetType(StatusEffect.TargetType.Character))
                     {
                         statusEffect.Apply(actionType, deltaTime, this, this);
+                    }
+                    if (statusEffect.HasTargetType(StatusEffect.TargetType.Hull) && CurrentHull != null)
+                    {
+                        statusEffect.Apply(actionType, deltaTime, this, CurrentHull);
                     }
                 }
                 if (actionType != ActionType.OnDamaged && actionType != ActionType.OnSevered)
@@ -4494,9 +4487,12 @@ namespace Barotrauma
 
             OnDeath?.Invoke(this, CauseOfDeath);
 
-            var abilityCharacterKiller = new AbilityCharacterKiller(CauseOfDeath.Killer);
-            CheckTalents(AbilityEffectType.OnDieToCharacter, abilityCharacterKiller);
-            CauseOfDeath.Killer?.RecordKill(this);
+            if (CauseOfDeath.Type != CauseOfDeathType.Disconnected)
+            {
+                var abilityCharacterKiller = new AbilityCharacterKiller(CauseOfDeath.Killer);
+                CheckTalents(AbilityEffectType.OnDieToCharacter, abilityCharacterKiller);
+                CauseOfDeath.Killer?.RecordKill(this);
+            }
 
             if (GameMain.GameSession != null && Screen.Selected == GameMain.GameScreen)
             {
@@ -4517,6 +4513,9 @@ namespace Barotrauma
             {
                 foreach (Item heldItem in HeldItems.ToList())
                 {
+                    //if the item is both wearable and holdable, and currently worn, don't drop the item
+                    var wearable = heldItem.GetComponent<Wearable>();
+                    if (wearable is { IsActive: true }) { continue; }
                     heldItem.Drop(this);
                 }
             }
@@ -4563,6 +4562,11 @@ namespace Barotrauma
             SetStun(0.0f, true);
             isDead = false;
 
+            if (info != null)
+            {
+                info.CauseOfDeath = null;
+            }
+
             foreach (LimbJoint joint in AnimController.LimbJoints)
             {
                 var revoluteJoint = joint.revoluteJoint;
@@ -4586,10 +4590,7 @@ namespace Barotrauma
                 limb.IsSevered = false;
             }
 
-            if (GameMain.GameSession != null)
-            {
-                GameMain.GameSession.ReviveCharacter(this);
-            }
+            GameMain.GameSession?.ReviveCharacter(this);            
         }
 
         public override void Remove()
@@ -4657,6 +4658,7 @@ namespace Barotrauma
             Submarine = null;
             AnimController.SetPosition(ConvertUnits.ToSimUnits(worldPos), lerp: false);
             AnimController.FindHull(worldPos, setSubmarine: true);
+            CurrentHull = AnimController.CurrentHull;
             if (AIController is HumanAIController humanAI)
             {
                 humanAI.PathSteering?.ResetPath();
@@ -4707,7 +4709,7 @@ namespace Barotrauma
                 if (!MathUtils.NearlyEqual(newItem.Condition, newItem.MaxCondition) &&
                     GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer)
                 {
-                    newItem.CreateStatusEvent();
+                    newItem.CreateStatusEvent(loadingRound: true);
                 }
 #if SERVER
                 newItem.GetComponent<Terminal>()?.SyncHistory();
@@ -4903,34 +4905,36 @@ namespace Barotrauma
             return visibleHulls;
         }
 
-        public Vector2 GetRelativeSimPosition(ISpatialEntity target, Vector2? worldPos = null)
+        public Vector2 GetRelativeSimPosition(ISpatialEntity target, Vector2? worldPos = null) => GetRelativeSimPosition(this, target, worldPos);
+
+        public static Vector2 GetRelativeSimPosition(ISpatialEntity from, ISpatialEntity to, Vector2? worldPos = null)
         {
-            Vector2 targetPos = target.SimPosition;
+            Vector2 targetPos = to.SimPosition;
             if (worldPos.HasValue)
             {
                 Vector2 wp = worldPos.Value;
-                if (target.Submarine != null)
+                if (to.Submarine != null)
                 {
-                    wp -= target.Submarine.Position;
+                    wp -= to.Submarine.Position;
                 }
                 targetPos = ConvertUnits.ToSimUnits(wp);
             }
-            if (Submarine == null && target.Submarine != null)
+            if (from.Submarine == null && to.Submarine != null)
             {
                 // outside and targeting inside
-                targetPos += target.Submarine.SimPosition;
+                targetPos += to.Submarine.SimPosition;
             }
-            else if (Submarine != null && target.Submarine == null)
+            else if (from.Submarine != null && to.Submarine == null)
             {
                 // inside and targeting outside
-                targetPos -= Submarine.SimPosition;
+                targetPos -= from.Submarine.SimPosition;
             }
-            else if (Submarine != target.Submarine)
+            else if (from.Submarine != to.Submarine)
             {
-                if (Submarine != null && target.Submarine != null)
+                if (from.Submarine != null && to.Submarine != null)
                 {
                     // both inside, but in different subs
-                    Vector2 diff = Submarine.SimPosition - target.Submarine.SimPosition;
+                    Vector2 diff = from.Submarine.SimPosition - to.Submarine.SimPosition;
                     targetPos -= diff;
                 }
             }
@@ -4952,13 +4956,14 @@ namespace Barotrauma
 
         public bool HasJob(Identifier identifier) => Info?.Job?.Prefab.Identifier == identifier;
 
-        public bool IsProtectedFromPressure()
-        {
-            return HasAbilityFlag(AbilityFlags.ImmuneToPressure) || PressureProtection >= (Level.Loaded?.GetRealWorldDepth(WorldPosition.Y) ?? 1.0f);
-        }
+        /// <summary>
+        /// Is the character currently protected from the pressure by immunity/ability or a status effect (e.g. from a diving suit).
+        /// </summary>
+        public bool IsProtectedFromPressure => IsImmuneToPressure || PressureProtection >= (Level.Loaded?.GetRealWorldDepth(WorldPosition.Y) ?? 1.0f);
 
-        // Talent logic begins here. Should be encapsulated to its own controller soon
+        public bool IsImmuneToPressure => !NeedsAir || HasAbilityFlag(AbilityFlags.ImmuneToPressure);
 
+        #region Talents
         private readonly List<CharacterTalent> characterTalents = new List<CharacterTalent>();
 
         public void LoadTalents()
@@ -5032,6 +5037,49 @@ namespace Barotrauma
             return info.UnlockedTalents.Contains(identifier);
         }
 
+        public bool HasUnlockedAllTalents()
+        {
+            if (TalentTree.JobTalentTrees.TryGet(Info.Job.Prefab.Identifier, out TalentTree talentTree))
+            {
+                foreach (TalentSubTree talentSubTree in talentTree.TalentSubTrees)
+                {
+                    foreach (TalentOption talentOption in talentSubTree.TalentOptionStages)
+                    {
+                        if (!talentOption.HasMaxTalents(info.UnlockedTalents))
+                        {
+                            return false;
+                        }
+                    }
+                }
+            }
+            return true;
+        }
+
+        public bool HasTalents()
+        {
+            return characterTalents.Any();
+        }
+
+        public void CheckTalents(AbilityEffectType abilityEffectType, AbilityObject abilityObject)
+        {
+            foreach (var characterTalent in characterTalents)
+            {
+                characterTalent.CheckTalent(abilityEffectType, abilityObject);
+            }
+        }
+
+        public void CheckTalents(AbilityEffectType abilityEffectType)
+        {
+            foreach (var characterTalent in characterTalents)
+            {
+                characterTalent.CheckTalent(abilityEffectType, null);
+            }
+        }
+
+        partial void OnTalentGiven(TalentPrefab talentPrefab);
+
+        #endregion
+
         private readonly HashSet<Hull> sameRoomHulls = new();
 
         /// <summary>
@@ -5058,24 +5106,6 @@ namespace Barotrauma
             return sameRoomHulls.Contains(character.CurrentHull);
         }
 
-        public bool HasUnlockedAllTalents()
-        {
-            if (TalentTree.JobTalentTrees.TryGet(Info.Job.Prefab.Identifier, out TalentTree talentTree))
-            {
-                foreach (TalentSubTree talentSubTree in talentTree.TalentSubTrees)
-                {
-                    foreach (TalentOption talentOption in talentSubTree.TalentOptionStages)
-                    {
-                        if (!talentOption.HasMaxTalents(info.UnlockedTalents))
-                        {
-                            return false;
-                        }
-                    }
-                }
-            }
-            return true;
-        }
-
         public static IEnumerable<Character> GetFriendlyCrew(Character character)
         {
             if (character is null)
@@ -5083,27 +5113,6 @@ namespace Barotrauma
                 return Enumerable.Empty<Character>();
             }
             return CharacterList.Where(c => HumanAIController.IsFriendly(character, c, onlySameTeam: true) && !c.IsDead);
-        }
-
-        public bool HasTalents()
-        {
-            return characterTalents.Any();
-        }
-
-        public void CheckTalents(AbilityEffectType abilityEffectType, AbilityObject abilityObject)
-        {
-            foreach (var characterTalent in characterTalents)
-            {
-                characterTalent.CheckTalent(abilityEffectType, abilityObject);
-            }
-        }
-
-        public void CheckTalents(AbilityEffectType abilityEffectType)
-        {
-            foreach (var characterTalent in characterTalents)
-            {
-                characterTalent.CheckTalent(abilityEffectType, null);
-            }
         }
 
         public bool HasRecipeForItem(Identifier recipeIdentifier)
@@ -5169,7 +5178,6 @@ namespace Barotrauma
 #endif
 
         partial void OnMoneyChanged(int prevAmount, int newAmount);
-        partial void OnTalentGiven(TalentPrefab talentPrefab);
 
         /// <summary>
         /// This dictionary is used for stats that are required very frequently. Not very performant, but easier to develop with for now.
@@ -5345,7 +5353,7 @@ namespace Barotrauma
 
         public bool IsSameSpeciesOrGroup(Character other) => IsSameSpeciesOrGroup(this, other);
 
-        public static bool IsSameSpeciesOrGroup(Character me, Character other) => other.SpeciesName == me.SpeciesName || other.Params.CompareGroup(me.Params.Group);
+        public static bool IsSameSpeciesOrGroup(Character me, Character other) => other.SpeciesName == me.SpeciesName || CharacterParams.CompareGroup(me.Group, other.Group);
 
         public void StopClimbing()
         {

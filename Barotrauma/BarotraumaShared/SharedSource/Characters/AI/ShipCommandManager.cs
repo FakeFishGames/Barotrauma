@@ -229,7 +229,7 @@ namespace Barotrauma
 #if DEBUG
                     ShipCommandLog("Current importance for " + shipIssueWorker + " was " + importance + " and it was already being attended by " + shipIssueWorker.OrderedCharacter);
 #endif
-                    attendedIssues.Add(shipIssueWorker);
+                    InsertIssue(shipIssueWorker, attendedIssues);
                 }
                 else
                 {
@@ -237,12 +237,19 @@ namespace Barotrauma
                     ShipCommandLog("Current importance for " + shipIssueWorker + " was " + importance + " and it is not attended to");
 #endif
                     shipIssueWorker.RemoveOrder();
-                    availableIssues.Add(shipIssueWorker);
+                    InsertIssue(shipIssueWorker, availableIssues);
                 }
             }
 
-            availableIssues.Sort((x, y) => y.Importance.CompareTo(x.Importance));
-            attendedIssues.Sort((x, y) => x.Importance.CompareTo(y.Importance));
+            static void InsertIssue(ShipIssueWorker issue, List<ShipIssueWorker> list)
+            {
+                int index = 0;
+                while (index < list.Count && list[index].Importance > issue.Importance)
+                {
+                    index++;
+                }
+                list.Insert(index, issue);
+            }
 
             ShipIssueWorker mostImportantIssue = availableIssues.FirstOrDefault();
 

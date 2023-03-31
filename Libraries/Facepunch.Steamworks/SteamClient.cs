@@ -124,7 +124,7 @@ namespace Steamworks
 		/// very good experience for the player and you could be preventing them from accessing APIs that do not 
 		/// need a live connection to Steam.
 		/// </summary>
-		public static bool IsLoggedOn => SteamUser.Internal.BLoggedOn();
+		public static bool IsLoggedOn => SteamUser.Internal != null && SteamUser.Internal.BLoggedOn();
 
 		/// <summary>
 		/// Gets the Steam ID of the account currently logged into the Steam client. This is 
@@ -132,18 +132,18 @@ namespace Steamworks
 		/// A Steam ID is a unique identifier for a Steam accounts, Steam groups, Lobbies and Chat 
 		/// rooms, and used to differentiate users in all parts of the Steamworks API.
 		/// </summary>
-		public static SteamId SteamId => SteamUser.Internal.GetSteamID();
+		public static SteamId SteamId => SteamUser.Internal?.GetSteamID() ?? default;
 
 		/// <summary>
 		/// returns the local players name - guaranteed to not be NULL.
 		/// this is the same name as on the users community profile page
 		/// </summary>
-		public static string Name => SteamFriends.Internal.GetPersonaName();
+		public static string? Name => SteamFriends.Internal?.GetPersonaName();
 
 		/// <summary>
 		/// gets the status of the current user
 		/// </summary>
-		public static FriendState State => SteamFriends.Internal.GetPersonaState();
+		public static FriendState State => SteamFriends.Internal?.GetPersonaState() ?? FriendState.Offline;
 
 		/// <summary>
 		/// returns the appID of the current process

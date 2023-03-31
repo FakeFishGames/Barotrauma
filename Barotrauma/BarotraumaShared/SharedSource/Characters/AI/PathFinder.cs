@@ -348,6 +348,7 @@ namespace Barotrauma
                     {
                         if (body.UserData is Submarine) { return false; }
                         if (body.UserData is Structure s && !s.IsPlatform) { return false; }
+                        if (body.UserData is Voronoi2.VoronoiCell) { return false; }
                         if (body.UserData is Item && body.FixtureList[0].CollisionCategories.HasFlag(Physics.CollisionWall)) { return false; }
                     }
                 }

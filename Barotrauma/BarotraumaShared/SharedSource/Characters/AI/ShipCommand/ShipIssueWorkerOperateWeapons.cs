@@ -17,7 +17,20 @@ namespace Barotrauma
         float GetTargetingImportance(Entity entity)
         {
             float currentDistanceToEnemy = Vector2.Distance(entity.WorldPosition, TargetItem.WorldPosition);
-            return MathHelper.Clamp(100 - (currentDistanceToEnemy / 100f), MinImportance, MaxImportance);
+
+            float importance = MathHelper.Clamp(100 - (currentDistanceToEnemy / 100f), MinImportance, MaxImportance * 0.5f);
+            if (TargetItem.Submarine != null)
+            {
+                Vector2 dir = entity.WorldPosition - TargetItem.WorldPosition;
+                Vector2 submarineDir = TargetItem.WorldPosition - TargetItem.Submarine.WorldPosition;
+                if (Vector2.Dot(dir, submarineDir) < 0)
+                {
+                    //direction from the weapon to the target is opposite to the direction from the sub to the weapon
+                    // = the turret is most likely on the wrong side of the sub, reduce importance
+                    importance *= 0.1f;
+                }
+            }
+            return importance;
         }
 
         public override void CalculateImportanceSpecific()
