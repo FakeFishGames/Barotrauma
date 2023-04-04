@@ -32,39 +32,39 @@ namespace Barotrauma
         // direct parent of the prefab
         public PrefabInstance InheritParent => originalElement.InheritParent();
 
-		// ancestry line of the prefab
-		public IEnumerable<T> InheritHistory { 
+        // ancestry line of the prefab
+        public IEnumerable<T> InheritHistory { 
             get {
                 IImplementsVariants<T> cur = this;
                 while(!(cur.InheritParent?.IsEmpty??true)){
                     if(cur.InheritParent.package.IsNullOrEmpty()){
                         cur = cur.GetPrevious(cur.InheritParent.id) as IImplementsVariants<T>;
-					}
+                    }
                     else{
                         cur = FindByPrefabInstance(cur.InheritParent) as IImplementsVariants<T>;
                     }
                     if (cur is null) break;
                     yield return cur as T;
-				}
-			} 
+                }
+            } 
         }
 
         public XElement originalElement{ get; }
 
-		public ContentXElement ConfigElement { get; }
+        public ContentXElement ConfigElement { get; }
 
-		public void InheritFrom(T parent);
+        public void InheritFrom(T parent);
 
         public bool CheckInheritHistory(T parent)
         {
             bool result = true;
-			if ((parent as IImplementsVariants<T>).InheritHistory.Any(p => ReferenceEquals(p, this as T)))
-		    {
-				throw new Exception("Inheritance cycle detected: "
-					+ string.Join(", ", InheritHistory.Select(n => "(id: " + n.Identifier.ToString() + ", package: " + n.ContentPackage!.Name + ")"))
-					+ "\n(id: " + (this as T).Identifier.ToString() + ", package: " + (this as T).ContentPackage.Name + ")");
-			}
-			return result;
+            if ((parent as IImplementsVariants<T>).InheritHistory.Any(p => ReferenceEquals(p, this as T)))
+            {
+                throw new Exception("Inheritance cycle detected: "
+                    + string.Join(", ", InheritHistory.Select(n => "(id: " + n.Identifier.ToString() + ", package: " + n.ContentPackage!.Name + ")"))
+                    + "\n(id: " + (this as T).Identifier.ToString() + ", package: " + (this as T).ContentPackage.Name + ")");
+            }
+            return result;
         }
 
         public T FindByPrefabInstance(PrefabInstance instance);
@@ -76,10 +76,10 @@ namespace Barotrauma
             Stack<ContentXElement> preprocessed = new Stack<ContentXElement>();
             var last_elem = originalElement.FromContent((this as T).FilePath);
             foreach(var it in InheritHistory)
-			{
-				preprocessed.Push(last_elem.PreprocessInherit((it as IImplementsVariants<T>).originalElement.FromContent(it.ContentFile.Path), false));
-				last_elem = preprocessed.Peek();
-			}
+            {
+                preprocessed.Push(last_elem.PreprocessInherit((it as IImplementsVariants<T>).originalElement.FromContent(it.ContentFile.Path), false));
+                last_elem = preprocessed.Peek();
+            }
             ContentXElement previous = preprocessed.Pop();
             while (preprocessed.Any())
             {
@@ -269,23 +269,23 @@ namespace Barotrauma
                         if (attribute.Name.ToString().Equals("folder", StringComparison.OrdinalIgnoreCase) && attribute.Value.ToString().Equals("default", StringComparison.OrdinalIgnoreCase))
                         {
                             if(!old_element.GetAttributeBool("usehuskappendage",false)) {
-								if (attribute.Parent.Name.ToString().Equals("ragdolls", StringComparison.OrdinalIgnoreCase))
-								{
-									evaluated = ContentPath.FromRaw(old_element.ContentPath, "./Ragdolls/");
-								}
-								else if (attribute.Parent.Name.ToString().Equals("animations", StringComparison.OrdinalIgnoreCase))
-								{
-									evaluated = ContentPath.FromRaw(old_element.ContentPath, "./Animations/");
-								}
-								else
-								{
-									evaluated = attribute.GetContentPath(old_element.ContentPath);
-								}
-							}
+                                if (attribute.Parent.Name.ToString().Equals("ragdolls", StringComparison.OrdinalIgnoreCase))
+                                {
+                                    evaluated = ContentPath.FromRaw(old_element.ContentPath, "./Ragdolls/");
+                                }
+                                else if (attribute.Parent.Name.ToString().Equals("animations", StringComparison.OrdinalIgnoreCase))
+                                {
+                                    evaluated = ContentPath.FromRaw(old_element.ContentPath, "./Animations/");
+                                }
+                                else
+                                {
+                                    evaluated = attribute.GetContentPath(old_element.ContentPath);
+                                }
+                            }
                             else
                             {
-								evaluated = attribute.GetContentPath(old_element.ContentPath);
-							}
+                                evaluated = attribute.GetContentPath(old_element.ContentPath);
+                            }
                         }
                         else
                         {
@@ -297,7 +297,7 @@ namespace Barotrauma
                             && evaluated.RelativePath==attribute.Value.ToString().CleanUpPathCrossPlatform())
                         {
                             new_element.Add(attribute);
-						}
+                        }
                         else {
                             new_element.Add(new XAttribute(attribute.Name, evaluated.MutateContentPath(new_element.ContentPath).ToAttrString()));
                         }

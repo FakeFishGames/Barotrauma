@@ -199,7 +199,8 @@ namespace Barotrauma
 						}
 						else if (force_resolve)
 						{
-							DebugConsole.LogError($"Cannot resolve inheritance of {(prefab as T)!.Identifier} inheriting {prefab.InheritParent.id}!");
+							string error_str = $"Cannot resolve inheritance of {(prefab as T)!.Identifier} inheriting {prefab.InheritParent.id}!";
+							(prefab as T)!.ContentPackage!.AddError(new ContentPackage.LoadError(error_str, null));
 						}
 					}
 					node.Inheritors.ForEach(invokeCallbacksForNode);
@@ -219,7 +220,7 @@ namespace Barotrauma
 
         private void HandleInheritance(IEnumerable<PrefabInstance> prefabInstance, bool force_resolve = false)
         {
-            if (!implementsVariants) { return; }
+            if (!implementsVariants || !force_resolve) { return; }
             InheritanceTreeCollection inheritanceTreeCollection = new InheritanceTreeCollection(this);
             inheritanceTreeCollection.AddNodesAndInheritors(prefabInstance);
             inheritanceTreeCollection.InvokeCallbacks(force_resolve);
@@ -502,15 +503,11 @@ namespace Barotrauma
             }
             topMostOverrideFile = overrideFiles.Any() ? overrideFiles.First(f1 => overrideFiles.All(f2 => f1.ContentPackage.Index >= f2.ContentPackage.Index)) : null;
             OnSort?.Invoke();
-			// inheritance cannot just work topmost prefab
-			// Mod A have item a, Mod B partially overrides Mod A's a.
-			// If you have Mod B, this doesn't necessarily mean Mod B works correctly
-			AllPrefabs.SelectMany(p => p.Value).ForEach(p => HandleInheritance(p, true));
-            /*
-            foreach(T p in this){
-                HandleInheritance(p);
-			}*/
-        }
+			foreach (var selector in AllPrefabs)
+			{
+				HandleInheritance(selector.Value.First(), true);
+			}
+		}
 
         /// <summary>
         /// GetEnumerator implementation to enable foreach
