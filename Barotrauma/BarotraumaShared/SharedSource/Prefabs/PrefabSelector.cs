@@ -32,17 +32,19 @@ namespace Barotrauma
         public T? GetPrevious(string package_name)
 		{
             bool found = false;
-			foreach (T prefab in this)
+			var it = GetEnumerator();
+			while (it.MoveNext())
 			{
-                if(found) {
-                    return prefab;
-				}
-				if (prefab.ContentPackage?.StringMatches(package_name)??false)
+				if (found)
 				{
-                    found = true;
-                }
-            }
-            return null;
+					return it.Current;
+				}
+				if (it.Current.ContentPackage?.StringMatches(package_name) ?? false)
+				{
+					found = true;
+				}
+			}
+			return null;
 		}
 
 		public void Add(T prefab, bool isOverride)
