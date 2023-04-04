@@ -61,8 +61,8 @@ namespace Barotrauma
 			if ((parent as IImplementsVariants<T>).InheritHistory.Any(p => ReferenceEquals(p, this as T)))
 		    {
 				throw new Exception("Inheritance cycle detected: "
-					+ string.Join(", ", InheritHistory.Select(n => "(id: " + n.Identifier.ToString() + ", package: " + n.ContentPackage!.Name + ")"),
-					"(id: " + (this as T).Identifier.ToString() + ", package: " + (this as T).ContentPackage.Name + ")"));
+					+ string.Join(", ", InheritHistory.Select(n => "(id: " + n.Identifier.ToString() + ", package: " + n.ContentPackage!.Name + ")"))
+					+ "\n(id: " + (this as T).Identifier.ToString() + ", package: " + (this as T).ContentPackage.Name + ")");
 			}
 			return result;
         }
