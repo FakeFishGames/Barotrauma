@@ -1909,21 +1909,39 @@ namespace Barotrauma
                 switch (args[0])
                 {
                     case "Item":
-						elem = ItemPrefab.Prefabs[args[1].ToIdentifier()].ConfigElement.Element;
+                        {
+                            ItemPrefab.Prefabs.TryGet(args[1].ToIdentifier(), out ItemPrefab res);
+                            elem = res?.ConfigElement.Element;
+                        }
                         break;
                     case "Character":
-						elem = CharacterPrefab.Prefabs[args[1].ToIdentifier()].ConfigElement.Element;
+                        {
+							CharacterPrefab.Prefabs.TryGet(args[1].ToIdentifier(), out CharacterPrefab res);
+							elem = res?.ConfigElement.Element;
+						}
 						break;
-                    default:
+					case "Affliction":
+						{
+							AfflictionPrefab.Prefabs.TryGet(args[1].ToIdentifier(), out AfflictionPrefab res);
+							elem = res?.ConfigElement.Element;
+						}
+						break;
+					default:
 						ThrowError($"Only support Item and Character that have IImplementVariants for now!");
 						return;
                 }
-                System.Xml.XmlWriterSettings settings = new();
-                settings.Indent = true;
-				var writer = System.Xml.XmlWriter.Create(filePath, settings);
-                elem.WriteTo(writer);
-                writer.Flush();
-                writer.Close();
+                if (elem != null)
+                {
+                    System.Xml.XmlWriterSettings settings = new();
+                    settings.Indent = true;
+                    var writer = System.Xml.XmlWriter.Create(filePath, settings);
+                    elem.WriteTo(writer);
+                    writer.Flush();
+                    writer.Close();
+                }
+                else {
+                    ThrowError($"Cannot find {args[0]} with identifier {args[1]}!");
+                }
             }, null, false));
 
             InitProjectSpecific();

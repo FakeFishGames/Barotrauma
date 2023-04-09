@@ -1,4 +1,6 @@
-﻿using System;
+﻿#nullable enable
+
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -8,6 +10,8 @@ using System.Text.RegularExpressions;
 using System.Collections;
 
 using Barotrauma.Extensions;
+using System.Runtime.ConstrainedExecution;
+using Barotrauma.Items.Components;
 
 namespace Barotrauma
 {
@@ -27,44 +31,221 @@ namespace Barotrauma
             return inst.id;
         }
     }
-    public interface IImplementsVariants<T> where T : Prefab
+
+    // flags prefab types that can inherit but not necessarily have variants.
+    // this means the prefab can inherit+override same identifier or the prefab is singleton.
+    // typically: afflictions and cprsettings, etc.
+    public interface IImplementsInherit { }
+
+    public interface IImplementsPartialOverride : IImplementsInherit { }
+
+	public interface IImplementsAnyInherit : IImplementsInherit { }
+
+	public interface IImplementsActivator { }
+
+    // evaluate T only when sortall happens (force resolve inheritance)
+    // inherits from T so that current prefabselector code works with Activators.
+    // not thread-safe, as with prefabs
+    public class PrefabActivator<T> : Prefab, IImplementsActivator where T : Prefab
+    {
+        static PrefabActivator() {
+            if (!typeof(T).GetInterfaces().Any(i => i.Name.Contains(nameof(IImplementsInherit))))
+            {
+                throw new InvalidOperationException("PrefabActivator<T> can only take IImplementsInherit types!");
+            }
+			if (typeof(T).GetInterfaces().Any(i => i.Name.Contains(nameof(IImplementsVariants<T>))))
+			{
+				throw new InvalidOperationException("PrefabActivator<T> currently does not handle variant logic!");
+			}
+		}
+        public PrefabActivator(ContentFile file, ContentXElement element, Func<ContentXElement, T> constructorLambda, Func<PrefabActivator<T>, PrefabActivator<T>?> locator,
+		    VariantExtensions.VariantXMLChecker? create_callback = null, Action<T>? onAdd = null) 
+            : base(file, element)
+        {
+			originalElement = element;
+            CurrentElement = element;
+            constructor = constructorLambda;
+            GetParentFunc = locator;
+			OnAdd = onAdd;
+            inherit_callback = create_callback;
+            // we don't need to wait for sortall to resolve.
+            if (originalElement.InheritParent().id.IsEmpty) {
+				cached = constructor.Invoke(CurrentElement);
+                cached_valid = true;
+                is_immutable = true;
+			}
+		}
+
+        public T? Activate() {
+			if (cached != null && cached_valid)
+			{
+				return cached;
+			}
+			else
+			{
+				DoInherit(inherit_callback);
+				cached = constructor.Invoke(CurrentElement);
+				cached_valid = true;
+                OnAdd?.Invoke(cached);
+				return cached;
+			}
+		}
+
+        public void InvalidateCache(Action<T>? OnRemoved=null) {
+            T? current = cached;
+            if (!is_immutable) {
+				cached?.Dispose();
+				cached = null;
+				cached_valid = false;
+			}
+            if (current != null) {
+				OnRemoved?.Invoke(current);
+			}
+        }
+
+		public PrefabInstance InheritParent => originalElement.InheritParent();
+
+		public IEnumerable<PrefabActivator<T>> InheritHistory {
+            get {
+                var cur = this;
+				while (cur != null)
+                {
+                    cur = GetParentFunc.Invoke(cur);
+					if (cur is null) break;
+					yield return cur;
+				}
+			}
+        }
+
+		public void CheckInheritHistory(PrefabActivator<T> parent)
+		{
+			if (parent.InheritHistory.Any(p => ReferenceEquals(p, this as T)))
+			{
+				throw new Exception("Inheritance cycle detected: "
+					+ string.Join(", ", InheritHistory.Select(n => "(id: " + n.Identifier.ToString() + ", package: " + n.ContentPackage!.Name + ")"))
+					+ "\n(id: " + (this as T)!.Identifier.ToString() + ", package: " + (this as T)!.ContentPackage?.Name + ")");
+			}
+		}
+
+		public void DoInherit(VariantExtensions.VariantXMLChecker? create_callback)
+		{
+			Stack<ContentXElement> preprocessed = new Stack<ContentXElement>();
+			var last_elem = originalElement;
+			foreach (var it in InheritHistory)
+			{
+                CheckInheritHistory(it);
+				preprocessed.Push(last_elem.PreprocessInherit(it.originalElement, false));
+				last_elem = preprocessed.Peek();
+			}
+			ContentXElement previous = preprocessed.Pop();
+			while (preprocessed.Any())
+			{
+				previous = preprocessed.Pop().CreateVariantXML(previous, create_callback);
+			}
+			CurrentElement = originalElement.CreateVariantXML(previous, create_callback);
+		}
+
+        private T? cached = null;
+        private bool cached_valid = false;
+
+		private bool is_immutable { get; }
+
+        Func<PrefabActivator<T>, PrefabActivator<T>?> GetParentFunc;
+
+		public static PrefabActivator<T>? GetParent_Collection(PrefabActivator<T> current, PrefabCollection<T> collection)
+        {
+            PrefabInstance parent_instance = current.InheritParent;
+			if (parent_instance.id.IsEmpty) {
+                return null;
+            }
+            else if (parent_instance.package.IsNullOrEmpty())
+            {
+                string current_package = current.ContentPackage?.GetBestEffortId()??"0";
+                return collection.GetSelector(parent_instance.id)?.GetPreviousActivator(current_package);
+			}
+            else
+            {
+                collection.TryGet(parent_instance, out PrefabActivator<T>? res);
+                return res;
+            }
+		}
+
+		public static PrefabActivator<T>? GetParent_Selector(PrefabActivator<T> current, PrefabSelector<T> selector)
+		{
+			PrefabInstance parent_instance = current.InheritParent;
+            if (parent_instance.id.IsEmpty)
+            {
+                return null;
+            }
+            else if (parent_instance.id != current.Identifier) {
+                throw new InvalidOperationException("Cannot use GetParent_Selector inheriting different identifiers");
+            }
+            else if (parent_instance.package.IsNullOrEmpty())
+            {
+                string current_package = current.ContentPackage?.GetBestEffortId() ?? "0";
+                return selector.GetPreviousActivator(current_package);
+            }
+            else
+            {
+                return selector.GetPackageActivator(parent_instance.package);
+            }
+		}
+
+		public ContentXElement originalElement { get; }
+
+		public ContentXElement CurrentElement { get; set; }
+
+		private Func<ContentXElement, T> constructor;
+
+        VariantExtensions.VariantXMLChecker? inherit_callback;
+		public override void Dispose(){
+            if (cached != null) { 
+                cached.Dispose();
+            }
+        }
+
+        private Action<T>? OnAdd;
+	}
+
+	public interface IImplementsVariants<T> : IImplementsInherit where T : Prefab
     {
         // direct parent of the prefab
         public PrefabInstance InheritParent => originalElement.InheritParent();
 
-		// ancestry line of the prefab
-		public IEnumerable<T> InheritHistory { 
+        // ancestry line of the prefab
+        public IEnumerable<T> InheritHistory { 
             get {
-                IImplementsVariants<T> cur = this;
-                while(!(cur.InheritParent?.IsEmpty??true)){
+                IImplementsVariants<T>? cur = this;
+                while(!(cur?.InheritParent?.IsEmpty??true)){
                     if(cur.InheritParent.package.IsNullOrEmpty()){
                         cur = cur.GetPrevious(cur.InheritParent.id) as IImplementsVariants<T>;
-					}
+                    }
                     else{
                         cur = FindByPrefabInstance(cur.InheritParent) as IImplementsVariants<T>;
                     }
-                    if (cur is null) break;
-                    yield return cur as T;
-				}
-			} 
+                    T? res = (cur as T);
+					if (res is null) break;
+                    yield return res;
+                }
+            } 
         }
 
         public XElement originalElement{ get; }
 
-		public ContentXElement ConfigElement { get; }
+        public ContentXElement ConfigElement { get; }
 
-		public void InheritFrom(T parent);
+        public void InheritFrom(T parent);
 
         public bool CheckInheritHistory(T parent)
         {
             bool result = true;
-			if ((parent as IImplementsVariants<T>).InheritHistory.Any(p => ReferenceEquals(p, this as T)))
-		    {
-				throw new Exception("Inheritance cycle detected: "
+            if ((parent as IImplementsVariants<T>)!.InheritHistory.Any(p => ReferenceEquals(p, this as T)))
+            {
+                throw new Exception("Inheritance cycle detected: "
                     + string.Join(", ", InheritHistory.Select(n => "(id: " + n.Identifier.ToString() + ", package: " + n.ContentPackage!.Name + ")"))
-					+ "\n(id: " + (this as T).Identifier.ToString() + ", package: " + (this as T).ContentPackage.Name + ")");
-			}
-			return result;
+                    + "\n(id: " + (this as T)!.Identifier.ToString() + ", package: " + (this as T)!.ContentPackage?.Name + ")");
+            }
+            return result;
         }
 
         public T FindByPrefabInstance(PrefabInstance instance);
@@ -74,18 +255,18 @@ namespace Barotrauma
         public ContentXElement DoInherit(VariantExtensions.VariantXMLChecker create_callback)
         {
             Stack<ContentXElement> preprocessed = new Stack<ContentXElement>();
-            var last_elem = originalElement.FromContent((this as T).FilePath);
+            var last_elem = originalElement.FromContent((this as T)!.FilePath);
             foreach(var it in InheritHistory)
-			{
-				preprocessed.Push(last_elem.PreprocessInherit((it as IImplementsVariants<T>).originalElement.FromContent(it.ContentFile.Path), false));
-				last_elem = preprocessed.Peek();
-			}
+            {
+                preprocessed.Push(last_elem.PreprocessInherit((it as IImplementsVariants<T>)!.originalElement.FromContent(it.ContentFile.Path), false));
+                last_elem = preprocessed.Peek();
+            }
             ContentXElement previous = preprocessed.Pop();
             while (preprocessed.Any())
             {
                 previous = preprocessed.Pop().CreateVariantXML(previous, create_callback);
             }
-            return originalElement.FromContent((this as T).ContentFile.Path).CreateVariantXML(previous, create_callback);
+            return originalElement.FromContent((this as T)!.ContentFile.Path).CreateVariantXML(previous, create_callback);
         }
     }
 
@@ -121,9 +302,10 @@ namespace Barotrauma
                             baseElement.GetAttributeIdentifier("speciesname", "") : baseElement.GetAttributeIdentifier("identifier", "")))
                 .SelectMany(p => p.Elements().SkipWhile(p => is_post_process ? !p.Name.ToString().Equals("doinherit") : false).Skip(is_post_process?1:0));
             // adapted from barotrauma mod generator
-            foreach (XElement change in inherits)
+            foreach (ContentXElement change_ctx in inherits)
             {
-                string xpath = change.Attribute("sel")?.Value??".";
+                XElement change = change_ctx.Element;
+				string xpath = change.Attribute("sel")?.Value??".";
                 bool done = false;
                 switch (change.Name.ToString().ToLower())
                 {
@@ -269,23 +451,23 @@ namespace Barotrauma
                         if (attribute.Name.ToString().Equals("folder", StringComparison.OrdinalIgnoreCase) && attribute.Value.ToString().Equals("default", StringComparison.OrdinalIgnoreCase))
                         {
                             if(!old_element.GetAttributeBool("usehuskappendage",false)) {
-								if (attribute.Parent.Name.ToString().Equals("ragdolls", StringComparison.OrdinalIgnoreCase))
-								{
-									evaluated = ContentPath.FromRaw(old_element.ContentPath, "./Ragdolls/");
-								}
-								else if (attribute.Parent.Name.ToString().Equals("animations", StringComparison.OrdinalIgnoreCase))
-								{
-									evaluated = ContentPath.FromRaw(old_element.ContentPath, "./Animations/");
-								}
-								else
-								{
-									evaluated = attribute.GetContentPath(old_element.ContentPath);
-								}
-							}
+                                if (attribute.Parent?.Name.ToString().Equals("ragdolls", StringComparison.OrdinalIgnoreCase)??false)
+                                {
+                                    evaluated = ContentPath.FromRaw(old_element.ContentPath, "./Ragdolls/");
+                                }
+                                else if (attribute.Parent?.Name.ToString().Equals("animations", StringComparison.OrdinalIgnoreCase)??false)
+                                {
+                                    evaluated = ContentPath.FromRaw(old_element.ContentPath, "./Animations/");
+                                }
+                                else
+                                {
+                                    evaluated = attribute.GetContentPath(old_element.ContentPath);
+                                }
+                            }
                             else
                             {
-								evaluated = attribute.GetContentPath(old_element.ContentPath);
-							}
+                                evaluated = attribute.GetContentPath(old_element.ContentPath);
+                            }
                         }
                         else
                         {
@@ -297,7 +479,7 @@ namespace Barotrauma
                             && evaluated.RelativePath==attribute.Value.ToString().CleanUpPathCrossPlatform())
                         {
                             new_element.Add(attribute);
-						}
+                        }
                         else {
                             new_element.Add(new XAttribute(attribute.Name, evaluated.MutateContentPath(new_element.ContentPath).ToAttrString()));
                         }
@@ -320,7 +502,7 @@ namespace Barotrauma
             return newElement;
         }
 
-        public static ContentXElement CreateVariantXML(this ContentXElement variantElement, ContentXElement baseElement, VariantXMLChecker create_callback)
+        public static ContentXElement CreateVariantXML(this ContentXElement variantElement, ContentXElement baseElement, VariantXMLChecker? create_callback)
         {
             // As of 0.18.15.1, grep -r "Content/" yields only texture="xxx" and file="yyy" attributes.
             // This means for config feature set vanilla is using, replacing can be safely done via these two attributes.
@@ -328,7 +510,7 @@ namespace Barotrauma
             // cannot copy baseuri here
             ContentXElement newElement = variantElement.PreprocessInherit(baseElement, true);
 
-            ReplaceElement(newElement, variantElement);
+            ReplaceElement(newElement.Element, variantElement.Element);
 
             void ReplaceElement(XElement element, XElement replacement)
             {
@@ -381,7 +563,7 @@ namespace Barotrauma
 
             void ReplaceAttribute(XElement element, XAttribute newAttribute)
             {
-                XAttribute existingAttribute = element.Attributes().FirstOrDefault(a => a.Name.ToString().Equals(newAttribute.Name.ToString(), StringComparison.OrdinalIgnoreCase));
+                XAttribute? existingAttribute = element.Attributes().FirstOrDefault(a => a.Name.ToString().Equals(newAttribute.Name.ToString(), StringComparison.OrdinalIgnoreCase));
                 if (existingAttribute == null)
                 {
                     element.Add(newAttribute);
@@ -420,7 +602,7 @@ namespace Barotrauma
                 }
             }
 
-            create_callback?.Invoke(newElement,variantElement,baseElement);
+            create_callback?.Invoke(newElement.Element,variantElement.Element,baseElement.Element);
             return newElement;
         }
     }
