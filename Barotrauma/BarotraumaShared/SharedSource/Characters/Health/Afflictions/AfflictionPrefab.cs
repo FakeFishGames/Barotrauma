@@ -117,7 +117,7 @@ namespace Barotrauma
         public readonly bool ControlHusk;
     }
 
-    class AfflictionPrefab : PrefabWithUintIdentifier
+    class AfflictionPrefab : PrefabWithUintIdentifier, IImplementsAnyInherit
     {
         public class Effect
         {
@@ -375,7 +375,7 @@ namespace Barotrauma
         // Arbitrary string that is used to identify the type of the affliction.
         public readonly Identifier AfflictionType;
 
-        private readonly ContentXElement configElement;
+        public readonly ContentXElement ConfigElement;
         
         //Does the affliction affect a specific limb or the whole character
         public readonly bool LimbSpecific;
@@ -488,7 +488,7 @@ namespace Barotrauma
 
         public AfflictionPrefab(ContentXElement element, AfflictionsFile file, Type type) : base(file, element.GetAttributeIdentifier("identifier", ""))
         {
-            configElement = element;
+            ConfigElement = element;
             
             AfflictionType = element.GetAttributeIdentifier("type", "");
             TranslationIdentifier = element.GetAttributeIdentifier("translationoverride", Identifier);
@@ -636,7 +636,7 @@ namespace Barotrauma
         public void LoadEffects()
         {
             ClearEffects();
-            foreach (var subElement in configElement.Elements())
+            foreach (var subElement in ConfigElement.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {

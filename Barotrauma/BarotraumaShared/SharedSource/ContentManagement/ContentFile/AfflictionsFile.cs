@@ -74,8 +74,16 @@ namespace Barotrauma
                                t.Name == elementName
                                || t.Name == $"Affliction{elementName}".ToIdentifier())
                            ?? typeof(Affliction);
+                AfflictionPrefab.Prefabs.AddDefered(element.GetAttributeIdentifier("identifier", ""), this, element,
+                    (elem) => {
+                        return CreatePrefab(elem, type);
+                    },
+                    (current) => PrefabActivator<AfflictionPrefab>.GetParent_Collection(current, AfflictionPrefab.Prefabs),
+                    null, overriding
+                );
+                /*
                 var prefab = CreatePrefab(element, type);
-                AfflictionPrefab.Prefabs.Add(prefab, overriding);
+                AfflictionPrefab.Prefabs.Add(prefab, overriding);*/
             }
         }
         
@@ -104,9 +112,9 @@ namespace Barotrauma
         public override void Sort()
         {
 #if CLIENT
-            CharacterHealth.DamageOverlayPrefab.Prefabs.Sort();
+            CharacterHealth.DamageOverlayPrefab.Prefabs.Sort(true);
 #endif
-            CPRSettings.Prefabs.Sort();
+            CPRSettings.Prefabs.Sort(true);
             AfflictionPrefab.Prefabs.SortAll();
         }
     }
