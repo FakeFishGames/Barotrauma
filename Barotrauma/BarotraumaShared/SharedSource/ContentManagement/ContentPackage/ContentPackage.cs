@@ -180,7 +180,6 @@ namespace Barotrauma
         // to add xpath error to loading
         public void AddError(LoadError error)
         {
-            EnableError = Option.None;
             FatalLoadErrors = FatalLoadErrors.Add(error);
         }
 
