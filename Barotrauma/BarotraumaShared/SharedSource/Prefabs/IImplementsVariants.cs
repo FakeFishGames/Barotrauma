@@ -357,10 +357,13 @@ namespace Barotrauma
                                         attribute.Value = change.Value.Trim();
                                         break;
                                     case XElement element:
-                                        if (string.IsNullOrWhiteSpace(change.Value) && change.HasElements)
+                                        if (change.HasElements)
                                         {
-                                            element.Elements().Remove();
-                                            element.Add(change.Elements());
+                                            XElement? target = element.Parent;
+                                            if (target != null) {
+                                                element.Remove();
+                                                target.Add(change.Elements());
+                                            }
                                         }
                                         else
                                         {
