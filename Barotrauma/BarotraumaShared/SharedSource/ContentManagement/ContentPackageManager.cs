@@ -420,6 +420,11 @@ namespace Barotrauma
                         {
                             var newRegular = EnabledPackages.Regular.ToArray();
                             newRegular[index] = regular;
+                            // hot reloading xpath mod need to reset upper errors.
+                            for (int i = 0; i <= index; ++i)
+                            {
+                                newRegular[i].ResetErrors();
+                            }
                             EnabledPackages.SetRegular(newRegular);
                         }
 
