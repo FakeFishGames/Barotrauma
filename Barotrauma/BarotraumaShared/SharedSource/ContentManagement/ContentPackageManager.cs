@@ -87,9 +87,40 @@ namespace Barotrauma
                     // so people are forced away from broken mods
                     .Where(r => !r.FatalLoadErrors.Any())
                     .ToList();
-                IEnumerable<RegularPackage> toUnload = regular.Where(r => !newRegular.Contains(r));
-                RegularPackage[] toLoad = newRegular.Where(r => !regular.Contains(r)).ToArray();
-                toUnload.ForEach(r => r.UnloadContent());
+
+                // this is in reverse order. this can help inheritance removing wrong package
+                RegularPackage[] toLoad;
+                {
+                    // unload contents.
+                    var reversed_original = regular.AsEnumerable().Reverse().GetEnumerator();
+                    var reversed_incomming = newRegular.AsEnumerable().Reverse().GetEnumerator();
+                    bool difference_found = false;
+                    List<RegularPackage> toLoadList = new List<RegularPackage>();
+                    while (reversed_original.MoveNext())
+                    {
+                        if (reversed_incomming.MoveNext())
+                        {
+                            if (reversed_original.Current != reversed_incomming.Current)
+                            {
+                                difference_found = true;
+                            }
+                            if (difference_found)
+                            {
+                                toLoadList.Add(reversed_incomming.Current);
+                                reversed_original.Current.UnloadContent();
+                            }
+                        }
+                        else
+                        {
+                            reversed_original.Current.UnloadContent();
+                        }
+                    }
+                    while (reversed_incomming.MoveNext())
+                    {
+                        toLoadList.Add(reversed_incomming.Current);
+                    }
+                    toLoad = toLoadList.AsEnumerable().ToArray();
+                }
 
                 Range<float> loadingRange = new Range<float>(0.0f, 1.0f);
                 
@@ -420,6 +451,11 @@ namespace Barotrauma
                         {
                             var newRegular = EnabledPackages.Regular.ToArray();
                             newRegular[index] = regular;
+                            // hot reloading xpath mod need to reset upper errors.
+                            for (int i = 0; i <= index; ++i)
+                            {
+                                newRegular[i].ResetErrors();
+                            }
                             EnabledPackages.SetRegular(newRegular);
                         }
 
