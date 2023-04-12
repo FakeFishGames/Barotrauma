@@ -482,8 +482,8 @@ namespace Barotrauma.Items.Components
                     {
                         foreach (Item item in Inventory.AllItemsMod)
                         {
-                            item.ApplyStatusEffects(ActionType.OnSuccess, 1.0f, ownerCharacter);
-                            item.ApplyStatusEffects(ActionType.OnUse, 1.0f, ownerCharacter);
+                            item.ApplyStatusEffects(ActionType.OnSuccess, 1.0f, ownerCharacter, useTarget: ownerCharacter);
+                            item.ApplyStatusEffects(ActionType.OnUse, 1.0f, ownerCharacter, useTarget: ownerCharacter);
                             item.GetComponent<GeneticMaterial>()?.Equip(ownerCharacter);
                         }
                         autoInjectCooldown = AutoInjectInterval;

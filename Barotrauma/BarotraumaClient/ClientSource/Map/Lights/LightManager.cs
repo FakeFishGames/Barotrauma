@@ -155,7 +155,7 @@ namespace Barotrauma.Lights
         {
             foreach (LightSource light in lights)
             {
-                light.NeedsHullCheck = true;
+                light.HullsUpToDate.Clear();
                 light.NeedsRecalculation = true;
             }
         }
