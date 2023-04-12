@@ -6,8 +6,8 @@
     <RootNamespace>Barotrauma</RootNamespace>
     <Authors>FakeFish, Undertow Games</Authors>
     <Product>Barotrauma</Product>
-    <Version>1.0.8.0</Version>
-    <Copyright>Copyright © FakeFish 2018-2022</Copyright>
+    <Version>1.0.9.0</Version>
+    <Copyright>Copyright © FakeFish 2018-2023</Copyright>
     <Platforms>AnyCPU;x64</Platforms>
     <AssemblyName>Barotrauma</AssemblyName>
     <ApplicationIcon>..\BarotraumaShared\Icon.ico</ApplicationIcon>

@@ -1,4 +1,16 @@
 ---------------------------------------------------------------------------------------------------------
+v1.0.9.0
+---------------------------------------------------------------------------------------------------------
+
+- Fixed crashing when you move from one textbox to another using tab and go past the last available textbox.
+- Fixed inability to enter the final levels on some subs that include shuttles/drones. 
+- Fixed autoinjectors (PUCS, autoinjector headset) wasting the syringe without any effects on the character.
+- Fixed bots failing to operate turrets in Typhon 1 due to them being partially inside the ceiling.
+- Fixed lights going through walls in outposts.
+- Fixed language selection prompt not showing up when launching the game for the first time.
+- Fixed bots doing objectives during the roles tutorial, e.g. repairing the leaks for you.
+
+---------------------------------------------------------------------------------------------------------
 v1.0.8.0
 ---------------------------------------------------------------------------------------------------------
 
