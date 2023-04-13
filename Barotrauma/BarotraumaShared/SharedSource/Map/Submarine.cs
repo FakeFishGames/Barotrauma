@@ -259,7 +259,7 @@ namespace Barotrauma
         {
             if (outpost.exitPoints.Any())
             {
-                Rectangle worldBorders = Borders;
+                Rectangle worldBorders = GetDockedBorders();
                 worldBorders.Location += WorldPosition.ToPoint();
                 foreach (var exitPoint in outpost.exitPoints)
                 {
@@ -425,18 +425,22 @@ namespace Barotrauma
             }
         }
 
+        private static readonly HashSet<Submarine> checkSubmarineBorders = new HashSet<Submarine>();
+
         /// <summary>
-        /// Returns a rect that contains the borders of this sub and all subs docked to it
+        /// Returns a rect that contains the borders of this sub and all subs docked to it, excluding outposts
         /// </summary>
-        public Rectangle GetDockedBorders(List<Submarine> checkd = null)
+        public Rectangle GetDockedBorders()
         {
-            if (checkd == null) { checkd = new List<Submarine>(); }
-            checkd.Add(this);
+            checkSubmarineBorders.Clear();
+            return GetDockedBordersRecursive();
+        }
 
+        private Rectangle GetDockedBordersRecursive()
+        {
             Rectangle dockedBorders = Borders;
-
-            var connectedSubs = DockedTo.Where(s => !checkd.Contains(s) && !s.Info.IsOutpost).ToList();
-
+            checkSubmarineBorders.Add(this);
+            var connectedSubs = DockedTo.Where(s => !checkSubmarineBorders.Contains(s) && !s.Info.IsOutpost);
             foreach (Submarine dockedSub in connectedSubs)
             {
                 //use docking ports instead of world position to determine
@@ -445,7 +449,7 @@ namespace Barotrauma
                 Vector2? expectedLocation = CalculateDockOffset(this, dockedSub);
                 if (expectedLocation == null) { continue; }
 
-                Rectangle dockedSubBorders = dockedSub.GetDockedBorders(checkd);
+                Rectangle dockedSubBorders = dockedSub.GetDockedBordersRecursive();
                 dockedSubBorders.Location += MathUtils.ToPoint(expectedLocation.Value);
 
                 dockedBorders.Y = -dockedBorders.Y;
@@ -477,8 +481,7 @@ namespace Barotrauma
         {
             foreach (Submarine dockedSub in DockedTo)
             {
-                if (subs.Contains(dockedSub)) continue;
-
+                if (subs.Contains(dockedSub)) { continue; }
                 subs.Add(dockedSub);
                 dockedSub.GetConnectedSubsRecursive(subs);
             }
