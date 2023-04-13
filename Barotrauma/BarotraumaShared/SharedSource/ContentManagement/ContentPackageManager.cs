@@ -88,59 +88,77 @@ namespace Barotrauma
                     .Where(r => !r.FatalLoadErrors.Any())
                     .ToList();
 
-                // this is in reverse order. this can help inheritance removing wrong package
-                RegularPackage[] toLoad;
+                Range<float> loadingRange = new Range<float>(0.0f, 1.0f);
+
+                bool finished = false;
+                while (!finished)
                 {
-                    // unload contents.
-                    var reversed_original = regular.AsEnumerable().Reverse().GetEnumerator();
-                    var reversed_incomming = newRegular.AsEnumerable().Reverse().GetEnumerator();
-                    bool difference_found = false;
-                    List<RegularPackage> toLoadList = new List<RegularPackage>();
-                    while (reversed_original.MoveNext())
+                    // this is in reverse order. this can help inheritance removing wrong package
+                    RegularPackage[] toLoad;
                     {
-                        if (reversed_incomming.MoveNext())
+                        // unload contents.
+                        var reversed_original = regular.AsEnumerable().Reverse().GetEnumerator();
+                        var reversed_incomming = newRegular.AsEnumerable().Reverse().GetEnumerator();
+                        bool difference_found = false;
+                        List<RegularPackage> toLoadList = new List<RegularPackage>();
+                        while (reversed_original.MoveNext())
                         {
-                            if (reversed_original.Current != reversed_incomming.Current)
+                            if (reversed_incomming.MoveNext())
                             {
-                                difference_found = true;
+                                if (reversed_original.Current != reversed_incomming.Current)
+                                {
+                                    difference_found = true;
+                                }
+                                if (difference_found)
+                                {
+                                    toLoadList.Add(reversed_incomming.Current);
+                                    reversed_original.Current.UnloadContent();
+                                }
                             }
-                            if (difference_found)
+                            else
                             {
-                                toLoadList.Add(reversed_incomming.Current);
                                 reversed_original.Current.UnloadContent();
                             }
                         }
-                        else
+                        while (reversed_incomming.MoveNext())
                         {
-                            reversed_original.Current.UnloadContent();
+                            toLoadList.Add(reversed_incomming.Current);
                         }
+                        toLoad = toLoadList.AsEnumerable().ToArray();
                     }
-                    while (reversed_incomming.MoveNext())
-                    {
-                        toLoadList.Add(reversed_incomming.Current);
-                    }
-                    toLoad = toLoadList.AsEnumerable().ToArray();
-                }
 
-                Range<float> loadingRange = new Range<float>(0.0f, 1.0f);
-                
-                for (int i = 0; i < toLoad.Length; i++)
-                {
-                    var package = toLoad[i];
-                    loadingRange = new Range<float>(i / (float)toLoad.Length, (i + 1) / (float)toLoad.Length);
-                    foreach (var progress in package.LoadContentEnumerable())
+                    for (int i = 0; i < toLoad.Length; i++)
                     {
-                        if (progress.Result.IsFailure)
+                        var package = toLoad[i];
+                        loadingRange = new Range<float>(i / (float)toLoad.Length, (i + 1) / (float)toLoad.Length);
+                        foreach (var progress in package.LoadContentEnumerable())
                         {
-                            //If an exception was thrown while loading this package, refuse to add it to the list of enabled packages
-                            newRegular.Remove(package);
-                            break;
+                            if (progress.Result.IsFailure)
+                            {
+                                //If an exception was thrown while loading this package, refuse to add it to the list of enabled packages
+                                package.UnloadContent();
+                                newRegular.Remove(package);
+                                break;
+                            }
+                            yield return progress.Transform(loadingRange);
                         }
-                        yield return progress.Transform(loadingRange);
+                    }
+                    regular.Clear(); regular.AddRange(newRegular);
+                    SortContent();
+                    if (newRegular.Any(p => p.HasAnyErrors))
+                    {
+                        newRegular.Where(p => p.HasAnyErrors).ToArray()
+                            .ForEach((p) =>
+                            {
+                                p.UnloadContent();
+                                newRegular.Remove(p);
+                            });
+                    }
+                    else
+                    {
+                        finished = true;
                     }
                 }
-                regular.Clear(); regular.AddRange(newRegular);
-                SortContent();
                 yield return LoadProgress.Progress(1.0f);
             }
 
