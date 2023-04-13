@@ -222,9 +222,10 @@ namespace Barotrauma.Lights
         private float prevCalculatedRange;
         private Vector2 prevCalculatedPosition;
 
-        //do we need to recheck which convex hulls are within range
-        //(e.g. position or range of the lightsource has changed)
-        public bool NeedsHullCheck = true;
+        //Which submarines' convex hulls are up to date? Resets when the item moves/rotates relative to the submarine.
+        //Can contain null (means convex hulls that aren't part of any submarine).
+        public HashSet<Submarine> HullsUpToDate = new HashSet<Submarine>();
+
         //do we need to recalculate the vertices of the light volume
         private bool needsRecalculation;
         public bool NeedsRecalculation
@@ -277,7 +278,7 @@ namespace Barotrauma.Lights
                     return;
                 }
 
-                NeedsHullCheck = true;
+                HullsUpToDate.Clear();
                 NeedsRecalculation = true;
             }
         }
@@ -298,7 +299,7 @@ namespace Barotrauma.Lights
                     return;
                 }
 
-                NeedsHullCheck = true;
+                HullsUpToDate.Clear();
                 NeedsRecalculation = true;
             }
         }
@@ -368,7 +369,7 @@ namespace Barotrauma.Lights
                 lightSourceParams.Range = value;
                 if (Math.Abs(prevCalculatedRange - lightSourceParams.Range) < 10.0f) return;
 
-                NeedsHullCheck = true;
+                HullsUpToDate.Clear();
                 NeedsRecalculation = true;
                 prevCalculatedRange = lightSourceParams.Range;
             }
@@ -384,8 +385,8 @@ namespace Barotrauma.Lights
             set
             {
                 NeedsRecalculation = true;
-                NeedsHullCheck = true;
                 lightTextureTargetSize = value;
+                HullsUpToDate.Clear();
             }
         }
 
@@ -526,7 +527,7 @@ namespace Barotrauma.Lights
                 chList.List.Add(convexHull);
             }
             chList.IsHidden.RemoveWhere(ch => !chList.List.Contains(ch));
-            NeedsHullCheck = false;
+            HullsUpToDate.Add(sub);    
         }
 
         /// <summary>
@@ -571,7 +572,7 @@ namespace Barotrauma.Lights
                 //light and the convexhulls are both outside
                 if (sub == null)
                 {
-                    if (NeedsHullCheck)
+                    if (!HullsUpToDate.Contains(null))
                     {
                         RefreshConvexHullList(chList, lightPos, null);
                     }
@@ -603,7 +604,7 @@ namespace Barotrauma.Lights
                 //light and convexhull are both inside the same sub
                 if (sub == ParentSub)
                 {
-                    if (NeedsHullCheck)
+                    if (!HullsUpToDate.Contains(sub))
                     {
                         RefreshConvexHullList(chList, lightPos, sub);
                     }
@@ -611,7 +612,7 @@ namespace Barotrauma.Lights
                 //light and convexhull are inside different subs
                 else
                 {
-                    if (sub.DockedTo.Contains(ParentSub) && !NeedsHullCheck) { return; }
+                    if (sub.DockedTo.Contains(ParentSub) && HullsUpToDate.Contains(sub)) { return; }
 
                     lightPos -= (sub.Position - ParentSub.Position);
 
@@ -1385,9 +1386,9 @@ namespace Barotrauma.Lights
 
         public void Reset()
         {
+            HullsUpToDate.Clear();
             convexHullsInRange.Clear();
             diffToSub.Clear();
-            NeedsHullCheck = true;
             NeedsRecalculation = true;
 
             vertexCount = 0;
