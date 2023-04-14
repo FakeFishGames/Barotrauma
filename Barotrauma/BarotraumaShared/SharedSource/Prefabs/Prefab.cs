@@ -15,7 +15,7 @@ namespace Barotrauma
             Types = ReflectionUtils.GetDerivedNonAbstract<Prefab>().ToImmutableHashSet();
         }
 
-        private static bool potentialCallFromConstructor = false;
+        protected static bool potentialCallFromConstructor = false;
         public static void DisallowCallFromConstructor()
         {
             if (!potentialCallFromConstructor) { return; }

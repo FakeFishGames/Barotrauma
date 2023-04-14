@@ -113,6 +113,7 @@ namespace Barotrauma
                             .OfType<RegularPackage>().ToList();
                     //keep enabled client-side-only mods enabled
                     regularPackages.AddRange(ContentPackageManager.EnabledPackages.Regular.Where(p => !p.HasMultiplayerSyncedContent && !regularPackages.Contains(p)));
+                    regularPackages.ForEach(p => p.ResetErrors());
                     ContentPackageManager.EnabledPackages.SetRegular(regularPackages);
                 }
                 GameMain.NetLobbyScreen.Select();
