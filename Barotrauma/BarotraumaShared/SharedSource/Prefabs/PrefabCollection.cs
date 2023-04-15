@@ -255,7 +255,7 @@ namespace Barotrauma
         {
             get
             {
-                Prefab.DisallowCallFromConstructor();
+                Prefab.DisallowCallFromConstructor<T>();
                 var prefab = prefabs[identifier].ActivePrefab;
                 if (prefab != null && !IsPrefabOverriddenByFile(prefab))
                 {
@@ -285,7 +285,7 @@ namespace Barotrauma
         /// <returns>Whether a prefab with the identifier exists or not</returns>
         public bool TryGet(PrefabInstance identifier, [NotNullWhen(true)] out T? result)
         {
-            Prefab.DisallowCallFromConstructor();
+            Prefab.DisallowCallFromConstructor<T>();
             if (prefabs.TryGetValue(identifier.id, out PrefabSelector<T>? selector))
             {
 				// resolved prefab
@@ -310,7 +310,7 @@ namespace Barotrauma
 
 		public bool TryGet(PrefabInstance identifier, [NotNullWhen(true)] out PrefabActivator<T>? result)
 		{
-			Prefab.DisallowCallFromConstructor();
+			Prefab.DisallowCallFromConstructor<T>();
 			if (prefabs.TryGetValue(identifier.id, out PrefabSelector<T>? selector))
 			{
 				// resolved prefab
@@ -358,7 +358,7 @@ namespace Barotrauma
         /// <returns></returns>
         public T? Find(Predicate<T> predicate)
         {
-            Prefab.DisallowCallFromConstructor();
+            Prefab.DisallowCallFromConstructor<T>();
             foreach (var kpv in prefabs)
             {
                 if (kpv.Value.ActivePrefab is T p && predicate(p))
@@ -371,6 +371,7 @@ namespace Barotrauma
 
 		private T? FindInternal(Predicate<T> predicate)
 		{
+			Prefab.DisallowCallFromConstructor<T>();
 			foreach (var kpv in prefabs)
 			{
 				if (kpv.Value.activePrefabInternal is T p && predicate(p))
@@ -388,7 +389,7 @@ namespace Barotrauma
 		/// <returns>Whether a prefab with the given identifier exists or not</returns>
 		public bool ContainsKey(Identifier identifier)
         {
-            Prefab.DisallowCallFromConstructor();
+            Prefab.DisallowCallFromConstructor<T>();
             return prefabs.ContainsKey(identifier);
         }
 
@@ -401,7 +402,7 @@ namespace Barotrauma
         /// <returns>Whether a prefab is implemented as an override or not</returns>
         public bool IsOverride(T prefab)
         {
-            Prefab.DisallowCallFromConstructor();
+            Prefab.DisallowCallFromConstructor<T>();
             if (ContainsKey(prefab.Identifier))
             {
                 return prefabs[prefab.Identifier].IsOverride(prefab);
@@ -420,7 +421,7 @@ namespace Barotrauma
         /// <param name="isOverride">Is marked as override</param>
         public void Add(T prefab, bool isOverride)
         {
-            Prefab.DisallowCallFromConstructor();
+            Prefab.DisallowCallFromConstructor<T>();
             if (prefab.Identifier.IsEmpty)
             {
                 throw new ArgumentException($"Prefab has no identifier!");
@@ -470,7 +471,7 @@ namespace Barotrauma
 		public void AddDefered(Identifier identifier, 
             ContentFile file, ContentXElement element, Func<ContentXElement, T> constructorLambda, Func<PrefabActivator<T>, PrefabActivator<T>?> locator, VariantExtensions.VariantXMLChecker? inherit_callback, bool isOverride)
 		{
-			Prefab.DisallowCallFromConstructor();
+			Prefab.DisallowCallFromConstructor<T>();
             
 			if (identifier.IsEmpty)
 			{
@@ -525,7 +526,7 @@ namespace Barotrauma
 		/// <param name="prefab">Prefab</param>
 		public void Remove(T prefab)
         {
-            Prefab.DisallowCallFromConstructor();
+            Prefab.DisallowCallFromConstructor<T>();
             OnRemove?.Invoke(prefab);
             if (!ContainsKey(prefab.Identifier)) { return; }
             if (!prefabs[prefab.Identifier].Contains(prefab)) { return; }
@@ -543,7 +544,7 @@ namespace Barotrauma
         /// </summary>
         public void RemoveByFile(ContentFile file)
         {
-            Prefab.DisallowCallFromConstructor();
+            Prefab.DisallowCallFromConstructor<T>();
             HashSet<Identifier> clearedIdentifiers = new HashSet<Identifier>();
             foreach (var kpv in prefabs)
             {
@@ -563,7 +564,7 @@ namespace Barotrauma
         /// </summary>
         public void AddOverrideFile(ContentFile file)
         {
-            Prefab.DisallowCallFromConstructor();
+            Prefab.DisallowCallFromConstructor<T>();
             if (!overrideFiles.Contains(file))
             {
                 overrideFiles.Add(file);
@@ -576,7 +577,7 @@ namespace Barotrauma
         /// </summary>
         public void RemoveOverrideFile(ContentFile file)
         {
-            Prefab.DisallowCallFromConstructor();
+            Prefab.DisallowCallFromConstructor<T>();
             if (overrideFiles.Contains(file))
             {
                 overrideFiles.Remove(file);
@@ -589,7 +590,7 @@ namespace Barotrauma
         /// </summary>
         public void SortAll()
         {
-            Prefab.DisallowCallFromConstructor();
+            Prefab.DisallowCallFromConstructor<T>();
             foreach (var kvp in prefabs)
             {
                 kvp.Value.Sort(true);
@@ -611,7 +612,7 @@ namespace Barotrauma
         /// <returns>IEnumerator</returns>
         public IEnumerator<T> GetEnumerator()
         {
-            Prefab.DisallowCallFromConstructor();
+            Prefab.DisallowCallFromConstructor<T>();
             foreach (var kpv in prefabs)
             {
                 var prefab = kpv.Value.ActivePrefab;
