@@ -519,7 +519,7 @@ namespace Barotrauma
 
         public static void LoadVanillaFileList()
         {
-            VanillaCorePackage = new CorePackage(XDocument.Load(VanillaFileList), VanillaFileList);
+            VanillaCorePackage = new CorePackage(XDocument.Load(VanillaFileList), VanillaFileList, true);
             foreach (ContentPackage.LoadError error in VanillaCorePackage.FatalLoadErrors)
             {
                 DebugConsole.ThrowError(error.ToString());

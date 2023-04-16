@@ -53,7 +53,7 @@ namespace Barotrauma
                     .Distinct().Where(id => !id.IsEmpty && id != modName).ToHashSet();
                 cachedValue = RawValue!;
                 // vanilla package's filelist.xml is not at package root.
-                if (!(ContentPackage is null) && !(ContentPackage is CorePackage))
+                if (!(ContentPackage is null) && !IsVanilla(ContentPackage))
                 {
                     string modPath = Path.GetDirectoryName(ContentPackage.Path)!;
                     cachedValue = cachedValue
@@ -77,7 +77,7 @@ namespace Barotrauma
                         ?? allPackages.FirstOrDefault(p => p.Name == otherModName)
                         ?? allPackages.FirstOrDefault(p => p.NameMatches(otherModName))
                         ?? throw new MissingContentPackageException(ContentPackage, otherModName.Value);
-                    Debug.Assert(!(otherMod is CorePackage));
+                    Debug.Assert(!IsVanilla(otherMod));
 					cachedValue = cachedValue.Replace(string.Format(OtherModDirFmt, otherModName.Value), Path.GetDirectoryName(otherMod.Path));
 				}
                 cachedValue = cachedValue.CleanUpPath();
@@ -93,8 +93,13 @@ namespace Barotrauma
             }
 		}
 
-        // package of %ModDir:xxxx%, xxxx, or vanilla path for Content/
-        public string PackagePath {
+		public static bool IsVanilla(ContentPackage? pkg)
+		{
+			return (pkg as CorePackage)?.isVanilla ?? false;
+		}
+
+		// package of %ModDir:xxxx%, xxxx, or vanilla path for Content/
+		public string PackagePath {
             get {
                 if (!cachedPackagePath.IsNullOrEmpty()) return cachedPackagePath!;
                 var allPackages = ContentPackageManager.AllPackages;
@@ -143,13 +148,14 @@ namespace Barotrauma
             if (!(parent is null))
             {
                 string dir;
-                if(parent.ContentPackage is CorePackage){
+                if(IsVanilla(parent.ContentPackage))
+				{
                     dir = "";
                 }
                 else{
                     dir = parent.ContentPackage?.Dir ?? "";
                 }
-                EvaluateRelativePath(parent.FullPath, dir, parent.ContentPackage is CorePackage);
+                EvaluateRelativePath(parent.FullPath, dir, IsVanilla(parent.ContentPackage));
             }
         }
 
@@ -163,7 +169,7 @@ namespace Barotrauma
             if (!(parent is null))
             {
                 string dir;
-                if (parent is CorePackage)
+                if (IsVanilla(parent))
                 {
                     dir = "";
                 }
@@ -171,7 +177,7 @@ namespace Barotrauma
                 {
                     dir = parent.Dir;
                 }
-                EvaluateRelativePath("", dir, parent is CorePackage);
+                EvaluateRelativePath("", dir, IsVanilla(parent));
             }
         }
 

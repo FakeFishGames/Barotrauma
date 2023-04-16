@@ -111,9 +111,12 @@ namespace Barotrauma
                         GameMain.Client.ClientPeer.ServerContentPackages
                             .Select(p => p.RegularPackage)
                             .OfType<RegularPackage>().ToList();
-                    //keep enabled client-side-only mods enabled
-                    regularPackages.AddRange(ContentPackageManager.EnabledPackages.Regular.Where(p => !p.HasMultiplayerSyncedContent && !regularPackages.Contains(p)));
-                    regularPackages.ForEach(p => p.ResetErrors());
+					//keep enabled client-side-only mods enabled
+					regularPackages =
+						ContentPackageManager.EnabledPackages.Regular
+							.Where(p => !p.HasMultiplayerSyncedContent && !regularPackages.Contains(p))
+							.Concat(regularPackages).Distinct().ToList();
+					regularPackages.ForEach(p => p.ResetErrors());
                     ContentPackageManager.EnabledPackages.SetRegular(regularPackages);
                 }
                 GameMain.NetLobbyScreen.Select();
@@ -345,10 +348,14 @@ namespace Barotrauma
                         DebugConsole.NewMessage($"Enabling \"{regularPackage.Name}\" ({regularPackage.Dir})", Color.Lime);
                     }
 
-                    //keep enabled client-side-only mods enabled
-                    regularPackages.AddRange(ContentPackageManager.EnabledPackages.Regular.Where(p => !p.HasMultiplayerSyncedContent && !regularPackages.Contains(p)));
+					//keep enabled client-side-only mods enabled
+					regularPackages =
+	                    ContentPackageManager.EnabledPackages.Regular
+		                    .Where(p => !p.HasMultiplayerSyncedContent && !regularPackages.Contains(p))
+		                    .Concat(regularPackages).Distinct().ToList();
+					regularPackages.ForEach(p => p.ResetErrors());
 
-                    ContentPackageManager.EnabledPackages.BackUp();
+					ContentPackageManager.EnabledPackages.BackUp();
                     ContentPackageManager.EnabledPackages.SetCore(corePackage);
                     ContentPackageManager.EnabledPackages.SetRegular(regularPackages);
 
