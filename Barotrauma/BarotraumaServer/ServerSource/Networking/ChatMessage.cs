@@ -200,6 +200,33 @@ namespace Barotrauma.Networking
             return length;
         }
 
+        public static string GetSpecialChatMessageCommand(string message, out string messageWithoutCommand)
+        {
+            messageWithoutCommand = message;
+
+            if (message[0] != '!') return "";
+
+            int separatorIndex = message.IndexOf(" ");
+
+            if (separatorIndex == -1) { separatorIndex = message.Length - 1; }
+
+            string command = "";
+            try
+            {
+                command = message.Substring(1, separatorIndex);
+                command = command.Trim();
+            }
+
+            catch
+            {
+                return command;
+            }
+
+            messageWithoutCommand = message.Substring(separatorIndex + 1, message.Length - separatorIndex - 1).TrimStart();
+
+            return command;
+        }
+
         public virtual void ServerWrite(in SegmentTableWriter<ServerNetSegment> segmentTable, IWriteMessage msg, Client c)
         {
             segmentTable.StartNewSegment(ServerNetSegment.ChatMessage);

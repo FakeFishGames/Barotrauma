@@ -86,20 +86,6 @@ namespace Barotrauma
                         {
                             idCard.SubmarineSpecificID = 0;
                         }
-                        var idCard = item.GetComponent<Items.Components.IdCard>();
-                        if (idCard != null)
-                        {
-                            idCard.TeamID = TeamTag;
-                            idCard.SubmarineSpecificID = 0;
-                        }
-                    }
-
-                    WayPoint subWaypoint = 
-                        WayPoint.WayPointList.Find(wp => wp.Submarine == Submarine.MainSub && wp.SpawnType == SpawnType.Human && wp.AssignedJob == npc.Info.Job?.Prefab) ??
-                        WayPoint.WayPointList.Find(wp => wp.Submarine == Submarine.MainSub && wp.SpawnType == SpawnType.Human);
-                    if (subWaypoint != null)
-                    {
-                        npc.GiveIdCardTags(subWaypoint, createNetworkEvent: true);
                     }
                     WayPoint subWaypoint =
                         WayPoint.WayPointList.Find(wp => wp.Submarine == sub && wp.SpawnType == SpawnType.Human && wp.AssignedJob == npc.Info.Job?.Prefab) ??

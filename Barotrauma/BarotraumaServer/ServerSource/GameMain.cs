@@ -149,7 +149,7 @@ namespace Barotrauma
             string password = "";
             bool enableUpnp = false;
 
-            int maxPlayers = 10; 
+            int maxPlayers = 32; 
             Option<int> ownerKey = Option<int>.None();
             Option<SteamId> steamId = Option<SteamId>.None();
 

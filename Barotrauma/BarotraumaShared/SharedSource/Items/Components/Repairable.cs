@@ -646,11 +646,6 @@ namespace Barotrauma.Items.Components
                     //batteries don't deteriorate if they're not charging/discharging
                     if (Math.Abs(pc.CurrPowerConsumption) > 0.1f || Math.Abs(pc.CurrPowerOutput) > 0.1f) { return true; }
                 }
-                else if (ic is PowerContainer pc)
-                {
-                    //batteries don't deteriorate if they're not charging/discharging
-                    if (Math.Abs(pc.CurrPowerConsumption) > 0.1f || Math.Abs(pc.CurrPowerOutput) > 0.1f) { return true; }
-                }
                 else if (ic is Engine engine)
                 {
                     //engines don't deteriorate if they're not running
