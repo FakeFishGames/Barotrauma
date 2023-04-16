@@ -46,7 +46,7 @@ namespace Barotrauma
                 if (targetConnectionPanels.Count > 0)
                 {
                     var textId = targetConnectionPanels[0].Item.Prefab.GetItemNameTextId();
-                    targetItemPrefabName = TextManager.FormatServerMessage(textId) ?? targetConnectionPanels[0].Item.Prefab.Name;
+                    targetItemPrefabName = TextManager.FormatServerMessage(textId) ?? targetConnectionPanels[0].Item.Prefab.Name.Value;
                 }
 
                 return targetConnectionPanels.Count > 0;

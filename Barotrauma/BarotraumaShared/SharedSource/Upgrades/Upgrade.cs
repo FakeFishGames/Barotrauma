@@ -5,16 +5,15 @@ using System.Globalization;
 using System.Linq;
 using System.Xml.Linq;
 using Barotrauma.Items.Components;
-using Barotrauma.Networking;
 
 // ReSharper disable ArrangeThisQualifier
 namespace Barotrauma
 {
-    internal class PropertyReference
+    internal sealed class PropertyReference
     {
         public object? OriginalValue { get; private set; }
 
-        public readonly string Name;
+        public readonly Identifier Name;
 
         private readonly string Multiplier;
 
@@ -22,7 +21,7 @@ namespace Barotrauma
 
         private readonly Upgrade upgrade;
 
-        private PropertyReference(string name, string multiplier, Upgrade upgrade)
+        private PropertyReference(Identifier name, string multiplier, Upgrade upgrade)
         {
             this.Name = name;
             this.Multiplier = multiplier;
@@ -38,87 +37,63 @@ namespace Barotrauma
         /// Calculate the new value of the property
         /// </summary>
         /// <param name="level">level of the upgrade</param>
-        /// <param name="sourceElement">Optional XElement reference, only used for error logging.</param>
         /// <returns></returns>
-        public float CalculateUpgrade(int level, XElement? sourceElement = null)
+        public object CalculateUpgrade(int level)
         {
-            if (OriginalValue is float || OriginalValue is int || OriginalValue is double)
+            switch (OriginalValue)
             {
-                var value = (float) OriginalValue;
-
-                if (level == 0) { return value; }
-
-                if (Multiplier[^1] != '%')
+                case float _:
+                case int _:
+                case double _:
                 {
-                    float multiplier = ParseValue();
-                    switch (Multiplier[0])
-                    {
-                        case '*':
-                        case 'x':
-                            return value * (multiplier * level);
-                        case '/':
-                            return value / (multiplier * level);
-                        case '-':
-                            return value - (multiplier * level);
-                        case '+':
-                            return value + (multiplier * level);
-                        case '=':
-                            return multiplier;
-                    }
+                    var value = Convert.ToSingle(OriginalValue);
+                    return level == 0 ? value : CalculateUpgrade(value, level, Multiplier);
                 }
-                else
+                case bool _ when bool.TryParse(Multiplier, out bool result):
                 {
-                    float multiplier = UpgradePrefab.ParsePercentage(Multiplier, Name, sourceElement, upgrade.Prefab.SuppressWarnings);
-                    return ApplyPercentage(value, multiplier, level);
+                    return result;
                 }
-            }
-            else
-            {
-                DebugConsole.AddWarning($"Original value of \"{Name}\" in the upgrade \"{upgrade.Prefab.Name}\" is not a integer, float or a double but {OriginalValue?.GetType()} with a value of ({OriginalValue}). \n" +
-                                        "The value has been assumed to be '0', did you forget a Convert.ChangeType()?");
+                default:
+                {
+                    DebugConsole.AddWarning($"Original value of \"{Name}\" in the upgrade \"{upgrade.Prefab.Name}\" is not a integer, float, double or boolean but {OriginalValue?.GetType()} with a value of ({OriginalValue}). \n" +
+                                            "The value has been assumed to be '0', did you forget a Convert.ChangeType()?");
+                    break;
+                }
             }
 
             return 0;
         }
 
-        public static float CalculateUpgrade(object originalValue, int level, string Multiplier)
+        public static float CalculateUpgrade(float value, int level, string multiplier)
         {
-            if (originalValue is float || originalValue is int || originalValue is double)
+            if (multiplier[^1] != '%')
             {
-                var value = (float)originalValue;
-
-                if (Multiplier[^1] != '%')
-                {
-                    float multiplier = 1.0f;
-                    if (Multiplier.Length > 1)
-                    {
-                        if (prefixCharacters.Contains(Multiplier[0]))
-                        {
-                            float.TryParse(Multiplier.Substring(1).Trim(), NumberStyles.Number, CultureInfo.InvariantCulture, out multiplier);
-                        }
-                    }
-                    switch (Multiplier[0])
-                    {
-                        case '*':
-                        case 'x':
-                            return value * (multiplier * level);
-                        case '/':
-                            return value / (multiplier * level);
-                        case '-':
-                            return value - (multiplier * level);
-                        case '+':
-                            return value + (multiplier * level);
-                        case '=':
-                            return multiplier;
-                    }
-                }
-                else
-                {
-                    float multiplier = UpgradePrefab.ParsePercentage(Multiplier, "", suppressWarnings: true);
-                    return ApplyPercentage(value, multiplier, level);
-                }
+                return CalculateUpgradeFloat(multiplier, value , level);
             }
-            return float.NaN;
+
+            return ApplyPercentage(value, UpgradePrefab.ParsePercentage(multiplier, Identifier.Empty, suppressWarnings: true), level);
+        }
+
+        private static float CalculateUpgradeFloat(string multiplier, float value, int level)
+        {
+            float multiplierFloat = ParseValue(multiplier, value);
+
+            switch (multiplier[0])
+            {
+                case '*':
+                case 'x':
+                    return value * (multiplierFloat * level);
+                case '/':
+                    return value / (multiplierFloat * level);
+                case '-':
+                    return value - (multiplierFloat * level);
+                case '+':
+                    return value + (multiplierFloat * level);
+                case '=':
+                    return multiplierFloat;
+            }
+
+            return 0;
         }
 
         /// <summary>
@@ -131,9 +106,22 @@ namespace Barotrauma
 
             foreach (var savedValue in savedElement.Elements())
             {
-                if (string.Equals(savedValue.Name.ToString(), Name, StringComparison.OrdinalIgnoreCase))
+                if (savedValue.NameAsIdentifier() == Name)
                 {
-                    OriginalValue = savedValue.GetAttributeFloat("value", 0.0f);
+                    string value = savedValue.GetAttributeString("value", string.Empty);
+
+                    if (float.TryParse(value, NumberStyles.Any, CultureInfo.InvariantCulture, out float floatValue))
+                    {
+                        OriginalValue = floatValue;
+                    }
+                    else if (bool.TryParse(value, out bool boolValue))
+                    {
+                        OriginalValue = boolValue;
+                    }
+                    else
+                    {
+                        OriginalValue = value;
+                    }
                 }
             }
         }
@@ -152,33 +140,26 @@ namespace Barotrauma
 
         public static PropertyReference[] ParseAttributes(IEnumerable<XAttribute> attributes, Upgrade upgrade)
         {
-            return attributes.Select(attribute => new PropertyReference(attribute.Name.ToString(), attribute.Value, upgrade)).ToArray();
+            return attributes.Select(attribute => new PropertyReference(attribute.NameAsIdentifier(), attribute.Value, upgrade)).ToArray();
         }
 
-        private float ParseValue()
+        private static float ParseValue(string multiplier, object? originalValue)
         {
-            if (Multiplier.Length > 1)
+            if (multiplier.Length > 1)
             {
-                if (prefixCharacters.Contains(Multiplier[0]))
+                if (prefixCharacters.Contains(multiplier[0]))
                 {
-                    if (float.TryParse(Multiplier.Substring(1).Trim(), NumberStyles.Number, CultureInfo.InvariantCulture, out float value)) { return value; }
+                    if (float.TryParse(multiplier.Substring(1).Trim(), NumberStyles.Number, CultureInfo.InvariantCulture, out float value)) { return value; }
 
-                    if (OriginalValue is float || OriginalValue is int || OriginalValue is double) { return (float) OriginalValue; }
+                    if (originalValue is float || originalValue is int || originalValue is double) { return (float) originalValue; }
                 }
-            }
-
-            if (!upgrade.Prefab.SuppressWarnings)
-            {
-                DebugConsole.AddWarning($"Multiplier for {Name} is too short or does not contain proper prefix. \n" +
-                                        $"The value should start with {string.Join(",", prefixCharacters)} and contain a floating point value or another property. \n" +
-                                        "The value has been assumed to be '1'.");
             }
 
             return 1;
         }
     }
 
-    internal class Upgrade : IDisposable
+    internal sealed class Upgrade : IDisposable
     {
         private ISerializableEntity TargetEntity { get; }
 
@@ -186,13 +167,13 @@ namespace Barotrauma
 
         public UpgradePrefab Prefab { get; }
 
-        public string Identifier => Prefab.Identifier;
+        public Identifier Identifier => Prefab.Identifier;
 
         public int Level { get; set; }
 
         public bool Disposed { get; private set; }
 
-        private readonly XElement sourceElement;
+        private readonly ContentXElement sourceElement;
 
         public Upgrade(ISerializableEntity targetEntity, UpgradePrefab prefab, int level, XContainer? saveElement = null)
         {
@@ -205,7 +186,7 @@ namespace Barotrauma
 
             List<XElement>? saveElements = saveElement?.Elements().ToList();
 
-            foreach (XElement subElement in prefab.SourceElement.Elements())
+            foreach (var subElement in prefab.SourceElement.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
@@ -275,11 +256,12 @@ namespace Barotrauma
             {
                 if (TargetComponents.SelectMany(pair => pair.Value)
                                     .Select(@ref => @ref.Name)
-                                    .Any(@string => string.Equals(@string, element.Name.ToString(), StringComparison.OrdinalIgnoreCase))) { continue; }
+                                    .Any(@identifier => @identifier == element.NameAsIdentifier())) { continue; }
 
                 string value = element.GetAttributeString("value", string.Empty);
-                string name = element.Name.ToString();
-                string componentName = element.Parent.Name.ToString();
+                Identifier name = element.NameAsIdentifier();
+                XElement parentElement = element.Parent ?? throw new NullReferenceException("Unable to reset properties: Parent element is null.");
+                string componentName = parentElement.Name.ToString();
 
                 DebugConsole.AddWarning($"Upgrade \"{Prefab.Name}\" in {TargetEntity.Name} does not affect the property \"{name}\" but the save file suggest it has done so before (has it been overriden?). \n" +
                                         $"The property has been reset to the original value of {value} and will be ignored from now on.");
@@ -339,12 +321,12 @@ namespace Barotrauma
 
                 string name = key is ItemComponent ? key.Name : "This";
 
-                XElement subElement = new XElement(name);
+                var subElement = new XElement(name);
                 foreach (PropertyReference propertyRef in value)
                 {
                     if (propertyRef.OriginalValue != null)
                     {
-                        subElement.Add(new XElement(propertyRef.Name,
+                        subElement.Add(new XElement(propertyRef.Name.Value,
                             new XAttribute("value", propertyRef.OriginalValue)));
                     }
                     else if (!Prefab.SuppressWarnings)
@@ -378,10 +360,10 @@ namespace Barotrauma
                 {
                     if (entity.SerializableProperties.TryGetValue(propertyReference.Name, out SerializableProperty? property) && property != null)
                     {
-                        object? originalValue = property!.GetValue(entity);
+                        object? originalValue = property.GetValue(entity);
                         propertyReference.SetOriginalValue(originalValue);
-                        object newValue = Convert.ChangeType(propertyReference.CalculateUpgrade(Level, sourceElement), originalValue.GetType(), NumberFormatInfo.InvariantInfo);
-                        property!.SetValue(entity, newValue);
+                        object newValue = Convert.ChangeType(propertyReference.CalculateUpgrade(Level), originalValue.GetType(), NumberFormatInfo.InvariantInfo);
+                        property.SetValue(entity, newValue);
                     }
                     else
                     {
@@ -390,10 +372,10 @@ namespace Barotrauma
                         int closestMatch = int.MaxValue;
                         foreach (var (propertyName, _) in entity.SerializableProperties)
                         {
-                            int match = ToolBox.LevenshteinDistance(propertyName, propertyReference.Name);
+                            int match = ToolBox.LevenshteinDistance(propertyName.Value, propertyReference.Name.Value);
                             if (match < closestMatch)
                             {
-                                matchingString = propertyName;
+                                matchingString = propertyName.Value ?? "";
                                 closestMatch = match;
                             }
                         }
@@ -405,23 +387,14 @@ namespace Barotrauma
             }
         }
 
-        private void Dispose(bool disposing)
+        public void Dispose()
         {
             if (!Disposed)
             {
-                if (disposing)
-                {
-                    TargetComponents.Clear();
-                }
+                TargetComponents.Clear();
             }
 
             Disposed = true;
-        }
-
-        public void Dispose()
-        {
-            Dispose(true);
-            GC.SuppressFinalize(this);
         }
     }
 }

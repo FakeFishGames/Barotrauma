@@ -1,4 +1,4 @@
-using FarseerPhysics;
+using Barotrauma.Extensions;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -61,12 +61,6 @@ namespace Barotrauma
 
         public void Dispose()
         {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-
-        protected virtual void Dispose(bool disposing)
-        {
             IsDisposed = true;
             WallEdgeBuffer?.Dispose();
             WallBuffer?.Dispose();
@@ -77,9 +71,12 @@ namespace Barotrauma
     {
         private static BasicEffect wallEdgeEffect, wallCenterEffect;
 
-        private Vector2 dustOffset;
-        private Vector2 defaultDustVelocity;
-        private Vector2 dustVelocity;
+        private Vector2 waterParticleOffset;
+        private Vector2 waterParticleVelocity;
+
+        private float flashCooldown;
+        private float flashTimer;
+        public Color FlashColor { get; private set; }
 
         private readonly RasterizerState cullNone;
 
@@ -87,10 +84,26 @@ namespace Barotrauma
 
         private readonly List<LevelWallVertexBuffer> vertexBuffers = new List<LevelWallVertexBuffer>();
 
+        private float chromaticAberrationStrength;
+        public float ChromaticAberrationStrength
+        {
+            get { return chromaticAberrationStrength; }
+            set { chromaticAberrationStrength = MathHelper.Clamp(value, 0.0f, 100.0f); }
+        }
+        public float CollapseEffectStrength
+        {
+            get;
+            set;
+        }
+        public Vector2 CollapseEffectOrigin
+        {
+            get;
+            set;
+        }
+
+
         public LevelRenderer(Level level)
         {
-            defaultDustVelocity = Vector2.UnitY * 10.0f;
-
             cullNone = new RasterizerState() { CullMode = CullMode.None };
 
             if (wallEdgeEffect == null)
@@ -126,12 +139,50 @@ namespace Barotrauma
             level.GenerationParams.WallSprite.ReloadTexture();
             wallCenterEffect.Texture = level.GenerationParams.WallSprite.Texture;
         }
+
+        public void Flash()
+        {
+            flashTimer = 1.0f;
+        }
         
         public void Update(float deltaTime, Camera cam)
         {
+            if (CollapseEffectStrength > 0.0f)
+            {
+                CollapseEffectStrength = Math.Max(0.0f, CollapseEffectStrength - deltaTime);
+            }
+            if (ChromaticAberrationStrength > 0.0f)
+            {
+                ChromaticAberrationStrength = Math.Max(0.0f, ChromaticAberrationStrength - deltaTime * 10.0f);
+            }
+
+            if (level.GenerationParams.FlashInterval.Y > 0)
+            {
+                flashCooldown -= deltaTime;
+                if (flashCooldown <= 0.0f)
+                {
+                    flashTimer = 1.0f;
+                    if (level.GenerationParams.FlashSound != null)
+                    {
+                        level.GenerationParams.FlashSound.Play(1.0f, "default");
+                    }
+                    flashCooldown = Rand.Range(level.GenerationParams.FlashInterval.X, level.GenerationParams.FlashInterval.Y, Rand.RandSync.Unsynced);
+                }
+                if (flashTimer > 0.0f)
+                {
+                    float brightness = flashTimer * 1.1f - PerlinNoise.GetPerlin((float)Timing.TotalTime, (float)Timing.TotalTime * 0.66f) * 0.1f;
+                    FlashColor = level.GenerationParams.FlashColor.Multiply(MathHelper.Clamp(brightness, 0.0f, 1.0f));
+                    flashTimer -= deltaTime * 0.5f;
+                }
+                else
+                {
+                    FlashColor = Color.TransparentBlack;
+                }
+            }
+
             //calculate the sum of the forces of nearby level triggers
-            //and use it to move the dust texture and water distortion effect
-            Vector2 currentDustVel = defaultDustVelocity;
+            //and use it to move the water texture and water distortion effect
+            Vector2 currentWaterParticleVel = level.GenerationParams.WaterParticleVelocity;
             foreach (LevelObject levelObject in level.LevelObjectManager.GetVisibleObjects())
             {
                 if (levelObject.Triggers == null) { continue; }
@@ -145,21 +196,21 @@ namespace Barotrauma
                         objectMaxFlow = vel;
                     }
                 }
-                currentDustVel += objectMaxFlow;
+                currentWaterParticleVel += objectMaxFlow;
             }
+
+            waterParticleVelocity = Vector2.Lerp(waterParticleVelocity, currentWaterParticleVel, deltaTime);
             
-            dustVelocity = Vector2.Lerp(dustVelocity, currentDustVel, deltaTime);
-            
-            WaterRenderer.Instance?.ScrollWater(dustVelocity, deltaTime);
+            WaterRenderer.Instance?.ScrollWater(waterParticleVelocity, deltaTime);
 
             if (level.GenerationParams.WaterParticles != null)
             {
                 Vector2 waterTextureSize = level.GenerationParams.WaterParticles.size * level.GenerationParams.WaterParticleScale;
-                dustOffset += new Vector2(dustVelocity.X, -dustVelocity.Y) * level.GenerationParams.WaterParticleScale * deltaTime;
-                while (dustOffset.X <= -waterTextureSize.X) dustOffset.X += waterTextureSize.X;
-                while (dustOffset.X >= waterTextureSize.X) dustOffset.X -= waterTextureSize.X;
-                while (dustOffset.Y <= -waterTextureSize.Y) dustOffset.Y += waterTextureSize.Y;
-                while (dustOffset.Y >= waterTextureSize.Y) dustOffset.Y -= waterTextureSize.Y;
+                waterParticleOffset += new Vector2(waterParticleVelocity.X, -waterParticleVelocity.Y) * level.GenerationParams.WaterParticleScale * deltaTime;
+                while (waterParticleOffset.X <= -waterTextureSize.X) { waterParticleOffset.X += waterTextureSize.X; }
+                while (waterParticleOffset.X >= waterTextureSize.X){ waterParticleOffset.X -= waterTextureSize.X; }
+                while (waterParticleOffset.Y <= -waterTextureSize.Y) { waterParticleOffset.Y += waterTextureSize.Y; }
+                while (waterParticleOffset.Y >= waterTextureSize.Y) { waterParticleOffset.Y -= waterTextureSize.Y; }
             }
         }
 
@@ -240,7 +291,7 @@ namespace Barotrauma
 
                 Rectangle srcRect = new Rectangle(0, 0, 2048, 2048);
                 Vector2 origin = new Vector2(cam.WorldView.X, -cam.WorldView.Y);
-                Vector2 offset = -origin + dustOffset;
+                Vector2 offset = -origin + waterParticleOffset;
                 while (offset.X <= -srcRect.Width * textureScale) offset.X += srcRect.Width * textureScale;
                 while (offset.X > 0.0f) offset.X -= srcRect.Width * textureScale;
                 while (offset.Y <= -srcRect.Height * textureScale) offset.Y += srcRect.Height * textureScale;
@@ -267,7 +318,7 @@ namespace Barotrauma
                     level.GenerationParams.WaterParticles.DrawTiled(
                         spriteBatch, origin + offsetS, 
                         new Vector2(cam.WorldView.Width - offsetS.X, cam.WorldView.Height - offsetS.Y), 
-                        color: Color.White * alpha, textureScale: new Vector2(texScale));                    
+                        color: level.GenerationParams.WaterParticleColor * alpha, textureScale: new Vector2(texScale));                    
                 }
             }
             spriteBatch.End();
@@ -326,7 +377,7 @@ namespace Barotrauma
                         GUI.DrawLine(spriteBatch,
                             new Vector2(nodeList[i - 1].X, -nodeList[i - 1].Y),
                             new Vector2(nodeList[i].X, -nodeList[i].Y),
-                            Color.Lerp(Color.Yellow, GUI.Style.Red, i / (float)nodeList.Count), 0, 10);
+                            Color.Lerp(Color.Yellow, GUIStyle.Red, i / (float)nodeList.Count), 0, 10);
                     }
                 }*/
 
@@ -482,12 +533,6 @@ namespace Barotrauma
         }
 
         public void Dispose()
-        {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-
-        protected virtual void Dispose(bool disposing)
         {
             foreach (var vertexBuffer in vertexBuffers)
             {

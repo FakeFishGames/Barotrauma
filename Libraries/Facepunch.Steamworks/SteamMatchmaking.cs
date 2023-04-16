@@ -72,7 +72,7 @@ namespace Steamworks
 		{
 			SteamId steamid = default;
 			ChatEntryType chatEntryType = default;
-			var buffer = Helpers.TakeMemory();
+			using var buffer = Helpers.TakeMemory();
 
 			var readData = Internal.GetLobbyChatEntry( callback.SteamIDLobby, (int)callback.ChatID, ref steamid, buffer, Helpers.MemoryBufferSize, ref chatEntryType );
 
@@ -166,9 +166,9 @@ namespace Steamworks
 		public static async Task<Lobby?> CreateLobbyAsync( int maxMembers = 100 )
 		{
 			var lobby = await Internal.CreateLobby( LobbyType.Invisible, maxMembers );
-			if ( !lobby.HasValue || lobby.Value.Result != Result.OK ) return null;
+			if ( !lobby.HasValue ) { return null; }
 
-			return new Lobby { Id = lobby.Value.SteamIDLobby };
+			return new Lobby { Id = lobby.Value.SteamIDLobby, Result = lobby.Value.Result };
 		}
 
 		/// <summary>

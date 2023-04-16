@@ -1,8 +1,10 @@
 ﻿using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Xml.Linq;
+using static Barotrauma.LocationTypeChange;
 
 namespace Barotrauma
 {
@@ -21,7 +23,7 @@ namespace Barotrauma
             /// <summary>
             /// The change can only happen if there's at least one of the given types of locations near this one
             /// </summary>
-            public readonly List<string> RequiredLocations;
+            public readonly ImmutableArray<Identifier> RequiredLocations;
 
             /// <summary>
             /// How close the location needs to be to one of the RequiredLocations for the change to occur
@@ -55,8 +57,8 @@ namespace Barotrauma
 
             public Requirement(XElement element, LocationTypeChange change)
             {
-                RequiredLocations = element.GetAttributeStringArray("requiredlocations", element.GetAttributeStringArray("requiredadjacentlocations", new string[0])).ToList();
-                RequiredProximity = Math.Max(element.GetAttributeInt("requiredproximity", 1), 1);
+                RequiredLocations = element.GetAttributeIdentifierArray("requiredlocations", element.GetAttributeIdentifierArray("requiredadjacentlocations", Array.Empty<Identifier>())).ToImmutableArray();
+                RequiredProximity = Math.Max(element.GetAttributeInt("requiredproximity", 1), 0);
                 ProximityProbabilityIncrease = element.GetAttributeFloat("proximityprobabilityincrease", 0.0f);
                 RequiredProximityForProbabilityIncrease = element.GetAttributeInt("requiredproximityforprobabilityincrease", -1);
                 RequireBeaconStation = element.GetAttributeBool("requirebeaconstation", false);
@@ -89,44 +91,37 @@ namespace Barotrauma
                 }
             }
 
+            public bool AnyWithinDistance(Location startLocation, int distance)
+            {
+                return Map.LocationOrConnectionWithinDistance(
+                    startLocation,
+                    maxDistance: distance,
+                    criteria: MatchesLocation,
+                    connectionCriteria: MatchesConnection);
+            }
+
             public bool MatchesLocation(Location location)
             {
                 return RequiredLocations.Contains(location.Type.Identifier) && !location.IsCriticallyRadiated();
             }
 
-            public bool AnyWithinDistance(Location location, int maxDistance, int currentDistance = 0, HashSet<Location> checkedLocations = null)
+            public bool MatchesConnection(LocationConnection connection)
             {
-                if (currentDistance > maxDistance) { return false; }
-                if (currentDistance > 0 && MatchesLocation(location)) { return true; }
-
-                checkedLocations ??= new HashSet<Location>();
-                checkedLocations.Add(location);
-
-                foreach (var connection in location.Connections)
+                if (RequireBeaconStation && connection.LevelData.HasBeaconStation && connection.LevelData.IsBeaconActive)
                 {
-                    if (RequireBeaconStation && connection.LevelData.HasBeaconStation && connection.LevelData.IsBeaconActive)
-                    {
-                        return true;
-                    }
-                    if (RequireHuntingGrounds && connection.LevelData.HasHuntingGrounds)
-                    {
-                        return true;
-                    }
-
-                    var otherLocation = connection.OtherLocation(location);
-                    if (!checkedLocations.Contains(otherLocation))
-                    {
-                        if (AnyWithinDistance(otherLocation, maxDistance, currentDistance + 1, checkedLocations)) { return true; }
-                    }
+                    return true;
                 }
-
+                if (RequireHuntingGrounds && connection.LevelData.HasHuntingGrounds)
+                {
+                    return true;
+                }
                 return false;
             }
         }
 
-        public readonly string CurrentType;
+        public readonly Identifier CurrentType;
 
-        public readonly string ChangeToType;
+        public readonly Identifier ChangeToType;
 
         /// <summary>
         /// Base probability per turn for the location to change if near one of the RequiredLocations
@@ -137,12 +132,34 @@ namespace Barotrauma
 
         public List<Requirement> Requirements = new List<Requirement>();
 
-        public List<string> Messages = new List<string>();
+        private readonly bool requireChangeMessages;
+        private readonly string messageTag;
+
+        public IReadOnlyList<string> GetMessages(Faction faction)
+        {
+            if (faction != null && TextManager.ContainsTag(messageTag + "." + faction.Prefab.Identifier))
+            {
+                return TextManager.GetAll(messageTag + "." + faction.Prefab.Identifier).ToImmutableArray();
+            }
+
+            if (TextManager.ContainsTag(messageTag))
+            {
+                return TextManager.GetAll(messageTag).ToImmutableArray();
+            }
+            else
+            {
+                if (requireChangeMessages)
+                {
+                    DebugConsole.ThrowError($"No messages defined for the location type change {CurrentType} -> {ChangeToType}");
+                }
+                return Enumerable.Empty<string>().ToImmutableArray();
+            }
+        }
 
         /// <summary>
         /// The change can't happen if there's one or more of the given types of locations near this one
         /// </summary>
-        public readonly List<string> DisallowedAdjacentLocations;
+        public readonly ImmutableArray<Identifier> DisallowedAdjacentLocations;
 
         /// <summary>
         /// How close the location needs to be to one of the DisallowedAdjacentLocations for the change to be disabled
@@ -156,14 +173,14 @@ namespace Barotrauma
 
         public readonly Point RequiredDurationRange;
 
-        public LocationTypeChange(string currentType, XElement element, bool requireChangeMessages, float defaultProbability = 0.0f)
+        public LocationTypeChange(Identifier currentType, XElement element, bool requireChangeMessages, float defaultProbability = 0.0f)
         {
             CurrentType = currentType;
-            ChangeToType = element.GetAttributeString("type", element.GetAttributeString("to", ""));
+            ChangeToType = element.GetAttributeIdentifier("type", element.GetAttributeIdentifier("to", ""));
 
             RequireDiscovered = element.GetAttributeBool("requirediscovered", false);
 
-            DisallowedAdjacentLocations = element.GetAttributeStringArray("disallowedadjacentlocations", new string[0]).ToList();
+            DisallowedAdjacentLocations = element.GetAttributeIdentifierArray("disallowedadjacentlocations", Array.Empty<Identifier>()).ToImmutableArray();
             DisallowedProximity = Math.Max(element.GetAttributeInt("disallowedproximity", 1), 1);
 
             RequiredDurationRange = element.GetAttributePoint("requireddurationrange", Point.Zero);
@@ -184,19 +201,10 @@ namespace Barotrauma
                 RequiredDurationRange = new Point(element.GetAttributeInt("requiredduration", 0));
             }
 
-            string messageTag = element.GetAttributeString("messagetag", "LocationChange." + currentType + ".ChangeTo." + ChangeToType);
+            this.requireChangeMessages = requireChangeMessages;
+            messageTag = element.GetAttributeString("messagetag", "LocationChange." + currentType + ".ChangeTo." + ChangeToType);
 
-            Messages = TextManager.GetAll(messageTag);
-            if (Messages == null)
-            {
-                if (requireChangeMessages)
-                {
-                    DebugConsole.ThrowError("No messages defined for the location type change " + currentType + " -> " + ChangeToType);
-                }
-                Messages = new List<string>();
-            }
-
-            foreach (XElement subElement in element.Elements())
+            foreach (var subElement in element.Elements())
             {
                 if (subElement.Name.ToString().Equals("requirement", StringComparison.OrdinalIgnoreCase))
                 {
@@ -212,8 +220,9 @@ namespace Barotrauma
             if (location.LocationTypeChangeCooldown > 0) { return 0.0f; }
             if (location.IsGateBetweenBiomes) { return 0.0f; }
          
-            if (DisallowedAdjacentLocations.Any() && 
-                AnyWithinDistance(location, DisallowedProximity, (otherLocation) => { return DisallowedAdjacentLocations.Contains(otherLocation.Type.Identifier); }))
+            if (DisallowedAdjacentLocations.Any() &&
+                Map.LocationOrConnectionWithinDistance(location, DisallowedProximity, 
+                    (otherLocation) => { return DisallowedAdjacentLocations.Contains(otherLocation.Type.Identifier); }))
             {
                 return 0.0f;
             }
@@ -232,7 +241,6 @@ namespace Barotrauma
                         probability *= requirement.Probability;
                     }
                 }
-
                 if (location.ProximityTimer.ContainsKey(requirement))
                 {
                     if (requirement.AnyWithinDistance(location, requirement.RequiredProximityForProbabilityIncrease))
@@ -250,26 +258,6 @@ namespace Barotrauma
             }
 
             return probability;
-        }
-
-        private bool AnyWithinDistance(Location location, int maxDistance, Func<Location, bool> predicate, int currentDistance = 0, HashSet<Location> checkedLocations = null)
-        {
-            if (currentDistance > maxDistance) { return false; }
-            if (currentDistance > 0 && predicate(location)) { return true; }
-
-            checkedLocations ??= new HashSet<Location>();
-            checkedLocations.Add(location);
-
-            foreach (var connection in location.Connections)
-            {
-                var otherLocation = connection.OtherLocation(location);
-                if (!checkedLocations.Contains(otherLocation)) 
-                {
-                    if (AnyWithinDistance(otherLocation, maxDistance, predicate, currentDistance + 1, checkedLocations)) { return true; }
-                }
-            }
-
-            return false;
         }
     }
 }

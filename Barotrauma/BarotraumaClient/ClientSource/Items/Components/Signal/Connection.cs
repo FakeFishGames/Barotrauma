@@ -21,12 +21,13 @@ namespace Barotrauma.Items.Components
         public float FlashTimer { get; private set; }
         public static Wire DraggingConnected { get; private set; }
 
-        public static void DrawConnections(SpriteBatch spriteBatch, ConnectionPanel panel, Character character)
+        public static void DrawConnections(SpriteBatch spriteBatch, ConnectionPanel panel, Rectangle dragArea, Character character)
         {
-            if (DraggingConnected?.Item.Removed ?? false)
+            if (DraggingConnected?.Item?.Removed ?? true)
             {
                 DraggingConnected = null;
             }
+
             Rectangle panelRect = panel.GuiFrame.Rect;
             int x = panelRect.X, y = panelRect.Y;
             int width = panelRect.Width, height = panelRect.Height;
@@ -38,7 +39,7 @@ namespace Barotrauma.Items.Components
             int totalWireCount = 0;
             foreach (Connection c in panel.Connections)
             {
-                totalWireCount += c.Wires.Count(w => w != null);
+                totalWireCount += c.Wires.Count;
             }
 
             Wire equippedWire = null;
@@ -87,8 +88,8 @@ namespace Barotrauma.Items.Components
                             (DraggingConnected.Connections[0] == null && DraggingConnected.Connections[1] == null) ||
                             (DraggingConnected.Connections.Contains(c) && DraggingConnected.Connections.Contains(null)))
                         {
-                            int linkIndex = c.FindWireIndex(DraggingConnected.Item);
-                            if (linkIndex > -1 || panel.DisconnectedWires.Contains(DraggingConnected))
+                            var linkedWire = c.FindWireByItem(DraggingConnected.Item);
+                            if (linkedWire != null || panel.DisconnectedWires.Contains(DraggingConnected))
                             {
                                 Inventory.DraggingItems.Clear();
                                 Inventory.DraggingItems.Add(DraggingConnected.Item);
@@ -108,7 +109,7 @@ namespace Barotrauma.Items.Components
                             c.DrawWires(spriteBatch, panel, rightPos, rightWirePos, mouseInRect, equippedWire, wireInterval);
                         }
                         rightPos.Y += connectorIntervalLeft;
-                        rightWirePos.Y += c.Wires.Count(w => w != null) * wireInterval;
+                        rightWirePos.Y += c.Wires.Count * wireInterval;
                     }
                     else
                     {
@@ -121,7 +122,7 @@ namespace Barotrauma.Items.Components
                             c.DrawWires(spriteBatch, panel, leftPos, leftWirePos, mouseInRect, equippedWire, wireInterval);
                         }
                         leftPos.Y += connectorIntervalRight;
-                        leftWirePos.Y += c.Wires.Count(w => w != null) * wireInterval;
+                        leftWirePos.Y += c.Wires.Count * wireInterval;
                     }
                 }
             }
@@ -131,7 +132,10 @@ namespace Barotrauma.Items.Components
             {
                 if (mouseInRect)
                 {
-                    DrawWire(spriteBatch, DraggingConnected, PlayerInput.MousePosition, new Vector2(x + width / 2, y + height - 10), null, panel, "");
+                    Vector2 wireDragPos = new Vector2(
+                        MathHelper.Clamp(PlayerInput.MousePosition.X, dragArea.X, dragArea.Right),
+                        MathHelper.Clamp(PlayerInput.MousePosition.Y, dragArea.Y, dragArea.Bottom));
+                    DrawWire(spriteBatch, DraggingConnected, wireDragPos, new Vector2(x + width / 2, y + height - 10), null, panel, "");
                 }
                 panel.TriggerRewiringSound();
 
@@ -190,7 +194,7 @@ namespace Barotrauma.Items.Components
                 if (wire.HiddenInGame && Screen.Selected == GameMain.GameScreen) { continue; }
 
                 Connection recipient = wire.OtherConnection(null);
-                string label = recipient == null ? "" : recipient.item.Name + $" ({recipient.DisplayName})";
+                LocalizedString label = recipient == null ? "" : recipient.item.Name + $" ({recipient.DisplayName})";
                 if (wire.Locked) { label += "\n" + TextManager.Get("ConnectionLocked"); }
                 DrawWire(spriteBatch, wire, new Vector2(x, y + height - 100 * GUI.Scale),
                     new Vector2(x, y + height),
@@ -208,17 +212,17 @@ namespace Barotrauma.Items.Components
 
         private void DrawConnection(SpriteBatch spriteBatch, ConnectionPanel panel, Vector2 position, Vector2 labelPos, Vector2 scale)
         {
-            string text = DisplayName.ToUpper();
+            string text = DisplayName.Value.ToUpperInvariant();
 
             //nasty
-            if (GUI.Style.GetComponentStyle("ConnectionPanelLabel")?.Sprites.Values.First().First() is UISprite labelSprite)
+            if (GUIStyle.GetComponentStyle("ConnectionPanelLabel")?.Sprites.Values.First().First() is UISprite labelSprite)
             {
                 Rectangle labelArea = GetLabelArea(labelPos, text, scale);
-                labelSprite.Draw(spriteBatch, labelArea, IsPower ? GUI.Style.Red : Color.SteelBlue);
+                labelSprite.Draw(spriteBatch, labelArea, IsPower ? GUIStyle.Red : Color.SteelBlue);
             }
 
-            GUI.DrawString(spriteBatch, labelPos + Vector2.UnitY, text, Color.Black * 0.8f, font: GUI.SmallFont);
-            GUI.DrawString(spriteBatch, labelPos, text, GUI.Style.TextColorBright, font: GUI.SmallFont);
+            GUI.DrawString(spriteBatch, labelPos + Vector2.UnitY, text, Color.Black * 0.8f, font: GUIStyle.SmallFont);
+            GUI.DrawString(spriteBatch, labelPos, text, GUIStyle.TextColorBright, font: GUIStyle.SmallFont);
 
             float connectorSpriteScale = (35.0f / connectionSprite.SourceRect.Width) * panel.Scale;
             connectionSprite.Draw(spriteBatch, position, scale: connectorSpriteScale);
@@ -228,15 +232,15 @@ namespace Barotrauma.Items.Components
         {
             float connectorSpriteScale = (35.0f / connectionSprite.SourceRect.Width) * panel.Scale;
 
-            for (int i = 0; i < MaxWires; i++)
+            foreach (var wire in wires)
             {
-                if (wires[i] == null || wires[i].Hidden || (DraggingConnected == wires[i] && (mouseIn || Screen.Selected == GameMain.SubEditorScreen))) { continue; }
-                if (wires[i].HiddenInGame && Screen.Selected == GameMain.GameScreen) { continue; }
+                if (wire.Hidden || (DraggingConnected == wire && (mouseIn || Screen.Selected == GameMain.SubEditorScreen))) { continue; }
+                if (wire.HiddenInGame && Screen.Selected == GameMain.GameScreen) { continue; }
 
-                Connection recipient = wires[i].OtherConnection(this);
-                string label = recipient == null ? "" : recipient.item.Name + $" ({recipient.DisplayName})";
-                if (wires[i].Locked) { label += "\n" + TextManager.Get("ConnectionLocked"); }
-                DrawWire(spriteBatch, wires[i], position, wirePosition, equippedWire, panel, label);
+                Connection recipient = wire.OtherConnection(this);
+                LocalizedString label = recipient == null ? "" : recipient.item.Name + $" ({recipient.DisplayName})";
+                if (wire.Locked) { label += "\n" + TextManager.Get("ConnectionLocked"); }
+                DrawWire(spriteBatch, wire, position, wirePosition, equippedWire, panel, label);
 
                 wirePosition.Y += wireInterval;
             }
@@ -248,18 +252,17 @@ namespace Barotrauma.Items.Components
                 if (!PlayerInput.PrimaryMouseButtonHeld())
                 {
                     if ((GameMain.NetworkMember != null || panel.CheckCharacterSuccess(Character.Controlled)) &&
-                        Wires.Count(w => w != null) < MaxPlayerConnectableWires)
+                        Wires.Count < MaxPlayerConnectableWires)
                     {
                         //find an empty cell for the new connection
-                        int index = FindEmptyIndex();
-                        if (index > -1 && !Wires.Contains(DraggingConnected))
+                        if (WireSlotsAvailable() && !Wires.Contains(DraggingConnected))
                         {
                             bool alreadyConnected = DraggingConnected.IsConnectedTo(panel.Item);
                             DraggingConnected.RemoveConnection(panel.Item);
                             if (DraggingConnected.Connect(this, !alreadyConnected, true))
                             {
                                 var otherConnection = DraggingConnected.OtherConnection(this);
-                                SetWire(index, DraggingConnected);
+                                ConnectWire(DraggingConnected);
                             }
                         }
                     }
@@ -284,7 +287,7 @@ namespace Barotrauma.Items.Components
                     flashColor * (float)Math.Sin(FlashTimer % flashCycleDuration / flashCycleDuration * MathHelper.Pi * 0.8f), scale: connectorSpriteScale);
             }
 
-            if (Wires.Any(w => w != null && w != DraggingConnected && !w.Hidden && (!w.HiddenInGame || Screen.Selected != GameMain.GameScreen)))
+            if (Wires.Any(w => w != DraggingConnected && !w.Hidden && (!w.HiddenInGame || Screen.Selected != GameMain.GameScreen)))
             {
                 int screwIndex = (int)Math.Floor(position.Y / 30.0f) % screwSprites.Count;
                 screwSprites[screwIndex].Draw(spriteBatch, position, scale: connectorSpriteScale);
@@ -295,7 +298,7 @@ namespace Barotrauma.Items.Components
         {
             FlashTimer = flashDuration;
             this.flashDuration = flashDuration;
-            flashColor = (color == null) ? GUI.Style.Red : (Color)color;
+            flashColor = (color == null) ? GUIStyle.Red : (Color)color;
         }
 
         public void UpdateFlashTimer(float deltaTime)
@@ -304,7 +307,7 @@ namespace Barotrauma.Items.Components
             FlashTimer -= deltaTime;
         }
 
-        private static void DrawWire(SpriteBatch spriteBatch, Wire wire, Vector2 end, Vector2 start, Wire equippedWire, ConnectionPanel panel, string label)
+        private static void DrawWire(SpriteBatch spriteBatch, Wire wire, Vector2 end, Vector2 start, Wire equippedWire, ConnectionPanel panel, LocalizedString label)
         {
             int textX = (int)start.X;
             if (start.X < end.X)
@@ -318,26 +321,27 @@ namespace Barotrauma.Items.Components
 
             bool mouseOn =
                 canDrag &&
+                !(GUI.MouseOn is GUIDragHandle) &&
                 ((PlayerInput.MousePosition.X > Math.Min(start.X, end.X) &&
                 PlayerInput.MousePosition.X < Math.Max(start.X, end.X) &&
                 MathUtils.LineToPointDistanceSquared(start, end, PlayerInput.MousePosition) < 36) ||
                 Vector2.Distance(end, PlayerInput.MousePosition) < 20.0f ||
                 new Rectangle((start.X < end.X) ? textX - 100 : textX, (int)start.Y - 5, 100, 14).Contains(PlayerInput.MousePosition));
 
-            if (!string.IsNullOrEmpty(label))
+            if (!label.IsNullOrEmpty())
             {
                 if (start.Y > panel.GuiFrame.Rect.Bottom - 1.0f)
                 {
                     //wire at the bottom of the panel -> draw the text below the panel, tilted 45 degrees
-                    GUI.Font.DrawString(spriteBatch, label, start + Vector2.UnitY * 20 * GUI.Scale, Color.White, 45.0f, Vector2.Zero, 1.0f, SpriteEffects.None, 0.0f);
+                    GUIStyle.Font.DrawString(spriteBatch, label, start + Vector2.UnitY * 20 * GUI.Scale, Color.White, 45.0f, Vector2.Zero, 1.0f, SpriteEffects.None, 0.0f);
                 }
                 else
                 {
                     GUI.DrawString(spriteBatch,
-                        new Vector2(start.X < end.X ? textX - GUI.SmallFont.MeasureString(label).X : textX, start.Y - 5.0f),
+                        new Vector2(start.X < end.X ? textX - GUIStyle.SmallFont.MeasureString(label).X : textX, start.Y - 5.0f),
                         label,
-                        wire.Locked ? GUI.Style.TextColorDim : (mouseOn ? Wire.higlightColor : GUI.Style.TextColor), Color.Black * 0.9f,
-                        3, GUI.SmallFont);
+                        wire.Locked ? GUIStyle.TextColorDim : (mouseOn ? Wire.higlightColor : GUIStyle.TextColorNormal), Color.Black * 0.9f,
+                        3, GUIStyle.SmallFont);
                 }
             }
 
@@ -401,13 +405,13 @@ namespace Barotrauma.Items.Components
                 {
                     if (c.IsOutput)
                     {
-                        var labelArea = GetLabelArea(GetOutputLabelPosition(rightPos, panel, c), c.DisplayName.ToUpper(), scale);
+                        var labelArea = GetLabelArea(GetOutputLabelPosition(rightPos, panel, c), c.DisplayName.Value.ToUpperInvariant(), scale);
                         labelAreas.Add(labelArea);
                         rightPos.Y += connectorIntervalLeft;
                     }
                     else
                     {
-                        var labelArea = GetLabelArea(GetInputLabelPosition(leftPos, panel, c), c.DisplayName.ToUpper(), scale);
+                        var labelArea = GetLabelArea(GetInputLabelPosition(leftPos, panel, c), c.DisplayName.Value.ToUpperInvariant(), scale);
                         labelAreas.Add(labelArea);
                         leftPos.Y += connectorIntervalRight;
                     }
@@ -455,19 +459,19 @@ namespace Barotrauma.Items.Components
         {
             return new Vector2(
                 connectorPosition.X + 25 * panel.Scale,
-                connectorPosition.Y - 5 * panel.Scale - GUI.SmallFont.MeasureString(connection.DisplayName.ToUpper()).Y);
+                connectorPosition.Y - 5 * panel.Scale - GUIStyle.SmallFont.MeasureString(connection.DisplayName.ToUpper()).Y);
         }
 
         private static Vector2 GetOutputLabelPosition(Vector2 connectorPosition, ConnectionPanel panel, Connection connection)
         {
             return new Vector2(
-                connectorPosition.X - 25 * panel.Scale - GUI.SmallFont.MeasureString(connection.DisplayName.ToUpper()).X,
+                connectorPosition.X - 25 * panel.Scale - GUIStyle.SmallFont.MeasureString(connection.DisplayName.ToUpper()).X,
                 connectorPosition.Y + 5 * panel.Scale);
         }
 
         private static Rectangle GetLabelArea(Vector2 labelPos, string text, Vector2 scale)
         {
-            Vector2 textSize = GUI.SmallFont.MeasureString(text);
+            Vector2 textSize = GUIStyle.SmallFont.MeasureString(text);
             Rectangle labelArea = new Rectangle(labelPos.ToPoint(), textSize.ToPoint());
             labelArea.Inflate(10 * scale.X, 3 * scale.Y);
             return labelArea;

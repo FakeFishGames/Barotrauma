@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
+using Barotrauma.Steam;
 
 namespace Barotrauma.Networking
 {
@@ -32,7 +33,7 @@ namespace Barotrauma.Networking
                     else if (GUIComponent is GUIDropDown dropdown) return dropdown.SelectedData;
                     else if (GUIComponent is GUINumberInput numInput)
                     {
-                        if (numInput.InputType == GUINumberInput.NumberType.Int) { return numInput.IntValue; } else { return numInput.FloatValue; }
+                        if (numInput.InputType == NumberType.Int) { return numInput.IntValue; } else { return numInput.FloatValue; }
                     }
                     return null;
                 }
@@ -56,7 +57,7 @@ namespace Barotrauma.Networking
                     else if (GUIComponent is GUIDropDown dropdown) dropdown.SelectItem(value);
                     else if (GUIComponent is GUINumberInput numInput)
                     {
-                        if (numInput.InputType == GUINumberInput.NumberType.Int)
+                        if (numInput.InputType == NumberType.Int)
                         {
                             numInput.IntValue = (int)value;
                         }
@@ -77,27 +78,27 @@ namespace Barotrauma.Networking
                 }
             }
         }
-        private Dictionary<string, bool> tempMonsterEnabled;
-        
+        private Dictionary<Identifier, bool> tempMonsterEnabled;
+
         partial void InitProjSpecific()
         {
             var properties = TypeDescriptor.GetProperties(GetType()).Cast<PropertyDescriptor>();
 
-            SerializableProperties = new Dictionary<string, SerializableProperty>();
+            SerializableProperties = new Dictionary<Identifier, SerializableProperty>();
 
             foreach (var property in properties)
             {
                 SerializableProperty objProperty = new SerializableProperty(property);
-                SerializableProperties.Add(property.Name.ToLowerInvariant(), objProperty);
+                SerializableProperties.Add(property.Name.ToIdentifier(), objProperty);
             }
         }
 
         public void ClientAdminRead(IReadMessage incMsg)
         {
-            int count = incMsg.ReadUInt16();
-            for (int i = 0; i < count; i++)
+            while (true)
             {
                 UInt32 key = incMsg.ReadUInt32();
+                if (key == 0) { break; }
                 if (netProperties.ContainsKey(key))
                 {
                     bool changedLocally = netProperties[key].ChangedLocally;
@@ -121,27 +122,40 @@ namespace Barotrauma.Networking
 
             ReadMonsterEnabled(incMsg);
             BanList.ClientAdminRead(incMsg);
-            Whitelist.ClientAdminRead(incMsg);
         }
 
         public void ClientRead(IReadMessage incMsg)
         {
-            cachedServerListInfo = null;
+            NetFlags requiredFlags = (NetFlags)incMsg.ReadByte();
 
-            ServerName = incMsg.ReadString();
-            ServerMessageText = incMsg.ReadString();
+            if (requiredFlags.HasFlag(NetFlags.Name))
+            {
+                ServerName = incMsg.ReadString();
+            }
+
+            if (requiredFlags.HasFlag(NetFlags.Message))
+            {
+                ServerMessageText = incMsg.ReadString();
+            }
+            PlayStyle = (PlayStyle)incMsg.ReadByte();
             MaxPlayers = incMsg.ReadByte();
             HasPassword = incMsg.ReadBoolean();
             IsPublic = incMsg.ReadBoolean();
-            GameMain.NetLobbyScreen.SetPublic(IsPublic);
+            GameMain.Client?.SetLobbyPublic(IsPublic);
             AllowFileTransfers = incMsg.ReadBoolean();
             incMsg.ReadPadBits();
             TickRate = incMsg.ReadRangedInteger(1, 60);
-            GameMain.NetworkMember.TickRate = TickRate;
 
-            ReadExtraCargo(incMsg);
+            if (requiredFlags.HasFlag(NetFlags.Properties))
+            {
+                ReadExtraCargo(incMsg);
+            }
 
-            Voting.ClientRead(incMsg);
+            if (requiredFlags.HasFlag(NetFlags.HiddenSubs))
+            {
+                ReadHiddenSubs(incMsg);
+            }
+            GameMain.NetLobbyScreen.UpdateSubVisibility();
 
             bool isAdmin = incMsg.ReadBoolean();
             incMsg.ReadPadBits();
@@ -151,15 +165,24 @@ namespace Barotrauma.Networking
             }
         }
 
-        public void ClientAdminWrite(NetFlags dataToSend, int? missionTypeOr = null, int? missionTypeAnd = null, float? levelDifficulty = null, bool? autoRestart = null, int traitorSetting = 0, int botCount = 0, int botSpawnMode = 0, bool? radiationEnabled = null, bool? useRespawnShuttle = null, int maxMissionCount = 0)
+        public void ClientAdminWrite(
+                NetFlags dataToSend,
+                int? missionTypeOr = null,
+                int? missionTypeAnd = null,
+                float? levelDifficulty = null,
+                bool? autoRestart = null,
+                int traitorSetting = 0,
+                int botCount = 0,
+                int botSpawnMode = 0,
+                bool? useRespawnShuttle = null)
         {
             if (!GameMain.Client.HasPermission(Networking.ClientPermissions.ManageSettings)) return;
 
             IWriteMessage outMsg = new WriteOnlyMessage();
 
-            outMsg.Write((byte)ClientPacketHeader.SERVER_SETTINGS);
+            outMsg.WriteByte((byte)ClientPacketHeader.SERVER_SETTINGS);
 
-            outMsg.Write((byte)dataToSend);
+            outMsg.WriteByte((byte)dataToSend);
 
             if (dataToSend.HasFlag(NetFlags.Name))
             {
@@ -167,7 +190,7 @@ namespace Barotrauma.Networking
                 {
                     ServerName = GameMain.NetLobbyScreen.ServerName.Text;
                 }
-                outMsg.Write(ServerName);
+                outMsg.WriteString(ServerName);
             }
 
             if (dataToSend.HasFlag(NetFlags.Message))
@@ -176,7 +199,7 @@ namespace Barotrauma.Networking
                 {
                     ServerMessageText = GameMain.NetLobbyScreen.ServerMessage.Text;
                 }
-                outMsg.Write(ServerMessageText);
+                outMsg.WriteString(ServerMessageText);
             }
 
             if (dataToSend.HasFlag(NetFlags.Properties))
@@ -188,43 +211,46 @@ namespace Barotrauma.Networking
                 UInt32 count = (UInt32)changedProperties.Count();
                 bool changedMonsterSettings = tempMonsterEnabled != null && tempMonsterEnabled.Any(p => p.Value != MonsterEnabled[p.Key]);
 
-                outMsg.Write(count);
+                outMsg.WriteUInt32(count);
                 foreach (KeyValuePair<UInt32, NetPropertyData> prop in changedProperties)
                 {
-                    DebugConsole.NewMessage(prop.Value.Name, Color.Lime);
-                    outMsg.Write(prop.Key);
+                    DebugConsole.NewMessage(prop.Value.Name.Value, Color.Lime);
+                    outMsg.WriteUInt32(prop.Key);
                     prop.Value.Write(outMsg, prop.Value.GUIComponentValue);
                 }
 
-                outMsg.Write(changedMonsterSettings); outMsg.WritePadBits();
+                outMsg.WriteBoolean(changedMonsterSettings); outMsg.WritePadBits();
                 if (changedMonsterSettings) WriteMonsterEnabled(outMsg, tempMonsterEnabled);
                 BanList.ClientAdminWrite(outMsg);
-                Whitelist.ClientAdminWrite(outMsg);
             }
 
+            if (dataToSend.HasFlag(NetFlags.HiddenSubs))
+            {
+                WriteHiddenSubs(outMsg);
+            }
+            
             if (dataToSend.HasFlag(NetFlags.Misc))
             {
                 outMsg.WriteRangedInteger(missionTypeOr ?? (int)Barotrauma.MissionType.None, 0, (int)Barotrauma.MissionType.All);
                 outMsg.WriteRangedInteger(missionTypeAnd ?? (int)Barotrauma.MissionType.All, 0, (int)Barotrauma.MissionType.All);
-                outMsg.Write((byte)(traitorSetting + 1));
-                outMsg.Write((byte)(botCount + 1));
-                outMsg.Write((byte)(botSpawnMode + 1));
+                outMsg.WriteByte((byte)(traitorSetting + 1));
+                outMsg.WriteByte((byte)(botCount + 1));
+                outMsg.WriteByte((byte)(botSpawnMode + 1));
 
-                outMsg.Write(levelDifficulty ?? -1000.0f);
+                outMsg.WriteSingle(levelDifficulty ?? -1000.0f);
 
-                outMsg.Write(useRespawnShuttle ?? UseRespawnShuttle);
+                outMsg.WriteBoolean(useRespawnShuttle != null);
+                outMsg.WriteBoolean(useRespawnShuttle ?? false);
 
-                outMsg.Write(autoRestart != null);
-                outMsg.Write(autoRestart ?? false);
-                outMsg.Write(radiationEnabled ?? RadiationEnabled);
-                outMsg.Write((byte)maxMissionCount + 1);
+                outMsg.WriteBoolean(autoRestart != null);
+                outMsg.WriteBoolean(autoRestart ?? false);
 
                 outMsg.WritePadBits();
             }
 
             if (dataToSend.HasFlag(NetFlags.LevelSeed))
             {
-                outMsg.Write(GameMain.NetLobbyScreen.SeedBox.Text);
+                outMsg.WriteString(GameMain.NetLobbyScreen.SeedBox.Text);
             }
 
             GameMain.Client.ClientPeer.Send(outMsg, DeliveryMethod.Reliable);
@@ -244,8 +270,7 @@ namespace Barotrauma.Networking
             General,
             Rounds,
             Antigriefing,
-            Banlist,
-            Whitelist
+            Banlist
         }
 
         private NetPropertyData GetPropertyData(string name)
@@ -288,14 +313,14 @@ namespace Barotrauma.Networking
             };
 
             //center frames
-            GUIFrame innerFrame = new GUIFrame(new RectTransform(new Vector2(0.4f, 0.8f), settingsFrame.RectTransform, Anchor.Center) { MinSize = new Point(400, 430) });
+            GUIFrame innerFrame = new GUIFrame(new RectTransform(new Vector2(0.5f, 0.85f), settingsFrame.RectTransform, Anchor.Center) { MinSize = new Point(400, 430) });
             GUILayoutGroup paddedFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.95f), innerFrame.RectTransform, Anchor.Center), childAnchor: Anchor.TopCenter)
             {
                 Stretch = true,
                 RelativeSpacing = 0.02f
             };
 
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), paddedFrame.RectTransform), TextManager.Get("Settings"), font: GUI.LargeFont);
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), paddedFrame.RectTransform), TextManager.Get("Settings"), font: GUIStyle.LargeFont);
 
             var buttonArea = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.04f), paddedFrame.RectTransform), isHorizontal: true)
             {
@@ -306,12 +331,9 @@ namespace Barotrauma.Networking
             var tabContent = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.85f), paddedFrame.RectTransform), style: "InnerFrame");
 
             //tabs
-            var tabValues = Enum.GetValues(typeof(SettingsTab)).Cast<SettingsTab>().ToArray();
-            string[] tabNames = new string[tabValues.Count()];
-            for (int i = 0; i < tabNames.Length; i++)
-            {
-                tabNames[i] = TextManager.Get("ServerSettings" + tabValues[i] + "Tab");
-            }
+            LocalizedString[] tabNames =
+                Enum.GetValues(typeof(SettingsTab)).Cast<SettingsTab>()
+                    .Select(tv => TextManager.Get("ServerSettings" + tv + "Tab")).ToArray();
             settingsTabs = new GUIFrame[tabNames.Length];
             tabButtons = new GUIButton[tabNames.Length];
             for (int i = 0; i < tabNames.Length; i++)
@@ -346,8 +368,28 @@ namespace Barotrauma.Networking
 
             //***********************************************
 
+            // Language
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), serverTab.RectTransform), TextManager.Get("Language"), font: GUIStyle.SubHeadingFont);
+            var languageDD = new GUIDropDown(new RectTransform(new Vector2(1.0f, 0.02f), serverTab.RectTransform));
+            foreach (var language in ServerLanguageOptions.Options)
+            {
+                languageDD.AddItem(language.Label, language.Identifier);
+            }
+            GetPropertyData(nameof(Language)).AssignGUIComponent(languageDD);
+
+            //changing server visibility on the fly is not supported in dedicated servers
+            if (GameMain.Client?.ClientPeer is not LidgrenClientPeer)
+            {
+                var isPublic = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.05f), serverTab.RectTransform),
+                    TextManager.Get("publicserver"))
+                {
+                    ToolTip = TextManager.Get("publicservertooltip")
+                };
+                GetPropertyData(nameof(IsPublic)).AssignGUIComponent(isPublic);
+            }
+
             // Sub Selection
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), serverTab.RectTransform), TextManager.Get("ServerSettingsSubSelection"), font: GUI.SubHeadingFont);
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), serverTab.RectTransform), TextManager.Get("ServerSettingsSubSelection"), font: GUIStyle.SubHeadingFont);
             var selectionFrame = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.02f), serverTab.RectTransform), isHorizontal: true)
             {
                 Stretch = true,
@@ -357,16 +399,16 @@ namespace Barotrauma.Networking
             GUIRadioButtonGroup selectionMode = new GUIRadioButtonGroup();
             for (int i = 0; i < 3; i++)
             {
-                var selectionTick = new GUITickBox(new RectTransform(new Vector2(0.3f, 1.0f), selectionFrame.RectTransform), TextManager.Get(((SelectionMode)i).ToString()), font: GUI.SmallFont, style: "GUIRadioButton");
+                var selectionTick = new GUITickBox(new RectTransform(new Vector2(0.3f, 1.0f), selectionFrame.RectTransform), TextManager.Get(((SelectionMode)i).ToString()), font: GUIStyle.SmallFont, style: "GUIRadioButton");
                 selectionMode.AddRadioButton(i, selectionTick);
             }
             selectionFrame.RectTransform.NonScaledSize = new Point(selectionFrame.Rect.Width, selectionFrame.Children.First().Rect.Height);
             selectionFrame.RectTransform.IsFixedSize = true;
 
-            GetPropertyData("SubSelectionMode").AssignGUIComponent(selectionMode);
+            GetPropertyData(nameof(SubSelectionMode)).AssignGUIComponent(selectionMode);
 
             // Mode Selection
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), serverTab.RectTransform), TextManager.Get("ServerSettingsModeSelection"), font: GUI.SubHeadingFont);
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), serverTab.RectTransform), TextManager.Get("ServerSettingsModeSelection"), font: GUIStyle.SubHeadingFont);
             selectionFrame = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.02f), serverTab.RectTransform), isHorizontal: true)
             {
                 Stretch = true,
@@ -376,12 +418,12 @@ namespace Barotrauma.Networking
             selectionMode = new GUIRadioButtonGroup();
             for (int i = 0; i < 3; i++)
             {
-                var selectionTick = new GUITickBox(new RectTransform(new Vector2(0.3f, 1.0f), selectionFrame.RectTransform), TextManager.Get(((SelectionMode)i).ToString()), font: GUI.SmallFont, style: "GUIRadioButton");
+                var selectionTick = new GUITickBox(new RectTransform(new Vector2(0.3f, 1.0f), selectionFrame.RectTransform), TextManager.Get(((SelectionMode)i).ToString()), font: GUIStyle.SmallFont, style: "GUIRadioButton");
                 selectionMode.AddRadioButton(i, selectionTick);
             }
             selectionFrame.RectTransform.NonScaledSize = new Point(selectionFrame.Rect.Width, selectionFrame.Children.First().Rect.Height);
             selectionFrame.RectTransform.IsFixedSize = true;
-            GetPropertyData("ModeSelectionMode").AssignGUIComponent(selectionMode);
+            GetPropertyData(nameof(ModeSelectionMode)).AssignGUIComponent(selectionMode);
 
             new GUIFrame(new RectTransform(new Vector2(1.0f, 0.02f), serverTab.RectTransform), style: "HorizontalLine");
 
@@ -389,11 +431,11 @@ namespace Barotrauma.Networking
 
             var voiceChatEnabled = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.05f), serverTab.RectTransform),
                 TextManager.Get("ServerSettingsVoiceChatEnabled"));
-            GetPropertyData("VoiceChatEnabled").AssignGUIComponent(voiceChatEnabled);
+            GetPropertyData(nameof(VoiceChatEnabled)).AssignGUIComponent(voiceChatEnabled);
 
             //***********************************************
 
-            string autoRestartDelayLabel = TextManager.Get("ServerSettingsAutoRestartDelay") + " ";
+            LocalizedString autoRestartDelayLabel = TextManager.Get("ServerSettingsAutoRestartDelay") + " ";
             var startIntervalText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), serverTab.RectTransform), autoRestartDelayLabel);
             var startIntervalSlider = new GUIScrollBar(new RectTransform(new Vector2(1.0f, 0.05f), serverTab.RectTransform), barSize: 0.1f, style: "GUISlider")
             {
@@ -407,17 +449,17 @@ namespace Barotrauma.Networking
                 }
             };
             startIntervalSlider.Range = new Vector2(10.0f, 300.0f);
-            GetPropertyData("AutoRestartInterval").AssignGUIComponent(startIntervalSlider);
+            GetPropertyData(nameof(AutoRestartInterval)).AssignGUIComponent(startIntervalSlider);
             startIntervalSlider.OnMoved(startIntervalSlider, startIntervalSlider.BarScroll);
 
             //***********************************************
 
             var startWhenClientsReady = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.05f), serverTab.RectTransform),
                 TextManager.Get("ServerSettingsStartWhenClientsReady"));
-            GetPropertyData("StartWhenClientsReady").AssignGUIComponent(startWhenClientsReady);
+            GetPropertyData(nameof(StartWhenClientsReady)).AssignGUIComponent(startWhenClientsReady);
 
             CreateLabeledSlider(serverTab, "ServerSettingsStartWhenClientsReadyRatio", out GUIScrollBar slider, out GUITextBlock sliderLabel);
-            string clientsReadyRequiredLabel = sliderLabel.Text;
+            LocalizedString clientsReadyRequiredLabel = sliderLabel.Text;
             slider.Step = 0.2f;
             slider.Range = new Vector2(0.5f, 1.0f);
             slider.OnMoved = (GUIScrollBar scrollBar, float barScroll) =>
@@ -425,19 +467,19 @@ namespace Barotrauma.Networking
                 ((GUITextBlock)scrollBar.UserData).Text = clientsReadyRequiredLabel.Replace("[percentage]", ((int)MathUtils.Round(scrollBar.BarScrollValue * 100.0f, 10.0f)).ToString());
                 return true;
             };
-            GetPropertyData("StartWhenClientsReadyRatio").AssignGUIComponent(slider);
+            GetPropertyData(nameof(StartWhenClientsReadyRatio)).AssignGUIComponent(slider);
             slider.OnMoved(slider, slider.BarScroll);
 
             //***********************************************
 
             var allowSpecBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.05f), serverTab.RectTransform), TextManager.Get("ServerSettingsAllowSpectating"));
-            GetPropertyData("AllowSpectating").AssignGUIComponent(allowSpecBox);
+            GetPropertyData(nameof(AllowSpectating)).AssignGUIComponent(allowSpecBox);
 
             var shareSubsBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.05f), serverTab.RectTransform), TextManager.Get("ServerSettingsShareSubFiles"));
-            GetPropertyData("AllowFileTransfers").AssignGUIComponent(shareSubsBox);
+            GetPropertyData(nameof(AllowFileTransfers)).AssignGUIComponent(shareSubsBox);
 
             var randomizeLevelBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.05f), serverTab.RectTransform), TextManager.Get("ServerSettingsRandomizeSeed"));
-            GetPropertyData("RandomizeSeed").AssignGUIComponent(randomizeLevelBox);
+            GetPropertyData(nameof(RandomizeSeed)).AssignGUIComponent(randomizeLevelBox);
 
             var saveLogsBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.05f), serverTab.RectTransform), TextManager.Get("ServerSettingsSaveLogs"))
             {
@@ -448,21 +490,19 @@ namespace Barotrauma.Networking
                     return true;
                 }
             };
-            GetPropertyData("SaveServerLogs").AssignGUIComponent(saveLogsBox);
+            GetPropertyData(nameof(SaveServerLogs)).AssignGUIComponent(saveLogsBox);
 
             //--------------------------------------------------------------------------------
             //                              game settings 
             //--------------------------------------------------------------------------------
 
-            var roundsTab = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.95f), settingsTabs[(int)SettingsTab.Rounds].RectTransform, Anchor.Center))
-            {
-                Stretch = true,
-                RelativeSpacing = 0.02f
-            };
+            var roundsTab = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.95f), settingsTabs[(int)SettingsTab.Rounds].RectTransform, Anchor.Center));
+            var roundsContent = new GUIListBox(new RectTransform(Vector2.One, roundsTab.RectTransform, Anchor.Center), style: "GUIListBoxNoBorder").Content;
 
+            GUILayoutGroup playStyleLayout = new GUILayoutGroup(new RectTransform(new Vector2(1f, 0.2f), roundsContent.RectTransform));
             // Play Style Selection
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), roundsTab.RectTransform), TextManager.Get("ServerSettingsPlayStyle"), font: GUI.SubHeadingFont);
-            var playstyleList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.16f), roundsTab.RectTransform))
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.2f), playStyleLayout.RectTransform), TextManager.Get("ServerSettingsPlayStyle"), font: GUIStyle.SubHeadingFont);
+            var playstyleList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.7f), playStyleLayout.RectTransform))
             {                
                 AutoHideScrollBar = true,
                 UseGridLayout = true
@@ -473,27 +513,32 @@ namespace Barotrauma.Networking
             GUIRadioButtonGroup selectionPlayStyle = new GUIRadioButtonGroup();
             foreach (PlayStyle playStyle in Enum.GetValues(typeof(PlayStyle)))
             {
-                var selectionTick = new GUITickBox(new RectTransform(new Vector2(0.32f, 0.49f), playstyleList.Content.RectTransform), TextManager.Get("servertag." + playStyle), font: GUI.SmallFont, style: "GUIRadioButton")
+                var selectionTick = new GUITickBox(new RectTransform(new Vector2(0.32f, 0.49f), playstyleList.Content.RectTransform), TextManager.Get("servertag." + playStyle), font: GUIStyle.SmallFont, style: "GUIRadioButton")
                 {
                     ToolTip = TextManager.Get("servertagdescription." + playStyle)
                 };
                 selectionPlayStyle.AddRadioButton((int)playStyle, selectionTick);
                 playStyleTickBoxes.Add(selectionTick);
             }
-            GetPropertyData("PlayStyle").AssignGUIComponent(selectionPlayStyle);
+            GetPropertyData(nameof(PlayStyle)).AssignGUIComponent(selectionPlayStyle);
             GUITextBlock.AutoScaleAndNormalize(playStyleTickBoxes.Select(t => t.TextBlock));
             playstyleList.RectTransform.MinSize = new Point(0, (int)(playstyleList.Content.Children.First().Rect.Height * 2.0f + playstyleList.Padding.Y + playstyleList.Padding.W));
 
-            var endVoteBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.05f), roundsTab.RectTransform),
+            GUILayoutGroup sliderLayout = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.35f), roundsContent.RectTransform))
+            {
+                Stretch = true
+            };
+
+            var endVoteBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.05f), sliderLayout.RectTransform),
                 TextManager.Get("ServerSettingsEndRoundVoting"));
-            GetPropertyData("AllowEndVoting").AssignGUIComponent(endVoteBox);
+            GetPropertyData(nameof(AllowEndVoting)).AssignGUIComponent(endVoteBox);
 
-            CreateLabeledSlider(roundsTab, "ServerSettingsEndRoundVotesRequired", out slider, out sliderLabel);
+            CreateLabeledSlider(sliderLayout, "ServerSettingsEndRoundVotesRequired", out slider, out sliderLabel);
 
-            string endRoundLabel = sliderLabel.Text;
+            LocalizedString endRoundLabel = sliderLabel.Text;
             slider.Step = 0.2f;
             slider.Range = new Vector2(0.5f, 1.0f);
-            GetPropertyData("EndVoteRequiredRatio").AssignGUIComponent(slider);
+            GetPropertyData(nameof(EndVoteRequiredRatio)).AssignGUIComponent(slider);
             slider.OnMoved = (GUIScrollBar scrollBar, float barScroll) =>
             {
                 ((GUITextBlock)scrollBar.UserData).Text = endRoundLabel + " " + (int)MathUtils.Round(scrollBar.BarScrollValue * 100.0f, 10.0f) + " %";
@@ -501,15 +546,15 @@ namespace Barotrauma.Networking
             };
             slider.OnMoved(slider, slider.BarScroll);
 
-            var respawnBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.05f), roundsTab.RectTransform),
+            var respawnBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.05f), sliderLayout.RectTransform),
                 TextManager.Get("ServerSettingsAllowRespawning"));
-            GetPropertyData("AllowRespawn").AssignGUIComponent(respawnBox);
+            GetPropertyData(nameof(AllowRespawn)).AssignGUIComponent(respawnBox);
 
-            CreateLabeledSlider(roundsTab, "ServerSettingsRespawnInterval", out slider, out sliderLabel);
-            string intervalLabel = sliderLabel.Text;
+            CreateLabeledSlider(sliderLayout, "ServerSettingsRespawnInterval", out slider, out sliderLabel);
+            LocalizedString intervalLabel = sliderLabel.Text;
             slider.Range = new Vector2(10.0f, 600.0f);
             slider.StepValue = 10.0f;
-            GetPropertyData("RespawnInterval").AssignGUIComponent(slider);
+            GetPropertyData(nameof(RespawnInterval)).AssignGUIComponent(slider);
             slider.OnMoved = (GUIScrollBar scrollBar, float barScroll) =>
             {
                 GUITextBlock text = scrollBar.UserData as GUITextBlock;
@@ -518,18 +563,26 @@ namespace Barotrauma.Networking
             };
             slider.OnMoved(slider, slider.BarScroll);
 
-            var minRespawnText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), roundsTab.RectTransform), "")
+            var respawnLayout = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.15f), sliderLayout.RectTransform),
+                isHorizontal: true);
+
+            var minRespawnLayout
+                = new GUILayoutGroup(new RectTransform(new Vector2(0.5f, 1.0f), respawnLayout.RectTransform));
+
+            var minRespawnText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.5f), minRespawnLayout.RectTransform), "")
             {
                 ToolTip = TextManager.Get("ServerSettingsMinRespawnToolTip")
             };
 
-            string minRespawnLabel = TextManager.Get("ServerSettingsMinRespawn") + " ";
-            CreateLabeledSlider(roundsTab, "", out slider, out sliderLabel);
-            slider.ToolTip = minRespawnText.RawToolTip;
+            LocalizedString minRespawnLabel = TextManager.Get("ServerSettingsMinRespawn") + " ";
+            CreateLabeledSlider(minRespawnLayout, "", out slider, out sliderLabel);
+            sliderLabel.RectTransform.RelativeSize = Vector2.Zero;
+            slider.RectTransform.RelativeSize = new Vector2(1.0f, 0.5f);
+            slider.ToolTip = minRespawnText.ToolTip;
             slider.UserData = minRespawnText;
             slider.Step = 0.1f;
             slider.Range = new Vector2(0.0f, 1.0f);
-            GetPropertyData("MinRespawnRatio").AssignGUIComponent(slider);
+            GetPropertyData(nameof(MinRespawnRatio)).AssignGUIComponent(slider);
             slider.OnMoved = (GUIScrollBar scrollBar, float barScroll) =>
             {
                 ((GUITextBlock)scrollBar.UserData).Text = minRespawnLabel + (int)MathUtils.Round(scrollBar.BarScrollValue * 100.0f, 10.0f) + " %";
@@ -537,14 +590,19 @@ namespace Barotrauma.Networking
             };
             slider.OnMoved(slider, MinRespawnRatio);
 
-            var respawnDurationText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), roundsTab.RectTransform), "")
+            var respawnDurationLayout
+                = new GUILayoutGroup(new RectTransform(new Vector2(0.5f, 1.0f), respawnLayout.RectTransform));
+
+            var respawnDurationText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.5f), respawnDurationLayout.RectTransform), "")
             {
                 ToolTip = TextManager.Get("ServerSettingsRespawnDurationToolTip")
             };
 
-            string respawnDurationLabel = TextManager.Get("ServerSettingsRespawnDuration") + " ";
-            CreateLabeledSlider(roundsTab, "", out slider, out sliderLabel);
-            slider.ToolTip = respawnDurationText.RawToolTip;
+            LocalizedString respawnDurationLabel = TextManager.Get("ServerSettingsRespawnDuration") + " ";
+            CreateLabeledSlider(respawnDurationLayout, "", out slider, out sliderLabel);
+            sliderLabel.RectTransform.RelativeSize = Vector2.Zero;
+            slider.RectTransform.RelativeSize = new Vector2(1.0f, 0.5f);
+            slider.ToolTip = respawnDurationText.ToolTip;
             slider.UserData = respawnDurationText;
             slider.Step = 0.1f;
             slider.Range = new Vector2(60.0f, 660.0f);
@@ -556,7 +614,7 @@ namespace Barotrauma.Networking
             {
                 return value <= 0.0f ? 1.0f : (value - scrollBar.Range.X) / (scrollBar.Range.Y - scrollBar.Range.X);
             };
-            GetPropertyData("MaxTransportTime").AssignGUIComponent(slider);
+            GetPropertyData(nameof(MaxTransportTime)).AssignGUIComponent(slider);
             slider.OnMoved = (GUIScrollBar scrollBar, float barScroll) =>
             {
                 if (barScroll == 1.0f)
@@ -572,16 +630,73 @@ namespace Barotrauma.Networking
             };
             slider.OnMoved(slider, slider.BarScroll);
 
-            var traitorsMinPlayerCount = CreateLabeledNumberInput(roundsTab, "ServerSettingsTraitorsMinPlayerCount", 1, 16, "ServerSettingsTraitorsMinPlayerCountToolTip");
-            GetPropertyData("TraitorsMinPlayerCount").AssignGUIComponent(traitorsMinPlayerCount);
+            GUILayoutGroup losModeLayout = new GUILayoutGroup(new RectTransform(new Vector2(1f, 0.14f), roundsContent.RectTransform));
 
-            var ragdollButtonBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.05f), roundsTab.RectTransform), TextManager.Get("ServerSettingsAllowRagdollButton"));
-            GetPropertyData("AllowRagdollButton").AssignGUIComponent(ragdollButtonBox);
+            var losModeLabel = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.4f), losModeLayout.RectTransform),
+                TextManager.Get("LosEffect"));
 
-            var disableBotConversationsBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.05f), roundsTab.RectTransform), TextManager.Get("ServerSettingsDisableBotConversations"));
-            GetPropertyData("DisableBotConversations").AssignGUIComponent(disableBotConversationsBox);
+            var losModeRadioButtonLayout
+                = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.6f), losModeLayout.RectTransform),
+                    isHorizontal: true)
+                {
+                    Stretch = true
+                };
 
-            var buttonHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.07f), roundsTab.RectTransform), isHorizontal: true)
+            var losModeRadioButtonGroup = new GUIRadioButtonGroup();
+            LosMode[] losModes = (LosMode[])Enum.GetValues(typeof(LosMode));
+            for (int i = 0; i < losModes.Length; i++)
+            {
+                var losTick = new GUITickBox(new RectTransform(new Vector2(0.3f, 1.0f), losModeRadioButtonLayout.RectTransform), TextManager.Get($"LosMode{losModes[i]}"), font: GUIStyle.SmallFont, style: "GUIRadioButton");
+                losModeRadioButtonGroup.AddRadioButton(i, losTick);
+            }
+            GetPropertyData(nameof(LosMode)).AssignGUIComponent(losModeRadioButtonGroup);
+
+            GUILayoutGroup healthBarModeLayout = new GUILayoutGroup(new RectTransform(new Vector2(1f, 0.14f), roundsContent.RectTransform));
+
+            var healthBarModeLabel = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.4f), healthBarModeLayout.RectTransform),
+                TextManager.Get("ShowEnemyHealthBars"));
+
+            var healthBarModeRadioButtonLayout
+                = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.6f), healthBarModeLayout.RectTransform),
+                    isHorizontal: true)
+                {
+                    Stretch = true
+                };
+
+            var healthBarModeRadioButtonGroup = new GUIRadioButtonGroup();
+            EnemyHealthBarMode[] healthBarModeModes = Enum.GetValues<EnemyHealthBarMode>();
+            for (int i = 0; i < healthBarModeModes.Length; i++)
+            {
+                var losTick = new GUITickBox(new RectTransform(new Vector2(0.3f, 1.0f), healthBarModeRadioButtonLayout.RectTransform), 
+                    TextManager.Get($"ShowEnemyHealthBars.{healthBarModeModes[i]}"), 
+                    font: GUIStyle.SmallFont, style: "GUIRadioButton");
+                healthBarModeRadioButtonGroup.AddRadioButton(i, losTick);
+            }
+            GetPropertyData(nameof(ShowEnemyHealthBars)).AssignGUIComponent(healthBarModeRadioButtonGroup);
+
+            GUILayoutGroup numberLayout = new GUILayoutGroup(new RectTransform(new Vector2(1f, 0.3f), roundsContent.RectTransform))
+            {
+                Stretch = true
+            };
+
+            var traitorsMinPlayerCount = CreateLabeledNumberInput(numberLayout, "ServerSettingsTraitorsMinPlayerCount", 1, 16, "ServerSettingsTraitorsMinPlayerCountToolTip");
+            GetPropertyData(nameof(TraitorsMinPlayerCount)).AssignGUIComponent(traitorsMinPlayerCount);
+
+            var maximumTransferAmount = CreateLabeledNumberInput(numberLayout, "serversettingsmaximumtransferrequest", 0, CampaignMode.MaxMoney, "serversettingsmaximumtransferrequesttooltip");
+            GetPropertyData(nameof(MaximumMoneyTransferRequest)).AssignGUIComponent(maximumTransferAmount);
+
+            var lootedMoneyDestination = CreateLabeledDropdown(numberLayout, "serversettingslootedmoneydestination", numElements: 2, "serversettingslootedmoneydestinationtooltip");
+            lootedMoneyDestination.AddItem(TextManager.Get("lootedmoneydestination.bank"), LootedMoneyDestination.Bank);
+            lootedMoneyDestination.AddItem(TextManager.Get("lootedmoneydestination.wallet"), LootedMoneyDestination.Wallet);
+            GetPropertyData(nameof(LootedMoneyDestination)).AssignGUIComponent(lootedMoneyDestination);
+
+            var ragdollButtonBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.05f), numberLayout.RectTransform), TextManager.Get("ServerSettingsAllowRagdollButton"));
+            GetPropertyData(nameof(AllowRagdollButton)).AssignGUIComponent(ragdollButtonBox);
+
+            var disableBotConversationsBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.05f), numberLayout.RectTransform), TextManager.Get("ServerSettingsDisableBotConversations"));
+            GetPropertyData(nameof(DisableBotConversations)).AssignGUIComponent(disableBotConversationsBox);
+
+            GUILayoutGroup buttonHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.1f), roundsContent.RectTransform), isHorizontal: true)
             {
                 Stretch = true,
                 RelativeSpacing = 0.05f
@@ -610,13 +725,13 @@ namespace Barotrauma.Networking
             };
 
             InitMonstersEnabled();
-            List<string> monsterNames = MonsterEnabled.Keys.ToList();
-            tempMonsterEnabled = new Dictionary<string, bool>(MonsterEnabled);
-            foreach (string s in monsterNames)
+            List<Identifier> monsterNames = MonsterEnabled.Keys.ToList();
+            tempMonsterEnabled = new Dictionary<Identifier, bool>(MonsterEnabled);
+            foreach (Identifier s in monsterNames)
             {
-                string translatedLabel = TextManager.Get($"Character.{s}", true);
+                LocalizedString translatedLabel = TextManager.Get($"Character.{s}").Fallback(s.Value);
                 var monsterEnabledBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.1f), monsterFrame.Content.RectTransform) { MinSize = new Point(0, 25) },
-                    label: translatedLabel ?? s)
+                    label: translatedLabel)
                 {
                     Selected = tempMonsterEnabled[s],
                     OnSelected = (GUITickBox tb) =>
@@ -632,10 +747,30 @@ namespace Barotrauma.Networking
             {
                 Enabled = !GameMain.NetworkMember.GameStarted
             };
-            var cargoFrame = new GUIListBox(new RectTransform(new Vector2(0.6f, 0.7f), settingsTabs[(int)SettingsTab.Rounds].RectTransform, Anchor.BottomRight, Pivot.BottomLeft))
+
+            var cargoFrame = new GUIFrame(new RectTransform(new Vector2(0.6f, 0.7f), settingsTabs[(int)SettingsTab.Rounds].RectTransform, Anchor.BottomRight, Pivot.BottomLeft))
             {
                 Visible = false
             };
+            var cargoContent = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.95f), cargoFrame.RectTransform, Anchor.Center))
+            {
+                Stretch = true
+            };
+
+            var filterText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), cargoContent.RectTransform), TextManager.Get("serverlog.filter"), font: GUIStyle.SubHeadingFont);
+            var entityFilterBox = new GUITextBox(new RectTransform(new Vector2(0.5f, 1.0f), filterText.RectTransform, Anchor.CenterRight), font: GUIStyle.Font, createClearButton: true);
+            filterText.RectTransform.MinSize = new Point(0, entityFilterBox.RectTransform.MinSize.Y);
+            var cargoList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.8f), cargoContent.RectTransform));
+            entityFilterBox.OnTextChanged += (textBox, text) =>
+            {
+                foreach (var child in cargoList.Content.Children)
+                {
+                    if (child.UserData is not ItemPrefab itemPrefab) { continue; }
+                    child.Visible = string.IsNullOrEmpty(text) || itemPrefab.Name.Contains(text, StringComparison.OrdinalIgnoreCase);
+                }
+                return true;
+            };
+
             cargoButton.UserData = cargoFrame;
             cargoButton.OnClicked = (button, obj) =>
             {
@@ -651,7 +786,7 @@ namespace Barotrauma.Networking
 
             GUITextBlock.AutoScaleAndNormalize(buttonHolder.Children.Select(c => ((GUIButton)c).TextBlock));
 
-            foreach (ItemPrefab ip in ItemPrefab.Prefabs)
+            foreach (ItemPrefab ip in ItemPrefab.Prefabs.OrderBy(ip => ip.Name))
             {
                 if (ip.AllowAsExtraCargo.HasValue)
                 {
@@ -662,18 +797,17 @@ namespace Barotrauma.Networking
                     if (!ip.CanBeBought) { continue; }
                 }
 
-                var itemFrame = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.15f), cargoFrame.Content.RectTransform) { MinSize = new Point(0, 30) }, isHorizontal: true)
+                var itemFrame = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.15f), cargoList.Content.RectTransform) { MinSize = new Point(0, 30) }, isHorizontal: true)
                 {
                     Stretch = true,
-                    UserData = cargoFrame,
+                    UserData = ip,
                     RelativeSpacing = 0.05f
                 };
 
-
-                if (ip.InventoryIcon != null || ip.sprite != null)
+                if (ip.InventoryIcon != null || ip.Sprite != null)
                 {
                     GUIImage img = new GUIImage(new RectTransform(new Point(itemFrame.Rect.Height), itemFrame.RectTransform),
-                        ip.InventoryIcon ?? ip.sprite, scaleToFit: true)
+                        ip.InventoryIcon ?? ip.Sprite, scaleToFit: true)
                     {
                         CanBeFocused = false
                     };
@@ -681,7 +815,7 @@ namespace Barotrauma.Networking
                 }
 
                 new GUITextBlock(new RectTransform(new Vector2(0.75f, 1.0f), itemFrame.RectTransform),
-                    ip.Name, font: GUI.SmallFont)
+                    ip.Name, font: GUIStyle.SmallFont)
                 {
                     Wrap = true,
                     CanBeFocused = false
@@ -689,10 +823,10 @@ namespace Barotrauma.Networking
 
                 ExtraCargo.TryGetValue(ip, out int cargoVal);
                 var amountInput = new GUINumberInput(new RectTransform(new Vector2(0.35f, 1.0f), itemFrame.RectTransform),
-                    GUINumberInput.NumberType.Int, textAlignment: Alignment.CenterLeft)
+                    NumberType.Int, textAlignment: Alignment.CenterLeft)
                 {
                     MinValueInt = 0,
-                    MaxValueInt = 100,
+                    MaxValueInt = MaxExtraCargoItemsOfType,
                     IntValue = cargoVal
                 };
                 amountInput.OnValueChanged += (numberInput) =>
@@ -700,15 +834,25 @@ namespace Barotrauma.Networking
                     if (ExtraCargo.ContainsKey(ip))
                     {
                         ExtraCargo[ip] = numberInput.IntValue;
-                        if (numberInput.IntValue <= 0) ExtraCargo.Remove(ip);
+                        if (numberInput.IntValue <= 0) { ExtraCargo.Remove(ip); }
                     }
-                    else
+                    else if (ExtraCargo.Keys.Count() < MaxExtraCargoItemTypes)
                     {
                         ExtraCargo.Add(ip, numberInput.IntValue);
                     }
+                    numberInput.IntValue = ExtraCargo.ContainsKey(ip) ? ExtraCargo[ip] : 0;
+                    CoroutineManager.Invoke(() =>
+                    {
+                        foreach (var child in cargoList.Content.GetAllChildren())
+                        {
+                            if (child.GetChild<GUINumberInput>() is GUINumberInput otherNumberInput)
+                            {
+                                otherNumberInput.PlusButton.Enabled = ExtraCargo.Keys.Count() < MaxExtraCargoItemTypes && otherNumberInput.IntValue < otherNumberInput.MaxValueInt;
+                            }
+                        }
+                    }, 0.0f);
                 };
             }
-
 
             //--------------------------------------------------------------------------------
             //                              antigriefing
@@ -729,42 +873,42 @@ namespace Barotrauma.Networking
 
             var allowFriendlyFire = new GUITickBox(new RectTransform(new Vector2(0.48f, 0.05f), tickBoxContainer.Content.RectTransform),
                 TextManager.Get("ServerSettingsAllowFriendlyFire"));
-            GetPropertyData("AllowFriendlyFire").AssignGUIComponent(allowFriendlyFire);
+            GetPropertyData(nameof(AllowFriendlyFire)).AssignGUIComponent(allowFriendlyFire);
 
             var killableNPCs = new GUITickBox(new RectTransform(new Vector2(0.48f, 0.05f), tickBoxContainer.Content.RectTransform),
                 TextManager.Get("ServerSettingsKillableNPCs"));
-            GetPropertyData("KillableNPCs").AssignGUIComponent(killableNPCs);
+            GetPropertyData(nameof(KillableNPCs)).AssignGUIComponent(killableNPCs);
 
             var destructibleOutposts = new GUITickBox(new RectTransform(new Vector2(0.48f, 0.05f), tickBoxContainer.Content.RectTransform),
                 TextManager.Get("ServerSettingsDestructibleOutposts"));
-            GetPropertyData("DestructibleOutposts").AssignGUIComponent(destructibleOutposts);
+            GetPropertyData(nameof(DestructibleOutposts)).AssignGUIComponent(destructibleOutposts);
 
             var lockAllDefaultWires = new GUITickBox(new RectTransform(new Vector2(0.48f, 0.05f), tickBoxContainer.Content.RectTransform),
                 TextManager.Get("ServerSettingsLockAllDefaultWires"));
-            GetPropertyData("LockAllDefaultWires").AssignGUIComponent(lockAllDefaultWires);
+            GetPropertyData(nameof(LockAllDefaultWires)).AssignGUIComponent(lockAllDefaultWires);
 
             var allowRewiring = new GUITickBox(new RectTransform(new Vector2(0.48f, 0.05f), tickBoxContainer.Content.RectTransform),
                 TextManager.Get("ServerSettingsAllowRewiring"));
-            GetPropertyData("AllowRewiring").AssignGUIComponent(allowRewiring);
+            GetPropertyData(nameof(AllowRewiring)).AssignGUIComponent(allowRewiring);
 
             var allowWifiChatter = new GUITickBox(new RectTransform(new Vector2(0.48f, 0.05f), tickBoxContainer.Content.RectTransform), 
                 TextManager.Get("ServerSettingsAllowWifiChat"));
-            GetPropertyData("AllowLinkingWifiToChat").AssignGUIComponent(allowWifiChatter);
+            GetPropertyData(nameof(AllowLinkingWifiToChat)).AssignGUIComponent(allowWifiChatter);
 
             var allowDisguises = new GUITickBox(new RectTransform(new Vector2(0.48f, 0.05f), tickBoxContainer.Content.RectTransform),
                 TextManager.Get("ServerSettingsAllowDisguises"));
-            GetPropertyData("AllowDisguises").AssignGUIComponent(allowDisguises);
+            GetPropertyData(nameof(AllowDisguises)).AssignGUIComponent(allowDisguises);
 
             var voteKickBox = new GUITickBox(new RectTransform(new Vector2(0.48f, 0.05f), tickBoxContainer.Content.RectTransform), 
                 TextManager.Get("ServerSettingsAllowVoteKick"));
-            GetPropertyData("AllowVoteKick").AssignGUIComponent(voteKickBox);
+            GetPropertyData(nameof(AllowVoteKick)).AssignGUIComponent(voteKickBox);
 
             GUITextBlock.AutoScaleAndNormalize(tickBoxContainer.Content.Children.Select(c => ((GUITickBox)c).TextBlock));
 
             tickBoxContainer.RectTransform.MinSize = new Point(0, (int)(tickBoxContainer.Content.Children.First().Rect.Height * 2.0f + tickBoxContainer.Padding.Y + tickBoxContainer.Padding.W));
 
             CreateLabeledSlider(antigriefingTab, "ServerSettingsKickVotesRequired", out slider, out sliderLabel);
-            string votesRequiredLabel = sliderLabel.Text + " ";
+            LocalizedString votesRequiredLabel = sliderLabel.Text + " ";
             slider.Step = 0.2f;
             slider.Range = new Vector2(0.5f, 1.0f);
             slider.OnMoved = (GUIScrollBar scrollBar, float barScroll) =>
@@ -772,11 +916,11 @@ namespace Barotrauma.Networking
                 ((GUITextBlock)scrollBar.UserData).Text = votesRequiredLabel + (int)MathUtils.Round(scrollBar.BarScrollValue * 100.0f, 10.0f) + " %";
                 return true;
             };
-            GetPropertyData("KickVoteRequiredRatio").AssignGUIComponent(slider);
+            GetPropertyData(nameof(KickVoteRequiredRatio)).AssignGUIComponent(slider);
             slider.OnMoved(slider, slider.BarScroll);
             
             CreateLabeledSlider(antigriefingTab, "ServerSettingsAutobanTime", out slider, out sliderLabel);
-            string autobanLabel = sliderLabel.Text + " ";
+            LocalizedString autobanLabel = sliderLabel.Text + " ";
             slider.Step = 0.01f;
             slider.Range = new Vector2(0.0f, MaxAutoBanTime);
             slider.OnMoved = (GUIScrollBar scrollBar, float barScroll) =>
@@ -784,13 +928,13 @@ namespace Barotrauma.Networking
                 ((GUITextBlock)scrollBar.UserData).Text = autobanLabel + ToolBox.SecondsToReadableTime(scrollBar.BarScrollValue);
                 return true;
             };
-            GetPropertyData("AutoBanTime").AssignGUIComponent(slider);
+            GetPropertyData(nameof(AutoBanTime)).AssignGUIComponent(slider);
             slider.OnMoved(slider, slider.BarScroll);
 
             var wrongPasswordBanBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.05f), antigriefingTab.RectTransform), TextManager.Get("ServerSettingsBanAfterWrongPassword"));
-            GetPropertyData("BanAfterWrongPassword").AssignGUIComponent(wrongPasswordBanBox);
+            GetPropertyData(nameof(BanAfterWrongPassword)).AssignGUIComponent(wrongPasswordBanBox);
             var allowedPasswordRetries = CreateLabeledNumberInput(antigriefingTab, "ServerSettingsPasswordRetriesBeforeBan", 0, 10);
-            GetPropertyData("MaxPasswordRetriesBeforeBan").AssignGUIComponent(allowedPasswordRetries);
+            GetPropertyData(nameof(MaxPasswordRetriesBeforeBan)).AssignGUIComponent(allowedPasswordRetries);
             wrongPasswordBanBox.OnSelected += (tb) =>
             {
                 allowedPasswordRetries.Enabled = tb.Selected;
@@ -800,7 +944,7 @@ namespace Barotrauma.Networking
             // karma --------------------------------------------------------------------------
 
             var karmaBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.05f), antigriefingTab.RectTransform), TextManager.Get("ServerSettingsUseKarma"));
-            GetPropertyData("KarmaEnabled").AssignGUIComponent(karmaBox);
+            GetPropertyData(nameof(KarmaEnabled)).AssignGUIComponent(karmaBox);
 
             karmaPresetDD = new GUIDropDown(new RectTransform(new Vector2(1.0f, 0.05f), antigriefingTab.RectTransform));
             foreach (string karmaPreset in GameMain.NetworkMember.KarmaManager.Presets.Keys)
@@ -865,12 +1009,6 @@ namespace Barotrauma.Networking
             //--------------------------------------------------------------------------------
 
             BanList.CreateBanFrame(settingsTabs[(int)SettingsTab.Banlist]);
-
-            //--------------------------------------------------------------------------------
-            //                              whitelist
-            //--------------------------------------------------------------------------------
-
-            Whitelist.CreateWhiteListFrame(settingsTabs[(int)SettingsTab.Whitelist]);
         }
 
         private void CreateLabeledSlider(GUIComponent parent, string labelTag, out GUIScrollBar slider, out GUITextBlock label)
@@ -883,7 +1021,7 @@ namespace Barotrauma.Networking
 
             slider = new GUIScrollBar(new RectTransform(new Vector2(0.5f, 1.0f), container.RectTransform), barSize: 0.1f, style: "GUISlider");
             label = new GUITextBlock(new RectTransform(new Vector2(0.5f, 1.0f), container.RectTransform),
-                string.IsNullOrEmpty(labelTag) ? "" : TextManager.Get(labelTag), textAlignment: Alignment.CenterLeft, font: GUI.SmallFont);
+                string.IsNullOrEmpty(labelTag) ? "" : TextManager.Get(labelTag), textAlignment: Alignment.CenterLeft, font: GUIStyle.SmallFont);
 
             container.RectTransform.MinSize = new Point(0, slider.RectTransform.MinSize.Y);
             container.RectTransform.MaxSize = new Point(int.MaxValue, slider.RectTransform.MaxSize.Y);
@@ -902,7 +1040,7 @@ namespace Barotrauma.Networking
             };
 
             var label = new GUITextBlock(new RectTransform(new Vector2(0.7f, 1.0f), container.RectTransform),
-                TextManager.Get(labelTag), textAlignment: Alignment.CenterLeft, font: GUI.SmallFont)
+                TextManager.Get(labelTag), textAlignment: Alignment.CenterLeft, font: GUIStyle.SmallFont)
             {
                 AutoScaleHorizontal = true
             };
@@ -910,11 +1048,37 @@ namespace Barotrauma.Networking
             {
                 label.ToolTip = TextManager.Get(toolTipTag);
             }
-            var input = new GUINumberInput(new RectTransform(new Vector2(0.3f, 1.0f), container.RectTransform), GUINumberInput.NumberType.Int)
+            var input = new GUINumberInput(new RectTransform(new Vector2(0.3f, 1.0f), container.RectTransform), NumberType.Int)
             {
                 MinValueInt = min,
                 MaxValueInt = max
             };
+
+            container.RectTransform.MinSize = new Point(0, input.RectTransform.MinSize.Y);
+            container.RectTransform.MaxSize = new Point(int.MaxValue, input.RectTransform.MaxSize.Y);
+
+            return input;
+        }
+
+        private GUIDropDown CreateLabeledDropdown(GUIComponent parent, string labelTag, int numElements, string toolTipTag = null)
+        {
+            var container = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.1f), parent.RectTransform), isHorizontal: true)
+            {
+                Stretch = true,
+                RelativeSpacing = 0.05f,
+                ToolTip = TextManager.Get(labelTag)
+            };
+
+            var label = new GUITextBlock(new RectTransform(new Vector2(0.7f, 1.0f), container.RectTransform),
+                TextManager.Get(labelTag), textAlignment: Alignment.CenterLeft, font: GUIStyle.SmallFont)
+            {
+                AutoScaleHorizontal = true
+            };
+            if (!string.IsNullOrEmpty(toolTipTag))
+            {
+                label.ToolTip = TextManager.Get(toolTipTag);
+            }
+            var input = new GUIDropDown(new RectTransform(new Vector2(0.3f, 1.0f), container.RectTransform), elementCount: numElements);
 
             container.RectTransform.MinSize = new Point(0, input.RectTransform.MinSize.Y);
             container.RectTransform.MaxSize = new Point(int.MaxValue, input.RectTransform.MaxSize.Y);
@@ -956,15 +1120,7 @@ namespace Barotrauma.Networking
                 }
                 settingsFrame = null;
             }
-
             return false;
-        }
-
-        private ServerInfo cachedServerListInfo = null;
-        public ServerInfo GetServerListInfo()
-        {
-            cachedServerListInfo ??= GameMain.ServerListScreen.UpdateServerInfoWithServerSettings(GameMain.Client.ClientPeer.ServerConnection, this);
-            return cachedServerListInfo;
         }
     }
 }

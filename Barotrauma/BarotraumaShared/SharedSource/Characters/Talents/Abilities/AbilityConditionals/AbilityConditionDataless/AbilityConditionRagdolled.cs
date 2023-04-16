@@ -6,7 +6,7 @@ namespace Barotrauma.Abilities
     class AbilityConditionRagdolled : AbilityConditionDataless
     {
 
-        public AbilityConditionRagdolled(CharacterTalent characterTalent, XElement conditionElement) : base(characterTalent, conditionElement)
+        public AbilityConditionRagdolled(CharacterTalent characterTalent, ContentXElement conditionElement) : base(characterTalent, conditionElement)
         {
         }
 

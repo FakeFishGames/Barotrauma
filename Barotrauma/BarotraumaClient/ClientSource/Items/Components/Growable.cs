@@ -1,6 +1,7 @@
 ﻿#nullable enable
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Xml.Linq;
 using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
@@ -10,15 +11,15 @@ namespace Barotrauma.Items.Components
 {
     internal class VineSprite
     {
-        [Serialize("0,0,0,0", false)]
+        [Serialize("0,0,0,0", IsPropertySaveable.No)]
         public Rectangle SourceRect { get; private set; }
 
-        [Serialize("0.5,0.5", false)]
+        [Serialize("0.5,0.5", IsPropertySaveable.No)]
         public Vector2 Origin { get; private set; }
 
         public Vector2 AbsoluteOrigin;
 
-        public VineSprite(XElement element)
+        public VineSprite(ContentXElement element)
         {
             SerializableProperty.DeserializeProperties(this, element);
             AbsoluteOrigin = new Vector2(SourceRect.Width * Origin.X, SourceRect.Height * Origin.Y);
@@ -109,28 +110,27 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        partial void LoadVines(XElement element)
+        partial void LoadVines(ContentXElement element)
         {
-            string? vineAtlasPath = element.GetAttributeString("vineatlas", null);
-            string? decayAtlasPath = element.GetAttributeString("decayatlas", null);
+            ContentPath vineAtlasPath = element.GetAttributeContentPath("vineatlas") ?? ContentPath.Empty;
+            ContentPath decayAtlasPath = element.GetAttributeContentPath("decayatlas") ?? ContentPath.Empty;
 
-            if (vineAtlasPath != null)
+            if (!vineAtlasPath.IsNullOrEmpty())
             {
-                VineAtlas = new Sprite(vineAtlasPath, Rectangle.Empty);
+                VineAtlas = new Sprite(vineAtlasPath.Value, Rectangle.Empty);
             }
 
-            if (decayAtlasPath != null)
+            if (!decayAtlasPath.IsNullOrEmpty())
             {
-                DecayAtlas = new Sprite(decayAtlasPath, Rectangle.Empty);
+                DecayAtlas = new Sprite(decayAtlasPath.Value, Rectangle.Empty);
             }
 
-            foreach (XElement subElement in element.Elements())
+            foreach (var subElement in element.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
                     case "vinesprite":
-                        var tileType = subElement.GetAttributeString("type", null);
-                        VineTileType type = Enum.Parse<VineTileType>(tileType);
+                        VineTileType type = subElement.GetAttributeEnum("type", VineTileType.Stem);
                         VineSprites.Add(type, new VineSprite(subElement));
                         break;
                     case "flowersprite":
@@ -145,18 +145,18 @@ namespace Barotrauma.Items.Components
                 leafVariants = LeafSprites.Count;
             }
 
-            foreach (VineTileType type in Enum.GetValues(typeof(VineTileType)))
+            foreach (VineTileType type in Enum.GetValues(typeof(VineTileType)).Cast<VineTileType>())
             {
                 if (!VineSprites.ContainsKey(type))
                 {
-                    DebugConsole.ThrowError($"Vine sprite missing from {item.prefab.Identifier}: {type}");
+                    DebugConsole.ThrowError($"Vine sprite missing from {item.Prefab.Identifier}: {type}");
                 }
             }
         }
 
         private readonly object mutex = new object();
 
-        public void ClientRead(ServerNetObject type, IReadMessage msg, float sendingTime)
+        public void ClientEventRead(IReadMessage msg, float sendingTime)
         {
             Health = msg.ReadRangedSingle(0, MaxHealth, 8);
             int startOffset = msg.ReadRangedInteger(-1, MaximumVines);
@@ -166,10 +166,10 @@ namespace Barotrauma.Items.Components
                 List<VineTile> tiles = new List<VineTile>();
                 for (int i = 0; i < vineCount; i++)
                 {
-                    VineTileType vineType = (VineTileType) msg.ReadRangedInteger(0b0000, 0b1111);
+                    VineTileType vineType = (VineTileType)msg.ReadRangedInteger(0b0000, 0b1111);
                     int flowerConfig = msg.ReadRangedInteger(0, 0xFFF);
                     int leafConfig = msg.ReadRangedInteger(0, 0xFFF);
-                    sbyte posX = (sbyte) msg.ReadByte(), posY = (sbyte) msg.ReadByte();
+                    sbyte posX = (sbyte)msg.ReadByte(), posY = (sbyte)msg.ReadByte();
                     Vector2 pos = new Vector2(posX * VineTile.Size, posY * VineTile.Size);
 
                     tiles.Add(new VineTile(this, pos, vineType, FoliageConfig.Deserialize(flowerConfig), FoliageConfig.Deserialize(leafConfig)));
@@ -321,7 +321,7 @@ namespace Barotrauma.Items.Components
         {
             GUILayoutGroup layout = new GUILayoutGroup(new RectTransform(new Vector2(1f, 0.08f), parent), isHorizontal: true);
             new GUITextBlock(new RectTransform(new Vector2(0.5f, 1f), layout.RectTransform), label);
-            GUINumberInput input = new GUINumberInput(new RectTransform(new Vector2(0.5f, 1f), layout.RectTransform), GUINumberInput.NumberType.Int) { IntValue = defaultValue };
+            GUINumberInput input = new GUINumberInput(new RectTransform(new Vector2(0.5f, 1f), layout.RectTransform), NumberType.Int) { IntValue = defaultValue };
             return input;
         }
 
@@ -329,7 +329,7 @@ namespace Barotrauma.Items.Components
         {
             GUILayoutGroup layout = new GUILayoutGroup(new RectTransform(new Vector2(1f, 0.08f), parent), isHorizontal: true);
             new GUITextBlock(new RectTransform(new Vector2(0.5f, 1f), layout.RectTransform), label);
-            GUINumberInput input = new GUINumberInput(new RectTransform(new Vector2(0.5f, 1f), layout.RectTransform), GUINumberInput.NumberType.Float) { FloatValue = defaultValue, DecimalsToDisplay = 2 };
+            GUINumberInput input = new GUINumberInput(new RectTransform(new Vector2(0.5f, 1f), layout.RectTransform), NumberType.Float) { FloatValue = defaultValue, DecimalsToDisplay = 2 };
             return input;
         }
 
@@ -341,7 +341,7 @@ namespace Barotrauma.Items.Components
             for (var i = 0; i < values.Length; i++)
             {
                 float value = values[i];
-                GUINumberInput input = new GUINumberInput(new RectTransform(new Vector2(0.5f / values.Length, 1f), layout.RectTransform), GUINumberInput.NumberType.Float)
+                GUINumberInput input = new GUINumberInput(new RectTransform(new Vector2(0.5f / values.Length, 1f), layout.RectTransform), NumberType.Float)
                 {
                     FloatValue = value, DecimalsToDisplay = 2,
                     MinValueFloat = min,

@@ -15,9 +15,9 @@ namespace Barotrauma.Lights
 
         public bool Persistent;
 
-        public Dictionary<string, SerializableProperty> SerializableProperties { get; private set; } = new Dictionary<string, SerializableProperty>();
+        public Dictionary<Identifier, SerializableProperty> SerializableProperties { get; private set; } = new Dictionary<Identifier, SerializableProperty>();
 
-        [Serialize("1.0,1.0,1.0,1.0", true, alwaysUseInstanceValues: true), Editable]
+        [Serialize("1.0,1.0,1.0,1.0", IsPropertySaveable.Yes, alwaysUseInstanceValues: true), Editable]
         public Color Color
         {
             get;
@@ -26,7 +26,7 @@ namespace Barotrauma.Lights
 
         private float range;
 
-        [Serialize(100.0f, true, alwaysUseInstanceValues: true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 2048.0f)]
+        [Serialize(100.0f, IsPropertySaveable.Yes, alwaysUseInstanceValues: true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 2048.0f)]
         public float Range
         {
             get { return range; }
@@ -43,19 +43,19 @@ namespace Barotrauma.Lights
             }
         }
 
-        [Serialize(1f, true), Editable(minValue: 0.01f, maxValue: 100f, ValueStep = 0.1f, DecimalCount = 2)]
+        [Serialize(1f, IsPropertySaveable.Yes), Editable(minValue: 0.01f, maxValue: 100f, ValueStep = 0.1f, DecimalCount = 2)]
         public float Scale { get; set; }
 
-        [Serialize("0, 0", true), Editable(ValueStep = 1, DecimalCount = 1, MinValueFloat = -1000f, MaxValueFloat = 1000f)]
+        [Serialize("0, 0", IsPropertySaveable.Yes), Editable(ValueStep = 1, DecimalCount = 1, MinValueFloat = -1000f, MaxValueFloat = 1000f)]
         public Vector2 Offset { get; set; }
 
-        [Serialize(0f, true), Editable(MinValueFloat = -360, MaxValueFloat = 360, ValueStep = 1, DecimalCount = 0)]
+        [Serialize(0f, IsPropertySaveable.Yes), Editable(MinValueFloat = -360, MaxValueFloat = 360, ValueStep = 1, DecimalCount = 0)]
         public float Rotation { get; set; }
 
-        public Vector2 GetOffset() => Vector2.Transform(Offset, Matrix.CreateRotationZ(Rotation));
+        public Vector2 GetOffset() => Vector2.Transform(Offset, Matrix.CreateRotationZ(MathHelper.ToRadians(Rotation)));
 
         private float flicker;
-        [Editable, Serialize(0.0f, false, description: "How heavily the light flickers. 0 = no flickering, 1 = the light will alternate between completely dark and full brightness.")]
+        [Editable, Serialize(0.0f, IsPropertySaveable.No, description: "How heavily the light flickers. 0 = no flickering, 1 = the light will alternate between completely dark and full brightness.")]
         public float Flicker
         {
             get { return flicker; }
@@ -65,7 +65,7 @@ namespace Barotrauma.Lights
             }
         }
 
-        [Editable, Serialize(1.0f, false, description: "How fast the light flickers.")]
+        [Editable, Serialize(1.0f, IsPropertySaveable.No, description: "How fast the light flickers.")]
         public float FlickerSpeed
         {
             get;
@@ -73,7 +73,7 @@ namespace Barotrauma.Lights
         }
 
         private float pulseFrequency;
-        [Editable, Serialize(0.0f, true, description: "How rapidly the light pulsates (in Hz). 0 = no blinking.")]
+        [Editable, Serialize(0.0f, IsPropertySaveable.Yes, description: "How rapidly the light pulsates (in Hz). 0 = no blinking.")]
         public float PulseFrequency
         {
             get { return pulseFrequency; }
@@ -84,7 +84,7 @@ namespace Barotrauma.Lights
         }
 
         private float pulseAmount;
-        [Editable(MinValueFloat = 0.0f, MaxValueFloat = 1.0f, DecimalCount = 2), Serialize(0.0f, true, description: "How much light pulsates (in Hz). 0 = not at all, 1 = alternates between full brightness and off.")]
+        [Editable(MinValueFloat = 0.0f, MaxValueFloat = 1.0f, DecimalCount = 2), Serialize(0.0f, IsPropertySaveable.Yes, description: "How much light pulsates (in Hz). 0 = not at all, 1 = alternates between full brightness and off.")]
         public float PulseAmount
         {
             get { return pulseAmount; }
@@ -95,7 +95,7 @@ namespace Barotrauma.Lights
         }
 
         private float blinkFrequency;
-        [Editable, Serialize(0.0f, true, description: "How rapidly the light blinks on and off (in Hz). 0 = no blinking.")]
+        [Editable, Serialize(0.0f, IsPropertySaveable.Yes, description: "How rapidly the light blinks on and off (in Hz). 0 = no blinking.")]
         public float BlinkFrequency
         {
             get { return blinkFrequency; }
@@ -124,7 +124,7 @@ namespace Barotrauma.Lights
             private set;
         }
 
-        public XElement DeformableLightSpriteElement
+        public ContentXElement DeformableLightSpriteElement
         {
             get;
             private set;
@@ -134,11 +134,11 @@ namespace Barotrauma.Lights
         //Can be used to make lamp sprites glow at full brightness even if the light itself is dim.
         public float? OverrideLightSpriteAlpha;
 
-        public LightSourceParams(XElement element)
+        public LightSourceParams(ContentXElement element)
         {
             Deserialize(element);
 
-            foreach (XElement subElement in element.Elements())
+            foreach (var subElement in element.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
@@ -200,12 +200,10 @@ namespace Barotrauma.Lights
 
         private static Texture2D lightTexture;
 
-        private float blinkTimer, flickerState, pulseState;
-
         private VertexPositionColorTexture[] vertices;
         private short[] indices;
 
-        private List<ConvexHullList> hullsInRange;
+        private readonly List<ConvexHullList> convexHullsInRange;
 
         public Texture2D texture;
 
@@ -224,9 +222,10 @@ namespace Barotrauma.Lights
         private float prevCalculatedRange;
         private Vector2 prevCalculatedPosition;
 
-        //do we need to recheck which convex hulls are within range
-        //(e.g. position or range of the lightsource has changed)
-        public bool NeedsHullCheck = true;
+        //Which submarines' convex hulls are up to date? Resets when the item moves/rotates relative to the submarine.
+        //Can contain null (means convex hulls that aren't part of any submarine).
+        public HashSet<Submarine> HullsUpToDate = new HashSet<Submarine>();
+
         //do we need to recalculate the vertices of the light volume
         private bool needsRecalculation;
         public bool NeedsRecalculation
@@ -236,7 +235,7 @@ namespace Barotrauma.Lights
             {
                 if (!needsRecalculation && value)
                 {
-                    foreach (ConvexHullList chList in hullsInRange)
+                    foreach (ConvexHullList chList in convexHullsInRange)
                     {
                         chList.IsHidden.Clear();
                     }
@@ -246,9 +245,9 @@ namespace Barotrauma.Lights
         }
 
         //when were the vertices of the light volume last calculated
-        private float lastRecalculationTime;
+        public float LastRecalculationTime { get; private set; }
 
-        private Dictionary<Submarine, Vector2> diffToSub;
+        private readonly Dictionary<Submarine, Vector2> diffToSub;
 
         private DynamicVertexBuffer lightVolumeBuffer;
         private DynamicIndexBuffer lightVolumeIndexBuffer;
@@ -279,7 +278,7 @@ namespace Barotrauma.Lights
                     return;
                 }
 
-                NeedsHullCheck = true;
+                HullsUpToDate.Clear();
                 NeedsRecalculation = true;
             }
         }
@@ -300,7 +299,7 @@ namespace Barotrauma.Lights
                     return;
                 }
 
-                NeedsHullCheck = true;
+                HullsUpToDate.Clear();
                 NeedsRecalculation = true;
             }
         }
@@ -370,11 +369,13 @@ namespace Barotrauma.Lights
                 lightSourceParams.Range = value;
                 if (Math.Abs(prevCalculatedRange - lightSourceParams.Range) < 10.0f) return;
 
-                NeedsHullCheck = true;
+                HullsUpToDate.Clear();
                 NeedsRecalculation = true;
                 prevCalculatedRange = lightSourceParams.Range;
             }
         }
+
+        public float Priority;
 
         private Vector2 lightTextureTargetSize;
 
@@ -384,8 +385,8 @@ namespace Barotrauma.Lights
             set
             {
                 NeedsRecalculation = true;
-                NeedsHullCheck = true;
                 lightTextureTargetSize = value;
+                HullsUpToDate.Clear();
             }
         }
 
@@ -423,11 +424,11 @@ namespace Barotrauma.Lights
 
         public bool Enabled = true;
 
-        private ISerializableEntity conditionalTarget;
+        private readonly ISerializableEntity conditionalTarget;
         private readonly PropertyConditional.Comparison comparison;
         private readonly List<PropertyConditional> conditionals = new List<PropertyConditional>();
 
-        public LightSource (XElement element, ISerializableEntity conditionalTarget = null)
+        public LightSource(ContentXElement element, ISerializableEntity conditionalTarget = null)
             : this(Vector2.Zero, 100.0f, Color.White, null)
         {
             lightSourceParams = new LightSourceParams(element);
@@ -444,7 +445,7 @@ namespace Barotrauma.Lights
             }
 
             this.conditionalTarget = conditionalTarget;
-            foreach (XElement subElement in element.Elements())
+            foreach (var subElement in element.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
@@ -474,7 +475,7 @@ namespace Barotrauma.Lights
 
         public LightSource(Vector2 position, float range, Color color, Submarine submarine, bool addLight=true)
         {
-            hullsInRange = new List<ConvexHullList>();
+            convexHullsInRange = new List<ConvexHullList>();
             this.ParentSub = submarine;
             this.position = position;
             lightSourceParams = new LightSourceParams(range, color);
@@ -484,12 +485,12 @@ namespace Barotrauma.Lights
             if (addLight) { GameMain.LightManager.AddLight(this); }
         }
 
-        public void Update(float deltaTime)
+        public void Update(float time)
         {
             float brightness = 1.0f;
             if (lightSourceParams.BlinkFrequency > 0.0f)
             {
-                blinkTimer = (blinkTimer + deltaTime * lightSourceParams.BlinkFrequency) % 1.0f;
+                float blinkTimer = (time * lightSourceParams.BlinkFrequency) % 1.0f;
                 if (blinkTimer > 0.5f)
                 {
                     CurrentBrightness = 0.0f;
@@ -498,14 +499,13 @@ namespace Barotrauma.Lights
             }
             if (lightSourceParams.PulseFrequency > 0.0f && lightSourceParams.PulseAmount > 0.0f)
             {
-                pulseState = (pulseState + deltaTime * lightSourceParams.PulseFrequency) % 1.0f;
+                float pulseState = (time * lightSourceParams.PulseFrequency) % 1.0f;
                 //oscillate between 0-1
                 brightness *= 1.0f - (float)(Math.Sin(pulseState * MathHelper.TwoPi) + 1.0f) / 2.0f * lightSourceParams.PulseAmount;
             }
-            if (lightSourceParams.Flicker > 0.0f)
+            if (lightSourceParams.Flicker > 0.0f && lightSourceParams.FlickerSpeed > 0.0f)
             {
-                flickerState += deltaTime * lightSourceParams.FlickerSpeed;
-                flickerState %= 255;
+                float flickerState = (time * lightSourceParams.FlickerSpeed) % 255;
                 brightness *= 1.0f - PerlinNoise.GetPerlin(flickerState, flickerState * 0.5f) * lightSourceParams.Flicker;
             }
             CurrentBrightness = brightness;
@@ -516,121 +516,139 @@ namespace Barotrauma.Lights
         /// </summary>
         private void RefreshConvexHullList(ConvexHullList chList, Vector2 lightPos, Submarine sub)
         {
-            var fullChList = ConvexHull.HullLists.Find(x => x.Submarine == sub);
-            if (fullChList == null) return;
+            var fullChList = ConvexHull.HullLists.FirstOrDefault(chList => chList.Submarine == sub);
+            if (fullChList == null) { return; }
 
-            chList.List = fullChList.List.FindAll(ch => ch.Enabled && MathUtils.CircleIntersectsRectangle(lightPos, TextureRange, ch.BoundingBox));
-
-            NeedsHullCheck = true;
+            chList.List.Clear();
+            foreach (var convexHull in fullChList.List)
+            {
+                if (!convexHull.Enabled) { continue; }
+                if (!MathUtils.CircleIntersectsRectangle(lightPos, TextureRange, convexHull.BoundingBox)) { continue; }
+                chList.List.Add(convexHull);
+            }
+            chList.IsHidden.RemoveWhere(ch => !chList.List.Contains(ch));
+            HullsUpToDate.Add(sub);    
         }
 
         /// <summary>
         /// Recheck which convex hulls are in range (if needed),
         /// and check if we need to recalculate vertices due to changes in the convex hulls
         /// </summary>
-        private void CheckHullsInRange()
+        private void CheckConvexHullsInRange()
         {
-            List<Submarine> subs = new List<Submarine>(Submarine.Loaded);
-            subs.Add(null);
-
-            foreach (Submarine sub in subs)
+            foreach (Submarine sub in Submarine.Loaded)
             {
-                //find the list of convexhulls that belong to the sub
-                var chList = hullsInRange.Find(x => x.Submarine == sub);
-
-                //not found -> create one
-                if (chList == null)
-                {
-                    chList = new ConvexHullList(sub);
-                    hullsInRange.Add(chList);
-                    NeedsRecalculation = true;
-                }
-
-                if (chList.List.Any(ch => ch.LastVertexChangeTime > lastRecalculationTime && !chList.IsHidden.Contains(ch)))
-                {
-                    NeedsRecalculation = true;
-                }
-
-                Vector2 lightPos = position;
-                if (ParentSub == null)
-                {
-                    //light and the convexhulls are both outside
-                    if (sub == null)
-                    {
-                        if (NeedsHullCheck)
-                        {
-                            RefreshConvexHullList(chList, lightPos, null);
-                        }
-                    }
-                    //light is outside, convexhulls inside a sub
-                    else
-                    {
-                        lightPos -= sub.Position;
-
-                        Rectangle subBorders = sub.Borders;
-                        subBorders.Location += sub.HiddenSubPosition.ToPoint() - new Point(0, sub.Borders.Height);
-
-                        //only draw if the light overlaps with the sub
-                        if (!MathUtils.CircleIntersectsRectangle(lightPos, TextureRange, subBorders))
-                        {
-                            if (chList.List.Count > 0) NeedsRecalculation = true;
-                            chList.List.Clear();
-                            continue;
-                        }
-
-                        RefreshConvexHullList(chList, lightPos, sub);
-                    }
-                }
-                else
-                {
-                    //light is inside, convexhull outside
-                    if (sub == null) continue;
-
-                    //light and convexhull are both inside the same sub
-                    if (sub == ParentSub)
-                    {
-                        if (NeedsHullCheck)
-                        {
-                            RefreshConvexHullList(chList, lightPos, sub);
-                        }
-                    }
-                    //light and convexhull are inside different subs
-                    else
-                    {
-                        if (sub.DockedTo.Contains(ParentSub) && !NeedsHullCheck) continue;
-
-                        lightPos -= (sub.Position - ParentSub.Position);
-
-                        Rectangle subBorders = sub.Borders;
-                        subBorders.Location += sub.HiddenSubPosition.ToPoint() - new Point(0, sub.Borders.Height);
-
-                        //don't draw any shadows if the light doesn't overlap with the borders of the sub
-                        if (!MathUtils.CircleIntersectsRectangle(lightPos, TextureRange, subBorders))
-                        {
-                            if (chList.List.Count > 0) NeedsRecalculation = true;
-                            chList.List.Clear();
-                            continue;
-                        }
-
-                        //recalculate vertices if the subs have moved > 5 px relative to each other
-                        Vector2 diff = ParentSub.WorldPosition - sub.WorldPosition;
-                        if (!diffToSub.TryGetValue(sub, out Vector2 prevDiff))
-                        {
-                            diffToSub.Add(sub, diff);
-                            NeedsRecalculation = true;
-                        }
-                        else if (Vector2.DistanceSquared(diff, prevDiff) > 5.0f * 5.0f)
-                        {
-                            diffToSub[sub] = diff;
-                            NeedsRecalculation = true;
-                        }
-
-                        RefreshConvexHullList(chList, lightPos, sub);
-                    }
-                }
+                CheckHullsInRange(sub);
             }
+            //check convex hulls that aren't in any sub
+            CheckHullsInRange(null);
         }
 
+        private void CheckHullsInRange(Submarine sub)
+        {
+            //find the list of convexhulls that belong to the sub
+            ConvexHullList chList = convexHullsInRange.FirstOrDefault(chList => chList.Submarine == sub);
+            
+            //not found -> create one
+            if (chList == null)
+            {
+                chList = new ConvexHullList(sub);
+                convexHullsInRange.Add(chList);
+                NeedsRecalculation = true;
+            }
+
+            foreach (var ch in chList.List)
+            {
+                if (ch.LastVertexChangeTime > LastRecalculationTime && !chList.IsHidden.Contains(ch))
+                {
+                    NeedsRecalculation = true;
+                    break;
+                }
+            }
+
+            Vector2 lightPos = position;
+            if (ParentSub == null)
+            {
+                //light and the convexhulls are both outside
+                if (sub == null)
+                {
+                    if (!HullsUpToDate.Contains(null))
+                    {
+                        RefreshConvexHullList(chList, lightPos, null);
+                    }
+                }
+                //light is outside, convexhulls inside a sub
+                else
+                {
+                    lightPos -= sub.Position;
+
+                    Rectangle subBorders = sub.Borders;
+                    subBorders.Location += sub.HiddenSubPosition.ToPoint() - new Point(0, sub.Borders.Height);
+
+                    //only draw if the light overlaps with the sub
+                    if (!MathUtils.CircleIntersectsRectangle(lightPos, TextureRange, subBorders))
+                    {
+                        if (chList.List.Count > 0) { NeedsRecalculation = true; }
+                        chList.List.Clear();
+                        return;
+                    }
+
+                    RefreshConvexHullList(chList, lightPos, sub);
+                }
+            }
+            else
+            {
+                //light is inside, convexhull outside
+                if (sub == null) { return; }
+
+                //light and convexhull are both inside the same sub
+                if (sub == ParentSub)
+                {
+                    if (!HullsUpToDate.Contains(sub))
+                    {
+                        RefreshConvexHullList(chList, lightPos, sub);
+                    }
+                }
+                //light and convexhull are inside different subs
+                else
+                {
+                    if (sub.DockedTo.Contains(ParentSub) && HullsUpToDate.Contains(sub)) { return; }
+
+                    lightPos -= (sub.Position - ParentSub.Position);
+
+                    Rectangle subBorders = sub.Borders;
+                    subBorders.Location += sub.HiddenSubPosition.ToPoint() - new Point(0, sub.Borders.Height);
+
+                    //don't draw any shadows if the light doesn't overlap with the borders of the sub
+                    if (!MathUtils.CircleIntersectsRectangle(lightPos, TextureRange, subBorders))
+                    {
+                        if (chList.List.Count > 0) { NeedsRecalculation = true; }
+                        chList.List.Clear();
+                        return;
+                    }
+
+                    //recalculate vertices if the subs have moved > 5 px relative to each other
+                    Vector2 diff = ParentSub.WorldPosition - sub.WorldPosition;
+                    if (!diffToSub.TryGetValue(sub, out Vector2 prevDiff))
+                    {
+                        diffToSub.Add(sub, diff);
+                        NeedsRecalculation = true;
+                    }
+                    else if (Vector2.DistanceSquared(diff, prevDiff) > 5.0f * 5.0f)
+                    {
+                        diffToSub[sub] = diff;
+                        NeedsRecalculation = true;
+                    }
+
+                    RefreshConvexHullList(chList, lightPos, sub);
+                }
+            }            
+        }
+
+        private static readonly List<Segment> visibleSegments = new List<Segment>();
+        private static readonly List<SegmentPoint> points = new List<SegmentPoint>();
+        private static readonly List<Vector2> output = new List<Vector2>();
+        private static readonly SegmentPoint[] boundaryCorners = new SegmentPoint[4];
         private List<Vector2> FindRaycastHits()
         {
             if (!CastShadows || Range < 1.0f || Color.A < 1) { return null; }
@@ -638,27 +656,22 @@ namespace Barotrauma.Lights
             Vector2 drawPos = position;
             if (ParentSub != null) { drawPos += ParentSub.DrawPosition; }
 
-            var hulls = new List<ConvexHull>();
-            foreach (ConvexHullList chList in hullsInRange)
+            visibleSegments.Clear();
+            foreach (ConvexHullList chList in convexHullsInRange)
             {
                 foreach (ConvexHull hull in chList.List)
                 {
-                    if (!chList.IsHidden.Contains(hull)) { hulls.Add(hull); }
+                    if (!chList.IsHidden.Contains(hull)) 
+                    {
+                        //find convexhull segments that are close enough and facing towards the light source
+                        hull.RefreshWorldPositions();
+                        hull.GetVisibleSegments(drawPos, visibleSegments, ignoreEdges: false);                  
+                    }
                 }
                 foreach (ConvexHull hull in chList.List)
                 {
                     chList.IsHidden.Add(hull);
                 }
-            }
-
-            float bounds = TextureRange;
-            //find convexhull segments that are close enough and facing towards the light source
-            List<Segment> visibleSegments = new List<Segment>();
-            List<SegmentPoint> points = new List<SegmentPoint>();
-            foreach (ConvexHull hull in hulls)
-            {
-                hull.RefreshWorldPositions();
-                hull.GetVisibleSegments(drawPos, visibleSegments, ignoreEdges: false);
             }
 
             //add a square-shaped boundary to make sure we've got something to construct the triangles from
@@ -667,7 +680,7 @@ namespace Barotrauma.Lights
             //(might be more effective to calculate if we actually need these extra points)
 
             Vector2 drawOffset = Vector2.Zero;
-            float boundsExtended = bounds;
+            float boundsExtended = TextureRange;
             if (OverrideLightTexture != null)
             {
                 float cosAngle = (float)Math.Cos(Rotation);
@@ -691,12 +704,12 @@ namespace Barotrauma.Lights
                 drawOffset.Y = origin.X * sinAngle + origin.Y * cosAngle;
             }
 
-            var boundaryCorners = new SegmentPoint[] {
-                new SegmentPoint(new Vector2(drawPos.X + drawOffset.X + boundsExtended, drawPos.Y + drawOffset.Y + boundsExtended), null),
-                new SegmentPoint(new Vector2(drawPos.X + drawOffset.X + boundsExtended, drawPos.Y + drawOffset.Y - boundsExtended), null),
-                new SegmentPoint(new Vector2(drawPos.X + drawOffset.X - boundsExtended, drawPos.Y + drawOffset.Y - boundsExtended), null),
-                new SegmentPoint(new Vector2(drawPos.X + drawOffset.X - boundsExtended, drawPos.Y + drawOffset.Y + boundsExtended), null)
-            };
+            Vector2 boundsMin = drawPos + drawOffset + new Vector2(-boundsExtended, -boundsExtended);
+            Vector2 boundsMax = drawPos + drawOffset + new Vector2(boundsExtended, boundsExtended);
+            boundaryCorners[0] = new SegmentPoint(boundsMax, null);
+            boundaryCorners[1] = new SegmentPoint(new Vector2(boundsMax.X, boundsMin.Y), null);
+            boundaryCorners[2] = new SegmentPoint(boundsMin, null);
+            boundaryCorners[3] = new SegmentPoint(new Vector2(boundsMin.X, boundsMax.Y), null);
 
             for (int i = 0; i < 4; i++)
             {
@@ -780,6 +793,7 @@ namespace Barotrauma.Lights
                 }
             }
 
+            points.Clear();
             //remove segments that fall out of bounds
             for (int i = 0; i < visibleSegments.Count; i++)
             {
@@ -799,7 +813,18 @@ namespace Barotrauma.Lights
                 }
             }
 
-            visibleSegments = visibleSegments.OrderBy(s => MathUtils.LineToPointDistanceSquared(s.Start.WorldPos, s.End.WorldPos, drawPos)).ToList();
+            //remove points that are very close to each other
+            for (int i = 0; i < points.Count; i++)
+            {
+                for (int j = Math.Min(i + 4, points.Count-1); j > i; j--)
+                {
+                    if (Math.Abs(points[i].WorldPos.X - points[j].WorldPos.X) < 6 &&
+                        Math.Abs(points[i].WorldPos.Y - points[j].WorldPos.Y) < 6)
+                    {
+                        points.RemoveAt(j);
+                    }
+                }
+            }
 
             var compareCCW = new CompareSegmentPointCW(drawPos);
             try
@@ -815,23 +840,12 @@ namespace Barotrauma.Lights
                 }
                 DebugConsole.ThrowError(sb.ToString(), e);
             }
+                        
+            visibleSegments.Sort((s1, s2) => 
+                MathUtils.LineToPointDistanceSquared(s1.Start.WorldPos, s1.End.WorldPos, drawPos)
+                .CompareTo(MathUtils.LineToPointDistanceSquared(s2.Start.WorldPos, s2.End.WorldPos, drawPos)));
 
-            List<Vector2> output = new List<Vector2>();
-            //List<Pair<int, Vector2>> preOutput = new List<Pair<int, Vector2>>();
-
-            //remove points that are very close to each other
-            for (int i = 0; i < points.Count; i++)
-            {
-                for (int j = Math.Min(i + 4, points.Count-1); j > i; j--)
-                {
-                    if (Math.Abs(points[i].WorldPos.X - points[j].WorldPos.X) < 6 &&
-                        Math.Abs(points[i].WorldPos.Y - points[j].WorldPos.Y) < 6)
-                    {
-                        points.RemoveAt(j);
-                    }
-                }
-            }
-
+            output.Clear();
             foreach (SegmentPoint p in points)
             {
                 Vector2 dir = Vector2.Normalize(p.WorldPos - drawPos);
@@ -839,10 +853,10 @@ namespace Barotrauma.Lights
 
                 //do two slightly offset raycasts to hit the segment itself and whatever's behind it
                 var intersection1 = RayCast(drawPos, drawPos + dir * boundsExtended * 2 - dirNormal, visibleSegments);
+                if (intersection1.index < 0) { return null; }
                 var intersection2 = RayCast(drawPos, drawPos + dir * boundsExtended * 2 + dirNormal, visibleSegments);
+                if (intersection2.index < 0) { return null; }
 
-                if (intersection1.index < 0) return null;
-                if (intersection2.index < 0) return null;
                 Segment seg1 = visibleSegments[intersection1.index];
                 Segment seg2 = visibleSegments[intersection2.index];
 
@@ -854,7 +868,7 @@ namespace Barotrauma.Lights
                     //hit at the current segmentpoint -> place the segmentpoint into the list
                     output.Add(p.WorldPos);
 
-                    foreach (ConvexHullList hullList in hullsInRange)
+                    foreach (ConvexHullList hullList in convexHullsInRange)
                     {
                         hullList.IsHidden.Remove(p.ConvexHull);
                         hullList.IsHidden.Remove(seg1.ConvexHull);
@@ -868,7 +882,7 @@ namespace Barotrauma.Lights
                     output.Add(isPoint1 ? p.WorldPos : intersection1.pos);
                     output.Add(isPoint2 ? p.WorldPos : intersection2.pos);
 
-                    foreach (ConvexHullList hullList in hullsInRange)
+                    foreach (ConvexHullList hullList in convexHullsInRange)
                     {
                         hullList.IsHidden.Remove(p.ConvexHull);
                         hullList.IsHidden.Remove(seg1.ConvexHull);
@@ -896,7 +910,7 @@ namespace Barotrauma.Lights
             return output;
         }
 
-        private (int index, Vector2 pos) RayCast(Vector2 rayStart, Vector2 rayEnd, List<Segment> segments)
+        private static (int index, Vector2 pos) RayCast(Vector2 rayStart, Vector2 rayEnd, List<Segment> segments)
         {
             Vector2? closestIntersection = null;
             int segment = -1;
@@ -921,13 +935,13 @@ namespace Barotrauma.Lights
                 //same for the x-axis
                 if (s.Start.WorldPos.X > s.End.WorldPos.X)
                 {
-                    if (s.Start.WorldPos.X < minX) continue;
-                    if (s.End.WorldPos.X > maxX) continue;
+                    if (s.Start.WorldPos.X < minX) { continue; }
+                    if (s.End.WorldPos.X > maxX) { continue; }
                 }
                 else
                 {
-                    if (s.End.WorldPos.X < minX) continue;
-                    if (s.Start.WorldPos.X > maxX) continue;
+                    if (s.End.WorldPos.X < minX) { continue; }
+                    if (s.Start.WorldPos.X > maxX) { continue; }
                 }
 
                 bool intersects;
@@ -1195,7 +1209,7 @@ namespace Barotrauma.Lights
                     new SegmentPoint(new Vector2(drawPos.X - bounds, drawPos.Y + bounds), null)
                 };
 
-                for (int i=0;i<4;i++)
+                for (int i = 0; i < 4; i++)
                 {
                     GUI.DrawLine(spriteBatch, boundaryCorners[i].Pos, boundaryCorners[(i + 1) % 4].Pos, Color.White, 0, 3);
                 }
@@ -1267,16 +1281,16 @@ namespace Barotrauma.Lights
 
                 if (CastShadows && Screen.Selected == GameMain.SubEditorScreen)
                 {
-                    GUI.DrawRectangle(spriteBatch, drawPos - Vector2.One * 20, Vector2.One * 40, GUI.Style.Orange, isFilled: false);
-                    GUI.DrawLine(spriteBatch, drawPos - Vector2.One * 20, drawPos + Vector2.One * 20, GUI.Style.Orange);
-                    GUI.DrawLine(spriteBatch, drawPos - new Vector2(1.0f, -1.0f) * 20, drawPos + new Vector2(1.0f, -1.0f) * 20, GUI.Style.Orange);
+                    GUI.DrawRectangle(spriteBatch, drawPos - Vector2.One * 20, Vector2.One * 40, GUIStyle.Orange, isFilled: false);
+                    GUI.DrawLine(spriteBatch, drawPos - Vector2.One * 20, drawPos + Vector2.One * 20, GUIStyle.Orange);
+                    GUI.DrawLine(spriteBatch, drawPos - new Vector2(1.0f, -1.0f) * 20, drawPos + new Vector2(1.0f, -1.0f) * 20, GUIStyle.Orange);
                 }
 
                 //visualize light recalculations
-                float timeSinceRecalculation = (float)Timing.TotalTime - lastRecalculationTime;
+                float timeSinceRecalculation = (float)Timing.TotalTime - LastRecalculationTime;
                 if (timeSinceRecalculation < 0.1f)
                 {
-                    GUI.DrawRectangle(spriteBatch, drawPos - Vector2.One * 10, Vector2.One * 20, GUI.Style.Red * (1.0f - timeSinceRecalculation * 10.0f), isFilled: true);
+                    GUI.DrawRectangle(spriteBatch, drawPos - Vector2.One * 10, Vector2.One * 20, GUIStyle.Red * (1.0f - timeSinceRecalculation * 10.0f), isFilled: true);
                     GUI.DrawLine(spriteBatch, drawPos - Vector2.One * Range, drawPos + Vector2.One * Range, Color);
                     GUI.DrawLine(spriteBatch, drawPos - new Vector2(1.0f, -1.0f) * Range, drawPos + new Vector2(1.0f, -1.0f) * Range, Color);
                 }
@@ -1297,7 +1311,7 @@ namespace Barotrauma.Lights
             }
         }
 
-        public void DrawLightVolume(SpriteBatch spriteBatch, BasicEffect lightEffect, Matrix transform)
+        public void DrawLightVolume(SpriteBatch spriteBatch, BasicEffect lightEffect, Matrix transform, bool allowRecalculation, ref int recalculationCount)
         {
             if (Range < 1.0f || Color.A < 1 || CurrentBrightness <= 0.0f) { return; }
 
@@ -1320,10 +1334,11 @@ namespace Barotrauma.Lights
                 return;
             }
 
-            CheckHullsInRange();
+            CheckConvexHullsInRange();
 
-            if (NeedsRecalculation)
+            if (NeedsRecalculation && allowRecalculation)
             {
+                recalculationCount++;
                 var verts = FindRaycastHits();
                 if (verts == null)
                 {
@@ -1336,7 +1351,7 @@ namespace Barotrauma.Lights
 
                 CalculateLightVertices(verts);
 
-                lastRecalculationTime = (float)Timing.TotalTime;
+                LastRecalculationTime = (float)Timing.TotalTime;
                 NeedsRecalculation = false;
             }
 
@@ -1371,9 +1386,9 @@ namespace Barotrauma.Lights
 
         public void Reset()
         {
-            hullsInRange.Clear();
+            HullsUpToDate.Clear();
+            convexHullsInRange.Clear();
             diffToSub.Clear();
-            NeedsHullCheck = true;
             NeedsRecalculation = true;
 
             vertexCount = 0;

@@ -1,11 +1,11 @@
 ﻿using Barotrauma.Extensions;
 using Barotrauma.Networking;
+using Barotrauma.Sounds;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
 {
@@ -29,16 +29,22 @@ namespace Barotrauma.Items.Components
         private Sprite tempRangeIndicator;
 
         private Sprite graphLine;
-        //private GUIFrame graph;
+        private GUICustomComponent graph;
+
+        private GUIFrame inventoryWindow;
+        private GUILayoutGroup buttonArea;
+        private GUIFrame infographic;
 
         private Color optimalRangeColor = new Color(74,238,104,255);
         private Color offRangeColor = Color.Orange;
         private Color warningColor = Color.Red;
-        private Color coldColor = Color.LightBlue;
-        private Color warmColor = Color.Orange;
-        private Color hotColor = Color.Red;
+
+        private readonly Color[] temperatureColors = new Color[] { Color.Blue, Color.LightBlue, Color.Orange, Color.Red };
         private Color outputColor = Color.Goldenrod;
         private Color loadColor = Color.LightSteelBlue;
+
+        private RoundSound temperatureBoostSoundUp, temperatureBoostSoundDown;
+        private GUIButton temperatureBoostUpButton, temperatureBoostDownButton;
 
         public GUIScrollBar FissionRateScrollBar { get; private set; }
 
@@ -63,10 +69,15 @@ namespace Barotrauma.Items.Components
             "ReactorWarningOverheating", "ReactorWarningHighOutput", "ReactorWarningFuelOut", "ReactorWarningSCRAM"
         };
 
-        partial void InitProjSpecific(XElement element)
-        {
-            // TODO: need to recreate the gui when the resolution changes
+        public override bool RecreateGUIOnResolutionChange => true;
 
+        public bool TriggerInfographic { get; set; }
+
+        public bool IsInfographicVisible => infographic != null && infographic.Visible;
+
+        partial void InitProjSpecific(ContentXElement element)
+        {
+            CreateGUI();
             fissionRateMeter = new Sprite(element.GetChildElement("fissionratemeter")?.GetChildElement("sprite"));
             turbineOutputMeter = new Sprite(element.GetChildElement("turbineoutputmeter")?.GetChildElement("sprite"));
             meterPointer = new Sprite(element.GetChildElement("meterpointer")?.GetChildElement("sprite"));
@@ -76,11 +87,32 @@ namespace Barotrauma.Items.Components
             tempRangeIndicator = new Sprite(element.GetChildElement("temprangeindicator")?.GetChildElement("sprite"));
             graphLine = new Sprite(element.GetChildElement("graphline")?.GetChildElement("sprite"));
 
-            paddedFrame = new GUILayoutGroup(new RectTransform(
-                    GuiFrame.Rect.Size - GUIStyle.ItemFrameMargin, GuiFrame.RectTransform, Anchor.Center) 
-                    { AbsoluteOffset = GUIStyle.ItemFrameOffset }, 
-                isHorizontal: true)
+            foreach (var subElement in element.Elements())
             {
+                switch (subElement.Name.ToString().ToLowerInvariant())
+                {
+                    case "temperatureboostsoundup":
+                        temperatureBoostSoundUp = RoundSound.Load(subElement, false);
+                        break;
+                    case "temperatureboostsounddown":
+                        temperatureBoostSoundDown = RoundSound.Load(subElement, false);
+                        break;
+                }
+            }
+        }
+
+        protected override void CreateGUI()
+        {
+            warningButtons.Clear();
+
+            paddedFrame = new GUILayoutGroup(new RectTransform(
+                 GuiFrame.Rect.Size - GUIStyle.ItemFrameMargin, GuiFrame.RectTransform, Anchor.Center)
+            { AbsoluteOffset = GUIStyle.ItemFrameOffset },
+             isHorizontal: true)
+            {
+                CanBeFocused = true,
+                HoverCursor = CursorState.Default,
+                AlwaysOverrideCursor = true,
                 RelativeSpacing = 0.012f,
                 Stretch = true
             };
@@ -101,7 +133,7 @@ namespace Barotrauma.Items.Components
             //left column
             //----------------------------------------------------------
 
-            GUIFrame inventoryWindow = new GUIFrame(new RectTransform(new Vector2(0.1f, 0.75f), GuiFrame.RectTransform, Anchor.TopLeft, Pivot.TopRight)
+            inventoryWindow = new GUIFrame(new RectTransform(new Vector2(0.1f, 0.75f), GuiFrame.RectTransform, Anchor.TopLeft, Pivot.TopRight)
             {
                 MinSize = new Point(85, 220),
                 RelativeOffset = new Vector2(-0.02f, 0)
@@ -115,7 +147,7 @@ namespace Barotrauma.Items.Components
             };
 
             /*new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), inventoryContent.RectTransform), "", 
-                textAlignment: Alignment.Center, font: GUI.SubHeadingFont, wrap: true);*/
+                textAlignment: Alignment.Center, font: GUIStyle.SubHeadingFont, wrap: true);*/
             inventoryContainer = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.9f), inventoryContent.RectTransform), style: null);
 
             //----------------------------------------------------------
@@ -131,34 +163,34 @@ namespace Barotrauma.Items.Components
 
             Point maxIndicatorSize = new Point(int.MaxValue, (int)(40 * GUI.Scale));
             criticalHeatWarning = new GUITickBox(new RectTransform(new Vector2(0.3f, 1.0f), topLeftArea.RectTransform) { MaxSize = maxIndicatorSize },
-                TextManager.Get("ReactorWarningCriticalTemp"), font: GUI.SubHeadingFont, style: "IndicatorLightRed")
+                TextManager.Get("ReactorWarningCriticalTemp"), font: GUIStyle.SubHeadingFont, style: "IndicatorLightRed")
             {
                 Selected = false,
                 Enabled = false,
                 ToolTip = TextManager.Get("ReactorHeatTip")
             };
             criticalOutputWarning = new GUITickBox(new RectTransform(new Vector2(0.3f, 1.0f), topLeftArea.RectTransform) { MaxSize = maxIndicatorSize },
-                TextManager.Get("ReactorWarningCriticalOutput"), font: GUI.SubHeadingFont, style: "IndicatorLightRed")
+                TextManager.Get("ReactorWarningCriticalOutput"), font: GUIStyle.SubHeadingFont, style: "IndicatorLightRed")
             {
                 Selected = false,
                 Enabled = false,
                 ToolTip = TextManager.Get("ReactorOutputTip")
             };
             lowTemperatureWarning = new GUITickBox(new RectTransform(new Vector2(0.4f, 1.0f), topLeftArea.RectTransform) { MaxSize = maxIndicatorSize },
-                TextManager.Get("ReactorWarningCriticalLowTemp"), font: GUI.SubHeadingFont, style: "IndicatorLightRed")
+                TextManager.Get("ReactorWarningCriticalLowTemp"), font: GUIStyle.SubHeadingFont, style: "IndicatorLightRed")
             {
                 Selected = false,
                 Enabled = false,
                 ToolTip = TextManager.Get("ReactorTempTip")
             };
             List<GUITickBox> indicatorLights = new List<GUITickBox>() { criticalHeatWarning, lowTemperatureWarning, criticalOutputWarning };
-            indicatorLights.ForEach(l => l.TextBlock.OverrideTextColor(GUI.Style.TextColor));
+            indicatorLights.ForEach(l => l.TextBlock.OverrideTextColor(GUIStyle.TextColorNormal));
             topLeftArea.Recalculate();
 
             new GUIFrame(new RectTransform(new Vector2(1.0f, 0.01f), columnLeft.RectTransform), style: "HorizontalLine");
 
             float relativeYMargin = 0.02f;
-            Vector2 relativeTextSize = new Vector2(0.9f, 0.2f);
+            Vector2 relativeTextSize = new Vector2(0.9f, 0.15f);
             Vector2 sliderSize = new Vector2(1.0f, 0.125f);
             Vector2 meterSize = new Vector2(1, 1 - relativeTextSize.Y - relativeYMargin - sliderSize.Y - 0.1f);
 
@@ -167,7 +199,7 @@ namespace Barotrauma.Items.Components
             var rightArea = new GUIFrame(new RectTransform(new Vector2(0.49f, 1), meterArea.RectTransform, Anchor.TopCenter, Pivot.TopLeft), style: null);
 
             var fissionRateTextBox = new GUITextBlock(new RectTransform(relativeTextSize, leftArea.RectTransform, Anchor.TopCenter),
-                TextManager.Get("ReactorFissionRate"), textColor: GUI.Style.TextColor, textAlignment: Alignment.Center, font: GUI.SubHeadingFont)
+                TextManager.Get("ReactorFissionRate"), textColor: GUIStyle.TextColorNormal, textAlignment: Alignment.Center, font: GUIStyle.SubHeadingFont)
             {
                 AutoScaleHorizontal = true
             };
@@ -181,7 +213,7 @@ namespace Barotrauma.Items.Components
             };
 
             var turbineOutputTextBox = new GUITextBlock(new RectTransform(relativeTextSize, rightArea.RectTransform, Anchor.TopCenter), 
-                TextManager.Get("ReactorTurbineOutput"), textColor: GUI.Style.TextColor, textAlignment: Alignment.Center, font: GUI.SubHeadingFont)
+                TextManager.Get("ReactorTurbineOutput"), textColor: GUIStyle.TextColorNormal, textAlignment: Alignment.Center, font: GUIStyle.SubHeadingFont)
             {
                 AutoScaleHorizontal = true
             };
@@ -198,7 +230,7 @@ namespace Barotrauma.Items.Components
 
             FissionRateScrollBar = new GUIScrollBar(new RectTransform(sliderSize, leftArea.RectTransform, Anchor.TopCenter)
             {
-                RelativeOffset = new Vector2(0, fissionMeter.RectTransform.RelativeOffset.Y + meterSize.Y)
+                RelativeOffset = new Vector2(0, fissionMeter.RectTransform.RelativeOffset.Y + meterSize.Y + relativeYMargin)
             },
                 style: "DeviceSlider", barSize: 0.15f)
             {
@@ -208,15 +240,16 @@ namespace Barotrauma.Items.Components
                 {
                     LastUser = Character.Controlled;
                     unsentChanges = true;
-                    targetFissionRate = scrollAmount * 100.0f;
+                    TargetFissionRate = scrollAmount * 100.0f;
 
                     return false;
                 }
             };
+            FissionRateScrollBar.Frame.UserData = UIHighlightAction.ElementId.FissionRateSlider;
 
             TurbineOutputScrollBar = new GUIScrollBar(new RectTransform(sliderSize, rightArea.RectTransform, Anchor.TopCenter)
             {
-                RelativeOffset = new Vector2(0, turbineMeter.RectTransform.RelativeOffset.Y + meterSize.Y)
+                RelativeOffset = new Vector2(0, turbineMeter.RectTransform.RelativeOffset.Y + meterSize.Y + relativeYMargin)
             },
                 style: "DeviceSlider", barSize: 0.15f, isHorizontal: true)
             {
@@ -226,13 +259,14 @@ namespace Barotrauma.Items.Components
                 {
                     LastUser = Character.Controlled;
                     unsentChanges = true;
-                    targetTurbineOutput = scrollAmount * 100.0f;
+                    TargetTurbineOutput = scrollAmount * 100.0f;
 
                     return false;
                 }
             };
+            TurbineOutputScrollBar.Frame.UserData = UIHighlightAction.ElementId.TurbineOutputSlider;
 
-            var buttonArea = new GUILayoutGroup(new RectTransform(new Vector2(1, 0.2f), columnLeft.RectTransform)) 
+            buttonArea = new GUILayoutGroup(new RectTransform(new Vector2(1, 0.2f), columnLeft.RectTransform)) 
             { 
                 Stretch = true,
                 RelativeSpacing = 0.02f
@@ -254,7 +288,7 @@ namespace Barotrauma.Items.Components
                 var b = new GUIButton(new RectTransform(Vector2.One, (i < 4) ? upperButtons.RectTransform : lowerButtons.RectTransform), 
                     TextManager.Get(text), style: "IndicatorButton")
                 {
-                    Font = GUI.SubHeadingFont,
+                    Font = GUIStyle.SubHeadingFont,
                     CanBeFocused = false
                 };
                 warningButtons.Add(text, b);
@@ -281,9 +315,10 @@ namespace Barotrauma.Items.Components
 
             new GUIFrame(new RectTransform(new Vector2(0.01f, 1.0f), topRightArea.RectTransform), style: "VerticalLine");
 
-            AutoTempSwitch = new GUIButton(new RectTransform(new Vector2(0.15f, 0.9f), topRightArea.RectTransform), 
+            AutoTempSwitch = new GUIButton(new RectTransform(new Vector2(0.15f, 0.9f), topRightArea.RectTransform),
                 style: "SwitchVertical")
             {
+                UserData = UIHighlightAction.ElementId.AutoTempSwitch,
                 Enabled = false,
                 Selected = AutoTemp,
                 ClickSound = GUISoundType.UISwitch,
@@ -298,14 +333,14 @@ namespace Barotrauma.Items.Components
             AutoTempSwitch.RectTransform.MaxSize = new Point((int)(AutoTempSwitch.Rect.Height * 0.4f), int.MaxValue);
             
             autoTempLight = new GUITickBox(new RectTransform(new Vector2(0.4f, 1.0f), topRightArea.RectTransform),
-                TextManager.Get("ReactorAutoTemp"), font: GUI.SubHeadingFont, style: "IndicatorLightYellow")
+                TextManager.Get("ReactorAutoTemp"), font: GUIStyle.SubHeadingFont, style: "IndicatorLightYellow")
                 {
                     ToolTip = TextManager.Get("ReactorTipAutoTemp"),
                     CanBeFocused = false,
                     Selected = AutoTemp
                 };
             autoTempLight.RectTransform.MaxSize = new Point(int.MaxValue, criticalHeatWarning.Rect.Height);
-            autoTempLight.TextBlock.OverrideTextColor(GUI.Style.TextColor);
+            autoTempLight.TextBlock.OverrideTextColor(GUIStyle.TextColorNormal);
 
             new GUIFrame(new RectTransform(new Vector2(0.01f, 1.0f), topRightArea.RectTransform), style: "VerticalLine");
 
@@ -313,19 +348,20 @@ namespace Barotrauma.Items.Components
             var powerArea = new GUIFrame(new RectTransform(new Vector2(0.4f, 1.0f), topRightArea.RectTransform), style: null);
             var paddedPowerArea = new GUIFrame(new RectTransform(new Vector2(0.9f, 0.9f), powerArea.RectTransform, Anchor.Center, scaleBasis: ScaleBasis.BothHeight), style: "PowerButtonFrame");
             powerLight = new GUITickBox(new RectTransform(new Vector2(0.87f, 0.3f), paddedPowerArea.RectTransform, Anchor.TopCenter, Pivot.Center), 
-                TextManager.Get("PowerLabel"), font: GUI.SubHeadingFont, style: "IndicatorLightPower")
+                TextManager.Get("PowerLabel"), font: GUIStyle.SubHeadingFont, style: "IndicatorLightPower")
                 {
                     CanBeFocused = false,
                     Selected = _powerOn
                 };
             powerLight.TextBlock.Padding = new Vector4(5.0f, 0.0f, 0.0f, 0.0f);
             powerLight.TextBlock.AutoScaleHorizontal = true;
-            powerLight.TextBlock.OverrideTextColor(GUI.Style.TextColor);
+            powerLight.TextBlock.OverrideTextColor(GUIStyle.TextColorNormal);
             PowerButton = new GUIButton(new RectTransform(new Vector2(0.8f, 0.75f), paddedPowerArea.RectTransform, Anchor.BottomCenter)
             {
                 RelativeOffset = new Vector2(0, 0.1f)
             }, style: "PowerButton")
             {
+                UserData = UIHighlightAction.ElementId.PowerButton,
                 OnClicked = (button, data) =>
                 {
                     PowerOn = !PowerOn;
@@ -337,7 +373,7 @@ namespace Barotrauma.Items.Components
 
             topRightArea.Recalculate();
             autoTempLight.TextBlock.Padding = new Vector4(autoTempLight.TextBlock.Padding.X, 0.0f, 0.0f, 0.0f);
-            autoTempLight.TextBlock.Text = autoTempLight.TextBlock.Text.Replace(' ', '\n');
+            autoTempLight.TextBlock.Text = autoTempLight.TextBlock.Text.Replace(" ", "\n");
             autoTempLight.TextBlock.AutoScaleHorizontal = true;
             GUITextBlock.AutoScaleAndNormalize(indicatorLights.Select(l => l.TextBlock));
 
@@ -354,7 +390,36 @@ namespace Barotrauma.Items.Components
 
             new GUIFrame(new RectTransform(new Vector2(0.01f, 1.0f), bottomRightArea.RectTransform), style: "VerticalLine");
 
-            new GUICustomComponent(new RectTransform(new Vector2(0.1f, 1), bottomRightArea.RectTransform, Anchor.Center), DrawTempMeter, null);
+            var temperatureArea = new GUILayoutGroup(new RectTransform(new Vector2(0.1f, 1), bottomRightArea.RectTransform, Anchor.Center), isHorizontal: false)
+            {
+                Stretch = true,
+                RelativeSpacing = 0.01f
+            };
+
+            temperatureBoostUpButton = new GUIButton(new RectTransform(Vector2.One, temperatureArea.RectTransform, scaleBasis: ScaleBasis.BothWidth), style: "GUIPlusButton")
+            {
+                ToolTip = TextManager.Get("reactor.temperatureboostup"),
+                OnClicked = (_, __) =>
+                {
+                    unsentChanges = true;
+                    sendUpdateTimer = 0.0f;
+                    ApplyTemperatureBoost(TemperatureBoostAmount);
+                    return true;
+                }
+            };
+            new GUICustomComponent(new RectTransform(Vector2.One, temperatureArea.RectTransform, Anchor.Center), DrawTempMeter, null);
+
+            temperatureBoostDownButton = new GUIButton(new RectTransform(Vector2.One, temperatureArea.RectTransform, scaleBasis: ScaleBasis.BothWidth), style: "GUIMinusButton")
+            {
+                ToolTip = TextManager.Get("reactor.temperatureboostdown"),
+                OnClicked = (_, __) =>
+                {
+                    unsentChanges = true;
+                    sendUpdateTimer = 0.0f;
+                    ApplyTemperatureBoost(-TemperatureBoostAmount);
+                    return true;
+                }
+            };
 
             var graphArea = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 1.0f), bottomRightArea.RectTransform))
             {
@@ -364,46 +429,80 @@ namespace Barotrauma.Items.Components
 
             relativeTextSize = new Vector2(1.0f, 0.15f);
             var loadText = new GUITextBlock(new RectTransform(relativeTextSize, graphArea.RectTransform),
-                "Load", textColor: loadColor, font: GUI.SubHeadingFont, textAlignment: Alignment.CenterLeft)
+                "Load", textColor: loadColor, font: GUIStyle.SubHeadingFont, textAlignment: Alignment.CenterLeft)
             {
                 ToolTip = TextManager.Get("ReactorTipLoad")
             };
-            string loadStr = TextManager.Get("ReactorLoad");
-            string kW = TextManager.Get("kilowatt");
-            loadText.TextGetter += () => $"{loadStr.Replace("[kw]", ((int)load).ToString())} {kW}";
-            
-            var graph = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.9f), graphArea.RectTransform), style: "InnerFrameRed");
-            new GUICustomComponent(new RectTransform(new Vector2(0.9f, 0.98f), graph.RectTransform, Anchor.Center), DrawGraph, null);
+            LocalizedString loadStr = TextManager.Get("ReactorLoad");
+            LocalizedString kW = TextManager.Get("kilowatt");
+            loadText.TextGetter += () => $"{loadStr.Replace("[kw]", ((int)Load).ToString())} {kW}";
+
+            var graphFrame = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.9f), graphArea.RectTransform), style: "InnerFrameRed");
+            graph = new GUICustomComponent(new RectTransform(new Vector2(0.9f, 0.98f), graphFrame.RectTransform, Anchor.Center), DrawGraph, null);
 
             var outputText = new GUITextBlock(new RectTransform(relativeTextSize, graphArea.RectTransform),
-                "Output", textColor: outputColor, font: GUI.SubHeadingFont, textAlignment: Alignment.CenterLeft)
+                "Output", textColor: outputColor, font: GUIStyle.SubHeadingFont, textAlignment: Alignment.CenterLeft)
             {
                 ToolTip = TextManager.Get("ReactorTipPower")
             };
-            string outputStr = TextManager.Get("ReactorOutput");
+            LocalizedString outputStr = TextManager.Get("ReactorOutput");
             outputText.TextGetter += () => $"{outputStr.Replace("[kw]", ((int)-currPowerConsumption).ToString())} {kW}";
+
+            InitInventoryUI();
+
+            // Infographic overlay ---------------------
+            int buttonHeight = (int)(GUIStyle.ItemFrameMargin.Y * 0.4f);
+            var helpButtonRt = new RectTransform(new Point(buttonHeight), parent: GuiFrame.RectTransform, anchor: Anchor.TopRight)
+            {
+                AbsoluteOffset = new Point(buttonHeight / 4),
+                MinSize = new Point(buttonHeight)
+            };
+            new GUIButton(helpButtonRt, "", style: "HelpIcon")
+            {
+                OnClicked = (_, _) =>
+                {
+                    CreateInfrographic();
+                    return true;
+                } 
+            };
+        }
+        private void ApplyTemperatureBoost(float amount)
+        {
+            if (Math.Abs(temperatureBoost) <= TemperatureBoostAmount * 0.9f &&
+                Math.Abs(amount) > TemperatureBoostAmount * 0.9f)
+            {
+                var sound = amount > 0 ? temperatureBoostSoundUp : temperatureBoostSoundDown;
+                if (sound != null)
+                {
+                    SoundPlayer.PlaySound(
+                        sound.Sound,
+                        item.WorldPosition,
+                        sound.Volume,
+                        sound.Range,
+                        freqMult: sound.GetRandomFrequencyMultiplier(),
+                        hullGuess: item.CurrentHull);
+                }
+            }
+            temperatureBoost = amount;
         }
 
-        public override void OnItemLoaded()
+        private void InitInventoryUI()
         {
-            base.OnItemLoaded();
-            TurbineOutputScrollBar.BarScroll = targetTurbineOutput / 100.0f;
-            FissionRateScrollBar.BarScroll = targetFissionRate / 100.0f;
             var itemContainer = item.GetComponent<ItemContainer>();
             if (itemContainer != null)
             {
                 itemContainer.UILabel = "";
                 itemContainer.AllowUIOverlap = true;
                 itemContainer.Inventory.RectTransform = inventoryContainer.RectTransform;
-                /*var inventoryLabel = inventoryContainer.Parent?.GetChild<GUITextBlock>();
-                if (inventoryLabel != null)
-                {
-                    inventoryLabel.RectTransform.MinSize = new Point(100, 0);
-                    inventoryLabel.Text = itemContainer.GetUILabel();
-                    inventoryLabel.CalculateHeightFromText();
-                    (inventoryLabel.Parent as GUILayoutGroup).Recalculate();
-                }*/
             }
+        }
+
+        public override void OnItemLoaded()
+        {
+            base.OnItemLoaded();
+            TurbineOutputScrollBar.BarScroll = TargetTurbineOutput / 100.0f;
+            FissionRateScrollBar.BarScroll = TargetFissionRate / 100.0f;
+            InitInventoryUI();
         }
 
         private void DrawTempMeter(SpriteBatch spriteBatch, GUICustomComponent container)
@@ -418,7 +517,7 @@ namespace Barotrauma.Items.Components
             while (meterBarPos.Y > container.Rect.Bottom + (int)(5 * GUI.yScale) - container.Rect.Height * tempFill)
             {
                 float tempRatio = 1.0f - ((meterBarPos.Y - container.Rect.Y) / container.Rect.Height);
-                Color color = ToolBox.GradientLerp(tempRatio, coldColor, optimalRangeColor, warmColor, hotColor);
+                Color color = ToolBox.GradientLerp(tempRatio, temperatureColors);
                 tempMeterBar.Draw(spriteBatch, meterBarPos, color: color, scale: meterBarScale);
                 int spacing = 2;
                 meterBarPos.Y -= tempMeterBar.size.Y * meterBarScale + spacing;
@@ -454,7 +553,6 @@ namespace Barotrauma.Items.Components
             DrawGraph(loadGraph, spriteBatch, graphRect, Math.Max(10000.0f, maxLoad), xOffset, loadColor);
         }
 
-
         private void UpdateGraph(float deltaTime)
         {
             graphTimer += deltaTime * 1000.0f;
@@ -462,7 +560,7 @@ namespace Barotrauma.Items.Components
             if (graphTimer > updateGraphInterval)
             {
                 UpdateGraph(outputGraph, -currPowerConsumption);
-                UpdateGraph(loadGraph, load);
+                UpdateGraph(loadGraph, Load);
 
                 graphTimer = 0.0f;
             }
@@ -487,7 +585,7 @@ namespace Barotrauma.Items.Components
             float jitter = 0.0f;
             if (FissionRate > allowedFissionRate.Y - 5.0f)
             {
-                float jitterAmount = Math.Min(targetFissionRate - allowedFissionRate.Y, 10.0f);
+                float jitterAmount = Math.Min(TargetFissionRate - allowedFissionRate.Y, 10.0f);
                 float t = graphTimer / updateGraphInterval;
 
                 jitter = (PerlinNoise.GetPerlin(t * 0.5f, t * 0.1f) - 0.5f) * jitterAmount;
@@ -525,12 +623,12 @@ namespace Barotrauma.Items.Components
 
             criticalHeatWarning.Selected = temperature > allowedTemperature.Y && lightOn;
             lowTemperatureWarning.Selected = temperature < allowedTemperature.X && lightOn;
-            criticalOutputWarning.Selected = -currPowerConsumption > load * 1.5f && lightOn;
+            criticalOutputWarning.Selected = -currPowerConsumption > Load * 1.5f && lightOn;
 
             warningButtons["ReactorWarningOverheating"].Selected = temperature > optimalTemperature.Y && lightOn;
-            warningButtons["ReactorWarningHighOutput"].Selected = -currPowerConsumption > load * 1.1f && lightOn;
+            warningButtons["ReactorWarningHighOutput"].Selected = -currPowerConsumption > Load * 1.1f && lightOn;
             warningButtons["ReactorWarningLowTemp"].Selected = temperature < optimalTemperature.X && lightOn;
-            warningButtons["ReactorWarningLowOutput"].Selected = -currPowerConsumption < load * 0.9f && lightOn;
+            warningButtons["ReactorWarningLowOutput"].Selected = -currPowerConsumption < Load * 0.9f && lightOn;
             warningButtons["ReactorWarningFuelOut"].Selected = prevAvailableFuel < fissionRate * 0.01f && lightOn;
             warningButtons["ReactorWarningLowFuel"].Selected = prevAvailableFuel < fissionRate && lightOn;
             warningButtons["ReactorWarningMeltdown"].Selected = meltDownTimer > MeltdownDelay * 0.5f || item.Condition == 0.0f && lightOn;
@@ -571,15 +669,21 @@ namespace Barotrauma.Items.Components
                     unsentChanges = true;
                     if (input.X != 0.0f && GUIScrollBar.DraggingBar != FissionRateScrollBar)
                     {
-                        targetFissionRate = MathHelper.Clamp(targetFissionRate + input.X, 0.0f, 100.0f);
+                        TargetFissionRate = MathHelper.Clamp(TargetFissionRate + input.X, 0.0f, 100.0f);
                         FissionRateScrollBar.BarScroll += input.X / 100.0f;
                     }
                     if (input.Y != 0.0f && GUIScrollBar.DraggingBar != TurbineOutputScrollBar)
                     {
-                        targetTurbineOutput = MathHelper.Clamp(targetTurbineOutput + input.Y, 0.0f, 100.0f);
+                        TargetTurbineOutput = MathHelper.Clamp(TargetTurbineOutput + input.Y, 0.0f, 100.0f);
                         TurbineOutputScrollBar.BarScroll += input.Y / 100.0f;
                     }
                 }
+            }
+
+            if (GuiFrame is not null && GuiFrame.Visible && TriggerInfographic)
+            {
+                CreateInfrographic();
+                TriggerInfographic = false;
             }
         }
 
@@ -596,7 +700,7 @@ namespace Barotrauma.Items.Components
                 MathHelper.Clamp((allowedRange.X - range.X) / (range.Y - range.X), 0.0f, 0.95f),
                 MathHelper.Clamp((allowedRange.Y - range.X) / (range.Y - range.X), 0.0f, 1.0f));
 
-            Vector2 sectorRad = new Vector2(-1.57f, 1.57f);
+            Vector2 sectorRad = new Vector2(-1.35f, 1.35f);
 
             Vector2 optimalSectorRad = new Vector2(
                 MathHelper.Lerp(sectorRad.X, sectorRad.Y, optimalRangeNormalized.X),
@@ -606,23 +710,25 @@ namespace Barotrauma.Items.Components
                 MathHelper.Lerp(sectorRad.X, sectorRad.Y, allowedRangeNormalized.X),
                 MathHelper.Lerp(sectorRad.X, sectorRad.Y, allowedRangeNormalized.Y));
 
+            Vector2 pointerPos = pos - new Vector2(0, 30) * scale;
+
+            float scaleMultiplier = 0.95f;
             if (optimalRangeNormalized.X == optimalRangeNormalized.Y)
             {
-                sectorSprite.Draw(spriteBatch, pos, GUI.Style.Red, MathHelper.PiOver2, scale);
+                sectorSprite.Draw(spriteBatch, pointerPos, GUIStyle.Red, MathHelper.PiOver2, scale * scaleMultiplier);
             }
             else
             {
                 spriteBatch.End();
                 Rectangle prevScissorRect = spriteBatch.GraphicsDevice.ScissorRectangle;
-                spriteBatch.GraphicsDevice.ScissorRectangle = new Rectangle(0, 0, GameMain.GraphicsWidth, (int)(pos.Y + (meterSprite.size.Y - meterSprite.Origin.Y) * scale) - 3);
+                spriteBatch.GraphicsDevice.ScissorRectangle = new Rectangle(0, 0, GameMain.GraphicsWidth, (int)(pointerPos.Y + (meterSprite.size.Y - meterSprite.Origin.Y) * scale) - 3);
                 spriteBatch.Begin(SpriteSortMode.Deferred, rasterizerState: GameMain.ScissorTestEnable);
 
-                float scaleMultiplier = 0.95f;
-                sectorSprite.Draw(spriteBatch, pos, optimalRangeColor, MathHelper.PiOver2 + (allowedSectorRad.X + allowedSectorRad.Y) / 2.0f, scale * scaleMultiplier);
-                sectorSprite.Draw(spriteBatch, pos, offRangeColor, optimalSectorRad.X, scale * scaleMultiplier);
-                sectorSprite.Draw(spriteBatch, pos, warningColor, allowedSectorRad.X, scale * scaleMultiplier);
-                sectorSprite.Draw(spriteBatch, pos, offRangeColor, MathHelper.Pi + optimalSectorRad.Y, scale * scaleMultiplier);
-                sectorSprite.Draw(spriteBatch, pos, warningColor, MathHelper.Pi + allowedSectorRad.Y, scale * scaleMultiplier);
+                sectorSprite.Draw(spriteBatch, pointerPos, optimalRangeColor, MathHelper.PiOver2 + (allowedSectorRad.X + allowedSectorRad.Y) / 2.0f, scale * scaleMultiplier);
+                sectorSprite.Draw(spriteBatch, pointerPos, offRangeColor, optimalSectorRad.X, scale * scaleMultiplier);
+                sectorSprite.Draw(spriteBatch, pointerPos, warningColor, allowedSectorRad.X, scale * scaleMultiplier);
+                sectorSprite.Draw(spriteBatch, pointerPos, offRangeColor, MathHelper.Pi + optimalSectorRad.Y, scale * scaleMultiplier);
+                sectorSprite.Draw(spriteBatch, pointerPos, warningColor, MathHelper.Pi + allowedSectorRad.Y, scale * scaleMultiplier);
 
                 spriteBatch.End();
                 spriteBatch.GraphicsDevice.ScissorRectangle = prevScissorRect;
@@ -633,8 +739,7 @@ namespace Barotrauma.Items.Components
 
             float normalizedValue = (value - range.X) / (range.Y - range.X);
             float valueRad = MathHelper.Lerp(sectorRad.X, sectorRad.Y, normalizedValue);
-            Vector2 offset = new Vector2(0, 40) * scale;
-            meterPointer.Draw(spriteBatch, pos - offset, valueRad, scale);
+            meterPointer.Draw(spriteBatch, pointerPos, valueRad, scale);
         }
 
         static void UpdateGraph<T>(IList<T> graph, T newValue)
@@ -695,7 +800,98 @@ namespace Barotrauma.Items.Components
             spriteBatch.GraphicsDevice.ScissorRectangle = prevScissorRect;
             spriteBatch.Begin(SpriteSortMode.Deferred);
         }
+
+        private enum InfographicArrowStyle { Straight, Curved };
         
+        private void CreateInfrographic()
+        {
+            if (infographic != null) { return; }
+            var dimColor = Color.Lerp(Color.Black, Color.TransparentBlack, 0.25f);
+            // Dim reactor interface
+            infographic = new GUIFrame(new RectTransform(Vector2.One, GuiFrame.RectTransform))
+            {
+                CanBeFocused = false,
+                Color = dimColor
+            };
+            // Dim inventory window
+            new GUIFrame(new RectTransform(inventoryWindow.Rect.Size, infographic.RectTransform) { AbsoluteOffset = inventoryWindow.Rect.Location - GuiFrame.Rect.Location}, color: dimColor)
+            {
+                CanBeFocused = false
+            };
+            int arrowSize = (int)(70 * GUI.Scale);
+            var arrows = new Dictionary<string, GUIImage>()
+            {
+                { "fuelslots", CreateArrow(InfographicArrowStyle.Curved, inventoryWindow, Anchor.TopLeft, Pivot.TopRight, SpriteEffects.FlipVertically) },
+                { "temperature", CreateArrow(InfographicArrowStyle.Straight, temperatureBoostDownButton, Anchor.Center, Pivot.Center) },
+                { "automaticcontrol", CreateArrow(InfographicArrowStyle.Curved, AutoTempSwitch, Anchor.TopRight, Pivot.BottomRight, rotationDegrees: 90f) },
+                { "power", CreateArrow(InfographicArrowStyle.Straight, PowerButton, Anchor.BottomCenter, Pivot.TopCenter) }
+            };
+            CreateArrow(InfographicArrowStyle.Straight, FissionRateScrollBar, Anchor.Center, Pivot.Center);
+            CreateArrow(InfographicArrowStyle.Straight, TurbineOutputScrollBar, Anchor.Center, Pivot.Center);
+            CreateArrow(InfographicArrowStyle.Straight, graph, Anchor.TopLeft, Pivot.TopLeft, SpriteEffects.FlipHorizontally, additionalOffset: new Point(arrowSize / 2, 0));
+            CreateArrow(InfographicArrowStyle.Straight, graph, Anchor.BottomLeft, Pivot.BottomLeft, SpriteEffects.FlipHorizontally | SpriteEffects.FlipVertically, additionalOffset: new Point(arrowSize / 2, 0));
+            new GUICustomComponent(new RectTransform(Vector2.One, infographic.RectTransform),
+                onDraw: (sb, c) =>
+                {
+                    DrawToolTip("fuelslots", Anchor.TopLeft, Pivot.BottomCenter, arrows["fuelslots"]);
+                    DrawToolTip("fissionrate", Anchor.TopCenter, Pivot.TopCenter, buttonArea);
+                    DrawToolTip("temperature", Anchor.BottomLeft, Pivot.TopLeft, arrows["temperature"]);
+                    DrawToolTip("automaticcontrol", Anchor.TopLeft, Pivot.CenterRight, arrows["automaticcontrol"]);
+                    DrawToolTip("power", Anchor.BottomCenter, Pivot.TopCenter, arrows["power"]);
+                    DrawToolTip("load", Anchor.CenterLeft, Pivot.CenterLeft, graph);
+
+                    void DrawToolTip(string textTag, Anchor anchor, Pivot pivot, GUIComponent targetComponent)
+                    {
+                        GUIComponent.DrawToolTip(sb,
+                            TextManager.Get($"infographic.reactor.{textTag}"),
+                            targetComponent.Rect,
+                            anchor: anchor,
+                            pivot: pivot);
+                    }
+                })
+            {
+                CanBeFocused = false
+            };
+            var closeButtonRt = new RectTransform(new Point(200, 50).Multiply(GUI.Scale), infographic.RectTransform, Anchor.TopRight, Pivot.BottomRight)
+            {
+                AbsoluteOffset = new Point(0, -50).Multiply(GUI.Scale)
+            };
+            new GUIButton(closeButtonRt, TextManager.Get("closeinfographic"))
+            {
+                UserData = UIHighlightAction.ElementId.CloseButton,
+                OnClicked = (_, _) =>
+                {
+                    CloseInfographic(Character.Controlled);
+                    return true;
+                }
+            };
+            item.OnDeselect += CloseInfographic;
+
+            GUIImage CreateArrow(InfographicArrowStyle arrowStyle, GUIComponent parent, Anchor anchor, Pivot pivot, SpriteEffects spriteEffects = SpriteEffects.None, float rotationDegrees = 0f, Point? additionalOffset = null)
+            {
+                Point offset = (additionalOffset ?? Point.Zero) + RectTransform.CalculateAnchorPoint(anchor, parent.Rect) - GuiFrame.Rect.Location;
+                var rt = new RectTransform(new Point(arrowSize), infographic.RectTransform, pivot: pivot)
+                {
+                    AbsoluteOffset = offset
+                };
+                string style = arrowStyle == InfographicArrowStyle.Straight ? "InfographicArrow" : "InfographicArrowCurved";
+                return new GUIImage(rt, style)
+                {
+                    CanBeFocused = false,
+                    Rotation = MathHelper.ToRadians(rotationDegrees),
+                    SpriteEffects = spriteEffects
+                };
+            }
+
+            void CloseInfographic(Character character)
+            {
+                if (character != Character.Controlled) { return; }
+                GuiFrame.RemoveChild(infographic);
+                infographic = null;
+                item.OnDeselect -= CloseInfographic;
+            }
+        }
+
         protected override void RemoveComponentSpecific()
         {
             base.RemoveComponentSpecific();
@@ -709,38 +905,40 @@ namespace Barotrauma.Items.Components
             tempRangeIndicator?.Remove();
         }
 
-        public void ClientWrite(IWriteMessage msg, object[] extraData = null)
+        public void ClientEventWrite(IWriteMessage msg, NetEntityEvent.IData extraData = null)
         {
-            msg.Write(autoTemp);
-            msg.Write(PowerOn);
-            msg.WriteRangedSingle(targetFissionRate, 0.0f, 100.0f, 8);
-            msg.WriteRangedSingle(targetTurbineOutput, 0.0f, 100.0f, 8);
+            msg.WriteBoolean(autoTemp);
+            msg.WriteBoolean(PowerOn);
+            msg.WriteRangedSingle(TargetFissionRate, 0.0f, 100.0f, 8);
+            msg.WriteRangedSingle(TargetTurbineOutput, 0.0f, 100.0f, 8);
+            msg.WriteRangedSingle(temperatureBoost, -TemperatureBoostAmount, TemperatureBoostAmount, 8);
 
             correctionTimer = CorrectionDelay;
         }
 
-        public void ClientRead(ServerNetObject type, IReadMessage msg, float sendingTime)
+        public void ClientEventRead(IReadMessage msg, float sendingTime)
         {
             if (correctionTimer > 0.0f)
             {
-                StartDelayedCorrection(type, msg.ExtractBits(1 + 1 + 8 + 8 + 8 + 8), sendingTime);
+                StartDelayedCorrection(msg.ExtractBits(1 + 1 + 8 + 8 + 8 + 8 + 8), sendingTime);
                 return;
             }
 
             AutoTemp = msg.ReadBoolean();
             PowerOn = msg.ReadBoolean();
             Temperature = msg.ReadRangedSingle(0.0f, 100.0f, 8);
-            targetFissionRate = msg.ReadRangedSingle(0.0f, 100.0f, 8);
-            targetTurbineOutput = msg.ReadRangedSingle(0.0f, 100.0f, 8);
+            TargetFissionRate = msg.ReadRangedSingle(0.0f, 100.0f, 8);
+            TargetTurbineOutput = msg.ReadRangedSingle(0.0f, 100.0f, 8);
             degreeOfSuccess = msg.ReadRangedSingle(0.0f, 1.0f, 8);
+            ApplyTemperatureBoost(msg.ReadRangedSingle(-TemperatureBoostAmount, TemperatureBoostAmount, 8));
 
-            if (Math.Abs(FissionRateScrollBar.BarScroll - targetFissionRate / 100.0f) > 0.01f)
+            if (Math.Abs(FissionRateScrollBar.BarScroll - TargetFissionRate / 100.0f) > 0.01f)
             {
-                FissionRateScrollBar.BarScroll = targetFissionRate / 100.0f;
+                FissionRateScrollBar.BarScroll = TargetFissionRate / 100.0f;
             }
-            if (Math.Abs(TurbineOutputScrollBar.BarScroll - targetTurbineOutput / 100.0f) > 0.01f)
+            if (Math.Abs(TurbineOutputScrollBar.BarScroll - TargetTurbineOutput / 100.0f) > 0.01f)
             {
-                TurbineOutputScrollBar.BarScroll = targetTurbineOutput / 100.0f;
+                TurbineOutputScrollBar.BarScroll = TargetTurbineOutput / 100.0f;
             }
 
             IsActive = true;

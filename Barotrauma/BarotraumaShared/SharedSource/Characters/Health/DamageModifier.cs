@@ -2,6 +2,7 @@
 using System;
 using System.Xml.Linq;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 
 namespace Barotrauma
@@ -10,23 +11,23 @@ namespace Barotrauma
     {
         public string Name => "Damage Modifier";
 
-        public Dictionary<string, SerializableProperty> SerializableProperties { get; private set; }
+        public Dictionary<Identifier, SerializableProperty> SerializableProperties { get; private set; }
 
-        [Serialize(1.0f, false), Editable(DecimalCount = 2)]
+        [Serialize(1.0f, IsPropertySaveable.No), Editable(DecimalCount = 2)]
         public float DamageMultiplier
         {
             get;
             private set;
         }
 
-        [Serialize(1.0f, false), Editable(DecimalCount = 2, MinValueFloat = 0, MaxValueFloat = 1)]
+        [Serialize(1.0f, IsPropertySaveable.No), Editable(DecimalCount = 2, MinValueFloat = 0, MaxValueFloat = 1)]
         public float ProbabilityMultiplier
         {
             get;
             private set;
         }
 
-        [Serialize("0.0,360", false), Editable]
+        [Serialize("0.0,360", IsPropertySaveable.No), Editable]
         public Vector2 ArmorSector
         {
             get;
@@ -35,14 +36,14 @@ namespace Barotrauma
 
         public Vector2 ArmorSectorInRadians => new Vector2(MathHelper.ToRadians(ArmorSector.X), MathHelper.ToRadians(ArmorSector.Y));
 
-        [Serialize(false, false), Editable]
+        [Serialize(false, IsPropertySaveable.No), Editable]
         public bool DeflectProjectiles
         {
             get;
             private set;
         }
 
-        [Serialize("", true), Editable]
+        [Serialize("", IsPropertySaveable.Yes), Editable]
         public string AfflictionIdentifiers
         {
             get
@@ -56,7 +57,7 @@ namespace Barotrauma
             }
         }
 
-        [Serialize("", true), Editable]
+        [Serialize("", IsPropertySaveable.Yes), Editable]
         public string AfflictionTypes
         {
             get
@@ -72,29 +73,48 @@ namespace Barotrauma
 
         private string rawAfflictionIdentifierString;
         private string rawAfflictionTypeString;
-        private string[] parsedAfflictionIdentifiers;
-        private string[] parsedAfflictionTypes;
-        public string[] ParsedAfflictionIdentifiers
-        {
-            get
-            {
-                return parsedAfflictionIdentifiers;
-            }
-        }
-        public string[] ParsedAfflictionTypes
-        {
-            get
-            {
-                return parsedAfflictionTypes;
-            }
-        }
+        private ImmutableArray<Identifier> parsedAfflictionIdentifiers;
+        private ImmutableArray<Identifier> parsedAfflictionTypes;
+        public ref readonly ImmutableArray<Identifier> ParsedAfflictionIdentifiers => ref parsedAfflictionIdentifiers;
 
-        public DamageModifier(XElement element, string parentDebugName)
+        public ref readonly ImmutableArray<Identifier> ParsedAfflictionTypes => ref parsedAfflictionTypes;
+
+        public DamageModifier(XElement element, string parentDebugName, bool checkErrors = true)
         {
             Deserialize(element);
             if (element.Attribute("afflictionnames") != null)
             {
                 DebugConsole.ThrowError("Error in DamageModifier config (" + parentDebugName + ") - define afflictions using identifiers or types instead of names.");
+            }
+            if (checkErrors)
+            {
+                foreach (var afflictionType in parsedAfflictionTypes)
+                {
+                    if (!AfflictionPrefab.Prefabs.Any(p => p.AfflictionType == afflictionType))
+                    {
+                        createWarningOrError($"Potentially invalid damage modifier in \"{parentDebugName}\". Could not find any afflictions of the type \"{afflictionType}\". Did you mean to use an affliction identifier instead?");
+                    }
+                }
+                foreach (var afflictionIdentifier in parsedAfflictionIdentifiers)
+                {
+                    if (!AfflictionPrefab.Prefabs.ContainsKey(afflictionIdentifier))
+                    {
+                        createWarningOrError($"Potentially invalid damage modifier in \"{parentDebugName}\". Could not find any afflictions with the identifier \"{afflictionIdentifier}\". Did you mean to use an affliction type instead?");
+                    }
+                }
+                if (!parsedAfflictionTypes.Any() && !parsedAfflictionIdentifiers.Any())
+                {
+                    createWarningOrError($"Potentially invalid damage modifier in \"{parentDebugName}\". Neither affliction types of identifiers defined.");
+                }
+            }
+
+            static void createWarningOrError(string msg)
+            {
+#if DEBUG
+                DebugConsole.ThrowError(msg);
+#else
+                DebugConsole.AddWarning(msg);
+#endif
             }
         }
 
@@ -102,55 +122,58 @@ namespace Barotrauma
         {
             if (string.IsNullOrWhiteSpace(rawAfflictionTypeString)) 
             {
-                parsedAfflictionTypes = new string[0];
+                parsedAfflictionTypes = Enumerable.Empty<Identifier>().ToImmutableArray();
                 return;
             }
-            string[] splitValue = rawAfflictionTypeString.Split(',', '，');
-            for (int i = 0; i < splitValue.Length; i++)
-            {
-                splitValue[i] = splitValue[i].ToLowerInvariant().Trim();
-            }
-            parsedAfflictionTypes = splitValue;
+
+            parsedAfflictionTypes = rawAfflictionTypeString.Split(',', '，')
+                .Select(s => s.Trim()).ToIdentifiers().ToImmutableArray();
         }
 
         private void ParseAfflictionIdentifiers()
         {
             if (string.IsNullOrWhiteSpace(rawAfflictionIdentifierString))
             {
-                parsedAfflictionIdentifiers = new string[0];
+                parsedAfflictionIdentifiers = Enumerable.Empty<Identifier>().ToImmutableArray();
                 return;
             }
-            string[] splitValue = rawAfflictionIdentifierString.Split(',', '，');
-            for (int i = 0; i < splitValue.Length; i++)
-            {
-                splitValue[i] = splitValue[i].ToLowerInvariant().Trim();
-            }
-            parsedAfflictionIdentifiers = splitValue;
+            
+            parsedAfflictionIdentifiers = rawAfflictionIdentifierString.Split(',', '，')
+                .Select(s => s.Trim()).ToIdentifiers().ToImmutableArray();
         }
 
-        public bool MatchesAfflictionIdentifier(string identifier)
+        public bool MatchesAfflictionIdentifier(string identifier) =>
+            MatchesAfflictionIdentifier(identifier.ToIdentifier());
+        
+        public bool MatchesAfflictionIdentifier(Identifier identifier)
         {
             //if no identifiers have been defined, the damage modifier affects all afflictions
             if (AfflictionIdentifiers.Length == 0) { return true; }
-            return parsedAfflictionIdentifiers.Any(id => id.Equals(identifier, StringComparison.OrdinalIgnoreCase));
+            return parsedAfflictionIdentifiers.Any(id => id == identifier);
         }
 
-        public bool MatchesAfflictionType(string type)
+        public bool MatchesAfflictionType(string type) =>
+            MatchesAfflictionType(type.ToIdentifier());
+        
+        public bool MatchesAfflictionType(Identifier type)
         {
             //if no types have been defined, the damage modifier affects all afflictions
             if (AfflictionTypes.Length == 0) { return true; }
-            return parsedAfflictionTypes.Any(t => t.Equals(type, StringComparison.OrdinalIgnoreCase));
+            return parsedAfflictionTypes.Any(t => t == type);
         }
 
         /// <summary>
         /// Returns true if the type or the identifier matches the defined types/identifiers.
         /// </summary>
-        public bool MatchesAffliction(string identifier, string type)
+        public bool MatchesAffliction(string identifier, string type) =>
+            MatchesAffliction(identifier.ToIdentifier(), type.ToIdentifier());
+        
+        public bool MatchesAffliction(Identifier identifier, Identifier type)
         {
             //if no identifiers or types have been defined, the damage modifier affects all afflictions
             if (AfflictionIdentifiers.Length == 0 && AfflictionTypes.Length == 0) { return true; }
-            return parsedAfflictionIdentifiers.Any(id => id.Equals(identifier, StringComparison.OrdinalIgnoreCase))
-                || parsedAfflictionTypes.Any(t => t.Equals(type, StringComparison.OrdinalIgnoreCase));
+            return parsedAfflictionIdentifiers.Any(id => id == identifier)
+                || parsedAfflictionTypes.Any(t => t == type);
         }
 
         public bool MatchesAffliction(Affliction affliction) => MatchesAffliction(affliction.Identifier, affliction.Prefab.AfflictionType);

@@ -48,14 +48,14 @@ namespace Barotrauma
             if (ItemOwnsSelf(item)) { return false; }
             if (i < 0 || i >= slots.Length) { return false; }
             if (!container.CanBeContained(item, i)) { return false; }
-            return item != null && slots[i].CanBePut(item, ignoreCondition) && slots[i].ItemCount < container.GetMaxStackSize(i);
+            return item != null && slots[i].CanBePut(item, ignoreCondition) && slots[i].Items.Count < container.GetMaxStackSize(i);
         }
 
         public override bool CanBePutInSlot(ItemPrefab itemPrefab, int i, float? condition, int? quality = null)
         {
             if (i < 0 || i >= slots.Length) { return false; }
             if (!container.CanBeContained(itemPrefab, i)) { return false; }
-            return itemPrefab != null && slots[i].CanBePut(itemPrefab, condition, quality) && slots[i].ItemCount < container.GetMaxStackSize(i);
+            return itemPrefab != null && slots[i].CanBePut(itemPrefab, condition, quality) && slots[i].Items.Count < container.GetMaxStackSize(i);
         }
 
         public override int HowManyCanBePut(ItemPrefab itemPrefab, int i, float? condition)
@@ -74,7 +74,7 @@ namespace Barotrauma
                 {
                     if (!slots[i].Any()) { return false; }
                     var item = slots[i].FirstOrDefault();
-                    if (slots[i].ItemCount < Math.Min(item.Prefab.MaxStackSize, container.GetMaxStackSize(i))) { return false; }
+                    if (slots[i].Items.Count < Math.Min(item.Prefab.MaxStackSize, container.GetMaxStackSize(i))) { return false; }
                 }
             }
             else
@@ -103,6 +103,9 @@ namespace Barotrauma
 
                 container.IsActive = true;
                 container.OnItemContained(item);
+#if SERVER
+                GameMain.Server?.KarmaManager?.OnItemContained(item, container.Item, user);
+#endif
             }
 
             return wasPut;
@@ -122,6 +125,9 @@ namespace Barotrauma
 
                 container.IsActive = true;
                 container.OnItemContained(item);
+#if SERVER
+                GameMain.Server?.KarmaManager?.OnItemContained(item, container.Item, user);
+#endif
             }
 
             return wasPut;
@@ -135,12 +141,11 @@ namespace Barotrauma
                 DebugConsole.ThrowError(errorMsg);
                 GameAnalyticsManager.AddErrorEventOnce(
                     "ItemInventory.CreateServerEvent:EventForUninitializedItem" + container.Item.Name + container.Item.ID,
-                    GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                    GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
                 return;
             }
 
-            int componentIndex = container.Item.GetComponentIndex(container);
-            if (componentIndex == -1)
+            if (!container.Item.Components.Contains(container))
             {
                 DebugConsole.Log("Creating a network event for the item \"" + container.Item + "\" failed, ItemContainer not found in components");
                 return;
@@ -149,7 +154,7 @@ namespace Barotrauma
             if (GameMain.NetworkMember != null)
             {
                 if (GameMain.NetworkMember.IsClient) { syncItemsDelay = 1.0f; }
-                GameMain.NetworkMember.CreateEntityEvent(Owner as INetSerializable, new object[] { NetEntityEvent.Type.InventoryState, componentIndex });
+                GameMain.NetworkMember.CreateEntityEvent(Owner as INetSerializable, new Item.InventoryStateEventData(container));
             }
         }    
 

@@ -1,257 +1,205 @@
-﻿using Barotrauma.Extensions;
+﻿#nullable enable
 using Barotrauma.Steam;
 using System;
-using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
-using System.Reflection;
-using System.Text;
+using Microsoft.Xna.Framework;
 
 namespace Barotrauma.Networking
 {
-    abstract class ClientPeer
+    internal abstract class ClientPeer
     {
-        protected class ServerContentPackage
+        public ImmutableArray<ServerContentPackage> ServerContentPackages { get; set; } =
+            ImmutableArray<ServerContentPackage>.Empty;
+
+        public readonly record struct Callbacks(
+            Callbacks.MessageCallback OnMessageReceived,
+            Callbacks.DisconnectCallback OnDisconnect,
+            Callbacks.InitializationCompleteCallback OnInitializationComplete)
         {
-            public readonly string Name;
-            public readonly string Hash;
-            public readonly UInt64 WorkshopId;
-            public readonly DateTime InstallTime;
-
-            public ContentPackage RegularPackage
-            {
-                get
-                {
-                    return ContentPackage.RegularPackages.Find(p => p.MD5hash.Hash.Equals(Hash));
-                }
-            }
-
-            public ContentPackage CorePackage
-            {
-                get
-                {
-                    return ContentPackage.CorePackages.Find(p => p.MD5hash.Hash.Equals(Hash));
-                }
-            }
-
-            public ServerContentPackage(string name, string hash, UInt64 workshopId, DateTime installTime)
-            {
-                Name = name;
-                Hash = hash;
-                WorkshopId = workshopId;
-                InstallTime = installTime;
-            }
+            public delegate void MessageCallback(IReadMessage message);
+            public delegate void DisconnectCallback(PeerDisconnectPacket disconnectPacket);
+            public delegate void InitializationCompleteCallback();
         }
 
-        protected string GetPackageStr(ContentPackage contentPackage)
+        protected readonly Callbacks callbacks;
+
+        public readonly Endpoint ServerEndpoint;
+        public NetworkConnection? ServerConnection { get; protected set; }
+
+        protected readonly bool isOwner;
+        protected readonly Option<int> ownerKey;
+
+        public bool IsActive => isActive;
+
+        protected bool isActive;
+
+        public ClientPeer(Endpoint serverEndpoint, Callbacks callbacks, Option<int> ownerKey)
         {
-            return $"\"{contentPackage.Name}\" (hash {contentPackage.MD5hash.ShortHash})";
+            ServerEndpoint = serverEndpoint;
+            this.callbacks = callbacks;
+            this.ownerKey = ownerKey;
+            isOwner = ownerKey.IsSome();
         }
-        protected string GetPackageStr(ServerContentPackage contentPackage)
-        {
-            return $"\"{contentPackage.Name}\" (hash {Md5Hash.GetShortHash(contentPackage.Hash)})";
-        }
 
-        public delegate void MessageCallback(IReadMessage message);
-        public delegate void DisconnectCallback(bool disableReconnect);
-        public delegate void DisconnectMessageCallback(string message);
-        public delegate void PasswordCallback(int salt, int retries);
-        public delegate void InitializationCompleteCallback();
-        
-        public MessageCallback OnMessageReceived;
-        public DisconnectCallback OnDisconnect;
-        public DisconnectMessageCallback OnDisconnectMessageReceived;
-        public PasswordCallback OnRequestPassword;
-        public InitializationCompleteCallback OnInitializationComplete;
-
-        public string Name;
-
-        public string Version { get; protected set; }
-
-        public NetworkConnection ServerConnection { get; protected set; }
-
-        public abstract void Start(object endPoint, int ownerKey);
-        public abstract void Close(string msg = null, bool disableReconnect = false);
+        public abstract void Start();
+        public abstract void Close(PeerDisconnectPacket peerDisconnectPacket);
         public abstract void Update(float deltaTime);
-        public abstract void Send(IWriteMessage msg, DeliveryMethod deliveryMethod);
+        public abstract void Send(IWriteMessage msg, DeliveryMethod deliveryMethod, bool compressPastThreshold = true);
         public abstract void SendPassword(string password);
 
-        protected abstract void SendMsgInternal(DeliveryMethod deliveryMethod, IWriteMessage msg);
+        protected abstract void SendMsgInternal(PeerPacketHeaders headers, INetSerializableStruct? body);
 
         protected ConnectionInitialization initializationStep;
-        protected bool contentPackageOrderReceived;
-        protected int ownerKey = 0;
+        public bool ContentPackageOrderReceived { get; set; }
         protected int passwordSalt;
-        protected Steamworks.AuthTicket steamAuthTicket;
-        protected void ReadConnectionInitializationStep(IReadMessage inc)
+        protected Steamworks.AuthTicket? steamAuthTicket;
+        private GUIMessageBox? passwordMsgBox;
+
+        public bool WaitingForPassword
+            => isActive && initializationStep == ConnectionInitialization.Password
+               && passwordMsgBox != null
+               && GUIMessageBox.MessageBoxes.Contains(passwordMsgBox);
+
+        public struct IncomingInitializationMessage
         {
-            ConnectionInitialization step = (ConnectionInitialization)inc.ReadByte();
+            public ConnectionInitialization InitializationStep;
+            public IReadMessage Message;
+        }
 
-            IWriteMessage outMsg;
-
-            switch (step)
+        protected void ReadConnectionInitializationStep(IncomingInitializationMessage inc)
+        {
+            switch (inc.InitializationStep)
             {
                 case ConnectionInitialization.SteamTicketAndVersion:
+                {
                     if (initializationStep != ConnectionInitialization.SteamTicketAndVersion) { return; }
-                    outMsg = new WriteOnlyMessage();
-                    outMsg.Write((byte)PacketHeader.IsConnectionInitializationStep);
-                    outMsg.Write((byte)ConnectionInitialization.SteamTicketAndVersion);
-                    outMsg.Write(Name);
-                    outMsg.Write(ownerKey);
-                    outMsg.Write(SteamManager.GetSteamID());
-                    if (steamAuthTicket == null)
-                    {
-                        outMsg.Write((UInt16)0);
-                    }
-                    else
-                    {
-                        outMsg.Write((UInt16)steamAuthTicket.Data.Length);
-                        outMsg.Write(steamAuthTicket.Data, 0, steamAuthTicket.Data.Length);
-                    }
-                    outMsg.Write(GameMain.Version.ToString());
-                    outMsg.Write(GameMain.Config.Language);
 
-                    SendMsgInternal(DeliveryMethod.Reliable, outMsg);
+                    PeerPacketHeaders headers = new PeerPacketHeaders
+                    {
+                        DeliveryMethod = DeliveryMethod.Reliable,
+                        PacketHeader = PacketHeader.IsConnectionInitializationStep,
+                        Initialization = ConnectionInitialization.SteamTicketAndVersion
+                    };
+
+                    if (steamAuthTicket is { Canceled: true })
+                    {
+                        throw new InvalidOperationException("ReadConnectionInitializationStep failed: Steam auth ticket has been cancelled.");
+                    }
+
+                    ClientSteamTicketAndVersionPacket body = new ClientSteamTicketAndVersionPacket
+                    {
+                        Name = GameMain.Client.Name,
+                        OwnerKey = ownerKey,
+                        SteamId = SteamManager.GetSteamId().Select(id => (AccountId)id),
+                        SteamAuthTicket = steamAuthTicket switch
+                        {
+                            null => Option<byte[]>.None(),
+                            var ticket => Option<byte[]>.Some(ticket.Data)
+                        },
+                        GameVersion = GameMain.Version.ToString(),
+                        Language = GameSettings.CurrentConfig.Language.Value
+                    };
+
+                    SendMsgInternal(headers, body);
                     break;
+                }
                 case ConnectionInitialization.ContentPackageOrder:
-                    if (initializationStep == ConnectionInitialization.SteamTicketAndVersion ||
-                        initializationStep == ConnectionInitialization.Password) { initializationStep = ConnectionInitialization.ContentPackageOrder; }
+                {
+                    if (initializationStep
+                        is ConnectionInitialization.SteamTicketAndVersion
+                        or ConnectionInitialization.Password)
+                    {
+                        initializationStep = ConnectionInitialization.ContentPackageOrder;
+                    }
+
                     if (initializationStep != ConnectionInitialization.ContentPackageOrder) { return; }
-                    outMsg = new WriteOnlyMessage();
-                    outMsg.Write((byte)PacketHeader.IsConnectionInitializationStep);
-                    outMsg.Write((byte)ConnectionInitialization.ContentPackageOrder);
 
-                    string serverName = inc.ReadString();
-
-                    UInt32 cpCount = inc.ReadVariableUInt32();
-                    ServerContentPackage corePackage = null;
-                    List<ServerContentPackage> regularPackages = new List<ServerContentPackage>();
-                    List<ServerContentPackage> missingPackages = new List<ServerContentPackage>();
-                    for (int i = 0; i < cpCount; i++)
+                    PeerPacketHeaders headers = new PeerPacketHeaders
                     {
-                        string name = inc.ReadString();
-                        string hash = inc.ReadString();
-                        UInt64 workshopId = inc.ReadUInt64();
-                        UInt32 installTimeDiffSeconds = inc.ReadUInt32();
-                        DateTime installTime = DateTime.UtcNow + TimeSpan.FromSeconds(installTimeDiffSeconds);
+                        DeliveryMethod = DeliveryMethod.Reliable,
+                        PacketHeader = PacketHeader.IsConnectionInitializationStep,
+                        Initialization = ConnectionInitialization.ContentPackageOrder
+                    };
 
-                        var pkg = new ServerContentPackage(name, hash, workshopId, installTime);
-                        if (pkg.CorePackage != null)
-                        {
-                            corePackage = pkg;
-                        }
-                        else if (pkg.RegularPackage != null)
-                        {
-                            regularPackages.Add(pkg);
-                        }
-                        else
-                        {
-                            missingPackages.Add(pkg);
-                        }
-                    }
+                    var orderPacket = INetSerializableStruct.Read<ServerPeerContentPackageOrderPacket>(inc.Message);
 
-                    if (missingPackages.Count > 0)
+                    if (!ContentPackageOrderReceived)
                     {
-                        var nonDownloadable = missingPackages.Where(p => p.WorkshopId == 0);
-                        var mismatchedButDownloaded = missingPackages.Where(remote =>
+                        ServerContentPackages = orderPacket.ContentPackages;
+                        if (ServerContentPackages.Length == 0)
                         {
-                            return ContentPackage.AllPackages.Any(local =>
-                                local.SteamWorkshopId != 0 && /* is a Workshop item */
-                                remote.WorkshopId == local.SteamWorkshopId && /* ids match */
-                                remote.InstallTime < local.InstallTime/* remote is older than local */);
-                        });
-
-                        if (mismatchedButDownloaded.Any())
-                        {
-                            string disconnectMsg;
-                            if (mismatchedButDownloaded.Count() == 1)
-                            {
-                                disconnectMsg = $"DisconnectMessage.MismatchedWorkshopMod~[incompatiblecontentpackage]={GetPackageStr(mismatchedButDownloaded.First())}";
-                            }
-                            else
-                            {
-                                List<string> packageStrs = new List<string>();
-                                mismatchedButDownloaded.ForEach(cp => packageStrs.Add(GetPackageStr(cp)));
-                                disconnectMsg = $"DisconnectMessage.MismatchedWorkshopMods~[incompatiblecontentpackages]={string.Join(", ", packageStrs)}";
-                            }
-                            Close(disconnectMsg, disableReconnect: true);
-                            OnDisconnectMessageReceived?.Invoke(DisconnectReason.MissingContentPackage + "/" + disconnectMsg);
+                            string errorMsg = "Error in ContentPackageOrder message: list of content packages enabled on the server was empty.";
+                            GameAnalyticsManager.AddErrorEventOnce("ClientPeer.ReadConnectionInitializationStep:NoContentPackages", GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
+                            DebugConsole.ThrowError(errorMsg);
                         }
-                        else if (nonDownloadable.Any())
-                        {
-                            string disconnectMsg;
-                            if (nonDownloadable.Count() == 1)
-                            {
-                                disconnectMsg = $"DisconnectMessage.MissingContentPackage~[missingcontentpackage]={GetPackageStr(nonDownloadable.First())}";
-                            }
-                            else
-                            {
-                                List<string> packageStrs = new List<string>();
-                                nonDownloadable.ForEach(cp => packageStrs.Add(GetPackageStr(cp)));
-                                disconnectMsg = $"DisconnectMessage.MissingContentPackages~[missingcontentpackages]={string.Join(", ", packageStrs)}";
-                            }
-                            Close(disconnectMsg, disableReconnect: true);
-                            OnDisconnectMessageReceived?.Invoke(DisconnectReason.MissingContentPackage + "/" + disconnectMsg);
-                        }
-                        else
-                        {
-                            Close(disableReconnect: true);
-
-                            string missingModNames = "\n";
-                            int displayedModCount = 0;
-                            foreach (ServerContentPackage missingPackage in missingPackages)
-                            {
-                                missingModNames += "\n- " + GetPackageStr(missingPackage);
-                                displayedModCount++;
-                                if (GUI.Font.MeasureString(missingModNames).Y > GameMain.GraphicsHeight * 0.5f)
-                                {
-                                    missingModNames += "\n\n" + TextManager.GetWithVariable("workshopitemdownloadprompttruncated", "[number]", (missingPackages.Count - displayedModCount).ToString());
-                                    break;
-                                }
-                            }
-                            missingModNames += "\n\n";
-
-                            var msgBox = new GUIMessageBox(
-                                TextManager.Get("WorkshopItemDownloadTitle"),
-                                TextManager.GetWithVariable("WorkshopItemDownloadPrompt", "[items]", missingModNames),
-                                new string[] { TextManager.Get("Yes"), TextManager.Get("No") });
-                            msgBox.Buttons[0].OnClicked = (yesBtn, userdata) =>
-                            {
-                                GameMain.ServerListScreen.Select();
-                                IEnumerable<ServerListScreen.PendingWorkshopDownload> downloads =
-                                    missingPackages.Select(p => new ServerListScreen.PendingWorkshopDownload(p.Hash, p.WorkshopId));
-                                GameMain.ServerListScreen.DownloadWorkshopItems(downloads, serverName, ServerConnection.EndPointString);
-                                return true;
-                            };
-                            msgBox.Buttons[0].OnClicked += msgBox.Close;
-                            msgBox.Buttons[1].OnClicked = msgBox.Close;
-                        }
-
-                        return;
+                        ContentPackageOrderReceived = true;
                     }
+                    SendMsgInternal(headers, null);                    
 
-                    if (!contentPackageOrderReceived)
-                    {
-                        GameMain.Config.BackUpModOrder();
-                        GameMain.Config.SwapPackages(corePackage.CorePackage, regularPackages.Select(p => p.RegularPackage).ToList());
-                        contentPackageOrderReceived = true;
-                    }
-
-                    SendMsgInternal(DeliveryMethod.Reliable, outMsg);
                     break;
+                }
                 case ConnectionInitialization.Password:
-                    if (initializationStep == ConnectionInitialization.SteamTicketAndVersion) { initializationStep = ConnectionInitialization.Password; }
+                    if (initializationStep == ConnectionInitialization.SteamTicketAndVersion)
+                    {
+                        initializationStep = ConnectionInitialization.Password;
+                    }
+
                     if (initializationStep != ConnectionInitialization.Password) { return; }
-                    bool incomingSalt = inc.ReadBoolean(); inc.ReadPadBits();
-                    int retries = 0;
-                    if (incomingSalt)
+
+                    var passwordPacket = INetSerializableStruct.Read<ServerPeerPasswordPacket>(inc.Message);
+
+                    if (WaitingForPassword) { return; }
+                    
+                    passwordPacket.Salt.TryUnwrap(out passwordSalt);
+                    passwordPacket.RetriesLeft.TryUnwrap(out var retries);
+
+                    LocalizedString pwMsg = TextManager.Get("PasswordRequired");
+
+                    passwordMsgBox = new GUIMessageBox(pwMsg, "", new LocalizedString[] { TextManager.Get("OK"), TextManager.Get("Cancel") },
+                        relativeSize: new Vector2(0.25f, 0.1f), minSize: new Point(400, GUI.IntScale(170)));
+                    var passwordHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.5f), passwordMsgBox.Content.RectTransform), childAnchor: Anchor.TopCenter);
+                    var passwordBox = new GUITextBox(new RectTransform(new Vector2(0.8f, 1f), passwordHolder.RectTransform) { MinSize = new Point(0, 20) })
                     {
-                        passwordSalt = inc.ReadInt32();
-                    }
-                    else
+                        Censor = true
+                    };
+
+                    if (retries > 0)
                     {
-                        retries = inc.ReadInt32();
+                        var incorrectPasswordText = new GUITextBlock(new RectTransform(new Vector2(1f, 0.0f), passwordHolder.RectTransform), TextManager.Get("incorrectpassword"), GUIStyle.Red, GUIStyle.Font, textAlignment: Alignment.Center);
+                        incorrectPasswordText.RectTransform.MinSize = new Point(0, (int)incorrectPasswordText.TextSize.Y);
+                        passwordHolder.Recalculate();
                     }
-                    OnRequestPassword?.Invoke(passwordSalt, retries);
+
+                    passwordMsgBox.Content.Recalculate();
+                    passwordMsgBox.Content.RectTransform.MinSize = new Point(0, passwordMsgBox.Content.RectTransform.Children.Sum(c => c.Rect.Height));
+                    passwordMsgBox.Content.Parent.RectTransform.MinSize = new Point(0, (int)(passwordMsgBox.Content.RectTransform.MinSize.Y / passwordMsgBox.Content.RectTransform.RelativeSize.Y));
+
+                    var okButton = passwordMsgBox.Buttons[0];
+                    okButton.OnClicked += (_, __) =>
+                    {
+                        SendPassword(passwordBox.Text);
+                        return true;
+                    };
+                    okButton.OnClicked += passwordMsgBox.Close;
+                    
+                    var cancelButton = passwordMsgBox.Buttons[1];
+                    cancelButton.OnClicked = (_, __) =>
+                    {
+                        Close(PeerDisconnectPacket.WithReason(DisconnectReason.Disconnected));
+                        passwordMsgBox?.Close(); passwordMsgBox = null;
+
+                        return true;
+                    };
+
+                    passwordBox.OnEnterPressed += (_, __) =>
+                    {
+                        okButton.OnClicked.Invoke(okButton, okButton.UserData);
+                        return true;
+                    };
+
+                    passwordBox.Select();
+                    
                     break;
             }
         }

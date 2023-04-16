@@ -1,9 +1,9 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Barotrauma.Extensions;
+using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Microsoft.Xna.Framework.Graphics;
-using Barotrauma.Extensions;
 
 namespace Barotrauma.Networking
 {
@@ -49,7 +49,7 @@ namespace Barotrauma.Networking
             List<GUITickBox> tickBoxes = new List<GUITickBox>();
             foreach (MessageType msgType in Enum.GetValues(typeof(MessageType)))
             {
-                var tickBox = new GUITickBox(new RectTransform(new Point(tickBoxContainer.Rect.Width, 30), tickBoxContainer.RectTransform), TextManager.Get("ServerLog." + messageTypeName[msgType]), font: GUI.SmallFont)
+                var tickBox = new GUITickBox(new RectTransform(new Point(tickBoxContainer.Rect.Width, 30), tickBoxContainer.RectTransform), TextManager.Get("ServerLog." + messageTypeName[msgType]), font: GUIStyle.SmallFont)
                 {
                     Selected = true,
                     TextColor = messageColor[msgType],
@@ -84,8 +84,8 @@ namespace Barotrauma.Networking
                 isHorizontal: true, childAnchor: Anchor.CenterLeft);
 
             new GUITextBlock(new RectTransform(new Vector2(0.2f, 1.0f), filterArea.RectTransform), TextManager.Get("ServerLog.Filter"), 
-                font: GUI.SubHeadingFont);            
-            GUITextBox searchBox = new GUITextBox(new RectTransform(new Vector2(0.8f, 1.0f), filterArea.RectTransform), font: GUI.SmallFont, createClearButton: true);
+                font: GUIStyle.SubHeadingFont);            
+            GUITextBox searchBox = new GUITextBox(new RectTransform(new Vector2(0.8f, 1.0f), filterArea.RectTransform), font: GUIStyle.SmallFont, createClearButton: true);
             searchBox.OnTextChanged += (textBox, text) =>
             {
                 msgFilter = text;
@@ -146,7 +146,7 @@ namespace Barotrauma.Networking
             List<GUITickBox> tickBoxes = new List<GUITickBox>();
             foreach (MessageType msgType in Enum.GetValues(typeof(MessageType)))
             {
-                var tickBox = new GUITickBox(new RectTransform(new Point(tickBoxContainer.Rect.Width, (int)(25 * GUI.Scale)), tickBoxContainer.RectTransform), TextManager.Get("ServerLog." + messageTypeName[msgType]), font: GUI.SmallFont)
+                var tickBox = new GUITickBox(new RectTransform(new Point(tickBoxContainer.Rect.Width, (int)(25 * GUI.Scale)), tickBoxContainer.RectTransform), TextManager.Get("ServerLog." + messageTypeName[msgType]), font: GUIStyle.SmallFont)
                 {
                     Selected = true,
                     TextColor = messageColor[msgType],
@@ -191,15 +191,12 @@ namespace Barotrauma.Networking
 
             Anchor anchor = Anchor.TopLeft;
             Pivot pivot = Pivot.TopLeft;
-            if (line.RichData != null)
+            RichString richString = line.Text as RichString;
+            if (richString != null && richString.RichTextData.HasValue)
             {
-                foreach (var data in line.RichData)
+                foreach (var data in richString.RichTextData.Value)
                 {
-                    if (!UInt64.TryParse(data.Metadata, out ulong id)) { return; }
-                    Client client = GameMain.Client.ConnectedClients.Find(c => c.SteamID == id)
-                                ?? GameMain.Client.ConnectedClients.Find(c => c.ID == id)
-                                ?? GameMain.Client.PreviouslyConnectedClients.FirstOrDefault(c => c.SteamID == id)
-                                ?? GameMain.Client.PreviouslyConnectedClients.FirstOrDefault(c => c.ID == id);
+                    Client client = data.ExtractClient();
                     if (client != null && client.Karma < 40.0f)
                     {
                         textContainer = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.0f), listBox.Content.RectTransform),
@@ -215,7 +212,7 @@ namespace Barotrauma.Networking
             }
 
             var textBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), (textContainer ?? listBox.Content).RectTransform, anchor, pivot),
-                line.RichData, line.SanitizedText, wrap: true, font: GUI.SmallFont)
+                line.Text, wrap: true, font: GUIStyle.SmallFont)
             {
                 TextColor = messageColor[line.Type],
                 Visible = !msgTypeHidden[(int)line.Type],
@@ -235,14 +232,15 @@ namespace Barotrauma.Networking
                 textBlock.RectTransform.SetAsFirstChild();
             }
 
-            if (line.RichData != null)
+            if (richString != null && richString.RichTextData.HasValue)
             {
-                foreach (var data in line.RichData)
+                foreach (var data in richString.RichTextData.Value)
                 {
                     textBlock.ClickableAreas.Add(new GUITextBlock.ClickableArea()
                     {
                         Data = data,
-                        OnClick = GameMain.NetLobbyScreen.SelectPlayer
+                        OnClick = GameMain.NetLobbyScreen.SelectPlayer,
+                        OnSecondaryClick = GameMain.NetLobbyScreen.ShowPlayerContextMenu
                     });
                 }
             }
@@ -256,11 +254,8 @@ namespace Barotrauma.Networking
 
             foreach (GUIComponent child in listBox.Content.Children)
             {
-                var textBlock = child as GUITextBlock;
-                if (textBlock == null) continue;
-
+                if (!(child is GUITextBlock textBlock)) { continue; }
                 child.Visible = true;
-
                 if (msgTypeHidden[(int)((LogMessage)child.UserData).Type])
                 {
                     child.Visible = false;
@@ -285,10 +280,10 @@ namespace Barotrauma.Networking
             listBox.Content.RectTransform.ReverseChildren();
         }
 
-        public bool ClearFilter(GUIComponent button, object obj)
+        public bool ClearFilter(GUIComponent button, object _)
         {
             var searchBox = button.UserData as GUITextBox;
-            if (searchBox != null) searchBox.Text = "";
+            if (searchBox != null) { searchBox.Text = ""; }
 
             msgFilter = "";
             FilterMessages();

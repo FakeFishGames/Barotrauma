@@ -1,4 +1,3 @@
-using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -6,20 +5,51 @@ using System.Linq;
 
 namespace Barotrauma.Networking
 {
+    [NetworkSerialize]
+    struct TempClient : INetSerializableStruct
+    {
+        public string Name;
+        public Identifier PreferredJob;
+        public CharacterTeamType PreferredTeam;
+        public UInt16 NameId;
+        public AccountInfo AccountInfo;
+        public byte SessionId;
+        public UInt16 CharacterId;
+        public float Karma;
+        public bool Muted;
+        public bool InGame;
+        public bool HasPermissions;
+        public bool IsOwner;
+        public bool IsDownloading;
+    }
+    
     partial class Client : IDisposable
     {
         public const int MaxNameLength = 32;
 
-        public string Name; public UInt16 NameID;
-        public byte ID;
-        public UInt64 SteamID;
-        public UInt64 OwnerSteamID;
+        public string Name; public UInt16 NameId;
+        
+        /// <summary>
+        /// An ID for this client for the current session.
+        /// THIS IS NOT A PERSISTENT VALUE. DO NOT STORE THIS LONG-TERM.
+        /// IT CANNOT BE USED TO IDENTIFY PLAYERS ACROSS SESSIONS.
+        /// </summary>
+        public readonly byte SessionId;
 
-        public string Language;
+        public AccountInfo AccountInfo;
+        
+        /// <summary>
+        /// The ID of the account used to authenticate this session.
+        /// This value can be used as a persistent value to identify
+        /// players in the banlist and campaign saves.
+        /// </summary>
+        public Option<AccountId> AccountId => AccountInfo.AccountId;
+
+        public LanguageIdentifier Language;
 
         public UInt16 Ping;
 
-        public string PreferredJob;
+        public Identifier PreferredJob;
 
         public CharacterTeamType TeamID;
 
@@ -72,14 +102,14 @@ namespace Barotrauma.Networking
 
         public UInt16 CharacterID;
 
-        private Vector2 spectate_position;
+        private Vector2 spectatePos;
         public Vector2? SpectatePos
         {
             get
             {
                 if (character == null || character.IsDead)
                 {
-                    return spectate_position;
+                    return spectatePos;
                 }
                 else
                 {
@@ -89,7 +119,7 @@ namespace Barotrauma.Networking
 
             set
             {
-                spectate_position = value.Value;
+                spectatePos = value.Value;
             }
         }
 
@@ -120,7 +150,7 @@ namespace Barotrauma.Networking
             }
         }
 
-        public bool HasPermissions = false;
+        public bool HasPermissions => Permissions != ClientPermissions.None;
 
         public VoipQueue VoipQueue
         {
@@ -146,39 +176,19 @@ namespace Barotrauma.Networking
         }
         public bool HasSpawned; //has the client spawned as a character during the current round
         
-        private List<Client> kickVoters;
-
-        public HashSet<string> GivenAchievements = new HashSet<string>();
+        public HashSet<Identifier> GivenAchievements = new HashSet<Identifier>();
 
         public ClientPermissions Permissions = ClientPermissions.None;
-        public List<DebugConsole.Command> PermittedConsoleCommands
-        {
-            get;
-            private set;
-        }
+        public readonly HashSet<DebugConsole.Command> PermittedConsoleCommands = new HashSet<DebugConsole.Command>();
 
-        private object[] votes;
-
-        public int KickVoteCount
-        {
-            get { return kickVoters.Count; }
-        }
-        
-        /*public Client(NetPeer server, string name, byte ID)
-            : this(name, ID)
-        {
-            
-        }*/
+        private readonly object[] votes;
 
         partial void InitProjSpecific();
         partial void DisposeProjSpecific();
-        public Client(string name, byte ID)
+        public Client(string name, byte sessionId)
         {
             this.Name = name;
-            this.ID = ID;
-
-            PermittedConsoleCommands = new List<DebugConsole.Command>();
-            kickVoters = new List<Client>();
+            this.SessionId = sessionId;
 
             votes = new object[Enum.GetNames(typeof(VoteType)).Length];
 
@@ -187,71 +197,34 @@ namespace Barotrauma.Networking
 
         public T GetVote<T>(VoteType voteType)
         {
-            return (votes[(int)voteType] is T) ? (T)votes[(int)voteType] : default(T);
+            return (votes[(int)voteType] is T t) ? t : default;
         }
 
         public void SetVote(VoteType voteType, object value)
         {
             votes[(int)voteType] = value;
         }
-
-        public void ResetVotes()
-        {
-            for (int i = 0; i < votes.Length; i++)
-            {
-                votes[i] = null;
-            }
-
-            kickVoters.Clear();
-        }
-
-        public void AddKickVote(Client voter)
-        {
-            if (voter != null && !kickVoters.Contains(voter)) { kickVoters.Add(voter); }
-        }
-
-
-        public void RemoveKickVote(Client voter)
-        {
-            kickVoters.Remove(voter);
-        }
-        
-        public bool HasKickVoteFrom(Client voter)
-        {
-            return kickVoters.Contains(voter);
-        }
-
-        public bool HasKickVoteFromID(int id)
-        {
-            return kickVoters.Any(k => k.ID == id);
-        }
-
-
-        public static void UpdateKickVotes(List<Client> connectedClients)
-        {
-            foreach (Client client in connectedClients)
-            {
-                client.kickVoters.RemoveAll(voter => !connectedClients.Contains(voter));
-            }
-        }
+                       
+        public bool SessionOrAccountIdMatches(string userId)
+            => (AccountId.IsSome() && Networking.AccountId.Parse(userId) == AccountId)
+               || (byte.TryParse(userId, out byte sessionId) && SessionId == sessionId);
 
         public void WritePermissions(IWriteMessage msg)
         {
-            msg.Write(ID);
-            msg.Write((UInt16)Permissions);
+            msg.WriteByte(SessionId);
+            msg.WriteRangedInteger((int)Permissions, 0, (int)ClientPermissions.All);
             if (HasPermission(ClientPermissions.ConsoleCommands))
             {
-                msg.Write((UInt16)PermittedConsoleCommands.Count);
+                msg.WriteUInt16((UInt16)PermittedConsoleCommands.Count);
                 foreach (DebugConsole.Command command in PermittedConsoleCommands)
                 {
-                    msg.Write(command.names[0]);
+                    msg.WriteString(command.names[0]);
                 }
             }
         }
         public static void ReadPermissions(IReadMessage inc, out ClientPermissions permissions, out List<DebugConsole.Command> permittedCommands)
         {
-            UInt16 permissionsInt = inc.ReadUInt16();
-
+            int permissionsInt = inc.ReadRangedInteger(0, (int)ClientPermissions.All);
             permissions = ClientPermissions.None;
             permittedCommands = new List<DebugConsole.Command>();
             try
@@ -279,9 +252,7 @@ namespace Barotrauma.Networking
 
         public void ReadPermissions(IReadMessage inc)
         {
-            ClientPermissions permissions = ClientPermissions.None;
-            List<DebugConsole.Command> permittedCommands = new List<DebugConsole.Command>();
-            ReadPermissions(inc, out permissions, out permittedCommands);
+            ReadPermissions(inc, out ClientPermissions permissions, out List<DebugConsole.Command> permittedCommands);
             SetPermissions(permissions, permittedCommands);
         }
 

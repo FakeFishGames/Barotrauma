@@ -13,12 +13,26 @@ namespace Barotrauma
 
     internal partial class ReadyCheck
     {
-        private readonly float endTime;
-        private float time;
+        private readonly DateTime endTime;
+        private readonly DateTime startTime;
         public readonly Dictionary<byte, ReadyStatus> Clients;
         public bool IsFinished = false;
 
-        public ReadyCheck(List<byte> clients, float duration = 30)
+        public ReadyCheck(List<byte> clients, DateTime startTime, DateTime endTime)
+            : this(clients)
+        {
+            this.startTime = startTime;
+            this.endTime = endTime;
+        }
+
+        public ReadyCheck(List<byte> clients, float duration)
+            : this(clients)
+        {
+            startTime = DateTime.Now;
+            endTime = startTime + new TimeSpan(0, 0, 0, 0, (int)(duration * 1000));
+        }
+
+        private ReadyCheck(List<byte> clients)
         {
             Clients = new Dictionary<byte, ReadyStatus>();
             foreach (byte client in clients)
@@ -27,28 +41,25 @@ namespace Barotrauma
 
                 Clients.Add(client, ReadyStatus.Unanswered);
             }
-
-            time = duration;
-            endTime = duration;
-#if CLIENT
-            lastSecond = (int) Math.Ceiling(duration);
-#endif
         }
 
         partial void EndReadyCheck();
 
         public void Update(float deltaTime)
         {
-            if (time > 0)
+            if (DateTime.Now < endTime)
             {
 #if CLIENT
                 UpdateBar();
 #endif
-                time -= deltaTime;
                 return;
             }
 
             EndReadyCheck();
+
+#if CLIENT
+            msgBox?.Close();
+#endif
         }
     }
 }

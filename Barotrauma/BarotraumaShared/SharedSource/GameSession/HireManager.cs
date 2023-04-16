@@ -8,7 +8,7 @@ namespace Barotrauma
         public List<CharacterInfo> AvailableCharacters { get; set; }
         public List<CharacterInfo> PendingHires = new List<CharacterInfo>();
 
-        public const int MaxAvailableCharacters = 10;
+        public const int MaxAvailableCharacters = 6;
 
         public HireManager()
         {
@@ -29,8 +29,26 @@ namespace Barotrauma
                 JobPrefab job = location.Type.GetRandomHireable();
                 if (job == null) { return; }
 
-                var variant = Rand.Range(0, job.Variants, Rand.RandSync.Server);
-                AvailableCharacters.Add(new CharacterInfo(CharacterPrefab.HumanSpeciesName, jobPrefab: job, variant: variant));
+                var variant = Rand.Range(0, job.Variants, Rand.RandSync.ServerAndClient);
+                AvailableCharacters.Add(new CharacterInfo(CharacterPrefab.HumanSpeciesName, jobOrJobPrefab: job, variant: variant));
+            }
+            if (location.Faction != null) { GenerateFactionCharacters(location.Faction.Prefab); }
+            if (location.SecondaryFaction != null) { GenerateFactionCharacters(location.SecondaryFaction.Prefab); }
+        }
+
+        private void GenerateFactionCharacters(FactionPrefab faction)
+        {
+            foreach (var character in faction.HireableCharacters)
+            {
+                HumanPrefab humanPrefab = NPCSet.Get(character.NPCSetIdentifier, character.NPCIdentifier);
+                if (humanPrefab == null)
+                {
+                    DebugConsole.ThrowError($"Couldn't create a hireable for the location: character prefab \"{character.NPCIdentifier}\" not found in the NPC set \"{character.NPCSetIdentifier}\".");
+                    continue;
+                }
+                var characterInfo = humanPrefab.CreateCharacterInfo(Rand.RandSync.ServerAndClient);
+                characterInfo.MinReputationToHire = (faction.Identifier, character.MinReputation);
+                AvailableCharacters.Add(characterInfo);
             }
         }
 

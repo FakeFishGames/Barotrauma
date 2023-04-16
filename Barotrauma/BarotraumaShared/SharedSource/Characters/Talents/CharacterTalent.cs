@@ -1,8 +1,6 @@
-﻿using System;
+﻿using Barotrauma.Abilities;
+using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Xml.Linq;
-using Barotrauma.Abilities;
 
 namespace Barotrauma
 {
@@ -20,17 +18,18 @@ namespace Barotrauma
         private readonly List<CharacterAbilityGroupInterval> characterAbilityGroupIntervals = new List<CharacterAbilityGroupInterval>();
 
         // works functionally but a missing recipe is not represented on GUI side. this might be better placed in the character class itself, though it might be fine here as well
-        public List<string> UnlockedRecipes { get; } = new List<string>();
+        public List<Identifier> UnlockedRecipes { get; } = new List<Identifier>();
+        public List<Identifier> UnlockedStoreItems { get; } = new List<Identifier>();
 
         public CharacterTalent(TalentPrefab talentPrefab, Character character)
         {
             Character = character;
 
             Prefab = talentPrefab;
-            XElement element = talentPrefab.ConfigElement;
+            var element = talentPrefab.ConfigElement;
             DebugIdentifier = talentPrefab.OriginalName;
 
-            foreach (XElement subElement in element.Elements())
+            foreach (var subElement in element.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
@@ -41,13 +40,23 @@ namespace Barotrauma
                         LoadAbilityGroupInterval(subElement);
                         break;
                     case "addedrecipe":
-                        if (subElement.GetAttributeString("itemidentifier", string.Empty) is string recipeIdentifier && recipeIdentifier != string.Empty)
+                        if (subElement.GetAttributeIdentifier("itemidentifier", Identifier.Empty) is { IsEmpty: false } recipeIdentifier)
                         {
                             UnlockedRecipes.Add(recipeIdentifier);
                         }
                         else
                         {
-                            DebugConsole.ThrowError("No recipe identifier defined for talent " + DebugIdentifier);
+                            DebugConsole.ThrowError($"No recipe identifier defined for talent {DebugIdentifier}");
+                        }
+                        break;
+                    case "addedstoreitem":
+                        if (subElement.GetAttributeIdentifier("itemtag", Identifier.Empty) is { IsEmpty: false } storeItemTag)
+                        {
+                            UnlockedStoreItems.Add(storeItemTag);
+                        }
+                        else
+                        {
+                            DebugConsole.ThrowError($"No store item identifier defined for talent {DebugIdentifier}");
                         }
                         break;
                 }
@@ -85,12 +94,12 @@ namespace Barotrauma
         }
 
         // XML logic
-        private void LoadAbilityGroupInterval(XElement abilityGroup)
+        private void LoadAbilityGroupInterval(ContentXElement abilityGroup)
         {
             characterAbilityGroupIntervals.Add(new CharacterAbilityGroupInterval(AbilityEffectType.Undefined, this, abilityGroup));
         }
 
-        private void LoadAbilityGroupEffect(XElement abilityGroup)
+        private void LoadAbilityGroupEffect(ContentXElement abilityGroup)
         {
             AbilityEffectType abilityEffectType = ParseAbilityEffectType(this, abilityGroup.GetAttributeString("abilityeffecttype", "none"));
             AddAbilityGroupEffect(new CharacterAbilityGroupEffect(abilityEffectType, this, abilityGroup), abilityEffectType);

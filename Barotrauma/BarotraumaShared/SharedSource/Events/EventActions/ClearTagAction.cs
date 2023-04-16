@@ -1,16 +1,15 @@
 using System.Xml.Linq;
-using NLog.Targets;
 
 namespace Barotrauma
 {
     class ClearTagAction : EventAction
     {
-        [Serialize("", true)]
-        public string Tag { get; set; }
+        [Serialize("", IsPropertySaveable.Yes)]
+        public Identifier Tag { get; set; }
 
         private bool isFinished;
 
-        public ClearTagAction(ScriptedEvent parentEvent, XElement element) : base(parentEvent, element) { }
+        public ClearTagAction(ScriptedEvent parentEvent, ContentXElement element) : base(parentEvent, element) { }
 
         public override bool IsFinished(ref string goToLabel) => isFinished;
 
@@ -23,7 +22,7 @@ namespace Barotrauma
         {
             if (isFinished) { return; }
 
-            if (!string.IsNullOrWhiteSpace(Tag))
+            if (!Tag.IsEmpty)
             {
                 ParentEvent.RemoveTag(Tag);
             }

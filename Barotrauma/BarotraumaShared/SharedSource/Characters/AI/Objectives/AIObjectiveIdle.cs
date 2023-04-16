@@ -10,7 +10,7 @@ namespace Barotrauma
 {
     class AIObjectiveIdle : AIObjective
     {
-        public override string Identifier { get; set; } = "idle";
+        public override Identifier Identifier { get; set; } = "idle".ToIdentifier();
         public override bool AllowAutomaticItemUnequipping => true;
         public override bool AllowInAnySub => true;
 
@@ -93,7 +93,7 @@ namespace Barotrauma
 
         public override bool IsLoop { get => true; set => throw new Exception("Trying to set the value for IsLoop from: " + Environment.StackTrace.CleanupStackTrace()); }
 
-        public readonly HashSet<string> PreferredOutpostModuleTypes = new HashSet<string>();
+        public readonly HashSet<Identifier> PreferredOutpostModuleTypes = new HashSet<Identifier>();
 
         public void CalculatePriority(float max = 0)
         {
@@ -161,10 +161,7 @@ namespace Barotrauma
                 character.DeselectCharacter();
             }
 
-            if (!character.IsClimbing)
-            {
-                character.SelectedConstruction = null;
-            }
+            character.SelectedItem = null;
 
             CleanupItems(deltaTime);
 
@@ -173,7 +170,8 @@ namespace Barotrauma
                 TargetHull = character.CurrentHull;
             }
 
-            if (behavior == BehaviorType.StayInHull)
+            bool currentTargetIsInvalid = currentTarget == null || IsForbidden(currentTarget) || (PathSteering.CurrentPath != null && PathSteering.CurrentPath.Nodes.Any(n => HumanAIController.UnsafeHulls.Contains(n.CurrentHull)));
+            if (behavior == BehaviorType.StayInHull && !currentTargetIsInvalid)
             {
                 currentTarget = TargetHull;
                 bool stayInHull = character.CurrentHull == currentTarget && IsSteeringFinished() && !character.IsClimbing;
@@ -185,12 +183,14 @@ namespace Barotrauma
                 {
                     PathSteering.SteeringSeek(character.GetRelativeSimPosition(currentTarget), weight: 1, nodeFilter: node => node.Waypoint.CurrentHull != null);
                 }
+                else
+                {
+                    PathSteering.ResetPath();
+                    PathSteering.Reset();
+                }
             }
             else
             {
-                bool currentTargetIsInvalid = currentTarget == null || IsForbidden(currentTarget) ||
-                    (PathSteering.CurrentPath != null && PathSteering.CurrentPath.Nodes.Any(n => HumanAIController.UnsafeHulls.Contains(n.CurrentHull)));
-
                 if (currentTarget != null && !currentTargetIsInvalid)
                 {
                     if (character.TeamID == CharacterTeamType.FriendlyNPC && !character.IsEscorted)
@@ -257,7 +257,8 @@ namespace Barotrauma
                             // Check that there is no unsafe hulls on the way to the target
                             if (node.Waypoint.CurrentHull != character.CurrentHull && HumanAIController.UnsafeHulls.Contains(node.Waypoint.CurrentHull)) { return false; }
                             return true;
-                        }, endNodeFilter: node => !isCurrentHullAllowed | !IsForbidden(node.Waypoint.CurrentHull));
+                            //don't stop at ladders when idling
+                        }, endNodeFilter: node => node.Waypoint.Ladders == null && (!isCurrentHullAllowed || !IsForbidden(node.Waypoint.CurrentHull)));
                         if (path.Unreachable)
                         {
                             //can't go to this room, remove it from the list and try another room
@@ -288,14 +289,29 @@ namespace Barotrauma
                 }
                 else if (currentTarget != null)
                 {
-                    PathSteering.SteeringSeek(character.GetRelativeSimPosition(currentTarget), weight: 1, nodeFilter: node => node.Waypoint.CurrentHull != null);
+                    PathSteering.SteeringSeek(character.GetRelativeSimPosition(currentTarget), weight: 1, 
+                        nodeFilter: node => node.Waypoint.CurrentHull != null, 
+                        endNodeFilter: node => node.Waypoint.Ladders == null);
+                }
+                else
+                {
+                    PathSteering.ResetPath();
+                    PathSteering.Reset();
                 }
             }
         }
 
         public void Wander(float deltaTime)
         {
-            if (character.IsClimbing) { return; }
+            if (character.IsClimbing)
+            {
+                if (character.AnimController.GetHeightFromFloor() < 0.1f)
+                {
+                    character.AnimController.Anim = AnimController.Animation.None;
+                    character.SelectedSecondaryItem = null;
+                }
+                return;
+            }
             var currentHull = character.CurrentHull;
             if (!character.AnimController.InWater && currentHull != null)
             {
@@ -357,7 +373,7 @@ namespace Barotrauma
                     }
 
                     chairCheckTimer -= deltaTime;
-                    if (chairCheckTimer <= 0.0f && character.SelectedConstruction == null)
+                    if (chairCheckTimer <= 0.0f && character.SelectedSecondaryItem == null)
                     {
                         foreach (Item item in Item.ItemList)
                         {
@@ -391,7 +407,7 @@ namespace Barotrauma
         {
             targetHulls.Clear();
             hullWeights.Clear();
-            foreach (var hull in Hull.hullList)
+            foreach (var hull in Hull.HullList)
             {
                 if (character.Submarine == null) { break; }
                 if (HumanAIController.UnsafeHulls.Contains(hull)) { continue; }
@@ -470,7 +486,7 @@ namespace Barotrauma
                 if (hull != null)
                 {
                     itemsToClean.Clear();
-                    foreach (Item item in Item.ItemList)
+                    foreach (Item item in Item.CleanableItems)
                     {
                         if (item.CurrentHull != hull) { continue; }
                         if (AIObjectiveCleanupItems.IsValidTarget(item, character, checkInventory: true, allowUnloading: false) && !ignoredItems.Contains(item))

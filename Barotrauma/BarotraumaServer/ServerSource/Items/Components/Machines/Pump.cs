@@ -1,14 +1,23 @@
 ﻿using Barotrauma.Networking;
-using Microsoft.Xna.Framework;
-using System;
-using System.Globalization;
-using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
 {
     partial class Pump : Powered, IServerSerializable, IClientSerializable
     {
-        public void ServerRead(ClientNetObject type, IReadMessage msg, Client c)
+        const float NetworkUpdateInterval = 5.0f;
+        private float networkUpdateTimer;
+
+        partial void UpdateProjSpecific(float deltaTime)
+        {
+            networkUpdateTimer -= deltaTime;
+            if (networkUpdateTimer <= 0.0f)
+            {
+                item.CreateServerEvent(this);
+                networkUpdateTimer = NetworkUpdateInterval;
+            }
+        }
+
+        public void ServerEventRead(IReadMessage msg, Client c)
         {
             float newFlowPercentage = msg.ReadRangedInteger(-10, 10) * 10.0f;
             bool newIsActive = msg.ReadBoolean();
@@ -36,20 +45,20 @@ namespace Barotrauma.Items.Components
             item.CreateServerEvent(this);
         }
 
-        public void ServerWrite(IWriteMessage msg, Client c, object[] extraData = null)
+        public void ServerEventWrite(IWriteMessage msg, Client c, NetEntityEvent.IData extraData = null)
         {
             //flowpercentage can only be adjusted at 10% intervals -> no need for more accuracy than this
             msg.WriteRangedInteger((int)(flowPercentage / 10.0f), -10, 10);
-            msg.Write(IsActive);
-            msg.Write(Hijacked);
+            msg.WriteBoolean(IsActive);
+            msg.WriteBoolean(Hijacked);
             if (TargetLevel != null)
             { 
-                msg.Write(true);
-                msg.Write(TargetLevel.Value);
+                msg.WriteBoolean(true);
+                msg.WriteSingle(TargetLevel.Value);
             }
             else
             {
-                msg.Write(false);
+                msg.WriteBoolean(false);
             }
         }
     }

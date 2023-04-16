@@ -1,10 +1,11 @@
 ﻿using Barotrauma.Extensions;
-using Barotrauma.Items.Components;
 using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
+using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Barotrauma
@@ -14,8 +15,6 @@ namespace Barotrauma
         protected bool crewDead;
 
         protected Color overlayColor;
-        protected string overlayText, overlayTextBottom;
-        protected Color overlayTextColor;
         protected Sprite overlaySprite;
 
         private TransitionType prevCampaignUIAutoOpenType;
@@ -27,6 +26,14 @@ namespace Barotrauma
 
         protected GUIFrame campaignUIContainer;
         public CampaignUI CampaignUI;
+
+        public SlideshowPlayer SlideshowPlayer
+        {
+            get;
+            protected set;
+        }
+
+        private CancellationTokenSource startRoundCancellationToken;
 
         public bool ForceMapUI
         {
@@ -55,21 +62,37 @@ namespace Barotrauma
                 {
                     chatBox.ToggleOpen = wasChatBoxOpen;
                 }
-                if (!value && CampaignUI?.SelectedTab == InteractionType.PurchaseSub)
+                if (!value)
                 {
-                    SubmarinePreview.Close();
+                    switch (CampaignUI?.SelectedTab)
+                    {
+                        case InteractionType.PurchaseSub:
+                            SubmarinePreview.Close();
+                            break;
+                        case InteractionType.MedicalClinic:
+                            CampaignUI.MedicalClinic?.OnDeselected();
+                            break;
+                    }
                 }
+
                 showCampaignUI = value;
             }
         }
 
+        /// <summary>
+        /// Gets the current personal wallet
+        /// In singleplayer this is the campaign bank and in multiplayer this is the personal wallet
+        /// </summary>
+        public virtual Wallet Wallet => GetWallet();
+
         public override void ShowStartMessage()
         {
-            foreach (Mission mission in Missions)
+            foreach (Mission mission in Missions.ToList())
             {
+                if (!mission.Prefab.ShowStartMessage) { continue; }
                 new GUIMessageBox(
-                    mission.Prefab.IsSideObjective ? TextManager.AddPunctuation(':', TextManager.Get("sideobjective"), mission.Name) : mission.Name, 
-                    mission.Description, new string[0], type: GUIMessageBox.Type.InGame, icon: mission.Prefab.Icon, parseRichText: true)
+                    RichString.Rich(mission.Prefab.IsSideObjective ? TextManager.AddPunctuation(':', TextManager.Get("sideobjective"), mission.Name) : mission.Name), 
+                    RichString.Rich(mission.Description), Array.Empty<LocalizedString>(), type: GUIMessageBox.Type.InGame, icon: mission.Prefab.Icon)
                 {
                     IconColor = mission.Prefab.IconColor,
                     UserData = "missionstartmessage"
@@ -77,37 +100,26 @@ namespace Barotrauma
             }
         }
 
-        /// <summary>
-        /// There is a server-side implementation of the method in <see cref="MultiPlayerCampaign"/>
-        /// </summary>
-        public bool AllowedToEndRound()
-        {
-            //allow ending the round if the client has permissions, is the owner, the only client in the server
-            //or if no-one has management permissions
-            if (GameMain.Client == null) { return true; }
-            return
-                GameMain.Client.HasPermission(ClientPermissions.ManageRound) ||
-                GameMain.Client.HasPermission(ClientPermissions.ManageCampaign) || 
-                GameMain.Client.ConnectedClients.Count == 1 ||
-                GameMain.Client.IsServerOwner ||
-                GameMain.Client.ConnectedClients.None(c =>
-                    c.InGame && (c.IsOwner || c.HasPermission(ClientPermissions.ManageRound) || c.HasPermission(ClientPermissions.ManageCampaign)));
-        }
+        private static bool IsOwner(Client client) => client != null && client.IsOwner;
 
         /// <summary>
         /// There is a server-side implementation of the method in <see cref="MultiPlayerCampaign"/>
         /// </summary>
-        public bool AllowedToManageCampaign()
+        public static bool AllowedToManageCampaign(ClientPermissions permissions)
         {
-            //allow ending the round if the client has permissions, is the owner, the only client in the server,
+            //allow managing the round if the client has permissions, is the owner, the only client in the server,
             //or if no-one has management permissions
             if (GameMain.Client == null) { return true; }
             return
+                GameMain.Client.HasPermission(permissions) ||
                 GameMain.Client.HasPermission(ClientPermissions.ManageCampaign) ||
-                GameMain.Client.ConnectedClients.Count == 1 ||
                 GameMain.Client.IsServerOwner ||
-                GameMain.Client.ConnectedClients.None(c =>
-                    c.InGame && (c.IsOwner || c.HasPermission(ClientPermissions.ManageCampaign)));
+                AnyOneAllowedToManageCampaign(permissions);
+        }
+
+        public static bool AllowedToManageWallets()
+        {
+            return AllowedToManageCampaign(ClientPermissions.ManageMoney);
         }
 
         public override void Draw(SpriteBatch spriteBatch)
@@ -124,31 +136,9 @@ namespace Barotrauma
                 {
                     GUI.DrawRectangle(spriteBatch, new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight), overlayColor, isFilled: true);
                 }
-                if (!string.IsNullOrEmpty(overlayText) && overlayTextColor.A > 0)
-                {
-                    var backgroundSprite = GUI.Style.GetComponentStyle("CommandBackground").GetDefaultSprite();
-                    Vector2 centerPos = new Vector2(GameMain.GraphicsWidth, GameMain.GraphicsHeight) / 2;
-                    string wrappedText = ToolBox.WrapText(overlayText, GameMain.GraphicsWidth / 3, GUI.Font);
-                    Vector2 textSize = GUI.Font.MeasureString(wrappedText);
-                    Vector2 textPos = centerPos - textSize / 2;
-                    backgroundSprite.Draw(spriteBatch, 
-                        centerPos, 
-                        Color.White * (overlayTextColor.A / 255.0f), 
-                        origin: backgroundSprite.size / 2,
-                        rotate: 0.0f,
-                        scale: new Vector2(GameMain.GraphicsWidth / 2 / backgroundSprite.size.X, textSize.Y / backgroundSprite.size.Y * 1.5f));
-
-                    GUI.DrawString(spriteBatch, textPos + Vector2.One, wrappedText, Color.Black * (overlayTextColor.A / 255.0f));
-                    GUI.DrawString(spriteBatch, textPos, wrappedText, overlayTextColor);
-
-                    if (!string.IsNullOrEmpty(overlayTextBottom))
-                    {
-                        Vector2 bottomTextPos = centerPos + new Vector2(0.0f, textSize.Y / 2 + 40 * GUI.Scale) - GUI.Font.MeasureString(overlayTextBottom) / 2;
-                        GUI.DrawString(spriteBatch, bottomTextPos + Vector2.One, overlayTextBottom, Color.Black * (overlayTextColor.A / 255.0f));
-                        GUI.DrawString(spriteBatch, bottomTextPos, overlayTextBottom, overlayTextColor);
-                    }
-                }
             }
+
+            SlideshowPlayer?.DrawManually(spriteBatch);
 
             if (GUI.DisableHUD || GUI.DisableUpperHUD || ForceMapUI || CoroutineManager.IsCoroutineRunning("LevelTransition"))
             {
@@ -160,7 +150,7 @@ namespace Barotrauma
 
             endRoundButton.Visible = false;
             var availableTransition = GetAvailableTransition(out _, out Submarine leavingSub);
-            string buttonText = "";
+            LocalizedString buttonText = "";
             switch (availableTransition)
             {
                 case TransitionType.ProgressToNextLocation:
@@ -189,7 +179,8 @@ namespace Barotrauma
                 case TransitionType.None:
                 default:
                     if (Level.Loaded.Type == LevelData.LevelType.Outpost &&
-                        (Character.Controlled?.Submarine?.Info.Type == SubmarineType.Player || (Character.Controlled?.CurrentHull?.OutpostModuleTags.Contains("airlock") ?? false)))
+                        !Level.Loaded.IsEndBiome &&
+                        (Character.Controlled?.Submarine?.Info.Type == SubmarineType.Player || (Character.Controlled?.CurrentHull?.OutpostModuleTags.Contains("airlock".ToIdentifier()) ?? false)))
                     {
                         buttonText = TextManager.GetWithVariable("LeaveLocation", "[locationname]", Level.Loaded.StartLocation?.Name ?? "[ERROR]");
                         endRoundButton.Visible = !ForceMapUI && !ShowCampaignUI;
@@ -200,12 +191,16 @@ namespace Barotrauma
                     }
                     break;
             }
+            if (Level.IsLoadedOutpost && !ObjectiveManager.AllActiveObjectivesCompleted())
+            {
+                endRoundButton.Visible = false;
+            }
 
             if (ReadyCheckButton != null) { ReadyCheckButton.Visible = endRoundButton.Visible; }
 
             if (endRoundButton.Visible)
             {
-                if (!AllowedToEndRound()) 
+                if (!AllowedToManageCampaign(ClientPermissions.ManageMap)) 
                 { 
                     buttonText = TextManager.Get("map"); 
                 }
@@ -219,7 +214,7 @@ namespace Barotrauma
                     endRoundButton.OnClicked(EndRoundButton, null);
                     prevCampaignUIAutoOpenType = availableTransition;
                 }
-                endRoundButton.Text = ToolBox.LimitString(buttonText, endRoundButton.Font, endRoundButton.Rect.Width - 5);
+                endRoundButton.Text = ToolBox.LimitString(buttonText.Value, endRoundButton.Font, endRoundButton.Rect.Width - 5);
                 if (endRoundButton.Text != buttonText)
                 {
                     endRoundButton.ToolTip = buttonText;
@@ -242,6 +237,11 @@ namespace Barotrauma
             {
                 ReadyCheckButton.RectTransform.ScreenSpaceOffset = endRoundButton.RectTransform.ScreenSpaceOffset;
                 ReadyCheckButton.DrawManually(spriteBatch);
+                if (ReadyCheck.ReadyCheckCooldown > DateTime.Now)
+                {
+                    float progress = (ReadyCheck.ReadyCheckCooldown - DateTime.Now).Seconds / 60.0f;
+                    ReadyCheckButton.Color = ToolBox.GradientLerp(progress, Color.White, GUIStyle.Red);
+                }
             }
         }
 
@@ -251,20 +251,22 @@ namespace Barotrauma
 
             GUI.ClearCursorWait();
 
+            startRoundCancellationToken = new CancellationTokenSource();
             var loadTask = Task.Run(async () =>
             {
                 await Task.Yield();
-                Rand.ThreadId = System.Threading.Thread.CurrentThread.ManagedThreadId;
+                Rand.ThreadId = Environment.CurrentManagedThreadId;
                 try
                 {
-                    GameMain.GameSession.StartRound(newLevel, mirrorLevel: mirror);
+                    GameMain.GameSession.StartRound(newLevel, mirrorLevel: mirror, startOutpost: GetPredefinedStartOutpost());
                 }
                 catch (Exception e)
                 {
                     roundSummaryScreen.LoadException = e;
                 }
                 Rand.ThreadId = 0;
-            });
+                startRoundCancellationToken = null;
+            }, startRoundCancellationToken.Token);
             TaskPool.Add("AsyncCampaignStartRound", loadTask, (t) =>
             {
                 overlayColor = Color.Transparent;
@@ -272,6 +274,33 @@ namespace Barotrauma
             });
 
             return loadTask;
+        }
+
+        public void CancelStartRound()
+        {
+            startRoundCancellationToken?.Cancel();
+        }
+
+        public void ThrowIfStartRoundCancellationRequested()
+        {
+            if (startRoundCancellationToken != null && 
+                startRoundCancellationToken.Token.IsCancellationRequested)
+            {
+                startRoundCancellationToken.Token.ThrowIfCancellationRequested();
+                startRoundCancellationToken = null;
+            }
+        }
+
+        protected SubmarineInfo GetPredefinedStartOutpost()
+        {
+            if (Map?.CurrentLocation?.Type?.GetForcedOutpostGenerationParams() is OutpostGenerationParams parameters && !parameters.OutpostFilePath.IsNullOrEmpty())
+            {
+                return new SubmarineInfo(parameters.OutpostFilePath.Value)
+                {
+                    OutpostGenerationParams = parameters
+                };
+            }
+            return null;
         }
 
         partial void NPCInteractProjSpecific(Character npc, Character interactor)
@@ -285,15 +314,18 @@ namespace Barotrauma
                 case InteractionType.Examine:
                     return;
                 case InteractionType.Upgrade when !UpgradeManager.CanUpgradeSub():
-                    UpgradeManager.CreateUpgradeErrorMessage(TextManager.Get("Dialog.CantUpgrade"), IsSinglePlayer, npc);
+                    UpgradeManager.CreateUpgradeErrorMessage(TextManager.Get("Dialog.CantUpgrade").Value, IsSinglePlayer, npc);
                     return;
                 case InteractionType.Crew when GameMain.NetworkMember != null:
                     CampaignUI.CrewManagement.SendCrewState(false);
                     goto default;
+                case InteractionType.MedicalClinic:
+                    CampaignUI.MedicalClinic.RequestLatestPending();
+                    goto default;
                 default:
                     ShowCampaignUI = true;
-                    CampaignUI.SelectTab(npc.CampaignInteractionType);
-                    CampaignUI.UpgradeStore?.RefreshAll();
+                    CampaignUI.SelectTab(npc.CampaignInteractionType, npc);
+                    CampaignUI.UpgradeStore?.RequestRefresh();
                     break;
             }
         }
@@ -303,7 +335,7 @@ namespace Barotrauma
             if (ShowCampaignUI || ForceMapUI)
             {
                 campaignUIContainer?.AddToGUIUpdateList();
-                if (CampaignUI?.UpgradeStore?.HoveredItem != null)
+                if (CampaignUI?.UpgradeStore?.HoveredEntity != null)
                 {
                     if (CampaignUI.SelectedTab != InteractionType.Upgrade) { return; }
                     CampaignUI?.UpgradeStore?.ItemInfoFrame.AddToGUIUpdateList(order: 1);
@@ -315,9 +347,53 @@ namespace Barotrauma
             ReadyCheckButton?.AddToGUIUpdateList();
         }
 
+        protected void TryEndRoundWithFuelCheck(Action onConfirm, Action onReturnToMapScreen)
+        {
+            Submarine.MainSub.CheckFuel();
+            SubmarineInfo nextSub = PendingSubmarineSwitch ?? Submarine.MainSub.Info;
+            bool lowFuel = nextSub.Name == Submarine.MainSub.Info.Name ? Submarine.MainSub.Info.LowFuel : nextSub.LowFuel;
+            if (Level.IsLoadedFriendlyOutpost && lowFuel && CargoManager.PurchasedItems.None(i => i.Value.Any(pi => pi.ItemPrefab.Tags.Contains("reactorfuel"))))
+            {
+                var extraConfirmationBox =
+                    new GUIMessageBox(TextManager.Get("lowfuelheader"),
+                    TextManager.Get("lowfuelwarning"),
+                    new LocalizedString[2] { TextManager.Get("ok"), TextManager.Get("cancel") });
+                extraConfirmationBox.Buttons[0].OnClicked = (b, o) => { Confirm(); return true; };
+                extraConfirmationBox.Buttons[0].OnClicked += extraConfirmationBox.Close;
+                extraConfirmationBox.Buttons[1].OnClicked = extraConfirmationBox.Close;
+            }
+            else
+            {
+                Confirm();
+            }
+
+            void Confirm()
+            {
+                var availableTransition = GetAvailableTransition(out _, out _);
+                if (Character.Controlled != null &&
+                    availableTransition == TransitionType.ReturnToPreviousLocation &&
+                    Character.Controlled?.Submarine == Level.Loaded?.StartOutpost)
+                {
+                    onConfirm();
+                }
+                else if (Character.Controlled != null &&
+                    availableTransition == TransitionType.ProgressToNextLocation &&
+                    Character.Controlled?.Submarine == Level.Loaded?.EndOutpost)
+                {
+                    onConfirm();
+                }
+                else
+                {
+                    onReturnToMapScreen();
+                }
+            }
+        }
+
         public override void Update(float deltaTime)
         {
             base.Update(deltaTime);
+
+            MedicalClinic?.Update(deltaTime);
 
             if (PlayerInput.KeyHit(Microsoft.Xna.Framework.Input.Keys.Escape))
             {

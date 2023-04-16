@@ -19,20 +19,20 @@ namespace Barotrauma
 
         public readonly Type GameModeType;
 
-        public readonly string Name;
-        public readonly string Description;
+        public readonly LocalizedString Name;
+        public readonly LocalizedString Description;
 
-        public readonly string Identifier;
+        public readonly Identifier Identifier;
 
         public readonly bool IsSinglePlayer;
 
         //are clients allowed to vote for this gamemode
         public readonly bool Votable;
 
-        public GameModePreset(string identifier, Type type, bool isSinglePlayer = false, bool votable = true)
+        public GameModePreset(Identifier identifier, Type type, bool isSinglePlayer = false, bool votable = true)
         {
             Name = TextManager.Get("GameMode." + identifier);
-            Description = TextManager.Get("GameModeDescription." + identifier, returnNull: true) ?? "";
+            Description = TextManager.Get("GameModeDescription." + identifier).Fallback("");
             Identifier = identifier;
 
             GameModeType = type;
@@ -46,15 +46,15 @@ namespace Barotrauma
         public static void Init()
         {
 #if CLIENT
-            Tutorial = new GameModePreset("tutorial", typeof(TutorialMode), true);
-            DevSandbox = new GameModePreset("devsandbox", typeof(GameMode), true);
-            SinglePlayerCampaign = new GameModePreset("singleplayercampaign", typeof(SinglePlayerCampaign), true);
-            TestMode = new GameModePreset("testmode", typeof(TestGameMode), true);
+            Tutorial = new GameModePreset("tutorial".ToIdentifier(), typeof(TutorialMode), isSinglePlayer: true);
+            DevSandbox = new GameModePreset("devsandbox".ToIdentifier(), typeof(GameMode), isSinglePlayer: true);
+            SinglePlayerCampaign = new GameModePreset("singleplayercampaign".ToIdentifier(), typeof(SinglePlayerCampaign), isSinglePlayer: true);
+            TestMode = new GameModePreset("testmode".ToIdentifier(), typeof(TestGameMode), isSinglePlayer: true);
 #endif
-            Sandbox = new GameModePreset("sandbox", typeof(GameMode), false);
-            Mission = new GameModePreset("mission", typeof(CoOpMode), false);
-            PvP = new GameModePreset("pvp", typeof(PvPMode), false);
-            MultiPlayerCampaign = new GameModePreset("multiplayercampaign", typeof(MultiPlayerCampaign), false, false);
+            Sandbox = new GameModePreset("sandbox".ToIdentifier(), typeof(GameMode), isSinglePlayer: false);
+            Mission = new GameModePreset("mission".ToIdentifier(), typeof(CoOpMode), isSinglePlayer: false);
+            PvP = new GameModePreset("pvp".ToIdentifier(), typeof(PvPMode), isSinglePlayer: false);
+            MultiPlayerCampaign = new GameModePreset("multiplayercampaign".ToIdentifier(), typeof(MultiPlayerCampaign), isSinglePlayer: false);
         }
     }
 }

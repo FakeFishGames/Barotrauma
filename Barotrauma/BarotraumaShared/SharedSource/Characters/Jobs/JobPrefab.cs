@@ -2,6 +2,7 @@
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Xml.Linq;
 
@@ -9,54 +10,71 @@ namespace Barotrauma
 {
     public class AutonomousObjective
     {
-        public string identifier;
-        public string option;
-        public readonly float priorityModifier;
-        public readonly bool ignoreAtOutpost;
+        public readonly Identifier Identifier;
+        public readonly Identifier Option;
+        public readonly float PriorityModifier;
+        public readonly bool IgnoreAtOutpost;
 
         public AutonomousObjective(XElement element)
         {
-            identifier = element.GetAttributeString("identifier", null);
+            Identifier = element.GetAttributeIdentifier("identifier", Identifier.Empty);
 
             //backwards compatibility
-            if (string.IsNullOrEmpty(identifier))
+            if (Identifier == Identifier.Empty)
             {
-                identifier = element.GetAttributeString("aitag", null);
+                Identifier = element.GetAttributeIdentifier("aitag", Identifier.Empty);
             }
 
-            option = element.GetAttributeString("option", null);
-            priorityModifier = element.GetAttributeFloat("prioritymodifier", 1);
-            priorityModifier = MathHelper.Max(priorityModifier, 0);
-            ignoreAtOutpost = element.GetAttributeBool("ignoreatoutpost", false);
+            Option = element.GetAttributeIdentifier("option", Identifier.Empty);
+            PriorityModifier = element.GetAttributeFloat("prioritymodifier", 1);
+            PriorityModifier = MathHelper.Max(PriorityModifier, 0);
+            IgnoreAtOutpost = element.GetAttributeBool("ignoreatoutpost", false);
         }
     }
 
-    partial class JobPrefab : IPrefab, IDisposable
+    class ItemRepairPriority : Prefab
+    {
+        public static readonly PrefabCollection<ItemRepairPriority> Prefabs = new PrefabCollection<ItemRepairPriority>();
+
+        public readonly float Priority;
+
+        public ItemRepairPriority(XElement element, JobsFile file) : base(file, element.GetAttributeIdentifier("tag", Identifier.Empty))
+        {
+            Priority = element.GetAttributeFloat("priority", -1f);
+            if (Priority < 0)
+            {
+                DebugConsole.AddWarning($"The 'priority' attribute is missing from the the item repair priorities definition in {element} of {file.Path}.");
+            }
+        }
+
+        public override void Dispose() { }
+    }
+
+    class JobVariant
+    {
+        public JobPrefab Prefab;
+        public int Variant;
+        public JobVariant(JobPrefab prefab, int variant)
+        {
+            Prefab = prefab;
+            Variant = variant;
+        }
+    }
+
+    partial class JobPrefab : PrefabWithUintIdentifier
     {
         public static readonly PrefabCollection<JobPrefab> Prefabs = new PrefabCollection<JobPrefab>();
 
-        private bool disposed = false;
-        public void Dispose()
-        {
-            if (disposed) { return; }
-            disposed = true;
-            Prefabs.Remove(this);
-        }
+        public override void Dispose() { }
 
-        private static readonly Dictionary<string, float> _itemRepairPriorities = new Dictionary<string, float>();
+        private static readonly Dictionary<Identifier, float> _itemRepairPriorities = new Dictionary<Identifier, float>();
         /// <summary>
         /// Tag -> priority.
         /// </summary>
-        public static IReadOnlyDictionary<string, float> ItemRepairPriorities => _itemRepairPriorities;
+        public static IReadOnlyDictionary<Identifier, float> ItemRepairPriorities => _itemRepairPriorities;
 
-        public static XElement NoJobElement;
-        public static JobPrefab Get(string identifier)
+        public static JobPrefab Get(Identifier identifier)
         {
-            if (Prefabs == null)
-            {
-                DebugConsole.ThrowError("Issue in the code execution order: job prefabs not loaded.");
-                return null;
-            }
             if (Prefabs.ContainsKey(identifier))
             {
                 return Prefabs[identifier];
@@ -70,62 +88,41 @@ namespace Barotrauma
 
         public class PreviewItem
         {
-            public readonly string ItemIdentifier;
+            public readonly Identifier ItemIdentifier;
             public readonly bool ShowPreview;
 
-            public PreviewItem(string itemIdentifier, bool showPreview)
+            public PreviewItem(Identifier itemIdentifier, bool showPreview)
             {
                 ItemIdentifier = itemIdentifier;
                 ShowPreview = showPreview;
             }
         }
 
-        public readonly Dictionary<int, XElement> ItemSets = new Dictionary<int, XElement>();
-        public readonly Dictionary<int, List<PreviewItem>> PreviewItems = new Dictionary<int, List<PreviewItem>>();
+        public readonly Dictionary<int, ContentXElement> ItemSets = new Dictionary<int, ContentXElement>();
+        public readonly ImmutableDictionary<int, ImmutableArray<PreviewItem>> PreviewItems;
         public readonly List<SkillPrefab> Skills = new List<SkillPrefab>();
         public readonly List<AutonomousObjective> AutonomousObjectives = new List<AutonomousObjective>();
-        public readonly List<string> AppropriateOrders = new List<string>();
+        public readonly List<Identifier> AppropriateOrders = new List<Identifier>();
 
-        [Serialize("1,1,1,1", false)]
+        [Serialize("1,1,1,1", IsPropertySaveable.No)]
         public Color UIColor
         {
             get;
             private set;
         }
 
-        [Serialize("notfound", false)]
-        public string Identifier
-        {
-            get;
-            private set;
-        }
+        public readonly LocalizedString Name;
 
-        [Serialize("notfound", false)]
-        public string Name
-        {
-            get;
-            private set;
-        }
-
-        [Serialize(AIObjectiveIdle.BehaviorType.Passive, false)]
+        [Serialize(AIObjectiveIdle.BehaviorType.Passive, IsPropertySaveable.No)]
         public AIObjectiveIdle.BehaviorType IdleBehavior
         {
             get;
             private set;
         }
 
-        public string OriginalName { get { return Identifier; } }
+        public readonly LocalizedString Description;
 
-        public ContentPackage ContentPackage { get; private set; }
-
-        [Serialize("", false)]
-        public string Description
-        {
-            get;
-            private set;
-        }
-
-        [Serialize(false, false)]
+        [Serialize(false, IsPropertySaveable.No)]
         public bool OnlyJobSpecificDialog
         {
             get;
@@ -133,7 +130,7 @@ namespace Barotrauma
         }
 
         //the number of these characters in the crew the player starts with in the single player campaign
-        [Serialize(0, false)]
+        [Serialize(0, IsPropertySaveable.No)]
         public int InitialCount
         {
             get;
@@ -141,7 +138,7 @@ namespace Barotrauma
         }
 
         //if set to true, a client that has chosen this as their preferred job will get it no matter what
-        [Serialize(false, false)]
+        [Serialize(false, IsPropertySaveable.No)]
         public bool AllowAlways
         {
             get;
@@ -149,7 +146,7 @@ namespace Barotrauma
         }
 
         //how many crew members can have the job (only one captain etc) 
-        [Serialize(100, false)]
+        [Serialize(100, IsPropertySaveable.No)]
         public int MaxNumber
         {
             get;
@@ -158,21 +155,21 @@ namespace Barotrauma
 
         //how many crew members are REQUIRED to have the job 
         //(i.e. if one captain is required, one captain is chosen even if all the players have set captain to lowest preference)
-        [Serialize(0, false)]
+        [Serialize(0, IsPropertySaveable.No)]
         public int MinNumber
         {
             get;
             private set;
         }
 
-        [Serialize(0.0f, false)]
+        [Serialize(0.0f, IsPropertySaveable.No)]
         public float MinKarma
         {
             get;
             private set;
         }
 
-        [Serialize(1.0f, false)]
+        [Serialize(1.0f, IsPropertySaveable.No)]
         public float PriceMultiplier
         {
             get;
@@ -180,7 +177,7 @@ namespace Barotrauma
         }
 
         // TODO: not used
-        [Serialize(10.0f, false)]
+        [Serialize(10.0f, IsPropertySaveable.No)]
         public float Commonness
         {
             get;
@@ -188,7 +185,7 @@ namespace Barotrauma
         }
 
         //how much the vitality of the character is increased/reduced from the default value
-        [Serialize(0.0f, false)]
+        [Serialize(0.0f, IsPropertySaveable.No)]
         public float VitalityModifier
         {
             get;
@@ -196,7 +193,7 @@ namespace Barotrauma
         }
 
         //whether the job should be available to NPCs
-        [Serialize(false, false)]
+        [Serialize(false, IsPropertySaveable.No)]
         public bool HiddenJob
         {
             get;
@@ -208,35 +205,33 @@ namespace Barotrauma
 
         public SkillPrefab PrimarySkill => Skills?.FirstOrDefault(s => s.IsPrimarySkill);
 
-        public string FilePath { get; private set; }
+        public ContentXElement Element { get; private set; }
 
-        public XElement Element { get; private set; }
-        public XElement ClothingElement { get; private set; }
         public int Variants { get; private set; }
 
-        public JobPrefab(XElement element, string filePath)
+        public JobPrefab(ContentXElement element, JobsFile file) : base(file, element.GetAttributeIdentifier("identifier", ""))
         {
-            FilePath = filePath;
             SerializableProperty.DeserializeProperties(this, element);
 
             Name = TextManager.Get("JobName." + Identifier);
-            Description = TextManager.Get("JobDescription." + Identifier, returnNull: true) ?? string.Empty;
-            Identifier = Identifier.ToLowerInvariant();
+            Description = TextManager.Get("JobDescription." + Identifier);
             Element = element;
 
+            var previewItems = new Dictionary<int, List<PreviewItem>>();
+
             int variant = 0;
-            foreach (XElement subElement in element.Elements())
+            foreach (var subElement in element.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
                     case "itemset":
                         ItemSets.Add(variant, subElement);
-                        PreviewItems[variant] = new List<PreviewItem>();
+                        previewItems[variant] = new List<PreviewItem>();
                         loadItemIdentifiers(subElement, variant);
                         variant++;
                         break;
                     case "skills":
-                        foreach (XElement skillElement in subElement.Elements())
+                        foreach (var skillElement in subElement.Elements())
                         {
                             Skills.Add(new SkillPrefab(skillElement));
                         }
@@ -246,7 +241,7 @@ namespace Barotrauma
                         break;
                     case "appropriateobjectives":
                     case "appropriateorders":
-                        subElement.Elements().ForEach(order => AppropriateOrders.Add(order.GetAttributeString("identifier", "").ToLowerInvariant()));
+                        subElement.Elements().ForEach(order => AppropriateOrders.Add(order.GetAttributeIdentifier("identifier", "")));
                         break;
                     case "jobicon":
                         Icon = new Sprite(subElement.FirstElement());
@@ -267,97 +262,27 @@ namespace Barotrauma
                         continue;
                     }
 
-                    string itemIdentifier = itemElement.GetAttributeString("identifier", "");
-                    if (string.IsNullOrWhiteSpace(itemIdentifier))
+                    Identifier itemIdentifier = itemElement.GetAttributeIdentifier("identifier", Identifier.Empty);
+                    if (itemIdentifier.IsEmpty)
                     {
                         DebugConsole.ThrowError("Error in job config \"" + Name + "\" - item with no identifier.");
                     }
                     else
                     {
-                        PreviewItems[variant].Add(new PreviewItem(itemIdentifier, itemElement.GetAttributeBool("showpreview", true)));
+                        previewItems[variant].Add(new PreviewItem(itemIdentifier, itemElement.GetAttributeBool("showpreview", true)));
                     }
                     loadItemIdentifiers(itemElement, variant);
                 }
             }
 
+            PreviewItems = previewItems.Select(kvp => (kvp.Key, kvp.Value.ToImmutableArray()))
+                .ToImmutableDictionary();
+            
             Variants = variant;
 
-            Skills.Sort((x,y) => y.LevelRange.X.CompareTo(x.LevelRange.X));
-
-            // Disabled on purpose, TODO: remove all references?
-            //ClothingElement = element.GetChildElement("PortraitClothing");
-        }
-        
-
-        public static JobPrefab Random(Rand.RandSync sync = Rand.RandSync.Unsynced) => Prefabs.GetRandom(p => !p.HiddenJob, sync);
-
-        public static void LoadAll(IEnumerable<ContentFile> files)
-        {
-            foreach (ContentFile file in files)
-            {
-                LoadFromFile(file);
-            }
+            Skills.Sort((x,y) => y.LevelRange.Start.CompareTo(x.LevelRange.Start));
         }
 
-        public static void LoadFromFile(ContentFile file)
-        {
-            XDocument doc = XMLExtensions.TryLoadXml(file.Path);
-            if (doc == null) { return; }
-            var mainElement = doc.Root.IsOverride() ? doc.Root.FirstElement() : doc.Root;
-            if (doc.Root.IsOverride())
-            {
-                DebugConsole.ThrowError($"Error in '{file.Path}': Cannot override all job prefabs, because many of them are required by the main game! Please try overriding jobs one by one.");
-            }
-            foreach (XElement element in mainElement.Elements())
-            {
-                if (element.IsOverride())
-                {
-                    var job = new JobPrefab(element.FirstElement(), file.Path)
-                    {
-                        ContentPackage = file.ContentPackage
-                    };
-                    Prefabs.Add(job, true);
-                }
-                else
-                {
-                    if (!element.Name.ToString().Equals("job", StringComparison.OrdinalIgnoreCase)) { continue; }
-                    var job = new JobPrefab(element, file.Path)
-                    {
-                        ContentPackage = file.ContentPackage
-                    };
-                    Prefabs.Add(job, false);
-                }
-            }
-            NoJobElement ??= mainElement.GetChildElement("nojob");
-            var itemRepairPrioritiesElement = mainElement.GetChildElement("ItemRepairPriorities");
-            if (itemRepairPrioritiesElement != null)
-            {
-                foreach (var subElement in itemRepairPrioritiesElement.Elements())
-                {
-                    string tag = subElement.GetAttributeString("tag", null);
-                    if (tag != null)
-                    {
-                        float priority = subElement.GetAttributeFloat("priority", -1f);
-                        if (priority >= 0)
-                        {
-                            _itemRepairPriorities.TryAdd(tag, priority);
-                        }
-                        else
-                        {
-                            DebugConsole.AddWarning($"The 'priority' attribute is missing from the the item repair priorities definition in {subElement} of {file.Path}.");
-                        }
-                    }
-                    else
-                    {
-                        DebugConsole.AddWarning($"The 'tag' attribute is missing from the the item repair priorities definition in {subElement} of {file.Path}.");
-                    }
-                }
-            }
-        }
-
-        public static void RemoveByFile(string filePath)
-        {
-            Prefabs.RemoveByFile(filePath);
-        }
+        public static JobPrefab Random(Rand.RandSync sync, Func<JobPrefab, bool> predicate = null) => Prefabs.GetRandom(p => !p.HiddenJob && (predicate == null || predicate(p)), sync);
     }
 }

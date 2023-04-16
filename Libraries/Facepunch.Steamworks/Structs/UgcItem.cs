@@ -9,6 +9,14 @@ using QueryType = Steamworks.Ugc.Query;
 
 namespace Steamworks.Ugc
 {
+	public enum Visibility : int
+	{
+		Public = 0,
+		FriendsOnly = 1,
+		Private = 2,
+		Unlisted = 3,
+	}
+	
 	public struct Item
 	{
 		internal SteamUGCDetails_t details;
@@ -74,20 +82,20 @@ namespace Steamworks.Ugc
 		/// </summary>
 		public DateTime Updated => Epoch.ToDateTime( details.TimeUpdated );
 
-		/// <summary>
-		/// True if this is publically visible
-		/// </summary>
-		public bool IsPublic => details.Visibility == RemoteStoragePublishedFileVisibility.Public;
+		public DateTime LatestUpdateTime
+		{
+			get
+			{
+				var created = Created;
+				var updated = Updated;
+				return created > updated ? created : updated;
+			}
+		}
 
 		/// <summary>
-		/// True if this item is only visible by friends of the creator
+		/// The item's visibility, i.e. public, friends-only, unlisted or private
 		/// </summary>
-		public bool IsFriendsOnly => details.Visibility == RemoteStoragePublishedFileVisibility.FriendsOnly;
-
-		/// <summary>
-		/// True if this is only visible to the creator
-		/// </summary>
-		public bool IsPrivate => details.Visibility == RemoteStoragePublishedFileVisibility.Private;
+		public Visibility Visibility => (Visibility)details.Visibility;
 		
 		/// <summary>
 		/// True if this item has been banned
@@ -122,20 +130,9 @@ namespace Steamworks.Ugc
 				ulong size = 0;
 				uint ts = 0;
 
-				if ( !SteamUGC.Internal.GetItemInstallInfo( Id, ref size, out var strVal, ref ts ) )
-					return null;
-
-				return strVal;
+				if (SteamUGC.Internal.GetItemInstallInfo(Id, ref size, out var strVal, ref ts)) { return strVal; }
+				return null;
 			}
-		}
-
-		/// <summary>
-		/// Start downloading this item.
-		/// If this returns false the item isn't getting downloaded.
-		/// </summary>
-		public bool Download( Action onInstalled = null, bool highPriority = false )
-		{
-			return SteamUGC.Download( Id, onInstalled, highPriority );
 		}
 
 		/// <summary>
@@ -146,7 +143,7 @@ namespace Steamworks.Ugc
 			get
 			{
 				if ( !NeedsUpdate )
-					return SizeBytes;
+					return InstalledSize;
 
 				ulong downloaded = 0;
 				ulong total = 0;
@@ -165,7 +162,7 @@ namespace Steamworks.Ugc
 			get
 			{
 				if ( !NeedsUpdate )
-					return SizeBytes;
+					return InstalledSize;
 
 				ulong downloaded = 0;
 				ulong total = 0;
@@ -179,7 +176,7 @@ namespace Steamworks.Ugc
 		/// <summary>
 		/// If we're installed, how big is the install
 		/// </summary>
-		public long SizeBytes
+		public long InstalledSize
 		{
 			get
 			{
@@ -196,6 +193,29 @@ namespace Steamworks.Ugc
 		}
 
 		/// <summary>
+		/// If installed, the time and date of installation
+		/// </summary>
+		public DateTime? InstallTime
+		{
+			get
+			{
+				ulong size = 0;
+				uint ts = 0;
+				if ( !SteamUGC.Internal.GetItemInstallInfo( Id, ref size, out _, ref ts ) )
+					return null;
+
+				return Epoch.ToDateTime(ts);
+			}
+		}
+
+		/// <summary>
+		/// File size as returned by Steamworks,
+		/// no download/install required
+		/// </summary>
+		public long SizeOfFileInBytes
+			=> details.FileSize;
+
+		/// <summary>
 		/// If we're downloading our current progress as a delta betwen 0-1
 		/// </summary>
 		public float DownloadAmount
@@ -204,21 +224,23 @@ namespace Steamworks.Ugc
 			{
 				//changed from NeedsUpdate as it's false when validating and redownloading ugc
 				//possibly similar properties should also be changed
-				if ( !IsDownloading ) return 1;
-
 				ulong downloaded = 0;
 				ulong total = 0;
-				if ( SteamUGC.Internal.GetItemDownloadInfo( Id, ref downloaded, ref total ) && total > 0 )
+				if (SteamUGC.Internal.GetItemDownloadInfo(Id, ref downloaded, ref total) && total > 0)
+				{
 					return (float)((double)downloaded / (double)total);
+				}
 
-				if ( NeedsUpdate || !IsInstalled || IsDownloading )
+				if (NeedsUpdate || !IsInstalled || IsDownloading)
+				{
 					return 0;
+				}
 
-				return 1;
+				return IsDownloadPending || IsDownloading ? 0 : 1;
 			}
 		}
 
-		private ItemState State => (ItemState) SteamUGC.Internal.GetItemState( Id );
+		private ItemState State => (ItemState)(SteamUGC.Internal?.GetItemState( Id ) ?? 0);
 
 		public static async Task<Item?> GetAsync( PublishedFileId id, int maxageseconds = 60 * 30 )
 		{

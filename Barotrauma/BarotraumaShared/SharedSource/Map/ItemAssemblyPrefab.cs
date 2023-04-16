@@ -5,64 +5,61 @@ using System.Collections.Generic;
 using Barotrauma.IO;
 using System.Linq;
 using System.Xml.Linq;
+using System.Collections.Immutable;
+using System.Net;
 
 namespace Barotrauma
 {
+    #warning TODO: MapEntityPrefab should be constrained further to not include item assemblies, as assemblies are effectively not entities at all
     partial class ItemAssemblyPrefab : MapEntityPrefab
     {
-        private readonly string name;
-        public override string Name { get { return name; } }
-
         public static readonly PrefabCollection<ItemAssemblyPrefab> Prefabs = new PrefabCollection<ItemAssemblyPrefab>();
 
-        public static readonly string VanillaSaveFolder = Path.Combine("Content", "Items", "Assemblies");
-        public static readonly string SaveFolder = "ItemAssemblies";
-
-        private bool disposed = false;
-        public override void Dispose()
-        {
-            if (disposed) { return; }
-            disposed = true;
-            Prefabs.Remove(this);
-        }
-
         private readonly XElement configElement;
-        
-        public List<Pair<MapEntityPrefab, Rectangle>> DisplayEntities
+
+        public readonly ImmutableArray<(Identifier Identifier, Rectangle Rect)> DisplayEntities;
+
+        public readonly Rectangle Bounds;
+
+        public override LocalizedString Name { get; }
+
+        public override Sprite Sprite => null;
+
+        public override string OriginalName => Name.Value;
+
+        public override ImmutableHashSet<Identifier> Tags { get; }
+
+        public override ImmutableHashSet<Identifier> AllowedLinks => null;
+
+        public override MapEntityCategory Category => MapEntityCategory.ItemAssembly;
+
+        public override ImmutableHashSet<string> Aliases => null;
+
+        protected override Identifier DetermineIdentifier(XElement element)
         {
-            get;
-            private set;
+            return element.GetAttributeIdentifier("identifier", element.GetAttributeIdentifier("name", ""));
         }
 
-        public Rectangle Bounds;
-
-        public ItemAssemblyPrefab(string filePath, bool allowOverwrite = false)
+        public ItemAssemblyPrefab(ContentXElement element, ItemAssemblyFile file) : base(element, file)
         {
-            FilePath = filePath;
-            XDocument doc = XMLExtensions.TryLoadXml(filePath);
-            if (doc == null) { return; }
-
-            XElement element = doc.Root;
-            if (element.IsOverride())
-            {
-                element = element.Elements().First();
-            }
-
-            originalName = element.GetAttributeString("name", "");
-            identifier = element.GetAttributeString("identifier", null) ?? originalName.ToLowerInvariant().Replace(" ", "");
             configElement = element;
-
-            Category = MapEntityCategory.ItemAssembly;
 
             SerializableProperty.DeserializeProperties(this, configElement);
 
-            name = TextManager.Get("EntityName." + identifier, returnNull: true) ?? originalName;
-            Description = TextManager.Get("EntityDescription." + identifier, returnNull: true) ?? Description;
+            Name = TextManager.Get($"EntityName.{Identifier}").Fallback(element.GetAttributeString("name", ""));
+            Description = TextManager.Get($"EntityDescription.{Identifier}");
+            Tags = Enumerable.Empty<Identifier>().ToImmutableHashSet();
+
+            string description = element.GetAttributeString("description", string.Empty);
+            if (!description.IsNullOrEmpty())
+            {
+                Description = Description.Fallback(description);
+            }
 
             List<ushort> containedItemIDs = new List<ushort>();
             foreach (XElement entityElement in element.Elements())
             {
-                var containerElement = entityElement.Elements().FirstOrDefault(e => e.Name.LocalName.Equals("itemcontainer", StringComparison.OrdinalIgnoreCase));
+                var containerElement = entityElement.GetChildElement("itemcontainer");
                 if (containerElement == null) { continue; }
 
                 string containedString = containerElement.GetAttributeString("contained", "");
@@ -84,52 +81,36 @@ namespace Barotrauma
 
             int minX = int.MaxValue, minY = int.MaxValue;
             int maxX = int.MinValue, maxY = int.MinValue;
-            DisplayEntities = new List<Pair<MapEntityPrefab, Rectangle>>();
+            var displayEntities = new List<(Identifier, Rectangle)>();
             foreach (XElement entityElement in element.Elements())
             {
                 ushort id = (ushort)entityElement.GetAttributeInt("ID", 0);
                 if (id > 0 && containedItemIDs.Contains(id)) { continue; }
 
-                string identifier = entityElement.GetAttributeString("identifier", entityElement.Name.ToString().ToLowerInvariant());
-                MapEntityPrefab mapEntity = List.FirstOrDefault(p => p.Identifier == identifier);
-                if (mapEntity == null)
-                {
-                    string entityName = entityElement.GetAttributeString("name", "");
-                    mapEntity = List.FirstOrDefault(p => p.Name == entityName);
-                }
+                Identifier identifier = entityElement.GetAttributeIdentifier("identifier", entityElement.Name.ToString().ToLowerInvariant());
 
                 Rectangle rect = entityElement.GetAttributeRect("rect", Rectangle.Empty);
-                if (mapEntity != null && !entityElement.Elements().Any(e => e.Name.LocalName.Equals("wire", StringComparison.OrdinalIgnoreCase)))
+                if (!entityElement.Elements().Any(e => e.Name.LocalName.Equals("wire", StringComparison.OrdinalIgnoreCase)))
                 {
-                    if (!entityElement.GetAttributeBool("hideinassemblypreview", false)) { DisplayEntities.Add(new Pair<MapEntityPrefab, Rectangle>(mapEntity, rect)); }
+                    if (!entityElement.GetAttributeBool("hideinassemblypreview", false)) { displayEntities.Add((identifier, rect)); }
                     minX = Math.Min(minX, rect.X);
                     minY = Math.Min(minY, rect.Y - rect.Height);
                     maxX = Math.Max(maxX, rect.Right);
                     maxY = Math.Max(maxY, rect.Y);
                 }
             }
+            DisplayEntities = displayEntities.ToImmutableArray();
 
             Bounds = minX == int.MaxValue ?
                 new Rectangle(0, 0, 1, 1) :
                 new Rectangle(minX, minY, maxX - minX, maxY - minY);
-
-            if (allowOverwrite && Prefabs.ContainsKey(identifier))
-            {
-                Prefabs.Remove(Prefabs[identifier]);
-            }
-            Prefabs.Add(this, doc.Root.IsOverride());
         }
 
-        public static void Remove(string filePath)
-        {
-            Prefabs.RemoveByFile(filePath);
-        }
-        
         protected override void CreateInstance(Rectangle rect)
         {
 #if CLIENT
             var loaded = CreateInstance(rect.Location.ToVector2(), Submarine.MainSub, selectInstance: Screen.Selected == GameMain.SubEditorScreen);
-            if (Screen.Selected is SubEditorScreen)
+            if (Screen.Selected is SubEditorScreen && loaded.Any())
             {
                 SubEditorScreen.StoreCommand(new AddOrDeleteCommand(loaded, false, handleInventoryBehavior: false));
             }
@@ -140,13 +121,12 @@ namespace Barotrauma
 
         public List<MapEntity> CreateInstance(Vector2 position, Submarine sub, bool selectInstance = false)
         {
-            return PasteEntities(position, sub, configElement, FilePath, selectInstance);
+            return PasteEntities(position, sub, configElement, ContentFile.Path.Value, selectInstance);
         }
 
         public static List<MapEntity> PasteEntities(Vector2 position, Submarine sub, XElement configElement, string filePath = null, bool selectInstance = false)
         {
-            int idOffset = Entity.FindFreeID(1);
-            if (MapEntity.mapEntityList.Any()) { idOffset = MapEntity.mapEntityList.Max(e => e.ID); }
+            int idOffset = Entity.FindFreeIdBlock(configElement.Elements().Count());
             List<MapEntity> entities = MapEntity.LoadAll(sub, configElement, filePath, idOffset);
             if (entities.Count == 0) { return entities; }
 
@@ -183,54 +163,23 @@ namespace Barotrauma
         
         public void Delete()
         {
-            Dispose();
-            if (File.Exists(FilePath))
+            Prefabs.Remove(this);
+            try
             {
-                try
+                if (ContentPackage is { Files: { Length: 1 } }
+                    && ContentPackageManager.LocalPackages.Contains(ContentPackage))
                 {
-                    File.Delete(FilePath);
+                    Directory.Delete(ContentPackage.Dir, recursive: true);
+                    ContentPackageManager.LocalPackages.Refresh();
+                    ContentPackageManager.EnabledPackages.DisableRemovedMods();
                 }
-                catch (Exception e)
-                {
-                    DebugConsole.ThrowError("Deleting item assembly \"" + name + "\" failed.", e);
-                }
+            }
+            catch (Exception e)
+            {
+                DebugConsole.ThrowError("Deleting item assembly \"" + Name + "\" failed.", e);
             }
         }
 
-        public static void LoadAll()
-        {
-            if (GameSettings.VerboseLogging)
-            {
-                DebugConsole.Log("Loading item assembly prefabs: ");
-            }
-
-            List<string> itemAssemblyFiles = new List<string>();
-
-            //find assembly files in the item assembly folders
-            if (Directory.Exists(VanillaSaveFolder))
-            {
-                itemAssemblyFiles.AddRange(Directory.GetFiles(VanillaSaveFolder));
-            }
-            if (Directory.Exists(SaveFolder))
-            {
-                itemAssemblyFiles.AddRange(Directory.GetFiles(SaveFolder));
-            }
-
-            //find assembly files in selected content packages
-            foreach (ContentPackage cp in GameMain.Config.AllEnabledPackages)
-            {
-                foreach (string filePath in cp.GetFilesOfType(ContentType.ItemAssembly))
-                {
-                    //ignore files that have already been added (= file saved to item assembly folder)
-                    if (itemAssemblyFiles.Any(f => Path.GetFullPath(f) == Path.GetFullPath(filePath))) { continue; }
-                    itemAssemblyFiles.Add(filePath);
-                }
-            }
-
-            foreach (string file in itemAssemblyFiles)
-            {
-                new ItemAssemblyPrefab(file);
-            }
-        }
+        public override void Dispose() { }
     }
 }

@@ -1,5 +1,4 @@
-﻿using System;
-using Microsoft.Xna.Framework;
+﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System.Linq;
 
@@ -17,7 +16,7 @@ namespace Barotrauma
             {
                 if (PlayerInput.KeyHit(InputType.Select))
                 {
-                    Character.Controlled.SelectedConstruction = null;
+                    Character.Controlled.SelectedItem = null;
                 }
             }*/            
         }

@@ -1,68 +1,19 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Barotrauma.Extensions;
+using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
-using System.Xml.Linq;
 
 namespace Barotrauma
 {
-    class Biome
+    class LevelGenerationParams : PrefabWithUintIdentifier, ISerializableEntity
     {
-        public readonly string Identifier;
-        public readonly string OldIdentifier;
-        public readonly string DisplayName;
-        public readonly string Description;
+        public readonly static PrefabCollection<LevelGenerationParams> LevelParams = new PrefabCollection<LevelGenerationParams>();
 
-        public readonly bool IsEndBiome;
+        public string Name => Identifier.Value;
 
-        public readonly List<int> AllowedZones = new List<int>();
-
-        public Biome(string name, string description)
-        {
-            Identifier = name;
-            Description = description;
-        }
-
-        public Biome(XElement element)
-        {
-            Identifier = element.GetAttributeString("identifier", "");
-            OldIdentifier = element.GetAttributeString("oldidentifier", null);
-            if (string.IsNullOrEmpty(Identifier))
-            {
-                Identifier = element.GetAttributeString("name", "");
-                DebugConsole.ThrowError("Error in biome \"" + Identifier + "\": identifier missing, using name as the identifier.");
-            }
-
-            DisplayName =
-                TextManager.Get("biomename." + Identifier, returnNull: true) ??
-                element.GetAttributeString("name", "Biome") ??
-                TextManager.Get("biomename." + Identifier);
-
-            Description =
-                TextManager.Get("biomedescription." + Identifier, returnNull: true) ??
-                element.GetAttributeString("description", "") ??
-                TextManager.Get("biomedescription." + Identifier);
-
-            IsEndBiome = element.GetAttributeBool("endbiome", false);
-
-            AllowedZones.AddRange(element.GetAttributeIntArray("AllowedZones", new int[] { 1, 2, 3, 4, 5, 6, 7, 8, 9 }));
-        }
-    }
-
-    class LevelGenerationParams : ISerializableEntity
-    {
-        public static List<LevelGenerationParams> LevelParams { get; private set; }
-
-        private static List<Biome> biomes;
-
-        public string Name
-        {
-            get { return Identifier; }
-        }
-
-        public readonly string Identifier;
-
-        public readonly string OldIdentifier;
+        public Identifier OldIdentifier { get; }
 
         private int minWidth, maxWidth, height;
 
@@ -100,56 +51,80 @@ namespace Barotrauma
         private int initialDepthMin, initialDepthMax;
 
         //which biomes can this type of level appear in
-        private readonly List<Biome> allowedBiomes = new List<Biome>();
+        public readonly ImmutableHashSet<Identifier> AllowedBiomeIdentifiers;
+        public readonly bool AnyBiomeAllowed;
 
-        public IEnumerable<Biome> AllowedBiomes
-        {
-            get { return allowedBiomes; }
-        }
-
-        public Dictionary<string, SerializableProperty> SerializableProperties
+        public Dictionary<Identifier, SerializableProperty> SerializableProperties
         {
             get;
             set;
         }
 
-        [Serialize(LevelData.LevelType.LocationConnection, true), Editable]
+        [Serialize(LevelData.LevelType.LocationConnection, IsPropertySaveable.Yes), Editable]
         public LevelData.LevelType Type
         {
             get;
             set;
         }
 
-        [Serialize("27,30,36", true), Editable]
+        [Serialize(100.0f, IsPropertySaveable.Yes, "If there are multiple level generation parameters available for a level in a given biome, their commonness determines how likely it is for one to get selected."), Editable(MinValueFloat = 0, MaxValueFloat = 100)]
+        public float Commonness
+        {
+            get;
+            set;
+        }
+
+        [Serialize(0.0f, IsPropertySaveable.Yes, "The difficulty of the level has to be above or equal to this for these parameters to get chosen for the level."), Editable(MinValueFloat = 0, MaxValueFloat = 100)]
+        public float MinLevelDifficulty
+        {
+            get;
+            set;
+        }
+
+        [Serialize(100.0f, IsPropertySaveable.Yes, "The difficulty of the level has to be below or equal to this for these parameters to get chosen for the level."), Editable(MinValueFloat = 0, MaxValueFloat = 100)]
+        public float MaxLevelDifficulty
+        {
+            get;
+            set;
+        }
+
+        [Serialize("27,30,36", IsPropertySaveable.Yes), Editable]
         public Color AmbientLightColor
         {
             get;
             set;
         }
 
-        [Serialize("20,40,50", true), Editable()]
+        [Serialize("20,40,50", IsPropertySaveable.Yes), Editable()]
         public Color BackgroundTextureColor
         {
             get;
             set;
         }
 
-        [Serialize("20,40,50", true), Editable]
+        [Serialize("20,40,50", IsPropertySaveable.Yes), Editable]
         public Color BackgroundColor
         {
             get;
             set;
         }
 
-        [Serialize("255,255,255", true), Editable]
+        [Serialize("255,255,255", IsPropertySaveable.Yes), Editable]
         public Color WallColor
         {
             get;
             set;
         }
 
+        [Serialize("255,255,255", IsPropertySaveable.Yes), Editable]
+        public Color WaterParticleColor
+        {
+            get;
+            set;
+        }
+
         private Vector2 startPosition;
-        [Serialize("0,0", true, "Start position of the level (relative to the size of the level. 0,0 = top left corner, 1,1 = bottom right corner)"), Editable(DecimalCount = 2)]
+        [Serialize("0,0", IsPropertySaveable.Yes, "Start position of the level (relative to the size of the level. 0,0 = top left corner, 1,1 = bottom right corner)"), Editable(DecimalCount = 2)]
         public Vector2 StartPosition
         {
             get { return startPosition; }
@@ -162,7 +137,7 @@ namespace Barotrauma
         }
 
         private Vector2 endPosition;
-        [Serialize("1,0", true, "End position of the level (relative to the size of the level. 0,0 = top left corner, 1,1 = bottom right corner)"), Editable(DecimalCount = 2)]
+        [Serialize("1,0", IsPropertySaveable.Yes, "End position of the level (relative to the size of the level. 0,0 = top left corner, 1,1 = bottom right corner)"), Editable(DecimalCount = 2)]
         public Vector2 EndPosition
         {
             get { return endPosition; }
@@ -174,70 +149,90 @@ namespace Barotrauma
             }
         }
 
-        [Serialize(true, true, "Should there be a hole in the wall next to the end outpost (can be used to prevent players from having to backtrack if they approach the outpost from the wrong side of the main path's walls)."), Editable]
+        private Vector2 forceOutpostPosition;
+        [Serialize("0,0", IsPropertySaveable.Yes, "Position of the outpost (relative to the size of the level. 0,0 = top left corner, 1,1 = bottom right corner). If set to 0,0, the outpost is placed in a suitable position automatically."), Editable(DecimalCount = 2)]
+        public Vector2 ForceOutpostPosition
+        {
+            get { return forceOutpostPosition; }
+            set
+            {
+                forceOutpostPosition = new Vector2(
+                    MathHelper.Clamp(value.X, 0.0f, 1.0f),
+                    MathHelper.Clamp(value.Y, 0.0f, 1.0f));
+            }
+        }
+
+        [Serialize(true, IsPropertySaveable.Yes, "Should there be a hole in the wall next to the end outpost (can be used to prevent players from having to backtrack if they approach the outpost from the wrong side of the main path's walls)."), Editable]
         public bool CreateHoleNextToEnd
         {
             get;
             set;
         }
 
-        [Serialize(true, true, "Should the generator force a hole to the bottom of the level to ensure there's a way to the abyss."), Editable]
+        [Serialize(true, IsPropertySaveable.Yes, "Should the generator force a hole to the bottom of the level to ensure there's a way to the abyss."), Editable]
         public bool CreateHoleToAbyss
         {
             get;
             set;
         }
 
-        [Serialize(1000, true, description: "The total number of level objects (vegetation, vents, etc) in the level."), Editable(MinValueInt = 0, MaxValueInt = 100000)]
+        [Serialize(false, IsPropertySaveable.Yes, ""), Editable]
+        public bool NoLevelGeometry
+        {
+            get;
+            set;
+        }
+
+        [Serialize(1000, IsPropertySaveable.Yes, description: "The total number of level objects (vegetation, vents, etc) in the level."), Editable(MinValueInt = 0, MaxValueInt = 100000)]
         public int LevelObjectAmount
         {
             get;
             set;
         }
 
-        [Serialize(80, true, description: "The total number of decorative background creatures."), Editable(MinValueInt = 0, MaxValueInt = 1000)]
+        [Serialize(80, IsPropertySaveable.Yes, description: "The total number of decorative background creatures."), Editable(MinValueInt = 0, MaxValueInt = 1000)]
         public int BackgroundCreatureAmount
         {
             get;
             set;
         }
 
-        [Serialize(100000, true), Editable]
+        [Serialize(100000, IsPropertySaveable.Yes), Editable]
         public int MinWidth
         {
             get { return minWidth; }
             set { minWidth = MathHelper.Clamp(value, 2000, 1000000); }
         }
 
-        [Serialize(100000, true), Editable]
+        [Serialize(100000, IsPropertySaveable.Yes), Editable]
         public int MaxWidth
         {
             get { return maxWidth; }
             set { maxWidth = MathHelper.Clamp(value, 2000, 1000000); }
         }
 
-        [Serialize(50000, true), Editable]
+        [Serialize(50000, IsPropertySaveable.Yes), Editable]
         public int Height
         {
             get { return height; }
             set { height = MathHelper.Clamp(value, 2000, 1000000); }
         }
 
-        [Serialize(80000, true), Editable(MinValueInt = 0, MaxValueInt = 1000000)]
+        [Serialize(80000, IsPropertySaveable.Yes), Editable(MinValueInt = 0, MaxValueInt = 1000000)]
         public int InitialDepthMin
         {
             get { return initialDepthMin; }
             set { initialDepthMin = Math.Max(value, 0); }
         }
 
-        [Serialize(80000, true), Editable(MinValueInt = 0, MaxValueInt = 1000000)]
+        [Serialize(80000, IsPropertySaveable.Yes), Editable(MinValueInt = 0, MaxValueInt = 1000000)]
         public int InitialDepthMax
         {
             get { return initialDepthMax; }
             set { initialDepthMax = Math.Max(value, initialDepthMin); }
         }
 
-        [Serialize(6500, true), Editable(MinValueInt = 5000, MaxValueInt = 1000000)]
+        [Serialize(6500, IsPropertySaveable.Yes), Editable(MinValueInt = 5000, MaxValueInt = 1000000)]
         public int MinTunnelRadius
         {
             get;
@@ -245,7 +240,7 @@ namespace Barotrauma
         }
 
 
-        [Serialize("0,1", true), Editable]
+        [Serialize("0,1", IsPropertySaveable.Yes), Editable]
         public Point SideTunnelCount
         {
             get;
@@ -253,21 +248,21 @@ namespace Barotrauma
         }
 
 
-        [Serialize(0.5f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 1.0f)]
+        [Serialize(0.5f, IsPropertySaveable.Yes), Editable(MinValueFloat = 0.0f, MaxValueFloat = 1.0f)]
         public float SideTunnelVariance
         {
             get;
             set;
         }
 
-        [Serialize("2000,6000", true), Editable]
+        [Serialize("2000,6000", IsPropertySaveable.Yes), Editable]
         public Point MinSideTunnelRadius
         {
             get;
             set;
         }
 
-        [Editable, Serialize("3000, 3000", true, description: "How far from each other voronoi sites are placed. " +
+        [Editable, Serialize("3000, 3000", IsPropertySaveable.Yes, description: "How far from each other voronoi sites are placed. " +
             "Sites determine shape of the voronoi graph which the level walls are generated from. " +
             "(Decreasing this value causes the number of sites, and the complexity of the level, to increase exponentially - be careful when adjusting)")]
         public Point VoronoiSiteInterval
@@ -280,7 +275,7 @@ namespace Barotrauma
             }
         }
 
-        [Editable, Serialize("700,700", true, description: "How much random variation to apply to the positions of the voronoi sites on each axis. " +
+        [Editable, Serialize("700,700", IsPropertySaveable.Yes, description: "How much random variation to apply to the positions of the voronoi sites on each axis. " +
             "Small values produce roughly rectangular level walls. The larger the values are, the less uniform the shapes get.")]
         public Point VoronoiSiteVariance
         {
@@ -293,7 +288,7 @@ namespace Barotrauma
             }
         }
 
-        [Editable(MinValueInt = 500, MaxValueInt = 10000), Serialize(5000, true, description: "The edges of the individual wall cells are subdivided into edges of this size. "
+        [Editable(MinValueInt = 500, MaxValueInt = 10000), Serialize(5000, IsPropertySaveable.Yes, description: "The edges of the individual wall cells are subdivided into edges of this size. "
             + "Can be used in conjunction with the rounding values to make the cells rounder. Smaller values will make the cells look smoother, " +
             "but make the level more performance-intensive as the number of polygons used in rendering and physics calculations increases.")]
         public int CellSubdivisionLength
@@ -306,7 +301,7 @@ namespace Barotrauma
         }
 
 
-        [Editable(MinValueFloat = 0.0f, MaxValueFloat = 1.0f), Serialize(0.5f, true, description: "How much the individual wall cells are rounded. "
+        [Editable(MinValueFloat = 0.0f, MaxValueFloat = 1.0f), Serialize(0.5f, IsPropertySaveable.Yes, description: "How much the individual wall cells are rounded. "
             + "Note that the final shape of the cells is also affected by the CellSubdivisionLength parameter.")]
         public float CellRoundingAmount
         {
@@ -317,7 +312,7 @@ namespace Barotrauma
             }
         }
 
-        [Editable(MinValueFloat = 0.0f, MaxValueFloat = 1.0f), Serialize(0.1f, true, description: "How much random variance is applied to the edges of the cells. "
+        [Editable(MinValueFloat = 0.0f, MaxValueFloat = 1.0f), Serialize(0.1f, IsPropertySaveable.Yes, description: "How much random variance is applied to the edges of the cells. "
             + "Note that the final shape of the cells is also affected by the CellSubdivisionLength parameter.")]
         public float CellIrregularity
         {
@@ -330,7 +325,7 @@ namespace Barotrauma
 
 
         [Editable(VectorComponentLabels = new string[] { "editable.minvalue", "editable.maxvalue" }), 
-            Serialize("5000, 10000", true, description: "The distance between the nodes that are used to generate the main path through the level (min, max). Larger values produce a straighter path.")]
+            Serialize("5000, 10000", IsPropertySaveable.Yes, description: "The distance between the nodes that are used to generate the main path through the level (min, max). Larger values produce a straighter path.")]
         public Point MainPathNodeIntervalRange
         {
             get { return mainPathNodeIntervalRange; }
@@ -341,42 +336,42 @@ namespace Barotrauma
             }
         }
 
-        [Serialize(0.5f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 1.0f)]
+        [Serialize(0.5f, IsPropertySaveable.Yes), Editable(MinValueFloat = 0.0f, MaxValueFloat = 1.0f)]
         public float MainPathVariance
         {
             get;
             set;
         }
 
-        [Editable, Serialize(5, true, description: "The number of caves placed along the main path.")]
+        [Editable, Serialize(5, IsPropertySaveable.Yes, description: "The number of caves placed along the main path.")]
         public int CaveCount
         {
             get { return caveCount; }
             set { caveCount = MathHelper.Clamp(value, 0, 100); }
         }
 
-        [Serialize(100, true), Editable(MinValueInt = 0, MaxValueInt = 10000)]
+        [Serialize(100, IsPropertySaveable.Yes, description: "The maximum number of level resources in the level."), Editable(MinValueInt = 0, MaxValueInt = 10000)]
         public int ItemCount
         {
             get;
             set;
         }
 
-        [Serialize("19200,38400", true, description: "The minimum and maximum distance between two resource spawn points on a path."), Editable(100, 100000)]
+        [Serialize("19200,38400", IsPropertySaveable.Yes, description: "The minimum and maximum distance between two resource spawn points on a path."), Editable(100, 100000)]
         public Point ResourceIntervalRange
         {
             get;
             set;
         }
 
-        [Serialize("9600,19200", true, description: "The minimum and maximum distance between two resource spawn points on a cave path."), Editable(100, 100000)]
+        [Serialize("9600,19200", IsPropertySaveable.Yes, description: "The minimum and maximum distance between two resource spawn points on a cave path."), Editable(100, 100000)]
         public Point CaveResourceIntervalRange
         {
             get;
             set;
         }
 
-        [Serialize("2,8", true, description: "The minimum and maximum amount of resources in a single cluster. " +
+        [Serialize("3,6", IsPropertySaveable.Yes, description: "The minimum and maximum amount of resources in a single cluster. " +
             "In addition to this, resource commonness affects the cluster size. Less common resources spawn in smaller clusters."), Editable(1, 20)]
         public Point ResourceClusterSizeRange
         {
@@ -384,76 +379,90 @@ namespace Barotrauma
             set;
         }
 
-        [Serialize(0.3f, true, description: "How likely a resource spawn point on a path is to contain resources."), Editable(MinValueFloat = 0, MaxValueFloat = 1)]
+        [Serialize(0.3f, IsPropertySaveable.Yes, description: "How likely a resource spawn point on a path is to contain resources."), Editable(MinValueFloat = 0, MaxValueFloat = 1)]
         public float ResourceSpawnChance { get; set; }
 
-        [Serialize(1.0f, true, description: "How likely a resource spawn point on a cave path is to contain resources."), Editable(MinValueFloat = 0, MaxValueFloat = 1)]
+        [Serialize(1.0f, IsPropertySaveable.Yes, description: "How likely a resource spawn point on a cave path is to contain resources."), Editable(MinValueFloat = 0, MaxValueFloat = 1)]
         public float CaveResourceSpawnChance { get; set; }
 
-        [Serialize(0, true), Editable(MinValueInt = 0, MaxValueInt = 20)]
+        [Serialize(0, IsPropertySaveable.Yes), Editable(MinValueInt = 0, MaxValueInt = 20)]
         public int FloatingIceChunkCount
         {
             get;
             set;
         }
 
-        [Serialize(0, true), Editable(MinValueInt = 0, MaxValueInt = 100)]
+        [Serialize(0, IsPropertySaveable.Yes), Editable(MinValueInt = 0, MaxValueInt = 100)]
         public int IslandCount
         {
             get;
             set;
         }
 
-        [Serialize(0, true), Editable(MinValueInt = 0, MaxValueInt = 20)]
+        [Serialize(0, IsPropertySaveable.Yes), Editable(MinValueInt = 0, MaxValueInt = 20)]
         public int IceSpireCount
         {
             get;
             set;
         }
 
-        [Serialize(5, true), Editable(MinValueInt = 0, MaxValueInt = 20)]
+        [Serialize(5, IsPropertySaveable.Yes), Editable(MinValueInt = 0, MaxValueInt = 20)]
         public int AbyssIslandCount
         {
             get;
             set;
         }
 
-        [Serialize("4000,7000", true), Editable]
+        [Serialize("4000,7000", IsPropertySaveable.Yes), Editable]
         public Point AbyssIslandSizeMin
         {
             get;
             set;
         }
 
-        [Serialize("8000,10000", true), Editable]
+        [Serialize("8000,10000", IsPropertySaveable.Yes), Editable]
         public Point AbyssIslandSizeMax
         {
             get;
             set;
         }
 
-        [Serialize(0.5f, true), Editable()]
+        [Serialize(0.5f, IsPropertySaveable.Yes), Editable()]
         public float AbyssIslandCaveProbability
         {
             get;
             set;
         }
 
-        [Serialize(-300000, true, description: "How far below the level the sea floor is placed."), Editable(MinValueFloat = Level.MaxEntityDepth, MaxValueFloat = 0.0f)]
+        [Serialize(10, IsPropertySaveable.Yes, description: "Minimum number of resource clusters in the abyss (the actual number is picked between min and max according to the level difficulty)"), Editable(MinValueInt = 0, MaxValueInt = 1000)]
+        public int AbyssResourceClustersMin
+        {
+            get;
+            set;
+        }
+
+        [Serialize(40, IsPropertySaveable.Yes, description: "Maximum number of resource clusters in the abyss (the actual number is picked between min and max according to the level difficulty)"), Editable(MinValueInt = 0, MaxValueInt = 1000)]
+        public int AbyssResourceClustersMax
+        {
+            get;
+            set;
+        }
+
+        [Serialize(-300000, IsPropertySaveable.Yes, description: "How far below the level the sea floor is placed."), Editable(MinValueFloat = Level.MaxEntityDepth, MaxValueFloat = 0.0f)]
         public int SeaFloorDepth
         {
             get { return seaFloorBaseDepth; }
             set { seaFloorBaseDepth = MathHelper.Clamp(value, Level.MaxEntityDepth, 0); }
         }
 
-        [Serialize(1000, true, description: "Variance of the depth of the sea floor. Smaller values produce a smoother sea floor."), Editable(MinValueFloat = 0.0f, MaxValueFloat = 100000.0f)]
+        [Serialize(1000, IsPropertySaveable.Yes, description: "Variance of the depth of the sea floor. Smaller values produce a smoother sea floor."), Editable(MinValueFloat = 0.0f, MaxValueFloat = 100000.0f)]
         public int SeaFloorVariance
         {
             get { return seaFloorVariance; }
             set { seaFloorVariance = value; }
         }
 
-        [Serialize(0, true, description: "The minimum number of mountains on the sea floor."), Editable(MinValueInt = 0, MaxValueInt = 20)]
+        [Serialize(0, IsPropertySaveable.Yes, description: "The minimum number of mountains on the sea floor."), Editable(MinValueInt = 0, MaxValueInt = 20)]
         public int MountainCountMin
         {
             get { return mountainCountMin; }
@@ -463,7 +472,7 @@ namespace Barotrauma
             }
         }
 
-        [Serialize(0, true, description: "The maximum number of mountains on the sea floor."), Editable(MinValueInt = 0, MaxValueInt = 20)]
+        [Serialize(0, IsPropertySaveable.Yes, description: "The maximum number of mountains on the sea floor."), Editable(MinValueInt = 0, MaxValueInt = 20)]
         public int MountainCountMax
         {
             get { return mountainCountMax; }
@@ -473,7 +482,7 @@ namespace Barotrauma
             }
         }
 
-        [Serialize(1000, true, description: "The minimum height of the mountains on the sea floor."), Editable(MinValueInt = 0, MaxValueInt = 1000000)]
+        [Serialize(1000, IsPropertySaveable.Yes, description: "The minimum height of the mountains on the sea floor."), Editable(MinValueInt = 0, MaxValueInt = 1000000)]
         public int MountainHeightMin
         {
             get { return mountainHeightMin; }
@@ -483,7 +492,7 @@ namespace Barotrauma
             }
         }
 
-        [Serialize(5000, true, description: "The maximum height of the mountains on the sea floor."), Editable(MinValueInt = 0, MaxValueInt = 1000000)]
+        [Serialize(5000, IsPropertySaveable.Yes, description: "The maximum height of the mountains on the sea floor."), Editable(MinValueInt = 0, MaxValueInt = 1000000)]
         public int MountainHeightMax
         {
             get { return mountainHeightMax; }
@@ -493,72 +502,111 @@ namespace Barotrauma
             }
         }
 
-        [Serialize(1, true, description: "The number of alien ruins in the level."), Editable(MinValueInt = 0, MaxValueInt = 10)]
+        [Serialize(1, IsPropertySaveable.Yes, description: "The number of alien ruins in the level."), Editable(MinValueInt = 0, MaxValueInt = 10)]
         public int RuinCount { get; set; }
-
-        [Serialize(1, true, description: "The minimum number of wrecks in the level. Note that this value cannot be higher than the amount of wreck prefabs (subs)."), Editable(MinValueInt = 0, MaxValueInt = 10)]
-        public int MinWreckCount { get; set; }
-
-        [Serialize(1, true, description: "The maximum number of wrecks in the level. Note that this value cannot be higher than the amount of wreck prefabs (subs)."), Editable(MinValueInt = 0, MaxValueInt = 10)]
-        public int MaxWreckCount { get; set; }
 
         // TODO: Move the wreck parameters under a separate class?
 #region Wreck parameters
-        [Serialize(1, true, description: "The minimum number of corpses per wreck."), Editable(MinValueInt = 0, MaxValueInt = 20)]
+        [Serialize(1, IsPropertySaveable.Yes, description: "The minimum number of wrecks in the level. Note that this value cannot be higher than the amount of wreck prefabs (subs)."), Editable(MinValueInt = 0, MaxValueInt = 10)]
+        public int MinWreckCount { get; set; }
+
+        [Serialize(1, IsPropertySaveable.Yes, description: "The maximum number of wrecks in the level. Note that this value cannot be higher than the amount of wreck prefabs (subs)."), Editable(MinValueInt = 0, MaxValueInt = 10)]
+        public int MaxWreckCount { get; set; }
+
+        [Serialize(1, IsPropertySaveable.Yes, description: "The minimum number of corpses per wreck."), Editable(MinValueInt = 0, MaxValueInt = 20)]
         public int MinCorpseCount { get; set; }
 
-        [Serialize(5, true, description: "The maximum number of corpses per wreck."), Editable(MinValueInt = 0, MaxValueInt = 20)]
+        [Serialize(5, IsPropertySaveable.Yes, description: "The maximum number of corpses per wreck."), Editable(MinValueInt = 0, MaxValueInt = 20)]
         public int MaxCorpseCount { get; set; }
 
-        [Serialize(0.0f, true, description: "How likely is it that a Thalamus inhabits a wreck. Percentage from 0 to 1 per wreck."), Editable(MinValueFloat = 0, MaxValueFloat = 1)]
+        [Serialize(0.0f, IsPropertySaveable.Yes, description: "How likely is it that a Thalamus inhabits a wreck. Percentage from 0 to 1 per wreck."), Editable(MinValueFloat = 0, MaxValueFloat = 1)]
         public float ThalamusProbability { get; set; }
 
-        [Serialize(0.5f, true, description: "How likely the water level of a hull inside a wreck is randomly set."), Editable(MinValueFloat = 0, MaxValueFloat = 1)]
+        [Serialize(0.5f, IsPropertySaveable.Yes, description: "How likely the water level of a hull inside a wreck is randomly set."), Editable(MinValueFloat = 0, MaxValueFloat = 1)]
         public float WreckHullFloodingChance { get; set; }
 
-        [Serialize(0.1f, true, description: "The min water percentage of randomly flooding hulls in wrecks."), Editable(MinValueFloat = 0, MaxValueFloat = 1)]
+        [Serialize(0.1f, IsPropertySaveable.Yes, description: "The min water percentage of randomly flooding hulls in wrecks."), Editable(MinValueFloat = 0, MaxValueFloat = 1)]
         public float WreckFloodingHullMinWaterPercentage { get; set; }
 
-        [Serialize(1.0f, true, description: "The min water percentage of randomly flooding hulls in wrecks."), Editable(MinValueFloat = 0, MaxValueFloat = 1)]
+        [Serialize(1.0f, IsPropertySaveable.Yes, description: "The min water percentage of randomly flooding hulls in wrecks."), Editable(MinValueFloat = 0, MaxValueFloat = 1)]
         public float WreckFloodingHullMaxWaterPercentage { get; set; }
-#endregion
+        #endregion
 
-        [Serialize(0.4f, true, description: "The probability for wall cells to be removed from the bottom of the map. A value of 0 will produce a completely enclosed tunnel and 1 will make the entire bottom of the level completely open."), Editable()]
+        [Serialize("", IsPropertySaveable.Yes)]
+        public string ForceBeaconStation { get; set; }
+
+        [Serialize(0.4f, IsPropertySaveable.Yes, description: "The probability for wall cells to be removed from the bottom of the map. A value of 0 will produce a completely enclosed tunnel and 1 will make the entire bottom of the level completely open."), Editable()]
         public float BottomHoleProbability
         {
             get { return bottomHoleProbability; }
             set { bottomHoleProbability = MathHelper.Clamp(value, 0.0f, 1.0f); }
         }
 
-        [Serialize(1.0f, true, description: "Scale of the water particle texture."), Editable]
+        [Serialize(1.0f, IsPropertySaveable.Yes, description: "Scale of the water particle texture."), Editable]
         public float WaterParticleScale
         {
             get { return waterParticleScale; }
             private set { waterParticleScale = Math.Max(value, 0.01f); }
         }
 
-        [Serialize(2048.0f, true, description: "Size of the level wall texture."), Editable(minValue: 10.0f, maxValue: 10000.0f)]
+        private Vector2 waterParticleVelocity;
+        [Serialize("0,10", IsPropertySaveable.Yes, description: "How fast the water particle texture scrolls."), Editable]
+        public Vector2 WaterParticleVelocity
+        {
+            get { return waterParticleVelocity; }
+            private set { waterParticleVelocity = value; }
+        }
+
+        [Serialize(2048.0f, IsPropertySaveable.Yes, description: "Size of the level wall texture."), Editable(minValue: 10.0f, maxValue: 10000.0f)]
         public float WallTextureSize
         {
             get;
             private set;
         }
 
-        [Serialize(2048.0f, true), Editable(minValue: 10.0f, maxValue: 10000.0f)]
+        [Serialize(2048.0f, IsPropertySaveable.Yes), Editable(minValue: 10.0f, maxValue: 10000.0f)]
         public float WallEdgeTextureWidth
         {
             get;
             private set;
         }
 
-        [Serialize(120.0f, true, description: "How far the level walls' edge texture portrudes outside the actual, \"physical\" edge of the cell."), Editable(minValue: 0.0f, maxValue: 1000.0f)]
+        [Serialize("0,0", IsPropertySaveable.Yes), Editable]
+        public Vector2 FlashInterval
+        {
+            get;
+            set;
+        }
+
+        [Serialize("0,0,0,0", IsPropertySaveable.Yes), Editable]
+        public Color FlashColor
+        {
+            get;
+            set;
+        }
+
+        [Serialize(false, IsPropertySaveable.Yes), Editable]
+        public bool PlayNoiseLoopInOutpostLevel
+        {
+            get;
+            set;
+        }
+
+        [Serialize(1.0f, IsPropertySaveable.Yes), Editable]
+        public float WaterAmbienceVolume
+        {
+            get;
+            set;
+        }
+
+        [Serialize(120.0f, IsPropertySaveable.Yes, description: "How far the level walls' edge texture portrudes outside the actual, \"physical\" edge of the cell."), Editable(minValue: 0.0f, maxValue: 1000.0f)]
         public float WallEdgeExpandOutwardsAmount
         {
             get;
             private set;
         }
 
-        [Serialize(1000.0f, true, description: "How far inside the level walls the edge texture continues."), Editable(minValue: 0.0f, maxValue: 10000.0f)]
+        [Serialize(1000.0f, IsPropertySaveable.Yes, description: "How far inside the level walls the edge texture continues."), Editable(minValue: 0.0f, maxValue: 10000.0f)]
         public float WallEdgeExpandInwardsAmount
         {
             get;
@@ -574,92 +622,104 @@ namespace Barotrauma
         public Sprite WallSpriteDestroyed { get; private set; }
         public Sprite WaterParticles { get; private set; }
 
-        public static IEnumerable<Biome> GetBiomes()
+#if CLIENT
+        public Sounds.Sound FlashSound { get; private set; }
+#endif
+
+        #warning TODO: this should be in the unit test project (#3164)
+        public static void CheckValidity()
+
         {
-            return biomes;
+            foreach (Biome biome in Biome.Prefabs)
+            {
+                for (float i = 0.0f; i <= 100.0f; i += 0.5f)
+                {
+                    if (GetRandom("test", LevelData.LevelType.LocationConnection, i, biome.Identifier) == null)
+                    {
+                        DebugConsole.ThrowError($"No suitable level generation parameters found for a specific type of level (level type: LocationConnection, difficulty: {i}, biome: {biome.Identifier})");
+                    }
+                    if (GetRandom("test", LevelData.LevelType.Outpost, i, biome.Identifier) == null)
+                    {
+                        DebugConsole.ThrowError($"No suitable level generation parameters found for a specific type of level (level type: Outpost, difficulty: {i}, biome: {biome.Identifier})");
+                    }
+                }
+            }
         }
 
-        public static LevelGenerationParams GetRandom(string seed, LevelData.LevelType type, Biome biome = null)
+        public static LevelGenerationParams GetRandom(string seed, LevelData.LevelType type, float difficulty, Identifier biomeId = default)
         {
             Rand.SetSyncedSeed(ToolBox.StringToInt(seed));
 
-            if (LevelParams == null || !LevelParams.Any())
+            if (!LevelParams.Any())
             {
-                DebugConsole.ThrowError("Level generation presets not found - using default presets");
-                return new LevelGenerationParams(null);
+                throw new InvalidOperationException("Level generation presets not found - using default presets");
             }
 
-            var matchingLevelParams = LevelParams.FindAll(lp => lp.Type == type && lp.allowedBiomes.Any());
-            if (biome == null)
+            var levelParamsOrdered = LevelParams.OrderBy(l => l.UintIdentifier);
+
+            var matchingLevelParams = levelParamsOrdered.Where(lp =>
+                lp.Type == type &&
+                (lp.AnyBiomeAllowed || lp.AllowedBiomeIdentifiers.Any()) &&
+                !lp.AllowedBiomeIdentifiers.Contains("None".ToIdentifier()));
+            if (biomeId.IsEmpty)
             {
-                matchingLevelParams = matchingLevelParams.FindAll(lp => !lp.allowedBiomes.All(b => b.IsEndBiome));
+                //we don't want end levels when generating a completely random level (e.g. in mission mode)
+                matchingLevelParams = matchingLevelParams.Where(lp => lp.AnyBiomeAllowed || !lp.AllowedBiomeIdentifiers.All(b => Biome.Prefabs[b].IsEndBiome));
             }
             else
             {
-                matchingLevelParams = matchingLevelParams.FindAll(lp => lp.allowedBiomes.Contains(biome));
+                bool isEndBiome = Biome.Prefabs.TryGet(biomeId, out Biome biome) && biome.IsEndBiome;
+                if (isEndBiome && matchingLevelParams.Any(lp => lp.AllowedBiomeIdentifiers.Contains(biomeId)))
+                {
+                    //in the end biome, we must choose level parameters meant specifically for the end levels
+                    matchingLevelParams = matchingLevelParams.Where(lp => lp.AllowedBiomeIdentifiers.Contains(biomeId));
+                }
+                else
+                {
+                    matchingLevelParams = matchingLevelParams.Where(lp => lp.AnyBiomeAllowed || lp.AllowedBiomeIdentifiers.Contains(biomeId));
+                }
             }
-            if (matchingLevelParams.Count == 0)
+            
+            if (!matchingLevelParams.Any())
             {
-                DebugConsole.ThrowError($"Suitable level generation presets not found (biome \"{(biome?.Identifier ?? "null")}\", type: \"{type}\"!");
-                if (biome != null)
+                DebugConsole.ThrowError($"Suitable level generation presets not found (biome \"{biomeId.IfEmpty("null".ToIdentifier())}\", type: \"{type}\")");
+                if (!biomeId.IsEmpty)
                 {
                     //try to find params that at least have a suitable type
-                    matchingLevelParams = LevelParams.FindAll(lp => lp.Type == type);
-                    if (matchingLevelParams.Count == 0)
+                    matchingLevelParams = levelParamsOrdered.Where(lp => lp.Type == type);
+                    if (!matchingLevelParams.Any())
                     {
                         //still not found, give up and choose some params randomly
-                        matchingLevelParams = LevelParams;
+                        matchingLevelParams = levelParamsOrdered;
                     }
                 }
             }
 
-            return matchingLevelParams[Rand.Range(0, matchingLevelParams.Count, Rand.RandSync.Server)];
-        }
-
-        private LevelGenerationParams(XElement element)
-        {
-            Identifier = element == null ? "default" :
-                element.GetAttributeString("identifier", null) ?? element.Name.ToString();
-            OldIdentifier = element?.GetAttributeString("oldidentifier", null)?.ToLowerInvariant();
-            Identifier = Identifier.ToLowerInvariant();
-            SerializableProperties = SerializableProperty.DeserializeProperties(this, element);
-
-            if (element == null) { return; }
-
-            string biomeStr = element.GetAttributeString("biomes", "");
-            if (string.IsNullOrWhiteSpace(biomeStr) || biomeStr.Equals("any", StringComparison.OrdinalIgnoreCase))
+            if (!matchingLevelParams.Any(lp => difficulty >= lp.MinLevelDifficulty && difficulty <= lp.MaxLevelDifficulty))
             {
-                allowedBiomes = new List<Biome>(biomes);
+                DebugConsole.ThrowError($"Suitable level generation presets not found (biome \"{biomeId.IfEmpty("null".ToIdentifier())}\", type: \"{type}\", difficulty: {difficulty})");
             }
             else
             {
-                string[] biomeNames = biomeStr.Split(',');
-                for (int i = 0; i < biomeNames.Length; i++)
-                {
-                    string biomeName = biomeNames[i].Trim().ToLowerInvariant();
-                    if (biomeName == "none") { continue; }
-
-                    Biome matchingBiome = biomes.Find(b => 
-                        b.Identifier.Equals(biomeName, StringComparison.OrdinalIgnoreCase) || (b.OldIdentifier?.Equals(biomeName, StringComparison.OrdinalIgnoreCase) ?? false));
-                    if (matchingBiome == null)
-                    {
-                        matchingBiome = biomes.Find(b => b.DisplayName.Equals(biomeName, StringComparison.OrdinalIgnoreCase));
-                        if (matchingBiome == null)
-                        {
-                            DebugConsole.ThrowError("Error in level generation parameters: biome \"" + biomeName + "\" not found.");
-                            continue;
-                        }
-                        else
-                        {
-                            DebugConsole.NewMessage("Please use biome identifiers instead of names in level generation parameter \"" + Identifier + "\".", Color.Orange);
-                        }
-                    }
-
-                    allowedBiomes.Add(matchingBiome);
-                }
+                matchingLevelParams = matchingLevelParams.Where(lp => difficulty >= lp.MinLevelDifficulty && difficulty <= lp.MaxLevelDifficulty);
             }
 
-            foreach (XElement subElement in element.Elements())
+            return ToolBox.SelectWeightedRandom(matchingLevelParams, p => p.Commonness, Rand.RandSync.ServerAndClient);
+        }
+
+        public LevelGenerationParams(ContentXElement element, LevelGenerationParametersFile file) : base(file, element.GetAttributeIdentifier("identifier", element.Name.LocalName))
+        {
+            OldIdentifier = element.GetAttributeIdentifier("oldidentifier", Identifier.Empty);
+            SerializableProperties = SerializableProperty.DeserializeProperties(this, element);
+
+            if (element is null) { throw new ArgumentNullException($"{nameof(element)} is null"); }
+
+            var allowedBiomeIdentifiers = element.GetAttributeIdentifierArray("biomes", Array.Empty<Identifier>()).ToHashSet();
+            AnyBiomeAllowed = allowedBiomeIdentifiers.Contains("any".ToIdentifier());
+            allowedBiomeIdentifiers.Remove("any".ToIdentifier());
+            AllowedBiomeIdentifiers = allowedBiomeIdentifiers.ToImmutableHashSet();
+
+            foreach (var subElement in element.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
@@ -687,91 +747,15 @@ namespace Barotrauma
                     case "waterparticles":
                         WaterParticles = new Sprite(subElement);
                         break;
+#if CLIENT
+                    case "flashsound":
+                        FlashSound = GameMain.SoundManager.LoadSound(subElement);
+                        break;
+#endif
                 }
             }
         }
 
-        public static void LoadPresets()
-        {
-            LevelParams = new List<LevelGenerationParams>();
-            biomes = new List<Biome>();
-
-            var files = GameMain.Instance.GetFilesOfType(ContentType.LevelGenerationParameters);
-            if (!files.Any())
-            {
-                files = new List<ContentFile>() { new ContentFile("Content/Map/LevelGenerationParameters.xml", ContentType.LevelGenerationParameters) };
-            }
-
-            List<XElement> biomeElements = new List<XElement>();
-            Dictionary<string, XElement> levelParamElements = new Dictionary<string, XElement>();
-            foreach (ContentFile file in files)
-            {
-                XDocument doc = XMLExtensions.TryLoadXml(file.Path);
-                if (doc == null) { continue; }
-                var mainElement = doc.Root;
-                if (doc.Root.IsOverride())
-                {
-                    mainElement = doc.Root.FirstElement();
-                    biomeElements.Clear();
-                    DebugConsole.NewMessage($"Overriding biomes with '{file.Path}'", Color.Yellow);
-                }
-                else if (biomeElements.Any() && mainElement.Name.ToString().Equals("biomes", StringComparison.OrdinalIgnoreCase))
-                {
-                    DebugConsole.ThrowError($"Error in '{file.Path}': Another level generation parameter file already loaded! Use <override></override> tags to override the biomes.");
-                    break;
-                }
-
-                foreach (XElement element in mainElement.Elements())
-                {
-                    bool isOverride = element.IsOverride();
-                    if (isOverride)
-                    {
-                        if (element.FirstElement().Name.ToString().Equals("biomes", StringComparison.OrdinalIgnoreCase))
-                        {
-                            biomeElements.Clear();
-                            biomeElements.AddRange(element.FirstElement().Elements());
-                            DebugConsole.NewMessage($"Overriding biomes with '{file.Path}'", Color.Yellow);
-                        }
-                        else
-                        {
-                            string identifier = element.FirstElement().GetAttributeString("identifier", null) ?? element.GetAttributeString("name", "");
-                            if (levelParamElements.ContainsKey(identifier))
-                            {
-                                DebugConsole.NewMessage($"Overriding the level generation parameters '{identifier}' using the file '{file.Path}'", Color.Yellow);
-                                levelParamElements.Remove(identifier);
-                            }
-                            levelParamElements.Add(identifier, element.FirstElement());
-                        }
-                    }
-                    else if (element.Name.ToString().Equals("biomes", StringComparison.OrdinalIgnoreCase))
-                    {
-                        biomeElements.AddRange(element.Elements());
-                    }
-                    else
-                    {
-                        string identifier = element.GetAttributeString("identifier", null) ?? element.GetAttributeString("name", "");
-                        if (levelParamElements.ContainsKey(identifier))
-                        {
-                            DebugConsole.ThrowError($"Duplicate level generation parameters: '{identifier}' defined in {element.Name} of '{file.Path}'. Use <override></override> tags to override the generation parameters.");
-                            continue;
-                        }
-                        else
-                        {
-                            levelParamElements.Add(identifier, element);
-                        }
-                    }
-                }
-            }
-
-            foreach (XElement biomeElement in biomeElements)
-            {
-                biomes.Add(new Biome(biomeElement));
-            }
-
-            foreach (XElement levelParamElement in levelParamElements.Values)
-            {
-                LevelParams.Add(new LevelGenerationParams(levelParamElement));
-            }
-        }
+        public override void Dispose() { }
     }
 }

@@ -1,21 +1,21 @@
 ﻿#nullable enable
 using System;
-using System.Xml.Linq;
+using System.Linq;
 
 namespace Barotrauma
 {
     class CheckDataAction : BinaryOptionAction
     {
-        [Serialize("", true)]
-        public string Identifier { get; set; } = null!;
+        [Serialize("", IsPropertySaveable.Yes)]
+        public Identifier Identifier { get; set; } = Identifier.Empty;
 
-        [Serialize("", true)]
-        public string Condition { get; set; } = null!;
+        [Serialize("", IsPropertySaveable.Yes)]
+        public string Condition { get; set; } = "";
 
-        [Serialize(false, true, "Forces the comparison to use string instead of attempting to parse it as a boolean or a float first")]
+        [Serialize(false, IsPropertySaveable.Yes, "Forces the comparison to use string instead of attempting to parse it as a boolean or a float first")]
         public bool ForceString { get; set; }
 
-        [Serialize(false, true, "Performs the comparison against a metadata by identifier instead of a constant value")]
+        [Serialize(false, IsPropertySaveable.Yes, "Performs the comparison against a metadata by identifier instead of a constant value")]
         public bool CheckAgainstMetadata { get; set; }
 
         protected object? value2;
@@ -23,11 +23,11 @@ namespace Barotrauma
 
         protected PropertyConditional.OperatorType Operator { get; set; }
 
-        public CheckDataAction(ScriptedEvent parentEvent, XElement element) : base(parentEvent, element) 
+        public CheckDataAction(ScriptedEvent parentEvent, ContentXElement element) : base(parentEvent, element) 
         {
             if (string.IsNullOrEmpty(Condition))
             {
-                Condition = element.GetAttributeString("value", string.Empty);
+                Condition = element.GetAttributeString("value", string.Empty)!;
                 if (string.IsNullOrEmpty(Condition))
                 {
                     DebugConsole.ThrowError($"Error in scripted event \"{parentEvent.Prefab.Identifier}\". CheckDataAction with no condition set ({element}).");
@@ -35,18 +35,33 @@ namespace Barotrauma
             }
         }
 
+        public CheckDataAction(ContentXElement element, string parentDebugString) : base(null, element)
+        {
+            if (string.IsNullOrEmpty(Condition))
+            {
+                Condition = element.GetAttributeString("value", string.Empty)!;
+                if (string.IsNullOrEmpty(Condition))
+                {
+                    DebugConsole.ThrowError($"Error in scripted event \"{parentDebugString}\". CheckDataAction with no condition set ({element}).");
+                }
+            }
+        }
+
+        public bool GetSuccess()
+        {
+            return DetermineSuccess() ?? false;
+        }
+
         protected override bool? DetermineSuccess()
         {
-            if (!(GameMain.GameSession?.GameMode is CampaignMode campaignMode)) { return false; }
+            if (GameMain.GameSession?.GameMode is not CampaignMode campaignMode) { return false; }
 
             string[] splitString = Condition.Split(' ');
-            string value = Condition;
+            string value;
             if (splitString.Length > 0)
             {
-                for (int i = 1; i < splitString.Length; i++)
-                {
-                    value = splitString[i] + (i > 1 && i < splitString.Length ? " " : "");
-                }
+                //the first part of the string is the operator, skip it
+                value = string.Join(" ", splitString.Skip(1));
             }
             else
             {
@@ -61,7 +76,7 @@ namespace Barotrauma
             if (CheckAgainstMetadata)
             {
                 object? metadata1 = campaignMode.CampaignMetadata.GetValue(Identifier);
-                object? metadata2 = campaignMode.CampaignMetadata.GetValue(value);
+                object? metadata2 = campaignMode.CampaignMetadata.GetValue(value.ToIdentifier());
 
                 if (metadata1 == null || metadata2 == null)
                 {

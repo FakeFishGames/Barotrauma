@@ -17,7 +17,7 @@ namespace Barotrauma.Particles
         public float AngleMinRad { get; private set; }
         public float AngleMaxRad { get; private set; }
 
-        [Editable(ValueStep = 1, DecimalCount = 2, MaxValueFloat = 360, MinValueFloat = -360f), Serialize(0f, true)]
+        [Editable(ValueStep = 1, DecimalCount = 2, MaxValueFloat = 360, MinValueFloat = -360f), Serialize(0f, IsPropertySaveable.Yes)]
         public float AngleMin
         {
             get => angleMin;
@@ -28,7 +28,7 @@ namespace Barotrauma.Particles
             }
         }
 
-        [Editable(ValueStep = 1, DecimalCount = 2, MaxValueFloat = 360, MinValueFloat = -360f), Serialize(0f, true)]
+        [Editable(ValueStep = 1, DecimalCount = 2, MaxValueFloat = 360, MinValueFloat = -360f), Serialize(0f, IsPropertySaveable.Yes)]
         public float AngleMax
         {
             get => angleMax;
@@ -39,77 +39,86 @@ namespace Barotrauma.Particles
             }
         }
 
-        [Editable(ValueStep = 1, DecimalCount = 2, MaxValueFloat = MaxValue, MinValueFloat = MinValue), Serialize(0f, true)]
+        [Editable(ValueStep = 1, DecimalCount = 2, MaxValueFloat = MaxValue, MinValueFloat = MinValue), Serialize(0f, IsPropertySaveable.Yes)]
         public float DistanceMin { get; set; }
 
-        [Editable(ValueStep = 1, DecimalCount = 2, MaxValueFloat = MaxValue, MinValueFloat = MinValue), Serialize(0f, true)]
+        [Editable(ValueStep = 1, DecimalCount = 2, MaxValueFloat = MaxValue, MinValueFloat = MinValue), Serialize(0f, IsPropertySaveable.Yes)]
         public float DistanceMax { get; set; }
 
-        [Editable(ValueStep = 1, DecimalCount = 2, MaxValueFloat = MaxValue, MinValueFloat = MinValue), Serialize(0f, true)]
+        [Editable(ValueStep = 1, DecimalCount = 2, MaxValueFloat = MaxValue, MinValueFloat = MinValue), Serialize(0f, IsPropertySaveable.Yes)]
         public float VelocityMin { get; set; }
 
-        [Editable(ValueStep = 1, DecimalCount = 2, MaxValueFloat = MaxValue, MinValueFloat = MinValue), Serialize(0f, true)]
+        [Editable(ValueStep = 1, DecimalCount = 2, MaxValueFloat = MaxValue, MinValueFloat = MinValue), Serialize(0f, IsPropertySaveable.Yes)]
         public float VelocityMax { get; set; }
 
-        [Editable(ValueStep = 1, DecimalCount = 2, MaxValueFloat = 100.0f, MinValueFloat = 0.0f), Serialize(1f, true)]
+        [Editable(ValueStep = 1, DecimalCount = 2, MaxValueFloat = 100.0f, MinValueFloat = 0.0f), Serialize(1f, IsPropertySaveable.Yes)]
         public float ScaleMin { get; set; }
 
-        [Editable(ValueStep = 1, DecimalCount = 2, MaxValueFloat = 100.0f, MinValueFloat = 0.0f), Serialize(1f, true)]
+        [Editable(ValueStep = 1, DecimalCount = 2, MaxValueFloat = 100.0f, MinValueFloat = 0.0f), Serialize(1f, IsPropertySaveable.Yes)]
         public float ScaleMax { get; set; }
 
 
-        [Editable(), Serialize("1,1", true)]
+        [Editable(), Serialize("1,1", IsPropertySaveable.Yes)]
         public Vector2 ScaleMultiplier { get; set; }
 
-        [Editable(ValueStep = 1, DecimalCount = 2, MaxValueFloat = 100.0f, MinValueFloat = 0.0f), Serialize(0f, true)]
+        [Editable(ValueStep = 1, DecimalCount = 2, MaxValueFloat = 100.0f, MinValueFloat = 0.0f), Serialize(0f, IsPropertySaveable.Yes)]
         public float EmitInterval { get; set; }
 
-        [Editable(ValueStep = 1, MinValueInt = 0, MaxValueInt = 1000), Serialize(0, true, description: "The number of particles to spawn per frame, or every x seconds if EmitInterval is set.")]
+        [Editable(ValueStep = 1, MinValueInt = 0, MaxValueInt = 1000), Serialize(0, IsPropertySaveable.Yes, description: "The number of particles to spawn per frame, or every x seconds if EmitInterval is set.")]
         public int ParticleAmount { get; set; }
 
-        [Editable(ValueStep = 1, DecimalCount = 2, MaxValueFloat = 1000.0f, MinValueFloat = 0.0f), Serialize(0f, true)]
+        [Editable(ValueStep = 1, DecimalCount = 2, MaxValueFloat = 1000.0f, MinValueFloat = 0.0f), Serialize(0f, IsPropertySaveable.Yes)]
         public float ParticlesPerSecond { get; set; }
 
-        [Editable(ValueStep = 1, DecimalCount = 2, MaxValueFloat = 10.0f, MinValueFloat = 0.0f), Serialize(0f, true, description: "If larger than 0, a particle is spawned every x pixels across the ray cast by a hitscan weapon.")]
+        [Editable(ValueStep = 1, DecimalCount = 2, MaxValueFloat = 10.0f, MinValueFloat = 0.0f), Serialize(0f, IsPropertySaveable.Yes, description: "If larger than 0, a particle is spawned every x pixels across the ray cast by a hitscan weapon.")]
         public float EmitAcrossRayInterval { get; set; }
 
-        [Editable(ValueStep = 1, DecimalCount = 2, MaxValueFloat = 100.0f, MinValueFloat = 0.0f), Serialize(0f, true, description: "Delay before the emitter becomes active after being created.")]
+        [Editable(ValueStep = 1, DecimalCount = 2, MaxValueFloat = 100.0f, MinValueFloat = 0.0f), Serialize(0f, IsPropertySaveable.Yes, description: "Delay before the emitter becomes active after being created.")]
         public float InitialDelay { get; set; }
 
-        [Editable, Serialize(false, true)]
+        [Editable, Serialize(false, IsPropertySaveable.Yes)]
         public bool HighQualityCollisionDetection { get; set; }
 
-        [Editable, Serialize(false, true)]
+        [Editable, Serialize(false, IsPropertySaveable.Yes)]
         public bool CopyEntityAngle { get; set; }
 
-        [Editable, Serialize("1,1,1,1", true)]
+        [Editable, Serialize(true, IsPropertySaveable.Yes, description: "Should the entity heading direction be applied to the particle rotation? Only affects after flipping the texture and when CopyEntityAngle is true.")]
+        public bool CopyEntityDir { get; set; }
+
+        [Editable, Serialize(false, IsPropertySaveable.Yes, description: "Only relevant for status effects. Makes the emitter copy the angle from the target of the effect instead of the entity applying the effect.")]
+        public bool CopyTargetAngle { get; set; }
+
+        [Editable, Serialize("1,1,1,1", IsPropertySaveable.Yes)]
         public Color ColorMultiplier { get; set; }
 
-        [Editable, Serialize(false, true)]
+        [Editable, Serialize(1f, IsPropertySaveable.Yes)]
+        public float LifeTimeMultiplier { get; set; }
+
+        [Editable, Serialize(false, IsPropertySaveable.Yes)]
         public bool DrawOnTop { get; set; }
 
-        [Serialize(0f, true)]
+        [Serialize(0f, IsPropertySaveable.Yes)]
         public float Angle
         {
             get => AngleMin;
             set => AngleMin = AngleMax = value;
         }
 
-        [Serialize(0f, true)]
+        [Serialize(0f, IsPropertySaveable.Yes)]
         public float Distance
         {
             get => DistanceMin;
             set => DistanceMin = DistanceMax = value;
         }
 
-        [Serialize(0f, true)]
+        [Serialize(0f, IsPropertySaveable.Yes)]
         public float Velocity
         {
             get => VelocityMin;
             set => VelocityMin = VelocityMax = value;
         }
 
-        public Dictionary<string, SerializableProperty> SerializableProperties { get; }
+        public Dictionary<Identifier, SerializableProperty> SerializableProperties { get; }
 
         public ParticleEmitterProperties(XElement element)
         {
@@ -125,7 +134,7 @@ namespace Barotrauma.Particles
 
         public readonly ParticleEmitterPrefab Prefab;
 
-        public ParticleEmitter(XElement element)
+        public ParticleEmitter(ContentXElement element)
         {
             Prefab = new ParticleEmitterPrefab(element);
         }
@@ -136,7 +145,7 @@ namespace Barotrauma.Particles
             Prefab = prefab;
         }
 
-        public void Emit(float deltaTime, Vector2 position, Hull hullGuess = null, float angle = 0.0f, float particleRotation = 0.0f, float velocityMultiplier = 1.0f, float sizeMultiplier = 1.0f, float amountMultiplier = 1.0f, Color? colorMultiplier = null, ParticlePrefab overrideParticle = null, Tuple<Vector2, Vector2> tracerPoints = null)
+        public void Emit(float deltaTime, Vector2 position, Hull hullGuess = null, float angle = 0.0f, float particleRotation = 0.0f, float velocityMultiplier = 1.0f, float sizeMultiplier = 1.0f, float amountMultiplier = 1.0f, Color? colorMultiplier = null, ParticlePrefab overrideParticle = null, bool mirrorAngle = false, Tuple<Vector2, Vector2> tracerPoints = null)
         {
             if (GameMain.Client?.MidRoundSyncing ?? false) { return; }
 
@@ -159,7 +168,7 @@ namespace Barotrauma.Particles
                     for (float z = 0.0f; z < dist; z += Prefab.Properties.EmitAcrossRayInterval)
                     {
                         Vector2 pos = tracerPoints.Item1 + dir * z;
-                        Emit(pos, hullGuess, angle, particleRotation, velocityMultiplier, sizeMultiplier, colorMultiplier, overrideParticle, tracerPoints: null);
+                        Emit(pos, hullGuess, angle, particleRotation, velocityMultiplier, sizeMultiplier, colorMultiplier, overrideParticle, mirrorAngle, tracerPoints: null);
                     }
                 }
             }
@@ -169,7 +178,7 @@ namespace Barotrauma.Particles
                 float emitInterval = 1.0f / Prefab.Properties.ParticlesPerSecond;
                 while (emitTimer > emitInterval)
                 {
-                    Emit(position, hullGuess, angle, particleRotation, velocityMultiplier, sizeMultiplier, colorMultiplier, overrideParticle, tracerPoints: tracerPoints);
+                    Emit(position, hullGuess, angle, particleRotation, velocityMultiplier, sizeMultiplier, colorMultiplier, overrideParticle, mirrorAngle, tracerPoints: tracerPoints);
                     emitTimer -= emitInterval;
                 }
             }
@@ -183,18 +192,21 @@ namespace Barotrauma.Particles
             }
         }
 
-        private void Emit(Vector2 position, Hull hullGuess, float angle, float particleRotation, float velocityMultiplier, float sizeMultiplier, Color? colorMultiplier = null, ParticlePrefab overrideParticle = null, Tuple<Vector2, Vector2> tracerPoints = null)
+        private void Emit(Vector2 position, Hull hullGuess, float angle, float particleRotation, float velocityMultiplier, float sizeMultiplier, Color? colorMultiplier = null, ParticlePrefab overrideParticle = null, bool mirrorAngle = false, Tuple<Vector2, Vector2> tracerPoints = null)
         {
             var particlePrefab = overrideParticle ?? Prefab.ParticlePrefab;
             if (particlePrefab == null) { return; }
 
-            angle += Rand.Range(Prefab.Properties.AngleMinRad, Prefab.Properties.AngleMaxRad);
+            Vector2 velocity = Vector2.Zero;
+            if (!MathUtils.NearlyEqual(Prefab.Properties.VelocityMax * velocityMultiplier, 0.0f) || !MathUtils.NearlyEqual(Prefab.Properties.DistanceMax, 0.0f))
+            {
+                angle += Rand.Range(Prefab.Properties.AngleMinRad, Prefab.Properties.AngleMaxRad) * (mirrorAngle ? -1 : 1);
+                Vector2 dir = new Vector2((float)Math.Cos(angle), (float)Math.Sin(angle));
+                velocity = dir * Rand.Range(Prefab.Properties.VelocityMin, Prefab.Properties.VelocityMax) * velocityMultiplier;
+                position += dir * Rand.Range(Prefab.Properties.DistanceMin, Prefab.Properties.DistanceMax);
+            }
 
-            Vector2 dir = new Vector2((float)Math.Cos(angle), (float)Math.Sin(angle));
-            Vector2 velocity = dir * Rand.Range(Prefab.Properties.VelocityMin, Prefab.Properties.VelocityMax) * velocityMultiplier;
-            position += dir * Rand.Range(Prefab.Properties.DistanceMin, Prefab.Properties.DistanceMax);
-
-            var particle = GameMain.ParticleManager.CreateParticle(particlePrefab, position, velocity, particleRotation, hullGuess, Prefab.DrawOnTop, tracerPoints: tracerPoints);
+            var particle = GameMain.ParticleManager.CreateParticle(particlePrefab, position, velocity, particleRotation, hullGuess, lifeTimeMultiplier: Prefab.Properties.LifeTimeMultiplier, tracerPoints: tracerPoints);
 
             if (particle != null)
             {
@@ -250,40 +262,24 @@ namespace Barotrauma.Particles
 
     class ParticleEmitterPrefab
     {
-        private string particlePrefabName;
+        private readonly Identifier particlePrefabName;
 
-        private ParticlePrefab particlePrefab;
-        public ParticlePrefab ParticlePrefab
-        {
-            get
-            {
-                if (particlePrefab == null && particlePrefabName != null)
-                {
-                    particlePrefab = GameMain.ParticleManager?.FindPrefab(particlePrefabName);
-                    if (particlePrefab == null) 
-                    {
-                        DebugConsole.ThrowError($"Failed to find particle prefab \"{particlePrefabName}\".");
-                        particlePrefabName = null; 
-                    }
-                }
-                return particlePrefab;
-            }
-        }
+        public ParticlePrefab ParticlePrefab => ParticlePrefab.Prefabs[particlePrefabName];
 
         public readonly ParticleEmitterProperties Properties;
 
         public bool DrawOnTop => Properties.DrawOnTop || ParticlePrefab.DrawOnTop;
 
-        public ParticleEmitterPrefab(XElement element)
+        public ParticleEmitterPrefab(ContentXElement element)
         {
             Properties = new ParticleEmitterProperties(element);
-            particlePrefabName = element.GetAttributeString("particle", "");
+            particlePrefabName = element.GetAttributeIdentifier("particle", "");
         }
 
         public ParticleEmitterPrefab(ParticlePrefab prefab, ParticleEmitterProperties properties)
         {
             Properties = properties;
-            particlePrefab = prefab;
+            particlePrefabName = prefab.Identifier;
         }
     }
 }

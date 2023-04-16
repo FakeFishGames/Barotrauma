@@ -1,7 +1,4 @@
-﻿using System;
-using System.Xml.Linq;
-
-namespace Barotrauma.Abilities
+﻿namespace Barotrauma.Abilities
 {
     class CharacterAbilityModifyFlag : CharacterAbility
     {
@@ -10,7 +7,7 @@ namespace Barotrauma.Abilities
         private bool lastState;
         public override bool AllowClientSimulation => true;
 
-        public CharacterAbilityModifyFlag(CharacterAbilityGroup characterAbilityGroup, XElement abilityElement) : base(characterAbilityGroup, abilityElement)
+        public CharacterAbilityModifyFlag(CharacterAbilityGroup characterAbilityGroup, ContentXElement abilityElement) : base(characterAbilityGroup, abilityElement)
         {
             abilityFlag = CharacterAbilityGroup.ParseFlagType(abilityElement.GetAttributeString("flagtype", ""), CharacterTalent.DebugIdentifier);
         }

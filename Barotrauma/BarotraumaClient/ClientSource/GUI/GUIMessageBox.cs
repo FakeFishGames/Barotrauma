@@ -1,16 +1,15 @@
 ﻿using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Barotrauma.Networking;
 using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
     public class GUIMessageBox : GUIFrame
     {
-        public static List<GUIComponent> MessageBoxes = new List<GUIComponent>();
+        #warning TODO: change this to List<GUIMessageBox> and fix incorrect uses of this list
+        public readonly static List<GUIComponent> MessageBoxes = new List<GUIComponent>();
         private static int DefaultWidth
         {
             get { return Math.Max(400, (int)(400 * (GameMain.GraphicsWidth / GUI.ReferenceResolution.X))); }
@@ -24,16 +23,22 @@ namespace Barotrauma
             Default,
             InGame,
             Vote,
-            Hint
+            Hint,
+            Tutorial,
+            Warning // Keep this last so that it's always drawn in front
         }
+
+        private bool IsAnimated => type == Type.InGame || type == Type.Hint || type == Type.Tutorial;
 
         public List<GUIButton> Buttons { get; private set; } = new List<GUIButton>();
         public GUILayoutGroup Content { get; private set; }
         public GUIFrame InnerFrame { get; private set; }
         public GUITextBlock Header { get; private set; }
         public GUITextBlock Text { get; private set; }
-        public string Tag { get; private set; }
+        public Identifier Tag { get; private set; }
         public bool Closed { get; private set; }
+
+        public bool DisplayInLoadingScreens;
 
         public GUIImage Icon
         {
@@ -57,6 +62,9 @@ namespace Barotrauma
         public GUIImage BackgroundIcon { get; private set; }
         private GUIImage newBackgroundIcon;
 
+        /// <summary>
+        /// Close the message box automatically after enough time has passed (<see cref="inGameCloseTime"/>)
+        /// </summary>
         public bool AutoClose;
 
         private float openState;
@@ -66,18 +74,27 @@ namespace Barotrauma
 
         private readonly Type type;
 
+        /// <summary>
+        /// Close the message box automatically if the condition is met
+        /// </summary>
+        private readonly Func<bool> autoCloseCondition;
+
+        public bool FlashOnAutoCloseCondition { get; set; }
+
         public Type MessageBoxType => type;
 
         public static GUIComponent VisibleBox => MessageBoxes.LastOrDefault();
 
-        public GUIMessageBox(string headerText, string text, Vector2? relativeSize = null, Point? minSize = null)
-            : this(headerText, text, new string[] { "OK" }, relativeSize, minSize)
+        public GUIMessageBox(LocalizedString headerText, LocalizedString text, Vector2? relativeSize = null, Point? minSize = null, Type type = Type.Default)
+            : this(headerText, text, new LocalizedString[] { "OK" }, relativeSize, minSize, type: type)
         {
             this.Buttons[0].OnClicked = Close;
         }
 
-        public GUIMessageBox(string headerText, string text, string[] buttons, Vector2? relativeSize = null, Point? minSize = null, Alignment textAlignment = Alignment.TopLeft, Type type = Type.Default, string tag = "", Sprite icon = null, string iconStyle = "", Sprite backgroundIcon = null, bool parseRichText = false)
-            : base(new RectTransform(GUI.Canvas.RelativeSize, GUI.Canvas, Anchor.Center), style: GUI.Style.GetComponentStyle("GUIMessageBox." + type) != null ? "GUIMessageBox." + type : "GUIMessageBox")
+        public GUIMessageBox(RichString headerText, RichString text, LocalizedString[] buttons,
+            Vector2? relativeSize = null, Point? minSize = null, Alignment textAlignment = Alignment.TopLeft, Type type = Type.Default, string tag = "",
+            Sprite icon = null, string iconStyle = "", Sprite backgroundIcon = null, Func<bool> autoCloseCondition = null, bool hideCloseButton = false)
+            : base(new RectTransform(GUI.Canvas.RelativeSize, GUI.Canvas, Anchor.Center), style: GUIStyle.GetComponentStyle("GUIMessageBox." + type) != null ? "GUIMessageBox." + type : "GUIMessageBox")
         {
             int width = (int)(DefaultWidth * type switch
             {
@@ -113,6 +130,7 @@ namespace Barotrauma
             Anchor anchor = type switch
             {
                 Type.InGame => Anchor.TopCenter,
+                Type.Tutorial => Anchor.TopCenter,
                 Type.Hint => Anchor.TopRight,
                 Type.Vote => Anchor.TopRight,
                 _ => Anchor.Center
@@ -125,23 +143,24 @@ namespace Barotrauma
                 InnerFrame.RectTransform.ScreenSpaceOffset = new Point(-offset, offset);
                 CanBeFocused = false;
             }
-            GUI.Style.Apply(InnerFrame, "", this);
+            GUIStyle.Apply(InnerFrame, "", this);
             this.type = type;
-            Tag = tag;
+            Tag = tag.ToIdentifier();
 
-            if (type == Type.Default || type == Type.Vote)
+            #warning TODO: These should be broken into separate methods at least
+            if (type == Type.Default || type == Type.Vote || type == Type.Warning)
             {
                 Content = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.85f), InnerFrame.RectTransform, Anchor.Center)) { AbsoluteSpacing = 5 };
                             
                 Header = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), Content.RectTransform), 
-                    headerText, font: GUI.SubHeadingFont, textAlignment: Alignment.Center, wrap: true, parseRichText: parseRichText);
-                GUI.Style.Apply(Header, "", this);
+                    headerText, font: GUIStyle.SubHeadingFont, textAlignment: Alignment.Center, wrap: true);
+                GUIStyle.Apply(Header, "", this);
                 Header.RectTransform.MinSize = new Point(0, Header.Rect.Height);
 
-                if (!string.IsNullOrWhiteSpace(text))
+                if (!text.IsNullOrWhiteSpace())
                 {
-                    Text = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), Content.RectTransform), text, textAlignment: textAlignment, wrap: true, parseRichText: parseRichText);
-                    GUI.Style.Apply(Text, "", this);
+                    Text = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), Content.RectTransform), text, textAlignment: textAlignment, wrap: true);
+                    GUIStyle.Apply(Text, "", this);
                     Text.RectTransform.NonScaledSize = Text.RectTransform.MinSize = Text.RectTransform.MaxSize = 
                         new Point(Text.Rect.Width, Text.Rect.Height);
                     Text.RectTransform.IsFixedSize = true;
@@ -154,7 +173,7 @@ namespace Barotrauma
                 };
 
                 int buttonSize = 35;
-                var buttonStyle = GUI.Style.GetComponentStyle("GUIButton");
+                var buttonStyle = GUIStyle.GetComponentStyle("GUIButton");
                 if (buttonStyle != null && buttonStyle.Height.HasValue)
                 {
                     buttonSize = buttonStyle.Height.Value;
@@ -183,13 +202,14 @@ namespace Barotrauma
                     var button = new GUIButton(new RectTransform(new Vector2(0.6f, 1.0f / buttons.Length), buttonContainer.RectTransform), buttons[i]);
                     Buttons.Add(button);
                 }
+                GUITextBlock.AutoScaleAndNormalize(Buttons.Select(btn => btn.TextBlock));
             }
-            else if (type == Type.InGame)
+            else if (type == Type.InGame || type == Type.Tutorial)
             {
                 InnerFrame.RectTransform.AbsoluteOffset = new Point(0, GameMain.GraphicsHeight);
                 CanBeFocused = false;
-                AutoClose = true;
-                GUI.Style.Apply(InnerFrame, "", this);
+                AutoClose = type == Type.InGame;
+                GUIStyle.Apply(InnerFrame, "", this);
 
                 var horizontalLayoutGroup = new GUILayoutGroup(new RectTransform(new Vector2(0.98f, 0.95f), InnerFrame.RectTransform, Anchor.Center), 
                     isHorizontal: true, childAnchor: Anchor.CenterLeft)
@@ -208,52 +228,59 @@ namespace Barotrauma
 
                 Content = new GUILayoutGroup(new RectTransform(new Vector2(Icon != null ? 0.65f : 0.85f, 1.0f), horizontalLayoutGroup.RectTransform));
 
-                var buttonContainer = new GUIFrame(new RectTransform(new Vector2(0.15f, 1.0f), horizontalLayoutGroup.RectTransform), style: null);
-                Buttons = new List<GUIButton>(1)
+                if (!hideCloseButton)
                 {
-                    new GUIButton(new RectTransform(new Vector2(0.3f, 0.5f), buttonContainer.RectTransform, Anchor.Center), 
-                        style: "UIToggleButton")
+                    var buttonContainer = new GUIFrame(new RectTransform(new Vector2(0.15f, 1.0f), horizontalLayoutGroup.RectTransform), style: null);
+                    Buttons = new List<GUIButton>(1)
                     {
-                        OnClicked = Close
-                    }
-                };
-
-                InputType? closeInput = null;
-                if (GameMain.Config.KeyBind(InputType.Use).MouseButton == MouseButton.None)
-                {
-                    closeInput = InputType.Use;
-                }
-                else if (GameMain.Config.KeyBind(InputType.Select).MouseButton == MouseButton.None)
-                {
-                    closeInput = InputType.Select;
-                }
-                if (closeInput.HasValue)
-                {
-                    Buttons[0].ToolTip = TextManager.ParseInputTypes($"{TextManager.Get("Close")} ([InputType.{closeInput.Value}])");
-                    Buttons[0].OnAddedToGUIUpdateList += (GUIComponent component) =>
-                    {
-                        if (!closing && openState >= 1.0f && PlayerInput.KeyHit(closeInput.Value))
+                        new GUIButton(new RectTransform(new Vector2(0.3f, 0.5f), buttonContainer.RectTransform, Anchor.Center),
+                            style: "UIToggleButton")
                         {
-                            GUIButton btn = component as GUIButton;
-                            btn?.OnClicked(btn, btn.UserData);
-                            btn?.Flash(GUI.Style.Green);
+                            OnClicked = Close,
+                            UserData = UIHighlightAction.ElementId.MessageBoxCloseButton
                         }
                     };
+                    InputType? closeInput = null;
+                    if (GameSettings.CurrentConfig.KeyMap.Bindings[InputType.Use].MouseButton == MouseButton.None)
+                    {
+                        closeInput = InputType.Use;
+                    }
+                    else if (GameSettings.CurrentConfig.KeyMap.Bindings[InputType.Select].MouseButton == MouseButton.None)
+                    {
+                        closeInput = InputType.Select;
+                    }
+                    if (closeInput.HasValue)
+                    {
+                        Buttons[0].ToolTip = TextManager.ParseInputTypes($"{TextManager.Get("Close")} ([InputType.{closeInput.Value}])");
+                        Buttons[0].OnAddedToGUIUpdateList += (GUIComponent component) =>
+                        {
+                            if (!closing && openState >= 1.0f && PlayerInput.KeyHit(closeInput.Value))
+                            {
+                                GUIButton btn = component as GUIButton;
+                                btn?.OnClicked(btn, btn.UserData);
+                                btn?.Flash(GUIStyle.Green);
+                            }
+                        };
+                    }
+                }
+                else
+                {
+                    Buttons.Clear();
                 }
 
-                Header = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), Content.RectTransform), headerText, wrap: true, parseRichText: parseRichText);
-                GUI.Style.Apply(Header, "", this);
+                Header = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), Content.RectTransform), headerText, wrap: true, textColor: GUIStyle.TextColorBright);
+                GUIStyle.Apply(Header, "", this);
                 Header.RectTransform.MinSize = new Point(0, Header.Rect.Height);
 
-                if (!string.IsNullOrWhiteSpace(text))
+                if (!text.IsNullOrWhiteSpace())
                 {
-                    Text = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), Content.RectTransform), text, textAlignment: textAlignment, wrap: true, parseRichText: parseRichText);
-                    GUI.Style.Apply(Text, "", this);
+                    Text = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), Content.RectTransform), text, textAlignment: textAlignment, wrap: true);
+                    GUIStyle.Apply(Text, "", this);
                     Content.Recalculate();
                     Text.RectTransform.NonScaledSize = Text.RectTransform.MinSize = Text.RectTransform.MaxSize =
                         new Point(Text.Rect.Width, Text.Rect.Height);
                     Text.RectTransform.IsFixedSize = true;
-                    if (string.IsNullOrWhiteSpace(headerText))
+                    if (headerText.IsNullOrWhiteSpace())
                     {
                         Content.ChildAnchor = Anchor.Center;
                     }
@@ -270,12 +297,15 @@ namespace Barotrauma
                     Content.RectTransform.NonScaledSize =
                         new Point(Content.Rect.Width, height);
                 }
-                Buttons[0].RectTransform.MaxSize = new Point((int)(0.4f * Buttons[0].Rect.Y), Buttons[0].Rect.Y);
+                if (!hideCloseButton)
+                {
+                    Buttons[0].RectTransform.MaxSize = new Point((int)(0.4f * Buttons[0].Rect.Y), Buttons[0].Rect.Y);
+                }
             }
             else if (type == Type.Hint)
             {
                 CanBeFocused = false;
-                GUI.Style.Apply(InnerFrame, "", this);
+                GUIStyle.Apply(InnerFrame, "", this);
 
                 Point absoluteSpacing = GUIStyle.ItemFrameMargin.Multiply(1.0f / 5.0f);
                 var verticalLayoutGroup = new GUILayoutGroup(new RectTransform(GetVerticalLayoutGroupSize(), parent: InnerFrame.RectTransform, anchor: Anchor.Center), childAnchor: Anchor.TopCenter)
@@ -319,28 +349,29 @@ namespace Barotrauma
                     AbsoluteSpacing = absoluteSpacing.Y,
                 };
 
-                var bottomContainer = new GUIFrame(new RectTransform(new Vector2(0.9f, 0.3f), verticalLayoutGroup.RectTransform), style: null);
-
-                var tickBoxLayoutGroup = new GUILayoutGroup(new RectTransform(new Vector2(0.67f, 1.0f), bottomContainer.RectTransform, anchor: Anchor.CenterLeft),
-                    isHorizontal: true, childAnchor: Anchor.CenterLeft)
+                var bottomContainer = new GUIFrame(new RectTransform(new Vector2(0.9f, 0.3f), verticalLayoutGroup.RectTransform), style: null)
                 {
-                    Stretch = true,
-                    RelativeSpacing = 0.02f
+                    CanBeFocused = true
                 };
 
-                var dontShowAgainTickBox = new GUITickBox(new RectTransform(new Vector2(0.5f, 1.0f), tickBoxLayoutGroup.RectTransform),
+                var tickBoxLayoutGroup = new GUILayoutGroup(new RectTransform(new Vector2(0.67f, 1.0f), bottomContainer.RectTransform, anchor: Anchor.CenterLeft))
+                {
+                    CanBeFocused = true,
+                    Stretch = true
+                };
+                Vector2 tickBoxRelativeSize = new Vector2(1.0f, 0.5f);
+                var dontShowAgainTickBox = new GUITickBox(new RectTransform(tickBoxRelativeSize, tickBoxLayoutGroup.RectTransform),
                     TextManager.Get("hintmessagebox.dontshowagain"))
                 {
                     ToolTip = TextManager.Get("hintmessagebox.dontshowagaintooltip"),
                     UserData = "dontshowagain"
                 };
-
-                //var disableHintsTickBox = new GUITickBox(new RectTransform(new Vector2(0.33f, 1.0f), tickBoxLayoutGroup.RectTransform),
-                //    TextManager.Get("hintmessagebox.disablehints"))
-                //{
-                //    ToolTip = TextManager.Get("hintmessagebox.disablehintstooltip"),
-                //    UserData = "disablehints"
-                //};
+                var disableHintsTickBox = new GUITickBox(new RectTransform(tickBoxRelativeSize, tickBoxLayoutGroup.RectTransform),
+                    TextManager.Get("hintmessagebox.disablehints"))
+                {
+                    ToolTip = TextManager.Get("hintmessagebox.disablehintstooltip"),
+                    UserData = "disablehints"
+                };
 
                 Buttons = new List<GUIButton>(1)
                 {
@@ -352,18 +383,18 @@ namespace Barotrauma
                 };
 
                 Header = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), Content.RectTransform), headerText, wrap: true);
-                GUI.Style.Apply(Header, "", this);
+                GUIStyle.Apply(Header, "", this);
                 Header.RectTransform.MinSize = new Point(0, Header.Rect.Height);
 
-                if (!string.IsNullOrWhiteSpace(text))
+                if (!text.IsNullOrWhiteSpace())
                 {
                     Text = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), Content.RectTransform), text, textAlignment: textAlignment, wrap: true);
-                    GUI.Style.Apply(Text, "", this);
+                    GUIStyle.Apply(Text, "", this);
                     Content.Recalculate();
                     Text.RectTransform.NonScaledSize = Text.RectTransform.MinSize = Text.RectTransform.MaxSize =
                         new Point(Text.Rect.Width, Text.Rect.Height);
                     Text.RectTransform.IsFixedSize = true;
-                    if (string.IsNullOrWhiteSpace(headerText))
+                    if (headerText.IsNullOrWhiteSpace())
                     {
                         Header.RectTransform.Parent = null;
                         Content.ChildAnchor = Anchor.Center;
@@ -379,12 +410,16 @@ namespace Barotrauma
                     upperContainerHeight = Math.Max(upperContainerHeight, Icon.Rect.Height);
                     height += upperContainerHeight;
                     height += absoluteSpacing.Y;
-                    height += (int)((bottomContainer.RectTransform.RelativeSize.Y / topHorizontalLayoutGroup.RectTransform.RelativeSize.Y) * upperContainerHeight);
+                    int bottomContainerHeight = dontShowAgainTickBox.Rect.Height + disableHintsTickBox.Rect.Height;
+                    height += bottomContainerHeight;
                     height += absoluteSpacing.Y;
                     if (minSize.HasValue) { height = Math.Max(height, minSize.Value.Y); }
 
                     InnerFrame.RectTransform.NonScaledSize = new Point(InnerFrame.Rect.Width, height);
                     verticalLayoutGroup.RectTransform.NonScaledSize = GetVerticalLayoutGroupSize();
+                    float upperContainerRelativeHeight = (float)upperContainerHeight / (upperContainerHeight + bottomContainerHeight);
+                    topHorizontalLayoutGroup.RectTransform.RelativeSize = new Vector2(topHorizontalLayoutGroup.RectTransform.RelativeSize.X, upperContainerRelativeHeight);
+                    bottomContainer.RectTransform.RelativeSize = new Vector2(bottomContainer.RectTransform.RelativeSize.X, 1.0f - upperContainerRelativeHeight);
                     verticalLayoutGroup.Recalculate();
                     topHorizontalLayoutGroup.Recalculate();
                     Content.Recalculate();
@@ -399,13 +434,15 @@ namespace Barotrauma
                 }
             }
 
+            this.autoCloseCondition = autoCloseCondition;
+
             MessageBoxes.Add(this);
         }
 
         /// <summary>
         /// Use to create a message box of Hint type
         /// </summary>
-        public GUIMessageBox(string hintIdentifier, string text, Sprite icon) : this("", text, new string[0], textAlignment: Alignment.CenterLeft, type: Type.Hint, icon: icon)
+        public GUIMessageBox(Identifier hintIdentifier, LocalizedString text, Sprite icon) : this("", text, Array.Empty<LocalizedString>(), textAlignment: Alignment.CenterLeft, type: Type.Hint, icon: icon)
         {
             if (InnerFrame.FindChild("dontshowagain", recursive: true) is GUITickBox dontShowAgainTickBox)
             {
@@ -439,11 +476,15 @@ namespace Barotrauma
                         {
                             // Message box not of type GUIMessageBox is likely the round summary
                             MessageBoxes[i].AddToGUIUpdateList();
-                            break;
+                            if (!(MessageBoxes[i].UserData is RoundSummary)) { break; }
                         }
                         continue;
                     }
                     if (messageBox.type != type) { continue; }
+                    if (!messageBox.DisplayInLoadingScreens && GameMain.Instance.LoadingScreenOpen)
+                    {
+                        continue;
+                    }
 
                     // These are handled separately in GUI.HandlePersistingElements()
                     if (MessageBoxes[i].UserData as string == "verificationprompt") { continue; }
@@ -458,6 +499,7 @@ namespace Barotrauma
         public void SetBackgroundIcon(Sprite icon)
         {
             if (icon == null) { return; }
+            if (icon == BackgroundIcon?.Sprite) { return; }
             GUIImage newIcon = new GUIImage(new RectTransform(icon.size.ToPoint(), RectTransform), icon)
             {
                 IgnoreLayoutGroups = true,
@@ -497,10 +539,10 @@ namespace Barotrauma
                 }
             }
 
-            if (type == Type.InGame || type == Type.Hint)
+            if (IsAnimated)
             {
                 Vector2 initialPos, defaultPos, endPos;
-                if (type == Type.InGame)
+                if (type == Type.InGame || type == Type.Tutorial)
                 {
                     initialPos = new Vector2(0.0f, GameMain.GraphicsHeight);
                     defaultPos = new Vector2(0.0f, HUDLayoutSettings.InventoryAreaLower.Y - InnerFrame.Rect.Height - 20 * GUI.Scale);
@@ -538,6 +580,14 @@ namespace Barotrauma
                     if (inGameCloseTimer >= inGameCloseTime)
                     {
                         Close();
+                    }
+                    else if (autoCloseCondition != null && autoCloseCondition())
+                    {
+                        Close();
+                        if (FlashOnAutoCloseCondition)
+                        {
+                            InnerFrame.Flash(GUIStyle.Green);
+                        }
                     }
                 }
                 else
@@ -580,7 +630,7 @@ namespace Barotrauma
                     {
                         newBackgroundIcon.SetAsFirstChild();
                         newBackgroundIcon.RectTransform.AbsoluteOffset = new Point(InnerFrame.Rect.Location.X - (int)(newBackgroundIcon.Rect.Size.X / 1.25f), (int)defaultPos.Y - newBackgroundIcon.Rect.Size.Y / 2);
-                        newBackgroundIcon.Color = ToolBox.GradientLerp(iconState, Color.Transparent, Color.White);
+                        newBackgroundIcon.Color = Color.Lerp(Color.Transparent, Color.White, iconState);
                         if (newBackgroundIcon.Color.A == 255)
                         {
                             BackgroundIcon = newBackgroundIcon;
@@ -595,10 +645,9 @@ namespace Barotrauma
             }
         }
 
-
         public void Close()
         {
-            if (type == Type.InGame || type == Type.Hint)
+            if (IsAnimated)
             {
                 closing = true;
             }
@@ -613,6 +662,7 @@ namespace Barotrauma
 
         public bool Close(GUIButton button, object obj)
         {
+            RectTransform.Parent = null;
             Close();            
             return true;
         }
@@ -621,6 +671,19 @@ namespace Barotrauma
         {
             MessageBoxes.Clear();
         }
+
+        public static void Close(Identifier tag)
+        {
+            foreach (var messageBox in MessageBoxes)
+            {
+                if (messageBox is GUIMessageBox mb && mb.Tag == tag)
+                {
+                    mb.Close();
+                }
+            }
+        }
+
+        public static void Close(string tag) => Close(tag.ToIdentifier());
 
         /// <summary>
         /// Parent does not matter. It's overridden.

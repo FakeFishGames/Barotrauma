@@ -12,11 +12,13 @@ namespace Barotrauma.Items.Components
 
         protected string[] receivedSignal;
 
+        private readonly Character[] signalSender = new Character[2];
+
         //the output is sent if both inputs have received a signal within the timeframe
         protected float timeFrame;
 
         private int maxOutputLength;
-        [Editable, Serialize(200, false, description: "The maximum length of the output strings. Warning: Large values can lead to large memory usage or networking issues.")]
+        [Editable, Serialize(200, IsPropertySaveable.No, description: "The maximum length of the output strings. Warning: Large values can lead to large memory usage or networking issues.")]
         public int MaxOutputLength
         {
             get { return maxOutputLength; }
@@ -26,7 +28,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        [InGameEditable, Serialize("1", true, description: "The signal sent when the condition is met.", alwaysUseInstanceValues: true)]
+        [InGameEditable, Serialize("1", IsPropertySaveable.Yes, description: "The signal sent when the condition is met.", alwaysUseInstanceValues: true)]
         public string Output
         {
             get { return output; }
@@ -41,7 +43,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        [InGameEditable, Serialize("", true, description: "The signal sent when the condition is met (if empty, no signal is sent).", alwaysUseInstanceValues: true)]
+        [InGameEditable, Serialize("", IsPropertySaveable.Yes, description: "The signal sent when the condition is met (if empty, no signal is sent).", alwaysUseInstanceValues: true)]
         public string FalseOutput
         {
             get { return falseOutput; }
@@ -56,17 +58,21 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        [InGameEditable(DecimalCount = 2), Serialize(0.0f, true, description: "The maximum amount of time between the received signals. If set to 0, the signals must be received at the same time.", alwaysUseInstanceValues: true)]
+        [InGameEditable(DecimalCount = 2), Serialize(0.0f, IsPropertySaveable.Yes, description: "The maximum amount of time between the received signals. If set to 0, the signals must be received at the same time.", alwaysUseInstanceValues: true)]
         public float TimeFrame
         {
             get { return timeFrame; }
             set
             {
+                if (value > timeFrame)
+                {
+                    timeSinceReceived[0] = timeSinceReceived[1] = Math.Max(value * 2.0f, 0.1f);
+                }
                 timeFrame = Math.Max(0.0f, value);
             }
         }
 
-        public EqualsComponent(Item item, XElement element)
+        public EqualsComponent(Item item, ContentXElement element)
             : base(item, element)
         {
             timeSinceReceived = new float[] { Math.Max(timeFrame * 2.0f, 0.1f), Math.Max(timeFrame * 2.0f, 0.1f) };
@@ -86,9 +92,8 @@ namespace Barotrauma.Items.Components
             if (sendOutput)
             {
                 string signalOut = receivedSignal[0] == receivedSignal[1] ? output : falseOutput;
-                if (string.IsNullOrEmpty(signalOut)) return;
-
-                item.SendSignal(signalOut, "signal_out");
+                if (string.IsNullOrEmpty(signalOut)) { return; }
+                item.SendSignal(new Signal(signalOut, sender: signalSender[0] ?? signalSender[1]), "signal_out");
             }
         }
 
@@ -99,10 +104,15 @@ namespace Barotrauma.Items.Components
                 case "signal_in1":
                     receivedSignal[0] = signal.value;
                     timeSinceReceived[0] = 0.0f;
+                    signalSender[0] = signal.sender;
                     break;
                 case "signal_in2":
                     receivedSignal[1] = signal.value;
                     timeSinceReceived[1] = 0.0f;
+                    signalSender[1] = signal.sender;
+                    break;
+                case "set_output":
+                    output = signal.value;
                     break;
             }
         }

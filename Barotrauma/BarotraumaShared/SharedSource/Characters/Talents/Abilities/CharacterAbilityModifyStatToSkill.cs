@@ -1,5 +1,4 @@
 ﻿using System.Linq;
-using System.Xml.Linq;
 
 namespace Barotrauma.Abilities
 {
@@ -12,7 +11,7 @@ namespace Barotrauma.Abilities
         private float lastValue = 0f;
         public override bool AllowClientSimulation => true;
 
-        public CharacterAbilityModifyStatToSkill(CharacterAbilityGroup characterAbilityGroup, XElement abilityElement) : base(characterAbilityGroup, abilityElement)
+        public CharacterAbilityModifyStatToSkill(CharacterAbilityGroup characterAbilityGroup, ContentXElement abilityElement) : base(characterAbilityGroup, abilityElement)
         {
             statType = CharacterAbilityGroup.ParseStatType(abilityElement.GetAttributeString("stattype", ""), CharacterTalent.DebugIdentifier);
             maxValue = abilityElement.GetAttributeFloat("maxvalue", 0f);
@@ -30,11 +29,12 @@ namespace Barotrauma.Abilities
 
                 if (useAll && Character.Info?.Job != null)
                 {
-                    foreach (Skill skill in Character.Info.Job.Skills)
+                    var skills = Character.Info.Job.GetSkills();
+                    foreach (Skill skill in skills)
                     {
                         skillTotal += Character.GetSkillLevel(skill.Identifier);
                     }
-                    skillTotal /= Character.Info.Job.Skills.Count;
+                    skillTotal /= skills.Count();
                 }
                 else
                 {

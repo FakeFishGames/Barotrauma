@@ -5,7 +5,7 @@ using System.Collections.Generic;
 
 namespace Barotrauma
 {
-    partial class Screen
+    abstract partial class Screen
     {
         private GUIFrame frame;
         public GUIFrame Frame
@@ -14,7 +14,7 @@ namespace Barotrauma
             {
                 if (frame == null)
                 {
-                    frame = new GUIFrame(new RectTransform(GUICanvas.Instance.RelativeSize, GUICanvas.Instance), style: null)
+                    frame = new GUIFrame(new RectTransform(GUI.Canvas.RelativeSize, GUI.Canvas), style: null)
                     {
                         CanBeFocused = false
                     };
@@ -43,7 +43,7 @@ namespace Barotrauma
             CoroutineManager.StartCoroutine(UpdateColorFade(from, to, duration));
         }
 
-        private IEnumerable<object> UpdateColorFade(Color from, Color to, float duration)
+        private IEnumerable<CoroutineStatus> UpdateColorFade(Color from, Color to, float duration)
         {
             while (Selected != this)
             {
@@ -55,9 +55,7 @@ namespace Barotrauma
             while (timer < duration)
             {
                 GUI.ScreenOverlayColor = Color.Lerp(from, to, Math.Min(timer / duration, 1.0f));
-
-                timer += CoroutineManager.UnscaledDeltaTime;
-
+                timer += CoroutineManager.DeltaTime;
                 yield return CoroutineStatus.Running;
             }
 
@@ -70,6 +68,7 @@ namespace Barotrauma
 
         public virtual void Release()
         {
+            if (frame is null) { return; }
             frame.RectTransform.Parent = null;
             frame = null;
         }

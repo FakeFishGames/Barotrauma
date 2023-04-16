@@ -8,6 +8,8 @@ using System.Xml.Linq;
 using Barotrauma.IO;
 using RestSharp;
 using System.Net;
+using System.Collections.Immutable;
+using Barotrauma.Tutorials;
 
 namespace Barotrauma
 {
@@ -39,7 +41,7 @@ namespace Barotrauma
 
         public IEnumerable<T> GetAllChildren<T>() where T : GUIComponent
         {
-            return GetAllChildren().Where(c => c is T).Select(c => c as T);
+            return GetAllChildren().OfType<T>();
         }
 
         /// <summary>
@@ -66,7 +68,7 @@ namespace Barotrauma
         {
             foreach (GUIComponent child in Children)
             {
-                if (child.UserData == obj || (child.userData != null && child.userData.Equals(obj))) { return child; }
+                if (Equals(child.UserData, obj)) { return child; }
             }
             return null;
         }
@@ -107,7 +109,7 @@ namespace Barotrauma
         }
         public GUIComponent FindChild(object userData, bool recursive = false)
         {
-            var matchingChild = Children.FirstOrDefault(c => c.userData == userData);
+            var matchingChild = Children.FirstOrDefault(c => Equals(c.UserData, userData));
             if (recursive && matchingChild == null)
             {
                 foreach (GUIComponent child in Children)
@@ -122,7 +124,7 @@ namespace Barotrauma
 
         public IEnumerable<GUIComponent> FindChildren(object userData)
         {
-            return Children.Where(c => c.userData == userData);
+            return Children.Where(c => Equals(c.UserData, userData));
         }
 
         public IEnumerable<GUIComponent> FindChildren(Func<GUIComponent, bool> predicate)
@@ -161,9 +163,7 @@ namespace Barotrauma
 
         protected Alignment alignment;
 
-        protected GUIComponentStyle style;
-
-        protected object userData;
+        protected Identifier[] styleHierarchy;
 
         public bool CanBeFocused;
 
@@ -206,16 +206,14 @@ namespace Barotrauma
             }
         }
 
-        public virtual ScalableFont Font
+        public virtual GUIFont Font
         {
             get;
             set;
         }
-
-        // Use the rawtooltip when copying displayed tooltips so that any possible color-data related values are translated over as well
-        public string RawToolTip;
-        private string toolTip;
-        public virtual string ToolTip
+        
+        private RichString toolTip;
+        public virtual RichString ToolTip
         {
             get
             {
@@ -223,18 +221,12 @@ namespace Barotrauma
             }
             set
             {
-                RawToolTip = value;
-                TooltipRichTextData = RichTextData.GetRichTextData(value, out value);
                 toolTip = value;
             }
         }
 
-        public List<RichTextData> TooltipRichTextData = null;
-
         public GUIComponentStyle Style
-        {
-            get { return style; }
-        }
+            => GUIComponentStyle.FromHierarchy(styleHierarchy);
 
         public bool Visible
         {
@@ -258,8 +250,8 @@ namespace Barotrauma
 
         protected Rectangle ClampRect(Rectangle r)
         {
-            if (Parent == null || !ClampMouseRectToParent) { return r; }
-            Rectangle parentRect = Parent.ClampRect(Parent.Rect);
+            if (Parent is null) { return r; }
+            Rectangle parentRect = !Parent.ClampMouseRectToParent ? Parent.Rect : Parent.ClampRect(Parent.Rect);
             if (parentRect.Width <= 0 || parentRect.Height <= 0) { return Rectangle.Empty; }
             if (parentRect.X > r.X)
             {
@@ -293,11 +285,13 @@ namespace Barotrauma
         }
 
         public bool ClampMouseRectToParent { get; set; } = false;
+
         public virtual Rectangle MouseRect
         {
             get
             {
                 if (!CanBeFocused) { return Rectangle.Empty; }
+
                 return ClampMouseRectToParent ? ClampRect(Rect) : Rect;
             }
         }
@@ -310,14 +304,17 @@ namespace Barotrauma
 
         protected ComponentState _state;
         protected ComponentState _previousState;
-        protected bool selected;
+        protected bool isSelected;
         public virtual bool Selected
         {
-            get { return selected; }
+            get { return isSelected; }
             set
             {
-                selected = value;
-                Children.ForEach(c => c.Selected = value);
+                isSelected = value;
+                foreach (var child in Children)
+                {
+                    child.Selected = value;
+                }
             }
         }
         public virtual ComponentState State
@@ -335,11 +332,8 @@ namespace Barotrauma
             }
         }
 
-        public object UserData
-        {
-            get { return userData; }
-            set { userData = value; }
-        }
+        #warning TODO: this is cursed, stop using this
+        public object UserData;
         
         public int CountChildren
         {
@@ -390,6 +384,8 @@ namespace Barotrauma
 
         public bool ExternalHighlight = false;
 
+        public virtual bool PlaySoundOnSelect { get; set; } = false;
+
         private RectTransform rectTransform;
         public RectTransform RectTransform
         {
@@ -414,20 +410,20 @@ namespace Barotrauma
 
             Visible = true;
             OutlineColor = Color.Transparent;
-            Font = GUI.Font;
+            Font = GUIStyle.Font;
             CanBeFocused = true;
 
-            if (style != null) { GUI.Style.Apply(this, style); }
+            if (style != null) { GUIStyle.Apply(this, style); }
         }
 
         protected GUIComponent(string style)
         {
             Visible = true;
             OutlineColor = Color.Transparent;
-            Font = GUI.Font;
+            Font = GUIStyle.Font;
             CanBeFocused = true;
 
-            if (style != null) { GUI.Style.Apply(this, style); }
+            if (style != null) { GUIStyle.Apply(this, style); }
         }
 
         #region Updating
@@ -483,7 +479,7 @@ namespace Barotrauma
             {
                 if (GUI.IsMouseOn(this) && PlayerInput.SecondaryMouseButtonClicked())
                 {
-                    OnSecondaryClicked?.Invoke(this, userData);
+                    OnSecondaryClicked?.Invoke(this, UserData);
                 }
             }
 
@@ -491,7 +487,7 @@ namespace Barotrauma
             {
                 if (bounceTimer > 3.0f || bounceDown)
                 {
-                    RectTransform.ScreenSpaceOffset = new Point(RectTransform.ScreenSpaceOffset.X, (int) -(bounceJump * 10f));
+                    RectTransform.ScreenSpaceOffset = new Point(RectTransform.ScreenSpaceOffset.X, (int) -(bounceJump * 15f * GUI.Scale));
                     if (!bounceDown)
                     {
                         bounceJump += deltaTime * 4;
@@ -508,6 +504,7 @@ namespace Barotrauma
                             bounceJump = 0.0f;
                             bounceTimer = 0.0f;
                             bounceDown = false;
+                            Bounce = false;
                         }
                     }
                 }
@@ -531,12 +528,29 @@ namespace Barotrauma
             }
         }
 
+        public virtual void ForceLayoutRecalculation()
+        {
+            //This is very ugly but it gets the job done, it
+            //would be real nice to un-jank this some day
+            ForceUpdate();
+            ForceUpdate();
+            foreach (var child in Children) 
+            { 
+                child.ForceLayoutRecalculation(); 
+            }
+        }
+
+        public void ForceUpdate() => Update((float)Timing.Step);
+
         /// <summary>
         /// Updates all the children manually.
         /// </summary>
         public void UpdateChildren(float deltaTime, bool recursive)
         {
-            RectTransform.Children.ForEach(c => c.GUIComponent.UpdateManually(deltaTime, recursive, recursive));
+            foreach (var child in RectTransform.Children)
+            {
+                child.GUIComponent.UpdateManually(deltaTime, recursive, recursive);
+            }
         }
         #endregion
 
@@ -572,7 +586,10 @@ namespace Barotrauma
         /// </summary>
         public virtual void DrawChildren(SpriteBatch spriteBatch, bool recursive)
         {
-            RectTransform.Children.ForEach(c => c.GUIComponent.DrawManually(spriteBatch, recursive, recursive));
+            foreach (RectTransform child in RectTransform.Children)
+            {
+                child.GUIComponent.DrawManually(spriteBatch, recursive, recursive);
+            }
         }
 
         protected Color _currentColor;
@@ -681,7 +698,7 @@ namespace Barotrauma
 
             if (GlowOnSelect && State == ComponentState.Selected)
             {
-                GUI.UIGlow.Draw(spriteBatch, Rect, SelectedColor);
+                GUIStyle.UIGlow.Draw(spriteBatch, Rect, SelectedColor);
             }
 
             if (flashTimer > 0.0f)
@@ -701,7 +718,7 @@ namespace Barotrauma
                 }
                 else
                 {
-                    var glow = useCircularFlash ? GUI.UIGlowCircular : GUI.UIGlow;
+                    var glow = useCircularFlash ? GUIStyle.UIGlowCircular : GUIStyle.UIGlow;
                     glow.Draw(spriteBatch,
                         flashRect,
                         flashColor * (float)Math.Sin(flashTimer % flashCycleDuration / flashCycleDuration * MathHelper.Pi * 0.8f));
@@ -715,24 +732,24 @@ namespace Barotrauma
         public void DrawToolTip(SpriteBatch spriteBatch)
         {
             if (!Visible) { return; }
-            DrawToolTip(spriteBatch, ToolTip, GUI.MouseOn.Rect, TooltipRichTextData);
+            DrawToolTip(spriteBatch, ToolTip, Rect);
         }
         
-        public static void DrawToolTip(SpriteBatch spriteBatch, string toolTip, Vector2 pos, List<RichTextData> richTextData = null)
+        public static void DrawToolTip(SpriteBatch spriteBatch, RichString toolTip, Vector2 pos)
         {
-            if (Tutorials.Tutorial.ContentRunning) { return; }
+            if (ObjectiveManager.ContentRunning) { return; }
 
             int width = (int)(400 * GUI.Scale);
             int height = (int)(18 * GUI.Scale);
             Point padding = new Point((int)(10 * GUI.Scale));
 
-            if (toolTipBlock == null || (string)toolTipBlock.userData != toolTip)
+            if (toolTipBlock == null || (RichString)toolTipBlock.UserData != toolTip)
             {
-                toolTipBlock = new GUITextBlock(new RectTransform(new Point(width, height), null), richTextData, toolTip, font: GUI.SmallFont, wrap: true, style: "GUIToolTip");
+                toolTipBlock = new GUITextBlock(new RectTransform(new Point(width, height), null), toolTip, font: GUIStyle.SmallFont, wrap: true, style: "GUIToolTip");
                 toolTipBlock.RectTransform.NonScaledSize = new Point(
-                    (int)(GUI.SmallFont.MeasureString(toolTipBlock.WrappedText).X + padding.X + toolTipBlock.Padding.X + toolTipBlock.Padding.Z),
-                    (int)(GUI.SmallFont.MeasureString(toolTipBlock.WrappedText).Y + padding.Y + toolTipBlock.Padding.Y + toolTipBlock.Padding.W));
-                toolTipBlock.userData = toolTip;
+                    (int)(GUIStyle.SmallFont.MeasureString(toolTipBlock.WrappedText).X + padding.X + toolTipBlock.Padding.X + toolTipBlock.Padding.Z),
+                    (int)(GUIStyle.SmallFont.MeasureString(toolTipBlock.WrappedText).Y + padding.Y + toolTipBlock.Padding.Y + toolTipBlock.Padding.W));
+                toolTipBlock.UserData = toolTip;
             }
 
             toolTipBlock.RectTransform.AbsoluteOffset = pos.ToPoint();
@@ -741,24 +758,27 @@ namespace Barotrauma
             toolTipBlock.DrawManually(spriteBatch);
         }
 
-        public static void DrawToolTip(SpriteBatch spriteBatch, string toolTip, Rectangle targetElement, List<RichTextData> richTextData = null)
+        public static void DrawToolTip(SpriteBatch spriteBatch, RichString toolTip, Rectangle targetElement, Anchor anchor = Anchor.BottomCenter, Pivot pivot = Pivot.TopLeft)
         {
-            if (Tutorials.Tutorial.ContentRunning) { return; }
+            if (ObjectiveManager.ContentRunning) { return; }
 
             int width = (int)(400 * GUI.Scale);
             int height = (int)(18 * GUI.Scale);
             Point padding = new Point((int)(10 * GUI.Scale));
 
-            if (toolTipBlock == null || (string)toolTipBlock.userData != toolTip)
+            if (toolTipBlock == null || (RichString)toolTipBlock.UserData != toolTip)
             {
-                toolTipBlock = new GUITextBlock(new RectTransform(new Point(width, height), null), richTextData, toolTip, font: GUI.SmallFont, wrap: true, style: "GUIToolTip");
+                toolTipBlock = new GUITextBlock(new RectTransform(new Point(width, height), null), toolTip, font: GUIStyle.SmallFont, wrap: true, style: "GUIToolTip");
                 toolTipBlock.RectTransform.NonScaledSize = new Point(
-                    (int)(GUI.SmallFont.MeasureString(toolTipBlock.WrappedText).X + padding.X + toolTipBlock.Padding.X + toolTipBlock.Padding.Z),
-                    (int)(GUI.SmallFont.MeasureString(toolTipBlock.WrappedText).Y + padding.Y + toolTipBlock.Padding.Y + toolTipBlock.Padding.W));
-                toolTipBlock.userData = toolTip;
+                    (int)(toolTipBlock.Font.MeasureString(toolTipBlock.WrappedText).X + padding.X + toolTipBlock.Padding.X + toolTipBlock.Padding.Z),
+                    (int)(toolTipBlock.Font.MeasureString(toolTipBlock.WrappedText).Y + padding.Y + toolTipBlock.Padding.Y + toolTipBlock.Padding.W));
+                toolTipBlock.UserData = toolTip;
             }
 
-            toolTipBlock.RectTransform.AbsoluteOffset = new Point(targetElement.Center.X, targetElement.Bottom);
+            toolTipBlock.RectTransform.AbsoluteOffset =
+                RectTransform.CalculateAnchorPoint(anchor, targetElement) +
+                RectTransform.CalculatePivotOffset(pivot, toolTipBlock.RectTransform.NonScaledSize);
+
             if (toolTipBlock.Rect.Right > GameMain.GraphicsWidth - 10)
             {
                 toolTipBlock.RectTransform.AbsoluteOffset -= new Point(toolTipBlock.Rect.Width, 0);
@@ -766,7 +786,7 @@ namespace Barotrauma
             if (toolTipBlock.Rect.Bottom > GameMain.GraphicsHeight - 10)
             {
                 toolTipBlock.RectTransform.AbsoluteOffset -= new Point(
-                    (targetElement.Width / 2) * Math.Sign(targetElement.Center.X - toolTipBlock.Center.X), 
+                    0, 
                     toolTipBlock.Rect.Bottom - (GameMain.GraphicsHeight - 10));
             }
             toolTipBlock.SetTextPos();
@@ -788,12 +808,19 @@ namespace Barotrauma
             this.useRectangleFlash = useRectangleFlash;
             this.useCircularFlash = useCircularFlash;
             this.flashDuration = flashDuration;
-            flashColor = (color == null) ? GUI.Style.Red : (Color)color;
+            flashColor = (color == null) ? GUIStyle.Red : (Color)color;
         }
 
-        public void FadeOut(float duration, bool removeAfter, float wait = 0.0f)
+        public void ImmediateFlash(Color? color = null)
         {
-            CoroutineManager.StartCoroutine(LerpAlpha(0.0f, duration, removeAfter, wait));
+            flashTimer = MathHelper.Pi / 4.0f * 0.1f;
+            flashDuration = 1.0f *0.1f;
+            flashColor = (color == null) ? GUIStyle.Red : (Color)color;
+        }
+
+        public void FadeOut(float duration, bool removeAfter, float wait = 0.0f, Action onRemove = null)
+        {
+            CoroutineManager.StartCoroutine(LerpAlpha(0.0f, duration, removeAfter, wait, onRemove));
         }
 
         public void FadeIn(float wait, float duration)
@@ -831,7 +858,7 @@ namespace Barotrauma
             CoroutineManager.StartCoroutine(SlideToPosition(duration, 0.0f, targetPos));
         }
 
-        private IEnumerable<object> SlideToPosition(float duration, float wait, Vector2 target)
+        private IEnumerable<CoroutineStatus> SlideToPosition(float duration, float wait, Vector2 target)
         {
             float t = 0.0f;
             var (startX, startY) = RectTransform.ScreenSpaceOffset.ToVector2();
@@ -855,7 +882,7 @@ namespace Barotrauma
             yield return CoroutineStatus.Success;
         }
 
-        private IEnumerable<object> LerpAlpha(float to, float duration, bool removeAfter, float wait = 0.0f)
+        private IEnumerable<CoroutineStatus> LerpAlpha(float to, float duration, bool removeAfter, float wait = 0.0f, Action onRemove = null)
         {
             State = ComponentState.None;
             float t = 0.0f;
@@ -880,6 +907,7 @@ namespace Barotrauma
             if (removeAfter && Parent != null)
             {
                 Parent.RemoveChild(this);
+                onRemove?.Invoke();
             }
 
             yield return CoroutineStatus.Success;
@@ -894,7 +922,7 @@ namespace Barotrauma
             pulsateCoroutine = CoroutineManager.StartCoroutine(DoPulsate(startScale, endScale, duration), "Pulsate" + ToString());
         }
 
-        private IEnumerable<object> DoPulsate(Vector2 startScale, Vector2 endScale, float duration)
+        private IEnumerable<CoroutineStatus> DoPulsate(Vector2 startScale, Vector2 endScale, float duration)
         {
             float t = 0.0f;
             while (t < duration)
@@ -929,8 +957,7 @@ namespace Barotrauma
                 ApplySizeRestrictions(style);
             }
 
-
-            this.style = style;
+            styleHierarchy = GUIComponentStyle.ToHierarchy(style);
         }
 
         public void ApplySizeRestrictions(GUIComponentStyle style)
@@ -949,11 +976,11 @@ namespace Barotrauma
             }
         }
 
-        public static GUIComponent FromXML(XElement element, RectTransform parent)
+        public static GUIComponent FromXML(ContentXElement element, RectTransform parent)
         {
             GUIComponent component = null;
 
-            foreach (XElement subElement in element.Elements())
+            foreach (var subElement in element.Elements())
             {
                 if (subElement.Name.ToString().Equals("conditional", StringComparison.OrdinalIgnoreCase) && !CheckConditional(subElement))
                 {
@@ -996,13 +1023,15 @@ namespace Barotrauma
                 case "gridtext":
                     LoadGridText(element, parent);
                     return null;
+                case "conditional":
+                    break;
                 default:
-                    throw new NotImplementedException("Loading GUI component \""+element.Name+"\" from XML is not implemented.");
+                    throw new NotImplementedException("Loading GUI component \"" + element.Name + "\" from XML is not implemented.");
             }
 
             if (component != null)
             {
-                foreach (XElement subElement in element.Elements())
+                foreach (var subElement in element.Elements())
                 {
                     if (subElement.Name.ToString().Equals("conditional", StringComparison.OrdinalIgnoreCase)) { continue; }
                     FromXML(subElement, component is GUIListBox listBox ? listBox.Content.RectTransform : component.RectTransform);
@@ -1053,8 +1082,9 @@ namespace Barotrauma
                 switch (attribute.Name.ToString().ToLowerInvariant())
                 {
                     case "language":
-                        string[] languages = element.GetAttributeStringArray(attribute.Name.ToString(), new string[0]);
-                        if (!languages.Any(l => GameMain.Config.Language.Equals(l, StringComparison.OrdinalIgnoreCase))) { return false; }
+                        var languages = element.GetAttributeIdentifierArray(attribute.Name.ToString(), Array.Empty<Identifier>())
+                            .Select(s => new LanguageIdentifier(s));
+                        if (!languages.Any(l => GameSettings.CurrentConfig.Language == l)) { return false; }
                         break;
                     case "gameversion":
                         var version = new Version(attribute.Value);
@@ -1068,6 +1098,29 @@ namespace Barotrauma
                         var maxVersion = new Version(attribute.Value);
                         if (GameMain.Version > maxVersion) { return false; }
                         break;
+                    case "buildconfiguration":
+                        switch (attribute.Value.ToString().ToLowerInvariant())
+                        {
+                            case "debug":
+#if DEBUG
+                                return true;
+#else
+                                break;
+#endif
+                            case "unstable":
+#if UNSTABLE
+                                return true;
+#else
+                                break;
+#endif
+                            case "release":
+#if !DEBUG && !UNSTABLE
+                                return true;
+#else
+                                break;
+#endif
+                        }
+                        return false;
                 }
             }
 
@@ -1088,27 +1141,15 @@ namespace Barotrauma
             if (element.Attribute("color") != null) { color = element.GetAttributeColor("color", Color.White); }           
             float scale = element.GetAttributeFloat("scale", 1.0f);
             bool wrap = element.GetAttributeBool("wrap", true);
-            Alignment alignment = Alignment.Center;
-            Enum.TryParse(element.GetAttributeString("alignment", "Center"), out alignment);
-            ScalableFont font = GUI.Font;
-            switch (element.GetAttributeString("font", "Font").ToLowerInvariant())
+            Alignment alignment =
+                element.GetAttributeEnum("alignment", text.Contains('\n') ? Alignment.Left : Alignment.Center);
+            if (!GUIStyle.Fonts.TryGetValue(element.GetAttributeIdentifier("font", "Font"), out GUIFont font))
             {
-                case "font":
-                    font = GUI.Font;
-                    break;
-                case "smallfont":
-                    font = GUI.SmallFont;
-                    break;
-                case "largefont":
-                    font = GUI.LargeFont;
-                    break;
-                case "subheading":
-                    font = GUI.SubHeadingFont;
-                    break;
+                font = GUIStyle.Font;
             }
 
             var textBlock = new GUITextBlock(RectTransform.Load(element, parent),
-                text, color, font, alignment, wrap: wrap, style: style)
+                RichString.Rich(text), color, font, alignment, wrap: wrap, style: style)
             {
                 TextScale = scale
             };
@@ -1127,7 +1168,7 @@ namespace Barotrauma
                 try
                 {
 #if USE_STEAM
-                    Steam.SteamManager.OverlayCustomURL(url);
+                    Steam.SteamManager.OverlayCustomUrl(url);
 #else
                     ToolBox.OpenFileWithShell(url);
 #endif
@@ -1217,7 +1258,7 @@ namespace Barotrauma
             };
         }
 
-        private static GUIImage LoadGUIImage(XElement element, RectTransform parent)
+        private static GUIImage LoadGUIImage(ContentXElement element, RectTransform parent)
         {
             Sprite sprite;
             string url = element.GetAttributeString("url", "");
@@ -1250,11 +1291,11 @@ namespace Barotrauma
             return new GUIImage(RectTransform.Load(element, parent), sprite, scaleToFit: true);
         }
 
-        private static GUIButton LoadAccordion(XElement element, RectTransform parent)
+        private static GUIButton LoadAccordion(ContentXElement element, RectTransform parent)
         {
             var button = LoadGUIButton(element, parent);
             List<GUIComponent> content = new List<GUIComponent>();
-            foreach (XElement subElement in element.Elements())
+            foreach (var subElement in element.Elements())
             {
                 var contentElement = FromXML(subElement, parent);
                 if (contentElement != null)

@@ -24,12 +24,12 @@ namespace Barotrauma
 
         public TestGameMode(GameModePreset preset) : base(preset)
         {
-            foreach (JobPrefab jobPrefab in JobPrefab.Prefabs)
+            foreach (JobPrefab jobPrefab in JobPrefab.Prefabs.OrderBy(p => p.Identifier))
             {
                 for (int i = 0; i < jobPrefab.InitialCount; i++)
                 {
                     var variant = Rand.Range(0, jobPrefab.Variants);
-                    CrewManager.AddCharacterInfo(new CharacterInfo(CharacterPrefab.HumanSpeciesName, jobPrefab: jobPrefab, variant: variant));
+                    CrewManager.AddCharacterInfo(new CharacterInfo(CharacterPrefab.HumanSpeciesName, jobOrJobPrefab: jobPrefab, variant: variant));
                 }
             }
         }
@@ -93,7 +93,7 @@ namespace Barotrauma
 
         private void GenerateOutpost(Submarine submarine)
         {
-            Submarine outpost = OutpostGenerator.Generate(OutpostParams ?? OutpostGenerationParams.Params.GetRandom(), OutpostType ?? LocationType.List.GetRandom());
+            Submarine outpost = OutpostGenerator.Generate(OutpostParams ?? OutpostGenerationParams.OutpostParams.GetRandomUnsynced(), OutpostType ?? LocationType.Prefabs.GetRandomUnsynced());
             outpost.SetPosition(Vector2.Zero);
 
             float closestDistance = 0.0f;
@@ -131,7 +131,7 @@ namespace Barotrauma
 
             if (Character.Controlled != null)
             {
-                Character.Controlled.TeleportTo(outpost.GetWaypoints(false).GetRandom(point => point.SpawnType == SpawnType.Human).WorldPosition);
+                Character.Controlled.TeleportTo(outpost.GetWaypoints(false).GetRandomUnsynced(point => point.SpawnType == SpawnType.Human).WorldPosition);
             }
         }
     }

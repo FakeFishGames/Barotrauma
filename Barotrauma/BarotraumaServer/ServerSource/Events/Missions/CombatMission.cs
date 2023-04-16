@@ -1,20 +1,25 @@
-﻿using Barotrauma.Networking;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 
 namespace Barotrauma
 {
     partial class CombatMission
     {
+        const float RoundEndDuration = 5.0f;
+
         private readonly bool[] teamDead = new bool[2];
+
+        private List<Character>[] crews;
 
         private bool initialized = false;
 
-        public override string Description
+        private float roundEndTimer;
+
+        public override LocalizedString Description
         {
             get
             {
-                if (descriptions == null) return "";
+                if (descriptions == null) { return ""; }
                 
                 //non-team-specific description
                 return descriptions[0];
@@ -52,6 +57,7 @@ namespace Barotrauma
             {
                 teamDead[0] = crews[0].All(c => c.IsDead || c.IsIncapacitated);
                 teamDead[1] = crews[1].All(c => c.IsDead || c.IsIncapacitated);
+                if (teamDead[0] && teamDead[1]) { state = 1; }
             }
 
             if (state == 0)
@@ -65,13 +71,17 @@ namespace Barotrauma
 
                         GameMain.GameSession.WinningTeam = i == 0 ? CharacterTeamType.Team1 : CharacterTeamType.Team2;
 
-                        state = 1;
+                        //state 1 = team 1 won, 2 = team 2 won
+                        State = i + 1;
                         break;
                     }
                 }
             }
             else
             {
+                roundEndTimer -= deltaTime;
+                if (roundEndTimer > 0.0f) { return; }
+                
                 if (teamDead[0] && teamDead[1])
                 {
                     GameMain.GameSession.WinningTeam = CharacterTeamType.None;
@@ -80,7 +90,7 @@ namespace Barotrauma
                 else if (GameMain.GameSession.WinningTeam != CharacterTeamType.None)
                 {
                     GameMain.Server.EndGame();
-                }
+                }                
             }
         }
     }

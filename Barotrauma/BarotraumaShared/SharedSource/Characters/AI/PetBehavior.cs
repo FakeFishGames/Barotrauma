@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Xml.Linq;
+using static Barotrauma.CharacterParams;
 
 namespace Barotrauma
 {
@@ -44,7 +45,7 @@ namespace Barotrauma
         public float PlayTimer { get; set; }
         private float? unstunY { get; set; }
 
-        public EnemyAIController AiController { get; private set; } = null;
+        public EnemyAIController AIController { get; private set; } = null;
 
         public Character Owner { get; set; }
 
@@ -93,15 +94,15 @@ namespace Barotrauma
                 }
                 Rate = element.GetAttributeFloat("rate", 0.016f);
                 totalCommonness = 0.0f;
-                foreach (XElement subElement in element.Elements())
+                foreach (var subElement in element.Elements())
                 {
                     switch (subElement.Name.LocalName.ToLowerInvariant())
                     {
                         case "item":
-                            string identifier = subElement.GetAttributeString("identifier", "");
+                            Identifier identifier = subElement.GetAttributeIdentifier("identifier", Identifier.Empty);
                             Item newItemToProduce = new Item
                             {
-                                Prefab = string.IsNullOrEmpty(identifier) ? null : ItemPrefab.Find("", subElement.GetAttributeString("identifier", "")),
+                                Prefab = identifier.IsEmpty ? null : ItemPrefab.Find("", subElement.GetAttributeIdentifier("identifier", Identifier.Empty)),
                                 Commonness = subElement.GetAttributeFloat("commonness", 0.0f)
                             };
                             totalCommonness += newItemToProduce.Commonness;
@@ -134,7 +135,8 @@ namespace Barotrauma
                         aggregate += Items[i].Commonness;
                         if (aggregate >= r && Items[i].Prefab != null)
                         {
-                            Entity.Spawner.AddToSpawnQueue(Items[i].Prefab, pet.AiController.Character.WorldPosition);
+                            GameAnalyticsManager.AddDesignEvent("MicroInteraction:" + (GameMain.GameSession?.GameMode?.Preset.Identifier.Value ?? "null") + ":PetProducedItem:" + pet.AIController.Character.SpeciesName + ":" + Items[i].Prefab.Identifier);
+                            Entity.Spawner.AddItemToSpawnQueue(Items[i].Prefab, pet.AIController.Character.WorldPosition);
                             break;
                         }
                     }
@@ -159,8 +161,8 @@ namespace Barotrauma
 
         public PetBehavior(XElement element, EnemyAIController aiController)
         {
-            AiController = aiController;
-            AiController.Character.CanBeDragged = true;
+            AIController = aiController;
+            AIController.Character.CanBeDragged = true;
 
             MaxHappiness = element.GetAttributeFloat("maxhappiness", 100.0f);
             MaxHunger = element.GetAttributeFloat("maxhunger", 100.0f);
@@ -173,7 +175,7 @@ namespace Barotrauma
 
             PlayForce = element.GetAttributeFloat("playforce", 15.0f);
 
-            foreach (XElement subElement in element.Elements())
+            foreach (var subElement in element.Elements())
             {
                 switch (subElement.Name.LocalName.ToLowerInvariant())
                 {
@@ -200,6 +202,8 @@ namespace Barotrauma
                         break;
                 }
             }
+
+            GameAnalyticsManager.AddDesignEvent("MicroInteraction:" + (GameMain.GameSession?.GameMode?.Preset.Identifier.Value ?? "null") + ":PetSpawned:" + aiController.Character.SpeciesName);
         }
 
         public StatusIndicatorType GetCurrentStatusIndicatorType()
@@ -210,25 +214,46 @@ namespace Barotrauma
             return StatusIndicatorType.None;
         }
 
-        public bool OnEat(IEnumerable<string> tags, float amount)
+        public bool OnEat(Item item)
         {
-            foreach (string tag in tags)
+            bool success = OnEat(item.GetTags());
+            if (success)
             {
-               if (OnEat(tag, amount)) { return true; }
+                GameAnalyticsManager.AddDesignEvent("MicroInteraction:" + (GameMain.GameSession?.GameMode?.Preset.Identifier.Value ?? "null") + ":PetEat:" + AIController.Character.SpeciesName + ":" + item.Prefab.Identifier);
+            }
+            return success;
+        }
+
+        public bool OnEat(Character character)
+        {
+            if (character == null || !character.IsDead) { return false; }
+            bool success = OnEat("dead".ToIdentifier());
+            if (success)
+            {
+                GameAnalyticsManager.AddDesignEvent("MicroInteraction:" + (GameMain.GameSession?.GameMode?.Preset.Identifier.Value ?? "null") + ":PetEat:" + AIController.Character.SpeciesName + ":" + character.SpeciesName);
+            }
+            return success;
+        }
+
+        private bool OnEat(IEnumerable<Identifier> tags)
+        {
+            foreach (Identifier tag in tags)
+            {
+                if (OnEat(tag)) { return true; }
             }
             return false;
         }
 
-        public bool OnEat(string tag, float amount)
+        public bool OnEat(Identifier tag)
         {
             for (int i = 0; i < foods.Count; i++)
             {
-                if (tag.Equals(foods[i].Tag, System.StringComparison.OrdinalIgnoreCase))
+                if (tag == foods[i].Tag)
                 {
-                    Hunger += foods[i].Hunger * amount;
-                    Happiness += foods[i].Happiness * amount;
+                    Hunger += foods[i].Hunger;
+                    Happiness += foods[i].Happiness;
 #if CLIENT
-                    AiController.Character.PlaySound(CharacterSound.SoundType.Happy, 0.5f);
+                    AIController.Character.PlaySound(CharacterSound.SoundType.Happy, 0.5f);
 #endif
                     return true;
                 }
@@ -241,20 +266,20 @@ namespace Barotrauma
             if (PlayTimer > 0.0f) { return; }
             if (Owner == null) { Owner = player; }
             PlayTimer = 5.0f;
-            AiController.Character.IsRagdolled = true;
+            AIController.Character.IsRagdolled = true;
             Happiness += 10.0f;
-            AiController.Character.AnimController.MainLimb.body.LinearVelocity += new Vector2(0, PlayForce);
-            unstunY = AiController.Character.SimPosition.Y;
+            AIController.Character.AnimController.MainLimb.body.LinearVelocity += new Vector2(0, PlayForce);
+            unstunY = AIController.Character.SimPosition.Y;
 #if CLIENT
-            AiController.Character.PlaySound(CharacterSound.SoundType.Happy, 0.9f);
+            AIController.Character.PlaySound(CharacterSound.SoundType.Happy, 0.9f);
 #endif
         }
 
         public string GetTagName()
         {
-            if (AiController.Character.Inventory != null)
+            if (AIController.Character.Inventory != null)
             {
-                foreach (Item item in AiController.Character.Inventory.AllItems)
+                foreach (Item item in AIController.Character.Inventory.AllItems)
                 {
                     var tag = item.GetComponent<NameTag>();
                     if (tag != null && !string.IsNullOrWhiteSpace(tag.WrittenName))
@@ -269,7 +294,7 @@ namespace Barotrauma
 
         public void Update(float deltaTime)
         {
-            var character = AiController.Character;
+            var character = AIController.Character;
             if (character?.Removed ?? true || character.IsDead) { return; }
 
             if (unstunY.HasValue)
@@ -308,16 +333,27 @@ namespace Barotrauma
                 Food food = foods[i];
                 if (Hunger >= food.HungerRange.X && Hunger <= food.HungerRange.Y)
                 {
-                    if (food.TargetParams == null &&
-                        AiController.AIParams.TryAddNewTarget(food.Tag, AIState.Eat, food.Priority, out CharacterParams.TargetParams targetParams))
+                    if (food.TargetParams == null)
                     {
-                        targetParams.IgnoreContained = food.IgnoreContained;
-                        food.TargetParams = targetParams;
+                        if (AIController.AIParams.TryGetTarget(food.Tag, out TargetParams target))
+                        {
+                            food.TargetParams = target;
+                        }
+                        else if (AIController.AIParams.TryAddNewTarget(food.Tag, AIState.Eat, food.Priority, out TargetParams targetParams))
+                        {
+                            food.TargetParams = targetParams;
+                        }
+                        if (food.TargetParams != null)
+                        {
+                            food.TargetParams.State = AIState.Eat;
+                            food.TargetParams.Priority = food.Priority;
+                            food.TargetParams.IgnoreContained = food.IgnoreContained;
+                        }
                     }
                 }
                 else if (food.TargetParams != null)
                 {
-                    AiController.AIParams.RemoveTarget(food.TargetParams);
+                    AIController.AIParams.RemoveTarget(food.TargetParams);
                     food.TargetParams = null;
                 }
             }
@@ -328,7 +364,7 @@ namespace Barotrauma
             }
             else if (Hunger < MaxHunger * 0.1f)
             {
-                character.CharacterHealth.ReduceAffliction(null, null, 8.0f * deltaTime);
+                character.CharacterHealth.ReduceAllAfflictionsOnAllLimbs(8.0f * deltaTime);
             }
 
             if (character.SelectedBy != null)
@@ -380,7 +416,7 @@ namespace Barotrauma
 
         public static void LoadPets(XElement petsElement)
         {
-            foreach (XElement subElement in petsElement.Elements())
+            foreach (var subElement in petsElement.Elements())
             {
                 string speciesName = subElement.GetAttributeString("speciesname", "");
                 string seed = subElement.GetAttributeString("seed", "123");
@@ -394,12 +430,12 @@ namespace Barotrauma
                 else
                 {
                     //try to find a spawnpoint in the main sub
-                    var spawnPoint = WayPoint.WayPointList.Where(wp => wp.SpawnType == SpawnType.Human && wp.Submarine == Submarine.MainSub).GetRandom();
+                    var spawnPoint = WayPoint.WayPointList.Where(wp => wp.SpawnType == SpawnType.Human && wp.Submarine == Submarine.MainSub).GetRandomUnsynced();
                     //if not found, try any player sub (shuttle/drone etc)
-                    spawnPoint ??= WayPoint.WayPointList.Where(wp => wp.SpawnType == SpawnType.Human && wp.Submarine?.Info.Type == SubmarineType.Player).GetRandom();
+                    spawnPoint ??= WayPoint.WayPointList.Where(wp => wp.SpawnType == SpawnType.Human && wp.Submarine?.Info.Type == SubmarineType.Player).GetRandomUnsynced();
                     spawnPos = spawnPoint?.WorldPosition ?? Submarine.MainSub.WorldPosition;
                 }
-                var pet = Character.Create(speciesName, spawnPos, seed);
+                var pet = Character.Create(speciesName, spawnPos, seed, spawnInitialItems: false);
                 var petBehavior = (pet?.AIController as EnemyAIController)?.PetBehavior;
                 if (petBehavior != null)
                 {
@@ -415,7 +451,7 @@ namespace Barotrauma
                 var inventoryElement = subElement.Element("inventory");
                 if (inventoryElement != null)
                 {
-                    pet.SpawnInventoryItems(pet.Inventory, inventoryElement);
+                    pet.SpawnInventoryItems(pet.Inventory, inventoryElement.FromPackage(null));
                 }
             }
         }

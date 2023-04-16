@@ -1,35 +1,41 @@
-﻿using System.Collections.Generic;
-using System.Xml.Linq;
-
-namespace Barotrauma.Abilities
+﻿namespace Barotrauma.Abilities
 {
     class CharacterAbilityModifyAffliction : CharacterAbility
     {
-        private readonly string[] afflictionIdentifiers;
+        private readonly Identifier[] afflictionIdentifiers;
+
+        private readonly Identifier replaceWith;
 
         private readonly float addedMultiplier;
 
-        public CharacterAbilityModifyAffliction(CharacterAbilityGroup characterAbilityGroup, XElement abilityElement) : base(characterAbilityGroup, abilityElement)
+        public CharacterAbilityModifyAffliction(CharacterAbilityGroup characterAbilityGroup, ContentXElement abilityElement) : base(characterAbilityGroup, abilityElement)
         {
-            afflictionIdentifiers = abilityElement.GetAttributeStringArray("afflictionidentifiers", new string[0], convertToLowerInvariant: true);
+            afflictionIdentifiers = abilityElement.GetAttributeIdentifierArray("afflictionidentifiers", System.Array.Empty<Identifier>());
+            replaceWith = abilityElement.GetAttributeIdentifier("replacewith", Identifier.Empty);
             addedMultiplier = abilityElement.GetAttributeFloat("addedmultiplier", 0f);
         }
 
         protected override void ApplyEffect(AbilityObject abilityObject)
         {
-            if ((abilityObject as IAbilityAffliction)?.Affliction is Affliction affliction)
+            var abilityAffliction = abilityObject as IAbilityAffliction;
+            if (abilityAffliction?.Affliction is Affliction affliction)
             {
-                foreach (string afflictionIdentifier in afflictionIdentifiers)
+                foreach (Identifier afflictionIdentifier in afflictionIdentifiers)
                 {
-                    if (affliction.Identifier == afflictionIdentifier)
+                    if (affliction.Identifier != afflictionIdentifier) { continue; }                    
+                    affliction.Strength *= 1 + addedMultiplier;
+                    if (!replaceWith.IsEmpty)
                     {
-                        affliction.Strength *= 1 + addedMultiplier;
-                    }
+                        if (AfflictionPrefab.Prefabs.TryGet(replaceWith, out AfflictionPrefab afflictionPrefab))
+                        {
+                            abilityAffliction.Affliction = new Affliction(afflictionPrefab, abilityAffliction.Affliction.Strength);
+                        }
+                    }                    
                 }
             }
             else
             {
-                LogabilityObjectMismatch();
+                LogAbilityObjectMismatch();
             }
         }
     }

@@ -1,4 +1,7 @@
-﻿using System.IO.Pipes;
+﻿using System;
+using System.IO.Pipes;
+using System.Text;
+using System.Threading;
 
 namespace Barotrauma.Networking
 {
@@ -14,6 +17,12 @@ namespace Barotrauma.Networking
             PrivateStart();
         }
 
+        public static void NotifyCrash(string msg)
+        {
+            errorsToWrite.Enqueue(msg);
+            Thread.Sleep(1000);
+        }
+        
         public static void ShutDown()
         {
             PrivateShutDown();

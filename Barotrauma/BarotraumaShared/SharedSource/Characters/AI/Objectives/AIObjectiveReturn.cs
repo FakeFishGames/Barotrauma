@@ -6,11 +6,14 @@ namespace Barotrauma
 {
     class AIObjectiveReturn : AIObjective
     {
-        public override string Identifier { get; set; } = "return";
-        private AIObjectiveGoTo moveInsideObjective, moveInCaveObjective, moveOutsideObjective;
-        private bool usingEscapeBehavior;
-        private bool isSteeringThroughGap;
+        public override Identifier Identifier { get; set; } = "return".ToIdentifier();
         public Submarine ReturnTarget { get; }
+
+        private AIObjectiveGoTo moveInsideObjective, moveOutsideObjective;
+        private bool usingEscapeBehavior, isSteeringThroughGap;
+
+        public override bool AllowOutsideSubmarine => true;
+        public override bool AllowInAnySub => true;
 
         public AIObjectiveReturn(Character character, Character orderGiver, AIObjectiveManager objectiveManager, float priorityModifier = 1.0f) : base(character, objectiveManager, priorityModifier)
         {
@@ -93,7 +96,7 @@ namespace Barotrauma
                             // Target the closest airlock
                             float closestDist = 0;
                             Hull airlock = null;
-                            foreach (Hull hull in Hull.hullList)
+                            foreach (Hull hull in Hull.HullList)
                             {
                                 if (hull.Submarine != targetHull.Submarine) { continue; }
                                 if (!hull.IsTaggedAirlock()) { continue; }
@@ -112,7 +115,6 @@ namespace Barotrauma
                         }
                         if (targetHull != null)
                         {
-                            RemoveSubObjective(ref moveInCaveObjective);
                             RemoveSubObjective(ref moveOutsideObjective);
                             TryAddSubObjective(ref moveInsideObjective,
                                 constructor: () => new AIObjectiveGoTo(targetHull, character, objectiveManager)
@@ -137,91 +139,41 @@ namespace Barotrauma
                     IsCompleted = true;
                 }
             }
-            else if (!isSteeringThroughGap && moveInCaveObjective == null && moveOutsideObjective == null)
+            else if (!isSteeringThroughGap && moveOutsideObjective == null)
             {
-                if (HumanAIController.IsInsideCave)
+                Hull targetHull = null;
+                float targetDistanceSquared = float.MaxValue;
+                bool targetIsAirlock = false;
+                foreach (var hull in ReturnTarget.GetHulls(false))
                 {
-                    WayPoint closestOutsideWaypoint = null;
-                    float closestDistance = float.MaxValue;
-                    foreach (var w in WayPoint.WayPointList)
+                    bool hullIsAirlock = hull.IsTaggedAirlock();
+                    if(hullIsAirlock || (!targetIsAirlock && hull.LeadsOutside(character)))
                     {
-                        if (w.Tunnel != null && w.Tunnel.Type == Level.TunnelType.Cave) { continue; }
-                        if (w.linkedTo.None(l => l is WayPoint linkedWaypoint && linkedWaypoint.Tunnel?.Type == Level.TunnelType.Cave)) { continue; }
-                        float distance = Vector2.DistanceSquared(character.WorldPosition, w.WorldPosition);
-                        if (closestOutsideWaypoint == null || distance < closestDistance)
+                        float distanceSquared = Vector2.DistanceSquared(character.WorldPosition, hull.WorldPosition);
+                        if (targetHull == null || distanceSquared < targetDistanceSquared)
                         {
-                            closestOutsideWaypoint = w;
-                            closestDistance = distance;
+                            targetHull = hull;
+                            targetDistanceSquared = distanceSquared;
+                            targetIsAirlock = hullIsAirlock;
                         }
                     }
-                    if (closestOutsideWaypoint != null)
-                    {
-                        RemoveSubObjective(ref moveInsideObjective);
-                        RemoveSubObjective(ref moveOutsideObjective);
-                        TryAddSubObjective(ref moveInCaveObjective,
-                            constructor: () => new AIObjectiveGoTo(closestOutsideWaypoint, character, objectiveManager)
-                            {
-                                endNodeFilter = n => n.Waypoint == closestOutsideWaypoint,
-                                AllowGoingOutside = true
-                            },
-                            onCompleted: () => RemoveSubObjective(ref moveInCaveObjective),
-                            onAbandon: () => Abandon = true);
-                    }
-                    else
-                    {
-#if DEBUG
-                        DebugConsole.ThrowError("Error with a Return objective: no suitable main or side path node target found for 'moveOutsideObjective'");
-#endif
-                    }
+                }
+                if (targetHull != null)
+                {
+                    RemoveSubObjective(ref moveInsideObjective);
+                    TryAddSubObjective(ref moveOutsideObjective,
+                        constructor: () => new AIObjectiveGoTo(targetHull, character, objectiveManager)
+                        {
+                            AllowGoingOutside = true
+                        },
+                        onCompleted: () => RemoveSubObjective(ref moveOutsideObjective),
+                        onAbandon: () => Abandon = true);
                 }
                 else
                 {
-                    Hull targetHull = null;
-                    float targetDistanceSquared = float.MaxValue;
-                    bool targetIsAirlock = false;
-                    foreach (var hull in ReturnTarget.GetHulls(false))
-                    {
-                        bool hullIsAirlock = hull.IsTaggedAirlock();
-                        if(hullIsAirlock || (!targetIsAirlock && hull.LeadsOutside(character)))
-                        {
-                            float distanceSquared = Vector2.DistanceSquared(character.WorldPosition, hull.WorldPosition);
-                            if (targetHull == null || distanceSquared < targetDistanceSquared)
-                            {
-                                targetHull = hull;
-                                targetDistanceSquared = distanceSquared;
-                                targetIsAirlock = hullIsAirlock;
-                            }
-                        }
-                    }
-                    if (targetHull != null)
-                    {
-                        RemoveSubObjective(ref moveInsideObjective);
-                        RemoveSubObjective(ref moveInCaveObjective);
-                        TryAddSubObjective(ref moveOutsideObjective,
-                            constructor: () => new AIObjectiveGoTo(targetHull, character, objectiveManager)
-                            {
-                                AllowGoingOutside = true
-                            },
-                            onCompleted: () => RemoveSubObjective(ref moveOutsideObjective),
-                            onAbandon: () => Abandon = true);
-                    }
-                    else
-                    {
 #if DEBUG
-                        DebugConsole.ThrowError("Error with a Return objective: no suitable target for 'moveOutsideObjective'");
+                    DebugConsole.ThrowError("Error with a Return objective: no suitable target for 'moveOutsideObjective'");
 #endif
-                    }
-                }
-            }
-            else
-            {
-                if (HumanAIController.IsInsideCave)
-                {
-                    RemoveSubObjective(ref moveOutsideObjective);
-                }
-                else
-                {
-                    RemoveSubObjective(ref moveInCaveObjective);
                 }
             }
             usingEscapeBehavior = shouldUseEscapeBehavior;
@@ -249,7 +201,6 @@ namespace Barotrauma
         {
             base.Reset();
             moveInsideObjective = null;
-            moveInCaveObjective = null;
             moveOutsideObjective = null;
             usingEscapeBehavior = false;
             isSteeringThroughGap = false;
@@ -262,10 +213,10 @@ namespace Barotrauma
             SteeringManager?.Reset();
             if (character.IsOnPlayerTeam && objectiveManager.CurrentOrder == objectiveManager.CurrentObjective)
             {
-                string msg = TextManager.Get("dialogcannotreturn", returnNull: true);
-                if (msg != null)
+                string msg = TextManager.Get("dialogcannotreturn").Value;
+                if (!msg.IsNullOrEmpty())
                 {
-                    character.Speak(msg, identifier: "dialogcannotreturn", minDurationBetweenSimilar: 5.0f);
+                    character.Speak(msg, identifier: "dialogcannotreturn".ToIdentifier(), minDurationBetweenSimilar: 5.0f);
                 }
             }
         }

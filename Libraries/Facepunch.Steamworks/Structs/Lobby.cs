@@ -8,11 +8,13 @@ namespace Steamworks.Data
 	public struct Lobby
 	{
 		public SteamId Id { get; internal set; }
+		public Result Result { get; internal set; }
 
 
 		public Lobby( SteamId id )
 		{
 			Id = id;
+			Result = Result.OK;
 		}
 
 		/// <summary>
@@ -151,13 +153,13 @@ namespace Steamworks.Data
 		}
 
 		/// <summary>
-		/// Refreshes metadata for a lobby you're not necessarily in right now
-		/// you never do this for lobbies you're a member of, only if your
-		/// this will send down all the metadata associated with a lobby
-		/// this is an asynchronous call
-		/// returns false if the local user is not connected to the Steam servers
-		/// results will be returned by a LobbyDataUpdate_t callback
-		/// if the specified lobby doesn't exist, LobbyDataUpdate_t::m_bSuccess will be set to false
+		/// Refreshes metadata for a lobby you're not necessarily in right now.
+		/// You never do this for lobbies you're a member of, only if your
+		/// this will send down all the metadata associated with a lobby.
+		/// This is an asynchronous call.
+		/// Returns false if the local user is not connected to the Steam servers.
+		/// Results will be returned by a LobbyDataUpdate_t callback.
+		/// If the specified lobby doesn't exist, LobbyDataUpdate_t::m_bSuccess will be set to false.
 		/// </summary>
 		public bool Refresh()
 		{

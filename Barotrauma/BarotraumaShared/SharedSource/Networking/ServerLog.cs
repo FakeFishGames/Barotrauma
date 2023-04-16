@@ -10,23 +10,20 @@ namespace Barotrauma.Networking
     {
         private struct LogMessage
         {
-            public readonly string Text;
-            public readonly string SanitizedText;
+            public readonly RichString Text;
             public readonly MessageType Type;
-            public readonly List<RichTextData> RichData;
 
             public LogMessage(string text, MessageType type)
             {
                 if (type.HasFlag(MessageType.Chat))
                 {
-                    Text = $"[{DateTime.Now}]\n  {text}";
+                    text = $"[{DateTime.Now}]\n  {text}";
                 }
                 else
                 {
-                    Text = $"[{DateTime.Now}]\n  {TextManager.GetServerMessage(text)}";
+                    text = $"[{DateTime.Now}]\n  {TextManager.GetServerMessage(text)}";
                 }
-                RichData = RichTextData.GetRichTextData(Text, out SanitizedText);
-
+                Text = RichString.Rich(text);
                 Type = type;
             }
         }
@@ -41,7 +38,9 @@ namespace Barotrauma.Networking
             Wiring,
             ServerMessage,
             ConsoleUsage,
+            Money,
             Karma,
+            Talent,
             Error,
         }
 
@@ -55,8 +54,10 @@ namespace Barotrauma.Networking
             { MessageType.Wiring, new Color(255, 157, 85) },
             { MessageType.ServerMessage, new Color(157, 225, 160) },
             { MessageType.ConsoleUsage, new Color(0, 162, 232) },
+            { MessageType.Money, Color.Green },
             { MessageType.Karma, new Color(75, 88, 255) },
-            { MessageType.Error, Color.Red },
+            { MessageType.Talent, new Color(125, 125, 255) },
+            { MessageType.Error, Color.Red }
         };
 
         private readonly Dictionary<MessageType, string> messageTypeName = new Dictionary<MessageType, string>
@@ -69,7 +70,9 @@ namespace Barotrauma.Networking
             { MessageType.Wiring, "Wiring" },
             { MessageType.ServerMessage, "ServerMessage" },
             { MessageType.ConsoleUsage, "ConsoleUsage" },
+            { MessageType.Money, "Money" },
             { MessageType.Karma, "Karma" },
+            { MessageType.Talent, "Talent" },
             { MessageType.Error, "Error" }
         };
 
@@ -78,8 +81,7 @@ namespace Barotrauma.Networking
         public const string SavePath = "ServerLogs";
         
         private readonly Queue<LogMessage> lines;
-
-        private int unsavedLineCount;
+        private readonly Queue<LogMessage> unsavedLines;
 
         private readonly bool[] msgTypeHidden = new bool[Enum.GetValues(typeof(MessageType)).Length];
 
@@ -95,6 +97,7 @@ namespace Barotrauma.Networking
         {
             ServerName = serverName;
             lines = new Queue<LogMessage>();
+            unsavedLines = new Queue<LogMessage>();
 
             foreach (MessageType messageType in Enum.GetValues(typeof(MessageType)))
             {
@@ -110,26 +113,23 @@ namespace Barotrauma.Networking
             var newText = new LogMessage(line, messageType);
 
 #if SERVER
-            DebugConsole.NewMessage(newText.SanitizedText, messageColor[messageType]); //TODO: REMOVE
+            DebugConsole.NewMessage(newText.Text.SanitizedValue, messageColor[messageType]); //TODO: REMOVE
 #endif
 
             lines.Enqueue(newText);
+            unsavedLines.Enqueue(newText);
 
 #if CLIENT
             if (listBox != null)
             {
                 AddLine(newText);
-
                 listBox.UpdateScrollBarSize();
             }
 #endif
-            
-            unsavedLineCount++;
-
-            if (unsavedLineCount >= LinesPerFile)
+            if (unsavedLines.Count() >= LinesPerFile)
             {
                 Save();
-                unsavedLineCount = 0;
+                unsavedLines.Clear();
             }
 
             while (lines.Count > LinesPerFile)
@@ -173,7 +173,7 @@ namespace Barotrauma.Networking
 
             try
             {
-                File.WriteAllLines(filePath, lines.Select(l => l.SanitizedText));
+                File.WriteAllLines(filePath, unsavedLines.Select(l => l.Text.SanitizedValue));
             }
             catch (Exception e)
             {

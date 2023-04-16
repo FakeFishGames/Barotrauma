@@ -1,4 +1,5 @@
-﻿using Barotrauma.Items.Components;
+﻿using Barotrauma.Extensions;
+using Barotrauma.Items.Components;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -27,7 +28,19 @@ namespace Barotrauma
 
         protected bool[] IsEquipped;
 
+        /// <summary>
+        /// Can the inventory be accessed when the character is still alive
+        /// </summary>
         public bool AccessibleWhenAlive
+        {
+            get;
+            private set;
+        }
+
+        /// <summary>
+        /// Can the inventory be accessed by the character itself when the character is still alive (only has an effect if AccessibleWhenAlive false)
+        /// </summary>
+        public bool AccessibleByOwner
         {
             get;
             private set;
@@ -36,17 +49,18 @@ namespace Barotrauma
         private static string[] ParseSlotTypes(XElement element)
         {
             string slotString = element.GetAttributeString("slots", null);
-            return slotString == null ? new string[0] : slotString.Split(',');
+            return slotString == null ? Array.Empty<string>() : slotString.Split(',');
         }
 
-        public CharacterInventory(XElement element, Character character)
+        public CharacterInventory(XElement element, Character character, bool spawnInitialItems)
             : base(character, ParseSlotTypes(element).Length)
         {
             this.character = character;
             IsEquipped = new bool[capacity];
             SlotTypes = new InvSlotType[capacity];
 
-            AccessibleWhenAlive = element.GetAttributeBool("accessiblewhenalive", true);
+            AccessibleWhenAlive = element.GetAttributeBool("accessiblewhenalive", character.Info != null);
+            AccessibleByOwner = element.GetAttributeBool("accessiblebyowner", AccessibleWhenAlive);
 
             string[] slotTypeNames = ParseSlotTypes(element);
             System.Diagnostics.Debug.Assert(slotTypeNames.Length == capacity);
@@ -71,17 +85,19 @@ namespace Barotrauma
             
             InitProjSpecific(element);
 
+            if (!spawnInitialItems) { return; }
+
 #if CLIENT
             //clients don't create items until the server says so
             if (GameMain.Client != null) { return; }
 #endif
 
-            foreach (XElement subElement in element.Elements())
+            foreach (var subElement in element.Elements())
             {
                 if (!subElement.Name.ToString().Equals("item", StringComparison.OrdinalIgnoreCase)) { continue; }
                 
                 string itemIdentifier = subElement.GetAttributeString("identifier", "");
-                if (!(MapEntityPrefab.Find(null, itemIdentifier) is ItemPrefab itemPrefab))
+                if (!ItemPrefab.Prefabs.TryGet(itemIdentifier, out var itemPrefab))
                 {
                     DebugConsole.ThrowError("Error in character inventory \"" + character.SpeciesName + "\" - item \"" + itemIdentifier + "\" not found.");
                     continue;
@@ -89,7 +105,21 @@ namespace Barotrauma
 
                 string slotString = subElement.GetAttributeString("slot", "None");
                 InvSlotType slot = Enum.TryParse(slotString, ignoreCase: true, out InvSlotType s) ? s : InvSlotType.None;
-                Entity.Spawner?.AddToSpawnQueue(itemPrefab, this, ignoreLimbSlots: subElement.GetAttributeBool("forcetoslot", false), slot: slot);
+
+                bool forceToSlot = subElement.GetAttributeBool("forcetoslot", false);
+                int amount = subElement.GetAttributeInt("amount", 1);
+                for (int i = 0; i < amount; i++)
+                {
+                    Entity.Spawner?.AddItemToSpawnQueue(itemPrefab, this, ignoreLimbSlots: forceToSlot, slot: slot, onSpawned: (Item item) =>
+                    {
+                        if (item != null && item.ParentInventory != this)
+                        {
+                            string errorMsg = $"Failed to spawn the initial item \"{item.Prefab.Identifier}\" in the inventory of \"{character.SpeciesName}\".";
+                            DebugConsole.ThrowError(errorMsg);
+                            GameAnalyticsManager.AddErrorEventOnce("CharacterInventory:FailedToSpawnInitialItem", GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
+                        }
+                    });
+                }
             }
         }
 
@@ -138,29 +168,14 @@ namespace Barotrauma
         {
             return 
                 base.CanBePutInSlot(item, i, ignoreCondition) && item.AllowedSlots.Any(s => s.HasFlag(SlotTypes[i])) && 
-                (SlotTypes[i] == InvSlotType.Any || slots[i].ItemCount < 1);
+                (SlotTypes[i] == InvSlotType.Any || slots[i].Items.Count < 1);
         }
 
         public override bool CanBePutInSlot(ItemPrefab itemPrefab, int i, float? condition, int? quality = null)
         {
             return 
                 base.CanBePutInSlot(itemPrefab, i, condition, quality) &&
-                (SlotTypes[i] == InvSlotType.Any || slots[i].ItemCount < 1);
-        }
-
-        public bool CanBeAutoMovedToCorrectSlots(Item item)
-        {
-            if (item == null) { return false; }
-            foreach (var allowedSlot in item.AllowedSlots)
-            {
-                InvSlotType slotsFree = InvSlotType.None;
-                for (int i = 0; i < slots.Length; i++)
-                {
-                    if (allowedSlot.HasFlag(SlotTypes[i]) && slots[i].Empty()) { slotsFree |= SlotTypes[i]; }
-                }
-                if (allowedSlot == slotsFree) { return true; }
-            }
-            return false;
+                (SlotTypes[i] == InvSlotType.Any || slots[i].Items.Count < 1);
         }
 
         public override void RemoveItem(Item item)
@@ -179,6 +194,7 @@ namespace Barotrauma
 #if CLIENT
             CreateSlots();
 #endif
+            CharacterHUD.RecreateHudTextsIfControlling(character);
             //if the item was equipped and there are more items in the same stack, equip one of those items
             if (tryEquipFromSameStack && wasEquipped)
             {
@@ -191,7 +207,7 @@ namespace Barotrauma
                         if (TryPutItem(itemInSameSlot, limbSlot, allowSwapping: false, allowCombine: false, character))
                         {
 #if CLIENT
-                            visualSlots[i].ShowBorderHighlight(GUI.Style.Green, 0.1f, 0.412f);
+                            visualSlots[i].ShowBorderHighlight(GUIStyle.Green, 0.1f, 0.412f);
 #endif
                         }
                         break;
@@ -284,6 +300,8 @@ namespace Barotrauma
 #endif
             }
 
+            if (item.GetComponent<Pickable>() == null || item.AllowedSlots.None()) { return false; }
+
             bool inSuitableSlot = false;
             bool inWrongSlot = false;
             int currentSlot = -1;
@@ -339,16 +357,13 @@ namespace Barotrauma
                 {
                     if (allowedSlot.HasFlag(SlotTypes[i]) && item.AllowedSlots.Any(s => s.HasFlag(SlotTypes[i])) && slots[i].Items.Any(it => it != item))
                     {
-#if CLIENT
-                        if (PersonalSlots.HasFlag(SlotTypes[i])) { hidePersonalSlots = false; }
-#endif
                         if (!slots[i].First().AllowedSlots.Contains(InvSlotType.Any) || !TryPutItem(slots[i].FirstOrDefault(), character, new List<InvSlotType> { InvSlotType.Any }, true, ignoreCondition))
                         {
                             free = false;
 #if CLIENT
                             for (int j = 0; j < capacity; j++)
                             {
-                                if (visualSlots != null && slots[j] == slots[i]) { visualSlots[j].ShowBorderHighlight(GUI.Style.Red, 0.1f, 0.9f); }
+                                if (visualSlots != null && slots[j] == slots[i]) { visualSlots[j].ShowBorderHighlight(GUIStyle.Red, 0.1f, 0.9f); }
                             }
 #endif
                         }
@@ -361,9 +376,6 @@ namespace Barotrauma
                 {
                     if (allowedSlot.HasFlag(SlotTypes[i]) && item.GetComponents<Pickable>().Any(p => p.AllowedSlots.Any(s => s.HasFlag(SlotTypes[i]))) && slots[i].Empty())
                     {
-#if CLIENT
-                        if (PersonalSlots.HasFlag(SlotTypes[i])) { hidePersonalSlots = false; }
-#endif
                         bool removeFromOtherSlots = item.ParentInventory != this;
                         if (placedInSlot == -1 && inWrongSlot)
                         {
@@ -430,12 +442,9 @@ namespace Barotrauma
             if (index < 0 || index >= slots.Length)
             {
                 string errorMsg = "CharacterInventory.TryPutItem failed: index was out of range(" + index + ").\n" + Environment.StackTrace.CleanupStackTrace();
-                GameAnalyticsManager.AddErrorEventOnce("CharacterInventory.TryPutItem:IndexOutOfRange", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                GameAnalyticsManager.AddErrorEventOnce("CharacterInventory.TryPutItem:IndexOutOfRange", GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
                 return false;
             }
-#if CLIENT
-            if (PersonalSlots.HasFlag(SlotTypes[index])) { hidePersonalSlots = false; }
-#endif
             //there's already an item in the slot
             if (slots[index].Any())
             {
@@ -459,9 +468,6 @@ namespace Barotrauma
                 foreach (InvSlotType allowedSlot in pickable.AllowedSlots)
                 {
                     if (!allowedSlot.HasFlag(SlotTypes[index])) { continue; }
-    #if CLIENT
-                    if (PersonalSlots.HasFlag(allowedSlot)) { hidePersonalSlots = false; }
-    #endif
                     for (int i = 0; i < capacity; i++)
                     {
                         if (allowedSlot.HasFlag(SlotTypes[i]) && slots[i].Any() && !slots[i].Contains(item))
@@ -478,5 +484,23 @@ namespace Barotrauma
 
             return TryPutItem(item, user, new List<InvSlotType>() { placeToSlots }, createNetworkEvent, ignoreCondition);
         }
+
+        protected override void PutItem(Item item, int i, Character user, bool removeItem = true, bool createNetworkEvent = true)
+        {
+            base.PutItem(item, i, user, removeItem, createNetworkEvent);
+#if CLIENT
+            CreateSlots();
+            if (character == Character.Controlled)
+            {
+                HintManager.OnObtainedItem(character, item);
+            }
+#endif
+            CharacterHUD.RecreateHudTextsIfControlling(character);
+            if (item.CampaignInteractionType == CampaignMode.InteractionType.Cargo)
+            {
+                item.CampaignInteractionType = CampaignMode.InteractionType.None;
+            }
+        }
+
     }
 }

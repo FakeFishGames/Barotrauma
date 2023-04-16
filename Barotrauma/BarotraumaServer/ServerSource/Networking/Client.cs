@@ -8,9 +8,16 @@ namespace Barotrauma.Networking
     {
         public bool VoiceEnabled = true;
 
-        public UInt16 LastRecvClientListUpdate = 0;
+        public UInt16 LastRecvClientListUpdate
+            = NetIdUtils.GetIdOlderThan(GameMain.Server.LastClientListUpdateID);
 
-        public UInt16 LastRecvLobbyUpdate = 0;
+        public UInt16 LastSentServerSettingsUpdate
+            = NetIdUtils.GetIdOlderThan(GameMain.Server.ServerSettings.LastUpdateIdForFlag[ServerSettings.NetFlags.Properties]);
+        public UInt16 LastRecvServerSettingsUpdate
+            = NetIdUtils.GetIdOlderThan(GameMain.Server.ServerSettings.LastUpdateIdForFlag[ServerSettings.NetFlags.Properties]);
+        
+        public UInt16 LastRecvLobbyUpdate
+            = NetIdUtils.GetIdOlderThan(GameMain.NetLobbyScreen.LastUpdateID);
 
         public UInt16 LastSentChatMsgID = 0; //last msg this client said
         public UInt16 LastRecvChatMsgID = 0; //last msg this client knows about
@@ -18,10 +25,11 @@ namespace Barotrauma.Networking
         public UInt16 LastSentEntityEventID = 0;
         public UInt16 LastRecvEntityEventID = 0;
 
-        public UInt16 LastRecvCampaignUpdate = 0;
+        public readonly Dictionary<MultiPlayerCampaign.NetFlags, UInt16> LastRecvCampaignUpdate
+            = new Dictionary<MultiPlayerCampaign.NetFlags, UInt16>();
         public UInt16 LastRecvCampaignSave = 0;
 
-        public Pair<UInt16, float> LastCampaignSaveSendTime;
+        public (UInt16 saveId, float time) LastCampaignSaveSendTime;
 
         public readonly List<ChatMessage> ChatMsgQueue = new List<ChatMessage>();
         public UInt16 LastChatMsgQueueID;
@@ -31,6 +39,8 @@ namespace Barotrauma.Networking
         public float ChatSpamSpeed;
         public float ChatSpamTimer;
         public int ChatSpamCount;
+
+        public string RejectedName;
 
         public int RoundsSincePlayedAsTraitor;
 
@@ -54,10 +64,15 @@ namespace Barotrauma.Networking
 
         public bool ReadyToStart;
 
-        public List<Pair<JobPrefab, int>> JobPreferences;
-        public Pair<JobPrefab, int> AssignedJob;
+        public List<JobVariant> JobPreferences { get; set; }
+        public JobVariant AssignedJob;
 
         public float DeleteDisconnectedTimer;
+
+        public DateTime JoinTime;
+
+        public static readonly TimeSpan NameChangeCoolDown = new TimeSpan(hours: 0, minutes: 0, seconds: 30);
+        public DateTime LastNameChangeTime;
 
         private CharacterInfo characterInfo;
         public CharacterInfo CharacterInfo
@@ -70,6 +85,9 @@ namespace Barotrauma.Networking
                 characterInfo = value;
             }
         }
+
+        public string PendingName;
+
         public NetworkConnection Connection { get; set; }
 
         public bool SpectateOnly;
@@ -99,23 +117,40 @@ namespace Barotrauma.Networking
             }
         }
 
+        private List<Client> kickVoters;
+
+        public int KickVoteCount
+        {
+            get { return kickVoters.Count; }
+        }
+
         partial void InitProjSpecific()
         {
-            JobPreferences = new List<Pair<JobPrefab, int>>();
+            kickVoters = new List<Client>();
 
-            VoipQueue = new VoipQueue(ID, true, true);
+            JobPreferences = new List<JobVariant>();
+
+            VoipQueue = new VoipQueue(SessionId, true, true);
             GameMain.Server.VoipServer.RegisterQueue(VoipQueue);
 
             //initialize to infinity, gets set to a proper value when initializing midround syncing
             MidRoundSyncTimeOut = double.PositiveInfinity;
+
+            JoinTime = DateTime.Now;
         }
 
         partial void DisposeProjSpecific()
         {
             GameMain.Server.VoipServer.UnregisterQueue(VoipQueue);
             VoipQueue.Dispose();
-            characterInfo?.Remove();
-            characterInfo = null;
+            if (characterInfo != null)
+            {
+                if (characterInfo.Character == null || characterInfo.Character.Removed)
+                {
+                    characterInfo?.Remove();
+                    characterInfo = null;
+                }
+            }
         }
 
         public void InitClientSync()
@@ -133,41 +168,116 @@ namespace Barotrauma.Networking
 
         public static bool IsValidName(string name, ServerSettings serverSettings)
         {
-            char[] disallowedChars = new char[] { ';', ',', '<', '>', '/', '\\', '[', ']', '"', '?' };
-            if (name.Any(c => disallowedChars.Contains(c))) return false;
+            if (string.IsNullOrWhiteSpace(name)) { return false; }
+            
+            char[] disallowedChars =
+            {
+                //',', //previously disallowed because of the ban list format
+                
+                ';',
+                '<',
+                '>',
+                
+                '/', //disallowed because of server messages using forward slash as a delimiter (TODO: implement escaping)
+                
+                '\\',
+                '[',
+                ']',
+                '"',
+                '?'
+            };
+            if (name.Any(c => disallowedChars.Contains(c))) { return false; }
 
             foreach (char character in name)
             {
-                if (!serverSettings.AllowedClientNameChars.Any(charRange => (int)character >= charRange.First && (int)character <= charRange.Second)) return false;
+                if (!serverSettings.AllowedClientNameChars.Any(charRange => (int)character >= charRange.Start && (int)character <= charRange.End)) { return false; }
             }
 
             return true;
         }
 
-        public bool EndpointMatches(string endPoint)
+        public bool AddressMatches(Address address)
         {
-            return Connection.EndpointMatches(endPoint);
+            return Connection.Endpoint.Address.Equals(address);
         }
 
-        public void SetPermissions(ClientPermissions permissions, List<DebugConsole.Command> permittedConsoleCommands)
+        public void AddKickVote(Client voter)
         {
-            this.Permissions = permissions;
-            this.PermittedConsoleCommands = new List<DebugConsole.Command>(permittedConsoleCommands);
+            if (voter != null && !kickVoters.Contains(voter)) { kickVoters.Add(voter); }
+        }
+
+        public void RemoveKickVote(Client voter)
+        {
+            kickVoters.Remove(voter);
+        }
+
+        public bool HasKickVoteFrom(Client voter)
+        {
+            return kickVoters.Contains(voter);
+        }
+
+        public bool HasKickVoteFromSessionId(int id)
+        {
+            return kickVoters.Any(k => k.SessionId == id);
+        }
+
+        public static void UpdateKickVotes(IReadOnlyList<Client> connectedClients)
+        {
+            foreach (Client client in connectedClients)
+            {
+                client.kickVoters.RemoveAll(voter => !connectedClients.Contains(voter));
+            }
+        }
+
+        /// <summary>
+        /// Reset what this client has voted for and the kick votes given to this client
+        /// </summary>
+        public void ResetVotes(bool resetKickVotes)
+        {
+            for (int i = 0; i < votes.Length; i++)
+            {
+                votes[i] = null;
+            }
+            if (resetKickVotes)
+            {
+                kickVoters.Clear();
+            }
+        }
+
+
+        public void SetPermissions(ClientPermissions permissions, IEnumerable<DebugConsole.Command> permittedConsoleCommands)
+        {
+            Permissions = permissions;
+            PermittedConsoleCommands.Clear();
+            PermittedConsoleCommands.UnionWith(permittedConsoleCommands);
+            if (Permissions.HasFlag(ClientPermissions.ManageSettings))
+            {
+                //ensure the client has the up-to-date server settings
+                GameMain.Server?.ServerSettings?.ForcePropertyUpdate();
+            }
         }
 
         public void GivePermission(ClientPermissions permission)
         {
-            if (!this.Permissions.HasFlag(permission)) this.Permissions |= permission;
+            if (!Permissions.HasFlag(permission))
+            {
+                Permissions |= permission;
+                if (permission.HasFlag(ClientPermissions.ManageSettings))
+                {
+                    //ensure the client has the up-to-date server settings
+                    GameMain.Server?.ServerSettings?.ForcePropertyUpdate();
+                }
+            }
         }
 
         public void RemovePermission(ClientPermissions permission)
         {
-            this.Permissions &= ~permission;
+            Permissions &= ~permission;
         }
 
         public bool HasPermission(ClientPermissions permission)
         {
-            return this.Permissions.HasFlag(permission);
+            return Permissions.HasFlag(permission);
         }
     }
 }

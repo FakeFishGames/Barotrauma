@@ -1,5 +1,6 @@
 using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
+using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
 
@@ -7,39 +8,51 @@ namespace Barotrauma
 {
     class TriggerAction : EventAction
     {
-        [Serialize("", true, description: "Tag of the first entity that will be used for trigger checks.")]
-        public string Target1Tag { get; set; }
+        public enum TriggerType
+        {
+            Inside,
+            Outside
+        }
 
-        [Serialize("", true, description: "Tag of the second entity that will be used for trigger checks.")]
-        public string Target2Tag { get; set; }
+        [Serialize("", IsPropertySaveable.Yes, description: "Tag of the first entity that will be used for trigger checks.")]
+        public Identifier Target1Tag { get; set; }
 
-        [Serialize("", true, description: "If set, the first target has to be within an outpost module of this type.")]
-        public string TargetModuleType { get; set; }
+        [Serialize("", IsPropertySaveable.Yes, description: "Tag of the second entity that will be used for trigger checks.")]
+        public Identifier Target2Tag { get; set; }
 
-        [Serialize("", true, description: "Tag to apply to the first entity when the trigger check succeeds.")]
-        public string ApplyToTarget1 { get; set; }
+        [Serialize("", IsPropertySaveable.Yes, description: "If set, the first target has to be within an outpost module of this type.")]
+        public Identifier TargetModuleType { get; set; }
 
-        [Serialize("", true, description: "Tag to apply to the second entity when the trigger check succeeds.")]
-        public string ApplyToTarget2 { get; set; }
+        [Serialize("", IsPropertySaveable.Yes, description: "Tag to apply to the first entity when the trigger check succeeds.")]
+        public Identifier ApplyToTarget1 { get; set; }
 
-        [Serialize(0.0f, true, description: "Range both entities must be within to activate the trigger.")]
+        [Serialize("", IsPropertySaveable.Yes, description: "Tag to apply to the second entity when the trigger check succeeds.")]
+        public Identifier ApplyToTarget2 { get; set; }
+
+        [Serialize(TriggerType.Inside, IsPropertySaveable.Yes, description: "Determines if the targets must be inside or outside of the radius.")]
+        public TriggerType Type { get; set; }
+
+        [Serialize(0.0f, IsPropertySaveable.Yes, description: "Range to activate the trigger.")]
         public float Radius { get; set; }
 
-        [Serialize(true, true, description: "If true, characters who are being targeted by some enemy cannot trigger the action.")]
+        [Serialize(true, IsPropertySaveable.Yes, description: "If true, characters who are being targeted by some enemy cannot trigger the action.")]
         public bool DisableInCombat { get; set; }
 
-        [Serialize(true, true, description: "If true, dead/unconscious characters cannot trigger the action.")]
+        [Serialize(true, IsPropertySaveable.Yes, description: "If true, dead/unconscious characters cannot trigger the action.")]
         public bool DisableIfTargetIncapacitated { get; set; }
 
-        [Serialize(false, true, description: "If true, one target must interact with the other to trigger the action.")]
+        [Serialize(false, IsPropertySaveable.Yes, description: "If true, one target must interact with the other to trigger the action.")]
         public bool WaitForInteraction { get; set; }
 
+        [Serialize(false, IsPropertySaveable.Yes, description: "If true, the action can be triggered by interacting with any matching target (not just the 1st one).")]
+        public bool AllowMultipleTargets { get; set; }
+
+        [Serialize(false, IsPropertySaveable.Yes, description: "If true and using multiple targets, all targets must be inside/outside the radius.")]
+        public bool CheckAllTargets { get; set; }
+
         private float distance;
-        
-        public TriggerAction(ScriptedEvent parentEvent, XElement element) : base(parentEvent, element) 
-        {
-            TargetModuleType = TargetModuleType?.ToLowerInvariant();
-        }
+
+        public TriggerAction(ScriptedEvent parentEvent, ContentXElement element) : base(parentEvent, element) { }
 
         private bool isFinished = false;
         public override bool IsFinished(ref string goTo)
@@ -55,7 +68,9 @@ namespace Barotrauma
 
         public bool isRunning = false;
 
-        private Either<Character, Item> npcOrItem = null;
+        private readonly List<Either<Character, Item>> npcsOrItems = new List<Either<Character, Item>>();
+        
+        private readonly List<(Entity e1, Entity e2)> triggerers = new List<(Entity e1, Entity e2)>();
 
         public override void Update(float deltaTime)
         {
@@ -65,17 +80,43 @@ namespace Barotrauma
 
             var targets1 = ParentEvent.GetTargets(Target1Tag);
             if (!targets1.Any()) { return; }
-            
+
+            triggerers.Clear();
             foreach (Entity e1 in targets1)
             {
-                if (DisableInCombat && IsInCombat(e1)) { continue; }
-                if (DisableIfTargetIncapacitated && e1 is Character character1 && (character1.IsDead || character1.IsIncapacitated)) { continue; }
-                if (!string.IsNullOrEmpty(TargetModuleType))
+                if (DisableInCombat && IsInCombat(e1))
                 {
-                    if (IsCloseEnoughToHull(e1, out Hull hull))
+                    if (CheckAllTargets)
+                    {
+                        return;
+                    }
+                    continue;
+                }
+                if (DisableIfTargetIncapacitated && e1 is Character character1 && (character1.IsDead || character1.IsIncapacitated))
+                {
+                    if (CheckAllTargets)
+                    {
+                        return;
+                    }
+                    continue;
+                }
+                if (!TargetModuleType.IsEmpty)
+                {
+                    if (!CheckAllTargets && CheckDistanceToHull(e1, out Hull hull))
                     {
                         Trigger(e1, hull);
                         return;
+                    }
+                    else if (CheckAllTargets)
+                    {
+                        if (CheckDistanceToHull(e1, out hull))
+                        {
+                            triggerers.Add((e1, hull));
+                        }
+                        else
+                        {
+                            return;
+                        }
                     }
                     continue;
                 }
@@ -84,21 +125,42 @@ namespace Barotrauma
                 
                 foreach (Entity e2 in targets2)
                 {
-                    if (e1 == e2) { continue; }
-                    if (DisableInCombat && IsInCombat(e2)) { continue; }
-                    if (DisableIfTargetIncapacitated && e2 is Character character2 && (character2.IsDead || character2.IsIncapacitated)) { continue; }
+                    if (e1 == e2)
+                    {
+                        continue;
+                    }
+                    if (DisableInCombat && IsInCombat(e2))
+                    {
+                        if (CheckAllTargets)
+                        {
+                            return;
+                        }
+                        continue;
+                    }
+                    if (DisableIfTargetIncapacitated && e2 is Character character2 && (character2.IsDead || character2.IsIncapacitated))
+                    {
+                        if (CheckAllTargets)
+                        {
+                            return;
+                        }
+                        continue;
+                    }
 
                     if (WaitForInteraction)
                     {
                         Character player = null;
                         Character npc = null;
                         Item item = null;
-                        npcOrItem?.TryGet(out npc);
-                        npcOrItem?.TryGet(out item);
                         if (e1 is Character char1)
                         {
-                            if (char1.IsBot) { npc ??= char1; }
-                            else { player = char1; }
+                            if (char1.IsBot) 
+                            { 
+                                npc ??= char1; 
+                            }
+                            else 
+                            { 
+                                player = char1; 
+                            }
                         }
                         else
                         {
@@ -106,8 +168,14 @@ namespace Barotrauma
                         }
                         if (e2 is Character char2)
                         {
-                            if (char2.IsBot) { npc ??= char2; }
-                            else { player = char2; }
+                            if (char2.IsBot) 
+                            { 
+                                npc ??= char2; 
+                            }
+                            else 
+                            {
+                                player = char2; 
+                            }
                         }
                         else
                         {
@@ -120,29 +188,35 @@ namespace Barotrauma
                             {
                                 if (npc.CampaignInteractionType != CampaignMode.InteractionType.Examine)
                                 {
-                                    npcOrItem = npc;
+                                    if (!npcsOrItems.Any(n => n.TryGet(out Character npc2) && npc2 == npc)) 
+                                    {
+                                        npcsOrItems.Add(npc);
+                                    } 
                                     npc.CampaignInteractionType = CampaignMode.InteractionType.Examine;
                                     npc.RequireConsciousnessForCustomInteract = DisableIfTargetIncapacitated;
 #if CLIENT
                                     npc.SetCustomInteract(
                                         (speaker, player) => { if (e1 == speaker) { Trigger(speaker, player); } else { Trigger(player, speaker); } },
-                                        TextManager.GetWithVariable("CampaignInteraction.Examine", "[key]", GameMain.Config.KeyBindText(InputType.Use)));
+                                        TextManager.GetWithVariable("CampaignInteraction.Examine", "[key]", GameSettings.CurrentConfig.KeyMap.KeyBindText(InputType.Use)));
 #else
                                     npc.SetCustomInteract(
                                         (speaker, player) => { if (e1 == speaker) { Trigger(speaker, player); } else { Trigger(player, speaker); } }, 
                                         TextManager.Get("CampaignInteraction.Talk"));
-                                    GameMain.NetworkMember.CreateEntityEvent(npc, new object[] { NetEntityEvent.Type.AssignCampaignInteraction });
+                                    GameMain.NetworkMember.CreateEntityEvent(npc, new Character.AssignCampaignInteractionEventData());
 #endif
                                 }
-
-                                return;
+                                if (!AllowMultipleTargets) { return; }
                             }
                             else if (item != null)
                             {
-                                npcOrItem = item;
+                                if (!npcsOrItems.Any(n => n.TryGet(out Item item2) && item2 == item))
+                                {
+                                    npcsOrItems.Add(item);
+                                }
                                 item.CampaignInteractionType = CampaignMode.InteractionType.Examine;
-                                if (player.SelectedConstruction == item ||
-                                    player.Inventory != null && player.Inventory.Contains(item) ||
+                                if (player.SelectedItem == item ||
+                                    player.SelectedSecondaryItem == item ||
+                                    (player.Inventory != null && player.Inventory.Contains(item)) ||
                                     (player.FocusedItem == item && player.IsKeyHit(InputType.Use)))
                                 {
                                     Trigger(e1, e2);
@@ -156,37 +230,58 @@ namespace Barotrauma
                         Vector2 pos1 = e1.WorldPosition;
                         Vector2 pos2 = e2.WorldPosition;
                         distance = Vector2.Distance(pos1, pos2);
-                        if (((e1 is MapEntity m1) && Submarine.RectContains(m1.WorldRect, pos2)) ||
-                            ((e2 is MapEntity m2) && Submarine.RectContains(m2.WorldRect, pos1)) ||
-                            Vector2.DistanceSquared(pos1, pos2) < Radius * Radius)
+                        if ((Type == TriggerType.Inside) == IsWithinRadius())
                         {
-                            Trigger(e1, e2);
+                            if (!CheckAllTargets)
+                            {
+                                Trigger(e1, e2);
+                                return;
+                            }
+                            else
+                            {
+                                triggerers.Add((e1, e2));
+                            }
+                        }
+                        else if (CheckAllTargets)
+                        {
                             return;
                         }
+
+                        bool IsWithinRadius() =>
+                            ((e1 is MapEntity m1) && Submarine.RectContains(m1.WorldRect, pos2)) ||
+                            ((e2 is MapEntity m2) && Submarine.RectContains(m2.WorldRect, pos1)) ||
+                            Vector2.DistanceSquared(pos1, pos2) < Radius * Radius;
                     }
                 }
-            }            
+            }
+
+            foreach (var (e1, e2) in triggerers)
+            {
+                Trigger(e1, e2);
+            }
         }
 
         private void ResetTargetIcons()
         {
-            if (npcOrItem == null) { return; }
-            if (npcOrItem.TryGet(out Character npc))
+            foreach (var npcOrItem in npcsOrItems)
             {
-                npc.CampaignInteractionType = CampaignMode.InteractionType.None;
-                npc.SetCustomInteract(null, null);
-                npc.RequireConsciousnessForCustomInteract = true;
-#if SERVER
-                GameMain.NetworkMember.CreateEntityEvent(npc, new object[] { NetEntityEvent.Type.AssignCampaignInteraction });
-#endif
-            }
-            else if (npcOrItem.TryGet(out Item item))
-            {
-                item.CampaignInteractionType = CampaignMode.InteractionType.None;
+                if (npcOrItem.TryGet(out Character npc))
+                {
+                    npc.CampaignInteractionType = CampaignMode.InteractionType.None;
+                    npc.SetCustomInteract(null, null);
+                    npc.RequireConsciousnessForCustomInteract = true;
+    #if SERVER
+                    GameMain.NetworkMember.CreateEntityEvent(npc, new Character.AssignCampaignInteractionEventData());
+    #endif
+                }
+                else if (npcOrItem.TryGet(out Item item))
+                {
+                    item.CampaignInteractionType = CampaignMode.InteractionType.None;
+                }
             }
         }
 
-        private bool IsCloseEnoughToHull(Entity e, out Hull hull)
+        private bool CheckDistanceToHull(Entity e, out Hull hull)
         {
             hull = null;
             if (Radius <= 0)
@@ -194,36 +289,35 @@ namespace Barotrauma
                 if (e is Character character && character.CurrentHull != null && character.CurrentHull.OutpostModuleTags.Contains(TargetModuleType))
                 {
                     hull = character.CurrentHull;
-                    return true;
+                    return Type == TriggerType.Inside;
                 }
                 else if (e is Item item && item.CurrentHull != null && item.CurrentHull.OutpostModuleTags.Contains(TargetModuleType))
                 {
                     hull = item.CurrentHull;
-                    return true;
+                    return Type == TriggerType.Inside;
                 }
-                return false;
+                return Type == TriggerType.Outside;
             }
             else
             {
-                foreach (Hull potentialHull in Hull.hullList)
+                foreach (Hull potentialHull in Hull.HullList)
                 {
                     if (!potentialHull.OutpostModuleTags.Contains(TargetModuleType)) { continue; }
-
                     Rectangle hullRect = potentialHull.WorldRect;
                     hullRect.Inflate(Radius, Radius);
                     if (Submarine.RectContains(hullRect, e.WorldPosition))
                     {
                         hull = potentialHull;
-                        return true;
+                        return Type == TriggerType.Inside;
                     }
                 }
-                return false;
+                return Type == TriggerType.Outside;
             }
         }
 
-        private bool IsInCombat(Entity entity)
+        private static bool IsInCombat(Entity entity)
         {
-            if (!(entity is Character character)) { return false; }
+            if (entity is not Character character) { return false; }
             foreach (Character c in Character.CharacterList)
             {
                 if (c.IsDead || c.Removed || c.IsIncapacitated || !c.Enabled) { continue; }
@@ -249,11 +343,11 @@ namespace Barotrauma
         private void Trigger(Entity entity1, Entity entity2)
         {
             ResetTargetIcons();
-            if (!string.IsNullOrEmpty(ApplyToTarget1))
+            if (!ApplyToTarget1.IsEmpty)
             {
                 ParentEvent.AddTarget(ApplyToTarget1, entity1);
             }
-            if (!string.IsNullOrEmpty(ApplyToTarget2))
+            if (!ApplyToTarget2.IsEmpty)
             {
                 ParentEvent.AddTarget(ApplyToTarget2, entity2);
             }
@@ -264,12 +358,12 @@ namespace Barotrauma
 
         public override string ToDebugString()
         {
-            if (string.IsNullOrEmpty(TargetModuleType))
+            if (TargetModuleType.IsEmpty)
             {
                 return
                     $"{ToolBox.GetDebugSymbol(isFinished, isRunning)} {nameof(TriggerAction)} -> (" +
                     (WaitForInteraction ?
-                        $"Selected non-player target: {(npcOrItem?.ToString() ?? "<null>").ColorizeObject()}, " :
+                        $"Selected non-player target: {(npcsOrItems?.ToString() ?? "<null>").ColorizeObject()}, " :
                         $"Distance: {((int)distance).ColorizeObject()}, ") +
                     $"Radius: {Radius.ColorizeObject()}, " +
                     $"TargetTags: {Target1Tag.ColorizeObject()}, " +

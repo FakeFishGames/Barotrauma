@@ -1,16 +1,13 @@
-using System;
-using System.Xml.Linq;
-
 namespace Barotrauma
 {
     class WaitAction : EventAction
     {
-        [Serialize(0.0f, true)]
+        [Serialize(0.0f, IsPropertySaveable.Yes)]
         public float Time { get; set; }
 
         private float timeRemaining;
 
-        public WaitAction(ScriptedEvent parentEvent, XElement element) : base(parentEvent, element)
+        public WaitAction(ScriptedEvent parentEvent, ContentXElement element) : base(parentEvent, element)
         {
             timeRemaining = Time;
         }

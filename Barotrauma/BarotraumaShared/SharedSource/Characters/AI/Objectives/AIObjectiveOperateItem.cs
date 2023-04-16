@@ -8,7 +8,7 @@ namespace Barotrauma
 {
     class AIObjectiveOperateItem : AIObjective
     {
-        public override string Identifier { get; set; } = "operate item";
+        public override Identifier Identifier { get; set; } = "operate item".ToIdentifier();
         public override string DebugTag =>  $"{Identifier} {component.Name}";
 
         public override bool AllowAutomaticItemUnequipping => true;
@@ -23,6 +23,11 @@ namespace Barotrauma
         private AIObjectiveGoTo goToObjective;
         private AIObjectiveGetItem getItemObjective;
 
+        /// <summary>
+        /// If undefined, a default filter will be used.
+        /// </summary>
+        public Func<PathNode, bool> EndNodeFilter;
+
         public bool Override { get; set; } = true;
 
         public override bool CanBeCompleted => base.CanBeCompleted && (!useController || controller != null);
@@ -36,6 +41,8 @@ namespace Barotrauma
 
         public Func<bool> completionCondition;
         private bool isDoneOperating;
+
+        public float? OverridePriority = null;
 
         protected override float GetPriority()
         {
@@ -52,7 +59,11 @@ namespace Barotrauma
             }
             else
             {
-                if (isOrder)
+                if (OverridePriority.HasValue)
+                {
+                    Priority = OverridePriority.Value;
+                }
+                else if (isOrder)
                 {
                     Priority = objectiveManager.GetOrderPriority(this);
                 }
@@ -64,6 +75,11 @@ namespace Barotrauma
                     DebugConsole.ThrowError("Item or component of AI Objective Operate item was null. This shouldn't happen.");
 #endif
                     Abandon = true;
+                    Priority = 0;
+                    return Priority;
+                }
+                else if (targetItem.IsClaimedByBallastFlora)
+                {
                     Priority = 0;
                     return Priority;
                 }
@@ -79,7 +95,7 @@ namespace Barotrauma
                             return Priority;
                         }
                     }
-                    switch (Option)
+                    switch (Option.Value.ToLowerInvariant())
                     {
                         case "shutdown":
                             if (!reactor.PowerOn)
@@ -130,7 +146,7 @@ namespace Barotrauma
                         float value = CumulatedDevotion + (max * PriorityModifier);
                         Priority = MathHelper.Clamp(value, 0, max);
                     }
-                    else
+                    else if (!OverridePriority.HasValue)
                     {
                         float value = CumulatedDevotion + (AIObjectiveManager.LowestOrderPriority * PriorityModifier);
                         float max = AIObjectiveManager.LowestOrderPriority - 1;
@@ -146,7 +162,7 @@ namespace Barotrauma
             return Priority;
         }
 
-        public AIObjectiveOperateItem(ItemComponent item, Character character, AIObjectiveManager objectiveManager, string option, bool requireEquip,
+        public AIObjectiveOperateItem(ItemComponent item, Character character, AIObjectiveManager objectiveManager, Identifier option, bool requireEquip,
             Entity operateTarget = null, bool useController = false, ItemComponent controller = null, float priorityModifier = 1)
             : base(character, objectiveManager, priorityModifier, option)
         {
@@ -181,7 +197,7 @@ namespace Barotrauma
             {
                 if (character.IsOnPlayerTeam)
                 {
-                    character.Speak(TextManager.GetWithVariable("DialogCantFindController", "[item]", component.Item.Name, true), null, 2.0f, "cantfindcontroller", 30.0f);
+                    character.Speak(TextManager.GetWithVariable("DialogCantFindController", "[item]", component.Item.Name).Value, delay: 2.0f, identifier: "cantfindcontroller".ToIdentifier(), minDurationBetweenSimilar: 30.0f);
                 }
                 Abandon = true;
                 return;
@@ -199,12 +215,19 @@ namespace Barotrauma
             {
                 if (!character.IsClimbing && character.CanInteractWith(target.Item, out _, checkLinked: false))
                 {
-                    HumanAIController.FaceTarget(target.Item);
-                    if (character.SelectedConstruction != target.Item)
+                    if (target.Item.GetComponent<Controller>() is not Controller { ControlCharacterPose: true })
                     {
-                        target.Item.TryInteract(character, false, true);
+                        HumanAIController.FaceTarget(target.Item);
                     }
-                    if (component.AIOperate(deltaTime, character, this))
+                    else
+                    {
+                        HumanAIController.SteeringManager.Reset();
+                    }
+                    if (character.SelectedItem != target.Item && character.SelectedSecondaryItem != target.Item)
+                    {
+                        target.Item.TryInteract(character, forceSelectKey: true);
+                    }
+                    if (component.CrewAIOperate(deltaTime, character, this))
                     {
                         isDoneOperating = completionCondition == null || completionCondition();
                     }
@@ -213,9 +236,8 @@ namespace Barotrauma
                 {
                     TryAddSubObjective(ref goToObjective, () => new AIObjectiveGoTo(target.Item, character, objectiveManager, closeEnough: 50)
                     {
-                        DialogueIdentifier = "dialogcannotreachtarget",
                         TargetName = target.Item.Name,
-                        endNodeFilter = node => node.Waypoint.Ladders == null
+                        endNodeFilter = EndNodeFilter ?? AIObjectiveGetItem.CreateEndNodeFilter(target.Item)
                     },
                         onAbandon: () => Abandon = true,
                         onCompleted: () => RemoveSubObjective(ref goToObjective));
@@ -273,7 +295,7 @@ namespace Barotrauma
                         }
                         return;
                     }
-                    if (component.AIOperate(deltaTime, character, this))
+                    if (component.CrewAIOperate(deltaTime, character, this))
                     {
                         isDoneOperating = completionCondition == null || completionCondition();
                     }

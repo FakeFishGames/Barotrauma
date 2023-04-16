@@ -11,12 +11,12 @@ namespace Barotrauma.Items.Components
                 Character.Controlled?.UpdateHUDProgressBar(this,
                     item.WorldPosition,
                     ScanTimer / ScanDuration,
-                    GUI.Style.Red, GUI.Style.Green,
+                    GUIStyle.Red, GUIStyle.Green,
                     textTag: "progressbar.scanning");
             }
         }
 
-        public void ClientRead(ServerNetObject type, IReadMessage msg, float sendingTime)
+        public void ClientEventRead(IReadMessage msg, float sendingTime)
         {
             bool wasScanCompletedPreviously = IsScanCompleted;
             scanTimer = msg.ReadSingle();

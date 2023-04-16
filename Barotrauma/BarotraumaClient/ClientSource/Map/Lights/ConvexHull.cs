@@ -2,7 +2,6 @@
 using Barotrauma.Items.Components;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using SharpFont;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -12,28 +11,14 @@ namespace Barotrauma.Lights
 {
     class ConvexHullList
     {
-        private List<ConvexHull> list;
-        public HashSet<ConvexHull> IsHidden;
 
         public readonly Submarine Submarine;
-        public List<ConvexHull> List
-        {
-            get { return list; }
-            set
-            {
-                Debug.Assert(value != null);
-                Debug.Assert(!list.Contains(null));
-                list = value;
-                IsHidden.RemoveWhere(ch => !list.Contains(ch));
-            }
-        }
-        
+        public HashSet<ConvexHull> IsHidden = new HashSet<ConvexHull>();
+        public readonly List<ConvexHull> List = new List<ConvexHull>();
 
         public ConvexHullList(Submarine submarine)
         {
             Submarine = submarine;
-            list = new List<ConvexHull>();
-            IsHidden = new HashSet<ConvexHull>();
         }
     }
 
@@ -354,7 +339,7 @@ namespace Barotrauma.Lights
             }
         }
 
-        public bool IsSegmentAInB(Segment a, Segment b)
+        public static bool IsSegmentAInB(Segment a, Segment b)
         {
             if (Vector2.DistanceSquared(a.Start.Pos, a.End.Pos) > Vector2.DistanceSquared(b.Start.Pos, b.End.Pos))
             {
@@ -362,14 +347,15 @@ namespace Barotrauma.Lights
             }
 
             Vector2 min = new Vector2(Math.Min(b.Start.Pos.X, b.End.Pos.X), Math.Min(b.Start.Pos.Y, b.End.Pos.Y));
-            Vector2 max = new Vector2(Math.Max(b.Start.Pos.X, b.End.Pos.X), Math.Max(b.Start.Pos.Y, b.End.Pos.Y));
             min.X -= 1.0f; min.Y -= 1.0f;
-            max.X += 1.0f; max.Y += 1.0f;
 
             if (a.Start.Pos.X < min.X) { return false; }
             if (a.Start.Pos.Y < min.Y) { return false; }
             if (a.End.Pos.X < min.X) { return false; }
             if (a.End.Pos.Y < min.Y) { return false; }
+
+            Vector2 max = new Vector2(Math.Max(b.Start.Pos.X, b.End.Pos.X), Math.Max(b.Start.Pos.Y, b.End.Pos.Y));
+            max.X += 1.0f; max.Y += 1.0f;
 
             if (a.Start.Pos.X > max.X) { return false; }
             if (a.Start.Pos.Y > max.Y) { return false; }
@@ -388,7 +374,7 @@ namespace Barotrauma.Lights
             if (!BoundingBox.Contains(point)) { return false; }
 
             Vector2 center = (vertices[0].Pos + vertices[1].Pos + vertices[2].Pos + vertices[3].Pos) * 0.25f;
-            for (int i=0;i<4;i++)
+            for (int i = 0; i < 4; i++)
             {
                 Vector2 segmentVector = vertices[(i + 1) % 4].Pos - vertices[i].Pos;
                 Vector2 centerToVertex = center - vertices[i].Pos;
@@ -461,7 +447,7 @@ namespace Barotrauma.Lights
                 Matrix.CreateTranslation(-origin.X, -origin.Y, 0.0f) * 
                 Matrix.CreateRotationZ(amount) *
                 Matrix.CreateTranslation(origin.X, origin.Y, 0.0f);
-            SetVertices(vertices.Select(v => v.Pos).ToArray(), rotationMatrix);
+            SetVertices(vertices.Select(v => v.Pos).ToArray(), rotationMatrix: rotationMatrix);
         }
 
         private void CalculateDimensions()
@@ -541,7 +527,7 @@ namespace Barotrauma.Lights
             }
         }
 
-        public void SetVertices(Vector2[] points, Matrix? rotationMatrix = null)
+        public void SetVertices(Vector2[] points, bool mergeOverlappingSegments = true, Matrix? rotationMatrix = null)
         {
             Debug.Assert(points.Length == 4, "Only rectangular convex hulls are supported");
 
@@ -594,13 +580,16 @@ namespace Barotrauma.Lights
 
             if (ParentEntity == null) { return; }
 
-            var chList = HullLists.Find(h => h.Submarine == ParentEntity.Submarine);
-            if (chList != null)
+            if (mergeOverlappingSegments)
             {
-                overlappingHulls.Clear();
-                foreach (ConvexHull ch in chList.List)
+                var chList = HullLists.Find(h => h.Submarine == ParentEntity.Submarine);
+                if (chList != null)
                 {
-                    MergeOverlappingSegments(ch);
+                    overlappingHulls.Clear();
+                    foreach (ConvexHull ch in chList.List)
+                    {
+                        MergeOverlappingSegments(ch);
+                    }
                 }
             }
         }
@@ -625,7 +614,7 @@ namespace Barotrauma.Lights
         {            
             for (int i = 0; i < 4; i++)
             {
-                if (ignoreEdge[i] && ignoreEdges) continue;
+                if (ignoreEdge[i] && ignoreEdges) { continue; }
 
                 Vector2 pos1 = vertices[i].WorldPos;
                 Vector2 pos2 = vertices[(i + 1) % 4].WorldPos;
@@ -695,7 +684,7 @@ namespace Barotrauma.Lights
             }
 
             ShadowVertexCount = 0;
-            for (int i=0;i<4;i++)
+            for (int i = 0; i < 4; i++)
             {
                 if (!backFacing[i]) { continue; }
                 int currentIndex = i;

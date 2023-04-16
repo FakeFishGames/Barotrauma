@@ -28,19 +28,20 @@ namespace Barotrauma
                 }
             }
 
-            public SubactionGroup(ScriptedEvent scriptedEvent, XElement elem)
+            public SubactionGroup(ScriptedEvent scriptedEvent, ContentXElement elem)
             {
-                Text = elem.Attribute("text")?.Value ?? "";
+                Text = elem.GetAttribute("text")?.Value ?? "";
                 Actions = new List<EventAction>();
                 EndConversation = elem.GetAttributeBool("endconversation", false);
-                foreach (XElement e in elem.Elements())
+                foreach (var e in elem.Elements())
                 {
                     if (e.Name.ToString().Equals("statuseffect", StringComparison.OrdinalIgnoreCase))
                     {
                         DebugConsole.ThrowError($"Error in event prefab \"{scriptedEvent.Prefab.Identifier}\". Status effect configured as a sub action (text: \"{Text}\"). Please configure status effects as child elements of a StatusEffectAction.");
                         continue;
                     }
-                    Actions.Add(Instantiate(scriptedEvent, e));
+                    var action = Instantiate(scriptedEvent, e);
+                    if (action != null) { Actions.Add(action); }
                 }
             }
 
@@ -100,7 +101,7 @@ namespace Barotrauma
 
         public readonly ScriptedEvent ParentEvent;
 
-        public EventAction(ScriptedEvent parentEvent, XElement element)
+        public EventAction(ScriptedEvent parentEvent, ContentXElement element)
         {
             ParentEvent = parentEvent;
             SerializableProperty.DeserializeProperties(this, element);
@@ -132,9 +133,9 @@ namespace Barotrauma
 
         public virtual void Update(float deltaTime) { }
 
-        public static EventAction Instantiate(ScriptedEvent scriptedEvent, XElement element)
+        public static EventAction Instantiate(ScriptedEvent scriptedEvent, ContentXElement element)
         {
-            Type actionType = null;
+            Type actionType;
             try
             {
                 actionType = Type.GetType("Barotrauma." + element.Name, true, true);
@@ -146,9 +147,13 @@ namespace Barotrauma
                 return null;
             }
 
-            ConstructorInfo constructor = actionType.GetConstructor(new[] { typeof(ScriptedEvent), typeof(XElement) });
+            ConstructorInfo constructor = actionType.GetConstructor(new[] { typeof(ScriptedEvent), typeof(ContentXElement) });
             try
             {
+                if (constructor == null)
+                {
+                    throw new Exception($"Error in scripted event \"{scriptedEvent.Prefab.Identifier}\" - could not find a constructor for the EventAction \"{actionType}\".");
+                }
                 return constructor.Invoke(new object[] { scriptedEvent, element }) as EventAction;
             }
             catch (Exception ex)

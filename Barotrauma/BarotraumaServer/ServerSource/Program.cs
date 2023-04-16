@@ -1,13 +1,14 @@
 ﻿#region Using Statements
 
 using Barotrauma.Steam;
-using GameAnalyticsSDK.Net;
 using System;
 using Barotrauma.IO;
 using System.Linq;
 using System.Text;
-using System.Threading;
+using Barotrauma.Networking;
+#if LINUX
 using System.Runtime.InteropServices;
+#endif
 
 #endregion
 
@@ -26,6 +27,20 @@ namespace Barotrauma
         private static extern void setLinuxEnv();
 #endif
 
+        public static bool TryStartChildServerRelay(string[] commandLineArgs)
+        {            
+            for (int i = 0; i < commandLineArgs.Length; i++)
+            {
+                switch (commandLineArgs[i].Trim())
+                {
+                    case "-pipes":
+                        ChildServerRelay.Start(commandLineArgs[i + 2], commandLineArgs[i + 1]);
+                        return true;
+                }
+            }
+            return false;
+        }
+        
         /// <summary>
         /// The main entry point for the application.
         /// </summary>
@@ -36,17 +51,22 @@ namespace Barotrauma
             AppDomain currentDomain = AppDomain.CurrentDomain;
             currentDomain.UnhandledException += new UnhandledExceptionEventHandler(CrashHandler);
 #endif
+            TryStartChildServerRelay(args);
 
 #if LINUX
             setLinuxEnv();
+            AppDomain.CurrentDomain.ProcessExit += (s, e) => 
+            {
+                GameMain.ShouldRun = false;
+            };
 #endif
             Console.WriteLine("Barotrauma Dedicated Server " + GameMain.Version +
                 " (" + AssemblyInfo.BuildString + ", branch " + AssemblyInfo.GitBranch + ", revision " + AssemblyInfo.GitRevision + ")");
-            if(Console.IsOutputRedirected)
+            if (Console.IsOutputRedirected)
             {
                 Console.WriteLine("Output redirection detected; colored text and command input will be disabled.");
             }
-            if(Console.IsInputRedirected)
+            if (Console.IsInputRedirected)
             {
                 Console.WriteLine("Redirected input is detected but is not supported by this application. Input will be ignored.");
             }
@@ -56,28 +76,55 @@ namespace Barotrauma
             Game = new GameMain(args);
 
             Game.Run();
-            if (GameSettings.SendUserStatistics) { GameAnalytics.OnQuit(); }
+            if (GameAnalyticsManager.SendUserStatistics) { GameAnalyticsManager.ShutDown(); }
             SteamManager.ShutDown();
         }
 
         static GameMain Game;
 
+        private static void NotifyCrash(string reportFilePath, Exception e)
+        {
+            string errorMsg = $"{reportFilePath}||\n{e.Message} ({e.GetType().Name}) {e.StackTrace}";
+            if (e.InnerException != null)
+            {
+                var innerMost = e.GetInnermost();
+                errorMsg += $"\nInner exception: {innerMost.Message} ({innerMost.GetType().Name}) {e.StackTrace}";
+            }
+            if (errorMsg.Length > ushort.MaxValue) { errorMsg = errorMsg[..ushort.MaxValue]; }
+            ChildServerRelay.NotifyCrash(errorMsg);
+            GameMain.Server?.NotifyCrash();
+        }
+        
         private static void CrashHandler(object sender, UnhandledExceptionEventArgs args)
         {
+            static void swallowExceptions(Action action)
+            {
+                try
+                {
+                    action();
+                }
+                catch
+                {
+                    //discard exceptions and keep going
+                }
+            }
+
+            string reportFilePath = "";
             try
             {
-                Game?.Exit();
-                CrashDump("servercrashreport.log", (Exception)args.ExceptionObject);
-                GameMain.Server?.NotifyCrash();
+                reportFilePath = "servercrashreport.log";
+                CrashDump(ref reportFilePath, (Exception)args.ExceptionObject);
             }
             catch
             {
-                //exception handler is broken, we have a serious problem here!!
-                return;
+                //fuck
+                reportFilePath = "";
             }
+            swallowExceptions(() => NotifyCrash(reportFilePath, (Exception)args.ExceptionObject));
+            swallowExceptions(() => Game?.Exit());
         }
 
-        static void CrashDump(string filePath, Exception exception)
+        static void CrashDump(ref string filePath, Exception exception)
         {
             try
             {
@@ -108,13 +155,10 @@ namespace Barotrauma
             sb.AppendLine("Barotrauma seems to have crashed. Sorry for the inconvenience! ");
             sb.AppendLine("\n");
             sb.AppendLine("Game version " + GameMain.Version + " (" + AssemblyInfo.BuildString + ", branch " + AssemblyInfo.GitBranch + ", revision " + AssemblyInfo.GitRevision + ")");
-            if (GameMain.Config != null)
+            sb.AppendLine("Language: " + GameSettings.CurrentConfig.Language);
+            if (ContentPackageManager.EnabledPackages.All != null)
             {
-                sb.AppendLine("Language: " + (GameMain.Config.Language ?? "none"));
-                if (GameMain.Config.AllEnabledPackages != null)
-                {
-                    sb.AppendLine("Selected content packages: " + (!GameMain.Config.AllEnabledPackages.Any() ? "None" : string.Join(", ", GameMain.Config.AllEnabledPackages.Select(c => c.Name))));
-                }
+                sb.AppendLine("Selected content packages: " + (!ContentPackageManager.EnabledPackages.All.Any() ? "None" : string.Join(", ", ContentPackageManager.EnabledPackages.All.Select(c => c.Name))));
             }
             sb.AppendLine("Level seed: " + ((Level.Loaded == null) ? "no level loaded" : Level.Loaded.Seed));
             sb.AppendLine("Loaded submarine: " + ((Submarine.MainSub == null) ? "None" : Submarine.MainSub.Info.Name + " (" + Submarine.MainSub.Info.MD5Hash + ")"));
@@ -152,11 +196,18 @@ namespace Barotrauma
                 }
             }
 
+            if (GameAnalyticsManager.SendUserStatistics)
+            {
+                //send crash report before appending debug console messages (which may contain non-anonymous information)
+                GameAnalyticsManager.AddErrorEvent(GameAnalyticsManager.ErrorSeverity.Critical, sb.ToString());
+                GameAnalyticsManager.ShutDown();
+            }
+
             sb.AppendLine("Last debug messages:");
             DebugConsole.Clear();
-            for (int i = DebugConsole.Messages.Count - 1; i > 0 && i > DebugConsole.Messages.Count - 15; i-- )
+            for (int i = DebugConsole.Messages.Count - 1; i > 0 && i > DebugConsole.Messages.Count - 15; i--)
             {
-                sb.AppendLine("   "+DebugConsole.Messages[i].Time+" - "+DebugConsole.Messages[i].Text);
+                sb.AppendLine("   " + DebugConsole.Messages[i].Time + " - " + DebugConsole.Messages[i].Text);
             }
 
             string crashReport = sb.ToString();
@@ -167,12 +218,13 @@ namespace Barotrauma
             }
             Console.Write(crashReport);
 
-            File.WriteAllText(filePath,sb.ToString());
+            File.WriteAllText(filePath, sb.ToString());
 
-            if (GameSettings.SendUserStatistics)
+            if (GameSettings.CurrentConfig.SaveDebugConsoleLogs
+                || GameSettings.CurrentConfig.VerboseLogging) { DebugConsole.SaveLogs(); }
+
+            if (GameAnalyticsManager.SendUserStatistics)
             {
-                GameAnalytics.AddErrorEvent(EGAErrorSeverity.Critical, crashReport);
-                GameAnalytics.OnQuit();
                 Console.Write("A crash report (\"servercrashreport.log\") was saved in the root folder of the game and sent to the developers.");
             }
             else

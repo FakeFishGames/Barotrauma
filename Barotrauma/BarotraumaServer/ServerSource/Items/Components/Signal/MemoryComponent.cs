@@ -18,7 +18,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        private IEnumerable<object> SendStateAfterDelay()
+        private IEnumerable<CoroutineStatus> SendStateAfterDelay()
         {
             while (sendStateTimer > 0.0f)
             {
@@ -36,9 +36,9 @@ namespace Barotrauma.Items.Components
             yield return CoroutineStatus.Success;
         }
 
-        public void ServerWrite(IWriteMessage msg, Client c, object[] extraData = null)
+        public void ServerEventWrite(IWriteMessage msg, Client c, NetEntityEvent.IData extraData = null)
         {
-            msg.Write(Value);
+            msg.WriteString(Value);
             lastSentValue = Value;
         }
     }

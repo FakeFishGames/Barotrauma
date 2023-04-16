@@ -1,5 +1,7 @@
+using Barotrauma.Extensions;
 using Barotrauma.Networking;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Barotrauma
 {
@@ -11,37 +13,37 @@ namespace Barotrauma
 
         public void AssignTeamIDs(IEnumerable<Client> clients)
         {
-            int teamWeight = 0;
-            List<Client> randList = new List<Client>(clients);
-            for (int i = 0; i < randList.Count; i++)
+            int team1Count = 0, team2Count = 0;
+            //if a client has a preference, assign them to that team
+            List<Client> unassignedClients = new List<Client>(clients);
+            for (int i = 0; i < unassignedClients.Count; i++)
             {
-                if (randList[i].PreferredTeam == CharacterTeamType.Team1 ||
-                    randList[i].PreferredTeam == CharacterTeamType.Team2)
+                if (unassignedClients[i].PreferredTeam == CharacterTeamType.Team1 ||
+                    unassignedClients[i].PreferredTeam == CharacterTeamType.Team2)
                 {
-                    randList[i].TeamID = randList[i].PreferredTeam;
-                    teamWeight += randList[i].PreferredTeam == CharacterTeamType.Team1 ? -1 : 1;
-                    randList.RemoveAt(i);
+                    assignTeam(unassignedClients[i], unassignedClients[i].PreferredTeam);
                     i--;
                 }
             }
-            for (int i = 0; i<randList.Count; i++)
-                {
-                Client a = randList[i];
-                int oi = Rand.Range(0, randList.Count - 1);
-                Client b = randList[oi];
-                randList[i] = b;
-                randList[oi] = a;
-            }
-            int halfPlayers = (randList.Count / 2) + teamWeight;
-            for (int i = 0; i < randList.Count; i++)
+            
+            //assign the rest of the clients to the team that has the least players
+            while (unassignedClients.Any())
             {
-                if (i < halfPlayers)
+                var randomClient = unassignedClients.GetRandom(Rand.RandSync.Unsynced);
+                assignTeam(randomClient, team1Count < team2Count ? CharacterTeamType.Team1 : CharacterTeamType.Team2);
+            }
+
+            void assignTeam(Client client, CharacterTeamType team)
+            {
+                client.TeamID = team;
+                unassignedClients.Remove(client);
+                if (team == CharacterTeamType.Team1)
                 {
-                    randList[i].TeamID = CharacterTeamType.Team1;
+                    team1Count++;
                 }
                 else
                 {
-                    randList[i].TeamID = CharacterTeamType.Team2;
+                    team2Count++;
                 }
             }
         }

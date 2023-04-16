@@ -5,15 +5,13 @@ using System.Collections.Generic;
 
 namespace Barotrauma
 {
-    abstract partial class MapEntityPrefab : IPrefab, IDisposable
+    abstract partial class MapEntityPrefab : PrefabWithUintIdentifier
     {
-        public readonly Dictionary<string, List<DecorativeSprite>> UpgradeOverrideSprites = new Dictionary<string, List<DecorativeSprite>>();
-        
         public virtual void UpdatePlacing(Camera cam)
         {
             if (PlayerInput.SecondaryMouseButtonClicked())
             {
-                selected = null;
+                Selected = null;
                 return;
             }
             
@@ -23,7 +21,7 @@ namespace Barotrauma
             {
                 Vector2 position = Submarine.MouseToWorldGrid(cam, Submarine.MainSub);
                 
-                if (PlayerInput.PrimaryMouseButtonHeld()) placePosition = position;
+                if (PlayerInput.PrimaryMouseButtonHeld() && GUI.MouseOn == null) placePosition = position;
             }
             else
             {
@@ -41,13 +39,13 @@ namespace Barotrauma
                     newRect.Location -= MathUtils.ToPoint(Submarine.MainSub.Position);
                 }
 
-                if (PlayerInput.PrimaryMouseButtonReleased())
+                if (PlayerInput.PrimaryMouseButtonReleased() && GUI.MouseOn == null)
                 {
                     CreateInstance(newRect);
                     placePosition = Vector2.Zero;
                     if (!PlayerInput.IsShiftDown())
                     {
-                        selected = null;
+                        Selected = null;
                     }
                 }
 
@@ -97,7 +95,7 @@ namespace Barotrauma
         }
         public void DrawListLine(SpriteBatch spriteBatch, Vector2 pos, Color color)
         {
-            GUI.Font.DrawString(spriteBatch, originalName, pos, color);
+            GUIStyle.Font.DrawString(spriteBatch, OriginalName, pos, color);
         }
     }
 }

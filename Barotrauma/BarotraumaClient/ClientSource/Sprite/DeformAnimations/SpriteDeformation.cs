@@ -14,53 +14,53 @@ namespace Barotrauma.SpriteDeformations
         /// A positive value means that this deformation is or could be used for multiple sprites.
         /// This behaviour is not automatic, and has to be implemented for any particular case separately (currently only used in Limbs).
         /// </summary>
-        [Serialize(-1, true), Editable(minValue: -1, maxValue: 100)]
+        [Serialize(-1, IsPropertySaveable.Yes), Editable(minValue: -1, maxValue: 100)]
         public int Sync
         {
             get;
             private set;
         }
 
-        [Serialize("", true)]
-        public string TypeName
+        [Serialize("", IsPropertySaveable.No)]
+        public string Type 
         {
             get;
             set;
         }
 
-        [Serialize(SpriteDeformation.DeformationBlendMode.Add, true), Editable]
+        [Serialize(SpriteDeformation.DeformationBlendMode.Add, IsPropertySaveable.Yes), Editable]
         public SpriteDeformation.DeformationBlendMode BlendMode
         {
             get;
             set;
         }
 
-        public string Name => $"Deformation ({TypeName})";
+        public string Name => $"Deformation ({Type})";
 
-        [Serialize(1.0f, true), Editable(MinValueFloat = 0, MaxValueFloat = 10, DecimalCount = 2, ValueStep = 0.01f)]
+        [Serialize(1.0f, IsPropertySaveable.Yes), Editable(MinValueFloat = 0, MaxValueFloat = 10, DecimalCount = 2, ValueStep = 0.01f)]
         public float Strength { get; private set; }
 
-        [Serialize(90f, true), Editable(MinValueFloat = 0, MaxValueFloat = 90)]
+        [Serialize(90f, IsPropertySaveable.Yes), Editable(MinValueFloat = 0, MaxValueFloat = 90)]
         public float MaxRotation { get; private set; }
 
-        [Serialize(false, true), Editable]
+        [Serialize(false, IsPropertySaveable.Yes), Editable]
         public bool UseMovementSine { get; set; }
 
-        [Serialize(false, true), Editable]
+        [Serialize(false, IsPropertySaveable.Yes), Editable]
         public bool StopWhenHostIsDead { get; set; }
 
-        [Serialize(false, true), Editable]
+        [Serialize(false, IsPropertySaveable.Yes), Editable]
         public bool OnlyInWater { get; set; }
 
         /// <summary>
         /// Only used if UseMovementSine is enabled. Multiplier for Pi.
         /// </summary>
-        [Serialize(0f, true), Editable]
+        [Serialize(0f, IsPropertySaveable.Yes), Editable]
         public float SineOffset { get; set; }
 
         public virtual float Frequency { get; set; } = 1;
 
-        public Dictionary<string, SerializableProperty> SerializableProperties
+        public Dictionary<Identifier, SerializableProperty> SerializableProperties
         {
             get;
             set;
@@ -72,7 +72,7 @@ namespace Barotrauma.SpriteDeformations
         public static readonly Point ShaderMaxResolution = new Point(15, 15);
 
         private Point _resolution;
-        [Serialize("2,2", true)]
+        [Serialize("2,2", IsPropertySaveable.Yes)]
         public Point Resolution
         {
             get { return _resolution; }
@@ -85,11 +85,11 @@ namespace Barotrauma.SpriteDeformations
 
         public SpriteDeformationParams(XElement element)
         {
-            if (element != null)
-            {
-                TypeName = element.GetAttributeString("type", "").ToLowerInvariant();
-            }
             SerializableProperties = SerializableProperty.DeserializeProperties(this, element);
+            if (element != null && string.IsNullOrEmpty(Type))
+            {
+                Type = element.GetAttributeString("typename", string.Empty);
+            }
         }
     }
 
@@ -120,7 +120,7 @@ namespace Barotrauma.SpriteDeformations
             set { SetResolution(value); }
         }
 
-        public string TypeName => Params.TypeName;
+        public string TypeName => Params.Type;
 
         public int Sync => Params.Sync;
 
@@ -177,7 +177,7 @@ namespace Barotrauma.SpriteDeformations
 
             if (newDeformation != null)
             {
-                newDeformation.Params.TypeName = typeName;
+                newDeformation.Params.Type = typeName;
             }
             return newDeformation;
         }

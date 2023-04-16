@@ -11,6 +11,11 @@ namespace Barotrauma.Networking
 {
     partial class RespawnManager : Entity, IServerSerializable
     {
+        /// <summary>
+        /// How much skills drop towards the job's default skill levels when dying
+        /// </summary>
+        const float SkillReductionOnDeath = 0.75f;
+
         public enum State
         {
             Waiting,
@@ -21,6 +26,8 @@ namespace Barotrauma.Networking
         private readonly NetworkMember networkMember;
         private readonly Steering shuttleSteering;
         private readonly List<Door> shuttleDoors;
+        private const string RespawnContainerTag = "respawncontainer";
+        private readonly ItemContainer respawnContainer;
 
         //items created during respawn
         //any respawn items left in the shuttle are removed when the shuttle despawns
@@ -58,7 +65,7 @@ namespace Barotrauma.Networking
 
         public State CurrentState { get; private set; }
 
-        public bool UseRespawnPrompt
+        public static bool UseRespawnPrompt
         {
             get
             {
@@ -100,13 +107,18 @@ namespace Barotrauma.Networking
                 shuttleDoors = new List<Door>();
                 foreach (Item item in Item.ItemList)
                 {
-                    if (item.Submarine != RespawnShuttle) continue;
+                    if (item.Submarine != RespawnShuttle) { continue; }
+
+                    if (item.HasTag(RespawnContainerTag))
+                    {
+                        respawnContainer = item.GetComponent<ItemContainer>();
+                    }
 
                     var steering = item.GetComponent<Steering>();
-                    if (steering != null) shuttleSteering = steering;
+                    if (steering != null) { shuttleSteering = steering; }
 
                     var door = item.GetComponent<Door>();
-                    if (door != null) shuttleDoors.Add(door);
+                    if (door != null) { shuttleDoors.Add(door); }
 
                     //lock all wires to prevent the players from messing up the electronics
                     var connectionPanel = item.GetComponent<ConnectionPanel>();
@@ -179,6 +191,7 @@ namespace Barotrauma.Networking
         public void ForceRespawn()
         {
             ResetShuttle();
+            RespawnCountdownStarted = true;
             RespawnTime = DateTime.Now;
             CurrentState = State.Waiting;
         }
@@ -196,7 +209,7 @@ namespace Barotrauma.Networking
 
         partial void UpdateReturningProjSpecific(float deltaTime);
         
-        private IEnumerable<object> ForceShuttleToPos(Vector2 position, float speed)
+        private IEnumerable<CoroutineStatus> ForceShuttleToPos(Vector2 position, float speed)
         {
             if (RespawnShuttle == null)
             {
@@ -227,16 +240,16 @@ namespace Barotrauma.Networking
             despawnTime = ReturnTime + new TimeSpan(0, 0, seconds: 30);
 #endif
 
-            if (RespawnShuttle == null) return;
+            if (RespawnShuttle == null) { return; }
 
             foreach (Item item in Item.ItemList)
             {
                 if (item.Submarine != RespawnShuttle) { continue; }
                 
                 //remove respawn items that have been left in the shuttle
-                if (respawnItems.Contains(item))
+                if (respawnItems.Contains(item) || respawnContainer?.Item != null && item.IsOwnedBy(respawnContainer.Item))
                 {
-                    Spawner.AddToRemoveQueue(item);
+                    Spawner.AddItemToRemoveQueue(item);
                     continue;
                 }
 
@@ -246,7 +259,7 @@ namespace Barotrauma.Networking
                 var powerContainer = item.GetComponent<PowerContainer>();
                 if (powerContainer != null)
                 {
-                    powerContainer.Charge = powerContainer.Capacity;
+                    powerContainer.Charge = powerContainer.GetCapacity();
                 }
 
                 var door = item.GetComponent<Door>();
@@ -262,6 +275,7 @@ namespace Barotrauma.Networking
 #endif
                 }
             }
+            respawnItems.Clear();
 
             foreach (Structure wall in Structure.WallList)
             {
@@ -272,12 +286,12 @@ namespace Barotrauma.Networking
                 }            
             }
 
-            foreach (Hull hull in Hull.hullList)
+            foreach (Hull hull in Hull.HullList)
             {
                 if (hull.Submarine != RespawnShuttle) { continue; }
                 hull.OxygenPercentage = 100.0f;
                 hull.WaterVolume = 0.0f;
-                hull.BallastFlora?.Kill();
+                hull.BallastFlora?.Remove();
             }
 
             Dictionary<Character, Vector2> characterPositions = new Dictionary<Character, Vector2>();
@@ -295,12 +309,12 @@ namespace Barotrauma.Networking
                 c.Kill(CauseOfDeathType.Unknown, null, true);
                 c.Enabled = false;
                 
-                Spawner.AddToRemoveQueue(c);
+                Spawner.AddEntityToRemoveQueue(c);
                 if (c.Inventory != null)
                 {
                     foreach (Item item in c.Inventory.AllItems)
                     {
-                        Spawner.AddToRemoveQueue(item);
+                        Spawner.AddItemToRemoveQueue(item);
                     }
                 }
             }
@@ -320,10 +334,14 @@ namespace Barotrauma.Networking
             RespawnCharactersProjSpecific(shuttlePos);
         }
 
+        public static AfflictionPrefab GetRespawnPenaltyAfflictionPrefab()
+        {
+            return AfflictionPrefab.Prefabs.First(a => a.AfflictionType == "respawnpenalty");
+        }
+
         public static Affliction GetRespawnPenaltyAffliction()
         {
-            var respawnPenaltyAffliction = AfflictionPrefab.List.FirstOrDefault(a => a.AfflictionType.Equals("respawnpenalty", StringComparison.OrdinalIgnoreCase));
-            return respawnPenaltyAffliction?.Instantiate(10.0f);
+            return GetRespawnPenaltyAfflictionPrefab()?.Instantiate(10.0f);
         }
 
         public static void GiveRespawnPenaltyAffliction(Character character)

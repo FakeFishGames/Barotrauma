@@ -1,17 +1,12 @@
 ﻿namespace Barotrauma
 {
-    partial class Screen
+    abstract partial class Screen
     {
-        private static Screen selected;
-        
-        public static Screen Selected
-        {
-            get { return selected; }
-        }
+        public static Screen Selected { get; private set; }
 
         public static void SelectNull()
         {
-            selected = null;
+            Selected = null;
         }
 
         public virtual void Deselect()
@@ -20,10 +15,11 @@
 
         public virtual void Select()
         {
-            if (selected != null && selected != this)
+            if (Selected != null && Selected != this)
             {
-                selected.Deselect();
+                Selected.Deselect();
 #if CLIENT
+                GameMain.ParticleManager.ClearParticles();
                 GUIContextMenu.CurrentContextMenu = null;
                 GUI.ClearCursorWait();
                 //make sure any textbox in the previously selected screen doesn't stay selected
@@ -39,16 +35,20 @@
                 {
                     GUI.DisableSavingIndicatorDelayed();
                 }
+                GameMain.ResetIMEWorkaround();
 #endif
             }
-            selected = this;
+
+#if CLIENT
+            GUI.SettingsMenuOpen = false;
+#endif
+            Selected = this;
         }
 
-        public virtual Camera Cam
-        {
-            get { return null; }
-        }
-        
+        public virtual Camera Cam => null;
+
+        public virtual bool IsEditor => false;
+
         public virtual void Update(double deltaTime)
         {
         }

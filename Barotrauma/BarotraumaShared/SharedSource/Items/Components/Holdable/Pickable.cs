@@ -4,7 +4,6 @@ using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
 {
@@ -20,10 +19,14 @@ namespace Barotrauma.Items.Components
 
         private CoroutineHandle pickingCoroutine;
 
+        public virtual bool IsAttached => false;
+
         public List<InvSlotType> AllowedSlots
         {
             get { return allowedSlots; }
         }
+
+        public bool PickingDone => pickTimer >= PickingTime;
 
         public Character Picker
         {
@@ -36,8 +39,8 @@ namespace Barotrauma.Items.Components
                 return picker; 
             }
         }
-        
-        public Pickable(Item item, XElement element)
+
+        public Pickable(Item item, ContentXElement element)
             : base(item, element)
         {
             allowedSlots = new List<InvSlotType>();
@@ -69,13 +72,28 @@ namespace Barotrauma.Items.Components
         public override bool Pick(Character picker)
         {
             //return if someone is already trying to pick the item
-            if (pickTimer > 0.0f) return false;
-            if (picker == null || picker.Inventory == null) return false;
+            if (pickTimer > 0.0f) { return false; }
+            if (picker == null || picker.Inventory == null) { return false; }
+            if (!picker.Inventory.AccessibleWhenAlive && !picker.Inventory.AccessibleByOwner) { return false; }
 
             if (PickingTime > 0.0f)
             {
-                var abilityPickingTime = new AbilityValueItem(PickingTime, item.Prefab);
+                var abilityPickingTime = new AbilityItemPickingTime(PickingTime, item.Prefab);
                 picker.CheckTalents(AbilityEffectType.OnItemPicked, abilityPickingTime);
+
+                if (requiredItems.ContainsKey(RelatedItem.RelationType.Equipped))
+                {
+                    foreach (RelatedItem ri in requiredItems[RelatedItem.RelationType.Equipped])
+                    {
+                        foreach (var heldItem in picker.HeldItems)
+                        {
+                            if (ri.MatchesItem(heldItem))
+                            {
+                                abilityPickingTime.Value /= 1 + heldItem.Prefab.AddedPickingSpeedMultiplier;
+                            }
+                        }
+                    }
+                }
 
                 if ((picker.PickingItem == null || picker.PickingItem == item) && PickingTime <= float.MaxValue)
                 {
@@ -142,38 +160,39 @@ namespace Barotrauma.Items.Components
             return false;
         }
 
-        private IEnumerable<object> WaitForPick(Character picker, float requiredTime)
+        private IEnumerable<CoroutineStatus> WaitForPick(Character picker, float requiredTime)
         {
             activePicker = picker;
             picker.PickingItem = item;
             pickTimer = 0.0f;
             while (pickTimer < requiredTime && Screen.Selected != GameMain.SubEditorScreen)
             {
-                //cancel if the item is currently selected
-                //attempting to pick does not select the item, so if it is selected at this point, another ItemComponent
-                //must have been selected and we should not keep deattaching (happens when for example interacting with
-                //an electrical component while holding both a screwdriver and a wrench).
-                if (picker.SelectedConstruction == item || 
-                    picker.IsKeyDown(InputType.Aim) || 
-                    !picker.CanInteractWith(item) ||
-                    item.Removed || item.ParentInventory != null)
+                if (!CoroutineManager.Paused)
                 {
-                    StopPicking(picker);
-                    yield return CoroutineStatus.Success;
-                }
+                    //cancel if the item is currently selected
+                    //attempting to pick does not select the item, so if it is selected at this point, another ItemComponent
+                    //must have been selected and we should not keep deattaching (happens when for example interacting with
+                    //an electrical component while holding both a screwdriver and a wrench).
+                    if (picker.IsAnySelectedItem(item) ||
+                        picker.IsKeyDown(InputType.Aim) ||
+                        !picker.CanInteractWith(item) ||
+                        item.Removed || item.ParentInventory != null)
+                    {
+                        StopPicking(picker);
+                        yield return CoroutineStatus.Success;
+                    }
 
 #if CLIENT
-                Character.Controlled?.UpdateHUDProgressBar(
-                    this,
-                    item.WorldPosition,
-                    pickTimer / requiredTime,
-                    GUI.Style.Red, GUI.Style.Green,
-                    !string.IsNullOrWhiteSpace(PickingMsg) ? PickingMsg : this is Door ? "progressbar.opening" : "progressbar.deattaching");
+                    Character.Controlled?.UpdateHUDProgressBar(
+                        this,
+                        item.WorldPosition,
+                        pickTimer / requiredTime,
+                        GUIStyle.Red, GUIStyle.Green,
+                        !string.IsNullOrWhiteSpace(PickingMsg) ? PickingMsg : this is Door ? "progressbar.opening" : "progressbar.deattaching");
 #endif
-                
-                picker.AnimController.UpdateUseItem(true, item.WorldPosition + new Vector2(0.0f, 100.0f) * ((pickTimer / 10.0f) % 0.1f));
-                pickTimer += CoroutineManager.DeltaTime;
-
+                    picker.AnimController.UpdateUseItem(!picker.IsClimbing, item.WorldPosition + new Vector2(0.0f, 100.0f) * ((pickTimer / 10.0f) % 0.1f));
+                    pickTimer += CoroutineManager.DeltaTime;
+                }
                 yield return CoroutineStatus.Running;
             }
 
@@ -192,7 +211,7 @@ namespace Barotrauma.Items.Components
         {
             if (picker != null)
             {
-                picker.AnimController.Anim = AnimController.Animation.None;
+                picker.AnimController.StopUsingItem();
                 picker.PickingItem = null;
             }
             if (pickingCoroutine != null)
@@ -212,7 +231,7 @@ namespace Barotrauma.Items.Components
             {
                 foreach (Connection c in connectionPanel.Connections)
                 {
-                    foreach (Wire w in c.Wires)
+                    foreach (Wire w in c.Wires.ToArray())
                     {
                         if (w == null) continue;
                         w.Item.Drop(character);
@@ -268,12 +287,12 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public virtual void ServerWrite(IWriteMessage msg, Client c, object[] extraData = null)
+        public virtual void ServerEventWrite(IWriteMessage msg, Client c, NetEntityEvent.IData extraData = null)
         {
-            msg.Write(activePicker == null ? (ushort)0 : activePicker.ID);
+            msg.WriteUInt16(activePicker?.ID ?? (ushort)0);
         }
 
-        public virtual void ClientRead(ServerNetObject type, IReadMessage msg, float sendingTime)
+        public virtual void ClientEventRead(IReadMessage msg, float sendingTime)
         {
             ushort pickerID = msg.ReadUInt16();
             if (pickerID == 0)
@@ -285,5 +304,16 @@ namespace Barotrauma.Items.Components
                 Pick(Entity.FindEntityByID(pickerID) as Character);
             }
         }
+    }
+
+    class AbilityItemPickingTime : AbilityObject, IAbilityValue, IAbilityItemPrefab
+    {
+        public AbilityItemPickingTime(float pickingTime, ItemPrefab itemPrefab)
+        {
+            Value = pickingTime;
+            ItemPrefab = itemPrefab;
+        }
+        public float Value { get; set; }
+        public ItemPrefab ItemPrefab { get; set; }
     }
 }

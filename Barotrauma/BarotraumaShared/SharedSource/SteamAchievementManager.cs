@@ -6,7 +6,6 @@ using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 
 namespace Barotrauma
 {
@@ -14,7 +13,7 @@ namespace Barotrauma
     {
         private const float UpdateInterval = 1.0f;
 
-        private static HashSet<string> unlockedAchievements = new HashSet<string>();
+        private static HashSet<Identifier> unlockedAchievements = new HashSet<Identifier>();
 
         public static bool CheatsEnabled = false;
 
@@ -30,8 +29,6 @@ namespace Barotrauma
             public readonly HashSet<Character> EnteredCrushDepth = new HashSet<Character>();
             public readonly HashSet<Character> ReactorMeltdown = new HashSet<Character>();
 
-            public readonly HashSet<Character> Casualties = new HashSet<Character>();
-
             public bool SubWasDamaged;
         }
 
@@ -46,8 +43,9 @@ namespace Barotrauma
             roundData = new RoundData();
             foreach (Item item in Item.ItemList)
             {
+                if (item.Submarine == null || item.Submarine.Info.Type != SubmarineType.Player) { continue; }
                 Reactor reactor = item.GetComponent<Reactor>();
-                if (reactor != null) { roundData.Reactors.Add(reactor); }
+                if (reactor != null && reactor.Item.Condition > 0.0f) { roundData.Reactors.Add(reactor); }
             }
             pathFinder = new PathFinder(WayPoint.WayPointList, false);
             cachedDistances.Clear();
@@ -68,23 +66,23 @@ namespace Barotrauma
             {
                 if (GameMain.GameSession.EventManager.CurrentIntensity > 0.99f)
                 {
-                    UnlockAchievement("maxintensity", true, c => c != null && !c.IsDead && !c.IsUnconscious);
+                    UnlockAchievement("maxintensity".ToIdentifier(), true, c => c != null && !c.IsDead && !c.IsUnconscious);
                 }
 
                 foreach (Character c in Character.CharacterList)
                 {
                     if (c.IsDead) { continue; }
                     //achievement for descending below crush depth and coming back
-                    if (Timing.TotalTime > GameMain.GameSession.RoundStartTime + 30.0f)
+                    if (GameMain.GameSession.RoundDuration > 30.0f)
                     {
                         if (c.Submarine != null && c.Submarine.AtDamageDepth || Level.Loaded.GetRealWorldDepth(c.WorldPosition.Y) > Level.Loaded.RealWorldCrushDepth)
                         {
                             roundData.EnteredCrushDepth.Add(c);
                         }
-                        else if (Level.Loaded.GetRealWorldDepth(c.WorldPosition.Y) < Level.Loaded.RealWorldCrushDepth * 0.5f)
+                        else if (Level.Loaded.GetRealWorldDepth(c.WorldPosition.Y) < Level.Loaded.RealWorldCrushDepth - 500.0f)
                         {
                             //all characters that have entered crush depth and are still alive get an achievement
-                            if (roundData.EnteredCrushDepth.Contains(c)) UnlockAchievement(c, "survivecrushdepth");
+                            if (roundData.EnteredCrushDepth.Contains(c)) { UnlockAchievement(c, "survivecrushdepth".ToIdentifier()); }
                         }
                     }
                 }
@@ -99,7 +97,7 @@ namespace Barotrauma
                             //get an achievement if they're still alive at the end of the round
                             foreach (Character c in Character.CharacterList)
                             {
-                                if (!c.IsDead && c.Submarine == sub) roundData.ReactorMeltdown.Add(c);
+                                if (!c.IsDead && c.Submarine == sub) { roundData.ReactorMeltdown.Add(c); }
                             }
                         }
                     }
@@ -110,15 +108,15 @@ namespace Barotrauma
                     if (Math.Abs(submarineVel.X) > 100.0f)
                     {
                         //all conscious characters inside the sub get an achievement
-                        UnlockAchievement("subhighvelocity", true, c => c != null && c.Submarine == sub && !c.IsDead && !c.IsUnconscious);
+                        UnlockAchievement("subhighvelocity".ToIdentifier(), true, c => c != null && c.Submarine == sub && !c.IsDead && !c.IsUnconscious);
                     }
 
                     //achievement for descending ridiculously deep
                     float realWorldDepth = sub.RealWorldDepth;
-                    if (realWorldDepth > 5000.0f && Timing.TotalTime > GameMain.GameSession.RoundStartTime + 30.0f)
+                    if (realWorldDepth > 5000.0f && GameMain.GameSession.RoundDuration > 30.0f)
                     {
                         //all conscious characters inside the sub get an achievement
-                        UnlockAchievement("subdeep", true, c => c != null && c.Submarine == sub && !c.IsDead && !c.IsUnconscious);
+                        UnlockAchievement("subdeep".ToIdentifier(), true, c => c != null && c.Submarine == sub && !c.IsDead && !c.IsUnconscious);
                     }
                 }
 
@@ -151,13 +149,13 @@ namespace Barotrauma
         {
             if (c == null || c.Removed) { return; }
 
-            if (c.HasEquippedItem("clownmask") &&
-                c.HasEquippedItem("clowncostume"))
+            if (c.HasEquippedItem("clownmask".ToIdentifier()) &&
+                c.HasEquippedItem("clowncostume".ToIdentifier()))
             {
-                UnlockAchievement(c, "clowncostume");
+                UnlockAchievement(c, "clowncostume".ToIdentifier());
             }
 
-            if (Submarine.MainSub != null && c.Submarine == null && c.SpeciesName.Equals(CharacterPrefab.HumanSpeciesName, StringComparison.OrdinalIgnoreCase))
+            if (Submarine.MainSub != null && c.Submarine == null && c.SpeciesName == CharacterPrefab.HumanSpeciesName)
             {
                 float requiredDist = 500 / Physics.DisplayToRealWorldRatio;
                 float distSquared = Vector2.DistanceSquared(c.WorldPosition, Submarine.MainSub.WorldPosition);
@@ -187,7 +185,7 @@ namespace Barotrauma
                 }
                 if (distSquared > requiredDist * requiredDist)
                 {
-                    UnlockAchievement(c, "crewaway");
+                    UnlockAchievement(c, "crewaway".ToIdentifier());
                 }
 
                 static CachedDistance CalculateNewCachedDistance(Character c)
@@ -218,26 +216,41 @@ namespace Barotrauma
 
         public static void OnBiomeDiscovered(Biome biome)
         {
-            UnlockAchievement("discover" + biome.Identifier.ToLowerInvariant().Replace(" ", ""));
+            UnlockAchievement($"discover{biome.Identifier.Value.Replace(" ", "")}".ToIdentifier());
+        }
+
+        public static void OnCampaignMetadataSet(Identifier identifier, object value, bool unlockClients = false)
+        {
+            if (identifier.IsEmpty || value is null) { return; }
+            UnlockAchievement($"campaignmetadata_{identifier}_{value}".ToIdentifier(), unlockClients);
         }
 
         public static void OnItemRepaired(Item item, Character fixer)
         {
 #if CLIENT
-            if (GameMain.Client != null) return;
+            if (GameMain.Client != null) { return; }
 #endif
-            if (fixer == null) return;
+            if (fixer == null) { return; }
             
-            UnlockAchievement(fixer, "repairdevice");
-            UnlockAchievement(fixer, "repair" + item.Prefab.Identifier);
+            UnlockAchievement(fixer, "repairdevice".ToIdentifier());
+            UnlockAchievement(fixer, $"repair{item.Prefab.Identifier}".ToIdentifier());
+        }
+
+        public static void OnAfflictionReceived(Affliction affliction, Character character)
+        {
+            if (affliction.Prefab.AchievementOnReceived.IsEmpty) { return; }
+#if CLIENT
+            if (GameMain.Client != null) { return; }
+#endif
+            UnlockAchievement(character, affliction.Prefab.AchievementOnReceived);
         }
 
         public static void OnAfflictionRemoved(Affliction affliction, Character character)
         {
-            if (string.IsNullOrEmpty(affliction.Prefab.AchievementOnRemoved)) return;
+            if (affliction.Prefab.AchievementOnRemoved.IsEmpty) { return; }
 
 #if CLIENT
-            if (GameMain.Client != null) return;
+            if (GameMain.Client != null) { return; }
 #endif
             UnlockAchievement(character, affliction.Prefab.AchievementOnRemoved);
         }
@@ -245,80 +258,82 @@ namespace Barotrauma
         public static void OnCharacterRevived(Character character, Character reviver)
         {
 #if CLIENT
-            if (GameMain.Client != null) return;
+            if (GameMain.Client != null) { return; }
 #endif
-            if (reviver == null) return;
-            UnlockAchievement(reviver, "healcrit");
+            if (reviver == null) { return; }
+            UnlockAchievement(reviver, "healcrit".ToIdentifier());
         }
 
         public static void OnCharacterKilled(Character character, CauseOfDeath causeOfDeath)
         {
 #if CLIENT
-            if (GameMain.Client != null || GameMain.GameSession == null) return;
-#endif
+            if (GameMain.Client != null || GameMain.GameSession == null) { return; }
 
             if (character != Character.Controlled &&
                 causeOfDeath.Killer != null &&
                 causeOfDeath.Killer == Character.Controlled)
             {
-                SteamManager.IncrementStat(
-                    character.IsHuman ? "humanskilled" : "monsterskilled",
-                    1);
+                IncrementStat(causeOfDeath.Killer, (character.IsHuman ? "humanskilled" : "monsterskilled").ToIdentifier(), 1);
             }
+#elif SERVER
+            if (character != causeOfDeath.Killer && causeOfDeath.Killer != null)
+            {
+                IncrementStat(causeOfDeath.Killer, (character.IsHuman ? "humanskilled" : "monsterskilled").ToIdentifier(), 1);
+            }
+#endif
 
-            roundData?.Casualties.Add(character);
-
-            UnlockAchievement(causeOfDeath.Killer, "kill" + character.SpeciesName);
+            UnlockAchievement(causeOfDeath.Killer, $"kill{character.SpeciesName}".ToIdentifier());
             if (character.CurrentHull != null)
             {
-                UnlockAchievement(causeOfDeath.Killer, "kill" + character.SpeciesName + "indoors");
+                UnlockAchievement(causeOfDeath.Killer, $"kill{character.SpeciesName}indoors".ToIdentifier());
             }
             if (character.SpeciesName.EndsWith("boss"))
             {
-                UnlockAchievement(causeOfDeath.Killer, "kill" + character.SpeciesName.Replace("boss", ""));
+                UnlockAchievement(causeOfDeath.Killer, $"kill{character.SpeciesName.Replace("boss", "")}".ToIdentifier());
                 if (character.CurrentHull != null)
                 {
-                    UnlockAchievement(causeOfDeath.Killer, "kill" + character.SpeciesName.Replace("boss", "") + "indoors");
+                    UnlockAchievement(causeOfDeath.Killer, $"kill{character.SpeciesName.Replace("boss", "")}indoors".ToIdentifier());
                 }
             }
             if (character.SpeciesName.EndsWith("_m"))
             {
-                UnlockAchievement(causeOfDeath.Killer, "kill" + character.SpeciesName.Replace("_m", ""));
+                UnlockAchievement(causeOfDeath.Killer, $"kill{character.SpeciesName.Replace("_m", "")}".ToIdentifier());
                 if (character.CurrentHull != null)
                 {
-                    UnlockAchievement(causeOfDeath.Killer, "kill" + character.SpeciesName.Replace("_m", "") + "indoors");
+                    UnlockAchievement(causeOfDeath.Killer, $"kill{character.SpeciesName.Replace("_m", "")}indoors".ToIdentifier());
                 }
             }
 
-            if (character.HasEquippedItem("clownmask") && 
-                character.HasEquippedItem("clowncostume") &&
+            if (character.HasEquippedItem("clownmask".ToIdentifier()) && 
+                character.HasEquippedItem("clowncostume".ToIdentifier()) &&
                 causeOfDeath.Killer != character)
             {
-                UnlockAchievement(causeOfDeath.Killer, "killclown");
+                UnlockAchievement(causeOfDeath.Killer, "killclown".ToIdentifier());
             }
 
+            // TODO: should we change this? Morbusine used to be the strongest poison. Now Cyanide is strongest.
             if (character.CharacterHealth?.GetAffliction("morbusinepoisoning") != null)
             {
-                UnlockAchievement(causeOfDeath.Killer, "killpoison");
+                UnlockAchievement(causeOfDeath.Killer, "killpoison".ToIdentifier());
             }
 
             if (causeOfDeath.DamageSource is Item item)
             {
                 if (item.HasTag("tool"))
                 {
-                    UnlockAchievement(causeOfDeath.Killer, "killtool");
+                    UnlockAchievement(causeOfDeath.Killer, "killtool".ToIdentifier());
                 }
                 else
                 {
-                    switch (item.Prefab.Identifier)
+                    // TODO: should we change this? Morbusine used to be the strongest poison. Now Cyanide is strongest.
+                    if (item.Prefab.Identifier == "morbusine")
                     {
-                        case "morbusine":
-                            UnlockAchievement(causeOfDeath.Killer, "killpoison");
-                            break;
-                        case "nuclearshell":
-                        case "nucleardepthcharge":
-                            UnlockAchievement(causeOfDeath.Killer, "killnuke");
-                            break;
+                        UnlockAchievement(causeOfDeath.Killer, "killpoison".ToIdentifier());
+                    }
+                    else if (item.Prefab.Identifier == "nuclearshell" ||
+                             item.Prefab.Identifier == "nucleardepthcharge")
+                    {
+                            UnlockAchievement(causeOfDeath.Killer, "killnuke".ToIdentifier());
                     }
                 }
             }
@@ -328,7 +343,7 @@ namespace Barotrauma
             {
                 if (GameMain.Server.TraitorManager.IsTraitor(character))
                 {
-                    UnlockAchievement(causeOfDeath.Killer, "killtraitor");
+                    UnlockAchievement(causeOfDeath.Killer, "killtraitor".ToIdentifier());
                 }
             }
 #endif
@@ -337,13 +352,15 @@ namespace Barotrauma
         public static void OnTraitorWin(Character character)
         {
 #if CLIENT
-            if (GameMain.Client != null || GameMain.GameSession == null) return;
+            if (GameMain.Client != null || GameMain.GameSession == null) { return; }
 #endif
-            UnlockAchievement(character, "traitorwin");
+            UnlockAchievement(character, "traitorwin".ToIdentifier());
         }
 
         public static void OnRoundEnded(GameSession gameSession)
         {
+            if (CheatsEnabled) { return; }
+
             //made it to the destination
             if (gameSession?.Submarine != null && Level.Loaded != null && gameSession.Submarine.AtEndExit)
             {
@@ -358,14 +375,14 @@ namespace Barotrauma
                         !myCharacter.IsDead &&
                         (myCharacter.Submarine == gameSession.Submarine || (Level.Loaded?.EndOutpost != null && myCharacter.Submarine == Level.Loaded.EndOutpost)))
                     {
-                        SteamManager.IncrementStat("kmstraveled", levelLengthKilometers);
+                        IncrementStat("kmstraveled".ToIdentifier(), levelLengthKilometers);
                     }
 #endif
                 }
                 else
                 {
                     //in sp making it to the end is enough
-                    SteamManager.IncrementStat("kmstraveled", levelLengthKilometers);
+                    IncrementStat("kmstraveled".ToIdentifier(), levelLengthKilometers);
                 }
             }
 
@@ -379,7 +396,10 @@ namespace Barotrauma
                 if (mission is CombatMission combatMission && GameMain.GameSession.WinningTeam.HasValue)
                 {
                     //all characters that are alive and in the winning team get an achievement
-                    UnlockAchievement(mission.Prefab.AchievementIdentifier + (int)GameMain.GameSession.WinningTeam, true,
+                    var achvIdentifier =
+                        $"{mission.Prefab.AchievementIdentifier}{(int) GameMain.GameSession.WinningTeam}"
+                            .ToIdentifier();
+                    UnlockAchievement(achvIdentifier, true,
                         c => c != null && !c.IsDead && !c.IsUnconscious && combatMission.IsInWinningTeam(c));
                 }
                 else if (mission.Completed)
@@ -399,43 +419,43 @@ namespace Barotrauma
             //made it to the destination
             if (gameSession.Submarine.AtEndExit)
             {
-                bool noDamageRun = !roundData.SubWasDamaged && !roundData.Casualties.Any(c => !(c.AIController is EnemyAIController));
+                bool noDamageRun = !roundData.SubWasDamaged && !gameSession.Casualties.Any();
 
 #if SERVER
                 if (GameMain.Server != null)
                 {
                     //in MP all characters that were inside the sub during reactor meltdown and still alive at the end of the round get an achievement
-                    UnlockAchievement("survivereactormeltdown", true, c => c != null && !c.IsDead && roundData.ReactorMeltdown.Contains(c));
+                    UnlockAchievement("survivereactormeltdown".ToIdentifier(), true, c => c != null && !c.IsDead && roundData.ReactorMeltdown.Contains(c));
                     if (noDamageRun)
                     {
-                        UnlockAchievement("nodamagerun", true, c => c != null && !c.IsDead);                    
+                        UnlockAchievement("nodamagerun".ToIdentifier(), true, c => c != null && !c.IsDead);                    
                     }
                 }
 #endif
 #if CLIENT
-                if (noDamageRun) { UnlockAchievement("nodamagerun"); }
+                if (noDamageRun) { UnlockAchievement("nodamagerun".ToIdentifier()); }
                 if (roundData.ReactorMeltdown.Any()) //in SP getting to the destination after a meltdown is enough
                 {
-                    UnlockAchievement("survivereactormeltdown");
+                    UnlockAchievement("survivereactormeltdown".ToIdentifier());
                 }
 #endif
                 var charactersInSub = Character.CharacterList.FindAll(c => 
                     !c.IsDead && 
                     c.TeamID != CharacterTeamType.FriendlyNPC &&
                     !(c.AIController is EnemyAIController) &&
-                    (c.Submarine == gameSession.Submarine || (Level.Loaded?.EndOutpost != null && c.Submarine == Level.Loaded.EndOutpost)));
+                    (c.Submarine == gameSession.Submarine || gameSession.Submarine.GetConnectedSubs().Contains(c.Submarine) || (Level.Loaded?.EndOutpost != null && c.Submarine == Level.Loaded.EndOutpost)));
 
                 if (charactersInSub.Count == 1)
                 {
-                    //there must be some non-enemy casualties to get the last mant standing achievement
-                    if (roundData.Casualties.Any(c => !(c.AIController is EnemyAIController) && c.TeamID == charactersInSub[0].TeamID))
+                    //there must be some casualties to get the last mant standing achievement
+                    if (gameSession.Casualties.Any())
                     {
-                        UnlockAchievement(charactersInSub[0], "lastmanstanding");
+                        UnlockAchievement(charactersInSub[0], "lastmanstanding".ToIdentifier());
                     }
 #if CLIENT
                     else if (GameMain.GameSession.CrewManager.GetCharacters().Count() == 1)
                     {
-                        UnlockAchievement(charactersInSub[0], "lonesailor");
+                        UnlockAchievement(charactersInSub[0], "lonesailor".ToIdentifier());
                     }
 #else
                     //lone sailor achievement if alone in the sub and there are no other characters with the same team ID
@@ -444,59 +464,83 @@ namespace Barotrauma
                         c.TeamID == charactersInSub[0].TeamID && 
                         !(c.AIController is EnemyAIController)))
                     {
-                        UnlockAchievement(charactersInSub[0], "lonesailor");
+                        UnlockAchievement(charactersInSub[0], "lonesailor".ToIdentifier());
                     }
 #endif
 
                 }
                 foreach (Character character in charactersInSub)
                 {
+                    if (roundData.EnteredCrushDepth.Contains(character))
+                    {
+                        UnlockAchievement(character, "survivecrushdepth".ToIdentifier());
+                    }
                     if (character.Info.Job == null) { continue; }
-                    UnlockAchievement(character, character.Info.Job.Prefab.Identifier + "round");
+                    UnlockAchievement(character, $"{character.Info.Job.Prefab.Identifier}round".ToIdentifier());
                 }
             }
 
             pathFinder = null;
         }
 
-        private static void UnlockAchievement(Character recipient, string identifier)
+        private static void UnlockAchievement(Character recipient, Identifier identifier)
         {
-            if (CheatsEnabled) return;
-            if (recipient == null) return;
+            if (CheatsEnabled || recipient == null) { return; }
 #if CLIENT
             if (recipient == Character.Controlled)
             {
                 UnlockAchievement(identifier);
             }
-#endif
-#if SERVER
+#elif SERVER
             GameMain.Server?.GiveAchievement(recipient, identifier);
 #endif
         }
-        
-        public static void UnlockAchievement(string identifier, bool unlockClients = false, Func<Character, bool> conditions = null)
-        {
-            if (CheatsEnabled) return;
-            identifier = identifier.ToLowerInvariant();
-            
-#if SERVER
 
+        private static void IncrementStat(Character recipient, Identifier identifier, int amount)
+        {
+            if (CheatsEnabled || recipient == null) { return; }
+#if CLIENT
+            if (recipient == Character.Controlled)
+            {
+                SteamManager.IncrementStat(identifier, amount);
+            }
+#elif SERVER
+            GameMain.Server?.IncrementStat(recipient, identifier, amount);
+#endif
+        }
+
+        public static void IncrementStat(Identifier identifier, int amount)
+        {
+            if (CheatsEnabled) { return; }
+            SteamManager.IncrementStat(identifier, amount);
+        }
+
+        public static void IncrementStat(Identifier identifier, float amount)
+        {
+            if (CheatsEnabled) { return; }
+            SteamManager.IncrementStat(identifier, amount);
+        }
+
+        public static void UnlockAchievement(Identifier identifier, bool unlockClients = false, Func<Character, bool> conditions = null)
+        {
+            if (CheatsEnabled) { return; }
+
+#if SERVER
             if (unlockClients && GameMain.Server != null)
             {
                 foreach (Client c in GameMain.Server.ConnectedClients)
                 {
-                    if (conditions != null && !conditions(c.Character)) continue;
+                    if (conditions != null && !conditions(c.Character)) { continue; }
                     GameMain.Server.GiveAchievement(c, identifier);
                 }
             }
 #endif
-
             //already unlocked, no need to do anything
-            if (unlockedAchievements.Contains(identifier)) return;
+            if (unlockedAchievements.Contains(identifier)) { return; }
             unlockedAchievements.Add(identifier);
 
 #if CLIENT
-            if (conditions != null && !conditions(Character.Controlled)) return;
+            if (conditions != null && !conditions(Character.Controlled)) { return; }
 #endif
 
             SteamManager.UnlockAchievement(identifier);

@@ -9,7 +9,7 @@ namespace Barotrauma
 {
     class AIObjectiveFixLeak : AIObjective
     {
-        public override string Identifier { get; set; } = "fix leak";
+        public override Identifier Identifier { get; set; } = "fix leak".ToIdentifier();
         public override bool ForceRun => true;
         public override bool KeepDivingGearOn => true;
         public override bool AllowInAnySub => true;
@@ -48,31 +48,44 @@ namespace Barotrauma
             }
             else
             {
-                float xDist = Math.Abs(character.WorldPosition.X - Leak.WorldPosition.X);
-                float yDist = Math.Abs(character.WorldPosition.Y - Leak.WorldPosition.Y);
-                // Vertical distance matters more than horizontal (climbing up/down is harder than moving horizontally).
-                // If the target is close, ignore the distance factor alltogether so that we keep fixing the leaks that are nearby.
-                float distanceFactor = isPriority || xDist < 200 && yDist < 100 ? 1 : MathHelper.Lerp(1, 0.1f, MathUtils.InverseLerp(0, 3000, xDist + yDist * 3.0f));
-                float severity = isPriority ? 1 : AIObjectiveFixLeaks.GetLeakSeverity(Leak) / 100;
                 float reduction = isPriority ? 1 : 2;
-                float max = AIObjectiveManager.LowestOrderPriority - reduction;
-                float devotion = CumulatedDevotion / 100;
-                Priority = MathHelper.Lerp(0, max, MathHelper.Clamp(devotion + (severity * distanceFactor * PriorityModifier), 0, 1));
+                float maxPriority = AIObjectiveManager.LowestOrderPriority - reduction;
+                if (operateObjective != null && objectiveManager.GetActiveObjective<AIObjectiveFixLeaks>() is AIObjectiveFixLeaks fixLeaks && fixLeaks.CurrentSubObjective == this)
+                {
+                    // Prioritize leaks that we are already fixing
+                    Priority = maxPriority;
+                }
+                else
+                {
+                    float xDist = Math.Abs(character.WorldPosition.X - Leak.WorldPosition.X);
+                    float yDist = Math.Abs(character.WorldPosition.Y - Leak.WorldPosition.Y);
+                    // Vertical distance matters more than horizontal (climbing up/down is harder than moving horizontally).
+                    // If the target is close, ignore the distance factor alltogether so that we keep fixing the leaks that are nearby.
+                    float distanceFactor = isPriority || xDist < 200 && yDist < 100 ? 1 : MathHelper.Lerp(1, 0.1f, MathUtils.InverseLerp(0, 3000, xDist + yDist * 3.0f));
+                    if (Leak.linkedTo.Any(e => e is Hull h && h == character.CurrentHull))
+                    {
+                        // Double the distance when the leak can be accessed from the current hull.
+                        distanceFactor *= 2;
+                    }
+                    float severity = isPriority ? 1 : AIObjectiveFixLeaks.GetLeakSeverity(Leak) / 100;
+                    float devotion = CumulatedDevotion / 100;
+                    Priority = MathHelper.Lerp(0, maxPriority, MathHelper.Clamp(devotion + (severity * distanceFactor * PriorityModifier), 0, 1));
+                }
             }
             return Priority;
         }
 
         protected override void Act(float deltaTime)
         {
-            var weldingTool = character.Inventory.FindItemByTag("weldingequipment", true);
+            var weldingTool = character.Inventory.FindItemByTag("weldingequipment".ToIdentifier(), true);
             if (weldingTool == null)
             {
-                TryAddSubObjective(ref getWeldingTool, () => new AIObjectiveGetItem(character, "weldingequipment", objectiveManager, equip: true, spawnItemIfNotFound: character.TeamID == CharacterTeamType.FriendlyNPC), 
+                TryAddSubObjective(ref getWeldingTool, () => new AIObjectiveGetItem(character, "weldingequipment".ToIdentifier(), objectiveManager, equip: true, spawnItemIfNotFound: character.TeamID == CharacterTeamType.FriendlyNPC), 
                     onAbandon: () =>
                     {
                         if (character.IsOnPlayerTeam && objectiveManager.IsCurrentOrder<AIObjectiveFixLeaks>())
                         {
-                            character.Speak(TextManager.Get("dialogcannotfindweldingequipment"), null, 0.0f, "dialogcannotfindweldingequipment", 10.0f);
+                            character.Speak(TextManager.Get("dialogcannotfindweldingequipment").Value, null, 0.0f, "dialogcannotfindweldingequipment".ToIdentifier(), 10.0f);
                         }
                         Abandon = true;
                     },
@@ -91,7 +104,7 @@ namespace Barotrauma
                 }
                 if (weldingTool.OwnInventory != null && weldingTool.OwnInventory.AllItems.None(i => i.HasTag("weldingfuel") && i.Condition > 0.0f))
                 {
-                    TryAddSubObjective(ref refuelObjective, () => new AIObjectiveContainItem(character, "weldingfuel", weldingTool.GetComponent<ItemContainer>(), objectiveManager, spawnItemIfNotFound: character.TeamID == CharacterTeamType.FriendlyNPC)
+                    TryAddSubObjective(ref refuelObjective, () => new AIObjectiveContainItem(character, "weldingfuel".ToIdentifier(), weldingTool.GetComponent<ItemContainer>(), objectiveManager, spawnItemIfNotFound: character.TeamID == CharacterTeamType.FriendlyNPC)
                     {
                         RemoveExisting = true
                     },
@@ -112,11 +125,11 @@ namespace Barotrauma
                         int remainingOxygenTanks = Submarine.MainSub.GetItems(false).Count(i => i.HasTag("weldingfuel") && i.Condition > 1);
                         if (remainingOxygenTanks == 0)
                         {
-                            character.Speak(TextManager.Get("DialogOutOfWeldingFuel"), null, 0.0f, "outofweldingfuel", 30.0f);
+                            character.Speak(TextManager.Get("DialogOutOfWeldingFuel").Value, null, 0.0f, "outofweldingfuel".ToIdentifier(), 30.0f);
                         }
                         else if (remainingOxygenTanks < 4)
                         {
-                            character.Speak(TextManager.Get("DialogLowOnWeldingFuel"), null, 0.0f, "lowonweldingfuel", 30.0f);
+                            character.Speak(TextManager.Get("DialogLowOnWeldingFuel").Value, null, 0.0f, "lowonweldingfuel".ToIdentifier(), 30.0f);
                         }
                     }
                     return;
@@ -142,17 +155,21 @@ namespace Barotrauma
             bool canOperate = toLeak.LengthSquared() < reach * reach;
             if (canOperate)
             {
-                TryAddSubObjective(ref operateObjective, () => new AIObjectiveOperateItem(repairTool, character, objectiveManager, option: "", requireEquip: true, operateTarget: Leak), 
-                    onAbandon: () => Abandon = true,
-                    onCompleted: () =>
+                TryAddSubObjective(ref operateObjective, () => new AIObjectiveOperateItem(repairTool, character, objectiveManager, option: Identifier.Empty, requireEquip: true, operateTarget: Leak)
+                {
+                    // Use an empty filter to override the default
+                    EndNodeFilter = n => true
+                }, 
+                onAbandon: () => Abandon = true,
+                onCompleted: () =>
+                {
+                    if (CheckObjectiveSpecific()) { IsCompleted = true; }
+                    else
                     {
-                        if (CheckObjectiveSpecific()) { IsCompleted = true; }
-                        else
-                        {
-                            // Failed to operate. Probably too far.
-                            Abandon = true;
-                        }
-                    });
+                        // Failed to operate. Probably too far.
+                        Abandon = true;
+                    }
+                });
             }
             else
             {
@@ -160,9 +177,14 @@ namespace Barotrauma
                 {
                     UseDistanceRelativeToAimSourcePos = true,
                     CloseEnough = reach,
-                    DialogueIdentifier = Leak.FlowTargetHull != null ? "dialogcannotreachleak" : null,
+                    DialogueIdentifier = Leak.FlowTargetHull != null ? "dialogcannotreachleak".ToIdentifier() : Identifier.Empty,
                     TargetName = Leak.FlowTargetHull?.DisplayName,
-                    CheckVisibility = false
+                    requiredCondition = () => 
+                        Leak.Submarine == character.Submarine &&
+                        Leak.linkedTo.Any(e => e is Hull h && (character.CurrentHull == h || h.linkedTo.Contains(character.CurrentHull))),
+                    endNodeFilter = IsSuitableEndNode,
+                    // The Go To objective can be abandoned if the leak is fixed (in which case we don't want to use the dialogue)
+                    SpeakCannotReachCondition = () => !CheckObjectiveSpecific()
                 },
                 onAbandon: () =>
                 {
@@ -179,6 +201,14 @@ namespace Barotrauma
                     }
                 },
                 onCompleted: () => RemoveSubObjective(ref gotoObjective));
+
+                bool IsSuitableEndNode(PathNode n)
+                {
+                    if (n.Waypoint.CurrentHull is null) { return false; }
+                    if (n.Waypoint.CurrentHull.ConnectedGaps.Contains(Leak)) { return true; }
+                    // Accept also nodes located in the linked hulls (multi-hull rooms)
+                    return Leak.linkedTo.Any(e => e is Hull h && h.linkedTo.Contains(n.Waypoint.CurrentHull));
+                }
             }
         }
 
@@ -197,7 +227,7 @@ namespace Barotrauma
             // This is an approximation, because we don't know the exact reach until the pose is taken.
             // And even then the actual range depends on the direction we are aiming to.
             // Found out that without any multiplier the value (209) is often too short.
-            return repairTool.Range + armLength * 1.3f;
+            return repairTool.Range + armLength * 2;
         }
     }
 }

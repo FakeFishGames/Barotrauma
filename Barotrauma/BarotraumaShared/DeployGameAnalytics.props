@@ -1,0 +1,18 @@
+<Project>
+
+  <PropertyGroup Condition="'$(Configuration)'!='Debug'">
+    <IsDebug>false</IsDebug>
+    <IsNotDebug>true</IsNotDebug>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)'=='Debug'">
+    <IsDebug>true</IsDebug>
+    <IsNotDebug>false</IsNotDebug>
+  </PropertyGroup>
+  <Target Name="DeployGameAnalyticsBuild" AfterTargets="CoreCompile" >
+    <Exec Command="dotnet publish $(ProjectDir)../../Libraries/GameAnalytics/GA_SDK_NETSTANDARD/GA_SDK_NETSTANDARD.csproj -c Release -r $(GARuntime) --no-self-contained --nologo -o $(ProjectDir)$(OutputPath)" ContinueOnError="$(IsDebug)" />
+  </Target>
+  <Target Name="DeployGameAnalyticsPublish" AfterTargets="PrepareForPublish" >
+    <Exec Command="dotnet publish $(ProjectDir)../../Libraries/GameAnalytics/GA_SDK_NETSTANDARD/GA_SDK_NETSTANDARD.csproj -c Release -r $(GARuntime) --no-self-contained --nologo -o &quot;$(PublishDir)&quot;" ContinueOnError="$(IsDebug)" />
+  </Target>
+
+</Project>

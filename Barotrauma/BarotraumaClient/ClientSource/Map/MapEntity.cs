@@ -5,6 +5,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using Barotrauma.Lights;
 
@@ -20,6 +21,7 @@ namespace Barotrauma
         private static float keyDelay;
 
         public static Vector2 StartMovingPos => startMovingPos;
+        public static Vector2 SelectionPos => selectionPos;
 
         public event Action<Rectangle> Resized;
 
@@ -34,10 +36,7 @@ namespace Barotrauma
 
         public static List<MapEntity> CopiedList = new List<MapEntity>();
 
-        private static List<MapEntity> highlightedList = new List<MapEntity>();
-
-        // Test feature. Not yet saved.
-        public static Dictionary<MapEntity, HashSet<MapEntity>> SelectionGroups { get; private set; } = new Dictionary<MapEntity, HashSet<MapEntity>>();
+        private static List<MapEntity> highlightedInEditorList = new List<MapEntity>();
 
         private static float highlightTimer;
 
@@ -100,9 +99,22 @@ namespace Barotrauma
         {
             float depth = baseDepth
                 //take texture into account to get entities with (roughly) the same base depth and texture to render consecutively to minimize texture swaps
-                + (sprite?.Texture?.SortingKey ?? 0) % 100 * 0.00001f
-                + ID % 100 * 0.000001f;
+                + (sprite?.Texture?.SortingKey ?? 0) % 100 * 0.000001f
+                + ID % 100 * 0.0000001f;
             return Math.Min(depth, 1.0f);
+        }
+
+        protected Vector2 GetCollapseEffectOffset()
+        {
+            if (Level.Loaded?.Renderer?.CollapseEffectStrength is float collapseEffectStrength and > 0.0f && Submarine is not { Info.Type: SubmarineType.Player })
+            {
+                   Vector2 noisePos = new Vector2(
+                    (float)PerlinNoise.GetPerlin((float)(Timing.TotalTime + ID) * 0.1f, (float)(Timing.TotalTime + ID) * 0.5f) - 0.5f,
+                    (float)PerlinNoise.GetPerlin((float)(Timing.TotalTime + ID) * 0.1f, (float)(Timing.TotalTime + ID) * 0.1f) - 0.5f);
+                Vector2 offsetFromOrigin = Level.Loaded.Renderer.CollapseEffectOrigin - DrawPosition;
+                return offsetFromOrigin * MathF.Pow(collapseEffectStrength, MathHelper.Lerp(1, 4, ID % 1000 / 1000.0f)) + (noisePos * 100.0f * collapseEffectStrength);                
+            }
+            return Vector2.Zero;
         }
 
         /// <summary>
@@ -119,10 +131,7 @@ namespace Barotrauma
                 return;
             }
 
-            foreach (MapEntity e in mapEntityList)
-            {
-                e.isHighlighted = false;
-            }
+            ClearHighlightedEntities();
 
             if (DisableSelect)
             {
@@ -130,7 +139,9 @@ namespace Barotrauma
                 return;
             }
 
-            if (GUI.MouseOn != null || !PlayerInput.MouseInsideWindow)
+            if (startMovingPos == Vector2.Zero
+                && selectionPos == Vector2.Zero
+                && (GUI.MouseOn != null || !PlayerInput.MouseInsideWindow))
             {
                 if (highlightedListBox == null ||
                     (GUI.MouseOn != highlightedListBox && !highlightedListBox.IsParentOf(GUI.MouseOn)))
@@ -197,7 +208,7 @@ namespace Barotrauma
                     {
                         Paste(cam.ScreenToWorld(PlayerInput.MousePosition));
                     }
-                    else if (PlayerInput.KeyHit(Keys.G))
+                    /*else if (PlayerInput.KeyHit(Keys.G))
                     {
                         if (SelectedList.Any())
                         {
@@ -217,7 +228,7 @@ namespace Barotrauma
                                 }
                             }
                         }
-                    }
+                    }*/
                 }
             }
 
@@ -234,8 +245,7 @@ namespace Barotrauma
                 {
                     foreach (MapEntity e in mapEntityList)
                     {
-                        if (!e.SelectableInEditor) continue;
-
+                        if (!e.SelectableInEditor) { continue; }
                         if (e.IsMouseOn(position))
                         {
                             int i = 0;
@@ -245,17 +255,14 @@ namespace Barotrauma
                             {
                                 i++;
                             }
-
                             highlightedEntities.Insert(i, e);
-
                             if (i == 0) highLightedEntity = e;
                         }
                     }
-
                     UpdateHighlighting(highlightedEntities);
                 }
 
-                if (highLightedEntity != null) highLightedEntity.isHighlighted = true;
+                if (highLightedEntity != null) { highLightedEntity.IsHighlighted = true; }
             }
 
             if (GUI.KeyboardDispatcher.Subscriber == null)
@@ -277,7 +284,6 @@ namespace Barotrauma
             if (startMovingPos != Vector2.Zero)
             {
                 Item targetContainer = GetPotentialContainer(position, SelectedList);
-
                 if (targetContainer != null) { targetContainer.IsHighlighted = true; }
 
                 if (PlayerInput.PrimaryMouseButtonReleased())
@@ -360,14 +366,15 @@ namespace Barotrauma
                 {
                     if (highLightedEntity != null)
                     {
-                        if (SelectionGroups.TryGetValue(highLightedEntity, out HashSet<MapEntity> group))
+                        if (SubEditorScreen.IsLayerLinked(highLightedEntity)/*SelectionGroups.TryGetValue(highLightedEntity, out HashSet<MapEntity> group)*/)
                         {
-                            foreach (MapEntity entity in group.Where(e => !newSelection.Contains(e)))
+                            ImmutableHashSet<MapEntity> entitiesInSameLayer = SubEditorScreen.GetEntitiesInSameLayer(highLightedEntity);
+                            foreach (MapEntity entity in entitiesInSameLayer.Where(e => !newSelection.Contains(e)))
                             {
                                 newSelection.Add(entity);
                             }
 
-                            foreach (MapEntity entity in group)
+                            foreach (MapEntity entity in entitiesInSameLayer)
                             {
                                 entity.IsIncludedInSelection = true;
                             }
@@ -516,11 +523,11 @@ namespace Barotrauma
             Item targetContainer = null;
             bool isShiftDown = PlayerInput.IsShiftDown();
 
-            if (!isShiftDown) return null;
+            if (!isShiftDown) { return null; }
 
             foreach (MapEntity e in mapEntityList)
             {
-                if (!e.SelectableInEditor ||!(e is Item potentialContainer)) { continue; }
+                if (!e.SelectableInEditor || e is not Item potentialContainer) { continue; }
 
                 if (e.IsMouseOn(position))
                 {
@@ -598,10 +605,10 @@ namespace Barotrauma
             if (highlightedListBox != null)
             {
                 if (GUI.MouseOn == highlightedListBox || highlightedListBox.IsParentOf(GUI.MouseOn)) return;
-                if (highlightedEntities.SequenceEqual(highlightedList)) return;
+                if (highlightedEntities.SequenceEqual(highlightedInEditorList)) return;
             }
 
-            highlightedList = highlightedEntities;
+            highlightedInEditorList = highlightedEntities;
 
             highlightedListBox = new GUIListBox(new RectTransform(new Point(180, highlightedEntities.Count * 18 + 5), GUI.Canvas)
             {
@@ -611,7 +618,7 @@ namespace Barotrauma
 
             foreach (MapEntity entity in highlightedEntities)
             {
-                var tooltip = string.Empty;
+                LocalizedString tooltip = string.Empty;
 
                 if (wiringMode && entity is Item item)
                 {
@@ -623,9 +630,9 @@ namespace Barotrauma
                             var conn = wire.Connections[i];
                             if (conn != null)
                             {
-                                string[] tags = { "[item]", "[pin]" };
-                                string[] values = { conn.Item?.Name, conn.Name };
-                                tooltip += TextManager.GetWithVariables("wirelistformat",tags , values);
+                                tooltip += TextManager.GetWithVariables("wirelistformat",
+                                    ("[item]", conn.Item?.Name),
+                                    ("[pin]", conn.Name));
                             }
                             if (i != wire.Connections.Length - 1) { tooltip += '\n'; }
                         }
@@ -633,7 +640,7 @@ namespace Barotrauma
                 }
 
                 var textBlock = new GUITextBlock(new RectTransform(new Point(highlightedListBox.Content.Rect.Width, 15), highlightedListBox.Content.RectTransform),
-                                                 ToolBox.LimitString(entity.Name, GUI.SmallFont, 140), font: GUI.SmallFont)
+                                                 ToolBox.LimitString(entity.Name, GUIStyle.SmallFont, 140), font: GUIStyle.SmallFont)
                 {
                     ToolTip = tooltip,
                     UserData = entity
@@ -742,7 +749,14 @@ namespace Barotrauma
         /// </summary>
         public static void DrawSelecting(SpriteBatch spriteBatch, Camera cam)
         {
-            if (GUI.MouseOn != null) return;
+            if (Screen.Selected is SubEditorScreen subEditor)
+            {
+                if (subEditor.IsMouseOnEditorGUI()) { return; }
+            }
+            else if (GUI.MouseOn != null) 
+            { 
+                return; 
+            }
 
             Vector2 position = PlayerInput.MousePosition;
             position = cam.ScreenToWorld(position);
@@ -769,36 +783,42 @@ namespace Barotrauma
                         switch (e)
                         {
                             case Item item:
-                            {
-                                if (item.FlippedX && item.Prefab.CanSpriteFlipX) spriteEffects ^= SpriteEffects.FlipHorizontally;
-                                if (item.flippedY && item.Prefab.CanSpriteFlipY) spriteEffects ^= SpriteEffects.FlipVertically;
-                                break;
-                            }
+                                {
+                                    if (item.FlippedX && item.Prefab.CanSpriteFlipX) { spriteEffects ^= SpriteEffects.FlipHorizontally; }
+                                    if (item.flippedY && item.Prefab.CanSpriteFlipY) { spriteEffects ^= SpriteEffects.FlipVertically; }
+                                    var wire = item.GetComponent<Wire>();
+                                    if (wire != null && wire.Item.body != null && !wire.Item.body.Enabled)
+                                    {
+                                        wire.Draw(spriteBatch, editing: false, new Vector2(moveAmount.X, -moveAmount.Y));
+                                        continue;
+                                    }
+                                    break;
+                                }
                             case Structure structure:
-                            {
-                                if (structure.FlippedX && structure.Prefab.CanSpriteFlipX) spriteEffects ^= SpriteEffects.FlipHorizontally;
-                                if (structure.flippedY && structure.Prefab.CanSpriteFlipY) spriteEffects ^= SpriteEffects.FlipVertically;
-                                break;
-                            }
+                                {
+                                    if (structure.FlippedX && structure.Prefab.CanSpriteFlipX) { spriteEffects ^= SpriteEffects.FlipHorizontally; }
+                                    if (structure.flippedY && structure.Prefab.CanSpriteFlipY) { spriteEffects ^= SpriteEffects.FlipVertically; }
+                                    break;
+                                }
                             case WayPoint wayPoint:
-                            {
-                                Vector2 drawPos = e.WorldPosition;
-                                drawPos.Y = -drawPos.Y;
-                                drawPos += moveAmount;
-                                wayPoint.Draw(spriteBatch, drawPos);
-                                continue;
-                            }
+                                {
+                                    Vector2 drawPos = e.WorldPosition;
+                                    drawPos.Y = -drawPos.Y;
+                                    drawPos += moveAmount;
+                                    wayPoint.Draw(spriteBatch, drawPos);
+                                    continue;
+                                }
                             case LinkedSubmarine linkedSub:
-                            {
-                                var ma = moveAmount;
-                                ma.Y = -ma.Y;
-                                Vector2 lPos = linkedSub.Position;
-                                lPos += ma;
-                                linkedSub.Draw(spriteBatch, lPos, alpha: 0.5f);
-                                break;
-                            }
+                                {
+                                    var ma = moveAmount;
+                                    ma.Y = -ma.Y;
+                                    Vector2 lPos = linkedSub.Position;
+                                    lPos += ma;
+                                    linkedSub.Draw(spriteBatch, lPos, alpha: 0.5f);
+                                    break;
+                                }
                         }
-                        e.prefab?.DrawPlacing(spriteBatch,
+                        e.Prefab?.DrawPlacing(spriteBatch,
                             new Rectangle(e.WorldRect.Location + new Point((int)moveAmount.X, (int)-moveAmount.Y), e.WorldRect.Size), e.Scale, spriteEffects);
                         GUI.DrawRectangle(spriteBatch,
                             new Vector2(e.WorldRect.X, -e.WorldRect.Y) + moveAmount,
@@ -810,7 +830,7 @@ namespace Barotrauma
                     selectionPos = Vector2.Zero;
                 }
             }
-            if (selectionPos != null && selectionPos != Vector2.Zero)
+            if (selectionPos != Vector2.Zero)
             {
                 var (sizeX, sizeY) = selectionSize;
                 var (posX, posY) = selectionPos;
@@ -825,7 +845,7 @@ namespace Barotrauma
                     new Vector2(posX, posY + sizeY)
                 };
 
-                Color selectionColor = GUI.Style.Blue;
+                Color selectionColor = GUIStyle.Blue;
                 float thickness = Math.Max(2f, 2f / Screen.Selected.Cam.Zoom);
 
                 GUI.DrawFilledRectangle(spriteBatch, corners[0], selectionSize, selectionColor * 0.1f);
@@ -1030,19 +1050,11 @@ namespace Barotrauma
 
         protected static void PositionEditingHUD()
         {
-            int maxHeight = 100;
-            if (Screen.Selected == GameMain.SubEditorScreen)
-            {
-                editingHUD.RectTransform.SetPosition(Anchor.TopRight);
-                editingHUD.RectTransform.AbsoluteOffset = new Point(0, GameMain.SubEditorScreen.TopPanel.Rect.Bottom);
-                maxHeight = (GameMain.GraphicsHeight - GameMain.SubEditorScreen.EntityMenu.Rect.Height) - GameMain.SubEditorScreen.TopPanel.Rect.Bottom * 2 - 20;
-            }
-            else
-            {
-                editingHUD.RectTransform.SetPosition(Anchor.TopRight);
-                editingHUD.RectTransform.RelativeOffset = new Vector2(0.0f, (HUDLayoutSettings.CrewArea.Bottom + 10.0f) / (editingHUD.RectTransform.Parent ?? GUI.Canvas).Rect.Height);
-                maxHeight = HUDLayoutSettings.InventoryAreaLower.Y - HUDLayoutSettings.CrewArea.Bottom - 10;
-            }
+            int maxHeight = 
+                Screen.Selected == GameMain.SubEditorScreen ?
+                    GameMain.GraphicsHeight - GameMain.SubEditorScreen.EntityMenu.Rect.Height - GameMain.SubEditorScreen.TopPanel.Rect.Bottom * 2 - 20 :
+                    HUDLayoutSettings.InventoryAreaLower.Y - HUDLayoutSettings.CrewArea.Bottom - 10;
+
 
             var listBox = editingHUD.GetChild<GUIListBox>();
             if (listBox != null)
@@ -1062,13 +1074,24 @@ namespace Barotrauma
                         MathHelper.Clamp(contentHeight + padding * 2, 50, maxHeight)), resizeChildren: false);
                 listBox.RectTransform.Resize(new Point(listBox.RectTransform.NonScaledSize.X, editingHUD.RectTransform.NonScaledSize.Y - padding * 2), resizeChildren: false);
             }
+            editingHUD.RectTransform.SetPosition(Anchor.TopRight);
+            if (Screen.Selected == GameMain.SubEditorScreen)
+            {
+                editingHUD.RectTransform.AbsoluteOffset = new Point(0, GameMain.SubEditorScreen.TopPanel.Rect.Bottom);
+            }
+            else
+            {
+                editingHUD.RectTransform.AbsoluteOffset = new Point(
+                    0, 
+                    HUDLayoutSettings.HealthBarAfflictionArea.Y - editingHUD.Rect.Height - GUI.IntScale(10));
+            }
         }
 
         public virtual void DrawEditing(SpriteBatch spriteBatch, Camera cam) { }
 
         private void UpdateResizing(Camera cam)
         {
-            isHighlighted = true;
+            IsHighlighted = true;
 
             int startX = ResizeHorizontal ? -1 : 0;
             int StartY = ResizeVertical ? -1 : 0;
@@ -1088,6 +1111,10 @@ namespace Barotrauma
                         resizeDirY = y;
                         resizing = true;
                         startMovingPos = Vector2.Zero;
+                        foreach (var mapEntity in mapEntityList)
+                        {
+                            if (mapEntity != this) { mapEntity.isHighlighted = false; }
+                        }
                     }
                 }
             }
@@ -1165,7 +1192,7 @@ namespace Barotrauma
 
         private void DrawResizing(SpriteBatch spriteBatch, Camera cam)
         {
-            isHighlighted = true;
+            IsHighlighted = true;
 
             int startX = ResizeHorizontal ? -1 : 0;
             int StartY = ResizeVertical ? -1 : 0;
@@ -1197,14 +1224,24 @@ namespace Barotrauma
 
             Rectangle selectionRect = Submarine.AbsRect(pos, size);
 
-            foreach (MapEntity e in mapEntityList)
+            foreach (MapEntity entity in mapEntityList)
             {
-                if (!e.SelectableInEditor) continue;
+                if (!entity.SelectableInEditor) { continue; }
 
-                if (Submarine.RectsOverlap(selectionRect, e.rect))
+                if (Submarine.RectsOverlap(selectionRect, entity.rect))
                 {
-                    foundEntities.Add(e);
-                    e.IsIncludedInSelection = true;
+                    foundEntities.Add(entity);
+                    entity.IsIncludedInSelection = true;
+
+                    if (SubEditorScreen.IsLayerLinked(entity))
+                    {
+                        ImmutableHashSet<MapEntity> entitiesInSameLayer = SubEditorScreen.GetEntitiesInSameLayer(entity);
+                        foreach (MapEntity layerEntity in entitiesInSameLayer.Where(e => !foundEntities.Contains(e)))
+                        {
+                            foundEntities.Add(layerEntity);
+                            layerEntity.IsIncludedInSelection = true;
+                        }
+                    }
                 }
             }
 

@@ -1,4 +1,6 @@
-﻿namespace Barotrauma
+﻿using System;
+
+namespace Barotrauma
 {
     public enum TransitionMode
     {
@@ -31,24 +33,25 @@
     public enum AbilityEffectType
     {
         Undefined,
-        None, 
+        None,
         OnAttack,
         OnAttackResult,
         OnAttacked,
         OnAttackedResult,
-        OnGainSkillPoint, 
-        OnAllyGainSkillPoint, 
+        OnGainSkillPoint,
+        OnAllyGainSkillPoint,
         OnRepairComplete,
         OnItemFabricationSkillGain,
         OnItemFabricatedAmount,
+        OnItemFabricatedIngredients,
         OnAllyItemFabricatedAmount,
         OnOpenItemContainer,
         OnUseRangedWeapon,
         OnReduceAffliction,
         OnAddDamageAffliction,
-        OnSelfRagdoll,
         OnRagdoll,
         OnRoundEnd,
+        OnLootCharacter,
         OnAnyMissionCompleted,
         OnAllMissionsCompleted,
         OnGiveOrder,
@@ -60,6 +63,7 @@
         OnGainMissionMoney,
         OnLocationDiscovered,
         OnItemDeconstructed,
+        OnItemDeconstructedByAlly,
         OnItemDeconstructedMaterial,
         OnItemDeconstructedInventory,
         OnStopTinkering,
@@ -68,6 +72,7 @@
         OnCrewGeneticMaterialCombinedOrRefined,
         AfterSubmarineAttacked,
         OnApplyTreatment,
+        OnStatusEffectIdentifier,
     }
 
     public enum StatTypes
@@ -76,6 +81,11 @@
         // Skills
         ElectricalSkillBonus,
         HelmSkillBonus,
+        HelmSkillOverride,
+        MedicalSkillOverride,
+        WeaponsSkillOverride,
+        ElectricalSkillOverride,
+        MechanicalSkillOverride,
         MechanicalSkillBonus,
         MedicalSkillBonus,
         WeaponsSkillBonus,
@@ -101,6 +111,7 @@
         RangedSpreadReduction,
         // Utility
         RepairSpeed,
+        MechanicalRepairSpeed,
         DeconstructorSpeedMultiplier,
         RepairToolStructureRepairMultiplier,
         RepairToolStructureDamageMultiplier,
@@ -111,36 +122,110 @@
         GeneticMaterialRefineBonus,
         GeneticMaterialTaintedProbabilityReductionOnCombine,
         SkillGainSpeed,
+        ExtraLevelGain,
+        HelmSkillGainSpeed,
+        WeaponsSkillGainSpeed,
+        MedicalSkillGainSpeed,
+        ElectricalSkillGainSpeed,
+        MechanicalSkillGainSpeed,
+        MedicalItemApplyingMultiplier,
+        MedicalItemDurationMultiplier,
+        PoisonMultiplier,
         // Tinker
         TinkeringDuration,
         TinkeringStrength,
         TinkeringDamage,
         // Misc
         ReputationGainMultiplier,
+        ReputationLossMultiplier,
         MissionMoneyGainMultiplier,
         ExperienceGainMultiplier,
         MissionExperienceGainMultiplier,
         ExtraMissionCount,
         ExtraSpecialSalesCount,
-        ApplyTreatmentsOnSelfFraction,
+        StoreSellMultiplier,
+        StoreBuyMultiplierAffiliated,
+        StoreBuyMultiplier,
+        ShipyardBuyMultiplierAffiliated,
+        ShipyardBuyMultiplier,
         MaxAttachableCount,
+        ExplosionRadiusMultiplier,
+        ExplosionDamageMultiplier,
+        FabricationSpeed,
+        BallastFloraDamageMultiplier,
+        HoldBreathMultiplier,
+        Apprenticeship,
+        Affiliation,
+        CPRBoost,
+        LockedTalents
     }
 
-    public enum AbilityFlags
+    internal enum ItemTalentStats
     {
         None,
-        MustWalk,
-        ImmuneToPressure,
-        IgnoredByEnemyAI,
-        MoveNormallyWhileDragging,
-        CanTinker,
-        CanTinkerFabricatorsAndDeconstructors,
-        TinkeringPowersDevices,
-        GainSkillPastMaximum,
-        RetainExperienceForNewCharacter,
-        AllowSecondOrderedTarget,
-        PowerfulCPR,
-        AlwaysStayConscious,
+        DetoriationSpeed,
+        BatteryCapacity,
+        EngineSpeed,
+        EngineMaxSpeed,
+        PumpSpeed,
+        PumpMaxFlow,
+        ReactorMaxOutput,
+        ReactorFuelConsumption,
+        DeconstructorSpeed,
+        FabricationSpeed
     }
 
+    [Flags]
+    public enum AbilityFlags
+    {
+        None = 0,
+        MustWalk = 0x1,
+        ImmuneToPressure = 0x2,
+        IgnoredByEnemyAI = 0x4,
+        MoveNormallyWhileDragging = 0x8,
+        CanTinker = 0x10,
+        CanTinkerFabricatorsAndDeconstructors = 0x20,
+        TinkeringPowersDevices = 0x40,
+        GainSkillPastMaximum = 0x80,
+        RetainExperienceForNewCharacter = 0x100,
+        AllowSecondOrderedTarget = 0x200,
+        AlwaysStayConscious = 0x400,
+        CanNotDieToAfflictions = 0x800,
+    }
+
+    [Flags]
+    public enum CharacterType
+    {
+        Bot = 0b01,
+        Player = 0b10,
+        Both = Bot | Player
+    }
+
+    public enum StartingBalanceAmount
+    {
+        Low,
+        Medium,
+        High,
+    }
+
+    public enum GameDifficulty
+    {
+        Easy,
+        Medium,
+        Hard,
+        Hellish
+    }
+
+    public enum NumberType
+    {
+        Int,
+        Float
+    }
+
+    public enum ChatMode
+    {
+        None,
+        Local,
+        Radio
+    }
 }

@@ -1,4 +1,5 @@
-﻿using Barotrauma.Items.Components;
+﻿using Barotrauma.Extensions;
+using Barotrauma.Items.Components;
 using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
 using System.Collections.Generic;
@@ -8,32 +9,22 @@ namespace Barotrauma
 {
     partial class Inventory : IServerSerializable, IClientSerializable
     {
-        public void ServerRead(ClientNetObject type, IReadMessage msg, Client c)
+        public void ServerEventRead(IReadMessage msg, Client c)
         {
             List<Item> prevItems = new List<Item>(AllItems.Distinct());
 
-            byte slotCount = msg.ReadByte();
-            List<ushort>[] newItemIDs = new List<ushort>[slotCount];            
-            for (int i = 0; i < slotCount; i++)
-            {
-                newItemIDs[i] = new List<ushort>();
-                int itemCount = msg.ReadRangedInteger(0, MaxStackSize);
-                for (int j = 0; j < itemCount; j++)
-                {
-                    newItemIDs[i].Add(msg.ReadUInt16());
-                }
-            }
+            SharedRead(msg, out var newItemIDs);
 
             if (c == null || c.Character == null) { return; }
 
             bool accessible = c.Character.CanAccessInventory(this);
             if (this is CharacterInventory characterInventory && accessible)
             {
-                if (Owner == null || !(Owner is Character ownerCharacter))
+                if (Owner == null || Owner is not Character ownerCharacter)
                 {
                     accessible = false;
                 }
-                else if (!characterInventory.AccessibleWhenAlive && !ownerCharacter.IsDead)
+                else if (!characterInventory.AccessibleWhenAlive && !ownerCharacter.IsDead && !characterInventory.AccessibleByOwner)
                 {
                     accessible = false;
                 }
@@ -49,7 +40,7 @@ namespace Barotrauma
                 {
                     foreach (ushort id in newItemIDs[i])
                     {
-                        if (!(Entity.FindEntityByID(id) is Item item)) { continue; }
+                        if (Entity.FindEntityByID(id) is not Item item) { continue; }
                         item.PositionUpdateInterval = 0.0f;
                         if (item.ParentInventory != null && item.ParentInventory != this)
                         {
@@ -104,7 +95,15 @@ namespace Barotrauma
             {
                 foreach (ushort id in newItemIDs[i])
                 {
-                    if (!(Entity.FindEntityByID(id) is Item item) || slots[i].Contains(item)) { continue; }
+                    if (Entity.FindEntityByID(id) is not Item item || slots[i].Contains(item)) { continue; }
+
+                    if (item.GetComponent<Pickable>() is not Pickable pickable ||
+                        (pickable.IsAttached && !pickable.PickingDone) ||
+                        item.AllowedSlots.None())
+                    {
+                        DebugConsole.AddWarning($"Client {c.Name} tried to pick up a non-pickable item \"{item}\" (parent inventory: {item.ParentInventory?.Owner.ToString() ?? "null"})");
+                        continue;
+                    }
 
                     if (GameMain.Server != null)
                     {
@@ -115,7 +114,7 @@ namespace Barotrauma
                             (c.Character == null || item.PreviousParentInventory == null || !c.Character.CanAccessInventory(item.PreviousParentInventory)))
                         {
     #if DEBUG || UNSTABLE
-                            DebugConsole.NewMessage($"Client {c.Name} failed to pick up item \"{item}\" (parent inventory: {(item.ParentInventory?.Owner.ToString() ?? "null")}). No access.", Color.Yellow);
+                            DebugConsole.NewMessage($"Client {c.Name} failed to pick up item \"{item}\" (parent inventory: {item.ParentInventory?.Owner.ToString() ?? "null"}). No access.", Color.Yellow);
     #endif
                             if (item.body != null && !c.PendingPositionUpdates.Contains(item))
                             {
@@ -175,7 +174,7 @@ namespace Barotrauma
             }
         }
 
-        public void ServerWrite(IWriteMessage msg, Client c, object[] extraData = null)
+        public void ServerEventWrite(IWriteMessage msg, Client c, NetEntityEvent.IData extraData = null)
         {
             SharedWrite(msg, extraData);
         }

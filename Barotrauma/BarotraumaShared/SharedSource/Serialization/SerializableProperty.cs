@@ -3,12 +3,15 @@ using Barotrauma.Items.Components;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.ComponentModel;
 using System.Globalization;
 using System.Linq;
 using System.Reflection;
 using System.Xml.Linq;
 using Barotrauma.Networking;
+
+//TODO: come back to this later, clever use of reflection would make this nicer >:)
 
 namespace Barotrauma
 {
@@ -77,7 +80,8 @@ namespace Barotrauma
             //I would love to see a better way to do this
             AllowLinkingWifiToChat,
             IsSwappableItem,
-            AllowRotating
+            AllowRotating,
+            Attachable
         }
 
         public bool IsEditable(ISerializableEntity entity)
@@ -94,18 +98,27 @@ namespace Barotrauma
                     {
                         return entity is Item item && item.body == null && item.Prefab.AllowRotatingInEditor && Screen.Selected == GameMain.SubEditorScreen;
                     }
+                case ConditionType.Attachable:
+                    {
+                        return entity is Holdable holdable && holdable.Attachable && Screen.Selected == GameMain.SubEditorScreen;
+                    }
             }
             return false;
         }
     }
 
+    public enum IsPropertySaveable
+    {
+        Yes,
+        No
+    }
 
     [AttributeUsage(AttributeTargets.Property)]
     public class Serialize : Attribute
     {
-        public object defaultValue;
-        public bool isSaveable;
-        public string translationTextTag;
+        public readonly object DefaultValue;
+        public readonly IsPropertySaveable IsSaveable;
+        public readonly Identifier TranslationTextTag;
 
         /// <summary>
         /// If set to true, the instance values saved in a submarine file will always override the prefab values, even if using a mod that normally overrides instance values.
@@ -122,48 +135,50 @@ namespace Barotrauma
         /// <param name="translationTextTag">If set to anything else than null, SerializableEntityEditors will show what the text gets translated to or warn if the text is not found in the language files.
         /// <param name="alwaysUseInstanceValues">If set to true, the instance values saved in a submarine file will always override the prefab values, even if using a mod that normally overrides instance values.
         /// Setting the value to a non-empty string will let the user select the text from one whose tag starts with the given string (e.g. RoomName. would show all texts with a RoomName.* tag)</param>
-        public Serialize(object defaultValue, bool isSaveable, string description = "", string translationTextTag = null, bool alwaysUseInstanceValues = false)
+        public Serialize(object defaultValue, IsPropertySaveable isSaveable, string description = "", string translationTextTag = "", bool alwaysUseInstanceValues = false)
         {
-            this.defaultValue = defaultValue;
-            this.isSaveable = isSaveable;
-            this.translationTextTag = translationTextTag;
+            this.DefaultValue = defaultValue;
+            this.IsSaveable = isSaveable;
+            this.TranslationTextTag = translationTextTag.ToIdentifier();
             Description = description;
             AlwaysUseInstanceValues = alwaysUseInstanceValues;
         }
     }
 
-    class SerializableProperty
+    public class SerializableProperty
     {
-        private static Dictionary<Type, string> supportedTypes = new Dictionary<Type, string>
+        private readonly static ImmutableDictionary<Type, string> supportedTypes = new Dictionary<Type, string>
         {
             { typeof(bool), "bool" },
             { typeof(int), "int" },
             { typeof(float), "float" },
             { typeof(string), "string" },
+            { typeof(Identifier), "identifier" },
+            { typeof(LanguageIdentifier), "languageidentifier" },
+            { typeof(LocalizedString), "localizedstring" },
             { typeof(Point), "point" },
             { typeof(Vector2), "vector2" },
             { typeof(Vector3), "vector3" },
             { typeof(Vector4), "vector4" },
             { typeof(Rectangle), "rectangle" },
             { typeof(Color), "color" },
-            { typeof(string[]), "stringarray" }
-        };
+            { typeof(string[]), "stringarray" },
+            { typeof(Identifier[]), "identifierarray" }
+        }.ToImmutableDictionary();
 
-        private static readonly Dictionary<Type, Dictionary<string, SerializableProperty>> cachedProperties = 
-            new Dictionary<Type, Dictionary<string, SerializableProperty>>();
+        private static readonly Dictionary<Type, Dictionary<Identifier, SerializableProperty>> cachedProperties = 
+            new Dictionary<Type, Dictionary<Identifier, SerializableProperty>>();
         public readonly string Name;
-        public readonly string NameToLowerInvariant;
         public readonly AttributeCollection Attributes;
         public readonly Type PropertyType;
 
         public readonly bool OverridePrefabValues;
 
-        public PropertyInfo PropertyInfo { get; private set; }
+        public readonly PropertyInfo PropertyInfo;
 
         public SerializableProperty(PropertyDescriptor property)
         {
             Name = property.Name;
-            NameToLowerInvariant = Name.ToLowerInvariant();
             PropertyInfo = property.ComponentType.GetProperty(property.Name);
             PropertyType = property.PropertyType;
             Attributes = property.Attributes;
@@ -215,8 +230,7 @@ namespace Barotrauma
                 }
                 else
                 {
-                    DebugConsole.ThrowError("Failed to set the value of the property \"" + Name + "\" of \"" + parentObject + "\" to " + value);
-                    DebugConsole.ThrowError("(Type not supported)");
+                    DebugConsole.ThrowError($"Failed to set the value of the property \"{Name}\" of \"{parentObject}\" to {value} (Type \"{PropertyType.Name}\" not supported)");
 
                     return false;
                 }
@@ -227,14 +241,14 @@ namespace Barotrauma
                 switch (typeName)
                 {
                     case "bool":
-                        bool boolValue = value == "true" || value == "True";
-                        if (TrySetValueWithoutReflection(parentObject, boolValue)) { return true; }
+                        bool boolValue = value.ToIdentifier() == "true";
+                        if (TrySetBoolValueWithoutReflection(parentObject, boolValue)) { return true; }
                         PropertyInfo.SetValue(parentObject, boolValue, null);
                         break;
                     case "int":
                         if (int.TryParse(value, out int intVal))
                         {
-                            if (TrySetValueWithoutReflection(parentObject, intVal)) { return true; }
+                            if (TrySetFloatValueWithoutReflection(parentObject, intVal)) { return true; }
                             PropertyInfo.SetValue(parentObject, intVal, null);
                         }
                         else
@@ -245,7 +259,7 @@ namespace Barotrauma
                     case "float":
                         if (float.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out float floatVal))
                         {
-                            if (TrySetValueWithoutReflection(parentObject, floatVal)) { return true; }
+                            if (TrySetFloatValueWithoutReflection(parentObject, floatVal)) { return true; }
                             PropertyInfo.SetValue(parentObject, floatVal, null);
                         }
                         else
@@ -274,12 +288,23 @@ namespace Barotrauma
                     case "rectangle":
                         PropertyInfo.SetValue(parentObject, XMLExtensions.ParseRect(value, true));
                         break;
+                    case "identifier":
+                        PropertyInfo.SetValue(parentObject, value.ToIdentifier());
+                        break;
+                    case "languageidentifier":
+                        PropertyInfo.SetValue(parentObject, value.ToLanguageIdentifier());
+                        break;
+                    case "localizedstring":
+                        PropertyInfo.SetValue(parentObject, new RawLString(value));
+                        break;
                     case "stringarray":
                         PropertyInfo.SetValue(parentObject, XMLExtensions.ParseStringArray(value));
                         break;
+                    case "identifierarray":
+                        PropertyInfo.SetValue(parentObject, XMLExtensions.ParseStringArray(value).ToIdentifiers().ToArray());
+                        break;
                 }
             }
-
             catch (Exception e)
             {
                 DebugConsole.ThrowError("Failed to set the value of the property \"" + Name + "\" of \"" + parentObject.ToString() + "\" to " + value.ToString(), e);
@@ -307,7 +332,8 @@ namespace Barotrauma
                         }
                         catch (Exception e)
                         {
-                            DebugConsole.ThrowError("Failed to set the value of the property \"" + Name + "\" of \"" + parentObject + "\" to " + value + " (not a valid " + PropertyInfo.PropertyType + ")", e);
+                            DebugConsole.ThrowError(
+                                $"Failed to set the value of the property \"{Name}\" of \"{parentObject}\" to {value} (not a valid {PropertyInfo.PropertyType})", e);
                             return false;
                         }
                         PropertyInfo.SetValue(parentObject, enumVal);
@@ -315,8 +341,7 @@ namespace Barotrauma
                     }
                     else
                     {
-                        DebugConsole.ThrowError("Failed to set the value of the property \"" + Name + "\" of \"" + parentObject + "\" to " + value);
-                        DebugConsole.ThrowError("(Type not supported)");
+                        DebugConsole.ThrowError($"Failed to set the value of the property \"{Name}\" of \"{parentObject}\" to {value} (Type \"{PropertyType.Name}\" not supported)");
 
                         return false;
                     }
@@ -349,9 +374,21 @@ namespace Barotrauma
                             case "rectangle":
                                 PropertyInfo.SetValue(parentObject, XMLExtensions.ParseRect((string)value, false));
                                 return true;
+                            case "identifier":
+                                PropertyInfo.SetValue(parentObject, new Identifier((string)value));
+                                return true;
+                            case "languageidentifier":
+                                PropertyInfo.SetValue(parentObject, ((string)value).ToLanguageIdentifier());
+                                return true;
+                            case "localizedstring":
+                                PropertyInfo.SetValue(parentObject, new RawLString((string)value));
+                                return true;
                             case "stringarray":
                                 PropertyInfo.SetValue(parentObject, XMLExtensions.ParseStringArray((string)value));
-                                break;
+                                return true;
+                            case "identifierarray":
+                                PropertyInfo.SetValue(parentObject, XMLExtensions.ParseStringArray((string)value).ToIdentifiers().ToArray());
+                                return true;
                             default:
                                 DebugConsole.ThrowError("Failed to set the value of the property \"" + Name + "\" of \"" + parentObject.ToString() + "\" to " + value.ToString());
                                 DebugConsole.ThrowError("(Cannot convert a string to a " + PropertyType.ToString() + ")");
@@ -387,7 +424,7 @@ namespace Barotrauma
         {
             try
             {
-                if (TrySetValueWithoutReflection(parentObject, value)) { return true; }
+                if (TrySetFloatValueWithoutReflection(parentObject, value)) { return true; }
                 PropertyInfo.SetValue(parentObject, value, null);
             }
             catch (TargetInvocationException e)
@@ -408,7 +445,7 @@ namespace Barotrauma
         {
             try
             {
-                if (TrySetValueWithoutReflection(parentObject, value)) { return true; }
+                if (TrySetBoolValueWithoutReflection(parentObject, value)) { return true; }
                 PropertyInfo.SetValue(parentObject, value, null);
             }
             catch (TargetInvocationException e)
@@ -428,6 +465,7 @@ namespace Barotrauma
         {
             try
             {
+                if (TrySetFloatValueWithoutReflection(parentObject, value)) { return true; }
                 PropertyInfo.SetValue(parentObject, value, null);
             }
             catch (TargetInvocationException e)
@@ -466,9 +504,66 @@ namespace Barotrauma
             }
         }
 
+        public float GetFloatValue(object parentObject)
+        {
+            if (parentObject == null || PropertyInfo == null) { return 0.0f; }
+
+            if (TryGetFloatValueWithoutReflection(parentObject, out float value))
+            {
+                return value;
+            }
+
+            try
+            {
+                if (PropertyType == typeof(int))
+                {
+                    return (int)PropertyInfo.GetValue(parentObject, null);
+                }
+                else
+                {
+                    return (float)PropertyInfo.GetValue(parentObject, null);
+                }
+            }
+            catch (TargetInvocationException e)
+            {
+                DebugConsole.ThrowError("Exception thrown by the target of SerializableProperty.GetValue", e.InnerException);
+                return 0.0f;
+            }
+            catch (Exception e)
+            {
+                DebugConsole.ThrowError("Error in SerializableProperty.GetValue", e);
+                return 0.0f;
+            }
+        }
+
+        public bool GetBoolValue(object parentObject)
+        {
+            if (parentObject == null || PropertyInfo == null) { return false; }
+
+            if (TryGetBoolValueWithoutReflection(parentObject, out bool value))
+            {
+                return value;
+            }
+
+            try
+            {
+                return (bool)PropertyInfo.GetValue(parentObject, null);
+            }
+            catch (TargetInvocationException e)
+            {
+                DebugConsole.ThrowError("Exception thrown by the target of SerializableProperty.GetValue", e.InnerException);
+                return false;
+            }
+            catch (Exception e)
+            {
+                DebugConsole.ThrowError("Error in SerializableProperty.GetValue", e);
+                return false;
+            }
+        }
+
         public static string GetSupportedTypeName(Type type)
         {
-            if (type.IsEnum) return "Enum";
+            if (type.IsEnum) { return "Enum"; }
             if (!supportedTypes.TryGetValue(type, out string typeName))
             {
                 return null;
@@ -476,130 +571,312 @@ namespace Barotrauma
             return typeName;
         }
 
+        private readonly ImmutableDictionary<Identifier, Func<object, object>> valueGetters =
+            new Dictionary<Identifier, Func<object, object>>()
+            {
+                {"Voltage".ToIdentifier(), (obj) => obj is Powered p ? p.Voltage : (object) null},
+                {"Charge".ToIdentifier(), (obj) => obj is PowerContainer p ? p.Charge : (object) null},
+                {"Overload".ToIdentifier(), (obj) => obj is PowerTransfer p ? p.Overload : (object) null},
+                {"AvailableFuel".ToIdentifier(), (obj) => obj is Reactor r ? r.AvailableFuel : (object) null},
+                {"FissionRate".ToIdentifier(), (obj) => obj is Reactor r ? r.FissionRate : (object) null},
+                {"OxygenFlow".ToIdentifier(), (obj) => obj is Vent v ? v.OxygenFlow : (object) null},
+                {
+                    "CurrFlow".ToIdentifier(),
+                    (obj) => obj is Pump p ? (object) p.CurrFlow :
+                                   obj is OxygenGenerator o ? (object)o.CurrFlow :
+                                   null
+                },
+                {"CurrentVolume".ToIdentifier(), (obj) => obj is Engine e ? e.CurrentVolume : (object)null},
+                {"MotionDetected".ToIdentifier(), (obj) => obj is MotionSensor m ? m.MotionDetected : (object)null},
+                {"Oxygen".ToIdentifier(), (obj) => obj is Character c ? c.Oxygen : (object)null},
+                {"Health".ToIdentifier(), (obj) => obj is Character c ? c.Health : (object)null},
+                {"OxygenAvailable".ToIdentifier(), (obj) => obj is Character c ? c.OxygenAvailable : (object)null},
+                {"PressureProtection".ToIdentifier(), (obj) => obj is Character c ? c.PressureProtection : (object)null},
+                {"IsDead".ToIdentifier(), (obj) => obj is Character c ? c.IsDead : (object)null},
+                {"IsHuman".ToIdentifier(), (obj) => obj is Character c ? c.IsHuman : (object)null},
+                {"IsOn".ToIdentifier(), (obj) => obj is LightComponent l ? l.IsOn : (object)null},
+                {"Condition".ToIdentifier(), (obj) => obj is Item i ? i.Condition : (object)null},
+                {"ContainerIdentifier".ToIdentifier(), (obj) => obj is Item i ? i.ContainerIdentifier : (object)null},
+                {"PhysicsBodyActive".ToIdentifier(), (obj) => obj is Item i ? i.PhysicsBodyActive : (object)null},
+            }.ToImmutableDictionary();
+        
         /// <summary>
         /// Try getting the values of some commonly used properties directly without reflection
         /// </summary>
         private object TryGetValueWithoutReflection(object parentObject)
         {
+            if (PropertyType == typeof(float))
+            {
+                if (TryGetFloatValueWithoutReflection(parentObject, out float value)) { return value; }
+            }
+            else if (PropertyType == typeof(bool))
+            {
+                if (TryGetBoolValueWithoutReflection(parentObject, out bool value)) { return value; }
+            }
+            else if (PropertyType == typeof(string))
+            {
+                if (TryGetStringValueWithoutReflection(parentObject, out string value)) { return value; }
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// Try getting the values of some commonly used properties directly without reflection
+        /// </summary>
+        private bool TryGetFloatValueWithoutReflection(object parentObject, out float value)
+        {
+            value = 0.0f;
             switch (Name)
             {
-                case "Voltage":
-                    if (parentObject is Powered powered) { return powered.Voltage; }
-                    break;
-                case "Charge":
-                    if (parentObject is PowerContainer powerContainer) { return powerContainer.Charge; }
-                    break;
-                case "Overload":
-                    if (parentObject is PowerTransfer powerTransfer) { return powerTransfer.Overload; }
-                    break;
-                case "AvailableFuel":
-                    { if (parentObject is Reactor reactor) { return reactor.AvailableFuel; } }
-                    break;
-                case "FissionRate":
-                    { if (parentObject is Reactor reactor) { return reactor.FissionRate; } }
-                    break;
-                case "OxygenFlow":
-                    if (parentObject is Vent vent) { return vent.OxygenFlow; }
-                    break;
-                case "CurrFlow":
-                    if (parentObject is Pump pump) { return pump.CurrFlow; }
-                    if (parentObject is OxygenGenerator oxygenGenerator) { return oxygenGenerator.CurrFlow; }
-                    break;
-                case "CurrentVolume":
-                    if (parentObject is Engine engine) { return engine.CurrentVolume; }
-                    break;
-                case "MotionDetected":
-                    if (parentObject is MotionSensor motionSensor) { return motionSensor.MotionDetected; }
-                    break;
-                case "Oxygen":
-                    { if (parentObject is Character character) { return character.Oxygen; } }
-                    break;
-                case "Health":
-                    {  if (parentObject is Character character) { return character.Health; } }
-                    break;
-                case "OxygenAvailable":
-                    { if (parentObject is Character character) { return character.OxygenAvailable; } }
-                    break;
-                case "PressureProtection":
-                    { if (parentObject is Character character) { return character.PressureProtection; } }
-                    break;
-                case "IsDead":
-                    { if (parentObject is Character character) { return character.IsDead; } }
-                    break;
-                case "IsHuman":
-                    { if (parentObject is Character character) { return character.IsHuman; } }
-                    break;
-                case "IsOn":
-                    { if (parentObject is LightComponent lightComponent) { return lightComponent.IsOn; } }
-                    break;
-                case "Condition":
+                case nameof(Powered.Voltage):
                     {
-                        if (parentObject is Item item) { return item.Condition; }
+                        if (parentObject is Powered powered) { value = powered.Voltage; return true; }
                     }
                     break;
-                case "ContainerIdentifier":
+                case nameof(Powered.RelativeVoltage):
                     {
-                        if (parentObject is Item item) { return item.ContainerIdentifier; }
+                        if (parentObject is Powered powered) { value = powered.RelativeVoltage; return true; }
                     }
                     break;
-                case "PhysicsBodyActive":
+                case nameof(Powered.CurrPowerConsumption):
                     {
-                        if (parentObject is Item item) { return item.PhysicsBodyActive; }
+                        if (parentObject is Powered powered) { value = powered.CurrPowerConsumption; return true; }
+                    }
+                    break;
+                case nameof(PowerContainer.Charge):
+                    {
+                        if (parentObject is PowerContainer powerContainer) { value = powerContainer.Charge; return true; }
+                    }
+                    break;
+                case nameof(PowerContainer.ChargePercentage):
+                    {
+                        if (parentObject is PowerContainer powerContainer) { value = powerContainer.ChargePercentage; return true; }
+                    }
+                    break;
+                case nameof(PowerContainer.RechargeRatio):
+                    {
+                        if (parentObject is PowerContainer powerContainer) { value = powerContainer.RechargeRatio; return true; }
+                    }
+                    break;
+                case nameof(Reactor.AvailableFuel):
+                    { if (parentObject is Reactor reactor) { value = reactor.AvailableFuel; return true; } }
+                    break;
+                case nameof(Reactor.FissionRate):
+                    { if (parentObject is Reactor reactor) { value = reactor.FissionRate; return true; } }
+                    break;
+                case nameof(Reactor.Temperature):
+                    { if (parentObject is Reactor reactor) { value = reactor.Temperature; return true; } }
+                    break;
+                case nameof(Vent.OxygenFlow):
+                    if (parentObject is Vent vent) { value = vent.OxygenFlow; return true; }
+                    break;
+                case nameof(Pump.CurrFlow):
+                    { if (parentObject is Pump pump) { value = pump.CurrFlow; return true; } }
+                    if (parentObject is OxygenGenerator oxygenGenerator) { value = oxygenGenerator.CurrFlow; return true; }
+                    break;
+                case nameof(Engine.CurrentBrokenVolume):
+                    { if (parentObject is Engine engine) { value = engine.CurrentBrokenVolume; return true; } }
+                    { if (parentObject is Pump pump) { value = pump.CurrentBrokenVolume; return true; } }
+                    break;
+                case nameof(Engine.CurrentVolume):
+                    { if (parentObject is Engine engine) { value = engine.CurrentVolume; return true; } }
+                    break;
+                case nameof(Character.Oxygen):
+                    { if (parentObject is Character character) { value = character.Oxygen; return true; } }
+                    { if (parentObject is Hull hull) { value = hull.Oxygen; return true; } }
+                    break;
+                case nameof(Character.Health):
+                    { if (parentObject is Character character) { value = character.Health; return true; } }
+                    break;
+                case nameof(Character.OxygenAvailable):
+                    { if (parentObject is Character character) { value = character.OxygenAvailable; return true; } }
+                    break;
+                case nameof(Character.PressureProtection):
+                    { if (parentObject is Character character) { value = character.PressureProtection; return true; } }
+                    break;
+                case nameof(Item.Condition):
+                    { if (parentObject is Item item) { value = item.Condition; return true; } }
+                    break;
+                case nameof(Character.SpeedMultiplier):
+                    { if (parentObject is Character character) { value = character.SpeedMultiplier; return true; } }
+                    break;
+                case nameof(Character.PropulsionSpeedMultiplier):
+                    { if (parentObject is Character character) { value = character.PropulsionSpeedMultiplier; return true; } }
+                    break;
+                case nameof(Character.LowPassMultiplier):
+                    { if (parentObject is Character character) { value = character.LowPassMultiplier; return true; } }
+                    break;
+                case nameof(Character.HullOxygenPercentage):
+                    {
+                        if (parentObject is Character character) 
+                        { 
+                            value = character.HullOxygenPercentage;
+                            return true;
+                        }
+                        else if (parentObject is Item item)
+                        {
+                            value = item.HullOxygenPercentage;
+                            return true;
+                        }
+                    }
+                    break;
+                case nameof(Door.Stuck):
+                    { if (parentObject is Door door) { value = door.Stuck; return true; } }
+                    break;
+            }
+            return false;
+        }
+        
+        /// <summary>
+         /// Try getting the values of some commonly used properties directly without reflection
+         /// </summary>
+        private bool TryGetBoolValueWithoutReflection(object parentObject, out bool value)
+        {
+            value = false;
+            switch (Name)
+            {
+                case nameof(ItemComponent.IsActive):
+                    if (parentObject is ItemComponent ic) { value = ic.IsActive; return true; }
+                    break;
+                case nameof(PowerTransfer.Overload):
+                    if (parentObject is PowerTransfer powerTransfer) { value = powerTransfer.Overload; return true; }
+                    break;
+                case nameof(MotionSensor.MotionDetected):
+                    if (parentObject is MotionSensor motionSensor) { value = motionSensor.MotionDetected; return true; }
+                    break;
+                case nameof(Character.IsDead):
+                    { if (parentObject is Character character) { value = character.IsDead; return true; } }
+                    break;
+                case nameof(Character.IsHuman):
+                    { if (parentObject is Character character) { value = character.IsHuman; return true; } }
+                    break;
+                case nameof(LightComponent.IsOn):
+                    { if (parentObject is LightComponent lightComponent) { value = lightComponent.IsOn; return true; } }
+                    break;
+                case nameof(Item.PhysicsBodyActive):
+                    {
+                        if (parentObject is Item item) { value = item.PhysicsBodyActive; return true; }
+                    }
+                    break;
+                case nameof(DockingPort.Docked):
+                    if (parentObject is DockingPort dockingPort) { value = dockingPort.Docked; return true; }
+                    break;
+                case nameof(Reactor.TemperatureCritical):
+                    if (parentObject is Reactor reactor) { value = reactor.TemperatureCritical; return true; }
+                    break;
+                case nameof(TriggerComponent.TriggerActive):
+                    if (parentObject is TriggerComponent trigger) { value = trigger.TriggerActive; return true; }
+                    break;
+                case nameof(Controller.State):
+                    if (parentObject is Controller controller) { value = controller.State; return true; }
+                    break;
+                case nameof(Character.InWater):
+                    {
+                        if (parentObject is Character character)
+                        {
+                            value = character.InWater;
+                            return true;
+                        }
+                        else if (parentObject is Item item)
+                        {
+                            value = item.InWater;
+                            return true;
+                        }
+                    }
+                    break;
+                case nameof(Rope.Snapped):
+                    if (parentObject is Rope rope) { value = rope.Snapped; return true; }
+                    break;
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// Try getting the values of some commonly used properties directly without reflection
+        /// </summary>
+        private bool TryGetStringValueWithoutReflection(object parentObject, out string value)
+        {
+            value = null;
+            switch (Name)
+            {
+                case nameof(Item.ContainerIdentifier):
+                    {
+                        if (parentObject is Item item) { value = item.ContainerIdentifier.Value; return true; }
                     }
                     break;
             }
-
-            return null;
+            return false;
         }
 
         /// <summary>
         /// Try setting the values of some commonly used properties directly without reflection
         /// </summary>
-        private bool TrySetValueWithoutReflection(object parentObject, object value)
+        private bool TrySetFloatValueWithoutReflection(object parentObject, float value)
         {
             switch (Name)
             {
-                case "Condition":
-                    if (parentObject is Item item && value is float) { item.Condition = (float)value; return true; }
+                case nameof(Item.Condition):
+                    { if (parentObject is Item item) { item.Condition = value; return true; } }
                     break;
-                case "Voltage":
-                    if (parentObject is Powered powered && value is float) { powered.Voltage = (float)value; return true; }
+                case nameof(Powered.Voltage):
+                    if (parentObject is Powered powered) { powered.Voltage = value; return true; }
                     break;
-                case "Charge":
-                    if (parentObject is PowerContainer powerContainer && value is float) { powerContainer.Charge = (float)value; return true; }
+                case nameof(PowerContainer.Charge):
+                    if (parentObject is PowerContainer powerContainer) { powerContainer.Charge = value; return true; }
                     break;
-                case "AvailableFuel":
-                    if (parentObject is Reactor reactor && value is float) { reactor.AvailableFuel = (float)value; return true; }
+                case nameof(Reactor.AvailableFuel):
+                    if (parentObject is Reactor reactor) { reactor.AvailableFuel = value; return true; }
                     break;
-                case "Oxygen":
-                    { if (parentObject is Character character && value is float) { character.Oxygen = (float)value; return true; } }
+                case nameof(Character.Oxygen):
+                    { if (parentObject is Character character) { character.Oxygen = value; return true; } }
                     break;
-                case "HideFace":
-                    { if (parentObject is Character character && value is bool) { character.HideFace = (bool)value; return true; } }
+                case nameof(Character.OxygenAvailable):
+                    { if (parentObject is Character character) { character.OxygenAvailable = value; return true; } }
                     break;
-                case "OxygenAvailable":
-                    { if (parentObject is Character character && value is float) { character.OxygenAvailable = (float)value; return true; } }
+                case nameof(Character.PressureProtection):
+                    { if (parentObject is Character character) { character.PressureProtection = value; return true; } }
                     break;
-                case "ObstructVision":
-                    { if (parentObject is Character character && value is bool) { character.ObstructVision = (bool)value; return true; } }
+                case nameof(Character.LowPassMultiplier):
+                    { if (parentObject is Character character) { character.LowPassMultiplier = value; return true; } }
                     break;
-                case "PressureProtection":
-                    { if (parentObject is Character character && value is float) { character.PressureProtection = (float)value; return true; } }
+                case nameof(Character.SpeedMultiplier):
+                    { if (parentObject is Character character) { character.StackSpeedMultiplier(value); return true; } }
                     break;
-                case "LowPassMultiplier":
-                    { if (parentObject is Character character && value is float) { character.LowPassMultiplier = (float)value; return true; } }
+                case nameof(Character.HealthMultiplier):
+                    { if (parentObject is Character character) { character.StackHealthMultiplier(value); return true; } }
                     break;
-                case "SpeedMultiplier":
-                    { if (parentObject is Character character && value is float) { character.StackSpeedMultiplier((float)value); return true; } }
+                case nameof(Character.PropulsionSpeedMultiplier):
+                    { if (parentObject is Character character) { character.PropulsionSpeedMultiplier = value; return true; } }
                     break;
-                case "HealthMultiplier":
-                    { if (parentObject is Character character && value is float) { character.StackHealthMultiplier((float)value); return true; } }
-                    break;
-                case "IsOn":
-                    { if (parentObject is LightComponent lightComponent && value is bool) { lightComponent.IsOn = (bool)value; return true; } }
+                case nameof(Item.Scale):
+                    { if (parentObject is Item item) { item.Scale = value; return true; } }
                     break;
             }
-
+            return false;
+        }
+        /// <summary>
+        /// Try setting the values of some commonly used properties directly without reflection
+        /// </summary>
+        private bool TrySetBoolValueWithoutReflection(object parentObject, bool value)
+        {
+            switch (Name)
+            {
+                case nameof(Character.ObstructVision):
+                    { if (parentObject is Character character) { character.ObstructVision = value; return true; } }
+                    break;
+                case nameof(Character.HideFace):
+                    { if (parentObject is Character character) { character.HideFace = value; return true; } }
+                    break;
+                case nameof(Character.UseHullOxygen):
+                    { if (parentObject is Character character) { character.UseHullOxygen = value; return true; } }
+                    break;
+                case nameof(LightComponent.IsOn):
+                    { if (parentObject is LightComponent lightComponent) { lightComponent.IsOn = value; return true; } }
+                    break;
+                case nameof(ItemComponent.IsActive):
+                    { if (parentObject is ItemComponent ic) { ic.IsActive = value; return true; } }
+                    break;
+            }
             return false;
         }
 
@@ -614,7 +891,7 @@ namespace Barotrauma
             return editableProperties;
         }
 
-        public static Dictionary<string, SerializableProperty> GetProperties(object obj)
+        public static Dictionary<Identifier, SerializableProperty> GetProperties(object obj)
         {
             Type objType = obj.GetType();
             if (cachedProperties.ContainsKey(objType))
@@ -623,11 +900,11 @@ namespace Barotrauma
             }
 
             var properties = TypeDescriptor.GetProperties(obj.GetType()).Cast<PropertyDescriptor>();
-            Dictionary<string, SerializableProperty> dictionary = new Dictionary<string, SerializableProperty>();
+            Dictionary<Identifier, SerializableProperty> dictionary = new Dictionary<Identifier, SerializableProperty>();
             foreach (var property in properties)
             {
                 var serializableProperty = new SerializableProperty(property);
-                dictionary.Add(serializableProperty.NameToLowerInvariant, serializableProperty);
+                dictionary.Add(serializableProperty.Name.ToIdentifier(), serializableProperty);
             }
 
             cachedProperties[objType] = dictionary;
@@ -635,16 +912,16 @@ namespace Barotrauma
             return dictionary;
         }
         
-        public static Dictionary<string, SerializableProperty> DeserializeProperties(object obj, XElement element = null)
+        public static Dictionary<Identifier, SerializableProperty> DeserializeProperties(object obj, XElement element = null)
         {
-            Dictionary<string, SerializableProperty> dictionary = GetProperties(obj);
+            Dictionary<Identifier, SerializableProperty> dictionary = GetProperties(obj);
 
             foreach (var property in dictionary.Values)
             {
                 //set the value of the property to the default value if there is one
                 foreach (var ini in property.Attributes.OfType<Serialize>())
                 {
-                    property.TrySetValue(obj, ini.defaultValue);
+                    property.TrySetValue(obj, ini.DefaultValue);
                     break;
                 }
             }
@@ -655,7 +932,7 @@ namespace Barotrauma
                 //and set the value of the matching property if it is initializable
                 foreach (XAttribute attribute in element.Attributes())
                 {
-                    if (!dictionary.TryGetValue(attribute.Name.ToString().ToLowerInvariant(), out SerializableProperty property)) { continue; }
+                    if (!dictionary.TryGetValue(attribute.NameAsIdentifier(), out SerializableProperty property)) { continue; }
                     if (!property.Attributes.OfType<Serialize>().Any()) { continue; }
                     property.TrySetValue(obj, attribute.Value);
                 }
@@ -680,7 +957,7 @@ namespace Barotrauma
                     bool save = false;
                     foreach (var attribute in property.Attributes.OfType<Serialize>())
                     {
-                        if ((attribute.isSaveable && !attribute.defaultValue.Equals(value)) ||
+                        if ((attribute.IsSaveable == IsPropertySaveable.Yes && !attribute.DefaultValue.Equals(value)) ||
                             (!ignoreEditable && property.Attributes.OfType<Editable>().Any()))
                         {
                             save = true;
@@ -734,14 +1011,17 @@ namespace Barotrauma
                             string[] stringArray = (string[])value;
                             stringValue =  stringArray != null ? string.Join(';', stringArray) : "";
                             break;
+                        case "identifierarray":
+                            Identifier[] identifierArray = (Identifier[])value;
+                            stringValue =  identifierArray != null ? string.Join(';', identifierArray) : "";
+                            break;
                         default:
                             stringValue = value.ToString();
                             break;
                     }
                 }
-
-                element.Attribute(property.Name)?.Remove();
-                element.SetAttributeValue(property.NameToLowerInvariant, stringValue);
+                element.GetAttribute(property.Name)?.Remove();
+                element.SetAttributeValue(property.Name, stringValue);
             }
         }
 
@@ -752,9 +1032,9 @@ namespace Barotrauma
         /// <param name="entity">The entity to upgrade</param>
         /// <param name="configElement">The XML element to get the upgrade instructions from (e.g. the config of an item prefab)</param>
         /// <param name="savedVersion">The game version the entity was saved with</param>
-        public static void UpgradeGameVersion(ISerializableEntity entity, XElement configElement, Version savedVersion)
+        public static void UpgradeGameVersion(ISerializableEntity entity, ContentXElement configElement, Version savedVersion)
         {
-            foreach (XElement subElement in configElement.Elements())
+            foreach (var subElement in configElement.Elements())
             {
                 if (!subElement.Name.ToString().Equals("upgrade", StringComparison.OrdinalIgnoreCase)) { continue; }
                 var upgradeVersion = new Version(subElement.GetAttributeString("gameversion", "0.0.0.0"));
@@ -762,7 +1042,7 @@ namespace Barotrauma
 
                 foreach (XAttribute attribute in subElement.Attributes())
                 {
-                    string attributeName = attribute.Name.ToString().ToLowerInvariant();
+                    var attributeName = attribute.NameAsIdentifier();
                     if (attributeName == "gameversion") { continue; }
 
                     if (attributeName == "refreshrect")
@@ -780,6 +1060,21 @@ namespace Barotrauma
                                 structure.Rect = structure.DefaultRect = new Rectangle(structure.Rect.X, structure.Rect.Y,
                                     structure.Rect.Width,
                                     (int)structure.Prefab.ScaledSize.Y);
+                            }
+                        }
+                        else if (entity is Item item)
+                        {
+                            if (!item.ResizeHorizontal)
+                            {
+                                item.Rect = item.DefaultRect = new Rectangle(item.Rect.X, item.Rect.Y,
+                                    (int)(item.Prefab.Size.X * item.Prefab.Scale),
+                                    item.Rect.Height);
+                            }
+                            if (!item.ResizeVertical)
+                            {
+                                item.Rect = item.DefaultRect = new Rectangle(item.Rect.X, item.Rect.Y,
+                                    item.Rect.Width,
+                                    (int)(item.Prefab.Size.Y * item.Prefab.Scale));
                             }
                         }
                     }
@@ -862,19 +1157,19 @@ namespace Barotrauma
 
                 if (entity is Item item2)
                 {
-                    XElement componentElement = subElement.FirstElement();
+                    var componentElement = subElement.FirstElement();
                     if (componentElement == null) { continue; }
                     ItemComponent itemComponent = item2.Components.First(c => c.Name == componentElement.Name.ToString());
                     if (itemComponent == null) { continue; }
                     foreach (XAttribute attribute in componentElement.Attributes())
                     {
-                        string attributeName = attribute.Name.ToString().ToLowerInvariant();
+                        var attributeName = attribute.NameAsIdentifier();
                         if (itemComponent.SerializableProperties.TryGetValue(attributeName, out SerializableProperty property))
                         {
                             FixValue(property, itemComponent, attribute);
                         }
                     }
-                    foreach (XElement element in componentElement.Elements())
+                    foreach (var element in componentElement.Elements())
                     {
                         switch (element.Name.ToString().ToLowerInvariant())
                         {
@@ -883,10 +1178,15 @@ namespace Barotrauma
                                 itemComponent.requiredItems.Clear();
                                 itemComponent.DisabledRequiredItems.Clear();
 
-                                itemComponent.SetRequiredItems(element);
+                                itemComponent.SetRequiredItems(element, allowEmpty: true);
                                 break;
                         }
-                    }                   
+                    }          
+                    if (itemComponent is ItemContainer itemContainer &&
+                        (componentElement.GetChildElement("containable") != null || componentElement.GetChildElement("subcontainer") != null))
+                    {
+                        itemContainer.ReloadContainableRestrictions(componentElement);
+                    }
                 }
             }
         }

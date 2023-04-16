@@ -4,34 +4,37 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Globalization;
 using System.Linq;
-using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 using System.Xml.Linq;
+using Barotrauma.Items.Components;
 
 namespace Barotrauma
 {
-    class SubmarinePreview : IDisposable
+    sealed class SubmarinePreview : IDisposable
     {
+        private readonly SubmarineInfo submarineInfo;
+
         private SpriteRecorder spriteRecorder;
-        private SubmarineInfo submarineInfo;
         private Camera camera;
         private Task loadTask;
+        private (Vector2 Min, Vector2 Max) bounds;
+
         private volatile bool isDisposed;
 
         private GUIFrame previewFrame;
 
-        private class HullCollection
+        private sealed class HullCollection
         {
             public readonly List<Rectangle> Rects;
-            public readonly string Name;
+            public readonly LocalizedString Name;
 
-            public HullCollection(string identifier)
+            public HullCollection(Identifier identifier)
             {
                 Rects = new List<Rectangle>();
-                Name = TextManager.Get(identifier, returnNull: true) ?? identifier;
+                Name = TextManager.Get(identifier).Fallback(identifier.Value);
             }
 
             public void AddRect(XElement element)
@@ -42,7 +45,7 @@ namespace Barotrauma
             }
         }
 
-        private struct Door
+        private readonly struct Door
         {
             public readonly Rectangle Rect;
 
@@ -53,9 +56,8 @@ namespace Barotrauma
             }
         }
 
-        private readonly Dictionary<string, HullCollection> hullCollections;
+        private readonly Dictionary<Identifier,HullCollection> hullCollections;
         private readonly List<Door> doors;
-
 
         private static SubmarinePreview instance = null;
 
@@ -67,7 +69,7 @@ namespace Barotrauma
 
         public static void Close()
         {
-            instance?.Dispose();
+            instance?.Dispose(); instance = null;
         }
 
         private SubmarinePreview(SubmarineInfo subInfo)
@@ -78,7 +80,7 @@ namespace Barotrauma
             isDisposed = false;
             loadTask = null;
 
-            hullCollections = new Dictionary<string, HullCollection>();
+            hullCollections = new Dictionary<Identifier, HullCollection>();
             doors = new List<Door>();
 
             previewFrame = new GUIFrame(new RectTransform(Vector2.One, GUI.Canvas, Anchor.Center), style: null);
@@ -101,16 +103,20 @@ namespace Barotrauma
             GUIListBox specsContainer = null;
 
             new GUICustomComponent(new RectTransform(Vector2.One, innerPadded.RectTransform, Anchor.Center),
-                (spriteBatch, component) => {
+                (spriteBatch, component) => 
+                {
+                    if (isDisposed) { return; }
                     camera.UpdateTransform(interpolate: true, updateListener: false);
                     Rectangle drawRect = new Rectangle(component.Rect.X + 1, component.Rect.Y + 1, component.Rect.Width - 2, component.Rect.Height - 2);
                     RenderSubmarine(spriteBatch, drawRect, component);
                 },
-                (deltaTime, component) => {
+                (deltaTime, component) => 
+                {
+                    if (isDisposed) { return; }
                     bool isMouseOnComponent = GUI.MouseOn == component;
                     camera.MoveCamera(deltaTime, allowZoom: isMouseOnComponent, followSub: false);
                     if (isMouseOnComponent &&
-                        (PlayerInput.MidButtonHeld() || PlayerInput.LeftButtonHeld()))
+                        (PlayerInput.MidButtonHeld() || PlayerInput.PrimaryMouseButtonHeld()))
                     {
                         Vector2 moveSpeed = PlayerInput.MouseSpeed * (float)deltaTime * 60.0f / camera.Zoom;
                         moveSpeed.X = -moveSpeed.X;
@@ -133,7 +139,7 @@ namespace Barotrauma
             };
             var topLayout = new GUILayoutGroup(new RectTransform(new Vector2(0.97f, 5f / 7f), topContainer.RectTransform, Anchor.Center), isHorizontal: true, childAnchor: Anchor.CenterLeft);
 
-            titleText = new GUITextBlock(new RectTransform(new Vector2(0.95f, 1f), topLayout.RectTransform), subInfo.DisplayName, font: GUI.LargeFont);
+            titleText = new GUITextBlock(new RectTransform(new Vector2(0.95f, 1f), topLayout.RectTransform), subInfo.DisplayName, font: GUIStyle.LargeFont);
             new GUIButton(new RectTransform(new Vector2(0.05f, 1f), topLayout.RectTransform), TextManager.Get("Close"))
             {
                 OnClicked = (btn, obj) => { Dispose(); return false; }
@@ -141,12 +147,15 @@ namespace Barotrauma
 
             specsContainer = new GUIListBox(new RectTransform(new Vector2(0.4f, 1f), innerPadded.RectTransform, Anchor.TopLeft) { RelativeOffset = new Vector2(0.015f, 0.07f) })
             {
+                CurrentSelectMode = GUIListBox.SelectMode.None,
                 Color = Color.Black * 0.65f,
                 ScrollBarEnabled = false,
                 ScrollBarVisible = false,
-                Spacing = 5
+                Spacing = GUI.IntScale(5)
             };
-            subInfo.CreateSpecsWindow(specsContainer, GUI.Font, includeTitle: false, includeDescription: true);
+            subInfo.CreateSpecsWindow(specsContainer, GUIStyle.Font,
+                includeTitle: false,
+                includeDescription: true);
             int width = specsContainer.Rect.Width;
             void recalculateSpecsContainerHeight()
             {
@@ -182,7 +191,22 @@ namespace Barotrauma
             });
             recalculateSpecsContainerHeight();
 
-            GeneratePreviewMeshes();
+            TaskPool.Add(nameof(GeneratePreviewMeshes), GeneratePreviewMeshes(), _ =>
+            {
+                if (isDisposed) { return; }
+                // Reset the camera's position on the main thread,
+                // because the Camera class is not thread-safe and
+                // it's possible for its state to not get updated
+                // properly if done within a task
+                camera.Position = (bounds.Min + bounds.Max) * (0.5f, -0.5f);
+                Vector2 span2d = bounds.Max - bounds.Min;
+                Vector2 scaledSpan2d = span2d / camera.Resolution.ToVector2();
+                float scaledSpan = Math.Max(scaledSpan2d.X, scaledSpan2d.Y);
+                camera.MinZoom = Math.Min(0.1f, 0.4f / scaledSpan);
+                camera.Zoom = 0.7f / scaledSpan;
+                camera.StopMovement();
+                camera.UpdateTransform(interpolate: false, updateListener: false);
+            });
         }
 
         public static void AddToGUIUpdateList()
@@ -203,6 +227,7 @@ namespace Barotrauma
             spriteRecorder.Begin(SpriteSortMode.BackToFront);
 
             HashSet<int> toIgnore = new HashSet<int>();
+            HashSet<int> wires = new HashSet<int>();
 
             foreach (var subElement in submarineInfo.SubmarineElement.Elements())
             {
@@ -217,7 +242,7 @@ namespace Barotrauma
                                     ExtractItemContainerIds(component, toIgnore);
                                     break;
                                 case "connectionpanel":
-                                    ExtractConnectionPanelLinks(component, toIgnore);
+                                    ExtractConnectionPanelLinks(component, wires);
                                     break;
                             }
                         }
@@ -227,23 +252,28 @@ namespace Barotrauma
                 await Task.Yield();
             }
 
+            var wireNodes = new List<XElement>();
+
             foreach (var subElement in submarineInfo.SubmarineElement.Elements())
             {
                 if (subElement.GetAttributeBool("hiddeningame", false)) { continue; }
                 switch (subElement.Name.LocalName.ToLowerInvariant())
                 {
+                    case "structure":
                     case "item":
-                        if (!toIgnore.Contains(subElement.GetAttributeInt("ID", 0)))
+                        var id = subElement.GetAttributeInt("ID", 0);
+                        if (wires.Contains(id))
+                        {
+                            wireNodes.Add(subElement);
+                        }
+                        else if (!toIgnore.Contains(id))
                         {
                             BakeMapEntity(subElement);
                         }
                         break;
-                    case "structure":
-                        BakeMapEntity(subElement);
-                        break;
                     case "hull":
-                        string identifier = subElement.GetAttributeString("roomname", "").ToLowerInvariant();
-                        if (!string.IsNullOrEmpty(identifier))
+                        Identifier identifier = subElement.GetAttributeIdentifier("roomname", "");
+                        if (!identifier.IsEmpty)
                         {
                             if (!hullCollections.TryGetValue(identifier, out HullCollection hullCollection))
                             {
@@ -257,15 +287,14 @@ namespace Barotrauma
                 if (isDisposed) { return; }
                 await Task.Yield();
             }
-            spriteRecorder.End();
 
-            camera.Position = (spriteRecorder.Min + spriteRecorder.Max) * 0.5f;
-            float scaledSpan = (spriteRecorder.Max - spriteRecorder.Min).X / camera.Resolution.X;
-            camera.Zoom = 0.8f / scaledSpan;
-            camera.StopMovement();
+            bounds = (spriteRecorder.Min, spriteRecorder.Max);
+            wireNodes.ForEach(BakeWireNodes);
+
+            spriteRecorder.End();
         }
 
-        private void ExtractItemContainerIds(XElement component, HashSet<int> ids)
+        private static void ExtractItemContainerIds(XElement component, HashSet<int> ids)
         {
             string containedString = component.GetAttributeString("contained", "");
             string[] itemIdStrings = containedString.Split(',');
@@ -279,7 +308,7 @@ namespace Barotrauma
             }
         }
 
-        private void ExtractConnectionPanelLinks(XElement component, HashSet<int> ids)
+        private static void ExtractConnectionPanelLinks(XElement component, HashSet<int> ids)
         {
             var pins = component.Elements("input").Concat(component.Elements("output"));
             foreach (var pin in pins)
@@ -293,10 +322,43 @@ namespace Barotrauma
             }
         }
 
+        private void BakeWireNodes(XElement element)
+        {
+            var prefabIdentifier = element.GetAttributeIdentifier("identifier", "");
+            if (prefabIdentifier.IsEmpty) { return; }
+            if (!ItemPrefab.Prefabs.TryGet(prefabIdentifier, out var prefab)) { return; }
+            
+            var prefabWireComponentElement = prefab.ConfigElement.GetChildElement("wire");
+            if (prefabWireComponentElement is null) { return; }
+            
+            var wireComponent = element.GetChildElement("wire");
+            if (wireComponent is null) { return; }
+            
+            var color = element.GetAttributeColor("spritecolor") ?? Color.White;
+            
+            var nodes = Wire.ExtractNodes(wireComponent).ToImmutableArray();
+            var wireSprite = Wire.ExtractWireSprite(prefab.ConfigElement);
+
+            var useSpriteDepth = element.GetAttributeBool("usespritedepth", false);
+            var depth = 
+                useSpriteDepth
+                    ? element.GetAttributeFloat("spritedepth", 1.0f)
+                    : wireSprite.Depth;
+
+            var width = prefabWireComponentElement.GetAttributeFloat("width", 0.3f);
+            
+            for (int i = 0; i < nodes.Length - 1; i++)
+            {
+                var line = (Start: nodes[i], End: nodes[i + 1]);
+                var wireSegment = new Wire.WireSection(line.Start, line.End);
+                wireSegment.Draw(spriteRecorder, wireSprite, color, Vector2.Zero, depth, width);
+            }
+        }
+        
         private void BakeMapEntity(XElement element)
         {
-            string identifier = element.GetAttributeString("identifier", "");
-            if (string.IsNullOrEmpty(identifier)) { return; }
+            Identifier identifier = element.GetAttributeIdentifier("identifier", Identifier.Empty);
+            if (identifier.IsEmpty) { return; }
             Rectangle rect = element.GetAttributeRect("rect", Rectangle.Empty);
             if (rect.Equals(Rectangle.Empty)) { return; }
 
@@ -309,11 +371,20 @@ namespace Barotrauma
 
             float rotation = element.GetAttributeFloat("rotation", 0f);
 
-            MapEntityPrefab prefab = MapEntityPrefab.List.FirstOrDefault(p => p.Identifier.Equals(identifier, StringComparison.OrdinalIgnoreCase));
+            MapEntityPrefab prefab;
+            if (element.NameAsIdentifier() == "item"
+                && ItemPrefab.Prefabs.TryGet(identifier, out ItemPrefab ip))
+            {
+                prefab = ip;
+            }
+            else
+            {
+                prefab = MapEntityPrefab.FindByIdentifier(identifier);
+            }
             if (prefab == null) { return; }
 
-            var texture = prefab.sprite.Texture;
-            var srcRect = prefab.sprite.SourceRect;
+            flippedX &= prefab.CanSpriteFlipX;
+            flippedY &= prefab.CanSpriteFlipY;
 
             SpriteEffects spriteEffects = SpriteEffects.None;
             if (flippedX)
@@ -325,12 +396,11 @@ namespace Barotrauma
                 spriteEffects |= SpriteEffects.FlipVertically;
             }
 
-            var prevEffects = prefab.sprite.effects;
-            prefab.sprite.effects ^= spriteEffects;
+            var prevEffects = prefab.Sprite.effects;
+            prefab.Sprite.effects ^= spriteEffects;
 
             bool overrideSprite = false;
             ItemPrefab itemPrefab = prefab as ItemPrefab;
-            StructurePrefab structurePrefab = prefab as StructurePrefab;
             if (itemPrefab != null)
             {
                 BakeItemComponents(itemPrefab, rect, color, scale, rotation, depth, out overrideSprite);
@@ -338,7 +408,7 @@ namespace Barotrauma
 
             if (!overrideSprite)
             {
-                if (structurePrefab != null)
+                if (prefab is StructurePrefab structurePrefab)
                 {
                     ParseUpgrades(structurePrefab.ConfigElement, ref scale);
 
@@ -359,10 +429,10 @@ namespace Barotrauma
                     if (flippedY) { textureOffset.Y = -textureOffset.Y; }
 
                     backGroundOffset = new Vector2(
-                                MathUtils.PositiveModulo((int)-textureOffset.X, prefab.sprite.SourceRect.Width),
-                                MathUtils.PositiveModulo((int)-textureOffset.Y, prefab.sprite.SourceRect.Height));
+                                MathUtils.PositiveModulo((int)-textureOffset.X, prefab.Sprite.SourceRect.Width),
+                                MathUtils.PositiveModulo((int)-textureOffset.Y, prefab.Sprite.SourceRect.Height));
 
-                    prefab.sprite.DrawTiled(
+                    prefab.Sprite.DrawTiled(
                         spriteRecorder,
                         rect.Location.ToVector2() * new Vector2(1f, -1f),
                         rect.Size.ToVector2(),
@@ -385,17 +455,17 @@ namespace Barotrauma
                     {
                         if (!prefab.ResizeHorizontal)
                         {
-                            rect.Width = (int)(prefab.sprite.size.X * scale);
+                            rect.Width = (int)(prefab.Sprite.size.X * scale);
                         }
                         if (!prefab.ResizeVertical)
                         {
-                            rect.Height = (int)(prefab.sprite.size.Y * scale);
+                            rect.Height = (int)(prefab.Sprite.size.Y * scale);
                         }
 
                         var spritePos = rect.Center.ToVector2();
                         //spritePos.Y = rect.Height - spritePos.Y;
 
-                        prefab.sprite.DrawTiled(
+                        prefab.Sprite.DrawTiled(
                             spriteRecorder,
                             rect.Location.ToVector2() * new Vector2(1f, -1f),
                             rect.Size.ToVector2(),
@@ -407,13 +477,13 @@ namespace Barotrauma
                         {
                             float offsetState = 0f;
                             Vector2 offset = decorativeSprite.GetOffset(ref offsetState, Vector2.Zero) * scale;
-                            if (flippedX && itemPrefab.CanSpriteFlipX) { offset.X = -offset.X; }
-                            if (flippedY && itemPrefab.CanSpriteFlipY) { offset.Y = -offset.Y; }
+                            if (flippedX) { offset.X = -offset.X; }
+                            if (flippedY) { offset.Y = -offset.Y; }
                             decorativeSprite.Sprite.DrawTiled(spriteRecorder,
                                 new Vector2(spritePos.X + offset.X - rect.Width / 2, -(spritePos.Y + offset.Y + rect.Height / 2)),
                                 rect.Size.ToVector2(), color: color,
                                 textureScale: Vector2.One * scale,
-                                depth: Math.Min(depth + (decorativeSprite.Sprite.Depth - prefab.sprite.Depth), 0.999f));
+                                depth: Math.Min(depth + (decorativeSprite.Sprite.Depth - prefab.Sprite.Depth), 0.999f));
                         }
                     }
                     else
@@ -425,31 +495,31 @@ namespace Barotrauma
                         spritePos.Y -= rect.Height;
                         //spritePos.Y = rect.Height - spritePos.Y;
 
-                        prefab.sprite.Draw(
+                        prefab.Sprite.Draw(
                             spriteRecorder,
                             spritePos * new Vector2(1f, -1f),
                             color,
-                            prefab.sprite.Origin,
+                            prefab.Sprite.Origin,
                             rotation,
                             scale,
-                            prefab.sprite.effects, depth);
+                            prefab.Sprite.effects, depth);
 
                         foreach (var decorativeSprite in itemPrefab.DecorativeSprites)
                         {
                             float rotationState = 0f; float offsetState = 0f;
                             float rot = decorativeSprite.GetRotation(ref rotationState, 0f);
                             Vector2 offset = decorativeSprite.GetOffset(ref offsetState, Vector2.Zero) * scale;
-                            if (flippedX && itemPrefab.CanSpriteFlipX) { offset.X = -offset.X; }
-                            if (flippedY && itemPrefab.CanSpriteFlipY) { offset.Y = -offset.Y; }
+                            if (flippedX) { offset.X = -offset.X; }
+                            if (flippedY) { offset.Y = -offset.Y; }
                             decorativeSprite.Sprite.Draw(spriteRecorder, new Vector2(spritePos.X + offset.X, -(spritePos.Y + offset.Y)), color,
-                                MathHelper.ToRadians(rotation) + rot, decorativeSprite.GetScale(0f) * scale, prefab.sprite.effects,
-                                depth: Math.Min(depth + (decorativeSprite.Sprite.Depth - prefab.sprite.Depth), 0.999f));
+                                MathHelper.ToRadians(rotation) + rot, decorativeSprite.GetScale(0f) * scale, prefab.Sprite.effects,
+                                depth: Math.Min(depth + (decorativeSprite.Sprite.Depth - prefab.Sprite.Depth), 0.999f));
                         }
                     }
                 }
             }
 
-            prefab.sprite.effects = prevEffects;
+            prefab.Sprite.effects = prevEffects;
         }
 
         private void BakeItemComponents(
@@ -460,6 +530,7 @@ namespace Barotrauma
         {
             overrideSprite = false;
 
+            float relativeScale = scale / prefab.Scale;
             foreach (var subElement in prefab.ConfigElement.Elements())
             {
                 switch (subElement.Name.LocalName.ToLowerInvariant())
@@ -467,7 +538,7 @@ namespace Barotrauma
                     case "turret":
                         Sprite barrelSprite = null;
                         Sprite railSprite = null;
-                        foreach (XElement turretSubElem in subElement.Elements())
+                        foreach (var turretSubElem in subElement.Elements())
                         {
                             switch (turretSubElem.Name.ToString().ToLowerInvariant())
                             {
@@ -486,7 +557,6 @@ namespace Barotrauma
                             relativeBarrelPos,                            
                             MathHelper.ToRadians(rotation));
 
-                        float relativeScale = scale / prefab.Scale;
                         Vector2 drawPos = new Vector2(rect.X + rect.Width * relativeScale / 2 + transformedBarrelPos.X * relativeScale, rect.Y - rect.Height * relativeScale / 2 - transformedBarrelPos.Y * relativeScale);
                         drawPos.Y = -drawPos.Y;
 
@@ -494,30 +564,32 @@ namespace Barotrauma
                             drawPos,
                             color,
                             rotation + MathHelper.PiOver2, scale,
-                            SpriteEffects.None, depth + (railSprite.Depth - prefab.sprite.Depth));
+                            SpriteEffects.None, depth + (railSprite.Depth - prefab.Sprite.Depth));
 
                         barrelSprite?.Draw(spriteRecorder,
                             drawPos,
                             color,
                             rotation + MathHelper.PiOver2, scale,
-                            SpriteEffects.None, depth + (barrelSprite.Depth - prefab.sprite.Depth));
+                            SpriteEffects.None, depth + (barrelSprite.Depth - prefab.Sprite.Depth));
 
                         break;
                     case "door":
-                        doors.Add(new Door(rect));
+                        var scaledRect = rect with { Size = (rect.Size.ToVector2() * relativeScale).ToPoint() };
+                        
+                        doors.Add(new Door(scaledRect));
 
                         var doorSpriteElem = subElement.Elements().FirstOrDefault(e => e.Name.LocalName.Equals("sprite", StringComparison.OrdinalIgnoreCase));
                         if (doorSpriteElem != null)
                         {
-                            string texturePath = doorSpriteElem.GetAttributeString("texture", "");
-                            Vector2 pos = rect.Location.ToVector2() * new Vector2(1f, -1f);
+                            string texturePath = doorSpriteElem.GetAttributeStringUnrestricted("texture", "");
+                            Vector2 pos = scaledRect.Location.ToVector2() * new Vector2(1f, -1f);
                             if (subElement.GetAttributeBool("horizontal", false))
                             {
-                                pos.Y += (float)rect.Height * 0.5f;
+                                pos.Y += (float)scaledRect.Height * 0.5f;
                             }
                             else
                             {
-                                pos.X += (float)rect.Width * 0.5f;
+                                pos.X += (float)scaledRect.Width * 0.5f;
                             }
                             Sprite doorSprite = new Sprite(doorSpriteElem, texturePath.Contains("/") ? "" : Path.GetDirectoryName(prefab.FilePath));
                             spriteRecorder.Draw(doorSprite.Texture, pos,
@@ -543,7 +615,7 @@ namespace Barotrauma
             }
         }
 
-        public void ParseUpgrades(XElement prefabConfigElement, ref float scale)
+        private void ParseUpgrades(XElement prefabConfigElement, ref float scale)
         {
             foreach (var upgrade in prefabConfigElement.Elements("Upgrade"))
             {
@@ -578,13 +650,13 @@ namespace Barotrauma
             
             if (!spriteRecorder.ReadyToRender)
             {
-                string waitText = !loadTask.IsCompleted ?
-                    TextManager.Get("generatingsubmarinepreview", fallBackTag: "loading") :
+                LocalizedString waitText = !loadTask.IsCompleted ?
+                    TextManager.Get("generatingsubmarinepreview", "loading") :
                     (loadTask.Exception?.ToString() ?? "Task completed without marking as ready to render");
-                Vector2 origin = (GUI.Font.MeasureString(waitText) * 0.5f);
+                Vector2 origin = (GUIStyle.Font.MeasureString(waitText) * 0.5f);
                 origin.X = MathF.Round(origin.X);
                 origin.Y = MathF.Round(origin.Y);
-                GUI.Font.DrawString(
+                GUIStyle.Font.DrawString(
                     spriteBatch,
                     waitText,
                     scissorRectangle.Center.ToVector2(),
@@ -629,18 +701,18 @@ namespace Barotrauma
 
                 if (mouseOver)
                 {
-                    string str = hullCollection.Name;
-                    Vector2 strSize = GUI.Font.MeasureString(str) / camera.Zoom;
+                    LocalizedString str = hullCollection.Name;
+                    Vector2 strSize = GUIStyle.Font.MeasureString(str) / camera.Zoom;
                     Vector2 padding = new Vector2(30, 30) / camera.Zoom;
                     Vector2 shift = new Vector2(10, 0) / camera.Zoom;
 
                     GUI.DrawRectangle(spriteBatch, mousePos + shift, strSize + padding, Color.Black, isFilled: true, depth: 0.25f);
-                    GUI.Font.DrawString(spriteBatch, str, mousePos + shift + (strSize + padding) * 0.5f, Color.White, 0f, strSize * camera.Zoom * 0.5f, 1f / camera.Zoom, SpriteEffects.None, 0f);
+                    GUIStyle.Font.DrawString(spriteBatch, str, mousePos + shift + (strSize + padding) * 0.5f, Color.White, 0f, strSize * camera.Zoom * 0.5f, 1f / camera.Zoom, SpriteEffects.None, 0f);
                 }
             }
             foreach (var door in doors)
             {
-                GUI.DrawRectangle(spriteBatch, door.Rect, GUI.Style.Green * 0.5f, isFilled: true, depth: 0.4f);
+                GUI.DrawRectangle(spriteBatch, door.Rect, GUIStyle.Green * 0.5f, isFilled: true, depth: 0.4f);
             }
             spriteBatch.End();
 
@@ -651,8 +723,13 @@ namespace Barotrauma
 
         public void Dispose()
         {
-            previewFrame = null;
-            spriteRecorder?.Dispose();
+            if (previewFrame != null)
+            {
+                previewFrame.RectTransform.Parent = null;
+                previewFrame = null;
+            }
+            spriteRecorder?.Dispose(); spriteRecorder = null;
+            camera?.Dispose(); camera = null;
             isDisposed = true;
         }
     }

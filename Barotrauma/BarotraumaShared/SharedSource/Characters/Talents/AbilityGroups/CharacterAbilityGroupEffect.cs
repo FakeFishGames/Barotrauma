@@ -1,36 +1,47 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
-using System.Xml.Linq;
+﻿using System.Collections.Generic;
 
 namespace Barotrauma.Abilities
 {
     class CharacterAbilityGroupEffect : CharacterAbilityGroup
     {
-        public CharacterAbilityGroupEffect(AbilityEffectType abilityEffectType, CharacterTalent characterTalent, XElement abilityElementGroup) : 
+        public CharacterAbilityGroupEffect(AbilityEffectType abilityEffectType, CharacterTalent characterTalent, ContentXElement abilityElementGroup) :
             base(abilityEffectType, characterTalent, abilityElementGroup) { }
 
         public void CheckAbilityGroup(AbilityObject abilityObject)
         {
             if (!IsActive) { return; }
-            if (IsApplicable(abilityObject))
+
+            if (IsOverTriggerCount) { return; }
+
+            List<CharacterAbility> abilities = IsApplicable(abilityObject) ? characterAbilities : fallbackAbilities;
+
+            foreach (CharacterAbility characterAbility in abilities)
             {
-                foreach (var characterAbility in characterAbilities)
+                if (characterAbility.IsViable())
                 {
-                    if (characterAbility.IsViable())
-                    {
-                        characterAbility.ApplyAbilityEffect(abilityObject);
-                    }
+                    characterAbility.ApplyAbilityEffect(abilityObject);
                 }
+            }
+
+            if (abilities.Count > 0)
+            {
                 timesTriggered++;
             }
         }
 
+        private bool IsOverTriggerCount => timesTriggered >= maxTriggerCount;
+
         private bool IsApplicable(AbilityObject abilityObject)
         {
-            if (timesTriggered >= maxTriggerCount) { return false; }
-            return abilityConditions.All(c => c.MatchesCondition(abilityObject));
+            foreach (var abilityCondition in abilityConditions)
+            {
+                if (!abilityCondition.MatchesCondition(abilityObject))
+                {
+                    return false;
+                }
+            }
+
+            return true;
         }
     }
 }

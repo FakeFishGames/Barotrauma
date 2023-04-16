@@ -1,28 +1,32 @@
-﻿using Barotrauma.Items.Components;
+﻿using Barotrauma.Extensions;
+using Barotrauma.Items.Components;
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
+using Microsoft.Xna.Framework;
 
 namespace Barotrauma
 {
     class AIObjectiveContainItem: AIObjective
     {
-        public override string Identifier { get; set; } = "contain item";
+        public override Identifier Identifier { get; set; } = "contain item".ToIdentifier();
 
         public Func<Item, float> GetItemPriority;
 
-        public int targetItemCount = 1;
-        public string[] ignoredContainerIdentifiers;
+        public ImmutableHashSet<Identifier> ignoredContainerIdentifiers;
         public bool checkInventory = true;
 
-        //if the item can't be found, spawn it in the character's inventory (used by outpost NPCs)
-        private bool spawnItemIfNotFound = false;
+        //if the item can't be found, spawn it in the character's inventory (used by outpost NPCs and in some cases also enemy NPCs, like pirates)
+        private readonly bool spawnItemIfNotFound;
 
         //can either be a tag or an identifier
-        public readonly string[] itemIdentifiers;
+        public readonly ImmutableHashSet<Identifier> itemIdentifiers;
         public readonly ItemContainer container;
         private readonly Item item;
         public Item ItemToContain { get; private set; }
+
+        public int? TargetSlot;
 
         private AIObjectiveGetItem getItemObjective;
         private AIObjectiveGoTo goToObjective;
@@ -35,9 +39,24 @@ namespace Barotrauma
         public bool Equip { get; set; }
         public bool RemoveEmpty { get; set; } = true;
         public bool RemoveExisting { get; set; }
+        /// <summary>
+        /// Only remove existing items when the contain target can't be put in the inventory
+        /// </summary>
+        public bool RemoveExistingWhenNecessary { get; set; }
+        public Func<Item, bool> RemoveExistingPredicate { get; set; }
+        public int? RemoveMax { get; set; }
 
         public bool MoveWholeStack { get; set; }
 
+        private int _itemCount = 1;
+        public int ItemCount
+        {
+            get { return _itemCount; }
+            set
+            {
+                _itemCount = Math.Max(value, 1);
+            }
+        }
 
         public AIObjectiveContainItem(Character character, Item item, ItemContainer container, AIObjectiveManager objectiveManager, float priorityModifier = 1)
             : base(character, objectiveManager, priorityModifier)
@@ -46,25 +65,21 @@ namespace Barotrauma
             this.item = item;
         }
 
-        public AIObjectiveContainItem(Character character, string itemIdentifier, ItemContainer container, AIObjectiveManager objectiveManager, float priorityModifier = 1, bool spawnItemIfNotFound = false)
-            : this(character, new string[] { itemIdentifier }, container, objectiveManager, priorityModifier, spawnItemIfNotFound) { }
+        public AIObjectiveContainItem(Character character, Identifier itemIdentifier, ItemContainer container, AIObjectiveManager objectiveManager, float priorityModifier = 1, bool spawnItemIfNotFound = false)
+            : this(character, itemIdentifier.ToEnumerable().ToImmutableHashSet(), container, objectiveManager, priorityModifier, spawnItemIfNotFound) { }
 
-        public AIObjectiveContainItem(Character character, string[] itemIdentifiers, ItemContainer container, AIObjectiveManager objectiveManager, float priorityModifier = 1, bool spawnItemIfNotFound = false) 
+        public AIObjectiveContainItem(Character character, ImmutableHashSet<Identifier> itemIdentifiers, ItemContainer container, AIObjectiveManager objectiveManager, float priorityModifier = 1, bool spawnItemIfNotFound = false) 
             : base(character, objectiveManager, priorityModifier)
         {
             this.itemIdentifiers = itemIdentifiers;
             this.spawnItemIfNotFound = spawnItemIfNotFound;
-            for (int i = 0; i < itemIdentifiers.Length; i++)
-            {
-                itemIdentifiers[i] = itemIdentifiers[i].ToLowerInvariant();
-            }
             this.container = container;
         }
 
         protected override bool CheckObjectiveSpecific()
         {
             if (IsCompleted) { return true; }
-            if (container == null || (container.Item != null && container.Item.IsThisOrAnyContainerIgnoredByAI(character)))
+            if (container?.Item == null || !container.Item.HasAccess(character))
             {
                 Abandon = true;
                 return false;
@@ -75,28 +90,40 @@ namespace Barotrauma
             }
             else
             {
-                int containedItemCount = 0;
-                foreach (Item it in container.Inventory.AllItems)
-                {
-                    if (CheckItem(it))
-                    {
-                        containedItemCount++;
-                    }
-                }
-                return containedItemCount >= targetItemCount;
+                return CountItems();
             }
         }
 
-        private bool CheckItem(Item i) => itemIdentifiers.Any(id => i.Prefab.Identifier == id || i.HasTag(id)) && i.ConditionPercentage >= ConditionLevel && !i.IsThisOrAnyContainerIgnoredByAI(character);
+        private bool CountItems()
+        {
+            int containedItemCount = 0;
+            foreach (Item it in container.Inventory.AllItems)
+            {
+                if (CheckItem(it) && IsInTargetSlot(it))
+                {
+                    containedItemCount++;
+                }
+            }
+            return containedItemCount >= ItemCount;
+        }
+
+        private bool CheckItem(Item item)
+        {
+            return CheckItemIdentifiersOrTags(item, itemIdentifiers) && item.ConditionPercentage >= ConditionLevel && item.HasAccess(character);
+        }
 
         protected override void Act(float deltaTime)
         {
-            if (container?.Item == null || container.Item.Removed || container.Item.IsThisOrAnyContainerIgnoredByAI(character))
+            if (container?.Item == null)
             {
                 Abandon = true;
                 return;
             }
-            ItemToContain = item ?? character.Inventory.FindItem(i => CheckItem(i) && i.Container != container.Item, recursive: true);
+            ItemToContain = item ?? character.Inventory.FindItem(it => 
+                CheckItem(it) && 
+                //ignore items already in the container, unless we're trying to place to a specific slot, and the item's not in it
+                (it.Container != container.Item || (TargetSlot.HasValue && it.Container.OwnInventory.FindIndex(it) != TargetSlot)), 
+                recursive: true);
             if (ItemToContain != null)
             {
                 if (!character.CanInteractWith(ItemToContain, checkLinked: false))
@@ -106,9 +133,21 @@ namespace Barotrauma
                 }
                 if (character.CanInteractWith(container.Item, checkLinked: false))
                 {
-                    if (RemoveExisting)
+                    static bool CanBePut(Inventory inventory, int? targetSlot, Item itemToContain)
                     {
-                        HumanAIController.UnequipContainedItems(container.Item);
+                        if (targetSlot.HasValue)
+                        {
+                            return inventory.CanBePutInSlot(itemToContain, targetSlot.Value);
+                        }
+                        else
+                        {
+                            return inventory.CanBePut(itemToContain);
+                        }
+                    }
+
+                    if (RemoveExisting || (RemoveExistingWhenNecessary && !CanBePut(container.Inventory, TargetSlot, ItemToContain)))
+                    {
+                        HumanAIController.UnequipContainedItems(container.Item, predicate: RemoveExistingPredicate, unequipMax: RemoveMax);
                     }
                     else if (RemoveEmpty)
                     {
@@ -116,7 +155,20 @@ namespace Barotrauma
                     }
                     Inventory originalInventory = ItemToContain.ParentInventory;
                     var slots = originalInventory?.FindIndices(ItemToContain);
-                    if (container.Inventory.TryPutItem(ItemToContain, null))
+                    
+                    static bool TryPutItem(Inventory inventory, int? targetSlot, Item itemToContain)
+                    {
+                        if (targetSlot.HasValue)
+                        {
+                            return inventory.TryPutItem(itemToContain, targetSlot.Value, allowSwapping: false, allowCombine: false, user: null);
+                        }
+                        else
+                        {
+                            return inventory.TryPutItem(itemToContain, user: null);
+                        }
+                    }
+
+                    if (TryPutItem(container.Inventory, TargetSlot, ItemToContain))
                     {
                         if (MoveWholeStack && slots != null)
                         {
@@ -124,12 +176,11 @@ namespace Barotrauma
                             {
                                 foreach (Item item in originalInventory.GetItemsAt(slot).ToList())
                                 {
-                                    container.Inventory.TryPutItem(item, null);
+                                    TryPutItem(container.Inventory, TargetSlot, item);
                                 }
                             }
-
-                            IsCompleted = true;
                         }
+                        IsCompleted = item != null || CountItems();
                     }
                     else
                     {
@@ -144,13 +195,14 @@ namespace Barotrauma
                 {
                     TryAddSubObjective(ref goToObjective, () => new AIObjectiveGoTo(container.Item, character, objectiveManager, getDivingGearIfNeeded: AllowToFindDivingGear)
                     {
-                        DialogueIdentifier = "dialogcannotreachtarget",
                         TargetName = container.Item.Name,
                         AbortCondition = obj =>
-                            container?.Item == null || container.Item.Removed || container.Item.IsThisOrAnyContainerIgnoredByAI(character) ||
+                            container?.Item == null || container.Item.Removed || !container.Item.HasAccess(character) || 
+                            (container.Item.GetRootContainer()?.OwnInventory?.Locked ?? false) ||
                             ItemToContain == null || ItemToContain.Removed ||
                             !ItemToContain.IsOwnedBy(character) || container.Item.GetRootInventoryOwner() is Character c && c != character,
-                        SpeakIfFails = !objectiveManager.IsCurrentOrder<AIObjectiveCleanupItems>()
+                        SpeakIfFails = !objectiveManager.IsCurrentOrder<AIObjectiveCleanupItems>(),
+                        endNodeFilter = n => Vector2.DistanceSquared(n.Waypoint.WorldPosition, container.Item.WorldPosition) <= MathUtils.Pow2(AIObjectiveGetItem.DefaultReach)
                     },
                     onAbandon: () => Abandon = true,
                     onCompleted: () => RemoveSubObjective(ref goToObjective));
@@ -174,7 +226,9 @@ namespace Barotrauma
                             AllowToFindDivingGear = AllowToFindDivingGear,
                             AllowDangerousPressure = AllowDangerousPressure,
                             TargetCondition = ConditionLevel,
-                            ItemFilter = (Item potentialItem) => RemoveEmpty ? container.CanBeContained(potentialItem) : container.Inventory.CanBePut(potentialItem)
+                            ItemFilter = (Item potentialItem) => RemoveEmpty ? container.CanBeContained(potentialItem) : container.Inventory.CanBePut(potentialItem),
+                            ItemCount = ItemCount,
+                            TakeWholeStack = MoveWholeStack
                         }, onAbandon: () =>
                         {
                             Abandon = true;
@@ -188,6 +242,16 @@ namespace Barotrauma
                         });
                 }
             }
+        }
+
+        public bool IsInTargetSlot(Item item)
+        {
+            if (TargetSlot == null) { return true; }
+            if (container?.Inventory is ItemInventory inventory)
+            {
+                return inventory.IsInSlot(item, (int)TargetSlot);
+            }
+            return false;
         }
 
         public override void Reset()

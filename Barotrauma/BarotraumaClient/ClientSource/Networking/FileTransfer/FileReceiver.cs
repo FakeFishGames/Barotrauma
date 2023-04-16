@@ -1,6 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using Barotrauma.IO;
 using System.Linq;
 using System.Threading;
@@ -11,7 +12,7 @@ namespace Barotrauma.Networking
     class FileReceiver
     {
         public class FileTransferIn : IDisposable
-        {            
+        {
             public string FileName
             {
                 get;
@@ -36,6 +37,8 @@ namespace Barotrauma.Networking
                 private set;
             }
 
+            public int LastSeen { get; set; }
+
             public FileTransferType FileType
             {
                 get;
@@ -46,6 +49,17 @@ namespace Barotrauma.Networking
             {
                 get;
                 set;
+            }
+
+            public DateTime LastOffsetAckTime
+            {
+                get;
+                private set;
+            }
+
+            public void RecordOffsetAckTime()
+            {
+                LastOffsetAckTime = DateTime.Now;
             }
 
             public float BytesPerSecond
@@ -79,6 +93,12 @@ namespace Barotrauma.Networking
 
             public int ID;
 
+            public const int DataBufferSize = 50;
+            /// <summary>
+            /// Data that we've ignored because we're waiting for some earlier data. Key = byte offset, value = the actual data
+            /// </summary>
+            public readonly Dictionary<int, byte[]> DataBuffer = new Dictionary<int, byte[]>();
+
             public FileTransferIn(NetworkConnection connection, string filePath, FileTransferType fileType)
             {
                 FilePath = filePath;
@@ -88,6 +108,8 @@ namespace Barotrauma.Networking
                 Connection = connection;               
 
                 Status = FileTransferStatus.NotStarted;
+
+                LastOffsetAckTime = DateTime.Now - new TimeSpan(days: 0, hours: 0, minutes: 5, seconds: 0);
             }
 
             public void OpenStream()
@@ -112,71 +134,73 @@ namespace Barotrauma.Networking
                     bytesToRead -= Received + bytesToRead - FileSize;
                 }
 
-                byte[] all = inc.ReadBytes(bytesToRead);
-                Received += all.Length;
-                WriteStream.Write(all, 0, all.Length);
+                ReadBytes(inc.ReadBytes(bytesToRead));
+            }
+
+            public void ReadBytes(byte[] data)
+            {
+                Received += data.Length;
+                WriteStream.Write(data, 0, data.Length);
 
                 int passed = Environment.TickCount - TimeStarted;
                 float psec = passed / 1000.0f;
 
-                if (GameSettings.VerboseLogging)
-                {
-                    DebugConsole.Log($"Received {all.Length} bytes of the file {FileName} ({Received / 1000}/{FileSize / 1000} kB received)");
-                }
-
                 BytesPerSecond = Received / psec;
+
+                var outdatedKeys = DataBuffer.Keys.Where(k => k < Received).ToList();
+                foreach (int key in outdatedKeys)
+                {
+                    DataBuffer.Remove(key);
+                }
 
                 Status = Received >= FileSize ? FileTransferStatus.Finished : FileTransferStatus.Receiving;
             }
 
             private bool disposed = false;
-            protected virtual void Dispose(bool disposing)
-            {
-                if (disposed) return;
-                
-                if (disposing)
-                {
-                    if (WriteStream != null)
-                    {
-                        WriteStream.Flush();
-                        WriteStream.Close();
-                        WriteStream.Dispose();
-                        WriteStream = null;
-                    }
-                }
-                disposed = true;                
-            }
-            
+
             public void Dispose()
             {
-                Dispose(true);
+                if (disposed) { return; }
+                
+                if (WriteStream != null)
+                {
+                    WriteStream.Flush();
+                    WriteStream.Close();
+                    WriteStream.Dispose();
+                    WriteStream = null;
+                }
+                disposed = true;  
             }
         }
-        
-        const int MaxFileSize = 50000000; //50 MB
+
+        private static int GetMaxFileSizeInBytes(FileTransferType fileTransferType) =>
+            fileTransferType switch
+            {
+                FileTransferType.Mod => 500 * 1024 * 1024, //500 MiB should be good enough, right?
+                _ => 50 * 1024 * 1024 //50 MiB for everything other than mods
+            };
         
         public delegate void TransferInDelegate(FileTransferIn fileStreamReceiver);
         public TransferInDelegate OnFinished;
         public TransferInDelegate OnTransferFailed;
 
         private readonly List<FileTransferIn> activeTransfers;
-        private readonly List<Pair<int, double>> finishedTransfers;
+        private readonly List<(int transferId, double finishedTime)> finishedTransfers;
 
-        private readonly Dictionary<FileTransferType, string> downloadFolders = new Dictionary<FileTransferType, string>()
+        private readonly ImmutableDictionary<FileTransferType, string> downloadFolders = new Dictionary<FileTransferType, string>()
         {
             { FileTransferType.Submarine, SaveUtil.SubmarineDownloadFolder },
-            { FileTransferType.CampaignSave, SaveUtil.CampaignDownloadFolder }
-        };
+            { FileTransferType.CampaignSave, SaveUtil.CampaignDownloadFolder },
+            { FileTransferType.Mod, ModReceiver.DownloadFolder }
+        }.ToImmutableDictionary();
 
-        public List<FileTransferIn> ActiveTransfers
-        {
-            get { return activeTransfers; }
-        }
+        public IReadOnlyList<FileTransferIn> ActiveTransfers => activeTransfers;
+        public bool HasActiveTransfers => ActiveTransfers.Any();
 
         public FileReceiver()
         {
             activeTransfers = new List<FileTransferIn>();
-            finishedTransfers = new List<Pair<int, double>>();
+            finishedTransfers = new List<(int transferId, double finishedTime)>();
         }
         
         public void ReadMessage(IReadMessage inc)
@@ -193,8 +217,8 @@ namespace Barotrauma.Networking
                 case (byte)FileTransferMessageType.Initiate:
                     {
                         byte transferId = inc.ReadByte();
-                        var existingTransfer = activeTransfers.Find(t => t.ID == transferId);
-                        finishedTransfers.RemoveAll(t => t.First  == transferId);
+                        var existingTransfer = activeTransfers.Find(t => t.Connection.EndpointMatches(t.Connection.Endpoint) && t.ID == transferId);
+                        finishedTransfers.RemoveAll(t => t.transferId  == transferId);
                         byte fileType = inc.ReadByte();
                         //ushort chunkLen = inc.ReadUInt16();
                         int fileSize = inc.ReadInt32();
@@ -207,11 +231,11 @@ namespace Barotrauma.Networking
                                 fileName != existingTransfer.FileName)
                             {
                                 GameMain.Client.CancelFileTransfer(transferId);
-                                DebugConsole.ThrowError("File transfer error: file transfer initiated with an ID that's already in use");
+                                DebugConsole.AddWarning("File transfer error: file transfer initiated with an ID that's already in use");
                             }
                             else //resend acknowledgement packet
                             {
-                                GameMain.Client.UpdateFileTransfer(transferId, 0);
+                                GameMain.Client.UpdateFileTransfer(existingTransfer, existingTransfer.Received, existingTransfer.LastSeen);
                             }
                             return;
                         }
@@ -223,7 +247,7 @@ namespace Barotrauma.Networking
                             return;
                         }
 
-                        if (GameSettings.VerboseLogging)
+                        if (GameSettings.CurrentConfig.VerboseLogging)
                         {
                             DebugConsole.Log("Received file transfer initiation message: ");
                             DebugConsole.Log("  File: " + fileName);
@@ -278,7 +302,7 @@ namespace Barotrauma.Networking
                         }
                         activeTransfers.Add(newTransfer);
 
-                        GameMain.Client.UpdateFileTransfer(transferId, 0); //send acknowledgement packet
+                        GameMain.Client.UpdateFileTransfer(newTransfer, 0, 0); //send acknowledgement packet
                     }
                     break;
                 case (byte)FileTransferMessageType.TransferOnSameMachine:
@@ -287,7 +311,7 @@ namespace Barotrauma.Networking
                         byte fileType = inc.ReadByte();
                         string filePath = inc.ReadString();
 
-                        if (GameSettings.VerboseLogging)
+                        if (GameSettings.CurrentConfig.VerboseLogging)
                         {
                             DebugConsole.Log("Received file transfer message on the same machine: ");
                             DebugConsole.Log("  File: " + filePath);
@@ -308,7 +332,6 @@ namespace Barotrauma.Networking
                             FileSize = 0
                         };
 
-                        Md5Hash.RemoveFromCache(directTransfer.FilePath);
                         OnFinished(directTransfer);
                     }
                     break;
@@ -316,17 +339,17 @@ namespace Barotrauma.Networking
                     {
                         byte transferId = inc.ReadByte();
 
-                        var activeTransfer = activeTransfers.Find(t => t.Connection == inc.Sender && t.ID == transferId);
+                        var activeTransfer = activeTransfers.Find(t => t.Connection.EndpointMatches(t.Connection.Endpoint) && t.ID == transferId);
                         if (activeTransfer == null)
                         {
                             //it's possible for the server to send some extra data
                             //before it acknowledges that the download is finished,
                             //so let's suppress the error message in that case
-                            finishedTransfers.RemoveAll(t => t.Second + 5.0 < Timing.TotalTime);
-                            if (!finishedTransfers.Any(t => t.First == transferId))
+                            finishedTransfers.RemoveAll(t => t.finishedTime + 5.0 < Timing.TotalTime);
+                            if (!finishedTransfers.Any(t => t.transferId == transferId))
                             {
                                 GameMain.Client.CancelFileTransfer(transferId);
-                                DebugConsole.ThrowError("File transfer error: received data without a transfer initiation message");
+                                DebugConsole.AddWarning("File transfer error: received data without a transfer initiation message");
                             }
                             return;
                         }
@@ -335,10 +358,16 @@ namespace Barotrauma.Networking
                         int bytesToRead = inc.ReadUInt16();
                         if (offset != activeTransfer.Received)
                         {
+                            activeTransfer.LastSeen = Math.Max(offset, activeTransfer.LastSeen);
+                            if (!activeTransfer.DataBuffer.ContainsKey(offset) && activeTransfer.DataBuffer.Count < FileTransferIn.DataBufferSize)
+                            {
+                                activeTransfer.DataBuffer.Add(offset, inc.ReadBytes(bytesToRead));
+                            }
                             DebugConsole.Log($"Received {bytesToRead} bytes of the file {activeTransfer.FileName} (ignoring: offset {offset}, waiting for {activeTransfer.Received})");
-                            GameMain.Client.UpdateFileTransfer(activeTransfer.ID, activeTransfer.Received);
+                            GameMain.Client.UpdateFileTransfer(activeTransfer, activeTransfer.Received, activeTransfer.LastSeen);
                             return;
                         }
+                        activeTransfer.LastSeen = offset;
 
                         if (activeTransfer.Received + bytesToRead > activeTransfer.FileSize)
                         {
@@ -355,7 +384,16 @@ namespace Barotrauma.Networking
 
                         try
                         {
-                            activeTransfer.ReadBytes(inc, bytesToRead); 
+                            activeTransfer.ReadBytes(inc, bytesToRead);
+                            if (GameSettings.CurrentConfig.VerboseLogging)
+                            {
+                                DebugConsole.Log($"Received {bytesToRead} bytes of the file {activeTransfer.FileName} ({activeTransfer.Received / 1000}/{activeTransfer.FileSize / 1000} kB received)");
+                            }
+                            while (activeTransfer.DataBuffer.TryGetValue(activeTransfer.Received, out byte[] data))
+                            {
+                                activeTransfer.ReadBytes(data);
+                                DebugConsole.Log($"Read {data.Length} bytes of buffer data of the file {activeTransfer.FileName} ({activeTransfer.Received / 1000}/{activeTransfer.FileSize / 1000} kB received)");
+                            }
                         }
                         catch (Exception e)
                         {
@@ -366,16 +404,15 @@ namespace Barotrauma.Networking
                             return;
                         }
 
-                        GameMain.Client.UpdateFileTransfer(activeTransfer.ID, activeTransfer.Received, reliable: activeTransfer.Status == FileTransferStatus.Finished);
+                        GameMain.Client.UpdateFileTransfer(activeTransfer, activeTransfer.Received, activeTransfer.LastSeen,  reliable: activeTransfer.Status == FileTransferStatus.Finished);
                         if (activeTransfer.Status == FileTransferStatus.Finished)
                         {
                             activeTransfer.Dispose();
 
                             if (ValidateReceivedData(activeTransfer, out string errorMessage))
                             {
-                                finishedTransfers.Add(new Pair<int, double>(transferId, Timing.TotalTime));
+                                finishedTransfers.Add((transferId, Timing.TotalTime));
                                 StopTransfer(activeTransfer);
-                                Md5Hash.RemoveFromCache(activeTransfer.FilePath);
                                 OnFinished(activeTransfer);
                             }
                             else
@@ -391,7 +428,7 @@ namespace Barotrauma.Networking
                 case (byte)FileTransferMessageType.Cancel:
                     {
                         byte transferId = inc.ReadByte();
-                        var matchingTransfer = activeTransfers.Find(t => t.Connection == inc.Sender && t.ID == transferId);
+                        var matchingTransfer = activeTransfers.Find(t => t.Connection.EndpointMatches(t.Connection.Endpoint) && t.ID == transferId);
                         if (matchingTransfer != null)
                         {
                             new GUIMessageBox("File transfer cancelled", "The server has cancelled the transfer of the file \"" + matchingTransfer.FileName + "\".");
@@ -406,20 +443,20 @@ namespace Barotrauma.Networking
         {
             errorMessage = "";
 
-            if (fileSize > MaxFileSize)
-            {
-                errorMessage = "File too large (" + MathUtils.GetBytesReadable(fileSize) + ")";
-                return false;
-            }
-
             if (!Enum.IsDefined(typeof(FileTransferType), (int)type))
             {
                 errorMessage = "Unknown file type";
                 return false;
             }
 
+            if (fileSize > GetMaxFileSizeInBytes((FileTransferType)type))
+            {
+                errorMessage = $"File too large ({MathUtils.GetBytesReadable(fileSize)} > {MathUtils.GetBytesReadable(GetMaxFileSizeInBytes((FileTransferType)type))})";
+                return false;
+            }
+
             if (string.IsNullOrEmpty(fileName) ||
-                fileName.IndexOfAny(Path.GetInvalidFileNameChars().ToArray()) > -1)
+                fileName.IndexOfAny(Path.GetInvalidFileNameCharsCrossPlatform().ToArray()) > -1)
             {
                 errorMessage = "Illegal characters in file name ''" + fileName + "''";
                 return false;
@@ -455,7 +492,7 @@ namespace Barotrauma.Networking
                     System.IO.Stream stream;
                     try
                     {
-                        stream = SaveUtil.DecompressFiletoStream(fileTransfer.FilePath);
+                        stream = SaveUtil.DecompressFileToStream(fileTransfer.FilePath);
                     }
                     catch (Exception e)
                     {
@@ -528,7 +565,7 @@ namespace Barotrauma.Networking
                 transfer.Status = FileTransferStatus.Canceled;
             }
 
-            if (activeTransfers.Contains(transfer)) activeTransfers.Remove(transfer);
+            if (activeTransfers.Contains(transfer)) { activeTransfers.Remove(transfer); }
             transfer.Dispose();
 
             if (deleteFile && File.Exists(transfer.FilePath))

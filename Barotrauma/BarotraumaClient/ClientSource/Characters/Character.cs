@@ -9,7 +9,6 @@ using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Xml.Linq;
 using Barotrauma.Extensions;
 
 namespace Barotrauma
@@ -110,6 +109,42 @@ namespace Barotrauma
             set => grainStrength = Math.Max(0, value);
         }
 
+        /// <summary>
+        /// Can be used by status effects
+        /// </summary>
+        public float CollapseEffectStrength
+        {
+            get { return Level.Loaded?.Renderer?.CollapseEffectStrength ?? 0.0f; }
+            set
+            {
+                if (Level.Loaded?.Renderer == null) { return; }
+                if (Controlled == this)
+                {
+                    float strength = MathHelper.Clamp(value, 0.0f, 1.0f);
+                    Level.Loaded.Renderer.CollapseEffectStrength = strength;
+                    Level.Loaded.Renderer.CollapseEffectOrigin = Submarine?.WorldPosition ?? WorldPosition;
+                    Screen.Selected.Cam.Shake = Math.Max(MathF.Pow(strength, 3) * 100.0f, Screen.Selected.Cam.Shake);
+                    Screen.Selected.Cam.Rotation = strength * (PerlinNoise.GetPerlin((float)Timing.TotalTime * 0.01f, (float)Timing.TotalTime * 0.05f) - 0.5f);
+                    Level.Loaded.Renderer.ChromaticAberrationStrength = value * 50.0f;
+                }
+            }
+        }
+        /// <summary>
+        /// Can be used to set camera shake from status effects
+        /// </summary>
+        public float CameraShake
+        {
+            get { return Screen.Selected?.Cam?.Shake ?? 0.0f; }
+            set
+            {
+                if (!MathUtils.IsValid(value)) { return; }
+                if (Screen.Selected?.Cam != null)
+                {
+                    Screen.Selected.Cam.Shake = value;
+                }
+            }
+        }
+
         private readonly List<ParticleEmitter> bloodEmitters = new List<ParticleEmitter>();
         public IEnumerable<ParticleEmitter> BloodEmitters
         {
@@ -131,7 +166,7 @@ namespace Barotrauma
         private class GUIMessage
         {
             public string RawText;
-            public string Identifier;
+            public Identifier Identifier;
             public string Text;
 
             private int _value;
@@ -142,7 +177,7 @@ namespace Barotrauma
                 {
                     _value = value;
                     Text = RawText.Replace("[value]", _value.ToString());
-                    Size = GUI.Font.MeasureString(Text);
+                    Size = GUIStyle.Font.MeasureString(Text);
                 }
             }
 
@@ -154,7 +189,7 @@ namespace Barotrauma
 
             public bool PlaySound;
 
-            public GUIMessage(string rawText, Color color, float delay, string identifier = null, int? value = null)
+            public GUIMessage(string rawText, Color color, float delay, Identifier identifier = default, int? value = null, float lifeTime = 3.0f)
             {
                 RawText = Text = rawText;
                 if (value.HasValue)
@@ -163,10 +198,10 @@ namespace Barotrauma
                     Value = value.Value;
                 }
                 Timer = -delay;
-                Size = GUI.Font.MeasureString(Text);
+                Size = GUIStyle.Font.MeasureString(Text);
                 Color = color;
                 Identifier = identifier;
-                Lifetime = 3.0f;
+                Lifetime = lifeTime;
             }
         }
 
@@ -202,14 +237,14 @@ namespace Barotrauma
             get { return activeObjectiveEntities; }
         }
 
-        partial void InitProjSpecific(XElement mainElement)
+        partial void InitProjSpecific(ContentXElement mainElement)
         {
             soundTimer = Rand.Range(0.0f, Params.SoundInterval);
 
             sounds = new List<CharacterSound>();
             Params.Sounds.ForEach(s => sounds.Add(new CharacterSound(s)));
 
-            foreach (XElement subElement in mainElement.Elements())
+            foreach (var subElement in mainElement.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
@@ -263,15 +298,30 @@ namespace Barotrauma
                 {
                     keys[i].SetState();
                 }
+
+                if (CharacterInventory.IsMouseOnInventory && CharacterHUD.ShouldDrawInventory(this))
+                {
+                    ResetInputIfPrimaryMouse(InputType.Use);
+                    ResetInputIfPrimaryMouse(InputType.Shoot);
+                    ResetInputIfPrimaryMouse(InputType.Select);
+                    void ResetInputIfPrimaryMouse(InputType inputType)
+                    {
+                        if (GameSettings.CurrentConfig.KeyMap.Bindings[inputType].MouseButton == MouseButton.PrimaryMouse)
+                        {
+                            keys[(int)inputType].Reset();
+                        }
+                    }
+                }
+
                 //if we were firing (= pressing the aim and shoot keys at the same time)
                 //and the fire key is the same as Select or Use, reset the key to prevent accidentally selecting/using items
                 if (wasFiring && !keys[(int)InputType.Shoot].Held)
                 {
-                    if (GameMain.Config.KeyBind(InputType.Shoot).Equals(GameMain.Config.KeyBind(InputType.Select)))
+                    if (GameSettings.CurrentConfig.KeyMap.Bindings[InputType.Shoot] == GameSettings.CurrentConfig.KeyMap.Bindings[InputType.Select])
                     {
                         keys[(int)InputType.Select].Reset();
                     }
-                    if (GameMain.Config.KeyBind(InputType.Shoot).Equals(GameMain.Config.KeyBind(InputType.Use)))
+                    if (GameSettings.CurrentConfig.KeyMap.Bindings[InputType.Shoot] == GameSettings.CurrentConfig.KeyMap.Bindings[InputType.Use])
                     {
                         keys[(int)InputType.Use].Reset();
                     }
@@ -281,8 +331,7 @@ namespace Barotrauma
                 float targetOffsetAmount = 0.0f;
                 if (moveCam)
                 {
-                    if (NeedsAir && !IsProtectedFromPressure() &&
-                        (AnimController.CurrentHull == null || AnimController.CurrentHull.LethalPressure > 0.0f))
+                    if (!IsProtectedFromPressure && (AnimController.CurrentHull == null || AnimController.CurrentHull.LethalPressure > 0.0f))
                     {
                         float pressure = AnimController.CurrentHull == null ? 100.0f : AnimController.CurrentHull.LethalPressure;
                         if (pressure > 0.0f)
@@ -312,11 +361,7 @@ namespace Barotrauma
                     }
                 }
 
-                cursorPosition = cam.ScreenToWorld(PlayerInput.MousePosition);
-                if (AnimController.CurrentHull?.Submarine != null)
-                {
-                    cursorPosition -= AnimController.CurrentHull.Submarine.Position;
-                }
+                UpdateLocalCursor(cam);
 
                 Vector2 mouseSimPos = ConvertUnits.ToSimUnits(cursorPosition);
                 if (GUI.PauseMenuOpen)
@@ -327,15 +372,15 @@ namespace Barotrauma
                 {
                     cam.OffsetAmount = targetOffsetAmount = item.Prefab.OffsetOnSelected * item.OffsetOnSelectedMultiplier;
                 }
-                else if (SelectedConstruction != null && ViewTarget == null &&
-                    SelectedConstruction.Components.Any(ic => ic?.GuiFrame != null && ic.ShouldDrawHUD(this)))
+                else if (SelectedItem != null && ViewTarget == null &&
+                    SelectedItem.Components.Any(ic => ic?.GuiFrame != null && ic.ShouldDrawHUD(this)))
                 {
                     cam.OffsetAmount = targetOffsetAmount = 0.0f;
                     cursorPosition =
                         Position +
                         PlayerInput.MouseSpeed.ClampLength(10.0f); //apply a little bit of movement to the cursor pos to prevent AFK kicking
                 }
-                else if (!GameMain.Config.EnableMouseLook)
+                else if (!GameSettings.CurrentConfig.EnableMouseLook)
                 {
                     cam.OffsetAmount = targetOffsetAmount = 0.0f;
                 }
@@ -372,30 +417,38 @@ namespace Barotrauma
 
             if (!GUI.InputBlockingMenuOpen)
             {
-                if (SelectedConstruction != null &&
-                    (SelectedConstruction.ActiveHUDs.Any(ic => ic.GuiFrame != null && HUD.CloseHUD(ic.GuiFrame.Rect)) ||
+                if (SelectedItem != null &&
+                    (SelectedItem.ActiveHUDs.Any(ic => ic.GuiFrame != null && HUD.CloseHUD(ic.GuiFrame.Rect)) ||
                     ((ViewTarget as Item)?.Prefab.FocusOnSelected ?? false) && PlayerInput.KeyHit(Microsoft.Xna.Framework.Input.Keys.Escape)))
                 {
                     if (GameMain.Client != null)
                     {
-                        //emulate a Select input to get the character to deselect the item server-side
-                        //keys[(int)InputType.Select].Hit = true;
-                        keys[(int)InputType.Deselect].Hit = true;
+                        //emulate a Deselect input to get the character to deselect the item server-side
+                        EmulateInput(InputType.Deselect);
                     }
                     //reset focus to prevent us from accidentally interacting with another entity
                     focusedItem = null;
                     FocusedCharacter = null;
                     findFocusedTimer = 0.2f;
-                    SelectedConstruction = null;
+                    SelectedItem = null;
                 }
             }
 
             DisableControls = false;
         }
 
+        public void UpdateLocalCursor(Camera cam)
+        {
+            cursorPosition = cam.ScreenToWorld(PlayerInput.MousePosition);
+            if (AnimController.CurrentHull?.Submarine != null)
+            {
+                cursorPosition -= AnimController.CurrentHull.Submarine.DrawPosition;
+            }
+        }
+
         partial void UpdateControlled(float deltaTime, Camera cam)
         {
-            if (controlled != this) return;
+            if (controlled != this) { return; }
             
             ControlLocalPlayer(deltaTime, cam);
 
@@ -420,6 +473,11 @@ namespace Barotrauma
                 }
             }
         }
+
+        public void EmulateInput(InputType input)
+        {
+            keys[(int)input].Hit = true;
+        }
         
         partial void OnAttackedProjSpecific(Character attacker, AttackResult attackResult, float stun)
         {
@@ -441,36 +499,15 @@ namespace Barotrauma
 
             if (GameMain.NetworkMember != null && controlled == this)
             {
-                string chatMessage = CauseOfDeath.Type == CauseOfDeathType.Affliction ?
+                LocalizedString chatMessage = CauseOfDeath.Type == CauseOfDeathType.Affliction ?
                     CauseOfDeath.Affliction.SelfCauseOfDeathDescription :
-                    TextManager.Get("Self_CauseOfDeathDescription." + CauseOfDeath.Type.ToString(), fallBackTag: "Self_CauseOfDeathDescription.Damage");
+                    TextManager.Get("Self_CauseOfDeathDescription." + CauseOfDeath.Type.ToString(), "Self_CauseOfDeathDescription.Damage");
 
                 if (GameMain.Client != null) { chatMessage += " " + TextManager.Get("DeathChatNotification"); }
 
-                if (GameMain.NetworkMember.RespawnManager?.UseRespawnPrompt ?? false)
-                {
-                    CoroutineManager.Invoke(() =>
-                    {
-                        if (controlled != null || (!(GameMain.GameSession?.IsRunning ?? false))) { return; }
-                        var respawnPrompt = new GUIMessageBox(
-                            TextManager.Get("tutorial.tryagainheader"), TextManager.Get("respawnquestionprompt"),
-                            new string[] { TextManager.Get("respawnquestionpromptrespawn"), TextManager.Get("respawnquestionpromptwait") });
-                        respawnPrompt.Buttons[0].OnClicked += (btn, userdata) =>
-                        {
-                            GameMain.Client?.SendRespawnPromptResponse(waitForNextRoundRespawn: false);
-                            respawnPrompt.Close();
-                            return true;
-                        };
-                        respawnPrompt.Buttons[1].OnClicked += (btn, userdata) =>
-                        {
-                            GameMain.Client?.SendRespawnPromptResponse(waitForNextRoundRespawn: true);
-                            respawnPrompt.Close();
-                            return true;
-                        };
-                    }, delay: 5.0f);
-                }
+                GameMain.NetworkMember.RespawnManager?.ShowRespawnPromptIfNeeded();
 
-                GameMain.NetworkMember.AddChatMessage(chatMessage, ChatMessageType.Dead);
+                GameMain.NetworkMember.AddChatMessage(chatMessage.Value, ChatMessageType.Dead);
                 GameMain.LightManager.LosEnabled = false;
                 controlled = null;
                 if (!(Screen.Selected?.Cam is null))
@@ -534,7 +571,7 @@ namespace Barotrauma
             //reduce the amount of aim assist if an item has been selected 
             //= can't switch selection to another item without deselecting the current one first UNLESS the cursor is directly on the item
             //otherwise it would be too easy to accidentally switch the selected item when rewiring items
-            float aimAssistAmount = SelectedConstruction == null ? 100.0f * aimAssistModifier : 1.0f;
+            float aimAssistAmount = SelectedItem == null ? 100.0f * aimAssistModifier : 1.0f;
 
             Vector2 displayPosition = ConvertUnits.ToDisplayUnits(simPosition);
 
@@ -613,7 +650,7 @@ namespace Barotrauma
             return closestItem;
         }
 
-        private Character FindCharacterAtPosition(Vector2 mouseSimPos, float maxDist = 150.0f)
+        private Character FindCharacterAtPosition(Vector2 mouseSimPos, float maxDist = MaxHighlightDistance)
         {
             Character closestCharacter = null;
 
@@ -623,7 +660,7 @@ namespace Barotrauma
             {
                 if (!CanInteractWith(c, checkVisibility: false) || (c.AnimController?.SimplePhysicsEnabled ?? true)) { continue; }
 
-                float dist = Vector2.DistanceSquared(mouseSimPos, c.SimPosition);
+                float dist = c.GetDistanceToClosestLimb(mouseSimPos);
                 if (dist < closestDist || 
                     (c.CampaignInteractionType != CampaignMode.InteractionType.None && closestCharacter?.CampaignInteractionType == CampaignMode.InteractionType.None && dist * 0.9f < closestDist))
                 {
@@ -639,29 +676,17 @@ namespace Barotrauma
         {
             if (this != controlled) { return false; }
             if (GameMain.GameSession?.Campaign != null && GameMain.GameSession.Campaign.ShowCampaignUI) { return true; }
-            var controller = SelectedConstruction?.GetComponent<Controller>();
+            var controller = SelectedItem?.GetComponent<Controller>();
             //lock if using a controller, except if we're also using a connection panel in the same item
             return
-                SelectedConstruction != null &&
+                SelectedItem != null &&
                 controller?.User == this && controller.HideHUD &&
-                SelectedConstruction?.GetComponent<ConnectionPanel>()?.User != this;
+                SelectedItem?.GetComponent<ConnectionPanel>()?.User != this;
         }
 
 
         partial void UpdateProjSpecific(float deltaTime, Camera cam)
         {
-            if (InvisibleTimer > 0.0f)
-            {
-                if (Controlled == null || Controlled == this || (Controlled.CharacterHealth.GetAffliction("psychosis")?.Strength ?? 0.0f) <= 0.0f)
-                {
-                    InvisibleTimer = 0.0f;
-                }
-                else
-                {
-                    InvisibleTimer -= deltaTime;
-                }
-            }
-
             foreach (GUIMessage message in guiMessages)
             {
                 bool wasPending = message.Timer < 0.0f;
@@ -742,9 +767,9 @@ namespace Barotrauma
             }
         }
 
-        partial void SetOrderProjSpecific(Order order, string orderOption, int priority)
+        partial void SetOrderProjSpecific(Order order)
         {
-            GameMain.GameSession?.CrewManager?.AddCurrentOrderIcon(this, order, orderOption, priority);
+            GameMain.GameSession?.CrewManager?.AddCurrentOrderIcon(this, order);
         }
 
         public static void AddAllToGUIUpdateList()
@@ -828,7 +853,7 @@ namespace Barotrauma
                 Controlled != this &&
                 Submarine != null &&
                 Controlled.Submarine == Submarine &&
-                GameMain.Config.LosMode != LosMode.None)
+                GameSettings.CurrentConfig.Graphics.LosMode != LosMode.None)
             {
                 float yPos = Controlled.AnimController.FloorY - 1.5f;
 
@@ -870,7 +895,7 @@ namespace Barotrauma
 
             if (speechBubbleTimer > 0.0f)
             {
-                GUI.SpeechBubbleIcon.Draw(spriteBatch, pos - Vector2.UnitY * 5,
+                GUIStyle.SpeechBubbleIcon.Value.Sprite.Draw(spriteBatch, pos - Vector2.UnitY * 5,
                     speechBubbleColor * Math.Min(speechBubbleTimer, 1.0f), 0.0f,
                     Math.Min(speechBubbleTimer, 1.0f));
             }
@@ -896,7 +921,7 @@ namespace Barotrauma
                         GUI.DrawLine(spriteBatch,
                             cursorPos,
                             new Vector2(item.DrawPosition.X, -item.DrawPosition.Y),
-                            ToolBox.GradientLerp(dist, GUI.Style.Red, GUI.Style.Orange, GUI.Style.Green), width: 2);
+                            ToolBox.GradientLerp(dist, GUIStyle.Red, GUIStyle.Orange, GUIStyle.Green), width: 2);
                     }
                 }
                 return;
@@ -915,10 +940,17 @@ namespace Barotrauma
             {
                 if (info != null)
                 {
-                    string name = Info.DisplayName;
-                    if (controlled == null && name != Info.Name) { name += " " + TextManager.Get("Disguised"); }
+                    LocalizedString name = Info.DisplayName;
+                    if (controlled == null && name != Info.Name) 
+                    { 
+                        name += " " + TextManager.Get("Disguised"); 
+                    }
+                    else if (Info.Title != null && TeamID != CharacterTeamType.Team1)
+                    {
+                        name += '\n' + Info.Title;
+                    }
 
-                    Vector2 nameSize = GUI.Font.MeasureString(name);
+                    Vector2 nameSize = GUIStyle.Font.MeasureString(name);
                     Vector2 namePos = new Vector2(pos.X, pos.Y - 10.0f - (5.0f / cam.Zoom)) - nameSize * 0.5f / cam.Zoom;
                     Color nameColor = GetNameColor();
 
@@ -932,7 +964,7 @@ namespace Barotrauma
 
                     if (CampaignInteractionType != CampaignMode.InteractionType.None && AllowCustomInteract)
                     {
-                        var iconStyle = GUI.Style.GetComponentStyle("CampaignInteractionBubble." + CampaignInteractionType);
+                        var iconStyle = GUIStyle.GetComponentStyle("CampaignInteractionBubble." + CampaignInteractionType);
                         if (iconStyle != null)
                         {
                             Vector2 headPos = AnimController.GetLimb(LimbType.Head)?.body?.DrawPosition ?? DrawPosition + Vector2.UnitY * 100.0f;
@@ -945,11 +977,11 @@ namespace Barotrauma
                         }
                     }
 
-                    GUI.Font.DrawString(spriteBatch, name, namePos + new Vector2(1.0f / cam.Zoom, 1.0f / cam.Zoom), Color.Black, 0.0f, Vector2.Zero, 1.0f / cam.Zoom, SpriteEffects.None, 0.001f);
-                    GUI.Font.DrawString(spriteBatch, name, namePos, nameColor * hudInfoAlpha, 0.0f, Vector2.Zero, 1.0f / cam.Zoom, SpriteEffects.None, 0.0f);
+                    GUIStyle.Font.DrawString(spriteBatch, name, namePos + new Vector2(1.0f / cam.Zoom, 1.0f / cam.Zoom), Color.Black, 0.0f, Vector2.Zero, 1.0f / cam.Zoom, SpriteEffects.None, 0.001f);
+                    GUIStyle.Font.DrawString(spriteBatch, name, namePos, nameColor * hudInfoAlpha, 0.0f, Vector2.Zero, 1.0f / cam.Zoom, SpriteEffects.None, 0.0f);
                     if (GameMain.DebugDraw)
                     {
-                        GUI.Font.DrawString(spriteBatch, ID.ToString(), namePos - new Vector2(0.0f, 20.0f), Color.White);
+                        GUIStyle.Font.DrawString(spriteBatch, ID.ToString(), namePos - new Vector2(0.0f, 20.0f), Color.White);
                     }
                 }
                 
@@ -957,7 +989,7 @@ namespace Barotrauma
                 if (petBehavior != null && !IsDead && !IsUnconscious)
                 {
                     var petStatus = petBehavior.GetCurrentStatusIndicatorType();
-                    var iconStyle = GUI.Style.GetComponentStyle("PetIcon." + petStatus);
+                    var iconStyle = GUIStyle.GetComponentStyle("PetIcon." + petStatus);
                     if (iconStyle != null)
                     {
                         Vector2 headPos = AnimController.GetLimb(LimbType.Head)?.body?.DrawPosition ?? DrawPosition + Vector2.UnitY * 100.0f;
@@ -971,15 +1003,32 @@ namespace Barotrauma
             }
 
             if (IsDead) { return; }
-            
-            if (CharacterHealth.DisplayedVitality < MaxVitality * 0.98f && hudInfoVisible)
+
+            var healthBarMode = GameMain.NetworkMember?.ServerSettings.ShowEnemyHealthBars ?? GameSettings.CurrentConfig.ShowEnemyHealthBars;
+            if (healthBarMode != EnemyHealthBarMode.ShowAll)
+            {
+                if (Controlled == null)
+                {
+                    if (!IsOnPlayerTeam) { return; }
+                }
+                else
+                {
+                    if (!HumanAIController.IsFriendly(Controlled, this) || 
+                        (AIController is HumanAIController humanAi && humanAi.ObjectiveManager.CurrentObjective is AIObjectiveCombat combatObjective && HumanAIController.IsFriendly(Controlled, combatObjective.Enemy))) 
+                    { 
+                        return; 
+                    }
+                }
+            }
+
+            if (Params.ShowHealthBar && CharacterHealth.DisplayedVitality < MaxVitality * 0.98f && hudInfoVisible)
             {
                 hudInfoAlpha = Math.Max(hudInfoAlpha, Math.Min(CharacterHealth.DamageOverlayTimer, 1.0f));
 
                 Vector2 healthBarPos = new Vector2(pos.X - 50, -pos.Y);
                 GUI.DrawProgressBar(spriteBatch, healthBarPos, new Vector2(100.0f, 15.0f),
-                    CharacterHealth.DisplayedVitality / MaxVitality, 
-                    Color.Lerp(GUI.Style.Red, GUI.Style.Green, CharacterHealth.DisplayedVitality / MaxVitality) * 0.8f * hudInfoAlpha,
+                    CharacterHealth.DisplayedVitality / MaxVitality,
+                    Color.Lerp(GUIStyle.Red, GUIStyle.Green, CharacterHealth.DisplayedVitality / MaxVitality) * 0.8f * hudInfoAlpha,
                     new Color(0.5f, 0.57f, 0.6f, 1.0f) * hudInfoAlpha);
             }
         }
@@ -1003,7 +1052,7 @@ namespace Barotrauma
                 }
             }
 
-            Color nameColor = GUI.Style.TextColor;
+            Color nameColor = GUIStyle.TextColorNormal;
             if (Controlled != null && team != Controlled.TeamID)
             {
                 if (TeamID == CharacterTeamType.FriendlyNPC)
@@ -1012,13 +1061,13 @@ namespace Barotrauma
                 }
                 else
                 {
-                    nameColor = GUI.Style.Red;
+                    nameColor = GUIStyle.Red;
                 }
             }
             return nameColor;
         }
 
-        public void AddMessage(string rawText, Color color, bool playSound, string identifier = null, int? value = null)
+        public void AddMessage(string rawText, Color color, bool playSound, Identifier identifier = default, int? value = null, float lifetime = 3.0f)
         {
             GUIMessage existingMessage = null;
 
@@ -1047,7 +1096,7 @@ namespace Barotrauma
             }
             if (existingMessage == null || !value.HasValue)
             {
-                var newMessage = new GUIMessage(rawText, color, delay, identifier, value);
+                var newMessage = new GUIMessage(rawText, color, delay, identifier, value, lifetime);
                 guiMessages.Insert(0, newMessage);
                 if (playSound)
                 {
@@ -1105,12 +1154,12 @@ namespace Barotrauma
             matchingSounds.Clear();
             foreach (var s in sounds)
             {
-                if (s.Type == soundType && (s.Gender == Gender.None || (info != null && info.Gender == s.Gender)))
+                if (s.Type == soundType && (s.TagSet.None() || (info != null && s.TagSet.IsSubsetOf(info.Head.Preset.TagSet))))
                 {
                     matchingSounds.Add(s);
                 }
             }
-            var selectedSound = matchingSounds.GetRandom();
+            var selectedSound = matchingSounds.GetRandomUnsynced();
             if (selectedSound?.Sound == null) { return; }
             soundChannel = SoundPlayer.PlaySound(selectedSound.Sound, AnimController.WorldPosition, selectedSound.Volume, selectedSound.Range, hullGuess: CurrentHull, ignoreMuffling: selectedSound.IgnoreMuffling);
             soundTimer = Params.SoundInterval;
@@ -1133,7 +1182,7 @@ namespace Barotrauma
         /// <summary>
         /// Note that when a predicate is provided, the random option uses Linq.Where() extension method, which creates a new collection.
         /// </summary>
-        public CharacterSound GetSound(Func<CharacterSound, bool> predicate = null, bool random = false) => random ? sounds.GetRandom(predicate) : sounds.FirstOrDefault(predicate);
+        public CharacterSound GetSound(Func<CharacterSound, bool> predicate = null, bool random = false) => random ? sounds.GetRandomUnsynced(predicate) : sounds.FirstOrDefault(predicate);
 
         partial void ImplodeFX()
         {
@@ -1167,19 +1216,11 @@ namespace Barotrauma
             }
         }
 
-        partial void OnMoneyChanged(int prevAmount, int newAmount)
-        {
-            if (newAmount > prevAmount)
-            {
-                int increase = newAmount - prevAmount;
-                AddMessage("+" + TextManager.GetWithVariable("currencyformat", "[credits]", "[value]"),
-                    GUI.Style.Yellow, playSound: this == Controlled, "money", increase);
-            }
-        }
+        partial void OnMoneyChanged(int prevAmount, int newAmount) { }
 
-        partial void OnTalentGiven(string talentIdentifier)
+        partial void OnTalentGiven(TalentPrefab talentPrefab)
         {
-            AddMessage(TextManager.Get("talentname." + talentIdentifier.ToString()), GUI.Style.Yellow, playSound: this == Controlled);
+            AddMessage(TextManager.Get("talentname." + talentPrefab.Identifier).Value, GUIStyle.Yellow, playSound: this == Controlled);
         }
     }
 }

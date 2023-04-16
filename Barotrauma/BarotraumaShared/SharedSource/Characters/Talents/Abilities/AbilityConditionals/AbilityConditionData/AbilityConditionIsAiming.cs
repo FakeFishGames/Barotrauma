@@ -15,7 +15,7 @@ namespace Barotrauma.Abilities
         private readonly bool hittingCountsAsAiming;
 
         private readonly WeaponType weapontype;
-        public AbilityConditionIsAiming(CharacterTalent characterTalent, XElement conditionElement) : base(characterTalent, conditionElement)
+        public AbilityConditionIsAiming(CharacterTalent characterTalent, ContentXElement conditionElement) : base(characterTalent, conditionElement)
         {
             hittingCountsAsAiming = conditionElement.GetAttributeBool("hittingcountsasaiming", false);
             switch (conditionElement.GetAttributeString("weapontype", ""))

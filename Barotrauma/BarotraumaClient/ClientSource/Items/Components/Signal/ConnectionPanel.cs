@@ -5,7 +5,6 @@ using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
 {
@@ -27,16 +26,32 @@ namespace Barotrauma.Items.Components
         private Point originalMaxSize;
         private Vector2 originalRelativeSize;
 
+        private GUIComponent dragArea;
+
+        public override bool RecreateGUIOnResolutionChange => true;
+
         partial void InitProjSpecific()
         {
             if (GuiFrame == null) { return; }
             originalMaxSize = GuiFrame.RectTransform.MaxSize;
             originalRelativeSize = GuiFrame.RectTransform.RelativeSize;
+            CreateGUI();
+        }
+
+        protected override void CreateGUI()
+        {
+            if (GuiFrame == null) { return; }
+
             CheckForLabelOverlap();
-            new GUICustomComponent(new RectTransform(Vector2.One, GuiFrame.RectTransform), DrawConnections, null)
+            var content = new GUICustomComponent(new RectTransform(Vector2.One, GuiFrame.RectTransform), DrawConnections, null)
             {
                 UserData = this
             };
+            content.RectTransform.SetAsFirstChild();
+
+            //prevents inputs from going through the GUICustomComponent to the drag handle
+            dragArea = new GUIFrame(new RectTransform(GuiFrame.Rect.Size - GUIStyle.ItemFrameMargin, GuiFrame.RectTransform, Anchor.Center)
+            { AbsoluteOffset = GUIStyle.ItemFrameOffset }, style: null);
         }
 
         public void TriggerRewiringSound()
@@ -62,7 +77,7 @@ namespace Barotrauma.Items.Components
             }
 
             rewireSoundTimer -= deltaTime;
-            if (user != null && user.SelectedConstruction == item && rewireSoundTimer > 0.0f)
+            if (user != null && user.SelectedItem == item && rewireSoundTimer > 0.0f)
             {
                 if (rewireSoundChannel == null || !rewireSoundChannel.IsPlaying)
                 {
@@ -77,7 +92,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public override void Move(Vector2 amount)
+        public override void Move(Vector2 amount, bool ignoreContacts = false)
         {
             if (item.Submarine == null || item.Submarine.Loading || Screen.Selected != GameMain.SubEditorScreen) { return; }
             MoveConnectedWires(amount);
@@ -85,18 +100,18 @@ namespace Barotrauma.Items.Components
         
         public override bool ShouldDrawHUD(Character character)
         {
-            return character == Character.Controlled && character == user && character.SelectedConstruction == item;
+            return character == Character.Controlled && character == user && character.SelectedItem == item;
         }
         
         public override void UpdateHUD(Character character, float deltaTime, Camera cam)
         {
-            if (character != Character.Controlled || character != user || character.SelectedConstruction != item) { return; }
+            if (character != Character.Controlled || character != user || character.SelectedItem != item) { return; }
             
             if (HighlightedWire != null)
             {
                 HighlightedWire.Item.IsHighlighted = true;
-                if (HighlightedWire.Connections[0] != null && HighlightedWire.Connections[0].Item != null) HighlightedWire.Connections[0].Item.IsHighlighted = true;
-                if (HighlightedWire.Connections[1] != null && HighlightedWire.Connections[1].Item != null) HighlightedWire.Connections[1].Item.IsHighlighted = true;
+                if (HighlightedWire.Connections[0] != null && HighlightedWire.Connections[0].Item != null) { HighlightedWire.Connections[0].Item.IsHighlighted = true; }
+                if (HighlightedWire.Connections[1] != null && HighlightedWire.Connections[1].Item != null) { HighlightedWire.Connections[1].Item.IsHighlighted = true; }
             }
         }
 
@@ -105,19 +120,12 @@ namespace Barotrauma.Items.Components
             if (user != Character.Controlled || user == null) { return; }
 
             HighlightedWire = null;
-            Connection.DrawConnections(spriteBatch, this, user);
+            Connection.DrawConnections(spriteBatch, this, dragArea.Rect, user);
 
-            foreach (UISprite sprite in GUI.Style.GetComponentStyle("ConnectionPanelFront").Sprites[GUIComponent.ComponentState.None])
+            foreach (UISprite sprite in GUIStyle.GetComponentStyle("ConnectionPanelFront").Sprites[GUIComponent.ComponentState.None])
             {
                 sprite.Draw(spriteBatch, GuiFrame.Rect, Color.White, SpriteEffects.None);
             }
-        }
-
-        protected override void OnResolutionChanged()
-        {
-            base.OnResolutionChanged();
-            if (GuiFrame == null) { return; }
-            CheckForLabelOverlap();
         }
 
         private void CheckForLabelOverlap()
@@ -139,7 +147,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public void ClientRead(ServerNetObject type, IReadMessage msg, float sendingTime)
+        public void ClientEventRead(IReadMessage msg, float sendingTime)
         {
             if (GameMain.Client.MidRoundSyncing)
             {
@@ -147,9 +155,10 @@ namespace Barotrauma.Items.Components
                 //because some of the wires connected to the panel may not exist yet
                 long msgStartPos = msg.BitPosition;
                 msg.ReadUInt16(); //user ID
-                foreach (Connection connection in Connections)
+                foreach (Connection _ in Connections)
                 {
-                    for (int i = 0; i < connection.MaxWires; i++)
+                    uint wireCount = msg.ReadVariableUInt32();
+                    for (int i = 0; i < wireCount; i++)
                     {
                         msg.ReadUInt16();
                     }
@@ -161,7 +170,7 @@ namespace Barotrauma.Items.Components
                 }
                 int msgLength = (int)(msg.BitPosition - msgStartPos);
                 msg.BitPosition = (int)msgStartPos;
-                StartDelayedCorrection(type, msg.ExtractBits(msgLength), sendingTime, waitForMidRoundSync: true);
+                StartDelayedCorrection(msg.ExtractBits(msgLength), sendingTime, waitForMidRoundSync: true);
             }
             else
             {
@@ -173,9 +182,8 @@ namespace Barotrauma.Items.Components
 
         private void ApplyRemoteState(IReadMessage msg)
         {
-            List<Wire> prevWires = Connections.SelectMany(c => c.Wires.Where(w => w != null)).ToList();
-            List<Wire> newWires = new List<Wire>();
-
+            List<Wire> prevWires = Connections.SelectMany(c => c.Wires).ToList();
+            
             ushort userID = msg.ReadUInt16();
 
             if (userID == 0)
@@ -195,7 +203,9 @@ namespace Barotrauma.Items.Components
 
             foreach (Connection connection in Connections)
             {
-                for (int i = 0; i < connection.MaxWires; i++)
+                HashSet<Wire> newWires = new HashSet<Wire>();
+                uint wireCount = msg.ReadVariableUInt32();
+                for (int i = 0; i < wireCount; i++)
                 {
                     ushort wireId = msg.ReadUInt16();
 
@@ -204,9 +214,18 @@ namespace Barotrauma.Items.Components
                     if (wireComponent == null) { continue; }
 
                     newWires.Add(wireComponent);
+                }
 
-                    connection.SetWire(i, wireComponent);
-                    wireComponent.Connect(connection, false);
+                Wire[] oldWires = connection.Wires.Where(w => !newWires.Contains(w)).ToArray();
+                foreach (var wire in oldWires)
+                {
+                    connection.DisconnectWire(wire);
+                }
+
+                foreach (var wire in newWires.Where(w => !connection.Wires.Contains(w)).ToArray())
+                {
+                    connection.ConnectWire(wire);
+                    wire.Connect(connection, false);
                 }
             }
 

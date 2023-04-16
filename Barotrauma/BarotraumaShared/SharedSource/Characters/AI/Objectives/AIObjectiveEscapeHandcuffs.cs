@@ -6,7 +6,7 @@ namespace Barotrauma
     class AIObjectiveEscapeHandcuffs : AIObjective
     {
         // Used for prisoner escorts to allow them to escape their binds
-        public override string Identifier { get; set; } = "escape handcuffs";
+        public override Identifier Identifier { get; set; } = "escape handcuffs".ToIdentifier();
         public override bool AllowAutomaticItemUnequipping => true;
         public override bool AllowOutsideSubmarine => true;
         public override bool AllowInAnySub => true;
@@ -88,7 +88,7 @@ namespace Barotrauma
                 escapeProgress += Rand.Range(2, 5);
                 if (escapeProgress > 15)
                 {
-                    Item handcuffs = character.Inventory.FindItemByTag("handlocker");
+                    Item handcuffs = character.Inventory.FindItemByTag("handlocker".ToIdentifier());
                     if (handcuffs != null)
                     {
                         handcuffs.Drop(character);

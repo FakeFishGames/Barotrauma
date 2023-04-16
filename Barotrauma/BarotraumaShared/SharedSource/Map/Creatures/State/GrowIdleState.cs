@@ -59,11 +59,14 @@ namespace Barotrauma.MapCreatures.Behavior
 
         protected virtual void Grow()
         {
-            List<BallastFloraBranch> newTiles = GrowRandomly();
+            List<BallastFloraBranch> newBranches = GrowRandomly();
 #if DEBUG
             Behavior.debugSearchLines.Clear();
 #endif
-            if (newTiles.Any(TryScanTargets)) { return; }
+            foreach (var branch in newBranches)
+            {
+                TryScanTargets(branch);
+            }
         }
 
         public void UpdateIgnoredTargets()
@@ -85,23 +88,20 @@ namespace Barotrauma.MapCreatures.Behavior
 
         private List<BallastFloraBranch> GrowRandomly()
         {
-            List<BallastFloraBranch> newBranches = new List<BallastFloraBranch>();
-            List<BallastFloraBranch> newList = new List<BallastFloraBranch>(Behavior.Branches);
-            foreach (BallastFloraBranch branch in newList)
-            {
-                if (branch.FailedGrowthAttempts > 8 || !branch.CanGrowMore()) { continue; }
+            List<BallastFloraBranch> availableBranches = Behavior.Branches.Where(b => !b.DisconnectedFromRoot && b.FailedGrowthAttempts <= 8 && b.CanGrowMore()).ToList();
+            if (availableBranches.Count == 0) { return availableBranches; }
 
-                if (Rand.Range(0, Behavior.Branches.Count(tile => tile.CanGrowMore())) != 0) { continue; }
+            //prefer growing from the branches furthest from the root (ones with the largest branch depth)
+            var branch = ToolBox.SelectWeightedRandom(availableBranches, b => (float)b.BranchDepth, Rand.RandSync.Unsynced);
 
-                TileSide side = branch.GetRandomFreeSide();
+            TileSide side = branch.GetRandomFreeSide();
+            if (side == TileSide.None) { return availableBranches; }
 
-                if (side == TileSide.None) { continue; }
+            Behavior.TryGrowBranch(branch, side, out List<BallastFloraBranch> result);
+            availableBranches.Clear();
+            availableBranches.Add(branch);
 
-                Behavior.TryGrowBranch(branch, side, out List<BallastFloraBranch> result);
-                newBranches.AddRange(result);
-            }
-
-            return newBranches;
+            return availableBranches;
         }
 
         private Item? ScanForTargets(VineTile branch)
@@ -117,21 +117,21 @@ namespace Barotrauma.MapCreatures.Behavior
             int highestPriority = 0;
             Item? currentItem = null;
 
-            foreach (Item item in Item.ItemList.Where(it => !Behavior.ClaimedTargets.Contains(it)))
+            foreach (Item item in Item.ItemList)
             {
+                if (item.Submarine != parent.Submarine || Vector2.DistanceSquared(worldPos, item.WorldPosition) > Behavior.Sight * Behavior.Sight) { continue; }
+                if (Behavior.ClaimedTargets.Contains(item)) { continue; }
                 if (Behavior.IgnoredTargets.ContainsKey(item)) { continue; }
 
                 int priority = 0;
                 foreach (BallastFloraBehavior.AITarget target in Behavior.Targets)
                 {
-                    if (!target.Matches(item) || target.Priority <= highestPriority) { continue; }
+                    if (target.Priority <= highestPriority || !target.Matches(item)) { continue; }
                     priority = target.Priority;
                     break;
                 }
 
                 if (priority == 0) { continue; }
-
-                if (item.Submarine != parent.Submarine || Vector2.Distance(worldPos, item.WorldPosition) > Behavior.Sight) { continue; }
 
                 Vector2 itemSimPos = ConvertUnits.ToSimUnits(item.Position);
 
@@ -156,6 +156,7 @@ namespace Barotrauma.MapCreatures.Behavior
             {
                 foreach (BallastFloraBranch existingBranch in Behavior.Branches)
                 {
+                    if (existingBranch.Health <= 0 || existingBranch.IsRootGrowth) { continue; }
                     if (Behavior.BranchContainsTarget(existingBranch, currentItem))
                     {
                         Behavior.ClaimTarget(currentItem, existingBranch);

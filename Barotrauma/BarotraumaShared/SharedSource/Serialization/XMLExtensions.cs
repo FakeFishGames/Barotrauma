@@ -1,13 +1,14 @@
-﻿using System;
+﻿using Microsoft.Xna.Framework;
+using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Diagnostics;
 using System.Globalization;
-using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Xml;
 using System.Xml.Linq;
-using Microsoft.Xna.Framework;
 using File = Barotrauma.IO.File;
 using FileStream = Barotrauma.IO.FileStream;
 using Path = Barotrauma.IO.Path;
@@ -68,8 +69,25 @@ namespace Barotrauma
             return doc;
         }
         
+        public static XDocument TryLoadXml(ContentPath path) => TryLoadXml(path.Value);
+        
         public static XDocument TryLoadXml(string filePath)
         {
+            var doc = TryLoadXml(filePath, out var exception);
+            if (exception != null)
+            {
+                DebugConsole.ThrowError($"Couldn't load xml document \"{filePath}\"!", exception);
+            }
+            else if (doc is null)
+            {
+                DebugConsole.ThrowError($"File \"{filePath}\" could not be loaded: Document or the root element is invalid!");
+            }
+            return doc;
+        }
+
+        public static XDocument TryLoadXml(string filePath, out Exception exception)
+        {
+            exception = null;
             XDocument doc;
             try
             {
@@ -80,39 +98,13 @@ namespace Barotrauma
             }
             catch (Exception e)
             {
-                DebugConsole.ThrowError("Couldn't load xml document \"" + filePath + "\"!", e);
+                exception = e;
                 return null;
             }
             if (doc?.Root == null)
             {
-                DebugConsole.ThrowError("File \"" + filePath + "\" could not be loaded: Document or the root element is invalid!");
                 return null;
             }
-            return doc;
-        }
-
-        public static XDocument LoadXml(string filePath)
-        {
-            XDocument doc = null;
-
-            ToolBox.IsProperFilenameCase(filePath);
-
-            if (File.Exists(filePath))
-            {
-                try
-                {
-                    using FileStream stream = File.Open(filePath, System.IO.FileMode.Open, System.IO.FileAccess.Read);
-                    using XmlReader reader = CreateReader(stream, Path.GetFullPath(filePath));
-                    doc = XDocument.Load(reader);
-                }
-                catch
-                {
-                    return null;
-                }
-
-                if (doc.Root == null) { return null; }
-            }
-
             return doc;
         }
 
@@ -150,41 +142,89 @@ namespace Barotrauma
 
         public static string GetAttributeString(this XElement element, string name, string defaultValue)
         {
-            if (element?.Attribute(name) == null) { return defaultValue; }
-            return GetAttributeString(element.Attribute(name), defaultValue);
+            var attribute = element?.GetAttribute(name);
+            if (attribute == null) { return defaultValue; }
+            string str = GetAttributeString(attribute, defaultValue);
+#if DEBUG
+            if (!str.IsNullOrEmpty() &&
+                (str.Contains("%ModDir", StringComparison.OrdinalIgnoreCase)
+                 || str.CleanUpPathCrossPlatform(correctFilenameCase: false).StartsWith("Content/", StringComparison.OrdinalIgnoreCase)))
+            {
+                DebugConsole.ThrowError($"Use {nameof(GetAttributeContentPath)} instead of {nameof(GetAttributeString)}\n{Environment.StackTrace.CleanupStackTrace()}");
+                if (Debugger.IsAttached) { Debugger.Break(); }
+            }
+#endif
+            return str;
+        }
+
+        public static string GetAttributeStringUnrestricted(this XElement element, string name, string defaultValue)
+        {
+            #warning TODO: remove?
+            var attribute = element?.GetAttribute(name);
+            if (attribute == null) { return defaultValue; }
+            return GetAttributeString(attribute, defaultValue);
+        }
+
+        public static bool DoesAttributeReferenceFileNameAlone(this XElement element, string name)
+        {
+            string texName = element.GetAttributeStringUnrestricted(name, "");
+            return !texName.IsNullOrEmpty() & !texName.Contains("/") && !texName.Contains("%ModDir", StringComparison.OrdinalIgnoreCase);
+        }
+
+        public static ContentPath GetAttributeContentPath(this XElement element, string name, ContentPackage contentPackage)
+        {
+            var attribute = element?.GetAttribute(name);
+            if (attribute == null) { return null; }
+            return ContentPath.FromRaw(contentPackage, GetAttributeString(attribute, null));
+        }
+        
+        public static Identifier GetAttributeIdentifier(this XElement element, string name, string defaultValue)
+        {
+            return element.GetAttributeString(name, defaultValue).ToIdentifier();
+        }
+
+        public static Identifier GetAttributeIdentifier(this XElement element, string name, Identifier defaultValue)
+        {
+            return element.GetAttributeIdentifier(name, defaultValue.Value);
         }
 
         private static string GetAttributeString(XAttribute attribute, string defaultValue)
         {
             string value = attribute.Value;
-            return String.IsNullOrEmpty(value) ? defaultValue : value;
+            return string.IsNullOrEmpty(value) ? defaultValue : value;
         }
 
         public static string[] GetAttributeStringArray(this XElement element, string name, string[] defaultValue, bool trim = true, bool convertToLowerInvariant = false)
         {
-            if (element?.Attribute(name) == null) { return defaultValue; }
+            var attribute = element?.GetAttribute(name);
+            if (attribute == null) { return defaultValue; }
 
-            string stringValue = element.Attribute(name).Value;
+            string stringValue = attribute.Value;
             if (string.IsNullOrEmpty(stringValue)) { return defaultValue; }
 
             string[] splitValue = stringValue.Split(',', '，');
 
-            if (convertToLowerInvariant)
+            for (int i = 0; i < splitValue.Length; i++)
             {
-                for (int i = 0; i < splitValue.Length; i++)
-                {
-                    splitValue[i] = splitValue[i].ToLowerInvariant();
-                }
-            }
-            if (trim)
-            {
-                for (int i = 0; i < splitValue.Length; i++)
-                {
-                    splitValue[i] = splitValue[i].Trim();
-                }
+                if (convertToLowerInvariant) { splitValue[i] = splitValue[i].ToLowerInvariant(); }
+                if (trim) { splitValue[i] = splitValue[i].Trim(); }
             }
 
             return splitValue;
+        }
+
+
+        public static Identifier[] GetAttributeIdentifierArray(this XElement element, string name, Identifier[] defaultValue, bool trim = true)
+        {
+            return element.GetAttributeStringArray(name, null, trim: trim, convertToLowerInvariant: false)
+                    ?.ToIdentifiers()
+                ?? defaultValue;
+        }
+
+        public static ImmutableHashSet<Identifier> GetAttributeIdentifierImmutableHashSet(this XElement element, string key, ImmutableHashSet<Identifier> defaultValue, bool trim = true)
+        {
+            return element.GetAttributeIdentifierArray(key, null, trim)?.ToImmutableHashSet()
+                   ?? defaultValue;
         }
 
         public static float GetAttributeFloat(this XElement element, float defaultValue, params string[] matchingAttributeName)
@@ -193,50 +233,15 @@ namespace Barotrauma
 
             foreach (string name in matchingAttributeName)
             {
-                if (element.Attribute(name) == null) { continue; }
-
-                float val;
-                try
-                {
-                    string strVal = element.Attribute(name).Value;
-                    if (strVal.LastOrDefault() == 'f')
-                    {
-                        strVal = strVal.Substring(0, strVal.Length - 1);
-                    }
-                    val = float.Parse(strVal, CultureInfo.InvariantCulture);
-                }
-                catch (Exception e)
-                {
-                    DebugConsole.ThrowError("Error in " + element + "!", e);
-                    continue;
-                }
-                return val;
+                var attribute = element.GetAttribute(name);
+                if (attribute == null) { continue; }
+                return GetAttributeFloat(attribute, defaultValue);
             }
 
             return defaultValue;
         }
 
-        public static float GetAttributeFloat(this XElement element, string name, float defaultValue)
-        {
-            if (element?.Attribute(name) == null) { return defaultValue; }
-
-            float val = defaultValue;
-            try
-            {
-                string strVal = element.Attribute(name).Value;
-                if (strVal.LastOrDefault() == 'f')
-                {
-                    strVal = strVal.Substring(0, strVal.Length - 1);
-                }
-                val = float.Parse(strVal, CultureInfo.InvariantCulture);
-            }
-            catch (Exception e)
-            {
-                DebugConsole.ThrowError("Error in " + element + "!", e);
-            }
-
-            return val;
-        }
+        public static float GetAttributeFloat(this XElement element, string name, float defaultValue) => GetAttributeFloat(element?.GetAttribute(name), defaultValue);
 
         public static float GetAttributeFloat(this XAttribute attribute, float defaultValue)
         {
@@ -261,11 +266,37 @@ namespace Barotrauma
             return val;
         }
 
+        public static double GetAttributeDouble(this XElement element, string name, double defaultValue) => GetAttributeDouble(element?.GetAttribute(name), defaultValue);
+
+        public static double GetAttributeDouble(this XAttribute attribute, double defaultValue)
+        {
+            if (attribute == null) { return defaultValue; }
+
+            double val = defaultValue;
+            try
+            {
+                string strVal = attribute.Value;
+                if (strVal.LastOrDefault() == 'f')
+                {
+                    strVal = strVal.Substring(0, strVal.Length - 1);
+                }
+                val = double.Parse(strVal, CultureInfo.InvariantCulture);
+            }
+            catch (Exception e)
+            {
+                DebugConsole.ThrowError("Error in " + attribute + "!", e);
+            }
+
+            return val;
+        }
+
+
         public static float[] GetAttributeFloatArray(this XElement element, string name, float[] defaultValue)
         {
-            if (element?.Attribute(name) == null) { return defaultValue; }
+            var attribute = element?.GetAttribute(name);
+            if (attribute == null) { return defaultValue; }
 
-            string stringValue = element.Attribute(name).Value;
+            string stringValue = attribute.Value;
             if (string.IsNullOrEmpty(stringValue)) { return defaultValue; }
 
             string[] splitValue = stringValue.Split(',');
@@ -283,29 +314,49 @@ namespace Barotrauma
                 }
                 catch (Exception e)
                 {
-                    DebugConsole.ThrowError("Error in " + element + "! ", e);
+                    LogAttributeError(attribute, element, e);
                 }
             }
 
             return floatValue;
         }
 
+        public static bool TryGetAttributeInt(this XElement element, string name, out int result)
+        {
+            var attribute = element?.GetAttribute(name);
+            result = default;
+            if (attribute == null) { return false; }
+
+            if (int.TryParse(attribute.Value, NumberStyles.Any, CultureInfo.InvariantCulture, out var intVal))
+            {
+                result = intVal;
+                return true;
+            }
+            if (float.TryParse(attribute.Value, NumberStyles.Any, CultureInfo.InvariantCulture, out var floatVal))
+            {
+                result = (int)floatVal;
+                return true;
+            }
+            return false;
+        }
+        
         public static int GetAttributeInt(this XElement element, string name, int defaultValue)
         {
-            if (element?.Attribute(name) == null) { return defaultValue; }
+            var attribute = element?.GetAttribute(name);
+            if (attribute == null) { return defaultValue; }
 
             int val = defaultValue;
 
             try
             {
-                if (!Int32.TryParse(element.Attribute(name).Value, NumberStyles.Any, CultureInfo.InvariantCulture, out val))
+                if (!Int32.TryParse(attribute.Value, NumberStyles.Any, CultureInfo.InvariantCulture, out val))
                 {
-                    val = (int)float.Parse(element.Attribute(name).Value, CultureInfo.InvariantCulture);
+                    val = (int)float.Parse(element.GetAttribute(name).Value, CultureInfo.InvariantCulture);
                 }
             }
             catch (Exception e)
             {
-                DebugConsole.ThrowError("Error in " + element + "! ", e);
+                LogAttributeError(attribute, element, e);
             }
 
             return val;
@@ -313,17 +364,18 @@ namespace Barotrauma
 
         public static uint GetAttributeUInt(this XElement element, string name, uint defaultValue)
         {
-            if (element?.Attribute(name) == null) { return defaultValue; }
+            var attribute = element?.GetAttribute(name);
+            if (attribute == null) { return defaultValue; }
 
             uint val = defaultValue;
 
             try
             {
-                val = UInt32.Parse(element.Attribute(name).Value);
+                val = UInt32.Parse(attribute.Value);
             }
             catch (Exception e)
             {
-                DebugConsole.ThrowError("Error in " + element + "! ", e);
+                LogAttributeError(attribute, element, e);
             }
 
             return val;
@@ -331,35 +383,47 @@ namespace Barotrauma
 
         public static UInt64 GetAttributeUInt64(this XElement element, string name, UInt64 defaultValue)
         {
-            if (element?.Attribute(name) == null) { return defaultValue; }
+            var attribute = element?.GetAttribute(name);
+            if (attribute == null) { return defaultValue; }
 
             UInt64 val = defaultValue;
 
             try
             {
-                val = UInt64.Parse(element.Attribute(name).Value);
+                val = UInt64.Parse(attribute.Value, NumberStyles.Any, CultureInfo.InvariantCulture);
             }
             catch (Exception e)
             {
-                DebugConsole.ThrowError("Error in " + element + "! ", e);
+                LogAttributeError(attribute, element, e);
             }
 
             return val;
         }
 
-        public static UInt64 GetAttributeSteamID(this XElement element, string name, UInt64 defaultValue)
+        public static Option<SerializableDateTime> GetAttributeDateTime(
+            this XElement element, string name)
         {
-            if (element?.Attribute(name) == null) { return defaultValue; }
+            var attribute = element?.GetAttribute(name);
+            if (attribute == null) { return Option<SerializableDateTime>.None(); }
 
-            UInt64 val = defaultValue;
+            string attrVal = attribute.Value;
+            return SerializableDateTime.Parse(attrVal);
+        }
+
+        public static Version GetAttributeVersion(this XElement element, string name, Version defaultValue)
+        {
+            var attribute = element?.GetAttribute(name);
+            if (attribute == null) { return defaultValue; }
+
+            Version val = defaultValue;
 
             try
             {
-                val = Steam.SteamManager.SteamIDStringToUInt64(element.Attribute(name).Value);
+                val = Version.Parse(attribute.Value);
             }
             catch (Exception e)
             {
-                DebugConsole.ThrowError("Error in " + element + "! ", e);
+                LogAttributeError(attribute, element, e);
             }
 
             return val;
@@ -367,9 +431,10 @@ namespace Barotrauma
 
         public static int[] GetAttributeIntArray(this XElement element, string name, int[] defaultValue)
         {
-            if (element?.Attribute(name) == null) { return defaultValue; }
+            var attribute = element?.GetAttribute(name);
+            if (attribute == null) { return defaultValue; }
 
-            string stringValue = element.Attribute(name).Value;
+            string stringValue = attribute.Value;
             if (string.IsNullOrEmpty(stringValue)) { return defaultValue; }
 
             string[] splitValue = stringValue.Split(',');
@@ -383,7 +448,7 @@ namespace Barotrauma
                 }
                 catch (Exception e)
                 {
-                    DebugConsole.ThrowError("Error in " + element + "! ", e);
+                    LogAttributeError(attribute, element, e);
                 }
             }
 
@@ -391,9 +456,10 @@ namespace Barotrauma
         }
         public static ushort[] GetAttributeUshortArray(this XElement element, string name, ushort[] defaultValue)
         {
-            if (element?.Attribute(name) == null) { return defaultValue; }
+            var attribute = element?.GetAttribute(name);
+            if (attribute == null) { return defaultValue; }
 
-            string stringValue = element.Attribute(name).Value;
+            string stringValue = attribute.Value;
             if (string.IsNullOrEmpty(stringValue)) { return defaultValue; }
 
             string[] splitValue = stringValue.Split(',');
@@ -407,17 +473,36 @@ namespace Barotrauma
                 }
                 catch (Exception e)
                 {
-                    DebugConsole.ThrowError("Error in " + element + "! ", e);
+                    LogAttributeError(attribute, element, e);
                 }
             }
 
             return ushortValue;
         }
 
+        public static T GetAttributeEnum<T>(this XElement element, string name, T defaultValue) where T : struct, Enum
+        {
+            var attr = element?.GetAttribute(name);
+            if (attr == null) { return defaultValue; }
+
+            if (Enum.TryParse(attr.Value, true, out T result))
+            {
+                return result;
+            }
+            else if (int.TryParse(attr.Value, NumberStyles.Any, CultureInfo.InvariantCulture, out int resultInt))
+            {
+                return Unsafe.As<int, T>(ref resultInt);
+            }
+            DebugConsole.ThrowError($"Error in {attr}! \"{attr}\" is not a valid {typeof(T).Name} value");
+            return default;
+            
+        }
+
         public static bool GetAttributeBool(this XElement element, string name, bool defaultValue)
         {
-            if (element?.Attribute(name) == null) { return defaultValue; }
-            return element.Attribute(name).GetAttributeBool(defaultValue);
+            var attribute = element?.GetAttribute(name);
+            if (attribute == null) { return defaultValue; }
+            return attribute.GetAttributeBool(defaultValue);
         }
 
         public static bool GetAttributeBool(this XAttribute attribute, bool defaultValue)
@@ -440,45 +525,52 @@ namespace Barotrauma
 
         public static Point GetAttributePoint(this XElement element, string name, Point defaultValue)
         {
-            if (element?.Attribute(name) == null) { return defaultValue; }
-            return ParsePoint(element.Attribute(name).Value);
+            var attribute = element?.GetAttribute(name);
+            if (attribute == null) { return defaultValue; }
+            return ParsePoint(attribute.Value);
         }
 
         public static Vector2 GetAttributeVector2(this XElement element, string name, Vector2 defaultValue)
         {
-            if (element?.Attribute(name) == null) { return defaultValue; }
-            return ParseVector2(element.Attribute(name).Value);
+            var attribute = element?.GetAttribute(name);
+            if (attribute == null) { return defaultValue; }
+            return ParseVector2(attribute.Value);
         }
 
         public static Vector3 GetAttributeVector3(this XElement element, string name, Vector3 defaultValue)
         {
-            if (element == null || element.Attribute(name) == null) { return defaultValue; }
-            return ParseVector3(element.Attribute(name).Value);
+            var attribute = element?.GetAttribute(name);
+            if (attribute == null) { return defaultValue; }
+            return ParseVector3(attribute.Value);
         }
 
         public static Vector4 GetAttributeVector4(this XElement element, string name, Vector4 defaultValue)
         {
-            if (element == null || element.Attribute(name) == null) { return defaultValue; }
-            return ParseVector4(element.Attribute(name).Value);
+            var attribute = element?.GetAttribute(name);
+            if (attribute == null) { return defaultValue; }
+            return ParseVector4(attribute.Value);
         }
 
         public static Color GetAttributeColor(this XElement element, string name, Color defaultValue)
         {
-            if (element == null || element.Attribute(name) == null) { return defaultValue; }
-            return ParseColor(element.Attribute(name).Value);
+            var attribute = element?.GetAttribute(name);
+            if (attribute == null) { return defaultValue; }
+            return ParseColor(attribute.Value);
         }
 
         public static Color? GetAttributeColor(this XElement element, string name)
         {
-            if (element == null || element.Attribute(name) == null) { return null; }
-            return ParseColor(element.Attribute(name).Value);
+            var attribute = element?.GetAttribute(name);
+            if (attribute == null) { return null; }
+            return ParseColor(attribute.Value);
         }
 
         public static Color[] GetAttributeColorArray(this XElement element, string name, Color[] defaultValue)
         {
-            if (element?.Attribute(name) == null) { return defaultValue; }
+            var attribute = element?.GetAttribute(name);
+            if (attribute == null) { return defaultValue; }
 
-            string stringValue = element.Attribute(name).Value;
+            string stringValue = attribute.Value;
             if (string.IsNullOrEmpty(stringValue)) { return defaultValue; }
 
             string[] splitValue = stringValue.Split(';');
@@ -492,17 +584,60 @@ namespace Barotrauma
                 }
                 catch (Exception e)
                 {
-                    DebugConsole.ThrowError("Error in " + element + "! ", e);
+                    LogAttributeError(attribute, element, e);
                 }
             }
 
             return colorValue;
         }
 
+        private static void LogAttributeError(XAttribute attribute, XElement element, Exception e)
+        {
+            string elementStr = element.ToString();
+            if (elementStr.Length > 500)
+            {
+                DebugConsole.ThrowError($"Error when reading attribute \"{attribute}\"!", e);
+            }
+            else
+            {
+                DebugConsole.ThrowError($"Error when reading attribute \"{attribute.Name}\" from {elementStr}!", e);
+            }
+        }
+
+#if CLIENT
+        public static KeyOrMouse GetAttributeKeyOrMouse(this XElement element, string name, KeyOrMouse defaultValue)
+        {
+            string strValue = element.GetAttributeString(name, defaultValue?.ToString() ?? "");
+            if (Enum.TryParse(strValue, true, out Microsoft.Xna.Framework.Input.Keys key))
+            {
+                return key;
+            }
+            else if (Enum.TryParse(strValue, out MouseButton mouseButton))
+            {
+                return mouseButton;
+            }
+            else if (int.TryParse(strValue, NumberStyles.Any, CultureInfo.InvariantCulture, out int mouseButtonInt) &&
+                     Enum.GetValues<MouseButton>().Contains((MouseButton)mouseButtonInt))
+            {
+                return (MouseButton)mouseButtonInt;
+            }
+            else if (string.Equals(strValue, "LeftMouse", StringComparison.OrdinalIgnoreCase))
+            {
+                return !PlayerInput.MouseButtonsSwapped() ? MouseButton.PrimaryMouse : MouseButton.SecondaryMouse;
+            }
+            else if (string.Equals(strValue, "RightMouse", StringComparison.OrdinalIgnoreCase))
+            {
+                return !PlayerInput.MouseButtonsSwapped() ? MouseButton.SecondaryMouse : MouseButton.PrimaryMouse;
+            }
+            return defaultValue;
+        }
+#endif
+
         public static Rectangle GetAttributeRect(this XElement element, string name, Rectangle defaultValue)
         {
-            if (element == null || element.Attribute(name) == null) { return defaultValue; }
-            return ParseRect(element.Attribute(name).Value, false);
+            var attribute = element?.GetAttribute(name);
+            if (attribute == null) { return defaultValue; }
+            return ParseRect(attribute.Value, false);
         }
 
         //TODO: nested tuples and and n-uples where n!=2 are unsupported
@@ -516,12 +651,22 @@ namespace Barotrauma
         public static (T1, T2)[] GetAttributeTupleArray<T1, T2>(this XElement element, string name,
             (T1, T2)[] defaultValue)
         {
-            if (element?.Attribute(name) == null) { return defaultValue; }
+            var attribute = element?.GetAttribute(name);
+            if (attribute == null) { return defaultValue; }
 
-            string stringValue = element.Attribute(name).Value;
+            string stringValue = attribute.Value;
             if (string.IsNullOrEmpty(stringValue)) { return defaultValue; }
 
             return stringValue.Split(';').Select(s => ParseTuple<T1, T2>(s, default)).ToArray();
+        }
+
+        public static Range<int> GetAttributeRange(this XElement element, string name, Range<int> defaultValue)
+        {
+            var attribute = element?.GetAttribute(name);
+            if (attribute is null) { return defaultValue; }
+
+            string stringValue = attribute.Value;
+            return string.IsNullOrEmpty(stringValue) ? defaultValue : ParseRange(stringValue);
         }
 
         public static string ElementInnerText(this XElement el)
@@ -671,21 +816,23 @@ namespace Barotrauma
             if (stringColor.StartsWith("gui.", StringComparison.OrdinalIgnoreCase))
             {
 #if CLIENT
-                if (GUI.Style != null)
+                Identifier colorName = stringColor.Substring(4).ToIdentifier();
+                if (GUIStyle.Colors.TryGetValue(colorName, out GUIColor guiColor))
                 {
-                    string colorName = stringColor.Substring(4);
-                    var property = GUI.Style.GetType().GetProperties().FirstOrDefault(
-                        p => p.PropertyType == typeof(Color) &&
-                             p.Name.Equals(colorName, StringComparison.OrdinalIgnoreCase));
-                    if (property != null)
-                    {
-                        return (Color)property?.GetValue(GUI.Style);
-                    }
+                    return guiColor.Value;
                 }
 #endif
                 return Color.White;
             }
-
+            if (stringColor.StartsWith("faction.", StringComparison.OrdinalIgnoreCase))
+            {
+                Identifier factionId = stringColor.Substring(8).ToIdentifier();
+                if (FactionPrefab.Prefabs.TryGet(factionId, out var faction))
+                {
+                    return faction.IconColor;
+                }
+                return Color.White;
+            }
 
             string[] strComponents = stringColor.Split(',');
 
@@ -695,7 +842,7 @@ namespace Barotrauma
 
             if (strComponents.Length == 1)
             {
-                bool hexFailed = true;
+                bool altParseFailed = true;
                 stringColor = stringColor.Trim();
                 if (stringColor.Length > 0 && stringColor[0] == '#')
                 {
@@ -712,11 +859,40 @@ namespace Barotrauma
                         components[2] = ((float)((colorInt & 0x0000ff00) >> 8)) / 255.0f;
                         components[3] = ((float)(colorInt & 0x000000ff)) / 255.0f;
 
-                        hexFailed = false;
+                        altParseFailed = false;
+                    }
+                }
+                else if (stringColor.Length > 0 && stringColor[0] == '{')
+                {
+                    stringColor = stringColor.Substring(1, stringColor.Length-2);
+
+                    string[] mgComponents = stringColor.Split(' ');
+                    if (mgComponents.Length == 4)
+                    {
+                        altParseFailed = false;
+                        
+                        string[] expectedPrefixes = {"R:", "G:", "B:", "A:"};
+                        for (int i = 0; i < 4; i++)
+                        {
+                            if (mgComponents[i].StartsWith(expectedPrefixes[i], StringComparison.OrdinalIgnoreCase))
+                            {
+                                string strToParse = mgComponents[i]
+                                    .Remove(expectedPrefixes[i], StringComparison.OrdinalIgnoreCase)
+                                    .Trim();
+                                int val = 0;
+                                altParseFailed |= !int.TryParse(strToParse, out val);
+                                components[i] = ((float) val) / 255f;
+                            }
+                            else
+                            {
+                                altParseFailed = true;
+                                break;
+                            }
+                        }
                     }
                 }
 
-                if (hexFailed)
+                if (altParseFailed)
                 {
                     if (errorMessages) { DebugConsole.ThrowError("Failed to parse the string \"" + stringColor + "\" to Color"); }
                     return Color.White;
@@ -775,17 +951,59 @@ namespace Barotrauma
             return floatArray;
         }
 
-        public static string[] ParseStringArray(string stringArrayValues)
+        // parse a range string, e.g "1-3" or "3"
+        public static Range<int> ParseRange(string rangeString)
         {
-            return string.IsNullOrEmpty(stringArrayValues) ? new string[0] : stringArrayValues.Split(';');
+            if (string.IsNullOrWhiteSpace(rangeString)) { return GetDefault(rangeString); }
+
+            string[] split = rangeString.Split('-');
+            return split.Length switch
+            {
+                1 when TryParseInt(split[0], out int value) => new Range<int>(value, value),
+                2 when TryParseInt(split[0], out int min) && TryParseInt(split[1], out int max) && min < max => new Range<int>(min, max),
+                _ => GetDefault(rangeString)
+            };
+
+            static bool TryParseInt(string value, out int result)
+            {
+                if (!string.IsNullOrWhiteSpace(value))
+                {
+                    return int.TryParse(value, NumberStyles.Any, CultureInfo.InvariantCulture, out result);
+                }
+
+                result = default;
+                return false;
+            }
+
+            static Range<int> GetDefault(string rangeString)
+            {
+                DebugConsole.ThrowError($"Error parsing range: \"{rangeString}\" (using default value 0-99)");
+                return new Range<int>(0, 99);
+            }
         }
 
-        public static bool IsOverride(this XElement element) => element.Name.ToString().Equals("override", StringComparison.OrdinalIgnoreCase);
-        public static bool IsCharacterVariant(this XElement element) => element.Name.ToString().Equals("charactervariant", StringComparison.OrdinalIgnoreCase);
+        public static Identifier VariantOf(this XElement element) =>
+            element.GetAttributeIdentifier("inherit", element.GetAttributeIdentifier("variantof", ""));
+
+        public static string[] ParseStringArray(string stringArrayValues)
+        {
+            return string.IsNullOrEmpty(stringArrayValues) ? Array.Empty<string>() : stringArrayValues.Split(';');
+        }
+        
+        public static Identifier[] ParseIdentifierArray(string stringArrayValues)
+        {
+            return ParseStringArray(stringArrayValues).ToIdentifiers().ToArray();
+        }
+
+        public static bool IsOverride(this XElement element) => element.NameAsIdentifier() == "override";
 
         public static XElement FirstElement(this XElement element) => element.Elements().FirstOrDefault();
 
         public static XAttribute GetAttribute(this XElement element, string name, StringComparison comparisonMethod = StringComparison.OrdinalIgnoreCase) => element.GetAttribute(a => a.Name.ToString().Equals(name, comparisonMethod));
+
+        public static void SetAttributeValue(this XElement element, string name, object value, StringComparison comparisonMethod = StringComparison.OrdinalIgnoreCase) => GetAttribute(element, name, comparisonMethod)?.SetValue(value);
+
+        public static XAttribute GetAttribute(this XElement element, Identifier name) => element.GetAttribute(name.Value, StringComparison.OrdinalIgnoreCase);
 
         public static XAttribute GetAttribute(this XElement element, Func<XAttribute, bool> predicate) => element.Attributes().FirstOrDefault(predicate);
 
@@ -798,5 +1016,31 @@ namespace Barotrauma
         /// Returns all child elements that match the name using the provided comparison method.
         /// </summary>
         public static IEnumerable<XElement> GetChildElements(this XContainer container, string name, StringComparison comparisonMethod = StringComparison.OrdinalIgnoreCase) => container.Elements().Where(e => e.Name.ToString().Equals(name, comparisonMethod));
+
+        public static IEnumerable<XElement> GetChildElements(this XContainer container, params string[] names)
+        {
+            return names.SelectMany(name => container.GetChildElements(name));
+        }
+
+        public static bool ComesAfter(this XElement element, XElement other)
+        {
+            if (element.Parent != other.Parent) { return false; }
+            foreach (var child in element.Parent.Elements())
+            {
+                if (child == element) { return false; }
+                if (child == other) { return true; }
+            }
+            return false;
+        }
+
+        public static Identifier NameAsIdentifier(this XElement elem)
+        {
+            return elem.Name.LocalName.ToIdentifier();
+        }
+
+        public static Identifier NameAsIdentifier(this XAttribute attr)
+        {
+            return attr.Name.LocalName.ToIdentifier();
+        }
     }
 }

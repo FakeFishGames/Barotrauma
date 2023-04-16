@@ -2,8 +2,10 @@
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using Microsoft.Xna.Framework.Input;
+using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
@@ -65,12 +67,13 @@ namespace Barotrauma
 
         private float connectionHighlightState;
 
-        private (Rectangle targetArea, string tip)? tooltip;
-        private string sanitizedTooltip;
-        private List<RichTextData> tooltipRichTextData;
-        private string prevTooltip;
+        private (Rectangle targetArea, RichString tip)? tooltip;
 
-        private (SubmarineInfo pendingSub, float realWorldCrushDepth) pendingSubInfo;
+        private SubmarineInfo.PendingSubInfo pendingSubInfo;
+
+        private RichString beaconStationActiveText, beaconStationInactiveText;
+
+        private GUIComponent locationInfoOverlay;
 
         /*private (Rectangle targetArea, string tip)? connectionTooltip;
         private string sanitizedConnectionTooltip;
@@ -98,7 +101,7 @@ namespace Barotrauma
                 OnClicked = (btn, userData) =>
                 {
                     Rand.SetSyncedSeed(ToolBox.StringToInt(this.Seed));
-                    Generate();
+                    Generate(GameMain.GameSession?.Campaign);
                     InitProjectSpecific();
                     return true;
                 }
@@ -110,7 +113,9 @@ namespace Barotrauma
         {
             noiseOverlay ??= new Sprite("Content/UI/noise.png", Vector2.Zero);
 
-            OnLocationChanged = LocationChanged;
+            OnLocationChanged.RegisterOverwriteExisting(
+                "Map.InitProjSpecific".ToIdentifier(), 
+                (locationChangeInfo) => LocationChanged(locationChangeInfo.PrevLocation, locationChangeInfo.NewLocation));
 
             borders = new Rectangle(
                 (int)Locations.Min(l => l.MapPosition.X),
@@ -130,41 +135,61 @@ namespace Barotrauma
             int tilesY = (int)Math.Ceiling(Height / tileSize.Y);
             mapTiles = new Sprite[tilesX, tilesY];
             tileDiscovered = new bool[tilesX, tilesY];
+            HashSet<Biome> missingBiomes = new HashSet<Biome>();
             for (int x = 0; x < tilesX; x++)
             {
                 for (int y = 0; y < tilesY; y++)
                 {
                     var biome = GetBiome(x * tileSize.X);
-                    var tileList = generationParams.MapTiles.ContainsKey(biome.Identifier) ?
-                        generationParams.MapTiles[biome.Identifier] :
-                        generationParams.MapTiles.Values.First();
-                    mapTiles[x, y] = tileList[x % tileList.Count];                    
+                    ImmutableArray<Sprite> tileList;
+                    if (generationParams.MapTiles.ContainsKey(biome.Identifier))
+                    {
+                        tileList = generationParams.MapTiles[biome.Identifier];
+                    }
+                    else
+                    {
+                        tileList = generationParams.MapTiles.Values.First();
+                        missingBiomes.Add(biome);
+                    }
+                    mapTiles[x, y] = tileList[x % tileList.Length];
                 }
             }
 
+            foreach (var missingBiome in missingBiomes)
+            {
+                DebugConsole.ThrowError($"Could not find campaign map sprites for the biome \"{missingBiome.Identifier}\". Using the sprites of the first biome instead...");
+            }
+
+            beaconStationActiveText = RichString.Rich(TextManager.Get("BeaconStationActiveTooltip"));
+            beaconStationInactiveText = RichString.Rich(TextManager.Get("BeaconStationInactiveTooltip"));
+
             RemoveFogOfWar(StartLocation);
 
-            GenerateLocationConnectionVisuals();
+            GenerateAllLocationConnectionVisuals();
         }
 
-        partial void GenerateLocationConnectionVisuals()
+        partial void GenerateAllLocationConnectionVisuals()
         {
             foreach (LocationConnection connection in Connections)
             {
-                Vector2 connectionStart = connection.Locations[0].MapPosition;
-                Vector2 connectionEnd = connection.Locations[1].MapPosition;
-                float connectionLength = Vector2.Distance(connectionStart, connectionEnd);
-                int iterations = Math.Min((int)Math.Sqrt(connectionLength * generationParams.ConnectionIndicatorIterationMultiplier), 5);
-                connection.CrackSegments.Clear();
-                connection.CrackSegments.AddRange(MathUtils.GenerateJaggedLine(
-                    connectionStart, connectionEnd,
-                    iterations, connectionLength * generationParams.ConnectionIndicatorDisplacementMultiplier));
+                GenerateLocationConnectionVisuals(connection);
             }
+        }
+        partial void GenerateLocationConnectionVisuals(LocationConnection connection)
+        {
+            Vector2 connectionStart = connection.Locations[0].MapPosition;
+            Vector2 connectionEnd = connection.Locations[1].MapPosition;
+            float connectionLength = Vector2.Distance(connectionStart, connectionEnd);
+            int iterations = Math.Min((int)Math.Sqrt(connectionLength * generationParams.ConnectionIndicatorIterationMultiplier), 5);
+            connection.CrackSegments.Clear();
+            connection.CrackSegments.AddRange(MathUtils.GenerateJaggedLine(
+                connectionStart, connectionEnd,
+                iterations, connectionLength * generationParams.ConnectionIndicatorDisplacementMultiplier));
         }
 
         private void LocationChanged(Location prevLocation, Location newLocation)
         {
-            if (prevLocation == newLocation) return;
+            if (prevLocation == newLocation) { return; }
             //focus on starting location
             if (prevLocation != null)
             {
@@ -188,17 +213,27 @@ namespace Barotrauma
                 currLocationIndicatorPos = CurrentLocation.MapPosition;
             }
 
-            RemoveFogOfWar(newLocation);
+            if (newLocation.Visited)
+            {
+                RemoveFogOfWar(newLocation);
+            }
         }
+
+        partial void RemoveFogOfWarProjSpecific(Location location) => RemoveFogOfWar(location);
 
         private void RemoveFogOfWar(Location location, bool removeFromAdjacentLocations = true)
         {
+            if (mapTiles == null) { return; }
             if (location == null) { return; }
-            Vector2 mapTileSize = mapTiles[0, 0].size * generationParams.MapTileScale;
+
+            var mapTile = generationParams.MapTiles.Values.FirstOrDefault().FirstOrDefault();
+            if (mapTile == null) { return; }
+
+            Vector2 mapTileSize = mapTile.size * generationParams.MapTileScale;
             int startX = (int)Math.Max(Math.Floor(location.MapPosition.X / mapTileSize.X - 0.25f), 0);
             int startY = (int)Math.Max(Math.Floor(location.MapPosition.Y / mapTileSize.Y - 0.25f), 0);
-            int endX = (int)Math.Min(Math.Floor(location.MapPosition.X / mapTileSize.X + 0.25f), mapTiles.GetLength(0));
-            int endY = (int)Math.Min(Math.Floor(location.MapPosition.Y / mapTileSize.Y + 0.25f), mapTiles.GetLength(1));
+            int endX = (int)Math.Min(Math.Floor(location.MapPosition.X / mapTileSize.X + 0.25f), mapTiles.GetLength(0) - 1);
+            int endY = (int)Math.Min(Math.Floor(location.MapPosition.Y / mapTileSize.Y + 0.25f), mapTiles.GetLength(1) - 1);
             for (int x = startX; x <= endX; x++)
             {
                 for (int y = startY; y <= endY; y++)
@@ -226,27 +261,223 @@ namespace Barotrauma
             return !tileDiscovered[MathHelper.Clamp(x, 0, tileDiscovered.Length), MathHelper.Clamp(y, 0, tileDiscovered.Length)];
         }
 
+        private class MapNotification
+        {
+            public readonly RichString Text;
+            public readonly GUIFont Font;
+
+            public readonly Vector2 TextSize;
+
+            public int TimesShown;
+
+            public float Offset;
+
+            public readonly Location RelatedLocation;
+
+            public bool IsCurrentlyVisible;
+
+            public MapNotification(string text, GUIFont font, List<MapNotification> existingNotifications, Location relatedLocation)
+            {
+                Text = RichString.Rich(text);
+                Font = font;
+                TextSize = Font.MeasureString(Font.ForceUpperCase ? Text.SanitizedValue.ToUpper() : Text.SanitizedValue);
+                if (existingNotifications.Any())
+                {
+                    Offset = existingNotifications.Max(n => n.Offset + n.TextSize.X + GUI.IntScale(60));
+                }
+                RelatedLocation = relatedLocation;
+            }
+        }
+
+        private readonly List<MapNotification> mapNotifications = new List<MapNotification>();
+
         partial void ChangeLocationTypeProjSpecific(Location location, string prevName, LocationTypeChange change)
         {
-            if (change.Messages.Any())
+            var messages = change.GetMessages(location.Faction);
+            if (!messages.Any()) { return; }
+
+            string msg = messages.GetRandom(Rand.RandSync.Unsynced)
+                .Replace("[previousname]", $"‖color:gui.yellow‖{prevName}‖end‖")
+                .Replace("[name]", $"‖color:gui.yellow‖{location.Name}‖end‖");
+            location.LastTypeChangeMessage = msg;
+
+            mapNotifications.Add(new MapNotification(msg, GUIStyle.SubHeadingFont, mapNotifications, location));           
+        }
+
+        public void DrawNotifications(SpriteBatch spriteBatch, GUICustomComponent container)
+        {
+            Vector2 pos = new Vector2(container.Rect.Right, container.Rect.Center.Y);
+            foreach (var notification in mapNotifications)
             {
-                string msg = change.Messages[Rand.Range(0, change.Messages.Count)]
-                    .Replace("[previousname]", $"‖color:gui.orange‖{prevName}‖end‖")
-                    .Replace("[name]", $"‖color:gui.orange‖{location.Name}‖end‖");
-                location.LastTypeChangeMessage = msg;
-                if (GameMain.Client != null)
+                Vector2 textPos = pos + new Vector2(notification.Offset, -notification.TextSize.Y / 2);
+
+                notification.Font.DrawStringWithColors(
+                    spriteBatch, 
+                    notification.Text.SanitizedValue,
+                   textPos, 
+                    Color.White, 0.0f, Vector2.Zero, 1.0f, SpriteEffects.None, 0, 
+                    notification.Text.RichTextData);
+
+                int margin = container.Rect.Width / 5;
+                notification.IsCurrentlyVisible = 
+                    textPos.X < container.Rect.Right - margin &&
+                    textPos.X + notification.TextSize.X > container.Rect.X + margin;
+            }
+        }
+
+        private void UpdateNotifications(float deltaTime, GUICustomComponent mapContainer)
+        {
+            if (mapNotifications.Count < 5)
+            {
+                int maxIndex = 1;
+                while (TextManager.ContainsTag("randomnews" + maxIndex))
                 {
-                    GameMain.Client.AddChatMessage(msg, Networking.ChatMessageType.Default, TextManager.Get("RadioAnnouncerName"));
+                    maxIndex++;
                 }
-                else
+                string textTag = "randomnews" + Rand.Range(0, maxIndex);
+                if (TextManager.ContainsTag(textTag))
                 {
-                    GameMain.GameSession?.GameMode.CrewManager.AddSinglePlayerChatMessage(
-                        TextManager.Get("RadioAnnouncerName"),
-                        msg,
-                        Networking.ChatMessageType.Default,
-                        sender: null);
+                    mapNotifications.Add(new MapNotification(TextManager.Get(textTag).Value, GUIStyle.SubHeadingFont, mapNotifications, relatedLocation: null));
                 }
-            }         
+            }
+
+            for (int i = mapNotifications.Count - 1; i >= 0; i--)
+            {
+                var notification = mapNotifications[i];
+                notification.Offset -= deltaTime * 75.0f;
+                if (notification.Offset < -notification.TextSize.X - mapContainer.Rect.Width)
+                {
+                    notification.Offset = Math.Max(mapNotifications.Max(n => n.Offset + n.TextSize.X) + GUI.IntScale(60), 0);
+                    notification.TimesShown++;
+                    if (mapNotifications.Count > 5)
+                    {
+                        mapNotifications.RemoveAt(i);
+                    }
+                    else if (mapNotifications.Count > 3 && notification.TimesShown > 2)
+                    {
+                        mapNotifications.RemoveAt(i);
+                    }
+                }
+            }
+        }
+
+        private void CreateLocationInfoOverlay(Location location)
+        {
+            locationInfoOverlay = new GUIFrame(new RectTransform(new Point(GUI.IntScale(350), GUI.IntScale(350)), GUI.Canvas), style: "GUIToolTip")
+            {
+                UserData = location
+            };
+            locationInfoOverlay.Color *= 0.8f;
+
+            var content = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.85f), locationInfoOverlay.RectTransform, Anchor.Center))
+            {
+                Stretch = true,
+                RelativeSpacing = 0.02f
+            };
+
+            bool showReputation = hudVisibility > 0.0f && location.Type.HasOutpost && location.Reputation != null;
+
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), content.RectTransform), location.Name, font: GUIStyle.LargeFont) { Padding = Vector4.Zero };
+            if (!location.Type.Name.IsNullOrEmpty())
+            {
+                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), content.RectTransform), location.Type.Name, font: GUIStyle.SubHeadingFont) { Padding = Vector4.Zero };
+            }
+
+            CreateSpacing(10);
+
+            if (!location.Type.Description.IsNullOrEmpty())
+            {
+                CreateTextWithIcon(location.Type.Description, location.Type.Sprite);
+            }
+
+            int highestSubTier = location.HighestSubmarineTierAvailable();
+            List<(SubmarineClass subClass, int tier)> overrideTiers = null;
+            if (location.CanHaveSubsForSale())
+            {
+                overrideTiers = new List<(SubmarineClass subClass, int tier)>();
+                foreach (SubmarineClass subClass in Enum.GetValues(typeof(SubmarineClass)))
+                {
+                    if (subClass == SubmarineClass.Undefined) { continue; }
+                    int highestClassTier = location.HighestSubmarineTierAvailable(subClass);
+                    if (highestClassTier > 0 && highestClassTier > highestSubTier)
+                    {
+                        overrideTiers.Add((subClass, highestClassTier));
+                    }
+                }
+            }
+            if (highestSubTier > 0)
+            {
+                CreateTextWithIcon(TextManager.GetWithVariable("advancedsub.all", "[tiernumber]", highestSubTier.ToString()), icon: null, style: "LocationOverlaySubmarineIcon");
+            }
+            if (overrideTiers != null)
+            {
+                foreach (var (subClass, tier) in overrideTiers)
+                {
+                    CreateTextWithIcon(TextManager.GetWithVariable($"advancedsub.{subClass}", "[tiernumber]", tier.ToString()), icon: null, style: "LocationOverlaySubmarineIcon");
+                }
+            }
+
+            CreateSpacing(10);
+
+            void CreateTextWithIcon(LocalizedString text, Sprite icon, string style = null)
+            {
+                var textHolder = new GUILayoutGroup(new RectTransform(new Point(content.Rect.Width, (int)GUIStyle.Font.MeasureString(text).Y), content.RectTransform), isHorizontal: true)
+                {
+                    Stretch = true,
+                    CanBeFocused = true
+                };
+                var guiIcon =
+                    style == null ? 
+                    new GUIImage(new RectTransform(Vector2.One * 1.25f, textHolder.RectTransform, scaleBasis: ScaleBasis.BothHeight), icon) :
+                    new GUIImage(new RectTransform(Vector2.One * 1.25f, textHolder.RectTransform, scaleBasis: ScaleBasis.BothHeight), style);
+                var textBlock = new GUITextBlock(new RectTransform(new Vector2(0.9f, 1.0f), textHolder.RectTransform), text);
+                textBlock.RectTransform.MinSize = new Point((int)textBlock.TextSize.X, 0);
+                textHolder.RectTransform.MinSize = new Point((int)textBlock.TextSize.X + guiIcon.Rect.Width, 0);
+            }
+
+            void CreateSpacing(int height)
+            {
+                new GUIFrame(new RectTransform(new Point(content.Rect.Width, GUI.IntScale(height)), content.RectTransform), style: null);
+            }
+
+            if (location.Faction != null)
+            {
+                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), content.RectTransform),
+                    RichString.Rich(TextManager.GetWithVariables("reputationgainnotification",
+                        ("[value]", string.Empty),
+                        ("[reputationname]", $"‖color:{XMLExtensions.ToStringHex(location.Faction.Prefab.IconColor)}‖{location.Faction.Prefab.Name}‖end‖"))))
+                { 
+                    Padding = Vector4.Zero 
+                };
+
+                CreateSpacing(10);
+
+                var repBarHolder = new GUILayoutGroup(new RectTransform(new Point(content.Rect.Width, GUI.IntScale(25)), content.RectTransform), isHorizontal: true)
+                {
+                    Stretch = true,
+                    RelativeSpacing = 0.05f
+                };
+                new GUICustomComponent(new RectTransform(new Vector2(0.6f, 1.0f), repBarHolder.RectTransform), onDraw: (sb, component) =>
+                {
+                    if (location.Reputation == null) { return; }
+                    RoundSummary.DrawReputationBar(sb, component.Rect, location.Reputation.NormalizedValue);
+                });
+
+                new GUITextBlock(new RectTransform(new Vector2(0.4f, 1.0f), repBarHolder.RectTransform),
+                    location.Reputation.GetFormattedReputationText(), textAlignment: Alignment.CenterRight);
+
+                new GUIImage(new RectTransform(new Vector2(0.25f, 0.5f), locationInfoOverlay.RectTransform, Anchor.BottomRight) { RelativeOffset = new Vector2(0.05f) }, 
+                    location.Faction.Prefab.Icon, scaleToFit: true)
+                {
+                    Color = location.Faction.Prefab.IconColor * 0.5f
+                };
+                CreateSpacing(20);
+            }
+
+            locationInfoOverlay.RectTransform.NonScaledSize =
+                new Point(
+                    Math.Max(locationInfoOverlay.Rect.Width, (int)(content.Children.Max(c => c is GUITextBlock textBlock ? textBlock.TextSize.X : c.RectTransform.MinSize.X) * 1.2f)),
+                    (int)(content.Children.Sum(c => c.Rect.Height) / content.RectTransform.RelativeSize.Y));
         }
 
         partial void ClearAnimQueue()
@@ -254,18 +485,19 @@ namespace Barotrauma
             mapAnimQueue.Clear();
         }
 
-        public void Update(float deltaTime, GUICustomComponent mapContainer)
+        public void Update(CampaignMode campaign, float deltaTime, GUICustomComponent mapContainer)
         {
             Rectangle rect = mapContainer.Rect;
 
-            var currentDisplayLocation = GameMain.GameSession?.Campaign?.GetCurrentDisplayLocation();
+            UpdateNotifications(deltaTime, mapContainer);
 
+            var currentDisplayLocation = campaign?.GetCurrentDisplayLocation();
             if (currentDisplayLocation != null)
             {
                 if (!currentDisplayLocation.Discovered)
                 {
                     RemoveFogOfWar(currentDisplayLocation);
-                    currentDisplayLocation.Discover();
+                    Discover(currentDisplayLocation);
                     if (currentDisplayLocation.MapPosition.X > furthestDiscoveredLocation.MapPosition.X)
                     {
                         furthestDiscoveredLocation = currentDisplayLocation;
@@ -319,10 +551,39 @@ namespace Barotrauma
             
             Vector2 rectCenter = new Vector2(rect.Center.X, rect.Center.Y);
             Vector2 viewOffset = DrawOffset + drawOffsetNoise;
+            if (HighlightedLocation != null)
+            {
+                Vector2 highlightedLocationDrawPos = rectCenter + (HighlightedLocation.MapPosition + viewOffset) * zoom;
+                if (locationInfoOverlay == null || locationInfoOverlay.UserData != HighlightedLocation)
+                {
+                    CreateLocationInfoOverlay(HighlightedLocation);
+                }
+
+                Point offsetFromLocationIcon = new Point(GUI.IntScale(25));
+                var locationInfoRt = locationInfoOverlay.RectTransform;
+                if (locationInfoRt.Pivot == Pivot.BottomLeft || locationInfoRt.Pivot == Pivot.BottomRight)
+                {
+                    offsetFromLocationIcon.Y = -offsetFromLocationIcon.Y;
+                }
+                if (locationInfoRt.Pivot == Pivot.TopRight || locationInfoRt.Pivot == Pivot.BottomRight)
+                {
+                    offsetFromLocationIcon.X = -offsetFromLocationIcon.X;
+                }
+                locationInfoRt.ScreenSpaceOffset = highlightedLocationDrawPos.ToPoint() + offsetFromLocationIcon;
+                if (locationInfoOverlay.Rect.Bottom > rect.Bottom)
+                {
+                    locationInfoRt.Pivot = Pivot.BottomLeft;
+                }
+                if (locationInfoOverlay.Rect.Right > rect.Right)
+                {
+                    locationInfoRt.Pivot = locationInfoRt.Pivot == Pivot.TopLeft ? Pivot.TopRight : Pivot.BottomRight;
+                }
+                locationInfoOverlay?.AddToGUIUpdateList(order: 1);
+            }
 
             float closestDist = 0.0f;
             HighlightedLocation = null;
-            if (GUI.MouseOn == null || GUI.MouseOn == mapContainer)
+            if ((GUI.MouseOn == null || GUI.MouseOn == mapContainer))
             {
                 for (int i = 0; i < Locations.Count; i++)
                 {
@@ -348,7 +609,7 @@ namespace Barotrauma
                     if (HighlightedLocation == null || dist < closestDist)
                     {
                         closestDist = dist;
-                        HighlightedLocation = location;
+                        HighlightedLocation = location; 
                     }
                 }
             }
@@ -392,7 +653,7 @@ namespace Barotrauma
                                 new GUIMessageBox(string.Empty, TextManager.Get("LockedPathTooltip"));
                             }
                             //clients aren't allowed to select the location without a permission
-                            else if ((GameMain.GameSession?.GameMode as CampaignMode)?.AllowedToManageCampaign() ?? false)
+                            else if (CampaignMode.AllowedToManageCampaign(Networking.ClientPermissions.ManageMap))
                             {
                                 connectionHighlightState = 0.0f;
                                 SelectedConnection = connection;
@@ -426,25 +687,20 @@ namespace Barotrauma
                         Level.Loaded.DebugSetStartLocation(CurrentLocation);
                         Level.Loaded.DebugSetEndLocation(null);
 
-                        CurrentLocation.Discover();
-                        OnLocationChanged?.Invoke(prevLocation, CurrentLocation);
+                        Discover(CurrentLocation);
+                        Visit(CurrentLocation);
+                        OnLocationChanged?.Invoke(new LocationChangeInfo(prevLocation, CurrentLocation));
                         SelectLocation(-1);
                         if (GameMain.Client == null)
                         {
-                            CurrentLocation.CreateStore();
-                            ProgressWorld();
+                            CurrentLocation.CreateStores();
+                            ProgressWorld(campaign);
                             Radiation?.OnStep(1);
                         }
                         else
                         {
                             GameMain.Client.SendCampaignState();
                         }
-                    }
-
-                    if (PlayerInput.KeyDown(Microsoft.Xna.Framework.Input.Keys.LeftShift) && PlayerInput.PrimaryMouseButtonClicked() && HighlightedLocation != null)
-                    {
-                        int distance = DistanceToClosestLocationWithOutpost(HighlightedLocation, out Location foundLocation);
-                        DebugConsole.NewMessage($"Distance to closest outpost from {HighlightedLocation.Name} to {foundLocation?.Name} is {distance}");
                     }
 
                     if (PlayerInput.PrimaryMouseButtonClicked() && HighlightedLocation == null)
@@ -455,10 +711,10 @@ namespace Barotrauma
             }
         }
         
-        public void Draw(SpriteBatch spriteBatch, GUICustomComponent mapContainer)
+        public void Draw(CampaignMode campaign, SpriteBatch spriteBatch, GUICustomComponent mapContainer)
         {
             tooltip = null;
-            var currentDisplayLocation = GameMain.GameSession?.Campaign?.GetCurrentDisplayLocation();
+            var currentDisplayLocation = campaign?.GetCurrentDisplayLocation();
 
             Rectangle rect = mapContainer.Rect;
 
@@ -474,6 +730,8 @@ namespace Barotrauma
             Vector2 viewOffset = DrawOffset + drawOffsetNoise;
 
             Vector2 rectCenter = new Vector2(rect.Center.X, rect.Center.Y);
+
+            float missionIconScale = generationParams.MissionIcon != null ? 18.0f / generationParams.MissionIcon.SourceRect.Width : 1.0f;
 
             Rectangle prevScissorRect = GameMain.Instance.GraphicsDevice.ScissorRectangle;
             spriteBatch.End();
@@ -542,7 +800,9 @@ namespace Barotrauma
                 for (int i = 0; i < Locations.Count; i++)
                 {
                     Location location = Locations[i];
-                    if (IsInFogOfWar(location)) { continue; }
+                    if (!location.Discovered && IsInFogOfWar(location)) { continue; }
+                    bool isEndLocation = endLocations.Contains(location);
+                    if (!GameMain.DebugDraw && isEndLocation && location != endLocations.First()) { continue; }
                     Vector2 pos = rectCenter + (location.MapPosition + viewOffset) * zoom;
 
                     Sprite locationSprite = location.IsCriticallyRadiated() ? location.Type.RadiationSprite ?? location.Type.Sprite : location.Type.Sprite;
@@ -551,23 +811,53 @@ namespace Barotrauma
                     drawRect.X = (int)pos.X - drawRect.Width / 2;
                     drawRect.Y = (int)pos.Y - drawRect.Width / 2;
 
+                    if (drawRect.X > rect.Right - GUI.IntScale(100) && generationParams.MissionIcon != null && location.AvailableMissions.Any())
+                    {
+                        Vector2 offScreenMissionIconPos = new Vector2(rect.Right - GUI.IntScale(50), drawRect.Center.Y);
+                        generationParams.MissionIcon.Draw(spriteBatch,
+                            offScreenMissionIconPos,
+                            generationParams.IndicatorColor, scale: missionIconScale * zoom);
+                        GUI.Arrow.Draw(spriteBatch,
+                            offScreenMissionIconPos + Vector2.UnitX * generationParams.MissionIcon.size.X * missionIconScale * zoom,
+                            generationParams.IndicatorColor, MathHelper.PiOver2, scale: 0.5f);
+                    }
+
+
                     if (!rect.Intersects(drawRect)) { continue; }
 
                     Color color = location.Type.SpriteColor;
-                    if (!location.Discovered) { color = Color.White; }
+                    if (!location.Visited) { color = Color.White; }
                     if (location.Connections.Find(c => c.Locations.Contains(currentDisplayLocation)) == null)
                     {
                         color *= 0.5f;
                     }
 
                     float iconScale = location == currentDisplayLocation ? 1.2f : 1.0f;
-                    if (location == HighlightedLocation)
+                    if (location == HighlightedLocation) { iconScale *= 1.2f; }
+                    if (isEndLocation) { iconScale *= 2.0f; }
+
+                    float notificationPulseAmount = 1.0f;
+                    float notificationColorLerp = 0.0f;
+                    if (mapNotifications.Any(n => n.RelatedLocation == location && n.IsCurrentlyVisible))
                     {
-                        iconScale *= 1.2f;
+                        float sin = MathF.Sin((float)Timing.TotalTime * 2.0f);
+                        notificationPulseAmount = Math.Max(sin + 0.5f, 1.0f);
+                        notificationColorLerp = (notificationPulseAmount - 1.0f) * 4.0f;
+                        color = Color.Lerp(color, GUIStyle.Yellow, notificationColorLerp);
+                        iconScale *= notificationPulseAmount;
                     }
 
-                    locationSprite.Draw(spriteBatch, pos, color, 
+                    locationSprite.Draw(spriteBatch, pos, color,
                         scale: generationParams.LocationIconSize / locationSprite.size.X * iconScale * zoom);
+
+                    if (location.Faction != null)
+                    {
+                        float factionIconScale = iconScale * 0.7f;
+                        Sprite factionIcon = location.Faction.Prefab.IconSmall ?? location.Faction.Prefab.Icon;
+                        Color factionIconColor = Color.Lerp(color, location.Faction.Prefab.IconColor, notificationColorLerp);
+                        factionIcon.Draw(spriteBatch, pos + new Vector2(-15, 15) * zoom, factionIconColor,
+                            scale: generationParams.LocationIconSize / factionIcon.size.X * factionIconScale * zoom);
+                    }
 
                     if (location == currentDisplayLocation)
                     {
@@ -600,49 +890,53 @@ namespace Barotrauma
                     {
                         Vector2 typeChangeIconPos = pos + new Vector2(1.35f, -0.35f) * generationParams.LocationIconSize * 0.5f * zoom;
                         float typeChangeIconScale = 18.0f / generationParams.TypeChangeIcon.SourceRect.Width;
-                        generationParams.TypeChangeIcon.Draw(spriteBatch, typeChangeIconPos, GUI.Style.Red, scale: typeChangeIconScale * zoom);
+                        Color iconColor = GUIStyle.Red;
+                        color = Color.Lerp(color, GUIStyle.Yellow, notificationColorLerp);
+                        iconScale *= notificationPulseAmount;                        
+                        generationParams.TypeChangeIcon.Draw(spriteBatch, typeChangeIconPos, iconColor, scale: typeChangeIconScale * zoom);
                         if (Vector2.Distance(PlayerInput.MousePosition, typeChangeIconPos) < generationParams.TypeChangeIcon.SourceRect.Width * zoom &&
                             (tooltip == null || IsPreferredTooltip(typeChangeIconPos)))
                         {
-                            tooltip = (new Rectangle(typeChangeIconPos.ToPoint(), new Point(30)), location.LastTypeChangeMessage);
+                            tooltip = (new Rectangle(typeChangeIconPos.ToPoint(), new Point(30)), RichString.Rich(location.LastTypeChangeMessage));
                         }
                     }
                     if (location != CurrentLocation && generationParams.MissionIcon != null)
                     {
-                        if ((CurrentLocation == currentDisplayLocation && CurrentLocation.AvailableMissions.Any(m => m.Locations.Contains(location))) || location.AvailableMissions.Any(m => m.Prefab.Type == MissionType.GoTo))
+                        if ((CurrentLocation == currentDisplayLocation && CurrentLocation.AvailableMissions.Any(m => m.Locations.Contains(location))) || 
+                            location.AvailableMissions.Any(m => m.Locations[0] == m.Locations[1]))
                         {
                             Vector2 missionIconPos = pos + new Vector2(1.35f, 0.35f) * generationParams.LocationIconSize * 0.5f * zoom;
-                            float missionIconScale = 18.0f / generationParams.MissionIcon.SourceRect.Width;
                             generationParams.MissionIcon.Draw(spriteBatch, missionIconPos, generationParams.IndicatorColor, scale: missionIconScale * zoom);
                             if (Vector2.Distance(PlayerInput.MousePosition, missionIconPos) < generationParams.MissionIcon.SourceRect.Width * zoom && IsPreferredTooltip(missionIconPos))
                             {
-                                var availableMissions = CurrentLocation.AvailableMissions.Where(m => m.Locations.Contains(location)).Concat(location.AvailableMissions.Where(m => m.Prefab.Type == MissionType.GoTo)).Distinct();
+                                var availableMissions = CurrentLocation.AvailableMissions
+                                    .Where(m => m.Locations.Contains(location))
+                                    .Concat(location.AvailableMissions.Where(m => m.Locations[0] == m.Locations[1]))
+                                    .Distinct();
                                 tooltip = (new Rectangle(missionIconPos.ToPoint(), new Point(30)), TextManager.Get("mission") + '\n'+ string.Join('\n', availableMissions.Select(m => "- " + m.Name)));
                             }
                         }
                     }
 
-                    if (GameMain.DebugDraw && location == HighlightedLocation && (!location.Discovered || !location.HasOutpost()))
+                    if (GameMain.DebugDraw)
                     {
-                        if (location.Reputation != null)
+                        Vector2 dPos = pos;
+                        if (location == HighlightedLocation)
                         {
-                            Vector2 dPos = pos;
+                            dPos.Y -= 80;
+                            GUI.DrawString(spriteBatch, dPos + new Vector2(15, 32), "Faction: " + (location.Faction?.Prefab.Name ?? "none"), Color.White, Color.Black, font: GUIStyle.SubHeadingFont);
+                            GUI.DrawString(spriteBatch, dPos + new Vector2(15, 50), "Secondary Faction: " + (location.SecondaryFaction?.Prefab.Name ?? "none"), Color.White, Color.Black, font: GUIStyle.SubHeadingFont);
                             dPos.Y += 48;
-                            string name = $"Reputation: {location.Name}";
-                            Vector2 nameSize = GUI.SmallFont.MeasureString(name);
-                            GUI.DrawString(spriteBatch, dPos, name, Color.White, Color.Black * 0.8f, 4, font: GUI.SmallFont);
-                            dPos.Y += nameSize.Y + 16;
 
-                            Rectangle bgRect = new Rectangle((int)dPos.X, (int)dPos.Y, 256, 32);
-                            bgRect.Inflate(8,8);
-                            Color barColor = ToolBox.GradientLerp(location.Reputation.NormalizedValue, Color.Red, Color.Yellow, Color.LightGreen);
-                            GUI.DrawRectangle(spriteBatch, bgRect, Color.Black * 0.8f, isFilled: true);
-                            GUI.DrawRectangle(spriteBatch, new Rectangle((int)dPos.X, (int)dPos.Y, (int)(location.Reputation.NormalizedValue * 255), 32), barColor, isFilled: true);
-                            string reputationValue = ((int)location.Reputation.Value).ToString();
-                            Vector2 repValueSize = GUI.SubHeadingFont.MeasureString(reputationValue);
-                            GUI.DrawString(spriteBatch, dPos + (new Vector2(256, 32) / 2) - (repValueSize / 2), reputationValue, Color.White, Color.Black, font: GUI.SubHeadingFont);
-                            GUI.DrawRectangle(spriteBatch, new Rectangle((int)dPos.X, (int)dPos.Y, 256, 32), Color.White);
+                            if (PlayerInput.KeyDown(Keys.LeftShift))
+                            {
+                                GUI.DrawString(spriteBatch, new Vector2(150,150), "Dist: " +
+                                    GetDistanceToClosestLocationOrConnection(CurrentLocation, int.MaxValue, loc => loc == location), Color.White, Color.Black, font: GUIStyle.SubHeadingFont);
+
+                            }
                         }
+                        dPos.Y += 48;
+                        GUI.DrawString(spriteBatch, dPos, $"Difficulty: {location.LevelData.Difficulty.FormatSingleDecimal()}", Color.White, Color.Black * 0.8f, 4, font: GUIStyle.SmallFont);
                     }
                 }
             }
@@ -653,51 +947,8 @@ namespace Barotrauma
             
             if (tooltip != null)
             {
-                if (tooltip.Value.tip != prevTooltip)
-                {
-                    prevTooltip = tooltip.Value.tip;
-                    tooltipRichTextData = RichTextData.GetRichTextData(tooltip.Value.tip, out sanitizedTooltip);
-                }
-                GUIComponent.DrawToolTip(spriteBatch, sanitizedTooltip, tooltip.Value.targetArea, tooltipRichTextData);
+                GUIComponent.DrawToolTip(spriteBatch, tooltip.Value.tip, tooltip.Value.targetArea);
                 drawRadiationTooltip = false;
-            }
-            else if (HighlightedLocation != null)
-            {
-                drawRadiationTooltip = false;
-                Vector2 pos = rectCenter + (HighlightedLocation.MapPosition + viewOffset) * zoom;
-                pos.X += 50 * zoom;
-                pos.X = (int)pos.X;
-                pos.Y = (int)pos.Y;
-                Vector2 nameSize = GUI.LargeFont.MeasureString(HighlightedLocation.Name);
-                Vector2 typeSize = string.IsNullOrEmpty(HighlightedLocation.Type.Name) ? Vector2.Zero : GUI.Font.MeasureString(HighlightedLocation.Type.Name);
-                Vector2 size = new Vector2(Math.Max(nameSize.X, typeSize.X), nameSize.Y + typeSize.Y);
-                bool showReputation = hudVisibility > 0.0f && HighlightedLocation.Discovered && HighlightedLocation.Type.HasOutpost && HighlightedLocation.Reputation != null;
-                string repLabelText = null, repValueText = null;
-                Vector2 repLabelSize = Vector2.Zero, repBarSize = Vector2.Zero;
-                if (showReputation)
-                {
-                    repLabelText = TextManager.Get("reputation");
-                    repLabelSize = GUI.Font.MeasureString(repLabelText);
-                    repBarSize = new Vector2(GUI.IntScale(200), repLabelSize.Y);
-                    size.Y += 2 * repLabelSize.Y + GUI.IntScale(5) + repBarSize.Y;
-                    repValueText = HighlightedLocation.Reputation.GetFormattedReputationText(addColorTags: false);
-                    size.X = Math.Max(size.X, repBarSize.X + GUI.Font.MeasureString(repValueText).X + GUI.IntScale(10));
-                }
-                GUI.Style.GetComponentStyle("OuterGlow").Sprites[GUIComponent.ComponentState.None][0].Draw(
-                    spriteBatch, new Rectangle((int)(pos.X - 60 * GUI.Scale), (int)(pos.Y - size.Y), (int)(size.X + 120 * GUI.Scale), (int)(size.Y * 2.2f)), Color.Black * hudVisibility);
-                var topLeftPos = pos - new Vector2(0.0f, size.Y / 2);
-                GUI.DrawString(spriteBatch, topLeftPos, HighlightedLocation.Name, GUI.Style.TextColor * hudVisibility * 1.5f, font: GUI.LargeFont);
-                topLeftPos += new Vector2(0.0f, nameSize.Y);
-                GUI.DrawString(spriteBatch, topLeftPos, HighlightedLocation.Type.Name, GUI.Style.TextColor * hudVisibility * 1.5f);
-                if (showReputation)
-                {
-                    topLeftPos += new Vector2(0.0f, typeSize.Y + repLabelSize.Y);
-                    GUI.DrawString(spriteBatch, topLeftPos, repLabelText, GUI.Style.TextColor * hudVisibility * 1.5f);
-                    topLeftPos += new Vector2(0.0f, repLabelSize.Y + GUI.IntScale(10));
-                    Rectangle repBarRect = new Rectangle(new Point((int)topLeftPos.X, (int)topLeftPos.Y), new Point((int)repBarSize.X, (int)repBarSize.Y));
-                    RoundSummary.DrawReputationBar(spriteBatch, repBarRect, HighlightedLocation.Reputation.NormalizedValue);
-                    GUI.DrawString(spriteBatch, new Vector2(repBarRect.Right + GUI.IntScale(5), repBarRect.Top), repValueText, Reputation.GetReputationColor(HighlightedLocation.Reputation.NormalizedValue));
-                }
             }
 
             if (drawRadiationTooltip)
@@ -746,7 +997,7 @@ namespace Barotrauma
                    generationParams.SmallLevelConnectionLength,
                    generationParams.LargeLevelConnectionLength,
                    connection.Length);
-                connectionColor = ToolBox.GradientLerp(sizeFactor, Color.LightGreen, GUI.Style.Orange, GUI.Style.Red);
+                connectionColor = ToolBox.GradientLerp(sizeFactor, Color.LightGreen, GUIStyle.Orange, GUIStyle.Red);
             }
             else if (overrideColor.HasValue)
             {
@@ -816,7 +1067,7 @@ namespace Barotrauma
                 }
 
                 float a = 1.0f;
-                if (!connection.Locations[0].Discovered && !connection.Locations[1].Discovered)
+                if (!connection.Locations[0].Visited && !connection.Locations[1].Visited)
                 {
                     if (IsInFogOfWar(connection.Locations[0]))
                     {
@@ -860,39 +1111,8 @@ namespace Barotrauma
                 if (connection.LevelData.HasHuntingGrounds) { iconCount++; }
                 if (connection.Locked) { iconCount++; }
                 string tooltip = null;
-                float subCrushDepth = Level.DefaultRealWorldCrushDepth;
-                var currentOrPendingSub = SubmarineSelection.CurrentOrPendingSubmarine();
-                if (Submarine.MainSub != null && Submarine.MainSub.Info == currentOrPendingSub)
-                {
-                    subCrushDepth = Submarine.MainSub.RealWorldCrushDepth;
-                }
-                else if (currentOrPendingSub != null)
-                {
-                    if (pendingSubInfo.pendingSub != currentOrPendingSub)
-                    {
-                        // Store the real world crush depth for the pending sub so that we don't have to calculate it again every time
-                        pendingSubInfo = (currentOrPendingSub, currentOrPendingSub.GetRealWorldCrushDepth());
-                    }
-                    subCrushDepth = pendingSubInfo.realWorldCrushDepth;
-                }
-                if (GameMain.GameSession?.Campaign?.UpgradeManager != null)
-                {
-                    var hullUpgradePrefab =  UpgradePrefab.Find("increasewallhealth");
-                    if (hullUpgradePrefab != null)
-                    {
-                        int pendingLevel = GameMain.GameSession.Campaign.UpgradeManager.GetUpgradeLevel(hullUpgradePrefab, hullUpgradePrefab.UpgradeCategories.First());
-                        int currentLevel = GameMain.GameSession.Campaign.UpgradeManager.GetRealUpgradeLevel(hullUpgradePrefab, hullUpgradePrefab.UpgradeCategories.First());
-                        if (pendingLevel > currentLevel)
-                        {
-                            string updateValueStr = hullUpgradePrefab.SourceElement?.Element("Structure")?.GetAttributeString("crushdepth", null);
-                            if (!string.IsNullOrEmpty(updateValueStr))
-                            {
-                                subCrushDepth = PropertyReference.CalculateUpgrade(subCrushDepth, pendingLevel - currentLevel, updateValueStr);
-                            }
-                        }
-                    }
-                }
 
+                float subCrushDepth = SubmarineInfo.GetSubCrushDepth(SubmarineSelection.CurrentOrPendingSubmarine(), ref pendingSubInfo);
                 string crushDepthWarningIconStyle = null;
                 if (connection.LevelData.InitialDepth * Physics.DisplayToRealWorldRatio > subCrushDepth)
                 {
@@ -910,31 +1130,31 @@ namespace Barotrauma
                 if (connection.LevelData.HasBeaconStation)
                 {
                     var beaconStationIconStyle = connection.LevelData.IsBeaconActive ? "BeaconStationActive" : "BeaconStationInactive";
-                    DrawIcon(beaconStationIconStyle, (int)(28 * zoom), TextManager.Get(connection.LevelData.IsBeaconActive ? "BeaconStationActiveTooltip" : "BeaconStationInactiveTooltip"));
+                    DrawIcon(beaconStationIconStyle, (int)(28 * zoom), connection.LevelData.IsBeaconActive ? beaconStationActiveText : beaconStationInactiveText);
                 }
 
                 if (connection.Locked)
                 {
                     var gateLocation = connection.Locations[0].IsGateBetweenBiomes ? connection.Locations[0] : connection.Locations[1];
-                    var unlockEvent =
-                        EventSet.PrefabList.Find(ep => ep.UnlockPathEvent && ep.BiomeIdentifier == gateLocation.LevelData.Biome.Identifier) ??
-                        EventSet.PrefabList.Find(ep => ep.UnlockPathEvent && string.IsNullOrEmpty(ep.BiomeIdentifier));
+                    var unlockEvent = EventPrefab.GetUnlockPathEvent(gateLocation.LevelData.Biome.Identifier, gateLocation.Faction);
 
                     if (unlockEvent != null)
                     {
                         Reputation unlockReputation = CurrentLocation.Reputation;
                         Faction unlockFaction = null;
-                        if (!string.IsNullOrEmpty(unlockEvent.UnlockPathFaction))
+                        if (!unlockEvent.Faction.IsEmpty)
                         {
-                            unlockFaction = GameMain.GameSession.Campaign.Factions.Find(f => f.Prefab.Identifier.Equals(unlockEvent.UnlockPathFaction, StringComparison.OrdinalIgnoreCase));
+                            unlockFaction = GameMain.GameSession.Campaign.Factions.Find(f => f.Prefab.Identifier == unlockEvent.Faction);
                             unlockReputation = unlockFaction?.Reputation;
                         }
-
-                        DrawIcon(
-                            "LockedLocationConnection", (int)(28 * zoom),
-                            TextManager.GetWithVariables(unlockEvent.UnlockPathTooltip ?? "LockedPathTooltip",
-                              new string[] { "[requiredreputation]", "[currentreputation]" },
-                              new string[] { Reputation.GetFormattedReputationText(MathUtils.InverseLerp(unlockReputation.MinReputation, unlockReputation.MaxReputation, unlockEvent.UnlockPathReputation), unlockEvent.UnlockPathReputation, addColorTags: true), unlockReputation.GetFormattedReputationText(addColorTags: true) }));
+                        if (unlockReputation != null)
+                        {
+                            DrawIcon(
+                                "LockedLocationConnection", (int)(28 * zoom),
+                                RichString.Rich(TextManager.GetWithVariables(unlockEvent.UnlockPathTooltip ?? "LockedPathTooltip",
+                                  ("[requiredreputation]", Reputation.GetFormattedReputationText(MathUtils.InverseLerp(unlockReputation.MinReputation, unlockReputation.MaxReputation, unlockEvent.UnlockPathReputation), unlockEvent.UnlockPathReputation, addColorTags: true)),
+                                  ("[currentreputation]", unlockReputation.GetFormattedReputationText(addColorTags: true)))));
+                        }
                     }
                     else
                     {
@@ -945,15 +1165,15 @@ namespace Barotrauma
 
                 if (connection.LevelData.HasHuntingGrounds)
                 {
-                    DrawIcon("HuntingGrounds", (int)(28 * zoom), TextManager.Get("HuntingGroundsTooltip"));
+                    DrawIcon("HuntingGrounds", (int)(28 * zoom), RichString.Rich(TextManager.Get("HuntingGroundsTooltip")));
                 }
 
                 if (crushDepthWarningIconStyle != null)
                 {
                     DrawIcon(crushDepthWarningIconStyle, (int)(32 * zoom), 
-                        TextManager.Get(tooltip)
-                                .Replace("[initialdepth]", $"‖color:gui.orange‖{(int)(connection.LevelData.InitialDepth * Physics.DisplayToRealWorldRatio)}‖end‖")
-                                .Replace("[submarinecrushdepth]", $"‖color:gui.orange‖{(int)subCrushDepth}‖end‖"));
+                        RichString.Rich(TextManager.GetWithVariables(tooltip,
+                                ("[initialdepth]", $"‖color:gui.orange‖{(int)(connection.LevelData.InitialDepth * Physics.DisplayToRealWorldRatio)}‖end‖"),
+                                ("[submarinecrushdepth]", $"‖color:gui.orange‖{(int)subCrushDepth}‖end‖"))));
                 }
             }
 
@@ -962,18 +1182,18 @@ namespace Barotrauma
                 Vector2 center = rectCenter + (connection.CenterPos + viewOffset) * zoom;
                 if (viewArea.Contains(center) && connection.Biome != null)
                 {
-                    GUI.DrawString(spriteBatch, center, connection.Biome.Identifier + " (" + connection.Difficulty + ")", Color.White);
+                    GUI.DrawString(spriteBatch, center, (connection.LevelData?.GenerationParams?.Identifier ?? connection.Biome.Identifier) + " (" + connection.Difficulty.FormatSingleDecimal() + ")", Color.White);
                 }
             }
 
-            void DrawIcon(string iconStyle, int iconSize, string tooltipText)
+            void DrawIcon(string iconStyle, int iconSize, RichString tooltipText)
             {
                 Vector2 iconPos = (connectionStart.Value + connectionEnd.Value) / 2;
                 Vector2 iconDiff = Vector2.Normalize(connectionEnd.Value - connectionStart.Value) * iconSize;
 
                 iconPos += (iconDiff * -(iconCount - 1) / 2.0f) + iconDiff * iconIndex;
 
-                var style = GUI.Style.GetComponentStyle(iconStyle);
+                var style = GUIStyle.GetComponentStyle(iconStyle);
                 bool mouseOn = Vector2.DistanceSquared(iconPos, PlayerInput.MousePosition) < iconSize * iconSize && IsPreferredTooltip(iconPos);
                 Sprite iconSprite = style.GetDefaultSprite();
                 iconSprite.Draw(spriteBatch, iconPos, (mouseOn ? style.HoverColor : style.Color) * 0.7f,
@@ -997,14 +1217,15 @@ namespace Barotrauma
         private void DrawDecorativeHUD(SpriteBatch spriteBatch, Rectangle rect)
         {
             generationParams.DecorativeGraphSprite.Draw(spriteBatch, (int)((Timing.TotalTime * 5.0f) % generationParams.DecorativeGraphSprite.FrameCount),
-                new Vector2(rect.Left, rect.Top), Color.White, Vector2.Zero, 0, Vector2.One * GUI.Scale);
+                new Vector2(rect.X, rect.Bottom - (generationParams.DecorativeGraphSprite.FrameSize.Y + 30) * GUI.Scale), 
+                Color.White, Vector2.Zero, 0, Vector2.One * GUI.Scale, SpriteEffects.FlipVertically);
 
             GUI.DrawString(spriteBatch,
                 new Vector2(rect.Right - GUI.IntScale(170), rect.Y + GUI.IntScale(5)),
-                "JOVIAN FLUX " + ((cameraNoiseStrength + Rand.Range(-0.02f, 0.02f)) * 500), generationParams.IndicatorColor * hudVisibility, font: GUI.SmallFont);
+                "JOVIAN FLUX " + ((cameraNoiseStrength + Rand.Range(-0.02f, 0.02f)) * 500), generationParams.IndicatorColor * hudVisibility, font: GUIStyle.SmallFont);
             GUI.DrawString(spriteBatch,
-                new Vector2(rect.X + GUI.IntScale(15), rect.Bottom - GUI.IntScale(25)),
-                "LAT " + (-DrawOffset.Y / 100.0f) + "   LON " + (-DrawOffset.X / 100.0f), generationParams.IndicatorColor * hudVisibility, font: GUI.SmallFont);
+                new Vector2(rect.X + GUI.IntScale(5), rect.Y + GUI.IntScale(5)),
+                "LAT " + (-DrawOffset.Y / 100.0f) + "   LON " + (-DrawOffset.X / 100.0f), generationParams.IndicatorColor * hudVisibility, font: GUIStyle.SmallFont);
         }
 
         private void UpdateMapAnim(MapAnim anim, float deltaTime)
@@ -1047,6 +1268,14 @@ namespace Barotrauma
                 }
                 anim.Finished = true;
             }
+        }
+
+        /// <summary>
+        /// Resets <see cref="pendingSubInfo"/> and forces crush depth to be calculated again for icon displaying purposes
+        /// </summary>
+        public void ResetPendingSub()
+        {
+            pendingSubInfo = new SubmarineInfo.PendingSubInfo();
         }
 
         partial void RemoveProjSpecific()

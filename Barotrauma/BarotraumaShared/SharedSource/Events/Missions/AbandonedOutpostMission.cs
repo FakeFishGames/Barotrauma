@@ -22,10 +22,12 @@ namespace Barotrauma
 
         protected const int HostagesKilledState = 5;
 
-        private readonly string hostagesKilledMessage;
+        private readonly LocalizedString hostagesKilledMessage;
 
         private const float EndDelay = 5.0f;
         private float endTimer;
+
+        private bool allowOrderingRescuees;
 
         public override bool AllowRespawn => false;
 
@@ -38,17 +40,17 @@ namespace Barotrauma
             }
         }
 
-        public override IEnumerable<Vector2> SonarPositions
+        public override IEnumerable<(LocalizedString Label, Vector2 Position)> SonarLabels
         {
             get
             {
-                if (State > 0)
+                if (State == 0)
                 {
-                    return Enumerable.Empty<Vector2>();
+                    return Targets.Select(t => (Prefab.SonarLabel, t.WorldPosition));
                 }
                 else
                 {
-                    return Targets.Select(t => t.WorldPosition);
+                    return Enumerable.Empty<(LocalizedString Label, Vector2 Position)>();
                 }
             }
         }
@@ -80,12 +82,14 @@ namespace Barotrauma
         public AbandonedOutpostMission(MissionPrefab prefab, Location[] locations, Submarine sub) : 
             base(prefab, locations, sub)
         {
-            characterConfig = prefab.ConfigElement.Element("Characters");
+            characterConfig = prefab.ConfigElement.GetChildElement("Characters");
+
+            allowOrderingRescuees = prefab.ConfigElement.GetAttributeBool(nameof(allowOrderingRescuees), true);
 
             string msgTag = prefab.ConfigElement.GetAttributeString("hostageskilledmessage", "");
-            hostagesKilledMessage = TextManager.Get(msgTag, returnNull: true) ?? msgTag;
+            hostagesKilledMessage = TextManager.Get(msgTag).Fallback(msgTag);
 
-            itemConfig = prefab.ConfigElement.Element("Items");
+            itemConfig = prefab.ConfigElement.GetChildElement("Items");
             itemTag = prefab.ConfigElement.GetAttributeString("targetitem", "");
         }
 
@@ -138,20 +142,17 @@ namespace Barotrauma
                         continue;
                     }
 
-                    string[] moduleFlags = element.GetAttributeStringArray("moduleflags", null);
-                    string[] spawnPointTags = element.GetAttributeStringArray("spawnpointtags", null);
+                    Identifier[] moduleFlags = element.GetAttributeIdentifierArray("moduleflags", null);
+                    Identifier[] spawnPointTags = element.GetAttributeIdentifierArray("spawnpointtags", null);
                     ISpatialEntity spawnPoint = SpawnAction.GetSpawnPos(
                          SpawnAction.SpawnLocationType.Outpost, SpawnType.Human | SpawnType.Enemy,
                          moduleFlags, spawnPointTags, element.GetAttributeBool("asfaraspossible", false));
-                    if (spawnPoint == null)
-                    {
-                        spawnPoint = submarine.GetHulls(alsoFromConnectedSubs: false).GetRandom();
-                    }
+                    spawnPoint ??= submarine.GetHulls(alsoFromConnectedSubs: false).GetRandomUnsynced();
                     Vector2 spawnPos = spawnPoint.WorldPosition;
                     if (spawnPoint is WayPoint wp && wp.CurrentHull != null && wp.CurrentHull.Rect.Width > 100)
                     {
                         spawnPos = new Vector2(
-                            MathHelper.Clamp(wp.WorldPosition.X + Rand.Range(-200, 200), wp.CurrentHull.WorldRect.X + 50, wp.CurrentHull.WorldRect.Right - 50),
+                            MathHelper.Clamp(wp.WorldPosition.X + Rand.Range(-200, 201), wp.CurrentHull.WorldRect.X + 50, wp.CurrentHull.WorldRect.Right - 50),
                             wp.CurrentHull.WorldRect.Y - wp.CurrentHull.Rect.Height + 16.0f);
                     }
                     var item = new Item(itemPrefab, spawnPos, null);
@@ -185,7 +186,12 @@ namespace Barotrauma
 
                     if (element.Attribute("identifier") != null && element.Attribute("from") != null)
                     {
-                        HumanPrefab humanPrefab = GetHumanPrefabFromElement(element);
+                        HumanPrefab humanPrefab = GetHumanPrefabFromElement(element); 
+                        if (humanPrefab == null)
+                        {
+                            DebugConsole.ThrowError($"Couldn't spawn a human character for abandoned outpost mission: human prefab \"{element.GetAttributeString("identifier", string.Empty)}\" not found");
+                            continue;
+                        }
                         for (int i = 0; i < count; i++)
                         {
                             LoadHuman(humanPrefab, element, submarine);
@@ -193,11 +199,11 @@ namespace Barotrauma
                     }
                     else
                     {
-                        string speciesName = element.GetAttributeString("character", element.GetAttributeString("identifier", ""));
+                        Identifier speciesName = element.GetAttributeIdentifier("character", element.GetAttributeIdentifier("identifier", Identifier.Empty));
                         var characterPrefab = CharacterPrefab.FindBySpeciesName(speciesName);
                         if (characterPrefab == null)
                         {
-                            DebugConsole.ThrowError("Couldn't spawn a character for abandoned outpost mission: character prefab \"" + speciesName + "\" not found");
+                            DebugConsole.ThrowError($"Couldn't spawn a character for abandoned outpost mission: character prefab \"{speciesName}\" not found");
                             continue;
                         }
                         for (int i = 0; i < count; i++)
@@ -211,21 +217,27 @@ namespace Barotrauma
 
         private void LoadHuman(HumanPrefab humanPrefab, XElement element, Submarine submarine)
         {
-            string[] moduleFlags = element.GetAttributeStringArray("moduleflags", null);
-            string[] spawnPointTags = element.GetAttributeStringArray("spawnpointtags", null);
+            Identifier[] moduleFlags = element.GetAttributeIdentifierArray("moduleflags", null);
+            Identifier[] spawnPointTags = element.GetAttributeIdentifierArray("spawnpointtags", null);
+            var spawnPointType = element.GetAttributeEnum("spawnpointtype", SpawnType.Human);
             ISpatialEntity spawnPos = SpawnAction.GetSpawnPos(
-                SpawnAction.SpawnLocationType.Outpost, SpawnType.Human,
+                SpawnAction.SpawnLocationType.Outpost, spawnPointType,
                 moduleFlags ?? humanPrefab.GetModuleFlags(),
                 spawnPointTags ?? humanPrefab.GetSpawnPointTags(),
                 element.GetAttributeBool("asfaraspossible", false));
-            if (spawnPos == null)
-            {
-                spawnPos = submarine.GetHulls(alsoFromConnectedSubs: false).GetRandom();
-            }
+            spawnPos ??= submarine.GetHulls(alsoFromConnectedSubs: false).GetRandomUnsynced();
 
             bool requiresRescue = element.GetAttributeBool("requirerescue", false);
-
-            Character spawnedCharacter = CreateHuman(humanPrefab, characters, characterItems, submarine, requiresRescue ? CharacterTeamType.FriendlyNPC : CharacterTeamType.None, spawnPos, giveTags: true);
+            var teamId = element.GetAttributeEnum("teamid", requiresRescue ? CharacterTeamType.FriendlyNPC : CharacterTeamType.None);
+            Character spawnedCharacter = CreateHuman(humanPrefab, characters, characterItems, submarine, teamId, spawnPos);
+            if (Level.Loaded?.StartOutpost?.Info is { } outPostInfo)
+            {
+                outPostInfo.AddOutpostNPCIdentifierOrTag(spawnedCharacter, humanPrefab.Identifier);
+                foreach (Identifier tag in humanPrefab.GetTags())
+                {
+                    outPostInfo.AddOutpostNPCIdentifierOrTag(spawnedCharacter, tag);
+                }
+            }
 
             if (spawnPos is WayPoint wp)
             {
@@ -236,8 +248,18 @@ namespace Barotrauma
             {
                 requireRescue.Add(spawnedCharacter);
 #if CLIENT
-                GameMain.GameSession.CrewManager.AddCharacterToCrewList(spawnedCharacter);
+                if (allowOrderingRescuees)
+                {
+                    GameMain.GameSession.CrewManager.AddCharacterToCrewList(spawnedCharacter);
+                }
 #endif
+            }
+            else if (TimesAttempted > 0 && spawnedCharacter.AIController is HumanAIController humanAi)
+            {
+                var order = OrderPrefab.Prefabs["fightintruders"]
+                    .CreateInstance(OrderPrefab.OrderTargetType.Entity, orderGiver: spawnedCharacter)
+                    .WithManualPriority(CharacterInfo.HighestManualOrderPriority);
+                spawnedCharacter.SetOrder(order, isNewOrder: true, speak: false);
             }
 
             if (element.GetAttributeBool("requirekill", false))
@@ -248,13 +270,10 @@ namespace Barotrauma
 
         private void LoadMonster(CharacterPrefab monsterPrefab, XElement element, Submarine submarine)
         {
-            string[] moduleFlags = element.GetAttributeStringArray("moduleflags", null);
-            string[] spawnPointTags = element.GetAttributeStringArray("spawnpointtags", null);
+            Identifier[] moduleFlags = element.GetAttributeIdentifierArray("moduleflags", null);
+            Identifier[] spawnPointTags = element.GetAttributeIdentifierArray("spawnpointtags", null);
             ISpatialEntity spawnPos = SpawnAction.GetSpawnPos(SpawnAction.SpawnLocationType.Outpost, SpawnType.Enemy, moduleFlags, spawnPointTags, element.GetAttributeBool("asfaraspossible", false));
-            if (spawnPos == null)
-            {
-                spawnPos = submarine.GetHulls(alsoFromConnectedSubs: false).GetRandom();
-            }
+            spawnPos ??= submarine.GetHulls(alsoFromConnectedSubs: false).GetRandomUnsynced();
             Character spawnedCharacter = Character.Create(monsterPrefab.Identifier, spawnPos.WorldPosition, ToolBox.RandomSeed(8), createNetworkEvent: false);
             characters.Add(spawnedCharacter);
             if (element.GetAttributeBool("requirekill", false))
@@ -328,21 +347,14 @@ namespace Barotrauma
 
         }
 
-        public override void End()
+        protected override bool DetermineCompleted()
         {
-            completed = State > 0 && State != HostagesKilledState;
-            if (completed)
-            {
-                if (Prefab.LocationTypeChangeOnCompleted != null)
-                {
-                    ChangeLocationType(Prefab.LocationTypeChangeOnCompleted);
-                }
-                GiveReward();
-            }
-            else
-            {
-                failed = requireRescue.Any(r => r.Removed || r.IsDead);
-            }
+            return State > 0 && State != HostagesKilledState;
+        }
+
+        protected override void EndMissionSpecific(bool completed)
+        {
+            failed = !completed && requireRescue.Any(r => r.Removed || r.IsDead);
         }
     }
 }

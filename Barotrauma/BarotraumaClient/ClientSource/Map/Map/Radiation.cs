@@ -7,9 +7,9 @@ namespace Barotrauma
 {
     internal partial class Radiation
     {
-        private static readonly string radiationTooltip = TextManager.Get("RadiationTooltip");
+        private static readonly LocalizedString radiationTooltip = TextManager.Get("RadiationTooltip");
         private static float spriteIndex;
-        private readonly SpriteSheet sheet = GUI.Style.RadiationAnimSpriteSheet;
+        private readonly SpriteSheet sheet = GUIStyle.RadiationAnimSpriteSheet;
         private int maxFrames => sheet.FrameCount + 1;
 
         private bool isHovingOver;
@@ -18,7 +18,7 @@ namespace Barotrauma
         {
             if (!Enabled) { return; }
 
-            UISprite uiSprite = GUI.Style.RadiationSprite;
+            UISprite uiSprite = GUIStyle.Radiation;
             var (offsetX, offsetY) = Map.DrawOffset * zoom;
             var (centerX, centerY) = container.Center.ToVector2();
             var (halfSizeX, halfSizeY) = new Vector2(container.Width / 2f, container.Height / 2f) * zoom;

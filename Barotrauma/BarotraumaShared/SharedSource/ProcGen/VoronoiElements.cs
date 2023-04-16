@@ -53,7 +53,9 @@
 using Barotrauma;
 using FarseerPhysics.Dynamics;
 using Microsoft.Xna.Framework;
+using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Voronoi2
 {
@@ -156,6 +158,11 @@ namespace Voronoi2
         public bool IsDestructible;
         public bool DoesDamage;
 
+        /// <summary>
+        /// Executed when the cell is destroyed (only applies to destructible level walls)
+        /// </summary>
+        public Action OnDestroyed;
+
         public Vector2 Center
         {
             get { return new Vector2((float)Site.Coord.X, (float)Site.Coord.Y) + Translation; }
@@ -194,10 +201,26 @@ namespace Voronoi2
 
         public bool IsPointInside(Vector2 point)
         {
+            if (!IsPointInsideAABB(point, margin: 0.0f)) { return false; }
+            Vector2 transformedPoint = point - Translation;
             foreach (GraphEdge edge in Edges)
             {
-                if (MathUtils.LinesIntersect(point, Center, edge.Point1 + Translation, edge.Point2 + Translation)) { return false; }
+                if (MathUtils.LinesIntersect(transformedPoint, Center - Translation, edge.Point1, edge.Point2)) { return false; }
             }
+            return true;
+        }
+
+        public bool IsPointInsideAABB(Vector2 point2, float margin)
+        {
+            Vector2 transformedPoint = point2 - Translation;
+            Vector2 max = transformedPoint + Vector2.One * margin;
+            Vector2 min = transformedPoint - Vector2.One * margin;
+
+            if (Edges.All(e => e.Point1.X < min.X && e.Point2.X < min.X)) { return false; }
+            if (Edges.All(e => e.Point1.Y < min.Y && e.Point2.Y < min.Y)) { return false; }
+            if (Edges.All(e => e.Point1.X > max.X && e.Point2.X > max.X)) { return false; }
+            if (Edges.All(e => e.Point1.Y > max.Y && e.Point2.Y > max.Y)) { return false; }
+
             return true;
         }
     }

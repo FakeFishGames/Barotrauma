@@ -1,3 +1,4 @@
+using System;
 using Barotrauma.Extensions;
 using Barotrauma.RuinGeneration;
 using Microsoft.Xna.Framework;
@@ -8,8 +9,8 @@ namespace Barotrauma
 {
     partial class AlienRuinMission : Mission
     {
-        private readonly string[] targetItemIdentifiers;
-        private readonly string[] targetEnemyIdentifiers;
+        private readonly Identifier[] targetItemIdentifiers;
+        private readonly Identifier[] targetEnemyIdentifiers;
         private readonly int minEnemyCount;
         private readonly HashSet<Entity> existingTargets = new HashSet<Entity>();
         private readonly HashSet<Character> spawnedTargets = new HashSet<Character>();
@@ -17,25 +18,27 @@ namespace Barotrauma
 
         private Ruin TargetRuin { get; set; }
 
-        public override IEnumerable<Vector2> SonarPositions
+        public override IEnumerable<(LocalizedString Label, Vector2 Position)> SonarLabels
         {
             get
             {
                 if (State == 0)
                 {
-                    return allTargets.Where(t => (t is Item i && !IsItemDestroyed(i)) || (t is Character c && !IsEnemyDefeated(c))).Select(t => t.WorldPosition);
+                    return allTargets
+                        .Where(t => (t is Item i && !IsItemDestroyed(i)) || (t is Character c && !IsEnemyDefeated(c)))
+                        .Select(t => (Prefab.SonarLabel, t.WorldPosition));
                 }
                 else
                 {
-                    return Enumerable.Empty<Vector2>();
+                    return Enumerable.Empty<(LocalizedString Label, Vector2 Position)>();
                 }
             }
         }
 
         public AlienRuinMission(MissionPrefab prefab, Location[] locations, Submarine sub) : base(prefab, locations, sub)
         {
-            targetItemIdentifiers = prefab.ConfigElement.GetAttributeStringArray("targetitems", new string[0], convertToLowerInvariant: true);
-            targetEnemyIdentifiers = prefab.ConfigElement.GetAttributeStringArray("targetenemies", new string[0], convertToLowerInvariant: true);
+            targetItemIdentifiers = prefab.ConfigElement.GetAttributeIdentifierArray("targetitems", Array.Empty<Identifier>());
+            targetEnemyIdentifiers = prefab.ConfigElement.GetAttributeIdentifierArray("targetenemies", Array.Empty<Identifier>());
             minEnemyCount = prefab.ConfigElement.GetAttributeInt("minenemycount", 0);
         }
 
@@ -45,7 +48,7 @@ namespace Barotrauma
             spawnedTargets.Clear();
             allTargets.Clear();
             if (IsClient) { return; }
-            TargetRuin = Level.Loaded?.Ruins?.GetRandom(randSync: Rand.RandSync.Server);
+            TargetRuin = Level.Loaded?.Ruins?.GetRandom(randSync: Rand.RandSync.ServerAndClient);
             if (TargetRuin == null)
             {
                 DebugConsole.ThrowError($"Failed to initialize an Alien Ruin mission (\"{Prefab.Identifier}\"): level contains no alien ruins");
@@ -66,8 +69,8 @@ namespace Barotrauma
             int existingEnemyCount = 0;
             foreach (var character in Character.CharacterList)
             {
-                if (string.IsNullOrEmpty(character.SpeciesName)) { continue; }
-                if (!targetEnemyIdentifiers.Contains(character.SpeciesName.ToLowerInvariant())) { continue; }
+                if (character.SpeciesName.IsEmpty) { continue; }
+                if (!targetEnemyIdentifiers.Contains(character.SpeciesName)) { continue; }
                 if (character.Submarine != TargetRuin.Submarine) { continue; }
                 existingTargets.Add(character);
                 allTargets.Add(character);
@@ -76,7 +79,7 @@ namespace Barotrauma
             if (existingEnemyCount < minEnemyCount)
             {
                 var enemyPrefabs = new HashSet<CharacterPrefab>();
-                foreach (string identifier in targetEnemyIdentifiers)
+                foreach (Identifier identifier in targetEnemyIdentifiers)
                 {
                     var prefab = CharacterPrefab.FindBySpeciesName(identifier);
                     if (prefab != null)
@@ -95,8 +98,8 @@ namespace Barotrauma
                 }
                 for (int i = 0; i < (minEnemyCount - existingEnemyCount); i++)
                 {
-                    var prefab = enemyPrefabs.GetRandom();
-                    var spawnPos = TargetRuin.Submarine.GetWaypoints(false).GetRandom(w => w.CurrentHull != null)?.WorldPosition;
+                    var prefab = enemyPrefabs.GetRandomUnsynced();
+                    var spawnPos = TargetRuin.Submarine.GetWaypoints(false).GetRandomUnsynced(w => w.CurrentHull != null)?.WorldPosition;
                     if (!spawnPos.HasValue)
                     {
                         DebugConsole.ThrowError($"Error in an Alien Ruin mission (\"{Prefab.Identifier}\"): no valid spawn positions could be found for the additional ({minEnemyCount - existingEnemyCount}) enemies to be spawned");
@@ -123,10 +126,6 @@ namespace Barotrauma
                 case 0:
                     if (!AllTargetsEliminated()) { return; }
                     State = 1;
-                    break;
-                case 1:
-                    if (!Submarine.MainSub.AtEndExit && !Submarine.MainSub.AtStartExit) { return; }
-                    State = 2;
                     break;
             }
         }
@@ -159,17 +158,21 @@ namespace Barotrauma
             return true;
         }
 
-        private bool IsItemDestroyed(Item item) => item == null || item.Removed || item.Condition <= 0.0f;
+        private static bool IsItemDestroyed(Item item) => item == null || item.Removed || item.Condition <= 0.0f;
 
-        private bool IsEnemyDefeated(Character enemy) => enemy == null ||enemy.Removed || enemy.IsDead;
+        private static bool IsEnemyDefeated(Character enemy) => enemy == null ||enemy.Removed || enemy.IsDead;
 
-        public override void End()
+        protected override bool DetermineCompleted()
         {
-            if (State == 2)
-            {
-                GiveReward();
-                completed = true;
-            }
+            bool exitingLevel = GameMain.GameSession?.GameMode is CampaignMode campaign ?
+                campaign.GetAvailableTransition() != CampaignMode.TransitionType.None :
+                Submarine.MainSub is { } sub && sub.AtEitherExit;
+
+            return State > 0 && exitingLevel;            
+        }
+
+        protected override void EndMissionSpecific(bool completed)
+        {
             failed = !completed && State > 0;
         }
     }

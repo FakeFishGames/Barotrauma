@@ -20,7 +20,7 @@ namespace Barotrauma
         private RectTransform currentHighestParent;
         private List<RectTransform> parentHierarchy = new List<RectTransform>();
 
-        private bool selectMultiple;
+        private readonly bool selectMultiple;
 
         public bool Dropped { get; set; }
         
@@ -55,9 +55,8 @@ namespace Barotrauma
         {
             get { return listBox.SelectedComponent; }
         }
-        
-        // TODO: fix implicit hiding
-        public bool Selected
+
+        public override bool Selected
         {
             get
             {
@@ -97,7 +96,7 @@ namespace Barotrauma
             set { button.TextColor = value; }
         }
 
-        public override ScalableFont Font 
+        public override GUIFont Font 
         {
             get { return button?.Font ?? base.Font; }
             set 
@@ -112,6 +111,7 @@ namespace Barotrauma
         }
         public void ReceiveTextInput(string text) { }
         public void ReceiveCommandInput(char command) { }
+        public void ReceiveEditingInput(string text, int start, int length) {  }
 
         public void ReceiveSpecialInput(Keys key)
         {
@@ -122,33 +122,33 @@ namespace Barotrauma
                     listBox.ReceiveSpecialInput(key);
                     GUI.KeyboardDispatcher.Subscriber = this;
                     break;
-                case Keys.Enter:
-                case Keys.Space:
-                case Keys.Escape:
+                default:
                     GUI.KeyboardDispatcher.Subscriber = null;
                     break;
             }
         }
 
-        private List<object> selectedDataMultiple = new List<object>();
+        private readonly List<object> selectedDataMultiple = new List<object>();
         public IEnumerable<object> SelectedDataMultiple
         {
             get { return selectedDataMultiple; }
         }
 
-        private List<int> selectedIndexMultiple = new List<int>();
+        private readonly List<int> selectedIndexMultiple = new List<int>();
         public IEnumerable<int> SelectedIndexMultiple
         {
             get { return selectedIndexMultiple; }
         }
 
-        public string Text
+        public bool MustSelectAtLeastOne;
+
+        public LocalizedString Text
         {
             get { return button.Text; }
             set { button.Text = value; }
         }
 
-        public override string ToolTip
+        public override RichString ToolTip
         {
             get
             {
@@ -161,19 +161,26 @@ namespace Barotrauma
                 listBox.ToolTip = value;
             }
         }
+
+        public GUIImage DropDownIcon => icon;
+
+        public Vector4 Padding => button.TextBlock.Padding;
                 
-        public GUIDropDown(RectTransform rectT, string text = "", int elementCount = 4, string style = "", bool selectMultiple = false, bool dropAbove = false) : base(style, rectT)
+        public GUIDropDown(RectTransform rectT, LocalizedString text = null, int elementCount = 4, string style = "", bool selectMultiple = false, bool dropAbove = false, Alignment textAlignment = Alignment.CenterLeft) : base(style, rectT)
         {
+            text ??= new RawLString("");
+
             HoverCursor = CursorState.Hand;
             CanBeFocused = true;
 
             this.selectMultiple = selectMultiple;
 
-            button = new GUIButton(new RectTransform(Vector2.One, rectT), text, Alignment.CenterLeft, style: "GUIDropDown")
+            button = new GUIButton(new RectTransform(Vector2.One, rectT), text, textAlignment, style: "GUIDropDown")
             {
-                OnClicked = OnClicked
+                OnClicked = OnClicked,
+                TextBlock = { OverflowClip = true }
             };
-            GUI.Style.Apply(button, "", this);
+            GUIStyle.Apply(button, "", this);
             button.TextBlock.SetTextPos();
 
             Anchor listAnchor = dropAbove ? Anchor.TopCenter : Anchor.BottomCenter;
@@ -181,29 +188,22 @@ namespace Barotrauma
             listBox = new GUIListBox(new RectTransform(new Point(Rect.Width, Rect.Height * MathHelper.Clamp(elementCount, 2, 10)), rectT, listAnchor, listPivot)
             { IsFixedSize = false }, style: null)
             {
-                Enabled = !selectMultiple
+                Enabled = !selectMultiple,
+                PlaySoundOnSelect = true,
             };
             if (!selectMultiple) { listBox.OnSelected = SelectItem; }           
-            GUI.Style.Apply(listBox, "GUIListBox", this);
-            GUI.Style.Apply(listBox.ContentBackground, "GUIListBox", this);
+            GUIStyle.Apply(listBox, "GUIListBox", this);
+            GUIStyle.Apply(listBox.ContentBackground, "GUIListBox", this);
 
-            if (button.Style.ChildStyles.ContainsKey("dropdownicon"))
+            if (button.Style.ChildStyles.ContainsKey("dropdownicon".ToIdentifier()))
             {
                 icon = new GUIImage(new RectTransform(new Vector2(0.6f, 0.6f), button.RectTransform, Anchor.CenterRight, scaleBasis: ScaleBasis.BothHeight) { AbsoluteOffset = new Point(5, 0) }, null, scaleToFit: true);
-                icon.ApplyStyle(button.Style.ChildStyles["dropdownicon"]);
+                icon.ApplyStyle(button.Style.ChildStyles["dropdownicon".ToIdentifier()]);
             }
 
             currentHighestParent = FindHighestParent();
             currentHighestParent.GUIComponent.OnAddedToGUIUpdateList += AddListBoxToGUIUpdateList;
-            rectT.ParentChanged += (RectTransform newParent) =>
-            {
-                currentHighestParent.GUIComponent.OnAddedToGUIUpdateList -= AddListBoxToGUIUpdateList;
-                if (newParent != null)
-                {
-                    currentHighestParent = FindHighestParent();
-                    currentHighestParent.GUIComponent.OnAddedToGUIUpdateList += AddListBoxToGUIUpdateList;
-                }
-            };
+            rectT.ParentChanged += _ => RefreshListBoxParent();
         }
 
 
@@ -244,31 +244,36 @@ namespace Barotrauma
             return parentHierarchy.Last();
         }
                 
-        public void AddItem(string text, object userData = null, string toolTip = "")
+        public GUIComponent AddItem(LocalizedString text, object userData = null, LocalizedString toolTip = null, Color? color = null, Color? textColor = null)
         {
+            toolTip ??= "";
             if (selectMultiple)
             {
-                var frame = new GUIFrame(new RectTransform(new Point(button.Rect.Width, button.Rect.Height), listBox.Content.RectTransform)
-                { IsFixedSize = false }, style: "ListBoxElement")
+                var frame = new GUIFrame(new RectTransform(new Point(button.Rect.Width, button.Rect.Height), listBox.Content.RectTransform) { IsFixedSize = false }, style: "ListBoxElement", color: color)
                 {
                     UserData = userData,
                     ToolTip = toolTip
                 };
-
                 new GUITickBox(new RectTransform(new Vector2(1.0f, 0.8f), frame.RectTransform, anchor: Anchor.CenterLeft) { MaxSize = new Point(int.MaxValue, (int)(button.Rect.Height * 0.8f)) }, text)
                 {
                     UserData = userData,
                     ToolTip = toolTip,
                     OnSelected = (GUITickBox tb) =>
                     {
-                        List<string> texts = new List<string>();
+                        if (MustSelectAtLeastOne && selectedIndexMultiple.Count <= 1 && !tb.Selected)
+                        {
+                            tb.Selected = true;
+                            return false;
+                        }
+
+                        List<LocalizedString> texts = new List<LocalizedString>();
                         selectedDataMultiple.Clear();
                         selectedIndexMultiple.Clear();
                         int i = 0;
                         foreach (GUIComponent child in ListBox.Content.Children)
                         {
                             var tickBox = child.GetChild<GUITickBox>();
-                            if (tickBox.Selected)
+                            if (tickBox is { Selected: true })
                             {
                                 selectedDataMultiple.Add(child.UserData);
                                 selectedIndexMultiple.Add(i);
@@ -276,17 +281,17 @@ namespace Barotrauma
                             }
                             i++;
                         }
-                        button.Text = string.Join(", ", texts);
+                        button.Text = LocalizedString.Join(", ", texts);
                         // TODO: The callback is called at least twice, remove this?
                         OnSelected?.Invoke(tb.Parent, tb.Parent.UserData);
                         return true;
                     }
                 };
+                return frame;
             }
             else
             {
-                new GUITextBlock(new RectTransform(new Point(button.Rect.Width, button.Rect.Height), listBox.Content.RectTransform)
-                { IsFixedSize = false }, text, style: "ListBoxElement")
+                return new GUITextBlock(new RectTransform(new Point(button.Rect.Width, button.Rect.Height), listBox.Content.RectTransform) { IsFixedSize = false }, text, style: "ListBoxElement", color: color, textColor: textColor)
                 {
                     UserData = userData,
                     ToolTip = toolTip
@@ -311,13 +316,12 @@ namespace Barotrauma
                 foreach (GUIComponent child in ListBox.Content.Children)
                 {
                     var tickBox = child.GetChild<GUITickBox>();
-                    if (obj == child.UserData) { tickBox.Selected = true; }
+                    if (Equals(obj, child.UserData)) { tickBox.Selected = true; }
                 }
             }
             else
             {
-                GUITextBlock textBlock = component as GUITextBlock;
-                if (textBlock == null)
+                if (component is not GUITextBlock textBlock)
                 {
                     textBlock = component.GetChild<GUITextBlock>();
                     if (textBlock is null && !AllowNonText) { return false; }
@@ -368,8 +372,9 @@ namespace Barotrauma
             Dropped = !Dropped;
             if (Dropped && Enabled)
             {
-                OnDropped?.Invoke(this, userData);
+                OnDropped?.Invoke(this, UserData);
                 listBox.UpdateScrollBarSize();
+                listBox.UpdateDimensions();
 
                 GUI.KeyboardDispatcher.Subscriber = this;
             }
@@ -380,6 +385,15 @@ namespace Barotrauma
             return true;
         }
 
+        public void RefreshListBoxParent()
+        {
+            currentHighestParent.GUIComponent.OnAddedToGUIUpdateList -= AddListBoxToGUIUpdateList;
+            if (RectTransform.Parent == null) { return; }
+
+            currentHighestParent = FindHighestParent();
+            currentHighestParent.GUIComponent.OnAddedToGUIUpdateList += AddListBoxToGUIUpdateList;
+        }
+        
         private void AddListBoxToGUIUpdateList(GUIComponent parent)
         {
             //the parent is not our parent anymore :(
@@ -387,11 +401,13 @@ namespace Barotrauma
             //and somewhere between this component and the higher parent a component was removed
             for (int i = 1; i < parentHierarchy.Count; i++)
             {
-                if (!parentHierarchy[i].IsParentOf(parentHierarchy[i - 1], recursive: false))
+                if (parentHierarchy[i].IsParentOf(parentHierarchy[i - 1], recursive: false))
                 {
-                    parent.OnAddedToGUIUpdateList -= AddListBoxToGUIUpdateList;
-                    return;
+                    continue;
                 }
+
+                parent.OnAddedToGUIUpdateList -= AddListBoxToGUIUpdateList;
+                return;
             }
 
             if (Dropped)

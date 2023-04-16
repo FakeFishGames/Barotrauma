@@ -1,9 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Xml.Linq;
-using Microsoft.Xna.Framework;
+﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
 {
@@ -11,7 +8,7 @@ namespace Barotrauma.Items.Components
     {
         public float BackgroundSpriteDepth
         {
-            get { return item.GetDrawDepth() + 0.1f; }
+            get { return item.GetDrawDepth() + 0.05f; }
         }
 
         public Vector2 DrawSize
@@ -33,7 +30,7 @@ namespace Barotrauma.Items.Components
                 depth: BackgroundSpriteDepth);
         }
 
-        partial void InitProjSpecific(XElement element)
+        partial void InitProjSpecific(ContentXElement element)
         {
             var backgroundSpriteElement = element.GetChildElement("backgroundsprite");
             if (backgroundSpriteElement != null)

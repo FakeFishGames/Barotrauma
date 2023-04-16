@@ -1,14 +1,12 @@
-﻿using Barotrauma.Networking;
-
-namespace Barotrauma
+﻿namespace Barotrauma
 {
     partial class CombatMission : Mission
     {
-        public override string Description
+        public override LocalizedString Description
         {
             get
             {
-                if (descriptions == null) return "";
+                if (descriptions == null) { return ""; }
 
                 if (GameMain.Client?.Character == null)
                 {
@@ -20,5 +18,8 @@ namespace Barotrauma
                 return descriptions[GameMain.Client.Character.TeamID == CharacterTeamType.Team1 ? 1 : 2];
             }
         }
+
+        public override bool DisplayAsCompleted => false;
+        public override bool DisplayAsFailed => false;
     }
 }

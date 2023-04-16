@@ -7,14 +7,12 @@ namespace Barotrauma
 {
     class GUINumberInput : GUIComponent
     {
-        public enum NumberType
-        {
-            Int, Float
-        }
+        public delegate void OnValueEnteredHandler(GUINumberInput numberInput);
+        public OnValueEnteredHandler OnValueEntered;
 
         public delegate void OnValueChangedHandler(GUINumberInput numberInput);
         public OnValueChangedHandler OnValueChanged;
-        
+
         public GUITextBox TextBox { get; private set; }
 
         public GUIButton PlusButton { get; private set; }
@@ -162,7 +160,7 @@ namespace Barotrauma
             }
         }
 
-        public override ScalableFont Font
+        public override GUIFont Font
         {
             get
             {
@@ -181,10 +179,15 @@ namespace Barotrauma
             private set;
         }
 
+        /// <summary>
+        /// If enabled, the value wraps around to Max when you go below Min, and vice versa
+        /// </summary>
+        public bool WrapAround;
+
         public float valueStep;
 
         private float pressedTimer;
-        private float pressedDelay = 0.5f;
+        private readonly float pressedDelay = 0.5f;
         private bool IsPressedTimerRunning { get { return pressedTimer > 0; } }
 
         public GUINumberInput(RectTransform rectT, NumberType inputType, string style = "", Alignment textAlignment = Alignment.Center, float? relativeButtonAreaWidth = null, bool hidePlusMinusButtons = false) : base(style, rectT)
@@ -209,6 +212,8 @@ namespace Barotrauma
                 {
                     ClampFloatValue();
                 }
+
+                OnValueEntered?.Invoke(this);
             };
             TextBox.OnEnterPressed += (textBox, text) =>
             {
@@ -220,12 +225,15 @@ namespace Barotrauma
                 {
                     ClampFloatValue();
                 }
+
+                OnValueEntered?.Invoke(this);
                 return true;
             };
 
             var buttonArea = new GUIFrame(new RectTransform(new Vector2(_relativeButtonAreaWidth, 1.0f), LayoutGroup.RectTransform, Anchor.CenterRight), style: null);
             PlusButton = new GUIButton(new RectTransform(new Vector2(1.0f, 0.5f), buttonArea.RectTransform), style: null);
-            GUI.Style.Apply(PlusButton, "PlusButton", this);
+            GUIStyle.Apply(PlusButton, "PlusButton", this);
+            PlusButton.ClickSound = GUISoundType.Increase;
             PlusButton.OnButtonDown += () =>
             {
                 pressedTimer = pressedDelay;
@@ -246,7 +254,8 @@ namespace Barotrauma
             };
 
             MinusButton = new GUIButton(new RectTransform(new Vector2(1.0f, 0.5f), buttonArea.RectTransform, Anchor.BottomRight), style: null);
-            GUI.Style.Apply(MinusButton, "MinusButton", this);
+            GUIStyle.Apply(MinusButton, "MinusButton", this);
+            MinusButton.ClickSound = GUISoundType.Decrease;
             MinusButton.OnButtonDown += () =>
             {
                 pressedTimer = pressedDelay;
@@ -304,7 +313,9 @@ namespace Barotrauma
                     break;
             }
 
-            RectTransform.MinSize = TextBox.RectTransform.MinSize;
+            RectTransform.MinSize = new Point(
+                Math.Max(rectT.MinSize.X, TextBox.RectTransform.MinSize.X), 
+                Math.Max(rectT.MinSize.Y, TextBox.RectTransform.MinSize.Y));
             LayoutGroup.Recalculate();
         }
 
@@ -399,13 +410,19 @@ namespace Barotrauma
         {
             if (MinValueFloat != null)
             {
-                floatValue = Math.Max(floatValue, MinValueFloat.Value);
-                MinusButton.Enabled = floatValue > MinValueFloat;
+                floatValue = 
+                    WrapAround && MinValueFloat.HasValue && floatValue < MinValueFloat.Value ? 
+                    MaxValueFloat.Value : 
+                    Math.Max(floatValue, MinValueFloat.Value);
+                MinusButton.Enabled = WrapAround || floatValue > MinValueFloat;
             }
             if (MaxValueFloat != null)
             {
-                floatValue = Math.Min(floatValue, MaxValueFloat.Value);
-                PlusButton.Enabled = floatValue < MaxValueFloat;
+                floatValue =
+                    WrapAround && MaxValueFloat.HasValue && floatValue > MaxValueFloat.Value ?
+                    MinValueFloat.Value : 
+                    Math.Min(floatValue, MaxValueFloat.Value);
+                PlusButton.Enabled = WrapAround || floatValue < MaxValueFloat;
             }
         }
 
@@ -413,16 +430,16 @@ namespace Barotrauma
         {
             if (MinValueInt != null && intValue < MinValueInt.Value)
             {
-                intValue = Math.Max(intValue, MinValueInt.Value);
+                intValue = WrapAround && MaxValueInt.HasValue ? MaxValueInt.Value : Math.Max(intValue, MinValueInt.Value);
                 UpdateText();
             }
             if (MaxValueInt != null && intValue > MaxValueInt.Value)
             {
-                intValue = Math.Min(intValue, MaxValueInt.Value);
+                intValue = WrapAround && MinValueInt.HasValue ? MinValueInt.Value : Math.Min(intValue, MaxValueInt.Value);
                 UpdateText();
             }
-            PlusButton.Enabled = intValue < MaxValueInt;
-            MinusButton.Enabled = intValue > MinValueInt;
+            PlusButton.Enabled = WrapAround || MaxValueInt == null || intValue < MaxValueInt;
+            MinusButton.Enabled = WrapAround || MinValueInt == null || intValue > MinValueInt;
         }
 
         private void UpdateText()

@@ -12,6 +12,6 @@
 
     enum FileTransferType
     {
-        Submarine, CampaignSave
+        Submarine, CampaignSave, Mod
     }
 }

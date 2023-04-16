@@ -12,21 +12,33 @@ namespace Barotrauma
 
         public string Name => ToString();
 
-        public Dictionary<string, SerializableProperty> SerializableProperties { get; set; }
+        public Dictionary<Identifier, SerializableProperty> SerializableProperties { get; set; }
 
         public float PendingAdditionStrength { get; set; }
         public float AdditionStrength { get; set; }
 
         private float fluctuationTimer;
 
+        private AfflictionPrefab.Effect activeEffect;
+        private float prevActiveEffectStrength;
+        protected bool activeEffectDirty = true;
+
         protected float _strength;
 
-        [Serialize(0f, true), Editable]
+        [Serialize(0f, IsPropertySaveable.Yes), Editable]
         public virtual float Strength
         {
             get { return _strength; }
             set
             {
+                if (!MathUtils.IsValid(value))
+                {
+#if DEBUG
+                    DebugConsole.ThrowError($"Attempted to set an affliction to an invalid strength ({value})\n" + Environment.StackTrace.CleanupStackTrace());
+#endif
+                    return;
+                }
+
                 if (_nonClampedStrength < 0 && value > 0)
                 {
                     _nonClampedStrength = value;
@@ -35,19 +47,27 @@ namespace Barotrauma
                 if (newValue > _strength)
                 {
                     PendingAdditionStrength = Prefab.GrainBurst;
+                    Duration = Prefab.Duration;
                 }
                 _strength = newValue;
+                activeEffectDirty = true;
             }
         }
 
         private float _nonClampedStrength = -1;
         public float NonClampedStrength => _nonClampedStrength > 0 ? _nonClampedStrength : _strength;
 
-        [Serialize("", true), Editable]
-        public string Identifier { get; private set; }
+        [Serialize("", IsPropertySaveable.Yes), Editable]
+        public Identifier Identifier { get; private set; }
 
-        [Serialize(1.0f, true, description: "The probability for the affliction to be applied."), Editable(minValue: 0f, maxValue: 1f)]
+        [Serialize(1.0f, IsPropertySaveable.Yes, description: "The probability for the affliction to be applied."), Editable(minValue: 0f, maxValue: 1f)]
         public float Probability { get; set; } = 1.0f;
+
+        [Serialize(true, IsPropertySaveable.Yes, description: "Explosion damage is applied per each affected limb. Should this affliction damage be divided by the count of affected limbs (1-15) or applied in full? Default: true. Only affects explosions."), Editable]
+        public bool DivideByLimbCount { get; set; }
+
+        [Serialize(false, IsPropertySaveable.Yes, description: "Is the damage relative to the max vitality (percentage) or absolute (normal)"), Editable]
+        public bool MultiplyByMaxVitality { get; private set; }
 
         public float DamagePerSecond;
         public float DamagePerSecondTimer;
@@ -60,22 +80,46 @@ namespace Barotrauma
 
         public double AppliedAsSuccessfulTreatmentTime, AppliedAsFailedTreatmentTime;
 
+        public float Duration;
+
         /// <summary>
         /// Which character gave this affliction
         /// </summary>
         public Character Source;
 
+        private readonly static LocalizedString[] strengthTexts = new LocalizedString[]
+        {
+            TextManager.Get("AfflictionStrengthLow"),
+            TextManager.Get("AfflictionStrengthMedium"),
+            TextManager.Get("AfflictionStrengthHigh")
+        };
+
         public Affliction(AfflictionPrefab prefab, float strength)
         {
+#if CLIENT
+            prefab?.ReloadSoundsIfNeeded();
+#endif
             Prefab = prefab;
             PendingAdditionStrength = Prefab.GrainBurst;
             _strength = strength;
-            Identifier = prefab?.Identifier;
+            Identifier = prefab.Identifier;
+
+            Duration = prefab.Duration;
 
             foreach (var periodicEffect in prefab.PeriodicEffects)
             {
                 PeriodicEffectTimers[periodicEffect] = Rand.Range(periodicEffect.MinInterval, periodicEffect.MaxInterval);
             }
+        }
+
+        /// <summary>
+        /// Copy properties here instead of using SerializableProperties (with reflection).
+        /// </summary>
+        public void CopyProperties(Affliction source)
+        {
+            Probability = source.Probability;
+            DivideByLimbCount = source.DivideByLimbCount;
+            MultiplyByMaxVitality = source.MultiplyByMaxVitality;
         }
 
         public void Serialize(XElement element)
@@ -88,26 +132,54 @@ namespace Barotrauma
             SerializableProperties = SerializableProperty.DeserializeProperties(this, element);
         }
 
-        public Affliction CreateMultiplied(float multiplier)
+        public Affliction CreateMultiplied(float multiplier, Affliction affliction)
         {
-            return Prefab.Instantiate(NonClampedStrength * multiplier, Source);
+            var instance = Prefab.Instantiate(NonClampedStrength * multiplier, Source);
+            instance.CopyProperties(affliction);
+            return instance;
         }
 
         public override string ToString() => Prefab == null ? "Affliction (Invalid)" : $"Affliction ({Prefab.Name})";
 
-        public AfflictionPrefab.Effect GetActiveEffect() => Prefab.GetActiveEffect(Strength);
+        public LocalizedString GetStrengthText()
+        {
+            return GetStrengthText(Strength, Prefab.MaxStrength);
+        }
+
+        public static LocalizedString GetStrengthText(float strength, float maxStrength)
+        {
+            return strengthTexts[
+                MathHelper.Clamp((int)Math.Floor(strength / maxStrength * strengthTexts.Length), 0, strengthTexts.Length - 1)];
+        }
+
+        public AfflictionPrefab.Effect GetActiveEffect()
+        {
+            if (activeEffectDirty)
+            {
+                activeEffect = Prefab.GetActiveEffect(_strength);
+                prevActiveEffectStrength = _strength;
+                activeEffectDirty = false;
+            }
+            return activeEffect;
+        }
 
         public float GetVitalityDecrease(CharacterHealth characterHealth)
         {
-            if (Strength < Prefab.ActivationThreshold) { return 0.0f; }
+            return GetVitalityDecrease(characterHealth, Strength);
+        }
+
+        public float GetVitalityDecrease(CharacterHealth characterHealth, float strength)
+        {
+            if (strength < Prefab.ActivationThreshold) { return 0.0f; }
+            strength = MathHelper.Clamp(strength, 0.0f, Prefab.MaxStrength);
             AfflictionPrefab.Effect currentEffect = GetActiveEffect();
             if (currentEffect == null) { return 0.0f; }
             if (currentEffect.MaxStrength - currentEffect.MinStrength <= 0.0f) { return 0.0f; }
 
             float currVitalityDecrease = MathHelper.Lerp(
-                currentEffect.MinVitalityDecrease, 
-                currentEffect.MaxVitalityDecrease, 
-                (Strength - currentEffect.MinStrength) / (currentEffect.MaxStrength - currentEffect.MinStrength));
+                currentEffect.MinVitalityDecrease,
+                currentEffect.MaxVitalityDecrease,
+                (strength - currentEffect.MinStrength) / (currentEffect.MaxStrength - currentEffect.MinStrength));
 
             if (currentEffect.MultiplyByMaxVitality)
             {
@@ -116,7 +188,8 @@ namespace Barotrauma
 
             return currVitalityDecrease;
         }
-        
+
+
         public float GetScreenGrainStrength()
         {
             if (Strength < Prefab.ActivationThreshold) { return 0.0f; }
@@ -259,14 +332,15 @@ namespace Barotrauma
             }
         }
 
-        public float GetResistance(AfflictionPrefab affliction)
+        public float GetResistance(Identifier afflictionId)
         {
             if (Strength < Prefab.ActivationThreshold) { return 0.0f; }
+            var affliction = AfflictionPrefab.Prefabs[afflictionId];
             AfflictionPrefab.Effect currentEffect = GetActiveEffect();
             if (currentEffect == null) { return 0.0f; }
             if (!currentEffect.ResistanceFor.Any(r =>
-                r.Equals(affliction.Identifier, StringComparison.OrdinalIgnoreCase) ||
-                r.Equals(affliction.AfflictionType, StringComparison.OrdinalIgnoreCase)))
+                r == affliction.Identifier ||
+                r == affliction.AfflictionType))
             {
                 return 0.0f;
             }
@@ -289,7 +363,7 @@ namespace Barotrauma
 
         public float GetStatValue(StatTypes statType)
         {
-            if (!(GetViableEffect() is AfflictionPrefab.Effect currentEffect)) { return 0.0f; }
+            if (GetViableEffect() is not AfflictionPrefab.Effect currentEffect) { return 0.0f; }
 
             if (currentEffect.AfflictionStatValues.TryGetValue(statType, out var value))
             {
@@ -303,9 +377,8 @@ namespace Barotrauma
 
         public bool HasFlag(AbilityFlags flagType)
         {
-            if (!(GetViableEffect() is AfflictionPrefab.Effect currentEffect)) { return false; }
-
-            return currentEffect.AfflictionAbilityFlags.Contains(flagType);
+            if (GetViableEffect() is not AfflictionPrefab.Effect currentEffect) { return false; }
+            return currentEffect.AfflictionAbilityFlags.HasFlag(flagType);
         }
 
         private AfflictionPrefab.Effect GetViableEffect()
@@ -356,6 +429,7 @@ namespace Barotrauma
             }
             // Don't use the property, because it's virtual and some afflictions like husk overload it for external use.
             _strength = MathHelper.Clamp(_strength, 0.0f, Prefab.MaxStrength);
+            activeEffectDirty |= !MathUtils.NearlyEqual(prevActiveEffectStrength, _strength);
 
             foreach (StatusEffect statusEffect in currentEffect.StatusEffects)
             {
@@ -383,7 +457,10 @@ namespace Barotrauma
             var currentEffect = GetActiveEffect();
             if (currentEffect != null)
             {
-                currentEffect.StatusEffects.ForEach(se => ApplyStatusEffect(type, se, deltaTime, characterHealth, targetLimb));
+                foreach (var statusEffect in currentEffect.StatusEffects)
+                {
+                    ApplyStatusEffect(type, statusEffect, deltaTime, characterHealth, targetLimb);
+                }
             }
         }
 
@@ -401,15 +478,15 @@ namespace Barotrauma
             {
                 statusEffect.Apply(type, deltaTime, characterHealth.Character, targetLimb);
             }
-            if (targetLimb != null && statusEffect.HasTargetType(StatusEffect.TargetType.AllLimbs))
+            if (characterHealth?.Character?.AnimController?.Limbs != null && statusEffect.HasTargetType(StatusEffect.TargetType.AllLimbs))
             {
-                statusEffect.Apply(type, deltaTime, targetLimb.character, targets: targetLimb.character.AnimController.Limbs);
+                statusEffect.Apply(type, deltaTime, characterHealth.Character, targets: characterHealth.Character.AnimController.Limbs);
             }
             if (statusEffect.HasTargetType(StatusEffect.TargetType.NearbyItems) ||
                 statusEffect.HasTargetType(StatusEffect.TargetType.NearbyCharacters))
             {
                 targets.Clear();
-                targets.AddRange(statusEffect.GetNearbyTargets(characterHealth.Character.WorldPosition, targets));
+                statusEffect.AddNearbyTargets(characterHealth.Character.WorldPosition, targets);
                 statusEffect.Apply(type, deltaTime, characterHealth.Character, targets);
             }
         }
@@ -422,6 +499,7 @@ namespace Barotrauma
         {
             _nonClampedStrength = strength;
             _strength = _nonClampedStrength;
+            activeEffectDirty |= !MathUtils.NearlyEqual(_strength, prevActiveEffectStrength);
         }
 
         public bool ShouldShowIcon(Character afflictedCharacter)

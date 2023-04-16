@@ -1,39 +1,54 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Xml.Linq;
+﻿#if CLIENT
+using Microsoft.Xna.Framework;
+#endif
 
 namespace Barotrauma
 {
-    class TalentPrefab : IPrefab, IDisposable, IHasUintIdentifier
+    class TalentPrefab : PrefabWithUintIdentifier
     {
-        public string Identifier { get; private set; }
-        public string OriginalName => Identifier;
-        public ContentPackage ContentPackage { get; private set; }
-        public string FilePath { get; private set; }
+        public string OriginalName => Identifier.Value;
 
-        public string DisplayName { get; private set; }
+        public LocalizedString DisplayName { get; private set; }
 
-        public string Description { get; private set; }
+        public LocalizedString Description { get; private set; }
 
         public readonly Sprite Icon;
 
+#if CLIENT
+        public readonly Option<Color> ColorOverride;
+#endif
+
         public static readonly PrefabCollection<TalentPrefab> TalentPrefabs = new PrefabCollection<TalentPrefab>();
 
-        public XElement ConfigElement
+        public ContentXElement ConfigElement
         {
             get;
             private set;
         }
 
-        public TalentPrefab(XElement element, string filePath)
+        public TalentPrefab(ContentXElement element, TalentsFile file) : base(file, element.GetAttributeIdentifier("identifier", Identifier.Empty))
         {
-            FilePath = filePath;
             ConfigElement = element;
-            Identifier = element.GetAttributeString("identifier", "noidentifier");
-            DisplayName = TextManager.Get("talentname." + Identifier, returnNull: true) ?? Identifier;
-            this.CalculatePrefabUIntIdentifier(TalentPrefabs);
 
-            foreach (XElement subElement in element.Elements())
+            DisplayName = TextManager.Get($"talentname.{Identifier}").Fallback(Identifier.Value);
+
+            Identifier nameIdentifier = element.GetAttributeIdentifier("nameidentifier", Identifier.Empty);
+            if (!nameIdentifier.IsEmpty)
+            {
+                DisplayName = TextManager.Get(nameIdentifier).Fallback(Identifier.Value);
+            }
+
+            Description = string.Empty;
+
+#if CLIENT
+            Color colorOverride = element.GetAttributeColor("coloroverride", Color.TransparentBlack);
+
+            ColorOverride = colorOverride != Color.TransparentBlack
+                ? Option<Color>.Some(colorOverride)
+                : Option<Color>.None();
+#endif
+
+            foreach (var subElement in element.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
@@ -41,107 +56,24 @@ namespace Barotrauma
                         Icon = new Sprite(subElement);
                         break;
                     case "description":
-                        string tempDescription = Description;
+                        var tempDescription = Description;
                         TextManager.ConstructDescription(ref tempDescription, subElement);
                         Description = tempDescription;
                         break;
                 }
             }
 
-            if (string.IsNullOrEmpty(Description))
+            if (element.GetAttribute("description") != null)
             {
-                if (element.Attribute("description") != null)
-                {
-                    string description = element.GetAttributeString("description", string.Empty);
-                    Description = TextManager.Get(description, returnNull: true) ?? description;
-                }
-                else
-                {
-                    Description = TextManager.Get("talentdescription." + Identifier, returnNull: true) ?? string.Empty;
-                }
+                string description = element.GetAttributeString("description", string.Empty);
+                Description = Description.Fallback(TextManager.Get(description)).Fallback(description);
             }
-
-#if DEBUG
-            if (!TextManager.ContainsTag("talentname." + Identifier))
+            else
             {
-                DebugConsole.AddWarning($"Name for the talent \"{Identifier}\" not found in the text files.");
-            }
-            if (string.IsNullOrEmpty(Description))
-            {
-                DebugConsole.AddWarning($"Description for the talent \"{Identifier}\" not configured");
-            }
-            if (Description.Contains('['))
-            {
-                DebugConsole.ThrowError($"Description for the talent \"{Identifier}\" contains brackets - was some variable not replaced correctly? ({Description})");
-            }
-#endif
-        }
-
-        private bool disposed = false;
-        public void Dispose()
-        {
-            if (disposed) { return; }
-            disposed = true;
-            TalentPrefabs.Remove(this);
-        }
-
-        /// <summary>
-        /// Unique identifier that's generated by hashing the prefab's string identifier. 
-        /// Used to reduce the amount of bytes needed to write talent data into network messages in multiplayer.
-        /// </summary>
-        public uint UIntIdentifier { get; set; }
-
-        public static void RemoveByFile(string filePath) => TalentPrefabs.RemoveByFile(filePath);
-
-        public static void LoadFromFile(ContentFile file)
-        {
-            DebugConsole.Log("Loading talent prefab: " + file.Path);
-            RemoveByFile(file.Path);
-
-            XDocument doc = XMLExtensions.TryLoadXml(file.Path);
-            if (doc == null) { return; }
-
-            var rootElement = doc.Root;
-            switch (rootElement.Name.ToString().ToLowerInvariant())
-            {
-                case "talent":
-                    TalentPrefabs.Add(new TalentPrefab(rootElement, file.Path), false);
-                    break;
-                case "talents":
-                    foreach (var element in rootElement.Elements())
-                    {
-                        if (element.IsOverride())
-                        {
-                            var itemElement = element.GetChildElement("talent");
-                            if (itemElement != null)
-                            {
-                                TalentPrefabs.Add(new TalentPrefab(rootElement, file.Path), true);
-                            }
-                            else
-                            {
-                                DebugConsole.ThrowError($"Cannot find a talent element from the children of the override element defined in {file.Path}");
-                            }
-                        }
-                        else
-                        {
-                            TalentPrefabs.Add(new TalentPrefab(element, file.Path), false);
-                        }
-                    }
-                    break;
-                default:
-                    DebugConsole.ThrowError($"Invalid XML root element: '{rootElement.Name.ToString()}' in {file.Path}");
-                    break;
+                Description = Description.Fallback(TextManager.Get($"talentdescription.{Identifier}")).Fallback(string.Empty);
             }
         }
 
-        public static void LoadAll(IEnumerable<ContentFile> files)
-        {
-            DebugConsole.Log("Loading talent prefabs: ");
-
-            foreach (ContentFile file in files)
-            {
-                LoadFromFile(file);
-            }
-        }
+        public override void Dispose() { }
     }
 }

@@ -1,19 +1,21 @@
-﻿using Barotrauma.Items.Components;
+﻿using Barotrauma.Extensions;
+using Barotrauma.Items.Components;
 using System;
+using System.Collections.Immutable;
 using System.Linq;
 
 namespace Barotrauma
 {
     class AIObjectiveDecontainItem : AIObjective
     {
-        public override string Identifier { get; set; } = "decontain item";
+        public override Identifier Identifier { get; set; } = "decontain item".ToIdentifier();
 
         public Func<Item, float> GetItemPriority;
 
         //can either be a tag or an identifier
         private readonly string[] itemIdentifiers;
         private readonly ItemContainer sourceContainer;
-        private ItemContainer targetContainer;
+        private readonly ItemContainer targetContainer;
         private readonly Item targetItem;
 
         private AIObjectiveGetItem getItemObjective;
@@ -35,6 +37,12 @@ namespace Barotrauma
         /// Note that has no effect if the target container was not defined (always drops) -> completes when the item is dropped.
         /// </summary>
         public bool DropIfFails { get; set; } = true;
+
+        public bool RemoveExistingWhenNecessary { get; set; }
+        public Func<Item, bool> RemoveExistingPredicate { get; set; }
+        public int? RemoveExistingMax { get; set; }
+        public string AbandonGetItemDialogueIdentifier { get; set; }
+        public Func<bool> AbandonGetItemDialogueCondition { get; set; }
 
         public AIObjectiveDecontainItem(Character character, Item targetItem, AIObjectiveManager objectiveManager, ItemContainer sourceContainer = null, ItemContainer targetContainer = null, float priorityModifier = 1) 
             : base(character, objectiveManager, priorityModifier)
@@ -86,6 +94,7 @@ namespace Barotrauma
                 }
                 if (itemToDecontain.Container != sourceContainer.Item)
                 {
+                    itemToDecontain.Drop(character);
                     IsCompleted = true;
                     return;
                 }
@@ -98,7 +107,13 @@ namespace Barotrauma
             if (getItemObjective == null && !itemToDecontain.IsOwnedBy(character))
             {
                 TryAddSubObjective(ref getItemObjective,
-                    constructor: () => new AIObjectiveGetItem(character, targetItem, objectiveManager, Equip) { TakeWholeStack = this.TakeWholeStack },
+                    constructor: () => new AIObjectiveGetItem(character, targetItem, objectiveManager, Equip)
+                    {
+                        CannotFindDialogueCondition = AbandonGetItemDialogueCondition,
+                        CannotFindDialogueIdentifierOverride = AbandonGetItemDialogueIdentifier,
+                        SpeakIfFails = AbandonGetItemDialogueIdentifier != null,
+                        TakeWholeStack = this.TakeWholeStack
+                    },
                     onAbandon: () => Abandon = true);
                 return;
             }
@@ -110,8 +125,11 @@ namespace Barotrauma
                         MoveWholeStack = TakeWholeStack,
                         Equip = Equip,
                         RemoveEmpty = false,
+                        RemoveExistingWhenNecessary = RemoveExistingWhenNecessary,
+                        RemoveExistingPredicate = RemoveExistingPredicate,
+                        RemoveMax = RemoveExistingMax,
                         GetItemPriority = GetItemPriority,
-                        ignoredContainerIdentifiers = sourceContainer != null ? new string[] { sourceContainer.Item.Prefab.Identifier } : null
+                        ignoredContainerIdentifiers = sourceContainer?.Item.Prefab.Identifier.ToEnumerable().ToImmutableHashSet()
                     },
                     onCompleted: () => IsCompleted = true,
                     onAbandon: () => Abandon = true);

@@ -32,12 +32,12 @@ namespace Barotrauma
 
         private static bool shouldFadeToBlack;
 
-        private bool IsBlockedByAnotherConversation(IEnumerable<Entity> _)
+        private bool IsBlockedByAnotherConversation(IEnumerable<Entity> _, float duration)
         {
             return 
                 lastActiveAction != null && 
                 lastActiveAction.ParentEvent != ParentEvent && 
-                Timing.TotalTime < lastActiveAction.lastActiveTime + BlockOtherConversationsDuration;
+                Timing.TotalTime < lastActiveAction.lastActiveTime + duration;
         }
 
         partial void ShowDialog(Character speaker, Character targetCharacter)
@@ -63,49 +63,65 @@ namespace Barotrauma
 
             shouldFadeToBlack = fadeToBlack;
 
+            Sprite eventSprite = EventSet.GetEventSprite(spriteIdentifier);
+
             if (lastMessageBox != null && !lastMessageBox.Closed && GUIMessageBox.MessageBoxes.Contains(lastMessageBox))
             {
-                if (actionId != null && lastMessageBox.UserData is Pair<string, ushort> userData)
+                if (eventSprite != null && lastMessageBox.BackgroundIcon == null)
                 {
-                    if (userData.Second == actionId) { return; }
-                    lastMessageBox.UserData = new Pair<string, ushort>("ConversationAction", actionId.Value);
+                    //no background icon in the last message box: we need to create a new one
+                    lastMessageBox.Close();
                 }
-
-                GUIListBox conversationList = lastMessageBox.FindChild("conversationlist", true) as GUIListBox;
-                Debug.Assert(conversationList != null);
-
-                // gray out the last text block
-                if (conversationList.Content.Children.LastOrDefault() is GUILayoutGroup lastElement)
+                else
                 {
-                    if (lastElement.FindChild("text", true) is GUITextBlock textLayout)
+                    if (actionId != null && lastMessageBox.UserData is Pair<string, ushort> userData)
                     {
-                        textLayout.OverrideTextColor(Color.DarkGray * 0.8f);
+                        if (userData.Second == actionId) { return; }
+                        lastMessageBox.UserData = new Pair<string, ushort>("ConversationAction", actionId.Value);
                     }
+
+                    GUIListBox conversationList = lastMessageBox.FindChild("conversationlist", true) as GUIListBox;
+                    Debug.Assert(conversationList != null);
+
+                    DisableButtons(conversationList.Content.GetAllChildren<GUIButton>(), selectedButton: null);
+                    // gray out the last text block
+                    if (conversationList.Content.Children.LastOrDefault() is GUILayoutGroup lastElement)
+                    {
+                        if (lastElement.FindChild("text", true) is GUITextBlock textLayout)
+                        {
+                            textLayout.OverrideTextColor(Color.DarkGray * 0.8f);
+                        }
+                    }
+
+                    float prevSize = conversationList.TotalSize;
+
+                    List<GUIButton> extraButtons = CreateConversation(conversationList, text, speaker, options, string.IsNullOrWhiteSpace(spriteIdentifier));
+                    AssignActionsToButtons(extraButtons, lastMessageBox);
+                    RecalculateLastMessage(conversationList, true);
+                    conversationList.BarScroll = (prevSize - conversationList.Content.Rect.Height) / (conversationList.TotalSize - conversationList.Content.Rect.Height);
+                    conversationList.ScrollToEnd(duration: 0.5f);
+                    lastMessageBox.SetBackgroundIcon(eventSprite);
+                    return;
                 }
-
-                List<GUIButton> extraButtons = CreateConversation(conversationList, text, speaker, options, string.IsNullOrWhiteSpace(spriteIdentifier));
-                AssignActionsToButtons(extraButtons, lastMessageBox);
-                RecalculateLastMessage(conversationList, true);
-
-                conversationList.ScrollToEnd(0.5f);
-                lastMessageBox.SetBackgroundIcon(EventSet.GetEventSprite(spriteIdentifier));
-                return;
             }
 
             var (relative, min) = GetSizes(dialogType);
 
-            GUIMessageBox messageBox = new GUIMessageBox(string.Empty, string.Empty, new string[0], 
+            GUIMessageBox messageBox = new GUIMessageBox(string.Empty, string.Empty, Array.Empty<LocalizedString>(), 
                 relativeSize: relative, minSize: min,
                 type: GUIMessageBox.Type.InGame, backgroundIcon: EventSet.GetEventSprite(spriteIdentifier))
             {
                 UserData = "ConversationAction"
             };
-
+            messageBox.OnAddedToGUIUpdateList += (GUIComponent component) =>
+            {
+                if (Screen.Selected is not GameScreen) { messageBox.Close(); }
+            };
             lastMessageBox = messageBox;
 
             messageBox.InnerFrame.ClearChildren();
             messageBox.AutoClose = false;
-            GUI.Style.Apply(messageBox.InnerFrame, "DialogBox");
+            GUIStyle.Apply(messageBox.InnerFrame, "DialogBox");
 
             if (actionInstance != null)
             {
@@ -222,11 +238,11 @@ namespace Barotrauma
                     closeButton.SlideIn(0.5f, 0.33f, 16, SlideDirection.Down);
 
                     InputType? closeInput = null;
-                    if (GameMain.Config.KeyBind(InputType.Use).MouseButton == MouseButton.None)
+                    if (GameSettings.CurrentConfig.KeyMap.Bindings[InputType.Use].MouseButton == MouseButton.None)
                     {
                         closeInput = InputType.Use;
                     }
-                    else if (GameMain.Config.KeyBind(InputType.Select).MouseButton == MouseButton.None)
+                    else if (GameSettings.CurrentConfig.KeyMap.Bindings[InputType.Select].MouseButton == MouseButton.None)
                     {
                         closeInput = InputType.Select;
                     }
@@ -239,7 +255,7 @@ namespace Barotrauma
                             {
                                 GUIButton btn = component as GUIButton;
                                 btn?.OnClicked(btn, btn.UserData);
-                                btn?.Flash(GUI.Style.Green);
+                                btn?.Flash(GUIStyle.Green);
                             }
                         };
                     }
@@ -254,14 +270,7 @@ namespace Barotrauma
                         if (actionInstance != null)
                         {
                             actionInstance.selectedOption = selectedOption;
-                            foreach (GUIButton otherButton in optionButtons)
-                            {
-                                otherButton.CanBeFocused = false;
-                                if (otherButton != btn)
-                                {
-                                    otherButton.TextBlock.OverrideTextColor(Color.DarkGray * 0.8f);
-                                }
-                            }
+                            DisableButtons(optionButtons, btn);
                             btn.ExternalHighlight = true;
                             return true;
                         }
@@ -271,14 +280,7 @@ namespace Barotrauma
                             SendResponse(actionId.Value, selectedOption);
                             btn.CanBeFocused = false;
                             btn.ExternalHighlight = true;
-                            foreach (GUIButton otherButton in optionButtons)
-                            {
-                                otherButton.CanBeFocused = false;
-                                if (otherButton != btn)
-                                {
-                                    otherButton.TextBlock.OverrideTextColor(Color.DarkGray * 0.8f);
-                                }
-                            }
+                            DisableButtons(optionButtons, btn);
                             return true;
                         }
                         //should not happen
@@ -287,6 +289,18 @@ namespace Barotrauma
 
                     if (closingOptions.Contains(i)) { optionButtons[i].OnClicked += target.Close; }
                 }
+            }
+        }
+
+        public static void SelectOption(ushort actionId, int option)
+        {
+            if (lastMessageBox.UserData is Pair<string, ushort> userData)
+            {
+                if (userData.Second != actionId) { return; }
+
+                GUIListBox conversationList = lastMessageBox.FindChild("conversationlist", true) as GUIListBox;
+                Debug.Assert(conversationList != null);
+                DisableButtons(conversationList.Content.GetAllChildren<GUIButton>(), (btn) => btn.UserData is int i && i == option);
             }
         }
 
@@ -308,7 +322,10 @@ namespace Barotrauma
                 AlwaysOverrideCursor = true
             };
 
-            string translatedText = TextManager.Get(text, returnNull: true) ?? text;
+            LocalizedString translatedText = speaker?.DisplayName is not null ?
+                TextManager.GetWithVariable(text, "[speakername]", speaker?.DisplayName) :
+                TextManager.Get(text);
+            translatedText = TextManager.ParseInputTypes(translatedText).Fallback(text);
 
             if (speaker?.Info != null && drawChathead)
             {
@@ -335,9 +352,9 @@ namespace Barotrauma
             {
                 foreach (string option in options)
                 {
-                    var btn = new GUIButton(new RectTransform(new Vector2(0.9f, 0.01f), textContent.RectTransform), TextManager.Get(option, returnNull: true) ?? option, style: "ListBoxElement");
+                    var btn = new GUIButton(new RectTransform(new Vector2(0.9f, 0.01f), textContent.RectTransform), TextManager.Get(option).Fallback(option), style: "ListBoxElement");
                     btn.TextBlock.TextAlignment = Alignment.CenterLeft;
-                    btn.TextColor = btn.HoverTextColor = GUI.Style.Green;
+                    btn.TextColor = btn.HoverTextColor = GUIStyle.Green;
                     btn.TextBlock.Wrap = true;
                     buttons.Add(btn);
                 }
@@ -365,26 +382,50 @@ namespace Barotrauma
             return buttons;
         }
 
+        private static void DisableButtons(IEnumerable<GUIButton> buttons, GUIButton selectedButton)
+        {
+            DisableButtons(buttons, (btn) => btn == selectedButton);
+        }
+
+        private static void DisableButtons(IEnumerable<GUIButton> buttons, Func<GUIButton, bool> isSelectedButton)
+        {
+            foreach (GUIButton btn in buttons)
+            {
+                if (btn.CanBeFocused)
+                {
+                    btn.CanBeFocused = false;
+                    if (isSelectedButton(btn))
+                    {
+                        btn.Selected = true;
+                    }
+                    else
+                    {
+                        btn.TextBlock.OverrideTextColor(Color.DarkGray * 0.8f);
+                    }
+                }
+            }
+        }
+
         private static void SendResponse(UInt16 actionId, int selectedOption)
         {
             IWriteMessage outmsg = new WriteOnlyMessage();
-            outmsg.Write((byte)ClientPacketHeader.EVENTMANAGER_RESPONSE);
-            outmsg.Write(actionId);
-            outmsg.Write((byte)selectedOption);
+            outmsg.WriteByte((byte)ClientPacketHeader.EVENTMANAGER_RESPONSE);
+            outmsg.WriteUInt16(actionId);
+            outmsg.WriteByte((byte)selectedOption);
             GameMain.Client?.ClientPeer?.Send(outmsg, DeliveryMethod.Reliable);
         }
 
         private static void SendIgnore(UInt16 actionId)
         {
             IWriteMessage outmsg = new WriteOnlyMessage();
-            outmsg.Write((byte)ClientPacketHeader.EVENTMANAGER_RESPONSE);
-            outmsg.Write(actionId);
-            outmsg.Write(byte.MaxValue);
+            outmsg.WriteByte((byte)ClientPacketHeader.EVENTMANAGER_RESPONSE);
+            outmsg.WriteUInt16(actionId);
+            outmsg.WriteByte(byte.MaxValue);
             GameMain.Client?.ClientPeer?.Send(outmsg, DeliveryMethod.Reliable);
         }
 
         // Too broken, left it here if I ever want to come back to it
-        private static List<RichTextData> GetQuoteHighlights(string text, Color color)
+        /*private static List<RichTextData> GetQuoteHighlights(string text, Color color)
         {
             char[] quotes = { '“', '”', '\"', '\'', '「', '」'};
 
@@ -406,6 +447,6 @@ namespace Barotrauma
                 last.EndIndex = text.Length;
             }
             return textColors;
-        }
+        }*/
     }
 }

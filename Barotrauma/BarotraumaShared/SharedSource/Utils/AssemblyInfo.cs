@@ -1,7 +1,11 @@
 ﻿using System;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 
+[assembly:InternalsVisibleTo("WindowsTest"),
+          InternalsVisibleTo("MacTest"),
+          InternalsVisibleTo("LinuxTest")]
 public static class AssemblyInfo
 {
     public static readonly string GitRevision;

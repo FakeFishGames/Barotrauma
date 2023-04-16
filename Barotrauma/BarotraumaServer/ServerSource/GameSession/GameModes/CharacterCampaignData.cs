@@ -1,5 +1,5 @@
 ﻿using Barotrauma.Networking;
-using System.Globalization;
+using System;
 using System.Xml.Linq;
 
 namespace Barotrauma
@@ -13,45 +13,59 @@ namespace Barotrauma
             get { return itemData != null; }
         }
 
-        public CharacterCampaignData(Client client, bool giveRespawnPenaltyAffliction = false)
+        public CharacterCampaignData(Client client)
         {
             Name = client.Name;
-            ClientEndPoint = client.Connection.EndPointString;
-            SteamID = client.SteamID;
+            ClientAddress = client.Connection.Endpoint.Address;
+            AccountId = client.AccountId;
             CharacterInfo = client.CharacterInfo;
 
             healthData = new XElement("health");
-            client.Character?.CharacterHealth?.Save(healthData);
-            if (giveRespawnPenaltyAffliction)
-            {
-                var respawnPenaltyAffliction = RespawnManager.GetRespawnPenaltyAffliction();
-                healthData.Add(new XElement("Affliction",
-                    new XAttribute("identifier", respawnPenaltyAffliction.Identifier),
-                    new XAttribute("strength", respawnPenaltyAffliction.Strength.ToString("G", CultureInfo.InvariantCulture))));
-            }
-            if (client.Character?.Inventory != null)
+
+            //the character may not be controlled by the client atm, but still exist
+            Character character = client.Character ?? CharacterInfo?.Character;
+
+            character?.CharacterHealth?.Save(healthData);
+            if (character?.Inventory != null)
             {
                 itemData = new XElement("inventory");
-                Character.SaveInventory(client.Character.Inventory, itemData);
+                Character.SaveInventory(character.Inventory, itemData);
             }
             OrderData = new XElement("orders");
-            if (client.CharacterInfo != null)
+            if (CharacterInfo != null)
             {
-                CharacterInfo.SaveOrderData(client.CharacterInfo, OrderData);
+                CharacterInfo.SaveOrderData(CharacterInfo, OrderData);
+            }
+            if (character?.Wallet.Save() is { } walletSave)
+            {
+                WalletData = walletSave;
             }
         }
 
+        public void Refresh(Character character)
+        {
+            healthData = new XElement("health");
+            character.CharacterHealth.Save(healthData);
+            if (character.Inventory != null)
+            {
+                itemData = new XElement("inventory");
+                Character.SaveInventory(character.Inventory, itemData);
+            }
+            OrderData = new XElement("orders");
+            CharacterInfo.SaveOrderData(character.Info, OrderData);
+            WalletData = character.Wallet.Save();
+        }
 
         public CharacterCampaignData(XElement element)
         {
             Name = element.GetAttributeString("name", "Unnamed");
-            ClientEndPoint = element.GetAttributeString("endpoint", null) ?? element.GetAttributeString("ip", "");
-            string steamID = element.GetAttributeString("steamid", "");
-            if (!string.IsNullOrEmpty(steamID))
-            {
-                ulong.TryParse(steamID, out ulong parsedID);
-                SteamID = parsedID;
-            }
+            string clientEndPointStr = element.GetAttributeString("address", null)
+                                       ?? element.GetAttributeString("endpoint", null)
+                                       ?? element.GetAttributeString("ip", "");
+            ClientAddress = Address.Parse(clientEndPointStr).Fallback(new UnknownAddress());
+            string accountIdStr = element.GetAttributeString("accountid", null)
+                               ?? element.GetAttributeString("steamid", "");
+            AccountId = Networking.AccountId.Parse(accountIdStr);
 
             foreach (XElement subElement in element.Elements())
             {
@@ -70,48 +84,80 @@ namespace Barotrauma
                     case "orders":
                         OrderData = subElement;
                         break;
+                    case Wallet.LowerCaseSaveElementName:
+                        WalletData = subElement;
+                        break;
                 }
             }
         }
 
         public bool MatchesClient(Client client)
         {
-            if (SteamID > 0)
+            if (AccountId.TryUnwrap(out var accountId)
+                && client.AccountId.TryUnwrap(out var clientId))
             {
-                return SteamID == client.SteamID;
+                return accountId == clientId;
             }
             else
             {
-                return ClientEndPoint == client.Connection.EndPointString;
+                return ClientAddress == client.Connection.Endpoint.Address;
             }
         }
 
         public bool IsDuplicate(CharacterCampaignData other)
         {
-            return other.SteamID == SteamID && other.ClientEndPoint == ClientEndPoint;
+            return AccountId == other.AccountId && other.ClientAddress == ClientAddress;
+        }
+
+        public void Reset()
+        {
+            itemData = null;
+            healthData = null;
+            WalletData = null;
         }
 
         public void SpawnInventoryItems(Character character, Inventory inventory)
         {
             if (character == null)
             {
-                throw new System.InvalidOperationException($"Failed to spawn inventory items. Character was null.");
+                throw new InvalidOperationException($"Failed to spawn inventory items. Character was null.");
             }
             if (itemData == null)
             {
-                throw new System.InvalidOperationException($"Failed to spawn inventory items for the character \"{character.Name}\". No saved inventory data.");
+                throw new InvalidOperationException($"Failed to spawn inventory items for the character \"{character.Name}\". No saved inventory data.");
             }
-            character.SpawnInventoryItems(inventory, itemData);
+            character.SpawnInventoryItems(inventory, itemData.FromPackage(null));
         }
 
-        public void ApplyHealthData(Character character)
-        {            
-            CharacterInfo.ApplyHealthData(character, healthData);
+        public void ApplyHealthData(Character character, Func<AfflictionPrefab, bool> afflictionPredicate = null)
+        {
+            CharacterInfo.ApplyHealthData(character, healthData, afflictionPredicate);
         }
 
         public void ApplyOrderData(Character character)
         {
             CharacterInfo.ApplyOrderData(character, OrderData);
+        }
+
+        public void ApplyWalletData(Character character)
+        {
+            character.Wallet = new Wallet(Option<Character>.Some(character), WalletData);
+        }
+
+        public XElement Save()
+        {
+            XElement element = new XElement("CharacterCampaignData",
+                new XAttribute("name", Name),
+                new XAttribute("address", ClientAddress),
+                new XAttribute("accountid", AccountId.TryUnwrap(out var accountId) ? accountId.StringRepresentation : ""));
+
+            CharacterInfo?.Save(element);
+            if (itemData != null) { element.Add(itemData); }
+            if (healthData != null) { element.Add(healthData); }
+            if (OrderData != null) { element.Add(OrderData); }
+            if (WalletData != null) { element.Add(WalletData); }
+
+            return element;
         }
     }
 }

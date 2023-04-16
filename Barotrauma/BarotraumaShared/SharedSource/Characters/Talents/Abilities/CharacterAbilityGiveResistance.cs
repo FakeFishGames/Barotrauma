@@ -1,26 +1,30 @@
-﻿using System.Xml.Linq;
-
-namespace Barotrauma.Abilities
+﻿namespace Barotrauma.Abilities
 {
     class CharacterAbilityGiveResistance : CharacterAbility
     {
-        private readonly string resistanceId;
+        private readonly Identifier resistanceId;
         private readonly float multiplier;
 
-        public CharacterAbilityGiveResistance(CharacterAbilityGroup characterAbilityGroup, XElement abilityElement) : base(characterAbilityGroup, abilityElement)
+        public CharacterAbilityGiveResistance(CharacterAbilityGroup characterAbilityGroup, ContentXElement abilityElement) : base(characterAbilityGroup, abilityElement)
         {
-            resistanceId = abilityElement.GetAttributeString("resistanceid", abilityElement.GetAttributeString("resistance", string.Empty));
-            multiplier = abilityElement.GetAttributeFloat("multiplier", 1f); // rename this to resistance for consistency
+            resistanceId = abilityElement.GetAttributeIdentifier("resistanceid", abilityElement.GetAttributeIdentifier("resistance", Identifier.Empty));
+            multiplier = abilityElement.GetAttributeFloat("multiplier", 1f);
 
-            if (string.IsNullOrEmpty(resistanceId))
+            if (resistanceId.IsEmpty)
             {
                 DebugConsole.ThrowError("Error in CharacterAbilityGiveResistance - resistance identifier not set.");
             }
+            if (MathUtils.NearlyEqual(multiplier, 1))
+            {
+                DebugConsole.AddWarning($"Possible error in talent {CharacterTalent.DebugIdentifier} - multiplier set to 1, which will do nothing.");
+            }
+
         }
 
         public override void InitializeAbility(bool addingFirstTime)
         {
-            Character.ChangeAbilityResistance(resistanceId, multiplier);
+            TalentResistanceIdentifier identifier = new(resistanceId, CharacterTalent.Prefab.Identifier);
+            Character.ChangeAbilityResistance(identifier, multiplier);
         }
     }
 }

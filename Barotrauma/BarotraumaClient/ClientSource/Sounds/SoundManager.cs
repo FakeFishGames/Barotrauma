@@ -9,7 +9,7 @@ using Barotrauma.IO;
 
 namespace Barotrauma.Sounds
 {
-    public class SoundManager : IDisposable
+    class SoundManager : IDisposable
     {
         public const int SOURCE_COUNT = 32;
 
@@ -195,19 +195,19 @@ namespace Barotrauma.Sounds
                 GainMultipliers[index] = gain;
             }
         }
-        private Dictionary<string, CategoryModifier> categoryModifiers;
+
+        private readonly Dictionary<string, CategoryModifier> categoryModifiers = new Dictionary<string, CategoryModifier>();
 
         public SoundManager()
         {
             loadedSounds = new List<Sound>();
             streamingThread = null;
-            categoryModifiers = null;
 
             sourcePools = new SoundSourcePool[2];
             playingChannels[(int)SourcePoolIndex.Default] = new SoundChannel[SOURCE_COUNT];
             playingChannels[(int)SourcePoolIndex.Voice] = new SoundChannel[16];
 
-            string deviceName = GameMain.Config.AudioOutputDevice;
+            string deviceName = GameSettings.CurrentConfig.Audio.AudioOutputDevice;
 
             if (string.IsNullOrEmpty(deviceName))
             {
@@ -221,7 +221,10 @@ namespace Barotrauma.Sounds
                 deviceName = audioDeviceNames[0];
             }
 #endif
-            GameMain.Config.AudioOutputDevice = deviceName;
+            if (GameSettings.CurrentConfig.Audio.AudioOutputDevice != deviceName)
+            {
+                SetAudioOutputDevice(deviceName);
+            }
 
             InitializeAlcDevice(deviceName);
 
@@ -232,6 +235,13 @@ namespace Barotrauma.Sounds
             CompressionDynamicRangeGain = 1.0f;
         }
 
+        private static void SetAudioOutputDevice(string deviceName)
+        {
+            var config = GameSettings.CurrentConfig;
+            config.Audio.AudioOutputDevice = deviceName;
+            GameSettings.SetCurrentConfig(config);
+        }
+        
         public bool InitializeAlcDevice(string deviceName)
         {
             ReleaseResources(true);
@@ -239,7 +249,7 @@ namespace Barotrauma.Sounds
             DebugConsole.NewMessage($"Attempting to open ALC device \"{deviceName}\"");
 
             alcDevice = IntPtr.Zero;
-            int alcError = Al.NoError;
+            int alcError;
             for (int i = 0; i < 3; i++)
             {
                 alcDevice = Alc.OpenDevice(deviceName);
@@ -351,24 +361,23 @@ namespace Barotrauma.Sounds
             return newSound;
         }
 
-        public Sound LoadSound(XElement element, bool stream = false, string overrideFilePath = null)
+        public Sound LoadSound(ContentXElement element, bool stream = false, string overrideFilePath = null)
         {
             if (Disabled) { return null; }
 
-            string filePath = overrideFilePath ?? element.GetAttributeString("file", "");
+            string filePath = overrideFilePath ?? element.GetAttributeContentPath("file")?.Value ?? "";
             if (!File.Exists(filePath))
             {
-                throw new System.IO.FileNotFoundException("Sound file \"" + filePath + "\" doesn't exist!");
+                throw new System.IO.FileNotFoundException($"Sound file \"{filePath}\" doesn't exist! Content package \"{(element.ContentPackage?.Name ?? "Unknown")}\".");
             }
 
-            var newSound = new OggSound(this, filePath, stream, xElement: element);
-            if (newSound != null)
+            var newSound = new OggSound(this, filePath, stream, xElement: element)
             {
-                newSound.BaseGain = element.GetAttributeFloat("volume", 1.0f);
-                float range = element.GetAttributeFloat("range", 1000.0f);
-                newSound.BaseNear = range * 0.4f;
-                newSound.BaseFar = range;
-            }
+                BaseGain = element.GetAttributeFloat("volume", 1.0f)
+            };
+            float range = element.GetAttributeFloat("range", 1000.0f);
+            newSound.BaseNear = range * 0.4f;
+            newSound.BaseFar = range;
 
             lock (loadedSounds)
             {
@@ -530,14 +539,16 @@ namespace Barotrauma.Sounds
         {
             if (Disabled) { return; }
             category = category.ToLower();
-            if (categoryModifiers == null) categoryModifiers = new Dictionary<string, CategoryModifier>();
-            if (!categoryModifiers.ContainsKey(category))
+            lock (categoryModifiers)
             {
-                categoryModifiers.Add(category, new CategoryModifier(index, gain, false));
-            }
-            else
-            {
-                categoryModifiers[category].SetGainMultiplier(index, gain);
+                if (!categoryModifiers.ContainsKey(category))
+                {
+                    categoryModifiers.Add(category, new CategoryModifier(index, gain, false));
+                }
+                else
+                {
+                    categoryModifiers[category].SetGainMultiplier(index, gain);
+                }
             }
 
             for (int i = 0; i < playingChannels.Length; i++)
@@ -555,23 +566,26 @@ namespace Barotrauma.Sounds
             }
         }
 
-        public float GetCategoryGainMultiplier(string category, int index=-1)
+        public float GetCategoryGainMultiplier(string category, int index = -1)
         {
             if (Disabled) { return 0.0f; }
             category = category.ToLower();
-            if (categoryModifiers == null || !categoryModifiers.ContainsKey(category)) return 1.0f;
-            if (index < 0)
+            lock (categoryModifiers)
             {
-                float accumulatedMultipliers = 1.0f;
-                for (int i = 0; i < categoryModifiers[category].GainMultipliers.Length; i++)
+                if (categoryModifiers == null || !categoryModifiers.TryGetValue(category, out CategoryModifier categoryModifier)) { return 1.0f; }
+                if (index < 0)
                 {
-                    accumulatedMultipliers *= categoryModifiers[category].GainMultipliers[i];
+                    float accumulatedMultipliers = 1.0f;
+                    for (int i = 0; i < categoryModifier.GainMultipliers.Length; i++)
+                    {
+                        accumulatedMultipliers *= categoryModifier.GainMultipliers[i];
+                    }
+                    return accumulatedMultipliers;
                 }
-                return accumulatedMultipliers;
-            }
-            else
-            {
-                return categoryModifiers[category].GainMultipliers[index];
+                else
+                {
+                    return categoryModifier.GainMultipliers[index];
+                }
             }
         }
 
@@ -580,15 +594,16 @@ namespace Barotrauma.Sounds
             if (Disabled) { return; }
 
             category = category.ToLower();
-
-            if (categoryModifiers == null) { categoryModifiers = new Dictionary<string, CategoryModifier>(); }
-            if (!categoryModifiers.ContainsKey(category))
+            lock (categoryModifiers)
             {
-                categoryModifiers.Add(category, new CategoryModifier(0, 1.0f, muffle));
-            }
-            else
-            {
-                categoryModifiers[category].Muffle = muffle;
+                if (!categoryModifiers.ContainsKey(category))
+                {
+                    categoryModifiers.Add(category, new CategoryModifier(0, 1.0f, muffle));
+                }
+                else
+                {
+                    categoryModifiers[category].Muffle = muffle;
+                }
             }
 
             for (int i = 0; i < playingChannels.Length; i++)
@@ -611,8 +626,11 @@ namespace Barotrauma.Sounds
             if (Disabled) { return false; }
 
             category = category.ToLower();
-            if (categoryModifiers == null || !categoryModifiers.ContainsKey(category)) { return false; }
-            return categoryModifiers[category].Muffle;
+            lock (categoryModifiers)
+            {
+                if (categoryModifiers == null || !categoryModifiers.TryGetValue(category, out CategoryModifier categoryModifier)) { return false; }
+                return categoryModifier.Muffle;
+            }
         }
 
         public void Update()
@@ -630,14 +648,20 @@ namespace Barotrauma.Sounds
 
                 if (isConnected == 0)
                 {
+                    if (!GameMain.Instance.HasLoaded)
+                    {
+                        //wait for loading to finish so we don't start releasing and reloading sounds when they're being loaded,
+                        //or throw an error mid-loading that'd prevent the content package from being enabled
+                        return;
+                    }
                     DebugConsole.ThrowError("Playback device has been disconnected. You can select another available device in the settings.");
-                    GameMain.Config.AudioOutputDevice = "<disconnected>";
+                    SetAudioOutputDevice("<disconnected>");
                     Disconnected = true;
                     return;
                 }
             }
 
-            if (GameMain.Client != null && GameMain.Config.VoipAttenuationEnabled)
+            if (GameMain.Client != null && GameSettings.CurrentConfig.Audio.VoipAttenuationEnabled)
             {
                 if (Timing.TotalTime > lastAttenuationTime+0.2)
                 {
@@ -653,7 +677,7 @@ namespace Barotrauma.Sounds
             SetCategoryGainMultiplier("waterambience", VoipAttenuatedGain, 1);
             SetCategoryGainMultiplier("music", VoipAttenuatedGain, 1);
 
-            if (GameMain.Config.DynamicRangeCompressionEnabled)
+            if (GameSettings.CurrentConfig.Audio.DynamicRangeCompressionEnabled)
             {
                 float targetGain = (Math.Min(1.0f, 1.0f / PlaybackAmplitude) - 1.0f) * 0.5f + 1.0f;
                 if (targetGain < CompressionDynamicRangeGain)
@@ -695,6 +719,15 @@ namespace Barotrauma.Sounds
             }
         }
 
+        public void ApplySettings()
+        {
+            SetCategoryGainMultiplier("default", GameSettings.CurrentConfig.Audio.SoundVolume, 0);
+            SetCategoryGainMultiplier("ui", GameSettings.CurrentConfig.Audio.UiVolume, 0);
+            SetCategoryGainMultiplier("waterambience", GameSettings.CurrentConfig.Audio.SoundVolume, 0);
+            SetCategoryGainMultiplier("music", GameSettings.CurrentConfig.Audio.MusicVolume, 0);
+            SetCategoryGainMultiplier("voip", Math.Min(GameSettings.CurrentConfig.Audio.VoiceChatVolume, 1.0f), 0);
+        }
+        
         public void InitStreamThread()
         {
             if (Disabled) { return; }

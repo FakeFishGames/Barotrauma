@@ -1,12 +1,9 @@
-﻿using System.Linq;
-using System.Xml.Linq;
-
-namespace Barotrauma.Abilities
+﻿namespace Barotrauma.Abilities
 {
     class AbilityConditionShipFlooded : AbilityConditionDataless
     {
         private readonly float floodPercentage;
-        public AbilityConditionShipFlooded(CharacterTalent characterTalent, XElement conditionElement) : base(characterTalent, conditionElement)
+        public AbilityConditionShipFlooded(CharacterTalent characterTalent, ContentXElement conditionElement) : base(characterTalent, conditionElement)
         {
             floodPercentage = conditionElement.GetAttributeFloat("floodpercentage", 0f);
         }
@@ -14,8 +11,14 @@ namespace Barotrauma.Abilities
         protected override bool MatchesConditionSpecific()
         {
             if (!character.IsInFriendlySub) { return false; }
-            float currentFloodPercentage = character.Submarine.GetHulls(false).Average(h => h.WaterPercentage);
-            return currentFloodPercentage / 100 > floodPercentage;
+            float waterVolume = 0.0f, totalVolume = 0.0f;
+            foreach (Hull hull in Hull.HullList)
+            {
+                if (hull.Submarine != character.Submarine) { continue; }
+                waterVolume += hull.WaterVolume;
+                totalVolume += hull.Volume;
+            }
+            return (waterVolume / totalVolume) > floodPercentage;
         }
     }
 }

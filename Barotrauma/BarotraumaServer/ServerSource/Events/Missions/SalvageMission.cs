@@ -6,32 +6,66 @@ namespace Barotrauma
 {
     partial class SalvageMission : Mission
     {
-        private bool usedExistingItem;
+        struct SpawnInfo
+        {
+            public readonly bool UsedExistingItem;
+            public readonly UInt16 OriginalInventoryID;
+            public readonly byte OriginalItemContainerIndex;
+            public readonly int OriginalSlotIndex;
+            public readonly List<(int listIndex, int effectIndex)> ExecutedEffectIndices;
 
-        private UInt16 originalInventoryID;
-        private byte originalItemContainerIndex;
+            public SpawnInfo(bool usedExistingItem, UInt16 originalInventoryID, byte originalItemContainerIndex, int originalSlotIndex, List<(int listIndex, int effectIndex)> executedEffectIndices)
+            {
+                UsedExistingItem = usedExistingItem;
+                OriginalInventoryID = originalInventoryID;
+                OriginalItemContainerIndex = originalItemContainerIndex;
+                OriginalSlotIndex = originalSlotIndex;
+                ExecutedEffectIndices = executedEffectIndices;
+            }
+        }
 
-        private readonly List<Pair<int, int>> executedEffectIndices = new List<Pair<int, int>>();
+        private readonly Dictionary<Target, SpawnInfo> spawnInfo = new Dictionary<Target, SpawnInfo>();
 
         public override void ServerWriteInitial(IWriteMessage msg, Client c)
         {
             base.ServerWriteInitial(msg, c);
 
-            msg.Write(usedExistingItem);
-            if (usedExistingItem)
+            foreach (var target in targets)
             {
-                msg.Write(item.ID);
-            }
-            else
-            {
-                item.WriteSpawnData(msg, item.ID, originalInventoryID, originalItemContainerIndex);
-            }
+                bool targetFound = spawnInfo.ContainsKey(target) && target.Item != null;
+                msg.WriteBoolean(targetFound);
+                if (!targetFound) { continue; }
 
-            msg.Write((byte)executedEffectIndices.Count);
-            foreach (Pair<int, int> effectIndex in executedEffectIndices)
+                msg.WriteBoolean(spawnInfo[target].UsedExistingItem);
+                if (spawnInfo[target].UsedExistingItem)
+                {
+                    msg.WriteUInt16(target.Item.ID);
+                }
+                else
+                {
+                    target.Item.WriteSpawnData(msg, 
+                        target.Item.ID, 
+                        spawnInfo[target].OriginalInventoryID, 
+                        spawnInfo[target].OriginalItemContainerIndex,
+                        spawnInfo[target].OriginalSlotIndex);
+                }
+
+                msg.WriteByte((byte)spawnInfo[target].ExecutedEffectIndices.Count);
+                foreach ((int listIndex, int effectIndex) in spawnInfo[target].ExecutedEffectIndices)
+                {
+                    msg.WriteByte((byte)listIndex);
+                    msg.WriteByte((byte)effectIndex);
+                }
+            }
+        }
+
+        public override void ServerWrite(IWriteMessage msg)
+        {
+            base.ServerWrite(msg);
+            msg.WriteByte((byte)targets.Count);
+            for (int i = 0; i < targets.Count; i++)
             {
-                msg.Write((byte)effectIndex.First);
-                msg.Write((byte)effectIndex.Second);
+                msg.WriteByte((byte)targets[i].State);
             }
         }
     }

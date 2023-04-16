@@ -4,17 +4,21 @@ namespace Barotrauma
 {
     partial class MonsterMission : Mission
     {
+        public override bool DisplayAsCompleted => State > 0;
+        public override bool DisplayAsFailed => false;
+
         public override void ClientReadInitial(IReadMessage msg)
         {
             base.ClientReadInitial(msg);
             byte monsterCount = msg.ReadByte();
             for (int i = 0; i < monsterCount; i++)
             {
-                monsters.Add(Character.ReadSpawnData(msg));
-            }
-            if (monsters.Contains(null))
-            {
-                throw new System.Exception("Error in MonsterMission.ClientReadInitial: monster list contains null (mission: " + Prefab.Identifier + ")");
+                var monster = Character.ReadSpawnData(msg);
+                if (monster == null)
+                {
+                    throw new System.Exception($"Error in MonsterMission.ClientReadInitial: failed to create a monster (mission: {Prefab.Identifier}, index: {i})");
+                }
+                monsters.Add(monster);
             }
             if (monsters.Count != monsterCount)
             {

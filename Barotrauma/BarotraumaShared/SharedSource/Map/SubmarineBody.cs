@@ -1,8 +1,6 @@
 ﻿using Barotrauma.Extensions;
 using Barotrauma.Items.Components;
-using Barotrauma.Networking;
 using FarseerPhysics;
-using FarseerPhysics.Collision;
 using FarseerPhysics.Common;
 using FarseerPhysics.Dynamics;
 using FarseerPhysics.Dynamics.Contacts;
@@ -19,6 +17,13 @@ namespace Barotrauma
     partial class SubmarineBody
     {
         public const float NeutralBallastPercentage = 0.07f;
+
+        public const Category CollidesWith =
+                Physics.CollisionItem |
+                Physics.CollisionLevel |
+                Physics.CollisionCharacter |
+                Physics.CollisionProjectile |
+                Physics.CollisionWall;
 
         const float HorizontalDrag = 0.01f;
         const float VerticalDrag = 0.05f;
@@ -41,6 +46,7 @@ namespace Barotrauma
         }
 
         private float depthDamageTimer = 10.0f;
+        private float damageSoundTimer = 10.0f;
 
         private readonly Submarine submarine;
 
@@ -68,12 +74,24 @@ namespace Barotrauma
             }
         }
 
+        /// <summary>
+        /// Extents of the solid items/structures (ones with a physics body) and hulls
+        /// </summary>
         public Rectangle Borders
         {
             get;
             private set;
         }
-                
+
+        /// <summary>
+        /// Extents of all the visible items/structures/hulls (including ones without a physics body)
+        /// </summary>
+        public Rectangle VisibleBorders
+        {
+            get;
+            private set;
+        }
+
         public Vector2 Velocity
         {
             get { return Body.LinearVelocity; }
@@ -99,17 +117,19 @@ namespace Barotrauma
             get { return submarine; }
         }
 
-        public SubmarineBody(Submarine sub, bool showWarningMessages = true)
+        public SubmarineBody(Submarine sub, bool showErrorMessages = true)
         {
             this.submarine = sub;
 
+            Vector2 minExtents = Vector2.Zero, maxExtents = Vector2.Zero;
+            Vector2 visibleMinExtents = Vector2.Zero, visibleMaxExtents = Vector2.Zero;
             Body farseerBody = null;
-            if (!Hull.hullList.Any(h => h.Submarine == sub))
+            if (!Hull.HullList.Any(h => h.Submarine == sub))
             {
                 farseerBody = GameMain.World.CreateRectangle(1.0f, 1.0f, 1.0f);
-                if (showWarningMessages)
+                if (showErrorMessages)
                 {
-                    DebugConsole.ThrowError("WARNING: no hulls found, generating a physics body for the submarine failed.");
+                    DebugConsole.ThrowError($"No hulls found in the submarine \"{sub.Info.Name}\". Generating a physics body for the submarine failed.");
                 }
             }
             else
@@ -121,55 +141,76 @@ namespace Barotrauma
                 }
                 HullVertices = convexHull;
 
-                Vector2 minExtents = Vector2.Zero, maxExtents = Vector2.Zero;
 
-                farseerBody = GameMain.World.CreateBody();
+                farseerBody = GameMain.World.CreateBody(findNewContacts: false, bodyType: BodyType.Dynamic);
+                var collisionCategory = Physics.CollisionWall;
+                var collidesWith =
+                    Physics.CollisionItem |
+                    Physics.CollisionLevel |
+                    Physics.CollisionCharacter |
+                    Physics.CollisionProjectile |
+                    Physics.CollisionWall;
+                farseerBody.CollisionCategories = collisionCategory;
+                farseerBody.CollidesWith = collidesWith;
+                farseerBody.Enabled = false;
                 farseerBody.UserData = this;
-                foreach (Structure wall in Structure.WallList)
+                if (sub.Info.IsOutpost)
                 {
-                    if (wall.Submarine != submarine || wall.IsPlatform) { continue; }
+                    farseerBody.BodyType = BodyType.Static;
+                }
+                foreach (var mapEntity in MapEntity.mapEntityList)
+                {
+                    if (mapEntity.Submarine != submarine || mapEntity is not Structure wall) { continue; }
 
+                    bool hasCollider = wall.HasBody && !wall.IsPlatform && wall.StairDirection == Direction.None;
                     Rectangle rect = wall.Rect;
-
-                    farseerBody.CreateRectangle(
-                          ConvertUnits.ToSimUnits(wall.BodyWidth),
-                          ConvertUnits.ToSimUnits(wall.BodyHeight),
-                          50.0f,
-                          -wall.BodyRotation,
-                          ConvertUnits.ToSimUnits(new Vector2(rect.X + rect.Width / 2, rect.Y - rect.Height / 2) + wall.BodyOffset)).UserData = wall;
-
-                    minExtents.X = Math.Min(rect.X, minExtents.X);
-                    minExtents.Y = Math.Min(rect.Y - rect.Height, minExtents.Y);
-                    maxExtents.X = Math.Max(rect.Right, maxExtents.X);
-                    maxExtents.Y = Math.Max(rect.Y, maxExtents.Y);
+                    SetExtents(new Vector2(rect.X, rect.Y - rect.Height), new Vector2(rect.Right, rect.Y), hasCollider);
+                    if (hasCollider)
+                    {
+                        farseerBody.CreateRectangle(
+                              ConvertUnits.ToSimUnits(wall.BodyWidth),
+                              ConvertUnits.ToSimUnits(wall.BodyHeight),
+                              50.0f,
+                              -wall.BodyRotation,
+                              ConvertUnits.ToSimUnits(new Vector2(rect.X + rect.Width / 2, rect.Y - rect.Height / 2) + wall.BodyOffset),
+                              collisionCategory,
+                              collidesWith).UserData = wall;
+                    }
                 }
 
-                foreach (Hull hull in Hull.hullList)
+                foreach (Hull hull in Hull.HullList)
                 {
                     if (hull.Submarine != submarine || hull.IdFreed) { continue; }
 
                     Rectangle rect = hull.Rect;
+                    SetExtents(new Vector2(rect.X, rect.Y - rect.Height), new Vector2(rect.Right, rect.Y), hasCollider: true);
+
                     farseerBody.CreateRectangle(
                         ConvertUnits.ToSimUnits(rect.Width),
                         ConvertUnits.ToSimUnits(rect.Height),
                         100.0f,
-                        ConvertUnits.ToSimUnits(new Vector2(rect.X + rect.Width / 2, rect.Y - rect.Height / 2))).UserData = hull;
-
-                    minExtents.X = Math.Min(rect.X, minExtents.X);
-                    minExtents.Y = Math.Min(rect.Y - rect.Height, minExtents.Y);
-                    maxExtents.X = Math.Max(rect.Right, maxExtents.X);
-                    maxExtents.Y = Math.Max(rect.Y, maxExtents.Y);
+                        ConvertUnits.ToSimUnits(new Vector2(rect.X + rect.Width / 2, rect.Y - rect.Height / 2)),
+                        collisionCategory,
+                        collidesWith).UserData = hull;
                 }
 
                 foreach (Item item in Item.ItemList)
                 {
-                    if (item.StaticBodyConfig == null || item.Submarine != submarine) { continue; }
+                    if (item.Submarine != submarine) { continue; }
+
+                    Vector2 simPos  = ConvertUnits.ToSimUnits(item.Position);
+                    if (item.GetComponent<Door>() is Door door)
+                    {
+                        door.OutsideSubmarineFixture = farseerBody.CreateRectangle(door.Body.Width, door.Body.Height, 5.0f, simPos, collisionCategory, collidesWith);
+                        door.OutsideSubmarineFixture.UserData = item;
+                    }
+
+                    if (item.StaticBodyConfig == null) { continue; }
 
                     float radius    = item.StaticBodyConfig.GetAttributeFloat("radius", 0.0f) * item.Scale;
                     float width     = item.StaticBodyConfig.GetAttributeFloat("width", 0.0f) * item.Scale;
                     float height    = item.StaticBodyConfig.GetAttributeFloat("height", 0.0f) * item.Scale;
 
-                    Vector2 simPos  = ConvertUnits.ToSimUnits(item.Position);
                     float simRadius = ConvertUnits.ToSimUnits(radius);
                     float simWidth  = ConvertUnits.ToSimUnits(width);
                     float simHeight = ConvertUnits.ToSimUnits(height);
@@ -181,56 +222,40 @@ namespace Barotrauma
 
                     if (width > 0.0f && height > 0.0f)
                     {
-                        item.StaticFixtures.Add(farseerBody.CreateRectangle(simWidth, simHeight, 5.0f, simPos));
-
-                        minExtents.X = Math.Min(item.Position.X - width / 2, minExtents.X);
-                        minExtents.Y = Math.Min(item.Position.Y - height / 2, minExtents.Y);
-                        maxExtents.X = Math.Max(item.Position.X + width / 2, maxExtents.X);
-                        maxExtents.Y = Math.Max(item.Position.Y + height / 2, maxExtents.Y);
+                        item.StaticFixtures.Add(farseerBody.CreateRectangle(simWidth, simHeight, 5.0f, simPos, collisionCategory, collidesWith));
+                        SetExtents(item.Position - new Vector2(width, height) / 2, item.Position + new Vector2(width, height) / 2, hasCollider: true);
                     }
                     else if (radius > 0.0f && width > 0.0f)
                     {
-                        item.StaticFixtures.Add(farseerBody.CreateRectangle(simWidth, simRadius * 2, 5.0f, simPos));
-                        item.StaticFixtures.Add(farseerBody.CreateCircle(simRadius, 5.0f, simPos - Vector2.UnitX * simWidth / 2));
-                        item.StaticFixtures.Add(farseerBody.CreateCircle(simRadius, 5.0f, simPos + Vector2.UnitX * simWidth / 2));
-                        minExtents.X = Math.Min(item.Position.X - width / 2 - radius, minExtents.X);
-                        minExtents.Y = Math.Min(item.Position.Y - radius, minExtents.Y);
-                        maxExtents.X = Math.Max(item.Position.X + width / 2 + radius, maxExtents.X);
-                        maxExtents.Y = Math.Max(item.Position.Y + radius, maxExtents.Y);
+                        item.StaticFixtures.Add(farseerBody.CreateRectangle(simWidth, simRadius * 2, 5.0f, simPos, collisionCategory, collidesWith));
+                        item.StaticFixtures.Add(farseerBody.CreateCircle(simRadius, 5.0f, simPos - Vector2.UnitX * simWidth / 2, collisionCategory, collidesWith));
+                        item.StaticFixtures.Add(farseerBody.CreateCircle(simRadius, 5.0f, simPos + Vector2.UnitX * simWidth / 2, collisionCategory, collidesWith));
+                        SetExtents(item.Position - new Vector2(width / 2 + radius, height / 2), item.Position + new Vector2(width / 2 + radius, height / 2), hasCollider: true);
                     }
                     else if (radius > 0.0f && height > 0.0f)
                     {
-                        item.StaticFixtures.Add(farseerBody.CreateRectangle(simRadius * 2, height, 5.0f, simPos));
-                        item.StaticFixtures.Add(farseerBody.CreateCircle(simRadius, 5.0f, simPos - Vector2.UnitY * simHeight / 2));
-                        item.StaticFixtures.Add(farseerBody.CreateCircle(simRadius, 5.0f, simPos + Vector2.UnitX * simHeight / 2));
-                        minExtents.X = Math.Min(item.Position.X - radius, minExtents.X);
-                        minExtents.Y = Math.Min(item.Position.Y - height / 2 - radius, minExtents.Y);
-                        maxExtents.X = Math.Max(item.Position.X + radius, maxExtents.X);
-                        maxExtents.Y = Math.Max(item.Position.Y + height / 2 + radius, maxExtents.Y);
+                        item.StaticFixtures.Add(farseerBody.CreateRectangle(simRadius * 2, height, 5.0f, simPos, collisionCategory, collidesWith));
+                        item.StaticFixtures.Add(farseerBody.CreateCircle(simRadius, 5.0f, simPos - Vector2.UnitY * simHeight / 2, collisionCategory, collidesWith));
+                        item.StaticFixtures.Add(farseerBody.CreateCircle(simRadius, 5.0f, simPos + Vector2.UnitY * simHeight / 2, collisionCategory, collidesWith));
+                        SetExtents(item.Position - new Vector2(width / 2, height / 2 + radius), item.Position + new Vector2(width / 2, height / 2 + radius), hasCollider: true);
                     }
                     else if (radius > 0.0f)
                     {
-                        item.StaticFixtures.Add(farseerBody.CreateCircle(simRadius, 5.0f, simPos));
-                        minExtents.X = Math.Min(item.Position.X - radius, minExtents.X);
-                        minExtents.Y = Math.Min(item.Position.Y - radius, minExtents.Y);
-                        maxExtents.X = Math.Max(item.Position.X + radius, maxExtents.X);
-                        maxExtents.Y = Math.Max(item.Position.Y + radius, maxExtents.Y);
+                        item.StaticFixtures.Add(farseerBody.CreateCircle(simRadius, 5.0f, simPos, collisionCategory, collidesWith));
+                        visibleMinExtents.X = Math.Min(item.Position.X - radius, visibleMinExtents.X);
+                        visibleMinExtents.Y = Math.Min(item.Position.Y - radius, visibleMinExtents.Y);
+                        visibleMaxExtents.X = Math.Max(item.Position.X + radius, visibleMaxExtents.X);
+                        visibleMaxExtents.Y = Math.Max(item.Position.Y + radius, visibleMaxExtents.Y);
+                        SetExtents(item.Position - new Vector2(radius, radius), item.Position + new Vector2(radius, radius), hasCollider: true);
                     }
                     item.StaticFixtures.ForEach(f => f.UserData = item);
                 }
 
                 Borders = new Rectangle((int)minExtents.X, (int)maxExtents.Y, (int)(maxExtents.X - minExtents.X), (int)(maxExtents.Y - minExtents.Y));
+                VisibleBorders = new Rectangle((int)visibleMinExtents.X, (int)visibleMaxExtents.Y, (int)(visibleMaxExtents.X - visibleMinExtents.X), (int)(visibleMaxExtents.Y - visibleMinExtents.Y));
             }
 
-            farseerBody.BodyType = BodyType.Dynamic;
-            farseerBody.CollisionCategories = Physics.CollisionWall;
-            farseerBody.CollidesWith = 
-                Physics.CollisionItem | 
-                Physics.CollisionLevel | 
-                Physics.CollisionCharacter | 
-                Physics.CollisionProjectile | 
-                Physics.CollisionWall;
-
+            farseerBody.Enabled = true;
             farseerBody.Restitution = Restitution;
             farseerBody.Friction = Friction;
             farseerBody.FixedRotation = true;
@@ -241,6 +266,21 @@ namespace Barotrauma
             farseerBody.UserData = submarine;
 
             Body = new PhysicsBody(farseerBody);
+
+            void SetExtents(Vector2 min, Vector2 max, bool hasCollider)
+            {
+                visibleMinExtents.X = Math.Min(min.X, visibleMinExtents.X);
+                visibleMinExtents.Y = Math.Min(min.Y, visibleMinExtents.Y);
+                visibleMaxExtents.X = Math.Max(max.X, visibleMaxExtents.X);
+                visibleMaxExtents.Y = Math.Max(max.Y, visibleMaxExtents.Y);
+                if (hasCollider)
+                {
+                    minExtents.X = Math.Min(min.X, minExtents.X);
+                    minExtents.Y = Math.Min(min.Y, minExtents.Y);
+                    maxExtents.X = Math.Max(max.X, maxExtents.X);
+                    maxExtents.Y = Math.Max(max.Y, maxExtents.Y);
+                }
+            }
         }
 
         private List<Vector2> GenerateConvexHull()
@@ -322,14 +362,12 @@ namespace Barotrauma
                         Math.Max(Body.LinearVelocity.Y, ConvertUnits.ToSimUnits(Level.Loaded.BottomPos - (worldBorders.Y - worldBorders.Height))));
                 }
 
-                //hard limit for how far outside the level the sub can go
-                float maxDist = 200000.0f;
-                //the force of the current starts to increase exponentially after this point
-                float exponentialForceIncreaseDist = 150000.0f;
-                float distance = Position.X < 0 ? Math.Abs(Position.X) : Position.X - Level.Loaded.Size.X;
+                float distance = Position.X < -Level.OutsideBoundsCurrentMargin ? 
+                    Math.Abs(Position.X + Level.OutsideBoundsCurrentMargin) : 
+                    Position.X - (Level.Loaded.Size.X + Level.OutsideBoundsCurrentMargin);
                 if (distance > 0)
                 {
-                    if (distance > maxDist)
+                    if (distance > Level.OutsideBoundsCurrentHardLimit)
                     {
                         if (Position.X < 0)
                         {
@@ -340,9 +378,9 @@ namespace Barotrauma
                             Body.LinearVelocity = new Vector2(Math.Min(0, Body.LinearVelocity.X), Body.LinearVelocity.Y);
                         }
                     }
-                    if (distance > exponentialForceIncreaseDist)
+                    if (distance > Level.OutsideBoundsCurrentMarginExponential)
                     {
-                        distance += (float)Math.Pow((distance - exponentialForceIncreaseDist) * 0.01f, 2.0f);
+                        distance += (float)Math.Pow((distance - Level.OutsideBoundsCurrentMarginExponential) * 0.01f, 2.0f);
                     }
                     float force = distance * 0.5f;
                     totalForce += (Position.X < 0 ? Vector2.UnitX : -Vector2.UnitX) * force;
@@ -428,11 +466,13 @@ namespace Barotrauma
 
         private Vector2 CalculateBuoyancy()
         {
+            if (Submarine.LockY) { return Vector2.Zero; }
+
             float waterVolume = 0.0f;
             float volume = 0.0f;
-            foreach (Hull hull in Hull.hullList)
+            foreach (Hull hull in Hull.HullList)
             {
-                if (hull.Submarine != submarine) continue;
+                if (hull.Submarine != submarine) { continue; }
 
                 waterVolume += hull.WaterVolume;
                 volume += hull.Volume;
@@ -468,37 +508,58 @@ namespace Barotrauma
             if (Level.Loaded == null) { return; }
 
             //camera shake and sounds start playing 500 meters before crush depth
-            float depthEffectThreshold = 500.0f;
-            if (Submarine.RealWorldDepth < Level.Loaded.RealWorldCrushDepth - depthEffectThreshold || Submarine.RealWorldDepth < Submarine.RealWorldCrushDepth - depthEffectThreshold)
+            const float CosmeticEffectThreshold = -500.0f;
+            //breaches won't get any more severe 500 meters below crush depth
+            const float MaxEffectThreshold = 500.0f;
+            const float MinWallDamageProbability = 0.1f;
+            const float MaxWallDamageProbability = 1.0f;
+            const float MinWallDamage = 50f;
+            const float MaxWallDamage = 500.0f;
+            const float MinCameraShake = 5f;
+            const float MaxCameraShake = 50.0f;
+
+            if (Submarine.RealWorldDepth < Level.Loaded.RealWorldCrushDepth + CosmeticEffectThreshold || Submarine.RealWorldDepth < Submarine.RealWorldCrushDepth + CosmeticEffectThreshold)
             {
                 return;
             }
 
-            depthDamageTimer -= deltaTime;
-            if (depthDamageTimer > 0.0f) { return; }
-
-#if CLIENT
-            SoundPlayer.PlayDamageSound("pressure", Rand.Range(0.0f, 100.0f), submarine.WorldPosition + Rand.Vector(Rand.Range(0.0f, Math.Min(submarine.Borders.Width, submarine.Borders.Height))), 20000.0f);
-#endif
-
-            foreach (Structure wall in Structure.WallList)
+            damageSoundTimer -= deltaTime;
+            if (damageSoundTimer <= 0.0f)
             {
-                if (wall.Submarine != submarine) { continue; }
-
-                float wallCrushDepth = wall.CrushDepth;
-                if (submarine.Info.SubmarineClass == SubmarineClass.DeepDiver) { wallCrushDepth *= 1.2f; }
-                float pastCrushDepth = submarine.RealWorldDepth - wallCrushDepth;
-                if (pastCrushDepth > 0)
-                {
-                    Explosion.RangedStructureDamage(wall.WorldPosition, 100.0f, pastCrushDepth * 0.1f, levelWallDamage: 0.0f);
-                }
-                if (Character.Controlled != null && Character.Controlled.Submarine == submarine)
-                {
-                    GameMain.GameScreen.Cam.Shake = Math.Max(GameMain.GameScreen.Cam.Shake, MathHelper.Clamp(pastCrushDepth * 0.001f, 1.0f, 50.0f));
-                }
+#if CLIENT
+                SoundPlayer.PlayDamageSound("pressure", Rand.Range(0.0f, 100.0f), submarine.WorldPosition + Rand.Vector(Rand.Range(0.0f, Math.Min(submarine.Borders.Width, submarine.Borders.Height))), 20000.0f);
+#endif
+                damageSoundTimer = Rand.Range(5.0f, 10.0f);
             }
 
-            depthDamageTimer = 10.0f;
+            depthDamageTimer -= deltaTime;
+            if (depthDamageTimer <= 0.0f)
+            {
+                foreach (Structure wall in Structure.WallList)
+                {
+                    if (wall.Submarine != submarine) { continue; }
+
+                    float wallCrushDepth = wall.CrushDepth;
+                    float pastCrushDepth = submarine.RealWorldDepth - wallCrushDepth;
+                    float pastCrushDepthRatio = Math.Clamp(pastCrushDepth / MaxEffectThreshold, 0.0f, 1.0f);
+
+                    if (Rand.Range(0.0f, 1.0f) > MathHelper.Lerp(MinWallDamageProbability, MaxWallDamageProbability, pastCrushDepthRatio)) { continue; }
+
+                    float damage = MathHelper.Lerp(MinWallDamage, MaxWallDamage, pastCrushDepthRatio);
+                    if (pastCrushDepth > 0)
+                    {
+                        Explosion.RangedStructureDamage(wall.WorldPosition, 100.0f, damage, levelWallDamage: 0.0f);
+#if CLIENT
+                        SoundPlayer.PlayDamageSound("StructureBlunt", Rand.Range(0.0f, 100.0f), wall.WorldPosition, 2000.0f);
+#endif
+                    }
+                    if (Character.Controlled != null && Character.Controlled.Submarine == submarine)
+                    {
+                        GameMain.GameScreen.Cam.Shake = Math.Max(GameMain.GameScreen.Cam.Shake, MathHelper.Lerp(MinCameraShake, MaxCameraShake, pastCrushDepthRatio));
+                    }
+                }
+                depthDamageTimer = Rand.Range(5.0f, 10.0f);
+            }
         }
 
         public void FlipX()
@@ -568,14 +629,23 @@ namespace Barotrauma
                 newHull = Hull.FindHull(targetPos, null);
             }
 
-            var gaps = newHull?.ConnectedGaps ?? Gap.GapList.Where(g => g.Submarine == submarine);
-            Gap adjacentGap = Gap.FindAdjacent(gaps, ConvertUnits.ToDisplayUnits(points[0]), 200.0f);
-            if (adjacentGap == null) { return true; }
+            //if all the bodies of a wall have been disabled, we don't need to care about gaps (can always pass through)
+            if (!(contact.FixtureA.UserData is Structure wall) || !wall.AllSectionBodiesDisabled())
+            {
+                var gaps = newHull?.ConnectedGaps ?? Gap.GapList.Where(g => g.Submarine == submarine);
+                Gap adjacentGap = Gap.FindAdjacent(gaps, ConvertUnits.ToDisplayUnits(points[0]), 200.0f);
+                if (adjacentGap == null) { return true; }
+            }
 
             if (newHull != null)
             {
                 CoroutineManager.Invoke(() =>
-                    character.AnimController.FindHull(newHull.WorldPosition, true));
+                {
+                    if (character != null && !character.Removed)
+                    {
+                        character.AnimController.FindHull(newHull.WorldPosition, setSubmarine: true);
+                    }
+                });
             }
 
             return false;
@@ -594,7 +664,7 @@ namespace Barotrauma
                 attackMultiplier = enemyAI.ActiveAttack.SubmarineImpactMultiplier;
             }
 
-            if (impactMass * attackMultiplier > MinImpactLimbMass)
+            if (impactMass * attackMultiplier > MinImpactLimbMass && Body.BodyType != BodyType.Static)
             {
                 Vector2 normal = 
                     Vector2.DistanceSquared(Body.SimPosition, limb.SimPosition) < 0.0001f ?
@@ -660,7 +730,7 @@ namespace Barotrauma
                 {
                     GameAnalyticsManager.AddErrorEventOnce(
                         "SubmarineBody.HandleLimbCollision:" + submarine.ID,
-                        GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
+                        GameAnalyticsManager.ErrorSeverity.Error,
                         "Invalid velocity change in SubmarineBody.HandleLimbCollision (submarine velocity: " + Body.LinearVelocity
                         + ", avgContactNormal: " + avgContactNormal
                         + ", contactDot: " + contactDot
@@ -691,7 +761,7 @@ namespace Barotrauma
 
         private void HandleLevelCollision(Impact impact, VoronoiCell cell = null)
         {
-            if (GameMain.GameSession != null && Timing.TotalTime < GameMain.GameSession.RoundStartTime + 10)
+            if (GameMain.GameSession != null && GameMain.GameSession.RoundDuration < 10)
             {
                 //ignore level collisions for the first 10 seconds of the round in case the sub spawns in a way that causes it to hit a wall 
                 //(e.g. level without outposts to dock to and an incorrectly configured ballast that makes the sub go up)
@@ -823,6 +893,8 @@ namespace Barotrauma
             Vector2 impulse = direction * impact * 0.5f;            
             impulse = impulse.ClampLength(MaxCollisionImpact);
 
+            float impulseMagnitude = impulse.Length();
+
             if (!MathUtils.IsValid(impulse))
             {
                 string errorMsg =
@@ -832,10 +904,10 @@ namespace Barotrauma
                 {
                     errorMsg += GameMain.NetworkMember.IsClient ? " Playing as a client." : " Hosting a server.";
                 }
-                if (GameSettings.VerboseLogging) DebugConsole.ThrowError(errorMsg);
+                if (GameSettings.CurrentConfig.VerboseLogging) DebugConsole.ThrowError(errorMsg);
                 GameAnalyticsManager.AddErrorEventOnce(
                     "SubmarineBody.ApplyImpact:InvalidImpulse",
-                    GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
+                    GameAnalyticsManager.ErrorSeverity.Error,
                     errorMsg);
                 return;
             }
@@ -868,13 +940,15 @@ namespace Barotrauma
                 }
 
                 bool holdingOntoSomething = false;
-                if (c.SelectedConstruction != null)
+                if (c.SelectedSecondaryItem != null)
                 {
-                    holdingOntoSomething =
-                        c.SelectedConstruction.GetComponent<Ladder>() != null ||
-                        (c.SelectedConstruction.GetComponent<Controller>()?.LimbPositions.Any() ?? false);
+                    holdingOntoSomething = c.SelectedSecondaryItem.IsLadder ||
+                        (c.SelectedSecondaryItem.GetComponent<Controller>()?.LimbPositions.Any() ?? false);
                 }
-
+                if (!holdingOntoSomething && c.SelectedItem != null)
+                {
+                    holdingOntoSomething = c.SelectedItem.GetComponent<Controller>()?.LimbPositions.Any() ?? false;
+                }
                 if (!holdingOntoSomething)
                 {
                     c.AnimController.Collider.ApplyLinearImpulse(c.AnimController.Collider.Mass * impulse, 10.0f);
@@ -889,8 +963,9 @@ namespace Barotrauma
             foreach (Item item in Item.ItemList)
             {
                 if (item.Submarine != submarine || item.CurrentHull == null || item.body == null || !item.body.Enabled) { continue; }
+                if (item.body.Mass > impulseMagnitude) { continue; }
 
-                item.body.ApplyLinearImpulse(item.body.Mass * impulse, 10.0f);
+                item.body.ApplyLinearImpulse(impulse, 10.0f);
                 item.PositionUpdateInterval = 0.0f;
             }
 

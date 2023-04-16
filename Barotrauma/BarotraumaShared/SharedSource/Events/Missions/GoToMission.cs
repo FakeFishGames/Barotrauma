@@ -1,4 +1,4 @@
-﻿using Barotrauma.Networking;
+﻿using System;
 
 namespace Barotrauma
 {
@@ -11,7 +11,22 @@ namespace Barotrauma
 
         protected override void UpdateMissionSpecific(float deltaTime)
         {
-            State = 1;
+            if (Level.Loaded?.Type == LevelData.LevelType.Outpost)
+            {
+                State = Math.Max(1, State);
+            }
+        }
+
+        protected override bool DetermineCompleted()
+        {
+            if (Level.Loaded?.Type == LevelData.LevelType.Outpost)
+            {
+                return true;
+            }
+            else
+            {
+                return Submarine.MainSub is { AtEndExit: true };
+            }
         }
     }
 }

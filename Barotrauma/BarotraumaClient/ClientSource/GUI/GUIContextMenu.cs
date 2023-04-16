@@ -9,16 +9,23 @@ namespace Barotrauma
 {
     struct ContextMenuOption
     {
-        public string Label;
+        public LocalizedString Label;
         public Action OnSelected;
         public ContextMenuOption[]? SubOptions;
         public bool IsEnabled;
-        public string Tooltip;
+        public LocalizedString Tooltip;
 
-        // Creates a regular context menu
+
         public ContextMenuOption(string label, bool isEnabled, Action onSelected)
+            : this(TextManager.Get(label).Fallback(label), isEnabled, onSelected) { }
+        
+        public ContextMenuOption(Identifier labelTag, bool isEnabled, Action onSelected)
+            : this(TextManager.Get(labelTag), isEnabled, onSelected) { }
+        
+        // Creates a regular context menu
+        public ContextMenuOption(LocalizedString label, bool isEnabled, Action onSelected)
         {
-            Label = TextManager.Get(label, returnNull: true) ?? label;
+            Label = label;
             OnSelected = onSelected;
             IsEnabled = isEnabled;
             SubOptions = null;
@@ -49,14 +56,14 @@ namespace Barotrauma
         /// <param name="header">Header text</param>
         /// <param name="style">Background style</param>
         /// <param name="options">list of context menu options</param>
-        public GUIContextMenu(Vector2? position, string header, string style, params ContextMenuOption[] options) : base(style, new RectTransform(Point.Zero, GUI.Canvas))
+        public GUIContextMenu(Vector2? position, LocalizedString header, string style, params ContextMenuOption[] options) : base(style, new RectTransform(Point.Zero, GUI.Canvas))
         {
             Vector2 pos = position ?? PlayerInput.MousePosition;
-            ScalableFont headerFont = GUI.SubHeadingFont;
-            ScalableFont font = GUI.SmallFont; // font the context menu options use
+            GUIFont headerFont = GUIStyle.SubHeadingFont;
+            GUIFont font = GUIStyle.SmallFont; // font the context menu options use
             Vector4 padding = new Vector4(4), headerPadding = new Vector4(8);
-            int horizontalPadding = (int) (padding.X + padding.Z), verticalPadding = (int) (padding.Y + padding.W);
-            bool hasHeader = !string.IsNullOrWhiteSpace(header);
+            int horizontalPadding = (int)(padding.X + padding.Z), verticalPadding = (int)(padding.Y + padding.W);
+            bool hasHeader = !header.IsNullOrWhiteSpace();
 
             //----------------------------------------------------------------------------------
             // Estimate the size of the context menu
@@ -88,18 +95,26 @@ namespace Barotrauma
             // Construct the GUI elements
             //----------------------------------------------------------------------------------
 
-            GUILayoutGroup background = new GUILayoutGroup(new RectTransform(Vector2.One, RectTransform, Anchor.Center));
+            GUILayoutGroup background = new GUILayoutGroup(new RectTransform(Vector2.One, RectTransform, Anchor.Center))
+            {
+                Stretch = true
+            };
 
+            Point listSize = estimatedSize;
             if (hasHeader)
             {
-                HeaderLabel = new GUITextBlock(new RectTransform(new Vector2(1f, 0.2f), background.RectTransform), header, font: headerFont) { Padding = headerPadding };
+                Point sz = Point.Zero;
+                InflateSize(ref sz, header, headerFont);
+                listSize.Y -= sz.Y;
+                HeaderLabel = new GUITextBlock(new RectTransform(sz, background.RectTransform), header, font: headerFont) { Padding = headerPadding };
             }
 
-            GUIListBox optionList = new GUIListBox(new RectTransform(new Vector2(1f, hasHeader ? 0.8f : 1f), background.RectTransform), style: null)
+            GUIListBox optionList = new GUIListBox(new RectTransform(listSize, background.RectTransform), style: null)
             {
                 AutoHideScrollBar = false,
                 ScrollBarVisible = false,
-                Padding = hasHeader ? new Vector4(4, 0, 4, 4) : padding
+                Padding = hasHeader ? new Vector4(4, 0, 4, 4) : padding,
+                PlaySoundOnSelect = true
             };
 
             foreach (var (option, size) in optionsAndSizes)
@@ -111,14 +126,20 @@ namespace Barotrauma
                 };
                 Options.Add(option, optionElement);
 
-                if (!string.IsNullOrWhiteSpace(option.Tooltip) && optionElement.Enabled)
+                if (!option.Tooltip.IsNullOrWhiteSpace() && optionElement.Enabled)
                 {
                     optionElement.ToolTip = option.Tooltip;
                 }
 
-                if (!option.IsEnabled)
+                //option doesn't do anything, make it a label
+                if (option.OnSelected == null)
                 {
-                    optionElement.TextColor *= 0.5f;
+                    optionElement.TextAlignment = Alignment.BottomLeft;
+                    optionElement.TextColor = optionElement.DisabledTextColor = GUIStyle.Green;
+                }
+                else if (!option.IsEnabled)
+                {
+                     optionElement.TextColor *= 0.5f;                    
                 }
             }
 
@@ -131,7 +152,10 @@ namespace Barotrauma
             // Resize all children to the size of their text
             foreach (GUITextBlock block in children.Where(c => c is GUITextBlock).Cast<GUITextBlock>())
             {
-                block.RectTransform.NonScaledSize = new Point((int) (block.TextSize.X + (block.Padding.X + block.Padding.Z)), (int) (18 * GUI.Scale));
+                bool isLabel = block.UserData is ContextMenuOption option && option.OnSelected == null;
+                block.RectTransform.NonScaledSize = new Point(
+                    (int)(block.TextSize.X + (block.Padding.X + block.Padding.Z)), 
+                    (int)Math.Max(block.TextSize.Y * 1.2f, 18 * GUI.Scale));
             }
 
             int largestWidth = children.Max(c => c.Rect.Width + horizontalPadding);
@@ -140,7 +164,7 @@ namespace Barotrauma
             if (HeaderLabel != null)
             {
                 RectTransform headerTransform = HeaderLabel.RectTransform;
-                headerTransform.MinSize = new Point((int) (HeaderLabel.TextSize.X + (headerPadding.X + headerPadding.Z)), headerTransform.NonScaledSize.Y);
+                headerTransform.MinSize = new Point((int)(HeaderLabel.TextSize.X + (headerPadding.X + headerPadding.Z)), headerTransform.NonScaledSize.Y);
                 if (largestWidth < headerTransform.MinSize.X)
                 {
                     largestWidth = headerTransform.MinSize.X;
@@ -156,7 +180,7 @@ namespace Barotrauma
             // the cropped size of the option list
             Point newSize = new Point(largestWidth, children.Sum(c => c.Rect.Height) + verticalPadding);
             // resize the menu itself taking into account the option menus relative Y size
-            RectTransform.NonScaledSize = new Point(newSize.X, (int) (newSize.Y / optionList.RectTransform.RelativeSize.Y));
+            RectTransform.NonScaledSize = new Point(newSize.X, (int)(newSize.Y / optionList.RectTransform.RelativeSize.Y));
             optionList.RectTransform.NonScaledSize = newSize;
 
             // move the context menu if it would go outside of screen
@@ -179,7 +203,7 @@ namespace Barotrauma
 
         public static GUIContextMenu CreateContextMenu(params ContextMenuOption[] options) => CreateContextMenu(PlayerInput.MousePosition, string.Empty, null, options);
 
-        public static GUIContextMenu CreateContextMenu(Vector2? pos, string header, Color? headerColor, params ContextMenuOption[] options)
+        public static GUIContextMenu CreateContextMenu(Vector2? pos, LocalizedString header, Color? headerColor, params ContextMenuOption[] options)
         {
             GUIContextMenu menu = new GUIContextMenu(pos,header, "GUIToolTip", options);
             if (headerColor != null)
@@ -209,11 +233,11 @@ namespace Barotrauma
         /// <param name="label">String whose size to inflate by</param>
         /// <param name="font">What font to use</param>
         /// <returns>The size of the text</returns>
-        private Vector2 InflateSize(ref Point size, string label, ScalableFont font)
+        private Vector2 InflateSize(ref Point size, LocalizedString label, ScalableFont font)
         {
             Vector2 textSize = font.MeasureString(label);
-            size.X = Math.Max((int) Math.Ceiling(textSize.X), size.X);
-            size.Y += (int) Math.Ceiling(textSize.Y);
+            size.X = Math.Max((int)Math.Ceiling(textSize.X), size.X);
+            size.Y += (int)Math.Ceiling(textSize.Y);
             return textSize;
         }
 
@@ -276,7 +300,7 @@ namespace Barotrauma
         public override void AddToGUIUpdateList(bool ignoreChildren = false, int order = 0)
         {
             base.AddToGUIUpdateList(ignoreChildren, order);
-            SubMenu?.AddToGUIUpdateList();
+            SubMenu?.AddToGUIUpdateList(order: 2);
         }
 
         public static void AddActiveToGUIUpdateList()
@@ -286,7 +310,7 @@ namespace Barotrauma
                 CurrentContextMenu = null;
             }
 
-            CurrentContextMenu?.AddToGUIUpdateList();
+            CurrentContextMenu?.AddToGUIUpdateList(order: 2);
         }
     }
 }

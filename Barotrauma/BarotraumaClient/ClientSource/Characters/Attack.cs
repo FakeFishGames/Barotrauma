@@ -6,22 +6,22 @@ namespace Barotrauma
 {
     partial class Attack
     {
-        [Serialize("StructureBlunt", true), Editable()]
+        [Serialize("StructureBlunt", IsPropertySaveable.Yes), Editable()]
         public string StructureSoundType { get; private set; }
 
         private RoundSound sound;
 
         private ParticleEmitter particleEmitter;
 
-        partial void InitProjSpecific(XElement element)
+        partial void InitProjSpecific(ContentXElement element)
         {
-            if (element.Attribute("sound") != null)
+            if (element.GetAttribute("sound") != null)
             {
                 DebugConsole.ThrowError("Error in attack ("+element+") - sounds should be defined as child elements, not as attributes.");
                 return;
             }
 
-            foreach (XElement subElement in element.Elements())
+            foreach (var subElement in element.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
@@ -29,7 +29,7 @@ namespace Barotrauma
                         particleEmitter = new ParticleEmitter(subElement);
                         break;
                     case "sound":
-                        sound = Submarine.LoadRoundSound(subElement);
+                        sound = RoundSound.Load(subElement);
                         break;
                 }
 
@@ -42,7 +42,7 @@ namespace Barotrauma
 
             if (sound != null)
             {
-                SoundPlayer.PlaySound(sound.Sound, worldPosition, sound.Volume, sound.Range, ignoreMuffling: sound.IgnoreMuffling);
+                SoundPlayer.PlaySound(sound.Sound, worldPosition, sound.Volume, sound.Range, ignoreMuffling: sound.IgnoreMuffling, freqMult: sound.GetRandomFrequencyMultiplier());
             }
         }
     }

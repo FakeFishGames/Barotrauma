@@ -1,4 +1,5 @@
-﻿using Barotrauma.Networking;
+﻿using Barotrauma.Extensions;
+using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -178,7 +179,7 @@ namespace Barotrauma
                 activeSprite?.Draw(
                     spriteBatch,
                     new Vector2(obj.Position.X, -obj.Position.Y) - camDiff * obj.Position.Z / 10000.0f,
-                    Color.Lerp(Color.White, Level.Loaded.BackgroundTextureColor, obj.Position.Z / 3000.0f),
+                    Color.Lerp(obj.Prefab.SpriteColor, obj.Prefab.SpriteColor.Multiply(Level.Loaded.BackgroundTextureColor), obj.Position.Z / 3000.0f),
                     activeSprite.Origin,
                     obj.CurrentRotation,
                     obj.CurrentScale,
@@ -200,13 +201,13 @@ namespace Barotrauma
                         obj.ActivePrefab.DeformableSprite.Origin,
                         obj.CurrentRotation,
                         obj.CurrentScale,
-                        Color.Lerp(Color.White, Level.Loaded.BackgroundTextureColor, obj.Position.Z / 5000.0f));
+                        Color.Lerp(obj.Prefab.SpriteColor, obj.Prefab.SpriteColor.Multiply(Level.Loaded.BackgroundTextureColor), obj.Position.Z / 5000.0f));
                 }
 
                 
                 if (GameMain.DebugDraw)
                 {
-                    GUI.DrawRectangle(spriteBatch, new Vector2(obj.Position.X, -obj.Position.Y), new Vector2(10.0f, 10.0f), GUI.Style.Red, true);
+                    GUI.DrawRectangle(spriteBatch, new Vector2(obj.Position.X, -obj.Position.Y), new Vector2(10.0f, 10.0f), GUIStyle.Red, true);
 
                     if (obj.Triggers == null) { continue; }
                     foreach (LevelTrigger trigger in obj.Triggers)
@@ -218,7 +219,7 @@ namespace Barotrauma
                         if (flowForce.LengthSquared() > 1)
                         {
                             flowForce.Y = -flowForce.Y;
-                            GUI.DrawLine(spriteBatch, new Vector2(trigger.WorldPosition.X, -trigger.WorldPosition.Y), new Vector2(trigger.WorldPosition.X, -trigger.WorldPosition.Y) + flowForce * 10, GUI.Style.Orange, 0, 5);
+                            GUI.DrawLine(spriteBatch, new Vector2(trigger.WorldPosition.X, -trigger.WorldPosition.Y), new Vector2(trigger.WorldPosition.X, -trigger.WorldPosition.Y) + flowForce * 10, GUIStyle.Orange, 0, 5);
                         }
                         trigger.PhysicsBody.UpdateDrawPosition();
                         trigger.PhysicsBody.DebugDraw(spriteBatch, trigger.IsTriggered ? Color.Cyan : Color.DarkCyan);
@@ -229,7 +230,7 @@ namespace Barotrauma
             }
         }
 
-        public void ClientRead(ServerNetObject type, IReadMessage msg, float sendingTime)
+        public void ClientEventRead(IReadMessage msg, float sendingTime)
         {
             int objIndex = msg.ReadRangedInteger(0, objects.Count);
             objects[objIndex].ClientRead(msg);

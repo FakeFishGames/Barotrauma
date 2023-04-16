@@ -7,17 +7,13 @@ namespace Barotrauma
 {
     class CampaignEndScreen : Screen
     {
-        private Video video;
-
         private readonly CreditsPlayer creditsPlayer;
 
         private readonly Camera cam;
 
         public Action OnFinished;
 
-        private string textOverlay;
-        private float textOverlayTimer;
-        private Vector2 textOverlaySize;
+        protected SlideshowPlayer slideshowPlayer;
 
         public CampaignEndScreen()
         {
@@ -27,92 +23,66 @@ namespace Barotrauma
                 ScrollBarEnabled = false,
                 AllowMouseWheelScroll = false
             };
-            new GUIButton(new RectTransform(new Vector2(0.1f), creditsPlayer.RectTransform, Anchor.BottomRight, maxSize: new Point(300, 50)) { AbsoluteOffset = new Point(GUI.IntScale(20)) },
-                TextManager.Get("close"))
+            creditsPlayer.CloseButton.OnClicked = (btn, userdata) =>
             {
-                OnClicked = (btn, userdata) =>
-                {
-                    creditsPlayer.Scroll = 1.0f;
-                    return true;
-                }
+                creditsPlayer.Scroll = 1.0f;
+                return true;
             };
+
             cam = new Camera();
         }
 
         public override void Select()
         {
             base.Select();
-
-            textOverlay = ToolBox.WrapText(TextManager.Get("campaignend1"), GameMain.GraphicsWidth / 3, GUI.Font);
-            textOverlaySize = GUI.Font.MeasureString(textOverlay);
-            textOverlayTimer = 0.0f;
-
-            video = Video.Load(GameMain.GraphicsDeviceManager.GraphicsDevice, GameMain.SoundManager, "Content/SplashScreens/Ending.webm");
-            video.Play();
+            if (SlideshowPrefab.Prefabs.TryGet("campaignending".ToIdentifier(), out var slideshow))
+            {
+                slideshowPlayer = new SlideshowPlayer(GUICanvas.Instance, slideshow);
+            }
             creditsPlayer.Restart();
             creditsPlayer.Visible = false;
-            SteamAchievementManager.UnlockAchievement("campaigncompleted", unlockClients: true);
+            UnlockAchievement("campaigncompleted");
+            UnlockAchievement(
+                GameMain.GameSession is { Campaign.Settings.RadiationEnabled: true } ? 
+                "campaigncompleted_radiationenabled" : 
+                "campaigncompleted_radiationdisabled");
+
+            static void UnlockAchievement(string id)
+            {
+                SteamAchievementManager.UnlockAchievement(id.ToIdentifier(), unlockClients: true);
+            }
         }
 
         public override void Deselect()
         {
-            video?.Dispose();
-            video = null;
             GUI.HideCursor = false;
-            SoundPlayer.OverrideMusicType = null;
+            SoundPlayer.OverrideMusicType = Identifier.Empty;
         }
 
         public override void Update(double deltaTime)
         {
+            slideshowPlayer?.UpdateManually((float)deltaTime);
             if (creditsPlayer.Finished)
             {
                 OnFinished?.Invoke();
-                SoundPlayer.OverrideMusicType = null;
+                SoundPlayer.OverrideMusicType = Identifier.Empty;
             }
         }
 
         public override void Draw(double deltaTime, GraphicsDevice graphics, SpriteBatch spriteBatch)
         {
-            spriteBatch.Begin();
+            spriteBatch.Begin(SpriteSortMode.Deferred, null, GUI.SamplerState, null, GameMain.ScissorTestEnable);
             graphics.Clear(Color.Black);
-            if (video.IsPlaying)
+            SoundPlayer.OverrideMusicType = "ending".ToIdentifier();
+            if (slideshowPlayer != null && !slideshowPlayer.Finished)
             {
-                GUI.HideCursor = !GUI.PauseMenuOpen;
-                spriteBatch.Draw(video.GetTexture(), new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight), Color.White);
+                slideshowPlayer.DrawManually(spriteBatch);
             }
             else
             {
-                SoundPlayer.OverrideMusicType = "ending";
-                float duration = 20.0f;
-                float creditsDelay = 3.0f;
-                if (textOverlayTimer < duration + creditsDelay)
-                {
-                    float textAlpha;
-                    float fadeInTime = 5.0f, fadeOutTime = 3.0f;
-                    textOverlayTimer += (float)deltaTime;
-                    if (textOverlayTimer < fadeInTime)
-                    {
-                        textAlpha = textOverlayTimer / fadeInTime;
-                    }
-                    else if (textOverlayTimer > duration - fadeOutTime)
-                    {
-                        textAlpha = Math.Min((duration - textOverlayTimer) / fadeOutTime, 1.0f);
-                    }
-                    else
-                    {
-                        textAlpha = 1.0f;
-                    }
-                    GUI.Font.DrawString(spriteBatch, textOverlay, new Vector2(GameMain.GraphicsWidth, GameMain.GraphicsHeight) / 2 - textOverlaySize / 2, Color.White * textAlpha);
-                }
-                else
-                {
-                    GUI.HideCursor = false;
-                    creditsPlayer.Visible = true;
-                }
+                GUI.HideCursor = false;
+                creditsPlayer.Visible = true;
             }
-            spriteBatch.End();
-
-            spriteBatch.Begin(SpriteSortMode.Deferred, null, GUI.SamplerState, null, GameMain.ScissorTestEnable);
             GUI.Draw(cam, spriteBatch);
             spriteBatch.End();
         }

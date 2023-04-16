@@ -8,6 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
+using System.Collections.Immutable;
 using Barotrauma.Abilities;
 #if CLIENT
 using Microsoft.Xna.Framework.Graphics;
@@ -55,10 +56,12 @@ namespace Barotrauma
         //dimensions of the wall sections' physics bodies (only used for debug rendering)
         private readonly List<Vector2> bodyDebugDimensions = new List<Vector2>();
 
+        private static Explosion explosionOnBroken;
+
 #if DEBUG
-        [Serialize(false, true), Editable]
+        [Serialize(false, IsPropertySaveable.Yes), Editable]
 #else
-        [Serialize(false, true)]
+        [Serialize(false, IsPropertySaveable.Yes)]
 #endif
         public bool Indestructible
         {
@@ -75,7 +78,7 @@ namespace Barotrauma
 
         public override Sprite Sprite
         {
-            get { return prefab.sprite; }
+            get { return base.Prefab.Sprite; }
         }
 
         public bool IsPlatform
@@ -91,7 +94,7 @@ namespace Barotrauma
 
         public override string Name
         {
-            get { return prefab.Name; }
+            get { return base.Prefab.Name.Value; }
         }
 
         public bool HasBody
@@ -115,7 +118,7 @@ namespace Barotrauma
 
         private float? maxHealth;
 
-        [Serialize(100.0f, true)]
+        [Serialize(100.0f, IsPropertySaveable.Yes), Editable(MinValueFloat = 0)]
         public float MaxHealth
         {
             get => maxHealth ?? Prefab.Health;
@@ -124,7 +127,7 @@ namespace Barotrauma
 
         private float crushDepth;
 
-        [Serialize(Level.DefaultRealWorldCrushDepth, true)]
+        [Serialize(Level.DefaultRealWorldCrushDepth, IsPropertySaveable.Yes)]
         public float CrushDepth
         {
             get => crushDepth;
@@ -163,29 +166,37 @@ namespace Barotrauma
             private set;
         }
 
-        public StructurePrefab Prefab => prefab as StructurePrefab;
+        public new StructurePrefab Prefab => base.Prefab as StructurePrefab;
 
-        public HashSet<string> Tags
+        public ImmutableHashSet<Identifier> Tags => Prefab.Tags;
+
+#if DEBUG
+        [Editable, Serialize("", IsPropertySaveable.Yes)]
+#else
+        [Serialize("", IsPropertySaveable.Yes)]
+#endif
+        public string SpecialTag
         {
-            get { return prefab.Tags; }
+            get;
+            set;
         }
 
         protected Color spriteColor;
-        [Editable, Serialize("1.0,1.0,1.0,1.0", true)]
+        [Editable, Serialize("1.0,1.0,1.0,1.0", IsPropertySaveable.Yes)]
         public Color SpriteColor
         {
             get { return spriteColor; }
             set { spriteColor = value; }
         }
 
-        [Editable, Serialize(false, true)]
+        [Editable, Serialize(false, IsPropertySaveable.Yes)]
         public bool UseDropShadow
         {
             get;
             private set;
         }
 
-        [Editable, Serialize("0,0", true, description: "The position of the drop shadow relative to the structure. If set to zero, the shadow is positioned automatically so that it points towards the sub's center of mass.")]
+        [Editable, Serialize("0,0", IsPropertySaveable.Yes, description: "The position of the drop shadow relative to the structure. If set to zero, the shadow is positioned automatically so that it points towards the sub's center of mass.")]
         public Vector2 DropShadowOffset
         {
             get;
@@ -201,7 +212,7 @@ namespace Barotrauma
                 if (scale == value) { return; }
                 scale = MathHelper.Clamp(value, 0.1f, 10.0f);
 
-                float relativeScale = scale / prefab.Scale;
+                float relativeScale = scale / base.Prefab.Scale;
 
                 if (!ResizeHorizontal || !ResizeVertical)
                 {
@@ -230,7 +241,7 @@ namespace Barotrauma
 
         protected Vector2 textureScale = Vector2.One;
 
-        [Editable(DecimalCount = 3, MinValueFloat = 0.01f, MaxValueFloat = 10f, ValueStep = 0.1f), Serialize("1.0, 1.0", false)]
+        [Editable(DecimalCount = 3, MinValueFloat = 0.01f, MaxValueFloat = 10f, ValueStep = 0.1f), Serialize("1.0, 1.0", IsPropertySaveable.No)]
         public Vector2 TextureScale
         {
             get { return textureScale; }
@@ -250,7 +261,7 @@ namespace Barotrauma
         }
 
         protected Vector2 textureOffset = Vector2.Zero;
-        [Editable(MinValueFloat = -1000f, MaxValueFloat = 1000f, ValueStep = 10f), Serialize("0.0, 0.0", true)]
+        [Editable(MinValueFloat = -1000f, MaxValueFloat = 1000f, ValueStep = 10f), Serialize("0.0, 0.0", IsPropertySaveable.Yes)]
         public Vector2 TextureOffset
         {
             get { return textureOffset; }
@@ -343,20 +354,20 @@ namespace Barotrauma
             }
         }
 
-        [Serialize(false, true), Editable]
+        [Serialize(false, IsPropertySaveable.Yes), Editable]
         public bool NoAITarget
         {
             get;
             private set;
         }
 
-        public Dictionary<string, SerializableProperty> SerializableProperties
+        public Dictionary<Identifier, SerializableProperty> SerializableProperties
         {
             get;
             private set;
         }
 
-        public override void Move(Vector2 amount)
+        public override void Move(Vector2 amount, bool ignoreContacts = false)
         {
             if (!MathUtils.IsValid(amount))
             {
@@ -379,7 +390,15 @@ namespace Barotrauma
                 Vector2 simAmount = ConvertUnits.ToSimUnits(amount);
                 foreach (Body b in Bodies)
                 {
-                    b.SetTransform(b.Position + simAmount, b.Rotation);
+                    Vector2 pos = b.Position + simAmount;
+                    if (ignoreContacts)
+                    {
+                        b.SetTransformIgnoreContacts(ref pos, b.Rotation);
+                    }
+                    else
+                    {
+                        b.SetTransform(pos, b.Rotation);
+                    }
                 }
             }
 
@@ -406,7 +425,7 @@ namespace Barotrauma
             rect = rectangle;
             TextureScale = sp.TextureScale;
 
-            spriteColor = prefab.SpriteColor;
+            spriteColor = base.Prefab.SpriteColor;
             if (sp.IsHorizontal.HasValue)
             {
                 IsHorizontal = sp.IsHorizontal.Value;
@@ -461,7 +480,7 @@ namespace Barotrauma
             SerializableProperties = element != null ? SerializableProperty.DeserializeProperties(this, element) : SerializableProperty.GetProperties(this);
 
 #if CLIENT
-            foreach (XElement subElement in sp.ConfigElement.Elements())
+            foreach (var subElement in sp.ConfigElement.Elements())
             {
                 if (subElement.Name.ToString().Equals("light", StringComparison.OrdinalIgnoreCase))
                 {
@@ -524,7 +543,7 @@ namespace Barotrauma
             {
                 defaultRect = defaultRect
             };
-            foreach (KeyValuePair<string, SerializableProperty> property in SerializableProperties)
+            foreach (KeyValuePair<Identifier, SerializableProperty> property in SerializableProperties)
             {
                 if (!property.Value.Attributes.OfType<Editable>().Any()) { continue; }
                 clone.SerializableProperties[property.Key].TrySetValue(clone, property.Value.GetValue(this));
@@ -568,17 +587,22 @@ namespace Barotrauma
             int xsections = 1, ysections = 1;
             int width = rect.Width, height = rect.Height;
 
+            WallSection[] prevSections = null;
+            if (Sections != null)
+            {
+                prevSections = Sections.ToArray();
+            }
             if (!HasBody)
             {
                 if (FlippedX && IsHorizontal)
                 {
-                    xsections = (int)Math.Ceiling((float)rect.Width / prefab.sprite.SourceRect.Width);
-                    width = prefab.sprite.SourceRect.Width;
+                    xsections = (int)Math.Ceiling((float)rect.Width / base.Prefab.Sprite.SourceRect.Width);
+                    width = base.Prefab.Sprite.SourceRect.Width;
                 }
                 else if (FlippedY && !IsHorizontal)
                 {
-                    ysections = (int)Math.Ceiling((float)rect.Height / prefab.sprite.SourceRect.Height);
-                    width = prefab.sprite.SourceRect.Height;
+                    ysections = (int)Math.Ceiling((float)rect.Height / base.Prefab.Sprite.SourceRect.Height);
+                    width = base.Prefab.Sprite.SourceRect.Height;
                 }
                 else
                 {
@@ -651,6 +675,14 @@ namespace Barotrauma
                     }
                 }
             }
+
+            if (prevSections != null && Sections.Length == prevSections.Length)
+            {
+                for (int i = 0; i < Sections.Length; i++)
+                {
+                    Sections[i].damage = prevSections[i].damage;
+                }
+            }
         }
 
         private Rectangle GenerateMergedRect(List<WallSection> mergedSections)
@@ -704,7 +736,7 @@ namespace Barotrauma
                 if (BodyWidth > 0.0f) { rectSize.X = BodyWidth; }
                 if (BodyHeight > 0.0f) { rectSize.Y = BodyHeight; }
 
-                Vector2 bodyPos = WorldPosition + BodyOffset;
+                Vector2 bodyPos = WorldPosition + BodyOffset * Scale;
 
                 Vector2 transformedMousePos = MathUtils.RotatePointAroundTarget(position, bodyPos, BodyRotation);
 
@@ -823,17 +855,24 @@ namespace Barotrauma
 
         public WallSection GetSection(int sectionIndex)
         {
-            if (sectionIndex < 0 || sectionIndex >= Sections.Length) return null;
-
+            if (sectionIndex < 0 || sectionIndex >= Sections.Length) { return null; }
             return Sections[sectionIndex];
 
         }
 
         public bool SectionBodyDisabled(int sectionIndex)
         {
-            if (sectionIndex < 0 || sectionIndex >= Sections.Length) return false;
-
+            if (sectionIndex < 0 || sectionIndex >= Sections.Length) { return false; }
             return (Sections[sectionIndex].damage >= MaxHealth);
+        }
+
+        public bool AllSectionBodiesDisabled()
+        {
+            for (int i = 0; i < Sections.Length; i++)
+            {
+                if (Sections[i].damage < MaxHealth) { return false; }
+            }
+            return true;
         }
 
         /// <summary>
@@ -841,9 +880,8 @@ namespace Barotrauma
         /// </summary>
         public bool SectionIsLeaking(int sectionIndex)
         {
-            if (sectionIndex < 0 || sectionIndex >= Sections.Length) return false;
-
-            return (Sections[sectionIndex].damage >= MaxHealth * LeakThreshold);
+            if (sectionIndex < 0 || sectionIndex >= Sections.Length) { return false; }
+            return Sections[sectionIndex].damage >= MaxHealth * LeakThreshold;
         }
 
         public int SectionLength(int sectionIndex)
@@ -876,7 +914,7 @@ namespace Barotrauma
             return true;
         }
 
-        public void AddDamage(int sectionIndex, float damage, Character attacker = null)
+        public void AddDamage(int sectionIndex, float damage, Character attacker = null, bool emitParticles = true)
         {
             if (!Prefab.Body || Prefab.Platform || Indestructible) { return; }
 
@@ -885,7 +923,7 @@ namespace Barotrauma
             var section = Sections[sectionIndex];
 
 #if CLIENT
-            if (damage > 0)
+            if (damage > 0 && emitParticles)
             {
                 float dmg = Math.Min(MaxHealth - section.damage, damage);
                 float particleAmount = MathHelper.Lerp(0, 25, MathUtils.InverseLerp(0, 100, dmg * Rand.Range(0.75f, 1.25f)));
@@ -898,8 +936,8 @@ namespace Barotrauma
                 {
                     var worldRect = section.WorldRect;
                     Vector2 particlePos = new Vector2(
-                        Rand.Range(worldRect.X, worldRect.Right),
-                        Rand.Range(worldRect.Y - worldRect.Height, worldRect.Y));
+                        Rand.Range(worldRect.X, worldRect.Right + 1),
+                        Rand.Range(worldRect.Y - worldRect.Height, worldRect.Y + 1));
 
                     var particle = GameMain.ParticleManager.CreateParticle("shrapnel", particlePos, Rand.Vector(Rand.Range(1.0f, 50.0f)), collisionIgnoreTimer: 1f);
                     if (particle == null) break;
@@ -1016,7 +1054,10 @@ namespace Barotrauma
                     damageAmount = attack.GetStructureDamage(deltaTime);
                     AddDamage(i, damageAmount, attacker);
 #if CLIENT
-                    GameMain.ParticleManager.CreateParticle("dustcloud", SectionPosition(i), 0.0f, 0.0f);
+                    if (attack.EmitStructureDamageParticles)
+                    {
+                        GameMain.ParticleManager.CreateParticle("dustcloud", SectionPosition(i), 0.0f, 0.0f);
+                    }
 #endif
                 }
             }
@@ -1034,7 +1075,7 @@ namespace Barotrauma
 
             if (Submarine != null && damageAmount > 0 && attacker != null)
             {
-                var abilityAttackerSubmarine = new AbilityCharacterSubmarine(attacker, Submarine);
+                var abilityAttackerSubmarine = new AbilityAttackerSubmarine(attacker, Submarine);
                 foreach (Character character in Character.CharacterList)
                 {
                     character.CheckTalents(AbilityEffectType.AfterSubmarineAttacked, abilityAttackerSubmarine);
@@ -1044,7 +1085,7 @@ namespace Barotrauma
             return new AttackResult(damageAmount, null);
         }
 
-        public void SetDamage(int sectionIndex, float damage, Character attacker = null, bool createNetworkEvent = true)
+        public void SetDamage(int sectionIndex, float damage, Character attacker = null, bool createNetworkEvent = true, bool createExplosionEffect = true)
         {
             if (Submarine != null && Submarine.GodMode || Indestructible) { return; }
             if (!Prefab.Body) { return; }
@@ -1089,6 +1130,7 @@ namespace Barotrauma
             }
             else
             {
+                float prevGapOpenState = Sections[sectionIndex].gap?.Open ?? 0.0f;
                 if (Sections[sectionIndex].gap == null)
                 {
                     Rectangle gapRect = Sections[sectionIndex].rect;
@@ -1130,21 +1172,22 @@ namespace Barotrauma
                     gapRect.Height += 20;
 
                     bool horizontalGap = !IsHorizontal;
+                    bool diagonalGap = false;
                     if (Prefab.BodyRotation != 0.0f)
                     {
                         //rotation within a 90 deg sector (e.g. 100 -> 10, 190 -> 10, -10 -> 80)
                         float sectorizedRotation = MathUtils.WrapAngleTwoPi(BodyRotation) % MathHelper.PiOver2;
                         //diagonal if 30 < angle < 60
-                        bool diagonal = sectorizedRotation > MathHelper.Pi / 6 && sectorizedRotation < MathHelper.Pi / 3;
+                        diagonalGap = sectorizedRotation > MathHelper.Pi / 6 && sectorizedRotation < MathHelper.Pi / 3;
                         //gaps on the lower half of a diagonal wall are horizontal, ones on the upper half are vertical
-                        if (diagonal)
+                        if (diagonalGap)
                         {
                             horizontalGap = gapRect.Y - gapRect.Height / 2 < Position.Y;
                             if (FlippedY) { horizontalGap = !horizontalGap; }
                         }
                     }
 
-                    Sections[sectionIndex].gap = new Gap(gapRect, horizontalGap, Submarine);
+                    Sections[sectionIndex].gap = new Gap(gapRect, horizontalGap, Submarine, isDiagonal: diagonalGap);
 
                     //free the ID, because if we give gaps IDs we have to make sure they always match between the clients and the server and
                     //that clients create them in the correct order along with every other entity created/removed during the round
@@ -1164,8 +1207,15 @@ namespace Barotrauma
 #endif
                 }
 
+                var gap = Sections[sectionIndex].gap;
                 float gapOpen = MaxHealth <= 0.0f ? 0.0f : (damage / MaxHealth - LeakThreshold) * (1.0f / (1.0f - LeakThreshold));
-                Sections[sectionIndex].gap.Open = gapOpen;
+                gap.Open = gapOpen;
+
+                //gap appeared or became much larger -> explosion effect
+                if (gapOpen - prevGapOpenState > 0.25f && createExplosionEffect && !gap.IsRoomToRoom)
+                {
+                    CreateWallDamageExplosion(gap, attacker);
+                }
             }
 
             float damageDiff = damage - Sections[sectionIndex].damage;
@@ -1181,7 +1231,7 @@ namespace Barotrauma
                 {
                     if (damageDiff < 0.0f)
                     {
-                        attacker.Info?.IncreaseSkillLevel("mechanical",
+                        attacker.Info?.IncreaseSkillLevel("mechanical".ToIdentifier(),
                             -damageDiff * SkillSettings.Current.SkillIncreasePerRepairedStructureDamage / Math.Max(attacker.GetSkillLevel("mechanical"), 1.0f));
                     }
                 }
@@ -1192,6 +1242,59 @@ namespace Barotrauma
             if (hadHole == hasHole) { return; }
 
             UpdateSections();
+        }
+
+        private void CreateWallDamageExplosion(Gap gap, Character attacker)
+        {
+            const float explosionRange = 750.0f;
+            float explosionStrength = gap.Open;
+
+            var linkedHull = gap.linkedTo.FirstOrDefault() as Hull;
+            if (linkedHull != null)
+            {
+                //existing, nearby gaps leading to the same hull reduce the strength of the explosion
+                // -> the first breached section does most (or all) of the damage, making it more consistent
+                //    (otherwise the damage would depend on how many structures and sections happen to be breached)
+                foreach (var otherGap in linkedHull.ConnectedGaps)
+                {
+                    if (otherGap == gap || otherGap.IsRoomToRoom || otherGap.Open < 0.25f) { continue; }
+                    explosionStrength -= Math.Max(0, explosionRange - Vector2.Distance(otherGap.WorldPosition, gap.WorldPosition)) / explosionRange;
+                    if (explosionStrength <= 0.0f) { return; }
+                }
+            }
+
+            if (explosionOnBroken == null)
+            {
+                explosionOnBroken = new Explosion(explosionRange * gap.Open, force: 10.0f, damage: 0.0f, structureDamage: 0.0f, itemDamage: 0.0f);
+                if (AfflictionPrefab.Prefabs.TryGet("lacerations".ToIdentifier(), out AfflictionPrefab lacerations))
+                {
+                    explosionOnBroken.Attack.Afflictions.Add(lacerations.Instantiate(50.0f), null);
+                }
+                else
+                {
+                    explosionOnBroken.Attack.Afflictions.Add(AfflictionPrefab.InternalDamage.Instantiate(5.0f), null);
+                }
+                explosionOnBroken.OnlyInside = true;
+                explosionOnBroken.DisableParticles();
+            }
+
+            explosionOnBroken.Attack.DamageMultiplier = explosionStrength;
+            explosionOnBroken?.Explode(gap.WorldPosition, damageSource: null, attacker: attacker);
+#if CLIENT
+            if (linkedHull != null)
+            {
+                for (int i = 0; i <= 50; i++)
+                {
+                    Vector2 particlePos = new Vector2(Rand.Range(gap.WorldRect.X, gap.WorldRect.Right), Rand.Range(gap.WorldRect.Y - gap.WorldRect.Height, gap.WorldRect.Y));
+                    var velocity = gap.IsHorizontal ?
+                        gap.linkedTo[0].WorldPosition.X < gap.WorldPosition.X ? -Vector2.UnitX : Vector2.UnitX :
+                        gap.linkedTo[0].WorldPosition.Y < gap.WorldPosition.Y ? -Vector2.UnitY : Vector2.UnitY;
+                    velocity = new Vector2(velocity.X + Rand.Range(-0.2f, 0.2f), velocity.Y + Rand.Range(-0.2f, 0.2f));
+                    var particle = GameMain.ParticleManager.CreateParticle("shrapnel", particlePos, velocity * Rand.Range(100.0f, 3000.0f), collisionIgnoreTimer: 0.1f);
+                    if (particle == null) { break; }
+                }
+            }
+#endif
         }
 
         partial void OnHealthChangedProjSpecific(Character attacker, float damageAmount);
@@ -1207,7 +1310,7 @@ namespace Barotrauma
 
         private void UpdateSections()
         {
-            if (Bodies == null) return;
+            if (Bodies == null) { return; }
             foreach (Body b in Bodies)
             {
                 GameMain.World.Remove(b);
@@ -1280,9 +1383,9 @@ namespace Barotrauma
             Body newBody = GameMain.World.CreateRectangle(
                 ConvertUnits.ToSimUnits(rect.Width),
                 ConvertUnits.ToSimUnits(rect.Height),
-                1.5f);
-            newBody.BodyType = BodyType.Static;
-            //newBody.Position = ConvertUnits.ToSimUnits(new Vector2(rect.X + rect.Width / 2.0f, rect.Y - rect.Height / 2.0f));
+                1.5f, 
+                bodyType: BodyType.Static,
+                findNewContacts: false);
             newBody.Friction = 0.5f;
             newBody.OnCollision += OnWallCollision;
             newBody.CollisionCategories = (Prefab.Platform) ? Physics.CollisionPlatform : Physics.CollisionWall;
@@ -1291,15 +1394,16 @@ namespace Barotrauma
             Vector2 structureCenter = ConvertUnits.ToSimUnits(Position);
             if (BodyRotation != 0.0f)
             {
-                newBody.Position = structureCenter + bodyOffset + new Vector2(
+                Vector2 pos = structureCenter + bodyOffset + new Vector2(
                     (float)Math.Cos(IsHorizontal ? -BodyRotation : MathHelper.PiOver2 - BodyRotation),
                     (float)Math.Sin(IsHorizontal ? -BodyRotation : MathHelper.PiOver2 - BodyRotation))
                         * ConvertUnits.ToSimUnits(diffFromCenter);
-                newBody.Rotation = -BodyRotation;
+                newBody.SetTransformIgnoreContacts(ref pos, -BodyRotation);
             }
             else
             {
-                newBody.Position = structureCenter + (IsHorizontal ? Vector2.UnitX : Vector2.UnitY) * ConvertUnits.ToSimUnits(diffFromCenter) + bodyOffset;
+                Vector2 pos = structureCenter + (IsHorizontal ? Vector2.UnitX : Vector2.UnitY) * ConvertUnits.ToSimUnits(diffFromCenter) + bodyOffset;
+                newBody.SetTransformIgnoreContacts(ref pos, newBody.Rotation);
             }
 
             if (createConvexHull)
@@ -1371,10 +1475,10 @@ namespace Barotrauma
             }
         }
 
-        public static Structure Load(XElement element, Submarine submarine, IdRemap idRemap)
+        public static Structure Load(ContentXElement element, Submarine submarine, IdRemap idRemap)
         {
-            string name = element.Attribute("name").Value;
-            string identifier = element.GetAttributeString("identifier", "");
+            string name = element.GetAttribute("name").Value;
+            Identifier identifier = element.GetAttributeIdentifier("identifier", "");
 
             StructurePrefab prefab = FindPrefab(name, identifier);
             if (prefab == null)
@@ -1392,10 +1496,17 @@ namespace Barotrauma
             if (submarine?.Info.GameVersion != null)
             {
                 SerializableProperty.UpgradeGameVersion(s, s.Prefab.ConfigElement, submarine.Info.GameVersion);
+                //tier-based upgrade restrictions were added in 0.19.10.0, potentially soft-locking campaigns if you're
+                //far enough on the map on a submarine that can no longer have as many levels of hull upgrades.
+                // -> let's ensure that won't happen
+                if (submarine.Info.GameVersion < new Version(0, 19, 10) && GameMain.GameSession?.LevelData != null)
+                {
+                    s.CrushDepth = Math.Max(s.CrushDepth, GameMain.GameSession.LevelData.InitialDepth * Physics.DisplayToRealWorldRatio + 500);
+                }
             }
 
             bool hasDamage = false;
-            foreach (XElement subElement in element.Elements())
+            foreach (var subElement in element.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
@@ -1407,7 +1518,7 @@ namespace Barotrauma
                         {
                             string errorMsg = $"Error while loading structure \"{s.Name}\". Section damage index out of bounds. Index: {index}, section count: {s.SectionCount}.";
                             DebugConsole.ThrowError(errorMsg);
-                            GameAnalyticsManager.AddErrorEventOnce("Structure.Load:SectionIndexOutOfBounds", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                            GameAnalyticsManager.AddErrorEventOnce("Structure.Load:SectionIndexOutOfBounds", GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
                         }
                         else
                         {
@@ -1418,7 +1529,7 @@ namespace Barotrauma
                         break;
                     case "upgrade":
                     {
-                        var upgradeIdentifier = subElement.GetAttributeString("identifier", string.Empty);
+                        var upgradeIdentifier = subElement.GetAttributeIdentifier("identifier", Identifier.Empty);
                         UpgradePrefab upgradePrefab = UpgradePrefab.Find(upgradeIdentifier);
                         int level = subElement.GetAttributeInt("level", 1);
                         if (upgradePrefab != null)
@@ -1439,12 +1550,12 @@ namespace Barotrauma
             if (element.GetAttributeBool("flippedy", false)) { s.FlipY(false); }
 
             //structures with a body drop a shadow by default
-            if (element.Attribute("usedropshadow") == null)
+            if (element.GetAttribute("usedropshadow") == null)
             {
                 s.UseDropShadow = prefab.Body;
             }
 
-            if (element.Attribute("noaitarget") == null)
+            if (element.GetAttribute("noaitarget") == null)
             {
                 s.NoAITarget = prefab.NoAITarget;
             }
@@ -1457,18 +1568,18 @@ namespace Barotrauma
             return s;
         }
 
-        public static StructurePrefab FindPrefab(string name, string identifier)
+        public static StructurePrefab FindPrefab(string name, Identifier identifier)
         {
             StructurePrefab prefab = null;
-            if (string.IsNullOrEmpty(identifier))
+            if (identifier.IsEmpty)
             {
                 //legacy support:
                 //1. attempt to find a prefab with an empty identifier and a matching name
                 prefab = MapEntityPrefab.Find(name, "") as StructurePrefab;
                 //2. not found, attempt to find a prefab with a matching name
-                if (prefab == null) prefab = MapEntityPrefab.Find(name) as StructurePrefab;
+                if (prefab == null) { prefab = MapEntityPrefab.Find(name) as StructurePrefab; }
                 //3. not found, attempt to find a prefab that uses the previous name as an identifier
-                if (prefab == null) prefab = MapEntityPrefab.Find(null, name) as StructurePrefab;
+                if (prefab == null) { prefab = MapEntityPrefab.Find(null, name) as StructurePrefab; }
             }
             else
             {
@@ -1485,8 +1596,8 @@ namespace Barotrauma
             int height = ResizeVertical ? rect.Height : defaultRect.Height;
 
             element.Add(
-                new XAttribute("name", prefab.Name),
-                new XAttribute("identifier", prefab.Identifier),
+                new XAttribute("name", base.Prefab.Name),
+                new XAttribute("identifier", base.Prefab.Identifier),
                 new XAttribute("ID", ID),
                 new XAttribute("rect",
                     (int)(rect.X - Submarine.HiddenSubPosition.X) + "," +
@@ -1522,13 +1633,14 @@ namespace Barotrauma
         {
             for (int i = 0; i < Sections.Length; i++)
             {
-                SetDamage(i, Sections[i].damage, createNetworkEvent: false);
+                SetDamage(i, Sections[i].damage, createNetworkEvent: false, createExplosionEffect: false);
             }
         }
 
         public virtual void Reset()
         {
             SerializableProperties = SerializableProperty.DeserializeProperties(this, Prefab.ConfigElement);
+            MaxHealth = Prefab.Health;
             Sprite.ReloadXML();
             SpriteDepth = Sprite.Depth;
             NoAITarget = Prefab.NoAITarget;
@@ -1541,5 +1653,16 @@ namespace Barotrauma
                 aiTarget.SightRange = Submarine == null ? aiTarget.MinSightRange : MathHelper.Lerp(aiTarget.MinSightRange, aiTarget.MaxSightRange, Submarine.Velocity.Length() / 10);
             }
         }
+    }
+
+    class AbilityAttackerSubmarine : AbilityObject, IAbilityCharacter, IAbilitySubmarine
+    {
+        public AbilityAttackerSubmarine(Character character, Submarine submarine)
+        {
+            Character = character;
+            Submarine = submarine;
+        }
+        public Character Character { get; set; }
+        public Submarine Submarine { get; set; }
     }
 }

@@ -1,7 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using System;
-using System.Xml.Linq;
 using Barotrauma.Networking;
+using Barotrauma.Extensions;
 #if CLIENT
 using Microsoft.Xna.Framework.Graphics;
 using Barotrauma.Lights;
@@ -12,6 +12,9 @@ namespace Barotrauma.Items.Components
     partial class LightComponent : Powered, IServerSerializable, IDrawableComponent
     {
         private Color lightColor;
+        /// <summary>
+        /// The current brightness of the light source, affected by powerconsumption/voltage
+        /// </summary>
         private float lightBrightness;
         private float blinkFrequency;
         private float pulseFrequency, pulseAmount;
@@ -26,9 +29,11 @@ namespace Barotrauma.Items.Components
 
         public PhysicsBody ParentBody;
 
+        private bool isOn;
+
         private Turret turret;
 
-        [Serialize(100.0f, true, description: "The range of the emitted light. Higher values are more performance-intensive.", alwaysUseInstanceValues: true),
+        [Serialize(100.0f, IsPropertySaveable.Yes, description: "The range of the emitted light. Higher values are more performance-intensive.", alwaysUseInstanceValues: true),
             Editable(MinValueFloat = 0.0f, MaxValueFloat = 2048.0f)]
         public float Range
         {
@@ -43,10 +48,19 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public float Rotation;
+        private float rotation;
+        public float Rotation
+        {
+            get { return rotation; }
+            set 
+            { 
+                rotation = value;
+                SetLightSourceTransformProjSpecific();
+            }
+        }
 
-        [Editable, Serialize(true, true, description: "Should structures cast shadows when light from this light source hits them. " +
-            "Disabling shadows increases the performance of the game, and is recommended for lights with a short range.", alwaysUseInstanceValues: true)]
+        [Editable, Serialize(true, IsPropertySaveable.Yes, description: "Should structures cast shadows when light from this light source hits them. " +
+            "Disabling shadows increases the performance of the game, and is recommended for lights with a short range. Lights that are set to be drawn behind subs don't cast shadows, regardless of this setting.", alwaysUseInstanceValues: true)]
         public bool CastShadows
         {
             get { return castShadows; }
@@ -59,7 +73,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        [Editable, Serialize(false, true, description: "Lights drawn behind submarines don't cast any shadows and are much faster to draw than shadow-casting lights. " +
+        [Editable, Serialize(false, IsPropertySaveable.Yes, description: "Lights drawn behind submarines don't cast any shadows and are much faster to draw than shadow-casting lights. " +
             "It's recommended to enable this on decorative lights outside the submarine's hull.", alwaysUseInstanceValues: true)]
         public bool DrawBehindSubs
         {
@@ -73,20 +87,21 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        [Editable, Serialize(false, true, description: "Is the light currently on.", alwaysUseInstanceValues: true)]
+        [Editable, Serialize(false, IsPropertySaveable.Yes, description: "Is the light currently on.", alwaysUseInstanceValues: true)]
         public bool IsOn
         {
-            get { return IsActive; }
+            get { return isOn; }
             set
             {
-                if (IsActive == value) { return; }
+                if (isOn == value && IsActive == value) { return; }
 
-                IsActive = value;
+                IsActive = isOn = value;
+                SetLightSourceState(value, value ? lightBrightness : 0.0f);
                 OnStateChanged();
             }
         }
 
-        [Editable, Serialize(0.0f, false, description: "How heavily the light flickers. 0 = no flickering, 1 = the light will alternate between completely dark and full brightness.")]
+        [Editable, Serialize(0.0f, IsPropertySaveable.No, description: "How heavily the light flickers. 0 = no flickering, 1 = the light will alternate between completely dark and full brightness.")]
         public float Flicker
         {
             get { return flicker; }
@@ -99,7 +114,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        [Editable, Serialize(1.0f, false, description: "How fast the light flickers.")]
+        [Editable, Serialize(1.0f, IsPropertySaveable.No, description: "How fast the light flickers.")]
         public float FlickerSpeed
         {
             get { return flickerSpeed; }
@@ -112,7 +127,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        [Editable, Serialize(0.0f, true, description: "How rapidly the light pulsates (in Hz). 0 = no blinking.")]
+        [Editable, Serialize(0.0f, IsPropertySaveable.Yes, description: "How rapidly the light pulsates (in Hz). 0 = no blinking.")]
         public float PulseFrequency
         {
             get { return pulseFrequency; }
@@ -125,7 +140,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        [Editable(MinValueFloat = 0.0f, MaxValueFloat = 1.0f, DecimalCount = 2), Serialize(0.0f, true, description: "How much light pulsates (in Hz). 0 = not at all, 1 = alternates between full brightness and off.")]
+        [Editable(MinValueFloat = 0.0f, MaxValueFloat = 1.0f, DecimalCount = 2), Serialize(0.0f, IsPropertySaveable.Yes, description: "How much light pulsates (in Hz). 0 = not at all, 1 = alternates between full brightness and off.")]
         public float PulseAmount
         {
             get { return pulseAmount; }
@@ -138,7 +153,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        [Editable, Serialize(0.0f, true, description: "How rapidly the light blinks on and off (in Hz). 0 = no blinking.")]
+        [Editable, Serialize(0.0f, IsPropertySaveable.Yes, description: "How rapidly the light blinks on and off (in Hz). 0 = no blinking.")]
         public float BlinkFrequency
         {
             get { return blinkFrequency; }
@@ -151,7 +166,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        [InGameEditable(FallBackTextTag = "connection.setcolor"), Serialize("255,255,255,255", true, description: "The color of the emitted light (R,G,B,A).", alwaysUseInstanceValues: true)]
+        [InGameEditable(FallBackTextTag = "connection.setcolor"), Serialize("255,255,255,255", IsPropertySaveable.Yes, description: "The color of the emitted light (R,G,B,A).", alwaysUseInstanceValues: true)]
         public Color LightColor
         {
             get { return lightColor; }
@@ -161,20 +176,29 @@ namespace Barotrauma.Items.Components
 #if CLIENT
                 if (Light != null)
                 {
-                    Light.Color = IsActive ? lightColor : Color.Transparent;
+                    Light.Color = IsOn ? lightColor.Multiply(lightColorMultiplier) : Color.Transparent;
                 }
 #endif
             }
         }
 
-        [Serialize(false, false, description: "If enabled, the component will ignore continuous signals received in the toggle input (i.e. a continuous signal will only toggle it once).")]
+        [Serialize(false, IsPropertySaveable.No, description: "If enabled, the component will ignore continuous signals received in the toggle input (i.e. a continuous signal will only toggle it once).")]
         public bool IgnoreContinuousToggle
         {
             get;
             set;
         }
 
-        public override void Move(Vector2 amount)
+        [Serialize(true, IsPropertySaveable.No, description: "Should the light sprite be drawn on the item using alpha blending, in addition to being rendered in the light map? Can be used to make the light sprite stand out more.")]
+        public bool AlphaBlend
+        {
+            get;
+            set;
+        }
+
+        public float TemporaryFlickerTimer;
+
+        public override void Move(Vector2 amount, bool ignoreContacts = false)
         {
 #if CLIENT
             Light.Position += amount;
@@ -191,13 +215,12 @@ namespace Barotrauma.Items.Components
             set
             {
                 if (base.IsActive == value) { return; }
-                base.IsActive = value;
-
-                SetLightSourceState(value, value ? lightBrightness : 0.0f);
+                base.IsActive = isOn = value;
+                SetLightSourceState(value, value ? lightBrightness : 0.0f);                
             }
         }
 
-        public LightComponent(Item item, XElement element)
+        public LightComponent(Item item, ContentXElement element)
             : base(item, element)
         {
 #if CLIENT
@@ -226,6 +249,51 @@ namespace Barotrauma.Items.Components
             base.OnItemLoaded();
             SetLightSourceState(IsActive, lightBrightness);
             turret = item.GetComponent<Turret>();
+#if CLIENT
+            Drawable = AlphaBlend && Light.LightSprite != null;
+            if (Screen.Selected.IsEditor)
+            {
+                OnMapLoaded();
+            }
+#endif
+        }
+
+        public override void OnMapLoaded()
+        {
+#if CLIENT
+            if (item.HiddenInGame)
+            {
+                Light.Enabled = false;
+            }
+#endif
+            CheckIfNeedsUpdate();
+        }
+
+        public void CheckIfNeedsUpdate()
+        {
+            if (!IsOn) 
+            {
+                base.IsActive = false;
+                return; 
+            }
+
+            if (item.body == null && powerConsumption <= 0.0f && Parent == null && turret == null &&
+                (statusEffectLists == null || !statusEffectLists.ContainsKey(ActionType.OnActive)) &&
+                (IsActiveConditionals == null || IsActiveConditionals.Count == 0))
+            {
+                lightBrightness = 1.0f;
+                SetLightSourceState(true, lightBrightness);
+                SetLightSourceTransformProjSpecific();
+                base.IsActive = false;
+                isOn = true;
+#if CLIENT
+                Light.ParentSub = item.Submarine;
+#endif
+            }
+            else
+            {
+                base.IsActive = true;
+            }
         }
 
         public override void Update(float deltaTime, Camera cam)
@@ -235,54 +303,33 @@ namespace Barotrauma.Items.Components
                 UpdateAITarget(item.AiTarget);
             }
             UpdateOnActiveEffects(deltaTime);
-
-            if (powerIn == null && powerConsumption > 0.0f) { Voltage -= deltaTime; }
+            //something in UpdateOnActiveEffects may deactivate the light -> return so we don't turn it back on
+            if (!IsActive) { return; }
 
 #if CLIENT
             Light.ParentSub = item.Submarine;
 #endif
-            if (item.Container != null)
+            if (item.Container != null && item.GetRootInventoryOwner() is not Character)
             {
+                lightBrightness = 0.0f;
                 SetLightSourceState(false, 0.0f);
                 return;
             }
-#if CLIENT
-            if (ParentBody != null)
-            {
-                Light.Position = ParentBody.Position;
-            }
-            else if (turret != null)
-            {
-                Light.Position = new Vector2(item.Rect.X + turret.TransformedBarrelPos.X, item.Rect.Y - turret.TransformedBarrelPos.Y);
-            }
-            else
-            {
-                Light.Position = item.Position;
-            }
-#endif
+
+            SetLightSourceTransformProjSpecific();
+
             PhysicsBody body = ParentBody ?? item.body;
-            if (body != null)
+            if (body != null && !body.Enabled)
             {
-#if CLIENT
-                Light.Rotation = body.Dir > 0.0f ? body.DrawRotation : body.DrawRotation - MathHelper.Pi;
-                Light.LightSpriteEffect = (body.Dir > 0.0f) ? SpriteEffects.None : SpriteEffects.FlipVertically;
-#endif
-                if (!body.Enabled)
-                {
-                    SetLightSourceState(false, 0.0f);
-                    return;
-                }
-            }
-            else
-            {
-#if CLIENT
-                Light.Rotation = -Rotation - MathHelper.ToRadians(item.Rotation);
-                Light.LightSpriteEffect = item.SpriteEffects;
-#endif
+                lightBrightness = 0.0f;
+                SetLightSourceState(false, 0.0f);
+                return;
             }
 
-            currPowerConsumption = powerConsumption;
-            if (Rand.Range(0.0f, 1.0f) < 0.05f && Voltage < Rand.Range(0.0f, MinVoltage))
+            TemporaryFlickerTimer -= deltaTime;
+
+            //currPowerConsumption = powerConsumption;
+            if (Rand.Range(0.0f, 1.0f) < 0.05f && (Voltage < Rand.Range(0.0f, MinVoltage) || TemporaryFlickerTimer > 0.0f))
             {
 #if CLIENT
                 if (Voltage > 0.1f)
@@ -333,6 +380,9 @@ namespace Barotrauma.Items.Components
                     if (signal.value != prevColorSignal)
                     {
                         LightColor = XMLExtensions.ParseColor(signal.value, false);
+#if CLIENT
+                        SetLightSourceState(Light.Enabled, lightColorMultiplier);
+#endif
                         prevColorSignal = signal.value;
                     }
                     break;
@@ -350,5 +400,12 @@ namespace Barotrauma.Items.Components
         }
 
         partial void SetLightSourceState(bool enabled, float brightness);
+
+        public void SetLightSourceTransform()
+        {
+            SetLightSourceTransformProjSpecific();
+        }
+
+        partial void SetLightSourceTransformProjSpecific();
     }
 }

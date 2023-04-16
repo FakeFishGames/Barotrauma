@@ -1,6 +1,5 @@
 ﻿using Barotrauma.Extensions;
 using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
 using System;
 
 namespace Barotrauma
@@ -29,7 +28,7 @@ namespace Barotrauma
 
         public bool IsBooleanSwitch;
 
-        public override string ToolTip
+        public override RichString ToolTip
         {
             get { return base.ToolTip; }
             set
@@ -183,6 +182,11 @@ namespace Barotrauma
             }
         }
 
+        /// <summary>
+        /// ListBoxes with lots of content in them clamp the size of the scrollbar above a certain minimum size; this is the relative bar size without the clamping applied.
+        /// </summary>
+        public float UnclampedBarSize;
+
         public float BarSize
         {
             get { return barSize; }
@@ -198,7 +202,7 @@ namespace Barotrauma
             CanBeFocused = true;
             this.isHorizontal = isHorizontal ?? (Rect.Width > Rect.Height);
             Frame = new GUIFrame(new RectTransform(Vector2.One, rectT));
-            GUI.Style.Apply(Frame, IsHorizontal ? "GUIFrameHorizontal" : "GUIFrameVertical", this);
+            GUIStyle.Apply(Frame, IsHorizontal ? "GUIFrameHorizontal" : "GUIFrameVertical", this);
             this.barSize = barSize;
 
             Bar = new GUIButton(new RectTransform(Vector2.One, rectT, IsHorizontal ? Anchor.CenterLeft : Anchor.TopCenter), color: color, style: null);
@@ -219,7 +223,7 @@ namespace Barotrauma
                     break;
             }
 
-            GUI.Style.Apply(Bar, IsHorizontal ? "GUIButtonHorizontal" : "GUIButtonVertical", this);
+            GUIStyle.Apply(Bar, IsHorizontal ? "GUIButtonHorizontal" : "GUIButtonVertical", this);
             Bar.OnPressed = SelectBar;
             enabled = true;
             UpdateRect();
@@ -299,9 +303,16 @@ namespace Barotrauma
                     }
                     else
                     {
+                        float barScale = 1.0f;
+                        if (UnclampedBarSize > 0.0f)
+                        {
+                            barScale = (UnclampedBarSize / BarSize);
+                        }
+
                         MoveButton(new Vector2(
-                            Math.Sign(PlayerInput.MousePosition.X - Bar.Rect.Center.X) * Bar.Rect.Width,
-                            Math.Sign(PlayerInput.MousePosition.Y - Bar.Rect.Center.Y) * Bar.Rect.Height));
+                            Math.Sign(PlayerInput.MousePosition.X - Bar.Rect.Center.X) * Bar.Rect.Width * barScale,
+                            Math.Sign(PlayerInput.MousePosition.Y - Bar.Rect.Center.Y) * Bar.Rect.Height * barScale));
+                        OnReleased?.Invoke(this, BarScroll);
                     }
                 }
             }       
@@ -311,9 +322,8 @@ namespace Barotrauma
         {
             if (!enabled || !PlayerInput.PrimaryMouseButtonDown()) { return false; }
             if (barSize >= 1.0f) { return false; }
-
             DraggingBar = this;
-
+            SoundPlayer.PlayUISound(GUISoundType.Select);
             return true;
         }
 

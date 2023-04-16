@@ -16,79 +16,35 @@ namespace Barotrauma.MapCreatures.Behavior
 {
     partial class BallastFloraBehavior
     {
-        
-        // ReSharper disable AutoPropertyCanBeMadeGetOnly.Global, UnusedAutoPropertyAccessor.Global, MemberCanBePrivate.Global
-        internal class DamageParticle
-        {
-            [Serialize(defaultValue: "", isSaveable: false)]
-            public string Identifier { get; set; } = "";
-
-            [Serialize(defaultValue: 0f, isSaveable: false)]
-            public float MinRotation { get; set; }
-            
-            [Serialize(defaultValue: 0f, isSaveable: false)]
-            public float MaxRotation { get; set; }
-
-            [Serialize(defaultValue: 0f, isSaveable: false)]
-            public float MinVelocity { get; set; }
-
-            [Serialize(defaultValue: 0f, isSaveable: false)]
-            public float MaxVelocity { get; set; }
-
-            [Serialize(defaultValue: "255,255,255,255", isSaveable: false)]
-            public Color ColorMultiplier { get; set; }
-
-            private float RandRotation() => Rand.Range(MinRotation, MaxRotation);
-            private float RandVelocity() => Rand.Range(MinVelocity, MaxVelocity);
-
-            public void Emit(Vector2 pos)
-            {
-                Particle particle = GameMain.ParticleManager.CreateParticle(Identifier, pos, RandRotation(), RandVelocity());
-                if (particle != null)
-                {
-                    particle.ColorMultiplier = ColorMultiplier.ToVector4();
-                }
-            }
-
-            public DamageParticle(XElement element)
-            {
-                SerializableProperty.DeserializeProperties(this, element);
-            }
-        }
-
         public Sprite? branchAtlas, decayAtlas;
         public readonly Dictionary<VineTileType, VineSprite> BranchSprites = new Dictionary<VineTileType, VineSprite>();
         public readonly List<Sprite> FlowerSprites = new List<Sprite>(), DamagedFlowerSprites = new List<Sprite>();
         public readonly List<Sprite> HiddenFlowerSprites = new List<Sprite>();
         public readonly List<Sprite> LeafSprites = new List<Sprite>(), DamagedLeafSprites = new List<Sprite>();
 
-        public readonly List<DamageParticle> DamageParticles = new List<DamageParticle>();
-        public readonly List<DamageParticle> DeathParticles = new List<DamageParticle>();
+        public readonly List<ParticleEmitter> DamageParticles = new List<ParticleEmitter>();
+        public readonly List<ParticleEmitter> DeathParticles = new List<ParticleEmitter>();
 
         public static bool AlwaysShowBallastFloraSprite = false;
 
-        partial void LoadPrefab(XElement element)
+        partial void LoadPrefab(ContentXElement element)
         {
-            string? branchAtlasPath = element.GetAttributeString("branchatlas", null);
-            string? decayAtlasPath = element.GetAttributeString("decayatlas", null);
-
-            if (branchAtlasPath != null)
+            if (element.GetAttributeContentPath("branchatlas") is { } branchAtlasPath)
             {
-                branchAtlas = new Sprite(branchAtlasPath, Rectangle.Empty);
-            }
-            
-            if (decayAtlasPath != null)
-            {
-                decayAtlas = new Sprite(decayAtlasPath, Rectangle.Empty);
+                branchAtlas = new Sprite(branchAtlasPath.Value, Rectangle.Empty);
             }
 
-            foreach (XElement subElement in element.Elements())
+            if (element.GetAttributeContentPath("decayatlas") is { } decayAtlasPath)
+            {
+                decayAtlas = new Sprite(decayAtlasPath.Value, Rectangle.Empty);
+            }
+
+            foreach (var subElement in element.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
                     case "branchsprite":
-                        var tileType = subElement.GetAttributeString("type", null);
-                        VineTileType type = Enum.Parse<VineTileType>(tileType);
+                        var type = subElement.GetAttributeEnum("type", VineTileType.Stem);
                         BranchSprites.Add(type, new VineSprite(subElement));
                         break;
                     case "flowersprite":
@@ -107,10 +63,10 @@ namespace Barotrauma.MapCreatures.Behavior
                         DamagedLeafSprites.Add(new Sprite(subElement));
                         break;
                     case "damageparticle":
-                        DamageParticles.Add(new DamageParticle(subElement));
+                        DamageParticles.Add(new ParticleEmitter(subElement));
                         break;
                     case "deathparticle":
-                        DeathParticles.Add(new DamageParticle(subElement));
+                        DeathParticles.Add(new ParticleEmitter(subElement));
                         break;
                     case "targets":
                         LoadTargets(subElement);
@@ -131,29 +87,60 @@ namespace Barotrauma.MapCreatures.Behavior
             }
         }
 
-        private void CreateDamageParticle(BallastFloraBranch branch, float damage)
-        {
-            Vector2 pos = GetWorldPosition() + branch.Position;
-            int amount = (int)Math.Clamp(damage / 10f, 1, 10);
-            for (int i = 0; i < amount; i++)
+        partial void UpdateDamage(float deltaTime)
+        {  
+            foreach (BallastFloraBranch branch in Branches)
             {
-                foreach (DamageParticle particle in DamageParticles)
+                if (branch.IsRoot && isDead) { continue; }
+                
+                if (branch.AccumulatedDamage > 0)
                 {
-                    particle.Emit(pos);
+                    CreateDamageParticle(branch, branch.AccumulatedDamage);
+
+                    if (GameMain.DebugDraw)
+                    {
+                        var pos = (Parent?.Position ?? Vector2.Zero) + Offset + branch.Position;
+                        GUI.AddMessage($"{(int)branch.AccumulatedDamage}", GUIStyle.Red, pos, Vector2.UnitY * 10.0f, 3f, playSound: false, subId: Parent?.Submarine?.ID ?? -1);
+                    }
+                }
+                if (Character.Controlled != null && Character.Controlled.CurrentHull == branch.CurrentHull && branch.IsRoot &&
+                    (branch.AccumulatedDamage > 0.0f || branch.AccumulatedDamage < -0.1f))
+                {
+                    Character.Controlled.UpdateHUDProgressBar(this, 
+                        GetWorldPosition() + branch.Position, 
+                        branch.Health / branch.MaxHealth, 
+                        emptyColor: GUIStyle.HealthBarColorLow,
+                        fullColor: GUIStyle.HealthBarColorHigh,
+                        textTag: Prefab.DisplayName.Value);
+                }
+                branch.AccumulatedDamage = 0f;
+                if (branch.DamageVisualizationTimer > 0.0f)
+                {
+                    branch.DamageVisualizationTimer -= deltaTime;
+                    float t1 = (float)Timing.TotalTime * 0.2f + branch.Position.X / 100.0f;
+                    float t2 = (float)Timing.TotalTime * 0.5f + branch.Position.Y / 100.0f;
+                    branch.ShakeAmount = new Vector2(
+                        PerlinNoise.GetPerlin(t1, t2) - 0.5f,
+                        PerlinNoise.GetPerlin(t2, t1) - 0.5f) * 10.0f * branch.DamageVisualizationTimer;
                 }
             }
         }
 
-        private void CreateDeathParticle(BallastFloraBranch branch)
+        private void CreateDamageParticle(BallastFloraBranch branch, float deltaTime)
         {
             Vector2 pos = GetWorldPosition() + branch.Position;
-            int amount = (int)Math.Clamp(branch.MaxHealth / 10f, 1, 10);
-            for (int i = 0; i < amount; i++)
+            foreach (var particleEmitter in DamageParticles)
             {
-                foreach (DamageParticle particle in DeathParticles)
-                {
-                    particle.Emit(pos);
-                }
+                particleEmitter.Emit(deltaTime, pos, branch.CurrentHull);
+            }            
+        }
+
+        private void CreateDeathParticle(BallastFloraBranch branch, float deltaTime)
+        {
+            Vector2 pos = GetWorldPosition() + branch.Position;
+            foreach (var particleEmitter in DeathParticles)
+            {
+                particleEmitter.Emit(deltaTime, pos, branch.CurrentHull);
             }
         }
 
@@ -169,25 +156,25 @@ namespace Barotrauma.MapCreatures.Behavior
                 {
                     Vector2 pos = Parent.Submarine.DrawPosition + ConvertUnits.ToDisplayUnits(body.Position);
                     pos.Y = -pos.Y;
-                    GUI.DrawRectangle(spriteBatch, pos, 32f, 32f, 0f, Color.Cyan, 0.1f, thickness: 1);
+                    GUI.DrawRectangle(spriteBatch, pos, 32f, 32f, 0f, body.UserData is BallastFloraBranch { IsRoot: true } ? Color.Magenta : Color.Cyan, 0.1f, thickness: 1);
                 }
 
                 foreach (var (key, steps) in IgnoredTargets)
                 {
                     string label = $"Ignored \"{key.Name}\" for {steps} steps";
-                    var (sizeX, sizeY) = GUI.SubHeadingFont.MeasureString(label);
+                    var (sizeX, sizeY) = GUIStyle.SubHeadingFont.MeasureString(label);
                     Vector2 targetPos = key.WorldPosition;
                     targetPos.Y = -targetPos.Y;
-                    GUI.DrawString(spriteBatch, targetPos - new Vector2(sizeX / 2f, sizeY), label, GUI.Style.Red, font: GUI.SubHeadingFont);
+                    GUI.DrawString(spriteBatch, targetPos - new Vector2(sizeX / 2f, sizeY), label, GUIStyle.Red, font: GUIStyle.SubHeadingFont);
                 }
             }
 
             foreach (BallastFloraBranch branch in Branches)
             {
-                Vector2 pos = Parent.DrawPosition + Offset + branch.Position;
+                Vector2 pos = Parent.DrawPosition + Offset + branch.Position + branch.ShakeAmount;
                 pos.Y = -pos.Y;
 
-                float depth = BranchDepth;
+                float depth = branch.IsRootGrowth ? 0.2f : BranchDepth;
 
                 float layer1 = depth + 0.01f,
                       layer2 = depth + 0.02f,
@@ -195,10 +182,23 @@ namespace Barotrauma.MapCreatures.Behavior
 
                 VineSprite branchSprite = BranchSprites[branch.Type];
 
-                Color branchColor = Color.White;
+                Color branchColor = (branch.IsRoot || branch.IsRootGrowth) ? RootColor : Color.White;
+
 
                 if (GameMain.DebugDraw)
                 {
+                    if (branch.DisconnectedFromRoot && branch.ParentBranch == null)
+                    {
+                        branchColor = Color.Yellow;
+                    }
+                    else if (branch.DisconnectedFromRoot)
+                    {
+                        branchColor = Color.Cyan;
+                    }
+                    else if (branch.ParentBranch == null)
+                    {
+                        branchColor = Color.Magenta;
+                    }
 #if DEBUG
                     Vector2 basePos = Parent.WorldPosition;
                     foreach (var (from, to) in debugSearchLines)
@@ -207,7 +207,13 @@ namespace Barotrauma.MapCreatures.Behavior
                         pos1.Y = -pos1.Y;
                         Vector2 pos2 = basePos - to;
                         pos2.Y = -pos2.Y;
-                        GUI.DrawLine(spriteBatch, pos1, pos2, GUI.Style.Yellow * 0.8f, width: 4);
+                        GUI.DrawLine(spriteBatch, pos1, pos2, GUIStyle.Yellow * 0.8f, width: 4);
+                    }
+                    if (branch.ParentBranch != null)
+                    {
+                        Vector2 pos2 = Parent.DrawPosition + Offset + branch.ParentBranch.Position;
+                        pos2.Y = -pos2.Y;
+                        GUI.DrawLine(spriteBatch, pos, pos2, GUIStyle.Green * 0.8f, width: 3);
                     }
 #endif
 
@@ -235,8 +241,8 @@ namespace Barotrauma.MapCreatures.Behavior
                         }
                     }
 
-                    var (sizeX, sizeY) = GUI.SubHeadingFont.MeasureString(label);
-                    GUI.DrawString(spriteBatch, pos - new Vector2(sizeX / 2f, branch.Rect.Height + sizeY), label, Color.White, font: GUI.SubHeadingFont);
+                    var (sizeX, sizeY) = GUIStyle.SubHeadingFont.MeasureString(label);
+                    GUI.DrawString(spriteBatch, pos - new Vector2(sizeX / 2f, branch.Rect.Height + sizeY), label, Color.White, font: GUIStyle.SubHeadingFont);
                 }
 
                 bool isDamaged = branch.Health < branch.MaxHealth;
@@ -315,7 +321,7 @@ namespace Barotrauma.MapCreatures.Behavior
                         }
                         else
                         {
-                            RemoveClaim(itemId);
+                            RemoveClaim(item);
                         }
                     }
                     else
@@ -340,7 +346,7 @@ namespace Barotrauma.MapCreatures.Behavior
                 case NetworkHeader.BranchRemove:
 
                     int removedBranchId = msg.ReadInt32();
-                    BallastFloraBranch removedBranch = Branches.FirstOrDefault(b => b.ID == removedBranchId);
+                    BallastFloraBranch? removedBranch = Branches.FirstOrDefault(b => b.ID == removedBranchId);
                     if (removedBranch != null)
                     {
                         RemoveBranch(removedBranch);
@@ -352,14 +358,11 @@ namespace Barotrauma.MapCreatures.Behavior
                     
                     break;
                 case NetworkHeader.BranchDamage:
-
                     int damageBranchId = msg.ReadInt32();
-                    float damage = msg.ReadSingle();
                     float health = msg.ReadSingle();
-                    BallastFloraBranch damagedBranch = Branches.FirstOrDefault(b => b.ID == damageBranchId);
+                    BallastFloraBranch? damagedBranch = Branches.FirstOrDefault(b => b.ID == damageBranchId);
                     if (damagedBranch != null)
                     {
-                        CreateDamageParticle(damagedBranch, damage);
                         damagedBranch.Health = health;
                     }
                     else
@@ -370,6 +373,9 @@ namespace Barotrauma.MapCreatures.Behavior
                 case NetworkHeader.Kill:
                     Kill();
                     break;
+                case NetworkHeader.Remove:
+                    Remove();
+                    break;
             }
 
             PowerConsumptionTimer = msg.ReadSingle();
@@ -378,19 +384,24 @@ namespace Barotrauma.MapCreatures.Behavior
         private BallastFloraBranch ReadBranch(IReadMessage msg)
         {
             int id = msg.ReadInt32();
-            byte type = (byte) msg.ReadRangedInteger(0b0000, 0b1111);
-            byte sides = (byte) msg.ReadRangedInteger(0b0000, 0b1111);
+            bool isRootGrowth = msg.ReadBoolean();
+            byte type = (byte)msg.ReadRangedInteger(0b0000, 0b1111);
+            byte sides = (byte)msg.ReadRangedInteger(0b0000, 0b1111);
             int flowerConfig = msg.ReadRangedInteger(0, 0xFFF);
             int leafConfig = msg.ReadRangedInteger(0, 0xFFF);
             int maxHealth = msg.ReadUInt16();
             int posX = msg.ReadInt32(), posY = msg.ReadInt32();
+            int parentBranchIndex = msg.ReadInt32();
             Vector2 pos = new Vector2(posX * VineTile.Size, posY * VineTile.Size);
 
-            return new BallastFloraBranch(this, pos, (VineTileType)type, FoliageConfig.Deserialize(flowerConfig), FoliageConfig.Deserialize(leafConfig))
+            BallastFloraBranch? parentBranch = parentBranchIndex < 0 || parentBranchIndex >= Branches.Count ? null : Branches[parentBranchIndex];
+
+            return new BallastFloraBranch(this, parentBranch, pos, (VineTileType)type, FoliageConfig.Deserialize(flowerConfig), FoliageConfig.Deserialize(leafConfig))
             {
                 ID = id,
                 MaxHealth = maxHealth,
-                Sides = (TileSide) sides
+                Sides = (TileSide) sides,
+                IsRootGrowth = isRootGrowth
             };
         }
     }

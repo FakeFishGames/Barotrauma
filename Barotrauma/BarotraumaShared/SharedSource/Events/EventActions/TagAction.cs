@@ -1,6 +1,7 @@
 using Barotrauma.Extensions;
 using System;
-using System.Xml.Linq;
+using System.Collections.Immutable;
+using System.Linq;
 
 namespace Barotrauma
 {
@@ -8,21 +9,41 @@ namespace Barotrauma
     {
         public enum SubType { Any = 0, Player = 1, Outpost = 2, Wreck = 4, BeaconStation = 8 }
 
-        [Serialize("", true)]
+        [Serialize("", IsPropertySaveable.Yes)]
         public string Criteria { get; set; }
 
-        [Serialize("", true)]
-        public string Tag { get; set; }
+        [Serialize("", IsPropertySaveable.Yes)]
+        public Identifier Tag { get; set; }
 
-        [Serialize(SubType.Any, true)]
+        [Serialize(SubType.Any, IsPropertySaveable.Yes)]
         public SubType SubmarineType { get; set; }
 
-        [Serialize(true, true)]
+        [Serialize(true, IsPropertySaveable.Yes)]
         public bool IgnoreIncapacitatedCharacters { get; set; }
+
+        [Serialize(false, IsPropertySaveable.Yes)]
+        public bool AllowHiddenItems { get; set; }
 
         private bool isFinished = false;
 
-        public TagAction(ScriptedEvent parentEvent, XElement element) : base(parentEvent, element) { }
+        public TagAction(ScriptedEvent parentEvent, ContentXElement element) : base(parentEvent, element)
+        {
+            Taggers = new (string k, Action<Identifier> v)[]
+            {
+                ("players", v => TagPlayers()),
+                ("player", v => TagPlayers()),
+                ("bot", v => TagBots(playerCrewOnly: false)),
+                ("crew", v => TagCrew()),
+                ("humanprefabidentifier", TagHumansByIdentifier),
+                ("jobidentifier", TagHumansByJobIdentifier),
+                ("structureidentifier", TagStructuresByIdentifier),
+                ("structurespecialtag", TagStructuresBySpecialTag),
+                ("itemidentifier", TagItemsByIdentifier),
+                ("itemtag", TagItemsByTag),
+                ("hullname", TagHullsByName),
+                ("submarine", TagSubmarinesByType),
+            }.Select(t => (t.k.ToIdentifier(), t.v)).ToImmutableDictionary();
+        }
 
         public override bool IsFinished(ref string goTo)
         {
@@ -67,29 +88,61 @@ namespace Barotrauma
 #endif
         }
 
-        private void TagHumansByIdentifier(string identifier)
+        private void TagHumansByIdentifier(Identifier identifier)
         {
             foreach (Character c in Character.CharacterList)
             {
-                if (c.Prefab?.Identifier.Equals(identifier, StringComparison.OrdinalIgnoreCase) ?? false)
+                if (c.HumanPrefab?.Identifier == identifier)
                 {
                     ParentEvent.AddTarget(Tag, c);
                 }
             }
         }
-        private void TagStructuresByIdentifier(string identifier)
+
+        private void TagHumansByJobIdentifier(Identifier jobIdentifier)
         {
-            ParentEvent.AddTargetPredicate(Tag, e => e is Structure s && SubmarineTypeMatches(s.Submarine) && s.Prefab.Identifier.Equals(identifier, StringComparison.InvariantCultureIgnoreCase));
+            foreach (Character c in Character.CharacterList)
+            {
+                if (c.HasJob(jobIdentifier))
+                {
+                    ParentEvent.AddTarget(Tag, c);
+                }
+            }
         }
 
-        private void TagItemsByIdentifier(string identifier)
+        private void TagStructuresByIdentifier(Identifier identifier)
         {
-            ParentEvent.AddTargetPredicate(Tag, e => e is Item it && SubmarineTypeMatches(it.Submarine) && it.Prefab.Identifier.Equals(identifier, StringComparison.InvariantCultureIgnoreCase));
+            ParentEvent.AddTargetPredicate(Tag, e => e is Structure s && SubmarineTypeMatches(s.Submarine) && s.Prefab.Identifier == identifier);
         }
 
-        private void TagItemsByTag(string tag)
+        private void TagStructuresBySpecialTag(Identifier tag)
         {
-            ParentEvent.AddTargetPredicate(Tag, e => e is Item it && SubmarineTypeMatches(it.Submarine) && it.HasTag(tag));
+            ParentEvent.AddTargetPredicate(Tag, e => e is Structure s && SubmarineTypeMatches(s.Submarine) && s.SpecialTag.ToIdentifier() == tag);
+        }
+
+        private void TagItemsByIdentifier(Identifier identifier)
+        {
+            ParentEvent.AddTargetPredicate(Tag, e => e is Item it && IsValidItem(it) && it.Prefab.Identifier == identifier);
+        }
+
+        private void TagItemsByTag(Identifier tag)
+        {
+            ParentEvent.AddTargetPredicate(Tag, e => e is Item it && IsValidItem(it) && it.HasTag(tag));
+        }
+
+        private void TagHullsByName(Identifier name)
+        {
+            ParentEvent.AddTargetPredicate(Tag, e => e is Hull h && SubmarineTypeMatches(h.Submarine) && h.RoomName.Contains(name.Value, StringComparison.OrdinalIgnoreCase));
+        }
+
+        private void TagSubmarinesByType(Identifier type)
+        {
+            ParentEvent.AddTargetPredicate(Tag, e => e is Submarine s && SubmarineTypeMatches(s) && (type.IsEmpty || type == s.Info?.Type.ToIdentifier()));
+        }
+
+        private bool IsValidItem(Item it)
+        {
+            return (!it.HiddenInGame || AllowHiddenItems) && SubmarineTypeMatches(it.Submarine);
         }
 
         private bool SubmarineTypeMatches(Submarine sub)
@@ -112,6 +165,8 @@ namespace Barotrauma
             }
         }
 
+        private readonly ImmutableDictionary<Identifier, Action<Identifier>> Taggers;
+        
         public override void Update(float deltaTime)
         {
             if (isFinished) { return; }
@@ -121,29 +176,17 @@ namespace Barotrauma
             foreach (string entry in criteriaSplit)
             {
                 string[] kvp = entry.Split(':');
-                switch (kvp[0].Trim().ToLowerInvariant())
+                Identifier key = kvp[0].Trim().ToIdentifier();
+                Identifier value = kvp.Length > 1 ? kvp[1].Trim().ToIdentifier() : Identifier.Empty;
+                if (Taggers.TryGetValue(key, out Action<Identifier> tagger))
                 {
-                    case "player":
-                        TagPlayers();
-                        break;
-                    case "bot":
-                        TagBots(playerCrewOnly: false);
-                        break;
-                    case "crew":
-                        TagCrew();
-                        break;
-                    case "humanprefabidentifier":
-                        if (kvp.Length > 1) { TagHumansByIdentifier(kvp[1].Trim()); }
-                        break;
-                    case "structureidentifier":
-                        if (kvp.Length > 1) { TagStructuresByIdentifier(kvp[1].Trim()); }
-                        break;
-                    case "itemidentifier":
-                        if (kvp.Length > 1) { TagItemsByIdentifier(kvp[1].Trim()); }
-                        break;
-                    case "itemtag":
-                        if (kvp.Length > 1) { TagItemsByTag(kvp[1].Trim()); }
-                        break;
+                    tagger(value);
+                }
+                else
+                {
+                    string errorMessage = $"Error in TagAction (event \"{ParentEvent.Prefab.Identifier}\") - unrecognized target criteria \"{key}\".";
+                    DebugConsole.ThrowError(errorMessage);
+                    GameAnalyticsManager.AddErrorEventOnce($"TagAction.Update:InvalidCriteria_{ParentEvent.Prefab.Identifier}_{key}", GameAnalyticsManager.ErrorSeverity.Error, errorMessage);
                 }
             }
 

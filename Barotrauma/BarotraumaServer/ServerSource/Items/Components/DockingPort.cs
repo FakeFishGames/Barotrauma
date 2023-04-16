@@ -1,19 +1,27 @@
 ﻿using Barotrauma.Networking;
-using System;
 
 namespace Barotrauma.Items.Components
 {
-    partial class DockingPort : ItemComponent, IDrawableComponent, IServerSerializable
+    partial class DockingPort : ItemComponent, IDrawableComponent, IServerSerializable, IClientSerializable
     {
-        public void ServerWrite(IWriteMessage msg, Client c, object[] extraData = null)
+        public void ServerEventWrite(IWriteMessage msg, Client c, NetEntityEvent.IData extraData = null)
         {
-            msg.Write(docked);
-
+            msg.WriteBoolean(docked);
             if (docked)
             {
-                msg.Write(DockingTarget.item.ID);
-                msg.Write(IsLocked);
+                msg.WriteUInt16(DockingTarget.item.ID);
+                msg.WriteBoolean(IsLocked);
             }
         }
+        public void ServerEventRead(IReadMessage msg, Client c)
+        {
+            var allowOutpostAutoDocking = (AllowOutpostAutoDocking)msg.ReadByte();
+            if (outpostAutoDockingPromptShown &&
+                CampaignMode.AllowedToManageCampaign(c, ClientPermissions.ManageMap))
+            {
+                this.allowOutpostAutoDocking = allowOutpostAutoDocking;
+            }
+        }
+
     }
 }

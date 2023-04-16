@@ -24,6 +24,8 @@ namespace Barotrauma
         public bool IsAiming => wasAiming;
         public bool IsAimingMelee => wasAimingMelee;
 
+        protected bool Aiming => aiming || aimingMelee || FlipLockTime > Timing.TotalTime && character.IsKeyDown(InputType.Aim);
+
         public float ArmLength => upperArmLength + forearmLength;
 
         public abstract GroundedMovementParams WalkParams { get; set; }
@@ -85,7 +87,7 @@ namespace Barotrauma
         }
 
         public bool CanWalk => RagdollParams.CanWalk;
-        public bool IsMovingBackwards => !InWater && Math.Sign(targetMovement.X) == -Math.Sign(Dir);
+        public bool IsMovingBackwards => !InWater && Math.Sign(targetMovement.X) == -Math.Sign(Dir) && CurrentAnimationParams is not FishGroundedParams { Flip: false };
 
         // TODO: define death anim duration in XML
         protected float deathAnimTimer, deathAnimDuration = 5.0f;
@@ -99,8 +101,7 @@ namespace Barotrauma
             {
                 if (InWater || !CanWalk)
                 {
-                    float avg = (SwimSlowParams.MovementSpeed + SwimFastParams.MovementSpeed) / 2.0f;
-                    return TargetMovement.LengthSquared() > avg * avg;
+                    return TargetMovement.LengthSquared() > MathUtils.Pow2(SwimSlowParams.MovementSpeed + 0.0001f);
                 }
                 else
                 {
@@ -133,8 +134,11 @@ namespace Barotrauma
             }
         }
 
-        public enum Animation { None, Climbing, UsingConstruction, Struggle, CPR };
+        public enum Animation { None, Climbing, UsingItem, Struggle, CPR, UsingItemWhileClimbing };
         public Animation Anim;
+
+        public bool IsUsingItem => Anim == Animation.UsingItem || Anim == Animation.UsingItemWhileClimbing;
+        public bool IsClimbing => Anim == Animation.Climbing || Anim == Animation.UsingItemWhileClimbing;
 
         public Vector2 AimSourceWorldPos
         {
@@ -269,10 +273,21 @@ namespace Barotrauma
             }
         }
 
+        public float GetHeightFromFloor() => GetColliderBottom().Y - FloorY;
+
+        // We need some margin, because if a hatch has closed, it's possible that the height from floor is slightly negative.
+        public bool IsAboveFloor => GetHeightFromFloor() > -0.1f;
+
+        public float FlipLockTime { get; private set; }
+        public void LockFlipping(float time = 0.2f)
+        {
+            FlipLockTime = (float)Timing.TotalTime + time;
+        }
+
         public void UpdateUseItem(bool allowMovement, Vector2 handWorldPos)
         {
             useItemTimer = 0.5f;
-            Anim = Animation.UsingConstruction;
+            StartUsingItem();
 
             if (!allowMovement)
             {
@@ -332,7 +347,7 @@ namespace Barotrauma
             aimingMelee = aimMelee;
             if (character.Stun > 0.0f || character.IsIncapacitated)
             {
-                aim = false; 
+                aim = false;
             }
 
             //calculate the handle positions
@@ -351,8 +366,13 @@ namespace Barotrauma
 
             Vector2 itemPos = aim ? aimPos : holdPos;
 
-            var controller = character.SelectedConstruction?.GetComponent<Controller>();
+            var controller = character.SelectedItem?.GetComponent<Controller>();
             bool usingController = controller != null && !controller.AllowAiming;
+            if (!usingController)
+            {
+                controller = character.SelectedSecondaryItem?.GetComponent<Controller>();
+                usingController = controller != null && !controller.AllowAiming;
+            }
             bool isClimbing = character.IsClimbing && Math.Abs(character.AnimController.TargetMovement.Y) > 0.01f;
             float itemAngle;
             Holdable holdable = item.GetComponent<Holdable>();
@@ -374,18 +394,10 @@ namespace Barotrauma
                 {
                     //if holding two items that should control the characters' pose, let the item in the right hand do it
                     bool anotherItemControlsPose = equippedInLefthand && rightHandItem != item && (rightHandItem?.GetComponent<Holdable>()?.ControlPose ?? false);
-                    if (!anotherItemControlsPose)
+                    if (!anotherItemControlsPose && TargetMovement == Vector2.Zero && inWater)
                     {
-                        var head = GetLimb(LimbType.Head);
-                        if (head != null)
-                        {
-                            head.body.SmoothRotate(itemAngle, force: 30 * head.Mass);
-                        }
-                        if (TargetMovement == Vector2.Zero && inWater)
-                        {
-                            torso.body.AngularVelocity -= torso.body.AngularVelocity * 0.1f;
-                            torso.body.ApplyForce(torso.body.LinearVelocity * -0.5f);
-                        }
+                        torso.body.AngularVelocity -= torso.body.AngularVelocity * 0.1f;
+                        torso.body.ApplyForce(torso.body.LinearVelocity * -0.5f);
                     }
                     aiming = true;
                 }
@@ -462,7 +474,7 @@ namespace Barotrauma
                 DebugConsole.Log(errorMsg);
                 GameAnalyticsManager.AddErrorEventOnce(
                     "HumanoidAnimController.HoldItem:InvalidPos:" + character.Name + item.Name,
-                    GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
+                    GameAnalyticsManager.ErrorSeverity.Error,
                     errorMsg);
 
                 return;
@@ -529,11 +541,11 @@ namespace Barotrauma
             float wobbleStrength = 0.0f;
             if (character.Inventory?.GetItemInLimbSlot(InvSlotType.RightHand) == heldItem)
             {
-                wobbleStrength += Character.CharacterHealth.GetLimbDamage(rightHand, afflictionType: "damage");
+                wobbleStrength += Character.CharacterHealth.GetLimbDamage(rightHand, afflictionType: AfflictionPrefab.DamageType);
             }
             if (character.Inventory?.GetItemInLimbSlot(InvSlotType.LeftHand) == heldItem)
             {
-                wobbleStrength += Character.CharacterHealth.GetLimbDamage(leftHand, afflictionType: "damage");
+                wobbleStrength += Character.CharacterHealth.GetLimbDamage(leftHand, afflictionType: AfflictionPrefab.DamageType);
             }
             if (wobbleStrength <= 0.1f) { return 0.0f; }
             wobbleStrength = (float)Math.Min(wobbleStrength, 1.0f);
@@ -722,5 +734,45 @@ namespace Barotrauma
                 CalculateArmLengths();
             }
         }
+
+        private void StartAnimation(Animation animation)
+        {
+            if (animation == Animation.UsingItem)
+            {
+                Anim = IsClimbing ? Animation.UsingItemWhileClimbing : Animation.UsingItem;
+            }
+            else if (animation == Animation.Climbing)
+            {
+                Anim = IsUsingItem ? Animation.UsingItemWhileClimbing : Animation.Climbing;
+            }
+            else
+            {
+                Anim = animation;
+            }
+        }
+
+        private void StopAnimation(Animation animation)
+        {
+            if (animation == Animation.UsingItem)
+            {
+                Anim = IsClimbing ? Animation.Climbing : Animation.None;
+            }
+            else if (animation == Animation.Climbing)
+            {
+                Anim = IsUsingItem ? Animation.UsingItem : Animation.None;
+            }
+            else
+            {
+                Anim = Animation.None;
+            }
+        }
+
+        public void StartUsingItem() => StartAnimation(Animation.UsingItem);
+
+        public void StartClimbing() => StartAnimation(Animation.Climbing);
+
+        public void StopUsingItem() => StopAnimation(Animation.UsingItem);
+
+        public void StopClimbing() => StopAnimation(Animation.Climbing);
     }
 }

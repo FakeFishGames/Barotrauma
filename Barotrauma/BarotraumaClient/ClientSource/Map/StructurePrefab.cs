@@ -2,25 +2,22 @@
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 
 namespace Barotrauma
 {
     partial class StructurePrefab : MapEntityPrefab
     {
-        public Color BackgroundSpriteColor
-        {
-            get;
-            private set;
-        }
+        public readonly Color BackgroundSpriteColor;
 
-        public List<DecorativeSprite> DecorativeSprites = new List<DecorativeSprite>();
-        public Dictionary<int, List<DecorativeSprite>> DecorativeSpriteGroups = new Dictionary<int, List<DecorativeSprite>>();
+        public readonly ImmutableArray<DecorativeSprite> DecorativeSprites;
+        public readonly ImmutableDictionary<int, ImmutableArray<DecorativeSprite>> DecorativeSpriteGroups;
 
         public override void UpdatePlacing(Camera cam)
         {
             if (PlayerInput.SecondaryMouseButtonClicked())
             {
-                selected = null;
+                Selected = null;
                 return;
             }
             
@@ -30,9 +27,10 @@ namespace Barotrauma
             
             if (placePosition == Vector2.Zero)
             {
-                if (PlayerInput.PrimaryMouseButtonHeld())
+                if (PlayerInput.PrimaryMouseButtonHeld() && GUI.MouseOn == null)
+                {
                     placePosition = Submarine.MouseToWorldGrid(cam, Submarine.MainSub);
-
+                }
                 newRect.X = (int)position.X;
                 newRect.Y = (int)position.Y;
             }
@@ -65,7 +63,7 @@ namespace Barotrauma
                     placePosition = Vector2.Zero;
                     if (!PlayerInput.IsShiftDown())
                     {
-                        selected = null;
+                        Selected = null;
                     }
                     return;
                 }
@@ -91,24 +89,24 @@ namespace Barotrauma
                 newRect = Submarine.AbsRect(placePosition, placeSize);
             }
 
-            sprite.DrawTiled(spriteBatch, new Vector2(newRect.X, -newRect.Y), new Vector2(newRect.Width, newRect.Height), textureScale: TextureScale * Scale);
+            Sprite.DrawTiled(spriteBatch, new Vector2(newRect.X, -newRect.Y), new Vector2(newRect.Width, newRect.Height), textureScale: TextureScale * Scale);
             GUI.DrawRectangle(spriteBatch, new Rectangle(newRect.X - GameMain.GraphicsWidth, -newRect.Y, newRect.Width + GameMain.GraphicsWidth * 2, newRect.Height), Color.White);
             GUI.DrawRectangle(spriteBatch, new Rectangle(newRect.X, -newRect.Y - GameMain.GraphicsHeight, newRect.Width, newRect.Height + GameMain.GraphicsHeight * 2), Color.White);
         }
 
         public override void DrawPlacing(SpriteBatch spriteBatch, Rectangle placeRect, float scale = 1.0f, SpriteEffects spriteEffects = SpriteEffects.None)
         {
-            SpriteEffects oldEffects = sprite.effects;
-            sprite.effects ^= spriteEffects;
+            SpriteEffects oldEffects = Sprite.effects;
+            Sprite.effects ^= spriteEffects;
 
-            sprite.DrawTiled(
+            Sprite.DrawTiled(
                 spriteBatch, 
                 new Vector2(placeRect.X, -placeRect.Y), 
                 new Vector2(placeRect.Width, placeRect.Height), 
                 color: Color.White * 0.8f, 
                 textureScale: TextureScale * scale);
 
-            sprite.effects = oldEffects;
+            Sprite.effects = oldEffects;
         }
     }
 }

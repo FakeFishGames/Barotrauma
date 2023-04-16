@@ -1,3 +1,4 @@
+using Barotrauma.Items.Components;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -8,18 +9,48 @@ namespace Barotrauma
 {
     partial class BeaconMission : Mission
     {
+        private class MonsterSet
+        {
+            public readonly HashSet<(CharacterPrefab character, Point amountRange)> MonsterPrefabs = new HashSet<(CharacterPrefab character, Point amountRange)>();
+            public float Commonness;
+
+            public MonsterSet(XElement element)
+            {
+                Commonness = element.GetAttributeFloat("commonness", 100.0f);
+            }
+        }
+
         private bool swarmSpawned;
-        private readonly string monsterSpeciesName;
-        private Point monsterCountRange;
-        private readonly string sonarLabel;
+        private readonly List<MonsterSet> monsterSets = new List<MonsterSet>();
+        private readonly LocalizedString sonarLabel;
 
         public BeaconMission(MissionPrefab prefab, Location[] locations, Submarine sub) : base(prefab, locations, sub)
         {
             swarmSpawned = false;
 
-            XElement monsterElement = prefab.ConfigElement.Element("monster");
+            foreach (var monsterElement in prefab.ConfigElement.GetChildElements("monster"))
+            {
+                if (!monsterSets.Any())
+                {
+                    monsterSets.Add(new MonsterSet(monsterElement));
+                }
+                LoadMonsters(monsterElement, monsterSets[0]);
+            }
+            foreach (var monsterSetElement in prefab.ConfigElement.GetChildElements("monsters"))
+            {
+                monsterSets.Add(new MonsterSet(monsterSetElement));
+                foreach (var monsterElement in monsterSetElement.GetChildElements("monster"))
+                {
+                    LoadMonsters(monsterElement, monsterSets.Last());
+                }
+            }
 
-            monsterSpeciesName = monsterElement.GetAttributeString("character", string.Empty);
+            sonarLabel = TextManager.Get("beaconstationsonarlabel");
+        }
+
+        private void LoadMonsters(XElement monsterElement, MonsterSet set)
+        {
+            Identifier speciesName = monsterElement.GetAttributeIdentifier("character", Identifier.Empty);
             int defaultCount = monsterElement.GetAttributeInt("count", -1);
             if (defaultCount < 0)
             {
@@ -27,21 +58,18 @@ namespace Barotrauma
             }
             int min = Math.Min(monsterElement.GetAttributeInt("min", defaultCount), 255);
             int max = Math.Min(Math.Max(min, monsterElement.GetAttributeInt("max", defaultCount)), 255);
-
-            monsterCountRange = new Point(min, max);
-
-            sonarLabel = TextManager.Get("beaconstationsonarlabel");
-        }
-
-        public override string SonarLabel
-        {
-            get
+            var characterPrefab = CharacterPrefab.FindBySpeciesName(speciesName);
+            if (characterPrefab != null)
             {
-                return string.IsNullOrEmpty(base.SonarLabel) ? sonarLabel : base.SonarLabel;
+                set.MonsterPrefabs.Add((characterPrefab, new Point(min, max)));
+            }
+            else
+            {
+                DebugConsole.ThrowError($"Error in beacon mission \"{Prefab.Identifier}\". Could not find a character prefab with the name \"{speciesName}\".");
             }
         }
 
-        public override IEnumerable<Vector2> SonarPositions
+        public override IEnumerable<(LocalizedString Label, Vector2 Position)> SonarLabels
         {
             get
             {
@@ -49,7 +77,12 @@ namespace Barotrauma
                 {
                     yield break;
                 }
-                yield return level.BeaconStation.WorldPosition;                
+                else
+                {
+                    yield return (
+                            Prefab.SonarLabel.IsNullOrEmpty() ? sonarLabel : Prefab.SonarLabel,
+                            level.BeaconStation.WorldPosition);
+                }
             }
         }
 
@@ -58,6 +91,19 @@ namespace Barotrauma
             if (IsClient) { return; }
             if (!swarmSpawned && level.CheckBeaconActive())
             {
+                List<Submarine> connectedSubs = level.BeaconStation.GetConnectedSubs();
+                foreach (Item item in Item.ItemList)
+                {
+                    if (!connectedSubs.Contains(item.Submarine) || item.Submarine?.Info is { IsPlayer: true  }) { continue; }
+                    if (item.GetComponent<PowerTransfer>() != null ||
+                        item.GetComponent<PowerContainer>() != null ||
+                        item.GetComponent<Reactor>() != null ||
+                        item.GetComponent<Sonar>() != null)
+                    {
+                        item.InvulnerableToDamage = true;
+                    }
+                }
+
                 State = 1;
 
                 Vector2 spawnPos = level.BeaconStation.WorldPosition;
@@ -88,34 +134,42 @@ namespace Barotrauma
                     }
                 }
 
-                int amount = Rand.Range(monsterCountRange.X, monsterCountRange.Y + 1);
-                for (int i = 0; i < amount; i++)
+                var monsterSet = ToolBox.SelectWeightedRandom(monsterSets, m => m.Commonness, Rand.RandSync.Unsynced);
+                foreach ((CharacterPrefab monsterSpecies, Point monsterCountRange) in monsterSet.MonsterPrefabs)
                 {
-                    CoroutineManager.Invoke(() =>
+                    int amount = Rand.Range(monsterCountRange.X, monsterCountRange.Y + 1);
+                    for (int i = 0; i < amount; i++)
                     {
-                        //round ended before the coroutine finished
-                        if (GameMain.GameSession == null || Level.Loaded == null) { return; }
-                        Entity.Spawner.AddToSpawnQueue(monsterSpeciesName, spawnPos);
-                    }, Rand.Range(0f, amount));
+                        CoroutineManager.Invoke(() =>
+                        {
+                            //round ended before the coroutine finished
+                            if (GameMain.GameSession == null || Level.Loaded == null) { return; }
+                            Entity.Spawner.AddCharacterToSpawnQueue(monsterSpecies.Identifier, spawnPos);
+                        }, Rand.Range(0f, amount));
+                    }
                 }
+
                 swarmSpawned = true;
             }
+#if DEBUG || UNSTABLE
+            if (State == 1 && !level.CheckBeaconActive())
+            {
+                DebugConsole.ThrowError("Beacon became inactive!");
+                State = 2;
+            }
+#endif
         }
 
-        public override void End()
+        protected override bool DetermineCompleted()
         {
-            completed = level.CheckBeaconActive();
-            if (completed)
+            return level.CheckBeaconActive();
+        }
+
+        protected override void EndMissionSpecific(bool completed)
+        {
+            if (completed && level.LevelData != null)
             {
-                if (Prefab.LocationTypeChangeOnCompleted != null)
-                {
-                    ChangeLocationType(Prefab.LocationTypeChangeOnCompleted);
-                }
-                GiveReward();
-                if (level?.LevelData != null)
-                {
-                    level.LevelData.IsBeaconActive = true;
-                }
+                level.LevelData.IsBeaconActive = true;                
             }
         }
 

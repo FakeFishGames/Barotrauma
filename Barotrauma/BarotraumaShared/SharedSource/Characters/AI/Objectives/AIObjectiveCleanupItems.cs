@@ -2,16 +2,15 @@
 using Barotrauma.Items.Components;
 using System.Collections.Generic;
 using System.Linq;
-using System;
 
 namespace Barotrauma
 {
     class AIObjectiveCleanupItems : AIObjectiveLoop<Item>
     {
-        public override string Identifier { get; set; } = "cleanup items";
+        public override Identifier Identifier { get; set; } = "cleanup items".ToIdentifier();
         public override bool KeepDivingGearOn => true;
         public override bool AllowAutomaticItemUnequipping => false;
-        public override bool ForceOrderPriority => false;
+        protected override bool ForceOrderPriority => false;
 
         public readonly List<Item> prioritizedItems = new List<Item>();
 
@@ -48,16 +47,19 @@ namespace Barotrauma
 
         protected override bool Filter(Item target)
         {
+            System.Diagnostics.Debug.Assert(target.GetComponent<Pickable>() is { } pickable && !pickable.IsAttached, "Invalid target in AIObjectiveCleanUpItems - the the objective should only be checking pickable, non-attached items.");
+            System.Diagnostics.Debug.Assert(target.Prefab.PreferredContainers.Any(), "Invalid target in AIObjectiveCleanUpItems - the the objective should only be checking items that have preferred containers defined.");
+
             // If the target was selected as a valid target, we'll have to accept it so that the objective can be completed.
             // The validity changes when a character picks the item up.
             if (!IsValidTarget(target, character, checkInventory: true)) { return Objectives.ContainsKey(target) && IsItemInsideValidSubmarine(target, character); }
             if (target.CurrentHull.FireSources.Count > 0) { return false; }
-            // Don't repair items in rooms that have enemies inside.
+            // Don't clean up items in rooms that have enemies inside.
             if (Character.CharacterList.Any(c => c.CurrentHull == target.CurrentHull && !HumanAIController.IsFriendly(c) && HumanAIController.IsActive(c))) { return false; }
             return true;
         }
 
-        protected override IEnumerable<Item> GetList() => Item.ItemList;
+        protected override IEnumerable<Item> GetList() => Item.CleanableItems;
 
         protected override AIObjective ObjectiveConstructor(Item item)
             => new AIObjectiveCleanupItem(item, character, objectiveManager, priorityModifier: PriorityModifier)
@@ -68,33 +70,29 @@ namespace Barotrauma
         protected override void OnObjectiveCompleted(AIObjective objective, Item target)
             => HumanAIController.RemoveTargets<AIObjectiveCleanupItems, Item>(character, target);
 
-        private static bool IsItemInsideValidSubmarine(Item item, Character character)
+        public static bool IsItemInsideValidSubmarine(Item item, Character character)
         {
             if (item.CurrentHull == null) { return false; }
             if (item.Submarine == null) { return false; }
             if (item.Submarine.TeamID != character.TeamID) { return false; }
-            if (character.Submarine != null)
-            {
-                if (!character.Submarine.IsConnectedTo(item.Submarine)) { return false; }
-            }
+            if (character.Submarine != null && !character.Submarine.IsConnectedTo(item.Submarine)) { return false; }
             return true;
         }
 
         public static bool IsValidContainer(Item container, Character character, bool allowUnloading = true) =>
             allowUnloading &&
-            !container.IgnoreByAI(character) && 
-            container.IsInteractable(character) && 
+            container.HasAccess(character) && 
             container.HasTag("allowcleanup") && 
             container.ParentInventory == null && container.OwnInventory != null && container.OwnInventory.AllItems.Any() && 
-            container.GetComponent<ItemContainer>() is ItemContainer itemContainer && itemContainer.HasAccess(character) &&
-            IsItemInsideValidSubmarine(container, character);
+            container.GetComponent<ItemContainer>() != null &&
+            IsItemInsideValidSubmarine(container, character) &&
+            !container.IsClaimedByBallastFlora;
 
         public static bool IsValidTarget(Item item, Character character, bool checkInventory, bool allowUnloading = true)
         {
             if (item == null) { return false; }
-            if (item.IgnoreByAI(character)) { return false; }
-            if (!item.IsInteractable(character)) { return false; }
-            if (item.SpawnedInOutpost) { return false; }
+            if (!item.HasAccess(character)) { return false; }
+            if ((item.SpawnedInCurrentOutpost && !item.AllowStealing) == character.IsOnPlayerTeam) { return false; }
             if (item.ParentInventory != null)
             {
                 if (item.Container == null)
@@ -105,9 +103,7 @@ namespace Barotrauma
                 if (!IsValidContainer(item.Container, character, allowUnloading)) { return false; }
             }
             if (character != null && !IsItemInsideValidSubmarine(item, character)) { return false; }
-            var pickable = item.GetComponent<Pickable>();
-            if (pickable == null) { return false; }
-            if (pickable is Holdable h && h.Attachable && h.Attached) { return false; }
+            if (item.HasBallastFloraInHull) { return false; }
             var wire = item.GetComponent<Wire>();
             if (wire != null)
             {
@@ -116,42 +112,16 @@ namespace Barotrauma
             else
             {
                 var connectionPanel = item.GetComponent<ConnectionPanel>();
-                if (connectionPanel != null && connectionPanel.Connections.Any(c => c.Wires.Any(w => w != null)))
+                if (connectionPanel != null && connectionPanel.Connections.Any(c => c.Wires.Count > 0))
                 {
                     return false;
                 }
-            }
-            if (item.Prefab.PreferredContainers.None())
-            {
-                return false;
             }
             if (!checkInventory)
             {
                 return true;
             }
-            bool canEquip = true;
-            if (!item.AllowedSlots.Contains(InvSlotType.Any))
-            {
-                canEquip = false;
-                var inv = character.Inventory;
-                foreach (var allowedSlot in item.AllowedSlots)
-                {
-                    foreach (var slotType in inv.SlotTypes)
-                    {
-                        if (!allowedSlot.HasFlag(slotType)) { continue; }                        
-                        for (int i = 0; i < inv.Capacity; i++)
-                        {
-                            canEquip = true;
-                            if (allowedSlot.HasFlag(inv.SlotTypes[i]) && inv.GetItemAt(i) != null)
-                            {
-                                canEquip = false;
-                                break;
-                            }
-                        }                        
-                    }
-                }
-            }
-            return canEquip;
+            return CanEquip(character, item);
         }
 
         public override void OnDeselected()

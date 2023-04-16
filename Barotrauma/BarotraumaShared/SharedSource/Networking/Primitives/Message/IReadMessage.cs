@@ -4,11 +4,12 @@ using System.Text;
 
 namespace Barotrauma.Networking
 {
-    public interface IReadMessage
+    interface IReadMessage
     {
         bool ReadBoolean();
         void ReadPadBits();
         byte ReadByte();
+        byte PeekByte();
         UInt16 ReadUInt16();
         Int16 ReadInt16();
         UInt32 ReadUInt32();
@@ -19,6 +20,7 @@ namespace Barotrauma.Networking
         Double ReadDouble();
         UInt32 ReadVariableUInt32();
         String ReadString();
+        Identifier ReadIdentifier();
         Microsoft.Xna.Framework.Color ReadColorR8G8B8();
         Microsoft.Xna.Framework.Color ReadColorR8G8B8A8();
         int ReadRangedInteger(int min, int max);

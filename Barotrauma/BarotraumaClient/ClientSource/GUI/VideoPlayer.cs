@@ -34,23 +34,29 @@ namespace Barotrauma
 
         public class TextSettings
         {
-            public string Text;
+            public LocalizedString Text;
             public int Width;
+
+            public TextSettings(Identifier textTag, int width)
+            {
+                Text = TextManager.GetFormatted(textTag);
+                Width = width;
+            }
 
             public TextSettings(XElement element)
             {
-                Text = TextManager.GetFormatted(element.GetAttributeString("text", string.Empty), true);
+                Text = TextManager.GetFormatted(element.GetAttributeIdentifier("text", Identifier.Empty));
                 Width = element.GetAttributeInt("width", 450);
             }
         }
 
         public class VideoSettings
         {
-            public string File;
+            public readonly string File;
 
-            public VideoSettings(XElement element)
+            public VideoSettings(string file)
             {
-                File = element.GetAttributeString("file", string.Empty);
+                File = file;
             }
         }
 
@@ -75,13 +81,13 @@ namespace Barotrauma
             }
 
             videoView = new GUICustomComponent(new RectTransform(Point.Zero, videoFrame.RectTransform, Anchor.Center), (spriteBatch, guiCustomComponent) => { DrawVideo(spriteBatch, guiCustomComponent.Rect); });
-            title = new GUITextBlock(new RectTransform(Point.Zero, textFrame.RectTransform, Anchor.TopLeft, Pivot.TopLeft), string.Empty, font: GUI.LargeFont, textColor: new Color(253, 174, 0), textAlignment: Alignment.Left);
+            title = new GUITextBlock(new RectTransform(Point.Zero, textFrame.RectTransform, Anchor.TopLeft, Pivot.TopLeft), string.Empty, font: GUIStyle.LargeFont, textColor: new Color(253, 174, 0), textAlignment: Alignment.Left);
 
-            textContent = new GUITextBlock(new RectTransform(Point.Zero, textFrame.RectTransform, Anchor.TopLeft, Pivot.TopLeft), string.Empty, font: GUI.Font, textAlignment: Alignment.TopLeft);
+            textContent = new GUITextBlock(new RectTransform(Point.Zero, textFrame.RectTransform, Anchor.TopLeft, Pivot.TopLeft), string.Empty, font: GUIStyle.Font, textAlignment: Alignment.TopLeft);
 
-            objectiveTitle = new GUITextBlock(new RectTransform(new Vector2(1f, 0f), textFrame.RectTransform, Anchor.TopCenter, Pivot.TopCenter), string.Empty, font: GUI.SubHeadingFont, textAlignment: Alignment.CenterRight, textColor: Color.White);
+            objectiveTitle = new GUITextBlock(new RectTransform(new Vector2(1f, 0f), textFrame.RectTransform, Anchor.TopCenter, Pivot.TopCenter), string.Empty, font: GUIStyle.SubHeadingFont, textAlignment: Alignment.CenterRight, textColor: Color.White);
             objectiveTitle.Text = TextManager.Get("Tutorial.NewObjective");
-            objectiveText = new GUITextBlock(new RectTransform(Point.Zero, textFrame.RectTransform, Anchor.TopCenter, Pivot.TopCenter), string.Empty, font: GUI.SubHeadingFont, textColor: new Color(4, 180, 108), textAlignment: Alignment.CenterRight);
+            objectiveText = new GUITextBlock(new RectTransform(Point.Zero, textFrame.RectTransform, Anchor.TopCenter, Pivot.TopCenter), string.Empty, font: GUIStyle.SubHeadingFont, textColor: new Color(4, 180, 108), textAlignment: Alignment.CenterRight);
 
             objectiveTitle.Visible = objectiveText.Visible = false;
         }
@@ -120,9 +126,14 @@ namespace Barotrauma
             background.AddToGUIUpdateList(ignoreChildren, order);
         }
 
-        public void LoadContent(string contentPath, VideoSettings videoSettings, TextSettings textSettings, string contentId, bool startPlayback, string objective = "", Action callback = null)
+        public void LoadContent(string contentPath, VideoSettings videoSettings, TextSettings textSettings, Identifier contentId, bool startPlayback)
         {
-            callbackOnStop = callback;
+            LoadContent(contentPath, videoSettings, textSettings, contentId, startPlayback, new RawLString(""), null);
+        }
+
+        public void LoadContent(string contentPath, VideoSettings videoSettings, TextSettings textSettings, Identifier contentId, bool startPlayback, LocalizedString objective, Action onStop = null)
+        {
+            callbackOnStop = onStop;
             filePath = contentPath + videoSettings.File;
 
             if (!File.Exists(filePath))
@@ -183,10 +194,10 @@ namespace Barotrauma
             title.RectTransform.NonScaledSize = new Point(scaledTextWidth, scaledTitleHeight);
             title.RectTransform.AbsoluteOffset = new Point((int)(5 * GUI.Scale), (int)(10 * GUI.Scale));
 
-            if (textSettings != null && !string.IsNullOrEmpty(textSettings.Text))
+            if (textSettings != null && !textSettings.Text.IsNullOrEmpty())
             {
-                textSettings.Text = ToolBox.WrapText(textSettings.Text, scaledTextWidth, GUI.Font);
-                int wrappedHeight = textSettings.Text.Split('\n').Length * scaledTextHeight;
+                textSettings.Text = ToolBox.WrapText(textSettings.Text, scaledTextWidth, GUIStyle.Font);
+                int wrappedHeight = textSettings.Text.Value.Split('\n').Length * scaledTextHeight;
 
                 textFrame.RectTransform.NonScaledSize = new Point(scaledTextWidth + scaledBorderSize, wrappedHeight + scaledBorderSize + scaledButtonSize.Y + scaledTitleHeight);
 
@@ -203,7 +214,7 @@ namespace Barotrauma
                 textContent.RectTransform.AbsoluteOffset = new Point(0, scaledBorderSize + scaledTitleHeight);
             }
 
-            if (!string.IsNullOrEmpty(objectiveText.Text))
+            if (!objectiveText.Text.IsNullOrEmpty())
             {
                 int scaledXOffset = (int)(-10 * GUI.Scale);
 

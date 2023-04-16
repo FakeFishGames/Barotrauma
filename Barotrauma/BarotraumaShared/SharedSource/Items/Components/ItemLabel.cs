@@ -13,6 +13,8 @@ namespace Barotrauma.Items.Components
 
         partial void OnStateChanged();
 
+        private string prevColorSignal;
+
         public override void ReceiveSignal(Signal signal, Connection connection)
         {
             switch (connection.Name)
@@ -21,6 +23,13 @@ namespace Barotrauma.Items.Components
                     if (Text == signal.value) { return; }
                     Text = signal.value;
                     OnStateChanged();
+                    break;
+                case "set_text_color":
+                    if (signal.value != prevColorSignal)
+                    {
+                        TextColor = XMLExtensions.ParseColor(signal.value, false);
+                        prevColorSignal = signal.value;
+                    }
                     break;
             }
         }

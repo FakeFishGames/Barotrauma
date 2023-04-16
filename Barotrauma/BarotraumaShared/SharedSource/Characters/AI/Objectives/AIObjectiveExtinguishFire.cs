@@ -8,7 +8,7 @@ namespace Barotrauma
 {
     class AIObjectiveExtinguishFire : AIObjective
     {
-        public override string Identifier { get; set; } = "extinguish fire";
+        public override Identifier Identifier { get; set; } = "extinguish fire".ToIdentifier();
         public override bool ForceRun => true;
         public override bool ConcurrentObjectives => true;
         public override bool KeepDivingGearOn => true;
@@ -19,7 +19,6 @@ namespace Barotrauma
 
         private AIObjectiveGetItem getExtinguisherObjective;
         private AIObjectiveGoTo gotoObjective;
-        private float useExtinquisherTimer;
 
         public AIObjectiveExtinguishFire(Character character, Hull targetHull, AIObjectiveManager objectiveManager, float priorityModifier = 1) 
             : base(character, objectiveManager, priorityModifier)
@@ -44,7 +43,8 @@ namespace Barotrauma
             }
             else
             {
-                float yDist = Math.Abs(character.WorldPosition.Y - targetHull.WorldPosition.Y);
+                float characterY = character.CurrentHull?.WorldPosition.Y ?? character.WorldPosition.Y;
+                float yDist = Math.Abs(characterY - targetHull.WorldPosition.Y);
                 yDist = yDist > 100 ? yDist * 3 : 0;
                 float dist = Math.Abs(character.WorldPosition.X - targetHull.WorldPosition.X) + yDist;
                 float distanceFactor = MathHelper.Lerp(1, 0.1f, MathUtils.InverseLerp(0, 5000, dist));
@@ -77,16 +77,16 @@ namespace Barotrauma
         private float sinTime;
         protected override void Act(float deltaTime)
         {
-            var extinguisherItem = character.Inventory.FindItemByTag("fireextinguisher");
+            var extinguisherItem = character.Inventory.FindItemByTag("fireextinguisher".ToIdentifier());
             if (extinguisherItem == null || extinguisherItem.Condition <= 0.0f || !character.HasEquippedItem(extinguisherItem))
             {
                 TryAddSubObjective(ref getExtinguisherObjective, () =>
                 {
-                    if (character.IsOnPlayerTeam && !character.HasEquippedItem("fireextinguisher", allowBroken: false))
+                    if (character.IsOnPlayerTeam && !character.HasEquippedItem("fireextinguisher".ToIdentifier(), allowBroken: false))
                     {
-                        character.Speak(TextManager.Get("DialogFindExtinguisher"), null, 2.0f, "findextinguisher", 30.0f);
+                        character.Speak(TextManager.Get("DialogFindExtinguisher").Value, null, 2.0f, "findextinguisher".ToIdentifier(), 30.0f);
                     }
-                    var getItemObjective = new AIObjectiveGetItem(character, "fireextinguisher", objectiveManager, equip: true)
+                    var getItemObjective = new AIObjectiveGetItem(character, "fireextinguisher".ToIdentifier(), objectiveManager, equip: true)
                     {
                         AllowStealing = true,
                         // If the item is inside an unsafe hull, decrease the priority
@@ -94,7 +94,7 @@ namespace Barotrauma
                     };
                     if (objectiveManager.HasOrder<AIObjectiveExtinguishFires>())
                     {
-                        getItemObjective.Abandoned += () => character.Speak(TextManager.Get("dialogcannotfindfireextinguisher"), null, 0.0f, "dialogcannotfindfireextinguisher", 10.0f);
+                        getItemObjective.Abandoned += () => character.Speak(TextManager.Get("dialogcannotfindfireextinguisher").Value, null, 0.0f, "dialogcannotfindfireextinguisher".ToIdentifier(), 10.0f);
                     };
                     return getItemObjective;
                 });
@@ -112,24 +112,25 @@ namespace Barotrauma
                 }
                 foreach (FireSource fs in targetHull.FireSources)
                 {
-                    float xDist = Math.Abs(character.WorldPosition.X - fs.WorldPosition.X) - fs.DamageRange;
-                    float yDist = Math.Abs(character.WorldPosition.Y - fs.WorldPosition.Y);
-                    bool inRange = xDist + yDist < extinguisher.Range;
-                    // Use the hull position, because the fire x pos is sometimes inside a wall -> the bot can't ever see it and continues running towards the wall.
-                    ISpatialEntity lookTarget = character.CurrentHull == targetHull || character.CurrentHull.linkedTo.Contains(targetHull) ? targetHull : fs as ISpatialEntity;
-                    bool move = !inRange || !character.CanSeeTarget(lookTarget);
-                    if ((inRange && character.CanSeeTarget(lookTarget)) || useExtinquisherTimer > 0)
+                    if (fs == null) { continue; }
+                    if (fs.Removed) { continue; }
+                    if (character.CurrentHull == null)
                     {
-                        useExtinquisherTimer += deltaTime;
-                        if (useExtinquisherTimer > 2.0f)
-                        {
-                            useExtinquisherTimer = 0.0f;
-                        }
-                        // Aim
+                        Abandon = true;
+                        break;
+                    }
+                    float xDist = Math.Abs(character.WorldPosition.X - fs.WorldPosition.X);
+                    float yDist = Math.Abs(character.CurrentHull.WorldPosition.Y - targetHull.WorldPosition.Y);
+                    float dist = xDist + yDist;
+                    bool inRange = dist < extinguisher.Range;
+                    bool isInDamageRange = fs.IsInDamageRange(character, fs.DamageRange) && character.CanSeeTarget(targetHull);
+                    bool moveCloser = !isInDamageRange && (!inRange || !character.CanSeeTarget(targetHull));
+                    bool operateExtinguisher = !moveCloser || (dist < extinguisher.Range * 1.2f && character.CanSeeTarget(targetHull));
+                    if (operateExtinguisher)
+                    {
                         character.CursorPosition = fs.Position;
                         Vector2 fromCharacterToFireSource = fs.WorldPosition - character.WorldPosition;
-                        float dist = fromCharacterToFireSource.Length();
-                        character.CursorPosition += VectorExtensions.Forward(extinguisherItem.body.TransformedRotation + (float)Math.Sin(sinTime) / 2, dist / 2);
+                        character.CursorPosition += VectorExtensions.Forward(extinguisherItem.body.TransformedRotation + (float)Math.Sin(sinTime) / 2, fromCharacterToFireSource.Length() / 2);
                         if (extinguisherItem.RequireAimToUse)
                         {
                             character.SetInput(InputType.Aim, false, true);
@@ -139,27 +140,31 @@ namespace Barotrauma
                         extinguisher.Use(deltaTime, character);
                         if (!targetHull.FireSources.Contains(fs))
                         {
-                            character.Speak(TextManager.GetWithVariable("DialogPutOutFire", "[roomname]", targetHull.DisplayName, true), null, 0, "putoutfire", 10.0f);
+                            character.Speak(TextManager.GetWithVariable("DialogPutOutFire", "[roomname]", targetHull.DisplayName, FormatCapitals.Yes).Value, null, 0, "putoutfire".ToIdentifier(), 10.0f);
                         }
+                        // Prevents running into the flames.
+                        objectiveManager.CurrentObjective.ForceWalk = true;
                     }
-                    if (move)
+                    if (moveCloser)
                     {
-                        //go to the first firesource
-                        if (TryAddSubObjective(ref gotoObjective, () => new AIObjectiveGoTo(fs, character, objectiveManager, closeEnough: Math.Max(fs.DamageRange, extinguisher.Range * 0.7f))
-                            {
-                                DialogueIdentifier = "dialogcannotreachfire",
-                                TargetName = fs.Hull.DisplayName
-                            }, 
-                                onAbandon: () =>  Abandon = true, 
-                                onCompleted: () => RemoveSubObjective(ref gotoObjective)))
+                        if (TryAddSubObjective(ref gotoObjective, () => new AIObjectiveGoTo(fs, character, objectiveManager, closeEnough: extinguisher.Range * 0.8f)
                         {
-                            gotoObjective.requiredCondition = () => targetHull == null || character.CanSeeTarget(targetHull);
+                            DialogueIdentifier = "dialogcannotreachfire".ToIdentifier(),
+                            TargetName = fs.Hull.DisplayName,
+                        },
+                        onAbandon: () => Abandon = true,
+                        onCompleted: () => RemoveSubObjective(ref gotoObjective)))
+                        {
+                            gotoObjective.requiredCondition = () => character.CanSeeTarget(targetHull);
                         }
                     }
-                    else
+                    else if (!operateExtinguisher || isInDamageRange)
                     {
-                        character.AIController.SteeringManager.Reset();
+                        // Don't walk into the flames.
+                        RemoveSubObjective(ref gotoObjective);
+                        SteeringManager.Reset();
                     }
+                    // Only target one fire source at the time.
                     break;
                 }
             }
@@ -170,8 +175,20 @@ namespace Barotrauma
             base.Reset();
             getExtinguisherObjective = null;
             gotoObjective = null;
-            useExtinquisherTimer = 0;
             sinTime = 0;
+            SteeringManager.Reset();
+        }
+
+        protected override void OnCompleted()
+        {
+            base.OnCompleted();
+            SteeringManager.Reset();
+        }
+
+        protected override void OnAbandon()
+        {
+            base.OnAbandon();
+            SteeringManager.Reset();
         }
     }
 }

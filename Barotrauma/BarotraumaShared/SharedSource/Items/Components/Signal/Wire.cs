@@ -13,7 +13,7 @@ namespace Barotrauma.Items.Components
 {
     partial class Wire : ItemComponent, IDrawableComponent, IServerSerializable, IClientSerializable
     {
-        partial class WireSection
+        public partial class WireSection
         {
             private Vector2 start;
             private Vector2 end;
@@ -81,35 +81,35 @@ namespace Barotrauma.Items.Components
             get { return connections; }
         }
 
-        [Serialize(5000.0f, false, description: "The maximum distance the wire can extend (in pixels).")]
+        [Serialize(5000.0f, IsPropertySaveable.No, description: "The maximum distance the wire can extend (in pixels).")]
         public float MaxLength
         {
             get;
             set;
         }
 
-        [Serialize(false, false, description: "If enabled, the wire will not be visible in connection panels outside the submarine editor.")]
+        [Serialize(false, IsPropertySaveable.No, description: "If enabled, the wire will not be visible in connection panels outside the submarine editor.")]
         public bool HiddenInGame
         {
             get;
             set;
         }
 
-        [Editable, Serialize(false, true, "If enabled, this wire will be ignored by the \"Lock all default wires\" setting.", alwaysUseInstanceValues: true)]
+        [Editable, Serialize(false, IsPropertySaveable.Yes, "If enabled, this wire will be ignored by the \"Lock all default wires\" setting.", alwaysUseInstanceValues: true)]
         public bool NoAutoLock
         {
             get;
             set;
         }
 
-        [Editable, Serialize(false, true, "If enabled, this wire will use the sprite depth instead of a constant depth.")]
+        [Editable, Serialize(false, IsPropertySaveable.Yes, "If enabled, this wire will use the sprite depth instead of a constant depth.")]
         public bool UseSpriteDepth
         {
             get;
             set;
         }
         
-        public Wire(Item item, XElement element)
+        public Wire(Item item, ContentXElement element)
             : base(item, element)
         {
             nodes = new List<Vector2>();
@@ -121,7 +121,7 @@ namespace Barotrauma.Items.Components
             InitProjSpecific(element);
         }
 
-        partial void InitProjSpecific(XElement element);
+        partial void InitProjSpecific(ContentXElement element);
 
         public Connection OtherConnection(Connection connection)
         {
@@ -143,12 +143,11 @@ namespace Barotrauma.Items.Components
             {
                 if (connections[i] == null || connections[i].Item != item) { continue; }
 
-                foreach (Wire wire in connections[i].Wires)
+                if (connections[i].Wires.Contains(this))
                 {
-                    if (wire != this) continue;
                     SetConnectedDirty();
 
-                    connections[i].SetWire(connections[i].FindWireIndex(wire), null);
+                    connections[i].DisconnectWire(this);
                 }
 
                 connections[i] = null;
@@ -310,7 +309,7 @@ namespace Barotrauma.Items.Components
             if (nodes.Count == 0) { return; }
 
             Character user = item.ParentInventory?.Owner as Character;
-            editNodeDelay = (user?.SelectedConstruction == null) ? editNodeDelay - deltaTime : 0.5f;
+            editNodeDelay = (user?.SelectedItem == null) ? editNodeDelay - deltaTime : 0.5f;
 
             Submarine sub = item.Submarine;
             if (connections[0] != null && connections[0].Item.Submarine != null) { sub = connections[0].Item.Submarine; }
@@ -370,7 +369,7 @@ namespace Barotrauma.Items.Components
                         user.AnimController.Collider.ApplyForce(forceDir * user.Mass * 50.0f, maxVelocity: NetConfig.MaxPhysicsBodyVelocity * 0.5f);
                         if (diff.LengthSquared() > 50.0f * 50.0f)
                         {
-                            user.AnimController.UpdateUseItem(true, user.WorldPosition + pullBackDir * Math.Min(150.0f, diff.Length()));
+                            user.AnimController.UpdateUseItem(!user.IsClimbing, user.WorldPosition + pullBackDir * Math.Min(150.0f, diff.Length()));
                         }
 
                         if (GameMain.NetworkMember == null || GameMain.NetworkMember.IsServer)
@@ -429,7 +428,7 @@ namespace Barotrauma.Items.Components
         public override bool Use(float deltaTime, Character character = null)
         {
             if (character == null || character != Character.Controlled) { return false; }
-            if (character.SelectedConstruction != null) { return false; }
+            if (character.HasSelectedAnyItem) { return false; }
 #if CLIENT
             if (Screen.Selected == GameMain.SubEditorScreen && !PlayerInput.PrimaryMouseButtonClicked())
             {
@@ -455,12 +454,7 @@ namespace Barotrauma.Items.Components
 #if CLIENT
                 if (GameMain.NetworkMember != null)
                 {
-                    GameMain.Client.CreateEntityEvent(item, new object[]
-                    {
-                        NetEntityEvent.Type.ComponentState,
-                        item.GetComponentIndex(this),
-                        nodes.Count
-                    });
+                    item.CreateClientEvent(this, new ClientEventData(nodes.Count));
                 }
 #endif
             }
@@ -482,12 +476,7 @@ namespace Barotrauma.Items.Components
 #if CLIENT
                 if (GameMain.NetworkMember != null)
                 {
-                    GameMain.Client.CreateEntityEvent(item, new object[]
-                    {
-                        NetEntityEvent.Type.ComponentState,
-                        item.GetComponentIndex(this),
-                        nodes.Count
-                    });
+                    item.CreateClientEvent(this, new ClientEventData(nodes.Count));
                 }
 #endif
             }
@@ -501,13 +490,6 @@ namespace Barotrauma.Items.Components
         {
             ClearConnections(picker);
             return true;
-        }
-
-        public override void Move(Vector2 amount)
-        {
-#if CLIENT
-            if (item.IsSelected) MoveNodes(amount);
-#endif
         }
 
         public List<Vector2> GetNodes()
@@ -614,15 +596,16 @@ namespace Barotrauma.Items.Components
             for (int i = 0; i < 2; i++)
             {
                 if (connections[i] == null) { continue; }
-                int wireIndex = connections[i].FindWireIndex(item);
-                if (wireIndex == -1) { continue; }
+
+                var wire = connections[i].FindWireByItem(item);
+                if (wire is null) { continue; }
 #if SERVER
                 if (!connections[i].Item.Removed && (!connections[i].Item.Submarine?.Loading ?? true) && (!Level.Loaded?.Generating ?? true))
                 {
                     connections[i].Item.CreateServerEvent(connections[i].Item.GetComponent<ConnectionPanel>());
                 }
 #endif
-                connections[i].SetWire(wireIndex, null);
+                connections[i].DisconnectWire(wire);
                 connections[i] = null;
             }
 
@@ -756,14 +739,17 @@ namespace Barotrauma.Items.Components
         {
             if (item.ParentInventory != null) { return; }
 #if CLIENT
-            if (!relativeToSub && Screen.Selected != GameMain.SubEditorScreen) { return; }
+            if (!relativeToSub)
+            {
+                if (Screen.Selected != GameMain.SubEditorScreen || (item.Submarine?.Loading ?? false)) { return; }
+            }
 #else
             if (!relativeToSub) { return; }
 #endif
 
             Vector2 refPos = item.Submarine == null ?
                 Vector2.Zero :
-               item.Position - item.Submarine.HiddenSubPosition;
+                item.Position - item.Submarine.HiddenSubPosition;
 
             for (int i = 0; i < nodes.Count; i++)
             {
@@ -789,20 +775,25 @@ namespace Barotrauma.Items.Components
             UpdateSections();
         }
 
-        public override void Load(XElement componentElement, bool usePrefabValues, IdRemap idRemap)
+        public static IEnumerable<Vector2> ExtractNodes(XElement element)
         {
-            base.Load(componentElement, usePrefabValues, idRemap);
-
-            string nodeString = componentElement.GetAttributeString("nodes", "");
-            if (nodeString == "") return;
+            string nodeString = element.GetAttributeString("nodes", "");
+            if (nodeString.IsNullOrWhiteSpace()) { yield break; }
 
             string[] nodeCoords = nodeString.Split(';');
             for (int i = 0; i < nodeCoords.Length / 2; i++)
             {
-                float.TryParse(nodeCoords[i * 2], NumberStyles.Float, CultureInfo.InvariantCulture, out float x);
-                float.TryParse(nodeCoords[i * 2 + 1], NumberStyles.Float, CultureInfo.InvariantCulture, out float y);
-                nodes.Add(new Vector2(x, y));
+                float.TryParse(nodeCoords[i * 2].Trim(), NumberStyles.Float, CultureInfo.InvariantCulture, out float x);
+                float.TryParse(nodeCoords[i * 2 + 1].Trim(), NumberStyles.Float, CultureInfo.InvariantCulture, out float y);
+                yield return new Vector2(x, y);
             }
+        }
+        
+        public override void Load(ContentXElement componentElement, bool usePrefabValues, IdRemap idRemap)
+        {
+            base.Load(componentElement, usePrefabValues, idRemap);
+
+            nodes.AddRange(ExtractNodes(componentElement));
 
             Drawable = nodes.Any();
         }

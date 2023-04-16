@@ -1,11 +1,18 @@
 ﻿#nullable enable
-using System;
-using System.Collections.Generic;
-using System.Xml.Linq;
 using Microsoft.Xna.Framework;
+using System.Collections.Generic;
+using System.Collections.Immutable;
+using System.Linq;
 
 namespace Barotrauma
 {
+    public enum FactionAffiliation
+    {
+        Positive,
+        Neutral,
+        Negative
+    }
+
     class Faction
     {
         public Reputation Reputation { get; }
@@ -14,20 +21,93 @@ namespace Barotrauma
         public Faction(CampaignMetadata metadata, FactionPrefab prefab)
         {
             Prefab = prefab;
-            Reputation = new Reputation(metadata, $"faction.{prefab.Identifier}", prefab.MinReputation, prefab.MaxReputation, prefab.InitialReputation);
+            Reputation = new Reputation(metadata, this, prefab.MinReputation, prefab.MaxReputation, prefab.InitialReputation);
+        }
+
+        /// <summary>
+        /// Get what kind of affiliation this faction has towards the player depending on who they chose to side with via talents
+        /// </summary>
+        /// <returns></returns>
+        public static FactionAffiliation GetPlayerAffiliationStatus(Faction faction)
+        {
+            if (GameMain.GameSession?.Campaign?.Factions is not { } factions) { return FactionAffiliation.Neutral; }
+
+            bool isHighest = true;
+            foreach (Faction otherFaction in factions)
+            {
+                if (otherFaction == faction || otherFaction.Reputation.Value < faction.Reputation.Value) { continue; }
+
+                isHighest = false;
+                break;
+            }
+
+            return isHighest ? FactionAffiliation.Positive : FactionAffiliation.Negative;
+        }
+
+        public override string ToString()
+        {
+            return $"{base.ToString()} ({Prefab?.Identifier.ToString() ?? "null"})";
         }
     }
 
-    internal class FactionPrefab : IDisposable
+    internal class FactionPrefab : Prefab
     {
-        public static List<FactionPrefab> Prefabs { get; set; }
+        public readonly static PrefabCollection<FactionPrefab> Prefabs = new PrefabCollection<FactionPrefab>();
 
-        public string Name { get; }
+        public LocalizedString Name { get; }
 
-        public string Description { get; }
-        public string ShortDescription { get; }
+        public LocalizedString Description { get; }
+        public LocalizedString ShortDescription { get; }
 
-        public string Identifier { get; }
+        public class HireableCharacter
+        {
+            public readonly Identifier NPCSetIdentifier;
+            public readonly Identifier NPCIdentifier;
+            public readonly float MinReputation;
+
+            public HireableCharacter(ContentXElement element)
+            {
+                NPCSetIdentifier = element.GetAttributeIdentifier("from", element.GetAttributeIdentifier("npcsetidentifier", Identifier.Empty));
+                NPCIdentifier = element.GetAttributeIdentifier("identifier", element.GetAttributeIdentifier("npcidentifier", Identifier.Empty));
+                MinReputation = element.GetAttributeFloat("minreputation", 0.0f);
+            }
+        }
+
+        public ImmutableArray<HireableCharacter> HireableCharacters;
+
+        public class AutomaticMission
+        {
+            public readonly Identifier MissionTag;
+            public readonly LevelData.LevelType LevelType;
+            public readonly float MinReputation, MaxReputation;
+            public readonly float MinProbability, MaxProbability;
+            public readonly int MaxDistanceFromFactionOutpost;
+            public readonly bool DisallowBetweenOtherFactionOutposts;
+
+            public AutomaticMission(ContentXElement element, string parentDebugName)
+            {
+                MissionTag = element.GetAttributeIdentifier("missiontag", Identifier.Empty);
+                LevelType = element.GetAttributeEnum("leveltype", LevelData.LevelType.LocationConnection);
+                MinReputation = element.GetAttributeFloat("minreputation", 0.0f);
+                MaxReputation = element.GetAttributeFloat("maxreputation", 0.0f);
+                if (MinReputation > MaxReputation)
+                {
+                    DebugConsole.ThrowError($"Error in faction prefab \"{parentDebugName}\": MinReputation cannot be larger than MaxReputation.");
+                }
+                float probability = element.GetAttributeFloat("probability", 0.0f);
+                MinProbability = element.GetAttributeFloat("minprobability", probability);
+                MaxProbability = element.GetAttributeFloat("maxprobability", probability);
+                MaxDistanceFromFactionOutpost = element.GetAttributeInt(nameof(MaxDistanceFromFactionOutpost), int.MaxValue);
+                DisallowBetweenOtherFactionOutposts = element.GetAttributeBool(nameof(DisallowBetweenOtherFactionOutposts), false);
+            }
+        }
+
+        public ImmutableArray<AutomaticMission> AutomaticMissions;
+
+        public bool StartOutpost { get; }
+
+
+        public int MenuOrder { get; }
 
         /// <summary>
         /// How low the reputation can drop on this faction
@@ -44,98 +124,81 @@ namespace Barotrauma
         /// </summary>
         public int InitialReputation { get; }
 
+        public float ControlledOutpostPercentage { get; }
+
+        public float SecondaryControlledOutpostPercentage { get; }
+
 #if CLIENT
         public Sprite? Icon { get; private set; }
 
-        public Sprite? BackgroundPortrait { get; private set; }
+        public Sprite? IconSmall { get; private set; }
 
-        public Color IconColor { get; }
+        public Sprite? BackgroundPortrait { get; private set; }
 #endif
 
-        private FactionPrefab(XElement element)
+        public Color IconColor { get; }
+
+        public FactionPrefab(ContentXElement element, FactionsFile file) : base(file, element.GetAttributeIdentifier("identifier", string.Empty))
         {
-            Identifier = element.GetAttributeString("identifier", string.Empty);
+            MenuOrder = element.GetAttributeInt("menuorder", 0);
+            StartOutpost = element.GetAttributeBool("startoutpost", false);
             MinReputation = element.GetAttributeInt("minreputation", -100);
             MaxReputation = element.GetAttributeInt("maxreputation", 100);
             InitialReputation = element.GetAttributeInt("initialreputation", 0);
-            Name = element.GetAttributeString("name", null) ?? TextManager.Get($"faction.{Identifier}", returnNull: true) ?? "Unnamed";
-            Description = element.GetAttributeString("description", null) ?? TextManager.Get($"faction.{Identifier}.description", returnNull: true) ?? "";
-            ShortDescription = element.GetAttributeString("shortdescription", null) ?? TextManager.Get($"faction.{Identifier}.shortdescription", returnNull: true) ?? "";
-#if CLIENT
-            foreach (XElement subElement in element.Elements())
-            {
+            ControlledOutpostPercentage = element.GetAttributeFloat("controlledoutpostpercentage", 0);
+            SecondaryControlledOutpostPercentage = element.GetAttributeFloat("secondarycontrolledoutpostpercentage", 0);
+            Name = element.GetAttributeString("name", null) ?? TextManager.Get($"faction.{Identifier}").Fallback("Unnamed");
+            Description = element.GetAttributeString("description", null) ?? TextManager.Get($"faction.{Identifier}.description").Fallback("");
+            ShortDescription = element.GetAttributeString("shortdescription", null) ?? TextManager.Get($"faction.{Identifier}.shortdescription").Fallback("");
 
-                if (subElement.Name.ToString().Equals("icon", StringComparison.OrdinalIgnoreCase))
+            List<HireableCharacter> hireableCharacters = new List<HireableCharacter>();
+            List<AutomaticMission> automaticMissions = new List<AutomaticMission>();
+            foreach (var subElement in element.Elements())
+            {
+                var subElementId = subElement.NameAsIdentifier();
+                if (subElementId == "icon")
                 {
                     IconColor = subElement.GetAttributeColor("color", Color.White);
+#if CLIENT
                     Icon = new Sprite(subElement);
-                }
-                else if (subElement.Name.ToString().Equals("portrait", StringComparison.OrdinalIgnoreCase))
-                {
-                    BackgroundPortrait = new Sprite(subElement);
-                }
-            }
 #endif
-        }
-
-        public static void LoadFactions()
-        {
-            Prefabs?.ForEach(set => set.Dispose());
-            Prefabs = new List<FactionPrefab>();
-            IEnumerable<ContentFile> files = GameMain.Instance.GetFilesOfType(ContentType.Factions);
-            foreach (ContentFile file in files)
-            {
-                XDocument doc = XMLExtensions.TryLoadXml(file.Path);
-                XElement? rootElement = doc?.Root;
-
-                if (doc == null || rootElement == null) { continue; }
-
-                if (doc.Root.IsOverride())
-                {
-                    Prefabs.Clear();
-                    DebugConsole.NewMessage($"Overriding all factions with '{file.Path}'", Color.Yellow);
                 }
-
-                foreach (XElement element in rootElement.Elements())
+                else if (subElementId == "iconsmall")
                 {
-                    bool isOverride = element.IsOverride();
-                    XElement sourceElement = isOverride ? element.FirstElement() : element;
-                    string elementName = sourceElement.Name.ToString().ToLowerInvariant();
-                    string identifier = sourceElement.GetAttributeString("identifier", null);
-
-                    if (string.IsNullOrWhiteSpace(identifier))
-                    {
-                        DebugConsole.ThrowError($"No identifier defined for the faction config '{elementName}' in file '{file.Path}'");
-                        continue;
-                    }
-
-                    var existingParams = Prefabs.Find(set => set.Identifier == identifier);
-                    if (existingParams != null)
-                    {
-                        if (isOverride)
-                        {
-                            DebugConsole.NewMessage($"Overriding faction config '{identifier}' using the file '{file.Path}'", Color.Yellow);
-                            Prefabs.Remove(existingParams);
-                        }
-                        else
-                        {
-                            DebugConsole.ThrowError($"Duplicate faction config: '{identifier}' defined in {elementName} of '{file.Path}'");
-                            continue;
-                        }
-                    }
-
-                    Prefabs.Add(new FactionPrefab(element));
+#if CLIENT
+                    IconSmall = new Sprite(subElement);
+#endif
+                }
+                else if (subElementId == "portrait")
+                {
+#if CLIENT
+                    BackgroundPortrait = new Sprite(subElement);
+#endif
+                }
+                else if (subElementId == "hireable")
+                {
+                    hireableCharacters.Add(new HireableCharacter(subElement));
+                }
+                else if (subElementId == "mission" || subElementId == "automaticmission")
+                {
+                    automaticMissions.Add(new AutomaticMission(subElement, Identifier.ToString()));
                 }
             }
+            HireableCharacters = hireableCharacters.ToImmutableArray();
+            AutomaticMissions = automaticMissions.ToImmutableArray();
         }
 
-        public void Dispose()
+        public override string ToString()
+        {
+            return $"{base.ToString()} ({Identifier})";
+        }
+
+        public override void Dispose()
         {
 #if CLIENT
             Icon?.Remove();
             Icon = null;
 #endif
-            GC.SuppressFinalize(this);
         }
     }
 }

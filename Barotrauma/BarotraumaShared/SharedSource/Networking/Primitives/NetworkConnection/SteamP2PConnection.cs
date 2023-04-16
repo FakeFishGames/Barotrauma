@@ -1,18 +1,13 @@
-﻿using Barotrauma.Steam;
-using System;
-
-namespace Barotrauma.Networking
+﻿namespace Barotrauma.Networking
 {
-    public class SteamP2PConnection : NetworkConnection
+    sealed class SteamP2PConnection : NetworkConnection
     {
         public double Timeout = 0.0;
 
-        public SteamP2PConnection(string name, UInt64 steamId)
+        public SteamP2PConnection(SteamId steamId) : this(new SteamP2PEndpoint(steamId)) { }
+        
+        public SteamP2PConnection(SteamP2PEndpoint endpoint) : base(endpoint)
         {
-            SteamID = steamId;
-            OwnerSteamID = 0;
-            EndPointString = SteamManager.SteamIDUInt64ToString(SteamID);
-            Name = name;
             Heartbeat();
         }
 
@@ -24,11 +19,6 @@ namespace Barotrauma.Networking
         public void Heartbeat()
         {
             Timeout = TimeoutThreshold;
-        }
-
-        public override bool EndpointMatches(string endPoint)
-        {
-            return SteamManager.SteamIDStringToUInt64(endPoint) == SteamID;
         }
     }
 }

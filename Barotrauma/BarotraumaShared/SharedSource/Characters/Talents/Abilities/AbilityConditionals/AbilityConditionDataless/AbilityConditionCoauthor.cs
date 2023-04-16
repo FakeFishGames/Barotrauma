@@ -1,13 +1,10 @@
-﻿using System.Linq;
-using System.Xml.Linq;
-
-namespace Barotrauma.Abilities
+﻿namespace Barotrauma.Abilities
 {
     class AbilityConditionCoauthor : AbilityConditionDataless
     {
         private readonly string jobIdentifier;
 
-        public AbilityConditionCoauthor(CharacterTalent characterTalent, XElement conditionElement) : base(characterTalent, conditionElement)
+        public AbilityConditionCoauthor(CharacterTalent characterTalent, ContentXElement conditionElement) : base(characterTalent, conditionElement)
         {
             jobIdentifier = conditionElement.GetAttributeString("jobidentifier", string.Empty);
         }

@@ -36,23 +36,32 @@ namespace Barotrauma
 
         private readonly List<Vector2> patrolPositions = new List<Vector2>();
 
-        public override IEnumerable<Vector2> SonarPositions
+        public override IEnumerable<(LocalizedString Label, Vector2 Position)> SonarLabels
         {
             get
             {
-                var empty = Enumerable.Empty<Vector2>();
-                if (outsideOfSonarRange)
+                if (!outsideOfSonarRange || state > 1)
                 {
-                    return State switch
-                    {
-                        0 => patrolPositions,
-                        1 => lastSighting.HasValue ? lastSighting.Value.ToEnumerable() : empty,
-                        _ => empty,
-                    };
+                    yield break;
+
                 }
-                else
+                else if (state == 0)
                 {
-                    return empty;
+                    foreach (Vector2 patrolPos in patrolPositions)
+                    {
+                        yield return (Prefab.SonarLabel, patrolPos);
+                    }
+                }
+                else if (state == 1)
+                {
+                    if (lastSighting.HasValue)
+                    {
+                        yield return (Prefab.SonarLabel, lastSighting.Value);
+                    }
+                    else
+                    {
+                        yield break;
+                    }
                 }
             }
         }
@@ -80,10 +89,35 @@ namespace Barotrauma
 
         public PirateMission(MissionPrefab prefab, Location[] locations, Submarine sub) : base(prefab, locations, sub)
         {
-            submarineTypeConfig = prefab.ConfigElement.Element("SubmarineTypes");
-            characterConfig = prefab.ConfigElement.Element("Characters");
-            characterTypeConfig = prefab.ConfigElement.Element("CharacterTypes");
+            submarineTypeConfig = prefab.ConfigElement.GetChildElement("SubmarineTypes");
+            characterConfig = prefab.ConfigElement.GetChildElement("Characters");
+            characterTypeConfig = prefab.ConfigElement.GetChildElement("CharacterTypes");
             addedMissionDifficultyPerPlayer = prefab.ConfigElement.GetAttributeFloat("addedmissiondifficultyperplayer", 0);
+
+            //make sure all referenced character types are defined
+            foreach (XElement characterElement in characterConfig.Elements())
+            {
+                var characterId = characterElement.GetAttributeString("typeidentifier", string.Empty);
+                var characterTypeElement = characterTypeConfig.Elements().FirstOrDefault(e => e.GetAttributeString("typeidentifier", string.Empty) == characterId);
+                if (characterTypeElement == null)
+                {
+                    DebugConsole.ThrowError($"Error in mission \"{prefab.Identifier}\". Could not find a character type element for the character \"{characterId}\".");
+                }
+            }
+            //make sure all defined character types can be found from human prefabs
+            foreach (XElement characterTypeElement in characterTypeConfig.Elements())
+            {
+                foreach (XElement characterElement in characterTypeElement.Elements())
+                {
+                    Identifier characterIdentifier = characterElement.GetAttributeIdentifier("identifier", Identifier.Empty);
+                    Identifier characterFrom = characterElement.GetAttributeIdentifier("from", Identifier.Empty);
+                    HumanPrefab humanPrefab = NPCSet.Get(characterFrom, characterIdentifier);
+                    if (humanPrefab == null)
+                    {
+                        DebugConsole.ThrowError($"Error in mission \"{prefab.Identifier}\". Character prefab \"{characterIdentifier}\" not found in the NPC set \"{characterFrom}\".");
+                    }
+                }
+            }
 
             // for campaign missions, set level at construction
             LevelData levelData = locations[0].Connections.Where(c => c.Locations.Contains(locations[1])).FirstOrDefault()?.LevelData ?? locations[0]?.LevelData;
@@ -100,6 +134,7 @@ namespace Barotrauma
                 //level already set
                 return;
             }
+            submarineInfo = null;
 
             levelData = level;
             missionDifficulty = level?.Difficulty ?? 0;
@@ -111,21 +146,28 @@ namespace Barotrauma
             string rewardText = $"‖color:gui.orange‖{string.Format(System.Globalization.CultureInfo.InvariantCulture, "{0:N0}", alternateReward)}‖end‖";
             if (descriptionWithoutReward != null) { description = descriptionWithoutReward.Replace("[reward]", rewardText); }
 
-            string submarinePath = submarineConfig.GetAttributeString("path", string.Empty);
-            if (submarinePath == string.Empty)
+            ContentPath submarinePath = submarineConfig.GetAttributeContentPath("path", Prefab.ContentPackage);
+            if (submarinePath.IsNullOrEmpty())
             {
                 DebugConsole.ThrowError($"No path used for submarine for the pirate mission \"{Prefab.Identifier}\"!");
                 return;
             }
-            // maybe a little redundant
-            var contentFile = ContentPackage.GetFilesOfType(GameMain.Config.AllEnabledPackages, ContentType.EnemySubmarine).FirstOrDefault(x => x.Path == submarinePath);
+
+            BaseSubFile contentFile = 
+                GetSubFile<EnemySubmarineFile>(submarinePath) ?? 
+                GetSubFile<SubmarineFile>(submarinePath);
+            BaseSubFile GetSubFile<T>(ContentPath path) where T : BaseSubFile
+            {
+                return ContentPackageManager.EnabledPackages.All.SelectMany(p => p.GetFiles<T>()).FirstOrDefault(f => f.Path == submarinePath);
+            }
+
             if (contentFile == null)
             {
                 DebugConsole.ThrowError($"No submarine file found from the path {submarinePath}!");
                 return;
             }
 
-            submarineInfo = new SubmarineInfo(contentFile.Path);
+            submarineInfo = new SubmarineInfo(contentFile.Path.Value);
         }
 
         private float GetDifficultyModifiedValue(float preferredDifficulty, float levelDifficulty, float randomnessModifier, Random rand)
@@ -183,7 +225,7 @@ namespace Barotrauma
                     var validNodes = path.Nodes.FindAll(n => !Level.Loaded.ExtraWalls.Any(w => w.Cells.Any(c => c.IsPointInside(n.WorldPosition))));
                     if (validNodes.Any())
                     {
-                        preferredSpawnPos = validNodes.GetRandom().WorldPosition; // spawn the sub in a random point in the path if possible
+                        preferredSpawnPos = validNodes.GetRandomUnsynced().WorldPosition; // spawn the sub in a random point in the path if possible
                     }
                 }
 
@@ -203,6 +245,14 @@ namespace Barotrauma
             enemySub.TeamID = CharacterTeamType.None;
             //make the enemy sub withstand atleast the same depth as the player sub
             enemySub.RealWorldCrushDepth = Math.Max(enemySub.RealWorldCrushDepth, Submarine.MainSub.RealWorldCrushDepth);
+            if (Level.Loaded != null)
+            {
+                //...and the depth of the patrol positions + 1000 m
+                foreach (var patrolPos in patrolPositions)
+                {
+                    enemySub.RealWorldCrushDepth = Math.Max(enemySub.RealWorldCrushDepth, Level.Loaded.GetRealWorldDepth(patrolPos.Y) + 1000);
+                }
+            }
             enemySub.ImmuneToBallastFlora = true;
         }
 
@@ -233,9 +283,10 @@ namespace Barotrauma
                 // it is possible to get more than the "max" amount of characters if the modified difficulty is high enough; this is intentional
                 // if necessary, another "hard max" value could be used to clamp the value for performance/gameplay concerns
                 int amountCreated = GetDifficultyModifiedAmount(element.GetAttributeInt("minamount", 0), element.GetAttributeInt("maxamount", 0), enemyCreationDifficulty, rand);
+                var characterId = element.GetAttributeString("typeidentifier", string.Empty);
                 for (int i = 0; i < amountCreated; i++)
                 {
-                    XElement characterType = characterTypeConfig.Elements().Where(e => e.GetAttributeString("typeidentifier", string.Empty) == element.GetAttributeString("typeidentifier", string.Empty)).FirstOrDefault();
+                    XElement characterType = characterTypeConfig.Elements().Where(e => e.GetAttributeString("typeidentifier", string.Empty) == characterId).FirstOrDefault();
 
                     if (characterType == null)
                     {
@@ -245,7 +296,10 @@ namespace Barotrauma
 
                     XElement variantElement = GetRandomDifficultyModifiedElement(characterType, enemyCreationDifficulty, RandomnessModifier);
 
-                    Character spawnedCharacter = CreateHuman(GetHumanPrefabFromElement(variantElement), characters, characterItems, enemySub, CharacterTeamType.None, null);
+                    var humanPrefab = GetHumanPrefabFromElement(variantElement);
+                    if (humanPrefab == null) { continue; }
+
+                    Character spawnedCharacter = CreateHuman(humanPrefab, characters, characterItems, enemySub, CharacterTeamType.None, null);
                     if (!commanderAssigned)
                     {
                         bool isCommander = variantElement.GetAttributeBool("iscommander", false);
@@ -262,7 +316,7 @@ namespace Barotrauma
 
                     foreach (Item item in spawnedCharacter.Inventory.AllItems)
                     {
-                        if (item?.Prefab.Identifier == "idcard")
+                        if (item?.GetComponent<IdCard>() != null)
                         {
                             item.AddTag("id_pirate");
                         }
@@ -297,8 +351,9 @@ namespace Barotrauma
 
             if (enemySub == null)
             {
-                DebugConsole.ThrowError($"Enemy Submarine was not created. SubmarineInfo is likely not defined.");
-                // TODO: should we set the state to something here?
+                DebugConsole.ThrowError(submarineInfo == null ? 
+                    $"Error in PirateMission: enemy sub was not created (submarineInfo == null)." :
+                    $"Error in PirateMission: enemy sub was not created.");
                 return;
             }
 
@@ -337,12 +392,14 @@ namespace Barotrauma
 
         protected override void UpdateMissionSpecific(float deltaTime)
         {
-            int newState = State;
+            if (state >= 2 || enemySub == null) { return; }
+
             float sqrSonarRange = MathUtils.Pow2(Sonar.DefaultSonarRange);
             outsideOfSonarRange = Vector2.DistanceSquared(enemySub.WorldPosition, Submarine.MainSub.WorldPosition) > sqrSonarRange;
-            if (State < 2 && CheckWinState())
+
+            if (CheckWinState())
             {
-                newState = 2;
+                State = 2;
             }
             else
             {
@@ -358,7 +415,7 @@ namespace Barotrauma
                         }
                         if (!outsideOfSonarRange || patrolPositions.None())
                         {
-                            newState = 1;
+                            State = 1;
                         }
                         break;
                     case 1:
@@ -383,26 +440,26 @@ namespace Barotrauma
                         break;
                 }
             }
-            State = newState;
         }
 
         private bool CheckWinState() => !IsClient && characters.All(m => DeadOrCaptured(m));
 
         private bool DeadOrCaptured(Character character)
         {
-            return character == null || character.Removed || character.IsDead || (character.LockHands && character.Submarine == Submarine.MainSub);
+            return character == null || character.Removed || character.Submarine == null || (character.LockHands && character.Submarine == Submarine.MainSub) || character.IsIncapacitated;
         }
 
-        public override void End()
+        protected override bool DetermineCompleted()
         {
-            if (state == 2)
-            {
-                GiveReward();
-                completed = true;
-            }
+            return state == 2;
+        }
+
+        protected override void EndMissionSpecific(bool completed)
+        {
             characters.Clear();
             characterItems.Clear();
             failed = !completed;
+            submarineInfo = null;
         }
     }
 }

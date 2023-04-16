@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.Xml.Linq;
 
 namespace Barotrauma
 {
@@ -7,21 +6,21 @@ namespace Barotrauma
     {
         private readonly List<StatusEffect> effects = new List<StatusEffect>();
 
-        private int actionIndex;
+        private readonly int actionIndex;
 
-        [Serialize("", true)]
-        public string TargetTag { get; set; }
+        [Serialize("", IsPropertySaveable.Yes)]
+        public Identifier TargetTag { get; set; }
 
-        public StatusEffectAction(ScriptedEvent parentEvent, XElement element) : base(parentEvent, element) 
+        public StatusEffectAction(ScriptedEvent parentEvent, ContentXElement element) : base(parentEvent, element) 
         {
             actionIndex = 0;
-            foreach (XElement subElement in parentEvent.Prefab.ConfigElement.Descendants())
+            foreach (var subElement in parentEvent.Prefab.ConfigElement.Descendants())
             {
                 if (subElement == element) { break; }
                 actionIndex++;
             }
 
-            foreach (XElement subElement in element.Elements())
+            foreach (var subElement in element.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
@@ -46,25 +45,40 @@ namespace Barotrauma
         public override void Update(float deltaTime)
         {
             if (isFinished) { return; }
-            var targets = ParentEvent.GetTargets(TargetTag);
+            var eventTargets = ParentEvent.GetTargets(TargetTag);
             foreach (StatusEffect effect in effects)
             {
-                foreach (var target in targets)
+                foreach (var target in eventTargets)
                 {
-                    if (target is Item targetItem)
+                    if (effect.HasTargetType(StatusEffect.TargetType.NearbyCharacters))
                     {
-                        effect.Apply(effect.type, deltaTime, target, targetItem.AllPropertyObjects);
+                        List<ISerializableEntity> nearbyTargets = new List<ISerializableEntity>();
+                        effect.AddNearbyTargets(target.WorldPosition, nearbyTargets);
+                        foreach (var nearbyTarget in nearbyTargets)
+                        {
+                            ApplyOnTarget(nearbyTarget as Entity, effect);
+                        }
+                        continue;
                     }
-                    else
-                    {
-                        effect.Apply(effect.type, deltaTime, target, target as ISerializableEntity);
-                    }
+                    ApplyOnTarget(target, effect);
                 }
             }
 #if SERVER
-            ServerWrite(targets);
+            ServerWrite(eventTargets);
 #endif
             isFinished = true;
+
+            void ApplyOnTarget(Entity target, StatusEffect effect)
+            {
+                if (target is Item targetItem)
+                {
+                    effect.Apply(effect.type, deltaTime, target, targetItem.AllPropertyObjects);
+                }
+                else
+                {
+                    effect.Apply(effect.type, deltaTime, target, target as ISerializableEntity);
+                }
+            }
         }
 
         public override string ToDebugString()

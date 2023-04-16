@@ -14,7 +14,7 @@ namespace Barotrauma.Items.Components
         private GUIImage containerIndicator;
         private GUIComponentStyle indicatorStyleRed, indicatorStyleGreen;
 
-        partial void InitProjSpecific(XElement element)
+        partial void InitProjSpecific(ContentXElement element)
         {
             terminalButtonStyles = new string[RequiredSignalCount];
             int i = 0;
@@ -24,8 +24,8 @@ namespace Barotrauma.Items.Components
                 if (style == null) { continue; }
                 terminalButtonStyles[i++] = style;
             }
-            indicatorStyleRed = GUI.Style.GetComponentStyle("IndicatorLightRed");
-            indicatorStyleGreen = GUI.Style.GetComponentStyle("IndicatorLightGreen");
+            indicatorStyleRed = GUIStyle.GetComponentStyle("IndicatorLightRed");
+            indicatorStyleGreen = GUIStyle.GetComponentStyle("IndicatorLightGreen");
             CreateGUI();
         }
 
@@ -46,6 +46,7 @@ namespace Barotrauma.Items.Components
                     child.Enabled = buttonsEnabled;
                     child.Children.ForEach(c => c.Enabled = buttonsEnabled);
                 }
+                if (Container == null) { return; }
                 bool itemsContained = Container.Inventory.AllItems.Any();
                 if (itemsContained)
                 {
@@ -75,13 +76,14 @@ namespace Barotrauma.Items.Components
                     UserData = i,
                     OnClicked = (button, userData) =>
                     {
+                        int signalIndex = (int)userData;
                         if (GameMain.IsSingleplayer)
                         {
-                            SendSignal((int)userData);
+                            SendSignal(signalIndex, Character.Controlled);
                         }
                         else
                         {
-                            item.CreateClientEvent(this, new object[] { userData });
+                            item.CreateClientEvent(this, new EventData(signalIndex));
                         }
                         return true;
                     }
@@ -92,24 +94,24 @@ namespace Barotrauma.Items.Components
 
         protected override void OnResolutionChanged()
         {
-            base.OnResolutionChanged();
             OnItemLoadedProjSpecific();
         }
 
         partial void OnItemLoadedProjSpecific()
         {
+            if (Container == null) { return; }
             Container.AllowUIOverlap = true;
             Container.Inventory.RectTransform = containerHolder.RectTransform;
         }
 
-        public void ClientWrite(IWriteMessage msg, object[] extraData = null)
+        public void ClientEventWrite(IWriteMessage msg, NetEntityEvent.IData extraData = null)
         {
             Write(msg, extraData);
         }
 
-        public void ClientRead(ServerNetObject type, IReadMessage msg, float sendingTime)
+        public void ClientEventRead(IReadMessage msg, float sendingTime)
         {
-            SendSignal(msg.ReadRangedInteger(0, Signals.Length - 1), isServerMessage: true);
+            SendSignal(msg.ReadRangedInteger(0, Signals.Length - 1), sender: null, isServerMessage: true);
         }
     }
 }

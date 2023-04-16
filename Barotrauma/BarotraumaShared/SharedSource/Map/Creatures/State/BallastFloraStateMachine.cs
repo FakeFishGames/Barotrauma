@@ -17,6 +17,8 @@ namespace Barotrauma.MapCreatures.Behavior
         {
             lastState = State;
             State?.Exit();
+            State = null;
+
             newState.Enter();
             State = newState;
         }
@@ -35,11 +37,9 @@ namespace Barotrauma.MapCreatures.Behavior
             {
                 case ExitState.Running:
                     break;
-
                 case ExitState.ReturnLast when lastState != null && lastState.GetState() == ExitState.Running:
                     EnterState(lastState);
                     break;
-
                 default:
                     EnterState(new GrowIdleState(parent));
                     break;

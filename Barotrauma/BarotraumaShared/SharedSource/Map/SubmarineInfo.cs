@@ -1,6 +1,7 @@
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.ComponentModel;
 #if DEBUG
 using System.IO;
@@ -24,17 +25,12 @@ namespace Barotrauma
     }
 
     public enum SubmarineType { Player, Outpost, OutpostModule, Wreck, BeaconStation, EnemySubmarine, Ruin }
-    public enum SubmarineClass { Undefined, Scout, Attack, Transport, DeepDiver }
+    public enum SubmarineClass { Undefined, Scout, Attack, Transport }
 
     partial class SubmarineInfo : IDisposable
     {
-        public const string SavePath = "Submarines";
-
         private static List<SubmarineInfo> savedSubmarines = new List<SubmarineInfo>();
-        public static IEnumerable<SubmarineInfo> SavedSubmarines
-        {
-            get { return savedSubmarines; }
-        }
+        public static IEnumerable<SubmarineInfo> SavedSubmarines => savedSubmarines;
 
         private Task hashTask;
         private Md5Hash hash;
@@ -44,7 +40,21 @@ namespace Barotrauma
         public SubmarineTag Tags { get; private set; }
 
         public int RecommendedCrewSizeMin = 1, RecommendedCrewSizeMax = 2;
-        public string RecommendedCrewExperience;
+        
+        public enum CrewExperienceLevel
+        {
+            Unknown,
+            CrewExperienceLow,
+            CrewExperienceMid,
+            CrewExperienceHigh
+        }
+        public CrewExperienceLevel RecommendedCrewExperience;
+
+        public int Tier
+        {
+            get;
+            set;
+        }
 
         /// <summary>
         /// A random int that gets assigned when saving the sub. Used in mp campaign to verify that sub files match
@@ -59,13 +69,13 @@ namespace Barotrauma
             set;
         }
 
-        public string DisplayName
+        public LocalizedString DisplayName
         {
             get;
             set;
         }
 
-        public string Description
+        public LocalizedString Description
         {
             get;
             set;
@@ -83,6 +93,21 @@ namespace Barotrauma
             set;
         }
 
+        public bool NoItems
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        /// Note: Refreshed for loaded submarines when they are saved, when they are loaded, and on round end. If you need to refresh it, please use Submarine.CheckFuel() method!
+        /// </summary>
+        public bool LowFuel
+        {
+            get;
+            set;
+        }
+
         public Version GameVersion
         {
             get;
@@ -91,9 +116,12 @@ namespace Barotrauma
 
         public SubmarineType Type { get; set; }
 
+        public bool IsManuallyOutfitted { get; set; }
+
         public SubmarineClass SubmarineClass;
 
         public OutpostModuleInfo OutpostModuleInfo { get; set; }
+        public BeaconStationInfo BeaconStationInfo { get; set; }
 
         public bool IsOutpost => Type == SubmarineType.Outpost || Type == SubmarineType.OutpostModule;
 
@@ -104,6 +132,8 @@ namespace Barotrauma
 
         public bool IsCampaignCompatible => IsPlayer && !HasTag(SubmarineTag.Shuttle) && !HasTag(SubmarineTag.HideInMenus) && SubmarineClass != SubmarineClass.Undefined;
         public bool IsCampaignCompatibleIgnoreClass => IsPlayer && !HasTag(SubmarineTag.Shuttle) && !HasTag(SubmarineTag.HideInMenus);
+
+        public bool AllowPreviewImage => Type == SubmarineType.Player;
 
         public Md5Hash MD5Hash
         {
@@ -170,7 +200,7 @@ namespace Barotrauma
             get
             {
                 if (requiredContentPackagesInstalled.HasValue) { return requiredContentPackagesInstalled.Value; }
-                return RequiredContentPackages.All(cp => GameMain.Config.AllEnabledPackages.Any(cp2 => cp2.Name == cp));
+                return RequiredContentPackages.All(reqName => ContentPackageManager.EnabledPackages.All.Any(contentPackage => contentPackage.NameMatches(reqName)));
             }
             set
             {
@@ -199,13 +229,14 @@ namespace Barotrauma
 
         public OutpostGenerationParams OutpostGenerationParams;
 
-        public readonly Dictionary<string, List<Character>> OutpostNPCs = new Dictionary<string, List<Character>>();
+        public readonly Dictionary<Identifier, List<Character>> OutpostNPCs = new Dictionary<Identifier, List<Character>>();
 
         //constructors & generation ----------------------------------------------------
         public SubmarineInfo()
         {
             FilePath = null;
-            Name = DisplayName = TextManager.Get("UnspecifiedSubFileName");
+            DisplayName = TextManager.Get("UnspecifiedSubFileName");
+            Name = DisplayName.Value;
             IsFileCorrupted = false;
             RequiredContentPackages = new HashSet<string>();
         }
@@ -219,7 +250,8 @@ namespace Barotrauma
             }
             try
             {
-                Name = DisplayName = Path.GetFileNameWithoutExtension(filePath);
+                DisplayName = Path.GetFileNameWithoutExtension(filePath);
+                Name = DisplayName.Value;
             }
             catch (Exception e)
             {
@@ -228,7 +260,7 @@ namespace Barotrauma
 
             if (!string.IsNullOrWhiteSpace(hash))
             {
-                this.hash = new Md5Hash(hash);
+                this.hash = Md5Hash.StringAsHash(hash);
             }
 
             IsFileCorrupted = false;
@@ -264,10 +296,12 @@ namespace Barotrauma
             Description = original.Description;
             Price = original.Price;
             InitialSuppliesSpawned = original.InitialSuppliesSpawned;
+            NoItems = original.NoItems;
+            LowFuel = original.LowFuel;
             GameVersion = original.GameVersion;
             Type = original.Type;
             SubmarineClass = original.SubmarineClass;
-            hash = !string.IsNullOrEmpty(original.FilePath) ? original.MD5Hash : null;
+            hash = !string.IsNullOrEmpty(original.FilePath) && File.Exists(original.FilePath) ? original.MD5Hash : null;
             Dimensions = original.Dimensions;
             CargoCapacity = original.CargoCapacity;
             FilePath = original.FilePath;
@@ -278,10 +312,17 @@ namespace Barotrauma
             RecommendedCrewExperience = original.RecommendedCrewExperience;
             RecommendedCrewSizeMin = original.RecommendedCrewSizeMin;
             RecommendedCrewSizeMax = original.RecommendedCrewSizeMax;
+            Tier = original.Tier;
+            IsManuallyOutfitted = original.IsManuallyOutfitted;
             Tags = original.Tags;
+            OutpostGenerationParams = original.OutpostGenerationParams;
             if (original.OutpostModuleInfo != null)
             {
                 OutpostModuleInfo = new OutpostModuleInfo(original.OutpostModuleInfo);
+            }
+            if (original.BeaconStationInfo != null)
+            {
+                BeaconStationInfo = new BeaconStationInfo(original.BeaconStationInfo);
             }
 #if CLIENT
             PreviewImage = original.PreviewImage != null ? new Sprite(original.PreviewImage) : null;
@@ -300,7 +341,7 @@ namespace Barotrauma
                 DebugConsole.NewMessage("Opening submarine file \"" + FilePath + "\" failed, retrying in 250 ms...");
                 Thread.Sleep(250);
             }
-            if (doc == null || doc.Root == null)
+            if (doc?.Root == null)
             {
                 IsFileCorrupted = true;
                 return;
@@ -314,17 +355,18 @@ namespace Barotrauma
 
         private void Init()
         {
-            DisplayName = TextManager.Get("Submarine.Name." + Name, true);
-            if (string.IsNullOrEmpty(DisplayName)) { DisplayName = Name; }
+            DisplayName = TextManager.Get("Submarine.Name." + Name).Fallback(Name);
 
-            Description = TextManager.Get("Submarine.Description." + Name, true);
-            if (string.IsNullOrEmpty(Description)) { Description = SubmarineElement.GetAttributeString("description", ""); }
+            Description = TextManager.Get("Submarine.Description." + Name).Fallback(SubmarineElement.GetAttributeString("description", ""));
 
             EqualityCheckVal = SubmarineElement.GetAttributeInt("checkval", 0);
 
             Price = SubmarineElement.GetAttributeInt("price", 1000);
 
             InitialSuppliesSpawned = SubmarineElement.GetAttributeBool("initialsuppliesspawned", false);
+            NoItems = SubmarineElement.GetAttributeBool("noitems", false);
+            LowFuel = SubmarineElement.GetAttributeBool("lowfuel", false);
+            IsManuallyOutfitted = SubmarineElement.GetAttributeBool("ismanuallyoutfitted", false);
 
             GameVersion = new Version(SubmarineElement.GetAttributeString("gameversion", "0.0.0.0"));
             if (Enum.TryParse(SubmarineElement.GetAttributeString("tags", ""), out SubmarineTag tags))
@@ -335,7 +377,25 @@ namespace Barotrauma
             CargoCapacity = SubmarineElement.GetAttributeInt("cargocapacity", -1);
             RecommendedCrewSizeMin = SubmarineElement.GetAttributeInt("recommendedcrewsizemin", 0);
             RecommendedCrewSizeMax = SubmarineElement.GetAttributeInt("recommendedcrewsizemax", 0);
-            RecommendedCrewExperience = SubmarineElement.GetAttributeString("recommendedcrewexperience", "Unknown");
+            var recommendedCrewExperience = SubmarineElement.GetAttributeIdentifier("recommendedcrewexperience", CrewExperienceLevel.Unknown.ToIdentifier());
+            // Backwards compatibility
+            if (recommendedCrewExperience == "Beginner")
+            {
+                RecommendedCrewExperience = CrewExperienceLevel.CrewExperienceLow;
+            }
+            else if (recommendedCrewExperience == "Intermediate")
+            {
+                RecommendedCrewExperience = CrewExperienceLevel.CrewExperienceMid;
+            }
+            else if (recommendedCrewExperience == "Experienced")
+            {
+                RecommendedCrewExperience = CrewExperienceLevel.CrewExperienceHigh;
+            }
+            else
+            {
+                Enum.TryParse(recommendedCrewExperience.Value, ignoreCase: true, out RecommendedCrewExperience);
+            }
+            Tier = SubmarineElement.GetAttributeInt("tier", GetDefaultTier(Price));
 
             if (SubmarineElement?.Attribute("type") != null)
             {
@@ -346,6 +406,10 @@ namespace Barotrauma
                     {
                         OutpostModuleInfo = new OutpostModuleInfo(this, SubmarineElement);
                     }
+                    else if (Type == SubmarineType.BeaconStation)
+                    {
+                        BeaconStationInfo = new BeaconStationInfo(this, SubmarineElement);
+                    }
                 }
             }
 
@@ -353,7 +417,13 @@ namespace Barotrauma
             {
                 if (SubmarineElement?.Attribute("class") != null)
                 {
-                    if (Enum.TryParse(SubmarineElement.GetAttributeString("class", "Undefined"), out SubmarineClass submarineClass))
+                    string classStr = SubmarineElement.GetAttributeString("class", "Undefined");
+                    if (classStr == "DeepDiver")
+                    {
+                        //backwards compatibility
+                        SubmarineClass = SubmarineClass.Scout;
+                    }
+                    else if (Enum.TryParse(classStr, out SubmarineClass submarineClass))
                     {
                         SubmarineClass = submarineClass;
                     }
@@ -364,22 +434,8 @@ namespace Barotrauma
                 SubmarineClass = SubmarineClass.Undefined;
             }
 
-            //backwards compatibility (use text tags instead of the actual text)
-            if (RecommendedCrewExperience == "Beginner")
-            {
-                RecommendedCrewExperience = "CrewExperienceLow";
-            }
-            else if (RecommendedCrewExperience == "Intermediate")
-            {
-                RecommendedCrewExperience = "CrewExperienceMid";
-            }
-            else if (RecommendedCrewExperience == "Experienced")
-            {
-                RecommendedCrewExperience = "CrewExperienceHigh";
-            }
-
             RequiredContentPackages.Clear();
-            string[] contentPackageNames = SubmarineElement.GetAttributeStringArray("requiredcontentpackages", new string[0]);
+            string[] contentPackageNames = SubmarineElement.GetAttributeStringArray("requiredcontentpackages", Array.Empty<string>());
             foreach (string contentPackageName in contentPackageNames)
             {
                 RequiredContentPackages.Add(contentPackageName);
@@ -401,17 +457,13 @@ namespace Barotrauma
 
         public bool IsVanillaSubmarine()
         {
+            if (FilePath == null) { return false; }
             var vanilla = GameMain.VanillaContent;
             if (vanilla != null)
             {
-                var vanillaSubs = vanilla.GetFilesOfType(ContentType.Submarine)
-                    .Concat(vanilla.GetFilesOfType(ContentType.Wreck))
-                    .Concat(vanilla.GetFilesOfType(ContentType.BeaconStation))
-                    .Concat(vanilla.GetFilesOfType(ContentType.EnemySubmarine))
-                    .Concat(vanilla.GetFilesOfType(ContentType.Outpost))
-                    .Concat(vanilla.GetFilesOfType(ContentType.OutpostModule));
-                string pathToCompare = FilePath.Replace(@"\", @"/").ToLowerInvariant();
-                if (vanillaSubs.Any(sub => sub.Replace(@"\", @"/").ToLowerInvariant() == pathToCompare))
+                var vanillaSubs = vanilla.GetFiles<BaseSubFile>();
+                string pathToCompare = FilePath.CleanUpPath();
+                if (vanillaSubs.Any(sub => sub.Path == pathToCompare))
                 {
                     return true;
                 }
@@ -426,7 +478,7 @@ namespace Barotrauma
 
             hashTask = new Task(() =>
             {
-                hash = new Md5Hash(doc, FilePath);
+                hash = Md5Hash.CalculateForString(doc.ToString(), Md5Hash.StringHashOptions.IgnoreWhitespace);
             });
             hashTask.Start();
         }
@@ -458,7 +510,7 @@ namespace Barotrauma
             LeftBehindSubDockingPortOccupied = false;
             LeftBehindDockingPortIDs.Clear();
             BlockedDockingPortIDs.Clear();
-            foreach (XElement subElement in element.Elements())
+            foreach (var subElement in element.Elements())
             {
                 if (!subElement.Name.ToString().Equals("linkedsubmarine", StringComparison.OrdinalIgnoreCase)) { continue; }
                 if (subElement.Attribute("location") == null) { continue; }
@@ -468,7 +520,7 @@ namespace Barotrauma
                 LeftBehindDockingPortIDs.Add(targetDockingPortID);
                 XElement targetPortElement = targetDockingPortID == 0 ? null :
                     element.Elements().FirstOrDefault(e => e.GetAttributeInt("ID", 0) == targetDockingPortID);
-                if (targetPortElement != null && targetPortElement.GetAttributeIntArray("linked", new int[0]).Length > 0)
+                if (targetPortElement != null && targetPortElement.GetAttributeIntArray("linked", Array.Empty<int>()).Length > 0)
                 {
                     BlockedDockingPortIDs.Add(targetDockingPortID);
                     LeftBehindSubDockingPortOccupied = true;
@@ -479,15 +531,19 @@ namespace Barotrauma
         /// <summary>
         /// Calculated from <see cref="SubmarineElement"/>. Can be used when the sub hasn't been loaded and we can't access <see cref="Submarine.RealWorldCrushDepth"/>.
         /// </summary>
-        public float GetRealWorldCrushDepth()
+        public bool IsCrushDepthDefinedInStructures(out float realWorldCrushDepth)
         {
-            if (SubmarineElement == null) { return Level.DefaultRealWorldCrushDepth; }
+            if (SubmarineElement == null)
+            {
+                realWorldCrushDepth = Level.DefaultRealWorldCrushDepth;
+                return false;
+            }
             bool structureCrushDepthsDefined = false;
-            float realWorldCrushDepth = float.PositiveInfinity;
+            realWorldCrushDepth = float.PositiveInfinity;
             foreach (var structureElement in SubmarineElement.GetChildElements("structure"))
             {
                 string name = structureElement.Attribute("name")?.Value ?? "";
-                string identifier = structureElement.GetAttributeString("identifier", "");
+                Identifier identifier = structureElement.GetAttributeIdentifier("identifier", "");
                 var structurePrefab = Structure.FindPrefab(name, identifier);
                 if (structurePrefab == null || !structurePrefab.Body) { continue; }
                 if (!structureCrushDepthsDefined && structureElement.Attribute("crushdepth") != null)
@@ -501,27 +557,19 @@ namespace Barotrauma
             {
                 realWorldCrushDepth = Level.DefaultRealWorldCrushDepth;
             }
-            realWorldCrushDepth *= GetRealWorldCrushDepthMultiplier();
-            return realWorldCrushDepth;
+            return structureCrushDepthsDefined;
         }
-
-        /// <summary>
-        /// Based on <see cref="SubmarineClass"/>
-        /// </summary>
-        public float GetRealWorldCrushDepthMultiplier()
+        public void AddOutpostNPCIdentifierOrTag(Character npc, Identifier idOrTag)
         {
-            if (SubmarineClass == SubmarineClass.DeepDiver)
+            if (!OutpostNPCs.ContainsKey(idOrTag))
             {
-                return 1.2f;
+                OutpostNPCs.Add(idOrTag, new List<Character>());
             }
-            else
-            {
-                return 1.0f;
-            }
+            OutpostNPCs[idOrTag].Add(npc);
         }
 
         //saving/loading ----------------------------------------------------
-        public bool SaveAs(string filePath, System.IO.MemoryStream previewImage = null)
+        public void SaveAs(string filePath, System.IO.MemoryStream previewImage = null)
         {
             var newElement = new XElement(
                 SubmarineElement.Name, 
@@ -536,25 +584,20 @@ namespace Barotrauma
                 OutpostModuleInfo.Save(newElement);
                 OutpostModuleInfo = new OutpostModuleInfo(this, newElement);
             }
+            else if (Type == SubmarineType.BeaconStation)
+            {
+                BeaconStationInfo.Save(newElement);
+                BeaconStationInfo = new BeaconStationInfo(this, newElement);
+            }
             XDocument doc = new XDocument(newElement);
 
             doc.Root.Add(new XAttribute("name", Name));
-            if (previewImage != null)
+            if (previewImage != null && AllowPreviewImage)
             {
                 doc.Root.Add(new XAttribute("previewimage", Convert.ToBase64String(previewImage.ToArray())));
             }
-            try
-            {
-                SaveUtil.CompressStringToFile(filePath, doc.ToString());
-                Md5Hash.RemoveFromCache(filePath);
-            }
-            catch (Exception e)
-            {
-                DebugConsole.ThrowError("Saving submarine \"" + filePath + "\" failed!", e);
-                return false;
-            }
 
-            return true;
+            SaveUtil.CompressStringToFile(filePath, doc.ToString());
         }
 
         public static void AddToSavedSubs(SubmarineInfo subInfo)
@@ -562,7 +605,7 @@ namespace Barotrauma
             savedSubmarines.Add(subInfo);
         }
 
-        public static void RefreshSavedSub(string filePath)
+        public static void RemoveSavedSub(string filePath)
         {
             string fullPath = Path.GetFullPath(filePath);
             for (int i = savedSubmarines.Count - 1; i >= 0; i--)
@@ -572,7 +615,11 @@ namespace Barotrauma
                     savedSubmarines[i].Dispose();
                 }
             }
+        }
 
+        public static void RefreshSavedSub(string filePath)
+        {
+            RemoveSavedSub(filePath);
             if (File.Exists(filePath))
             {
                 var subInfo = new SubmarineInfo(filePath);
@@ -586,73 +633,27 @@ namespace Barotrauma
 
         public static void RefreshSavedSubs()
         {
-            var contentPackageSubs = ContentPackage.GetFilesOfType(
-                GameMain.Config.AllEnabledPackages, 
-                ContentType.Submarine, ContentType.Outpost, ContentType.OutpostModule,
-                ContentType.Wreck, ContentType.BeaconStation, ContentType.EnemySubmarine);
+            var contentPackageSubs = ContentPackageManager.EnabledPackages.All.SelectMany(c => c.GetFiles<BaseSubFile>());
 
             for (int i = savedSubmarines.Count - 1; i >= 0; i--)
             {
                 if (File.Exists(savedSubmarines[i].FilePath))
                 {
                     bool isDownloadedSub = Path.GetFullPath(Path.GetDirectoryName(savedSubmarines[i].FilePath)) == Path.GetFullPath(SaveUtil.SubmarineDownloadFolder);
-                    bool isInSubmarinesFolder = Path.GetFullPath(Path.GetDirectoryName(savedSubmarines[i].FilePath)) == Path.GetFullPath(SavePath);
-                    bool isInContentPackage = contentPackageSubs.Any(fp => Path.GetFullPath(fp.Path).CleanUpPath() == Path.GetFullPath(savedSubmarines[i].FilePath).CleanUpPath());
+                    bool isInContentPackage = contentPackageSubs.Any(f => f.Path == savedSubmarines[i].FilePath);
                     if (isDownloadedSub) { continue; }
-                    if (savedSubmarines[i].LastModifiedTime == File.GetLastWriteTime(savedSubmarines[i].FilePath) && (isInSubmarinesFolder || isInContentPackage)) { continue; }
+                    if (savedSubmarines[i].LastModifiedTime == File.GetLastWriteTime(savedSubmarines[i].FilePath) && isInContentPackage) { continue; }
                 }
                 savedSubmarines[i].Dispose();
             }
 
-            if (!Directory.Exists(SavePath))
+            List<string> filePaths = new List<string>();
+            foreach (BaseSubFile subFile in contentPackageSubs)
             {
-                try
+                if (!File.Exists(subFile.Path.Value)) { continue; }
+                if (!filePaths.Any(fp => fp == subFile.Path))
                 {
-                    Directory.CreateDirectory(SavePath);
-                }
-                catch (Exception e)
-                {
-                    DebugConsole.ThrowError("Directory \"" + SavePath + "\" not found and creating the directory failed.", e);
-                    return;
-                }
-            }
-
-            List<string> filePaths;
-            string[] subDirectories;
-
-            try
-            {
-                filePaths = Directory.GetFiles(SavePath).ToList();
-                subDirectories = Directory.GetDirectories(SavePath).Where(s =>
-                {
-                    DirectoryInfo dir = new DirectoryInfo(s);
-                    return !dir.Attributes.HasFlag(System.IO.FileAttributes.Hidden) && !dir.Name.StartsWith(".");
-                }).ToArray();
-            }
-            catch (Exception e)
-            {
-                DebugConsole.ThrowError("Couldn't open directory \"" + SavePath + "\"!", e);
-                return;
-            }
-
-            foreach (string subDirectory in subDirectories)
-            {
-                try
-                {
-                    filePaths.AddRange(Directory.GetFiles(subDirectory).ToList());
-                }
-                catch (Exception e)
-                {
-                    DebugConsole.ThrowError("Couldn't open subdirectory \"" + subDirectory + "\"!", e);
-                    return;
-                }
-            }
-
-            foreach (ContentFile subFile in contentPackageSubs)
-            {
-                if (!filePaths.Any(fp => Path.GetFullPath(fp) == Path.GetFullPath(subFile.Path)))
-                {
-                    filePaths.Add(subFile.Path);
+                    filePaths.Add(subFile.Path.Value);
                 }
             }
 
@@ -661,34 +662,7 @@ namespace Barotrauma
             foreach (string path in filePaths)
             {
                 var subInfo = new SubmarineInfo(path);
-                if (subInfo.IsFileCorrupted)
-                {
-#if CLIENT
-                    if (DebugConsole.IsOpen) { DebugConsole.Toggle(); }
-                    var deleteSubPrompt = new GUIMessageBox(
-                        TextManager.Get("Error"),
-                        TextManager.GetWithVariable("SubLoadError", "[subname]", subInfo.Name) + "\n" +
-                        TextManager.GetWithVariable("DeleteFileVerification", "[filename]", subInfo.Name),
-                        new string[] { TextManager.Get("Yes"), TextManager.Get("No") });
-
-                    string filePath = path;
-                    deleteSubPrompt.Buttons[0].OnClicked += (btn, userdata) =>
-                    {
-                        try
-                        {
-                            File.Delete(filePath);
-                        }
-                        catch (Exception e)
-                        {
-                            DebugConsole.ThrowError($"Failed to delete file \"{filePath}\".", e);
-                        }
-                        deleteSubPrompt.Close();
-                        return true;
-                    };
-                    deleteSubPrompt.Buttons[1].OnClicked += deleteSubPrompt.Close;
-#endif
-                }
-                else
+                if (!subInfo.IsFileCorrupted)
                 {
                     savedSubmarines.Add(subInfo);
                 }
@@ -727,7 +701,7 @@ namespace Barotrauma
                 System.IO.Stream stream;
                 try
                 {
-                    stream = SaveUtil.DecompressFiletoStream(file);
+                    stream = SaveUtil.DecompressFileToStream(file);
                 }
                 catch (System.IO.FileNotFoundException e)
                 {
@@ -784,5 +758,37 @@ namespace Barotrauma
 
             return doc;
         }
+
+        public int GetPrice(Location location = null, ImmutableHashSet<Character> characterList = null)
+        {
+            if (location is null)
+            {
+                if (GameMain.GameSession?.Campaign?.Map?.CurrentLocation is { } currentLocation)
+                {
+                    location = currentLocation;
+                }
+                else
+                {
+
+                    return Price;
+                }
+            }
+
+            characterList ??= GameSession.GetSessionCrewCharacters(CharacterType.Both);
+
+            float price = Price;
+
+            if (location.Faction is { } faction && Faction.GetPlayerAffiliationStatus(faction) is FactionAffiliation.Positive)
+            {
+                price *= 1f - characterList.Max(static c => c.GetStatValue(StatTypes.ShipyardBuyMultiplierAffiliated));
+            }
+            price *= 1f - characterList.Max(static c => c.GetStatValue(StatTypes.ShipyardBuyMultiplier));
+
+            return (int)price;
+        }
+
+        public static int GetDefaultTier(int price) => price > 20000 ? HighestTier : price > 10000 ? 2 : 1;
+
+        public const int HighestTier = 3;
     }
 }

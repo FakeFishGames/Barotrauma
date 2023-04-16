@@ -27,7 +27,7 @@ namespace Barotrauma
 
     internal abstract partial class Command
     {
-        public abstract string GetDescription();
+        public abstract LocalizedString GetDescription();
     }
 
     /// <summary>
@@ -88,7 +88,7 @@ namespace Barotrauma
             }
         }
 
-        public override string GetDescription()
+        public override LocalizedString GetDescription()
         {
             if (Resized)
             {
@@ -303,7 +303,7 @@ namespace Barotrauma
             }
         }
 
-        public override string GetDescription()
+        public override LocalizedString GetDescription()
         {
             if (WasDeleted)
             {
@@ -364,7 +364,7 @@ namespace Barotrauma
             }
         }
 
-        public override string GetDescription()
+        public override LocalizedString GetDescription()
         {
             if (wasDropped)
             {
@@ -379,8 +379,8 @@ namespace Barotrauma
             }
 
             return Receivers.Count > 1
-                ? TextManager.GetWithVariables("Undo.ContainedItemsMultiple", new[] { "[count]", "[container]" }, new[] { Receivers.Count.ToString(), container })
-                : TextManager.GetWithVariables("Undo.ContainedItem", new[] { "[item]", "[container]" }, new[] { Receivers.FirstOrDefault().Item.Name, container });
+                ? TextManager.GetWithVariables("Undo.ContainedItemsMultiple", ("[count]", Receivers.Count.ToString()), ("[container]", container))
+                : TextManager.GetWithVariables("Undo.ContainedItem", ("[item]", Receivers.FirstOrDefault().Item.Name), ("[container]", container));
         }
     }
 
@@ -391,7 +391,7 @@ namespace Barotrauma
     {
         private Dictionary<object, List<ISerializableEntity>> OldProperties;
         private readonly List<ISerializableEntity> Receivers;
-        private readonly string PropertyName;
+        private readonly Identifier PropertyName;
         private readonly object NewProperties;
         private string sanitizedProperty;
 
@@ -404,7 +404,7 @@ namespace Barotrauma
         /// <param name="propertyName">Real property name, not all lowercase</param>
         /// <param name="newData"></param>
         /// <param name="oldData"></param>
-        public PropertyCommand(List<ISerializableEntity> receivers, string propertyName, object newData, Dictionary<object, List<ISerializableEntity>> oldData)
+        public PropertyCommand(List<ISerializableEntity> receivers, Identifier propertyName, object newData, Dictionary<object, List<ISerializableEntity>> oldData)
         {
             Receivers = receivers;
             PropertyName = propertyName;
@@ -414,7 +414,7 @@ namespace Barotrauma
             SanitizeProperty();
         }
 
-        public PropertyCommand(ISerializableEntity receiver, string propertyName, object newData, object oldData)
+        public PropertyCommand(ISerializableEntity receiver, Identifier propertyName, object newData, object oldData)
         {
             Receivers = new List<ISerializableEntity> { receiver };
             PropertyName = propertyName;
@@ -485,9 +485,9 @@ namespace Barotrauma
 
                 if (receiver.SerializableProperties != null)
                 {
-                    Dictionary<string, SerializableProperty> props = receiver.SerializableProperties;
+                    Dictionary<Identifier, SerializableProperty> props = receiver.SerializableProperties;
 
-                    if (props.TryGetValue(PropertyName.ToLowerInvariant(), out SerializableProperty prop))
+                    if (props.TryGetValue(PropertyName, out SerializableProperty prop))
                     {
                         prop.TrySetValue(receiver, data);
                         // Update the editing hud
@@ -512,11 +512,17 @@ namespace Barotrauma
             }
         }
 
-        public override string GetDescription()
+        public override LocalizedString GetDescription()
         {
             return Receivers.Count > 1
-                ? TextManager.GetWithVariables("Undo.ChangedPropertyMultiple", new[] { "[property]", "[count]", "[value]" }, new[] { PropertyName, Receivers.Count.ToString(), sanitizedProperty })
-                : TextManager.GetWithVariables("Undo.ChangedProperty", new[] { "[property]", "[item]", "[value]" }, new[] { PropertyName, Receivers.FirstOrDefault()?.Name, sanitizedProperty });
+                ? TextManager.GetWithVariables("Undo.ChangedPropertyMultiple",
+                    ("[property]", PropertyName.Value),
+                    ("[count]", Receivers.Count.ToString()),
+                    ("[value]", sanitizedProperty))
+                : TextManager.GetWithVariables("Undo.ChangedProperty",
+                    ("[property]", PropertyName.Value),
+                    ("[item]", Receivers.FirstOrDefault()?.Name),
+                    ("[value]", sanitizedProperty));
         }
     }
 
@@ -560,7 +566,7 @@ namespace Barotrauma
 
         public override void Cleanup() { }
 
-        public override string GetDescription()
+        public override LocalizedString GetDescription()
         {
             return TextManager.GetWithVariable("Undo.MovedItem", "[item]", targetItem.Name);
         }

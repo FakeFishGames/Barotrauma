@@ -1,55 +1,14 @@
-﻿using System;
-using System.Net;
-using Lidgren.Network;
+﻿using Lidgren.Network;
 
 namespace Barotrauma.Networking
 {
-    public class LidgrenConnection : NetworkConnection
+    sealed class LidgrenConnection : NetworkConnection
     {
-        public NetConnection NetConnection { get; private set; }
+        public readonly NetConnection NetConnection;
 
-        public IPEndPoint IPEndPoint => NetConnection.RemoteEndPoint;
-
-        public string IPString
+        public LidgrenConnection(NetConnection netConnection) : base(new LidgrenEndpoint(netConnection.RemoteEndPoint))
         {
-            get
-            {
-                return IPEndPoint.Address.IsIPv4MappedToIPv6 ? IPEndPoint.Address.MapToIPv4NoThrow().ToString() : IPEndPoint.Address.ToString();
-            }
-        }
-
-        public UInt16 Port
-        {
-            get
-            {
-                return (UInt16)IPEndPoint.Port;
-            }
-        }
-
-        public LidgrenConnection(string name, NetConnection netConnection, UInt64 steamId)
-        {
-            Name = name;
             NetConnection = netConnection;
-            SteamID = steamId;
-            EndPointString = IPString;
-        }
-
-        public override bool SetSteamIDIfUnknown(UInt64 id)
-        {
-            if (SteamID != 0) { return false; } //do not allow the SteamID to be set multiple times
-            SteamID = id;
-            return true;
-        }
-
-        public override bool EndpointMatches(string endPoint)
-        {
-            if (IPEndPoint?.Address == null) { return false; }
-            if (!IPAddress.TryParse(endPoint, out IPAddress addr)) { return false; }
-
-            IPAddress ip1 = IPEndPoint.Address.IsIPv4MappedToIPv6 ? IPEndPoint.Address.MapToIPv4() : IPEndPoint.Address;
-            IPAddress ip2 = addr.IsIPv4MappedToIPv6 ? addr.MapToIPv4() : addr;
-
-            return ip1.ToString() == ip2.ToString();
         }
     }
 }

@@ -9,11 +9,11 @@ namespace Barotrauma
 {
     class AIObjectiveChargeBatteries : AIObjectiveLoop<PowerContainer>
     {
-        public override string Identifier { get; set; } = "charge batteries";
+        public override Identifier Identifier { get; set; } = "charge batteries".ToIdentifier();
         public override bool AllowAutomaticItemUnequipping => true;
         private IEnumerable<PowerContainer> batteryList;
 
-        public AIObjectiveChargeBatteries(Character character, AIObjectiveManager objectiveManager, string option, float priorityModifier) 
+        public AIObjectiveChargeBatteries(Character character, AIObjectiveManager objectiveManager, Identifier option, float priorityModifier) 
             : base(character, objectiveManager, priorityModifier, option) { }
 
         protected override bool Filter(PowerContainer battery)
@@ -30,6 +30,7 @@ namespace Barotrauma
                 if (!character.Submarine.IsConnectedTo(item.Submarine)) { return false; }
             }
             if (item.ConditionPercentage <= 0) { return false; }
+            if (item.IsClaimedByBallastFlora) { return false; }
             if (Character.CharacterList.Any(c => c.CurrentHull == item.CurrentHull && !HumanAIController.IsFriendly(c) && HumanAIController.IsActive(c))) { return false; }
             if (IsReady(battery)) { return false; }
             return true;
@@ -55,7 +56,7 @@ namespace Barotrauma
             {
                 if (character == null || character.Submarine == null)
                 {
-                    return new PowerContainer[0];
+                    return Array.Empty<PowerContainer>();
                 }
                 batteryList = character.Submarine.GetItems(true).Select(i => i.GetComponent<PowerContainer>()).Where(b => b != null);
             }

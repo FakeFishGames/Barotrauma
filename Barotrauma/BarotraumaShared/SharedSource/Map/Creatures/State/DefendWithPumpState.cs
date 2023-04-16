@@ -18,7 +18,7 @@ namespace Barotrauma.MapCreatures.Behavior
         private bool tryDrown;
         private readonly Character attacker;
 
-        public DefendWithPumpState(BallastFloraBranch branch, List<Item> items, Character attacker)
+        public DefendWithPumpState(BallastFloraBranch branch, IEnumerable<Item> items, Character attacker)
         {
             targetBranch = branch;
             this.attacker = attacker;

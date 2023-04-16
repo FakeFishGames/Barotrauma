@@ -1,7 +1,4 @@
-﻿using System.Linq;
-using System.Xml.Linq;
-
-namespace Barotrauma.Abilities
+﻿namespace Barotrauma.Abilities
 {
     class CharacterAbilityModifyStatToFlooding : CharacterAbility
     {
@@ -10,7 +7,7 @@ namespace Barotrauma.Abilities
         private float lastValue = 0f;
         public override bool AllowClientSimulation => true;
 
-        public CharacterAbilityModifyStatToFlooding(CharacterAbilityGroup characterAbilityGroup, XElement abilityElement) : base(characterAbilityGroup, abilityElement)
+        public CharacterAbilityModifyStatToFlooding(CharacterAbilityGroup characterAbilityGroup, ContentXElement abilityElement) : base(characterAbilityGroup, abilityElement)
         {
             statType = CharacterAbilityGroup.ParseStatType(abilityElement.GetAttributeString("stattype", ""), CharacterTalent.DebugIdentifier);
             maxValue = abilityElement.GetAttributeFloat("maxvalue", 0f);
@@ -22,8 +19,14 @@ namespace Barotrauma.Abilities
 
             if (conditionsMatched && Character.IsInFriendlySub)
             {
-                float currentFloodPercentage = Character.Submarine.GetHulls(false).Average(h => h.WaterPercentage);
-                lastValue = currentFloodPercentage / 100f * maxValue;
+                float waterVolume = 0.0f, totalVolume = 0.0f;
+                foreach (Hull hull in Hull.HullList)
+                {
+                    if (hull.Submarine != Character.Submarine) { continue; }
+                    waterVolume += hull.WaterVolume;
+                    totalVolume += hull.Volume;
+                }
+                lastValue = (totalVolume == 0.0f ? 1.0f : waterVolume / totalVolume) * maxValue;
                 Character.ChangeStat(statType, lastValue);
             }
             else

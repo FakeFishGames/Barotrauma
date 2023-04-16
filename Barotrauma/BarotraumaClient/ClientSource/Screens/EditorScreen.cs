@@ -4,7 +4,23 @@ namespace Barotrauma
 {
     class EditorScreen : Screen
     {
-        public static Color BackgroundColor = GameSettings.SubEditorBackgroundColor;
+        public static Color BackgroundColor = GameSettings.CurrentConfig.SubEditorBackground;
+        public override bool IsEditor => true;
+
+        public override sealed void Deselect()
+        {
+            DeselectEditorSpecific();
+#if !DEBUG
+            //reset cheats the player might have used in the editor
+            GameMain.LightManager.LightingEnabled = true;
+            GameMain.LightManager.LosEnabled = true;
+            Hull.EditFire = false;
+            Hull.EditWater = false;
+            HumanAIController.DisableCrewAI = false;
+#endif
+        }
+
+        protected virtual void DeselectEditorSpecific() { }
 
         public void CreateBackgroundColorPicker()
         {
@@ -17,14 +33,14 @@ namespace Barotrauma
             for (int i = 0; i < 3; i++)
             {
                 var colorContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.33f, 1), rgbLayout.RectTransform), isHorizontal: true) { Stretch = true };
-                new GUITextBlock(new RectTransform(new Vector2(0.2f, 1), colorContainer.RectTransform, Anchor.CenterLeft) { MinSize = new Point(15, 0) }, GUI.colorComponentLabels[i], font: GUI.SmallFont, textAlignment: Alignment.Center);
+                new GUITextBlock(new RectTransform(new Vector2(0.2f, 1), colorContainer.RectTransform, Anchor.CenterLeft) { MinSize = new Point(15, 0) }, GUI.ColorComponentLabels[i], font: GUIStyle.SmallFont, textAlignment: Alignment.Center);
                 layoutParents[i] = colorContainer;
             }
 
             // attach number inputs to our generated parent elements
-            var rInput = new GUINumberInput(new RectTransform(new Vector2(0.7f, 1f), layoutParents[0].RectTransform), GUINumberInput.NumberType.Int) { IntValue = BackgroundColor.R };
-            var gInput = new GUINumberInput(new RectTransform(new Vector2(0.7f, 1f), layoutParents[1].RectTransform), GUINumberInput.NumberType.Int) { IntValue = BackgroundColor.G };
-            var bInput = new GUINumberInput(new RectTransform(new Vector2(0.7f, 1f), layoutParents[2].RectTransform), GUINumberInput.NumberType.Int) { IntValue = BackgroundColor.B };
+            var rInput = new GUINumberInput(new RectTransform(new Vector2(0.7f, 1f), layoutParents[0].RectTransform), NumberType.Int) { IntValue = BackgroundColor.R };
+            var gInput = new GUINumberInput(new RectTransform(new Vector2(0.7f, 1f), layoutParents[1].RectTransform), NumberType.Int) { IntValue = BackgroundColor.G };
+            var bInput = new GUINumberInput(new RectTransform(new Vector2(0.7f, 1f), layoutParents[2].RectTransform), NumberType.Int) { IntValue = BackgroundColor.B };
 
             rInput.MinValueInt = gInput.MinValueInt = bInput.MinValueInt = 0;
             rInput.MaxValueInt = gInput.MaxValueInt = bInput.MaxValueInt = 255;
@@ -33,7 +49,9 @@ namespace Barotrauma
             {
                 var color = new Color(rInput.IntValue, gInput.IntValue, bInput.IntValue);
                 BackgroundColor = color;
-                GameSettings.SubEditorBackgroundColor = color;
+                var config = GameSettings.CurrentConfig;
+                config.SubEditorBackground = color;
+                GameSettings.SetCurrentConfig(config);
             };
             
             // Reset button
@@ -49,7 +67,7 @@ namespace Barotrauma
             msgBox.Buttons[1].OnClicked = (button, o) => 
             { 
                 msgBox.Close();
-                GameMain.Config.SaveNewPlayerConfig();
+                GameSettings.SaveCurrentConfig();
                 return true;
             };
         }

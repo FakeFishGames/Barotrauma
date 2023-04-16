@@ -12,15 +12,22 @@ namespace Microsoft.Xna.Framework.Graphics
 {
     public interface ISpriteBatch
     {
-        public void Draw(Texture2D texture,
-                Vector2 position,
-                Rectangle? sourceRectangle,
-                Color color,
-                float rotation,
-                Vector2 origin,
-                Vector2 scale,
-                SpriteEffects effects,
-                float layerDepth);
+        public void Draw(
+            Texture2D texture,
+            Vector2 position,
+            Rectangle? sourceRectangle,
+            Color color,
+            float rotation,
+            Vector2 origin,
+            Vector2 scale,
+            SpriteEffects effects,
+            float layerDepth);
+
+        public void Draw(
+            Texture2D texture,
+            VertexPositionColorTexture[] vertices,
+            float layerDepth,
+            int? count = null);
     }
 
     /// <summary>
@@ -237,9 +244,17 @@ namespace Microsoft.Xna.Framework.Graphics
         void CheckValid(Texture2D texture)
         {
             if (texture == null)
+            {
                 throw new ArgumentNullException("texture");
+            }
+            if (texture.IsDisposed)
+            {
+                throw new InvalidOperationException($"Texture is disposed");
+            }
             if (!_beginCalled)
+            {
                 throw new InvalidOperationException("Draw was called, but Begin has not yet been called. Begin must be called successfully before you can call Draw.");
+            }
         }
 
         void CheckValid(SpriteFont spriteFont, string text)
@@ -315,7 +330,7 @@ namespace Microsoft.Xna.Framework.Graphics
             }
         }
 
-        public void Draw(Texture2D texture, VertexPositionColorTexture[] vertices, float layerDepth)
+        public void Draw(Texture2D texture, VertexPositionColorTexture[] vertices, float layerDepth, int? count = null)
         {
             CheckValid(texture);
 
@@ -338,7 +353,7 @@ namespace Microsoft.Xna.Framework.Graphics
                     break;
             }
 
-            int iters = vertices.Length / 4;
+            int iters = count ?? (vertices.Length / 4);
             for (int i=0;i<iters;i++)
             {
                 var item = _batcher.CreateBatchItem();

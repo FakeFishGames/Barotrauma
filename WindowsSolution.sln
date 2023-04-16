@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.29201.188
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.32014.148
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{D32A29D8-AC7B-4189-B734-8ED9EB4120D0}"
 	ProjectSection(SolutionItems) = preProject
@@ -38,6 +38,10 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "XNATypes", "Libraries\XNATypes\XNATypes.csproj", "{1F318AC4-F808-4130-867F-B98DF9AA8F95}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SharpFont.NetStandard", "Libraries\SharpFont\Source\SharpFont\SharpFont.NetStandard.csproj", "{6911872D-40EF-400C-B0A1-9985A19ED488}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WindowsTest", "Barotrauma\BarotraumaTest\WindowsTest.csproj", "{C7212AE2-A925-4225-A639-AE0653EF65B0}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DeployAll", "Deploy\DeployAll\DeployAll.csproj", "{C98FE0D0-BC7D-4806-B592-734B53016FD8}"
 EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
@@ -115,6 +119,24 @@ Global
 		{6911872D-40EF-400C-B0A1-9985A19ED488}.Release|x64.Build.0 = Release|x64
 		{6911872D-40EF-400C-B0A1-9985A19ED488}.Unstable|x64.ActiveCfg = Release|x64
 		{6911872D-40EF-400C-B0A1-9985A19ED488}.Unstable|x64.Build.0 = Release|x64
+		{C7212AE2-A925-4225-A639-AE0653EF65B0}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{C7212AE2-A925-4225-A639-AE0653EF65B0}.Debug|x64.Build.0 = Debug|Any CPU
+		{C7212AE2-A925-4225-A639-AE0653EF65B0}.Release|x64.ActiveCfg = Release|Any CPU
+		{C7212AE2-A925-4225-A639-AE0653EF65B0}.Release|x64.Build.0 = Release|Any CPU
+		{C7212AE2-A925-4225-A639-AE0653EF65B0}.Unstable|x64.ActiveCfg = Debug|Any CPU
+		{C7212AE2-A925-4225-A639-AE0653EF65B0}.Unstable|x64.Build.0 = Debug|Any CPU
+		{C98FE0D0-BC7D-4806-B592-734B53016FD8}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{C98FE0D0-BC7D-4806-B592-734B53016FD8}.Debug|x64.Build.0 = Debug|Any CPU
+		{C98FE0D0-BC7D-4806-B592-734B53016FD8}.Release|x64.ActiveCfg = Release|Any CPU
+		{C98FE0D0-BC7D-4806-B592-734B53016FD8}.Release|x64.Build.0 = Release|Any CPU
+		{C98FE0D0-BC7D-4806-B592-734B53016FD8}.Unstable|x64.ActiveCfg = Debug|Any CPU
+		{C98FE0D0-BC7D-4806-B592-734B53016FD8}.Unstable|x64.Build.0 = Debug|Any CPU
+		{D42D8E48-A687-445D-AAF1-9E7E6EBF1DE6}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{D42D8E48-A687-445D-AAF1-9E7E6EBF1DE6}.Debug|x64.Build.0 = Debug|Any CPU
+		{D42D8E48-A687-445D-AAF1-9E7E6EBF1DE6}.Release|x64.ActiveCfg = Release|Any CPU
+		{D42D8E48-A687-445D-AAF1-9E7E6EBF1DE6}.Release|x64.Build.0 = Release|Any CPU
+		{D42D8E48-A687-445D-AAF1-9E7E6EBF1DE6}.Unstable|x64.ActiveCfg = Debug|Any CPU
+		{D42D8E48-A687-445D-AAF1-9E7E6EBF1DE6}.Unstable|x64.Build.0 = Debug|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -132,6 +154,9 @@ Global
 		{47848C6E-C7A8-4EC3-96C2-3BC8A4234AFA} = {78A9F0AA-5519-407A-9B72-2A09F5DF7068}
 		{1F318AC4-F808-4130-867F-B98DF9AA8F95} = {DE36F45F-F09E-4719-B953-00D148F7722A}
 		{6911872D-40EF-400C-B0A1-9985A19ED488} = {DE36F45F-F09E-4719-B953-00D148F7722A}
+		{C7212AE2-A925-4225-A639-AE0653EF65B0} = {78A9F0AA-5519-407A-9B72-2A09F5DF7068}
+		{C98FE0D0-BC7D-4806-B592-734B53016FD8} = {F35DF9BF-0BED-4FEF-A51C-DD83C531882F}
+		{D42D8E48-A687-445D-AAF1-9E7E6EBF1DE6} = {DE36F45F-F09E-4719-B953-00D148F7722A}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {17032EAB-554B-4B44-A4F6-EFB177ACAB7A}

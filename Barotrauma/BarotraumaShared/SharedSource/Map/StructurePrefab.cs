@@ -5,6 +5,7 @@ using System.Linq;
 using System.Collections.Generic;
 using System.Xml.Linq;
 using Barotrauma.IO;
+using System.Collections.Immutable;
 #if CLIENT
 using Microsoft.Xna.Framework.Graphics;
 #endif
@@ -15,169 +16,98 @@ namespace Barotrauma
     {
         public static readonly PrefabCollection<StructurePrefab> Prefabs = new PrefabCollection<StructurePrefab>();
 
-        private bool disposed = false;
-        public override void Dispose()
-        {
-            if (disposed) { return; }
-            disposed = true;
-            Prefabs.Remove(this);
-        }
+        public override LocalizedString Name { get; }
 
-        private string name;
-        public override string Name
-        {
-            get { return name; }
-        }
+        public readonly ContentXElement ConfigElement;
 
-        public XElement ConfigElement { get; private set; }
-
-        private bool canSpriteFlipX, canSpriteFlipY;
-
-        private float health;
-        
-        //default size
-        private Vector2 size;
-        
-        //does the structure have a physics body
-        [Serialize(false, false)]
-        public bool Body
-        {
-            get;
-            private set;
-        }
-
-        //rotation of the physics body in degrees
-        [Serialize(0.0f, false)]
-        public float BodyRotation
-        {
-            get;
-            private set;
-        }
-        
-        //in display units
-        [Serialize(0.0f, false)]
-        public float BodyWidth
-        {
-            get;
-            private set;
-        }
-
-        //in display units
-        [Serialize(0.0f, false)]
-        public float BodyHeight
-        {
-            get;
-            private set;
-        }
-
-        //in display units
-        [Serialize("0.0,0.0", false)]
-        public Vector2 BodyOffset
-        {
-            get;
-            private set;
-        }
-
-        [Serialize(false, false)]
-        public bool Platform
-        {
-            get;
-            private set;
-        }
-
-        [Serialize(false, false)]
-        public bool AllowAttachItems
-        {
-            get;
-            private set;
-        }
-
-        [Serialize(0.0f, false)]
-        public float MinHealth
-        {
-            get;
-            set;
-        }
-
-        [Serialize(100.0f, false)]
-        public float Health
-        {
-            get { return health; }
-            set { health = Math.Max(value, MinHealth); }
-        }
-
-        [Serialize(true, false)]
-        public bool IndestructibleInOutposts
-        {
-            get;
-            set;
-        }
-
-        [Serialize(false, false)]
-        public bool CastShadow
-        {
-            get;
-            private set;
-        }
+        public override bool CanSpriteFlipX { get; }
+        public override bool CanSpriteFlipY { get; }
 
         /// <summary>
         /// If null, the orientation is determined automatically based on the dimensions of the structure instances
         /// </summary>
-        public bool? IsHorizontal
+        public readonly bool? IsHorizontal;
+
+        public Vector2 ScaledSize => Size * Scale;
+
+        public readonly Sprite BackgroundSprite;
+
+        public override Sprite Sprite { get; }
+
+        public override string OriginalName { get; }
+
+        public override ImmutableHashSet<Identifier> Tags { get; }
+
+        public override ImmutableHashSet<Identifier> AllowedLinks { get; } 
+
+        public override MapEntityCategory Category { get; }
+
+        public override ImmutableHashSet<string> Aliases { get; }
+
+        //does the structure have a physics body
+        [Serialize(false, IsPropertySaveable.No)]
+        public bool Body { get; private set; }
+
+        //rotation of the physics body in degrees
+        [Serialize(0.0f, IsPropertySaveable.No)]
+        public float BodyRotation { get; private set; }
+        
+        //in display units
+        [Serialize(0.0f, IsPropertySaveable.No)]
+        public float BodyWidth { get; private set; }
+
+        //in display units
+        [Serialize(0.0f, IsPropertySaveable.No)]
+        public float BodyHeight { get; private set; }
+
+        //in display units
+        [Serialize("0.0,0.0", IsPropertySaveable.No)]
+        public Vector2 BodyOffset { get; private set; }
+
+        [Serialize(false, IsPropertySaveable.No)]
+        public bool Platform { get; private set; }
+
+        [Serialize(false, IsPropertySaveable.No)]
+        public bool AllowAttachItems { get; private set; }
+
+        [Serialize(0.0f, IsPropertySaveable.No)]
+        public float MinHealth { get; private set; }
+
+        private float health;
+        [Serialize(100.0f, IsPropertySaveable.No)]
+        public float Health
         {
-            get;
-            private set;
+            get { return health; }
+            private set { health = Math.Max(value, MinHealth); }
         }
 
-        [Serialize(Direction.None, false)]
-        public Direction StairDirection
-        {
-            get;
-            private set;
-        }
+        [Serialize(true, IsPropertySaveable.No)]
+        public bool IndestructibleInOutposts { get; private set; }
 
-        [Serialize(45.0f, false)]
-        public float StairAngle
-        {
-            get;
-            private set;
-        }
+        [Serialize(false, IsPropertySaveable.No)]
+        public bool CastShadow { get; private set; }
 
-        [Serialize(false, false)]
-        public bool NoAITarget
-        {
-            get;
-            private set;
-        }
+        [Serialize(Direction.None, IsPropertySaveable.No)]
+        public Direction StairDirection { get; private set; }
 
-        public bool CanSpriteFlipX
-        {
-            get { return canSpriteFlipX; }
-        }
+        [Serialize(45.0f, IsPropertySaveable.No)]
+        public float StairAngle { get; private set; }
 
-        public bool CanSpriteFlipY
-        {
-            get { return canSpriteFlipY; }
-        }
+        [Serialize(false, IsPropertySaveable.No)]
+        public bool NoAITarget { get; private set; }
 
-        [Serialize("0,0", true)]
-        public Vector2 Size
-        {
-            get { return size; }
-            private set { size = value; }
-        }
+        [Serialize("0,0", IsPropertySaveable.Yes)]
+        public Vector2 Size { get; private set; }
 
-        [Serialize("", true)]
+        [Serialize("", IsPropertySaveable.Yes)]
         public string DamageSound { get; private set; }
 
-        public Vector2 ScaledSize => size * Scale;
-
         protected Vector2 textureScale = Vector2.One;
-        [Editable(DecimalCount = 3), Serialize("1.0, 1.0", true)]
+        [Editable(DecimalCount = 3), Serialize("1.0, 1.0", IsPropertySaveable.Yes)]
         public Vector2 TextureScale
         {
             get { return textureScale; }
-            set
+            private set
             {
                 textureScale = new Vector2(
                     MathHelper.Clamp(value.X, 0.01f, 10),
@@ -185,263 +115,209 @@ namespace Barotrauma
             }
         }
 
-        public Sprite BackgroundSprite
+        protected override Identifier DetermineIdentifier(XElement element)
         {
-            get;
-            private set;
-        }
-        
-        public static void LoadAll(IEnumerable<ContentFile> files)
-        {            
-            foreach (ContentFile file in files)
+            Identifier identifier = base.DetermineIdentifier(element);
+            string originalName = element.GetAttributeString("name", "");
+            if (identifier.IsEmpty && !string.IsNullOrEmpty(originalName))
             {
-                LoadFromFile(file);
-            }
-        }
-        
-        public static void LoadFromFile(ContentFile file)
-        {
-            XDocument doc = XMLExtensions.TryLoadXml(file.Path);
-            if (doc == null) { return; }
-            var rootElement = doc.Root;
-            if (rootElement.IsOverride())
-            {
-                foreach (var element in rootElement.Elements())
+                string categoryStr = element.GetAttributeString("category", "Misc");
+                if (Enum.TryParse(categoryStr, true, out MapEntityCategory category) && category.HasFlag(MapEntityCategory.Legacy))
                 {
-                    foreach (var childElement in element.Elements())
-                    {
-                        Load(childElement, true, file);
-                    }
+                    identifier = $"legacystructure_{originalName.Replace(" ", "")}".ToIdentifier();
                 }
             }
-            else
-            {
-                foreach (var element in rootElement.Elements())
-                {
-                    if (element.IsOverride())
-                    {
-                        foreach (var childElement in element.Elements())
-                        {
-                            Load(childElement, true, file);
-                        }
-                    }
-                    else
-                    {
-                        Load(element, false, file);
-                    }
-                }
-            }
+            return identifier;
         }
 
-        public static void RemoveByFile(string filePath)
+        public StructurePrefab(ContentXElement element, StructureFile file) : base(element, file)
         {
-            Prefabs.RemoveByFile(filePath);
-        }
+            OriginalName = element.GetAttributeString("name", "");
+            ConfigElement = element;
 
-        private static StructurePrefab Load(XElement element, bool allowOverride, ContentFile file)
-        {
-            StructurePrefab sp = new StructurePrefab
-            {
-                originalName = element.GetAttributeString("name", ""),
-                FilePath = file.Path,
-                ContentPackage = file.ContentPackage
-            };
-            sp.name = sp.originalName;
-            sp.ConfigElement = element;
-            sp.identifier = element.GetAttributeString("identifier", "");
-            
-            var parentType = element.Parent?.GetAttributeString("prefabtype", "") ?? string.Empty;
-            
-            string nameIdentifier = element.GetAttributeString("nameidentifier", "");
+            var parentType = element.Parent?.GetAttributeIdentifier("prefabtype", Identifier.Empty) ?? Identifier.Empty;
+
+            Identifier nameIdentifier = element.GetAttributeIdentifier("nameidentifier", "");
 
             //only used if the item doesn't have a name/description defined in the currently selected language
-            string fallbackNameIdentifier = element.GetAttributeString("fallbacknameidentifier", "");
+            Identifier fallbackNameIdentifier = element.GetAttributeIdentifier("fallbacknameidentifier", "");
 
-            string descriptionIdentifier = element.GetAttributeString("descriptionidentifier", "");
+            Name = TextManager.Get(nameIdentifier.IsEmpty
+                    ? $"EntityName.{Identifier}"
+                    : $"EntityName.{nameIdentifier}",
+                $"EntityName.{fallbackNameIdentifier}");
 
-            if (string.IsNullOrEmpty(sp.originalName))
+            if (parentType == "wrecked")
             {
-                if (string.IsNullOrEmpty(nameIdentifier))
-                {
-                    sp.name = TextManager.Get("EntityName." + sp.identifier, true, "EntityName." + fallbackNameIdentifier) ?? string.Empty;
-                }
-                else
-                {
-                    sp.name = TextManager.Get("EntityName." + nameIdentifier, true, "EntityName." + fallbackNameIdentifier) ?? string.Empty;
-                }
+                Name = TextManager.GetWithVariable("wreckeditemformat", "[name]", Name);
             }
-            
-            if (string.IsNullOrEmpty(sp.name))
+            if (!string.IsNullOrEmpty(OriginalName))
             {
-                sp.name = TextManager.Get("EntityName." + sp.identifier, returnNull: true) ?? $"Not defined ({sp.identifier})";
+                Name = Name.Fallback(OriginalName);
             }
-            sp.Tags = new HashSet<string>();
+
+            var tags = new HashSet<Identifier>();
             string joinedTags = element.GetAttributeString("tags", "");
             if (string.IsNullOrEmpty(joinedTags)) joinedTags = element.GetAttributeString("Tags", "");
             foreach (string tag in joinedTags.Split(','))
             {
-                sp.Tags.Add(tag.Trim().ToLowerInvariant());
+                tags.Add(tag.Trim().ToIdentifier());
             }
 
-            if (element.Attribute("ishorizontal") != null)
+            if (element.GetAttribute("ishorizontal") != null)
             {
-                sp.IsHorizontal = element.GetAttributeBool("ishorizontal", false);
+                IsHorizontal = element.GetAttributeBool("ishorizontal", false);
             }
 
-            foreach (XElement subElement in element.Elements())
+#if CLIENT
+            var decorativeSprites = new List<DecorativeSprite>();
+            var decorativeSpriteGroups = new Dictionary<int, List<DecorativeSprite>>();
+#endif
+            foreach (var subElement in element.Elements())
             {
-                switch (subElement.Name.ToString())
+                switch (subElement.Name.ToString().ToLowerInvariant())
                 {
                     case "sprite":
-                        sp.sprite = new Sprite(subElement, lazyLoad: true);
-                        if (subElement.Attribute("sourcerect") == null &&
-                            subElement.Attribute("sheetindex") == null)
+                        Sprite = new Sprite(subElement, lazyLoad: true);
+                        if (subElement.GetAttribute("sourcerect") == null &&
+                            subElement.GetAttribute("sheetindex") == null)
                         {
-                            DebugConsole.ThrowError("Warning - sprite sourcerect not configured for structure \"" + sp.name + "\"!");
+                            DebugConsole.ThrowError("Warning - sprite sourcerect not configured for structure \"" + Name + "\"!");
                         }
 #if CLIENT
                         if (subElement.GetAttributeBool("fliphorizontal", false))
-                            sp.sprite.effects = SpriteEffects.FlipHorizontally;
+                            Sprite.effects = SpriteEffects.FlipHorizontally;
                         if (subElement.GetAttributeBool("flipvertical", false))
-                            sp.sprite.effects = SpriteEffects.FlipVertically;
+                            Sprite.effects = SpriteEffects.FlipVertically;
 #endif
-                        sp.canSpriteFlipX = subElement.GetAttributeBool("canflipx", true);
-                        sp.canSpriteFlipY = subElement.GetAttributeBool("canflipy", true);
+                        CanSpriteFlipX = subElement.GetAttributeBool("canflipx", true);
+                        CanSpriteFlipY = subElement.GetAttributeBool("canflipy", true);
 
-                        if (subElement.Attribute("name") == null && !string.IsNullOrWhiteSpace(sp.Name))
+                        if (subElement.GetAttribute("name") == null && !Name.IsNullOrWhiteSpace())
                         {
-                            sp.sprite.Name = sp.Name;
+                            Sprite.Name = Name.Value;
                         }
-                        sp.sprite.EntityID = sp.identifier;
+                        Sprite.EntityIdentifier = Identifier;
                         break;
                     case "backgroundsprite":
-                        sp.BackgroundSprite = new Sprite(subElement, lazyLoad: true);
-                        if (subElement.Attribute("sourcerect") == null && sp.sprite != null)
+                        BackgroundSprite = new Sprite(subElement, lazyLoad: true);
+                        if (subElement.GetAttribute("sourcerect") == null && Sprite != null)
                         {
-                            sp.BackgroundSprite.SourceRect = sp.sprite.SourceRect;
-                            sp.BackgroundSprite.size = sp.sprite.size;
-                            sp.BackgroundSprite.size.X *= sp.sprite.SourceRect.Width;
-                            sp.BackgroundSprite.size.Y *= sp.sprite.SourceRect.Height;
-                            sp.BackgroundSprite.RelativeOrigin = subElement.GetAttributeVector2("origin", new Vector2(0.5f, 0.5f));
+                            BackgroundSprite.SourceRect = Sprite.SourceRect;
+                            BackgroundSprite.size = Sprite.size;
+                            BackgroundSprite.size.X *= Sprite.SourceRect.Width;
+                            BackgroundSprite.size.Y *= Sprite.SourceRect.Height;
+                            BackgroundSprite.RelativeOrigin = subElement.GetAttributeVector2("origin", new Vector2(0.5f, 0.5f));
                         }
 #if CLIENT
-                        if (subElement.GetAttributeBool("fliphorizontal", false)) { sp.BackgroundSprite.effects = SpriteEffects.FlipHorizontally; }
-                        if (subElement.GetAttributeBool("flipvertical", false)) { sp.BackgroundSprite.effects = SpriteEffects.FlipVertically; }
-                        sp.BackgroundSpriteColor = subElement.GetAttributeColor("color", Color.White);
+                        if (subElement.GetAttributeBool("fliphorizontal", false)) { BackgroundSprite.effects = SpriteEffects.FlipHorizontally; }
+                        if (subElement.GetAttributeBool("flipvertical", false)) { BackgroundSprite.effects = SpriteEffects.FlipVertically; }
+                        BackgroundSpriteColor = subElement.GetAttributeColor("color", Color.White);
 #endif
                         break;
                     case "decorativesprite":
 #if CLIENT
                         string decorativeSpriteFolder = "";
-                        if (!subElement.GetAttributeString("texture", "").Contains("/"))
+                        if (subElement.DoesAttributeReferenceFileNameAlone("texture"))
                         {
                             decorativeSpriteFolder = Path.GetDirectoryName(file.Path);
                         }
 
                         int groupID = 0;
                         DecorativeSprite decorativeSprite = null;
-                        if (subElement.Attribute("texture") == null)
+                        if (subElement.GetAttribute("texture") == null)
                         {
                             groupID = subElement.GetAttributeInt("randomgroupid", 0);
                         }
                         else
                         {
                             decorativeSprite = new DecorativeSprite(subElement, decorativeSpriteFolder, lazyLoad: true);
-                            sp.DecorativeSprites.Add(decorativeSprite);
+                            decorativeSprites.Add(decorativeSprite);
                             groupID = decorativeSprite.RandomGroupID;
                         }
-                        if (!sp.DecorativeSpriteGroups.ContainsKey(groupID))
+                        if (!decorativeSpriteGroups.ContainsKey(groupID))
                         {
-                            sp.DecorativeSpriteGroups.Add(groupID, new List<DecorativeSprite>());
+                            decorativeSpriteGroups.Add(groupID, new List<DecorativeSprite>());
                         }
-                        sp.DecorativeSpriteGroups[groupID].Add(decorativeSprite);
+                        decorativeSpriteGroups[groupID].Add(decorativeSprite);
 #endif
                         break;
                 }
             }
-            
-            if (string.Equals(parentType, "wrecked", StringComparison.OrdinalIgnoreCase))
-            {
-                if (!string.IsNullOrEmpty(sp.Name))
-                {
-                    sp.name = TextManager.GetWithVariable("wreckeditemformat", "[name]", sp.name);
-                }
-            }
+#if CLIENT
+            DecorativeSprites = decorativeSprites.ToImmutableArray();
+            DecorativeSpriteGroups = decorativeSpriteGroups.Select(kvp => (kvp.Key, kvp.Value.ToImmutableArray())).ToImmutableDictionary();
+#endif
 
             string categoryStr = element.GetAttributeString("category", "Structure");
             if (!Enum.TryParse(categoryStr, true, out MapEntityCategory category))
             {
-                category = MapEntityCategory.Structure; 
+                category = MapEntityCategory.Structure;
             }
-            sp.Category = category;
+            Category = category;
 
-            if (category.HasFlag(MapEntityCategory.Legacy))
-            {
-                if (string.IsNullOrWhiteSpace(sp.identifier))
-                {
-                    sp.identifier = "legacystructure_" + sp.name.ToLowerInvariant().Replace(" ", "");
-                }
-            }
-
-            sp.Aliases = 
-                (element.GetAttributeStringArray("aliases", null) ?? 
-                element.GetAttributeStringArray("Aliases", new string[0])).ToHashSet();
+            Aliases =
+                (element.GetAttributeStringArray("aliases", null, convertToLowerInvariant: true) ??
+                element.GetAttributeStringArray("Aliases", Array.Empty<string>(), convertToLowerInvariant: true)).ToImmutableHashSet();
 
             string nonTranslatedName = element.GetAttributeString("name", null) ?? element.Name.ToString();
-            sp.Aliases.Add(nonTranslatedName.ToLowerInvariant());
+            Aliases.Add(nonTranslatedName.ToLowerInvariant());
 
-            SerializableProperty.DeserializeProperties(sp, element);
-            if (sp.Body)
+            SerializableProperty.DeserializeProperties(this, element);
+            if (Body)
             {
-                sp.Tags.Add("wall");
+                tags.Add("wall".ToIdentifier());
             }
 
-            if (string.IsNullOrEmpty(sp.Description))
-            {
-                if (!string.IsNullOrEmpty(descriptionIdentifier))
-                {
-                    sp.Description = TextManager.Get("EntityDescription." + descriptionIdentifier, returnNull: true) ?? string.Empty;
-                }
-                else  if (string.IsNullOrEmpty(nameIdentifier))
-                {
-                    sp.Description = TextManager.Get("EntityDescription." + sp.identifier, returnNull: true) ?? string.Empty;
-                }
-                else
-                {
-                    sp.Description = TextManager.Get("EntityDescription." + nameIdentifier, true) ?? string.Empty;
-                }
-            }
+            LoadDescription(element);
 
             //backwards compatibility
-            if (element.Attribute("size") == null)
+            if (element.GetAttribute("size") == null)
             {
-                sp.size = Vector2.Zero;
-                if (element.Attribute("width") == null && element.Attribute("height") == null)
+                Size = Vector2.Zero;
+                if (element.GetAttribute("width") == null && element.GetAttribute("height") == null)
                 {
-                    sp.size.X = sp.sprite.SourceRect.Width;
-                    sp.size.Y = sp.sprite.SourceRect.Height;
+                    Size = Sprite.SourceRect.Size.ToVector2();
                 }
                 else
                 {
-                    sp.size.X = element.GetAttributeFloat("width", 0.0f);
-                    sp.size.Y = element.GetAttributeFloat("height", 0.0f);
+                    Size = new Vector2(
+                        element.GetAttributeFloat("width", 0.0f),
+                        element.GetAttributeFloat("height", 0.0f));
                 }
             }
 
             //backwards compatibility
             if (categoryStr.Equals("Thalamus", StringComparison.OrdinalIgnoreCase))
             {
-                sp.Category = MapEntityCategory.Wrecked;
-                sp.Subcategory = "Thalamus";
+                Category = MapEntityCategory.Wrecked;
+                Subcategory = "Thalamus";
             }
 
-            if (string.IsNullOrEmpty(sp.identifier))
+            if (Identifier == Identifier.Empty)
             {
                 DebugConsole.ThrowError(
-                    "Structure prefab \"" + sp.name + "\" has no identifier. All structure prefabs have a unique identifier string that's used to differentiate between items during saving and loading.");
+                    "Structure prefab \"" + Name + "\" has no identifier. All structure prefabs have a unique identifier string that's used to differentiate between items during saving and loading.");
             }
-            Prefabs.Add(sp, allowOverride);
-            return sp;
+#if DEBUG
+            if (!Category.HasFlag(MapEntityCategory.Legacy) && !HideInMenus)
+            {
+                if (!string.IsNullOrEmpty(OriginalName))
+                {
+                    DebugConsole.AddWarning($"Structure \"{(Identifier == Identifier.Empty ? Name : Identifier.Value)}\" has a hard-coded name, and won't be localized to other languages.");
+                }
+            }
+#endif
+
+            Tags = tags.ToImmutableHashSet();
+            AllowedLinks = ImmutableHashSet<Identifier>.Empty;
         }
+
+        protected override void CreateInstance(Rectangle rect)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override void Dispose() { }
     }
 }

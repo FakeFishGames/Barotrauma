@@ -1,39 +1,54 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using Barotrauma.IO;
-using System.IO.Pipes;
+using System.Collections.Concurrent;
 using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Barotrauma.Extensions;
+
+#if SERVER
+using PipeType = System.IO.Pipes.AnonymousPipeClientStream;
+#else
+using PipeType = System.IO.Pipes.AnonymousPipeServerStream;
+#endif
 
 namespace Barotrauma.Networking
 {
     static partial class ChildServerRelay
     {
-        private static System.IO.Stream writeStream;
-        private static System.IO.Stream readStream;
-        private static volatile bool shutDown;
-        public static bool HasShutDown
+        private static PipeType writeStream;
+        private static PipeType readStream;
+
+        private enum WriteStatus : byte
         {
-            get { return shutDown; }
+            Success = 0x00,
+            Heartbeat = 0x01,
+            RequestShutdown = 0xCC,
+            Crash = 0xFF
         }
+
         private static ManualResetEvent writeManualResetEvent;
 
-        private static byte[] tempBytes;
-        private enum ReadState
+        private enum StatusEnum
         {
-            WaitingForPacketStart,
-            WaitingForPacketEnd
-        };
-        private static ReadState readState;
-        private static byte[] readIncBuf;
+            NeverStarted,
+            Active,
+            RequestedShutDown,
+            ShutDown
+        }
+        
+        private static volatile StatusEnum status = StatusEnum.NeverStarted;
+        public static bool HasShutDown => status is StatusEnum.ShutDown;
+
+        private const int ReadBufferSize = MsgConstants.MTU * 2;
+        private static byte[] readTempBytes;
         private static int readIncOffset;
         private static int readIncTotal;
 
-        private static Queue<byte[]> msgsToWrite;
-        private static Queue<byte[]> msgsToRead;
+        private static ConcurrentQueue<byte[]> msgsToWrite;
+        private static ConcurrentQueue<string> errorsToWrite;
+
+        private static ConcurrentQueue<byte[]> msgsToRead;
 
         private static Thread readThread;
         private static Thread writeThread;
@@ -42,16 +57,17 @@ namespace Barotrauma.Networking
 
         private static void PrivateStart()
         {
-            readState = ReadState.WaitingForPacketStart;
+            status = StatusEnum.Active;
+
             readIncOffset = 0;
             readIncTotal = 0;
 
-            tempBytes = new byte[MsgConstants.MTU * 2];
+            readTempBytes = new byte[ReadBufferSize];
 
-            msgsToWrite = new Queue<byte[]>();
-            msgsToRead = new Queue<byte[]>();
-
-            shutDown = false;
+            msgsToWrite = new ConcurrentQueue<byte[]>();
+            errorsToWrite = new ConcurrentQueue<string>();
+            
+            msgsToRead = new ConcurrentQueue<byte[]>();
 
             readCancellationToken = new CancellationTokenSource();
 
@@ -73,7 +89,13 @@ namespace Barotrauma.Networking
 
         private static void PrivateShutDown()
         {
-            shutDown = true;
+            if (Thread.CurrentThread != GameMain.MainThread)
+            {
+                throw new InvalidOperationException(
+                    $"Cannot call {nameof(ChildServerRelay)}.{nameof(PrivateShutDown)} from a thread other than the main one");
+            }
+            if (status is StatusEnum.NeverStarted) { return; }
+            status = StatusEnum.ShutDown;
             writeManualResetEvent?.Set();
             readCancellationToken?.Cancel();
             readThread?.Join(); readThread = null;
@@ -86,198 +108,190 @@ namespace Barotrauma.Networking
         }
 
 
-        private static int ReadIncomingMsgs()
+        private static Option<int> ReadIncomingMsgs()
         {
-            Task<int> readTask = readStream?.ReadAsync(tempBytes, 0, tempBytes.Length, readCancellationToken.Token);
-            TimeSpan timeOut = TimeSpan.FromMilliseconds(100);
+            Task<int> readTask = readStream?.ReadAsync(readTempBytes, 0, readTempBytes.Length, readCancellationToken.Token);
+            if (readTask is null) { return Option<int>.None(); }
+
+            int timeOutMilliseconds = 100;
             for (int i = 0; i < 150; i++)
             {
-                if (shutDown)
+                if (status is StatusEnum.ShutDown)
                 {
                     readCancellationToken?.Cancel();
-                    shutDown = true;
-                    return -1;
+                    return Option<int>.None();
                 }
-
-                if ((readTask?.IsCompleted ?? true) || (readTask?.Wait(timeOut) ?? true))
+                try
                 {
-                    break;
+                    if (readTask.IsCompleted || readTask.Wait(timeOutMilliseconds, readCancellationToken.Token))
+                    {
+                        break;
+                    }
+                }
+                catch (AggregateException aggregateException)
+                {
+                    if (aggregateException.InnerException is OperationCanceledException) { return Option<int>.None(); }
+                    throw;
+                }
+                catch (OperationCanceledException)
+                {
+                    return Option<int>.None();
                 }
             }
 
-            if (readTask == null || !readTask.IsCompleted)
+            if (readTask.Status == TaskStatus.RanToCompletion)
+            {
+                return Option<int>.Some(readTask.Result);
+            }
+
+            bool swallowException =
+                status is not StatusEnum.Active
+                && readTask.Exception?.InnerException is ObjectDisposedException or System.IO.IOException;
+            if (swallowException)
             {
                 readCancellationToken?.Cancel();
-                shutDown = true;
-                return -1;
+                return Option<int>.None();
             }
-
-            if (readTask.Status != TaskStatus.RanToCompletion)
-            {
-                shutDown = true;
-                return -1;
-            }
-
-            return readTask.Result;
+            throw new Exception(
+                $"ChildServerRelay readTask did not run to completion: status was {readTask.Status}.",
+                readTask.Exception);
         }
 
+        private static void CheckPipeConnected(string name, PipeType pipe)
+        {
+            if (status is StatusEnum.Active && pipe is not { IsConnected: true })
+            {
+                throw new Exception($"{name} was disconnected unexpectedly");
+            }
+        }
 
+        static partial void HandleCrashString(string str);
+        
         private static void UpdateRead()
         {
-            while (!shutDown)
+            Span<byte> msgLengthSpan = stackalloc byte[4 + 1];
+            while (!HasShutDown)
             {
-#if SERVER
-                if (!((readStream as AnonymousPipeClientStream)?.IsConnected ?? false))
+                CheckPipeConnected(nameof(readStream), readStream);
+
+                bool readBytes(Span<byte> readTo)
                 {
-                    shutDown = true;
-                    return;
-                }
-#else
-                if (!((readStream as AnonymousPipeServerStream)?.IsConnected ?? false))
-                {
-                    shutDown = true;
-                    return;
-                }
-#endif
-
-                int readLen = ReadIncomingMsgs();
-
-                if (readLen < 0) { shutDown = true; return; }
-
-                int procIndex = 0;
-
-                while (procIndex < readLen)
-                {
-                    if (readState == ReadState.WaitingForPacketStart)
+                    for (int i = 0; i < readTo.Length; i++)
                     {
-                        readIncTotal = tempBytes[procIndex];
-                        procIndex++;
-
-                        if (procIndex >= readLen)
+                        if (readIncOffset >= readIncTotal)
                         {
-                            readLen = ReadIncomingMsgs();
-
-                            if (readLen < 0) { shutDown = true; return; }
-
-                            procIndex = 0;
+                            if (!ReadIncomingMsgs().TryUnwrap(out readIncTotal)) { return false; }
+                            readIncOffset = 0;
+                            if (readIncTotal == 0) { Thread.Yield(); continue; }
                         }
-
-                        readIncTotal |= (tempBytes[procIndex] << 8);
-                        procIndex++;
-
-                        if (readIncTotal <= 0) { continue; }
-
-                        readIncOffset = 0;
-                        readIncBuf = new byte[readIncTotal];
-                        readState = ReadState.WaitingForPacketEnd;
+                        readTo[i] = readTempBytes[readIncOffset];
+                        readIncOffset++;
                     }
-                    else if (readState == ReadState.WaitingForPacketEnd)
-                    {
-                        if ((readIncTotal - readIncOffset) > (readLen - procIndex))
-                        {
-                            Array.Copy(tempBytes, procIndex, readIncBuf, readIncOffset, readLen - procIndex);
-                            readIncOffset += (readLen - procIndex);
-                            procIndex = readLen;
-                        }
-                        else
-                        {
-                            Array.Copy(tempBytes, procIndex, readIncBuf, readIncOffset, readIncTotal - readIncOffset);
-                            procIndex += (readIncTotal - readIncOffset);
-                            readIncOffset = readIncTotal;
-                            lock (msgsToRead)
-                            {
-                                msgsToRead.Enqueue(readIncBuf);
-                            }
-                            readIncBuf = null;
-                            readState = ReadState.WaitingForPacketStart;
-                        }
-                    }
-
-                    if (shutDown) { break; }
+                    return true;
                 }
+
+                if (!readBytes(msgLengthSpan)) { status = StatusEnum.ShutDown; break; }
+
+                int msgLength = msgLengthSpan[0]
+                                | (msgLengthSpan[1] << 8)
+                                | (msgLengthSpan[2] << 16)
+                                | (msgLengthSpan[3] << 24);
+                WriteStatus writeStatus = (WriteStatus)msgLengthSpan[4];
+
+                byte[] msg = msgLength > 0 ? new byte[msgLength] : Array.Empty<byte>();
+                if (msg.Length > 0 && !readBytes(msg.AsSpan())) { status = StatusEnum.ShutDown; break; }
+
+                switch (writeStatus)
+                {
+                    case WriteStatus.Success:
+                        msgsToRead.Enqueue(msg);
+                        break;
+                    case WriteStatus.Heartbeat:
+                        //do nothing
+                        break;
+                    case WriteStatus.RequestShutdown:
+                        status = StatusEnum.ShutDown;
+                        break;
+                    case WriteStatus.Crash:
+                        HandleCrashString(Encoding.UTF8.GetString(msg));
+                        status = StatusEnum.ShutDown;
+                        break;
+                }
+
                 Thread.Yield();
             }
         }
 
         private static void UpdateWrite()
         {
-            while (!shutDown)
+            while (!HasShutDown)
             {
-#if SERVER
-                if (!((writeStream as AnonymousPipeClientStream)?.IsConnected ?? false))
-                {
-                    shutDown = true;
-                    return;
-                }
-#else
-                if (!((writeStream as AnonymousPipeServerStream)?.IsConnected ?? false))
-                {
-                    shutDown = true;
-                    return;
-                }
-#endif
-                bool msgAvailable; byte[] msg;
-                lock (msgsToWrite)
-                {
-                    msgAvailable = msgsToWrite.TryDequeue(out msg);
-                }
-                while (msgAvailable)
-                {
-                    byte[] lengthBytes = new byte[2];
-                    lengthBytes[0] = (byte)(msg.Length & 0xFF);
-                    lengthBytes[1] = (byte)((msg.Length >> 8) & 0xFF);
+                CheckPipeConnected(nameof(writeStream), writeStream);
 
-                    msg = lengthBytes.Concat(msg).ToArray();
+                void writeMsg(WriteStatus writeStatus, byte[] msg)
+                {
+                    // It's SUPER IMPORTANT that this stack allocation
+                    // remains in this local function and is never inlined,
+                    // because C# is stupid and only calls for deallocation
+                    // when the function returns; placing it in the loop
+                    // this method is based around would lead to a stack
+                    // overflow real quick!
+                    Span<byte> headerBytes = stackalloc byte[4 + 1];
+
+                    headerBytes[0] = (byte)(msg.Length & 0xFF);
+                    headerBytes[1] = (byte)((msg.Length >> 8) & 0xFF);
+                    headerBytes[2] = (byte)((msg.Length >> 16) & 0xFF);
+                    headerBytes[3] = (byte)((msg.Length >> 24) & 0xFF);
+                    
+                    headerBytes[4] = (byte)writeStatus;
 
                     try
                     {
-                        writeStream?.Write(msg, 0, msg.Length);
+                        writeStream?.Write(headerBytes);
+                        writeStream?.Write(msg);
                     }
-                    catch (ObjectDisposedException)
+                    catch (Exception exception)
                     {
-                        shutDown = true;
-                        break;
-                    }
-                    catch (System.IO.IOException)
-                    {
-                        shutDown = true;
-                        break;
-                    }
-
-                    if (shutDown) { break; }
-
-                    lock (msgsToWrite)
-                    {
-                        msgAvailable = msgsToWrite.TryDequeue(out msg);
+                        switch (exception)
+                        {
+                            case ObjectDisposedException _:
+                            case System.IO.IOException _:
+                                if (!HasShutDown) { throw; }
+                                break;
+                            default:
+                                throw;
+                        };
                     }
                 }
-                if (!shutDown)
+
+                if (status is StatusEnum.RequestedShutDown)
+                {
+                    writeMsg(WriteStatus.RequestShutdown, Array.Empty<byte>());
+                    status = StatusEnum.ShutDown;
+                }
+                
+                while (errorsToWrite.TryDequeue(out var error))
+                {
+                    writeMsg(WriteStatus.Crash, Encoding.UTF8.GetBytes(error));
+                    status = StatusEnum.ShutDown;
+                }
+                
+                while (msgsToWrite.TryDequeue(out var msg))
+                {
+                    writeMsg(WriteStatus.Success, msg);
+
+                    if (HasShutDown) { break; }
+                }
+                
+                if (!HasShutDown)
                 {
                     writeManualResetEvent.Reset();
                     if (!writeManualResetEvent.WaitOne(1000))
                     {
-                        if (shutDown)
-                        {
-                            return;
-                        }
-                        try
-                        {
-                            //heartbeat to keep the other end alive
-                            byte[] lengthBytes = new byte[2];
-                            lengthBytes[0] = (byte)0;
-                            lengthBytes[1] = (byte)0;
-                            writeStream?.Write(lengthBytes, 0, 2);
-                        }
-                        catch (ObjectDisposedException)
-                        {
-                            shutDown = true;
-                            break;
-                        }
-                        catch (System.IO.IOException)
-                        {
-                            shutDown = true;
-                            break;
-                        }
+                        if (HasShutDown) { return; }
+
+                        //heartbeat to keep the other end alive
+                        writeMsg(WriteStatus.Heartbeat, Array.Empty<byte>());
                     }
                 }
             }
@@ -285,23 +299,23 @@ namespace Barotrauma.Networking
 
         public static void Write(byte[] msg)
         {
-            if (shutDown) { return; }
+            if (HasShutDown) { return; }
 
-            lock (msgsToWrite)
+            if (msg.Length > 0x1fff_ffff)
             {
-                msgsToWrite.Enqueue(msg);
-                writeManualResetEvent.Set();
+                //This message is extremely long and is close to breaking
+                //ChildServerRelay, so let's not allow this to go through!
+                return;
             }
+            msgsToWrite.Enqueue(msg);
+            writeManualResetEvent.Set();
         }
 
         public static bool Read(out byte[] msg)
         {
-            if (shutDown) { msg = null; return false; }
+            if (HasShutDown) { msg = null; return false; }
 
-            lock (msgsToRead)
-            {
-                return msgsToRead.TryDequeue(out msg);
-            }
+            return msgsToRead.TryDequeue(out msg);
         }
     }
 }

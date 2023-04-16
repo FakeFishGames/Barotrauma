@@ -11,7 +11,7 @@ namespace Barotrauma
 
     public delegate void TextBoxEvent(GUITextBox sender, Keys key);
 
-    public class GUITextBox : GUIComponent, IKeyboardSubscriber
+    public partial class GUITextBox : GUIComponent, IKeyboardSubscriber
     {        
         public event TextBoxEvent OnSelected;
         public event TextBoxEvent OnDeselected;
@@ -44,7 +44,7 @@ namespace Barotrauma
         private int? maxTextLength;
 
         private int _caretIndex;
-        private int CaretIndex
+        public int CaretIndex
         {
             get { return _caretIndex; }
             set
@@ -66,14 +66,13 @@ namespace Barotrauma
         private int selectionStartIndex;
         private int selectionEndIndex;
         private bool IsLeftToRight => selectionStartIndex <= selectionEndIndex;
-        private Vector2 selectionStartPos;
-        private Vector2 selectionEndPos;
-        private Vector2 selectionRectSize;
+
+        private readonly GUICustomComponent caretAndSelectionRenderer;
 
         private bool mouseHeldInside;
 
         private readonly Memento<string> memento = new Memento<string>();
-        
+
         // Skip one update cycle, fixes Enter key instantly deselecting the chatbox
         private bool skipUpdate;
 
@@ -139,7 +138,7 @@ namespace Barotrauma
                 maxTextLength = value;
                 if (Text.Length > MaxTextLength)
                 {
-                    SetText(textBlock.Text.Substring(0, (int)maxTextLength));
+                    SetText(Text.Substring(0, (int)maxTextLength));
                 }
             }
         }
@@ -170,7 +169,7 @@ namespace Barotrauma
             set { textBlock.Censor = value; }
         }
 
-        public override string ToolTip
+        public override RichString ToolTip
         {
             get
             {
@@ -178,12 +177,11 @@ namespace Barotrauma
             }
             set
             {
-                base.ToolTip = value;
-                textBlock.ToolTip = value;
+                base.ToolTip = textBlock.ToolTip = caretAndSelectionRenderer.ToolTip = value;
             }
         }
 
-        public override ScalableFont Font
+        public override GUIFont Font
         {
             get { return textBlock?.Font ?? base.Font; }
             set
@@ -191,6 +189,7 @@ namespace Barotrauma
                 base.Font = value;
                 if (textBlock == null) { return; }
                 textBlock.Font = value;
+                imePreviewTextHandler.Font = Font;
             }
         }
 
@@ -236,7 +235,7 @@ namespace Barotrauma
         {
             get
             {
-                return textBlock.Text;
+                return textBlock.Text.SanitizedValue;
             }
             set
             {
@@ -248,12 +247,18 @@ namespace Barotrauma
 
         public string WrappedText
         {
-            get { return textBlock.WrappedText; }
+            get { return textBlock.WrappedText.Value; }
         }
 
         public bool Readonly { get; set; }
 
-        public GUITextBox(RectTransform rectT, string text = "", Color? textColor = null, ScalableFont font = null,
+        public override bool PlaySoundOnSelect { get; set; } = true;
+
+        private readonly IMEPreviewTextHandler imePreviewTextHandler;
+
+        public bool IsIMEActive => imePreviewTextHandler is { HasText: true };
+
+        public GUITextBox(RectTransform rectT, string text = "", Color? textColor = null, GUIFont font = null,
                           Alignment textAlignment = Alignment.Left, bool wrap = false, string style = "", Color? color = null, bool createClearButton = false, bool createPenIcon = true)
             : base(style, rectT)
         {
@@ -262,13 +267,15 @@ namespace Barotrauma
 
             this.color = color ?? Color.White;
             frame = new GUIFrame(new RectTransform(Vector2.One, rectT, Anchor.Center), style, color);
-            GUI.Style.Apply(frame, style == "" ? "GUITextBox" : style);
-            textBlock = new GUITextBlock(new RectTransform(Vector2.One, frame.RectTransform, Anchor.CenterLeft), text, textColor, font, textAlignment, wrap, playerInput: true);
-            GUI.Style.Apply(textBlock, "", this);
+            GUIStyle.Apply(frame, style == "" ? "GUITextBox" : style);
+            textBlock = new GUITextBlock(new RectTransform(Vector2.One, frame.RectTransform, Anchor.CenterLeft), text ?? "", textColor, font, textAlignment, wrap);
+            imePreviewTextHandler = new IMEPreviewTextHandler(textBlock.Font);
+            GUIStyle.Apply(textBlock, "", this);
+            if (font != null) { textBlock.Font = font; }
             CaretEnabled = true;
             caretPosDirty = true;
 
-            new GUICustomComponent(new RectTransform(Vector2.One, frame.RectTransform), onDraw: DrawCaretAndSelection);
+            caretAndSelectionRenderer = new GUICustomComponent(new RectTransform(Vector2.One, frame.RectTransform), onDraw: DrawCaretAndSelection);
 
             int clearButtonWidth = 0;
             if (createClearButton)
@@ -286,25 +293,25 @@ namespace Barotrauma
                 clearButtonWidth = (int)(clearButton.Rect.Width * 1.2f);
             }
 
-            if (this.style != null && this.style.ChildStyles.ContainsKey("textboxicon") && createPenIcon)
+            var selfStyle = Style;
+            if (selfStyle != null && selfStyle.ChildStyles.ContainsKey("textboxicon".ToIdentifier()) && createPenIcon)
             {
                 icon = new GUIImage(new RectTransform(new Vector2(0.6f, 0.6f), frame.RectTransform, Anchor.CenterRight, scaleBasis: ScaleBasis.BothHeight) { AbsoluteOffset = new Point(5 + clearButtonWidth, 0) }, null, scaleToFit: true);
-                icon.ApplyStyle(this.style.ChildStyles["textboxicon"]);
+                icon.ApplyStyle(this.Style.ChildStyles["textboxicon".ToIdentifier()]);
                 textBlock.RectTransform.MaxSize = new Point(frame.Rect.Width - icon.Rect.Height - clearButtonWidth - icon.RectTransform.AbsoluteOffset.X * 2, int.MaxValue);
             }
             Font = textBlock.Font;
-            
             Enabled = true;
 
-            rectT.SizeChanged += () => 
+            rectT.SizeChanged += () =>
             {
                 if (icon != null) { textBlock.RectTransform.MaxSize = new Point(frame.Rect.Width - icon.Rect.Height - icon.RectTransform.AbsoluteOffset.X * 2, int.MaxValue); }
-                caretPosDirty = true; 
+                caretPosDirty = true;
             };
             rectT.ScaleChanged += () =>
             {
                 if (icon != null) { textBlock.RectTransform.MaxSize = new Point(frame.Rect.Width - icon.Rect.Height - icon.RectTransform.AbsoluteOffset.X * 2, int.MaxValue); }
-                caretPosDirty = true; 
+                caretPosDirty = true;
             };
         }
 
@@ -314,68 +321,43 @@ namespace Barotrauma
             {
                 text = textFilterFunction(text);
             }
-            if (textBlock.Text == text) { return false; }
+            if (Text == text) { return false; }
             textBlock.Text = text;
-            if (textBlock.Text == null) textBlock.Text = "";
-            if (textBlock.Text != "" && !Wrap)
+            ClearSelection();
+            if (Text == null) textBlock.Text = "";
+            if (Text != "" && !Wrap)
             {
                 if (maxTextLength != null)
                 {
                     if (textBlock.Text.Length > maxTextLength)
                     {
-                        textBlock.Text = textBlock.Text.Substring(0, (int)maxTextLength);
+                        textBlock.Text = Text.Substring(0, (int)maxTextLength);
                     }
                 }
                 else
                 {
                     while (ClampText && textBlock.Text.Length > 0 && Font.MeasureString(textBlock.Text).X * TextBlock.TextScale > (int)(textBlock.Rect.Width - textBlock.Padding.X - textBlock.Padding.Z))
                     {
-                        textBlock.Text = textBlock.Text.Substring(0, textBlock.Text.Length - 1);
+                        textBlock.Text = Text.Substring(0, textBlock.Text.Length - 1);
                     }
                 }
             }
             if (store)
             {
-                memento.Store(textBlock.Text);
+                memento.Store(Text);
             }
             return true;
         }
 
         private void CalculateCaretPos()
         {
-            string textDrawn = Censor ? textBlock.CensoredText : textBlock.WrappedText;
-            if (textDrawn.Contains("\n"))
-            {
-                string[] lines = textDrawn.Split('\n');
-                int totalIndex = 0;
-                for (int i = 0; i < lines.Length; i++)
-                {
-                    int currentLineLength = lines[i].Length;
-                    totalIndex += currentLineLength;
-                    // The caret is on this line
-                    if (CaretIndex < totalIndex || totalIndex == textBlock.Text.Length)
-                    {
-                        int diff = totalIndex - CaretIndex;
-                        int index = currentLineLength - diff;
-                        Vector2 lineTextSize = Font.MeasureString(lines[i].Substring(0, index)) * TextBlock.TextScale;
-                        Vector2 lastLineSize = Font.MeasureString(lines[i]) * TextBlock.TextScale;
-                        float totalTextHeight = Font.MeasureString(textDrawn.Substring(0, totalIndex)).Y * TextBlock.TextScale;
-                        caretPos = new Vector2(lineTextSize.X, totalTextHeight - lastLineSize.Y) + textBlock.TextPos - textBlock.Origin * TextBlock.TextScale;
-                        break;
-                    }
-                }
-            }
-            else
-            {
-                CaretIndex = Math.Min(CaretIndex, textDrawn.Length);
-                textDrawn = Censor ? textBlock.CensoredText : textBlock.Text;
-                Vector2 textSize = Font.MeasureString(textDrawn.Substring(0, CaretIndex)) * TextBlock.TextScale;
-                caretPos = new Vector2(textSize.X, 0) + textBlock.TextPos - textBlock.Origin * TextBlock.TextScale;
-            }
+            CaretIndex = Math.Clamp(CaretIndex, 0, textBlock.Text.Length);
+            var caretPositions = textBlock.GetAllCaretPositions();
+            caretPos = caretPositions[CaretIndex];
             caretPosDirty = false;
         }
 
-        public void Select(int forcedCaretIndex = -1)
+        public void Select(int forcedCaretIndex = -1, bool ignoreSelectSound = false)
         {
             skipUpdate = true;
             if (memento.Current == null)
@@ -383,10 +365,16 @@ namespace Barotrauma
                 memento.Store(Text);
             }
             CaretIndex = forcedCaretIndex == - 1 ? textBlock.GetCaretIndexFromScreenPos(PlayerInput.MousePosition) : forcedCaretIndex;
+            CalculateCaretPos();
             ClearSelection();
+            bool wasSelected = selected;
             selected = true;
             GUI.KeyboardDispatcher.Subscriber = this;
             OnSelected?.Invoke(this, Keys.None);
+            if (!wasSelected && PlaySoundOnSelect && !ignoreSelectSound)
+            {
+                SoundPlayer.PlayUISound(GUISoundType.Select);
+            }
         }
 
         public void Deselect()
@@ -398,14 +386,16 @@ namespace Barotrauma
             {
                 GUI.KeyboardDispatcher.Subscriber = null;
             }
+
             OnDeselected?.Invoke(this, Keys.None);
+            imePreviewTextHandler.Reset();
         }
 
         public override void Flash(Color? color = null, float flashDuration = 1.5f, bool useRectangleFlash = false, bool useCircularFlash = false, Vector2? flashRectOffset = null)
         {
             frame.Flash(color, flashDuration, useRectangleFlash, useCircularFlash, flashRectOffset);
         }
-        
+
         protected override void Update(float deltaTime)
         {
             if (!Visible) return;
@@ -419,7 +409,8 @@ namespace Barotrauma
                 return;
             }
 
-            if (MouseRect.Contains(PlayerInput.MousePosition) && (GUI.MouseOn == null || (!(GUI.MouseOn is GUIButton) && GUI.IsMouseOn(this))))
+            bool isMouseOn = MouseRect.Contains(PlayerInput.MousePosition) && (GUI.MouseOn == null || (!(GUI.MouseOn is GUIButton) && GUI.IsMouseOn(this)));
+            if (isMouseOn || isSelecting)
             {
                 State = ComponentState.Hover;
                 if (PlayerInput.PrimaryMouseButtonDown())
@@ -447,17 +438,13 @@ namespace Barotrauma
             }
             else
             {
-                if ((PlayerInput.LeftButtonClicked() || PlayerInput.RightButtonClicked()) && selected) 
+                if ((PlayerInput.PrimaryMouseButtonClicked() || PlayerInput.SecondaryMouseButtonClicked()) && selected)
                 {
                     if (!mouseHeldInside) { Deselect(); }
                     mouseHeldInside = false;
                 }
                 isSelecting = false;
                 State = ComponentState.None;
-            }
-            if (!isSelecting)
-            {
-                isSelecting = PlayerInput.IsShiftDown();
             }
 
             if (mouseHeldInside && !PlayerInput.PrimaryMouseButtonHeld())
@@ -467,19 +454,7 @@ namespace Barotrauma
 
             if (CaretEnabled)
             {
-                if (textBlock.OverflowClipActive)
-                {
-                    if (CaretScreenPos.X < textBlock.Rect.X + textBlock.Padding.X)
-                    {
-                        textBlock.TextPos = new Vector2(textBlock.TextPos.X + ((textBlock.Rect.X + textBlock.Padding.X) - CaretScreenPos.X), textBlock.TextPos.Y);
-                        CalculateCaretPos();
-                    }
-                    else if (CaretScreenPos.X > textBlock.Rect.Right - textBlock.Padding.Z)
-                    {
-                        textBlock.TextPos = new Vector2(textBlock.TextPos.X - (CaretScreenPos.X - (textBlock.Rect.Right - textBlock.Padding.Z)), textBlock.TextPos.Y);
-                        CalculateCaretPos();
-                    }
-                }
+                HandleCaretBoundsOverflow();
                 caretTimer += deltaTime;
                 caretVisible = ((caretTimer * 1000.0f) % 1000) < 500;
                 if (caretVisible && caretPosDirty)
@@ -505,99 +480,83 @@ namespace Barotrauma
             textBlock.State = State;
         }
 
+        private void HandleCaretBoundsOverflow()
+        {
+            if (textBlock.OverflowClipActive)
+            {
+                CalculateCaretPos();
+                float left = textBlock.Rect.X + textBlock.Padding.X;
+                if (CaretScreenPos.X < left)
+                {
+                    float diff = left - CaretScreenPos.X;
+                    textBlock.TextPos = new Vector2(textBlock.TextPos.X + diff, textBlock.TextPos.Y);
+                    CalculateCaretPos();
+                }
+
+                float right = textBlock.Rect.Right - textBlock.Padding.Z;
+                if (CaretScreenPos.X > right)
+                {
+                    float diff = CaretScreenPos.X - right;
+                    textBlock.TextPos = new Vector2(textBlock.TextPos.X - diff, textBlock.TextPos.Y);
+                    CalculateCaretPos();
+                }
+            }
+        }
+
         private void DrawCaretAndSelection(SpriteBatch spriteBatch, GUICustomComponent customComponent)
         {
             if (!Visible) { return; }
-            if (Selected)
+            if (!Selected) { return; }
+            
+            if (caretVisible)
             {
-                if (caretVisible )
-                {
-                    GUI.DrawLine(spriteBatch,
-                        new Vector2(Rect.X + (int)caretPos.X + 2, Rect.Y + caretPos.Y + 3),
-                        new Vector2(Rect.X + (int)caretPos.X + 2, Rect.Y + caretPos.Y + Font.MeasureString("I").Y * textBlock.TextScale - 3),
-                        CaretColor ?? textBlock.TextColor * (textBlock.TextColor.A / 255.0f));
-                }
-                if (selectedCharacters > 0)
-                {
-                    DrawSelectionRect(spriteBatch);
-                }
-                //GUI.DrawString(spriteBatch, new Vector2(100, 0), selectedCharacters.ToString(), Color.LightBlue, Color.Black);
-                //GUI.DrawString(spriteBatch, new Vector2(100, 20), selectionStartIndex.ToString(), Color.White, Color.Black);
-                //GUI.DrawString(spriteBatch, new Vector2(140, 20), selectionEndIndex.ToString(), Color.White, Color.Black);
-                //GUI.DrawString(spriteBatch, new Vector2(100, 40), selectedText.ToString(), Color.Yellow, Color.Black);
-                //GUI.DrawString(spriteBatch, new Vector2(100, 60), $"caret index: {CaretIndex.ToString()}", GUI.Style.Red, Color.Black);
-                //GUI.DrawString(spriteBatch, new Vector2(100, 80), $"caret pos: {caretPos.ToString()}", GUI.Style.Red, Color.Black);
-                //GUI.DrawString(spriteBatch, new Vector2(100, 100), $"caret screen pos: {CaretScreenPos.ToString()}", GUI.Style.Red, Color.Black);
-                //GUI.DrawString(spriteBatch, new Vector2(100, 120), $"text start pos: {(textBlock.TextPos - textBlock.Origin).ToString()}", Color.White, Color.Black);
-                //GUI.DrawString(spriteBatch, new Vector2(100, 140), $"cursor pos: {PlayerInput.MousePosition.ToString()}", Color.White, Color.Black);
+                GUI.DrawLine(spriteBatch,
+                    new Vector2(Rect.X + (int)caretPos.X + 2, Rect.Y + caretPos.Y + 3),
+                    new Vector2(Rect.X + (int)caretPos.X + 2, Rect.Y + caretPos.Y + Font.LineHeight * textBlock.TextScale - 3),
+                    CaretColor ?? textBlock.TextColor * (textBlock.TextColor.A / 255.0f));
+            }
+            if (selectedCharacters > 0)
+            {
+                DrawSelectionRect(spriteBatch);
             }
         }
 
         private void DrawSelectionRect(SpriteBatch spriteBatch)
         {
-            if (textBlock.WrappedText.Contains("\n"))
+            var characterPositions = textBlock.GetAllCaretPositions();
+            (int startIndex, int endIndex) = IsLeftToRight
+                ? (selectionStartIndex, selectionEndIndex)
+                : (selectionEndIndex, selectionStartIndex);
+            endIndex--;
+
+            void drawRect(Vector2 topLeft, Vector2 bottomRight)
             {
-                // Multiline selection
-                string[] lines = textBlock.WrappedText.Split('\n');
-                int totalIndex = 0;
-                int previousCharacters = 0;
-                Vector2 offset = textBlock.TextPos - textBlock.Origin;
-                for (int i = 0; i < lines.Length; i++)
+                int minWidth = GUI.IntScale(5);
+                if (bottomRight.X - topLeft.X < minWidth) { bottomRight.X = topLeft.X + minWidth; }
+                GUI.DrawRectangle(spriteBatch,
+                    Rect.Location.ToVector2() + topLeft,
+                    bottomRight - topLeft,
+                    SelectionColor, isFilled: true);
+            }
+            
+            Vector2 topLeft = characterPositions[startIndex];
+            for (int i = startIndex+1; i <= endIndex; i++)
+            {
+                Vector2 currPos = characterPositions[i];
+                if (!MathUtils.NearlyEqual(topLeft.Y, currPos.Y))
                 {
-                    string currentLine = lines[i];
-                    int currentLineLength = currentLine.Length;
-                    totalIndex += currentLineLength;
-                    bool containsSelection = IsLeftToRight
-                        ? selectionStartIndex < totalIndex && selectionEndIndex > previousCharacters
-                        : selectionEndIndex < totalIndex && selectionStartIndex > previousCharacters;
-                    if (containsSelection)
-                    {
-                        Vector2 currentLineSize = Font.MeasureString(currentLine) * TextBlock.TextScale;
-                        if ((IsLeftToRight && selectionStartIndex < previousCharacters && selectionEndIndex > totalIndex)
-                            || !IsLeftToRight && selectionEndIndex < previousCharacters && selectionStartIndex > totalIndex)
-                        {
-                            // select the whole line
-                            Vector2 topLeft = offset + new Vector2(0, currentLineSize.Y * i);
-                            GUI.DrawRectangle(spriteBatch, Rect.Location.ToVector2() + topLeft, currentLineSize, SelectionColor, isFilled: true);
-                        }
-                        else
-                        {
-                            if (IsLeftToRight)
-                            {
-                                bool selectFromTheBeginning = selectionStartIndex <= previousCharacters;
-                                int startIndex = selectFromTheBeginning ? 0 : Math.Abs(selectionStartIndex - previousCharacters);
-                                int endIndex = Math.Abs(selectionEndIndex - previousCharacters);
-                                int characters = Math.Min(endIndex - startIndex, currentLineLength - startIndex);
-                                Vector2 selectedTextSize = Font.MeasureString(currentLine.Substring(startIndex, characters)) * TextBlock.TextScale;
-                                Vector2 topLeft = selectFromTheBeginning
-                                    ? new Vector2(offset.X, offset.Y + currentLineSize.Y * i)
-                                    : new Vector2(selectionStartPos.X, offset.Y + currentLineSize.Y * i);
-                                GUI.DrawRectangle(spriteBatch, Rect.Location.ToVector2() + topLeft, selectedTextSize, SelectionColor, isFilled: true);
-                            }
-                            else
-                            {
-                                bool selectFromTheBeginning = selectionStartIndex >= totalIndex;
-                                bool selectFromTheStart = selectionEndIndex <= previousCharacters;
-                                int startIndex = selectFromTheBeginning ? currentLineLength : Math.Abs(selectionStartIndex - previousCharacters);
-                                int endIndex = selectFromTheStart ? 0 : Math.Abs(selectionEndIndex - previousCharacters);
-                                int characters = Math.Min(Math.Abs(endIndex - startIndex), currentLineLength);
-                                Vector2 selectedTextSize = Font.MeasureString(currentLine.Substring(endIndex, characters)) * TextBlock.TextScale;
-                                Vector2 topLeft = selectFromTheBeginning
-                                    ? new Vector2(offset.X + currentLineSize.X - selectedTextSize.X, offset.Y + currentLineSize.Y * i)
-                                    : new Vector2(selectionStartPos.X - selectedTextSize.X, offset.Y + currentLineSize.Y * i);
-                                GUI.DrawRectangle(spriteBatch, Rect.Location.ToVector2() + topLeft, selectedTextSize, SelectionColor, isFilled: true);
-                            }
-                        }
-                    }
-                    previousCharacters = totalIndex;
+                    Vector2 bottomRight = characterPositions[i - 1];
+                    bottomRight += Font.MeasureChar(Text[i - 1]) * TextBlock.TextScale;
+                    drawRect(topLeft, bottomRight);
+                    topLeft = currPos;
                 }
             }
-            else
+            Vector2 finalBottomRight = characterPositions[endIndex];
+            if (Text.Length > endIndex)
             {
-                // Single line selection
-                Vector2 topLeft = IsLeftToRight ? selectionStartPos : selectionEndPos;
-                GUI.DrawRectangle(spriteBatch, Rect.Location.ToVector2() + topLeft, selectionRectSize, SelectionColor, isFilled: true);
+                finalBottomRight += Font.MeasureChar(Text[endIndex]) * TextBlock.TextScale;
             }
+            drawRect(topLeft, finalBottomRight);
         }
 
         public void ReceiveTextInput(char inputChar)
@@ -612,29 +571,52 @@ namespace Barotrauma
             {
                 RemoveSelectedText();
             }
-            Vector2 textPos = textBlock.TextPos;
-            bool wasOverflowClipActive = textBlock.OverflowClipActive;
+            using var _ = new TextPosPreservation(this);
             if (SetText(Text.Insert(CaretIndex, input)))
             {
                 CaretIndex = Math.Min(Text.Length, CaretIndex + input.Length);
                 OnTextChanged?.Invoke(this, Text);
+                imePreviewTextHandler?.Reset();
+            }
+        }
+
+        private readonly ref struct TextPosPreservation
+        {
+            private readonly GUITextBox textBox;
+            private GUITextBlock textBlock => textBox.TextBlock;
+            private readonly bool wasOverflowClipActive;
+            private readonly Vector2 textPos;
+
+            public TextPosPreservation(GUITextBox tb)
+            {
+                textBox = tb;
+                wasOverflowClipActive = tb.TextBlock.OverflowClipActive;
+                textPos = tb.TextBlock.TextPos;
+            }
+            
+            public void Dispose()
+            {
                 if (textBlock.OverflowClipActive && wasOverflowClipActive && !MathUtils.NearlyEqual(textBlock.TextPos, textPos))
                 {
-                    textBlock.TextPos = textPos + Vector2.UnitX * Font.MeasureString(input).X * TextBlock.TextScale;
+                    textBlock.TextPos = textPos;
                 }
             }
         }
 
         public void ReceiveCommandInput(char command)
         {
-            if (Text == null) Text = "";
+            if (IsIMEActive) { return; }
+
+            if (Text == null) { Text = ""; }
 
             // Prevent alt gr from triggering any of these as that combination is often needed for special characters
-            if (PlayerInput.IsAltDown()) return;
+            if (PlayerInput.IsAltDown()) { return; }
 
             switch (command)
             {
                 case '\b' when !Readonly: //backspace
+                {
+                    using var _ = new TextPosPreservation(this);
                     if (PlayerInput.KeyDown(Keys.LeftControl) || PlayerInput.KeyDown(Keys.RightControl))
                     {
                         SetText(string.Empty, false);
@@ -653,6 +635,7 @@ namespace Barotrauma
                     }
                     OnTextChanged?.Invoke(this, Text);
                     break;
+                }
                 case (char)0x3: // ctrl-c
                     CopySelectedText();
                     break;
@@ -701,8 +684,21 @@ namespace Barotrauma
             }
         }
 
+        public void ReceiveEditingInput(string text, int start, int length)
+        {
+            if (string.IsNullOrEmpty(text))
+            {
+                imePreviewTextHandler.Reset();
+                return;
+            }
+
+            imePreviewTextHandler.UpdateText(text, start, length);
+        }
+
         public void ReceiveSpecialInput(Keys key)
         {
+            if (IsIMEActive) { return; }
+
             switch (key)
             {
                 case Keys.Left:
@@ -728,8 +724,15 @@ namespace Barotrauma
                     {
                         InitSelectionStart();
                     }
-                    float lineHeight = Font.MeasureString("T").Y * TextBlock.TextScale;
-                    int newIndex = textBlock.GetCaretIndexFromLocalPos(new Vector2(caretPos.X, caretPos.Y - lineHeight));
+                    float lineHeight = Font.LineHeight * TextBlock.TextScale;
+                    int newIndex = textBlock.GetCaretIndexFromLocalPos(new Vector2(caretPos.X, caretPos.Y - lineHeight * 0.5f));
+                    textBlock.Font.WrapText(
+                        textBlock.Text.SanitizedValue,
+                        GetWrapWidth(),
+                        newIndex,
+                        out Vector2 requestedCharPos);
+                    requestedCharPos *= TextBlock.TextScale;
+                    if (MathUtils.NearlyEqual(requestedCharPos.Y, caretPos.Y)) { newIndex = 0; }
                     CaretIndex = newIndex;
                     caretTimer = 0;
                     HandleSelection();
@@ -739,8 +742,15 @@ namespace Barotrauma
                     {
                         InitSelectionStart();
                     }
-                    lineHeight = Font.MeasureString("T").Y * TextBlock.TextScale;
-                    newIndex = textBlock.GetCaretIndexFromLocalPos(new Vector2(caretPos.X, caretPos.Y + lineHeight));
+                    lineHeight = Font.LineHeight * TextBlock.TextScale;
+                    newIndex = textBlock.GetCaretIndexFromLocalPos(new Vector2(caretPos.X, caretPos.Y + lineHeight * 1.5f));
+                    textBlock.Font.WrapText(
+                        textBlock.Text.SanitizedValue,
+                        GetWrapWidth(),
+                        newIndex,
+                        out Vector2 requestedCharPos2);
+                    requestedCharPos2 *= TextBlock.TextScale;
+                    if (MathUtils.NearlyEqual(requestedCharPos2.Y, caretPos.Y)) { newIndex = Text.Length; }
                     CaretIndex = newIndex;
                     caretTimer = 0;
                     HandleSelection();
@@ -791,6 +801,7 @@ namespace Barotrauma
                     IEnumerable<GUITextBox> GetAndSortTextBoxes(GUIComponent parent) => parent.GetAllChildren<GUITextBox>().OrderBy(t => t.Rect.Y).ThenBy(t => t.Rect.X);
                     GUITextBox SelectNextTextBox(GUIListBox listBox)
                     {
+                        if (listBox?.SelectedComponent == null) { return null; }
                         var textBoxes = GetAndSortTextBoxes(listBox.SelectedComponent);
                         if (textBoxes.Any())
                         {
@@ -803,6 +814,7 @@ namespace Barotrauma
                     }
                     break;
             }
+            if (caretPosDirty) { CalculateCaretPos(); }
             OnKeyHit?.Invoke(this, key);
             void HandleSelection()
             {
@@ -822,7 +834,6 @@ namespace Barotrauma
         {
             CaretIndex = 0;
             CalculateCaretPos();
-            selectionStartPos = caretPos;
             selectionStartIndex = 0;
             CaretIndex = Text.Length;
             CalculateSelection();
@@ -853,14 +864,17 @@ namespace Barotrauma
         {
             if (selectedText.Length == 0) { return; }
 
-            selectionStartIndex = Math.Max(0, Math.Min(selectionEndIndex, Math.Min(selectionStartIndex, Text.Length - 1)));
-            int selectionLength = Math.Min(Text.Length - selectionStartIndex, selectedText.Length);
-            SetText(Text.Remove(selectionStartIndex, selectionLength));
-            CaretIndex = Math.Min(Text.Length, selectionStartIndex);
+            int targetCaretIndex = Math.Max(0, Math.Min(selectionEndIndex, Math.Min(selectionStartIndex, Text.Length - 1)));
+            int selectionLength = Math.Min(Text.Length - targetCaretIndex, selectedText.Length);
+            SetText(Text.Remove(targetCaretIndex, selectionLength));
+            CaretIndex = targetCaretIndex;
 
             ClearSelection();
             OnTextChanged?.Invoke(this, Text);
         }
+
+        private float GetWrapWidth()
+            => Wrap ? (textBlock.Rect.Width - textBlock.Padding.X - textBlock.Padding.Z) / TextBlock.TextScale : float.PositiveInfinity;
 
         private void InitSelectionStart()
         {
@@ -871,29 +885,25 @@ namespace Barotrauma
             if (selectionStartIndex == -1)
             {
                 selectionStartIndex = CaretIndex;
-                selectionStartPos = caretPos;
             }
+        }
+
+        public void DrawIMEPreview(SpriteBatch spriteBatch)
+        {
+            imePreviewTextHandler.DrawIMEPreview(spriteBatch, CaretScreenPos, textBlock);
         }
 
         private void CalculateSelection()
         {
-            string textDrawn = Censor ? textBlock.CensoredText : textBlock.WrappedText;
+            string textDrawn = Censor ? textBlock.CensoredText : WrappedText;
             InitSelectionStart();
             selectionEndIndex = Math.Min(CaretIndex, textDrawn.Length);
-            selectionEndPos = caretPos;
             selectedCharacters = Math.Abs(selectionStartIndex - selectionEndIndex);
             try
             {
-                if (IsLeftToRight)
-                {
-                    selectedText = Text.Substring(selectionStartIndex, Math.Min(selectedCharacters, Text.Length));
-                    selectionRectSize = Font.MeasureString(textDrawn.Substring(selectionStartIndex, Math.Min(selectedCharacters, textDrawn.Length))) * TextBlock.TextScale;
-                }
-                else
-                {
-                    selectedText = Text.Substring(selectionEndIndex, Math.Min(selectedCharacters, Text.Length));
-                    selectionRectSize = Font.MeasureString(textDrawn.Substring(selectionEndIndex, Math.Min(selectedCharacters, textDrawn.Length))) * TextBlock.TextScale;
-                }
+                selectedText = Text.Substring(
+                    IsLeftToRight ? selectionStartIndex : selectionEndIndex,
+                    Math.Min(selectedCharacters, Text.Length));
             }
             catch (ArgumentOutOfRangeException exception)
             {

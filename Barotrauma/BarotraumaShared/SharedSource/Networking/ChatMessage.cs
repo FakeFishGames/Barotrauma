@@ -56,9 +56,9 @@ namespace Barotrauma.Networking
             {
                 if (Type.HasFlag(ChatMessageType.Server) || Type.HasFlag(ChatMessageType.Error) || Type.HasFlag(ChatMessageType.ServerLog))
                 {
-                    if (translatedText == null || translatedText.Length == 0)
+                    if (translatedText.IsNullOrEmpty())
                     {
-                        translatedText = TextManager.GetServerMessage(Text);
+                        translatedText = TextManager.GetServerMessage(Text).Value;
                     }
 
                     return translatedText;
@@ -79,9 +79,21 @@ namespace Barotrauma.Networking
 
         public readonly string SenderName;
 
+        private Color? customTextColor;
         public Color Color
         {
-            get { return MessageColor[(int)Type]; }
+            get
+            {
+                if (customTextColor != null) { return customTextColor.Value; }
+                int intType = (int)Type;
+                if (intType < 0 || intType >= MessageColor.Length) { return Color.White; }
+                return MessageColor[intType];
+            }
+
+            set
+            {
+                customTextColor = value;
+            }
         }
 
         public static string GetTimeStamp()
@@ -105,7 +117,9 @@ namespace Barotrauma.Networking
             set;
         }
 
-        protected ChatMessage(string senderName, string text, ChatMessageType type, Character sender, Client client, PlayerConnectionChangeType changeType = PlayerConnectionChangeType.None)
+        public ChatMode ChatMode { get; set; } = ChatMode.None; 
+
+        protected ChatMessage(string senderName, string text, ChatMessageType type, Character sender, Client client, PlayerConnectionChangeType changeType = PlayerConnectionChangeType.None, Color? textColor = null)
         {
             Text = text;
             Type = type;
@@ -115,11 +129,13 @@ namespace Barotrauma.Networking
 
             SenderName = senderName;
             ChangeType = changeType;
-        }        
 
-        public static ChatMessage Create(string senderName, string text, ChatMessageType type, Character sender, Client client = null, PlayerConnectionChangeType changeType = PlayerConnectionChangeType.None)
+            customTextColor = textColor;
+        }
+
+        public static ChatMessage Create(string senderName, string text, ChatMessageType type, Character sender, Client client = null, PlayerConnectionChangeType changeType = PlayerConnectionChangeType.None, Color? textColor = null)
         {
-            return new ChatMessage(senderName, text, type, sender, client ?? GameMain.NetworkMember?.ConnectedClients?.Find(c => c.Character != null && c.Character == sender), changeType);
+            return new ChatMessage(senderName, text, type, sender, client ?? GameMain.NetworkMember?.ConnectedClients?.Find(c => c.Character != null && c.Character == sender), changeType, textColor);
         }
 
         public static string GetChatMessageCommand(string message, out string messageWithoutCommand)
@@ -148,35 +164,11 @@ namespace Barotrauma.Networking
             return command;
         }
 
-        public static string GetSpecialChatMessageCommand(string message, out string messageWithoutCommand)
-        {
-            messageWithoutCommand = message;
-
-            if (message[0] != '!') return "";
-
-            int separatorIndex = message.IndexOf(" ");
-
-            if (separatorIndex == -1) { separatorIndex = message.Length - 1; }
-
-            string command = "";
-            try
-            {
-                command = message.Substring(1, separatorIndex);
-                command = command.Trim();
-            }
-
-            catch
-            {
-                return command;
-            }
-
-            messageWithoutCommand = message.Substring(separatorIndex + 1, message.Length - separatorIndex - 1).TrimStart();
-
-            return command;
-        }
-
-
-        public static float GetGarbleAmount(Entity listener, Entity sender, float range, float obstructionmult = 2.0f)
+        /// <summary>
+        /// How much messages sent by <paramref name="sender"/> should get garbled. Takes the distance between the entities and optionally the obstructions between them into account (see <paramref name="obstructionMultiplier"/>).
+        /// </summary>
+        /// <param name="obstructionMultiplier">Values greater than or equal to 1 cause the message to get garbled more heavily when there's some obstruction between the characters. Values smaller than 1 mean the garbling only depends on distance.</param>
+        public static float GetGarbleAmount(Entity listener, Entity sender, float range, float obstructionMultiplier = 2.0f)
         {
             if (listener == null || sender == null)
             {
@@ -189,12 +181,12 @@ namespace Barotrauma.Networking
 
             Hull listenerHull = listener == null ? null : Hull.FindHull(listener.WorldPosition);
             Hull sourceHull = sender == null ? null : Hull.FindHull(sender.WorldPosition);
-            if (sourceHull != listenerHull)
+            if (sourceHull != listenerHull && obstructionMultiplier >= 1.0f)
             {
                 if ((sourceHull == null || !sourceHull.GetConnectedHulls(includingThis: false, searchDepth: 2, ignoreClosedGaps: true).Contains(listenerHull)) &&
                     Submarine.CheckVisibility(listener.SimPosition, sender.SimPosition) != null) 
                 { 
-                    dist = (dist + 100f) * obstructionmult; 
+                    dist = (dist + 100f) * obstructionMultiplier; 
                 }
             }
             if (dist > range) { return 1.0f; }
@@ -209,9 +201,9 @@ namespace Barotrauma.Networking
             return ApplyDistanceEffect(listener, Sender, Text, SpeakRange);
         }
 
-        public static string ApplyDistanceEffect(Entity listener, Entity sender, string text, float range, float obstructionmult = 2.0f)
+        public static string ApplyDistanceEffect(Entity listener, Entity sender, string text, float range, float obstructionMultiplier = 2.0f)
         {
-            return ApplyDistanceEffect(text, GetGarbleAmount(listener, sender, range, obstructionmult));
+            return ApplyDistanceEffect(text, GetGarbleAmount(listener, sender, range, obstructionMultiplier));
         }
 
         public static string ApplyDistanceEffect(string text, float garbleAmount)
@@ -233,8 +225,12 @@ namespace Barotrauma.Networking
         public static string ApplyDistanceEffect(string message, ChatMessageType type, Character sender, Character receiver)
         {
             if (sender == null) { return ""; }
-
-            string spokenMsg = ApplyDistanceEffect(receiver, sender, message, SpeakRange * (1.0f - sender.SpeechImpediment / 100.0f), 3.0f);
+            float range = SpeakRange;
+            if (type == ChatMessageType.Default && sender.SpeechImpediment > 0)
+            {
+                range *= 1.0f - sender.SpeechImpediment / 100.0f;
+            }
+            string spokenMsg = ApplyDistanceEffect(receiver, sender, message, range, 3.0f);
 
             switch (type)
             {
@@ -246,27 +242,30 @@ namespace Barotrauma.Networking
                     break;
                 case ChatMessageType.Radio:
                 case ChatMessageType.Order:
-                    if (receiver != null && !receiver.IsDead)
+                    if (receiver?.Inventory != null && !receiver.IsDead)
                     {
-                        var receiverItem = receiver.Inventory?.AllItems.FirstOrDefault(i => i.GetComponent<WifiComponent>() != null);
-                        //character doesn't have a radio -> don't send
-                        if (receiverItem == null || !receiver.HasEquippedItem(receiverItem)) { return spokenMsg; }
-
-                        var senderItem = sender.Inventory?.AllItems.FirstOrDefault(i => i.GetComponent<WifiComponent>() != null);
-                        if (senderItem == null || !sender.HasEquippedItem(senderItem)) { return spokenMsg; }
-
-                        var receiverRadio = receiverItem.GetComponent<WifiComponent>();
-                        var senderRadio = senderItem.GetComponent<WifiComponent>();
-
-                        if (!receiverRadio.CanReceive(senderRadio)) { return spokenMsg; }
-
-                        string msg = ApplyDistanceEffect(receiverItem, senderItem, message, senderRadio.Range);
-                        if (sender.SpeechImpediment > 0.0f)
+                        foreach (Item receiverItem in receiver.Inventory.AllItems.Where(i => i.GetComponent<WifiComponent>()?.LinkToChat ?? false))
                         {
-                            //speech impediment doesn't reduce the range when using a radio, but adds extra garbling
-                            msg = ApplyDistanceEffect(msg, sender.SpeechImpediment / 100.0f);
+                            if (sender.Inventory == null || !receiver.HasEquippedItem(receiverItem)) { continue; }
+
+                            foreach (Item senderItem in sender.Inventory.AllItems.Where(i => i.GetComponent<WifiComponent>()?.LinkToChat ?? false))
+                            {
+                                if (!sender.HasEquippedItem(senderItem)) { continue; }
+
+                                var receiverRadio = receiverItem.GetComponent<WifiComponent>();
+                                var senderRadio = senderItem.GetComponent<WifiComponent>();
+                                if (!receiverRadio.CanReceive(senderRadio)) { continue; }
+
+                                string msg = ApplyDistanceEffect(receiverItem, senderItem, message, senderRadio.Range, obstructionMultiplier: 0);
+                                if (sender.SpeechImpediment > 0.0f)
+                                {
+                                    //speech impediment doesn't reduce the range when using a radio, but adds extra garbling
+                                    msg = ApplyDistanceEffect(msg, sender.SpeechImpediment / 100.0f);
+                                }
+                                return msg;
+                            }
                         }
-                        return msg;
+                        return spokenMsg;
                     }
                     break;
             }
@@ -296,7 +295,7 @@ namespace Barotrauma.Networking
             foreach (Item item in sender.Inventory.AllItems)
             {
                 var wifiComponent = item.GetComponent<WifiComponent>();
-                if (wifiComponent == null || !wifiComponent.CanTransmit() || !sender.HasEquippedItem(item)) { continue; }
+                if (wifiComponent == null || !wifiComponent.LinkToChat || !wifiComponent.CanTransmit() || !sender.HasEquippedItem(item)) { continue; }
                 if (radio == null || wifiComponent.Range > radio.Range)
                 {
                     radio = wifiComponent;

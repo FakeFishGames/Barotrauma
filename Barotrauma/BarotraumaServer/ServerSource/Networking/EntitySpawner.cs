@@ -1,47 +1,58 @@
-﻿using Barotrauma.Networking;
-using Microsoft.Xna.Framework;
+﻿using System;
+using Barotrauma.Networking;
 
 namespace Barotrauma
 {
     partial class EntitySpawner : Entity, IServerSerializable
     {
-        public void CreateNetworkEvent(Entity entity, bool remove)
+        public void CreateNetworkEvent(SpawnOrRemove spawnOrRemove)
         {
-            CreateNetworkEventProjSpecific(entity, remove);
+            CreateNetworkEventProjSpecific(spawnOrRemove);
         }
 
-        partial void CreateNetworkEventProjSpecific(Entity entity, bool remove)
+        partial void CreateNetworkEventProjSpecific(SpawnOrRemove spawnOrRemove)
         {
-            if (GameMain.Server != null && entity != null)
+            if (GameMain.Server == null || spawnOrRemove?.Entity == null) { return; }
+
+            GameMain.Server.CreateEntityEvent(this, spawnOrRemove);
+            if (spawnOrRemove is SpawnEntity)
             {
-                GameMain.Server.CreateEntityEvent(this, new object[] { new SpawnOrRemove(entity, remove) });
+                if (spawnOrRemove.Entity is Character { Info: { } } character && !character.Removed)
+                {
+                    foreach (var statKey in character.Info.SavedStatValues.Keys)
+                    {
+                        GameMain.NetworkMember.CreateEntityEvent(character, new Character.UpdatePermanentStatsEventData(statKey));
+                    }
+                }
             }
         }
 
-        public void ServerWrite(IWriteMessage message, Client client, object[] extraData = null)
+        public void ServerEventWrite(IWriteMessage message, Client client, NetEntityEvent.IData extraData = null)
         {
-            if (GameMain.Server == null) return;
+            if (GameMain.Server is null) { return; }
+            if (!(extraData is SpawnOrRemove entities)) { throw new Exception($"Malformed {nameof(EntitySpawner)} event: expected {nameof(SpawnOrRemove)}"); }
 
-            SpawnOrRemove entities = (SpawnOrRemove)extraData[0];
-
-            message.Write(entities.Remove);
-            if (entities.Remove)
+            message.WriteBoolean(entities is RemoveEntity);
+            if (entities is RemoveEntity)
             {
-                message.Write(entities.OriginalID);
+                message.WriteUInt16(entities.ID);
             }
             else
             {
-                if (entities.Entity is Item)
+                switch (entities.Entity)
                 {
-                    message.Write((byte)SpawnableType.Item);
-                    DebugConsole.Log("Writing item spawn data " + entities.Entity.ToString() + " (original ID: " + entities.OriginalID + ", current ID: " + entities.Entity.ID + ")");
-                    ((Item)entities.Entity).WriteSpawnData(message, entities.OriginalID, entities.OriginalInventoryID, entities.OriginalItemContainerIndex);
-                }
-                else if (entities.Entity is Character)
-                {
-                    message.Write((byte)SpawnableType.Character);
-                    DebugConsole.Log("Writing character spawn data: " + entities.Entity.ToString() + " (original ID: " + entities.OriginalID + ", current ID: " + entities.Entity.ID + ")");
-                    ((Character)entities.Entity).WriteSpawnData(message, entities.OriginalID, restrictMessageSize: true);
+                    case Item item:
+                        message.WriteByte((byte)SpawnableType.Item);
+                        DebugConsole.Log(
+                            $"Writing item spawn data {item} (ID: {entities.ID})");
+                        item.WriteSpawnData(message, entities.ID, entities.InventoryID, entities.ItemContainerIndex, entities.SlotIndex);
+                        break;
+                    case Character character:
+                        message.WriteByte((byte)SpawnableType.Character);
+                        DebugConsole.Log(
+                            $"Writing character spawn data: {character} (ID: {entities.ID})");
+                        character.WriteSpawnData(message, entities.ID, restrictMessageSize: true);
+                        break;
                 }
             }
         }

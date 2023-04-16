@@ -1,5 +1,4 @@
 using Barotrauma.Networking;
-using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -22,6 +21,9 @@ namespace Barotrauma
                 }
             }
         }
+
+        public override bool DisplayAsCompleted => false;
+        public override bool DisplayAsFailed => false;
 
         public override void ClientReadInitial(IReadMessage msg)
         {
@@ -60,7 +62,16 @@ namespace Barotrauma
                 ushort id = msg.ReadUInt16();
                 bool scanned = msg.ReadBoolean();
                 Entity entity = Entity.FindEntityByID(id);
-                scanTargets.Add(entity as WayPoint, scanned);
+                if (!(entity is WayPoint wayPoint))
+                {
+                    string errorMsg = $"Failed to find a waypoint in ScanMission.ClientReadScanTargetStatus. Entity {id} was {(entity?.ToString() ?? null)}";
+                    DebugConsole.ThrowError(errorMsg);
+                    GameAnalyticsManager.AddErrorEventOnce("ScanMission.ClientReadScanTargetStatus", GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
+                }
+                else
+                {
+                    scanTargets.Add(wayPoint, scanned);
+                }
             }
         }
     }

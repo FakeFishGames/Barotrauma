@@ -136,7 +136,7 @@ namespace Lidgren.Network
 		{
 			connectionReset = false;
 
-            target = NetUtility.MapToIPv6(target);
+            target = target.MapToFamily(m_socket.AddressFamily);
 
             IPAddress ba = default(IPAddress);
 			try

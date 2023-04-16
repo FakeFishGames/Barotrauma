@@ -3,7 +3,7 @@ using Concentus.Structs;
 using Microsoft.Xna.Framework;
 using OpenAL;
 using System;
-using System.Diagnostics;
+using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
@@ -17,14 +17,15 @@ namespace Barotrauma.Networking
             get;
             private set;
         }
+                  
 
-        private IntPtr captureDevice;
+        private readonly IntPtr captureDevice;
 
         private Thread captureThread;
 
         private bool capturing;
 
-        private OpusEncoder encoder;
+        private readonly OpusEncoder encoder;
 
         public double LastdB
         {
@@ -40,7 +41,7 @@ namespace Barotrauma.Networking
 
         public float Gain
         {
-            get { return GameMain.Config?.MicrophoneVolume ?? 1.0f; }
+            get { return GameSettings.CurrentConfig.Audio.MicrophoneVolume; }
         }
 
         public DateTime LastEnqueueAudio;
@@ -49,7 +50,7 @@ namespace Barotrauma.Networking
         {
             get
             {
-                return GameMain.Client?.ID ?? 0;
+                return GameMain.Client?.SessionId ?? 0;
             }
             protected set
             {
@@ -78,7 +79,7 @@ namespace Barotrauma.Networking
             }
         }
 
-        private VoipCapture(string deviceName) : base(GameMain.Client?.ID ?? 0, true, false)
+        private VoipCapture(string deviceName) : base(GameMain.Client?.SessionId ?? 0, true, false)
         {
             Disconnected = false;
 
@@ -106,16 +107,18 @@ namespace Barotrauma.Networking
                 string errorCode = Alc.GetError(IntPtr.Zero).ToString();
                 if (!GUIMessageBox.MessageBoxes.Any(mb => mb.UserData as string == "capturedevicenotfound"))
                 {
-                    GUI.SettingsMenuOpen = false;
+                    //GUI.SettingsMenuOpen = false;
                     new GUIMessageBox(TextManager.Get("Error"),
-                        (TextManager.Get("VoipCaptureDeviceNotFound", returnNull: true) ?? "Could not start voice capture, suitable capture device not found.") + " (" + errorCode + ")")
+                        (TextManager.Get("VoipCaptureDeviceNotFound").Fallback("Could not start voice capture, suitable capture device not found.")) + " (" + errorCode + ")")
                     {
                         UserData = "capturedevicenotfound"
                     };
                 }
-                GameAnalyticsManager.AddErrorEventOnce("Alc.CaptureDeviceOpenFailed", GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
+                GameAnalyticsManager.AddErrorEventOnce("Alc.CaptureDeviceOpenFailed", GameAnalyticsManager.ErrorSeverity.Error,
                     "Alc.CaptureDeviceOpen(" + deviceName + ") failed. Error code: " + errorCode);
-                GameMain.Config.VoiceSetting = GameSettings.VoiceMode.Disabled;
+                var config = GameSettings.CurrentConfig;
+                config.Audio.VoiceSetting = VoiceMode.Disabled;
+                GameSettings.SetCurrentConfig(config);
                 Instance?.Dispose();
                 Instance = null;
                 return;
@@ -157,19 +160,21 @@ namespace Barotrauma.Networking
 
         public static void ChangeCaptureDevice(string deviceName)
         {
-            GameMain.Config.VoiceCaptureDevice = deviceName;
+            if (Instance == null) { return; }
 
-            if (Instance != null)
-            {
-                UInt16 storedBufferID = Instance.LatestBufferID;
-                Instance.Dispose();
-                Create(GameMain.Config.VoiceCaptureDevice, storedBufferID);
-            }
+            UInt16 storedBufferID = Instance.LatestBufferID;
+            Instance.Dispose();
+            Create(GameSettings.CurrentConfig.Audio.VoiceCaptureDevice, storedBufferID);
+        }
+
+        public static IReadOnlyList<string> GetCaptureDeviceNames()
+        {
+            return Alc.GetStringList(IntPtr.Zero, OpenAL.Alc.CaptureDeviceSpecifier); 
         }
 
         IntPtr nativeBuffer;
-        short[] uncompressedBuffer = new short[VoipConfig.BUFFER_SIZE];
-        short[] prevUncompressedBuffer = new short[VoipConfig.BUFFER_SIZE];
+        readonly short[] uncompressedBuffer = new short[VoipConfig.BUFFER_SIZE];
+        readonly short[] prevUncompressedBuffer = new short[VoipConfig.BUFFER_SIZE];
         bool prevCaptured = true;
         int captureTimer;
 
@@ -222,37 +227,47 @@ namespace Barotrauma.Networking
                     LastAmplitude = maxAmplitude;
 
                     bool allowEnqueue = overrideSound != null;
-                    if (GameMain.WindowActive)
+                    if (GameMain.WindowActive && SettingsMenu.Instance is null)
                     {
-                        ForceLocal = captureTimer > 0 ? ForceLocal : GameMain.Config.UseLocalVoiceByDefault;
-                        bool pttDown = false;
-                        if ((PlayerInput.KeyDown(InputType.Voice) || PlayerInput.KeyDown(InputType.LocalVoice)) &&
-                                GUI.KeyboardDispatcher.Subscriber == null)
+                        bool usingLocalMode = PlayerInput.KeyDown(InputType.LocalVoice);
+                        bool usingRadioMode = PlayerInput.KeyDown(InputType.RadioVoice);
+                        if (GameSettings.CurrentConfig.Audio.VoiceSetting == VoiceMode.Activity)
                         {
-                            pttDown = true;
-                            if (PlayerInput.KeyDown(InputType.LocalVoice))
+                            bool pttDown = (usingLocalMode || usingRadioMode) && GUI.KeyboardDispatcher.Subscriber == null;
+                            if (pttDown)
                             {
-                                ForceLocal = true;
+                                ForceLocal = usingLocalMode;
                             }
+                            //in Activity mode, we default to the active mode UNLESS a specific ptt key is held
                             else
                             {
-                                ForceLocal = false;
+                                ForceLocal = GameMain.ActiveChatMode == ChatMode.Local;
                             }
-                        }
-                        if (GameMain.Config.VoiceSetting == GameSettings.VoiceMode.Activity)
-                        {
-                            if (dB > GameMain.Config.NoiseGateThreshold)
+                            if (dB > GameSettings.CurrentConfig.Audio.NoiseGateThreshold)
                             {
                                 allowEnqueue = true;
                             }
                         }
-                        else if (GameMain.Config.VoiceSetting == GameSettings.VoiceMode.PushToTalk)
+                        else if (GameSettings.CurrentConfig.Audio.VoiceSetting == VoiceMode.PushToTalk)
                         {
+                            //in push-to-talk mode, InputType.Voice uses the active chat mode
+                            bool usingActiveMode = PlayerInput.KeyDown(InputType.Voice);
+                            bool pttDown = (usingActiveMode || usingLocalMode || usingRadioMode) && GUI.KeyboardDispatcher.Subscriber == null;
+                            if (pttDown || captureTimer <= 0)
+                            {
+                                ForceLocal = (usingActiveMode && GameMain.ActiveChatMode == ChatMode.Local) || usingLocalMode;
+                            }
                             if (pttDown)
                             {
                                 allowEnqueue = true;
                             }
                         }
+                    }
+
+                    if (Screen.Selected is ModDownloadScreen)
+                    {
+                        allowEnqueue = false;
+                        captureTimer = 0;
                     }
 
                     if (allowEnqueue || captureTimer > 0)
@@ -277,7 +292,7 @@ namespace Barotrauma.Networking
                         captureTimer -= (VoipConfig.BUFFER_SIZE * 1000) / VoipConfig.FREQUENCY;
                         if (allowEnqueue)
                         {
-                            captureTimer = GameMain.Config.VoiceChatCutoffPrevention;
+                            captureTimer = GameSettings.CurrentConfig.Audio.VoiceChatCutoffPrevention;
                         }
                         prevCaptured = true;
                     }
@@ -378,6 +393,7 @@ namespace Barotrauma.Networking
             capturing = false;
             captureThread?.Join();
             captureThread = null;
+            if (captureDevice != IntPtr.Zero) { Alc.CaptureCloseDevice(captureDevice); }
         }
     }
 }

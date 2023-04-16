@@ -1,0 +1,82 @@
+name: Bug Report
+description: Found a bug? Help us squash it by making a bug report!
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report a bug! Actionable reports are very important in identifying and fixing bugs, so please fill out all the fields carefully and provide as much information as you can while being concise. Please also note that we get lots of reports and may not always write back to each individually – that does not mean we have not read it.
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: "Disclaimers"
+      options:
+        - label: "I have searched the issue tracker to check if the issue has already been reported."
+          required: true
+        - label: "My issue happened while using mods."
+          required: false
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: Please tell us also what you expected should have happened if the game was behaving correctly.
+      placeholder: "Using the bike horn crashes the game."
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Reproduction steps
+      description: | 
+        If possible, describe how the developers can get the bug to happen (or, in other words, what actions lead to you encountering the bug). **This is by far the most important part of the report** - it is often extremely difficult, or even impossible, to diagnose an issue if we don't know the conditions it occurs in.
+        If you have a save, a submarine file, screenshots or any other files that might help us diagnose the issue, you can attach them here. Note that GitHub doesn't support the .save or .sub file extensions, so you should .zip those types of files to allow them to be attached.
+      placeholder: |
+        1. Start a multiplayer campaign
+        2. Spawn a bike horn with console commands
+        3. Use the bike horn
+        4. Observe how the game crashes
+    validations:
+      required: true
+  - type: dropdown
+    id: prevalence
+    attributes:
+      label: Bug prevalence
+      description: "How often do you or others encounter this bug?"
+      options:
+        - Just once
+        - Happens every now and then
+        - Happens regularly
+        - Happens every time I play
+    validations:
+      required: true
+  - type: dropdown
+    id: version
+    attributes:
+      label: Version
+      description: Which version of the game did the bug happen in? You can see the current version number in the bottom left corner of your screen in the main menu.
+      options:      
+        - v1.0.9.0
+        - Unstable (v1.1.4.0)
+        - Other
+    validations:
+      required: true
+  - type: input
+    id: otherversion
+    attributes:
+      label: "-"
+      description: If you selected "Other" in the above dropdown because you are e.g. using a custom build, please tell us more about it here.
+  - type: dropdown
+    id: operating-systems
+    attributes:
+      label: Which operating system did you encounter this bug on?
+      options:
+        - Windows
+        - MacOS
+        - Linux
+    validations:
+      required: true
+  - type: textarea
+    id: errors
+    attributes:
+      label: Relevant error messages and crash reports
+      description: If the game produces any text relevant to your issue, please include those in full. You can copy error messages from the in-game console by right clicking the error and selecting "copy". Crash reports will be named crashreport.log or servercrashreport.log and they're automatically generated into the root of the game's installation folder on your computer. You can usually find the game files location through Steam (Right click Barotrauma in your Steam Library -> Properties -> Local files -> Browse local files).
+      render: shell

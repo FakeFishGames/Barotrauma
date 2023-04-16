@@ -1,8 +1,12 @@
+#nullable enable
 using System;
 
 namespace Barotrauma
 {
-    public struct Range<T> where T : IComparable
+    /// <summary>
+    /// An inclusive range, i.e. [Start, End] where Start <= End
+    /// </summary>
+    public struct Range<T> where T : notnull, IComparable<T>
     {
         private T start; private T end;
         public T Start
@@ -24,6 +28,9 @@ namespace Barotrauma
                 VerifyEndGreaterThanStart();
             }
         }
+
+        public readonly bool Contains(in T v)
+            => start.CompareTo(v) <= 0 && end.CompareTo(v) >= 0;
 
         private void VerifyStartLessThanEnd()
         {

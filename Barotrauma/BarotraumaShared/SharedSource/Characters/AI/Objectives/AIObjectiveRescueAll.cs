@@ -7,7 +7,7 @@ namespace Barotrauma
 {
     class AIObjectiveRescueAll : AIObjectiveLoop<Character>
     {
-        public override string Identifier { get; set; } = "rescue all";
+        public override Identifier Identifier { get; set; } = "rescue all".ToIdentifier();
         public override bool ForceRun => true;
         public override bool InverseTargetEvaluation => true;
         public override bool AllowOutsideSubmarine => true;
@@ -26,7 +26,7 @@ namespace Barotrauma
                 // When targeting player characters, always treat them when ordered, else use the threshold so that minor/non-severe damage is ignored.
                 // If we ignore any damage when the player orders a bot to do healings, it's observed to cause confusion among the players.
                 // On the other hand, if the bots too eagerly heal characters when it's not necessary, it's inefficient and can feel frustrating, because it can't be controlled.
-                return character == target || manager.HasOrder<AIObjectiveRescueAll>() ? (target.IsPlayer ? 100 : vitalityThresholdForOrders) : vitalityThreshold;
+                return character == target || manager.HasOrder<AIObjectiveRescueAll>() ? (target.IsPlayer && target.HealthPercentage < 100 ? 100 : vitalityThresholdForOrders) : vitalityThreshold;
             }
         }
         
@@ -64,9 +64,35 @@ namespace Barotrauma
 
         public static float GetVitalityFactor(Character character)
         {
-            float vitality = character.HealthPercentage - (character.Bleeding * 2) - character.Bloodloss + Math.Min(character.Oxygen, 0);
-            vitality -= character.CharacterHealth.GetAfflictionStrength("paralysis");
+            float vitality = 100;
+            vitality -= character.Bleeding * 2;
+            vitality += Math.Min(character.Oxygen, 0);
+            foreach (Affliction affliction in GetTreatableAfflictions(character))
+            {
+                float strength = character.CharacterHealth.GetPredictedStrength(affliction, predictFutureDuration: 10.0f);
+                vitality -= affliction.GetVitalityDecrease(character.CharacterHealth, strength) / character.MaxVitality * 100;
+                if (affliction.Prefab.AfflictionType == AfflictionPrefab.ParalysisType)
+                {
+                    vitality -= affliction.Strength;
+                }
+                else if (affliction.Prefab.AfflictionType == AfflictionPrefab.PoisonType)
+                {
+                    vitality -= affliction.Strength;
+                }
+            }
             return Math.Clamp(vitality, 0, 100);
+        }
+
+        public static IEnumerable<Affliction> GetTreatableAfflictions(Character character)
+        {
+            var allAfflictions = character.CharacterHealth.GetAllAfflictions();
+            foreach (Affliction affliction in allAfflictions)
+            {
+                if (affliction.Prefab.IsBuff || affliction.Strength < affliction.Prefab.TreatmentThreshold) { continue; }
+                if (affliction.Prefab.TreatmentSuitability.None(kvp => kvp.Value > 0)) { continue; }
+                if (allAfflictions.Any(otherAffliction => affliction.Prefab.IgnoreTreatmentIfAfflictedBy.Contains(otherAffliction.Identifier))) { continue; }
+                yield return affliction;
+            }
         }
 
         protected override AIObjective ObjectiveConstructor(Character target)
@@ -79,11 +105,11 @@ namespace Barotrauma
         {
             if (target == null || target.IsDead || target.Removed) { return false; }
             if (target.IsInstigator) { return false; }
+            if (target.IsPet) { return false; }
             if (!HumanAIController.IsFriendly(character, target, onlySameTeam: true)) { return false; }
             if (character.AIController is HumanAIController humanAI)
             {
-                if (GetVitalityFactor(target) >= GetVitalityThreshold(humanAI.ObjectiveManager, character, target) ||
-                    target.CharacterHealth.GetAllAfflictions().All(a => a.Prefab.IsBuff || a.Strength <= a.Prefab.TreatmentThreshold)) 
+                if (GetVitalityFactor(target) >= GetVitalityThreshold(humanAI.ObjectiveManager, character, target)) 
                 {
                     return false; 
                 }
@@ -105,10 +131,16 @@ namespace Barotrauma
             {
                 if (GetVitalityFactor(target) >= vitalityThreshold) { return false; }
             }
-            if (target.Submarine == null || character.Submarine == null) { return false; }
-            // Don't allow going into another sub, unless it's connected and of the same team and type.
-            if (!character.Submarine.IsEntityFoundOnThisSub(target.CurrentHull, includingConnectedSubs: true)) { return false; }
-            if (target != character &&!target.IsPlayer && HumanAIController.IsActive(target) && target.AIController is HumanAIController targetAI)
+            if (character.Submarine != null)
+            {
+                // Don't allow going into another sub, unless it's connected and of the same team and type.
+                if (!character.Submarine.IsEntityFoundOnThisSub(target.CurrentHull, includingConnectedSubs: true)) { return false; }
+            }
+            else
+            {
+                return target.Submarine == null;
+            }
+            if (target != character && target.IsBot && HumanAIController.IsActive(target) && target.AIController is HumanAIController targetAI)
             {
                 // Ignore all concious targets that are currently fighting, fleeing, fixing, or treating characters
                 if (targetAI.ObjectiveManager.HasActiveObjective<AIObjectiveCombat>() ||
@@ -119,9 +151,12 @@ namespace Barotrauma
                     return false;
                 }
             }
-            // Don't go into rooms that have enemies
-            if (Character.CharacterList.Any(c => c.CurrentHull == target.CurrentHull && !HumanAIController.IsFriendly(character, c) && HumanAIController.IsActive(c))) { return false; }
-            return true;
+            if (target.CurrentHull != null)
+            {
+                // Don't go into rooms that have enemies
+                if (Character.CharacterList.Any(c => c.CurrentHull == target.CurrentHull && !HumanAIController.IsFriendly(character, c) && HumanAIController.IsActive(c))) { return false; }
+            }
+            return character.GetDamageDoneByAttacker(target) <= 0;
         }
     }
 }

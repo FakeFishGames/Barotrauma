@@ -1,8 +1,9 @@
-﻿using System;
-using System.Linq;
-using System.Xml.Linq;
-using Microsoft.Xna.Framework;
+﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using System;
+using System.Collections;
+using System.Linq;
+using static Barotrauma.Inventory;
 
 namespace Barotrauma.Items.Components
 {
@@ -46,28 +47,30 @@ namespace Barotrauma.Items.Components
             private set;
         }
 
+        public override bool RecreateGUIOnResolutionChange => true;
+
         /// <summary>
         /// Depth at which the contained sprites are drawn. If not set, the original depth of the item sprites is used.
         /// </summary>
-        [Serialize(-1.0f, false, description: "Depth at which the contained sprites are drawn. If not set, the original depth of the item sprites is used.")]
+        [Serialize(-1.0f, IsPropertySaveable.No, description: "Depth at which the contained sprites are drawn. If not set, the original depth of the item sprites is used.")]
         public float ContainedSpriteDepth { get; set; }
 
-        [Serialize(null, false, description: "An optional text displayed above the item's inventory.")]
+        [Serialize(null, IsPropertySaveable.No, description: "An optional text displayed above the item's inventory.")]
         public string UILabel { get; set; }
 
         public GUIComponentStyle IndicatorStyle { get; set; }
 
-        [Serialize(null, false)]
+        [Serialize(null, IsPropertySaveable.No)]
         public string ContainedStateIndicatorStyle { get; set; }
 
-        [Serialize(-1, false, description: "Can be used to make the contained state indicator display the condition of the item in a specific slot even when the container's capacity is more than 1.")]
+        [Serialize(-1, IsPropertySaveable.No, description: "Can be used to make the contained state indicator display the condition of the item in a specific slot even when the container's capacity is more than 1.")]
         public int ContainedStateIndicatorSlot { get; set; }
 
-        [Serialize(true, false, description: "Should an indicator displaying the state of the contained items be displayed on this item's inventory slot. "+
-            "If this item can only contain one item, the indicator will display the condition of the contained item, otherwise it will indicate how full the item is.")]
+        [Serialize(true, IsPropertySaveable.No, description: "Should an indicator displaying the state of the contained items be displayed on this item's inventory slot. "+
+                                                             "If this item can only contain one item, the indicator will display the condition of the contained item, otherwise it will indicate how full the item is.")]
         public bool ShowContainedStateIndicator { get; set; }
 
-        [Serialize(false, false, description: "If enabled, the condition of this item is displayed in the indicator that would normally show the state of the contained items." +
+        [Serialize(false, IsPropertySaveable.No, description: "If enabled, the condition of this item is displayed in the indicator that would normally show the state of the contained items." +
             " May be useful for items such as ammo boxes and magazines that spawn projectiles as needed," +
             " and use the condition to determine how many projectiles can be spawned in total.")]
         public bool ShowConditionInContainedStateIndicator
@@ -76,10 +79,13 @@ namespace Barotrauma.Items.Components
             set;
         }
 
-        [Serialize(false, false, description: "Should the inventory of this item be kept open when the item is equipped by a character.")]
+        [Serialize(false, IsPropertySaveable.No, description: "If true, the contained state indicator calculates how full the item is based on the total amount of items that can be stacked inside it, as opposed to how many of the inventory slots are occupied.")]
+        public bool ShowTotalStackCapacityInContainedStateIndicator { get; set; }
+
+        [Serialize(false, IsPropertySaveable.No, description: "Should the inventory of this item be kept open when the item is equipped by a character.")]
         public bool KeepOpenWhenEquipped { get; set; }
 
-        [Serialize(false, false, description: "Can the inventory of this item be moved around on the screen by the player.")]
+        [Serialize(false, IsPropertySaveable.No, description: "Can the inventory of this item be moved around on the screen by the player.")]
         public bool MovableFrame { get; set; }
 
         public Vector2 DrawSize
@@ -88,10 +94,10 @@ namespace Barotrauma.Items.Components
             get { return Vector2.Zero; }
         }
 
-        partial void InitProjSpecific(XElement element)
+        partial void InitProjSpecific(ContentXElement element)
         {
             slotIcons = new Sprite[capacity];
-            foreach (XElement subElement in element.Elements())
+            foreach (var subElement in element.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
@@ -129,12 +135,12 @@ namespace Barotrauma.Items.Components
                 //if neither a style or a custom sprite is defined, use default style
                 if (ContainedStateIndicator == null)
                 {
-                    IndicatorStyle = GUI.Style.GetComponentStyle("ContainedStateIndicator.Default");
+                    IndicatorStyle = GUIStyle.GetComponentStyle("ContainedStateIndicator.Default");
                 }
             }
             else
             {
-                IndicatorStyle = GUI.Style.GetComponentStyle("ContainedStateIndicator." + ContainedStateIndicatorStyle);
+                IndicatorStyle = GUIStyle.GetComponentStyle("ContainedStateIndicator." + ContainedStateIndicatorStyle);
                 if (ContainedStateIndicator != null || ContainedStateIndicatorEmpty != null)
                 {
                     DebugConsole.AddWarning($"Item \"{item.Name}\" defines both a contained state indicator style and a custom indicator sprite. Will use the custom sprite...");
@@ -162,7 +168,7 @@ namespace Barotrauma.Items.Components
                 CreateGUI();
             }
 
-            containedSpriteDepths = element.GetAttributeFloatArray("containedspritedepths", new float[0]);
+            containedSpriteDepths = element.GetAttributeFloatArray("containedspritedepths", Array.Empty<float>());
         }
 
         protected override void CreateGUI()
@@ -173,12 +179,12 @@ namespace Barotrauma.Items.Components
                 CanBeFocused = false
             };
 
-            string labelText = GetUILabel();
+            LocalizedString labelText = GetUILabel();
             GUITextBlock label = null;
-            if (!string.IsNullOrEmpty(labelText))
+            if (!labelText.IsNullOrEmpty())
             {
                 label = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), content.RectTransform, Anchor.TopCenter), 
-                    labelText, font: GUI.SubHeadingFont, textAlignment: Alignment.Center, wrap: true);
+                    labelText, font: GUIStyle.SubHeadingFont, textAlignment: Alignment.Center, wrap: true);
             }
 
             float minInventoryAreaSize = 0.5f;
@@ -187,7 +193,7 @@ namespace Barotrauma.Items.Components
                 onDraw: (SpriteBatch spriteBatch, GUICustomComponent component) => { Inventory.Draw(spriteBatch); },
                 onUpdate: null)
             {
-                CanBeFocused = false
+                CanBeFocused = true
             };
 
             // Expand the frame vertically if it's too small to fit the text
@@ -209,12 +215,12 @@ namespace Barotrauma.Items.Components
             Inventory.RectTransform = guiCustomComponent.RectTransform;
         }
 
-        public string GetUILabel()
+        public LocalizedString GetUILabel()
         {
             if (UILabel == string.Empty) { return string.Empty; }
             if (UILabel != null)
             {
-                return TextManager.Get("UILabel." + UILabel, returnNull: true) ?? TextManager.Get(UILabel);
+                return TextManager.Get("UILabel." + UILabel).Fallback(TextManager.Get(UILabel));
             }
             else
             {
@@ -244,6 +250,80 @@ namespace Barotrauma.Items.Components
             }
 
             return true;
+        }
+
+
+        public float GetContainedIndicatorState()
+        {
+            if (ShowConditionInContainedStateIndicator)
+            {
+                return item.Condition / item.MaxCondition;
+            }
+
+            int targetSlot = Math.Max(ContainedStateIndicatorSlot, 0);
+            if (targetSlot >= Inventory.Capacity) { return 0.0f; }
+
+            var containedItems = Inventory.GetItemsAt(targetSlot);            
+            if (containedItems == null) { return 0.0f; }
+            
+            Item containedItem = containedItems.FirstOrDefault();
+            if (ShowTotalStackCapacityInContainedStateIndicator)
+            {
+                // No item on the defined slot, check if the items on other slots can be used.
+                containedItem ??= 
+                    containedItems.FirstOrDefault() ?? 
+                    Inventory.AllItems.FirstOrDefault(it => CanBeContained(it, targetSlot));
+                if (containedItem == null) { return 0.0f; }
+                
+                int ignoredItemCount = 0;
+                var subContainableItems = AllSubContainableItems;
+                float targetSlotCapacity = GetMaxStackSize(targetSlot);
+                float capacity = targetSlotCapacity * MainContainerCapacity;
+                if (subContainableItems != null)
+                {
+                    bool useMainContainerCapacity = true;
+                    foreach (Item it in Inventory.AllItems)
+                    {
+                        // Ignore all items in the sub containers.
+                        foreach (RelatedItem ri in subContainableItems)
+                        {
+                            if (ri.MatchesItem(containedItem))
+                            {
+                                // The target item is in a subcontainer -> inverse the logic.
+                                useMainContainerCapacity = false;
+                                break;
+                            }
+                            if (ri.MatchesItem(it))
+                            {
+                                ignoredItemCount++;
+                            }
+                        }
+                        if (!useMainContainerCapacity) { break; }
+                    }
+                    if (!useMainContainerCapacity)
+                    {
+                        // Ignore all items in the main container.
+                        ignoredItemCount = Inventory.AllItems.Count(it => subContainableItems.Any(ri => !ri.MatchesItem(it)));
+                        capacity = targetSlotCapacity * (Capacity - MainContainerCapacity);
+                    }
+                }
+                int itemCount = Inventory.AllItems.Count() - ignoredItemCount;
+                return Math.Min(itemCount / Math.Max(capacity, 1), 1);                
+            }
+            else
+            {
+                if (containedItem != null && (Inventory.Capacity == 1 || HasSubContainers))
+                {
+                    int maxStackSize = Math.Min(containedItem.Prefab.MaxStackSize, GetMaxStackSize(targetSlot));
+                    if (maxStackSize > 1 || containedItem.Prefab.HideConditionBar)
+                    {
+                        return containedItems.Count() / (float)maxStackSize;
+                    }
+                }
+                return Inventory.Capacity == 1 || ContainedStateIndicatorSlot > -1 ?
+                    (containedItem == null ? 0.0f : containedItem.Condition / containedItem.MaxCondition) :
+                    Inventory.EmptySlotCount / (float)Inventory.Capacity;
+            }                  
         }
 
         public void Draw(SpriteBatch spriteBatch, bool editing = false, float itemDepth = -1)
@@ -278,9 +358,9 @@ namespace Barotrauma.Items.Components
                 transformedItemPos += new Vector2(item.Rect.X, item.Rect.Y);
                 if (item.Submarine != null) { transformedItemPos += item.Submarine.DrawPosition; }
 
-                if (Math.Abs(item.Rotation) > 0.01f)
+                if (Math.Abs(item.RotationRad) > 0.01f)
                 {
-                    Matrix transform = Matrix.CreateRotationZ(MathHelper.ToRadians(-item.Rotation));
+                    Matrix transform = Matrix.CreateRotationZ(-item.RotationRad);
                     transformedItemPos = Vector2.Transform(transformedItemPos - item.DrawPosition, transform) + item.DrawPosition;
                     transformedItemInterval = Vector2.Transform(transformedItemInterval, transform);
                     transformedItemIntervalHorizontal = Vector2.Transform(transformedItemIntervalHorizontal, transform);
@@ -305,51 +385,97 @@ namespace Barotrauma.Items.Components
 
             Vector2 currentItemPos = transformedItemPos;
 
-            SpriteEffects spriteEffects = SpriteEffects.None;
-            if ((item.body != null && item.body.Dir == -1) || item.FlippedX) 
-            { 
-                spriteEffects |= MathUtils.NearlyEqual(ItemRotation % 180, 90.0f) ? SpriteEffects.FlipVertically : SpriteEffects.FlipHorizontally;
-            }
-            if (item.FlippedY)
-            {
-                spriteEffects |= MathUtils.NearlyEqual(ItemRotation % 180, 90.0f) ? SpriteEffects.FlipHorizontally : SpriteEffects.FlipVertically;
-            }
-
             bool isWiringMode = SubEditorScreen.TransparentWiringMode && SubEditorScreen.IsWiringMode();
 
             int i = 0;
-            foreach (Item containedItem in Inventory.AllItems)
+            foreach (DrawableContainedItem contained in drawableContainedItems)
             {
+                Vector2 itemPos = currentItemPos;
+
+                if (contained.Item?.Sprite == null) { continue; }
+
+                if (contained.Hide) { continue; }
+                if (contained.ItemPos.HasValue)
+                {
+                    Vector2 pos = contained.ItemPos.Value;
+                    if (item.body != null)
+                    {
+                        Matrix transform = Matrix.CreateRotationZ(item.body.DrawRotation);
+                        pos.X *= item.body.Dir;
+                        itemPos = Vector2.Transform(pos, transform) + item.body.DrawPosition;
+                    }
+                    else
+                    {
+                        itemPos = pos;
+                        // This code is aped based on above. Not tested.
+                        if (item.FlippedX)
+                        {
+                            itemPos.X = -itemPos.X;
+                            itemPos.X += item.Rect.Width;
+                        }
+                        if (item.FlippedY)
+                        {
+                            itemPos.Y = -itemPos.Y;
+                            itemPos.Y -= item.Rect.Height;
+                        }
+                        itemPos += new Vector2(item.Rect.X, item.Rect.Y);
+                        if (item.Submarine != null)
+                        {
+                            itemPos += item.Submarine.DrawPosition;
+                        }
+                        if (Math.Abs(item.RotationRad) > 0.01f)
+                        {
+                            Matrix transform = Matrix.CreateRotationZ(-item.RotationRad);
+                            itemPos = Vector2.Transform(itemPos - item.DrawPosition, transform) + item.DrawPosition;
+                        }
+                    }
+                }
+                
                 if (AutoInteractWithContained)
                 {
-                    containedItem.IsHighlighted = item.IsHighlighted;
+                    contained.Item.IsHighlighted = item.IsHighlighted;
                     item.IsHighlighted = false;
                 }
 
-                Vector2 origin = containedItem.Sprite.Origin;
-                if (item.FlippedX) { origin.X = containedItem.Sprite.SourceRect.Width - origin.X; }
-                if (item.FlippedY) { origin.Y = containedItem.Sprite.SourceRect.Height - origin.Y; }
+                Vector2 origin = contained.Item.Sprite.Origin;
+                if (item.FlippedX) { origin.X = contained.Item.Sprite.SourceRect.Width - origin.X; }
+                if (item.FlippedY) { origin.Y = contained.Item.Sprite.SourceRect.Height - origin.Y; }
 
-                float containedSpriteDepth = ContainedSpriteDepth < 0.0f ? containedItem.Sprite.Depth : ContainedSpriteDepth;
+                float containedSpriteDepth = ContainedSpriteDepth < 0.0f ? contained.Item.Sprite.Depth : ContainedSpriteDepth;
                 if (i < containedSpriteDepths.Length)
                 {
                     containedSpriteDepth = containedSpriteDepths[i];
                 }
                 containedSpriteDepth = itemDepth + (containedSpriteDepth - (item.Sprite?.Depth ?? item.SpriteDepth)) / 10000.0f;
 
-                containedItem.Sprite.Draw(
+                SpriteEffects spriteEffects = SpriteEffects.None;
+                float spriteRotation = ItemRotation;
+                if (contained.Rotation != 0)
+                {
+                    spriteRotation = contained.Rotation;
+                }
+                if ((item.body != null && item.body.Dir == -1) || item.FlippedX)
+                {
+                    spriteEffects |= MathUtils.NearlyEqual(spriteRotation % 180, 90.0f) ? SpriteEffects.FlipVertically : SpriteEffects.FlipHorizontally;
+                }
+                if (item.FlippedY)
+                {
+                    spriteEffects |= MathUtils.NearlyEqual(spriteRotation % 180, 90.0f) ? SpriteEffects.FlipHorizontally : SpriteEffects.FlipVertically;
+                }
+
+                contained.Item.Sprite.Draw(
                     spriteBatch,
-                    new Vector2(currentItemPos.X, -currentItemPos.Y),
-                    isWiringMode ? containedItem.GetSpriteColor() * 0.15f : containedItem.GetSpriteColor(),
+                    new Vector2(itemPos.X, -itemPos.Y),
+                    isWiringMode ? contained.Item.GetSpriteColor(withHighlight: true) * 0.15f : contained.Item.GetSpriteColor(withHighlight: true),
                     origin,
-                    -(containedItem.body == null ? 0.0f : containedItem.body.DrawRotation ),
-                    containedItem.Scale,
+                    -(contained.Item.body == null ? 0.0f : contained.Item.body.DrawRotation),
+                    contained.Item.Scale,
                     spriteEffects,
                     depth: containedSpriteDepth);
 
-                foreach (ItemContainer ic in containedItem.GetComponents<ItemContainer>())
+                foreach (ItemContainer ic in contained.Item.GetComponents<ItemContainer>())
                 {
-                    if (ic.hideItems) continue;
+                    if (ic.hideItems) { continue; }
                     ic.DrawContainedItems(spriteBatch, containedSpriteDepth);
                 }
 
@@ -379,10 +505,15 @@ namespace Barotrauma.Items.Components
                 guiCustomComponent.RectTransform.Parent = Inventory.RectTransform;
             }
 
+            if (item.ParentInventory?.Owner == character && character.SelectedItem == item)
+            {
+                character.SelectedItem = null;
+            }
+
             //if the item is in the character's inventory, no need to update the item's inventory 
-            //because the player can see it by hovering the cursor over the item
-            guiCustomComponent.Visible = item.ParentInventory?.Owner != character && DrawInventory;
-            if (!guiCustomComponent.Visible) { return; }
+            //because the player can see it by hovering the cursor over the item        
+            guiCustomComponent.Visible = DrawInventory && item.ParentInventory?.Owner != character;
+            if (!guiCustomComponent.Visible) { return; }           
 
             Inventory.Update(deltaTime, cam);
         }

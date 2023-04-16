@@ -12,8 +12,7 @@ namespace Barotrauma
         Ragdoll, Health, Grab,
         SelectNextCharacter,
         SelectPreviousCharacter,
-        Voice,
-        LocalVoice,
+        Voice, RadioVoice, LocalVoice,
         Deselect,
         Shoot,
         Command,
@@ -21,6 +20,9 @@ namespace Barotrauma
         TakeOneFromInventorySlot,
         TakeHalfFromInventorySlot,
         NextFireMode,
-        PreviousFireMode
+        PreviousFireMode,
+        ActiveChat,
+        ToggleChatMode,
+        ChatBox
     }
 }

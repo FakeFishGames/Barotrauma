@@ -1,17 +1,21 @@
-﻿namespace Barotrauma
+﻿using Microsoft.Xna.Framework;
+
+namespace Barotrauma
 {
     abstract partial class AIObjective
     {
-        public static Sprite GetSprite(string identifier, string option, Entity targetEntity)
+        public static Color ObjectiveIconColor => Color.LightGray;
+
+        public static Sprite GetSprite(Identifier identifier, Identifier option, Entity targetEntity)
         {
-            if (string.IsNullOrEmpty(identifier))
+            if (identifier == Identifier.Empty)
             {
                 return null;
             }
-            identifier = identifier.RemoveWhitespace();
-            if (Order.Prefabs.TryGetValue(identifier, out Order orderPrefab))
+            if (OrderPrefab.Prefabs.ContainsKey(identifier))
             {
-                if (!string.IsNullOrEmpty(option) && orderPrefab.OptionSprites.TryGetValue(option, out var optionSprite))
+                OrderPrefab orderPrefab = OrderPrefab.Prefabs[identifier];
+                if (option != Identifier.Empty && orderPrefab.OptionSprites.TryGetValue(option, out var optionSprite))
                 {
                     return optionSprite;
                 }
@@ -21,7 +25,7 @@
                 }
                 return orderPrefab.SymbolSprite;
             }
-            return GUI.Style.GetComponentStyle($"{identifier}objectiveicon")?.GetDefaultSprite();
+            return GUIStyle.GetComponentStyle($"{identifier}objectiveicon")?.GetDefaultSprite();
         }
 
         public Sprite GetSprite()

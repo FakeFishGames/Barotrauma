@@ -9,7 +9,7 @@ namespace Barotrauma.Networking
     static class NetIdUtils
     {
         /// <summary>
-        /// Is newID more recent than oldID
+        /// Is newID more recent than oldID, i.e. newId > oldId accounting for ushort rollover
         /// </summary>
         public static bool IdMoreRecent(ushort newID, ushort oldID)
         {
@@ -21,6 +21,25 @@ namespace Barotrauma.Networking
                    ||
                 (id2 > id1) && (id2 - id1 > ushort.MaxValue / 2);
         }
+
+        /// <summary>
+        /// newId >= oldId accounting for ushort rollover (newer or equals)
+        /// </summary>
+        public static bool IdMoreRecentOrMatches(ushort newId, ushort oldId)
+            => !IdMoreRecent(oldId, newId);
+
+        /// <summary>
+        /// Returns some ID that is older than the input ID. There are no guarantees
+        /// regarding its relation to values other than the input.
+        /// </summary>
+        public static ushort GetIdOlderThan(ushort id)
+#if DEBUG
+            // Debug implementation has some RNG to discourage bad assumptions about the return value
+            => unchecked((ushort)(id - 1 - Rand.Int(500, sync: Rand.RandSync.Unsynced)));
+#else
+            // Release implementation favors performance
+            => unchecked((ushort)(id - 1));
+#endif
 
         public static ushort Difference(ushort id1, ushort id2)
         {

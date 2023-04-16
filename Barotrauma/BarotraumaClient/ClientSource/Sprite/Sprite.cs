@@ -10,11 +10,19 @@ namespace Barotrauma
 {
     public partial class Sprite
     {
+        private class TextureRefCounter
+        {
+            public Texture2D Texture;
+            public int RefCount;
+        }
+
+        private readonly static Dictionary<Identifier, TextureRefCounter> textureRefCounts = new Dictionary<Identifier, TextureRefCounter>();
+        
         private bool cannotBeLoaded;
 
         protected volatile bool loadingAsync = false;
-
-        protected Texture2D texture;
+        
+        protected Texture2D texture { get; private set; }
         public Texture2D Texture
         {
             get
@@ -24,15 +32,15 @@ namespace Barotrauma
             }
         }
 
+        private string disposeStackTrace;
+        
         public bool Loaded
         {
             get { return texture != null && !cannotBeLoaded; }
         }
 
-        public Sprite(Sprite other) : this(other.texture, other.sourceRect, other.offset, other.rotation)
+        public Sprite(Sprite other) : this(other.texture, other.sourceRect, other.offset, other.rotation, other.FilePath.Value)
         {
-            FilePath = other.FilePath;
-            FullPath = other.FullPath;
             Compress = other.Compress;
             size = other.size;
             effects = other.effects;
@@ -47,18 +55,24 @@ namespace Barotrauma
             origin = Vector2.Zero;
             effects = SpriteEffects.None;
             rotation = newRotation;
-            FilePath = path;
+            FilePath = ContentPath.FromRaw(path);
             AddToList(this);
+            if (!string.IsNullOrEmpty(path))
+            {
+                Identifier fullPath = Path.GetFullPath(path).CleanUpPathCrossPlatform(correctFilenameCase: false).ToIdentifier();
+                lock (list)
+                {
+                    if (!textureRefCounts.TryAdd(fullPath, new TextureRefCounter { RefCount = 1, Texture = texture }))
+                    {
+                        textureRefCounts[fullPath].RefCount++;
+                    }
+                }
+            }
         }
 
         partial void LoadTexture(ref Vector4 sourceVector, ref bool shouldReturn)
         {
-            texture = LoadTexture(this.FilePath, out Sprite reusedSprite, Compress);
-            if (reusedSprite != null)
-            {
-                FilePath = string.Intern(reusedSprite.FilePath);
-                FullPath = string.Intern(reusedSprite.FullPath);
-            }
+            texture = LoadTexture(FilePath.Value, Compress);
 
             if (texture == null)
             {
@@ -84,7 +98,7 @@ namespace Barotrauma
 
             Vector4 sourceVector = Vector4.Zero;
             bool temp2 = false;
-            int maxLoadRetries = 3;
+            int maxLoadRetries = File.Exists(FilePath) ? 3 : 0;
             for (int i = 0; i <= maxLoadRetries; i++)
             {
                 try
@@ -113,15 +127,22 @@ namespace Barotrauma
             }
         }
 
-        public void ReloadTexture(bool updateAllSprites = false) => ReloadTexture(updateAllSprites ? LoadedSprites.Where(s => s.texture == texture).ToList() : new List<Sprite>() { this });
-
-        public void ReloadTexture(IEnumerable<Sprite> spritesToUpdate)
+        public void ReloadTexture()
         {
+            var oldTexture = texture;
             texture.Dispose();
-            texture = TextureLoader.FromFile(FilePath, Compress);
-            foreach (Sprite sprite in spritesToUpdate)
+            texture = TextureLoader.FromFile(FilePath.Value, Compress);
+            Identifier pathKey = FullPath.ToIdentifier();
+            if (textureRefCounts.ContainsKey(pathKey))
             {
-                sprite.texture = texture;
+                textureRefCounts[pathKey].Texture = texture;
+            }
+            foreach (Sprite sprite in LoadedSprites)
+            {
+                if (sprite.texture == oldTexture)
+                {
+                    sprite.texture = texture;
+                }
             }
         }
 
@@ -130,14 +151,8 @@ namespace Barotrauma
             sourceRect = new Rectangle(0, 0, texture.Width, texture.Height);
         }
 
-        public static Texture2D LoadTexture(string file)
+        public static Texture2D LoadTexture(string file, bool compress = true)
         {
-            return LoadTexture(file, out _);
-        }
-
-        public static Texture2D LoadTexture(string file, out Sprite reusedSprite, bool compress = true)
-        {
-            reusedSprite = null;
             if (string.IsNullOrWhiteSpace(file))
             {
                 Texture2D t = null;
@@ -147,13 +162,13 @@ namespace Barotrauma
                 });
                 return t;
             }
-            string fullPath = Path.GetFullPath(file);
-            foreach (Sprite s in LoadedSprites)
+            Identifier fullPath = Path.GetFullPath(file).CleanUpPathCrossPlatform(correctFilenameCase: false).ToIdentifier();
+            lock (list)
             {
-                if (s.FullPath == fullPath && s.texture != null && !s.texture.IsDisposed) 
+                if (textureRefCounts.ContainsKey(fullPath))
                 {
-                    reusedSprite = s;
-                    return s.texture; 
+                    textureRefCounts[fullPath].RefCount++;
+                    return textureRefCounts[fullPath].Texture;
                 }
             }
 
@@ -165,11 +180,24 @@ namespace Barotrauma
                     DebugConsole.ThrowError("Texture file \"" + file + "\" has incorrect case!");
 #endif
                 }
-                return TextureLoader.FromFile(file, compress);
+
+                Texture2D newTexture = TextureLoader.FromFile(file, compress);
+                lock (list)
+                {
+                    if (!textureRefCounts.TryAdd(fullPath,
+                            new TextureRefCounter { RefCount = 1, Texture = newTexture }))
+                    {
+                        CrossThread.RequestExecutionOnMainThread(() => newTexture.Dispose());
+                        textureRefCounts[fullPath].RefCount++;
+                        return textureRefCounts[fullPath].Texture;
+                    }
+                }
+                return newTexture;
             }
             else
             {
-                DebugConsole.ThrowError($"Sprite \"{file}\" not found! {Environment.StackTrace.CleanupStackTrace()}");
+                DebugConsole.ThrowError($"Sprite \"{file}\" not found!");
+                DebugConsole.Log(Environment.StackTrace.CleanupStackTrace());
             }
 
             return null;
@@ -232,12 +260,18 @@ namespace Barotrauma
             if (flipHorizontal)
             {
                 float diff = targetSize.X % (sourceRect.Width * scale.X);
-                flippedDrawOffset.X = (int)((sourceRect.Width * scale.X - diff) / scale.X);
+                flippedDrawOffset.X = (sourceRect.Width * scale.X - diff) / scale.X;
+                flippedDrawOffset.X =
+                    MathUtils.NearlyEqual(flippedDrawOffset.X, MathF.Round(flippedDrawOffset.X)) ?
+                    MathF.Round(flippedDrawOffset.X) : flippedDrawOffset.X;
             }
             if (flipVertical)
             {
                 float diff = targetSize.Y % (sourceRect.Height * scale.Y);
-                flippedDrawOffset.Y = (int)((sourceRect.Height * scale.Y - diff) / scale.Y);
+                flippedDrawOffset.Y = (sourceRect.Height * scale.Y - diff) / scale.Y;
+                flippedDrawOffset.Y =
+                    MathUtils.NearlyEqual(flippedDrawOffset.Y, MathF.Round(flippedDrawOffset.Y)) ?
+                    MathF.Round(flippedDrawOffset.Y) : flippedDrawOffset.Y;
             }
             drawOffset += flippedDrawOffset;
 
@@ -367,21 +401,33 @@ namespace Barotrauma
 
         partial void DisposeTexture()
         {
-            //check if another sprite is using the same texture
-            if (!string.IsNullOrEmpty(FilePath)) //file can be empty if the sprite is created directly from a Texture2D instance
-            {
-                lock (list)
-                {
-                    foreach (Sprite s in LoadedSprites)
-                    {
-                        if (s.FullPath == FullPath) { return; }
-                    }
-                }
-            }
-            
-            //if not, free the texture
+            disposeStackTrace = Environment.StackTrace;
             if (texture != null)
             {
+                //check if another sprite is using the same texture
+                lock (list)
+                {
+                    if (!FilePath.IsNullOrEmpty()) //file can be empty if the sprite is created directly from a Texture2D instance
+                    {
+                        Identifier pathKey = FullPath.ToIdentifier();
+                        if (!pathKey.IsEmpty && textureRefCounts.ContainsKey(pathKey))
+                        {
+                            textureRefCounts[pathKey].RefCount--;
+                            if (textureRefCounts[pathKey].RefCount <= 0)
+                            {
+                                textureRefCounts.Remove(pathKey);
+                            }
+                            else
+                            {
+                                texture = null;
+                                FilePath = ContentPath.Empty;
+                                return;
+                            }
+                        }
+                    }
+                }
+
+                //if not, free the texture
                 CrossThread.RequestExecutionOnMainThread(() =>
                 {
                     texture.Dispose();

@@ -1,11 +1,9 @@
 ﻿#region Using Statements
 
 using System;
-using System.Collections.Generic;
 using Barotrauma.IO;
 using System.Linq;
 using System.Text;
-using GameAnalyticsSDK.Net;
 using Barotrauma.Steam;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
@@ -106,9 +104,7 @@ namespace Barotrauma
             try
             {
                 string exePath = System.Reflection.Assembly.GetEntryAssembly().Location;
-                var md5 = System.Security.Cryptography.MD5.Create();
-                byte[] exeBytes = File.ReadAllBytes(exePath);
-                exeHash = new Md5Hash(exeBytes);
+                exeHash = Md5Hash.CalculateForFile(exePath, Md5Hash.StringHashOptions.BytePerfect);
             }
             catch
             {
@@ -116,10 +112,23 @@ namespace Barotrauma
             }
 
             StringBuilder sb = new StringBuilder();
+
             sb.AppendLine("Barotrauma Client crash report (generated on " + DateTime.Now + ")");
-            sb.AppendLine("\n");
+            sb.AppendLine();
             sb.AppendLine("Barotrauma seems to have crashed. Sorry for the inconvenience! ");
-            sb.AppendLine("\n");
+            sb.AppendLine();
+
+            string dxgiErrorHelpText =
+#if WINDOWS
+                GetDXGIErrorHelpText(game, exception);
+#else
+                string.Empty;
+#endif
+            if (!string.IsNullOrEmpty(dxgiErrorHelpText))
+            {
+                sb.AppendLine(dxgiErrorHelpText);
+                sb.AppendLine();
+            }
 
             try
             {
@@ -127,21 +136,19 @@ namespace Barotrauma
                 {
                     //exception occurred in loading screen:
                     //assume content packages are the culprit and reset them
-                    XDocument doc = XMLExtensions.TryLoadXml(GameSettings.PlayerSavePath);
-                    XDocument baseDoc = XMLExtensions.TryLoadXml(GameSettings.SavePath);
-                    if (doc != null && baseDoc != null)
+                    XDocument doc = XMLExtensions.TryLoadXml(GameSettings.PlayerConfigPath);
+                    if (doc?.Root != null)
                     {
                         XElement newElement = new XElement(doc.Root.Name);
                         newElement.Add(doc.Root.Attributes());
-                        string[] contentPackageTags = { "contentpackage", "contentpackages" };
-                        bool elementNameMatches(XElement element)
-                            => contentPackageTags.Any(t => element.Name.LocalName.Equals(t, StringComparison.InvariantCultureIgnoreCase));
-                        newElement.Add(doc.Root.Elements().Where(e => !elementNameMatches(e)));
-                        newElement.Add(baseDoc.Root.Elements().Where(e => elementNameMatches(e)));
+                        Identifier[] contentPackageTags = { "contentpackage".ToIdentifier(), "contentpackages".ToIdentifier() };
+                        newElement.Add(doc.Root.Elements().Where(e => !contentPackageTags.Contains(e.NameAsIdentifier())));
+                        newElement.Add(new XElement("core",
+                            new XAttribute("path", ContentPackageManager.VanillaFileList)));
                         XDocument newDoc = new XDocument(newElement);
-                        newDoc.Save(GameSettings.PlayerSavePath);
+                        newDoc.Save(GameSettings.PlayerConfigPath);
                         sb.AppendLine("To prevent further startup errors, installed mods will be disabled the next time you launch the game.");
-                        sb.AppendLine("\n");
+                        sb.AppendLine();
                     }
                 }
             }
@@ -150,22 +157,19 @@ namespace Barotrauma
                 //welp i guess we couldn't reset the config!
             }
 
-            if (exeHash?.Hash != null)
+            if (exeHash?.StringRepresentation != null)
             {
-                sb.AppendLine(exeHash.Hash);
+                sb.AppendLine(exeHash.StringRepresentation);
             }
-            sb.AppendLine("\n");
+            sb.AppendLine();
             sb.AppendLine("Game version " + GameMain.Version +
             " (" + AssemblyInfo.BuildString + ", branch " + AssemblyInfo.GitBranch + ", revision " + AssemblyInfo.GitRevision + ")");
-            if (GameMain.Config != null)
+            sb.AppendLine($"Graphics mode: {GameSettings.CurrentConfig.Graphics.Width}x{GameSettings.CurrentConfig.Graphics.Height} ({GameSettings.CurrentConfig.Graphics.DisplayMode})");
+            sb.AppendLine("VSync " + (GameSettings.CurrentConfig.Graphics.VSync ? "ON" : "OFF"));
+            sb.AppendLine("Language: " + GameSettings.CurrentConfig.Language);
+            if (ContentPackageManager.EnabledPackages.All != null)
             {
-                sb.AppendLine("Graphics mode: " + GameMain.Config.GraphicsWidth + "x" + GameMain.Config.GraphicsHeight + " (" + GameMain.Config.WindowMode.ToString() + ")");
-                sb.AppendLine("VSync " + (GameMain.Config.VSyncEnabled ? "ON" : "OFF"));
-                sb.AppendLine("Language: " + (GameMain.Config.Language ?? "none"));
-                if (GameMain.Config.AllEnabledPackages != null)
-                {
-                    sb.AppendLine("Selected content packages: " + (!GameMain.Config.AllEnabledPackages.Any() ? "None" : string.Join(", ", GameMain.Config.AllEnabledPackages.Select(c => c.Name))));
-                }
+                sb.AppendLine("Selected content packages: " + (!ContentPackageManager.EnabledPackages.All.Any() ? "None" : string.Join(", ", ContentPackageManager.EnabledPackages.All.Select(c => c.Name))));
             }
             sb.AppendLine("Level seed: " + ((Level.Loaded == null) ? "no level loaded" : Level.Loaded.Seed));
             sb.AppendLine("Loaded submarine: " + ((Submarine.MainSub == null) ? "None" : Submarine.MainSub.Info.Name + " (" + Submarine.MainSub.Info.MD5Hash + ")"));
@@ -180,7 +184,7 @@ namespace Barotrauma
                 sb.AppendLine("Client (" + (GameMain.Client.GameStarted ? "Round had started)" : "Round hadn't been started)"));
             }
 
-            sb.AppendLine("\n");
+            sb.AppendLine();
             sb.AppendLine("System info:");
             sb.AppendLine("    Operating system: " + System.Environment.OSVersion + (System.Environment.Is64BitOperatingSystem ? " 64 bit" : " x86"));
 
@@ -210,13 +214,14 @@ namespace Barotrauma
                 }
             }
 
-            sb.AppendLine("\n");
-            sb.AppendLine("Exception: " + exception.Message + " (" + exception.GetType().ToString() + ")");
+            sb.AppendLine();
+            sb.AppendLine($"Exception: {exception.Message} ({exception.GetType()})");
 #if WINDOWS
             if (exception is SharpDXException sharpDxException && ((uint)sharpDxException.HResult) == 0x887A0005)
             {
                 var dxDevice = (SharpDX.Direct3D11.Device)game.GraphicsDevice.Handle;
-                sb.AppendLine("Device removed reason: " + dxDevice.DeviceRemovedReason.ToString());
+                var descriptor = ResultDescriptor.Find(dxDevice.DeviceRemovedReason)?.ApiCode ?? "UNKNOWN";
+                sb.AppendLine($"Device removed reason: {descriptor} ({dxDevice.DeviceRemovedReason})");
             }
 #endif
             if (exception.TargetSite != null)
@@ -228,7 +233,7 @@ namespace Barotrauma
             {
                 sb.AppendLine("Stack trace: ");
                 sb.AppendLine(exception.StackTrace.CleanupStackTrace());
-                sb.AppendLine("\n");
+                sb.AppendLine();
             }
 
             if (exception.InnerException != null)
@@ -245,6 +250,18 @@ namespace Barotrauma
                 }
             }
 
+            if (GameAnalyticsManager.SendUserStatistics)
+            {
+                //send crash report before appending debug console messages (which may contain non-anonymous information)
+                string crashHeader = exception.Message;
+                if (exception.TargetSite != null)
+                {
+                    crashHeader += " " + exception.TargetSite.ToString();
+                }
+                GameAnalyticsManager.AddErrorEvent(GameAnalyticsManager.ErrorSeverity.Critical, crashHeader + "\n\n" + sb.ToString());
+                GameAnalyticsManager.ShutDown();
+            }
+
             sb.AppendLine("Last debug messages:");
             for (int i = DebugConsole.Messages.Count - 1; i >= 0; i--)
             {
@@ -255,20 +272,44 @@ namespace Barotrauma
 
             File.WriteAllText(filePath, crashReport);
 
-            if (GameSettings.SaveDebugConsoleLogs) DebugConsole.SaveLogs();
+            if (GameSettings.CurrentConfig.SaveDebugConsoleLogs
+                || GameSettings.CurrentConfig.VerboseLogging) { DebugConsole.SaveLogs(); }
 
-            if (GameSettings.SendUserStatistics)
+            string msg = string.Empty;
+            if (GameAnalyticsManager.SendUserStatistics)
             {
-                CrashMessageBox("A crash report (\"" + filePath + "\") was saved in the root folder of the game and sent to the developers.", filePath);
-                GameAnalytics.AddErrorEvent(EGAErrorSeverity.Critical, crashReport);
-                GameAnalytics.OnQuit();
+                msg = "A crash report (\"" + filePath + "\") was saved in the root folder of the game and sent to the developers.";
             }
             else
             {
-                CrashMessageBox("A crash report (\"" + filePath + "\") was saved in the root folder of the game. The error was not sent to the developers because user statistics have been disabled, but" +
-                    " if you'd like to help fix this bug, you may post it on Barotrauma's GitHub issue tracker: https://github.com/Regalis11/Barotrauma/issues/", filePath);
+                msg = "A crash report (\"" + filePath + "\") was saved in the root folder of the game. The error was not sent to the developers because user statistics have been disabled, but" +
+                    " if you'd like to help fix this bug, you may post it on Barotrauma's GitHub issue tracker: https://github.com/Regalis11/Barotrauma/issues/";
             }
+            if (string.IsNullOrEmpty(dxgiErrorHelpText))
+            {
+                msg += "\n\n" + dxgiErrorHelpText;
+            }
+            CrashMessageBox(msg, filePath);
         }
+
+#if WINDOWS
+        private static string GetDXGIErrorHelpText(GameMain game, Exception exception)
+        {
+            string text = string.Empty;
+            if (exception is SharpDXException sharpDxException && ((uint)sharpDxException.HResult) == 0x887A0005)
+            {
+                var dxDevice = (SharpDX.Direct3D11.Device)game.GraphicsDevice.Handle;
+                var descriptor = ResultDescriptor.Find(dxDevice.DeviceRemovedReason)?.ApiCode ?? "UNKNOWN";
+
+                text += 
+                    $"The crash was caused by the DirectX error {descriptor} ({dxDevice.DeviceRemovedReason}). " +
+                    "This is a common DirectX error that can be related to various different issues, such as outdated drivers, RAM problems or an overclocked or otherwise overstressed GPU. " +
+                    "There are several potential ways to fix the issue: ensuring your graphics drivers and DirectX installation are up-to-date, disabling overclocking and adjusting various GPU-specific settings. " +
+                    $"You may also be able to find potential solutions to the problem by using the error code {descriptor} ({dxDevice.DeviceRemovedReason}) and your GPU manufacturer as search terms.";
+            }
+            return text;
+        }
+#endif
 
         private static IntPtr nvApi64Dll = IntPtr.Zero;
         private static void EnableNvOptimus()
@@ -285,11 +326,11 @@ namespace Barotrauma
 
         private static void FreeNvOptimus()
         {
-            #warning TODO: determine if we can do this safely
+#warning TODO: determine if we can do this safely
             //NativeLibrary.Free(nvApi64Dll);
         }
         
     }
 #endif
-    
+
         }

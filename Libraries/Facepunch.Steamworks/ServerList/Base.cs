@@ -23,17 +23,17 @@ namespace Steamworks.ServerList
 		/// <summary>
 		/// When a new server is added, this function will get called
 		/// </summary>
-		public event Action OnChanges;
+		public Action OnChanges;
 
         /// <summary>
         /// Called for every responsive server
         /// </summary>
-        public event Action<ServerInfo> OnResponsiveServer;
+        public Action<ServerInfo> OnResponsiveServer;
 
         /// <summary>
         /// Called for every unresponsive server
         /// </summary>
-        public event Action<ServerInfo> OnUnresponsiveServer;
+        public Action<ServerInfo> OnUnresponsiveServer;
 
         /// <summary>
         /// A list of servers that responded. If you're only interested in servers that responded since you
@@ -65,14 +65,14 @@ namespace Steamworks.ServerList
 
 			var thisRequest = request;
 
-			while ( IsRefreshing )
+			while ( true )
 			{
 				await Task.Delay( 33 );
 
 				//
 				// The request has been cancelled or changed in some way
 				//
-				if ( request.Value == IntPtr.Zero || thisRequest.Value != request.Value )
+				if ( request.Value == IntPtr.Zero || thisRequest.Value != request.Value || !IsRefreshing )
 					return false;
 
 				if ( !SteamClient.IsValid )

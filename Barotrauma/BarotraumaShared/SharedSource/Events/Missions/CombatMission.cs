@@ -1,4 +1,3 @@
-using Barotrauma.Extensions;
 using System.Collections.Generic;
 
 namespace Barotrauma
@@ -6,11 +5,9 @@ namespace Barotrauma
     partial class CombatMission : Mission
     {
         private Submarine[] subs;
-        // TODO: not used
-        private List<Character>[] crews;
 
-        private readonly string[] descriptions;
-        private static string[] teamNames = { "Team A", "Team B" };
+        private readonly LocalizedString[] descriptions;
+        private static LocalizedString[] teamNames = { "Team A", "Team B" };
 
         public override bool AllowRespawn
         {
@@ -26,11 +23,11 @@ namespace Barotrauma
             }
         }
 
-        public override string SuccessMessage
+        public override LocalizedString SuccessMessage
         {
             get 
             {
-                if (Winner == CharacterTeamType.None || string.IsNullOrEmpty(base.SuccessMessage)) { return ""; }
+                if (Winner == CharacterTeamType.None || base.SuccessMessage.IsNullOrEmpty()) { return ""; }
 
                 //disable success message for now if it hasn't been translated
                 if (!TextManager.ContainsTag("MissionSuccess." + Prefab.TextIdentifier)) { return ""; }
@@ -48,11 +45,11 @@ namespace Barotrauma
         public CombatMission(MissionPrefab prefab, Location[] locations, Submarine sub)
             : base(prefab, locations, sub)
         {
-            descriptions = new string[]
+            descriptions = new LocalizedString[]
             {
-                TextManager.Get("MissionDescriptionNeutral." + prefab.TextIdentifier, true) ?? prefab.ConfigElement.GetAttributeString("descriptionneutral", ""),
-                TextManager.Get("MissionDescription1." + prefab.TextIdentifier, true) ?? prefab.ConfigElement.GetAttributeString("description1", ""),
-                TextManager.Get("MissionDescription2." + prefab.TextIdentifier, true) ?? prefab.ConfigElement.GetAttributeString("description2", "")
+                TextManager.Get("MissionDescriptionNeutral." + prefab.TextIdentifier).Fallback(prefab.ConfigElement.GetAttributeString("descriptionneutral", "")),
+                TextManager.Get("MissionDescription1." + prefab.TextIdentifier).Fallback(prefab.ConfigElement.GetAttributeString("description1", "")),
+                TextManager.Get("MissionDescription2." + prefab.TextIdentifier).Fallback(prefab.ConfigElement.GetAttributeString("description2", ""))
             };
 
             for (int i = 0; i < descriptions.Length; i++)
@@ -63,14 +60,14 @@ namespace Barotrauma
                 }
             }
 
-            teamNames = new string[]
+            teamNames = new LocalizedString[]
             {
-                TextManager.Get("MissionTeam1." + prefab.TextIdentifier, true) ?? prefab.ConfigElement.GetAttributeString("teamname1", "Team A"),
-                TextManager.Get("MissionTeam2." + prefab.TextIdentifier, true) ?? prefab.ConfigElement.GetAttributeString("teamname2", "Team B")
+                TextManager.Get("MissionTeam1." + prefab.TextIdentifier).Fallback(prefab.ConfigElement.GetAttributeString("teamname1", "Team A")),
+                TextManager.Get("MissionTeam2." + prefab.TextIdentifier).Fallback(prefab.ConfigElement.GetAttributeString("teamname2", "Team B"))
             };
         }
 
-        public static string GetTeamName(CharacterTeamType teamID)
+        public static LocalizedString GetTeamName(CharacterTeamType teamID)
         {
             if (teamID == CharacterTeamType.Team1)
             {
@@ -103,26 +100,22 @@ namespace Barotrauma
 
             subs[0].NeutralizeBallast(); 
             subs[0].TeamID = CharacterTeamType.Team1;
-            subs[0].DockedTo.ForEach(s => s.TeamID = CharacterTeamType.Team1);
+            subs[0].GetConnectedSubs().ForEach(s => s.TeamID = CharacterTeamType.Team1);
 
             subs[1].NeutralizeBallast();
             subs[1].TeamID = CharacterTeamType.Team2;
-            subs[1].DockedTo.ForEach(s => s.TeamID = CharacterTeamType.Team2);
+            subs[1].GetConnectedSubs().ForEach(s => s.TeamID = CharacterTeamType.Team2);
             subs[1].SetPosition(subs[1].FindSpawnPos(Level.Loaded.EndPosition));
             subs[1].FlipX();
-
+#if SERVER
             crews = new List<Character>[] { new List<Character>(), new List<Character>() };
+            roundEndTimer = RoundEndDuration;
+#endif
         }
 
-        public override void End()
+        protected override bool DetermineCompleted()
         {
-            if (GameMain.NetworkMember == null) { return; }
-
-            if (Winner != CharacterTeamType.None)
-            {
-                GiveReward();
-                completed = true;
-            }
+            return Winner != CharacterTeamType.None;
         }
     }
 }

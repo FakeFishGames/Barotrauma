@@ -4,7 +4,6 @@ using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Xml.Linq;
 using Barotrauma.Extensions;
 using Barotrauma.MapCreatures.Behavior;
 
@@ -17,7 +16,8 @@ namespace Barotrauma.Items.Components
             Air, Water, Both, None
         };
 
-        private readonly List<string> fixableEntities;
+        private readonly HashSet<Identifier> fixableEntities;
+        private readonly HashSet<Identifier> nonFixableEntities;
         private Vector2 pickedPosition;
         private float activeTimer;
 
@@ -25,88 +25,91 @@ namespace Barotrauma.Items.Components
 
         private readonly List<Body> ignoredBodies = new List<Body>();
 
-        [Serialize("Both", false, description: "Can the item be used in air, water or both.")]
+        [Serialize("Both", IsPropertySaveable.No, description: "Can the item be used in air, water or both.")]
         public UseEnvironment UsableIn
         {
             get; set;
         }
 
-        [Serialize(0.0f, false, description: "The distance at which the item can repair targets.")]
+        [Serialize(0.0f, IsPropertySaveable.No, description: "The distance at which the item can repair targets.")]
         public float Range { get; set; }
 
-        [Serialize(0.0f, false, description: "Random spread applied to the firing angle when used by a character with sufficient skills to use the tool (in degrees).")]
+        [Serialize(0.0f, IsPropertySaveable.No, description: "Random spread applied to the firing angle when used by a character with sufficient skills to use the tool (in degrees).")]
         public float Spread
         {
             get;
             set;
         }
 
-        [Serialize(0.0f, false, description: "Random spread applied to the firing angle when used by a character with insufficient skills to use the tool (in degrees).")]
+        [Serialize(0.0f, IsPropertySaveable.No, description: "Random spread applied to the firing angle when used by a character with insufficient skills to use the tool (in degrees).")]
         public float UnskilledSpread
         {
             get;
             set;
         }
 
-        [Serialize(0.0f, false, description: "How many units of damage the item removes from structures per second.")]
+        [Serialize(0.0f, IsPropertySaveable.No, description: "How many units of damage the item removes from structures per second.")]
         public float StructureFixAmount
         {
             get; set;
         }
 
-        [Serialize(0.0f, false, description: "How much damage is applied to ballast flora.")]
+        [Serialize(0.0f, IsPropertySaveable.No, description: "How much damage is applied to ballast flora.")]
         public float FireDamage
         {
             get; set;
         }
 
-        [Serialize(0.0f, false, description: "How many units of damage the item removes from destructible level walls per second.")]
+        [Serialize(0.0f, IsPropertySaveable.No, description: "How many units of damage the item removes from destructible level walls per second.")]
         public float LevelWallFixAmount
         {
             get; set;
         }
 
-        [Serialize(0.0f, false, description: "How much the item decreases the size of fires per second.")]
+        [Serialize(0.0f, IsPropertySaveable.No, description: "How much the item decreases the size of fires per second.")]
         public float ExtinguishAmount
         {
             get; set;
         }
 
-        [Serialize(0.0f, false, description: "How much water the item provides to planters per second.")]
+        [Serialize(0.0f, IsPropertySaveable.No, description: "How much water the item provides to planters per second.")]
         public float WaterAmount { get; set; }
 
-        [Serialize("0.0,0.0", false, description: "The position of the barrel as an offset from the item's center (in pixels).")]
+        [Serialize("0.0,0.0", IsPropertySaveable.No, description: "The position of the barrel as an offset from the item's center (in pixels).")]
         public Vector2 BarrelPos { get; set; }
 
-        [Serialize(false, false, description: "Can the item repair things through walls.")]
+        [Serialize(false, IsPropertySaveable.No, description: "Can the item repair things through walls.")]
         public bool RepairThroughWalls { get; set; }
 
-        [Serialize(false, false, description: "Can the item repair multiple things at once, or will it only affect the first thing the ray from the barrel hits.")]
+        [Serialize(false, IsPropertySaveable.No, description: "Can the item repair multiple things at once, or will it only affect the first thing the ray from the barrel hits.")]
         public bool RepairMultiple { get; set; }
 
-        [Serialize(false, false, description: "Can the item repair things through holes in walls.")]
+        [Serialize(false, IsPropertySaveable.No, description: "Can the item repair things through holes in walls.")]
         public bool RepairThroughHoles { get; set; }
 
 
-        [Serialize(100.0f, false, description: "How far two walls need to not be considered overlapping and to stop the ray.")]
+        [Serialize(100.0f, IsPropertySaveable.No, description: "How far two walls need to not be considered overlapping and to stop the ray.")]
         public float MaxOverlappingWallDist
         {
             get; set;
         }
 
-        [Serialize(true, false, description: "Can the item hit broken doors.")]
+        [Serialize(true, IsPropertySaveable.No, description: "Can the item hit doors.")]
         public bool HitItems { get; set; }
 
-        [Serialize(false, false, description: "Can the item hit broken doors.")]
+        [Serialize(false, IsPropertySaveable.No, description: "Can the item hit broken doors.")]
         public bool HitBrokenDoors { get; set; }
 
-        [Serialize(0.0f, false, description: "The probability of starting a fire somewhere along the ray fired from the barrel (for example, 0.1 = 10% chance to start a fire during a second of use).")]
+        [Serialize(false, IsPropertySaveable.No, description: "Should the tool ignore characters? Enabled e.g. for fire extinguisher.")]
+        public bool IgnoreCharacters { get; set; }
+
+        [Serialize(0.0f, IsPropertySaveable.No, description: "The probability of starting a fire somewhere along the ray fired from the barrel (for example, 0.1 = 10% chance to start a fire during a second of use).")]
         public float FireProbability { get; set; }
 
-        [Serialize(0.0f, false, description: "Force applied to the entity the ray hits.")]
+        [Serialize(0.0f, IsPropertySaveable.No, description: "Force applied to the entity the ray hits.")]
         public float TargetForce { get; set; }
 
-        [Serialize(0.0f, false, description: "Rotation of the barrel in degrees."), Editable(MinValueFloat = 0, MaxValueFloat = 360, VectorComponentLabels = new string[] { "editable.minvalue", "editable.maxvalue" })]
+        [Serialize(0.0f, IsPropertySaveable.No, description: "Rotation of the barrel in degrees."), Editable(MinValueFloat = 0, MaxValueFloat = 360, VectorComponentLabels = new string[] { "editable.minvalue", "editable.maxvalue" })]
         public float BarrelRotation
         {
             get; set;
@@ -124,30 +127,40 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public RepairTool(Item item, XElement element)
+        public RepairTool(Item item, ContentXElement element)
             : base(item, element)
         {
             this.item = item;
 
-            if (element.Attribute("limbfixamount") != null)
+            if (element.GetAttribute("limbfixamount") != null)
             {
                 DebugConsole.ThrowError("Error in item \"" + item.Name + "\" - RepairTool damage should be configured using a StatusEffect with Afflictions, not the limbfixamount attribute.");
             }
 
-            fixableEntities = new List<string>();
-            foreach (XElement subElement in element.Elements())
+            fixableEntities = new HashSet<Identifier>();
+            nonFixableEntities = new HashSet<Identifier>();
+            foreach (var subElement in element.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
                     case "fixable":
-                        if (subElement.Attribute("name") != null)
+                        if (subElement.GetAttribute("name") != null)
                         {
                             DebugConsole.ThrowError("Error in RepairTool " + item.Name + " - use identifiers instead of names to configure fixable entities.");
-                            fixableEntities.Add(subElement.Attribute("name").Value);
+                            fixableEntities.Add(subElement.GetAttribute("name").Value.ToIdentifier());
                         }
                         else
                         {
-                            fixableEntities.Add(subElement.GetAttributeString("identifier", ""));
+                            foreach (Identifier id in subElement.GetAttributeIdentifierArray("identifier", Array.Empty<Identifier>()))
+                            {
+                                fixableEntities.Add(id);
+                            }
+                        }
+                        break;
+                    case "nonfixable":
+                        foreach (Identifier id in subElement.GetAttributeIdentifierArray("identifier", Array.Empty<Identifier>()))
+                        {
+                            nonFixableEntities.Add(id);
                         }
                         break;
                 }
@@ -157,7 +170,7 @@ namespace Barotrauma.Items.Components
             InitProjSpecific(element);
         }
 
-        partial void InitProjSpecific(XElement element);
+        partial void InitProjSpecific(ContentXElement element);
 
         public override void Update(float deltaTime, Camera cam)
         {
@@ -174,24 +187,23 @@ namespace Barotrauma.Items.Components
             
             float degreeOfSuccess = character == null ? 0.5f : DegreeOfSuccess(character);
 
+            bool failed = false;
             if (Rand.Range(0.0f, 0.5f) > degreeOfSuccess)
             {
                 ApplyStatusEffects(ActionType.OnFailure, deltaTime, character);
-                return false;
+                failed = true;
             }
-
             if (UsableIn == UseEnvironment.None)
             {
                 ApplyStatusEffects(ActionType.OnFailure, deltaTime, character);
-                return false;
+                failed = true;
             }
-
             if (item.InWater)
             {
                 if (UsableIn == UseEnvironment.Air)
                 {
                     ApplyStatusEffects(ActionType.OnFailure, deltaTime, character);
-                    return false;
+                    failed = true;
                 }
             }
             else
@@ -199,8 +211,14 @@ namespace Barotrauma.Items.Components
                 if (UsableIn == UseEnvironment.Water)
                 {
                     ApplyStatusEffects(ActionType.OnFailure, deltaTime, character);
-                    return false;
+                    failed = true;
                 }
+            }
+            if (failed)
+            {
+                // Always apply ActionType.OnUse. If doesn't fail, the effect is called later.
+                ApplyStatusEffects(ActionType.OnUse, deltaTime, character);
+                return false;
             }
 
             Vector2 rayStart;
@@ -228,9 +246,12 @@ namespace Barotrauma.Items.Components
                 {
                     if (MathUtils.GetLineRectangleIntersection(ConvertUnits.ToDisplayUnits(sourcePos), ConvertUnits.ToDisplayUnits(rayStart), item.CurrentHull.Rect, out Vector2 hullIntersection))
                     {
-                        Vector2 rayDir = rayStart.NearlyEquals(sourcePos) ? Vector2.Zero : Vector2.Normalize(rayStart - sourcePos);
-                        rayStartWorld = ConvertUnits.ToSimUnits(hullIntersection - rayDir * 5.0f);
-                        if (item.Submarine != null) { rayStartWorld += item.Submarine.SimPosition; }
+                        if (!item.CurrentHull.ConnectedGaps.Any(g => g.Open > 0.0f && Submarine.RectContains(g.Rect, hullIntersection))) 
+                        { 
+                            Vector2 rayDir = rayStart.NearlyEquals(sourcePos) ? Vector2.Zero : Vector2.Normalize(rayStart - sourcePos);
+                            rayStartWorld = ConvertUnits.ToSimUnits(hullIntersection - rayDir * 5.0f);
+                            if (item.Submarine != null) { rayStartWorld += item.Submarine.SimPosition; }
+                        }
                     }
                 }
             }
@@ -295,12 +316,19 @@ namespace Barotrauma.Items.Components
         private readonly List<FireSource> fireSourcesInRange = new List<FireSource>();
         private void Repair(Vector2 rayStart, Vector2 rayEnd, float deltaTime, Character user, float degreeOfSuccess, List<Body> ignoredBodies)
         {
-            var collisionCategories = Physics.CollisionWall | Physics.CollisionCharacter | Physics.CollisionItem | Physics.CollisionLevel | Physics.CollisionRepair;
+            var collisionCategories = Physics.CollisionWall | Physics.CollisionItem | Physics.CollisionLevel | Physics.CollisionRepair;
+            if (!IgnoreCharacters)
+            {
+                collisionCategories |= Physics.CollisionCharacter;
+            }
 
             //if the item can cut off limbs, activate nearby bodies to allow the raycast to hit them
-            if (statusEffectLists != null && statusEffectLists.ContainsKey(ActionType.OnUse))
+            if (statusEffectLists != null)
             {
-                if (statusEffectLists[ActionType.OnUse].Any(s => s.SeverLimbsProbability > 0.0f))
+                static bool CanSeverJoints(ActionType type, Dictionary<ActionType, List<StatusEffect>> effectList) =>
+                    effectList.TryGetValue(type, out List<StatusEffect> effects) && effects.Any(e => e.SeverLimbsProbability > 0);
+
+                if (CanSeverJoints(ActionType.OnUse, statusEffectLists) || CanSeverJoints(ActionType.OnSuccess, statusEffectLists))
                 {
                     float rangeSqr = ConvertUnits.ToSimUnits(Range);
                     rangeSqr *= rangeSqr;
@@ -489,7 +517,7 @@ namespace Barotrauma.Items.Components
 #if CLIENT
                                     float barOffset = 10f * GUI.Scale;
                                     Vector2 offset = planter.PlantSlots.ContainsKey(i) ? planter.PlantSlots[i].Offset : Vector2.Zero;
-                                    user?.UpdateHUDProgressBar(planter, planter.Item.DrawPosition + new Vector2(barOffset, 0) + offset, seed.Health / seed.MaxHealth, GUI.Style.Blue, GUI.Style.Blue, "progressbar.watering");
+                                    user?.UpdateHUDProgressBar(planter, planter.Item.DrawPosition + new Vector2(barOffset, 0) + offset, seed.Health / seed.MaxHealth, GUIStyle.Blue, GUIStyle.Blue, "progressbar.watering");
 #endif
                                 }
                             }
@@ -500,7 +528,7 @@ namespace Barotrauma.Items.Components
 
             if (GameMain.NetworkMember == null || GameMain.NetworkMember.IsServer)
             {
-                if (Rand.Range(0.0f, 1.0f) < FireProbability * deltaTime)
+                if (Rand.Range(0.0f, 1.0f) < FireProbability * deltaTime && item.CurrentHull != null)
                 {
                     Vector2 displayPos = ConvertUnits.ToDisplayUnits(rayStart + (rayEnd - rayStart) * lastPickedFraction * 0.9f);
                     if (item.CurrentHull.Submarine != null) { displayPos += item.CurrentHull.Submarine.Position; }
@@ -520,8 +548,10 @@ namespace Barotrauma.Items.Components
                 if (sectionIndex < 0) { return false; }
 
                 if (!fixableEntities.Contains("structure") && !fixableEntities.Contains(targetStructure.Prefab.Identifier)) { return true; }
+                if (nonFixableEntities.Contains(targetStructure.Prefab.Identifier) || nonFixableEntities.Any(t => targetStructure.Tags.Contains(t))) { return false; }
 
-                ApplyStatusEffectsOnTarget(user, deltaTime, ActionType.OnUse, new ISerializableEntity[] { targetStructure });
+                ApplyStatusEffectsOnTarget(user, deltaTime, ActionType.OnUse, structure: targetStructure);
+                ApplyStatusEffectsOnTarget(user, deltaTime, ActionType.OnSuccess, structure: targetStructure);
                 FixStructureProjSpecific(user, deltaTime, targetStructure, sectionIndex);
 
                 float structureFixAmount = StructureFixAmount;
@@ -589,8 +619,8 @@ namespace Barotrauma.Items.Components
                     closestLimb.body.ApplyForce(dir * TargetForce, maxVelocity: 10.0f);
                 }
 
-                ApplyStatusEffectsOnTarget(user, deltaTime, ActionType.OnUse,
-                    closestLimb == null ? new ISerializableEntity[] { targetCharacter } : new ISerializableEntity[] { targetCharacter, closestLimb });
+                ApplyStatusEffectsOnTarget(user, deltaTime, ActionType.OnUse, character: targetCharacter, limb: closestLimb);
+                ApplyStatusEffectsOnTarget(user, deltaTime, ActionType.OnSuccess, character: targetCharacter, limb: closestLimb);
                 FixCharacterProjSpecific(user, deltaTime, targetCharacter);
                 return true;
             }
@@ -606,7 +636,8 @@ namespace Barotrauma.Items.Components
                 }
 
                 targetLimb.character.LastDamageSource = item;
-                ApplyStatusEffectsOnTarget(user, deltaTime, ActionType.OnUse, new ISerializableEntity[] { targetLimb.character, targetLimb });
+                ApplyStatusEffectsOnTarget(user, deltaTime, ActionType.OnUse, character: targetLimb.character, limb: targetLimb);
+                ApplyStatusEffectsOnTarget(user, deltaTime, ActionType.OnSuccess, character: targetLimb.character, limb: targetLimb);
                 FixCharacterProjSpecific(user, deltaTime, targetLimb.character);
                 return true;
             }
@@ -622,11 +653,14 @@ namespace Barotrauma.Items.Components
                     float addedDetachTime = deltaTime * (1f + user.GetStatValue(StatTypes.RepairToolDeattachTimeMultiplier)) * (1f + item.GetQualityModifier(Quality.StatType.RepairToolDeattachTimeMultiplier));
                     levelResource.DeattachTimer += addedDetachTime;
 #if CLIENT
-                    Character.Controlled?.UpdateHUDProgressBar(
-                        this,
-                        targetItem.WorldPosition,
-                        levelResource.DeattachTimer / levelResource.DeattachDuration,
-                        GUI.Style.Red, GUI.Style.Green, "progressbar.deattaching");
+                    if (targetItem.Prefab.ShowHealthBar)
+                    {
+                        Character.Controlled?.UpdateHUDProgressBar(
+                            this,
+                            targetItem.WorldPosition,
+                            levelResource.DeattachTimer / levelResource.DeattachDuration,
+                            GUIStyle.Red, GUIStyle.Green, "progressbar.deattaching");
+                    }
 #endif
                     FixItemProjSpecific(user, deltaTime, targetItem, showProgressBar: false);
                     return true;
@@ -645,7 +679,8 @@ namespace Barotrauma.Items.Components
 
                 targetItem.IsHighlighted = true;
                 
-                ApplyStatusEffectsOnTarget(user, deltaTime, ActionType.OnUse, targetItem.AllPropertyObjects);
+                ApplyStatusEffectsOnTarget(user, deltaTime, ActionType.OnUse, targetItem);
+                ApplyStatusEffectsOnTarget(user, deltaTime, ActionType.OnSuccess, targetItem);
 
                 if (targetItem.body != null && !MathUtils.NearlyEqual(TargetForce, 0.0f))
                 {
@@ -675,14 +710,14 @@ namespace Barotrauma.Items.Components
         private float repairTimer;
         private Gap previousGap;
         private readonly float repairTimeOut = 5;
-        public override bool AIOperate(float deltaTime, Character character, AIObjectiveOperateItem objective)
+        public override bool CrewAIOperate(float deltaTime, Character character, AIObjectiveOperateItem objective)
         {
             if (!(objective.OperateTarget is Gap leak))
             {
                 Reset();
                 return true;
             }
-            if (leak.Submarine == null)
+            if (leak.Submarine == null || leak.Submarine != character.Submarine)
             {
                 Reset();
                 return true;
@@ -695,14 +730,17 @@ namespace Barotrauma.Items.Components
             Vector2 fromCharacterToLeak = leak.WorldPosition - character.AnimController.AimSourceWorldPos;
             float dist = fromCharacterToLeak.Length();
             float reach = AIObjectiveFixLeak.CalculateReach(this, character);
-
-            if (dist > reach * 3)
+            if (dist > reach * 2)
             {
                 // Too far away -> consider this done and hope the AI is smart enough to move closer
                 Reset();
                 return true;
             }
             character.AIController.SteeringManager.Reset();
+            if (character.AIController.SteeringManager is IndoorsSteeringManager pathSteering)
+            {
+                pathSteering.ResetPath();
+            }
             if (!character.AnimController.InWater)
             {
                 // TODO: use the collider size?
@@ -712,34 +750,25 @@ namespace Barotrauma.Items.Components
                     humanAnim.Crouching = true;
                 }
             }
-            if (dist > reach * 0.8f || dist > reach * 0.5f && character.AnimController.Limbs.Any(l => l.InWater))
+            if (!character.IsClimbing)
             {
-                // Steer closer
-                if (character.AIController.SteeringManager is IndoorsSteeringManager indoorSteering)
+                if (dist > reach * 0.8f || dist > reach * 0.5f && character.AnimController.Limbs.Any(l => l.InWater))
                 {
-                    // Swimming inside the sub
-                    if (indoorSteering.CurrentPath != null && !indoorSteering.IsPathDirty && (indoorSteering.CurrentPath.Unreachable || indoorSteering.CurrentPath.Finished))
+                    // Steer closer
+                    Vector2 dir = Vector2.Normalize(fromCharacterToLeak);
+                    if (!character.InWater)
                     {
-                        Vector2 dir = Vector2.Normalize(fromCharacterToLeak);
-                        character.AIController.SteeringManager.SteeringManual(deltaTime, dir);
+                        dir.Y = 0;
                     }
-                    else
-                    {
-                        character.AIController.SteeringManager.SteeringSeek(character.GetRelativeSimPosition(leak));
-                    }
+                    character.AIController.SteeringManager.SteeringManual(deltaTime, dir);
                 }
-                else
+                else if (dist < reach * 0.25f && !character.IsClimbing)
                 {
-                    // Swimming outside the sub
-                    character.AIController.SteeringManager.SteeringSeek(character.GetRelativeSimPosition(leak));
+                    // Too close -> steer away
+                    character.AIController.SteeringManager.SteeringManual(deltaTime, Vector2.Normalize(character.SimPosition - leak.SimPosition));
                 }
             }
-            else if (dist < reach * 0.25f)
-            {
-                // Too close -> steer away
-                character.AIController.SteeringManager.SteeringManual(deltaTime, Vector2.Normalize(character.SimPosition - leak.SimPosition));
-            }
-            if (dist <= reach)
+            if (dist <= reach || character.IsClimbing)
             {
                 // In range
                 character.CursorPosition = leak.WorldPosition;
@@ -813,17 +842,17 @@ namespace Barotrauma.Items.Components
             }
 
             bool leakFixed = (leak.Open <= 0.0f || leak.Removed) && 
-                (leak.ConnectedWall == null || leak.ConnectedWall.Sections.Average(s => s.damage) < 1);
+                (leak.ConnectedWall == null || leak.ConnectedWall.Sections.Max(s => s.damage) < 0.1f);
 
             if (leakFixed && leak.FlowTargetHull?.DisplayName != null && character.IsOnPlayerTeam)
             {
                 if (!leak.FlowTargetHull.ConnectedGaps.Any(g => !g.IsRoomToRoom && g.Open > 0.0f))
-                {                    
-                    character.Speak(TextManager.GetWithVariable("DialogLeaksFixed", "[roomname]", leak.FlowTargetHull.DisplayName, true), null, 0.0f, "leaksfixed", 10.0f);
+                {
+                    character.Speak(TextManager.GetWithVariable("DialogLeaksFixed", "[roomname]", leak.FlowTargetHull.DisplayName, FormatCapitals.Yes).Value, null, 0.0f, "leaksfixed".ToIdentifier(), 10.0f);
                 }
                 else
                 {
-                    character.Speak(TextManager.GetWithVariable("DialogLeakFixed", "[roomname]", leak.FlowTargetHull.DisplayName, true), null, 0.0f, "leakfixed", 10.0f);
+                    character.Speak(TextManager.GetWithVariable("DialogLeakFixed", "[roomname]", leak.FlowTargetHull.DisplayName, FormatCapitals.Yes).Value, null, 0.0f, "leakfixed".ToIdentifier(), 10.0f);
                 }
             }
 
@@ -836,38 +865,54 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        private void ApplyStatusEffectsOnTarget(Character user, float deltaTime, ActionType actionType, IEnumerable<ISerializableEntity> targets)
+        private static List<ISerializableEntity> currentTargets = new List<ISerializableEntity>();
+        private void ApplyStatusEffectsOnTarget(Character user, float deltaTime, ActionType actionType, Item targetItem = null, Character character = null, Limb limb = null, Structure structure = null)
         {
             if (statusEffectLists == null) { return; }
             if (!statusEffectLists.TryGetValue(actionType, out List<StatusEffect> statusEffects)) { return; }
 
             foreach (StatusEffect effect in statusEffects)
             {
+                currentTargets.Clear();
                 effect.SetUser(user);
                 if (effect.HasTargetType(StatusEffect.TargetType.UseTarget))
                 {
-                    effect.Apply(actionType, deltaTime, item, targets);
+                    if (targetItem != null)
+                    {
+                        currentTargets.AddRange(targetItem.AllPropertyObjects);
+                    }
+                    if (structure != null)
+                    {
+                        currentTargets.Add(structure);
+                    }
+                    if (character != null)
+                    {
+                        currentTargets.Add(character);
+                    }
+                    effect.Apply(actionType, deltaTime, item, currentTargets);
                 }
                 else if (effect.HasTargetType(StatusEffect.TargetType.Character))
                 {
-                    effect.Apply(actionType, deltaTime, item, targets.Where(t => t is Character));
+                    currentTargets.Add(user);
+                    effect.Apply(actionType, deltaTime, item, currentTargets);
                 }
                 else if (effect.HasTargetType(StatusEffect.TargetType.Limb))
                 {
-                    effect.Apply(actionType, deltaTime, item, targets.Where(t => t is Limb));
+                    currentTargets.Add(limb);
+                    effect.Apply(actionType, deltaTime, item, currentTargets);
                 }
 
 #if CLIENT
                 if (user == null) { return; }
                 // Hard-coded progress bars for welding doors stuck.
                 // A general purpose system could be better, but it would most likely require changes in the way we define the status effects in xml.
-                foreach (ISerializableEntity target in targets)
+                foreach (ISerializableEntity target in currentTargets)
                 {
                     if (!(target is Door door)) { continue; }                    
                     if (!door.CanBeWelded || !door.Item.IsInteractable(user)) { continue; }
                     for (int i = 0; i < effect.propertyNames.Length; i++)
                     {
-                        string propertyName = effect.propertyNames[i];
+                        Identifier propertyName = effect.propertyNames[i];
                         if (propertyName != "stuck") { continue; }
                         if (door.SerializableProperties == null || !door.SerializableProperties.TryGetValue(propertyName, out SerializableProperty property)) { continue; }
                         object value = property.GetValue(target);

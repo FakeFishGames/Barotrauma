@@ -90,7 +90,7 @@ namespace Barotrauma
 
             checkWallsTimer = Rand.Range(0.0f, CheckWallsInterval, Rand.RandSync.ClientOnly);
 
-            foreach (XElement subElement in prefab.Config.Elements())
+            foreach (var subElement in prefab.Config.Elements())
             {
                 List<SpriteDeformation> deformationList = null;
                 switch (subElement.Name.ToString().ToLowerInvariant())
@@ -168,11 +168,11 @@ namespace Barotrauma
                 }
                 else if (position.X < 0.0f)
                 {
-                    obstacleDiff = Vector2.UnitX;
+                    obstacleDiff = -Vector2.UnitX;
                 }
                 else if (position.X > Level.Loaded.Size.X)
                 {
-                    obstacleDiff = -Vector2.UnitX;
+                    obstacleDiff = Vector2.UnitX;
                 }
                 else
                 {
@@ -183,7 +183,7 @@ namespace Barotrauma
                         foreach (Voronoi2.VoronoiCell cell in cells)
                         {
                             Vector2 diff = cell.Center - position;
-                            if (diff.LengthSquared() > 5000.0f * 5000.0f) continue;
+                            if (diff.LengthSquared() > 5000.0f * 5000.0f) { continue; }
                             obstacleDiff += diff;
                             cellCount++;
                         }

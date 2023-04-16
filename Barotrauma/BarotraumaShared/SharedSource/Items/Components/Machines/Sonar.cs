@@ -17,6 +17,8 @@ namespace Barotrauma.Items.Components
 
         public const float DefaultSonarRange = 10000.0f;
 
+        public const float PassivePowerConsumption = 0.1f;
+
         class ConnectedTransducer
         {
             public readonly SonarTransducer Transducer;
@@ -62,6 +64,8 @@ namespace Barotrauma.Items.Components
         private const float MinZoom = 1.0f, MaxZoom = 4.0f;
         private float zoom = 1.0f;
 
+        /// <remarks>Accessed through event actions. Do not remove even if there are no references in code.</remarks>
+        public bool UseDirectionalPing => useDirectionalPing;
         private bool useDirectionalPing = false;
         private Vector2 pingDirection = new Vector2(1.0f, 0.0f);
         private bool useMineralScanner;
@@ -76,7 +80,7 @@ namespace Barotrauma.Items.Components
             get { return connectedTransducers.Select(t => t.Transducer); }
         }
 
-        [Serialize(DefaultSonarRange, false, description: "The maximum range of the sonar.")]
+        [Serialize(DefaultSonarRange, IsPropertySaveable.No, description: "The maximum range of the sonar.")]
         public float Range
         {
             get { return range; }
@@ -90,27 +94,55 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        [Serialize(false, false, description: "Should the sonar display the walls of the submarine it is inside.")]
+        [Serialize(false, IsPropertySaveable.No, description: "Should the sonar display the walls of the submarine it is inside.")]
         public bool DetectSubmarineWalls
         {
             get;
             set;
         }
 
-        [Editable, Serialize(false, false, description: "Does the sonar have to be connected to external transducers to work.")]
+        [Editable, Serialize(false, IsPropertySaveable.No, description: "Does the sonar have to be connected to external transducers to work.")]
         public bool UseTransducers
         {
             get;
             set;
         }
 
-        [Editable, Serialize(false, false, description: "Does the sonar have mineral scanning mode. " +
-            "Only available in-game when the Item has no Steering component.")]
-        public bool HasMineralScanner { get; set; }
+        [Editable, Serialize(false, IsPropertySaveable.No, description: "Should the sonar view be centered on the transducers or the submarine's center of mass. Only has an effect if UseTransducers is enabled.")]
+        public bool CenterOnTransducers
+        {
+            get;
+            set;
+        }
+
+        private bool hasMineralScanner;
+
+        [Editable, Serialize(false, IsPropertySaveable.No, description: "Does the sonar have mineral scanning mode. ")]
+        public bool HasMineralScanner
+        {
+            get => hasMineralScanner;
+            set
+            {
+#if CLIENT
+                if (controlContainer != null && !hasMineralScanner && value)
+                {
+                    AddMineralScannerSwitchToGUI();
+                }
+#endif
+                hasMineralScanner = value;
+            }
+        }
 
         public float Zoom
         {
             get { return zoom; }
+            set 
+            { 
+                zoom = MathHelper.Clamp(value, MinZoom, MaxZoom);
+#if CLIENT
+                zoomSlider.BarScroll = MathUtils.InverseLerp(MinZoom, MaxZoom, zoom);
+#endif
+            }
         }
 
         public Mode CurrentMode
@@ -119,15 +151,7 @@ namespace Barotrauma.Items.Components
             set
             {
                 bool changed = currentMode != value;
-
                 currentMode = value;
-                if (value == Mode.Passive)
-                {
-                    if (item.AiTarget != null)
-                    {
-                        item.AiTarget.SectorDegrees = 360.0f;
-                    }
-                }
 #if CLIENT
                 if (changed) { prevPassivePingRadius = float.MaxValue; }
                 UpdateGUIElements();
@@ -135,9 +159,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public override bool RecreateGUIOnResolutionChange => true;
-
-        public Sonar(Item item, XElement element)
+        public Sonar(Item item, ContentXElement element)
             : base(item, element)
         {
             connectedTransducers = new List<ConnectedTransducer>();
@@ -146,12 +168,10 @@ namespace Barotrauma.Items.Components
             CurrentMode = Mode.Passive;
         }
 
-        partial void InitProjSpecific(XElement element);
+        partial void InitProjSpecific(ContentXElement element);
 
         public override void Update(float deltaTime, Camera cam)
         {
-            currPowerConsumption = (currentMode == Mode.Active) ? powerConsumption : powerConsumption * 0.1f;
-
             UpdateOnActiveEffects(deltaTime);
 
             if (UseTransducers)
@@ -178,13 +198,6 @@ namespace Barotrauma.Items.Components
                         var activePing = activePings[currentPingIndex];
                         if (activePing.State > 1.0f)
                         {
-                            if (item.AiTarget != null)
-                            {
-                                float range = MathUtils.InverseLerp(item.AiTarget.MinSoundRange, item.AiTarget.MaxSoundRange, Range * activePing.State / zoom);
-                                item.AiTarget.SoundRange = MathHelper.Lerp(item.AiTarget.MinSoundRange, item.AiTarget.MaxSoundRange, range);
-                                item.AiTarget.SectorDegrees = activePing.IsDirectional ? DirectionalPingSector : 360.0f;
-                                item.AiTarget.SectorDir = new Vector2(pingDirection.X, -pingDirection.Y);
-                            }
                             aiPingCheckPending = true;
                             currentPingIndex = -1;
                         }
@@ -200,21 +213,27 @@ namespace Barotrauma.Items.Components
                         activePings[currentPingIndex].Direction = pingDirection;
                         activePings[currentPingIndex].State = 0.0f;
                         activePings[currentPingIndex].PrevPingRadius = 0.0f;
+                        if (item.AiTarget != null)
+                        {
+                            item.AiTarget.SectorDegrees = useDirectionalPing ? DirectionalPingSector : 360.0f;
+                            item.AiTarget.SectorDir = new Vector2(pingDirection.X, -pingDirection.Y);
+                        }
                         item.Use(deltaTime);
                     }
                 }
                 else
                 {
-                    if (item.AiTarget != null)
-                    {
-                        item.AiTarget.SectorDegrees = 360.0f;
-                    }
                     aiPingCheckPending = false;
                 }
             }
 
             for (var pingIndex = 0; pingIndex < activePingsCount;)
             {
+                if (item.AiTarget != null)
+                {
+                    float range = MathUtils.InverseLerp(item.AiTarget.MinSoundRange, item.AiTarget.MaxSoundRange, Range * activePings[pingIndex].State / zoom);
+                    item.AiTarget.SoundRange = Math.Max(item.AiTarget.SoundRange, MathHelper.Lerp(item.AiTarget.MinSoundRange, item.AiTarget.MaxSoundRange, range));
+                }
                 if (activePings[pingIndex].State > 1.0f)
                 {
                     var lastIndex = --activePingsCount;
@@ -231,8 +250,19 @@ namespace Barotrauma.Items.Components
                     ++pingIndex;
                 }
             }
+        }
 
-            Voltage -= deltaTime;
+        /// <summary>
+        /// Power consumption of the sonar. Only consume power when active and adjust the consumption based on the sonar mode.
+        /// </summary>
+        public override float GetCurrentPowerConsumption(Connection connection = null)
+        {
+            if (connection != powerIn || !IsActive)
+            {
+                return 0;
+            }
+
+            return (currentMode == Mode.Active) ? powerConsumption : powerConsumption * PassivePowerConsumption;
         }
 
         public override bool Use(float deltaTime, Character character = null)
@@ -242,7 +272,7 @@ namespace Barotrauma.Items.Components
 
         private static readonly Dictionary<string, List<Character>> targetGroups = new Dictionary<string, List<Character>>();
 
-        public override bool AIOperate(float deltaTime, Character character, AIObjectiveOperateItem objective)
+        public override bool CrewAIOperate(float deltaTime, Character character, AIObjectiveOperateItem objective)
         {
             if (currentMode == Mode.Passive || !aiPingCheckPending) { return false; }
 
@@ -257,7 +287,8 @@ namespace Barotrauma.Items.Components
                 if (DetectSubmarineWalls && c.AnimController.CurrentHull == null && item.CurrentHull != null) { continue; }
                 if (Vector2.DistanceSquared(c.WorldPosition, item.WorldPosition) > range * range) { continue; }
 
-                string directionName = GetDirectionName(c.WorldPosition - item.WorldPosition);
+                #warning This is not the best key for a dictionary.
+                string directionName = GetDirectionName(c.WorldPosition - item.WorldPosition).Value;
                 if (!targetGroups.ContainsKey(directionName))
                 {
                     targetGroups.Add(directionName, new List<Character>());
@@ -280,9 +311,10 @@ namespace Barotrauma.Items.Components
 
                 if (character.IsOnPlayerTeam)
                 {
-                    character.Speak(TextManager.GetWithVariables(dialogTag, new string[2] { "[direction]", "[count]" },
-                        new string[2] { targetGroup.Key.ToString(), targetGroup.Value.Count.ToString() },
-                        new bool[2] { true, false }), null, 0, "sonartarget" + targetGroup.Value[0].ID, 60);
+                    character.Speak(TextManager.GetWithVariables(dialogTag,
+                        ("[direction]", targetGroup.Key.ToString(), FormatCapitals.Yes),
+                        ("[count]", targetGroup.Value.Count.ToString(), FormatCapitals.No)).Value,
+                        null, 0, $"sonartarget{targetGroup.Value[0].ID}".ToIdentifier(), 60);
                 }
 
                 //prevent the character from reporting other targets in the group
@@ -295,7 +327,7 @@ namespace Barotrauma.Items.Components
             return true;
         }
 
-        private string GetDirectionName(Vector2 dir)
+        private LocalizedString GetDirectionName(Vector2 dir)
         {
             float angle = MathUtils.WrapAngleTwoPi((float)-Math.Atan2(dir.Y, dir.X) + MathHelper.PiOver2);
 
@@ -305,26 +337,6 @@ namespace Barotrauma.Items.Components
             return TextManager.GetWithVariable("roomname.subdiroclock", "[dir]", clockDir.ToString());
         }
 
-        private Vector2 GetTransducerPos()
-        {
-            if (!UseTransducers || connectedTransducers.Count == 0)
-            {
-                //use the position of the sub if the item is static (no body) and inside a sub
-                return item.Submarine != null && item.body == null ? item.Submarine.WorldPosition : item.WorldPosition;
-            }
-
-            Vector2 transducerPosSum = Vector2.Zero;
-            foreach (ConnectedTransducer transducer in connectedTransducers)
-            {
-                if (transducer.Transducer.Item.Submarine != null)
-                {
-                    return transducer.Transducer.Item.Submarine.WorldPosition;
-                }
-                transducerPosSum += transducer.Transducer.Item.WorldPosition;
-            }
-            return transducerPosSum / connectedTransducers.Count;
-        }
-
         public override void ReceiveSignal(Signal signal, Connection connection)
         {
             base.ReceiveSignal(signal, connection);
@@ -332,7 +344,9 @@ namespace Barotrauma.Items.Components
             if (connection.Name == "transducer_in")
             {
                 var transducer = signal.source.GetComponent<SonarTransducer>();
-                if (transducer == null) return;
+                if (transducer == null) { return; }
+
+                transducer.ConnectedSonar = this;
 
                 var connectedTransducer = connectedTransducers.Find(t => t.Transducer == transducer);
                 if (connectedTransducer == null)
@@ -347,7 +361,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public void ServerRead(ClientNetObject type, IReadMessage msg, Client c)
+        public void ServerEventRead(IReadMessage msg, Client c)
         {
             bool isActive = msg.ReadBoolean();
             bool directionalPing = useDirectionalPing;
@@ -392,19 +406,19 @@ namespace Barotrauma.Items.Components
 #endif
         }
 
-        public void ServerWrite(IWriteMessage msg, Client c, object[] extraData = null)
+        public void ServerEventWrite(IWriteMessage msg, Client c, NetEntityEvent.IData extraData = null)
         {
-            msg.Write(currentMode == Mode.Active);
+            msg.WriteBoolean(currentMode == Mode.Active);
             if (currentMode == Mode.Active)
             {
                 msg.WriteRangedSingle(zoom, MinZoom, MaxZoom, 8);
-                msg.Write(useDirectionalPing);
+                msg.WriteBoolean(useDirectionalPing);
                 if (useDirectionalPing)
                 {
                     float pingAngle = MathUtils.WrapAngleTwoPi(MathUtils.VectorToAngle(pingDirection));
                     msg.WriteRangedSingle(MathUtils.InverseLerp(0.0f, MathHelper.TwoPi, pingAngle), 0.0f, 1.0f, 8);
                 }
-                msg.Write(useMineralScanner);
+                msg.WriteBoolean(useMineralScanner);
             }
         }
     }

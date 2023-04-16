@@ -1,8 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
-using System.Xml.Linq;
 
 namespace Barotrauma.Abilities
 {
@@ -27,7 +24,7 @@ namespace Barotrauma.Abilities
         /// </summary>
         protected float EffectDeltaTime => CharacterAbilityGroup is CharacterAbilityGroupInterval abilityGroupInterval ? abilityGroupInterval.TimeSinceLastUpdate : DefaultEffectTime;
 
-        public CharacterAbility(CharacterAbilityGroup characterAbilityGroup, XElement abilityElement)
+        public CharacterAbility(CharacterAbilityGroup characterAbilityGroup, ContentXElement abilityElement)
         {
             CharacterAbilityGroup = characterAbilityGroup;
             CharacterTalent = characterAbilityGroup.CharacterTalent;
@@ -37,7 +34,7 @@ namespace Barotrauma.Abilities
 
         public bool IsViable()
         {
-            if (!AllowClientSimulation && GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) { return false; }
+            if (!AllowClientSimulation && GameMain.NetworkMember is { IsClient: true }) { return false; }
             if (RequiresAlive && Character.IsDead) { return false; }
             return true;
         }
@@ -70,7 +67,7 @@ namespace Barotrauma.Abilities
             if (abilityObject is null)
             {
                 ApplyEffect();
-            } 
+            }
             else
             {
                 ApplyEffect(abilityObject);
@@ -79,21 +76,21 @@ namespace Barotrauma.Abilities
 
         protected virtual void ApplyEffect()
         {
-            DebugConsole.AddWarning($"Ability {this} used improperly! This ability does not have a definition for ApplyEffect");
+            DebugConsole.AddWarning($"Ability {this} used improperly! This ability does not have a definition for ApplyEffect in talent {CharacterTalent.DebugIdentifier}");
         }
 
         protected virtual void ApplyEffect(AbilityObject abilityObject)
         {
-            DebugConsole.AddWarning($"Ability {this} used improperly! This ability does not take a parameter for ApplyEffect");
+            DebugConsole.AddWarning($"Ability {this} used improperly! This ability does not take a parameter for ApplyEffect in talent {CharacterTalent.DebugIdentifier}");
         }
 
-        protected void LogabilityObjectMismatch()
+        protected void LogAbilityObjectMismatch()
         {
-            DebugConsole.ThrowError($"Incompatible ability! Ability {this} is incompatitible with this type of ability effect type.");
+            DebugConsole.ThrowError($"Incompatible ability! Ability {this} is incompatitible with this type of ability effect type in talent {CharacterTalent.DebugIdentifier}");
         }
 
         // XML
-        public static CharacterAbility Load(XElement abilityElement, CharacterAbilityGroup characterAbilityGroup, bool errorMessages = true)
+        public static CharacterAbility Load(ContentXElement abilityElement, CharacterAbilityGroup characterAbilityGroup, bool errorMessages = true)
         {
             Type abilityType;
             string type = abilityElement.Name.ToString().ToLowerInvariant();

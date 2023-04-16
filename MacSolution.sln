@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.29201.188
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.32014.148
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{D32A29D8-AC7B-4189-B734-8ED9EB4120D0}"
 	ProjectSection(SolutionItems) = preProject
@@ -31,12 +31,22 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MacServer", "Barotrauma\BarotraumaServer\MacServer.csproj", "{8C3F4314-E5CA-4563-BEE6-69E97CAA0813}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MacClient", "Barotrauma\BarotraumaClient\MacClient.csproj", "{F17FB469-E9E6-4B1C-B887-4FE709D4D771}"
+	ProjectSection(ProjectDependencies) = postProject
+		{8C3F4314-E5CA-4563-BEE6-69E97CAA0813} = {8C3F4314-E5CA-4563-BEE6-69E97CAA0813}
+	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MonoGame.Framework.MacOS.NetStandard", "Libraries\MonoGame.Framework\Src\MonoGame.Framework\MonoGame.Framework.MacOS.NetStandard.csproj", "{35DDDA7D-328D-4A5D-BCBB-2E60C830A899}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Facepunch.Steamworks.Posix", "Libraries\Facepunch.Steamworks\Facepunch.Steamworks.Posix.csproj", "{F10CE3BB-26B8-446E-84D2-86D25E850F61}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MacTest", "Barotrauma\BarotraumaTest\MacTest.csproj", "{20BC9336-B439-4BF1-8B65-D587DBF421D1}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DeployAll", "Deploy\DeployAll\DeployAll.csproj", "{36B38D18-3574-4B67-A89C-FD3C2D39F1D6}"
+EndProject
 Global
+	GlobalSection(SharedMSBuildProjectFiles) = preSolution
+		Libraries\GameAnalytics\GA-SDK-MONO-SHARED\GA-SDK-MONO-SHARED.projitems*{c54f0dfe-add3-4767-8cbc-101859218d66}*SharedItemsImports = 5
+	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Debug|x64 = Debug|x64
@@ -178,6 +188,30 @@ Global
 		{F10CE3BB-26B8-446E-84D2-86D25E850F61}.Unstable|Any CPU.Build.0 = Release|Any CPU
 		{F10CE3BB-26B8-446E-84D2-86D25E850F61}.Unstable|x64.ActiveCfg = Release|Any CPU
 		{F10CE3BB-26B8-446E-84D2-86D25E850F61}.Unstable|x64.Build.0 = Release|Any CPU
+		{20BC9336-B439-4BF1-8B65-D587DBF421D1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{20BC9336-B439-4BF1-8B65-D587DBF421D1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{20BC9336-B439-4BF1-8B65-D587DBF421D1}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{20BC9336-B439-4BF1-8B65-D587DBF421D1}.Debug|x64.Build.0 = Debug|Any CPU
+		{20BC9336-B439-4BF1-8B65-D587DBF421D1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{20BC9336-B439-4BF1-8B65-D587DBF421D1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{20BC9336-B439-4BF1-8B65-D587DBF421D1}.Release|x64.ActiveCfg = Release|Any CPU
+		{20BC9336-B439-4BF1-8B65-D587DBF421D1}.Release|x64.Build.0 = Release|Any CPU
+		{20BC9336-B439-4BF1-8B65-D587DBF421D1}.Unstable|Any CPU.ActiveCfg = Debug|Any CPU
+		{20BC9336-B439-4BF1-8B65-D587DBF421D1}.Unstable|Any CPU.Build.0 = Debug|Any CPU
+		{20BC9336-B439-4BF1-8B65-D587DBF421D1}.Unstable|x64.ActiveCfg = Debug|Any CPU
+		{20BC9336-B439-4BF1-8B65-D587DBF421D1}.Unstable|x64.Build.0 = Debug|Any CPU
+		{36B38D18-3574-4B67-A89C-FD3C2D39F1D6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{36B38D18-3574-4B67-A89C-FD3C2D39F1D6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{36B38D18-3574-4B67-A89C-FD3C2D39F1D6}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{36B38D18-3574-4B67-A89C-FD3C2D39F1D6}.Debug|x64.Build.0 = Debug|Any CPU
+		{36B38D18-3574-4B67-A89C-FD3C2D39F1D6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{36B38D18-3574-4B67-A89C-FD3C2D39F1D6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{36B38D18-3574-4B67-A89C-FD3C2D39F1D6}.Release|x64.ActiveCfg = Release|Any CPU
+		{36B38D18-3574-4B67-A89C-FD3C2D39F1D6}.Release|x64.Build.0 = Release|Any CPU
+		{36B38D18-3574-4B67-A89C-FD3C2D39F1D6}.Unstable|Any CPU.ActiveCfg = Debug|Any CPU
+		{36B38D18-3574-4B67-A89C-FD3C2D39F1D6}.Unstable|Any CPU.Build.0 = Debug|Any CPU
+		{36B38D18-3574-4B67-A89C-FD3C2D39F1D6}.Unstable|x64.ActiveCfg = Debug|Any CPU
+		{36B38D18-3574-4B67-A89C-FD3C2D39F1D6}.Unstable|x64.Build.0 = Debug|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -195,6 +229,8 @@ Global
 		{F17FB469-E9E6-4B1C-B887-4FE709D4D771} = {DFD82BBD-8D05-403D-BEBC-F4C1CF783E18}
 		{35DDDA7D-328D-4A5D-BCBB-2E60C830A899} = {DE36F45F-F09E-4719-B953-00D148F7722A}
 		{F10CE3BB-26B8-446E-84D2-86D25E850F61} = {DE36F45F-F09E-4719-B953-00D148F7722A}
+		{20BC9336-B439-4BF1-8B65-D587DBF421D1} = {DFD82BBD-8D05-403D-BEBC-F4C1CF783E18}
+		{36B38D18-3574-4B67-A89C-FD3C2D39F1D6} = {F35DF9BF-0BED-4FEF-A51C-DD83C531882F}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {17032EAB-554B-4B44-A4F6-EFB177ACAB7A}

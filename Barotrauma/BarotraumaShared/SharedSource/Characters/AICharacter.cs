@@ -11,8 +11,8 @@ namespace Barotrauma
             get { return aiController; }
         }
 
-        public AICharacter(CharacterPrefab prefab, string speciesName, Vector2 position, string seed, CharacterInfo characterInfo = null, ushort id = Entity.NullEntityID, bool isNetworkPlayer = false, RagdollParams ragdoll = null)
-            : base(prefab, speciesName, position, seed, characterInfo, id: id, isRemotePlayer: isNetworkPlayer, ragdollParams: ragdoll)
+        public AICharacter(CharacterPrefab prefab, Vector2 position, string seed, CharacterInfo characterInfo = null, ushort id = Entity.NullEntityID, bool isNetworkPlayer = false, RagdollParams ragdoll = null, bool spawnInitialItems = true)
+            : base(prefab, position, seed, characterInfo, id: id, isRemotePlayer: isNetworkPlayer, ragdollParams: ragdoll, spawnInitialItems)
         {
             InitProjSpecific();
         }

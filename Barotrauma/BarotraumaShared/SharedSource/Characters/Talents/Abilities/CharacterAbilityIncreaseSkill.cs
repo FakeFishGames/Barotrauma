@@ -1,6 +1,4 @@
 ﻿using Barotrauma.Extensions;
-using Microsoft.Xna.Framework;
-using System.Xml.Linq;
 
 namespace Barotrauma.Abilities
 {
@@ -8,15 +6,15 @@ namespace Barotrauma.Abilities
     {
         public override bool AppliesEffectOnIntervalUpdate => true;
 
-        private readonly string skillIdentifier;
+        private readonly Identifier skillIdentifier;
         private readonly float skillIncrease;
 
-        public CharacterAbilityIncreaseSkill(CharacterAbilityGroup characterAbilityGroup, XElement abilityElement) : base(characterAbilityGroup, abilityElement)
+        public CharacterAbilityIncreaseSkill(CharacterAbilityGroup characterAbilityGroup, ContentXElement abilityElement) : base(characterAbilityGroup, abilityElement)
         {
-            skillIdentifier = abilityElement.GetAttributeString("skillidentifier", "").ToLowerInvariant();
+            skillIdentifier = abilityElement.GetAttributeIdentifier("skillidentifier", "");
             skillIncrease = abilityElement.GetAttributeFloat("skillincrease", 0f);
 
-            if (string.IsNullOrEmpty(skillIdentifier))
+            if (skillIdentifier.IsEmpty)
             {
                 DebugConsole.ThrowError($"Error in talent \"{characterAbilityGroup.CharacterTalent.DebugIdentifier}\" - skill identifier not defined in CharacterAbilityIncreaseSkill.");
             }
@@ -45,15 +43,15 @@ namespace Barotrauma.Abilities
 
         private void ApplyEffectSpecific(Character character)
         {
-            if (skillIdentifier.Equals("random"))
+            if (skillIdentifier == "random")
             {
-                var skill = character.Info?.Job?.Skills?.GetRandom();
+                var skill = character.Info?.Job?.GetSkills()?.GetRandomUnsynced();
                 if (skill == null) { return; }
-                character.Info?.IncreaseSkillLevel(skill.Identifier, skillIncrease);
+                character.Info?.IncreaseSkillLevel(skill.Identifier, skillIncrease, gainedFromAbility: true);
             }
             else
             {
-                character.Info?.IncreaseSkillLevel(skillIdentifier, skillIncrease);
+                character.Info?.IncreaseSkillLevel(skillIdentifier, skillIncrease, gainedFromAbility: true);
             }
         }
     }

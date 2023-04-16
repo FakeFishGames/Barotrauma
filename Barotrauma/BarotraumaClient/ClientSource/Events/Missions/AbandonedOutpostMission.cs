@@ -1,3 +1,4 @@
+using Barotrauma.Extensions;
 using Barotrauma.Networking;
 
 namespace Barotrauma
@@ -7,18 +8,21 @@ namespace Barotrauma
         public override int State
         {
             get { return base.State; }
-            protected set
+            set
             {
                 if (state != value)
                 {
                     base.State = value;
-                    if (state == HostagesKilledState && !string.IsNullOrEmpty(hostagesKilledMessage))
+                    if (state == HostagesKilledState && !hostagesKilledMessage.IsNullOrEmpty())
                     {
                         CreateMessageBox(string.Empty, hostagesKilledMessage);
                     }
                 }
             }
         }
+
+        public override bool DisplayAsCompleted => State > 0 && requireRescue.None();
+        public override bool DisplayAsFailed => State == HostagesKilledState;
 
         public override void ClientReadInitial(IReadMessage msg)
         {
@@ -41,7 +45,10 @@ namespace Barotrauma
                 { 
                     requireRescue.Add(character);
 #if CLIENT
-                    GameMain.GameSession.CrewManager.AddCharacterToCrewList(character);
+                    if (allowOrderingRescuees)
+                    {
+                        GameMain.GameSession.CrewManager.AddCharacterToCrewList(character);
+                    }
 #endif
                 }
                 ushort itemCount = msg.ReadUInt16();

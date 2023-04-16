@@ -8,11 +8,14 @@ using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
 {
-    partial class WifiComponent : ItemComponent
+    partial class WifiComponent : ItemComponent, IServerSerializable
     {
         private static readonly List<WifiComponent> list = new List<WifiComponent>();
 
         const int ChannelMemorySize = 10;
+
+        private const int MinChannel = 0;
+        private const int MaxChannel = 10000;
 
         private float range;
 
@@ -22,14 +25,15 @@ namespace Barotrauma.Items.Components
 
         private string prevSignal;
 
-        private readonly int[] channelMemory = new int[ChannelMemorySize];
+        private int[] channelMemory = new int[ChannelMemorySize];
 
+        private Connection signalInConnection;
         private Connection signalOutConnection;
 
-        [Serialize(CharacterTeamType.None, true, description: "WiFi components can only communicate with components that have the same Team ID.", alwaysUseInstanceValues: true)]
+        [Serialize(CharacterTeamType.None, IsPropertySaveable.Yes, description: "WiFi components can only communicate with components that have the same Team ID.", alwaysUseInstanceValues: true)]
         public CharacterTeamType TeamID { get; set; }
 
-        [Editable, Serialize(20000.0f, false, description: "How close the recipient has to be to receive a signal from this WiFi component.", alwaysUseInstanceValues: true)]
+        [Editable, Serialize(20000.0f, IsPropertySaveable.No, description: "How close the recipient has to be to receive a signal from this WiFi component.", alwaysUseInstanceValues: true)]
         public float Range
         {
             get { return range; }
@@ -42,18 +46,18 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        [InGameEditable, Serialize(0, true, description: "WiFi components can only communicate with components that use the same channel.", alwaysUseInstanceValues: true)]
+        [InGameEditable, Serialize(0, IsPropertySaveable.Yes, description: "WiFi components can only communicate with components that use the same channel.", alwaysUseInstanceValues: true)]
         public int Channel
         {
             get { return channel; }
             set
             {
-                channel = MathHelper.Clamp(value, 0, 10000);
+                channel = MathHelper.Clamp(value, MinChannel, MaxChannel);
             }
         }
 
 
-        [Editable, Serialize(false, true, description: "Can the component communicate with wifi components in another team's submarine (e.g. enemy sub in Combat missions, respawn shuttle). Needs to be enabled on both the component transmitting the signal and the component receiving it.", alwaysUseInstanceValues: true)]
+        [Editable, Serialize(false, IsPropertySaveable.Yes, description: "Can the component communicate with wifi components in another team's submarine (e.g. enemy sub in Combat missions, respawn shuttle). Needs to be enabled on both the component transmitting the signal and the component receiving it.", alwaysUseInstanceValues: true)]
         public bool AllowCrossTeamCommunication
         {
             get;
@@ -61,7 +65,7 @@ namespace Barotrauma.Items.Components
         }
 
         [ConditionallyEditable(ConditionallyEditable.ConditionType.AllowLinkingWifiToChat)]
-        [Serialize(false, false, description: "If enabled, any signals received from another chat-linked wifi component are displayed " +
+        [Serialize(false, IsPropertySaveable.No, description: "If enabled, any signals received from another chat-linked wifi component are displayed " +
             "as chat messages in the chatbox of the player holding the item.", alwaysUseInstanceValues: true)]
         public bool LinkToChat
         {
@@ -69,7 +73,7 @@ namespace Barotrauma.Items.Components
             set;
         }
 
-        [Editable, Serialize(1.0f, true, description: "How many seconds have to pass between signals for a message to be displayed in the chatbox. " +
+        [Editable, Serialize(1.0f, IsPropertySaveable.Yes, description: "How many seconds have to pass between signals for a message to be displayed in the chatbox. " +
             "Setting this to a very low value is not recommended, because it may cause an excessive amount of chat messages to be created " +
             "if there are chat-linked wifi components that transmit a continuous signal.")]
         public float MinChatMessageInterval
@@ -78,19 +82,29 @@ namespace Barotrauma.Items.Components
             set;
         }
 
-        [Editable, Serialize(false, true, description: "If set to true, the component will only create chat messages when the received signal changes.")]
+        [Editable, Serialize(false, IsPropertySaveable.Yes, description: "If set to true, the component will only create chat messages when the received signal changes.")]
         public bool DiscardDuplicateChatMessages
         {
             get;
             set;
         }
 
-        public WifiComponent(Item item, XElement element)
+        public WifiComponent(Item item, ContentXElement element)
             : base (item, element)
         {
             list.Add(this);
             IsActive = true;
-            channelMemory = element.GetAttributeIntArray("channelmemory", new int[ChannelMemorySize]);
+        }
+
+        public override void Load(ContentXElement componentElement, bool usePrefabValues, IdRemap idRemap)
+        {
+            base.Load(componentElement, usePrefabValues, idRemap);
+            channelMemory = componentElement.GetAttributeIntArray("channelmemory", new int[ChannelMemorySize]);
+            if (channelMemory.Length != ChannelMemorySize)
+            {
+                DebugConsole.AddWarning($"Error when loading item {item.Prefab.Identifier}: the size of the channel memory doesn't match the default value of {ChannelMemorySize}. Resizing...");
+                Array.Resize(ref channelMemory, ChannelMemorySize);
+            }
         }
 
         public override void OnItemLoaded()
@@ -98,6 +112,7 @@ namespace Barotrauma.Items.Components
             if (item.Connections != null)
             {
                 signalOutConnection = item.Connections.Find(c => c.Name == "signal_out");
+                signalInConnection = item.Connections.Find(c => c.Name == "signal_in");
             }
             if (channelMemory.All(m => m == 0))
             {
@@ -112,7 +127,10 @@ namespace Barotrauma.Items.Components
         {
             return HasRequiredContainedItems(user: null, addMessage: false);
         }
-        
+
+        /// <summary>
+        /// Returns the wifi components that can receive signals from this one
+        /// </summary>
         public IEnumerable<WifiComponent> GetReceiversInRange()
         {
             return list.Where(w => w != this && w.CanReceive(this));
@@ -121,17 +139,38 @@ namespace Barotrauma.Items.Components
         public bool CanReceive(WifiComponent sender)
         {
             if (sender == null || sender.channel != channel) { return false; }
+            if (sender.TeamID != TeamID && !AllowCrossTeamCommunication) { return false; }
 
-            //if (sender.TeamID != TeamID && !AllowCrossTeamCommunication)
-            //{
-            //    return false;
-            //}            
+            //if the component is not linked to chat and has nothing connected to the output, sending a signal to it does nothing
+            // = no point in receiving
+            if (!LinkToChat)
+            {
+                if (signalOutConnection == null || signalOutConnection.Wires.Count <= 0)
+                {
+                    return false;
+                }
+            }
 
             if (Vector2.DistanceSquared(item.WorldPosition, sender.item.WorldPosition) > sender.range * sender.range) { return false; }
 
             return HasRequiredContainedItems(user: null, addMessage: false);
         }
 
+        /// <summary>
+        /// Returns the wifi components that can transmit signals to this one
+        /// </summary>
+        public IEnumerable<WifiComponent> GetTransmittersInRange()
+        {
+            return list.Where(w => w != this && w.CanTransmit(this));
+        }
+
+        public bool CanTransmit(WifiComponent sender)
+        {
+            if (sender == null || sender.channel != channel) { return false; }
+            if (sender.TeamID != TeamID && !AllowCrossTeamCommunication) { return false; }
+            if (Vector2.DistanceSquared(item.WorldPosition, sender.item.WorldPosition) > sender.range * sender.range) { return false; }
+            return HasRequiredContainedItems(user: null, addMessage: false);
+        }
         public override void Update(float deltaTime, Camera cam)
         {
             chatMsgCooldown -= deltaTime;
@@ -165,8 +204,6 @@ namespace Barotrauma.Items.Components
             {
                 item.LastSentSignalRecipients.Clear();
             }
-            var senderComponent = signal.source?.GetComponent<WifiComponent>();
-            if (senderComponent != null && !CanReceive(senderComponent)) { return; }
 
             bool chatMsgSent = false;
 
@@ -183,6 +220,18 @@ namespace Barotrauma.Items.Components
 
                 if (wifiComp.signalOutConnection != null)
                 {
+                    if (signal.source != null && wifiComp.signalInConnection != null)
+                    {
+                        if (signal.source.LastSentSignalRecipients.Contains(wifiComp.signalInConnection)) 
+                        { 
+                            //signal already passed through this wifi component -> stop here to prevent an infinite loop
+                            continue; 
+                        }
+                        else
+                        {
+                            signal.source.LastSentSignalRecipients.Add(wifiComp.signalInConnection);
+                        }
+                    }
                     wifiComp.item.SendSignal(s, wifiComp.signalOutConnection);
                 }
 
@@ -206,7 +255,7 @@ namespace Barotrauma.Items.Components
                         wifiComp.item.ParentInventory.Owner != null)
                     {
                         string chatMsg = signal.value;
-                        if (senderComponent != null)
+                        if (sentSignalStrength <= 1.0f)
                         {
                             chatMsg = ChatMessage.ApplyDistanceEffect(chatMsg, 1.0f - sentSignalStrength);
                         }
@@ -257,7 +306,14 @@ namespace Barotrauma.Items.Components
                 case "set_channel":
                     if (int.TryParse(signal.value, out int newChannel))
                     {
+                        int prevChannel = Channel;
                         Channel = newChannel;
+                        if (prevChannel != Channel)
+                        {
+#if SERVER
+                            item.CreateServerEvent(this);
+#endif
+                        }
                     }
                     break;
                 case "set_range":

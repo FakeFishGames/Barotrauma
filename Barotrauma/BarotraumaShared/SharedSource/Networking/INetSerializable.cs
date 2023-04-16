@@ -3,28 +3,41 @@
     interface INetSerializable { }
 
     /// <summary>
-    /// Interface for entities that the clients can send information of to the server
+    /// Interface for entities that the clients can send events to the server
     /// </summary>
     interface IClientSerializable : INetSerializable
     {
 #if CLIENT
-        void ClientWrite(IWriteMessage msg, object[] extraData = null);
+        void ClientEventWrite(IWriteMessage msg, NetEntityEvent.IData extraData = null);
 #endif
 #if SERVER
-        void ServerRead(ClientNetObject type, IReadMessage msg, Client c);        
+        void ServerEventRead(IReadMessage msg, Client c);        
 #endif
     }
 
     /// <summary>
-    /// Interface for entities that the server can send information of to the clients
+    /// Interface for entities that the server can send events to the clients
     /// </summary>
     interface IServerSerializable : INetSerializable
     {
 #if SERVER
-        void ServerWrite(IWriteMessage msg, Client c, object[] extraData = null);
+        void ServerEventWrite(IWriteMessage msg, Client c, NetEntityEvent.IData extraData = null);
 #endif
 #if CLIENT
-        void ClientRead(ServerNetObject type, IReadMessage msg, float sendingTime);
+        void ClientEventRead(IReadMessage msg, float sendingTime);
+#endif
+    }
+
+    /// <summary>
+    /// Interface for entities that handle ServerNetObject.ENTITY_POSITION
+    /// </summary>
+    interface IServerPositionSync : IServerSerializable
+    {
+#if SERVER
+        void ServerWritePosition(ReadWriteMessage tempBuffer, Client c);
+#endif
+#if CLIENT
+        void ClientReadPosition(IReadMessage msg, float sendingTime);
 #endif
     }
 }

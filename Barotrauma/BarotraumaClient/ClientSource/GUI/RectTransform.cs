@@ -58,7 +58,7 @@ namespace Barotrauma
             }
         }
 
-        private readonly List<RectTransform> children = new List<RectTransform>();
+        protected readonly List<RectTransform> children = new List<RectTransform>();
         public IEnumerable<RectTransform> Children => children;
 
         public int CountChildren => children.Count;
@@ -233,7 +233,9 @@ namespace Barotrauma
             get
             {
                 Point absoluteOffset = ConvertOffsetRelativeToAnchor(AbsoluteOffset, Anchor);
-                Point relativeOffset = NonScaledParentRect.MultiplySize(RelativeOffset);
+                Point relativeOffset = new Point(
+                    (int)(NonScaledParentSize.X * RelativeOffset.X),
+                    (int)(NonScaledParentSize.Y * RelativeOffset.Y));
                 relativeOffset = ConvertOffsetRelativeToAnchor(relativeOffset, Anchor);
                 return AnchorPoint + PivotOffset + absoluteOffset + relativeOffset + ScreenSpaceOffset;
             }
@@ -256,6 +258,7 @@ namespace Barotrauma
         public Rectangle ParentRect => Parent != null ? Parent.Rect : UIRect;
         protected Rectangle NonScaledRect => new Rectangle(NonScaledTopLeft, NonScaledSize);
         protected virtual Rectangle NonScaledUIRect => NonScaledRect;
+        protected Point NonScaledParentSize => parent?.NonScaledSize ?? new Point(GUI.UIWidth, GameMain.GraphicsHeight);
         protected Rectangle NonScaledParentRect => parent != null ? Parent.NonScaledRect : UIRect;
         protected Rectangle NonScaledParentUIRect => parent != null ? Parent.NonScaledUIRect : UIRect;
         protected Rectangle UIRect => new Rectangle(0, 0, GUI.UIWidth, GameMain.GraphicsHeight);
@@ -336,6 +339,11 @@ namespace Barotrauma
         public event Action<RectTransform> ChildrenChanged;
         public event Action ScaleChanged;
         public event Action SizeChanged;
+
+        public void ResetSizeChanged()
+        {
+            SizeChanged = null;
+        }
         #endregion
 
         #region Initialization
@@ -637,7 +645,15 @@ namespace Barotrauma
 
         public bool IsParentOf(RectTransform rectT, bool recursive = true)
         {
-            return children.Contains(rectT) || (recursive && children.Any(c => c.IsParentOf(rectT)));
+            if (children.Contains(rectT)) { return true; }
+            if (recursive)
+            {
+                foreach (var child in children)
+                {
+                    if (child.IsParentOf(rectT)) { return true; }
+                }
+            }
+            return false;
         }
 
         public bool IsChildOf(RectTransform rectT, bool recursive = true)
@@ -722,17 +738,17 @@ namespace Barotrauma
             get { return animTargetPos ?? AbsoluteOffset; }
         }
 
-        public void MoveOverTime(Point targetPos, float duration)
+        public void MoveOverTime(Point targetPos, float duration, Action onDoneMoving = null)
         {
             animTargetPos = targetPos;
-            CoroutineManager.StartCoroutine(DoMoveAnimation(targetPos, duration));
+            CoroutineManager.StartCoroutine(DoMoveAnimation(targetPos, duration, onDoneMoving));
         }
         public void ScaleOverTime(Point targetSize, float duration)
         {
             CoroutineManager.StartCoroutine(DoScaleAnimation(targetSize, duration));
         }
 
-        private IEnumerable<object> DoMoveAnimation(Point targetPos, float duration)
+        private IEnumerable<CoroutineStatus> DoMoveAnimation(Point targetPos, float duration, Action onDoneMoving = null)
         {
             Vector2 startPos = AbsoluteOffset.ToVector2();
             float t = 0.0f;
@@ -744,9 +760,10 @@ namespace Barotrauma
             }
             AbsoluteOffset = targetPos;
             animTargetPos = null;
+            onDoneMoving?.Invoke();
             yield return CoroutineStatus.Success;
         }
-        private IEnumerable<object> DoScaleAnimation(Point targetSize, float duration)
+        private IEnumerable<CoroutineStatus> DoScaleAnimation(Point targetSize, float duration)
         {
             Vector2 startSize = NonScaledSize.ToVector2();
             float t = 0.0f;

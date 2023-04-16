@@ -8,6 +8,7 @@ using Microsoft.Xna.Framework.Graphics;
 using System.Xml.Linq;
 using Barotrauma.IO;
 using Barotrauma.Items.Components;
+using System.Collections.Immutable;
 
 namespace Barotrauma
 {
@@ -16,6 +17,7 @@ namespace Barotrauma
         private static Sprite infoAreaPortraitBG;
 
         public bool LastControlled;
+        public int CrewListIndex { get; set; } = -1;
 
         #warning TODO: Refactor
         private Sprite disguisedPortrait;
@@ -33,17 +35,17 @@ namespace Barotrauma
 
         public static void Init()
         {
-            infoAreaPortraitBG = GUI.Style.GetComponentStyle("InfoAreaPortraitBG")?.GetDefaultSprite();
+            infoAreaPortraitBG = GUIStyle.GetComponentStyle("InfoAreaPortraitBG")?.GetDefaultSprite();
             new Sprite("Content/UI/InventoryUIAtlas.png", new Rectangle(833, 298, 142, 98), null, 0);
         }
 
-        partial void LoadHeadSpriteProjectSpecific(XElement limbElement)
+        partial void LoadHeadSpriteProjectSpecific(ContentXElement limbElement)
         {
-            XElement maskElement = limbElement.Element("tintmask");
+            ContentXElement maskElement = limbElement.GetChildElement("tintmask");
             if (maskElement != null)
             {
-                string tintMaskPath = maskElement.GetAttributeString("texture", "");
-                if (!string.IsNullOrWhiteSpace(tintMaskPath))
+                ContentPath tintMaskPath = maskElement.GetAttributeContentPath("texture");
+                if (!tintMaskPath.IsNullOrEmpty())
                 {
                     tintMask = new Sprite(maskElement, file: Limb.GetSpritePath(tintMaskPath, this));
                     tintHighlightThreshold = maskElement.GetAttributeFloat("highlightthreshold", 0.6f);
@@ -65,7 +67,7 @@ namespace Barotrauma
             new GUICustomComponent(new RectTransform(new Vector2(0.425f, 1.0f), headerArea.RectTransform), 
                 onDraw: (sb, component) => DrawInfoFrameCharacterIcon(sb, component.Rect));
 
-            ScalableFont font = paddedFrame.Rect.Width < 280 ? GUI.SmallFont : GUI.Font;
+            GUIFont font = paddedFrame.Rect.Width < 280 ? GUIStyle.SmallFont : GUIStyle.Font;
 
             var headerTextArea = new GUILayoutGroup(new RectTransform(new Vector2(0.575f, 1.0f), headerArea.RectTransform))
             {
@@ -76,9 +78,9 @@ namespace Barotrauma
             Color? nameColor = null;
             if (Job != null) { nameColor = Job.Prefab.UIColor; }
 
-            GUITextBlock characterNameBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), headerTextArea.RectTransform), ToolBox.LimitString(Name, GUI.Font, headerTextArea.Rect.Width), textColor: nameColor, font: GUI.Font)
+            GUITextBlock characterNameBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.25f), headerTextArea.RectTransform), ToolBox.LimitString(Name, GUIStyle.Font, headerTextArea.Rect.Width), textColor: nameColor, font: GUIStyle.Font)
             {
-                ForceUpperCase = true,
+                ForceUpperCase = ForceUpperCase.Yes,
                 Padding = Vector4.Zero
             };
 
@@ -90,33 +92,51 @@ namespace Barotrauma
             }
 
             if (Job != null)
-            {   
-                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), headerTextArea.RectTransform), Job.Name, textColor: Job.Prefab.UIColor, font: font)
-                {
-                    Padding = Vector4.Zero
-                };
-            }
-
-            if (personalityTrait != null)
             {
-                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), headerTextArea.RectTransform), TextManager.AddPunctuation(':', TextManager.Get("PersonalityTrait"), TextManager.Get("personalitytrait." + personalityTrait.Name.Replace(" ", ""))), font: font)
+                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.25f), headerTextArea.RectTransform), Job.Name, textColor: Job.Prefab.UIColor, font: font)
                 {
                     Padding = Vector4.Zero
                 };
             }
 
-            if (Job != null && (Character == null || !Character.IsDead))
+            if (PersonalityTrait != null)
+            {
+                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.25f), headerTextArea.RectTransform),
+                    TextManager.AddPunctuation(':', TextManager.Get("PersonalityTrait"), PersonalityTrait.DisplayName),
+                    font: font)
+                {
+                    Padding = Vector4.Zero
+                };
+            }
+
+            GUIButton manageTalentButton = new GUIButton(new RectTransform(new Vector2(1.0f, 0.25f), headerTextArea.RectTransform),
+                text: TextManager.Get("ClientPermission.ManageBotTalents"), style: "GUIButtonSmall")
+            {
+                Enabled = false,
+                UserData = TalentMenu.ManageBotTalentsButtonUserData,
+                TextBlock =
+                {
+                    AutoScaleHorizontal = true
+                }
+            };
+
+            if (TalentMenu.CanManageTalents(this))
+            {
+                manageTalentButton.Enabled = true;
+            }
+
+            if (Job != null && Character is not { IsDead: true })
             {
                 var skillsArea = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.63f), paddedFrame.RectTransform, Anchor.BottomCenter, Pivot.BottomCenter))
                 {
                     Stretch = true
                 };
 
-                var skills = Job.Skills;
+                var skills = Job.GetSkills().ToList();
                 skills.Sort((s1, s2) => -s1.Level.CompareTo(s2.Level));
 
                 new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), skillsArea.RectTransform), TextManager.AddPunctuation(':', TextManager.Get("skills"), string.Empty), font: font) { Padding = Vector4.Zero };
-                
+
                 foreach (Skill skill in skills)
                 {
                     Color textColor = Color.White * (0.5f + skill.Level / 200.0f);
@@ -140,17 +160,18 @@ namespace Barotrauma
                     }
                 }
             }
-            else if (Character != null && Character.IsDead)
+            else if (Character is { IsDead: true })
             {
                 var deadArea = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.63f), paddedFrame.RectTransform, Anchor.BottomCenter, Pivot.BottomCenter))
                 {
                     Stretch = true
                 };
 
-                string deadDescription = TextManager.AddPunctuation(':', TextManager.Get("deceased") + "\n" + Character.CauseOfDeath.Affliction?.CauseOfDeathDescription ?? 
-                    TextManager.AddPunctuation(':', TextManager.Get("CauseOfDeath"), TextManager.Get("CauseOfDeath." + Character.CauseOfDeath.Type.ToString())));
+                LocalizedString deadDescription = 
+                    TextManager.Get("deceased") + "\n" + 
+                   (Character.CauseOfDeath.Affliction?.CauseOfDeathDescription ?? TextManager.Get("CauseOfDeath." + Character.CauseOfDeath.Type.ToString()));
 
-                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), deadArea.RectTransform), deadDescription, textColor: GUI.Style.Red, font: font, textAlignment: Alignment.TopLeft) { Padding = Vector4.Zero };
+                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), deadArea.RectTransform), deadDescription, textColor: GUIStyle.Red, font: font, textAlignment: Alignment.TopLeft) { Padding = Vector4.Zero };
             }
 
             if (returnParent)
@@ -181,13 +202,13 @@ namespace Barotrauma
             Color? textColor = null;
             if (Job != null) { textColor = Job.Prefab.UIColor; }
 
-            GUITextBlock textBlock = new GUITextBlock(new RectTransform(Vector2.One, frame.RectTransform, Anchor.CenterLeft) { AbsoluteOffset = new Point(40, 0) }, text, textColor: textColor, font: GUI.SmallFont);
+            GUITextBlock textBlock = new GUITextBlock(new RectTransform(Vector2.One, frame.RectTransform, Anchor.CenterLeft) { AbsoluteOffset = new Point(40, 0) }, text, textColor: textColor, font: GUIStyle.SmallFont);
             new GUICustomComponent(new RectTransform(new Point(frame.Rect.Height, frame.Rect.Height), frame.RectTransform, Anchor.CenterLeft) { IsFixedSize = false }, 
                 onDraw: (sb, component) => DrawIcon(sb, component.Rect.Center.ToVector2(), targetAreaSize: component.Rect.Size.ToVector2()));
             return frame;
         }
 
-        partial void OnSkillChanged(string skillIdentifier, float prevLevel, float newLevel)
+        partial void OnSkillChanged(Identifier skillIdentifier, float prevLevel, float newLevel)
         {
             if (TeamID == CharacterTeamType.FriendlyNPC) { return; }
             if (Character.Controlled != null && Character.Controlled.TeamID != TeamID) { return; }
@@ -198,9 +219,10 @@ namespace Barotrauma
             if ((int)newLevel > (int)prevLevel)
             {
                 int increase = Math.Max((int)newLevel - (int)prevLevel, 1);
+
                 Character?.AddMessage(
-                    "+[value] "+ TextManager.Get("SkillName." + skillIdentifier), 
-                    specialIncrease ? GUI.Style.Orange : GUI.Style.Green, 
+                    "+[value] "+ TextManager.Get("SkillName." + skillIdentifier).Value, 
+                    specialIncrease ? GUIStyle.Orange : GUIStyle.Green, 
                     playSound: Character == Character.Controlled, skillIdentifier, increase);
             }
         }
@@ -215,8 +237,8 @@ namespace Barotrauma
             {
                 int increase = newAmount - prevAmount;
                 Character?.AddMessage(
-                    "+[value] " + TextManager.Get("experienceshort"),
-                    GUI.Style.Blue, playSound: Character == Character.Controlled, "exp", increase);
+                    "+[value] " + TextManager.Get("experienceshort").Value,
+                    GUIStyle.Blue, playSound: Character == Character.Controlled, "exp".ToIdentifier(), increase);
             }
         }
 
@@ -226,9 +248,13 @@ namespace Barotrauma
 
             if (idCard.StoredOwnerAppearance.JobPrefab == null || idCard.StoredOwnerAppearance.Portrait == null)
             {
-                string[] readTags = idCard.Item.Tags.Split(',');
+                var readTags = idCard.Item.Tags.Split(',')
+                    .Where(s => s.Contains(':'))
+                    .Select(s => s.Split(':'))
+                    .Select(s => (s[0].ToIdentifier(),s[1]))
+                    .ToImmutableDictionary();
 
-                if (readTags.Length == 0) { return; }
+                if (readTags.None()) { return; }
 
                 if (idCard.StoredOwnerAppearance.JobPrefab == null)
                 {
@@ -237,7 +263,7 @@ namespace Barotrauma
 
                 if (idCard.StoredOwnerAppearance.Portrait == null)
                 {
-                    idCard.StoredOwnerAppearance.ExtractAppearance(this, readTags);
+                    idCard.StoredOwnerAppearance.ExtractAppearance(this, idCard);
                 }
             }
 
@@ -256,7 +282,7 @@ namespace Barotrauma
             disguisedSkinColor = idCard.StoredOwnerAppearance.SkinColor;
         }
 
-        partial void LoadAttachmentSprites(bool omitJob)
+        partial void LoadAttachmentSprites()
         {
             if (attachmentSprites == null)
             {
@@ -266,18 +292,10 @@ namespace Barotrauma
             {
                 LoadHeadAttachments();
             }
-            FaceAttachment?.Elements("sprite").ForEach(s => attachmentSprites.Add(new WearableSprite(s, WearableType.FaceAttachment)));
-            BeardElement?.Elements("sprite").ForEach(s => attachmentSprites.Add(new WearableSprite(s, WearableType.Beard)));
-            MoustacheElement?.Elements("sprite").ForEach(s => attachmentSprites.Add(new WearableSprite(s, WearableType.Moustache)));
-            HairElement?.Elements("sprite").ForEach(s => attachmentSprites.Add(new WearableSprite(s, WearableType.Hair)));
-            if (omitJob)
-            {
-                JobPrefab.NoJobElement?.Element("PortraitClothing")?.Elements("sprite").ForEach(s => attachmentSprites.Add(new WearableSprite(s, WearableType.JobIndicator)));
-            }
-            else
-            {
-                Job?.Prefab.ClothingElement?.Elements("sprite").ForEach(s => attachmentSprites.Add(new WearableSprite(s, WearableType.JobIndicator)));
-            }
+            Head.FaceAttachment?.GetChildElements("sprite").ForEach(s => attachmentSprites.Add(new WearableSprite(s, WearableType.FaceAttachment)));
+            Head.BeardElement?.GetChildElements("sprite").ForEach(s => attachmentSprites.Add(new WearableSprite(s, WearableType.Beard)));
+            Head.MoustacheElement?.GetChildElements("sprite").ForEach(s => attachmentSprites.Add(new WearableSprite(s, WearableType.Moustache)));
+            Head.HairElement?.GetChildElements("sprite").ForEach(s => attachmentSprites.Add(new WearableSprite(s, WearableType.Hair)));
         }
 
         // Doesn't work if the head's source rect does not start at 0,0.
@@ -287,7 +305,7 @@ namespace Barotrauma
         {
             if (sprite == null) { return; }
             if (Head.SheetIndex == null) { return; }
-            Point location = CalculateOffset(sprite, Head.SheetIndex.Value.ToPoint());
+            Point location = CalculateOffset(sprite, Head.SheetIndex.ToPoint());
             sprite.SourceRect = new Rectangle(location, sprite.SourceRect.Size);
         }
 
@@ -298,6 +316,32 @@ namespace Barotrauma
                 scale: new Vector2(
                     HUDLayoutSettings.BottomRightInfoArea.Width / (float)infoAreaPortraitBG.SourceRect.Width,
                     HUDLayoutSettings.BottomRightInfoArea.Height / (float)infoAreaPortraitBG.SourceRect.Height));
+        }
+
+        public void DrawForeground(SpriteBatch spriteBatch)
+        {
+            if (Character is null || !(GameMain.GameSession?.Campaign is MultiPlayerCampaign)) { return; }
+            const int million = 1000000;
+            int xfraction = (int)(HUDLayoutSettings.BottomRightInfoArea.Width * 0.2f);
+            int yoffset = GUI.IntScale(6);
+
+            int walletAmount = Character.Wallet.Balance;
+
+            LocalizedString str = walletAmount >= million ? TextManager.Get("crewwallet.balance.toomuchtoshow") : TextManager.FormatCurrency(walletAmount);
+            Vector2 size = GUIStyle.Font.MeasureString(str);
+            int barHeight = GUI.IntScale(18);
+
+            Rectangle barRect = new Rectangle((int)(HUDLayoutSettings.BottomRightInfoArea.X + xfraction / 2.5f), HUDLayoutSettings.BottomRightInfoArea.Bottom - barHeight - yoffset, HUDLayoutSettings.BottomRightInfoArea.Width - xfraction, barHeight);
+            float textScale = Math.Max(0.1f, Math.Min(barRect.Width / size.X, barRect.Height / size.Y)) - 0.01f;
+
+            GUIStyle.WalletPortraitBG.Draw(spriteBatch, barRect, Color.White);
+
+            int iconSize = GUI.IntScale(28);
+            int iconXOffset = iconSize / 2;
+            Rectangle iconRect = new Rectangle(barRect.Right - iconXOffset, barRect.Top - iconSize / 4, iconSize, iconSize);
+            GUIStyle.CrewWalletIconSmall.Draw(spriteBatch, iconRect, Color.White);
+            var (scaledTextSizeX, scaledTextSizeY) = size * textScale;
+            GUIStyle.Font.DrawString(spriteBatch, str, new Vector2(barRect.Right - iconXOffset - scaledTextSizeX - GUI.IntScale(4), barRect.Center.Y - scaledTextSizeY / 2), GUIStyle.TextColorNormal, 0f, Vector2.Zero, textScale, SpriteEffects.None, 0f);
         }
 
         public void DrawPortrait(SpriteBatch spriteBatch, Vector2 screenPos, Vector2 offset, float targetWidth, bool flip = false, bool evaluateDisguise = false)
@@ -413,19 +457,16 @@ namespace Barotrauma
             {
                 var currEffect = spriteBatch.GetCurrentEffect();
                 float scale = Math.Min(targetAreaSize.X / headSprite.size.X, targetAreaSize.Y / headSprite.size.Y);
-                if (Head.SheetIndex.HasValue)
-                {
-                    headSprite.SourceRect = new Rectangle(CalculateOffset(headSprite, Head.SheetIndex.Value.ToPoint()), headSprite.SourceRect.Size);
-                }
+                headSprite.SourceRect = new Rectangle(CalculateOffset(headSprite, Head.SheetIndex.ToPoint()), headSprite.SourceRect.Size);
                 SetHeadEffect(spriteBatch);
-                headSprite.Draw(spriteBatch, screenPos, scale: scale, color: SkinColor);
+                headSprite.Draw(spriteBatch, screenPos, scale: scale, color: Head.SkinColor);
                 if (AttachmentSprites != null)
                 {
                     float depthStep = 0.000001f;
                     foreach (var attachment in AttachmentSprites)
                     {
                         SetAttachmentEffect(spriteBatch, attachment);
-                        DrawAttachmentSprite(spriteBatch, attachment, headSprite, Head.SheetIndex, screenPos, scale, depthStep, GetAttachmentColor(attachment, HairColor, FacialHairColor));
+                        DrawAttachmentSprite(spriteBatch, attachment, headSprite, Head.SheetIndex, screenPos, scale, depthStep, GetAttachmentColor(attachment, Head.HairColor, Head.FacialHairColor));
                         depthStep += depthStep;
                     }
                 }
@@ -478,14 +519,17 @@ namespace Barotrauma
             attachment.Sprite.Draw(spriteBatch, drawPos, color ?? Color.White, origin, rotate: 0, scale: scale, depth: depth, spriteEffect: spriteEffects);
         }
 
-        public static CharacterInfo ClientRead(string speciesName, IReadMessage inc)
+        public static CharacterInfo ClientRead(Identifier speciesName, IReadMessage inc)
         {
             ushort infoID = inc.ReadUInt16();
             string newName = inc.ReadString();
             string originalName = inc.ReadString();
-            int gender = inc.ReadByte();
-            int race = inc.ReadByte();
-            int headSpriteID = inc.ReadByte();
+            int tagCount = inc.ReadByte();
+            HashSet<Identifier> tagSet = new HashSet<Identifier>();
+            for (int i = 0; i < tagCount; i++)
+            {
+                tagSet.Add(inc.ReadIdentifier());
+            }
             int hairIndex = inc.ReadByte();
             int beardIndex = inc.ReadByte();
             int moustacheIndex = inc.ReadByte();
@@ -493,60 +537,49 @@ namespace Barotrauma
             Color skinColor = inc.ReadColorR8G8B8();
             Color hairColor = inc.ReadColorR8G8B8();
             Color facialHairColor = inc.ReadColorR8G8B8();
+
             string ragdollFile = inc.ReadString();
+            Identifier npcId = inc.ReadIdentifier();
 
-            string jobIdentifier = inc.ReadString();
-            int variant = inc.ReadByte();
-
-            JobPrefab jobPrefab = null;
-            Dictionary<string, float> skillLevels = new Dictionary<string, float>();
-            if (!string.IsNullOrEmpty(jobIdentifier))
+            Identifier factionId = inc.ReadIdentifier();
+            float minReputationToHire = 0.0f;
+            if (factionId != default)
             {
-                jobPrefab = JobPrefab.Get(jobIdentifier);
-                byte skillCount = inc.ReadByte();
-                for (int i = 0; i < skillCount; i++)
+                minReputationToHire = inc.ReadSingle();
+            }
+
+            uint jobIdentifier = inc.ReadUInt32();
+            int variant = inc.ReadByte();
+            JobPrefab jobPrefab = null;
+            Dictionary<Identifier, float> skillLevels = new Dictionary<Identifier, float>();
+            if (jobIdentifier > 0)
+            {
+                jobPrefab = JobPrefab.Prefabs.Find(jp => jp.UintIdentifier == jobIdentifier);
+                if (jobPrefab == null)
                 {
-                    string skillIdentifier = inc.ReadString();
+                    throw new Exception($"Error while reading {nameof(CharacterInfo)} received from the server: could not find a job prefab with the identifier \"{jobIdentifier}\".");
+                }
+                foreach (SkillPrefab skillPrefab in jobPrefab.Skills.OrderBy(s => s.Identifier))
+                {
                     float skillLevel = inc.ReadSingle();
-                    skillLevels.Add(skillIdentifier, skillLevel);
+                    skillLevels.Add(skillPrefab.Identifier, skillLevel);
                 }
             }
 
-            // TODO: animations
-            CharacterInfo ch = new CharacterInfo(speciesName, newName, originalName, jobPrefab, ragdollFile, variant)
+            CharacterInfo ch = new CharacterInfo(speciesName, newName, originalName, jobPrefab, ragdollFile, variant, npcIdentifier: npcId)
             {
                 ID = infoID,
+                MinReputationToHire = (factionId, minReputationToHire)
             };
-            ch.RecreateHead(headSpriteID,(Race)race, (Gender)gender, hairIndex, beardIndex, moustacheIndex, faceAttachmentIndex);
-            ch.SkinColor = skinColor;
-            ch.HairColor = hairColor;
-            ch.FacialHairColor = facialHairColor;
-            if (ch.Job != null)
-            {
-                foreach (KeyValuePair<string, float> skill in skillLevels)
-                {
-                    Skill matchingSkill = ch.Job.Skills.Find(s => s.Identifier == skill.Key);
-                    if (matchingSkill == null)
-                    {
-                        ch.Job.Skills.Add(new Skill(skill.Key, skill.Value));
-                        continue;
-                    }
-                    matchingSkill.Level = skill.Value;
-                }
-                ch.Job.Skills.RemoveAll(s => !skillLevels.ContainsKey(s.Identifier));
-            }
+            ch.RecreateHead(tagSet.ToImmutableHashSet(), hairIndex, beardIndex, moustacheIndex, faceAttachmentIndex);
+            ch.Head.SkinColor = skinColor;
+            ch.Head.HairColor = hairColor;
+            ch.Head.FacialHairColor = facialHairColor;
+            ch.SetPersonalityTrait();
+            ch.Job?.OverrideSkills(skillLevels);
 
-            byte savedStatValueCount = inc.ReadByte();
-            for (int i = 0; i < savedStatValueCount; i++)
-            {
-                int statType = inc.ReadByte();
-                string statIdentifier = inc.ReadString();
-                float statValue = inc.ReadSingle();
-                bool removeOnDeath = inc.ReadBoolean();
-                ch.ChangeSavedStatValue((StatTypes)statType, statValue, statIdentifier, removeOnDeath);
-            }
-            ch.ExperiencePoints = inc.ReadUInt16();
-            ch.AdditionalTalentPoints = inc.ReadUInt16();
+            ch.ExperiencePoints = inc.ReadInt32();
+            ch.AdditionalTalentPoints = inc.ReadRangedInteger(0, MaxAdditionalTalentPoints);
             return ch;
         }
 
@@ -603,12 +636,12 @@ namespace Barotrauma
                             { RelativeOffset = new Vector2(-0.01f, 0.0f) });
                 }
 
-                RectTransform createItemRectTransform(string labelTag, float width = 0.6f)
+                RectTransform createItemRectTransform(Identifier labelTag, float width = 0.6f)
                 {
                     var layoutGroup = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.166f), content.RectTransform));
                     
                     var label = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.5f), layoutGroup.RectTransform),
-                        TextManager.Get(labelTag), font: GUI.SubHeadingFont);
+                        TextManager.Get(labelTag), font: GUIStyle.SubHeadingFont);
 
                     var bottomItem = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.5f), layoutGroup.RectTransform),
                         style: null);
@@ -616,43 +649,40 @@ namespace Barotrauma
                     return new RectTransform(new Vector2(width, 1.0f), bottomItem.RectTransform, Anchor.Center);
                 }
 
-                RectTransform genderItemRT = createItemRectTransform("Gender", 1.0f);
+                RectTransform menuCategoryRT = createItemRectTransform(info.Prefab.MenuCategoryVar, 1.0f);
                 
-                GUILayoutGroup genderContainer =
-                    new GUILayoutGroup(genderItemRT, isHorizontal: true)
+                GUILayoutGroup menuCategoryContainer =
+                    new GUILayoutGroup(menuCategoryRT, isHorizontal: true)
                     {
                         Stretch = true,
                         RelativeSpacing = 0.05f
                     };
 
-                void createGenderButton(Gender gender)
+                void createMenuCategoryButton(Identifier tag)
                 {
-                    new GUIButton(new RectTransform(new Vector2(1.0f, 1.0f), genderContainer.RectTransform),
-                        TextManager.Get(gender.ToString()), style: "ListBoxElement")
+                    new GUIButton(new RectTransform(new Vector2(1.0f, 1.0f), menuCategoryContainer.RectTransform),
+                        TextManager.Get(tag), style: "ListBoxElement")
                     {
-                        UserData = gender,
+                        UserData = tag,
                         OnClicked = OpenHeadSelection,
-                        Selected = info.Gender == gender
+                        Selected = info.Head.Preset.TagSet.Contains(tag)
                     };
                 }
 
-                createGenderButton(Gender.Male);
-                createGenderButton(Gender.Female);
-
-                int countAttachmentsOfType(WearableType wearableType)
-                    => info.FilterByTypeAndHeadID(
-                        info.FilterElementsByGenderAndRace(info.Wearables, info.Head.gender, info.Head.race),
-                        wearableType, info.HeadSpriteId).Count();
+                foreach (var tag in info.Prefab.VarTags[info.Prefab.MenuCategoryVar].OrderBy(t => t.Value).Reverse())
+                {
+                    createMenuCategoryButton(tag);
+                }
 
                 List<GUIScrollBar> attachmentSliders = new List<GUIScrollBar>();
                 void createAttachmentSlider(int initialValue, WearableType wearableType)
                 {
-                    int attachmentCount = countAttachmentsOfType(wearableType);
+                    int attachmentCount = info.CountValidAttachmentsOfType(wearableType);
                     if (attachmentCount > 0)
                     {
                         var labelTag = wearableType == WearableType.FaceAttachment
-                            ? "FaceAttachment.Accessories"
-                            : $"FaceAttachment.{wearableType}";
+                            ? "FaceAttachment.Accessories".ToIdentifier()
+                            : $"FaceAttachment.{wearableType}".ToIdentifier();
                         var sliderItemRT = createItemRectTransform(labelTag);
                         var slider =
                             new GUIScrollBar(sliderItemRT, style: "GUISlider")
@@ -668,12 +698,12 @@ namespace Barotrauma
                     }
                 }
 
-                createAttachmentSlider(info.HairIndex, WearableType.Hair);
-                createAttachmentSlider(info.BeardIndex, WearableType.Beard);
-                createAttachmentSlider(info.MoustacheIndex, WearableType.Moustache);
-                createAttachmentSlider(info.FaceAttachmentIndex, WearableType.FaceAttachment);
+                createAttachmentSlider(info.Head.HairIndex, WearableType.Hair);
+                createAttachmentSlider(info.Head.BeardIndex, WearableType.Beard);
+                createAttachmentSlider(info.Head.MoustacheIndex, WearableType.Moustache);
+                createAttachmentSlider(info.Head.FaceAttachmentIndex, WearableType.FaceAttachment);
 
-                void createColorSelector(string labelTag, IEnumerable<(Color Color, float Commonness)> options, Func<Color> getter,
+                void createColorSelector(Identifier labelTag, IEnumerable<(Color Color, float Commonness)> options, Func<Color> getter,
                     Action<Color> setter)
                 {
                     var selectorItemRT = createItemRectTransform(labelTag, 0.4f);
@@ -755,22 +785,36 @@ namespace Barotrauma
                     };
                 }
 
-                if (countAttachmentsOfType(WearableType.Hair) > 0)
+                if (info.CountValidAttachmentsOfType(WearableType.Hair) > 0)
                 {
-                    createColorSelector($"Customization.{nameof(info.HairColor)}", info.HairColors,
-                        () => info.HairColor, (color) => info.HairColor = color);
+                    createColorSelector($"Customization.{nameof(info.Head.HairColor)}".ToIdentifier(), info.HairColors,
+                        () => info.Head.HairColor, (color) => info.Head.HairColor = color);
                 }
 
-                if (countAttachmentsOfType(WearableType.Moustache) > 0 ||
-                    countAttachmentsOfType(WearableType.Beard) > 0)
+                if (info.CountValidAttachmentsOfType(WearableType.Moustache) > 0 ||
+                    info.CountValidAttachmentsOfType(WearableType.Beard) > 0)
                 {
-                    createColorSelector($"Customization.{nameof(info.FacialHairColor)}", info.FacialHairColors,
-                        () => info.FacialHairColor, (color) => info.FacialHairColor = color);
+                    createColorSelector($"Customization.{nameof(info.Head.FacialHairColor)}".ToIdentifier(), info.FacialHairColors,
+                        () => info.Head.FacialHairColor, (color) => info.Head.FacialHairColor = color);
                 }
-
-                createColorSelector($"Customization.{nameof(info.SkinColor)}", info.SkinColors, () => info.SkinColor,
-                    (color) => info.SkinColor = color);
-
+                
+                createColorSelector($"Customization.{nameof(info.Head.SkinColor)}".ToIdentifier(), info.SkinColors, () => info.Head.SkinColor,
+                    (color) => info.Head.SkinColor = color);
+#if DEBUG
+                new GUIButton(new RectTransform(Vector2.One * 0.12f,
+                        parentComponent.RectTransform,
+                        anchor: Anchor.BottomRight, scaleBasis: ScaleBasis.Smallest)
+                { RelativeOffset = new Vector2(0.01f, 0.005f) }, style: "SaveButton", color: Color.Magenta)
+                {
+                    ToolTip = "DEBUG ONLY: copy the character info XML to clipboard",
+                    OnClicked = (button, o) =>
+                    {
+                        XElement element = info.Save(null);
+                        Clipboard.SetText(element.ToString());
+                        return false;
+                    }
+                };
+#endif
                 RandomizeButton = new GUIButton(new RectTransform(Vector2.One * 0.12f,
                         parentComponent.RectTransform,
                         anchor: Anchor.BottomRight, scaleBasis: ScaleBasis.Smallest)
@@ -778,10 +822,11 @@ namespace Barotrauma
                 {
                     OnClicked = (button, o) =>
                     {
-                        info.Head = new HeadInfo();
-                        info.SetGenderAndRace(Rand.RandSync.Unsynced);
-                        info.SetColors();
-                        
+                        var headPreset = info.Prefab.Heads.GetRandom(Rand.RandSync.Unsynced);
+                        info.Head = new HeadInfo(info, headPreset);
+                        info.SetAttachments(Rand.RandSync.Unsynced);
+                        info.SetColors(Rand.RandSync.Unsynced);
+
                         RecreateFrameContents();
                         info.RefreshHead();
                         OnHeadSwitch?.Invoke(this);
@@ -790,10 +835,7 @@ namespace Barotrauma
                         return false;
                     }
                 };
-                //force update twice because the listbox is insanely janky
-                //TODO: fix all of the UI :)
-                listBox.ForceUpdate();
-                listBox.ForceUpdate();
+                listBox.ForceLayoutRecalculation();
                 foreach (var childLayoutGroup in listBox.Content.GetAllChildren<GUILayoutGroup>())
                 {
                     childLayoutGroup.Recalculate();
@@ -802,7 +844,7 @@ namespace Barotrauma
 
             private bool OpenHeadSelection(GUIButton button, object userData)
             {
-                Gender selectedGender = (Gender)userData;
+                Identifier selectedCategory = (Identifier)userData;
 
                 var info = CharacterInfo;
 
@@ -833,7 +875,7 @@ namespace Barotrauma
                 };
 
                 new GUIFrame(
-                    new RectTransform(new Vector2(1.25f, 1.25f), HeadSelectionList.RectTransform, Anchor.Center),
+                    new RectTransform(new Vector2(1.25f, 1.25f), HeadSelectionList.ContentBackground.RectTransform, Anchor.Center),
                     style: "OuterGlow", color: Color.Black)
                 {
                     UserData = "outerglow",
@@ -843,36 +885,27 @@ namespace Barotrauma
                 GUILayoutGroup row = null;
                 int itemsInRow = 0;
 
-                XElement headElement = info.Ragdoll.MainElement.Elements().FirstOrDefault(e =>
+                ContentXElement headElement = info.Ragdoll.MainElement.Elements().FirstOrDefault(e =>
                     e.GetAttributeString("type", "").Equals("head", StringComparison.OrdinalIgnoreCase));
-                XElement headSpriteElement = headElement.Element("sprite");
-                string spritePathWithTags = headSpriteElement.Attribute("texture").Value;
+                ContentXElement headSpriteElement = headElement.GetChildElement("sprite");
+                ContentPath spritePathWithTags = headSpriteElement.GetAttributeContentPath("texture");
 
                 var characterConfigElement = info.CharacterConfigElement;
 
-                var heads = info.Heads;
+                var heads = info.Prefab.Heads;
                 if (heads != null)
                 {
                     row = null;
                     itemsInRow = 0;
-                    foreach (var kvp in heads.Where(kv => kv.Key.Gender == selectedGender))
+                    foreach (var head in heads.Where(h => h.TagSet.Contains(selectedCategory)))
                     {
-                        var headPreset = kvp.Key;
-                        Race race = headPreset.Race;
-                        int headIndex = headPreset.ID;
+                        string spritePath = info.Prefab.ReplaceVars(spritePathWithTags.Value, head);
 
-                        string spritePath = spritePathWithTags
-                            .Replace("[GENDER]", selectedGender.ToString().ToLowerInvariant())
-                            .Replace("[RACE]", race.ToString().ToLowerInvariant());
-
-                        if (!File.Exists(spritePath))
-                        {
-                            continue;
-                        }
+                        if (!File.Exists(spritePath)) { continue; }
 
                         Sprite headSprite = new Sprite(headSpriteElement, "", spritePath);
                         headSprite.SourceRect =
-                            new Rectangle(CalculateOffset(headSprite, kvp.Value.ToPoint()),
+                            new Rectangle(CharacterInfo.CalculateOffset(headSprite, head.SheetIndex.ToPoint()),
                                 headSprite.SourceRect.Size);
                         characterSprites.Add(headSprite);
 
@@ -882,7 +915,7 @@ namespace Barotrauma
                                 new RectTransform(new Vector2(1.0f, 0.333f), HeadSelectionList.Content.RectTransform),
                                 true)
                             {
-                                UserData = selectedGender,
+                                UserData = head.MenuCategory,
                                 Visible = true
                             };
                             itemsInRow = 0;
@@ -893,9 +926,9 @@ namespace Barotrauma
                         {
                             OutlineColor = Color.White * 0.5f,
                             PressedColor = Color.White * 0.5f,
-                            UserData = new Tuple<Gender, Race, int>(selectedGender, race, headIndex),
+                            UserData = head,
                             OnClicked = SwitchHead,
-                            Selected = selectedGender == info.Gender && race == info.Race && headIndex == info.HeadSpriteId,
+                            Selected = info.Head.Preset == head,
                             Visible = true
                         };
 
@@ -910,12 +943,18 @@ namespace Barotrauma
             private bool SwitchHead(GUIButton button, object obj)
             {
                 var info = CharacterInfo;
-                Gender gender = ((Tuple<Gender, Race, int>)obj).Item1;
-                Race race = ((Tuple<Gender, Race, int>)obj).Item2;
-                int id = ((Tuple<Gender, Race, int>)obj).Item3;
-                info.Gender = gender;
-                info.Race = race;
-                info.Head.HeadSpriteId = id;
+                var headPreset = obj as HeadPreset;
+                if (info.Head.Preset != headPreset)
+                {
+                    info.Head = new HeadInfo(info, headPreset, info.Head.HairIndex, info.Head.BeardIndex, info.Head.MoustacheIndex, info.Head.FaceAttachmentIndex)
+                    {
+                        SkinColor = info.Head.SkinColor,
+                        HairColor = info.Head.HairColor,
+                        FacialHairColor = info.Head.FacialHairColor
+                    };
+                    info.ReloadHeadAttachments();
+                }
+
                 RecreateFrameContents();
                 OnHeadSwitch?.Invoke(this);
                 return true;
@@ -928,16 +967,16 @@ namespace Barotrauma
                 switch (type)
                 {
                     case WearableType.Beard:
-                        info.BeardIndex = index;
+                        info.Head.BeardIndex = index;
                         break;
                     case WearableType.FaceAttachment:
-                        info.FaceAttachmentIndex = index;
+                        info.Head.FaceAttachmentIndex = index;
                         break;
                     case WearableType.Hair:
-                        info.HairIndex = index;
+                        info.Head.HairIndex = index;
                         break;
                     case WearableType.Moustache:
-                        info.MoustacheIndex = index;
+                        info.Head.MoustacheIndex = index;
                         break;
                     default:
                         DebugConsole.ThrowError($"Wearable type not implemented: {type}");
@@ -968,15 +1007,15 @@ namespace Barotrauma
                 foreach (Sprite sprite in characterSprites) { sprite.Remove(); }
                 characterSprites.Clear();
             }
-            
+
             public void Dispose()
             {
                 ClearSprites();
-            }
-
-            ~AppearanceCustomizationMenu()
-            {
-                Dispose();
+                if (HeadSelectionList != null)
+                {
+                    HeadSelectionList.RectTransform.Parent = null;
+                    HeadSelectionList = null;
+                }
             }
         }
     }

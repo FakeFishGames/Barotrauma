@@ -114,41 +114,53 @@ namespace Barotrauma
 
             graphics.Clear(BackgroundColor);
 
-            renderer?.DrawBackground(spriteBatch, cam, LevelObjectManager, backgroundCreatureManager);
+            if (renderer != null)
+            {
+                GameMain.LightManager.AmbientLight = GameMain.LightManager.AmbientLight.Add(renderer.FlashColor);
+                renderer?.DrawBackground(spriteBatch, cam, LevelObjectManager, backgroundCreatureManager);
+            }
         }
 
         public void DrawFront(SpriteBatch spriteBatch, Camera cam)
         {
             renderer?.DrawForeground(spriteBatch, cam, LevelObjectManager);
         }
-        public void ClientRead(ServerNetObject type, IReadMessage msg, float sendingTime)
+        public void ClientEventRead(IReadMessage msg, float sendingTime)
         {
-            bool isGlobalUpdate = msg.ReadBoolean();
-            if (isGlobalUpdate)
+            EventType eventType = (EventType)msg.ReadByte();
+            
+            switch (eventType)
             {
-                foreach (LevelWall levelWall in ExtraWalls)
+                case EventType.GlobalDestructibleWall:
                 {
-                    if (levelWall.Body.BodyType == BodyType.Static) { continue; }
-
-                    Vector2 bodyPos = new Vector2(
-                        msg.ReadSingle(),
-                        msg.ReadSingle());
-                    levelWall.MoveState = msg.ReadRangedSingle(0.0f, MathHelper.TwoPi, 16);
-                    DestructibleLevelWall destructibleWall = levelWall as DestructibleLevelWall;
-                    if (Vector2.DistanceSquared(bodyPos, levelWall.Body.Position) > 0.5f && (destructibleWall == null || !destructibleWall.Destroyed))
+                    foreach (LevelWall levelWall in ExtraWalls)
                     {
-                        levelWall.Body.SetTransformIgnoreContacts(ref bodyPos, levelWall.Body.Rotation);
+                        if (levelWall.Body.BodyType == BodyType.Static) { continue; }
+
+                        Vector2 bodyPos = new Vector2(
+                            msg.ReadSingle(),
+                            msg.ReadSingle());
+                        levelWall.MoveState = msg.ReadRangedSingle(0.0f, MathHelper.TwoPi, 16);
+                        if (Vector2.DistanceSquared(bodyPos, levelWall.Body.Position) > 0.5f
+                            && !(levelWall is DestructibleLevelWall { Destroyed: true }))
+                        {
+                            levelWall.Body.SetTransformIgnoreContacts(ref bodyPos, levelWall.Body.Rotation);
+                        }
                     }
                 }
-            }
-            else
-            {
-                int index = msg.ReadUInt16();
-                byte damageByte = msg.ReadByte();
-                if (index < ExtraWalls.Count && ExtraWalls[index] is DestructibleLevelWall destructibleWall)
+                break;
+                case EventType.SingleDestructibleWall:
                 {
-                    destructibleWall.SetDamage(destructibleWall.MaxHealth * damageByte / 255.0f);
+                    int index = msg.ReadUInt16();
+                    float damageByte = msg.ReadByte();
+                    if (index < ExtraWalls.Count && ExtraWalls[index] is DestructibleLevelWall destructibleWall)
+                    {
+                        destructibleWall.SetDamage(destructibleWall.MaxHealth * damageByte / 255.0f);
+                    }
                 }
+                break;
+                default:
+                    throw new Exception($"Malformed incoming level event: {eventType} is not a supported event type");
             }
         }
     }

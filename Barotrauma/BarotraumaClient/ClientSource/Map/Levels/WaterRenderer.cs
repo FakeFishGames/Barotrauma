@@ -1,5 +1,4 @@
 using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
@@ -51,7 +50,7 @@ namespace Barotrauma
         public readonly WaterVertexData IndoorsSurfaceBottomColor = new WaterVertexData(0.2f, 0.1f, 0.9f, 1.0f);
 
         public VertexPositionTexture[] vertices = new VertexPositionTexture[DefaultBufferSize];
-        public Dictionary<EntityGrid, VertexPositionColorTexture[]> IndoorsVertices = new Dictionary<EntityGrid, VertexPositionColorTexture[]>();// VertexPositionColorTexture[DefaultBufferSize * 2];
+        public Dictionary<EntityGrid, VertexPositionColorTexture[]> IndoorsVertices = new Dictionary<EntityGrid, VertexPositionColorTexture[]>();
 
         public Effect WaterEffect
         {
@@ -65,15 +64,9 @@ namespace Barotrauma
 
         public Texture2D WaterTexture { get; }
 
-        public WaterRenderer(GraphicsDevice graphicsDevice, ContentManager content)
+        public WaterRenderer(GraphicsDevice graphicsDevice)
         {
-#if WINDOWS
-            WaterEffect = content.Load<Effect>("Effects/watershader");
-#endif
-#if LINUX || OSX
-
-            WaterEffect = content.Load<Effect>("Effects/watershader_opengl");
-#endif
+            WaterEffect = EffectLoader.Load("Effects/watershader");
 
             WaterTexture = TextureLoader.FromFile("Content/Effects/waterbump.png");
             WaterEffect.Parameters["xWaterBumpMap"].SetValue(WaterTexture);
@@ -81,12 +74,16 @@ namespace Barotrauma
 
             if (basicEffect == null)
             {
-                basicEffect = new BasicEffect(GameMain.Instance.GraphicsDevice);
-                basicEffect.VertexColorEnabled = false;
-
-                basicEffect.TextureEnabled = true;
+                basicEffect = new BasicEffect(GameMain.Instance.GraphicsDevice)
+                {
+                    VertexColorEnabled = false,
+                    TextureEnabled = true
+                };
             }
         }
+
+        private readonly VertexPositionColorTexture[] tempVertices = new VertexPositionColorTexture[6];
+        private readonly Vector3[] tempCorners = new Vector3[4];
 
         public void RenderWater(SpriteBatch spriteBatch, RenderTarget2D texture, Camera cam)
         {
@@ -102,7 +99,8 @@ namespace Barotrauma
                 WaterEffect.Parameters["xBlurDistance"].SetValue(BlurAmount / 100.0f);
             }
             else
-            {   WaterEffect.CurrentTechnique = WaterEffect.Techniques["WaterShader"];
+            {
+                WaterEffect.CurrentTechnique = WaterEffect.Techniques["WaterShader"];
             }
 
             Vector2 offset = WavePos;
@@ -139,29 +137,26 @@ namespace Barotrauma
 
             WaterEffect.CurrentTechnique.Passes[0].Apply();
 
-            VertexPositionColorTexture[] verts = new VertexPositionColorTexture[6];
-
             Rectangle view = cam != null ? cam.WorldView : spriteBatch.GraphicsDevice.Viewport.Bounds;
 
-            var corners = new Vector3[4];
-            corners[0] = new Vector3(view.X, view.Y, 0.1f);
-            corners[1] = new Vector3(view.Right, view.Y, 0.1f);
-            corners[2] = new Vector3(view.Right, view.Y - view.Height, 0.1f);
-            corners[3] = new Vector3(view.X, view.Y - view.Height, 0.1f);
+            tempCorners[0] = new Vector3(view.X, view.Y, 0.1f);
+            tempCorners[1] = new Vector3(view.Right, view.Y, 0.1f);
+            tempCorners[2] = new Vector3(view.Right, view.Y - view.Height, 0.1f);
+            tempCorners[3] = new Vector3(view.X, view.Y - view.Height, 0.1f);
 
             WaterVertexData backGroundColor = new WaterVertexData(0.1f, 0.1f, 0.5f, 1.0f);
-            verts[0] = new VertexPositionColorTexture(corners[0], backGroundColor, Vector2.Zero);
-            verts[1] = new VertexPositionColorTexture(corners[1], backGroundColor, Vector2.Zero);
-            verts[2] = new VertexPositionColorTexture(corners[2], backGroundColor, Vector2.Zero);
-            verts[3] = new VertexPositionColorTexture(corners[0], backGroundColor, Vector2.Zero);
-            verts[4] = new VertexPositionColorTexture(corners[2], backGroundColor, Vector2.Zero);
-            verts[5] = new VertexPositionColorTexture(corners[3], backGroundColor, Vector2.Zero);
+            tempVertices[0] = new VertexPositionColorTexture(tempCorners[0], backGroundColor, Vector2.Zero);
+            tempVertices[1] = new VertexPositionColorTexture(tempCorners[1], backGroundColor, Vector2.Zero);
+            tempVertices[2] = new VertexPositionColorTexture(tempCorners[2], backGroundColor, Vector2.Zero);
+            tempVertices[3] = new VertexPositionColorTexture(tempCorners[0], backGroundColor, Vector2.Zero);
+            tempVertices[4] = new VertexPositionColorTexture(tempCorners[2], backGroundColor, Vector2.Zero);
+            tempVertices[5] = new VertexPositionColorTexture(tempCorners[3], backGroundColor, Vector2.Zero);
 
-            spriteBatch.GraphicsDevice.DrawUserPrimitives(PrimitiveType.TriangleList, verts, 0, 2);
+            spriteBatch.GraphicsDevice.DrawUserPrimitives(PrimitiveType.TriangleList, tempVertices, 0, 2);
 
             foreach (KeyValuePair<EntityGrid, VertexPositionColorTexture[]> subVerts in IndoorsVertices)
             {
-                if (!PositionInIndoorsBuffer.ContainsKey(subVerts.Key) || PositionInIndoorsBuffer[subVerts.Key] == 0) continue;
+                if (!PositionInIndoorsBuffer.ContainsKey(subVerts.Key) || PositionInIndoorsBuffer[subVerts.Key] == 0) { continue; }
 
                 offset = WavePos;
                 if (subVerts.Key.Submarine != null) { offset -= subVerts.Key.Submarine.WorldPosition; }
@@ -207,23 +202,27 @@ namespace Barotrauma
             basicEffect.CurrentTechnique.Passes[0].Apply();
         }
 
+        private readonly List<EntityGrid> buffersToRemove = new List<EntityGrid>();
         public void ResetBuffers()
         {
             PositionInBuffer = 0;
             PositionInIndoorsBuffer.Clear();
-            IndoorsVertices.Clear();
+            buffersToRemove.Clear();
+            foreach (var buffer in IndoorsVertices.Keys)
+            {
+                if (buffer.Submarine?.Removed ?? false)
+                {
+                    buffersToRemove.Add(buffer);
+                }
+            }
+            foreach (var bufferToRemove in buffersToRemove)
+            {
+                IndoorsVertices.Remove(bufferToRemove);
+            }
         }
 
         public void Dispose()
         {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-
-        protected virtual void Dispose(bool disposing)
-        {
-            if (!disposing) return;
-
             if (WaterEffect != null)
             {
                 WaterEffect.Dispose();
@@ -236,6 +235,5 @@ namespace Barotrauma
                 basicEffect = null;
             }
         }
-
     }
 }
