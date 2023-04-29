@@ -287,7 +287,7 @@ namespace Barotrauma
             }
             else
             {
-                SourceElement = sourceElements.Single().FromPackage(SourceElement.ContentPackage);
+                SourceElement = sourceElements.Single().FromContent(SourceElement.ContentPath);
             }
             if (SourceElement != null)
             {
@@ -333,7 +333,7 @@ namespace Barotrauma
             {
                 if (!path.EndsWith("/")) path += "/";
             }
-            FilePath = ContentPath.FromRaw(SourceElement.ContentPackage, (path + file).CleanUpPathCrossPlatform(correctFilenameCase: true));
+            FilePath = ContentPath.FromRaw(SourceElement.ContentPath, (path + file).CleanUpPathCrossPlatform(correctFilenameCase: true));
             return true;
         }
 

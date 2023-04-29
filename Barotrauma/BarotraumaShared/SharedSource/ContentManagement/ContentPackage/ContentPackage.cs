@@ -83,9 +83,13 @@ namespace Barotrauma
         /// </summary>
         public bool HasMultiplayerSyncedContent { get; }
 
-        protected ContentPackage(XDocument doc, string path)
+		// vanilla's filelist.xml location and %ModDir% logic is different
+		public bool isVanilla;
+
+		protected ContentPackage(XDocument doc, string path, bool isVanilla = false)
         {
-            using var errorCatcher = DebugConsole.ErrorCatcher.Create();
+			this.isVanilla = isVanilla;
+			using var errorCatcher = DebugConsole.ErrorCatcher.Create();
             
             Path = path.CleanUpPathCrossPlatform();
             XElement rootElement = doc.Root ?? throw new NullReferenceException("XML document is invalid: root element is null.");
@@ -158,6 +162,31 @@ namespace Barotrauma
         public bool NameMatches(string name)
             => NameMatches(name.ToIdentifier());
         
+        public bool StringMatches(string workshop_id_or_name)
+            => (UgcId.Fallback(ContentPackageId.NULL).ToString().Equals(workshop_id_or_name) || NameMatches(workshop_id_or_name));
+
+        public string GetBestEffortId() {
+            if (UgcId.TryUnwrap(out ContentPackageId? id))
+            {
+                return id.ToString();
+            }
+            else
+            {
+                return Name;
+            }
+        }
+        public void ResetErrors()
+        {
+            EnableError = Option.None;
+            FatalLoadErrors = FatalLoadErrors.Clear();
+        }
+
+        // to add xpath error to loading
+        public void AddError(LoadError error)
+        {
+            FatalLoadErrors = FatalLoadErrors.Add(error);
+        }
+
         public static Result<ContentPackage, Exception> TryLoad(string path)
         {
             var (success, failure) = Result<ContentPackage, Exception>.GetFactoryMethods();

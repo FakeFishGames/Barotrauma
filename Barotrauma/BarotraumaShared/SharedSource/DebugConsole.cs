@@ -13,6 +13,9 @@ using Barotrauma.IO;
 using System.Linq;
 using System.Text;
 using Barotrauma.MapCreatures.Behavior;
+using System.Xml.Linq;
+using System.Xml;
+using System.Data;
 
 namespace Barotrauma
 {
@@ -1890,6 +1893,61 @@ namespace Barotrauma
             commands.Add(new Command("devmode", "Toggle the dev mode on/off (client-only).", null, isCheat: true));
             commands.Add(new Command("showmonsters", "Permanently unlocks all the monsters in the character editor. Use \"hidemonsters\" to undo.", null, isCheat: true));
             commands.Add(new Command("hidemonsters", "Permanently hides in the character editor all the monsters that haven't been encountered in the game. Use \"showmonsters\" to undo.", null, isCheat: true));
+
+            commands.Add(new Command("dump_prefab_id", "dump_prefab_id [prefab type] [identifier] [file (optional)]", (string[] args) =>
+            {
+                if (args.Length < 2)
+                {
+                    ThrowError($"Invalid arguments!");
+                    return;
+                }
+                string filePath = $"{args[1]}.xml";
+                if (args.Length > 2) {
+                    filePath = args[2];
+                }
+                XElement elem = null;
+                switch (args[0].ToLowerInvariant())
+                {
+                    case "item":
+                        {
+                            ItemPrefab.Prefabs.TryGet(args[1].ToIdentifier(), out ItemPrefab res);
+                            elem = res?.ConfigElement.Element;
+                        }
+                        break;
+                    case "character":
+                        {
+							CharacterPrefab.Prefabs.TryGet(args[1].ToIdentifier(), out CharacterPrefab res);
+							elem = res?.ConfigElement.Element;
+						}
+						break;
+					case "affliction":
+						{
+							AfflictionPrefab.Prefabs.TryGet(args[1].ToIdentifier(), out AfflictionPrefab res);
+							elem = res?.ConfigElement.Element;
+						}
+						break;
+					default:
+						ThrowError($"Only support Item and Character that have IImplementVariants for now!");
+						return;
+                }
+                if (elem != null)
+                {
+                    System.Xml.XmlWriterSettings settings = new();
+                    settings.Indent = true;
+                    var writer = System.Xml.XmlWriter.Create(filePath, settings);
+                    elem.WriteTo(writer);
+                    writer.Flush();
+                    writer.Close();
+                }
+                else {
+                    ThrowError($"Cannot find {args[0]} with identifier {args[1]}!");
+                }
+            }, 
+            () => {
+                return new string[][] {
+                    new string[]{ "Item", "Character", "Affliction" }
+                };
+            }, false));
 
             InitProjectSpecific();
 

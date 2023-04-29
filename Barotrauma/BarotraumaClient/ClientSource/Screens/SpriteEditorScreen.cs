@@ -344,7 +344,7 @@ namespace Barotrauma
                         XDocument doc = XMLExtensions.TryLoadXml(file.Path);
                         if (doc != null)
                         {
-                            LoadSprites(doc.Root.FromPackage(file.Path.ContentPackage));
+                            LoadSprites(doc.Root.FromContent(file.Path));
                         }
                     }
                 }

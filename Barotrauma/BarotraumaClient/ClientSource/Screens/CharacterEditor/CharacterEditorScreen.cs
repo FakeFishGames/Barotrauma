@@ -1167,7 +1167,7 @@ namespace Barotrauma.CharacterEditor
                 new XAttribute("height", limb.Params.Height),
                 new XElement("sprite",
                     new XAttribute("texture", spriteParams.Texture),
-                    new XAttribute("sourcerect", $"{rect.X}, {rect.Y}, {rect.Size.X}, {rect.Size.Y}"))).FromPackage(character.Prefab.ContentPackage);
+                    new XAttribute("sourcerect", $"{rect.X}, {rect.Y}, {rect.Size.X}, {rect.Size.Y}"))).FromContent(character.Prefab.FilePath);
             CreateLimb(newLimbElement);
         }
 
@@ -1179,7 +1179,7 @@ namespace Barotrauma.CharacterEditor
                 new XAttribute("height", sourceRect.Height * RagdollParams.TextureScale),
                 new XElement("sprite",
                     new XAttribute("texture", RagdollParams.Limbs.First().GetSprite().Texture),
-                    new XAttribute("sourcerect", $"{sourceRect.X}, {sourceRect.Y}, {sourceRect.Width}, {sourceRect.Height}"))).FromPackage(character.Prefab.ContentPackage);
+                    new XAttribute("sourcerect", $"{sourceRect.X}, {sourceRect.Y}, {sourceRect.Width}, {sourceRect.Height}"))).FromContent(character.Prefab.FilePath);
             CreateLimb(newLimbElement);
             lockSpriteOriginToggle.Selected = false;
             recalculateColliderToggle.Selected = true;
@@ -1225,7 +1225,7 @@ namespace Barotrauma.CharacterEditor
                 new XAttribute("limb2", toLimb),
                 new XAttribute("limb1anchor", $"{a1.X.Format(2)}, {a1.Y.Format(2)}"),
                 new XAttribute("limb2anchor", $"{a2.X.Format(2)}, {a2.Y.Format(2)}")
-            ).FromPackage(character.Prefab.ContentPackage);
+            ).FromContent(character.Prefab.FilePath);
             var lastJointElement = RagdollParams.MainElement.GetChildElements("joint").LastOrDefault() ?? RagdollParams.MainElement.GetChildElements("limb").LastOrDefault();
             if (lastJointElement == null)
             {
@@ -1747,7 +1747,7 @@ namespace Barotrauma.CharacterEditor
             }
             XDocument doc = new XDocument(config);
             
-            ContentPath configFileContentPath = ContentPath.FromRaw(contentPackage, configFilePath);
+            ContentPath configFileContentPath = ContentPath.FromRawNoConcrete(contentPackage, configFilePath);
             Directory.CreateDirectory(Path.GetDirectoryName(configFileContentPath.Value));
 #if DEBUG
             doc.Save(configFileContentPath.Value);
@@ -2810,7 +2810,7 @@ namespace Barotrauma.CharacterEditor
                     return false;
                 }
 #endif
-                ContentPath texturePath = ContentPath.FromRaw(character.Prefab.ContentPackage, RagdollParams.Texture);
+                ContentPath texturePath = ContentPath.FromRaw(character.Prefab.FilePath, RagdollParams.Texture);
                 if (!character.IsHuman && (texturePath.IsNullOrWhiteSpace() || !File.Exists(texturePath.Value)))
                 {
                     DebugConsole.ThrowError($"Invalid texture path: {RagdollParams.Texture}");

@@ -405,7 +405,7 @@ namespace Barotrauma
                 ragdoll.Flip();
             }
 
-            var root = doc.Root.FromPackage(pathToAppendage.ContentPackage);
+            var root = doc.Root.FromContent(pathToAppendage);
             var limbElements = root.GetChildElements("limb").ToDictionary(e => e.GetAttributeString("id", null), e => e);
             //the IDs may need to be offset if the character has other extra appendages (e.g. from gene splicing)
             //that take up the IDs of this appendage

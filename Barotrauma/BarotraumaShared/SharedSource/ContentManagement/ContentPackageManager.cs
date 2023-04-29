@@ -1,4 +1,4 @@
-#nullable enable
+﻿#nullable enable
 using Barotrauma.Extensions;
 using System;
 using System.Collections;
@@ -87,29 +87,78 @@ namespace Barotrauma
                     // so people are forced away from broken mods
                     .Where(r => !r.FatalLoadErrors.Any())
                     .ToList();
-                IEnumerable<RegularPackage> toUnload = regular.Where(r => !newRegular.Contains(r));
-                RegularPackage[] toLoad = newRegular.Where(r => !regular.Contains(r)).ToArray();
-                toUnload.ForEach(r => r.UnloadContent());
 
                 Range<float> loadingRange = new Range<float>(0.0f, 1.0f);
-                
-                for (int i = 0; i < toLoad.Length; i++)
+
+                bool finished = false;
+                while (!finished)
                 {
-                    var package = toLoad[i];
-                    loadingRange = new Range<float>(i / (float)toLoad.Length, (i + 1) / (float)toLoad.Length);
-                    foreach (var progress in package.LoadContentEnumerable())
+                    // this is in reverse order. this can help inheritance removing wrong package
+                    RegularPackage[] toLoad;
                     {
-                        if (progress.Result.IsFailure)
+                        // unload contents.
+                        var reversed_original = regular.AsEnumerable().Reverse().GetEnumerator();
+                        var reversed_incomming = newRegular.AsEnumerable().Reverse().GetEnumerator();
+                        bool difference_found = false;
+                        List<RegularPackage> toLoadList = new List<RegularPackage>();
+                        while (reversed_original.MoveNext())
                         {
-                            //If an exception was thrown while loading this package, refuse to add it to the list of enabled packages
-                            newRegular.Remove(package);
-                            break;
+                            if (reversed_incomming.MoveNext())
+                            {
+                                if (reversed_original.Current != reversed_incomming.Current)
+                                {
+                                    difference_found = true;
+                                }
+                                if (difference_found)
+                                {
+                                    toLoadList.Add(reversed_incomming.Current);
+                                    reversed_original.Current.UnloadContent();
+                                }
+                            }
+                            else
+                            {
+                                reversed_original.Current.UnloadContent();
+                            }
                         }
-                        yield return progress.Transform(loadingRange);
+                        while (reversed_incomming.MoveNext())
+                        {
+                            toLoadList.Add(reversed_incomming.Current);
+                        }
+                        toLoad = toLoadList.AsEnumerable().ToArray();
+                    }
+
+                    for (int i = 0; i < toLoad.Length; i++)
+                    {
+                        var package = toLoad[i];
+                        loadingRange = new Range<float>(i / (float)toLoad.Length, (i + 1) / (float)toLoad.Length);
+                        foreach (var progress in package.LoadContentEnumerable())
+                        {
+                            if (progress.Result.IsFailure)
+                            {
+                                //If an exception was thrown while loading this package, refuse to add it to the list of enabled packages
+                                package.UnloadContent();
+                                newRegular.Remove(package);
+                                break;
+                            }
+                            yield return progress.Transform(loadingRange);
+                        }
+                    }
+                    regular.Clear(); regular.AddRange(newRegular);
+                    SortContent();
+                    if (newRegular.Any(p => p.HasAnyErrors))
+                    {
+                        newRegular.Where(p => p.HasAnyErrors).ToArray()
+                            .ForEach((p) =>
+                            {
+                                p.UnloadContent();
+                                newRegular.Remove(p);
+                            });
+                    }
+                    else
+                    {
+                        finished = true;
                     }
                 }
-                regular.Clear(); regular.AddRange(newRegular);
-                SortContent();
                 yield return LoadProgress.Progress(1.0f);
             }
 
@@ -420,6 +469,11 @@ namespace Barotrauma
                         {
                             var newRegular = EnabledPackages.Regular.ToArray();
                             newRegular[index] = regular;
+                            // hot reloading xpath mod need to reset upper errors.
+                            for (int i = 0; i <= index; ++i)
+                            {
+                                newRegular[i].ResetErrors();
+                            }
                             EnabledPackages.SetRegular(newRegular);
                         }
 
@@ -465,7 +519,7 @@ namespace Barotrauma
 
         public static void LoadVanillaFileList()
         {
-            VanillaCorePackage = new CorePackage(XDocument.Load(VanillaFileList), VanillaFileList);
+            VanillaCorePackage = new CorePackage(XDocument.Load(VanillaFileList), VanillaFileList, true);
             foreach (ContentPackage.LoadError error in VanillaCorePackage.FatalLoadErrors)
             {
                 DebugConsole.ThrowError(error.ToString());

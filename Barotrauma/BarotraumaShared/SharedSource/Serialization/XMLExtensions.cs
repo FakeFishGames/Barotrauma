@@ -32,7 +32,9 @@ namespace Barotrauma
                 { typeof(Vector4), (str, defVal) => ParseVector4(str) },
                 { typeof(Rectangle), (str, defVal) => ParseRect(str, true) }
             }.ToImmutableDictionary();
-        
+
+        // should never use contentpathfromuri for internal parsing after mod refactor, workshop mods are NOT in subdirectory of current working dir, and will create "../../.." or even
+        // be on different filesystem roots ("C:\" and "D:\")
         public static string ParseContentPathFromUri(this XObject element)
             => !string.IsNullOrWhiteSpace(element.BaseUri)
                 ? System.IO.Path.GetRelativePath(Environment.CurrentDirectory, element.BaseUri.CleanUpPath())
@@ -139,7 +141,6 @@ namespace Barotrauma
             return value;
         }
 
-
         public static string GetAttributeString(this XElement element, string name, string defaultValue)
         {
             var attribute = element?.GetAttribute(name);
@@ -171,12 +172,23 @@ namespace Barotrauma
             return !texName.IsNullOrEmpty() & !texName.Contains("/") && !texName.Contains("%ModDir", StringComparison.OrdinalIgnoreCase);
         }
 
-        public static ContentPath GetAttributeContentPath(this XElement element, string name, ContentPackage contentPackage)
+        public static ContentPath GetContentPath(this XAttribute attribute, ContentPath contentPath)
+        {
+            if (attribute == null) { return null; }
+            return ContentPath.FromRaw(contentPath, GetAttributeString(attribute, null));
+        }
+
+        public static ContentPath GetAttributeContentPath(this XElement element, string name, ContentPath contentPath)
         {
             var attribute = element?.GetAttribute(name);
             if (attribute == null) { return null; }
-            return ContentPath.FromRaw(contentPackage, GetAttributeString(attribute, null));
+            return ContentPath.FromRaw(contentPath, GetAttributeString(attribute, null));
         }
+
+        public static XAttribute CreateFromContentPath(string name, ContentPath contentPath, ContentPath newParent)
+        {
+            return new XAttribute(name, contentPath.MutateContentPath(newParent).ToAttrString());
+		}
         
         public static Identifier GetAttributeIdentifier(this XElement element, string name, string defaultValue)
         {
@@ -950,7 +962,7 @@ namespace Barotrauma
 
             return floatArray;
         }
-
+        
         // parse a range string, e.g "1-3" or "3"
         public static Range<int> ParseRange(string rangeString)
         {
@@ -982,8 +994,22 @@ namespace Barotrauma
             }
         }
 
-        public static Identifier VariantOf(this XElement element) =>
-            element.GetAttributeIdentifier("inherit", element.GetAttributeIdentifier("variantof", ""));
+
+        // add <inherit/> element for extended inheritance.
+        public static PrefabInstance InheritParent(this XElement element)
+        {
+            var attr_string = element.GetAttributeIdentifier("inherit", element.GetAttributeIdentifier("variantof", ""));
+            if (!attr_string.IsEmpty)
+            {
+                return new PrefabInstance(attr_string, "");
+            }
+            if (element.Elements().Any(e => e.Name.ToString().Equals("inherit", StringComparison.OrdinalIgnoreCase)))
+            {
+                XElement elem = element.Elements().First(e => e.Name.ToString().Equals("inherit", StringComparison.OrdinalIgnoreCase));
+                return new PrefabInstance(elem.GetAttributeIdentifier("identifier",""), elem.Attribute("package")?.Value ?? "");
+            }
+            return new PrefabInstance("".ToIdentifier(), "");
+        }
 
         public static string[] ParseStringArray(string stringArrayValues)
         {

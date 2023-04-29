@@ -573,7 +573,8 @@ namespace Barotrauma
             if (item.Condition < TargetCondition) { return false; }
             if (ItemFilter != null && !ItemFilter(item)) { return false; }
             if (RequireNonEmpty && item.Components.Any(i => !i.IsNotEmpty(character))) { return false; }
-            return CheckItemIdentifiersOrTags(item, IdentifiersOrTags) || (AllowVariants && !item.Prefab.VariantOf.IsEmpty && IdentifiersOrTags.Contains(item.Prefab.VariantOf));
+            return CheckItemIdentifiersOrTags(item, IdentifiersOrTags) || (AllowVariants && !(item.Prefab as IImplementsVariants<ItemPrefab>).InheritParent.IsEmpty && IdentifiersOrTags.Contains((item.Prefab as IImplementsVariants<ItemPrefab>).InheritParent.id));
+
         }
 
         public override void Reset()

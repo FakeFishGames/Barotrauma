@@ -92,7 +92,7 @@ namespace Barotrauma
                     {
                         foreach (var subElement in remoteContentDoc.Root.Elements())
                         {
-                            GUIComponent.FromXML(subElement.FromPackage(null), remoteContentContainer.RectTransform);
+                            GUIComponent.FromXML(subElement.FromContent(ContentPath.Empty), remoteContentContainer.RectTransform);
                         }
                     }
                     catch (Exception e)
@@ -1541,7 +1541,7 @@ namespace Barotrauma
                     remoteContentDoc = XDocument.Parse(xml);
                     foreach (var subElement in remoteContentDoc?.Root.Elements())
                     {
-                        GUIComponent.FromXML(subElement.FromPackage(null), remoteContentContainer.RectTransform);
+                        GUIComponent.FromXML(subElement.FromContent(ContentPath.Empty), remoteContentContainer.RectTransform);
                     }
                 }
             }

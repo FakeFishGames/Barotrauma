@@ -44,7 +44,7 @@ namespace Barotrauma
             if (doc == null) { return; }
 
             bool allowOverriding = false;
-            var mainElement = doc.Root.FromPackage(configFile.ContentPackage);
+            var mainElement = doc.Root.FromContent(configFile.Path);
             if (doc.Root.IsOverride())
             {
                 mainElement = mainElement.FirstElement();

@@ -50,7 +50,7 @@ namespace Barotrauma
         {
             XDocument doc = XMLExtensions.TryLoadXml(Path);
             if (doc is null) { return; }
-            LoadSubElements(doc.Root.FromPackage(ContentPackage), false);
+            LoadSubElements(doc.Root.FromContent(Path), false);
         }
 
         public override void UnloadFile()

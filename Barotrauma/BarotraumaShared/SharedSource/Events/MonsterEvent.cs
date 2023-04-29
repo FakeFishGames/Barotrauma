@@ -157,7 +157,7 @@ namespace Barotrauma
                 Character createdCharacter = Character.Create(SpeciesName, Vector2.Zero, seed, characterInfo: null, isRemotePlayer: false, hasAi: true, createNetworkEvent: true, throwErrorIfNotFound: false);
                 if (createdCharacter == null)
                 {
-                    DebugConsole.AddWarning($"Error in MonsterEvent: failed to spawn the character \"{SpeciesName}\". Content package: \"{prefab.ConfigElement?.ContentPackage?.Name ?? "unknown"}\".");
+                    DebugConsole.AddWarning($"Error in MonsterEvent: failed to spawn the character \"{SpeciesName}\". Content package: \"{prefab.ConfigElement?.ContentPath.ContentPackage?.Name ?? "unknown"}\".");
                     disallowed = true;
                     continue;
                 }

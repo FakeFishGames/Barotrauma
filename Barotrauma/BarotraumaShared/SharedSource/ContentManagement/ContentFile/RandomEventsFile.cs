@@ -66,7 +66,7 @@ namespace Barotrauma
             XDocument doc = XMLExtensions.TryLoadXml(Path);
             if (doc == null) { return; }
 
-            var rootElement = doc.Root.FromPackage(ContentPackage);
+            var rootElement = doc.Root.FromContent(Path);
             LoadFromXElement(rootElement, false);
         }
 

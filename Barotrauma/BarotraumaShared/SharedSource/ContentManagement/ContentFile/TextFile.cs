@@ -11,7 +11,7 @@ namespace Barotrauma
         public override void LoadFile()
         {
             XDocument doc = XMLExtensions.TryLoadXml(Path);
-            var mainElement = doc.Root.FromPackage(ContentPackage);
+            var mainElement = doc.Root.FromContent(Path);
 
             var languageName = mainElement.GetAttributeIdentifier("language", TextManager.DefaultLanguage.Value);
 

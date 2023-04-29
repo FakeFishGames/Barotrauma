@@ -21,7 +21,7 @@ namespace Barotrauma
 
         public void InheritFrom(CharacterPrefab parent)
         {
-            ConfigElement = CharacterParams.CreateVariantXml(originalElement, parent.ConfigElement).FromPackage(ConfigElement.ContentPackage);
+            ConfigElement = (this as IImplementsVariants<CharacterPrefab>).DoInherit(CharacterParams.CreateVariantXml_callback);
             ParseConfigElement();
         }
 
@@ -38,7 +38,7 @@ namespace Barotrauma
             }
         }
 
-        private readonly XElement originalElement;
+        public XElement originalElement { get; }
         public ContentXElement ConfigElement { get; private set; }
 
         public CharacterInfoPrefab CharacterInfoPrefab { get; private set; }
@@ -69,7 +69,6 @@ namespace Barotrauma
         {
             originalElement = mainElement;
             ConfigElement = mainElement;
-            VariantOf = mainElement.VariantOf();
 
             ParseConfigElement();
         }
@@ -97,6 +96,37 @@ namespace Barotrauma
                 return false;
             }
             return true;
+        }
+
+        public CharacterPrefab FindByPrefabInstance(PrefabInstance instance){
+            Prefabs.TryGet(instance, out CharacterPrefab res);
+            return res;
+		}
+
+        public CharacterPrefab GetPrevious(Identifier identifier)
+        {
+            CharacterPrefab res;
+            if (identifier != Identifier)
+            {
+                if(Prefabs.Any(p=>p.Identifier == identifier)){
+					res = Prefabs[identifier];
+				}
+                else{
+                    res = null;
+                }
+            }
+            else {
+                if (Prefabs.AllPrefabs.Any(p => p.Key == identifier)) {
+                    string best_effort_package_id = ContentPackage.GetBestEffortId();
+					res = Prefabs.AllPrefabs.Where(p => p.Key == identifier)
+		                .Single().Value
+		                .GetPrevious(best_effort_package_id);
+				}
+                else{
+                    res = null;
+                }
+			}
+            return res;
         }
     }
 }

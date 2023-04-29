@@ -146,7 +146,7 @@ namespace Barotrauma
             string rewardText = $"‖color:gui.orange‖{string.Format(System.Globalization.CultureInfo.InvariantCulture, "{0:N0}", alternateReward)}‖end‖";
             if (descriptionWithoutReward != null) { description = descriptionWithoutReward.Replace("[reward]", rewardText); }
 
-            ContentPath submarinePath = submarineConfig.GetAttributeContentPath("path", Prefab.ContentPackage);
+            ContentPath submarinePath = submarineConfig.GetAttributeContentPath("path", Prefab.FilePath);
             if (submarinePath.IsNullOrEmpty())
             {
                 DebugConsole.ThrowError($"No path used for submarine for the pirate mission \"{Prefab.Identifier}\"!");

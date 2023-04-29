@@ -1127,7 +1127,7 @@ namespace Barotrauma
         public static List<ContentXElement> AddEmpty(IEnumerable<ContentXElement> elements, WearableType type, float commonness = 1)
         {
             // Let's add an empty element so that there's a chance that we don't get any actual element -> allows bald and beardless guys, for example.
-            var emptyElement = new XElement("EmptyWearable", type.ToString(), new XAttribute("commonness", commonness)).FromPackage(null);
+            var emptyElement = new XElement("EmptyWearable", type.ToString(), new XAttribute("commonness", commonness)).FromContent(ContentPath.Empty);
             var list = new List<ContentXElement>() { emptyElement };
             list.AddRange(elements);
             return list;
