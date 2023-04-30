@@ -410,7 +410,7 @@ namespace Barotrauma
             }
 
             bool isMouseOn = MouseRect.Contains(PlayerInput.MousePosition) && (GUI.MouseOn == null || (!(GUI.MouseOn is GUIButton) && GUI.IsMouseOn(this)));
-            if (isMouseOn || isSelecting)
+            if (isMouseOn || isSelecting || (State == ComponentState.Selected && PlayerInput.IsShiftDown()))
             {
                 State = ComponentState.Hover;
                 if (PlayerInput.PrimaryMouseButtonDown())
@@ -868,7 +868,7 @@ namespace Barotrauma
                     }
                     else
                     {
-                        CaretIndex = Text.LastIndexOf('\n', CaretIndex - 1) + 1;
+                        CaretIndex = Text.LastIndexOf('\n', Math.Max(0, CaretIndex - 1)) + 1;
                     }
 
                     caretTimer = 0;
