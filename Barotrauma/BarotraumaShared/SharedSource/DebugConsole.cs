@@ -384,7 +384,7 @@ namespace Barotrauma
                     return new string[][]
                     {
                         GameMain.NetworkMember.ConnectedClients.Select(c => c.Name).ToArray(),
-                        PermissionPreset.List.Select(pp => pp.Name.Value).ToArray()
+                        PermissionPreset.List.Select(pp => pp.DisplayName.Value).ToArray()
                     };
                 }));
 

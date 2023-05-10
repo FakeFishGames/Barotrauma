@@ -66,7 +66,7 @@ namespace Barotrauma
                 else
                 {
                     float devotion = CumulatedDevotion / 100;
-                    Priority = MathHelper.Lerp(0, 100, MathHelper.Clamp(devotion + (severity * distanceFactor * PriorityModifier), 0, 1));
+                    Priority = MathHelper.Lerp(0, AIObjectiveManager.MaxObjectivePriority, MathHelper.Clamp(devotion + (severity * distanceFactor * PriorityModifier), 0, 1));
                 }
             }
             return Priority;

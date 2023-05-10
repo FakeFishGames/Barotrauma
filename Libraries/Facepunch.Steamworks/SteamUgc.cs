@@ -15,7 +15,7 @@ namespace Steamworks
 	/// </summary>
 	public class SteamUGC : SteamSharedClass<SteamUGC>
 	{
-		internal static ISteamUGC Internal => Interface as ISteamUGC;
+		internal static ISteamUGC? Internal => Interface as ISteamUGC;
 
 		internal override void InitializeInterface( bool server )
 		{
@@ -44,10 +44,11 @@ namespace Steamworks
 		/// <summary>
 		/// Posted after Download call
 		/// </summary>
-		public static event Action<Result, ulong> OnDownloadItemResult;
+		public static event Action<Result, ulong>? OnDownloadItemResult;
 
 		public static async Task<bool> DeleteFileAsync( PublishedFileId fileId )
 		{
+			if (Internal is null) { return false; }
 			var r = await Internal.DeleteItem( fileId );
 			return r?.Result == Result.OK;
 		}
@@ -60,7 +61,7 @@ namespace Steamworks
 		/// <returns>true if nothing went wrong and the download is started</returns>
 		public static bool Download( PublishedFileId fileId, bool highPriority = false )
 		{
-			return Internal.DownloadItem( fileId, highPriority );
+			return Internal != null && Internal.DownloadItem( fileId, highPriority );
 		}
 
 		/// <summary>
@@ -73,7 +74,7 @@ namespace Steamworks
 		/// <returns>true if downloaded and installed correctly</returns>
 		public static async Task<bool> DownloadAsync(
 			PublishedFileId fileId,
-			Action<float> progress = null,
+			Action<float>? progress = null,
 			int millisecondsUpdateDelay = 60,
 			CancellationToken? ct = null)
 		{
@@ -163,28 +164,32 @@ namespace Steamworks
 
 		public static async Task<bool> StartPlaytimeTracking(PublishedFileId fileId)
 		{
+			if (Internal is null) { return false; }
 			var result = await Internal.StartPlaytimeTracking(new[] {fileId}, 1);
-			return result.Value.Result == Result.OK;
+			return result?.Result == Result.OK;
 		}
 		
 		public static async Task<bool> StopPlaytimeTracking(PublishedFileId fileId)
 		{
+			if (Internal is null) { return false; }
 			var result = await Internal.StopPlaytimeTracking(new[] {fileId}, 1);
-			return result.Value.Result == Result.OK;
+			return result?.Result == Result.OK;
 		}
 		
 		public static async Task<bool> StopPlaytimeTrackingForAllItems()
 		{
+			if (Internal is null) { return false; }
 			var result = await Internal.StopPlaytimeTrackingForAllItems();
-			return result.Value.Result == Result.OK;
+			return result?.Result == Result.OK;
 		}
 
-		public static Action<ulong> GlobalOnItemInstalled;
+		public static Action<ulong>? GlobalOnItemInstalled;
 
-		public static uint NumSubscribedItems { get { return Internal.GetNumSubscribedItems(); } }
+		public static uint NumSubscribedItems { get { return Internal?.GetNumSubscribedItems() ?? 0; } }
 
 		public static PublishedFileId[] GetSubscribedItems()
 		{
+			if (Internal is null) { return Array.Empty<PublishedFileId>(); }
 			uint numSubscribed = NumSubscribedItems;
 			PublishedFileId[] ids = new PublishedFileId[numSubscribed];
 			Internal.GetSubscribedItems(ids, numSubscribed);

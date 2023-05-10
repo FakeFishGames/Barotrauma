@@ -12,7 +12,7 @@ namespace Steamworks
 	/// </summary>
 	public class SteamFriends : SteamClientClass<SteamFriends>
 	{
-		internal static ISteamFriends Internal => Interface as ISteamFriends;
+		internal static ISteamFriends? Internal => Interface as ISteamFriends;
 
 		internal override void InitializeInterface( bool server )
 		{
@@ -23,7 +23,7 @@ namespace Steamworks
 			InstallEvents();
 		}
 
-		static Dictionary<string, string> richPresence;
+		static Dictionary<string, string>? richPresence;
 
 		internal void InstallEvents()
 		{
@@ -40,42 +40,42 @@ namespace Steamworks
 		/// Called when chat message has been received from a friend. You'll need to turn on
 		/// ListenForFriendsMessages to recieve this. (friend, msgtype, message)
 		/// </summary>
-		public static event Action<Friend, string, string> OnChatMessage;
+		public static event Action<Friend, string, string>? OnChatMessage;
 
 		/// <summary>
 		/// called when a friends' status changes
 		/// </summary>
-		public static event Action<Friend> OnPersonaStateChange;
+		public static event Action<Friend>? OnPersonaStateChange;
 
 
 		/// <summary>
 		/// Called when the user tries to join a game from their friends list
 		///	rich presence will have been set with the "connect" key which is set here
 		/// </summary>
-		public static event Action<Friend, string> OnGameRichPresenceJoinRequested;
+		public static event Action<Friend, string>? OnGameRichPresenceJoinRequested;
 
 		/// <summary>
 		/// Posted when game overlay activates or deactivates
 		///	the game can use this to be pause or resume single player games
 		/// </summary>
-		public static event Action<bool> OnGameOverlayActivated;
+		public static event Action<bool>? OnGameOverlayActivated;
 
 		/// <summary>
 		/// Called when the user tries to join a different game server from their friends list
 		///	game client should attempt to connect to specified server when this is received
 		/// </summary>
-		public static event Action<string, string> OnGameServerChangeRequested;
+		public static event Action<string, string>? OnGameServerChangeRequested;
 
 		/// <summary>
 		/// Called when the user tries to join a lobby from their friends list
 		///	game client should attempt to connect to specified lobby when this is received
 		/// </summary>
-		public static event Action<Lobby, SteamId> OnGameLobbyJoinRequested;
+		public static event Action<Lobby, SteamId>? OnGameLobbyJoinRequested;
 
 		/// <summary>
 		/// Callback indicating updated data about friends rich presence information
 		/// </summary>
-		public static event Action<Friend> OnFriendRichPresenceUpdate;
+		public static event Action<Friend>? OnFriendRichPresenceUpdate;
 
 		static unsafe void OnFriendChatMessage( GameConnectedFriendChatMsg_t data )
 		{
@@ -86,7 +86,7 @@ namespace Steamworks
 			using var buffer = Helpers.TakeMemory();
 			var type = ChatEntryType.ChatMsg;
 
-			var len = Internal.GetFriendMessage( data.SteamIDUser, data.MessageID, buffer, Helpers.MemoryBufferSize, ref type );
+			var len = Internal?.GetFriendMessage( data.SteamIDUser, data.MessageID, buffer, Helpers.MemoryBufferSize, ref type ) ?? 0;
 
 			if ( len == 0 && type == ChatEntryType.Invalid )
 				return;
@@ -99,15 +99,18 @@ namespace Steamworks
 		
 		private static IEnumerable<Friend> GetFriendsWithFlag(FriendFlags flag)
 		{
-			for ( int i=0; i<Internal.GetFriendCount( (int)flag); i++ )
+			if (Internal is null) { yield break; }
+			int friendCount = Internal.GetFriendCount((int)flag);
+			for ( int i=0; i<friendCount; i++ )
 			{
+				if (Internal is null) { yield break; }
 				yield return new Friend( Internal.GetFriendByIndex( i, (int)flag ) );
 			}
 		}
 
-        public static string GetFriendPersonaName( SteamId steamId )
+        public static string? GetFriendPersonaName( SteamId steamId )
         {
-            return Internal.GetFriendPersonaName(steamId);
+            return Internal?.GetFriendPersonaName(steamId);
         }
 
 		public static IEnumerable<Friend> GetFriends()
@@ -142,24 +145,33 @@ namespace Steamworks
 
 		public static IEnumerable<Friend> GetPlayedWith()
 		{
-			for ( int i = 0; i < Internal.GetCoplayFriendCount(); i++ )
+			if (Internal is null) { yield break; }
+			int friendCount = Internal.GetCoplayFriendCount();
+			for ( int i = 0; i < friendCount; i++ )
 			{
+				if (Internal is null) { yield break; }
 				yield return new Friend( Internal.GetCoplayFriend( i ) );
 			}
 		}
 
 		public static IEnumerable<Friend> GetFromSource( SteamId steamid )
 		{
-		    for ( int i = 0; i < Internal.GetFriendCountFromSource( steamid ); i++ )
-		    {
+			if (Internal is null) { yield break; }
+			int friendCount = Internal.GetFriendCountFromSource( steamid );
+			for ( int i = 0; i < friendCount; i++ )
+			{
+				if (Internal is null) { yield break; }
 		        yield return new Friend( Internal.GetFriendFromSourceByIndex( steamid, i ) );
 		    }
 		}
 
 		public static IEnumerable<Clan> GetClans()
 		{
-			for (int i = 0; i < Internal.GetClanCount(); i++)
+			if (Internal is null) { yield break; }
+			int friendCount = Internal.GetClanCount();
+			for ( int i = 0; i < friendCount; i++ )
 			{
+				if (Internal is null) { yield break; }
 				yield return new Clan( Internal.GetClanByIndex( i ) );
 			}
 		}
@@ -174,7 +186,7 @@ namespace Steamworks
 		/// "stats", 
 		/// "achievements".
 		/// </summary>
-		public static void OpenOverlay( string type ) => Internal.ActivateGameOverlay( type );
+		public static void OpenOverlay( string type ) => Internal?.ActivateGameOverlay( type );
 
 		/// <summary>
 		/// "steamid" - Opens the overlay web browser to the specified user or groups profile.
@@ -187,35 +199,35 @@ namespace Steamworks
 		/// "friendrequestaccept" - Opens the overlay in minimal mode prompting the user to accept an incoming friend invite.
 		/// "friendrequestignore" - Opens the overlay in minimal mode prompting the user to ignore an incoming friend invite.
 		/// </summary>
-		public static void OpenUserOverlay( SteamId id, string type ) => Internal.ActivateGameOverlayToUser( type, id );
+		public static void OpenUserOverlay( SteamId id, string type ) => Internal?.ActivateGameOverlayToUser( type, id );
 
 		/// <summary>
 		/// Activates the Steam Overlay to the Steam store page for the provided app.
 		/// </summary>
-		public static void OpenStoreOverlay( AppId id ) => Internal.ActivateGameOverlayToStore( id.Value, OverlayToStoreFlag.None );
+		public static void OpenStoreOverlay( AppId id ) => Internal?.ActivateGameOverlayToStore( id.Value, OverlayToStoreFlag.None );
 
 		/// <summary>
 		/// Activates Steam Overlay web browser directly to the specified URL.
 		/// </summary>
-		public static void OpenWebOverlay( string url, bool modal = false ) => Internal.ActivateGameOverlayToWebPage( url, modal ? ActivateGameOverlayToWebPageMode.Modal : ActivateGameOverlayToWebPageMode.Default );
+		public static void OpenWebOverlay( string url, bool modal = false ) => Internal?.ActivateGameOverlayToWebPage( url, modal ? ActivateGameOverlayToWebPageMode.Modal : ActivateGameOverlayToWebPageMode.Default );
 
 		/// <summary>
 		/// Activates the Steam Overlay to open the invite dialog. Invitations sent from this dialog will be for the provided lobby.
 		/// </summary>
-		public static void OpenGameInviteOverlay( SteamId lobby ) => Internal.ActivateGameOverlayInviteDialog( lobby );
+		public static void OpenGameInviteOverlay( SteamId lobby ) => Internal?.ActivateGameOverlayInviteDialog( lobby );
 
 		/// <summary>
 		/// Mark a target user as 'played with'.
 		/// NOTE: The current user must be in game with the other player for the association to work.
 		/// </summary>
-		public static void SetPlayedWith( SteamId steamid ) => Internal.SetPlayedWith( steamid );
+		public static void SetPlayedWith( SteamId steamid ) => Internal?.SetPlayedWith( steamid );
 
 		/// <summary>
 		/// Requests the persona name and optionally the avatar of a specified user.
 		/// NOTE: It's a lot slower to download avatars and churns the local cache, so if you don't need avatars, don't request them.
 		/// returns true if we're fetching the data, false if we already have it
 		/// </summary>
-		public static bool RequestUserInformation( SteamId steamid, bool nameonly = true ) => Internal.RequestUserInformation( steamid, nameonly );
+		public static bool RequestUserInformation( SteamId steamid, bool nameonly = true ) => Internal != null && Internal.RequestUserInformation( steamid, nameonly );
 
 
 		internal static async Task CacheUserInformationAsync( SteamId steamid, bool nameonly )
@@ -239,18 +251,21 @@ namespace Steamworks
 
 		public static async Task<Data.Image?> GetSmallAvatarAsync( SteamId steamid )
 		{
+			if (Internal is null) { return null; }
 			await CacheUserInformationAsync( steamid, false );
 			return SteamUtils.GetImage( Internal.GetSmallFriendAvatar( steamid ) );
 		}
 
 		public static async Task<Data.Image?> GetMediumAvatarAsync( SteamId steamid )
 		{
+			if (Internal is null) { return null; }
 			await CacheUserInformationAsync( steamid, false );
 			return SteamUtils.GetImage( Internal.GetMediumFriendAvatar( steamid ) );
 		}
 
 		public static async Task<Data.Image?> GetLargeAvatarAsync( SteamId steamid )
 		{
+			if (Internal is null) { return null; }
 			await CacheUserInformationAsync( steamid, false );
 
 			var imageid = Internal.GetLargeFriendAvatar( steamid );
@@ -268,8 +283,10 @@ namespace Steamworks
 		/// <summary>
 		/// Find a rich presence value by key for current user. Will be null if not found.
 		/// </summary>
-		public static string GetRichPresence( string key )
+		public static string? GetRichPresence( string key )
 		{
+			if (richPresence is null) { return null; }
+			
 			if ( richPresence.TryGetValue( key, out var val ) )
 				return val;
 
@@ -281,6 +298,8 @@ namespace Steamworks
 		/// </summary>
 		public static bool SetRichPresence( string key, string value )
 		{
+			if (richPresence is null || Internal is null) { return false; }
+			
 			bool success = Internal.SetRichPresence( key, value );
 
 			if ( success ) 
@@ -294,8 +313,8 @@ namespace Steamworks
 		/// </summary>
 		public static void ClearRichPresence()
 		{
-			richPresence.Clear();
-			Internal.ClearRichPresence();
+			richPresence?.Clear();
+			Internal?.ClearRichPresence();
 		}
 
 		static bool _listenForFriendsMessages;
@@ -312,20 +331,22 @@ namespace Steamworks
 			set
 			{
 				_listenForFriendsMessages = value;
-				Internal.SetListenForFriendsMessages( value );
+				Internal?.SetListenForFriendsMessages( value );
 			}
 		}
 
 		public static async Task<bool> IsFollowing(SteamId steamID)
 		{
+			if (Internal is null) { return false; }
 			var r = await Internal.IsFollowing(steamID);
-			return r.Value.IsFollowing;
+			return r?.IsFollowing ?? false;
 		}
 
 		public static async Task<int> GetFollowerCount(SteamId steamID)
 		{
+			if (Internal is null) { return 0; }
 			var r = await Internal.GetFollowerCount(steamID);
-			return r.Value.Count;
+			return r?.Count ?? 0;
 		}
 
         public static async Task<SteamId[]> GetFollowingList()
@@ -337,6 +358,7 @@ namespace Steamworks
 
             do
             {
+	            if (Internal is null) { break; }
                 if ( (result = await Internal.EnumerateFollowingList((uint)resultCount)) != null)
                 {
                     resultCount += result.Value.ResultsReturned;

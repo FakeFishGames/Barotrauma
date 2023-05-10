@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Xml.Linq;
 using Barotrauma.IO;
 using System.Collections.Immutable;
+using System.ComponentModel;
 #if CLIENT
 using Microsoft.Xna.Framework.Graphics;
 #endif
@@ -44,30 +45,26 @@ namespace Barotrauma
 
         public override ImmutableHashSet<string> Aliases { get; }
 
-        //does the structure have a physics body
-        [Serialize(false, IsPropertySaveable.No)]
+        [Serialize(false, IsPropertySaveable.No, description: "Does the structure have a physics body?")]
         public bool Body { get; private set; }
 
-        //rotation of the physics body in degrees
-        [Serialize(0.0f, IsPropertySaveable.No)]
+        [Serialize(0.0f, IsPropertySaveable.No, description: "Rotation of the physics body in degrees.")]
         public float BodyRotation { get; private set; }
         
-        //in display units
-        [Serialize(0.0f, IsPropertySaveable.No)]
+        [Serialize(0.0f, IsPropertySaveable.No, description: "Width of the physics body in pixels.")]
         public float BodyWidth { get; private set; }
 
-        //in display units
-        [Serialize(0.0f, IsPropertySaveable.No)]
+        [Serialize(0.0f, IsPropertySaveable.No, description: "Height of the physics body in pixels.")]
         public float BodyHeight { get; private set; }
 
         //in display units
-        [Serialize("0.0,0.0", IsPropertySaveable.No)]
+        [Serialize("0.0,0.0", IsPropertySaveable.No, description: "Offset of the physics body from the center of the structure in pixels.")]
         public Vector2 BodyOffset { get; private set; }
 
-        [Serialize(false, IsPropertySaveable.No)]
+        [Serialize(false, IsPropertySaveable.No, description: "Is the structure a platform (i.e. a \"floor\" the players can pass through)? Only relevant if the structure has a physics body.")]
         public bool Platform { get; private set; }
 
-        [Serialize(false, IsPropertySaveable.No)]
+        [Serialize(false, IsPropertySaveable.No, description: "Can items like signal components be attached on this structure? Should be enabled on structures like decorative background walls.")]
         public bool AllowAttachItems { get; private set; }
 
         [Serialize(0.0f, IsPropertySaveable.No)]
@@ -81,26 +78,29 @@ namespace Barotrauma
             private set { health = Math.Max(value, MinHealth); }
         }
 
-        [Serialize(true, IsPropertySaveable.No)]
+        [Serialize(true, IsPropertySaveable.No, description: "Should the structure be indestructible when used in an outpost?")]
         public bool IndestructibleInOutposts { get; private set; }
 
-        [Serialize(false, IsPropertySaveable.No)]
+        [Serialize(false, IsPropertySaveable.No, description: "Should the structure cast shadows and obstruct visibility when LOS is enabled?")]
         public bool CastShadow { get; private set; }
 
-        [Serialize(Direction.None, IsPropertySaveable.No)]
+        [Serialize(Direction.None, IsPropertySaveable.No, description: "Makes the structure function as a staircase.")]
         public Direction StairDirection { get; private set; }
 
-        [Serialize(45.0f, IsPropertySaveable.No)]
+        [Serialize(45.0f, IsPropertySaveable.No, description: "Angle of the stairs in degrees. Only relevant if StairDirection is something else than None.")]
         public float StairAngle { get; private set; }
 
-        [Serialize(false, IsPropertySaveable.No)]
+        [Serialize(false, IsPropertySaveable.No, description: "If enabled, monsters will not be able to target this structure.")]
         public bool NoAITarget { get; private set; }
 
-        [Serialize("0,0", IsPropertySaveable.Yes)]
+        [Serialize("0,0", IsPropertySaveable.Yes, description: "Size of the structure in pixels. If not set, the size is determined, based on the attributes width and height, and if those aren't defined either, based on the size of the structure's sprite.")]
         public Vector2 Size { get; private set; }
 
-        [Serialize("", IsPropertySaveable.Yes)]
+        [Serialize("", IsPropertySaveable.Yes, description: "Tag of the sound that plays when something damages the wall.")]
         public string DamageSound { get; private set; }
+
+        [Serialize("shrapnel", IsPropertySaveable.Yes, description: "Identifier of the particles emitted when something damages the wall.")]
+        public string DamageParticle { get; private set; }
 
         protected Vector2 textureScale = Vector2.One;
         [Editable(DecimalCount = 3), Serialize("1.0, 1.0", IsPropertySaveable.Yes)]

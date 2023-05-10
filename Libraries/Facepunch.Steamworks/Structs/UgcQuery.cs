@@ -14,7 +14,7 @@ namespace Steamworks.Ugc
 		UGCQuery queryType;
 		AppId consumerApp;
 		AppId creatorApp;
-        string searchText;
+        string? searchText;
 
 		public Query( UgcType type ) : this()
 		{
@@ -96,7 +96,7 @@ namespace Steamworks.Ugc
 		#endregion
 
 		#region Files
-		PublishedFileId[] Files;
+		PublishedFileId[]? Files;
 
 		public Query WithFileId( params PublishedFileId[] files )
 		{
@@ -109,6 +109,8 @@ namespace Steamworks.Ugc
 		{
 			if ( page <= 0 ) throw new System.Exception( "page should be > 0" );
 
+			if (SteamUGC.Internal is null) { return null; }
+			
 			if ( consumerApp == 0 ) consumerApp = SteamClient.AppId;
 			if ( creatorApp == 0 ) creatorApp = consumerApp;
 
@@ -159,16 +161,16 @@ namespace Steamworks.Ugc
 		public QueryType WithType( UgcType type ) { matchingType = type; return this; }
 		int? maxCacheAge;
 		public QueryType AllowCachedResponse( int maxSecondsAge ) { maxCacheAge = maxSecondsAge; return this; }
-		string language;
+		string? language;
 		public QueryType InLanguage( string lang ) { language = lang; return this; }
 
 		int? trendDays;
 		public QueryType WithTrendDays( int days ) { trendDays = days; return this; }
 
-		List<string> requiredTags;
+		List<string>? requiredTags;
 		bool? matchAnyTag;
-		List<string> excludedTags;
-		Dictionary<string, string> requiredKv;
+		List<string>? excludedTags;
+		Dictionary<string, string>? requiredKv;
 
 		/// <summary>
 		/// Found items must have at least one of the defined tags
@@ -213,34 +215,34 @@ namespace Steamworks.Ugc
 			if ( requiredTags != null )
 			{
 				foreach ( var tag in requiredTags )
-					SteamUGC.Internal.AddRequiredTag( handle, tag );
+					SteamUGC.Internal?.AddRequiredTag( handle, tag );
 			}
 
 			if ( excludedTags != null )
 			{
 				foreach ( var tag in excludedTags )
-					SteamUGC.Internal.AddExcludedTag( handle, tag );
+					SteamUGC.Internal?.AddExcludedTag( handle, tag );
 			}
 
 			if ( requiredKv != null )
 			{
 				foreach ( var tag in requiredKv )
-					SteamUGC.Internal.AddRequiredKeyValueTag( handle, tag.Key, tag.Value );
+					SteamUGC.Internal?.AddRequiredKeyValueTag( handle, tag.Key, tag.Value );
 			}
 
 			if ( matchAnyTag.HasValue )
 			{
-				SteamUGC.Internal.SetMatchAnyTag( handle, matchAnyTag.Value );
+				SteamUGC.Internal?.SetMatchAnyTag( handle, matchAnyTag.Value );
 			}
 
 			if ( trendDays.HasValue )
 			{
-				SteamUGC.Internal.SetRankedByTrendDays( handle, (uint)trendDays.Value );
+				SteamUGC.Internal?.SetRankedByTrendDays( handle, (uint)trendDays.Value );
 			}
 
             if ( !string.IsNullOrEmpty( searchText ) )
             {
-                SteamUGC.Internal.SetSearchText( handle, searchText );
+                SteamUGC.Internal?.SetSearchText( handle, searchText );
             }
 		}
 
@@ -271,42 +273,42 @@ namespace Steamworks.Ugc
 	    {
 	        if (WantsReturnOnlyIDs.HasValue)
 	        {
-	            SteamUGC.Internal.SetReturnOnlyIDs(handle, WantsReturnOnlyIDs.Value);
+	            SteamUGC.Internal?.SetReturnOnlyIDs(handle, WantsReturnOnlyIDs.Value);
 	        }
 
 	        if (WantsReturnKeyValueTags.HasValue)
 	        {
-	            SteamUGC.Internal.SetReturnKeyValueTags(handle, WantsReturnKeyValueTags.Value);
+	            SteamUGC.Internal?.SetReturnKeyValueTags(handle, WantsReturnKeyValueTags.Value);
 	        }
 
 	        if (WantsReturnLongDescription.HasValue)
 	        {
-	            SteamUGC.Internal.SetReturnLongDescription(handle, WantsReturnLongDescription.Value);
+	            SteamUGC.Internal?.SetReturnLongDescription(handle, WantsReturnLongDescription.Value);
 	        }
 
 	        if (WantsReturnMetadata.HasValue)
 	        {
-	            SteamUGC.Internal.SetReturnMetadata(handle, WantsReturnMetadata.Value);
+	            SteamUGC.Internal?.SetReturnMetadata(handle, WantsReturnMetadata.Value);
 	        }
 
 	        if (WantsReturnChildren.HasValue)
 	        {
-	            SteamUGC.Internal.SetReturnChildren(handle, WantsReturnChildren.Value);
+	            SteamUGC.Internal?.SetReturnChildren(handle, WantsReturnChildren.Value);
 	        }
 
 	        if (WantsReturnAdditionalPreviews.HasValue)
 	        {
-	            SteamUGC.Internal.SetReturnAdditionalPreviews(handle, WantsReturnAdditionalPreviews.Value);
+	            SteamUGC.Internal?.SetReturnAdditionalPreviews(handle, WantsReturnAdditionalPreviews.Value);
 	        }
 
 	        if (WantsReturnTotalOnly.HasValue)
 	        {
-	            SteamUGC.Internal.SetReturnTotalOnly(handle, WantsReturnTotalOnly.Value);
+	            SteamUGC.Internal?.SetReturnTotalOnly(handle, WantsReturnTotalOnly.Value);
 	        }
 
 	        if (WantsReturnPlaytimeStats.HasValue)
 	        {
-	            SteamUGC.Internal.SetReturnPlaytimeStats(handle, WantsReturnPlaytimeStats.Value);
+	            SteamUGC.Internal?.SetReturnPlaytimeStats(handle, WantsReturnPlaytimeStats.Value);
 	        }
 	    }
 

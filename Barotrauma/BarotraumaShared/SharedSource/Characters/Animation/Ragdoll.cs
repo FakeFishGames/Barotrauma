@@ -1299,21 +1299,32 @@ namespace Barotrauma
                 limb.Update(deltaTime);
             }
 
-            if (!inWater && character.AllowInput && levitatingCollider && Collider.LinearVelocity.Y > -ImpactTolerance && onGround)
+            if (!inWater && character.AllowInput && levitatingCollider)
             {
-                float targetY = standOnFloorY + ((float)Math.Abs(Math.Cos(Collider.Rotation)) * Collider.Height * 0.5f) + Collider.Radius + ColliderHeightFromFloor;
-                if (Math.Abs(Collider.SimPosition.Y - targetY) > 0.01f && onGround)
+                if (onGround && Collider.LinearVelocity.Y > -ImpactTolerance)
                 {
-                    if (Stairs != null)
+                    float targetY = standOnFloorY + ((float)Math.Abs(Math.Cos(Collider.Rotation)) * Collider.Height * 0.5f) + Collider.Radius + ColliderHeightFromFloor;
+                    if (Math.Abs(Collider.SimPosition.Y - targetY) > 0.01f)
                     {
-                        Collider.LinearVelocity = new Vector2(Collider.LinearVelocity.X,
-                            (targetY < Collider.SimPosition.Y ? Math.Sign(targetY - Collider.SimPosition.Y) : (targetY - Collider.SimPosition.Y)) * 5.0f);
+                        if (Stairs != null)
+                        {
+                            Collider.LinearVelocity = new Vector2(Collider.LinearVelocity.X,
+                                (targetY < Collider.SimPosition.Y ? Math.Sign(targetY - Collider.SimPosition.Y) : (targetY - Collider.SimPosition.Y)) * 5.0f);
+                        }
+                        else
+                        {
+                            Collider.LinearVelocity = new Vector2(Collider.LinearVelocity.X, (targetY - Collider.SimPosition.Y) * 5.0f);
+                        }
                     }
-                    else
+                }
+                else
+                {
+                    // Falling -> ragdoll briefly if we are not moving at all, because we are probably stuck.
+                    if (Collider.LinearVelocity == Vector2.Zero)
                     {
-                        Collider.LinearVelocity = new Vector2(Collider.LinearVelocity.X, (targetY - Collider.SimPosition.Y) * 5.0f);
+                        character.IsRagdolled = true;
                     }
-                }                
+                }
             }
             UpdateProjSpecific(deltaTime, cam);
             forceNotStanding = false;

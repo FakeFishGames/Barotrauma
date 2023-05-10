@@ -4,7 +4,7 @@ namespace Steamworks
 {
 	public class AuthTicket : IDisposable
 	{
-		public byte[] Data;
+		public byte[]? Data;
 		public uint Handle;
 
 		public bool Canceled { get; private set; }
@@ -17,7 +17,7 @@ namespace Steamworks
         {
             if (Handle != 0)
             {
-                SteamUser.Internal.CancelAuthTicket(Handle);
+                SteamUser.Internal?.CancelAuthTicket(Handle);
             }
 
             Handle = 0;

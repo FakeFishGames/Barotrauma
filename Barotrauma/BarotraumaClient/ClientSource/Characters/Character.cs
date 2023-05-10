@@ -582,7 +582,7 @@ namespace Barotrauma
             float closestItemDistance = Math.Max(aimAssistAmount, 2.0f);
             foreach (MapEntity entity in entityList)
             {
-                if (!(entity is Item item))
+                if (entity is not Item item)
                 {
                     continue;
                 }

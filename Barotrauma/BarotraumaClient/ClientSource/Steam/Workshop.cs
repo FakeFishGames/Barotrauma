@@ -111,7 +111,7 @@ namespace Barotrauma.Steam
                 {
                     await Task.Yield();
 
-                    string thumbnailUrl = item.PreviewImageUrl;
+                    string? thumbnailUrl = item.PreviewImageUrl;
                     if (thumbnailUrl.IsNullOrWhiteSpace()) { return null; }
                     var client = new RestClient(thumbnailUrl);
                     var request = new RestRequest(".", Method.GET);

@@ -1072,18 +1072,19 @@ namespace Barotrauma
             if (save)
             {
                 GUI.SetSavingIndicatorState(true);
-
                 if (GameSession.Submarine != null && !GameSession.Submarine.Removed)
                 {
                     GameSession.SubmarineInfo = new SubmarineInfo(GameSession.Submarine);
                 }
-
-                // Update store stock when saving and quitting in an outpost (normally updated when CampaignMode.End() is called)
-                if (GameSession?.Campaign is SinglePlayerCampaign spCampaign && Level.IsLoadedFriendlyOutpost)
+                if (GameSession.Campaign is CampaignMode campaign)
                 {
-                    spCampaign.UpdateStoreStock();
+                    if (campaign is SinglePlayerCampaign spCampaign && Level.IsLoadedFriendlyOutpost)
+                    {
+                        spCampaign.UpdateStoreStock();
+                    }
+                    GameSession.EventManager?.RegisterEventHistory(registerFinishedOnly: true);
+                    campaign.End();
                 }
-
                 SaveUtil.SaveGame(GameSession.SavePath);
             }
 

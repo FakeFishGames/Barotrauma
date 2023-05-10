@@ -401,7 +401,7 @@ namespace Barotrauma
             int reward = GetReward(sub);
             IEnumerable<Character> crewCharacters = GameSession.GetSessionCrewCharacters(CharacterType.Both);
             var missionMoneyGainMultiplier = new AbilityMissionMoneyGainMultiplier(this, 1f);
-            crewCharacters.ForEach(c => c.CheckTalents(AbilityEffectType.OnGainMissionMoney, missionMoneyGainMultiplier));
+            CharacterTalent.CheckTalentsForCrew(crewCharacters, AbilityEffectType.OnGainMissionMoney, missionMoneyGainMultiplier);
             crewCharacters.ForEach(c => missionMoneyGainMultiplier.Value += c.GetStatValue(StatTypes.MissionMoneyGainMultiplier));
             finalReward = (int)(reward * missionMoneyGainMultiplier.Value);
         }

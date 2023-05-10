@@ -89,12 +89,7 @@ namespace Barotrauma
                     var target = objective.Key;
                     if (!Targets.Contains(target))
                     {
-                        var subObjective = objective.Value;
-                        if (CurrentSubObjective == subObjective)
-                        {
-                            CurrentSubObjective.Abandon = !CurrentSubObjective.IsCompleted;
-                        }
-                        subObjectives.Remove(subObjective);
+                        subObjectives.Remove(objective.Value);
                     }
                 }
                 SyncRemovedObjectives(Objectives, GetList());
@@ -157,6 +152,11 @@ namespace Barotrauma
                     else
                     {
                         float max = AIObjectiveManager.LowestOrderPriority - 1;
+                        if (this is AIObjectiveRescueAll rescueObjective && rescueObjective.Targets.Contains(character))
+                        {
+                            // Allow higher prio
+                            max = AIObjectiveManager.EmergencyObjectivePriority;
+                        }
                         float value = MathHelper.Clamp((CumulatedDevotion + (targetValue * PriorityModifier)) / 100, 0, 1);
                         Priority = MathHelper.Lerp(0, max, value);
                     }

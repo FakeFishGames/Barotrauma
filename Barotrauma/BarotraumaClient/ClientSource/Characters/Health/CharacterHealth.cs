@@ -701,10 +701,11 @@ namespace Barotrauma
                 blurStrength = Math.Max(blurStrength, affliction.GetScreenBlurStrength());
                 radialDistortStrength = Math.Max(radialDistortStrength, affliction.GetRadialDistortStrength());
                 chromaticAberrationStrength = Math.Max(chromaticAberrationStrength, affliction.GetChromaticAberrationStrength());
+
                 float afflictionGrainStrength = affliction.GetScreenGrainStrength();
                 if (afflictionGrainStrength > 0.0f)
                 {
-                    grainStrength = Math.Max(grainStrength, affliction.GetScreenGrainStrength());
+                    grainStrength = Math.Max(grainStrength, afflictionGrainStrength);
                     Color afflictionGrainColor = affliction.GetActiveEffect()?.GrainColor ?? Color.White;
                     grainColor = Color.Lerp(grainColor, afflictionGrainColor, (float)Math.Pow(1.0f - oxygenLowStrength, 2));
                 }
@@ -1020,12 +1021,8 @@ namespace Barotrauma
             foreach (KeyValuePair<Affliction, LimbHealth> kvp in afflictions)
             {
                 var affliction = kvp.Key;
-                if (affliction.Prefab.AfflictionOverlay != null)
-                {
-                    Sprite ScreenAfflictionOverlay = affliction.Prefab.AfflictionOverlay;
-                    ScreenAfflictionOverlay?.Draw(spriteBatch, Vector2.Zero, Color.White * affliction.GetAfflictionOverlayMultiplier(), Vector2.Zero, 0.0f,
-                        new Vector2(GameMain.GraphicsWidth / DamageOverlay.size.X, GameMain.GraphicsHeight / DamageOverlay.size.Y));
-                }
+                affliction.Prefab.AfflictionOverlay?.Draw(spriteBatch, Vector2.Zero, Color.White * affliction.GetAfflictionOverlayMultiplier(), Vector2.Zero, 0.0f,
+                    new Vector2(GameMain.GraphicsWidth / DamageOverlay.size.X, GameMain.GraphicsHeight / DamageOverlay.size.Y));
             }
 
             float damageOverlayAlpha = DamageOverlayTimer;

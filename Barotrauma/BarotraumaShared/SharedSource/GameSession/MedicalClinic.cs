@@ -11,6 +11,9 @@ namespace Barotrauma
 {
     internal sealed partial class MedicalClinic
     {
+        private const int RateLimitMaxRequests = 20,
+                          RateLimitExpiry = 5;
+
         public enum NetworkHeader
         {
             REQUEST_AFFLICTIONS,

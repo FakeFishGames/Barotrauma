@@ -94,6 +94,7 @@ namespace Barotrauma
         {
             List<byte> bytes = new List<byte>();
             byte currentByte;
+
             do
             {
                 if (inc.BitPosition >= inc.LengthBits)

@@ -1,4 +1,5 @@
 ﻿
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
 
 namespace Steamworks.Data
@@ -17,10 +18,11 @@ namespace Steamworks.Data
 		/// </summary>
 		public bool Close()
 		{
-			return SteamNetworkingSockets.Internal.CloseListenSocket( Id );
+			return SteamNetworkingSockets.Internal != null && SteamNetworkingSockets.Internal.CloseListenSocket( Id );
 		}
 
-		public SocketManager Manager
+		[DisallowNull]
+		public SocketManager? Manager
 		{
 			get => SteamNetworkingSockets.GetSocketManager( Id );
 			set => SteamNetworkingSockets.SetSocketManager( Id, value );

@@ -377,6 +377,8 @@ namespace Barotrauma.Lights
 
         public float Priority;
 
+        public float PriorityMultiplier = 1.0f;
+
         private Vector2 lightTextureTargetSize;
 
         public Vector2 LightTextureTargetSize

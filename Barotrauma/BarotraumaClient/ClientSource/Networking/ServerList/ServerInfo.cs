@@ -428,7 +428,7 @@ namespace Barotrauma.Networking
             if (Enum.TryParse(valueGetter("playstyle"), out PlayStyle playStyle)) { PlayStyle = playStyle; }
             Language = valueGetter("language")?.ToLanguageIdentifier() ?? LanguageIdentifier.None;
 
-            ContentPackages = ExtractContentPackageInfo(valueGetter).ToImmutableArray();
+            ContentPackages = ExtractContentPackageInfo(ServerName, valueGetter).ToImmutableArray();
             
             bool getBool(string key)
             {
@@ -437,8 +437,34 @@ namespace Barotrauma.Networking
             }
         }
 
-        private static ContentPackageInfo[] ExtractContentPackageInfo(Func<string, string?> valueGetter)
+        private static ContentPackageInfo[] ExtractContentPackageInfo(string serverName, Func<string, string?> valueGetter)
         {
+            //workaround to ServerRules queries truncating the values to 255 bytes
+            int individualPackageIndex = 0;
+            string? individualPackage = valueGetter($"contentpackage{individualPackageIndex}");
+            if (!individualPackage.IsNullOrEmpty())
+            {
+                List<ContentPackageInfo> contentPackages = new List<ContentPackageInfo>();
+                do
+                {
+                    string[] splitPackageInfo = individualPackage.Split(',');
+                    if (splitPackageInfo.Length != 3)
+                    {
+                        DebugConsole.Log(
+                            $"Error in a server's content package list: malformed content package info ({individualPackage}).");
+                        return Array.Empty<ContentPackageInfo>();
+                    }
+                    string name = splitPackageInfo[0];
+                    string hash = splitPackageInfo[1];
+                    ulong.TryParse(splitPackageInfo[2], out ulong id);
+                    contentPackages.Add(new ContentPackageInfo(name, hash, Option<ContentPackageId>.Some(new SteamWorkshopId(id))));
+
+                    individualPackageIndex++;
+                    individualPackage = valueGetter($"contentpackage{individualPackageIndex}");
+                } while (!individualPackage.IsNullOrEmpty());
+                return contentPackages.ToArray();
+            } 
+
             string? joinedNames = valueGetter("contentpackage");
             string? joinedHashes = valueGetter("contentpackagehash");
             string? joinedWorkshopIds = valueGetter("contentpackageid");
@@ -448,9 +474,11 @@ namespace Barotrauma.Networking
             #warning TODO: genericize
             ulong[] contentPackageIds = joinedWorkshopIds.IsNullOrEmpty() ? new ulong[1] : SteamManager.ParseWorkshopIds(joinedWorkshopIds).ToArray();
 
-            if (contentPackageNames.Length != contentPackageHashes.Length
-                || contentPackageHashes.Length != contentPackageIds.Length)
+            if (contentPackageNames.Length != contentPackageHashes.Length || contentPackageHashes.Length != contentPackageIds.Length)
             {
+                DebugConsole.Log(
+                    $"The number of names, hashes and Workshop IDs on server \"{serverName}\"" +
+                    $" doesn't match: {contentPackageNames.Length} names ({string.Join(", ", contentPackageNames)}), {contentPackageHashes.Length} hashes, {contentPackageIds.Length} ids)");
                 return Array.Empty<ContentPackageInfo>();
             }
 

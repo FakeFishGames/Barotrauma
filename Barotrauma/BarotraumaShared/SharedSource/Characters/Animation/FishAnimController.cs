@@ -480,7 +480,10 @@ namespace Barotrauma
                     t = MathHelper.Clamp((1 + dot) / 10, 0.01f, 0.1f);
                 }
             }
-            Collider.LinearVelocity = Vector2.Lerp(Collider.LinearVelocity, movement, t);
+            if (Collider.BodyType == BodyType.Dynamic)
+            {
+                Collider.LinearVelocity = Vector2.Lerp(Collider.LinearVelocity, movement, t);
+            }
             //limbs are disabled when simple physics is enabled, no need to move them
             if (SimplePhysicsEnabled) { return; }
             mainLimb.PullJointEnabled = true;
@@ -717,9 +720,12 @@ namespace Barotrauma
         {
             movement = MathUtils.SmoothStep(movement, TargetMovement, 0.2f);
 
-            Collider.LinearVelocity = new Vector2(
-                movement.X,
-                Collider.LinearVelocity.Y > 0.0f ? Collider.LinearVelocity.Y * 0.5f : Collider.LinearVelocity.Y);
+            if (Collider.BodyType == BodyType.Dynamic)
+            {
+                Collider.LinearVelocity = new Vector2(
+                    movement.X,
+                    Collider.LinearVelocity.Y > 0.0f ? Collider.LinearVelocity.Y * 0.5f : Collider.LinearVelocity.Y);
+            }
 
             //limbs are disabled when simple physics is enabled, no need to move them
             if (SimplePhysicsEnabled) { return; }

@@ -396,8 +396,16 @@ namespace Barotrauma
 
         public int GetEventCount(Level level)
         {
-            if (level?.StartLocation == null || !overrideEventCount.TryGetValue(level.StartLocation.Type.Identifier, out int count)) { return eventCount; }
-            return count;
+            int finishedEventCount = 0;
+            if (level is not null)
+            {
+                level.LevelData.FinishedEvents.TryGetValue(this, out finishedEventCount);
+            }
+            if (level.StartLocation == null || !overrideEventCount.TryGetValue(level.StartLocation.Type.Identifier, out int count))
+            {
+                return eventCount - finishedEventCount;
+            }
+            return count - finishedEventCount;
         }
 
         public static List<string> GetDebugStatistics(int simulatedRoundCount = 100, Func<MonsterEvent, bool> filter = null, bool fullLog = false)

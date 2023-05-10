@@ -420,20 +420,18 @@ namespace Barotrauma
                         {
                             List<Character> availableSpeakers = new List<Character>() { npc, player };
                             List<Identifier> dialogFlags = new List<Identifier>() { "OutpostNPC".ToIdentifier(), "EnterOutpost".ToIdentifier() };
+                            if (npc.HumanPrefab != null)
+                            {
+                                foreach (var tag in npc.HumanPrefab.GetTags())
+                                {
+                                    dialogFlags.Add(tag);
+                                }
+                            }
                             if (GameMain.GameSession?.GameMode is CampaignMode campaignMode)
                             {
                                 if (campaignMode.Map?.CurrentLocation?.Type?.Identifier == "abandoned")
                                 {
-                                    if (npc.TeamID == CharacterTeamType.None)
-                                    {
-                                        dialogFlags.Remove("OutpostNPC".ToIdentifier());
-                                        dialogFlags.Add("Bandit".ToIdentifier());
-                                    }
-                                    else if (npc.TeamID == CharacterTeamType.FriendlyNPC)
-                                    {
-                                        dialogFlags.Remove("OutpostNPC".ToIdentifier());
-                                        dialogFlags.Add("Hostage".ToIdentifier());
-                                    }
+                                    dialogFlags.Remove("OutpostNPC".ToIdentifier());
                                 }
                                 else if (campaignMode.Map?.CurrentLocation?.Reputation != null)
                                 {

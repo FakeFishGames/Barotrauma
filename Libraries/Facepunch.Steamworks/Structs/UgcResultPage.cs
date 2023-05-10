@@ -24,6 +24,7 @@ namespace Steamworks.Ugc
 				var details = default( SteamUGCDetails_t );
 				for ( uint i=0; i< ResultCount; i++ )
 				{
+					if (SteamUGC.Internal is null) { yield break; }
 					if ( SteamUGC.Internal.GetQueryUGCResult( Handle, i, ref details ) )
 					{
 						var item = Item.From( details );
@@ -86,7 +87,7 @@ namespace Steamworks.Ugc
 		{
 			ulong val = 0;
 
-			if ( !SteamUGC.Internal.GetQueryUGCStatistic( Handle, index, stat, ref val ) )
+			if ( SteamUGC.Internal is null || !SteamUGC.Internal.GetQueryUGCStatistic( Handle, index, stat, ref val ) )
 				return 0;
 
 			return val;
@@ -96,7 +97,7 @@ namespace Steamworks.Ugc
 		{
 			if ( Handle > 0 )
 			{
-				SteamUGC.Internal.ReleaseQueryUGCRequest( Handle );
+				SteamUGC.Internal?.ReleaseQueryUGCRequest( Handle );
 				Handle = 0;
 			}
 		}

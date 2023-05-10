@@ -217,6 +217,11 @@ namespace Barotrauma.Abilities
 
         public static StatTypes ParseStatType(string statTypeString, string debugIdentifier)
         {
+            //backwards compatibility
+            if (statTypeString.Equals("MedicalItemDurationMultiplier", StringComparison.OrdinalIgnoreCase))
+            {
+                statTypeString = "BuffItemApplyingMultiplier";
+            }
             if (!Enum.TryParse(statTypeString, true, out StatTypes statType))
             {
                 DebugConsole.ThrowError("Invalid stat type type \"" + statTypeString + "\" in CharacterTalent (" + debugIdentifier + ")");

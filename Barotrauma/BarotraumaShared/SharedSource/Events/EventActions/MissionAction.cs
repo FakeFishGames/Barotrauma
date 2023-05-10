@@ -31,6 +31,8 @@ namespace Barotrauma
 
         private bool isFinished;
 
+        private readonly Random random;
+
         public MissionAction(ScriptedEvent parentEvent, ContentXElement element) : base(parentEvent, element)
         {
             if (MissionIdentifier.IsEmpty && MissionTag.IsEmpty)
@@ -42,6 +44,7 @@ namespace Barotrauma
                 DebugConsole.ThrowError($"Error in event \"{parentEvent.Prefab.Identifier}\": both MissionIdentifier or MissionTag have been configured. The tag will be ignored.");
             }
             LocationTypes = element.GetAttributeIdentifierArray("locationtype", Array.Empty<Identifier>()).ToImmutableArray();
+            random = new MTRandom(parentEvent.RandomSeed);
         }
 
         public override bool IsFinished(ref string goTo)
@@ -80,7 +83,7 @@ namespace Barotrauma
                     }
                     else if (!MissionTag.IsEmpty)
                     {
-                        unlockedMission = unlockLocation.UnlockMissionByTag(MissionTag);
+                        unlockedMission = unlockLocation.UnlockMissionByTag(MissionTag, random);
                     }
                     if (campaign is MultiPlayerCampaign mpCampaign)
                     {

@@ -88,6 +88,11 @@ namespace Barotrauma.Items.Components
 
         public void ClientEventRead(IReadMessage msg, float sendingTime)
         {
+            UInt16 userID = msg.ReadUInt16();
+            if (userID != Entity.NullEntityID)
+            {
+                user = Entity.FindEntityByID(userID) as Character;
+            }
             CurrPowerConsumption = powerConsumption;
             charging = true;
             timer = Duration;

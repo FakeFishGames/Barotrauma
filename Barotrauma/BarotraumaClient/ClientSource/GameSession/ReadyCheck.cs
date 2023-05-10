@@ -40,7 +40,7 @@ namespace Barotrauma
 
         private void CreateMessageBox(string author)
         {
-            Vector2 relativeSize = new Vector2(0.3f * GUI.AspectRatioAdjustment, 0.15f);
+            Vector2 relativeSize = new Vector2(0.2f / GUI.AspectRatioAdjustment, 0.15f);
             Point minSize = new Point(300, 200);
             msgBox = new GUIMessageBox(readyCheckHeader, readyCheckBody(author), new[] { yesButton, noButton }, relativeSize, minSize, type: GUIMessageBox.Type.Vote) { UserData = PromptData, Draggable = true };
 

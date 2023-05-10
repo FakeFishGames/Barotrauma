@@ -10,7 +10,7 @@ namespace Steamworks
 {
 	public class SteamNetworking : SteamSharedClass<SteamNetworking>
 	{
-		internal static ISteamNetworking Internal => Interface as ISteamNetworking;
+		internal static ISteamNetworking? Internal => Interface as ISteamNetworking;
 
 		internal override void InitializeInterface( bool server )
 		{
@@ -35,26 +35,26 @@ namespace Steamworks
 		/// This SteamId wants to send you a message. You should respond by calling AcceptP2PSessionWithUser
 		/// if you want to recieve their messages
 		/// </summary>
-		public static Action<SteamId> OnP2PSessionRequest;
+		public static Action<SteamId>? OnP2PSessionRequest;
 
 		/// <summary>
 		/// Called when packets can't get through to the specified user.
 		/// All queued packets unsent at this point will be dropped, further attempts
 		/// to send will retry making the connection (but will be dropped if we fail again).
 		/// </summary>
-		public static Action<SteamId, P2PSessionError> OnP2PConnectionFailed;
+		public static Action<SteamId, P2PSessionError>? OnP2PConnectionFailed;
 
 		/// <summary>
 		/// This should be called in response to a OnP2PSessionRequest
 		/// </summary>
-		public static bool AcceptP2PSessionWithUser( SteamId user ) => Internal.AcceptP2PSessionWithUser( user );
+		public static bool AcceptP2PSessionWithUser( SteamId user ) => Internal != null && Internal.AcceptP2PSessionWithUser( user );
 
 		/// <summary>
 		/// Allow or disallow P2P connects to fall back on Steam server relay if direct 
 		/// connection or NAT traversal can't be established. Applies to connections 
 		/// created after setting or old connections that need to reconnect.
 		/// </summary>
-		public static bool AllowP2PPacketRelay( bool allow ) => Internal.AllowP2PPacketRelay( allow );
+		public static bool AllowP2PPacketRelay( bool allow ) => Internal != null && Internal.AllowP2PPacketRelay( allow );
 
 		/// <summary>
 		/// This should be called when you're done communicating with a user, as this will
@@ -62,7 +62,7 @@ namespace Steamworks
 		/// If the remote user tries to send data to you again, a new OnP2PSessionRequest 
 		/// callback will be posted
 		/// </summary>
-		public static bool CloseP2PSessionWithUser( SteamId user ) => Internal.CloseP2PSessionWithUser( user );
+		public static bool CloseP2PSessionWithUser( SteamId user ) => Internal != null && Internal.CloseP2PSessionWithUser( user );
 
 		/// <summary>
 		/// Checks if a P2P packet is available to read, and gets the size of the message if there is one.
@@ -70,7 +70,7 @@ namespace Steamworks
 		public static bool IsP2PPacketAvailable( int channel = 0 )
 		{
 			uint _ = 0;
-			return Internal.IsP2PPacketAvailable( ref _, channel );
+			return Internal != null && Internal.IsP2PPacketAvailable( ref _, channel );
 		}
 
 		/// <summary>
@@ -80,7 +80,7 @@ namespace Steamworks
 		{
 			uint size = 0;
 
-			if ( !Internal.IsP2PPacketAvailable( ref size, channel ) )
+			if ( Internal is null || !Internal.IsP2PPacketAvailable( ref size, channel ) )
 				return null;
 
 			var buffer = Helpers.TakeBuffer( (int) size );
@@ -108,7 +108,7 @@ namespace Steamworks
 		public unsafe static bool ReadP2PPacket( byte[] buffer, ref uint size, ref SteamId steamid, int channel = 0 )
 		{
 			fixed (byte* p = buffer) {
-				return Internal.ReadP2PPacket( (IntPtr)p, (uint)buffer.Length, ref size, ref steamid, channel );
+				return Internal != null && Internal.ReadP2PPacket( (IntPtr)p, (uint)buffer.Length, ref size, ref steamid, channel );
 			}
 		}
 
@@ -117,7 +117,7 @@ namespace Steamworks
 		/// </summary>
 		public unsafe static bool ReadP2PPacket( byte* buffer, uint cbuf, ref uint size, ref SteamId steamid, int channel = 0 )
 		{
-			return Internal.ReadP2PPacket( (IntPtr)buffer, cbuf, ref size, ref steamid, channel );
+			return Internal != null && Internal.ReadP2PPacket( (IntPtr)buffer, cbuf, ref size, ref steamid, channel );
 		}
 
 		/// <summary>
@@ -132,7 +132,7 @@ namespace Steamworks
 
 			fixed ( byte* p = data )
 			{
-				return Internal.SendP2PPacket( steamid, (IntPtr)p, (uint)length, (P2PSend)sendType, nChannel );
+				return Internal != null && Internal.SendP2PPacket( steamid, (IntPtr)p, (uint)length, (P2PSend)sendType, nChannel );
 			}
 		}
 
@@ -143,13 +143,13 @@ namespace Steamworks
 		/// </summary>
 		public static unsafe bool SendP2PPacket( SteamId steamid, byte* data, uint length, int nChannel = 1, P2PSend sendType = P2PSend.Reliable )
 		{ 
-			return Internal.SendP2PPacket( steamid, (IntPtr)data, (uint)length, (P2PSend)sendType, nChannel );
+			return Internal != null && Internal.SendP2PPacket( steamid, (IntPtr)data, (uint)length, (P2PSend)sendType, nChannel );
 		}
 
 		public static P2PSessionState? GetP2PSessionState( SteamId steamid )
 		{
 			P2PSessionState_t state = new P2PSessionState_t();
-			if (Internal.GetP2PSessionState(steamid, ref state))
+			if (Internal != null && Internal.GetP2PSessionState(steamid, ref state))
 			{
 				return new P2PSessionState(state);
 			}

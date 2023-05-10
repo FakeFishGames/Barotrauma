@@ -141,15 +141,31 @@ namespace Barotrauma.Networking
 
             if (remotePeer.DisconnectTime != null) { return; }
 
-            var peerPacketHeaders = INetSerializableStruct.Read<PeerPacketHeaders>(inc);
-            
-            PacketHeader packetHeader = peerPacketHeaders.PacketHeader;
+            try
+            {
+                ProcessP2PData(steamId, remotePeer, inc);
+            }
+            catch (Exception e)
+            {
+                string errorMsg = $"Server failed to read an incoming P2P message. {{{e}}}\n{e.StackTrace.CleanupStackTrace()}";
+                GameAnalyticsManager.AddErrorEventOnce($"SteamP2POwnerPeer.OnP2PData:OwnerReadException{e.TargetSite}", GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
+#if DEBUG
+                DebugConsole.ThrowError(errorMsg);
+#else
+                if (GameSettings.CurrentConfig.VerboseLogging) { DebugConsole.ThrowError(errorMsg); }
+#endif
+            }
+        }
 
-            if (!remotePeer.Authenticated && !remotePeer.Authenticating && packetHeader.IsConnectionInitializationStep())
+        private void ProcessP2PData(ulong steamId, RemotePeer remotePeer, IReadMessage inc)
+        {
+            var (deliveryMethod, packetHeader, connectionInitialization) = INetSerializableStruct.Read<PeerPacketHeaders>(inc);
+
+            if (remotePeer is { Authenticated: false, Authenticating: false } && packetHeader.IsConnectionInitializationStep())
             {
                 remotePeer.DisconnectTime = null;
 
-                ConnectionInitialization initialization = peerPacketHeaders.Initialization ?? throw new Exception("Initialization step missing");
+                ConnectionInitialization initialization = connectionInitialization ?? throw new Exception("Initialization step missing");
                 if (initialization == ConnectionInitialization.SteamTicketAndVersion)
                 {
                     remotePeer.Authenticating = true;
@@ -181,6 +197,7 @@ namespace Barotrauma.Networking
 
                 ForwardToServerProcess(outMsg);
             }
+
         }
 
         public override void Update(float deltaTime)

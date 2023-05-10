@@ -39,6 +39,7 @@ namespace Barotrauma.Networking
             ServerMessage,
             ConsoleUsage,
             Money,
+            DoSProtection,
             Karma,
             Talent,
             Error,
@@ -55,6 +56,7 @@ namespace Barotrauma.Networking
             { MessageType.ServerMessage, new Color(157, 225, 160) },
             { MessageType.ConsoleUsage, new Color(0, 162, 232) },
             { MessageType.Money, Color.Green },
+            { MessageType.DoSProtection, Color.OrangeRed },
             { MessageType.Karma, new Color(75, 88, 255) },
             { MessageType.Talent, new Color(125, 125, 255) },
             { MessageType.Error, Color.Red }
@@ -71,6 +73,7 @@ namespace Barotrauma.Networking
             { MessageType.ServerMessage, "ServerMessage" },
             { MessageType.ConsoleUsage, "ConsoleUsage" },
             { MessageType.Money, "Money" },
+            { MessageType.DoSProtection, "DoSProtection" },
             { MessageType.Karma, "Karma" },
             { MessageType.Talent, "Talent" },
             { MessageType.Error, "Error" }

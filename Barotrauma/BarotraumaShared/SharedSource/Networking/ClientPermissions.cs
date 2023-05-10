@@ -28,28 +28,30 @@ namespace Barotrauma.Networking
         ManageMap = 0x8000,
         ManageHires = 0x10000,
         ManageBotTalents = 0x20000,
-        All = 0x3FFFF
+        SpamImmunity = 0x40000,
+        All = 0x7FFFF
     }
 
     class PermissionPreset
     {
         public static readonly List<PermissionPreset> List = new List<PermissionPreset>();
-        
-        public readonly LocalizedString Name;
+
+        public readonly Identifier Identifier;
+        public readonly LocalizedString DisplayName;
         public readonly LocalizedString Description;
         public readonly ClientPermissions Permissions;
         public readonly HashSet<DebugConsole.Command> PermittedCommands;
         
         public PermissionPreset(XElement element)
         {
-            string name = element.GetAttributeString("name", "");
-            Name = TextManager.Get("permissionpresetname." + name).Fallback(name);
-            Description = TextManager.Get("permissionpresetdescription." + name) .Fallback(element.GetAttributeString("description", ""));
+            Identifier = element.GetAttributeIdentifier("name", Identifier.Empty);
+            DisplayName = TextManager.Get("permissionpresetname." + Identifier).Fallback(Identifier.ToString());
+            Description = TextManager.Get("permissionpresetdescription." + Identifier) .Fallback(element.GetAttributeString("description", ""));
 
             string permissionsStr = element.GetAttributeString("permissions", "");
             if (!Enum.TryParse(permissionsStr, out Permissions))
             {
-                DebugConsole.ThrowError("Error in permission preset \"" + Name + "\" - " + permissionsStr + " is not a valid permission!");
+                DebugConsole.ThrowError("Error in permission preset \"" + DisplayName + "\" - " + permissionsStr + " is not a valid permission!");
             }
 
             PermittedCommands = new HashSet<DebugConsole.Command>();
@@ -64,7 +66,7 @@ namespace Barotrauma.Networking
                     if (command == null)
                     {
 #if SERVER
-                        DebugConsole.ThrowError("Error in permission preset \"" + Name + "\" - " + commandName + "\" is not a valid console command.");
+                        DebugConsole.ThrowError("Error in permission preset \"" + DisplayName + "\" - " + commandName + "\" is not a valid console command.");
 #endif
                         continue;
                     }
