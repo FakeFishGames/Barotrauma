@@ -400,6 +400,13 @@ namespace Barotrauma
             audioDeviceElement(audio, v => unsavedConfig.Audio.AudioOutputDevice = v, Alc.OutputDevicesSpecifier, Alc.DefaultDeviceSpecifier, ref currentOutputDevice);
             Spacer(audio);
 
+            Label(audio, TextManager.Get("GlobalVolume"), GUIStyle.SubHeadingFont);
+            Slider(audio, (0, 1), 101, Percentage, GetHighestVolumeSlider(), v => { 
+                unsavedConfig.Audio.SoundVolume = v; 
+                unsavedConfig.Audio.MusicVolume = v; 
+                unsavedConfig.Audio.UiVolume = v;
+            });
+
             Label(audio, TextManager.Get("SoundVolume"), GUIStyle.SubHeadingFont);
             Slider(audio, (0, 1), 101, Percentage, unsavedConfig.Audio.SoundVolume, v => unsavedConfig.Audio.SoundVolume = v);
 
@@ -473,6 +480,10 @@ namespace Barotrauma
             Slider(voiceChat, (0, 500), 26, v => $"{Round(v)} ms", unsavedConfig.Audio.VoiceChatCutoffPrevention, v => unsavedConfig.Audio.VoiceChatCutoffPrevention = Round(v), TextManager.Get("CutoffPreventionTooltip"));
         }
 
+        private float GetHighestVolumeSlider() 
+        {
+            return Math.Max(unsavedConfig.Audio.SoundVolume, Math.Max(unsavedConfig.Audio.MusicVolume, unsavedConfig.Audio.UiVolume);
+        }
         private readonly Dictionary<GUIButton, Func<LocalizedString>> inputButtonValueNameGetters = new Dictionary<GUIButton, Func<LocalizedString>>();
         private bool inputBoxSelectedThisFrame = false;
 
