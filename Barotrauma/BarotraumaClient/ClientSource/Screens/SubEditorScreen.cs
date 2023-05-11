@@ -3557,6 +3557,7 @@ namespace Barotrauma
                 foreach (var subElement in info.SubmarineElement.Elements())
                 {
                     int id = subElement.GetAttributeInt("ID", -1);
+                    if (id == -1) { continue; }
                     Identifier identifier = subElement.GetAttributeIdentifier("identifier", string.Empty);
                     if (entities.TryGetValue(id, out Identifier duplicateEntity))
                     {
