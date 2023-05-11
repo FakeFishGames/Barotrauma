@@ -306,7 +306,7 @@ namespace Barotrauma
                     }
                     idOffset = moduleEntities.Max(e => e.ID) + 1;
 
-                    var wallEntities = moduleEntities.Where(e => e is Structure).Cast<Structure>();
+                    var wallEntities = moduleEntities.Where(e => e is Structure s && s.HasBody).Cast<Structure>();
                     var hullEntities = moduleEntities.Where(e => e is Hull).Cast<Hull>();
 
                     // Tell the hulls what tags the module has, used to spawn NPCs on specific rooms
@@ -1440,27 +1440,7 @@ namespace Barotrauma
 
         private static void EnableFactionSpecificEntities(Submarine sub, Location location)
         {
-            foreach (MapEntity me in MapEntity.mapEntityList)
-            {
-                if (string.IsNullOrEmpty(me.Layer) || me.Submarine != sub) { continue; }
-
-                var layerAsIdentifier = me.Layer.ToIdentifier();
-                if (FactionPrefab.Prefabs.ContainsKey(layerAsIdentifier))
-                {
-                    me.HiddenInGame = 
-                        location?.Faction?.Prefab != FactionPrefab.Prefabs[layerAsIdentifier];
-#if CLIENT
-                    //normally this is handled in LightComponent.OnMapLoaded, but this method is called after that
-                    if (me.HiddenInGame && me is Item item)
-                    {
-                        foreach (var lightComponent in item.GetComponents<LightComponent>())
-                        {
-                            lightComponent.Light.Enabled = false;
-                        }
-                    }
-#endif
-                }
-            }            
+            sub.EnableFactionSpecificEntities(location?.Faction?.Prefab.Identifier ?? Identifier.Empty);        
         }
 
         private static void LockUnusedDoors(IEnumerable<PlacedModule> placedModules, Dictionary<PlacedModule, List<MapEntity>> entities, bool removeUnusedGaps)

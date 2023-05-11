@@ -429,7 +429,7 @@ namespace Barotrauma
         public static bool IsLoadedOutpost => Loaded?.Type == LevelData.LevelType.Outpost;
 
         /// <summary>
-        /// Is there a loaded level set, and is it a friendly outpost (FriendlyNPC or Team1)
+        /// Is there a loaded level set, and is it a friendly outpost (FriendlyNPC or Team1). Does not take reputation into account.
         /// </summary>
         public static bool IsLoadedFriendlyOutpost => 
             loaded?.Type == LevelData.LevelType.Outpost && 
@@ -468,8 +468,7 @@ namespace Barotrauma
                 (StartOutpost.Info.OutpostGenerationParams?.SpawnCrewInsideOutpost ?? false) &&
                 StartOutpost.GetConnectedSubs().Any(s => s.Info.Type == SubmarineType.Player))
             {
-                var reputation = GameMain.GameSession?.Campaign?.Map?.CurrentLocation?.Reputation;
-                return reputation == null || reputation.NormalizedValue >= Reputation.HostileThreshold;
+                return GameMain.GameSession.Campaign?.CurrentLocation is not { IsFactionHostile: true };
             }
             return false;
         }
@@ -508,6 +507,8 @@ namespace Barotrauma
             StartLocation = startLocation;
             EndLocation = endLocation;            
 
+            Rand.SetSyncedSeed(ToolBox.StringToInt(Seed));
+
             GenerateEqualityCheckValue(LevelGenStage.GenStart);
             SetEqualityCheckValue(LevelGenStage.LevelGenParams, unchecked((int)GenerationParams.UintIdentifier));
             SetEqualityCheckValue(LevelGenStage.Size, borders.Width ^ borders.Height << 16);
@@ -535,7 +536,6 @@ namespace Barotrauma
             List<Vector2> sites = new List<Vector2>();
             
             Voronoi voronoi = new Voronoi(1.0);
-            Rand.SetSyncedSeed(ToolBox.StringToInt(Seed));
 
 #if CLIENT
             renderer = new LevelRenderer(this);
@@ -838,14 +838,6 @@ namespace Barotrauma
                 foreach (var pathCell in tunnel.Cells)
                 {
                     MarkEdges(pathCell, tunnel.Type);
-                    foreach (GraphEdge edge in pathCell.Edges)
-                    {
-                        var adjacent = edge.AdjacentCell(pathCell);
-                        if (adjacent != null)
-                        {
-                            MarkEdges(adjacent, tunnel.Type);
-                        }
-                    }
                     if (!pathCells.Contains(pathCell))
                     {
                         pathCells.Add(pathCell);
@@ -1813,6 +1805,7 @@ namespace Barotrauma
 
             if (AbyssArea.Height < islandSize.Y) { return; }
 
+            int createdCaves = 0;
             int islandCount = GenerationParams.AbyssIslandCount;
             for (int i = 0; i < islandCount; i++)
             {
@@ -1842,8 +1835,13 @@ namespace Barotrauma
                     break;
                 }
 
-                if (Rand.Range(0.0f, 1.0f, Rand.RandSync.ServerAndClient) > GenerationParams.AbyssIslandCaveProbability)
+                bool createCave =
+                    //force at least one abyss cave
+                    (i == islandCount - 1 && createdCaves == 0) ||
+                    Rand.Range(0.0f, 1.0f, Rand.RandSync.ServerAndClient) < GenerationParams.AbyssIslandCaveProbability;
+                if (!createCave)
                 {
+                    //just create a chunk with no cave
                     float radiusVariance = Math.Min(islandArea.Width, islandArea.Height) * 0.1f;
                     var vertices = CaveGenerator.CreateRandomChunk(islandArea.Width - (int)(radiusVariance * 2), islandArea.Height - (int)(radiusVariance * 2), 16, radiusVariance: radiusVariance);
                     Vector2 position = islandArea.Center.ToVector2();
@@ -1901,6 +1899,7 @@ namespace Barotrauma
                     new Point(islandArea.Center.X, islandArea.Center.Y + (int)(islandArea.Size.Y * (1.0f - caveScaleRelativeToIsland)) / 2),
                     new Point((int)(islandArea.Size.X * caveScaleRelativeToIsland), (int)(islandArea.Size.Y * caveScaleRelativeToIsland)));
                 AbyssIslands.Add(new AbyssIsland(islandArea, islandCells));
+                createdCaves++;
             }
         }
 
@@ -3013,10 +3012,12 @@ namespace Barotrauma
 
             if (PositionsOfInterest.None(p => p.PositionType == positionType))
             {
+                DebugConsole.AddWarning($"Failed to find a position of the type \"{positionType}\" for mission resources.");
                 foreach (var validType in MineralMission.ValidPositionTypes)
                 {
                     if (validType != positionType && PositionsOfInterest.Any(p => p.PositionType == validType))
                     {
+                        DebugConsole.AddWarning($"Placing in \"{validType}\" instead.");
                         positionType = validType;
                         break;
                     }

@@ -21,6 +21,9 @@ namespace Barotrauma.Items.Components
         /// </summary>
         private float lightColorMultiplier;
 
+        [Serialize(1.0f, IsPropertySaveable.Yes, description: "The scale of the light sprite.")]
+        public float LightSpriteScale { get; set; }
+
         public Vector2 DrawSize
         {
             get { return new Vector2(Light.Range * 2, Light.Range * 2); }
@@ -92,7 +95,13 @@ namespace Barotrauma.Items.Components
                 {
                     color = new Color(lightColor, Light.OverrideLightSpriteAlpha.Value);
                 }
-                Light.LightSprite.Draw(spriteBatch, new Vector2(drawPos.X, -drawPos.Y), color * lightBrightness, origin, -Light.Rotation, item.Scale, Light.LightSpriteEffect, itemDepth - 0.0001f);
+                Light.LightSprite.Draw(spriteBatch, 
+                    new Vector2(drawPos.X, -drawPos.Y), 
+                    color * lightBrightness, 
+                    origin, 
+                    -Light.Rotation, 
+                    item.Scale * LightSpriteScale, 
+                    Light.LightSpriteEffect, itemDepth - 0.0001f);
             }
         }
 

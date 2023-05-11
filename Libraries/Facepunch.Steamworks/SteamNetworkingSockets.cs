@@ -10,7 +10,7 @@ namespace Steamworks
 {
 	public class SteamNetworkingSockets : SteamSharedClass<SteamNetworkingSockets>
 	{
-		internal static ISteamNetworkingSockets Internal => Interface as ISteamNetworkingSockets;
+		internal static ISteamNetworkingSockets? Internal => Interface as ISteamNetworkingSockets;
 
 		internal override void InitializeInterface( bool server )
 		{
@@ -22,7 +22,7 @@ namespace Steamworks
 
 		static readonly Dictionary<uint, SocketManager> SocketInterfaces = new Dictionary<uint, SocketManager>();
 
-		internal static SocketManager GetSocketManager( uint id )
+		internal static SocketManager? GetSocketManager( uint id )
 		{
 			if ( SocketInterfaces == null ) return null;
 			if ( id == 0 ) throw new System.ArgumentException( "Invalid Socket" );
@@ -43,7 +43,7 @@ namespace Steamworks
 #region ConnectionInterface
 		static readonly Dictionary<uint, ConnectionManager> ConnectionInterfaces = new Dictionary<uint, ConnectionManager>();
 
-		internal static ConnectionManager GetConnectionManager( uint id )
+		internal static ConnectionManager? GetConnectionManager( uint id )
 		{
 			if ( ConnectionInterfaces == null ) return null;
 			if ( id == 0 ) return null;
@@ -88,7 +88,7 @@ namespace Steamworks
 			OnConnectionStatusChanged?.Invoke( data.Conn, data.Nfo );
 		}
 
-		public static event Action<Connection, ConnectionInfo> OnConnectionStatusChanged;
+		public static event Action<Connection, ConnectionInfo>? OnConnectionStatusChanged;
 
 
 		/// <summary>
@@ -98,8 +98,10 @@ namespace Steamworks
 		/// To use this derive a class from SocketManager and override as much as you want.
 		/// 
 		/// </summary>
-		public static T CreateNormalSocket<T>( NetAddress address ) where T : SocketManager, new()
+		public static T? CreateNormalSocket<T>( NetAddress address ) where T : SocketManager, new()
 		{
+			if (Internal is null) { return null; }
+			
 			var t = new T();
 			var options = Array.Empty<NetKeyValue>();
 			t.Socket = Internal.CreateListenSocketIP( ref address, options.Length, options );
@@ -118,8 +120,10 @@ namespace Steamworks
 		/// will received all the appropriate callbacks.
 		/// 
 		/// </summary>
-		public static SocketManager CreateNormalSocket( NetAddress address, ISocketManager intrface )
+		public static SocketManager? CreateNormalSocket( NetAddress address, ISocketManager intrface )
 		{
+			if (Internal is null) { return null; }
+			
 			var options = Array.Empty<NetKeyValue>();
 			var socket = Internal.CreateListenSocketIP( ref address, options.Length, options );
 
@@ -138,8 +142,10 @@ namespace Steamworks
 		/// <summary>
 		/// Connect to a socket created via <method>CreateListenSocketIP</method>
 		/// </summary>
-		public static T ConnectNormal<T>( NetAddress address ) where T : ConnectionManager, new()
+		public static T? ConnectNormal<T>( NetAddress address ) where T : ConnectionManager, new()
 		{
+			if (Internal is null) { return null; }
+
 			var t = new T();
 			var options = Array.Empty<NetKeyValue>();
 			t.Connection = Internal.ConnectByIPAddress( ref address, options.Length, options );
@@ -150,8 +156,10 @@ namespace Steamworks
 		/// <summary>
 		/// Connect to a socket created via <method>CreateListenSocketIP</method>
 		/// </summary>
-		public static ConnectionManager ConnectNormal( NetAddress address, IConnectionManager iface )
+		public static ConnectionManager? ConnectNormal( NetAddress address, IConnectionManager iface )
 		{
+			if (Internal is null) { return null; }
+
 			var options = Array.Empty<NetKeyValue>();
 			var connection = Internal.ConnectByIPAddress( ref address, options.Length, options );
 
@@ -171,8 +179,10 @@ namespace Steamworks
 		/// To use this derive a class from SocketManager and override as much as you want.
 		/// 
 		/// </summary>
-		public static T CreateRelaySocket<T>( int virtualport = 0 ) where T : SocketManager, new()
+		public static T? CreateRelaySocket<T>( int virtualport = 0 ) where T : SocketManager, new()
 		{
+			if (Internal is null) { return null; }
+
 			var t = new T();
 			var options = Array.Empty<NetKeyValue>();
 			t.Socket = Internal.CreateListenSocketP2P( virtualport, options.Length, options );
@@ -189,8 +199,10 @@ namespace Steamworks
 		/// will received all the appropriate callbacks.
 		/// 
 		/// </summary>
-		public static SocketManager CreateRelaySocket( int virtualport, ISocketManager intrface )
+		public static SocketManager? CreateRelaySocket( int virtualport, ISocketManager intrface )
 		{
+			if (Internal is null) { return null; }
+
 			var options = Array.Empty<NetKeyValue>();
 			var socket = Internal.CreateListenSocketP2P( virtualport, options.Length, options );
 
@@ -209,8 +221,10 @@ namespace Steamworks
 		/// <summary>
 		/// Connect to a relay server
 		/// </summary>
-		public static T ConnectRelay<T>( SteamId serverId, int virtualport = 0 ) where T : ConnectionManager, new()
+		public static T? ConnectRelay<T>( SteamId serverId, int virtualport = 0 ) where T : ConnectionManager, new()
 		{
+			if (Internal is null) { return null; }
+
 			var t = new T();
 			NetIdentity identity = serverId;
 			var options = Array.Empty<NetKeyValue>();

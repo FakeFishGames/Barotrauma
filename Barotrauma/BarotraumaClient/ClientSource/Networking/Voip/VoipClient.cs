@@ -146,7 +146,7 @@ namespace Barotrauma.Networking
 
                 if ((client.VoipSound.CurrentAmplitude * client.VoipSound.Gain * GameMain.SoundManager.GetCategoryGainMultiplier("voip")) > 0.1f) //TODO: might need to tweak
                 {
-                    if (client.Character != null && !client.Character.Removed)
+                    if (client.Character != null && !client.Character.Removed && !client.Character.IsDead)
                     {
                         Vector3 clientPos = new Vector3(client.Character.WorldPosition.X, client.Character.WorldPosition.Y, 0.0f);
                         Vector3 listenerPos = GameMain.SoundManager.ListenerPosition;

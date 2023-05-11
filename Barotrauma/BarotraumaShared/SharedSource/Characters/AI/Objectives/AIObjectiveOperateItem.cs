@@ -122,7 +122,7 @@ namespace Barotrauma
                 else if (!isOrder)
                 {
                     var steering = component?.Item.GetComponent<Steering>();
-                    if (steering != null && (steering.AutoPilot || HumanAIController.IsTrueForAnyCrewMember(c => c != HumanAIController && c.Character.IsCaptain)))
+                    if (steering != null && (steering.AutoPilot || HumanAIController.IsTrueForAnyCrewMember(c => c != character && c.IsCaptain, onlyActive: true, onlyConnectedSubs: true)))
                     {
                         // Ignore if already set to autopilot or if there's a captain onboard
                         Priority = 0;
@@ -204,7 +204,7 @@ namespace Barotrauma
             }
             if (operateTarget != null)
             {
-                if (HumanAIController.IsTrueForAnyCrewMember(other => other != HumanAIController && other.Character.IsBot && other.ObjectiveManager.GetActiveObjective() is AIObjectiveOperateItem operateObjective && operateObjective.operateTarget == operateTarget))
+                if (HumanAIController.IsTrueForAnyBotInTheCrew(other => other != HumanAIController && other.ObjectiveManager.GetActiveObjective() is AIObjectiveOperateItem operateObjective && operateObjective.operateTarget == operateTarget))
                 {
                     // Another crew member is already targeting this entity (leak).
                     Abandon = true;

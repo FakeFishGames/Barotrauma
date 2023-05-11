@@ -260,7 +260,7 @@ namespace Barotrauma.Items.Components
                 {
                     Vector2 barrelPos = TransformedBarrelPos + item.body.SimPosition;
                     float rotation = (Item.body.Dir == 1.0f) ? Item.body.Rotation : Item.body.Rotation - MathHelper.Pi;
-                    float spread = GetSpread(character) * Projectile.GetSpreadFromPool(projectile.SpreadCounter);
+                    float spread = GetSpread(character) * projectile.GetSpreadFromPool();
 
                     var lastProjectile = LastProjectile;
                     if (lastProjectile != projectile)
@@ -277,7 +277,7 @@ namespace Barotrauma.Items.Components
                         {
                             Item.body.ApplyLinearImpulse(new Vector2((float)Math.Cos(projectile.Item.body.Rotation), (float)Math.Sin(projectile.Item.body.Rotation)) * Item.body.Mass * -50.0f, maxVelocity: NetConfig.MaxPhysicsBodyVelocity);
                         }
-                        projectile.Item.body.ApplyTorque(projectile.Item.body.Mass * degreeOfFailure * 20.0f * Projectile.GetSpreadFromPool(projectile.SpreadCounter));
+                        projectile.Item.body.ApplyTorque(projectile.Item.body.Mass * degreeOfFailure * 20.0f * projectile.GetSpreadFromPool());
                     }
                     Item.RemoveContained(projectile.Item);
                 }

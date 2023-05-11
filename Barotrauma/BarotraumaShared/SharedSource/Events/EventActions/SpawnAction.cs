@@ -188,6 +188,10 @@ namespace Barotrauma
                                     outPostInfo.AddOutpostNPCIdentifierOrTag(newCharacter, tag);
                                 }
                             }
+#if SERVER
+                            newCharacter.LoadTalents();
+                            GameMain.NetworkMember.CreateEntityEvent(newCharacter, new Character.UpdateTalentsEventData());
+#endif
                         });
                     }
                 }

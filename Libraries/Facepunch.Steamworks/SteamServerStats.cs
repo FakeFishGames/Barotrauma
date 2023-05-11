@@ -9,7 +9,7 @@ namespace Steamworks
 {
 	public class SteamServerStats : SteamServerClass<SteamServerStats>
 	{
-		internal static ISteamGameServerStats Internal => Interface as ISteamGameServerStats;
+		internal static ISteamGameServerStats? Internal => Interface as ISteamGameServerStats;
 
 		internal override void InitializeInterface( bool server )
 		{
@@ -24,6 +24,7 @@ namespace Steamworks
 		/// </summary>
 		public static async Task<Result> RequestUserStatsAsync( SteamId steamid )
 		{
+			if (Internal is null) { return Result.Fail; }
 			var r = await Internal.RequestUserStats( steamid );
 			if ( !r.HasValue ) return Result.Fail;
 			return r.Value.Result;
@@ -35,7 +36,7 @@ namespace Steamworks
 		/// </summary>
 		public static bool SetInt( SteamId steamid, string name, int stat )
 		{
-			return Internal.SetUserStat( steamid, name, stat );
+			return Internal != null && Internal.SetUserStat( steamid, name, stat );
 		}
 
 		/// <summary>
@@ -44,7 +45,7 @@ namespace Steamworks
 		/// </summary>
 		public static bool SetFloat( SteamId steamid, string name, float stat )
 		{
-			return Internal.SetUserStat( steamid, name, stat );
+			return Internal != null && Internal.SetUserStat( steamid, name, stat );
 		}
 
 		/// <summary>
@@ -56,7 +57,7 @@ namespace Steamworks
 		{
 			int data = defaultValue;
 
-			if ( !Internal.GetUserStat( steamid, name, ref data ) )
+			if ( Internal is null || !Internal.GetUserStat( steamid, name, ref data ) )
 				return defaultValue;
 
 			return data;
@@ -71,7 +72,7 @@ namespace Steamworks
 		{
 			float data = defaultValue;
 
-			if ( !Internal.GetUserStat( steamid, name, ref data ) )
+			if ( Internal is null || !Internal.GetUserStat( steamid, name, ref data ) )
 				return defaultValue;
 
 			return data;
@@ -83,7 +84,7 @@ namespace Steamworks
 		/// </summary>
 		public static bool SetAchievement( SteamId steamid, string name )
 		{
-			return Internal.SetUserAchievement( steamid, name );
+			return Internal != null && Internal.SetUserAchievement( steamid, name );
 		}
 
 		/// <summary>
@@ -92,7 +93,7 @@ namespace Steamworks
 		/// </summary>
 		public static bool ClearAchievement( SteamId steamid, string name )
 		{
-			return Internal.ClearUserAchievement( steamid, name );
+			return Internal != null && Internal.ClearUserAchievement( steamid, name );
 		}
 
 		/// <summary>
@@ -102,7 +103,7 @@ namespace Steamworks
 		{
 			bool achieved = false;
 
-			if ( !Internal.GetUserAchievement( steamid, name, ref achieved ) )
+			if ( Internal is null || !Internal.GetUserAchievement( steamid, name, ref achieved ) )
 				return false;
 
 			return achieved;
@@ -115,6 +116,7 @@ namespace Steamworks
 		/// </summary>
 		public static async Task<Result> StoreUserStats( SteamId steamid )
 		{
+			if (Internal is null) { return Result.Fail; }
 			var r = await Internal.StoreUserStats( steamid );
 			if ( !r.HasValue ) return Result.Fail;
 			return r.Value.Result;

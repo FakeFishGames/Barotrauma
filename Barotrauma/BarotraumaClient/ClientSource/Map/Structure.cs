@@ -537,7 +537,7 @@ namespace Barotrauma
                 float damage = msg.ReadRangedSingle(0.0f, 1.0f, 8) * MaxHealth;
                 if (!invalidMessage && i < Sections.Length)
                 {
-                    SetDamage(i, damage);
+                    SetDamage(i, damage, isNetworkEvent: true);
                 }
             }
         }

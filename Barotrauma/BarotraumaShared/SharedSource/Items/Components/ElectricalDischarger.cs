@@ -600,7 +600,7 @@ namespace Barotrauma.Items.Components
 
         public void ServerEventWrite(IWriteMessage msg, Client c, NetEntityEvent.IData extraData = null)
         {
-            //no further data needed, the event just triggers the discharge
+            msg.WriteUInt16(user?.ID ?? Entity.NullEntityID);
         }
     }
 }

@@ -78,6 +78,11 @@ namespace Barotrauma
         }
     }
 
+    /// <summary>
+    /// Attacks are used to deal damage to characters, structures and items.
+    /// They can be defined in the weapon components of the items or the limb definitions of the characters.
+    /// The limb attacks can also be used by the player, when they control a monster or have some appendage, like a husk stinger.
+    /// </summary>
     partial class Attack : ISerializableEntity
     {
         [Serialize(AttackContext.Any, IsPropertySaveable.Yes, description: "The attack will be used only in this context."), Editable]
@@ -123,7 +128,7 @@ namespace Barotrauma
             set => _damageRange = value;
         }
 
-        [Serialize(0.0f, IsPropertySaveable.Yes, description: ""), Editable(MinValueFloat = 0.0f, MaxValueFloat = 10000.0f)]
+        [Serialize(0.0f, IsPropertySaveable.Yes, description: "Used by enemy AI to determine the minimum range required for the attack to hit."), Editable(MinValueFloat = 0.0f, MaxValueFloat = 10000.0f)]
         public float MinRange { get; private set; }
 
         [Serialize(0.25f, IsPropertySaveable.Yes, description: "An approximation of the attack duration. Effectively defines the time window in which the hit can be registered. If set to too low value, it's possible that the attack won't hit the target in time."), Editable(MinValueFloat = 0.0f, MaxValueFloat = 10.0f, DecimalCount = 2)]
@@ -138,22 +143,22 @@ namespace Barotrauma
         [Serialize(0f, IsPropertySaveable.Yes, description: "A random factor applied to all cooldowns. Example: 0.1 -> adds a random value between -10% and 10% of the cooldown. Min 0 (default), Max 1 (could disable or double the cooldown in extreme cases)."), Editable(MinValueFloat = 0, MaxValueFloat = 1, DecimalCount = 2)]
         public float CoolDownRandomFactor { get; private set; } = 0;
 
-        [Serialize(false, IsPropertySaveable.Yes), Editable]
+        [Serialize(false, IsPropertySaveable.Yes, description: "When set to true, causes the enemy AI to use the fast movement animations when the attack is on cooldown."), Editable]
         public bool FullSpeedAfterAttack { get; private set; }
 
         private float _structureDamage;
-        [Serialize(0.0f, IsPropertySaveable.Yes), Editable(MinValueFloat = 0.0f, MaxValueFloat = 10000.0f)]
+        [Serialize(0.0f, IsPropertySaveable.Yes, description: "How much damage the attack does to submarine walls."), Editable(MinValueFloat = 0.0f, MaxValueFloat = 10000.0f)]
         public float StructureDamage
         {
             get => _structureDamage * DamageMultiplier;
             set => _structureDamage = value;
         }
 
-        [Serialize(true, IsPropertySaveable.Yes), Editable]
+        [Serialize(true, IsPropertySaveable.Yes, description: "Whether or not damaging structures with the attack causes damage particles to emit."), Editable]
         public bool EmitStructureDamageParticles { get; private set; }
 
         private float _itemDamage;
-        [Serialize(0.0f, IsPropertySaveable.Yes), Editable(MinValueFloat = 0.0f, MaxValueFloat = 1000.0f)]
+        [Serialize(0.0f, IsPropertySaveable.Yes, description: "How much damage the attack does to items."), Editable(MinValueFloat = 0.0f, MaxValueFloat = 1000.0f)]
         public float ItemDamage
         {
             get =>_itemDamage * DamageMultiplier;
@@ -178,16 +183,16 @@ namespace Barotrauma
         /// </summary>
         public float ImpactMultiplier { get; set; } = 1;
 
-        [Serialize(0.0f, IsPropertySaveable.Yes), Editable(MinValueFloat = 0.0f, MaxValueFloat = 1000.0f)]
+        [Serialize(0.0f, IsPropertySaveable.Yes, description: "How much damage the attack does to level walls."), Editable(MinValueFloat = 0.0f, MaxValueFloat = 1000.0f)]
         public float LevelWallDamage { get; set; }
 
-        [Serialize(false, IsPropertySaveable.Yes), Editable]
+        [Serialize(false, IsPropertySaveable.Yes, description: "Sets whether or not the attack is ranged or not."), Editable]
         public bool Ranged { get; set; }
 
-        [Serialize(false, IsPropertySaveable.Yes, description:"Only affects ranged attacks."), Editable]
+        [Serialize(false, IsPropertySaveable.Yes, description:"When enabled the attack will not be launched when there's a friendly character in the way. Only affects ranged attacks."), Editable]
         public bool AvoidFriendlyFire { get; set; }
 
-        [Serialize(20f, IsPropertySaveable.Yes, description: "Only affects ranged attacks."), Editable]
+        [Serialize(20f, IsPropertySaveable.Yes, description: "Used by enemy AI to determine how accurately the attack needs to be aimed for the attack to trigger. Only affects ranged attacks."), Editable]
         public float RequiredAngle { get; set; }
 
         [Serialize(0f, IsPropertySaveable.Yes, description: "By default uses the same value as RequiredAngle. Use if you want to allow selecting the attack but not shooting until the angle is smaller. Only affects ranged attacks."), Editable]
@@ -205,16 +210,13 @@ namespace Barotrauma
         [Serialize(5f, IsPropertySaveable.Yes, description: "How fast the held weapon is swayed back and forth while aiming. Only affects monsters using ranged weapons (items)."), Editable]
         public float SwayFrequency { get; set; }
 
-        /// <summary>
-        /// Legacy support. Use Afflictions.
-        /// </summary>
-        [Serialize(0.0f, IsPropertySaveable.No)]
+        [Serialize(0.0f, IsPropertySaveable.No, description: "Legacy support. Use Afflictions.")]
         public float Stun { get; private set; }
 
         [Serialize(false, IsPropertySaveable.Yes, description: "Can damage only Humans."), Editable]
         public bool OnlyHumans { get; set; }
 
-        [Serialize("", IsPropertySaveable.Yes), Editable]
+        [Serialize("", IsPropertySaveable.Yes, description: "List of limb indices to apply the force into."), Editable]
         public string ApplyForceOnLimbs
         {
             get
@@ -240,20 +242,20 @@ namespace Barotrauma
 
         [Serialize("0.0, 0.0", IsPropertySaveable.Yes, description: "Applied to the main limb. In world space coordinates(i.e. 0, 1 pushes the character upwards a bit). The attacker's facing direction is taken into account."), Editable]
         public Vector2 RootForceWorldStart { get; private set; }
-        
+
         [Serialize("0.0, 0.0", IsPropertySaveable.Yes, description: "Applied to the main limb. In world space coordinates(i.e. 0, 1 pushes the character upwards a bit). The attacker's facing direction is taken into account."), Editable]
         public Vector2 RootForceWorldMiddle { get; private set; }
-        
+
         [Serialize("0.0, 0.0", IsPropertySaveable.Yes, description: "Applied to the main limb. In world space coordinates(i.e. 0, 1 pushes the character upwards a bit). The attacker's facing direction is taken into account."), Editable]
         public Vector2 RootForceWorldEnd { get; private set; }
-        
-        [Serialize(TransitionMode.Linear, IsPropertySaveable.Yes, description:""), Editable]
+
+        [Serialize(TransitionMode.Linear, IsPropertySaveable.Yes, description:"Applied to the main limb. The transition smoothing of the applied force."), Editable]
         public TransitionMode RootTransitionEasing { get; private set; }
 
         [Serialize(0.0f, IsPropertySaveable.Yes, description: "Applied to the attacking limb (or limbs defined using ApplyForceOnLimbs)"), Editable(MinValueFloat = -10000.0f, MaxValueFloat = 10000.0f)]
         public float Torque { get; private set; }
 
-        [Serialize(false, IsPropertySaveable.Yes), Editable]
+        [Serialize(false, IsPropertySaveable.Yes, description: "Only apply the force once during the attacks lifetime."), Editable]
         public bool ApplyForcesOnlyOnce { get; private set; }
 
         [Serialize(0.0f, IsPropertySaveable.Yes, description: "Applied to the target the attack hits. The direction of the impulse is from this limb towards the target (use negative values to pull the target closer)."), Editable(MinValueFloat = -1000.0f, MaxValueFloat = 1000.0f)]
@@ -279,10 +281,10 @@ namespace Barotrauma
         //public float StickChance { get; set; }
         public float StickChance => 0f;
 
-        [Serialize(0.0f, IsPropertySaveable.Yes, description: ""), Editable(MinValueFloat = 0.0f, MaxValueFloat = 1.0f)]
+        [Serialize(0.0f, IsPropertySaveable.Yes, description: "Used by enemy AI to determine the priority when selecting attacks. When random attacks are disabled on the character it is multiplied with distance to determine the which attack to use. Only attacks that are currently valid are taken into consideration when making the decision."), Editable(MinValueFloat = 0.0f, MaxValueFloat = 1.0f)]
         public float Priority { get; private set; }
 
-        [Serialize(false, IsPropertySaveable.Yes, description: ""), Editable]
+        [Serialize(false, IsPropertySaveable.Yes, description: "Triggers the 'blink' animation on the attacking limbs when the attack executes. Used e.g. by abyss monsters to make their jaws close when attacking."), Editable]
         public bool Blink { get; private set; }
 
         public IEnumerable<StatusEffect> StatusEffects
@@ -298,7 +300,7 @@ namespace Barotrauma
             private set;
         } = new Dictionary<Identifier, SerializableProperty>();
 
-        //the indices of the limbs Force is applied on 
+        //the indices of the limbs Force is applied on
         //(if none, force is applied only to the limb the attack is attached to)
         public readonly List<int> ForceOnLimbIndices = new List<int>();
 
@@ -309,6 +311,10 @@ namespace Barotrauma
         /// </summary>
         public List<PropertyConditional> Conditionals { get; private set; } = new List<PropertyConditional>();
 
+        /// <summary>
+        /// StatusEffects to apply when the attack triggers.
+        /// StatusEffect types of 'OnUse' are executed always, 'OnFailure' only when the attack doesn't deal damage and 'OnSuccess' executes when some damage is dealt.
+        /// </summary>
         private readonly List<StatusEffect> statusEffects = new List<StatusEffect>();
 
         public void SetUser(Character user)
@@ -322,7 +328,7 @@ namespace Barotrauma
 
         // used for talents/ability conditions
         public Item SourceItem { get; set; }
-        
+
         public List<Affliction> GetMultipliedAfflictions(float multiplier)
         {
             List<Affliction> multipliedAfflictions = new List<Affliction>();
