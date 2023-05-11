@@ -19,6 +19,8 @@ namespace Barotrauma
         private float missionDifficulty;
         private int alternateReward;
 
+        private Identifier factionIdentifier;
+
         private Submarine enemySub;
         private readonly List<Character> characters = new List<Character>();
         private readonly Dictionary<Character, List<Item>> characterItems = new Dictionary<Character, List<Item>>();
@@ -140,8 +142,8 @@ namespace Barotrauma
             missionDifficulty = level?.Difficulty ?? 0;
 
             XElement submarineConfig = GetRandomDifficultyModifiedElement(submarineTypeConfig, missionDifficulty, ShipRandomnessModifier);
-
             alternateReward = submarineConfig.GetAttributeInt("alternatereward", Reward);
+            factionIdentifier = submarineConfig.GetAttributeIdentifier("faction", Identifier.Empty);
 
             string rewardText = $"‖color:gui.orange‖{string.Format(System.Globalization.CultureInfo.InvariantCulture, "{0:N0}", alternateReward)}‖end‖";
             if (descriptionWithoutReward != null) { description = descriptionWithoutReward.Replace("[reward]", rewardText); }
@@ -170,11 +172,11 @@ namespace Barotrauma
             submarineInfo = new SubmarineInfo(contentFile.Path.Value);
         }
 
-        private float GetDifficultyModifiedValue(float preferredDifficulty, float levelDifficulty, float randomnessModifier, Random rand)
+        private static float GetDifficultyModifiedValue(float preferredDifficulty, float levelDifficulty, float randomnessModifier, Random rand)
         {
             return Math.Abs(levelDifficulty - preferredDifficulty + MathHelper.Lerp(-randomnessModifier, randomnessModifier, (float)rand.NextDouble()));
         }
-        private int GetDifficultyModifiedAmount(int minAmount, int maxAmount, float levelDifficulty, Random rand)
+        private static int GetDifficultyModifiedAmount(int minAmount, int maxAmount, float levelDifficulty, Random rand)
         {
             return Math.Max((int)Math.Round(minAmount + (maxAmount - minAmount) * (levelDifficulty + MathHelper.Lerp(-RandomnessModifier, RandomnessModifier, (float)rand.NextDouble())) / MaxDifficulty), minAmount);
         }
@@ -254,6 +256,7 @@ namespace Barotrauma
                 }
             }
             enemySub.ImmuneToBallastFlora = true;
+            enemySub.EnableFactionSpecificEntities(factionIdentifier);
         }
 
         private void InitPirates()
@@ -444,7 +447,7 @@ namespace Barotrauma
 
         private bool CheckWinState() => !IsClient && characters.All(m => DeadOrCaptured(m));
 
-        private bool DeadOrCaptured(Character character)
+        private static bool DeadOrCaptured(Character character)
         {
             return character == null || character.Removed || character.Submarine == null || (character.LockHands && character.Submarine == Submarine.MainSub) || character.IsIncapacitated;
         }

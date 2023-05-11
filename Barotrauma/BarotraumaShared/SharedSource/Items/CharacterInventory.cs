@@ -24,7 +24,7 @@ namespace Barotrauma
         }
 
 
-        public static readonly List<InvSlotType> anySlot = new List<InvSlotType>() { InvSlotType.Any };
+        public static readonly List<InvSlotType> AnySlot = new List<InvSlotType>() { InvSlotType.Any };
 
         protected bool[] IsEquipped;
 
@@ -226,7 +226,7 @@ namespace Barotrauma
             if (item.AllowedSlots.Contains(InvSlotType.Any))
             {
                 var wearable = item.GetComponent<Wearable>();
-                if (wearable != null && !wearable.AutoEquipWhenFull && CheckIfAnySlotAvailable(item, false) == -1)
+                if (wearable != null && !wearable.AutoEquipWhenFull && !IsAnySlotAvailable(item))
                 {
                     return false;
                 }
@@ -336,7 +336,7 @@ namespace Barotrauma
             //try to place the item in a LimbSlot.Any slot if that's allowed
             if (allowedSlots.Contains(InvSlotType.Any) && item.AllowedSlots.Contains(InvSlotType.Any))
             {
-                int freeIndex = CheckIfAnySlotAvailable(item, inWrongSlot);
+                int freeIndex = GetFreeAnySlot(item, inWrongSlot);
                 if (freeIndex > -1)
                 {
                     PutItem(item, freeIndex, user, true, createNetworkEvent);
@@ -393,7 +393,9 @@ namespace Barotrauma
             return placedInSlot > -1;
         }
 
-        public int CheckIfAnySlotAvailable(Item item, bool inWrongSlot)
+        public bool IsAnySlotAvailable(Item item) => GetFreeAnySlot(item, inWrongSlot: false) > -1;
+
+        private int GetFreeAnySlot(Item item, bool inWrongSlot)
         {
             //attempt to stack first
             for (int i = 0; i < capacity; i++)

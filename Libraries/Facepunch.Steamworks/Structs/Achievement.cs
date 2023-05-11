@@ -25,16 +25,16 @@ namespace Steamworks.Data
 			get
 			{
 				var state = false;
-				SteamUserStats.Internal.GetAchievement( Value, ref state );
+				SteamUserStats.Internal?.GetAchievement( Value, ref state );
 				return state;
 			}
 		}
 
 		public string Identifier => Value;
 
-		public string Name => SteamUserStats.Internal.GetAchievementDisplayAttribute( Value, "name" );
+		public string? Name => SteamUserStats.Internal?.GetAchievementDisplayAttribute( Value, "name" );
 
-		public string Description => SteamUserStats.Internal.GetAchievementDisplayAttribute( Value, "desc" );
+		public string? Description => SteamUserStats.Internal?.GetAchievementDisplayAttribute( Value, "desc" );
 
 
 		/// <summary>
@@ -47,7 +47,7 @@ namespace Steamworks.Data
 				var state = false;
 				uint time = 0;
 
-				if ( !SteamUserStats.Internal.GetAchievementAndUnlockTime( Value, ref state, ref time ) || !state )
+				if ( SteamUserStats.Internal is null || !SteamUserStats.Internal.GetAchievementAndUnlockTime( Value, ref state, ref time ) || !state )
 					return null;
 
 				return Epoch.ToDateTime( time );
@@ -60,6 +60,7 @@ namespace Steamworks.Data
 		/// </summary>
 		public Image? GetIcon()
 		{
+			if (SteamUserStats.Internal is null) { return null; }
 			return SteamUtils.GetImage( SteamUserStats.Internal.GetAchievementIcon( Value ) );
 		}
 
@@ -69,6 +70,7 @@ namespace Steamworks.Data
 		/// </summary>
 		public async Task<Image?> GetIconAsync( int timeout = 5000 )
 		{
+			if (SteamUserStats.Internal is null) { return null; }
 			var i = SteamUserStats.Internal.GetAchievementIcon( Value );
 			if ( i != 0 ) return SteamUtils.GetImage( i );
 
@@ -115,7 +117,7 @@ namespace Steamworks.Data
 			{
 				float pct = 0;
 
-				if ( !SteamUserStats.Internal.GetAchievementAchievedPercent( Value, ref pct ) )
+				if ( SteamUserStats.Internal is null || !SteamUserStats.Internal.GetAchievementAchievedPercent( Value, ref pct ) )
 					return -1.0f;
 
 				return pct / 100.0f;
@@ -127,6 +129,8 @@ namespace Steamworks.Data
 		/// </summary>
 		public bool Trigger( bool apply = true )
 		{
+			if (SteamUserStats.Internal is null) { return false; }
+
 			var r = SteamUserStats.Internal.SetAchievement( Value );
 
 			if ( apply && r )
@@ -142,6 +146,7 @@ namespace Steamworks.Data
 		/// </summary>
 		public bool Clear()
 		{
+			if (SteamUserStats.Internal is null) { return false; }
 			return SteamUserStats.Internal.ClearAchievement( Value );
 		}
 	}

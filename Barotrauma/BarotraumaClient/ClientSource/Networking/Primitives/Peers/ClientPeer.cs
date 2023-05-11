@@ -92,10 +92,10 @@ namespace Barotrauma.Networking
                         Name = GameMain.Client.Name,
                         OwnerKey = ownerKey,
                         SteamId = SteamManager.GetSteamId().Select(id => (AccountId)id),
-                        SteamAuthTicket = steamAuthTicket switch
+                        SteamAuthTicket = steamAuthTicket?.Data switch
                         {
                             null => Option<byte[]>.None(),
-                            var ticket => Option<byte[]>.Some(ticket.Data)
+                            var ticketData => Option<byte[]>.Some(ticketData)
                         },
                         GameVersion = GameMain.Version.ToString(),
                         Language = GameSettings.CurrentConfig.Language.Value

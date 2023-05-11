@@ -56,11 +56,9 @@ namespace Barotrauma.Items.Components
 
         private float resetUserTimer;
 
-        private float aiTargetingGraceTimer;
-
         private float aiFindTargetTimer;
         private ISpatialEntity currentTarget;
-        private const float CrewAiFindTargetMaxInterval = 3.0f;
+        private const float CrewAiFindTargetMaxInterval = 1.0f;
         private const float CrewAIFindTargetMinInverval = 0.2f;
 
         private int currentLoaderIndex;
@@ -299,7 +297,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        [Serialize(3000.0f, IsPropertySaveable.Yes, description: "How close to a target the turret has to be for an AI character to fire it.")]
+        [Serialize(3500.0f, IsPropertySaveable.Yes, description: "How close to a target the turret has to be for an AI character to fire it.")]
         public float AIRange
         {
             get;
@@ -422,10 +420,7 @@ namespace Barotrauma.Items.Components
                 // Only make the Turret control the LightComponents that are it's children. So it'd be possible to for example have some extra lights on the turret that don't rotate with it.
                 if (lc?.Parent == this)
                 {
-                    if (lightComponents == null)
-                    {
-                        lightComponents = new List<LightComponent>();
-                    }
+                    lightComponents ??= new List<LightComponent>();
                     lightComponents.Add(lc);
                 }
             }
@@ -439,6 +434,8 @@ namespace Barotrauma.Items.Components
                     light.Parent = null;
                     light.Rotation = Rotation - item.RotationRad;
                     light.Light.Rotation = -rotation;
+                    //turret lights are high-prio (don't want the lights to disappear when you're fighting something)
+                    light.Light.PriorityMultiplier *= 10.0f;
                 }
             }
 #endif
@@ -590,10 +587,6 @@ namespace Barotrauma.Items.Components
                 angularVelocity *= -0.5f;
             }
 
-            if (aiTargetingGraceTimer > 0f)
-            {
-                aiTargetingGraceTimer -= deltaTime;
-            }
             if (aiFindTargetTimer > 0.0f)
             {
                 aiFindTargetTimer -= deltaTime;
@@ -620,10 +613,18 @@ namespace Barotrauma.Items.Components
 
         partial void UpdateProjSpecific(float deltaTime);
 
+        private bool isUseBeingCalled;
+
         public override bool Use(float deltaTime, Character character = null)
         {
             if (!characterUsable && character != null) { return false; }
-            return TryLaunch(deltaTime, character);
+            //prevent an infinite loop if launching triggers a StatusEffect that Uses this item
+            if (isUseBeingCalled) { return false;  }
+
+            isUseBeingCalled = true;
+            bool wasSuccessful = TryLaunch(deltaTime, character);
+            isUseBeingCalled = false;
+            return wasSuccessful;
         }
 
         public float GetPowerRequiredToShoot()
@@ -1015,6 +1016,7 @@ namespace Barotrauma.Items.Components
                     float dist = Vector2.DistanceSquared(item.WorldPosition, targetItem.WorldPosition);
                     if (dist > closestDist) { continue; }
                     if (dist > shootDistance * shootDistance) { continue; }
+                    if (!IsTargetItemCloseEnough(targetItem, dist)) { continue; }
                     if (!CheckTurretAngle(targetItem.WorldPosition)) { continue; }
                     target = targetItem;
                     closestDist = dist / priority;
@@ -1130,9 +1132,12 @@ namespace Barotrauma.Items.Components
         {
             if (character.AIController.SelectedAiTarget?.Entity is Character previousTarget && previousTarget.IsDead)
             {
-                character.Speak(TextManager.Get("DialogTurretTargetDead").Value,
-                    identifier: $"killedtarget{previousTarget.ID}".ToIdentifier(),
-                    minDurationBetweenSimilar: 10.0f);
+                if (previousTarget.LastAttacker == null || previousTarget.LastAttacker == character)
+                {
+                    character.Speak(TextManager.Get("DialogTurretTargetDead").Value,
+                        identifier: $"killedtarget{previousTarget.ID}".ToIdentifier(),
+                        minDurationBetweenSimilar: 5.0f);
+                }
                 character.AIController.SelectTarget(null);
             }
 
@@ -1265,18 +1270,27 @@ namespace Barotrauma.Items.Components
             Vector2? targetPos = null;
             float maxDistance = 10000;
             float shootDistance = AIRange * item.OffsetOnSelectedMultiplier;
-            // use full range only if we're actively firing
-            if (aiTargetingGraceTimer <= 0f)
-            {
-                shootDistance *= 0.75f;
-            }
-
             float closestDistance = maxDistance * maxDistance;
-
             bool hadCurrentTarget = currentTarget != null;
             if (hadCurrentTarget)
             {
-                if (!IsValidTarget(currentTarget))
+                bool isValidTarget = IsValidTarget(currentTarget);
+                if (isValidTarget)
+                {
+                    float dist = Vector2.DistanceSquared(item.WorldPosition, currentTarget.WorldPosition);
+                    if (dist > closestDistance)
+                    {
+                        isValidTarget = false;
+                    }
+                    else if (currentTarget is Item targetItem)
+                    {
+                        if (!IsTargetItemCloseEnough(targetItem, dist))
+                        {
+                            isValidTarget = false;
+                        }
+                    }
+                }
+                if (!isValidTarget)
                 {
                     currentTarget = null;
                     aiFindTargetTimer = CrewAIFindTargetMinInverval;
@@ -1292,7 +1306,11 @@ namespace Barotrauma.Items.Components
                     if (character.Submarine != null)
                     {
                         if (enemy.Submarine == character.Submarine) { continue; }
-                        if (enemy.Submarine != null && enemy.Submarine.TeamID == character.Submarine.TeamID) { continue; }
+                        if (enemy.Submarine != null)
+                        {
+                            if (enemy.Submarine.TeamID == character.Submarine.TeamID) { continue; }
+                            if (enemy.Submarine.Info.IsOutpost) { continue; }
+                        }
                     }
                     // Don't aim monsters that are inside any submarine.
                     if (!enemy.IsHuman && enemy.CurrentHull != null) { continue; }
@@ -1318,6 +1336,7 @@ namespace Barotrauma.Items.Components
                     float dist = Vector2.DistanceSquared(item.WorldPosition, targetItem.WorldPosition);
                     if (dist > closestDistance) { continue; }
                     if (dist > shootDistance * shootDistance) { continue; }
+                    if (!IsTargetItemCloseEnough(targetItem, dist)) { continue; }
                     if (!CheckTurretAngle(targetItem.WorldPosition)) { continue; }
                     targetPos = targetItem.WorldPosition;
                     closestDistance = dist / priority;
@@ -1325,14 +1344,7 @@ namespace Barotrauma.Items.Components
                     closestEnemy = null;
                     currentTarget = targetItem;
                 }
-                if (currentTarget == null)
-                {
-                    aiFindTargetTimer = CrewAIFindTargetMinInverval;
-                }
-                else
-                {
-                    aiFindTargetTimer = CrewAiFindTargetMaxInterval;
-                }
+                aiFindTargetTimer = currentTarget == null ? CrewAiFindTargetMaxInterval : CrewAIFindTargetMinInverval;
             }
             else if (currentTarget != null)
             {
@@ -1346,6 +1358,10 @@ namespace Barotrauma.Items.Components
                 if (targetCharacter.Submarine != null && targetCharacter.CurrentHull != null && targetCharacter.Submarine != item.Submarine && !targetCharacter.CanSeeTarget(Item))
                 {
                     targetPos = targetCharacter.CurrentHull.WorldPosition;
+                    if (closestDistance > maxDistance * maxDistance)
+                    {
+                        ResetTarget();
+                    }
                 }
                 else
                 {
@@ -1365,11 +1381,16 @@ namespace Barotrauma.Items.Components
                     }
                     if (closestDist > shootDistance * shootDistance)
                     {
-                        // Not close enough to shoot.
-                        currentTarget = null;
-                        closestEnemy = null;
-                        targetPos = null;
+                        aiFindTargetTimer = CrewAIFindTargetMinInverval;
+                        ResetTarget();
                     }
+                }
+                void ResetTarget()
+                {
+                    // Not close enough to shoot.
+                    currentTarget = null;
+                    closestEnemy = null;
+                    targetPos = null;
                 }
             }
             else if (targetPos == null && item.Submarine != null && Level.Loaded != null)
@@ -1520,9 +1541,10 @@ namespace Barotrauma.Items.Components
                 }
                 character.SetInput(InputType.Shoot, true, true);
             }
-            aiTargetingGraceTimer = 5f;
             return false;
         }
+
+        private bool IsTargetItemCloseEnough(Item target, float sqrDist) => float.IsPositiveInfinity(target.Prefab.AITurretTargetingMaxDistance) || sqrDist < MathUtils.Pow2(target.Prefab.AITurretTargetingMaxDistance);
 
         /// <summary>
         /// Turret doesn't consume grid power, directly takes from the batteries on its grid instead.
@@ -1553,6 +1575,10 @@ namespace Barotrauma.Items.Components
                 {
                     return false;
                 }
+                if (targetItem.ParentInventory != null)
+                {
+                    return false;
+                }
             }
             return true;
         }
@@ -1568,6 +1594,7 @@ namespace Barotrauma.Items.Components
             {
                 if (item.Submarine != null)
                 {
+                    if (item.Submarine.Info.IsOutpost) { return false; }
                     // Check that the target is not in the friendly team, e.g. pirate or a hostile player sub (PvP).
                     return !target.IsOnFriendlyTeam(item.Submarine.TeamID) && TargetHumans;
                 }
@@ -1660,7 +1687,7 @@ namespace Barotrauma.Items.Components
             return angle >= minRotation && angle <= maxRotation;
         }
 
-        private bool CheckTurretAngle(Vector2 target) => CheckTurretAngle(-MathUtils.VectorToAngle(target - item.WorldPosition));
+        public bool CheckTurretAngle(Vector2 target) => CheckTurretAngle(-MathUtils.VectorToAngle(target - item.WorldPosition));
 
         protected override void RemoveComponentSpecific()
         {

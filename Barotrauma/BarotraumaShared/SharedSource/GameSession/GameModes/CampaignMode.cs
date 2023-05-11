@@ -105,23 +105,29 @@ namespace Barotrauma
         {
             get
             {
-                if (Map.CurrentLocation != null)
+                //map can be null if we're in the process of loading the save
+                if (Map != null)
                 {
-                    foreach (Mission mission in map.CurrentLocation.SelectedMissions)
+                    if (Map.CurrentLocation != null)
                     {
-                        if (mission.Locations[0] == mission.Locations[1] ||
-                            mission.Locations.Contains(Map.SelectedLocation))
+                        foreach (Mission mission in map.CurrentLocation.SelectedMissions)
                         {
-                            yield return mission;
+                            if (mission.Locations[0] == mission.Locations[1] ||
+                                mission.Locations.Contains(Map.SelectedLocation))
+                            {
+                                yield return mission;
+                            }
                         }
                     }
-                }
-                foreach (Mission mission in extraMissions)
-                {
-                    yield return mission;
+                    foreach (Mission mission in extraMissions)
+                    {
+                        yield return mission;
+                    }
                 }
             }
         }
+
+        public Location CurrentLocation => Map?.CurrentLocation;
 
         public Wallet Bank;
 
@@ -246,6 +252,11 @@ namespace Barotrauma
 #if CLIENT
             prevCampaignUIAutoOpenType = TransitionType.None;
 #endif
+
+            foreach (var faction in factions)
+            {
+                faction.Reputation.ReputationAtRoundStart = faction.Reputation.Value;
+            }
 
             if (PurchasedHullRepairsInLatestSave)
             {
@@ -907,6 +918,10 @@ namespace Barotrauma
             {
                 location.TurnsInRadiation = 0;
             }
+            foreach (var faction in Factions)
+            {
+                faction.Reputation.SetReputation(faction.Prefab.InitialReputation);
+            }
             EndCampaignProjSpecific();
 
             if (CampaignMetadata != null)
@@ -1154,15 +1169,12 @@ namespace Barotrauma
 
             if (npc.Faction != null && Factions.FirstOrDefault(f => f.Prefab.Identifier == npc.Faction) is Faction faction)
             {
-                faction.Reputation?.AddReputation(-attackResult.Damage * Reputation.ReputationLossPerNPCDamage);
+                faction.Reputation?.AddReputation(-attackResult.Damage * Reputation.ReputationLossPerNPCDamage, Reputation.MaxReputationLossFromNPCDamage);
             }
             else
             {
                 Location location = Map?.CurrentLocation;
-                if (location != null)
-                {
-                    location.Reputation?.AddReputation(-attackResult.Damage * Reputation.ReputationLossPerNPCDamage);
-                }
+                location?.Reputation?.AddReputation(-attackResult.Damage * Reputation.ReputationLossPerNPCDamage, Reputation.MaxReputationLossFromNPCDamage);
             }
         }
 

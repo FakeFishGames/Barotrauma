@@ -15,7 +15,7 @@ namespace Steamworks.Data
 		/// </summary>
 		public bool TagUser( SteamId user )
 		{
-			return SteamScreenshots.Internal.TagUser( Value, user );
+			return SteamScreenshots.Internal != null && SteamScreenshots.Internal.TagUser( Value, user );
 		}
 
 		/// <summary>
@@ -23,7 +23,7 @@ namespace Steamworks.Data
 		/// </summary>
 		public bool SetLocation( string location )
 		{
-			return SteamScreenshots.Internal.SetLocation( Value, location );
+			return SteamScreenshots.Internal != null && SteamScreenshots.Internal.SetLocation( Value, location );
 		}
 
 		/// <summary>
@@ -31,7 +31,7 @@ namespace Steamworks.Data
 		/// </summary>
 		public bool TagPublishedFile( PublishedFileId file )
 		{
-			return SteamScreenshots.Internal.TagPublishedFile( Value, file );
+			return SteamScreenshots.Internal != null && SteamScreenshots.Internal.TagPublishedFile( Value, file );
 		}
 	}
 }

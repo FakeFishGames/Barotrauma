@@ -236,7 +236,7 @@ namespace Barotrauma.Items.Components
             set;
         }
 
-        [Serialize(0f, IsPropertySaveable.No, description: "How useful the item is in combat? Used by AI to decide which item it should use as a weapon. For the sake of clarity, use a value between 0 and 100 (not enforced). Note that there's also a generic BotPriority for all item prefabs.")]
+        [Serialize(0f, IsPropertySaveable.No, description: "How useful the item is in combat? Used by AI to decide which item it should use as a weapon. For the sake of clarity, use a value between 0 and 100 (not forced). Note that there's also a generic BotPriority for all item prefabs.")]
         public float CombatPriority { get; private set; }
 
         /// <summary>
@@ -687,9 +687,10 @@ namespace Barotrauma.Items.Components
 
         public virtual void FlipY(bool relativeToSub) { }
 
-        public bool IsNotEmpty(Character user, bool checkContainedItems = true) =>
-            HasRequiredContainedItems(user, addMessage: false) &&
-            (!checkContainedItems || Item.OwnInventory == null || Item.OwnInventory.AllItems.Any(i => i.Condition > 0));
+        /// <summary>
+        /// Shorthand for !HasRequiredContainedItems()
+        /// </summary>
+        public bool IsEmpty(Character user) => !HasRequiredContainedItems(user, addMessage: false);
 
         public bool HasRequiredContainedItems(Character user, bool addMessage, LocalizedString msg = null)
         {

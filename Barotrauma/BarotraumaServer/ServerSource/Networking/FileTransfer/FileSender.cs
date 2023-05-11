@@ -108,9 +108,7 @@ namespace Barotrauma.Networking
 
         const int MaxTransferCount = 16;
         const int MaxTransferCountPerRecipient = 5;
-
-        public static TimeSpan MaxTransferDuration = new TimeSpan(0, 2, 0);
-        
+                
         public delegate void FileTransferDelegate(FileTransferOut fileStreamReceiver);
         public FileTransferDelegate OnStarted;
         public FileTransferDelegate OnEnded;
@@ -121,8 +119,9 @@ namespace Barotrauma.Networking
 
         private readonly ServerPeer peer;
 
+        public static DateTime StartTime;
 #if DEBUG
-        public float StallPacketsTime { get; set; }
+        public float ForceMinimumFileTransferDuration { get; set; }
 #endif
 
         public IReadOnlyList<FileTransferOut> ActiveTransfers => activeTransfers;
@@ -171,6 +170,8 @@ namespace Barotrauma.Networking
                 DebugConsole.ThrowError("Failed to initiate file transfer", e);
                 return null;
             }
+
+            StartTime = DateTime.Now;
 
             OnStarted(transfer);
             GameMain.Server.LastClientListUpdateID++;
@@ -259,7 +260,18 @@ namespace Barotrauma.Networking
                 for (int i = 0; i < Math.Floor(transfer.PacketsPerUpdate); i++)
                 {
                     long remaining = transfer.Data.Length - transfer.SentOffset;
-                    int sendByteCount = (remaining > chunkLen ? chunkLen : (int)remaining);
+#if DEBUG
+                    bool stalling = false;
+                    float elapsedTime = (float)(DateTime.Now - StartTime).TotalSeconds;
+                    if (elapsedTime < ForceMinimumFileTransferDuration)
+                    {
+                        int remainingChunks = (int)Math.Max(remaining / chunkLen, 1);
+                        transfer.WaitTimer =
+                            Math.Max(transfer.WaitTimer, (ForceMinimumFileTransferDuration - elapsedTime) / remainingChunks);
+                        if (remainingChunks <= 1) { break; }
+                    }
+#endif
+                    int sendByteCount = remaining > chunkLen ? chunkLen : (int)remaining;
                     
                     message = new WriteOnlyMessage();
                     message.WriteByte((byte)ServerPacketHeader.FILE_TRANSFER);
@@ -293,11 +305,10 @@ namespace Barotrauma.Networking
                     //this gets reset when packet loss or disorder sets in
                     transfer.PacketsPerUpdate = Math.Min(FileTransferOut.MaxPacketsPerUpdate,
                         transfer.PacketsPerUpdate + 0.05f);
-                }
-                
 #if DEBUG
-                transfer.WaitTimer = Math.Max(transfer.WaitTimer, StallPacketsTime);
+                    if (stalling) { break; }
 #endif
+                }
             }
 
             catch (Exception e)
@@ -330,7 +341,7 @@ namespace Barotrauma.Networking
             {
                 byte transferId = inc.ReadByte();
                 var matchingTransfer = activeTransfers.Find(t => t.Connection == inc.Sender && t.ID == transferId);
-                if (matchingTransfer != null) CancelTransfer(matchingTransfer);
+                if (matchingTransfer != null) { CancelTransfer(matchingTransfer); }
                 return;
             }
             else if (messageType == FileTransferMessageType.Data)
@@ -359,6 +370,7 @@ namespace Barotrauma.Networking
                     if (matchingTransfer.KnownReceivedOffset >= matchingTransfer.Data.Length)
                     {
                         matchingTransfer.Status = FileTransferStatus.Finished;
+                        DebugConsole.Log($"Finished sending file \"{matchingTransfer.FilePath}\" to \"{client.Name}\". Took {DateTime.Now - StartTime}");
                     }
                 }
                 return;

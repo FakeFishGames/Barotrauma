@@ -102,9 +102,9 @@ namespace Barotrauma.Networking
                 similarity *= 0.25f;
             }
 
-            bool isOwner = GameMain.Server.OwnerConnection != null && c.Connection == GameMain.Server.OwnerConnection;
+            bool isSpamExempt = RateLimiter.IsExempt(c);
 
-            if (similarity + c.ChatSpamSpeed > 5.0f && !isOwner)
+            if (similarity + c.ChatSpamSpeed > 5.0f && !isSpamExempt)
             {
                 GameMain.Server.KarmaManager.OnSpamFilterTriggered(c);
 
@@ -125,7 +125,7 @@ namespace Barotrauma.Networking
 
             c.ChatSpamSpeed += similarity + 0.5f;
 
-            if (c.ChatSpamTimer > 0.0f && !isOwner)
+            if (c.ChatSpamTimer > 0.0f && !isSpamExempt)
             {
                 ChatMessage denyMsg = Create("", TextManager.Get("SpamFilterBlocked").Value, ChatMessageType.Server, null);
                 c.ChatSpamTimer = 10.0f;

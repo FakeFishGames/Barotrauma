@@ -24,7 +24,7 @@ namespace Barotrauma
         }
 
 
-        [Serialize(-1, IsPropertySaveable.Yes), Editable(MinValueInt = -1, MaxValueInt = 10)]
+        [Serialize(-1, IsPropertySaveable.Yes, description: "Should this type of outpost be forced to the locations at the end of the campaign map? 0 = first end level, 1 = second end level, and so on."), Editable(MinValueInt = -1, MaxValueInt = 10)]
         public int ForceToEndLocationIndex
         {
             get;
@@ -32,7 +32,7 @@ namespace Barotrauma
         }
 
 
-        [Serialize(10, IsPropertySaveable.Yes), Editable(MinValueInt = 1, MaxValueInt = 50)]
+        [Serialize(10, IsPropertySaveable.Yes, description: "Total number of modules in the outpost."), Editable(MinValueInt = 1, MaxValueInt = 50)]
         public int TotalModuleCount
         {
             get;
@@ -46,70 +46,70 @@ namespace Barotrauma
             set;
         }
 
-        [Serialize(200.0f, IsPropertySaveable.Yes), Editable(MinValueFloat = 0.0f, MaxValueFloat = 1000.0f)]
+        [Serialize(200.0f, IsPropertySaveable.Yes, description: "Minimum length of the hallways between modules. If 0, the generator will place the modules directly against each other assuming it can be done without making any modules overlap."), Editable(MinValueFloat = 0.0f, MaxValueFloat = 1000.0f)]
         public float MinHallwayLength
         {
             get;
             set;
         }
 
-        [Serialize(false, IsPropertySaveable.Yes), Editable]
+        [Serialize(false, IsPropertySaveable.Yes, description: "Should this outpost always be destructible, regardless if damaging outposts is allowed by the server?"), Editable]
         public bool AlwaysDestructible
         {
             get;
             set;
         }
 
-        [Serialize(false, IsPropertySaveable.Yes), Editable]
+        [Serialize(false, IsPropertySaveable.Yes, description: "Should this outpost always be rewireable, regardless if rewiring is allowed by the server?"), Editable]
         public bool AlwaysRewireable
         {
             get;
             set;
         }
 
-        [Serialize(false, IsPropertySaveable.Yes), Editable]
+        [Serialize(false, IsPropertySaveable.Yes, description: "Should stealing from this outpost be always allowed?"), Editable]
         public bool AllowStealing
         {
             get;
             set;
         }
 
-        [Serialize(true, IsPropertySaveable.Yes), Editable]
+        [Serialize(true, IsPropertySaveable.Yes, description: "Should the crew spawn inside the outpost (if not, they'll spawn in the submarine)."), Editable]
         public bool SpawnCrewInsideOutpost
         {
             get;
             set;
         }
         
-        [Serialize(true, IsPropertySaveable.Yes), Editable]
+        [Serialize(true, IsPropertySaveable.Yes, description: "Should doors at the edges of an outpost module that didn't get connected to another module be locked?"), Editable]
         public bool LockUnusedDoors
         {
             get;
             set;
         }
 
-        [Serialize(true, IsPropertySaveable.Yes), Editable]
+        [Serialize(true, IsPropertySaveable.Yes, description: "Should gaps at the edges of an outpost module that didn't get connected to another module be removed?"), Editable]
         public bool RemoveUnusedGaps
         {
             get;
             set;
         }
 
-        [Serialize(false, IsPropertySaveable.Yes), Editable]
+        [Serialize(false, IsPropertySaveable.Yes, description: "Should the whole outpost render behind submarines? Only set this to true if the submarine is intended to go inside the outpost."), Editable]
         public bool DrawBehindSubs
         {
             get;
             set;
         }
 
-        [Serialize(0.0f, IsPropertySaveable.Yes), Editable(MinValueFloat = 0.0f, MaxValueFloat = 100.0f)]
+        [Serialize(0.0f, IsPropertySaveable.Yes, description: "Minimum amount of water in the hulls of the outpost."), Editable(MinValueFloat = 0.0f, MaxValueFloat = 100.0f)]
         public float MinWaterPercentage
         {
             get;
             set;
         }
 
-        [Serialize(0.0f, IsPropertySaveable.Yes), Editable(MinValueFloat = 0.0f, MaxValueFloat = 100.0f)]
+        [Serialize(0.0f, IsPropertySaveable.Yes, description: "Maximum amount of water in the hulls of the outpost."), Editable(MinValueFloat = 0.0f, MaxValueFloat = 100.0f)]
         public float MaxWaterPercentage
         {
             get;
@@ -122,7 +122,7 @@ namespace Barotrauma
             set;
         }
 
-        [Serialize("", IsPropertySaveable.Yes), Editable]
+        [Serialize("", IsPropertySaveable.Yes, description: "Identifier of the outpost generation parameters that should be used if this outpost has become critically irradiated."), Editable]
         public string ReplaceInRadiation { get; set; }
 
         public ContentPath OutpostFilePath { get; set; }

@@ -267,7 +267,7 @@ namespace Barotrauma.Items.Components
             itemList.Enabled = true;
             if (amountInput != null)
             {
-                amountInput.Enabled = true;
+                amountInput.Enabled = amountTextMax.Enabled;
             }
             RefreshActivateButtonText();
 #endif

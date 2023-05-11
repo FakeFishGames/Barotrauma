@@ -87,6 +87,7 @@ namespace Barotrauma.Networking
                 if (character != null)
                 {
                     HasSpawned = true;
+                    UsingFreeCam = false;
 #if CLIENT
                     GameMain.GameSession?.CrewManager?.SetPlayerVoiceIconState(this, muted, mutedLocally);
 
@@ -99,6 +100,11 @@ namespace Barotrauma.Networking
                 }
             }
         }
+
+        /// <summary>
+        /// Is the client using the 'freecam' console command?
+        /// </summary>
+        public bool UsingFreeCam;
 
         public UInt16 CharacterID;
 

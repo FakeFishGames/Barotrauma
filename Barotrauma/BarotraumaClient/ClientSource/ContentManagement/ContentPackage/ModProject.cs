@@ -86,7 +86,7 @@ namespace Barotrauma
 
         public string ModVersion = ContentPackage.DefaultModVersion;
 
-        public Md5Hash? ExpectedHash { get; private set; }
+        public Md5Hash? ExpectedHash { get; set; }
 
         public bool IsCore = false;
 
@@ -125,9 +125,11 @@ namespace Barotrauma
         
         public static string IncrementModVersion(string modVersion)
         {
+            if (string.IsNullOrWhiteSpace(modVersion)) { return string.Empty; }
+
             //look for an integer at the end of the string and increment it
             int startIndex = modVersion.Length - 1;
-            while (char.IsDigit(modVersion[startIndex])) { startIndex--; }
+            while (startIndex > 0 && char.IsDigit(modVersion[startIndex])) { startIndex--; }
             startIndex++;
 
             if (startIndex >= modVersion.Length

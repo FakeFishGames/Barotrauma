@@ -23,6 +23,8 @@ namespace Steamworks.Data
 		/// </summary>
 		public async Task<RoomEnter> Join()
 		{
+			if (SteamMatchmaking.Internal is null) { return RoomEnter.Error; }
+
 			var result = await SteamMatchmaking.Internal.JoinLobby( Id );
 			if ( !result.HasValue ) return RoomEnter.Error;
 
@@ -35,7 +37,7 @@ namespace Steamworks.Data
 		/// </summary>
 		public void Leave()
 		{
-			SteamMatchmaking.Internal.LeaveLobby( Id );
+			SteamMatchmaking.Internal?.LeaveLobby( Id );
 		}
 
 		/// <summary>
@@ -45,13 +47,13 @@ namespace Steamworks.Data
 		/// </summary>
 		public bool InviteFriend( SteamId steamid )
 		{
-			return SteamMatchmaking.Internal.InviteUserToLobby( Id, steamid );
+			return SteamMatchmaking.Internal != null && SteamMatchmaking.Internal.InviteUserToLobby( Id, steamid );
 		}
 
 		/// <summary>
 		/// returns the number of users in the specified lobby
 		/// </summary>
-		public int MemberCount => SteamMatchmaking.Internal.GetNumLobbyMembers( Id );
+		public int MemberCount => SteamMatchmaking.Internal?.GetNumLobbyMembers( Id ) ?? 0;
 
 		/// <summary>
 		/// Returns current members. Need to be in the lobby to see the users.
@@ -62,6 +64,7 @@ namespace Steamworks.Data
 			{
 				for( int i = 0; i < MemberCount; i++ )
 				{
+					if (SteamMatchmaking.Internal is null) { break; }
 					yield return new Friend( SteamMatchmaking.Internal.GetLobbyMemberByIndex( Id, i ) );
 				}
 			}
@@ -71,9 +74,9 @@ namespace Steamworks.Data
 		/// <summary>
 		/// Get data associated with this lobby
 		/// </summary>
-		public string GetData( string key )
+		public string? GetData( string key )
 		{
-			return SteamMatchmaking.Internal.GetLobbyData( Id, key );
+			return SteamMatchmaking.Internal?.GetLobbyData( Id, key );
 		}
 
 		/// <summary>
@@ -84,7 +87,7 @@ namespace Steamworks.Data
 			if ( key.Length > 255 ) throw new System.ArgumentException( "Key should be < 255 chars", nameof( key ) );
 			if ( value.Length > 8192 ) throw new System.ArgumentException( "Value should be < 8192 chars", nameof( key ) );
 
-			return SteamMatchmaking.Internal.SetLobbyData( Id, key, value );
+			return SteamMatchmaking.Internal != null && SteamMatchmaking.Internal.SetLobbyData( Id, key, value );
 		}
 
 		/// <summary>
@@ -92,7 +95,7 @@ namespace Steamworks.Data
 		/// </summary>
 		public bool DeleteData( string key )
 		{
-			return SteamMatchmaking.Internal.DeleteLobbyData( Id, key );
+			return SteamMatchmaking.Internal != null && SteamMatchmaking.Internal.DeleteLobbyData( Id, key );
 		}
 
 		/// <summary>
@@ -102,10 +105,11 @@ namespace Steamworks.Data
 		{
 			get
 			{
-				var cnt = SteamMatchmaking.Internal.GetLobbyDataCount( Id );
+				var cnt = SteamMatchmaking.Internal?.GetLobbyDataCount( Id ) ?? 0;
 
 				for ( int i =0; i<cnt; i++)
 				{
+					if (SteamMatchmaking.Internal is null) { break; }
 					if ( SteamMatchmaking.Internal.GetLobbyDataByIndex( Id, i, out var a, out var b ) )
 					{
 						yield return new KeyValuePair<string, string>( a, b );
@@ -117,9 +121,9 @@ namespace Steamworks.Data
 		/// <summary>
 		/// Gets per-user metadata for someone in this lobby
 		/// </summary>
-		public string GetMemberData( Friend member, string key )
+		public string? GetMemberData( Friend member, string key )
 		{
-			return SteamMatchmaking.Internal.GetLobbyMemberData( Id, member.Id, key );
+			return SteamMatchmaking.Internal?.GetLobbyMemberData( Id, member.Id, key );
 		}
 
 		/// <summary>
@@ -127,7 +131,7 @@ namespace Steamworks.Data
 		/// </summary>
 		public void SetMemberData( string key, string value )
 		{
-			SteamMatchmaking.Internal.SetLobbyMemberData( Id, key, value );
+			SteamMatchmaking.Internal?.SetLobbyMemberData( Id, key, value );
 		}
 
 		/// <summary>
@@ -148,7 +152,7 @@ namespace Steamworks.Data
 		{
 			fixed ( byte* ptr = data )
 			{
-				return SteamMatchmaking.Internal.SendLobbyChatMsg( Id, (IntPtr)ptr, data.Length );
+				return SteamMatchmaking.Internal != null && SteamMatchmaking.Internal.SendLobbyChatMsg( Id, (IntPtr)ptr, data.Length );
 			}
 		}
 
@@ -163,7 +167,7 @@ namespace Steamworks.Data
 		/// </summary>
 		public bool Refresh()
 		{
-			return SteamMatchmaking.Internal.RequestLobbyData( Id );
+			return SteamMatchmaking.Internal != null && SteamMatchmaking.Internal.RequestLobbyData( Id );
 		}
 
 		/// <summary>
@@ -172,33 +176,33 @@ namespace Steamworks.Data
 		/// </summary>
 		public int MaxMembers
 		{
-			get => SteamMatchmaking.Internal.GetLobbyMemberLimit( Id );
-			set => SteamMatchmaking.Internal.SetLobbyMemberLimit( Id, value );
+			get => SteamMatchmaking.Internal?.GetLobbyMemberLimit( Id ) ?? 0;
+			set => SteamMatchmaking.Internal?.SetLobbyMemberLimit( Id, value );
 		}
 
 		public bool SetPublic()
 		{
-			return SteamMatchmaking.Internal.SetLobbyType( Id, LobbyType.Public );
+			return SteamMatchmaking.Internal != null && SteamMatchmaking.Internal.SetLobbyType( Id, LobbyType.Public );
 		}
 
 		public bool SetPrivate()
 		{
-			return SteamMatchmaking.Internal.SetLobbyType( Id, LobbyType.Private );
+			return SteamMatchmaking.Internal != null && SteamMatchmaking.Internal.SetLobbyType( Id, LobbyType.Private );
 		}
 
 		public bool SetInvisible()
 		{
-			return SteamMatchmaking.Internal.SetLobbyType( Id, LobbyType.Invisible );
+			return SteamMatchmaking.Internal != null && SteamMatchmaking.Internal.SetLobbyType( Id, LobbyType.Invisible );
 		}
 
 		public bool SetFriendsOnly()
 		{
-			return SteamMatchmaking.Internal.SetLobbyType( Id, LobbyType.FriendsOnly );
+			return SteamMatchmaking.Internal != null && SteamMatchmaking.Internal.SetLobbyType( Id, LobbyType.FriendsOnly );
 		}
 
 		public bool SetJoinable( bool b )
 		{
-			return SteamMatchmaking.Internal.SetLobbyJoinable( Id, b );
+			return SteamMatchmaking.Internal != null && SteamMatchmaking.Internal.SetLobbyJoinable( Id, b );
 		}
 
 		/// <summary>
@@ -211,7 +215,7 @@ namespace Steamworks.Data
 			if ( !steamServer.IsValid )
 				throw new ArgumentException( $"SteamId for server is invalid" );
 
-			SteamMatchmaking.Internal.SetLobbyGameServer( Id, 0, 0, steamServer );
+			SteamMatchmaking.Internal?.SetLobbyGameServer( Id, 0, 0, steamServer );
 		}
 
 		/// <summary>
@@ -224,7 +228,7 @@ namespace Steamworks.Data
 			if ( !IPAddress.TryParse( ip, out IPAddress add ) )
 				throw new ArgumentException( $"IP address for server is invalid" );
 
-			SteamMatchmaking.Internal.SetLobbyGameServer( Id, add.IpToInt32(), port, new SteamId() );
+			SteamMatchmaking.Internal?.SetLobbyGameServer( Id, add.IpToInt32(), port, new SteamId() );
 		}
 
 		/// <summary>
@@ -233,7 +237,7 @@ namespace Steamworks.Data
 		/// </summary>
 		public bool GetGameServer( ref uint ip, ref ushort port, ref SteamId serverId )
 		{
-			return SteamMatchmaking.Internal.GetLobbyGameServer( Id, ref ip, ref port, ref serverId );
+			return SteamMatchmaking.Internal != null && SteamMatchmaking.Internal.GetLobbyGameServer( Id, ref ip, ref port, ref serverId );
 		}
 
 		/// <summary>
@@ -241,8 +245,8 @@ namespace Steamworks.Data
 		/// </summary>
 		public Friend Owner
 		{
-			get => new Friend( SteamMatchmaking.Internal.GetLobbyOwner( Id ) );
-			set => SteamMatchmaking.Internal.SetLobbyOwner( Id, value.Id );
+			get => new Friend( SteamMatchmaking.Internal?.GetLobbyOwner( Id ) ?? 0 );
+			set => SteamMatchmaking.Internal?.SetLobbyOwner( Id, value.Id );
 		}
 
 		/// <summary>

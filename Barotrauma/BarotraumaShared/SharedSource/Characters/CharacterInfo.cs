@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Diagnostics.CodeAnalysis;
 using Barotrauma.IO;
 using System.Linq;
 using System.Xml.Linq;
@@ -11,6 +12,31 @@ using Barotrauma.Abilities;
 
 namespace Barotrauma
 {
+    [NetworkSerialize]
+    internal readonly record struct NetJobVariant(Identifier Identifier, byte Variant) : INetSerializableStruct
+    {
+        [return: MaybeNull]
+        public JobVariant ToJobVariant()
+        {
+            if (!JobPrefab.Prefabs.TryGet(Identifier, out JobPrefab jobPrefab) || jobPrefab.HiddenJob) { return null; }
+            return new JobVariant(jobPrefab, Variant);
+        }
+
+        public static NetJobVariant FromJobVariant(JobVariant jobVariant) => new NetJobVariant(jobVariant.Prefab.Identifier, (byte)jobVariant.Variant);
+    }
+
+    [NetworkSerialize(ArrayMaxSize = byte.MaxValue)]
+    internal readonly record struct NetCharacterInfo(string NewName,
+                                                     ImmutableArray<Identifier> Tags,
+                                                     byte HairIndex,
+                                                     byte BeardIndex,
+                                                     byte MoustacheIndex,
+                                                     byte FaceAttachmentIndex,
+                                                     Color SkinColor,
+                                                     Color HairColor,
+                                                     Color FacialHairColor,
+                                                     ImmutableArray<NetJobVariant> JobVariants) : INetSerializableStruct;
+
     class CharacterInfoPrefab
     {
         public readonly ImmutableArray<CharacterInfo.HeadPreset> Heads;
@@ -879,10 +905,19 @@ namespace Barotrauma
                         Identifier talentIdentifier = talentElement.GetAttributeIdentifier("identifier", Identifier.Empty);
                         if (talentIdentifier == Identifier.Empty) { continue; }
 
+                        if (TalentPrefab.TalentPrefabs.TryGet(talentIdentifier, out TalentPrefab prefab))
+                        {
+                            foreach (TalentMigration migration in prefab.Migrations)
+                            {
+                                migration.TryApply(version, this);
+                            }
+                        }
+
                         UnlockedTalents.Add(talentIdentifier);
                     }
                 }
             }
+
             LoadHeadAttachments();
         }
 
@@ -1854,6 +1889,21 @@ namespace Barotrauma
             {
                 return 0f;
             }
+        }
+
+        public float GetSavedStatValueWithBotsInMp(StatTypes statType, Identifier statIdentifier)
+        {
+            float statValue = GetSavedStatValue(statType, statIdentifier);
+
+            if (GameMain.NetworkMember is null) { return statValue; }
+
+            foreach (Character bot in GameSession.GetSessionCrewCharacters(CharacterType.Bot))
+            {
+                int botStatValue = (int)bot.Info.GetSavedStatValue(statType, statIdentifier);
+                statValue = Math.Max(statValue, botStatValue);
+            }
+
+            return statValue;
         }
 
         public void ChangeSavedStatValue(StatTypes statType, float value, Identifier statIdentifier, bool removeOnDeath, float maxValue = float.MaxValue, bool setValue = false)
