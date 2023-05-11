@@ -23,7 +23,7 @@ namespace Barotrauma
                        : string.Empty);
         }
 
-        public static readonly Version MinimumHashCompatibleVersion = new Version(1, 0, 11, 0);
+        public static readonly Version MinimumHashCompatibleVersion = new Version(1, 0, 13, 2);
         
         public const string LocalModsDir = "LocalMods";
         public static readonly string WorkshopModsDir = Barotrauma.IO.Path.Combine(
@@ -177,7 +177,7 @@ namespace Barotrauma
             }
         }
 
-        public Md5Hash CalculateHash(bool logging = false)
+        public Md5Hash CalculateHash(bool logging = false, string? name = null, string? modVersion = null)
         {
             using IncrementalHash incrementalHash = IncrementalHash.CreateHash(HashAlgorithmName.MD5);
             
@@ -205,11 +205,12 @@ namespace Barotrauma
                 }             
             }
 
-            if (UgcId.TryUnwrap(out ContentPackageId? id) && id != null)
+            string selectedName = name ?? Name;
+            if (!selectedName.IsNullOrEmpty())
             {
-                incrementalHash.AppendData(Encoding.UTF8.GetBytes(id.StringRepresentation));
+                incrementalHash.AppendData(Encoding.UTF8.GetBytes(selectedName));
             }
-            incrementalHash.AppendData(Encoding.UTF8.GetBytes(ModVersion));
+            incrementalHash.AppendData(Encoding.UTF8.GetBytes(modVersion ?? ModVersion));
 
             var md5Hash = Md5Hash.BytesAsHash(incrementalHash.GetHashAndReset());
             if (logging)

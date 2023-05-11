@@ -86,7 +86,7 @@ namespace Barotrauma
 
         public string ModVersion = ContentPackage.DefaultModVersion;
 
-        public Md5Hash? ExpectedHash { get; private set; }
+        public Md5Hash? ExpectedHash { get; set; }
 
         public bool IsCore = false;
 

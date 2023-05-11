@@ -478,7 +478,7 @@ namespace Barotrauma.Steam
             bool stagingReady = false;
             Exception? stagingException = null;
             TaskPool.Add("CreatePublishStagingCopy",
-                SteamManager.Workshop.CreatePublishStagingCopy(modVersion, localPackage),
+                SteamManager.Workshop.CreatePublishStagingCopy(editor.Title ?? localPackage.Name, modVersion, localPackage),
                 (t) =>
                 {
                     stagingReady = true;
