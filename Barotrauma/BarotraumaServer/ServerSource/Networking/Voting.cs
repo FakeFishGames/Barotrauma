@@ -225,7 +225,7 @@ namespace Barotrauma
             }
         }
 
-        public void ServerRead(IReadMessage inc, Client sender)
+        public void ServerRead(IReadMessage inc, Client sender, DoSProtection dosProtection)
         {
             if (GameMain.Server == null || sender == null) { return; }
 
@@ -337,7 +337,10 @@ namespace Barotrauma
 
             inc.ReadPadBits();
 
-            GameMain.Server.UpdateVoteStatus();
+            using (dosProtection.Pause(sender))
+            {
+                GameMain.Server.UpdateVoteStatus();
+            }
         }
 
         public void ServerWrite(IWriteMessage msg)

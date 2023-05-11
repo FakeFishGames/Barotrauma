@@ -20,6 +20,8 @@ namespace Barotrauma
             MaxValue = 2
         }
 
+        public const float MaxObjectivePriority = 100;
+        public const float EmergencyObjectivePriority = 90;
         public const float HighestOrderPriority = 70;
         public const float LowestOrderPriority = 60;
         public const float RunPriority = 50;
@@ -125,11 +127,21 @@ namespace Barotrauma
             {
                 CoroutineManager.StopCoroutines(delayedObjective.Value);
             }
+
+            var prevIdleObjective = GetObjective<AIObjectiveIdle>();
+
             DelayedObjectives.Clear();
             Objectives.Clear();
             FailedAutonomousObjectives = false;
             AddObjective(new AIObjectiveFindSafety(character, this));
-            AddObjective(new AIObjectiveIdle(character, this));
+            var newIdleObjective = new AIObjectiveIdle(character, this);
+            if (prevIdleObjective != null)
+            {
+                newIdleObjective.TargetHull = prevIdleObjective.TargetHull;
+                newIdleObjective.Behavior = prevIdleObjective.Behavior;
+                prevIdleObjective.PreferredOutpostModuleTypes.ForEach(t => newIdleObjective.PreferredOutpostModuleTypes.Add(t));
+            }
+            AddObjective(newIdleObjective);
             int objectiveCount = Objectives.Count;
             foreach (var autonomousObjective in character.Info.Job.Prefab.AutonomousObjectives)
             {
@@ -155,7 +167,7 @@ namespace Barotrauma
                     AddObjective(objective, delay: Rand.Value() / 2);
                     objectiveCount++;
                 }
-            }
+            }          
             _waitTimer = Math.Max(_waitTimer, Rand.Range(0.5f, 1f) * objectiveCount);
         }
 
@@ -410,7 +422,7 @@ namespace Barotrauma
                     newObjective = new AIObjectiveGoTo(order.OrderGiver, character, this, repeat: true, priorityModifier: priorityModifier)
                     {
                         CloseEnough = Rand.Range(80f, 100f),
-                        CloseEnoughMultiplier = Math.Min(1 + HumanAIController.CountCrew(c => c.ObjectiveManager.HasOrder<AIObjectiveGoTo>(o => o.Target == order.OrderGiver), onlyBots: true) * Rand.Range(0.8f, 1f), 4),
+                        CloseEnoughMultiplier = Math.Min(1 + HumanAIController.CountBotsInTheCrew(c => c.ObjectiveManager.HasOrder<AIObjectiveGoTo>(o => o.Target == order.OrderGiver)) * Rand.Range(0.8f, 1f), 4),
                         ExtraDistanceOutsideSub = 100,
                         ExtraDistanceWhileSwimming = 100,
                         AllowGoingOutside = true,
@@ -633,10 +645,11 @@ namespace Barotrauma
         public AIObjective GetActiveObjective() => CurrentObjective?.GetActiveObjective();
         public T GetOrder<T>() where T : AIObjective => CurrentOrders.FirstOrDefault(o => o.Objective is T)?.Objective as T;
 
-        /// <summary>
-        /// Returns the last active objective of the specific type.
-        /// </summary>
-        public T GetActiveObjective<T>() where T : AIObjective => CurrentObjective?.GetSubObjectivesRecursive(includingSelf: true).LastOrDefault(so => so is T) as T;
+        public T GetLastActiveObjective<T>() where T : AIObjective
+            => CurrentObjective?.GetSubObjectivesRecursive(includingSelf: true).LastOrDefault(so => so is T) as T;
+
+        public T GetFirstActiveObjective<T>() where T : AIObjective
+            => CurrentObjective?.GetSubObjectivesRecursive(includingSelf: true).FirstOrDefault(so => so is T) as T;
 
         /// <summary>
         /// Returns all active objectives of the specific type. Creates a new collection -> don't use too frequently.

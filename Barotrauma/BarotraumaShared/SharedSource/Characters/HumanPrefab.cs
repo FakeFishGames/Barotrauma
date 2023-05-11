@@ -111,6 +111,9 @@ namespace Barotrauma
         [Serialize("", IsPropertySaveable.No)]
         public Identifier Group { get; set; }
 
+        [Serialize(false, IsPropertySaveable.No)]
+        public bool AllowDraggingIndefinitely { get; set; }
+
         public XElement Element { get; protected set; }
         
 
@@ -214,7 +217,8 @@ namespace Barotrauma
             CharacterInfo characterInfo;
             if (characterElement == null)
             {
-                characterInfo = new CharacterInfo(CharacterPrefab.HumanSpeciesName, jobOrJobPrefab: GetJobPrefab(randSync), npcIdentifier: Identifier, randSync: randSync);}
+                characterInfo = new CharacterInfo(CharacterPrefab.HumanSpeciesName, jobOrJobPrefab: GetJobPrefab(randSync), npcIdentifier: Identifier, randSync: randSync);
+            }
             else
             {
                 characterInfo = new CharacterInfo(characterElement, Identifier);

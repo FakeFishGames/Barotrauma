@@ -74,12 +74,10 @@ namespace Steamworks
             m_RulesFailedToRespond = onRulesFailedToRespond;
             m_RulesRefreshComplete = onRulesRefreshComplete;
 
-            m_VTable = new VTable()
-            {
-                m_VTRulesResponded = InternalOnRulesResponded,
-                m_VTRulesFailedToRespond = InternalOnRulesFailedToRespond,
-                m_VTRulesRefreshComplete = InternalOnRulesRefreshComplete
-            };
+            m_VTable = new VTable(
+                mVtRulesResponded: InternalOnRulesResponded,
+                mVtRulesFailedToRespond: InternalOnRulesFailedToRespond,
+                mVtRulesRefreshComplete: InternalOnRulesRefreshComplete);
             m_pVTable = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(VTable)));
             Marshal.StructureToPtr(m_VTable, m_pVTable, false);
 
@@ -153,13 +151,20 @@ namespace Steamworks
         private class VTable
         {
             [NonSerialized] [MarshalAs(UnmanagedType.FunctionPtr)]
-            public InternalRulesResponded m_VTRulesResponded;
+            public readonly InternalRulesResponded m_VTRulesResponded;
 
             [NonSerialized] [MarshalAs(UnmanagedType.FunctionPtr)]
-            public InternalRulesFailedToRespond m_VTRulesFailedToRespond;
+            public readonly InternalRulesFailedToRespond m_VTRulesFailedToRespond;
 
             [NonSerialized] [MarshalAs(UnmanagedType.FunctionPtr)]
-            public InternalRulesRefreshComplete m_VTRulesRefreshComplete;
+            public readonly InternalRulesRefreshComplete m_VTRulesRefreshComplete;
+
+            public VTable(InternalRulesResponded mVtRulesResponded, InternalRulesFailedToRespond mVtRulesFailedToRespond, InternalRulesRefreshComplete mVtRulesRefreshComplete)
+            {
+                m_VTRulesResponded = mVtRulesResponded;
+                m_VTRulesFailedToRespond = mVtRulesFailedToRespond;
+                m_VTRulesRefreshComplete = mVtRulesRefreshComplete;
+            }
         }
 
         public static explicit operator System.IntPtr(SteamMatchmakingRulesResponse that)

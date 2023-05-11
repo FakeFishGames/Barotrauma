@@ -14,19 +14,18 @@ namespace Barotrauma.Items.Components
 {
     partial class Projectile : ItemComponent, IServerSerializable
     {
-        const int SpreadCounterWrapAround = 256;
-
         private static readonly ImmutableArray<float> spreadPool;
         static Projectile()
         {
             MTRandom random = new MTRandom(0);
-            spreadPool = Enumerable.Range(0, SpreadCounterWrapAround).Select(f => (float)random.NextDouble() - 0.5f).ToImmutableArray();            
+            spreadPool = Enumerable.Range(0, byte.MaxValue + 1).Select(f => (float)random.NextDouble() - 0.5f).ToImmutableArray();            
         }
 
-        public static float GetSpreadFromPool(int seed)
+        public static byte SpreadCounter { get; private set; }
+
+        public static void ResetSpreadCounter()
         {
-            if (seed < 0) { seed = -seed; }
-            return spreadPool[seed % SpreadCounterWrapAround];
+            SpreadCounter = 0;
         }
 
         struct HitscanResult
@@ -63,7 +62,7 @@ namespace Barotrauma.Items.Components
 
         private bool removePending;
 
-        public byte SpreadCounter { get; private set; }
+        private byte spreadIndex;
 
         //continuous collision detection is used while the projectile is moving faster than this
         const float ContinuousCollisionThreshold = 5.0f;
@@ -212,7 +211,7 @@ namespace Barotrauma.Items.Components
             set;
         }
 
-        [Serialize(false, IsPropertySaveable.No, description: "Override random spread with static spread; hitscan are launched with an equal amount of angle between them. Only applies when firing multiple hitscan.")]
+        [Serialize(false, IsPropertySaveable.No, description: "Override random spread with static spread; projectiles are launched with an equal amount of angle between them. Only applies when firing multiple projectiles.")]
         public bool StaticSpread
         {
             get;
@@ -300,7 +299,8 @@ namespace Barotrauma.Items.Components
                 return;
             }
 
-            SpreadCounter = (byte)(item.ID % SpreadCounterWrapAround);
+            spreadIndex = SpreadCounter;
+            SpreadCounter++;
 
             InitProjSpecific(element);
         }
@@ -327,6 +327,12 @@ namespace Barotrauma.Items.Components
             }
             originalCollisionCategories = item.body.CollisionCategories;
             originalCollisionTargets = item.body.CollidesWith;
+        }
+
+        public float GetSpreadFromPool()
+        {
+            spreadIndex = (byte)MathUtils.PositiveModulo(spreadIndex, spreadPool.Length);
+            return spreadPool[spreadIndex];
         }
 
         private void Launch(Character user, Vector2 simPosition, float rotation, float damageMultiplier = 1f, float launchImpulseModifier = 0f)
@@ -380,8 +386,8 @@ namespace Barotrauma.Items.Components
             if (createNetworkEvent && !Item.Removed && GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer)
             {
 #if SERVER
-                launchRot = rotation;               
-                Item.CreateServerEvent(this, new EventData(launch: true, spreadCounter: (byte)(SpreadCounter - 1)));         
+                launchRot = rotation;
+                Item.CreateServerEvent(this, new EventData(launch: true, spreadCounter: (byte)(spreadIndex - 1)));
 #endif
             }
         }
@@ -390,24 +396,22 @@ namespace Barotrauma.Items.Components
         {
             if (character != null && !characterUsable) { return false; }
             if (item.body == null) { return false; }
+            //can't launch if already launched
+            if (StickTarget != null || IsActive) { return false; }
 
+            float initialRotation = item.body.Rotation;
             for (int i = 0; i < HitScanCount; i++)
             {
                 float launchAngle;
-                
                 if (StaticSpread)
                 {
-                    float staticSpread = Spread / (HitScanCount - 1);
-                    // because the position of the item changes as hitscan are fired, we will set an
-                    // initial offset on the first hitscan and then increase the item's angle by a set amount as hitscan are fired
-                    float offset = i == 0 ? -staticSpread * (HitScanCount -1) : 0f; 
-                    launchAngle = item.body.Rotation + MathHelper.ToRadians(staticSpread + offset);
+                    launchAngle = initialRotation + MathHelper.ToRadians(i - ((float)(HitScanCount - 1) / 2)) * Spread;
                 }
                 else
                 {
-                    launchAngle = item.body.Rotation + MathHelper.ToRadians(Spread * GetSpreadFromPool(SpreadCounter));
+                    launchAngle = initialRotation + MathHelper.ToRadians(Spread * GetSpreadFromPool());
                 }
-                SpreadCounter++;
+                spreadIndex++;
 
                 Vector2 launchDir = new Vector2((float)Math.Cos(launchAngle), (float)Math.Sin(launchAngle));
                 if (Hitscan)

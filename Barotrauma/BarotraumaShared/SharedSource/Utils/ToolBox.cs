@@ -394,7 +394,6 @@ namespace Barotrauma
             return SelectWeightedRandom(objects, weightMethod, Rand.GetRNG(randSync));
         }
 
-
         public static T SelectWeightedRandom<T>(IEnumerable<T> objects, Func<T, float> weightMethod, Random random)
         {
             List<T> objectList = objects.ToList();
@@ -409,7 +408,7 @@ namespace Barotrauma
 
         public static T SelectWeightedRandom<T>(IList<T> objects, IList<float> weights, Random random)
         {
-            if (objects.Count == 0) return default(T);
+            if (objects.Count == 0) { return default(T); }
 
             if (objects.Count != weights.Count)
             {

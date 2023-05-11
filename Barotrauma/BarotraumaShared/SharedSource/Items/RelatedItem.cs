@@ -8,44 +8,85 @@ using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
+    /// <summary>
+    /// Used by various features to define different kinds of relations between items: 
+    /// for example, which item a character must have equipped to interact with some item in some way, 
+    /// which items can go inside a container, or which kind of item the target of a status effect must have for the effect to execute.
+    /// </summary>
     class RelatedItem
     {
         public enum RelationType
         {
             None,
+            /// <summary>
+            /// The item must be contained inside the item this relation is defined in. 
+            /// Can for example by used to make an item usable only when there's a specific kind of item inside it.
+            /// </summary>
             Contained,
+            /// <summary>
+            /// The user must have equipped the item (i.e. held or worn).
+            /// </summary>
             Equipped,
+            /// <summary>
+            /// The user must have picked up the item (i.e. the item needs to be in the user's inventory).
+            /// </summary>
             Picked,
+            /// <summary>
+            /// The item this relation is defined in must be inside a specific kind of container. 
+            /// Can for example by used to make an item do something when it's inside some other type of item.
+            /// </summary>
             Container
         }
 
-        public bool IsOptional { get; set; }
-
+        /// <summary>
+        /// Should an empty inventory be considered valid? Can be used to, for example, make an item do something if there's a specific item, or nothing, inside it.
+        /// </summary>
         public bool MatchOnEmpty { get; set; }
 
+        /// <summary>
+        /// Should only an empty inventory be considered valid? Can be used to, for example, make an item do something when there's nothing inside it.
+        /// </summary>
         public bool RequireEmpty { get; set; }
 
+        /// <summary>
+        /// Only valid for the RequiredItems of an ItemComponent. Can be used to ignore the requirement in the submarine editor, 
+        /// making it easier to for example make rewire things that require some special tool to rewire.
+        /// </summary>
         public bool IgnoreInEditor { get; set; }
 
+        /// <summary>
+        /// Identifier(s) or tag(s) of the items that are NOT considered valid. 
+        /// Can be used to, for example, exclude some specific items when using tags that apply to multiple items.
+        /// </summary>
         public ImmutableHashSet<Identifier> ExcludedIdentifiers { get; private set; }
 
         private RelationType type;
 
         public List<StatusEffect> statusEffects;
-        
+
+        /// <summary>
+        /// Only valid for the RequiredItems of an ItemComponent. A message displayed if the required item isn't found (e.g. a notification about lack of ammo or fuel).
+        /// </summary>
         public LocalizedString Msg;
+
+        /// <summary>
+        /// Only valid for the RequiredItems of an ItemComponent. The localization tag of a message displayed if the required item isn't found (e.g. a notification about lack of ammo or fuel).
+        /// </summary>
         public Identifier MsgTag;
 
         /// <summary>
-        /// Should broken (0 condition) items be excluded
+        /// Should broken (0 condition) items be excluded?
         /// </summary>
         public bool ExcludeBroken { get; private set; }
 
         /// <summary>
-        /// Should full condition (100%) items be excluded
+        /// Should full condition (100%) items be excluded?
         /// </summary>
         public bool ExcludeFullCondition { get; private set; }
 
+        /// <summary>
+        /// Are item variants considered valid?
+        /// </summary>
         public bool AllowVariants { get; private set; } = true;
 
         public RelationType Type
@@ -59,18 +100,33 @@ namespace Barotrauma
         public int TargetSlot = -1;
 
         /// <summary>
-        /// Overrides the position defined in ItemContainer.
+        /// Overrides the position defined in ItemContainer. Only valid when used in the Containable definitions of an ItemContainer.
         /// </summary>
         public Vector2? ItemPos;
 
         /// <summary>
-        /// Only affects when ItemContainer.hideItems is false. Doesn't override the value.
+        ///  Only valid when used in the Containable definitions of an ItemContainer.
+        ///  Only affects when ItemContainer.hideItems is false. Doesn't override the value.
         /// </summary>
         public bool Hide;
 
+        /// <summary>
+        ///  Only valid when used in the Containable definitions of an ItemContainer. 
+        ///  Can be used to override the rotation of specific items in the container.
+        /// </summary>
         public float Rotation;
 
+        /// <summary>
+        ///  Only valid when used in the Containable definitions of an ItemContainer. 
+        ///  Can be used to force specific items to stay active inside the container (such as flashlights attached to a gun).
+        /// </summary>
         public bool SetActive;
+
+        /// <summary>
+        /// Only valid for the RequiredItems of an ItemComponent. Can be used to make the requirement optional, 
+        /// meaning that you don't need to have the item to interact with something, but having it may still affect what the interaction does (such as using a crowbar on a door).
+        /// </summary>
+        public bool IsOptional { get; set; }
 
         public string JoinedIdentifiers
         {
@@ -83,6 +139,9 @@ namespace Barotrauma
             }
         }
 
+        /// <summary>
+        /// Identifier(s) or tag(s) of the items that are considered valid.
+        /// </summary>
         public ImmutableHashSet<Identifier> Identifiers { get; private set; }
 
         public string JoinedExcludedIdentifiers

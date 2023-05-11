@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
+using System.Text;
 using Barotrauma.Extensions;
 using Barotrauma.Networking;
 
@@ -11,24 +12,15 @@ namespace Barotrauma
 {
     internal partial class MedicalClinic
     {
-        private enum RateLimitResult
-        {
-            OK,
-            LimitReached
-        }
-
-        private struct RateLimitInfo
-        {
-            public int Requests;
-            public const int MaxRequests = 10;
-            public DateTimeOffset Expiry;
-        }
+        // allow 20 requests per 5 seconds, announce to chat if the limit is reached
+        private readonly RateLimiter rateLimiter = new(
+            maxRequests: RateLimitMaxRequests,
+            expiryInSeconds: RateLimitExpiry,
+            punishmentRules: (RateLimitAction.OnLimitReached, RateLimitPunishment.Announce));
 
         private readonly record struct AfflictionSubscriber(Client Subscriber, CharacterInfo Target, DateTimeOffset Expiry);
 
         private readonly List<AfflictionSubscriber> afflictionSubscribers = new();
-
-        private readonly Dictionary<Client, RateLimitInfo> rateLimits = new();
 
         public void ServerRead(IReadMessage inc, Client sender)
         {
@@ -65,7 +57,7 @@ namespace Barotrauma
 
         private void ProcessNewAddition(IReadMessage inc, Client client)
         {
-            if (CheckRateLimit(client) == RateLimitResult.LimitReached) { return; }
+            if (rateLimiter.IsLimitReached(client)) { return; }
 
             NetCrewMember newCrewMember = INetSerializableStruct.Read<NetCrewMember>(inc);
             InsertPendingCrewMember(newCrewMember);
@@ -74,7 +66,7 @@ namespace Barotrauma
 
         private void ProcessAddEverything(Client client)
         {
-            if (CheckRateLimit(client) == RateLimitResult.LimitReached) { return; }
+            if (rateLimiter.IsLimitReached(client)) { return; }
             AddEverythingToPending();
             ServerSend(PendingHeals.ToNetCollection(), NetworkHeader.ADD_PENDING, DeliveryMethod.Reliable, reponseClient: client);
         }
@@ -92,7 +84,7 @@ namespace Barotrauma
 
         private void ProcessNewRemoval(IReadMessage inc, Client client)
         {
-            if (CheckRateLimit(client) == RateLimitResult.LimitReached) { return; }
+            if (rateLimiter.IsLimitReached(client)) { return; }
 
             NetRemovedAffliction removed = INetSerializableStruct.Read<NetRemovedAffliction>(inc);
             RemovePendingAffliction(removed.CrewMember, removed.Affliction);
@@ -101,14 +93,14 @@ namespace Barotrauma
 
         private void ProcessRequestedPending(Client client)
         {
-            if (CheckRateLimit(client) == RateLimitResult.LimitReached) { return; }
+            if (rateLimiter.IsLimitReached(client)) { return; }
 
             ServerSend(PendingHeals.ToNetCollection(), NetworkHeader.REQUEST_PENDING, DeliveryMethod.Reliable, targetClient: client);
         }
 
         private void ProcessHealing(Client client)
         {
-            if (CheckRateLimit(client) == RateLimitResult.LimitReached) { return; }
+            if (rateLimiter.IsLimitReached(client)) { return; }
 
             HealRequestResult result = HealAllPending(client: client);
             ServerSend(new NetHealRequest { Result = result }, NetworkHeader.HEAL_PENDING, DeliveryMethod.Reliable, reponseClient: client);
@@ -116,7 +108,7 @@ namespace Barotrauma
 
         private void ProcessClearing(Client client)
         {
-            if (CheckRateLimit(client) == RateLimitResult.LimitReached) { return; }
+            if (rateLimiter.IsLimitReached(client)) { return; }
 
             if (!PendingHeals.Any()) { return; }
 
@@ -126,7 +118,7 @@ namespace Barotrauma
 
         private void ProcessRequestedAfflictions(IReadMessage inc, Client client)
         {
-            if (CheckRateLimit(client) == RateLimitResult.LimitReached) { return; }
+            if (rateLimiter.IsLimitReached(client)) { return; }
 
             NetCrewMember crewMember = INetSerializableStruct.Read<NetCrewMember>(inc);
 
@@ -134,6 +126,17 @@ namespace Barotrauma
 
             ImmutableArray<NetAffliction> pendingAfflictions = ImmutableArray<NetAffliction>.Empty;
             int infoId = 0;
+
+            if (foundInfo is null)
+            {
+                StringBuilder sb = new();
+                foreach (CharacterInfo character in GetCrewCharacters())
+                {
+                    sb.AppendLine($" - {character.DisplayName} ({character.ID})");
+                }
+
+                DebugConsole.ThrowError($"Could not find the requested crew member with ID {crewMember.CharacterInfoID}.\n{sb}");
+            }
 
             if (foundInfo is { Character.CharacterHealth: { } health })
             {
@@ -156,32 +159,6 @@ namespace Barotrauma
             }
 
             ServerSend(writeCrewMember, NetworkHeader.REQUEST_AFFLICTIONS, DeliveryMethod.Unreliable, client);
-        }
-
-        private RateLimitResult CheckRateLimit(Client client)
-        {
-            if (rateLimits.TryGetValue(client, out RateLimitInfo rateLimitInfo))
-            {
-                if (rateLimitInfo.Expiry < DateTimeOffset.Now)
-                {
-                    rateLimitInfo.Expiry = DateTimeOffset.Now.AddSeconds(5);
-                    rateLimitInfo.Requests = 1;
-                }
-                else
-                {
-                    if (rateLimitInfo.Requests > RateLimitInfo.MaxRequests) { return RateLimitResult.LimitReached; }
-
-                    rateLimitInfo.Requests++;
-                }
-
-                rateLimits[client] = rateLimitInfo;
-            }
-            else
-            {
-                rateLimits.Add(client, new RateLimitInfo { Requests = 1, Expiry = DateTimeOffset.Now.AddSeconds(5) });
-            }
-
-            return RateLimitResult.OK;
         }
 
         private IWriteMessage StartSending()

@@ -520,7 +520,7 @@ namespace Barotrauma.Networking
                 else
                 {
                     string presetName = clientElement.GetAttributeString("preset", "");
-                    PermissionPreset preset = PermissionPreset.List.Find(p => p.Name == presetName);
+                    PermissionPreset preset = PermissionPreset.List.Find(p => p.DisplayName == presetName);
                     if (preset == null)
                     {
                         DebugConsole.ThrowError("Failed to restore saved permissions to the client \"" + clientName + "\". Permission preset \"" + presetName + "\" not found.");
@@ -585,8 +585,7 @@ namespace Barotrauma.Networking
             foreach (SavedClientPermission clientPermission in ClientPermissions)
             {
                 var matchingPreset = PermissionPreset.List.Find(p => p.MatchesPermissions(clientPermission.Permissions, clientPermission.PermittedCommands));
-                #warning TODO: this is broken because of localization
-                if (matchingPreset != null && matchingPreset.Name == "None")
+                if (matchingPreset != null && matchingPreset.Identifier == "None")
                 {
                     continue;
                 }
@@ -600,7 +599,7 @@ namespace Barotrauma.Networking
 
                 clientElement.Add(matchingPreset == null
                     ? new XAttribute("permissions", clientPermission.Permissions.ToString())
-                    : new XAttribute("preset", matchingPreset.Name));
+                    : new XAttribute("preset", matchingPreset.DisplayName));
                 
                 if (clientPermission.Permissions.HasFlag(Networking.ClientPermissions.ConsoleCommands))
                 {

@@ -1,5 +1,8 @@
 ﻿namespace Barotrauma
 {
+    /// <summary>
+    /// A special affliction type that increases the character's Bloodloss affliction with a rate relative to the strength of the bleeding.
+    /// </summary>
     class AfflictionBleeding : Affliction
     {
         public AfflictionBleeding(AfflictionPrefab prefab, float strength) : 

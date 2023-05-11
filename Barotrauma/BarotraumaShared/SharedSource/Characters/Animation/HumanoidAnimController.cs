@@ -841,14 +841,11 @@ namespace Barotrauma
             if (head == null) { return; }
             if (torso == null) { return; }
 
-            const float DisableMovementAboveSurfaceThreshold = 50.0f;
-
             if (currentHull != null && character.CurrentHull != null)
             {
                 float surfacePos = GetSurfaceY();
                 float surfaceThreshold = ConvertUnits.ToDisplayUnits(Collider.SimPosition.Y + 1.0f);
                 surfaceLimiter = Math.Max(1.0f, surfaceThreshold - surfacePos);
-                if (surfaceLimiter > DisableMovementAboveSurfaceThreshold) { return; }  
             }          
 
             Limb leftHand = GetLimb(LimbType.LeftHand);
@@ -918,6 +915,7 @@ namespace Barotrauma
                 RotateHead(head);
             }
 
+            const float DisableMovementAboveSurfaceThreshold = 50.0f;
             //dont try to move upwards if head is already out of water
             if (surfaceLimiter > 1.0f && TargetMovement.Y > 0.0f)
             {
@@ -937,8 +935,8 @@ namespace Barotrauma
                     //turn head above the water
                     head.body.ApplyTorque(Dir);
                 }
+                movement.Y *= Math.Max(0, 1.0f - ((surfaceLimiter - 1.0f) / DisableMovementAboveSurfaceThreshold));
 
-                movement.Y = movement.Y * (1.0f - ((surfaceLimiter - 1.0f) / DisableMovementAboveSurfaceThreshold));
             }
 
             bool isNotRemote = true;
@@ -957,7 +955,13 @@ namespace Barotrauma
                         t = MathHelper.Clamp((1 + dot) / 10, 0.01f, 0.1f);
                     }
                 }
-                Collider.LinearVelocity = Vector2.Lerp(Collider.LinearVelocity, movement, t);
+                Vector2 targetVelocity = movement;
+                //if we're too high above the surface, don't touch the vertical velocity of the collider unless we're heading down
+                if (surfaceLimiter > DisableMovementAboveSurfaceThreshold)
+                {
+                    targetVelocity.Y = Math.Min(Collider.LinearVelocity.Y, movement.Y);
+                };
+                Collider.LinearVelocity = Vector2.Lerp(Collider.LinearVelocity, targetVelocity, t);
             }
 
             WalkPos += movement.Length();
@@ -1255,7 +1259,7 @@ namespace Barotrauma
             
             if (ladder.Item.Prefab.Triggers.None())
             {
-                character.SelectedSecondaryItem = null;
+                character.ReleaseSecondaryItem();
                 return;
             }
 
@@ -1525,13 +1529,15 @@ namespace Barotrauma
             Limb leftHand = GetLimb(LimbType.LeftHand);
             Limb rightHand = GetLimb(LimbType.RightHand);
 
-            Limb targetLeftHand = target.AnimController.GetLimb(LimbType.LeftForearm);
-            if (targetLeftHand == null) { targetLeftHand = target.AnimController.GetLimb(LimbType.Torso); }
-            if (targetLeftHand == null) { targetLeftHand = target.AnimController.MainLimb; }
+            Limb targetLeftHand = 
+                target.AnimController.GetLimb(LimbType.LeftForearm) ?? 
+                target.AnimController.GetLimb(LimbType.Torso) ?? 
+                target.AnimController.MainLimb;
 
-            Limb targetRightHand = target.AnimController.GetLimb(LimbType.RightForearm);
-            if (targetRightHand == null) { targetRightHand = target.AnimController.GetLimb(LimbType.Torso); }
-            if (targetRightHand == null) { targetRightHand = target.AnimController.MainLimb; }
+            Limb targetRightHand = 
+                target.AnimController.GetLimb(LimbType.RightForearm) ??
+                target.AnimController.GetLimb(LimbType.Torso) ?? 
+                target.AnimController.MainLimb;
 
             if (!target.AllowInput)
             {
@@ -1547,10 +1553,7 @@ namespace Barotrauma
                     return;
                 }
                 Limb targetTorso = target.AnimController.GetLimb(LimbType.Torso);
-                if (targetTorso == null)
-                {
-                    targetTorso = target.AnimController.MainLimb;
-                }
+                targetTorso ??= target.AnimController.MainLimb;
                 if (target.AnimController.Dir != Dir)
                 {
                     target.AnimController.Flip();

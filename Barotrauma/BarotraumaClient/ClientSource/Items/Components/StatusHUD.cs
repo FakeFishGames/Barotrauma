@@ -212,7 +212,7 @@ namespace Barotrauma.Items.Components
                     Sprite pingCircle = GUIStyle.UIThermalGlow.Value.Sprite;
                     foreach (Limb limb in c.AnimController.Limbs)
                     {
-                        if (limb.Mass < 1.0f) { continue; }
+                        if (limb.Mass < 0.5f && limb != c.AnimController.MainLimb) { continue; }
                         float noise1 = PerlinNoise.GetPerlin((thermalEffectState + limb.Params.ID + c.ID) * 0.01f, (thermalEffectState + limb.Params.ID + c.ID) * 0.02f);
                         float noise2 = PerlinNoise.GetPerlin((thermalEffectState + limb.Params.ID + c.ID) * 0.01f, (thermalEffectState + limb.Params.ID + c.ID) * 0.008f);
                         Vector2 spriteScale = ConvertUnits.ToDisplayUnits(limb.body.GetSize()) / pingCircle.size * (noise1 * 0.5f + 2f);

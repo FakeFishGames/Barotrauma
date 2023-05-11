@@ -939,7 +939,7 @@ namespace Barotrauma
                         Rand.Range(worldRect.X, worldRect.Right + 1),
                         Rand.Range(worldRect.Y - worldRect.Height, worldRect.Y + 1));
 
-                    var particle = GameMain.ParticleManager.CreateParticle("shrapnel", particlePos, Rand.Vector(Rand.Range(1.0f, 50.0f)), collisionIgnoreTimer: 1f);
+                    var particle = GameMain.ParticleManager.CreateParticle(Prefab.DamageParticle, particlePos, Rand.Vector(Rand.Range(1.0f, 50.0f)), collisionIgnoreTimer: 1f);
                     if (particle == null) break;
                 }
             }
@@ -1085,9 +1085,9 @@ namespace Barotrauma
             return new AttackResult(damageAmount, null);
         }
 
-        public void SetDamage(int sectionIndex, float damage, Character attacker = null, bool createNetworkEvent = true, bool createExplosionEffect = true)
+        public void SetDamage(int sectionIndex, float damage, Character attacker = null, bool createNetworkEvent = true, bool isNetworkEvent = true, bool createExplosionEffect = true)
         {
-            if (Submarine != null && Submarine.GodMode || Indestructible) { return; }
+            if (Submarine != null && Submarine.GodMode || (Indestructible && !isNetworkEvent)) { return; }
             if (!Prefab.Body) { return; }
             if (!MathUtils.IsValid(damage)) { return; }
 

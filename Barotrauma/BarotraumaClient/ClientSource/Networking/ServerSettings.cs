@@ -9,6 +9,9 @@ namespace Barotrauma.Networking
 {
     partial class ServerSettings : ISerializableEntity
     {
+        private static readonly LocalizedString packetAmountTooltip = TextManager.Get("ServerSettingsMaxPacketAmountTooltip");
+        private static readonly RichString packetAmountTooltipWarning = RichString.Rich($"{packetAmountTooltip}\n\n‖color:gui.red‖{TextManager.Get("PacketLimitWarning")}‖end‖");
+
         partial class NetPropertyData
         {
             public GUIComponent GUIComponent;
@@ -28,7 +31,15 @@ namespace Barotrauma.Networking
                     if (GUIComponent == null) return null;
                     else if (GUIComponent is GUITickBox tickBox) return tickBox.Selected;
                     else if (GUIComponent is GUITextBox textBox) return textBox.Text;
-                    else if (GUIComponent is GUIScrollBar scrollBar) return scrollBar.BarScrollValue;
+                    else if (GUIComponent is GUIScrollBar scrollBar)
+                    {
+                        if (property.PropertyType == typeof(int))
+                        {
+                            return (int)MathF.Floor(scrollBar.BarScrollValue);
+                        }
+
+                        return scrollBar.BarScrollValue;
+                    }
                     else if (GUIComponent is GUIRadioButtonGroup radioButtonGroup) return radioButtonGroup.Selected;
                     else if (GUIComponent is GUIDropDown dropdown) return dropdown.SelectedData;
                     else if (GUIComponent is GUINumberInput numInput)
@@ -44,9 +55,9 @@ namespace Barotrauma.Networking
                     else if (GUIComponent is GUITextBox textBox) textBox.Text = (string)value;
                     else if (GUIComponent is GUIScrollBar scrollBar)
                     {
-                        if (value.GetType() == typeof(int))
+                        if (value is int i)
                         {
-                            scrollBar.BarScrollValue = (int)value;
+                            scrollBar.BarScrollValue = i;
                         }
                         else
                         {
@@ -941,10 +952,57 @@ namespace Barotrauma.Networking
                 return true;
             };
 
+
+            GUILayoutGroup karmaAndDosLayout = new GUILayoutGroup(new RectTransform(new Vector2(1f, 0.2f), antigriefingTab.RectTransform), isHorizontal: false);
+            GUILayoutGroup lowerLayout = new GUILayoutGroup(new RectTransform(new Vector2(1f, 0.5f), karmaAndDosLayout.RectTransform), isHorizontal: true);
+            GUILayoutGroup upperLayout = new GUILayoutGroup(new RectTransform(new Vector2(1f, 0.5f), karmaAndDosLayout.RectTransform), isHorizontal: true);
+
             // karma --------------------------------------------------------------------------
 
-            var karmaBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.05f), antigriefingTab.RectTransform), TextManager.Get("ServerSettingsUseKarma"));
+            var karmaBox = new GUITickBox(new RectTransform(new Vector2(0.5f, 1f), upperLayout.RectTransform), TextManager.Get("ServerSettingsUseKarma"));
             GetPropertyData(nameof(KarmaEnabled)).AssignGUIComponent(karmaBox);
+
+            var enableDosProtection = new GUITickBox(new RectTransform(new Vector2(0.5f, 1f), upperLayout.RectTransform), TextManager.Get("ServerSettingsEnableDoSProtection"))
+            {
+                ToolTip = TextManager.Get("ServerSettingsEnableDoSProtectionTooltip")
+            };
+            GetPropertyData(nameof(EnableDoSProtection)).AssignGUIComponent(enableDosProtection);
+
+            CreateLabeledSlider(lowerLayout, "ServerSettingsMaxPacketAmount", out GUIScrollBar maxPacketSlider, out GUITextBlock maxPacketSliderLabel);
+            LocalizedString maxPacketCountLabel = maxPacketSliderLabel.Text;
+            maxPacketSlider.Step = 0.001f;
+            maxPacketSlider.Range = new Vector2(PacketLimitMin, PacketLimitMax);
+            maxPacketSlider.ToolTip = packetAmountTooltip;
+            maxPacketSlider.OnMoved = (scrollBar, _) =>
+            {
+                GUITextBlock textBlock = (GUITextBlock)scrollBar.UserData;
+                int value = (int)MathF.Floor(scrollBar.BarScrollValue);
+
+                LocalizedString valueText = value > PacketLimitMin
+                    ? value.ToString()
+                    : TextManager.Get("ServerSettingsNoLimit");
+
+                switch (value)
+                {
+                    case <= PacketLimitMin:
+                        textBlock.TextColor = GUIStyle.Green;
+                        scrollBar.ToolTip = packetAmountTooltip;
+                        break;
+                    case < PacketLimitWarning:
+                        textBlock.TextColor = GUIStyle.Red;
+                        scrollBar.ToolTip = packetAmountTooltipWarning;
+                        break;
+                    default:
+                        textBlock.TextColor = GUIStyle.TextColorNormal;
+                        scrollBar.ToolTip = packetAmountTooltip;
+                        break;
+                }
+
+                textBlock.Text = $"{maxPacketCountLabel} {valueText}";
+                return true;
+            };
+            GetPropertyData(nameof(MaxPacketAmount)).AssignGUIComponent(maxPacketSlider);
+            maxPacketSlider.OnMoved(maxPacketSlider, maxPacketSlider.BarScroll);
 
             karmaPresetDD = new GUIDropDown(new RectTransform(new Vector2(1.0f, 0.05f), antigriefingTab.RectTransform));
             foreach (string karmaPreset in GameMain.NetworkMember.KarmaManager.Presets.Keys)

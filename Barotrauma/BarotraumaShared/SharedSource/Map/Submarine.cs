@@ -1,16 +1,13 @@
-﻿using Barotrauma.Items.Components;
+﻿using Barotrauma.Extensions;
+using Barotrauma.IO;
+using Barotrauma.Items.Components;
 using Barotrauma.Networking;
-using Barotrauma.Extensions;
 using FarseerPhysics;
 using FarseerPhysics.Dynamics;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using Barotrauma.IO;
 using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 using System.Xml.Linq;
 using Voronoi2;
 
@@ -259,7 +256,7 @@ namespace Barotrauma
         {
             if (outpost.exitPoints.Any())
             {
-                Rectangle worldBorders = Borders;
+                Rectangle worldBorders = GetDockedBorders();
                 worldBorders.Location += WorldPosition.ToPoint();
                 foreach (var exitPoint in outpost.exitPoints)
                 {
@@ -425,18 +422,22 @@ namespace Barotrauma
             }
         }
 
+        private static readonly HashSet<Submarine> checkSubmarineBorders = new HashSet<Submarine>();
+
         /// <summary>
-        /// Returns a rect that contains the borders of this sub and all subs docked to it
+        /// Returns a rect that contains the borders of this sub and all subs docked to it, excluding outposts
         /// </summary>
-        public Rectangle GetDockedBorders(List<Submarine> checkd = null)
+        public Rectangle GetDockedBorders()
         {
-            if (checkd == null) { checkd = new List<Submarine>(); }
-            checkd.Add(this);
+            checkSubmarineBorders.Clear();
+            return GetDockedBordersRecursive();
+        }
 
+        private Rectangle GetDockedBordersRecursive()
+        {
             Rectangle dockedBorders = Borders;
-
-            var connectedSubs = DockedTo.Where(s => !checkd.Contains(s) && !s.Info.IsOutpost).ToList();
-
+            checkSubmarineBorders.Add(this);
+            var connectedSubs = DockedTo.Where(s => !checkSubmarineBorders.Contains(s) && !s.Info.IsOutpost);
             foreach (Submarine dockedSub in connectedSubs)
             {
                 //use docking ports instead of world position to determine
@@ -445,7 +446,7 @@ namespace Barotrauma
                 Vector2? expectedLocation = CalculateDockOffset(this, dockedSub);
                 if (expectedLocation == null) { continue; }
 
-                Rectangle dockedSubBorders = dockedSub.GetDockedBorders(checkd);
+                Rectangle dockedSubBorders = dockedSub.GetDockedBordersRecursive();
                 dockedSubBorders.Location += MathUtils.ToPoint(expectedLocation.Value);
 
                 dockedBorders.Y = -dockedBorders.Y;
@@ -477,8 +478,7 @@ namespace Barotrauma
         {
             foreach (Submarine dockedSub in DockedTo)
             {
-                if (subs.Contains(dockedSub)) continue;
-
+                if (subs.Contains(dockedSub)) { continue; }
                 subs.Add(dockedSub);
                 dockedSub.GetConnectedSubsRecursive(subs);
             }
@@ -1041,6 +1041,30 @@ namespace Barotrauma
 #endif
         }
 
+        public void EnableFactionSpecificEntities(Identifier factionIdentifier)
+        {
+            foreach (MapEntity me in MapEntity.mapEntityList)
+            {
+                if (string.IsNullOrEmpty(me.Layer) || me.Submarine != this) { continue; }
+
+                var layerAsIdentifier = me.Layer.ToIdentifier();
+                if (FactionPrefab.Prefabs.ContainsKey(layerAsIdentifier))
+                {
+                    me.HiddenInGame = factionIdentifier != layerAsIdentifier;
+#if CLIENT
+                    //normally this is handled in LightComponent.OnMapLoaded, but this method is called after that
+                    if (me.HiddenInGame && me is Item item)
+                    {
+                        foreach (var lightComponent in item.GetComponents<LightComponent>())
+                        {
+                            lightComponent.Light.Enabled = false;
+                        }
+                    }
+#endif
+                }
+            }
+        }
+
         public void Update(float deltaTime)
         {
             if (Info.IsWreck)
@@ -1095,7 +1119,7 @@ namespace Barotrauma
 
         public void ApplyForce(Vector2 force)
         {
-            if (subBody != null) subBody.ApplyForce(force);
+            if (subBody != null) { subBody.ApplyForce(force); }
         }
 
         public void EnableMaintainPosition()
@@ -1687,9 +1711,30 @@ namespace Barotrauma
                 }
             }
 
+            Dictionary<int, MapEntity> savedEntities = new Dictionary<int, MapEntity>();
             foreach (MapEntity e in MapEntity.mapEntityList.OrderBy(e => e.ID))
             {
                 if (!e.ShouldBeSaved) { continue; }
+
+                if (e.Removed)
+                {
+                    GameAnalyticsManager.AddErrorEventOnce(
+                        "Submarine.SaveToXElement:Removed" + e.Name,
+                        GameAnalyticsManager.ErrorSeverity.Error,
+                        $"Attempted to save a removed entity (\"{e.Name}\"). Duplicate ID: {savedEntities.ContainsKey(e.ID)}");
+                    DebugConsole.ThrowError($"Error while saving the submarine. Attempted to save a removed entity (\"{e.Name} ({e.ID})\"). The entity will not be saved to avoid corrupting the submarine file.");
+                    continue;
+                }
+                if (savedEntities.TryGetValue(e.ID, out MapEntity duplicateEntity))
+                {
+                    GameAnalyticsManager.AddErrorEventOnce(
+                        "Submarine.SaveToXElement:DuplicateId" + e.Name,
+                        GameAnalyticsManager.ErrorSeverity.Error,
+                        $"Attempted to save an entity with a duplicate ID ({e.Name}, {duplicateEntity.Name}).");
+                    DebugConsole.ThrowError($"Error while saving the submarine. The entity \"{e.Name}\" has the same ID as \"{duplicateEntity.Name}\" ({e.ID}). The entity will not be saved to avoid corrupting the submarine file.");
+                    continue;
+                }
+
                 if (e is Item item)
                 {
                     if (item.FindParentInventory(inv => inv is CharacterInventory) != null) { continue; }
@@ -1709,6 +1754,7 @@ namespace Barotrauma
                 }
 
                 e.Save(element);
+                savedEntities.Add(e.ID, e);
             }
             Info.CheckSubsLeftBehind(element);
         }

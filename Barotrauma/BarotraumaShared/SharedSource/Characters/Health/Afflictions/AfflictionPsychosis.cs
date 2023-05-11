@@ -1,5 +1,8 @@
 ﻿namespace Barotrauma
 {
+    /// <summary>
+    /// A special affliction type that makes the character see and hear things that aren't there.
+    /// </summary>
     partial class AfflictionPsychosis : Affliction
     {
 

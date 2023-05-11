@@ -213,10 +213,11 @@ namespace Barotrauma
             };
 
             List<Mission> missionsToDisplay = new List<Mission>(selectedMissions.Where(m => m.Prefab.ShowInMenus));
-            if (!selectedMissions.Any() && startLocation != null)
+            if (startLocation != null)
             {
                 foreach (Mission mission in startLocation.SelectedMissions)
                 {
+                    if (missionsToDisplay.Contains(mission)) { continue; }
                     if (!mission.Prefab.ShowInMenus) { continue; }
                     if (mission.Locations[0] == mission.Locations[1] ||
                         mission.Locations.Contains(campaignMode?.Map.SelectedLocation))
@@ -316,7 +317,7 @@ namespace Barotrauma
                     RichString reputationText = displayedMission.GetReputationRewardText();
                     if (!reputationText.IsNullOrEmpty())
                     {
-                        new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), missionTextContent.RectTransform), reputationText);
+                        new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), missionTextContent.RectTransform), reputationText, wrap: true);
                     }
 
                     int totalReward = displayedMission.GetFinalReward(Submarine.MainSub);

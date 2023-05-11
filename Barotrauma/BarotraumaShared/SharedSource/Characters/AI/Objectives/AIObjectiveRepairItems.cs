@@ -102,7 +102,7 @@ namespace Barotrauma
                 // Don't stop fixing until completely done
                 return 100;
             }
-            int otherFixers = HumanAIController.CountCrew(c => c != HumanAIController && c.ObjectiveManager.IsCurrentObjective<AIObjectiveRepairItems>() && !c.Character.IsIncapacitated, onlyBots: true);
+            int otherFixers = HumanAIController.CountBotsInTheCrew(c => c != HumanAIController && c.ObjectiveManager.IsCurrentObjective<AIObjectiveRepairItems>());
             int items = Targets.Count;
             if (items == 0)
             {
@@ -116,7 +116,7 @@ namespace Barotrauma
             }
             else
             {
-                if (anyFixers && (ratio <= 1 || otherFixers > 5 || otherFixers / (float)HumanAIController.CountCrew(onlyBots: true) > 0.75f))
+                if (anyFixers && (ratio <= 1 || otherFixers > 5 || otherFixers / (float)HumanAIController.CountBotsInTheCrew() > 0.75f))
                 {
                     // Enough fixers
                     return 0;

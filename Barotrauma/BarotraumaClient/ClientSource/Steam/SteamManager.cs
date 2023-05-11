@@ -16,6 +16,9 @@ namespace Barotrauma.Steam
         private static readonly List<Identifier> initializationErrors = new List<Identifier>();
         public static IReadOnlyList<Identifier> InitializationErrors => initializationErrors;
 
+        private static bool IsInitializedProjectSpecific
+            => Steamworks.SteamClient.IsValid && Steamworks.SteamClient.IsLoggedOn;
+
         private static void InitializeProjectSpecific()
         {
             if (IsInitialized) { return; }
@@ -23,7 +26,6 @@ namespace Barotrauma.Steam
             try
             {
                 Steamworks.SteamClient.Init(AppID, false);
-                IsInitialized = Steamworks.SteamClient.IsLoggedOn && Steamworks.SteamClient.IsValid;
 
                 if (IsInitialized)
                 {
@@ -43,13 +45,11 @@ namespace Barotrauma.Steam
             }
             catch (DllNotFoundException)
             {
-                IsInitialized = false;
                 initializationErrors.Add("SteamDllNotFound".ToIdentifier());
             }
             catch (Exception e)
             {
                 DebugConsole.ThrowError("SteamManager initialization threw an exception", e);
-                IsInitialized = false;
                 initializationErrors.Add("SteamClientInitFailed".ToIdentifier());
             }
 

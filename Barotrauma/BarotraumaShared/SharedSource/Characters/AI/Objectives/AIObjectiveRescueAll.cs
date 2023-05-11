@@ -42,15 +42,16 @@ namespace Barotrauma
             if (Targets.None()) { return 100; }
             if (!objectiveManager.IsOrder(this))
             {
-                if (!character.IsMedic && HumanAIController.IsTrueForAnyCrewMember(c => c != HumanAIController && c.Character.IsMedic && !c.Character.IsUnconscious))
+                if (!character.IsMedic && HumanAIController.IsTrueForAnyCrewMember(c => c != character && c.IsMedic, onlyActive: true, onlyConnectedSubs: true))
                 {
-                    // Don't do anything if there's a medic on board and we are not a medic
+                    // Don't do anything if there's a medic on board actively treating and we are not a medic
                     return 100;
                 }
             }
             float worstCondition = Targets.Min(t => GetVitalityFactor(t));
             if (Targets.Contains(character))
             {
+                // Targeting self -> higher prio
                 if (character.Bleeding > 10)
                 {
                     // Enforce the highest priority when bleeding out.
@@ -117,7 +118,7 @@ namespace Barotrauma
                 {
                     if (!character.IsMedic && target != character)
                     {
-                        // Don't allow to treat others autonomously
+                        // Don't allow to treat others autonomously, unless we are a medic
                         return false;
                     }
                     // Ignore unsafe hulls, unless ordered
@@ -136,17 +137,17 @@ namespace Barotrauma
                 // Don't allow going into another sub, unless it's connected and of the same team and type.
                 if (!character.Submarine.IsEntityFoundOnThisSub(target.CurrentHull, includingConnectedSubs: true)) { return false; }
             }
-            else
+            else if (target.Submarine != null)
             {
-                return target.Submarine == null;
+                // We are outside, but the target is inside.
+                return false;
             }
             if (target != character && target.IsBot && HumanAIController.IsActive(target) && target.AIController is HumanAIController targetAI)
             {
-                // Ignore all concious targets that are currently fighting, fleeing, fixing, or treating characters
+                // Ignore all concious targets that are currently fighting, fleeing, or treating characters
                 if (targetAI.ObjectiveManager.HasActiveObjective<AIObjectiveCombat>() ||
                     targetAI.ObjectiveManager.HasActiveObjective<AIObjectiveFindSafety>() ||
-                    targetAI.ObjectiveManager.HasActiveObjective<AIObjectiveRescue>() ||
-                    targetAI.ObjectiveManager.HasActiveObjective<AIObjectiveFixLeak>())
+                    targetAI.ObjectiveManager.HasActiveObjective<AIObjectiveRescue>())
                 {
                     return false;
                 }

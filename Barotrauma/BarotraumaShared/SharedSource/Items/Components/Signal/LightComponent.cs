@@ -230,7 +230,7 @@ namespace Barotrauma.Items.Components
                 Position = item.Position,
                 CastShadows = castShadows,                
                 IsBackground = drawBehindSubs,
-                SpriteScale = Vector2.One * item.Scale,
+                SpriteScale = Vector2.One * item.Scale * LightSpriteScale,
                 Range = range
             };
             Light.LightSourceParams.Flicker = flicker;
@@ -309,13 +309,14 @@ namespace Barotrauma.Items.Components
 #if CLIENT
             Light.ParentSub = item.Submarine;
 #endif
-            if (item.Container != null && item.GetRootInventoryOwner() is not Character)
+            var ownerCharacter = item.GetRootInventoryOwner() as Character;
+            if ((item.Container != null && ownerCharacter == null) || 
+                (ownerCharacter != null && ownerCharacter.InvisibleTimer > 0.0f))
             {
                 lightBrightness = 0.0f;
                 SetLightSourceState(false, 0.0f);
                 return;
             }
-
             SetLightSourceTransformProjSpecific();
 
             PhysicsBody body = ParentBody ?? item.body;
