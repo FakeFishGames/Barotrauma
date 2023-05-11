@@ -119,6 +119,9 @@ namespace Barotrauma
         [Serialize(1.0f, IsPropertySaveable.Yes, "Tells the bots how much they should prefer targeting this character with submarine weapons tagged as \"slowturret\", like railguns. The tag is arbitrary and can be added to any turrets, just like the priority. Defaults to 1. Not used if AITurretPriority is 0. Distance to the target affects the decision making."), Editable]
         public float AISlowTurretPriority { get; set; }
 
+        [Serialize("", IsPropertySaveable.Yes, description: "Identifier or tag of the item the character's items are placed inside when the character despawns."), Editable]
+        public Identifier DespawnContainer { get; private set; }
+
         public readonly CharacterFile File;
 
         public XDocument VariantFile { get; private set; }

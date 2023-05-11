@@ -52,7 +52,12 @@ namespace Barotrauma
             {
                 Config config = new Config
                 {
+#if SERVER
+                    //server defaults to English, clients get a prompt to select a language
                     Language = TextManager.DefaultLanguage,
+#else
+                    Language = LanguageIdentifier.None,
+#endif
                     SubEditorUndoBuffer = 32,
                     MaxAutoSaves = 8,
                     AutoSaveIntervalSeconds = 300,
@@ -100,11 +105,13 @@ namespace Barotrauma
                 Config retVal = fallback ?? GetDefault();
                 
                 retVal.DeserializeElement(element);
+#if SERVER
+                //server defaults to English, clients get a prompt to select a language
                 if (retVal.Language == LanguageIdentifier.None)
                 {
                     retVal.Language = TextManager.DefaultLanguage;
                 }
-
+#endif
                 retVal.Graphics = GraphicsSettings.FromElements(element.GetChildElements("graphicsmode", "graphicssettings"), retVal.Graphics);
                 retVal.Audio = AudioSettings.FromElements(element.GetChildElements("audio"), retVal.Audio);
 #if CLIENT

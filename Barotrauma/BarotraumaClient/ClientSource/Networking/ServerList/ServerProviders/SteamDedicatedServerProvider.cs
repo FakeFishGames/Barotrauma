@@ -35,7 +35,7 @@ namespace Barotrauma
         }
         
         private static Option<ServerInfo> InfoFromListEntry(Steamworks.Data.ServerInfo entry) =>
-            entry.Name.IsNullOrEmpty()
+            entry.Name.IsNullOrEmpty() || entry.Address is null
                 ? Option<ServerInfo>.None()
                 : Option<ServerInfo>.Some(new ServerInfo(new LidgrenEndpoint(entry.Address, entry.ConnectionPort))
                     {

@@ -122,7 +122,7 @@ namespace Barotrauma
                 foreach (Affliction affliction in afflictions)
                 {
                     var currentEffect = affliction.GetActiveEffect();
-                    if (currentEffect != null && !string.IsNullOrEmpty(currentEffect.DialogFlag.Value) && !currentFlags.Contains(currentEffect.DialogFlag))
+                    if (currentEffect is { DialogFlag.IsEmpty: false } && !currentFlags.Contains(currentEffect.DialogFlag))
                     {
                         currentFlags.Add(currentEffect.DialogFlag);
                     }

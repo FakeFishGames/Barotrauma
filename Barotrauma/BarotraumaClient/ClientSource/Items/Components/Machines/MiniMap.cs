@@ -403,7 +403,8 @@ namespace Barotrauma.Items.Components
 
         private bool VisibleOnItemFinder(Item it)
         {
-            if (!item.Submarine.IsEntityFoundOnThisSub(it, includingConnectedSubs: true)) { return false; }
+            if (it?.Submarine == null) { return false; }
+            if (item.Submarine == null || !item.Submarine.IsEntityFoundOnThisSub(it, includingConnectedSubs: true)) { return false; }
             if (it.NonInteractable || it.HiddenInGame) { return false; }
             if (it.GetComponent<Pickable>() == null) { return false; }
 
@@ -702,6 +703,12 @@ namespace Barotrauma.Items.Components
 
         private void DrawHUDFront(SpriteBatch spriteBatch, GUICustomComponent container)
         {
+            if (miniMapFrame == null)
+            {
+                //frame not created yet, could happen if the item hasn't been inside any sub this round?
+                return;
+            }
+
             if (Voltage < MinVoltage)
             {
                 Vector2 textSize = GUIStyle.Font.MeasureString(noPowerTip);
@@ -1057,7 +1064,9 @@ namespace Barotrauma.Items.Components
                         waterVolume += linkedHull.WaterVolume;
                         totalVolume += linkedHull.Volume;
                     }
-                    hullData.HullWaterAmount = MathHelper.Clamp((int)Math.Ceiling(waterVolume / totalVolume * 100), 0, 100);
+                    hullData.HullWaterAmount =
+                        waterVolume > 1.0f ?
+                        MathHelper.Clamp((int)Math.Ceiling(waterVolume / totalVolume * 100), 0, 100) : 0.0f;
                 }
                 else
                 {

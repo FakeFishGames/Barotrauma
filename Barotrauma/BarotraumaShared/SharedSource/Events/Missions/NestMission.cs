@@ -260,8 +260,24 @@ namespace Barotrauma
                                     int amount = Rand.Range(monster.Item2.X, monster.Item2.Y + 1);
                                     for (int i = 0; i < amount; i++)
                                     {
-                                        Character.Create(monster.Item1.Identifier, nestPosition + Rand.Vector(100.0f), ToolBox.RandomSeed(8), createNetworkEvent: true);
+                                        Vector2 offsetPosition;
+                                        int tries = 0;
+                                        do
+                                        {
+                                            offsetPosition = nestPosition + Rand.Vector(100.0f);
+                                            tries++;
+                                            if (tries > 10)
+                                            {
+                                                offsetPosition = nestPosition;
+                                                break;
+                                            }
+                                        } while (Level.Loaded.IsPositionInsideWall(offsetPosition));
+                                        Character.Create(monster.Item1.Identifier, offsetPosition, ToolBox.RandomSeed(8), createNetworkEvent: true);
                                     }
+                                }
+                                if (Level.Loaded.IsPositionInsideWall(nestPosition))
+                                {
+                                    DebugConsole.AddWarning($"Error in nest mission \"{Prefab.Identifier}\": nest position was inside a wall ({nestPosition}).");
                                 }
                                 monsterPrefabs.Clear();
                                 break;

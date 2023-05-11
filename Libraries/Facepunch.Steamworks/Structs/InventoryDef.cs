@@ -8,7 +8,7 @@ namespace Steamworks
 	public class InventoryDef : IEquatable<InventoryDef>
 	{
 		internal InventoryDefId _id;
-		internal Dictionary<string, string> _properties;
+		internal Dictionary<string, string>? _properties;
 
 		public InventoryDef( InventoryDefId defId )
 		{
@@ -20,32 +20,32 @@ namespace Steamworks
 		/// <summary>
 		/// Shortcut to call GetProperty( "name" )
 		/// </summary>
-		public string Name => GetProperty( "name" );
+		public string? Name => GetProperty( "name" );
 
 		/// <summary>
 		/// Shortcut to call GetProperty( "description" )
 		/// </summary>
-		public string Description => GetProperty( "description" );
+		public string? Description => GetProperty( "description" );
 
 		/// <summary>
 		/// Shortcut to call GetProperty( "icon_url" )
 		/// </summary>
-		public string IconUrl => GetProperty( "icon_url" );
+		public string? IconUrl => GetProperty( "icon_url" );
 
 		/// <summary>
 		/// Shortcut to call GetProperty( "icon_url_large" )
 		/// </summary>
-		public string IconUrlLarge => GetProperty( "icon_url_large" );
+		public string? IconUrlLarge => GetProperty( "icon_url_large" );
 
 		/// <summary>
 		/// Shortcut to call GetProperty( "price_category" )
 		/// </summary>
-		public string PriceCategory => GetProperty( "price_category" );
+		public string? PriceCategory => GetProperty( "price_category" );
 
 		/// <summary>
 		/// Shortcut to call GetProperty( "type" )
 		/// </summary>
-		public string Type => GetProperty( "type" );
+		public string? Type => GetProperty( "type" );
 
 		/// <summary>
 		/// Returns true if this is an item that generates an item, rather 
@@ -56,12 +56,12 @@ namespace Steamworks
 		/// <summary>
 		/// Shortcut to call GetProperty( "exchange" )
 		/// </summary>
-		public string ExchangeSchema => GetProperty( "exchange" );
+		public string? ExchangeSchema => GetProperty( "exchange" );
 
 		/// <summary>
 		/// Get a list of exchanges that are available to make this item
 		/// </summary>
-		public InventoryRecipe[] GetRecipes()
+		public InventoryRecipe[]? GetRecipes()
 		{
 			if ( string.IsNullOrEmpty( ExchangeSchema ) ) return null;
 
@@ -93,19 +93,19 @@ namespace Steamworks
 		/// <summary>
 		/// Get a specific property by name
 		/// </summary>
-		public string GetProperty( string name )
+		public string? GetProperty( string? name )
 		{
-			if ( _properties!= null && _properties.TryGetValue( name, out string val ) )
+			if ( _properties != null && name != null && _properties.TryGetValue( name, out string val ) )
 				return val;
 
 			uint _ = (uint)Helpers.MemoryBufferSize;
 
-			if ( !SteamInventory.Internal.GetItemDefinitionProperty( Id, name, out var vl, ref _ ) )
+			if ( SteamInventory.Internal is null || !SteamInventory.Internal.GetItemDefinitionProperty( Id, name, out var vl, ref _ ) )
 				return null;
-				
+
 			if (name == null) //return keys string
 				return vl;
-				
+
 			if ( _properties == null )
 				_properties = new Dictionary<string, string>();
 
@@ -119,9 +119,9 @@ namespace Steamworks
 		/// </summary>
 		public bool GetBoolProperty( string name )
 		{
-			string val = GetProperty( name );
+			string? val = GetProperty( name );
 
-			if ( val.Length == 0 ) return false;
+			if ( string.IsNullOrEmpty(val) ) return false;
 			if ( val[0] == '0' || val[0] == 'F' || val[0] == 'f' ) return false;
 
 			return true;
@@ -130,9 +130,9 @@ namespace Steamworks
 		/// <summary>
 		/// Read a raw property from the definition schema
 		/// </summary>
-		public T GetProperty<T>( string name )
+		public T? GetProperty<T>( string name )
 		{
-			string val = GetProperty( name );
+			string? val = GetProperty( name );
 
 			if ( string.IsNullOrEmpty( val ) )
 				return default;
@@ -150,16 +150,16 @@ namespace Steamworks
 		/// <summary>
 		/// Gets a list of all properties on this item
 		/// </summary>
-		public IEnumerable<KeyValuePair<string, string>> Properties
+		public IEnumerable<KeyValuePair<string, string?>> Properties
 		{
 			get
 			{
-				var list = GetProperty( null );
+				var list = GetProperty( null ) ?? "";
 				var keys = list.Split( ',' );
 
 				foreach ( var key in keys )
 				{
-					yield return new KeyValuePair<string, string>( key, GetProperty( key ) );
+					yield return new KeyValuePair<string, string?>( key, GetProperty( key ) );
 				}
 			}
 		}
@@ -174,7 +174,7 @@ namespace Steamworks
 				ulong curprice = 0;
 				ulong baseprice = 0;
 
-				if ( !SteamInventory.Internal.GetItemPrice( Id, ref curprice, ref baseprice ) )
+				if ( SteamInventory.Internal is null || !SteamInventory.Internal.GetItemPrice( Id, ref curprice, ref baseprice ) )
 					return 0;
 
 				return (int) curprice;
@@ -194,7 +194,7 @@ namespace Steamworks
 				ulong curprice = 0;
 				ulong baseprice = 0;
 
-				if ( !SteamInventory.Internal.GetItemPrice( Id, ref curprice, ref baseprice ) )
+				if ( SteamInventory.Internal is null || !SteamInventory.Internal.GetItemPrice( Id, ref curprice, ref baseprice ) )
 					return 0;
 
 				return (int)baseprice;
@@ -203,12 +203,12 @@ namespace Steamworks
 
 		public string LocalBasePriceFormatted => Utility.FormatPrice( SteamInventory.Currency, LocalPrice / 100.0 );
 
-		InventoryRecipe[] _recContaining;
+		InventoryRecipe[]? _recContaining;
 
 		/// <summary>
 		/// Return a list of recepies that contain this item
 		/// </summary>
-		public InventoryRecipe[] GetRecipesContainingThis()
+		public InventoryRecipe[]? GetRecipesContainingThis()
 		{
 			if ( _recContaining != null ) return _recContaining;
 
@@ -221,17 +221,17 @@ namespace Steamworks
 			return _recContaining;
 		}
 
-		public static bool operator ==( InventoryDef a, InventoryDef b )
+		public static bool operator ==( InventoryDef? a, InventoryDef? b )
 		{
 			if ( Object.ReferenceEquals( a, null ) )
 				return Object.ReferenceEquals( b, null );
 
 			return a.Equals( b );
 		}
-		public static bool operator !=( InventoryDef a, InventoryDef b ) => !(a == b);
+		public static bool operator !=( InventoryDef? a, InventoryDef? b ) => !(a == b);
 		public override bool Equals( object p ) => this.Equals( (InventoryDef)p );
 		public override int GetHashCode() => Id.GetHashCode();
-		public bool Equals( InventoryDef p )
+		public bool Equals( InventoryDef? p )
 		{
 			if ( p == null ) return false;
 			return p.Id == Id;

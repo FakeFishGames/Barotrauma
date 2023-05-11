@@ -348,7 +348,7 @@ namespace Barotrauma
             //--------------------------------------
 
             //wait for the new level to be loaded
-            DateTime timeOut = DateTime.Now + new TimeSpan(0, 0, seconds: 60);
+            DateTime timeOut = DateTime.Now + GameClient.LevelTransitionTimeOut;
             while (Level.Loaded == prevLevel || Level.Loaded == null)
             {
                 if (DateTime.Now > timeOut || Screen.Selected != GameMain.GameScreen)  { break; }
@@ -358,8 +358,12 @@ namespace Barotrauma
             endTransition.Stop();
             overlayColor = Color.Transparent;
 
-            if (DateTime.Now > timeOut) { GameMain.NetLobbyScreen.Select(); }
-            if (!(Screen.Selected is RoundSummaryScreen))
+            if (DateTime.Now > timeOut) 
+            {
+                DebugConsole.ThrowError("Failed to start the round. Timed out while waiting for the level transition to finish.");
+                GameMain.NetLobbyScreen.Select(); 
+            }
+            if (Screen.Selected is not RoundSummaryScreen)
             {
                 if (continueButton != null)
                 {
@@ -947,7 +951,9 @@ namespace Barotrauma
                 if (firedCharacter != null) { CrewManager.FireCharacter(firedCharacter); }
             }
 
-            if (map?.CurrentLocation?.HireManager != null && CampaignUI?.CrewManagement != null)
+            if (map?.CurrentLocation?.HireManager != null && CampaignUI?.CrewManagement != null && 
+                /*can't apply until we have the latest save file*/
+                !NetIdUtils.IdMoreRecent(pendingSaveID, LastSaveID))
             {
                 CampaignUI.CrewManagement.SetHireables(map.CurrentLocation, availableHires);
                 if (hiredCharacters.Any()) { CampaignUI.CrewManagement.ValidateHires(hiredCharacters); }

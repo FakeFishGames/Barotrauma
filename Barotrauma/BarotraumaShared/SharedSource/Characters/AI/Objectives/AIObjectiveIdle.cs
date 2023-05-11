@@ -163,15 +163,22 @@ namespace Barotrauma
 
             character.SelectedItem = null;
 
-            CleanupItems(deltaTime);
+            if (!character.IsClimbing)
+            {
+                CleanupItems(deltaTime);
+            }
 
             if (behavior == BehaviorType.StayInHull && TargetHull == null && character.CurrentHull != null)
             {
                 TargetHull = character.CurrentHull;
             }
 
-            bool currentTargetIsInvalid = currentTarget == null || IsForbidden(currentTarget) || (PathSteering.CurrentPath != null && PathSteering.CurrentPath.Nodes.Any(n => HumanAIController.UnsafeHulls.Contains(n.CurrentHull)));
-            if (behavior == BehaviorType.StayInHull && !currentTargetIsInvalid)
+            bool currentTargetIsInvalid = 
+                currentTarget == null || 
+                IsForbidden(currentTarget) ||
+                (PathSteering.CurrentPath != null && PathSteering.CurrentPath.Nodes.Any(n => HumanAIController.UnsafeHulls.Contains(n.CurrentHull)));
+
+            if (behavior == BehaviorType.StayInHull && !currentTargetIsInvalid && !HumanAIController.UnsafeHulls.Contains(TargetHull))
             {
                 currentTarget = TargetHull;
                 bool stayInHull = character.CurrentHull == currentTarget && IsSteeringFinished() && !character.IsClimbing;
@@ -305,12 +312,8 @@ namespace Barotrauma
         {
             if (character.IsClimbing)
             {
-                if (character.AnimController.GetHeightFromFloor() < 0.1f)
-                {
-                    character.AnimController.Anim = AnimController.Animation.None;
-                    character.SelectedSecondaryItem = null;
-                }
-                return;
+                PathSteering.Reset();
+                character.StopClimbing();
             }
             var currentHull = character.CurrentHull;
             if (!character.AnimController.InWater && currentHull != null)
@@ -362,6 +365,7 @@ namespace Barotrauma
                         }
                         else
                         {
+                            character.ReleaseSecondaryItem();
                             PathSteering.SteeringManual(deltaTime, Vector2.Normalize(diff));
                         }
                         return;

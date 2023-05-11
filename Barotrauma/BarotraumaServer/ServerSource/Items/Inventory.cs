@@ -4,6 +4,7 @@ using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
 using System.Collections.Generic;
 using System.Linq;
+using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
@@ -135,6 +136,8 @@ namespace Barotrauma
                 }
             }
 
+            EnsureItemsInBothHands(c.Character);
+
             CreateNetworkEvent();
             foreach (Inventory prevInventory in prevItemInventories.Distinct())
             {
@@ -172,6 +175,33 @@ namespace Barotrauma
                     }
                 }
             }
+        }
+
+        private void EnsureItemsInBothHands(Character character)
+        {
+            if (this is not CharacterInventory charInv) { return; }
+
+            int leftHandSlot = charInv.FindLimbSlot(InvSlotType.LeftHand),
+                rightHandSlot = charInv.FindLimbSlot(InvSlotType.RightHand);
+
+            if (IsSlotIndexOutOfBound(leftHandSlot) || IsSlotIndexOutOfBound(rightHandSlot)) { return; }
+
+            TryPutInOppositeHandSlot(rightHandSlot, leftHandSlot);
+            TryPutInOppositeHandSlot(leftHandSlot, rightHandSlot);
+
+            void TryPutInOppositeHandSlot(int originalSlot, int otherHandSlot)
+            {
+                const InvSlotType bothHandSlot = InvSlotType.LeftHand | InvSlotType.RightHand;
+
+                foreach (Item it in slots[originalSlot].Items)
+                {
+                    if (it.AllowedSlots.None(static s => s.HasFlag(bothHandSlot)) || slots[otherHandSlot].Contains(it)) { continue; }
+
+                    TryPutItem(it, otherHandSlot, true, true, character, false);
+                }
+            }
+
+            bool IsSlotIndexOutOfBound(int index) => index < 0 || index >= slots.Length;
         }
 
         public void ServerEventWrite(IWriteMessage msg, Client c, NetEntityEvent.IData extraData = null)

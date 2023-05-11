@@ -290,6 +290,7 @@ namespace Barotrauma
             dictionary.Clear();
             Hull.EntityGrids.Clear();
             Spawner?.Reset();
+            Items.Components.Projectile.ResetSpreadCounter();
         }
 
         /// <summary>

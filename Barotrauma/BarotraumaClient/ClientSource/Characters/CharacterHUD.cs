@@ -153,6 +153,7 @@ namespace Barotrauma
         private static readonly List<BossProgressBar> bossProgressBars = new List<BossProgressBar>();
 
         private static readonly Dictionary<Identifier, LocalizedString> cachedHudTexts = new Dictionary<Identifier, LocalizedString>();
+        private static LanguageIdentifier cachedHudTextLanguage = LanguageIdentifier.None;
 
         private static GUILayoutGroup bossHealthContainer;
 
@@ -202,10 +203,15 @@ namespace Barotrauma
 
         public static LocalizedString GetCachedHudText(string textTag, InputType keyBind)
         {
+            if (cachedHudTextLanguage != GameSettings.CurrentConfig.Language)
+            {
+                cachedHudTexts.Clear();
+            }
             Identifier key = (textTag + keyBind).ToIdentifier();
             if (cachedHudTexts.TryGetValue(key, out LocalizedString text)) { return text; }
             text = TextManager.GetWithVariable(textTag, "[key]", GameSettings.CurrentConfig.KeyMap.KeyBindText(keyBind)).Value;
             cachedHudTexts.Add(key, text);
+            cachedHudTextLanguage = GameSettings.CurrentConfig.Language;
             return text;
         }
         

@@ -95,7 +95,7 @@ namespace Barotrauma
             set;
         }
 
-        [Serialize("20,40,50", IsPropertySaveable.Yes), Editable()]
+        [Serialize("20,40,50", IsPropertySaveable.Yes), Editable]
         public Color BackgroundTextureColor
         {
             get;
@@ -176,7 +176,7 @@ namespace Barotrauma
             set;
         }
 
-        [Serialize(false, IsPropertySaveable.Yes, ""), Editable]
+        [Serialize(false, IsPropertySaveable.Yes, description: "If enabled, no walls generate in the level. Can be useful for e.g. levels that are just supposed to consist of a pre-built outpost."), Editable]
         public bool NoLevelGeometry
         {
             get;
@@ -218,21 +218,21 @@ namespace Barotrauma
             set { height = MathHelper.Clamp(value, 2000, 1000000); }
         }
 
-        [Serialize(80000, IsPropertySaveable.Yes), Editable(MinValueInt = 0, MaxValueInt = 1000000)]
+        [Serialize(80000, IsPropertySaveable.Yes, description: "Minimum depth at the top of the level (100 corresponds to 1 meter)."), Editable(MinValueInt = 0, MaxValueInt = 1000000)]
         public int InitialDepthMin
         {
             get { return initialDepthMin; }
             set { initialDepthMin = Math.Max(value, 0); }
         }
 
-        [Serialize(80000, IsPropertySaveable.Yes), Editable(MinValueInt = 0, MaxValueInt = 1000000)]
+        [Serialize(80000, IsPropertySaveable.Yes, description: "Maximum depth at the top of the level (100 corresponds to 1 meter)."), Editable(MinValueInt = 0, MaxValueInt = 1000000)]
         public int InitialDepthMax
         {
             get { return initialDepthMax; }
             set { initialDepthMax = Math.Max(value, initialDepthMin); }
         }
 
-        [Serialize(6500, IsPropertySaveable.Yes), Editable(MinValueInt = 5000, MaxValueInt = 1000000)]
+        [Serialize(6500, IsPropertySaveable.Yes, description: "Minimum width of the main tunnel going through the level, in pixels. Can be automatically increased by the level editor if the submarine is larger than this."), Editable(MinValueInt = 5000, MaxValueInt = 1000000)]
         public int MinTunnelRadius
         {
             get;
@@ -240,7 +240,7 @@ namespace Barotrauma
         }
 
 
-        [Serialize("0,1", IsPropertySaveable.Yes), Editable]
+        [Serialize("0,1", IsPropertySaveable.Yes, description: "Amount of side tunnels in the level (min,max)."), Editable]
         public Point SideTunnelCount
         {
             get;
@@ -248,14 +248,14 @@ namespace Barotrauma
         }
 
 
-        [Serialize(0.5f, IsPropertySaveable.Yes), Editable(MinValueFloat = 0.0f, MaxValueFloat = 1.0f)]
+        [Serialize(0.5f, IsPropertySaveable.Yes, description: "How much the side tunnels can \"zigzag\". 0 = completely straight tunnel, 1 = can go all the way from the top of the level to the bottom."), Editable(MinValueFloat = 0.0f, MaxValueFloat = 1.0f)]
         public float SideTunnelVariance
         {
             get;
             set;
         }
 
-        [Serialize("2000,6000", IsPropertySaveable.Yes), Editable]
+        [Serialize("2000,6000", IsPropertySaveable.Yes, description: "Minimum width of the side tunnels, in pixels. Unlike the main tunnel, does not get adjusted based on the size of the submarine."), Editable]
         public Point MinSideTunnelRadius
         {
             get;
@@ -336,7 +336,7 @@ namespace Barotrauma
             }
         }
 
-        [Serialize(0.5f, IsPropertySaveable.Yes), Editable(MinValueFloat = 0.0f, MaxValueFloat = 1.0f)]
+        [Serialize(0.5f, IsPropertySaveable.Yes, description: "How much the side tunnels can \"zigzag\". 0 = completely straight tunnel, 1 = can go all the way from the top of the level to the bottom."), Editable(MinValueFloat = 0.0f, MaxValueFloat = 1.0f)]
         public float MainPathVariance
         {
             get;
@@ -385,28 +385,28 @@ namespace Barotrauma
         [Serialize(1.0f, IsPropertySaveable.Yes, description: "How likely a resource spawn point on a cave path is to contain resources."), Editable(MinValueFloat = 0, MaxValueFloat = 1)]
         public float CaveResourceSpawnChance { get; set; }
 
-        [Serialize(0, IsPropertySaveable.Yes), Editable(MinValueInt = 0, MaxValueInt = 20)]
+        [Serialize(0, IsPropertySaveable.Yes, description: "Number of floating, destructible ice chunks in the level."), Editable(MinValueInt = 0, MaxValueInt = 20)]
         public int FloatingIceChunkCount
         {
             get;
             set;
         }
 
-        [Serialize(0, IsPropertySaveable.Yes), Editable(MinValueInt = 0, MaxValueInt = 100)]
+        [Serialize(0, IsPropertySaveable.Yes, description: "Number of islands (static wall chunks along the main path) in the level."), Editable(MinValueInt = 0, MaxValueInt = 100)]
         public int IslandCount
         {
             get;
             set;
         }
 
-        [Serialize(0, IsPropertySaveable.Yes), Editable(MinValueInt = 0, MaxValueInt = 20)]
+        [Serialize(0, IsPropertySaveable.Yes, description: "Number of ice spires in the level."), Editable(MinValueInt = 0, MaxValueInt = 20)]
         public int IceSpireCount
         {
             get;
             set;
         }
 
-        [Serialize(5, IsPropertySaveable.Yes), Editable(MinValueInt = 0, MaxValueInt = 20)]
+        [Serialize(5, IsPropertySaveable.Yes, description: "Number of abyss islands in the level."), Editable(MinValueInt = 0, MaxValueInt = 20)]
         public int AbyssIslandCount
         {
             get;
@@ -427,7 +427,7 @@ namespace Barotrauma
             set;
         }
 
-        [Serialize(0.5f, IsPropertySaveable.Yes), Editable()]
+        [Serialize(0.5f, IsPropertySaveable.Yes, description: "The probability of an abyss island having a cave. There is always a cave in at least one of the islands regardless of this setting."), Editable()]
         public float AbyssIslandCaveProbability
         {
             get;
@@ -532,7 +532,7 @@ namespace Barotrauma
         public float WreckFloodingHullMaxWaterPercentage { get; set; }
         #endregion
 
-        [Serialize("", IsPropertySaveable.Yes)]
+        [Serialize("", IsPropertySaveable.Yes, description: "Should a beacon station always spawn in this type of level?")]
         public string ForceBeaconStation { get; set; }
 
         [Serialize(0.4f, IsPropertySaveable.Yes, description: "The probability for wall cells to be removed from the bottom of the map. A value of 0 will produce a completely enclosed tunnel and 1 will make the entire bottom of the level completely open."), Editable()]
@@ -571,21 +571,21 @@ namespace Barotrauma
             private set;
         }
 
-        [Serialize("0,0", IsPropertySaveable.Yes), Editable]
+        [Serialize("0,0", IsPropertySaveable.Yes, description: "Interval of lightning-like flashes of light in the level."), Editable]
         public Vector2 FlashInterval
         {
             get;
             set;
         }
 
-        [Serialize("0,0,0,0", IsPropertySaveable.Yes), Editable]
+        [Serialize("0,0,0,0", IsPropertySaveable.Yes, description: "Color of lightning-like flashes of light in the level."), Editable]
         public Color FlashColor
         {
             get;
             set;
         }
 
-        [Serialize(false, IsPropertySaveable.Yes), Editable]
+        [Serialize(false, IsPropertySaveable.Yes, description: "Should the \"ambient noise\" of the biome play in this level if it's an outpost level."), Editable]
         public bool PlayNoiseLoopInOutpostLevel
         {
             get;

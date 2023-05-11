@@ -13,7 +13,7 @@ namespace Steamworks
 	/// </summary>
 	public class SteamApps : SteamSharedClass<SteamApps>
 	{
-		internal static ISteamApps Internal => Interface as ISteamApps;
+		internal static ISteamApps? Internal => Interface as ISteamApps;
 
 		internal override void InitializeInterface( bool server )
 		{
@@ -29,7 +29,7 @@ namespace Steamworks
 		/// <summary>
 		/// posted after the user gains ownership of DLC and that DLC is installed
 		/// </summary>
-		public static event Action<AppId> OnDlcInstalled;
+		public static event Action<AppId>? OnDlcInstalled;
 
 		/// <summary>
 		/// posted after the user gains executes a Steam URL with command line or query parameters
@@ -37,61 +37,63 @@ namespace Steamworks
 		/// while the game is already running.  The new params can be queried
 		/// with GetLaunchQueryParam and GetLaunchCommandLine
 		/// </summary>
-		public static event Action OnNewLaunchParameters;
+		public static event Action? OnNewLaunchParameters;
 
 		/// <summary>
 		/// Checks if the active user is subscribed to the current App ID
 		/// </summary>
-		public static bool IsSubscribed => Internal.BIsSubscribed();
+		public static bool IsSubscribed => Internal != null && Internal.BIsSubscribed();
 
 		/// <summary>
 		/// Check if user borrowed this game via Family Sharing, If true, call GetAppOwner() to get the lender SteamID
 		/// </summary>
-		public static bool IsSubscribedFromFamilySharing => Internal.BIsSubscribedFromFamilySharing();
+		public static bool IsSubscribedFromFamilySharing => Internal != null && Internal.BIsSubscribedFromFamilySharing();
 
 		/// <summary>
 		/// Checks if the license owned by the user provides low violence depots.
 		/// Low violence depots are useful for copies sold in countries that have content restrictions
 		/// </summary>
-		public static bool IsLowViolence => Internal.BIsLowViolence();
+		public static bool IsLowViolence => Internal != null && Internal.BIsLowViolence();
 
 		/// <summary>
 		/// Checks whether the current App ID license is for Cyber Cafes.
 		/// </summary>
-		public static bool IsCybercafe => Internal.BIsCybercafe();
+		public static bool IsCybercafe => Internal != null && Internal.BIsCybercafe();
 
 		/// <summary>
 		/// CChecks if the user has a VAC ban on their account
 		/// </summary>
-		public static bool IsVACBanned => Internal.BIsVACBanned();
+		public static bool IsVACBanned => Internal != null && Internal.BIsVACBanned();
 
 		/// <summary>
 		/// Gets the current language that the user has set.
 		/// This falls back to the Steam UI language if the user hasn't explicitly picked a language for the title.
 		/// </summary>
-		public static string GameLanguage => Internal.GetCurrentGameLanguage();
+		public static string? GameLanguage => Internal?.GetCurrentGameLanguage();
 
 		/// <summary>
 		/// Gets a list of the languages the current app supports.
 		/// </summary>
-		public static string[] AvailableLanguages => Internal.GetAvailableGameLanguages().Split( new[] { ',' }, StringSplitOptions.RemoveEmptyEntries );
+		public static string[]? AvailableLanguages => Internal?.GetAvailableGameLanguages().Split( new[] { ',' }, StringSplitOptions.RemoveEmptyEntries );
 
 		/// <summary>
 		/// Checks if the active user is subscribed to a specified AppId.
 		/// Only use this if you need to check ownership of another game related to yours, a demo for example.
 		/// </summary>
-		public static bool IsSubscribedToApp( AppId appid ) => Internal.BIsSubscribedApp( appid.Value );
+		public static bool IsSubscribedToApp( AppId appid ) => Internal != null && Internal.BIsSubscribedApp( appid.Value );
 
 		/// <summary>
 		/// Checks if the user owns a specific DLC and if the DLC is installed
 		/// </summary>
-		public static bool IsDlcInstalled( AppId appid ) => Internal.BIsDlcInstalled( appid.Value );
+		public static bool IsDlcInstalled( AppId appid ) => Internal != null && Internal.BIsDlcInstalled( appid.Value );
 
 		/// <summary>
 		/// Returns the time of the purchase of the app
 		/// </summary>
 		public static DateTime PurchaseTime( AppId appid = default )
 		{
+			if (Internal is null) { return default; }
+			
 			if ( appid == 0 )
 				appid = SteamClient.AppId;
 
@@ -103,7 +105,7 @@ namespace Steamworks
 		/// This function will return false for users who have a retail or other type of license
 		/// Before using, please ask your Valve technical contact how to package and secure your free weekened
 		/// </summary>
-		public static bool IsSubscribedFromFreeWeekend => Internal.BIsSubscribedFromFreeWeekend();
+		public static bool IsSubscribedFromFreeWeekend => Internal != null && Internal.BIsSubscribedFromFreeWeekend();
 
 		/// <summary>
 		/// Returns metadata for all available DLC
@@ -113,8 +115,12 @@ namespace Steamworks
 			var appid = default( AppId );
 			var available = false;
 
-			for ( int i = 0; i < Internal.GetDLCCount(); i++ )
+			if (Internal is null) { yield break; }
+
+			int dlcCount = Internal.GetDLCCount();
+			for ( int i = 0; i < dlcCount; i++ )
 			{
+				if (Internal is null) { yield break; }
 				if ( !Internal.BGetDLCDataByIndex( i, ref appid, ref available, out var strVal ) )
 					continue;
 
@@ -130,21 +136,21 @@ namespace Steamworks
 		/// <summary>
 		/// Install/Uninstall control for optional DLC
 		/// </summary>
-		public static void InstallDlc( AppId appid ) => Internal.InstallDLC( appid.Value );
+		public static void InstallDlc( AppId appid ) => Internal?.InstallDLC( appid.Value );
 
 		/// <summary>
 		/// Install/Uninstall control for optional DLC
 		/// </summary>
-		public static void UninstallDlc( AppId appid ) => Internal.UninstallDLC( appid.Value );
+		public static void UninstallDlc( AppId appid ) => Internal?.UninstallDLC( appid.Value );
 
 		/// <summary>
 		/// Returns null if we're not on a beta branch, else the name of the branch
 		/// </summary>
-		public static string CurrentBetaName
+		public static string? CurrentBetaName
 		{
 			get
 			{
-				if ( !Internal.GetCurrentBetaName( out var strVal ) )
+				if ( Internal is null || !Internal.GetCurrentBetaName( out var strVal ) )
 					return null;
 
 				return strVal;
@@ -157,13 +163,15 @@ namespace Steamworks
 		/// If you detect the game is out-of-date(for example, by having the client detect a version mismatch with a server),
 		/// you can call use MarkContentCorrupt to force a verify, show a message to the user, and then quit.
 		/// </summary>
-		public static void MarkContentCorrupt( bool missingFilesOnly ) => Internal.MarkContentCorrupt( missingFilesOnly );
+		public static void MarkContentCorrupt( bool missingFilesOnly ) => Internal?.MarkContentCorrupt( missingFilesOnly );
 
 		/// <summary>
 		/// Gets a list of all installed depots for a given App ID in mount order
 		/// </summary>
 		public static IEnumerable<DepotId> InstalledDepots( AppId appid = default )
 		{
+			if (Internal is null) { yield break; }
+			
 			if ( appid == 0 )
 				appid = SteamClient.AppId;
 
@@ -180,12 +188,12 @@ namespace Steamworks
 		/// Gets the install folder for a specific AppID.
 		/// This works even if the application is not installed, based on where the game would be installed with the default Steam library location.
 		/// </summary>
-		public static string AppInstallDir( AppId appid = default )
+		public static string? AppInstallDir( AppId appid = default )
 		{
 			if ( appid == 0 )
 				appid = SteamClient.AppId;
 
-			if ( Internal.GetAppInstallDir( appid.Value, out var strVal ) == 0 )
+			if ( Internal is null || Internal.GetAppInstallDir( appid.Value, out var strVal ) == 0 )
 				return null;
 
 			return strVal;
@@ -194,12 +202,12 @@ namespace Steamworks
 		/// <summary>
 		/// The app may not actually be owned by the current user, they may have it left over from a free weekend, etc.
 		/// </summary>
-		public static bool IsAppInstalled( AppId appid ) => Internal.BIsAppInstalled( appid.Value );
+		public static bool IsAppInstalled( AppId appid ) => Internal != null && Internal.BIsAppInstalled( appid.Value );
 
 		/// <summary>
 		/// Gets the Steam ID of the original owner of the current app. If it's different from the current user then it is borrowed..
 		/// </summary>
-		public static SteamId AppOwner => Internal.GetAppOwner().Value;
+		public static SteamId AppOwner => Internal?.GetAppOwner().Value ?? default;
 
 		/// <summary>
 		/// Gets the associated launch parameter if the game is run via steam://run/appid/?param1=value1;param2=value2;param3=value3 etc.
@@ -207,7 +215,7 @@ namespace Steamworks
 		/// Parameter names starting with an underscore '_' are reserved for steam features -- they can be queried by the game, 
 		/// but it is advised that you not param names beginning with an underscore for your own features.
 		/// </summary>
-		public static string GetLaunchParam( string param ) => Internal.GetLaunchQueryParam( param );
+		public static string? GetLaunchParam( string param ) => Internal?.GetLaunchQueryParam( param );
 
 		/// <summary>
 		/// Gets the download progress for optional DLC.
@@ -217,7 +225,7 @@ namespace Steamworks
 			ulong punBytesDownloaded = 0;
 			ulong punBytesTotal = 0;
 
-			if ( !Internal.GetDlcDownloadProgress( appid.Value, ref punBytesDownloaded, ref punBytesTotal ) )
+			if ( Internal is null || !Internal.GetDlcDownloadProgress( appid.Value, ref punBytesDownloaded, ref punBytesTotal ) )
 				return default;
 
 			return new DownloadProgress { BytesDownloaded = punBytesDownloaded, BytesTotal = punBytesTotal, Active = true };
@@ -227,7 +235,7 @@ namespace Steamworks
 		/// Gets the buildid of this app, may change at any time based on backend updates to the game.
 		/// Defaults to 0 if you're not running a build downloaded from steam.
 		/// </summary>
-		public static int BuildId => Internal.GetAppBuildId();
+		public static int BuildId => Internal?.GetAppBuildId() ?? 0;
 
 
 		/// <summary>
@@ -236,6 +244,7 @@ namespace Steamworks
 		/// </summary>
 		public static async Task<FileDetails?> GetFileDetailsAsync( string filename )
 		{
+			if (Internal is null) { return null; }
 			var r = await Internal.GetFileDetails( filename );
 
 			if ( !r.HasValue || r.Value.Result != Result.OK )
@@ -257,11 +266,12 @@ namespace Steamworks
 		/// path and not be placed on the OS command line, you must set a value in your app's
 		/// configuration on Steam.  Ask Valve for help with this.
 		/// </summary>
-		public static string CommandLine
+		public static string? CommandLine
 		{
 			get
 			{
-				Internal.GetLaunchCommandLine( out var strVal );
+				string? strVal = null;
+				Internal?.GetLaunchCommandLine( out strVal );
 				return strVal;
 			}
 		}
