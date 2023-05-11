@@ -13,7 +13,7 @@ namespace Barotrauma
     {
         private const float UpdateInterval = 1.0f;
 
-        private static HashSet<Identifier> unlockedAchievements = new HashSet<Identifier>();
+        private static readonly HashSet<Identifier> unlockedAchievements = new HashSet<Identifier>();
 
         public static bool CheatsEnabled = false;
 
@@ -442,7 +442,7 @@ namespace Barotrauma
                 var charactersInSub = Character.CharacterList.FindAll(c => 
                     !c.IsDead && 
                     c.TeamID != CharacterTeamType.FriendlyNPC &&
-                    !(c.AIController is EnemyAIController) &&
+                    c.AIController is not EnemyAIController &&
                     (c.Submarine == gameSession.Submarine || gameSession.Submarine.GetConnectedSubs().Contains(c.Submarine) || (Level.Loaded?.EndOutpost != null && c.Submarine == Level.Loaded.EndOutpost)));
 
                 if (charactersInSub.Count == 1)
@@ -524,7 +524,10 @@ namespace Barotrauma
         public static void UnlockAchievement(Identifier identifier, bool unlockClients = false, Func<Character, bool> conditions = null)
         {
             if (CheatsEnabled) { return; }
-
+            if (Screen.Selected is { IsEditor: true }) { return; }
+#if CLIENT
+            if (GameMain.GameSession?.GameMode is TestGameMode) { return; }
+#endif
 #if SERVER
             if (unlockClients && GameMain.Server != null)
             {

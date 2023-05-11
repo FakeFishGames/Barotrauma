@@ -380,11 +380,11 @@ namespace Barotrauma
             {
                 if (fromType == "any" ||
                     fromType == from.Type.Identifier ||
-                    (fromType == "anyoutpost" && from.HasOutpost()))
+                    (fromType == "anyoutpost" && from.HasOutpost() && from.Type.Identifier != "abandoned"))
                 {
                     if (toType == "any" ||
                         toType == to.Type.Identifier ||
-                        (toType == "anyoutpost" && to.HasOutpost()))
+                        (toType == "anyoutpost" && to.HasOutpost() && to.Type.Identifier != "abandoned"))
                     {
                         return true;
                     }

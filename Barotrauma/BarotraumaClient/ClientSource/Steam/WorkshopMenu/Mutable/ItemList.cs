@@ -17,7 +17,7 @@ namespace Barotrauma.Steam
         private string ExtractTitle(ItemOrPackage itemOrPackage)
             => itemOrPackage.TryGet(out ContentPackage package)
                 ? package.Name
-                : ((Steamworks.Ugc.Item)itemOrPackage).Title;
+                : (((Steamworks.Ugc.Item)itemOrPackage).Title ?? "");
 
         private void CreateWorkshopItemDetailContainer(
             GUIFrame parent,
@@ -340,6 +340,8 @@ namespace Barotrauma.Steam
             
             subscribeButton.OnClicked = (button, o) =>
             {
+                if (!SteamManager.IsInitialized) { return false; }
+                
                 if (!workshopItem.IsSubscribed)
                 {
                     workshopItem.Subscribe();
@@ -360,6 +362,8 @@ namespace Barotrauma.Steam
                 new RectTransform(Vector2.Zero, subscribeButton.RectTransform),
                 onUpdate: (deltaTime, component) =>
                 {
+                    if (!SteamManager.IsInitialized) { return; }
+                    
                     if (subscribeButtonSprite.Style is { Identifier: { } styleId })
                     {
                         if (workshopItem.IsSubscribed && styleId != minusButton)
@@ -380,6 +384,8 @@ namespace Barotrauma.Steam
                 new RectTransform((1.22f, 1.22f), subscribeButtonSprite.RectTransform, Anchor.Center),
                 onDraw: (spriteBatch, component) =>
                 {
+                    if (!SteamManager.IsInitialized) { return; }
+                    
                     bool visible = workshopItem.IsSubscribed
                                    && (workshopItem.IsDownloading
                                        || workshopItem.IsDownloadPending
@@ -407,6 +413,8 @@ namespace Barotrauma.Steam
                 },
                 onUpdate: (deltaTime, component) =>
                 {
+                    if (!SteamManager.IsInitialized) { return; }
+                    
                     displayedDownloadAmount = Math.Min(
                         workshopItem.DownloadAmount,
                         MathHelper.Lerp(displayedDownloadAmount, workshopItem.DownloadAmount, 0.05f));
@@ -450,7 +458,7 @@ namespace Barotrauma.Steam
 
                         var title = new GUITextBlock(
                             new RectTransform(Vector2.One, itemLayout.RectTransform),
-                            workshopItem.Title, font: GUIStyle.Font)
+                            workshopItem.Title ?? "", font: GUIStyle.Font)
                         {
                             CanBeFocused = false
                         };
@@ -570,7 +578,7 @@ namespace Barotrauma.Steam
             var titleAndAuthorLayout = new GUILayoutGroup(new RectTransform(Vector2.One, headerLayout.RectTransform));
             
             var selectedTitle =
-                new GUITextBlock(new RectTransform((1.0f, 0.5f), titleAndAuthorLayout.RectTransform), workshopItem.Title,
+                new GUITextBlock(new RectTransform((1.0f, 0.5f), titleAndAuthorLayout.RectTransform), workshopItem.Title ?? "",
                     font: GUIStyle.LargeFont);
             
             var author = workshopItem.Owner;
@@ -682,9 +690,9 @@ namespace Barotrauma.Steam
             
             TaskPool.Add($"Request username for {author.Id}", author.RequestInfoAsync(), (t) =>
             {
-                authorButton.Text = author.Name;
+                authorButton.Text = author.Name ?? "";
                 authorButton.RectTransform.NonScaledSize =
-                    ((int)(authorButton.Font.MeasureString(author.Name).X + authorPadding.X + authorPadding.Z),
+                    ((int)(authorButton.Font.MeasureString(author.Name ?? "").X + authorPadding.X + authorPadding.Z),
                         authorButton.RectTransform.NonScaledSize.Y);
             });
 
@@ -769,7 +777,7 @@ namespace Barotrauma.Steam
 
             var tagsLabel = new GUITextBlock(new RectTransform((1.0f, 0.12f), statsVertical0.RectTransform),
                 TextManager.Get("WorkshopItemTags"), font: GUIStyle.SubHeadingFont);
-            CreateTagsList(workshopItem.Tags.ToIdentifiers(), new RectTransform((0.97f, 0.3f), statsVertical0.RectTransform), canBeFocused: false);
+            CreateTagsList((workshopItem.Tags ?? Array.Empty<string>()).ToIdentifiers(), new RectTransform((0.97f, 0.3f), statsVertical0.RectTransform), canBeFocused: false);
             #endregion
 
             var descriptionListBox = new GUIListBox(new RectTransform((1.0f, 0.38f), verticalLayout.RectTransform));

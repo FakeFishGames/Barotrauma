@@ -1311,7 +1311,6 @@ namespace Barotrauma.Items.Components
             float worldPingRadiusSqr = worldPingRadius * worldPingRadius;
 
             disruptedDirections.Clear();
-            if (Level.Loaded == null) { return; }
 
             for (var pingIndex = 0; pingIndex < activePingsCount; ++pingIndex)
             {
@@ -1434,8 +1433,10 @@ namespace Barotrauma.Items.Components
                     if (connectedSubs.Contains(submarine)) { continue; }                    
                 }
 
-                Rectangle worldBorders = Submarine.MainSub.GetDockedBorders();
-                worldBorders.Location += Submarine.MainSub.WorldPosition.ToPoint();
+                //display the actual walls if the ping source is inside the sub (but not inside a hull, that's handled above)
+                //only relevant in the end levels or maybe custom subs with some kind of non-hulled parts
+                Rectangle worldBorders = submarine.GetDockedBorders();
+                worldBorders.Location += submarine.WorldPosition.ToPoint();
                 if (Submarine.RectContains(worldBorders, pingSource))
                 {
                     CreateBlipsForSubmarineWalls(submarine, pingSource, transducerPos, pingRadius, prevPingRadius, range, passive);

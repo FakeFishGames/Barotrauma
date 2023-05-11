@@ -1,4 +1,219 @@
 ---------------------------------------------------------------------------------------------------------
+v1.0.13.2
+---------------------------------------------------------------------------------------------------------
+
+- Fixed "hash mismatch" errors when trying to enable a mod that's been updated in the most recent patch.
+- Fixed "the submarine contains entities with duplicate IDs" error message when loading a submarine that contains multiple shuttles/drones.
+
+---------------------------------------------------------------------------------------------------------
+v1.0.13.1
+---------------------------------------------------------------------------------------------------------
+
+- Updated localizations.
+- Fixes to Japanese and Russian translations.
+- Fixed Azimuth not going up in Silent Running mode.
+
+---------------------------------------------------------------------------------------------------------
+v1.0.13.0
+---------------------------------------------------------------------------------------------------------
+
+Misc changes and improvements:
+- NPCs who offer services don't get turned hostile regardless of your reputation. If you've got money, they'll be happy to serve!
+- Attacking outpost NPCs can't decrease your reputation by more than 20 points per round. Works as a safeguard against enormous reputation losses e.g. in the case of a trigger-happy griefer or a nuclear mishap.
+- Destroying outpost walls can't decrease your reputation by more than 10 points per round.
+- Outpost NPCs don't allow players to grab them for longer than 10 seconds to prevent being able to drag them around the outpost.
+- Minor visual improvements to biomes: biome-specific outpost levels (instead of all outpost levels looking like Cold Caverns), more level objects in Hydrothermal Wastes and the Great Sea.
+- Spawn abyss and combat suits in enemy subs and wrecks instead of normal ones in later biomes.
+- Fixed minerals still sometimes spawning on the wrong side of cave walls (when the other side of the wall is outside the boundaries of the level).
+- Fixed pressure stabilizer only affecting the player for 100 seconds, instead of the intended 1000 seconds (16 mins).
+- Fixed clients not getting assigned the "None" permission preset when using a language other than English (meaning it wasn't possible to customize what permissions clients have by default).
+- Fixed enabling cheats not actually disabling Steam achievements for the rest of the campaign (it was possible to re-enable unlocking achievements by saving and reloading).
+- Fixed Tormsdale mission not completing unless you bring the item to the sub. Now retrieving the item counts as "bringing it to the sub" in friendly outposts. 
+- Optimized/simplified exosuit and FB3000 status effects.
+- Made huskified humans' items move to a duffel bag on death.
+- Increased the priority of turret lights to prevent them from getting hidden when using a low light limit.
+- Reduced the minimum mass required for a character to be visible with thermal goggles, always show at least the main limb regardless of the mass. Fixes thresher hatchlings being invisible to the goggles.
+- Alien power cells can be deconstructed.
+
+Bots:
+- Fixed bots targeting crawler eggs when they are inside an inventory (also in the Broodmother's inventory).
+- Fixed bots being allowed to shoot items from very long distances.
+- Fixed bots wasting ammunition on crawler eggs that are not dangerously close to the sub.
+- Fixed bots using an unintentionally long delay before shooting.
+- Fixed bots targeting (but not shooting) enemies inside abandoned outposts.
+- Adjusted the delays and the targeting ranges. Remove the "grace" distance modifier. Improves the bots' general usage of turrets.
+- Fixed "fight intruders" order causing bots to attack enemies in abandoned outposts again.
+- Bots are allowed to use meds from an unconscious patient's inventory.
+- Fixed bots falling off the ledge in DockingModule_02_Colony (again).
+- Fixed bots not prioritizing the leaks as they should when multiple bots are fixing leaks simultaneously.
+- Fixed bots not preferring the items that lie on the ground.
+- Fixed bots often not being able to reach small items like battery cells or rifle rounds that lie on the ground.
+- Fixed bots sometimes holding the flashlight in their mouth.
+- Fixed bots acting weird when picking up items and having their inventory full.
+- Fixed bots not being able to find an alternative container for the items they are cleaning up, when the path to the preferred container is blocked. Didn't affect bots getting a specific item, like a diving suit when they need it.
+- Bots are no longer allowed to wear the items (other than in hands) when they are cleaning them up.
+- Improved bots' abilities to find items. They should be much quicker at it than previously.
+- Possibly fixed bots sometimes ignoring targets that they shouldn't ignore.
+- Fixed bots not being able to change the oxygen tanks when they are in a safe room with no enemies.
+- Fixed bots using both diving mask and the suit simultaneously.
+- Fixed bots holding to old paths that shouldn't be valid anymore (= not complying when you order them to follow outside of the submarine).
+- Fixed bots not being able to use pathing when the player has just controlled them, leaving them in a ruin, wreck, or a beacon. Only happened when the bot hadn't been AI controlled before during the round.
+- Fixed bots using the waypoints not linked to any sub when they should use the waypoints linked to a sub and vice versa.
+- Fixed bots trying to use the gaps when they could just use a path to get to the target.
+- Fixed missing links between doors and waypoints in Alien_Entrance3.
+- Fixed bots sometimes not being able to release from the ladders when they were trying to exit a wreck or beacon to get back to their own submarine.
+- Fixed bots sometimes still idling on ladders, which they shouldn't do (There are some unaddressed cases where it might seem like they'd do this, but actually don't. They just can't reach the buttons linked to the door.)
+- Fixed bots sometimes failing to climb up the ladder all the way up and falling down just before reaching next floor. Happened only in the idle state.
+- Fixed bots sometimes getting stuck on the long ladder in EngineeringModule_02_Colony.
+- Fixed waypoints on ladders leading to a hatch on many subs (using old waypoints), which caused the bots to fail to reach the hatch while trying to fix it.
+- Fixed bots not being able to operate properly in high pressure levels when they don't have a suit that protects from the pressure (e.g. a regular diving suit later in the campaign).
+- Bots now prioritize suits that give a better pressure protection (there's a separate attribute for it in the item definition: called "botpriority", which can and should be taken into account with the modified items).
+- Fixed bots not healing theirselves while swimming outside of the submarine (they only do that when the wounds are relatively severe).
+- Fixed bots treating theirselves when there's a medic onboard, which is currently unable to treat them (if the medic is able to treat the bot, they should not try to heal theirselves).
+- Fixed bots ignoring targets that are currently fixing leaks (which was intentional, but seems to have been a bad decision).
+- Added new dialogue for the bots about the lethal pressure levels and insufficient protection for it.
+- Fixed some minor buts regarding the dialogue.
+- Fixed bots not being able to use harpoon coil rifles properly.
+- Fixed bots accepting random items as weapons when they can't find any weapon. Note that many tools, like welding tools and wrenches, can intentionally be used as weapons.
+- Fixed prepare for expedition order and another order, like clean items, possibly resulting in looping behavior where the bot can't decide which one to follow.
+- Adjustments to how the bots prioritize combat targets under fight intruders objective.
+- Fixed bots not reacting when they are non-intentionally damaged by friendly NPCs (e.g. security smashing a player character).
+
+Multiplayer fixes:
+- Changes to make starting a round more robust: fixes various equality check errors ("submarine/mission doesn't match") if starting a multiplayer round takes a long time.
+- Fixed dedicated servers' content package info getting truncated to 255 bytes, causing the content package list to just display "unknown" if the server has lots of mods enabled.
+- Fixed "input contains duplicate packages" error when trying to join a server that has certain types of mods enabled (more specifically, mods that only contain client-side content, identical content or files of the type "Other", which could result in the MD5 hashes of the mods to be identical).
+- Fixed projectile spread not being as random as it should be in multiplayer (successive hitscan rounds usually launched in the same direction).
+- Fixed spectators not hearing others if their character is dead before the character despawns.
+- Campaign rounds aren't forced to end if there's only one client on the server using freecam.
+- Fixed crashing when a traitor missions starts when the host isn't controlling a character.
+- Fixed sonar beacon tickbox sometimes flickering on and off in multiplayer.
+- Fixed clients not seeing wall damage in outposts if the server has made outpost walls damageable, and the client doesn't have permissions to manage server settings.
+- Fixed arc emitter briefly stunning the user client-side.
+- Unconscious players can't end the round.
+
+Countermeasures against multiplayer exploits:
+- Fixed an exploit that allowed you to equip 2-handed weapons in only one hand.
+- Added protection against deliberately lagging the server.
+	- Added an option to enable "DoS Protection" in the server settings under "Anti-Griefing".
+		- Enabled by default.
+		- When enabled, the server will automatically kick players who are causing the server to perform poorly.
+	- Added a new "Max Packet Auto-Kick" in the server settings under "Anti-Griefing".
+		- Enabled and set to 3000 by default.
+		- Can be disabled by setting the limit to 1200 or below.
+		- When enabled, the server will automatically kick players who are sending a certain amount of network packets in a minute.
+- Added "Spam Immunity" server permission.
+	- Gives immunity to getting kicked from DoS protection, chat spam and from sending too many packets.
+- Added a rate limit to console commands in multiplayer.
+- Added a rate limit to creating new characters in multiplayer.
+
+Balance:
+- Buffed Harpoon Coil Rifle a bit (shorter charge time).
+- Reduced Focused Flak Shell penetration slightly.
+
+Talents:
+- Engine Engineer, Helmsman and Affiliation talents no longer stack (allowed gaining insane engine speed boosts and bonuses by having large numbers of crew with the same talent).
+- Fixed makeshift shelves no longer being placeable in pre-1.0 saves.
+- Fixed some incorrect talent icons.
+- Fixed Networking talent only giving a discount for faction-specific items.
+- Fixed Machine Maniac requiring 5 repaired items instead 3 like the description says.
+- Gene harvester doesn't spawn genetic materials on pets.
+- Dying due to a disconnect doesn't trigger talents (like "Revenge Squad") or get recorded as a kill.
+
+Submarines:
+- Reworked Typhon (kudos to uberpendragon): replaced legacy items and structures, got rid of double walls, layout adjustments, visual improvements, improvements to the power grid and many smaller changes.
+- Fixed waypoint in Herja's airlock not being linked to the door.
+- Fixed fabricators not being linked to the cabinet next to them in Azimuth, Berilia, Kastrull, Orca2, Typhon, Typhon2, Winterhalter.
+- Fixed some unhulled spaces inside Kastrull, Azimuth and Berilia.
+- Fixed improperly wired smoke detectors in Typhon 2.
+- Replaced the wall between gunnery and engineering (that every sane person cuts a hole in) with a door in Kastrull.
+- Fixed medic not being given proper ID card tags in R-29, preventing them from accessing the toxin cabinet.
+- Fixed Venture's exterior airlock door being repairable with a welding tool instead of a wrench.
+- Fixed water detector in Dugong's oxygen generator room not being connected to the flood alarm circuit.
+- Added "Silent Running" to Azimuth, as well as 1 diving suit and exterior cameras to make it more worthy of tier 2 (despite a lack of guns)
+
+Fixes:
+- Fixed all shadow-casting lights going through the outpost walls when docked to one.
+- Oxygen generator sprite and animation fixes.
+- Fixed escorted characters being hostile to you if they belong to a hostile faction.
+- Safeguard against getting pinned under flooded enemy subs. The sub can now be pushed off as long as the enemies inside it are dead/incapacitated.
+- Fixed enemy subs not affecting monster spawns (meaning monsters could spawn very close to enemy subs, and fighting an enemy sub didn't decrease the probability of monster spawns as it should've).
+- Fixed submarines sometimes getting stuck when trying to squeeze through a tight passage in the level.
+- Fixed pets being considered hostile in hostile outposts (causing AI crew to report them as intruders).
+- Fixed monsters sometimes spawning inside walls during nest missions.
+- Fixed paths between biomes sometimes being unlocked from the start on certain map seeds.
+- Fixed launching an alien turret (or any modded turret that spawns it's own ammo inside itself) causing a crash.
+- Fixed crashing when you exit Steam while the Workshop menu is open.
+- Fixed some of the fonts not working properly in Japanese (but using roughly similar Chinese symbols instead).
+- Fixed campaign's end boss moving away from you if you attack it with melee weapons.
+- Fixed enemy crews not being able to switch between turrets and being very reluctant to operate multiple turrets at the same time.
+- Fixed reputation reward text sometimes overflowing in the round summary (e.g. when the mission modifies both the husk cult and clown rep).
+- Fixed characters holding and eating bananas weirdly.
+- Fixed all friendly characters using the "hostage" dialog and all hostile characters the "bandit" dialog in abandoned outposts.
+- Fixed characters sometimes becoming briefly immobilized (as if stunned) when the surface of the water rises up to the character's chest.
+- Fixed cultist hood overlapping with the exosuit.
+- Fixed exosuit and FB3000 not being tagged as "provocative" (meaning enemies didn't care about the sounds they make or the lights on them).
+- Adjusted FB3000 fabrication recipe (the previous required so many materials they don't fit in the fabricator's input slots).
+- Fixed PUCS not having an AI target unlike all other diving suits.
+- Fixed sonar monitor's "sonar circle" overlapping with the control panel on some resolutions / HUD scales.
+- Fixed occasional invisible barriers around alien ruins.
+- Fixed protein bars only healing 1/60 of the intended amount.
+- Fixed "Engineers_are_special" event no longer appearing.
+- Fixed characters sometimes being able pass through level walls by swimming down through the broken floor of a wreck.
+- Fixed "acquire a wrench" popup appearing multiple times in the mechanic tutorial.
+- Fixed black squares on docking ports and hatches.
+- Fixed crashing when trying to increment the version number of a mod whose version number consists of only numbers (i.e. no periods) or is empty.
+- Fixed hireable cultists and clowns being the wrong way around (i.e. high clown rep allowed you to hire cultists and vice versa).
+- Fixed wikiimage_sub and wikiimage_character crashing the game if the file is being used by another process.
+- Fixed wikiimage_sub not sorting the entities the same way as the sub editor and game screen.
+- Fixed status monitor displaying very small amounts of water in linked hulls as 1%.
+- Faction reputation is reset after finishing the campaign.
+- Fixed colony docking modules spawning with a bit of water in them.
+- Fixed minerals sometimes spawning in normal caves in abyss mining missions. Happened if no abyss islands with caves happened to generate - now we always generate a cave in at least one of the islands.
+- Fixed lights on the items the character is wearing being visible when inside a clown crate.
+- Fixed mudraptor eggs (or other items set to be damaged by repair tools) not being damaged by flamers.
+- Fixed handheld sonars not working in the end levels.
+- Fixed rebinding the Use key not working in the sub editor.
+- Fixed Ctrl+A not selecting connected wires in the sub editor.
+- Fixed ability to climb ladders while lying in bed.
+- Fabricator input slot tooltips don't show duplicate item names when the item can be crafted from multiple different items with the same name (e.g. petraptor egg can be crafted from 3 different egg items, all called "mudraptor egg").
+- Fixed attacking others with the husk appendage not healing the user.
+- Fixed pet name tag getting stuck mid-air when equipped.
+- Fixed next round's missions not being displayed in the round summary when leaving a location that has missions (e.g. outpost with a jailbreak mission).
+- Fixed inability to hire Jacov Subra if you miss/ignore the event the first time you get it. 
+- Outpost generator only takes walls with a collider into account when determining the bounds of the modules. Fixes husk modules being placed unnecessarily far from the outpost due to the decorative structures outside the door, leaving a very short hallway between the modules.
+- Fixed characters sometimes dying from barotrauma despite the pressure icon not being visible. Happened when the pressure was just above the lethal threshold, but not as high as outside the sub.
+- Fixed character interact texts (like "[H] Heal") not changing when you change the language.
+- Fixed treatment suggestion for husk infection being shown when wearing zealot robes.
+- Fixed inability to fabricate high-quality nuclear depth charges.
+- Fixed exosuits getting autofilled with batteries.
+- Fixed exosuits' lights not turning off when the wearer dies.
+- Fixed 0% grenades (stun grenade and fixfoam) detonating if a player has one in their inventory when a mission starts.
+- Fixed pre-unlocked talents not being visible client-side on the special faction NPCs hired during the round.
+- Fixed escort and cargo missions sometimes leading to an abandoned outpost even if there's an inhabited one available.
+- Fixed characters (ragdolls) sometimes getting stuck to the corners near platforms.
+
+Modding:
+- Fixed thalamus items fading from the prefab color to a darker tint, disregarding the actual sprite color of the item.
+- Fixed LevelTrigger statuseffects not doing anything when triggered by a submarine. 
+- Added a scrollbar to the campaign setup's crew tab to make it work properly when there's more than 3 initial crew members.
+- Support for using OnWearing in Containable StatusEffects.
+- Fixed ability to "relaunch" a projectile that has already been launched or that's stuck to some target using status effects, which lead to various strange results.
+- Fixed ItemContainer StatusEffects working in a different way than other effects, applying the effect separately to each target. Prevents e.g. having an effect that does something to an item if a condition is met on the character wearing it.
+
+---------------------------------------------------------------------------------------------------------
+v1.0.9.0
+---------------------------------------------------------------------------------------------------------
+
+- Fixed crashing when you move from one textbox to another using tab and go past the last available textbox.
+- Fixed inability to enter the final levels on some subs that include shuttles/drones. 
+- Fixed autoinjectors (PUCS, autoinjector headset) wasting the syringe without any effects on the character.
+- Fixed bots failing to operate turrets in Typhon 1 due to them being partially inside the ceiling.
+- Fixed lights going through walls in outposts.
+- Fixed language selection prompt not showing up when launching the game for the first time.
+- Fixed bots doing objectives during the roles tutorial, e.g. repairing the leaks for you.
+
+---------------------------------------------------------------------------------------------------------
 v1.0.8.0
 ---------------------------------------------------------------------------------------------------------
 
@@ -65,12 +280,7 @@ v1.0.2.0
 - Fixed missing "place in ceiling" text in beacon station save dialog.
 - Fixed basic depth charges being cheaper than intended (only 30 mk).
 - Fixed inability to make lights blink at a high frequency by rapidly turning them on and off with e.g. oscillators.
-- Fixed red glow around the light switch's green button.
-- Fixed odd fabrication list sorting: the items that require a recipe to fabricate were split into ones you have the skills to fabricate and ones you don't, even though that isn't visible in the UI, making the list just seem out of order.
-- Fixed "skedaddle" not giving a 10% movement boost like the description says.
-- Fixed acid burns not having a cause of death text.
 - Fixed ranged weapons emitting particles in the wrong direction. There haven't been any changes to this code in years, so it must've been an issue for a long time, I guess we just never noticed because no gun before the scrap cannon emitted particles with a noticeable velocity?
-- Fixed banana being held weirldy.
 - Fixed a pathfinding issue that often made bots swim against cave walls.
 - Fixed inability to join servers with a submarine switch/purchase vote running.
 - Fixed votes passing if the client who initiated them disconnects before anyone else votes.
@@ -92,7 +302,7 @@ v1.0.1.0
 - Fixed "skedaddle" not giving a 10% movement boost like the description says.
 - Fixed odd fabrication list sorting: the items that require a recipe to fabricate were split into ones you have the skills to fabricate and ones you don't, even though that isn't visible in the UI, making the list just seem out of order.
 - Fixed red glow around the light switch's green button.
-- Fixed banana being held weirldy.
+- Fixed banana being held weirdly.
 - Fixed inability to hold a captain's pipe or cigar in your left hand.
 - Fixed ready checks not working.
 
@@ -114,7 +324,7 @@ Faction overhaul:
 - Added a 3rd talent tree, "Politician", for the Captain. Focused around faction relations and reputation.
 
 Endgame:
-- Completely remade the ending of the campaign. Now you'll get to see what's beyond the Eye of Europa and perhaps uncover the cause for the increasing levels or radiation.
+- Completely remade the ending of the campaign. Now you'll get to see what's beyond the Eye of Europa and perhaps uncover the cause for the increasing levels of radiation.
 - New types of enemies/bosses.
 - Some new events to foreshadow the ending during the course of the campaign.
 

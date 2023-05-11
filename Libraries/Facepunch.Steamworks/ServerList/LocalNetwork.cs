@@ -10,6 +10,7 @@ namespace Steamworks.ServerList
 	{
 		internal override void LaunchQuery()
 		{
+			if (Internal is null) { return; }
 			request = Internal.RequestLANServerList( AppId.Value, IntPtr.Zero );
 		}
 	}

@@ -517,6 +517,10 @@ namespace Barotrauma
                 GlyphData gd = GetGlyphData(charIndex);
                 if (gd.TexIndex >= 0)
                 {
+                    if (gd.TexIndex < 0 || gd.TexIndex >= textures.Count)
+                    {
+                        throw new ArgumentOutOfRangeException($"Error while rendering text. Texture index was out of range. Text: {text}, char: {charIndex} index: {gd.TexIndex}, texture count: {textures.Count}");
+                    }
                     Texture2D tex = textures[gd.TexIndex];
                     Vector2 drawOffset;
                     drawOffset.X = gd.DrawOffset.X * advanceUnit.X * scale.X - gd.DrawOffset.Y * advanceUnit.Y * scale.Y;

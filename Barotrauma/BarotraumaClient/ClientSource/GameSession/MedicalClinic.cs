@@ -17,7 +17,8 @@ namespace Barotrauma
         {
             Undecided,
             Success,
-            Error,
+            CharacterInfoMissing,
+            CharacterNotFound,
             Timeout
         }
 
@@ -34,7 +35,9 @@ namespace Barotrauma
         private readonly List<RequestAction<CallbackOnlyRequest>> addRequests = new List<RequestAction<CallbackOnlyRequest>>();
         private readonly List<RequestAction<CallbackOnlyRequest>> removeRequests = new List<RequestAction<CallbackOnlyRequest>>();
 
-        public void RequestAfflictions(CharacterInfo info, Action<AfflictionRequest> onReceived)
+        private static readonly LeakyBucket requestBucket = new(RateLimitExpiry / (float)RateLimitMaxRequests, 10);
+
+        public bool RequestAfflictions(CharacterInfo info, Action<AfflictionRequest> onReceived)
         {
             if (GameMain.IsSingleplayer)
             {
@@ -42,23 +45,26 @@ namespace Barotrauma
                 if (Screen.Selected is TestScreen)
                 {
                     onReceived.Invoke(new AfflictionRequest(RequestResult.Success, TestAfflictions.ToImmutableArray()));
-                    return;
+                    return true;
                 }
 #endif
 
                 if (info is not { Character.CharacterHealth: { } health })
                 {
-                    onReceived.Invoke(new AfflictionRequest(RequestResult.Error, ImmutableArray<NetAffliction>.Empty));
-                    return;
+                    onReceived.Invoke(new AfflictionRequest(RequestResult.CharacterInfoMissing, ImmutableArray<NetAffliction>.Empty));
+                    return true;
                 }
 
-                ImmutableArray<NetAffliction> pendingAfflictions = GetAllAfflictions(health).ToImmutableArray();
+                ImmutableArray<NetAffliction> pendingAfflictions = GetAllAfflictions(health);
                 onReceived.Invoke(new AfflictionRequest(RequestResult.Success, pendingAfflictions));
-                return;
+                return true;
             }
 
-            afflictionRequests.Add(new RequestAction<AfflictionRequest>(onReceived, GetTimeout()));
-            SendAfflictionRequest(info);
+            return requestBucket.TryEnqueue(() =>
+            {
+                afflictionRequests.Add(new RequestAction<AfflictionRequest>(onReceived, GetTimeout()));
+                SendAfflictionRequest(info);
+            });
         }
 
         public void RequestLatestPending(Action<PendingRequest> onReceived)
@@ -66,8 +72,11 @@ namespace Barotrauma
             // no need to worry about syncing when there's only one pair of eyes capable of looking at the UI
             if (GameMain.IsSingleplayer) { return; }
 
-            pendingHealRequests.Add(new RequestAction<PendingRequest>(onReceived, GetTimeout()));
-            SendPendingRequest();
+            requestBucket.TryEnqueue(() =>
+            {
+                pendingHealRequests.Add(new RequestAction<PendingRequest>(onReceived, GetTimeout()));
+                SendPendingRequest();
+            });
         }
 
         public void Update(float deltaTime)
@@ -79,6 +88,7 @@ namespace Barotrauma
             UpdateQueue(clearAllRequests, now, onTimeout: CallbackOnlyTimeout);
             UpdateQueue(addRequests, now, onTimeout: CallbackOnlyTimeout);
             UpdateQueue(removeRequests, now, onTimeout: CallbackOnlyTimeout);
+            requestBucket.Update(deltaTime);
 
             static void CallbackOnlyTimeout(Action<CallbackOnlyRequest> callback) { callback(new CallbackOnlyRequest(RequestResult.Timeout)); }
         }
@@ -146,21 +156,25 @@ namespace Barotrauma
             return (from client in clients where client.Name == ownName select client.Ping).FirstOrDefault();
         }
 
-        public void TreatAllButtonAction(Action<CallbackOnlyRequest> onReceived)
+        public bool TreatAllButtonAction(Action<CallbackOnlyRequest> onReceived)
         {
             if (GameMain.IsSingleplayer)
             {
                 AddEverythingToPending();
                 onReceived(new CallbackOnlyRequest(RequestResult.Success));
                 OnUpdate?.Invoke();
-                return;
+                return true;
             }
 
-            addRequests.Add(new RequestAction<CallbackOnlyRequest>(onReceived, GetTimeout()));
-            ClientSend(null, NetworkHeader.ADD_EVERYTHING_TO_PENDING, DeliveryMethod.Reliable);
+            return requestBucket.TryEnqueue(() =>
+            {
+                addRequests.Add(new RequestAction<CallbackOnlyRequest>(onReceived, GetTimeout()));
+                ClientSend(null, NetworkHeader.ADD_EVERYTHING_TO_PENDING, DeliveryMethod.Reliable);
+            });
         }
 
-        public void HealAllButtonAction(Action<HealRequest> onReceived)
+
+        public bool HealAllButtonAction(Action<HealRequest> onReceived)
         {
             if (GameMain.IsSingleplayer)
             {
@@ -171,33 +185,39 @@ namespace Barotrauma
                     OnUpdate?.Invoke();
                 }
 
-                return;
+                return true;
             }
 
-            if (campaign?.CampaignUI?.MedicalClinic is { } ui)
+            if (campaign?.CampaignUI?.MedicalClinic is { } openedUi)
             {
-                ui.ClosePopup();
+                openedUi.ClosePopup();
             }
 
-            healAllRequests.Add(new RequestAction<HealRequest>(onReceived, GetTimeout()));
-            ClientSend(null, NetworkHeader.HEAL_PENDING, DeliveryMethod.Reliable);
+            return requestBucket.TryEnqueue(() =>
+            {
+                healAllRequests.Add(new RequestAction<HealRequest>(onReceived, GetTimeout()));
+                ClientSend(null, NetworkHeader.HEAL_PENDING, DeliveryMethod.Reliable);
+            });
         }
 
-        public void ClearAllButtonAction(Action<CallbackOnlyRequest> onReceived)
+        public bool ClearAllButtonAction(Action<CallbackOnlyRequest> onReceived)
         {
             if (GameMain.IsSingleplayer)
             {
                 ClearPendingHeals();
                 onReceived(new CallbackOnlyRequest(RequestResult.Success));
                 OnUpdate?.Invoke();
-                return;
+                return true;
             }
 
-            clearAllRequests.Add(new RequestAction<CallbackOnlyRequest>(onReceived, GetTimeout()));
-            ClientSend(null, NetworkHeader.CLEAR_PENDING, DeliveryMethod.Reliable);
+            return requestBucket.TryEnqueue(() =>
+            {
+                clearAllRequests.Add(new RequestAction<CallbackOnlyRequest>(onReceived, GetTimeout()));
+                ClientSend(null, NetworkHeader.CLEAR_PENDING, DeliveryMethod.Reliable);
+            });
         }
 
-        private void ClearRequstReceived()
+        private void ClearRequestReceived()
         {
             ClearPendingHeals();
             if (TryDequeue(clearAllRequests, out var callback))
@@ -224,28 +244,31 @@ namespace Barotrauma
             OnUpdate?.Invoke();
         }
 
-        public void AddPendingButtonAction(NetCrewMember crewMember, Action<CallbackOnlyRequest> onReceived)
+        public bool AddPendingButtonAction(NetCrewMember crewMember, Action<CallbackOnlyRequest> onReceived)
         {
             if (GameMain.IsSingleplayer)
             {
                 InsertPendingCrewMember(crewMember);
                 onReceived(new CallbackOnlyRequest(RequestResult.Success));
                 OnUpdate?.Invoke();
-                return;
+                return true;
             }
 
-            addRequests.Add(new RequestAction<CallbackOnlyRequest>(onReceived, GetTimeout()));
-            ClientSend(crewMember, NetworkHeader.ADD_PENDING, DeliveryMethod.Reliable);
+            return requestBucket.TryEnqueue(() =>
+            {
+                addRequests.Add(new RequestAction<CallbackOnlyRequest>(onReceived, GetTimeout()));
+                ClientSend(crewMember, NetworkHeader.ADD_PENDING, DeliveryMethod.Reliable);
+            });
         }
 
-        public void RemovePendingButtonAction(NetCrewMember crewMember, NetAffliction affliction, Action<CallbackOnlyRequest> onReceived)
+        public bool RemovePendingButtonAction(NetCrewMember crewMember, NetAffliction affliction, Action<CallbackOnlyRequest> onReceived)
         {
             if (GameMain.IsSingleplayer)
             {
                 RemovePendingAffliction(crewMember, affliction);
                 onReceived(new CallbackOnlyRequest(RequestResult.Success));
                 OnUpdate?.Invoke();
-                return;
+                return true;
             }
 
             INetSerializableStruct removedAffliction = new NetRemovedAffliction
@@ -254,11 +277,14 @@ namespace Barotrauma
                 Affliction = affliction
             };
 
-            removeRequests.Add(new RequestAction<CallbackOnlyRequest>(onReceived, GetTimeout()));
-            ClientSend(removedAffliction, NetworkHeader.REMOVE_PENDING, DeliveryMethod.Reliable);
+            return requestBucket.TryEnqueue(() =>
+            {
+                removeRequests.Add(new RequestAction<CallbackOnlyRequest>(onReceived, GetTimeout()));
+                ClientSend(removedAffliction, NetworkHeader.REMOVE_PENDING, DeliveryMethod.Reliable);
+            });
         }
 
-        private void NewAdditonReceived(IReadMessage inc, MessageFlag flag)
+        private void NewAdditionReceived(IReadMessage inc, MessageFlag flag)
         {
             var crewMembers = INetSerializableStruct.Read<NetCollection<NetCrewMember>>(inc);
             foreach (var crewMember in crewMembers)
@@ -300,7 +326,7 @@ namespace Barotrauma
             NetCrewMember crewMember = INetSerializableStruct.Read<NetCrewMember>(inc);
             if (TryDequeue(afflictionRequests, out var callback))
             {
-                RequestResult result = crewMember.CharacterInfoID is 0 ? RequestResult.Error : RequestResult.Success;
+                RequestResult result = crewMember.CharacterInfoID is 0 ? RequestResult.CharacterNotFound : RequestResult.Success;
                 callback(new AfflictionRequest(result, crewMember.Afflictions.ToImmutableArray()));
             }
         }
@@ -336,7 +362,7 @@ namespace Barotrauma
             IWriteMessage msg = StartSending();
             msg.WriteByte((byte)header);
             netStruct?.Write(msg);
-            GameMain.Client.ClientPeer?.Send(msg, deliveryMethod);
+            GameMain.Client?.ClientPeer?.Send(msg, deliveryMethod);
         }
 
         public void ClientRead(IReadMessage inc)
@@ -356,7 +382,7 @@ namespace Barotrauma
                     PendingRequestReceived(inc);
                     break;
                 case NetworkHeader.ADD_PENDING:
-                    NewAdditonReceived(inc, flag);
+                    NewAdditionReceived(inc, flag);
                     break;
                 case NetworkHeader.REMOVE_PENDING:
                     NewRemovalReceived(inc, flag);
@@ -365,7 +391,7 @@ namespace Barotrauma
                     HealRequestReceived(inc);
                     break;
                 case NetworkHeader.CLEAR_PENDING:
-                    ClearRequstReceived();
+                    ClearRequestReceived();
                     break;
             }
         }

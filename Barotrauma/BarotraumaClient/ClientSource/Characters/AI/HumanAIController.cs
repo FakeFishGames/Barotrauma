@@ -10,7 +10,7 @@ namespace Barotrauma
         public override void DebugDraw(Microsoft.Xna.Framework.Graphics.SpriteBatch spriteBatch)
         {
             if (Character == Character.Controlled) { return; }
-            if (!debugai) { return; }
+            if (!DebugAI) { return; }
             Vector2 pos = Character.WorldPosition;
             pos.Y = -pos.Y;
             Vector2 textOffset = new Vector2(-40, -160);

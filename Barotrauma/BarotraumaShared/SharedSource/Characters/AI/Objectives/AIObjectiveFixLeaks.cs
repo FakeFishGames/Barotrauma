@@ -38,9 +38,9 @@ namespace Barotrauma
 
         protected override float TargetEvaluation()
         {
-            int totalLeaks = Targets.Count();
+            int totalLeaks = Targets.Count;
             if (totalLeaks == 0) { return 0; }
-            int otherFixers = HumanAIController.CountCrew(c => c != HumanAIController && c.ObjectiveManager.IsCurrentObjective<AIObjectiveFixLeaks>() && !c.Character.IsIncapacitated && c.Character.Submarine == character.Submarine, onlyBots: true);
+            int otherFixers = HumanAIController.CountBotsInTheCrew(c => c != HumanAIController && c.ObjectiveManager.IsCurrentObjective<AIObjectiveFixLeaks>() && c.Character.Submarine == character.Submarine);
             bool anyFixers = otherFixers > 0;
             if (objectiveManager.IsOrder(this))
             {
@@ -52,7 +52,7 @@ namespace Barotrauma
                 int secondaryLeaks = Targets.Count(l => l.IsRoomToRoom);
                 int leaks = totalLeaks - secondaryLeaks;
                 float ratio = leaks == 0 ? 1 : anyFixers ? leaks / (float)otherFixers : 1;
-                if (anyFixers && (ratio <= 1 || otherFixers > 5 || otherFixers / (float)HumanAIController.CountCrew(onlyBots: true) > 0.75f))
+                if (anyFixers && (ratio <= 1 || otherFixers > 5 || otherFixers / (float)HumanAIController.CountBotsInTheCrew() > 0.75f))
                 {
                     // Enough fixers
                     return 0;

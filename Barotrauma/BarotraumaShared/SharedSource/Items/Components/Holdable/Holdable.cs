@@ -700,7 +700,8 @@ namespace Barotrauma.Items.Components
                     }
                     Vector2 attachPos = GetAttachPosition(character, useWorldCoordinates: true);
                     Submarine attachSubmarine = Structure.GetAttachTarget(attachPos)?.Submarine ?? item.Submarine;
-                    int maxAttachableCount = (int)character.Info.GetSavedStatValue(StatTypes.MaxAttachableCount, item.Prefab.Identifier);
+                    int maxAttachableCount = (int)character.Info.GetSavedStatValueWithBotsInMp(StatTypes.MaxAttachableCount, item.Prefab.Identifier);
+
                     int currentlyAttachedCount = Item.ItemList.Count(
                         i => i.Submarine == attachSubmarine && i.GetComponent<Holdable>() is Holdable holdable && holdable.Attached && i.Prefab.Identifier == item.Prefab.Identifier);
                     if (maxAttachableCount == 0)

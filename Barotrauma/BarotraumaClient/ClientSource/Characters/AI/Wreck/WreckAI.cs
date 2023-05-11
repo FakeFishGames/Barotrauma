@@ -19,6 +19,17 @@ namespace Barotrauma
 
         private IEnumerable<CoroutineStatus> FadeOutColors(float time)
         {
+
+            Dictionary<MapEntity, Color> originalColors = new Dictionary<MapEntity, Color>();
+            foreach (var item in thalamusItems)
+            {
+                originalColors.Add(item, item.SpriteColor);
+            }
+            foreach (var structure in thalamusStructures)
+            {
+                originalColors.Add(structure, structure.SpriteColor);
+            }
+
             float timer = 0;
             while (timer < time)
             {
@@ -26,15 +37,16 @@ namespace Barotrauma
                 float m = MathHelper.Lerp(1, Config.DeadEntityColorMultiplier, MathUtils.InverseLerp(0, time, timer));
                 foreach (var item in thalamusItems)
                 {
+                    if (item.Color.A == 0) { continue; }
                     if (item.Prefab.BrokenSprites.None())
                     {
-                        Color c = item.Prefab.SpriteColor;
+                        Color c = originalColors[item];
                         item.SpriteColor = new Color(c.R / 255f * m, c.G / 255f * m, c.B / 255f * m, c.A / 255f);
                     }
                 }
                 foreach (var structure in thalamusStructures)
                 {
-                    Color c = structure.Prefab.SpriteColor;
+                    Color c = originalColors[structure];
                     structure.SpriteColor = new Color(c.R / 255f * m, c.G / 255f * m, c.B / 255f * m, c.A / 255f);
                 }
                 yield return CoroutineStatus.Running;

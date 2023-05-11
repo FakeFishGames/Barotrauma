@@ -1,4 +1,5 @@
-﻿using Barotrauma.Networking;
+﻿using Barotrauma.Extensions;
+using Barotrauma.Networking;
 using FarseerPhysics;
 using FarseerPhysics.Dynamics;
 using FarseerPhysics.Dynamics.Contacts;
@@ -657,6 +658,10 @@ namespace Barotrauma
                 else if (triggerer is Item item)
                 {
                     effect.Apply(effect.type, deltaTime, triggerer, item.AllPropertyObjects, position);
+                }
+                else if (triggerer is Submarine sub)
+                {
+                    effect.Apply(effect.type, deltaTime, sub, Array.Empty<ISerializableEntity>(), position);
                 }
                 if (effect.HasTargetType(StatusEffect.TargetType.NearbyItems) || effect.HasTargetType(StatusEffect.TargetType.NearbyCharacters))
                 {

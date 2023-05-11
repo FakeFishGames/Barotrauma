@@ -15,7 +15,7 @@ namespace Steamworks
 	/// </summary>
 	public class SteamParties : SteamClientClass<SteamParties>
 	{
-		internal static ISteamParties Internal => Interface as ISteamParties;
+		internal static ISteamParties? Internal => Interface as ISteamParties;
 
 		internal override void InitializeInterface( bool server )
 		{
@@ -32,15 +32,15 @@ namespace Steamworks
 		/// <summary>
 		/// The list of possible Party beacon locations has changed
 		/// </summary>
-		public static event Action OnBeaconLocationsUpdated;
+		public static event Action? OnBeaconLocationsUpdated;
 
 		/// <summary>
 		/// The list of active beacons may have changed
 		/// </summary>
-		public static event Action OnActiveBeaconsUpdated;
+		public static event Action? OnActiveBeaconsUpdated;
 
 
-		public static int ActiveBeaconCount => (int) Internal.GetNumActiveBeacons();
+		public static int ActiveBeaconCount => (int)(Internal?.GetNumActiveBeacons() ?? 0);
 
 		public static IEnumerable<PartyBeacon> ActiveBeacons
 		{
@@ -50,7 +50,7 @@ namespace Steamworks
 				{
 					yield return new PartyBeacon
 					{
-						Id = Internal.GetBeaconByIndex( i )
+						Id = Internal?.GetBeaconByIndex( i ) ?? 0
 					};
 				}
 			}

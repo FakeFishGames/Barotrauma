@@ -343,7 +343,7 @@ namespace Barotrauma
             editorContainer.ClearChildren();
             paramsList.Content.ClearChildren();
 
-            foreach (LevelGenerationParams genParams in LevelGenerationParams.LevelParams)
+            foreach (LevelGenerationParams genParams in LevelGenerationParams.LevelParams.OrderBy(p => p.Name))
             {
                 new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), paramsList.Content.RectTransform) { MinSize = new Point(0, 20) },
                     genParams.Identifier.Value)
@@ -359,7 +359,7 @@ namespace Barotrauma
             editorContainer.ClearChildren();
             caveParamsList.Content.ClearChildren();
 
-            foreach (CaveGenerationParams genParams in CaveGenerationParams.CaveParams)
+            foreach (CaveGenerationParams genParams in CaveGenerationParams.CaveParams.OrderBy(p => p.Name))
             {
                 new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), caveParamsList.Content.RectTransform) { MinSize = new Point(0, 20) },
                     genParams.Name)
@@ -375,7 +375,7 @@ namespace Barotrauma
             editorContainer.ClearChildren();
             ruinParamsList.Content.ClearChildren();
 
-            foreach (RuinGenerationParams genParams in RuinGenerationParams.RuinParams)
+            foreach (RuinGenerationParams genParams in RuinGenerationParams.RuinParams.OrderBy(p => p.Identifier))
             {
                 new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), ruinParamsList.Content.RectTransform) { MinSize = new Point(0, 20) },
                     genParams.Name)
@@ -391,7 +391,7 @@ namespace Barotrauma
             editorContainer.ClearChildren();
             outpostParamsList.Content.ClearChildren();
 
-            foreach (OutpostGenerationParams genParams in OutpostGenerationParams.OutpostParams)
+            foreach (OutpostGenerationParams genParams in OutpostGenerationParams.OutpostParams.OrderBy(p => p.Name))
             {
                 new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), outpostParamsList.Content.RectTransform) { MinSize = new Point(0, 20) },
                     genParams.Name)

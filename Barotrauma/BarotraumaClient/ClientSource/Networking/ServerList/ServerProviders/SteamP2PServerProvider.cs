@@ -71,10 +71,10 @@ namespace Barotrauma
 
                 foreach (var lobby in lobbies)
                 {
-                    string lobbyOwnerStr = lobby.GetData("lobbyowner");
+                    string lobbyOwnerStr = lobby.GetData("lobbyowner") ?? "";
                     lobbyQuery = lobbyQuery.WithoutKeyValue("lobbyowner", lobbyOwnerStr);
 
-                    string serverName = lobby.GetData("name");
+                    string serverName = lobby.GetData("name") ?? "";
                     if (string.IsNullOrEmpty(serverName)) { continue; }
 
                     var ownerId = SteamId.Parse(lobbyOwnerStr);

@@ -1398,7 +1398,7 @@ namespace Barotrauma
                         }
                         else
                         {
-                            throw new Exception("Failed to read component state - " + components[componentIndex].GetType() + " is not IServerSerializable.");
+                            throw new Exception($"Failed to read component state - {components[componentIndex].GetType()} in item \"{Prefab.Identifier}\" is not IServerSerializable.");
                         }
                     }
                     break;
@@ -1411,13 +1411,14 @@ namespace Barotrauma
                         }
                         else
                         {
-                            throw new Exception("Failed to read inventory state - " + components[containerIndex].GetType() + " is not an ItemContainer.");
+                            throw new Exception($"Failed to read inventory state - {components[containerIndex].GetType()} in item \"{Prefab.Identifier}\"  is not an ItemContainer.");
                         }
                     }
                     break;
                 case EventType.Status:
+                    bool loadingRound = msg.ReadBoolean();
                     float newCondition = msg.ReadSingle();
-                    SetCondition(newCondition, isNetworkEvent: true);
+                    SetCondition(newCondition, isNetworkEvent: true, executeEffects: !loadingRound);
                     break;
                 case EventType.AssignCampaignInteraction:
                     CampaignInteractionType = (CampaignMode.InteractionType)msg.ReadByte();
@@ -1459,9 +1460,9 @@ namespace Barotrauma
                     byte length = msg.ReadByte();
                     for (int i = 0; i < length; i++)
                     {
-                        var statIdentifier = INetSerializableStruct.Read<ItemStatManager.TalentStatIdentifier>(msg);
+                        var statIdentifier = INetSerializableStruct.Read<TalentStatIdentifier>(msg);
                         var statValue = msg.ReadSingle();
-                        StatManager.ApplyStat(statIdentifier, statValue);
+                        StatManager.ApplyStatDirect(statIdentifier, statValue);
                     }
                     break;
                 case EventType.Upgrade:

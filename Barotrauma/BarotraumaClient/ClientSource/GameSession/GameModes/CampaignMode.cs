@@ -148,7 +148,10 @@ namespace Barotrauma
             }
             if (Submarine.MainSub == null || Level.Loaded == null) { return; }
 
-            endRoundButton.Visible = false;
+            bool allowEndingRound = false;
+            endRoundButton.Color = endRoundButton.Style.Color;
+            endRoundButton.HoverColor = endRoundButton.Style.HoverColor;
+            RichString overrideEndRoundButtonToolTip = string.Empty;
             var availableTransition = GetAvailableTransition(out _, out Submarine leavingSub);
             LocalizedString buttonText = "";
             switch (availableTransition)
@@ -159,12 +162,12 @@ namespace Barotrauma
                     {
                         string textTag = availableTransition == TransitionType.ProgressToNextLocation ? "EnterLocation" : "EnterEmptyLocation";
                         buttonText = TextManager.GetWithVariable(textTag, "[locationname]", Level.Loaded.EndLocation?.Name ?? "[ERROR]");
-                        endRoundButton.Visible = !ForceMapUI && !ShowCampaignUI;
+                        allowEndingRound = !ForceMapUI && !ShowCampaignUI;
                     }
                     break;
                 case TransitionType.LeaveLocation:
                     buttonText = TextManager.GetWithVariable("LeaveLocation", "[locationname]", Level.Loaded.StartLocation?.Name ?? "[ERROR]");
-                    endRoundButton.Visible = !ForceMapUI && !ShowCampaignUI;
+                    allowEndingRound = !ForceMapUI && !ShowCampaignUI;
                     break;
                 case TransitionType.ReturnToPreviousLocation:
                 case TransitionType.ReturnToPreviousEmptyLocation:
@@ -172,32 +175,37 @@ namespace Barotrauma
                     {
                         string textTag = availableTransition == TransitionType.ReturnToPreviousLocation ? "EnterLocation" : "EnterEmptyLocation";
                         buttonText = TextManager.GetWithVariable(textTag, "[locationname]", Level.Loaded.StartLocation?.Name ?? "[ERROR]");
-                        endRoundButton.Visible = !ForceMapUI && !ShowCampaignUI;
+                        allowEndingRound = !ForceMapUI && !ShowCampaignUI;
                     }
-
                     break;
                 case TransitionType.None:
                 default:
-                    if (Level.Loaded.Type == LevelData.LevelType.Outpost &&
-                        !Level.Loaded.IsEndBiome &&
-                        (Character.Controlled?.Submarine?.Info.Type == SubmarineType.Player || (Character.Controlled?.CurrentHull?.OutpostModuleTags.Contains("airlock".ToIdentifier()) ?? false)))
+                    bool inFriendlySub = Character.Controlled is { IsInFriendlySub: true };
+                    if (Level.Loaded.Type == LevelData.LevelType.Outpost && !Level.Loaded.IsEndBiome &&
+                        (inFriendlySub || (Character.Controlled?.CurrentHull?.OutpostModuleTags.Contains("airlock".ToIdentifier()) ?? false)))
                     {
+                        if (Missions.Any(m => m is SalvageMission salvageMission && salvageMission.AnyTargetNeedsToBeRetrievedToSub))
+                        {
+                            overrideEndRoundButtonToolTip = TextManager.Get("SalvageTargetNotInSub");
+                            endRoundButton.Color = GUIStyle.Red * 0.7f;
+                            endRoundButton.HoverColor = GUIStyle.Red;
+                        }
                         buttonText = TextManager.GetWithVariable("LeaveLocation", "[locationname]", Level.Loaded.StartLocation?.Name ?? "[ERROR]");
-                        endRoundButton.Visible = !ForceMapUI && !ShowCampaignUI;
+                        allowEndingRound = !ForceMapUI && !ShowCampaignUI;
                     }
                     else
                     {
-                        endRoundButton.Visible = false;
+                        allowEndingRound = false;
                     }
                     break;
             }
             if (Level.IsLoadedOutpost && !ObjectiveManager.AllActiveObjectivesCompleted())
             {
-                endRoundButton.Visible = false;
+                allowEndingRound = false;
             }
+            if (ReadyCheckButton != null) { ReadyCheckButton.Visible = allowEndingRound; }
 
-            if (ReadyCheckButton != null) { ReadyCheckButton.Visible = endRoundButton.Visible; }
-
+            endRoundButton.Visible = allowEndingRound && Character.Controlled is { IsIncapacitated: false };
             if (endRoundButton.Visible)
             {
                 if (!AllowedToManageCampaign(ClientPermissions.ManageMap)) 
@@ -215,7 +223,11 @@ namespace Barotrauma
                     prevCampaignUIAutoOpenType = availableTransition;
                 }
                 endRoundButton.Text = ToolBox.LimitString(buttonText.Value, endRoundButton.Font, endRoundButton.Rect.Width - 5);
-                if (endRoundButton.Text != buttonText)
+                if (overrideEndRoundButtonToolTip != string.Empty)
+                {
+                    endRoundButton.ToolTip = overrideEndRoundButtonToolTip;
+                }
+                else if (endRoundButton.Text != buttonText)
                 {
                     endRoundButton.ToolTip = buttonText;
                 }
@@ -327,6 +339,11 @@ namespace Barotrauma
                     CampaignUI.SelectTab(npc.CampaignInteractionType, npc);
                     CampaignUI.UpgradeStore?.RequestRefresh();
                     break;
+            }
+
+            if (npc.AIController is HumanAIController humanAi && humanAi.IsInHostileFaction())
+            {
+                npc.Speak(TextManager.Get("dialoglowrepcampaigninteraction").Value, identifier: "dialoglowrepcampaigninteraction".ToIdentifier(), minDurationBetweenSimilar: 60.0f);
             }
         }
 

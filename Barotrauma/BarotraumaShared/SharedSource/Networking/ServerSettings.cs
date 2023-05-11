@@ -42,6 +42,11 @@ namespace Barotrauma.Networking
 
     partial class ServerSettings : ISerializableEntity
     {
+        public const int PacketLimitMin = 1200,
+                         PacketLimitWarning = 2400,
+                         PacketLimitDefault = 3000,
+                         PacketLimitMax = 10000;
+
         public const string SettingsFile = "serversettings.xml";
 
         [Flags]
@@ -683,6 +688,20 @@ namespace Barotrauma.Networking
 
         [Serialize(3, IsPropertySaveable.Yes)]
         public int MaxPasswordRetriesBeforeBan
+        {
+            get;
+            private set;
+        }
+
+        [Serialize(true, IsPropertySaveable.Yes)]
+        public bool EnableDoSProtection
+        {
+            get;
+            private set;
+        }
+
+        [Serialize(PacketLimitDefault, IsPropertySaveable.Yes)]
+        public int MaxPacketAmount
         {
             get;
             private set;
