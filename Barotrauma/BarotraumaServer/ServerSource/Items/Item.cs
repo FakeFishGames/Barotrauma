@@ -65,7 +65,8 @@ namespace Barotrauma
                     msg.WriteUInt16(GameMain.Server.EntityEventManager.Events.Last()?.ID ?? (ushort)0);
                     itemContainer.Inventory.ServerEventWrite(msg, c);
                     break;
-                case ItemStatusEventData _:
+                case ItemStatusEventData statusEvent:
+                    msg.WriteBoolean(statusEvent.LoadingRound);
                     msg.WriteSingle(condition);
                     break;
                 case AssignCampaignInteractionEventData _:

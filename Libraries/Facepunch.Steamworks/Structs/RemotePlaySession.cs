@@ -23,16 +23,16 @@ namespace Steamworks.Data
 		/// <summary>
 		/// Get the SteamID of the connected user
 		/// </summary>
-		public SteamId SteamId => SteamRemotePlay.Internal.GetSessionSteamID( Id );
+		public SteamId SteamId => SteamRemotePlay.Internal?.GetSessionSteamID( Id ) ?? default;
 
 		/// <summary>
 		/// Get the name of the session client device
 		/// </summary>
-		public string ClientName => SteamRemotePlay.Internal.GetSessionClientName( Id );
+		public string? ClientName => SteamRemotePlay.Internal?.GetSessionClientName( Id );
 
 		/// <summary>
 		/// Get the name of the session client device
 		/// </summary>
-		public SteamDeviceFormFactor FormFactor => SteamRemotePlay.Internal.GetSessionClientFormFactor( Id );
+		public SteamDeviceFormFactor FormFactor => SteamRemotePlay.Internal?.GetSessionClientFormFactor( Id ) ?? SteamDeviceFormFactor.Unknown;
 	}
 }

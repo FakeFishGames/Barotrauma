@@ -7,6 +7,10 @@ using Microsoft.Xna.Framework;
 
 namespace Barotrauma
 {
+    /// <summary>
+    /// A special affliction type that gradually makes the character turn into another type of character. 
+    /// See <see cref="AfflictionPrefabHusk"/> for more details.
+    /// </summary>
     partial class AfflictionHusk : Affliction
     {
         public enum InfectionState
@@ -63,6 +67,7 @@ namespace Barotrauma
         private float DormantThreshold => HuskPrefab.DormantThreshold;
         private float ActiveThreshold => HuskPrefab.ActiveThreshold;
         private float TransitionThreshold => HuskPrefab.TransitionThreshold;
+
         private float TransformThresholdOnDeath => HuskPrefab.TransformThresholdOnDeath;
 
         public AfflictionHusk(AfflictionPrefab prefab, float strength) : base(prefab, strength)

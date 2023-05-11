@@ -260,10 +260,12 @@ namespace Barotrauma
                 }
                 bool success = false;
                 bool isCampaign = GameMain.GameSession?.GameMode is CampaignMode;
+                float levelDifficulty = Level.Loaded?.Difficulty ?? 0.0f;
                 foreach (PreferredContainer preferredContainer in itemPrefab.PreferredContainers)
                 {
                     if (preferredContainer.CampaignOnly && !isCampaign) { continue; }
                     if (preferredContainer.NotCampaign && isCampaign) { continue; }
+                    if (levelDifficulty < preferredContainer.MinLevelDifficulty || levelDifficulty > preferredContainer.MaxLevelDifficulty) { continue; }
                     if (preferredContainer.SpawnProbability <= 0.0f || preferredContainer.MaxAmount <= 0 && preferredContainer.Amount <= 0) { continue; }
                     validContainers = GetValidContainers(preferredContainer, containers, validContainers, primary: true);
                     if (validContainers.None())

@@ -109,7 +109,7 @@ namespace Barotrauma
 
         private bool CheckItem(Item item)
         {
-            return CheckItemIdentifiersOrTags(item, itemIdentifiers) && item.ConditionPercentage >= ConditionLevel && item.HasAccess(character);
+            return item.HasIdentifierOrTags(itemIdentifiers) && item.ConditionPercentage >= ConditionLevel && item.HasAccess(character);
         }
 
         protected override void Act(float deltaTime)
@@ -156,15 +156,15 @@ namespace Barotrauma
                     Inventory originalInventory = ItemToContain.ParentInventory;
                     var slots = originalInventory?.FindIndices(ItemToContain);
                     
-                    static bool TryPutItem(Inventory inventory, int? targetSlot, Item itemToContain)
+                    bool TryPutItem(Inventory inventory, int? targetSlot, Item itemToContain)
                     {
                         if (targetSlot.HasValue)
                         {
-                            return inventory.TryPutItem(itemToContain, targetSlot.Value, allowSwapping: false, allowCombine: false, user: null);
+                            return inventory.TryPutItem(itemToContain, targetSlot.Value, allowSwapping: false, allowCombine: false, user: character);
                         }
                         else
                         {
-                            return inventory.TryPutItem(itemToContain, user: null);
+                            return inventory.TryPutItem(itemToContain, user: character);
                         }
                     }
 
@@ -202,7 +202,7 @@ namespace Barotrauma
                             ItemToContain == null || ItemToContain.Removed ||
                             !ItemToContain.IsOwnedBy(character) || container.Item.GetRootInventoryOwner() is Character c && c != character,
                         SpeakIfFails = !objectiveManager.IsCurrentOrder<AIObjectiveCleanupItems>(),
-                        endNodeFilter = n => Vector2.DistanceSquared(n.Waypoint.WorldPosition, container.Item.WorldPosition) <= MathUtils.Pow2(AIObjectiveGetItem.DefaultReach)
+                        endNodeFilter = n => Vector2.DistanceSquared(n.Waypoint.WorldPosition, container.Item.WorldPosition) <= MathUtils.Pow2(AIObjectiveGetItem.MaxReach)
                     },
                     onAbandon: () => Abandon = true,
                     onCompleted: () => RemoveSubObjective(ref goToObjective));

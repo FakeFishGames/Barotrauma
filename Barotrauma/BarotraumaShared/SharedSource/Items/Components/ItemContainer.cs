@@ -502,8 +502,8 @@ namespace Barotrauma.Items.Components
                     {
                         foreach (Item item in Inventory.AllItemsMod)
                         {
-                            item.ApplyStatusEffects(ActionType.OnSuccess, 1.0f, ownerCharacter);
-                            item.ApplyStatusEffects(ActionType.OnUse, 1.0f, ownerCharacter);
+                            item.ApplyStatusEffects(ActionType.OnSuccess, 1.0f, ownerCharacter, useTarget: ownerCharacter);
+                            item.ApplyStatusEffects(ActionType.OnUse, 1.0f, ownerCharacter, useTarget: ownerCharacter);
                             item.GetComponent<GeneticMaterial>()?.Equip(ownerCharacter);
                         }
                         autoInjectCooldown = AutoInjectInterval;
@@ -534,25 +534,28 @@ namespace Barotrauma.Items.Components
                 if (activeContainedItem.ExcludeFullCondition && contained.IsFullCondition) { continue; }
                 StatusEffect effect = activeContainedItem.StatusEffect;
 
+                targets.Clear();
+                bool wearing = item.GetComponent<Wearable>() is Wearable { IsActive: true };
                 if (effect.HasTargetType(StatusEffect.TargetType.This))
                 {
-                    effect.Apply(ActionType.OnContaining, deltaTime, item, item.AllPropertyObjects);
+                    targets.AddRange(item.AllPropertyObjects);
                 }
                 if (effect.HasTargetType(StatusEffect.TargetType.Contained))
                 {
-                    effect.Apply(ActionType.OnContaining, deltaTime, item, contained.AllPropertyObjects);
+                    targets.AddRange(contained.AllPropertyObjects);
                 }
                 if (effect.HasTargetType(StatusEffect.TargetType.Character) && item.ParentInventory?.Owner is Character character)
                 {
-                    effect.Apply(ActionType.OnContaining, deltaTime, item, character);
+                    targets.Add(character);
                 }
                 if (effect.HasTargetType(StatusEffect.TargetType.NearbyItems) ||
                     effect.HasTargetType(StatusEffect.TargetType.NearbyCharacters))
                 {
-                    targets.Clear();
                     effect.AddNearbyTargets(item.WorldPosition, targets);
-                    effect.Apply(ActionType.OnActive, deltaTime, item, targets);
                 }
+                effect.Apply(ActionType.OnActive, deltaTime, item, targets);
+                effect.Apply(ActionType.OnContaining, deltaTime, item, targets);
+                if (wearing) { effect.Apply(ActionType.OnWearing, deltaTime, item, targets); }
             }
         }
 

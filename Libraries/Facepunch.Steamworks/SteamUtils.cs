@@ -12,7 +12,7 @@ namespace Steamworks
 	/// </summary>
 	public class SteamUtils : SteamSharedClass<SteamUtils>
 	{
-		internal static ISteamUtils Internal => Interface as ISteamUtils;
+		internal static ISteamUtils? Internal => Interface as ISteamUtils;
 
 		internal override void InitializeInterface( bool server )
 		{
@@ -38,47 +38,47 @@ namespace Steamworks
 		/// <summary>
 		/// The country of the user changed
 		/// </summary>
-		public static event Action OnIpCountryChanged;
+		public static event Action? OnIpCountryChanged;
 
 		/// <summary>
 		/// Fired when running on a laptop and less than 10 minutes of battery is left, fires then every minute
 		/// The parameter is the number of minutes left
 		/// </summary>
-		public static event Action<int> OnLowBatteryPower;
+		public static event Action<int>? OnLowBatteryPower;
 
 		/// <summary>
 		/// Called when Steam wants to shutdown
 		/// </summary>
-		public static event Action OnSteamShutdown;
+		public static event Action? OnSteamShutdown;
 
 		/// <summary>
 		/// Big Picture gamepad text input has been closed. Parameter is true if text was submitted, false if cancelled etc.
 		/// </summary>
-		public static event Action<bool> OnGamepadTextInputDismissed;
+		public static event Action<bool>? OnGamepadTextInputDismissed;
 
 		/// <summary>
 		/// Returns the number of seconds since the application was active
 		/// </summary>
-		public static uint SecondsSinceAppActive => Internal.GetSecondsSinceAppActive();
+		public static uint SecondsSinceAppActive => Internal?.GetSecondsSinceAppActive() ?? 0;
 
 		/// <summary>
 		/// Returns the number of seconds since the user last moved the mouse etc
 		/// </summary>
-		public static uint SecondsSinceComputerActive => Internal.GetSecondsSinceComputerActive();
+		public static uint SecondsSinceComputerActive => Internal?.GetSecondsSinceComputerActive() ?? 0;
 
 		// the universe this client is connecting to
-		public static Universe ConnectedUniverse => Internal.GetConnectedUniverse();
+		public static Universe ConnectedUniverse => Internal?.GetConnectedUniverse() ?? Universe.Invalid;
 
 		/// <summary>
 		/// Steam server time.  Number of seconds since January 1, 1970, GMT (i.e unix time)
 		/// </summary>
-		public static DateTime SteamServerTime => Epoch.ToDateTime( Internal.GetServerRealTime() );
+		public static DateTime SteamServerTime => Internal != null ? Epoch.ToDateTime( Internal.GetServerRealTime() ) : default;
 
 		/// <summary>
 		/// returns the 2 digit ISO 3166-1-alpha-2 format country code this client is running in (as looked up via an IP-to-location database)
 		/// e.g "US" or "UK".
 		/// </summary>
-		public static string IpCountry => Internal.GetIPCountry();
+		public static string? IpCountry => Internal?.GetIPCountry();
 
 		/// <summary>
 		/// returns true if the image exists, and the buffer was successfully filled out
@@ -89,7 +89,7 @@ namespace Steamworks
 		{
 			width = 0;
 			height = 0;
-			return Internal.GetImageSize( image, ref width, ref height );
+			return Internal != null && Internal.GetImageSize( image, ref width, ref height );
 		}
 
 		/// <summary>
@@ -109,7 +109,7 @@ namespace Steamworks
 
 			var buf = Helpers.TakeBuffer( (int) size );
 
-			if ( !Internal.GetImageRGBA( image, buf, (int)size ) )
+			if ( Internal is null || !Internal.GetImageRGBA( image, buf, (int)size ) )
 				return null;
 
 			i.Data = new byte[size];
@@ -120,12 +120,12 @@ namespace Steamworks
 		/// <summary>
 		/// Returns true if we're using a battery (ie, a laptop not plugged in)
 		/// </summary>
-		public static bool UsingBatteryPower => Internal.GetCurrentBatteryPower() != 255;
+		public static bool UsingBatteryPower => Internal != null && Internal.GetCurrentBatteryPower() != 255;
 
 		/// <summary>
 		/// Returns battery power [0-1]
 		/// </summary>
-		public static float CurrentBatteryPower => Math.Min( Internal.GetCurrentBatteryPower() / 100, 1.0f );
+		public static float CurrentBatteryPower => Math.Min( (Internal?.GetCurrentBatteryPower() ?? 0f) / 100, 1.0f );
 
 		static NotificationPosition overlayNotificationPosition = NotificationPosition.BottomRight;
 
@@ -140,7 +140,7 @@ namespace Steamworks
 			set
 			{
 				overlayNotificationPosition = value;
-				Internal.SetOverlayNotificationPosition( value );
+				Internal?.SetOverlayNotificationPosition( value );
 			}
 		}
 
@@ -148,7 +148,7 @@ namespace Steamworks
 		/// Returns true if the overlay is running and the user can access it. The overlay process could take a few seconds to
 		/// start and hook the game process, so this function will initially return false while the overlay is loading.
 		/// </summary>
-		public static bool IsOverlayEnabled => Internal.IsOverlayEnabled();
+		public static bool IsOverlayEnabled => Internal != null && Internal.IsOverlayEnabled();
 
 		/// <summary>
 		/// Normally this call is unneeded if your game has a constantly running frame loop that calls the 
@@ -161,7 +161,7 @@ namespace Steamworks
 		/// in that case, and then you can check for this periodically (roughly 33hz is desirable) and make sure you
 		/// refresh the screen with Present or SwapBuffers to allow the overlay to do it's work.
 		/// </summary>
-		public static bool DoesOverlayNeedPresent => Internal.BOverlayNeedsPresent();
+		public static bool DoesOverlayNeedPresent => Internal != null && Internal.BOverlayNeedsPresent();
 
 		/// <summary>
 		/// Asynchronous call to check if an executable file has been signed using the public key set on the signing tab
@@ -169,6 +169,8 @@ namespace Steamworks
 		/// </summary>
 		public static async Task<CheckFileSignature> CheckFileSignatureAsync( string filename )
 		{
+			if (Internal is null) { throw new System.Exception( "SteamUtils not initialized" ); }
+			
 			var r = await Internal.CheckFileSignature( filename );
 
 			if ( !r.HasValue )
@@ -184,7 +186,7 @@ namespace Steamworks
 		/// </summary>
 		public static bool ShowGamepadTextInput( GamepadTextInputMode inputMode, GamepadTextInputLineMode lineInputMode, string description, int maxChars, string existingText = "" )
 		{
-			return Internal.ShowGamepadTextInput( inputMode, lineInputMode, description, (uint)maxChars, existingText );
+			return Internal != null && Internal.ShowGamepadTextInput( inputMode, lineInputMode, description, (uint)maxChars, existingText );
 		}
 
 		/// <summary>
@@ -192,6 +194,8 @@ namespace Steamworks
 		/// </summary>
 		public static string GetEnteredGamepadText()
 		{
+			if (Internal is null) { return string.Empty; }
+			
 			var len = Internal.GetEnteredGamepadTextLength();
 			if ( len == 0 ) return string.Empty;
 
@@ -205,19 +209,19 @@ namespace Steamworks
 		/// returns the language the steam client is running in, you probably want 
 		/// Apps.CurrentGameLanguage instead, this is for very special usage cases
 		/// </summary>
-		public static string SteamUILanguage => Internal.GetSteamUILanguage();
+		public static string? SteamUILanguage => Internal?.GetSteamUILanguage();
 
 		/// <summary>
 		/// returns true if Steam itself is running in VR mode
 		/// </summary>
-		public static bool IsSteamRunningInVR => Internal.IsSteamRunningInVR();
+		public static bool IsSteamRunningInVR => Internal != null && Internal.IsSteamRunningInVR();
 
 		/// <summary>
 		/// Sets the inset of the overlay notification from the corner specified by SetOverlayNotificationPosition
 		/// </summary>
 		public static void SetOverlayNotificationInset( int x, int y )
 		{
-			Internal.SetOverlayNotificationInset( x, y );
+			Internal?.SetOverlayNotificationInset( x, y );
 		}
 
 		/// <summary>
@@ -225,13 +229,13 @@ namespace Steamworks
 		/// Games much be launched through the Steam client to enable the Big Picture overlay. During development,
 		/// a game can be added as a non-steam game to the developers library to test this feature
 		/// </summary>
-		public static bool IsSteamInBigPictureMode => Internal.IsSteamInBigPictureMode();
+		public static bool IsSteamInBigPictureMode => Internal != null && Internal.IsSteamInBigPictureMode();
 
 
 		/// <summary>
 		/// ask SteamUI to create and render its OpenVR dashboard
 		/// </summary>
-		public static void StartVRDashboard() => Internal.StartVRDashboard();
+		public static void StartVRDashboard() => Internal?.StartVRDashboard();
 
 		/// <summary>
 		/// Set whether the HMD content will be streamed via Steam In-Home Streaming
@@ -242,24 +246,24 @@ namespace Steamworks
 		/// </summary>
 		public static bool VrHeadsetStreaming
 		{
-			get => Internal.IsVRHeadsetStreamingEnabled();
+			get => Internal != null && Internal.IsVRHeadsetStreamingEnabled();
 			
 			set
 			{
-				Internal.SetVRHeadsetStreamingEnabled( value );
+				Internal?.SetVRHeadsetStreamingEnabled( value );
 			}
 		}
 
 		internal static bool IsCallComplete( SteamAPICall_t call, out bool failed )
 		{
 			failed = false;
-			return Internal.IsAPICallCompleted( call, ref failed );
+			return Internal != null && Internal.IsAPICallCompleted( call, ref failed );
 		}
 
 
 		/// <summary>
 		/// Returns whether this steam client is a Steam China specific client, vs the global client
 		/// </summary>
-		public static bool IsSteamChinaLauncher => Internal.IsSteamChinaLauncher();
+		public static bool IsSteamChinaLauncher => Internal != null && Internal.IsSteamChinaLauncher();
 	}
 }

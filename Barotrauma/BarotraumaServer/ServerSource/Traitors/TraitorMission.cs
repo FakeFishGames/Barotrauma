@@ -224,10 +224,6 @@ namespace Barotrauma
                 {
                     pendingMessages.Add(traitor, new List<string>());
                 }
-                foreach (var traitor in Traitors.Values)
-                {
-                    traitor.Greet(server, CodeWords, CodeResponse, message => pendingMessages[traitor].Add(message));
-                }
                 pendingMessages.ForEach(traitor => traitor.Value.ForEach(message => traitor.Key.SendChatMessage(message, Identifier)));
                 pendingMessages.ForEach(traitor => traitor.Value.ForEach(message => traitor.Key.SendChatMessageBox(message, Identifier)));
 

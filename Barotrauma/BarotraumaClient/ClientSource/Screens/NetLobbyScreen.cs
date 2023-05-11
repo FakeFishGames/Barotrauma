@@ -2244,9 +2244,9 @@ namespace Barotrauma
             List<ContextMenuOption> rankOptions = new List<ContextMenuOption>();
             foreach (PermissionPreset rank in PermissionPreset.List)
             {
-                rankOptions.Add(new ContextMenuOption(rank.Name, isEnabled: true, onSelected: () =>
+                rankOptions.Add(new ContextMenuOption(rank.DisplayName, isEnabled: true, onSelected: () =>
                 {
-                    LocalizedString label = TextManager.GetWithVariables(rank.Permissions == ClientPermissions.None ?  "clearrankprompt" : "giverankprompt", ("[user]", client.Name), ("[rank]", rank.Name));
+                    LocalizedString label = TextManager.GetWithVariables(rank.Permissions == ClientPermissions.None ?  "clearrankprompt" : "giverankprompt", ("[user]", client.Name), ("[rank]", rank.DisplayName));
                     GUIMessageBox msgBox = new GUIMessageBox(string.Empty, label, new[] { TextManager.Get("Yes"), TextManager.Get("Cancel") });
 
                     msgBox.Buttons[0].OnClicked = delegate
@@ -2350,7 +2350,7 @@ namespace Barotrauma
                 };
                 foreach (PermissionPreset permissionPreset in PermissionPreset.List)
                 {
-                    rankDropDown.AddItem(permissionPreset.Name, permissionPreset, permissionPreset.Description);
+                    rankDropDown.AddItem(permissionPreset.DisplayName, permissionPreset, permissionPreset.Description);
                 }
                 rankDropDown.AddItem(TextManager.Get("CustomRank"), null);
 
