@@ -1456,7 +1456,13 @@ namespace Barotrauma
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
                     case "location":
-                        Location location = Locations[subElement.GetAttributeInt("i", 0)];
+                        int locationIndex = subElement.GetAttributeInt("i", -1);
+                        if (locationIndex < 0 || locationIndex >= Locations.Count)
+                        {
+                            DebugConsole.AddWarning($"Error while loading the campaign map: location index out of bounds ({locationIndex})");
+                            continue;
+                        }
+                        Location location = Locations[locationIndex];
                         location.ProximityTimer.Clear();
                         for (int i = 0; i < location.Type.CanChangeTo.Count; i++)
                         {
@@ -1502,9 +1508,17 @@ namespace Barotrauma
 
                         break;
                     case "connection":
-                        int connectionIndex = subElement.GetAttributeInt("i", 0);
+                        //the index wasn't saved previously, skip if that's the case
+                        if (subElement.Attribute("i") == null) { continue; }
+
+                        int connectionIndex = subElement.GetAttributeInt("i", -1);
+                        if (connectionIndex < 0 || connectionIndex >= Connections.Count)
+                        {
+                            DebugConsole.AddWarning($"Error while loading the campaign map: connection index out of bounds ({connectionIndex})");
+                            continue;
+                        }
                         Connections[connectionIndex].Passed = subElement.GetAttributeBool("passed", false);
-                        Connections[connectionIndex].Locked = subElement.GetAttributeBool("locked", false);
+                        Connections[connectionIndex].Locked = subElement.GetAttributeBool("locked", false);                        
                         break;
                     case "radiation":
                         Radiation = new Radiation(this, generationParams.RadiationParams, subElement);
@@ -1635,6 +1649,7 @@ namespace Barotrauma
                     new XAttribute("locked", connection.Locked),
                     new XAttribute("difficulty", connection.Difficulty),
                     new XAttribute("biome", connection.Biome.Identifier),
+                    new XAttribute("i", i),
                     new XAttribute("locations", Locations.IndexOf(connection.Locations[0]) + "," + Locations.IndexOf(connection.Locations[1])));
                 connection.LevelData.Save(connectionElement);
                 mapElement.Add(connectionElement);

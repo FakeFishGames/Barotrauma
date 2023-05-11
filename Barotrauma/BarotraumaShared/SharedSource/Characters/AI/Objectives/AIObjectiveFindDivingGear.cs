@@ -79,7 +79,7 @@ namespace Barotrauma
                         {
                             if (mask != targetItem)
                             {
-                                character.Inventory.TryPutItem(mask, character, CharacterInventory.anySlot);
+                                character.Inventory.TryPutItem(mask, character, CharacterInventory.AnySlot);
                             }
                         }
                     }

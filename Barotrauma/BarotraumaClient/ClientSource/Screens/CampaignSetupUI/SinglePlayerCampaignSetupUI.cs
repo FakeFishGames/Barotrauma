@@ -18,7 +18,7 @@ namespace Barotrauma
         public CharacterInfo.AppearanceCustomizationMenu[] CharacterMenus { get; private set; }
 
         private GUIButton nextButton;
-        private GUILayoutGroup characterInfoColumns;
+        private GUIListBox characterInfoColumns;
     
         public SinglePlayerCampaignSetupUI(GUIComponent newGameContainer, GUIComponent loadGameContainer, IEnumerable<SubmarineInfo> submarines, IEnumerable<CampaignMode.SaveInfo> saveFiles = null)
             : base(newGameContainer, loadGameContainer)
@@ -249,11 +249,7 @@ namespace Barotrauma
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.04f), secondPageLayout.RectTransform),
                 TextManager.Get("Crew"), font: GUIStyle.SubHeadingFont, textAlignment: Alignment.TopLeft);
             
-            characterInfoColumns = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.86f), secondPageLayout.RectTransform), isHorizontal: true)
-            {
-                Stretch = true,
-                RelativeSpacing = 0.01f
-            };
+            characterInfoColumns = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.86f), secondPageLayout.RectTransform), isHorizontal: true);
 
             var secondPageButtonContainer = new GUILayoutGroup(new RectTransform(new Vector2(1f, 0.08f),
                 secondPageLayout.RectTransform), childAnchor: Anchor.BottomLeft, isHorizontal: true)
@@ -306,8 +302,8 @@ namespace Barotrauma
             
             for (int i = 0; i < characterInfos.Count; i++)
             {
-                var subLayout = new GUILayoutGroup(new RectTransform(new Vector2(1.0f / characterInfos.Count, 1.0f),
-                    characterInfoColumns.RectTransform));
+                var subLayout = new GUILayoutGroup(new RectTransform(new Vector2(Math.Max(1.0f / characterInfos.Count, 0.33f), 1.0f),
+                    characterInfoColumns.Content.RectTransform));
 
                 var (characterInfo, job) = characterInfos[i];
 

@@ -561,6 +561,12 @@ namespace Barotrauma.Items.Components
                     gap.ConnectedDoor = null;
                 }
             }
+
+            if (OutsideSubmarineFixture != null)
+            {
+                OutsideSubmarineFixture.Body.Remove(OutsideSubmarineFixture);
+                OutsideSubmarineFixture = null;
+            }
             
             //no need to remove the gap if we're unloading the whole submarine
             //otherwise the gap will be removed twice and cause console warnings

@@ -16,13 +16,13 @@ namespace Steamworks
 		private static readonly HashSet<SteamMatchmakingRulesResponse> ruleResponseHandlers
 			= new HashSet<SteamMatchmakingRulesResponse>();
 		
-		internal static async Task<Dictionary<string, string>> GetRules(Steamworks.Data.ServerInfo server)
+		internal static async Task<Dictionary<string, string>?> GetRules(Steamworks.Data.ServerInfo server)
 		{
 			Status status = Status.Pending;
 
 			var rules = new Dictionary<string, string>();
 
-			SteamMatchmakingRulesResponse responseHandler = null;
+			SteamMatchmakingRulesResponse? responseHandler = null;
 
 			void onRulesResponded(string key, string value)
 				=> rules.Add(key, value);
@@ -51,6 +51,8 @@ namespace Steamworks
 				responseHandler = null;
 			}
 
+			if (SteamMatchmakingServers.Internal is null) { return null; }
+			
 			responseHandler = new SteamMatchmakingRulesResponse(
 				onRulesResponded,
 				onRulesFailToRespond,

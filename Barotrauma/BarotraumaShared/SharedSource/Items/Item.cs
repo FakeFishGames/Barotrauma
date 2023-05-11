@@ -651,11 +651,13 @@ namespace Barotrauma
             }
         }
 
-        [Serialize(true, IsPropertySaveable.Yes, alwaysUseInstanceValues: true)]
-        public bool AllowStealing
+        private bool allowStealing;
+        [Serialize(true, IsPropertySaveable.Yes, alwaysUseInstanceValues: true, 
+            description: $"Determined by where/how the item originally spawned. If ItemPrefab.AllowStealing is true, stealing the item is always allowed.")]
+        public bool AllowStealing 
         {
-            get;
-            set;
+            get { return allowStealing || Prefab.AllowStealingAlways;  }
+            set { allowStealing = value; }
         }
 
         private string originalOutpost;
@@ -1585,6 +1587,17 @@ namespace Barotrauma
             return tags.Contains(tag) || base.Prefab.Tags.Contains(tag);
         }
 
+        public bool HasIdentifierOrTags(IEnumerable<Identifier> identifiersOrTags)
+        {
+            if (identifiersOrTags == null) { return false; }
+            if (identifiersOrTags.Contains(Prefab.Identifier)) { return true; }
+            foreach (Identifier tag in identifiersOrTags)
+            {
+                if (HasTag(tag)) { return true; }
+            }
+            return false;
+        }
+
         public void ReplaceTag(string tag, string newTag)
         {
             ReplaceTag(tag.ToIdentifier(), newTag.ToIdentifier());
@@ -1756,7 +1769,7 @@ namespace Barotrauma
             return new AttackResult(damageAmount, null);
         }
 
-        private void SetCondition(float value, bool isNetworkEvent)
+        private void SetCondition(float value, bool isNetworkEvent, bool executeEffects = true)
         {
             if (!isNetworkEvent)
             {
@@ -1779,16 +1792,22 @@ namespace Barotrauma
                 //Flag connections to be updated as device is broken
                 flagChangedConnections(connections);
 #if CLIENT
-                foreach (ItemComponent ic in components)
-                {
-                    ic.PlaySound(ActionType.OnBroken);
-                    ic.StopSounds(ActionType.OnActive);
+                if (executeEffects)
+                {                
+                    foreach (ItemComponent ic in components)
+                    {
+                        ic.PlaySound(ActionType.OnBroken);
+                        ic.StopSounds(ActionType.OnActive);
+                    }
                 }
                 if (Screen.Selected == GameMain.SubEditorScreen) { return; }
 #endif
                 // Have to set the previous condition here or OnBroken status effects that reduce the condition will keep triggering the status effects, resulting in a stack overflow.
                 SetPreviousCondition();
-                ApplyStatusEffects(ActionType.OnBroken, 1.0f, null);
+                if (executeEffects)
+                {
+                    ApplyStatusEffects(ActionType.OnBroken, 1.0f, null);
+                }
             }
             else if (condition > 0.0f && prevCondition <= 0.0f)
             {
@@ -1872,15 +1891,15 @@ namespace Barotrauma
             if (!(GameMain.NetworkMember is { IsServer: true })) { return; }
             if (!conditionUpdatePending) { return; }
 
-            CreateStatusEvent();
+            CreateStatusEvent(loadingRound: false);
             lastSentCondition = condition;
             sendConditionUpdateTimer = NetConfig.ItemConditionUpdateInterval;
             conditionUpdatePending = false;
         }
 
-        public void CreateStatusEvent()
+        public void CreateStatusEvent(bool loadingRound)
         {
-            GameMain.NetworkMember.CreateEntityEvent(this, new ItemStatusEventData());
+            GameMain.NetworkMember.CreateEntityEvent(this, new ItemStatusEventData(loadingRound));
         }
 
         private bool isActive = true;

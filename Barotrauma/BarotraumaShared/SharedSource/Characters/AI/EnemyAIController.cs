@@ -480,7 +480,7 @@ namespace Barotrauma
                 if (SelectedAiTarget?.Entity != null || EscapeTarget != null)
                 {
                     Entity t = SelectedAiTarget?.Entity ?? EscapeTarget;
-                    float referencePos = Vector2.DistanceSquared(Character.WorldPosition, t.WorldPosition) > 100 * 100 && HasValidPath(requireNonDirty: true) ? PathSteering.CurrentPath.CurrentNode.WorldPosition.X : t.WorldPosition.X;
+                    float referencePos = Vector2.DistanceSquared(Character.WorldPosition, t.WorldPosition) > 100 * 100 && HasValidPath() ? PathSteering.CurrentPath.CurrentNode.WorldPosition.X : t.WorldPosition.X;
                     Character.AnimController.TargetDir = Character.WorldPosition.X < referencePos ? Direction.Right : Direction.Left;
                 }
                 else
@@ -3934,7 +3934,7 @@ namespace Barotrauma
                 {
                     SteerAwayFromTheEnemy();
                 }
-                else if (canAttackDoors && HasValidPath(requireNonDirty: true, requireUnfinished: true))
+                else if (canAttackDoors && HasValidPath())
                 {
                     var door = PathSteering.CurrentPath.CurrentNode?.ConnectedDoor ?? PathSteering.CurrentPath.NextNode?.ConnectedDoor;
                     if (door != null && !door.CanBeTraversed && !door.HasAccess(Character))

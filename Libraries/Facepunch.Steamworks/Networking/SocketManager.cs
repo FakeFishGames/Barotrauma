@@ -14,7 +14,7 @@ namespace Steamworks
 	/// </summary>
 	public partial class SocketManager
 	{
-		public ISocketManager Interface { get; set; }
+		public ISocketManager? Interface { get; set; }
 
 		public List<Connection> Connecting = new List<Connection>();
 		public List<Connection> Connected = new List<Connection>();
@@ -26,12 +26,12 @@ namespace Steamworks
 
 		internal void Initialize()
 		{
-			pollGroup = SteamNetworkingSockets.Internal.CreatePollGroup();
+			pollGroup = SteamNetworkingSockets.Internal?.CreatePollGroup() ?? default;
 		}
 
 		public bool Close()
 		{
-			if ( SteamNetworkingSockets.Internal.IsValid )
+			if ( SteamNetworkingSockets.Internal is { IsValid: true } )
 			{
 				SteamNetworkingSockets.Internal.DestroyPollGroup( pollGroup );
 				Socket.Close();
@@ -94,7 +94,7 @@ namespace Steamworks
 		/// </summary>
 		public virtual void OnConnected( Connection connection, ConnectionInfo info )
 		{
-			SteamNetworkingSockets.Internal.SetConnectionPollGroup( connection, pollGroup );
+			SteamNetworkingSockets.Internal?.SetConnectionPollGroup( connection, pollGroup );
 
 			Interface?.OnConnected( connection, info );
 		}
@@ -104,7 +104,7 @@ namespace Steamworks
 		/// </summary>
 		public virtual void OnDisconnected( Connection connection, ConnectionInfo info )
 		{
-			SteamNetworkingSockets.Internal.SetConnectionPollGroup( connection, 0 );
+			SteamNetworkingSockets.Internal?.SetConnectionPollGroup( connection, 0 );
 
 			connection.Close();
 
@@ -121,7 +121,7 @@ namespace Steamworks
 
 			try
 			{
-				processed = SteamNetworkingSockets.Internal.ReceiveMessagesOnPollGroup( pollGroup, messageBuffer, bufferSize );
+				processed = SteamNetworkingSockets.Internal?.ReceiveMessagesOnPollGroup( pollGroup, messageBuffer, bufferSize ) ?? 0;
 
 				for ( int i = 0; i < processed; i++ )
 				{

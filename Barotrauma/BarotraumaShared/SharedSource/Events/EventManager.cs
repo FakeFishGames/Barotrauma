@@ -1,4 +1,5 @@
 ﻿using Barotrauma.Extensions;
+using Barotrauma.Items.Components;
 using FarseerPhysics;
 using Microsoft.Xna.Framework;
 using System;
@@ -72,7 +73,7 @@ namespace Barotrauma
 
         private readonly List<Event> activeEvents = new List<Event>();
 
-        private readonly HashSet<Identifier> finishedEvents = new HashSet<Identifier>();
+        private readonly HashSet<Event> finishedEvents = new HashSet<Event>();
         private readonly HashSet<Identifier> nonRepeatableEvents = new HashSet<Identifier>();
         private readonly HashSet<EventSet> usedUniqueSets = new HashSet<EventSet>();
 
@@ -123,7 +124,8 @@ namespace Barotrauma
 
         public bool Enabled = true;
 
-        private MTRandom rand;
+        private MTRandom random;
+        private int randomSeed;
 
         public void StartRound(Level level)
         {
@@ -147,23 +149,22 @@ namespace Barotrauma
             }
 
             SelectSettings();
-
-            int seed = 0;            
+           
             if (level != null)
             {
-                seed = ToolBox.StringToInt(level.Seed);
+                randomSeed = ToolBox.StringToInt(level.Seed);
                 foreach (var previousEvent in level.LevelData.EventHistory)
                 {
-                    seed ^= ToolBox.IdentifierToInt(previousEvent);
+                    randomSeed ^= ToolBox.IdentifierToInt(previousEvent);
                 }
             }
-            rand = new MTRandom(seed);
+            random = new MTRandom(randomSeed);
 
             bool playingCampaign = GameMain.GameSession?.GameMode is CampaignMode;
             EventSet initialEventSet = SelectRandomEvents(
                 EventSet.Prefabs.ToList(),
                 requireCampaignSet: playingCampaign,
-                random: rand);
+                random: random);
             EventSet additiveSet = null;
             if (initialEventSet != null && initialEventSet.Additive)
             {
@@ -171,7 +172,7 @@ namespace Barotrauma
                 initialEventSet = SelectRandomEvents(
                     EventSet.Prefabs.Where(e => !e.Additive).ToList(),
                     requireCampaignSet: playingCampaign,
-                    random: rand);
+                    random: random);
             }
             if (initialEventSet != null)
             {
@@ -366,20 +367,49 @@ namespace Barotrauma
         /// <summary>
         /// Registers the exhaustible events in the level as exhausted, and adds the current events to the event history
         /// </summary>
-        public void RegisterEventHistory()
+        public void RegisterEventHistory(bool registerFinishedOnly = false)
         {
             if (level?.LevelData == null) { return; }
 
+            level.LevelData.EventsExhausted = !registerFinishedOnly;
+
             if (level.LevelData.Type == LevelData.LevelType.Outpost)
             {
-                level.LevelData.EventsExhausted = true;
-                level.LevelData.EventHistory.AddRange(selectedEvents.Values.SelectMany(v => v).Select(e => e.Prefab.Identifier).Where(e => !level.LevelData.EventHistory.Contains(e)));
+                if (registerFinishedOnly)
+                {
+                    foreach (var finishedEvent in finishedEvents)
+                    {
+                        var key = finishedEvent.ParentSet;
+                        if (key == null) { continue; }
+                        if (level.LevelData.FinishedEvents.ContainsKey(key))
+                        {
+                            level.LevelData.FinishedEvents[key] += 1;
+                        }
+                        else
+                        {
+                            level.LevelData.FinishedEvents.Add(key, 1);
+                        }
+                    }
+                }
+
+                level.LevelData.EventHistory.AddRange(selectedEvents.Values
+                    .SelectMany(v => v)
+                    .Select(e => e.Prefab.Identifier)
+                    .Where(eventId => Register(eventId) && !level.LevelData.EventHistory.Contains(eventId)));
+
                 if (level.LevelData.EventHistory.Count > MaxEventHistory)
                 {
                     level.LevelData.EventHistory.RemoveRange(0, level.LevelData.EventHistory.Count - MaxEventHistory);
                 }
             }
-            level.LevelData.NonRepeatableEvents.AddRange(nonRepeatableEvents.Where(e => !level.LevelData.NonRepeatableEvents.Contains(e)));
+            level.LevelData.NonRepeatableEvents.AddRange(nonRepeatableEvents.Where(eventId => Register(eventId) && !level.LevelData.NonRepeatableEvents.Contains(eventId)));
+
+            if (!registerFinishedOnly)
+            {
+                level.LevelData.FinishedEvents.Clear();
+            }
+
+            bool Register(Identifier eventId) => !registerFinishedOnly || finishedEvents.Any(fe => fe.Prefab.Identifier == eventId);
         }
 
         public void SkipEventCooldown()
@@ -462,14 +492,14 @@ namespace Barotrauma
                         for (int j = 0; j < eventCount; j++)
                         {
                             if (unusedEvents.All(e => e.EventPrefabs.All(p => CalculateCommonness(p, e.Commonness) <= 0.0f))) { break; }
-                            EventSet.SubEventPrefab subEventPrefab = ToolBox.SelectWeightedRandom(unusedEvents, e => e.EventPrefabs.Max(p => CalculateCommonness(p, e.Commonness)), rand);
+                            EventSet.SubEventPrefab subEventPrefab = ToolBox.SelectWeightedRandom(unusedEvents, e => e.EventPrefabs.Max(p => CalculateCommonness(p, e.Commonness)), random);
                             (IEnumerable<EventPrefab> eventPrefabs, float commonness, float probability) = subEventPrefab;
-                            if (eventPrefabs != null && rand.NextDouble() <= probability)
+                            if (eventPrefabs != null && random.NextDouble() <= probability)
                             {
-                                var eventPrefab = ToolBox.SelectWeightedRandom(eventPrefabs.Where(isPrefabSuitable), e => e.Commonness, rand);
-
+                                var eventPrefab = ToolBox.SelectWeightedRandom(eventPrefabs.Where(isPrefabSuitable), e => e.Commonness, random);
                                 var newEvent = eventPrefab.CreateInstance();
                                 if (newEvent == null) { continue; }
+                                newEvent.RandomSeed = randomSeed;
                                 if (i < spawnPosFilter.Count) { newEvent.SpawnPosFilter = spawnPosFilter[i]; }
                                 DebugConsole.NewMessage($"Initialized event {newEvent}", debugOnly: true);
                                 if (!selectedEvents.ContainsKey(eventSet))
@@ -483,7 +513,7 @@ namespace Barotrauma
                     }
                     if (eventSet.ChildSets.Any())
                     {
-                        var newEventSet = SelectRandomEvents(eventSet.ChildSets, random: rand);
+                        var newEventSet = SelectRandomEvents(eventSet.ChildSets, random: random);
                         if (newEventSet != null)
                         {
                             CreateEvents(newEventSet);
@@ -494,9 +524,9 @@ namespace Barotrauma
                 {
                     foreach ((IEnumerable<EventPrefab> eventPrefabs, float commonness, float probability) in suitablePrefabSubsets)
                     {
-                        if (rand.NextDouble() > probability) { continue; }
+                        if (random.NextDouble() > probability) { continue; }
 
-                        var eventPrefab = ToolBox.SelectWeightedRandom(eventPrefabs.Where(isPrefabSuitable), e => e.Commonness, rand);
+                        var eventPrefab = ToolBox.SelectWeightedRandom(eventPrefabs.Where(isPrefabSuitable), e => e.Commonness, random);
                         var newEvent = eventPrefab.CreateInstance();
                         if (newEvent == null) { continue; }
                         if (!selectedEvents.ContainsKey(eventSet))
@@ -783,13 +813,13 @@ namespace Barotrauma
                 { 
                     ev.Update(deltaTime); 
                 }
-                else if (ev.Prefab != null && !finishedEvents.Contains(ev.Prefab.Identifier))
+                else if (ev.Prefab != null && !finishedEvents.Any(e => e.Prefab == ev.Prefab))
                 {
                     if (level?.LevelData != null && level.LevelData.Type == LevelData.LevelType.Outpost)
                     {
                         if (!level.LevelData.EventHistory.Contains(ev.Prefab.Identifier)) { level.LevelData.EventHistory.Add(ev.Prefab.Identifier); }
                     }
-                    finishedEvents.Add(ev.Prefab.Identifier);
+                    finishedEvents.Add(ev);
                 }
             }
 
@@ -833,30 +863,44 @@ namespace Barotrauma
             monsterStrength = 0;
             foreach (Character character in Character.CharacterList)
             {
-                if (character.IsIncapacitated || !character.Enabled || character.IsPet || CharacterParams.CompareGroup(CharacterPrefab.HumanSpeciesName, character.Group)) { continue; }
+                if (character.IsIncapacitated || character.IsArrested || !character.Enabled || character.IsPet) { continue; }
 
-                if (!(character.AIController is EnemyAIController enemyAI)) { continue; }
-
-                if (!enemyAI.AIParams.StayInAbyss)
+                if (character.AIController is EnemyAIController enemyAI)
                 {
-                    // Ignore abyss monsters because they can stay active for quite great distances. They'll be taken into account when they target the sub.
-                    monsterStrength += enemyAI.CombatStrength;
+                    if (!enemyAI.AIParams.StayInAbyss)
+                    {
+                        // Ignore abyss monsters because they can stay active for quite great distances. They'll be taken into account when they target the sub.
+                        monsterStrength += enemyAI.CombatStrength;
+                    }
+
+                    if (character.CurrentHull?.Submarine?.Info != null &&
+                        (character.CurrentHull.Submarine == Submarine.MainSub || Submarine.MainSub.DockedTo.Contains(character.CurrentHull.Submarine)) &&
+                        character.CurrentHull.Submarine.Info.Type == SubmarineType.Player)
+                    {
+                        // Enemy onboard -> Crawler inside the sub adds 0.2 to enemy danger, Mudraptor 0.42
+                        enemyDanger += enemyAI.CombatStrength / 500.0f;
+                    }
+                    else if (enemyAI.SelectedAiTarget?.Entity?.Submarine != null)
+                    {
+                        // Enemy outside targeting the sub or something in it
+                        // -> One Crawler adds 0.02, a Mudraptor 0.042, a Hammerhead 0.1, and a Moloch 0.25.
+                        enemyDanger += enemyAI.CombatStrength / 5000.0f;
+                    }
                 }
-
-                if (character.CurrentHull?.Submarine?.Info != null && 
-                    (character.CurrentHull.Submarine == Submarine.MainSub || Submarine.MainSub.DockedTo.Contains(character.CurrentHull.Submarine)) &&
-                    character.CurrentHull.Submarine.Info.Type == SubmarineType.Player)
+                else if (character.AIController is HumanAIController humanAi && !character.IsOnFriendlyTeam(CharacterTeamType.Team1))
                 {
-                    // Enemy onboard -> Crawler inside the sub adds 0.2 to enemy danger, Mudraptor 0.42
-                    enemyDanger += enemyAI.CombatStrength / 500.0f;
-                }
-                else if (enemyAI.SelectedAiTarget?.Entity?.Submarine != null)
-                {
-                    // Enemy outside targeting the sub or something in it
-                    // -> One Crawler adds 0.02, a Mudraptor 0.042, a Hammerhead 0.1, and a Moloch 0.25.
-                    enemyDanger += enemyAI.CombatStrength / 5000.0f;
+                    if (character.Submarine != null &&
+                        character.Submarine.PhysicsBody is { BodyType: BodyType.Dynamic } &&
+                        Vector2.DistanceSquared(character.Submarine.WorldPosition, Submarine.MainSub.WorldPosition) < Sonar.DefaultSonarRange * Sonar.DefaultSonarRange)
+                    {
+                        //we have no easy way to define the strength of a human enemy (depends more on the sub and it's state than the character),
+                        //so let's just go with a fixed value.
+                        //5 living enemy characters in an enemy sub in sonar range is enough to bump the intensity to max
+                        enemyDanger += 0.2f;
+                    }
                 }
             }
+
             // Add a portion of the total strength of active monsters to the enemy danger so that we don't spawn too many monsters around the sub.
             // On top of the existing value, so if 10 crawlers are targeting the sub simultaneously from outside, the final value would be: 0.02 x 10 + 0.2 = 0.4.
             // And if they get inside, we add 0.1 per crawler on that.

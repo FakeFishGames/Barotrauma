@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Security.Cryptography;
+using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 
@@ -22,7 +23,7 @@ namespace Barotrauma
                        : string.Empty);
         }
 
-        public static readonly Version MinimumHashCompatibleVersion = new Version(0, 18, 13, 0);
+        public static readonly Version MinimumHashCompatibleVersion = new Version(1, 0, 11, 0);
         
         public const string LocalModsDir = "LocalMods";
         public static readonly string WorkshopModsDir = Barotrauma.IO.Path.Combine(
@@ -203,7 +204,13 @@ namespace Barotrauma
                     break;
                 }             
             }
-            
+
+            if (UgcId.TryUnwrap(out ContentPackageId? id) && id != null)
+            {
+                incrementalHash.AppendData(Encoding.UTF8.GetBytes(id.StringRepresentation));
+            }
+            incrementalHash.AppendData(Encoding.UTF8.GetBytes(ModVersion));
+
             var md5Hash = Md5Hash.BytesAsHash(incrementalHash.GetHashAndReset());
             if (logging)
             {

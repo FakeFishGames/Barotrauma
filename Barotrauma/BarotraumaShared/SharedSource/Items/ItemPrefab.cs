@@ -332,6 +332,8 @@ namespace Barotrauma
         public readonly bool TransferOnlyOnePerContainer;
         public readonly bool AllowTransfersHere = true;
 
+        public readonly float MinLevelDifficulty, MaxLevelDifficulty;
+
         public PreferredContainer(XElement element)
         {
             Primary = XMLExtensions.GetAttributeIdentifierArray(element, "primary", Array.Empty<Identifier>()).ToImmutableHashSet();
@@ -346,6 +348,9 @@ namespace Barotrauma
             NotCampaign = element.GetAttributeBool("notcampaign", NotCampaign);
             TransferOnlyOnePerContainer = element.GetAttributeBool("TransferOnlyOnePerContainer", TransferOnlyOnePerContainer);
             AllowTransfersHere = element.GetAttributeBool("AllowTransfersHere", AllowTransfersHere);
+
+            MinLevelDifficulty = element.GetAttributeFloat(nameof(MinLevelDifficulty), float.MinValue);
+            MaxLevelDifficulty = element.GetAttributeFloat(nameof(MaxLevelDifficulty), float.MaxValue);
 
             if (element.GetAttribute("spawnprobability") == null)
             {
@@ -671,6 +676,9 @@ namespace Barotrauma
         public bool AllowSellingWhenBroken { get; private set; }
 
         [Serialize(false, IsPropertySaveable.No)]
+        public bool AllowStealingAlways { get; private set; }
+
+        [Serialize(false, IsPropertySaveable.No)]
         public bool Indestructible { get; private set; }
 
         [Serialize(false, IsPropertySaveable.No)]
@@ -805,6 +813,9 @@ namespace Barotrauma
 
         [Serialize(1.0f, IsPropertySaveable.No, description: "How much the bots prioritize shooting this item with slow turrets, like railguns? Defaults to 1. Not used if AITurretPriority is 0. Distance to the target affects the decision making.")]
         public float AISlowTurretPriority { get; private set; }
+
+        [Serialize(float.PositiveInfinity, IsPropertySaveable.No, description: "The max distance at which the bots are allowed to target the items. Defaults to infinity.")]
+        public float AITurretTargetingMaxDistance { get; private set; }
 
         protected override Identifier DetermineIdentifier(XElement element)
         {

@@ -240,7 +240,8 @@ namespace Barotrauma.Lights
                     range *
                     ((Character.Controlled?.Submarine != null && light.ParentSub == Character.Controlled?.Submarine) ? 2.0f : 1.0f) *
                     (light.CastShadows ? 10.0f : 1.0f) *
-                    (light.LightSourceParams.OverrideLightSpriteAlpha ?? (light.Color.A / 255.0f));
+                    (light.LightSourceParams.OverrideLightSpriteAlpha ?? (light.Color.A / 255.0f)) *
+                    light.PriorityMultiplier;
             }
 
             //find the lights with an active light volume

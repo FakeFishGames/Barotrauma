@@ -47,25 +47,25 @@ namespace Steamworks.Ugc
 		
 		public Editor ForAppId( AppId id ) { this.consumerAppId = id; return this; }
 
-		public string Title { get; private set; }
+		public string? Title { get; private set; }
 		public Editor WithTitle( string t ) { this.Title = t; return this; }
 
-		public string Description { get; private set; }
+		public string? Description { get; private set; }
 		public Editor WithDescription( string t ) { this.Description = t; return this; }
 
-		string MetaData;
+		string? MetaData;
 		public Editor WithMetaData( string t ) { this.MetaData = t; return this; }
 
-		string ChangeLog;
+		string? ChangeLog;
 		public Editor WithChangeLog( string t ) { this.ChangeLog = t; return this; }
 
-		string Language;
+		string? Language;
 		public Editor InLanguage( string t ) { this.Language = t; return this; }
 
-		public string PreviewFile { get; private set; }
-		public Editor WithPreviewFile( string t ) { this.PreviewFile = t; return this; }
+		public string? PreviewFile { get; private set; }
+		public Editor WithPreviewFile( string? t ) { this.PreviewFile = t; return this; }
 
-		public System.IO.DirectoryInfo ContentFolder { get; private set; }
+		public System.IO.DirectoryInfo? ContentFolder { get; private set; }
 		public Editor WithContent( System.IO.DirectoryInfo t ) { this.ContentFolder = t; return this; }
 		public Editor WithContent( string folderName ) { return WithContent( new System.IO.DirectoryInfo( folderName ) ); }
 
@@ -73,9 +73,9 @@ namespace Steamworks.Ugc
 
 		public Editor WithVisibility(Visibility visibility) { Visibility = visibility; return this; }
 
-		public List<string> Tags { get; private set; }
-		Dictionary<string, List<string>> keyValueTags;
-		HashSet<string> keyValueTagsToRemove;
+		public List<string>? Tags { get; private set; }
+		Dictionary<string, List<string>>? keyValueTags;
+		HashSet<string>? keyValueTagsToRemove;
 
 		public Editor WithTag( string tag )
 		{
@@ -143,9 +143,10 @@ namespace Steamworks.Ugc
 			return false;
 		}
 
-		public async Task<PublishResult> SubmitAsync( IProgress<float> progress = null )
+		public async Task<PublishResult> SubmitAsync( IProgress<float>? progress = null )
 		{
 			var result = default( PublishResult );
+			if (SteamUGC.Internal is null) { return result; }
 
 			progress?.Report( 0 );
 

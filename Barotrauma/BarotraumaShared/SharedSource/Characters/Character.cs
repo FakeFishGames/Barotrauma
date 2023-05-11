@@ -11,6 +11,7 @@ using FarseerPhysics.Dynamics;
 using Barotrauma.Extensions;
 using System.Collections.Immutable;
 using Barotrauma.Abilities;
+using System.Diagnostics;
 #if SERVER
 using System.Text;
 #endif
@@ -756,7 +757,7 @@ namespace Barotrauma
         /// </summary>
         public bool InPressure
         {
-            get { return CurrentHull == null || CurrentHull.LethalPressure > 5.0f; }
+            get { return CurrentHull == null || CurrentHull.LethalPressure > 0.0f; }
         }
 
         /// <summary>
@@ -964,6 +965,7 @@ namespace Barotrauma
         /// The secondary selected item. It's an item other than a device (see <see cref="SelectedItem"/>), e.g. a ladder or a chair.
         /// </summary>
         public Item SelectedSecondaryItem { get; set; }
+        public void ReleaseSecondaryItem() => SelectedSecondaryItem = null;
         /// <summary>
         /// Has the characters selected a primary or a secondary item?
         /// </summary>
@@ -1823,20 +1825,8 @@ namespace Barotrauma
 
         public void StackSpeedMultiplier(float val)
         {
-            if (val < 1f)
-            {
-                if (val < greatestNegativeSpeedMultiplier)
-                {
-                    greatestNegativeSpeedMultiplier = val;
-                }
-            }
-            else
-            {
-                if (val > greatestPositiveSpeedMultiplier)
-                {
-                    greatestPositiveSpeedMultiplier = val;
-                }
-            }
+            greatestNegativeSpeedMultiplier = Math.Min(val, greatestNegativeSpeedMultiplier);
+            greatestPositiveSpeedMultiplier = Math.Max(val, greatestPositiveSpeedMultiplier);
         }
 
         public void ResetSpeedMultiplier()
@@ -1859,20 +1849,8 @@ namespace Barotrauma
 
         public void StackHealthMultiplier(float val)
         {
-            if (val < 1f)
-            {
-                if (val < greatestNegativeHealthMultiplier)
-                {
-                    greatestNegativeHealthMultiplier = val;
-                }
-            }
-            else
-            {
-                if (val > greatestPositiveHealthMultiplier)
-                {
-                    greatestPositiveHealthMultiplier = val;
-                }
-            }
+            greatestNegativeHealthMultiplier = Math.Min(val, greatestNegativeHealthMultiplier);
+            greatestPositiveHealthMultiplier = Math.Max(val, greatestPositiveHealthMultiplier);
         }
 
         private void CalculateHealthMultiplier()
@@ -2456,6 +2434,8 @@ namespace Barotrauma
             return true;
         }
 
+        private Stopwatch sw;
+        private Stopwatch StopWatch => sw ??= new Stopwatch();
         private float _selectedItemPriority;
         private Item _foundItem;
         /// <summary>
@@ -2469,14 +2449,20 @@ namespace Barotrauma
             IEnumerable<Item> ignoredItems = null, IEnumerable<Identifier> ignoredContainerIdentifiers = null, 
             Func<Item, bool> customPredicate = null, Func<Item, float> customPriorityFunction = null, float maxItemDistance = 10000, ISpatialEntity positionalReference = null)
         {
+            if (HumanAIController.DebugAI)
+            {
+                StopWatch.Restart();
+            }
             if (itemIndex == 0)
             {
                 _foundItem = null;
                 _selectedItemPriority = 0;
             }
-            for (int i = 0; i < 10 && itemIndex < Item.ItemList.Count - 1; i++)
+            int itemsPerFrame = IsOnPlayerTeam ? 100 : 10;
+            int checkedItemCount = 0;
+            for (int i = 0; i < itemsPerFrame && itemIndex < Item.ItemList.Count; i++, itemIndex++)
             {
-                itemIndex++;
+                checkedItemCount++;
                 var item = Item.ItemList[itemIndex];
                 if (!item.IsInteractable(this)) { continue; }
                 if (ignoredItems != null && ignoredItems.Contains(item)) { continue; }
@@ -2516,7 +2502,21 @@ namespace Barotrauma
                 }
             }
             targetItem = _foundItem;
-            return itemIndex >= Item.ItemList.Count - 1;
+            bool completed = itemIndex >= Item.ItemList.Count - 1;
+            if (HumanAIController.DebugAI && checkedItemCount > 0 && targetItem != null && StopWatch.ElapsedMilliseconds > 1)
+            {
+                var msg = $"Went through {checkedItemCount} of total {Item.ItemList.Count} items. Found item {targetItem.Name} in {StopWatch.ElapsedMilliseconds} ms. Completed: {completed}";
+                if (StopWatch.ElapsedMilliseconds > 5)
+                {
+                    DebugConsole.ThrowError(msg);
+                }
+                else
+                {
+                    // An occasional warning now and then can be ignored, but multiple at the same time might indicate a performance issue.
+                    DebugConsole.AddWarning(msg);
+                }
+            }
+            return completed;
         }
 
         public bool IsItemTakenBySomeoneElse(Item item) => item.FindParentInventory(i => i.Owner != this && i.Owner is Character owner && !owner.IsDead && !owner.Removed) != null;
@@ -2536,7 +2536,7 @@ namespace Barotrauma
                 }
             }
 
-            return checkVisibility ? CanSeeCharacter(c) : true;
+            return !checkVisibility || CanSeeCharacter(c);
         }
 
         public bool CanInteractWith(Item item, bool checkLinked = true)
@@ -2930,7 +2930,7 @@ namespace Barotrauma
             else if (IsKeyHit(InputType.Deselect) && SelectedSecondaryItem != null && SelectedSecondaryItem.GetComponent<Ladder>() == null &&
                 (focusedItem == null || focusedItem == SelectedSecondaryItem || !selectInputSameAsDeselect))
             {
-                SelectedSecondaryItem = null;
+                ReleaseSecondaryItem();
 #if CLIENT
                 CharacterHealth.OpenHealthWindow = null;
 #endif
@@ -3270,7 +3270,7 @@ namespace Barotrauma
             }
             if (SelectedSecondaryItem != null && !CanInteractWith(SelectedSecondaryItem))
             {
-                SelectedSecondaryItem = null;
+                ReleaseSecondaryItem();
             }
 
             if (!IsDead) { LockHands = false; }
@@ -3484,14 +3484,19 @@ namespace Barotrauma
             despawnTimer += deltaTime * despawnPriority;
             if (despawnTimer < GameSettings.CurrentConfig.CorpseDespawnDelay) { return; }
 
-            if (IsHuman)
+            Identifier despawnContainerId =
+                IsHuman ?
+                "despawncontainer".ToIdentifier() :
+                Params.DespawnContainer;
+            if (!despawnContainerId.IsEmpty)
             {
                 var containerPrefab =
-                    ItemPrefab.Prefabs.Find(me => me.Tags.Contains("despawncontainer")) ??
+                    MapEntityPrefab.FindByIdentifier(despawnContainerId) as ItemPrefab ??
+                    ItemPrefab.Prefabs.Find(me => me?.Tags != null && me.Tags.Contains(despawnContainerId)) ??
                     (MapEntityPrefab.FindByIdentifier("metalcrate".ToIdentifier()) as ItemPrefab);
                 if (containerPrefab == null)
                 {
-                    DebugConsole.NewMessage("Could not spawn a container for a despawned character's items. No item with the tag \"despawncontainer\" or the identifier \"metalcrate\" found.", Color.Red);
+                    DebugConsole.NewMessage($"Could not spawn a container for a despawned character's items. No item with the tag \"{despawnContainerId}\" or the identifier \"metalcrate\" found.", Color.Red);
                 }
                 else
                 {
@@ -3615,7 +3620,7 @@ namespace Barotrauma
                             {
                                 if (character == this) { continue; }
                                 if (character.TeamID != TeamID) { continue; }
-                                if (!(character.AIController is HumanAIController)) { continue; }
+                                if (character.AIController is not HumanAIController) { continue; }
                                 if (!HumanAIController.IsActive(character)) { continue; }
                                 foreach (var currentOrder in character.CurrentOrders)
                                 {
@@ -4507,9 +4512,12 @@ namespace Barotrauma
 
             OnDeath?.Invoke(this, CauseOfDeath);
 
-            var abilityCharacterKiller = new AbilityCharacterKiller(CauseOfDeath.Killer);
-            CheckTalents(AbilityEffectType.OnDieToCharacter, abilityCharacterKiller);
-            CauseOfDeath.Killer?.RecordKill(this);
+            if (CauseOfDeath.Type != CauseOfDeathType.Disconnected)
+            {
+                var abilityCharacterKiller = new AbilityCharacterKiller(CauseOfDeath.Killer);
+                CheckTalents(AbilityEffectType.OnDieToCharacter, abilityCharacterKiller);
+                CauseOfDeath.Killer?.RecordKill(this);
+            }
 
             if (GameMain.GameSession != null && Screen.Selected == GameMain.GameScreen)
             {
@@ -4724,7 +4732,7 @@ namespace Barotrauma
                 if (!MathUtils.NearlyEqual(newItem.Condition, newItem.MaxCondition) &&
                     GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer)
                 {
-                    newItem.CreateStatusEvent();
+                    newItem.CreateStatusEvent(loadingRound: true);
                 }
 #if SERVER
                 newItem.GetComponent<Terminal>()?.SyncHistory();
@@ -4981,6 +4989,8 @@ namespace Barotrauma
         #region Talents
         private readonly List<CharacterTalent> characterTalents = new List<CharacterTalent>();
 
+        public IReadOnlyCollection<CharacterTalent> CharacterTalents => characterTalents;
+
         public void LoadTalents()
         {
             List<Identifier> toBeRemoved = null;
@@ -5077,7 +5087,7 @@ namespace Barotrauma
 
         public void CheckTalents(AbilityEffectType abilityEffectType, AbilityObject abilityObject)
         {
-            foreach (var characterTalent in characterTalents)
+            foreach (CharacterTalent characterTalent in CharacterTalents)
             {
                 characterTalent.CheckTalent(abilityEffectType, abilityObject);
             }
@@ -5373,7 +5383,7 @@ namespace Barotrauma
         public void StopClimbing()
         {
             AnimController.StopClimbing();
-            SelectedSecondaryItem = null;
+            ReleaseSecondaryItem();
         }
     }
 

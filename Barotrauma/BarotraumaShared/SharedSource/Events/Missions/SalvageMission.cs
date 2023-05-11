@@ -16,8 +16,8 @@ namespace Barotrauma
             public Item Item;
 
             /// <summary>
-            /// Note that the integer values matter here: the state of the target can't go back to a smaller value,
-            /// and a larger or equal value than the <see href="RequiredRetrievalState">RequiredRetrievalState</see> means the item counts as retrieved
+            /// Note that the integer values matter here:
+            /// a larger or equal value than the <see href="RequiredRetrievalState">RequiredRetrievalState</see> means the item counts as retrieved
             /// (if the item needs to be picked up to be considered retrieved, it's also considered retrieved if it's in the sub)
             /// </summary>
             public enum RetrievalState
@@ -166,6 +166,8 @@ namespace Barotrauma
         }
 
         private readonly List<Target> targets = new List<Target>();
+
+        public bool AnyTargetNeedsToBeRetrievedToSub => targets.Any(t => t.RequiredRetrievalState == Target.RetrievalState.RetrievedToSub && !t.Retrieved);
 
         public override IEnumerable<(LocalizedString Label, Vector2 Position)> SonarLabels
         {
@@ -382,29 +384,55 @@ namespace Barotrauma
                 switch (target.State)
                 {
                     case Target.RetrievalState.None:
-                        if (target.Interacted)
                         {
-                            TrySetRetrievalState(Target.RetrievalState.Interact);
+                            if (target.Interacted)
+                            {
+                                TrySetRetrievalState(Target.RetrievalState.Interact);
+                            }
+                            var root = target.Item?.GetRootContainer() ?? target.Item;
+                            if (root.ParentInventory?.Owner is Character character && character.TeamID == CharacterTeamType.Team1)
+                            {
+                                TrySetRetrievalState(Target.RetrievalState.PickedUp);
+                            }
                         }
-                        var root = target.Item?.GetRootContainer() ?? target.Item;
-                        if (root.ParentInventory?.Owner is Character character && character.TeamID == CharacterTeamType.Team1)
-                        {
-                            TrySetRetrievalState(Target.RetrievalState.PickedUp);
-                        }
+
                         break;
                     case Target.RetrievalState.PickedUp:
-                        Submarine parentSub = target.Item.CurrentHull?.Submarine ?? target.Item.GetRootInventoryOwner()?.Submarine;
-                        if (parentSub != null && parentSub.Info.Type == SubmarineType.Player)
+                    case Target.RetrievalState.RetrievedToSub:
                         {
-                            TrySetRetrievalState(Target.RetrievalState.RetrievedToSub);
+                            Entity rootInventoryOwner = target.Item.GetRootInventoryOwner();
+                            Submarine parentSub = target.Item.CurrentHull?.Submarine ?? rootInventoryOwner?.Submarine;
+
+                            bool inPlayerSub = parentSub != null && parentSub.Info.Type == SubmarineType.Player;
+                            bool inPlayerInventory = false;
+                            bool playerInFriendlySub = false;
+                            if (rootInventoryOwner is Character character && character.TeamID == CharacterTeamType.Team1)
+                            {
+                                inPlayerInventory = true;
+                                if (character.Submarine != null)
+                                {
+                                    playerInFriendlySub =
+                                        character.IsInFriendlySub ||
+                                        (character.Submarine == Level.Loaded?.StartOutpost && Level.IsLoadedFriendlyOutpost && GameMain.GameSession?.Campaign.CurrentLocation is not { IsFactionHostile: true });
+                                }
+                            }
+
+                            if (inPlayerSub || (inPlayerInventory && playerInFriendlySub))
+                            {
+                                TrySetRetrievalState(Target.RetrievalState.RetrievedToSub);                            
+                            }
+                            else
+                            {
+                                target.State = Target.RetrievalState.PickedUp;
+                            }
                         }
                         break;
                 }
 
                 void TrySetRetrievalState(Target.RetrievalState retrievalState)
                 {
-                    if (retrievalState < target.State) { return; }
-                    bool wasRetrieved = false;
+                    if (retrievalState < target.State || target.State == retrievalState) { return; }
+                    bool wasRetrieved = target.Retrieved;
                     target.State = retrievalState;
                     //increment the mission state if the target became retrieved
                     if (!wasRetrieved && target.Retrieved) { State = i + 1; }

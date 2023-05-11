@@ -39,6 +39,8 @@ namespace Barotrauma
         private const float MaxCollisionImpact = 5.0f;
         private const float Friction = 0.2f, Restitution = 0.0f;
 
+        private readonly List<Contact> levelContacts = new List<Contact>();
+
         public List<Vector2> HullVertices
         {
             get;
@@ -55,6 +57,9 @@ namespace Barotrauma
         private readonly List<PosInfo> positionBuffer = new List<PosInfo>();
 
         private readonly Queue<Impact> impactQueue = new Queue<Impact>();
+
+        private float forceUpwardsTimer;
+        private const float ForceUpwardsDelay = 30.0f;
 
         struct Impact
         {
@@ -199,6 +204,7 @@ namespace Barotrauma
                     if (item.Submarine != submarine) { continue; }
 
                     Vector2 simPos  = ConvertUnits.ToSimUnits(item.Position);
+                    if (sub.FlippedX) { simPos.X = -simPos.X; }
                     if (item.GetComponent<Door>() is Door door)
                     {
                         door.OutsideSubmarineFixture = farseerBody.CreateRectangle(door.Body.Width, door.Body.Height, 5.0f, simPos, collisionCategory, collidesWith);
@@ -214,11 +220,6 @@ namespace Barotrauma
                     float simRadius = ConvertUnits.ToSimUnits(radius);
                     float simWidth  = ConvertUnits.ToSimUnits(width);
                     float simHeight = ConvertUnits.ToSimUnits(height);
-
-                    if (sub.FlippedX)
-                    {
-                        simPos.X = -simPos.X;
-                    }
 
                     if (width > 0.0f && height > 0.0f)
                     {
@@ -393,6 +394,33 @@ namespace Barotrauma
 
             //-------------------------
 
+            //if heading up and there's another sub on top of us, gradually force it upwards
+            //(i.e. apply "artificial buoyancy" to it) to prevent us from getting pinned under it
+            //only applies to enemy subs with no enemies inside them (like destroyed pirate subs)
+            if (totalForce.Y > 0)
+            {
+                ContactEdge contactEdge = Body?.FarseerBody?.ContactList;
+                while (contactEdge?.Contact != null)
+                {
+                    if (contactEdge.Contact.Enabled &&
+                        contactEdge.Other.UserData is Submarine otherSubmarine &&
+                        otherSubmarine.TeamID != Submarine.TeamID &&
+                        contactEdge.Contact.IsTouching)
+                    {
+                        contactEdge.Contact.GetWorldManifold(out Vector2 _, out FixedArray2<Vector2> points);
+                        if (points[0].Y > Body.SimPosition.Y &&
+                            !Character.CharacterList.Any(c => c.Submarine == otherSubmarine && !c.IsIncapacitated && c.TeamID == otherSubmarine.TeamID))
+                        {
+                            otherSubmarine.GetConnectedSubs().ForEach(s => s.SubBody.forceUpwardsTimer += deltaTime);
+                            break;
+                        }
+                    }
+                    contactEdge = contactEdge.Next;
+                }
+            }
+
+            //-------------------------
+
             if (Body.LinearVelocity.LengthSquared() > 0.0001f)
             {
                 //TODO: sync current drag with clients?
@@ -416,7 +444,32 @@ namespace Barotrauma
 
             ApplyForce(totalForce);
 
+            if (Velocity.LengthSquared() < 0.01f)
+            {
+                levelContacts.Clear();
+                levelContacts.AddRange(GetLevelContacts(Body));
+                for (int i = 0; i < levelContacts.Count; i++)
+                {
+                    for (int j = i + 1; j < levelContacts.Count; j++)
+                    {
+                        levelContacts[i].GetWorldManifold(out Vector2 normal1, out _);
+                        levelContacts[j].GetWorldManifold(out Vector2 normal2, out _);
+
+                        //normals pointing in different directions = sub lodged between two walls
+                        if (Vector2.Dot(normal1, normal2) < 0)
+                        {
+                            //apply an extra force to hopefully dislodge the sub
+                            ApplyForce(totalForce * 100.0f);
+                            i = levelContacts.Count;
+                            break;
+                        }
+                    }
+                }
+            }
+
             UpdateDepthDamage(deltaTime);
+
+            forceUpwardsTimer = MathHelper.Clamp(forceUpwardsTimer - deltaTime * 0.1f, 0.0f, ForceUpwardsDelay);
         }
 
         partial void ClientUpdatePosition(float deltaTime);
@@ -483,9 +536,18 @@ namespace Barotrauma
             float buoyancy = NeutralBallastPercentage - waterPercentage;
 
             if (buoyancy > 0.0f)
+            {
                 buoyancy *= 2.0f;
+            }
             else
+            {
                 buoyancy = Math.Max(buoyancy, -0.5f);
+            }
+
+            if (forceUpwardsTimer > 0.0f)
+            {
+                buoyancy = MathHelper.Lerp(buoyancy, 0.1f, forceUpwardsTimer / ForceUpwardsDelay);
+            }
 
             return new Vector2(0.0f, buoyancy * Body.Mass * 10.0f);
         }
@@ -630,7 +692,7 @@ namespace Barotrauma
             }
 
             //if all the bodies of a wall have been disabled, we don't need to care about gaps (can always pass through)
-            if (!(contact.FixtureA.UserData is Structure wall) || !wall.AllSectionBodiesDisabled())
+            if (contact.FixtureA.UserData is not Structure wall || !wall.AllSectionBodiesDisabled())
             {
                 var gaps = newHull?.ConnectedGaps ?? Gap.GapList.Where(g => g.Submarine == submarine);
                 Gap adjacentGap = Gap.FindAdjacent(gaps, ConvertUnits.ToDisplayUnits(points[0]), 200.0f);
@@ -682,20 +744,10 @@ namespace Barotrauma
             }
 
             //find all contacts between the limb and level walls
-            List<Contact> levelContacts = new List<Contact>();
-            ContactEdge contactEdge = limb.body.FarseerBody.ContactList;
-            while (contactEdge?.Contact != null)
-            {
-                if (contactEdge.Contact.Enabled &&
-                    contactEdge.Contact.IsTouching &&
-                    contactEdge.Other?.UserData is VoronoiCell)
-                {
-                    levelContacts.Add(contactEdge.Contact);
-                }
-                contactEdge = contactEdge.Next;
-            }
+            IEnumerable<Contact> levelContacts = GetLevelContacts(limb.body);
+            int levelContactCount = levelContacts.Count();
 
-            if (levelContacts.Count == 0) { return; }
+            if (levelContactCount == 0) { return; }
 
             //if the limb is in contact with the level, apply an artifical impact to prevent the sub from bouncing on top of it
             //not a very realistic way to handle the collisions (makes it seem as if the characters were made of reinforced concrete),
@@ -718,9 +770,9 @@ namespace Barotrauma
                 avgContactNormal += contactNormal;
 
                 //apply impacts at the positions where this sub is touching the limb
-                ApplyImpact((Vector2.Dot(-collision.Velocity, contactNormal) / 2.0f) / levelContacts.Count, contactNormal, collision.ImpactPos, applyDamage: false);
+                ApplyImpact((Vector2.Dot(-collision.Velocity, contactNormal) / 2.0f) / levelContactCount, contactNormal, collision.ImpactPos, applyDamage: false);
             }
-            avgContactNormal /= levelContacts.Count;
+            avgContactNormal /= levelContactCount;
             
             float contactDot = Vector2.Dot(Body.LinearVelocity, -avgContactNormal);
             if (contactDot > 0.001f)
@@ -756,6 +808,21 @@ namespace Barotrauma
                         }
                     }
                 }
+            }
+        }
+
+        private static IEnumerable<Contact> GetLevelContacts(PhysicsBody body)
+        {
+            ContactEdge contactEdge = body.FarseerBody.ContactList;
+            while (contactEdge?.Contact != null)
+            {
+                if (contactEdge.Contact.Enabled &&
+                    contactEdge.Contact.IsTouching &&
+                    contactEdge.Other?.UserData is VoronoiCell)
+                {
+                   yield return contactEdge.Contact;
+                }
+                contactEdge = contactEdge.Next;
             }
         }
 
@@ -827,21 +894,9 @@ namespace Barotrauma
             }
 
             //find all contacts between this sub and level walls
-            List<Contact> levelContacts = new List<Contact>();
-            ContactEdge contactEdge = Body?.FarseerBody?.ContactList;
-            while (contactEdge?.Next != null)
-            {
-                if (contactEdge.Contact.Enabled &&
-                    contactEdge.Other.UserData is VoronoiCell &&
-                    contactEdge.Contact.IsTouching)
-                {
-                    levelContacts.Add(contactEdge.Contact);
-                }
-
-                contactEdge = contactEdge.Next;
-            }
-
-            if (levelContacts.Count == 0) { return; }
+            IEnumerable<Contact> levelContacts = GetLevelContacts(Body);
+            int levelContactCount = levelContacts.Count();
+            if (levelContactCount == 0) { return; }
             
             //if this sub is in contact with the level, apply artifical impacts
             //to both subs to prevent the other sub from bouncing on top of this one 
@@ -852,8 +907,7 @@ namespace Barotrauma
                 levelContact.GetWorldManifold(out Vector2 contactNormal, out FixedArray2<Vector2> temp);
 
                 //if the contact normal is pointing from the sub towards the level cell we collided with, flip the normal
-                VoronoiCell cell = levelContact.FixtureB.UserData is VoronoiCell ? 
-                    ((VoronoiCell)levelContact.FixtureB.UserData) : ((VoronoiCell)levelContact.FixtureA.UserData);
+                VoronoiCell cell = levelContact.FixtureB.UserData as VoronoiCell ?? levelContact.FixtureA.UserData as VoronoiCell;
 
                 var cellDiff = ConvertUnits.ToDisplayUnits(Body.SimPosition) - cell.Center;
                 if (Vector2.Dot(contactNormal, cellDiff) < 0)
@@ -864,9 +918,9 @@ namespace Barotrauma
                 avgContactNormal += contactNormal;
 
                 //apply impacts at the positions where this sub is touching the level
-                ApplyImpact((Vector2.Dot(impact.Velocity, contactNormal) / 2.0f) * massRatio / levelContacts.Count, contactNormal, impact.ImpactPos);
+                ApplyImpact((Vector2.Dot(impact.Velocity, contactNormal) / 2.0f) * massRatio / levelContactCount, contactNormal, impact.ImpactPos);
             }
-            avgContactNormal /= levelContacts.Count;
+            avgContactNormal /= levelContactCount;
 
             //apply an impact to the other sub
             float contactDot = Vector2.Dot(otherSub.PhysicsBody.LinearVelocity, -avgContactNormal);
