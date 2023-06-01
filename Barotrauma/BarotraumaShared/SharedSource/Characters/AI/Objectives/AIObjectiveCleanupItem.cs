@@ -64,7 +64,6 @@ namespace Barotrauma
             if (subObjectives.Any()) { return; }
             if (HumanAIController.FindSuitableContainer(character, item, ignoredContainers, ref itemIndex, out Item suitableContainer))
             {
-                itemIndex = 0;
                 if (suitableContainer != null)
                 {
                     bool equip = item.GetComponent<Holdable>() != null ||
@@ -112,10 +111,7 @@ namespace Barotrauma
                     Abandon = true;
                 }
             }
-            else
-            {
-                objectiveManager.GetObjective<AIObjectiveIdle>().Wander(deltaTime);
-            }
+            objectiveManager.GetObjective<AIObjectiveIdle>().Wander(deltaTime);
         }
 
         protected override bool CheckObjectiveSpecific()

@@ -23,7 +23,6 @@
         protected override bool MatchesConditionSpecific()
         {
             Identifier identifier = CharacterAbilityGivePermanentStat.HandlePlaceholders(placeholder, statIdentifier);
-
             return character.Info.GetSavedStatValue(statType, identifier) >= min;
         }
     }

@@ -30,7 +30,7 @@ namespace Barotrauma
             public EventType EventType { get; }
         }
 
-        public struct ComponentStateEventData : IEventData
+        public readonly struct ComponentStateEventData : IEventData
         {
             public EventType EventType => EventType.ComponentState;
             public readonly ItemComponent Component;
@@ -71,9 +71,9 @@ namespace Barotrauma
         {
             public EventType EventType => EventType.ItemStat;
 
-            public readonly Dictionary<ItemStatManager.TalentStatIdentifier, float> Stats;
+            public readonly Dictionary<TalentStatIdentifier, float> Stats;
 
-            public SetItemStatEventData(Dictionary<ItemStatManager.TalentStatIdentifier, float> stats)
+            public SetItemStatEventData(Dictionary<TalentStatIdentifier, float> stats)
             {
                 Stats = stats;
             }
@@ -82,6 +82,13 @@ namespace Barotrauma
         private readonly struct ItemStatusEventData : IEventData
         {
             public EventType EventType => EventType.Status;
+
+            public readonly bool LoadingRound;
+
+            public ItemStatusEventData(bool loadingRound)
+            {
+                LoadingRound = loadingRound;
+            }
         }
         
         private readonly struct AssignCampaignInteractionEventData : IEventData

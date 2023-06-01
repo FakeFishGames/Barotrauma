@@ -124,7 +124,24 @@ namespace Lidgren.Network
 			m_lastSocketBind = now;
 
 			if (m_socket == null)
-                m_socket = new Socket(AddressFamily.InterNetworkV6, SocketType.Dgram, ProtocolType.Udp);
+			{
+				try
+				{
+					m_socket = new Socket(AddressFamily.InterNetworkV6, SocketType.Dgram, ProtocolType.Udp);
+				}
+				catch (SocketException socketException)
+				{
+					if (socketException.SocketErrorCode == SocketError.AddressFamilyNotSupported)
+					{
+						// Fall back to IPv4 if IPv6 is unsupported
+						m_socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
+					}
+					else
+					{
+						throw;
+					}
+				}
+			}
 
             if (reBind)
 				m_socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, (int)1); 
@@ -132,9 +149,9 @@ namespace Lidgren.Network
 			m_socket.ReceiveBufferSize = m_configuration.ReceiveBufferSize;
 			m_socket.SendBufferSize = m_configuration.SendBufferSize;
 			m_socket.Blocking = false;
-            m_socket.DualMode = m_configuration.UseDualModeSockets;
+            if (m_socket.AddressFamily == AddressFamily.InterNetworkV6) { m_socket.DualMode = m_configuration.UseDualModeSockets; }
 
-            var ep = (EndPoint)new NetEndPoint(m_configuration.LocalAddress.MapToIPv6(), reBind ? m_listenPort : m_configuration.Port);
+            var ep = (EndPoint)new NetEndPoint(m_configuration.LocalAddress.MapToFamily(m_socket.AddressFamily), reBind ? m_listenPort : m_configuration.Port);
             m_socket.Bind(ep);
 
 			try
@@ -413,6 +430,10 @@ namespace Lidgren.Network
 				int bytesReceived = 0;
 				try
 				{
+					if (m_senderRemote is IPEndPoint ipEndpoint && ipEndpoint.AddressFamily != m_socket.AddressFamily)
+					{
+						m_senderRemote = ipEndpoint.MapToFamily(m_socket.AddressFamily);
+					}
 					bytesReceived = m_socket.ReceiveFrom(m_receiveBuffer, 0, m_receiveBuffer.Length, SocketFlags.None, ref m_senderRemote);
 				}
 				catch (SocketException sx)

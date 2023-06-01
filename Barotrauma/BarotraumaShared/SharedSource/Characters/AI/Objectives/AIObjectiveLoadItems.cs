@@ -63,7 +63,7 @@ namespace Barotrauma
         {
             if (item == null || item.Removed) { return false; }
             if (targetContainerTags.HasValue && !OrderPrefab.TargetItemsMatchItem(targetContainerTags.Value, item)) { return false; }
-            if (!(item.GetComponent<ItemContainer>() is ItemContainer container)) { return false; }
+            if ((item.GetComponent<ItemContainer>() is not ItemContainer container)) { return false; }
             if (container.Inventory == null) { return false; }
             if (targetCondition.HasValue && container.Inventory.IsFull() && container.Inventory.AllItems.None(i => ItemMatchesTargetCondition(i, targetCondition.Value))) { return false; }
             if (!AIObjectiveCleanupItems.IsItemInsideValidSubmarine(item, character)) { return false; }

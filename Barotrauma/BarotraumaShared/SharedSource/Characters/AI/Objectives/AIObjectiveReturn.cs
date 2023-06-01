@@ -12,6 +12,9 @@ namespace Barotrauma
         private AIObjectiveGoTo moveInsideObjective, moveOutsideObjective;
         private bool usingEscapeBehavior, isSteeringThroughGap;
 
+        public override bool AllowOutsideSubmarine => true;
+        public override bool AllowInAnySub => true;
+
         public AIObjectiveReturn(Character character, Character orderGiver, AIObjectiveManager objectiveManager, float priorityModifier = 1.0f) : base(character, objectiveManager, priorityModifier)
         {
             ReturnTarget = GetReturnTarget(Submarine.MainSubs) ?? GetReturnTarget(Submarine.Loaded);

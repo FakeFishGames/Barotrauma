@@ -14,7 +14,7 @@ namespace Steamworks
 		}
 
 		public ulong Id => Handle.Value;
-		public InputType InputType => SteamInput.Internal.GetInputTypeForHandle( Handle );
+		public InputType InputType => SteamInput.Internal?.GetInputTypeForHandle( Handle ) ?? InputType.Unknown;
 
 		/// <summary>
 		/// Reconfigure the controller to use the specified action set (ie 'Menu', 'Walk' or 'Drive')
@@ -23,12 +23,12 @@ namespace Steamworks
 		/// </summary>
 		public string ActionSet
 		{
-			set => SteamInput.Internal.ActivateActionSet( Handle, SteamInput.Internal.GetActionSetHandle( value ) );
+			set => SteamInput.Internal?.ActivateActionSet( Handle, SteamInput.Internal.GetActionSetHandle( value ) );
 		}
 
-		public void DeactivateLayer( string layer ) => SteamInput.Internal.DeactivateActionSetLayer( Handle, SteamInput.Internal.GetActionSetHandle( layer ) );
-		public void ActivateLayer( string layer ) => SteamInput.Internal.ActivateActionSetLayer( Handle, SteamInput.Internal.GetActionSetHandle( layer ) );
-		public void ClearLayers() => SteamInput.Internal.DeactivateAllActionSetLayers( Handle );
+		public void DeactivateLayer( string layer ) => SteamInput.Internal?.DeactivateActionSetLayer( Handle, SteamInput.Internal.GetActionSetHandle( layer ) );
+		public void ActivateLayer( string layer ) => SteamInput.Internal?.ActivateActionSetLayer( Handle, SteamInput.Internal.GetActionSetHandle( layer ) );
+		public void ClearLayers() => SteamInput.Internal?.DeactivateAllActionSetLayers( Handle );
 
 
 		/// <summary>
@@ -36,7 +36,7 @@ namespace Steamworks
 		/// </summary>
 		public DigitalState GetDigitalState( string actionName )
 		{
-			return SteamInput.Internal.GetDigitalActionData( Handle, SteamInput.GetDigitalActionHandle( actionName ) );
+			return SteamInput.Internal?.GetDigitalActionData( Handle, SteamInput.GetDigitalActionHandle( actionName ) ) ?? default;
 		}
 
 		/// <summary>
@@ -44,7 +44,7 @@ namespace Steamworks
 		/// </summary>
 		public AnalogState GetAnalogState( string actionName )
 		{
-			return SteamInput.Internal.GetAnalogActionData( Handle, SteamInput.GetAnalogActionHandle( actionName ) );
+			return SteamInput.Internal?.GetAnalogActionData( Handle, SteamInput.GetAnalogActionHandle( actionName ) ) ?? default;
 		}
 
 

@@ -25,15 +25,16 @@ namespace Steamworks.Data
 		public static NetPingLocation? TryParseFromString( string str )
 		{
 			var result = default( NetPingLocation );
-			if ( !SteamNetworkingUtils.Internal.ParsePingLocationString( str, ref result ) )
+			if ( SteamNetworkingUtils.Internal is null || !SteamNetworkingUtils.Internal.ParsePingLocationString( str, ref result ) )
 				return null;
 
 			return result;
 		}
 
-		public override string ToString()
+		public override string? ToString()
 		{
-			SteamNetworkingUtils.Internal.ConvertPingLocationToString( ref this, out var strVal );
+			string? strVal = null;
+			SteamNetworkingUtils.Internal?.ConvertPingLocationToString( ref this, out strVal );
 			return strVal;
 		}
 
@@ -61,7 +62,7 @@ namespace Steamworks.Data
 		/// You are looking for the "ticketgen" library.
 		public int EstimatePingTo( NetPingLocation target )
 		{
-			return SteamNetworkingUtils.Internal.EstimatePingTimeBetweenTwoLocations( ref this, ref target );
+			return SteamNetworkingUtils.Internal?.EstimatePingTimeBetweenTwoLocations( ref this, ref target ) ?? Defines.k_nSteamNetworkingPing_Failed;
 		}
 	}
 }

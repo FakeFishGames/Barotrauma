@@ -17,14 +17,19 @@ using System.Linq;
 using System.Reflection;
 using System.Threading;
 using Barotrauma.Extensions;
+using System.Collections.Immutable;
 
 namespace Barotrauma
 {
     class GameMain : Game
     {
-        public static bool ShowFPS = false;
-        public static bool ShowPerf = false;
+        public static bool ShowFPS;
+        public static bool ShowPerf;
         public static bool DebugDraw;
+        /// <summary>
+        /// Doesn't automatically enable los or bot AI or do anything like that. Probably not fully implemented.
+        /// </summary>
+        public static bool DevMode;
         public static bool IsSingleplayer => NetworkMember == null;
         public static bool IsMultiplayer => NetworkMember != null;
 
@@ -227,9 +232,8 @@ namespace Barotrauma
             }
 
             GameSettings.Init();
+            CreatureMetrics.Init();
             
-            Md5Hash.Cache.Load();
-
             ConsoleArguments = args;
 
             try
@@ -397,7 +401,7 @@ namespace Barotrauma
             TextureLoader.Init(GraphicsDevice);
 
             //do this here because we need it for the loading screen
-            WaterRenderer.Instance = new WaterRenderer(base.GraphicsDevice, Content);
+            WaterRenderer.Instance = new WaterRenderer(base.GraphicsDevice);
 
             Quad.Init(GraphicsDevice);
 
@@ -475,6 +479,19 @@ namespace Barotrauma
                 yield return CoroutineStatus.Running;
             }
 
+            var corePackage = ContentPackageManager.EnabledPackages.Core;
+            if (corePackage.EnableError.TryUnwrap(out var error))
+            {
+                if (error.ErrorsOrException.TryGet(out ImmutableArray<string> errorMessages))
+                {
+                    throw new Exception($"Error while loading the core content package \"{corePackage.Name}\": {errorMessages.First()}");
+                }
+                else if (error.ErrorsOrException.TryGet(out Exception exception))
+                {
+                    throw new Exception($"Error while loading the core content package \"{corePackage.Name}\": {exception.Message}", exception);
+                }
+            }
+
             TextManager.VerifyLanguageAvailable();
 
             DebugConsole.Init();
@@ -498,10 +515,10 @@ namespace Barotrauma
             TitleScreen.LoadState = 75.0f;
         yield return CoroutineStatus.Running;
 
-            GameScreen = new GameScreen(GraphicsDeviceManager.GraphicsDevice, Content);
+            GameScreen = new GameScreen(GraphicsDeviceManager.GraphicsDevice);
 
             ParticleManager = new ParticleManager(GameScreen.Cam);
-            LightManager = new Lights.LightManager(base.GraphicsDevice, Content);
+            LightManager = new Lights.LightManager(base.GraphicsDevice);
             
             TitleScreen.LoadState = 80.0f;
         yield return CoroutineStatus.Running;
@@ -729,14 +746,14 @@ namespace Barotrauma
                 }
                 else if (HasLoaded)
                 {
-                    if (ConnectCommand is Some<ConnectCommand> { Value: var connectCommand })
+                    if (ConnectCommand.TryUnwrap(out var connectCommand))
                     {
                         if (Client != null)
                         {
                             Client.Quit();
                             Client = null;
-                            MainMenuScreen.Select();
                         }
+                        MainMenuScreen.Select();
 
                         if (connectCommand.EndpointOrLobby.TryGet(out ulong lobbyId))
                         {
@@ -1051,21 +1068,23 @@ namespace Barotrauma
 
         public static void QuitToMainMenu(bool save)
         {
+            CreatureMetrics.Save();
             if (save)
             {
                 GUI.SetSavingIndicatorState(true);
-
                 if (GameSession.Submarine != null && !GameSession.Submarine.Removed)
                 {
                     GameSession.SubmarineInfo = new SubmarineInfo(GameSession.Submarine);
                 }
-
-                // Update store stock when saving and quitting in an outpost (normally updated when CampaignMode.End() is called)
-                if (GameSession?.Campaign is SinglePlayerCampaign spCampaign && Level.IsLoadedFriendlyOutpost)
+                if (GameSession.Campaign is CampaignMode campaign)
                 {
-                    spCampaign.UpdateStoreStock();
+                    if (campaign is SinglePlayerCampaign spCampaign && Level.IsLoadedFriendlyOutpost)
+                    {
+                        spCampaign.UpdateStoreStock();
+                    }
+                    GameSession.EventManager?.RegisterEventHistory(registerFinishedOnly: true);
+                    campaign.End();
                 }
-
                 SaveUtil.SaveGame(GameSession.SavePath);
             }
 
@@ -1097,37 +1116,6 @@ namespace Barotrauma
             GUIMessageBox.CloseAll();
             MainMenuScreen.Select();
             GameSession = null;
-        }
-
-        public void ShowEditorDisclaimer()
-        {
-            var msgBox = new GUIMessageBox(TextManager.Get("EditorDisclaimerTitle"), TextManager.Get("EditorDisclaimerText"));
-            var linkHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.25f), msgBox.Content.RectTransform)) { Stretch = true, RelativeSpacing = 0.025f };
-            linkHolder.RectTransform.MaxSize = new Point(int.MaxValue, linkHolder.Rect.Height);
-            List<(LocalizedString Caption, string Url)> links = new List<(LocalizedString, string)>()
-            {
-                (TextManager.Get("EditorDisclaimerWikiLink"), TextManager.Get("EditorDisclaimerWikiUrl").Fallback("https://barotraumagame.com/wiki").Value),
-                (TextManager.Get("EditorDisclaimerDiscordLink"), TextManager.Get("EditorDisclaimerDiscordUrl").Fallback("https://discordapp.com/invite/undertow").Value),
-            };
-            foreach (var link in links)
-            {
-                new GUIButton(new RectTransform(new Vector2(1.0f, 0.2f), linkHolder.RectTransform), link.Caption, style: "MainMenuGUIButton", textAlignment: Alignment.Left)
-                {
-                    UserData = link.Url,
-                    OnClicked = (btn, userdata) =>
-                    {
-                        ShowOpenUrlInWebBrowserPrompt(userdata as string);
-                        return true;
-                    }
-                };
-            }
-
-            msgBox.InnerFrame.RectTransform.MinSize = new Point(0,
-                msgBox.InnerFrame.Rect.Height + linkHolder.Rect.Height + msgBox.Content.AbsoluteSpacing * 2 + 10);
-            var config = GameSettings.CurrentConfig;
-            config.EditorDisclaimerShown = true;
-            GameSettings.SetCurrentConfig(config);
-            GameSettings.SaveCurrentConfig();
         }
 
         public void ShowBugReporter()
@@ -1187,6 +1175,7 @@ namespace Barotrauma
         protected override void OnExiting(object sender, EventArgs args)
         {
             exiting = true;
+            CreatureMetrics.Save();
             DebugConsole.NewMessage("Exiting...");
             Client?.Quit();
             SteamManager.ShutDown();

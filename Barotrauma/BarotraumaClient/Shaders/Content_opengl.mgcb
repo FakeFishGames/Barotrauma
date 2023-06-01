@@ -78,3 +78,9 @@
 /processor:EffectProcessor
 /processorParam:DebugMode=Auto
 /build:thresholdtint_opengl.fx
+
+#begin wearableclip_opengl.fx
+/importer:EffectImporter
+/processor:EffectProcessor
+/processorParam:DebugMode=Auto
+/build:wearableclip_opengl.fx

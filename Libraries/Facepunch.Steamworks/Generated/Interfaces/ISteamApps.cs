@@ -76,7 +76,7 @@ namespace Steamworks
 		private static extern Utf8StringPointer _GetCurrentGameLanguage( IntPtr self );
 		
 		#endregion
-		internal string GetCurrentGameLanguage()
+		internal string? GetCurrentGameLanguage()
 		{
 			var returnValue = _GetCurrentGameLanguage( Self );
 			return returnValue;

@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Diagnostics.CodeAnalysis;
 using Barotrauma.IO;
 using System.Linq;
 using System.Xml.Linq;
@@ -11,6 +12,31 @@ using Barotrauma.Abilities;
 
 namespace Barotrauma
 {
+    [NetworkSerialize]
+    internal readonly record struct NetJobVariant(Identifier Identifier, byte Variant) : INetSerializableStruct
+    {
+        [return: MaybeNull]
+        public JobVariant ToJobVariant()
+        {
+            if (!JobPrefab.Prefabs.TryGet(Identifier, out JobPrefab jobPrefab) || jobPrefab.HiddenJob) { return null; }
+            return new JobVariant(jobPrefab, Variant);
+        }
+
+        public static NetJobVariant FromJobVariant(JobVariant jobVariant) => new NetJobVariant(jobVariant.Prefab.Identifier, (byte)jobVariant.Variant);
+    }
+
+    [NetworkSerialize(ArrayMaxSize = byte.MaxValue)]
+    internal readonly record struct NetCharacterInfo(string NewName,
+                                                     ImmutableArray<Identifier> Tags,
+                                                     byte HairIndex,
+                                                     byte BeardIndex,
+                                                     byte MoustacheIndex,
+                                                     byte FaceAttachmentIndex,
+                                                     Color SkinColor,
+                                                     Color HairColor,
+                                                     Color FacialHairColor,
+                                                     ImmutableArray<NetJobVariant> JobVariants) : INetSerializableStruct;
+
     class CharacterInfoPrefab
     {
         public readonly ImmutableArray<CharacterInfo.HeadPreset> Heads;
@@ -315,6 +341,8 @@ namespace Barotrauma
 
         public HashSet<Identifier> UnlockedTalents { get; private set; } = new HashSet<Identifier>();
 
+        public (Identifier factionId, float reputation) MinReputationToHire;
+
         /// <summary>
         /// Endocrine boosters can unlock talents outside the user's talent tree. This method is used to cull them from the selection
         /// </summary>
@@ -508,8 +536,11 @@ namespace Barotrauma
 
         public List<Order> CurrentOrders { get; } = new List<Order>();
 
-        //unique ID given to character infos in MP
-        //used by clients to identify which infos are the same to prevent duplicate characters in round summary
+
+        /// <summary>
+        /// Unique ID given to character infos in MP. Non-persistent.
+        /// Used by clients to identify which infos are the same to prevent duplicate characters in round summary.
+        /// </summary>
         public ushort ID;
 
         public List<Identifier> SpriteTags
@@ -667,7 +698,6 @@ namespace Barotrauma
                 {
                     Name = GetRandomName(randSync);
                 }
-
                 TryLoadNameAndTitle(npcIdentifier);
                 SetPersonalityTrait();
 
@@ -778,9 +808,10 @@ namespace Barotrauma
                 FacialHairColors = CharacterConfigElement.GetAttributeTupleArray("facialhaircolors", new (Color, float)[] { (Color.WhiteSmoke, 100f) }).ToImmutableArray();
                 SkinColors = CharacterConfigElement.GetAttributeTupleArray("skincolors", new (Color, float)[] { (new Color(255, 215, 200, 255), 100f) }).ToImmutableArray();
                 
-                Head.SkinColor = infoElement.GetAttributeColor("skincolor", Color.White);
-                Head.HairColor = infoElement.GetAttributeColor("haircolor", Color.White);
-                Head.FacialHairColor = infoElement.GetAttributeColor("facialhaircolor", Color.White);
+                //default to transparent color, it's invalid and will be replaced with a random one in CheckColors
+                Head.SkinColor = infoElement.GetAttributeColor("skincolor", Color.Transparent);
+                Head.HairColor = infoElement.GetAttributeColor("haircolor", Color.Transparent);
+                Head.FacialHairColor = infoElement.GetAttributeColor("facialhaircolor", Color.Transparent);
                 CheckColors();
 
                 TryLoadNameAndTitle(npcIdentifier);
@@ -822,6 +853,8 @@ namespace Barotrauma
 
             MissionsCompletedSinceDeath = infoElement.GetAttributeInt("missionscompletedsincedeath", 0);
             UnlockedTalents = new HashSet<Identifier>();
+
+            MinReputationToHire = (infoElement.GetAttributeIdentifier("factionId", Identifier.Empty), infoElement.GetAttributeFloat("minreputation", 0.0f));
 
             foreach (var subElement in infoElement.Elements())
             {
@@ -872,10 +905,19 @@ namespace Barotrauma
                         Identifier talentIdentifier = talentElement.GetAttributeIdentifier("identifier", Identifier.Empty);
                         if (talentIdentifier == Identifier.Empty) { continue; }
 
+                        if (TalentPrefab.TalentPrefabs.TryGet(talentIdentifier, out TalentPrefab prefab))
+                        {
+                            foreach (TalentMigration migration in prefab.Migrations)
+                            {
+                                migration.TryApply(version, this);
+                            }
+                        }
+
                         UnlockedTalents.Add(talentIdentifier);
                     }
                 }
             }
+
             LoadHeadAttachments();
         }
 
@@ -918,17 +960,25 @@ namespace Barotrauma
             }
         }
 
+        /// <summary>
+        /// Returns a presumably (not guaranteed) unique hash using the (current) Name, appearence, and job.
+        /// So unless there's another character with the exactly same name, job, and appearance, the hash should be unique.
+        /// </summary>
         public int GetIdentifier()
         {
-            return GetIdentifier(Name);
+            return GetIdentifierHash(Name);
         }
 
+        /// <summary>
+        /// Returns a presumably (not guaranteed) unique hash using the OriginalName, appearence, and job.
+        /// So unless there's another character with the exactly same name, job, and appearance, the hash should be unique.
+        /// </summary>
         public int GetIdentifierUsingOriginalName()
         {
-            return GetIdentifier(OriginalName);
+            return GetIdentifierHash(OriginalName);
         }
 
-        private int GetIdentifier(string name)
+        private int GetIdentifierHash(string name)
         {
             int id = ToolBox.StringToInt(name + string.Join("", Head.Preset.TagSet.OrderBy(s => s)));
             id ^= Head.HairIndex << 12;
@@ -1151,7 +1201,7 @@ namespace Barotrauma
 
         partial void LoadAttachmentSprites();
         
-        private int CalculateSalary()
+        public int CalculateSalary()
         {
             if (Name == null || Job == null) { return 0; }
 
@@ -1393,6 +1443,13 @@ namespace Barotrauma
 
             charElement.Add(new XAttribute("missionscompletedsincedeath", MissionsCompletedSinceDeath));
 
+            if (MinReputationToHire.factionId != default)
+            {
+                charElement.Add(
+                    new XAttribute("factionId", Name),
+                    new XAttribute("minreputation", MinReputationToHire.reputation));
+            }
+
             if (Character != null)
             {
                 if (Character.AnimController.CurrentHull != null)
@@ -1501,7 +1558,7 @@ namespace Barotrauma
                 }
                 if (order.OrderGiver != null)
                 {
-                    orderElement.Add(new XAttribute("ordergiverinfoid", order.OrderGiver.Info.ID));
+                    orderElement.Add(new XAttribute("ordergiver", order.OrderGiver.Info?.GetIdentifier()));
                 }
                 if (order.TargetSpatialEntity?.Submarine is Submarine targetSub)
                 {
@@ -1595,8 +1652,8 @@ namespace Barotrauma
                     continue;
                 }
                 var targetType = (Order.OrderTargetType)orderElement.GetAttributeInt("targettype", 0);
-                int orderGiverInfoId = orderElement.GetAttributeInt("ordergiverinfoid", -1);
-                var orderGiver = orderGiverInfoId >= 0 ? Character.CharacterList.FirstOrDefault(c => c.Info?.ID == orderGiverInfoId) : null;
+                int orderGiverInfoId = orderElement.GetAttributeInt("ordergiver", -1);
+                var orderGiver = orderGiverInfoId >= 0 ? Character.CharacterList.FirstOrDefault(c => c.Info?.GetIdentifier() == orderGiverInfoId) : null;
                 Entity targetEntity = null;
                 switch (targetType)
                 {
@@ -1832,6 +1889,21 @@ namespace Barotrauma
             {
                 return 0f;
             }
+        }
+
+        public float GetSavedStatValueWithBotsInMp(StatTypes statType, Identifier statIdentifier)
+        {
+            float statValue = GetSavedStatValue(statType, statIdentifier);
+
+            if (GameMain.NetworkMember is null) { return statValue; }
+
+            foreach (Character bot in GameSession.GetSessionCrewCharacters(CharacterType.Bot))
+            {
+                int botStatValue = (int)bot.Info.GetSavedStatValue(statType, statIdentifier);
+                statValue = Math.Max(statValue, botStatValue);
+            }
+
+            return statValue;
         }
 
         public void ChangeSavedStatValue(StatTypes statType, float value, Identifier statIdentifier, bool removeOnDeath, float maxValue = float.MaxValue, bool setValue = false)

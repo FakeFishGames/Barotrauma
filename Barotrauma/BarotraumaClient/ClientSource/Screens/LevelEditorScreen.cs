@@ -219,7 +219,7 @@ namespace Barotrauma
                     currentLevelData = LevelData.CreateRandom(seedBox.Text, generationParams: selectedParams);
                     currentLevelData.ForceOutpostGenerationParams = outpostParamsList.SelectedData as OutpostGenerationParams;
                     currentLevelData.AllowInvalidOutpost = allowInvalidOutpost.Selected;
-                    var dummyLocations = GameSession.CreateDummyLocations(seed: currentLevelData.Seed);
+                    var dummyLocations = GameSession.CreateDummyLocations(currentLevelData);
                     Level.Generate(currentLevelData, mirror: mirrorLevel.Selected, startLocation: dummyLocations[0], endLocation: dummyLocations[1]);
                     Submarine.MainSub?.SetPosition(Level.Loaded.StartPosition);
                     GameMain.LightManager.AddLight(pointerLightSource);
@@ -343,7 +343,7 @@ namespace Barotrauma
             editorContainer.ClearChildren();
             paramsList.Content.ClearChildren();
 
-            foreach (LevelGenerationParams genParams in LevelGenerationParams.LevelParams)
+            foreach (LevelGenerationParams genParams in LevelGenerationParams.LevelParams.OrderBy(p => p.Name))
             {
                 new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), paramsList.Content.RectTransform) { MinSize = new Point(0, 20) },
                     genParams.Identifier.Value)
@@ -359,7 +359,7 @@ namespace Barotrauma
             editorContainer.ClearChildren();
             caveParamsList.Content.ClearChildren();
 
-            foreach (CaveGenerationParams genParams in CaveGenerationParams.CaveParams)
+            foreach (CaveGenerationParams genParams in CaveGenerationParams.CaveParams.OrderBy(p => p.Name))
             {
                 new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), caveParamsList.Content.RectTransform) { MinSize = new Point(0, 20) },
                     genParams.Name)
@@ -375,7 +375,7 @@ namespace Barotrauma
             editorContainer.ClearChildren();
             ruinParamsList.Content.ClearChildren();
 
-            foreach (RuinGenerationParams genParams in RuinGenerationParams.RuinParams)
+            foreach (RuinGenerationParams genParams in RuinGenerationParams.RuinParams.OrderBy(p => p.Identifier))
             {
                 new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), ruinParamsList.Content.RectTransform) { MinSize = new Point(0, 20) },
                     genParams.Name)
@@ -391,7 +391,7 @@ namespace Barotrauma
             editorContainer.ClearChildren();
             outpostParamsList.Content.ClearChildren();
 
-            foreach (OutpostGenerationParams genParams in OutpostGenerationParams.OutpostParams)
+            foreach (OutpostGenerationParams genParams in OutpostGenerationParams.OutpostParams.OrderBy(p => p.Name))
             {
                 new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), outpostParamsList.Content.RectTransform) { MinSize = new Point(0, 20) },
                     genParams.Name)

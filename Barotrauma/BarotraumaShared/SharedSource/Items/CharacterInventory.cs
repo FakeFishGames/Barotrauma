@@ -1,4 +1,5 @@
-﻿using Barotrauma.Items.Components;
+﻿using Barotrauma.Extensions;
+using Barotrauma.Items.Components;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -23,7 +24,7 @@ namespace Barotrauma
         }
 
 
-        public static readonly List<InvSlotType> anySlot = new List<InvSlotType>() { InvSlotType.Any };
+        public static readonly List<InvSlotType> AnySlot = new List<InvSlotType>() { InvSlotType.Any };
 
         protected bool[] IsEquipped;
 
@@ -104,15 +105,21 @@ namespace Barotrauma
 
                 string slotString = subElement.GetAttributeString("slot", "None");
                 InvSlotType slot = Enum.TryParse(slotString, ignoreCase: true, out InvSlotType s) ? s : InvSlotType.None;
-                Entity.Spawner?.AddItemToSpawnQueue(itemPrefab, this, ignoreLimbSlots: subElement.GetAttributeBool("forcetoslot", false), slot: slot, onSpawned: (Item item) =>
+
+                bool forceToSlot = subElement.GetAttributeBool("forcetoslot", false);
+                int amount = subElement.GetAttributeInt("amount", 1);
+                for (int i = 0; i < amount; i++)
                 {
-                    if (item != null && item.ParentInventory != this)
+                    Entity.Spawner?.AddItemToSpawnQueue(itemPrefab, this, ignoreLimbSlots: forceToSlot, slot: slot, onSpawned: (Item item) =>
                     {
-                        string errorMsg = $"Failed to spawn the initial item \"{item.Prefab.Identifier}\" in the inventory of \"{character.SpeciesName}\".";
-                        DebugConsole.ThrowError(errorMsg);
-                        GameAnalyticsManager.AddErrorEventOnce("CharacterInventory:FailedToSpawnInitialItem", GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
-                    }
-                });
+                        if (item != null && item.ParentInventory != this)
+                        {
+                            string errorMsg = $"Failed to spawn the initial item \"{item.Prefab.Identifier}\" in the inventory of \"{character.SpeciesName}\".";
+                            DebugConsole.ThrowError(errorMsg);
+                            GameAnalyticsManager.AddErrorEventOnce("CharacterInventory:FailedToSpawnInitialItem", GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
+                        }
+                    });
+                }
             }
         }
 
@@ -171,21 +178,6 @@ namespace Barotrauma
                 (SlotTypes[i] == InvSlotType.Any || slots[i].Items.Count < 1);
         }
 
-        public bool CanBeAutoMovedToCorrectSlots(Item item)
-        {
-            if (item == null) { return false; }
-            foreach (var allowedSlot in item.AllowedSlots)
-            {
-                InvSlotType slotsFree = InvSlotType.None;
-                for (int i = 0; i < slots.Length; i++)
-                {
-                    if (allowedSlot.HasFlag(SlotTypes[i]) && slots[i].Empty()) { slotsFree |= SlotTypes[i]; }
-                }
-                if (allowedSlot == slotsFree) { return true; }
-            }
-            return false;
-        }
-
         public override void RemoveItem(Item item)
         {
             RemoveItem(item, tryEquipFromSameStack: false);
@@ -234,7 +226,7 @@ namespace Barotrauma
             if (item.AllowedSlots.Contains(InvSlotType.Any))
             {
                 var wearable = item.GetComponent<Wearable>();
-                if (wearable != null && !wearable.AutoEquipWhenFull && CheckIfAnySlotAvailable(item, false) == -1)
+                if (wearable != null && !wearable.AutoEquipWhenFull && !IsAnySlotAvailable(item))
                 {
                     return false;
                 }
@@ -308,6 +300,8 @@ namespace Barotrauma
 #endif
             }
 
+            if (item.GetComponent<Pickable>() == null || item.AllowedSlots.None()) { return false; }
+
             bool inSuitableSlot = false;
             bool inWrongSlot = false;
             int currentSlot = -1;
@@ -342,7 +336,7 @@ namespace Barotrauma
             //try to place the item in a LimbSlot.Any slot if that's allowed
             if (allowedSlots.Contains(InvSlotType.Any) && item.AllowedSlots.Contains(InvSlotType.Any))
             {
-                int freeIndex = CheckIfAnySlotAvailable(item, inWrongSlot);
+                int freeIndex = GetFreeAnySlot(item, inWrongSlot);
                 if (freeIndex > -1)
                 {
                     PutItem(item, freeIndex, user, true, createNetworkEvent);
@@ -399,7 +393,9 @@ namespace Barotrauma
             return placedInSlot > -1;
         }
 
-        public int CheckIfAnySlotAvailable(Item item, bool inWrongSlot)
+        public bool IsAnySlotAvailable(Item item) => GetFreeAnySlot(item, inWrongSlot: false) > -1;
+
+        private int GetFreeAnySlot(Item item, bool inWrongSlot)
         {
             //attempt to stack first
             for (int i = 0; i < capacity; i++)

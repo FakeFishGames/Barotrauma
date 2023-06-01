@@ -7,6 +7,10 @@ using Microsoft.Xna.Framework;
 
 namespace Barotrauma
 {
+    /// <summary>
+    /// A special affliction type that gradually makes the character turn into another type of character. 
+    /// See <see cref="AfflictionPrefabHusk"/> for more details.
+    /// </summary>
     partial class AfflictionHusk : Affliction
     {
         public enum InfectionState
@@ -22,7 +26,7 @@ namespace Barotrauma
 
         private Character character;
 
-        private bool stun = true;
+        private bool stun = false;
 
         private readonly List<Affliction> huskInfection = new List<Affliction>();
 
@@ -43,6 +47,7 @@ namespace Barotrauma
                     DeactivateHusk();
                     highestStrength = 0;
                 }
+                activeEffectDirty = true;
             }
         }
         private float highestStrength;
@@ -62,6 +67,7 @@ namespace Barotrauma
         private float DormantThreshold => HuskPrefab.DormantThreshold;
         private float ActiveThreshold => HuskPrefab.ActiveThreshold;
         private float TransitionThreshold => HuskPrefab.TransitionThreshold;
+
         private float TransformThresholdOnDeath => HuskPrefab.TransformThresholdOnDeath;
 
         public AfflictionHusk(AfflictionPrefab prefab, float strength) : base(prefab, strength)
@@ -216,7 +222,8 @@ namespace Barotrauma
         private void DeactivateHusk()
         {
             if (character?.AnimController == null || character.Removed) { return; }
-            if (Prefab is AfflictionPrefabHusk { NeedsAir: false })
+            if (Prefab is AfflictionPrefabHusk { NeedsAir: false } && 
+                !character.CharacterHealth.GetAllAfflictions().Any(a => a != this && a.Prefab is AfflictionPrefabHusk { NeedsAir: false }))
             {
                 character.NeedsAir = character.Params.MainElement.GetAttributeBool("needsair", false);
             }

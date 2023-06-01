@@ -13,6 +13,15 @@ namespace Barotrauma
 {
     static partial class DebugConsole
     {
+        private static readonly RateLimiter rateLimiter = new(
+            maxRequests: 50,
+            expiryInSeconds: 5,
+            punishmentRules: new[]
+            {
+                (RateLimitAction.OnLimitReached, RateLimitPunishment.Announce),
+                (RateLimitAction.OnLimitDoubled, RateLimitPunishment.Kick)
+            });
+
         public partial class Command
         {
             /// <summary>
@@ -608,12 +617,12 @@ namespace Barotrauma
                 NewMessage("Valid ranks are:", Color.White);
                 foreach (PermissionPreset permissionPreset in PermissionPreset.List)
                 {
-                    NewMessage(" - " + permissionPreset.Name, Color.White);
+                    NewMessage(" - " + permissionPreset.DisplayName, Color.White);
                 }
 
                 ShowQuestionPrompt("Rank to grant to \"" + client.Name + "\"?", (rank) =>
                 {
-                    PermissionPreset preset = PermissionPreset.List.Find(p => p.Name.Equals(rank, StringComparison.OrdinalIgnoreCase));
+                    PermissionPreset preset = PermissionPreset.List.Find(p => p.DisplayName.Equals(rank, StringComparison.OrdinalIgnoreCase));
                     if (preset == null)
                     {
                         ThrowError("Rank \"" + rank + "\" not found.");
@@ -622,7 +631,7 @@ namespace Barotrauma
 
                     client.SetPermissions(preset.Permissions, preset.PermittedCommands);
                     GameMain.Server.UpdateClientPermissions(client);
-                    NewMessage("Assigned the rank \"" + preset.Name + "\" to " + client.Name + ".", Color.White);
+                    NewMessage("Assigned the rank \"" + preset.DisplayName + "\" to " + client.Name + ".", Color.White);
                 }, args, 1);
             });
 
@@ -1374,7 +1383,7 @@ namespace Barotrauma
                         MultiPlayerCampaign.StartCampaignSetup();
                         return;
                     }
-                    if (!GameMain.Server.StartGame()) { NewMessage("Failed to start a new round", Color.Yellow); }
+                    if (!GameMain.Server.TryStartGame()) { NewMessage("Failed to start a new round", Color.Yellow); }
                 }
             }));
 
@@ -1400,6 +1409,44 @@ namespace Barotrauma
                 GameMain.Server.PrintSenderTransters();
             }));
 
+
+            commands.Add(new Command("forcelocationtypechange", "", (string[] args) =>
+            {
+                if (GameMain.Server == null || GameMain.GameSession?.Campaign == null) { return; }
+
+                if (args.Length < 2)
+                {
+                    ThrowError("Invalid parameters. The command should be formatted as \"forcelocationtypechange [locationname] [locationtype]\". If the names consist of multiple words, you should surround them with quotation marks.");
+                    return;
+                }
+
+                var location = GameMain.GameSession.Campaign.Map.Locations.FirstOrDefault(l => l.Name.Equals(args[0], StringComparison.OrdinalIgnoreCase));
+                if (location == null)
+                {
+                    ThrowError($"Could not find a location with the name {args[0]}.");
+                    return;
+                }
+
+                var locationType = LocationType.Prefabs.FirstOrDefault(lt => 
+                    lt.Name.Equals(args[1], StringComparison.OrdinalIgnoreCase) || lt.Identifier == args[1]);
+                if (location == null)
+                {
+                    ThrowError($"Could not find the location type {args[1]}.");
+                    return;
+                }
+
+                location.ChangeType(GameMain.GameSession.Campaign, locationType);
+            },
+            () =>
+            {
+                if (GameMain.GameSession?.Campaign == null) { return null; }
+
+                return new string[][]
+                {
+                    GameMain.GameSession.Campaign.Map.Locations.Select(l => l.Name).ToArray(),
+                    LocationType.Prefabs.Select(lt => lt.Name.Value).ToArray()
+                };
+            }));
 
             AssignOnExecute("resetcharacternetstate", (string[] args) =>
             {
@@ -1672,13 +1719,7 @@ namespace Barotrauma
                 "teleportsub",
                 (Client client, Vector2 cursorWorldPos, string[] args) =>
                 {
-                    if (Submarine.MainSub == null || Level.Loaded == null) return;
-                    if (Level.Loaded.Type == LevelData.LevelType.Outpost)
-                    {
-                        GameMain.Server.SendConsoleMessage("The teleportsub command is unavailable in outpost levels!", client, Color.Red);
-                        return;
-                    }
-
+                    if (Submarine.MainSub == null || Level.Loaded == null) { return; }
                     if (args.Length == 0 || args[0].Equals("cursor", StringComparison.OrdinalIgnoreCase))
                     {
                         Submarine.MainSub.SetPosition(cursorWorldPos);
@@ -1934,7 +1975,7 @@ namespace Barotrauma
                     {
                         GameMain.Server.SendConsoleMessage("Could not find the specified character.", client, Color.Red);
                     }
-                    killedCharacter?.SetAllDamage(200.0f, 0.0f, 0.0f);
+                    killedCharacter?.Kill(CauseOfDeathType.Unknown, causeOfDeathAffliction: null);
                 }
             );
 
@@ -1960,6 +2001,7 @@ namespace Barotrauma
                 "freecam",
                 (Client client, Vector2 cursorWorldPos, string[] args) =>
                 {
+                    client.UsingFreeCam = true;
                     GameMain.Server.SetClientCharacter(client, null);
                     client.SpectateOnly = true;
                 }
@@ -2073,7 +2115,7 @@ namespace Barotrauma
                     }
 
                     string rank = string.Join("", args.Skip(1));
-                    PermissionPreset preset = PermissionPreset.List.Find(p => p.Name.Equals(rank, StringComparison.OrdinalIgnoreCase));
+                    PermissionPreset preset = PermissionPreset.List.Find(p => p.DisplayName.Equals(rank, StringComparison.OrdinalIgnoreCase));
                     if (preset == null)
                     {
                         GameMain.Server.SendConsoleMessage("Rank \"" + rank + "\" not found.", senderClient, Color.Red);
@@ -2082,8 +2124,8 @@ namespace Barotrauma
 
                     client.SetPermissions(preset.Permissions, preset.PermittedCommands);
                     GameMain.Server.UpdateClientPermissions(client);
-                    GameMain.Server.SendConsoleMessage($"Assigned the rank \"{preset.Name}\" to {client.Name}.", senderClient);
-                    NewMessage(senderClient.Name + " granted  the rank \"" + preset.Name + "\" to " + client.Name + ".", Color.White);
+                    GameMain.Server.SendConsoleMessage($"Assigned the rank \"{preset.DisplayName}\" to {client.Name}.", senderClient);
+                    NewMessage(senderClient.Name + " granted  the rank \"" + preset.DisplayName + "\" to " + client.Name + ".", Color.White);
                 }
             );
 
@@ -2477,24 +2519,35 @@ namespace Barotrauma
                 foreach (Item item in Item.ItemList)
                 {
                     item.TryCreateServerEventSpam();
-                    item.CreateStatusEvent();
+                    item.CreateStatusEvent(loadingRound: false);
                 }
                 foreach (Structure wall in Structure.WallList)
                 {
                     GameMain.Server.CreateEntityEvent(wall);
                 }
             }));
-            commands.Add(new Command("stallfiletransfers", "stallfiletransfers [seconds]: A debug command that stalls each file transfer packet by the specified duration.", (string[] args) =>
+            commands.Add(new Command("stallfiletransfers", "stallfiletransfers [seconds]: A debug command that makes all file transfers take at least the specified duration.", (string[] args) =>
             {
                 float seconds = 0.0f;
                 if (args.Length > 0)
                 {
                     float.TryParse(args[0], out seconds);
                 }
-                GameMain.Server.FileSender.StallPacketsTime = seconds;
+                GameMain.Server.FileSender.ForceMinimumFileTransferDuration = seconds;
                 NewMessage("Set file transfer stall time to " + seconds);
             }));
 #endif
+        }
+
+        public static void ServerRead(IReadMessage inc, Client sender)
+        {
+            string consoleCommand = inc.ReadString();
+            float cursorX = inc.ReadSingle();
+            float cursorY = inc.ReadSingle();
+
+            if (rateLimiter.IsLimitReached(sender)) { return; }
+
+            ExecuteClientCommand(sender, new Vector2(cursorX, cursorY), consoleCommand);
         }
 
         public static void ExecuteClientCommand(Client client, Vector2 cursorWorldPos, string command)

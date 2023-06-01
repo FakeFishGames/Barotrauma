@@ -39,13 +39,14 @@ namespace Barotrauma
             affectedNpcs = ParentEvent.GetTargets(NPCTag).Where(c => c is Character).Select(c => c as Character).ToList();
             foreach (var npc in affectedNpcs)
             {
-                if (!(npc.AIController is HumanAIController humanAiController)) { continue; }
+                if (npc.AIController is not HumanAIController humanAiController) { continue; }
 
                 if (Follow)
                 {
                     var newObjective = new AIObjectiveGoTo(target, npc, humanAiController.ObjectiveManager, repeat: true)
                     {
-                        OverridePriority = 100.0f
+                        OverridePriority = 100.0f,
+                        IsFollowOrderObjective = true
                     };
                     humanAiController.ObjectiveManager.AddObjective(newObjective);
                     humanAiController.ObjectiveManager.WaitTimer = 0.0f;

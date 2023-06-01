@@ -11,6 +11,7 @@
     RadiationEnabled="false"
     StartingBalanceAmount="High"
     StartItemSet="easy"
+    MaxMissionCount="3"
     Difficulty="Easy"/>
   <CampaignSettings
     presetname="Normal"
@@ -18,12 +19,14 @@
     RadiationEnabled="false"
     StartingBalanceAmount="Medium"
     StartItemSet="normal"
+    MaxMissionCount="2"
     Difficulty="Medium"/>
   <CampaignSettings
     presetname="Hard"
     TutorialEnabled="false"
-    RadiationEnabled="true"
+    RadiationEnabled="false"
     StartingBalanceAmount="Low"
     StartItemSet="hard"
+    MaxMissionCount="1"
     Difficulty="Hard"/>
 </CampaignSettingPresets>

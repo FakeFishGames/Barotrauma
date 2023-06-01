@@ -33,6 +33,11 @@ namespace Barotrauma
         public bool DebugLogWhenFails { get; set; } = true;
         public bool UsePathingOutside { get; set; } = true;
 
+        /// <summary>
+        /// Which event action created this objective (if any)
+        /// </summary>
+        public EventAction SourceEventAction;
+
         public float ExtraDistanceWhileSwimming;
         public float ExtraDistanceOutsideSub;
         private float _closeEnoughMultiplier = 1;
@@ -45,6 +50,7 @@ namespace Barotrauma
         private readonly float minDistance = 50;
         private readonly float seekGapsInterval = 1;
         private float seekGapsTimer;
+        private bool cantFindDivingGear;
 
         /// <summary>
         /// Display units
@@ -85,7 +91,7 @@ namespace Barotrauma
         /// </summary>
         public bool UseDistanceRelativeToAimSourcePos { get; set; } = false;
 
-        public override bool AbandonWhenCannotCompleteSubjectives => !repeat;
+        public override bool AbandonWhenCannotCompleteSubjectives => false;
 
         public override bool AllowOutsideSubmarine => AllowGoingOutside;
         public override bool AllowInAnySub => true;
@@ -251,55 +257,80 @@ namespace Barotrauma
                         }
                     }
                 }
-                else if (HumanAIController.HasValidPath(requireNonDirty: true, requireUnfinished: false))
+                else if (HumanAIController.HasValidPath(requireUnfinished: false))
                 {
                     waitUntilPathUnreachable = pathWaitingTime;
                 }
             }
             if (!Abandon)
             {
-                if (getDivingGearIfNeeded && !character.LockHands)
+                if (getDivingGearIfNeeded)
                 {
                     Character followTarget = Target as Character;
-                    bool needsDivingSuit = (!isInside || hasOutdoorNodes) && character.NeedsAir && !character.HasAbilityFlag(AbilityFlags.ImmuneToPressure);
-                    bool needsDivingGear = needsDivingSuit || HumanAIController.NeedsDivingGear(targetHull, out needsDivingSuit);
-                    if (Mimic)
+                    bool needsDivingSuit = (!isInside || hasOutdoorNodes) && !character.IsImmuneToPressure;
+                    bool tryToGetDivingGear = needsDivingSuit || HumanAIController.NeedsDivingGear(targetHull, out needsDivingSuit);
+                    bool tryToGetDivingSuit = needsDivingSuit;
+                    if (Mimic && !character.IsImmuneToPressure)
                     {
                         if (HumanAIController.HasDivingSuit(followTarget))
                         {
-                            needsDivingGear = true;
-                            needsDivingSuit = true;
+                            tryToGetDivingGear = true;
+                            tryToGetDivingSuit = true;
                         }
-                        else if (HumanAIController.HasDivingMask(followTarget))
+                        else if (HumanAIController.HasDivingMask(followTarget) && character.CharacterHealth.OxygenLowResistance < 1)
                         {
-                            needsDivingGear = true;
+                            tryToGetDivingGear = true;
                         }
                     }
                     bool needsEquipment = false;
                     float minOxygen = AIObjectiveFindDivingGear.GetMinOxygen(character);
-                    if (needsDivingSuit)
+                    if (tryToGetDivingSuit)
                     {
                         needsEquipment = !HumanAIController.HasDivingSuit(character, minOxygen);
                     }
-                    else if (needsDivingGear)
+                    else if (tryToGetDivingGear)
                     {
                         needsEquipment = !HumanAIController.HasDivingGear(character, minOxygen);
                     }
-                    if (needsEquipment)
+                    if (character.LockHands)
+                    {
+                        cantFindDivingGear = true;
+                    }
+                    if (cantFindDivingGear && needsDivingSuit)
+                    {
+                        // Don't try to reach the target without a suit because it's lethal.
+                        Abandon = true;
+                        return;
+                    }
+                    if (needsEquipment && !cantFindDivingGear)
                     {
                         SteeringManager.Reset();
-                        if (findDivingGear != null && !findDivingGear.CanBeCompleted)
-                        {
-                            TryAddSubObjective(ref findDivingGear, () => new AIObjectiveFindDivingGear(character, needsDivingSuit: false, objectiveManager),
-                                onAbandon: () => Abandon = true,
-                                onCompleted: () => RemoveSubObjective(ref findDivingGear));
-                        }
-                        else
-                        {
-                            TryAddSubObjective(ref findDivingGear, () => new AIObjectiveFindDivingGear(character, needsDivingSuit, objectiveManager),
-                                onAbandon: () => Abandon = true,
-                                onCompleted: () => RemoveSubObjective(ref findDivingGear));
-                        }
+                        TryAddSubObjective(ref findDivingGear, () => new AIObjectiveFindDivingGear(character, needsDivingSuit: tryToGetDivingSuit, objectiveManager),
+                            onAbandon: () =>
+                            {
+                            cantFindDivingGear = true;
+                            if (needsDivingSuit)
+                            {
+                                // Shouldn't try to reach the target without a suit, because it's lethal.
+                                Abandon = true;
+                            }
+                            else
+                            {
+                                // Try again without requiring the diving suit
+                                RemoveSubObjective(ref findDivingGear);
+                                TryAddSubObjective(ref findDivingGear, () => new AIObjectiveFindDivingGear(character, needsDivingSuit: false, objectiveManager),
+                                    onAbandon: () =>
+                                    {
+                                        Abandon = character.CurrentHull != null && (objectiveManager.CurrentOrder != this || Target.Submarine == null);
+                                        RemoveSubObjective(ref findDivingGear);
+                                    },
+                                    onCompleted: () =>
+                                    {
+                                        RemoveSubObjective(ref findDivingGear);
+                                    });
+                                }
+                            },
+                            onCompleted: () => RemoveSubObjective(ref findDivingGear));
                         return;
                     }
                 }
@@ -333,7 +364,8 @@ namespace Barotrauma
                         else
                         {
                             bool isRuins = character.Submarine?.Info.IsRuin != null || Target.Submarine?.Info.IsRuin != null;
-                            if (!isRuins || !HumanAIController.HasValidPath(requireNonDirty: true, requireUnfinished: true))
+                            bool isEitherOneInside = isInside || Target.Submarine != null;
+                            if (isEitherOneInside && (!isRuins || !HumanAIController.HasValidPath()))
                             {
                                 SeekGaps(maxGapDistance);
                                 seekGapsTimer = seekGapsInterval * Rand.Range(0.1f, 1.1f);
@@ -356,6 +388,10 @@ namespace Barotrauma
                                         TargetGap = null;
                                     }
                                 }
+                            }
+                            else
+                            {
+                                TargetGap = null;
                             }
                         }
                     }
@@ -405,9 +441,9 @@ namespace Barotrauma
                         {
                             var leftHandItem = character.GetEquippedItem(slotType: InvSlotType.LeftHand);
                             var rightHandItem = character.GetEquippedItem(slotType: InvSlotType.RightHand);
-                            bool handsFull =
-                                (leftHandItem != null && character.Inventory.CheckIfAnySlotAvailable(leftHandItem, inWrongSlot: false) == -1) ||
-                                (rightHandItem != null && character.Inventory.CheckIfAnySlotAvailable(rightHandItem, inWrongSlot: false) == -1);
+                            bool handsFull = 
+                                (leftHandItem != null && !character.Inventory.IsAnySlotAvailable(leftHandItem)) ||
+                                (rightHandItem != null && !character.Inventory.IsAnySlotAvailable(rightHandItem));
                             if (!handsFull)
                             {
                                 bool hasBattery = false;
@@ -442,7 +478,7 @@ namespace Barotrauma
                                     // Try to switch batteries
                                     if (HumanAIController.HasItem(character, batteryTag, out IEnumerable<Item> batteries, conditionPercentage: 1, recursive: false))
                                     {
-                                        scooter.ContainedItems.ForEachMod(emptyBattery => character.Inventory.TryPutItem(emptyBattery, character, CharacterInventory.anySlot));
+                                        scooter.ContainedItems.ForEachMod(emptyBattery => character.Inventory.TryPutItem(emptyBattery, character, CharacterInventory.AnySlot));
                                         if (!scooter.Combine(batteries.OrderByDescending(b => b.Condition).First(), character))
                                         {
                                             useScooter = false;
@@ -457,7 +493,7 @@ namespace Barotrauma
                             if (!useScooter)
                             {
                                 // Unequip
-                                character.Inventory.TryPutItem(scooter, character, CharacterInventory.anySlot);
+                                character.Inventory.TryPutItem(scooter, character, CharacterInventory.AnySlot);
                             }
                         }
                     }
@@ -480,13 +516,20 @@ namespace Barotrauma
                     {
                         nodeFilter = n => n.Waypoint.CurrentHull != null;
                     }
-                    else if (!isInside && HumanAIController.UseIndoorSteeringOutside)
+                    else if (!isInside)
                     {
-                        nodeFilter = n => n.Waypoint.Submarine == null;
+                        if (HumanAIController.UseOutsideWaypoints)
+                        {
+                            nodeFilter = n => n.Waypoint.Submarine == null;
+                        }
+                        else
+                        {
+                            nodeFilter = n => n.Waypoint.Submarine != null || n.Waypoint.Ruin != null;
+                        }         
                     }
-
                     if (!isInside && !UsePathingOutside)
                     {
+                        character.ReleaseSecondaryItem();
                         PathSteering.SteeringSeekSimple(character.GetRelativeSimPosition(Target), 10);
                         if (character.AnimController.InWater)
                         {
@@ -509,6 +552,7 @@ namespace Barotrauma
                         }
                         else
                         {
+                            character.ReleaseSecondaryItem();
                             SteeringManager.SteeringManual(deltaTime, Vector2.Normalize(Target.WorldPosition - character.WorldPosition));
                             if (character.AnimController.InWater)
                             {
@@ -529,6 +573,7 @@ namespace Barotrauma
                     }
                     else
                     {
+                        character.ReleaseSecondaryItem();
                         SteeringManager.SteeringSeek(character.GetRelativeSimPosition(Target), 10);
                         if (character.AnimController.InWater)
                         {
@@ -542,6 +587,7 @@ namespace Barotrauma
             {
                 if (!character.HasEquippedItem("scooter".ToIdentifier())) { return; }
                 SteeringManager.Reset();
+                character.ReleaseSecondaryItem();
                 character.CursorPosition = targetWorldPos;
                 if (character.Submarine != null)
                 {
@@ -593,7 +639,7 @@ namespace Barotrauma
             }
             else if (target is Character c)
             {
-                return c.CurrentHull;
+                return c.CurrentHull ?? c.AnimController.CurrentHull;
             }
             else if (target is Structure structure)
             {
@@ -741,6 +787,14 @@ namespace Barotrauma
         {
             StopMovement();
             HumanAIController.FaceTarget(Target);
+            if (Target is WayPoint { Ladders: null })
+            {
+                // Release ladders when ordered to wait at a spawnpoint.
+                // This is a special case specifically meant for NPCs that spawn in outposts with a wait order.
+                // Otherwise they might keep holding to the ladders when the target is just next to it.
+                // Releasing too early should be handled inside the IsCloseEnough property.
+                character.ReleaseSecondaryItem();
+            }
             base.OnCompleted();
         }
 
@@ -750,6 +804,10 @@ namespace Barotrauma
             findDivingGear = null;
             seekGapsTimer = 0;
             TargetGap = null;
+            if (SteeringManager is IndoorsSteeringManager pathSteering)
+            {
+                pathSteering.ResetPath();
+            }
         }
     }
 }

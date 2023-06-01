@@ -77,7 +77,7 @@ namespace Barotrauma.Networking;
  */
 
 [NetworkSerialize]
-public readonly record struct Segment<T>(T Identifier, UInt16 Pointer) : INetSerializableStruct where T : struct;
+public readonly record struct Segment<T>(T Identifier, int Pointer) : INetSerializableStruct where T : struct;
 
 readonly ref struct SegmentTableWriter<T> where T : struct
 {
@@ -94,7 +94,7 @@ readonly ref struct SegmentTableWriter<T> where T : struct
     public static SegmentTableWriter<T> StartWriting(IWriteMessage msg)
     {
         var retVal = new SegmentTableWriter<T>(msg, msg.BitPosition);
-        msg.WriteUInt16(0); //reserve space for the table pointer
+        msg.WriteInt32(0); //reserve space for the table pointer
         return retVal;
     }
 
@@ -104,28 +104,22 @@ readonly ref struct SegmentTableWriter<T> where T : struct
         {
             throw new InvalidOperationException($"Too many segments in SegmentTable<{typeof(T).Name}>");
         }
-
-        if (message.BitPosition - PointerLocation > UInt16.MaxValue)
-        {
-            throw new OverflowException(
-                $"Too much data is being stored in SegmentTable<{typeof(T).Name}> ({segments.Count} segments)");
-        }
     }
-    
+
     public void StartNewSegment(T value)
     {
         ThrowOnInvalidState();
-        segments.Add(new Segment<T>(value, (UInt16)(message.BitPosition-PointerLocation)));
+        segments.Add(new Segment<T>(value, message.BitPosition - PointerLocation));
     }
 
     public void Dispose()
     {
         ThrowOnInvalidState();
         int tablePosition = message.BitPosition;
-        
+
         //rewrite the table pointer now that we know where the table ends
         message.BitPosition = PointerLocation;
-        message.WriteUInt16((UInt16)(tablePosition-PointerLocation));
+        message.WriteInt32(tablePosition - PointerLocation);
 
         //write the table
         message.BitPosition = tablePosition;
@@ -274,7 +268,7 @@ readonly ref struct SegmentTableReader<T> where T : struct
         ExceptionHandler? exceptionHandler = null)
     {
         int pointerLocation = msg.BitPosition;
-        int tablePointer = msg.ReadUInt16();
+        int tablePointer = msg.ReadInt32();
         int tableLocation = pointerLocation + tablePointer;
 
         int returnPosition = msg.BitPosition;

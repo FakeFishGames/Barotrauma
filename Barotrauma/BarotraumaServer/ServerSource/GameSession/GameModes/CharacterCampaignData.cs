@@ -109,15 +109,22 @@ namespace Barotrauma
             return AccountId == other.AccountId && other.ClientAddress == ClientAddress;
         }
 
+        public void Reset()
+        {
+            itemData = null;
+            healthData = null;
+            WalletData = null;
+        }
+
         public void SpawnInventoryItems(Character character, Inventory inventory)
         {
             if (character == null)
             {
-                throw new System.InvalidOperationException($"Failed to spawn inventory items. Character was null.");
+                throw new InvalidOperationException($"Failed to spawn inventory items. Character was null.");
             }
             if (itemData == null)
             {
-                throw new System.InvalidOperationException($"Failed to spawn inventory items for the character \"{character.Name}\". No saved inventory data.");
+                throw new InvalidOperationException($"Failed to spawn inventory items for the character \"{character.Name}\". No saved inventory data.");
             }
             character.SpawnInventoryItems(inventory, itemData.FromPackage(null));
         }

@@ -23,7 +23,7 @@ namespace Barotrauma.Items.Components
         {
             string newOutputValue = msg.ReadString();
 
-            if (item.CanClientAccess(c))
+            if (item.CanClientAccess(c) && !Readonly)
             {
                 if (newOutputValue.Length > MaxMessageLength)
                 {

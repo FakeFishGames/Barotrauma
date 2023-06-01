@@ -8,7 +8,7 @@ namespace Barotrauma
         public override int State
         {
             get { return base.State; }
-            protected set
+            set
             {
                 if (state != value)
                 {
@@ -45,7 +45,10 @@ namespace Barotrauma
                 { 
                     requireRescue.Add(character);
 #if CLIENT
-                    GameMain.GameSession.CrewManager.AddCharacterToCrewList(character);
+                    if (allowOrderingRescuees)
+                    {
+                        GameMain.GameSession.CrewManager.AddCharacterToCrewList(character);
+                    }
 #endif
                 }
                 ushort itemCount = msg.ReadUInt16();

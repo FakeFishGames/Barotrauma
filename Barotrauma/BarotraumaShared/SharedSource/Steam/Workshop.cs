@@ -47,7 +47,7 @@ namespace Barotrauma.Steam
                 int prevSize = 0;
                 for (int i = 1; i <= (maxPages ?? int.MaxValue); i++)
                 {
-                    Steamworks.Ugc.ResultPage? page = await query.GetPageAsync(i);
+                    using Steamworks.Ugc.ResultPage? page = await query.GetPageAsync(i);
                     if (page is not { Entries: var entries }) { break; }
                     
                     // This queries the results on the i-th page and stores them,
@@ -194,7 +194,7 @@ namespace Barotrauma.Steam
             {
                 try
                 {
-                    System.IO.Directory.Delete(item.Directory, recursive: true);
+                    System.IO.Directory.Delete(item.Directory ?? "", recursive: true);
                 }
                 catch
                 {
@@ -312,7 +312,7 @@ namespace Barotrauma.Steam
 
             public static bool IsItemDirectoryUpToDate(in Steamworks.Ugc.Item item)
             {
-                string itemDirectory = item.Directory;
+                string itemDirectory = item.Directory ?? "";
                 return Directory.Exists(itemDirectory)
                     && File.GetLastWriteTime(itemDirectory).ToUniversalTime() >= item.LatestUpdateTime;
             }
@@ -403,7 +403,7 @@ namespace Barotrauma.Steam
                     var ids = items.Select(it => it.Id.Value).ToHashSet();
                     var toUninstall = ContentPackageManager.WorkshopPackages
                         .Where(pkg
-                            => !pkg.UgcId.TryUnwrap(out SteamWorkshopId workshopId)
+                            => !pkg.UgcId.TryUnwrap<SteamWorkshopId>(out var workshopId)
                                || !ids.Contains(workshopId.Value))
                         .ToArray();
                     if (toUninstall.Any())
@@ -432,9 +432,9 @@ namespace Barotrauma.Steam
                 if (!(itemNullable is { } item)) { return; }
                 await Task.Yield();
                 
-                string itemTitle = item.Title.Trim();
+                string itemTitle = item.Title?.Trim() ?? "";
                 UInt64 itemId = item.Id;
-                string itemDirectory = item.Directory;
+                string itemDirectory = item.Directory ?? "";
                 DateTime updateTime = item.LatestUpdateTime;
 
                 if (!CanBeInstalled(item))
@@ -495,7 +495,8 @@ namespace Barotrauma.Steam
                         new XAttribute("corepackage", isCorePackage),
                         new XAttribute("modversion", modVersion),
                         new XAttribute("gameversion", gameVersion),
-                        new XAttribute("installtime", ToolBox.Epoch.FromDateTime(updateTime)));
+                        #warning TODO: stop writing Unix time after this gets on main
+                        new XAttribute("installtime", new SerializableDateTime(updateTime).ToUnixTime()));
                     if ((modPathDirName ?? modName).ToIdentifier() != itemTitle)
                     {
                         root.Add(new XAttribute("altnames", modPathDirName ?? modName));

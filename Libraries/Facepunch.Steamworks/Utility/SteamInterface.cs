@@ -61,9 +61,9 @@ namespace Steamworks
 
 	public class SteamSharedClass<T> : SteamClass
 	{
-		internal static SteamInterface Interface => InterfaceClient ?? InterfaceServer;
-		internal static SteamInterface InterfaceClient;
-		internal static SteamInterface InterfaceServer;
+		internal static SteamInterface? Interface => InterfaceClient ?? InterfaceServer;
+		internal static SteamInterface? InterfaceClient;
+		internal static SteamInterface? InterfaceServer;
 
 		internal override void InitializeInterface( bool server )
 		{
@@ -99,7 +99,7 @@ namespace Steamworks
 
 	public class SteamClientClass<T> : SteamClass
 	{
-		internal static SteamInterface Interface;
+		internal static SteamInterface? Interface;
 
 		internal override void InitializeInterface( bool server )
 		{
@@ -122,7 +122,7 @@ namespace Steamworks
 	
 	public class SteamServerClass<T> : SteamClass
 	{
-		internal static SteamInterface Interface;
+		internal static SteamInterface? Interface;
 
 		internal override void InitializeInterface( bool server )
 		{

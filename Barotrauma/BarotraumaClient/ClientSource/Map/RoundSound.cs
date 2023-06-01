@@ -83,7 +83,10 @@ namespace Barotrauma
                 {
                     string errorMsg = "Failed to load sound file \"" + filename + "\" (file not found).";
                     DebugConsole.ThrowError(errorMsg, e);
-                    GameAnalyticsManager.AddErrorEventOnce("RoundSound.LoadRoundSound:FileNotFound" + filename, GameAnalyticsManager.ErrorSeverity.Error, errorMsg + "\n" + Environment.StackTrace.CleanupStackTrace());
+                    if (!ContentPackageManager.ModsEnabled)
+                    {
+                        GameAnalyticsManager.AddErrorEventOnce("RoundSound.LoadRoundSound:FileNotFound" + filename, GameAnalyticsManager.ErrorSeverity.Error, errorMsg + "\n" + Environment.StackTrace.CleanupStackTrace());
+                    }
                     return null;
                 }
                 catch (System.IO.InvalidDataException e)

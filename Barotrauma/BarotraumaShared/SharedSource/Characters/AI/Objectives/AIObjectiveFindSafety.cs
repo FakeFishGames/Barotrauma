@@ -47,31 +47,22 @@ namespace Barotrauma
             }
             if (character.CurrentHull == null)
             {
-                if (!character.NeedsAir)
-                {
-                    Priority = 0;
-                }
-                else
-                {
-                    Priority = (
-                        objectiveManager.HasOrder<AIObjectiveGoTo>(o => o.Priority > 0) ||
-                        objectiveManager.HasOrder<AIObjectiveReturn>(o => o.Priority > 0) ||
-                        objectiveManager.HasActiveObjective<AIObjectiveRescue>() ||
-                        objectiveManager.Objectives.Any(o => o is AIObjectiveCombat && o.Priority > 0))
-                        && HumanAIController.HasDivingSuit(character) ? 0 : 100;
-                }
+                Priority = (
+                    objectiveManager.HasOrder<AIObjectiveGoTo>(o => o.Priority > 0) ||
+                    objectiveManager.HasOrder<AIObjectiveReturn>(o => o.Priority > 0) ||
+                    objectiveManager.HasActiveObjective<AIObjectiveRescue>() ||
+                    objectiveManager.Objectives.Any(o => o is AIObjectiveCombat && o.Priority > 0))
+                    && ((!character.IsLowInOxygen && character.IsImmuneToPressure)|| HumanAIController.HasDivingSuit(character)) ? 0 : AIObjectiveManager.EmergencyObjectivePriority - 10;
             }
             else
             {
-                if (HumanAIController.NeedsDivingGear(character.CurrentHull, out bool needsSuit) && 
-                    (needsSuit ? 
-                    !HumanAIController.HasDivingSuit(character, conditionPercentage: AIObjectiveFindDivingGear.GetMinOxygen(character)) : 
-                    !HumanAIController.HasDivingGear(character, conditionPercentage: AIObjectiveFindDivingGear.GetMinOxygen(character))))
+                if ((character.IsLowInOxygen && !character.AnimController.HeadInWater && HumanAIController.HasDivingSuit(character, requireOxygenTank: false)) ||
+                    NeedMoreDivingGear(character.CurrentHull, AIObjectiveFindDivingGear.GetMinOxygen(character)))
                 {
-                    Priority = 100;
+                    Priority = AIObjectiveManager.MaxObjectivePriority;
                 }
                 else if ((objectiveManager.IsCurrentOrder<AIObjectiveGoTo>() || objectiveManager.IsCurrentOrder<AIObjectiveReturn>()) &&
-                         character.Submarine != null && !HumanAIController.IsOnFriendlyTeam(character.TeamID, character.Submarine.TeamID))
+                         character.Submarine != null && !character.IsOnFriendlyTeam(character.Submarine.TeamID))
                 {
                     // Ordered to follow, hold position, or return back to main sub inside a hostile sub
                     // -> ignore find safety unless we need to find a diving gear
@@ -81,11 +72,11 @@ namespace Barotrauma
                 {
                     Priority = 0;
                 }
-                Priority = MathHelper.Clamp(Priority, 0, 100);
+                Priority = MathHelper.Clamp(Priority, 0, AIObjectiveManager.MaxObjectivePriority);
                 if (divingGearObjective != null && !divingGearObjective.IsCompleted && divingGearObjective.CanBeCompleted)
                 {
                     // Boost the priority while seeking the diving gear
-                    Priority = Math.Max(Priority, Math.Min(AIObjectiveManager.HighestOrderPriority + 20, 100));
+                    Priority = Math.Max(Priority, Math.Min(AIObjectiveManager.EmergencyObjectivePriority - 1, AIObjectiveManager.MaxObjectivePriority));
                 }
             }
             return Priority;
@@ -117,13 +108,18 @@ namespace Barotrauma
                 if (currenthullSafety > HumanAIController.HULL_SAFETY_THRESHOLD)
                 {
                     Priority -= priorityDecrease * deltaTime;
+                    if (currenthullSafety >= 100 && !character.IsLowInOxygen)
+                    {
+                        // Reduce the priority to zero so that the bot can get switch to other objectives immediately, e.g. when entering the airlock.
+                        Priority = 0;
+                    }
                 }
                 else
                 {
                     float dangerFactor = (100 - currenthullSafety) / 100;
                     Priority += dangerFactor * priorityIncrease * deltaTime;
                 }
-                Priority = MathHelper.Clamp(Priority, 0, 100);
+                Priority = MathHelper.Clamp(Priority, 0, AIObjectiveManager.MaxObjectivePriority);
             }
         }
 
@@ -137,12 +133,14 @@ namespace Barotrauma
         private float retryTimer;
         protected override void Act(float deltaTime)
         {
+            if (resetPriority) { return; }
             var currentHull = character.CurrentHull;
-            bool dangerousPressure = currentHull == null || currentHull.LethalPressure > 0 && character.PressureProtection <= 0;
-            if (!character.LockHands && (!dangerousPressure || cannotFindSafeHull))
+            bool dangerousPressure =  (currentHull == null || currentHull.LethalPressure > 0) && !character.IsProtectedFromPressure;
+            bool shouldActOnSuffocation = character.IsLowInOxygen && !character.AnimController.HeadInWater && HumanAIController.HasDivingSuit(character, requireOxygenTank: false);
+            if (!character.LockHands && (!dangerousPressure || shouldActOnSuffocation || cannotFindSafeHull))
             {
                 bool needsDivingGear = HumanAIController.NeedsDivingGear(currentHull, out bool needsDivingSuit);
-                bool needsEquipment = false;
+                bool needsEquipment = shouldActOnSuffocation;
                 if (needsDivingSuit)
                 {
                     needsEquipment = !HumanAIController.HasDivingSuit(character, AIObjectiveFindDivingGear.GetMinOxygen(character));
@@ -199,16 +197,11 @@ namespace Barotrauma
                         UpdateSimpleEscape(deltaTime);
                         return;
                     }
-
                     searchHullTimer = SearchHullInterval * Rand.Range(0.9f, 1.1f);
                     previousSafeHull = currentSafeHull;
                     currentSafeHull = potentialSafeHull;
-
-                    cannotFindSafeHull = currentSafeHull == null || HumanAIController.NeedsDivingGear(currentSafeHull, out _);
-                    if (currentSafeHull == null)
-                    {
-                        currentSafeHull = previousSafeHull;
-                    }
+                    cannotFindSafeHull = currentSafeHull == null || NeedMoreDivingGear(currentSafeHull);
+                    currentSafeHull ??= previousSafeHull;
                     if (currentSafeHull != null && currentSafeHull != currentHull)
                     {
                         if (goToObjective?.Target != currentSafeHull)
@@ -218,7 +211,12 @@ namespace Barotrauma
                         TryAddSubObjective(ref goToObjective,
                         constructor: () => new AIObjectiveGoTo(currentSafeHull, character, objectiveManager, getDivingGearIfNeeded: true)
                         {
-                            AllowGoingOutside = HumanAIController.HasDivingSuit(character, conditionPercentage: 50)
+                            SpeakIfFails = false,
+                            AllowGoingOutside =
+                                character.IsProtectedFromPressure ||
+                                character.CurrentHull == null || 
+                                character.CurrentHull.IsTaggedAirlock() ||
+                                character.CurrentHull.LeadsOutside(character)
                         },
                         onCompleted: () =>
                         {
@@ -295,6 +293,7 @@ namespace Barotrauma
                 //only move if we haven't reached the edge of the room
                 if (escapeVel.X < 0 && character.Position.X > left || escapeVel.X > 0 && character.Position.X < right)
                 {
+                    character.ReleaseSecondaryItem();
                     character.AIController.SteeringManager.SteeringManual(deltaTime, escapeVel);
                 }
                 else
@@ -344,13 +343,12 @@ namespace Barotrauma
                     if (ignoredHulls != null && ignoredHulls.Contains(hull)) { continue; }
                     if (HumanAIController.UnreachableHulls.Contains(hull)) { continue; }
                     if (connectedSubs != null && !connectedSubs.Contains(hull.Submarine)) { continue; }
-
                     //sort the hulls based on distance and which sub they're in
                     //tends to make the method much faster, because we find a potential hull earlier and can discard further-away hulls more easily
                     //(for instance, an NPC in an outpost might otherwise go through all the hulls in the main sub first and do tons of expensive
                     //path calculations, only to discard all of them when going through the hulls in the outpost)
-                    float hullSuitability = EstimateHullSuitability(character, hull);                  
-                    if (!hulls.Any())
+                    float hullSuitability = EstimateHullSuitability(character, hull);
+                    if (hulls.None())
                     {
                         hulls.Add(hull);
                     }
@@ -445,9 +443,12 @@ namespace Barotrauma
                 {
                     hullSafety = 100;
                 }
+                float characterY = character.CurrentHull?.WorldPosition.Y ?? character.WorldPosition.Y;
+                float yDist = Math.Abs(characterY - potentialHull.WorldPosition.Y);
+                yDist = yDist > 100 ? yDist * 3 : 0;
+                float distance = Math.Abs(character.WorldPosition.X - potentialHull.WorldPosition.X) + yDist;
                 // Huge preference for closer targets
-                float distance = Vector2.DistanceSquared(character.WorldPosition, potentialHull.WorldPosition);
-                float distanceFactor = MathHelper.Lerp(1, 0.2f, MathUtils.InverseLerp(0, MathUtils.Pow(100000, 2), distance));
+                float distanceFactor = MathHelper.Lerp(1, 0.2f, MathUtils.InverseLerp(0, 10000, distance));
                 hullSafety *= distanceFactor;
                 // If the target is not inside a friendly submarine, considerably reduce the hull safety.
                 // Intentionally exclude wrecks from this check
@@ -484,6 +485,19 @@ namespace Barotrauma
             retryCounter = 0;
             cannotFindDivingGear = false;
             cannotFindSafeHull = false;
+        }
+
+        private bool NeedMoreDivingGear(Hull targetHull, float minOxygen = 0)
+        {
+            if (!HumanAIController.NeedsDivingGear(targetHull, out bool needsSuit)) { return false; }
+            if (needsSuit)
+            {
+                return !HumanAIController.HasDivingSuit(character, minOxygen);
+            }
+            else
+            {
+                return !HumanAIController.HasDivingGear(character, minOxygen);
+            }
         }
     }
 }

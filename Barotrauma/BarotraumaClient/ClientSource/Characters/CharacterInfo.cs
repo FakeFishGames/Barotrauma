@@ -540,37 +540,45 @@ namespace Barotrauma
 
             string ragdollFile = inc.ReadString();
             Identifier npcId = inc.ReadIdentifier();
+
+            Identifier factionId = inc.ReadIdentifier();
+            float minReputationToHire = 0.0f;
+            if (factionId != default)
+            {
+                minReputationToHire = inc.ReadSingle();
+            }
+
             uint jobIdentifier = inc.ReadUInt32();
             int variant = inc.ReadByte();
-
             JobPrefab jobPrefab = null;
             Dictionary<Identifier, float> skillLevels = new Dictionary<Identifier, float>();
             if (jobIdentifier > 0)
-            { 
+            {
                 jobPrefab = JobPrefab.Prefabs.Find(jp => jp.UintIdentifier == jobIdentifier);
+                if (jobPrefab == null)
+                {
+                    throw new Exception($"Error while reading {nameof(CharacterInfo)} received from the server: could not find a job prefab with the identifier \"{jobIdentifier}\".");
+                }
                 foreach (SkillPrefab skillPrefab in jobPrefab.Skills.OrderBy(s => s.Identifier))
                 {
                     float skillLevel = inc.ReadSingle();
                     skillLevels.Add(skillPrefab.Identifier, skillLevel);
-                }         
-            }            
+                }
+            }
 
-            // TODO: animations
             CharacterInfo ch = new CharacterInfo(speciesName, newName, originalName, jobPrefab, ragdollFile, variant, npcIdentifier: npcId)
             {
-                ID = infoID
+                ID = infoID,
+                MinReputationToHire = (factionId, minReputationToHire)
             };
             ch.RecreateHead(tagSet.ToImmutableHashSet(), hairIndex, beardIndex, moustacheIndex, faceAttachmentIndex);
             ch.Head.SkinColor = skinColor;
             ch.Head.HairColor = hairColor;
             ch.Head.FacialHairColor = facialHairColor;
             ch.SetPersonalityTrait();
-            if (ch.Job != null)
-            {
-                ch.Job.OverrideSkills(skillLevels);
-            }
+            ch.Job?.OverrideSkills(skillLevels);
 
-            ch.ExperiencePoints = inc.ReadUInt16();
+            ch.ExperiencePoints = inc.ReadInt32();
             ch.AdditionalTalentPoints = inc.ReadRangedInteger(0, MaxAdditionalTalentPoints);
             return ch;
         }
@@ -938,7 +946,7 @@ namespace Barotrauma
                 var headPreset = obj as HeadPreset;
                 if (info.Head.Preset != headPreset)
                 {
-                    info.Head = new HeadInfo(info, headPreset)
+                    info.Head = new HeadInfo(info, headPreset, info.Head.HairIndex, info.Head.BeardIndex, info.Head.MoustacheIndex, info.Head.FaceAttachmentIndex)
                     {
                         SkinColor = info.Head.SkinColor,
                         HairColor = info.Head.HairColor,
