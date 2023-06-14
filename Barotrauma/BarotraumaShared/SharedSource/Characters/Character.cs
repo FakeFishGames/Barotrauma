@@ -852,6 +852,7 @@ namespace Barotrauma
         public bool IsLatched => AIController is EnemyAIController enemyAI && enemyAI.LatchOntoAI != null && enemyAI.LatchOntoAI.IsAttached;
         public float EmpVulnerability => Params.Health.EmpVulnerability;
         public float PoisonVulnerability => Params.Health.PoisonVulnerability;
+        public bool IsFlipped => AnimController.IsFlipped;
 
         public float Bloodloss
         {
