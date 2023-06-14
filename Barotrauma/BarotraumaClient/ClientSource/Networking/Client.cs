@@ -75,7 +75,7 @@ namespace Barotrauma.Networking
             float gain = 1.0f;
             float noiseGain = 0.0f;
             Vector3? position = null;
-            if (character != null)
+            if (character != null && !character.IsDead)
             {
                 if (GameSettings.CurrentConfig.Audio.UseDirectionalVoiceChat)
                 {

@@ -1,5 +1,6 @@
 ﻿#nullable enable
 
+using Barotrauma.Extensions;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -69,6 +70,9 @@ namespace Barotrauma.Networking
         
         [Serialize(PlayStyle.Casual, IsPropertySaveable.Yes)]
         public PlayStyle PlayStyle { get; set; }
+        
+        [Serialize("", IsPropertySaveable.Yes)]
+        public LanguageIdentifier Language { get; set; }
 
         public Version GameVersion { get; set; } = new Version(0, 0, 0, 0);
 
@@ -281,7 +285,7 @@ namespace Barotrauma.Networking
 
             // -----------------------------------------------------------------------------
 
-            float elementHeight = 0.075f;
+            const float elementHeight = 0.075f;
 
             // Spacing
             new GUIFrame(new RectTransform(new Vector2(1.0f, 0.025f), content.RectTransform), style: null);
@@ -293,6 +297,11 @@ namespace Barotrauma.Networking
             };
             serverMsg.Content.RectTransform.SizeChanged += () => { msgText.CalculateHeightFromText(); };
             msgText.RectTransform.SizeChanged += () => { serverMsg.UpdateScrollBarSize(); };
+
+            var languageLabel = new GUITextBlock(new RectTransform(new Vector2(1.0f, elementHeight), content.RectTransform), TextManager.Get("Language"));
+            new GUITextBlock(new RectTransform(Vector2.One, languageLabel.RectTransform),
+                ServerLanguageOptions.Options.FirstOrNull(o => o.Identifier == Language)?.Label ?? TextManager.Get("Unknown"),
+                textAlignment: Alignment.Right);
 
             var gameMode = new GUITextBlock(new RectTransform(new Vector2(1.0f, elementHeight), content.RectTransform), TextManager.Get("GameMode"));
             new GUITextBlock(new RectTransform(Vector2.One, gameMode.RectTransform),
@@ -363,7 +372,7 @@ namespace Barotrauma.Networking
                             packageText.Selected = true;
                         }
                         //workshop download link found
-                        else if (package.Id is Some<ContentPackageId> { Value: var ugcId } && ugcId is SteamWorkshopId)
+                        else if (package.Id.TryUnwrap(out var ugcId) && ugcId is SteamWorkshopId)
                         {
                             packageText.ToolTip = TextManager.GetWithVariable("ServerListIncompatibleContentPackageWorkshopAvailable", "[contentpackage]", package.Name);
                         }
@@ -417,8 +426,9 @@ namespace Barotrauma.Networking
             GameMode = valueGetter("gamemode")?.ToIdentifier() ?? Identifier.Empty;
             if (Enum.TryParse(valueGetter("traitors"), out YesNoMaybe traitorsEnabled)) { TraitorsEnabled = traitorsEnabled; }
             if (Enum.TryParse(valueGetter("playstyle"), out PlayStyle playStyle)) { PlayStyle = playStyle; }
+            Language = valueGetter("language")?.ToLanguageIdentifier() ?? LanguageIdentifier.None;
 
-            ContentPackages = ExtractContentPackageInfo(valueGetter).ToImmutableArray();
+            ContentPackages = ExtractContentPackageInfo(ServerName, valueGetter).ToImmutableArray();
             
             bool getBool(string key)
             {
@@ -427,8 +437,34 @@ namespace Barotrauma.Networking
             }
         }
 
-        private static ContentPackageInfo[] ExtractContentPackageInfo(Func<string, string?> valueGetter)
+        private static ContentPackageInfo[] ExtractContentPackageInfo(string serverName, Func<string, string?> valueGetter)
         {
+            //workaround to ServerRules queries truncating the values to 255 bytes
+            int individualPackageIndex = 0;
+            string? individualPackage = valueGetter($"contentpackage{individualPackageIndex}");
+            if (!individualPackage.IsNullOrEmpty())
+            {
+                List<ContentPackageInfo> contentPackages = new List<ContentPackageInfo>();
+                do
+                {
+                    string[] splitPackageInfo = individualPackage.Split(',');
+                    if (splitPackageInfo.Length != 3)
+                    {
+                        DebugConsole.Log(
+                            $"Error in a server's content package list: malformed content package info ({individualPackage}).");
+                        return Array.Empty<ContentPackageInfo>();
+                    }
+                    string name = splitPackageInfo[0];
+                    string hash = splitPackageInfo[1];
+                    ulong.TryParse(splitPackageInfo[2], out ulong id);
+                    contentPackages.Add(new ContentPackageInfo(name, hash, Option<ContentPackageId>.Some(new SteamWorkshopId(id))));
+
+                    individualPackageIndex++;
+                    individualPackage = valueGetter($"contentpackage{individualPackageIndex}");
+                } while (!individualPackage.IsNullOrEmpty());
+                return contentPackages.ToArray();
+            } 
+
             string? joinedNames = valueGetter("contentpackage");
             string? joinedHashes = valueGetter("contentpackagehash");
             string? joinedWorkshopIds = valueGetter("contentpackageid");
@@ -438,9 +474,11 @@ namespace Barotrauma.Networking
             #warning TODO: genericize
             ulong[] contentPackageIds = joinedWorkshopIds.IsNullOrEmpty() ? new ulong[1] : SteamManager.ParseWorkshopIds(joinedWorkshopIds).ToArray();
 
-            if (contentPackageNames.Length != contentPackageHashes.Length
-                || contentPackageHashes.Length != contentPackageIds.Length)
+            if (contentPackageNames.Length != contentPackageHashes.Length || contentPackageHashes.Length != contentPackageIds.Length)
             {
+                DebugConsole.Log(
+                    $"The number of names, hashes and Workshop IDs on server \"{serverName}\"" +
+                    $" doesn't match: {contentPackageNames.Length} names ({string.Join(", ", contentPackageNames)}), {contentPackageHashes.Length} hashes, {contentPackageIds.Length} ids)");
                 return Array.Empty<ContentPackageInfo>();
             }
 

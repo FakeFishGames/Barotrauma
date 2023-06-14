@@ -53,11 +53,11 @@ namespace Barotrauma
             get
             {
                 // Returns a point off-screen, Rectangle.Empty places buttons in the top left of the screen
-                if (IsMoving) return offScreenRect;
+                if (IsMoving) { return offScreenRect; }
 
                 int buttonDir = Math.Sign(SubInventoryDir);
 
-                float sizeY = Inventory.UnequippedIndicator.size.Y * Inventory.UIScale * Inventory.IndicatorScaleAdjustment;
+                float sizeY = Inventory.UnequippedIndicator.size.Y * Inventory.UIScale;
 
                 Vector2 equipIndicatorPos = new Vector2(Rect.Left, Rect.Center.Y + (Rect.Height / 2 + 15 * Inventory.UIScale) * buttonDir - sizeY / 2f);
                 equipIndicatorPos += DrawOffset;
@@ -176,14 +176,6 @@ namespace Barotrauma
         public static Sprite DraggableIndicator;
         public static Sprite UnequippedIndicator, UnequippedHoverIndicator, UnequippedClickedIndicator, EquippedIndicator, EquippedHoverIndicator, EquippedClickedIndicator;
 
-        public static float IndicatorScaleAdjustment
-        {
-            get
-            {
-                return !GUI.IsFourByThree() ? 0.8f : 0.7f;
-            }
-        }
-       
         public static Inventory DraggingInventory;
 
         public Inventory ReplacedBy;
@@ -249,11 +241,11 @@ namespace Barotrauma
                 {
                     itemsInSlot = ParentInventory.GetItemsAt(SlotIndex);
                 }
-                Tooltip = GetTooltip(Item, itemsInSlot);
+                Tooltip = GetTooltip(Item, itemsInSlot, Character.Controlled);
                 tooltipDisplayedCondition = (int)Item.ConditionPercentage;
             }
 
-            private RichString GetTooltip(Item item, IEnumerable<Item> itemsInSlot)
+            private static RichString GetTooltip(Item item, IEnumerable<Item> itemsInSlot, Character character)
             {
                 if (item == null) { return null; }
 
@@ -348,10 +340,12 @@ namespace Barotrauma
                 }
                 if (itemsInSlot.Count() > 1)
                 {
-                    string colorStr = XMLExtensions.ColorToString(GUIStyle.Blue);
-                    toolTip += $"\n‖color:{colorStr}‖[{GameSettings.CurrentConfig.KeyMap.KeyBindText(InputType.TakeOneFromInventorySlot)}] {TextManager.Get("inputtype.takeonefrominventoryslot")}‖color:end‖";
-                    colorStr = XMLExtensions.ColorToString(GUIStyle.Blue);
-                    toolTip += $"\n‖color:{colorStr}‖[{GameSettings.CurrentConfig.KeyMap.KeyBindText(InputType.TakeHalfFromInventorySlot)}] {TextManager.Get("inputtype.takehalffrominventoryslot")}‖color:end‖";
+                    toolTip += $"\n‖color:gui.blue‖[{GameSettings.CurrentConfig.KeyMap.KeyBindText(InputType.TakeOneFromInventorySlot)}] {TextManager.Get("inputtype.takeonefrominventoryslot")}‖color:end‖";
+                    toolTip += $"\n‖color:gui.blue‖[{GameSettings.CurrentConfig.KeyMap.KeyBindText(InputType.TakeHalfFromInventorySlot)}] {TextManager.Get("inputtype.takehalffrominventoryslot")}‖color:end‖";
+                }
+                if (item.Prefab.SkillRequirementHints != null && item.Prefab.SkillRequirementHints.Any())
+                {
+                    toolTip += item.Prefab.GetSkillRequirementHints(character);
                 }
                 return RichString.Rich(toolTip);
             }
@@ -576,7 +570,7 @@ namespace Barotrauma
                 }
             }
             
-            if (PlayerInput.LeftButtonHeld() && PlayerInput.RightButtonHeld())
+            if (PlayerInput.PrimaryMouseButtonHeld() && PlayerInput.SecondaryMouseButtonHeld())
             {
                 mouseOn = false;
             }
@@ -727,14 +721,7 @@ namespace Barotrauma
             Rectangle subRect = slot.Rect;
             Vector2 spacing;
 
-            if (GUI.IsFourByThree())
-            {
-                spacing = new Vector2(5 * UIScale, (5 + UnequippedIndicator.size.Y) * UIScale);
-            }
-            else
-            {
-                spacing = new Vector2(10 * UIScale, (10 + UnequippedIndicator.size.Y) * UIScale);
-            }
+            spacing = new Vector2(10 * UIScale, (10 + UnequippedIndicator.size.Y) * UIScale * GUI.AspectRatioAdjustment);            
 
             int columns = MathHelper.Clamp((int)Math.Floor(Math.Sqrt(itemCapacity)), 1, container.SlotsPerRow);
             while (itemCapacity / columns * (subRect.Height + spacing.Y) > GameMain.GraphicsHeight * 0.5f)
@@ -1535,16 +1522,6 @@ namespace Barotrauma
             {
                 Sprite slotSprite = slot.SlotSprite ?? SlotSpriteSmall;
 
-                /*if (inventory != null && (CharacterInventory.PersonalSlots.HasFlag(type) || (inventory.isSubInventory && (inventory.Owner as Item) != null 
-                    && (inventory.Owner as Item).AllowedSlots.Any(a => CharacterInventory.PersonalSlots.HasFlag(a)))))
-                {
-                    slotColor = slot.IsHighlighted ? GUIStyle.EquipmentSlotColor : GUIStyle.EquipmentSlotColor * 0.8f;
-                }
-                else
-                {
-                    slotColor = slot.IsHighlighted ? GUIStyle.InventorySlotColor : GUIStyle.InventorySlotColor * 0.8f;
-                }*/
-
                 if (inventory != null && inventory.Locked) { slotColor = Color.Gray * 0.5f; }
                 spriteBatch.Draw(slotSprite.Texture, rect, slotSprite.SourceRect, slotColor);
                 
@@ -1603,88 +1580,7 @@ namespace Barotrauma
 
                     if (itemContainer != null && itemContainer.ShowContainedStateIndicator && itemContainer.Capacity > 0)
                     {
-                        float containedState = 0.0f;
-                        if (itemContainer.ShowConditionInContainedStateIndicator)
-                        {
-                            containedState = item.Condition / item.MaxCondition;
-                        }
-                        else
-                        {
-                            int targetSlot = Math.Max(itemContainer.ContainedStateIndicatorSlot, 0);
-                            ItemSlot containedItemSlot = null;
-                            if (targetSlot < itemContainer.Inventory.slots.Length)
-                            {
-                                containedItemSlot = itemContainer.Inventory.slots[targetSlot];
-                            }
-                            if (containedItemSlot != null)
-                            {
-                                Item containedItem = containedItemSlot.FirstOrDefault();
-                                if (itemContainer.ShowTotalStackCapacityInContainedStateIndicator)
-                                {
-                                    if (containedItem == null)
-                                    {
-                                        // No item on the defined slot, check if the items on other slots can be used.
-                                        containedItem = containedItemSlot.FirstOrDefault() ?? itemContainer.Inventory.AllItems.FirstOrDefault(it => itemContainer.CanBeContained(it, targetSlot));
-                                    }
-                                    if (containedItem != null)
-                                    {
-                                        int ignoredItemCount = 0;
-                                        var subContainableItems = itemContainer.AllSubContainableItems;
-                                        float capacity = itemContainer.GetMaxStackSize(targetSlot);
-                                        if (subContainableItems != null)
-                                        {
-                                            bool useMainContainerCapacity = true;
-                                            foreach (Item it in itemContainer.Inventory.AllItems)
-                                            {
-                                                // Ignore all items in the sub containers.
-                                                foreach (RelatedItem ri in subContainableItems)
-                                                {
-                                                    if (ri.MatchesItem(containedItem))
-                                                    {
-                                                        // The target item is in a subcontainer -> inverse the logic.
-                                                        useMainContainerCapacity = false;
-                                                        break;
-                                                    }
-                                                    if (ri.MatchesItem(it))
-                                                    {
-                                                        ignoredItemCount++;
-                                                    }
-                                                }
-                                                if (!useMainContainerCapacity) { break; }
-                                            }
-                                            if (useMainContainerCapacity)
-                                            {
-                                                capacity *= itemContainer.MainContainerCapacity;
-                                            }
-                                            else
-                                            {
-                                                // Ignore all items in the main container.
-                                                ignoredItemCount = itemContainer.Inventory.AllItems.Count(it => subContainableItems.Any(ri => !ri.MatchesItem(it)));
-                                                capacity *= itemContainer.Capacity - itemContainer.MainContainerCapacity;
-                                            }
-                                        }
-                                        int itemCount = itemContainer.Inventory.AllItems.Count() - ignoredItemCount;
-                                        containedState = Math.Min(itemCount / Math.Max(capacity, 1), 1);
-                                    }
-                                }
-                                else
-                                {
-                                    containedState = itemContainer.Inventory.Capacity == 1 || itemContainer.ContainedStateIndicatorSlot > -1 ?
-                                        (containedItem == null ? 0.0f : containedItem.Condition / containedItem.MaxCondition) :
-                                        itemContainer.Inventory.slots.Count(i => !i.Empty()) / (float)itemContainer.Inventory.capacity;
-
-                                    if (containedItem != null && (itemContainer.Inventory.Capacity == 1 || itemContainer.HasSubContainers))
-                                    {
-                                        int maxStackSize = Math.Min(containedItem.Prefab.MaxStackSize, itemContainer.GetMaxStackSize(targetSlot));
-                                        if (maxStackSize > 1 || containedItem.Prefab.HideConditionBar)
-                                        {
-                                            containedState = containedItemSlot.Items.Count / (float)maxStackSize;
-                                        }
-                                    }
-                                }
-                            }
-                        }
-
+                        float containedState = itemContainer.GetContainedIndicatorState();
                         int dir = slot.SubInventoryDir;
                         Rectangle containedIndicatorArea = new Rectangle(rect.X,
                             dir < 0 ? rect.Bottom + HUDLayoutSettings.Padding / 2 : rect.Y - HUDLayoutSettings.Padding / 2 - ContainedIndicatorHeight, rect.Width, ContainedIndicatorHeight);
@@ -1794,6 +1690,15 @@ namespace Barotrauma
                         GUIStyle.SmallFont.DrawString(spriteBatch, stackCountText, stackCountPos, Color.White);
                     }
                 }
+
+                if (HealingCooldown.IsOnCooldown && item.HasTag(HealingCooldown.MedicalItemTag))
+                {
+                    RectangleF cdRect = rect;
+                    // shrink the rect from top to bottom depending on HealingCooldown.NormalizedCooldown
+                    cdRect.Height *= HealingCooldown.NormalizedCooldown;
+                    cdRect.Y += rect.Height;
+                    GUI.DrawFilledRectangle(spriteBatch, cdRect, Color.White * 0.5f);
+                }
             }
 
             if (inventory != null &&
@@ -1803,9 +1708,20 @@ namespace Barotrauma
                 slot.InventoryKeyIndex < GameSettings.CurrentConfig.InventoryKeyMap.Bindings.Length)
             {
                 spriteBatch.Draw(slotHotkeySprite.Texture, rect.ScaleSize(1.15f), slotHotkeySprite.SourceRect, slotColor);
-                GUI.DrawString(spriteBatch, rect.Location.ToVector2() + new Vector2((int)(4.25f * UIScale), (int)Math.Ceiling(-1.5f * UIScale)), GameSettings.CurrentConfig.InventoryKeyMap.Bindings[slot.InventoryKeyIndex].Name, Color.Black, font: GUIStyle.HotkeyFont);
+
+                GUIStyle.HotkeyFont.DrawString(
+                    spriteBatch,
+                    GameSettings.CurrentConfig.InventoryKeyMap.Bindings[slot.InventoryKeyIndex].Name,
+                    rect.Location.ToVector2() + new Vector2((int)(4.25f * UIScale), (int)Math.Ceiling(-1.5f * UIScale)),
+                    Color.Black,
+                    rotation: 0.0f,
+                    origin: Vector2.Zero,
+                    scale: Vector2.One * GUI.AspectRatioAdjustment,
+                    SpriteEffects.None,
+                    layerDepth: 0.0f);
             }
         }
+
 
         private static void DrawItemStateIndicator(
             SpriteBatch spriteBatch, Inventory inventory, 

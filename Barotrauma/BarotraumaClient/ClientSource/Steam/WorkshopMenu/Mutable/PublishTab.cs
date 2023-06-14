@@ -218,6 +218,20 @@ namespace Barotrauma.Steam
                 var descriptionTextBox
                     = ScrollableTextBox(rightTop, 6.0f, workshopItem.Description ?? string.Empty);
 
+                if (workshopItem.Id != 0)
+                {
+                    TaskPool.Add(
+                        $"GetFullDescription{workshopItem.Id}",
+                        SteamManager.Workshop.GetItemAsap(workshopItem.Id.Value, withLongDescription: true),
+                        t =>
+                        {
+                            if (!t.TryGetResult(out Steamworks.Ugc.Item? itemWithDescription)) { return; }
+
+                            descriptionTextBox.Text = itemWithDescription?.Description ?? descriptionTextBox.Text;
+                            descriptionTextBox.Deselect();
+                        });
+                }
+
                 var (leftBottom, _, rightBottom)
                     = CreateSidebars(mainLayout, leftWidth: 0.49f, centerWidth: 0.01f, rightWidth: 0.5f, height: 0.5f);
                 leftBottom.Stretch = true;
@@ -464,7 +478,7 @@ namespace Barotrauma.Steam
             bool stagingReady = false;
             Exception? stagingException = null;
             TaskPool.Add("CreatePublishStagingCopy",
-                SteamManager.Workshop.CreatePublishStagingCopy(modVersion, localPackage),
+                SteamManager.Workshop.CreatePublishStagingCopy(editor.Title ?? localPackage.Name, modVersion, localPackage),
                 (t) =>
                 {
                     stagingReady = true;

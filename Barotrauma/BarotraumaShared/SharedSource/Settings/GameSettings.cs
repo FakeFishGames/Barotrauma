@@ -52,7 +52,12 @@ namespace Barotrauma
             {
                 Config config = new Config
                 {
+#if SERVER
+                    //server defaults to English, clients get a prompt to select a language
                     Language = TextManager.DefaultLanguage,
+#else
+                    Language = LanguageIdentifier.None,
+#endif
                     SubEditorUndoBuffer = 32,
                     MaxAutoSaves = 8,
                     AutoSaveIntervalSeconds = 300,
@@ -64,7 +69,6 @@ namespace Barotrauma
                     EnableMouseLook = true,
                     ChatOpen = true,
                     CrewMenuOpen = true,
-                    EditorDisclaimerShown = false,
                     ShowOffensiveServerPrompt = true,
                     TutorialSkipWarning = true,
                     CorpseDespawnDelay = 600,
@@ -101,16 +105,19 @@ namespace Barotrauma
                 Config retVal = fallback ?? GetDefault();
                 
                 retVal.DeserializeElement(element);
+#if SERVER
+                //server defaults to English, clients get a prompt to select a language
                 if (retVal.Language == LanguageIdentifier.None)
                 {
                     retVal.Language = TextManager.DefaultLanguage;
                 }
-
+#endif
                 retVal.Graphics = GraphicsSettings.FromElements(element.GetChildElements("graphicsmode", "graphicssettings"), retVal.Graphics);
                 retVal.Audio = AudioSettings.FromElements(element.GetChildElements("audio"), retVal.Audio);
 #if CLIENT
                 retVal.KeyMap = new KeyMapping(element.GetChildElements("keymapping"), retVal.KeyMap);
                 retVal.InventoryKeyMap = new InventoryKeyMapping(element.GetChildElements("inventorykeymapping"), retVal.InventoryKeyMap);
+                retVal.SavedCampaignSettings = element.GetChildElement("campaignsettings");
                 LoadSubEditorImages(element);
 #endif
 
@@ -132,7 +139,6 @@ namespace Barotrauma
             public EnemyHealthBarMode ShowEnemyHealthBars;
             public bool ChatOpen;
             public bool CrewMenuOpen;
-            public bool EditorDisclaimerShown;
             public bool ShowOffensiveServerPrompt;
             public bool TutorialSkipWarning;
             public int CorpseDespawnDelay;
@@ -141,6 +147,9 @@ namespace Barotrauma
             public bool DisableInGameHints;
             public bool EnableSubmarineAutoSave;
             public Identifier QuickStartSub;
+#if CLIENT
+            public XElement SavedCampaignSettings;
+#endif
 #if DEBUG
             public bool UseSteamMatchmaking;
             public bool RequireSteamAuthentication;
@@ -232,7 +241,7 @@ namespace Barotrauma
                         SoundVolume = 0.5f,
                         UiVolume = 0.3f,
                         VoiceChatVolume = 0.5f,
-                        VoiceChatCutoffPrevention = 0,
+                        VoiceChatCutoffPrevention = 200,
                         MicrophoneVolume = 5,
                         MuteOnFocusLost = false,
                         DynamicRangeCompressionEnabled = true,
@@ -620,6 +629,8 @@ namespace Barotrauma
             root.Add(inventoryKeyMappingElement);
 
             SubEditorScreen.ImageManager.Save(root);
+
+            root.Add(CampaignSettings.CurrentSettings.Save());
 #endif
 
             configDoc.SaveSafe(PlayerConfigPath);

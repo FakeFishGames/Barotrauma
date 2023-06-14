@@ -26,8 +26,8 @@ namespace Barotrauma.Networking
             if (type != ChatMessageType.Order)
             {
                 changeType = (PlayerConnectionChangeType)msg.ReadByte();
-                txt = msg.ReadString();
             }
+            txt = msg.ReadString();
 
             string senderName = msg.ReadString();
             Character senderCharacter = null;
@@ -86,11 +86,6 @@ namespace Barotrauma.Networking
                     {
                         targetRoom = senderCharacter?.CurrentHull?.DisplayName?.Value;
                     }
-
-                    txt = orderPrefab.GetChatMessage(orderMessageInfo.TargetCharacter?.Name, targetRoom,
-                        givingOrderToSelf: orderMessageInfo.TargetCharacter == senderCharacter,
-                        orderOption: orderOption,
-                        isNewOrder: orderMessageInfo.IsNewOrder);
 
                     if (GameMain.Client.GameStarted && Screen.Selected == GameMain.GameScreen)
                     {

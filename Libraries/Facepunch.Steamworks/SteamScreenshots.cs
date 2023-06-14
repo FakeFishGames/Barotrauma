@@ -12,7 +12,7 @@ namespace Steamworks
 	/// </summary>
 	public class SteamScreenshots : SteamClientClass<SteamScreenshots>
 	{
-		internal static ISteamScreenshots Internal => Interface as ISteamScreenshots;
+		internal static ISteamScreenshots? Internal => Interface as ISteamScreenshots;
 
 		internal override void InitializeInterface( bool server )
 		{
@@ -37,17 +37,17 @@ namespace Steamworks
 		/// This will only be called if Hooked is true, in which case Steam 
 		/// will not take the screenshot itself.
 		/// </summary>
-		public static event Action OnScreenshotRequested;
+		public static event Action? OnScreenshotRequested;
 
 		/// <summary>
 		/// A screenshot successfully written or otherwise added to the library and can now be tagged.
 		/// </summary>
-		public static event Action<Screenshot> OnScreenshotReady;
+		public static event Action<Screenshot>? OnScreenshotReady;
 
 		/// <summary>
 		/// A screenshot attempt failed
 		/// </summary>
-		public static event Action<Result> OnScreenshotFailed;
+		public static event Action<Result>? OnScreenshotFailed;
 
 		/// <summary>
 		/// Writes a screenshot to the user's screenshot library given the raw image data, which must be in RGB format.
@@ -55,6 +55,8 @@ namespace Steamworks
 		/// </summary>
 		public unsafe static Screenshot? WriteScreenshot( byte[] data, int width, int height )
 		{
+			if (Internal is null) { return null; }
+
 			fixed ( byte* ptr = data )
 			{
 				var handle = Internal.WriteScreenshot( (IntPtr)ptr, (uint)data.Length, width, height );
@@ -72,6 +74,8 @@ namespace Steamworks
 		/// </summary>
 		public unsafe static Screenshot? AddScreenshot( string filename, string thumbnail, int width, int height )
 		{
+			if (Internal is null) { return null; }
+
 			var handle = Internal.AddScreenshotToLibrary( filename, thumbnail, width, height );
 			if ( handle.Value == 0 ) return null;
 
@@ -83,7 +87,7 @@ namespace Steamworks
 		/// If screenshots are being hooked by the game then a 
 		/// ScreenshotRequested callback is sent back to the game instead. 
 		/// </summary>
-		public static void TriggerScreenshot() => Internal.TriggerScreenshot();
+		public static void TriggerScreenshot() => Internal?.TriggerScreenshot();
 
 		/// <summary>
 		/// Toggles whether the overlay handles screenshots when the user presses the screenshot hotkey, or if the game handles them.
@@ -93,8 +97,8 @@ namespace Steamworks
 		/// </summary>
 		public static bool Hooked
 		{
-			get => Internal.IsScreenshotsHooked();
-			set => Internal.HookScreenshots( value );
+			get => Internal != null && Internal.IsScreenshotsHooked();
+			set => Internal?.HookScreenshots( value );
 		}
 	}
 }

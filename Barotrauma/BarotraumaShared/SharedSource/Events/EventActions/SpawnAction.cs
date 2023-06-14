@@ -50,7 +50,7 @@ namespace Barotrauma
         public Identifier SpawnPointTag { get; set; }
 
         [Serialize(CharacterTeamType.FriendlyNPC, IsPropertySaveable.Yes)]
-        public CharacterTeamType Team { get; protected set; }
+        public CharacterTeamType TeamID { get; protected set; }
 
         [Serialize(false, IsPropertySaveable.Yes, description: "Should we spawn the entity even when no spawn points with matching tags were found?")]
         public bool RequireSpawnPointTag { get; set; }
@@ -92,6 +92,14 @@ namespace Barotrauma
         public SpawnAction(ScriptedEvent parentEvent, ContentXElement element) : base(parentEvent, element)
         {
             ignoreSpawnPointType = element.GetAttribute("spawnpointtype") == null;
+            //backwards compatibility
+            TeamID = element.GetAttributeEnum("teamtag", element.GetAttributeEnum("team", TeamID));
+            if (element.GetAttribute("submarinetype") != null)
+            {
+                DebugConsole.ThrowError(
+                    $"Error in even \"{(parentEvent.Prefab?.Identifier.ToString() ?? "unknown")}\". " +
+                    $"The attribute \"submarinetype\" is not valid in {nameof(SpawnAction)}. Did you mean {nameof(SpawnLocation)}?");
+            }
         }
 
         public override bool IsFinished(ref string goTo)
@@ -118,7 +126,28 @@ namespace Barotrauma
 
             if (!NPCSetIdentifier.IsEmpty && !NPCIdentifier.IsEmpty)
             {
-                HumanPrefab humanPrefab = NPCSet.Get(NPCSetIdentifier, NPCIdentifier);
+                HumanPrefab humanPrefab = null;
+                if (Level.Loaded?.StartLocation is Location startLocation)
+                {
+                    humanPrefab = 
+                        TryFindHumanPrefab(startLocation.Faction) ?? 
+                        TryFindHumanPrefab(startLocation.SecondaryFaction);
+                }
+                HumanPrefab TryFindHumanPrefab(Faction faction)
+                {
+                    if (faction == null) { return null; }
+                    return 
+                        NPCSet.Get(NPCSetIdentifier, 
+                        NPCIdentifier.Replace("[faction]".ToIdentifier(), faction.Prefab.Identifier), 
+                        logError: false) ??
+                        //try to spawn a coalition NPC if a correct one can't be found
+                        NPCSet.Get(NPCSetIdentifier,
+                        NPCIdentifier.Replace("[faction]".ToIdentifier(), "coalition".ToIdentifier()),
+                        logError: false);
+                }
+
+                humanPrefab ??= NPCSet.Get(NPCSetIdentifier, NPCIdentifier, logError: true);
+
                 if (humanPrefab != null)
                 {
                     if (!AllowDuplicates && 
@@ -130,13 +159,13 @@ namespace Barotrauma
                     ISpatialEntity spawnPos = GetSpawnPos();
                     if (spawnPos != null)
                     {
-                        Entity.Spawner.AddCharacterToSpawnQueue(CharacterPrefab.HumanSpeciesName, OffsetSpawnPos(spawnPos.WorldPosition, Offset), humanPrefab.CreateCharacterInfo(), onSpawn: newCharacter =>
+                        Entity.Spawner.AddCharacterToSpawnQueue(CharacterPrefab.HumanSpeciesName, OffsetSpawnPos(spawnPos.WorldPosition, Rand.Range(0.0f, Offset)), humanPrefab.CreateCharacterInfo(), onSpawn: newCharacter =>
                         {
                             if (newCharacter == null) { return; }
                             newCharacter.HumanPrefab = humanPrefab;
-                            newCharacter.TeamID = Team;
+                            newCharacter.TeamID = TeamID;
                             newCharacter.EnableDespawn = false;
-                            humanPrefab.GiveItems(newCharacter, newCharacter.Submarine);
+                            humanPrefab.GiveItems(newCharacter, newCharacter.Submarine, spawnPos as WayPoint);
                             if (LootingIsStealing)
                             {
                                 foreach (Item item in newCharacter.Inventory.FindAllItems(recursive: true))
@@ -151,6 +180,18 @@ namespace Barotrauma
                                 ParentEvent.AddTarget(TargetTag, newCharacter);
                             }
                             spawnedEntity = newCharacter;
+                            if (Level.Loaded?.StartOutpost?.Info is { } outPostInfo)
+                            {
+                                outPostInfo.AddOutpostNPCIdentifierOrTag(newCharacter, humanPrefab.Identifier);
+                                foreach (Identifier tag in humanPrefab.GetTags())
+                                {
+                                    outPostInfo.AddOutpostNPCIdentifierOrTag(newCharacter, tag);
+                                }
+                            }
+#if SERVER
+                            newCharacter.LoadTalents();
+                            GameMain.NetworkMember.CreateEntityEvent(newCharacter, new Character.UpdateTalentsEventData());
+#endif
                         });
                     }
                 }
@@ -165,7 +206,7 @@ namespace Barotrauma
                 ISpatialEntity spawnPos = GetSpawnPos();
                 if (spawnPos != null)
                 {
-                    Entity.Spawner.AddCharacterToSpawnQueue(SpeciesName, OffsetSpawnPos(spawnPos.WorldPosition, Offset), onSpawn: newCharacter =>
+                    Entity.Spawner.AddCharacterToSpawnQueue(SpeciesName, OffsetSpawnPos(spawnPos.WorldPosition, Rand.Range(0.0f, Offset)), onSpawn: newCharacter =>
                     {
                         if (!TargetTag.IsEmpty && newCharacter != null)
                         {
@@ -211,7 +252,7 @@ namespace Barotrauma
                         ISpatialEntity spawnPos = GetSpawnPos();
                         if (spawnPos != null)
                         {
-                            Entity.Spawner.AddItemToSpawnQueue(itemPrefab, OffsetSpawnPos(spawnPos.WorldPosition, Offset), onSpawned: onSpawned);
+                            Entity.Spawner.AddItemToSpawnQueue(itemPrefab, OffsetSpawnPos(spawnPos.WorldPosition, Rand.Range(0.0f, Offset)), onSpawned: onSpawned);
                         }
                     }
                     else
@@ -239,10 +280,10 @@ namespace Barotrauma
             spawned = true;            
         }
 
-        public static Vector2 OffsetSpawnPos(Vector2 pos, float offsetAmount)
+        public static Vector2 OffsetSpawnPos(Vector2 pos, float offset)
         {
-            Hull hull = Hull.FindHull(pos);
-            pos += Rand.Vector(offsetAmount);
+            Hull hull = Hull.FindHull(pos);            
+            pos += Rand.Vector(offset);
             if (hull != null)
             {
                 float margin = 50.0f;
@@ -289,30 +330,24 @@ namespace Barotrauma
         public static WayPoint GetSpawnPos(SpawnLocationType spawnLocation, SpawnType? spawnPointType, IEnumerable<Identifier> moduleFlags = null, IEnumerable<Identifier> spawnpointTags = null, bool asFarAsPossibleFromAirlock = false, bool requireTaggedSpawnPoint = false)
         {
             bool requireHull = spawnLocation == SpawnLocationType.MainSub || spawnLocation == SpawnLocationType.Outpost;
-            List<WayPoint> potentialSpawnPoints = WayPoint.WayPointList.FindAll(wp => IsValidSubmarineType(spawnLocation, wp.Submarine) && (wp.CurrentHull != null || !requireHull));
-            
-            potentialSpawnPoints = potentialSpawnPoints.FindAll(wp => wp.ConnectedDoor == null && wp.Ladders == null && !wp.isObstructed);
-
+            List<WayPoint> potentialSpawnPoints = WayPoint.WayPointList.FindAll(wp => IsValidSubmarineType(spawnLocation, wp.Submarine) && (wp.CurrentHull != null || !requireHull));           
+            potentialSpawnPoints = potentialSpawnPoints.FindAll(wp => wp.ConnectedDoor == null && wp.Ladders == null && wp.IsTraversable);
             if (moduleFlags != null && moduleFlags.Any())
             {
-                List<WayPoint> spawnPoints = potentialSpawnPoints.Where(wp => wp.CurrentHull?.OutpostModuleTags.Any(moduleFlags.Contains) ?? false).ToList();
+                var spawnPoints = potentialSpawnPoints.Where(wp => wp.CurrentHull is Hull h && h.OutpostModuleTags.Any(moduleFlags.Contains));
                 if (spawnPoints.Any())
                 {
-                    potentialSpawnPoints = spawnPoints;
+                    potentialSpawnPoints = spawnPoints.ToList();
                 }
             }
-
             if (spawnpointTags != null && spawnpointTags.Any())
             {
-                var spawnPoints = potentialSpawnPoints
-                    .Where(wp => spawnpointTags.Any(tag => wp.Tags.Contains(tag) && wp.ConnectedDoor == null && !wp.isObstructed));
-
+                var spawnPoints = potentialSpawnPoints.Where(wp => spawnpointTags.Any(tag => wp.Tags.Contains(tag) && wp.ConnectedDoor == null && wp.IsTraversable));
                 if (requireTaggedSpawnPoint || spawnPoints.Any())
                 {
                     potentialSpawnPoints = spawnPoints.ToList();
                 }
             }
-
             if (potentialSpawnPoints.None())
             {
                 if (requireTaggedSpawnPoint && spawnpointTags != null && spawnpointTags.Any())

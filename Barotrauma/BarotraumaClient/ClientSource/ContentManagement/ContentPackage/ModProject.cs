@@ -86,13 +86,13 @@ namespace Barotrauma
 
         public string ModVersion = ContentPackage.DefaultModVersion;
 
-        public Md5Hash? ExpectedHash { get; private set; }
+        public Md5Hash? ExpectedHash { get; set; }
 
         public bool IsCore = false;
 
         public Option<ContentPackageId> UgcId = Option<ContentPackageId>.None();
 
-        public Option<DateTime> InstallTime = Option<DateTime>.None();
+        public Option<SerializableDateTime> InstallTime = Option<SerializableDateTime>.None();
 
         public bool HasFile(File file)
             => Files.Any(f =>
@@ -120,14 +120,16 @@ namespace Barotrauma
         public void DiscardHashAndInstallTime()
         {
             ExpectedHash = null;
-            InstallTime = Option<DateTime>.None();
+            InstallTime = Option<SerializableDateTime>.None();
         }
         
         public static string IncrementModVersion(string modVersion)
         {
+            if (string.IsNullOrWhiteSpace(modVersion)) { return string.Empty; }
+
             //look for an integer at the end of the string and increment it
             int startIndex = modVersion.Length - 1;
-            while (char.IsDigit(modVersion[startIndex])) { startIndex--; }
+            while (startIndex > 0 && char.IsDigit(modVersion[startIndex])) { startIndex--; }
             startIndex++;
 
             if (startIndex >= modVersion.Length
@@ -159,8 +161,8 @@ namespace Barotrauma
             addRootAttribute("gameversion", GameMain.Version);
             if (AltNames.Any()) { addRootAttribute("altnames", string.Join(",", AltNames)); }
             if (ExpectedHash != null) { addRootAttribute("expectedhash", ExpectedHash.StringRepresentation); }
-            if (InstallTime.TryUnwrap(out var installTime)) { addRootAttribute("installtime", ToolBox.Epoch.FromDateTime(installTime)); }
-            
+            if (InstallTime.TryUnwrap(out var installTime)) { addRootAttribute("installtime", installTime); }
+
             files.ForEach(f => rootElement.Add(f.ToXElement()));
             
             doc.Add(rootElement);

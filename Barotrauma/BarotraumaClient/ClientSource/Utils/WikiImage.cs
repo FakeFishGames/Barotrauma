@@ -142,11 +142,17 @@ namespace Barotrauma
                 GameMain.Instance.GraphicsDevice.SetRenderTarget(rt);
                 GameMain.Instance.GraphicsDevice.Clear(Color.Transparent);
 
-                spriteBatch.Begin(SpriteSortMode.BackToFront, BlendState.NonPremultiplied, null, null, null, null, transform);
-                Submarine.Draw(spriteBatch);
-                Submarine.DrawFront(spriteBatch);
-                Submarine.DrawDamageable(spriteBatch, null);
-                spriteBatch.End();
+                DrawBatch(() => Submarine.DrawBack(spriteBatch, true, e => e is Structure s && (e.SpriteDepth >= 0.9f || s.Prefab.BackgroundSprite != null)));
+                DrawBatch(() => Submarine.DrawBack(spriteBatch, true, e => (e is not Structure || e.SpriteDepth < 0.9f)));
+                DrawBatch(() => Submarine.DrawDamageable(spriteBatch, null, editing: true));
+                DrawBatch(() => Submarine.DrawFront(spriteBatch, editing: true));
+
+                void DrawBatch(Action drawAction)
+                {
+                    spriteBatch.Begin(SpriteSortMode.BackToFront, BlendState.NonPremultiplied, null, null, null, null, transform);
+                    drawAction.Invoke();
+                    spriteBatch.End();
+                }
 
                 GameMain.Instance.GraphicsDevice.SetRenderTarget(null);
                 GameMain.Instance.GraphicsDevice.Viewport = prevViewport;

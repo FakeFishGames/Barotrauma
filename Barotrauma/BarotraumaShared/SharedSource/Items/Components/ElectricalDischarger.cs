@@ -366,7 +366,6 @@ namespace Barotrauma.Items.Components
             for (int i = 0; i < entitiesInRange.Count; i++)
             {
                 float dist = float.MaxValue;
-
                 if (entitiesInRange[i] is Structure structure)
                 {
                     if (structure.IsHorizontal)
@@ -388,7 +387,7 @@ namespace Barotrauma.Items.Components
                 }
                 else if (entitiesInRange[i] is Character character)
                 {
-                    dist = MathUtils.LineSegmentToPointDistanceSquared(currPos, nodes[parentNodeIndex].WorldPosition, character.WorldPosition);
+                    dist = MathF.Sqrt(MathUtils.LineSegmentToPointDistanceSquared(currPos, nodes[parentNodeIndex].WorldPosition, character.WorldPosition));
                 }
 
                 if (dist < closestDist)
@@ -601,7 +600,7 @@ namespace Barotrauma.Items.Components
 
         public void ServerEventWrite(IWriteMessage msg, Client c, NetEntityEvent.IData extraData = null)
         {
-            //no further data needed, the event just triggers the discharge
+            msg.WriteUInt16(user?.ID ?? Entity.NullEntityID);
         }
     }
 }

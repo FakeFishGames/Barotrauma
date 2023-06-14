@@ -19,8 +19,6 @@ namespace Barotrauma
 
         private IEnumerable<Character> affectedNpcs;
 
-        private AIObjectiveGoTo gotoObjective;
-
         public override void Update(float deltaTime)
         {
             if (isFinished) { return; }
@@ -33,19 +31,18 @@ namespace Barotrauma
 
                 if (Wait)
                 {
-                    gotoObjective = new AIObjectiveGoTo(npc, npc, humanAiController.ObjectiveManager, repeat: true)
+                    var gotoObjective = new AIObjectiveGoTo(
+                        AIObjectiveGoTo.GetTargetHull(npc) as ISpatialEntity ?? npc, npc, humanAiController.ObjectiveManager, repeat: true)
                     {
-                        OverridePriority = 100.0f
+                        OverridePriority = 100.0f,
+                        SourceEventAction = this
                     };
                     humanAiController.ObjectiveManager.AddObjective(gotoObjective);
                     humanAiController.ObjectiveManager.WaitTimer = 0.0f;
                 }
                 else
                 {
-                    if (gotoObjective != null)
-                    {
-                        gotoObjective.Abandon = true;
-                    }
+                    AbandonGoToObjectives(humanAiController);
                 }
             }
             isFinished = true;
@@ -62,15 +59,23 @@ namespace Barotrauma
             {
                 foreach (var npc in affectedNpcs)
                 {
-                    if (npc.Removed || npc.AIController is not HumanAIController) { continue; }
-                    if (gotoObjective != null)
-                    {
-                        gotoObjective.Abandon = true;
-                    }                    
+                    if (npc.Removed || npc.AIController is not HumanAIController aiController) { continue; }
+                    AbandonGoToObjectives(aiController);
                 }
                 affectedNpcs = null;
             }
             isFinished = false;
+        }
+
+        private void AbandonGoToObjectives(HumanAIController aiController)
+        {
+            foreach (var objective in aiController.ObjectiveManager.Objectives)
+            {
+                if (objective is AIObjectiveGoTo gotoObjective && gotoObjective.SourceEventAction?.ParentEvent == ParentEvent)
+                {
+                    gotoObjective.Abandon = true;
+                }
+            }
         }
 
         public override string ToDebugString()

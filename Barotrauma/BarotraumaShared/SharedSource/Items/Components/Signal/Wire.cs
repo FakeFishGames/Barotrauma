@@ -13,7 +13,7 @@ namespace Barotrauma.Items.Components
 {
     partial class Wire : ItemComponent, IDrawableComponent, IServerSerializable, IClientSerializable
     {
-        partial class WireSection
+        public partial class WireSection
         {
             private Vector2 start;
             private Vector2 end;
@@ -775,20 +775,25 @@ namespace Barotrauma.Items.Components
             UpdateSections();
         }
 
-        public override void Load(ContentXElement componentElement, bool usePrefabValues, IdRemap idRemap)
+        public static IEnumerable<Vector2> ExtractNodes(XElement element)
         {
-            base.Load(componentElement, usePrefabValues, idRemap);
-
-            string nodeString = componentElement.GetAttributeString("nodes", "");
-            if (nodeString == "") return;
+            string nodeString = element.GetAttributeString("nodes", "");
+            if (nodeString.IsNullOrWhiteSpace()) { yield break; }
 
             string[] nodeCoords = nodeString.Split(';');
             for (int i = 0; i < nodeCoords.Length / 2; i++)
             {
-                float.TryParse(nodeCoords[i * 2], NumberStyles.Float, CultureInfo.InvariantCulture, out float x);
-                float.TryParse(nodeCoords[i * 2 + 1], NumberStyles.Float, CultureInfo.InvariantCulture, out float y);
-                nodes.Add(new Vector2(x, y));
+                float.TryParse(nodeCoords[i * 2].Trim(), NumberStyles.Float, CultureInfo.InvariantCulture, out float x);
+                float.TryParse(nodeCoords[i * 2 + 1].Trim(), NumberStyles.Float, CultureInfo.InvariantCulture, out float y);
+                yield return new Vector2(x, y);
             }
+        }
+        
+        public override void Load(ContentXElement componentElement, bool usePrefabValues, IdRemap idRemap)
+        {
+            base.Load(componentElement, usePrefabValues, idRemap);
+
+            nodes.AddRange(ExtractNodes(componentElement));
 
             Drawable = nodes.Any();
         }

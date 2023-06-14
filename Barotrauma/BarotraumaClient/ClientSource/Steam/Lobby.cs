@@ -105,7 +105,8 @@ namespace Barotrauma.Steam
 
             currentLobby?.SetData("contentpackage", string.Join(",", contentPackages.Select(cp => cp.Name)));
             currentLobby?.SetData("contentpackagehash", string.Join(",", contentPackages.Select(cp => cp.Hash.StringRepresentation)));
-            currentLobby?.SetData("contentpackageid", string.Join(",", contentPackages.Select(cp => cp.UgcId)));
+            currentLobby?.SetData("contentpackageid", string.Join(",", contentPackages.Select(cp
+                => cp.UgcId.TryUnwrap(out var ugcId) ? ugcId.StringRepresentation : "")));
             currentLobby?.SetData("modeselectionmode", serverSettings.ModeSelectionMode.ToString());
             currentLobby?.SetData("subselectionmode", serverSettings.SubSelectionMode.ToString());
             currentLobby?.SetData("voicechatenabled", serverSettings.VoiceChatEnabled.ToString());
@@ -117,6 +118,7 @@ namespace Barotrauma.Steam
             currentLobby?.SetData("gamestarted", GameMain.Client.GameStarted.ToString());
             currentLobby?.SetData("playstyle", serverSettings.PlayStyle.ToString());
             currentLobby?.SetData("gamemode", GameMain.NetLobbyScreen?.SelectedMode?.Identifier.Value ?? "");
+            currentLobby?.SetData("language", serverSettings.Language.ToString());
 
             DebugConsole.Log("Lobby updated!");
         }

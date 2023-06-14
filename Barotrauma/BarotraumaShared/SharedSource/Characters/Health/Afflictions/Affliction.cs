@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Barotrauma.Extensions;
+using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,10 +15,14 @@ namespace Barotrauma
 
         public Dictionary<Identifier, SerializableProperty> SerializableProperties { get; set; }
 
-        public float PendingAdditionStrength { get; set; }
-        public float AdditionStrength { get; set; }
+        public float PendingGrainEffectStrength { get; set; }
+        public float GrainEffectStrength { get; set; }
 
         private float fluctuationTimer;
+
+        private AfflictionPrefab.Effect activeEffect;
+        private float prevActiveEffectStrength;
+        protected bool activeEffectDirty = true;
 
         protected float _strength;
 
@@ -42,10 +47,11 @@ namespace Barotrauma
                 float newValue = MathHelper.Clamp(value, 0.0f, Prefab.MaxStrength);
                 if (newValue > _strength)
                 {
-                    PendingAdditionStrength = Prefab.GrainBurst;
+                    PendingGrainEffectStrength = Prefab.GrainBurst;
                     Duration = Prefab.Duration;
                 }
                 _strength = newValue;
+                activeEffectDirty = true;
             }
         }
 
@@ -68,8 +74,7 @@ namespace Barotrauma
         public float DamagePerSecondTimer;
         public float PreviousVitalityDecrease;
 
-        public float StrengthDiminishMultiplier = 1.0f;
-        public Affliction MultiplierSource;
+        public (float Value, Affliction Source) StrengthDiminishMultiplier = (1.0f, null);
 
         public readonly Dictionary<AfflictionPrefab.PeriodicEffect, float> PeriodicEffectTimers = new Dictionary<AfflictionPrefab.PeriodicEffect, float>();
 
@@ -95,7 +100,7 @@ namespace Barotrauma
             prefab?.ReloadSoundsIfNeeded();
 #endif
             Prefab = prefab;
-            PendingAdditionStrength = Prefab.GrainBurst;
+            PendingGrainEffectStrength = Prefab.GrainBurst;
             _strength = strength;
             Identifier = prefab.Identifier;
 
@@ -147,7 +152,16 @@ namespace Barotrauma
                 MathHelper.Clamp((int)Math.Floor(strength / maxStrength * strengthTexts.Length), 0, strengthTexts.Length - 1)];
         }
 
-        public AfflictionPrefab.Effect GetActiveEffect() => Prefab.GetActiveEffect(Strength);
+        public AfflictionPrefab.Effect GetActiveEffect()
+        {
+            if (activeEffectDirty)
+            {
+                activeEffect = Prefab.GetActiveEffect(_strength);
+                prevActiveEffectStrength = _strength;
+                activeEffectDirty = false;
+            }
+            return activeEffect;
+        }
 
         public float GetVitalityDecrease(CharacterHealth characterHealth)
         {
@@ -158,14 +172,14 @@ namespace Barotrauma
         {
             if (strength < Prefab.ActivationThreshold) { return 0.0f; }
             strength = MathHelper.Clamp(strength, 0.0f, Prefab.MaxStrength);
-            AfflictionPrefab.Effect currentEffect = Prefab.GetActiveEffect(strength);
+            AfflictionPrefab.Effect currentEffect = GetActiveEffect();
             if (currentEffect == null) { return 0.0f; }
             if (currentEffect.MaxStrength - currentEffect.MinStrength <= 0.0f) { return 0.0f; }
 
             float currVitalityDecrease = MathHelper.Lerp(
                 currentEffect.MinVitalityDecrease,
                 currentEffect.MaxVitalityDecrease,
-                (strength - currentEffect.MinStrength) / (currentEffect.MaxStrength - currentEffect.MinStrength));
+                currentEffect.GetStrengthFactor(strength));
 
             if (currentEffect.MultiplyByMaxVitality)
             {
@@ -186,11 +200,11 @@ namespace Barotrauma
             float amount = MathHelper.Lerp(
                 currentEffect.MinGrainStrength,
                 currentEffect.MaxGrainStrength,
-                (Strength - currentEffect.MinStrength) / (currentEffect.MaxStrength - currentEffect.MinStrength)) * GetScreenEffectFluctuation(currentEffect);
+                currentEffect.GetStrengthFactor(this)) * GetScreenEffectFluctuation(currentEffect);
 
-            if (Prefab.GrainBurst > 0 && AdditionStrength > amount)
+            if (Prefab.GrainBurst > 0 && GrainEffectStrength > amount)
             {
-                return Math.Min(AdditionStrength, 1.0f);
+                return Math.Min(GrainEffectStrength, 1.0f);
             }
 
             return amount;
@@ -206,7 +220,7 @@ namespace Barotrauma
             return MathHelper.Lerp(
                 currentEffect.MinScreenDistort,
                 currentEffect.MaxScreenDistort,
-                (Strength - currentEffect.MinStrength) / (currentEffect.MaxStrength - currentEffect.MinStrength)) * GetScreenEffectFluctuation(currentEffect);
+                currentEffect.GetStrengthFactor(this)) * GetScreenEffectFluctuation(currentEffect);
         }
 
         public float GetRadialDistortStrength()
@@ -219,7 +233,7 @@ namespace Barotrauma
             return MathHelper.Lerp(
                 currentEffect.MinRadialDistort,
                 currentEffect.MaxRadialDistort,
-                (Strength - currentEffect.MinStrength) / (currentEffect.MaxStrength - currentEffect.MinStrength)) * GetScreenEffectFluctuation(currentEffect);
+                currentEffect.GetStrengthFactor(this)) * GetScreenEffectFluctuation(currentEffect);
         }
 
         public float GetChromaticAberrationStrength()
@@ -232,7 +246,7 @@ namespace Barotrauma
             return MathHelper.Lerp(
                 currentEffect.MinChromaticAberration,
                 currentEffect.MaxChromaticAberration,
-                (Strength - currentEffect.MinStrength) / (currentEffect.MaxStrength - currentEffect.MinStrength)) * GetScreenEffectFluctuation(currentEffect);
+                currentEffect.GetStrengthFactor(this)) * GetScreenEffectFluctuation(currentEffect);
         }
 
         public float GetAfflictionOverlayMultiplier()
@@ -247,7 +261,7 @@ namespace Barotrauma
             return MathHelper.Lerp(
                 currentEffect.MinAfflictionOverlayAlphaMultiplier,
                 currentEffect.MaxAfflictionOverlayAlphaMultiplier,
-                (Strength - currentEffect.MinStrength) / (currentEffect.MaxStrength - currentEffect.MinStrength));
+                currentEffect.GetStrengthFactor(this));
         }
 
         public Color GetFaceTint()
@@ -259,7 +273,7 @@ namespace Barotrauma
             return Color.Lerp(
                 currentEffect.MinFaceTint,
                 currentEffect.MaxFaceTint,
-                (Strength - currentEffect.MinStrength) / (currentEffect.MaxStrength - currentEffect.MinStrength));
+                currentEffect.GetStrengthFactor(this));
         }
 
         public Color GetBodyTint()
@@ -271,7 +285,7 @@ namespace Barotrauma
             return Color.Lerp(
                 currentEffect.MinBodyTint,
                 currentEffect.MaxBodyTint,
-                (Strength - currentEffect.MinStrength) / (currentEffect.MaxStrength - currentEffect.MinStrength));
+                currentEffect.GetStrengthFactor(this));
         }
 
         public float GetScreenBlurStrength()
@@ -284,7 +298,7 @@ namespace Barotrauma
             return MathHelper.Lerp(
                 currentEffect.MinScreenBlur,
                 currentEffect.MaxScreenBlur,
-                (Strength - currentEffect.MinStrength) / (currentEffect.MaxStrength - currentEffect.MinStrength)) * GetScreenEffectFluctuation(currentEffect);
+                currentEffect.GetStrengthFactor(this)) * GetScreenEffectFluctuation(currentEffect);
         }
 
         private float GetScreenEffectFluctuation(AfflictionPrefab.Effect currentEffect)
@@ -302,7 +316,7 @@ namespace Barotrauma
             float amount = MathHelper.Lerp(
                 currentEffect.MinSkillMultiplier,
                 currentEffect.MaxSkillMultiplier,
-                (Strength - currentEffect.MinStrength) / (currentEffect.MaxStrength - currentEffect.MinStrength));
+                currentEffect.GetStrengthFactor(this));
 
             return amount;
         }
@@ -333,7 +347,7 @@ namespace Barotrauma
             return MathHelper.Lerp(
                 currentEffect.MinResistance,
                 currentEffect.MaxResistance,
-                (Strength - currentEffect.MinStrength) / (currentEffect.MaxStrength - currentEffect.MinStrength));
+                currentEffect.GetStrengthFactor(this));
         }    
 
         public float GetSpeedMultiplier()
@@ -344,26 +358,21 @@ namespace Barotrauma
             return MathHelper.Lerp(
                 currentEffect.MinSpeedMultiplier,
                 currentEffect.MaxSpeedMultiplier,
-                (Strength - currentEffect.MinStrength) / (currentEffect.MaxStrength - currentEffect.MinStrength));
+                currentEffect.GetStrengthFactor(this));
         }
 
         public float GetStatValue(StatTypes statType)
         {
-            if (!(GetViableEffect() is AfflictionPrefab.Effect currentEffect)) { return 0.0f; }
+            if (GetViableEffect() is not AfflictionPrefab.Effect currentEffect) { return 0.0f; }
 
-            if (currentEffect.AfflictionStatValues.TryGetValue(statType, out var value))
-            {
-                return MathHelper.Lerp(
-                    value.minValue,
-                    value.maxValue,
-                    (Strength - currentEffect.MinStrength) / (currentEffect.MaxStrength - currentEffect.MinStrength));
-            }
-            return 0.0f;
+            if (!currentEffect.AfflictionStatValues.TryGetValue(statType, out var appliedStat)) { return 0.0f; }
+
+            return MathHelper.Lerp(appliedStat.MinValue, appliedStat.MaxValue, currentEffect.GetStrengthFactor(this));
         }
 
         public bool HasFlag(AbilityFlags flagType)
         {
-            if (!(GetViableEffect() is AfflictionPrefab.Effect currentEffect)) { return false; }
+            if (GetViableEffect() is not AfflictionPrefab.Effect currentEffect) { return false; }
             return currentEffect.AfflictionAbilityFlags.HasFlag(flagType);
         }
 
@@ -401,13 +410,16 @@ namespace Barotrauma
             fluctuationTimer += deltaTime * currentEffect.ScreenEffectFluctuationFrequency;
             fluctuationTimer %= 1.0f;
 
-            if (currentEffect.StrengthChange < 0) // Reduce diminishing of buffs if boosted
+            if (currentEffect.StrengthChange < 0) // Only apply StrengthDiminish.Multiplier if affliction is being weakened
             {
-                float durationMultiplier = 1 / (1 + (Prefab.IsBuff ? characterHealth.Character.GetStatValue(StatTypes.BuffDurationMultiplier)
-                    : characterHealth.Character.GetStatValue(StatTypes.DebuffDurationMultiplier)));
+                float stat = characterHealth.Character.GetStatValue(
+                    Prefab.IsBuff
+                        ? StatTypes.BuffDurationMultiplier
+                        : StatTypes.DebuffDurationMultiplier);
 
-                _strength += currentEffect.StrengthChange * deltaTime * StrengthDiminishMultiplier * durationMultiplier;
+                float durationMultiplier = 1f / (1f + stat);
 
+                _strength += currentEffect.StrengthChange * deltaTime * StrengthDiminishMultiplier.Value * durationMultiplier;
             }
             else if (currentEffect.StrengthChange > 0) // Reduce strengthening of afflictions if resistant
             {
@@ -415,6 +427,7 @@ namespace Barotrauma
             }
             // Don't use the property, because it's virtual and some afflictions like husk overload it for external use.
             _strength = MathHelper.Clamp(_strength, 0.0f, Prefab.MaxStrength);
+            activeEffectDirty |= !MathUtils.NearlyEqual(prevActiveEffectStrength, _strength);
 
             foreach (StatusEffect statusEffect in currentEffect.StatusEffects)
             {
@@ -426,14 +439,14 @@ namespace Barotrauma
             {
                 amount /= Prefab.GrainBurst;
             }
-            if (PendingAdditionStrength >= 0)
+            if (PendingGrainEffectStrength >= 0)
             {
-                AdditionStrength += amount;
-                PendingAdditionStrength -= deltaTime;
+                GrainEffectStrength += amount;
+                PendingGrainEffectStrength -= deltaTime;
             } 
-            else if (AdditionStrength > 0)
+            else if (GrainEffectStrength > 0)
             {
-                AdditionStrength -= amount;
+                GrainEffectStrength -= amount;
             }
         }
 
@@ -442,7 +455,10 @@ namespace Barotrauma
             var currentEffect = GetActiveEffect();
             if (currentEffect != null)
             {
-                currentEffect.StatusEffects.ForEach(se => ApplyStatusEffect(type, se, deltaTime, characterHealth, targetLimb));
+                foreach (var statusEffect in currentEffect.StatusEffects)
+                {
+                    ApplyStatusEffect(type, statusEffect, deltaTime, characterHealth, targetLimb);
+                }
             }
         }
 
@@ -481,6 +497,7 @@ namespace Barotrauma
         {
             _nonClampedStrength = strength;
             _strength = _nonClampedStrength;
+            activeEffectDirty |= !MathUtils.NearlyEqual(_strength, prevActiveEffectStrength);
         }
 
         public bool ShouldShowIcon(Character afflictedCharacter)

@@ -20,6 +20,7 @@ namespace Barotrauma.Items.Components
                 User = Entity.FindEntityByID(userId) as Character;
                 Vector2 simPosition = new Vector2(msg.ReadSingle(), msg.ReadSingle());
                 float rotation = msg.ReadSingle();
+                spreadIndex = msg.ReadByte();
                 if (User != null)
                 {
                     Shoot(User, simPosition, simPosition, rotation, ignoredBodies: User.AnimController.Limbs.Where(l => !l.IsSevered).Select(l => l.body.FarseerBody).ToList(), createNetworkEvent: false);

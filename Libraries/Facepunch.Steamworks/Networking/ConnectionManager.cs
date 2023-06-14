@@ -9,7 +9,7 @@ namespace Steamworks
 		/// <summary>
 		/// An optional interface to use instead of deriving
 		/// </summary>
-		public IConnectionManager Interface { get; set; }
+		public IConnectionManager? Interface { get; set; }
 
 		/// <summary>
 		/// The actual connection we're managing
@@ -94,6 +94,8 @@ namespace Steamworks
 
 		public void Receive( int bufferSize = 32 )
 		{
+			if (SteamNetworkingSockets.Internal is null) { return; }
+			
 			int processed = 0;
 			IntPtr messageBuffer = Marshal.AllocHGlobal( IntPtr.Size * bufferSize );
 

@@ -176,6 +176,10 @@ namespace Barotrauma
             void updateWaterAmbience(Sound sound, float volume)
             {
                 SoundChannel chn = waterAmbienceChannels.FirstOrDefault(c => c.Sound == sound);
+                if (Level.Loaded != null)
+                {
+                    volume *= Level.Loaded.GenerationParams.WaterAmbienceVolume;
+                }
                 if (chn is null || !chn.IsPlaying)
                 {
                     if (volume < 0.01f) { return; }
@@ -513,6 +517,11 @@ namespace Barotrauma
             
             if (musicDisposed) { Thread.Sleep(60); }
         }
+
+        public static void ForceMusicUpdate()
+        {
+            updateMusicTimer = 0.0f;
+        }
         
         private static void UpdateMusic(float deltaTime)
         {
@@ -540,7 +549,7 @@ namespace Barotrauma
 
                 IEnumerable<BackgroundMusic> suitableMusic = GetSuitableMusicClips(currentMusicType, currentIntensity);
                 int mainTrackIndex = 0;
-                if (suitableMusic.Count() == 0)
+                if (suitableMusic.None())
                 {
                     targetMusic[mainTrackIndex] = null;
                 }
@@ -564,11 +573,21 @@ namespace Barotrauma
                     }
                 }
 
-                if (Level.Loaded?.Type == LevelData.LevelType.LocationConnection)
+                if (Level.Loaded != null && (Level.Loaded.Type == LevelData.LevelType.LocationConnection || Level.Loaded.GenerationParams.PlayNoiseLoopInOutpostLevel))
                 {
+                    Identifier biome = Level.Loaded.LevelData.Biome.Identifier;
+                    if (Level.Loaded.IsEndBiome && GameMain.GameSession?.Campaign is CampaignMode campaign)
+                    {
+                        //don't play end biome music in the path leading up to the end level(s)
+                        if (!campaign.Map.EndLocations.Contains(Level.Loaded.StartLocation))
+                        {
+                            biome = Level.Loaded.StartLocation.Biome.Identifier;
+                        }
+                    }
+
                     // Find background noise loop for the current biome
                     IEnumerable<BackgroundMusic> suitableNoiseLoops = Screen.Selected == GameMain.GameScreen ?
-                        GetSuitableMusicClips(Level.Loaded.LevelData.Biome.Identifier, currentIntensity) :
+                        GetSuitableMusicClips(biome, currentIntensity) :
                         Enumerable.Empty<BackgroundMusic>();
                     if (suitableNoiseLoops.Count() == 0)
                     {
@@ -597,10 +616,17 @@ namespace Barotrauma
                     targetMusic[typeAmbienceTrackIndex] = suitableTypeAmbiences.GetRandomUnsynced();
                 }
 
+                IEnumerable<BackgroundMusic> suitableIntensityMusic = Enumerable.Empty<BackgroundMusic>();
+                if (targetMusic[mainTrackIndex] is { MuteIntensityTracks: false } mainTrack && Screen.Selected == GameMain.GameScreen)
+                {
+                    float intensity = currentIntensity;
+                    if (mainTrack?.ForceIntensityTrack != null)
+                    {
+                        intensity = mainTrack.ForceIntensityTrack.Value;
+                    }
+                    suitableIntensityMusic = GetSuitableMusicClips("intensity".ToIdentifier(), intensity);
+                }
                 //get the appropriate intensity layers for current situation
-                IEnumerable<BackgroundMusic> suitableIntensityMusic = Screen.Selected == GameMain.GameScreen ?
-                    GetSuitableMusicClips("intensity".ToIdentifier(), currentIntensity) :
-                    Enumerable.Empty<BackgroundMusic>();
                 int intensityTrackStartIndex = 3;
                 for (int i = intensityTrackStartIndex; i < MaxMusicChannels; i++)
                 {
@@ -729,6 +755,14 @@ namespace Barotrauma
 
             firstTimeInMainMenu = false;
 
+            if (GameMain.GameSession != null)
+            {
+                foreach (var mission in GameMain.GameSession.Missions)
+                {
+                    var missionMusic = mission.GetOverrideMusicType();
+                    if (!missionMusic.IsEmpty) { return missionMusic; }
+                }
+            }
 
             if (Character.Controlled != null)
             {
@@ -754,6 +788,11 @@ namespace Barotrauma
                 }
             }
 
+            if (Level.Loaded is { IsEndBiome: true })
+            {
+                return "endlevel".ToIdentifier();
+            }
+
             Submarine targetSubmarine = Character.Controlled?.Submarine;
             if (targetSubmarine != null && targetSubmarine.AtDamageDepth)
             {
@@ -765,8 +804,8 @@ namespace Barotrauma
                 return "deep".ToIdentifier();
             }
 
-                if (targetSubmarine != null)
-            {                
+            if (targetSubmarine != null)
+            {
                 float floodedArea = 0.0f;
                 float totalArea = 0.0f;
                 foreach (Hull hull in Hull.HullList)
@@ -865,17 +904,18 @@ namespace Barotrauma
 
         public static void PlayDamageSound(string damageType, float damage, Vector2 position, float range = 2000.0f, IEnumerable<Identifier> tags = null)
         {
+            var suitableSounds = damageSounds.Where(s =>
+                s.DamageType == damageType &&
+                (s.RequiredTag.IsEmpty || (tags == null ? s.RequiredTag.IsEmpty : tags.Contains(s.RequiredTag))));
+
             //if the damage is too low for any sound, don't play anything
-            if (damageSounds.All(d => damage < d.DamageRange.X)) { return; }
+            if (suitableSounds.All(d => damage < d.DamageRange.X)) { return; }
 
             //allow the damage to differ by 10 from the configured damage range,
             //so the same amount of damage doesn't always play the same sound
             float randomizedDamage = MathHelper.Clamp(damage + Rand.Range(-10.0f, 10.0f), 0.0f, 100.0f);
-
-            var suitableSounds = damageSounds.Where(s => 
-                s.DamageType == damageType &&
-                (s.DamageRange == Vector2.Zero || (randomizedDamage >= s.DamageRange.X && randomizedDamage <= s.DamageRange.Y)) &&
-                (s.RequiredTag.IsEmpty || (tags == null ? s.RequiredTag.IsEmpty : tags.Contains(s.RequiredTag))));
+            suitableSounds = suitableSounds.Where(s => 
+                s.DamageRange == Vector2.Zero || (randomizedDamage >= s.DamageRange.X && randomizedDamage <= s.DamageRange.Y));
 
             var damageSound = suitableSounds.GetRandomUnsynced();
             damageSound?.Sound?.Play(1.0f, range, position, muffle: !damageSound.IgnoreMuffling && ShouldMuffleSound(Character.Controlled, position, range, null));

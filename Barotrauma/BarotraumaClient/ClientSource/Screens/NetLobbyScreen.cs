@@ -189,7 +189,8 @@ namespace Barotrauma
         }
 
         public IReadOnlyList<SubmarineInfo> GetSubList()
-            => SubList.Content.Children.Select(c => c.UserData as SubmarineInfo).ToArray();
+            => (IReadOnlyList<SubmarineInfo>)GameMain.Client?.ServerSubmarines
+               ?? Array.Empty<SubmarineInfo>();
 
         public readonly GUIListBox PlayerList;
 
@@ -300,7 +301,7 @@ namespace Barotrauma
                 levelSeed = value;
 
                 int intSeed = ToolBox.StringToInt(levelSeed);
-                backgroundSprite = LocationType.Random(new MTRandom(intSeed))?.GetPortrait(intSeed);
+                backgroundSprite = LocationType.Random(new MTRandom(intSeed), predicate: lt => lt.UsePortraitInRandomLoadingScreens)?.GetPortrait(intSeed);
                 SeedBox.Text = levelSeed;
             }
         }
@@ -929,6 +930,8 @@ namespace Barotrauma
 
                 var modeTitle = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), modeContent.RectTransform), mode.Name, font: GUIStyle.SubHeadingFont);
                 var modeDescription = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), modeContent.RectTransform), mode.Description, font: GUIStyle.SmallFont, wrap: true);
+                //leave some padding for the vote count text
+                modeDescription.Padding = new Vector4(modeDescription.Padding.X, modeDescription.Padding.Y, GUI.IntScale(30), modeDescription.Padding.W);
                 modeTitle.HoverColor = modeDescription.HoverColor = modeTitle.SelectedColor = modeDescription.SelectedColor = Color.Transparent;
                 modeTitle.HoverTextColor = modeDescription.HoverTextColor = modeTitle.TextColor;
                 modeTitle.TextColor = modeDescription.TextColor = modeTitle.TextColor * 0.5f;
@@ -981,7 +984,7 @@ namespace Barotrauma
                     }
                     else
                     {
-                        GameMain.Client.RequestSelectMode(ModeList.Content.GetChildIndex(ModeList.Content.GetChildByUserData(GameModePreset.Sandbox)));
+                        GameMain.Client.RequestRoundEnd(save: false, quitCampaign: true);
                     }
                     return true;
                 }
@@ -1931,7 +1934,7 @@ namespace Barotrauma
                     var selectedSub = component.UserData as SubmarineInfo;
                     if (SelectedMode == GameModePreset.MultiPlayerCampaign && CampaignSetupUI != null)
                     {
-                        if (selectedSub.Price > CampaignSetupUI.CurrentSettings.InitialMoney)
+                        if (selectedSub.Price > CampaignSettings.CurrentSettings.InitialMoney)
                         {
                             new GUIMessageBox(TextManager.Get("warning"), TextManager.Get("campaignsubtooexpensive"));
                         }
@@ -2241,9 +2244,9 @@ namespace Barotrauma
             List<ContextMenuOption> rankOptions = new List<ContextMenuOption>();
             foreach (PermissionPreset rank in PermissionPreset.List)
             {
-                rankOptions.Add(new ContextMenuOption(rank.Name, isEnabled: true, onSelected: () =>
+                rankOptions.Add(new ContextMenuOption(rank.DisplayName, isEnabled: true, onSelected: () =>
                 {
-                    LocalizedString label = TextManager.GetWithVariables(rank.Permissions == ClientPermissions.None ?  "clearrankprompt" : "giverankprompt", ("[user]", client.Name), ("[rank]", rank.Name));
+                    LocalizedString label = TextManager.GetWithVariables(rank.Permissions == ClientPermissions.None ?  "clearrankprompt" : "giverankprompt", ("[user]", client.Name), ("[rank]", rank.DisplayName));
                     GUIMessageBox msgBox = new GUIMessageBox(string.Empty, label, new[] { TextManager.Get("Yes"), TextManager.Get("Cancel") });
 
                     msgBox.Buttons[0].OnClicked = delegate
@@ -2347,7 +2350,7 @@ namespace Barotrauma
                 };
                 foreach (PermissionPreset permissionPreset in PermissionPreset.List)
                 {
-                    rankDropDown.AddItem(permissionPreset.Name, permissionPreset, permissionPreset.Description);
+                    rankDropDown.AddItem(permissionPreset.DisplayName, permissionPreset, permissionPreset.Description);
                 }
                 rankDropDown.AddItem(TextManager.Get("CustomRank"), null);
 
@@ -2755,12 +2758,10 @@ namespace Barotrauma
 
         public override void Draw(double deltaTime, GraphicsDevice graphics, SpriteBatch spriteBatch)
         {
+            if (backgroundSprite?.Texture == null) { return; }
             graphics.Clear(Color.Black);
-
-            GUI.DrawBackgroundSprite(spriteBatch, backgroundSprite);
-
             spriteBatch.Begin(SpriteSortMode.Deferred, samplerState: GUI.SamplerState, rasterizerState: GameMain.ScissorTestEnable);
-
+            GUI.DrawBackgroundSprite(spriteBatch, backgroundSprite, Color.White);
             GUI.Draw(Cam, spriteBatch);
             spriteBatch.End();
         }
@@ -3291,16 +3292,15 @@ namespace Barotrauma
                 {
                     //campaign running
                     settingsBlocker.Visible = true;
-                    CampaignFrame.Visible = GameMain.Client.HasPermission(ClientPermissions.ManageCampaign);
-                    ContinueCampaignButton.Enabled = !GameMain.Client.GameStarted && (GameMain.Client.HasPermission(ClientPermissions.ManageCampaign) || GameMain.Client.HasPermission(ClientPermissions.ManageRound));
-                    QuitCampaignButton.Enabled = GameMain.Client.HasPermission(ClientPermissions.ManageCampaign);
+                    CampaignFrame.Visible = QuitCampaignButton.Enabled = CampaignMode.AllowedToManageCampaign(ClientPermissions.ManageRound);
+                    ContinueCampaignButton.Enabled = !GameMain.Client.GameStarted && CampaignFrame.Visible;
                     CampaignSetupFrame.Visible = false;
                 }
                 else
                 {
                     CampaignFrame.Visible = false;
                     CampaignSetupFrame.Visible = true;
-                    if (!GameMain.Client.HasPermission(ClientPermissions.ManageCampaign))
+                    if (!CampaignMode.AllowedToManageCampaign(ClientPermissions.ManageRound))
                     {
                         CampaignSetupFrame.ClearChildren();
                         new GUITextBlock(new RectTransform(new Vector2(0.8f, 0.5f), CampaignSetupFrame.RectTransform, Anchor.Center),
@@ -3313,7 +3313,7 @@ namespace Barotrauma
                     foreach (var subElement in SubList.Content.Children)
                     {
                         var sub = subElement.UserData as SubmarineInfo;
-                        bool tooExpensive = sub.Price > CampaignSetupUI.CurrentSettings.InitialMoney;
+                        bool tooExpensive = sub.Price > CampaignSettings.CurrentSettings.InitialMoney;
                         if (tooExpensive || !sub.IsCampaignCompatible)
                         {
                             foreach (var textBlock in subElement.GetAllChildren<GUITextBlock>())
@@ -3364,7 +3364,7 @@ namespace Barotrauma
                 CampaignFrame.Visible = CampaignSetupFrame.Visible = false;
             }
             RefreshEnabledElements();
-            if (enabled)
+            if (enabled && SelectedMode != GameModePreset.MultiPlayerCampaign)
             {
                 ModeList.Select(GameModePreset.MultiPlayerCampaign, GUIListBox.Force.Yes);
             }

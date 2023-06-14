@@ -201,7 +201,7 @@ namespace Barotrauma
                 { 
                     continue; 
                 }
-                if (Level.Loaded.ExtraWalls.Any(w => w.IsPointInside(position.Position.ToVector2())))
+                if (Level.Loaded.IsPositionInsideWall(position.Position.ToVector2()))
                 {
                     removals.Add(position);
                 }
@@ -244,7 +244,12 @@ namespace Barotrauma
                     float dist = Vector2.DistanceSquared(pos, refSub.WorldPosition);
                     foreach (Submarine sub in Submarine.Loaded)
                     {
-                        if (sub.Info.Type != SubmarineType.Player && sub != GameMain.NetworkMember?.RespawnManager?.RespawnShuttle) { continue; }
+                        if (sub.Info.Type != SubmarineType.Player &&
+                            sub.Info.Type != SubmarineType.EnemySubmarine &&
+                            sub != GameMain.NetworkMember?.RespawnManager?.RespawnShuttle) 
+                        { 
+                            continue; 
+                        }
                         
                         float minDistToSub = GetMinDistanceToSub(sub);
                         if (dist < minDistToSub * minDistToSub) { continue; }

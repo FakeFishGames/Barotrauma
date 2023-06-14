@@ -21,7 +21,7 @@ namespace Barotrauma
                 for (int i = 0; i < Submarine.MainSubs.Length; i++)
                 {
                     var sub = Submarine.MainSubs[i];
-                    if (sub == null || sub.Info.InitialSuppliesSpawned || !sub.Info.IsPlayer) { continue; }
+                    if (sub == null || sub.Info.InitialSuppliesSpawned || sub.Info.IsManuallyOutfitted || !sub.Info.IsPlayer) { continue; }
                     //1st pass: items defined in the start item set, only spawned in the main sub (not drones/shuttles or other linked subs)
                     SpawnStartItems(sub, startItemSet);
                     //2nd pass: items defined using preferred containers, spawned in the main sub and all the linked subs (drones, shuttles etc)
@@ -260,10 +260,12 @@ namespace Barotrauma
                 }
                 bool success = false;
                 bool isCampaign = GameMain.GameSession?.GameMode is CampaignMode;
+                float levelDifficulty = Level.Loaded?.Difficulty ?? 0.0f;
                 foreach (PreferredContainer preferredContainer in itemPrefab.PreferredContainers)
                 {
                     if (preferredContainer.CampaignOnly && !isCampaign) { continue; }
                     if (preferredContainer.NotCampaign && isCampaign) { continue; }
+                    if (levelDifficulty < preferredContainer.MinLevelDifficulty || levelDifficulty > preferredContainer.MaxLevelDifficulty) { continue; }
                     if (preferredContainer.SpawnProbability <= 0.0f || preferredContainer.MaxAmount <= 0 && preferredContainer.Amount <= 0) { continue; }
                     validContainers = GetValidContainers(preferredContainer, containers, validContainers, primary: true);
                     if (validContainers.None())

@@ -61,10 +61,7 @@ namespace Barotrauma
             GameMain.GameSession?.CrewManager?.AutoShowCrewList();
 #endif
 
-            foreach (MapEntity entity in MapEntity.mapEntityList)
-            {
-                entity.IsHighlighted = false;
-            }
+            MapEntity.ClearHighlightedEntities();
 
 #if RUN_PHYSICS_IN_SEPARATE_THREAD
             var physicsThread = new Thread(ExecutePhysics)
@@ -140,10 +137,7 @@ namespace Barotrauma
             {
                 if (body.Enabled && body.BodyType != FarseerPhysics.BodyType.Static) { body.Update(); }               
             }
-            foreach (MapEntity e in MapEntity.mapEntityList)
-            {
-                e.IsHighlighted = false;
-            }
+            MapEntity.ClearHighlightedEntities();
 
 #if CLIENT
             var sw = new System.Diagnostics.Stopwatch();

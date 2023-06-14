@@ -30,6 +30,8 @@ namespace Barotrauma.Networking
         protected readonly bool isOwner;
         protected readonly Option<int> ownerKey;
 
+        public bool IsActive => isActive;
+
         protected bool isActive;
 
         public ClientPeer(Endpoint serverEndpoint, Callbacks callbacks, Option<int> ownerKey)
@@ -80,15 +82,20 @@ namespace Barotrauma.Networking
                         Initialization = ConnectionInitialization.SteamTicketAndVersion
                     };
 
+                    if (steamAuthTicket is { Canceled: true })
+                    {
+                        throw new InvalidOperationException("ReadConnectionInitializationStep failed: Steam auth ticket has been cancelled.");
+                    }
+
                     ClientSteamTicketAndVersionPacket body = new ClientSteamTicketAndVersionPacket
                     {
                         Name = GameMain.Client.Name,
                         OwnerKey = ownerKey,
                         SteamId = SteamManager.GetSteamId().Select(id => (AccountId)id),
-                        SteamAuthTicket = steamAuthTicket switch
+                        SteamAuthTicket = steamAuthTicket?.Data switch
                         {
                             null => Option<byte[]>.None(),
-                            var ticket => Option<byte[]>.Some(ticket.Data)
+                            var ticketData => Option<byte[]>.Some(ticketData)
                         },
                         GameVersion = GameMain.Version.ToString(),
                         Language = GameSettings.CurrentConfig.Language.Value

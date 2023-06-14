@@ -72,7 +72,9 @@ namespace Barotrauma.Items.Components
         public override bool RecreateGUIOnResolutionChange => true;
 
         public bool TriggerInfographic { get; set; }
-                
+
+        public bool IsInfographicVisible => infographic != null && infographic.Visible;
+
         partial void InitProjSpecific(ContentXElement element)
         {
             CreateGUI();
@@ -108,6 +110,9 @@ namespace Barotrauma.Items.Components
             { AbsoluteOffset = GUIStyle.ItemFrameOffset },
              isHorizontal: true)
             {
+                CanBeFocused = true,
+                HoverCursor = CursorState.Default,
+                AlwaysOverrideCursor = true,
                 RelativeSpacing = 0.012f,
                 Stretch = true
             };
@@ -675,7 +680,7 @@ namespace Barotrauma.Items.Components
                 }
             }
 
-            if (TriggerInfographic)
+            if (GuiFrame is not null && GuiFrame.Visible && TriggerInfographic)
             {
                 CreateInfrographic();
                 TriggerInfographic = false;
@@ -851,8 +856,9 @@ namespace Barotrauma.Items.Components
             {
                 AbsoluteOffset = new Point(0, -50).Multiply(GUI.Scale)
             };
-            new GUIButton(closeButtonRt, TextManager.Get("close"))
+            new GUIButton(closeButtonRt, TextManager.Get("closeinfographic"))
             {
+                UserData = UIHighlightAction.ElementId.CloseButton,
                 OnClicked = (_, _) =>
                 {
                     CloseInfographic(Character.Controlled);
@@ -871,6 +877,7 @@ namespace Barotrauma.Items.Components
                 string style = arrowStyle == InfographicArrowStyle.Straight ? "InfographicArrow" : "InfographicArrowCurved";
                 return new GUIImage(rt, style)
                 {
+                    CanBeFocused = false,
                     Rotation = MathHelper.ToRadians(rotationDegrees),
                     SpriteEffects = spriteEffects
                 };

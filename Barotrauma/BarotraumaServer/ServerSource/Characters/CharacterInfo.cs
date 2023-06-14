@@ -14,6 +14,13 @@ namespace Barotrauma
         /// </summary>
         public bool Discarded;
 
+        public void ApplyDeathEffects()
+        {
+            RespawnManager.ReduceCharacterSkills(this);
+            RemoveSavedStatValuesOnDeath();
+            CauseOfDeath = null;
+        }
+
         partial void OnSkillChanged(Identifier skillIdentifier, float prevLevel, float newLevel)
         {
             if (Character == null || Character.Removed) { return; }
@@ -64,6 +71,11 @@ namespace Barotrauma
 
             msg.WriteString(ragdollFileName);
             msg.WriteIdentifier(HumanPrefabIds.NpcIdentifier);
+            msg.WriteIdentifier(MinReputationToHire.factionId);
+            if (MinReputationToHire.factionId != default)
+            {
+                msg.WriteSingle(MinReputationToHire.reputation);
+            }
             if (Job != null)
             {
                 msg.WriteUInt32(Job.Prefab.UintIdentifier);
@@ -79,7 +91,7 @@ namespace Barotrauma
                 msg.WriteByte((byte)0);
             }
 
-            msg.WriteUInt16((ushort)ExperiencePoints);
+            msg.WriteInt32(ExperiencePoints);
             msg.WriteRangedInteger(AdditionalTalentPoints, 0, MaxAdditionalTalentPoints);
         }
     }

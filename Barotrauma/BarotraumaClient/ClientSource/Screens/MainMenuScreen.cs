@@ -46,14 +46,13 @@ namespace Barotrauma
 
         private GUITextBox serverNameBox, passwordBox, maxPlayersBox;
         private GUITickBox isPublicBox, wrongPasswordBanBox, karmaBox;
-        private GUIDropDown serverExecutableDropdown;
+        private GUIDropDown languageDropdown, serverExecutableDropdown;
         private readonly GUIButton joinServerButton, hostServerButton;
 
         private readonly GUIFrame modsButtonContainer;
         private readonly GUIButton modsButton, modUpdatesButton;
-        private Task<IReadOnlyList<Steamworks.Ugc.Item>> modUpdateTask;
-        private float modUpdateTimer = 0.0f;
-        private const float ModUpdateInterval = 60.0f;
+        private (DateTime WhenToRefresh, int Count) modUpdateStatus = (DateTime.Now, 0);
+        private static readonly TimeSpan ModUpdateInterval = TimeSpan.FromSeconds(60.0f);
         
         private readonly GameMain game;
 
@@ -467,6 +466,11 @@ namespace Barotrauma
 
             var creditsContainer = new GUIFrame(new RectTransform(new Vector2(0.75f, 1.5f), menuTabs[Tab.Credits].RectTransform, Anchor.CenterRight), style: "OuterGlow", color: Color.Black * 0.8f);
             creditsPlayer = new CreditsPlayer(new RectTransform(Vector2.One, creditsContainer.RectTransform), "Content/Texts/Credits.xml");
+            creditsPlayer.CloseButton.OnClicked = (btn, userdata) =>
+            {
+                SelectTab(Tab.Empty);
+                return true;
+            };
         }
 
         private void CreateTutorialTab()
@@ -736,8 +740,7 @@ namespace Barotrauma
 
         public void ResetModUpdateButton()
         {
-            modUpdateTask = null;
-            modUpdateTimer = 0;
+            modUpdateStatus = (DateTime.Now, 0);
             modUpdatesButton.Visible = false;
         }
 
@@ -875,14 +878,34 @@ namespace Barotrauma
             GameMain.ResetNetLobbyScreen();
             try
             {
-                string exeName = serverExecutableDropdown.SelectedComponent?.UserData is ServerExecutableFile f ? f.Path.Value : "DedicatedServer";
+                string fileName;
+                if (serverExecutableDropdown.SelectedComponent?.UserData is ServerExecutableFile f && 
+                    f.ContentPackage != GameMain.VanillaContent)
+                {
+                    fileName = Path.Combine(
+                        Path.GetDirectoryName(f.Path.Value),
+                        Path.GetFileNameWithoutExtension(f.Path.Value));
+#if WINDOWS
+                    fileName += ".exe";
+#endif
+                }
+                else
+                {
+#if WINDOWS
+                    fileName = "DedicatedServer.exe";
+#else
+                    fileName = "./DedicatedServer";
+#endif
+                }
 
-                string arguments = "-name \"" + ToolBox.EscapeCharacters(name) + "\"" +
-                                   " -public " + isPublicBox.Selected.ToString() +
-                                   " -playstyle " + ((PlayStyle)playstyleBanner.UserData).ToString()  +
-                                   " -banafterwrongpassword " + wrongPasswordBanBox.Selected.ToString() +
-                                   " -karmaenabled " + (!karmaBox.Selected).ToString() +
-                                   " -maxplayers " + maxPlayersBox.Text;
+                string arguments =
+                    "-name \"" + ToolBox.EscapeCharacters(name) + "\"" +
+                    " -public " + isPublicBox.Selected.ToString() +
+                    " -playstyle " + ((PlayStyle)playstyleBanner.UserData).ToString()  +
+                    " -banafterwrongpassword " + wrongPasswordBanBox.Selected.ToString() +
+                    " -karmaenabled " + (!karmaBox.Selected).ToString() +
+                    " -maxplayers " + maxPlayersBox.Text +
+                    $" -language \"{(LanguageIdentifier)languageDropdown.SelectedData}\"";
 
                 if (!string.IsNullOrWhiteSpace(passwordBox.Text))
                 {
@@ -899,19 +922,10 @@ namespace Barotrauma
                 }
                 int ownerKey = Math.Max(CryptoRandom.Instance.Next(), 1);
                 arguments += " -ownerkey " + ownerKey;
-
-                string filename = Path.Combine(
-                    Path.GetDirectoryName(exeName),
-                    Path.GetFileNameWithoutExtension(exeName));
-#if WINDOWS
-                filename += ".exe";
-#else
-                filename = "./" + exeName;
-#endif
-                
+                                
                 var processInfo = new ProcessStartInfo
                 {
-                    FileName = filename,
+                    FileName = fileName,
                     Arguments = arguments,
                     WorkingDirectory = Directory.GetCurrentDirectory(),
 #if !DEBUG
@@ -958,15 +972,42 @@ namespace Barotrauma
             }
         }
 
+        private void UpdateOutOfDateWorkshopItemCount()
+        {
+            if (DateTime.Now < modUpdateStatus.WhenToRefresh) { return; }
+            if (!SteamManager.IsInitialized) { return; }
+
+            var installedPackages = ContentPackageManager.WorkshopPackages;
+
+            var ids = SteamManager.Workshop.GetSubscribedItemIds()
+                .Select(id => id.Value)
+                .Union(installedPackages
+                    .Select(pkg => pkg.UgcId)
+                    .NotNone()
+                    .OfType<SteamWorkshopId>()
+                    .Select(id => id.Value));
+            var count = ids
+                // Deliberately construct Steamworks.Ugc.Item directly
+                // to not immediately generate a Workshop data request
+                .Select(id => new Steamworks.Ugc.Item(id))
+                .Count(item =>
+                    installedPackages.FirstOrDefault(p
+                        => p.UgcId.TryUnwrap(out SteamWorkshopId id) && id.Value == item.Id)
+                        is { } pkg
+                    // Checking that this item is downloading, waiting to be downloaded
+                    // or is newer than the currently installed copy should be good enough,
+                    // and should still not make a Workshop data request
+                    && (item.IsDownloading
+                        || item.IsDownloadPending
+                        || (item.InstallTime.TryGetValue(out var workshopInstallTime)
+                            && pkg.InstallTime.TryUnwrap(out var localInstallTime)
+                            && localInstallTime.ToUtcValue() < workshopInstallTime)));
+
+            modUpdateStatus = (DateTime.Now + ModUpdateInterval, count);
+        }
+
         public override void Update(double deltaTime)
         {
-            modUpdateTimer -= (float)deltaTime;
-            if (modUpdateTimer <= 0.0f && modUpdateTask is not { IsCompleted: false })
-            {
-                modUpdateTask = BulkDownloader.GetItemsThatNeedUpdating();
-                modUpdateTimer = ModUpdateInterval;
-            }
-
 #if DEBUG
             hostServerButton.Enabled = true;
 #else
@@ -976,10 +1017,8 @@ namespace Barotrauma
             }
 #endif
 
-            if (modUpdateTask is { IsCompletedSuccessfully: true })
-            {
-                modUpdatesButton.Visible = modUpdateTask.Result.Count > 0;
-            }
+            UpdateOutOfDateWorkshopItemCount();
+            modUpdatesButton.Visible = modUpdateStatus.Count > 0;
 
             if (modUpdatesButton.Visible)
             {
@@ -1007,22 +1046,29 @@ namespace Barotrauma
 #if UNSTABLE
                 backgroundSprite = new Sprite("Content/UnstableBackground.png", sourceRectangle: null);
 #endif
-                backgroundSprite ??= (LocationType.Prefabs.Where(l => l.UseInMainMenu).GetRandomUnsynced())?.GetPortrait(0);
-            }
-
-            if (backgroundSprite != null)
-            {
-                GUI.DrawBackgroundSprite(spriteBatch, backgroundSprite,
-                    aberrationStrength: 0.0f);
+                if (GUIStyle.GetComponentStyle("MainMenuBackground") is { } mainMenuStyle &&
+                     mainMenuStyle.Sprites.TryGetValue(GUIComponent.ComponentState.None, out var sprites))
+                {
+                    backgroundSprite = sprites.GetRandomUnsynced()?.Sprite;
+                }
+                backgroundSprite ??= LocationType.Prefabs.GetRandomUnsynced()?.GetPortrait(0);
             }
 
             var vignette = GUIStyle.GetComponentStyle("mainmenuvignette")?.GetDefaultSprite();
+            float vignetteScale = Math.Min(GameMain.GraphicsWidth / vignette.size.X, GameMain.GraphicsHeight / vignette.size.Y);
+
+            Rectangle drawArea = new Rectangle(
+                (int)(vignette.size.X * vignetteScale / 2), 0,
+                (int)(GameMain.GraphicsWidth - vignette.size.X * vignetteScale / 2), GameMain.GraphicsHeight);
+
+            if (backgroundSprite?.Texture != null)
+            {
+                GUI.DrawBackgroundSprite(spriteBatch, backgroundSprite, Color.White, drawArea);
+            }
+
             if (vignette != null)
             {
-                spriteBatch.Begin(blendState: BlendState.NonPremultiplied);
-                vignette.Draw(spriteBatch, Vector2.Zero, Color.White, Vector2.Zero, 0.0f, 
-                    new Vector2(GameMain.GraphicsWidth / vignette.size.X, GameMain.GraphicsHeight / vignette.size.Y));
-                spriteBatch.End();
+                vignette.Draw(spriteBatch, Vector2.Zero, Color.White, Vector2.Zero, 0.0f, vignetteScale);
             }
         }
 
@@ -1035,9 +1081,9 @@ namespace Barotrauma
 
         public override void Draw(double deltaTime, GraphicsDevice graphics, SpriteBatch spriteBatch)
         {
-            DrawBackground(graphics, spriteBatch);
-
             spriteBatch.Begin(SpriteSortMode.Deferred, null, GUI.SamplerState, null, GameMain.ScissorTestEnable);
+
+            DrawBackground(graphics, spriteBatch);
 
             GUI.Draw(Cam, spriteBatch);
 
@@ -1068,7 +1114,7 @@ namespace Barotrauma
                     if (i == 0)
                     {
                         GUI.DrawLine(spriteBatch, textPos, textPos - Vector2.UnitX * textSize.X, mouseOn ? Color.White : Color.White * 0.7f);
-                        if (mouseOn && PlayerInput.PrimaryMouseButtonClicked())
+                        if (mouseOn && PlayerInput.PrimaryMouseButtonClicked() && GUI.MouseOn == null)
                         {
                             GameMain.ShowOpenUrlInWebBrowserPrompt("http://privacypolicy.daedalic.com");
                         }
@@ -1173,45 +1219,28 @@ namespace Barotrauma
         {
             menuTabs[Tab.HostServer].ClearChildren();
 
-            string name = "";
-            string password = "";
-            int maxPlayers = 8;
-            bool isPublic = true;
-            bool banAfterWrongPassword = false;
-            bool karmaEnabled = true;
-            string selectedKarmaPreset = "";
-            PlayStyle selectedPlayStyle = PlayStyle.Casual;
-            if (File.Exists(ServerSettings.SettingsFile))
+            var serverSettings = XMLExtensions.TryLoadXml(ServerSettings.SettingsFile, out _)?.Root ?? new XElement("serversettings");
+
+            var name = serverSettings.GetAttributeString("name", "");
+            var password = serverSettings.GetAttributeString("password", "");
+            var isPublic = serverSettings.GetAttributeBool("IsPublic", true);
+            var banAfterWrongPassword = serverSettings.GetAttributeBool("banafterwrongpassword", false);
+
+            int maxPlayersElement = serverSettings.GetAttributeInt("maxplayers", 8);
+            if (maxPlayersElement > NetConfig.MaxPlayers)
             {
-                XDocument settingsDoc = XMLExtensions.TryLoadXml(ServerSettings.SettingsFile);
-                if (settingsDoc != null)
-                {
-                    name = settingsDoc.Root.GetAttributeString("name", name);
-                    password = settingsDoc.Root.GetAttributeString("password", password);
-                    isPublic = settingsDoc.Root.GetAttributeBool("public", isPublic);
-                    banAfterWrongPassword = settingsDoc.Root.GetAttributeBool("banafterwrongpassword", banAfterWrongPassword);
-
-                    int maxPlayersElement = settingsDoc.Root.GetAttributeInt("maxplayers", maxPlayers);
-                    if (maxPlayersElement > NetConfig.MaxPlayers)
-                    {
-                        DebugConsole.IsOpen = true;
-                        DebugConsole.NewMessage($"Setting the maximum amount of players to {maxPlayersElement} failed due to exceeding the limit of {NetConfig.MaxPlayers} players per server. Using the maximum of {NetConfig.MaxPlayers} instead.", Color.Red);
-                        maxPlayersElement = NetConfig.MaxPlayers;
-                    }
-
-                    maxPlayers = maxPlayersElement;
-                    karmaEnabled = settingsDoc.Root.GetAttributeBool("karmaenabled", true);
-                    selectedKarmaPreset = settingsDoc.Root.GetAttributeString("karmapreset", "default");
-                    string playStyleStr = settingsDoc.Root.GetAttributeString("playstyle", "Casual");
-                    Enum.TryParse(playStyleStr, out selectedPlayStyle);
-                }
+                DebugConsole.AddWarning($"Setting the maximum amount of players to {maxPlayersElement} failed due to exceeding the limit of {NetConfig.MaxPlayers} players per server. Using the maximum of {NetConfig.MaxPlayers} instead.");
             }
+            int maxPlayers = Math.Clamp(maxPlayersElement, min: 1, max: NetConfig.MaxPlayers);
+
+            var karmaEnabled = serverSettings.GetAttributeBool("karmaenabled", true);
+            var selectedPlayStyle = serverSettings.GetAttributeEnum("playstyle", PlayStyle.Casual);
 
             Vector2 textLabelSize = new Vector2(1.0f, 0.05f);
             Alignment textAlignment = Alignment.CenterLeft;
             Vector2 textFieldSize = new Vector2(0.5f, 1.0f);
             Vector2 tickBoxSize = new Vector2(0.4f, 0.04f);
-            var content = new GUILayoutGroup(new RectTransform(new Vector2(0.7f, 0.9f), menuTabs[Tab.HostServer].RectTransform, Anchor.Center), childAnchor: Anchor.TopCenter)
+            var content = new GUILayoutGroup(new RectTransform(new Vector2(0.7f, 0.95f), menuTabs[Tab.HostServer].RectTransform, Anchor.Center), childAnchor: Anchor.TopCenter)
             {
                 RelativeSpacing = 0.01f,
                 Stretch = true
@@ -1289,7 +1318,7 @@ namespace Barotrauma
             //other settings -----------------------------------------------------
 
             //spacing
-            new GUIFrame(new RectTransform(new Vector2(1.0f, 0.05f), content.RectTransform), style: null);
+            new GUIFrame(new RectTransform(new Vector2(1.0f, 0.025f), content.RectTransform), style: null);
 
             var label = new GUITextBlock(new RectTransform(textLabelSize, parent.RectTransform), TextManager.Get("ServerName"), textAlignment: textAlignment);
             serverNameBox = new GUITextBox(new RectTransform(textFieldSize, label.RectTransform, Anchor.CenterRight), text: name, textAlignment: textAlignment)
@@ -1340,6 +1369,21 @@ namespace Barotrauma
                 Censor = true
             };
             label.RectTransform.IsFixedSize = true;
+
+            var languageLabel = new GUITextBlock(new RectTransform(textLabelSize, parent.RectTransform),
+                TextManager.Get("Language"), textAlignment: textAlignment);
+            languageDropdown = new GUIDropDown(new RectTransform(textFieldSize, languageLabel.RectTransform, Anchor.CenterRight));
+            foreach (var language in ServerLanguageOptions.Options)
+            {
+                languageDropdown.AddItem(language.Label, language.Identifier);
+            }
+            var defaultLanguage = ServerLanguageOptions.PickLanguage(GameSettings.CurrentConfig.Language);
+            var settingsLanguage = serverSettings.GetAttributeIdentifier("language", defaultLanguage.Value).ToLanguageIdentifier();
+            if (!ServerLanguageOptions.Options.Any(o => o.Identifier == settingsLanguage))
+            {
+                settingsLanguage = defaultLanguage;
+            }
+            languageDropdown.Select(ServerLanguageOptions.Options.FindIndex(o => o.Identifier == settingsLanguage));
 
             var serverExecutableLabel = new GUITextBlock(new RectTransform(textLabelSize, parent.RectTransform),
                 TextManager.Get("ServerExecutable"), textAlignment: textAlignment);

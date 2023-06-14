@@ -141,7 +141,18 @@ namespace Barotrauma
                     }
                 }
                 if (items.Contains(item)) { return; }
-                items.Add(item);
+
+                //keep lowest-condition items at the top of the stack
+                int index = 0;
+                for (int i = 0; i < items.Count; i++)
+                {
+                    if (items[i].Condition > item.Condition)
+                    {
+                        break;
+                    }
+                    index++;
+                }
+                items.Insert(index, item);
             }
 
             /// <summary>
@@ -267,6 +278,8 @@ namespace Barotrauma
         {
             get { return capacity; }
         }
+
+        public int EmptySlotCount => slots.Count(i => !i.Empty());
 
         public bool AllowSwappingContainedItems = true;
 
@@ -583,6 +596,8 @@ namespace Barotrauma
                 item.body.Enabled = false;
                 item.body.BodyType = FarseerPhysics.BodyType.Dynamic;
                 item.SetTransform(item.SimPosition, rotation: 0.0f, findNewHull: false);
+                //update to refresh the interpolated draw rotation and position (update doesn't run on disabled bodies)
+                item.body.Update();
             }
             
 #if SERVER
@@ -727,13 +742,13 @@ namespace Barotrauma
                     stackedItems.Distinct().All(stackedItem => TryPutItem(stackedItem, index, false, false, user, createNetworkEvent))
                     &&
                     (existingItems.All(existingItem => otherInventory.TryPutItem(existingItem, otherIndex, false, false, user, createNetworkEvent)) ||
-                    existingItems.Count == 1 && otherInventory.TryPutItem(existingItems.First(), user, CharacterInventory.anySlot, createNetworkEvent));
+                    existingItems.Count == 1 && otherInventory.TryPutItem(existingItems.First(), user, CharacterInventory.AnySlot, createNetworkEvent));
             }
             else
             {
                 swapSuccessful =
                     (existingItems.All(existingItem => otherInventory.TryPutItem(existingItem, otherIndex, false, false, user, createNetworkEvent)) ||
-                    existingItems.Count == 1 && otherInventory.TryPutItem(existingItems.First(), user, CharacterInventory.anySlot, createNetworkEvent))
+                    existingItems.Count == 1 && otherInventory.TryPutItem(existingItems.First(), user, CharacterInventory.AnySlot, createNetworkEvent))
                     &&
                     stackedItems.Distinct().All(stackedItem => TryPutItem(stackedItem, index, false, false, user, createNetworkEvent));
 
@@ -887,10 +902,7 @@ namespace Barotrauma
                 }
                 if (recursive)
                 {
-                    if (item.OwnInventory != null)
-                    {
-                        item.OwnInventory.FindAllItems(predicate, recursive: true, list);
-                    }
+                    item.OwnInventory?.FindAllItems(predicate, recursive: true, list);
                 }
             }
             return list;
