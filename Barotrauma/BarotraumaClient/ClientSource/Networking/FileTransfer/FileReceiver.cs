@@ -12,7 +12,7 @@ namespace Barotrauma.Networking
     class FileReceiver
     {
         public class FileTransferIn : IDisposable
-        {            
+        {
             public string FileName
             {
                 get;
@@ -36,7 +36,7 @@ namespace Barotrauma.Networking
                 get;
                 private set;
             }
-            
+
             public int LastSeen { get; set; }
 
             public FileTransferType FileType
@@ -93,6 +93,12 @@ namespace Barotrauma.Networking
 
             public int ID;
 
+            public const int DataBufferSize = 50;
+            /// <summary>
+            /// Data that we've ignored because we're waiting for some earlier data. Key = byte offset, value = the actual data
+            /// </summary>
+            public readonly Dictionary<int, byte[]> DataBuffer = new Dictionary<int, byte[]>();
+
             public FileTransferIn(NetworkConnection connection, string filePath, FileTransferType fileType)
             {
                 FilePath = filePath;
@@ -128,19 +134,24 @@ namespace Barotrauma.Networking
                     bytesToRead -= Received + bytesToRead - FileSize;
                 }
 
-                byte[] all = inc.ReadBytes(bytesToRead);
-                Received += all.Length;
-                WriteStream.Write(all, 0, all.Length);
+                ReadBytes(inc.ReadBytes(bytesToRead));
+            }
+
+            public void ReadBytes(byte[] data)
+            {
+                Received += data.Length;
+                WriteStream.Write(data, 0, data.Length);
 
                 int passed = Environment.TickCount - TimeStarted;
                 float psec = passed / 1000.0f;
 
-                if (GameSettings.CurrentConfig.VerboseLogging)
-                {
-                    DebugConsole.Log($"Received {all.Length} bytes of the file {FileName} ({Received / 1000}/{FileSize / 1000} kB received)");
-                }
-
                 BytesPerSecond = Received / psec;
+
+                var outdatedKeys = DataBuffer.Keys.Where(k => k < Received).ToList();
+                foreach (int key in outdatedKeys)
+                {
+                    DataBuffer.Remove(key);
+                }
 
                 Status = Received >= FileSize ? FileTransferStatus.Finished : FileTransferStatus.Receiving;
             }
@@ -206,7 +217,7 @@ namespace Barotrauma.Networking
                 case (byte)FileTransferMessageType.Initiate:
                     {
                         byte transferId = inc.ReadByte();
-                        var existingTransfer = activeTransfers.Find(t => t.Connection.EndpointMatches(t.Connection.EndPointString) && t.ID == transferId);
+                        var existingTransfer = activeTransfers.Find(t => t.Connection.EndpointMatches(t.Connection.Endpoint) && t.ID == transferId);
                         finishedTransfers.RemoveAll(t => t.transferId  == transferId);
                         byte fileType = inc.ReadByte();
                         //ushort chunkLen = inc.ReadUInt16();
@@ -321,7 +332,6 @@ namespace Barotrauma.Networking
                             FileSize = 0
                         };
 
-                        Md5Hash.Cache.Remove(directTransfer.FilePath);
                         OnFinished(directTransfer);
                     }
                     break;
@@ -329,7 +339,7 @@ namespace Barotrauma.Networking
                     {
                         byte transferId = inc.ReadByte();
 
-                        var activeTransfer = activeTransfers.Find(t => t.Connection.EndpointMatches(t.Connection.EndPointString) && t.ID == transferId);
+                        var activeTransfer = activeTransfers.Find(t => t.Connection.EndpointMatches(t.Connection.Endpoint) && t.ID == transferId);
                         if (activeTransfer == null)
                         {
                             //it's possible for the server to send some extra data
@@ -349,6 +359,10 @@ namespace Barotrauma.Networking
                         if (offset != activeTransfer.Received)
                         {
                             activeTransfer.LastSeen = Math.Max(offset, activeTransfer.LastSeen);
+                            if (!activeTransfer.DataBuffer.ContainsKey(offset) && activeTransfer.DataBuffer.Count < FileTransferIn.DataBufferSize)
+                            {
+                                activeTransfer.DataBuffer.Add(offset, inc.ReadBytes(bytesToRead));
+                            }
                             DebugConsole.Log($"Received {bytesToRead} bytes of the file {activeTransfer.FileName} (ignoring: offset {offset}, waiting for {activeTransfer.Received})");
                             GameMain.Client.UpdateFileTransfer(activeTransfer, activeTransfer.Received, activeTransfer.LastSeen);
                             return;
@@ -370,7 +384,16 @@ namespace Barotrauma.Networking
 
                         try
                         {
-                            activeTransfer.ReadBytes(inc, bytesToRead); 
+                            activeTransfer.ReadBytes(inc, bytesToRead);
+                            if (GameSettings.CurrentConfig.VerboseLogging)
+                            {
+                                DebugConsole.Log($"Received {bytesToRead} bytes of the file {activeTransfer.FileName} ({activeTransfer.Received / 1000}/{activeTransfer.FileSize / 1000} kB received)");
+                            }
+                            while (activeTransfer.DataBuffer.TryGetValue(activeTransfer.Received, out byte[] data))
+                            {
+                                activeTransfer.ReadBytes(data);
+                                DebugConsole.Log($"Read {data.Length} bytes of buffer data of the file {activeTransfer.FileName} ({activeTransfer.Received / 1000}/{activeTransfer.FileSize / 1000} kB received)");
+                            }
                         }
                         catch (Exception e)
                         {
@@ -390,7 +413,6 @@ namespace Barotrauma.Networking
                             {
                                 finishedTransfers.Add((transferId, Timing.TotalTime));
                                 StopTransfer(activeTransfer);
-                                Md5Hash.Cache.Remove(activeTransfer.FilePath);
                                 OnFinished(activeTransfer);
                             }
                             else
@@ -406,7 +428,7 @@ namespace Barotrauma.Networking
                 case (byte)FileTransferMessageType.Cancel:
                     {
                         byte transferId = inc.ReadByte();
-                        var matchingTransfer = activeTransfers.Find(t => t.Connection.EndpointMatches(t.Connection.EndPointString) && t.ID == transferId);
+                        var matchingTransfer = activeTransfers.Find(t => t.Connection.EndpointMatches(t.Connection.Endpoint) && t.ID == transferId);
                         if (matchingTransfer != null)
                         {
                             new GUIMessageBox("File transfer cancelled", "The server has cancelled the transfer of the file \"" + matchingTransfer.FileName + "\".");
@@ -434,7 +456,7 @@ namespace Barotrauma.Networking
             }
 
             if (string.IsNullOrEmpty(fileName) ||
-                fileName.IndexOfAny(Path.GetInvalidFileNameChars().ToArray()) > -1)
+                fileName.IndexOfAny(Path.GetInvalidFileNameCharsCrossPlatform().ToArray()) > -1)
             {
                 errorMessage = "Illegal characters in file name ''" + fileName + "''";
                 return false;
@@ -470,7 +492,7 @@ namespace Barotrauma.Networking
                     System.IO.Stream stream;
                     try
                     {
-                        stream = SaveUtil.DecompressFiletoStream(fileTransfer.FilePath);
+                        stream = SaveUtil.DecompressFileToStream(fileTransfer.FilePath);
                     }
                     catch (Exception e)
                     {

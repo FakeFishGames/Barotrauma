@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using Barotrauma.Items.Components;
 using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
@@ -18,9 +19,10 @@ namespace Barotrauma
             AssignCampaignInteraction = 6,
             ApplyStatusEffect = 7,
             Upgrade = 8,
+            ItemStat = 9,
             
             MinValue = 0,
-            MaxValue = 6
+            MaxValue = 9
         }
 
         public interface IEventData : NetEntityEvent.IData
@@ -28,7 +30,7 @@ namespace Barotrauma
             public EventType EventType { get; }
         }
 
-        public struct ComponentStateEventData : IEventData
+        public readonly struct ComponentStateEventData : IEventData
         {
             public EventType EventType => EventType.ComponentState;
             public readonly ItemComponent Component;
@@ -56,16 +58,37 @@ namespace Barotrauma
         {
             public EventType EventType => EventType.ChangeProperty;
             public readonly SerializableProperty SerializableProperty;
+            public readonly ISerializableEntity Entity;
 
-            public ChangePropertyEventData(SerializableProperty serializableProperty)
+            public ChangePropertyEventData(SerializableProperty serializableProperty, ISerializableEntity entity)
             {
                 SerializableProperty = serializableProperty;
+                Entity = entity;
+            }
+        }
+
+        public readonly struct SetItemStatEventData : IEventData
+        {
+            public EventType EventType => EventType.ItemStat;
+
+            public readonly Dictionary<TalentStatIdentifier, float> Stats;
+
+            public SetItemStatEventData(Dictionary<TalentStatIdentifier, float> stats)
+            {
+                Stats = stats;
             }
         }
 
         private readonly struct ItemStatusEventData : IEventData
         {
             public EventType EventType => EventType.Status;
+
+            public readonly bool LoadingRound;
+
+            public ItemStatusEventData(bool loadingRound)
+            {
+                LoadingRound = loadingRound;
+            }
         }
         
         private readonly struct AssignCampaignInteractionEventData : IEventData

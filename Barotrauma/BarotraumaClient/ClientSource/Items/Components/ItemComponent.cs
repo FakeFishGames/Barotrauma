@@ -66,6 +66,8 @@ namespace Barotrauma.Items.Components
 
         public float IsActiveTimer;
 
+        public virtual bool RecreateGUIOnResolutionChange => false;
+
         public GUILayoutSettings DefaultLayout { get; protected set; }
         public GUILayoutSettings AlternativeLayout { get; protected set; }
 
@@ -147,6 +149,8 @@ namespace Barotrauma.Items.Components
         }
 
         public GUIFrame GuiFrame { get; set; }
+
+        public bool LockGuiFramePosition;
 
         [Serialize(false, IsPropertySaveable.No)]
         public bool AllowUIOverlap
@@ -365,6 +369,7 @@ namespace Barotrauma.Items.Components
                     loopingSoundChannel = loopingSound.RoundSound.Sound.Play(
                         new Vector3(position.X, position.Y, 0.0f), 
                         0.01f,
+                        freqMult: itemSound.RoundSound.GetRandomFrequencyMultiplier(),
                         muffle: SoundPlayer.ShouldMuffleSound(Character.Controlled, position, loopingSound.Range, Character.Controlled?.CurrentHull));
                     loopingSoundChannel.Looping = true;
                     //TODO: tweak
@@ -500,13 +505,14 @@ namespace Barotrauma.Items.Components
                     }
 
                     ActionType type;
+                    string typeStr = subElement.GetAttributeString("type", "");
                     try
                     {
-                        type = (ActionType)Enum.Parse(typeof(ActionType), subElement.GetAttributeString("type", ""), true);
+                        type = (ActionType)Enum.Parse(typeof(ActionType), typeStr, true);
                     }
                     catch (Exception e)
                     {
-                        DebugConsole.ThrowError("Invalid sound type in " + subElement + "!", e);
+                        DebugConsole.ThrowError($"Invalid sound type \"{typeStr}\" in item \"{item.Prefab.Identifier}\"!", e);
                         break;
                     }
                     
@@ -519,16 +525,16 @@ namespace Barotrauma.Items.Components
                         VolumeProperty = subElement.GetAttributeIdentifier("volumeproperty", "")
                     };
 
-                    if (soundSelectionModes == null) soundSelectionModes = new Dictionary<ActionType, SoundSelectionMode>();
+                    if (soundSelectionModes == null)
+                    {
+                        soundSelectionModes = new Dictionary<ActionType, SoundSelectionMode>();
+                    }
                     if (!soundSelectionModes.ContainsKey(type) || soundSelectionModes[type] == SoundSelectionMode.Random)
                     {
-                        SoundSelectionMode selectionMode = SoundSelectionMode.Random;
-                        Enum.TryParse(subElement.GetAttributeString("selectionmode", "Random"), out selectionMode);
-                        soundSelectionModes[type] = selectionMode;
+                        soundSelectionModes[type] = subElement.GetAttributeEnum("selectionmode", SoundSelectionMode.Random);
                     }
 
-                    List<ItemSound> soundList = null;
-                    if (!sounds.TryGetValue(itemSound.Type, out soundList))
+                    if (!sounds.TryGetValue(itemSound.Type, out List<ItemSound> soundList))
                     {
                         soundList = new List<ItemSound>();
                         sounds.Add(itemSound.Type, soundList);
@@ -566,12 +572,94 @@ namespace Barotrauma.Items.Components
             }
             string style = GuiFrameSource.Attribute("style") == null ? null : GuiFrameSource.GetAttributeString("style", "");
             GuiFrame = new GUIFrame(RectTransform.Load(GuiFrameSource, GUI.Canvas, Anchor.Center), style, color);
+
+            TryCreateDragHandle();
+
             DefaultLayout = GUILayoutSettings.Load(GuiFrameSource);
             if (GuiFrame != null)
             {
                 GuiFrame.RectTransform.ParentChanged += OnGUIParentChanged;
             }
-            GameMain.Instance.ResolutionChanged += OnResolutionChanged;
+            GameMain.Instance.ResolutionChanged += OnResolutionChangedPrivate;
+        }
+
+        protected virtual void TryCreateDragHandle()
+        {
+            if (GuiFrame != null && GuiFrameSource.GetAttributeBool("draggable", true))
+            {
+                bool hideDragIcons = GuiFrameSource.GetAttributeBool("hidedragicons", false);
+
+                var handle = new GUIDragHandle(new RectTransform(Vector2.One, GuiFrame.RectTransform, Anchor.Center),
+                    GuiFrame.RectTransform, style: null)
+                {
+                    DragArea = HUDLayoutSettings.ItemHUDArea
+                };
+
+                int iconHeight = GUIStyle.ItemFrameMargin.Y / 4;
+                var dragIcon = new GUIImage(new RectTransform(new Point(GuiFrame.Rect.Width, iconHeight), handle.RectTransform, Anchor.TopCenter) { AbsoluteOffset = new Point(0, iconHeight / 2) },
+                    style: "GUIDragIndicatorHorizontal");
+                dragIcon.RectTransform.MinSize = new Point(0, iconHeight);
+
+                handle.ValidatePosition = (RectTransform rectT) =>
+                {
+                    var activeHuds = Character.Controlled?.SelectedItem?.ActiveHUDs ?? item.ActiveHUDs;
+                    foreach (ItemComponent ic in activeHuds)
+                    {
+                        if (ic == this || ic.GuiFrame == null || !ic.CanBeSelected) { continue; }
+                        if (ic.GuiFrame.Rect.Width > GameMain.GraphicsWidth * 0.9f && ic.GuiFrame.Rect.Height > GameMain.GraphicsHeight * 0.9f) 
+                        { 
+                            //a full-screen GUIFrame (or at least close to one) - this component is doing something weird,
+                            //an ItemContainer with no GUIFrame definition that positions itself in some other GUIFrame, some kind of an overlay?
+                            // -> allow intersecting
+                            continue; 
+                        }
+                        if (dragIcon.Rect.Intersects(ic.GuiFrame.Rect))
+                        {
+                            GuiFrame.ImmediateFlash();
+                            return false;
+                        }
+                    }
+                    foreach (ItemComponent ic in activeHuds)
+                    {
+                        //refresh slots to ensure they're rendered at the correct position
+                        (ic as ItemContainer)?.Inventory.CreateSlots();
+                    }
+                    return true;
+                };
+
+                int buttonHeight = (int)(GUIStyle.ItemFrameMargin.Y * 0.4f);
+                var settingsIcon = new GUIButton(new RectTransform(new Point(buttonHeight), handle.RectTransform, Anchor.TopLeft) { AbsoluteOffset = new Point(buttonHeight / 4), MinSize = new Point(buttonHeight) },
+                    style: "GUIButtonSettings")
+                {
+                    OnClicked = (btn, userdata) =>
+                    {
+                        GUIContextMenu.CreateContextMenu(
+                            new ContextMenuOption("item.resetuiposition", isEnabled: true, onSelected: () =>
+                            {
+                                if (Character.Controlled?.SelectedItem != null && item != Character.Controlled.SelectedItem)
+                                {
+                                    Character.Controlled.SelectedItem.ForceHUDLayoutUpdate(ignoreLocking: true);
+                                }
+                                else
+                                {
+                                    item.ForceHUDLayoutUpdate(ignoreLocking: true);
+                                }
+                            }),
+                            new ContextMenuOption(TextManager.Get(LockGuiFramePosition ? "item.unlockuiposition" : "item.lockuiposition"), isEnabled: true, onSelected: () =>
+                            {
+                                LockGuiFramePosition = !LockGuiFramePosition;
+                                handle.Enabled = !LockGuiFramePosition;
+                            }));
+                        return true;
+                    }
+                };
+
+                if (hideDragIcons)
+                {
+                    dragIcon.Visible = false;
+                    settingsIcon.Visible = false;
+                }
+            }
         }
 
         /// <summary>
@@ -631,6 +719,11 @@ namespace Barotrauma.Items.Components
                 CreateGUI();
             }
             OnResolutionChanged();
+            item.ForceHUDLayoutUpdate(ignoreLocking: true);
+            if (GuiFrame != null && GuiFrame.GetChild<GUIDragHandle>() is GUIDragHandle dragHandle)
+            {
+                dragHandle.DragArea = HUDLayoutSettings.ItemHUDArea;
+            }
         }
 
         public virtual void AddTooltipInfo(ref LocalizedString name, ref LocalizedString description) { }

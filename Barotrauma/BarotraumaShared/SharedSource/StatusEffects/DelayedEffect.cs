@@ -39,16 +39,10 @@ namespace Barotrauma
         public DelayedEffect(ContentXElement element, string parentDebugName)
             : base(element, parentDebugName)
         {
-            string delayTypeStr = element.GetAttributeString("delaytype", "timer");
-            if (!Enum.TryParse(typeof(DelayTypes), delayTypeStr, ignoreCase: true, out var delayType))
+            DelayTypes delayTypeAttr = element.GetAttributeEnum("delaytype", DelayTypes.Timer);
+            if (delayTypeAttr is DelayTypes.Timer)
             {
-                DebugConsole.ThrowError("Invalid delay type \"" + delayTypeStr + "\" in StatusEffect (" + parentDebugName + ")");
-            }
-            switch (delayType)
-            {
-                case DelayTypes.Timer:
-                    delay = element.GetAttributeFloat("delay", 1.0f);
-                    break;
+                delay = element.GetAttributeFloat("delay", 1.0f);
             }
         }
 
@@ -77,13 +71,13 @@ namespace Barotrauma
                     Projectile projectile = (entity as Item)?.GetComponent<Projectile>();
                     if (projectile == null)
                     {
-                        DebugConsole.ShowError("Non-projectile using a delaytype of reachcursor");
+                        DebugConsole.LogError("Non-projectile using a delaytype of reachcursor");
                         return;
                     }
 
                     if (projectile.User == null)
                     {
-                        DebugConsole.ShowError("Projectile: '" + projectile.Name + "' missing user to determine distance");
+                        DebugConsole.LogError("Projectile: '" + projectile.Name + "' missing user to determine distance");
                         return;
                     }
 
@@ -95,11 +89,7 @@ namespace Barotrauma
         public override void Apply(ActionType type, float deltaTime, Entity entity, IReadOnlyList<ISerializableEntity> targets, Vector2? worldPosition = null)
         {
             if (this.type != type) { return; }
-            if (intervalTimer > 0.0f)
-            {
-                intervalTimer -= deltaTime;
-                return;
-            }
+            if (ShouldWaitForInterval(entity, deltaTime)) { return; }
             if (!HasRequiredItems(entity)) { return; }
             if (delayType == DelayTypes.ReachCursor && Character.Controlled == null) { return; }
             if (!Stackable) 
@@ -129,7 +119,7 @@ namespace Barotrauma
                     if (projectile == null)
                     {
 #if DEBUG
-                        DebugConsole.ShowError("Non-projectile using a delaytype of reachcursor");
+                        DebugConsole.LogError("Non-projectile using a delaytype of reachcursor");
 #endif
                         return;
                     }
@@ -137,7 +127,7 @@ namespace Barotrauma
                     if (projectile.User == null)
                     {
 #if DEBUG
-                        DebugConsole.ShowError("Projectile " + projectile.Name + "missing user");
+                        DebugConsole.LogError("Projectile " + projectile.Name + "missing user");
 #endif
                         return;
                     }

@@ -23,6 +23,11 @@ namespace Barotrauma
         private AIObjectiveGoTo goToObjective;
         private AIObjectiveGetItem getItemObjective;
 
+        /// <summary>
+        /// If undefined, a default filter will be used.
+        /// </summary>
+        public Func<PathNode, bool> EndNodeFilter;
+
         public bool Override { get; set; } = true;
 
         public override bool CanBeCompleted => base.CanBeCompleted && (!useController || controller != null);
@@ -36,6 +41,8 @@ namespace Barotrauma
 
         public Func<bool> completionCondition;
         private bool isDoneOperating;
+
+        public float? OverridePriority = null;
 
         protected override float GetPriority()
         {
@@ -52,7 +59,11 @@ namespace Barotrauma
             }
             else
             {
-                if (isOrder)
+                if (OverridePriority.HasValue)
+                {
+                    Priority = OverridePriority.Value;
+                }
+                else if (isOrder)
                 {
                     Priority = objectiveManager.GetOrderPriority(this);
                 }
@@ -111,7 +122,7 @@ namespace Barotrauma
                 else if (!isOrder)
                 {
                     var steering = component?.Item.GetComponent<Steering>();
-                    if (steering != null && (steering.AutoPilot || HumanAIController.IsTrueForAnyCrewMember(c => c != HumanAIController && c.Character.IsCaptain)))
+                    if (steering != null && (steering.AutoPilot || HumanAIController.IsTrueForAnyCrewMember(c => c != character && c.IsCaptain, onlyActive: true, onlyConnectedSubs: true)))
                     {
                         // Ignore if already set to autopilot or if there's a captain onboard
                         Priority = 0;
@@ -135,7 +146,7 @@ namespace Barotrauma
                         float value = CumulatedDevotion + (max * PriorityModifier);
                         Priority = MathHelper.Clamp(value, 0, max);
                     }
-                    else
+                    else if (!OverridePriority.HasValue)
                     {
                         float value = CumulatedDevotion + (AIObjectiveManager.LowestOrderPriority * PriorityModifier);
                         float max = AIObjectiveManager.LowestOrderPriority - 1;
@@ -193,7 +204,7 @@ namespace Barotrauma
             }
             if (operateTarget != null)
             {
-                if (HumanAIController.IsTrueForAnyCrewMember(other => other != HumanAIController && other.Character.IsBot && other.ObjectiveManager.GetActiveObjective() is AIObjectiveOperateItem operateObjective && operateObjective.operateTarget == operateTarget))
+                if (HumanAIController.IsTrueForAnyBotInTheCrew(other => other != HumanAIController && other.ObjectiveManager.GetActiveObjective() is AIObjectiveOperateItem operateObjective && operateObjective.operateTarget == operateTarget))
                 {
                     // Another crew member is already targeting this entity (leak).
                     Abandon = true;
@@ -204,12 +215,19 @@ namespace Barotrauma
             {
                 if (!character.IsClimbing && character.CanInteractWith(target.Item, out _, checkLinked: false))
                 {
-                    HumanAIController.FaceTarget(target.Item);
-                    if (character.SelectedConstruction != target.Item)
+                    if (target.Item.GetComponent<Controller>() is not Controller { ControlCharacterPose: true })
+                    {
+                        HumanAIController.FaceTarget(target.Item);
+                    }
+                    else
+                    {
+                        HumanAIController.SteeringManager.Reset();
+                    }
+                    if (character.SelectedItem != target.Item && character.SelectedSecondaryItem != target.Item)
                     {
                         target.Item.TryInteract(character, forceSelectKey: true);
                     }
-                    if (component.AIOperate(deltaTime, character, this))
+                    if (component.CrewAIOperate(deltaTime, character, this))
                     {
                         isDoneOperating = completionCondition == null || completionCondition();
                     }
@@ -219,7 +237,7 @@ namespace Barotrauma
                     TryAddSubObjective(ref goToObjective, () => new AIObjectiveGoTo(target.Item, character, objectiveManager, closeEnough: 50)
                     {
                         TargetName = target.Item.Name,
-                        endNodeFilter = node => node.Waypoint.Ladders == null
+                        endNodeFilter = EndNodeFilter ?? AIObjectiveGetItem.CreateEndNodeFilter(target.Item)
                     },
                         onAbandon: () => Abandon = true,
                         onCompleted: () => RemoveSubObjective(ref goToObjective));
@@ -277,7 +295,7 @@ namespace Barotrauma
                         }
                         return;
                     }
-                    if (component.AIOperate(deltaTime, character, this))
+                    if (component.CrewAIOperate(deltaTime, character, this))
                     {
                         isDoneOperating = completionCondition == null || completionCondition();
                     }

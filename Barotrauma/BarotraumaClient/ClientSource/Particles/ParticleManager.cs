@@ -3,7 +3,6 @@ using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Xml.Linq;
 
 namespace Barotrauma.Particles
 {
@@ -76,21 +75,21 @@ namespace Barotrauma.Particles
             return CreateParticle(prefab, position, velocity, rotation, hullGuess, collisionIgnoreTimer: collisionIgnoreTimer, tracerPoints:tracerPoints);
         }
 
-        public Particle CreateParticle(ParticlePrefab prefab, Vector2 position, Vector2 velocity, float rotation = 0.0f, Hull hullGuess = null, bool drawOnTop = false, float collisionIgnoreTimer = 0f, float lifeTimeMultiplier = 1f, Tuple<Vector2, Vector2> tracerPoints = null)
+        public Particle CreateParticle(ParticlePrefab prefab, Vector2 position, Vector2 velocity, float rotation = 0.0f, Hull hullGuess = null, float collisionIgnoreTimer = 0f, float lifeTimeMultiplier = 1f, Tuple<Vector2, Vector2> tracerPoints = null)
         {
             if (prefab == null || prefab.Sprites.Count == 0) { return null; }
-
             if (particleCount >= MaxParticles)
             {
                 for (int i = 0; i < particleCount; i++)
                 {
-                    if (particles[i].Prefab.Priority < prefab.Priority)
+                    if (particles[i].Prefab.Priority < prefab.Priority ||
+                        (!particles[i].Prefab.DrawAlways && prefab.DrawAlways))
                     {
                         RemoveParticle(i);
                         break;
                     }
                 }
-                if (particleCount >= MaxParticles) { return null; }
+                if (particleCount >= MaxParticles) { return null; }                
             }
 
             Vector2 particleEndPos = prefab.CalculateEndPosition(position, velocity);
@@ -110,26 +109,30 @@ namespace Barotrauma.Particles
 
             Rectangle expandedViewRect = MathUtils.ExpandRect(cam.WorldView, MaxOutOfViewDist);
 
-            if (minPos.X > expandedViewRect.Right || maxPos.X < expandedViewRect.X) { return null; }
-            if (minPos.Y > expandedViewRect.Y || maxPos.Y < expandedViewRect.Y - expandedViewRect.Height) { return null; }
+            if (!prefab.DrawAlways)
+            {
+                if (minPos.X > expandedViewRect.Right || maxPos.X < expandedViewRect.X) { return null; }
+                if (minPos.Y > expandedViewRect.Y || maxPos.Y < expandedViewRect.Y - expandedViewRect.Height) { return null; }
+            }
 
             if (particles[particleCount] == null) { particles[particleCount] = new Particle(); }
 
-            particles[particleCount].Init(prefab, position, velocity, rotation, hullGuess, drawOnTop, collisionIgnoreTimer, lifeTimeMultiplier, tracerPoints: tracerPoints);
+            particles[particleCount].Init(prefab, position, velocity, rotation, hullGuess, prefab.DrawOnTop, collisionIgnoreTimer, lifeTimeMultiplier, tracerPoints: tracerPoints);
 
             particleCount++;
 
             return particles[particleCount - 1];
         }
 
-        public List<ParticlePrefab> GetPrefabList()
+        public static List<ParticlePrefab> GetPrefabList()
         {
             return ParticlePrefab.Prefabs.ToList();
         }
 
-        public ParticlePrefab FindPrefab(string prefabName)
+        public static ParticlePrefab FindPrefab(string prefabName)
         {
-            return ParticlePrefab.Prefabs.Find(p => p.Identifier == prefabName);
+            ParticlePrefab.Prefabs.TryGet(prefabName, out ParticlePrefab prefab);
+            return prefab;
         }
 
         private void RemoveParticle(int index)
@@ -171,7 +174,7 @@ namespace Barotrauma.Particles
                     remove = true;
                 }
 
-                if (remove) RemoveParticle(i);
+                if (remove) { RemoveParticle(i); }
             }
         }
 
@@ -215,6 +218,11 @@ namespace Barotrauma.Particles
                 
                 particles[i].Draw(spriteBatch);
             }
+        }
+
+        public void ClearParticles()
+        {
+            particleCount = 0;
         }
 
         public void RemoveByPrefab(ParticlePrefab prefab)

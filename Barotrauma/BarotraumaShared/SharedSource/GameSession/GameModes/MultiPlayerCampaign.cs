@@ -1,4 +1,5 @@
-﻿using Barotrauma.IO;
+﻿using Barotrauma.Extensions;
+using Barotrauma.IO;
 using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
 using System;
@@ -10,8 +11,6 @@ namespace Barotrauma
 {
     partial class MultiPlayerCampaign : CampaignMode
     {
-        public const int MinimumInitialMoney = 500;
-
         [Flags]
         public enum NetFlags : UInt16
         {
@@ -55,7 +54,7 @@ namespace Barotrauma
             }
         }
 
-        private bool ValidateFlag(NetFlags flag)
+        private static bool ValidateFlag(NetFlags flag)
         {
             if (MathHelper.IsPowerOfTwo((int)flag)) { return true; }
 #if DEBUG
@@ -107,9 +106,8 @@ namespace Barotrauma
 #endif
             }
             CampaignID = currentCampaignID;
-            CampaignMetadata = new CampaignMetadata(this);
             UpgradeManager = new UpgradeManager(this);
-            InitCampaignData();
+            InitFactions();
         }
 
         public static MultiPlayerCampaign StartNew(string mapSeed, CampaignSettings settings)
@@ -135,13 +133,13 @@ namespace Barotrauma
         }
 
         partial void InitProjSpecific();
-        
+                
         public static string GetCharacterDataSavePath(string savePath)
         {
-            return Path.Combine(SaveUtil.MultiplayerSaveFolder, Path.GetFileNameWithoutExtension(savePath) + "_CharacterData.xml");
+            return Path.Combine(Path.GetDirectoryName(savePath), Path.GetFileNameWithoutExtension(savePath) + "_CharacterData.xml");
         }
 
-        public string GetCharacterDataSavePath()
+        public static string GetCharacterDataSavePath()
         {
             return GetCharacterDataSavePath(GameMain.GameSession.SavePath);
         }
@@ -151,9 +149,9 @@ namespace Barotrauma
         /// </summary>
         private void Load(XElement element)
         {
-            PurchasedLostShuttles = element.GetAttributeBool("purchasedlostshuttles", false);
-            PurchasedHullRepairs = element.GetAttributeBool("purchasedhullrepairs", false);
-            PurchasedItemRepairs = element.GetAttributeBool("purchaseditemrepairs", false);
+            PurchasedLostShuttlesInLatestSave = element.GetAttributeBool("purchasedlostshuttles", false);
+            PurchasedHullRepairsInLatestSave = element.GetAttributeBool("purchasedhullrepairs", false);
+            PurchasedItemRepairsInLatestSave = element.GetAttributeBool("purchaseditemrepairs", false);
             CheatsEnabled = element.GetAttributeBool("cheatsenabled", false);
             if (CheatsEnabled)
             {
@@ -192,11 +190,20 @@ namespace Barotrauma
                             //map already created, update it
                             //if we're not downloading the initial save file (LastSaveID > 0), 
                             //show notifications about location type changes
-                            map.LoadState(subElement, LastSaveID > 0);
+                            map.LoadState(this, subElement, LastSaveID > 0);
                         }
                         break;
                     case "metadata":
-                        CampaignMetadata = new CampaignMetadata(this, subElement);
+                        var prevReputations = Factions.ToDictionary(k => k, v => v.Reputation.Value);
+                        CampaignMetadata.Load(subElement);
+                        foreach (var faction in Factions)
+                        {
+                            if (!MathUtils.NearlyEqual(prevReputations[faction], faction.Reputation.Value))
+                            {
+                                faction.Reputation.OnReputationValueChanged?.Invoke(faction.Reputation);
+                                Reputation.OnAnyReputationValueChanged.Invoke(faction.Reputation);
+                            }
+                        }
                         break;
                     case "upgrademanager":
                     case "pendingupgrades":
@@ -239,10 +246,8 @@ namespace Barotrauma
                 };
             }
 
-            CampaignMetadata ??= new CampaignMetadata(this);
             UpgradeManager ??= new UpgradeManager(this);
 
-            InitCampaignData();
 #if SERVER
             characterData.Clear();
             string characterDataPath = GetCharacterDataSavePath();
@@ -294,14 +299,14 @@ namespace Barotrauma
 
         private static void WriteItems(IWriteMessage msg, Dictionary<Identifier, List<PurchasedItem>> purchasedItems)
         {
-            msg.Write((byte)purchasedItems.Count);
+            msg.WriteByte((byte)purchasedItems.Count);
             foreach (var storeItems in purchasedItems)
             {
-                msg.Write(storeItems.Key);
-                msg.Write((UInt16)storeItems.Value.Count);
+                msg.WriteIdentifier(storeItems.Key);
+                msg.WriteUInt16((UInt16)storeItems.Value.Count);
                 foreach (var item in storeItems.Value)
                 {
-                    msg.Write(item.ItemPrefabIdentifier);
+                    msg.WriteIdentifier(item.ItemPrefabIdentifier);
                     msg.WriteRangedInteger(item.Quantity, 0, CargoManager.MaxQuantity);
                 }
             }
@@ -328,18 +333,18 @@ namespace Barotrauma
 
         private static void WriteItems(IWriteMessage msg, Dictionary<Identifier, List<SoldItem>> soldItems)
         {
-            msg.Write((byte)soldItems.Count);
+            msg.WriteByte((byte)soldItems.Count);
             foreach (var storeItems in soldItems)
             {
-                msg.Write(storeItems.Key);
-                msg.Write((UInt16)storeItems.Value.Count);
+                msg.WriteIdentifier(storeItems.Key);
+                msg.WriteUInt16((UInt16)storeItems.Value.Count);
                 foreach (var item in storeItems.Value)
                 {
-                    msg.Write(item.ItemPrefab.Identifier);
-                    msg.Write((UInt16)item.ID);
-                    msg.Write(item.Removed);
-                    msg.Write(item.SellerID);
-                    msg.Write((byte)item.Origin);
+                    msg.WriteIdentifier(item.ItemPrefab.Identifier);
+                    msg.WriteUInt16((UInt16)item.ID);
+                    msg.WriteBoolean(item.Removed);
+                    msg.WriteByte(item.SellerID);
+                    msg.WriteByte((byte)item.Origin);
                 }
             }
         }

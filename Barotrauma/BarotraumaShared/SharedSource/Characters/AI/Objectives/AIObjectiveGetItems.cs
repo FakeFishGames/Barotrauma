@@ -21,11 +21,11 @@ namespace Barotrauma
         public bool CheckInventory { get; set; }
         public bool EvaluateCombatPriority { get; set; }
         public bool CheckPathForEachItem { get; set; }
-        public bool RequireLoaded { get; set; }
+        public bool RequireNonEmpty { get; set; }
         public bool RequireAllItems { get; set; }
 
         private readonly ImmutableArray<Identifier> gearTags;
-        private readonly Identifier[] ignoredTags;
+        private readonly ImmutableHashSet<Identifier> ignoredTags;
         private bool subObjectivesCreated;
 
         public readonly HashSet<Item> achievedItems = new HashSet<Item>();
@@ -33,7 +33,7 @@ namespace Barotrauma
         public AIObjectiveGetItems(Character character, AIObjectiveManager objectiveManager, IEnumerable<Identifier> identifiersOrTags, float priorityModifier = 1) : base(character, objectiveManager, priorityModifier)
         {
             gearTags = AIObjectiveGetItem.ParseGearTags(identifiersOrTags).ToImmutableArray();
-            ignoredTags = AIObjectiveGetItem.ParseIgnoredTags(identifiersOrTags).ToArray();
+            ignoredTags = AIObjectiveGetItem.ParseIgnoredTags(identifiersOrTags).ToImmutableHashSet();
         }
 
         protected override bool CheckObjectiveSpecific() => subObjectivesCreated && subObjectives.None();
@@ -61,7 +61,7 @@ namespace Barotrauma
                             AllowStealing = AllowStealing,
                             ignoredIdentifiersOrTags = ignoredTags,
                             CheckPathForEachItem = CheckPathForEachItem,
-                            RequireLoaded = RequireLoaded,
+                            RequireNonEmpty = RequireNonEmpty,
                             ItemCount = count,
                             SpeakIfFails = RequireAllItems
                         },

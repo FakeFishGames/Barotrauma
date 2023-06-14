@@ -608,58 +608,90 @@ namespace Barotrauma
                     }
                     break;
                 case NetworkEventType.CONVERSATION:
-                    UInt16 identifier = msg.ReadUInt16();
-                    string eventSprite = msg.ReadString();
-                    byte dialogType = msg.ReadByte();
-                    bool continueConversation = msg.ReadBoolean();
-                    UInt16 speakerId = msg.ReadUInt16();
-                    string text = msg.ReadString();
-                    bool fadeToBlack = msg.ReadBoolean();
-                    byte optionCount = msg.ReadByte();
-                    List<string> options = new List<string>();
-                    for (int i = 0; i < optionCount; i++)
                     {
-                        options.Add(msg.ReadString());
-                    }
-
-                    byte endCount = msg.ReadByte();
-                    int[] endings = new int[endCount];
-                    for (int i = 0; i < endCount; i++)
-                    {
-                        endings[i] = msg.ReadByte();
-                    }
-
-                    if (string.IsNullOrEmpty(text) && optionCount == 0)
-                    {
-                        GUIMessageBox.MessageBoxes.ForEachMod(mb =>
+                        UInt16 identifier = msg.ReadUInt16();
+                        string eventSprite = msg.ReadString();
+                        byte dialogType = msg.ReadByte();
+                        bool continueConversation = msg.ReadBoolean();
+                        UInt16 speakerId = msg.ReadUInt16();
+                        string text = msg.ReadString();
+                        bool fadeToBlack = msg.ReadBoolean();
+                        byte optionCount = msg.ReadByte();
+                        List<string> options = new List<string>();
+                        for (int i = 0; i < optionCount; i++)
                         {
-                            if (mb.UserData is Pair<string, UInt16> pair && pair.First == "ConversationAction" && pair.Second == identifier)
+                            options.Add(msg.ReadString());
+                        }
+
+                        byte endCount = msg.ReadByte();
+                        int[] endings = new int[endCount];
+                        for (int i = 0; i < endCount; i++)
+                        {
+                            endings[i] = msg.ReadByte();
+                        }
+
+                        if (string.IsNullOrEmpty(text) && optionCount == 0)
+                        {
+                            GUIMessageBox.MessageBoxes.ForEachMod(mb =>
                             {
-                                (mb as GUIMessageBox)?.Close();
-                            }
-                        });
+                                if (mb.UserData is Pair<string, UInt16> pair && pair.First == "ConversationAction" && pair.Second == identifier)
+                                {
+                                    (mb as GUIMessageBox)?.Close();
+                                }
+                            });
+                        }
+                        else
+                        {
+                            ConversationAction.CreateDialog(text, Entity.FindEntityByID(speakerId) as Character, options, endings, eventSprite, identifier, fadeToBlack, (ConversationAction.DialogTypes)dialogType, continueConversation);
+                        }
+                        if (Entity.FindEntityByID(speakerId) is Character speaker)
+                        {
+                            speaker.CampaignInteractionType = CampaignMode.InteractionType.None;
+                            speaker.SetCustomInteract(null, null);
+                        }
+                        break;
                     }
-                    else
+                case NetworkEventType.CONVERSATION_SELECTED_OPTION:
                     {
-                        ConversationAction.CreateDialog(text, Entity.FindEntityByID(speakerId) as Character, options, endings, eventSprite, identifier, fadeToBlack, (ConversationAction.DialogTypes)dialogType, continueConversation);
+                        UInt16 identifier = msg.ReadUInt16();
+                        int selectedOption = msg.ReadByte() - 1;
+                        ConversationAction.SelectOption(identifier, selectedOption);
+                        break;
                     }
-                    if (Entity.FindEntityByID(speakerId) is Character speaker)
-                    {
-                        speaker.CampaignInteractionType = CampaignMode.InteractionType.None;
-                        speaker.SetCustomInteract(null, null);
-                    }
-                    break;
                 case NetworkEventType.MISSION:
                     Identifier missionIdentifier = msg.ReadIdentifier();
+                    int locationIndex = msg.ReadInt32();
+                    int destinationIndex = msg.ReadInt32();
 
+                    string missionName = msg.ReadString();
                     MissionPrefab? prefab = MissionPrefab.Prefabs.Find(mp => mp.Identifier == missionIdentifier);
                     if (prefab != null)
                     {
-                        new GUIMessageBox(string.Empty, TextManager.GetWithVariable("missionunlocked", "[missionname]", prefab.Name), 
+                        new GUIMessageBox(string.Empty, TextManager.GetWithVariable("missionunlocked", "[missionname]", missionName),
                             Array.Empty<LocalizedString>(), type: GUIMessageBox.Type.InGame, icon: prefab.Icon, relativeSize: new Vector2(0.3f, 0.15f), minSize: new Point(512, 128))
                         {
                             IconColor = prefab.IconColor
                         };
+                        if (GameMain.GameSession?.Map is { } map && locationIndex >= 0 && locationIndex < map.Locations.Count)
+                        {
+                            Location location = map.Locations[locationIndex];
+                            map.Discover(location, checkTalents: false);
+
+                            LocationConnection? connection = null;
+                            if (destinationIndex != locationIndex && destinationIndex >= 0 && destinationIndex < map.Locations.Count)
+                            {
+                                Location destination = map.Locations[destinationIndex];
+                                connection = map.Connections.FirstOrDefault(c => c.Locations.Contains(location) && c.Locations.Contains(destination));
+                            }
+                            if (connection != null)
+                            {
+                                location.UnlockMission(prefab, connection);
+                            }
+                            else
+                            {
+                                location.UnlockMission(prefab);
+                            }
+                        }
                     }
                     break;
                 case NetworkEventType.UNLOCKPATH:

@@ -26,6 +26,8 @@ namespace Barotrauma.Items.Components
             get { return allowedSlots; }
         }
 
+        public bool PickingDone => pickTimer >= PickingTime;
+
         public Character Picker
         {
             get 
@@ -165,31 +167,32 @@ namespace Barotrauma.Items.Components
             pickTimer = 0.0f;
             while (pickTimer < requiredTime && Screen.Selected != GameMain.SubEditorScreen)
             {
-                //cancel if the item is currently selected
-                //attempting to pick does not select the item, so if it is selected at this point, another ItemComponent
-                //must have been selected and we should not keep deattaching (happens when for example interacting with
-                //an electrical component while holding both a screwdriver and a wrench).
-                if (picker.SelectedConstruction == item || 
-                    picker.IsKeyDown(InputType.Aim) || 
-                    !picker.CanInteractWith(item) ||
-                    item.Removed || item.ParentInventory != null)
+                if (!CoroutineManager.Paused)
                 {
-                    StopPicking(picker);
-                    yield return CoroutineStatus.Success;
-                }
+                    //cancel if the item is currently selected
+                    //attempting to pick does not select the item, so if it is selected at this point, another ItemComponent
+                    //must have been selected and we should not keep deattaching (happens when for example interacting with
+                    //an electrical component while holding both a screwdriver and a wrench).
+                    if (picker.IsAnySelectedItem(item) ||
+                        picker.IsKeyDown(InputType.Aim) ||
+                        !picker.CanInteractWith(item) ||
+                        item.Removed || item.ParentInventory != null)
+                    {
+                        StopPicking(picker);
+                        yield return CoroutineStatus.Success;
+                    }
 
 #if CLIENT
-                Character.Controlled?.UpdateHUDProgressBar(
-                    this,
-                    item.WorldPosition,
-                    pickTimer / requiredTime,
-                    GUIStyle.Red, GUIStyle.Green,
-                    !string.IsNullOrWhiteSpace(PickingMsg) ? PickingMsg : this is Door ? "progressbar.opening" : "progressbar.deattaching");
+                    Character.Controlled?.UpdateHUDProgressBar(
+                        this,
+                        item.WorldPosition,
+                        pickTimer / requiredTime,
+                        GUIStyle.Red, GUIStyle.Green,
+                        !string.IsNullOrWhiteSpace(PickingMsg) ? PickingMsg : this is Door ? "progressbar.opening" : "progressbar.deattaching");
 #endif
-                
-                picker.AnimController.UpdateUseItem(true, item.WorldPosition + new Vector2(0.0f, 100.0f) * ((pickTimer / 10.0f) % 0.1f));
-                pickTimer += CoroutineManager.DeltaTime;
-
+                    picker.AnimController.UpdateUseItem(!picker.IsClimbing, item.WorldPosition + new Vector2(0.0f, 100.0f) * ((pickTimer / 10.0f) % 0.1f));
+                    pickTimer += CoroutineManager.DeltaTime;
+                }
                 yield return CoroutineStatus.Running;
             }
 
@@ -208,7 +211,7 @@ namespace Barotrauma.Items.Components
         {
             if (picker != null)
             {
-                picker.AnimController.Anim = AnimController.Animation.None;
+                picker.AnimController.StopUsingItem();
                 picker.PickingItem = null;
             }
             if (pickingCoroutine != null)
@@ -286,7 +289,7 @@ namespace Barotrauma.Items.Components
 
         public virtual void ServerEventWrite(IWriteMessage msg, Client c, NetEntityEvent.IData extraData = null)
         {
-            msg.Write(activePicker?.ID ?? (ushort)0);
+            msg.WriteUInt16(activePicker?.ID ?? (ushort)0);
         }
 
         public virtual void ClientEventRead(IReadMessage msg, float sendingTime)

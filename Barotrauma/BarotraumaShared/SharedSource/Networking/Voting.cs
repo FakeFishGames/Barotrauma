@@ -1,5 +1,4 @@
 ﻿using Barotrauma.Networking;
-using System;
 using System.Collections.Generic;
 
 namespace Barotrauma
@@ -8,7 +7,7 @@ namespace Barotrauma
     {
         public enum VoteState { None = 0, Started = 1, Running = 2, Passed = 3, Failed = 4 };
 
-        private IReadOnlyDictionary<T, int> GetVoteCounts<T>(VoteType voteType, List<Client> voters)
+        private static IReadOnlyDictionary<T, int> GetVoteCounts<T>(VoteType voteType, IEnumerable<Client> voters)
         {
             Dictionary<T, int> voteList = new Dictionary<T, int>();
 
@@ -29,7 +28,7 @@ namespace Barotrauma
             return voteList;
         }
 
-        public T HighestVoted<T>(VoteType voteType, List<Client> voters)
+        public static T HighestVoted<T>(VoteType voteType, IEnumerable<Client> voters)
         {
             if (voteType == VoteType.Sub && !GameMain.NetworkMember.ServerSettings.AllowSubVoting) { return default; }
             if (voteType == VoteType.Mode && !GameMain.NetworkMember.ServerSettings.AllowModeVoting) { return default; }
@@ -55,24 +54,6 @@ namespace Barotrauma
             }
 
             return selected;            
-        }
-
-        public void ResetVotes(List<Client> connectedClients)
-        {
-            foreach (Client client in connectedClients)
-            {
-                client.ResetVotes();
-            }
-#if CLIENT
-            foreach (VoteType voteType in Enum.GetValues(typeof(VoteType)))
-            {
-                SetVoteCountYes(voteType, 0);
-                SetVoteCountNo(voteType, 0);
-                SetVoteCountMax(voteType, 0);
-            }
-            UpdateVoteTexts(connectedClients, VoteType.Mode);
-            UpdateVoteTexts(connectedClients, VoteType.Sub);
-#endif
         }
     }
 }

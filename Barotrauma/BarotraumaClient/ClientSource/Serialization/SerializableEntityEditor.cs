@@ -9,7 +9,7 @@ using System.Diagnostics;
 
 namespace Barotrauma
 {
-    class SerializableEntityEditor : GUIComponent
+    sealed class SerializableEntityEditor : GUIComponent
     {
         private readonly int elementHeight;
         private readonly GUILayoutGroup layoutGroup;
@@ -380,12 +380,16 @@ namespace Barotrauma
             }
 
             LocalizedString toolTip = TextManager.Get($"sp.{propertyTag}.description");
+            if (toolTip.IsNullOrEmpty() && entity.GetType() != property.PropertyInfo.DeclaringType)
+            {
+                Identifier propertyTagForDerivedClass = $"{entity.GetType().Name}.{property.PropertyInfo.Name}".ToIdentifier();
+                toolTip = TextManager.Get($"{propertyTagForDerivedClass}.description", $"sp.{propertyTagForDerivedClass}.description");
+            }
             if (toolTip.IsNullOrEmpty())
             {
-                toolTip =  TextManager.Get($"{propertyTag}.description", $"sp.{fallbackTag}.description");
+                toolTip = TextManager.Get($"{propertyTag}.description", $"sp.{fallbackTag}.description");
             }
-
-            if (toolTip == null)
+            if (toolTip.IsNullOrEmpty())
             {
                 toolTip = property.GetAttribute<Serialize>().Description;
             }
@@ -394,10 +398,6 @@ namespace Barotrauma
             if (value is bool boolVal)
             {
                 propertyField = CreateBoolField(entity, property, boolVal, displayName, toolTip);
-            }
-            else if (value is string stringVal)
-            {
-                propertyField = CreateStringField(entity, property, stringVal, displayName, toolTip);
             }
             else if (value.GetType().IsEnum)
             {
@@ -445,6 +445,10 @@ namespace Barotrauma
             else if(value is string[] a)
             {
                 propertyField = CreateStringArrayField(entity, property, a, displayName, toolTip);
+            }
+            else if (value is string or Identifier)
+            {
+                propertyField = CreateStringField(entity, property, value.ToString(), displayName, toolTip);
             }
             return propertyField;
         }
@@ -692,7 +696,7 @@ namespace Barotrauma
             propertyBox.OnEnterPressed += (box, text) => OnApply(box);
             refresh += () =>
             {
-                if (!propertyBox.Selected) { propertyBox.Text = (string)property.GetValue(entity); }
+                if (!propertyBox.Selected) { propertyBox.Text = property.GetValue(entity).ToString(); }
             };
 
             bool OnApply(GUITextBox textBox)
@@ -700,14 +704,17 @@ namespace Barotrauma
                 List<MapEntity> prevSelected = MapEntity.SelectedList.ToList();
                 //reselect the entities that were selected during editing
                 //otherwise multi-editing won't work when we deselect the entities with unapplied changes in the textbox
-                foreach (var entity in editedEntities)
-                { 
-                    MapEntity.SelectedList.Add(entity);
+                if (editedEntities.Count > 1)
+                {
+                    foreach (var entity in editedEntities)
+                    { 
+                        MapEntity.SelectedList.Add(entity);
+                    }
                 }
                 if (SetPropertyValue(property, entity, textBox.Text))
                 {
                     TrySendNetworkUpdate(entity, property);
-                    textBox.Text = (string) property.GetValue(entity);
+                    textBox.Text = property.GetValue(entity).ToString();
                     textBox.Flash(GUIStyle.Green, flashDuration: 1f);
                 }
                 //restore the entities that were selected before applying
@@ -1325,16 +1332,18 @@ namespace Barotrauma
             }
         }
         
-        private void TrySendNetworkUpdate(ISerializableEntity entity, SerializableProperty property)
+        private static void TrySendNetworkUpdate(ISerializableEntity entity, SerializableProperty property)
         {
-            if (entity is ItemComponent e)
+            if (GameMain.Client != null)
             {
-                entity = e.Item;
-            }
-
-            if (GameMain.Client != null && entity is Item item)
-            {
-                GameMain.Client.CreateEntityEvent(item, new Item.ChangePropertyEventData(property));
+                if (entity is Item item)
+                {
+                    GameMain.Client.CreateEntityEvent(item, new Item.ChangePropertyEventData(property, item));
+                }
+                else if (entity is ItemComponent ic)
+                {
+                    GameMain.Client.CreateEntityEvent(ic.Item, new Item.ChangePropertyEventData(property, ic));
+                }
             }
         }
 
@@ -1448,7 +1457,9 @@ namespace Barotrauma
                             var component = otherComponents[componentIndex];
                             Debug.Assert(component.GetType() == parentObject.GetType());                            
                             SafeAdd(component, property);
-                            if (value is string stringValue && Enum.TryParse(property.PropertyType, stringValue, out var enumValue))
+                            if (value is string stringValue && 
+                                property.PropertyType.IsEnum &&
+                                Enum.TryParse(property.PropertyType, stringValue, out var enumValue))
                             {
                                 property.PropertyInfo.SetValue(component, enumValue);
                             }

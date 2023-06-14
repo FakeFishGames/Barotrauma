@@ -1,11 +1,10 @@
 ﻿using System.Linq;
-using System.Xml.Linq;
 
 namespace Barotrauma.Abilities
 {
     class AbilityConditionAlliesAboveVitality : AbilityConditionDataless
     {
-        float vitalityPercentage;
+        readonly float vitalityPercentage;
 
         public AbilityConditionAlliesAboveVitality(CharacterTalent characterTalent, ContentXElement conditionElement) : base(characterTalent, conditionElement)
         {

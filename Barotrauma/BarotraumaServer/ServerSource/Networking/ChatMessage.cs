@@ -102,9 +102,9 @@ namespace Barotrauma.Networking
                 similarity *= 0.25f;
             }
 
-            bool isOwner = GameMain.Server.OwnerConnection != null && c.Connection == GameMain.Server.OwnerConnection;
+            bool isSpamExempt = RateLimiter.IsExempt(c);
 
-            if (similarity + c.ChatSpamSpeed > 5.0f && !isOwner)
+            if (similarity + c.ChatSpamSpeed > 5.0f && !isSpamExempt)
             {
                 GameMain.Server.KarmaManager.OnSpamFilterTriggered(c);
 
@@ -125,7 +125,7 @@ namespace Barotrauma.Networking
 
             c.ChatSpamSpeed += similarity + 0.5f;
 
-            if (c.ChatSpamTimer > 0.0f && !isOwner)
+            if (c.ChatSpamTimer > 0.0f && !isSpamExempt)
             {
                 ChatMessage denyMsg = Create("", TextManager.Get("SpamFilterBlocked").Value, ChatMessageType.Server, null);
                 c.ChatSpamTimer = 10.0f;
@@ -200,26 +200,26 @@ namespace Barotrauma.Networking
             return length;
         }
 
-        public virtual void ServerWrite(IWriteMessage msg, Client c)
+        public virtual void ServerWrite(in SegmentTableWriter<ServerNetSegment> segmentTable, IWriteMessage msg, Client c)
         {
-            msg.Write((byte)ServerNetObject.CHAT_MESSAGE);
-            msg.Write(NetStateID);
+            segmentTable.StartNewSegment(ServerNetSegment.ChatMessage);
+            msg.WriteUInt16(NetStateID);
             msg.WriteRangedInteger((int)Type, 0, Enum.GetValues(typeof(ChatMessageType)).Length - 1);
-            msg.Write((byte)ChangeType);
-            msg.Write(Text);
+            msg.WriteByte((byte)ChangeType);
+            msg.WriteString(Text);
 
-            msg.Write(SenderName);
-            msg.Write(SenderClient != null);
+            msg.WriteString(SenderName);
+            msg.WriteBoolean(SenderClient != null);
             if (SenderClient != null)
             {
-                msg.Write((SenderClient.SteamID != 0) ? SenderClient.SteamID : SenderClient.ID);
+                msg.WriteString(SenderClient.AccountId.TryUnwrap(out var accountId) ? accountId.StringRepresentation : SenderClient.SessionId.ToString());
             }
-            msg.Write(Sender != null && c.InGame);
+            msg.WriteBoolean(Sender != null && c.InGame);
             if (Sender != null && c.InGame)
             {
-                msg.Write(Sender.ID);
+                msg.WriteUInt16(Sender.ID);
             }
-            msg.Write(customTextColor != null);
+            msg.WriteBoolean(customTextColor != null);
             if (customTextColor != null)
             {
                 msg.WriteColorR8G8B8A8(customTextColor.Value);
@@ -227,7 +227,7 @@ namespace Barotrauma.Networking
             msg.WritePadBits();
             if (Type == ChatMessageType.ServerMessageBoxInGame)
             {
-                msg.Write(IconStyle);
+                msg.WriteString(IconStyle);
             }
         }
     }

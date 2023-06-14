@@ -1,9 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Barotrauma.Networking;
 using Barotrauma.Extensions;
 
 namespace Barotrauma
@@ -25,15 +23,19 @@ namespace Barotrauma
             Default,
             InGame,
             Vote,
-            Hint
+            Hint,
+            Tutorial,
+            Warning // Keep this last so that it's always drawn in front
         }
+
+        private bool IsAnimated => type == Type.InGame || type == Type.Hint || type == Type.Tutorial;
 
         public List<GUIButton> Buttons { get; private set; } = new List<GUIButton>();
         public GUILayoutGroup Content { get; private set; }
         public GUIFrame InnerFrame { get; private set; }
         public GUITextBlock Header { get; private set; }
         public GUITextBlock Text { get; private set; }
-        public string Tag { get; private set; }
+        public Identifier Tag { get; private set; }
         public bool Closed { get; private set; }
 
         public bool DisplayInLoadingScreens;
@@ -60,6 +62,9 @@ namespace Barotrauma
         public GUIImage BackgroundIcon { get; private set; }
         private GUIImage newBackgroundIcon;
 
+        /// <summary>
+        /// Close the message box automatically after enough time has passed (<see cref="inGameCloseTime"/>)
+        /// </summary>
         public bool AutoClose;
 
         private float openState;
@@ -69,17 +74,26 @@ namespace Barotrauma
 
         private readonly Type type;
 
+        /// <summary>
+        /// Close the message box automatically if the condition is met
+        /// </summary>
+        private readonly Func<bool> autoCloseCondition;
+
+        public bool FlashOnAutoCloseCondition { get; set; }
+
         public Type MessageBoxType => type;
 
         public static GUIComponent VisibleBox => MessageBoxes.LastOrDefault();
 
-        public GUIMessageBox(LocalizedString headerText, LocalizedString text, Vector2? relativeSize = null, Point? minSize = null)
-            : this(headerText, text, new LocalizedString[] { "OK" }, relativeSize, minSize)
+        public GUIMessageBox(LocalizedString headerText, LocalizedString text, Vector2? relativeSize = null, Point? minSize = null, Type type = Type.Default)
+            : this(headerText, text, new LocalizedString[] { "OK" }, relativeSize, minSize, type: type)
         {
             this.Buttons[0].OnClicked = Close;
         }
 
-        public GUIMessageBox(RichString headerText, RichString text, LocalizedString[] buttons, Vector2? relativeSize = null, Point? minSize = null, Alignment textAlignment = Alignment.TopLeft, Type type = Type.Default, string tag = "", Sprite icon = null, string iconStyle = "", Sprite backgroundIcon = null)
+        public GUIMessageBox(RichString headerText, RichString text, LocalizedString[] buttons,
+            Vector2? relativeSize = null, Point? minSize = null, Alignment textAlignment = Alignment.TopLeft, Type type = Type.Default, string tag = "",
+            Sprite icon = null, string iconStyle = "", Sprite backgroundIcon = null, Func<bool> autoCloseCondition = null, bool hideCloseButton = false)
             : base(new RectTransform(GUI.Canvas.RelativeSize, GUI.Canvas, Anchor.Center), style: GUIStyle.GetComponentStyle("GUIMessageBox." + type) != null ? "GUIMessageBox." + type : "GUIMessageBox")
         {
             int width = (int)(DefaultWidth * type switch
@@ -116,6 +130,7 @@ namespace Barotrauma
             Anchor anchor = type switch
             {
                 Type.InGame => Anchor.TopCenter,
+                Type.Tutorial => Anchor.TopCenter,
                 Type.Hint => Anchor.TopRight,
                 Type.Vote => Anchor.TopRight,
                 _ => Anchor.Center
@@ -130,10 +145,10 @@ namespace Barotrauma
             }
             GUIStyle.Apply(InnerFrame, "", this);
             this.type = type;
-            Tag = tag;
+            Tag = tag.ToIdentifier();
 
             #warning TODO: These should be broken into separate methods at least
-            if (type == Type.Default || type == Type.Vote)
+            if (type == Type.Default || type == Type.Vote || type == Type.Warning)
             {
                 Content = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.85f), InnerFrame.RectTransform, Anchor.Center)) { AbsoluteSpacing = 5 };
                             
@@ -187,12 +202,13 @@ namespace Barotrauma
                     var button = new GUIButton(new RectTransform(new Vector2(0.6f, 1.0f / buttons.Length), buttonContainer.RectTransform), buttons[i]);
                     Buttons.Add(button);
                 }
+                GUITextBlock.AutoScaleAndNormalize(Buttons.Select(btn => btn.TextBlock));
             }
-            else if (type == Type.InGame)
+            else if (type == Type.InGame || type == Type.Tutorial)
             {
                 InnerFrame.RectTransform.AbsoluteOffset = new Point(0, GameMain.GraphicsHeight);
                 CanBeFocused = false;
-                AutoClose = true;
+                AutoClose = type == Type.InGame;
                 GUIStyle.Apply(InnerFrame, "", this);
 
                 var horizontalLayoutGroup = new GUILayoutGroup(new RectTransform(new Vector2(0.98f, 0.95f), InnerFrame.RectTransform, Anchor.Center), 
@@ -212,40 +228,47 @@ namespace Barotrauma
 
                 Content = new GUILayoutGroup(new RectTransform(new Vector2(Icon != null ? 0.65f : 0.85f, 1.0f), horizontalLayoutGroup.RectTransform));
 
-                var buttonContainer = new GUIFrame(new RectTransform(new Vector2(0.15f, 1.0f), horizontalLayoutGroup.RectTransform), style: null);
-                Buttons = new List<GUIButton>(1)
+                if (!hideCloseButton)
                 {
-                    new GUIButton(new RectTransform(new Vector2(0.3f, 0.5f), buttonContainer.RectTransform, Anchor.Center), 
-                        style: "UIToggleButton")
+                    var buttonContainer = new GUIFrame(new RectTransform(new Vector2(0.15f, 1.0f), horizontalLayoutGroup.RectTransform), style: null);
+                    Buttons = new List<GUIButton>(1)
                     {
-                        OnClicked = Close
-                    }
-                };
-
-                InputType? closeInput = null;
-                if (GameSettings.CurrentConfig.KeyMap.Bindings[InputType.Use].MouseButton == MouseButton.None)
-                {
-                    closeInput = InputType.Use;
-                }
-                else if (GameSettings.CurrentConfig.KeyMap.Bindings[InputType.Select].MouseButton == MouseButton.None)
-                {
-                    closeInput = InputType.Select;
-                }
-                if (closeInput.HasValue)
-                {
-                    Buttons[0].ToolTip = TextManager.ParseInputTypes($"{TextManager.Get("Close")} ([InputType.{closeInput.Value}])");
-                    Buttons[0].OnAddedToGUIUpdateList += (GUIComponent component) =>
-                    {
-                        if (!closing && openState >= 1.0f && PlayerInput.KeyHit(closeInput.Value))
+                        new GUIButton(new RectTransform(new Vector2(0.3f, 0.5f), buttonContainer.RectTransform, Anchor.Center),
+                            style: "UIToggleButton")
                         {
-                            GUIButton btn = component as GUIButton;
-                            btn?.OnClicked(btn, btn.UserData);
-                            btn?.Flash(GUIStyle.Green);
+                            OnClicked = Close,
+                            UserData = UIHighlightAction.ElementId.MessageBoxCloseButton
                         }
                     };
+                    InputType? closeInput = null;
+                    if (GameSettings.CurrentConfig.KeyMap.Bindings[InputType.Use].MouseButton == MouseButton.None)
+                    {
+                        closeInput = InputType.Use;
+                    }
+                    else if (GameSettings.CurrentConfig.KeyMap.Bindings[InputType.Select].MouseButton == MouseButton.None)
+                    {
+                        closeInput = InputType.Select;
+                    }
+                    if (closeInput.HasValue)
+                    {
+                        Buttons[0].ToolTip = TextManager.ParseInputTypes($"{TextManager.Get("Close")} ([InputType.{closeInput.Value}])");
+                        Buttons[0].OnAddedToGUIUpdateList += (GUIComponent component) =>
+                        {
+                            if (!closing && openState >= 1.0f && PlayerInput.KeyHit(closeInput.Value))
+                            {
+                                GUIButton btn = component as GUIButton;
+                                btn?.OnClicked(btn, btn.UserData);
+                                btn?.Flash(GUIStyle.Green);
+                            }
+                        };
+                    }
+                }
+                else
+                {
+                    Buttons.Clear();
                 }
 
-                Header = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), Content.RectTransform), headerText, wrap: true);
+                Header = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), Content.RectTransform), headerText, wrap: true, textColor: GUIStyle.TextColorBright);
                 GUIStyle.Apply(Header, "", this);
                 Header.RectTransform.MinSize = new Point(0, Header.Rect.Height);
 
@@ -274,7 +297,10 @@ namespace Barotrauma
                     Content.RectTransform.NonScaledSize =
                         new Point(Content.Rect.Width, height);
                 }
-                Buttons[0].RectTransform.MaxSize = new Point((int)(0.4f * Buttons[0].Rect.Y), Buttons[0].Rect.Y);
+                if (!hideCloseButton)
+                {
+                    Buttons[0].RectTransform.MaxSize = new Point((int)(0.4f * Buttons[0].Rect.Y), Buttons[0].Rect.Y);
+                }
             }
             else if (type == Type.Hint)
             {
@@ -408,6 +434,8 @@ namespace Barotrauma
                 }
             }
 
+            this.autoCloseCondition = autoCloseCondition;
+
             MessageBoxes.Add(this);
         }
 
@@ -448,7 +476,7 @@ namespace Barotrauma
                         {
                             // Message box not of type GUIMessageBox is likely the round summary
                             MessageBoxes[i].AddToGUIUpdateList();
-                            break;
+                            if (!(MessageBoxes[i].UserData is RoundSummary)) { break; }
                         }
                         continue;
                     }
@@ -471,6 +499,7 @@ namespace Barotrauma
         public void SetBackgroundIcon(Sprite icon)
         {
             if (icon == null) { return; }
+            if (icon == BackgroundIcon?.Sprite) { return; }
             GUIImage newIcon = new GUIImage(new RectTransform(icon.size.ToPoint(), RectTransform), icon)
             {
                 IgnoreLayoutGroups = true,
@@ -510,10 +539,10 @@ namespace Barotrauma
                 }
             }
 
-            if (type == Type.InGame || type == Type.Hint)
+            if (IsAnimated)
             {
                 Vector2 initialPos, defaultPos, endPos;
-                if (type == Type.InGame)
+                if (type == Type.InGame || type == Type.Tutorial)
                 {
                     initialPos = new Vector2(0.0f, GameMain.GraphicsHeight);
                     defaultPos = new Vector2(0.0f, HUDLayoutSettings.InventoryAreaLower.Y - InnerFrame.Rect.Height - 20 * GUI.Scale);
@@ -551,6 +580,14 @@ namespace Barotrauma
                     if (inGameCloseTimer >= inGameCloseTime)
                     {
                         Close();
+                    }
+                    else if (autoCloseCondition != null && autoCloseCondition())
+                    {
+                        Close();
+                        if (FlashOnAutoCloseCondition)
+                        {
+                            InnerFrame.Flash(GUIStyle.Green);
+                        }
                     }
                 }
                 else
@@ -593,7 +630,7 @@ namespace Barotrauma
                     {
                         newBackgroundIcon.SetAsFirstChild();
                         newBackgroundIcon.RectTransform.AbsoluteOffset = new Point(InnerFrame.Rect.Location.X - (int)(newBackgroundIcon.Rect.Size.X / 1.25f), (int)defaultPos.Y - newBackgroundIcon.Rect.Size.Y / 2);
-                        newBackgroundIcon.Color = ToolBox.GradientLerp(iconState, Color.Transparent, Color.White);
+                        newBackgroundIcon.Color = Color.Lerp(Color.Transparent, Color.White, iconState);
                         if (newBackgroundIcon.Color.A == 255)
                         {
                             BackgroundIcon = newBackgroundIcon;
@@ -608,10 +645,9 @@ namespace Barotrauma
             }
         }
 
-
         public void Close()
         {
-            if (type == Type.InGame || type == Type.Hint)
+            if (IsAnimated)
             {
                 closing = true;
             }
@@ -635,6 +671,19 @@ namespace Barotrauma
         {
             MessageBoxes.Clear();
         }
+
+        public static void Close(Identifier tag)
+        {
+            foreach (var messageBox in MessageBoxes)
+            {
+                if (messageBox is GUIMessageBox mb && mb.Tag == tag)
+                {
+                    mb.Close();
+                }
+            }
+        }
+
+        public static void Close(string tag) => Close(tag.ToIdentifier());
 
         /// <summary>
         /// Parent does not matter. It's overridden.

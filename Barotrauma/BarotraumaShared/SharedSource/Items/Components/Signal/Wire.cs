@@ -13,7 +13,7 @@ namespace Barotrauma.Items.Components
 {
     partial class Wire : ItemComponent, IDrawableComponent, IServerSerializable, IClientSerializable
     {
-        partial class WireSection
+        public partial class WireSection
         {
             private Vector2 start;
             private Vector2 end;
@@ -309,7 +309,7 @@ namespace Barotrauma.Items.Components
             if (nodes.Count == 0) { return; }
 
             Character user = item.ParentInventory?.Owner as Character;
-            editNodeDelay = (user?.SelectedConstruction == null) ? editNodeDelay - deltaTime : 0.5f;
+            editNodeDelay = (user?.SelectedItem == null) ? editNodeDelay - deltaTime : 0.5f;
 
             Submarine sub = item.Submarine;
             if (connections[0] != null && connections[0].Item.Submarine != null) { sub = connections[0].Item.Submarine; }
@@ -369,7 +369,7 @@ namespace Barotrauma.Items.Components
                         user.AnimController.Collider.ApplyForce(forceDir * user.Mass * 50.0f, maxVelocity: NetConfig.MaxPhysicsBodyVelocity * 0.5f);
                         if (diff.LengthSquared() > 50.0f * 50.0f)
                         {
-                            user.AnimController.UpdateUseItem(true, user.WorldPosition + pullBackDir * Math.Min(150.0f, diff.Length()));
+                            user.AnimController.UpdateUseItem(!user.IsClimbing, user.WorldPosition + pullBackDir * Math.Min(150.0f, diff.Length()));
                         }
 
                         if (GameMain.NetworkMember == null || GameMain.NetworkMember.IsServer)
@@ -428,7 +428,7 @@ namespace Barotrauma.Items.Components
         public override bool Use(float deltaTime, Character character = null)
         {
             if (character == null || character != Character.Controlled) { return false; }
-            if (character.SelectedConstruction != null) { return false; }
+            if (character.HasSelectedAnyItem) { return false; }
 #if CLIENT
             if (Screen.Selected == GameMain.SubEditorScreen && !PlayerInput.PrimaryMouseButtonClicked())
             {
@@ -775,20 +775,25 @@ namespace Barotrauma.Items.Components
             UpdateSections();
         }
 
-        public override void Load(ContentXElement componentElement, bool usePrefabValues, IdRemap idRemap)
+        public static IEnumerable<Vector2> ExtractNodes(XElement element)
         {
-            base.Load(componentElement, usePrefabValues, idRemap);
-
-            string nodeString = componentElement.GetAttributeString("nodes", "");
-            if (nodeString == "") return;
+            string nodeString = element.GetAttributeString("nodes", "");
+            if (nodeString.IsNullOrWhiteSpace()) { yield break; }
 
             string[] nodeCoords = nodeString.Split(';');
             for (int i = 0; i < nodeCoords.Length / 2; i++)
             {
-                float.TryParse(nodeCoords[i * 2], NumberStyles.Float, CultureInfo.InvariantCulture, out float x);
-                float.TryParse(nodeCoords[i * 2 + 1], NumberStyles.Float, CultureInfo.InvariantCulture, out float y);
-                nodes.Add(new Vector2(x, y));
+                float.TryParse(nodeCoords[i * 2].Trim(), NumberStyles.Float, CultureInfo.InvariantCulture, out float x);
+                float.TryParse(nodeCoords[i * 2 + 1].Trim(), NumberStyles.Float, CultureInfo.InvariantCulture, out float y);
+                yield return new Vector2(x, y);
             }
+        }
+        
+        public override void Load(ContentXElement componentElement, bool usePrefabValues, IdRemap idRemap)
+        {
+            base.Load(componentElement, usePrefabValues, idRemap);
+
+            nodes.AddRange(ExtractNodes(componentElement));
 
             Drawable = nodes.Any();
         }

@@ -10,7 +10,7 @@ namespace Barotrauma
     class HumanPrefab : PrefabWithUintIdentifier
     {
         [Serialize("any", IsPropertySaveable.No)]
-        public string Job { get; protected set; }
+        public Identifier Job { get; protected set; }
 
         [Serialize(1f, IsPropertySaveable.No)]
         public float Commonness { get; protected set; }
@@ -26,6 +26,32 @@ namespace Barotrauma
 
         [Serialize(1f, IsPropertySaveable.No)]
         public float AimAccuracy { get; protected set; }
+
+        [Serialize(1f, IsPropertySaveable.No)]
+        public float SkillMultiplier { get; protected set; }
+
+        [Serialize(0, IsPropertySaveable.No)]
+        public int ExperiencePoints { get; private set; }
+
+        private readonly HashSet<Identifier> tags = new HashSet<Identifier>();
+
+        [Serialize("", IsPropertySaveable.Yes)]
+        public string Tags
+        {
+            get => string.Join(",", tags);
+            set
+            {
+                tags.Clear();
+                if (!string.IsNullOrWhiteSpace(value))
+                {
+                    string[] splitTags = value.Split(',');
+                    foreach (var tag in splitTags)
+                    {
+                        tags.Add(tag.ToIdentifier());
+                    }
+                }
+            }
+        }
 
         private readonly HashSet<Identifier> moduleFlags = new HashSet<Identifier>();
 
@@ -79,20 +105,36 @@ namespace Barotrauma
 
         public Identifier[] PreferredOutpostModuleTypes { get; protected set; }
 
+        [Serialize("", IsPropertySaveable.No)]
+        public Identifier Faction { get; set; }
+
+        [Serialize("", IsPropertySaveable.No)]
+        public Identifier Group { get; set; }
+
+        [Serialize(false, IsPropertySaveable.No)]
+        public bool AllowDraggingIndefinitely { get; set; }
+
         public XElement Element { get; protected set; }
         
 
-        public readonly Dictionary<XElement, float> ItemSets = new Dictionary<XElement, float>();
-        public readonly Dictionary<XElement, float> CustomNPCSets = new Dictionary<XElement, float>();
+        public readonly List<(XElement element, float commonness)> ItemSets = new List<(XElement element, float commonness)>();
+        public readonly List<(XElement element, float commonness)> CustomCharacterInfos = new List<(XElement element, float commonness)>();
 
-        public HumanPrefab(ContentXElement element, ContentFile file) : base(file, element.GetAttributeIdentifier("identifier", ""))
+        public readonly Identifier NpcSetIdentifier;
+
+        public HumanPrefab(ContentXElement element, ContentFile file, Identifier npcSetIdentifier) : base(file, element.GetAttributeIdentifier("identifier", ""))
         {
             SerializableProperty.DeserializeProperties(this, element);
-            Job = Job.ToLowerInvariant();
             Element = element;
-            element.GetChildElements("itemset").ForEach(e => ItemSets.Add(e, e.GetAttributeFloat("commonness", 1)));
-            element.GetChildElements("character").ForEach(e => CustomNPCSets.Add(e, e.GetAttributeFloat("commonness", 1)));
+            element.GetChildElements("itemset").ForEach(e => ItemSets.Add((e, e.GetAttributeFloat("commonness", 1))));
+            element.GetChildElements("character").ForEach(e => CustomCharacterInfos.Add((e, e.GetAttributeFloat("commonness", 1))));
             PreferredOutpostModuleTypes = element.GetAttributeIdentifierArray("preferredoutpostmoduletypes", Array.Empty<Identifier>());
+            this.NpcSetIdentifier = npcSetIdentifier;
+        }
+
+        public IEnumerable<Identifier> GetTags()
+        {
+            return tags;
         }
 
         public IEnumerable<Identifier> GetModuleFlags()
@@ -107,7 +149,7 @@ namespace Barotrauma
 
         public JobPrefab GetJobPrefab(Rand.RandSync randSync = Rand.RandSync.Unsynced, Func<JobPrefab, bool> predicate = null)
         {
-            return Job != null && Job != "any" ? JobPrefab.Get(Job) : JobPrefab.Random(randSync, predicate);
+            return !Job.IsEmpty && Job != "any" ? JobPrefab.Get(Job) : JobPrefab.Random(randSync, predicate);
         }
 
         public void InitializeCharacter(Character npc, ISpatialEntity positionToStayIn = null)
@@ -146,26 +188,56 @@ namespace Barotrauma
             }
         }
 
-        public void GiveItems(Character character, Submarine submarine, Rand.RandSync randSync = Rand.RandSync.Unsynced, bool createNetworkEvents = true)
+        public bool GiveItems(Character character, Submarine submarine, WayPoint spawnPoint, Rand.RandSync randSync = Rand.RandSync.Unsynced, bool createNetworkEvents = true)
         {
-            if (ItemSets == null || !ItemSets.Any()) { return; }
-            var spawnItems = ToolBox.SelectWeightedRandom(ItemSets.Keys.ToList(), ItemSets.Values.ToList(), randSync);
+            if (ItemSets == null || !ItemSets.Any()) { return false; }
+            var spawnItems = ToolBox.SelectWeightedRandom(ItemSets, it => it.commonness, randSync).element;
             if (spawnItems != null)
             {
                 foreach (XElement itemElement in spawnItems.GetChildElements("item"))
                 {
-                    InitializeItem(character, itemElement, submarine, this, createNetworkEvents: createNetworkEvents);
+                    int amount = itemElement.GetAttributeInt("amount", 1);
+                    for (int i = 0; i < amount; i++)
+                    {
+                        InitializeItem(character, itemElement, submarine, this, spawnPoint, createNetworkEvents: createNetworkEvents);
+                    }
                 }
             }
+            return true;
         }
 
-        public CharacterInfo GetCharacterInfo(Rand.RandSync randSync = Rand.RandSync.Unsynced)
+        /// <summary>
+        /// Creates a character info from the human prefab. If there are custom character infos defined, those are used, otherwise a randomized info is generated.
+        /// </summary>
+        /// <param name="randSync"></param>
+        /// <returns></returns>
+        public CharacterInfo CreateCharacterInfo(Rand.RandSync randSync = Rand.RandSync.Unsynced)
         {
-            var characterElement = ToolBox.SelectWeightedRandom(CustomNPCSets.Keys.ToList(), CustomNPCSets.Values.ToList(), randSync);
-            return characterElement != null ? new CharacterInfo(characterElement) : null;
+            var characterElement = ToolBox.SelectWeightedRandom(CustomCharacterInfos, info => info.commonness, randSync).element;
+            CharacterInfo characterInfo;
+            if (characterElement == null)
+            {
+                characterInfo = new CharacterInfo(CharacterPrefab.HumanSpeciesName, jobOrJobPrefab: GetJobPrefab(randSync), npcIdentifier: Identifier, randSync: randSync);
+            }
+            else
+            {
+                characterInfo = new CharacterInfo(characterElement, Identifier);
+            }
+            if (characterInfo.Job != null && !MathUtils.NearlyEqual(SkillMultiplier, 1.0f))
+            {
+                foreach (var skill in characterInfo.Job.GetSkills())
+                {
+                    float newSkill = skill.Level * SkillMultiplier;
+                    skill.IncreaseSkill(newSkill - skill.Level, increasePastMax: false);
+                }
+                characterInfo.Salary = characterInfo.CalculateSalary();
+            }
+            characterInfo.HumanPrefabIds = (NpcSetIdentifier, Identifier);
+            characterInfo.GiveExperience(ExperiencePoints);
+            return characterInfo;
         }
 
-        public static void InitializeItem(Character character, XElement itemElement, Submarine submarine, HumanPrefab humanPrefab, Item parentItem = null, bool createNetworkEvents = true)
+        public static void InitializeItem(Character character, XElement itemElement, Submarine submarine, HumanPrefab humanPrefab, WayPoint spawnPoint = null, Item parentItem = null, bool createNetworkEvents = true)
         {
             ItemPrefab itemPrefab;
             string itemIdentifier = itemElement.GetAttributeString("identifier", "");
@@ -209,7 +281,7 @@ namespace Barotrauma
             IdCard idCardComponent = item.GetComponent<IdCard>();
             if (idCardComponent != null)
             {
-                idCardComponent.Initialize(null, character);
+                idCardComponent.Initialize(spawnPoint, character);
                 if (submarine != null && (submarine.Info.IsWreck || submarine.Info.IsOutpost))
                 {
                     idCardComponent.SubmarineSpecificID = submarine.SubmarineSpecificIDTag;
@@ -229,7 +301,11 @@ namespace Barotrauma
             parentItem?.Combine(item, user: null);
             foreach (XElement childItemElement in itemElement.Elements())
             {
-                InitializeItem(character, childItemElement, submarine, humanPrefab, item, createNetworkEvents);
+                int amount = childItemElement.GetAttributeInt("amount", 1);
+                for (int i = 0; i < amount; i++)
+                {
+                    InitializeItem(character, childItemElement, submarine, humanPrefab, spawnPoint, item, createNetworkEvents);
+                }
             }
         }
 

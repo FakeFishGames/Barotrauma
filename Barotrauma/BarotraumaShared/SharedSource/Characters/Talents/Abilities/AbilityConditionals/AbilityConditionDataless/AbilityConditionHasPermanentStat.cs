@@ -1,13 +1,11 @@
-﻿using System.Linq;
-using System.Xml.Linq;
-
-namespace Barotrauma.Abilities
+﻿namespace Barotrauma.Abilities
 {
     class AbilityConditionHasPermanentStat : AbilityConditionDataless
     {
         private readonly Identifier statIdentifier;
         private readonly StatTypes statType;
         private readonly float min;
+        private readonly PermanentStatPlaceholder placeholder;
 
         public AbilityConditionHasPermanentStat(CharacterTalent characterTalent, ContentXElement conditionElement) : base(characterTalent, conditionElement)
         {
@@ -19,11 +17,13 @@ namespace Barotrauma.Abilities
             string statTypeName = conditionElement.GetAttributeString("stattype", string.Empty);
             statType = string.IsNullOrEmpty(statTypeName) ? StatTypes.None : CharacterAbilityGroup.ParseStatType(statTypeName, characterTalent.DebugIdentifier);
             min = conditionElement.GetAttributeFloat("min", 0f);
+            placeholder = conditionElement.GetAttributeEnum("placeholder", PermanentStatPlaceholder.None);
         }
 
         protected override bool MatchesConditionSpecific()
         {
-            return character.Info.GetSavedStatValue(statType, statIdentifier) >= min;
+            Identifier identifier = CharacterAbilityGivePermanentStat.HandlePlaceholders(placeholder, statIdentifier);
+            return character.Info.GetSavedStatValue(statType, identifier) >= min;
         }
     }
 }

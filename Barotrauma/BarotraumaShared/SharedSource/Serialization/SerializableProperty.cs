@@ -154,6 +154,7 @@ namespace Barotrauma
             { typeof(float), "float" },
             { typeof(string), "string" },
             { typeof(Identifier), "identifier" },
+            { typeof(LanguageIdentifier), "languageidentifier" },
             { typeof(LocalizedString), "localizedstring" },
             { typeof(Point), "point" },
             { typeof(Vector2), "vector2" },
@@ -240,7 +241,7 @@ namespace Barotrauma
                 switch (typeName)
                 {
                     case "bool":
-                        bool boolValue = value == "true" || value == "True";
+                        bool boolValue = value.ToIdentifier() == "true";
                         if (TrySetBoolValueWithoutReflection(parentObject, boolValue)) { return true; }
                         PropertyInfo.SetValue(parentObject, boolValue, null);
                         break;
@@ -289,6 +290,9 @@ namespace Barotrauma
                         break;
                     case "identifier":
                         PropertyInfo.SetValue(parentObject, value.ToIdentifier());
+                        break;
+                    case "languageidentifier":
+                        PropertyInfo.SetValue(parentObject, value.ToLanguageIdentifier());
                         break;
                     case "localizedstring":
                         PropertyInfo.SetValue(parentObject, new RawLString(value));
@@ -372,6 +376,9 @@ namespace Barotrauma
                                 return true;
                             case "identifier":
                                 PropertyInfo.SetValue(parentObject, new Identifier((string)value));
+                                return true;
+                            case "languageidentifier":
+                                PropertyInfo.SetValue(parentObject, ((string)value).ToLanguageIdentifier());
                                 return true;
                             case "localizedstring":
                                 PropertyInfo.SetValue(parentObject, new RawLString((string)value));
@@ -508,7 +515,14 @@ namespace Barotrauma
 
             try
             {
-                return (float)PropertyInfo.GetValue(parentObject, null);
+                if (PropertyType == typeof(int))
+                {
+                    return (int)PropertyInfo.GetValue(parentObject, null);
+                }
+                else
+                {
+                    return (float)PropertyInfo.GetValue(parentObject, null);
+                }
             }
             catch (TargetInvocationException e)
             {
@@ -549,7 +563,7 @@ namespace Barotrauma
 
         public static string GetSupportedTypeName(Type type)
         {
-            if (type.IsEnum) return "Enum";
+            if (type.IsEnum) { return "Enum"; }
             if (!supportedTypes.TryGetValue(type, out string typeName))
             {
                 return null;
@@ -686,6 +700,29 @@ namespace Barotrauma
                 case nameof(Character.SpeedMultiplier):
                     { if (parentObject is Character character) { value = character.SpeedMultiplier; return true; } }
                     break;
+                case nameof(Character.PropulsionSpeedMultiplier):
+                    { if (parentObject is Character character) { value = character.PropulsionSpeedMultiplier; return true; } }
+                    break;
+                case nameof(Character.LowPassMultiplier):
+                    { if (parentObject is Character character) { value = character.LowPassMultiplier; return true; } }
+                    break;
+                case nameof(Character.HullOxygenPercentage):
+                    {
+                        if (parentObject is Character character) 
+                        { 
+                            value = character.HullOxygenPercentage;
+                            return true;
+                        }
+                        else if (parentObject is Item item)
+                        {
+                            value = item.HullOxygenPercentage;
+                            return true;
+                        }
+                    }
+                    break;
+                case nameof(Door.Stuck):
+                    { if (parentObject is Door door) { value = door.Stuck; return true; } }
+                    break;
             }
             return false;
         }
@@ -733,6 +770,23 @@ namespace Barotrauma
                 case nameof(Controller.State):
                     if (parentObject is Controller controller) { value = controller.State; return true; }
                     break;
+                case nameof(Character.InWater):
+                    {
+                        if (parentObject is Character character)
+                        {
+                            value = character.InWater;
+                            return true;
+                        }
+                        else if (parentObject is Item item)
+                        {
+                            value = item.InWater;
+                            return true;
+                        }
+                    }
+                    break;
+                case nameof(Rope.Snapped):
+                    if (parentObject is Rope rope) { value = rope.Snapped; return true; }
+                    break;
             }
             return false;
         }
@@ -762,7 +816,7 @@ namespace Barotrauma
             switch (Name)
             {
                 case nameof(Item.Condition):
-                    if (parentObject is Item item) { item.Condition = value; return true; }
+                    { if (parentObject is Item item) { item.Condition = value; return true; } }
                     break;
                 case nameof(Powered.Voltage):
                     if (parentObject is Powered powered) { powered.Voltage = value; return true; }
@@ -793,6 +847,9 @@ namespace Barotrauma
                     break;
                 case nameof(Character.PropulsionSpeedMultiplier):
                     { if (parentObject is Character character) { character.PropulsionSpeedMultiplier = value; return true; } }
+                    break;
+                case nameof(Item.Scale):
+                    { if (parentObject is Item item) { item.Scale = value; return true; } }
                     break;
             }
             return false;

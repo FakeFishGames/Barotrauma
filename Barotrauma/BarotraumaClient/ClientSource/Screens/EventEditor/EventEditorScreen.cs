@@ -179,7 +179,7 @@ namespace Barotrauma
                     // Ok button
                     msgBox.Buttons[1].OnClicked = delegate
                     {
-                        foreach (var illegalChar in Path.GetInvalidFileNameChars())
+                        foreach (var illegalChar in Path.GetInvalidFileNameCharsCrossPlatform())
                         {
                             if (!nameInput.Text.Contains(illegalChar)) { continue; }
 
@@ -274,7 +274,7 @@ namespace Barotrauma
             // Ok button
             msgBox.Buttons[1].OnClicked = delegate
             {
-                foreach (var illegalChar in Path.GetInvalidFileNameChars())
+                foreach (var illegalChar in Path.GetInvalidFileNameCharsCrossPlatform())
                 {
                     if (!nameInput.Text.Contains(illegalChar)) { continue; }
 
@@ -819,6 +819,15 @@ namespace Barotrauma
                         return true;
                     };
                     valueInput.Text = newValue?.ToString() ?? "<type here>";
+                }
+                else if (type == typeof(Identifier))
+                {
+                    GUITextBox valueInput = new GUITextBox(new RectTransform(Vector2.One, layout.RectTransform), newValue?.ToString() ?? string.Empty);
+                    valueInput.OnTextChanged += (component, o) =>
+                    {
+                        newValue = new Identifier(o);
+                        return true;
+                    };
                 }
                 else if (type == typeof(float) || type == typeof(int))
                 {

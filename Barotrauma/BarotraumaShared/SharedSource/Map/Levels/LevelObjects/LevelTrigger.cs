@@ -1,4 +1,5 @@
-﻿using Barotrauma.Networking;
+﻿using Barotrauma.Extensions;
+using Barotrauma.Networking;
 using FarseerPhysics;
 using FarseerPhysics.Dynamics;
 using FarseerPhysics.Dynamics.Contacts;
@@ -215,7 +216,7 @@ namespace Barotrauma
                 PhysicsBody.FarseerBody.SetIsSensor(element.GetAttributeBool("sensor", true));
                 PhysicsBody.FarseerBody.BodyType = BodyType.Static;
 
-                ColliderRadius = ConvertUnits.ToDisplayUnits(Math.Max(Math.Max(PhysicsBody.radius, PhysicsBody.width / 2.0f), PhysicsBody.height / 2.0f));
+                ColliderRadius = ConvertUnits.ToDisplayUnits(Math.Max(Math.Max(PhysicsBody.Radius, PhysicsBody.Width / 2.0f), PhysicsBody.Height / 2.0f));
 
                 PhysicsBody.SetTransform(ConvertUnits.ToSimUnits(position), rotation);
             }
@@ -658,10 +659,14 @@ namespace Barotrauma
                 {
                     effect.Apply(effect.type, deltaTime, triggerer, item.AllPropertyObjects, position);
                 }
+                else if (triggerer is Submarine sub)
+                {
+                    effect.Apply(effect.type, deltaTime, sub, Array.Empty<ISerializableEntity>(), position);
+                }
                 if (effect.HasTargetType(StatusEffect.TargetType.NearbyItems) || effect.HasTargetType(StatusEffect.TargetType.NearbyCharacters))
                 {
                     targets.Clear();
-                    targets.AddRange(effect.GetNearbyTargets(worldPosition, targets));
+                    effect.AddNearbyTargets(worldPosition, targets);
                     effect.Apply(effect.type, deltaTime, triggerer, targets);
                 }
             }
@@ -747,7 +752,7 @@ namespace Barotrauma
             Vector2 baseVel = GetWaterFlowVelocity();
             if (baseVel.LengthSquared() < 0.1f) return Vector2.Zero;
 
-            float triggerSize = ConvertUnits.ToDisplayUnits(Math.Max(Math.Max(PhysicsBody.radius, PhysicsBody.width / 2.0f), PhysicsBody.height / 2.0f));
+            float triggerSize = ConvertUnits.ToDisplayUnits(Math.Max(Math.Max(PhysicsBody.Radius, PhysicsBody.Width / 2.0f), PhysicsBody.Height / 2.0f));
             float dist = Vector2.Distance(viewPosition, WorldPosition);
             if (dist > triggerSize) return Vector2.Zero;
 

@@ -43,14 +43,32 @@ namespace Barotrauma
             }
         }
 
-        public int GetBuyprice(int level, Location? location = null)
+        public int GetBuyPrice(int level, Location? location = null, ImmutableHashSet<Character>? characterList = null)
         {
-            int price = BasePrice;
-            for (int i = 1; i <= level; i++)
+            float price = BasePrice;
+
+            int maxLevel = Prefab.MaxLevel;
+
+            float lerpAmount = maxLevel is 0
+                ? level // avoid division by 0
+                : level / (float)maxLevel;
+
+            float priceMultiplier = MathHelper.Lerp(IncreaseLow, IncreaseHigh, lerpAmount);
+            price += price * (priceMultiplier / 100f);
+
+            price = location?.GetAdjustedMechanicalCost((int)price) ?? price;
+
+            characterList ??= GameSession.GetSessionCrewCharacters(CharacterType.Both);
+
+            if (characterList.Any())
             {
-                price += (int)(price * MathHelper.Lerp(IncreaseLow, IncreaseHigh, i / (float)Prefab.MaxLevel) / 100);
+                if (location?.Faction is { } faction && Faction.GetPlayerAffiliationStatus(faction) is FactionAffiliation.Positive)
+                {
+                    price *= 1f - characterList.Max(static c => c.GetStatValue(StatTypes.ShipyardBuyMultiplierAffiliated));
+                }
+                price *= 1f - characterList.Max(static c => c.GetStatValue(StatTypes.ShipyardBuyMultiplier));
             }
-            return location?.GetAdjustedMechanicalCost(price) ?? price;
+            return (int)price;
         }
     }
 
@@ -107,8 +125,10 @@ namespace Barotrauma
         public readonly bool IsWallUpgrade;
         public readonly LocalizedString Name;
 
+        private readonly object mutex = new object();
+
         public readonly IEnumerable<Identifier> ItemTags;
-        
+
         public UpgradeCategory(ContentXElement element, UpgradeModulesFile file) : base(element, file)
         {
             selfItemTags = element.GetAttributeIdentifierArray("items", Array.Empty<Identifier>())?.ToImmutableHashSet() ?? ImmutableHashSet<Identifier>.Empty;
@@ -118,7 +138,6 @@ namespace Barotrauma
             ItemTags = selfItemTags.CollectionConcat(prefabsThatAllowUpgrades);
 
             Identifier nameIdentifier = element.GetAttributeIdentifier("nameidentifier", Identifier.Empty);
-
             if (!nameIdentifier.IsEmpty)
             {
                 Name = TextManager.Get($"{nameIdentifier}");
@@ -131,38 +150,35 @@ namespace Barotrauma
 
         public void DeterminePrefabsThatAllowUpgrades()
         {
-            prefabsThatAllowUpgrades.Clear();
-            prefabsThatAllowUpgrades.UnionWith(ItemPrefab.Prefabs
-                .Where(it => it.GetAllowedUpgrades().Contains(Identifier))
-                .Select(it => it.Identifier));
+            lock (mutex)
+            {
+                prefabsThatAllowUpgrades.Clear();
+                prefabsThatAllowUpgrades.UnionWith(ItemPrefab.Prefabs
+                    .Where(it => it.GetAllowedUpgrades().Contains(Identifier))
+                    .Select(it => it.Identifier));
+            }
         }
 
-        public bool CanBeApplied(Item item, UpgradePrefab? upgradePrefab)
+        public bool CanBeApplied(MapEntity item, UpgradePrefab? upgradePrefab)
         {
-            if (IsWallUpgrade) { return false; }
+            if (upgradePrefab != null && item.Submarine is { Info: var info } && !upgradePrefab.IsApplicable(info)) { return false; }
+
+            bool isStructure = item is Structure;
+            switch (IsWallUpgrade)
+            {
+                case true:
+                    return isStructure;
+                case false when isStructure:
+                    return false;
+            }
 
             if (upgradePrefab != null && upgradePrefab.IsDisallowed(item)) { return false; }
 
-            return ((MapEntity)item).Prefab.GetAllowedUpgrades().Contains(Identifier) ||
-                   ItemTags.Any(tag => item.Prefab.Tags.Contains(tag) || item.Prefab.Identifier == tag);
-        }
-
-        public bool CanBeApplied(XElement element, UpgradePrefab prefab)
-        {
-            if ("Structure" == element.NameAsIdentifier()) { return IsWallUpgrade; }
-
-            Identifier identifier = element.GetAttributeIdentifier("identifier", Identifier.Empty);
-            if (identifier.IsEmpty) { return false; }
-
-            ItemPrefab? item = ItemPrefab.Find(null, identifier);
-            if (item == null) { return false; }
-
-            Identifier[] disallowedUpgrades = element.GetAttributeIdentifierArray("disallowedupgrades", Array.Empty<Identifier>());
-
-            if (disallowedUpgrades.Any(s => s == Identifier || s == prefab.Identifier)) { return false; }
-
-            return item.GetAllowedUpgrades().Contains(Identifier) || 
-                   ItemTags.Any(tag => item.Tags.Contains(tag) || item.Identifier == tag);
+            lock (mutex)
+            {
+                return item.Prefab.GetAllowedUpgrades().Contains(Identifier) ||
+                       ItemTags.Any(tag => item.Prefab.Tags.Contains(tag) || item.Prefab.Identifier == tag);
+            }
         }
 
         public static UpgradeCategory? Find(Identifier identifier)
@@ -173,10 +189,143 @@ namespace Barotrauma
         public override void Dispose() { }
     }
 
-    internal partial class UpgradePrefab : UpgradeContentPrefab
+    internal readonly struct UpgradeMaxLevelMod
+    {
+        private enum MaxLevelModType
+        {
+            Invalid,
+            Increase,
+            Set
+        }
+
+        private readonly Either<SubmarineClass, int> tierOrClass;
+        private readonly int value;
+        private readonly MaxLevelModType type;
+
+        public int GetLevelAfter(int level) =>
+            type switch
+            {
+                MaxLevelModType.Invalid => level,
+                MaxLevelModType.Increase => level + value,
+                MaxLevelModType.Set => value,
+                _ => throw new ArgumentOutOfRangeException()
+            };
+
+        public bool AppliesTo(SubmarineClass subClass, int subTier)
+        {
+            if (type is MaxLevelModType.Invalid) { return false; }
+
+            if (GameMain.GameSession?.Campaign?.CampaignMetadata is { } metadata)
+            {
+                int modifier = metadata.GetInt(new Identifier("tiermodifieroverride"), 0);
+
+                subTier = Math.Max(modifier, subTier);
+            }
+
+            if (tierOrClass.TryGet(out int tier))
+            {
+                return subTier == tier;
+            }
+
+            if (tierOrClass.TryGet(out SubmarineClass targetClass))
+            {
+                return subClass == targetClass;
+            }
+
+            return false;
+        }
+
+        public UpgradeMaxLevelMod(ContentXElement element)
+        {
+            bool isValid = true;
+
+            SubmarineClass subClass = element.GetAttributeEnum("class", SubmarineClass.Undefined);
+            int tier = element.GetAttributeInt("tier", 0);
+            if (subClass != SubmarineClass.Undefined)
+            {
+                tierOrClass = subClass;
+            }
+            else
+            {
+                tierOrClass = tier;
+            }
+
+            string stringValue = element.GetAttributeString("level", null) ?? string.Empty;
+            value = 0;
+
+            if (string.IsNullOrWhiteSpace(stringValue)) { isValid = false; }
+
+            char firstChar = stringValue[0];
+
+            if (!int.TryParse(stringValue, NumberStyles.Any, CultureInfo.InvariantCulture, out var intValue)) { isValid = false; }
+            value = intValue;
+
+            if (firstChar.Equals('+') || firstChar.Equals('-'))
+            {
+                type = MaxLevelModType.Increase;
+            }
+            else
+            {
+                type = MaxLevelModType.Set;
+            }
+
+            if (!isValid) { type = MaxLevelModType.Invalid; }
+        }
+    }
+
+    internal readonly struct UpgradeResourceCost
+    {
+        public readonly int Amount;
+        private readonly ImmutableArray<Identifier> targetTags;
+        public readonly Range<int> TargetLevels;
+
+        public UpgradeResourceCost(ContentXElement element)
+        {
+            Amount = element.GetAttributeInt("amount", 0);
+            targetTags = element.GetAttributeIdentifierArray("item", Array.Empty<Identifier>())!.ToImmutableArray();
+            TargetLevels = element.GetAttributeRange("levels", new Range<int>(0, 99));
+        }
+
+        public bool AppliesForLevel(int currentLevel) => TargetLevels.Contains(currentLevel);
+
+        public bool AppliesForLevel(Range<int> newLevels) => newLevels.Start <= TargetLevels.End && newLevels.End >= TargetLevels.Start;
+
+        public bool MatchesItem(Item item) => MatchesItem(item.Prefab);
+
+        public bool MatchesItem(ItemPrefab item)
+        {
+            foreach (Identifier tag in targetTags)
+            {
+                if (tag.Equals(item.Identifier) || item.Tags.Contains(tag)) { return true; }
+            }
+
+            return false;
+        }
+    }
+
+    internal readonly struct ApplicableResourceCollection
+    {
+        public readonly ImmutableArray<ItemPrefab> MatchingItems;
+        public readonly UpgradeResourceCost Cost;
+        public readonly int Count;
+
+        public ApplicableResourceCollection(IEnumerable<ItemPrefab> matchingItems, int count, UpgradeResourceCost cost)
+        {
+            MatchingItems = matchingItems.ToImmutableArray();
+            Count = count;
+            Cost = cost;
+        }
+
+        public static ApplicableResourceCollection CreateFor(UpgradeResourceCost cost)
+        {
+            return new ApplicableResourceCollection(ItemPrefab.Prefabs.Where(cost.MatchesItem), cost.Amount, cost);
+        }
+    }
+
+    internal sealed partial class UpgradePrefab : UpgradeContentPrefab
     {
         public static readonly PrefabCollection<UpgradePrefab> Prefabs = new PrefabCollection<UpgradePrefab>(
-            onAdd: (prefab, isOverride) =>
+            onAdd: static (prefab, isOverride) =>
             {
                 if (!prefab.SuppressWarnings && !isOverride)
                 {
@@ -205,10 +354,13 @@ namespace Barotrauma
             onRemoveOverrideFile: null
         );
 
-        public int MaxLevel { get; }
+        /// <summary>
+        /// Maximum upgrade level without taking submarine tier or class restrictions into account
+        /// </summary>
+        public readonly int MaxLevel;
 
         public LocalizedString Name { get; }
-        
+
         public LocalizedString Description { get; }
 
         public float IncreaseOnTooltip { get; }
@@ -232,8 +384,6 @@ namespace Barotrauma
 
         public ContentXElement SourceElement { get; }
 
-        private bool disposed;
-
         public bool SuppressWarnings { get; }
 
         public bool HideInMenus { get; }
@@ -243,6 +393,8 @@ namespace Barotrauma
         public bool IsWallUpgrade => UpgradeCategories.All(u => u.IsWallUpgrade);
 
         private Dictionary<string, string[]> targetProperties { get; }
+        private readonly ImmutableArray<UpgradeMaxLevelMod> MaxLevelsMods;
+        public readonly ImmutableHashSet<UpgradeResourceCost> ResourceCosts;
 
         public UpgradePrefab(ContentXElement element, UpgradeModulesFile file) : base(element, file)
         {
@@ -254,6 +406,8 @@ namespace Barotrauma
             SourceElement = element;
 
             var targetProperties = new Dictionary<string, string[]>();
+            var maxLevels = new List<UpgradeMaxLevelMod>();
+            var resourceCosts = new HashSet<UpgradeResourceCost>();
 
             Identifier nameIdentifier = element.GetAttributeIdentifier("nameidentifier", "");
             if (!nameIdentifier.IsEmpty)
@@ -291,6 +445,16 @@ namespace Barotrauma
                         Price = new UpgradePrice(this, subElement);
                         break;
                     }
+                    case "maxlevel":
+                    {
+                        maxLevels.Add(new UpgradeMaxLevelMod(subElement));
+                        break;
+                    }
+                    case "resourcecost":
+                    {
+                        resourceCosts.Add(new UpgradeResourceCost(subElement));
+                        break;
+                    }
 #if CLIENT
                     case "decorativesprite":
                     {
@@ -321,14 +485,110 @@ namespace Barotrauma
 #endif
 
             this.targetProperties = targetProperties;
+            MaxLevelsMods = maxLevels.ToImmutableArray();
+            ResourceCosts = resourceCosts.ToImmutableHashSet();
 
             upgradeCategoryIdentifiers = element.GetAttributeIdentifierArray("categories", Array.Empty<Identifier>())?
                 .ToImmutableHashSet() ?? ImmutableHashSet<Identifier>.Empty;
         }
 
-        public bool IsDisallowed(Item item)
+        /// <summary>
+        /// Returns the maximum upgrade level for the current sub, taking tier and class restrictions into account
+        /// </summary>
+        public int GetMaxLevelForCurrentSub()
         {
-            return item.DisallowedUpgradeSet.Contains(Identifier) || UpgradeCategories.Any(c => item.DisallowedUpgradeSet.Contains(c.Identifier));
+            Submarine? sub = GameMain.GameSession?.Submarine ?? Submarine.MainSub;
+            return sub is { Info: var info } ? GetMaxLevel(info) : MaxLevel;
+        }
+
+        /// <summary>
+        /// Returns the maximum upgrade level for the specified sub, taking tier and class restrictions into account
+        /// </summary>
+        public int GetMaxLevel(SubmarineInfo info)
+        {
+            int level = MaxLevel;
+
+            int tier = info.Tier;
+
+            if (GameMain.GameSession?.Campaign?.CampaignMetadata is { } metadata)
+            {
+                int modifier = metadata.GetInt(new Identifier($"tiermodifiers.{Identifier}"), 0);
+                tier += modifier;
+            }
+
+            tier = Math.Clamp(tier, 1, SubmarineInfo.HighestTier);
+
+            foreach (UpgradeMaxLevelMod mod in MaxLevelsMods)
+            {
+                if (mod.AppliesTo(info.SubmarineClass, tier)) { level = mod.GetLevelAfter(level); }
+            }
+
+            return level;
+        }
+
+        public bool IsApplicable(SubmarineInfo? info)
+        {
+            if (info is null) { return false; }
+
+            return GetMaxLevel(info) > 0;
+        }
+
+        public bool HasResourcesToUpgrade(Character? character, int currentLevel)
+        {
+            if (character is null) { return false; }
+            if (!ResourceCosts.Any()) { return true; }
+
+            List<Item> allItems = character.Inventory.FindAllItems(recursive: true);
+            return ResourceCosts.Where(cost => cost.AppliesForLevel(currentLevel)).All(cost => cost.Amount <= allItems.Count(cost.MatchesItem));
+        }
+
+        public bool TryTakeResources(Character character, int currentLevel)
+        {
+            IEnumerable<UpgradeResourceCost> costs = ResourceCosts.Where(cost => cost.AppliesForLevel(currentLevel));
+
+            if (!costs.Any()) { return true; }
+
+            List<Item> allItems = character.Inventory.FindAllItems(recursive: true);
+            HashSet<Item> itemsToRemove = new HashSet<Item>();
+
+            foreach (UpgradeResourceCost cost in costs)
+            {
+                int amountNeeded = cost.Amount;
+                foreach (Item item in allItems.Where(cost.MatchesItem))
+                {
+                    itemsToRemove.Add(item);
+                    amountNeeded--;
+                    if (amountNeeded <= 0) { break; }
+                }
+
+                if (amountNeeded > 0) { return false; }
+            }
+
+            foreach (Item item in itemsToRemove)
+            {
+                Entity.Spawner.AddItemToRemoveQueue(item);
+            }
+
+            if (GameMain.IsMultiplayer) { character.Inventory.CreateNetworkEvent(); }
+
+            return true;
+        }
+
+        public ImmutableArray<ApplicableResourceCollection> GetApplicableResources(int level)
+        {
+            var applicableCosts = ResourceCosts.Where(cost => cost.AppliesForLevel(level)).ToImmutableHashSet();
+
+            var costs = applicableCosts.Any()
+                ? applicableCosts.Select(ApplicableResourceCollection.CreateFor).ToImmutableArray()
+                : ImmutableArray<ApplicableResourceCollection>.Empty;
+
+            return costs;
+        }
+
+        public bool IsDisallowed(MapEntity item)
+        {
+            return item.DisallowedUpgradeSet.Contains(Identifier)
+                   || UpgradeCategories.Any(c => item.DisallowedUpgradeSet.Contains(c.Identifier));
         }
 
         public static UpgradePrefab? Find(Identifier identifier)
@@ -398,18 +658,12 @@ namespace Barotrauma
 
         public override void Dispose()
         {
-            if (!disposed)
-            {
-                Prefabs.Remove(this);
 #if CLIENT
-                Sprite?.Remove();
-                Sprite = null;
-                DecorativeSprites.ForEach(sprite => sprite.Remove());
-                targetProperties.Clear();
+            Sprite?.Remove();
+            Sprite = null;
+            DecorativeSprites.ForEach(sprite => sprite.Remove());
+            targetProperties.Clear();
 #endif
-            }
-
-            disposed = true;
         }
     }
 }

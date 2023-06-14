@@ -2,6 +2,7 @@
 
 using Microsoft.Xna.Framework;
 using System.Collections.Generic;
+using System.Linq;
 using System.Xml.Linq;
 
 namespace Barotrauma
@@ -10,12 +11,18 @@ namespace Barotrauma
     {
         public static CampaignSettings Empty => new CampaignSettings(element: null);
 
+#if CLIENT
+        public static CampaignSettings CurrentSettings = new CampaignSettings(GameSettings.CurrentConfig.SavedCampaignSettings);
+#endif
         public string Name => "CampaignSettings";
 
         public const string LowerCaseSaveElementName = "campaignsettings";
 
-        [Serialize("", IsPropertySaveable.Yes)]
+        [Serialize("Normal", IsPropertySaveable.Yes)]
         public string PresetName { get; set; } = string.Empty;
+
+        [Serialize(true, IsPropertySaveable.Yes)]
+        public bool TutorialEnabled { get; set; }
 
         [Serialize(false, IsPropertySaveable.Yes), NetworkSerialize]
         public bool RadiationEnabled { get; set; }
@@ -49,7 +56,6 @@ namespace Barotrauma
                     return definition.GetInt(StartingBalanceAmount.ToIdentifier());
                 }
                 return 8000;
-                
             }
         }
 
@@ -61,7 +67,7 @@ namespace Barotrauma
                 {
                     return definition.GetFloat(Difficulty.ToIdentifier());
                 }
-                return 0;                
+                return 0;
             }
         }
 
@@ -103,12 +109,9 @@ namespace Barotrauma
 
         private static int GetAddedMissionCount()
         {
-            int count = 0;
-            foreach (Character character in GameSession.GetSessionCrewCharacters(CharacterType.Both))
-            {
-                count += (int)character.GetStatValue(StatTypes.ExtraMissionCount);
-            }
-            return count;
+            var characters = GameSession.GetSessionCrewCharacters(CharacterType.Both);
+            if (!characters.Any()) { return 0; }
+            return characters.Max(static character => (int)character.GetStatValue(StatTypes.ExtraMissionCount));
         }
     }
 }

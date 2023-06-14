@@ -79,13 +79,13 @@ namespace Barotrauma
                     new Vector2(DrawPosition.X, -DrawPosition.Y),
                     Color.Cyan, 0, 5);
             }
-            if (bodyShapeTexture == null && IsValidShape(radius, height, width))
+            if (bodyShapeTexture == null && IsValidShape(Radius, Height, Width))
             {
                 switch (BodyShape)
                 {
                     case Shape.Rectangle:
                         {
-                            float maxSize = Math.Max(ConvertUnits.ToDisplayUnits(width), ConvertUnits.ToDisplayUnits(height));
+                            float maxSize = Math.Max(ConvertUnits.ToDisplayUnits(Width), ConvertUnits.ToDisplayUnits(Height));
                             if (maxSize > 128.0f)
                             {
                                 bodyShapeTextureScale = 128.0f / maxSize;
@@ -96,14 +96,14 @@ namespace Barotrauma
                             }
 
                             bodyShapeTexture = GUI.CreateRectangle(
-                                (int)ConvertUnits.ToDisplayUnits(width * bodyShapeTextureScale),
-                                (int)ConvertUnits.ToDisplayUnits(height * bodyShapeTextureScale));
+                                (int)ConvertUnits.ToDisplayUnits(Width * bodyShapeTextureScale),
+                                (int)ConvertUnits.ToDisplayUnits(Height * bodyShapeTextureScale));
                             break;
                         }
                     case Shape.Capsule:
                     case Shape.HorizontalCapsule:
                         {
-                            float maxSize = Math.Max(ConvertUnits.ToDisplayUnits(radius), ConvertUnits.ToDisplayUnits(Math.Max(height, width)));
+                            float maxSize = Math.Max(ConvertUnits.ToDisplayUnits(Radius), ConvertUnits.ToDisplayUnits(Math.Max(Height, Width)));
                             if (maxSize > 128.0f)
                             {
                                 bodyShapeTextureScale = 128.0f / maxSize;
@@ -114,20 +114,20 @@ namespace Barotrauma
                             }
 
                             bodyShapeTexture = GUI.CreateCapsule(
-                                (int)ConvertUnits.ToDisplayUnits(radius * bodyShapeTextureScale),
-                                (int)ConvertUnits.ToDisplayUnits(Math.Max(height, width) * bodyShapeTextureScale));
+                                (int)ConvertUnits.ToDisplayUnits(Radius * bodyShapeTextureScale),
+                                (int)ConvertUnits.ToDisplayUnits(Math.Max(Height, Width) * bodyShapeTextureScale));
                             break;
                         }
                     case Shape.Circle:
-                        if (ConvertUnits.ToDisplayUnits(radius) > 128.0f)
+                        if (ConvertUnits.ToDisplayUnits(Radius) > 128.0f)
                         {
-                            bodyShapeTextureScale = 128.0f / ConvertUnits.ToDisplayUnits(radius);
+                            bodyShapeTextureScale = 128.0f / ConvertUnits.ToDisplayUnits(Radius);
                         }
                         else
                         {
                             bodyShapeTextureScale = 1.0f;
                         }
-                        bodyShapeTexture = GUI.CreateCircle((int)ConvertUnits.ToDisplayUnits(radius * bodyShapeTextureScale));
+                        bodyShapeTexture = GUI.CreateCircle((int)ConvertUnits.ToDisplayUnits(Radius * bodyShapeTextureScale));
                         break;
                     default:
                         throw new NotImplementedException();

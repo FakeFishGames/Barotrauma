@@ -12,7 +12,7 @@ namespace Steamworks
 	/// </summary>
 	public class SteamVideo : SteamClientClass<SteamVideo>
 	{
-		internal static ISteamVideo Internal => Interface as ISteamVideo;
+		internal static ISteamVideo? Internal => Interface as ISteamVideo;
 
 		internal override void InitializeInterface( bool server )
 		{
@@ -26,8 +26,8 @@ namespace Steamworks
 			Dispatch.Install<BroadcastUploadStop_t>( x => OnBroadcastStopped?.Invoke( x.Result ) );
 		}
 
-		public static event Action OnBroadcastStarted;
-		public static event Action<BroadcastUploadResult> OnBroadcastStopped;
+		public static event Action? OnBroadcastStarted;
+		public static event Action<BroadcastUploadResult>? OnBroadcastStopped;
 
 		/// <summary>
 		/// Return true if currently using Steam's live broadcasting
@@ -37,7 +37,7 @@ namespace Steamworks
 			get
 			{
 				int viewers = 0;
-				return Internal.IsBroadcasting( ref viewers );
+				return Internal != null && Internal.IsBroadcasting( ref viewers );
 			}
 		}
 
@@ -50,7 +50,7 @@ namespace Steamworks
 			{
 				int viewers = 0;
 
-				if ( !Internal.IsBroadcasting( ref viewers ) )
+				if ( Internal is null || !Internal.IsBroadcasting( ref viewers ) )
 					return 0;
 
 				return viewers;

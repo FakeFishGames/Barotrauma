@@ -1,8 +1,10 @@
-﻿using Barotrauma.Items.Components;
+﻿using Barotrauma.Extensions;
+using Barotrauma.Items.Components;
 using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
 using System.Collections.Generic;
 using System.Linq;
+using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
@@ -19,7 +21,7 @@ namespace Barotrauma
             bool accessible = c.Character.CanAccessInventory(this);
             if (this is CharacterInventory characterInventory && accessible)
             {
-                if (Owner == null || !(Owner is Character ownerCharacter))
+                if (Owner == null || Owner is not Character ownerCharacter)
                 {
                     accessible = false;
                 }
@@ -39,7 +41,7 @@ namespace Barotrauma
                 {
                     foreach (ushort id in newItemIDs[i])
                     {
-                        if (!(Entity.FindEntityByID(id) is Item item)) { continue; }
+                        if (Entity.FindEntityByID(id) is not Item item) { continue; }
                         item.PositionUpdateInterval = 0.0f;
                         if (item.ParentInventory != null && item.ParentInventory != this)
                         {
@@ -94,7 +96,15 @@ namespace Barotrauma
             {
                 foreach (ushort id in newItemIDs[i])
                 {
-                    if (!(Entity.FindEntityByID(id) is Item item) || slots[i].Contains(item)) { continue; }
+                    if (Entity.FindEntityByID(id) is not Item item || slots[i].Contains(item)) { continue; }
+
+                    if (item.GetComponent<Pickable>() is not Pickable pickable ||
+                        (pickable.IsAttached && !pickable.PickingDone) ||
+                        item.AllowedSlots.None())
+                    {
+                        DebugConsole.AddWarning($"Client {c.Name} tried to pick up a non-pickable item \"{item}\" (parent inventory: {item.ParentInventory?.Owner.ToString() ?? "null"})");
+                        continue;
+                    }
 
                     if (GameMain.Server != null)
                     {
@@ -105,7 +115,7 @@ namespace Barotrauma
                             (c.Character == null || item.PreviousParentInventory == null || !c.Character.CanAccessInventory(item.PreviousParentInventory)))
                         {
     #if DEBUG || UNSTABLE
-                            DebugConsole.NewMessage($"Client {c.Name} failed to pick up item \"{item}\" (parent inventory: {(item.ParentInventory?.Owner.ToString() ?? "null")}). No access.", Color.Yellow);
+                            DebugConsole.NewMessage($"Client {c.Name} failed to pick up item \"{item}\" (parent inventory: {item.ParentInventory?.Owner.ToString() ?? "null"}). No access.", Color.Yellow);
     #endif
                             if (item.body != null && !c.PendingPositionUpdates.Contains(item))
                             {
@@ -125,6 +135,8 @@ namespace Barotrauma
                     }
                 }
             }
+
+            EnsureItemsInBothHands(c.Character);
 
             CreateNetworkEvent();
             foreach (Inventory prevInventory in prevItemInventories.Distinct())
@@ -163,6 +175,33 @@ namespace Barotrauma
                     }
                 }
             }
+        }
+
+        private void EnsureItemsInBothHands(Character character)
+        {
+            if (this is not CharacterInventory charInv) { return; }
+
+            int leftHandSlot = charInv.FindLimbSlot(InvSlotType.LeftHand),
+                rightHandSlot = charInv.FindLimbSlot(InvSlotType.RightHand);
+
+            if (IsSlotIndexOutOfBound(leftHandSlot) || IsSlotIndexOutOfBound(rightHandSlot)) { return; }
+
+            TryPutInOppositeHandSlot(rightHandSlot, leftHandSlot);
+            TryPutInOppositeHandSlot(leftHandSlot, rightHandSlot);
+
+            void TryPutInOppositeHandSlot(int originalSlot, int otherHandSlot)
+            {
+                const InvSlotType bothHandSlot = InvSlotType.LeftHand | InvSlotType.RightHand;
+
+                foreach (Item it in slots[originalSlot].Items)
+                {
+                    if (it.AllowedSlots.None(static s => s.HasFlag(bothHandSlot)) || slots[otherHandSlot].Contains(it)) { continue; }
+
+                    TryPutItem(it, otherHandSlot, true, true, character, false);
+                }
+            }
+
+            bool IsSlotIndexOutOfBound(int index) => index < 0 || index >= slots.Length;
         }
 
         public void ServerEventWrite(IWriteMessage msg, Client c, NetEntityEvent.IData extraData = null)

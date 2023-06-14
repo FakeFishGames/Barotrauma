@@ -35,6 +35,13 @@ namespace Barotrauma
             Rectangle camView = cam.WorldView;
             camView = new Rectangle(camView.X - CullMargin, camView.Y + CullMargin, camView.Width + CullMargin * 2, camView.Height + CullMargin * 2);
 
+            if (Level.Loaded?.Renderer?.CollapseEffectStrength is > 0.0f)
+            {
+                //force everything to be visible when the collapse effect (which moves everything to a single point) is active
+                camView = Rectangle.Union(AbsRect(camView.Location.ToVector2(), camView.Size.ToVector2()), new Rectangle(Point.Zero, Level.Loaded.Size));
+                camView.Y += camView.Height;
+            }
+
             if (Math.Abs(camView.X - prevCullArea.X) < CullMoveThreshold &&
                 Math.Abs(camView.Y - prevCullArea.Y) < CullMoveThreshold &&
                 Math.Abs(camView.Right - prevCullArea.Right) < CullMoveThreshold &&

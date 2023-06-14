@@ -8,6 +8,7 @@ using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
 using Barotrauma.IO;
+using Barotrauma.Utils;
 using System.Linq;
 using System.Xml.Linq;
 using SpriteParams = Barotrauma.RagdollParams.SpriteParams;
@@ -260,9 +261,7 @@ namespace Barotrauma
                 {
                     if (enableHuskSprite)
                     {
-                        List<WearableSprite> otherWearablesWithHusk = new List<WearableSprite>() { HuskSprite };
-                        otherWearablesWithHusk.AddRange(OtherWearables);
-                        OtherWearables = otherWearablesWithHusk;
+                        OtherWearables.Insert(0, HuskSprite);
                         UpdateWearableTypesToHide();
                     }
                     else
@@ -481,7 +480,7 @@ namespace Barotrauma
                 {
                     ContentPath texturePath =
                         character.Params.VariantFile?.Root?.GetAttributeContentPath("texture", character.Prefab.ContentPackage)
-                        ?? ContentPath.FromRaw(character.Prefab.ContentPackage, spriteParams.GetTexturePath());
+                        ?? ContentPath.FromRaw(spriteParams.Element.ContentPackage ?? character.Prefab.ContentPackage, spriteParams.GetTexturePath());
                     path = GetSpritePath(texturePath);
                 }
                 else
@@ -546,7 +545,7 @@ namespace Barotrauma
             {
                 foreach (var affliction in result.Afflictions)
                 {
-                    if (affliction is AfflictionBleeding)
+                    if (affliction is AfflictionBleeding bleeding && bleeding.Prefab.DamageParticles)
                     {
                         bleedingDamage += affliction.GetVitalityDecrease(null);
                     }
@@ -555,7 +554,7 @@ namespace Barotrauma
             float damage = 0;
             foreach (var affliction in result.Afflictions)
             {
-                if (affliction.Prefab.AfflictionType == "damage")
+                if (affliction.Prefab.DamageParticles && affliction.Prefab.AfflictionType == AfflictionPrefab.DamageType)
                 {
                     damage += affliction.GetVitalityDecrease(null);
                 }
@@ -564,11 +563,11 @@ namespace Barotrauma
             float bleedingDamageMultiplier = 1;
             foreach (DamageModifier damageModifier in result.AppliedDamageModifiers)
             {
-                if (damageModifier.MatchesAfflictionType("damage"))
+                if (damageModifier.MatchesAfflictionType(AfflictionPrefab.DamageType))
                 {
                     damageMultiplier *= damageModifier.DamageMultiplier;
                 }
-                else if (damageModifier.MatchesAfflictionType("bleeding"))
+                else if (damageModifier.MatchesAfflictionType(AfflictionPrefab.BleedingType))
                 {
                     bleedingDamageMultiplier *= damageModifier.DamageMultiplier;
                 }
@@ -600,7 +599,7 @@ namespace Barotrauma
                     {
                         if (damageModifier.DamageMultiplier > 0 && !string.IsNullOrWhiteSpace(damageModifier.DamageParticle))
                         {
-                            overrideParticle = GameMain.ParticleManager?.FindPrefab(damageModifier.DamageParticle);
+                            overrideParticle = ParticleManager.FindPrefab(damageModifier.DamageParticle);
                             break;
                         }
                     }
@@ -647,7 +646,7 @@ namespace Barotrauma
                     dripParticleTimer += wetTimer * deltaTime * Mass * (wetTimer > 0.9f ? 50.0f : 5.0f);
                     if (dripParticleTimer > 1.0f)
                     {
-                        float dropRadius = body.BodyShape == PhysicsBody.Shape.Rectangle ? Math.Min(body.width, body.height) : body.radius;
+                        float dropRadius = body.BodyShape == PhysicsBody.Shape.Rectangle ? Math.Min(body.Width, body.Height) : body.Radius;
                         GameMain.ParticleManager.CreateParticle(
                             "waterdrop", 
                             WorldPosition + Rand.Vector(Rand.Range(0.0f, ConvertUnits.ToDisplayUnits(dropRadius))), 
@@ -684,10 +683,10 @@ namespace Barotrauma
 
         public void Draw(SpriteBatch spriteBatch, Camera cam, Color? overrideColor = null, bool disableDeformations = false)
         {
-            float brightness = Math.Max(1.0f - burnOverLayStrength, 0.2f);
             var spriteParams = Params.GetSprite();
             if (spriteParams == null) { return; }
-
+            float burn = spriteParams.IgnoreTint ? 0 : burnOverLayStrength;
+            float brightness = Math.Max(1.0f - burn, 0.2f);
             Color clr = spriteParams.Color;
             if (!spriteParams.IgnoreTint)
             {
@@ -728,11 +727,11 @@ namespace Barotrauma
                 }
             }
             
-            float herpesStrength = character.CharacterHealth.GetAfflictionStrength("spaceherpes");
+            float herpesStrength = character.CharacterHealth.GetAfflictionStrength(AfflictionPrefab.SpaceHerpesType);
 
             bool hideLimb = Hide || 
                 OtherWearables.Any(w => w.HideLimb) || 
-                wearingItems.Any(w => w != null && w.HideLimb);
+                WearingItems.Any(w => w.HideLimb);
 
             bool drawHuskSprite = HuskSprite != null && !wearableTypesToHide.Contains(WearableType.Husk);
 
@@ -828,7 +827,7 @@ namespace Barotrauma
                 LightSource.LightSpriteEffect = (dir == Direction.Right) ? SpriteEffects.None : SpriteEffects.FlipVertically;
             }
             float step = depthStep;
-            WearableSprite onlyDrawable = wearingItems.Find(w => w.HideOtherWearables);
+            WearableSprite onlyDrawable = WearingItems.Find(w => w.HideOtherWearables);
             if (Params.MirrorHorizontally)
             {
                 spriteEffect = spriteEffect == SpriteEffects.None ? SpriteEffects.FlipHorizontally : SpriteEffects.None;
@@ -965,31 +964,28 @@ namespace Barotrauma
 
         public void UpdateWearableTypesToHide()
         {
+            alphaClipEffectParams?.Clear();
+
             wearableTypeHidingSprites.Clear();
-            if (WearingItems != null && WearingItems.Count > 0)
+
+            void addWearablesFrom(IReadOnlyList<WearableSprite> wearableSprites)
             {
+                if (wearableSprites.Count <= 0) { return; }
+
                 wearableTypeHidingSprites.AddRange(
-                    WearingItems.FindAll(w => w.HideWearablesOfType != null && w.HideWearablesOfType.Count > 0));
-            }
-            if (OtherWearables != null && OtherWearables.Count > 0)
-            {
-                wearableTypeHidingSprites.AddRange(
-                    OtherWearables.FindAll(w => w.HideWearablesOfType != null && w.HideWearablesOfType.Count > 0));
+                    wearableSprites.Where(w => w.HideWearablesOfType.Count > 0));
             }
 
+            addWearablesFrom(WearingItems);
+            addWearablesFrom(OtherWearables);
+
             wearableTypesToHide.Clear();
-            if (wearableTypeHidingSprites.Count > 0)
+
+            if (wearableTypeHidingSprites.Count <= 0) { return; }
+
+            foreach (WearableSprite sprite in wearableTypeHidingSprites)
             {
-                foreach (WearableSprite sprite in wearableTypeHidingSprites)
-                {
-                    foreach (WearableType type in sprite.HideWearablesOfType)
-                    {
-                        if (!wearableTypesToHide.Contains(type))
-                        {
-                            wearableTypesToHide.Add(type);
-                        }
-                    }
-                }
+                wearableTypesToHide.UnionWith(sprite.HideWearablesOfType);
             }
         }
 
@@ -1071,7 +1067,13 @@ namespace Barotrauma
             }
         }
 
-        private void DrawWearable(WearableSprite wearable, float depthStep, SpriteBatch spriteBatch, Color color, float alpha, SpriteEffects spriteEffect)
+        private (
+            Color FinalColor,
+            Vector2 Origin,
+            float Rotation,
+            float Scale,
+            float Depth)
+            CalculateDrawParameters(WearableSprite wearable, float depthStep, Color color, float alpha)
         {
             var sprite = ActiveSprite;
             if (wearable.InheritSourceRect)
@@ -1163,27 +1165,118 @@ namespace Barotrauma
             float finalAlpha = alpha * wearableColor.A;
             Color finalColor = color.Multiply(wearableColor);
             finalColor = new Color(finalColor.R, finalColor.G, finalColor.B, (byte)finalAlpha);
-            wearable.Sprite.Draw(spriteBatch, new Vector2(body.DrawPosition.X, -body.DrawPosition.Y), finalColor, origin, rotation, scale, spriteEffect, depth);
+
+            return (finalColor, origin, rotation, scale, depth);
         }
 
-        private WearableSprite GetWearableSprite(WearableType type)//, bool random = false)
+        private static Effect alphaClipEffect;
+        private Dictionary<WearableSprite, Dictionary<string, object>> alphaClipEffectParams;
+        private void ApplyAlphaClip(SpriteBatch spriteBatch, WearableSprite wearable, WearableSprite alphaClipper, SpriteEffects spriteEffect)
+        {
+            SpriteRecorder.Command makeCommand(WearableSprite w)
+            {
+                var (_, origin, rotation, scale, _)
+                    = CalculateDrawParameters(w, 0f, Color.White, 0f);
+
+                var command = SpriteRecorder.Command.FromTransform(
+                    texture: w.Sprite.Texture,
+                    pos: new Vector2(body.DrawPosition.X, -body.DrawPosition.Y),
+                    srcRect: w.Sprite.SourceRect,
+                    color: Color.White,
+                    rotation: rotation,
+                    origin: origin,
+                    scale: new Vector2(scale, scale),
+                    effects: spriteEffect,
+                    depth: 0f,
+                    index: 0);
+
+                return command;
+            }
+
+            void spacesFromCommand(WearableSprite w, SpriteRecorder.Command command, out CoordinateSpace2D textureSpace, out CoordinateSpace2D worldSpace)
+            {
+                var (topLeft, bottomLeft, topRight) = spriteEffect switch
+                {
+                    SpriteEffects.None
+                        => (command.VertexTL, command.VertexBL, command.VertexTR),
+                    SpriteEffects.FlipHorizontally | SpriteEffects.FlipVertically
+                        => (command.VertexBR, command.VertexTR, command.VertexBL),
+                    SpriteEffects.FlipHorizontally
+                        => (command.VertexTR, command.VertexBR, command.VertexTL),
+                    SpriteEffects.FlipVertically
+                        => (command.VertexBL, command.VertexTL, command.VertexBR)
+                };
+
+                textureSpace = new CoordinateSpace2D
+                {
+                    Origin = topLeft.TextureCoordinate,
+                    I = topRight.TextureCoordinate - topLeft.TextureCoordinate,
+                    J = bottomLeft.TextureCoordinate - topLeft.TextureCoordinate
+                };
+
+                worldSpace = new CoordinateSpace2D
+                {
+                    Origin = topLeft.Position.DiscardZ(),
+                    I = topRight.Position.DiscardZ() - topLeft.Position.DiscardZ(),
+                    J = bottomLeft.Position.DiscardZ() - topLeft.Position.DiscardZ()
+                };
+            }
+
+            var wearableCommand = makeCommand(wearable);
+            var clipperCommand = makeCommand(alphaClipper);
+
+            spacesFromCommand(wearable, wearableCommand, out var wearableTextureSpace, out var wearableWorldSpace);
+            spacesFromCommand(alphaClipper, clipperCommand, out var clipperTextureSpace, out var clipperWorldSpace);
+
+            var wearableUvToClipperUv =
+                wearableTextureSpace.CanonicalToLocal
+                * wearableWorldSpace.LocalToCanonical
+                * clipperWorldSpace.CanonicalToLocal
+                * clipperTextureSpace.LocalToCanonical;
+
+            alphaClipEffect ??= EffectLoader.Load("Effects/wearableclip");
+            alphaClipEffectParams ??= new Dictionary<WearableSprite, Dictionary<string, object>>();
+            if (!alphaClipEffectParams.ContainsKey(wearable)) { alphaClipEffectParams.Add(wearable, new Dictionary<string, object>()); }
+
+            var paramsToPass = new SpriteBatch.EffectWithParams
+            {
+                Effect = alphaClipEffect,
+                Params = alphaClipEffectParams[wearable]
+            };
+
+            paramsToPass.Params["wearableUvToClipperUv"] = wearableUvToClipperUv;
+            paramsToPass.Params["clipperTexelSize"] = 2f / alphaClipper.Sprite.Texture.Width;
+            paramsToPass.Params["aCutoff"] = 2f / 255f;
+            paramsToPass.Params["xTexture"] = wearable.Sprite.Texture;
+            paramsToPass.Params["xStencil"] = alphaClipper.Sprite.Texture;
+            spriteBatch.SwapEffect(paramsToPass);
+        }
+
+        private void DrawWearable(WearableSprite wearable, float depthStep, SpriteBatch spriteBatch, Color color, float alpha, SpriteEffects spriteEffect)
+        {
+            var (finalColor, origin, rotation, scale, depth)
+                = CalculateDrawParameters(wearable, depthStep, color, alpha);
+
+            var prevEffect = spriteBatch.GetCurrentEffect();
+            var alphaClipper = WearingItems.Find(w => w.AlphaClipOtherWearables);
+            bool shouldApplyAlphaClip = alphaClipper != null && wearable != alphaClipper;
+            if (shouldApplyAlphaClip)
+            {
+                ApplyAlphaClip(spriteBatch, wearable, alphaClipper, spriteEffect);
+            }
+            wearable.Sprite.Draw(spriteBatch, new Vector2(body.DrawPosition.X, -body.DrawPosition.Y), finalColor, origin, rotation, scale, spriteEffect, depth);
+            if (shouldApplyAlphaClip)
+            {
+                spriteBatch.SwapEffect(effect: prevEffect);
+            }
+        }
+
+        private WearableSprite GetWearableSprite(WearableType type)
         {
             var info = character.Info;
             if (info == null) { return null; }
-            ContentXElement element;
-            /*if (random)
-            {
-                element = info.FilterElements(info.Wearables, info.Head.Preset.TagSet)?.GetRandom(Rand.RandSync.ClientOnly);
-            }
-            else
-            {*/
-            element = info.FilterElements(info.Wearables, info.Head.Preset.TagSet, type)?.FirstOrDefault();
-            //}
-            if (element != null)
-            {
-                return new WearableSprite(element.GetChildElement("sprite"), type);
-            }
-            return null;
+            ContentXElement element = info.FilterElements(info.Wearables, info.Head.Preset.TagSet, type)?.FirstOrDefault();
+            return element != null ? new WearableSprite(element.GetChildElement("sprite"), type) : null;
         }
 
         partial void RemoveProjSpecific()
@@ -1206,8 +1299,8 @@ namespace Barotrauma
             LightSource?.Remove();
             LightSource = null;
 
-            OtherWearables?.ForEach(w => w.Sprite.Remove());
-            OtherWearables = null;
+            OtherWearables.ForEach(w => w.Sprite.Remove());
+            OtherWearables.Clear();
 
             HuskSprite?.Sprite.Remove();
             HuskSprite = null;

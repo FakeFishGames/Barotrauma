@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Microsoft.Xna.Framework;
 using Barotrauma.Extensions;
+using System.Collections.Immutable;
 
 namespace Barotrauma
 {
@@ -255,7 +256,9 @@ namespace Barotrauma
                 if (!AllowOutsideSubmarine && character.Submarine == null) { return false; }
                 if (AllowInAnySub) { return true; }
                 if ((AllowInFriendlySubs && character.Submarine.TeamID == CharacterTeamType.FriendlyNPC) || character.IsEscorted) { return true; }
-                return character.Submarine.TeamID == character.TeamID || character.Submarine.DockedTo.Any(sub => sub.TeamID == character.TeamID);
+                return character.Submarine.TeamID == character.TeamID || 
+                        character.Submarine.TeamID == character.OriginalTeamID || 
+                        character.Submarine.DockedTo.Any(sub => sub.TeamID == character.TeamID || sub.TeamID == character.OriginalTeamID);
             }
         }
 
@@ -503,15 +506,29 @@ namespace Barotrauma
             }
         }
 
-        protected static bool CanEquip(Character character, Item item)
+        protected static bool CanEquip(Character character, Item item, bool allowWearing)
         {
-            bool canEquip = item != null;
-            if (canEquip && !item.AllowedSlots.Contains(InvSlotType.Any))
+            if (item == null) { return false; }
+            bool canEquip = false;
+            if (item.AllowedSlots.Contains(InvSlotType.Any))
             {
-                canEquip = false;
+                if (character.Inventory.IsAnySlotAvailable(item))
+                {
+                    canEquip = true;
+                }
+            }
+            if (!canEquip)
+            {
                 var inv = character.Inventory;
                 foreach (var allowedSlot in item.AllowedSlots)
                 {
+                    if (!allowWearing)
+                    {
+                        if (!allowedSlot.HasFlag(InvSlotType.RightHand) && !allowedSlot.HasFlag(InvSlotType.LeftHand))
+                        {
+                            continue;
+                        }
+                    }
                     foreach (var slotType in inv.SlotTypes)
                     {
                         if (!allowedSlot.HasFlag(slotType)) { continue; }
@@ -527,9 +544,9 @@ namespace Barotrauma
                     }
                 }
             }
-            return canEquip;
+            return canEquip && character.Inventory.CanBePut(item);
         }
 
-        protected bool CanEquip(Item item) => CanEquip(character, item);
+        protected bool CanEquip(Item item, bool allowWearing) => CanEquip(character, item, allowWearing);
     }
 }

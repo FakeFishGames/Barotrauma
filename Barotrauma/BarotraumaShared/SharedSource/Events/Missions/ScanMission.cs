@@ -32,25 +32,20 @@ namespace Barotrauma
             }
         } 
 
-        public override IEnumerable<Vector2> SonarPositions
+        public override IEnumerable<(LocalizedString Label, Vector2 Position)> SonarLabels
         {
             get
             {
-                if (State > 0)
+                if (State > 0 || scanTargets.None())
                 {
-                    return Enumerable.Empty<Vector2>();
-                }
-                else if (scanTargets.Any())
-                {
-                    return scanTargets
-                        .Where(kvp => !kvp.Value)
-                        .Select(kvp => kvp.Key.WorldPosition);
+                    return Enumerable.Empty<(LocalizedString Label, Vector2 Position)>();
                 }
                 else
                 {
-                    return Enumerable.Empty<Vector2>();
-                }
-                
+                    return scanTargets
+                        .Where(kvp => !kvp.Value)
+                        .Select(kvp => (Prefab.SonarLabel, kvp.Key.WorldPosition));
+                }             
             }
         }
 
@@ -247,24 +242,9 @@ namespace Barotrauma
             }
         }
 
-        public override void End()
+        protected override bool DetermineCompleted()
         {
-            if (State == 2 && AllScannersReturned())
-            {
-                GiveReward();
-                completed = true;
-            }
-            foreach (var scanner in scanners)
-            {
-                if (scanner.Item != null && !scanner.Item.Removed)
-                {
-                    scanner.OnScanStarted -= OnScanStarted;
-                    scanner.OnScanCompleted -= OnScanCompleted;
-                    scanner.Item.Remove();
-                }
-            }
-            Reset();
-            failed = !completed && state > 0;
+            return State == 2 && AllScannersReturned();
 
             bool AllScannersReturned()
             {
@@ -284,6 +264,21 @@ namespace Barotrauma
                 }
                 return true;
             }
+        }
+
+        protected override void EndMissionSpecific(bool completed)
+        {
+            foreach (var scanner in scanners)
+            {
+                if (scanner.Item != null && !scanner.Item.Removed)
+                {
+                    scanner.OnScanStarted -= OnScanStarted;
+                    scanner.OnScanCompleted -= OnScanCompleted;
+                    scanner.Item.Remove();
+                }
+            }
+            Reset();
+            failed = !completed && state > 0;
         }
     }
 }

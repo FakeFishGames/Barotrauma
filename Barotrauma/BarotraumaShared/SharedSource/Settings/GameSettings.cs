@@ -35,26 +35,40 @@ namespace Barotrauma
         Activity
     }
 
+    public enum EnemyHealthBarMode
+    {
+        ShowAll,
+        BossHealthBarsOnly,
+        HideAll
+    }
+
     public static class GameSettings
     {
         public struct Config
         {
+            public const float DefaultAimAssist = 0.05f;
+
             public static Config GetDefault()
             {
                 Config config = new Config
                 {
+#if SERVER
+                    //server defaults to English, clients get a prompt to select a language
                     Language = TextManager.DefaultLanguage,
+#else
+                    Language = LanguageIdentifier.None,
+#endif
                     SubEditorUndoBuffer = 32,
                     MaxAutoSaves = 8,
                     AutoSaveIntervalSeconds = 300,
                     SubEditorBackground = new Color(13, 37, 69, 255),
                     EnableSplashScreen = true,
                     PauseOnFocusLost = true,
-                    AimAssistAmount = 0.5f,
+                    AimAssistAmount = DefaultAimAssist,
+                    ShowEnemyHealthBars = EnemyHealthBarMode.ShowAll,
                     EnableMouseLook = true,
                     ChatOpen = true,
                     CrewMenuOpen = true,
-                    EditorDisclaimerShown = false,
                     ShowOffensiveServerPrompt = true,
                     TutorialSkipWarning = true,
                     CorpseDespawnDelay = 600,
@@ -86,28 +100,25 @@ namespace Barotrauma
                 return config;
             }
 
-            public static Config FromFile(string configFile, in Config? fallback = null)
-            {
-                XDocument doc = XMLExtensions.TryLoadXml(configFile);
-
-                return FromElement(doc.Root ?? throw new InvalidOperationException("Unable to load config file: XML document is null."), fallback);
-            }
-
             public static Config FromElement(XElement element, in Config? fallback = null)
             {
                 Config retVal = fallback ?? GetDefault();
                 
                 retVal.DeserializeElement(element);
+#if SERVER
+                //server defaults to English, clients get a prompt to select a language
                 if (retVal.Language == LanguageIdentifier.None)
                 {
                     retVal.Language = TextManager.DefaultLanguage;
                 }
-
+#endif
                 retVal.Graphics = GraphicsSettings.FromElements(element.GetChildElements("graphicsmode", "graphicssettings"), retVal.Graphics);
                 retVal.Audio = AudioSettings.FromElements(element.GetChildElements("audio"), retVal.Audio);
 #if CLIENT
                 retVal.KeyMap = new KeyMapping(element.GetChildElements("keymapping"), retVal.KeyMap);
                 retVal.InventoryKeyMap = new InventoryKeyMapping(element.GetChildElements("inventorykeymapping"), retVal.InventoryKeyMap);
+                retVal.SavedCampaignSettings = element.GetChildElement("campaignsettings");
+                LoadSubEditorImages(element);
 #endif
 
                 return retVal;
@@ -116,6 +127,7 @@ namespace Barotrauma
             public LanguageIdentifier Language;
             public bool VerboseLogging;
             public bool SaveDebugConsoleLogs;
+            public string SavePath;
             public int SubEditorUndoBuffer;
             public int MaxAutoSaves;
             public int AutoSaveIntervalSeconds;
@@ -124,9 +136,9 @@ namespace Barotrauma
             public bool PauseOnFocusLost;
             public float AimAssistAmount;
             public bool EnableMouseLook;
+            public EnemyHealthBarMode ShowEnemyHealthBars;
             public bool ChatOpen;
             public bool CrewMenuOpen;
-            public bool EditorDisclaimerShown;
             public bool ShowOffensiveServerPrompt;
             public bool TutorialSkipWarning;
             public int CorpseDespawnDelay;
@@ -135,6 +147,9 @@ namespace Barotrauma
             public bool DisableInGameHints;
             public bool EnableSubmarineAutoSave;
             public Identifier QuickStartSub;
+#if CLIENT
+            public XElement SavedCampaignSettings;
+#endif
 #if DEBUG
             public bool UseSteamMatchmaking;
             public bool RequireSteamAuthentication;
@@ -226,7 +241,7 @@ namespace Barotrauma
                         SoundVolume = 0.5f,
                         UiVolume = 0.3f,
                         VoiceChatVolume = 0.5f,
-                        VoiceChatCutoffPrevention = 0,
+                        VoiceChatCutoffPrevention = 200,
                         MicrophoneVolume = 5,
                         MuteOnFocusLost = false,
                         DynamicRangeCompressionEnabled = true,
@@ -288,8 +303,11 @@ namespace Barotrauma
                         { InputType.RadioChat, Keys.None },
                         { InputType.ActiveChat, Keys.T },
                         { InputType.CrewOrders, Keys.C },
+                        { InputType.ChatBox, Keys.B }, 
 
                         { InputType.Voice, Keys.V },
+                        { InputType.RadioVoice, Keys.None },
+                        { InputType.LocalVoice, Keys.None },
                         { InputType.ToggleChatMode, Keys.R },
                         { InputType.Command, MouseButton.MiddleMouse },
                         { InputType.PreviousFireMode, MouseButton.MouseWheelDown },
@@ -329,36 +347,69 @@ namespace Barotrauma
                     Dictionary<InputType, KeyOrMouse> bindings = fallback?.Bindings?.ToMutable() ?? defaultBindings.ToMutable();
                     foreach (InputType inputType in (InputType[])Enum.GetValues(typeof(InputType)))
                     {
-                        if (!bindings.ContainsKey(inputType)) { bindings.Add(inputType, defaultBindings[inputType]); }
+                        if (!bindings.ContainsKey(inputType))
+                        {
+                            bindings.Add(inputType, defaultBindings[inputType]);
+                        }
                     }
 
+                    Dictionary<InputType, KeyOrMouse> savedBindings = new Dictionary<InputType, KeyOrMouse>();
                     bool playerConfigContainsNewChatBinds = false;
+                    bool playerConfigContainsRestoredVoipBinds = false;
                     foreach (XElement element in elements)
                     {
                         foreach (XAttribute attribute in element.Attributes())
                         {
                             if (Enum.TryParse(attribute.Name.LocalName, out InputType result))
                             {
-                                if (!playerConfigContainsNewChatBinds)
-                                {
-                                    playerConfigContainsNewChatBinds = result == InputType.ActiveChat;
-                                }
-                                bindings[result] = element.GetAttributeKeyOrMouse(attribute.Name.LocalName, bindings[result]);
+                                playerConfigContainsNewChatBinds |= result == InputType.ActiveChat;
+                                playerConfigContainsRestoredVoipBinds |= result == InputType.RadioVoice;
+                                var keyOrMouse = element.GetAttributeKeyOrMouse(attribute.Name.LocalName, bindings[result]);
+                                savedBindings.Add(result, keyOrMouse);
+                                bindings[result] = keyOrMouse;
                             }
                         }
+                    }
+
+                    // Check for duplicate binds when introducing new binds
+                    foreach (var defaultBinding in defaultBindings)
+                    {
+                        if (!IsSetToNone(defaultBinding.Value) && !savedBindings.ContainsKey(defaultBinding.Key))
+                        {
+                            foreach (var savedBinding in savedBindings)
+                            {
+                                if (savedBinding.Value == defaultBinding.Value)
+                                {
+                                    OnGameMainHasLoaded += () =>
+                                    {
+                                        (string, string)[] replacements =
+                                        {
+                                            ("[defaultbind]", $"\"{TextManager.Get($"inputtype.{defaultBinding.Key}")}\""),
+                                            ("[savedbind]", $"\"{TextManager.Get($"inputtype.{savedBinding.Key}")}\""),
+                                            ("[key]", $"\"{defaultBinding.Value.Name}\"")
+                                        };
+                                        new GUIMessageBox(TextManager.Get("warning"), TextManager.GetWithVariables("duplicatebindwarning", replacements));
+                                    };
+                                    break;
+                                }
+                            }
+                        }
+
+                        static bool IsSetToNone(KeyOrMouse keyOrMouse) => keyOrMouse == Keys.None && keyOrMouse == MouseButton.None;
                     }
 
                     // Clear the old chat binds for configs saved before the introduction of the new chat binds
                     if (!playerConfigContainsNewChatBinds)
                     {
-                        if (bindings.ContainsKey(InputType.Chat))
-                        {
-                            bindings[InputType.Chat] = Keys.None;
-                        }
-                        if (bindings.ContainsKey(InputType.RadioChat))
-                        {
-                            bindings[InputType.RadioChat] = Keys.None;
-                        }
+                        bindings[InputType.Chat] = Keys.None;
+                        bindings[InputType.RadioChat] = Keys.None;
+                    }
+
+                    // Clear old VOIP binds to make sure we have no overlapping binds
+                    if (!playerConfigContainsRestoredVoipBinds)
+                    {
+                        bindings[InputType.LocalVoice] = Keys.None;
+                        bindings[InputType.RadioVoice] = Keys.None;
                     }
 
                     Bindings = bindings.ToImmutableDictionary();
@@ -440,6 +491,10 @@ namespace Barotrauma
         private static Config currentConfig;
         public static ref readonly Config CurrentConfig => ref currentConfig;
 
+#if CLIENT
+        public static Action? OnGameMainHasLoaded;
+#endif
+
         public static void Init()
         {
             XDocument? currentConfigDoc = null;
@@ -511,6 +566,7 @@ namespace Barotrauma
             if (hudScaleChanged)
             {
                 HUDLayoutSettings.CreateAreas();
+                GameMain.GameSession?.HUDScaleChanged();
             }
             
             GameMain.SoundManager?.ApplySettings();
@@ -571,6 +627,10 @@ namespace Barotrauma
                     .Select(kvp
                         => new XAttribute($"slot{kvp.Index.ToString(CultureInfo.InvariantCulture)}", kvp.Bind.ToString())));
             root.Add(inventoryKeyMappingElement);
+
+            SubEditorScreen.ImageManager.Save(root);
+
+            root.Add(CampaignSettings.CurrentSettings.Save());
 #endif
 
             configDoc.SaveSafe(PlayerConfigPath);
@@ -597,5 +657,18 @@ namespace Barotrauma
                     "Saving game settings failed.\n" + e.Message + "\n" + e.StackTrace.CleanupStackTrace());
             }
         }
+
+#if CLIENT
+        private static void LoadSubEditorImages(XElement configElement)
+        {
+            XElement? element = configElement?.Element("editorimages");
+            if (element == null)
+            {
+                SubEditorScreen.ImageManager.Clear(alsoPending: true);
+                return;
+            }
+            SubEditorScreen.ImageManager.Load(element);
+        }
+#endif
     }
 }

@@ -21,7 +21,7 @@ namespace Steamworks
     /// </summary>
     public struct SteamServerInit
     {
-        public IPAddress IpAddress;
+        public IPAddress? IpAddress;
         public ushort SteamPort;
         public ushort GamePort;
         public ushort QueryPort;

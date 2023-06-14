@@ -141,7 +141,18 @@ namespace Barotrauma
                     }
                 }
                 if (items.Contains(item)) { return; }
-                items.Add(item);
+
+                //keep lowest-condition items at the top of the stack
+                int index = 0;
+                for (int i = 0; i < items.Count; i++)
+                {
+                    if (items[i].Condition > item.Condition)
+                    {
+                        break;
+                    }
+                    index++;
+                }
+                items.Insert(index, item);
             }
 
             /// <summary>
@@ -226,6 +237,14 @@ namespace Barotrauma
                 {
                     foreach (var item in slots[i].Items)
                     {
+                        if (item == null)
+                        {
+#if DEBUG
+                            DebugConsole.ThrowError($"Null item in inventory {Owner.ToString() ?? "null"}, slot {i}!");
+#endif
+                            continue;
+                        }
+
                         bool duplicateFound = false;
                         for (int j = 0; j < i; j++)
                         {
@@ -259,6 +278,8 @@ namespace Barotrauma
         {
             get { return capacity; }
         }
+
+        public int EmptySlotCount => slots.Count(i => !i.Empty());
 
         public bool AllowSwappingContainedItems = true;
 
@@ -568,11 +589,15 @@ namespace Barotrauma
                 if (selectedSlot?.Inventory == this) { selectedSlot.ForceTooltipRefresh = true; }
             }
 #endif
+            CharacterHUD.RecreateHudTextsIfControlling(user);
 
             if (item.body != null)
             {
                 item.body.Enabled = false;
                 item.body.BodyType = FarseerPhysics.BodyType.Dynamic;
+                item.SetTransform(item.SimPosition, rotation: 0.0f, findNewHull: false);
+                //update to refresh the interpolated draw rotation and position (update doesn't run on disabled bodies)
+                item.body.Update();
             }
             
 #if SERVER
@@ -717,13 +742,13 @@ namespace Barotrauma
                     stackedItems.Distinct().All(stackedItem => TryPutItem(stackedItem, index, false, false, user, createNetworkEvent))
                     &&
                     (existingItems.All(existingItem => otherInventory.TryPutItem(existingItem, otherIndex, false, false, user, createNetworkEvent)) ||
-                    existingItems.Count == 1 && otherInventory.TryPutItem(existingItems.First(), user, CharacterInventory.anySlot, createNetworkEvent));
+                    existingItems.Count == 1 && otherInventory.TryPutItem(existingItems.First(), user, CharacterInventory.AnySlot, createNetworkEvent));
             }
             else
             {
                 swapSuccessful =
                     (existingItems.All(existingItem => otherInventory.TryPutItem(existingItem, otherIndex, false, false, user, createNetworkEvent)) ||
-                    existingItems.Count == 1 && otherInventory.TryPutItem(existingItems.First(), user, CharacterInventory.anySlot, createNetworkEvent))
+                    existingItems.Count == 1 && otherInventory.TryPutItem(existingItems.First(), user, CharacterInventory.AnySlot, createNetworkEvent))
                     &&
                     stackedItems.Distinct().All(stackedItem => TryPutItem(stackedItem, index, false, false, user, createNetworkEvent));
 
@@ -877,10 +902,7 @@ namespace Barotrauma
                 }
                 if (recursive)
                 {
-                    if (item.OwnInventory != null)
-                    {
-                        item.OwnInventory.FindAllItems(predicate, recursive: true, list);
-                    }
+                    item.OwnInventory?.FindAllItems(predicate, recursive: true, list);
                 }
             }
             return list;
@@ -916,6 +938,7 @@ namespace Barotrauma
                     if (selectedSlot?.Inventory == this) { selectedSlot.ForceTooltipRefresh = true; }
                 }
 #endif
+                CharacterHUD.RecreateHudTextsIfFocused(item);
             }
         }
 
@@ -942,6 +965,12 @@ namespace Barotrauma
             slots[index].RemoveItem(item);
         }
 
+        public bool IsInSlot(Item item, int index)
+        {
+            if (index < 0 || index >= slots.Length) { return false; }
+            return slots[index].Contains(item);
+        }
+
         public void SharedRead(IReadMessage msg, out List<ushort>[] newItemIds)
         {
             byte slotCount = msg.ReadByte();
@@ -959,14 +988,14 @@ namespace Barotrauma
         
         public void SharedWrite(IWriteMessage msg, NetEntityEvent.IData extraData = null)
         {
-            msg.Write((byte)capacity);
+            msg.WriteByte((byte)capacity);
             for (int i = 0; i < capacity; i++)
             {
                 msg.WriteRangedInteger(slots[i].Items.Count, 0, MaxStackSize);
                 for (int j = 0; j < Math.Min(slots[i].Items.Count, MaxStackSize); j++)
                 {
                     var item = slots[i].Items[j];
-                    msg.Write(item?.ID ?? (ushort)0);
+                    msg.WriteUInt16(item?.ID ?? (ushort)0);
                 }
             }
         }

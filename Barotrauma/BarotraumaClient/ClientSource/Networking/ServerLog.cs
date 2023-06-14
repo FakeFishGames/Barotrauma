@@ -1,9 +1,9 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Barotrauma.Extensions;
+using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Microsoft.Xna.Framework.Graphics;
-using Barotrauma.Extensions;
 
 namespace Barotrauma.Networking
 {
@@ -196,11 +196,7 @@ namespace Barotrauma.Networking
             {
                 foreach (var data in richString.RichTextData.Value)
                 {
-                    if (!UInt64.TryParse(data.Metadata, out ulong id)) { return; }
-                    Client client = GameMain.Client.ConnectedClients.Find(c => c.SteamID == id)
-                                ?? GameMain.Client.ConnectedClients.Find(c => c.ID == id)
-                                ?? GameMain.Client.PreviouslyConnectedClients.FirstOrDefault(c => c.SteamID == id)
-                                ?? GameMain.Client.PreviouslyConnectedClients.FirstOrDefault(c => c.ID == id);
+                    Client client = data.ExtractClient();
                     if (client != null && client.Karma < 40.0f)
                     {
                         textContainer = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.0f), listBox.Content.RectTransform),
@@ -258,11 +254,8 @@ namespace Barotrauma.Networking
 
             foreach (GUIComponent child in listBox.Content.Children)
             {
-                var textBlock = child as GUITextBlock;
-                if (textBlock == null) continue;
-
+                if (!(child is GUITextBlock textBlock)) { continue; }
                 child.Visible = true;
-
                 if (msgTypeHidden[(int)((LogMessage)child.UserData).Type])
                 {
                     child.Visible = false;
@@ -287,10 +280,10 @@ namespace Barotrauma.Networking
             listBox.Content.RectTransform.ReverseChildren();
         }
 
-        public bool ClearFilter(GUIComponent button, object obj)
+        public bool ClearFilter(GUIComponent button, object _)
         {
             var searchBox = button.UserData as GUITextBox;
-            if (searchBox != null) searchBox.Text = "";
+            if (searchBox != null) { searchBox.Text = ""; }
 
             msgFilter = "";
             FilterMessages();

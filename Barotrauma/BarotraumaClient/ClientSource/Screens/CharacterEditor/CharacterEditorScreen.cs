@@ -25,20 +25,18 @@ namespace Barotrauma.CharacterEditor
         {
             get
             {
-                if (cam == null)
+                cam ??= new Camera()
                 {
-                    cam = new Camera()
-                    {
-                        MinZoom = 0.1f,
-                        MaxZoom = 5.0f
-                    };
-                }
+                    MinZoom = 0.1f,
+                    MaxZoom = 5.0f
+                };
                 return cam;
             }
         }
 
         private bool ShowExtraRagdollControls => editLimbs || editJoints;
 
+        public Character SpawnedCharacter => character;
         private Character character;
         private Vector2 spawnPosition;
 
@@ -89,26 +87,26 @@ namespace Barotrauma.CharacterEditor
         private float spriteSheetZoom = 1;
         private float spriteSheetMinZoom = 0.25f;
         private float spriteSheetMaxZoom = 1;
-        private int spriteSheetOffsetY = 20;
-        private int spriteSheetOffsetX = 30;
+        private const int spriteSheetOffsetY = 20;
+        private const int spriteSheetOffsetX = 30;
         private bool hideBodySheet;
         private Color backgroundColor = new Color(0.2f, 0.2f, 0.2f, 1.0f);
         private Vector2 cameraOffset;
 
-        private List<LimbJoint> selectedJoints = new List<LimbJoint>();
-        private List<Limb> selectedLimbs = new List<Limb>();
-        private HashSet<Character> editedCharacters = new HashSet<Character>();
+        private readonly List<LimbJoint> selectedJoints = new List<LimbJoint>();
+        private readonly List<Limb> selectedLimbs = new List<Limb>();
+        private readonly HashSet<Character> editedCharacters = new HashSet<Character>();
 
         private bool isEndlessRunner;
 
         private Rectangle spriteSheetRect;
 
-        private Rectangle CalculateSpritesheetRectangle() => 
+        private Rectangle CalculateSpritesheetRectangle() =>
             Textures == null || Textures.None() ? Rectangle.Empty :
             new Rectangle(
-                spriteSheetOffsetX, 
-                spriteSheetOffsetY, 
-                (int)(Textures.OrderByDescending(t => t.Width).First().Width * spriteSheetZoom), 
+                spriteSheetOffsetX,
+                spriteSheetOffsetY,
+                (int)(Textures.OrderByDescending(t => t.Width).First().Width * spriteSheetZoom),
                 (int)(Textures.Sum(t => t.Height) * spriteSheetZoom));
 
         private const string screenTextTag = "CharacterEditor.";
@@ -124,7 +122,7 @@ namespace Barotrauma.CharacterEditor
             {
                 ResetVariables();
                 var subInfo = new SubmarineInfo("Content/AnimEditor.sub");
-                Submarine.MainSub = new Submarine(subInfo);
+                Submarine.MainSub = new Submarine(subInfo, showErrorMessages: false);
                 if (Submarine.MainSub.PhysicsBody != null)
                 {
                     Submarine.MainSub.PhysicsBody.Enabled = false;
@@ -145,7 +143,7 @@ namespace Barotrauma.CharacterEditor
                 var humanSpeciesName = CharacterPrefab.HumanSpeciesName;
                 if (humanSpeciesName.IsEmpty)
                 {
-                    SpawnCharacter(AllSpecies.First());
+                    SpawnCharacter(VisibleSpecies.First());
                 }
                 else
                 {
@@ -161,11 +159,6 @@ namespace Barotrauma.CharacterEditor
             OpenDoors();
             GameMain.Instance.ResolutionChanged += OnResolutionChanged;
             Instance = this;
-
-            if (!GameSettings.CurrentConfig.EditorDisclaimerShown)
-            {
-                GameMain.Instance.ShowEditorDisclaimer();
-            }
         }
 
         private void ResetVariables()
@@ -199,7 +192,7 @@ namespace Barotrauma.CharacterEditor
             jointEndLimb = null;
             anchor1Pos = null;
             jointStartLimb = null;
-            allSpecies = null;
+            visibleSpecies = null;
             onlyShowSourceRectForSelectedLimbs = false;
             unrestrictSpritesheet = false;
             editedCharacters.Clear();
@@ -221,15 +214,12 @@ namespace Barotrauma.CharacterEditor
 
         private void Reset(IEnumerable<Character> characters = null)
         {
-            if (characters == null)
-            {
-                characters = editedCharacters;
-            }
+            characters ??= editedCharacters;
             characters.ForEach(c => ResetParams(c));
             ResetVariables();
         }
 
-        private void ResetParams(Character character)
+        private static void ResetParams(Character character)
         {
             character.Params.Reset(true);
             foreach (var animation in character.AnimController.AllAnimParams)
@@ -266,7 +256,10 @@ namespace Barotrauma.CharacterEditor
 #endif
             }
             GameMain.Instance.ResolutionChanged -= OnResolutionChanged;
-            GameMain.LightManager.LightingEnabled = true;
+            if (!GameMain.DevMode)
+            {
+                GameMain.LightManager.LightingEnabled = true;
+            }
             ClearWidgets();
             ClearSelection();
         }
@@ -284,6 +277,7 @@ namespace Barotrauma.CharacterEditor
 #region Main methods
         public override void AddToGUIUpdateList()
         {
+            if (rightArea == null || leftArea == null) { return; }
             rightArea.AddToGUIUpdateList();
             leftArea.AddToGUIUpdateList();
 
@@ -722,7 +716,7 @@ namespace Barotrauma.CharacterEditor
                 cameraOffset = Vector2.Clamp(cameraOffset, min, max);
             }
             Cam.Position = targetPos + cameraOffset;
-            MapEntity.mapEntityList.ForEach(e => e.IsHighlighted = false);
+            MapEntity.ClearHighlightedEntities();
             // Update widgets
             jointSelectionWidgets.Values.ForEach(w => w.Update((float)deltaTime));
             limbEditWidgets.Values.ForEach(w => w.Update((float)deltaTime));
@@ -782,7 +776,7 @@ namespace Barotrauma.CharacterEditor
             scaledMouseSpeed = PlayerInput.MouseSpeedPerSecond * (float)deltaTime;
             Cam.UpdateTransform(true);
             Submarine.CullEntities(Cam);
-            Submarine.MainSub.UpdateTransform();
+            Submarine.MainSub?.UpdateTransform();
 
             // Lightmaps
             if (GameMain.LightManager.LightingEnabled)
@@ -997,7 +991,7 @@ namespace Barotrauma.CharacterEditor
                 var collider = character.AnimController.Collider;
                 var colliderDrawPos = SimToScreen(collider.SimPosition);
                 Vector2 forward = Vector2.Transform(Vector2.UnitY, Matrix.CreateRotationZ(collider.Rotation));
-                var endPos = SimToScreen(collider.SimPosition + forward * collider.radius);
+                var endPos = SimToScreen(collider.SimPosition + forward * collider.Radius);
                 GUI.DrawLine(spriteBatch, colliderDrawPos, endPos, GUIStyle.Green);
                 GUI.DrawLine(spriteBatch, colliderDrawPos, SimToScreen(collider.SimPosition + forward * 0.25f), Color.Blue);
                 Vector2 left = forward.Left();
@@ -1366,7 +1360,7 @@ namespace Barotrauma.CharacterEditor
         private class WallGroup
         {
             public readonly List<Structure> walls;
-            
+
             public WallGroup(List<Structure> walls)
             {
                 this.walls = walls;
@@ -1377,7 +1371,7 @@ namespace Barotrauma.CharacterEditor
                 var clones = new List<Structure>();
                 walls.ForEachMod(w => clones.Add(w.Clone() as Structure));
                 return new WallGroup(clones);
-            }     
+            }
         }
 
         private void CloneWalls()
@@ -1394,7 +1388,7 @@ namespace Barotrauma.CharacterEditor
                     else if (i == 2)
                     {
                         clones[i].walls[j].Move(new Vector2(-originalWall.walls[j].Rect.Width, 0));
-                    }      
+                    }
                 }
             }
         }
@@ -1407,8 +1401,8 @@ namespace Barotrauma.CharacterEditor
 
         private WallGroup SelectLastClone(bool right)
         {
-            var lastWall = right 
-                ? clones.SelectMany(c => c.walls).OrderBy(w => w.Rect.Right).Last() 
+            var lastWall = right
+                ? clones.SelectMany(c => c.walls).OrderBy(w => w.Rect.Right).Last()
                 : clones.SelectMany(c => c.walls).OrderBy(w => w.Rect.Left).First();
             return clones.Where(c => c.walls.Contains(lastWall)).FirstOrDefault();
         }
@@ -1443,33 +1437,35 @@ namespace Barotrauma.CharacterEditor
         private Identifier currentCharacterIdentifier;
         private Identifier selectedJob = Identifier.Empty;
 
-        private List<Identifier> allSpecies;
-        private List<Identifier> AllSpecies
+        private List<Identifier> visibleSpecies;
+        private List<Identifier> VisibleSpecies
         {
             get
             {
-                if (allSpecies == null)
-                {
-#if DEBUG
-                    allSpecies = CharacterPrefab.Prefabs.Keys.OrderBy(p => p).ToList();
-#else
-                    allSpecies = CharacterPrefab.Prefabs.Keys.Where(p => !p.Contains("variant")).OrderBy(p => p).ToList();
-#endif
-                    allSpecies.ForEach(f => DebugConsole.NewMessage(f.Value, Color.White));
-                }
-                return allSpecies;
+                visibleSpecies ??= CharacterPrefab.Prefabs.Where(ShowCreature).OrderBy(p => p.Identifier).Select(p => p.Identifier).ToList();
+                return visibleSpecies;
             }
         }
 
-        private List<CharacterFile> vanillaCharacters;
-        private List<CharacterFile> VanillaCharacters
+        private bool ShowCreature(CharacterPrefab prefab)
+        {
+            Identifier speciesName = prefab.Identifier;
+            if (speciesName == CharacterPrefab.HumanSpeciesName) { return true; }
+            if (!VanillaCharacters.Contains(prefab.ContentFile))
+            {
+                // Always show all custom characters.
+                return true;
+            }
+            if (CreatureMetrics.UnlockAll) { return true; }
+            return CreatureMetrics.Unlocked.Contains(speciesName);
+        }
+
+        private IEnumerable<CharacterFile> vanillaCharacters;
+        private IEnumerable<CharacterFile> VanillaCharacters
         {
             get
             {
-                if (vanillaCharacters == null)
-                {
-                    vanillaCharacters = GameMain.VanillaContent.GetFiles<CharacterFile>().ToList();
-                }
+                vanillaCharacters ??= GameMain.VanillaContent.GetFiles<CharacterFile>();
                 return vanillaCharacters;
             }
         }
@@ -1478,7 +1474,7 @@ namespace Barotrauma.CharacterEditor
         {
             GetCurrentCharacterIndex();
             IncreaseIndex();
-            currentCharacterIdentifier = AllSpecies[characterIndex];
+            currentCharacterIdentifier = VisibleSpecies[characterIndex];
             return currentCharacterIdentifier;
         }
 
@@ -1486,19 +1482,19 @@ namespace Barotrauma.CharacterEditor
         {
             GetCurrentCharacterIndex();
             ReduceIndex();
-            currentCharacterIdentifier = AllSpecies[characterIndex];
+            currentCharacterIdentifier = VisibleSpecies[characterIndex];
             return currentCharacterIdentifier;
         }
 
         private void GetCurrentCharacterIndex()
         {
-            characterIndex = AllSpecies.IndexOf(character.SpeciesName);
+            characterIndex = VisibleSpecies.IndexOf(character.SpeciesName);
         }
 
         private void IncreaseIndex()
         {
             characterIndex++;
-            if (characterIndex > AllSpecies.Count - 1)
+            if (characterIndex > VisibleSpecies.Count - 1)
             {
                 characterIndex = 0;
             }
@@ -1509,11 +1505,11 @@ namespace Barotrauma.CharacterEditor
             characterIndex--;
             if (characterIndex < 0)
             {
-                characterIndex = AllSpecies.Count - 1;
+                characterIndex = VisibleSpecies.Count - 1;
             }
         }
 
-        private Character SpawnCharacter(Identifier speciesName, RagdollParams ragdoll = null)
+        public Character SpawnCharacter(Identifier speciesName, RagdollParams ragdoll = null)
         {
             DebugConsole.NewMessage(GetCharacterEditorTranslation("TryingToSpawnCharacter").Replace("[config]", speciesName.ToString()), Color.HotPink);
             OnPreSpawn();
@@ -1574,10 +1570,7 @@ namespace Barotrauma.CharacterEditor
             {
                 wayPoint = WayPoint.GetRandom(spawnType: SpawnType.Human, sub: Submarine.MainSub);
             }
-            if (wayPoint == null)
-            {
-                wayPoint = WayPoint.GetRandom(sub: Submarine.MainSub);
-            }
+            wayPoint ??= WayPoint.GetRandom(sub: Submarine.MainSub);
             spawnPosition = wayPoint.WorldPosition;
         }
 
@@ -1693,7 +1686,7 @@ namespace Barotrauma.CharacterEditor
             XElement overrideElement = null;
             if (duplicate != null)
             {
-                allSpecies = null;
+                visibleSpecies = null;
                 if (!File.Exists(configFilePath))
                 {
                     // If the file exists, we just want to overwrite it.
@@ -1765,9 +1758,15 @@ namespace Barotrauma.CharacterEditor
             var modProject = new ModProject(contentPackage);
             var newFile = ModProject.File.FromPath<CharacterFile>(configFilePath);
             modProject.AddFile(newFile);
-
             modProject.Save(contentPackage.Path);
-            contentPackage = ContentPackageManager.ReloadContentPackage(contentPackage);
+
+            var reloadResult = ContentPackageManager.ReloadContentPackage(contentPackage);
+            if (!reloadResult.TryUnwrapSuccess(out var newPackage))
+            {
+                throw new Exception($"Failed to reload package",
+                    reloadResult.TryUnwrapFailure(out var exception) ? exception : null);
+            }
+            contentPackage = newPackage;
 
             DebugConsole.NewMessage(GetCharacterEditorTranslation("ContentPackageSaved").Replace("[path]", contentPackage.Path));      
 
@@ -1823,9 +1822,9 @@ namespace Barotrauma.CharacterEditor
                     AnimationParams.Create(fullPath, name, animType, type);
                 }
             }
-            if (!AllSpecies.Contains(name))
+            if (!VisibleSpecies.Contains(name))
             {
-                AllSpecies.Add(name);
+                VisibleSpecies.Add(name);
             }
             SpawnCharacter(name, ragdollParams);
             limbPairEditing = false;
@@ -2606,8 +2605,8 @@ namespace Barotrauma.CharacterEditor
             animationControls = new GUIFrame(new RectTransform(Vector2.One, centerArea.RectTransform), style: null) { CanBeFocused = false };
             var layoutGroupAnimation = new GUILayoutGroup(new RectTransform(Vector2.One, animationControls.RectTransform), childAnchor: Anchor.TopLeft) { CanBeFocused = false };
             var animationSelectionElement = new GUIFrame(new RectTransform(new Point(elementSize.X * 2 - (int)(5 * GUI.xScale), elementSize.Y), layoutGroupAnimation.RectTransform), style: null);
-            var animationSelectionText = new GUITextBlock(new RectTransform(new Point(elementSize.X, elementSize.Y), animationSelectionElement.RectTransform), GetCharacterEditorTranslation("SelectedAnimation") + ": ", Color.WhiteSmoke, textAlignment: Alignment.Center);
-            animSelection = new GUIDropDown(new RectTransform(new Point((int)(100 * GUI.xScale), elementSize.Y), animationSelectionElement.RectTransform, Anchor.TopRight), elementCount: 5);
+            var animationSelectionText = new GUITextBlock(new RectTransform(new Point(elementSize.X, elementSize.Y), animationSelectionElement.RectTransform), GetCharacterEditorTranslation("SelectedAnimation"), Color.WhiteSmoke, textAlignment: Alignment.CenterRight);
+            animSelection = new GUIDropDown(new RectTransform(new Point((int)(150 * GUI.xScale), elementSize.Y), animationSelectionElement.RectTransform, Anchor.Center, Pivot.CenterLeft), elementCount: 5);
             if (character.AnimController.CanWalk)
             {
                 animSelection.AddItem(AnimationType.Walk.ToString(), AnimationType.Walk);
@@ -2678,27 +2677,33 @@ namespace Barotrauma.CharacterEditor
             {
                 Stretch = true
             };
-
             // Character selection
             var characterLabel = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), content.RectTransform), GetCharacterEditorTranslation("CharacterPanel"), font: GUIStyle.LargeFont);
-            var disclaimerBtn = new GUIButton(new RectTransform(new Vector2(0.2f, 0.7f), characterLabel.RectTransform, Anchor.CenterRight), style: "GUINotificationButton")
-            {
-                OnClicked = (btn, userdata) => { GameMain.Instance.ShowEditorDisclaimer(); return true; }
-            };
-
             var characterDropDown = new GUIDropDown(new RectTransform(new Vector2(1, 0.2f), content.RectTransform)
             {
                 RelativeOffset = new Vector2(0, 0.2f)
             }, elementCount: 8, style: null);
             characterDropDown.ListBox.Color = new Color(characterDropDown.ListBox.Color.R, characterDropDown.ListBox.Color.G, characterDropDown.ListBox.Color.B, byte.MaxValue);
-            foreach (var file in AllSpecies)
+            foreach (CharacterPrefab prefab in CharacterPrefab.Prefabs.OrderByDescending(p => p.Identifier))
             {
-                characterDropDown.AddItem(file.Value.CapitaliseFirstInvariant(), file);
+                Identifier speciesName = prefab.Identifier;
+                if (ShowCreature(prefab))
+                {
+                    characterDropDown.AddItem(speciesName.Value.CapitaliseFirstInvariant(), speciesName).SetAsFirstChild();
+                }
+                else if (!CreatureMetrics.Encountered.Contains(speciesName))
+                {
+                    // Using a matching placeholder string here ("hidden").
+                    var element = characterDropDown.AddItem(TextManager.Get("hiddensubmarines"), Identifier.Empty, textColor: Color.Gray * 0.75f);
+                    element.SetAsLastChild();
+                    element.Enabled = false;
+                }
             }
             characterDropDown.SelectItem(currentCharacterIdentifier);
             characterDropDown.OnSelected = (component, data) =>
             {
                 Identifier characterIdentifier = (Identifier)data;
+                if (characterIdentifier.IsEmpty) { return true; }
                 try
                 {
                     SpawnCharacter(characterIdentifier);
@@ -2799,7 +2804,7 @@ namespace Barotrauma.CharacterEditor
             saveAllButton.OnClicked += (button, userData) =>
             {
 #if !DEBUG
-                if (VanillaCharacters != null && VanillaCharacters.Contains(CharacterPrefab.Prefabs[currentCharacterIdentifier].ContentFile))
+                if (VanillaCharacters.Contains(CharacterPrefab.Prefabs[currentCharacterIdentifier].ContentFile))
                 {
                     GUI.AddMessage(GetCharacterEditorTranslation("CannotEditVanillaCharacters"), GUIStyle.Red, font: GUIStyle.LargeFont);
                     return false;
@@ -2839,7 +2844,7 @@ namespace Barotrauma.CharacterEditor
                 box.Buttons[1].OnClicked += (b, d) =>
                 {
 #if !DEBUG
-                    if (VanillaCharacters != null && VanillaCharacters.Contains(CharacterPrefab.Prefabs[currentCharacterIdentifier].ContentFile))
+                    if (VanillaCharacters.Contains(CharacterPrefab.Prefabs[currentCharacterIdentifier].ContentFile))
                     {
                         GUI.AddMessage(GetCharacterEditorTranslation("CannotEditVanillaCharacters"), GUIStyle.Red, font: GUIStyle.LargeFont);
                         box.Close();
@@ -2977,7 +2982,7 @@ namespace Barotrauma.CharacterEditor
                 box.Buttons[1].OnClicked += (b, d) =>
                 {
 #if !DEBUG
-                    if (VanillaCharacters != null && VanillaCharacters.Contains(CharacterPrefab.Prefabs[currentCharacterIdentifier].ContentFile))
+                    if (VanillaCharacters.Contains(CharacterPrefab.Prefabs[currentCharacterIdentifier].ContentFile))
                     {
                         GUI.AddMessage(GetCharacterEditorTranslation("CannotEditVanillaCharacters"), GUIStyle.Red, font: GUIStyle.LargeFont);
                         box.Close();
@@ -3181,10 +3186,7 @@ namespace Barotrauma.CharacterEditor
                 OnClicked = (button, data) =>
                 {
                     ResetView();
-                    CharacterParams.Serialize();
-                    RagdollParams.Serialize();
-                    AnimParams.ForEach(a => a.Serialize());
-                    Wizard.Instance.CopyExisting(CharacterParams, RagdollParams, AnimParams);
+                    PrepareCharacterCopy();
                     Wizard.Instance.SelectTab(Wizard.Tab.Character);
                     return true;
                 }
@@ -3209,7 +3211,15 @@ namespace Barotrauma.CharacterEditor
 
             fileEditPanel.RectTransform.MinSize = new Point(0, (int)(layoutGroup.RectTransform.Children.Sum(c => c.MinSize.Y + layoutGroup.AbsoluteSpacing) * 1.2f));
         }
-#endregion
+        #endregion
+
+        public void PrepareCharacterCopy()
+        {
+            CharacterParams.Serialize();
+            RagdollParams.Serialize();
+            AnimParams.ForEach(a => a.Serialize());
+            Wizard.Instance.CopyExisting(CharacterParams, RagdollParams, AnimParams);
+        }
 
 #region ToggleButtons 
         private enum Direction
@@ -3995,7 +4005,7 @@ namespace Barotrauma.CharacterEditor
                             };
                         }).Draw(spriteBatch, deltaTime);
                     }
-                    else
+                    else if (groundedParams != null)
                     {
                         GetAnimationWidget("HeadPosition", color, Color.Black, initMethod: w =>
                         {
@@ -4104,7 +4114,7 @@ namespace Barotrauma.CharacterEditor
                             };
                         }).Draw(spriteBatch, deltaTime);
                     }
-                    else
+                    else if (groundedParams != null)
                     {
                         GetAnimationWidget("TorsoPosition", color, Color.Black, initMethod: w =>
                         {
@@ -4234,7 +4244,7 @@ namespace Barotrauma.CharacterEditor
                 int points = 1000;
                 float GetAmplitude() => ConvertUnits.ToDisplayUnits(fishSwimParams.WaveAmplitude) * Cam.Zoom / amplitudeMultiplier;
                 float GetWaveLength() => ConvertUnits.ToDisplayUnits(fishSwimParams.WaveLength) * Cam.Zoom / lengthMultiplier;
-                Vector2 GetRefPoint() => SimToScreen(collider.SimPosition) - GetScreenSpaceForward() * ConvertUnits.ToDisplayUnits(collider.radius) * 3 * Cam.Zoom;
+                Vector2 GetRefPoint() => SimToScreen(collider.SimPosition) - GetScreenSpaceForward() * ConvertUnits.ToDisplayUnits(collider.Radius) * 3 * Cam.Zoom;
                 Vector2 GetDrawPos() => GetRefPoint() - GetScreenSpaceForward() * GetWaveLength();
                 Vector2 GetDir() => GetRefPoint() - GetDrawPos();
                 Vector2 GetStartPoint() => GetDrawPos() + GetDir() / 2;
@@ -5007,9 +5017,9 @@ namespace Barotrauma.CharacterEditor
             // We want the collider to be slightly smaller than the source rect, because the source rect is usually a bit bigger than the graphic.
             float multiplier = 0.9f;
             l.body.SetSize(new Vector2(size.X, size.Y) * l.Scale * RagdollParams.TextureScale * multiplier);
-            TryUpdateLimbParam(l, "radius", ConvertUnits.ToDisplayUnits(l.body.radius / l.Params.Scale / RagdollParams.LimbScale / RagdollParams.TextureScale));
-            TryUpdateLimbParam(l, "width", ConvertUnits.ToDisplayUnits(l.body.width / l.Params.Scale / RagdollParams.LimbScale / RagdollParams.TextureScale));
-            TryUpdateLimbParam(l, "height", ConvertUnits.ToDisplayUnits(l.body.height / l.Params.Scale / RagdollParams.LimbScale / RagdollParams.TextureScale));
+            TryUpdateLimbParam(l, "radius", ConvertUnits.ToDisplayUnits(l.body.Radius / l.Params.Scale / RagdollParams.LimbScale / RagdollParams.TextureScale));
+            TryUpdateLimbParam(l, "width", ConvertUnits.ToDisplayUnits(l.body.Width / l.Params.Scale / RagdollParams.LimbScale / RagdollParams.TextureScale));
+            TryUpdateLimbParam(l, "height", ConvertUnits.ToDisplayUnits(l.body.Height / l.Params.Scale / RagdollParams.LimbScale / RagdollParams.TextureScale));
         }
 
         private void RecalculateOrigin(Limb l, Vector2? newOrigin = null)

@@ -25,7 +25,8 @@ namespace Barotrauma
         GoTo = 0x400,
         ScanAlienRuins = 0x800,
         ClearAlienRuins = 0x1000,
-        All = Salvage | Monster | Cargo | Beacon | Nest | Mineral | Combat | AbandonedOutpost | Escort | Pirate | GoTo | ScanAlienRuins | ClearAlienRuins
+        End = 0x2000,
+        All = Salvage | Monster | Cargo | Beacon | Nest | Mineral | Combat | AbandonedOutpost | Escort | Pirate | GoTo | ScanAlienRuins | ClearAlienRuins | End
     }
 
     partial class MissionPrefab : PrefabWithUintIdentifier
@@ -45,14 +46,15 @@ namespace Barotrauma
             { MissionType.Pirate, typeof(PirateMission) },
             { MissionType.GoTo, typeof(GoToMission) },
             { MissionType.ScanAlienRuins, typeof(ScanMission) },
-            { MissionType.ClearAlienRuins, typeof(AlienRuinMission) }
+            { MissionType.ClearAlienRuins, typeof(AlienRuinMission) },
+            { MissionType.End, typeof(EndMission) }
         };
         public static readonly Dictionary<MissionType, Type> PvPMissionClasses = new Dictionary<MissionType, Type>()
         {
             { MissionType.Combat, typeof(CombatMission) }
         };
 
-        public static readonly HashSet<MissionType> HiddenMissionClasses = new HashSet<MissionType>() { MissionType.GoTo };
+        public static readonly HashSet<MissionType> HiddenMissionClasses = new HashSet<MissionType>() { MissionType.GoTo, MissionType.End };
 
         private readonly ConstructorInfo constructor;
 
@@ -62,11 +64,7 @@ namespace Barotrauma
 
         public readonly Identifier TextIdentifier;
 
-        private readonly string[] tags;
-        public IEnumerable<string> Tags
-        {
-            get { return tags; }
-        }
+        public readonly ImmutableHashSet<Identifier> Tags;
 
         public readonly LocalizedString Name;
         public readonly LocalizedString Description;
@@ -93,9 +91,23 @@ namespace Barotrauma
 
         public readonly bool AllowRetry;
 
+        public readonly bool ShowInMenus, ShowStartMessage;
+
         public readonly bool IsSideObjective;
 
+        public readonly bool AllowOtherMissionsInLevel;
+
         public readonly bool RequireWreck, RequireRuin;
+
+        /// <summary>
+        /// If enabled, locations this mission takes place in cannot change their type
+        /// </summary>
+        public readonly bool BlockLocationTypeChanges;
+
+        public readonly bool ShowProgressBar;
+        public readonly bool ShowProgressInNumbers;
+        public readonly int MaxProgressState;
+        public readonly LocalizedString ProgressBarLabel;
 
         /// <summary>
         /// The mission can only be received when travelling from a location of the first type to a location of the second type
@@ -144,46 +156,78 @@ namespace Barotrauma
 
             TextIdentifier = element.GetAttributeIdentifier("textidentifier", Identifier);
 
-            tags = element.GetAttributeStringArray("tags", Array.Empty<string>(), convertToLowerInvariant: true);
+            Tags = element.GetAttributeIdentifierArray("tags", Array.Empty<Identifier>()).ToImmutableHashSet();
 
-            Name = 
-                TextManager.Get($"MissionName.{TextIdentifier}")
-                .Fallback(TextManager.Get(element.GetAttributeString("name", "")))
-                .Fallback(element.GetAttributeString("name", ""));
-            Description = 
-                TextManager.Get($"MissionDescription.{TextIdentifier}")
-                .Fallback(TextManager.Get(element.GetAttributeString("description", "")))
-                .Fallback(element.GetAttributeString("description", ""));
+            string nameTag = element.GetAttributeString("name", "");
+            Name = TextManager.Get($"MissionName.{TextIdentifier}");
+            if (!string.IsNullOrEmpty(nameTag))
+            {
+                Name = Name
+                    .Fallback(TextManager.Get(nameTag))
+                    .Fallback(nameTag);
+            }
+
+            string descriptionTag = element.GetAttributeString("description", "");
+            Description =
+                TextManager.Get($"MissionDescription.{TextIdentifier}"); 
+            if (!string.IsNullOrEmpty(descriptionTag))
+            {
+                Description = Description
+                    .Fallback(TextManager.Get(descriptionTag))
+                    .Fallback(descriptionTag);
+            }
 
             Reward      = element.GetAttributeInt("reward", 1);
             AllowRetry  = element.GetAttributeBool("allowretry", false);
+            ShowInMenus = element.GetAttributeBool("showinmenus", true);
+            ShowStartMessage = element.GetAttributeBool("showstartmessage", true);
             IsSideObjective = element.GetAttributeBool("sideobjective", false);
             RequireWreck = element.GetAttributeBool("requirewreck", false);
             RequireRuin = element.GetAttributeBool("requireruin", false);
+            BlockLocationTypeChanges = element.GetAttributeBool(nameof(BlockLocationTypeChanges), false);
             Commonness  = element.GetAttributeInt("commonness", 1);
+            AllowOtherMissionsInLevel = element.GetAttributeBool("allowothermissionsinlevel", true);
             if (element.GetAttribute("difficulty") != null)
             {
                 int difficulty = element.GetAttributeInt("difficulty", MinDifficulty);
                 Difficulty = Math.Clamp(difficulty, MinDifficulty, MaxDifficulty);
             }
 
-            SuccessMessage  = 
-                TextManager.Get($"MissionSuccess.{TextIdentifier}")
-                .Fallback(TextManager.Get(element.GetAttributeString("successmessage", "")))
-                .Fallback(element.GetAttributeString("successmessage", "Mission completed successfully"));
-            FailureMessage  = 
-                TextManager.Get($"MissionFailure.{TextIdentifier}")
-                .Fallback(TextManager.Get(element.GetAttributeString("missionfailed", "")))
-                .Fallback(TextManager.Get("missionfailed"))
-                .Fallback(GameSettings.CurrentConfig.Language == TextManager.DefaultLanguage ? element.GetAttributeString("failuremessage", "") : "");
+            ShowProgressBar = element.GetAttributeBool(nameof(ShowProgressBar), false);
+            ShowProgressInNumbers = element.GetAttributeBool(nameof(ShowProgressInNumbers), false);
+            MaxProgressState = element.GetAttributeInt(nameof(MaxProgressState), 1);
+            string progressBarLabel = element.GetAttributeString(nameof(ProgressBarLabel), "");
+            ProgressBarLabel = TextManager.Get(progressBarLabel).Fallback(progressBarLabel);
+
+            string successMessageTag = element.GetAttributeString("successmessage", "");
+            SuccessMessage = TextManager.Get($"MissionSuccess.{TextIdentifier}");
+            if (!string.IsNullOrEmpty(successMessageTag))
+            {
+                SuccessMessage = SuccessMessage
+                    .Fallback(TextManager.Get(successMessageTag))
+                    .Fallback(successMessageTag);
+            }
+            SuccessMessage = SuccessMessage.Fallback(TextManager.Get("missioncompleted"));
+
+            string failureMessageTag = element.GetAttributeString("failuremessage", "");
+            FailureMessage = TextManager.Get($"MissionFailure.{TextIdentifier}");
+            if (!string.IsNullOrEmpty(failureMessageTag))
+            {
+                FailureMessage = FailureMessage
+                    .Fallback(TextManager.Get(failureMessageTag))
+                    .Fallback(failureMessageTag);
+            }
+            FailureMessage = FailureMessage.Fallback(TextManager.Get("missionfailed"));
 
             string sonarLabelTag = element.GetAttributeString("sonarlabel", "");
-
-            SonarLabel = 
+            SonarLabel =
                 TextManager.Get($"MissionSonarLabel.{sonarLabelTag}")
                 .Fallback(TextManager.Get(sonarLabelTag))
-                .Fallback(TextManager.Get($"MissionSonarLabel.{TextIdentifier}"))
-                .Fallback(element.GetAttributeString("sonarlabel", ""));
+                .Fallback(TextManager.Get($"MissionSonarLabel.{TextIdentifier}"));
+            if (!string.IsNullOrEmpty(sonarLabelTag))
+            {
+                SonarLabel = SonarLabel.Fallback(sonarLabelTag);
+            }
 
             SonarIconIdentifier = element.GetAttributeIdentifier("sonaricon", "");
 
@@ -328,6 +372,7 @@ namespace Barotrauma
             {
                 return 
                     AllowedLocationTypes.Any(lt => lt == "any") ||
+                    AllowedLocationTypes.Any(lt => lt == "anyoutpost" && from.HasOutpost()) ||
                     AllowedLocationTypes.Any(lt => lt == from.Type.Identifier);
             }
 
@@ -335,11 +380,11 @@ namespace Barotrauma
             {
                 if (fromType == "any" ||
                     fromType == from.Type.Identifier ||
-                    (fromType == "anyoutpost" && from.HasOutpost()))
+                    (fromType == "anyoutpost" && from.HasOutpost() && from.Type.Identifier != "abandoned"))
                 {
                     if (toType == "any" ||
                         toType == to.Type.Identifier ||
-                        (toType == "anyoutpost" && to.HasOutpost()))
+                        (toType == "anyoutpost" && to.HasOutpost() && to.Type.Identifier != "abandoned"))
                     {
                         return true;
                     }

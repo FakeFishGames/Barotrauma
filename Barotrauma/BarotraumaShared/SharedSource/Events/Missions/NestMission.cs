@@ -31,17 +31,17 @@ namespace Barotrauma
         private Vector2 nestPosition;
 
 
-        public override IEnumerable<Vector2> SonarPositions
+        public override IEnumerable<(LocalizedString Label, Vector2 Position)> SonarLabels
         {
             get
             {
                 if (State > 0)
                 {
-                    Enumerable.Empty<Vector2>();
+                    yield break;
                 }
                 else
                 {
-                    yield return nestPosition;
+                    yield return (Prefab.SonarLabel, nestPosition);
                 }
             }
         }
@@ -260,8 +260,24 @@ namespace Barotrauma
                                     int amount = Rand.Range(monster.Item2.X, monster.Item2.Y + 1);
                                     for (int i = 0; i < amount; i++)
                                     {
-                                        Character.Create(monster.Item1.Identifier, nestPosition + Rand.Vector(100.0f), ToolBox.RandomSeed(8), createNetworkEvent: true);
+                                        Vector2 offsetPosition;
+                                        int tries = 0;
+                                        do
+                                        {
+                                            offsetPosition = nestPosition + Rand.Vector(100.0f);
+                                            tries++;
+                                            if (tries > 10)
+                                            {
+                                                offsetPosition = nestPosition;
+                                                break;
+                                            }
+                                        } while (Level.Loaded.IsPositionInsideWall(offsetPosition));
+                                        Character.Create(monster.Item1.Identifier, offsetPosition, ToolBox.RandomSeed(8), createNetworkEvent: true);
                                     }
+                                }
+                                if (Level.Loaded.IsPositionInsideWall(nestPosition))
+                                {
+                                    DebugConsole.AddWarning($"Error in nest mission \"{Prefab.Identifier}\": nest position was inside a wall ({nestPosition}).");
                                 }
                                 monsterPrefabs.Clear();
                                 break;
@@ -274,7 +290,7 @@ namespace Barotrauma
                    
                     break;
                 case 1:
-                    if (!Submarine.MainSub.AtEndExit && !Submarine.MainSub.AtStartExit) { return; }
+                    if (!Submarine.MainSub.AtEitherExit) { return; }
                     State = 2;
                     break;
             }
@@ -305,20 +321,13 @@ namespace Barotrauma
             return true;
         }
 
-        public override void End()
+        protected override bool DetermineCompleted()
         {
-            if (AllItemsDestroyedOrRetrieved())
-            {
-                GiveReward();
-                completed = true;
-                if (completed)
-                {
-                    if (Prefab.LocationTypeChangeOnCompleted != null)
-                    {
-                        ChangeLocationType(Prefab.LocationTypeChangeOnCompleted);
-                    }
-                }
-            }
+            return AllItemsDestroyedOrRetrieved();
+        }
+
+        protected override void EndMissionSpecific(bool completed)
+        {
             foreach (Item item in items)
             {
                 if (item != null && !item.Removed)

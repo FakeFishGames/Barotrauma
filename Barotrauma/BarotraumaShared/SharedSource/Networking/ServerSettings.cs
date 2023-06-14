@@ -42,6 +42,11 @@ namespace Barotrauma.Networking
 
     partial class ServerSettings : ISerializableEntity
     {
+        public const int PacketLimitMin = 1200,
+                         PacketLimitWarning = 2400,
+                         PacketLimitDefault = 3000,
+                         PacketLimitMax = 10000;
+
         public const string SettingsFile = "serversettings.xml";
 
         [Flags]
@@ -70,27 +75,18 @@ namespace Barotrauma.Networking
 
         public class SavedClientPermission
         {
-            public readonly string EndPoint;
-            public readonly ulong SteamID;
+            public readonly Either<Address, AccountId> AddressOrAccountId;
             public readonly string Name;
-            public HashSet<DebugConsole.Command> PermittedCommands;
+            public readonly ImmutableHashSet<DebugConsole.Command> PermittedCommands;
 
-            public ClientPermissions Permissions;
+            public readonly ClientPermissions Permissions;
 
-            public SavedClientPermission(string name, string endpoint, ClientPermissions permissions, HashSet<DebugConsole.Command> permittedCommands)
+            public SavedClientPermission(string name, Either<Address, AccountId> addressOrAccountId, ClientPermissions permissions, IEnumerable<DebugConsole.Command> permittedCommands)
             {
                 this.Name = name;
-                this.EndPoint = endpoint;
+                this.AddressOrAccountId = addressOrAccountId;
                 this.Permissions = permissions;
-                this.PermittedCommands = permittedCommands;
-            }
-            public SavedClientPermission(string name, ulong steamID, ClientPermissions permissions, HashSet<DebugConsole.Command> permittedCommands)
-            {
-                this.Name = name;
-                this.SteamID = steamID;
-
-                this.Permissions = permissions;
-                this.PermittedCommands = permittedCommands;
+                this.PermittedCommands = permittedCommands.ToImmutableHashSet();
             }
         }
 
@@ -120,27 +116,24 @@ namespace Barotrauma.Networking
                 switch (typeString)
                 {
                     case "float":
-                        if (!(a is float?)) return false;
-                        if (!(b is float?)) return false;
-                        return MathUtils.NearlyEqual((float)a, (float)b);
+                        if (a is not float fa) { return false; }
+                        if (b is not float fb) { return false; }
+                        return MathUtils.NearlyEqual(fa, fb);
                     case "int":
-                        if (!(a is int?)) return false;
-                        if (!(b is int?)) return false;
-                        return (int)a == (int)b;
+                        if (a is not int ia) { return false; }
+                        if (b is not int ib) { return false; }
+                        return ia == ib;
                     case "bool":
-                        if (!(a is bool?)) return false;
-                        if (!(b is bool?)) return false;
-                        return (bool)a == (bool)b;
+                        if (a is not bool ba) { return false; }
+                        if (b is not bool bb) { return false; }
+                        return ba == bb;
                     case "Enum":
-                        if (!(a is Enum)) return false;
-                        if (!(b is Enum)) return false;
-                        return ((Enum)a).Equals((Enum)b);
+                        if (a is not Enum ea) { return false; }
+                        if (b is not Enum eb) { return false; }
+                        return ea.Equals(eb);
                     default:
-                        if (a == null || b == null)
-                        {
-                            return (a == null) == (b == null);
-                        }
-                        return a.ToString().Equals(b.ToString(), StringComparison.OrdinalIgnoreCase);
+                        return ReferenceEquals(a,b)
+                            || string.Equals(a?.ToString(), b?.ToString(), StringComparison.OrdinalIgnoreCase);
                 }
             }
 
@@ -213,53 +206,53 @@ namespace Barotrauma.Networking
 
             public void Write(IWriteMessage msg, object overrideValue = null)
             {
-                if (overrideValue == null) { overrideValue = Value; }
+                overrideValue ??= Value;
                 switch (typeString)
                 {
                     case "float":
                         msg.WriteVariableUInt32(4);
-                        msg.Write((float)overrideValue);
+                        msg.WriteSingle((float)overrideValue);
                         break;
                     case "int":
                         msg.WriteVariableUInt32(4);
-                        msg.Write((int)overrideValue);
+                        msg.WriteInt32((int)overrideValue);
                         break;
                     case "vector2":
                         msg.WriteVariableUInt32(8);
-                        msg.Write(((Vector2)overrideValue).X);
-                        msg.Write(((Vector2)overrideValue).Y);
+                        msg.WriteSingle(((Vector2)overrideValue).X);
+                        msg.WriteSingle(((Vector2)overrideValue).Y);
                         break;
                     case "vector3":
                         msg.WriteVariableUInt32(12);
-                        msg.Write(((Vector3)overrideValue).X);
-                        msg.Write(((Vector3)overrideValue).Y);
-                        msg.Write(((Vector3)overrideValue).Z);
+                        msg.WriteSingle(((Vector3)overrideValue).X);
+                        msg.WriteSingle(((Vector3)overrideValue).Y);
+                        msg.WriteSingle(((Vector3)overrideValue).Z);
                         break;
                     case "vector4":
                         msg.WriteVariableUInt32(16);
-                        msg.Write(((Vector4)overrideValue).X);
-                        msg.Write(((Vector4)overrideValue).Y);
-                        msg.Write(((Vector4)overrideValue).Z);
-                        msg.Write(((Vector4)overrideValue).W);
+                        msg.WriteSingle(((Vector4)overrideValue).X);
+                        msg.WriteSingle(((Vector4)overrideValue).Y);
+                        msg.WriteSingle(((Vector4)overrideValue).Z);
+                        msg.WriteSingle(((Vector4)overrideValue).W);
                         break;
                     case "color":
                         msg.WriteVariableUInt32(4);
-                        msg.Write(((Color)overrideValue).R);
-                        msg.Write(((Color)overrideValue).G);
-                        msg.Write(((Color)overrideValue).B);
-                        msg.Write(((Color)overrideValue).A);
+                        msg.WriteByte(((Color)overrideValue).R);
+                        msg.WriteByte(((Color)overrideValue).G);
+                        msg.WriteByte(((Color)overrideValue).B);
+                        msg.WriteByte(((Color)overrideValue).A);
                         break;
                     case "rectangle":
                         msg.WriteVariableUInt32(16);
-                        msg.Write(((Rectangle)overrideValue).X);
-                        msg.Write(((Rectangle)overrideValue).Y);
-                        msg.Write(((Rectangle)overrideValue).Width);
-                        msg.Write(((Rectangle)overrideValue).Height);
+                        msg.WriteInt32(((Rectangle)overrideValue).X);
+                        msg.WriteInt32(((Rectangle)overrideValue).Y);
+                        msg.WriteInt32(((Rectangle)overrideValue).Width);
+                        msg.WriteInt32(((Rectangle)overrideValue).Height);
                         break;
                     default:
                         string strVal = overrideValue.ToString();
 
-                        msg.Write(strVal);
+                        msg.WriteString(strVal);
                         break;
                 }
             }
@@ -279,7 +272,6 @@ namespace Barotrauma.Networking
         {
             ServerLog = new ServerLog(serverName);
 
-            Whitelist = new WhiteList();
             BanList = new BanList();
 
             ExtraCargo = new Dictionary<ItemPrefab, int>();
@@ -303,10 +295,7 @@ namespace Barotrauma.Networking
                 var saveProperties = SerializableProperty.GetProperties<Serialize>(this);
                 foreach (var property in saveProperties)
                 {
-                    object value = property.GetValue(this);
-                    if (value == null) { continue; }
-
-                    string typeName = SerializableProperty.GetSupportedTypeName(value.GetType());
+                    string typeName = SerializableProperty.GetSupportedTypeName(property.PropertyType);
                     if (typeName != null || property.PropertyType.IsEnum)
                     {
                         NetPropertyData netPropertyData = new NetPropertyData(this, property, typeName);
@@ -392,19 +381,23 @@ namespace Barotrauma.Networking
 
         private bool autoRestart;
 
-        public bool IsPublic;
-
         private int maxPlayers;
 
         public List<SavedClientPermission> ClientPermissions { get; private set; } = new List<SavedClientPermission>();
 
-        public WhiteList Whitelist { get; private set; }
-
-        [Serialize(20, IsPropertySaveable.Yes)]
-        public int TickRate
+        [Serialize(true, IsPropertySaveable.Yes)]
+        public bool IsPublic
         {
             get;
             set;
+        }
+
+        private int tickRate = 20;
+        [Serialize(20, IsPropertySaveable.Yes)]
+        public int TickRate
+        {
+            get { return tickRate; }
+            set { tickRate = MathHelper.Clamp(value, 1, 60); }
         }
 
         [Serialize(true, IsPropertySaveable.Yes)]
@@ -529,8 +522,15 @@ namespace Barotrauma.Networking
             }
         }
 
-        [Serialize(Barotrauma.LosMode.Opaque, IsPropertySaveable.Yes)]
+        [Serialize(LosMode.Opaque, IsPropertySaveable.Yes)]
         public LosMode LosMode
+        {
+            get;
+            set;
+        }
+
+        [Serialize(EnemyHealthBarMode.ShowAll, IsPropertySaveable.Yes)]
+        public EnemyHealthBarMode ShowEnemyHealthBars
         {
             get;
             set;
@@ -562,7 +562,7 @@ namespace Barotrauma.Networking
 
         public bool HasPassword
         {
-            get { return password != null; }
+            get { return !string.IsNullOrEmpty(password); }
 #if CLIENT
             set
             {
@@ -693,6 +693,20 @@ namespace Barotrauma.Networking
             private set;
         }
 
+        [Serialize(true, IsPropertySaveable.Yes)]
+        public bool EnableDoSProtection
+        {
+            get;
+            private set;
+        }
+
+        [Serialize(PacketLimitDefault, IsPropertySaveable.Yes)]
+        public int MaxPacketAmount
+        {
+            get;
+            private set;
+        }
+
         [Serialize("", IsPropertySaveable.Yes)]
         public string SelectedSubmarine
         {
@@ -753,6 +767,9 @@ namespace Barotrauma.Networking
             get;
             set;
         }
+        
+        [Serialize(defaultValue: "", IsPropertySaveable.Yes)]
+        public LanguageIdentifier Language { get; set; }
 
         private SelectionMode subSelectionMode;
         [Serialize(SelectionMode.Manual, IsPropertySaveable.Yes)]
@@ -805,6 +822,13 @@ namespace Barotrauma.Networking
 
         [Serialize(0.6f, IsPropertySaveable.Yes)]
         public float KickVoteRequiredRatio
+        {
+            get;
+            private set;
+        }
+
+        [Serialize(120.0f, IsPropertySaveable.Yes)]
+        public float DisallowKickVoteTime
         {
             get;
             private set;
@@ -958,14 +982,7 @@ namespace Barotrauma.Networking
 
         public void SetPassword(string password)
         {
-            if (string.IsNullOrEmpty(password))
-            {
-                this.password = null;
-            }
-            else
-            {
-                this.password = password;
-            }
+            this.password = string.IsNullOrEmpty(password) ? null : password;
         }
 
         public static byte[] SaltPassword(byte[] password, int salt)
@@ -982,14 +999,9 @@ namespace Barotrauma.Networking
 
         public bool IsPasswordCorrect(byte[] input, int salt)
         {
-            if (!HasPassword) return true;
+            if (!HasPassword) { return true; }
             byte[] saltedPw = SaltPassword(Encoding.UTF8.GetBytes(password), salt);
-            if (input.Length != saltedPw.Length) return false;
-            for (int i = 0; i < input.Length; i++)
-            {
-                if (input[i] != saltedPw[i]) return false;
-            }
-            return true;
+            return saltedPw.SequenceEqual(input);
         }
 
         /// <summary>
@@ -1044,7 +1056,7 @@ namespace Barotrauma.Networking
             msg.WriteVariableUInt32((uint)monsterNames.Count);
             foreach (Identifier s in monsterNames)
             {
-                msg.Write(monsterEnabled[s]);
+                msg.WriteBoolean(monsterEnabled[s]);
             }
             msg.WritePadBits();
         }
@@ -1076,15 +1088,15 @@ namespace Barotrauma.Networking
         {
             if (ExtraCargo == null)
             {
-                msg.Write((UInt32)0);
+                msg.WriteUInt32((UInt32)0);
                 return;
             }
 
-            msg.Write((UInt32)ExtraCargo.Count);
+            msg.WriteUInt32((UInt32)ExtraCargo.Count);
             foreach (KeyValuePair<ItemPrefab, int> kvp in ExtraCargo)
             {
-                msg.Write(kvp.Key.Identifier);
-                msg.Write((byte)kvp.Value);
+                msg.WriteIdentifier(kvp.Key.Identifier);
+                msg.WriteByte((byte)kvp.Value);
             }
         }
 
@@ -1097,7 +1109,7 @@ namespace Barotrauma.Networking
             for (int i = 0; i < count; i++)
             {
                 int index = msg.ReadUInt16();
-                if (index < 0 || index >= subList.Count) { continue; }
+                if (index >= subList.Count) { continue; }
                 string submarineName = subList[index].Name;
                 HiddenSubs.Add(submarineName);
             }
@@ -1114,7 +1126,7 @@ namespace Barotrauma.Networking
             msg.WriteVariableUInt32((uint)HiddenSubs.Count);
             foreach (string submarineName in HiddenSubs)
             {
-                msg.Write((UInt16)subList.FindIndex(s => s.Name.Equals(submarineName, StringComparison.OrdinalIgnoreCase)));
+                msg.WriteUInt16((UInt16)subList.FindIndex(s => s.Name.Equals(submarineName, StringComparison.OrdinalIgnoreCase)));
             }
         }
     }

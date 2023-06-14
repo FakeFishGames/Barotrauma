@@ -15,8 +15,6 @@ namespace Barotrauma
         private int pageCount;
         private readonly bool transferService, purchaseService;
         private bool initialized;
-        private int deliveryFee;
-        private string deliveryLocationName;
 
         public GUIFrame GuiFrame;
         private GUIFrame pageIndicatorHolder;
@@ -34,14 +32,13 @@ namespace Barotrauma
         private readonly List<SubmarineInfo> subsToShow;
         private readonly SubmarineDisplayContent[] submarineDisplays = new SubmarineDisplayContent[submarinesPerPage];
         private SubmarineInfo selectedSubmarine = null;
-        private LocalizedString purchaseAndSwitchText, purchaseOnlyText, deliveryText, selectedSubText, switchText, missingPreviewText, currencyName;
+        private LocalizedString purchaseAndSwitchText, purchaseOnlyText, selectedSubText, switchText, missingPreviewText, currencyName;
         private readonly RectTransform parent;
         private readonly Action closeAction;
         private Sprite pageIndicator;
 
         private readonly LocalizedString[] messageBoxOptions;
 
-        public const int DeliveryFeePerDistanceTravelled = 1000;
         public static bool ContentRefreshRequired = false;
 
         private static readonly Color indicatorColor = new Color(112, 149, 129);
@@ -56,6 +53,7 @@ namespace Barotrauma
             public SubmarineInfo displayedSubmarine;
             public GUITextBlock submarineName;
             public GUITextBlock submarineClass;
+            public GUITextBlock submarineTier;
             public GUITextBlock submarineFee;
             public GUIButton selectSubmarineButton;
             public GUITextBlock middleTextBlock;
@@ -107,27 +105,15 @@ namespace Barotrauma
         {
             initialized = true;
             selectedSubText = TextManager.Get("selectedsub");
-            deliveryText = TextManager.Get("requestdeliverybutton");
             switchText = TextManager.Get("switchtosubmarinebutton");
             purchaseAndSwitchText = TextManager.Get("purchaseandswitch");
             purchaseOnlyText = TextManager.Get("purchase");
-            if (transferService)
-            {
-                deliveryFee = CalculateDeliveryFee();
-            }
 
             currencyName = TextManager.Get("credit").Value.ToLowerInvariant();
 
             UpdateSubmarines();
             missingPreviewText = TextManager.Get("SubPreviewImageNotFound");
             CreateGUI();
-        }
-
-        private int CalculateDeliveryFee()
-        {
-            int distanceToOutpost = GameMain.GameSession.Map.DistanceToClosestLocationWithOutpost(GameMain.GameSession.Map.CurrentLocation, out Location endLocation);
-            deliveryLocationName = endLocation.Name;
-            return DeliveryFeePerDistanceTravelled * distanceToOutpost;
         }
 
         private void CreateGUI()
@@ -162,7 +148,12 @@ namespace Barotrauma
                 IgnoreLayoutGroups = true                
             };
             new GUIListBox(new RectTransform(Vector2.One, infoFrame.RectTransform)) { IgnoreLayoutGroups = true, CanBeFocused = false };
-            specsFrame = new GUIListBox(new RectTransform(new Vector2(0.39f, 1f), infoFrame.RectTransform), style: null) { Spacing = GUI.IntScale(5), Padding = new Vector4(HUDLayoutSettings.Padding / 2f, HUDLayoutSettings.Padding, 0, 0) };
+            specsFrame = new GUIListBox(new RectTransform(new Vector2(0.39f, 1f), infoFrame.RectTransform), style: null) 
+            {
+                CurrentSelectMode = GUIListBox.SelectMode.None,
+                Spacing = GUI.IntScale(5), 
+                Padding = new Vector4(HUDLayoutSettings.Padding / 2f, HUDLayoutSettings.Padding, 0, 0) 
+            };
             new GUIFrame(new RectTransform(new Vector2(0.02f, 0.8f), infoFrame.RectTransform) { RelativeOffset = new Vector2(0.0f, 0.1f) }, style: "VerticalLine");
             GUIListBox descriptionFrame = new GUIListBox(new RectTransform(new Vector2(0.59f, 1f), infoFrame.RectTransform), style: null) { Padding = new Vector4(HUDLayoutSettings.Padding / 2f, HUDLayoutSettings.Padding * 1.5f, HUDLayoutSettings.Padding * 1.5f, HUDLayoutSettings.Padding / 2f) };
             descriptionTextBlock = new GUITextBlock(new RectTransform(new Vector2(1, 0), descriptionFrame.Content.RectTransform), string.Empty, font: GUIStyle.Font, wrap: true) { CanBeFocused = false };
@@ -188,7 +179,7 @@ namespace Barotrauma
                 confirmButtonAlt = new GUIButton(new RectTransform(new Vector2(0.2f, 1f), bottomContainer.RectTransform), purchaseOnlyText, style: "GUIButtonFreeScale");
                 transferInfoFrameWidth -= confirmButtonAlt.RectTransform.RelativeSize.X;
             } 
-            confirmButton = new GUIButton(new RectTransform(new Vector2(0.2f, 1f), bottomContainer.RectTransform), purchaseService ? purchaseAndSwitchText : deliveryFee > 0 ? deliveryText : switchText, style: "GUIButtonFreeScale");
+            confirmButton = new GUIButton(new RectTransform(new Vector2(0.2f, 1f), bottomContainer.RectTransform), purchaseService ? purchaseAndSwitchText : switchText, style: "GUIButtonFreeScale");
             SetConfirmButtonState(false);
             transferInfoFrameWidth -= confirmButton.RectTransform.RelativeSize.X;
             GUIFrame transferInfoFrame = new GUIFrame(new RectTransform(new Vector2(transferInfoFrameWidth, 1.0f), bottomContainer.RectTransform), style: null)
@@ -220,16 +211,18 @@ namespace Barotrauma
                 };
                 submarineDisplayElement.submarineImage = new GUIImage(new RectTransform(new Vector2(0.8f, 1f), submarineDisplayElement.background.RectTransform, Anchor.Center), null, true);
                 submarineDisplayElement.middleTextBlock = new GUITextBlock(new RectTransform(new Vector2(0.8f, 1f), submarineDisplayElement.background.RectTransform, Anchor.Center), string.Empty, textAlignment: Alignment.Center);
-                submarineDisplayElement.submarineName = new GUITextBlock(new RectTransform(new Vector2(1f, 0.1f), submarineDisplayElement.background.RectTransform, Anchor.TopCenter, Pivot.TopCenter) { AbsoluteOffset = new Point(0, HUDLayoutSettings.Padding) }, string.Empty, textAlignment: Alignment.Center, font: GUIStyle.SubHeadingFont);
-                submarineDisplayElement.submarineClass = new GUITextBlock(new RectTransform(new Vector2(1f, 0.1f), submarineDisplayElement.background.RectTransform, Anchor.TopCenter, Pivot.TopCenter) { AbsoluteOffset = new Point(0, HUDLayoutSettings.Padding + (int)GUIStyle.Font.MeasureString(submarineDisplayElement.submarineName.Text).Y) }, string.Empty, textAlignment: Alignment.Center);
-                submarineDisplayElement.submarineFee = new GUITextBlock(new RectTransform(new Vector2(1f, 0.1f), submarineDisplayElement.background.RectTransform, Anchor.BottomCenter, Pivot.BottomCenter) { AbsoluteOffset = new Point(0, HUDLayoutSettings.Padding) }, string.Empty, textAlignment: Alignment.Center, font: GUIStyle.SubHeadingFont);
+                submarineDisplayElement.submarineName = new GUITextBlock(new RectTransform(new Vector2(1f, 0.1f), submarineDisplayElement.background.RectTransform, Anchor.TopCenter) { AbsoluteOffset = new Point(0, HUDLayoutSettings.Padding) }, string.Empty, textAlignment: Alignment.Center, font: GUIStyle.SubHeadingFont);
+                submarineDisplayElement.submarineFee = new GUITextBlock(new RectTransform(new Vector2(1f, 0.1f), submarineDisplayElement.background.RectTransform, Anchor.BottomCenter) { AbsoluteOffset = new Point(0, HUDLayoutSettings.Padding) }, string.Empty, textAlignment: Alignment.Center, font: GUIStyle.SubHeadingFont);
                 submarineDisplayElement.selectSubmarineButton = new GUIButton(new RectTransform(Vector2.One, submarineDisplayElement.background.RectTransform), style: null);
-                submarineDisplayElement.previewButton = new GUIButton(new RectTransform(Vector2.One * 0.12f, submarineDisplayElement.background.RectTransform, anchor: Anchor.BottomRight, pivot: Pivot.BottomRight, scaleBasis: ScaleBasis.BothHeight) { AbsoluteOffset = new Point((int)(0.03f * background.Rect.Height)) }, style: "ExpandButton")
+                submarineDisplayElement.previewButton = new GUIButton(new RectTransform(Vector2.One * 0.12f, submarineDisplayElement.background.RectTransform, anchor: Anchor.BottomRight, scaleBasis: ScaleBasis.BothHeight) { AbsoluteOffset = new Point((int)(0.03f * background.Rect.Height)) }, style: "ExpandButton")
                 {
                     Color = Color.White,
                     HoverColor = Color.White,
                     PressedColor = Color.White
                 };
+                submarineDisplayElement.submarineClass = new GUITextBlock(new RectTransform(new Vector2(1f, 0.1f), submarineDisplayElement.background.RectTransform, Anchor.TopCenter) { AbsoluteOffset = new Point(0, HUDLayoutSettings.Padding + (int)GUIStyle.Font.MeasureString(submarineDisplayElement.submarineName.Text).Y) }, string.Empty, textAlignment: Alignment.Left);
+                submarineDisplayElement.submarineTier = new GUITextBlock(new RectTransform(new Vector2(0.5f, 0.1f), submarineDisplayElement.background.RectTransform, Anchor.TopRight) { AbsoluteOffset = new Point(0, HUDLayoutSettings.Padding + (int)GUIStyle.Font.MeasureString(submarineDisplayElement.submarineName.Text).Y) }, string.Empty, textAlignment: Alignment.Right);
+
                 submarineDisplays[i] = submarineDisplayElement;
             }
 
@@ -355,6 +348,7 @@ namespace Barotrauma
                     submarineDisplays[i].submarineName.Text = string.Empty;
                     submarineDisplays[i].submarineFee.Text = string.Empty;
                     submarineDisplays[i].submarineClass.Text = string.Empty;
+                    submarineDisplays[i].submarineTier.Text = string.Empty;
                     submarineDisplays[i].selectSubmarineButton.Enabled = false;
                     submarineDisplays[i].selectSubmarineButton.OnClicked = null;
                     submarineDisplays[i].displayedSubmarine = null;
@@ -387,27 +381,24 @@ namespace Barotrauma
                         return true;
                     };
 
-                    submarineDisplays[i].submarineName.Text = subToDisplay.DisplayName;
+                    submarineDisplays[i].submarineName.Text = subToDisplay.DisplayName;                    
+                    
                     submarineDisplays[i].submarineClass.Text = TextManager.GetWithVariable("submarineclass.classsuffixformat", "[type]", TextManager.Get($"submarineclass.{subToDisplay.SubmarineClass}"));
+                    submarineDisplays[i].submarineClass.ToolTip = TextManager.Get("submarineclass.description") + "\n\n" + TextManager.Get($"submarineclass.{subToDisplay.SubmarineClass}.description"); 
+
+                    submarineDisplays[i].submarineTier.Text = TextManager.Get($"submarinetier.{subToDisplay.Tier}");
+                    submarineDisplays[i].submarineTier.ToolTip = TextManager.Get("submarinetier.description");
 
                     if (!GameMain.GameSession.IsSubmarineOwned(subToDisplay))
                     {
-                        LocalizedString amountString = TextManager.FormatCurrency(subToDisplay.Price);
+                        LocalizedString amountString = TextManager.FormatCurrency(subToDisplay.GetPrice());
                         submarineDisplays[i].submarineFee.Text = TextManager.GetWithVariable("price", "[amount]", amountString);
                     }
                     else
                     {
                         if (subToDisplay.Name != CurrentOrPendingSubmarine().Name)
                         {
-                            if (deliveryFee > 0)
-                            {
-                                LocalizedString amountString = TextManager.FormatCurrency(deliveryFee);
-                                submarineDisplays[i].submarineFee.Text = TextManager.GetWithVariable("deliveryfee", "[amount]", amountString);
-                            }
-                            else
-                            {
-                                submarineDisplays[i].submarineFee.Text = string.Empty;
-                            }
+                            submarineDisplays[i].submarineFee.Text = string.Empty;                            
                         }
                         else
                         {
@@ -458,7 +449,7 @@ namespace Barotrauma
             if (transferService)
             {
                 subsToShow.AddRange(GameMain.GameSession.OwnedSubmarines);
-                subsToShow.Sort((x, y) => x.SubmarineClass.CompareTo(y.SubmarineClass));
+                subsToShow.Sort(ComparePrice);
                 string currentSubName = CurrentOrPendingSubmarine().Name;
                 int currentIndex = subsToShow.FindIndex(s => s.Name == currentSubName);
                 if (currentIndex != -1)
@@ -470,7 +461,11 @@ namespace Barotrauma
             {
                 subsToShow.AddRange((GameMain.Client is null ? SubmarineInfo.SavedSubmarines : MultiPlayerCampaign.GetCampaignSubs())
                     .Where(s => s.IsCampaignCompatible && !GameMain.GameSession.OwnedSubmarines.Any(os => os.Name == s.Name)));
-                subsToShow.Sort((x, y) => x.SubmarineClass.CompareTo(y.SubmarineClass));
+                if (GameMain.GameSession.Campaign?.Map?.CurrentLocation is Location currentLocation)
+                {
+                    subsToShow.RemoveAll(sub => !currentLocation.IsSubmarineAvailable(sub));
+                }
+                subsToShow.Sort(ComparePrice);
             }
 
             if (transferService)
@@ -478,10 +473,14 @@ namespace Barotrauma
                 SetConfirmButtonState(selectedSubmarine != null && selectedSubmarine.Name != CurrentOrPendingSubmarine().Name);
             }
 
-            subsToShow.Sort((x, y) => x.SubmarineClass.CompareTo(y.SubmarineClass));
             pageCount = Math.Max(1, (int)Math.Ceiling(subsToShow.Count / (float)submarinesPerPage));
             UpdatePaging();
             ContentRefreshRequired = false;
+
+            static int ComparePrice(SubmarineInfo x, SubmarineInfo y)
+            {
+                return x.Price.CompareTo(y.Price) * 100 + x.Name.CompareTo(y.Name);
+            }
         }
 
         private SubmarineInfo GetSubToDisplay(int index)
@@ -559,7 +558,7 @@ namespace Barotrauma
 
                 if (owned)
                 {
-                    confirmButton.Text = deliveryFee > 0 ? deliveryText : switchText;
+                    confirmButton.Text = switchText;
                     confirmButton.OnClicked = (button, userData) =>
                     {
                         ShowTransferPrompt();
@@ -593,7 +592,7 @@ namespace Barotrauma
                 listBackground.SetCrop(true);
 
                 GUIFont font = GUIStyle.Font;
-                info.CreateSpecsWindow(specsFrame, font);
+                info.CreateSpecsWindow(specsFrame, font, includeCrushDepth: true);
                 descriptionTextBlock.Text = info.Description;
                 descriptionTextBlock.CalculateHeightFromText();
             }
@@ -659,7 +658,7 @@ namespace Barotrauma
         {
             if (GameMain.GameSession?.Campaign?.PendingSubmarineSwitch == null)
             {
-                return Submarine.MainSub.Info;
+                return Submarine.MainSub?.Info;
             }
             else
             {
@@ -680,37 +679,12 @@ namespace Barotrauma
 
         private void ShowTransferPrompt()
         {
-            if (!GameMain.GameSession.Campaign.CanAfford(deliveryFee) && deliveryFee > 0)
-            {
-                new GUIMessageBox(TextManager.Get("deliveryrequestheader"), TextManager.GetWithVariables("notenoughmoneyfordeliverytext",
-                    ("[currencyname]", currencyName),
-                    ("[submarinename]", selectedSubmarine.DisplayName),
-                    ("[location1]", deliveryLocationName),
-                    ("[location2]", GameMain.GameSession.Map.CurrentLocation.Name)));
-                return;
-            }
+            var text = TextManager.GetWithVariables("switchsubmarinetext",
+                ("[submarinename1]", CurrentOrPendingSubmarine().DisplayName),
+                ("[submarinename2]", selectedSubmarine.DisplayName));
+            text += GetItemTransferText();
+            GUIMessageBox msgBox = new GUIMessageBox(TextManager.Get("switchsubmarineheader"), text, messageBoxOptions);
 
-            GUIMessageBox msgBox;
-
-            if (deliveryFee > 0)
-            {
-                msgBox = new GUIMessageBox(TextManager.Get("deliveryrequestheader"), TextManager.GetWithVariables("deliveryrequesttext",
-                    ("[submarinename1]", selectedSubmarine.DisplayName),
-                    ("[location1]", deliveryLocationName),
-                    ("[location2]", GameMain.GameSession.Map.CurrentLocation.Name),
-                    ("[submarinename2]", CurrentOrPendingSubmarine().DisplayName),
-                    ("[amount]", deliveryFee.ToString()),
-                    ("[currencyname]", currencyName)), messageBoxOptions);
-                msgBox.Buttons[0].ClickSound = GUISoundType.ConfirmTransaction;
-            }
-            else
-            {
-                var text = TextManager.GetWithVariables("switchsubmarinetext",
-                    ("[submarinename1]", CurrentOrPendingSubmarine().DisplayName),
-                    ("[submarinename2]", selectedSubmarine.DisplayName));
-                text += GetItemTransferText();
-                msgBox = new GUIMessageBox(TextManager.Get("switchsubmarineheader"), text, messageBoxOptions);
-            }
 
             msgBox.Buttons[0].OnClicked = (applyButton, obj) =>
             {
@@ -755,7 +729,7 @@ namespace Barotrauma
             {
                 if (GameMain.Client == null)
                 {
-                    GameMain.GameSession.SwitchSubmarine(selectedSubmarine, TransferItemsOnSwitch, deliveryFee);
+                    GameMain.GameSession.SwitchSubmarine(selectedSubmarine, TransferItemsOnSwitch);
                     RefreshSubmarineDisplay(true);
                 }
                 else
@@ -775,7 +749,9 @@ namespace Barotrauma
 
         private void ShowBuyPrompt(bool purchaseOnly)
         {
-            if (!GameMain.GameSession.Campaign.CanAfford(selectedSubmarine.Price))
+            int price = selectedSubmarine.GetPrice();
+
+            if (!GameMain.GameSession.Campaign.CanAfford(price))
             {
                 new GUIMessageBox(TextManager.Get("purchasesubmarineheader"), TextManager.GetWithVariables("notenoughmoneyforpurchasetext",
                     ("[currencyname]", currencyName),
@@ -788,7 +764,7 @@ namespace Barotrauma
             {
                 var text = TextManager.GetWithVariables("purchaseandswitchsubmarinetext",
                     ("[submarinename1]", selectedSubmarine.DisplayName),
-                    ("[amount]", selectedSubmarine.Price.ToString()),
+                    ("[amount]", price.ToString()),
                     ("[currencyname]", currencyName),
                     ("[submarinename2]", CurrentOrPendingSubmarine().DisplayName));
                 text += GetItemTransferText();
@@ -832,7 +808,7 @@ namespace Barotrauma
                     if (GameMain.Client == null)
                     {
                         GameMain.GameSession.PurchaseSubmarine(selectedSubmarine);
-                        GameMain.GameSession.SwitchSubmarine(selectedSubmarine, TransferItemsOnSwitch, 0);
+                        GameMain.GameSession.SwitchSubmarine(selectedSubmarine, TransferItemsOnSwitch);
                         RefreshSubmarineDisplay(true);
                     }
                     else
@@ -846,8 +822,8 @@ namespace Barotrauma
             {
                 msgBox = new GUIMessageBox(TextManager.Get("purchasesubmarineheader"), TextManager.GetWithVariables("purchasesubmarinetext",
                     ("[submarinename]", selectedSubmarine.DisplayName),
-                    ("[amount]", selectedSubmarine.Price.ToString()),
-                    ("[currencyname]", currencyName)), messageBoxOptions);
+                    ("[amount]", price.ToString()),
+                    ("[currencyname]", currencyName)) + '\n' + TextManager.Get("submarineswitchinstruction"), messageBoxOptions);
 
                 msgBox.Buttons[0].OnClicked = (applyButton, obj) =>
                 {

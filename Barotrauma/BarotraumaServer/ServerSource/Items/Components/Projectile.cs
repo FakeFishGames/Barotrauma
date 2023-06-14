@@ -8,10 +8,12 @@ namespace Barotrauma.Items.Components
         private readonly struct EventData : IEventData
         {
             public readonly bool Launch;
+            public readonly byte SpreadCounter;
             
-            public EventData(bool launch)
+            public EventData(bool launch, byte spreadCounter = 0)
             {
                 Launch = launch;
+                SpreadCounter = spreadCounter;
             }
         }
         
@@ -25,39 +27,40 @@ namespace Barotrauma.Items.Components
             var eventData = ExtractEventData<EventData>(extraData);
             bool launch = eventData.Launch;
             
-            msg.Write(launch);
+            msg.WriteBoolean(launch);
             if (launch)
             {
-                msg.Write(User.ID);
-                msg.Write(launchPos.X);
-                msg.Write(launchPos.Y);
-                msg.Write(launchRot);
+                msg.WriteUInt16(User?.ID ?? Entity.NullEntityID);
+                msg.WriteSingle(launchPos.X);
+                msg.WriteSingle(launchPos.Y);
+                msg.WriteSingle(launchRot);
+                msg.WriteByte(eventData.SpreadCounter);
             }
 
             bool stuck = StickTarget != null && !item.Removed && !StickTargetRemoved();
-            msg.Write(stuck);
+            msg.WriteBoolean(stuck);
             if (stuck)
             {
-                msg.Write(item.Submarine?.ID ?? Entity.NullEntityID);
-                msg.Write(item.CurrentHull?.ID ?? Entity.NullEntityID);
-                msg.Write(item.SimPosition.X);
-                msg.Write(item.SimPosition.Y);
-                msg.Write(jointAxis.X);
-                msg.Write(jointAxis.Y);
+                msg.WriteUInt16(item.Submarine?.ID ?? Entity.NullEntityID);
+                msg.WriteUInt16(item.CurrentHull?.ID ?? Entity.NullEntityID);
+                msg.WriteSingle(item.SimPosition.X);
+                msg.WriteSingle(item.SimPosition.Y);
+                msg.WriteSingle(jointAxis.X);
+                msg.WriteSingle(jointAxis.Y);
                 if (StickTarget.UserData is Structure structure)
                 {
-                    msg.Write(structure.ID);
+                    msg.WriteUInt16(structure.ID);
                     int bodyIndex = structure.Bodies.IndexOf(StickTarget);
-                    msg.Write((byte)(bodyIndex == -1 ? 0 : bodyIndex));
+                    msg.WriteByte((byte)(bodyIndex == -1 ? 0 : bodyIndex));
                 }
                 else if (StickTarget.UserData is Entity entity)
                 {
-                    msg.Write(entity.ID);
+                    msg.WriteUInt16(entity.ID);
                 }
                 else if (StickTarget.UserData is Limb limb)
                 {
-                    msg.Write(limb.character.ID);
-                    msg.Write((byte)Array.IndexOf(limb.character.AnimController.Limbs, limb));
+                    msg.WriteUInt16(limb.character.ID);
+                    msg.WriteByte((byte)Array.IndexOf(limb.character.AnimController.Limbs, limb));
                 }
                 else
                 {

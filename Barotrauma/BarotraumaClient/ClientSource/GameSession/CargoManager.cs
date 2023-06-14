@@ -11,7 +11,15 @@ namespace Barotrauma
         private List<SoldEntity> SoldEntities { get; } = new List<SoldEntity>();
 
         // The bag slot is intentionally left out since we want to be able to sell items from there
-        private readonly List<InvSlotType> equipmentSlots = new List<InvSlotType>() { InvSlotType.Head, InvSlotType.InnerClothes, InvSlotType.OuterClothes, InvSlotType.Headset, InvSlotType.Card };
+        private static readonly HashSet<InvSlotType> equipmentSlots = new HashSet<InvSlotType>()
+        {
+            InvSlotType.Head,
+            InvSlotType.InnerClothes,
+            InvSlotType.OuterClothes,
+            InvSlotType.Headset,
+            InvSlotType.Card,
+            InvSlotType.HealthInterface
+        };
 
         public IEnumerable<Item> GetSellableItems(Character character)
         {
@@ -103,7 +111,7 @@ namespace Barotrauma
             {
                 if (soldItem.ItemPrefab != soldEntity.ItemPrefab) { return false; }
                 if (matchId && (soldEntity.Item == null || soldItem.ID != soldEntity.Item.ID)) { return false; }
-                if (soldItem.Origin == SoldItem.SellOrigin.Character && GameMain.Client != null && soldItem.SellerID != GameMain.Client.ID) { return false; }
+                if (soldItem.Origin == SoldItem.SellOrigin.Character && GameMain.Client != null && soldItem.SellerID != GameMain.Client.SessionId) { return false; }
                 return true;
             }
         }
@@ -139,16 +147,16 @@ namespace Barotrauma
             }
             catch (NotImplementedException e)
             {
-                DebugConsole.ShowError($"Error selling items: uknown store tab type \"{sellingMode}\".\n{e.StackTrace.CleanupStackTrace()}");
+                DebugConsole.LogError($"Error selling items: uknown store tab type \"{sellingMode}\".\n{e.StackTrace.CleanupStackTrace()}");
                 return;
             }
             bool canAddToRemoveQueue = campaign.IsSinglePlayer && Entity.Spawner != null;
-            byte sellerId = GameMain.Client?.ID ?? 0;
+            byte sellerId = GameMain.Client?.SessionId ?? 0;
             // Check all the prices before starting the transaction to make sure the modifiers stay the same for the whole transaction
             var sellValues = GetSellValuesAtCurrentLocation(storeIdentifier, itemsToSell.Select(i => i.ItemPrefab));
             if (!(Location.GetStore(storeIdentifier) is { } store))
             {
-                DebugConsole.ShowError($"Error selling items at {Location}: no store with identifier \"{storeIdentifier}\" exists.\n{Environment.StackTrace.CleanupStackTrace()}");
+                DebugConsole.LogError($"Error selling items at {Location}: no store with identifier \"{storeIdentifier}\" exists.\n{Environment.StackTrace.CleanupStackTrace()}");
                 return;
             }
             var storeSpecificSoldItems = GetSoldItems(storeIdentifier, create: true);

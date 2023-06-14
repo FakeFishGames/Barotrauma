@@ -11,37 +11,58 @@ namespace Barotrauma
         public override void ClientReadInitial(IReadMessage msg)
         {
             base.ClientReadInitial(msg);
-            bool usedExistingItem = msg.ReadBoolean();
-            if (usedExistingItem)
+
+            foreach (var target in targets)
             {
-                ushort id = msg.ReadUInt16();
-                item = Entity.FindEntityByID(id) as Item;
-                if (item == null)
+                bool targetFound = msg.ReadBoolean();
+                if (!targetFound) { continue; }
+
+                bool usedExistingItem = msg.ReadBoolean();
+                if (usedExistingItem)
                 {
-                    throw new System.Exception("Error in SalvageMission.ClientReadInitial: failed to find item " + id + " (mission: " + Prefab.Identifier + ")");
+                    ushort id = msg.ReadUInt16();
+                    target.Item = Entity.FindEntityByID(id) as Item;
+                    if (target.Item == null)
+                    {
+                        throw new System.Exception("Error in SalvageMission.ClientReadInitial: failed to find item " + id + " (mission: " + Prefab.Identifier + ")");
+                    }
+                }
+                else
+                {
+                    target.Item = Item.ReadSpawnData(msg);
+                    if (target.Item == null)
+                    {
+                        throw new System.Exception("Error in SalvageMission.ClientReadInitial: spawned item was null (mission: " + Prefab.Identifier + ")");
+                    }
+                }
+
+                int executedEffectCount = msg.ReadByte();
+                for (int i = 0; i < executedEffectCount; i++)
+                {
+                    int listIndex = msg.ReadByte();
+                    int effectIndex = msg.ReadByte();
+                    var selectedEffect = target.StatusEffects[listIndex][effectIndex];
+                    target.Item.ApplyStatusEffect(selectedEffect, selectedEffect.type, deltaTime: 1.0f, worldPosition: target.Item.Position);
+                }
+
+                if (target.Item.body != null)
+                {
+                    target.Item.body.FarseerBody.BodyType = BodyType.Kinematic;
                 }
             }
-            else
+        }
+
+        public override void ClientRead(IReadMessage msg)
+        {
+            base.ClientRead(msg);
+            int targetCount = msg.ReadByte();
+            for (int i = 0; i < targetCount; i++)
             {
-                item = Item.ReadSpawnData(msg);
-                if (item == null)
+                var state = (Target.RetrievalState)msg.ReadByte();
+                if (i < targets.Count)
                 {
-                    throw new System.Exception("Error in SalvageMission.ClientReadInitial: spawned item was null (mission: " + Prefab.Identifier + ")");
+                    targets[i].State = state;
                 }
-            }
-
-            int executedEffectCount = msg.ReadByte();
-            for (int i = 0; i < executedEffectCount; i++)
-            {
-                int index1 = msg.ReadByte();
-                int index2 = msg.ReadByte();
-                var selectedEffect = statusEffects[index1][index2];
-                item.ApplyStatusEffect(selectedEffect, selectedEffect.type, deltaTime: 1.0f, worldPosition: item.Position);
-            }
-
-            if (item.body != null)
-            {
-                item.body.FarseerBody.BodyType = BodyType.Kinematic;
             }
         }
     }

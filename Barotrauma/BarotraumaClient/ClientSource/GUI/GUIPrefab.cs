@@ -8,6 +8,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text;
 using System.Xml.Linq;
+using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
@@ -45,16 +46,17 @@ namespace Barotrauma
             }
         }
 
-        private ScalableFont cjkFont;
+        private ImmutableDictionary<TextManager.SpeciallyHandledCharCategory, ScalableFont> specialHandlingFonts;
 
-        public ScalableFont CjkFont
+        public ScalableFont GetFontForCategory(TextManager.SpeciallyHandledCharCategory category)
         {
-            get
-            {
-                if (Language != GameSettings.CurrentConfig.Language) { LoadFont(); }
-                if (font.IsCJK) { return font; }
-                return cjkFont;
-            }
+            if (Language != GameSettings.CurrentConfig.Language) { LoadFont(); }
+            if (font.SpeciallyHandledCharCategory.HasFlag(category)) { return font; }
+            return specialHandlingFonts.TryGetValue(category, out var resultFont)
+                ? resultFont
+                : specialHandlingFonts.TryGetValue(TextManager.SpeciallyHandledCharCategory.CJK, out resultFont)
+                    ? resultFont
+                    : font;
         }
 
         public LanguageIdentifier Language { get; private set; }
@@ -70,40 +72,68 @@ namespace Barotrauma
             string fontPath = GetFontFilePath(element);
             uint size = GetFontSize(element);
             bool dynamicLoading = GetFontDynamicLoading(element);
-            bool isCJK = GetIsCJK(element);
+            var shcc = GetShcc(element);
             font?.Dispose();
-            cjkFont?.Dispose();
-            font = new ScalableFont(fontPath, size, GameMain.Instance.GraphicsDevice, dynamicLoading, isCJK)
+            specialHandlingFonts?.Values.ForEach(f => f.Dispose());
+            font = new ScalableFont(
+                fontPath,
+                size,
+                GameMain.Instance.GraphicsDevice,
+                dynamicLoading,
+                shcc)
             {
                 ForceUpperCase = element.GetAttributeBool("forceuppercase", false)
             };
-            if (!isCJK)
+
+            var fallbackFonts = new Dictionary<TextManager.SpeciallyHandledCharCategory, ScalableFont>();
+            foreach (var flag in TextManager.SpeciallyHandledCharCategories)
             {
-                cjkFont = ExtractCjkFont(element)
-                          ?? new ScalableFont("Content/Fonts/NotoSans/NotoSansCJKsc-Bold.otf",
-                                font.Size, GameMain.Instance.GraphicsDevice, dynamicLoading: true, isCJK: true);
-                cjkFont.ForceUpperCase = font.ForceUpperCase;
+                if (shcc.HasFlag(flag)) { continue; }
+
+                var extractedFont = ExtractFont(flag, element);
+                if (extractedFont is null) { continue; }
+                fallbackFonts.Add(flag, extractedFont);
             }
+            fallbackFonts.Values.ForEach(ff => ff.ForceUpperCase = font.ForceUpperCase);
+            specialHandlingFonts = fallbackFonts.ToImmutableDictionary();
             Language = GameSettings.CurrentConfig.Language;
         }
 
         public override void Dispose()
         {
-            font?.Dispose(); font = null;
-            cjkFont?.Dispose(); cjkFont = null;
+            font?.Dispose();
+            font = null;
+            specialHandlingFonts?.Values.ForEach(f => f.Dispose());
+            specialHandlingFonts = null;
         }
 
-        private ScalableFont ExtractCjkFont(ContentXElement element)
+        private ScalableFont ExtractFont(TextManager.SpeciallyHandledCharCategory flag, ContentXElement element)
         {
             foreach (var subElement in element.Elements().Reverse())
             {
                 if (subElement.NameAsIdentifier() != "override") { continue; }
-                if (subElement.GetAttributeBool("iscjk", false))
+                if (ScalableFont.ExtractShccFromXElement(subElement).HasFlag(flag))
                 {
                     return new ScalableFont(subElement, GameMain.Instance.GraphicsDevice);
                 }
             }
-            return null;
+
+            ScalableFont hardcodedFallback(string path)
+                => new ScalableFont(
+                    path,
+                    font.Size,
+                    GameMain.Instance.GraphicsDevice,
+                    dynamicLoading: true,
+                    speciallyHandledCharCategory: flag);
+            
+            return flag switch
+            {
+                TextManager.SpeciallyHandledCharCategory.CJK
+                    => hardcodedFallback("Content/Fonts/NotoSans/NotoSansCJKsc-Bold.otf"),
+                TextManager.SpeciallyHandledCharCategory.Cyrillic
+                    => hardcodedFallback("Content/Fonts/Oswald-Bold.ttf"),
+                _ => null
+            };
         }
         
         private string GetFontFilePath(ContentXElement element)
@@ -154,21 +184,21 @@ namespace Barotrauma
             return element.GetAttributeBool("dynamicloading", false);
         }
 
-        private bool GetIsCJK(XElement element)
+        private TextManager.SpeciallyHandledCharCategory GetShcc(XElement element)
         {
             foreach (var subElement in element.Elements())
             {
                 if (IsValidOverride(subElement))
                 {
-                    return subElement.GetAttributeBool("iscjk", false);
+                    return ScalableFont.ExtractShccFromXElement(subElement);
                 }
             }
-            return element.GetAttributeBool("iscjk", false);
+            return ScalableFont.ExtractShccFromXElement(element);
         }
 
         private bool IsValidOverride(XElement element)
         {
-            if (!element.Name.ToString().Equals("override", StringComparison.OrdinalIgnoreCase)) { return false; }
+            if (!element.IsOverride()) { return false; }
             var languages = element.GetAttributeIdentifierArray("language", Array.Empty<Identifier>());
             return languages.Any(l => l.ToLanguageIdentifier() == GameSettings.CurrentConfig.Language);
         }
@@ -178,39 +208,39 @@ namespace Barotrauma
     {
         public GUIFont(string identifier) : base(identifier) { }
 
-        public bool HasValue => Prefabs.Any();
+        public bool HasValue => !Prefabs.IsEmpty;
         
         public ScalableFont Value => Prefabs.ActivePrefab.Font;
 
         public static implicit operator ScalableFont(GUIFont reference) => reference.Value;
 
-        public bool ForceUpperCase => HasValue && Value.ForceUpperCase;
+        public bool ForceUpperCase => Prefabs.ActivePrefab?.Font is { ForceUpperCase: true };
 
         public uint Size => HasValue ? Value.Size : 0;
 
         private ScalableFont GetFontForStr(LocalizedString str) => GetFontForStr(str.Value);
         
-        private ScalableFont GetFontForStr(string str) =>
-            TextManager.IsCJK(str) ? Prefabs.ActivePrefab.CjkFont : Prefabs.ActivePrefab.Font;
+        public ScalableFont GetFontForStr(string str) =>
+            Prefabs.ActivePrefab.GetFontForCategory(TextManager.GetSpeciallyHandledCategories(str));
         
-        public void DrawString(SpriteBatch sb, LocalizedString text, Vector2 position, Color color, float rotation, Vector2 origin, Vector2 scale, SpriteEffects se, float layerDepth)
+        public void DrawString(SpriteBatch sb, LocalizedString text, Vector2 position, Color color, float rotation, Vector2 origin, Vector2 scale, SpriteEffects spriteEffects, float layerDepth)
         {
-            DrawString(sb, text.Value, position, color, rotation, origin, scale, se, layerDepth);
+            DrawString(sb, text.Value, position, color, rotation, origin, scale, spriteEffects, layerDepth);
         }
 
-        public void DrawString(SpriteBatch sb, string text, Vector2 position, Color color, float rotation, Vector2 origin, Vector2 scale, SpriteEffects se, float layerDepth)
+        public void DrawString(SpriteBatch sb, string text, Vector2 position, Color color, float rotation, Vector2 origin, Vector2 scale, SpriteEffects spriteEffects, float layerDepth)
         {
-            GetFontForStr(text).DrawString(sb, text, position, color, rotation, origin, scale, se, layerDepth);
+            GetFontForStr(text).DrawString(sb, text, position, color, rotation, origin, scale, spriteEffects, layerDepth);
         }
 
-        public void DrawString(SpriteBatch sb, LocalizedString text, Vector2 position, Color color, float rotation, Vector2 origin, float scale, SpriteEffects se, float layerDepth, Alignment alignment = Alignment.TopLeft)
+        public void DrawString(SpriteBatch sb, LocalizedString text, Vector2 position, Color color, float rotation, Vector2 origin, float scale, SpriteEffects spriteEffects, float layerDepth, Alignment alignment = Alignment.TopLeft)
         {
-            DrawString(sb, text.Value, position, color, rotation, origin, scale, se, layerDepth, alignment);
+            DrawString(sb, text.Value, position, color, rotation, origin, scale, spriteEffects, layerDepth, alignment);
         }
 
-        public void DrawString(SpriteBatch sb, string text, Vector2 position, Color color, float rotation, Vector2 origin, float scale, SpriteEffects se, float layerDepth, Alignment alignment = Alignment.TopLeft, ForceUpperCase forceUpperCase = Barotrauma.ForceUpperCase.Inherit)
+        public void DrawString(SpriteBatch sb, string text, Vector2 position, Color color, float rotation, Vector2 origin, float scale, SpriteEffects spriteEffects, float layerDepth, Alignment alignment = Alignment.TopLeft, ForceUpperCase forceUpperCase = Barotrauma.ForceUpperCase.Inherit)
         {
-            GetFontForStr(text).DrawString(sb, text, position, color, rotation, origin, scale, se, layerDepth, alignment, forceUpperCase);
+            GetFontForStr(text).DrawString(sb, text, position, color, rotation, origin, scale, spriteEffects, layerDepth, alignment, forceUpperCase);
         }
 
         public void DrawString(SpriteBatch sb, LocalizedString text, Vector2 position, Color color, ForceUpperCase forceUpperCase = Barotrauma.ForceUpperCase.Inherit, bool italics = false)
@@ -223,9 +253,9 @@ namespace Barotrauma
             GetFontForStr(text).DrawString(sb, text, position, color, forceUpperCase, italics);
         }
 
-        public void DrawStringWithColors(SpriteBatch sb, string text, Vector2 position, Color color, float rotation, Vector2 origin, float scale, SpriteEffects se, float layerDepth, in ImmutableArray<RichTextData>? richTextData, int rtdOffset = 0, Alignment alignment = Alignment.TopLeft, ForceUpperCase forceUpperCase = Barotrauma.ForceUpperCase.Inherit)
+        public void DrawStringWithColors(SpriteBatch sb, string text, Vector2 position, Color color, float rotation, Vector2 origin, float scale, SpriteEffects spriteEffects, float layerDepth, in ImmutableArray<RichTextData>? richTextData, int rtdOffset = 0, Alignment alignment = Alignment.TopLeft, ForceUpperCase forceUpperCase = Barotrauma.ForceUpperCase.Inherit)
         {
-            GetFontForStr(text).DrawStringWithColors(sb, text, position, color, rotation, origin, scale, se, layerDepth, richTextData, rtdOffset, alignment, forceUpperCase);
+            GetFontForStr(text).DrawStringWithColors(sb, text, position, color, rotation, origin, scale, spriteEffects, layerDepth, richTextData, rtdOffset, alignment, forceUpperCase);
         }
 
         public Vector2 MeasureString(LocalizedString str, bool removeExtraSpacing = false)

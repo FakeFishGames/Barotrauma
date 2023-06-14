@@ -1,7 +1,6 @@
 ﻿#nullable enable
 using System;
 using System.Linq;
-using System.Xml.Linq;
 
 namespace Barotrauma
 {
@@ -36,15 +35,32 @@ namespace Barotrauma
             }
         }
 
+        public CheckDataAction(ContentXElement element, string parentDebugString) : base(null, element)
+        {
+            if (string.IsNullOrEmpty(Condition))
+            {
+                Condition = element.GetAttributeString("value", string.Empty)!;
+                if (string.IsNullOrEmpty(Condition))
+                {
+                    DebugConsole.ThrowError($"Error in scripted event \"{parentDebugString}\". CheckDataAction with no condition set ({element}).");
+                }
+            }
+        }
+
+        public bool GetSuccess()
+        {
+            return DetermineSuccess() ?? false;
+        }
+
         protected override bool? DetermineSuccess()
         {
-            if (!(GameMain.GameSession?.GameMode is CampaignMode campaignMode)) { return false; }
+            if (GameMain.GameSession?.GameMode is not CampaignMode campaignMode) { return false; }
 
             string[] splitString = Condition.Split(' ');
-            string value = Condition;
+            string value;
             if (splitString.Length > 0)
             {
-                #warning Is this correct?
+                //the first part of the string is the operator, skip it
                 value = string.Join(" ", splitString.Skip(1));
             }
             else

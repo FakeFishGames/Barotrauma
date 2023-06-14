@@ -69,7 +69,7 @@ namespace Barotrauma
         public Option<int> RewardDistributionChanged;
         public Option<int> BalanceChanged;
 
-        public WalletChangedData MergeInto(WalletChangedData other)
+        public readonly WalletChangedData MergeInto(WalletChangedData other)
         {
             other.BalanceChanged = AddOptionalInt(other.BalanceChanged, BalanceChanged);
             other.RewardDistributionChanged = AddOptionalInt(other.RewardDistributionChanged, RewardDistributionChanged);
@@ -80,32 +80,20 @@ namespace Barotrauma
 
             static Option<int> AddOptionalInt(Option<int> a, Option<int> b)
             {
-                return a switch
-                {
-                    Some<int> some1 => b switch
-                    {
-                        Some<int> some2 => Option<int>.Some(some1.Value + some2.Value),
-                        None<int> _ => Option<int>.Some(some1.Value),
-                        _ => throw new ArgumentOutOfRangeException(nameof(b))
-                    },
-                    None<int> _ => b switch
-                    {
-                        Some<int> some1 => Option<int>.Some(some1.Value),
-                        None<int> _ => Option<int>.None(),
-                        _ => throw new ArgumentOutOfRangeException(nameof(b))
-                    },
-                    _ => throw new ArgumentOutOfRangeException(nameof(a))
-                };
+                bool hasValue1 = a.TryUnwrap(out var value1);
+                bool hasValue2 = b.TryUnwrap(out var value2);
+                return hasValue1
+                    ? hasValue2
+                        ? Option.Some(value1 + value2)
+                        : Option.Some(value1)
+                    : hasValue2
+                        ? Option.Some(value2)
+                        : Option.None;
             }
 
             static Option<int> TurnToNoneIfZero(Option<int> option)
             {
-                return option switch
-                {
-                    Some<int> s => s.Value == 0 ? Option<int>.None() : option,
-                    None<int> _ => option,
-                    _ => throw new ArgumentOutOfRangeException(nameof(option))
-                };
+                return option.Bind(i => i == 0 ? Option.None : Option.Some(i));
             }
         }
     }
@@ -223,12 +211,8 @@ namespace Barotrauma
             };
         }
 
-        public string GetOwnerLogName() => Owner switch
-        {
-            Some<Character> { Value: var character } => character.Name,
-            None<Character> _ => "the bank",
-            _ => throw new ArgumentOutOfRangeException(nameof(Owner))
-        };
+        public string GetOwnerLogName()
+            => Owner.TryUnwrap(out var character) ? character.Name : "the bank";
 
         partial void SettingsChanged(Option<int> balanceChanged, Option<int> rewardChanged);
 

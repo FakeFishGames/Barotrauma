@@ -5,9 +5,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
-using Barotrauma.IO;
 using System.Linq;
-using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
 {
@@ -93,14 +91,6 @@ namespace Barotrauma.Items.Components
             get;
             private set;
         }
-
-        [Serialize(false, IsPropertySaveable.No, description: "Use firing offset for muzzleflash? This field shouldn't be needed but I'm using it for prototyping")]
-        public bool UseFiringOffsetForMuzzleFlash
-        {
-            get;
-            private set;
-        }
-
 
         public Vector2 DrawSize
         {
@@ -188,7 +178,7 @@ namespace Barotrauma.Items.Components
                 recoilTimer /= 1 + user.GetStatValue(StatTypes.TurretAttackSpeed);
             }
             PlaySound(ActionType.OnUse);
-            Vector2 particlePos = GetRelativeFiringPosition(UseFiringOffsetForMuzzleFlash);
+            Vector2 particlePos = GetRelativeFiringPosition();
             foreach (ParticleEmitter emitter in particleEmitters)
             {
                 emitter.Emit(1.0f, particlePos, hullGuess: null, angle: -rotation, particleRotation: rotation);
@@ -222,14 +212,14 @@ namespace Barotrauma.Items.Components
             {
                 if (moveSoundChannel == null && startMoveSound != null)
                 {
-                    moveSoundChannel = SoundPlayer.PlaySound(startMoveSound.Sound, item.WorldPosition, startMoveSound.Volume, startMoveSound.Range, ignoreMuffling: startMoveSound.IgnoreMuffling);
+                    moveSoundChannel = SoundPlayer.PlaySound(startMoveSound.Sound, item.WorldPosition, startMoveSound.Volume, startMoveSound.Range, ignoreMuffling: startMoveSound.IgnoreMuffling, freqMult: startMoveSound.GetRandomFrequencyMultiplier());
                 }
                 else if (moveSoundChannel == null || !moveSoundChannel.IsPlaying)
                 {
                     if (moveSound != null)
                     {
                         moveSoundChannel.FadeOutAndDispose();
-                        moveSoundChannel = SoundPlayer.PlaySound(moveSound.Sound, item.WorldPosition, moveSound.Volume, moveSound.Range, ignoreMuffling: moveSound.IgnoreMuffling);
+                        moveSoundChannel = SoundPlayer.PlaySound(moveSound.Sound, item.WorldPosition, moveSound.Volume, moveSound.Range, ignoreMuffling: moveSound.IgnoreMuffling, freqMult: moveSound.GetRandomFrequencyMultiplier());
                         if (moveSoundChannel != null) moveSoundChannel.Looping = true;
                     }
                 }
@@ -241,14 +231,13 @@ namespace Barotrauma.Items.Components
                     if (endMoveSound != null && moveSoundChannel.Sound != endMoveSound.Sound)
                     {
                         moveSoundChannel.FadeOutAndDispose();
-                        moveSoundChannel = SoundPlayer.PlaySound(endMoveSound.Sound, item.WorldPosition, endMoveSound.Volume, endMoveSound.Range, ignoreMuffling: endMoveSound.IgnoreMuffling);
+                        moveSoundChannel = SoundPlayer.PlaySound(endMoveSound.Sound, item.WorldPosition, endMoveSound.Volume, endMoveSound.Range, ignoreMuffling: endMoveSound.IgnoreMuffling, freqMult: endMoveSound.GetRandomFrequencyMultiplier());
                         if (moveSoundChannel != null) moveSoundChannel.Looping = false;
                     }
                     else if (!moveSoundChannel.IsPlaying)
                     {
                         moveSoundChannel.FadeOutAndDispose();
                         moveSoundChannel = null;
-
                     }
                 }
             }
@@ -271,7 +260,7 @@ namespace Barotrauma.Items.Components
                     {
                         if (chargeSound != null)
                         {
-                            chargeSoundChannel = SoundPlayer.PlaySound(chargeSound.Sound, item.WorldPosition, chargeSound.Volume, chargeSound.Range, ignoreMuffling: chargeSound.IgnoreMuffling);
+                            chargeSoundChannel = SoundPlayer.PlaySound(chargeSound.Sound, item.WorldPosition, chargeSound.Volume, chargeSound.Range, ignoreMuffling: chargeSound.IgnoreMuffling, freqMult: chargeSound.GetRandomFrequencyMultiplier());
                             if (chargeSoundChannel != null) chargeSoundChannel.Looping = true;
                         }
                     }
@@ -344,15 +333,9 @@ namespace Barotrauma.Items.Components
 
             crosshairPointerPos = PlayerInput.MousePosition;
         }
-        
-        public void Draw(SpriteBatch spriteBatch, bool editing = false, float itemDepth = -1)
-        {
-            if (!MathUtils.NearlyEqual(item.Rotation, prevBaseRotation) || !MathUtils.NearlyEqual(item.Scale, prevScale))
-            {
-                UpdateTransformedBarrelPos();
-            }
-            Vector2 drawPos = GetDrawPos();
 
+        public Vector2 GetRecoilOffset()
+        {
             float recoilOffset = 0.0f;
             if (Math.Abs(RecoilDistance) > 0.0f && recoilTimer > 0.0f)
             {
@@ -373,6 +356,17 @@ namespace Barotrauma.Items.Components
                     recoilOffset = RecoilDistance;
                 }
             }
+            return new Vector2((float)Math.Cos(rotation), (float)Math.Sin(rotation)) * recoilOffset;
+        }
+        
+        public void Draw(SpriteBatch spriteBatch, bool editing = false, float itemDepth = -1)
+        {
+            if (!MathUtils.NearlyEqual(item.Rotation, prevBaseRotation) || !MathUtils.NearlyEqual(item.Scale, prevScale))
+            {
+                UpdateTransformedBarrelPos();
+            }
+            Vector2 drawPos = GetDrawPos();
+
 
             railSprite?.Draw(spriteBatch,
                 drawPos,
@@ -381,7 +375,7 @@ namespace Barotrauma.Items.Components
                 SpriteEffects.None, item.SpriteDepth + (railSprite.Depth - item.Sprite.Depth));
 
             barrelSprite?.Draw(spriteBatch,
-                drawPos - new Vector2((float)Math.Cos(rotation), (float)Math.Sin(rotation)) * recoilOffset * item.Scale,
+                drawPos - GetRecoilOffset() * item.Scale,
                 item.SpriteColor,
                 rotation + MathHelper.PiOver2, item.Scale,
                 SpriteEffects.None, item.SpriteDepth + (barrelSprite.Depth - item.Sprite.Depth));
@@ -420,6 +414,14 @@ namespace Barotrauma.Items.Components
                     Color.Lerp(item.SpriteColor, newColorModifier, 0.8f),
                     rotation + MathHelper.PiOver2, item.Scale,
                     SpriteEffects.None, newDepth);
+            }
+
+            if (GameMain.DebugDraw)
+            {
+                Vector2 firingPos = GetRelativeFiringPosition();
+                firingPos.Y = -firingPos.Y;
+                GUI.DrawLine(spriteBatch, firingPos - Vector2.UnitX * 5, firingPos + Vector2.UnitX * 5, Color.Red);
+                GUI.DrawLine(spriteBatch, firingPos - Vector2.UnitY * 5, firingPos + Vector2.UnitY * 5, Color.Red);
             }
 
             if (!editing || GUI.DisableHUD || !item.IsSelected) { return; }
@@ -592,7 +594,7 @@ namespace Barotrauma.Items.Components
                 var battery = recipient.Item?.GetComponent<PowerContainer>();
                 if (battery == null || battery.Item.Condition <= 0.0f) { continue; }
                 availableCharge += battery.Charge;
-                availableCapacity += battery.Capacity;
+                availableCapacity += battery.GetCapacity();
             }            
         }
 

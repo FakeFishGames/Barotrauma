@@ -11,15 +11,7 @@ namespace Barotrauma
 {
     partial class LinkedSubmarinePrefab : MapEntityPrefab
     {
-        //public static readonly PrefabCollection<LinkedSubmarinePrefab> Prefabs = new PrefabCollection<LinkedSubmarinePrefab>();
-
-        private bool disposed = false;
-        public override void Dispose()
-        {
-            if (disposed) { return; }
-            disposed = true;
-            //Prefabs.Remove(this);
-        }
+        public override void Dispose() { }
 
         public readonly SubmarineInfo subInfo;
 
@@ -289,6 +281,10 @@ namespace Barotrauma
             IdRemap parentRemap = new IdRemap(Submarine.Info.SubmarineElement, Submarine.IdOffset);
             sub = Submarine.Load(info, false, parentRemap);
             sub.Info.SubmarineClass = Submarine.Info.SubmarineClass;
+            if (Submarine.Info.IsOutpost && Submarine.TeamID == CharacterTeamType.FriendlyNPC)
+            {
+                sub.TeamID = CharacterTeamType.FriendlyNPC;
+            }
 
             IdRemap childRemap = new IdRemap(saveElement, sub.IdOffset);
 
@@ -357,7 +353,9 @@ namespace Barotrauma
                 float closestDistance = 0.0f;
                 foreach (DockingPort port in DockingPort.List)
                 {
-                    if (port.Item.Submarine != sub || port.IsHorizontal != linkedPort.IsHorizontal) { continue; }
+                    if (port.Item.Submarine != sub) { continue; }
+                    if (port.IsHorizontal != linkedPort.IsHorizontal) { continue; }
+                    if (port.ForceDockingDirection != DockingPort.DirectionType.None && port.ForceDockingDirection == linkedPort.ForceDockingDirection) { continue; }
                     float dist = Vector2.Distance(port.Item.WorldPosition, linkedPort.Item.WorldPosition);
                     if (myPort == null || dist < closestDistance)
                     {
@@ -407,7 +405,7 @@ namespace Barotrauma
                     if (wall.Submarine != sub) { continue; }
                     for (int i = 0; i < wall.SectionCount; i++)
                     {
-                        wall.SetDamage(i, 0, createNetworkEvent: false);
+                        wall.SetDamage(i, 0, createNetworkEvent: false, createExplosionEffect: false);
                     }                    
                 }
                 foreach (Hull hull in Hull.HullList)
@@ -453,21 +451,21 @@ namespace Barotrauma
 
                 saveElement.SetAttributeValue("pos", XMLExtensions.Vector2ToString(Position - Submarine.HiddenSubPosition));
 
-                if (linkedTo.Any() || linkedToID.Any())
-                {
-                    var linkedPort = 
-                        linkedTo.FirstOrDefault(lt => (lt is Item item) && item.GetComponent<DockingPort>() != null) ?? 
-                        FindEntityByID(linkedToID.First()) as MapEntity;
-                    if (linkedPort != null)
-                    {
-                        saveElement.SetAttributeValue("linkedto", linkedPort.ID);
-                    }
-                }
             }
             else
             {
                 saveElement = new XElement("LinkedSubmarine");
                 sub.SaveToXElement(saveElement);
+            }
+            if (linkedTo.Any() || linkedToID.Any())
+            {
+                var linkedPort = 
+                    linkedTo.FirstOrDefault(lt => (lt is Item item) && item.GetComponent<DockingPort>() != null) ?? 
+                    FindEntityByID(linkedToID.First()) as MapEntity;
+                if (linkedPort != null)
+                {
+                    saveElement.SetAttributeValue("linkedto", linkedPort.ID);
+                }
             }
 
             saveElement.SetAttributeValue("originallinkedto", originalLinkedPort != null ? originalLinkedPort.Item.ID : originalLinkedToID);
@@ -478,7 +476,7 @@ namespace Barotrauma
                 bool leaveBehind = false;
                 if (sub.Submarine != null && !sub.DockedTo.Contains(sub.Submarine))
                 {
-                    System.Diagnostics.Debug.Assert(Submarine.MainSub.AtEndExit || Submarine.MainSub.AtStartExit);
+                    System.Diagnostics.Debug.Assert(Submarine.MainSub.AtEitherExit);
                     if (Submarine.MainSub.AtEndExit)
                     {
                         leaveBehind = sub.AtEndExit != Submarine.MainSub.AtEndExit;

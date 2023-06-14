@@ -25,6 +25,10 @@ namespace Barotrauma
         {
             get; private set;
         }
+        public static Rectangle TutorialObjectiveListArea
+        {
+            get; private set;
+        }
 
         public static Rectangle MessageAreaTop
         {
@@ -61,7 +65,7 @@ namespace Barotrauma
             get; private set;
         }
 
-        public static Rectangle AfflictionAreaLeft
+        public static Rectangle HealthBarAfflictionArea
         {
             get; private set;
         }
@@ -77,6 +81,11 @@ namespace Barotrauma
         }
 
         public static Rectangle VotingArea
+        {
+            get; private set;
+        }
+
+        public static Rectangle ItemHUDArea
         {
             get; private set;
         }
@@ -134,14 +143,13 @@ namespace Barotrauma
             }
             int healthBarHeight = (int)(50f * GUI.Scale);
             HealthBarArea = new Rectangle(BottomRightInfoArea.Right - healthBarWidth + (int)Math.Floor(1 / GUI.Scale), BottomRightInfoArea.Y - healthBarHeight + GUI.IntScale(10), healthBarWidth, healthBarHeight);
-            AfflictionAreaLeft = new Rectangle(HealthBarArea.X, HealthBarArea.Y - Padding - afflictionAreaHeight, HealthBarArea.Width, afflictionAreaHeight);            
+            HealthBarAfflictionArea = new Rectangle(HealthBarArea.X, HealthBarArea.Y - Padding - afflictionAreaHeight, HealthBarArea.Width, afflictionAreaHeight);
 
 
             int messageAreaWidth = GameMain.GraphicsWidth / 3;
             MessageAreaTop = new Rectangle((GameMain.GraphicsWidth - messageAreaWidth) / 2, ButtonAreaTop.Bottom + ButtonAreaTop.Height, messageAreaWidth, ButtonAreaTop.Height);
 
-            bool isFourByThree = GUI.IsFourByThree();
-            int chatBoxWidth = !isFourByThree ? (int)(475 * GUI.Scale) : (int)(375 * GUI.Scale);
+            int chatBoxWidth = (int)(475 * GUI.Scale * GUI.AspectRatioAdjustment);
             int chatBoxHeight = (int)Math.Max(GameMain.GraphicsHeight * 0.25f, 150);
             ChatBoxArea = new Rectangle(Padding, GameMain.GraphicsHeight - Padding - chatBoxHeight, chatBoxWidth, chatBoxHeight);
 
@@ -162,25 +170,42 @@ namespace Barotrauma
 
             HealthWindowAreaLeft = new Rectangle(healthWindowX, healthWindowY, healthWindowWidth, healthWindowHeight);
 
+            int objectiveListAreaX = HealthWindowAreaLeft.Right + Padding;
+            int objectiveListAreaY = ButtonAreaTop.Bottom + Padding;
+            TutorialObjectiveListArea = new Rectangle(objectiveListAreaX, objectiveListAreaY, (GameMain.GraphicsWidth - Padding) - objectiveListAreaX, (HealthBarAfflictionArea.Top - Padding) - objectiveListAreaY);
+
             int votingAreaWidth = (int)(400 * GUI.Scale);
             int votingAreaX = GameMain.GraphicsWidth - Padding - votingAreaWidth;
             int votingAreaY = Padding + ButtonAreaTop.Height;
 
             // Height is based on text content
             VotingArea = new Rectangle(votingAreaX, votingAreaY, votingAreaWidth, 0);
+
+            ItemHUDArea = new Rectangle(0, ButtonAreaTop.Bottom, GameMain.GraphicsWidth, GameMain.GraphicsHeight - ButtonAreaTop.Bottom - InventoryAreaLower.Height);
         }
 
         public static void Draw(SpriteBatch spriteBatch)
         {
-            GUI.DrawRectangle(spriteBatch, ButtonAreaTop, Color.White * 0.5f);
-            GUI.DrawRectangle(spriteBatch, MessageAreaTop, GUIStyle.Orange * 0.5f);
-            GUI.DrawRectangle(spriteBatch, CrewArea, Color.Blue * 0.5f);
-            GUI.DrawRectangle(spriteBatch, ChatBoxArea, Color.Cyan * 0.5f);
-            GUI.DrawRectangle(spriteBatch, HealthBarArea, Color.Red * 0.5f);
-            GUI.DrawRectangle(spriteBatch, AfflictionAreaLeft, Color.Red * 0.5f);
-            GUI.DrawRectangle(spriteBatch, InventoryAreaLower, Color.Yellow * 0.5f);
-            GUI.DrawRectangle(spriteBatch, HealthWindowAreaLeft, Color.Red * 0.5f);
-            GUI.DrawRectangle(spriteBatch, BottomRightInfoArea, Color.Green * 0.5f);
+            DrawRectangle(nameof(ButtonAreaTop), ButtonAreaTop, Color.White * 0.5f);
+            DrawRectangle(nameof(TutorialObjectiveListArea), TutorialObjectiveListArea, GUIStyle.Blue * 0.5f);
+            DrawRectangle(nameof(MessageAreaTop), MessageAreaTop, GUIStyle.Orange * 0.5f);
+            DrawRectangle(nameof(CrewArea), CrewArea, Color.Blue * 0.5f);
+            DrawRectangle(nameof(ChatBoxArea), ChatBoxArea, Color.Cyan * 0.5f);
+            DrawRectangle(nameof(HealthBarArea), HealthBarArea, Color.Red * 0.5f);
+            DrawRectangle(nameof(HealthBarAfflictionArea), HealthBarAfflictionArea, Color.Red * 0.5f);
+            DrawRectangle(nameof(InventoryAreaLower), InventoryAreaLower, Color.Yellow * 0.5f);
+            DrawRectangle(nameof(HealthWindowAreaLeft), HealthWindowAreaLeft, Color.Red * 0.5f);
+            DrawRectangle(nameof(BottomRightInfoArea), BottomRightInfoArea, Color.Green * 0.5f);
+            DrawRectangle(nameof(ItemHUDArea), ItemHUDArea, Color.Magenta * 0.3f);
+
+            void DrawRectangle(string label, Rectangle r, Color c)
+            {
+                if (!label.IsNullOrEmpty())
+                {
+                    GUI.DrawString(spriteBatch, r.Location.ToVector2() + Vector2.One * 3, label, c, font: GUIStyle.SmallFont);
+                }
+                GUI.DrawRectangle(spriteBatch, r, c);
+            }
         }
     }
 

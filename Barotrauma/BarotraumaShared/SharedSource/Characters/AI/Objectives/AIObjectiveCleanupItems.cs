@@ -121,7 +121,7 @@ namespace Barotrauma
             {
                 return true;
             }
-            return CanEquip(character, item);
+            return CanEquip(character, item, allowWearing: false);
         }
 
         public override void OnDeselected()

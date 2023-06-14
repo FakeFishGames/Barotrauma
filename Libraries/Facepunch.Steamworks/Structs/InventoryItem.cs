@@ -11,7 +11,7 @@ namespace Steamworks
 		internal InventoryDefId _def;
 		internal SteamItemFlags _flags;
 		internal ushort _quantity;
-		internal Dictionary<string, string> _properties;
+		internal Dictionary<string, string>? _properties;
 
 		public InventoryItemId Id => _id;
 
@@ -19,13 +19,13 @@ namespace Steamworks
 
 		public int Quantity => _quantity;
 
-		public InventoryDef Def => SteamInventory.FindDefinition( DefId );
+		public InventoryDef? Def => SteamInventory.FindDefinition( DefId );
 
 
 		/// <summary>
 		/// Only available if the result set was created with the getproperties
 		/// </summary>
-		public Dictionary<string, string> Properties => _properties;
+		public Dictionary<string, string>? Properties => _properties;
 
 		/// <summary>
 		/// This item is account-locked and cannot be traded or given away. 
@@ -54,7 +54,7 @@ namespace Steamworks
 		public async Task<InventoryResult?> ConsumeAsync( int amount = 1 )
 		{
 			var sresult = Defines.k_SteamInventoryResultInvalid;
-			if ( !SteamInventory.Internal.ConsumeItem( ref sresult, Id, (uint)amount ) )
+			if ( SteamInventory.Internal is null || !SteamInventory.Internal.ConsumeItem( ref sresult, Id, (uint)amount ) )
 				return null;
 
 			return await InventoryResult.GetAsync( sresult );
@@ -66,7 +66,7 @@ namespace Steamworks
 		public async Task<InventoryResult?> SplitStackAsync( int quantity = 1 )
 		{
 			var sresult = Defines.k_SteamInventoryResultInvalid;
-			if ( !SteamInventory.Internal.TransferItemQuantity( ref sresult, Id, (uint)quantity, ulong.MaxValue ) )
+			if ( SteamInventory.Internal is null || !SteamInventory.Internal.TransferItemQuantity( ref sresult, Id, (uint)quantity, ulong.MaxValue ) )
 				return null;
 
 			return await InventoryResult.GetAsync( sresult );
@@ -78,7 +78,7 @@ namespace Steamworks
 		public async Task<InventoryResult?> AddAsync( InventoryItem add, int quantity = 1 )
 		{
 			var sresult = Defines.k_SteamInventoryResultInvalid;
-			if ( !SteamInventory.Internal.TransferItemQuantity( ref sresult, add.Id, (uint)quantity, Id ) )
+			if ( SteamInventory.Internal is null || !SteamInventory.Internal.TransferItemQuantity( ref sresult, add.Id, (uint)quantity, Id ) )
 				return null;
 
 			return await InventoryResult.GetAsync( sresult );
@@ -98,11 +98,11 @@ namespace Steamworks
 			return i;
 		}
 
-		internal static Dictionary<string, string> GetProperties( SteamInventoryResult_t result, int index )
+		internal static Dictionary<string, string>? GetProperties( SteamInventoryResult_t result, int index )
 		{
 			var strlen = (uint) Helpers.MemoryBufferSize;
 
-			if ( !SteamInventory.Internal.GetResultItemProperty( result, (uint)index, null, out var propNames, ref strlen ) )
+			if ( SteamInventory.Internal is null || !SteamInventory.Internal.GetResultItemProperty( result, (uint)index, null, out var propNames, ref strlen ) )
 				return null;
 
 			var props = new Dictionary<string, string>();
@@ -151,7 +151,7 @@ namespace Steamworks
 		/// Tries to get the origin property. Need properties for this to work.
 		/// Will return a string like "market"
 		/// </summary>
-		public string Origin
+		public string? Origin
 		{
 			get
 			{

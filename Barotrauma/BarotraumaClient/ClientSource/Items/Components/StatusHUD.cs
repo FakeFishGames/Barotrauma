@@ -212,7 +212,7 @@ namespace Barotrauma.Items.Components
                     Sprite pingCircle = GUIStyle.UIThermalGlow.Value.Sprite;
                     foreach (Limb limb in c.AnimController.Limbs)
                     {
-                        if (limb.Mass < 1.0f) { continue; }
+                        if (limb.Mass < 0.5f && limb != c.AnimController.MainLimb) { continue; }
                         float noise1 = PerlinNoise.GetPerlin((thermalEffectState + limb.Params.ID + c.ID) * 0.01f, (thermalEffectState + limb.Params.ID + c.ID) * 0.02f);
                         float noise2 = PerlinNoise.GetPerlin((thermalEffectState + limb.Params.ID + c.ID) * 0.01f, (thermalEffectState + limb.Params.ID + c.ID) * 0.008f);
                         Vector2 spriteScale = ConvertUnits.ToDisplayUnits(limb.body.GetSize()) / pingCircle.size * (noise1 * 0.5f + 2f);
@@ -293,7 +293,7 @@ namespace Barotrauma.Items.Components
 
                 if (target.Bleeding > 0.0f)
                 {
-                    int bleedingTextIndex = MathHelper.Clamp((int)Math.Floor(target.Bleeding / 100.0f) * BleedingTexts.Length, 0, BleedingTexts.Length - 1);
+                    int bleedingTextIndex = MathHelper.Clamp((int)Math.Floor(target.Bleeding / 100.0f * BleedingTexts.Length), 0, BleedingTexts.Length - 1);
                     texts.Add(BleedingTexts[bleedingTextIndex]);
                     textColors.Add(Color.Lerp(GUIStyle.Orange, GUIStyle.Red, target.Bleeding / 100.0f));
                 }
@@ -302,7 +302,18 @@ namespace Barotrauma.Items.Components
                 Dictionary<AfflictionPrefab, float> combinedAfflictionStrengths = new Dictionary<AfflictionPrefab, float>();
                 foreach (Affliction affliction in allAfflictions)
                 {
-                    if (affliction.Strength < affliction.Prefab.ShowInHealthScannerThreshold || affliction.Strength <= 0.0f) { continue; }
+                    if (affliction.Strength <= 0f) { continue; }
+                    if (affliction.Strength < affliction.Prefab.ShowInHealthScannerThreshold)
+                    {
+                        if (target.IsHuman || target.IsOnPlayerTeam || (affliction.Prefab.AfflictionType != AfflictionPrefab.PoisonType && affliction.Prefab.AfflictionType != AfflictionPrefab.ParalysisType))
+                        {
+                            // Always show the poisons on monsters, because poisoning bigger monsters require multiple doses.
+                            // The solution is hacky, but didn't want to introduce an extra property for this.
+                            // We also want to have a relatively high thershold for showing the poisons on the scanner on humans, so that it's not instantly clear that a target is poisoned and especially not which poison was used.
+                            // Paralysis is treated like a poison but isn't technically a poison, so that we can have multiple afflictions that still are treated the same.
+                            continue;
+                        }
+                    }
                     if (combinedAfflictionStrengths.ContainsKey(affliction.Prefab))
                     {
                         combinedAfflictionStrengths[affliction.Prefab] += affliction.Strength;

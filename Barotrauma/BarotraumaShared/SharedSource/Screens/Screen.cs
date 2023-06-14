@@ -19,6 +19,7 @@
             {
                 Selected.Deselect();
 #if CLIENT
+                GameMain.ParticleManager.ClearParticles();
                 GUIContextMenu.CurrentContextMenu = null;
                 GUI.ClearCursorWait();
                 //make sure any textbox in the previously selected screen doesn't stay selected
@@ -34,6 +35,7 @@
                 {
                     GUI.DisableSavingIndicatorDelayed();
                 }
+                GameMain.ResetIMEWorkaround();
 #endif
             }
 

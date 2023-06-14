@@ -1,20 +1,23 @@
-﻿using Barotrauma.Sounds;
+﻿using Barotrauma.Items.Components;
+using Barotrauma.Sounds;
+using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Microsoft.Xna.Framework;
-using Barotrauma.Items.Components;
 
 namespace Barotrauma.Networking
 {
     class VoipClient : IDisposable
     {
-        private GameClient gameClient;
-        private ClientPeer netClient;
+        /// <summary>
+        /// The "near" range of the voice chat (a percentage of either SpeakRange or radio range), further than this the volume starts to diminish
+        /// </summary>
+        const float RangeNear = 0.4f;
+
+        private readonly GameClient gameClient;
+        private readonly ClientPeer netClient;
         private DateTime lastSendTime;
-        private List<VoipQueue> queues;
+        private readonly List<VoipQueue> queues;
 
         private UInt16 storedBufferID = 0;
 
@@ -32,13 +35,13 @@ namespace Barotrauma.Networking
 
         public void RegisterQueue(VoipQueue queue)
         {
-            if (queue == VoipCapture.Instance) return;
-            if (!queues.Contains(queue)) queues.Add(queue);
+            if (queue == VoipCapture.Instance) { return; }
+            if (!queues.Contains(queue)) { queues.Add(queue); }
         }
 
         public void UnregisterQueue(VoipQueue queue)
         {
-            if (queues.Contains(queue)) queues.Remove(queue);
+            if (queues.Contains(queue)) { queues.Remove(queue); }
         }
 
         public void SendToServer()
@@ -72,8 +75,8 @@ namespace Barotrauma.Networking
             {
                 IWriteMessage msg = new WriteOnlyMessage();
 
-                msg.Write((byte)ClientPacketHeader.VOICE);
-                msg.Write((byte)VoipCapture.Instance.QueueID);
+                msg.WriteByte((byte)ClientPacketHeader.VOICE);
+                msg.WriteByte((byte)VoipCapture.Instance.QueueID);
                 VoipCapture.Instance.Write(msg);
 
                 netClient.Send(msg, DeliveryMethod.Unreliable);
@@ -85,6 +88,7 @@ namespace Barotrauma.Networking
         public void Read(IReadMessage msg)
         {
             byte queueId = msg.ReadByte();
+            float distanceFactor = msg.ReadRangedSingle(0.0f, 1.0f, 8);
             VoipQueue queue = queues.Find(q => q.QueueID == queueId);
 
             if (queue == null)
@@ -105,26 +109,36 @@ namespace Barotrauma.Networking
                     client.VoipSound = new VoipSound(client.Name, GameMain.SoundManager, client.VoipQueue);
                 }
                 GameMain.SoundManager.ForceStreamUpdate();
-
+                client.RadioNoise = 0.0f;
                 if (client.Character != null && !client.Character.IsDead && !client.Character.Removed && client.Character.SpeechImpediment <= 100.0f)
                 {
+                    float speechImpedimentMultiplier = 1.0f - client.Character.SpeechImpediment / 100.0f;
+                    bool spectating = Character.Controlled == null;
+                    float rangeMultiplier = spectating ? 2.0f : 1.0f;
                     WifiComponent radio = null;
-                    var messageType = !client.VoipQueue.ForceLocal && ChatMessage.CanUseRadio(client.Character, out radio) ? ChatMessageType.Radio : ChatMessageType.Default;
+                    var messageType = 
+                        !client.VoipQueue.ForceLocal && ChatMessage.CanUseRadio(client.Character, out radio) && ChatMessage.CanUseRadio(Character.Controlled) ? 
+                        ChatMessageType.Radio : ChatMessageType.Default;
                     client.Character.ShowSpeechBubble(1.25f, ChatMessage.MessageColor[(int)messageType]);
 
                     client.VoipSound.UseRadioFilter = messageType == ChatMessageType.Radio && !GameSettings.CurrentConfig.Audio.DisableVoiceChatFilters;
+                    client.RadioNoise = 0.0f;
                     if (messageType == ChatMessageType.Radio)
                     {
-                        client.VoipSound.SetRange(radio.Range * 0.8f, radio.Range);
+                        client.VoipSound.SetRange(radio.Range * RangeNear * speechImpedimentMultiplier * rangeMultiplier, radio.Range * speechImpedimentMultiplier * rangeMultiplier);
+                        if (distanceFactor > RangeNear && !spectating)
+                        {
+                            //noise starts increasing exponentially after 40% range
+                            client.RadioNoise = MathF.Pow(MathUtils.InverseLerp(RangeNear, 1.0f, distanceFactor), 2);
+                        }
                     }
                     else
                     {
-                        client.VoipSound.SetRange(ChatMessage.SpeakRange * 0.4f, ChatMessage.SpeakRange);
+                        client.VoipSound.SetRange(ChatMessage.SpeakRange * RangeNear * speechImpedimentMultiplier * rangeMultiplier, ChatMessage.SpeakRange * speechImpedimentMultiplier * rangeMultiplier);
                     }
-                    if (messageType != ChatMessageType.Radio && Character.Controlled != null && !GameSettings.CurrentConfig.Audio.DisableVoiceChatFilters)
-                    {
-                        client.VoipSound.UseMuffleFilter = SoundPlayer.ShouldMuffleSound(Character.Controlled, client.Character.WorldPosition, ChatMessage.SpeakRange, client.Character.CurrentHull);
-                    }
+                    client.VoipSound.UseMuffleFilter = 
+                        messageType != ChatMessageType.Radio && Character.Controlled != null && !GameSettings.CurrentConfig.Audio.DisableVoiceChatFilters &&
+                        SoundPlayer.ShouldMuffleSound(Character.Controlled, client.Character.WorldPosition, ChatMessage.SpeakRange, client.Character.CurrentHull);                 
                 }
 
                 GameMain.NetLobbyScreen?.SetPlayerSpeaking(client);
@@ -132,7 +146,7 @@ namespace Barotrauma.Networking
 
                 if ((client.VoipSound.CurrentAmplitude * client.VoipSound.Gain * GameMain.SoundManager.GetCategoryGainMultiplier("voip")) > 0.1f) //TODO: might need to tweak
                 {
-                    if (client.Character != null && !client.Character.Removed)
+                    if (client.Character != null && !client.Character.Removed && !client.Character.IsDead)
                     {
                         Vector3 clientPos = new Vector3(client.Character.WorldPosition.X, client.Character.WorldPosition.Y, 0.0f);
                         Vector3 listenerPos = GameMain.SoundManager.ListenerPosition;

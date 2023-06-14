@@ -6,7 +6,6 @@ using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 
 namespace Barotrauma
 {
@@ -14,7 +13,7 @@ namespace Barotrauma
     {
         private const float UpdateInterval = 1.0f;
 
-        private static HashSet<Identifier> unlockedAchievements = new HashSet<Identifier>();
+        private static readonly HashSet<Identifier> unlockedAchievements = new HashSet<Identifier>();
 
         public static bool CheatsEnabled = false;
 
@@ -44,8 +43,9 @@ namespace Barotrauma
             roundData = new RoundData();
             foreach (Item item in Item.ItemList)
             {
+                if (item.Submarine == null || item.Submarine.Info.Type != SubmarineType.Player) { continue; }
                 Reactor reactor = item.GetComponent<Reactor>();
-                if (reactor != null) { roundData.Reactors.Add(reactor); }
+                if (reactor != null && reactor.Item.Condition > 0.0f) { roundData.Reactors.Add(reactor); }
             }
             pathFinder = new PathFinder(WayPoint.WayPointList, false);
             cachedDistances.Clear();
@@ -73,7 +73,7 @@ namespace Barotrauma
                 {
                     if (c.IsDead) { continue; }
                     //achievement for descending below crush depth and coming back
-                    if (Timing.TotalTime > GameMain.GameSession.RoundStartTime + 30.0f)
+                    if (GameMain.GameSession.RoundDuration > 30.0f)
                     {
                         if (c.Submarine != null && c.Submarine.AtDamageDepth || Level.Loaded.GetRealWorldDepth(c.WorldPosition.Y) > Level.Loaded.RealWorldCrushDepth)
                         {
@@ -97,7 +97,7 @@ namespace Barotrauma
                             //get an achievement if they're still alive at the end of the round
                             foreach (Character c in Character.CharacterList)
                             {
-                                if (!c.IsDead && c.Submarine == sub) roundData.ReactorMeltdown.Add(c);
+                                if (!c.IsDead && c.Submarine == sub) { roundData.ReactorMeltdown.Add(c); }
                             }
                         }
                     }
@@ -113,7 +113,7 @@ namespace Barotrauma
 
                     //achievement for descending ridiculously deep
                     float realWorldDepth = sub.RealWorldDepth;
-                    if (realWorldDepth > 5000.0f && Timing.TotalTime > GameMain.GameSession.RoundStartTime + 30.0f)
+                    if (realWorldDepth > 5000.0f && GameMain.GameSession.RoundDuration > 30.0f)
                     {
                         //all conscious characters inside the sub get an achievement
                         UnlockAchievement("subdeep".ToIdentifier(), true, c => c != null && c.Submarine == sub && !c.IsDead && !c.IsUnconscious);
@@ -219,6 +219,12 @@ namespace Barotrauma
             UnlockAchievement($"discover{biome.Identifier.Value.Replace(" ", "")}".ToIdentifier());
         }
 
+        public static void OnCampaignMetadataSet(Identifier identifier, object value, bool unlockClients = false)
+        {
+            if (identifier.IsEmpty || value is null) { return; }
+            UnlockAchievement($"campaignmetadata_{identifier}_{value}".ToIdentifier(), unlockClients);
+        }
+
         public static void OnItemRepaired(Item item, Character fixer)
         {
 #if CLIENT
@@ -228,6 +234,15 @@ namespace Barotrauma
             
             UnlockAchievement(fixer, "repairdevice".ToIdentifier());
             UnlockAchievement(fixer, $"repair{item.Prefab.Identifier}".ToIdentifier());
+        }
+
+        public static void OnAfflictionReceived(Affliction affliction, Character character)
+        {
+            if (affliction.Prefab.AchievementOnReceived.IsEmpty) { return; }
+#if CLIENT
+            if (GameMain.Client != null) { return; }
+#endif
+            UnlockAchievement(character, affliction.Prefab.AchievementOnReceived);
         }
 
         public static void OnAfflictionRemoved(Affliction affliction, Character character)
@@ -296,6 +311,7 @@ namespace Barotrauma
                 UnlockAchievement(causeOfDeath.Killer, "killclown".ToIdentifier());
             }
 
+            // TODO: should we change this? Morbusine used to be the strongest poison. Now Cyanide is strongest.
             if (character.CharacterHealth?.GetAffliction("morbusinepoisoning") != null)
             {
                 UnlockAchievement(causeOfDeath.Killer, "killpoison".ToIdentifier());
@@ -309,6 +325,7 @@ namespace Barotrauma
                 }
                 else
                 {
+                    // TODO: should we change this? Morbusine used to be the strongest poison. Now Cyanide is strongest.
                     if (item.Prefab.Identifier == "morbusine")
                     {
                         UnlockAchievement(causeOfDeath.Killer, "killpoison".ToIdentifier());
@@ -425,7 +442,7 @@ namespace Barotrauma
                 var charactersInSub = Character.CharacterList.FindAll(c => 
                     !c.IsDead && 
                     c.TeamID != CharacterTeamType.FriendlyNPC &&
-                    !(c.AIController is EnemyAIController) &&
+                    c.AIController is not EnemyAIController &&
                     (c.Submarine == gameSession.Submarine || gameSession.Submarine.GetConnectedSubs().Contains(c.Submarine) || (Level.Loaded?.EndOutpost != null && c.Submarine == Level.Loaded.EndOutpost)));
 
                 if (charactersInSub.Count == 1)
@@ -507,7 +524,10 @@ namespace Barotrauma
         public static void UnlockAchievement(Identifier identifier, bool unlockClients = false, Func<Character, bool> conditions = null)
         {
             if (CheatsEnabled) { return; }
-
+            if (Screen.Selected is { IsEditor: true }) { return; }
+#if CLIENT
+            if (GameMain.GameSession?.GameMode is TestGameMode) { return; }
+#endif
 #if SERVER
             if (unlockClients && GameMain.Server != null)
             {

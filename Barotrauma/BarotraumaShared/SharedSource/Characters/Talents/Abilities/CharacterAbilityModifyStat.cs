@@ -1,6 +1,4 @@
-﻿using System.Xml.Linq;
-
-namespace Barotrauma.Abilities
+﻿namespace Barotrauma.Abilities
 {
     class CharacterAbilityModifyStat : CharacterAbility
     {
@@ -13,6 +11,11 @@ namespace Barotrauma.Abilities
         {
             statType = CharacterAbilityGroup.ParseStatType(abilityElement.GetAttributeString("stattype", ""), CharacterTalent.DebugIdentifier);
             value = abilityElement.GetAttributeFloat("value", 0f);
+        }
+
+        public override void InitializeAbility(bool addingFirstTime)
+        {
+            VerifyState(conditionsMatched: true, timeSinceLastUpdate: 0.0f);
         }
 
         protected override void VerifyState(bool conditionsMatched, float timeSinceLastUpdate)

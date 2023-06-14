@@ -111,7 +111,7 @@ namespace Barotrauma.Steam
                 {
                     await Task.Yield();
 
-                    string thumbnailUrl = item.PreviewImageUrl;
+                    string? thumbnailUrl = item.PreviewImageUrl;
                     if (thumbnailUrl.IsNullOrWhiteSpace()) { return null; }
                     var client = new RestClient(thumbnailUrl);
                     var request = new RestRequest(".", Method.GET);
@@ -163,7 +163,7 @@ namespace Barotrauma.Steam
                 CrossThread.RequestExecutionOnMainThread(() => ContentPackageManager.LocalPackages.Refresh());
             }
             
-            public static async Task CreatePublishStagingCopy(string modVersion, ContentPackage contentPackage)
+            public static async Task CreatePublishStagingCopy(string title, string modVersion, ContentPackage contentPackage)
             {
                 await Task.Yield();
                 
@@ -177,12 +177,19 @@ namespace Barotrauma.Steam
                 await CopyDirectory(contentPackage.Dir, contentPackage.Name, Path.GetDirectoryName(contentPackage.Path)!, PublishStagingDir, ShouldCorrectPaths.No);
 
                 var stagingFileListPath = Path.Combine(PublishStagingDir, ContentPackage.FileListFileName);
-                ContentPackage tempPkg = ContentPackage.TryLoad(stagingFileListPath) ?? throw new Exception("Staging copy could not be loaded");
-                
-                //Load filelist.xml and write the hash into it so anyone downloading this mod knows what it should be
+
+                var result = ContentPackage.TryLoad(stagingFileListPath);
+                if (!result.TryUnwrapSuccess(out var tempPkg))
+                {
+                    throw new Exception("Staging copy could not be loaded",
+                        result.TryUnwrapFailure(out var exception) ? exception : null);
+                }
+
+                //Load filelist.xml and write the hash into it so anyone downloading this mod knows what it should be                
                 ModProject modProject = new ModProject(tempPkg)
                 {
-                    ModVersion = modVersion
+                    ModVersion = modVersion,
+                    ExpectedHash = tempPkg.CalculateHash(name: title, modVersion: modVersion)
                 };
                 modProject.Save(stagingFileListPath);
             }
@@ -196,7 +203,7 @@ namespace Barotrauma.Steam
                     throw new Exception("Expected Workshop package");
                 }
 
-                if (contentPackage.SteamWorkshopId == 0)
+                if (!contentPackage.UgcId.TryUnwrap(out var ugcId) || !(ugcId is SteamWorkshopId workshopId))
                 {
                     throw new Exception($"Steam Workshop ID not set for {contentPackage.Name}");
                 }
@@ -210,7 +217,7 @@ namespace Barotrauma.Steam
                 string newPath = $"{ContentPackage.LocalModsDir}/{sanitizedName}";
                 if (File.Exists(newPath) || Directory.Exists(newPath))
                 {
-                    newPath += $"_{contentPackage.SteamWorkshopId}";
+                    newPath += $"_{workshopId.Value}";
                 }
 
                 if (File.Exists(newPath) || Directory.Exists(newPath))
@@ -226,7 +233,7 @@ namespace Barotrauma.Steam
 
                 RefreshLocalMods();
 
-                return ContentPackageManager.LocalPackages.FirstOrDefault(p => p.SteamWorkshopId == contentPackage.SteamWorkshopId);
+                return ContentPackageManager.LocalPackages.FirstOrDefault(p => p.UgcId == contentPackage.UgcId);
             }
 
             private struct InstallWaiter
@@ -266,7 +273,10 @@ namespace Barotrauma.Steam
             {
                 NukeDownload(workshopItem);
                 var toUninstall
-                    = ContentPackageManager.WorkshopPackages.Where(p => p.SteamWorkshopId == workshopItem.Id)
+                    = ContentPackageManager.WorkshopPackages.Where(p =>
+                            p.UgcId.TryUnwrap(out var ugcId)
+                            && ugcId is SteamWorkshopId workshopId
+                            && workshopId.Value == workshopItem.Id)
                         .ToHashSet();
                 toUninstall.Select(p => p.Dir).ForEach(d => Directory.Delete(d));
                 CrossThread.RequestExecutionOnMainThread(() => ContentPackageManager.WorkshopPackages.Refresh());
@@ -296,7 +306,10 @@ namespace Barotrauma.Steam
                     return;
                 }
                 else if (CanBeInstalled(id)
-                    && !ContentPackageManager.WorkshopPackages.Any(p => p.SteamWorkshopId == id)
+                    && !ContentPackageManager.WorkshopPackages.Any(p =>
+                        p.UgcId.TryUnwrap(out var ugcId)
+                        && ugcId is SteamWorkshopId workshopId
+                        && workshopId.Value == id)
                     && !InstallTaskCounter.IsInstalling(id))
                 {
                     TaskPool.Add($"InstallItem{id}", InstallMod(id), t => InstallWaiter.StopWaiting(id));

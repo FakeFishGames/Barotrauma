@@ -1,4 +1,7 @@
 ﻿using Barotrauma.Extensions;
+#if CLIENT
+using Barotrauma.Tutorials;
+#endif
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -195,6 +198,34 @@ namespace Barotrauma
             }            
         }
 
+        /// <summary>
+        /// Remove the character from the crew (and crew menus).
+        /// </summary>
+        /// <param name="character">The character to remove</param>
+        /// <param name="removeInfo">If the character info is also removed, the character will not be visible in the round summary.</param>
+        public void RemoveCharacter(Character character, bool removeInfo = false, bool resetCrewListIndex = true)
+        {
+            if (character == null)
+            {
+                DebugConsole.ThrowError("Tried to remove a null character from CrewManager.\n" + Environment.StackTrace.CleanupStackTrace());
+                return;
+            }
+            characters.Remove(character);
+            if (removeInfo)
+            {
+                characterInfos.Remove(character.Info);
+#if CLIENT
+                RemoveCharacterFromCrewList(character);
+#endif
+            }
+#if CLIENT
+            if (resetCrewListIndex)
+            {
+                ResetCrewListIndex(character);
+            }
+#endif
+        }
+
         public void AddCharacterInfo(CharacterInfo characterInfo)
         {
             if (characterInfos.Contains(characterInfo))
@@ -217,11 +248,11 @@ namespace Barotrauma
             List<WayPoint> spawnWaypoints = null;
             List<WayPoint> mainSubWaypoints = WayPoint.SelectCrewSpawnPoints(characterInfos, Submarine.MainSub).ToList();
 
-            if (Level.IsLoadedOutpost && Submarine.Loaded.Any(s => s.Info.Type == SubmarineType.Outpost && (s.Info.OutpostGenerationParams?.SpawnCrewInsideOutpost ?? false)))
+            if (Level.Loaded != null && Level.Loaded.ShouldSpawnCrewInsideOutpost())
             {
-                spawnWaypoints = WayPoint.WayPointList.FindAll(wp => 
+                spawnWaypoints = WayPoint.WayPointList.FindAll(wp =>
                     wp.SpawnType == SpawnType.Human &&
-                    wp.Submarine == Level.Loaded.StartOutpost && 
+                    wp.Submarine == Level.Loaded.StartOutpost &&
                     wp.CurrentHull != null &&
                     wp.CurrentHull.OutpostModuleTags.Contains("airlock".ToIdentifier()));
                 while (spawnWaypoints.Count > characterInfos.Count)
@@ -231,9 +262,8 @@ namespace Barotrauma
                 while (spawnWaypoints.Any() && spawnWaypoints.Count < characterInfos.Count)
                 {
                     spawnWaypoints.Add(spawnWaypoints[Rand.Int(spawnWaypoints.Count)]);
-                }
+                }                
             }
-
             if (spawnWaypoints == null || !spawnWaypoints.Any())
             {
                 spawnWaypoints = mainSubWaypoints;
@@ -259,6 +289,16 @@ namespace Barotrauma
                     else if (!character.Info.StartItemsGiven)
                     {
                         character.GiveJobItems(mainSubWaypoints[i]);
+                        foreach (Item item in character.Inventory.AllItems)
+                        {
+                            //if the character is loaded from a human prefab with preconfigured items, its ID card gets assigned to the sub it spawns in
+                            //we don't want that in this case, the crew's cards shouldn't be submarine-specific
+                            var idCard = item.GetComponent<Items.Components.IdCard>();
+                            if (idCard != null)
+                            {
+                                idCard.SubmarineSpecificID = 0;
+                            }
+                        }
                     }
                     if (character.Info.HealthData != null)
                     {
@@ -267,6 +307,7 @@ namespace Barotrauma
 
                     character.LoadTalents();
 
+                    character.GiveIdCardTags(mainSubWaypoints[i]);
                     character.GiveIdCardTags(spawnWaypoints[i]);
                     character.Info.StartItemsGiven = true;
                     if (character.Info.OrderData != null)
@@ -348,6 +389,9 @@ namespace Barotrauma
         private void UpdateConversations(float deltaTime)
         {
             if (GameMain.GameSession?.GameMode?.Preset == GameModePreset.TestMode) { return; }
+#if CLIENT
+            if (GameMain.GameSession?.GameMode is TutorialMode tutorialMode && tutorialMode.Tutorial is Tutorial tutorial && tutorial.TutorialPrefab.DisableBotConversations) { return; }
+#endif
             if (GameMain.NetworkMember != null && GameMain.NetworkMember.ServerSettings.DisableBotConversations) { return; }
 
             conversationTimer -= deltaTime;
@@ -376,20 +420,18 @@ namespace Barotrauma
                         {
                             List<Character> availableSpeakers = new List<Character>() { npc, player };
                             List<Identifier> dialogFlags = new List<Identifier>() { "OutpostNPC".ToIdentifier(), "EnterOutpost".ToIdentifier() };
+                            if (npc.HumanPrefab != null)
+                            {
+                                foreach (var tag in npc.HumanPrefab.GetTags())
+                                {
+                                    dialogFlags.Add(tag);
+                                }
+                            }
                             if (GameMain.GameSession?.GameMode is CampaignMode campaignMode)
                             {
                                 if (campaignMode.Map?.CurrentLocation?.Type?.Identifier == "abandoned")
                                 {
-                                    if (npc.TeamID == CharacterTeamType.None)
-                                    {
-                                        dialogFlags.Remove("OutpostNPC".ToIdentifier());
-                                        dialogFlags.Add("Bandit".ToIdentifier());
-                                    }
-                                    else if (npc.TeamID == CharacterTeamType.FriendlyNPC)
-                                    {
-                                        dialogFlags.Remove("OutpostNPC".ToIdentifier());
-                                        dialogFlags.Add("Hostage".ToIdentifier());
-                                    }
+                                    dialogFlags.Remove("OutpostNPC".ToIdentifier());
                                 }
                                 else if (campaignMode.Map?.CurrentLocation?.Reputation != null)
                                 {

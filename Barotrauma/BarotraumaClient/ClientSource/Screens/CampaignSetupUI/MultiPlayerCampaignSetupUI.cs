@@ -11,7 +11,9 @@ namespace Barotrauma
     class MultiPlayerCampaignSetupUI : CampaignSetupUI
     {
         private GUIButton deleteMpSaveButton;
-        
+
+        private int prevInitialMoney;
+
         public MultiPlayerCampaignSetupUI(GUIComponent newGameContainer, GUIComponent loadGameContainer, List<CampaignMode.SaveInfo> saveFiles = null)
             : base(newGameContainer, loadGameContainer)
         {
@@ -33,18 +35,18 @@ namespace Barotrauma
             };
 
             // New game
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.03f), nameSeedLayout.RectTransform) { MinSize = new Point(0, 20) }, TextManager.Get("SaveName"), font: GUIStyle.SubHeadingFont, textAlignment: Alignment.BottomLeft);
-            saveNameBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.03f), nameSeedLayout.RectTransform) { MinSize = new Point(0, 20) }, string.Empty)
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.03f), nameSeedLayout.RectTransform) { MinSize = new Point(0, GUI.IntScale(24)) }, TextManager.Get("SaveName"), font: GUIStyle.SubHeadingFont, textAlignment: Alignment.BottomLeft);
+            saveNameBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.03f), nameSeedLayout.RectTransform), string.Empty)
             {
                 textFilterFunction = ToolBox.RemoveInvalidFileNameChars
             };
 
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.03f), nameSeedLayout.RectTransform) { MinSize = new Point(0, 20) }, TextManager.Get("MapSeed"), font: GUIStyle.SubHeadingFont, textAlignment: Alignment.BottomLeft);
-            seedBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.03f), nameSeedLayout.RectTransform) { MinSize = new Point(0, 20) }, ToolBox.RandomSeed(8));
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.03f), nameSeedLayout.RectTransform) { MinSize = new Point(0, GUI.IntScale(24)) }, TextManager.Get("MapSeed"), font: GUIStyle.SubHeadingFont, textAlignment: Alignment.BottomLeft);
+            seedBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.03f), nameSeedLayout.RectTransform), ToolBox.RandomSeed(8));
 
             nameSeedLayout.RectTransform.MinSize = new Point(0, nameSeedLayout.Children.Sum(c => c.RectTransform.MinSize.Y));
 
-            CampaignSettingElements elements = CreateCampaignSettingList(campaignSettingLayout, CampaignSettings.Empty);
+            CampaignSettingElements elements = CreateCampaignSettingList(campaignSettingLayout, CampaignSettings.Empty, false);
 
             var buttonContainer = new GUILayoutGroup(new RectTransform(new Vector2(1f, 0.1f),
                 verticalLayout.RectTransform) { MaxSize = new Point(int.MaxValue, 60) }, childAnchor: Anchor.BottomRight, isHorizontal: true);
@@ -133,6 +135,7 @@ namespace Barotrauma
             StartButton.RectTransform.MaxSize = RectTransform.MaxPoint;
             StartButton.Children.ForEach(c => c.RectTransform.MaxSize = RectTransform.MaxPoint);
 
+            prevInitialMoney = 8000;
             InitialMoneyText = new GUITextBlock(new RectTransform(new Vector2(0.6f, 1f), buttonContainer.RectTransform), "", font: GUIStyle.SmallFont, textColor: GUIStyle.Green)
             {
                 TextGetter = () =>
@@ -142,11 +145,17 @@ namespace Barotrauma
                     {
                         initialMoney = definition.GetInt(elements.StartingFunds.GetValue().ToIdentifier());
                     }
+                    if (prevInitialMoney != initialMoney)
+                    {
+                        GameMain.NetLobbyScreen.RefreshEnabledElements();
+                        prevInitialMoney = initialMoney;
+                    }
                     if (GameMain.NetLobbyScreen.SelectedSub != null)
                     {
                         initialMoney -= GameMain.NetLobbyScreen.SelectedSub.Price;
                     }
-                    initialMoney = Math.Max(initialMoney, MultiPlayerCampaign.MinimumInitialMoney);
+                    initialMoney = Math.Max(initialMoney, 0);
+
                     return TextManager.GetWithVariable("campaignstartingmoney", "[money]", string.Format(CultureInfo.InvariantCulture, "{0:N0}", initialMoney));
                 }
             };
@@ -183,7 +192,7 @@ namespace Barotrauma
             yield return CoroutineStatus.Success;
         }
 
-        public void UpdateLoadMenu(IEnumerable<CampaignMode.SaveInfo> saveFiles = null)
+        public override void UpdateLoadMenu(IEnumerable<CampaignMode.SaveInfo> saveFiles = null)
         {
             prevSaveFiles?.Clear();
             prevSaveFiles = null;
@@ -211,37 +220,16 @@ namespace Barotrauma
                 CreateSaveElement(saveInfo);
             }
 
-            saveList.Content.RectTransform.SortChildren((c1, c2) =>
-            {
-                string file1 = c1.GUIComponent.UserData as string;
-                string file2 = c2.GUIComponent.UserData as string;
-                DateTime file1WriteTime = DateTime.MinValue;
-                DateTime file2WriteTime = DateTime.MinValue;
-                try
-                {
-                    file1WriteTime = File.GetLastWriteTime(file1);
-                }
-                catch
-                {
-                    //do nothing - DateTime.MinValue will be used and the element will get sorted at the bottom of the list 
-                };
-                try
-                {
-                    file2WriteTime = File.GetLastWriteTime(file2);
-                }
-                catch
-                {
-                    //do nothing - DateTime.MinValue will be used and the element will get sorted at the bottom of the list 
-                };
-                return file2WriteTime.CompareTo(file1WriteTime);
-            });
+            SortSaveList();
 
             loadGameButton = new GUIButton(new RectTransform(new Vector2(0.45f, 0.12f), loadGameContainer.RectTransform, Anchor.BottomRight), TextManager.Get("LoadButton"))
             {
                 OnClicked = (btn, obj) =>
                 {
-                    if (string.IsNullOrWhiteSpace(saveList.SelectedData as string)) { return false; }
-                    LoadGame?.Invoke(saveList.SelectedData as string);
+                    if (saveList.SelectedData is not CampaignMode.SaveInfo saveInfo) { return false; }
+                    if (string.IsNullOrWhiteSpace(saveInfo.FilePath)) { return false; }
+                    LoadGame?.Invoke(saveInfo.FilePath);
+                    
                     CoroutineManager.StartCoroutine(WaitForCampaignSetup(), "WaitForCampaignSetup");
                     return true;
                 },
@@ -255,36 +243,19 @@ namespace Barotrauma
             };
         }       
         
+        
         private bool SelectSaveFile(GUIComponent component, object obj)
         {
-            string fileName = (string)obj;
+            if (obj is not CampaignMode.SaveInfo saveInfo) { return true; }
+            string fileName = saveInfo.FilePath;
 
             loadGameButton.Enabled = true;
             deleteMpSaveButton.Visible = deleteMpSaveButton.Enabled = GameMain.Client.IsServerOwner;
             deleteMpSaveButton.Enabled = GameMain.GameSession?.SavePath != fileName;
             if (deleteMpSaveButton.Visible)
             {
-                deleteMpSaveButton.UserData = obj as string;
+                deleteMpSaveButton.UserData = saveInfo;
             }
-            return true;
-        }
-
-        private bool DeleteSave(GUIButton button, object obj)
-        {
-            string saveFile = obj as string;
-            if (obj == null) { return false; }
-
-            var header = TextManager.Get("deletedialoglabel");
-            var body = TextManager.GetWithVariable("deletedialogquestion", "[file]", Path.GetFileNameWithoutExtension(saveFile));
-
-            EventEditorScreen.AskForConfirmation(header, body, () =>
-            {
-                SaveUtil.DeleteSave(saveFile);
-                prevSaveFiles?.RemoveAll(s => s.FilePath == saveFile);
-                UpdateLoadMenu(prevSaveFiles.ToList());
-                return true;
-            });
-
             return true;
         }
     }

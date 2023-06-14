@@ -111,6 +111,13 @@ namespace Barotrauma.Items.Components
 
         private bool drawable = true;
 
+        [Serialize(PropertyConditional.Comparison.And, IsPropertySaveable.No)]
+        public PropertyConditional.Comparison IsActiveConditionalComparison
+        {
+            get;
+            set;
+        }
+
         public List<PropertyConditional> IsActiveConditionals;
 
         public bool Drawable
@@ -118,8 +125,8 @@ namespace Barotrauma.Items.Components
             get { return drawable; }
             set
             {
-                if (value == drawable) return;
-                if (!(this is IDrawableComponent))
+                if (value == drawable) { return; }
+                if (this is not IDrawableComponent)
                 {
                     DebugConsole.ThrowError("Couldn't make \"" + this + "\" drawable (the component doesn't implement the IDrawableComponent interface)");
                     return;
@@ -229,12 +236,7 @@ namespace Barotrauma.Items.Components
             set;
         }
 
-        public virtual bool RecreateGUIOnResolutionChange => false;
-
-        /// <summary>
-        /// How useful the item is in combat? Used by AI to decide which item it should use as a weapon. For the sake of clarity, use a value between 0 and 100 (not enforced).
-        /// </summary>
-        [Serialize(0f, IsPropertySaveable.No, description: "How useful the item is in combat? Used by AI to decide which item it should use as a weapon. For the sake of clarity, use a value between 0 and 100 (not enforced).")]
+        [Serialize(0f, IsPropertySaveable.No, description: "How useful the item is in combat? Used by AI to decide which item it should use as a weapon. For the sake of clarity, use a value between 0 and 100 (not forced). Note that there's also a generic BotPriority for all item prefabs.")]
         public float CombatPriority { get; private set; }
 
         /// <summary>
@@ -242,6 +244,13 @@ namespace Barotrauma.Items.Components
         /// </summary>
         [Serialize(0, IsPropertySaveable.Yes, alwaysUseInstanceValues: true)]
         public int ManuallySelectedSound { get; private set; }
+
+        /// <summary>
+        /// Can be used by status effects or conditionals to the speed of the item
+        /// </summary>
+        public float Speed => item.Speed;
+
+        public readonly bool InheritStatusEffects;
 
         public ItemComponent(Item item, ContentXElement element)
         {
@@ -303,6 +312,7 @@ namespace Barotrauma.Items.Components
             string inheritStatusEffectsFrom = element.GetAttributeString("inheritstatuseffectsfrom", "");
             if (!string.IsNullOrEmpty(inheritStatusEffectsFrom))
             {
+                InheritStatusEffects = true;
                 var component = item.Components.Find(ic => ic.Name.Equals(inheritStatusEffectsFrom, StringComparison.OrdinalIgnoreCase));
                 if (component == null)
                 {
@@ -397,7 +407,7 @@ namespace Barotrauma.Items.Components
             RelatedItem ri = RelatedItem.Load(element, returnEmpty, item.Name);
             if (ri != null)
             {
-                if (ri.Identifiers.Length == 0)
+                if (ri.Identifiers.Count == 0)
                 {
                     DisabledRequiredItems.Add(ri);
                 }
@@ -433,7 +443,7 @@ namespace Barotrauma.Items.Components
         public virtual void Drop(Character dropper) { }
 
         /// <returns>true if the operation was completed</returns>
-        public virtual bool AIOperate(float deltaTime, Character character, AIObjectiveOperateItem objective)
+        public virtual bool CrewAIOperate(float deltaTime, Character character, AIObjectiveOperateItem objective)
         {
             return false;
         }
@@ -677,9 +687,10 @@ namespace Barotrauma.Items.Components
 
         public virtual void FlipY(bool relativeToSub) { }
 
-        public bool IsLoaded(Character user, bool checkContainedItems = true) =>
-            HasRequiredContainedItems(user, addMessage: false) &&
-            (!checkContainedItems || Item.OwnInventory == null || Item.OwnInventory.AllItems.Any(i => i.Condition > 0));
+        /// <summary>
+        /// Shorthand for !HasRequiredContainedItems()
+        /// </summary>
+        public bool IsEmpty(Character user) => !HasRequiredContainedItems(user, addMessage: false);
 
         public bool HasRequiredContainedItems(Character user, bool addMessage, LocalizedString msg = null)
         {
@@ -799,7 +810,14 @@ namespace Barotrauma.Items.Components
                 }
                 else
                 {
-                    hasRequiredItems = itemList.Any(Predicate);
+                    if (itemList.Any(Predicate))
+                    {
+                        hasRequiredItems = !relatedItem.RequireEmpty;
+                    }
+                    else
+                    {
+                        hasRequiredItems = relatedItem.MatchOnEmpty || relatedItem.RequireEmpty;
+                    }
                     if (!hasRequiredItems)
                     {
                         shouldBreak = true;
@@ -816,7 +834,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public void ApplyStatusEffects(ActionType type, float deltaTime, Character character = null, Limb targetLimb = null, Entity useTarget = null, Character user = null, Vector2? worldPosition = null, float applyOnUserFraction = 0.0f)
+        public void ApplyStatusEffects(ActionType type, float deltaTime, Character character = null, Limb targetLimb = null, Entity useTarget = null, Character user = null, Vector2? worldPosition = null, float afflictionMultiplier = 1.0f)
         {
             if (statusEffectLists == null) { return; }
 
@@ -828,13 +846,15 @@ namespace Barotrauma.Items.Components
             {
                 if (broken && !effect.AllowWhenBroken && effect.type != ActionType.OnBroken) { continue; }
                 if (user != null) { effect.SetUser(user); }
-                item.ApplyStatusEffect(effect, type, deltaTime, character, targetLimb, useTarget, isNetworkEvent: false, checkCondition: false, worldPosition);
-                if (user != null && applyOnUserFraction > 0.0f && effect.HasTargetType(StatusEffect.TargetType.Character))
+                effect.AfflictionMultiplier = afflictionMultiplier;
+                var c = character;
+                if (user != null && effect.HasTargetType(StatusEffect.TargetType.Character) && !effect.HasTargetType(StatusEffect.TargetType.UseTarget))
                 {
-                    effect.AfflictionMultiplier = applyOnUserFraction;
-                    item.ApplyStatusEffect(effect, type, deltaTime, user, targetLimb == null ? null : user.AnimController.GetLimb(targetLimb.type), useTarget, false, false, worldPosition);
-                    effect.AfflictionMultiplier = 1.0f;
+                    // A bit hacky, but fixes MeleeWeapons targeting the use target instead of the attacker. Also applies to Projectiles and Throwables, or other callers that passes the user.
+                    c = user;
                 }
+                item.ApplyStatusEffect(effect, type, deltaTime, c, targetLimb, useTarget, isNetworkEvent: false, checkCondition: false, worldPosition);
+                effect.AfflictionMultiplier = 1.0f;
                 reducesCondition |= effect.ReducesItemCondition();
             }
             //if any of the effects reduce the item's condition, set the user for OnBroken effects as well
@@ -1070,7 +1090,7 @@ namespace Barotrauma.Items.Components
             AIObjectiveContainItem containObjective = null;
             if (character.AIController is HumanAIController aiController)
             {
-                containObjective = new AIObjectiveContainItem(character, container.ContainableItemIdentifiers.ToArray(), container, currentObjective.objectiveManager, spawnItemIfNotFound: spawnItemIfNotFound)
+                containObjective = new AIObjectiveContainItem(character, container.ContainableItemIdentifiers, container, currentObjective.objectiveManager, spawnItemIfNotFound: spawnItemIfNotFound)
                 {
                     ItemCount = itemCount,
                     Equip = equip,

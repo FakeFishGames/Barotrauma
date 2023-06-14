@@ -14,24 +14,17 @@ namespace Barotrauma
         public readonly LanguageIdentifier Language;
 
         public readonly List<NPCConversation> Conversations;
-        public readonly Dictionary<Identifier, NPCPersonalityTrait> PersonalityTraits;
 
         public NPCConversationCollection(NPCConversationsFile file, ContentXElement element) : base(file, element.GetAttributeIdentifier("identifier", ""))
         {
             Language = element.GetAttributeIdentifier("language", "English").ToLanguageIdentifier();
             Conversations = new List<NPCConversation>();
-            PersonalityTraits = new Dictionary<Identifier, NPCPersonalityTrait>();
             foreach (var subElement in element.Elements())
             {
                 Identifier elemName = new Identifier(subElement.Name.LocalName);
                 if (elemName == "Conversation")
                 {
                     Conversations.Add(new NPCConversation(subElement));
-                }
-                else if (elemName == "PersonalityTrait")
-                {
-                    var personalityTrait = new NPCPersonalityTrait(subElement);
-                    PersonalityTraits.Add(personalityTrait.Name, personalityTrait);
                 }
             }
         }
@@ -84,16 +77,21 @@ namespace Barotrauma
             {
                 if (Level.Loaded.Type == LevelData.LevelType.LocationConnection)
                 {
-                    if (Timing.TotalTime < GameMain.GameSession.RoundStartTime + 30.0f) { currentFlags.Add("Initial".ToIdentifier()); }
+                    if (GameMain.GameSession.RoundDuration < 30.0f) { currentFlags.Add("Initial".ToIdentifier()); }
                 }
                 else if (Level.Loaded.Type == LevelData.LevelType.Outpost)
                 {
-                    if (Timing.TotalTime < GameMain.GameSession.RoundStartTime + 120.0f && 
+                    if (GameMain.GameSession.RoundDuration < 120.0f && 
                         speaker?.CurrentHull != null && 
+                        GameMain.GameSession.Map?.CurrentLocation?.Reputation?.Value >= 0.0f &&
                         (speaker.TeamID == CharacterTeamType.FriendlyNPC || speaker.TeamID == CharacterTeamType.None) && 
                         Character.CharacterList.Any(c => c.TeamID != speaker.TeamID && c.CurrentHull == speaker.CurrentHull)) 
                     {
                         currentFlags.Add("EnterOutpost".ToIdentifier()); 
+                    }
+                    if (Level.Loaded.IsEndBiome)
+                    {
+                        currentFlags.Add("EndLevel".ToIdentifier());
                     }
                 }
                 if (GameMain.GameSession.EventManager.CurrentIntensity <= 0.2f)
@@ -124,7 +122,7 @@ namespace Barotrauma
                 foreach (Affliction affliction in afflictions)
                 {
                     var currentEffect = affliction.GetActiveEffect();
-                    if (currentEffect != null && !string.IsNullOrEmpty(currentEffect.DialogFlag.Value) && !currentFlags.Contains(currentEffect.DialogFlag))
+                    if (currentEffect is { DialogFlag.IsEmpty: false } && !currentFlags.Contains(currentEffect.DialogFlag))
                     {
                         currentFlags.Add(currentEffect.DialogFlag);
                     }
@@ -133,6 +131,10 @@ namespace Barotrauma
                 if (speaker.TeamID == CharacterTeamType.FriendlyNPC && speaker.Submarine != null && speaker.Submarine.Info.IsOutpost)
                 {
                     currentFlags.Add("OutpostNPC".ToIdentifier());
+                    if (GameMain.GameSession?.Level?.StartLocation?.Faction is Faction faction)
+                    {
+                        currentFlags.Add($"OutpostNPC{faction.Prefab.Identifier}".ToIdentifier());
+                    }
                 }
                 if (speaker.CampaignInteractionType != CampaignMode.InteractionType.None)
                 {
@@ -361,10 +363,13 @@ namespace Barotrauma
 
         private static float GetConversationProbability(NPCConversation conversation)
         {
-            int index = previousConversations.IndexOf(conversation);
-            if (index < 0) return 10.0f;
+            //prefer choosing conversations with more flags (= for more specific situations) when possible
+            float baseProbability = MathF.Pow(conversation.Flags.Count + 1, 2);
 
-            return 1.0f - 1.0f / (index + 1);
+            int index = previousConversations.IndexOf(conversation);
+            if (index < 0) { return baseProbability * 10.0f; }
+
+            return baseProbability + 1.0f - 1.0f / (index + 1);
         }
 
 #if DEBUG

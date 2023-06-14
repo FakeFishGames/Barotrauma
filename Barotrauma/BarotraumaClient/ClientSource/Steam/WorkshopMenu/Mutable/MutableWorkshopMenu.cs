@@ -1,12 +1,9 @@
 ﻿#nullable enable
 using Barotrauma.Extensions;
 using Microsoft.Xna.Framework;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
-using System.Threading.Tasks;
-using ItemOrPackage = Barotrauma.Either<Steamworks.Ugc.Item, Barotrauma.ContentPackage>;
 
 namespace Barotrauma.Steam
 {
@@ -28,6 +25,8 @@ namespace Barotrauma.Steam
             ShowOnlySubs,
             ShowOnlyItemAssemblies
         }
+
+        public Tab CurrentTab { get; private set; }
         
         private readonly GUILayoutGroup tabber;
         private readonly Dictionary<Tab, (GUIButton Button, GUIFrame Content)> tabContents;
@@ -45,11 +44,25 @@ namespace Barotrauma.Steam
         public MutableWorkshopMenu(GUIFrame parent) : base(parent)
         {
             var mainLayout
-                = new GUILayoutGroup(new RectTransform(Vector2.One, parent.RectTransform), isHorizontal: false);
+                = new GUILayoutGroup(new RectTransform(Vector2.One, parent.RectTransform), isHorizontal: false)
+                {
+                    Stretch = true,
+                    AbsoluteSpacing = GUI.IntScale(4)
+                };
 
             tabber = new GUILayoutGroup(new RectTransform((1.0f, 0.05f), mainLayout.RectTransform), isHorizontal: true)
                 { Stretch = true };
             tabContents = new Dictionary<Tab, (GUIButton Button, GUIFrame Content)>();
+
+            new GUIButton(new RectTransform((1.0f, 0.05f), mainLayout.RectTransform, Anchor.BottomLeft),
+                style: "GUIButtonSmall", text: TextManager.Get("FindModsButton"))
+            {
+                OnClicked = (button, o) =>
+                {
+                    SteamManager.OverlayCustomUrl($"https://steamcommunity.com/app/{SteamManager.AppID}/workshop/");
+                    return false;
+                }
+            };
 
             contentFrame = new GUIFrame(new RectTransform((1.0f, 0.95f), mainLayout.RectTransform), style: null);
 
@@ -78,6 +91,7 @@ namespace Barotrauma.Steam
 
         public void SelectTab(Tab tab)
         {
+            CurrentTab = tab;
             SwitchContent(tabContents[tab].Content);
             tabber.Children.ForEach(c =>
             {
@@ -130,17 +144,8 @@ namespace Barotrauma.Steam
             {
                 tabContents[Tab.PopularMods].Button.Enabled = false;
             }
-            GUIFrame listFrame = new GUIFrame(new RectTransform((1.0f, 0.95f), content.RectTransform), style: null);
+            GUIFrame listFrame = new GUIFrame(new RectTransform(Vector2.One, content.RectTransform), style: null);
             CreateWorkshopItemList(listFrame, out _, out popularModsList, onSelected: PopulateFrameWithItemInfo);
-            new GUIButton(new RectTransform((1.0f, 0.05f), content.RectTransform, Anchor.BottomLeft),
-                style: "GUIButtonSmall", text: TextManager.Get("FindModsButton"))
-            {
-                OnClicked = (button, o) =>
-                {
-                    SteamManager.OverlayCustomURL($"https://steamcommunity.com/app/{SteamManager.AppID}/workshop/");
-                    return false;
-                }
-            };
         }
 
         private void CreatePublishTab(out GUIListBox selfModsList)
@@ -160,6 +165,10 @@ namespace Barotrauma.Steam
                 .Select(c => c.UserData as RegularPackage).OfType<RegularPackage>().ToArray());
             PopulateInstalledModLists(forceRefreshEnabled: true, refreshDisabled: true);
             ContentPackageManager.LogEnabledRegularPackageErrors();
+            enabledCoreDropdown.ButtonTextColor =
+                EnabledCorePackage.HasAnyErrors
+                    ? GUIStyle.Red
+                    : GUIStyle.TextColorNormal;
         }
     }
 }

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
+using Barotrauma.Items.Components;
 
 namespace Barotrauma
 {    
@@ -77,6 +78,11 @@ namespace Barotrauma
         }
     }
 
+    /// <summary>
+    /// Attacks are used to deal damage to characters, structures and items.
+    /// They can be defined in the weapon components of the items or the limb definitions of the characters.
+    /// The limb attacks can also be used by the player, when they control a monster or have some appendage, like a husk stinger.
+    /// </summary>
     partial class Attack : ISerializableEntity
     {
         [Serialize(AttackContext.Any, IsPropertySaveable.Yes, description: "The attack will be used only in this context."), Editable]
@@ -100,6 +106,9 @@ namespace Barotrauma
         [Serialize(false, IsPropertySaveable.Yes, description: "Should the AI try to turn around when aiming with this attack?"), Editable]
         public bool Reverse { get; private set; }
 
+        [Serialize(true, IsPropertySaveable.Yes, description: "Should the rope attached to this limb snap upon choosing a new attack?"), Editable]
+        public bool SnapRopeOnNewAttack { get; private set; }
+
         [Serialize(false, IsPropertySaveable.Yes, description: "Should the AI try to steer away from the target when aiming with this attack? Best combined with PassiveAggressive behavior."), Editable]
         public bool Retreat { get; private set; }
 
@@ -119,7 +128,7 @@ namespace Barotrauma
             set => _damageRange = value;
         }
 
-        [Serialize(0.0f, IsPropertySaveable.Yes, description: ""), Editable(MinValueFloat = 0.0f, MaxValueFloat = 10000.0f)]
+        [Serialize(0.0f, IsPropertySaveable.Yes, description: "Used by enemy AI to determine the minimum range required for the attack to hit."), Editable(MinValueFloat = 0.0f, MaxValueFloat = 10000.0f)]
         public float MinRange { get; private set; }
 
         [Serialize(0.25f, IsPropertySaveable.Yes, description: "An approximation of the attack duration. Effectively defines the time window in which the hit can be registered. If set to too low value, it's possible that the attack won't hit the target in time."), Editable(MinValueFloat = 0.0f, MaxValueFloat = 10.0f, DecimalCount = 2)]
@@ -134,22 +143,22 @@ namespace Barotrauma
         [Serialize(0f, IsPropertySaveable.Yes, description: "A random factor applied to all cooldowns. Example: 0.1 -> adds a random value between -10% and 10% of the cooldown. Min 0 (default), Max 1 (could disable or double the cooldown in extreme cases)."), Editable(MinValueFloat = 0, MaxValueFloat = 1, DecimalCount = 2)]
         public float CoolDownRandomFactor { get; private set; } = 0;
 
-        [Serialize(false, IsPropertySaveable.Yes), Editable]
+        [Serialize(false, IsPropertySaveable.Yes, description: "When set to true, causes the enemy AI to use the fast movement animations when the attack is on cooldown."), Editable]
         public bool FullSpeedAfterAttack { get; private set; }
 
         private float _structureDamage;
-        [Serialize(0.0f, IsPropertySaveable.Yes), Editable(MinValueFloat = 0.0f, MaxValueFloat = 10000.0f)]
+        [Serialize(0.0f, IsPropertySaveable.Yes, description: "How much damage the attack does to submarine walls."), Editable(MinValueFloat = 0.0f, MaxValueFloat = 10000.0f)]
         public float StructureDamage
         {
             get => _structureDamage * DamageMultiplier;
             set => _structureDamage = value;
         }
 
-        [Serialize(true, IsPropertySaveable.Yes), Editable]
+        [Serialize(true, IsPropertySaveable.Yes, description: "Whether or not damaging structures with the attack causes damage particles to emit."), Editable]
         public bool EmitStructureDamageParticles { get; private set; }
 
         private float _itemDamage;
-        [Serialize(0.0f, IsPropertySaveable.Yes), Editable(MinValueFloat = 0.0f, MaxValueFloat = 1000.0f)]
+        [Serialize(0.0f, IsPropertySaveable.Yes, description: "How much damage the attack does to items."), Editable(MinValueFloat = 0.0f, MaxValueFloat = 1000.0f)]
         public float ItemDamage
         {
             get =>_itemDamage * DamageMultiplier;
@@ -174,28 +183,40 @@ namespace Barotrauma
         /// </summary>
         public float ImpactMultiplier { get; set; } = 1;
 
-        [Serialize(0.0f, IsPropertySaveable.Yes), Editable(MinValueFloat = 0.0f, MaxValueFloat = 1000.0f)]
+        [Serialize(0.0f, IsPropertySaveable.Yes, description: "How much damage the attack does to level walls."), Editable(MinValueFloat = 0.0f, MaxValueFloat = 1000.0f)]
         public float LevelWallDamage { get; set; }
 
-        [Serialize(false, IsPropertySaveable.Yes)]
+        [Serialize(false, IsPropertySaveable.Yes, description: "Sets whether or not the attack is ranged or not."), Editable]
         public bool Ranged { get; set; }
 
-        [Serialize(false, IsPropertySaveable.Yes, description:"Only affects ranged attacks.")]
+        [Serialize(false, IsPropertySaveable.Yes, description:"When enabled the attack will not be launched when there's a friendly character in the way. Only affects ranged attacks."), Editable]
         public bool AvoidFriendlyFire { get; set; }
 
-        [Serialize(20f, IsPropertySaveable.Yes)]
+        [Serialize(20f, IsPropertySaveable.Yes, description: "Used by enemy AI to determine how accurately the attack needs to be aimed for the attack to trigger. Only affects ranged attacks."), Editable]
         public float RequiredAngle { get; set; }
 
-        /// <summary>
-        /// Legacy support. Use Afflictions.
-        /// </summary>
-        [Serialize(0.0f, IsPropertySaveable.No)]
+        [Serialize(0f, IsPropertySaveable.Yes, description: "By default uses the same value as RequiredAngle. Use if you want to allow selecting the attack but not shooting until the angle is smaller. Only affects ranged attacks."), Editable]
+        public float RequiredAngleToShoot { get; set; }
+
+        [Serialize(0f, IsPropertySaveable.Yes, description: "How much the attack limb is rotated towards the target. Default 0 = no rotation. Only affects ranged attacks."), Editable]
+        public float AimRotationTorque { get; set; }
+
+        [Serialize(-1, IsPropertySaveable.Yes, description: "Reference to the limb we apply the aim rotation to. By default same as the attack limb. Only affects ranged attacks."), Editable]
+        public int RotationLimbIndex { get; set; }
+
+        [Serialize(0f, IsPropertySaveable.Yes, description:"How much the held weapon is swayed back and forth while aiming. Only affects monsters using ranged weapons (items). Default 0 means the weapon is not swayed at all."), Editable]
+        public float SwayAmount { get; set; }
+
+        [Serialize(5f, IsPropertySaveable.Yes, description: "How fast the held weapon is swayed back and forth while aiming. Only affects monsters using ranged weapons (items)."), Editable]
+        public float SwayFrequency { get; set; }
+
+        [Serialize(0.0f, IsPropertySaveable.No, description: "Legacy support. Use Afflictions.")]
         public float Stun { get; private set; }
 
         [Serialize(false, IsPropertySaveable.Yes, description: "Can damage only Humans."), Editable]
-        public bool OnlyHumans { get; private set; }
+        public bool OnlyHumans { get; set; }
 
-        [Serialize("", IsPropertySaveable.Yes), Editable]
+        [Serialize("", IsPropertySaveable.Yes, description: "List of limb indices to apply the force into."), Editable]
         public string ApplyForceOnLimbs
         {
             get
@@ -221,20 +242,20 @@ namespace Barotrauma
 
         [Serialize("0.0, 0.0", IsPropertySaveable.Yes, description: "Applied to the main limb. In world space coordinates(i.e. 0, 1 pushes the character upwards a bit). The attacker's facing direction is taken into account."), Editable]
         public Vector2 RootForceWorldStart { get; private set; }
-        
+
         [Serialize("0.0, 0.0", IsPropertySaveable.Yes, description: "Applied to the main limb. In world space coordinates(i.e. 0, 1 pushes the character upwards a bit). The attacker's facing direction is taken into account."), Editable]
         public Vector2 RootForceWorldMiddle { get; private set; }
-        
+
         [Serialize("0.0, 0.0", IsPropertySaveable.Yes, description: "Applied to the main limb. In world space coordinates(i.e. 0, 1 pushes the character upwards a bit). The attacker's facing direction is taken into account."), Editable]
         public Vector2 RootForceWorldEnd { get; private set; }
-        
-        [Serialize(TransitionMode.Linear, IsPropertySaveable.Yes, description:""), Editable]
+
+        [Serialize(TransitionMode.Linear, IsPropertySaveable.Yes, description:"Applied to the main limb. The transition smoothing of the applied force."), Editable]
         public TransitionMode RootTransitionEasing { get; private set; }
 
         [Serialize(0.0f, IsPropertySaveable.Yes, description: "Applied to the attacking limb (or limbs defined using ApplyForceOnLimbs)"), Editable(MinValueFloat = -10000.0f, MaxValueFloat = 10000.0f)]
         public float Torque { get; private set; }
 
-        [Serialize(false, IsPropertySaveable.Yes), Editable]
+        [Serialize(false, IsPropertySaveable.Yes, description: "Only apply the force once during the attacks lifetime."), Editable]
         public bool ApplyForcesOnlyOnce { get; private set; }
 
         [Serialize(0.0f, IsPropertySaveable.Yes, description: "Applied to the target the attack hits. The direction of the impulse is from this limb towards the target (use negative values to pull the target closer)."), Editable(MinValueFloat = -1000.0f, MaxValueFloat = 1000.0f)]
@@ -260,10 +281,10 @@ namespace Barotrauma
         //public float StickChance { get; set; }
         public float StickChance => 0f;
 
-        [Serialize(0.0f, IsPropertySaveable.Yes, description: ""), Editable(MinValueFloat = 0.0f, MaxValueFloat = 1.0f)]
+        [Serialize(0.0f, IsPropertySaveable.Yes, description: "Used by enemy AI to determine the priority when selecting attacks. When random attacks are disabled on the character it is multiplied with distance to determine the which attack to use. Only attacks that are currently valid are taken into consideration when making the decision."), Editable(MinValueFloat = 0.0f, MaxValueFloat = 1.0f)]
         public float Priority { get; private set; }
 
-        [Serialize(false, IsPropertySaveable.Yes, description: ""), Editable]
+        [Serialize(false, IsPropertySaveable.Yes, description: "Triggers the 'blink' animation on the attacking limbs when the attack executes. Used e.g. by abyss monsters to make their jaws close when attacking."), Editable]
         public bool Blink { get; private set; }
 
         public IEnumerable<StatusEffect> StatusEffects
@@ -279,7 +300,7 @@ namespace Barotrauma
             private set;
         } = new Dictionary<Identifier, SerializableProperty>();
 
-        //the indices of the limbs Force is applied on 
+        //the indices of the limbs Force is applied on
         //(if none, force is applied only to the limb the attack is attached to)
         public readonly List<int> ForceOnLimbIndices = new List<int>();
 
@@ -290,6 +311,10 @@ namespace Barotrauma
         /// </summary>
         public List<PropertyConditional> Conditionals { get; private set; } = new List<PropertyConditional>();
 
+        /// <summary>
+        /// StatusEffects to apply when the attack triggers.
+        /// StatusEffect types of 'OnUse' are executed always, 'OnFailure' only when the attack doesn't deal damage and 'OnSuccess' executes when some damage is dealt.
+        /// </summary>
         private readonly List<StatusEffect> statusEffects = new List<StatusEffect>();
 
         public void SetUser(Character user)
@@ -303,13 +328,13 @@ namespace Barotrauma
 
         // used for talents/ability conditions
         public Item SourceItem { get; set; }
-        
+
         public List<Affliction> GetMultipliedAfflictions(float multiplier)
         {
             List<Affliction> multipliedAfflictions = new List<Affliction>();
             foreach (Affliction affliction in Afflictions.Keys)
             {
-                multipliedAfflictions.Add(affliction.CreateMultiplied(multiplier));
+                multipliedAfflictions.Add(affliction.CreateMultiplied(multiplier, affliction));
             }
             return multipliedAfflictions;
         }
@@ -324,9 +349,10 @@ namespace Barotrauma
             return (Duration == 0.0f) ? LevelWallDamage : LevelWallDamage * deltaTime;
         }
 
-        public float GetItemDamage(float deltaTime)
+        public float GetItemDamage(float deltaTime, float multiplier = 1)
         {
-            return (Duration == 0.0f) ? ItemDamage : ItemDamage * deltaTime;
+            float dmg = ItemDamage * multiplier;
+            return (Duration == 0.0f) ? dmg : dmg * deltaTime;
         }
 
         public float GetTotalDamage(bool includeStructureDamage = false)
@@ -399,9 +425,8 @@ namespace Barotrauma
                         }
                         else
                         {
-                            string afflictionIdentifier = subElement.GetAttributeString("identifier", "").ToLowerInvariant();
-                            afflictionPrefab = AfflictionPrefab.Prefabs[afflictionIdentifier];
-                            if (afflictionPrefab == null)
+                            Identifier afflictionIdentifier = subElement.GetAttributeIdentifier("identifier", "");
+                            if (!AfflictionPrefab.Prefabs.TryGet(afflictionIdentifier, out afflictionPrefab))
                             {
                                 DebugConsole.ThrowError("Error in Attack (" + parentDebugName + ") - Affliction prefab \"" + afflictionIdentifier + "\" not found.");
                                 continue;
@@ -427,15 +452,13 @@ namespace Barotrauma
             Afflictions.Clear();
             foreach (var subElement in element.GetChildElements("affliction"))
             {
-                AfflictionPrefab afflictionPrefab;
                 Affliction affliction;
                 Identifier afflictionIdentifier = subElement.GetAttributeIdentifier("identifier", "");
-                if (!AfflictionPrefab.Prefabs.ContainsKey(afflictionIdentifier))
+                if (!AfflictionPrefab.Prefabs.TryGet(afflictionIdentifier, out AfflictionPrefab afflictionPrefab))
                 {
                     DebugConsole.ThrowError($"Error in an Attack defined in \"{parentDebugName}\" - could not find an affliction with the identifier \"{afflictionIdentifier}\".");
                     continue;
                 }
-                afflictionPrefab = AfflictionPrefab.Prefabs[afflictionIdentifier];
                 affliction = afflictionPrefab.Instantiate(0.0f);
                 affliction.Deserialize(subElement);
                 //backwards compatibility
@@ -482,37 +505,52 @@ namespace Barotrauma
             DamageParticles(deltaTime, worldPosition);
             
             var attackResult = target?.AddDamage(attacker, worldPosition, this, deltaTime, playSound) ?? new AttackResult();
-            var effectType = attackResult.Damage > 0.0f ? ActionType.OnUse : ActionType.OnFailure;
+            var conditionalEffectType = attackResult.Damage > 0.0f ? ActionType.OnSuccess : ActionType.OnFailure;
+            var additionalEffectType = ActionType.OnUse;
             if (targetCharacter != null && targetCharacter.IsDead)
             {
-                effectType = ActionType.OnEating;
+                additionalEffectType = ActionType.OnEating;
             }
 
             foreach (StatusEffect effect in statusEffects)
             {
                 effect.sourceBody = sourceBody;
-                if (effect.HasTargetType(StatusEffect.TargetType.This))
+                if (effect.HasTargetType(StatusEffect.TargetType.This) || effect.HasTargetType(StatusEffect.TargetType.Character))
                 {
-                    // TODO: do we want to apply the effect at the world position or the entity positions in each cases? -> go through also other cases where status effects are applied
-                    effect.Apply(effectType, deltaTime, attacker, sourceLimb ?? attacker as ISerializableEntity, worldPosition);
+                    var t = sourceLimb ?? attacker as ISerializableEntity;
+                    if (additionalEffectType != ActionType.OnEating)
+                    {
+                        effect.Apply(conditionalEffectType, deltaTime, attacker, t, worldPosition);
+                    }
+                    effect.Apply(additionalEffectType, deltaTime, attacker, t, worldPosition);
                 }
                 if (effect.HasTargetType(StatusEffect.TargetType.Parent))
                 {
-                    effect.Apply(effectType, deltaTime, attacker, attacker);
+                    if (additionalEffectType != ActionType.OnEating)
+                    {
+                        effect.Apply(conditionalEffectType, deltaTime, attacker, attacker);
+                    }
+                    effect.Apply(additionalEffectType, deltaTime, attacker, attacker);
                 }
                 if (targetCharacter != null)
                 {
-                    if (effect.HasTargetType(StatusEffect.TargetType.Character))
-                    {
-                        effect.Apply(effectType, deltaTime, targetCharacter, targetCharacter);
-                    }
                     if (effect.HasTargetType(StatusEffect.TargetType.Limb))
                     {
-                        effect.Apply(effectType, deltaTime, targetCharacter, attackResult.HitLimb);
+                        if (additionalEffectType != ActionType.OnEating)
+                        {
+                            effect.Apply(conditionalEffectType, deltaTime, targetCharacter, attackResult.HitLimb);
+                        }
+                        effect.Apply(additionalEffectType, deltaTime, targetCharacter, attackResult.HitLimb);
                     }                    
                     if (effect.HasTargetType(StatusEffect.TargetType.AllLimbs))
                     {
-                        effect.Apply(effectType, deltaTime, targetCharacter, targetCharacter.AnimController.Limbs.Cast<ISerializableEntity>().ToList());
+                        // TODO: do we need the conversion to list here? It generates garbage.
+                        var targets = targetCharacter.AnimController.Limbs.Cast<ISerializableEntity>().ToList();
+                        if (additionalEffectType != ActionType.OnEating)
+                        {
+                            effect.Apply(conditionalEffectType, deltaTime, targetCharacter, targets);
+                        }
+                        effect.Apply(additionalEffectType, deltaTime, targetCharacter, targets);
                     }
                 }
                 if (target is Entity targetEntity)
@@ -521,13 +559,31 @@ namespace Barotrauma
                         effect.HasTargetType(StatusEffect.TargetType.NearbyCharacters))
                     {
                         targets.Clear();
-                        targets.AddRange(effect.GetNearbyTargets(worldPosition, targets));
-                        effect.Apply(effectType, deltaTime, targetEntity, targets);
+                        effect.AddNearbyTargets(worldPosition, targets);
+                        if (additionalEffectType != ActionType.OnEating)
+                        {
+                            effect.Apply(conditionalEffectType, deltaTime, targetEntity, targets);
+                        }
+                        effect.Apply(additionalEffectType, deltaTime, targetEntity, targets);
                     }
                     if (effect.HasTargetType(StatusEffect.TargetType.UseTarget))
                     {
-                        effect.Apply(effectType, deltaTime, targetEntity, attacker, worldPosition);
+                        if (additionalEffectType != ActionType.OnEating)
+                        {
+                            effect.Apply(conditionalEffectType, deltaTime, targetEntity, targetEntity as ISerializableEntity, worldPosition);
+                        }
+                        effect.Apply(additionalEffectType, deltaTime, targetEntity, targetEntity as ISerializableEntity, worldPosition);
                     }
+                }
+                if (effect.HasTargetType(StatusEffect.TargetType.Contained))
+                {
+                    targets.Clear();
+                    targets.AddRange(attacker.Inventory.AllItems);
+                    if (additionalEffectType != ActionType.OnEating)
+                    {
+                        effect.Apply(conditionalEffectType, deltaTime, attacker, targets);
+                    }
+                    effect.Apply(additionalEffectType, deltaTime, attacker, targets);
                 }
             }
 
@@ -554,42 +610,61 @@ namespace Barotrauma
 
             DamageParticles(deltaTime, worldPosition);
 
-            var attackResult = targetLimb.character.ApplyAttack(attacker, worldPosition, this, deltaTime, playSound, targetLimb, penetration: Penetration);
-            var effectType = attackResult.Damage > 0.0f ? ActionType.OnUse : ActionType.OnFailure;
+            float penetration = Penetration;
+
+            float? penetrationValue = SourceItem?.GetComponent<RangedWeapon>()?.Penetration;
+            if (penetrationValue.HasValue)
+            {
+                penetration += penetrationValue.Value;
+            }
+
+            var attackResult = targetLimb.character.ApplyAttack(attacker, worldPosition, this, deltaTime, playSound, targetLimb, penetration);
+            var conditionalEffectType = attackResult.Damage > 0.0f ? ActionType.OnSuccess : ActionType.OnFailure;
 
             foreach (StatusEffect effect in statusEffects)
             {
                 effect.sourceBody = sourceBody;
-                if (effect.HasTargetType(StatusEffect.TargetType.This))
+                if (effect.HasTargetType(StatusEffect.TargetType.This) || effect.HasTargetType(StatusEffect.TargetType.Character))
                 {
-                    effect.Apply(effectType, deltaTime, attacker, sourceLimb ?? attacker as ISerializableEntity);
+                    effect.Apply(conditionalEffectType, deltaTime, attacker, sourceLimb ?? attacker as ISerializableEntity);
+                    effect.Apply(ActionType.OnUse, deltaTime, attacker, sourceLimb ?? attacker as ISerializableEntity);
                 }
                 if (effect.HasTargetType(StatusEffect.TargetType.Parent))
                 {
-                    effect.Apply(effectType, deltaTime, attacker, attacker);
+                    effect.Apply(conditionalEffectType, deltaTime, attacker, attacker);
+                    effect.Apply(ActionType.OnUse, deltaTime, attacker, attacker);
                 }
-                if (effect.HasTargetType(StatusEffect.TargetType.Character))
+                if (effect.HasTargetType(StatusEffect.TargetType.UseTarget))
                 {
-                    effect.Apply(effectType, deltaTime, targetLimb.character, targetLimb.character);
+                    effect.Apply(conditionalEffectType, deltaTime, targetLimb.character, targetLimb.character);
+                    effect.Apply(ActionType.OnUse, deltaTime, targetLimb.character, targetLimb.character);
                 }
                 if (effect.HasTargetType(StatusEffect.TargetType.Limb))
                 {
-                    effect.Apply(effectType, deltaTime, targetLimb.character, targetLimb);
+                    effect.Apply(conditionalEffectType, deltaTime, targetLimb.character, targetLimb);
+                    effect.Apply(ActionType.OnUse, deltaTime, targetLimb.character, targetLimb);
                 }
                 if (effect.HasTargetType(StatusEffect.TargetType.AllLimbs))
                 {
-                    effect.Apply(effectType, deltaTime, targetLimb.character, targetLimb.character.AnimController.Limbs.Cast<ISerializableEntity>().ToList());
+                    // TODO: do we need the conversion to list here? It generates garbage.
+                    var targets = targetLimb.character.AnimController.Limbs.Cast<ISerializableEntity>().ToList();
+                    effect.Apply(conditionalEffectType, deltaTime, targetLimb.character, targets);
+                    effect.Apply(ActionType.OnUse, deltaTime, targetLimb.character, targets);
                 }
                 if (effect.HasTargetType(StatusEffect.TargetType.NearbyItems) ||
                     effect.HasTargetType(StatusEffect.TargetType.NearbyCharacters))
                 {
                     targets.Clear();
-                    targets.AddRange(effect.GetNearbyTargets(worldPosition, targets));                
-                    effect.Apply(effectType, deltaTime, targetLimb.character, targets);
+                    effect.AddNearbyTargets(worldPosition, targets);                
+                    effect.Apply(conditionalEffectType, deltaTime, targetLimb.character, targets);
+                    effect.Apply(ActionType.OnUse, deltaTime, targetLimb.character, targets);
                 }
-                if (effect.HasTargetType(StatusEffect.TargetType.UseTarget))
+                if (effect.HasTargetType(StatusEffect.TargetType.Contained))
                 {
-                    effect.Apply(effectType, deltaTime, targetLimb.character, attacker, worldPosition);
+                    targets.Clear();
+                    targets.AddRange(attacker.Inventory.AllItems);
+                    effect.Apply(conditionalEffectType, deltaTime, attacker, targets);
+                    effect.Apply(ActionType.OnUse, deltaTime, attacker, targets);
                 }
             }
 

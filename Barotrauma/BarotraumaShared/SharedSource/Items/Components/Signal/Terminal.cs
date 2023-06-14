@@ -30,7 +30,7 @@ namespace Barotrauma.Items.Components
 
         private const int MaxMessages = 60;
 
-        private List<TerminalMessage> messageHistory = new List<TerminalMessage>(MaxMessages);
+        private readonly List<TerminalMessage> messageHistory = new List<TerminalMessage>(MaxMessages);
 
         public LocalizedString DisplayedWelcomeMessage
         {
@@ -67,6 +67,12 @@ namespace Barotrauma.Items.Components
         [Editable, Serialize(false, IsPropertySaveable.Yes, description: "The terminal will use a monospace font if this box is ticked.", alwaysUseInstanceValues: true)]
         public bool UseMonospaceFont { get; set; }
 
+        [Serialize(false, IsPropertySaveable.No)]
+        public bool AutoHideScrollbar { get; set; }
+
+        [Serialize(false, IsPropertySaveable.Yes, alwaysUseInstanceValues: true)]
+        public bool WelcomeMessageDisplayed { get; set; }
+
         private Color textColor = Color.LimeGreen;
 
         [Editable, Serialize("50,205,50,255", IsPropertySaveable.Yes, description: "Color of the terminal text.", alwaysUseInstanceValues: true)]
@@ -84,6 +90,15 @@ namespace Barotrauma.Items.Components
 #endif
             }
         }
+
+        [Editable, Serialize("> ", IsPropertySaveable.Yes)]
+        public string LineStartSymbol { get; set; }
+
+        [Editable, Serialize(false, IsPropertySaveable.No)]
+        public bool Readonly { get; set; }
+
+        [Serialize(true, IsPropertySaveable.No)]
+        public bool AutoScrollToBottom { get; set; }
 
         private string OutputValue { get; set; }
 
@@ -106,11 +121,11 @@ namespace Barotrauma.Items.Components
             {
                 case "set_text":
                 case "signal_in":
+                    if (string.IsNullOrEmpty(signal.value)) { return; }
                     if (signal.value.Length > MaxMessageLength)
                     {
                         signal.value = signal.value.Substring(0, MaxMessageLength);
                     }
-
                     string inputSignal = signal.value.Replace("\\n", "\n");
                     ShowOnDisplay(inputSignal, addToHistory: true, TextColor);
                     break;
@@ -143,14 +158,14 @@ namespace Barotrauma.Items.Components
 #endif
 
             base.OnItemLoaded();
-            if (!DisplayedWelcomeMessage.IsNullOrEmpty())
+            if (!DisplayedWelcomeMessage.IsNullOrEmpty() && !WelcomeMessageDisplayed)
             {
                 ShowOnDisplay(DisplayedWelcomeMessage.Value, addToHistory: !isSubEditor, TextColor);
                 DisplayedWelcomeMessage = "";
-                //remove welcome message if a game session is running so it doesn't reappear on successive rounds
+                //disable welcome message if a game session is running so it doesn't reappear on successive rounds
                 if (GameMain.GameSession != null && !isSubEditor)
                 {
-                    welcomeMessage = null;
+                    WelcomeMessageDisplayed = true;
                 }
             }
         }

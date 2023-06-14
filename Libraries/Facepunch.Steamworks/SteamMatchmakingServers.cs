@@ -12,7 +12,7 @@ namespace Steamworks
 	/// </summary>
 	internal class SteamMatchmakingServers : SteamClientClass<SteamMatchmakingServers>
 	{
-		internal static ISteamMatchmakingServers Internal => Interface as ISteamMatchmakingServers;
+		internal static ISteamMatchmakingServers? Internal => Interface as ISteamMatchmakingServers;
 
 		internal override void InitializeInterface( bool server )
 		{

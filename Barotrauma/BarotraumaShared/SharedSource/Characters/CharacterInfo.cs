@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Diagnostics.CodeAnalysis;
 using Barotrauma.IO;
 using System.Linq;
 using System.Xml.Linq;
@@ -11,6 +12,31 @@ using Barotrauma.Abilities;
 
 namespace Barotrauma
 {
+    [NetworkSerialize]
+    internal readonly record struct NetJobVariant(Identifier Identifier, byte Variant) : INetSerializableStruct
+    {
+        [return: MaybeNull]
+        public JobVariant ToJobVariant()
+        {
+            if (!JobPrefab.Prefabs.TryGet(Identifier, out JobPrefab jobPrefab) || jobPrefab.HiddenJob) { return null; }
+            return new JobVariant(jobPrefab, Variant);
+        }
+
+        public static NetJobVariant FromJobVariant(JobVariant jobVariant) => new NetJobVariant(jobVariant.Prefab.Identifier, (byte)jobVariant.Variant);
+    }
+
+    [NetworkSerialize(ArrayMaxSize = byte.MaxValue)]
+    internal readonly record struct NetCharacterInfo(string NewName,
+                                                     ImmutableArray<Identifier> Tags,
+                                                     byte HairIndex,
+                                                     byte BeardIndex,
+                                                     byte MoustacheIndex,
+                                                     byte FaceAttachmentIndex,
+                                                     Color SkinColor,
+                                                     Color HairColor,
+                                                     Color FacialHairColor,
+                                                     ImmutableArray<NetJobVariant> JobVariants) : INetSerializableStruct;
+
     class CharacterInfoPrefab
     {
         public readonly ImmutableArray<CharacterInfo.HeadPreset> Heads;
@@ -63,27 +89,34 @@ namespace Barotrauma
             public readonly CharacterInfo CharacterInfo;
             public readonly HeadPreset Preset;
 
-            private int hairIndex;
+            public int HairIndex { get; set; }
 
-            public int HairIndex
+            private int? hairWithHatIndex;
+
+            public void SetHairWithHatIndex()
             {
-                get => hairIndex;
-                set
+                if (CharacterInfo.Hairs is null)
                 {
-                    hairIndex = value;
-                    if (CharacterInfo.Hairs is null)
+                    if (HairIndex == -1)
                     {
-                        HairWithHatIndex = value;
-                        return;
+#if DEBUG
+                        DebugConsole.ThrowError("Setting \"hairWithHatIndex\" before \"Hairs\" are defined!");
+#else
+                        DebugConsole.AddWarning("Setting \"hairWithHatIndex\" before \"Hairs\" are defined!");
+#endif
                     }
-                    HairWithHatIndex = HairElement?.GetAttributeInt("replacewhenwearinghat", hairIndex) ?? -1;
-                    if (HairWithHatIndex < 0 || HairWithHatIndex >= CharacterInfo.Hairs.Count)
+                    hairWithHatIndex = HairIndex;
+                }
+                else
+                {
+                    hairWithHatIndex = HairElement?.GetAttributeInt("replacewhenwearinghat", HairIndex) ?? -1;
+                    if (hairWithHatIndex < 0 || hairWithHatIndex >= CharacterInfo.Hairs.Count)
                     {
-                        HairWithHatIndex = hairIndex;
+                        hairWithHatIndex = HairIndex;
                     }
                 }
             }
-            public int HairWithHatIndex { get; private set; }
+
             public int BeardIndex;
             public int MoustacheIndex;
             public int FaceAttachmentIndex;
@@ -99,26 +132,29 @@ namespace Barotrauma
                 get
                 {
                     if (CharacterInfo.Hairs == null) { return null; }
-                    if (hairIndex >= CharacterInfo.Hairs.Count)
+                    if (HairIndex >= CharacterInfo.Hairs.Count)
                     {
-                        DebugConsole.AddWarning($"Hair index out of range (character: {CharacterInfo?.Name ?? "null"}, index: {hairIndex})");
+                        DebugConsole.AddWarning($"Hair index out of range (character: {CharacterInfo?.Name ?? "null"}, index: {HairIndex})");
                     }
-                    return CharacterInfo.Hairs.ElementAtOrDefault(hairIndex);
+                    return CharacterInfo.Hairs.ElementAtOrDefault(HairIndex);
                 }
             }
             public ContentXElement HairWithHatElement
             {
                 get
                 {
-                    if (CharacterInfo.Hairs == null) { return null; }
-                    if (HairWithHatIndex >= CharacterInfo.Hairs.Count)
+                    if (hairWithHatIndex == null)
                     {
-                        DebugConsole.AddWarning($"Hair with hat index out of range (character: {CharacterInfo?.Name ?? "null"}, index: {HairWithHatIndex})");
+                        SetHairWithHatIndex();
                     }
-                    return CharacterInfo.Hairs.ElementAtOrDefault(HairWithHatIndex);
+                    if (CharacterInfo.Hairs == null) { return null; }
+                    if (hairWithHatIndex >= CharacterInfo.Hairs.Count)
+                    {
+                        DebugConsole.AddWarning($"Hair with hat index out of range (character: {CharacterInfo?.Name ?? "null"}, index: {hairWithHatIndex})");
+                    }
+                    return CharacterInfo.Hairs.ElementAtOrDefault(hairWithHatIndex.Value);
                 }
             }            
-
             public ContentXElement BeardElement
             {
                 get
@@ -261,6 +297,10 @@ namespace Barotrauma
 
         public string Name;
 
+        public LocalizedString Title;
+
+        public (Identifier NpcSetIdentifier, Identifier NpcIdentifier) HumanPrefabIds;
+
         public string DisplayName
         {
             get
@@ -300,6 +340,8 @@ namespace Barotrauma
         public int ExperiencePoints { get; private set; }
 
         public HashSet<Identifier> UnlockedTalents { get; private set; } = new HashSet<Identifier>();
+
+        public (Identifier factionId, float reputation) MinReputationToHire;
 
         /// <summary>
         /// Endocrine boosters can unlock talents outside the user's talent tree. This method is used to cull them from the selection
@@ -494,8 +536,11 @@ namespace Barotrauma
 
         public List<Order> CurrentOrders { get; } = new List<Order>();
 
-        //unique ID given to character infos in MP
-        //used by clients to identify which infos are the same to prevent duplicate characters in round summary
+
+        /// <summary>
+        /// Unique ID given to character infos in MP. Non-persistent.
+        /// Used by clients to identify which infos are the same to prevent duplicate characters in round summary.
+        /// </summary>
         public ushort ID;
 
         public List<Identifier> SpriteTags
@@ -539,7 +584,7 @@ namespace Barotrauma
         
         private void GetName(Rand.RandSync randSync, out string name)
         {
-            var nameElement = CharacterConfigElement.GetChildElement("names") ?? CharacterConfigElement.GetChildElement("name");
+            ContentXElement nameElement = CharacterConfigElement.GetChildElement("names") ?? CharacterConfigElement.GetChildElement("name");
             ContentPath namesXmlFile = nameElement?.GetAttributeContentPath("path") ?? ContentPath.Empty;
             XElement namesXml = null;
             if (!namesXmlFile.IsNullOrEmpty()) //names.xml is defined 
@@ -550,8 +595,8 @@ namespace Barotrauma
             else //the legacy firstnames.txt/lastnames.txt shit is defined
             {
                 namesXml = new XElement("names", new XAttribute("format", "[firstname] [lastname]"));
-                var firstNamesPath = ReplaceVars(nameElement.GetAttributeContentPath("firstname")?.Value ?? "");
-                var lastNamesPath = ReplaceVars(nameElement.GetAttributeContentPath("lastname")?.Value ?? "");
+                string firstNamesPath = nameElement == null ? string.Empty : ReplaceVars(nameElement.GetAttributeContentPath("firstname")?.Value ?? "");
+                string lastNamesPath = nameElement == null ? string.Empty : ReplaceVars(nameElement.GetAttributeContentPath("lastname")?.Value ?? "");
                 if (File.Exists(firstNamesPath) && File.Exists(lastNamesPath))
                 {
                     var firstNames = File.ReadAllLines(firstNamesPath);
@@ -649,15 +694,11 @@ namespace Barotrauma
                 {
                     Name = name;
                 }
-                else if (!npcIdentifier.IsEmpty && TextManager.Get("npctitle." + npcIdentifier) is { Loaded: true } npcTitle)
-                {
-                    Name = npcTitle.Value;
-                }
                 else
                 {
                     Name = GetRandomName(randSync);
                 }
-                
+                TryLoadNameAndTitle(npcIdentifier);
                 SetPersonalityTrait();
 
                 Salary = CalculateSalary();
@@ -710,7 +751,7 @@ namespace Barotrauma
         private bool IsColorValid(in Color clr)
             => clr.R != 0 || clr.G != 0 || clr.B != 0;
         
-        private void CheckColors()
+        public void CheckColors()
         {
             if (!IsColorValid(Head.HairColor))
             {
@@ -727,16 +768,14 @@ namespace Barotrauma
         }
 
         // Used for loading the data
-        public CharacterInfo(XElement infoElement)
+        public CharacterInfo(XElement infoElement, Identifier npcIdentifier = default)
         {
             ID = idCounter;
             idCounter++;
             Name = infoElement.GetAttributeString("name", "");
             OriginalName = infoElement.GetAttributeString("originalname", null);
             Salary = infoElement.GetAttributeInt("salary", 1000);
-
             ExperiencePoints = infoElement.GetAttributeInt("experiencepoints", 0);
-            UnlockedTalents = new HashSet<Identifier>(infoElement.GetAttributeIdentifierArray("unlockedtalents", Array.Empty<Identifier>()));
             AdditionalTalentPoints = infoElement.GetAttributeInt("additionaltalentpoints", 0);
             HashSet<Identifier> tags = infoElement.GetAttributeIdentifierArray("tags", Array.Empty<Identifier>()).ToHashSet();
             LoadTagsBackwardsCompatibility(infoElement, tags);
@@ -769,10 +808,13 @@ namespace Barotrauma
                 FacialHairColors = CharacterConfigElement.GetAttributeTupleArray("facialhaircolors", new (Color, float)[] { (Color.WhiteSmoke, 100f) }).ToImmutableArray();
                 SkinColors = CharacterConfigElement.GetAttributeTupleArray("skincolors", new (Color, float)[] { (new Color(255, 215, 200, 255), 100f) }).ToImmutableArray();
                 
-                Head.SkinColor = infoElement.GetAttributeColor("skincolor", Color.White);
-                Head.HairColor = infoElement.GetAttributeColor("haircolor", Color.White);
-                Head.FacialHairColor = infoElement.GetAttributeColor("facialhaircolor", Color.White);
+                //default to transparent color, it's invalid and will be replaced with a random one in CheckColors
+                Head.SkinColor = infoElement.GetAttributeColor("skincolor", Color.Transparent);
+                Head.HairColor = infoElement.GetAttributeColor("haircolor", Color.Transparent);
+                Head.FacialHairColor = infoElement.GetAttributeColor("facialhaircolor", Color.Transparent);
                 CheckColors();
+
+                TryLoadNameAndTitle(npcIdentifier);
 
                 if (string.IsNullOrEmpty(Name))
                 {
@@ -794,22 +836,40 @@ namespace Barotrauma
             ragdollFileName = infoElement.GetAttributeString("ragdoll", string.Empty);
             if (personalityName != Identifier.Empty)
             {
-                PersonalityTrait = NPCPersonalityTrait.Get(GameSettings.CurrentConfig.Language, personalityName);
+                if (NPCPersonalityTrait.Traits.TryGet(personalityName, out var trait) ||
+                    NPCPersonalityTrait.Traits.TryGet(personalityName.Replace(" ".ToIdentifier(), Identifier.Empty), out trait))
+                {
+                    PersonalityTrait = trait;
+                }
+                else
+                {
+                    DebugConsole.ThrowError($"Error in CharacterInfo \"{OriginalName}\": could not find a personality trait with the identifier \"{personalityName}\".");
+                }
             }
 
+            HumanPrefabIds = (
+                infoElement.GetAttributeIdentifier("npcsetid", Identifier.Empty),
+                infoElement.GetAttributeIdentifier("npcid", Identifier.Empty));
+
             MissionsCompletedSinceDeath = infoElement.GetAttributeInt("missionscompletedsincedeath", 0);
+            UnlockedTalents = new HashSet<Identifier>();
+
+            MinReputationToHire = (infoElement.GetAttributeIdentifier("factionId", Identifier.Empty), infoElement.GetAttributeFloat("minreputation", 0.0f));
 
             foreach (var subElement in infoElement.Elements())
             {
                 bool jobCreated = false;
-                if (subElement.Name.ToString().Equals("job", StringComparison.OrdinalIgnoreCase) && !jobCreated)
+
+                Identifier elementName = subElement.Name.ToIdentifier();
+
+                if (elementName == "job" && !jobCreated)
                 {
                     Job = new Job(subElement);
                     jobCreated = true;
                     // there used to be a break here, but it had to be removed to make room for statvalues
                     // using the jobCreated boolean to make sure that only the first job found is created
                 }
-                else if (subElement.Name.ToString().Equals("savedstatvalues", StringComparison.OrdinalIgnoreCase))
+                else if (elementName == "savedstatvalues")
                 {
                     foreach (XElement savedStat in subElement.Elements())
                     {
@@ -823,8 +883,8 @@ namespace Barotrauma
                         float value = savedStat.GetAttributeFloat("statvalue", 0f);
                         if (value == 0f) { continue; }
 
-                        string statIdentifier = savedStat.GetAttributeString("statidentifier", "").ToLowerInvariant();
-                        if (string.IsNullOrEmpty(statIdentifier))
+                        Identifier statIdentifier = savedStat.GetAttributeIdentifier("statidentifier", Identifier.Empty);
+                        if (statIdentifier.IsEmpty)
                         {
                             DebugConsole.ThrowError("Stat identifier not specified for Stat Value when loading character data in CharacterInfo!");
                             return;
@@ -834,8 +894,44 @@ namespace Barotrauma
                         ChangeSavedStatValue(statType, value, statIdentifier, removeOnDeath);
                     }
                 }
+                else if (elementName == "talents")
+                {
+                    Version version = subElement.GetAttributeVersion("version", GameMain.Version); // for future maybe
+
+                    foreach (XElement talentElement in subElement.Elements())
+                    {
+                        if (talentElement.Name.ToIdentifier() != "talent") { continue; }
+
+                        Identifier talentIdentifier = talentElement.GetAttributeIdentifier("identifier", Identifier.Empty);
+                        if (talentIdentifier == Identifier.Empty) { continue; }
+
+                        if (TalentPrefab.TalentPrefabs.TryGet(talentIdentifier, out TalentPrefab prefab))
+                        {
+                            foreach (TalentMigration migration in prefab.Migrations)
+                            {
+                                migration.TryApply(version, this);
+                            }
+                        }
+
+                        UnlockedTalents.Add(talentIdentifier);
+                    }
+                }
             }
+
             LoadHeadAttachments();
+        }
+
+        private void TryLoadNameAndTitle(Identifier npcIdentifier)
+        {
+            if (!npcIdentifier.IsEmpty)
+            {
+                Title = TextManager.Get("npctitle." + npcIdentifier);
+                string nameTag = "charactername." + npcIdentifier;
+                if (TextManager.ContainsTag(nameTag))
+                {
+                    Name = TextManager.Get(nameTag).Value;
+                }
+            }
         }
 
         private List<ContentXElement> hairs;
@@ -864,17 +960,25 @@ namespace Barotrauma
             }
         }
 
+        /// <summary>
+        /// Returns a presumably (not guaranteed) unique hash using the (current) Name, appearence, and job.
+        /// So unless there's another character with the exactly same name, job, and appearance, the hash should be unique.
+        /// </summary>
         public int GetIdentifier()
         {
-            return GetIdentifier(Name);
+            return GetIdentifierHash(Name);
         }
 
+        /// <summary>
+        /// Returns a presumably (not guaranteed) unique hash using the OriginalName, appearence, and job.
+        /// So unless there's another character with the exactly same name, job, and appearance, the hash should be unique.
+        /// </summary>
         public int GetIdentifierUsingOriginalName()
         {
-            return GetIdentifier(OriginalName);
+            return GetIdentifierHash(OriginalName);
         }
 
-        private int GetIdentifier(string name)
+        private int GetIdentifierHash(string name)
         {
             int id = ToolBox.StringToInt(name + string.Join("", Head.Preset.TagSet.OrderBy(s => s)));
             id ^= Head.HairIndex << 12;
@@ -1097,7 +1201,7 @@ namespace Barotrauma
 
         partial void LoadAttachmentSprites();
         
-        private int CalculateSalary()
+        public int CalculateSalary()
         {
             if (Name == null || Job == null) { return 0; }
 
@@ -1121,13 +1225,17 @@ namespace Barotrauma
 
             increase *= 1f + Character.GetStatValue(StatTypes.SkillGainSpeed);
 
+            increase = GetSkillSpecificGain(increase, skillIdentifier);
+
             float prevLevel = Job.GetSkillLevel(skillIdentifier);
             Job.IncreaseSkillLevel(skillIdentifier, increase, Character.HasAbilityFlag(AbilityFlags.GainSkillPastMaximum));
 
             float newLevel = Job.GetSkillLevel(skillIdentifier);
 
             if ((int)newLevel > (int)prevLevel)
-            {                
+            {
+                float extraLevel = Character.GetStatValue(StatTypes.ExtraLevelGain);
+                Job.IncreaseSkillLevel(skillIdentifier, extraLevel, Character.HasAbilityFlag(AbilityFlags.GainSkillPastMaximum));
                 // assume we are getting at least 1 point in skill, since this logic only runs in such cases
                 float increaseSinceLastSkillPoint = MathHelper.Max(increase, 1f);
                 var abilitySkillGain = new AbilitySkillGain(increaseSinceLastSkillPoint, skillIdentifier, Character, gainedFromAbility);
@@ -1139,6 +1247,25 @@ namespace Barotrauma
             }
 
             OnSkillChanged(skillIdentifier, prevLevel, newLevel);
+        }
+
+        private static readonly ImmutableDictionary<Identifier, StatTypes> skillGainStatValues = new Dictionary<Identifier, StatTypes>
+        {
+            { new("helm"), StatTypes.HelmSkillGainSpeed },
+            { new("medical"), StatTypes.WeaponsSkillGainSpeed },
+            { new("weapons"), StatTypes.MedicalSkillGainSpeed },
+            { new("electrical"), StatTypes.ElectricalSkillGainSpeed },
+            { new("mechanical"), StatTypes.MechanicalSkillGainSpeed }
+        }.ToImmutableDictionary();
+
+        private float GetSkillSpecificGain(float increase, Identifier skillIdentifier)
+        {
+            if (skillGainStatValues.TryGetValue(skillIdentifier, out StatTypes statType))
+            {
+                increase *= 1f + Character.GetStatValue(statType);
+            }
+
+            return increase;
         }
 
         public void SetSkillLevel(Identifier skillIdentifier, float level)
@@ -1161,15 +1288,11 @@ namespace Barotrauma
 
         partial void OnSkillChanged(Identifier skillIdentifier, float prevLevel, float newLevel);
 
-        public void GiveExperience(int amount, bool isMissionExperience = false)
+        public void GiveExperience(int amount)
         {
             int prevAmount = ExperiencePoints;
 
             var experienceGainMultiplier = new AbilityExperienceGainMultiplier(1f);
-            if (isMissionExperience)
-            {
-                Character?.CheckTalents(AbilityEffectType.OnGainMissionExperience, experienceGainMultiplier);
-            }
             experienceGainMultiplier.Value += Character?.GetStatValue(StatTypes.ExperienceGainMultiplier) ?? 0;
 
             amount = (int)(amount * experienceGainMultiplier.Value);
@@ -1219,6 +1342,18 @@ namespace Barotrauma
             return experienceRequired + ExperienceRequiredPerLevel(level);
         }
 
+        public int GetExperienceRequiredForLevel(int level)
+        {
+            int currentLevel = GetCurrentLevel(out int experienceRequired);
+            if (currentLevel >= level) { return 0; }
+            int required = experienceRequired;
+            for (int i = currentLevel + 1; i <= level; i++)
+            {
+                required += ExperienceRequiredPerLevel(i);
+            }
+            return required;
+        }
+
         public int GetCurrentLevel()
         {
             return GetCurrentLevel(out _);
@@ -1236,7 +1371,7 @@ namespace Barotrauma
             return level;
         }
 
-        private int ExperienceRequiredPerLevel(int level)
+        private static int ExperienceRequiredPerLevel(int level)
         {
             return BaseExperienceRequired + AddedExperienceRequiredPerLevel * level;
         }
@@ -1259,6 +1394,11 @@ namespace Barotrauma
                     if (splitTag[0] != "name") { continue; }
                     if (splitTag[1] != Name) { continue; }
                     item.ReplaceTag(tag, $"name:{newName}");
+                    var idCard = item.GetComponent<IdCard>();
+                    if (idCard != null)
+                    {
+                        idCard.OwnerName = newName;
+                    }
                     break;
                 }
             }
@@ -1281,7 +1421,6 @@ namespace Barotrauma
                 new XAttribute("tags", string.Join(",", Head.Preset.TagSet)),
                 new XAttribute("salary", Salary),
                 new XAttribute("experiencepoints", ExperiencePoints),
-                new XAttribute("unlockedtalents", string.Join(",", UnlockedTalents)),
                 new XAttribute("additionaltalentpoints", AdditionalTalentPoints),
                 new XAttribute("hairindex", Head.HairIndex),
                 new XAttribute("beardindex", Head.BeardIndex),
@@ -1292,10 +1431,24 @@ namespace Barotrauma
                 new XAttribute("facialhaircolor", XMLExtensions.ColorToString(Head.FacialHairColor)),
                 new XAttribute("startitemsgiven", StartItemsGiven),
                 new XAttribute("ragdoll", ragdollFileName),
-                new XAttribute("personality", PersonalityTrait?.Name.Value ?? ""));
+                new XAttribute("personality", PersonalityTrait?.Identifier ?? Identifier.Empty));
                 // TODO: animations?
 
+            if (HumanPrefabIds != default)
+            {
+                charElement.Add(
+                    new XAttribute("npcsetid", HumanPrefabIds.NpcSetIdentifier),
+                    new XAttribute("npcid", HumanPrefabIds.NpcIdentifier));
+            }
+
             charElement.Add(new XAttribute("missionscompletedsincedeath", MissionsCompletedSinceDeath));
+
+            if (MinReputationToHire.factionId != default)
+            {
+                charElement.Add(
+                    new XAttribute("factionId", Name),
+                    new XAttribute("minreputation", MinReputationToHire.reputation));
+            }
 
             if (Character != null)
             {
@@ -1323,11 +1476,17 @@ namespace Barotrauma
                 }
             }
 
+            XElement talentElement = new XElement("Talents");
+            talentElement.Add(new XAttribute("version", GameMain.Version.ToString()));
 
+            foreach (Identifier talentIdentifier in UnlockedTalents)
+            {
+                talentElement.Add(new XElement("Talent", new XAttribute("identifier", talentIdentifier)));
+            }
 
             charElement.Add(savedStatElement);
-
-            parentElement.Add(charElement);
+            charElement.Add(talentElement);
+            parentElement?.Add(charElement);
             return charElement;
         }
 
@@ -1399,7 +1558,7 @@ namespace Barotrauma
                 }
                 if (order.OrderGiver != null)
                 {
-                    orderElement.Add(new XAttribute("ordergiverinfoid", order.OrderGiver.Info.ID));
+                    orderElement.Add(new XAttribute("ordergiver", order.OrderGiver.Info?.GetIdentifier()));
                 }
                 if (order.TargetSpatialEntity?.Submarine is Submarine targetSub)
                 {
@@ -1493,8 +1652,8 @@ namespace Barotrauma
                     continue;
                 }
                 var targetType = (Order.OrderTargetType)orderElement.GetAttributeInt("targettype", 0);
-                int orderGiverInfoId = orderElement.GetAttributeInt("ordergiverinfoid", -1);
-                var orderGiver = orderGiverInfoId >= 0 ? Character.CharacterList.FirstOrDefault(c => c.Info?.ID == orderGiverInfoId) : null;
+                int orderGiverInfoId = orderElement.GetAttributeInt("ordergiver", -1);
+                var orderGiver = orderGiverInfoId >= 0 ? Character.CharacterList.FirstOrDefault(c => c.Info?.GetIdentifier() == orderGiverInfoId) : null;
                 Entity targetEntity = null;
                 switch (targetType)
                 {
@@ -1597,9 +1756,9 @@ namespace Barotrauma
             return id;
         }
 
-        public static void ApplyHealthData(Character character, XElement healthData)
+        public static void ApplyHealthData(Character character, XElement healthData, Func<AfflictionPrefab, bool> afflictionPredicate = null)
         {
-            if (healthData != null) { character?.CharacterHealth.Load(healthData); }
+            if (healthData != null) { character?.CharacterHealth.Load(healthData, afflictionPredicate); }
         }
 
         /// <summary>
@@ -1680,19 +1839,32 @@ namespace Barotrauma
             }
         }
 
-        public void ResetSavedStatValue(string statIdentifier)
+        public void ResetSavedStatValue(Identifier statIdentifier)
         {
             foreach (StatTypes statType in SavedStatValues.Keys)
             {
                 bool changed = false;
                 foreach (SavedStatValue savedStatValue in SavedStatValues[statType])
                 {
-                    if (savedStatValue.StatIdentifier != statIdentifier) { continue; }
+                    if (!MatchesIdentifier(savedStatValue.StatIdentifier, statIdentifier)) { continue; }
+
                     if (MathUtils.NearlyEqual(savedStatValue.StatValue, 0.0f)) { continue; }
                     savedStatValue.StatValue = 0.0f;
                     changed = true;
                 }
                 if (changed) { OnPermanentStatChanged(statType); }
+            }
+
+            static bool MatchesIdentifier(Identifier statIdentifier, Identifier identifier)
+            {
+                if (statIdentifier == identifier) { return true; }
+
+                if (identifier.IndexOf('*') is var index and > -1)
+                {
+                    return statIdentifier.StartsWith(identifier[0..index]);
+                }
+
+                return false;
             }
         }
 
@@ -1711,7 +1883,7 @@ namespace Barotrauma
         {
             if (SavedStatValues.TryGetValue(statType, out var statValues))
             {
-                return statValues.Where(s => s.StatIdentifier == statIdentifier).Sum(v => v.StatValue);
+                return statValues.Where(value => ToolBox.StatIdentifierMatches(value.StatIdentifier, statIdentifier)).Sum(static v => v.StatValue);
             }
             else
             {
@@ -1719,7 +1891,22 @@ namespace Barotrauma
             }
         }
 
-        public void ChangeSavedStatValue(StatTypes statType, float value, string statIdentifier, bool removeOnDeath, float maxValue = float.MaxValue, bool setValue = false)
+        public float GetSavedStatValueWithBotsInMp(StatTypes statType, Identifier statIdentifier)
+        {
+            float statValue = GetSavedStatValue(statType, statIdentifier);
+
+            if (GameMain.NetworkMember is null) { return statValue; }
+
+            foreach (Character bot in GameSession.GetSessionCrewCharacters(CharacterType.Bot))
+            {
+                int botStatValue = (int)bot.Info.GetSavedStatValue(statType, statIdentifier);
+                statValue = Math.Max(statValue, botStatValue);
+            }
+
+            return statValue;
+        }
+
+        public void ChangeSavedStatValue(StatTypes statType, float value, Identifier statIdentifier, bool removeOnDeath, float maxValue = float.MaxValue, bool setValue = false)
         {
             if (!SavedStatValues.ContainsKey(statType))
             {
@@ -1742,13 +1929,13 @@ namespace Barotrauma
         }
     }
 
-    public class SavedStatValue
+    internal sealed class SavedStatValue
     {
-        public string StatIdentifier { get; set; }
+        public Identifier StatIdentifier { get; set; }
         public float StatValue { get; set; }
         public bool RemoveOnDeath { get; set; }
 
-        public SavedStatValue(string statIdentifier, float value, bool removeOnDeath)
+        public SavedStatValue(Identifier statIdentifier, float value, bool removeOnDeath)
         {
             StatValue = value;
             RemoveOnDeath = removeOnDeath;
@@ -1756,7 +1943,7 @@ namespace Barotrauma
         }
     }
 
-    class AbilitySkillGain : AbilityObject, IAbilityValue, IAbilitySkillIdentifier, IAbilityCharacter
+    internal sealed class AbilitySkillGain : AbilityObject, IAbilityValue, IAbilitySkillIdentifier, IAbilityCharacter
     {
         public AbilitySkillGain(float skillAmount, Identifier skillIdentifier, Character character, bool gainedFromAbility)
         {

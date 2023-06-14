@@ -1,75 +1,82 @@
-﻿using System;
+#nullable enable
+using System;
 using System.Collections.Generic;
-using System.Net;
 using System.Text;
 using Lidgren.Network;
 using Barotrauma.Steam;
-using System.Linq;
 
 namespace Barotrauma.Networking
 {
-    class LidgrenClientPeer : ClientPeer
+    internal sealed class LidgrenClientPeer : ClientPeer
     {
-        private bool isActive;
-        private NetClient netClient;
-        private NetPeerConfiguration netPeerConfiguration;
+        private NetClient? netClient;
+        private readonly NetPeerConfiguration netPeerConfiguration;
 
-        List<NetIncomingMessage> incomingLidgrenMessages;
+        private readonly List<NetIncomingMessage> incomingLidgrenMessages;
 
-        public LidgrenClientPeer(string name)
+        private LidgrenEndpoint lidgrenEndpoint =>
+            ServerConnection is LidgrenConnection { Endpoint: LidgrenEndpoint result }
+                ? result
+                : throw new InvalidOperationException();
+
+        public LidgrenClientPeer(LidgrenEndpoint endpoint, Callbacks callbacks, Option<int> ownerKey) : base(endpoint, callbacks, ownerKey)
         {
             ServerConnection = null;
 
-            Name = name;
-
             netClient = null;
             isActive = false;
-        }
-
-        public override void Start(object endPoint, int ownerKey)
-        {
-            if (isActive) { return; }
-
-            this.ownerKey = ownerKey;
-
-            contentPackageOrderReceived = false;
 
             netPeerConfiguration = new NetPeerConfiguration("barotrauma")
             {
                 UseDualModeSockets = GameSettings.CurrentConfig.UseDualModeSockets
             };
 
-            netPeerConfiguration.DisableMessageType(NetIncomingMessageType.DebugMessage | NetIncomingMessageType.WarningMessage | NetIncomingMessageType.Receipt
-                | NetIncomingMessageType.ErrorMessage | NetIncomingMessageType.Error);
+            netPeerConfiguration.DisableMessageType(
+                NetIncomingMessageType.DebugMessage
+                | NetIncomingMessageType.WarningMessage
+                | NetIncomingMessageType.Receipt
+                | NetIncomingMessageType.ErrorMessage
+                | NetIncomingMessageType.Error);
+
+            incomingLidgrenMessages = new List<NetIncomingMessage>();
+        }
+
+        public override void Start()
+        {
+            if (isActive) { return; }
+
+            incomingLidgrenMessages.Clear();
+
+            ContentPackageOrderReceived = false;
 
             netClient = new NetClient(netPeerConfiguration);
 
             if (SteamManager.IsInitialized)
             {
                 steamAuthTicket = SteamManager.GetAuthSessionTicket();
-                //TODO: wait for GetAuthSessionTicketResponse_t
-
                 if (steamAuthTicket == null)
                 {
                     throw new Exception("GetAuthSessionTicket returned null");
                 }
             }
 
-            incomingLidgrenMessages = new List<NetIncomingMessage>();
-
             initializationStep = ConnectionInitialization.SteamTicketAndVersion;
 
-            if (!(endPoint is IPEndPoint ipEndPoint))
+            if (!(ServerEndpoint is LidgrenEndpoint lidgrenEndpointValue))
             {
-                throw new InvalidCastException("endPoint is not IPEndPoint");
+                throw new InvalidCastException($"Endpoint is not {nameof(LidgrenEndpoint)}");
             }
+
             if (ServerConnection != null)
             {
                 throw new InvalidOperationException("ServerConnection is not null");
             }
 
             netClient.Start();
-            ServerConnection = new LidgrenConnection("Server", netClient.Connect(ipEndPoint), 0)
+
+            var netConnection = netClient.Connect(lidgrenEndpointValue.NetEndpoint);
+
+            ServerConnection = new LidgrenConnection(netConnection)
             {
                 Status = NetworkConnectionStatus.Connected
             };
@@ -81,11 +88,14 @@ namespace Barotrauma.Networking
         {
             if (!isActive) { return; }
 
-            if (ownerKey != 0 && (ChildServerRelay.Process?.HasExited ?? true))
+            ToolBox.ThrowIfNull(netClient);
+            ToolBox.ThrowIfNull(incomingLidgrenMessages);
+
+            if (isOwner && !ChildServerRelay.IsProcessAlive)
             {
-                Close();
-                var msgBox = new GUIMessageBox(TextManager.Get("ConnectionLost"), ChildServerRelay.CrashMessage);
-                msgBox.Buttons[0].OnClicked += (btn, obj) => { GameMain.MainMenuScreen.Select(); return false; };
+                var gameClient = GameMain.Client;
+                Close(PeerDisconnectPacket.WithReason(DisconnectReason.ServerCrashed));
+                gameClient?.CreateServerCrashMessage();
                 return;
             }
 
@@ -97,7 +107,11 @@ namespace Barotrauma.Networking
 
             foreach (NetIncomingMessage inc in incomingLidgrenMessages)
             {
-                if (inc.SenderConnection != (ServerConnection as LidgrenConnection).NetConnection) { continue; }
+                if (!inc.SenderConnection.RemoteEndPoint.EquivalentTo(lidgrenEndpoint.NetEndpoint))
+                {
+                    DebugConsole.AddWarning($"Mismatched endpoint: expected {lidgrenEndpoint.NetEndpoint}, got {inc.SenderConnection.RemoteEndPoint}");
+                    continue;
+                }
 
                 switch (inc.MessageType)
                 {
@@ -111,26 +125,36 @@ namespace Barotrauma.Networking
             }
         }
 
-        private void HandleDataMessage(NetIncomingMessage inc)
+        private void HandleDataMessage(NetIncomingMessage lidgrenMsg)
         {
             if (!isActive) { return; }
 
-            PacketHeader packetHeader = (PacketHeader)inc.ReadByte();
+            ToolBox.ThrowIfNull(ServerConnection);
 
-            if (packetHeader.IsConnectionInitializationStep() && initializationStep != ConnectionInitialization.Success)
+            IReadMessage inc = lidgrenMsg.ToReadMessage();
+
+            var (_, packetHeader, initialization) = INetSerializableStruct.Read<PeerPacketHeaders>(inc);
+
+            if (packetHeader.IsConnectionInitializationStep())
             {
-                ReadConnectionInitializationStep(new ReadWriteMessage(inc.Data, (int)inc.Position, inc.LengthBits, false));
+                if (initializationStep == ConnectionInitialization.Success) { return; }
+
+                ReadConnectionInitializationStep(new IncomingInitializationMessage
+                {
+                    InitializationStep = initialization ?? throw new Exception("Initialization step missing"),
+                    Message = inc
+                });
             }
             else
             {
                 if (initializationStep != ConnectionInitialization.Success)
                 {
-                    OnInitializationComplete?.Invoke();
+                    callbacks.OnInitializationComplete.Invoke();
                     initializationStep = ConnectionInitialization.Success;
                 }
-                UInt16 length = inc.ReadUInt16();
-                IReadMessage msg = new ReadOnlyMessage(inc.Data, packetHeader.IsCompressed(), inc.PositionInBytes, length, ServerConnection);
-                OnMessageReceived?.Invoke(msg);
+
+                var packet = INetSerializableStruct.Read<PeerPacketMessage>(inc);
+                callbacks.OnMessageReceived.Invoke(packet.GetReadMessage(packetHeader.IsCompressed(), ServerConnection));
             }
         }
 
@@ -138,13 +162,14 @@ namespace Barotrauma.Networking
         {
             if (!isActive) { return; }
 
-            NetConnectionStatus status = (NetConnectionStatus)inc.ReadByte();
+            NetConnectionStatus status = inc.ReadHeader<NetConnectionStatus>();
             switch (status)
             {
                 case NetConnectionStatus.Disconnected:
                     string disconnectMsg = inc.ReadString();
-                    Close(disconnectMsg);
-                    OnDisconnectMessageReceived?.Invoke(disconnectMsg);
+                    var peerDisconnectPacket =
+                        PeerDisconnectPacket.FromLidgrenStringRepresentation(disconnectMsg);
+                    Close(peerDisconnectPacket.Fallback(PeerDisconnectPacket.WithReason(DisconnectReason.Unknown)));
                     break;
             }
         }
@@ -153,49 +178,47 @@ namespace Barotrauma.Networking
         {
             if (!isActive) { return; }
 
+            ToolBox.ThrowIfNull(netClient);
+
             if (initializationStep != ConnectionInitialization.Password) { return; }
-            NetOutgoingMessage outMsg = netClient.CreateMessage();
-            outMsg.Write((byte)PacketHeader.IsConnectionInitializationStep);
-            outMsg.Write((byte)ConnectionInitialization.Password);
-            byte[] saltedPw = ServerSettings.SaltPassword(Encoding.UTF8.GetBytes(password), passwordSalt);
-            outMsg.Write((byte)saltedPw.Length);
-            outMsg.Write(saltedPw, 0, saltedPw.Length);
-            NetSendResult result = netClient.SendMessage(outMsg, NetDeliveryMethod.ReliableUnordered);
-            if (result != NetSendResult.Queued && result != NetSendResult.Sent)
+
+            var headers = new PeerPacketHeaders
             {
-                DebugConsole.NewMessage("Failed to send " + initializationStep.ToString() + " message to host: " + result);
-            }
+                DeliveryMethod = DeliveryMethod.Reliable,
+                PacketHeader = PacketHeader.IsConnectionInitializationStep,
+                Initialization = ConnectionInitialization.Password
+            };
+            var body = new ClientPeerPasswordPacket
+            {
+                Password = ServerSettings.SaltPassword(Encoding.UTF8.GetBytes(password), passwordSalt)
+            };
+            
+            SendMsgInternal(headers, body);
         }
 
-        public override void Close(string msg = null, bool disableReconnect = false)
+        public override void Close(PeerDisconnectPacket peerDisconnectPacket)
         {
             if (!isActive) { return; }
 
+            ToolBox.ThrowIfNull(netClient);
+
             isActive = false;
 
-            netClient.Shutdown(msg ?? TextManager.Get("Disconnecting").Value);
+            netClient.Shutdown(peerDisconnectPacket.ToLidgrenStringRepresentation());
             netClient = null;
-            steamAuthTicket?.Cancel(); steamAuthTicket = null;
-            OnDisconnect?.Invoke(disableReconnect);
+
+            steamAuthTicket?.Cancel();
+            steamAuthTicket = null;
+
+            callbacks.OnDisconnect.Invoke(peerDisconnectPacket);
         }
 
         public override void Send(IWriteMessage msg, DeliveryMethod deliveryMethod, bool compressPastThreshold = true)
         {
             if (!isActive) { return; }
 
-            NetDeliveryMethod lidgrenDeliveryMethod = NetDeliveryMethod.Unreliable;
-            switch (deliveryMethod)
-            {
-                case DeliveryMethod.Unreliable:
-                    lidgrenDeliveryMethod = NetDeliveryMethod.Unreliable;
-                    break;
-                case DeliveryMethod.Reliable:
-                    lidgrenDeliveryMethod = NetDeliveryMethod.ReliableUnordered;
-                    break;
-                case DeliveryMethod.ReliableOrdered:
-                    lidgrenDeliveryMethod = NetDeliveryMethod.ReliableOrdered;
-                    break;
-            }
+            ToolBox.ThrowIfNull(netClient);
+            ToolBox.ThrowIfNull(netPeerConfiguration);
 
 #if DEBUG
             netPeerConfiguration.SimulatedDuplicatesChance = GameMain.Client.SimulatedDuplicatesChance;
@@ -204,30 +227,42 @@ namespace Barotrauma.Networking
             netPeerConfiguration.SimulatedLoss = GameMain.Client.SimulatedLoss;
 #endif
 
-            NetOutgoingMessage lidgrenMsg = netClient.CreateMessage();
-            byte[] msgData = new byte[msg.LengthBytes];
-            msg.PrepareForSending(ref msgData, compressPastThreshold, out bool isCompressed, out int length);
-            lidgrenMsg.Write((byte)(isCompressed ? PacketHeader.IsCompressed : PacketHeader.None));
-            lidgrenMsg.Write((UInt16)length);
-            lidgrenMsg.Write(msgData, 0, length);
+            byte[] bufAux = msg.PrepareForSending(compressPastThreshold, out bool isCompressed, out _);
 
-            NetSendResult result = netClient.SendMessage(lidgrenMsg, lidgrenDeliveryMethod);
+            var headers = new PeerPacketHeaders
+            {
+                DeliveryMethod = deliveryMethod,
+                PacketHeader = isCompressed ? PacketHeader.IsCompressed : PacketHeader.None,
+                Initialization = null
+            };
+            var body = new PeerPacketMessage
+            {
+                Buffer = bufAux
+            };
+            
+            SendMsgInternal(headers, body);
+        }
+
+        protected override void SendMsgInternal(PeerPacketHeaders headers, INetSerializableStruct? body)
+        {
+            ToolBox.ThrowIfNull(netClient);
+
+            IWriteMessage msg = new WriteOnlyMessage();
+            msg.WriteNetSerializableStruct(headers);
+            body?.Write(msg);
+
+            NetSendResult result = ForwardToLidgren(msg, DeliveryMethod.Reliable);
             if (result != NetSendResult.Queued && result != NetSendResult.Sent)
             {
-                DebugConsole.NewMessage("Failed to send message to host: " + result);
+                DebugConsole.NewMessage($"Failed to send message to host: {result}\n{Environment.StackTrace}");
             }
         }
 
-        protected override void SendMsgInternal(DeliveryMethod deliveryMethod, IWriteMessage msg)
+        private NetSendResult ForwardToLidgren(IWriteMessage msg, DeliveryMethod deliveryMethod)
         {
-            NetOutgoingMessage lidgrenMsg = netClient.CreateMessage();
-            lidgrenMsg.Write(msg.Buffer, 0, msg.LengthBytes);
+            ToolBox.ThrowIfNull(netClient);
 
-            NetSendResult result = netClient.SendMessage(lidgrenMsg, NetDeliveryMethod.ReliableUnordered);
-            if (result != NetSendResult.Queued && result != NetSendResult.Sent)
-            {
-                DebugConsole.NewMessage("Failed to send message to host: " + result + "\n" + Environment.StackTrace);
-            }
+            return netClient.SendMessage(msg.ToLidgren(netClient), deliveryMethod.ToLidgren());
         }
 
 #if DEBUG

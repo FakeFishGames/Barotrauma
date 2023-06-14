@@ -1,9 +1,11 @@
-﻿using Barotrauma.Items.Components;
+﻿using Barotrauma.Extensions;
+using Barotrauma.Items.Components;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Immutable;
 using System.Collections.Generic;
 using System.Linq;
+using System.Diagnostics;
 
 namespace Barotrauma
 {
@@ -21,24 +23,25 @@ namespace Barotrauma
         public float TargetCondition { get; set; } = 1;
         public bool AllowDangerousPressure { get; set; }
 
-        public readonly ImmutableArray<Identifier> IdentifiersOrTags;
+        public readonly ImmutableHashSet<Identifier> IdentifiersOrTags;
 
         //if the item can't be found, spawn it in the character's inventory (used by outpost NPCs)
-        private bool spawnItemIfNotFound = false;
+        private readonly bool spawnItemIfNotFound = false;
 
         private Item targetItem;
         private readonly Item originalTarget;
         private ISpatialEntity moveToTarget;
         private bool isDoneSeeking;
         public Item TargetItem => targetItem;
-        private int currSearchIndex;
-        public Identifier[] ignoredContainerIdentifiers;
-        public Identifier[] ignoredIdentifiersOrTags;
+        private int currentSearchIndex;
+        public ImmutableHashSet<Identifier> ignoredContainerIdentifiers;
+        public ImmutableHashSet<Identifier> ignoredIdentifiersOrTags;
         private AIObjectiveGoTo goToObjective;
         private float currItemPriority;
         private readonly bool checkInventory;
 
-        public static float DefaultReach = 100;
+        public const float DefaultReach = 100;
+        public const float MaxReach = 150;
 
         public bool AllowToFindDivingGear { get; set; } = true;
         public bool MustBeSpecificItem { get; set; }
@@ -54,7 +57,7 @@ namespace Barotrauma
         public bool AllowVariants { get; set; }
         public bool Equip { get; set; }
         public bool Wear { get; set; }
-        public bool RequireLoaded { get; set; }
+        public bool RequireNonEmpty { get; set; }
         public bool EvaluateCombatPriority { get; set; }
         public bool CheckPathForEachItem { get; set; }
         public bool SpeakIfFails { get; set; }
@@ -76,7 +79,7 @@ namespace Barotrauma
         public AIObjectiveGetItem(Character character, Item targetItem, AIObjectiveManager objectiveManager, bool equip = true, float priorityModifier = 1) 
             : base(character, objectiveManager, priorityModifier)
         {
-            currSearchIndex = -1;
+            currentSearchIndex = 0;
             Equip = equip;
             originalTarget = targetItem;
             this.targetItem = targetItem;
@@ -89,12 +92,12 @@ namespace Barotrauma
         public AIObjectiveGetItem(Character character, IEnumerable<Identifier> identifiersOrTags, AIObjectiveManager objectiveManager, bool equip = true, bool checkInventory = true, float priorityModifier = 1, bool spawnItemIfNotFound = false) 
             : base(character, objectiveManager, priorityModifier)
         {
-            currSearchIndex = -1;
+            currentSearchIndex = 0;
             Equip = equip;
             this.spawnItemIfNotFound = spawnItemIfNotFound;
             this.checkInventory = checkInventory;
-            IdentifiersOrTags = ParseGearTags(identifiersOrTags).ToImmutableArray();
-            ignoredIdentifiersOrTags = ParseIgnoredTags(identifiersOrTags).ToArray();
+            IdentifiersOrTags = ParseGearTags(identifiersOrTags).ToImmutableHashSet();
+            ignoredIdentifiersOrTags = ParseIgnoredTags(identifiersOrTags).ToImmutableHashSet();
         }
 
         public static IEnumerable<Identifier> ParseGearTags(IEnumerable<Identifier> identifiersOrTags)
@@ -121,6 +124,11 @@ namespace Barotrauma
                 }
             }
             return ignoredTags;
+        }
+
+        public static Func<PathNode, bool> CreateEndNodeFilter(ISpatialEntity targetEntity)
+        {
+            return n => (n.Waypoint.Ladders == null || n.Waypoint.IsInWater) && Vector2.DistanceSquared(n.Waypoint.WorldPosition, targetEntity.WorldPosition) <= MathUtils.Pow2(MaxReach);
         }
 
         private bool CheckInventory()
@@ -155,11 +163,6 @@ namespace Barotrauma
                 Abandon = true;
                 return;
             }
-            if (character.Submarine == null)
-            {
-                Abandon = true;
-                return;
-            }
             if (IdentifiersOrTags != null && !isDoneSeeking)
             {
                 if (checkInventory)
@@ -171,9 +174,14 @@ namespace Barotrauma
                 }
                 if (!isDoneSeeking)
                 {
+                    if (character.Submarine == null)
+                    {
+                        Abandon = true;
+                        return;
+                    }
                     if (!AllowDangerousPressure)
                     {
-                        bool dangerousPressure = character.CurrentHull == null || character.CurrentHull.LethalPressure > 0 && character.PressureProtection <= 0;
+                        bool dangerousPressure = !character.IsProtectedFromPressure && (character.CurrentHull == null || character.CurrentHull.LethalPressure > 0);
                         if (dangerousPressure)
                         {
 #if DEBUG
@@ -191,6 +199,11 @@ namespace Barotrauma
                     }
                     return;
                 }
+            }
+            else if (character.Submarine == null)
+            {
+                Abandon = true;
+                return;
             }
             if (targetItem == null || targetItem.Removed)
             {
@@ -236,7 +249,7 @@ namespace Barotrauma
                 else
                 {
                     character.SelectCharacter(c);
-                    canInteract = character.CanInteractWith(c, maxDist: DefaultReach);
+                    canInteract = character.CanInteractWith(c);
                     character.DeselectCharacter();
                 }
             }
@@ -258,7 +271,7 @@ namespace Barotrauma
 
                 Inventory itemInventory = targetItem.ParentInventory;
                 var slots = itemInventory?.FindIndices(targetItem);
-                if (HumanAIController.TakeItem(targetItem, character.Inventory, Equip, Wear, storeUnequipped: true))
+                if (HumanAIController.TakeItem(targetItem, character.Inventory, Equip, Wear, storeUnequipped: true, targetTags: IdentifiersOrTags))
                 {
                     if (TakeWholeStack && slots != null)
                     {
@@ -288,8 +301,11 @@ namespace Barotrauma
                     if (!Equip)
                     {
                         // Try equipping and wearing the item
-                        Wear = true;
                         Equip = true;
+                        if (!objectiveManager.HasActiveObjective<AIObjectiveCleanupItem>() && !objectiveManager.HasActiveObjective<AIObjectiveLoadItem>())
+                        {
+                            Wear = true;
+                        }
                         return;
                     }
 #if DEBUG
@@ -307,7 +323,8 @@ namespace Barotrauma
                         {
                             // If the root container changes, the item is no longer where it was (taken by someone -> need to find another item)
                             AbortCondition = obj => targetItem == null || targetItem.GetRootInventoryOwner() != moveToTarget,
-                            SpeakIfFails = false
+                            SpeakIfFails = false,
+                            endNodeFilter = CreateEndNodeFilter(moveToTarget)
                         };
                     },
                     onAbandon: () =>
@@ -331,6 +348,10 @@ namespace Barotrauma
             }
         }
 
+        private Stopwatch sw;
+        private Stopwatch StopWatch => sw ??= new Stopwatch();
+        private readonly List<(Item item, float priority)> itemCandidates = new List<(Item, float)>();
+        private List<Item> itemList;
         private void FindTargetItem()
         {
             if (IdentifiersOrTags == null)
@@ -338,13 +359,16 @@ namespace Barotrauma
                 if (targetItem == null)
                 {
 #if DEBUG
-                    DebugConsole.NewMessage($"{character.Name}: Cannot find an item, because neither identifiers nor item was defined.", Color.Red);
+                    DebugConsole.AddWarning($"{character.Name}: Cannot find an item, because neither identifiers nor item was defined.");
 #endif
                     Abandon = true;
                 }
                 return;
             }
-
+            if (HumanAIController.DebugAI)
+            {
+                StopWatch.Restart();
+            }
             float priority = Math.Clamp(objectiveManager.GetCurrentPriority(), 10, 100);
             if (!CheckPathForEachItem)
             {
@@ -355,12 +379,22 @@ namespace Barotrauma
                 CheckPathForEachItem = priority >= AIObjectiveManager.LowestOrderPriority && (objectiveManager.IsCurrentOrder<AIObjectiveFixLeaks>() || objectiveManager.CurrentOrder is AIObjectiveGoTo gotoOrder && gotoOrder.IsFollowOrderObjective);
             }
             bool checkPath = CheckPathForEachItem;
-            bool hasCalledPathFinder = false;
-            int itemsPerFrame = (int)priority;
-            for (int i = 0; i < itemsPerFrame && currSearchIndex < Item.ItemList.Count - 1; i++)
+            // Reset if the character has switched subs.
+            if (itemList != null && !character.Submarine.IsEntityFoundOnThisSub(itemList.FirstOrDefault(), includingConnectedSubs: true))
             {
-                currSearchIndex++;
-                var item = Item.ItemList[currSearchIndex];
+                currentSearchIndex = 0;
+            }
+            if (currentSearchIndex == 0)
+            {
+                itemCandidates.Clear();
+                itemList = character.Submarine.GetItems(alsoFromConnectedSubs: true);
+            }
+            int itemsPerFrame = (int)MathHelper.Lerp(30, 300, MathUtils.InverseLerp(10, 100, priority));
+            int checkedItems = 0;
+            for (int i = 0; i < itemsPerFrame && currentSearchIndex < itemList.Count; i++, currentSearchIndex++)
+            {
+                checkedItems++;
+                var item = itemList[currentSearchIndex];
                 Submarine itemSub = item.Submarine ?? item.ParentInventory?.Owner?.Submarine;
                 if (itemSub == null) { continue; }
                 Submarine mySub = character.Submarine;
@@ -384,27 +418,28 @@ namespace Barotrauma
                         if (ignoredContainerIdentifiers.Contains(item.ContainerIdentifier)) { continue; }
                     }
                 }
-                // Don't allow going into another sub, unless it's connected and of the same team and type.
-                if (!character.Submarine.IsEntityFoundOnThisSub(item, includingConnectedSubs: true)) { continue; }
                 if (character.IsItemTakenBySomeoneElse(item)) { continue; }
                 if (item.ParentInventory is ItemInventory itemInventory)
                 {
                     if (!itemInventory.Container.HasRequiredItems(character, addMessage: false)) { continue; }
                 }
-                float itemPriority = 1;
+                float itemPriority = item.Prefab.BotPriority;
                 if (GetItemPriority != null)
                 {
-                    itemPriority = GetItemPriority(item);
+                    itemPriority *= GetItemPriority(item);
                 }
                 Entity rootInventoryOwner = item.GetRootInventoryOwner();
                 if (rootInventoryOwner is Item ownerItem)
                 {
                     if (!ownerItem.IsInteractable(character)) { continue; }
-                    if (!(ownerItem.GetComponent<ItemContainer>()?.HasRequiredItems(character, addMessage: false) ?? true)) { continue; }
-                    //the item is inside an item inside an item (e.g. fuel tank in a welding tool in a cabinet -> reduce priority to prefer items that aren't inside a tool)
-                    if (ownerItem != item.Container)
+                    if (ownerItem != item)
                     {
-                        itemPriority *= 0.1f;
+                        if (!(ownerItem.GetComponent<ItemContainer>()?.HasRequiredItems(character, addMessage: false) ?? true)) { continue; }
+                        //the item is inside an item inside an item (e.g. fuel tank in a welding tool in a cabinet -> reduce priority to prefer items that aren't inside a tool)
+                        if (ownerItem != item.Container)
+                        {
+                            itemPriority *= 0.1f;
+                        }
                     }
                 }
                 Vector2 itemPos = (rootInventoryOwner ?? item).WorldPosition;
@@ -452,22 +487,69 @@ namespace Barotrauma
                 {
                     itemPriority *= item.Condition / item.MaxCondition;
                 }
+                if (checkPath)
+                {
+                    itemCandidates.Add((item, itemPriority));
+                }
                 // Ignore if the item has a lower priority than the currently selected one
                 if (itemPriority < currItemPriority) { continue; }
-                if (!hasCalledPathFinder && PathSteering != null && checkPath)
+                if (EvaluateCombatPriority && itemPriority <= 0)
                 {
-                    hasCalledPathFinder = true;
-                    var path = PathSteering.PathFinder.FindPath(character.SimPosition, item.SimPosition, character.Submarine, errorMsgStr: $"AIObjectiveGetItem {character.DisplayName}", nodeFilter: node => node.Waypoint.CurrentHull != null);
-                    if (path.Unreachable) { continue; }
+                    // Not good enough
+                    continue;
                 }
                 currItemPriority = itemPriority;
                 targetItem = item;
                 moveToTarget = rootInventoryOwner ?? item;
             }
-            if (currSearchIndex >= Item.ItemList.Count - 1)
+            if (currentSearchIndex >= itemList.Count - 1)
             {
                 isDoneSeeking = true;
-                if (targetItem == null)
+            }
+            if (checkedItems > 0)
+            {
+                if (isDoneSeeking && itemCandidates.Any())
+                {
+                    itemCandidates.Sort((x, y) => y.priority.CompareTo(x.priority));
+                }
+                if (HumanAIController.DebugAI && targetItem != null && StopWatch.ElapsedMilliseconds > 2)
+                {
+                    var msg = $"Went through {checkedItems} of total {itemList.Count} items. Found item {targetItem.Name} in {StopWatch.ElapsedMilliseconds} ms. Completed: {isDoneSeeking}";
+                    if (StopWatch.ElapsedMilliseconds > 5)
+                    {
+                        DebugConsole.ThrowError(msg);
+                    }
+                    else
+                    {
+                        // An occasional warning now and then can be ignored, but multiple at the same time might indicate a performance issue.
+                        DebugConsole.AddWarning(msg);
+                    }
+                }
+            }
+            if (isDoneSeeking)
+            {
+                if (PathSteering == null)
+                {
+                    itemCandidates.Clear();
+                }
+                if (itemCandidates.Any())
+                {
+                    if (itemCandidates.FirstOrDefault() is { } itemCandidate)
+                    {
+                        var path = PathSteering.PathFinder.FindPath(character.SimPosition, itemCandidate.item.SimPosition, character.Submarine, errorMsgStr: $"AIObjectiveGetItem {character.DisplayName}", nodeFilter: node => node.Waypoint.CurrentHull != null);
+                        if (path.Unreachable)
+                        {
+                            // Remove the invalid candidates and continue on the next frame.
+                            itemCandidates.Remove(itemCandidate);
+                        }
+                        else
+                        {
+                            // The path was valid -> we are done.
+                            itemCandidates.Clear();
+                        }
+                    }
+                }
+                if (targetItem == null && itemCandidates.None())
                 {
                     if (spawnItemIfNotFound)
                     {
@@ -513,7 +595,7 @@ namespace Barotrauma
             float lowestCost = float.MaxValue;
             foreach (MapEntityPrefab prefab in MapEntityPrefab.List)
             {
-                if (!(prefab is ItemPrefab itemPrefab)) { continue; }
+                if (prefab is not ItemPrefab itemPrefab) { continue; }
                 if (IdentifiersOrTags.Any(id => id == prefab.Identifier || prefab.Tags.Contains(id)))
                 {
                     float cost = itemPrefab.DefaultPrice != null && itemPrefab.CanBeBought ?
@@ -558,11 +640,11 @@ namespace Barotrauma
         {
             if (!item.HasAccess(character)) { return false; }
             if (ignoredItems.Contains(item)) { return false; };
-            if (ignoredIdentifiersOrTags != null && ignoredIdentifiersOrTags.Any(id => item.Prefab.Identifier == id || item.HasTag(id))) { return false; }
+            if (ignoredIdentifiersOrTags != null && item.HasIdentifierOrTags(ignoredIdentifiersOrTags)) { return false; }
             if (item.Condition < TargetCondition) { return false; }
             if (ItemFilter != null && !ItemFilter(item)) { return false; }
-            if (RequireLoaded && item.Components.Any(i => !i.IsLoaded(character))) { return false; }
-            return IdentifiersOrTags.Any(id => id == item.Prefab.Identifier || item.HasTag(id) || (AllowVariants && !item.Prefab.VariantOf.IsEmpty && item.Prefab.VariantOf == id));
+            if (RequireNonEmpty && item.Components.Any(i => i.IsEmpty(character))) { return false; }
+            return item.HasIdentifierOrTags(IdentifiersOrTags) || (AllowVariants && !item.Prefab.VariantOf.IsEmpty && IdentifiersOrTags.Contains(item.Prefab.VariantOf));
         }
 
         public override void Reset()
@@ -580,7 +662,7 @@ namespace Barotrauma
             targetItem = originalTarget;
             moveToTarget = targetItem?.GetRootInventoryOwner();
             isDoneSeeking = false;
-            currSearchIndex = 0;
+            currentSearchIndex = 0;
             currItemPriority = 0;
         }
 

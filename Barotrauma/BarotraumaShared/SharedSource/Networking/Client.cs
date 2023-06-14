@@ -11,16 +11,15 @@ namespace Barotrauma.Networking
         public string Name;
         public Identifier PreferredJob;
         public CharacterTeamType PreferredTeam;
-        public UInt16 NameID;
-        public UInt64 SteamID;
-        public byte ID;
-        public UInt16 CharacterID;
+        public UInt16 NameId;
+        public AccountInfo AccountInfo;
+        public byte SessionId;
+        public UInt16 CharacterId;
         public float Karma;
         public bool Muted;
         public bool InGame;
         public bool HasPermissions;
         public bool IsOwner;
-        public bool AllowKicking;
         public bool IsDownloading;
     }
     
@@ -28,10 +27,23 @@ namespace Barotrauma.Networking
     {
         public const int MaxNameLength = 32;
 
-        public string Name; public UInt16 NameID;
-        public byte ID;
-        public UInt64 SteamID;
-        public UInt64 OwnerSteamID;
+        public string Name; public UInt16 NameId;
+        
+        /// <summary>
+        /// An ID for this client for the current session.
+        /// THIS IS NOT A PERSISTENT VALUE. DO NOT STORE THIS LONG-TERM.
+        /// IT CANNOT BE USED TO IDENTIFY PLAYERS ACROSS SESSIONS.
+        /// </summary>
+        public readonly byte SessionId;
+
+        public AccountInfo AccountInfo;
+        
+        /// <summary>
+        /// The ID of the account used to authenticate this session.
+        /// This value can be used as a persistent value to identify
+        /// players in the banlist and campaign saves.
+        /// </summary>
+        public Option<AccountId> AccountId => AccountInfo.AccountId;
 
         public LanguageIdentifier Language;
 
@@ -75,6 +87,7 @@ namespace Barotrauma.Networking
                 if (character != null)
                 {
                     HasSpawned = true;
+                    UsingFreeCam = false;
 #if CLIENT
                     GameMain.GameSession?.CrewManager?.SetPlayerVoiceIconState(this, muted, mutedLocally);
 
@@ -88,16 +101,21 @@ namespace Barotrauma.Networking
             }
         }
 
+        /// <summary>
+        /// Is the client using the 'freecam' console command?
+        /// </summary>
+        public bool UsingFreeCam;
+
         public UInt16 CharacterID;
 
-        private Vector2 spectate_position;
+        private Vector2 spectatePos;
         public Vector2? SpectatePos
         {
             get
             {
                 if (character == null || character.IsDead)
                 {
-                    return spectate_position;
+                    return spectatePos;
                 }
                 else
                 {
@@ -107,7 +125,7 @@ namespace Barotrauma.Networking
 
             set
             {
-                spectate_position = value.Value;
+                spectatePos = value.Value;
             }
         }
 
@@ -164,8 +182,6 @@ namespace Barotrauma.Networking
         }
         public bool HasSpawned; //has the client spawned as a character during the current round
         
-        private readonly List<Client> kickVoters;
-
         public HashSet<Identifier> GivenAchievements = new HashSet<Identifier>();
 
         public ClientPermissions Permissions = ClientPermissions.None;
@@ -173,25 +189,12 @@ namespace Barotrauma.Networking
 
         private readonly object[] votes;
 
-        public int KickVoteCount
-        {
-            get { return kickVoters.Count; }
-        }
-        
-        /*public Client(NetPeer server, string name, byte ID)
-            : this(name, ID)
-        {
-            
-        }*/
-
         partial void InitProjSpecific();
         partial void DisposeProjSpecific();
-        public Client(string name, byte ID)
+        public Client(string name, byte sessionId)
         {
             this.Name = name;
-            this.ID = ID;
-
-            kickVoters = new List<Client>();
+            this.SessionId = sessionId;
 
             votes = new object[Enum.GetNames(typeof(VoteType)).Length];
 
@@ -200,64 +203,28 @@ namespace Barotrauma.Networking
 
         public T GetVote<T>(VoteType voteType)
         {
-            return (votes[(int)voteType] is T) ? (T)votes[(int)voteType] : default(T);
+            return (votes[(int)voteType] is T t) ? t : default;
         }
 
         public void SetVote(VoteType voteType, object value)
         {
             votes[(int)voteType] = value;
         }
-
-        public void ResetVotes()
-        {
-            for (int i = 0; i < votes.Length; i++)
-            {
-                votes[i] = null;
-            }
-
-            kickVoters.Clear();
-        }
-
-        public void AddKickVote(Client voter)
-        {
-            if (voter != null && !kickVoters.Contains(voter)) { kickVoters.Add(voter); }
-        }
-
-
-        public void RemoveKickVote(Client voter)
-        {
-            kickVoters.Remove(voter);
-        }
-        
-        public bool HasKickVoteFrom(Client voter)
-        {
-            return kickVoters.Contains(voter);
-        }
-
-        public bool HasKickVoteFromID(int id)
-        {
-            return kickVoters.Any(k => k.ID == id);
-        }
-
-
-        public static void UpdateKickVotes(List<Client> connectedClients)
-        {
-            foreach (Client client in connectedClients)
-            {
-                client.kickVoters.RemoveAll(voter => !connectedClients.Contains(voter));
-            }
-        }
+                       
+        public bool SessionOrAccountIdMatches(string userId)
+            => (AccountId.IsSome() && Networking.AccountId.Parse(userId) == AccountId)
+               || (byte.TryParse(userId, out byte sessionId) && SessionId == sessionId);
 
         public void WritePermissions(IWriteMessage msg)
         {
-            msg.Write(ID);
+            msg.WriteByte(SessionId);
             msg.WriteRangedInteger((int)Permissions, 0, (int)ClientPermissions.All);
             if (HasPermission(ClientPermissions.ConsoleCommands))
             {
-                msg.Write((UInt16)PermittedConsoleCommands.Count);
+                msg.WriteUInt16((UInt16)PermittedConsoleCommands.Count);
                 foreach (DebugConsole.Command command in PermittedConsoleCommands)
                 {
-                    msg.Write(command.names[0]);
+                    msg.WriteString(command.names[0]);
                 }
             }
         }

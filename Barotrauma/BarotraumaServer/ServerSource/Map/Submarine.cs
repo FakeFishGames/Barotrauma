@@ -5,14 +5,9 @@ namespace Barotrauma
 {
     partial class Submarine
     {
-        public void ServerWritePosition(IWriteMessage msg, Client c)
+        public void ServerWritePosition(ReadWriteMessage tempBuffer, Client c)
         {
-            msg.Write(ID);
-            IWriteMessage tempBuffer = new WriteOnlyMessage();
             subBody.Body.ServerWrite(tempBuffer);
-            msg.Write((byte)tempBuffer.LengthBytes);
-            msg.Write(tempBuffer.Buffer, 0, tempBuffer.LengthBytes);
-            msg.WritePadBits();
         }
         
         public void ServerEventWrite(IWriteMessage msg, Client c, NetEntityEvent.IData extraData = null)

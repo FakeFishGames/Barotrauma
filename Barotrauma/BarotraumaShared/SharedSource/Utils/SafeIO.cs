@@ -4,8 +4,10 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
+#if CLIENT
 using Barotrauma.Networking;
 using Barotrauma.Steam;
+#endif
 
 namespace Barotrauma.IO
 {
@@ -229,7 +231,19 @@ namespace Barotrauma.IO
 
         public static bool IsPathRooted(string path) => System.IO.Path.IsPathRooted(path);
 
-        public static IEnumerable<char> GetInvalidFileNameChars() => System.IO.Path.GetInvalidFileNameChars();
+        private static readonly ImmutableHashSet<char> invalidFileNameChars = ImmutableHashSet.Create
+        (
+            '\"', '<', '>', '|', '\0',
+            (char)1, (char)2, (char)3, (char)4, (char)5, (char)6, (char)7, (char)8, (char)9, (char)10,
+            (char)11, (char)12, (char)13, (char)14, (char)15, (char)16, (char)17, (char)18, (char)19, (char)20,
+            (char)21, (char)22, (char)23, (char)24, (char)25, (char)26, (char)27, (char)28, (char)29, (char)30,
+            (char)31, ':', '*', '?', '\\', '/'
+        );
+
+        /// <summary>
+        /// Returns file name characters that are invalid on any of our supported platforms (essentially the list of invalid characters on Windows)
+        /// </summary>
+        public static ImmutableHashSet<char> GetInvalidFileNameCharsCrossPlatform() => invalidFileNameChars;
     }
 
     public static class Directory
@@ -299,6 +313,19 @@ namespace Barotrauma.IO
             }
             //TODO: validate recursion?
             System.IO.Directory.Delete(path, recursive);
+        }
+
+        public static bool TryDelete(string path, bool recursive = true)
+        {
+            try
+            {
+                Directory.Delete(path, recursive);
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
         }
         
         public static DateTime GetLastWriteTime(string path)

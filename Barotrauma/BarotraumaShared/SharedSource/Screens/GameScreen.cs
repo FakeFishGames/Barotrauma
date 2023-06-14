@@ -61,10 +61,7 @@ namespace Barotrauma
             GameMain.GameSession?.CrewManager?.AutoShowCrewList();
 #endif
 
-            foreach (MapEntity entity in MapEntity.mapEntityList)
-            {
-                entity.IsHighlighted = false;
-            }
+            MapEntity.ClearHighlightedEntities();
 
 #if RUN_PHYSICS_IN_SEPARATE_THREAD
             var physicsThread = new Thread(ExecutePhysics)
@@ -87,10 +84,12 @@ namespace Barotrauma
             GameSettings.SaveCurrentConfig();
             GameMain.SoundManager.SetCategoryMuffle("default", false);
             GUI.ClearMessages();
+#if !DEBUG
             if (GameMain.GameSession?.GameMode is TestGameMode)
             {
                 DebugConsole.DeactivateCheats();
             }
+#endif
 #endif
         }
 
@@ -138,10 +137,7 @@ namespace Barotrauma
             {
                 if (body.Enabled && body.BodyType != FarseerPhysics.BodyType.Static) { body.Update(); }               
             }
-            foreach (MapEntity e in MapEntity.mapEntityList)
-            {
-                e.IsHighlighted = false;
-            }
+            MapEntity.ClearHighlightedEntities();
 
 #if CLIENT
             var sw = new System.Diagnostics.Stopwatch();
@@ -168,9 +164,9 @@ namespace Barotrauma
 
             if (Character.Controlled != null)
             {
-                if (Character.Controlled.SelectedConstruction != null && Character.Controlled.CanInteractWith(Character.Controlled.SelectedConstruction))
+                if (Character.Controlled.SelectedItem != null && Character.Controlled.CanInteractWith(Character.Controlled.SelectedItem))
                 {
-                    Character.Controlled.SelectedConstruction.UpdateHUD(cam, Character.Controlled, (float)deltaTime);                
+                    Character.Controlled.SelectedItem.UpdateHUD(cam, Character.Controlled, (float)deltaTime);                
                 }
                 if (Character.Controlled.Inventory != null)
                 {

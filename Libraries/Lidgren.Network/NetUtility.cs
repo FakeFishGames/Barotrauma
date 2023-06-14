@@ -454,16 +454,24 @@ namespace Lidgren.Network
 			return ComputeSHAHash(bytes, 0, bytes.Length);
 		}
 
-        /// <summary>
-        /// Maps the IPEndPoint object to an IPv6 address, if it is currently mapped to an IPv4 address.
-        /// </summary>
-        internal static IPEndPoint MapToIPv6(IPEndPoint endPoint)
-        {
-            if (endPoint.AddressFamily == AddressFamily.InterNetwork)
-            {
-                return new IPEndPoint(endPoint.Address.MapToIPv6(), endPoint.Port);
-            }
-            return endPoint;
-        }
+		internal static IPAddress MapToFamily(this IPAddress address, AddressFamily family)
+		{
+		    switch (family)
+		    {
+		        case AddressFamily.InterNetworkV6:
+			        return address.MapToIPv6();
+		        case AddressFamily.InterNetwork:
+			        return address.MapToIPv4();
+		        default:
+			        throw new Exception($"Unsupported address family: {family}");
+		    }
+		}
+
+		internal static IPEndPoint MapToFamily(this IPEndPoint endpoint, AddressFamily family)
+		{
+		    return endpoint.Address.AddressFamily == family
+		        ? endpoint
+		        : new IPEndPoint(endpoint.Address.MapToFamily(family), endpoint.Port);
+		}
     }
 }

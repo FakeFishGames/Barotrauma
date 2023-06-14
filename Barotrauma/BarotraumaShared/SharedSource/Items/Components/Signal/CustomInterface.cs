@@ -155,7 +155,7 @@ namespace Barotrauma.Items.Components
         {
             //use semicolon as a separator because comma may be needed in the signals (for color or vector values for example)
             //kind of hacky, we should probably add support for (string) arrays to SerializableEntityEditor so this wouldn't be needed
-            get { return signals == null ? "" : string.Join(";", signals); }
+            get { return signals == null ? string.Empty : string.Join(";", signals); }
             set
             {
                 if (value == null) { return; }
@@ -167,7 +167,31 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public override bool RecreateGUIOnResolutionChange => true;
+        private bool[] elementStates;
+        [Serialize("", IsPropertySaveable.Yes, description: "", alwaysUseInstanceValues: true)]
+        public string ElementStates
+        {
+            get { return elementStates == null ? string.Empty : string.Join(",", elementStates); }
+            set
+            {
+                if (value == null) { return; }
+                if (customInterfaceElementList.Count > 0)
+                {
+                    string[] splitValues = value == "" ? Array.Empty<string>() : value.Split(',');
+                    for (int i = 0; i < customInterfaceElementList.Count && i < splitValues.Length; i++)
+                    {
+                        if (!bool.TryParse(splitValues[i], out bool val)) { continue; }
+                        customInterfaceElementList[i].State = val;
+#if CLIENT
+                        if (uiElements != null && i < uiElements.Count && uiElements[i] is GUITickBox tickBox)
+                        {
+                            tickBox.Selected = val;
+                        }
+#endif
+                    }
+                }
+            }
+        }
 
         private readonly List<CustomInterfaceElement> customInterfaceElementList = new List<CustomInterfaceElement>();
         
@@ -207,8 +231,10 @@ namespace Barotrauma.Items.Components
             }
             IsActive = true;
             InitProjSpecific();
+            //load these here to ensure the UI elements (created in InitProjSpecific) are up-to-date
             Labels = element.GetAttributeString("labels", "");
             Signals = element.GetAttributeString("signals", "");
+            ElementStates = element.GetAttributeString("elementstates", "");
         }
 
         private void UpdateLabels(string[] newLabels)
@@ -217,14 +243,7 @@ namespace Barotrauma.Items.Components
             for (int i = 0; i < labels.Length; i++)
             {
                 labels[i] = i < newLabels.Length ? newLabels[i] : customInterfaceElementList[i].Label;
-                if (Screen.Selected != GameMain.SubEditorScreen)
-                {
-                    customInterfaceElementList[i].Label = TextManager.Get(labels[i]).Fallback(labels[i]).Value;
-                }
-                else
-                {
-                    customInterfaceElementList[i].Label = labels[i];
-                }
+                customInterfaceElementList[i].Label = labels[i];                
             }
             UpdateLabelsProjSpecific();
         }
@@ -278,9 +297,12 @@ namespace Barotrauma.Items.Components
             }
 #if SERVER
             //make sure the clients know about the states of the checkboxes and text fields
-            if (item.Submarine == null || !item.Submarine.Loading)
+            if (customInterfaceElementList.Any())
             {
-                item.CreateServerEvent(this);
+                if (item.Submarine == null || !item.Submarine.Loading)
+                {
+                    item.CreateServerEvent(this);
+                }
             }
 #endif
         }
@@ -300,7 +322,7 @@ namespace Barotrauma.Items.Components
             }
             foreach (StatusEffect effect in btnElement.StatusEffects)
             {
-                item.ApplyStatusEffect(effect, ActionType.OnUse, 1.0f);
+                item.ApplyStatusEffect(effect, ActionType.OnUse, 1.0f, character: item.ParentInventory?.Owner as Character);
             }
         }
 
@@ -386,6 +408,7 @@ namespace Barotrauma.Items.Components
         {
             labels = customInterfaceElementList.Select(ci => ci.Label).ToArray();
             signals = customInterfaceElementList.Select(ci => ci.Signal).ToArray();
+            elementStates = customInterfaceElementList.Select(ci => ci.State).ToArray();
             return base.Save(parentElement);
         }
 

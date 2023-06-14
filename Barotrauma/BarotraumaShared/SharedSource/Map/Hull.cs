@@ -759,7 +759,7 @@ namespace Barotrauma
             for (int i = start; i < end; i++)
             {
                 msg.WriteRangedSingle(BackgroundSections[i].ColorStrength, 0.0f, 1.0f, 8);
-                msg.Write(BackgroundSections[i].Color.PackedValue);
+                msg.WriteUInt32(BackgroundSections[i].Color.PackedValue);
             }
         }
         #endregion
@@ -994,7 +994,11 @@ namespace Barotrauma
             foreach (var gap in ConnectedGaps.Where(gap => gap.Open > 0))
             {
                 var distance = MathHelper.Max(Vector2.DistanceSquared(item.Position, gap.Position) / 1000, 1f);
-                item.body.ApplyForce((gap.LerpedFlowForce / distance) * deltaTime);
+                Vector2 force = (gap.LerpedFlowForce / distance) * deltaTime;
+                if (force.LengthSquared() > 0.01f)
+                {
+                    item.body.ApplyForce(force);
+                }
             }
         }
 
@@ -1079,7 +1083,7 @@ namespace Barotrauma
                 if (g.ConnectedDoor != null && !g.ConnectedDoor.IsBroken)
                 {
                     //gap blocked if the door is not open or the predicted state is not open
-                    if ((!g.ConnectedDoor.IsOpen && !g.ConnectedDoor.IsBroken) || (g.ConnectedDoor.PredictedState.HasValue && !g.ConnectedDoor.PredictedState.Value))
+                    if ((g.ConnectedDoor.IsClosed && !g.ConnectedDoor.IsBroken) || (g.ConnectedDoor.PredictedState.HasValue && !g.ConnectedDoor.PredictedState.Value))
                     {
                         if (g.ConnectedDoor.OpenState < 0.1f)
                         {
@@ -1545,7 +1549,7 @@ namespace Barotrauma
 
             var hull = new Hull(rect, submarine, idRemap.GetOffsetId(element))
             {
-                WaterVolume = element.GetAttributeFloat("pressure", 0.0f)
+                WaterVolume = element.GetAttributeFloat("water", 0.0f)
             };
             hull.linkedToID = new List<ushort>();
 

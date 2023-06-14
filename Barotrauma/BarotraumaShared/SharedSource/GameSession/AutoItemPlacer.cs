@@ -21,7 +21,7 @@ namespace Barotrauma
                 for (int i = 0; i < Submarine.MainSubs.Length; i++)
                 {
                     var sub = Submarine.MainSubs[i];
-                    if (sub == null || sub.Info.InitialSuppliesSpawned || !sub.Info.IsPlayer) { continue; }
+                    if (sub == null || sub.Info.InitialSuppliesSpawned || sub.Info.IsManuallyOutfitted || !sub.Info.IsPlayer) { continue; }
                     //1st pass: items defined in the start item set, only spawned in the main sub (not drones/shuttles or other linked subs)
                     SpawnStartItems(sub, startItemSet);
                     //2nd pass: items defined using preferred containers, spawned in the main sub and all the linked subs (drones, shuttles etc)
@@ -163,6 +163,7 @@ namespace Barotrauma
                 {
                     if (!subs.Contains(item.Submarine)) { continue; }
                     if (item.GetRootInventoryOwner() is Character) { continue; }
+                    if (item.NonInteractable) { continue; }
                     containers.AddRange(item.GetComponents<ItemContainer>());
                 }
                 containers.Shuffle(Rand.RandSync.ServerAndClient);
@@ -259,10 +260,12 @@ namespace Barotrauma
                 }
                 bool success = false;
                 bool isCampaign = GameMain.GameSession?.GameMode is CampaignMode;
+                float levelDifficulty = Level.Loaded?.Difficulty ?? 0.0f;
                 foreach (PreferredContainer preferredContainer in itemPrefab.PreferredContainers)
                 {
                     if (preferredContainer.CampaignOnly && !isCampaign) { continue; }
                     if (preferredContainer.NotCampaign && isCampaign) { continue; }
+                    if (levelDifficulty < preferredContainer.MinLevelDifficulty || levelDifficulty > preferredContainer.MaxLevelDifficulty) { continue; }
                     if (preferredContainer.SpawnProbability <= 0.0f || preferredContainer.MaxAmount <= 0 && preferredContainer.Amount <= 0) { continue; }
                     validContainers = GetValidContainers(preferredContainer, containers, validContainers, primary: true);
                     if (validContainers.None())
@@ -305,14 +308,6 @@ namespace Barotrauma
             return validContainers;
         }
 
-        private static readonly (int quality, float commonness)[] qualityCommonnesses = new (int quality, float commonness)[Quality.MaxQuality + 1]
-        {
-            (0, 1.0f),
-            (1, 0.0f),
-            (2, 0.0f),
-            (3, 0.0f),
-        };
-
         private static List<Item> CreateItems(ItemPrefab itemPrefab, List<ItemContainer> containers, KeyValuePair<ItemContainer, PreferredContainer> validContainer)
         {
             List<Item> newItems = new List<Item>();
@@ -335,11 +330,7 @@ namespace Barotrauma
                     break;
                 }
                 var existingItem = validContainer.Key.Inventory.AllItems.FirstOrDefault(it => it.Prefab == itemPrefab);
-                int quality = 
-                    existingItem?.Quality ??
-                    ToolBox.SelectWeightedRandom(
-                        qualityCommonnesses.Select(q => q.quality).ToList(),
-                        qualityCommonnesses.Select(q => q.commonness).ToList(), Rand.RandSync.ServerAndClient);
+                int quality = existingItem?.Quality ?? Quality.GetSpawnedItemQuality(validContainer.Key.Item.Submarine, Level.Loaded, Rand.RandSync.ServerAndClient);
                 if (!validContainer.Key.Inventory.CanBePut(itemPrefab, quality: quality)) { break; }
                 var item = new Item(itemPrefab, validContainer.Key.Item.Position, validContainer.Key.Item.Submarine, callOnItemLoaded: false)
                 {

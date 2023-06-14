@@ -109,18 +109,13 @@ namespace Barotrauma
             subs[1].FlipX();
 #if SERVER
             crews = new List<Character>[] { new List<Character>(), new List<Character>() };
+            roundEndTimer = RoundEndDuration;
 #endif
         }
 
-        public override void End()
+        protected override bool DetermineCompleted()
         {
-            if (GameMain.NetworkMember == null) { return; }
-
-            if (Winner != CharacterTeamType.None)
-            {
-                GiveReward();
-                completed = true;
-            }
+            return Winner != CharacterTeamType.None;
         }
     }
 }

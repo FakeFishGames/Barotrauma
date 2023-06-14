@@ -1,6 +1,7 @@
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.ComponentModel;
 #if DEBUG
 using System.IO;
@@ -24,7 +25,7 @@ namespace Barotrauma
     }
 
     public enum SubmarineType { Player, Outpost, OutpostModule, Wreck, BeaconStation, EnemySubmarine, Ruin }
-    public enum SubmarineClass { Undefined, Scout, Attack, Transport, DeepDiver }
+    public enum SubmarineClass { Undefined, Scout, Attack, Transport }
 
     partial class SubmarineInfo : IDisposable
     {
@@ -48,6 +49,12 @@ namespace Barotrauma
             CrewExperienceHigh
         }
         public CrewExperienceLevel RecommendedCrewExperience;
+
+        public int Tier
+        {
+            get;
+            set;
+        }
 
         /// <summary>
         /// A random int that gets assigned when saving the sub. Used in mp campaign to verify that sub files match
@@ -305,8 +312,10 @@ namespace Barotrauma
             RecommendedCrewExperience = original.RecommendedCrewExperience;
             RecommendedCrewSizeMin = original.RecommendedCrewSizeMin;
             RecommendedCrewSizeMax = original.RecommendedCrewSizeMax;
+            Tier = original.Tier;
             IsManuallyOutfitted = original.IsManuallyOutfitted;
             Tags = original.Tags;
+            OutpostGenerationParams = original.OutpostGenerationParams;
             if (original.OutpostModuleInfo != null)
             {
                 OutpostModuleInfo = new OutpostModuleInfo(original.OutpostModuleInfo);
@@ -386,6 +395,7 @@ namespace Barotrauma
             {
                 Enum.TryParse(recommendedCrewExperience.Value, ignoreCase: true, out RecommendedCrewExperience);
             }
+            Tier = SubmarineElement.GetAttributeInt("tier", GetDefaultTier(Price));
 
             if (SubmarineElement?.Attribute("type") != null)
             {
@@ -407,7 +417,13 @@ namespace Barotrauma
             {
                 if (SubmarineElement?.Attribute("class") != null)
                 {
-                    if (Enum.TryParse(SubmarineElement.GetAttributeString("class", "Undefined"), out SubmarineClass submarineClass))
+                    string classStr = SubmarineElement.GetAttributeString("class", "Undefined");
+                    if (classStr == "DeepDiver")
+                    {
+                        //backwards compatibility
+                        SubmarineClass = SubmarineClass.Scout;
+                    }
+                    else if (Enum.TryParse(classStr, out SubmarineClass submarineClass))
                     {
                         SubmarineClass = submarineClass;
                     }
@@ -463,7 +479,6 @@ namespace Barotrauma
             hashTask = new Task(() =>
             {
                 hash = Md5Hash.CalculateForString(doc.ToString(), Md5Hash.StringHashOptions.IgnoreWhitespace);
-                Md5Hash.Cache.Add(FilePath, hash, DateTime.UtcNow);
             });
             hashTask.Start();
         }
@@ -516,11 +531,15 @@ namespace Barotrauma
         /// <summary>
         /// Calculated from <see cref="SubmarineElement"/>. Can be used when the sub hasn't been loaded and we can't access <see cref="Submarine.RealWorldCrushDepth"/>.
         /// </summary>
-        public float GetRealWorldCrushDepth()
+        public bool IsCrushDepthDefinedInStructures(out float realWorldCrushDepth)
         {
-            if (SubmarineElement == null) { return Level.DefaultRealWorldCrushDepth; }
+            if (SubmarineElement == null)
+            {
+                realWorldCrushDepth = Level.DefaultRealWorldCrushDepth;
+                return false;
+            }
             bool structureCrushDepthsDefined = false;
-            float realWorldCrushDepth = float.PositiveInfinity;
+            realWorldCrushDepth = float.PositiveInfinity;
             foreach (var structureElement in SubmarineElement.GetChildElements("structure"))
             {
                 string name = structureElement.Attribute("name")?.Value ?? "";
@@ -538,23 +557,15 @@ namespace Barotrauma
             {
                 realWorldCrushDepth = Level.DefaultRealWorldCrushDepth;
             }
-            realWorldCrushDepth *= GetRealWorldCrushDepthMultiplier();
-            return realWorldCrushDepth;
+            return structureCrushDepthsDefined;
         }
-
-        /// <summary>
-        /// Based on <see cref="SubmarineClass"/>
-        /// </summary>
-        public float GetRealWorldCrushDepthMultiplier()
+        public void AddOutpostNPCIdentifierOrTag(Character npc, Identifier idOrTag)
         {
-            if (SubmarineClass == SubmarineClass.DeepDiver)
+            if (!OutpostNPCs.ContainsKey(idOrTag))
             {
-                return 1.2f;
+                OutpostNPCs.Add(idOrTag, new List<Character>());
             }
-            else
-            {
-                return 1.0f;
-            }
+            OutpostNPCs[idOrTag].Add(npc);
         }
 
         //saving/loading ----------------------------------------------------
@@ -587,7 +598,6 @@ namespace Barotrauma
             }
 
             SaveUtil.CompressStringToFile(filePath, doc.ToString());
-            Md5Hash.Cache.Remove(filePath);
         }
 
         public static void AddToSavedSubs(SubmarineInfo subInfo)
@@ -691,7 +701,7 @@ namespace Barotrauma
                 System.IO.Stream stream;
                 try
                 {
-                    stream = SaveUtil.DecompressFiletoStream(file);
+                    stream = SaveUtil.DecompressFileToStream(file);
                 }
                 catch (System.IO.FileNotFoundException e)
                 {
@@ -748,5 +758,37 @@ namespace Barotrauma
 
             return doc;
         }
+
+        public int GetPrice(Location location = null, ImmutableHashSet<Character> characterList = null)
+        {
+            if (location is null)
+            {
+                if (GameMain.GameSession?.Campaign?.Map?.CurrentLocation is { } currentLocation)
+                {
+                    location = currentLocation;
+                }
+                else
+                {
+
+                    return Price;
+                }
+            }
+
+            characterList ??= GameSession.GetSessionCrewCharacters(CharacterType.Both);
+
+            float price = Price;
+
+            if (location.Faction is { } faction && Faction.GetPlayerAffiliationStatus(faction) is FactionAffiliation.Positive)
+            {
+                price *= 1f - characterList.Max(static c => c.GetStatValue(StatTypes.ShipyardBuyMultiplierAffiliated));
+            }
+            price *= 1f - characterList.Max(static c => c.GetStatValue(StatTypes.ShipyardBuyMultiplier));
+
+            return (int)price;
+        }
+
+        public static int GetDefaultTier(int price) => price > 20000 ? HighestTier : price > 10000 ? 2 : 1;
+
+        public const int HighestTier = 3;
     }
 }

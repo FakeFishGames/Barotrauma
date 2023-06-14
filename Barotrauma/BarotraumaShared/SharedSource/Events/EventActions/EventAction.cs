@@ -40,7 +40,8 @@ namespace Barotrauma
                         DebugConsole.ThrowError($"Error in event prefab \"{scriptedEvent.Prefab.Identifier}\". Status effect configured as a sub action (text: \"{Text}\"). Please configure status effects as child elements of a StatusEffectAction.");
                         continue;
                     }
-                    Actions.Add(Instantiate(scriptedEvent, e));
+                    var action = Instantiate(scriptedEvent, e);
+                    if (action != null) { Actions.Add(action); }
                 }
             }
 
@@ -134,7 +135,7 @@ namespace Barotrauma
 
         public static EventAction Instantiate(ScriptedEvent scriptedEvent, ContentXElement element)
         {
-            Type actionType = null;
+            Type actionType;
             try
             {
                 actionType = Type.GetType("Barotrauma." + element.Name, true, true);
@@ -149,6 +150,10 @@ namespace Barotrauma
             ConstructorInfo constructor = actionType.GetConstructor(new[] { typeof(ScriptedEvent), typeof(ContentXElement) });
             try
             {
+                if (constructor == null)
+                {
+                    throw new Exception($"Error in scripted event \"{scriptedEvent.Prefab.Identifier}\" - could not find a constructor for the EventAction \"{actionType}\".");
+                }
                 return constructor.Invoke(new object[] { scriptedEvent, element }) as EventAction;
             }
             catch (Exception ex)

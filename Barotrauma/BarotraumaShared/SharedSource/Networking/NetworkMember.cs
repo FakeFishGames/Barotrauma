@@ -38,15 +38,15 @@ namespace Barotrauma.Networking
         READY_CHECK,
         READY_TO_SPAWN
     }
-    enum ClientNetObject
+
+    enum ClientNetSegment
     {
-        END_OF_MESSAGE, //self-explanatory
-        SYNC_IDS,       //ids of the last changes the client knows about
-        CHAT_MESSAGE,   //also self-explanatory
-        VOTE,           //you get the idea
-        CHARACTER_INPUT,
-        ENTITY_STATE,
-        SPECTATING_POS
+        SyncIds,       //ids of the last changes the client knows about
+        ChatMessage,   //also self-explanatory
+        Vote,          //you get the idea
+        CharacterInput,
+        EntityState,
+        SpectatingPos
     }
 
     enum ClientNetError
@@ -88,16 +88,28 @@ namespace Barotrauma.Networking
         MONEY,
         READY_CHECK         //start, end and update a ready check
     }
-    enum ServerNetObject
+    enum ServerNetSegment
     {
-        END_OF_MESSAGE,
-        SYNC_IDS,
-        CHAT_MESSAGE,
-        VOTE,
-        CLIENT_LIST,
-        ENTITY_POSITION,
-        ENTITY_EVENT,
-        ENTITY_EVENT_INITIAL
+        SyncIds,
+        ChatMessage,
+        Vote,
+        ClientList,
+        EntityPosition,
+        EntityEvent,
+        EntityEventInitial
+    }
+
+    [NetworkSerialize]
+    readonly record struct EntityPositionHeader(
+        bool IsItem,
+        UInt32 PrefabUintIdentifier,
+        UInt16 EntityId) : INetSerializableStruct
+    {
+        public static EntityPositionHeader FromEntity(Entity entity)
+            => new (
+                IsItem: entity is Item,
+                PrefabUintIdentifier: entity is MapEntity me ? me.Prefab.UintIdentifier : 0,
+                EntityId: entity.ID);
     }
 
     enum TraitorMessageType
@@ -131,29 +143,29 @@ namespace Barotrauma.Networking
 
     enum DisconnectReason
     {
+        //do not attempt reconnecting with these reasons
         Unknown,
+        Disconnected,
         Banned,
         Kicked,
         ServerShutdown,
         ServerCrashed,
         ServerFull,
         AuthenticationRequired,
-        SteamAuthenticationRequired,
         SteamAuthenticationFailed,
         SessionTaken,
         TooManyFailedLogins,
-        NoName,
         InvalidName,
         NameTaken,
         InvalidVersion,
-        MissingContentPackage,
-        IncompatibleContentPackage,
-        NotOnWhitelist,
+        SteamP2PError,
+        
+        //attempt reconnecting with these reasons
+        Timeout,
         ExcessiveDesyncOldEvent,
         ExcessiveDesyncRemovedEvent,
         SyncTimeout,
-        SteamP2PError,
-        SteamP2PTimeOut,
+        SteamP2PTimeOut
     }
 
     abstract partial class NetworkMember
@@ -164,32 +176,15 @@ namespace Barotrauma.Networking
             set;
         }
 
-        public virtual bool IsServer
-        {
-            get { return false; }
-        }
+        public abstract bool IsServer { get; }
 
-        public virtual bool IsClient
-        {
-            get { return false; }
-        }
+        public abstract bool IsClient { get; }
 
         public abstract void CreateEntityEvent(INetSerializable entity, NetEntityEvent.IData extraData = null);
 
-#if DEBUG
-        public Dictionary<string, long> messageCount = new Dictionary<string, long>();
-#endif
-        
-        protected ServerSettings serverSettings;
+        public abstract Voting Voting { get; }
 
-        public Voting Voting { get; protected set; }
-
-        protected TimeSpan updateInterval;
         protected DateTime updateTimer;
-
-        protected bool gameStarted;
-
-        protected RespawnManager respawnManager;
 
         public bool ShowNetStats;
         
@@ -197,41 +192,22 @@ namespace Barotrauma.Networking
         public float SimulatedLoss;
         public float SimulatedDuplicatesChance;
 
-        public int TickRate
-        {
-            get { return serverSettings.TickRate; }
-            set
-            {
-                serverSettings.TickRate = MathHelper.Clamp(value, 1, 60);
-                updateInterval = new TimeSpan(0, 0, 0, 0, MathHelper.Clamp(1000 / serverSettings.TickRate, 1, 500));
-            }
-        }
-
         public KarmaManager KarmaManager
         {
             get;
             private set;
         } = new KarmaManager();
 
-        public bool GameStarted
-        {
-            get { return gameStarted; }
-        }
+        public bool GameStarted { get; protected set; }
 
-        public virtual List<Client> ConnectedClients
-        {
-            get { return null; }
-        }
+        public abstract IReadOnlyList<Client> ConnectedClients { get; }
 
-        public RespawnManager RespawnManager
-        {
-            get { return respawnManager; }
-        }
+        public RespawnManager RespawnManager { get; protected set; }
 
-        public ServerSettings ServerSettings
-        {
-            get { return serverSettings; }
-        }
+        public ServerSettings ServerSettings { get; protected set; }
+        
+        public TimeSpan UpdateInterval => new TimeSpan(0, 0, 0, 0, MathHelper.Clamp(1000 / ServerSettings.TickRate, 1, 500));
+
 
         public bool CanUseRadio(Character sender)
         {
@@ -268,33 +244,18 @@ namespace Barotrauma.Networking
             {
                 retVal += "color:#ff9900;";
             }
-            retVal += "metadata:" + (client.SteamID != 0 ? client.SteamID.ToString() : client.ID.ToString()) + "‖" + (name ?? client.Name).Replace("‖", "") + "‖end‖";
+            retVal += "metadata:" + (client.AccountId.TryUnwrap(out var accountId) ? accountId.ToString() : client.SessionId.ToString())
+                                  + "‖" + (name ?? client.Name).Replace("‖", "") + "‖end‖";
             return retVal;
         }
 
-        public virtual void KickPlayer(string kickedName, string reason) { }
+        public abstract void KickPlayer(string kickedName, string reason);
 
-        public virtual void BanPlayer(string kickedName, string reason, bool range = false, TimeSpan? duration = null) { }
+        public abstract void BanPlayer(string kickedName, string reason, TimeSpan? duration = null);
 
-        public virtual void UnbanPlayer(string playerName, string playerIP) { }
-
-        public virtual void Update(float deltaTime) { }
-
-        public virtual void Disconnect() { }
-
-        /// <summary>
-        /// Check if the two version are compatible (= if they can play together in multiplayer). 
-        /// Returns null if compatibility could not be determined (invalid/unknown version number).
-        /// </summary>
-        public static bool? IsCompatible(string myVersion, string remoteVersion)
-        {
-            if (string.IsNullOrEmpty(myVersion) || string.IsNullOrEmpty(remoteVersion)) { return null; }
-
-            if (!Version.TryParse(myVersion, out Version myVersionNumber)) { return null; }
-            if (!Version.TryParse(remoteVersion, out Version remoteVersionNumber)) { return null; }
-
-            return IsCompatible(myVersionNumber, remoteVersionNumber);
-        }
+        public abstract void UnbanPlayer(string playerName);
+        
+        public abstract void UnbanPlayer(Endpoint endpoint);
 
         /// <summary>
         /// Check if the two version are compatible (= if they can play together in multiplayer).

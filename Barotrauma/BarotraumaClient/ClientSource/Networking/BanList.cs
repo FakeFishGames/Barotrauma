@@ -1,60 +1,54 @@
-﻿using Barotrauma.Steam;
+﻿#nullable enable
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace Barotrauma.Networking
 {
     partial class BannedPlayer
     {
-        public BannedPlayer(string name, UInt16 uniqueIdentifier, bool isRangeBan, string endPoint, ulong steamID, string reason, DateTime? expiration)
+        public BannedPlayer(
+            UInt32 uniqueIdentifier,
+            string name,
+            Either<Address, AccountId> addressOrAccountId,
+            string reason,
+            Option<SerializableDateTime> expiration)
         {
             this.Name = name;
-            this.EndPoint = endPoint;
-            this.SteamID = steamID;
-            ParseEndPointAsSteamId();
-            this.IsRangeBan = isRangeBan;
+            this.AddressOrAccountId = addressOrAccountId;
             this.UniqueIdentifier = uniqueIdentifier;
             this.Reason = reason;
             this.ExpirationTime = expiration;
         }
     }
 
-    public partial class BanList
+    partial class BanList
     {
-        private GUIComponent banFrame;
+        public GUIComponent? BanFrame { get; private set; }
 
-        public GUIComponent BanFrame
-        {
-            get { return banFrame; }
-        }
-
-        public List<UInt16> localRemovedBans = new List<UInt16>();
-        public List<UInt16> localRangeBans = new List<UInt16>();
+        public List<UInt32> localRemovedBans = new List<UInt32>();
 
         private void RecreateBanFrame()
         {
-            if (banFrame != null)
+            if (BanFrame != null)
             {
-                var parent = banFrame.Parent;
-                parent.RemoveChild(banFrame);
+                var parent = BanFrame.Parent;
+                parent.RemoveChild(BanFrame);
                 CreateBanFrame(parent);
             }
         }
 
         public GUIComponent CreateBanFrame(GUIComponent parent)
         {
-            banFrame = new GUIListBox(new RectTransform(Vector2.One, parent.RectTransform, Anchor.Center));
+            BanFrame = new GUIListBox(new RectTransform(Vector2.One, parent.RectTransform, Anchor.Center));
 
             foreach (BannedPlayer bannedPlayer in bannedPlayers)
             {
                 if (localRemovedBans.Contains(bannedPlayer.UniqueIdentifier)) { continue; }
 
-                var playerFrame = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.2f), ((GUIListBox)banFrame).Content.RectTransform) { MinSize = new Point(0, 70) })
+                var playerFrame = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.2f), ((GUIListBox)BanFrame).Content.RectTransform) { MinSize = new Point(0, 70) })
                 {
-                    UserData = banFrame
+                    UserData = BanFrame
                 };
 
                 var paddedPlayerFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.85f), playerFrame.RectTransform, Anchor.Center))
@@ -71,69 +65,62 @@ namespace Barotrauma.Networking
                     RelativeSpacing = 0.02f
                 };
 
-                string endPoint = bannedPlayer.EndPoint;
-                if (localRangeBans.Contains(bannedPlayer.UniqueIdentifier)) endPoint = ToRange(endPoint);
-                GUITextBlock textBlock = new GUITextBlock(new RectTransform(new Vector2(0.5f, 0.0f), topArea.RectTransform),
-                    bannedPlayer.Name + " (" + endPoint + ")");
-                textBlock.RectTransform.MinSize = new Point(textBlock.Rect.Width, 0);
+                var addressOrAccountId = bannedPlayer.AddressOrAccountId;
 
-                if (bannedPlayer.EndPoint.IndexOf(".x") <= -1)
+                string nameText = bannedPlayer.Name;
+                if (addressOrAccountId.TryCast(out Address address))
                 {
-                    var rangeBanButton = new GUIButton(new RectTransform(new Vector2(0.25f, 0.4f), topArea.RectTransform), 
-                        TextManager.Get("BanRange"), style: "GUIButtonSmall")
-                    {
-                        UserData = bannedPlayer,
-                        OnClicked = RangeBan
-                    };
+                    nameText += $" ({address.StringRepresentation})";
                 }
+                else if (addressOrAccountId.TryCast(out AccountId accountId))
+                {
+                    nameText += $" ({accountId.StringRepresentation})";
+                }
+                GUITextBlock textBlock = new GUITextBlock(new RectTransform(new Vector2(0.5f, 1.0f), topArea.RectTransform), nameText) 
+                { 
+                    CanBeFocused = true 
+                };
+                textBlock.RectTransform.MinSize = new Point(
+                    (int)textBlock.Font.MeasureString(textBlock.Text.SanitizedValue).X, 0);
+
                 var removeButton = new GUIButton(new RectTransform(new Vector2(0.2f, 0.4f), topArea.RectTransform), 
                     TextManager.Get("BanListRemove"), style: "GUIButtonSmall")
                 {
                     UserData = bannedPlayer,
                     OnClicked = RemoveBan
                 };
-                topArea.RectTransform.MinSize = new Point(0, (int)topArea.RectTransform.Children.Max(c => c.Rect.Height * 1.25f));
+                topArea.RectTransform.MinSize = new Point(0, (int)(removeButton.Rect.Height * 1.25f));
+                
+                topArea.ForceLayoutRecalculation();
 
                 new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), paddedPlayerFrame.RectTransform),
-                    bannedPlayer.ExpirationTime == null ? 
-                        TextManager.Get("BanPermanent") :  TextManager.GetWithVariable("BanExpires", "[time]", bannedPlayer.ExpirationTime.Value.ToString()),
+                    bannedPlayer.ExpirationTime.TryUnwrap(out var expirationTime)
+                        ? TextManager.GetWithVariable("BanExpires", "[time]", expirationTime.ToLocalUserString())
+                        : TextManager.Get("BanPermanent"),
                     font: GUIStyle.SmallFont);
 
+                LocalizedString reason = TextManager.GetServerMessage(bannedPlayer.Reason).Fallback(bannedPlayer.Reason);
                 var reasonText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), paddedPlayerFrame.RectTransform),
                     TextManager.Get("BanReason") + " " +
-                        (string.IsNullOrEmpty(bannedPlayer.Reason) ? TextManager.Get("None") : bannedPlayer.Reason),
+                        (string.IsNullOrEmpty(bannedPlayer.Reason) ? TextManager.Get("None") : reason),
                     font: GUIStyle.SmallFont, wrap: true)
                 {
-                    ToolTip = bannedPlayer.Reason
+                    ToolTip = reason
                 };
 
                 paddedPlayerFrame.Recalculate();
 
-                new GUIFrame(new RectTransform(new Vector2(1.0f, 0.01f), ((GUIListBox)banFrame).Content.RectTransform), style: "HorizontalLine");
+                new GUIFrame(new RectTransform(new Vector2(1.0f, 0.01f), ((GUIListBox)BanFrame).Content.RectTransform), style: "HorizontalLine");
             }
 
-            return banFrame;
+            return BanFrame;
         }
 
         private bool RemoveBan(GUIButton button, object obj)
         {
-            BannedPlayer banned = obj as BannedPlayer;
-            if (banned == null) { return false; }
+            if (obj is not BannedPlayer banned) { return false; }
 
             localRemovedBans.Add(banned.UniqueIdentifier);
-            RecreateBanFrame();
-
-            GameMain.Client?.ServerSettings?.ClientAdminWrite(ServerSettings.NetFlags.Properties);
-
-            return true;
-        }
-
-        private bool RangeBan(GUIButton button, object obj)
-        {
-            BannedPlayer banned = obj as BannedPlayer;
-            if (banned == null) { return false; }
-
-            localRangeBans.Add(banned.UniqueIdentifier);
             RecreateBanFrame();
 
             GameMain.Client?.ServerSettings?.ClientAdminWrite(ServerSettings.NetFlags.Properties);
@@ -159,59 +146,62 @@ namespace Barotrauma.Networking
             for (int i = 0; i < (int)bannedPlayerCount; i++)
             {
                 string name = incMsg.ReadString();
-                UInt16 uniqueIdentifier = incMsg.ReadUInt16();
-                bool isRangeBan = incMsg.ReadBoolean();
+                UInt32 uniqueIdentifier = incMsg.ReadUInt32();
                 bool includesExpiration = incMsg.ReadBoolean();
                 incMsg.ReadPadBits();
 
-                DateTime? expiration = null;
+                Option<SerializableDateTime> expiration = Option<SerializableDateTime>.None();
                 if (includesExpiration)
                 {
                     double hoursFromNow = incMsg.ReadDouble();
-                    expiration = DateTime.Now + TimeSpan.FromHours(hoursFromNow);
+                    expiration = Option<SerializableDateTime>.Some(SerializableDateTime.LocalNow + TimeSpan.FromHours(hoursFromNow));
                 }
 
                 string reason = incMsg.ReadString();
 
-                string endPoint = "";
-                UInt64 steamID = 0;
+                Either<Address, AccountId> addressOrAccountId;
                 if (isOwner)
                 {
-                    endPoint = incMsg.ReadString();
-                    steamID = incMsg.ReadUInt64();
+                    bool isAddress = incMsg.ReadBoolean();
+                    incMsg.ReadPadBits();
+                    string str = incMsg.ReadString();
+                    if (isAddress && Address.Parse(str).TryUnwrap(out var address))
+                    {
+                        addressOrAccountId = address;
+                    }
+                    else if (AccountId.Parse(str).TryUnwrap(out var accountId))
+                    {
+                        addressOrAccountId = accountId;
+                    }
+                    else
+                    {
+                        continue;
+                    }
                 }
                 else
                 {
-                    endPoint = "Endpoint concealed by host";
-                    steamID = 0;
+                    addressOrAccountId = new UnknownAddress();
                 }
-                bannedPlayers.Add(new BannedPlayer(name, uniqueIdentifier, isRangeBan, endPoint, steamID, reason, expiration));
+                bannedPlayers.Add(new BannedPlayer(uniqueIdentifier, name, addressOrAccountId, reason, expiration));
             }
 
-            if (banFrame != null)
+            if (BanFrame != null)
             {
-                var parent = banFrame.Parent;
-                parent.RemoveChild(banFrame);
+                var parent = BanFrame.Parent;
+                parent.RemoveChild(BanFrame);
                 CreateBanFrame(parent);
             }
         }
 
         public void ClientAdminWrite(IWriteMessage outMsg)
         {
-            outMsg.Write((UInt16)localRemovedBans.Count);
-            foreach (UInt16 uniqueId in localRemovedBans)
+            outMsg.WriteVariableUInt32((UInt32)localRemovedBans.Count);
+            foreach (UInt32 uniqueId in localRemovedBans)
             {
-                outMsg.Write(uniqueId);
-            }
-
-            outMsg.Write((UInt16)localRangeBans.Count);
-            foreach (UInt16 uniqueId in localRangeBans)
-            {
-                outMsg.Write(uniqueId);
+                outMsg.WriteUInt32(uniqueId);
             }
 
             localRemovedBans.Clear();
-            localRangeBans.Clear();
         }
     }
 }

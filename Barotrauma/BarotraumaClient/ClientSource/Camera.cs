@@ -6,7 +6,7 @@ using System;
 
 namespace Barotrauma
 {
-    public class Camera : IDisposable
+    class Camera : IDisposable
     {
         public static bool FollowSub = true;
 
@@ -36,8 +36,8 @@ namespace Barotrauma
         private float minZoom = 0.1f;
         public float MinZoom
         {
-            get { return minZoom;}
-            set { minZoom = MathHelper.Clamp(value, 0.001f, 10.0f);   }
+            get { return minZoom; }
+            set { minZoom = MathHelper.Clamp(value, 0.001f, 10.0f); }
         }
 
         private float maxZoom = 2.0f;
@@ -63,7 +63,7 @@ namespace Barotrauma
         private float prevZoom;
 
         public float Shake;
-        private Vector2 shakePosition;
+        public Vector2 ShakePosition { get; private set; }
         private float shakeTimer;
 
         private float globalZoomScale = 1.0f;
@@ -175,13 +175,13 @@ namespace Barotrauma
             position += amount;
         }
 
-        public void ClientWrite(IWriteMessage msg)
+        public void ClientWrite(in SegmentTableWriter<ClientNetSegment> segmentTableWriter, IWriteMessage msg)
         {
             if (Character.Controlled != null && !Character.Controlled.IsDead) { return; }
 
-            msg.Write((byte)ClientNetObject.SPECTATING_POS);
-            msg.Write(position.X);
-            msg.Write(position.Y);
+            segmentTableWriter.StartNewSegment(ClientNetSegment.SpectatingPos);
+            msg.WriteSingle(position.X);
+            msg.WriteSingle(position.Y);
         }
 
         private void CreateMatrices()
@@ -371,7 +371,7 @@ namespace Barotrauma
 
             if (Shake < 0.01f)
             {
-                shakePosition = Vector2.Zero;
+                ShakePosition = Vector2.Zero;
                 shakeTimer = 0.0f;
             }
             else
@@ -379,11 +379,11 @@ namespace Barotrauma
                 shakeTimer += deltaTime * 5.0f;
                 Vector2 noisePos = new Vector2((float)PerlinNoise.CalculatePerlin(shakeTimer, shakeTimer, 0) - 0.5f, (float)PerlinNoise.CalculatePerlin(shakeTimer, shakeTimer, 0.5f) - 0.5f);
 
-                shakePosition = noisePos * Shake * 2.0f;
+                ShakePosition = noisePos * Shake * 2.0f;
                 Shake = MathHelper.Lerp(Shake, 0.0f, deltaTime * 2.0f);
             }
 
-            Translate(moveCam + shakePosition);
+            Translate(moveCam + ShakePosition);
             Freeze = false;
         }
         

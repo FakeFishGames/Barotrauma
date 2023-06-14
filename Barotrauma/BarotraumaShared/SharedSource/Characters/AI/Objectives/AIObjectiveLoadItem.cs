@@ -24,7 +24,7 @@ namespace Barotrauma
         private ImmutableHashSet<Identifier> ValidContainableItemIdentifiers { get; }
         private static Dictionary<ItemPrefab, ImmutableHashSet<Identifier>> AllValidContainableItemIdentifiers { get; } = new Dictionary<ItemPrefab, ImmutableHashSet<Identifier>>();
 
-        private int itemIndex = 0;
+        private int itemIndex;
         private AIObjectiveDecontainItem decontainObjective;
         private readonly HashSet<Item> ignoredItems = new HashSet<Item>();
         private Item targetItem;
@@ -54,7 +54,7 @@ namespace Barotrauma
             if (ValidContainableItemIdentifiers.None())
             {
 #if DEBUG
-                DebugConsole.ShowError($"No valid containable item identifiers found for the Load Item objective targeting {Container}");
+                DebugConsole.LogError($"No valid containable item identifiers found for the Load Item objective targeting {Container}");
 #endif
                 Abandon = true;
                 return;
@@ -219,9 +219,8 @@ namespace Barotrauma
             return Priority;
         }
 
-        public override void Update(float deltaTime)
+        protected override void Act(float deltaTime)
         {
-            base.Update(deltaTime);
             if (targetItem == null)
             {
                 if (character.FindItem(ref itemIndex, out Item item, identifiers: ValidContainableItemIdentifiers, ignoreBroken: false, customPredicate: IsValidContainable, customPriorityFunction: GetPriority))
@@ -233,6 +232,7 @@ namespace Barotrauma
                     }
                     targetItem = item;
                 }
+                objectiveManager.GetObjective<AIObjectiveIdle>().Wander(deltaTime);
                 float GetPriority(Item item)
                 {
                     try
@@ -250,17 +250,13 @@ namespace Barotrauma
                     catch (NotImplementedException)
                     {
 #if DEBUG
-                        DebugConsole.ShowError($"Unexpected target condition \"{TargetItemCondition}\" in local function GetConditionBasedProperty");
+                        DebugConsole.LogError($"Unexpected target condition \"{TargetItemCondition}\" in local function GetConditionBasedProperty");
 #endif
                         return 0.0f;
                     }
                 }
             }
-        }
-
-        protected override void Act(float deltaTime)
-        {
-            if (targetItem != null)
+            else
             {
                 if(decontainObjective == null && !IsValidContainable(targetItem))
                 {
@@ -290,10 +286,6 @@ namespace Barotrauma
                         Reset();
                     });
             }
-            else
-            {
-                objectiveManager.GetObjective<AIObjectiveIdle>().Wander(deltaTime);
-            }
         }
 
         private bool IsValidContainable(Item item)
@@ -310,7 +302,7 @@ namespace Barotrauma
                 if (parentItem.HasTag("donttakeitems")) { return false; }
             }
             if (!item.HasAccess(character)) { return false; }
-            if (!character.HasItem(item) && !CanEquip(item)) { return false; }
+            if (!character.HasItem(item) && !CanEquip(item, allowWearing: false)) { return false; }
             if (!ItemContainer.CanBeContained(item)) { return false; }
             if (AIObjectiveLoadItems.ItemMatchesTargetCondition(item, TargetItemCondition)) { return false; }
             if (TargetItemCondition == AIObjectiveLoadItems.ItemCondition.Full)

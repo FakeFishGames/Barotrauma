@@ -1,19 +1,33 @@
-﻿using Barotrauma.Steam;
+﻿#nullable enable
 using System;
 
 namespace Barotrauma.Networking
 {
-    public class PipeConnection : NetworkConnection
+    sealed class PipeEndpoint : Endpoint
     {
-        public PipeConnection(ulong steamId)
-        {
-            EndPointString = "PIPE";
-            SteamID = steamId;
-        }
+        public override string StringRepresentation => "PIPE";
+        
+        public override LocalizedString ServerTypeString => throw new InvalidOperationException();
 
-        public override bool EndpointMatches(string endPoint)
+        public PipeEndpoint() : base(new PipeAddress()) { }
+
+        public override bool Equals(object? obj)
+            => obj is PipeEndpoint;
+
+        public override int GetHashCode() => 1;
+
+        public static bool operator ==(PipeEndpoint a, PipeEndpoint b)
+            => true;
+
+        public static bool operator !=(PipeEndpoint a, PipeEndpoint b)
+            => !(a == b);
+    }
+    
+    sealed class PipeConnection : NetworkConnection
+    {
+        public PipeConnection(AccountId accountId) : base(new PipeEndpoint())
         {
-            return SteamManager.SteamIDStringToUInt64(endPoint) == SteamID || endPoint == "PIPE";
+            SetAccountInfo(new AccountInfo(Option<AccountId>.Some(accountId)));
         }
     }
 }

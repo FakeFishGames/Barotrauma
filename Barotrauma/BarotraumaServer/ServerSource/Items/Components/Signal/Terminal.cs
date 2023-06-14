@@ -23,7 +23,7 @@ namespace Barotrauma.Items.Components
         {
             string newOutputValue = msg.ReadString();
 
-            if (item.CanClientAccess(c))
+            if (item.CanClientAccess(c) && !Readonly)
             {
                 if (newOutputValue.Length > MaxMessageLength)
                 {
@@ -101,11 +101,11 @@ namespace Barotrauma.Items.Components
         {
             if (TryExtractEventData(extraData, out ServerEventData eventData))
             {
-                msg.Write(eventData.MsgToSend);
+                msg.WriteString(eventData.MsgToSend);
             }
             else
             {
-                msg.Write(OutputValue);
+                msg.WriteString(OutputValue);
             }
         }
     }

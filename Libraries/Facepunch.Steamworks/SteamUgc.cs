@@ -15,7 +15,7 @@ namespace Steamworks
 	/// </summary>
 	public class SteamUGC : SteamSharedClass<SteamUGC>
 	{
-		internal static ISteamUGC Internal => Interface as ISteamUGC;
+		internal static ISteamUGC? Internal => Interface as ISteamUGC;
 
 		internal override void InitializeInterface( bool server )
 		{
@@ -44,10 +44,11 @@ namespace Steamworks
 		/// <summary>
 		/// Posted after Download call
 		/// </summary>
-		public static event Action<Result, ulong> OnDownloadItemResult;
+		public static event Action<Result, ulong>? OnDownloadItemResult;
 
 		public static async Task<bool> DeleteFileAsync( PublishedFileId fileId )
 		{
+			if (Internal is null) { return false; }
 			var r = await Internal.DeleteItem( fileId );
 			return r?.Result == Result.OK;
 		}
@@ -60,7 +61,7 @@ namespace Steamworks
 		/// <returns>true if nothing went wrong and the download is started</returns>
 		public static bool Download( PublishedFileId fileId, bool highPriority = false )
 		{
-			return Internal.DownloadItem( fileId, highPriority );
+			return Internal != null && Internal.DownloadItem( fileId, highPriority );
 		}
 
 		/// <summary>
@@ -69,77 +70,71 @@ namespace Steamworks
 		/// <param name="fileId">The ID of the file you want to download</param>
 		/// <param name="progress">An optional callback</param>
 		/// <param name="ct">Allows you to send a message to cancel the download anywhere during the process</param>
-		/// <param name="milisecondsUpdateDelay">How often to call the progress function</param>
+		/// <param name="millisecondsUpdateDelay">How often to call the progress function</param>
 		/// <returns>true if downloaded and installed correctly</returns>
-		public static async Task<bool> DownloadAsync( PublishedFileId fileId, Action<float> progress = null, int milisecondsUpdateDelay = 60, CancellationToken ct = default )
+		public static async Task<bool> DownloadAsync(
+			PublishedFileId fileId,
+			Action<float>? progress = null,
+			int millisecondsUpdateDelay = 60,
+			CancellationToken? ct = null)
 		{
 			var item = new Steamworks.Ugc.Item( fileId );
 
-			if ( ct == default )
-				ct = new CancellationTokenSource( TimeSpan.FromSeconds( 60 ) ).Token;
+			var cancellationToken = ct ?? new CancellationTokenSource(TimeSpan.FromSeconds(60)).Token;
 
+			async Task waitOrCancel()
+			{
+				cancellationToken.ThrowIfCancellationRequested();
+				await Task.Delay(millisecondsUpdateDelay);
+			}
+			
 			progress?.Invoke( 0.0f );
 
-			if ( Download( fileId, highPriority: true ) == false )
-				return item.IsInstalled;
+			Result downloadStartResult = Result.None;
 
-			// Steam docs about Download:
-			// If the return value is true then register and wait
-			// for the Callback DownloadItemResult_t before calling 
-			// GetItemInstallInfo or accessing the workshop item on disk.
-
-			// Wait for DownloadItemResult_t
+			void onDownloadFinished(Result r, ulong id)
 			{
-				Action<Result, ulong> onDownloadStarted = null;
+				if (id != item.Id) { return; }
+				downloadStartResult = r;
+			}
+			OnDownloadItemResult += onDownloadFinished;
 
-				try
+			if (!Download(fileId, highPriority: true)) { return item.IsInstalled; }
+
+			await Task.Delay(500);
+
+			try
+			{
+				while (true)
 				{
-					var downloadStarted = false;
-					
-					onDownloadStarted = (r, id) => downloadStarted = true;
-					OnDownloadItemResult += onDownloadStarted;
+					cancellationToken.ThrowIfCancellationRequested();
 
-					int iters = 0;
-					while ( downloadStarted == false )
+					progress?.Invoke(item.DownloadAmount);
+
+					if (downloadStartResult != Result.None)
 					{
-						ct.ThrowIfCancellationRequested();
-
-						iters++;
-						if (iters >= 1000 / milisecondsUpdateDelay)
-						{
-							if (!item.IsDownloading && !item.IsInstalled)
-							{
-								//force download to start if it's not started
-								if ( Download( fileId, highPriority: true ) == false )
-									return item.IsInstalled;
-							}
-							iters = 0;
-						}
-						await Task.Delay( milisecondsUpdateDelay );
+						if (downloadStartResult != Result.OK) { return false; }
+						break;
 					}
-				}
-				finally
-				{
-					OnDownloadItemResult -= onDownloadStarted;
+
+					if (!item.IsDownloadPending && !item.IsDownloading)
+					{
+						if (item.IsInstalled)
+						{
+							break;
+						}
+						if (!Download(fileId, highPriority: true))
+						{
+							return item.IsInstalled;
+						}
+					}
+
+					await Task.Delay( millisecondsUpdateDelay );
 				}
 			}
-
-			progress?.Invoke( 0.2f );
-			await Task.Delay( milisecondsUpdateDelay );
-
-			//Wait for downloading completion
+			finally
 			{
-				while ( true )
-				{
-					ct.ThrowIfCancellationRequested();
-
-					progress?.Invoke( 0.2f + item.DownloadAmount * 0.8f );
-
-					if ( !item.IsDownloading && item.IsInstalled )
-						break;
-
-					await Task.Delay( milisecondsUpdateDelay );
-				}
+				OnDownloadItemResult -= onDownloadFinished;
 			}
 
 			progress?.Invoke( 1.0f );
@@ -169,28 +164,32 @@ namespace Steamworks
 
 		public static async Task<bool> StartPlaytimeTracking(PublishedFileId fileId)
 		{
+			if (Internal is null) { return false; }
 			var result = await Internal.StartPlaytimeTracking(new[] {fileId}, 1);
-			return result.Value.Result == Result.OK;
+			return result?.Result == Result.OK;
 		}
 		
 		public static async Task<bool> StopPlaytimeTracking(PublishedFileId fileId)
 		{
+			if (Internal is null) { return false; }
 			var result = await Internal.StopPlaytimeTracking(new[] {fileId}, 1);
-			return result.Value.Result == Result.OK;
+			return result?.Result == Result.OK;
 		}
 		
 		public static async Task<bool> StopPlaytimeTrackingForAllItems()
 		{
+			if (Internal is null) { return false; }
 			var result = await Internal.StopPlaytimeTrackingForAllItems();
-			return result.Value.Result == Result.OK;
+			return result?.Result == Result.OK;
 		}
 
-		public static Action<ulong> GlobalOnItemInstalled;
+		public static Action<ulong>? GlobalOnItemInstalled;
 
-		public static uint NumSubscribedItems { get { return Internal.GetNumSubscribedItems(); } }
+		public static uint NumSubscribedItems { get { return Internal?.GetNumSubscribedItems() ?? 0; } }
 
 		public static PublishedFileId[] GetSubscribedItems()
 		{
+			if (Internal is null) { return Array.Empty<PublishedFileId>(); }
 			uint numSubscribed = NumSubscribedItems;
 			PublishedFileId[] ids = new PublishedFileId[numSubscribed];
 			Internal.GetSubscribedItems(ids, numSubscribed);

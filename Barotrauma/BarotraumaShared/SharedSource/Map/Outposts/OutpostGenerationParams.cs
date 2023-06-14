@@ -23,78 +23,109 @@ namespace Barotrauma
             get { return allowedLocationTypes; } 
         }
 
-        [Serialize(10, IsPropertySaveable.Yes), Editable(MinValueInt = 1, MaxValueInt = 50)]
+
+        [Serialize(-1, IsPropertySaveable.Yes, description: "Should this type of outpost be forced to the locations at the end of the campaign map? 0 = first end level, 1 = second end level, and so on."), Editable(MinValueInt = -1, MaxValueInt = 10)]
+        public int ForceToEndLocationIndex
+        {
+            get;
+            set;
+        }
+
+
+        [Serialize(10, IsPropertySaveable.Yes, description: "Total number of modules in the outpost."), Editable(MinValueInt = 1, MaxValueInt = 50)]
         public int TotalModuleCount
         {
             get;
             set;
         }
 
-        [Serialize(200.0f, IsPropertySaveable.Yes), Editable(MinValueFloat = 0.0f, MaxValueFloat = 1000.0f)]
+        [Serialize(true, IsPropertySaveable.Yes, description: "Should the generator append generic (module flag \"none\") modules to the outpost to reach the total module count."), Editable]
+        public bool AppendToReachTotalModuleCount
+        {
+            get;
+            set;
+        }
+
+        [Serialize(200.0f, IsPropertySaveable.Yes, description: "Minimum length of the hallways between modules. If 0, the generator will place the modules directly against each other assuming it can be done without making any modules overlap."), Editable(MinValueFloat = 0.0f, MaxValueFloat = 1000.0f)]
         public float MinHallwayLength
         {
             get;
             set;
         }
 
-        [Serialize(false, IsPropertySaveable.Yes), Editable]
+        [Serialize(false, IsPropertySaveable.Yes, description: "Should this outpost always be destructible, regardless if damaging outposts is allowed by the server?"), Editable]
         public bool AlwaysDestructible
         {
             get;
             set;
         }
 
-        [Serialize(false, IsPropertySaveable.Yes), Editable]
+        [Serialize(false, IsPropertySaveable.Yes, description: "Should this outpost always be rewireable, regardless if rewiring is allowed by the server?"), Editable]
         public bool AlwaysRewireable
         {
             get;
             set;
         }
 
-        [Serialize(false, IsPropertySaveable.Yes), Editable]
+        [Serialize(false, IsPropertySaveable.Yes, description: "Should stealing from this outpost be always allowed?"), Editable]
         public bool AllowStealing
         {
             get;
             set;
         }
 
-        [Serialize(true, IsPropertySaveable.Yes), Editable]
+        [Serialize(true, IsPropertySaveable.Yes, description: "Should the crew spawn inside the outpost (if not, they'll spawn in the submarine)."), Editable]
         public bool SpawnCrewInsideOutpost
         {
             get;
             set;
         }
         
-        [Serialize(true, IsPropertySaveable.Yes), Editable]
+        [Serialize(true, IsPropertySaveable.Yes, description: "Should doors at the edges of an outpost module that didn't get connected to another module be locked?"), Editable]
         public bool LockUnusedDoors
         {
             get;
             set;
         }
 
-        [Serialize(true, IsPropertySaveable.Yes), Editable]
+        [Serialize(true, IsPropertySaveable.Yes, description: "Should gaps at the edges of an outpost module that didn't get connected to another module be removed?"), Editable]
         public bool RemoveUnusedGaps
         {
             get;
             set;
         }
 
-        [Serialize(0.0f, IsPropertySaveable.Yes), Editable(MinValueFloat = 0.0f, MaxValueFloat = 100.0f)]
+        [Serialize(false, IsPropertySaveable.Yes, description: "Should the whole outpost render behind submarines? Only set this to true if the submarine is intended to go inside the outpost."), Editable]
+        public bool DrawBehindSubs
+        {
+            get;
+            set;
+        }
+
+        [Serialize(0.0f, IsPropertySaveable.Yes, description: "Minimum amount of water in the hulls of the outpost."), Editable(MinValueFloat = 0.0f, MaxValueFloat = 100.0f)]
         public float MinWaterPercentage
         {
             get;
             set;
         }
 
-        [Serialize(0.0f, IsPropertySaveable.Yes), Editable(MinValueFloat = 0.0f, MaxValueFloat = 100.0f)]
+        [Serialize(0.0f, IsPropertySaveable.Yes, description: "Maximum amount of water in the hulls of the outpost."), Editable(MinValueFloat = 0.0f, MaxValueFloat = 100.0f)]
         public float MaxWaterPercentage
         {
             get;
             set;
         }
 
-        [Serialize("", IsPropertySaveable.Yes), Editable]
+        public LevelData.LevelType? LevelType
+        {
+            get;
+            set;
+        }
+
+        [Serialize("", IsPropertySaveable.Yes, description: "Identifier of the outpost generation parameters that should be used if this outpost has become critically irradiated."), Editable]
         public string ReplaceInRadiation { get; set; }
+
+        public ContentPath OutpostFilePath { get; set; }
 
         public class ModuleCount
         {
@@ -102,17 +133,21 @@ namespace Barotrauma
             public int Count;
             public int Order;
 
+            public Identifier RequiredFaction;
+
             public ModuleCount(ContentXElement element)
             {
                 Identifier = element.GetAttributeIdentifier("flag", element.GetAttributeIdentifier("moduletype", ""));
                 Count = element.GetAttributeInt("count", 0);
                 Order = element.GetAttributeInt("order", 0);
+                RequiredFaction = element.GetAttributeIdentifier("requiredfaction", Identifier.Empty);
             }
 
             public ModuleCount(Identifier id, int count)
             {
                 Identifier = id;
                 Count = count;
+                RequiredFaction = Identifier.Empty;
             }
         }
 
@@ -130,16 +165,20 @@ namespace Barotrauma
                 private readonly HumanPrefab humanPrefab = null;
                 private readonly Identifier setIdentifier = Identifier.Empty;
                 private readonly Identifier npcIdentifier = Identifier.Empty;
+
+                public readonly Identifier FactionIdentifier = Identifier.Empty;
                 
-                public Entry(HumanPrefab humanPrefab)
+                public Entry(HumanPrefab humanPrefab, Identifier factionIdentifier)
                 {
                     this.humanPrefab = humanPrefab;
+                    this.FactionIdentifier = factionIdentifier;
                 }
 
-                public Entry(Identifier setIdentifier, Identifier npcIdentifier)
+                public Entry(Identifier setIdentifier, Identifier npcIdentifier, Identifier factionIdentifier)
                 {
                     this.setIdentifier = setIdentifier;
                     this.npcIdentifier = npcIdentifier;
+                    this.FactionIdentifier = factionIdentifier;
                 }
                 
                 public HumanPrefab HumanPrefab
@@ -148,29 +187,41 @@ namespace Barotrauma
 
             private readonly List<Entry> entries = new List<Entry>();
 
-            public void Add(HumanPrefab humanPrefab)
-                => entries.Add(new Entry(humanPrefab));
+            public void Add(HumanPrefab humanPrefab, Identifier factionIdentifier)
+                => entries.Add(new Entry(humanPrefab, factionIdentifier));
             
             
-            public void Add(Identifier setIdentifier, Identifier npcIdentifier)
-                => entries.Add(new Entry(setIdentifier, npcIdentifier));
+            public void Add(Identifier setIdentifier, Identifier npcIdentifier, Identifier factionIdentifier)
+                => entries.Add(new Entry(setIdentifier, npcIdentifier, factionIdentifier));
 
             public IEnumerator<HumanPrefab> GetEnumerator()
             {
                 foreach (var entry in entries)
                 {
+                    if (entry == null) { continue; }
                     yield return entry.HumanPrefab;
                 }
             }
 
             IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
+            public IEnumerable<HumanPrefab> GetByFaction(IEnumerable<FactionPrefab> factions)
+            {
+                foreach (var entry in entries)
+                {
+                    if (entry.FactionIdentifier == Identifier.Empty || factions.Any(f => f.Identifier == entry.FactionIdentifier))
+                    {
+                        yield return entry.HumanPrefab;
+                    }
+                }
+            }
+
             public int Count => entries.Count;
 
             public HumanPrefab this[int index] => entries[index].HumanPrefab;
         }
         
-        private readonly ImmutableArray<IReadOnlyList<HumanPrefab>> humanPrefabCollections;
+        private readonly ImmutableArray<NpcCollection> humanPrefabCollections;
 
         public Dictionary<Identifier, SerializableProperty> SerializableProperties { get; private set; }
 
@@ -182,8 +233,23 @@ namespace Barotrauma
             Name = element.GetAttributeString("name", Identifier.Value);
             allowedLocationTypes = element.GetAttributeIdentifierArray("allowedlocationtypes", Array.Empty<Identifier>()).ToHashSet();
             SerializableProperties = SerializableProperty.DeserializeProperties(this, element);
+
+            if (element.GetAttribute("leveltype") != null)
+            {
+                string levelTypeStr = element.GetAttributeString("leveltype", "");
+                if (Enum.TryParse(levelTypeStr, out LevelData.LevelType parsedLevelType))
+                {
+                    LevelType = parsedLevelType;
+                }
+                else
+                {
+                    DebugConsole.ThrowError($"Error in outpost generation parameters \"{Identifier}\". \"{levelTypeStr}\" is not a valid level type.");
+                }
+            }
+
+            OutpostFilePath = element.GetAttributeContentPath(nameof(OutpostFilePath));
             
-            var humanPrefabCollections = new List<IReadOnlyList<HumanPrefab>>();
+            var humanPrefabCollections = new List<NpcCollection>();
             foreach (var subElement in element.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
@@ -196,14 +262,14 @@ namespace Barotrauma
                         foreach (var npcElement in subElement.Elements())
                         {
                             Identifier from = npcElement.GetAttributeIdentifier("from", Identifier.Empty);
-
+                            Identifier faction = npcElement.GetAttributeIdentifier("faction", Identifier.Empty);
                             if (from != Identifier.Empty)
                             {
-                                newCollection.Add(from, npcElement.GetAttributeIdentifier("identifier", Identifier.Empty));
+                                newCollection.Add(from, npcElement.GetAttributeIdentifier("identifier", Identifier.Empty), faction);
                             }
                             else
                             {
-                                newCollection.Add(new HumanPrefab(npcElement, file));
+                                newCollection.Add(new HumanPrefab(npcElement, file, npcSetIdentifier: from), faction);
                             }
                         }
                         humanPrefabCollections.Add(newCollection);
@@ -251,10 +317,27 @@ namespace Barotrauma
             }
         }
 
-        public IReadOnlyList<HumanPrefab> GetHumanPrefabs(Rand.RandSync randSync)
+        public IReadOnlyList<HumanPrefab> GetHumanPrefabs(IEnumerable<FactionPrefab> factions, Rand.RandSync randSync)
         {
             if (!humanPrefabCollections.Any()) { return Array.Empty<HumanPrefab>(); }
-            return humanPrefabCollections.GetRandom(randSync);
+
+            var collection = humanPrefabCollections.GetRandom(randSync);
+            return collection.GetByFaction(factions).ToImmutableList();
+        }
+
+        public bool CanHaveCampaignInteraction(CampaignMode.InteractionType interactionType)
+        {
+            foreach (var collection in humanPrefabCollections)
+            {
+                foreach (var prefab in collection)
+                {
+                    if (prefab != null && prefab.CampaignInteractionType == interactionType)
+                    {
+                        return true;
+                    }
+                }
+            }
+            return false;
         }
 
         public ImmutableHashSet<Identifier> GetStoreIdentifiers()

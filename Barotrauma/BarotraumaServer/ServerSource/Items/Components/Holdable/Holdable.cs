@@ -10,13 +10,13 @@ namespace Barotrauma.Items.Components
             base.ServerEventWrite(msg, c, extraData);
 
             bool writeAttachData = attachable && body != null;
-            msg.Write(writeAttachData);
+            msg.WriteBoolean(writeAttachData);
             if (!writeAttachData) { return; }
 
-            msg.Write(Attached);
-            msg.Write(body.SimPosition.X);
-            msg.Write(body.SimPosition.Y);
-            msg.Write(item.Submarine?.ID ?? Entity.NullEntityID);
+            msg.WriteBoolean(Attached);
+            msg.WriteSingle(body.SimPosition.X);
+            msg.WriteSingle(body.SimPosition.Y);
+            msg.WriteUInt16(item.Submarine?.ID ?? Entity.NullEntityID);
         }
 
         public void ServerEventRead(IReadMessage msg, Client c)

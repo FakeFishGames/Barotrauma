@@ -1,8 +1,5 @@
-using Barotrauma.Extensions;
-using Microsoft.Xna.Framework;
 using System.Collections.Generic;
 using System.Linq;
-using System.Xml.Linq;
 
 namespace Barotrauma
 {
@@ -16,6 +13,12 @@ namespace Barotrauma
 
         [Serialize(true, IsPropertySaveable.Yes)]
         public bool Follow { get; set; }
+
+        [Serialize(-1, IsPropertySaveable.Yes)]
+        public int MaxTargets { get; set; }
+
+        [Serialize(true, IsPropertySaveable.Yes)]
+        public bool AbandonOnReset { get; set; }
 
         private bool isFinished = false;
 
@@ -32,16 +35,18 @@ namespace Barotrauma
             target = ParentEvent.GetTargets(TargetTag).FirstOrDefault();
             if (target == null) { return; }
 
+            int targetCount = 0;
             affectedNpcs = ParentEvent.GetTargets(NPCTag).Where(c => c is Character).Select(c => c as Character).ToList();
             foreach (var npc in affectedNpcs)
             {
-                if (!(npc.AIController is HumanAIController humanAiController)) { continue; }
+                if (npc.AIController is not HumanAIController humanAiController) { continue; }
 
                 if (Follow)
                 {
                     var newObjective = new AIObjectiveGoTo(target, npc, humanAiController.ObjectiveManager, repeat: true)
                     {
-                        OverridePriority = 100.0f
+                        OverridePriority = 100.0f,
+                        IsFollowOrderObjective = true
                     };
                     humanAiController.ObjectiveManager.AddObjective(newObjective);
                     humanAiController.ObjectiveManager.WaitTimer = 0.0f;
@@ -56,6 +61,11 @@ namespace Barotrauma
                         }
                     }
                 }
+                targetCount++;
+                if (MaxTargets > -1 && targetCount >= MaxTargets)
+                {
+                    break;
+                }
             }
             isFinished = true;
         }
@@ -67,11 +77,11 @@ namespace Barotrauma
 
         public override void Reset()
         {
-            if (affectedNpcs != null && target != null)
+            if (affectedNpcs != null && target != null && AbandonOnReset)
             {
                 foreach (var npc in affectedNpcs)
                 {
-                    if (npc.Removed || !(npc.AIController is HumanAIController humanAiController)) { continue; }
+                    if (npc.Removed || npc.AIController is not HumanAIController humanAiController) { continue; }
                     foreach (var goToObjective in humanAiController.ObjectiveManager.GetActiveObjectives<AIObjectiveGoTo>())
                     {
                         if (goToObjective.Target == target)

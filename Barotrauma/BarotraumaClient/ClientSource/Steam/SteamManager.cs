@@ -16,6 +16,9 @@ namespace Barotrauma.Steam
         private static readonly List<Identifier> initializationErrors = new List<Identifier>();
         public static IReadOnlyList<Identifier> InitializationErrors => initializationErrors;
 
+        private static bool IsInitializedProjectSpecific
+            => Steamworks.SteamClient.IsValid && Steamworks.SteamClient.IsLoggedOn;
+
         private static void InitializeProjectSpecific()
         {
             if (IsInitialized) { return; }
@@ -23,12 +26,11 @@ namespace Barotrauma.Steam
             try
             {
                 Steamworks.SteamClient.Init(AppID, false);
-                IsInitialized = Steamworks.SteamClient.IsLoggedOn && Steamworks.SteamClient.IsValid;
 
                 if (IsInitialized)
                 {
                     DebugConsole.NewMessage(
-                        $"Logged in as {GetUsername()} (SteamID {SteamIDUInt64ToString(GetSteamID())})");
+                        $"Logged in as {GetUsername()} (SteamID {(GetSteamId().TryUnwrap(out var steamId) ? steamId.ToString() : "[NULL]")})");
 
                     popularTags.Clear();
                     int i = 0;
@@ -43,13 +45,11 @@ namespace Barotrauma.Steam
             }
             catch (DllNotFoundException)
             {
-                IsInitialized = false;
                 initializationErrors.Add("SteamDllNotFound".ToIdentifier());
             }
             catch (Exception e)
             {
                 DebugConsole.ThrowError("SteamManager initialization threw an exception", e);
-                IsInitialized = false;
                 initializationErrors.Add("SteamClientInitFailed".ToIdentifier());
             }
 
@@ -73,7 +73,13 @@ namespace Barotrauma.Steam
                 
                 //This callback seems to take place when the item has been downloaded recently and an update
                 //or a redownload has taken place
-                Steamworks.SteamUGC.OnDownloadItemResult += (result, id) => Workshop.OnItemDownloadComplete(id);
+                Steamworks.SteamUGC.OnDownloadItemResult += (result, id) =>
+                {
+                    if (result == Steamworks.Result.OK)
+                    {
+                        Workshop.OnItemDownloadComplete(id);
+                    }
+                };
                 
                 //Maybe I'm completely wrong! All I know is that we need to handle both!
             }
@@ -129,7 +135,7 @@ namespace Barotrauma.Steam
         }
         
         
-        public static bool OverlayCustomURL(string url)
+        public static bool OverlayCustomUrl(string url)
         {
             if (!IsInitialized || !Steamworks.SteamClient.IsValid)
             {
@@ -138,6 +144,11 @@ namespace Barotrauma.Steam
 
             Steamworks.SteamFriends.OpenWebOverlay(url);
             return true;
+        }
+
+        public static void OverlayProfile(SteamId steamId)
+        {
+            OverlayCustomUrl($"https://steamcommunity.com/profiles/{steamId.Value}");
         }
     }
 }

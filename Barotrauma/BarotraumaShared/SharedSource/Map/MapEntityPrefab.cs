@@ -10,6 +10,7 @@ namespace Barotrauma
     [Flags]
     enum MapEntityCategory
     {
+        None = 0,
         Structure = 1, 
         Decorative = 2,
         Machine = 4,
@@ -173,6 +174,9 @@ namespace Barotrauma
         
         public abstract Sprite Sprite { get; }
 
+        public virtual bool CanSpriteFlipX { get; } = false;
+        public virtual bool CanSpriteFlipY { get; } = false;
+
         public abstract string OriginalName { get; }
 
         public abstract LocalizedString Name { get; }
@@ -279,6 +283,30 @@ namespace Barotrauma
             if (this is LinkedSubmarinePrefab && target.Tags.Contains("dock".ToIdentifier())) { return true; }
             return AllowedLinks.Contains(target.Identifier) || target.AllowedLinks.Contains(Identifier)
                    || target.Tags.Any(t => AllowedLinks.Contains(t)) || Tags.Any(t => target.AllowedLinks.Contains(t));
+        }
+
+        protected void LoadDescription(ContentXElement element)
+        {
+            Identifier descriptionIdentifier = element.GetAttributeIdentifier("descriptionidentifier", "");
+            Identifier nameIdentifier = element.GetAttributeIdentifier("nameidentifier", "");
+
+            string originalDescription = Description.Value;
+            if (descriptionIdentifier != Identifier.Empty)
+            {
+                Description = TextManager.Get($"EntityDescription.{descriptionIdentifier}");
+            }
+            else if (nameIdentifier == Identifier.Empty)
+            {
+                Description = TextManager.Get($"EntityDescription.{Identifier}");
+            }
+            else
+            {
+                Description = TextManager.Get($"EntityDescription.{nameIdentifier}");
+            }
+            if (!originalDescription.IsNullOrEmpty())
+            {
+                Description = Description.Fallback(originalDescription);
+            }
         }
     }
 }
