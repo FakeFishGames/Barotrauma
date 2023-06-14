@@ -235,7 +235,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public override bool AIOperate(float deltaTime, Character character, AIObjectiveOperateItem objective)
+        public override bool CrewAIOperate(float deltaTime, Character character, AIObjectiveOperateItem objective)
         {
 #if CLIENT
             if (GameMain.Client != null) { return false; }

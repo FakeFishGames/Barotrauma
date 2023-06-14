@@ -39,16 +39,10 @@ namespace Barotrauma
         public DelayedEffect(ContentXElement element, string parentDebugName)
             : base(element, parentDebugName)
         {
-            string delayTypeStr = element.GetAttributeString("delaytype", "timer");
-            if (!Enum.TryParse(typeof(DelayTypes), delayTypeStr, ignoreCase: true, out var delayType))
+            DelayTypes delayTypeAttr = element.GetAttributeEnum("delaytype", DelayTypes.Timer);
+            if (delayTypeAttr is DelayTypes.Timer)
             {
-                DebugConsole.ThrowError("Invalid delay type \"" + delayTypeStr + "\" in StatusEffect (" + parentDebugName + ")");
-            }
-            switch (delayType)
-            {
-                case DelayTypes.Timer:
-                    delay = element.GetAttributeFloat("delay", 1.0f);
-                    break;
+                delay = element.GetAttributeFloat("delay", 1.0f);
             }
         }
 

@@ -8,44 +8,85 @@ using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
+    /// <summary>
+    /// Used by various features to define different kinds of relations between items: 
+    /// for example, which item a character must have equipped to interact with some item in some way, 
+    /// which items can go inside a container, or which kind of item the target of a status effect must have for the effect to execute.
+    /// </summary>
     class RelatedItem
     {
         public enum RelationType
         {
             None,
+            /// <summary>
+            /// The item must be contained inside the item this relation is defined in. 
+            /// Can for example by used to make an item usable only when there's a specific kind of item inside it.
+            /// </summary>
             Contained,
+            /// <summary>
+            /// The user must have equipped the item (i.e. held or worn).
+            /// </summary>
             Equipped,
+            /// <summary>
+            /// The user must have picked up the item (i.e. the item needs to be in the user's inventory).
+            /// </summary>
             Picked,
+            /// <summary>
+            /// The item this relation is defined in must be inside a specific kind of container. 
+            /// Can for example by used to make an item do something when it's inside some other type of item.
+            /// </summary>
             Container
         }
 
-        public bool IsOptional { get; set; }
-
+        /// <summary>
+        /// Should an empty inventory be considered valid? Can be used to, for example, make an item do something if there's a specific item, or nothing, inside it.
+        /// </summary>
         public bool MatchOnEmpty { get; set; }
 
+        /// <summary>
+        /// Should only an empty inventory be considered valid? Can be used to, for example, make an item do something when there's nothing inside it.
+        /// </summary>
         public bool RequireEmpty { get; set; }
 
+        /// <summary>
+        /// Only valid for the RequiredItems of an ItemComponent. Can be used to ignore the requirement in the submarine editor, 
+        /// making it easier to for example make rewire things that require some special tool to rewire.
+        /// </summary>
         public bool IgnoreInEditor { get; set; }
 
+        /// <summary>
+        /// Identifier(s) or tag(s) of the items that are NOT considered valid. 
+        /// Can be used to, for example, exclude some specific items when using tags that apply to multiple items.
+        /// </summary>
         public ImmutableHashSet<Identifier> ExcludedIdentifiers { get; private set; }
 
         private RelationType type;
 
         public List<StatusEffect> statusEffects;
-        
+
+        /// <summary>
+        /// Only valid for the RequiredItems of an ItemComponent. A message displayed if the required item isn't found (e.g. a notification about lack of ammo or fuel).
+        /// </summary>
         public LocalizedString Msg;
+
+        /// <summary>
+        /// Only valid for the RequiredItems of an ItemComponent. The localization tag of a message displayed if the required item isn't found (e.g. a notification about lack of ammo or fuel).
+        /// </summary>
         public Identifier MsgTag;
 
         /// <summary>
-        /// Should broken (0 condition) items be excluded
+        /// Should broken (0 condition) items be excluded?
         /// </summary>
         public bool ExcludeBroken { get; private set; }
 
         /// <summary>
-        /// Should full condition (100%) items be excluded
+        /// Should full condition (100%) items be excluded?
         /// </summary>
         public bool ExcludeFullCondition { get; private set; }
 
+        /// <summary>
+        /// Are item variants considered valid?
+        /// </summary>
         public bool AllowVariants { get; private set; } = true;
 
         public RelationType Type
@@ -59,23 +100,33 @@ namespace Barotrauma
         public int TargetSlot = -1;
 
         /// <summary>
-        /// The slot type the target must be in when targeting an item contained inside a character's inventory
-        /// </summary>
-        public InvSlotType CharacterInventorySlotType;
-
-        /// <summary>
-        /// Overrides the position defined in ItemContainer.
+        /// Overrides the position defined in ItemContainer. Only valid when used in the Containable definitions of an ItemContainer.
         /// </summary>
         public Vector2? ItemPos;
 
         /// <summary>
-        /// Only affects when ItemContainer.hideItems is false. Doesn't override the value.
+        ///  Only valid when used in the Containable definitions of an ItemContainer.
+        ///  Only affects when ItemContainer.hideItems is false. Doesn't override the value.
         /// </summary>
-        public bool? Hide;
+        public bool Hide;
 
+        /// <summary>
+        ///  Only valid when used in the Containable definitions of an ItemContainer. 
+        ///  Can be used to override the rotation of specific items in the container.
+        /// </summary>
         public float Rotation;
 
+        /// <summary>
+        ///  Only valid when used in the Containable definitions of an ItemContainer. 
+        ///  Can be used to force specific items to stay active inside the container (such as flashlights attached to a gun).
+        /// </summary>
         public bool SetActive;
+
+        /// <summary>
+        /// Only valid for the RequiredItems of an ItemComponent. Can be used to make the requirement optional, 
+        /// meaning that you don't need to have the item to interact with something, but having it may still affect what the interaction does (such as using a crowbar on a door).
+        /// </summary>
+        public bool IsOptional { get; set; }
 
         public string JoinedIdentifiers
         {
@@ -88,6 +139,9 @@ namespace Barotrauma
             }
         }
 
+        /// <summary>
+        /// Identifier(s) or tag(s) of the items that are considered valid.
+        /// </summary>
         public ImmutableHashSet<Identifier> Identifiers { get; private set; }
 
         public string JoinedExcludedIdentifiers
@@ -105,10 +159,6 @@ namespace Barotrauma
         {
             if (item == null) { return false; }
             if (ExcludedIdentifiers.Contains(item.Prefab.Identifier)) { return false; }
-            if ((item.ParentInventory?.Owner is Character character) && (CharacterInventorySlotType != InvSlotType.None))
-            {
-                if (!character.HasEquippedItem(item, CharacterInventorySlotType)) { return false; }
-            }
             foreach (var excludedIdentifier in ExcludedIdentifiers)
             {
                 if (item.HasTag(excludedIdentifier)) { return false; }
@@ -206,11 +256,14 @@ namespace Barotrauma
             bool isEmpty = parentItem.OwnInventory.IsEmpty();
             if (RequireEmpty && !isEmpty) { return false; }
             if (MatchOnEmpty && isEmpty) { return true; }
-            foreach (Item contained in parentItem.ContainedItems)
+            foreach (var container in parentItem.GetComponents<Items.Components.ItemContainer>())
             {
-                if (TargetSlot > -1 && parentItem.OwnInventory.FindIndex(contained) != TargetSlot) { continue; }
-                if ((!ExcludeBroken || contained.Condition > 0.0f) && (!ExcludeFullCondition || !contained.IsFullCondition) && MatchesItem(contained)) { return true; }
-                if (CheckContained(contained)) { return true; }
+                foreach (Item contained in container.Inventory.AllItems)
+                {
+                    if (TargetSlot > -1 && parentItem.OwnInventory.FindIndex(contained) != TargetSlot) { continue; }
+                    if ((!ExcludeBroken || contained.Condition > 0.0f) && (!ExcludeFullCondition || !contained.IsFullCondition) && MatchesItem(contained)) { return true; }
+                    if (CheckContained(contained)) { return true; }
+                }
             }
             return false;
         }
@@ -220,7 +273,6 @@ namespace Barotrauma
             element.Add(
                 new XAttribute("items", JoinedIdentifiers),
                 new XAttribute("type", type.ToString()),
-                new XAttribute("characterinventoryslottype", CharacterInventorySlotType.ToString()),
                 new XAttribute("optional", IsOptional),
                 new XAttribute("ignoreineditor", IgnoreInEditor),
                 new XAttribute("excludebroken", ExcludeBroken),
@@ -231,9 +283,9 @@ namespace Barotrauma
                 new XAttribute("rotation", Rotation),
                 new XAttribute("setactive", SetActive));
 
-            if (Hide.HasValue)
+            if (Hide)
             {
-                element.Add(new XAttribute(nameof(Hide), Hide.Value));
+                element.Add(new XAttribute(nameof(Hide), true));
             }
             if (ItemPos.HasValue)
             {
@@ -298,22 +350,9 @@ namespace Barotrauma
 
             if (identifiers.Length == 0 && excludedIdentifiers.Length == 0 && !returnEmpty) { return null; }
 
-            InvSlotType slottype;
-            try
-            {
-                slottype = Enum.Parse<InvSlotType>(element.GetAttributeString("characterinventoryslottype", "None"));
-            }
-            catch (ArgumentException)
-            {
-                DebugConsole.ThrowError("Error in RelatedItem config (" + parentDebugName + ") - invalid characterinventoryslottype (" + (element.GetAttributeString("characterinventoryslottype", "None")) + "). Check spelling/capitalization.");
-                slottype = InvSlotType.None;
-            }
-
-
             RelatedItem ri = new RelatedItem(identifiers, excludedIdentifiers)
             {
                 ExcludeBroken = element.GetAttributeBool("excludebroken", true),
-                CharacterInventorySlotType = slottype,
                 RequireEmpty = element.GetAttributeBool("requireempty", false),
                 ExcludeFullCondition = element.GetAttributeBool("excludefullcondition", false),
                 AllowVariants = element.GetAttributeBool("allowvariants", true),

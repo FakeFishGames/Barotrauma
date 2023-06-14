@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Security.Cryptography;
+using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 
@@ -22,7 +23,7 @@ namespace Barotrauma
                        : string.Empty);
         }
 
-        public static readonly Version MinimumHashCompatibleVersion = new Version(0, 18, 13, 0);
+        public static readonly Version MinimumHashCompatibleVersion = new Version(1, 0, 13, 2);
         
         public const string LocalModsDir = "LocalMods";
         public static readonly string WorkshopModsDir = Barotrauma.IO.Path.Combine(
@@ -42,7 +43,7 @@ namespace Barotrauma
         public readonly Version GameVersion;
         public readonly string ModVersion;
         public Md5Hash Hash { get; private set; }
-        public readonly Option<DateTime> InstallTime;
+        public readonly Option<SerializableDateTime> InstallTime;
 
         public ImmutableArray<ContentFile> Files { get; private set; }
         
@@ -73,7 +74,7 @@ namespace Barotrauma
             
             Steamworks.Ugc.Item? item = await SteamManager.Workshop.GetItem(steamWorkshopId.Value);
             if (item is null) { return true; }
-            return item.Value.LatestUpdateTime <= installTime;
+            return item.Value.LatestUpdateTime <= installTime.ToUtcValue();
         }
 
         public int Index => ContentPackageManager.EnabledPackages.IndexOf(this);
@@ -106,10 +107,7 @@ namespace Barotrauma
 
             GameVersion = rootElement.GetAttributeVersion("gameversion", GameMain.Version);
             ModVersion = rootElement.GetAttributeString("modversion", DefaultModVersion);
-            UInt64 installTimeUnix = rootElement.GetAttributeUInt64("installtime", 0);
-            InstallTime = installTimeUnix != 0
-                ? Option<DateTime>.Some(ToolBox.Epoch.ToDateTime(installTimeUnix))
-                : Option<DateTime>.None();
+            InstallTime = rootElement.GetAttributeDateTime("installtime");
 
             var fileResults = rootElement.Elements()
                 .Select(e => ContentFile.CreateFromXElement(this, e))
@@ -179,7 +177,7 @@ namespace Barotrauma
             }
         }
 
-        public Md5Hash CalculateHash(bool logging = false)
+        public Md5Hash CalculateHash(bool logging = false, string? name = null, string? modVersion = null)
         {
             using IncrementalHash incrementalHash = IncrementalHash.CreateHash(HashAlgorithmName.MD5);
             
@@ -206,7 +204,14 @@ namespace Barotrauma
                     break;
                 }             
             }
-            
+
+            string selectedName = name ?? Name;
+            if (!selectedName.IsNullOrEmpty())
+            {
+                incrementalHash.AppendData(Encoding.UTF8.GetBytes(selectedName));
+            }
+            incrementalHash.AppendData(Encoding.UTF8.GetBytes(modVersion ?? ModVersion));
+
             var md5Hash = Md5Hash.BytesAsHash(incrementalHash.GetHashAndReset());
             if (logging)
             {
@@ -288,9 +293,7 @@ namespace Barotrauma
 
                     if (errorCatcher.Errors.Any())
                     {
-                        yield return ContentPackageManager.LoadProgress.Failure(
-                            ContentPackageManager.LoadProgress.Error
-                                .Reason.ConsoleErrorsThrown);
+                        yield return ContentPackageManager.LoadProgress.Failure(errorCatcher.Errors.Select(e => e.Text));
                         yield break;
                     }
                     yield return ContentPackageManager.LoadProgress.Progress((i + indexOffset) / (float)Files.Length);

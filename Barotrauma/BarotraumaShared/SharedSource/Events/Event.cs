@@ -9,6 +9,8 @@ namespace Barotrauma
         public event Action Finished;
         protected bool isFinished;
 
+        public int RandomSeed;
+
         protected readonly EventPrefab prefab;
         
         public EventPrefab Prefab => prefab;

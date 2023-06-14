@@ -438,7 +438,7 @@ namespace Barotrauma
             }
             else
             {
-                if ((PlayerInput.LeftButtonClicked() || PlayerInput.RightButtonClicked()) && selected) 
+                if ((PlayerInput.PrimaryMouseButtonClicked() || PlayerInput.SecondaryMouseButtonClicked()) && selected)
                 {
                     if (!mouseHeldInside) { Deselect(); }
                     mouseHeldInside = false;
@@ -801,6 +801,7 @@ namespace Barotrauma
                     IEnumerable<GUITextBox> GetAndSortTextBoxes(GUIComponent parent) => parent.GetAllChildren<GUITextBox>().OrderBy(t => t.Rect.Y).ThenBy(t => t.Rect.X);
                     GUITextBox SelectNextTextBox(GUIListBox listBox)
                     {
+                        if (listBox?.SelectedComponent == null) { return null; }
                         var textBoxes = GetAndSortTextBoxes(listBox.SelectedComponent);
                         if (textBoxes.Any())
                         {

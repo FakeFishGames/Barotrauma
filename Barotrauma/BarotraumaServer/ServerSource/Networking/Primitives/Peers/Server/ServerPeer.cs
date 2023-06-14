@@ -24,11 +24,28 @@ namespace Barotrauma.Networking
         }
 
         protected readonly Callbacks callbacks;
+        private readonly ImmutableArray<ContentPackage> contentPackages;
 
         protected ServerPeer(Callbacks callbacks)
         {
             this.callbacks = callbacks;
-        }
+
+            List<ContentPackage> contentPackageList = new List<ContentPackage>();
+            foreach (var cp in ContentPackageManager.EnabledPackages.All)
+            {
+                if (!cp.Files.Any()) { continue; }
+                if (!cp.HasMultiplayerSyncedContent && !cp.Files.All(f => f is SubmarineFile)) { continue; }
+                if (cp.UgcId.TryUnwrap(out var id1) &&
+                    contentPackageList.FirstOrDefault(cp => cp.UgcId.TryUnwrap(out var id2) && id1.Equals(id2)) is ContentPackage existingPackage)
+                {
+                    //there can be multiple enabled mods with the same UgcId if the player has e.g. created a local copy of a workshop mod
+                    DebugConsole.AddWarning($"The content package \"{existingPackage.Name}\" ({existingPackage.Path}) has the same id as \"{cp.Name}\" ({cp.Path}). Ignoring the latter package.");
+                    continue; 
+                }
+                contentPackageList.Add(cp);
+            }
+            contentPackages = contentPackageList.ToImmutableArray();
+    }
         
         public abstract void InitializeSteamServerCallbacks();
 
@@ -71,7 +88,7 @@ namespace Barotrauma.Networking
         protected List<NetworkConnection> connectedClients = null!;
         protected List<PendingClient> pendingClients = null!;
         protected ServerSettings serverSettings = null!;
-        protected Option<int> ownerKey = null!;
+        protected Option<int> ownerKey = Option.None;
         protected NetworkConnection? OwnerConnection;
 
         protected void ReadConnectionInitializationStep(PendingClient pendingClient, IReadMessage inc, ConnectionInitialization initializationStep)
@@ -246,13 +263,11 @@ namespace Barotrauma.Networking
             {
                 case ConnectionInitialization.ContentPackageOrder:
 
-                    DateTime timeNow = DateTime.UtcNow;
+                    SerializableDateTime timeNow = SerializableDateTime.UtcNow;
                     structToSend = new ServerPeerContentPackageOrderPacket
                     {
                         ServerName = GameMain.Server.ServerName,
-                        ContentPackages = ContentPackageManager.EnabledPackages.All
-                            .Where(cp => cp.Files.Any())
-                            .Where(cp => cp.HasMultiplayerSyncedContent || cp.Files.All(f => f is SubmarineFile))
+                        ContentPackages = contentPackages
                             .Select(contentPackage => new ServerContentPackage(contentPackage, timeNow))
                             .ToImmutableArray()
                     };
@@ -290,7 +305,7 @@ namespace Barotrauma.Networking
 
                 pendingClients.Remove(pendingClient);
 
-                if (pendingClient.AuthSessionStarted && pendingClient.AccountInfo.AccountId is Some<AccountId> { Value: SteamId steamId })
+                if (pendingClient.AuthSessionStarted && pendingClient.AccountInfo.AccountId.TryUnwrap<SteamId>(out var steamId))
                 {
                     Steam.SteamManager.StopAuthSession(steamId);
                     pendingClient.Connection.SetAccountInfo(AccountInfo.None);

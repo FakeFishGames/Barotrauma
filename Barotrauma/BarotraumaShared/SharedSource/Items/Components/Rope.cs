@@ -159,9 +159,11 @@ namespace Barotrauma.Items.Components
 
         public override void Update(float deltaTime, Camera cam)
         {
+            var user = item.GetComponent<Projectile>()?.User;
             if (source == null || target == null || target.Removed ||
                 (source is Entity sourceEntity && sourceEntity.Removed) ||
-                (source is Limb limb && limb.Removed))
+                (source is Limb limb && limb.Removed) ||
+                (user != null && user.Removed))
             {
                 ResetSource();
                 target = null;
@@ -293,7 +295,6 @@ namespace Barotrauma.Items.Components
                 {
                     targetMass = float.MaxValue;
                 }
-                var user = item.GetComponent<Projectile>()?.User;
                 if (targetMass > TargetMinMass)
                 {
                     if (Math.Abs(SourcePullForce) > 0.001f)
@@ -301,33 +302,16 @@ namespace Barotrauma.Items.Components
                         var sourceBody = GetBodyToPull(source);
                         if (sourceBody != null)
                         {
-                            var targetBody = GetBodyToPull(target);
-                            if (targetBody != null && !(targetBody.UserData is Character))
+                            if (user != null && user.InWater)
                             {
-                                sourceBody.ApplyForce(targetBody.LinearVelocity * sourceBody.Mass);
-                            }
-                            float forceMultiplier = 1;
-                            if (user != null)
-                            {
-                                user.AnimController.Hang();
-                                if (user.InWater)
+                                if (user.IsRagdolled)
                                 {
-                                    if (user.IsRagdolled)
-                                    {
-                                        forceMultiplier = 0;
-                                    }
+                                    // Reel in towards the target.
+                                    user.AnimController.Hang();
+                                    float force = LerpForces ? MathHelper.Lerp(0, SourcePullForce, MathUtils.InverseLerp(0, MaxLength / 2, distance)) : SourcePullForce;
+                                    sourceBody.ApplyForce(forceDir * force);
                                 }
-                                else
-                                {
-                                    forceMultiplier = user.IsRagdolled ? 0.1f : 0.4f;
-                                    // Prevents too easy smashing to the walls
-                                    forceDir.X /= 4;
-                                    // Prevents rubberbanding up and down
-                                    if (forceDir.Y < 0)
-                                    {
-                                        forceDir.Y = 0;
-                                    }
-                                }
+                                // Take the target velocity into account.
                                 if (targetCharacter != null)
                                 {
                                     var myCollider = user.AnimController.Collider;
@@ -340,9 +324,15 @@ namespace Barotrauma.Items.Components
                                         }
                                     }
                                 }
+                                else
+                                {
+                                    var targetBody = GetBodyToPull(target);
+                                    if (targetBody != null)
+                                    {
+                                        sourceBody.ApplyForce(targetBody.LinearVelocity * sourceBody.Mass);
+                                    }
+                                }
                             }
-                            float force = LerpForces ? MathHelper.Lerp(0, SourcePullForce, MathUtils.InverseLerp(0, MaxLength / 2, distance)) * forceMultiplier : SourcePullForce * forceMultiplier;
-                            sourceBody.ApplyForce(forceDir * force);
                         }
                     }
                 }

@@ -50,6 +50,12 @@ namespace Barotrauma
             Description = TextManager.Get($"EntityDescription.{Identifier}");
             Tags = Enumerable.Empty<Identifier>().ToImmutableHashSet();
 
+            string description = element.GetAttributeString("description", string.Empty);
+            if (!description.IsNullOrEmpty())
+            {
+                Description = Description.Fallback(description);
+            }
+
             List<ushort> containedItemIDs = new List<ushort>();
             foreach (XElement entityElement in element.Elements())
             {

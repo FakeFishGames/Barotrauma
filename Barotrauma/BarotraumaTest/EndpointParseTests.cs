@@ -14,8 +14,7 @@ public class EndpointParseTests
     {
         Endpoint.Parse("127.0.0.1:27015")
             .Should()
-            .BeOfType<Some<Endpoint>>()
-            .And.BeEquivalentTo(
+            .BeEquivalentTo(
                 Option<Endpoint>.Some(new LidgrenEndpoint(IPAddress.Loopback, 27015)),
                 options => options.RespectingRuntimeTypes());
     }
@@ -25,8 +24,7 @@ public class EndpointParseTests
     {
         Endpoint.Parse("localhost:27015")
             .Should()
-            .BeOfType<Some<Endpoint>>()
-            .And.BeEquivalentTo(
+            .BeEquivalentTo(
                 Option<Endpoint>.Some(new LidgrenEndpoint(IPAddress.Loopback, 27015)),
                 options => options.RespectingRuntimeTypes());
     }
@@ -36,8 +34,7 @@ public class EndpointParseTests
     {
         Address.Parse("127.0.0.1")
             .Should()
-            .BeOfType<Some<Address>>()
-            .And.BeEquivalentTo(
+            .BeEquivalentTo(
                 Option<Address>.Some(new LidgrenAddress(IPAddress.Loopback)),
                 options => options.RespectingRuntimeTypes());
     }
@@ -47,8 +44,7 @@ public class EndpointParseTests
     {
         Endpoint.Parse("STEAM_1:1:508792388")
             .Should()
-            .BeOfType<Some<Endpoint>>()
-            .And.BeEquivalentTo(
+            .BeEquivalentTo(
                 Option<Endpoint>.Some(new SteamP2PEndpoint(new SteamId(76561198977850505))),
                 options => options.RespectingRuntimeTypes());
     }
@@ -58,8 +54,7 @@ public class EndpointParseTests
     {
         Address.Parse("STEAM_1:1:508792388")
             .Should()
-            .BeOfType<Some<Address>>()
-            .And.BeEquivalentTo(
+            .BeEquivalentTo(
                 Option<Address>.Some(new SteamP2PAddress(new SteamId(76561198977850505))),
                 options => options.RespectingRuntimeTypes());
         new SteamId(76561198977850505).StringRepresentation.Should().BeEquivalentTo("STEAM_1:1:508792388");

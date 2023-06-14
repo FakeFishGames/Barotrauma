@@ -25,7 +25,7 @@ namespace Barotrauma.Items.Components
 
         private string prevSignal;
 
-        private readonly int[] channelMemory = new int[ChannelMemorySize];
+        private int[] channelMemory = new int[ChannelMemorySize];
 
         private Connection signalInConnection;
         private Connection signalOutConnection;
@@ -94,7 +94,17 @@ namespace Barotrauma.Items.Components
         {
             list.Add(this);
             IsActive = true;
-            channelMemory = element.GetAttributeIntArray("channelmemory", new int[ChannelMemorySize]);
+        }
+
+        public override void Load(ContentXElement componentElement, bool usePrefabValues, IdRemap idRemap)
+        {
+            base.Load(componentElement, usePrefabValues, idRemap);
+            channelMemory = componentElement.GetAttributeIntArray("channelmemory", new int[ChannelMemorySize]);
+            if (channelMemory.Length != ChannelMemorySize)
+            {
+                DebugConsole.AddWarning($"Error when loading item {item.Prefab.Identifier}: the size of the channel memory doesn't match the default value of {ChannelMemorySize}. Resizing...");
+                Array.Resize(ref channelMemory, ChannelMemorySize);
+            }
         }
 
         public override void OnItemLoaded()

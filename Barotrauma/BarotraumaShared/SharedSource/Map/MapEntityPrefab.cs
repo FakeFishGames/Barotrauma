@@ -174,6 +174,9 @@ namespace Barotrauma
         
         public abstract Sprite Sprite { get; }
 
+        public virtual bool CanSpriteFlipX { get; } = false;
+        public virtual bool CanSpriteFlipY { get; } = false;
+
         public abstract string OriginalName { get; }
 
         public abstract LocalizedString Name { get; }

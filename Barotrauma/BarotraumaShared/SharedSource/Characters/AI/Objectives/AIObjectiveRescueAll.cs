@@ -26,7 +26,7 @@ namespace Barotrauma
                 // When targeting player characters, always treat them when ordered, else use the threshold so that minor/non-severe damage is ignored.
                 // If we ignore any damage when the player orders a bot to do healings, it's observed to cause confusion among the players.
                 // On the other hand, if the bots too eagerly heal characters when it's not necessary, it's inefficient and can feel frustrating, because it can't be controlled.
-                return character == target || manager.HasOrder<AIObjectiveRescueAll>() ? (target.IsPlayer ? 100 : vitalityThresholdForOrders) : vitalityThreshold;
+                return character == target || manager.HasOrder<AIObjectiveRescueAll>() ? (target.IsPlayer && target.HealthPercentage < 100 ? 100 : vitalityThresholdForOrders) : vitalityThreshold;
             }
         }
         
@@ -42,15 +42,16 @@ namespace Barotrauma
             if (Targets.None()) { return 100; }
             if (!objectiveManager.IsOrder(this))
             {
-                if (!character.IsMedic && HumanAIController.IsTrueForAnyCrewMember(c => c != HumanAIController && c.Character.IsMedic && !c.Character.IsUnconscious))
+                if (!character.IsMedic && HumanAIController.IsTrueForAnyCrewMember(c => c != character && c.IsMedic, onlyActive: true, onlyConnectedSubs: true))
                 {
-                    // Don't do anything if there's a medic on board and we are not a medic
+                    // Don't do anything if there's a medic on board actively treating and we are not a medic
                     return 100;
                 }
             }
             float worstCondition = Targets.Min(t => GetVitalityFactor(t));
             if (Targets.Contains(character))
             {
+                // Targeting self -> higher prio
                 if (character.Bleeding > 10)
                 {
                     // Enforce the highest priority when bleeding out.
@@ -67,13 +68,32 @@ namespace Barotrauma
             float vitality = 100;
             vitality -= character.Bleeding * 2;
             vitality += Math.Min(character.Oxygen, 0);
-            vitality -= character.CharacterHealth.GetAfflictionStrength("paralysis");
-            foreach (Affliction affliction in AIObjectiveRescue.GetTreatableAfflictions(character))
+            foreach (Affliction affliction in GetTreatableAfflictions(character))
             {
                 float strength = character.CharacterHealth.GetPredictedStrength(affliction, predictFutureDuration: 10.0f);
                 vitality -= affliction.GetVitalityDecrease(character.CharacterHealth, strength) / character.MaxVitality * 100;
+                if (affliction.Prefab.AfflictionType == AfflictionPrefab.ParalysisType)
+                {
+                    vitality -= affliction.Strength;
+                }
+                else if (affliction.Prefab.AfflictionType == AfflictionPrefab.PoisonType)
+                {
+                    vitality -= affliction.Strength;
+                }
             }
             return Math.Clamp(vitality, 0, 100);
+        }
+
+        public static IEnumerable<Affliction> GetTreatableAfflictions(Character character)
+        {
+            var allAfflictions = character.CharacterHealth.GetAllAfflictions();
+            foreach (Affliction affliction in allAfflictions)
+            {
+                if (affliction.Prefab.IsBuff || affliction.Strength < affliction.Prefab.TreatmentThreshold) { continue; }
+                if (affliction.Prefab.TreatmentSuitability.None(kvp => kvp.Value > 0)) { continue; }
+                if (allAfflictions.Any(otherAffliction => affliction.Prefab.IgnoreTreatmentIfAfflictedBy.Contains(otherAffliction.Identifier))) { continue; }
+                yield return affliction;
+            }
         }
 
         protected override AIObjective ObjectiveConstructor(Character target)
@@ -98,7 +118,7 @@ namespace Barotrauma
                 {
                     if (!character.IsMedic && target != character)
                     {
-                        // Don't allow to treat others autonomously
+                        // Don't allow to treat others autonomously, unless we are a medic
                         return false;
                     }
                     // Ignore unsafe hulls, unless ordered
@@ -117,17 +137,17 @@ namespace Barotrauma
                 // Don't allow going into another sub, unless it's connected and of the same team and type.
                 if (!character.Submarine.IsEntityFoundOnThisSub(target.CurrentHull, includingConnectedSubs: true)) { return false; }
             }
-            else
+            else if (target.Submarine != null)
             {
-                return target.Submarine == null;
+                // We are outside, but the target is inside.
+                return false;
             }
             if (target != character && target.IsBot && HumanAIController.IsActive(target) && target.AIController is HumanAIController targetAI)
             {
-                // Ignore all concious targets that are currently fighting, fleeing, fixing, or treating characters
+                // Ignore all concious targets that are currently fighting, fleeing, or treating characters
                 if (targetAI.ObjectiveManager.HasActiveObjective<AIObjectiveCombat>() ||
                     targetAI.ObjectiveManager.HasActiveObjective<AIObjectiveFindSafety>() ||
-                    targetAI.ObjectiveManager.HasActiveObjective<AIObjectiveRescue>() ||
-                    targetAI.ObjectiveManager.HasActiveObjective<AIObjectiveFixLeak>())
+                    targetAI.ObjectiveManager.HasActiveObjective<AIObjectiveRescue>())
                 {
                     return false;
                 }

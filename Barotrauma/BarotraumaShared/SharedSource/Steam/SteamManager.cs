@@ -26,7 +26,7 @@ namespace Barotrauma.Steam
             { "language", 5 }
         };
 
-        public static bool IsInitialized { get; private set; }
+        public static bool IsInitialized => IsInitializedProjectSpecific;
 
         private static readonly List<string> popularTags = new List<string>();
         public static IEnumerable<string> PopularTags
@@ -83,15 +83,6 @@ namespace Barotrauma.Steam
                 return 0;
             }
             return Steamworks.SteamUGC.NumSubscribedItems;
-        }
-
-        public static PublishedFileId[] GetSubscribedItems()
-        {
-            if (!IsInitialized || !Steamworks.SteamClient.IsValid)
-            {
-                return Array.Empty<PublishedFileId>();
-            }
-            return Steamworks.SteamUGC.GetSubscribedItems();
         }
 
         public static bool UnlockAchievement(string achievementIdentifier) =>
@@ -198,7 +189,6 @@ namespace Barotrauma.Steam
 
             if (Steamworks.SteamClient.IsValid) { Steamworks.SteamClient.Shutdown(); }
             if (Steamworks.SteamServer.IsValid) { Steamworks.SteamServer.Shutdown(); }
-            IsInitialized = false;
         }
 
         public static IEnumerable<ulong> ParseWorkshopIds(string workshopIdData)

@@ -1,26 +1,20 @@
 ﻿#nullable enable
 using Barotrauma.IO;
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 using Barotrauma.Extensions;
-using Steamworks.Data;
 using WorkshopItemSet = System.Collections.Generic.ISet<Steamworks.Ugc.Item>;
 
 namespace Barotrauma.Steam
 {
     static partial class SteamManager
     {
-        public const string WorkshopItemPreviewImageFolder = "Workshop";
-        public const string PreviewImageName = "PreviewImage.png";
-        public const string DefaultPreviewImagePath = "Content/DefaultWorkshopPreviewImage.png";
-
         public static bool TryExtractSteamWorkshopId(this ContentPackage contentPackage, [NotNullWhen(true)]out SteamWorkshopId? workshopId)
         {
             workshopId = null;
@@ -47,16 +41,22 @@ namespace Barotrauma.Steam
             private static async Task<WorkshopItemSet> GetWorkshopItems(Steamworks.Ugc.Query query, int? maxPages = null)
             {
                 if (!IsInitialized) { return new HashSet<Steamworks.Ugc.Item>(); }
-
+                
                 await Task.Yield();
-                query = query.WithKeyValueTags(true).WithLongDescription(true);
                 var set = new HashSet<Steamworks.Ugc.Item>(ItemEqualityComparer.Instance);
                 int prevSize = 0;
-                for (int i = 1; maxPages is null || i <= maxPages; i++)
+                for (int i = 1; i <= (maxPages ?? int.MaxValue); i++)
                 {
-                    Steamworks.Ugc.ResultPage? page = await query.GetPageAsync(i);
-                    if (page is null || !page.Value.Entries.Any()) { break; }
-                    set.UnionWith(page.Value.Entries);
+                    using Steamworks.Ugc.ResultPage? page = await query.GetPageAsync(i);
+                    if (page is not { Entries: var entries }) { break; }
+                    
+                    // This queries the results on the i-th page and stores them,
+                    // using page.Entries directly would result in two GetQueryUGCResult calls
+                    entries = entries.ToArray();
+
+                    if (entries.None()) { break; }
+                    
+                    set.UnionWith(entries);
                     
                     if (set.Count == prevSize) { break; }
                     prevSize = set.Count;
@@ -66,10 +66,17 @@ namespace Barotrauma.Steam
                 // which can happen on items that are not visible to the currently
                 // logged in player (i.e. private & friends-only items)
                 set.RemoveWhere(it => it.ConsumerApp != AppID);
-                
+
                 return set;
             }
 
+            public static ImmutableHashSet<Steamworks.Data.PublishedFileId> GetSubscribedItemIds()
+            {
+                return IsInitialized
+                    ? Steamworks.SteamUGC.GetSubscribedItems().ToImmutableHashSet()
+                    : ImmutableHashSet<Steamworks.Data.PublishedFileId>.Empty;
+            }
+            
             public static async Task<WorkshopItemSet> GetAllSubscribedItems()
             {
                 if (!IsInitialized) { return new HashSet<Steamworks.Ugc.Item>(); }
@@ -98,14 +105,86 @@ namespace Barotrauma.Steam
                     .WhereUserPublished());
             }
 
-            public static async Task<Steamworks.Ugc.Item?> GetItem(UInt64 itemId)
+            private static class SingleItemRequestPool
+            {
+                private static readonly object mutex = new();
+                private static readonly TimeSpan delayAfterNewRequest = TimeSpan.FromSeconds(0.5);
+                private static readonly HashSet<UInt64> ids = new();
+
+                private static Task<WorkshopItemSet>? currentBatch = null;
+
+                private static async Task<WorkshopItemSet> PrepareNewBatch()
+                {
+                    // Wait for a bunch of requests to be made
+                    await Task.Delay(delayAfterNewRequest);
+                    
+                    Task<WorkshopItemSet> queryTask;
+                    lock (mutex)
+                    {
+                        DebugConsole.Log(
+                            $"{nameof(SteamManager)}.{nameof(Workshop)}.{nameof(SingleItemRequestPool)}: " +
+                            $"Running batch of {ids.Count} requests");
+                        
+                        queryTask = GetWorkshopItems(
+                            Steamworks.Ugc.Query.All
+                                .WithFileId(
+                                    ids
+                                    .Select(id => (Steamworks.Data.PublishedFileId)id)
+                                    .ToArray()));
+                        ids.Clear();
+
+                        // Immediately clear the current batch so the next request starts a new one
+                        currentBatch = null;
+                    }
+
+                    return await queryTask;
+                }
+                
+                public static async Task<Steamworks.Ugc.Item?> MakeRequest(UInt64 id)
+                {
+                    Task<WorkshopItemSet> ourTask;
+                    lock (mutex)
+                    {
+                        ids.Add(id);
+                        if (currentBatch is not { IsCompleted: false })
+                        {
+                            // There is no currently pending batch, start a new one
+                            currentBatch = Task.Run(PrepareNewBatch);
+                        }
+                        ourTask = currentBatch;
+                    }
+
+                    var items = await ourTask;
+                    var result = items.FirstOrNull(it => it.Id == id);
+                    return result;
+                }
+            }
+            
+            /// <summary>
+            /// Fetches a Workshop item's metadata. This is batched to minimize Steamworks API calls.
+            /// The description of the returned item is truncated to save bandwidth.
+            /// </summary>
+            /// <param name="itemId">Workshop Item ID</param>
+            public static Task<Steamworks.Ugc.Item?> GetItem(UInt64 itemId)
+                => SingleItemRequestPool.MakeRequest(itemId);
+
+            /// <summary>
+            /// Fetches a Workshop item's metadata in its own API call instead of batching.
+            /// This minimizes delay but needs to be used with caution to prevent rate limiting.
+            /// </summary>
+            /// <param name="itemId">Workshop Item ID</param>
+            /// <param name="withLongDescription">
+            /// If true, ask for the item's entire description, otherwise it'll be truncated.
+            /// </param>
+            public static async Task<Steamworks.Ugc.Item?> GetItemAsap(UInt64 itemId, bool withLongDescription = false)
             {
                 if (!IsInitialized) { return null; }
 
                 var items = await GetWorkshopItems(
                     Steamworks.Ugc.Query.All
-                        .WithFileId(itemId));
-                return items.Any() ? items.First() : (Steamworks.Ugc.Item?)null;
+                        .WithFileId(itemId)
+                        .WithLongDescription(withLongDescription));
+                return items.Any() ? items.First() : null;
             }
             
             public static async Task ForceRedownload(UInt64 itemId)
@@ -115,7 +194,7 @@ namespace Barotrauma.Steam
             {
                 try
                 {
-                    System.IO.Directory.Delete(item.Directory, recursive: true);
+                    System.IO.Directory.Delete(item.Directory ?? "", recursive: true);
                 }
                 catch
                 {
@@ -233,7 +312,7 @@ namespace Barotrauma.Steam
 
             public static bool IsItemDirectoryUpToDate(in Steamworks.Ugc.Item item)
             {
-                string itemDirectory = item.Directory;
+                string itemDirectory = item.Directory ?? "";
                 return Directory.Exists(itemDirectory)
                     && File.GetLastWriteTime(itemDirectory).ToUniversalTime() >= item.LatestUpdateTime;
             }
@@ -324,7 +403,7 @@ namespace Barotrauma.Steam
                     var ids = items.Select(it => it.Id.Value).ToHashSet();
                     var toUninstall = ContentPackageManager.WorkshopPackages
                         .Where(pkg
-                            => !pkg.UgcId.TryUnwrap(out SteamWorkshopId workshopId)
+                            => !pkg.UgcId.TryUnwrap<SteamWorkshopId>(out var workshopId)
                                || !ids.Contains(workshopId.Value))
                         .ToArray();
                     if (toUninstall.Any())
@@ -353,9 +432,9 @@ namespace Barotrauma.Steam
                 if (!(itemNullable is { } item)) { return; }
                 await Task.Yield();
                 
-                string itemTitle = item.Title.Trim();
+                string itemTitle = item.Title?.Trim() ?? "";
                 UInt64 itemId = item.Id;
-                string itemDirectory = item.Directory;
+                string itemDirectory = item.Directory ?? "";
                 DateTime updateTime = item.LatestUpdateTime;
 
                 if (!CanBeInstalled(item))
@@ -416,7 +495,8 @@ namespace Barotrauma.Steam
                         new XAttribute("corepackage", isCorePackage),
                         new XAttribute("modversion", modVersion),
                         new XAttribute("gameversion", gameVersion),
-                        new XAttribute("installtime", ToolBox.Epoch.FromDateTime(updateTime)));
+                        #warning TODO: stop writing Unix time after this gets on main
+                        new XAttribute("installtime", new SerializableDateTime(updateTime).ToUnixTime()));
                     if ((modPathDirName ?? modName).ToIdentifier() != itemTitle)
                     {
                         root.Add(new XAttribute("altnames", modPathDirName ?? modName));

@@ -24,7 +24,7 @@ namespace Steamworks.Data
 		/// </summary>
 		public Result Accept()
 		{
-			return SteamNetworkingSockets.Internal.AcceptConnection( this );
+			return SteamNetworkingSockets.Internal?.AcceptConnection( this ) ?? Result.Fail;
 		}
 
 		/// <summary>
@@ -33,7 +33,7 @@ namespace Steamworks.Data
 		/// </summary>
 		public bool Close( bool linger = false, int reasonCode = 0, string debugString = "Closing Connection" )
 		{
-			return SteamNetworkingSockets.Internal.CloseConnection( this, reasonCode, debugString, linger );
+			return SteamNetworkingSockets.Internal != null && SteamNetworkingSockets.Internal.CloseConnection( this, reasonCode, debugString, linger );
 		}
 
 		/// <summary>
@@ -41,8 +41,8 @@ namespace Steamworks.Data
 		/// </summary>
 		public long UserData
 		{
-			get => SteamNetworkingSockets.Internal.GetConnectionUserData( this );
-			set => SteamNetworkingSockets.Internal.SetConnectionUserData( this, value );
+			get => SteamNetworkingSockets.Internal?.GetConnectionUserData( this ) ?? 0;
+			set => SteamNetworkingSockets.Internal?.SetConnectionUserData( this, value );
 		}
 
 		/// <summary>
@@ -52,13 +52,13 @@ namespace Steamworks.Data
 		{
 			get
 			{
-				if ( !SteamNetworkingSockets.Internal.GetConnectionName( this, out var strVal ) )
+				if ( SteamNetworkingSockets.Internal is null || !SteamNetworkingSockets.Internal.GetConnectionName( this, out var strVal ) )
 					return "ERROR";
 
 				return strVal;
 			}
 
-			set => SteamNetworkingSockets.Internal.SetConnectionName( this, value );
+			set => SteamNetworkingSockets.Internal?.SetConnectionName( this, value );
 		}
 
 		/// <summary>
@@ -67,7 +67,7 @@ namespace Steamworks.Data
 		public Result SendMessage( IntPtr ptr, int size, SendType sendType = SendType.Reliable )
 		{
 			long messageNumber = 0;
-			return SteamNetworkingSockets.Internal.SendMessageToConnection( this, ptr, (uint) size, (int)sendType, ref messageNumber );
+			return SteamNetworkingSockets.Internal?.SendMessageToConnection( this, ptr, (uint) size, (int)sendType, ref messageNumber ) ?? Result.Fail;
 		}
 
 		/// <summary>
@@ -107,16 +107,16 @@ namespace Steamworks.Data
 		/// Flush any messages waiting on the Nagle timer and send them at the next transmission 
 		/// opportunity (often that means right now).
 		/// </summary>
-		public Result Flush() => SteamNetworkingSockets.Internal.FlushMessagesOnConnection( this );
+		public Result Flush() => SteamNetworkingSockets.Internal?.FlushMessagesOnConnection( this ) ?? Result.Fail;
 
 		/// <summary>
 		/// Returns detailed connection stats in text format.  Useful
 		/// for dumping to a log, etc.
 		/// </summary>
 		/// <returns>Plain text connection info</returns>
-		public string DetailedStatus()
+		public string? DetailedStatus()
 		{
-			if ( SteamNetworkingSockets.Internal.GetDetailedConnectionStatus( this, out var strVal ) != 0 )
+			if ( SteamNetworkingSockets.Internal is null || SteamNetworkingSockets.Internal.GetDetailedConnectionStatus( this, out var strVal ) != 0 )
 				return null;
 
 			return strVal;

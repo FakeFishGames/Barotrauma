@@ -671,7 +671,7 @@ namespace Barotrauma.Items.Components
             return picker != null;
         }
 
-        public override bool AIOperate(float deltaTime, Character character, AIObjectiveOperateItem objective)
+        public override bool CrewAIOperate(float deltaTime, Character character, AIObjectiveOperateItem objective)
         {
             if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) { return false; }
             character.AIController.SteeringManager.Reset();
@@ -874,6 +874,6 @@ namespace Barotrauma.Items.Components
         }
 
         private float GetMaxOutput() => item.StatManager.GetAdjustedValue(ItemTalentStats.ReactorMaxOutput, MaxPowerOutput);
-        private float GetFuelConsumption() => item.StatManager.GetAdjustedValue(ItemTalentStats.ReactorFuelEfficiency, fuelConsumptionRate);
+        private float GetFuelConsumption() => item.StatManager.GetAdjustedValue(ItemTalentStats.ReactorFuelConsumption, fuelConsumptionRate);
     }
 }

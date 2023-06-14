@@ -29,49 +29,6 @@ namespace Barotrauma
 
     static partial class ToolBox
     {
-        internal static class Epoch
-        {
-            private static readonly DateTime epoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
-
-            /// <summary>
-            /// Returns the current Unix Epoch (Coordinated Universal Time)
-            /// </summary>
-            public static int NowUTC
-            {
-                get
-                {
-                    return (int)(DateTime.UtcNow.Subtract(epoch).TotalSeconds);
-                }
-            }
-
-            /// <summary>
-            /// Returns the current Unix Epoch (user's current time)
-            /// </summary>
-            public static int NowLocal
-            {
-                get
-                {
-                    return (int)(DateTime.Now.Subtract(epoch).TotalSeconds);
-                }
-            }
-
-            /// <summary>
-            /// Convert an epoch to a datetime
-            /// </summary>
-            public static DateTime ToDateTime(decimal unixTime)
-            {
-                return epoch.AddSeconds((long)unixTime);
-            }
-
-            /// <summary>
-            /// Convert a DateTime to a unix time
-            /// </summary>
-            public static uint FromDateTime(DateTime dt)
-            {
-                return (uint)(dt.Subtract(epoch).TotalSeconds);
-            }
-        }
-
         public static bool IsProperFilenameCase(string filename)
         {
             //File case only matters on Linux where the filesystem is case-sensitive, so we don't need these errors in release builds.
@@ -437,7 +394,6 @@ namespace Barotrauma
             return SelectWeightedRandom(objects, weightMethod, Rand.GetRNG(randSync));
         }
 
-
         public static T SelectWeightedRandom<T>(IEnumerable<T> objects, Func<T, float> weightMethod, Random random)
         {
             List<T> objectList = objects.ToList();
@@ -452,7 +408,7 @@ namespace Barotrauma
 
         public static T SelectWeightedRandom<T>(IList<T> objects, IList<float> weights, Random random)
         {
-            if (objects.Count == 0) return default(T);
+            if (objects.Count == 0) { return default(T); }
 
             if (objects.Count != weights.Count)
             {

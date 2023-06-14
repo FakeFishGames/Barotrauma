@@ -85,6 +85,7 @@ namespace Barotrauma
             {
                 if (purchasedHullRepairs == value) { return; }
                 purchasedHullRepairs = value;
+                PurchasedHullRepairsInLatestSave |= value;
                 IncrementLastUpdateIdForFlag(NetFlags.Misc);
             }
         }
@@ -95,6 +96,7 @@ namespace Barotrauma
             {
                 if (purchasedLostShuttles == value) { return; }
                 purchasedLostShuttles = value;
+                PurchasedLostShuttlesInLatestSave |= value;
                 IncrementLastUpdateIdForFlag(NetFlags.Misc);
             }
         }
@@ -105,6 +107,7 @@ namespace Barotrauma
             {
                 if (purchasedItemRepairs == value) { return; }
                 purchasedItemRepairs = value;
+                PurchasedItemRepairsInLatestSave |= value;
                 IncrementLastUpdateIdForFlag(NetFlags.Misc);
             }
         }
@@ -146,7 +149,7 @@ namespace Barotrauma
         {
             NextLevel = map.SelectedConnection?.LevelData ?? map.CurrentLocation.LevelData;
             MirrorLevel = false;
-            GameMain.Server.StartGame();
+            GameMain.Server.TryStartGame();
         }
 
         public static void StartCampaignSetup()
@@ -240,9 +243,7 @@ namespace Barotrauma
                 //reduce skills if the character has died
                 if (characterInfo.CauseOfDeath != null && characterInfo.CauseOfDeath.Type != CauseOfDeathType.Disconnected)
                 {
-                    RespawnManager.ReduceCharacterSkills(characterInfo);
-                    characterInfo.RemoveSavedStatValuesOnDeath();
-                    characterInfo.CauseOfDeath = null;
+                    characterInfo.ApplyDeathEffects();
                 }
                 c.CharacterInfo = characterInfo;
                 SetClientCharacterData(c);
@@ -254,12 +255,20 @@ namespace Barotrauma
             {
                 if (data.HasSpawned && !GameMain.Server.ConnectedClients.Any(c => data.MatchesClient(c)))
                 {
-                    var character = Character.CharacterList.Find(c => c.Info == data.CharacterInfo && !c.IsHusk);
-                    if (character != null && (!character.IsDead || character.CauseOfDeath?.Type == CauseOfDeathType.Disconnected))
+                    var character = Character.CharacterList.Find(c => c.Info == data.CharacterInfo && !c.IsHusk);          
+                    if (character != null &&
+                        (!character.IsDead || character.CauseOfDeath?.Type == CauseOfDeathType.Disconnected))
                     {
+                        //character still alive (or killed by Disconnect) -> save it as-is
                         characterData.RemoveAll(cd => cd.IsDuplicate(data));
                         data.Refresh(character);
                         characterData.Add(data);
+                    }
+                    else
+                    {
+                        //character dead or removed -> reduce skills, remove items, health data, etc
+                        data.CharacterInfo.ApplyDeathEffects();
+                        data.Reset();
                     }
                 }
             }
@@ -331,11 +340,12 @@ namespace Barotrauma
                     IsFirstRound = true;
                     break;
                 case TransitionType.ProgressToNextEmptyLocation:
+                    Map.Visit(Map.CurrentLocation);
                     TotalPassedLevels++;
                     break;
             }
 
-            Map.ProgressWorld(transitionType, GameMain.GameSession.RoundDuration);
+            Map.ProgressWorld(this, transitionType, GameMain.GameSession.RoundDuration);
 
             bool success = GameMain.Server.ConnectedClients.Any(c => c.InGame && c.Character != null && !c.Character.IsDead);
             if (success)
@@ -385,17 +395,14 @@ namespace Barotrauma
             NextLevel = newLevel;
             MirrorLevel = mirror;
 
-            //give clients time to play the end cinematic before starting the next round
-            if (transitionType == TransitionType.End)
-            {
-                yield return new WaitForSeconds(EndCinematicDuration);
-            }
-            else
-            {
-                yield return new WaitForSeconds(EndTransitionDuration * 0.5f);
-            }
 
-            GameMain.Server.StartGame();
+            yield return new WaitForSeconds(EndTransitionDuration * 0.5f);
+            
+            //don't start the next round automatically if we just finished the campaign
+            if (transitionType != TransitionType.End)
+            {
+                GameMain.Server.TryStartGame();
+            }
 
             yield return CoroutineStatus.Success;
         }
@@ -418,7 +425,7 @@ namespace Barotrauma
         }
 
         public bool CanPurchaseSub(SubmarineInfo info, Client client)
-            => CanAfford(info.Price, client) && GetCampaignSubs().Contains(info);
+            => CanAfford(info.GetPrice(), client) && GetCampaignSubs().Contains(info);
 
         private readonly List<CharacterCampaignData> discardedCharacters = new List<CharacterCampaignData>();
         public void DiscardClientCharacterData(Client client)
@@ -487,7 +494,8 @@ namespace Barotrauma
                 if (Level.Loaded.Type == LevelData.LevelType.LocationConnection)
                 {
                     var transitionType = GetAvailableTransition(out _, out Submarine leavingSub); 
-                    if (transitionType == TransitionType.End)
+                    if (transitionType == TransitionType.End ||
+                        (Level.Loaded.IsEndBiome && transitionType == TransitionType.ProgressToNextLocation))
                     {
                         LoadNewLevel();
                     }
@@ -501,6 +509,14 @@ namespace Barotrauma
                         {
                             LoadNewLevel();
                         }
+                    }
+                }
+                else if (Level.Loaded.IsEndBiome)
+                {
+                    var transitionType = GetAvailableTransition(out _, out Submarine leavingSub);
+                    if (transitionType == TransitionType.ProgressToNextLocation)
+                    {
+                        LoadNewLevel();
                     }
                 }
                 else if (Level.Loaded.Type == LevelData.LevelType.Outpost)
@@ -698,10 +714,6 @@ namespace Barotrauma
             if (requiredFlags.HasFlag(NetFlags.Reputation))
             {
                 msg.WriteUInt16(GetLastUpdateIdForFlag(NetFlags.Reputation));
-                Reputation reputation = Map?.CurrentLocation?.Reputation;
-                msg.WriteBoolean(reputation != null);
-                if (reputation != null) { msg.WriteSingle(reputation.Value); }
-
                 // hopefully we'll never have more than 128 factions
                 msg.WriteByte((byte)Factions.Count);
                 foreach (Faction faction in Factions)
@@ -817,53 +829,36 @@ namespace Barotrauma
                 Bank.ForceUpdate();
             }
 
-            if (purchasedHullRepairs != PurchasedHullRepairs)
+            if (purchasedHullRepairs && !PurchasedHullRepairs)
             {
-                switch (purchasedHullRepairs)
+                if (GetBalance(sender) >= hullRepairCost)
                 {
-                    case true when GetBalance(sender) >= hullRepairCost:
-                        TryPurchase(sender, hullRepairCost);
-                        PurchasedHullRepairs = true;
-                        GameAnalyticsManager.AddMoneySpentEvent(hullRepairCost, GameAnalyticsManager.MoneySink.Service, "hullrepairs");
-                        break;
-                    case false:
-                        PurchasedHullRepairs = false;
-                        personalWallet.Refund(hullRepairCost);
-                        break;
+                    TryPurchase(sender, hullRepairCost);
+                    PurchasedHullRepairs = true;
+                    GameAnalyticsManager.AddMoneySpentEvent(hullRepairCost, GameAnalyticsManager.MoneySink.Service, "hullrepairs");
                 }
             }
 
-            if (purchasedItemRepairs != PurchasedItemRepairs)
+            if (purchasedItemRepairs && !PurchasedItemRepairs)
             {
-                switch (purchasedItemRepairs)
+                if (GetBalance(sender) >= itemRepairCost)
                 {
-                    case true when GetBalance(sender) >= itemRepairCost:
-                        TryPurchase(sender, itemRepairCost);
-                        PurchasedItemRepairs = true;
-                        GameAnalyticsManager.AddMoneySpentEvent(itemRepairCost, GameAnalyticsManager.MoneySink.Service, "devicerepairs");
-                        break;
-                    case false:
-                        PurchasedItemRepairs = false;
-                        personalWallet.Refund(itemRepairCost);
-                        break;
+                    TryPurchase(sender, itemRepairCost);
+                    PurchasedItemRepairs = true;
+                    GameAnalyticsManager.AddMoneySpentEvent(itemRepairCost, GameAnalyticsManager.MoneySink.Service, "devicerepairs");
                 }
             }
 
-            if (purchasedLostShuttles != PurchasedLostShuttles)
+            if (purchasedLostShuttles && !PurchasedLostShuttles)
             {
                 if (GameMain.GameSession?.SubmarineInfo != null && GameMain.GameSession.SubmarineInfo.LeftBehindSubDockingPortOccupied)
                 {
                     GameMain.Server.SendDirectChatMessage(TextManager.FormatServerMessage("ReplaceShuttleDockingPortOccupied"), sender, ChatMessageType.MessageBox);
                 }
-                else if (purchasedLostShuttles && TryPurchase(sender, shuttleRetrieveCost))
+                else if (TryPurchase(sender, shuttleRetrieveCost))
                 {
                     PurchasedLostShuttles = true;
                     GameAnalyticsManager.AddMoneySpentEvent(shuttleRetrieveCost, GameAnalyticsManager.MoneySink.Service, "retrieveshuttle");
-                }
-                else if (!purchasedItemRepairs)
-                {
-                    PurchasedLostShuttles = false;
-                    personalWallet.Refund(shuttleRetrieveCost);
                 }
             }
 
@@ -1015,12 +1010,13 @@ namespace Barotrauma
                 bool predicate(SoldItem i) => allowedToSellInventoryItems != (i.Origin == SoldItem.SellOrigin.Character);
             }
 
+            var characterList = GameSession.GetSessionCrewCharacters(CharacterType.Both);
             foreach (var (prefab, category, _) in purchasedUpgrades)
             {
                 UpgradeManager.PurchaseUpgrade(prefab, category, client: sender);
 
                 // unstable logging
-                int price = prefab.Price.GetBuyPrice(UpgradeManager.GetUpgradeLevel(prefab, category), Map?.CurrentLocation);
+                int price = prefab.Price.GetBuyPrice(UpgradeManager.GetUpgradeLevel(prefab, category), Map?.CurrentLocation, characterList);
                 int level = UpgradeManager.GetUpgradeLevel(prefab, category);
                 GameServer.Log($"SERVER: Purchased level {level} {category.Identifier}.{prefab.Identifier} for {price}", ServerLog.MessageType.ServerMessage);
             }
@@ -1051,49 +1047,47 @@ namespace Barotrauma
 
             if (GameMain.Server is null) { return; }
 
-            switch (transfer.Sender)
+            if (transfer.Sender.TryUnwrap(out var id))
             {
-                case Some<ushort> { Value: var id }:
-                    if (id != sender.CharacterID && !AllowedToManageWallets(sender)) { return; }
+                if (id != sender.CharacterID && !AllowedToManageWallets(sender)) { return; }
 
-                    Wallet wallet = GetWalletByID(id);
-                    if (wallet is InvalidWallet) { return; }
+                Wallet wallet = GetWalletByID(id);
+                if (wallet is InvalidWallet) { return; }
 
-                    TransferMoney(wallet);
-                    break;
-                case None<ushort> _:
-                    if (!AllowedToManageWallets(sender))
+                TransferMoney(wallet);
+            }
+            else
+            {
+                if (!AllowedToManageWallets(sender))
+                {
+                    if (transfer.Receiver.TryUnwrap(out var receiverId) && receiverId == sender.CharacterID)
                     {
-                        if (transfer.Receiver is Some<ushort> { Value: var receiverId } && receiverId == sender.CharacterID)
-                        {
-                            if (transfer.Amount > GameMain.Server.ServerSettings.MaximumMoneyTransferRequest) { return; }
-                            GameMain.Server.Voting.StartTransferVote(sender, null, transfer.Amount, sender);
-                            GameServer.Log($"{sender.Name} started a vote to transfer {transfer.Amount} mk from the bank.", ServerLog.MessageType.Money);
-                        }
-                        return;
+                        if (transfer.Amount > GameMain.Server.ServerSettings.MaximumMoneyTransferRequest) { return; }
+                        GameMain.Server.Voting.StartTransferVote(sender, null, transfer.Amount, sender);
+                        GameServer.Log($"{sender.Name} started a vote to transfer {transfer.Amount} mk from the bank.", ServerLog.MessageType.Money);
                     }
+                    return;
+                }
 
-                    TransferMoney(Bank);
-                    break;
+                TransferMoney(Bank);
             }
 
             void TransferMoney(Wallet from)
             {
                 if (!from.TryDeduct(transfer.Amount)) { return; }
 
-                switch (transfer.Receiver)
+                if (transfer.Receiver.TryUnwrap(out var id))
                 {
-                    case Some<ushort> { Value: var id }:
-                        Wallet wallet = GetWalletByID(id);
-                        if (wallet is InvalidWallet) { return; }
+                    Wallet wallet = GetWalletByID(id);
+                    if (wallet is InvalidWallet) { return; }
 
-                        wallet.Give(transfer.Amount);
-                        GameServer.Log($"{sender.Name} transferred {transfer.Amount} mk to {wallet.GetOwnerLogName()} from {from.GetOwnerLogName()}.", ServerLog.MessageType.Money);
-                        break;
-                    case None<ushort> _:
-                        Bank.Give(transfer.Amount);
-                        GameServer.Log($"{sender.Name} transferred {transfer.Amount} mk to {Bank.GetOwnerLogName()} from {from.GetOwnerLogName()}.", ServerLog.MessageType.Money);
-                        break;
+                    wallet.Give(transfer.Amount);
+                    GameServer.Log($"{sender.Name} transferred {transfer.Amount} mk to {wallet.GetOwnerLogName()} from {from.GetOwnerLogName()}.", ServerLog.MessageType.Money);
+                }
+                else
+                {
+                    Bank.Give(transfer.Amount);
+                    GameServer.Log($"{sender.Name} transferred {transfer.Amount} mk to {Bank.GetOwnerLogName()} from {from.GetOwnerLogName()}.", ServerLog.MessageType.Money);
                 }
             }
 

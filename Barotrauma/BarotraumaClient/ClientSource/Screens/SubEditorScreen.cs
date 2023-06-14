@@ -1,16 +1,16 @@
 using Barotrauma.Extensions;
+using Barotrauma.IO;
 using Barotrauma.Items.Components;
+using Barotrauma.Steam;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Threading;
 using System.Xml.Linq;
-using Microsoft.Xna.Framework.Input;
-using Barotrauma.IO;
-using Barotrauma.Steam;
 
 namespace Barotrauma
 {
@@ -542,13 +542,6 @@ namespace Barotrauma
                     return true;
                 }
             };
-
-            var disclaimerBtn = new GUIButton(new RectTransform(new Vector2(0.1f, 1.0f), paddedTopPanel.RectTransform, Anchor.CenterRight), style: "GUINotificationButton")
-            {
-                IgnoreLayoutGroups = true,
-                OnClicked = (btn, userdata) => { GameMain.Instance.ShowEditorDisclaimer(); return true; }
-            };
-            disclaimerBtn.RectTransform.MaxSize = new Point(disclaimerBtn.Rect.Height);
 
             TopPanel.RectTransform.MinSize = new Point(0, (int)(paddedTopPanel.RectTransform.Children.Max(c => c.MinSize.Y) / paddedTopPanel.RectTransform.RelativeSize.Y));
             paddedTopPanel.Recalculate();
@@ -1165,7 +1158,7 @@ namespace Barotrauma
                 foreach (MapEntityPrefab ep in entityLists[categoryKey])
                 {
 #if !DEBUG
-                    if (ep.HideInMenus) { continue; }
+                    if (ep.HideInMenus && !GameMain.DebugDraw) { continue; }
 #endif
                     CreateEntityElement(ep, entitiesPerRow, entityListInner.Content);
                 }
@@ -1184,7 +1177,7 @@ namespace Barotrauma
             foreach (MapEntityPrefab ep in MapEntityPrefab.List)
             {
 #if !DEBUG
-                if (ep.HideInMenus) { continue; }
+                if (ep.HideInMenus && !GameMain.DebugDraw) { continue; }
 #endif
                 CreateEntityElement(ep, entitiesPerRow, allEntityList.Content);
             }
@@ -1313,7 +1306,6 @@ namespace Barotrauma
                                 try
                                 {
                                     assemblyPrefab.Delete();
-                                    UpdateEntityList();
                                     OpenEntityMenu(MapEntityCategory.ItemAssembly);
                                 }
                                 catch (Exception e)
@@ -1425,7 +1417,7 @@ namespace Barotrauma
             else if (MainSub == null)
             {
                 var subInfo = new SubmarineInfo();
-                MainSub = new Submarine(subInfo);
+                MainSub = new Submarine(subInfo, showErrorMessages: false);
             }
 
             MainSub.UpdateTransform(interpolate: false);
@@ -1462,11 +1454,6 @@ namespace Barotrauma
 
             ImageManager.OnEditorSelected();
             ReconstructLayers();
-
-            if (!GameSettings.CurrentConfig.EditorDisclaimerShown)
-            {
-                GameMain.Instance.ShowEditorDisclaimer();
-            }
         }
 
         public override void OnFileDropped(string filePath, string extension)
@@ -2428,6 +2415,17 @@ namespace Barotrauma
                     return true;
                 }
             };
+            new GUITickBox(new RectTransform(new Vector2(1.0f, 0.25f), beaconSettingsContainer.RectTransform), TextManager.Get("beaconstationplacement"))
+            {
+                Selected = MainSub.Info.BeaconStationInfo is { Placement: Level.PlacementType.Top },
+                OnSelected = (tb) =>
+                {
+                    MainSub.Info.BeaconStationInfo.Placement = tb.Selected ? 
+                        Level.PlacementType.Top :
+                        Level.PlacementType.Bottom;
+                    return true;
+                }
+            };
             beaconSettingsContainer.RectTransform.MinSize = new Point(0, beaconSettingsContainer.RectTransform.Children.Sum(c => c.Children.Any() ? c.Children.Max(c2 => c2.MinSize.Y) : 0));
 
             //------------------------------------------------------------------
@@ -2726,11 +2724,13 @@ namespace Barotrauma
 
             previewImageButtonHolder.RectTransform.MinSize = new Point(0, previewImageButtonHolder.RectTransform.Children.Max(c => c.MinSize.Y));
 
-            var contentPackageTabber = new GUILayoutGroup(new RectTransform((1.0f, 0.06f), rightColumn.RectTransform), isHorizontal: true);
+            var contentPackageTabber = new GUILayoutGroup(new RectTransform((1.0f, 0.075f), rightColumn.RectTransform), isHorizontal: true);
 
             GUIButton createTabberBtn(string labelTag)
             {
                 var btn = new GUIButton(new RectTransform((0.5f, 1.0f), contentPackageTabber.RectTransform, Anchor.BottomCenter, Pivot.BottomCenter), TextManager.Get(labelTag), style: "GUITabButton");
+                btn.TextBlock.Wrap = true;
+                btn.TextBlock.SetTextPos();
                 btn.RectTransform.MaxSize = RectTransform.MaxPoint;
                 btn.Children.ForEach(c => c.RectTransform.MaxSize = RectTransform.MaxPoint);
                 btn.Font = GUIStyle.SmallFont;
@@ -3089,9 +3089,17 @@ namespace Barotrauma
                     string newPackagePath = ContentPackageManager.LocalPackages.SaveRegularMod(modProject);
                     existingContentPackage = ContentPackageManager.LocalPackages.GetRegularModByPath(newPackagePath);
                 }
-                
+
                 XDocument doc = new XDocument(ItemAssemblyPrefab.Save(MapEntity.SelectedList.ToList(), nameBox.Text, descriptionBox.Text, hideInMenus));
-                doc.SaveSafe(filePath);
+                try
+                {
+                    doc.SaveSafe(filePath);
+                }
+                catch (Exception e)
+                {
+                    DebugConsole.ThrowError($"Failed to save the item assembly to \"{filePath}\".", e);
+                    return;
+                }
 
                 var result = ContentPackageManager.ReloadContentPackage(existingContentPackage);
                 if (!result.TryUnwrapSuccess(out var resultPackage))
@@ -3538,10 +3546,46 @@ namespace Barotrauma
                 TextManager.Get("LoadingVanillaSubmarineHeader"),
                 TextManager.Get("LoadingVanillaSubmarineDesc"));
 
-        public void LoadSub(SubmarineInfo info)
+        public void LoadSub(SubmarineInfo info, bool checkIdConflicts = true)
         {
             Submarine.Unload();
             Submarine selectedSub = null;
+
+            if (checkIdConflicts)
+            {
+                Dictionary<int, Identifier> entities = new Dictionary<int, Identifier>();
+                foreach (var subElement in info.SubmarineElement.Elements())
+                {
+                    int id = subElement.GetAttributeInt("ID", -1);
+                    if (id == -1) { continue; }
+                    Identifier identifier = subElement.GetAttributeIdentifier("identifier", string.Empty);
+                    if (entities.TryGetValue(id, out Identifier duplicateEntity))
+                    {
+                        var errorMsg = new GUIMessageBox(
+                            TextManager.Get("error"), 
+                                TextManager.GetWithVariables("subeditor.duplicateiderror", 
+                                    ("[entity1]", $"{duplicateEntity} ({id})"), 
+                                    ("[entity2]", $"{identifier} ({id})")),
+                                new LocalizedString[] { TextManager.Get("Yes"), TextManager.Get("No") });
+                        errorMsg.Buttons[0].OnClicked = (bnt, userdata) =>
+                        {
+                            subElement.Remove();
+                            LoadSub(info, checkIdConflicts: false);
+                            errorMsg.Close();
+                            return true;
+                        };
+                        errorMsg.Buttons[1].OnClicked = (bnt, userdata) =>
+                        {
+                            LoadSub(info, checkIdConflicts: false);
+                            errorMsg.Close();
+                            return true;
+                        };
+                        return;
+                    }
+                    entities.Add(id, identifier);
+                }
+            }
+
             try
             {
                 selectedSub = new Submarine(info);
@@ -3645,6 +3689,8 @@ namespace Barotrauma
 
         private void OpenEntityMenu(MapEntityCategory? entityCategory)
         {
+            UpdateEntityList();
+
             foreach (GUIButton categoryButton in entityCategoryButtons)
             {
                 categoryButton.Selected = entityCategory.HasValue ?
@@ -3772,14 +3818,14 @@ namespace Barotrauma
         {
             if (GUIContextMenu.CurrentContextMenu != null) { return; }
 
-            List<MapEntity> targets = MapEntity.mapEntityList.Any(me => me.IsHighlighted && !MapEntity.SelectedList.Contains(me)) ?
-                MapEntity.mapEntityList.Where(me => me.IsHighlighted).ToList() :
+            List<MapEntity> targets = MapEntity.HighlightedEntities.Any(me => !MapEntity.SelectedList.Contains(me)) ?
+                MapEntity.HighlightedEntities.ToList() :
                 new List<MapEntity>(MapEntity.SelectedList);
 
             Item target = null;
 
             var single = targets.Count == 1 ? targets.Single() : null;
-            if (single is Item item && item.Components.Any(ic => !(ic is ConnectionPanel) && !(ic is Repairable) && ic.GuiFrame != null))
+            if (single is Item item && item.Components.Any(ic => !(ic is ConnectionPanel) && ic is not Repairable && ic.GuiFrame != null))
             {
                 // Do not offer the ability to open the inventory if the inventory should never be drawn
                 var container = item.GetComponent<ItemContainer>();
@@ -4024,7 +4070,7 @@ namespace Barotrauma
                    pickerMutex     = new object(),
                    hexMutex        = new object();
 
-            Vector2 relativeSize = new Vector2(GUI.IsFourByThree() ? 0.4f : 0.3f, 0.3f);
+            Vector2 relativeSize = new Vector2(0.4f * GUI.AspectRatioAdjustment, 0.3f);
 
             GUIMessageBox msgBox = new GUIMessageBox(string.Empty, string.Empty, Array.Empty<LocalizedString>(), relativeSize, type: GUIMessageBox.Type.Vote)
             {
@@ -4063,24 +4109,31 @@ namespace Barotrauma
             GUILayoutGroup sliderLayout = new GUILayoutGroup(new RectTransform(new Vector2(1.0f - colorPicker.RectTransform.RelativeSize.X, 1f), colorLayout.RectTransform), childAnchor: Anchor.TopRight);
 
             float currentHue = colorPicker.SelectedHue / 360f;
-            GUILayoutGroup hueSliderLayout = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.25f), sliderLayout.RectTransform), isHorizontal: true, childAnchor: Anchor.CenterLeft);
+            GUILayoutGroup hueSliderLayout = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.25f), sliderLayout.RectTransform), isHorizontal: true, childAnchor: Anchor.CenterLeft) { Stretch = true };
             new GUITextBlock(new RectTransform(new Vector2(0.1f, 0.2f), hueSliderLayout.RectTransform), text: "H:", font: GUIStyle.SubHeadingFont) { Padding = Vector4.Zero, ToolTip = "Hue" };
             GUIScrollBar hueScrollBar = new GUIScrollBar(new RectTransform(new Vector2(0.7f, 1f), hueSliderLayout.RectTransform), style: "GUISlider", barSize: 0.05f) { BarScroll = currentHue };
-            GUINumberInput hueTextBox = new GUINumberInput(new RectTransform(new Vector2(0.2f, 1f), hueSliderLayout.RectTransform), inputType: NumberType.Float) { FloatValue = currentHue, MaxValueFloat = 1f, MinValueFloat = 0f, DecimalsToDisplay = 2 };
+            GUINumberInput hueTextBox = new GUINumberInput(new RectTransform(new Vector2(0.2f, 1f), hueSliderLayout.RectTransform) { MinSize = new Point(GUI.IntScale(100), 0) }, 
+                inputType: NumberType.Float) { FloatValue = currentHue, MaxValueFloat = 1f, MinValueFloat = 0f, DecimalsToDisplay = 2 };
 
-            GUILayoutGroup satSliderLayout = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.2f), sliderLayout.RectTransform), isHorizontal: true, childAnchor: Anchor.CenterLeft);
+            GUILayoutGroup satSliderLayout = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.2f), sliderLayout.RectTransform), isHorizontal: true, childAnchor: Anchor.CenterLeft) { Stretch = true };
             new GUITextBlock(new RectTransform(new Vector2(0.1f, 0.2f), satSliderLayout.RectTransform), text: "S:", font: GUIStyle.SubHeadingFont) { Padding = Vector4.Zero, ToolTip = "Saturation"};
             GUIScrollBar satScrollBar = new GUIScrollBar(new RectTransform(new Vector2(0.7f, 1f), satSliderLayout.RectTransform), style: "GUISlider", barSize: 0.05f) { BarScroll = colorPicker.SelectedSaturation };
-            GUINumberInput satTextBox = new GUINumberInput(new RectTransform(new Vector2(0.2f, 1f), satSliderLayout.RectTransform), inputType: NumberType.Float) { FloatValue = colorPicker.SelectedSaturation, MaxValueFloat = 1f, MinValueFloat = 0f, DecimalsToDisplay = 2 };
+            GUINumberInput satTextBox = new GUINumberInput(new RectTransform(new Vector2(0.2f, 1f), satSliderLayout.RectTransform) { MinSize = new Point(GUI.IntScale(100), 0) }, 
+                inputType: NumberType.Float) { FloatValue = colorPicker.SelectedSaturation, MaxValueFloat = 1f, MinValueFloat = 0f, DecimalsToDisplay = 2 };
 
-            GUILayoutGroup valueSliderLayout = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.2f), sliderLayout.RectTransform), isHorizontal: true, childAnchor: Anchor.CenterLeft);
+            GUILayoutGroup valueSliderLayout = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.2f), sliderLayout.RectTransform), isHorizontal: true, childAnchor: Anchor.CenterLeft) { Stretch = true };
             new GUITextBlock(new RectTransform(new Vector2(0.1f, 0.2f), valueSliderLayout.RectTransform), text: "V:", font: GUIStyle.SubHeadingFont) { Padding = Vector4.Zero, ToolTip = "Value"};
             GUIScrollBar valueScrollBar = new GUIScrollBar(new RectTransform(new Vector2(0.7f, 1f), valueSliderLayout.RectTransform), style: "GUISlider", barSize: 0.05f) { BarScroll = colorPicker.SelectedValue };
-            GUINumberInput valueTextBox = new GUINumberInput(new RectTransform(new Vector2(0.2f, 1f), valueSliderLayout.RectTransform), inputType: NumberType.Float) { FloatValue = colorPicker.SelectedValue, MaxValueFloat = 1f, MinValueFloat = 0f, DecimalsToDisplay = 2 };
+            GUINumberInput valueTextBox = new GUINumberInput(new RectTransform(new Vector2(0.2f, 1f), valueSliderLayout.RectTransform) { MinSize = new Point(GUI.IntScale(100), 0) }, 
+                inputType: NumberType.Float) { FloatValue = colorPicker.SelectedValue, MaxValueFloat = 1f, MinValueFloat = 0f, DecimalsToDisplay = 2 };
 
-            GUILayoutGroup colorInfoLayout = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.3f), sliderLayout.RectTransform), childAnchor: Anchor.CenterLeft, isHorizontal: true) { RelativeSpacing = 0.15f };
+            GUILayoutGroup colorInfoLayout = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.3f), sliderLayout.RectTransform), childAnchor: Anchor.CenterLeft, isHorizontal: true) 
+            { 
+                Stretch = true,
+                RelativeSpacing = 0.1f 
+            };
 
-            new GUICustomComponent(new RectTransform(new Vector2(0.4f, 0.8f), colorInfoLayout.RectTransform), (batch, component) =>
+            new GUICustomComponent(new RectTransform(Vector2.One, colorInfoLayout.RectTransform, scaleBasis: ScaleBasis.BothHeight), (batch, component) =>
             {
                 Rectangle rect = component.Rect;
                 Point areaSize = new Point(rect.Width, rect.Height / 2);
@@ -5246,15 +5299,15 @@ namespace Barotrauma
                     }
                 }
 
-                if (PlayerInput.KeyHit(Keys.E) && mode == Mode.Default)
+                if (PlayerInput.KeyHit(InputType.Use) && mode == Mode.Default)
                 {
                     if (dummyCharacter != null)
                     {
                         if (dummyCharacter.SelectedItem == null)
                         {
-                            foreach (var entity in MapEntity.mapEntityList)
+                            foreach (var entity in MapEntity.HighlightedEntities)
                             {
-                                if (entity is Item item && entity.IsHighlighted && item.Components.Any(ic => !(ic is ConnectionPanel) && !(ic is Repairable) && ic.GuiFrame != null))
+                                if (entity is Item item && item.Components.Any(ic => ic is not ConnectionPanel && ic is not Repairable && ic.GuiFrame != null))
                                 {
                                     var container = item.GetComponents<ItemContainer>().ToList();
                                     if (!container.Any() || container.Any(ic => ic?.DrawInventory ?? false))
@@ -5337,6 +5390,16 @@ namespace Barotrauma
                         else
                         {
                             var selectables = MapEntity.mapEntityList.Where(entity => entity.SelectableInEditor).ToList();
+                            foreach (var item in Item.ItemList)
+                            {
+                                //attached wires are not normally selectable (by clicking),
+                                //but let's select them manually when selecting all
+                                var wire = item.GetComponent<Wire>();
+                                if (wire != null && wire.Connections.None(c => c == null) && !selectables.Contains(item))
+                                {
+                                    selectables.Add(item);
+                                }
+                            }
                             lock (selectables)
                             {
                                 selectables.ForEach(MapEntity.AddSelection);
@@ -5635,8 +5698,7 @@ namespace Barotrauma
                 MouseDragStart = Vector2.Zero;
             }
 
-            if (!saveAssemblyFrame.Rect.Contains(PlayerInput.MousePosition)
-                && !snapToGridFrame.Rect.Contains(PlayerInput.MousePosition)
+            if ((GUI.MouseOn == null || !GUI.MouseOn.IsChildOf(TopPanel))
                 && dummyCharacter?.SelectedItem == null && !WiringMode
                 && (GUI.MouseOn == null || MapEntity.SelectedAny || MapEntity.SelectionPos != Vector2.Zero))
             {

@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
+using Microsoft.Xna.Framework;
 
 namespace Barotrauma
 {
@@ -98,7 +99,7 @@ namespace Barotrauma
             int containedItemCount = 0;
             foreach (Item it in container.Inventory.AllItems)
             {
-                if (CheckItem(it))
+                if (CheckItem(it) && IsInTargetSlot(it))
                 {
                     containedItemCount++;
                 }
@@ -108,7 +109,7 @@ namespace Barotrauma
 
         private bool CheckItem(Item item)
         {
-            return CheckItemIdentifiersOrTags(item, itemIdentifiers) && item.ConditionPercentage >= ConditionLevel && item.HasAccess(character);
+            return item.HasIdentifierOrTags(itemIdentifiers) && item.ConditionPercentage >= ConditionLevel && item.HasAccess(character);
         }
 
         protected override void Act(float deltaTime)
@@ -155,15 +156,15 @@ namespace Barotrauma
                     Inventory originalInventory = ItemToContain.ParentInventory;
                     var slots = originalInventory?.FindIndices(ItemToContain);
                     
-                    static bool TryPutItem(Inventory inventory, int? targetSlot, Item itemToContain)
+                    bool TryPutItem(Inventory inventory, int? targetSlot, Item itemToContain)
                     {
                         if (targetSlot.HasValue)
                         {
-                            return inventory.TryPutItem(itemToContain, targetSlot.Value, allowSwapping: false, allowCombine: false, user: null);
+                            return inventory.TryPutItem(itemToContain, targetSlot.Value, allowSwapping: false, allowCombine: false, user: character);
                         }
                         else
                         {
-                            return inventory.TryPutItem(itemToContain, user: null);
+                            return inventory.TryPutItem(itemToContain, user: character);
                         }
                     }
 
@@ -200,7 +201,8 @@ namespace Barotrauma
                             (container.Item.GetRootContainer()?.OwnInventory?.Locked ?? false) ||
                             ItemToContain == null || ItemToContain.Removed ||
                             !ItemToContain.IsOwnedBy(character) || container.Item.GetRootInventoryOwner() is Character c && c != character,
-                        SpeakIfFails = !objectiveManager.IsCurrentOrder<AIObjectiveCleanupItems>()
+                        SpeakIfFails = !objectiveManager.IsCurrentOrder<AIObjectiveCleanupItems>(),
+                        endNodeFilter = n => Vector2.DistanceSquared(n.Waypoint.WorldPosition, container.Item.WorldPosition) <= MathUtils.Pow2(AIObjectiveGetItem.MaxReach)
                     },
                     onAbandon: () => Abandon = true,
                     onCompleted: () => RemoveSubObjective(ref goToObjective));
@@ -244,7 +246,8 @@ namespace Barotrauma
 
         public bool IsInTargetSlot(Item item)
         {
-            if (container?.Inventory is ItemInventory inventory && TargetSlot is not null)
+            if (TargetSlot == null) { return true; }
+            if (container?.Inventory is ItemInventory inventory)
             {
                 return inventory.IsInSlot(item, (int)TargetSlot);
             }

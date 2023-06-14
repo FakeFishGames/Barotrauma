@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -48,12 +49,13 @@ namespace Steamworks
 		internal IntPtr ptr;
 #pragma warning restore 649
 
-		public unsafe static implicit operator string( Utf8StringPointer p )
+		[return: NotNullIfNotNull("p")]
+		public unsafe static implicit operator string?( Utf8StringPointer p )
 		{
-            return ConvertPtrToString(p.ptr);
+            return ConvertPtrToString(p.ptr)!;
 		}
 
-        public unsafe static string ConvertPtrToString(IntPtr ptr)
+        public unsafe static string? ConvertPtrToString(IntPtr ptr)
         {
             if (ptr == IntPtr.Zero)
                 return null;

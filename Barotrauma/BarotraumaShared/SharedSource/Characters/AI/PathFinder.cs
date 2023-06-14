@@ -228,8 +228,8 @@ namespace Barotrauma
                 {
                     continue;
                 }
-                //optimization: node extremely close (< 1 m). If it's valid, choose it as the start node and skip the more exhaustive search for the closest one
-                if (node.TempDistance < 1.0f)
+                //optimization: node close enough. If it's valid, choose it as the start node and skip the more exhaustive search for the closest one
+                if (node.TempDistance < FarseerPhysics.ConvertUnits.ToSimUnits(AIObjectiveGetItem.DefaultReach))
                 {
                     if (IsValidStartNode(node))
                     {
@@ -348,6 +348,7 @@ namespace Barotrauma
                     {
                         if (body.UserData is Submarine) { return false; }
                         if (body.UserData is Structure s && !s.IsPlatform) { return false; }
+                        if (body.UserData is Voronoi2.VoronoiCell) { return false; }
                         if (body.UserData is Item && body.FixtureList[0].CollisionCategories.HasFlag(Physics.CollisionWall)) { return false; }
                     }
                 }

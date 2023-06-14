@@ -111,8 +111,25 @@ namespace Barotrauma.Networking
                 ? NetworkConnection.TimeoutThresholdInGame
                 : NetworkConnection.TimeoutThreshold;
 
-            IReadMessage inc = new ReadOnlyMessage(data, false, 0, dataLength, ServerConnection);
+            try
+            {
+                IReadMessage inc = new ReadOnlyMessage(data, false, 0, dataLength, ServerConnection);
+                ProcessP2PData(inc);
+            }
+            catch (Exception e)
+            {
+                string errorMsg = $"Client failed to read an incoming P2P message. {{{e}}}\n{e.StackTrace.CleanupStackTrace()}";
+                GameAnalyticsManager.AddErrorEventOnce($"SteamP2PClientPeer.OnP2PData:ClientReadException{e.TargetSite}", GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
+#if DEBUG
+                DebugConsole.ThrowError(errorMsg);
+#else
+                if (GameSettings.CurrentConfig.VerboseLogging) { DebugConsole.ThrowError(errorMsg); }
+#endif
+            }
+        }
 
+        private void ProcessP2PData(IReadMessage inc)
+        {
             var (deliveryMethod, packetHeader, initialization) = INetSerializableStruct.Read<PeerPacketHeaders>(inc);
 
             if (!packetHeader.IsServerMessage()) { return; }

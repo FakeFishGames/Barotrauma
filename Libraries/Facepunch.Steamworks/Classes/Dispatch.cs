@@ -26,7 +26,7 @@ namespace Steamworks
 		/// Params are : [Callback Type] [Callback Contents] [server]
 		/// 
 		/// </summary>
-		public static Action<CallbackType, string, bool> OnDebugCallback;
+		public static Action<CallbackType, string, bool>? OnDebugCallback;
 
 		/// <summary>
 		/// Called if an exception happens during a callback/callresult.
@@ -34,7 +34,7 @@ namespace Steamworks
 		/// async.. and can fail silently. With this hooked you won't be stuck wondering
 		/// what happened.
 		/// </summary>
-		public static Action<Exception> OnException;
+		public static Action<Exception>? OnException;
 
 		#region interop
 		[DllImport( Platform.LibraryName, EntryPoint = "SteamAPI_ManualDispatch_Init", CallingConvention = CallingConvention.Cdecl )]
@@ -288,7 +288,7 @@ namespace Steamworks
 		/// <summary>
 		/// Install a global callback. The passed function will get called if it's all good.
 		/// </summary>
-		internal static void Install<T>( Action<T> p, bool server = false ) where T : ICallbackData
+		internal static void Install<T>( Action<T> p, bool server = false ) where T : struct, ICallbackData
 		{
 			var t = default( T );
 			var type = t.CallbackType;

@@ -9,7 +9,7 @@ using System.Diagnostics;
 
 namespace Barotrauma
 {
-    class SerializableEntityEditor : GUIComponent
+    sealed class SerializableEntityEditor : GUIComponent
     {
         private readonly int elementHeight;
         private readonly GUILayoutGroup layoutGroup;
@@ -399,10 +399,6 @@ namespace Barotrauma
             {
                 propertyField = CreateBoolField(entity, property, boolVal, displayName, toolTip);
             }
-            else if (value is string stringVal)
-            {
-                propertyField = CreateStringField(entity, property, stringVal, displayName, toolTip);
-            }
             else if (value.GetType().IsEnum)
             {
                 if (value.GetType().IsDefined(typeof(FlagsAttribute), inherit: false))
@@ -449,6 +445,10 @@ namespace Barotrauma
             else if(value is string[] a)
             {
                 propertyField = CreateStringArrayField(entity, property, a, displayName, toolTip);
+            }
+            else if (value is string or Identifier)
+            {
+                propertyField = CreateStringField(entity, property, value.ToString(), displayName, toolTip);
             }
             return propertyField;
         }
@@ -696,7 +696,7 @@ namespace Barotrauma
             propertyBox.OnEnterPressed += (box, text) => OnApply(box);
             refresh += () =>
             {
-                if (!propertyBox.Selected) { propertyBox.Text = (string)property.GetValue(entity); }
+                if (!propertyBox.Selected) { propertyBox.Text = property.GetValue(entity).ToString(); }
             };
 
             bool OnApply(GUITextBox textBox)
@@ -714,7 +714,7 @@ namespace Barotrauma
                 if (SetPropertyValue(property, entity, textBox.Text))
                 {
                     TrySendNetworkUpdate(entity, property);
-                    textBox.Text = (string) property.GetValue(entity);
+                    textBox.Text = property.GetValue(entity).ToString();
                     textBox.Flash(GUIStyle.Green, flashDuration: 1f);
                 }
                 //restore the entities that were selected before applying

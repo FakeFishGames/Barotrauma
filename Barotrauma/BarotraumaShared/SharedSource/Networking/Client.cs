@@ -87,6 +87,7 @@ namespace Barotrauma.Networking
                 if (character != null)
                 {
                     HasSpawned = true;
+                    UsingFreeCam = false;
 #if CLIENT
                     GameMain.GameSession?.CrewManager?.SetPlayerVoiceIconState(this, muted, mutedLocally);
 
@@ -99,6 +100,11 @@ namespace Barotrauma.Networking
                 }
             }
         }
+
+        /// <summary>
+        /// Is the client using the 'freecam' console command?
+        /// </summary>
+        public bool UsingFreeCam;
 
         public UInt16 CharacterID;
 
@@ -197,7 +203,7 @@ namespace Barotrauma.Networking
 
         public T GetVote<T>(VoteType voteType)
         {
-            return (votes[(int)voteType] is T) ? (T)votes[(int)voteType] : default(T);
+            return (votes[(int)voteType] is T t) ? t : default;
         }
 
         public void SetVote(VoteType voteType, object value)

@@ -185,6 +185,7 @@ namespace Barotrauma.Items.Components
                         RefreshActivateButtonText();
                         if (GameMain.Client != null)
                         {
+                            pendingFabricatedItem = null;
                             item.CreateClientEvent(this);
                         }
                         return true;
@@ -336,8 +337,11 @@ namespace Barotrauma.Items.Components
 
                 int calculatePlacement(FabricationRecipe recipe)
                 {
+                    if (recipe.RequiresRecipe && !AnyOneHasRecipeForItem(character, recipe.TargetItem))
+                    {
+                        return -2;
+                    }
                     int placement = FabricationDegreeOfSuccess(character, recipe.RequiredSkills) >= 0.5f ? 0 : -1;
-                    placement += recipe.RequiresRecipe && !AnyOneHasRecipeForItem(character, recipe.TargetItem) ? -2 : 0;
                     return placement;
                 }
 
@@ -524,7 +528,7 @@ namespace Barotrauma.Items.Components
 
                     if (slotRect.Contains(PlayerInput.MousePosition))
                     {
-                        var suitableIngredients = requiredItem.ItemPrefabs.Select(ip => ip.Name);
+                        var suitableIngredients = requiredItem.ItemPrefabs.Select(ip => ip.Name).Distinct();
                         LocalizedString toolTipText = string.Join(", ", suitableIngredients.Count() > 3 ? suitableIngredients.SkipLast(suitableIngredients.Count() - 3) : suitableIngredients);
                         if (suitableIngredients.Count() > 3) { toolTipText += "..."; }
                         if (requiredItem.UseCondition && requiredItem.MinCondition < 1.0f)
@@ -546,6 +550,8 @@ namespace Barotrauma.Items.Components
                         {
                             toolTipText = TextManager.GetWithVariable("displayname.emptyitem", "[itemname]", toolTipText);
                         }
+
+                        toolTipText = $"‖color:{Color.White.ToStringHex()}‖{toolTipText}‖color:end‖";
                         if (!requiredItemPrefab.Description.IsNullOrEmpty())
                         {
                             toolTipText += '\n' + requiredItemPrefab.Description;
@@ -590,7 +596,7 @@ namespace Barotrauma.Items.Components
             
             if (tooltip != null)
             {
-                GUIComponent.DrawToolTip(spriteBatch, tooltip.Tooltip, tooltip.TargetElement);
+                GUIComponent.DrawToolTip(spriteBatch, RichString.Rich(tooltip.Tooltip), tooltip.TargetElement);
                 tooltip = null;
             }
         }

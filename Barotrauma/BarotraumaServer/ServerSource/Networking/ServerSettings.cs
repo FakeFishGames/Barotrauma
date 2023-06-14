@@ -51,7 +51,7 @@ namespace Barotrauma.Networking
             => LastUpdateIdForFlag.Keys
                 .Where(k => IsFlagRequired(c, k))
                 .Aggregate(NetFlags.None, (f1, f2) => f1 | f2);
-        
+
         partial void InitProjSpecific()
         {
             LoadSettings();
@@ -176,7 +176,11 @@ namespace Barotrauma.Networking
                         netProperties[key].Read(incMsg);
                         if (!netProperties[key].PropEquals(prevValue, netProperties[key]))
                         {
-                            GameServer.Log(GameServer.ClientLogName(c) + " changed " + netProperties[key].Name + " to " + netProperties[key].Value.ToString(), ServerLog.MessageType.ServerMessage);
+                            GameServer.Log(
+                                NetworkMember.ClientLogName(c)
+                                + $" changed {netProperties[key].Name}"
+                                + $" to {netProperties[key].Value}",
+                                ServerLog.MessageType.ServerMessage);
                         }
                         propertiesChanged = true;
                     }
@@ -329,6 +333,10 @@ namespace Barotrauma.Networking
             if (string.IsNullOrEmpty(doc.Root.GetAttributeString("losmode", "")))
             {
                 LosMode = GameSettings.CurrentConfig.Graphics.LosMode;
+            }
+            if (string.IsNullOrEmpty(doc.Root.GetAttributeString("language", "")))
+            {
+                Language = ServerLanguageOptions.PickLanguage(GameSettings.CurrentConfig.Language);
             }
 
             AutoRestart = doc.Root.GetAttributeBool("autorestart", false);
@@ -512,7 +520,7 @@ namespace Barotrauma.Networking
                 else
                 {
                     string presetName = clientElement.GetAttributeString("preset", "");
-                    PermissionPreset preset = PermissionPreset.List.Find(p => p.Name == presetName);
+                    PermissionPreset preset = PermissionPreset.List.Find(p => p.DisplayName == presetName);
                     if (preset == null)
                     {
                         DebugConsole.ThrowError("Failed to restore saved permissions to the client \"" + clientName + "\". Permission preset \"" + presetName + "\" not found.");
@@ -577,8 +585,7 @@ namespace Barotrauma.Networking
             foreach (SavedClientPermission clientPermission in ClientPermissions)
             {
                 var matchingPreset = PermissionPreset.List.Find(p => p.MatchesPermissions(clientPermission.Permissions, clientPermission.PermittedCommands));
-                #warning TODO: this is broken because of localization
-                if (matchingPreset != null && matchingPreset.Name == "None")
+                if (matchingPreset != null && matchingPreset.Identifier == "None")
                 {
                     continue;
                 }
@@ -592,7 +599,7 @@ namespace Barotrauma.Networking
 
                 clientElement.Add(matchingPreset == null
                     ? new XAttribute("permissions", clientPermission.Permissions.ToString())
-                    : new XAttribute("preset", matchingPreset.Name));
+                    : new XAttribute("preset", matchingPreset.DisplayName));
                 
                 if (clientPermission.Permissions.HasFlag(Networking.ClientPermissions.ConsoleCommands))
                 {

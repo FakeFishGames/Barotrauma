@@ -12,7 +12,7 @@ namespace Steamworks
 	/// </summary>
 	public class SteamRemoteStorage : SteamClientClass<SteamRemoteStorage>
 	{
-		internal static ISteamRemoteStorage Internal => Interface as ISteamRemoteStorage;
+		internal static ISteamRemoteStorage? Internal => Interface as ISteamRemoteStorage;
 
 		internal override void InitializeInterface( bool server )
 		{
@@ -28,15 +28,17 @@ namespace Steamworks
 		{
 			fixed ( byte* ptr = data )
 			{
-				return Internal.FileWrite( filename, (IntPtr) ptr, data.Length );
+				return Internal != null && Internal.FileWrite( filename, (IntPtr) ptr, data.Length );
 			}
 		}
 
 		/// <summary>
 		/// Opens a binary file, reads the contents of the file into a byte array, and then closes the file.
 		/// </summary>
-		public unsafe static byte[] FileRead( string filename )
+		public unsafe static byte[]? FileRead( string filename )
 		{
+			if (Internal is null) { return null; }
+			
 			var size = FileSize( filename );
 			if ( size <= 0 ) return null;
 			var buffer = new byte[size];
@@ -51,32 +53,32 @@ namespace Steamworks
 		/// <summary>
 		/// Checks whether the specified file exists.
 		/// </summary>
-		public static bool FileExists( string filename ) => Internal.FileExists( filename );
+		public static bool FileExists( string filename ) => Internal != null && Internal.FileExists( filename );
 
 		/// <summary>
 		/// Checks if a specific file is persisted in the steam cloud.
 		/// </summary>
-		public static bool FilePersisted( string filename ) => Internal.FilePersisted( filename );
+		public static bool FilePersisted( string filename ) => Internal != null && Internal.FilePersisted( filename );
 
 		/// <summary>
 		/// Gets the specified file's last modified date/time.
 		/// </summary>
-		public static DateTime FileTime( string filename ) => Epoch.ToDateTime( Internal.GetFileTimestamp( filename ) );
+		public static DateTime FileTime( string filename ) => Internal != null ? Epoch.ToDateTime( Internal.GetFileTimestamp( filename ) ) : default;
 
 		/// <summary>
 		/// Gets the specified files size in bytes. 0 if not exists.
 		/// </summary>
-		public static int FileSize( string filename ) => Internal.GetFileSize( filename );
+		public static int FileSize( string filename ) => Internal?.GetFileSize( filename ) ?? 0;
 
 		/// <summary>
 		/// Deletes the file from remote storage, but leaves it on the local disk and remains accessible from the API.
 		/// </summary>
-		public static bool FileForget( string filename ) => Internal.FileForget( filename );
+		public static bool FileForget( string filename ) => Internal != null && Internal.FileForget( filename );
 
 		/// <summary>
 		/// Deletes a file from the local disk, and propagates that delete to the cloud.
 		/// </summary>
-		public static bool FileDelete( string filename ) => Internal.FileDelete( filename );
+		public static bool FileDelete( string filename ) => Internal != null && Internal.FileDelete( filename );
 
 
 		/// <summary>
@@ -87,7 +89,7 @@ namespace Steamworks
 			get
 			{
 				ulong t = 0, a = 0;
-				Internal.GetQuota( ref t, ref a );
+				Internal?.GetQuota( ref t, ref a );
 				return t;
 			}
 		}
@@ -100,7 +102,7 @@ namespace Steamworks
 			get
 			{
 				ulong t = 0, a = 0;
-				Internal.GetQuota( ref t, ref a );
+				Internal?.GetQuota( ref t, ref a );
 				return t - a;
 			}
 		}
@@ -113,7 +115,7 @@ namespace Steamworks
 			get
 			{
 				ulong t = 0, a = 0;
-				Internal.GetQuota( ref t, ref a );
+				Internal?.GetQuota( ref t, ref a );
 				return a;
 			}
 		}
@@ -127,7 +129,7 @@ namespace Steamworks
 		/// Checks if the account wide Steam Cloud setting is enabled for this user
 		/// or if they disabled it in the Settings->Cloud dialog.
 		/// </summary>
-		public static bool IsCloudEnabledForAccount => Internal.IsCloudEnabledForAccount();
+		public static bool IsCloudEnabledForAccount => Internal != null && Internal.IsCloudEnabledForAccount();
 
 		/// <summary>
 		/// Checks if the per game Steam Cloud setting is enabled for this user
@@ -139,14 +141,14 @@ namespace Steamworks
 		/// </summary>
 		public static bool IsCloudEnabledForApp
 		{
-			get => Internal.IsCloudEnabledForApp();
-			set => Internal.SetCloudEnabledForApp( value );
+			get => Internal != null && Internal.IsCloudEnabledForApp();
+			set => Internal?.SetCloudEnabledForApp( value );
 		}
 
 		/// <summary>
 		/// Gets the total number of local files synchronized by Steam Cloud.
 		/// </summary>
-		public static int FileCount => Internal.GetFileCount();
+		public static int FileCount => Internal?.GetFileCount() ?? 0;
 
 		public struct RemoteFile
 		{
@@ -155,7 +157,7 @@ namespace Steamworks
 
 			public bool Delete()
 			{
-				return Internal.FileDelete(Filename);
+				return Internal != null && Internal.FileDelete(Filename);
 			}
 		}
 
@@ -167,6 +169,8 @@ namespace Steamworks
 			get
 			{
 				var ret = new List<RemoteFile>();
+				if (Internal is null) { return ret; }
+				
 				int count = FileCount;
 				for( int i=0; i<count; i++ )
 				{

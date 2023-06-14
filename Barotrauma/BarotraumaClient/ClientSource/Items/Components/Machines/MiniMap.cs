@@ -298,7 +298,7 @@ namespace Barotrauma.Items.Components
                 }
             }
 
-            OrderPrefab[] reports = OrderPrefab.Prefabs.Where(o => o.IsReport && o.SymbolSprite != null && !o.Hidden).ToArray();
+            OrderPrefab[] reports = OrderPrefab.Prefabs.Where(o => o.IsReport && o.SymbolSprite != null && !o.Hidden).OrderBy(o => o.Identifier).ToArray();
 
             GUIFrame bottomFrame = new GUIFrame(new RectTransform(new Vector2(0.5f, 0.15f), paddedContainer.RectTransform, Anchor.BottomCenter) { MaxSize = new Point(int.MaxValue, GUI.IntScale(40)) }, style: null)
             {
@@ -403,7 +403,8 @@ namespace Barotrauma.Items.Components
 
         private bool VisibleOnItemFinder(Item it)
         {
-            if (!item.Submarine.IsEntityFoundOnThisSub(it, includingConnectedSubs: true)) { return false; }
+            if (it?.Submarine == null) { return false; }
+            if (item.Submarine == null || !item.Submarine.IsEntityFoundOnThisSub(it, includingConnectedSubs: true)) { return false; }
             if (it.NonInteractable || it.HiddenInGame) { return false; }
             if (it.GetComponent<Pickable>() == null) { return false; }
 
@@ -413,7 +414,7 @@ namespace Barotrauma.Items.Components
             var wire = it.GetComponent<Wire>();
             if (wire != null && wire.Connections.Any(c => c != null)) { return false; }
 
-            if (it.Container?.GetComponent<ItemContainer>() is { DrawInventory: false }) { return false; }
+            if (it.Container?.GetComponent<ItemContainer>() is { DrawInventory: false } or { AllowAccess: false }) { return false; }
 
             if (it.HasTag("traitormissionitem")) { return false; }
 
@@ -452,7 +453,7 @@ namespace Barotrauma.Items.Components
             foreach (var (entity, component) in electricalMapComponents)
             {
                 GUIComponent parent = component.RectComponent;
-                if (!(entity is Item it )) { continue; }
+                if (entity is not Item it ) { continue; }
                 Sprite? sprite = it.Prefab.UpgradePreviewSprite;
                 if (sprite is null) { continue; }
 
@@ -476,7 +477,7 @@ namespace Barotrauma.Items.Components
             {
                 if (!hullPointsOfInterest.Contains(entity)) { continue; }
 
-                if (!(entity is Item it)) { continue; }
+                if (entity is not Item it) { continue; }
                 const int borderMaxSize = 2;
 
                 if (it.GetComponent<Door>() is { })
@@ -519,7 +520,10 @@ namespace Barotrauma.Items.Components
                             Color color = !hasPower ? NoPowerColor : turret.ActiveUser is null ? Color.DimGray : GUIStyle.Green;
                             weaponSprite.Draw(batch, center, color, origin, rotation, scale, SpriteEffects.None);
                         }
-                    });
+                    })
+                    {
+                        CanBeFocused = false
+                    };
 
                     weaponChilds.Add(component, frame);
                 }
@@ -640,7 +644,7 @@ namespace Barotrauma.Items.Components
                 elementSize = GuiFrame.Rect.Size;
             }
 
-            float distort = 1.0f - item.Condition / item.MaxCondition;
+            float distort = item.Repairables.Any(r => r.IsBelowRepairThreshold) ? 1.0f - item.Condition / item.MaxCondition : 0.0f;
             foreach (HullData hullData in hullDatas.Values)
             {
                 hullData.DistortionTimer -= deltaTime;
@@ -699,6 +703,12 @@ namespace Barotrauma.Items.Components
 
         private void DrawHUDFront(SpriteBatch spriteBatch, GUICustomComponent container)
         {
+            if (miniMapFrame == null)
+            {
+                //frame not created yet, could happen if the item hasn't been inside any sub this round?
+                return;
+            }
+
             if (Voltage < MinVoltage)
             {
                 Vector2 textSize = GUIStyle.Font.MeasureString(noPowerTip);
@@ -1054,7 +1064,9 @@ namespace Barotrauma.Items.Components
                         waterVolume += linkedHull.WaterVolume;
                         totalVolume += linkedHull.Volume;
                     }
-                    hullData.HullWaterAmount = MathHelper.Clamp((int)Math.Ceiling(waterVolume / totalVolume * 100), 0, 100);
+                    hullData.HullWaterAmount =
+                        waterVolume > 1.0f ?
+                        MathHelper.Clamp((int)Math.Ceiling(waterVolume / totalVolume * 100), 0, 100) : 0.0f;
                 }
                 else
                 {
@@ -1127,7 +1139,7 @@ namespace Barotrauma.Items.Components
         {
             foreach (var (entity, miniMapGuiComponent) in electricalMapComponents)
             {
-                if (!(entity is Item it)) { continue; }
+                if (entity is not Item it) { continue; }
                 if (!electricalChildren.TryGetValue(miniMapGuiComponent, out GUIComponent? component)) { continue; }
 
                 if (entity.Removed)
@@ -1217,7 +1229,7 @@ namespace Barotrauma.Items.Components
                 {
                     foreach (var (entity, component) in hullStatusComponents)
                     {
-                        if (!(entity is Hull hull)) { continue; }
+                        if (entity is not Hull hull) { continue; }
                         if (!hullDatas.TryGetValue(hull, out HullData? hullData) || hullData is null) { continue; }
 
                         if (hullData.Distort) { continue; }
