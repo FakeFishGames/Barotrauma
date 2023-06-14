@@ -381,6 +381,12 @@ namespace Barotrauma
 
         public Identifier Group => HumanPrefab is HumanPrefab humanPrefab && !humanPrefab.Group.IsEmpty ? humanPrefab.Group : Params.Group;
 
+        public string MusicType => Params.MusicType;
+
+        public float MusicWeight => Params.MusicWeight;
+
+        public float MusicRangeMultiplier => Params.MusicRangeMultiplier;
+
         public bool IsHumanoid => Params.Humanoid;
 
         public bool IsMachine => Params.IsMachine;
