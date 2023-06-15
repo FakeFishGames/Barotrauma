@@ -253,12 +253,9 @@ namespace Barotrauma.Networking
                             //in push-to-talk mode, InputType.Voice uses the active chat mode
                             bool usingActiveMode = PlayerInput.KeyDown(InputType.Voice);
                             bool pttDown = (usingActiveMode || usingLocalMode || usingRadioMode) && GUI.KeyboardDispatcher.Subscriber == null;
-                            if (pttDown || captureTimer <= 0)
-                            {
-                                ForceLocal = (usingActiveMode && GameMain.ActiveChatMode == ChatMode.Local) || usingLocalMode;
-                            }
                             if (pttDown)
                             {
+                                ForceLocal = (usingActiveMode && GameMain.ActiveChatMode == ChatMode.Local) || usingLocalMode;
                                 allowEnqueue = true;
                             }
                         }

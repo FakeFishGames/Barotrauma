@@ -376,6 +376,7 @@ namespace Barotrauma
                 - (0.1f * iconRelativeWidth)
                 // Spacing
                 - (7 * layoutGroup.RelativeSpacing);
+            nameRelativeWidth = Math.Max(nameRelativeWidth, 0.25f);
 
             var font = layoutGroup.Rect.Width < 150 ? GUIStyle.SmallFont : GUIStyle.Font;
             var nameBlock = new GUITextBlock(

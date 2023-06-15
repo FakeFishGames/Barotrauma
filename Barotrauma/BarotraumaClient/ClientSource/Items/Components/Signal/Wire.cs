@@ -5,7 +5,6 @@ using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
 {
@@ -119,6 +118,13 @@ namespace Barotrauma.Items.Components
             get { return sectionExtents; }
         }
 
+        public readonly record struct VisualSignal(
+            float TimeSent,
+            Color Color,
+            int Direction);
+
+        private VisualSignal lastReceivedSignal;
+
         public static Wire DraggingWire
         {
             get => draggingWire;
@@ -126,13 +132,11 @@ namespace Barotrauma.Items.Components
 
         public static Sprite ExtractWireSprite(ContentXElement element)
         {
-            if (defaultWireSprite == null)
-            {
-                defaultWireSprite = new Sprite("Content/Items/Electricity/signalcomp.png", new Rectangle(970, 47, 14, 16), new Vector2(0.5f, 0.5f))
+            defaultWireSprite ??= 
+                new Sprite("Content/Items/Electricity/signalcomp.png", new Rectangle(970, 47, 14, 16), new Vector2(0.5f, 0.5f))
                 {
                     Depth = 0.855f
                 };
-            }
 
             Sprite overrideSprite = null;
             foreach (var subElement in element.Elements())
@@ -153,6 +157,35 @@ namespace Barotrauma.Items.Components
             if (wireSprite != defaultWireSprite) { overrideSprite = wireSprite; }
         }
 
+        public void RegisterSignal(Signal signal, Connection source)
+        {
+            lastReceivedSignal = new VisualSignal(
+                (float)Timing.TotalTimeUnpaused,
+                GetSignalColor(signal), 
+                Direction: source == connections[0] ? 1 : -1);
+        }
+
+        private static readonly Color[] dataSignalColors = new Color[] { Color.White, Color.LightBlue, Color.CornflowerBlue, Color.Blue, Color.BlueViolet, Color.Violet };
+
+        private static Color GetSignalColor(Signal signal)
+        {
+            if (signal.value == "0")
+            {
+                return Color.Red;
+            }
+            else if (signal.value == "1")
+            {
+                return Color.LightGreen;
+            }
+            else if (float.TryParse(signal.value, out float floatValue))
+            {
+                //convert numeric values to a color (guessing the value might be somewhere in the range of 0-200)
+                //so a player with a keen eye can get some info out of the color of the signal
+                return ToolBox.GradientLerp(Math.Abs(floatValue / 200.0f), dataSignalColors);
+            }
+            return Color.LightBlue;
+        }
+
         public void Draw(SpriteBatch spriteBatch, bool editing, float itemDepth = -1)
         {
             Draw(spriteBatch, editing, Vector2.Zero, itemDepth);
@@ -166,20 +199,7 @@ namespace Barotrauma.Items.Components
                 return;
             }
 
-            Vector2 drawOffset = Vector2.Zero;
-            Submarine sub = item.Submarine;
-            if (IsActive && sub == null) // currently being rewired, we need to get the sub from the connections in case the wire has been taken outside
-            {
-                if (connections[0] != null && connections[0].Item.Submarine != null) { sub = connections[0].Item.Submarine; }
-                if (connections[1] != null && connections[1].Item.Submarine != null) { sub = connections[1].Item.Submarine; }
-            }
-
-            if (sub != null)
-            {
-                drawOffset = sub.DrawPosition + sub.HiddenSubPosition;
-            }
-
-            drawOffset += offset;
+            Vector2 drawOffset = GetDrawOffset() + offset;
 
             float baseDepth = UseSpriteDepth ? item.SpriteDepth : wireSprite.Depth;
             float depth = item.IsSelected ? 0.0f : SubEditorScreen.IsWiringMode() ? 0.02f : baseDepth + (item.ID % 100) * 0.000001f;// item.GetDrawDepth(wireSprite.Depth, wireSprite);
@@ -188,7 +208,9 @@ namespace Barotrauma.Items.Components
             {
                 foreach (WireSection section in sections)
                 {
-                    section.Draw(spriteBatch, wireSprite, Screen.Selected == GameMain.GameScreen ? higlightColor : editorHighlightColor, drawOffset, depth + 0.00001f, Width * 2.0f);
+                    section.Draw(spriteBatch, wireSprite, 
+                        Screen.Selected == GameMain.GameScreen ? higlightColor : editorHighlightColor, 
+                        drawOffset, depth + 0.00001f, Width * 2.0f);
                 }
             }
             else if (item.IsSelected)
@@ -270,6 +292,12 @@ namespace Barotrauma.Items.Components
                 }
             }
 
+
+            if (ConnectionPanel.ShouldDebugDrawWiring)
+            {
+                DebugDraw(spriteBatch, alpha: 0.2f);
+            }
+
             if (!editing || !GameMain.SubEditorScreen.WiringMode) { return; }
 
             for (int i = 0; i < nodes.Count; i++)
@@ -292,6 +320,102 @@ namespace Barotrauma.Items.Components
                 {
                     GUI.DrawRectangle(spriteBatch, drawPos + new Vector2(-3, -3), new Vector2(6, 6), item.Color, true, 0.015f);
                 }
+            }
+        }
+
+        public void DebugDraw(SpriteBatch spriteBatch, float alpha = 1.0f)
+        {
+            if (sections.Count == 0 || Hidden)
+            {
+                return;
+            }
+
+            const float PowerPulseSpeedLow = 5.0f;
+            const float PowerPulseSpeedHigh = 10.0f;
+            const float PowerHighlightScaleLow = 1.5f;
+            const float PowerHighlightScaleHigh = 2.5f;
+
+            const float SignalIndicatorInterval = 15.0f;
+            const float SignalIndicatorSpeed = 100.0f;
+
+            Vector2 drawOffset = GetDrawOffset();
+
+            Color currentHighlightColor = Color.Transparent;
+            float highlightScale = 0.0f;
+            if (connections[0] != null && connections[1] != null)
+            {
+                float voltage = Math.Max(GetVoltage(0), GetVoltage(1));
+                float GetVoltage(int connectionIndex)
+                {
+                    var connection1 = connections[connectionIndex];
+                    var connection2 = connections[1 - connectionIndex];
+                    if (connection1.IsOutput && connection1.Grid is { Power: > 0.01f } grid1)
+                    {
+                        if (connection2.Item.GetComponent<Powered>() is Powered powered &&
+                            (powered.GetCurrentPowerConsumption(connection2) > 0 || powered is PowerTransfer))
+                        {
+                            return grid1.Voltage;
+                        }
+                    }
+                    return 0.0f;
+                }
+                if (voltage > 0.0f)
+                {
+                    //pulse faster when there's overvoltage
+                    float pulseSpeed = voltage > 1.2f ? PowerPulseSpeedHigh : PowerPulseSpeedLow;
+                    float pulseAmount = (MathF.Sin((float)Timing.TotalTimeUnpaused * pulseSpeed) + 1.5f) / 2.5f;
+                    voltage = Math.Min(voltage, 1.0f);
+                    highlightScale = MathHelper.Lerp(PowerHighlightScaleLow, PowerHighlightScaleHigh, voltage);
+                    currentHighlightColor = Color.Red * voltage * pulseAmount;
+                }
+            }
+            if (highlightScale > 0.0f)
+            {
+                foreach (WireSection section in sections)
+                {
+                    section.Draw(spriteBatch, wireSprite, currentHighlightColor * alpha, drawOffset, 0.0f, Width * highlightScale);
+                }
+            }
+ 
+            float signalDuration = (float)Timing.TotalTimeUnpaused - lastReceivedSignal.TimeSent;
+            if (ConnectionPanel.ShouldDebugDrawWiring && signalDuration < 1.0f)
+            {
+                //make some wires "off sync" so it's easier to differentiate signals on overlapping wires
+                float offset = item.ID % 2 == 1 ? SignalIndicatorInterval / 2 : 0.0f;
+                float signalProgress = ((float)(Timing.TotalTimeUnpaused * SignalIndicatorSpeed + offset) % SignalIndicatorInterval) * lastReceivedSignal.Direction;
+                foreach (WireSection section in sections)
+                {
+                    for (float x = 0; x < section.Length; x += SignalIndicatorInterval)
+                    {
+                        Vector2 dir = (section.End - section.Start) / section.Length;
+                        float posOnSection = x + signalProgress;
+                        if (posOnSection < 0 || posOnSection > section.Length) { continue; }
+                        Vector2 signalPos = section.Start + drawOffset + dir * posOnSection;
+                        float a = 1.0f - Vector2.Distance(Screen.Selected.Cam.WorldViewCenter, signalPos) / 500.0f;
+                        if (a < 0) { continue; }
+                        signalPos.Y = -signalPos.Y;
+                        GUI.DrawRectangle(spriteBatch, signalPos - Vector2.One * 2.5f, Vector2.One * 5, lastReceivedSignal.Color * a * (1.0f - signalDuration) * alpha, isFilled: true);
+                    }
+                }                
+            }
+        }
+
+        private Vector2 GetDrawOffset()
+        {
+            Submarine sub = item.Submarine;
+            if (IsActive && sub == null) // currently being rewired, we need to get the sub from the connections in case the wire has been taken outside
+            {
+                if (connections[0] != null && connections[0].Item.Submarine != null) { sub = connections[0].Item.Submarine; }
+                if (connections[1] != null && connections[1].Item.Submarine != null) { sub = connections[1].Item.Submarine; }
+            }
+
+            if (sub == null)
+            {
+                return Vector2.Zero;
+            }
+            else
+            {
+                return sub.DrawPosition + sub.HiddenSubPosition;
             }
         }
 

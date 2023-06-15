@@ -42,6 +42,8 @@ namespace Barotrauma
         public readonly HashSet<Hull> UnsafeHulls = new HashSet<Hull>();
         public readonly List<Item> IgnoredItems = new List<Item>();
 
+        private readonly HashSet<Hull> dirtyHullSafetyCalculations = new HashSet<Hull>();
+
         private float respondToAttackTimer;
         private const float RespondToAttackInterval = 1.0f;
         private bool wasConscious;
@@ -436,6 +438,7 @@ namespace Barotrauma
                         foreach (Hull h in VisibleHulls)
                         {
                             PropagateHullSafety(Character, h);
+                            dirtyHullSafetyCalculations.Remove(h);
                         }
                     }
                     else
@@ -443,9 +446,15 @@ namespace Barotrauma
                         foreach (Hull h in VisibleHulls)
                         {
                             RefreshHullSafety(h);
+                            dirtyHullSafetyCalculations.Remove(h);
                         }
                     }
+                    foreach (Hull h in dirtyHullSafetyCalculations)
+                    {
+                        RefreshHullSafety(h);
+                    }
                 }
+                dirtyHullSafetyCalculations.Clear();
                 if (reportProblemsTimer <= 0.0f)
                 {
                     if (Character.Submarine != null && (Character.Submarine.TeamID == Character.TeamID || Character.Submarine.TeamID == Character.OriginalTeamID || Character.IsEscorted) && !Character.Submarine.Info.IsWreck)
@@ -615,7 +624,7 @@ namespace Barotrauma
                         ObjectiveManager.CurrentObjective.GetSubObjectivesRecursive(true).Any(o => o.KeepDivingGearOn) ||
                         Character.CurrentHull.OxygenPercentage < HULL_LOW_OXYGEN_PERCENTAGE + 10 ||
                         Character.CurrentHull.IsWetRoom;
-                    bool IsOrderedToWait() => Character.IsOnPlayerTeam && ObjectiveManager.CurrentOrder is AIObjectiveGoTo goTo && goTo.Target == Character;
+                    bool IsOrderedToWait() => Character.IsOnPlayerTeam && ObjectiveManager.CurrentOrder is AIObjectiveGoTo { IsWaitOrder: true };
                     bool removeDivingSuit = !shouldKeepTheGearOn && !IsOrderedToWait();
                     if (shouldActOnSuffocation && Character.CurrentHull.Oxygen > 0 && (!isCurrentObjectiveFindSafety || Character.OxygenAvailable < 1))
                     {
@@ -900,7 +909,7 @@ namespace Barotrauma
                 var container = i.GetComponent<ItemContainer>();
                 if (container == null) { return 0; }
                 if (!container.Inventory.CanBePut(containableItem)) { return 0; }
-                var rootContainer = container.Item.GetRootContainer() ?? container.Item;
+                var rootContainer = container.Item.RootContainer ?? container.Item;
                 if (rootContainer.GetComponent<Fabricator>() != null || rootContainer.GetComponent<Deconstructor>() != null) { return 0; }
                 if (container.ShouldBeContained(containableItem, out bool isRestrictionsDefined))
                 {
@@ -1145,7 +1154,7 @@ namespace Barotrauma
                 string msgId = "DialogLowOxygen";
                 Character.Speak(TextManager.Get(msgId).Value, delay: Rand.Range(minDelay, maxDelay), identifier: msgId.ToIdentifier(), minDurationBetweenSimilar: 30.0f);
             }
-            if (Character.Bleeding > 2.0f && !Character.IsMedic)
+            if (Character.Bleeding > AfflictionPrefab.Bleeding.TreatmentThreshold && !Character.IsMedic)
             {
                 string msgId = "DialogBleeding";
                 Character.Speak(TextManager.Get(msgId).Value, delay: Rand.Range(minDelay, maxDelay), identifier: msgId.ToIdentifier(), minDurationBetweenSimilar: 30.0f);
@@ -1658,7 +1667,7 @@ namespace Barotrauma
         /// </summary>
         public static bool HasDivingSuit(Character character, float conditionPercentage = 0, bool requireOxygenTank = true) 
             => HasItem(character, AIObjectiveFindDivingGear.HEAVY_DIVING_GEAR, out _, requireOxygenTank ? AIObjectiveFindDivingGear.OXYGEN_SOURCE : Identifier.Empty, conditionPercentage, requireEquipped: true,
-                predicate: (Item item) => character.HasEquippedItem(item, InvSlotType.OuterClothes));
+                predicate: (Item item) => character.HasEquippedItem(item, InvSlotType.OuterClothes | InvSlotType.InnerClothes));
 
         /// <summary>
         /// Check whether the character has a diving mask in usable condition plus some oxygen.
@@ -1891,7 +1900,7 @@ namespace Barotrauma
         private static float GetReactionTime() => reactionTime * Rand.Range(0.75f, 1.25f);
 
         /// <summary>
-        /// Updates the hull safety for all ai characters in the team. The idea is that the crew communicates (magically) via radio about the threads.
+        /// Updates the hull safety for all ai characters in the team. The idea is that the crew communicates (magically) via radio about the threats.
         /// The safety levels need to be calculated for each bot individually, because the formula takes into account things like current orders.
         /// There's now a cached value per each hull, which should prevent too frequent calculations.
         /// </summary>
@@ -1900,9 +1909,13 @@ namespace Barotrauma
             DoForEachBot(character, (humanAi) => humanAi.RefreshHullSafety(hull));
         }
 
+        public void AskToRecalculateHullSafety(Hull hull) => dirtyHullSafetyCalculations.Add(hull);
+
         private void RefreshHullSafety(Hull hull)
         {
-            if (GetHullSafety(hull, Character, VisibleHulls) > HULL_SAFETY_THRESHOLD)
+            var visibleHulls = dirtyHullSafetyCalculations.Contains(hull) ? hull.GetConnectedHulls(includingThis: true, searchDepth: 1) : VisibleHulls;
+            float hullSafety = GetHullSafety(hull, Character, visibleHulls);
+            if (hullSafety > HULL_SAFETY_THRESHOLD)
             {
                 UnsafeHulls.Remove(hull);
             }

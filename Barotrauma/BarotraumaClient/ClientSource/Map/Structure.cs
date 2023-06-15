@@ -55,21 +55,11 @@ namespace Barotrauma
         {
             if (!CastShadow) { return; }
 
-            if (convexHulls == null)
-            {
-                convexHulls = new List<ConvexHull>();
-            }
-
-            Vector2 halfSize = size / 2;
-            Vector2[] verts = new Vector2[]
-            {
-                position + new Vector2(-halfSize.X, halfSize.Y),
-                position + new Vector2(halfSize.X, halfSize.Y),
-                position + new Vector2(halfSize.X, -halfSize.Y),
-                position + new Vector2(-halfSize.X, -halfSize.Y),
-            };
-
-            var h = new ConvexHull(verts, Color.Black, this);
+            convexHulls ??= new List<ConvexHull>();
+            var h = new ConvexHull(
+                new Rectangle((position - size / 2).ToPoint(), size.ToPoint()),
+                IsHorizontal, 
+                this);
             if (Math.Abs(rotation) > 0.001f)
             {
                 h.Rotate(position, rotation);

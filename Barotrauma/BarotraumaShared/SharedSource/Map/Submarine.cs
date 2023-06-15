@@ -7,6 +7,7 @@ using FarseerPhysics.Dynamics;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Xml.Linq;
 using Voronoi2;
@@ -427,17 +428,20 @@ namespace Barotrauma
         /// <summary>
         /// Returns a rect that contains the borders of this sub and all subs docked to it, excluding outposts
         /// </summary>
-        public Rectangle GetDockedBorders()
+        public Rectangle GetDockedBorders(bool allowDifferentTeam = true)
         {
             checkSubmarineBorders.Clear();
-            return GetDockedBordersRecursive();
+            return GetDockedBordersRecursive(allowDifferentTeam);
         }
 
-        private Rectangle GetDockedBordersRecursive()
+        private Rectangle GetDockedBordersRecursive(bool allowDifferentTeam)
         {
             Rectangle dockedBorders = Borders;
             checkSubmarineBorders.Add(this);
-            var connectedSubs = DockedTo.Where(s => !checkSubmarineBorders.Contains(s) && !s.Info.IsOutpost);
+            var connectedSubs = DockedTo.Where(s => 
+                !checkSubmarineBorders.Contains(s) && 
+                !s.Info.IsOutpost && 
+                (allowDifferentTeam || s.TeamID == TeamID));
             foreach (Submarine dockedSub in connectedSubs)
             {
                 //use docking ports instead of world position to determine
@@ -446,7 +450,7 @@ namespace Barotrauma
                 Vector2? expectedLocation = CalculateDockOffset(this, dockedSub);
                 if (expectedLocation == null) { continue; }
 
-                Rectangle dockedSubBorders = dockedSub.GetDockedBordersRecursive();
+                Rectangle dockedSubBorders = dockedSub.GetDockedBordersRecursive(allowDifferentTeam);
                 dockedSubBorders.Location += MathUtils.ToPoint(expectedLocation.Value);
 
                 dockedBorders.Y = -dockedBorders.Y;
@@ -458,23 +462,23 @@ namespace Barotrauma
             return dockedBorders;
         }
 
-        /// <summary>
-        /// Don't use this directly, because the list is updated only when GetConnectedSubs() is called. The method is called so frequently that we don't want to create new list here.
-        /// </summary>
-        private readonly List<Submarine> connectedSubs = new List<Submarine>(2);
+        private readonly HashSet<Submarine> connectedSubs;
         /// <summary>
         /// Returns a list of all submarines that are connected to this one via docking ports, including this sub.
         /// </summary>
-        public List<Submarine> GetConnectedSubs()
+        public IEnumerable<Submarine> GetConnectedSubs()
+        {
+            return connectedSubs;
+        }
+
+        public void RefreshConnectedSubs()
         {
             connectedSubs.Clear();
             connectedSubs.Add(this);
             GetConnectedSubsRecursive(connectedSubs);
-
-            return connectedSubs;
         }
 
-        private void GetConnectedSubsRecursive(List<Submarine> subs)
+        private void GetConnectedSubsRecursive(HashSet<Submarine> subs)
         {
             foreach (Submarine dockedSub in DockedTo)
             {
@@ -1067,6 +1071,8 @@ namespace Barotrauma
 
         public void Update(float deltaTime)
         {
+            RefreshConnectedSubs();
+
             if (Info.IsWreck)
             {
                 WreckAI?.Update(deltaTime);
@@ -1393,6 +1399,13 @@ namespace Barotrauma
 
         public Submarine(SubmarineInfo info, bool showErrorMessages = true, Func<Submarine, List<MapEntity>> loadEntities = null, IdRemap linkedRemap = null) : base(null, Entity.NullEntityID)
         {
+            Stopwatch sw = Stopwatch.StartNew();
+
+            connectedSubs = new HashSet<Submarine>(2)
+            {
+                this
+            };
+
             upgradeEventIdentifier = new Identifier($"Submarine{ID}");
             Loading = true;
             GameMain.World.Enabled = false;
@@ -1489,8 +1502,14 @@ namespace Barotrauma
                         if (me.Submarine != this) { continue; }
                         if (me is Item item)
                         {
-                            item.SpawnedInCurrentOutpost = info.OutpostGenerationParams != null;
-                            item.AllowStealing = info.OutpostGenerationParams?.AllowStealing ?? true;
+                            item.AllowStealing = true;
+                            if (info.OutpostGenerationParams != null)
+                            {
+                                item.SpawnedInCurrentOutpost = true;
+                                item.AllowStealing =
+                                    info.OutpostGenerationParams.AllowStealing ||
+                                    item.RootContainer is { Prefab: { AllowStealingContainedItems: true } };
+                            }
                             if (item.GetComponent<Repairable>() != null && indestructible)
                             {
                                 item.Indestructible = true;
@@ -1569,6 +1588,7 @@ namespace Barotrauma
 
 #if CLIENT
                 GameMain.LightManager.OnMapLoaded();
+                Lights.ConvexHull.RecalculateAll(this);
 #endif
                 //if the sub was made using an older version, 
                 //halve the brightness of the lights to make them look (almost) right on the new lighting formula
@@ -1596,6 +1616,10 @@ namespace Barotrauma
                 Loading = false;
                 GameMain.World.Enabled = true;
             }
+            sw.Stop();
+            string debugMsg = $"Loading {Info?.Name ?? "unknown"} took {sw.ElapsedMilliseconds} ms.";
+            DebugConsole.Log(debugMsg);
+            System.Diagnostics.Debug.WriteLine(debugMsg);
         }
 
         protected override ushort DetermineID(ushort id, Submarine submarine)
@@ -1745,8 +1769,7 @@ namespace Barotrauma
                     }
 #endif
                     if (e.Submarine != this) { continue; }
-                    var rootContainer = item.GetRootContainer();
-                    if (rootContainer != null && rootContainer.Submarine != this) { continue; }
+                    if (item.RootContainer != null && item.RootContainer.Submarine != this) { continue; }
                 }
                 else
                 {

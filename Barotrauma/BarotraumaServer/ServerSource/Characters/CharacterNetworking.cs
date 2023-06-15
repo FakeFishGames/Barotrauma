@@ -60,6 +60,10 @@ namespace Barotrauma
             {
                 distance = Math.Min(distance, Vector2.Distance(recipient.Character.ViewTarget.WorldPosition, WorldPosition));
             }
+            if (ViewTarget != null && ViewTarget != this)
+            {
+                distance = Math.Min(distance, Vector2.Distance(comparePosition, ViewTarget.WorldPosition));
+            }
 
             float priority = 1.0f - MathUtils.InverseLerp(
                 NetConfig.HighPrioCharacterPositionUpdateDistance, 
@@ -154,8 +158,6 @@ namespace Barotrauma
                     }
 
                     memInput.RemoveAt(memInput.Count - 1);
-
-                    TransformCursorPos();
 
                     if ((dequeuedInput == InputNetFlags.None || dequeuedInput == InputNetFlags.FacingLeft) && Math.Abs(AnimController.Collider.LinearVelocity.X) < 0.005f && Math.Abs(AnimController.Collider.LinearVelocity.Y) < 0.2f)
                     {

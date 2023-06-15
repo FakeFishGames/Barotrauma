@@ -995,10 +995,18 @@ namespace Barotrauma
                     }
                 }
             }
-            if (HumanAIController.HasItem(character, "handlocker".ToIdentifier(), out IEnumerable<Item> matchingItems) && !Enemy.IsUnconscious && Enemy.IsKnockedDown && character.CanInteractWith(Enemy))
+
+            //prefer using handcuffs already on the enemy's inventory
+            if (!HumanAIController.HasItem(Enemy, "handlocker".ToIdentifier(), out IEnumerable<Item> matchingItems))
+            {
+                HumanAIController.HasItem(character, "handlocker".ToIdentifier(), out matchingItems);
+            }
+
+            if (matchingItems.Any() && 
+                !Enemy.IsUnconscious && Enemy.IsKnockedDown && character.CanInteractWith(Enemy) && !Enemy.LockHands)
             {
                 var handCuffs = matchingItems.First();
-                if (!HumanAIController.TakeItem(handCuffs, Enemy.Inventory, equip: true))
+                if (!HumanAIController.TakeItem(handCuffs, Enemy.Inventory, equip: true, wear: true))
                 {
 #if DEBUG
                     DebugConsole.NewMessage($"{character.Name}: Failed to handcuff the target.", Color.Red);

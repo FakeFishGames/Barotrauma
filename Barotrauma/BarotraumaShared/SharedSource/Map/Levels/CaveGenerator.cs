@@ -296,9 +296,9 @@ namespace Barotrauma
                             Vector2 triangleCenter = (edge.Point1 + edge.Point2 + extrudedPoint) / 3;
                             foreach (GraphEdge nearbyEdge in nearbyCell.Edges)
                             {
-                                if (!MathUtils.LinesIntersect(nearbyEdge.Point1, triangleCenter, edge.Point1, extrudedPoint) && 
-                                    !MathUtils.LinesIntersect(nearbyEdge.Point1, triangleCenter, edge.Point2, extrudedPoint) &&
-                                    !MathUtils.LinesIntersect(nearbyEdge.Point1, triangleCenter, edge.Point1, edge.Point2))
+                                if (!MathUtils.LineSegmentsIntersect(nearbyEdge.Point1, triangleCenter, edge.Point1, extrudedPoint) && 
+                                    !MathUtils.LineSegmentsIntersect(nearbyEdge.Point1, triangleCenter, edge.Point2, extrudedPoint) &&
+                                    !MathUtils.LineSegmentsIntersect(nearbyEdge.Point1, triangleCenter, edge.Point1, edge.Point2))
                                 {
                                     isInside = true;
                                     break;

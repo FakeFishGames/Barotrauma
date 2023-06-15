@@ -326,7 +326,9 @@ namespace Barotrauma
                     var lightComponent = item.GetComponent<LightComponent>();
                     if (lightComponent != null)
                     {
-                        lightComponent.TemporaryFlickerTimer = Math.Min(EmpStrength * distFactor, 10.0f);
+                        //multiply by 10 to make the effect more noticeable
+                        //(a strength of 1 is already enough to kill power and shut down the lights, but we want weaker EMPs to make the lights flicker noticeably)
+                        lightComponent.TemporaryFlickerTimer = Math.Min(EmpStrength * distFactor * 10.0f, 10.0f);
                     }
 
                     //discharge batteries

@@ -125,18 +125,15 @@ namespace Barotrauma.Items.Components
     {
         public static MiniMapSettings Default = new MiniMapSettings
         (
-            ignoreOutposts: false,
             createHullElements: true,
             elementColor: MiniMap.MiniMapBaseColor
         );
 
-        public readonly bool IgnoreOutposts;
         public readonly bool CreateHullElements;
         public readonly Color ElementColor;
 
-        public MiniMapSettings(bool ignoreOutposts = false, bool createHullElements = false, Color? elementColor = null)
+        public MiniMapSettings(bool createHullElements = false, Color? elementColor = null)
         {
-            IgnoreOutposts = ignoreOutposts;
             CreateHullElements = createHullElements;
             ElementColor = elementColor ?? MiniMap.MiniMapBaseColor;
         }
@@ -437,7 +434,11 @@ namespace Barotrauma.Items.Components
             prevResolution = new Point(GameMain.GraphicsWidth, GameMain.GraphicsHeight);
             submarineContainer.ClearChildren();
 
-            if (item.Submarine is null) { return; }
+            if (item.Submarine is null) 
+            {
+                displayedSubs.Clear();
+                return; 
+            }
 
             scissorComponent = new GUIScissorComponent(new RectTransform(Vector2.One, submarineContainer.RectTransform, Anchor.Center));
             miniMapContainer = new GUIFrame(new RectTransform(Vector2.One, scissorComponent.Content.RectTransform, Anchor.Center), style: null) { CanBeFocused = false };
@@ -445,8 +446,8 @@ namespace Barotrauma.Items.Components
             ImmutableHashSet<Item> hullPointsOfInterest = Item.ItemList.Where(it => item.Submarine.IsEntityFoundOnThisSub(it, includingConnectedSubs: true) && !it.HiddenInGame && !it.NonInteractable && it.Prefab.ShowInStatusMonitor && (it.GetComponent<Door>() != null || it.GetComponent<Turret>() != null)).ToImmutableHashSet();
             miniMapFrame = CreateMiniMap(item.Submarine, submarineContainer, MiniMapSettings.Default, hullPointsOfInterest, out hullStatusComponents);
 
-            IEnumerable<Item> electrialPointsOfInterest = Item.ItemList.Where(it => item.Submarine.IsEntityFoundOnThisSub(it, includingConnectedSubs: true) && !it.HiddenInGame && !it.NonInteractable && it.GetComponent<Repairable>() != null);
-            electricalFrame = CreateMiniMap(item.Submarine, miniMapContainer, new MiniMapSettings(createHullElements: false), electrialPointsOfInterest, out electricalMapComponents);
+            IEnumerable<Item> electricalPointsOfInterest = Item.ItemList.Where(it => item.Submarine.IsEntityFoundOnThisSub(it, includingConnectedSubs: true) && !it.HiddenInGame && !it.NonInteractable && it.GetComponent<Repairable>() != null);
+            electricalFrame = CreateMiniMap(item.Submarine, miniMapContainer, new MiniMapSettings(createHullElements: false), electricalPointsOfInterest, out electricalMapComponents);
 
             Dictionary<MiniMapGUIComponent, GUIComponent> electricChildren = new Dictionary<MiniMapGUIComponent, GUIComponent>();
 
@@ -536,7 +537,7 @@ namespace Barotrauma.Items.Components
 
             displayedSubs.Clear();
             displayedSubs.Add(item.Submarine);
-            displayedSubs.AddRange(item.Submarine.DockedTo);
+            displayedSubs.AddRange(item.Submarine.DockedTo.Where(s => s.TeamID == item.Submarine.TeamID));
 
             subEntities = MapEntity.mapEntityList.Where(me => (item.Submarine is { } sub && sub.IsEntityFoundOnThisSub(me, includingConnectedSubs: true, allowDifferentType: false)) && !me.HiddenInGame).OrderByDescending(w => w.SpriteDepth).ToList();
 
@@ -551,7 +552,7 @@ namespace Barotrauma.Items.Components
                 item.Submarine is { } itemSub &&
                 (
                     !displayedSubs.Contains(itemSub) ||                                                                     // current sub not displayed
-                    itemSub.DockedTo.Any(s => !displayedSubs.Contains(s) && itemSub.ConnectedDockingPorts[s].IsLocked) ||   // some of the docked subs not displayed
+                    itemSub.DockedTo.Where(s => s.TeamID == item.Submarine.TeamID).Any(s => !displayedSubs.Contains(s) && itemSub.ConnectedDockingPorts[s].IsLocked) ||   // some of the docked subs not displayed
                     displayedSubs.Any(s => s != itemSub && !itemSub.DockedTo.Contains(s))                                   // displaying a sub that shouldn't be displayed
                 ) ||
                 prevResolution.X != GameMain.GraphicsWidth || prevResolution.Y != GameMain.GraphicsHeight || // resolution changed
@@ -731,7 +732,7 @@ namespace Barotrauma.Items.Components
                 if (sprite != null && ShowHullIntegrity)
                 {
                     Vector2 spriteSize = sprite.size;
-                    Rectangle worldBorders = item.Submarine.GetDockedBorders();
+                    Rectangle worldBorders = item.Submarine.GetDockedBorders(allowDifferentTeam: false);
                     worldBorders.Location += item.Submarine.WorldPosition.ToPoint();
                     foreach (Gap gap in Gap.GapList)
                     {
@@ -915,7 +916,7 @@ namespace Barotrauma.Items.Components
             }
 
 
-            RectangleF dockedBorders = item.Submarine.GetDockedBorders();
+            RectangleF dockedBorders = item.Submarine.GetDockedBorders(allowDifferentTeam: false);
             dockedBorders.Location += item.Submarine.WorldPosition;
             RectangleF parentRect = miniMapFrame.Rect;
 
@@ -1305,7 +1306,7 @@ namespace Barotrauma.Items.Components
             GameMain.Instance.GraphicsDevice.SetRenderTarget(rt);
             GameMain.Instance.GraphicsDevice.Clear(Color.Transparent);
             spriteBatch.Begin(SpriteSortMode.Deferred, samplerState: GUI.SamplerState, rasterizerState: GameMain.ScissorTestEnable);
-            Rectangle worldBorders = sub.GetDockedBorders();
+            Rectangle worldBorders = sub.GetDockedBorders(allowDifferentTeam: false);
             worldBorders.Location += sub.WorldPosition.ToPoint();
 
             parentRect.Inflate(-inflate, -inflate);
@@ -1526,7 +1527,7 @@ namespace Barotrauma.Items.Components
 
             Dictionary<MapEntity, MiniMapGUIComponent> pointsOfInterestCollection = new Dictionary<MapEntity, MiniMapGUIComponent>();
 
-            RectangleF worldBorders = sub.GetDockedBorders();
+            RectangleF worldBorders = sub.GetDockedBorders(allowDifferentTeam: false);
             worldBorders.Location += sub.WorldPosition;
 
             // create a container that has the same "aspect ratio" as the sub
@@ -1539,7 +1540,7 @@ namespace Barotrauma.Items.Components
 
             GUIFrame hullContainer = new GUIFrame(new RectTransform(containerScale * elementPadding, parent.RectTransform, Anchor.Center), style: null);
 
-            ImmutableHashSet<Submarine> connectedSubs = sub.GetConnectedSubs().ToImmutableHashSet();
+            ImmutableHashSet<Submarine> connectedSubs = sub.GetConnectedSubs().Where(s => s.TeamID == sub.TeamID).ToImmutableHashSet();
             ImmutableArray<Hull> hullList = ImmutableArray<Hull>.Empty;
             ImmutableDictionary<Hull, ImmutableArray<Hull>> combinedHulls = ImmutableDictionary<Hull, ImmutableArray<Hull>>.Empty;
 
@@ -1686,7 +1687,7 @@ namespace Barotrauma.Items.Components
             bool IsPartofSub(MapEntity entity)
             {
                 if (entity.Submarine != sub && !connectedSubs.Contains(entity.Submarine) || entity.HiddenInGame) { return false; }
-                return !settings.IgnoreOutposts || sub.IsEntityFoundOnThisSub(entity, true);
+                return sub.IsEntityFoundOnThisSub(entity, true);
             }
 
             bool IsStandaloneHull(Hull hull)

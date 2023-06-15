@@ -482,11 +482,11 @@ namespace Barotrauma.Items.Components
             character.OnWearablesChanged();
         }
 
-        public override void Drop(Character dropper)
+        public override void Drop(Character dropper, bool setTransform = true)
         {
             Character previousPicker = picker;
             Unequip(picker);
-            base.Drop(dropper);
+            base.Drop(dropper, setTransform);
             previousPicker?.OnWearablesChanged();
             picker = null;
             IsActive = false;

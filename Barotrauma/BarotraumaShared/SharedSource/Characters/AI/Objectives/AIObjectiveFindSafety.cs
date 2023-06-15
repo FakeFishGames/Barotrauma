@@ -406,7 +406,7 @@ namespace Barotrauma
                     if (allowChangingSubmarine || !potentialHull.OutpostModuleTags.Any(t => t == "airlock"))
                     {
                         // Don't allow to go outside if not already outside.
-                        var path = PathSteering.PathFinder.FindPath(character.SimPosition, potentialHull.SimPosition, character.Submarine, nodeFilter: node => node.Waypoint.CurrentHull != null);
+                        var path = PathSteering.PathFinder.FindPath(character.SimPosition, character.GetRelativeSimPosition(potentialHull), character.Submarine, nodeFilter: node => node.Waypoint.CurrentHull != null);
                         if (path.Unreachable)
                         {
                             hullSafety = 0;

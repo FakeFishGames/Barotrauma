@@ -68,7 +68,6 @@ namespace Barotrauma.Items.Components
         public bool UseDirectionalPing => useDirectionalPing;
         private bool useDirectionalPing = false;
         private Vector2 pingDirection = new Vector2(1.0f, 0.0f);
-        private bool useMineralScanner;
 
         private bool aiPingCheckPending;
 
@@ -132,6 +131,9 @@ namespace Barotrauma.Items.Components
                 hasMineralScanner = value;
             }
         }
+
+        [Serialize(true, IsPropertySaveable.Yes, alwaysUseInstanceValues: true)]
+        public bool UseMineralScanner { get; set; }
 
         public float Zoom
         {
@@ -366,7 +368,7 @@ namespace Barotrauma.Items.Components
             bool isActive = msg.ReadBoolean();
             bool directionalPing = useDirectionalPing;
             float zoomT = zoom, pingDirectionT = 0.0f;
-            bool mineralScanner = useMineralScanner;
+            bool mineralScanner = UseMineralScanner;
             if (isActive)
             {
                 zoomT = msg.ReadRangedSingle(0.0f, 1.0f, 8);
@@ -391,13 +393,13 @@ namespace Barotrauma.Items.Components
                     float pingAngle = MathHelper.Lerp(0.0f, MathHelper.TwoPi, pingDirectionT);
                     pingDirection = new Vector2((float)Math.Cos(pingAngle), (float)Math.Sin(pingAngle));
                 }
-                useMineralScanner = mineralScanner;
+                UseMineralScanner = mineralScanner;
 #if CLIENT
                 zoomSlider.BarScroll = zoomT;
                 directionalModeSwitch.Selected = useDirectionalPing;
                 if (mineralScannerSwitch != null)
                 {
-                    mineralScannerSwitch.Selected = useMineralScanner;
+                    mineralScannerSwitch.Selected = UseMineralScanner;
                 }
 #endif
             }
@@ -418,7 +420,7 @@ namespace Barotrauma.Items.Components
                     float pingAngle = MathUtils.WrapAngleTwoPi(MathUtils.VectorToAngle(pingDirection));
                     msg.WriteRangedSingle(MathUtils.InverseLerp(0.0f, MathHelper.TwoPi, pingAngle), 0.0f, 1.0f, 8);
                 }
-                msg.WriteBoolean(useMineralScanner);
+                msg.WriteBoolean(UseMineralScanner);
             }
         }
     }

@@ -533,7 +533,7 @@ namespace Barotrauma
         {
             if (characterInfo.MinReputationToHire.factionId != Identifier.Empty)
             {
-                if (campaign.GetReputation(characterInfo.MinReputationToHire.factionId) < characterInfo.MinReputationToHire.reputation)
+                if (MathF.Round(campaign.GetReputation(characterInfo.MinReputationToHire.factionId)) < characterInfo.MinReputationToHire.reputation)
                 {
                     return false;
                 }

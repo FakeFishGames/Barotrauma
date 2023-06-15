@@ -6,7 +6,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
-using Barotrauma.Steam;
 
 namespace Barotrauma
 {
@@ -1310,6 +1309,10 @@ namespace Barotrauma
 
         public override bool TryPurchase(Client client, int price)
         {
+            //disconnected clients can never purchase anything
+            //(can happen e.g. if someone starts a vote to buy something and then disconnects)
+            if (client != null && !GameMain.Server.ConnectedClients.Contains(client)) { return false; }
+
             Wallet wallet = GetWallet(client);
             if (!AllowedToManageWallets(client))
             {
@@ -1359,6 +1362,12 @@ namespace Barotrauma
             modeElement.Add(Settings.Save());
             modeElement.Add(SaveStats());
             modeElement.Add(Bank.Save());
+
+            if (GameMain.GameSession?.EventManager != null)
+            {
+                modeElement.Add(GameMain.GameSession?.EventManager.Save());
+            }
+
             CampaignMetadata?.Save(modeElement);
             Map.Save(modeElement);
             CargoManager?.SavePurchasedItems(modeElement);

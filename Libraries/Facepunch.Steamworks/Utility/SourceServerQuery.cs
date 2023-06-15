@@ -25,7 +25,7 @@ namespace Steamworks
 			SteamMatchmakingRulesResponse? responseHandler = null;
 
 			void onRulesResponded(string key, string value)
-				=> rules.Add(key, value);
+				=> rules.TryAdd(key, value);
 
 			void onRulesFailToRespond()
 			{

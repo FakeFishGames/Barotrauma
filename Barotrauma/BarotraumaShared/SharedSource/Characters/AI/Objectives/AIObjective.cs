@@ -506,6 +506,8 @@ namespace Barotrauma
             }
         }
 
+        public virtual void SpeakAfterOrderReceived() { }
+
         protected static bool CanEquip(Character character, Item item, bool allowWearing)
         {
             if (item == null) { return false; }

@@ -178,8 +178,9 @@ namespace Barotrauma.Items.Components
             var autoPilotControls = new GUIFrame(new RectTransform(new Vector2(0.75f, 0.62f), paddedControlContainer.RectTransform, Anchor.BottomCenter), "OutlineFrame");
             var paddedAutoPilotControls = new GUIFrame(new RectTransform(new Vector2(0.92f, 0.88f), autoPilotControls.RectTransform, Anchor.Center), style: null);
 
+            int textLimit = (int)(paddedAutoPilotControls.Rect.Width * 0.75f);
             maintainPosTickBox = new GUITickBox(new RectTransform(new Vector2(1, 0.333f), paddedAutoPilotControls.RectTransform, Anchor.TopCenter),
-                TextManager.Get("SteeringMaintainPos"), font: GUIStyle.SmallFont, style: "GUIRadioButton")
+                ToolBox.LimitString(TextManager.Get("SteeringMaintainPos"), GUIStyle.SmallFont, textLimit), font: GUIStyle.SmallFont, style: "GUIRadioButton")
             {
                 UserData = UIHighlightAction.ElementId.MaintainPosTickBox,
                 Enabled = autoPilot,
@@ -214,7 +215,6 @@ namespace Barotrauma.Items.Components
                     return true;
                 }
             };
-            int textLimit = (int)(paddedAutoPilotControls.Rect.Width * 0.75f);
             levelStartTickBox = new GUITickBox(new RectTransform(new Vector2(1, 0.333f), paddedAutoPilotControls.RectTransform, Anchor.Center),
                 GameMain.GameSession?.StartLocation == null ? "" : ToolBox.LimitString(GameMain.GameSession.StartLocation.Name, GUIStyle.SmallFont, textLimit),
                 font: GUIStyle.SmallFont, style: "GUIRadioButton")

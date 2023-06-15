@@ -1722,7 +1722,7 @@ namespace Barotrauma
             static void CreateMaterialCosts(GUIListBox list, UpgradePrefab prefab, int targetLevel)
             {
                 list.Content.ClearChildren();
-                List<Item> allItems = Character.Controlled?.Inventory?.FindAllItems(recursive: true) ?? new List<Item>();
+                var allItems = CargoManager.FindAllItemsOnPlayerAndSub(Character.Controlled);
 
                 var resources = prefab.GetApplicableResources(targetLevel);
 

@@ -175,6 +175,7 @@ namespace Barotrauma
             {
                 if (relativeOffset.NearlyEquals(value)) { return; }
                 relativeOffset = value;
+                recalculateRect = true;
                 RecalculateChildren(false, false);
             }
         }

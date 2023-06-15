@@ -1,4 +1,5 @@
-﻿using FarseerPhysics;
+﻿using Barotrauma.Extensions;
+using FarseerPhysics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -48,18 +49,22 @@ namespace Barotrauma.Particles
 
         private Vector2 drawPosition;
         private float drawRotation;
+
+        private Vector2 colliderRadius;
         
         private Hull currentHull;
 
         private List<Gap> hullGaps;
 
         private bool hasSubEmitters;
-        private List<ParticleEmitter> subEmitters = new List<ParticleEmitter>();
+        private readonly List<ParticleEmitter> subEmitters = new List<ParticleEmitter>();
 
         private float animState;
         private int animFrame;
 
         private float collisionUpdateTimer;
+
+        private bool changesSize;
 
         public bool HighQualityCollisionDetection;
 
@@ -127,7 +132,10 @@ namespace Barotrauma.Particles
                 position = (tracerPoints.Item1 + tracerPoints.Item2) / 2;
             }
 
+            RefreshColliderSize();
+
             sizeChange = prefab.SizeChangeMin + (prefab.SizeChangeMax - prefab.SizeChangeMin) * Rand.Range(0.0f, 1.0f);
+            changesSize = !sizeChange.NearlyEquals(Vector2.Zero);
 
             this.position = position;
             prevPosition = position;
@@ -256,8 +264,12 @@ namespace Barotrauma.Particles
                 }
             }
 
-            size.X += sizeChange.X * deltaTime;
-            size.Y += sizeChange.Y * deltaTime;
+            if (changesSize)
+            {
+                size.X += sizeChange.X * deltaTime;
+                size.Y += sizeChange.Y * deltaTime; 
+                RefreshColliderSize();
+            }
 
             if (UseMiddleColor)
             {
@@ -344,11 +356,11 @@ namespace Barotrauma.Particles
             {
                 Rectangle hullRect = currentHull.WorldRect;
                 Vector2 collisionNormal = Vector2.Zero;
-                if (velocity.Y < 0.0f && position.Y - prefab.CollisionRadius * size.Y < hullRect.Y - hullRect.Height)
+                if (velocity.Y < 0.0f && position.Y - colliderRadius.Y < hullRect.Y - hullRect.Height)
                 {
                     collisionNormal = new Vector2(0.0f, 1.0f);
                 }
-                else if (velocity.Y > 0.0f && position.Y + prefab.CollisionRadius * size.Y > hullRect.Y)
+                else if (velocity.Y > 0.0f && position.Y + colliderRadius.Y > hullRect.Y)
                 {
                     collisionNormal = new Vector2(0.0f, -1.0f);
                 }
@@ -378,11 +390,11 @@ namespace Barotrauma.Particles
                 }
 
                 collisionNormal = Vector2.Zero;
-                if (velocity.X < 0.0f && position.X - prefab.CollisionRadius * size.X < hullRect.X)
+                if (velocity.X < 0.0f && position.X - colliderRadius.X < hullRect.X)
                 {
                     collisionNormal = new Vector2(1.0f, 0.0f);
                 }
-                else if (velocity.X > 0.0f && position.X + prefab.CollisionRadius * size.X > hullRect.Right)
+                else if (velocity.X > 0.0f && position.X + colliderRadius.X > hullRect.Right)
                 {
                     collisionNormal = new Vector2(-1.0f, 0.0f);
                 }
@@ -431,6 +443,13 @@ namespace Barotrauma.Particles
             return UpdateResult.Normal;
         }
 
+        private void RefreshColliderSize()
+        {
+            if (!prefab.UseCollision) { return; }
+            colliderRadius = new Vector2(prefab.CollisionRadius);
+            if (!prefab.InvariantCollisionSize) { colliderRadius *= size; }
+        }
+
         private void ApplyDrag(float dragCoefficient, float deltaTime)
         {
             Vector2 relativeVel = velocity;
@@ -475,11 +494,11 @@ namespace Barotrauma.Particles
             {
                 if (collisionNormal.X > 0.0f)
                 {
-                    position.X = Math.Max(position.X, prevHullRect.X + prefab.CollisionRadius * size.X);
+                    position.X = Math.Max(position.X, prevHullRect.X + colliderRadius.X);
                 }
                 else
                 {
-                    position.X = Math.Min(position.X, prevHullRect.Right - prefab.CollisionRadius * size.X);
+                    position.X = Math.Min(position.X, prevHullRect.Right - colliderRadius.X);
                 }
                 velocity.X = Math.Sign(collisionNormal.X) * Math.Abs(velocity.X) * prefab.Restitution;
                 velocity.Y *= (1.0f - prefab.Friction);
@@ -488,11 +507,11 @@ namespace Barotrauma.Particles
             {
                 if (collisionNormal.Y > 0.0f)
                 {
-                    position.Y = Math.Max(position.Y, prevHullRect.Y - prevHullRect.Height + prefab.CollisionRadius * size.Y);
+                    position.Y = Math.Max(position.Y, prevHullRect.Y - prevHullRect.Height + colliderRadius.Y);
                 }
                 else
                 {
-                    position.Y = Math.Min(position.Y, prevHullRect.Y - prefab.CollisionRadius * size.Y);
+                    position.Y = Math.Min(position.Y, prevHullRect.Y - colliderRadius.Y);
 
                 }
                 velocity.X *= (1.0f - prefab.Friction);
@@ -513,26 +532,26 @@ namespace Barotrauma.Particles
 
             if (position.Y < center.Y)
             {
-                position.Y = hullRect.Y - hullRect.Height - prefab.CollisionRadius;
+                position.Y = hullRect.Y - hullRect.Height - colliderRadius.Y;
                 velocity.X *= (1.0f - prefab.Friction);
                 velocity.Y = -velocity.Y * prefab.Restitution;
             }
             else if (position.Y > center.Y)
             {
-                position.Y = hullRect.Y + prefab.CollisionRadius;
+                position.Y = hullRect.Y + colliderRadius.Y;
                 velocity.X *= (1.0f - prefab.Friction);
                 velocity.Y = -velocity.Y * prefab.Restitution;
             }
 
             if (position.X < center.X)
             {
-                position.X = hullRect.X - prefab.CollisionRadius;
+                position.X = hullRect.X - colliderRadius.X;
                 velocity.X = -velocity.X * prefab.Restitution;
                 velocity.Y *= (1.0f - prefab.Friction);
             }
             else if (position.X > center.X)
             {
-                position.X = hullRect.X + hullRect.Width + prefab.CollisionRadius;
+                position.X = hullRect.X + hullRect.Width + colliderRadius.X;
                 velocity.X = -velocity.X * prefab.Restitution;
                 velocity.Y *= (1.0f - prefab.Friction);
             }
@@ -559,11 +578,12 @@ namespace Barotrauma.Particles
 
             Color currColor = new Color(color.ToVector4() * ColorMultiplier);
 
-            if (prefab.Sprites[spriteIndex] is SpriteSheet)
+            Vector2 drawPos = new Vector2(drawPosition.X, -drawPosition.Y);
+            if (prefab.Sprites[spriteIndex] is SpriteSheet sheet)
             {
-                ((SpriteSheet)prefab.Sprites[spriteIndex]).Draw(
+                sheet.Draw(
                     spriteBatch, animFrame,
-                    new Vector2(drawPosition.X, -drawPosition.Y),
+                    drawPos,
                     currColor * (currColor.A / 255.0f),
                     prefab.Sprites[spriteIndex].Origin, drawRotation,
                     drawSize, SpriteEffects.None, prefab.Sprites[spriteIndex].Depth);
@@ -571,11 +591,23 @@ namespace Barotrauma.Particles
             else
             {
                 prefab.Sprites[spriteIndex].Draw(spriteBatch,
-                    new Vector2(drawPosition.X, -drawPosition.Y),
+                    drawPos,
                     currColor * (currColor.A / 255.0f),
                     prefab.Sprites[spriteIndex].Origin, drawRotation,
                     drawSize, SpriteEffects.None, prefab.Sprites[spriteIndex].Depth);
             }
+
+            /*if (GameMain.DebugDraw && prefab.UseCollision)
+            {
+                GUI.DrawLine(spriteBatch, 
+                    drawPos - Vector2.UnitX * colliderRadius.X, 
+                    drawPos + Vector2.UnitX * colliderRadius.X,
+                    Color.Gray);
+                GUI.DrawLine(spriteBatch, 
+                    drawPos - Vector2.UnitY * colliderRadius.Y, 
+                    drawPos + Vector2.UnitY * colliderRadius.Y, 
+                    Color.Gray);
+            }*/
         }
     }
 }
