@@ -328,11 +328,11 @@ namespace Barotrauma
             Campaign!.TransferItemsOnSubSwitch = transferItems;
         }
 
-        public void PurchaseSubmarine(SubmarineInfo newSubmarine, Client? client = null)
+        public bool TryPurchaseSubmarine(SubmarineInfo newSubmarine, Client? client = null)
         {
-            if (Campaign is null) { return; }
+            if (Campaign is null) { return false; }
             int price = newSubmarine.GetPrice();
-            if ((GameMain.NetworkMember is null || GameMain.NetworkMember is { IsServer: true }) && !Campaign.TryPurchase(client, price)) { return; }
+            if ((GameMain.NetworkMember is null || GameMain.NetworkMember is { IsServer: true }) && !Campaign.TryPurchase(client, price)) { return false; }
             if (!OwnedSubmarines.Any(s => s.Name == newSubmarine.Name))
             {
                 GameAnalyticsManager.AddMoneySpentEvent(price, GameAnalyticsManager.MoneySink.SubmarinePurchase, newSubmarine.Name);
@@ -341,6 +341,7 @@ namespace Barotrauma
                 (Campaign as MultiPlayerCampaign)?.IncrementLastUpdateIdForFlag(MultiPlayerCampaign.NetFlags.SubList);
 #endif
             }
+            return true;
         }
 
         public bool IsSubmarineOwned(SubmarineInfo query)
@@ -504,7 +505,8 @@ namespace Barotrauma
             }
             GameAnalyticsManager.AddDesignEvent($"{eventId}HintManager:{(HintManager.Enabled ? "Enabled" : "Disabled")}");
 #endif
-            if (GameMode is CampaignMode campaignMode) 
+            var campaignMode = GameMode as CampaignMode;
+            if (campaignMode != null) 
             { 
                 if (campaignMode.Map?.Radiation != null && campaignMode.Map.Radiation.Enabled)
                 {
@@ -532,7 +534,7 @@ namespace Barotrauma
             }
 #endif
 #if CLIENT
-            if (GameMode is CampaignMode && levelData != null) { SteamAchievementManager.OnBiomeDiscovered(levelData.Biome); }
+            if (campaignMode != null && levelData != null) { SteamAchievementManager.OnBiomeDiscovered(levelData.Biome); }
 
             var existingRoundSummary = GUIMessageBox.MessageBoxes.Find(mb => mb.UserData is RoundSummary)?.UserData as RoundSummary;
             if (existingRoundSummary?.ContinueButton != null)
@@ -575,6 +577,14 @@ namespace Barotrauma
 
             HintManager.OnRoundStarted();
 #endif
+            if (campaignMode is { DivingSuitWarningShown: false } &&
+                Level.Loaded != null && Level.Loaded.GetRealWorldDepth(0) > 4000)
+            {
+#if CLIENT
+                CoroutineManager.Invoke(() => new GUIMessageBox(TextManager.Get("warning"), TextManager.Get("hint.upgradedivingsuits")), delay: 5.0f);
+#endif
+                campaignMode.DivingSuitWarningShown = true;
+            }
         }
 
         private void InitializeLevel(Level? level)
@@ -691,7 +701,7 @@ namespace Barotrauma
                     if (port.IsHorizontal || port.Docked) { continue; }
                     if (port.Item.Submarine == level.StartOutpost)
                     {
-                        if (port.DockingTarget == null)
+                        if (port.DockingTarget == null || (outPostPort != null && !outPostPort.MainDockingPort && port.MainDockingPort))
                         {
                             outPostPort = port;
                         }
@@ -972,7 +982,7 @@ namespace Barotrauma
                 Dictionary<ItemPrefab, int> submarineInventory = new Dictionary<ItemPrefab, int>();
                 foreach (Item item in Item.ItemList)
                 {
-                    var rootContainer = item.GetRootContainer() ?? item;
+                    var rootContainer = item.RootContainer ?? item;
                     if (rootContainer.Submarine?.Info == null || rootContainer.Submarine.Info.Type != SubmarineType.Player) { continue; }
                     if (rootContainer.Submarine != Submarine.MainSub && !Submarine.MainSub.DockedTo.Contains(rootContainer.Submarine)) { continue; }
 

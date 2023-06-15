@@ -730,13 +730,13 @@ namespace Barotrauma
         /// <summary>
         /// How high the strength has to be for the affliction icon to be shown with a health scanner
         /// </summary>
-        public readonly float ShowInHealthScannerThreshold = 0.05f;
+        public readonly float ShowInHealthScannerThreshold;
 
         /// <summary>
         /// How strong the affliction needs to be before bots attempt to treat it.
         /// Also effects when the affliction is shown in the suitable treatments list.
         /// </summary>
-        public readonly float TreatmentThreshold = 5.0f;
+        public readonly float TreatmentThreshold;
 
         /// <summary>
         /// Bots will not try to treat the affliction if the character has any of these afflictions
@@ -847,7 +847,7 @@ namespace Barotrauma
             {
                 foreach (var itemPrefab in ItemPrefab.Prefabs)
                 {
-                    float suitability = Math.Max(itemPrefab.GetTreatmentSuitability(Identifier), itemPrefab.GetTreatmentSuitability(AfflictionType));
+                    float suitability = itemPrefab.GetTreatmentSuitability(Identifier) + itemPrefab.GetTreatmentSuitability(AfflictionType);
                     if (!MathUtils.NearlyEqual(suitability, 0.0f))
                     {
                         yield return new KeyValuePair<Identifier, float>(itemPrefab.Identifier, suitability);
@@ -915,7 +915,7 @@ namespace Barotrauma
 
             ShowInHealthScannerThreshold = element.GetAttributeFloat(nameof(ShowInHealthScannerThreshold), 
                 Math.Max(ActivationThreshold, AfflictionType == "talentbuff" ? float.MaxValue : ShowIconToOthersThreshold));
-            TreatmentThreshold = element.GetAttributeFloat(nameof(TreatmentThreshold), Math.Max(ActivationThreshold, 5.0f));
+            TreatmentThreshold = element.GetAttributeFloat(nameof(TreatmentThreshold), Math.Max(ActivationThreshold, 10.0f));
 
             DamageOverlayAlpha  = element.GetAttributeFloat(nameof(DamageOverlayAlpha), 0.0f);
             BurnOverlayAlpha    = element.GetAttributeFloat(nameof(BurnOverlayAlpha), 0.0f);

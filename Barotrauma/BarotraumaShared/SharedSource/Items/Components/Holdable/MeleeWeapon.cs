@@ -170,9 +170,9 @@ namespace Barotrauma.Items.Components
             return characterUsable || character == null;
         }
 
-        public override void Drop(Character dropper)
+        public override void Drop(Character dropper, bool setTransform = true)
         {
-            base.Drop(dropper);
+            base.Drop(dropper, setTransform);
             hitting = false;
             hitPos = 0.0f;
         }

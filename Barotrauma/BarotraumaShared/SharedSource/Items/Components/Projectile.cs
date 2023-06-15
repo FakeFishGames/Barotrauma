@@ -709,7 +709,7 @@ namespace Barotrauma.Items.Components
             return hits;
         }
 
-        public override void Drop(Character dropper)
+        public override void Drop(Character dropper, bool setTransform = true)
         {
             Item.ResetWaterDragCoefficient();
             if (dropper != null)
@@ -717,7 +717,7 @@ namespace Barotrauma.Items.Components
                 DisableProjectileCollisions();
                 Unstick();
             }
-            base.Drop(dropper);
+            base.Drop(dropper, setTransform);
         }
 
         public override void Update(float deltaTime, Camera cam)
@@ -939,7 +939,7 @@ namespace Barotrauma.Items.Components
             Character character = null;
             if (target.Body.UserData is Submarine submarine && target.UserData is not Barotrauma.Item)
             {
-                item.Move(-submarine.Position);
+                item.Move(-submarine.Position, ignoreContacts: false);
                 item.Submarine = submarine;
                 item.body.Submarine = submarine;
                 return !Hitscan;

@@ -169,7 +169,7 @@ namespace Barotrauma.Items.Components
             {
                 //whole text can fit in the textblock, no need to scroll
                 needsScrolling = false;
-                scrollingText = DisplayText.Value;
+                TextBlock.Text = scrollingText = DisplayText.Value;
                 scrollPadding = 0;
                 scrollAmount = 0.0f;
                 scrollIndex = 0;

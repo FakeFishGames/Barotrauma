@@ -143,6 +143,8 @@ namespace Barotrauma
         public virtual bool PurchasedLostShuttles { get; set; }
         public virtual bool PurchasedItemRepairs { get; set; }
 
+        public bool DivingSuitWarningShown;
+
         private static bool AnyOneAllowedToManageCampaign(ClientPermissions permissions)
         {
             if (GameMain.NetworkMember == null) { return true; }
@@ -738,9 +740,11 @@ namespace Barotrauma
                     //if there's a sub docked to the outpost, we can leave the level
                     if (Level.Loaded.StartOutpost.DockedTo.Any())
                     {
-                        var dockedSub = Level.Loaded.StartOutpost.DockedTo.FirstOrDefault();
-                        if (dockedSub == GameMain.NetworkMember?.RespawnManager?.RespawnShuttle || dockedSub.TeamID != submarineTeam) { return null; }
-                        return dockedSub.DockedTo.Contains(Submarine.MainSub) ? Submarine.MainSub : dockedSub;
+                        foreach (var dockedSub in Level.Loaded.StartOutpost.DockedTo)
+                        {
+                            if (dockedSub == GameMain.NetworkMember?.RespawnManager?.RespawnShuttle || dockedSub.TeamID != submarineTeam) { continue; }
+                            return dockedSub.DockedTo.Contains(Submarine.MainSub) ? Submarine.MainSub : dockedSub;
+                        }
                     }
 
                     //nothing docked, check if there's a sub close enough to the outpost and someone inside the outpost
@@ -776,9 +780,11 @@ namespace Barotrauma
                     //if there's a sub docked to the outpost, we can leave the level
                     if (Level.Loaded.EndOutpost.DockedTo.Any())
                     {
-                        var dockedSub = Level.Loaded.EndOutpost.DockedTo.FirstOrDefault();
-                        if (dockedSub == GameMain.NetworkMember?.RespawnManager?.RespawnShuttle || dockedSub.TeamID != submarineTeam) { return null; }
-                        return dockedSub.DockedTo.Contains(Submarine.MainSub) ? Submarine.MainSub : dockedSub;
+                        foreach (var dockedSub in Level.Loaded.EndOutpost.DockedTo)
+                        {
+                            if (dockedSub == GameMain.NetworkMember?.RespawnManager?.RespawnShuttle || dockedSub.TeamID != submarineTeam) { continue; }
+                            return dockedSub.DockedTo.Contains(Submarine.MainSub) ? Submarine.MainSub : dockedSub;
+                        }
                     }
 
                     //nothing docked, check if there's a sub close enough to the outpost and someone inside the outpost
@@ -930,6 +936,9 @@ namespace Barotrauma
                 CampaignMetadata.SetValue("campaign.endings".ToIdentifier(),  loops + 1);
             }
 
+            //no tutorials after finishing the campaign once
+            Settings.TutorialEnabled = false;
+
             GameAnalyticsManager.AddProgressionEvent(
                 GameAnalyticsManager.ProgressionStatus.Complete,
                 Preset?.Identifier.Value ?? "none");
@@ -985,7 +994,7 @@ namespace Barotrauma
             if (characterInfo == null) { return false; }
             if (characterInfo.MinReputationToHire.factionId != Identifier.Empty)
             {
-                if (GetReputation(characterInfo.MinReputationToHire.factionId) < characterInfo.MinReputationToHire.reputation)
+                if (MathF.Round(GetReputation(characterInfo.MinReputationToHire.factionId)) < characterInfo.MinReputationToHire.reputation)
                 {
                     return false;
                 }
@@ -1204,15 +1213,17 @@ namespace Barotrauma
         {
             TotalPlayTime = element.GetAttributeDouble(nameof(TotalPlayTime).ToLowerInvariant(), 0);
             TotalPassedLevels = element.GetAttributeInt(nameof(TotalPassedLevels).ToLowerInvariant(), 0);
+            DivingSuitWarningShown = element.GetAttributeBool(nameof(DivingSuitWarningShown).ToLowerInvariant(), false);
         }
 
         protected XElement SaveStats()
         {
             return new XElement("stats", 
                 new XAttribute(nameof(TotalPlayTime).ToLowerInvariant(), TotalPlayTime), 
-                new XAttribute(nameof(TotalPassedLevels).ToLowerInvariant(), TotalPassedLevels));
+                new XAttribute(nameof(TotalPassedLevels).ToLowerInvariant(), TotalPassedLevels),
+                new XAttribute(nameof(DivingSuitWarningShown).ToLowerInvariant(), DivingSuitWarningShown));
         }
-        
+
         public void LogState()
         {
             DebugConsole.NewMessage("********* CAMPAIGN STATUS *********", Color.White);

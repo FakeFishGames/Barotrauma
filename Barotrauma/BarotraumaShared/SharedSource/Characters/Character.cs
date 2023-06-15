@@ -1065,7 +1065,7 @@ namespace Barotrauma
         {
             get
             {
-                return SelectedItem == null || (SelectedItem.GetComponent<Controller>()?.AllowAiming ?? false);
+                return (SelectedItem == null || SelectedItem.GetComponent<Controller>() is { AllowAiming: true }) && !IsIncapacitated && !IsRagdolled;
             }
         }
 
@@ -1128,6 +1128,7 @@ namespace Barotrauma
         public HashSet<Identifier> MarkedAsLooted = new();
 
         public bool IsInFriendlySub => Submarine != null && Submarine.TeamID == TeamID;
+        public bool IsInPlayerSub => Submarine != null && Submarine.Info.IsPlayer;
 
         public float AITurretPriority
         {
@@ -2701,27 +2702,6 @@ namespace Barotrauma
         {
             this.onCustomInteract = onCustomInteract;
             CustomInteractHUDText = hudText;
-        }
-
-        private void TransformCursorPos()
-        {
-            if (Submarine == null)
-            {
-                //character is outside but cursor position inside
-                if (cursorPosition.Y > Level.Loaded.Size.Y)
-                {
-                    var sub = Submarine.FindContaining(cursorPosition);
-                    if (sub != null) cursorPosition += sub.Position;
-                }
-            }
-            else
-            {
-                //character is inside but cursor position is outside
-                if (cursorPosition.Y < Level.Loaded.Size.Y)
-                {
-                    cursorPosition -= Submarine.Position;
-                }
-            }
         }
 
         public void SelectCharacter(Character character)
@@ -4316,7 +4296,7 @@ namespace Barotrauma
                     if (statusEffect.type == ActionType.OnDamaged)
                     {
                         if (!statusEffect.HasRequiredAfflictions(LastDamage)) { continue; }
-                        if (statusEffect.OnlyPlayerTriggered)
+                        if (statusEffect.OnlyWhenDamagedByPlayer)
                         {
                             if (LastAttacker == null || !LastAttacker.IsPlayer)
                             {
@@ -4373,6 +4353,10 @@ namespace Barotrauma
                     if (statusEffect.HasTargetType(StatusEffect.TargetType.This) || statusEffect.HasTargetType(StatusEffect.TargetType.Character))
                     {
                         statusEffect.Apply(actionType, deltaTime, this, this);
+                    }
+                    if (statusEffect.HasTargetType(StatusEffect.TargetType.Hull) && CurrentHull != null)
+                    {
+                        statusEffect.Apply(actionType, deltaTime, this, CurrentHull);
                     }
                 }
                 if (actionType != ActionType.OnDamaged && actionType != ActionType.OnSevered)
@@ -4650,6 +4634,13 @@ namespace Barotrauma
 
             CharacterList.Remove(this);
 
+            foreach (var attachedProjectile in AttachedProjectiles.ToList())
+            {
+                attachedProjectile.Unstick();
+            }
+            Latchers.ForEachMod(l => l?.DeattachFromBody(reset: true));
+            Latchers.Clear();
+
             if (Inventory != null)
             {
                 foreach (Item item in Inventory.AllItems)
@@ -4736,6 +4727,8 @@ namespace Barotrauma
                 }
 #if SERVER
                 newItem.GetComponent<Terminal>()?.SyncHistory();
+                if (newItem.GetComponent<WifiComponent>() is WifiComponent wifiComponent) { newItem.CreateServerEvent(wifiComponent); }
+                if (newItem.GetComponent<GeneticMaterial>() is GeneticMaterial geneticMaterial) { newItem.CreateServerEvent(geneticMaterial); }
 #endif
                 int[] slotIndices = itemElement.GetAttributeIntArray("i", new int[] { 0 });
                 if (!slotIndices.Any())

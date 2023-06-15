@@ -738,8 +738,8 @@ namespace Barotrauma
             spriteBatch.GraphicsDevice.ScissorRectangle = Rectangle.Intersect(prevScissorRect, rect);
             spriteBatch.Begin(SpriteSortMode.Deferred, samplerState: GUI.SamplerState, rasterizerState: GameMain.ScissorTestEnable);
 
-            Vector2 topLeft = rectCenter + viewOffset;
-            Vector2 bottomRight = rectCenter + (viewOffset + new Vector2(Width, Height));
+            Vector2 topLeft = rectCenter + viewOffset - rect.Location.ToVector2();
+            Vector2 bottomRight = topLeft + new Vector2(Width, Height);
             Vector2 mapTileSize = mapTiles[0, 0].size * generationParams.MapTileScale;
 
             int startX = (int)Math.Floor(-topLeft.X / mapTileSize.X) - 1;

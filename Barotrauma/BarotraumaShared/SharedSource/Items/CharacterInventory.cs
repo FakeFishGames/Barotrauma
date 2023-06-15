@@ -85,6 +85,22 @@ namespace Barotrauma
             
             InitProjSpecific(element);
 
+            var itemElements = element.Elements().Where(e => e.Name.ToString().Equals("item", StringComparison.OrdinalIgnoreCase));
+            int itemCount = itemElements.Count();
+            if (itemCount > capacity)
+            {
+                DebugConsole.ThrowError($"Character \"{character.SpeciesName}\" is configured to spawn with more items than it has inventory capacity for.");
+            }
+#if DEBUG
+            else if (itemCount > capacity - 2)
+            {
+                DebugConsole.ThrowError(
+                    $"Character \"{character.SpeciesName}\" is configured to spawn with so many items it will have less than 2 free inventory slots. " +
+                    "This can cause issues with talents that spawn extra loot in monsters' inventories."
+                    + " Consider increasing the inventory size.");
+            }
+#endif
+
             if (!spawnInitialItems) { return; }
 
 #if CLIENT
@@ -92,10 +108,8 @@ namespace Barotrauma
             if (GameMain.Client != null) { return; }
 #endif
 
-            foreach (var subElement in element.Elements())
-            {
-                if (!subElement.Name.ToString().Equals("item", StringComparison.OrdinalIgnoreCase)) { continue; }
-                
+            foreach (var subElement in itemElements)
+            {                
                 string itemIdentifier = subElement.GetAttributeString("identifier", "");
                 if (!ItemPrefab.Prefabs.TryGet(itemIdentifier, out var itemPrefab))
                 {

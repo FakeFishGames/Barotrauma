@@ -320,7 +320,7 @@ namespace Barotrauma
         private static bool IsItemDelivered(Item item)
         {
             if (item.Removed || item.Condition <= 0.0f || Submarine.MainSub == null) { return false; }
-            var submarine = item.Submarine ?? item.GetRootContainer()?.Submarine;
+            var submarine = item.Submarine ?? item.RootContainer?.Submarine;
             return submarine == Submarine.MainSub || Submarine.MainSub.GetConnectedSubs().Contains(submarine);
         }
     }

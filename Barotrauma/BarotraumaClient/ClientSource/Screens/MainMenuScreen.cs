@@ -59,7 +59,6 @@ namespace Barotrauma
         private GUIImage playstyleBanner;
         private GUITextBlock playstyleDescription;
 
-        private const string RemoteContentUrl = "http://www.barotraumagame.com/gamedata/";
         private readonly GUIComponent remoteContentContainer;
         private XDocument remoteContentDoc;
 
@@ -82,6 +81,7 @@ namespace Barotrauma
         {
             GameMain.Instance.ResolutionChanged += () =>
             {
+                SetMenuTabPositioning();
                 CreateHostServerFields();
                 CreateCampaignSetupUI();
                 SettingsMenu.Create(menuTabs[Tab.Settings].RectTransform);
@@ -426,31 +426,33 @@ namespace Barotrauma
             var relativeSize = new Vector2(0.6f, 0.65f);
             var minSize = new Point(600, 400);
             var maxSize = new Point(2000, 1500);
-            var anchor = Anchor.CenterRight;
-            var pivot = Pivot.CenterRight;
-            Vector2 relativeSpacing = new Vector2(0.05f, 0.0f);
-            
-            menuTabs = new Dictionary<Tab, GUIFrame>();
+            var anchor = Anchor.Center;
+            var pivot = Pivot.Center;
+            Vector2 relativeOffset = new Vector2(0.05f, 0.0f);
 
-            menuTabs[Tab.Settings] = new GUIFrame(new RectTransform(new Vector2(relativeSize.X, 0.8f), GUI.Canvas, anchor, pivot, minSize, maxSize) { RelativeOffset = relativeSpacing },
-                style: null);
-            menuTabs[Tab.Settings].CanBeFocused = false;
-
-            menuTabs[Tab.NewGame] = new GUIFrame(new RectTransform(relativeSize * new Vector2(1.0f, 1.15f), GUI.Canvas, anchor, pivot, minSize, maxSize) { RelativeOffset = relativeSpacing });
-            menuTabs[Tab.LoadGame] = new GUIFrame(new RectTransform(relativeSize, GUI.Canvas, anchor, pivot, minSize, maxSize) { RelativeOffset = relativeSpacing });
+            menuTabs = new Dictionary<Tab, GUIFrame>
+            {
+                [Tab.Settings] = new GUIFrame(new RectTransform(new Vector2(relativeSize.X, 0.8f), GUI.Canvas, anchor, pivot, minSize, maxSize) { RelativeOffset = relativeOffset },
+                style: null)
+                {
+                    CanBeFocused = false
+                },
+                [Tab.NewGame] = new GUIFrame(new RectTransform(relativeSize * new Vector2(1.0f, 1.15f), GUI.Canvas, anchor, pivot, minSize, maxSize) { RelativeOffset = relativeOffset }),
+                [Tab.LoadGame] = new GUIFrame(new RectTransform(relativeSize, GUI.Canvas, anchor, pivot, minSize, maxSize) { RelativeOffset = relativeOffset })
+            };
 
             CreateCampaignSetupUI();
 
             var hostServerScale = new Vector2(0.7f, 1.2f);
             menuTabs[Tab.HostServer] = new GUIFrame(new RectTransform(
                 Vector2.Multiply(relativeSize, hostServerScale), GUI.Canvas, anchor, pivot, minSize.Multiply(hostServerScale), maxSize.Multiply(hostServerScale))
-            { RelativeOffset = relativeSpacing });
+            { RelativeOffset = relativeOffset });
 
             CreateHostServerFields();
 
             //----------------------------------------------------------------------
 
-            menuTabs[Tab.Tutorials] = new GUIFrame(new RectTransform(relativeSize, GUI.Canvas, anchor, pivot, minSize, maxSize) { RelativeOffset = relativeSpacing });
+            menuTabs[Tab.Tutorials] = new GUIFrame(new RectTransform(relativeSize, GUI.Canvas, anchor, pivot, minSize, maxSize) { RelativeOffset = relativeOffset });
             CreateTutorialTab();
 
             this.game = game;
@@ -471,6 +473,20 @@ namespace Barotrauma
                 SelectTab(Tab.Empty);
                 return true;
             };
+
+            SetMenuTabPositioning();
+        }
+
+        private void SetMenuTabPositioning()
+        {
+            foreach (GUIFrame menuTab in menuTabs.Values)
+            {
+                var anchor = GUI.IsUltrawide ? Anchor.Center : Anchor.CenterRight;
+                var pivot = GUI.IsUltrawide ? Pivot.Center : Pivot.CenterRight;
+                Vector2 relativeOffset = GUI.IsUltrawide ? Vector2.Zero : new Vector2(0.05f, 0.0f);
+                menuTab.RectTransform.SetPosition(anchor, pivot);
+                menuTab.RectTransform.RelativeOffset = relativeOffset;
+            }
         }
 
         private void CreateTutorialTab()
@@ -1508,10 +1524,11 @@ namespace Barotrauma
 
         private void FetchRemoteContent()
         {
-            if (string.IsNullOrEmpty(RemoteContentUrl)) { return; }
+            string remoteContentUrl = GameSettings.CurrentConfig.RemoteMainMenuContentUrl;
+            if (string.IsNullOrEmpty(remoteContentUrl)) { return; }
             try
             {
-                var client = new RestClient(RemoteContentUrl);
+                var client = new RestClient(remoteContentUrl);
                 var request = new RestRequest("MenuContent.xml", Method.GET);
                 TaskPool.Add("RequestMainMenuRemoteContent", client.ExecuteAsync(request),
                     RemoteContentReceived);

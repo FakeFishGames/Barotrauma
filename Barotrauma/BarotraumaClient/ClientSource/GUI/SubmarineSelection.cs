@@ -807,8 +807,10 @@ namespace Barotrauma
                 {
                     if (GameMain.Client == null)
                     {
-                        GameMain.GameSession.PurchaseSubmarine(selectedSubmarine);
-                        GameMain.GameSession.SwitchSubmarine(selectedSubmarine, TransferItemsOnSwitch);
+                        if (GameMain.GameSession.TryPurchaseSubmarine(selectedSubmarine))
+                        {
+                            GameMain.GameSession.SwitchSubmarine(selectedSubmarine, TransferItemsOnSwitch);
+                        }
                         RefreshSubmarineDisplay(true);
                     }
                     else
@@ -829,7 +831,7 @@ namespace Barotrauma
                 {
                     if (GameMain.Client == null)
                     {
-                        GameMain.GameSession.PurchaseSubmarine(selectedSubmarine);
+                        GameMain.GameSession.TryPurchaseSubmarine(selectedSubmarine);
                         RefreshSubmarineDisplay(true);
                     }
                     else

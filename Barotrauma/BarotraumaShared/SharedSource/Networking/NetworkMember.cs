@@ -208,19 +208,6 @@ namespace Barotrauma.Networking
         
         public TimeSpan UpdateInterval => new TimeSpan(0, 0, 0, 0, MathHelper.Clamp(1000 / ServerSettings.TickRate, 1, 500));
 
-
-        public bool CanUseRadio(Character sender)
-        {
-            if (sender == null) { return false; }
-
-            var radio = sender.Inventory.AllItems.FirstOrDefault(i => i.GetComponent<WifiComponent>() != null);
-            if (radio == null || !sender.HasEquippedItem(radio)) { return false; }
-
-            var radioComponent = radio.GetComponent<WifiComponent>();
-            if (radioComponent == null) { return false; }
-            return radioComponent.HasRequiredContainedItems(sender, addMessage: false);
-        }
-
         public void AddChatMessage(string message, ChatMessageType type, string senderName = "", Client senderClient = null, Character senderCharacter = null, PlayerConnectionChangeType changeType = PlayerConnectionChangeType.None, Color? textColor = null)
         {
             AddChatMessage(ChatMessage.Create(senderName, message, type, senderCharacter, senderClient, changeType: changeType, textColor: textColor));

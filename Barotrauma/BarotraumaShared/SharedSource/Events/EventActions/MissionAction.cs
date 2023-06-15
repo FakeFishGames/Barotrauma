@@ -60,18 +60,42 @@ namespace Barotrauma
         {
             if (isFinished) { return; }
 
+            Identifier missionDebugId = (MissionIdentifier.IsEmpty ? MissionTag : MissionIdentifier);
+
             if (GameMain.GameSession.GameMode is CampaignMode campaign)
             {
                 Mission unlockedMission = null;
-                var unlockLocation = FindUnlockLocation(MinLocationDistance, UnlockFurtherOnMap, LocationTypes);
+                var unlockLocation = FindUnlockLocation(MinLocationDistance, UnlockFurtherOnMap, LocationTypes, mustAllowLocationTypeChanges: false);
+
+                if (unlockLocation == null && UnlockFurtherOnMap)
+                {
+                    DebugConsole.NewMessage($"Failed to find a suitable location to unlock the mission \"{missionDebugId}\" further on the map. Attempting to find a location earlier on the map...");
+                    unlockLocation = FindUnlockLocation(MinLocationDistance, unlockFurtherOnMap: false, LocationTypes, mustAllowLocationTypeChanges: false);
+                }
+
                 if (unlockLocation == null && CreateLocationIfNotFound)
                 {
+                    DebugConsole.NewMessage($"Failed to find a suitable location to unlock the mission \"{missionDebugId}\". Attempting to change the type of an empty location to create a suitable location...");
                     //find an empty location at least 3 steps away, further on the map
-                    var emptyLocation = FindUnlockLocation(Math.Max(MinLocationDistance, 3), unlockFurtherOnMap: true, "none".ToIdentifier().ToEnumerable());
+                    var emptyLocation = FindUnlockLocation(Math.Max(MinLocationDistance, 3), unlockFurtherOnMap: true, "none".ToIdentifier().ToEnumerable(), 
+                        mustAllowLocationTypeChanges: true,
+                        requireCorrectFaction: false);
+                    if (emptyLocation == null)
+                    {
+                        DebugConsole.NewMessage($"Failed to find a suitable empty location further on the map. Attempting to find a location earlier on the map...");
+                        emptyLocation = FindUnlockLocation(Math.Max(MinLocationDistance, 3), unlockFurtherOnMap: false, "none".ToIdentifier().ToEnumerable(), 
+                            mustAllowLocationTypeChanges: true,
+                            requireCorrectFaction: false);
+                    }
                     if (emptyLocation != null)
                     {
+                        System.Diagnostics.Debug.Assert(!emptyLocation.LocationTypeChangesBlocked);
                         emptyLocation.ChangeType(campaign, LocationType.Prefabs[LocationTypes[0]]);
                         unlockLocation = emptyLocation;
+                        if (!RequiredFaction.IsEmpty)
+                        {
+                            emptyLocation.Faction = campaign.Factions.Find(f => f.Prefab.Identifier == RequiredFaction);
+                        }
                     }
                 }
 
@@ -115,13 +139,13 @@ namespace Barotrauma
                 }
                 else
                 {
-                    DebugConsole.AddWarning($"Failed to find a suitable location to unlock a mission in (LocationType: {LocationTypes}, MinLocationDistance: {MinLocationDistance}, UnlockFurtherOnMap: {UnlockFurtherOnMap})");
+                    DebugConsole.AddWarning($"Failed to find a suitable location to unlock the mission \"{missionDebugId}\" (LocationType: {string.Join(", ", LocationTypes)}, MinLocationDistance: {MinLocationDistance}, UnlockFurtherOnMap: {UnlockFurtherOnMap})");
                 }
             }
             isFinished = true;
         }
 
-        private Location FindUnlockLocation(int minDistance, bool unlockFurtherOnMap, IEnumerable<Identifier> locationTypes)
+        private Location FindUnlockLocation(int minDistance, bool unlockFurtherOnMap, IEnumerable<Identifier> locationTypes, bool mustAllowLocationTypeChanges, bool requireCorrectFaction = true)
         {
             var campaign = GameMain.GameSession.GameMode as CampaignMode;
             if (LocationTypes.Length == 0 && minDistance <= 1)
@@ -140,7 +164,7 @@ namespace Barotrauma
                 foreach (var location in currentLocations)
                 {
                     checkedLocations.Add(location);
-                    if (IsLocationValid(currentLocation, location, unlockFurtherOnMap, distance, minDistance, locationTypes)) 
+                    if (IsLocationValid(currentLocation, location, unlockFurtherOnMap, distance, minDistance, locationTypes, mustAllowLocationTypeChanges, requireCorrectFaction)) 
                     {
                         return location;
                     }
@@ -160,9 +184,13 @@ namespace Barotrauma
             return null;
         }
 
-        private bool IsLocationValid(Location currLocation, Location location, bool unlockFurtherOnMap, int distance, int minDistance, IEnumerable<Identifier> locationTypes)
+        private bool IsLocationValid(Location currLocation, Location location, bool unlockFurtherOnMap, int distance, int minDistance, IEnumerable<Identifier> locationTypes, bool mustAllowLocationTypeChanges, bool requireCorrectFaction)
         {
-            if (!RequiredFaction.IsEmpty)
+            if (mustAllowLocationTypeChanges && location.LocationTypeChangesBlocked)
+            {
+                return false;
+            }
+            if (requireCorrectFaction && !RequiredFaction.IsEmpty)
             {
                 if (location.Faction?.Prefab.Identifier != RequiredFaction &&
                     location.SecondaryFaction?.Prefab.Identifier != RequiredFaction)
