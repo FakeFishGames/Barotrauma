@@ -19,7 +19,7 @@ namespace Barotrauma.Items.Components
             private Vector2 end;
 
             private readonly float angle;
-            private readonly float length;
+            public readonly float Length;
 
             public Vector2 Start
             {
@@ -36,7 +36,7 @@ namespace Barotrauma.Items.Components
                 this.end = end;
 
                 angle = MathUtils.VectorToAngle(end - start);
-                length = Vector2.Distance(start, end);
+                Length = Vector2.Distance(start, end);
             }
         }
 
@@ -52,7 +52,7 @@ namespace Barotrauma.Items.Components
         private List<Vector2> nodes;
         private readonly List<WireSection> sections;
 
-        private Connection[] connections;
+        private readonly Connection[] connections;
 
         private bool canPlaceNode;
         private Vector2 newNodePos;
@@ -80,6 +80,8 @@ namespace Barotrauma.Items.Components
         {
             get { return connections; }
         }
+
+        public float Length { get; private set; }
 
         [Serialize(5000.0f, IsPropertySaveable.No, description: "The maximum distance the wire can extend (in pixels).")]
         public float MaxLength
@@ -333,7 +335,7 @@ namespace Barotrauma.Items.Components
             IsActive = false;
         }
 
-        public override void Drop(Character dropper)
+        public override void Drop(Character dropper, bool setTransform = true)
         {
             if (shouldClearConnections) { ClearConnections(dropper); }
             IsActive = false;
@@ -563,6 +565,7 @@ namespace Barotrauma.Items.Components
                 sections.Add(new WireSection(nodes[i], nodes[i + 1]));
             }
             Drawable = IsActive || sections.Count > 0;
+            Length = sections.Count > 0 ? sections.Sum(s => s.Length) : 0;
             CalculateExtents();
         }
 

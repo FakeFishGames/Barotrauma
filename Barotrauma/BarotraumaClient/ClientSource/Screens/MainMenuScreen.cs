@@ -59,7 +59,6 @@ namespace Barotrauma
         private GUIImage playstyleBanner;
         private GUITextBlock playstyleDescription;
 
-        private const string RemoteContentUrl = "http://www.barotraumagame.com/gamedata/";
         private readonly GUIComponent remoteContentContainer;
         private XDocument remoteContentDoc;
 
@@ -1525,10 +1524,11 @@ namespace Barotrauma
 
         private void FetchRemoteContent()
         {
-            if (string.IsNullOrEmpty(RemoteContentUrl)) { return; }
+            string remoteContentUrl = GameSettings.CurrentConfig.RemoteMainMenuContentUrl;
+            if (string.IsNullOrEmpty(remoteContentUrl)) { return; }
             try
             {
-                var client = new RestClient(RemoteContentUrl);
+                var client = new RestClient(remoteContentUrl);
                 var request = new RestRequest("MenuContent.xml", Method.GET);
                 TaskPool.Add("RequestMainMenuRemoteContent", client.ExecuteAsync(request),
                     RemoteContentReceived);

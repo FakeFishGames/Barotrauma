@@ -1,5 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using System;
+using System.Linq;
 
 namespace Barotrauma
 {
@@ -15,7 +16,7 @@ namespace Barotrauma
         /// <summary>
         /// Maximum amount of reputation loss you can get from damaging outpost NPCs per round
         /// </summary>
-        public const float MaxReputationLossFromNPCDamage = 10.0f;
+        public const float MaxReputationLossFromNPCDamage = 20.0f;
         /// <summary>
         /// Maximum amount of reputation loss you can get from damaging outpost walls per round
         /// </summary>
@@ -71,45 +72,50 @@ namespace Barotrauma
 
         public float GetReputationChangeMultiplier(float reputationChange)
         {
-            if (reputationChange > 0f)
+            return reputationChange switch
             {
-                float reputationGainMultiplier = 1f;
-                foreach (Character character in GameSession.GetSessionCrewCharacters(CharacterType.Both))
-                {
-                    reputationGainMultiplier *= 1f + character.GetStatValue(StatTypes.ReputationGainMultiplier, includeSaved: false);
-                    reputationGainMultiplier *= 1f + character.Info?.GetSavedStatValue(StatTypes.ReputationGainMultiplier, Identifier) ?? 0;
-                }
-                return reputationGainMultiplier;
-            }
-            else if (reputationChange < 0f)
+                > 0f => GetMultiplierForStatType(StatTypes.ReputationGainMultiplier, Identifier),
+                < 0f => GetMultiplierForStatType(StatTypes.ReputationLossMultiplier, Identifier),
+                _ => 1.0f
+            };
+
+            static float GetMultiplierForStatType(StatTypes statTypes, Identifier identifier)
             {
-                float reputationLossMultiplier = 1f;
-                foreach (Character character in GameSession.GetSessionCrewCharacters(CharacterType.Both))
+                float multiplier = 1f;
+                var crew = GameSession.GetSessionCrewCharacters(CharacterType.Both);
+                if (crew != null && crew.Any())
                 {
-                    reputationLossMultiplier *= 1f + character.GetStatValue(StatTypes.ReputationLossMultiplier, includeSaved: false);
-                    reputationLossMultiplier *= 1f + character.Info?.GetSavedStatValue(StatTypes.ReputationLossMultiplier, Identifier) ?? 0;
+                    multiplier *= 1f + crew.Max(c => c.GetStatValue(statTypes, includeSaved: false));
+                    multiplier *= 1f + crew.Max(c => c.Info?.GetSavedStatValue(statTypes, identifier) ?? 0);
                 }
-                return reputationLossMultiplier;
+                return multiplier;
             }
-            return 1.0f;
         }
 
         public void AddReputation(float reputationChange, float maxReputationChangePerRound = float.MaxValue)
         {
-            float currentValue = Value;
-            float currentReputationChange = currentValue - ReputationAtRoundStart;
-            if (Math.Abs(currentReputationChange) >= maxReputationChangePerRound &&
-                Math.Sign(currentReputationChange) == Math.Sign(reputationChange)) 
-            { 
-                return; 
+            float prevValue = Value;
+            //if we're already over the limit, do nothing (assuming the change is in the "same direction" that we've gone over the limit)
+            if (doesReputationChangeGoOverLimit(prevValue, reputationChange))
+            {
+                return;
             }
+
             float newValue = Value + reputationChange * GetReputationChangeMultiplier(reputationChange);
-            if (Math.Abs(newValue - ReputationAtRoundStart) > maxReputationChangePerRound && 
-                Math.Sign(newValue - currentValue) == Math.Sign(newValue - ReputationAtRoundStart))
+            if (doesReputationChangeGoOverLimit(newValue, newValue - prevValue))
             {
                 newValue = ReputationAtRoundStart + maxReputationChangePerRound * Math.Sign(reputationChange);
             }
+
             Value = newValue;
+
+            bool doesReputationChangeGoOverLimit(float newValue, float change)
+            {
+                float totalReputationChange = newValue - ReputationAtRoundStart;
+                return 
+                    Math.Abs(totalReputationChange) > maxReputationChangePerRound &&
+                    Math.Sign(totalReputationChange) == Math.Sign(change);
+            }
         }
 
         public readonly NamedEvent<Reputation> OnReputationValueChanged = new NamedEvent<Reputation>();

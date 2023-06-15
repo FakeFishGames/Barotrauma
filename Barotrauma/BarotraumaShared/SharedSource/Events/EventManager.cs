@@ -225,7 +225,7 @@ namespace Barotrauma
                 }                
             }
 
-            while (QueuedEventsForNextRound.Count > 0 && QueuedEventsForNextRound.Dequeue() is Identifier id)
+            while (QueuedEventsForNextRound.TryDequeue(out var id))
             {
                 var eventPrefab = EventSet.GetEventPrefab(id);
                 if (eventPrefab == null)
@@ -879,9 +879,9 @@ namespace Barotrauma
             monsterStrength = 0;
             foreach (Character character in Character.CharacterList)
             {
-                if (character.IsIncapacitated || !character.Enabled || character.IsPet) { continue; }
+                if (character.IsIncapacitated || character.IsArrested || !character.Enabled || character.IsPet) { continue; }
 
-                if (character.AIController is EnemyAIController enemyAI) 
+                if (character.AIController is EnemyAIController enemyAI)
                 {
                     if (!enemyAI.AIParams.StayInAbyss)
                     {
@@ -889,7 +889,7 @@ namespace Barotrauma
                         monsterStrength += enemyAI.CombatStrength;
                     }
 
-                    if (character.CurrentHull?.Submarine?.Info != null && 
+                    if (character.CurrentHull?.Submarine?.Info != null &&
                         (character.CurrentHull.Submarine == Submarine.MainSub || Submarine.MainSub.DockedTo.Contains(character.CurrentHull.Submarine)) &&
                         character.CurrentHull.Submarine.Info.Type == SubmarineType.Player)
                     {
@@ -902,10 +902,11 @@ namespace Barotrauma
                         // -> One Crawler adds 0.02, a Mudraptor 0.042, a Hammerhead 0.1, and a Moloch 0.25.
                         enemyDanger += enemyAI.CombatStrength / 5000.0f;
                     }
-                }     
+                }
                 else if (character.AIController is HumanAIController humanAi && !character.IsOnFriendlyTeam(CharacterTeamType.Team1))
                 {
-                    if (character.Submarine != null && 
+                    if (character.Submarine != null &&
+                        character.Submarine.PhysicsBody is { BodyType: BodyType.Dynamic } &&
                         Vector2.DistanceSquared(character.Submarine.WorldPosition, Submarine.MainSub.WorldPosition) < Sonar.DefaultSonarRange * Sonar.DefaultSonarRange)
                     {
                         //we have no easy way to define the strength of a human enemy (depends more on the sub and it's state than the character),

@@ -250,7 +250,7 @@ namespace Barotrauma.Items.Components
             int visibleElementCount = 0;
             foreach (var uiElement in uiElements)
             {
-                if (!(uiElement.UserData is CustomInterfaceElement element)) { continue; }
+                if (uiElement.UserData is not CustomInterfaceElement element) { continue; }
                 bool visible = Screen.Selected == GameMain.SubEditorScreen || element.StatusEffects.Any() || element.HasPropertyName || (element.Connection != null && element.Connection.Wires.Count > 0);
                 if (visible) { visibleElementCount++; }
                 if (uiElement.Visible != visible)
@@ -337,7 +337,9 @@ namespace Barotrauma.Items.Components
             {
                 if (uiElements[i] is GUITextBox tb)
                 {
-                    tb.Text = customInterfaceElementList[i].Signal;
+                    tb.Text = Screen.Selected is { IsEditor: true } ?
+                        customInterfaceElementList[i].Signal :
+                        TextManager.Get(customInterfaceElementList[i].Signal).Value;
                 }
                 else if (uiElements[i] is GUINumberInput ni)
                 {

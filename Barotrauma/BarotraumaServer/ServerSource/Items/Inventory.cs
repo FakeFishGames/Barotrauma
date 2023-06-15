@@ -184,6 +184,8 @@ namespace Barotrauma
             int leftHandSlot = charInv.FindLimbSlot(InvSlotType.LeftHand),
                 rightHandSlot = charInv.FindLimbSlot(InvSlotType.RightHand);
 
+            if (IsSlotIndexOutOfBound(leftHandSlot) || IsSlotIndexOutOfBound(rightHandSlot)) { return; }
+
             TryPutInOppositeHandSlot(rightHandSlot, leftHandSlot);
             TryPutInOppositeHandSlot(leftHandSlot, rightHandSlot);
 
@@ -198,6 +200,8 @@ namespace Barotrauma
                     TryPutItem(it, otherHandSlot, true, true, character, false);
                 }
             }
+
+            bool IsSlotIndexOutOfBound(int index) => index < 0 || index >= slots.Length;
         }
 
         public void ServerEventWrite(IWriteMessage msg, Client c, NetEntityEvent.IData extraData = null)

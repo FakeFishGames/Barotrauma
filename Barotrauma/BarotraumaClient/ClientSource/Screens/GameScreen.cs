@@ -435,8 +435,11 @@ namespace Barotrauma
 
                 graphics.BlendState = BlendState.NonPremultiplied;
                 graphics.SamplerStates[0] = SamplerState.PointClamp;
+                graphics.SamplerStates[1] = SamplerState.PointClamp;
                 GameMain.LightManager.LosEffect.CurrentTechnique.Passes[0].Apply();
                 Quad.Render();
+                graphics.SamplerStates[0] = SamplerState.LinearWrap;
+                graphics.SamplerStates[1] = SamplerState.LinearWrap;
             }
 
             if (Character.Controlled is { } character)

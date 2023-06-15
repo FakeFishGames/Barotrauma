@@ -905,10 +905,19 @@ namespace Barotrauma
                         Identifier talentIdentifier = talentElement.GetAttributeIdentifier("identifier", Identifier.Empty);
                         if (talentIdentifier == Identifier.Empty) { continue; }
 
+                        if (TalentPrefab.TalentPrefabs.TryGet(talentIdentifier, out TalentPrefab prefab))
+                        {
+                            foreach (TalentMigration migration in prefab.Migrations)
+                            {
+                                migration.TryApply(version, this);
+                            }
+                        }
+
                         UnlockedTalents.Add(talentIdentifier);
                     }
                 }
             }
+
             LoadHeadAttachments();
         }
 
@@ -1884,6 +1893,21 @@ namespace Barotrauma
             {
                 return 0f;
             }
+        }
+
+        public float GetSavedStatValueWithBotsInMp(StatTypes statType, Identifier statIdentifier)
+        {
+            float statValue = GetSavedStatValue(statType, statIdentifier);
+
+            if (GameMain.NetworkMember is null) { return statValue; }
+
+            foreach (Character bot in GameSession.GetSessionCrewCharacters(CharacterType.Bot))
+            {
+                int botStatValue = (int)bot.Info.GetSavedStatValue(statType, statIdentifier);
+                statValue = Math.Max(statValue, botStatValue);
+            }
+
+            return statValue;
         }
 
         public void ChangeSavedStatValue(StatTypes statType, float value, Identifier statIdentifier, bool removeOnDeath, float maxValue = float.MaxValue, bool setValue = false)

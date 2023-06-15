@@ -120,7 +120,7 @@ namespace Barotrauma
                 {
                     if (contentPackages.AtLeast(2, cp2 => cp == cp2))
                     {
-                        throw new InvalidOperationException($"Input contains duplicate packages (\"{cp.Name}\", hash: {cp.Hash?.ShortRepresentation ?? "none"})");
+                        throw new InvalidOperationException($"There are duplicates in the list of selected content packages (\"{cp.Name}\", hash: {cp.Hash?.ShortRepresentation ?? "none"})");
                     }
                 }
             }

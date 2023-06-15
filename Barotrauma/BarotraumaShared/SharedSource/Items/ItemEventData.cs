@@ -71,9 +71,9 @@ namespace Barotrauma
         {
             public EventType EventType => EventType.ItemStat;
 
-            public readonly Dictionary<ItemStatManager.TalentStatIdentifier, float> Stats;
+            public readonly Dictionary<TalentStatIdentifier, float> Stats;
 
-            public SetItemStatEventData(Dictionary<ItemStatManager.TalentStatIdentifier, float> stats)
+            public SetItemStatEventData(Dictionary<TalentStatIdentifier, float> stats)
             {
                 Stats = stats;
             }

@@ -8,7 +8,6 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 
@@ -16,6 +15,10 @@ namespace Barotrauma.Networking
 {
     sealed class GameClient : NetworkMember
     {
+        public static readonly TimeSpan CampaignSaveTransferTimeOut = new TimeSpan(0, 0, seconds: 100);
+        //this should be longer than CampaignSaveTransferTimeOut - we shouldn't give up starting the round if we're still waiting for the save file
+        public static readonly TimeSpan LevelTransitionTimeOut = new TimeSpan(0, 0, seconds: 150);
+
         public override bool IsClient => true;
         public override bool IsServer => false;
 
@@ -514,6 +517,7 @@ namespace Barotrauma.Networking
                     DisplayInLoadingScreens = true
                 };
                 Quit();
+                GUI.DisableHUD = false;
                 GameMain.ServerListScreen.Select();
                 return;
             }
@@ -931,7 +935,7 @@ namespace Barotrauma.Networking
                         ", level value count: " + levelEqualityCheckValues.Count +
                         ", seed: " + Level.Loaded.Seed +
                         ", sub: " + Submarine.MainSub.Info.Name + " (" + Submarine.MainSub.Info.MD5Hash.ShortRepresentation + ")" +
-                        ", mirrored: " + Level.Loaded.Mirrored + "). Round init status: {roundInitStatus}." + campaignErrorInfo;
+                        ", mirrored: " + Level.Loaded.Mirrored + "). Round init status: " + roundInitStatus + "." + campaignErrorInfo;
                     GameAnalyticsManager.AddErrorEventOnce("GameClient.StartGame:LevelsDontMatch" + Level.Loaded.Seed, GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
                     throw new Exception(errorMsg);
                 }
@@ -1487,16 +1491,17 @@ namespace Barotrauma.Networking
                     NetIdUtils.IdMoreRecent(campaignSaveID, campaign.PendingSaveID))
                 {
                     campaign.PendingSaveID = campaignSaveID;
-                    DateTime saveFileTimeOut = DateTime.Now + new TimeSpan(0, 0, 60);
+                    DateTime saveFileTimeOut = DateTime.Now + CampaignSaveTransferTimeOut;
                     while (NetIdUtils.IdMoreRecent(campaignSaveID, campaign.LastSaveID))
                     {
                         if (DateTime.Now > saveFileTimeOut)
                         {
                             GameStarted = true;
-                            DebugConsole.ThrowError("Failed to start campaign round (timed out while waiting for the up-to-date save file).");
+                            new GUIMessageBox(TextManager.Get("error"), TextManager.Get("campaignsavetransfer.timeout"));
                             GameMain.NetLobbyScreen.Select();
                             roundInitStatus = RoundInitStatus.Interrupted;
-                            yield return CoroutineStatus.Failure;
+                            //use success status, even though this is a failure (no need to show a console error because we show it in the message box)
+                            yield return CoroutineStatus.Success;
                         }
                         yield return new WaitForSeconds(0.1f);
                     }
@@ -1712,7 +1717,7 @@ namespace Barotrauma.Networking
                 yield return CoroutineStatus.Success;
             }
 
-            if (GameMain.GameSession != null) { GameMain.GameSession.EndRound(endMessage, traitorResults, transitionType); }
+            GameMain.GameSession?.EndRound(endMessage, traitorResults, transitionType);
             
             ServerSettings.ServerDetailsChanged = true;
 
@@ -2872,12 +2877,14 @@ namespace Barotrauma.Networking
             ClientPeer.Send(msg, DeliveryMethod.Reliable);
         }
 
-        public bool SpectateClicked(GUIButton button, object userData)
+        public bool SpectateClicked(GUIButton button, object _)
         {
-            MultiPlayerCampaign campaign = 
+            MultiPlayerCampaign campaign =
                 GameMain.NetLobbyScreen.SelectedMode == GameMain.GameSession?.GameMode.Preset ?
                 GameMain.GameSession?.GameMode as MultiPlayerCampaign : null;
-            if (campaign != null && campaign.LastSaveID < campaign.PendingSaveID)
+
+            if (FileReceiver.ActiveTransfers.Any(t => t.FileType == FileTransferType.CampaignSave) ||
+                (campaign != null && NetIdUtils.IdMoreRecent(campaign.PendingSaveID, campaign.LastSaveID)))
             {
                 new GUIMessageBox("", TextManager.Get("campaignfiletransferinprogress"));
                 return false;
@@ -3063,8 +3070,12 @@ namespace Barotrauma.Networking
                     if (votingInterface != null)
                     {
                         votingInterface.Update(deltaTime);
-                        if (!votingInterface.VoteRunning)
+                        if (!votingInterface.VoteRunning || votingInterface.TimedOut)
                         {
+                            if (votingInterface.TimedOut)
+                            {
+                                DebugConsole.AddWarning($"Voting interface timed out.");
+                            }
                             votingInterface.Remove();
                             votingInterface = null;
                         }

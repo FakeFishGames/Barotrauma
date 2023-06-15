@@ -273,9 +273,9 @@ namespace Barotrauma
         }
 
         /// <summary>
-        /// check whether line from a to b is intersecting with line from c to b
+        /// Check whether a line segment from a to b is intersecting with a line segment from c to d
         /// </summary>
-        public static bool LinesIntersect(Vector2 a, Vector2 b, Vector2 c, Vector2 d)
+        public static bool LineSegmentsIntersect(Vector2 a, Vector2 b, Vector2 c, Vector2 d)
         {
             float denominator = ((b.X - a.X) * (d.Y - c.Y)) - ((b.Y - a.Y) * (d.X - c.X));
             float numerator1 = ((a.Y - c.Y) * (d.X - c.X)) - ((a.X - c.X) * (d.Y - c.Y));
@@ -289,13 +289,18 @@ namespace Barotrauma
             return (r >= 0 && r <= 1) && (s >= 0 && s <= 1);
         }
 
-        public static bool GetLineIntersection(Vector2 a1, Vector2 a2, Vector2 b1, Vector2 b2, out Vector2 intersection)
+        /// <summary>
+        /// Find where the line segments (i.e. non-infinite lines between the points) intersect
+        /// </summary>
+        public static bool GetLineSegmentIntersection(Vector2 a1, Vector2 a2, Vector2 b1, Vector2 b2, out Vector2 intersection)
         {
-            return GetLineIntersection(a1, a2, b1, b2, false, out intersection);
+            return GetLineIntersection(a1, a2, b1, b2, areLinesInfinite: false, out intersection);
         }
 
-        // a1 is line1 start, a2 is line1 end, b1 is line2 start, b2 is line2 end
-        public static bool GetLineIntersection(Vector2 a1, Vector2 a2, Vector2 b1, Vector2 b2, bool ignoreSegments, out Vector2 intersection)
+        /// <summary>
+        /// Find where the lines intersect. Use the areLinesInfinite argument to specify whether the lines should be finite segments or inifinite
+        /// </summary>
+        public static bool GetLineIntersection(Vector2 a1, Vector2 a2, Vector2 b1, Vector2 b2, bool areLinesInfinite, out Vector2 intersection)
         {
             intersection = Vector2.Zero;
 
@@ -308,10 +313,13 @@ namespace Barotrauma
 
             Vector2 c = b1 - a1;
             float t = (c.X * d.Y - c.Y * d.X) / bDotDPerp;
-            if ((t < 0 || t > 1) && !ignoreSegments) return false;
 
-            float u = (c.X * b.Y - c.Y * b.X) / bDotDPerp;
-            if ((u < 0 || u > 1) && !ignoreSegments) return false;
+            if (!areLinesInfinite)
+            {
+                if (t < 0 || t > 1) { return false; }
+                float u = (c.X * b.Y - c.Y * b.X) / bDotDPerp;
+                if (u < 0 || u > 1) { return false; }
+            }
 
             intersection = a1 + t * b;
             return true;

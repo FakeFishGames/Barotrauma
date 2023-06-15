@@ -175,12 +175,14 @@ namespace Barotrauma.Steam
 
         public static void Update(float deltaTime)
         {
+            //this should be run even if SteamManager is uninitialized
+            //servers need to be able to notify clients of unlocked talents even if the server isn't connected to Steam
+            SteamAchievementManager.Update(deltaTime);
+
             if (!IsInitialized) { return; }
 
             if (Steamworks.SteamClient.IsValid) { Steamworks.SteamClient.RunCallbacks(); }
             if (Steamworks.SteamServer.IsValid) { Steamworks.SteamServer.RunCallbacks(); }
-
-            SteamAchievementManager.Update(deltaTime);
         }
 
         public static void ShutDown()

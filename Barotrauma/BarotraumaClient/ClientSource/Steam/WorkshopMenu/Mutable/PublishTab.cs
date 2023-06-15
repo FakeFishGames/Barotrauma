@@ -9,6 +9,7 @@ using Barotrauma.Extensions;
 using Barotrauma.IO;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Steamworks;
 using Directory = Barotrauma.IO.Directory;
 using ItemOrPackage = Barotrauma.Either<Steamworks.Ugc.Item, Barotrauma.ContentPackage>;
 using Path = Barotrauma.IO.Path;
@@ -157,7 +158,7 @@ namespace Barotrauma.Steam
                 }
 
                 var selectedTitle =
-                    new GUITextBlock(new RectTransform((1.0f, 0.05f), mainLayout.RectTransform), workshopItem.Title ?? localPackage.Name,
+                    new GUITextBlock(new RectTransform((1.0f, 0.05f), mainLayout.RectTransform), localPackage.Name,
                         font: GUIStyle.LargeFont);
                 if (workshopItem.Id != 0)
                 {
@@ -212,7 +213,7 @@ namespace Barotrauma.Steam
                     };
 
                 Label(rightTop, TextManager.Get("WorkshopItemTitle"), GUIStyle.SubHeadingFont);
-                var titleTextBox = new GUITextBox(NewItemRectT(rightTop), workshopItem.Title ?? localPackage.Name);
+                var titleTextBox = new GUITextBox(NewItemRectT(rightTop), localPackage.Name);
 
                 Label(rightTop, TextManager.Get("WorkshopItemDescription"), GUIStyle.SubHeadingFont);
                 var descriptionTextBox
@@ -320,7 +321,9 @@ namespace Barotrauma.Steam
                             workshopItem.Id == 0
                                 ? Steamworks.Ugc.Editor.NewCommunityFile
                                 : new Steamworks.Ugc.Editor(workshopItem.Id);
-                        ugcEditor = ugcEditor.WithTitle(titleTextBox.Text)
+                        ugcEditor = ugcEditor
+                            .InLanguage(SteamUtils.SteamUILanguage ?? string.Empty)
+                            .WithTitle(titleTextBox.Text)
                             .WithDescription(descriptionTextBox.Text)
                             .WithTags(tagButtons.Where(kvp => kvp.Value.Selected).Select(kvp => kvp.Key.Value))
                             .WithChangeLog(changeNoteTextBox.Text)
@@ -478,7 +481,7 @@ namespace Barotrauma.Steam
             bool stagingReady = false;
             Exception? stagingException = null;
             TaskPool.Add("CreatePublishStagingCopy",
-                SteamManager.Workshop.CreatePublishStagingCopy(modVersion, localPackage),
+                SteamManager.Workshop.CreatePublishStagingCopy(editor.Title ?? localPackage.Name, modVersion, localPackage),
                 (t) =>
                 {
                     stagingReady = true;

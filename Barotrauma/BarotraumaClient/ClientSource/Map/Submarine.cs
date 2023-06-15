@@ -116,11 +116,11 @@ namespace Barotrauma
 
             foreach (MapEntity e in entitiesToRender)
             {
-                if (!e.DrawOverWater) continue;
+                if (!e.DrawOverWater) { continue; }
 
                 if (predicate != null)
                 {
-                    if (!predicate(e)) continue;
+                    if (!predicate(e)) { continue; }
                 }
 
                 e.Draw(spriteBatch, editing, false);

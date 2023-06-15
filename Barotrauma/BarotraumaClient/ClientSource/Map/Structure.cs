@@ -58,11 +58,8 @@ namespace Barotrauma
             convexHulls ??= new List<ConvexHull>();
             var h = new ConvexHull(
                 new Rectangle((position - size / 2).ToPoint(), size.ToPoint()),
-                IsHorizontal,
-                this)
-            {
-                IsExteriorWall = IsExteriorWall
-            };
+                IsHorizontal, 
+                this);
             if (Math.Abs(rotation) > 0.001f)
             {
                 h.Rotate(position, rotation);
@@ -501,7 +498,7 @@ namespace Barotrauma
 
         private bool ConditionalMatches(PropertyConditional conditional)
         {
-            if (!string.IsNullOrEmpty(conditional.TargetItemComponent))
+            if (!string.IsNullOrEmpty(conditional.TargetItemComponentName))
             {
                 return false;
             }

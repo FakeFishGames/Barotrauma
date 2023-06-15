@@ -202,17 +202,20 @@ namespace Barotrauma
                 case CampaignMode.InteractionType.PurchaseSub:
                     submarineSelection?.Update();
                     break;
-
                 case CampaignMode.InteractionType.Crew:
                     CrewManagement?.Update();
                     break;
-
                 case CampaignMode.InteractionType.Store:
                     Store?.Update(deltaTime);
-                    break;
-                
+                    break;                
                 case CampaignMode.InteractionType.MedicalClinic:
                     MedicalClinic?.Update(deltaTime);
+                    break;
+                case CampaignMode.InteractionType.Map:
+                    if (StartButton != null)
+                    {
+                        StartButton.Enabled = CampaignMode.AllowedToManageCampaign(ClientPermissions.ManageMap) && Character.Controlled is { IsIncapacitated: false };
+                    }
                     break;
             }
         }
@@ -568,7 +571,6 @@ namespace Barotrauma
                 StartButton.Visible = false;
                 missionList.Enabled = false;
             }
-            //locationInfoPanel?.UpdateAuto(1.0f);
         }
 
         public void SelectTab(CampaignMode.InteractionType tab, Character npc = null)

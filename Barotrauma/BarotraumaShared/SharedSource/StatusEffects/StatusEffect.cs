@@ -495,7 +495,7 @@ namespace Barotrauma
 
         public readonly ImmutableArray<(Identifier propertyName, object value)> PropertyEffects;
 
-        private readonly PropertyConditional.LogicalOperatorType conditionalLogicalOperator = PropertyConditional.LogicalOperatorType.Or;
+        private readonly PropertyConditional.Comparison conditionalComparison = PropertyConditional.Comparison.Or;
         private readonly List<PropertyConditional> propertyConditionals;
         public bool HasConditions => propertyConditionals != null && propertyConditionals.Any();
 
@@ -515,6 +515,14 @@ namespace Barotrauma
         /// Can be used in conditionals to check if a StatusEffect with a specific tag is currently running. Only relevant for effects with a non-zero duration.
         /// </summary>
         private readonly HashSet<string> tags;
+
+        /// <summary>
+        /// How long the effect runs (in seconds). Note that if <see cref="Stackable"/> is true, 
+        /// there can be multiple instances of the effect running at a time. 
+        /// In other words, if the effect has a duration and executes every frame, you probably want 
+        /// to make it non-stackable or it'll lead to a large number of overlapping effects running at the same time.
+        /// </summary>
+        private readonly float duration;
 
         /// <summary>
         /// How long _can_ the event run (in seconds). The difference to <see cref="duration"/> is that 
@@ -674,13 +682,7 @@ namespace Barotrauma
         private readonly List<int> giveExperiences = new List<int>();
         private readonly List<GiveSkill> giveSkills = new List<GiveSkill>();
 
-        /// <summary>
-        /// How long the effect runs (in seconds). Note that if <see cref="Stackable"/> is true, 
-        /// there can be multiple instances of the effect running at a time. 
-        /// In other words, if the effect has a duration and executes every frame, you probably want 
-        /// to make it non-stackable or it'll lead to a large number of overlapping effects running at the same time.
-        /// </summary>
-        public readonly float Duration;
+        public float Duration => duration;
 
         /// <summary>
         /// How close to the entity executing the effect the targets must be. Only applicable if targeting NearbyCharacters or NearbyItems.
@@ -735,7 +737,7 @@ namespace Barotrauma
             AllowWhenBroken = element.GetAttributeBool("allowwhenbroken", false);
 
             Interval = element.GetAttributeFloat("interval", 0.0f);
-            Duration = element.GetAttributeFloat("duration", 0.0f);
+            duration = element.GetAttributeFloat("duration", 0.0f);
             disableDeltaTime = element.GetAttributeBool("disabledeltatime", false);
             setValue = element.GetAttributeBool("setvalue", false);
             Stackable = element.GetAttributeBool("stackable", true);
@@ -832,7 +834,7 @@ namespace Barotrauma
                         break;
                     case "conditionalcomparison":
                     case "comparison":
-                        if (!Enum.TryParse(attribute.Value, ignoreCase: true, out conditionalLogicalOperator))
+                        if (!Enum.TryParse(attribute.Value, ignoreCase: true, out conditionalComparison))
                         {
                             DebugConsole.ThrowError($"Invalid conditional comparison type \"{attribute.Value}\" in StatusEffect ({parentDebugName})");
                         }
@@ -847,7 +849,7 @@ namespace Barotrauma
                         }
                         break;
                     case "tags":
-                        if (Duration <= 0.0f || setValue)
+                        if (duration <= 0.0f || setValue)
                         {
                             //a workaround to "tags" possibly meaning either an item's tags or this status effect's tags:
                             //if the status effect doesn't have a duration, assume tags mean an item's tags, not this status effect's tags
@@ -926,7 +928,13 @@ namespace Barotrauma
                         }
                         break;
                     case "conditional":
-                        propertyConditionals.AddRange(PropertyConditional.FromXElement(subElement));
+                        foreach (XAttribute attribute in subElement.Attributes())
+                        {
+                            if (PropertyConditional.IsValid(attribute))
+                            {
+                                propertyConditionals.Add(new PropertyConditional(attribute));
+                            }
+                        }
                         break;
                     case "affliction":
                         AfflictionPrefab afflictionPrefab;
@@ -1063,7 +1071,7 @@ namespace Barotrauma
             }
             else
             {
-                return itemPrefab.Tags.Any(t => propertyConditionals.Any(pc => pc.TargetTagMatchesTagCondition(t)));
+                return itemPrefab.Tags.Any(t => propertyConditionals.Any(pc => pc.MatchesTagCondition(t)));
             }
         }
 
@@ -1159,56 +1167,97 @@ namespace Barotrauma
         {
             if (conditionals.Count == 0) { return true; }
             if (targets.Count == 0 && requiredItems.Count > 0 && requiredItems.All(ri => ri.MatchOnEmpty)) { return true; }
-
-            bool shortCircuitValue = conditionalLogicalOperator switch
+            switch (conditionalComparison)
             {
-                PropertyConditional.LogicalOperatorType.Or => true,
-                PropertyConditional.LogicalOperatorType.And => false,
-                _ => throw new NotImplementedException()
-            };
-
-            for (int i = 0; i < conditionals.Count; i++)
-            {
-                var pc = conditionals[i];
-                if (!pc.TargetContainer || targetingContainer)
-                {
-                    if (AnyTargetMatches(targets, pc.TargetItemComponent, pc) == shortCircuitValue) { return shortCircuitValue; }
-                    continue;
-                }
-
-                var target = FindTargetItemOrComponent(targets);
-                var targetItem = target as Item ?? (target as ItemComponent)?.Item;
-                if (targetItem?.ParentInventory == null)
-                {
-                    //if we're checking for inequality, not being inside a valid container counts as success
-                    //(not inside a container = the container doesn't have a specific tag/value)
-                    bool comparisonIsNeq = pc.ComparisonOperator == PropertyConditional.ComparisonOperatorType.NotEquals;
-                    if (comparisonIsNeq == shortCircuitValue)
+                case PropertyConditional.Comparison.Or:
+                    for (int i = 0; i < conditionals.Count; i++)
                     {
-                        return shortCircuitValue;
+                        var pc = conditionals[i];
+                        if (pc.TargetContainer && !targetingContainer)
+                        {
+                            var target = FindTargetItemOrComponent(targets);
+                            var targetItem = target as Item ?? (target as ItemComponent)?.Item;
+                            if (targetItem?.ParentInventory == null) 
+                            {
+                                //if we're checking for inequality, not being inside a valid container counts as success
+                                //(not inside a container = the container doesn't have a specific tag/value)
+                                if (pc.Operator == PropertyConditional.OperatorType.NotEquals)
+                                {
+                                    return true;
+                                }
+                                continue; 
+                            }
+                            var owner = targetItem.ParentInventory.Owner;
+                            if (pc.TargetGrandParent && owner is Item ownerItem)
+                            {
+                                owner = ownerItem.ParentInventory?.Owner;
+                            }
+                            if (owner is Item container) 
+                            { 
+                                if (pc.Type == PropertyConditional.ConditionType.HasTag)
+                                {
+                                    //if we're checking for tags, just check the Item object, not the ItemComponents
+                                    if (pc.Matches(container)) { return true; }
+                                }
+                                else
+                                {
+                                    if (AnyTargetMatches(container.AllPropertyObjects, pc.TargetItemComponentName, pc)) { return true; } 
+                                }                                
+                            }
+                            if (owner is Character character && pc.Matches(character)) { return true; }                            
+                        }
+                        else
+                        {
+                            if (AnyTargetMatches(targets, pc.TargetItemComponentName, pc)) { return true; }                            
+                        }
                     }
-                    continue;
-                }
-                var owner = targetItem.ParentInventory.Owner;
-                if (pc.TargetGrandParent && owner is Item ownerItem)
-                {
-                    owner = ownerItem.ParentInventory?.Owner;
-                }
-                if (owner is Item container) 
-                { 
-                    if (pc.Type == PropertyConditional.ConditionType.HasTag)
+                    return false;
+                case PropertyConditional.Comparison.And:
+                    for (int i = 0; i < conditionals.Count; i++)
                     {
-                        //if we're checking for tags, just check the Item object, not the ItemComponents
-                        if (pc.Matches(container) == shortCircuitValue) { return shortCircuitValue; }
+                        var pc = conditionals[i];
+                        if (pc.TargetContainer && !targetingContainer)
+                        {
+                            var target = FindTargetItemOrComponent(targets);
+                            var targetItem = target as Item ?? (target as ItemComponent)?.Item;
+                            if (targetItem?.ParentInventory == null) 
+                            {
+                                //if we're checking for inequality, not being inside a valid container counts as success
+                                //(not inside a container = the container doesn't have a specific tag/value)
+                                if (pc.Operator == PropertyConditional.OperatorType.NotEquals)
+                                {
+                                    continue;
+                                }
+                                return false; 
+                            }
+                            var owner = targetItem.ParentInventory.Owner;
+                            if (pc.TargetGrandParent && owner is Item ownerItem)
+                            {
+                                owner = ownerItem.ParentInventory?.Owner;
+                            }
+                            if (owner is Item container)
+                            {
+                                if (pc.Type == PropertyConditional.ConditionType.HasTag)
+                                {
+                                    //if we're checking for tags, just check the Item object, not the ItemComponents
+                                    if (!pc.Matches(container)) { return false; }
+                                }
+                                else
+                                {
+                                    if (!AnyTargetMatches(container.AllPropertyObjects, pc.TargetItemComponentName, pc)) { return false; }
+                                }
+                            }
+                            if (owner is Character character && !pc.Matches(character)) { return false; }
+                        }
+                        else
+                        {
+                            if (!AnyTargetMatches(targets, pc.TargetItemComponentName, pc)) { return false; }
+                        }
                     }
-                    else
-                    {
-                        if (AnyTargetMatches(container.AllPropertyObjects, pc.TargetItemComponent, pc) == shortCircuitValue) { return shortCircuitValue; } 
-                    }                                
-                }
-                if (owner is Character character && pc.Matches(character) == shortCircuitValue) { return shortCircuitValue; }
+                    return true;
+                default:
+                    throw new NotImplementedException();
             }
-            return !shortCircuitValue;
 
             static bool AnyTargetMatches(IReadOnlyList<ISerializableEntity> targets, string targetItemComponentName, PropertyConditional conditional)
             {
@@ -1325,13 +1374,13 @@ namespace Barotrauma
 
             if (!IsValidTarget(target)) { return; }
 
-            if (Duration > 0.0f && !Stackable)
+            if (duration > 0.0f && !Stackable)
             {
                 //ignore if not stackable and there's already an identical statuseffect
                 DurationListElement existingEffect = DurationList.Find(d => d.Parent == this && d.Targets.FirstOrDefault() == target);
                 if (existingEffect != null)
                 {
-                    existingEffect.Reset(Math.Max(existingEffect.Timer, Duration), user);
+                    existingEffect.Reset(Math.Max(existingEffect.Timer, duration), user);
                     return;
                 }
             }
@@ -1370,13 +1419,13 @@ namespace Barotrauma
                 return; 
             }
 
-            if (Duration > 0.0f && !Stackable)
+            if (duration > 0.0f && !Stackable)
             {
                 //ignore if not stackable and there's already an identical statuseffect
                 DurationListElement existingEffect = DurationList.Find(d => d.Parent == this && d.Targets.SequenceEqual(currentTargets));
                 if (existingEffect != null)
                 {
-                    existingEffect?.Reset(Math.Max(existingEffect.Timer, Duration), user);
+                    existingEffect?.Reset(Math.Max(existingEffect.Timer, duration), user);
                     return;
                 }
             }
@@ -1570,9 +1619,9 @@ namespace Barotrauma
                 }
             }
 
-            if (Duration > 0.0f)
+            if (duration > 0.0f)
             {
-                DurationList.Add(new DurationListElement(this, entity, targets, Duration, user));
+                DurationList.Add(new DurationListElement(this, entity, targets, duration, user));
             }
             else
             {
@@ -1611,7 +1660,7 @@ namespace Barotrauma
             {
                 var target = targets[i];
                 //if the effect has a duration, these will be done in the UpdateAll method
-                if (Duration > 0) { break; }
+                if (duration > 0) { break; }
                 if (target == null) { continue; }
                 foreach (Affliction affliction in Afflictions)
                 {

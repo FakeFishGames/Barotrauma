@@ -104,7 +104,7 @@ namespace Barotrauma
         /// </summary>
         OnClose = 20,
         /// <summary>
-        /// Executes when the entity spawns. Only valid for doors.
+        /// Executes when the entity spawns. Valid for items and characters.
         /// </summary>
         OnSpawn = 21,
         /// <summary>

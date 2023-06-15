@@ -29,7 +29,7 @@ namespace Barotrauma.Items.Components
         private readonly Item item;
 
         public readonly bool IsOutput;
-        
+
         public readonly List<StatusEffect> Effects;
 
         public readonly List<(ushort wireId, int? connectionIndex)> LoadedWires;
@@ -39,6 +39,9 @@ namespace Barotrauma.Items.Components
 
         //Priority in which power output will be handled - load is unaffected
         public PowerPriority Priority = PowerPriority.Default;
+
+        public Signal LastSentSignal { get; private set; }
+        public Signal LastReceivedSignal {get; private set;}
 
         public bool IsPower
         {
@@ -292,6 +295,7 @@ namespace Barotrauma.Items.Components
 
         public void SendSignal(Signal signal)
         {
+            LastSentSignal = signal;
             enumeratingWires = true;
             foreach (var wire in wires)
             {
@@ -302,6 +306,10 @@ namespace Barotrauma.Items.Components
                 signal.source?.LastSentSignalRecipients.Add(recipient);
 
                 Connection connection = recipient;
+                connection.LastReceivedSignal = signal;
+#if CLIENT
+                wire.RegisterSignal(signal, source: this);
+#endif
 
                 foreach (ItemComponent ic in recipient.item.Components)
                 {

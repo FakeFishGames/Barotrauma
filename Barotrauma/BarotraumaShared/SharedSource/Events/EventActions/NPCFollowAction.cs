@@ -46,7 +46,7 @@ namespace Barotrauma
                     var newObjective = new AIObjectiveGoTo(target, npc, humanAiController.ObjectiveManager, repeat: true)
                     {
                         OverridePriority = 100.0f,
-                        IsFollowOrderObjective = true
+                        IsFollowOrder = true
                     };
                     humanAiController.ObjectiveManager.AddObjective(newObjective);
                     humanAiController.ObjectiveManager.WaitTimer = 0.0f;

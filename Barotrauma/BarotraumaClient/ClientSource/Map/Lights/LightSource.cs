@@ -53,10 +53,6 @@ namespace Barotrauma.Lights
         [Serialize(0f, IsPropertySaveable.Yes), Editable(MinValueFloat = -360, MaxValueFloat = 360, ValueStep = 1, DecimalCount = 0)]
         public float Rotation { get; set; }
 
-        [Serialize(false, IsPropertySaveable.Yes, "Directional lights only shine in \"one direction\", meaning no shadows are cast behind them."+
-            " Note that this does not affect how the light texture is drawn: if you want something like a conical spotlight, you should use an appropriate texture for that.")]
-        public bool Directional { get; set; }
-
         public Vector2 GetOffset() => Vector2.Transform(Offset, Matrix.CreateRotationZ(MathHelper.ToRadians(Rotation)));
 
         private float flicker;
@@ -233,6 +229,7 @@ namespace Barotrauma.Lights
 
         //do we need to recalculate the vertices of the light volume
         private bool needsRecalculation;
+        private bool needsRecalculationWhenUpToDate;
         public bool NeedsRecalculation
         {
             get { return needsRecalculation; }
@@ -246,8 +243,14 @@ namespace Barotrauma.Lights
                     }
                 }
                 needsRecalculation = value;
+                if (needsRecalculation && state != LightVertexState.UpToDate)
+                {
+                    //if we're currently recalculating light vertices, mark that we need to recalculate them again after it's done
+                    needsRecalculationWhenUpToDate = true;
+                }
             }
         }
+
 
         //when were the vertices of the light volume last calculated
         public float LastRecalculationTime { get; private set; }
@@ -309,8 +312,6 @@ namespace Barotrauma.Lights
                 if (Math.Abs(value - rotation) < 0.001f) { return; }
                 rotation = value;
 
-                dir = new Vector2(MathF.Cos(rotation), -MathF.Sin(rotation));
-
                 if (Math.Abs(rotation - prevCalculatedRotation) < RotationRecalculationThreshold && vertices != null)
                 {
                     return;
@@ -320,8 +321,6 @@ namespace Barotrauma.Lights
                 NeedsRecalculation = true;
             }
         }
-
-        private Vector2 dir = Vector2.UnitX;
 
         private Vector2 _spriteScale = Vector2.One;
 
@@ -396,6 +395,8 @@ namespace Barotrauma.Lights
 
         public float Priority;
 
+        public float PriorityMultiplier = 1.0f;
+
         private Vector2 lightTextureTargetSize;
 
         public Vector2 LightTextureTargetSize
@@ -444,7 +445,7 @@ namespace Barotrauma.Lights
         public bool Enabled = true;
 
         private readonly ISerializableEntity conditionalTarget;
-        private readonly PropertyConditional.LogicalOperatorType logicalOperator;
+        private readonly PropertyConditional.Comparison comparison;
         private readonly List<PropertyConditional> conditionals = new List<PropertyConditional>();
 
         public LightSource(ContentXElement element, ISerializableEntity conditionalTarget = null)
@@ -452,8 +453,11 @@ namespace Barotrauma.Lights
         {
             lightSourceParams = new LightSourceParams(element);
             CastShadows = element.GetAttributeBool("castshadows", true);
-            logicalOperator = element.GetAttributeEnum(nameof(logicalOperator),
-                element.GetAttributeEnum("comparison", logicalOperator));
+            string comparison = element.GetAttributeString("comparison", null);
+            if (comparison != null)
+            {
+                Enum.TryParse(comparison, ignoreCase: true, out this.comparison);
+            }
 
             if (lightSourceParams.DeformableLightSpriteElement != null)
             {
@@ -466,7 +470,13 @@ namespace Barotrauma.Lights
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
                     case "conditional":
-                        conditionals.AddRange(PropertyConditional.FromXElement(subElement));
+                        foreach (XAttribute attribute in subElement.Attributes())
+                        {
+                            if (PropertyConditional.IsValid(attribute))
+                            {
+                                conditionals.Add(new PropertyConditional(attribute));
+                            }
+                        }
                         break;
                 }
             }
@@ -529,32 +539,11 @@ namespace Barotrauma.Lights
             var fullChList = ConvexHull.HullLists.FirstOrDefault(chList => chList.Submarine == sub);
             if (fullChList == null) { return; }
 
-            //used to check whether the lightsource hits the target hull if the light is directional
-            Vector2 ray = new Vector2(dir.X, -dir.Y) * TextureRange;
-            Vector2 normal = new Vector2(-ray.Y, ray.X);
-
             chList.List.Clear();
             foreach (var convexHull in fullChList.List)
             {
                 if (!convexHull.Enabled) { continue; }
                 if (!MathUtils.CircleIntersectsRectangle(lightPos, TextureRange, convexHull.BoundingBox)) { continue; }
-                if (lightSourceParams.Directional && false)
-                {
-                    Rectangle bounds = convexHull.BoundingBox;
-                    //invert because GetLineRectangleIntersection uses the messed up rects that start from top-left
-                    bounds.Y -= bounds.Height;
-
-                    //the ray can't hit if
-                    //  center is in the opposite direction from the ray (cheapest check first)
-                    if (Vector2.Dot(ray, convexHull.BoundingBox.Center.ToVector2() - lightPos) <= 0 &&
-                        /*ray doesn't hit the convex hull*/
-                        !MathUtils.GetLineRectangleIntersection(lightPos, lightPos + ray, bounds, out _) &&
-                        /*normal vectors of the ray don't hit the convex hull */
-                        !MathUtils.GetLineRectangleIntersection(lightPos + normal, lightPos - normal, bounds, out _))
-                    {
-                        continue;
-                    }
-                }
                 chList.List.Add(convexHull);
             }
             chList.IsHidden.RemoveWhere(ch => !chList.List.Contains(ch));
@@ -704,7 +693,7 @@ namespace Barotrauma.Lights
                         lock (mutex)
                         {
                             hull.RefreshWorldPositions();
-                            hull.GetVisibleSegments(drawPos, visibleSegments);
+                            hull.GetVisibleSegments(drawPos, visibleSegments);    
                             foreach (var visibleSegment in visibleSegments)
                             {
                                 if (visibleSegment.ConvexHull?.ParentEntity?.Submarine != null)
@@ -713,7 +702,6 @@ namespace Barotrauma.Lights
                                 }
                             }
                         }
-                        
                     }
                 }
                 foreach (ConvexHull hull in chList.List)
@@ -812,7 +800,7 @@ namespace Barotrauma.Lights
                         }
                         else
                         {
-                            intersects = MathUtils.GetLineIntersection(p1a, p1b, p2a, p2b, out intersection);
+                            intersects = MathUtils.GetLineSegmentIntersection(p1a, p1b, p2a, p2b, out intersection);
                         }
 
                         if (intersects)
@@ -1006,7 +994,7 @@ namespace Barotrauma.Lights
                 }
                 else
                 {
-                    intersects = MathUtils.GetLineIntersection(rayStart, rayEnd, s.Start.WorldPos, s.End.WorldPos, out intersection);
+                    intersects = MathUtils.GetLineSegmentIntersection(rayStart, rayEnd, s.Start.WorldPos, s.End.WorldPos, out intersection);
                 }
 
                 if (intersects)
@@ -1041,9 +1029,11 @@ namespace Barotrauma.Lights
 
             Vector2 drawPos = calculatedDrawPos;
 
+            float cosAngle = (float)Math.Cos(Rotation);
+            float sinAngle = -(float)Math.Sin(Rotation);
+
             Vector2 uvOffset = Vector2.Zero;
             Vector2 overrideTextureDims = Vector2.One;
-            Vector2 dir = this.dir;
             if (OverrideLightTexture != null)
             {
                 overrideTextureDims = new Vector2(OverrideLightTexture.SourceRect.Width, OverrideLightTexture.SourceRect.Height);
@@ -1052,7 +1042,8 @@ namespace Barotrauma.Lights
                 if (LightSpriteEffect == SpriteEffects.FlipHorizontally)
                 {
                     origin.X = OverrideLightTexture.SourceRect.Width - origin.X;
-                    dir = -dir;
+                    cosAngle = -cosAngle;
+                    sinAngle = -sinAngle;
                 }
                 if (LightSpriteEffect == SpriteEffects.FlipVertically) { origin.Y = OverrideLightTexture.SourceRect.Height - origin.Y; }
                 uvOffset = (origin / overrideTextureDims) - new Vector2(0.5f, 0.5f);
@@ -1125,8 +1116,8 @@ namespace Barotrauma.Lights
                     //calculate texture coordinates based on the light's rotation
                     Vector2 originDiff = diff;
 
-                    diff.X = originDiff.X * dir.X - originDiff.Y * dir.Y;
-                    diff.Y = originDiff.X * dir.Y + originDiff.Y * dir.X;
+                    diff.X = originDiff.X * cosAngle - originDiff.Y * sinAngle;
+                    diff.Y = originDiff.X * sinAngle + originDiff.Y * cosAngle;
                     diff *= (overrideTextureDims / OverrideLightTexture.size);// / (1.0f - Math.Max(Math.Abs(uvOffset.X), Math.Abs(uvOffset.Y)));
                     diff += uvOffset;
                 }
@@ -1231,6 +1222,9 @@ namespace Barotrauma.Lights
                 }
                 drawPos.Y = -drawPos.Y;
 
+                float cosAngle = (float)Math.Cos(Rotation);
+                float sinAngle = -(float)Math.Sin(Rotation);
+
                 float bounds = TextureRange;
 
                 if (OverrideLightTexture != null)
@@ -1242,8 +1236,8 @@ namespace Barotrauma.Lights
                     origin /= Math.Max(overrideTextureDims.X, overrideTextureDims.Y);
                     origin *= TextureRange;
 
-                    drawPos.X += origin.X * dir.Y + origin.Y * dir.X;
-                    drawPos.Y += origin.X * dir.X + origin.Y * dir.Y;
+                    drawPos.X += origin.X * sinAngle + origin.Y * cosAngle;
+                    drawPos.Y += origin.X * cosAngle + origin.Y * sinAngle;
                 }
 
                 //add a square-shaped boundary to make sure we've got something to construct the triangles from
@@ -1349,7 +1343,7 @@ namespace Barotrauma.Lights
         {
             if (conditionals.None()) { return; }
             if (conditionalTarget == null) { return; }
-            if (logicalOperator == PropertyConditional.LogicalOperatorType.And)
+            if (comparison == PropertyConditional.Comparison.And)
             {
                 Enabled = conditionals.All(c => c.Matches(conditionalTarget));
             }
@@ -1405,7 +1399,9 @@ namespace Barotrauma.Lights
                     CalculateLightVertices(verts);
 
                     LastRecalculationTime = (float)Timing.TotalTime;
-                    NeedsRecalculation = false;
+                    NeedsRecalculation = needsRecalculationWhenUpToDate;
+                    needsRecalculationWhenUpToDate = false;
+
                     state = LightVertexState.UpToDate;
                 }
             }

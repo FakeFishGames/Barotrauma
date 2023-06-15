@@ -240,7 +240,7 @@ namespace Barotrauma
 
         private void UpdatePending()
         {
-            if (!(pendingHealList is { } healList)) { return; }
+            if (pendingHealList is not { } healList) { return; }
 
             ImmutableArray<MedicalClinic.NetCrewMember> pendingList = medicalClinic.PendingHeals.ToImmutableArray();
 
@@ -493,20 +493,26 @@ namespace Barotrauma
 
             GUIButton treatAllButton = new GUIButton(new RectTransform(new Vector2(1.0f, 0.05f), clinicContainer.RectTransform), TextManager.Get("medicalclinic.treateveryone"))
             {
-                OnClicked = (_, _) =>
+                OnClicked = (button, _) =>
                 {
+                    if (isWaitingForServer) { return true; }
+
+                    button.Enabled = false;
                     isWaitingForServer = true;
-                    medicalClinic.TreatAllButtonAction(OnReceived);
+
+                    bool wasSuccessful = medicalClinic.TreatAllButtonAction(_ => ReEnableButton());
+                    if (!wasSuccessful) { ReEnableButton(); }
+
+                    void ReEnableButton()
+                    {
+                        isWaitingForServer = false;
+                        button.Enabled = true;
+                    }
                     return true;
                 }
             };
 
             crewHealList = new CrewHealList(crewList, parent, treatAllButton);
-
-            void OnReceived(MedicalClinic.CallbackOnlyRequest obj)
-            {
-                isWaitingForServer = false;
-            }
         }
 
         private void CreateCrewEntry(GUIComponent parent, CrewHealList healList, CharacterInfo info, GUIComponent panel)
@@ -585,8 +591,10 @@ namespace Barotrauma
                 OnClicked = (button, _) =>
                 {
                     button.Enabled = false;
-                    medicalClinic.HealAllButtonAction(request =>
+                    isWaitingForServer = true;
+                    bool wasSuccessful = medicalClinic.HealAllButtonAction(request =>
                     {
+                        isWaitingForServer = false;
                         switch (request.HealResult)
                         {
                             case MedicalClinic.HealRequestResult.InsufficientFunds:
@@ -600,6 +608,12 @@ namespace Barotrauma
                         button.Enabled = true;
                         ClosePopup();
                     });
+
+                    if (!wasSuccessful)
+                    {
+                        isWaitingForServer = false;
+                        button.Enabled = true;
+                    }
                     ClosePopup();
                     return true;
                 }
@@ -610,11 +624,19 @@ namespace Barotrauma
                 ClickSound = GUISoundType.Cart,
                 OnClicked = (button, _) =>
                 {
+                    if (isWaitingForServer) { return true; }
+
                     button.Enabled = false;
-                    medicalClinic.ClearAllButtonAction(_ =>
+                    isWaitingForServer = true;
+
+                    bool wasSuccessful = medicalClinic.ClearAllButtonAction(_ => ReEnableButton());
+                    if (!wasSuccessful) { ReEnableButton(); }
+
+                    void ReEnableButton()
                     {
+                        isWaitingForServer = false;
                         button.Enabled = true;
-                    });
+                    }
                     return true;
                 }
             };
@@ -701,10 +723,15 @@ namespace Barotrauma
                 OnClicked = (button, _) =>
                 {
                     button.Enabled = false;
-                    medicalClinic.RemovePendingButtonAction(crewMember, affliction, _ =>
+                    bool wasSuccessful = medicalClinic.RemovePendingButtonAction(crewMember, affliction, _ =>
                     {
                         button.Enabled = true;
                     });
+
+                    if (!wasSuccessful)
+                    {
+                        button.Enabled = true;
+                    }
                     return true;
                 }
             };
@@ -792,7 +819,13 @@ namespace Barotrauma
             selectedCrewAfflictionList = popupAfflictionList;
 
             isWaitingForServer = true;
-            medicalClinic.RequestAfflictions(info, OnReceived);
+            bool wasSuccessful = medicalClinic.RequestAfflictions(info, OnReceived);
+
+            if (!wasSuccessful)
+            {
+                isWaitingForServer = false;
+                ClosePopup();
+            }
 
             void OnReceived(MedicalClinic.AfflictionRequest request)
             {
@@ -800,6 +833,16 @@ namespace Barotrauma
 
                 if (request.Result != MedicalClinic.RequestResult.Success)
                 {
+                    switch (request.Result)
+                    {
+                        case MedicalClinic.RequestResult.CharacterInfoMissing:
+                            DebugConsole.ThrowError($"Unable to select character \"{info.Character?.DisplayName}\" in medical clini because the character health was missing.");
+                            break;
+                        case MedicalClinic.RequestResult.CharacterNotFound:
+                            DebugConsole.ThrowError($"Unable to select character \"{info.Character?.DisplayName} in medical clinic because the server was unable to find a character with ID {info.ID}.");
+                            break;
+                    }
+
                     feedbackBlock.Text = GetErrorText(request.Result);
                     feedbackBlock.TextColor = GUIStyle.Red;
                     return;
@@ -953,14 +996,20 @@ namespace Barotrauma
             }
 
             existingMember.Afflictions = existingMember.Afflictions.Concat(afflictions).ToImmutableArray();
+
             ToggleElements(ElementState.Disabled, elementsToDisable);
-            medicalClinic.AddPendingButtonAction(existingMember, request =>
+            bool wasSuccessful = medicalClinic.AddPendingButtonAction(existingMember, request =>
             {
                 if (request.Result == MedicalClinic.RequestResult.Timeout)
                 {
                     ToggleElements(ElementState.Enabled, elementsToDisable);
                 }
             });
+
+            if (!wasSuccessful)
+            {
+                ToggleElements(ElementState.Enabled, elementsToDisable);
+            }
         }
 
         #warning TODO: this doesn't seem like the right place for this, and it's not clear from the method signature how this differs from ToolBox.LimitString
@@ -1090,9 +1139,8 @@ namespace Barotrauma
         {
             return result switch
             {
-                MedicalClinic.RequestResult.Error => TextManager.Get("error"),
                 MedicalClinic.RequestResult.Timeout => TextManager.Get("medicalclinic.requesttimeout"),
-                _ => "What the hell did you just do" // this should never happen
+                _ => TextManager.Get("error")
             };
         }
 

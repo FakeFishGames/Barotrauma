@@ -870,7 +870,7 @@ namespace Barotrauma
                     {
                         if (wearable.Type == WearableType.Hair)
                         {
-                            if (HairWithHatSprite != null)
+                            if (HairWithHatSprite != null && !hideLimb)
                             {
                                 DrawWearable(HairWithHatSprite, depthStep, spriteBatch, blankColor, alpha: color.A / 255f, spriteEffect);
                                 depthStep += step;

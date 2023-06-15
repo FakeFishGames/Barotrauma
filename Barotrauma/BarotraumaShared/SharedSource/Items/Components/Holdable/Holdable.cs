@@ -321,12 +321,12 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public override void Drop(Character dropper)
+        public override void Drop(Character dropper, bool setTransform = true)
         {
-            Drop(true, dropper);
+            Drop(true, dropper, setTransform);
         }
 
-        private void Drop(bool dropConnectedWires, Character dropper)
+        private void Drop(bool dropConnectedWires, Character dropper, bool setTransform = true)
         {
             GetRope()?.Snap();
             if (dropConnectedWires)
@@ -343,8 +343,11 @@ namespace Barotrauma.Items.Components
                 DeattachFromWall();
             }
 
-            if (Pusher != null) { Pusher.Enabled = false; }
-            if (item.body != null) { item.body.Enabled = true; }
+            if (setTransform)
+            {
+                if (Pusher != null) { Pusher.Enabled = false; }
+                if (item.body != null) { item.body.Enabled = true; }
+            }
             IsActive = false;
             attachTargetCell = null;
 
@@ -357,7 +360,7 @@ namespace Barotrauma.Items.Components
 
             item.Submarine = picker.Submarine;
 
-            if (item.body != null)
+            if (item.body != null && setTransform)
             {
                 if (item.body.Removed)
                 {
@@ -599,6 +602,10 @@ namespace Barotrauma.Items.Components
                 throw new InvalidOperationException($"Tried to attach an item with no physics body to a wall ({item.Prefab.Identifier}).");
             }
 
+            body.Enabled = false;
+            body.SetTransformIgnoreContacts(body.SimPosition, rotation: 0.0f);
+            item.body = null;
+
             //outside hulls/subs -> we need to check if the item is being attached on a structure outside the sub
             if (item.CurrentHull == null && item.Submarine == null)
             {
@@ -637,9 +644,6 @@ namespace Barotrauma.Items.Components
                     contained.SetTransform(item.SimPosition, contained.body.Rotation);
                 }
             }
-
-            body.Enabled = false;
-            item.body = null;
 
             DisplayMsg = prevMsg;
             PickKey = prevPickKey;
@@ -700,7 +704,8 @@ namespace Barotrauma.Items.Components
                     }
                     Vector2 attachPos = GetAttachPosition(character, useWorldCoordinates: true);
                     Submarine attachSubmarine = Structure.GetAttachTarget(attachPos)?.Submarine ?? item.Submarine;
-                    int maxAttachableCount = (int)character.Info.GetSavedStatValue(StatTypes.MaxAttachableCount, item.Prefab.Identifier);
+                    int maxAttachableCount = (int)character.Info.GetSavedStatValueWithBotsInMp(StatTypes.MaxAttachableCount, item.Prefab.Identifier);
+
                     int currentlyAttachedCount = Item.ItemList.Count(
                         i => i.Submarine == attachSubmarine && i.GetComponent<Holdable>() is Holdable holdable && holdable.Attached && i.Prefab.Identifier == item.Prefab.Identifier);
                     if (maxAttachableCount == 0)
@@ -811,7 +816,7 @@ namespace Barotrauma.Items.Components
                     foreach (var edge in cell.Edges)
                     {
                         if (!edge.IsSolid) { continue; }
-                        if (MathUtils.GetLineIntersection(edge.Point1, edge.Point2, user.WorldPosition, attachPos, out Vector2 intersection))
+                        if (MathUtils.GetLineSegmentIntersection(edge.Point1, edge.Point2, user.WorldPosition, attachPos, out Vector2 intersection))
                         {
                             attachPos = intersection;
                             edgeFound = true;

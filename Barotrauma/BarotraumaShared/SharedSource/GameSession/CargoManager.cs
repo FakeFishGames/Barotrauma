@@ -416,7 +416,7 @@ namespace Barotrauma
                 }
             }
 #endif
-            return FindAllSellableItems().Where(it => IsItemSellable(it, confirmedSoldEntities));
+            return FindAllSellableItems().Where(it => IsItemSellable(it, confirmedSoldEntities)).ToList();
         }
 
         public static IReadOnlyCollection<Item> FindAllItemsOnPlayerAndSub(Character character)
@@ -440,7 +440,7 @@ namespace Barotrauma
                 if (!item.Components.All(static c => c is not Holdable { Attachable: true, Attached: true })) { return false; }
                 if (!item.Components.All(static c => c is not Wire w || w.Connections.All(static c => c is null))) { return false; }
                 if (!ItemAndAllContainersInteractable(item)) { return false; }
-                if (item.GetRootContainer() is { } rootContainer && rootContainer.HasTag("dontsellitems")) { return false; }
+                if (item.RootContainer is Item rootContainer && rootContainer.HasTag("dontsellitems")) { return false; }
                 return true;
             }).Distinct();
 
@@ -610,7 +610,7 @@ namespace Barotrauma
                     (itemContainer?.Item ?? item).CampaignInteractionType = CampaignMode.InteractionType.Cargo;    
                     static void itemSpawned(PurchasedItem purchased, Item item)
                     {
-                        Submarine sub = item.Submarine ?? item.GetRootContainer()?.Submarine;
+                        Submarine sub = item.Submarine ?? item.RootContainer?.Submarine;
                         if (sub != null)
                         {
                             foreach (WifiComponent wifiComponent in item.GetComponents<WifiComponent>())

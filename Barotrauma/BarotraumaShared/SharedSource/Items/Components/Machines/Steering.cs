@@ -444,7 +444,7 @@ namespace Barotrauma.Items.Components
             if (connectedSubUpdateTimer <= 0.0f)
             {
                 connectedSubs.Clear();
-                connectedSubs = controlledSub?.GetConnectedSubs();                
+                connectedSubs.AddRange(controlledSub.GetConnectedSubs());                
                 connectedSubUpdateTimer = ConnectedSubUpdateInterval;
             }
 
@@ -535,7 +535,7 @@ namespace Barotrauma.Items.Components
 
                 foreach (GraphEdge edge in cell.Edges)
                 {
-                    if (MathUtils.GetLineIntersection(edge.Point1 + cell.Translation, edge.Point2 + cell.Translation, controlledSub.WorldPosition, cell.Center, out Vector2 intersection))
+                    if (MathUtils.GetLineSegmentIntersection(edge.Point1 + cell.Translation, edge.Point2 + cell.Translation, controlledSub.WorldPosition, cell.Center, out Vector2 intersection))
                     {
                         Vector2 diff = controlledSub.WorldPosition - intersection;
                         //far enough -> ignore

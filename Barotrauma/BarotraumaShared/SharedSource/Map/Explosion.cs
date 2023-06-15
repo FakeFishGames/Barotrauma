@@ -10,37 +10,169 @@ using System.Linq;
 
 namespace Barotrauma
 {
+    /// <summary>
+    /// Explosions are area of effect attacks that can damage characters, items and structures.
+    /// </summary>
+    /// <doc>
+    /// <Field Identifier="showEffects" Type="bool" DefaultValue="true">
+    ///     Used to enable all particle effects without having to specify them one by one.
+    /// </Field>
+    /// </doc>
     partial class Explosion
     {
         public readonly Attack Attack;
 
+        /// <summary>
+        /// How much force the explosion applies to the characters.
+        /// </summary>
         private readonly float force;
 
-        private readonly float cameraShake, cameraShakeRange;
+        /// <summary>
+        /// Intensity of the screen shake effect.
+        /// </summary>
+        /// <doc>
+        /// <override type="DefaultValue">
+        ///     10% of the range if showEffects is true, 0 otherwise.
+        /// </override>
+        /// </doc>
+        private readonly float cameraShake;
 
+        /// <summary>
+        /// How far away does the camera shake effect reach.
+        /// </summary>
+        /// <doc>
+        /// <override type="DefaultValue">
+        ///     Same as attack range if showEffects is true, 0 otherwise.
+        /// </override>
+        /// </doc>
+        private readonly float cameraShakeRange;
+
+        /// <summary>
+        /// Color tint to apply to the player's screen when in range of the explosion.
+        /// </summary>
         private readonly Color screenColor;
-        private readonly float screenColorRange, screenColorDuration;
 
-        private bool sparks, shockwave, flames, smoke, flash, underwaterBubble;
+        /// <summary>
+        /// How far away can the screen color effect be seen.
+        /// </summary>
+        /// <doc>
+        /// <override type="DefaultValue">
+        ///     10% of the range if showEffects is true, 0 otherwise.
+        /// </override>
+        /// </doc>
+        private readonly float screenColorRange;
+
+        /// <summary>
+        /// How long the screen color effect lasts.
+        /// </summary>
+        private readonly float screenColorDuration;
+
+        /// <summary>
+        /// Whether a spark particle effect is created when the explosion happens.
+        /// </summary>
+        private bool sparks;
+
+        /// <summary>
+        /// Whether a shockwave particle effect is created when the explosion happens.
+        /// </summary>
+        private bool shockwave;
+
+        /// <summary>
+        /// Whether a flame particle effect is created when the explosion happens.
+        /// </summary>
+        private bool flames;
+
+        /// <summary>
+        /// Whether a smoke particle effect is created when the explosion happens.
+        /// </summary>
+        private bool smoke;
+
+        /// <summary>
+        /// Whether a flash effect is created when the explosion happens.
+        /// </summary>
+        private bool flash;
+
+        /// <summary>
+        /// Whether a underwater bubble particle effect is created when the explosion happens.
+        /// </summary>
+        private bool underwaterBubble;
+
+        /// <summary>
+        /// Color of the light source created by the explosion.
+        /// </summary>
         private readonly Color flashColor;
+
+        /// <summary>
+        /// Whether the explosion plays a tinnitus sound to players who get hit by it.
+        /// </summary>
         private readonly bool playTinnitus;
+
+        /// <summary>
+        /// Whether the explosion executes 'OnFire' status effects on the items it hits.
+        /// </summary>
+        /// <doc>
+        /// <override type="DefaultValue">
+        ///     true if showEffects is true and flames haven't been explicitly set to false, false otherwise.
+        /// </override>
+        /// </doc>
         private readonly bool applyFireEffects;
+
+        /// <summary>
+        /// List of item tags that the explosion ignores when applying fire effects.
+        /// </summary>
         private readonly string[] ignoreFireEffectsForTags;
+
+        /// <summary>
+        /// When set to true, the explosion don't deal less damage when the target is behind a solid object.
+        /// </summary>
         private readonly bool ignoreCover;
+
+        /// <summary>
+        /// How long the light source created by the explosion lasts.
+        /// </summary>
         private readonly float flashDuration;
+
+        /// <summary>
+        /// How large the light source created by the explosion is.
+        /// </summary>
         private readonly float? flashRange;
+
+        /// <summary>
+        /// Identifier of the decal the explosion creates on the background structure it explodes over.
+        /// Set to empty string to disable.
+        /// </summary>
         private readonly string decal;
+
+        /// <summary>
+        /// Relative size of the decal created by the explosion.
+        /// </summary>
         private readonly float decalSize;
-        private readonly bool applyToSelf;
 
-        public bool OnlyInside, OnlyOutside;
+        /// <summary>
+        /// Whether the explosion only affects characters inside a submarine.
+        /// </summary>
+        public bool OnlyInside;
 
+        /// <summary>
+        /// Whether the explosion only affects characters outside a submarine.
+        /// </summary>
+        public bool OnlyOutside;
+
+        /// <summary>
+        /// How much the explosion repairs items.
+        /// </summary>
         private readonly float itemRepairStrength;
 
         public readonly HashSet<Submarine> IgnoredSubmarines = new HashSet<Submarine>();
 
+        /// <summary>
+        /// Strength of the EMP effect created by the explosion.
+        /// </summary>
         public float EmpStrength { get; set; }
-        
+
+        /// <summary>
+        /// How much damage the explosion does to ballast flora.
+        /// </summary>
         public float BallastFloraDamage { get; set; }
 
         public Explosion(float range, float force, float damage, float structureDamage, float itemDamage, float empStrength = 0.0f, float ballastFloraStrength = 0.0f)
@@ -65,8 +197,6 @@ namespace Barotrauma
             Attack = new Attack(element, parentDebugName + ", Explosion");
 
             force = element.GetAttributeFloat("force", 0.0f);
-
-            applyToSelf = element.GetAttributeBool("applytoself", true);
 
             //the "abilityexplosion" field is kept for backwards compatibility (basically the opposite of "showeffects")
             bool showEffects = !element.GetAttributeBool("abilityexplosion", false) && element.GetAttributeBool("showeffects", true);
@@ -196,7 +326,9 @@ namespace Barotrauma
                     var lightComponent = item.GetComponent<LightComponent>();
                     if (lightComponent != null)
                     {
-                        lightComponent.TemporaryFlickerTimer = Math.Min(EmpStrength * distFactor, 10.0f);
+                        //multiply by 10 to make the effect more noticeable
+                        //(a strength of 1 is already enough to kill power and shut down the lights, but we want weaker EMPs to make the lights flicker noticeably)
+                        lightComponent.TemporaryFlickerTimer = Math.Min(EmpStrength * distFactor * 10.0f, 10.0f);
                     }
 
                     //discharge batteries
@@ -231,7 +363,7 @@ namespace Barotrauma
                 return;
             }
 
-            DamageCharacters(worldPosition, Attack, force, damageSource, attacker, applyToSelf);
+            DamageCharacters(worldPosition, Attack, force, damageSource, attacker);
 
             if (GameMain.NetworkMember == null || !GameMain.NetworkMember.IsClient)
             {
@@ -284,8 +416,8 @@ namespace Barotrauma
         }
 
         partial void ExplodeProjSpecific(Vector2 worldPosition, Hull hull);
-        
-        private void DamageCharacters(Vector2 worldPosition, Attack attack, float force, Entity damageSource, Character attacker, bool applyToSelf)
+
+        private void DamageCharacters(Vector2 worldPosition, Attack attack, float force, Entity damageSource, Character attacker)
         {
             if (attack.Range <= 0.0f) { return; }
 
@@ -300,7 +432,6 @@ namespace Barotrauma
                 {
                     continue;
                 }
-                //if (c == attacker && !applyToSelf) { continue; }
 
                 if (OnlyInside && c.Submarine == null) 
                 { 
@@ -513,21 +644,28 @@ namespace Barotrauma
                 for (int i = Level.Loaded.ExtraWalls.Count - 1; i >= 0; i--)
                 {
                     if (Level.Loaded.ExtraWalls[i] is not DestructibleLevelWall destructibleWall) { continue; }
+
+                    bool inRange = false;
                     foreach (var cell in destructibleWall.Cells)
                     {
                         if (cell.IsPointInside(worldPosition))
                         {
-                            destructibleWall.AddDamage(levelWallDamage, worldPosition);
-                            continue;
+                            inRange = true;
+                            break;
                         }
                         foreach (var edge in cell.Edges)
                         {
                             if (MathUtils.LineSegmentToPointDistanceSquared((edge.Point1 + cell.Translation).ToPoint(), (edge.Point2 + cell.Translation).ToPoint(), worldPosition.ToPoint()) < worldRange * worldRange)
                             {
-                                destructibleWall.AddDamage(levelWallDamage, worldPosition);
+                                inRange = true;
                                 break;
                             }
                         }
+                        if (inRange) { break; }
+                    }
+                    if (inRange)
+                    {
+                        destructibleWall.AddDamage(levelWallDamage, worldPosition);
                     }
                 }
             }

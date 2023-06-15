@@ -575,8 +575,8 @@ namespace Barotrauma
 
             if (removeItem)
             {
-                item.Drop(user);
-                if (item.ParentInventory != null) { item.ParentInventory.RemoveItem(item); }
+                item.Drop(user, setTransform: false);
+                item.ParentInventory?.RemoveItem(item);
             }
 
             slots[i].Add(item);
@@ -742,13 +742,13 @@ namespace Barotrauma
                     stackedItems.Distinct().All(stackedItem => TryPutItem(stackedItem, index, false, false, user, createNetworkEvent))
                     &&
                     (existingItems.All(existingItem => otherInventory.TryPutItem(existingItem, otherIndex, false, false, user, createNetworkEvent)) ||
-                    existingItems.Count == 1 && otherInventory.TryPutItem(existingItems.First(), user, CharacterInventory.anySlot, createNetworkEvent));
+                    existingItems.Count == 1 && otherInventory.TryPutItem(existingItems.First(), user, CharacterInventory.AnySlot, createNetworkEvent));
             }
             else
             {
                 swapSuccessful =
                     (existingItems.All(existingItem => otherInventory.TryPutItem(existingItem, otherIndex, false, false, user, createNetworkEvent)) ||
-                    existingItems.Count == 1 && otherInventory.TryPutItem(existingItems.First(), user, CharacterInventory.anySlot, createNetworkEvent))
+                    existingItems.Count == 1 && otherInventory.TryPutItem(existingItems.First(), user, CharacterInventory.AnySlot, createNetworkEvent))
                     &&
                     stackedItems.Distinct().All(stackedItem => TryPutItem(stackedItem, index, false, false, user, createNetworkEvent));
 
@@ -835,13 +835,31 @@ namespace Barotrauma
 
                 if (otherIsEquipped)
                 {
-                    existingItems.ForEach(existingItem => TryPutItem(existingItem, index, false, false, user, createNetworkEvent, ignoreCondition: true));
-                    stackedItems.ForEach(stackedItem => otherInventory.TryPutItem(stackedItem, otherIndex, false, false, user, createNetworkEvent, ignoreCondition: true));
+                    TryPutAndForce(existingItems, this, index);
+                    TryPutAndForce(stackedItems, otherInventory, otherIndex);
                 }
                 else
                 {
-                    stackedItems.ForEach(stackedItem => otherInventory.TryPutItem(stackedItem, otherIndex, false, false, user, createNetworkEvent, ignoreCondition: true));
-                    existingItems.ForEach(existingItem => TryPutItem(existingItem, index, false, false, user, createNetworkEvent, ignoreCondition: true));
+                    TryPutAndForce(stackedItems, otherInventory, otherIndex);
+                    TryPutAndForce(existingItems, this, index);
+                }
+
+                void TryPutAndForce(IEnumerable<Item> items, Inventory inventory, int slotIndex)
+                {
+                    foreach (var item in items)
+                    {
+                        if (!inventory.TryPutItem(item, slotIndex, false, false, user, createNetworkEvent, ignoreCondition: true) &&
+                            !inventory.GetItemsAt(slotIndex).Contains(item))
+                        {
+                            inventory.ForceToSlot(item, slotIndex);
+                        }
+                    }
+                }
+
+                if (createNetworkEvent)
+                {
+                    CreateNetworkEvent();
+                    otherInventory.CreateNetworkEvent();
                 }
 
 #if CLIENT                

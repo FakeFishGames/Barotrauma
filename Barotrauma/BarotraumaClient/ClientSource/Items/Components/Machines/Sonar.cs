@@ -80,7 +80,7 @@ namespace Barotrauma.Items.Components
         private const float NearbyObjectUpdateInterval = 1.0f;
         float nearbyObjectUpdateTimer;
 
-        private List<Submarine> connectedSubs = new List<Submarine>();
+        private readonly List<Submarine> connectedSubs = new List<Submarine>();
         private const float ConnectedSubUpdateInterval = 1.0f;
         float connectedSubUpdateTimer;
 
@@ -335,9 +335,11 @@ namespace Barotrauma.Items.Components
             // Setup layout for nav terminal
             if (isConnectedToSteering || RightLayout)
             {
+                controlContainer.RectTransform.AbsoluteOffset = Point.Zero;
                 controlContainer.RectTransform.RelativeOffset = controlBoxOffset;
                 controlContainer.RectTransform.SetPosition(Anchor.TopRight);
                 sonarView.RectTransform.ScaleBasis = ScaleBasis.Smallest;
+                if (HasMineralScanner) { PreventMineralScannerOverlap(); }
                 sonarView.RectTransform.SetPosition(Anchor.CenterLeft);
                 sonarView.RectTransform.Resize(GUISizeCalculation);
                 GUITextBlock.AutoScaleAndNormalize(textBlocksToScaleAndNormalize);
@@ -431,10 +433,11 @@ namespace Barotrauma.Items.Components
             var mineralScannerFrame = new GUIFrame(new RectTransform(new Vector2(1.0f, zoomSlider.Parent.RectTransform.RelativeSize.Y), lowerAreaFrame.RectTransform, Anchor.BottomCenter), style: null);
             mineralScannerSwitch = new GUIButton(new RectTransform(new Vector2(0.3f, 0.8f), mineralScannerFrame.RectTransform, Anchor.CenterLeft), string.Empty, style: "SwitchHorizontal")
             {
+                Selected = UseMineralScanner,
                 OnClicked = (button, data) =>
                 {
-                    useMineralScanner = !useMineralScanner;
-                    button.Selected = useMineralScanner;
+                    UseMineralScanner = !UseMineralScanner;
+                    button.Selected = UseMineralScanner;
                     if (GameMain.Client != null)
                     {
                         unsentChanges = true;
@@ -496,12 +499,12 @@ namespace Barotrauma.Items.Components
                     {
                         if (transducer.Transducer.Item.Submarine == null) { continue; }
                         if (connectedSubs.Contains(transducer.Transducer.Item.Submarine)) { continue; }
-                        connectedSubs = transducer.Transducer.Item.Submarine?.GetConnectedSubs();
+                        connectedSubs.AddRange(transducer.Transducer.Item.Submarine.GetConnectedSubs());
                     }
                 }
                 else if (item.Submarine != null)
                 {
-                    connectedSubs = item.Submarine?.GetConnectedSubs();
+                    connectedSubs.AddRange(item.Submarine?.GetConnectedSubs());
                 }
                 connectedSubUpdateTimer = ConnectedSubUpdateInterval;
             }
@@ -1032,7 +1035,7 @@ namespace Barotrauma.Items.Components
                 missionIndex++;
             }
 
-            if (HasMineralScanner && useMineralScanner && CurrentMode == Mode.Active && MineralClusters != null &&
+            if (HasMineralScanner && UseMineralScanner && CurrentMode == Mode.Active && MineralClusters != null &&
                 (item.CurrentHull == null || !DetectSubmarineWalls))
             {
                 foreach (var c in MineralClusters)
@@ -1311,7 +1314,6 @@ namespace Barotrauma.Items.Components
             float worldPingRadiusSqr = worldPingRadius * worldPingRadius;
 
             disruptedDirections.Clear();
-            if (Level.Loaded == null) { return; }
 
             for (var pingIndex = 0; pingIndex < activePingsCount; ++pingIndex)
             {
@@ -1513,9 +1515,10 @@ namespace Barotrauma.Items.Components
                 }
             }
 
-            foreach (Item item in Item.ItemList)
+            foreach (Item item in Item.SonarVisibleItems)
             {
-                if (item.CurrentHull == null && item.Prefab.SonarSize > 0.0f)
+                System.Diagnostics.Debug.Assert(item.Prefab.SonarSize > 0.0f);
+                if (item.CurrentHull == null)
                 {
                     float pointDist = ((item.WorldPosition - pingSource) * displayScale).LengthSquared();
                     if (pointDist > prevPingRadiusSqr && pointDist < pingRadiusSqr)
@@ -1923,7 +1926,7 @@ namespace Barotrauma.Items.Components
                     float pingAngle = MathUtils.WrapAngleTwoPi(MathUtils.VectorToAngle(pingDirection));
                     msg.WriteRangedSingle(MathUtils.InverseLerp(0.0f, MathHelper.TwoPi, pingAngle), 0.0f, 1.0f, 8);
                 }
-                msg.WriteBoolean(useMineralScanner);
+                msg.WriteBoolean(UseMineralScanner);
             }
         }
         
@@ -1935,7 +1938,7 @@ namespace Barotrauma.Items.Components
             float zoomT             = 1.0f;
             bool directionalPing    = useDirectionalPing;
             float directionT        = 0.0f;
-            bool mineralScanner     = useMineralScanner;
+            bool mineralScanner     = UseMineralScanner;
             if (isActive)
             {
                 zoomT = msg.ReadRangedSingle(0.0f, 1.0f, 8);
@@ -1966,7 +1969,7 @@ namespace Barotrauma.Items.Components
                     pingDirection = new Vector2((float)Math.Cos(pingAngle), (float)Math.Sin(pingAngle));
                 }
                 useDirectionalPing = directionalModeSwitch.Selected = directionalPing;
-                useMineralScanner = mineralScanner;
+                UseMineralScanner = mineralScanner;
                 if (mineralScannerSwitch != null)
                 {
                     mineralScannerSwitch.Selected = mineralScanner;
@@ -1983,7 +1986,7 @@ namespace Barotrauma.Items.Components
             directionalModeSwitch.Selected = useDirectionalPing;
             if (mineralScannerSwitch != null)
             {
-                mineralScannerSwitch.Selected = useMineralScanner;
+                mineralScannerSwitch.Selected = UseMineralScanner;
             }
         }
     }

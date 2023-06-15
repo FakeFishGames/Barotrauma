@@ -14,6 +14,10 @@ namespace Barotrauma
 
         public readonly List<Item> prioritizedItems = new List<Item>();
 
+        public static readonly Identifier AllowCleanupTag = "allowcleanup".ToIdentifier();
+
+        protected override int MaxTargets => 100;
+
         public AIObjectiveCleanupItems(Character character, AIObjectiveManager objectiveManager, Item prioritizedItem = null, float priorityModifier = 1)
             : base(character, objectiveManager, priorityModifier)
         {
@@ -81,8 +85,8 @@ namespace Barotrauma
 
         public static bool IsValidContainer(Item container, Character character, bool allowUnloading = true) =>
             allowUnloading &&
+            container.HasTag(AllowCleanupTag) && 
             container.HasAccess(character) && 
-            container.HasTag("allowcleanup") && 
             container.ParentInventory == null && container.OwnInventory != null && container.OwnInventory.AllItems.Any() && 
             container.GetComponent<ItemContainer>() != null &&
             IsItemInsideValidSubmarine(container, character) &&
@@ -91,7 +95,6 @@ namespace Barotrauma
         public static bool IsValidTarget(Item item, Character character, bool checkInventory, bool allowUnloading = true)
         {
             if (item == null) { return false; }
-            if (!item.HasAccess(character)) { return false; }
             if ((item.SpawnedInCurrentOutpost && !item.AllowStealing) == character.IsOnPlayerTeam) { return false; }
             if (item.ParentInventory != null)
             {
@@ -102,6 +105,7 @@ namespace Barotrauma
                 }
                 if (!IsValidContainer(item.Container, character, allowUnloading)) { return false; }
             }
+            if (!item.HasAccess(character)) { return false; }
             if (character != null && !IsItemInsideValidSubmarine(item, character)) { return false; }
             if (item.HasBallastFloraInHull) { return false; }
             var wire = item.GetComponent<Wire>();
@@ -121,7 +125,7 @@ namespace Barotrauma
             {
                 return true;
             }
-            return CanEquip(character, item);
+            return CanEquip(character, item, allowWearing: false);
         }
 
         public override void OnDeselected()

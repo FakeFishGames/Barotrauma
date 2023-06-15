@@ -786,7 +786,7 @@ namespace Barotrauma
                         //check if the connection overlaps with this module's connection
                         if (selfGapPos1.HasValue && selfGapPos2.HasValue &&
                             !gapPos1.NearlyEquals(gapPos2) && !selfGapPos1.Value.NearlyEquals(selfGapPos2.Value) &&
-                            MathUtils.LinesIntersect(gapPos1, gapPos2, selfGapPos1.Value, selfGapPos2.Value))
+                            MathUtils.LineSegmentsIntersect(gapPos1, gapPos2, selfGapPos1.Value, selfGapPos2.Value))
                         {
                             return true;
                         }
@@ -1374,11 +1374,6 @@ namespace Barotrauma
                             endWaypoint.linkedTo.Add(prevWayPoint);
                         }
                     }
-                    else
-                    {
-                        startWaypoint.linkedTo.Add(endWaypoint);
-                        endWaypoint.linkedTo.Add(startWaypoint);
-                    }
 
                     WayPoint closestWaypoint = null;
                     float closestDistSqr = 30.0f * 30.0f;
@@ -1440,27 +1435,7 @@ namespace Barotrauma
 
         private static void EnableFactionSpecificEntities(Submarine sub, Location location)
         {
-            foreach (MapEntity me in MapEntity.mapEntityList)
-            {
-                if (string.IsNullOrEmpty(me.Layer) || me.Submarine != sub) { continue; }
-
-                var layerAsIdentifier = me.Layer.ToIdentifier();
-                if (FactionPrefab.Prefabs.ContainsKey(layerAsIdentifier))
-                {
-                    me.HiddenInGame = 
-                        location?.Faction?.Prefab != FactionPrefab.Prefabs[layerAsIdentifier];
-#if CLIENT
-                    //normally this is handled in LightComponent.OnMapLoaded, but this method is called after that
-                    if (me.HiddenInGame && me is Item item)
-                    {
-                        foreach (var lightComponent in item.GetComponents<LightComponent>())
-                        {
-                            lightComponent.Light.Enabled = false;
-                        }
-                    }
-#endif
-                }
-            }            
+            sub.EnableFactionSpecificEntities(location?.Faction?.Prefab.Identifier ?? Identifier.Empty);        
         }
 
         private static void LockUnusedDoors(IEnumerable<PlacedModule> placedModules, Dictionary<PlacedModule, List<MapEntity>> entities, bool removeUnusedGaps)
@@ -1615,10 +1590,11 @@ namespace Barotrauma
                     {
                         var startWaypoint = WayPoint.WayPointList.Find(wp => wp.ConnectedGap == bottomGap);
                         var endWaypoint = WayPoint.WayPointList.Find(wp => wp.ConnectedGap == topGap);
+                        float margin = 100;
                         if (startWaypoint != null && endWaypoint != null)
                         {
                             WayPoint prevWaypoint = startWaypoint;
-                            for (float y = startWaypoint.Position.Y + WayPoint.LadderWaypointInterval; y <= endWaypoint.Position.Y - WayPoint.LadderWaypointInterval; y += WayPoint.LadderWaypointInterval)
+                            for (float y = bottomGap.Position.Y + margin; y <= topGap.Position.Y - margin; y += WayPoint.LadderWaypointInterval)
                             {
                                 var wayPoint = new WayPoint(new Vector2(startWaypoint.Position.X, y), SpawnType.Path, ladder.Item.Submarine)
                                 {

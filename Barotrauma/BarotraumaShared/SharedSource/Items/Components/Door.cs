@@ -69,7 +69,7 @@ namespace Barotrauma.Items.Components
 
         private bool isBroken;
 
-        public bool CanBeTraversed => (IsOpen || IsBroken) && !IsJammed && !IsStuck && !Impassable;
+        public bool CanBeTraversed => !Impassable && (IsBroken || IsOpen);
         
         public bool IsBroken
         {
@@ -186,13 +186,19 @@ namespace Barotrauma.Items.Components
         {
             get { return openState; }
             set 
-            {                
+            {
                 openState = MathHelper.Clamp(value, 0.0f, 1.0f);
 #if CLIENT
                 float size = IsHorizontal ? item.Rect.Width : item.Rect.Height;
-                if (Math.Abs(lastConvexHullState - openState) * size < 5.0f) { return; }
-                UpdateConvexHulls();
-                lastConvexHullState = openState;
+                //refresh convex hulls if the body of the door has moved by 5 pixels,
+                //or if it becomes fully closed or fully open
+                if (Math.Abs(lastConvexHullState - openState) * size > 5.0f ||
+                    (openState <= 0.0f && lastConvexHullState > 0.0f) ||
+                    (openState >= 1.0f && lastConvexHullState < 1.0f)) 
+                {
+                    UpdateConvexHulls();
+                    lastConvexHullState = openState; 
+                }
 #endif
             }
         }
@@ -383,6 +389,8 @@ namespace Barotrauma.Items.Components
                 return;
             }
 
+
+
             bool isClosing = false;
             if ((!IsStuck && !IsJammed) || !isOpen)
             {
@@ -521,8 +529,11 @@ namespace Barotrauma.Items.Components
         {
             RefreshLinkedGap();
 #if CLIENT
-            convexHull = new ConvexHull(Rectangle.Empty, !IsHorizontal, item);
-            if (Window != Rectangle.Empty) { convexHull2 = new ConvexHull(Rectangle.Empty, !IsHorizontal, item); }
+            convexHull = new ConvexHull(doorRect, IsHorizontal, item);
+            if (Window != Rectangle.Empty)
+            {
+                convexHull2 = new ConvexHull(doorRect, IsHorizontal, item);
+            }
             UpdateConvexHulls();
 #endif
         }
@@ -555,6 +566,12 @@ namespace Barotrauma.Items.Components
                 {
                     gap.ConnectedDoor = null;
                 }
+            }
+
+            if (OutsideSubmarineFixture != null)
+            {
+                OutsideSubmarineFixture.Body.Remove(OutsideSubmarineFixture);
+                OutsideSubmarineFixture = null;
             }
             
             //no need to remove the gap if we're unloading the whole submarine

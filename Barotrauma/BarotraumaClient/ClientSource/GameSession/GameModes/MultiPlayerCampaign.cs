@@ -193,7 +193,7 @@ namespace Barotrauma
 
             if (GameMain.Client == null)
             {
-                yield return CoroutineStatus.Failure;
+                yield return CoroutineStatus.Success;
             }
 
             if (GameMain.Client.LateCampaignJoin)
@@ -335,7 +335,7 @@ namespace Barotrauma
             //--------------------------------------
 
             //wait for the new level to be loaded
-            DateTime timeOut = DateTime.Now + new TimeSpan(0, 0, seconds: 60);
+            DateTime timeOut = DateTime.Now + GameClient.LevelTransitionTimeOut;
             while (Level.Loaded == prevLevel || Level.Loaded == null)
             {
                 if (DateTime.Now > timeOut || Screen.Selected != GameMain.GameScreen)  { break; }
@@ -345,7 +345,11 @@ namespace Barotrauma
             endTransition.Stop();
             overlayColor = Color.Transparent;
 
-            if (DateTime.Now > timeOut) { GameMain.NetLobbyScreen.Select(); }
+            if (DateTime.Now > timeOut) 
+            {
+                DebugConsole.ThrowError("Failed to start the round. Timed out while waiting for the level transition to finish.");
+                GameMain.NetLobbyScreen.Select(); 
+            }
             if (Screen.Selected is not RoundSummaryScreen)
             {
                 if (continueButton != null)

@@ -59,6 +59,8 @@ namespace Barotrauma
         private Body outsideCollisionBlocker;
         private float outsideColliderRaycastTimer;
 
+        private bool wasRoomToRoom;
+
         public float Open
         {
             get { return open; }
@@ -205,7 +207,10 @@ namespace Barotrauma
             outsideCollisionBlocker.Enabled = false;
 #if CLIENT
             Resized += newRect => IsHorizontal = newRect.Width < newRect.Height;
-#endif
+# endif
+
+            wasRoomToRoom = IsRoomToRoom;
+            RefreshOutsideCollider();
             DebugConsole.Log("Created gap (" + ID + ")");
         }
 
@@ -214,7 +219,7 @@ namespace Barotrauma
             return new Gap(rect, IsHorizontal, Submarine);
         }
 
-        public override void Move(Vector2 amount, bool ignoreContacts = false)
+        public override void Move(Vector2 amount, bool ignoreContacts = true)
         {
             if (!MathUtils.IsValid(amount))
             {
@@ -222,7 +227,7 @@ namespace Barotrauma
                 return;
             }
 
-            base.Move(amount);
+            base.Move(amount, ignoreContacts);
 
             if (!DisableHullRechecks) { FindHulls(); }
         }
@@ -313,27 +318,26 @@ namespace Barotrauma
             for (int i = 0; i < 2; i++)
             {
                 hulls[i] = Hull.FindHullUnoptimized(searchPos[i], null, false);
-                if (hulls[i] == null) { hulls[i] = Hull.FindHullUnoptimized(searchPos[i], null, false, true); }
+                if (hulls[i] == null) hulls[i] = Hull.FindHullUnoptimized(searchPos[i], null, false, true);
             }
 
-            if (hulls[0] != null || hulls[1] != null) 
-            { 
-                if (hulls[0] == null && hulls[1] != null)
-                {
-                    (hulls[1], hulls[0]) = (hulls[0], hulls[1]);
-                }
+            if (hulls[0] == null && hulls[1] == null) { return; }
 
-                flowTargetHull = hulls[0];
-
-                for (int i = 0; i < 2; i++)
-                {
-                    if (hulls[i] == null) { continue; }
-                    linkedTo.Add(hulls[i]);
-                    if (!hulls[i].ConnectedGaps.Contains(this)) { hulls[i].ConnectedGaps.Add(this); }
-                }
+            if (hulls[0] == null && hulls[1] != null)
+            {
+                Hull temp = hulls[0];
+                hulls[0] = hulls[1];
+                hulls[1] = temp;
             }
 
-            RefreshOutsideCollider();
+            flowTargetHull = hulls[0];
+
+            for (int i = 0; i < 2; i++)
+            {
+                if (hulls[i] == null) { continue; }
+                linkedTo.Add(hulls[i]);
+                if (!hulls[i].ConnectedGaps.Contains(this)) hulls[i].ConnectedGaps.Add(this);
+            }
         }
 
         private int updateCount;
@@ -359,8 +363,13 @@ namespace Barotrauma
             updateCount = 0;
 
             flowForce = Vector2.Zero;
-
             outsideColliderRaycastTimer -= deltaTime;
+
+            if (IsRoomToRoom != wasRoomToRoom)
+            {
+                RefreshOutsideCollider();
+                wasRoomToRoom = IsRoomToRoom;
+            }
 
             if (open == 0.0f || linkedTo.Count == 0)
             {
@@ -664,7 +673,7 @@ namespace Barotrauma
 
             if (outsideColliderRaycastTimer <= 0.0f)
             {
-                UpdateOutsideColliderPos((Hull)linkedTo[0]);
+                UpdateOutsideColliderState((Hull)linkedTo[0]);
                 outsideColliderRaycastTimer = outsideCollisionBlocker.Enabled ?
                     OutsideColliderRaycastIntervalHighPrio :
                     OutsideColliderRaycastIntervalLowPrio;
@@ -673,7 +682,7 @@ namespace Barotrauma
             return outsideCollisionBlocker.Enabled;
         }
 
-        private void UpdateOutsideColliderPos(Hull hull)
+        private void UpdateOutsideColliderState(Hull hull)
         {
             if (Submarine == null || IsRoomToRoom || Level.Loaded == null) { return; }
 
@@ -710,7 +719,7 @@ namespace Barotrauma
                 if (blockingBody.UserData == Submarine) { return; }
                 outsideCollisionBlocker.Enabled = true;
                 Vector2 colliderPos = Submarine.LastPickedPosition - Submarine.SimPosition;
-                float colliderRotation = MathUtils.VectorToAngle(rayDir) - MathHelper.PiOver2;
+                float colliderRotation = MathUtils.VectorToAngle(Submarine.LastPickedNormal) - MathHelper.PiOver2;
                 outsideCollisionBlocker.SetTransformIgnoreContacts(ref colliderPos, colliderRotation);
             }
             else

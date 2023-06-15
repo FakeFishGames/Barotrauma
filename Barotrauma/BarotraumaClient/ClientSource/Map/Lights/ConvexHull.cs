@@ -93,12 +93,15 @@ namespace Barotrauma.Lights
 
         private readonly int thickness;
 
-        public bool IsExteriorWall;
-
         public VertexPositionColor[] ShadowVertices { get; private set; }
         public VertexPositionTexture[] PenumbraVertices { get; private set; }
         public int ShadowVertexCount { get; private set; }
         public int PenumbraVertexCount { get; private set; }
+
+        /// <summary>
+        /// Overrides the maximum distance a LOS vertex can be moved to make it align with a nearby LOS segment
+        /// </summary>
+        public float? MaxMergeLosVerticesDist;
 
         private readonly HashSet<ConvexHull> overlappingHulls = new HashSet<ConvexHull>();
 
@@ -130,7 +133,7 @@ namespace Barotrauma.Lights
 
         public Rectangle BoundingBox { get; private set; }
 
-        public ConvexHull(Rectangle rect, bool? isHorizontal, MapEntity parent)
+        public ConvexHull(Rectangle rect, bool isHorizontal, MapEntity parent)
         {
             shadowEffect ??= new BasicEffect(GameMain.Instance.GraphicsDevice)
                 {
@@ -150,15 +153,15 @@ namespace Barotrauma.Lights
             
             BoundingBox = rect;
 
-            this.isHorizontal = isHorizontal ?? BoundingBox.Width > BoundingBox.Height;
+            this.isHorizontal = isHorizontal;
             if (ParentEntity is Structure structure)
             {
-                System.Diagnostics.Debug.Assert(!structure.Removed);
+                Debug.Assert(!structure.Removed);
                 isHorizontal = structure.IsHorizontal;
             }
             else if (ParentEntity is Item item)
             {
-                System.Diagnostics.Debug.Assert(!item.Removed);
+                Debug.Assert(!item.Removed);
                 var door = item.GetComponent<Door>();
                 if (door != null) { isHorizontal = door.IsHorizontal; }
             }
@@ -205,44 +208,97 @@ namespace Barotrauma.Lights
         {
             if (ch == this) { return; }
 
-            //hide segments that are roughly at the some position as some other segment (e.g. the ends of two adjacent wall pieces)
-            float mergeDist = MathHelper.Clamp(ch.thickness * 0.55f, 16, 512);
-            mergeDist = Math.Min(mergeDist, Vector2.Distance(losVertices[0].Pos, losVertices[1].Pos) / 2);
+            //merge dist in the direction parallel to the segment
+            //(e.g. how far up/down we can stretch a vertical segment)
+            float mergeDistParallel = MathHelper.Clamp(ch.thickness * 0.65f, 16, 512);
+            if (MaxMergeLosVerticesDist.HasValue)
+            {
+                mergeDistParallel = Math.Max(mergeDistParallel, MaxMergeLosVerticesDist.Value);
+            }
+            else
+            {
+                Rectangle inflatedAABB = ch.BoundingBox;
+                inflatedAABB.Inflate(2, 2);
+                //if this los segment isn't touching the other's bounding box,
+                //don't extend the segment by more than 50% of it's length
+                if (!inflatedAABB.Contains(losVertices[0].Pos) && 
+                    !inflatedAABB.Contains(losVertices[1].Pos))
+                {
+                    mergeDistParallel = Math.Min(mergeDistParallel, Vector2.Distance(losVertices[0].Pos, losVertices[1].Pos) * 0.5f);
+                }
+            }
+            //merge dist in the direction perpendicular to the segment
+            //(e.g. how far right/left we can stretch a vertical segment)
+            //do not allow more than ~half of the thickness, because that'd make the segment go outside the convex hull
+            float mergeDistPerpendicular = Math.Min(mergeDistParallel, thickness * 0.35f);
 
-            float mergeDistSqr = mergeDist * mergeDist;
+            Vector2 center = (losVertices[0].Pos + losVertices[1].Pos) / 2;
 
             bool changed = false;
             for (int i = 0; i < losVertices.Length; i++)
             {
-                //find the closest point on the other convex hull segment
+                Vector2 segmentDir = Vector2.Normalize(losVertices[i].Pos - center);
+                //check if the closest point on the other convex hull segment is close enough, disregarding any offsets
+                //otherwise we might end up moving the vertex too much if we stretch it to an already-offset segment
+                if (!isCloseEnough(
+                        MathUtils.GetClosestPointOnLineSegment(ch.losVertices[0].Pos, ch.losVertices[1].Pos, losVertices[i].Pos),
+                        losVertices[i].Pos))
+                {
+                    continue;
+                }
+
+                //check the offset position of the segment next
                 Vector2 closest = MathUtils.GetClosestPointOnLineSegment(
                     ch.losVertices[0].Pos + ch.losOffsets[0], 
                     ch.losVertices[1].Pos + ch.losOffsets[1], 
                     losVertices[i].Pos);
-                if (Vector2.DistanceSquared(closest, losVertices[i].Pos) > mergeDistSqr) { continue; }
+                if (!isCloseEnough(closest, losVertices[i].Pos)) { continue; }
 
                 //find where the segments would intersect if they had infinite length
                 //   if it's close to the closest point, let's use that instead to keep
                 //   the direction of the segment unchanged (i.e. vertical segment stays vertical)
                 if (MathUtils.GetLineIntersection(
-                    ch.losVertices[0].Pos + ch.losOffsets[0],
-                    ch.losVertices[1].Pos + ch.losOffsets[1],
-                    losVertices[0].Pos,
-                    losVertices[1].Pos,
-                    out Vector2 intersection))
+                    ch.losVertices[0].Pos + ch.losOffsets[0], ch.losVertices[1].Pos + ch.losOffsets[1],
+                    losVertices[0].Pos, losVertices[1].Pos,
+                    areLinesInfinite: true, out Vector2 intersection) &&
+                    //the intersection needs to be outwards from the vertex we're checking
+                    Vector2.Dot(segmentDir, intersection - losVertices[i].Pos) > 0 &&
+                    //the intersection needs to be close enough to the default position of the vertex and the closest point
+                    //(we don't want to merge the segments somewhere close to infinity!)
+                    (Vector2.DistanceSquared(intersection, losVertices[i].Pos) < mergeDistParallel * mergeDistParallel ||
+                    Vector2.DistanceSquared(intersection, closest) < 16.0f * 16.0f))
                 {
-                    if (Vector2.DistanceSquared(intersection, losVertices[i].Pos) < mergeDistSqr ||
-                        Vector2.DistanceSquared(intersection, closest) < 16.0f * 16.0f)
-                    {
-                        closest = intersection;
-                    }
+                    closest = intersection;
+                }
+
+                //don't move the vertices of the segment too close to each other
+                if (Vector2.DistanceSquared(losVertices[1 - i].Pos + losOffsets[1 - i], closest) < mergeDistPerpendicular * mergeDistPerpendicular) 
+                { 
+                    continue; 
                 }
 
                 losOffsets[i] = closest - losVertices[i].Pos;
                 overlappingHulls.Add(ch);
                 ch.overlappingHulls.Add(this);
                 changed = true;
-                
+
+                bool isCloseEnough(Vector2 closest, Vector2 vertex)
+                {
+                    float dist = Vector2.Distance(closest, vertex);
+                    if (dist < 0.001f) { return true; }
+                    if (dist > mergeDistParallel) { return false; }
+
+                    Vector2 closestDir = (closest - vertex) / dist;
+
+                    float dot = Math.Abs(Vector2.Dot(segmentDir, closestDir));
+                    float distAlongAxis = dist * dot;
+                    if (distAlongAxis > mergeDistParallel) { return false; }
+
+                    float distPerpendicular = dist * (1.0f - dot);
+                    if (distPerpendicular > mergeDistPerpendicular) { return false; }
+
+                    return true;
+                }
             }
             if (changed && refreshOtherOverlappingHulls)
             {
@@ -251,6 +307,13 @@ namespace Barotrauma.Lights
                     overlapping.MergeLosVertices(this, refreshOtherOverlappingHulls: false);
                 }
             }
+        }
+
+        public bool LosIntersects(Vector2 pos1, Vector2 pos2)
+        {
+            return MathUtils.LineSegmentsIntersect(
+                losVertices[0].Pos + losOffsets[0], losVertices[1].Pos + losOffsets[1], 
+                pos1, pos2);
         }
 
         public void Rotate(Vector2 origin, float amount)
@@ -347,6 +410,7 @@ namespace Barotrauma.Lights
             for (int i = 0; i < 2; i++)
             {
                 losVertices[i] = new SegmentPoint(losPoints[i], this);
+                losOffsets[i] = Vector2.Zero;
             }
 
             overlappingHulls.Clear();
@@ -612,8 +676,11 @@ namespace Barotrauma.Lights
                     vertexPos0 += ParentEntity.Submarine.DrawPosition;
                     vertexPos1 += ParentEntity.Submarine.DrawPosition;
                 }
-                Vector2 viewTargetPos = LightManager.ViewTarget.WorldPosition;
-                float alpha = IsSegmentFacing(vertexPos0, vertexPos1, viewTargetPos) ? 1.0f : 0.5f;
+                float alpha = 1.0f;
+                if (LightManager.ViewTarget != null)
+                {
+                    alpha = IsSegmentFacing(vertexPos0, vertexPos1, LightManager.ViewTarget.WorldPosition) ? 1.0f : 0.5f;
+                }
                 vertexPos0.Y = -vertexPos0.Y;
                 vertexPos1.Y = -vertexPos1.Y;
                 GUI.DrawLine(spriteBatch, vertexPos0, vertexPos1, color * alpha, width: width);

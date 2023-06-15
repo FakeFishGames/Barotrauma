@@ -95,6 +95,8 @@ namespace Barotrauma
 
         public Reputation Reputation => Faction?.Reputation;
 
+        public bool IsFactionHostile => Faction?.Reputation.NormalizedValue < Reputation.HostileThreshold;
+
         public int TurnsInRadiation { get; set; }
 
         #region Store
@@ -177,29 +179,30 @@ namespace Barotrauma
                 }
             }
 
+            public static PurchasedItem CreateInitialStockItem(ItemPrefab itemPrefab, PriceInfo priceInfo)
+            {
+                int quantity = PriceInfo.DefaultAmount;
+                if (priceInfo.MaxAvailableAmount > 0)
+                {
+                    quantity =
+                    priceInfo.MaxAvailableAmount > priceInfo.MinAvailableAmount ?
+                    Rand.Range(priceInfo.MinAvailableAmount, priceInfo.MaxAvailableAmount + 1) :
+                        priceInfo.MaxAvailableAmount;
+                }
+                else if (priceInfo.MinAvailableAmount > 0)
+                {
+                    quantity = priceInfo.MinAvailableAmount;
+                }
+                return new PurchasedItem(itemPrefab, quantity, buyer: null);
+            }
+
             public List<PurchasedItem> CreateStock()
             {
                 var stock = new List<PurchasedItem>();
                 foreach (var prefab in ItemPrefab.Prefabs)
                 {
                     if (!prefab.CanBeBoughtFrom(this, out var priceInfo)) { continue; }
-                    int quantity = PriceInfo.DefaultAmount;
-                    if (priceInfo.MaxAvailableAmount > 0)
-                    {
-                        if (priceInfo.MaxAvailableAmount > priceInfo.MinAvailableAmount)
-                        {
-                            quantity = Rand.Range(priceInfo.MinAvailableAmount, priceInfo.MaxAvailableAmount + 1);
-                        }
-                        else
-                        {
-                            quantity = priceInfo.MaxAvailableAmount;
-                        }
-                    }
-                    else if (priceInfo.MinAvailableAmount > 0)
-                    {
-                        quantity = priceInfo.MinAvailableAmount;
-                    }
-                    stock.Add(new PurchasedItem(prefab, quantity, buyer: null));
+                    stock.Add(CreateInitialStockItem(prefab, priceInfo));
                 }
                 return stock;
             }
@@ -304,6 +307,7 @@ namespace Barotrauma
                     if (!faction.IsEmpty && GameMain.GameSession.Campaign.GetFactionAffiliation(faction) is FactionAffiliation.Positive)
                     {
                         price *= 1f - characters.Max(static c => c.GetStatValue(StatTypes.StoreBuyMultiplierAffiliated, includeSaved: false));
+                        price *= 1f - characters.Max(static c => c.Info.GetSavedStatValue(StatTypes.StoreBuyMultiplierAffiliated, new Identifier("all")));
                         price *= 1f - characters.Max(c => item.Tags.Sum(tag => c.Info.GetSavedStatValue(StatTypes.StoreBuyMultiplierAffiliated, tag)));
                     }
                     price *= 1f - characters.Max(static c => c.GetStatValue(StatTypes.StoreBuyMultiplier, includeSaved: false));
@@ -1277,25 +1281,31 @@ namespace Barotrauma
                 }
                 var stock = new List<PurchasedItem>(store.Stock);
                 var stockToRemove = new List<PurchasedItem>();
-                foreach (var item in stock)
+
+                foreach (var itemPrefab in ItemPrefab.Prefabs)
                 {
-                    if (item.ItemPrefab.CanBeBoughtFrom(store, out PriceInfo priceInfo))
+                    var existingStock = stock.FirstOrDefault(s => s.ItemPrefab == itemPrefab);
+                    if (itemPrefab.CanBeBoughtFrom(store, out PriceInfo priceInfo))
                     {
-                        item.Quantity += 1;
-                        if (priceInfo.MaxAvailableAmount > 0)
+                        if (existingStock == null)
                         {
-                            item.Quantity = Math.Min(item.Quantity, priceInfo.MaxAvailableAmount);
+                            //can be bought from the location, but not in stock - some new item added by an update or mod?
+                            stock.Add(StoreInfo.CreateInitialStockItem(itemPrefab, priceInfo));
                         }
                         else
                         {
-                            item.Quantity = Math.Min(item.Quantity, CargoManager.MaxQuantity);
+                            existingStock.Quantity =
+                                Math.Min(
+                                    existingStock.Quantity + 1, 
+                                    priceInfo.MaxAvailableAmount > 0 ? priceInfo.MaxAvailableAmount : CargoManager.MaxQuantity);
                         }
                     }
-                    else
+                    else if (existingStock != null)
                     {
-                        stockToRemove.Add(item);
+                        stockToRemove.Add(existingStock);                        
                     }
                 }
+
                 stockToRemove.ForEach(i => stock.Remove(i));
                 store.Stock.Clear();
                 store.Stock.AddRange(stock);

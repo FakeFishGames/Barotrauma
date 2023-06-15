@@ -9,6 +9,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using System.Text;
@@ -636,15 +637,29 @@ namespace Barotrauma
             commands.Add(new Command("wikiimage_character", "Save an image of the currently controlled character with a transparent background.", (string[] args) =>
             {
                 if (Character.Controlled == null) { return; }
-                WikiImage.Create(Character.Controlled);
+                try
+                {
+                    WikiImage.Create(Character.Controlled);
+                }
+                catch (Exception e)
+                {
+                    DebugConsole.ThrowError("The command 'wikiimage_character' failed.", e);
+                }
             }));
 
             commands.Add(new Command("wikiimage_sub", "Save an image of the main submarine with a transparent background.", (string[] args) =>
             {
                 if (Submarine.MainSub == null) { return; }
-                MapEntity.SelectedList.Clear();
-                MapEntity.ClearHighlightedEntities();
-                WikiImage.Create(Submarine.MainSub);
+                try
+                {
+                    MapEntity.SelectedList.Clear();
+                    MapEntity.ClearHighlightedEntities();
+                    WikiImage.Create(Submarine.MainSub);
+                }
+                catch (Exception e)
+                {
+                    DebugConsole.ThrowError("The command 'wikiimage_sub' failed.", e);
+                }
             }));
 
             AssignRelayToServer("kick", false);
@@ -1141,6 +1156,15 @@ namespace Barotrauma
                 GameMain.LightManager.DebugLos = state;
                 NewMessage("Los debug draw mode " + (GameMain.LightManager.DebugLos ? "enabled" : "disabled"), Color.Yellow);
             });
+            AssignOnExecute("debugwiring", (string[] args) =>
+            {
+                if (args.None() || !bool.TryParse(args[0], out bool state))
+                {
+                    state = !ConnectionPanel.DebugWiringMode;
+                }
+                ConnectionPanel.DebugWiringMode = state;
+                NewMessage("Wiring debug mode " + (ConnectionPanel.DebugWiringMode ? "enabled" : "disabled"), Color.Yellow);
+            });
             AssignRelayToServer("debugdraw", false);
 
             AssignOnExecute("devmode", (string[] args) =>
@@ -1263,8 +1287,8 @@ namespace Barotrauma
 
             AssignOnExecute("debugai", (string[] args) =>
             {
-                HumanAIController.debugai = !HumanAIController.debugai;
-                if (HumanAIController.debugai)
+                HumanAIController.DebugAI = !HumanAIController.DebugAI;
+                if (HumanAIController.DebugAI)
                 {
                     GameMain.DevMode = true;
                     GameMain.DebugDraw = true;
@@ -1279,7 +1303,7 @@ namespace Barotrauma
                     GameMain.LightManager.LosEnabled = true;
                     GameMain.LightManager.LosAlpha = 1f;
                 }
-                NewMessage(HumanAIController.debugai ? "AI debug info visible" : "AI debug info hidden", Color.Yellow);
+                NewMessage(HumanAIController.DebugAI ? "AI debug info visible" : "AI debug info hidden", Color.Yellow);
             });
             AssignRelayToServer("debugai", false);
 
@@ -2338,7 +2362,7 @@ namespace Barotrauma
                         {
                             if (mapEntity is Item item)
                             {
-                                item.Rect = new Rectangle(item.Rect.X, item.Rect.Y,
+                                item.Rect = item.DefaultRect = new Rectangle(item.Rect.X, item.Rect.Y,
                                     (int)(item.Prefab.Sprite.size.X * item.Prefab.Scale),
                                     (int)(item.Prefab.Sprite.size.Y * item.Prefab.Scale));
                             }
@@ -2811,7 +2835,26 @@ namespace Barotrauma
                 ContentPackageManager.EnabledPackages.ReloadCore();
             }));
 
-            #warning TODO: reimplement?
+#if WINDOWS
+            commands.Add(new Command("startdedicatedserver", "", (string[] args) =>
+            {
+                Process.Start("DedicatedServer.exe");
+            }));
+
+            commands.Add(new Command("editserversettings", "", (string[] args) =>
+            {
+                if (Process.GetProcessesByName("DedicatedServer").Length > 0)
+                {
+                    NewMessage("Can't be edited if DedicatedServer.exe is already running", Color.Red);
+                }
+                else
+                {
+                    Process.Start("notepad.exe", "serversettings.xml");
+                }
+            }));
+#endif
+
+#warning TODO: reimplement?
             /*commands.Add(new Command("ingamemodswap", "", (string[] args) =>
             {
                 ContentPackage.IngameModSwap = !ContentPackage.IngameModSwap;

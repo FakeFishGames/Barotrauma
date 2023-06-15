@@ -204,6 +204,7 @@ namespace Barotrauma
                     if (item.Submarine != submarine) { continue; }
 
                     Vector2 simPos  = ConvertUnits.ToSimUnits(item.Position);
+                    if (sub.FlippedX) { simPos.X = -simPos.X; }
                     if (item.GetComponent<Door>() is Door door)
                     {
                         door.OutsideSubmarineFixture = farseerBody.CreateRectangle(door.Body.Width, door.Body.Height, 5.0f, simPos, collisionCategory, collidesWith);
@@ -219,11 +220,6 @@ namespace Barotrauma
                     float simRadius = ConvertUnits.ToSimUnits(radius);
                     float simWidth  = ConvertUnits.ToSimUnits(width);
                     float simHeight = ConvertUnits.ToSimUnits(height);
-
-                    if (sub.FlippedX)
-                    {
-                        simPos.X = -simPos.X;
-                    }
 
                     if (width > 0.0f && height > 0.0f)
                     {
@@ -404,7 +400,7 @@ namespace Barotrauma
             if (totalForce.Y > 0)
             {
                 ContactEdge contactEdge = Body?.FarseerBody?.ContactList;
-                while (contactEdge?.Next != null)
+                while (contactEdge?.Contact != null)
                 {
                     if (contactEdge.Contact.Enabled &&
                         contactEdge.Other.UserData is Submarine otherSubmarine &&
@@ -412,10 +408,10 @@ namespace Barotrauma
                         contactEdge.Contact.IsTouching)
                     {
                         contactEdge.Contact.GetWorldManifold(out Vector2 _, out FixedArray2<Vector2> points);
-                        if (points[0].Y > Body.SimPosition.Y && 
+                        if (points[0].Y > Body.SimPosition.Y &&
                             !Character.CharacterList.Any(c => c.Submarine == otherSubmarine && !c.IsIncapacitated && c.TeamID == otherSubmarine.TeamID))
                         {
-                            otherSubmarine.SubBody.forceUpwardsTimer += deltaTime;
+                            otherSubmarine.GetConnectedSubs().ForEach(s => s.SubBody.forceUpwardsTimer += deltaTime);
                             break;
                         }
                     }
@@ -470,8 +466,6 @@ namespace Barotrauma
                     }
                 }
             }
-
-            totalForcePerFrame = Vector2.Zero;
 
             UpdateDepthDamage(deltaTime);
 
@@ -558,12 +552,9 @@ namespace Barotrauma
             return new Vector2(0.0f, buoyancy * Body.Mass * 10.0f);
         }
 
-
-        private Vector2 totalForcePerFrame;
         public void ApplyForce(Vector2 force)
         {
             Body.ApplyForce(force);
-            totalForcePerFrame += force;
         }
 
         public void SetPosition(Vector2 position)
@@ -701,7 +692,7 @@ namespace Barotrauma
             }
 
             //if all the bodies of a wall have been disabled, we don't need to care about gaps (can always pass through)
-            if (!(contact.FixtureA.UserData is Structure wall) || !wall.AllSectionBodiesDisabled())
+            if (contact.FixtureA.UserData is not Structure wall || !wall.AllSectionBodiesDisabled())
             {
                 var gaps = newHull?.ConnectedGaps ?? Gap.GapList.Where(g => g.Submarine == submarine);
                 Gap adjacentGap = Gap.FindAdjacent(gaps, ConvertUnits.ToDisplayUnits(points[0]), 200.0f);
@@ -820,7 +811,7 @@ namespace Barotrauma
             }
         }
 
-        private IEnumerable<Contact> GetLevelContacts(PhysicsBody body)
+        private static IEnumerable<Contact> GetLevelContacts(PhysicsBody body)
         {
             ContactEdge contactEdge = body.FarseerBody.ContactList;
             while (contactEdge?.Contact != null)

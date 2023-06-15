@@ -163,7 +163,7 @@ namespace Barotrauma.Steam
                 CrossThread.RequestExecutionOnMainThread(() => ContentPackageManager.LocalPackages.Refresh());
             }
             
-            public static async Task CreatePublishStagingCopy(string modVersion, ContentPackage contentPackage)
+            public static async Task CreatePublishStagingCopy(string title, string modVersion, ContentPackage contentPackage)
             {
                 await Task.Yield();
                 
@@ -184,11 +184,13 @@ namespace Barotrauma.Steam
                     throw new Exception("Staging copy could not be loaded",
                         result.TryUnwrapFailure(out var exception) ? exception : null);
                 }
-                
-                //Load filelist.xml and write the hash into it so anyone downloading this mod knows what it should be
+
+                //Load filelist.xml and write the hash into it so anyone downloading this mod knows what it should be                
                 ModProject modProject = new ModProject(tempPkg)
                 {
-                    ModVersion = modVersion
+                    ModVersion = modVersion,
+                    Name = title,
+                    ExpectedHash = tempPkg.CalculateHash(name: title, modVersion: modVersion)
                 };
                 modProject.Save(stagingFileListPath);
             }

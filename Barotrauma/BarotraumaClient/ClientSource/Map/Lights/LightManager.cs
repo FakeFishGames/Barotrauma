@@ -189,7 +189,7 @@ namespace Barotrauma.Lights
             }
         }
 
-        private class RayCastTask
+        private sealed class RayCastTask
         {
             public LightSource LightSource;
             public Vector2 DrawPos;
@@ -298,7 +298,8 @@ namespace Barotrauma.Lights
                     range *
                     ((Character.Controlled?.Submarine != null && light.ParentSub == Character.Controlled?.Submarine) ? 2.0f : 1.0f) *
                     (light.CastShadows ? 10.0f : 1.0f) *
-                    (light.LightSourceParams.OverrideLightSpriteAlpha ?? (light.Color.A / 255.0f));
+                    (light.LightSourceParams.OverrideLightSpriteAlpha ?? (light.Color.A / 255.0f)) *
+                    light.PriorityMultiplier;
             }
 
             //find the lights with an active light volume
@@ -475,6 +476,17 @@ namespace Barotrauma.Lights
             {
                 if (light.IsBackground || light.CurrentBrightness <= 0.0f) { continue; }
                 light.DrawLightVolume(spriteBatch, lightEffect, transform, recalculationCount < MaxLightVolumeRecalculationsPerFrame, ref recalculationCount);
+            }
+
+            if (ConnectionPanel.ShouldDebugDrawWiring)
+            {
+                foreach (MapEntity e in (Submarine.VisibleEntities ?? MapEntity.mapEntityList))
+                {
+                    if (e is Item item && item.GetComponent<Wire>() is Wire wire)
+                    {
+                        wire.DebugDraw(spriteBatch, alpha: 0.4f);
+                    }
+                }
             }
 
             lightEffect.World = transform;
@@ -686,19 +698,42 @@ namespace Barotrauma.Lights
             if (LosEnabled && LosMode != LosMode.None && ViewTarget != null)
             {
                 Vector2 pos = ViewTarget.DrawPosition;
-                if (ViewTarget is Character character && 
+                bool centeredOnHead = false;
+                if (ViewTarget is Character character &&
                     character.AnimController?.GetLimb(LimbType.Head) is Limb head &&
                     !head.IsSevered && !head.Removed)
                 {
                     pos = head.body.DrawPosition;
+                    centeredOnHead = true;
                 }
 
                 Rectangle camView = new Rectangle(cam.WorldView.X, cam.WorldView.Y - cam.WorldView.Height, cam.WorldView.Width, cam.WorldView.Height);
-
                 Matrix shadowTransform = cam.ShaderTransform
                     * Matrix.CreateOrthographic(GameMain.GraphicsWidth, GameMain.GraphicsHeight, -1, 1) * 0.5f;
 
                 var convexHulls = ConvexHull.GetHullsInRange(ViewTarget.Position, cam.WorldView.Width * 0.75f, ViewTarget.Submarine);
+
+                //make sure the head isn't peeking through any LOS segments, and if it is,
+                //center the LOS on the character's collider instead
+                if (centeredOnHead)
+                {
+                    foreach (var ch in convexHulls)
+                    {
+                        Vector2 currentViewPos = pos;
+                        Vector2 defaultViewPos = ViewTarget.DrawPosition;
+                        if (ch.ParentEntity?.Submarine != null)
+                        {
+                            defaultViewPos -= ch.ParentEntity.Submarine.DrawPosition;
+                            currentViewPos -= ch.ParentEntity.Submarine.DrawPosition;
+                        }
+                        //check if a line from the character's collider to the head intersects with the los segment (= head poking through it)
+                        if (ch.LosIntersects(defaultViewPos, currentViewPos))
+                        {
+                            pos = ViewTarget.DrawPosition;
+                        }
+                    }
+                }
+
                 if (convexHulls != null)
                 {
                     List<VertexPositionColor> shadowVerts = new List<VertexPositionColor>();
@@ -706,7 +741,6 @@ namespace Barotrauma.Lights
                     foreach (ConvexHull convexHull in convexHulls)
                     {
                         if (!convexHull.Enabled || !convexHull.Intersects(camView)) { continue; }
-                        if (LosMode == LosMode.BlockOutsideView && !convexHull.IsExteriorWall) { continue; };
 
                         Vector2 relativeLightPos = pos;
                         if (convexHull.ParentEntity?.Submarine != null) { relativeLightPos -= convexHull.ParentEntity.Submarine.Position; }
@@ -744,13 +778,14 @@ namespace Barotrauma.Lights
 
         public void DebugDrawLos(SpriteBatch spriteBatch, Camera cam)
         {
-            if (ViewTarget == null) { return; }
+            Vector2 pos = ViewTarget?.Position ?? cam.Position;
             spriteBatch.Begin(SpriteSortMode.Deferred, transformMatrix: cam.Transform);
-            var convexHulls = ConvexHull.GetHullsInRange(ViewTarget.Position, cam.WorldView.Width * 0.75f, ViewTarget?.Submarine);
+            var convexHulls = ConvexHull.GetHullsInRange(pos, cam.WorldView.Width * 0.75f, ViewTarget?.Submarine);
             Rectangle camView = new Rectangle(cam.WorldView.X, cam.WorldView.Y - cam.WorldView.Height, cam.WorldView.Width, cam.WorldView.Height);
             foreach (ConvexHull convexHull in convexHulls)
             {
                 if (!convexHull.Enabled || !convexHull.Intersects(camView)) { continue; }
+                if (convexHull.ParentEntity is Structure { CastShadow: false }) { continue; }
                 convexHull.DebugDraw(spriteBatch);
             }
             spriteBatch.End();

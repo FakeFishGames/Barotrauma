@@ -166,6 +166,9 @@ namespace Barotrauma
             if (Submarine.MainSub == null || Level.Loaded == null) { return; }
 
             bool allowEndingRound = false;
+            endRoundButton.Color = endRoundButton.Style.Color;
+            endRoundButton.HoverColor = endRoundButton.Style.HoverColor;
+            RichString overrideEndRoundButtonToolTip = string.Empty;
             var availableTransition = GetAvailableTransition(out _, out Submarine leavingSub);
             LocalizedString buttonText = "";
             switch (availableTransition)
@@ -194,12 +197,22 @@ namespace Barotrauma
                     break;
                 case TransitionType.None:
                 default:
-                    if (Level.Loaded.Type == LevelData.LevelType.Outpost &&
-                        !Level.Loaded.IsEndBiome &&
-                        (Character.Controlled?.Submarine?.Info.Type == SubmarineType.Player || (Character.Controlled?.CurrentHull?.OutpostModuleTags.Contains("airlock".ToIdentifier()) ?? false)))
+                    bool inFriendlySub = Character.Controlled is { IsInFriendlySub: true };
+                    if (Level.Loaded.Type == LevelData.LevelType.Outpost && !Level.Loaded.IsEndBiome &&
+                        (inFriendlySub || (Character.Controlled?.CurrentHull?.OutpostModuleTags.Contains("airlock".ToIdentifier()) ?? false)))
                     {
+                        if (Missions.Any(m => m is SalvageMission salvageMission && salvageMission.AnyTargetNeedsToBeRetrievedToSub))
+                        {
+                            overrideEndRoundButtonToolTip = TextManager.Get("SalvageTargetNotInSub");
+                            endRoundButton.Color = GUIStyle.Red * 0.7f;
+                            endRoundButton.HoverColor = GUIStyle.Red;
+                        }
                         buttonText = TextManager.GetWithVariable("LeaveLocation", "[locationname]", Level.Loaded.StartLocation?.Name ?? "[ERROR]");
                         allowEndingRound = !ForceMapUI && !ShowCampaignUI;
+                    }
+                    else
+                    {
+                        allowEndingRound = false;
                     }
                     break;
             }
@@ -227,7 +240,11 @@ namespace Barotrauma
                     prevCampaignUIAutoOpenType = availableTransition;
                 }
                 endRoundButton.Text = ToolBox.LimitString(buttonText.Value, endRoundButton.Font, endRoundButton.Rect.Width - 5);
-                if (endRoundButton.Text != buttonText)
+                if (overrideEndRoundButtonToolTip != string.Empty)
+                {
+                    endRoundButton.ToolTip = overrideEndRoundButtonToolTip;
+                }
+                else if (endRoundButton.Text != buttonText)
                 {
                     endRoundButton.ToolTip = buttonText;
                 }

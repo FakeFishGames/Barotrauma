@@ -28,7 +28,7 @@ namespace Barotrauma
             if (character.IsSecurity) { return 100; }
             if (objectiveManager.IsOrder(this)) { return 100; }
             // If there's any security officers onboard, leave fighting for them.
-            return HumanAIController.IsTrueForAnyCrewMember(c => c.Character.IsSecurity && !c.Character.IsIncapacitated && c.Character.Submarine == character.Submarine) ? 0 : 100;
+            return HumanAIController.IsTrueForAnyCrewMember(c => c.IsSecurity, onlyActive: true, onlyConnectedSubs: true) ? 0 : 100;
         }
 
         protected override AIObjective ObjectiveConstructor(Character target)
@@ -37,8 +37,7 @@ namespace Barotrauma
             var combatObjective = new AIObjectiveCombat(character, target, combatMode, objectiveManager, PriorityModifier);
             if (character.TeamID == CharacterTeamType.FriendlyNPC && target.TeamID == CharacterTeamType.Team1 && GameMain.GameSession?.GameMode is CampaignMode campaign)
             {
-                var reputation = campaign.Map?.CurrentLocation?.Reputation;
-                if (reputation != null && reputation.NormalizedValue < Reputation.HostileThreshold)
+                if (campaign.CurrentLocation is { IsFactionHostile: true })
                 {
                     combatObjective.holdFireCondition = () =>
                     {

@@ -256,7 +256,7 @@ namespace Barotrauma
             float bestValue = 0f;
             Character bestCharacter = null;
 
-            if (mostImportantIssue != null && mostImportantIssue.Importance > MinimumIssueThreshold)
+            if (mostImportantIssue != null && mostImportantIssue.Importance >= MinimumIssueThreshold)
             {
                 IEnumerable<Character> bestCharacters = CrewManager.GetCharactersSortedForOrder(mostImportantIssue.SuggestedOrder, AlliedCharacters, character, true);
 

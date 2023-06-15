@@ -1,16 +1,14 @@
-﻿using Barotrauma.Items.Components;
+﻿using Barotrauma.Extensions;
+using Barotrauma.IO;
+using Barotrauma.Items.Components;
 using Barotrauma.Networking;
-using Barotrauma.Extensions;
 using FarseerPhysics;
 using FarseerPhysics.Dynamics;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using Barotrauma.IO;
+using System.Diagnostics;
 using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 using System.Xml.Linq;
 using Voronoi2;
 
@@ -259,7 +257,7 @@ namespace Barotrauma
         {
             if (outpost.exitPoints.Any())
             {
-                Rectangle worldBorders = Borders;
+                Rectangle worldBorders = GetDockedBorders();
                 worldBorders.Location += WorldPosition.ToPoint();
                 foreach (var exitPoint in outpost.exitPoints)
                 {
@@ -425,18 +423,25 @@ namespace Barotrauma
             }
         }
 
+        private static readonly HashSet<Submarine> checkSubmarineBorders = new HashSet<Submarine>();
+
         /// <summary>
-        /// Returns a rect that contains the borders of this sub and all subs docked to it
+        /// Returns a rect that contains the borders of this sub and all subs docked to it, excluding outposts
         /// </summary>
-        public Rectangle GetDockedBorders(List<Submarine> checkd = null)
+        public Rectangle GetDockedBorders(bool allowDifferentTeam = true)
         {
-            if (checkd == null) { checkd = new List<Submarine>(); }
-            checkd.Add(this);
+            checkSubmarineBorders.Clear();
+            return GetDockedBordersRecursive(allowDifferentTeam);
+        }
 
+        private Rectangle GetDockedBordersRecursive(bool allowDifferentTeam)
+        {
             Rectangle dockedBorders = Borders;
-
-            var connectedSubs = DockedTo.Where(s => !checkd.Contains(s) && !s.Info.IsOutpost).ToList();
-
+            checkSubmarineBorders.Add(this);
+            var connectedSubs = DockedTo.Where(s => 
+                !checkSubmarineBorders.Contains(s) && 
+                !s.Info.IsOutpost && 
+                (allowDifferentTeam || s.TeamID == TeamID));
             foreach (Submarine dockedSub in connectedSubs)
             {
                 //use docking ports instead of world position to determine
@@ -445,7 +450,7 @@ namespace Barotrauma
                 Vector2? expectedLocation = CalculateDockOffset(this, dockedSub);
                 if (expectedLocation == null) { continue; }
 
-                Rectangle dockedSubBorders = dockedSub.GetDockedBorders(checkd);
+                Rectangle dockedSubBorders = dockedSub.GetDockedBordersRecursive(allowDifferentTeam);
                 dockedSubBorders.Location += MathUtils.ToPoint(expectedLocation.Value);
 
                 dockedBorders.Y = -dockedBorders.Y;
@@ -457,28 +462,27 @@ namespace Barotrauma
             return dockedBorders;
         }
 
-        /// <summary>
-        /// Don't use this directly, because the list is updated only when GetConnectedSubs() is called. The method is called so frequently that we don't want to create new list here.
-        /// </summary>
-        private readonly List<Submarine> connectedSubs = new List<Submarine>(2);
+        private readonly HashSet<Submarine> connectedSubs;
         /// <summary>
         /// Returns a list of all submarines that are connected to this one via docking ports, including this sub.
         /// </summary>
-        public List<Submarine> GetConnectedSubs()
+        public IEnumerable<Submarine> GetConnectedSubs()
+        {
+            return connectedSubs;
+        }
+
+        public void RefreshConnectedSubs()
         {
             connectedSubs.Clear();
             connectedSubs.Add(this);
             GetConnectedSubsRecursive(connectedSubs);
-
-            return connectedSubs;
         }
 
-        private void GetConnectedSubsRecursive(List<Submarine> subs)
+        private void GetConnectedSubsRecursive(HashSet<Submarine> subs)
         {
             foreach (Submarine dockedSub in DockedTo)
             {
-                if (subs.Contains(dockedSub)) continue;
-
+                if (subs.Contains(dockedSub)) { continue; }
                 subs.Add(dockedSub);
                 dockedSub.GetConnectedSubsRecursive(subs);
             }
@@ -1041,8 +1045,34 @@ namespace Barotrauma
 #endif
         }
 
+        public void EnableFactionSpecificEntities(Identifier factionIdentifier)
+        {
+            foreach (MapEntity me in MapEntity.mapEntityList)
+            {
+                if (string.IsNullOrEmpty(me.Layer) || me.Submarine != this) { continue; }
+
+                var layerAsIdentifier = me.Layer.ToIdentifier();
+                if (FactionPrefab.Prefabs.ContainsKey(layerAsIdentifier))
+                {
+                    me.HiddenInGame = factionIdentifier != layerAsIdentifier;
+#if CLIENT
+                    //normally this is handled in LightComponent.OnMapLoaded, but this method is called after that
+                    if (me.HiddenInGame && me is Item item)
+                    {
+                        foreach (var lightComponent in item.GetComponents<LightComponent>())
+                        {
+                            lightComponent.Light.Enabled = false;
+                        }
+                    }
+#endif
+                }
+            }
+        }
+
         public void Update(float deltaTime)
         {
+            RefreshConnectedSubs();
+
             if (Info.IsWreck)
             {
                 WreckAI?.Update(deltaTime);
@@ -1328,38 +1358,22 @@ namespace Barotrauma
         }
 
         /// <summary>
-        /// Finds the sub whose borders contain the position. Note that this method uses the "actual" position of the sub outside the level:
-        /// only use this if the position is in a submarine's local coordinate space!
+        /// Finds the sub whose borders contain the position
         /// </summary>
-        public static Submarine FindContainingInLocalCoordinates(Vector2 position, float inflate = 500.0f)
+        public static Submarine FindContaining(Vector2 position)
         {
             foreach (Submarine sub in Loaded)
             {
                 Rectangle subBorders = sub.Borders;
-                subBorders.Location += MathUtils.ToPoint(sub.HiddenSubPosition) - new Point(0, sub.Borders.Height);
-                subBorders.Inflate(inflate, inflate);
-                if (subBorders.Contains(position)) { return sub; }
+                subBorders.Location += MathUtils.ToPoint(sub.HiddenSubPosition) - new Microsoft.Xna.Framework.Point(0, sub.Borders.Height);
+
+                subBorders.Inflate(500.0f, 500.0f);
+
+                if (subBorders.Contains(position)) return sub;
             }
 
             return null;
         }
-
-        /// <summary>
-        /// Finds the sub whose world borders contain the position.
-        /// </summary>
-        public static Submarine FindContaining(Vector2 worldPosition, float inflate = 500.0f)
-        {
-            foreach (Submarine sub in Loaded)
-            {
-                Rectangle worldBorders = sub.Borders;
-                worldBorders.Location += sub.WorldPosition.ToPoint();
-                worldBorders.Inflate(inflate, inflate);
-                if (RectContains(worldBorders, worldPosition)) { return sub; }
-            }
-            return null;
-        }
-
-
         public static Rectangle GetBorders(XElement submarineElement)
         {
             Vector4 bounds = Vector4.Zero;
@@ -1385,6 +1399,13 @@ namespace Barotrauma
 
         public Submarine(SubmarineInfo info, bool showErrorMessages = true, Func<Submarine, List<MapEntity>> loadEntities = null, IdRemap linkedRemap = null) : base(null, Entity.NullEntityID)
         {
+            Stopwatch sw = Stopwatch.StartNew();
+
+            connectedSubs = new HashSet<Submarine>(2)
+            {
+                this
+            };
+
             upgradeEventIdentifier = new Identifier($"Submarine{ID}");
             Loading = true;
             GameMain.World.Enabled = false;
@@ -1481,8 +1502,14 @@ namespace Barotrauma
                         if (me.Submarine != this) { continue; }
                         if (me is Item item)
                         {
-                            item.SpawnedInCurrentOutpost = info.OutpostGenerationParams != null;
-                            item.AllowStealing = info.OutpostGenerationParams?.AllowStealing ?? true;
+                            item.AllowStealing = true;
+                            if (info.OutpostGenerationParams != null)
+                            {
+                                item.SpawnedInCurrentOutpost = true;
+                                item.AllowStealing =
+                                    info.OutpostGenerationParams.AllowStealing ||
+                                    item.RootContainer is { Prefab: { AllowStealingContainedItems: true } };
+                            }
                             if (item.GetComponent<Repairable>() != null && indestructible)
                             {
                                 item.Indestructible = true;
@@ -1589,6 +1616,10 @@ namespace Barotrauma
                 Loading = false;
                 GameMain.World.Enabled = true;
             }
+            sw.Stop();
+            string debugMsg = $"Loading {Info?.Name ?? "unknown"} took {sw.ElapsedMilliseconds} ms.";
+            DebugConsole.Log(debugMsg);
+            System.Diagnostics.Debug.WriteLine(debugMsg);
         }
 
         protected override ushort DetermineID(ushort id, Submarine submarine)
@@ -1704,9 +1735,30 @@ namespace Barotrauma
                 }
             }
 
+            Dictionary<int, MapEntity> savedEntities = new Dictionary<int, MapEntity>();
             foreach (MapEntity e in MapEntity.mapEntityList.OrderBy(e => e.ID))
             {
                 if (!e.ShouldBeSaved) { continue; }
+
+                if (e.Removed)
+                {
+                    GameAnalyticsManager.AddErrorEventOnce(
+                        "Submarine.SaveToXElement:Removed" + e.Name,
+                        GameAnalyticsManager.ErrorSeverity.Error,
+                        $"Attempted to save a removed entity (\"{e.Name}\"). Duplicate ID: {savedEntities.ContainsKey(e.ID)}");
+                    DebugConsole.ThrowError($"Error while saving the submarine. Attempted to save a removed entity (\"{e.Name} ({e.ID})\"). The entity will not be saved to avoid corrupting the submarine file.");
+                    continue;
+                }
+                if (savedEntities.TryGetValue(e.ID, out MapEntity duplicateEntity))
+                {
+                    GameAnalyticsManager.AddErrorEventOnce(
+                        "Submarine.SaveToXElement:DuplicateId" + e.Name,
+                        GameAnalyticsManager.ErrorSeverity.Error,
+                        $"Attempted to save an entity with a duplicate ID ({e.Name}, {duplicateEntity.Name}).");
+                    DebugConsole.ThrowError($"Error while saving the submarine. The entity \"{e.Name}\" has the same ID as \"{duplicateEntity.Name}\" ({e.ID}). The entity will not be saved to avoid corrupting the submarine file.");
+                    continue;
+                }
+
                 if (e is Item item)
                 {
                     if (item.FindParentInventory(inv => inv is CharacterInventory) != null) { continue; }
@@ -1717,8 +1769,7 @@ namespace Barotrauma
                     }
 #endif
                     if (e.Submarine != this) { continue; }
-                    var rootContainer = item.GetRootContainer();
-                    if (rootContainer != null && rootContainer.Submarine != this) { continue; }
+                    if (item.RootContainer != null && item.RootContainer.Submarine != this) { continue; }
                 }
                 else
                 {
@@ -1726,6 +1777,7 @@ namespace Barotrauma
                 }
 
                 e.Save(element);
+                savedEntities.Add(e.ID, e);
             }
             Info.CheckSubsLeftBehind(element);
         }

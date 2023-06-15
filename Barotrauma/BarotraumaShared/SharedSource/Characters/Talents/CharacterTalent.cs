@@ -71,6 +71,29 @@ namespace Barotrauma
             }
         }
 
+        private static readonly HashSet<Identifier> checkedNonStackableTalents = new();
+
+        /// <summary>
+        /// Checks talents for a given AbilityObject taking into account non-stackable talents.
+        /// </summary>
+        public static void CheckTalentsForCrew(IEnumerable<Character> crew, AbilityEffectType type, AbilityObject abilityObject)
+        {
+            checkedNonStackableTalents.Clear();
+            foreach (Character character in crew)
+            {
+                foreach (CharacterTalent characterTalent in character.CharacterTalents)
+                {
+                    if (!characterTalent.Prefab.AbilityEffectsStackWithSameTalent)
+                    {
+                        if (checkedNonStackableTalents.Contains(characterTalent.Prefab.Identifier)) { continue; }
+                        checkedNonStackableTalents.Add(characterTalent.Prefab.Identifier);
+                    }
+
+                    characterTalent.CheckTalent(type, abilityObject);
+                }
+            }
+        }
+
         public void CheckTalent(AbilityEffectType abilityEffectType, AbilityObject abilityObject)
         {
             if (characterAbilityGroupEffectDictionary.TryGetValue(abilityEffectType, out var characterAbilityGroups))

@@ -429,7 +429,7 @@ namespace Barotrauma
         public static bool IsLoadedOutpost => Loaded?.Type == LevelData.LevelType.Outpost;
 
         /// <summary>
-        /// Is there a loaded level set, and is it a friendly outpost (FriendlyNPC or Team1)
+        /// Is there a loaded level set, and is it a friendly outpost (FriendlyNPC or Team1). Does not take reputation into account.
         /// </summary>
         public static bool IsLoadedFriendlyOutpost => 
             loaded?.Type == LevelData.LevelType.Outpost && 
@@ -468,8 +468,7 @@ namespace Barotrauma
                 (StartOutpost.Info.OutpostGenerationParams?.SpawnCrewInsideOutpost ?? false) &&
                 StartOutpost.GetConnectedSubs().Any(s => s.Info.Type == SubmarineType.Player))
             {
-                var reputation = GameMain.GameSession?.Campaign?.Map?.CurrentLocation?.Reputation;
-                return reputation == null || reputation.NormalizedValue >= Reputation.HostileThreshold;
+                return GameMain.GameSession.Campaign?.CurrentLocation is not { IsFactionHostile: true };
             }
             return false;
         }
@@ -508,6 +507,8 @@ namespace Barotrauma
             StartLocation = startLocation;
             EndLocation = endLocation;            
 
+            Rand.SetSyncedSeed(ToolBox.StringToInt(Seed));
+
             GenerateEqualityCheckValue(LevelGenStage.GenStart);
             SetEqualityCheckValue(LevelGenStage.LevelGenParams, unchecked((int)GenerationParams.UintIdentifier));
             SetEqualityCheckValue(LevelGenStage.Size, borders.Width ^ borders.Height << 16);
@@ -535,7 +536,6 @@ namespace Barotrauma
             List<Vector2> sites = new List<Vector2>();
             
             Voronoi voronoi = new Voronoi(1.0);
-            Rand.SetSyncedSeed(ToolBox.StringToInt(Seed));
 
 #if CLIENT
             renderer = new LevelRenderer(this);
@@ -838,14 +838,6 @@ namespace Barotrauma
                 foreach (var pathCell in tunnel.Cells)
                 {
                     MarkEdges(pathCell, tunnel.Type);
-                    foreach (GraphEdge edge in pathCell.Edges)
-                    {
-                        var adjacent = edge.AdjacentCell(pathCell);
-                        if (adjacent != null)
-                        {
-                            MarkEdges(adjacent, tunnel.Type);
-                        }
-                    }
                     if (!pathCells.Contains(pathCell))
                     {
                         pathCells.Add(pathCell);
@@ -1462,7 +1454,7 @@ namespace Barotrauma
                         if (node2.X <= pathNodes.Last().X) { continue; }
                         if (MathUtils.NearlyEqual(node1.X, pathNodes.Last().X)) { continue; }
                         if (Math.Abs(node1.Y - nodePos.Y) > tunnel.MinWidth && Math.Abs(node2.Y - nodePos.Y) > tunnel.MinWidth &&
-                            !MathUtils.LinesIntersect(node1.ToVector2(), node2.ToVector2(), pathNodes.Last().ToVector2(), nodePos.ToVector2())) 
+                            !MathUtils.LineSegmentsIntersect(node1.ToVector2(), node2.ToVector2(), pathNodes.Last().ToVector2(), nodePos.ToVector2())) 
                         { 
                             continue; 
                         }
@@ -1558,7 +1550,7 @@ namespace Barotrauma
                     foreach (GraphEdge edge in tunnel.Cells[i].Edges)
                     {
                         if (edge.AdjacentCell(tunnel.Cells[i])?.CellType == CellType.Solid && 
-                            MathUtils.LinesIntersect(newWaypoint.WorldPosition, prevWayPoint.WorldPosition, edge.Point1, edge.Point2))
+                            MathUtils.LineSegmentsIntersect(newWaypoint.WorldPosition, prevWayPoint.WorldPosition, edge.Point1, edge.Point2))
                         {
                             solidCellBetween = true;
                             break;
@@ -1846,9 +1838,10 @@ namespace Barotrauma
                 bool createCave =
                     //force at least one abyss cave
                     (i == islandCount - 1 && createdCaves == 0) ||
-                    Rand.Range(0.0f, 1.0f, Rand.RandSync.ServerAndClient) > GenerationParams.AbyssIslandCaveProbability;
+                    Rand.Range(0.0f, 1.0f, Rand.RandSync.ServerAndClient) < GenerationParams.AbyssIslandCaveProbability;
                 if (!createCave)
                 {
+                    //just create a chunk with no cave
                     float radiusVariance = Math.Min(islandArea.Width, islandArea.Height) * 0.1f;
                     var vertices = CaveGenerator.CreateRandomChunk(islandArea.Width - (int)(radiusVariance * 2), islandArea.Height - (int)(radiusVariance * 2), 16, radiusVariance: radiusVariance);
                     Vector2 position = islandArea.Center.ToVector2();
@@ -2808,7 +2801,7 @@ namespace Barotrauma
                                 if (Vector2.DistanceSquared(c.EdgeCenter, validLocation.EdgeCenter) > (intervalRange.X * intervalRange.X))  { return true; }
                                 // If there is a line from a previous path point to one of its existing cluster locations
                                 // which intersects with the line from this path point to the new possible cluster location
-                                if (MathUtils.LinesIntersect(anotherPathPoint.Position, c.EdgeCenter, pathPoint.Position, validLocation.EdgeCenter))  { return true; }
+                                if (MathUtils.LineSegmentsIntersect(anotherPathPoint.Position, c.EdgeCenter, pathPoint.Position, validLocation.EdgeCenter))  { return true; }
                                 return false;
                             }
                         }
@@ -3188,7 +3181,7 @@ namespace Barotrauma
                 Vector2 edgeNormal = location.Edge.GetNormal(location.Cell);
                 float moveAmount = (item.body == null ? item.Rect.Height / 2 : ConvertUnits.ToDisplayUnits(item.body.GetMaxExtent() * 0.7f));
                 moveAmount += (item.GetComponent<LevelResource>()?.RandomOffsetFromWall ?? 0.0f) * Rand.Range(-0.5f, 0.5f, Rand.RandSync.ServerAndClient);
-                item.Move(edgeNormal * moveAmount, ignoreContacts: true);
+                item.Move(edgeNormal * moveAmount);
                 if (item.GetComponent<Holdable>() is Holdable h)
                 {
                     h.AttachToWall();
@@ -3513,7 +3506,7 @@ namespace Barotrauma
             {
                 foreach (GraphEdge e in cell.Edges)
                 {
-                    if (!MathUtils.LinesIntersect(closestPathCell.Center, pos.ToVector2(), e.Point1, e.Point2)) { continue; }
+                    if (!MathUtils.LineSegmentsIntersect(closestPathCell.Center, pos.ToVector2(), e.Point1, e.Point2)) { continue; }
                     
                     cell.CellType = CellType.Removed;
                     for (int x = 0; x < cellGrid.GetLength(0); x++)

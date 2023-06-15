@@ -369,7 +369,13 @@ namespace Barotrauma
                 }
                 else if (targetCharacter.AIController is EnemyAIController enemy)
                 {
-                    if (targetCharacter.IsHusk && AIParams.HasTag("husk"))
+                    if (enemy.PetBehavior != null && (PetBehavior != null || AIParams.HasTag("pet")))
+                    {
+                        // Pets see other pets as pets by default.
+                        // Monsters see them only as pet only when they have a matching ai target. Otherwise they use the other tags, specified below.
+                        targetingTag = "pet";
+                    }
+                    else if (targetCharacter.IsHusk && AIParams.HasTag("husk"))
                     {
                         targetingTag = "husk";
                     }
@@ -480,7 +486,7 @@ namespace Barotrauma
                 if (SelectedAiTarget?.Entity != null || EscapeTarget != null)
                 {
                     Entity t = SelectedAiTarget?.Entity ?? EscapeTarget;
-                    float referencePos = Vector2.DistanceSquared(Character.WorldPosition, t.WorldPosition) > 100 * 100 && HasValidPath(requireNonDirty: true) ? PathSteering.CurrentPath.CurrentNode.WorldPosition.X : t.WorldPosition.X;
+                    float referencePos = Vector2.DistanceSquared(Character.WorldPosition, t.WorldPosition) > 100 * 100 && HasValidPath() ? PathSteering.CurrentPath.CurrentNode.WorldPosition.X : t.WorldPosition.X;
                     Character.AnimController.TargetDir = Character.WorldPosition.X < referencePos ? Direction.Right : Direction.Left;
                 }
                 else
@@ -695,6 +701,9 @@ namespace Barotrauma
                                 // Can't target characters of same species/group because that would make us hostile to all friendly characters in the same species/group.
                                 if (Character.IsSameSpeciesOrGroup(c)) { return false; }
                                 if (targetCharacter.IsSameSpeciesOrGroup(c)) { return false; }
+                                //don't try to attack targets in a sub that belongs to a different team
+                                //(for example, targets in an outpost if we're in the main sub)
+                                if (c.Submarine?.TeamID != Character.Submarine?.TeamID) { return false; }
                                 if (c.IsPlayer || Character.IsOnFriendlyTeam(c))
                                 {
                                     return a.Damage >= selectedTargetingParams.Threshold;
@@ -894,7 +903,7 @@ namespace Barotrauma
                     _previousAttackLimb?.attack is Attack previousAttack && (previousAttack.AfterAttack != AIBehaviorAfterAttack.FallBack || previousAttack.CoolDownTimer <= 0)))
                 {
                     // Keep heading to the last known position of the target
-                    var memory = GetTargetMemory(target, false);
+                    var memory = GetTargetMemory(target);
                     if (memory != null)
                     {
                         var location = memory.Location;
@@ -981,7 +990,7 @@ namespace Barotrauma
                         }
                         else
                         {
-                            PathSteering.SetPath(path);
+                            PathSteering.SetPath(patrolTarget.SimPosition, path);
                             patrolTimerMargin = 0;
                             newPatrolTargetTimer = newPatrolTargetIntervalMax * Rand.Range(0.5f, 1.5f);
                             searchingNewHull = false;
@@ -1088,13 +1097,13 @@ namespace Barotrauma
                 Character owner = GetOwner(item);
                 if (owner != null)
                 {
-                    if (Character.IsFriendly(owner))
+                    if (Character.IsFriendly(owner) || owner.HasAbilityFlag(AbilityFlags.IgnoredByEnemyAI))
                     {
                         ResetAITarget();
                         State = AIState.Idle;
                         return;
                     }
-                    else if (!owner.HasAbilityFlag(AbilityFlags.IgnoredByEnemyAI))
+                    else
                     {
                         SelectedAiTarget = owner.AiTarget;
                     }
@@ -2186,7 +2195,7 @@ namespace Barotrauma
                 }
             }
 
-            AITargetMemory targetMemory = GetTargetMemory(attacker.AiTarget, addIfNotFound: true);
+            AITargetMemory targetMemory = GetTargetMemory(attacker.AiTarget, addIfNotFound: true, keepAlive: true);
             targetMemory.Priority += GetRelativeDamage(attackResult.Damage, Character.Vitality) * AIParams.AggressionHurt;
 
             // Only allow to react once. Otherwise would attack the target with only a fraction of a cooldown
@@ -2531,8 +2540,10 @@ namespace Barotrauma
                             if (Math.Abs(limbDiff.X) < itemBodyExtent &&
                                 Math.Abs(limbDiff.Y) < Character.AnimController.Collider.GetMaxExtent() + Character.AnimController.ColliderHeightFromFloor)
                             {
+                                Vector2 velocity = limbDiff;
+                                if (limbDiff.LengthSquared() > 0.01f) { velocity = Vector2.Normalize(velocity); }
                                 item.body.LinearVelocity *= 0.9f;
-                                item.body.LinearVelocity -= limbDiff * 0.25f;
+                                item.body.LinearVelocity -= velocity * 0.25f;
                                 bool wasBroken = item.Condition <= 0.0f;
                                 item.AddDamage(Character, item.WorldPosition, new Attack(0.0f, 0.0f, 0.0f, 0.0f, 0.02f * Character.Params.EatingSpeed), deltaTime);
                                 Character.ApplyStatusEffects(ActionType.OnEating, deltaTime);
@@ -2924,7 +2935,8 @@ namespace Barotrauma
                         }
                     }
                 }
-                if (targetParams.State == AIState.Eat && Character.Params.Health.HealthRegenerationWhenEating > 0)
+                //no need to eat if the character is already in full health (except if it's a pet - pets actually need to eat to stay alive, not just to regain health)
+                if (targetParams.State == AIState.Eat && Character.Params.Health.HealthRegenerationWhenEating > 0 && !Character.IsPet)
                 {
                     valueModifier *= MathHelper.Lerp(1f, 0.1f, Character.HealthPercentage / 100f);
                 }
@@ -3021,7 +3033,7 @@ namespace Barotrauma
                 //if the target is very close, the distance doesn't make much difference 
                 // -> just ignore the distance and target whatever has the highest priority
                 dist = Math.Max(dist, 100.0f);
-                AITargetMemory targetMemory = GetTargetMemory(aiTarget, addIfNotFound: true);
+                AITargetMemory targetMemory = GetTargetMemory(aiTarget, addIfNotFound: true, keepAlive: SelectedAiTarget != aiTarget);
                 if (Character.Submarine != null && !Character.Submarine.Info.IsRuin && Character.CurrentHull != null)
                 {
                     float diff = Math.Abs(toTarget.Y) - Character.CurrentHull.Size.Y;
@@ -3090,12 +3102,20 @@ namespace Barotrauma
                     if (aiTarget.Entity is Item i)
                     {
                         Character owner = GetOwner(i);
-                        // Don't target items that we own. 
-                        // This is a rare case, and almost entirely related to Humanhusks, so let's check it last to reduce unnecessary checks (although the check shouldn't be expensive)
                         if (owner == Character) { continue; }
-                        if (owner != null && (Character.IsFriendly(owner) || owner.AiTarget != null && ignoredTargets.Contains(owner.AiTarget)))
+                        if (owner != null)
                         {
-                            continue;
+                            if (owner.AiTarget != null && ignoredTargets.Contains(owner.AiTarget)) { continue; }
+                            if (Character.IsFriendly(owner))
+                            {
+                                // Don't target items that we own. This is a rare case, and almost entirely related to Humanhusks (in the vanilla game).
+                                continue;
+                            }
+                            if (owner.HasAbilityFlag(AbilityFlags.IgnoredByEnemyAI))
+                            {
+                                // ignore if owner is tagged to be explicitly ignored (Feign Death)
+                                continue;
+                            }
                         }
                     }
                     if (targetCharacter != null)
@@ -3418,7 +3438,7 @@ namespace Barotrauma
             return false;
         }
 
-        private AITargetMemory GetTargetMemory(AITarget target, bool addIfNotFound)
+        private AITargetMemory GetTargetMemory(AITarget target, bool addIfNotFound = false, bool keepAlive = false)
         {
             if (!targetMemories.TryGetValue(target, out AITargetMemory memory))
             {
@@ -3428,9 +3448,8 @@ namespace Barotrauma
                     targetMemories.Add(target, memory);
                 }
             }
-            if (addIfNotFound)
+            if (keepAlive)
             {
-                // Keep the memory alive.
                 memory.Priority = Math.Max(memory.Priority, minPriority);
             }
             return memory;
@@ -3446,7 +3465,7 @@ namespace Barotrauma
                 }
                 else if (CanPerceive(_selectedAiTarget, checkVisibility: false))
                 {
-                    var memory = GetTargetMemory(_selectedAiTarget, false);
+                    var memory = GetTargetMemory(_selectedAiTarget);
                     if (memory != null)
                     {
                         memory.Location = _selectedAiTarget.WorldPosition;
@@ -3643,7 +3662,11 @@ namespace Barotrauma
         {
             isStateChanged = true;
             SetStateResetTimer();
-            ChangeParams(target.SpeciesName, state, priority, ignoreAttacksIfNotInSameSub: !target.IsHuman);
+            if (!Character.IsPet || !target.IsHuman)
+            {
+                //don't turn pets hostile to all humans when attacked by one
+                ChangeParams(target.SpeciesName, state, priority, ignoreAttacksIfNotInSameSub: !target.IsHuman);
+            }
             if (target.IsHuman)
             {
                 priority = GetTargetParams("human")?.Priority;
@@ -3934,7 +3957,7 @@ namespace Barotrauma
                 {
                     SteerAwayFromTheEnemy();
                 }
-                else if (canAttackDoors && HasValidPath(requireNonDirty: true, requireUnfinished: true))
+                else if (canAttackDoors && HasValidPath())
                 {
                     var door = PathSteering.CurrentPath.CurrentNode?.ConnectedDoor ?? PathSteering.CurrentPath.NextNode?.ConnectedDoor;
                     if (door != null && !door.CanBeTraversed && !door.HasAccess(Character))

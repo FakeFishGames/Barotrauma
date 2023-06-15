@@ -1,246 +1,71 @@
-﻿#nullable enable
-using System;
-using System.Collections.Generic;
-using System.Collections.Immutable;
+﻿using System;
 using System.Globalization;
 using System.Linq;
 using System.Xml.Linq;
-using Barotrauma.Items.Components;
 
 namespace Barotrauma
 {
-    /// <summary>
-    /// Conditionals are used by some in-game mechanics to require one
-    /// or more conditions to be met for those mechanics to be active.
-    /// For example, some StatusEffects use Conditionals to only trigger
-    /// if the affected character is alive.
-    /// </summary>
-    sealed class PropertyConditional
+    // TODO: This class should be refactored: 
+    // - Use XElement instead of XAttribute in the constructor
+    // - Simplify, remove unnecessary conversions
+    // - Improve the flow so that the logic is undestandable.
+    // - Maybe add some test cases for the operators?
+    class PropertyConditional
     {
-        // TODO: Make this testable and add tests
-
-        /// <summary>
-        /// Category of properties to check against
-        /// </summary>
         public enum ConditionType
         {
-            /// <summary>
-            /// Depending on what's available, check against either one
-            /// of the target object's properties or the strength of an
-            /// affliction.
-            ///
-            /// The target object's available properties depend on how that
-            /// object is defined in the [source code](https://github.com/Regalis11/Barotrauma).
-            ///
-            /// This is not applicable if the element contains the attribute
-            /// `SkillRequirement="true"`.
-            /// </summary>
-            /// <AutoDocEntryName value="Property or affliction identifier" />
-            /// <example>
-            /// <Conditional IsDead="true" />
-            /// </example>
-            PropertyValueOrAffliction,
-
-            /// <summary>
-            /// Check against the target character's skill with the same name as the attribute.
-            ///
-            /// This is only applicable if the element contains the attribute
-            /// `SkillRequirement="true"`.
-            /// </summary>
-            /// <AutoDocEntryName value="Skill identifier" />
-            /// <example>
-            /// <Conditional SkillRequirement="true" weapons="lt 50" />
-            /// </example>
-            SkillRequirement,
-
-            /// <summary>
-            /// Check against the name of the target.
-            /// </summary>
+            Uncertain,
+            PropertyValue,
             Name,
-
-            /// <summary>
-            /// Check against the species identifier of the target. Only works on characters.
-            /// </summary>
             SpeciesName,
-
-            /// <summary>
-            /// Check against the species group of the target. Only works on characters.
-            /// </summary>
             SpeciesGroup,
-
-            /// <summary>
-            /// Check against the target's tags. Only works on items.
-            ///
-            /// Several tags can be checked against by using a comma-separated list.
-            /// </summary>
             HasTag,
-
-            /// <summary>
-            /// Check against the tags of the target's active status effects.
-            ///
-            /// Several tags can be checked against by using a comma-separated list.
-            /// </summary>
             HasStatusTag,
-
-            /// <summary>
-            /// Check against the target's specifier tags. In the vanilla game, these are the head index
-            /// and gender. See human.xml for more details.
-            ///
-            /// Several tags can be checked against by using a comma-separated list.
-            /// </summary>
             HasSpecifierTag,
-
-            /// <summary>
-            /// Check against the target's entity type.
-            ///
-            /// The currently supported values are "character", "limb", "item", "structure" and "null".
-            /// </summary>
+            Affliction,
             EntityType,
-
-            /// <summary>
-            /// Check against the target's limb type. See <see cref="Barotrauma.LimbType"/>.
-            /// </summary>
-            LimbType
+            LimbType,
+            SkillRequirement
         }
 
-        public enum LogicalOperatorType
+        public enum Comparison
         {
             And,
             Or
         }
 
-        /// <summary>
-        /// There are several ways to compare properties to values. The comparison operator
-        /// to use can be specified by placing one of the following before the value to compare
-        /// against.
-        /// </summary>
-        public enum ComparisonOperatorType
+        public enum OperatorType
         {
             None,
-
-            /// <summary>
-            /// Require that the property being checked equals the given value.
-            ///
-            /// This is the default operator used if none is specified.
-            /// </summary>
             Equals,
-
-            /// <summary>
-            /// Require that the property being checked doesn't equal the given value.
-            /// </summary>
             NotEquals,
-
-            /// <summary>
-            /// Require that the property being checked is less than the given value.
-            /// 
-            /// This can only be used to compare with numeric object properties,
-            /// affliction strengths and skill levels.
-            /// </summary>
             LessThan,
-
-            /// <summary>
-            /// Require that the property being checked is less than or equal to the given value.
-            /// 
-            /// This can only be used to compare with numeric object properties,
-            /// affliction strengths and skill levels.
-            /// </summary>
             LessThanEquals,
-
-            /// <summary>
-            /// Require that the property being checked is greater than the given value.
-            /// 
-            /// This can only be used to compare with numeric object properties,
-            /// affliction strengths and skill levels.
-            /// </summary>
             GreaterThan,
-
-            /// <summary>
-            /// Require that the property being checked is greater than or equal to the given value.
-            /// 
-            /// This can only be used to compare with numeric object properties,
-            /// affliction strengths and skill levels.
-            /// </summary>
             GreaterThanEquals
         }
 
         public readonly ConditionType Type;
-        public readonly ComparisonOperatorType ComparisonOperator;
+        public readonly OperatorType Operator;
         public readonly Identifier AttributeName;
         public readonly string AttributeValue;
-        public readonly ImmutableArray<Identifier> AttributeValueAsTags;
+        public readonly string[] SplitAttributeValue;
         public readonly float? FloatValue;
 
-        /// <summary>
-        /// If set to the name of one of the target's ItemComponents, the conditionals defined by this element check against the properties of that component.
-        /// Only works on items.
-        /// </summary>
-        public readonly string TargetItemComponent;
+        public readonly string TargetItemComponentName;
 
-        /// <summary>
-        /// If set to true, the conditionals defined by this element check against the attacking character instead of the attacked character
-        /// </summary>
+        // Only used by attacks
         public readonly bool TargetSelf;
 
-        /// <summary>
-        /// If set to true, the conditionals defined by this element check against the entity containing the target.
-        /// </summary>
+        // Only used by conditionals targeting an item (makes the conditional check the item/character whose inventory this item is inside)
         public readonly bool TargetContainer;
-
-        /// <summary>
-        /// If this and TargetContainer are set to true, the conditionals defined by this element check against the entity containing the target's container.
-        /// </summary>
+        // Only used by conditionals targeting an item. By default, containers check the parent item. This allows you to check the grandparent instead.
         public readonly bool TargetGrandParent;
 
-        /// <summary>
-        /// If set to true, the conditionals defined by this element check against the items contained by the target. Only works with items.
-        /// </summary>
         public readonly bool TargetContainedItem;
 
-        public static IEnumerable<PropertyConditional> FromXElement(XElement element, Predicate<XAttribute>? predicate = null)
-        {
-            var targetItemComponent = element.GetAttributeString(nameof(TargetItemComponent), "");
-            var targetContainer = element.GetAttributeBool(nameof(TargetContainer), false);
-            var targetSelf = element.GetAttributeBool(nameof(TargetSelf), false);
-            var targetGrandParent = element.GetAttributeBool(nameof(TargetGrandParent), false);
-            var targetContainedItem = element.GetAttributeBool(nameof(TargetContainedItem), false);
-
-            ConditionType? overrideConditionType = null;
-            if (element.GetAttributeBool(nameof(ConditionType.SkillRequirement), false))
-            {
-                overrideConditionType = ConditionType.SkillRequirement;
-            }
-
-            foreach (var attribute in element.Attributes())
-            {
-                if (!IsValid(attribute)) { continue; }
-                if (predicate != null && !predicate(attribute)) { continue; }
-
-                var (comparisonOperator, attributeValueString) = ExtractComparisonOperatorFromConditionString(attribute.Value);
-                if (string.IsNullOrWhiteSpace(attributeValueString))
-                {
-                    DebugConsole.ThrowError($"Conditional attribute value is empty: {element}");
-                    continue;
-                }
-
-                var conditionType = overrideConditionType ??
-                    (Enum.TryParse(attribute.Name.LocalName, ignoreCase: true, out ConditionType type)
-                        ? type
-                        : ConditionType.PropertyValueOrAffliction);
-
-                yield return new PropertyConditional(
-                    attributeName: attribute.NameAsIdentifier(),
-                    comparisonOperator: comparisonOperator,
-                    attributeValue: attributeValueString,
-                    targetItemComponent: targetItemComponent,
-                    targetSelf: targetSelf,
-                    targetContainer: targetContainer,
-                    targetGrandParent: targetGrandParent,
-                    targetContainedItem: targetContainedItem,
-                    conditionType: conditionType);
-            }
-        }
-
-        private static bool IsValid(XAttribute attribute)
+        // Remove this after refactoring
+        public static bool IsValid(XAttribute attribute)
         {
             switch (attribute.Name.ToString().ToLowerInvariant())
             {
@@ -257,63 +82,60 @@ namespace Barotrauma
             }
         }
 
-        private PropertyConditional(
-            Identifier attributeName,
-            ComparisonOperatorType comparisonOperator,
-            string attributeValue,
-            string targetItemComponent,
-            bool targetSelf,
-            bool targetContainer,
-            bool targetGrandParent,
-            bool targetContainedItem,
-            ConditionType conditionType)
+        // TODO: use XElement instead of XAttribute (how to do without breaking the existing content?)
+        public PropertyConditional(XAttribute attribute)
         {
-            AttributeName = attributeName;
+            AttributeName = attribute.NameAsIdentifier();
+            string attributeValueString = attribute.Value;
+            if (string.IsNullOrWhiteSpace(attributeValueString))
+            {
+                DebugConsole.ThrowError($"Conditional attribute value is empty: {attribute.Parent}");
+                return;
+            }
+            string valueString = attributeValueString;
+            string[] splitString = valueString.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+            if (splitString.Length > 1) { valueString = string.Join(' ', splitString.Skip(1)); }
+            Operator = GetOperatorType(splitString[0]);
 
-            TargetItemComponent = targetItemComponent;
-            TargetSelf = targetSelf;
-            TargetContainer = targetContainer;
-            TargetGrandParent = targetGrandParent;
-            TargetContainedItem = targetContainedItem;
+            if (Operator == OperatorType.None)
+            {
+                Operator = OperatorType.Equals;
+                valueString = attributeValueString;
+            }
 
-            Type = conditionType;
+            TargetItemComponentName = attribute.Parent.GetAttributeString("targetitemcomponent", "");
+            TargetContainer = attribute.Parent.GetAttributeBool("targetcontainer", false);
+            TargetSelf = attribute.Parent.GetAttributeBool("targetself", false);
+            TargetGrandParent = attribute.Parent.GetAttributeBool("targetgrandparent", false);
+            TargetContainedItem = attribute.Parent.GetAttributeBool("targetcontaineditem", false);
 
-            ComparisonOperator = comparisonOperator;
-            AttributeValue = attributeValue;
-            AttributeValueAsTags = AttributeValue.Split(',')
-                //, options: StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-                .Select(s => s.ToIdentifier())
-                .ToImmutableArray();
+            if (!Enum.TryParse(AttributeName.Value, true, out Type))
+            {
+                Type = ConditionType.Uncertain;
+            }
+
+            if (attribute.Parent.GetAttributeBool("skillrequirement", false))
+            {
+                Type = ConditionType.SkillRequirement;
+            }
+            
+            AttributeValue = valueString;
+            SplitAttributeValue = valueString.Split(',');
             if (float.TryParse(AttributeValue, NumberStyles.Float, CultureInfo.InvariantCulture, out float value))
             {
                 FloatValue = value;
             }
         }
 
-        public static (ComparisonOperatorType ComparisonOperator, string ConditionStr) ExtractComparisonOperatorFromConditionString(string str)
-        {
-            str ??= "";
-
-            ComparisonOperatorType op = ComparisonOperatorType.Equals;
-            string conditionStr = str;
-            if (str.IndexOf(' ') is var i and >= 0)
-            {
-                op = GetComparisonOperatorType(str[..i]);
-                if (op != ComparisonOperatorType.None) { conditionStr = str[(i + 1)..]; }
-                else { op = ComparisonOperatorType.Equals; }
-            }
-            return (op, conditionStr);
-        }
-
-        public static ComparisonOperatorType GetComparisonOperatorType(string op)
+        public static OperatorType GetOperatorType(string op)
         {
             //thanks xml for not letting me use < or > in attributes :(
-            switch (op.ToLowerInvariant())
+            switch (op)
             {
                 case "e":
                 case "eq":
                 case "equals":
-                    return ComparisonOperatorType.Equals;
+                    return OperatorType.Equals;
                 case "ne":
                 case "neq":
                 case "notequals":
@@ -321,280 +143,311 @@ namespace Barotrauma
                 case "!e":
                 case "!eq":
                 case "!equals":
-                    return ComparisonOperatorType.NotEquals;
+                    return OperatorType.NotEquals;
                 case "gt":
                 case "greaterthan":
-                    return ComparisonOperatorType.GreaterThan;
+                    return OperatorType.GreaterThan;
                 case "lt":
                 case "lessthan":
-                    return ComparisonOperatorType.LessThan;
+                    return OperatorType.LessThan;
                 case "gte":
                 case "gteq":
                 case "greaterthanequals":
-                    return ComparisonOperatorType.GreaterThanEquals;
+                    return OperatorType.GreaterThanEquals;
                 case "lte":
                 case "lteq":
                 case "lessthanequals":
-                    return ComparisonOperatorType.LessThanEquals;
+                    return OperatorType.LessThanEquals;
                 default:
-                    return ComparisonOperatorType.None;
+                    return OperatorType.None;
             }
         }
 
-        private bool ComparisonOperatorIsNotEquals => ComparisonOperator == ComparisonOperatorType.NotEquals;
 
-        public bool Matches(ISerializableEntity? target)
+        public bool Matches(ISerializableEntity target)
         {
-            return TargetContainedItem
-                ? MatchesContained(target)
-                : MatchesDirect(target);
+            return Matches(target, TargetContainedItem);
         }
 
-        private bool MatchesContained(ISerializableEntity? target)
+        public bool Matches(ISerializableEntity target, bool checkContained)
         {
-            var containedItems = target switch
+            var type = Type;
+            if (type == ConditionType.Uncertain)
             {
-                Item item
-                    => item.ContainedItems,
-                ItemComponent ic
-                    => ic.Item.ContainedItems,
-                Character {Inventory: { } characterInventory}
-                    => characterInventory.AllItems,
-                _
-                    => Enumerable.Empty<Item>()
-            };
-            foreach (var containedItem in containedItems)
-            {
-                if (MatchesDirect(containedItem)) { return true; }
+                type = AfflictionPrefab.Prefabs.ContainsKey(AttributeName)
+                    ? ConditionType.Affliction
+                    : ConditionType.PropertyValue;
             }
-            return false;
-        }
-
-        private bool MatchesDirect(ISerializableEntity? target)
-        {
-            Character? targetChar = target as Character;
-            if (target is Limb limb) { targetChar = limb.character; }
-            switch (Type)
+            
+            if (checkContained)
             {
-                case ConditionType.PropertyValueOrAffliction:
-                    // First try checking for a property belonging to the target
-                    if (target?.SerializableProperties != null
-                        && target.SerializableProperties.TryGetValue(AttributeName, out var property))
+                if (target is Item item)
+                {
+                    foreach (var containedItem in item.ContainedItems)
                     {
-                        return PropertyMatchesRequirement(target, property);
+                        if (Matches(containedItem, checkContained: false)) { return true; }
                     }
-                    // Then try checking for an affliction affecting the target
-                    if (targetChar is { CharacterHealth: { } health })
+                    return false;
+                }
+                else if (target is Items.Components.ItemComponent ic)
+                {
+                    foreach (var containedItem in ic.Item.ContainedItems)
                     {
-                        var affliction = health.GetAffliction(AttributeName.ToIdentifier());
-                        float afflictionStrength = affliction?.Strength ?? 0f;
+                        if (Matches(containedItem, checkContained: false)) { return true; }
+                    }
+                    return false;
+                }
+                else if (target is Character character)
+                {
+                    if (character.Inventory == null) { return false; }
+                    foreach (var containedItem in character.Inventory.AllItems)
+                    {
+                        if (Matches(containedItem, checkContained: false)) { return true; }
+                    }
+                    return false;
+                }
+            }
 
-                        return NumberMatchesRequirement(afflictionStrength);
-                    }
-                    return ComparisonOperatorIsNotEquals;
-                case ConditionType.SkillRequirement:
-                    if (targetChar != null)
+            switch (type)
+            {
+                case ConditionType.PropertyValue:
+                    SerializableProperty property;
+                    if (target?.SerializableProperties == null) { return Operator == OperatorType.NotEquals; }
+                    if (target.SerializableProperties.TryGetValue(AttributeName, out property))
                     {
-                        float skillLevel = targetChar.GetSkillLevel(AttributeName.ToIdentifier());
-
-                        return NumberMatchesRequirement(skillLevel);
+                        return Matches(target, property);
                     }
-                    return ComparisonOperatorIsNotEquals;
+                    return false;
+                case ConditionType.Name:
+                    if (target == null) { return Operator == OperatorType.NotEquals; }
+                    return (Operator == OperatorType.Equals) == (target.Name == AttributeValue);
                 case ConditionType.HasTag:
-                    return ItemMatchesTagCondition(target);
+                    if (target == null) { return Operator == OperatorType.NotEquals; }
+                    return MatchesTagCondition(target);
                 case ConditionType.HasStatusTag:
-                    if (target == null) { return ComparisonOperatorIsNotEquals; }
-
-                    // TODO: revisit this. As written, the current behavior is:
-                    // - ComparisonOperatorType.Equals: true when any effects have all tags
-                    // - ComparisonOperatorType.NotEquals: true when none of the effects have any of the tags
+                    if (target == null) { return Operator == OperatorType.NotEquals; }
                     int matches = 0;
-
-                    foreach (var durationEffect in StatusEffect.DurationList)
+                    foreach (DurationListElement durationEffect in StatusEffect.DurationList)
                     {
                         if (!durationEffect.Targets.Contains(target)) { continue; }
-                        if (StatusEffectMatchesTagCondition(durationEffect.Parent)) { matches++; }
+                        foreach (string tag in SplitAttributeValue)
+                        {
+                            if (durationEffect.Parent.HasTag(tag))
+                            {
+                                matches++;
+                            }
+                        }
                     }
-
-                    foreach (var delayedEffect in DelayedEffect.DelayList)
+                    foreach (DelayedListElement delayedEffect in DelayedEffect.DelayList)
                     {
                         if (!delayedEffect.Targets.Contains(target)) { continue; }
-                        if (StatusEffectMatchesTagCondition(delayedEffect.Parent)) { matches++; }
+                        foreach (string tag in SplitAttributeValue)
+                        {
+                            if (delayedEffect.Parent.HasTag(tag))
+                            {
+                                matches++;
+                            }
+                        }
                     }
+                    return Operator == OperatorType.Equals ? matches >= SplitAttributeValue.Length : matches <= 0;
+                case ConditionType.HasSpecifierTag:
+                    {
+                        if (target == null) { return Operator == OperatorType.NotEquals; }
+                        if (!(target is Character { Info: { } characterInfo })) { return false; }
 
-                    return ComparisonOperatorIsNotEquals
-                        ? matches >= StatusEffect.DurationList.Count + DelayedEffect.DelayList.Count
-                        : matches > 0;
+                        return (Operator == OperatorType.Equals) ==
+                               SplitAttributeValue.All(v => characterInfo.Head.Preset.TagSet.Contains(v));
+                    }
+                case ConditionType.SpeciesName:
+                    {
+                        if (target == null) { return Operator == OperatorType.NotEquals; }
+                        if (!(target is Character targetCharacter)) { return false; }
+                        return (Operator == OperatorType.Equals) == (targetCharacter.SpeciesName == AttributeValue);
+                    }
+                case ConditionType.SpeciesGroup:
+                    {
+                        if (target == null) { return Operator == OperatorType.NotEquals; }
+                        if (!(target is Character targetCharacter)) { return false; }
+                        return (Operator == OperatorType.Equals) == CharacterParams.CompareGroup(AttributeValue.ToIdentifier(), targetCharacter.Group);
+                    }
+                case ConditionType.EntityType:
+                    switch (AttributeValue)
+                    {
+                        case "character":
+                        case "Character":
+                            return (Operator == OperatorType.Equals) == target is Character;
+                        case "limb":
+                        case "Limb":
+                            return (Operator == OperatorType.Equals) == target is Limb;
+                        case "item":
+                        case "Item":
+                            return (Operator == OperatorType.Equals) == target is Item;
+                        case "structure":
+                        case "Structure":
+                            return (Operator == OperatorType.Equals) == target is Structure;
+                        case "null":
+                            return (Operator == OperatorType.Equals) == (target == null);
+                        default:
+                            return false;
+                    }
+                case ConditionType.LimbType:
+                    {
+                        if (!(target is Limb limb))
+                        {
+                            return false;
+                        }
+                        else
+                        {
+                            return limb.type.ToString().Equals(AttributeValue, StringComparison.OrdinalIgnoreCase);
+                        }
+                    }
+                case ConditionType.Affliction:
+                    {
+                        if (target == null) { return Operator == OperatorType.NotEquals; }
+
+                        Character targetChar = target as Character;
+                        if (target is Limb limb) { targetChar = limb.character; }
+                        if (targetChar != null)
+                        {
+                            var health = targetChar.CharacterHealth;
+                            if (health == null) { return false; }
+                            var affliction = health.GetAffliction(AttributeName.ToIdentifier());
+                            float afflictionStrength = affliction == null ? 0.0f : affliction.Strength;
+
+                            return ValueMatchesRequirement(afflictionStrength);
+                        }
+                    }
+                    return false;
+                case ConditionType.SkillRequirement:
+                    {
+                        if (target == null) { return Operator == OperatorType.NotEquals; }
+
+                        if (target is Character targetChar)
+                        {
+                            float skillLevel = targetChar.GetSkillLevel(AttributeName.ToIdentifier());
+
+                            return ValueMatchesRequirement(skillLevel);
+                        }
+                    }
+                    return false;
                 default:
-                    bool equals = CheckOnlyEquality(target);
-                    return ComparisonOperatorIsNotEquals
-                        ? !equals
-                        : equals;
+                    return false;
             }
         }
 
-        private bool CheckOnlyEquality(ISerializableEntity? target)
+        private bool ValueMatchesRequirement(float testedValue)
         {
-            switch (Type)
+            if (FloatValue.HasValue)
             {
-                case ConditionType.Name:
-                    if (target == null) { return false; }
-
-                    return target.Name == AttributeValue;
-                case ConditionType.HasSpecifierTag:
+                float value = FloatValue.Value;
+                switch (Operator)
                 {
-                    if (target is not Character {Info: { } characterInfo})
-                    {
-                        return false;
-                    }
-
-                    return AttributeValueAsTags.All(characterInfo.Head.Preset.TagSet.Contains);
-                }
-                case ConditionType.SpeciesName:
-                {
-                    if (target is not Character targetCharacter)
-                    {
-                        return false;
-                    }
-
-                    return targetCharacter.SpeciesName == AttributeValue;
-                }
-                case ConditionType.SpeciesGroup:
-                {
-                    if (target is not Character targetCharacter)
-                    {
-                        return false;
-                    }
-
-                    return CharacterParams.CompareGroup(AttributeValue.ToIdentifier(), targetCharacter.Params.Group);
-                }
-                case ConditionType.EntityType:
-                    return AttributeValue.ToLowerInvariant() switch
-                    {
-                        "character"
-                            => target is Character,
-                        "limb"
-                            => target is Limb,
-                        "item"
-                            => target is Item,
-                        "structure"
-                            => target is Structure,
-                        "null"
-                            => target == null,
-                        _
-                            => false
-                    };
-                case ConditionType.LimbType:
-                {
-                    return target is Limb limb
-                           && Enum.TryParse(AttributeValue, ignoreCase: true, out LimbType attributeLimbType)
-                           && attributeLimbType == limb.type;
+                    case OperatorType.Equals:
+                        return testedValue == value;
+                    case OperatorType.GreaterThan:
+                        return testedValue > value;
+                    case OperatorType.GreaterThanEquals:
+                        return testedValue >= value;
+                    case OperatorType.LessThan:
+                        return testedValue < value;
+                    case OperatorType.LessThanEquals:
+                        return testedValue <= value;
+                    case OperatorType.NotEquals:
+                        return testedValue != value;
                 }
             }
             return false;
         }
 
-        private bool SufficientTagMatches(int matches)
+        private bool MatchesTagCondition(ISerializableEntity target)
         {
-            return ComparisonOperatorIsNotEquals
-                ? matches <= 0
-                : matches >= AttributeValueAsTags.Length;
-        }
-
-        private bool ItemMatchesTagCondition(ISerializableEntity? target)
-        {
-            if (target is not Item item) { return ComparisonOperatorIsNotEquals; }
+            if (!(target is Item item)) { return Operator == OperatorType.NotEquals; }
 
             int matches = 0;
-            foreach (var tag in AttributeValueAsTags)
+            foreach (string tag in SplitAttributeValue)
             {
-                if (item.HasTag(tag)) { matches++; }
+                if (item.HasTag(tag))
+                {
+                    matches++;
+                }
             }
-            return SufficientTagMatches(matches);
+            //If operator is == then it needs to match everything, otherwise if its != there must be zero matches.
+            return Operator == OperatorType.Equals ? matches >= SplitAttributeValue.Length : matches <= 0;
         }
 
-        public bool TargetTagMatchesTagCondition(Identifier targetTag)
+        public bool MatchesTagCondition(Identifier targetTag)
         {
             if (targetTag.IsEmpty || Type != ConditionType.HasTag) { return false; }
 
             int matches = 0;
-            foreach (var tag in AttributeValueAsTags)
+            foreach (string tag in SplitAttributeValue)
             {
-                if (targetTag == tag) { matches++; }
+                if (targetTag == tag)
+                {
+                    matches++;
+                }
             }
-            return SufficientTagMatches(matches);
+            //If operator is == then it needs to match everything, otherwise if its != there must be zero matches.
+            return Operator == OperatorType.Equals ? matches >= SplitAttributeValue.Length : matches <= 0;
         }
 
-        private bool StatusEffectMatchesTagCondition(StatusEffect statusEffect)
-        {
-            int matches = 0;
-            foreach (var tag in AttributeValueAsTags)
-            {
-                if (statusEffect.HasTag(tag.Value)) { matches++; }
-            }
-            return SufficientTagMatches(matches);
-        }
-
-        private bool NumberMatchesRequirement(float testedValue)
-        {
-            if (!FloatValue.HasValue) { return ComparisonOperatorIsNotEquals; }
-            float value = FloatValue.Value;
-
-            return ComparisonOperator switch
-            {
-                ComparisonOperatorType.Equals
-                    => MathUtils.NearlyEqual(testedValue, value),
-                ComparisonOperatorType.NotEquals
-                    => !MathUtils.NearlyEqual(testedValue, value),
-                ComparisonOperatorType.GreaterThan
-                    => testedValue > value,
-                ComparisonOperatorType.GreaterThanEquals
-                    => testedValue >= value,
-                ComparisonOperatorType.LessThan
-                    => testedValue < value,
-                ComparisonOperatorType.LessThanEquals
-                    => testedValue <= value,
-                _
-                    => false
-            };
-        }
-
-        private bool PropertyMatchesRequirement(ISerializableEntity target, SerializableProperty property)
+        // TODO: refactor and add tests
+        private bool Matches(ISerializableEntity target, SerializableProperty property)
         {
             Type type = property.PropertyType;
 
             if (type == typeof(float) || type == typeof(int))
             {
                 float floatValue = property.GetFloatValue(target);
-                return NumberMatchesRequirement(floatValue);
+                switch (Operator)
+                {
+                    case OperatorType.Equals:
+                        return MathUtils.NearlyEqual(floatValue, FloatValue.Value);
+                    case OperatorType.NotEquals:
+                        return !MathUtils.NearlyEqual(floatValue, FloatValue.Value);
+                    case OperatorType.GreaterThan:
+                        return floatValue > FloatValue.Value;
+                    case OperatorType.LessThan:
+                        return floatValue < FloatValue.Value;
+                    case OperatorType.GreaterThanEquals:
+                        return floatValue >= FloatValue.Value;
+                    case OperatorType.LessThanEquals:
+                        return floatValue <= FloatValue.Value;
+                }
+                return false;
             }
 
-            switch (ComparisonOperator)
+            switch (Operator)
             {
-                case ComparisonOperatorType.Equals:
-                case ComparisonOperatorType.NotEquals:
-                    bool equals;
-                    if (type == typeof(bool))
+                case OperatorType.Equals:
                     {
-                        bool attributeValueBool = AttributeValue.IsTrueString();
-                        equals = property.GetBoolValue(target) == attributeValueBool;
-                    }
-                    else
-                    {
+                        if (type == typeof(bool))
+                        {
+                            return property.GetBoolValue(target) == (AttributeValue == "true" || AttributeValue == "True");
+                        }
                         var value = property.GetValue(target);
-                        equals = AreValuesEquivalent(value, AttributeValue);
+                        return Equals(value, AttributeValue);
                     }
-
-                    return ComparisonOperatorIsNotEquals
-                        ? !equals
-                        : equals;
-                default:
+                case OperatorType.NotEquals:
+                    {
+                        if (type == typeof(bool))
+                        {
+                            return property.GetBoolValue(target) != (AttributeValue == "true" || AttributeValue == "True");
+                        }
+                        var value = property.GetValue(target);
+                        return !Equals(value, AttributeValue);
+                    }
+                case OperatorType.GreaterThan:
+                case OperatorType.LessThanEquals:
+                case OperatorType.LessThan:
+                case OperatorType.GreaterThanEquals:
                     DebugConsole.ThrowError("Couldn't compare " + AttributeValue.ToString() + " (" + AttributeValue.GetType() + ") to property \"" + property.Name + "\" (" + type + ")! "
                         + "Make sure the type of the value set in the config files matches the type of the property.");
-                    return false;
+                    break;
             }
+            return false;
 
-            static bool AreValuesEquivalent(object? value, string desiredValue)
+            static bool Equals(object value, string desiredValue)
             {
                 if (value == null)
                 {
@@ -602,7 +455,7 @@ namespace Barotrauma
                 }
                 else
                 {
-                    return (value.ToString() ?? "").Equals(desiredValue);
+                    return value.ToString().Equals(desiredValue);
                 }
             }
         }

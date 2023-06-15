@@ -6,11 +6,17 @@ namespace Barotrauma
 {
     partial class Attack
     {
-        [Serialize("StructureBlunt", IsPropertySaveable.Yes), Editable()]
+        [Serialize("StructureBlunt", IsPropertySaveable.Yes, description: "Name of the sound effect the attack makes when it hits a structure."), Editable()]
         public string StructureSoundType { get; private set; }
 
+        /// <summary>
+        /// Sound to play when the attack deals damage.
+        /// </summary>
         private RoundSound sound;
 
+        /// <summary>
+        /// Particle emitter to use when the attack deals damage.
+        /// </summary>
         private ParticleEmitter particleEmitter;
 
         partial void InitProjSpecific(ContentXElement element)

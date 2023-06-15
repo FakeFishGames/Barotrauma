@@ -664,7 +664,10 @@ namespace Barotrauma
             while (Timing.Accumulator >= Timing.Step)
             {
                 Timing.TotalTime += Timing.Step;
-
+                if (!Paused)
+                {
+                    Timing.TotalTimeUnpaused += Timing.Step;
+                }
                 Stopwatch sw = new Stopwatch();
                 sw.Start();
 
@@ -944,7 +947,10 @@ namespace Barotrauma
                 PerformanceCounter.UpdateTimeGraph.Update(sw.ElapsedTicks * 1000.0f / (float)Stopwatch.Frequency);
             }
 
-            if (!Paused) { Timing.Alpha = Timing.Accumulator / Timing.Step; }
+            if (!Paused) 
+            { 
+                Timing.Alpha = Timing.Accumulator / Timing.Step;
+            }
 
             if (performanceCounterTimer.ElapsedMilliseconds > 1000)
             {

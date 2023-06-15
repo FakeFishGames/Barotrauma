@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
+using System.Text;
 using Barotrauma.Extensions;
 using Barotrauma.Networking;
 
@@ -11,10 +12,10 @@ namespace Barotrauma
 {
     internal partial class MedicalClinic
     {
-        // allow 10 requests per 5 seconds, announce to chat if the limit is reached
+        // allow 20 requests per 5 seconds, announce to chat if the limit is reached
         private readonly RateLimiter rateLimiter = new(
-            maxRequests: 10,
-            expiryInSeconds: 5,
+            maxRequests: RateLimitMaxRequests,
+            expiryInSeconds: RateLimitExpiry,
             punishmentRules: (RateLimitAction.OnLimitReached, RateLimitPunishment.Announce));
 
         private readonly record struct AfflictionSubscriber(Client Subscriber, CharacterInfo Target, DateTimeOffset Expiry);
@@ -125,6 +126,17 @@ namespace Barotrauma
 
             ImmutableArray<NetAffliction> pendingAfflictions = ImmutableArray<NetAffliction>.Empty;
             int infoId = 0;
+
+            if (foundInfo is null)
+            {
+                StringBuilder sb = new();
+                foreach (CharacterInfo character in GetCrewCharacters())
+                {
+                    sb.AppendLine($" - {character.DisplayName} ({character.ID})");
+                }
+
+                DebugConsole.ThrowError($"Could not find the requested crew member with ID {crewMember.CharacterInfoID}.\n{sb}");
+            }
 
             if (foundInfo is { Character.CharacterHealth: { } health })
             {

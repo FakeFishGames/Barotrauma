@@ -25,8 +25,7 @@ namespace Barotrauma
     {
         None = 0,
         Transparent = 1,
-        Opaque = 2,
-        BlockOutsideView = 3
+        Opaque = 2
     }
 
     public enum VoiceMode
@@ -53,13 +52,19 @@ namespace Barotrauma
             {
                 Config config = new Config
                 {
+#if SERVER
+                    //server defaults to English, clients get a prompt to select a language
                     Language = TextManager.DefaultLanguage,
+#else
+                    Language = LanguageIdentifier.None,
+#endif
                     SubEditorUndoBuffer = 32,
                     MaxAutoSaves = 8,
                     AutoSaveIntervalSeconds = 300,
                     SubEditorBackground = new Color(13, 37, 69, 255),
                     EnableSplashScreen = true,
                     PauseOnFocusLost = true,
+                    RemoteMainMenuContentUrl = "https://www.barotraumagame.com/gamedata/",
                     AimAssistAmount = DefaultAimAssist,
                     ShowEnemyHealthBars = EnemyHealthBarMode.ShowAll,
                     EnableMouseLook = true,
@@ -101,11 +106,18 @@ namespace Barotrauma
                 Config retVal = fallback ?? GetDefault();
                 
                 retVal.DeserializeElement(element);
+#if SERVER
+                //server defaults to English, clients get a prompt to select a language
                 if (retVal.Language == LanguageIdentifier.None)
                 {
                     retVal.Language = TextManager.DefaultLanguage;
                 }
-
+#endif
+                //RemoteMainMenuContentUrl gets set to default it left empty - lets allow leaving it empty to make it possible to disable the remote content 
+                if (element.Attribute("RemoteMainMenuContentUrl")?.Value == string.Empty)
+                {
+                    retVal.RemoteMainMenuContentUrl = string.Empty;
+                }
                 retVal.Graphics = GraphicsSettings.FromElements(element.GetChildElements("graphicsmode", "graphicssettings"), retVal.Graphics);
                 retVal.Audio = AudioSettings.FromElements(element.GetChildElements("audio"), retVal.Audio);
 #if CLIENT
@@ -141,6 +153,7 @@ namespace Barotrauma
             public bool DisableInGameHints;
             public bool EnableSubmarineAutoSave;
             public Identifier QuickStartSub;
+            public string RemoteMainMenuContentUrl;
 #if CLIENT
             public XElement SavedCampaignSettings;
 #endif

@@ -48,6 +48,8 @@ namespace Barotrauma
         protected virtual bool ResetWhenClearingIgnoreList => true;
         protected virtual bool ForceOrderPriority => true;
 
+        protected virtual int MaxTargets => int.MaxValue;
+
         public override bool IsLoop { get => true; set => throw new Exception("Trying to set the value for IsLoop from: " + System.Environment.StackTrace.CleanupStackTrace()); }
 
         public override void Update(float deltaTime)
@@ -89,12 +91,7 @@ namespace Barotrauma
                     var target = objective.Key;
                     if (!Targets.Contains(target))
                     {
-                        var subObjective = objective.Value;
-                        if (CurrentSubObjective == subObjective)
-                        {
-                            CurrentSubObjective.Abandon = !CurrentSubObjective.IsCompleted;
-                        }
-                        subObjectives.Remove(subObjective);
+                        subObjectives.Remove(objective.Value);
                     }
                 }
                 SyncRemovedObjectives(Objectives, GetList());
@@ -157,6 +154,11 @@ namespace Barotrauma
                     else
                     {
                         float max = AIObjectiveManager.LowestOrderPriority - 1;
+                        if (this is AIObjectiveRescueAll rescueObjective && rescueObjective.Targets.Contains(character))
+                        {
+                            // Allow higher prio
+                            max = AIObjectiveManager.EmergencyObjectivePriority;
+                        }
                         float value = MathHelper.Clamp((CumulatedDevotion + (targetValue * PriorityModifier)) / 100, 0, 1);
                         Priority = MathHelper.Lerp(0, max, value);
                     }
@@ -188,6 +190,10 @@ namespace Barotrauma
                 if (!ignoreList.Contains(target))
                 {
                     Targets.Add(target);
+                    if (Targets.Count > MaxTargets)
+                    {
+                        break;
+                    }
                 }
             }
         }

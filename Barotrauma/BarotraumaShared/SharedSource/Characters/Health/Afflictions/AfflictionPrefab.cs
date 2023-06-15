@@ -117,7 +117,7 @@ namespace Barotrauma
         public readonly bool CauseSpeechImpediment;
 
         /// <summary>
-        /// If not set to true, affected characters will no longer require air
+        /// If set to false, affected characters will no longer require air
         /// once the affliction reaches the active stage.
         /// </summary>
         public readonly bool NeedsAir;
@@ -247,7 +247,7 @@ namespace Barotrauma
 
             [Serialize(false, IsPropertySaveable.No, description:
                 "If set to true, MinVitalityDecrease and MaxVitalityDecrease represent a fraction of the affected character's maximum " +
-                "vilatily, with 1 meaning 100%, instead of the same amount for all species.")]
+                "vitality, with 1 meaning 100%, instead of the same amount for all species.")]
             public bool MultiplyByMaxVitality { get; private set; }
 
             [Serialize(0.0f, IsPropertySaveable.No, description: "Blur effect strength at this effect's lowest strength.")]
@@ -457,16 +457,22 @@ namespace Barotrauma
             /// Returns 0 if affliction.Strength is MinStrength,
             /// 1 if affliction.Strength is MaxStrength
             /// </summary>
-            public float GetStrengthFactor(Affliction affliction)
+            public float GetStrengthFactor(Affliction affliction) => GetStrengthFactor(affliction.Strength);
+
+            /// <summary>
+            /// Returns 0 if affliction.Strength is MinStrength,
+            /// 1 if affliction.Strength is MaxStrength
+            /// </summary>
+            public float GetStrengthFactor(float strength)
                 => MathUtils.InverseLerp(
                     MinStrength,
                     MaxStrength,
-                    affliction.Strength);
+                    strength);
         }
 
         /// <summary>
-        /// Description element can be used to define descriptions for the affliction that are shown at specific conditions.
-        /// For example a description that only shows to other players or only at certain strength levels.
+        /// The description element can be used to define descriptions for the affliction which are shown under specific conditions;
+        /// for example a description that only shows to other players or only at certain strength levels.
         /// </summary>
         /// <doc>
         /// <Field identifier="Text" type="string" defaultValue="&quot;&quot;">
@@ -692,8 +698,7 @@ namespace Barotrauma
         public readonly bool ShowBarInHealthMenu;
 
         /// <summary>
-        /// If set to true, this affliction's icon will be hidden from the HUD
-        /// after 5 seconds.
+        /// If set to true, this affliction's icon will be hidden from the HUD after 5 seconds.
         /// </summary>
         public readonly bool HideIconAfterDelay;
 
@@ -701,37 +706,37 @@ namespace Barotrauma
         /// How high the strength has to be for the affliction to take effect
         /// </summary>
         public readonly float ActivationThreshold = 0.0f;
-        
+
         /// <summary>
         /// How high the strength has to be for the affliction icon to be shown in the UI
         /// </summary>
         public readonly float ShowIconThreshold = 0.05f;
-        
+
         /// <summary>
         /// How high the strength has to be for the affliction icon to be shown to others with a health scanner or via the health interface
         /// </summary>
         public readonly float ShowIconToOthersThreshold = 0.05f;
-        
+
         /// <summary>
         /// The maximum strength this affliction can have.
         /// </summary>
         public readonly float MaxStrength = 100.0f;
 
         /// <summary>
-        /// The strength of the radiation grain effect to apply
-        /// when the strength of this affliction increases.
+        /// The strength of the radiation grain effect to apply when the strength of this affliction increases.
         /// </summary>
         public readonly float GrainBurst;
 
         /// <summary>
         /// How high the strength has to be for the affliction icon to be shown with a health scanner
         /// </summary>
-        public readonly float ShowInHealthScannerThreshold = 0.05f;
+        public readonly float ShowInHealthScannerThreshold;
 
         /// <summary>
-        /// How strong the affliction needs to be before bots attempt to treat it
+        /// How strong the affliction needs to be before bots attempt to treat it.
+        /// Also effects when the affliction is shown in the suitable treatments list.
         /// </summary>
-        public readonly float TreatmentThreshold = 5.0f;
+        public readonly float TreatmentThreshold;
 
         /// <summary>
         /// Bots will not try to treat the affliction if the character has any of these afflictions
@@ -758,13 +763,12 @@ namespace Barotrauma
         /// </summary>
         public readonly float DamageOverlayAlpha;
 
-        /// <summary>
-        /// Steam achievement given when the controlled character receives the affliction
+        /// Steam achievement given when the controlled character receives the affliction.
         /// </summary>
         public readonly Identifier AchievementOnReceived;
 
         /// <summary>
-        /// Steam achievement given when the affliction is removed from the controlled character
+        /// Steam achievement given when the affliction is removed from the controlled character.
         /// </summary>
         public readonly Identifier AchievementOnRemoved;
 
@@ -775,10 +779,8 @@ namespace Barotrauma
         public readonly Color[] IconColors;
 
         /// <summary>
-        /// If set to true and the affliction has an AfflictionOverlay element,
-        /// the overlay's opacity will be strictly proportional to its strength.
-        /// Otherwise, the overlay's opacity will be determined based on its
-        /// activation threshold and effects.
+        /// If set to true and the affliction has an AfflictionOverlay element, the overlay's opacity will be strictly proportional to its strength.
+        /// Otherwise, the overlay's opacity will be determined based on its activation threshold and effects.
         /// </summary>
         public readonly bool AfflictionOverlayAlphaIsLinear;
 
@@ -788,16 +790,18 @@ namespace Barotrauma
         public readonly bool ResetBetweenRounds;
 
         /// <summary>
-        /// Should damage particles be emitted when a character receives this affliction? Only relevant if the affliction is of the type "bleeding" or "damage".
+        /// Should damage particles be emitted when a character receives this affliction?
+        /// Only relevant if the affliction is of the type "bleeding" or "damage".
         /// </summary>
         public readonly bool DamageParticles;
 
         /// <summary>
         /// An arbitrary modifier that affects how much medical skill is increased when you apply the affliction on a target. 
-        /// If the affliction causes damage or is of type poison or paralysis, the skill is increased only when the target is hostile. 
-        /// If the affliction is of type buff, the skill is increased only when the target is friendly.
+        /// If the affliction causes damage or is of the 'poison' or 'paralysis' type, the skill is increased only when the target is hostile. 
+        /// If the affliction is of the 'buff' type, the skill is increased only when the target is friendly.
         /// </summary>
         public readonly float MedicalSkillGain;
+
         /// <summary>
         /// An arbitrary modifier that affects how much weapons skill is increased when you apply the affliction on a target. 
         /// The skill is increased only when the target is hostile. 
@@ -827,14 +831,13 @@ namespace Barotrauma
         private readonly ConstructorInfo constructor;
 
         /// <summary>
-        /// Icon that's used in UI to represent this affliction.
+        /// An icon that’s used in the UI to represent this affliction.
         /// </summary>
         public readonly Sprite Icon;
 
         /// <summary>
         /// A sprite that covers the affected player's entire screen when this affliction is active.
-        /// Its opacity is controlled by the active effect's MinAfflictionOverlayAlphaMultiplier
-        /// and MaxAfflictionOverlayAlphaMultiplier
+        /// Its opacity is controlled by the active effect's MinAfflictionOverlayAlphaMultiplier and MaxAfflictionOverlayAlphaMultiplier
         /// </summary>
         public readonly Sprite AfflictionOverlay;
 
@@ -844,7 +847,7 @@ namespace Barotrauma
             {
                 foreach (var itemPrefab in ItemPrefab.Prefabs)
                 {
-                    float suitability = Math.Max(itemPrefab.GetTreatmentSuitability(Identifier), itemPrefab.GetTreatmentSuitability(AfflictionType));
+                    float suitability = itemPrefab.GetTreatmentSuitability(Identifier) + itemPrefab.GetTreatmentSuitability(AfflictionType);
                     if (!MathUtils.NearlyEqual(suitability, 0.0f))
                     {
                         yield return new KeyValuePair<Identifier, float>(itemPrefab.Identifier, suitability);
@@ -912,7 +915,7 @@ namespace Barotrauma
 
             ShowInHealthScannerThreshold = element.GetAttributeFloat(nameof(ShowInHealthScannerThreshold), 
                 Math.Max(ActivationThreshold, AfflictionType == "talentbuff" ? float.MaxValue : ShowIconToOthersThreshold));
-            TreatmentThreshold = element.GetAttributeFloat(nameof(TreatmentThreshold), Math.Max(ActivationThreshold, 5.0f));
+            TreatmentThreshold = element.GetAttributeFloat(nameof(TreatmentThreshold), Math.Max(ActivationThreshold, 10.0f));
 
             DamageOverlayAlpha  = element.GetAttributeFloat(nameof(DamageOverlayAlpha), 0.0f);
             BurnOverlayAlpha    = element.GetAttributeFloat(nameof(BurnOverlayAlpha), 0.0f);

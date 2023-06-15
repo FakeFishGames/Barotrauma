@@ -155,8 +155,6 @@ namespace Barotrauma.Items.Components
                 convexHull.Enabled = true;
                 SetVertices(convexHull, rect);
             }
-            convexHull.IsExteriorWall = !linkedGap.IsRoomToRoom;
-            if (convexHull2 != null) { convexHull2.IsExteriorWall = convexHull.IsExteriorWall;  }
         }
 
 
@@ -169,12 +167,11 @@ namespace Barotrauma.Items.Components
                 IsHorizontal ? 
                     new Vector2[] { new Vector2(verts[0].X, center.Y), new Vector2(verts[2].X, center.Y) } :
                     new Vector2[] { new Vector2(center.X, verts[0].Y), new Vector2(center.X, verts[2].Y) });
+            convexHull.MaxMergeLosVerticesDist = 35.0f;
         }
 
         partial void UpdateProjSpecific(float deltaTime)
         {
-            convexHull.IsExteriorWall = !linkedGap.IsRoomToRoom;
-            if (convexHull2 != null) { convexHull2.IsExteriorWall = convexHull.IsExteriorWall; }
             if (shakeTimer > 0.0f)
             {				
                 shakeTimer -= deltaTime;

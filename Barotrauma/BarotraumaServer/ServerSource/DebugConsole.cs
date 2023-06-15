@@ -14,7 +14,7 @@ namespace Barotrauma
     static partial class DebugConsole
     {
         private static readonly RateLimiter rateLimiter = new(
-            maxRequests: 10,
+            maxRequests: 50,
             expiryInSeconds: 5,
             punishmentRules: new[]
             {
@@ -2526,14 +2526,14 @@ namespace Barotrauma
                     GameMain.Server.CreateEntityEvent(wall);
                 }
             }));
-            commands.Add(new Command("stallfiletransfers", "stallfiletransfers [seconds]: A debug command that stalls each file transfer packet by the specified duration.", (string[] args) =>
+            commands.Add(new Command("stallfiletransfers", "stallfiletransfers [seconds]: A debug command that makes all file transfers take at least the specified duration.", (string[] args) =>
             {
                 float seconds = 0.0f;
                 if (args.Length > 0)
                 {
                     float.TryParse(args[0], out seconds);
                 }
-                GameMain.Server.FileSender.StallPacketsTime = seconds;
+                GameMain.Server.FileSender.ForceMinimumFileTransferDuration = seconds;
                 NewMessage("Set file transfer stall time to " + seconds);
             }));
 #endif

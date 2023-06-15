@@ -84,6 +84,9 @@ namespace Barotrauma.Items.Components
         [Serialize(false, IsPropertySaveable.No, description: "Can the item repair multiple things at once, or will it only affect the first thing the ray from the barrel hits.")]
         public bool RepairMultiple { get; set; }
 
+        [Serialize(true, IsPropertySaveable.No, description: "Can the item repair multiple walls at once? Only relevant if RepairMultiple is true.")]
+        public bool RepairMultipleWalls { get; set; }
+
         [Serialize(false, IsPropertySaveable.No, description: "Can the item repair things through holes in walls.")]
         public bool RepairThroughHoles { get; set; }
 
@@ -383,6 +386,7 @@ namespace Barotrauma.Items.Components
                         //stop the ray if it already hit a door/wall and is now about to hit some other type of entity
                         if (lastHitType == typeof(Item) || lastHitType == typeof(Structure)) { break; }
                     }
+                    if (!RepairMultipleWalls && (bodyType == typeof(Structure) || (body.UserData as Item)?.GetComponent<Door>() != null)) { break; }
 
                     Character hitCharacter = null;
                     if (body.UserData is Limb limb)

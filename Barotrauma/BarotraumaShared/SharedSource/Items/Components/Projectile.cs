@@ -14,18 +14,18 @@ namespace Barotrauma.Items.Components
 {
     partial class Projectile : ItemComponent, IServerSerializable
     {
-        const int SpreadCounterWrapAround = 256;
-
         private static readonly ImmutableArray<float> spreadPool;
         static Projectile()
         {
             MTRandom random = new MTRandom(0);
-            spreadPool = Enumerable.Range(0, SpreadCounterWrapAround).Select(f => (float)random.NextDouble() - 0.5f).ToImmutableArray();            
+            spreadPool = Enumerable.Range(0, byte.MaxValue + 1).Select(f => (float)random.NextDouble() - 0.5f).ToImmutableArray();            
         }
 
-        public static float GetSpreadFromPool()
+        public static byte SpreadCounter { get; private set; }
+
+        public static void ResetSpreadCounter()
         {
-            return spreadPool[SpreadCounter];
+            SpreadCounter = 0;
         }
 
         struct HitscanResult
@@ -62,7 +62,7 @@ namespace Barotrauma.Items.Components
 
         private bool removePending;
 
-        public static byte SpreadCounter { get; private set; }
+        private byte spreadIndex;
 
         //continuous collision detection is used while the projectile is moving faster than this
         const float ContinuousCollisionThreshold = 5.0f;
@@ -299,7 +299,8 @@ namespace Barotrauma.Items.Components
                 return;
             }
 
-            SpreadCounter = (byte)(item.ID % SpreadCounterWrapAround);
+            spreadIndex = SpreadCounter;
+            SpreadCounter++;
 
             InitProjSpecific(element);
         }
@@ -326,6 +327,12 @@ namespace Barotrauma.Items.Components
             }
             originalCollisionCategories = item.body.CollisionCategories;
             originalCollisionTargets = item.body.CollidesWith;
+        }
+
+        public float GetSpreadFromPool()
+        {
+            spreadIndex = (byte)MathUtils.PositiveModulo(spreadIndex, spreadPool.Length);
+            return spreadPool[spreadIndex];
         }
 
         private void Launch(Character user, Vector2 simPosition, float rotation, float damageMultiplier = 1f, float launchImpulseModifier = 0f)
@@ -380,7 +387,7 @@ namespace Barotrauma.Items.Components
             {
 #if SERVER
                 launchRot = rotation;
-                Item.CreateServerEvent(this, new EventData(launch: true, spreadCounter: (byte)(SpreadCounter - 1)));
+                Item.CreateServerEvent(this, new EventData(launch: true, spreadCounter: (byte)(spreadIndex - 1)));
 #endif
             }
         }
@@ -396,7 +403,6 @@ namespace Barotrauma.Items.Components
             for (int i = 0; i < HitScanCount; i++)
             {
                 float launchAngle;
-
                 if (StaticSpread)
                 {
                     launchAngle = initialRotation + MathHelper.ToRadians(i - ((float)(HitScanCount - 1) / 2)) * Spread;
@@ -405,7 +411,7 @@ namespace Barotrauma.Items.Components
                 {
                     launchAngle = initialRotation + MathHelper.ToRadians(Spread * GetSpreadFromPool());
                 }
-                SpreadCounter++;
+                spreadIndex++;
 
                 Vector2 launchDir = new Vector2((float)Math.Cos(launchAngle), (float)Math.Sin(launchAngle));
                 if (Hitscan)
@@ -703,7 +709,7 @@ namespace Barotrauma.Items.Components
             return hits;
         }
 
-        public override void Drop(Character dropper)
+        public override void Drop(Character dropper, bool setTransform = true)
         {
             Item.ResetWaterDragCoefficient();
             if (dropper != null)
@@ -711,7 +717,7 @@ namespace Barotrauma.Items.Components
                 DisableProjectileCollisions();
                 Unstick();
             }
-            base.Drop(dropper);
+            base.Drop(dropper, setTransform);
         }
 
         public override void Update(float deltaTime, Camera cam)
@@ -885,17 +891,8 @@ namespace Barotrauma.Items.Components
                     return false; 
                 }
 
-                Vector2 normalizedVel;
-                Vector2 dir;
-                if (item.body.LinearVelocity.LengthSquared() < 0.001f)
-                {
-                    normalizedVel = Vector2.Zero;
-                    dir = contact.Manifold.LocalNormal;
-                }
-                else
-                {
-                    normalizedVel = dir = Vector2.Normalize(item.body.LinearVelocity);
-                }
+                Vector2 dir = item.body.LinearVelocity.LengthSquared() < 0.001f ?
+                contact.Manifold.LocalNormal : Vector2.Normalize(item.body.LinearVelocity);
 
                 //do a raycast in the sub's coordinate space to see if it hit a structure
                 var wallBody = Submarine.PickBody(
@@ -904,7 +901,7 @@ namespace Barotrauma.Items.Components
                     collisionCategory: Physics.CollisionWall);
                 if (wallBody?.FixtureList?.First() != null && (wallBody.UserData is Structure || wallBody.UserData is Item) &&
                     //ignore the hit if it's behind the position the item was launched from, and the projectile is travelling in the opposite direction
-                    Vector2.Dot((item.body.SimPosition + normalizedVel) - launchPos, dir) > 0)
+                    Vector2.Dot(item.body.SimPosition - launchPos, dir) > 0)
                 {
                     target = wallBody.FixtureList.First();
                     if (hits.Contains(target.Body))
@@ -942,7 +939,7 @@ namespace Barotrauma.Items.Components
             Character character = null;
             if (target.Body.UserData is Submarine submarine && target.UserData is not Barotrauma.Item)
             {
-                item.Move(-submarine.Position);
+                item.Move(-submarine.Position, ignoreContacts: false);
                 item.Submarine = submarine;
                 item.body.Submarine = submarine;
                 return !Hitscan;

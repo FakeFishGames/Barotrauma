@@ -532,6 +532,7 @@ namespace Barotrauma
             void drawRect(Vector2 topLeft, Vector2 bottomRight)
             {
                 int minWidth = GUI.IntScale(5);
+                if (OverflowClip) { topLeft.X = Math.Max(topLeft.X, 0.0f); }
                 if (bottomRight.X - topLeft.X < minWidth) { bottomRight.X = topLeft.X + minWidth; }
                 GUI.DrawRectangle(spriteBatch,
                     Rect.Location.ToVector2() + topLeft,
@@ -801,6 +802,7 @@ namespace Barotrauma
                     IEnumerable<GUITextBox> GetAndSortTextBoxes(GUIComponent parent) => parent.GetAllChildren<GUITextBox>().OrderBy(t => t.Rect.Y).ThenBy(t => t.Rect.X);
                     GUITextBox SelectNextTextBox(GUIListBox listBox)
                     {
+                        if (listBox?.SelectedComponent == null) { return null; }
                         var textBoxes = GetAndSortTextBoxes(listBox.SelectedComponent);
                         if (textBoxes.Any())
                         {

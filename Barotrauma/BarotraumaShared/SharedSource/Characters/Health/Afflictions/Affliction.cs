@@ -179,7 +179,7 @@ namespace Barotrauma
             float currVitalityDecrease = MathHelper.Lerp(
                 currentEffect.MinVitalityDecrease,
                 currentEffect.MaxVitalityDecrease,
-                currentEffect.GetStrengthFactor(this));
+                currentEffect.GetStrengthFactor(strength));
 
             if (currentEffect.MultiplyByMaxVitality)
             {
@@ -386,6 +386,8 @@ namespace Barotrauma
         {
             foreach (AfflictionPrefab.PeriodicEffect periodicEffect in Prefab.PeriodicEffects)
             {
+                if (Strength <= periodicEffect.MinStrength) { continue; }
+                if (periodicEffect.MaxStrength > 0 && Strength > periodicEffect.MaxStrength) { continue; }
                 PeriodicEffectTimers[periodicEffect] -= deltaTime;
                 if (PeriodicEffectTimers[periodicEffect] <= 0.0f)
                 {
@@ -495,6 +497,13 @@ namespace Barotrauma
         /// </summary>
         public void SetStrength(float strength)
         {
+            if (!MathUtils.IsValid(strength))
+            {
+#if DEBUG
+                DebugConsole.ThrowError($"Attempted to set an affliction to an invalid strength ({strength})\n" + Environment.StackTrace.CleanupStackTrace());
+#endif
+                return;
+            }
             _nonClampedStrength = strength;
             _strength = _nonClampedStrength;
             activeEffectDirty |= !MathUtils.NearlyEqual(_strength, prevActiveEffectStrength);
