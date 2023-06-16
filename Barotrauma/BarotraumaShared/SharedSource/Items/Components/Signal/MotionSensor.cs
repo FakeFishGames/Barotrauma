@@ -222,10 +222,10 @@ namespace Barotrauma.Items.Components
                         {
                             Vector2 e1 = edge.Point1 + cell.Translation;
                             Vector2 e2 = edge.Point2 + cell.Translation;
-                            if (MathUtils.LinesIntersect(e1, e2, new Vector2(detectRect.X, detectRect.Y), new Vector2(detectRect.Right, detectRect.Y)) ||
-                                MathUtils.LinesIntersect(e1, e2, new Vector2(detectRect.X, detectRect.Bottom), new Vector2(detectRect.Right, detectRect.Bottom)) ||
-                                MathUtils.LinesIntersect(e1, e2, new Vector2(detectRect.X, detectRect.Y), new Vector2(detectRect.X, detectRect.Bottom)) ||
-                                MathUtils.LinesIntersect(e1, e2, new Vector2(detectRect.Right, detectRect.Y), new Vector2(detectRect.Right, detectRect.Bottom)))
+                            if (MathUtils.LineSegmentsIntersect(e1, e2, new Vector2(detectRect.X, detectRect.Y), new Vector2(detectRect.Right, detectRect.Y)) ||
+                                MathUtils.LineSegmentsIntersect(e1, e2, new Vector2(detectRect.X, detectRect.Bottom), new Vector2(detectRect.Right, detectRect.Bottom)) ||
+                                MathUtils.LineSegmentsIntersect(e1, e2, new Vector2(detectRect.X, detectRect.Y), new Vector2(detectRect.X, detectRect.Bottom)) ||
+                                MathUtils.LineSegmentsIntersect(e1, e2, new Vector2(detectRect.Right, detectRect.Y), new Vector2(detectRect.Right, detectRect.Bottom)))
                             {
                                 MotionDetected = true;
                                 return;

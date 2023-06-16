@@ -54,7 +54,7 @@ body:
       label: Version
       description: Which version of the game did the bug happen in? You can see the current version number in the bottom left corner of your screen in the main menu.
       options:      
-        - v1.0.13.2
+        - v1.0.20.1
         - Other
     validations:
       required: true

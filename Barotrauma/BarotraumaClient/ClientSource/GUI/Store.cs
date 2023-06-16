@@ -870,7 +870,7 @@ namespace Barotrauma
             {
                 foreach (var minRep in priceInfo.MinReputation)
                 {
-                    if (campaign.GetReputation(minRep.Key) < minRep.Value)
+                    if (MathF.Round(campaign.GetReputation(minRep.Key)) < minRep.Value)
                     {
                         return minRep;
                     }
@@ -1930,7 +1930,7 @@ namespace Barotrauma
                                             "campaignstore.reputationrequired",
                                             ("[amount]", ((int)requiredReputation.Value.Value).ToString()),
                                             ("[faction]", TextManager.Get("faction." + requiredReputation.Value.Key).Value));
-                            Color color = campaign.GetReputation(requiredReputation.Value.Key) < requiredReputation.Value.Value ?
+                            Color color = MathF.Round(campaign.GetReputation(requiredReputation.Value.Key)) < requiredReputation.Value.Value ?
                                 GUIStyle.Orange : GUIStyle.Green;
                             toolTip += $"\n‖color:{color.ToStringHex()}‖{repStr}‖color:end‖";
                         }

@@ -490,7 +490,7 @@ namespace Barotrauma.Steam
                     root.Attributes().Remove();
 
                     root.Add(
-                        new XAttribute("name", itemTitle),
+                        new XAttribute("name", modName),
                         new XAttribute("steamworkshopid", itemId),
                         new XAttribute("corepackage", isCorePackage),
                         new XAttribute("modversion", modVersion),

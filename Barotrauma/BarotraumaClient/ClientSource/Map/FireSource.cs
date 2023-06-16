@@ -9,15 +9,17 @@ namespace Barotrauma
     {
         private LightSource lightSource;
 
-        partial void UpdateProjSpecific(float growModifier)
+        private float particleTimer;
+
+        partial void UpdateProjSpecific(float growModifier, float deltaTime)
         {
             if (this is DummyFireSource)
             {
-                EmitParticles(size, WorldPosition, hull, growModifier, null);
+                EmitParticles(size, WorldPosition, deltaTime, hull, growModifier,  null);
             }
             else
             {
-                EmitParticles(size, WorldPosition, hull, growModifier, OnChangeHull);
+                EmitParticles(size, WorldPosition, deltaTime, hull, growModifier, OnChangeHull);
             }
 
             lightSource.Color = new Color(1.0f, 0.45f, 0.3f) * Rand.Range(0.8f, 1.0f);
@@ -25,23 +27,29 @@ namespace Barotrauma
             if (Vector2.DistanceSquared(lightSource.Position, position) > 5.0f) { lightSource.Position = position + Vector2.UnitY * 30.0f; }
         }
 
-        public static void EmitParticles(Vector2 size, Vector2 worldPosition, Hull hull, float growModifier, Particle.OnChangeHullHandler onChangeHull = null)
+        public void EmitParticles(Vector2 size, Vector2 worldPosition, float deltaTime, Hull hull, float growModifier, Particle.OnChangeHullHandler onChangeHull = null)
         {
-            float particleCount = Rand.Range(0.0f, size.X / 50.0f);
+            var particlePrefab = ParticleManager.FindPrefab("flame");
+            if (particlePrefab == null) { return; }
 
-            for (int i = 0; i < particleCount; i++)
+            float particlesPerSecond = MathHelper.Clamp(size.X / 2.0f, 10.0f, 200.0f);
+
+            float particleInterval = 1.0f / particlesPerSecond;
+            particleTimer += deltaTime;
+            while (particleTimer > particleInterval)
             {
+                particleTimer -= particleInterval;
                 Vector2 particlePos = new Vector2(
                     worldPosition.X + Rand.Range(0.0f, size.X),
-                    Rand.Range(worldPosition.Y - size.Y, worldPosition.Y + 20.0f));
+                    worldPosition.Y - size.Y + particlePrefab.CollisionRadius);
 
                 Vector2 particleVel = new Vector2(
                     particlePos.X - (worldPosition.X + size.X / 2.0f),
                     Math.Max((float)Math.Sqrt(size.X) * Rand.Range(0.0f, 15.0f) * growModifier, 0.0f));
 
                 particleVel.X = MathHelper.Clamp(particleVel.X, -200.0f, 200.0f);
-
-                var particle = GameMain.ParticleManager.CreateParticle("flame",
+                
+                var particle = GameMain.ParticleManager.CreateParticle(particlePrefab,
                     particlePos, particleVel, 0.0f, hull);
 
                 if (particle == null) { continue; }
@@ -54,7 +62,7 @@ namespace Barotrauma
                 if (Rand.Int(5) == 1)
                 {
                     var smokeParticle = GameMain.ParticleManager.CreateParticle("smoke",
-                    particlePos, new Vector2(particleVel.X, particleVel.Y * 0.1f), 0.0f, hull);
+                        particlePos, new Vector2(particleVel.X, particleVel.Y * 0.1f), 0.0f, hull);
 
                     if (smokeParticle != null)
                     {

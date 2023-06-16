@@ -775,7 +775,6 @@ namespace Barotrauma.Items.Components
             if (shutDown)
             {
                 PowerOn = false;
-                AutoTemp = false;
                 TargetFissionRate = 0.0f;
                 TargetTurbineOutput = 0.0f;
                 unsentChanges = true;

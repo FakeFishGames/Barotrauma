@@ -376,7 +376,7 @@ namespace Barotrauma
                 // Otherwise it will take some time for us to find a valid item when there are multiple items that we can't reach and some that we can.
                 // This is relatively expensive, so let's do this only when it significantly improves the behavior.
                 // Only allow one path find call per frame.
-                CheckPathForEachItem = priority >= AIObjectiveManager.LowestOrderPriority && (objectiveManager.IsCurrentOrder<AIObjectiveFixLeaks>() || objectiveManager.CurrentOrder is AIObjectiveGoTo gotoOrder && gotoOrder.IsFollowOrderObjective);
+                CheckPathForEachItem = priority >= AIObjectiveManager.LowestOrderPriority && (objectiveManager.IsCurrentOrder<AIObjectiveFixLeaks>() || objectiveManager.CurrentOrder is AIObjectiveGoTo gotoOrder && gotoOrder.IsFollowOrder);
             }
             bool checkPath = CheckPathForEachItem;
             // Reset if the character has switched subs.
@@ -536,7 +536,7 @@ namespace Barotrauma
                 {
                     if (itemCandidates.FirstOrDefault() is { } itemCandidate)
                     {
-                        var path = PathSteering.PathFinder.FindPath(character.SimPosition, itemCandidate.item.SimPosition, character.Submarine, errorMsgStr: $"AIObjectiveGetItem {character.DisplayName}", nodeFilter: node => node.Waypoint.CurrentHull != null);
+                        var path = PathSteering.PathFinder.FindPath(character.SimPosition, character.GetRelativeSimPosition(itemCandidate.item), character.Submarine, errorMsgStr: $"AIObjectiveGetItem {character.DisplayName}", nodeFilter: node => node.Waypoint.CurrentHull != null);
                         if (path.Unreachable)
                         {
                             // Remove the invalid candidates and continue on the next frame.

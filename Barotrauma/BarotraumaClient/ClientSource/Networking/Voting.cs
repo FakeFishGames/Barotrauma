@@ -348,11 +348,13 @@ namespace Barotrauma
                             switch (voteType)
                             {
                                 case VoteType.PurchaseAndSwitchSub:
-                                    GameMain.GameSession.PurchaseSubmarine(subInfo);
-                                    GameMain.GameSession.SwitchSubmarine(subInfo, submarineVoteInfo.TransferItems);
+                                    if (GameMain.GameSession.TryPurchaseSubmarine(subInfo))
+                                    {
+                                        GameMain.GameSession.SwitchSubmarine(subInfo, submarineVoteInfo.TransferItems);
+                                    }
                                     break;
                                 case VoteType.PurchaseSub:
-                                    GameMain.GameSession.PurchaseSubmarine(subInfo);
+                                    GameMain.GameSession.TryPurchaseSubmarine(subInfo);
                                     break;
                                 case VoteType.SwitchSub:
                                     GameMain.GameSession.SwitchSubmarine(subInfo, submarineVoteInfo.TransferItems);

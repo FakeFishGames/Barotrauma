@@ -294,40 +294,37 @@ namespace Barotrauma
                 throw new Exception($"Generating a campaign map failed (no locations created). Width: {Width}, height: {Height}");
             }
 
-            foreach (Location location in Locations)
-            {
-                if (location.Type.Identifier != "outpost") { continue; }
-                SetStartLocation(location);
-            }
+            FindStartLocation(l => l.Type.Identifier == "outpost");
             //if no outpost was found (using a mod that replaces the outpost location type?), find any type of outpost
             if (CurrentLocation == null)
             {
+                FindStartLocation(l => l.Type.HasOutpost);
+            }
+
+            void FindStartLocation(Func<Location, bool> predicate)
+            {
                 foreach (Location location in Locations)
                 {
-                    if (!location.Type.HasOutpost) { continue; }
-                    SetStartLocation(location);
+                    if (!predicate(location)) { continue; }
+                    if (CurrentLocation == null || location.MapPosition.X < CurrentLocation.MapPosition.X)
+                    {
+                        CurrentLocation = StartLocation = furthestDiscoveredLocation = location;
+                    }
                 }
             }
-            
-            void SetStartLocation(Location location)
+
+            StartLocation.SecondaryFaction = null;             
+            var startOutpostFaction = campaign?.Factions.FirstOrDefault(f => f.Prefab.StartOutpost);
+            if (startOutpostFaction != null)
             {
-                if (CurrentLocation == null || location.MapPosition.X < CurrentLocation.MapPosition.X)
+                StartLocation.Faction = startOutpostFaction;
+                foreach (var connection in StartLocation.Connections)
                 {
-                    CurrentLocation = StartLocation = furthestDiscoveredLocation = location;
-                    StartLocation.SecondaryFaction = null;             
-                    var startOutpostFaction = campaign?.Factions.FirstOrDefault(f => f.Prefab.StartOutpost);
-                    if (startOutpostFaction != null)
+                    var otherLocation = connection.OtherLocation(StartLocation);
+                    if (otherLocation.HasOutpost() && otherLocation.Type.OutpostTeam == CharacterTeamType.FriendlyNPC)
                     {
-                        StartLocation.Faction = startOutpostFaction;
-                        foreach (var connection in StartLocation.Connections)
-                        {
-                            var otherLocation = connection.OtherLocation(StartLocation);
-                            if (otherLocation.HasOutpost() && otherLocation.Type.OutpostTeam == CharacterTeamType.FriendlyNPC)
-                            {
-                                otherLocation.Faction = startOutpostFaction;
-                            }
-                        }
-                    }                    
+                        otherLocation.Faction = startOutpostFaction;
+                    }
                 }
             }
 

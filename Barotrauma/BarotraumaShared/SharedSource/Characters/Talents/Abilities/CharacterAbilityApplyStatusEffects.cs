@@ -29,7 +29,7 @@ namespace Barotrauma.Abilities
             nearbyCharactersAppliesToEnemies = abilityElement.GetAttributeBool("nearbycharactersappliestoenemies", true);
         }
 
-        protected void ApplyEffectSpecific(Character targetCharacter)
+        protected void ApplyEffectSpecific(Character targetCharacter, Limb targetLimb = null)
         {
             //prevent an infinite loop if an effect triggers itself
             //(e.g. a talent that triggers when an affliction is applied, and applies that same affliction)
@@ -66,6 +66,11 @@ namespace Barotrauma.Abilities
                         statusEffect.SetUser(Character);
                         statusEffect.Apply(ActionType.OnAbility, EffectDeltaTime, targetCharacter, targets);
                     }
+                    else if (statusEffect.HasTargetType(StatusEffect.TargetType.Limb) && targetLimb != null)
+                    {
+                        statusEffect.SetUser(Character);
+                        statusEffect.Apply(ActionType.OnAbility, EffectDeltaTime, Character, targetLimb);
+                    }
                     else if (statusEffect.HasTargetType(StatusEffect.TargetType.Character))
                     {
                         statusEffect.SetUser(Character);
@@ -99,7 +104,7 @@ namespace Barotrauma.Abilities
         {
             if ((abilityObject as IAbilityCharacter)?.Character is Character targetCharacter && !applyToSelf)
             {
-                ApplyEffectSpecific(targetCharacter);
+                ApplyEffectSpecific(targetCharacter, targetLimb: (abilityObject as AbilityApplyTreatment)?.TargetLimb);
             }
             else
             {

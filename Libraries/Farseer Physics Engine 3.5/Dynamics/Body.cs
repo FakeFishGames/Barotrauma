@@ -334,6 +334,7 @@ namespace FarseerPhysics.Dynamics
                         CreateProxies();
 
                     // Contacts are created the next time step.
+                    OnEnabled?.Invoke();
                 }
                 else
                 {
@@ -342,6 +343,7 @@ namespace FarseerPhysics.Dynamics
                         DestroyProxies();
                         DestroyContacts();
                     }
+                    OnDisabled?.Invoke();
                 }
             }
         }
@@ -1204,6 +1206,8 @@ namespace FarseerPhysics.Dynamics
             add { onSeparationEventHandler += value; }
             remove { onSeparationEventHandler -= value; }
         }
+
+        public Action OnEnabled, OnDisabled;
 
         public float Restitution
         {

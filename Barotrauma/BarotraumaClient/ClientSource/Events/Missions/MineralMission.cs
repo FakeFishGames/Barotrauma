@@ -29,7 +29,7 @@ namespace Barotrauma
                 }
             }
 
-            for (int i = 0; i < resourceClusters.Count; i++)
+            for (int i = 0; i < resourceAmounts.Count; i++)
             {
                 var amount = msg.ReadByte();
                 var rotation = msg.ReadSingle();
@@ -54,7 +54,7 @@ namespace Barotrauma
 
             CalculateMissionClusterPositions();
 
-            for(int i = 0; i < resourceClusters.Count; i++)
+            for(int i = 0; i < resourceAmounts.Count; i++)
             {
                 var identifier = msg.ReadIdentifier();
                 var count = msg.ReadByte();
