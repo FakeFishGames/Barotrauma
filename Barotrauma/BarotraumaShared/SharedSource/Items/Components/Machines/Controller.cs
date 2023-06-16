@@ -32,7 +32,7 @@ namespace Barotrauma.Items.Components
 
     partial class Controller : ItemComponent, IServerSerializable
     {
-        protected string output, falseOutput;
+        private protected string output, falseOutput;
 
         //where the limbs of the user should be positioned when using the controller
         private readonly List<LimbPos> limbPositions = new List<LimbPos>();
@@ -51,29 +51,29 @@ namespace Barotrauma.Items.Components
         private Item focusTarget;
         private float targetRotation;
 
-        [InGameEditable, Serialize("1", IsPropertySaveable.Yes, description: "The signal sent when the condition is met (if empty, no signal is sent).", alwaysUseInstanceValues: true)]
+        [InGameEditable, Serialize("1", IsPropertySaveable.Yes, description: "The signal sent when the controller is being activated or is toggled on. If empty, no signal is sent.", alwaysUseInstanceValues: true)]
         public string Output
         {
             get { return output; }
             set
             {
-                if (value == null) { return; }
+                if (value == null || value == output) { return; }
                 output = value;
-                //reactivate (we may not have been previously sending a signal, but might now)
-                IsActive = true;
+                //reactivate if signal isn't empty (we may not have been previously sending a signal, but might now)
+                if (!value.IsNullOrEmpty()) { IsActive = true; }
             }
         }
 
-        [InGameEditable, Serialize("0", IsPropertySaveable.Yes, description: "The signal sent when the condition is not met (if empty, no signal is sent).", alwaysUseInstanceValues: true)]
+        [InGameEditable, Serialize("0", IsPropertySaveable.Yes, description: "The signal sent when the controller is toggled off. If empty, no signal is sent. Only valid if IsToggle is true.", alwaysUseInstanceValues: true)]
         public string FalseOutput
         {
             get { return falseOutput; }
             set
             {
-                if (value == null) { return; }
+                if (value == null || value == falseOutput) { return; }
                 falseOutput = value;
-                //reactivate (we may not have been previously sending a signal, but might now)
-                IsActive = true;
+                //reactivate if signal isn't empty (we may not have been previously sending a signal, but might now)
+                if (!value.IsNullOrEmpty()) { IsActive = true; }
             }
         }
 
@@ -192,13 +192,13 @@ namespace Barotrauma.Items.Components
             this.cam = cam;
             UserInCorrectPosition = false;
 
-            string signal = State && IsToggle ? output : falseOutput;
-            if (!string.IsNullOrEmpty(signal))
+            string signal = IsToggle && State ? output : falseOutput;
+
+            if (item.Connections != null && IsToggle && !string.IsNullOrEmpty(signal))
             {
                 item.SendSignal(signal, "signal_out");
                 item.SendSignal(signal, "trigger_out");
             }
-
 
             if (user == null 
                 || user.Removed
@@ -213,7 +213,7 @@ namespace Barotrauma.Items.Components
                     CancelUsing(user);
                     user = null;
                 }
-                if (item.Connections == null) { IsActive = false; }
+                if (item.Connections == null || !IsToggle || string.IsNullOrEmpty(signal)) { IsActive = false; }
                 return;
             }
 
