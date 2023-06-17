@@ -1,4 +1,5 @@
-﻿using Barotrauma.Extensions;
+﻿using Barotrauma.Abilities;
+using Barotrauma.Extensions;
 using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
 using System;
@@ -417,9 +418,13 @@ namespace Barotrauma
             return strength;
         }
 
-        public void ApplyAffliction(Limb targetLimb, Affliction affliction, bool allowStacking = true)
+        public void ApplyAffliction(Limb targetLimb, Affliction affliction, bool allowStacking = true, bool ignoreUnkillability = false)
         {
-            if (!affliction.Prefab.IsBuff && Unkillable || Character.GodMode) { return; }
+            if (Character.GodMode) { return; }
+            if (!ignoreUnkillability)
+            {
+                if (!affliction.Prefab.IsBuff && Unkillable) { return; }
+            }
             if (affliction.Prefab.LimbSpecific)
             {
                 if (targetLimb == null)
@@ -449,11 +454,7 @@ namespace Barotrauma
                 var affliction = kvp.Key;
                 resistance += affliction.GetResistance(afflictionPrefab.Identifier);
             }
-
-            resistance = 1 - ((1 - resistance) * Character.GetAbilityResistance(afflictionPrefab));
-            if (resistance > 1f) { resistance = 1f; }
-
-            return resistance;
+            return 1 - ((1 - resistance) * Character.GetAbilityResistance(afflictionPrefab));
         }
 
         public float GetStatValue(StatTypes statType)
@@ -974,7 +975,7 @@ namespace Barotrauma
 #endif
         }
 
-        private float GetVitalityMultiplier(Affliction affliction, LimbHealth limbHealth)
+        private static float GetVitalityMultiplier(Affliction affliction, LimbHealth limbHealth)
         {
             float multiplier = 1.0f;
             if (limbHealth.VitalityMultipliers.TryGetValue(affliction.Prefab.Identifier, out float vitalityMultiplier))
@@ -1116,7 +1117,11 @@ namespace Barotrauma
                     strength = GetPredictedStrength(affliction, predictFutureDuration, limb);
                 }
 
-                if (strength <= affliction.Prefab.TreatmentThreshold) { continue; }
+                //other afflictions of the same type increase the "treatability"
+                // e.g. we might want to ignore burns below 5%, but not if the character has them on all limbs
+                float totalAfflictionStrength = strength + GetTotalAdjustedAfflictionStrength(affliction, includeSameAffliction: false);
+                if (totalAfflictionStrength < affliction.Prefab.TreatmentThreshold) { continue; }
+
                 if (afflictions.Any(otherAffliction => affliction.Prefab.IgnoreTreatmentIfAfflictedBy.Contains(otherAffliction.Key.Identifier))) { continue; }
 
                 if (ignoreHiddenAfflictions)
@@ -1133,13 +1138,20 @@ namespace Barotrauma
 
                 foreach (KeyValuePair<Identifier, float> treatment in affliction.Prefab.TreatmentSuitability)
                 {
+                    float suitability = treatment.Value * strength;
+                    if (treatment.Value > strength)
+                    {
+                        //avoid using very effective meds on small injuries
+                        float overtreatmentFactor = MathHelper.Clamp(treatment.Value / strength, 1.0f, 10.0f);
+                        suitability /= overtreatmentFactor;
+                    }
                     if (!treatmentSuitability.ContainsKey(treatment.Key))
                     {
-                        treatmentSuitability[treatment.Key] = treatment.Value * strength;
+                        treatmentSuitability[treatment.Key] = suitability;
                     }
                     else
                     {
-                        treatmentSuitability[treatment.Key] += treatment.Value * strength;
+                        treatmentSuitability[treatment.Key] += suitability;
                     }
                     minSuitability = Math.Min(treatmentSuitability[treatment.Key], minSuitability);
                     maxSuitability = Math.Max(treatmentSuitability[treatment.Key], maxSuitability);
@@ -1153,6 +1165,28 @@ namespace Barotrauma
                     treatmentSuitability[treatment] = (treatmentSuitability[treatment] - minSuitability) / (maxSuitability - minSuitability);
                 }
             }
+        }
+
+        /// <summary>
+        /// Returns the total strength of instances of the same affliction on all the characters limbs, 
+        /// with a smaller weight given to the other afflictions on other limbs
+        /// </summary>
+        /// <param name="otherAfflictionMultiplier">Multiplier on the strengths of the afflictions on other limbs.</param>
+        /// <param name="includeSameAffliction">Should the strength of the provided affliction be included too?</param>
+        public float GetTotalAdjustedAfflictionStrength(Affliction affliction, float otherAfflictionMultiplier = 0.3f, bool includeSameAffliction = true)
+        {
+            float totalAfflictionStrength = includeSameAffliction ? affliction.Strength : 0;
+            if (affliction.Prefab.LimbSpecific)
+            {
+                foreach (Affliction otherAffliction in afflictions.Keys)
+                {
+                    if (affliction.Prefab == otherAffliction.Prefab && affliction != otherAffliction) 
+                    { 
+                        totalAfflictionStrength += otherAffliction.Strength * otherAfflictionMultiplier; 
+                    }
+                }
+            }
+            return totalAfflictionStrength;
         }
 
         private readonly HashSet<Identifier> afflictionTags = new HashSet<Identifier>();

@@ -590,7 +590,7 @@ namespace Barotrauma
             return index;
         }
 
-        public override void Move(Vector2 amount, bool ignoreContacts = false)
+        public override void Move(Vector2 amount, bool ignoreContacts = true)
         {
             if (!MathUtils.IsValid(amount))
             {
@@ -851,7 +851,21 @@ namespace Barotrauma
             {
                 decal.Update(deltaTime);
             }
-            decals.RemoveAll(d => d.FadeTimer >= d.LifeTime || d.BaseAlpha <= 0.001f);
+            //clients don't remove decals unless the server says so
+            if (GameMain.NetworkMember is not { IsClient: true })
+            {
+                for (int i = decals.Count - 1; i >= 0; i--)
+                {
+                    var decal = decals[i];
+                    if (decal.FadeTimer >= decal.LifeTime || decal.BaseAlpha <= 0.001f)
+                    {
+                        decals.RemoveAt(i);
+    #if SERVER
+                        decalUpdatePending = true;
+    #endif
+                    }
+                }
+            }
 
             if (aiTarget != null)
             {
@@ -1509,9 +1523,8 @@ namespace Barotrauma
         public void CleanSection(BackgroundSection section, float cleanVal, bool updateRequired)
         {
             bool decalsCleaned = false;
-            for (int i = 0; i < decals.Count; i++)
+            foreach (Decal decal in decals)
             {
-                Decal decal = decals[i];
                 if (decal.AffectsSection(section))
                 {
                     decal.Clean(cleanVal);
@@ -1672,5 +1685,9 @@ namespace Barotrauma
             return element;
         }
 
+        public override string ToString()
+        {
+            return $"{base.ToString()} ({Name ?? "unnamed"})";
+        }
     }
 }

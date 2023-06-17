@@ -98,7 +98,7 @@ namespace Barotrauma
                     {
                         foreach (var item in itemContainer.ContainableItems)
                         {
-                            if (CheckStatusEffects(item.statusEffects) == CheckStatus.Finished)
+                            if (CheckStatusEffects(item.StatusEffects) == CheckStatus.Finished)
                             {
                                 return CheckStatus.Finished;
                             }

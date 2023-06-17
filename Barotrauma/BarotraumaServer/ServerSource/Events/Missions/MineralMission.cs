@@ -1,4 +1,5 @@
 ﻿using Barotrauma.Networking;
+using System.Linq;
 
 namespace Barotrauma
 {
@@ -16,11 +17,10 @@ namespace Barotrauma
             foreach (var kvp in spawnedResources)
             {
                 msg.WriteByte((byte)kvp.Value.Count);
-                var rotation = resourceClusters[kvp.Key].Rotation;
-                msg.WriteSingle(rotation);
-                foreach (var r in kvp.Value)
+                msg.WriteSingle(kvp.Value.FirstOrDefault()?.Rotation ?? 0.0f);
+                foreach (var item in kvp.Value)
                 {
-                    r.WriteSpawnData(msg, r.ID, Entity.NullEntityID, 0, -1);
+                    item.WriteSpawnData(msg, item.ID, Entity.NullEntityID, 0, -1);
                 }
             }
 
@@ -28,9 +28,9 @@ namespace Barotrauma
             {
                 msg.WriteIdentifier(kvp.Key);
                 msg.WriteByte((byte)kvp.Value.Length);
-                foreach (var i in kvp.Value)
+                foreach (var item in kvp.Value)
                 {
-                    msg.WriteUInt16(i.ID);
+                    msg.WriteUInt16(item.ID);
                 }
             }
         }

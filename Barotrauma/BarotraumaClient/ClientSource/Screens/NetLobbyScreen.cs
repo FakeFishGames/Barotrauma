@@ -751,12 +751,20 @@ namespace Barotrauma
             };
             ServerMessage.OnTextChanged += (textBox, text) =>
             {
-                Vector2 textSize = textBox.Font.MeasureString(textBox.WrappedText);
-                textBox.RectTransform.NonScaledSize = new Point(textBox.RectTransform.NonScaledSize.X, Math.Max(serverMessageContainer.Content.Rect.Height, (int)textSize.Y + 10));
-                serverMessageContainer.UpdateScrollBarSize();
                 serverMessageHint.Visible = !textBox.Selected && !textBox.Readonly && string.IsNullOrWhiteSpace(textBox.Text);
+                RefreshServerInfoSize();
                 return true;
             };
+            ServerMessage.RectTransform.SizeChanged += RefreshServerInfoSize;
+
+            void RefreshServerInfoSize()
+            {
+                serverMessageHint.Visible = !ServerMessage.Selected && !ServerMessage.Readonly && string.IsNullOrWhiteSpace(ServerMessage.Text);
+                Vector2 textSize = ServerMessage.Font.MeasureString(ServerMessage.WrappedText);
+                ServerMessage.RectTransform.NonScaledSize = new Point(ServerMessage.RectTransform.NonScaledSize.X, Math.Max(serverMessageContainer.Content.Rect.Height, (int)textSize.Y + 10));
+                serverMessageContainer.UpdateScrollBarSize();
+            }
+
             ServerMessage.OnEnterPressed += (textBox, text) =>
             {
                 string str = textBox.Text;

@@ -363,7 +363,7 @@ namespace Barotrauma
             //make body dynamic when picked up
             foreach (var target in targets)
             {
-                var root = target.Item?.GetRootContainer() ?? target.Item;
+                var root = target.Item?.RootContainer ?? target.Item;
                 if (root == null) { continue; }
                 if (target.Item.ParentInventory != null && target.Item.body != null) { target.Item.body.FarseerBody.BodyType = BodyType.Dynamic; }
             }
@@ -389,7 +389,7 @@ namespace Barotrauma
                             {
                                 TrySetRetrievalState(Target.RetrievalState.Interact);
                             }
-                            var root = target.Item?.GetRootContainer() ?? target.Item;
+                            var root = target.Item?.RootContainer ?? target.Item;
                             if (root.ParentInventory?.Owner is Character character && character.TeamID == CharacterTeamType.Team1)
                             {
                                 TrySetRetrievalState(Target.RetrievalState.PickedUp);

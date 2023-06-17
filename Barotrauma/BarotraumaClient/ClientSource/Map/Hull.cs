@@ -324,13 +324,13 @@ namespace Barotrauma
                 }
 
 
-                /*GUI.DrawLine(spriteBatch, new Vector2(drawRect.X, -WorldSurface), new Vector2(drawRect.Right, -WorldSurface), Color.Cyan * 0.5f);
+                GUI.DrawLine(spriteBatch, new Vector2(drawRect.X, -WorldSurface), new Vector2(drawRect.Right, -WorldSurface), Color.Cyan * 0.5f);
                 for (int i = 0; i < waveY.Length - 1; i++)
                 {
                     GUI.DrawLine(spriteBatch,
                         new Vector2(drawRect.X + WaveWidth * i, -WorldSurface - waveY[i] - 10),
                         new Vector2(drawRect.X + WaveWidth * (i + 1), -WorldSurface - waveY[i + 1] - 10), Color.Blue * 0.5f);
-                }*/
+                }
             }
 
             foreach (MapEntity e in linkedTo)

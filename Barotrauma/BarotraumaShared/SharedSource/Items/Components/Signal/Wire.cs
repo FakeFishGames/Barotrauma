@@ -19,7 +19,7 @@ namespace Barotrauma.Items.Components
             private Vector2 end;
 
             private readonly float angle;
-            private readonly float length;
+            public readonly float Length;
 
             public Vector2 Start
             {
@@ -36,7 +36,7 @@ namespace Barotrauma.Items.Components
                 this.end = end;
 
                 angle = MathUtils.VectorToAngle(end - start);
-                length = Vector2.Distance(start, end);
+                Length = Vector2.Distance(start, end);
             }
         }
 
@@ -52,7 +52,7 @@ namespace Barotrauma.Items.Components
         private List<Vector2> nodes;
         private readonly List<WireSection> sections;
 
-        private Connection[] connections;
+        private readonly Connection[] connections;
 
         private bool canPlaceNode;
         private Vector2 newNodePos;
@@ -80,6 +80,8 @@ namespace Barotrauma.Items.Components
         {
             get { return connections; }
         }
+
+        public float Length { get; private set; }
 
         [Serialize(5000.0f, IsPropertySaveable.No, description: "The maximum distance the wire can extend (in pixels).")]
         public float MaxLength
@@ -162,14 +164,50 @@ namespace Barotrauma.Items.Components
             SetConnectedDirty();
         }
 
-        public bool Connect(Connection newConnection, bool addNode = true, bool sendNetworkEvent = false)
+        /// <summary>
+        /// Tries to add the given connection to this wire. Note that this only affects the wire - 
+        /// adding the wire to the connection is done in <see cref="Connection.ConnectWire(Wire)"/>
+        /// </summary>
+
+        public bool TryConnect(Connection newConnection, bool addNode = true, bool sendNetworkEvent = false)
+        {
+            if (connections[0] == null) 
+            { 
+                return Connect(newConnection, 0, addNode, sendNetworkEvent); 
+            }
+            else if (connections[1] == null) 
+            { 
+                return Connect(newConnection, 1, addNode, sendNetworkEvent); 
+            }
+            return false;
+        }
+
+
+        /// <summary>
+        /// Tries to add the given connection to this wire. Note that this only affects the wire - 
+        /// adding the wire to the connection is done in <see cref="Connection.ConnectWire(Wire)"/>
+        /// </summary>
+        /// <param name="connectionIndex">Which end of the wire to add the connection to? 0 or 1. 
+        /// Normally doesn't make a difference, but matters if we're copying/loading a wire,
+        /// in which case the 1st node should be located at the same item as the 1st connection.</param>
+        /// <returns></returns>
+        public bool Connect(Connection newConnection, int connectionIndex, bool addNode = true, bool sendNetworkEvent = false)
         {
             for (int i = 0; i < 2; i++)
             {
                 if (connections[i] == newConnection) { return false; }
             }
 
-            if (!connections.Any(c => c == null)) { return false; }
+            if (connectionIndex < 0 || connectionIndex > 1)
+            {
+                DebugConsole.ThrowError($"Error while connecting a wire to {newConnection.Item}: {connectionIndex} is not a valid index.");
+                return false;
+            }
+            if (connections[connectionIndex] != null)
+            {
+                DebugConsole.ThrowError($"Error while connecting a wire to {newConnection.Item}: a wire is already connected to the index {connectionIndex}.");
+                return false;
+            }
 
             for (int i = 0; i < 2; i++)
             {
@@ -183,70 +221,12 @@ namespace Barotrauma.Items.Components
 
             newConnection.ConnectionPanel.DisconnectedWires.Remove(this);
 
-            for (int i = 0; i < 2; i++)
+            connections[connectionIndex] = newConnection;
+            FixNodeEnds();
+
+            if (addNode) 
             {
-                if (connections[i] != null) { continue; }
-
-                connections[i] = newConnection;
-                FixNodeEnds();
-
-                if (!addNode) { break; }
-
-                Submarine refSub = newConnection.Item.Submarine;
-                if (refSub == null)
-                {
-                    Structure attachTarget = Structure.GetAttachTarget(newConnection.Item.WorldPosition);
-                    if (attachTarget == null && !(newConnection.Item.GetComponent<Holdable>()?.Attached ?? false))
-                    {
-                        connections[i] = null;
-                        continue; 
-                    }
-                    refSub = attachTarget?.Submarine;
-                }
-
-                Vector2 nodePos = refSub == null ? 
-                    newConnection.Item.Position : 
-                    newConnection.Item.Position - refSub.HiddenSubPosition;
-
-                if (nodes.Count > 0 && nodes[0] == nodePos) { break; }
-                if (nodes.Count > 1 && nodes[nodes.Count - 1] == nodePos) { break; }
-
-                //make sure we place the node at the correct end of the wire (the end that's closest to the new node pos)
-                int newNodeIndex = 0;
-                if (nodes.Count > 1)
-                {
-                    if (connections[0] != null && connections[0] != newConnection)
-                    {
-                        if (Vector2.DistanceSquared(nodes[0], connections[0].Item.Position - (refSub?.HiddenSubPosition ?? Vector2.Zero)) < 
-                            Vector2.DistanceSquared(nodes[nodes.Count - 1], connections[0].Item.Position - (refSub?.HiddenSubPosition ?? Vector2.Zero)))
-                        {
-                            newNodeIndex = nodes.Count;
-                        }
-                    }
-                    else if (connections[1] != null && connections[1] != newConnection)
-                    {
-                        if (Vector2.DistanceSquared(nodes[0], connections[1].Item.Position - (refSub?.HiddenSubPosition ?? Vector2.Zero)) < 
-                            Vector2.DistanceSquared(nodes[nodes.Count - 1], connections[1].Item.Position - (refSub?.HiddenSubPosition ?? Vector2.Zero)))
-                        {
-                            newNodeIndex = nodes.Count;
-                        }
-                    }
-                    else if (Vector2.DistanceSquared(nodes[nodes.Count - 1], nodePos) < Vector2.DistanceSquared(nodes[0], nodePos))
-                    {
-                        newNodeIndex = nodes.Count;
-                    }
-                }
-
-                if (newNodeIndex == 0 && nodes.Count > 1)
-                {
-                    nodes.Insert(0, nodePos);                    
-                }
-                else
-                {
-                    nodes.Add(nodePos);
-                }
-                
-                break;
+                AddNode(newConnection, connectionIndex);
             }
 
             SetConnectedDirty();
@@ -258,7 +238,7 @@ namespace Barotrauma.Items.Components
                     if (ic == this) { continue; }
                     ic.Drop(null);
                 }
-                if (item.Container != null) { item.Container.RemoveContained(this.item); }
+                item.Container?.RemoveContained(item);
                 if (item.body != null) { item.body.Enabled = false; }
 
                 IsActive = false;
@@ -286,6 +266,63 @@ namespace Barotrauma.Items.Components
             return true;
         }
 
+        private void AddNode(Connection newConnection, int selectedIndex)
+        {
+            Submarine refSub = newConnection.Item.Submarine;
+            if (refSub == null)
+            {
+                Structure attachTarget = Structure.GetAttachTarget(newConnection.Item.WorldPosition);
+                if (attachTarget == null && !(newConnection.Item.GetComponent<Holdable>()?.Attached ?? false))
+                {
+                    connections[selectedIndex] = null;
+                    return;
+                }
+                refSub = attachTarget?.Submarine;
+            }
+
+            Vector2 nodePos = refSub == null ?
+                newConnection.Item.Position :
+                newConnection.Item.Position - refSub.HiddenSubPosition;
+
+            if (nodes.Count > 0 && nodes[0] == nodePos) { return; }
+            if (nodes.Count > 1 && nodes[nodes.Count - 1] == nodePos) { return; }
+
+            //make sure we place the node at the correct end of the wire (the end that's closest to the new node pos)
+            int newNodeIndex = 0;
+            if (nodes.Count > 1)
+            {
+                if (connections[0] != null && connections[0] != newConnection)
+                {
+                    if (Vector2.DistanceSquared(nodes[0], connections[0].Item.Position - (refSub?.HiddenSubPosition ?? Vector2.Zero)) <
+                        Vector2.DistanceSquared(nodes[nodes.Count - 1], connections[0].Item.Position - (refSub?.HiddenSubPosition ?? Vector2.Zero)))
+                    {
+                        newNodeIndex = nodes.Count;
+                    }
+                }
+                else if (connections[1] != null && connections[1] != newConnection)
+                {
+                    if (Vector2.DistanceSquared(nodes[0], connections[1].Item.Position - (refSub?.HiddenSubPosition ?? Vector2.Zero)) <
+                        Vector2.DistanceSquared(nodes[nodes.Count - 1], connections[1].Item.Position - (refSub?.HiddenSubPosition ?? Vector2.Zero)))
+                    {
+                        newNodeIndex = nodes.Count;
+                    }
+                }
+                else if (Vector2.DistanceSquared(nodes[nodes.Count - 1], nodePos) < Vector2.DistanceSquared(nodes[0], nodePos))
+                {
+                    newNodeIndex = nodes.Count;
+                }
+            }
+
+            if (newNodeIndex == 0 && nodes.Count > 1)
+            {
+                nodes.Insert(0, nodePos);
+            }
+            else
+            {
+                nodes.Add(nodePos);
+            }
+        }
+
         public override void Equip(Character character)
         {
             if (shouldClearConnections) { ClearConnections(character); }
@@ -298,7 +335,7 @@ namespace Barotrauma.Items.Components
             IsActive = false;
         }
 
-        public override void Drop(Character dropper)
+        public override void Drop(Character dropper, bool setTransform = true)
         {
             if (shouldClearConnections) { ClearConnections(dropper); }
             IsActive = false;
@@ -528,6 +565,7 @@ namespace Barotrauma.Items.Components
                 sections.Add(new WireSection(nodes[i], nodes[i + 1]));
             }
             Drawable = IsActive || sections.Count > 0;
+            Length = sections.Count > 0 ? sections.Sum(s => s.Length) : 0;
             CalculateExtents();
         }
 

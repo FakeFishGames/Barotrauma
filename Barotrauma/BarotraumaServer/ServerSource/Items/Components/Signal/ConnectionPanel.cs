@@ -185,7 +185,7 @@ namespace Barotrauma.Items.Components
                     //already connected, no need to do anything
                     if (Connections[i].Wires.Contains(newWire)) { continue; }
 
-                    newWire.Connect(Connections[i], true, true);
+                    newWire.TryConnect(Connections[i], true, true);
                     Connections[i].TryAddLink(newWire);
 
                     var otherConnection = newWire.OtherConnection(Connections[i]);

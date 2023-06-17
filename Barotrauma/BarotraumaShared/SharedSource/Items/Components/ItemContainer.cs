@@ -3,10 +3,14 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
+using System.Globalization;
 using Barotrauma.Extensions;
 using FarseerPhysics;
 using System.Collections.Immutable;
 using Barotrauma.Abilities;
+using System.Data.Common;
+using FarseerPhysics.Common.PhysicsLogic;
+using Steamworks.Ugc;
 
 namespace Barotrauma.Items.Components
 {
@@ -20,11 +24,13 @@ namespace Barotrauma.Items.Components
         {
             public readonly int MaxStackSize;
             public List<RelatedItem> ContainableItems;
+            public readonly bool AutoInject;
 
-            public SlotRestrictions(int maxStackSize, List<RelatedItem> containableItems)
+            public SlotRestrictions(int maxStackSize, List<RelatedItem> containableItems, bool autoInject)
             {
                 MaxStackSize = maxStackSize;
                 ContainableItems = containableItems;
+                AutoInject = autoInject;
             }
 
             public bool MatchesItem(Item item)
@@ -269,7 +275,7 @@ namespace Barotrauma.Items.Components
             List<SlotRestrictions> newSlotRestrictions = new List<SlotRestrictions>(totalCapacity);
             for (int i = 0; i < capacity; i++)
             {
-                newSlotRestrictions.Add(new SlotRestrictions(maxStackSize, ContainableItems));
+                newSlotRestrictions.Add(new SlotRestrictions(maxStackSize, ContainableItems, autoInject: false));
             }
 
             int subContainerIndex = capacity;
@@ -279,6 +285,7 @@ namespace Barotrauma.Items.Components
        
                 int subCapacity = subElement.GetAttributeInt("capacity", 1);
                 int subMaxStackSize = subElement.GetAttributeInt("maxstacksize", maxStackSize);
+                bool autoInject = subElement.GetAttributeBool("autoinject", false);
 
                 var subContainableItems = new List<RelatedItem>();
                 foreach (var subSubElement in subElement.Elements())
@@ -298,7 +305,7 @@ namespace Barotrauma.Items.Components
 
                 for (int i = subContainerIndex; i < subContainerIndex + subCapacity; i++)
                 {
-                    newSlotRestrictions.Add(new SlotRestrictions(subMaxStackSize, subContainableItems));
+                    newSlotRestrictions.Add(new SlotRestrictions(subMaxStackSize, subContainableItems, autoInject));
                 }
                 subContainerIndex += subCapacity;
             }
@@ -351,7 +358,7 @@ namespace Barotrauma.Items.Components
                     foreach (var containableItem in slotRestrictions[index].ContainableItems)
                     {
                         if (!containableItem.MatchesItem(containedItem)) { continue; }
-                        foreach (StatusEffect effect in containableItem.statusEffects)
+                        foreach (StatusEffect effect in containableItem.StatusEffects)
                         {
                             activeContainedItems.Add(new ActiveContainedItem(containedItem, effect, containableItem.ExcludeBroken, containableItem.ExcludeFullCondition));
                         }
@@ -372,8 +379,10 @@ namespace Barotrauma.Items.Components
                 GameAnalyticsManager.AddDesignEvent("MicroInteraction:" + (GameMain.GameSession?.GameMode?.Preset.Identifier.Value ?? "null") + ":GardeningPlanted:" + containedItem.Prefab.Identifier);
             }
 
-            IsActive = true;
-            if (item.GetRootInventoryOwner() is Character owner && 
+            // No need to Update() if the new item has no statuseffects or a physics body, and if there are no signal connections.
+            IsActive = (item.Connections?.Any(c => c.Name is "contained_conditions" or "contained_conditions_percentage" or "contained_items") ?? false) || activeContainedItems.Count > 0 || Inventory.AllItems.Any(it => it.body != null);
+
+            if (IsActive && item.GetRootInventoryOwner() is Character owner && 
                 owner.HasEquippedItem(item, predicate: slot => slot.HasFlag(InvSlotType.LeftHand) || slot.HasFlag(InvSlotType.RightHand)))
             {
                 // Set the contained items active if there's an item inserted inside the container. Enables e.g. the rifle flashlight when it's attached to the rifle (put inside of it).
@@ -393,14 +402,8 @@ namespace Barotrauma.Items.Components
         {
             activeContainedItems.RemoveAll(i => i.Item == containedItem);
             drawableContainedItems.RemoveAll(i => i.Item == containedItem);
-            //deactivate if the inventory is empty
-            IsActive = Inventory.AllItems.Any();
-            if (!IsActive)
-            {
-                item.SendSignal("0", "contained_conditions");
-                item.SendSignal("0", "contained_condition_percentages");
-                item.SendSignal("0", "contained_items");
-            }
+            // No need to Update() if the container no longer has any items with statuseffects or physics bodies, and if there are no signal connections.
+            IsActive = (item.Connections?.Any(c => c.Name is "contained_conditions" or "contained_conditions_percentage" or "contained_items") ?? false) || activeContainedItems.Count > 0 || Inventory.AllItems.Any(it => it.body != null);
             CharacterHUD.RecreateHudTextsIfFocused(item, containedItem);
             OnContainedItemsChanged.Invoke(this);
         }
@@ -474,9 +477,9 @@ namespace Barotrauma.Items.Components
                     totalItems++;
                 }
             }
-            item.SendSignal(totalConditionValue.ToString(), "contained_conditions");
-            item.SendSignal(totalConditionPercentage.ToString(), "contained_condition_percentages");
-            item.SendSignal(totalItems.ToString(), "contained_items");
+            item.SendSignal(totalConditionValue.ToString(CultureInfo.InvariantCulture), "contained_conditions");
+            item.SendSignal(totalConditionPercentage.ToString(CultureInfo.InvariantCulture), "contained_conditions_percentage");
+            item.SendSignal(totalItems.ToString(CultureInfo.InvariantCulture), "contained_items");
 
             if (item.ParentInventory is CharacterInventory ownerInventory)
             {
@@ -486,7 +489,7 @@ namespace Barotrauma.Items.Components
                     prevContainedItemPositions = item.Position;
                 }
 
-                if (AutoInject)
+                if (AutoInject || slotRestrictions.Any(s => s.AutoInject))
                 {
                     //normally autoinjection should delete the (medical) item, so it only gets applied once
                     //but in multiplayer clients aren't allowed to remove items themselves, so they may be able to trigger this dozens of times
@@ -500,7 +503,21 @@ namespace Barotrauma.Items.Components
                         ownerCharacter.HealthPercentage / 100f <= AutoInjectThreshold &&
                         ownerCharacter.HasEquippedItem(item))
                     {
-                        foreach (Item item in Inventory.AllItemsMod)
+                        if (AutoInject)
+                        {
+                            Inventory.AllItemsMod.ForEach(i => Inject(i));
+                        }
+                        else
+                        {
+                            for (int i = 0; i < slotRestrictions.Length; i++)
+                            {
+                                if (slotRestrictions[i].AutoInject)
+                                {
+                                    Inventory.GetItemsAt(i).ForEachMod(i => Inject(i));
+                                }
+                            }
+                        }
+                        void Inject(Item item)
                         {
                             item.ApplyStatusEffects(ActionType.OnSuccess, 1.0f, ownerCharacter, useTarget: ownerCharacter);
                             item.ApplyStatusEffects(ActionType.OnUse, 1.0f, ownerCharacter, useTarget: ownerCharacter);
@@ -517,13 +534,9 @@ namespace Barotrauma.Items.Components
             {
                 SetContainedItemPositions();
             }
-            else if (!Inventory.AllItems.Any())
+            else if (!(item.Connections?.Any(c => c.Name is "contained_conditions" or "contained_conditions_percentage" or "contained_items") ?? false) && activeContainedItems.Count == 0)
             {
-                item.SendSignal("0", "contained_conditions");
-                item.SendSignal("0", "contained_conditions_percentage");
-                item.SendSignal("0", "contained_items");
                 IsActive = false;
-                return;
             }
 
             foreach (var activeContainedItem in activeContainedItems)
@@ -655,7 +668,7 @@ namespace Barotrauma.Items.Components
             return false;
         }
 
-        public override void Drop(Character dropper)
+        public override void Drop(Character dropper, bool setTransform = true)
         {
             IsActive = true;
             SetContainedActive(false);

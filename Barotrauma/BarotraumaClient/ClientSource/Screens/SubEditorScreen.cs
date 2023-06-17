@@ -525,6 +525,11 @@ namespace Barotrauma
                                 GUI.AddMessage(TextManager.Get("waypointsgeneratedsuccesfully"), GUIStyle.Green);
                             }
                             WayPoint.ShowWayPoints = true;
+                            var matchingTickBox = showEntitiesTickBoxes?.Find(tb => tb.UserData as string == "waypoint");
+                            if (matchingTickBox != null)
+                            {
+                                matchingTickBox.Selected = true;
+                            }
                             generateWaypointsVerification.Close();
                             return true;
                         };
@@ -2847,7 +2852,7 @@ namespace Barotrauma
             {
                 OnClicked = (button, o) =>
                 {
-                    var requiredPackages = MapEntity.mapEntityList.Select(e => e.Prefab.ContentPackage)
+                    var requiredPackages = MapEntity.mapEntityList.Select(e => e?.Prefab?.ContentPackage)
                         .Where(cp => cp != null)
                         .Distinct().OfType<ContentPackage>().Select(p => p.Name).ToHashSet();
                     var tickboxes = requiredContentPackList.Content.Children.OfType<GUITickBox>().ToArray();
@@ -5791,7 +5796,10 @@ namespace Barotrauma
                 {
                     item.SetTransform(dummyCharacter.SimPosition, 0.0f);
                     item.UpdateTransform();
-                    item.SetTransform(item.body.SimPosition, 0.0f);
+                    if (item.body != null)
+                    {
+                        item.SetTransform(item.body.SimPosition, 0.0f);
+                    }
 
                     //wires need to be updated for the last node to follow the player during rewiring
                     Wire wire = item.GetComponent<Wire>();
@@ -5902,6 +5910,11 @@ namespace Barotrauma
                 spriteBatch.Begin(SpriteSortMode.Deferred, Lights.CustomBlendStates.Multiplicative, null, DepthStencilState.None);
                 spriteBatch.Draw(GameMain.LightManager.LightMap, new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight), Color.White);
                 spriteBatch.End();
+            }
+
+            if (GameMain.LightManager.DebugLos)
+            {
+                GameMain.LightManager.DebugDrawLos(spriteBatch, cam);
             }
 
             //-------------------- HUD -----------------------------
