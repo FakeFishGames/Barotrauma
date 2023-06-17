@@ -159,8 +159,9 @@ namespace Barotrauma
 
             int crewAreaY = ButtonAreaTop.Bottom + Padding;
             int crewAreaHeight = ObjectiveAnchor.Top - Padding - crewAreaY;
-            CrewArea = new Rectangle(Padding, crewAreaY, (int)Math.Max(400 * GUI.Scale, 220), crewAreaHeight);
 
+            float crewAreaWidthMultiplier = GUI.IsUltrawide ? GUI.HorizontalAspectRatio : 1.0f;
+            CrewArea = new Rectangle(Padding, crewAreaY, (int)(Math.Max(400 * GUI.Scale, 220) * crewAreaWidthMultiplier), crewAreaHeight);
             InventoryAreaLower = new Rectangle(ChatBoxArea.Right + Padding * 7, inventoryTopY, GameMain.GraphicsWidth - Padding * 9 - ChatBoxArea.Width, GameMain.GraphicsHeight - inventoryTopY);
 
             int healthWindowWidth = (int)(GameMain.GraphicsWidth * 0.5f);

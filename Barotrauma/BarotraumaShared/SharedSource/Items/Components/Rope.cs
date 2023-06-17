@@ -339,18 +339,19 @@ namespace Barotrauma.Items.Components
                 if (Math.Abs(TargetPullForce) > 0.001f)
                 {
                     var targetBody = GetBodyToPull(target);
-                    if (user != null && targetCharacter != null && !user.AnimController.InWater)
+                    bool lerpForces = LerpForces;
+                    if (!lerpForces && user != null && targetCharacter != null && !user.AnimController.InWater)
                     {
-                        // Prevents rubberbanding horizontally when dragging a corpse.
                         if ((forceDir.X < 0) != (user.AnimController.Dir < 0))
                         {
-                            forceDir.X = Math.Clamp(forceDir.X, -0.1f, 0.1f);
+                            // Prevents rubberbanding horizontally when dragging a corpse.
+                            lerpForces = true;
                         }
                     }
-                    float force = LerpForces ? MathHelper.Lerp(0, TargetPullForce, MathUtils.InverseLerp(0, MaxLength / 3, distance - 50)) : TargetPullForce;
+                    float force = lerpForces ? MathHelper.Lerp(0, TargetPullForce, MathUtils.InverseLerp(0, MaxLength / 3, distance - 50)) : TargetPullForce;
                     targetBody?.ApplyForce(-forceDir * force);
                     var targetRagdoll = targetCharacter?.AnimController;
-                    if (targetRagdoll != null && (targetRagdoll.InWater || targetRagdoll.OnGround))
+                    if (targetRagdoll?.Collider != null && (targetRagdoll.InWater || targetRagdoll.OnGround))
                     {
                         targetRagdoll.Collider.ApplyForce(-forceDir * force * 3);
                     }

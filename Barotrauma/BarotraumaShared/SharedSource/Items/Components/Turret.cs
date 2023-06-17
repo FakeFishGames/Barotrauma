@@ -845,8 +845,13 @@ namespace Barotrauma.Items.Components
         {
             public readonly Item Projectile;
             
-            public EventData(Item projectile)
+            public EventData(Item projectile, Turret turret)
             {
+                System.Diagnostics.Debug.Assert(projectile != null, $"Tried to create Turret {nameof(EventData)} with no projectile.");
+                GameAnalyticsManager.AddErrorEventOnce(
+                    "Turret.EventData:entitynull"+ turret.Item.Prefab.Identifier, 
+                    GameAnalyticsManager.ErrorSeverity.Error,
+                    $"Turret \"{turret.Item.Prefab.Identifier}\" tried to create {nameof(EventData)} with no projectile.");
                 Projectile = projectile;
             }
         }
@@ -918,7 +923,7 @@ namespace Barotrauma.Items.Components
                 projectile.Container?.RemoveContained(projectile);
             }
 #if SERVER
-            item.CreateServerEvent(this, new EventData(projectile));
+            item.CreateServerEvent(this, new EventData(projectile, this));
 #endif
 
             ApplyStatusEffects(ActionType.OnUse, 1.0f, user: user);
@@ -1314,7 +1319,9 @@ namespace Barotrauma.Items.Components
                     }
                     // Don't aim monsters that are inside any submarine.
                     if (!enemy.IsHuman && enemy.CurrentHull != null) { continue; }
-                    if (HumanAIController.IsFriendly(character, enemy)) { continue; }       
+                    if (HumanAIController.IsFriendly(character, enemy)) { continue; }
+                    // Don't shoot at captured enemies.
+                    if (enemy.LockHands) { continue; }
                     float dist = Vector2.DistanceSquared(enemy.WorldPosition, item.WorldPosition);
                     if (dist > closestDistance) { continue; }
                     if (dist < shootDistance * shootDistance)
@@ -1413,7 +1420,7 @@ namespace Barotrauma.Items.Components
                             {
                                 // The closest point can't be targeted -> get a point directly in front of the turret
                                 Vector2 barrelDir = new Vector2((float)Math.Cos(rotation), -(float)Math.Sin(rotation));
-                                if (MathUtils.GetLineIntersection(p1, p2, item.WorldPosition, item.WorldPosition + barrelDir * shootDistance, out Vector2 intersection))
+                                if (MathUtils.GetLineSegmentIntersection(p1, p2, item.WorldPosition, item.WorldPosition + barrelDir * shootDistance, out Vector2 intersection))
                                 {
                                     closestPoint = intersection;
                                     if (!CheckTurretAngle(closestPoint)) { continue; }
@@ -1889,22 +1896,27 @@ namespace Barotrauma.Items.Components
         {
             if (TryExtractEventData(extraData, out EventData eventData))
             {
-                msg.WriteUInt16(eventData.Projectile.ID);
-                msg.WriteRangedSingle(MathHelper.Clamp(rotation, minRotation, maxRotation), minRotation, maxRotation, 16);
+                msg.WriteUInt16(eventData.Projectile?.ID ?? Entity.NullEntityID);
+                msg.WriteRangedSingle(MathHelper.Clamp(wrapAngle(rotation), minRotation, maxRotation), minRotation, maxRotation, 16);
             }
             else
             {
                 msg.WriteUInt16((ushort)0);
-                float wrappedTargetRotation = targetRotation;
-                while (wrappedTargetRotation < minRotation && MathUtils.IsValid(wrappedTargetRotation))
+                msg.WriteRangedSingle(MathHelper.Clamp(wrapAngle(targetRotation), minRotation, maxRotation), minRotation, maxRotation, 16);
+            }
+
+            float wrapAngle(float angle)
+            {
+                float wrappedAngle = angle;
+                while (wrappedAngle < minRotation && MathUtils.IsValid(wrappedAngle))
                 {
-                    wrappedTargetRotation += MathHelper.TwoPi;
+                    wrappedAngle += MathHelper.TwoPi;
                 }
-                while (wrappedTargetRotation > maxRotation && MathUtils.IsValid(wrappedTargetRotation))
+                while (wrappedAngle > maxRotation && MathUtils.IsValid(wrappedAngle))
                 {
-                    wrappedTargetRotation -= MathHelper.TwoPi;
+                    wrappedAngle -= MathHelper.TwoPi;
                 }
-                msg.WriteRangedSingle(MathHelper.Clamp(wrappedTargetRotation, minRotation, maxRotation), minRotation, maxRotation, 16);
+                return wrappedAngle;
             }
         }
     }

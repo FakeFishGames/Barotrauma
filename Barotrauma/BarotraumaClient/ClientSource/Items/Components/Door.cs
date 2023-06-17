@@ -92,9 +92,6 @@ namespace Barotrauma.Items.Components
                 rect.Height = (int)(rect.Height * (1.0f - openState));
             }
 
-            //only merge the door's convex hull with overlapping wall segments if it's fully open or fully closed
-            //it's the heaviest part of changing the convex hull, and doesn't need to be done while the door is still in motion
-            bool mergeOverlappingSegments = openState <= 0.0f || openState >= 1.0f;
             if (Window.Height > 0 && Window.Width > 0)
             {
                 if (IsHorizontal)
@@ -117,7 +114,7 @@ namespace Barotrauma.Items.Components
                         else
                         {
                             convexHull2.Enabled = true;
-                            convexHull2.SetVertices(GetConvexHullCorners(rect2), mergeOverlappingSegments);
+                            SetVertices(convexHull2, rect2);
                         }
                     }
                 }
@@ -141,7 +138,7 @@ namespace Barotrauma.Items.Components
                         else
                         {
                             convexHull2.Enabled = true;
-                            convexHull2.SetVertices(GetConvexHullCorners(rect2), mergeOverlappingSegments);
+                            SetVertices(convexHull2, rect2);
                         }
                     }
                 }
@@ -156,10 +153,22 @@ namespace Barotrauma.Items.Components
             else
             {
                 convexHull.Enabled = true;
-                convexHull.SetVertices(GetConvexHullCorners(rect), mergeOverlappingSegments);
+                SetVertices(convexHull, rect);
             }
         }
 
+
+        private void SetVertices(ConvexHull convexHull, Rectangle rect)
+        {
+            var verts = GetConvexHullCorners(rect);
+            Vector2 center = (verts[0] + verts[2]) / 2;
+            convexHull.SetVertices(
+                verts, 
+                IsHorizontal ? 
+                    new Vector2[] { new Vector2(verts[0].X, center.Y), new Vector2(verts[2].X, center.Y) } :
+                    new Vector2[] { new Vector2(center.X, verts[0].Y), new Vector2(center.X, verts[2].Y) });
+            convexHull.MaxMergeLosVerticesDist = 35.0f;
+        }
 
         partial void UpdateProjSpecific(float deltaTime)
         {

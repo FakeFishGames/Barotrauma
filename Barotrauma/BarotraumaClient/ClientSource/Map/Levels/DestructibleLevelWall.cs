@@ -27,7 +27,7 @@ namespace Barotrauma
                 {
                     foreach (var edge in cell.Edges)
                     {
-                        if (MathUtils.GetLineIntersection(worldPosition, cell.Center, edge.Point1 + cell.Translation, edge.Point2 + cell.Translation, out Vector2 intersection))
+                        if (MathUtils.GetLineSegmentIntersection(worldPosition, cell.Center, edge.Point1 + cell.Translation, edge.Point2 + cell.Translation, out Vector2 intersection))
                         {
                             intersectionFound = true;
                             particlePos = intersection;

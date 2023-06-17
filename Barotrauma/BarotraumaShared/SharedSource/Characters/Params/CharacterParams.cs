@@ -231,12 +231,17 @@ namespace Barotrauma
         protected void CreateSubParams()
         {
             SubParams.Clear();
-            var health = MainElement.GetChildElement("health");
-            if (health != null)
+            var healthElement = MainElement.GetChildElement("health");
+            if (healthElement != null)
             {
-                Health = new HealthParams(health, this);
-                SubParams.Add(Health);
+                Health = new HealthParams(healthElement, this);
             }
+            else
+            {
+                DebugConsole.ThrowError($"No health parameters defined for character \"{(SpeciesName)}\".");
+                Health = new HealthParams(null, this);
+            }
+            SubParams.Add(Health);
             // TODO: support for multiple ai elements?
             var ai = MainElement.GetChildElement("ai");
             if (ai != null)

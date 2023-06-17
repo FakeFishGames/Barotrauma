@@ -10,6 +10,10 @@ namespace Barotrauma.Items.Components
 {
     partial class ConnectionPanel : ItemComponent, IServerSerializable, IClientSerializable
     {
+        public static bool DebugWiringMode;
+        public static double DebugWiringEnabledUntil;
+        public static bool ShouldDebugDrawWiring => DebugWiringMode || Timing.TotalTimeUnpaused < DebugWiringEnabledUntil;
+
         //how long the rewiring sound plays after doing changes to the wiring
         const float RewireSoundDuration = 5.0f;
 
@@ -120,11 +124,14 @@ namespace Barotrauma.Items.Components
             if (user != Character.Controlled || user == null) { return; }
 
             HighlightedWire = null;
-            Connection.DrawConnections(spriteBatch, this, dragArea.Rect, user);
-
+            Connection.DrawConnections(spriteBatch, this, dragArea.Rect, user, out (Vector2 tooltipPos, LocalizedString text) tooltip);
             foreach (UISprite sprite in GUIStyle.GetComponentStyle("ConnectionPanelFront").Sprites[GUIComponent.ComponentState.None])
             {
                 sprite.Draw(spriteBatch, GuiFrame.Rect, Color.White, SpriteEffects.None);
+            }
+            if (!tooltip.text.IsNullOrEmpty())
+            {
+                GUIComponent.DrawToolTip(spriteBatch, tooltip.text, tooltip.tooltipPos);
             }
         }
 
@@ -225,7 +232,7 @@ namespace Barotrauma.Items.Components
                 foreach (var wire in newWires.Where(w => !connection.Wires.Contains(w)).ToArray())
                 {
                     connection.ConnectWire(wire);
-                    wire.Connect(connection, false);
+                    wire.TryConnect(connection, false);
                 }
             }
 

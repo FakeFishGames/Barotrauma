@@ -310,9 +310,10 @@ namespace Barotrauma
                         };
                     }
                 }
+
                 var missionDescription = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), missionTextContent.RectTransform),
                     RichString.Rich(missionMessage), wrap: true);
-                if (selectedMissions.Contains(displayedMission) && displayedMission.Completed)
+                if (selectedMissions.Contains(displayedMission))
                 {
                     RichString reputationText = displayedMission.GetReputationRewardText();
                     if (!reputationText.IsNullOrEmpty())
@@ -324,7 +325,7 @@ namespace Barotrauma
                     if (totalReward > 0)
                     {
                         new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), missionTextContent.RectTransform), RichString.Rich(displayedMission.GetMissionRewardText(Submarine.MainSub)));
-                        if (GameMain.IsMultiplayer && Character.Controlled is { } controlled)
+                        if (GameMain.IsMultiplayer && Character.Controlled is { } controlled && displayedMission.Completed)
                         {
                             var (share, percentage, _) = Mission.GetRewardShare(controlled.Wallet.RewardDistribution, GameSession.GetSessionCrewCharacters(CharacterType.Player).Where(c => c != controlled), Option<int>.Some(totalReward));
                             if (share > 0)

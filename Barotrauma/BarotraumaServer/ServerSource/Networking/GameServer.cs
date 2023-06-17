@@ -21,15 +21,13 @@ namespace Barotrauma.Networking
 
         public override Voting Voting { get; }
 
-        private string serverName;
         public string ServerName
         {
-            get { return serverName; }
+            get { return ServerSettings.ServerName; }
             set
             {
                 if (string.IsNullOrEmpty(value)) { return; }
-
-                serverName = value;
+                ServerSettings.ServerName = value;
             }
         }
 
@@ -132,8 +130,6 @@ namespace Barotrauma.Networking
             {
                 name = name.Substring(0, NetConfig.ServerNameMaxLength);
             }
-
-            this.serverName = name;
 
             LastClientListUpdateID = 0;
 
@@ -1667,38 +1663,54 @@ namespace Barotrauma.Networking
             //characters or items spawned mid-round don't necessarily exist at the client's end yet
             if (!c.NeedsMidRoundSync)
             {
-                foreach (Character character in Character.CharacterList)
+                Character clientCharacter = c.Character;
+                foreach (Character otherCharacter in Character.CharacterList)
                 {
-                    if (!character.Enabled) { continue; }
+                    if (!otherCharacter.Enabled) { continue; }
                     if (c.SpectatePos == null)
                     {
-                        float distSqr = Vector2.DistanceSquared(character.WorldPosition, c.Character.WorldPosition);
-                        if (c.Character.ViewTarget != null)
+                        //not spectating ->
+                        //  check if the client's character, or the entity they're viewing,
+                        //  is close enough to the other character or the entity the other character is viewing
+                        float distSqr = GetShortestDistance(clientCharacter.WorldPosition, otherCharacter);
+                        if (clientCharacter.ViewTarget != null && clientCharacter.ViewTarget != clientCharacter)
                         {
-                            distSqr = Math.Min(distSqr, Vector2.DistanceSquared(character.WorldPosition, c.Character.ViewTarget.WorldPosition));
+                            distSqr = Math.Min(distSqr, GetShortestDistance(clientCharacter.ViewTarget.WorldPosition, otherCharacter));
                         }
-                        if (distSqr >= MathUtils.Pow2(character.Params.DisableDistance)) { continue; }
+                        if (distSqr >= MathUtils.Pow2(otherCharacter.Params.DisableDistance)) { continue; }
                     }
-                    else
+                    else if (otherCharacter != clientCharacter)
                     {
-                        if (character != c.Character && Vector2.DistanceSquared(character.WorldPosition, c.SpectatePos.Value) >= MathUtils.Pow2(character.Params.DisableDistance))
-                        {
-                            continue;
-                        }
+                        //spectating ->
+                        //  check if the position the client is viewing
+                        //  is close enough to the other character or the entity the other character is viewing
+                        if (GetShortestDistance(c.SpectatePos.Value, otherCharacter) >= MathUtils.Pow2(otherCharacter.Params.DisableDistance)) { continue; }
                     }
 
-                    float updateInterval = character.GetPositionUpdateInterval(c);
-                    c.PositionUpdateLastSent.TryGetValue(character, out float lastSent);
+                    static float GetShortestDistance(Vector2 viewPos, Character targetCharacter)
+                    {
+                        float distSqr = Vector2.DistanceSquared(viewPos, targetCharacter.WorldPosition);
+                        if (targetCharacter.ViewTarget != null && targetCharacter.ViewTarget != targetCharacter)
+                        {
+                            //if the character is viewing something (far-away turret?),
+                            //we might want to send updates about it to the spectating client even though they're far away from the actual character
+                            distSqr = Math.Min(distSqr, Vector2.DistanceSquared(viewPos, targetCharacter.ViewTarget.WorldPosition));
+                        }
+                        return distSqr;
+                    }
+
+                    float updateInterval = otherCharacter.GetPositionUpdateInterval(c);
+                    c.PositionUpdateLastSent.TryGetValue(otherCharacter, out float lastSent);
                     if (lastSent > NetTime.Now)
                     {
                         //sent in the future -> can't be right, remove
-                        c.PositionUpdateLastSent.Remove(character);
+                        c.PositionUpdateLastSent.Remove(otherCharacter);
                     }
                     else
                     {
                         if (lastSent > NetTime.Now - updateInterval) { continue; }
                     }
-                    if (!c.PendingPositionUpdates.Contains(character)) { c.PendingPositionUpdates.Enqueue(character); }
+                    if (!c.PendingPositionUpdates.Contains(otherCharacter)) { c.PendingPositionUpdates.Enqueue(otherCharacter); }
                 }
 
                 foreach (Submarine sub in Submarine.Loaded)
@@ -3094,7 +3106,7 @@ namespace Barotrauma.Networking
                     default:
                         if (command != "")
                         {
-                            if (command.ToLower() == serverName.ToLower())
+                            if (command.ToLower() == ServerName.ToLower())
                             {
                                 //a private message to the host
                                 if (OwnerConnection != null)
@@ -3149,7 +3161,7 @@ namespace Barotrauma.Networking
                     //msg sent by the server
                     if (senderCharacter == null)
                     {
-                        senderName = serverName;
+                        senderName = ServerName;
                     }
                     else //msg sent by an AI character
                     {
@@ -3183,7 +3195,7 @@ namespace Barotrauma.Networking
                     //msg sent by the server
                     if (senderCharacter == null)
                     {
-                        senderName = serverName;
+                        senderName = ServerName;
                     }
                     else //sent by an AI character, not allowed when the game is not running
                     {
@@ -3406,33 +3418,35 @@ namespace Barotrauma.Networking
             }
         }
 
-        public void SwitchSubmarine()
+        public bool TrySwitchSubmarine()
         {
-            if (Voting.ActiveVote is not Voting.SubmarineVote subVote) { return; }
+            if (Voting.ActiveVote is not Voting.SubmarineVote subVote) { return false; }
 
             SubmarineInfo targetSubmarine = subVote.Sub;
             VoteType voteType = Voting.ActiveVote.VoteType;
             Client starter = Voting.ActiveVote.VoteStarter;
 
+            bool purchaseFailed = false;
             switch (voteType)
             {
                 case VoteType.PurchaseAndSwitchSub:
                 case VoteType.PurchaseSub:
                     // Pay for submarine
-                    GameMain.GameSession.PurchaseSubmarine(targetSubmarine, starter);
+                    purchaseFailed = !GameMain.GameSession.TryPurchaseSubmarine(targetSubmarine, starter);
                     break;
                 case VoteType.SwitchSub:
                     break;
                 default:
-                    return;
+                    return false;
             }
 
-            if (voteType != VoteType.PurchaseSub)
+            if (voteType != VoteType.PurchaseSub && !purchaseFailed)
             {
                 GameMain.GameSession.SwitchSubmarine(targetSubmarine, subVote.TransferItems, starter);
             }
 
-            Voting.StopSubmarineVote(true);
+            Voting.StopSubmarineVote(passed: !purchaseFailed);
+            return !purchaseFailed;
         }
 
         public void UpdateClientPermissions(Client client)

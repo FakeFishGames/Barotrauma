@@ -575,7 +575,7 @@ namespace Barotrauma
             //cancel dragging if too far away from the container of the dragged item
             if (DraggingItems.Any())
             {
-                var rootContainer = DraggingItems.First().GetRootContainer();
+                var rootContainer = DraggingItems.First().RootContainer;
                 var rootInventory = DraggingItems.First().ParentInventory;
 
                 if (rootContainer != null)

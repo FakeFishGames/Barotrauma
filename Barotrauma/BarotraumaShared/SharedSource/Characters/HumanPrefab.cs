@@ -182,7 +182,9 @@ namespace Barotrauma
                 {
                     humanAI.ObjectiveManager.SetForcedOrder(new AIObjectiveGoTo(positionToStayIn, npc, humanAI.ObjectiveManager, repeat: true, getDivingGearIfNeeded: false, closeEnough: 200)
                     {
-                        DebugLogWhenFails = false
+                        DebugLogWhenFails = false,
+                        IsWaitOrder = true,
+                        CloseEnough = 100
                     });
                 }
             }

@@ -1,10 +1,10 @@
-﻿using Barotrauma.Items.Components;
+﻿using Barotrauma.Extensions;
+using Barotrauma.Items.Components;
+using Barotrauma.Networking;
 using FarseerPhysics;
 using Microsoft.Xna.Framework;
 using System;
 using System.Linq;
-using Barotrauma.Extensions;
-using Barotrauma.Networking;
 
 namespace Barotrauma
 {
@@ -1544,6 +1544,10 @@ namespace Barotrauma
                 target.AnimController.ResetPullJoints();
             }
 
+            bool targetPoseControlled = 
+                target.SelectedItem?.GetComponent<Controller>() is { ControlCharacterPose: true } ||
+                target.SelectedSecondaryItem?.GetComponent<Controller>() is { ControlCharacterPose: true };
+
             if (IsClimbing)
             {
                 //cannot drag up ladders if the character is conscious
@@ -1719,13 +1723,12 @@ namespace Barotrauma
                         targetForce = 5000.0f;
                     }
 
-                    targetLimb.PullJointEnabled = true;
-                    targetLimb.PullJointMaxForce = targetForce;
-                    targetLimb.PullJointWorldAnchorB = targetAnchor;
-                    targetLimb.Disabled = true;                    
-
-                    if (diff.LengthSquared() > 0.1f)
+                    if (!targetPoseControlled)
                     {
+                        targetLimb.PullJointEnabled = true;
+                        targetLimb.PullJointMaxForce = targetForce;
+                        targetLimb.PullJointWorldAnchorB = targetAnchor;
+                        targetLimb.Disabled = true;
                         target.AnimController.movement = -diff;
                     }
                 }
@@ -1751,7 +1754,7 @@ namespace Barotrauma
                     target.AnimController.IgnorePlatforms = IgnorePlatforms;
                     target.AnimController.TargetMovement = TargetMovement;
                 }
-                else if (target is AICharacter && target != Character.Controlled)
+                else if (target is AICharacter && target != Character.Controlled && !targetPoseControlled)
                 {
                     if (target.AnimController.Dir > 0 == WorldPosition.X > target.WorldPosition.X)
                     {

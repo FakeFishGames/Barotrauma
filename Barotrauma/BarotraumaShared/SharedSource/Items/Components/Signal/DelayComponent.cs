@@ -82,8 +82,10 @@ namespace Barotrauma.Items.Components
                 signalOut.SendDuration -= 1;
                 item.SendSignal(new Signal(signalOut.Signal.value, sender: signalOut.Signal.sender, strength: signalOut.Signal.strength), "signal_out");
                 if (signalOut.SendDuration <= 0) 
-                { 
-                    signalQueue.Dequeue(); 
+                {
+                    //check the queue isn't empty again, because sending the signal may empty it
+                    //if this component is set to reset when it receives a signal and the signal is routed back to this component
+                    signalQueue.TryDequeue(out _);
                 } 
                 else 
                 { 

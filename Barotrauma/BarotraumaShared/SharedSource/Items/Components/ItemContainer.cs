@@ -20,11 +20,13 @@ namespace Barotrauma.Items.Components
         {
             public readonly int MaxStackSize;
             public List<RelatedItem> ContainableItems;
+            public readonly bool AutoInject;
 
-            public SlotRestrictions(int maxStackSize, List<RelatedItem> containableItems)
+            public SlotRestrictions(int maxStackSize, List<RelatedItem> containableItems, bool autoInject)
             {
                 MaxStackSize = maxStackSize;
                 ContainableItems = containableItems;
+                AutoInject = autoInject;
             }
 
             public bool MatchesItem(Item item)
@@ -269,7 +271,7 @@ namespace Barotrauma.Items.Components
             List<SlotRestrictions> newSlotRestrictions = new List<SlotRestrictions>(totalCapacity);
             for (int i = 0; i < capacity; i++)
             {
-                newSlotRestrictions.Add(new SlotRestrictions(maxStackSize, ContainableItems));
+                newSlotRestrictions.Add(new SlotRestrictions(maxStackSize, ContainableItems, autoInject: false));
             }
 
             int subContainerIndex = capacity;
@@ -279,6 +281,7 @@ namespace Barotrauma.Items.Components
        
                 int subCapacity = subElement.GetAttributeInt("capacity", 1);
                 int subMaxStackSize = subElement.GetAttributeInt("maxstacksize", maxStackSize);
+                bool autoInject = subElement.GetAttributeBool("autoinject", false);
 
                 var subContainableItems = new List<RelatedItem>();
                 foreach (var subSubElement in subElement.Elements())
@@ -298,7 +301,7 @@ namespace Barotrauma.Items.Components
 
                 for (int i = subContainerIndex; i < subContainerIndex + subCapacity; i++)
                 {
-                    newSlotRestrictions.Add(new SlotRestrictions(subMaxStackSize, subContainableItems));
+                    newSlotRestrictions.Add(new SlotRestrictions(subMaxStackSize, subContainableItems, autoInject));
                 }
                 subContainerIndex += subCapacity;
             }
@@ -351,7 +354,7 @@ namespace Barotrauma.Items.Components
                     foreach (var containableItem in slotRestrictions[index].ContainableItems)
                     {
                         if (!containableItem.MatchesItem(containedItem)) { continue; }
-                        foreach (StatusEffect effect in containableItem.statusEffects)
+                        foreach (StatusEffect effect in containableItem.StatusEffects)
                         {
                             activeContainedItems.Add(new ActiveContainedItem(containedItem, effect, containableItem.ExcludeBroken, containableItem.ExcludeFullCondition));
                         }
@@ -486,7 +489,7 @@ namespace Barotrauma.Items.Components
                     prevContainedItemPositions = item.Position;
                 }
 
-                if (AutoInject)
+                if (AutoInject || slotRestrictions.Any(s => s.AutoInject))
                 {
                     //normally autoinjection should delete the (medical) item, so it only gets applied once
                     //but in multiplayer clients aren't allowed to remove items themselves, so they may be able to trigger this dozens of times
@@ -500,7 +503,21 @@ namespace Barotrauma.Items.Components
                         ownerCharacter.HealthPercentage / 100f <= AutoInjectThreshold &&
                         ownerCharacter.HasEquippedItem(item))
                     {
-                        foreach (Item item in Inventory.AllItemsMod)
+                        if (AutoInject)
+                        {
+                            Inventory.AllItemsMod.ForEach(i => Inject(i));
+                        }
+                        else
+                        {
+                            for (int i = 0; i < slotRestrictions.Length; i++)
+                            {
+                                if (slotRestrictions[i].AutoInject)
+                                {
+                                    Inventory.GetItemsAt(i).ForEachMod(i => Inject(i));
+                                }
+                            }
+                        }
+                        void Inject(Item item)
                         {
                             item.ApplyStatusEffects(ActionType.OnSuccess, 1.0f, ownerCharacter, useTarget: ownerCharacter);
                             item.ApplyStatusEffects(ActionType.OnUse, 1.0f, ownerCharacter, useTarget: ownerCharacter);
@@ -655,7 +672,7 @@ namespace Barotrauma.Items.Components
             return false;
         }
 
-        public override void Drop(Character dropper)
+        public override void Drop(Character dropper, bool setTransform = true)
         {
             IsActive = true;
             SetContainedActive(false);

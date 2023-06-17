@@ -22,15 +22,13 @@
             {
                 foreach (Identifier afflictionIdentifier in afflictionIdentifiers)
                 {
-                    if (affliction.Identifier != afflictionIdentifier) { continue; }                    
-                    affliction.Strength *= 1 + addedMultiplier;
+                    if (affliction.Identifier != afflictionIdentifier) { continue; }
+                    AfflictionPrefab afflictionPrefab = affliction.Prefab;
                     if (!replaceWith.IsEmpty)
                     {
-                        if (AfflictionPrefab.Prefabs.TryGet(replaceWith, out AfflictionPrefab afflictionPrefab))
-                        {
-                            abilityAffliction.Affliction = new Affliction(afflictionPrefab, abilityAffliction.Affliction.Strength);
-                        }
-                    }                    
+                        AfflictionPrefab.Prefabs.TryGet(replaceWith, out afflictionPrefab);
+                    }
+                    abilityAffliction.Affliction = new Affliction(afflictionPrefab, affliction.Strength * (1 + addedMultiplier));
                 }
             }
             else

@@ -786,7 +786,7 @@ namespace Barotrauma
                         //check if the connection overlaps with this module's connection
                         if (selfGapPos1.HasValue && selfGapPos2.HasValue &&
                             !gapPos1.NearlyEquals(gapPos2) && !selfGapPos1.Value.NearlyEquals(selfGapPos2.Value) &&
-                            MathUtils.LinesIntersect(gapPos1, gapPos2, selfGapPos1.Value, selfGapPos2.Value))
+                            MathUtils.LineSegmentsIntersect(gapPos1, gapPos2, selfGapPos1.Value, selfGapPos2.Value))
                         {
                             return true;
                         }
@@ -1105,8 +1105,8 @@ namespace Barotrauma
                             DebugConsole.AddWarning($"Failed to connect junction boxes between outpost modules (not enough free connections in module \"{module.PreviousModule.Info.Name}\")");
                             continue;
                         }
-                        wire.Connect(thisJunctionBox.Connections[i], addNode: false);
-                        wire.Connect(previousJunctionBox.Connections[i], addNode: false);
+                        wire.TryConnect(thisJunctionBox.Connections[i], addNode: false);
+                        wire.TryConnect(previousJunctionBox.Connections[i], addNode: false);
                         wire.SetNodes(new List<Vector2>());
                     }
                 }
@@ -1374,11 +1374,6 @@ namespace Barotrauma
                             endWaypoint.linkedTo.Add(prevWayPoint);
                         }
                     }
-                    else
-                    {
-                        startWaypoint.linkedTo.Add(endWaypoint);
-                        endWaypoint.linkedTo.Add(startWaypoint);
-                    }
 
                     WayPoint closestWaypoint = null;
                     float closestDistSqr = 30.0f * 30.0f;
@@ -1595,10 +1590,11 @@ namespace Barotrauma
                     {
                         var startWaypoint = WayPoint.WayPointList.Find(wp => wp.ConnectedGap == bottomGap);
                         var endWaypoint = WayPoint.WayPointList.Find(wp => wp.ConnectedGap == topGap);
+                        float margin = 100;
                         if (startWaypoint != null && endWaypoint != null)
                         {
                             WayPoint prevWaypoint = startWaypoint;
-                            for (float y = startWaypoint.Position.Y + WayPoint.LadderWaypointInterval; y <= endWaypoint.Position.Y - WayPoint.LadderWaypointInterval; y += WayPoint.LadderWaypointInterval)
+                            for (float y = bottomGap.Position.Y + margin; y <= topGap.Position.Y - margin; y += WayPoint.LadderWaypointInterval)
                             {
                                 var wayPoint = new WayPoint(new Vector2(startWaypoint.Position.X, y), SpawnType.Path, ladder.Item.Submarine)
                                 {
