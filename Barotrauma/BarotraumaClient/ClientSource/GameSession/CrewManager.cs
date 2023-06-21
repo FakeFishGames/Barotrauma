@@ -95,6 +95,7 @@ namespace Barotrauma
             {
                 CanBeFocused = false
             };
+            crewArea.RectTransform.NonScaledSize = HUDLayoutSettings.CrewArea.Size;
 
             // AbsoluteOffset is set in UpdateProjectSpecific based on crewListOpenState
             crewList = new GUIListBox(new RectTransform(Vector2.One, crewArea.RectTransform), style: null, isScrollBarOnDefaultSide: false)

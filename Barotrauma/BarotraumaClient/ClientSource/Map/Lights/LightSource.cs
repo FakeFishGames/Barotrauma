@@ -206,6 +206,8 @@ namespace Barotrauma.Lights
 
         private readonly List<ConvexHullList> convexHullsInRange;
 
+        private readonly HashSet<ConvexHull> visibleConvexHulls = new HashSet<ConvexHull>();
+
         public Texture2D texture;
 
         public SpriteEffects LightSpriteEffect;
@@ -717,6 +719,8 @@ namespace Barotrauma.Lights
 
         public void RayCastTask(Vector2 drawPos, float rotation)
         {
+            visibleConvexHulls.Clear();
+
             Vector2 drawOffset = Vector2.Zero;
             float boundsExtended = TextureRange;
             if (OverrideLightTexture != null)
@@ -904,17 +908,12 @@ namespace Barotrauma.Lights
                     bool isPoint1 = MathUtils.LineToPointDistanceSquared(seg1.Start.WorldPos, seg1.End.WorldPos, p.WorldPos) < 25.0f;
                     bool isPoint2 = MathUtils.LineToPointDistanceSquared(seg2.Start.WorldPos, seg2.End.WorldPos, p.WorldPos) < 25.0f;
 
+                    bool markAsVisible = false;
                     if (isPoint1 && isPoint2)
                     {
                         //hit at the current segmentpoint -> place the segmentpoint into the list
                         verts.Add(p.WorldPos);
-
-                        foreach (ConvexHullList hullList in convexHullsInRange)
-                        {
-                            hullList.IsHidden.Remove(p.ConvexHull);
-                            hullList.IsHidden.Remove(seg1.ConvexHull);
-                            hullList.IsHidden.Remove(seg2.ConvexHull);
-                        }
+                        markAsVisible = true;
                     }
                     else if (intersection1.index != intersection2.index)
                     {
@@ -922,13 +921,13 @@ namespace Barotrauma.Lights
                         //we definitely want to generate new geometry here
                         verts.Add(isPoint1 ? p.WorldPos : intersection1.pos);
                         verts.Add(isPoint2 ? p.WorldPos : intersection2.pos);
-
-                        foreach (ConvexHullList hullList in convexHullsInRange)
-                        {
-                            hullList.IsHidden.Remove(p.ConvexHull);
-                            hullList.IsHidden.Remove(seg1.ConvexHull);
-                            hullList.IsHidden.Remove(seg2.ConvexHull);
-                        }
+                        markAsVisible = true;
+                    }
+                    if (markAsVisible)
+                    {
+                        visibleConvexHulls.Add(p.ConvexHull);
+                        visibleConvexHulls.Add(seg1.ConvexHull);
+                        visibleConvexHulls.Add(seg2.ConvexHull);
                     }
                     //if neither of the conditions above are met, we just assume
                     //that the raycasts both resulted on the same segment
@@ -1394,6 +1393,14 @@ namespace Barotrauma.Lights
     #endif
                         Enabled = false;
                         return;
+                    }
+
+                    foreach (var visibleConvexHull in visibleConvexHulls)
+                    {
+                        foreach (var convexHullList in convexHullsInRange)
+                        {
+                            convexHullList.IsHidden.Remove(visibleConvexHull);
+                        }
                     }
 
                     CalculateLightVertices(verts);

@@ -109,6 +109,7 @@ namespace Barotrauma
             foreach (Affliction affliction in allAfflictions)
             {
                 if (affliction.Prefab.IsBuff) { continue; }
+                if (!affliction.Prefab.HasTreatments) { continue; }
                 if (!ignoreTreatmentThreshold)
                 {
                     //other afflictions of the same type increase the "treatability"
@@ -116,7 +117,6 @@ namespace Barotrauma
                     float totalAfflictionStrength = character.CharacterHealth.GetTotalAdjustedAfflictionStrength(affliction);
                     if (totalAfflictionStrength < affliction.Prefab.TreatmentThreshold) { continue; }
                 }
-                if (affliction.Prefab.TreatmentSuitability.None(kvp => kvp.Value > 0)) { continue; }
                 if (allAfflictions.Any(otherAffliction => affliction.Prefab.IgnoreTreatmentIfAfflictedBy.Contains(otherAffliction.Identifier))) { continue; }
                 yield return affliction;
             }

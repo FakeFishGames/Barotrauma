@@ -200,7 +200,8 @@ namespace Barotrauma
                         Leak.linkedTo.Any(e => e is Hull h && (character.CurrentHull == h || h.linkedTo.Contains(character.CurrentHull))),
                     endNodeFilter = IsSuitableEndNode,
                     // The Go To objective can be abandoned if the leak is fixed (in which case we don't want to use the dialogue)
-                    SpeakCannotReachCondition = () => !CheckObjectiveSpecific()
+                    // Only report about contextual targets.
+                    SpeakCannotReachCondition = () => isPriority && !CheckObjectiveSpecific()
                 },
                 onAbandon: () =>
                 {

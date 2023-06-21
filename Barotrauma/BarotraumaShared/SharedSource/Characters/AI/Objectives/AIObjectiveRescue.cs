@@ -287,7 +287,7 @@ namespace Barotrauma
                 if (affliction.Prefab == null) { throw new Exception("Affliction prefab was null"); }
                 float bestSuitability = 0.0f;
                 Item bestItem = null;
-                foreach (KeyValuePair<Identifier, float> treatmentSuitability in affliction.Prefab.TreatmentSuitability)
+                foreach (KeyValuePair<Identifier, float> treatmentSuitability in affliction.Prefab.TreatmentSuitabilities)
                 {
                     if (currentTreatmentSuitabilities.ContainsKey(treatmentSuitability.Key) && 
                         currentTreatmentSuitabilities[treatmentSuitability.Key] > bestSuitability)

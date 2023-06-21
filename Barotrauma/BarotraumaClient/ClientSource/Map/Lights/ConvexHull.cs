@@ -561,7 +561,7 @@ namespace Barotrauma.Lights
 
             if (IsSegmentFacing(losVertices[0].Pos, losVertices[1].Pos, lightSourcePos))
             {
-                Array.Reverse(ShadowVertices);
+                Array.Reverse(ShadowVertices, 0, ShadowVertexCount);
             }
 
             CalculateLosPenumbraVertices(lightSourcePos);

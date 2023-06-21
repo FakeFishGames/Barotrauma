@@ -4055,18 +4055,6 @@ namespace Barotrauma
             }
             return null;
         }
-
-        public override void ServerWrite(IWriteMessage msg)
-        {
-            msg.WriteByte((byte)State);
-            PetBehavior?.ServerWrite(msg);
-        }
-
-        public override void ClientRead(IReadMessage msg)
-        {
-            State = (AIState)msg.ReadByte();
-            PetBehavior?.ClientRead(msg);
-        }
     }
 
     //the "memory" of the Character 

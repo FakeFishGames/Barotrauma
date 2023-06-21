@@ -521,8 +521,5 @@ namespace Barotrauma
 
         protected virtual void OnStateChanged(AIState from, AIState to) { }
         protected virtual void OnTargetChanged(AITarget previousTarget, AITarget newTarget) { }
-
-        public virtual void ClientRead(IReadMessage msg) { }
-        public virtual void ServerWrite(IWriteMessage msg) { }
     }
 }

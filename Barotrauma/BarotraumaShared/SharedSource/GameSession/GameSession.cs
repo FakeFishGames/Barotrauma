@@ -392,7 +392,7 @@ namespace Barotrauma
             DateTime startTime = DateTime.Now;
 #endif
             RoundDuration = 0.0f;
-            AfflictionPrefab.LoadAllEffects();
+            AfflictionPrefab.LoadAllEffectsAndTreatmentSuitabilities();
 
             MirrorLevel = mirrorLevel;
             if (SubmarineInfo == null)

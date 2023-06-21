@@ -222,7 +222,8 @@ namespace Barotrauma
                     {
                         var objective = new AIObjectiveGoTo(Item, character, objectiveManager)
                         {
-                            TargetName = Item.Name
+                            TargetName = Item.Name,
+                            SpeakCannotReachCondition = () => isPriority
                         };
                         if (repairTool != null)
                         {
