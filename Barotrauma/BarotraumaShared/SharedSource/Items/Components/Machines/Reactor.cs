@@ -354,7 +354,10 @@ namespace Barotrauma.Items.Components
                     num_rods += 1;
                     fuelLeft += item.ConditionPercentage;
                 }
-                fuelLeft /= num_rods;
+                if (num_rods > 0)
+                {
+                    fuelLeft /= num_rods;
+                }
             }
 
             if (fissionRate > 0.0f)
