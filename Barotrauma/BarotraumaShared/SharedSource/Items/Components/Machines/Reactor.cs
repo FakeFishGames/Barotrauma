@@ -336,6 +336,7 @@ namespace Barotrauma.Items.Components
             var containedItems = item.OwnInventory?.AllItems;
             if (containedItems != null)
             {
+                int num_rods = 0;
                 foreach (Item item in containedItems)
                 {
                     if (!item.HasTag("reactorfuel")) { continue; }
@@ -350,8 +351,10 @@ namespace Barotrauma.Items.Components
                             item.Condition -= fissionRate / 100.0f * GetFuelConsumption() * deltaTime;
                         }
                     }
+                    num_rods += 1;
                     fuelLeft += item.ConditionPercentage;
                 }
+                fuelLeft /= num_rods;
             }
 
             if (fissionRate > 0.0f)
