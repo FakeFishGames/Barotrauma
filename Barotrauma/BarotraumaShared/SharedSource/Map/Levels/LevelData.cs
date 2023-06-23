@@ -178,7 +178,7 @@ namespace Barotrauma
                     if (eventSet is null) { continue; }
                     int count = childElement.GetAttributeInt("count", 0);
                     if (count < 1) { continue; }
-                    FinishedEvents.Add(eventSet, count);
+                    FinishedEvents.TryAdd(eventSet, count);
                 }
 
                 static EventSet FindSetRecursive(EventSet parentSet, Identifier setIdentifier)
@@ -365,7 +365,7 @@ namespace Barotrauma
                 if (FinishedEvents.Any())
                 {
                     var finishedEventsElement = new XElement(nameof(FinishedEvents));
-                    foreach (var (set, count) in FinishedEvents)
+                    foreach (var (set, count) in FinishedEvents.DistinctBy(f => f.Key.Identifier))
                     {
                         var element = new XElement(nameof(FinishedEvents),
                             new XAttribute("set", set.Identifier),

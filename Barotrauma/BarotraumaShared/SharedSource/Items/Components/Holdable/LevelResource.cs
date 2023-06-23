@@ -135,7 +135,7 @@ namespace Barotrauma.Items.Components
         private void CreateTriggerBody()
         {
             System.Diagnostics.Debug.Assert(trigger == null, "LevelResource trigger already created!");
-            var body = item.body ?? holdable.Body;
+            var body = item.body ?? holdable?.Body;
             if (body != null && Attached)
             {
                 trigger = new PhysicsBody(body.Width, body.Height, body.Radius,

@@ -1,11 +1,30 @@
 ---------------------------------------------------------------------------------------------------------
+v1.0.21.0
+---------------------------------------------------------------------------------------------------------
+
+Fixes:
+- Fixed LOS effect sometimes "lagging behind" when the sub is moving fast.
+- Fixed some minor visual issues (occasional jitter/flickering) on the LOS effect.
+- Fixed some issues in the bot AI that we're causing a large performance hit particularly in situations when there's lots of bots in a sub with leaks.
+- Fixed bots abandoning their orders (such as operating a turret) if the room is unsafe (e.g. flooded).
+- Fixed an issue in character syncing that occasionally caused disconnects with the error message "Exception thrown while reading segment EntityPosition, tried to read too much data from segment".
+- Fixed wires set to be hidden in-game (e.g. invisible circuits built outside the sub) being visible on the Electrician's Goggles.
+- Fixed an issue with level resources that caused crashes with certain mods (e.g. ones that include subs with piezo crystals).
+- Fixed NPCs waiting on some outpost modules never reaching their targets, causing peculiar behavior.
+- Fixed waypoints sometimes not getting connected between outpost modules if there's a very short hallway between them. Addresses some cities missing connections between waypoints, causing AI to be unable to navigate through the modules.
+- Fixed some UI layout issues (most noticeably, ultra-wide crew list) on certain resolutions like 3440x1440.
+- Fixed campaign saves occasionally failing to load with the error "an item with the same key has already been added". Seemed to only occur when using certain mods.
+- Fixed crashing when you e.g. use a pet from some mod in the campaign, disable the mod and reload the save.
+- Waypoint adjustments to most submarines, outposts, wrecks, and beacons. Especially on ladders. Should take care of the remaining AI issues on ladders (the old subs in the saves don't get updated, but the fixes apply to new subs that you don't yet own. And ofc all the subs in a new game!)
+
+---------------------------------------------------------------------------------------------------------
 v1.0.20.1
 ---------------------------------------------------------------------------------------------------------
 
 Fixes:
 - Fixed hidden structures not colliding anymore.
 - Wiring debugger: Fixed tooltip rendering under the outer frame of the connection panel.
-- Wiring debugger: Fixed the glow sprite on connections having an inconsistent size in different resolutions-
+- Wiring debugger: Fixed the glow sprite on connections having an inconsistent size in different resolutions.
 - Fixed jailbreak_sootman event getting stuck at the 1st SpawnAction, preventing most of the event from working at all.
 
 ---------------------------------------------------------------------------------------------------------
