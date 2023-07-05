@@ -130,7 +130,7 @@ namespace Barotrauma.Items.Components
             if (Math.Abs(Force) > 1.0f)
             {
                 float voltageFactor = MinVoltage <= 0.0f ? 1.0f : Math.Min(Voltage, MaxOverVoltageFactor);
-                float currForce = force * voltageFactor;
+                float currForce = force * (float)Math.Pow(voltageFactor, 2f/3f);
                 float condition = item.MaxCondition <= 0.0f ? 0.0f : item.Condition / item.MaxCondition;
                 // Broken engine makes more noise.
                 float noise = Math.Abs(currForce) * MathHelper.Lerp(1.5f, 1f, condition);
@@ -180,7 +180,7 @@ namespace Barotrauma.Items.Components
                 return 0;
             }
 
-            currPowerConsumption = Math.Abs(targetForce) / 100.0f * powerConsumption;
+            currPowerConsumption = (float)Math.Pow(Math.Abs(targetForce) / 100.0f, 1.5f) * powerConsumption;
             //engines consume more power when in a bad condition
             item.GetComponent<Repairable>()?.AdjustPowerConsumption(ref currPowerConsumption);
             return currPowerConsumption;
