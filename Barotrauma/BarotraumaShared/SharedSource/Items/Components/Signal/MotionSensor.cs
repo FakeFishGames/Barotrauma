@@ -121,7 +121,7 @@ namespace Barotrauma.Items.Components
         }
 
         private string falseOutput;
-        [InGameEditable, Serialize("", IsPropertySaveable.Yes, description: "The signal the item outputs when it has not detected movement.", alwaysUseInstanceValues: true)]
+        [InGameEditable, Serialize("0", IsPropertySaveable.Yes, description: "The signal the item outputs when it has not detected movement.", alwaysUseInstanceValues: true)]
         public string FalseOutput
         {
             get { return falseOutput; }
