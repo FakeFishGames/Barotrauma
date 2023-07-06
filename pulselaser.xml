@@ -66,8 +66,8 @@
       <sprite texture="Content/Items/Weapons/Loaders.png" sourcerect="0,791,165,358" depth="0.1" origin="0.5,0.5" alpha="1.0" />
       <StatusEffect type="OnUse" target="This,Contained" IsOn="True">
         <ParticleEmitter particle="pulselasermist" particleamount="2" anglemin="70" anglemax="110" scalemin="0.5" scalemax="0.5" distancemin="0" distancemax="20" velocitymin="50" velocitymax="100" drawontop="true"/>
-		<Conditional condition="gt 0.0" TargetContainedItem="true" />
-	  </StatusEffect>
+	<Conditional condition="gt 0.0" TargetContainedItem="true" />
+      </StatusEffect>
       <StatusEffect type="OnActive" target="This" stackable="false" delay="0.5" IsOn="false"/>
     </LightComponent>
     <Repairable selectkey="Action" header="mechanicalrepairsheader" deteriorationspeed="10" mindeteriorationdelay="60" maxdeteriorationdelay="300" MinDeteriorationCondition="0" RepairThreshold="50" fixDurationHighSkill="5" fixDurationLowSkill="25" msg="ItemMsgRepairWrench" hudpriority="10">
