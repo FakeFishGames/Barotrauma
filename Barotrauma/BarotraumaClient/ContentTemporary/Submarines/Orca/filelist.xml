@@ -1,4 +1,4 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<contentpackage name="Orca" modversion="1.0.4" corepackage="False" gameversion="1.0.21.0">
+<contentpackage name="Orca" modversion="1.0.5" corepackage="False" gameversion="1.1.2.0">
   <Submarine file="%ModDir%/Orca.sub" />
 </contentpackage>
