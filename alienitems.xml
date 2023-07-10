@@ -1,0 +1,1993 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Items>
+  <Item name="" identifier="skyholderartifact" category="Alien" Tags="alien,alienartifact" sonarsize="30" scale="0.5" impactsoundtag="impact_metal_heavy" allowsellingwhenbroken="true" hideconditionbar="true">
+    <Upgrade gameversion="0.9.3.1" scale="0.5" />
+    <Price baseprice="2000" sold="false">
+      <Price storeidentifier="merchantoutpost" multiplier="0.85" />
+      <Price storeidentifier="merchantcity" multiplier="0.85" />
+      <Price storeidentifier="merchantresearch" multiplier="2" />
+      <Price storeidentifier="merchantmilitary" multiplier="1.25 "/>
+      <Price storeidentifier="merchantmine" />
+    </Price>
+    <!--I've put spawning the sky artifact inside ruins on hold until I can figure out how to make it trigger inside submarines only, otherwise it constantly drains water inside ruins and that might soft lock people if it drains a room and there's no way to break the walls -->
+    <PreferredContainer primary="wrecksecarmcab" amount="1" spawnprobability="0.01" />
+    <!--PreferredContainer primary="ruintreasure" amount="1" spawnprobability="0.05" /-->
+    <Sprite texture="Content/Items/Alien/AlienRuins_Items.png" depth="0.6" sourcerect="630,0,82,108" origin="0.5,0.5" />
+    <Deconstruct time="30">
+      <Item identifier="steel" />
+      <Item identifier="oxygeniteshard" />
+      <Item identifier="oxygeniteshard" />
+      <Item identifier="oxygeniteshard" />
+    </Deconstruct>
+    <Body radius="45" density="50" friction="0.95" />
+     <!-- drains water if not contained  -->
+    <Pump maxflow="1000" IsOn="false" flowpercentage="-100">
+      <PumpOutEmitter particle="shockwaveinverted" particlespersecond="10" position="41,-40" anglemin="0" anglemax="360" velocitymin="0" velocitymax="0" scalemin="0.25" scalemax="0.5"/>
+      <StatusEffect type="InWater" targettype="This" IsOn="True" setvalue="true" checkconditionalalways="true">
+        <Conditional hastag="neq artifactcontainer" targetcontainer="true" />
+        <Conditional Voltage="0.0" targetcontainer="true" />
+        <Conditional Insidesubmarine="true" />
+        <sound file="Content/Items/Alien/Alienpump.ogg" range="500.0" loop="false" frequencymultiplier="2" />
+      </StatusEffect>
+      <StatusEffect type="NotInWater" targettype="This" IsOn="False" setvalue="true" />
+    </Pump>
+    <Holdable slots="RightHand+LeftHand" holdpos="30,-15" handle1="0,10" handle2="0,-10" msg="ItemMsgPickUpSelect">
+      <StatusEffect type="Always" target="This,Hull" oxygen="-50000.0">
+        <Conditional hastag="neq artifactcontainer" targetcontainer="true" />
+        <Conditional voltage="lte 0" targetcontainer="true" />
+        <ParticleEmitter particle="skyholderfx2" anglemax="360" distancemin="100" distancemax="300" velocitymin="-700" velocitymax="-1200" particlespersecond="100" />
+        <ParticleEmitter particle="skyholderfx" anglemax="360" particlespersecond="2" />
+        <sound file="Content/Items/Alien/AlienArtifactLoop1.ogg" range="500.0" loop="true" />
+      </StatusEffect>
+    </Holdable>
+  </Item>  
+  <Item name="" identifier="thermalartifact" category="Alien" Tags="alien,alienartifact" sonarsize="30" scale="0.5" impactsoundtag="impact_metal_heavy">
+    <Upgrade gameversion="0.9.3.1" scale="0.5" />
+    <Price baseprice="2000" sold="false">
+      <Price storeidentifier="merchantoutpost" multiplier="0.85" />
+      <Price storeidentifier="merchantcity" multiplier="0.85" />
+      <Price storeidentifier="merchantresearch" multiplier="2" />
+      <Price storeidentifier="merchantmilitary" multiplier="1.25 "/>
+      <Price storeidentifier="merchantmine" />
+    </Price>
+    <PreferredContainer primary="wrecksecarmcab" amount="1" spawnprobability="0.01" />
+    <PreferredContainer primary="ruintreasure" amount="1" spawnprobability="0.05" />
+    <Sprite texture="Content/Items/Alien/AlienRuins_Items.png" depth="0.6" sourcerect="542,112,102,99" origin="0.5,0.5" />
+    <Deconstruct time="30">
+      <Item identifier="steel" />
+      <Item identifier="incendium" />
+      <Item identifier="incendium" />
+      <Item identifier="incendium" />
+    </Deconstruct>
+    <Body radius="40" density="11" friction="0.95" />
+	<Holdable slots="RightHand+LeftHand" holdpos="30,-15" handle1="0,10" handle2="0,-10" msg="ItemMsgPickUpSelect">
+      <StatusEffect type="NotInWater" target="This" stackable="false" delay="30" checkconditionalalways="true">
+        <Conditional hastag="neq artifactcontainer" targetcontainer="true" />
+        <Conditional voltage="lte 0" targetcontainer="true" />
+        <ParticleEmitter particle="thermalSetFire" anglemax="360" scalemultiplier="3,3" particleamount="40" />
+        <sound file="Content/Items/Alien/AlienTurret1.ogg" range="500.0" loop="false" />
+        <Fire />
+      </StatusEffect>
+      <StatusEffect type="Always" target="This">
+        <Conditional hastag="neq artifactcontainer" targetcontainer="true" />
+        <Conditional voltage="lte 0" targetcontainer="true" />
+        <ParticleEmitter particle="thermalfx" anglemax="360" distancemax="5" particlespersecond="40" />
+        <sound file="Content/Items/Alien/AlienArtifactLoop1.ogg" range="500.0" loop="true" />
+      </StatusEffect>
+		<!-- Emits steam periodically when in water, burns -->
+      <StatusEffect type="InWater" target="This" Delay="15" duration="1" interval="0.5" disabledeltatime="false" stackable="True" checkconditionalalways="true" networksyncing="true">
+        <Conditional hastag="neq artifactcontainer" targetcontainer="true" />
+        <Conditional Voltage="lte 0.0" targetcontainer="true" />
+        <ParticleEmitter particle="bubbles" particlespersecond="5" anglemin="60" anglemax="120" scalemin="1" scalemax="2" velocitymin="5" velocitymax="100" copyentityangle="false"/>
+        <ParticleEmitter particle="fleshsmoke" particlespersecond="5" anglemin="60" anglemax="120" scalemin="3" scalemax="5" velocitymin="10" velocitymax="20" copyentityangle="false"/>
+        <ParticleEmitter particle="steamspray" particlespersecond="30" anglemin="60" anglemax="120" scalemin="1" scalemax="2" velocitymin="300" velocitymax="500" copyentityangle="false" highqualitycollisiondetection="true" />
+        <sound file="Content/Items/Weapons/FlameThrowerLoop.ogg" type="OnUse" range="700.0" loop="true" />
+		<!-- burns via explosion every 0.5 seconds. burns on statuseffect would instead afflict you with burns for the entire duration even when away from the artifact -->
+        <Explosion range="200" structuredamage="1" itemdamage="0" smoke="False" flames="false" force="0" sparks="false" shockwave="False" underwaterbubble="false" camerashake="2" flash="false" playtinnitus="false" >
+          <Affliction identifier="burn" amount="1"/>			
+        </Explosion>
+      </StatusEffect>
+	</Holdable>
+  </Item>  
+  <Item name="" identifier="faradayartifact" category="Alien" Tags="alien,alienartifact" sonarsize="30" scale="0.5" impactsoundtag="impact_metal_heavy" allowsellingwhenbroken="true" hideconditionbar="true">
+    <Upgrade gameversion="0.9.3.1" scale="0.5" />
+    <Price baseprice="2000" sold="false">
+      <Price storeidentifier="merchantoutpost" multiplier="0.85" />
+      <Price storeidentifier="merchantcity" multiplier="0.85" />
+      <Price storeidentifier="merchantresearch" multiplier="2" />
+      <Price storeidentifier="merchantmilitary" multiplier="1.25 " />
+      <Price storeidentifier="merchantmine" />
+    </Price>
+    <PreferredContainer primary="wrecksecarmcab" amount="1" spawnprobability="0.01" />
+    <PreferredContainer primary="ruintreasure" amount="1" spawnprobability="0.05" />
+    <Sprite texture="Content/Items/Alien/AlienRuins_Items.png" depth="0.6" sourcerect="645,108,93,103" origin="0.5,0.5" />
+    <Deconstruct time="30">
+      <Item identifier="steel" />
+      <Item identifier="fulgurium" />
+      <Item identifier="fulgurium" />
+      <Item identifier="fulgurium" />
+    </Deconstruct>
+    <Body radius="45" density="50" friction="0.95" />
+    <Holdable slots="RightHand+LeftHand" holdpos="30,-15" handle1="0,10" handle2="0,-10" msg="ItemMsgPickUpSelect">
+      <!-- EMP explosion every 15 seconds. Increased range x4 and reduced EMP strength by a lot -->
+	  <StatusEffect type="Always" target="This" delay="15" stackable="false" checkconditionalalways="true">
+        <Conditional hastag="neq artifactcontainer" targetcontainer="true" />
+        <Conditional Voltage="0.0" targetcontainer="true" />
+        <Explosion range="800.0" empstrength="0.25" camerashake="2" stun="0" force="2.0" flames="false" smoke="false" shockwave="false" sparks="true" underwaterbubble="false" />
+        <!-- separate smaller explosion for EMP affliction so it doesn't fry guardians from across the room -->
+        <Explosion range="200.0" camerashake="0" stun="0" force="0" flames="false" smoke="false" shockwave="false" sparks="false" underwaterbubble="false" >
+          <Affliction identifier="emp" strength="25" multiplybymaxvitality="true" />
+        </Explosion>
+        <sound file="Content/Items/Alien/AlienCoil1.ogg" range="1000" />
+        <ParticleEmitter particle="faradayfx" anglemax="360" distancemax="80" scalemultiplier="2.6,2.6" particleamount="40" />
+      </StatusEffect>
+      <StatusEffect type="Always" target="This">
+        <Conditional hastag="neq artifactcontainer" targetcontainer="true" />
+        <Conditional voltage="lte 0" targetcontainer="true" />
+        <sound file="Content/Items/Alien/AlienArtifactLoop1.ogg" range="500.0" loop="true" />
+        <ParticleEmitter particle="faradayfx" anglemax="360" distancemax="10" particlespersecond="10" />
+      </StatusEffect>
+    </Holdable>
+    <!-- EDC effect on artifact -->
+    <ElectricalDischarger duration="0.2" outdoorsonly="False" powerconsumption="0" range="500" rangemultiplierinwalls="1">
+      <Attack targetimpulse="20">
+        <Affliction identifier="stun" strength="2"/>
+        <Affliction identifier="burn" strength="5"/>
+      </Attack>
+	  <!-- trigger discharge coil when not in water -->
+	  <StatusEffect type="NotInWater" target="This" delay="15" stackable="false" checkconditionalalways="true">
+        <Conditional hastag="neq artifactcontainer" targetcontainer="true" />
+		<Conditional Voltage="0.0" targetcontainer="true" />
+		<Use/>
+        <sound file="Content/Items/Weapons/WEAPONS_electricalDischarge1.ogg" range="6000" volume="0.5" selectionmode="random" />
+        <sound file="Content/Items/Weapons/WEAPONS_electricalDischarge2.ogg" range="6000" volume="0.5" />
+	  </StatusEffect>
+    </ElectricalDischarger>
+  </Item>
+  <Item name="" identifier="nasonovartifact" category="Alien" Tags="alien,nasonov,alienartifact" pickdistance="150" sonarsize="30" scale="0.5" impactsoundtag="impact_metal_heavy" allowsellingwhenbroken="true" hideconditionbar="true">
+    <Upgrade gameversion="0.9.3.1" scale="0.5" />
+    <Price baseprice="2000" sold="false">
+      <Price storeidentifier="merchantoutpost" multiplier="0.85" />
+      <Price storeidentifier="merchantcity" multiplier="0.85" />
+      <Price storeidentifier="merchantresearch" multiplier="2" />
+      <Price storeidentifier="merchantmilitary" multiplier="1.25 "/>
+      <Price storeidentifier="merchantmine" />
+    </Price>
+    <PreferredContainer primary="wrecksecarmcab" amount="1" spawnprobability="0.01" />
+    <PreferredContainer primary="ruintreasure" amount="1" spawnprobability="0.05" />
+    <Sprite texture="Content/Items/Alien/AlienRuins_Items.png" depth="0.6" sourcerect="718,6,78,102" origin="0.5,0.5" />
+    <Deconstruct time="30">
+      <Item identifier="steel" />
+      <Item identifier="physicorium" />
+      <Item identifier="physicorium" />
+      <Item identifier="physicorium" />
+    </Deconstruct>
+    <Body radius="45" density="50" friction="0.95" />
+	<!-- Added sonar disruption -->
+	<AiTarget sightrange="10000" Soundrange="50000" sonardisruption="0.5" />
+    <Holdable slots="RightHand+LeftHand" holdpos="30,-15" handle1="0,10" handle2="0,-10" msg="ItemMsgPickUpSelect">
+      <StatusEffect type="Always" target="This">
+        <Conditional hastag="neq artifactcontainer" targetcontainer="true" />
+        <Conditional voltage="lte 0" targetcontainer="true" />
+        <ParticleEmitter particle="nasonovsparkles" anglemax="360" distancemax="10" velocitymin="10" velocitymax="60" emitinterval="0.55" particleamount="5" particlespersecond="5" />
+        <sound file="Content/Items/Alien/AlienArtifactLoop1.ogg" range="500.0" loop="true" />
+      </StatusEffect>
+      <StatusEffect type="Always" target="This" delay="1.1" stackable="false" targettype="this" SoundRange="50000" setvalue="true" >
+        <Conditional hastag="neq artifactcontainer" targetcontainer="true" />
+        <Conditional Voltage="0.0" targetcontainer="true" />
+        <ParticleEmitter particle="nasonovfx" anglemax="360" particleamount="3" />
+        <sound file="Content/Items/Alien/Alien_ArtifactHolderLoop.ogg" range="1000.0" loop="true" volume="3"/>
+      </StatusEffect>
+    </Holdable>
+  </Item>  
+  <Item name="" identifier="psychosisartifact" category="Alien" Tags="alien,alienartifact" sonarsize="30" spritecolor="200,200,200,255" scale="0.5" impactsoundtag="impact_metal_heavy">
+    <Upgrade gameversion="0.9.3.1" scale="0.5" />
+    <Price baseprice="2000" sold="false">
+      <Price storeidentifier="merchantoutpost" multiplier="0.85" />
+      <Price storeidentifier="merchantcity" multiplier="0.85" />
+      <Price storeidentifier="merchantresearch" multiplier="2" />
+      <Price storeidentifier="merchantmilitary" multiplier="1.25 "/>
+      <Price storeidentifier="merchantmine" />
+    </Price>
+	<PreferredContainer primary="wrecksecarmcab" amount="1" spawnprobability="0.01" />
+    <PreferredContainer primary="ruintreasure" amount="1" spawnprobability="0.05" />
+    <Sprite texture="Content/Items/Alien/AlienRuins_Items.png" depth="0.6" sourcerect="541,0,88,108" origin="0.5,0.5" />
+    <Deconstruct time="30">
+      <Item identifier="steel" />
+      <Item identifier="dementonite" />
+      <Item identifier="dementonite" />
+      <Item identifier="dementonite" />
+    </Deconstruct>
+    <Body radius="45" density="50" friction="0.95" />
+    <Holdable slots="RightHand+LeftHand" holdpos="30,-15" handle1="0,10" handle2="0,-10" msg="ItemMsgPickUpSelect">
+      <StatusEffect type="Always" target="This">
+        <Conditional hastag="neq artifactcontainer" targetcontainer="true" />
+        <Conditional voltage="lte 0" targetcontainer="true" />
+        <sound file="Content/Items/Alien/AlienArtifactLoop1.ogg" range="500.0" loop="true" />
+        <ParticleEmitter particle="psychosisfx" scalemultiplier="0.7,0.7" anglemax="360" emitinterval="1.1" particleamount="1" particlespersecond="1" />
+      </StatusEffect>
+	  <!-- Releases a burst of watchers gaze in a 1500 radius periodically -->
+      <StatusEffect type="Always" target="This,NearbyCharacters" range="1500" Delay="30" Duration="5" stackable="false" setvalue="true" checkconditionalalways="true">
+        <Conditional hastag="neq artifactcontainer" targetcontainer="true" />
+		<Conditional Voltage="0.0" targetcontainer="true" />
+		<Affliction identifier="watchersgaze" strength="0.20"/>
+        <Affliction identifier="psychosis" strength="0.02" />
+        <ParticleEmitter particle="psychosisfx" anglemax="360" particlespersecond="12" />
+		<sound file="Content/Items/Alien/Alienpump.ogg" range="500.0" loop="true" volume="0.5" />
+      </StatusEffect>
+    </Holdable>
+    <LightComponent range="150.0" lightcolor="255,56,144,111" IsOn="true" castshadows="false" allowingameediting="false" pulseamount="0.9" pulsefrequency="0.25" />
+  </Item>
+  <Item name="" identifier="psychosisartifact_event" nameidentifier="psychosisartifact" variantof="psychosisartifact" hideinmenus="true">
+    <Price baseprice="1000" sold="false" canbespecial="false">
+      <Price storeidentifier="merchantoutpost" multiplier="0.85" />
+      <Price storeidentifier="merchantcity" multiplier="0.85" />
+      <Price storeidentifier="merchantresearch" multiplier="2" />
+      <Price storeidentifier="merchantmilitary" multiplier="1.25 " />
+      <Price storeidentifier="merchantmine" />
+    </Price>
+  </Item>
+  <Item name="" identifier="alientrinket1" category="Alien" maxstacksize="8" Tags="alien, smallitem,smallalienartifact" scale="0.5" impactsoundtag="impact_metal_heavy">
+    <Upgrade gameversion="0.9.3.1" scale="0.5" />
+    <PreferredContainer primary="wrecksecarmcab" amount="1" spawnprobability="0.02" />
+    <PreferredContainer primary="ruinstorage,ruinstoragesmall" amount="1" spawnprobability="0.2" />
+    <PreferredContainer primary="ruinstoragelarge" amount="1" spawnprobability="0.3" />
+    <PreferredContainer secondary="researchcontainer" spawnprobability="0.05"/>
+    <Price baseprice="300" sold="false">
+      <Price storeidentifier="merchantoutpost" multiplier="0.85" />
+      <Price storeidentifier="merchantcity" multiplier="0.85" />
+      <Price storeidentifier="merchantresearch" multiplier="2" />
+      <Price storeidentifier="merchantmilitary" multiplier="1.25 " />
+      <Price storeidentifier="merchantmine" />
+    </Price>
+    <Sprite texture="AlienRuins_Items.png" depth="0.7" sourcerect="48,1952,73,76" origin="0.5,0.5" />
+    <Deconstruct time="30">
+      <Item identifier="oxygeniteshard" />
+    </Deconstruct>
+    <Body width="70" height="70" density="20" />
+    <Holdable slots="Any,RightHand,LeftHand" holdpos="30,-15" handle1="0,5" handle2="0,-5" msg="ItemMsgPickUpSelect"></Holdable>
+  </Item>
+  <Item name="" identifier="alientrinket2" category="Alien" maxstacksize="8" Tags="alien, smallitem,smallalienartifact" scale="0.5" impactsoundtag="impact_metal_heavy">
+    <Upgrade gameversion="0.9.3.1" scale="0.5" />
+    <PreferredContainer primary="wrecksecarmcab" amount="1" spawnprobability="0.02" />
+    <PreferredContainer primary="ruinstorage,ruinstoragesmall" amount="1" spawnprobability="0.2" />
+    <PreferredContainer primary="ruinstoragelarge" amount="1" spawnprobability="0.3" />
+    <PreferredContainer secondary="researchcontainer" spawnprobability="0.05"/>
+    <Price baseprice="300" sold="false">
+      <Price storeidentifier="merchantoutpost" multiplier="0.85" />
+      <Price storeidentifier="merchantcity" multiplier="0.85" />
+      <Price storeidentifier="merchantresearch" multiplier="2" />
+      <Price storeidentifier="merchantmilitary" multiplier="1.25 " />
+      <Price storeidentifier="merchantmine" />
+    </Price>
+    <Sprite texture="AlienRuins_Items.png" depth="0.7" sourcerect="128,1953,82,74" origin="0.5,0.5" />
+    <Deconstruct time="30">
+      <Item identifier="sulphuriteshard" />
+    </Deconstruct>
+    <Body width="80" height="72" density="20" />
+    <Holdable slots="Any,RightHand,LeftHand" holdpos="30,-15" handle1="0,5" handle2="0,-5" msg="ItemMsgPickUpSelect"></Holdable>
+  </Item>
+  <Item name="" identifier="alientrinket3" category="Alien" maxstacksize="8" Tags="alien, smallitem,smallalienartifact" scale="0.5" impactsoundtag="impact_metal_heavy">
+    <Upgrade gameversion="0.9.3.1" scale="0.5" />
+    <PreferredContainer primary="wrecksecarmcab" amount="1" spawnprobability="0.02" />
+    <PreferredContainer primary="ruinstorage,ruinstoragesmall" amount="1" spawnprobability="0.2" />
+    <PreferredContainer primary="ruinstoragelarge" amount="1" spawnprobability="0.3" />
+    <PreferredContainer secondary="researchcontainer" spawnprobability="0.05"/>
+    <Price baseprice="300" sold="false">
+      <Price storeidentifier="merchantoutpost" multiplier="0.85" />
+      <Price storeidentifier="merchantcity" multiplier="0.85" />
+      <Price storeidentifier="merchantresearch" multiplier="2" />
+      <Price storeidentifier="merchantmilitary" multiplier="1.25 " />
+      <Price storeidentifier="merchantmine" />
+    </Price>
+    <Sprite texture="AlienRuins_Items.png" depth="0.7" sourcerect="232,1953,82,79" origin="0.5,0.5" />
+    <Deconstruct time="30">
+      <Item identifier="physicorium" />
+    </Deconstruct>
+    <Body width="80" height="75" density="20" />
+    <Holdable slots="Any,RightHand,LeftHand" holdpos="30,-15" handle1="0,5" handle2="0,-5" msg="ItemMsgPickUpSelect" />
+  </Item>
+  <Item name="" identifier="oxygeniteshard" category="Alien,Material" cargocontaineridentifier="explosivecrate" maxstacksize="32" maxstacksizecharacterinventory="8" scale="0.5" tags="alien,smallitem" impacttolerance="8" impactsoundtag="impact_metal_light">
+    <Upgrade gameversion="0.15.22.1" Tags="alien,smallitem" />
+    <Price baseprice="200" minavailable="1">
+      <Price storeidentifier="merchantoutpost" sold="false" />
+      <Price storeidentifier="merchantcity" sold="false" />
+      <Price storeidentifier="merchantresearch" multiplier="1.15" />
+      <Price storeidentifier="merchantmilitary" sold="false" multiplier="1.1" />
+      <Price storeidentifier="merchantmine" multiplier="0.9" />
+    </Price>
+    <PreferredContainer primary="wrecksecarmcab" amount="1" spawnprobability="0.05" />
+    <PreferredContainer primary="ruinstorage,ruinstoragesmall" amount="1" spawnprobability="0.1" />
+    <PreferredContainer primary="ruinstoragelarge" minamount="1" maxamount="2" spawnprobability="0.2" />
+    <PreferredContainer primary="ruintreasure" minamount="2" maxamount="3" spawnprobability="0.5" />
+    <Deconstruct time="20">
+      <Item identifier="liquidoxygenite" mincondition="0.5" />
+      <Item identifier="liquidoxygenite" mincondition="0.9" />
+    </Deconstruct>
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="200,835,50,56" origin="0.5,0.5" />
+    <Sprite texture="AlienMaterials.png" depth="0.7" sourcerect="18,436,58,69" origin="0.5,0.5" />
+    <Body radius="25" density="15" />
+    <Throwable characterusable="false" slots="Any,RightHand,LeftHand" handle1="0,-5" throwforce="3.5" aimpos="35,-10" msg="ItemMsgPickUpSelect">
+      <StatusEffect type="OnNotContained" target="Hull" oxygen="5000.0" />
+      <StatusEffect type="OnImpact" target="This" Condition="0.0" setvalue="true" />
+      <StatusEffect type="OnUse" target="This" Condition="0.0" setvalue="true" />
+      <StatusEffect type="OnBroken" target="This">
+        <Explosion range="200.0" ballastfloradamage="30" structuredamage="20" force="4">
+          <Affliction identifier="burn" strength="80" />
+          <Affliction identifier="stun" strength="5" />
+        </Explosion>
+        <sound file="Content/Items/Weapons/ExplosionSmall1.ogg" range="3000" />
+        <sound file="Content/Items/Weapons/ExplosionSmall2.ogg" range="3000" />
+        <sound file="Content/Items/Weapons/ExplosionSmall3.ogg" range="3000" />
+        <Remove />
+      </StatusEffect>
+    </Throwable>
+  </Item>
+  <Item name="" identifier="sulphuriteshard" category="Alien,Material" cargocontaineridentifier="metalcrate" maxstacksize="32" maxstacksizecharacterinventory="8" scale="0.5" tags="alien,smallitem" impacttolerance="8" impactsoundtag="impact_metal_light">
+    <Price baseprice="200" minavailable="1">
+      <Price storeidentifier="merchantoutpost" sold="false" />
+      <Price storeidentifier="merchantcity" sold="false" />
+      <Price storeidentifier="merchantresearch" multiplier="1.15" />
+      <Price storeidentifier="merchantmilitary" sold="false" multiplier="1.1" />
+      <Price storeidentifier="merchantmine" multiplier="0.9" />
+    </Price>
+    <PreferredContainer primary="wrecksecarmcab" amount="1" spawnprobability="0.05" />
+    <PreferredContainer primary="ruinstorage,ruinstoragesmall" amount="1" spawnprobability="0.1" />
+    <PreferredContainer primary="ruinstoragelarge" minamount="1" maxamount="2" spawnprobability="0.2" />
+    <PreferredContainer primary="ruintreasure" minamount="2" maxamount="3" spawnprobability="0.5" />
+    <Deconstruct time="20">
+      <Item identifier="sulphuricacid" mincondition="0.5" />
+      <Item identifier="sulphuricacid" mincondition="0.9" />
+    </Deconstruct>
+    <Sprite texture="AlienMaterials.png" depth="0.7" sourcerect="178,437,60,73" origin="0.5,0.5" />
+    <Body radius="25" density="15" />
+    <Throwable slots="Any,RightHand,LeftHand" handle1="0,-5" throwforce="3.5" aimpos="35,-10" msg="ItemMsgPickUpSelect">
+      <StatusEffect type="OnImpact" target="This" Condition="0.0" setvalue="true" />
+      <StatusEffect type="OnBroken" target="This">
+        <Explosion range="200.0" structuredamage="3" force="4">
+          <Affliction identifier="acidburn" strength="20" />
+          <Affliction identifier="stun" strength="5" />
+        </Explosion>
+        <ParticleEmitter particle="acidmistgrenade" particleamount="5" scalemin="0.4" scalemax="1" velocitymin="0" velocitymax="150" anglemin="0" anglemax="360" copyentityangle="false"/>
+        <sound file="Content/Items/Weapons/ExplosionSmall1.ogg" range="3000" />
+        <sound file="Content/Items/Weapons/ExplosionSmall2.ogg" range="3000" />
+        <sound file="Content/Items/Weapons/ExplosionSmall3.ogg" range="3000" />
+        <Remove />
+      </StatusEffect>
+    </Throwable>
+  </Item>
+  <Item name="" identifier="alienpistol" category="Weapon,Alien" tags="smallitem,weapon,alien,mountableweapon,pistolitem" Scale="0.5" impactsoundtag="impact_metal_light">
+    <Price baseprice="500" sold="false">
+      <Price storeidentifier="merchantoutpost" multiplier="0.9" />
+      <Price storeidentifier="merchantcity" multiplier="0.9" />
+      <Price storeidentifier="merchantresearch" multiplier="1.3" />
+      <Price storeidentifier="merchantmilitary" multiplier="1.2" />
+      <Price storeidentifier="merchantmine" multiplier="0.9" />
+    </Price>
+    <PreferredContainer primary="wrecksecarmcab" amount="1" spawnprobability="0.02" />
+    <PreferredContainer primary="ruinstorage,ruinstoragesmall" amount="1" spawnprobability="0.02" />
+    <PreferredContainer primary="ruinstoragelarge" amount="1" spawnprobability="0.05" />
+    <PreferredContainer primary="ruintreasure" amount="1" spawnprobability="0.1" />
+    <PreferredContainer secondary="researchcontainer" amount="1" spawnprobability="0.01"/>
+    <Deconstruct time="20">
+      <Item identifier="dementonite" />
+      <Item identifier="fulgurium" />
+    </Deconstruct>
+    <InventoryIcon texture="AlienRuins_Items.png" sourcerect="0,1875,104,58" />
+    <Sprite texture="AlienRuins_Items.png" sourcerect="0,1875,104,58" depth="0.55" />
+    <Body radius="15" width="15" density="25" />
+    <Holdable slots="Any,RightHand,LeftHand" controlpose="true" aimpos="90,10" handle1="2,-7" msg="ItemMsgPickUpSelect">
+      <StatusEffect type="OnBroken" target="This" Condition="100" setvalue="true" delay="1" />
+    </Holdable>
+    <ItemContainer capacity="1" maxstacksize="1" hideitems="true" itempos="20,-20">
+      <Containable items="alienpowercell" />
+    </ItemContainer>
+    <RangedWeapon reload="0.5" barrelpos="34,6" spread="0" unskilledspread="2" drawhudwhenequipped="true" crosshairscale="0.2">
+      <sound file="Content/Items/Alien/AlienTurret1.ogg" type="OnUse" range="1000.0"/>
+      <sound file="Content/Items/Alien/AlienTurret2.ogg" type="OnUse" range="1000.0"/>
+      <Crosshair texture="Content/Items/Weapons/Crosshairs.png" sourcerect="0,256,256,256" />
+      <CrosshairPointer texture="Content/Items/Weapons/Crosshairs.png" sourcerect="256,256,256,256" />
+      <ParticleEmitter particle="muzzleflashnucleargun" anglemin="0" anglemax="360" particleamount="10" velocitymin="0" scalemultiplier="0.5,0.5" colormultiplier="255,200,200,200" scalemin="0.0" scalemax="0.6" />
+      <StatusEffect type="OnUse" target="Contained">
+        <Use />
+      </StatusEffect>
+      <StatusEffect type="OnUse">
+        <Explosion range="150.0" force="1.5" shockwave="false" smoke="false" flames="false" sparks="false" underwaterbubble="false" camerashake="3.0">
+          <Affliction identifier="psychosis" strength="2.5" />
+        </Explosion>
+      </StatusEffect>
+      <RequiredItems identifier="alienpowercell" type="Contained" msg="ItemMsgAmmoRequired" />
+      <RequiredSkill identifier="weapons" level="40" />
+    </RangedWeapon>
+    <SkillRequirementHint identifier="weapons" level="40"/>
+  </Item>
+  <Item name="" identifier="ancientweapon" category="Alien,Weapon" Tags="alien,mediumitem,weapon,mountableweapon" scale="0.5" impactsoundtag="impact_metal_light">
+    <Price baseprice="1000" sold="false">
+      <Price storeidentifier="merchantoutpost" multiplier="0.9" />
+      <Price storeidentifier="merchantcity" multiplier="0.9" />
+      <Price storeidentifier="merchantresearch" multiplier="1.3" />
+      <Price storeidentifier="merchantmilitary" multiplier="1.2" />
+      <Price storeidentifier="merchantmine" multiplier="0.9" />
+    </Price>
+    <PreferredContainer primary="wrecksecarmcab" amount="1" spawnprobability="0.02" />
+    <PreferredContainer primary="ruinstorage,ruinstoragesmall" amount="1" spawnprobability="0.02" />
+    <PreferredContainer primary="ruinstoragelarge" amount="1" spawnprobability="0.05" />
+    <PreferredContainer primary="ruintreasure" amount="1" spawnprobability="0.1" />
+    <Deconstruct time="20">
+      <Item identifier="dementonite" />
+      <Item identifier="dementonite" />
+      <Item identifier="fulgurium" />
+    </Deconstruct>
+    <Sprite texture="AlienRuins_Items.png" depth="0.55" sourcerect="0,1776,185,96" origin="0.5,0.4" scale="0.5" />
+    <Body width="85" height="40" density="25" />
+    <Holdable slots="Any,RightHand+LeftHand" aimpos="100,0" handle1="0,11" handle2="2,11" msg="ItemMsgPickUpSelect" />
+    <RepairTool structurefixamount="-0.75" range="400" barrelpos="75,0" targetforce="50" repairmultiple="true" repairthroughwalls="true" maxoverlappingwalldist="0.0" repairthroughholes="true" levelwallfixamount="-20.0">
+      <Fixable identifier="structure" />
+      <RequiredItems items="alienpowercell" type="Contained" />
+      <StatusEffect type="OnUse" targettype="UseTarget" targets="weldable" Stuck="-80.0" />
+      <StatusEffect type="OnUse" targettype="Contained" Condition="-5.0" />
+      <!--Damage doors-->
+      <StatusEffect type="OnUse" targettype="UseTarget" Condition="-24.0" />
+      <ParticleEmitter particle="largeplasma" particlespersecond="50" copyentityangle="true" />
+      <ParticleEmitterHitStructure particle="plasmaspark" particlespersecond="100" anglemin="-40" anglemax="40" velocitymin="100" velocitymax="800" />
+      <ParticleEmitterHitStructure particle="plasmasmoke" particlespersecond="3" anglemin="-5" anglemax="5" velocitymin="10" velocitymax="20" />
+      <ParticleEmitterHitItem identifiers="door,hatch,ductblock" particle="plasmaspark" particlespersecond="100" anglemin="-40" anglemax="40" velocitymin="100" velocitymax="800" />
+      <ParticleEmitterHitItem identifiers="door,hatch,ductblock" particle="plasmasmoke" particlespersecond="3" anglemin="-5" anglemax="5" velocitymin="10" velocitymax="100" />
+      <ParticleEmitterHitItem identifiers="ore" particle="iceshards" particlespersecond="5" anglemin="-40" anglemax="40" velocitymin="10" velocitymax="300" scalemin="0.5" scalemax="1.0" />
+      <ParticleEmitterHitCharacter particle="fleshsmoke" particlespersecond="3" anglemin="-5" anglemax="5" velocitymin="10" velocitymax="100" />
+      <StatusEffect type="OnUse" target="Limb">
+        <Affliction identifier="burn" amount="40" />
+      </StatusEffect>
+      <sound file="Content/Items/Alien/alienweapon.ogg" type="OnUse" range="1000.0" loop="true" />
+      <LightComponent AllowInGameEditing="false" LightColor="0.8,0.7,1.0,1.0" Flicker="0.5" range="500">
+        <sprite texture="Content/Items/Electricity/lightsprite.png" origin="0.5,0.5" />
+      </LightComponent>
+    </RepairTool>
+    <Propulsion force="-40" usablein="both">
+      <RequiredItems items="alienpowercell" type="Contained" />
+    </Propulsion>
+    <!-- Legacy feature: can be used as a railgun ammunition. Requires "railgunammo" tag to work. Disabled because glitches with the new loaders and holders.
+    <Projectile characterusable="false" launchimpulse="80.0">
+      <Attack structuredamage="1000" damagetype="Blunt">
+        <Affliction identifier="burn" strength="1000" />
+      </Attack>
+      <StatusEffect type="OnUse" Condition="-100.0" stun="10.0" disabledeltatime="true">
+        <sound file="Content/Items/Alien/alienweapon.ogg" />
+        <Explosion range="1000.0" structuredamage="10000" force="50.0">
+          <Affliction identifier="burn" strength="50" />
+          <Affliction identifier="stun" strength="10" />
+        </Explosion>
+      </StatusEffect>
+      <StatusEffect type="OnActive" target="This">
+        <ParticleEmitter particle="bubbles" anglemin="0" anglemax="360" particleamount="10" velocitymin="0" velocitymax="50" scalemin="2" scalemax="5" />
+      </StatusEffect>
+    </Projectile>
+    -->
+    <ItemContainer capacity="1" maxstacksize="1" hideitems="false" itempos="9,-15">
+      <Containable items="alienpowercell" />
+    </ItemContainer>
+    <Upgrade gameversion="0.1500.5.0" scale="0.5" />
+  </Item>
+  <Item name="" identifier="alienhatch" category="Alien" Tags="alien,door,aliendoor,weldable" damagedbyrepairtools="true" scale="0.5">
+    <Sprite texture="Content/Items/Alien/AlienRuins_Items.png" sourcerect="528,415,432,145" depth="0.8" origin="0.5,0.5" />
+    <BrokenSprite texture="Content/Items/Alien/AlienRuins_Items_Destroyed.png" sourcerect="528,415,432,145" depth="0.799" origin="0.5,0.5" scale="true" />
+    <Door canbeselected="true" horizontal="true" canbepicked="true" pickkey="Action" msg="ItemMsgForceOpenCrowbar" PickingTime="30.0">
+      <RequiredItem items="crowbar" type="Equipped" />
+      <Sprite texture="Content/Items/Alien/AlienRuins_Items.png" sourcerect="529,577,431,40" depth="0.81" origin="0.0,0.5" />
+      <sound file="Content/Items/Alien/AlienDoorOpen1.ogg" type="OnOpen" range="1000.0" />
+      <sound file="Content/Items/Alien/AlienDoorClose1.ogg" type="OnClose" range="1000.0" />
+      <sound file="Content/Items/Tools/Crowbar.ogg" type="OnPicked" range="2000.0" />
+    </Door>
+    <ConnectionPanel canbeselected="true" hudpriority="10">
+      <RequiredItem items="screwdriver" type="Equipped" />
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
+      <input name="toggle" displayname="connection.togglestate" />
+      <input name="set_state" displayname="connection.setstate" />
+      <output name="state_out" displayname="connection.stateout" fallbackdisplayname="connection.signalout" />
+    </ConnectionPanel>
+  </Item>
+  <Item name="" identifier="aliendoor" category="Alien" Tags="alien,door,aliendoor,weldable" damagedbyrepairtools="true" scale="0.5">
+    <Sprite texture="Content/Items/Alien/AlienRuins_Items.png" sourcerect="355,223,140,435" depth="0.8" origin="0.5,0.5" />
+    <BrokenSprite texture="Content/Items/Alien/AlienRuins_Items_Destroyed.png" sourcerect="355,223,140,435" depth="0.799" origin="0.5,0.5" scale="true" />
+    <Door canbeselected="true" canbepicked="true" pickkey="Action" msg="ItemMsgForceOpenCrowbar" PickingTime="30.0">
+      <RequiredItem items="crowbar" type="Equipped" />
+      <Sprite texture="Content/Items/Alien/AlienRuins_Items.png" sourcerect="496,232,32,417" depth="0.81" origin="0.5,0.0" />
+      <sound file="Content/Items/Alien/AlienDoorOpen1.ogg" type="OnOpen" range="1000.0" />
+      <sound file="Content/Items/Alien/AlienDoorClose1.ogg" type="OnClose" range="1000.0" />
+      <sound file="Content/Items/Tools/Crowbar.ogg" type="OnPicked" range="2000.0" />
+    </Door>
+    <ConnectionPanel canbeselected="true" hudpriority="10">
+      <requireditem items="screwdriver" type="Equipped" />
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
+      <input name="toggle" displayname="connection.togglestate" />
+      <input name="set_state" displayname="connection.setstate" />
+      <output name="state_out" displayname="connection.stateout" fallbackdisplayname="connection.signalout" />
+    </ConnectionPanel>
+  </Item>
+  <Item name="" identifier="aliendoorsmall" nameidentifier="aliendoor" category="Alien" Tags="alien,door,aliendoor,weldable" damagedbyrepairtools="true" scale="0.5">
+    <Sprite texture="Content/Items/Alien/AlienRuins_Items.png" sourcerect="899,1234,107,173" depth="0.8" origin="0.5,0.5" />
+    <BrokenSprite texture="Content/Items/Alien/AlienRuins_Items_Destroyed.png" sourcerect="898,1426,107,173" depth="0.799" origin="0.5,0.5" scale="true" />
+    <Door canbeselected="true" canbepicked="true" pickkey="Action" msg="ItemMsgForceOpenCrowbar" PickingTime="30.0">
+      <RequiredItem items="crowbar" type="Equipped" />
+      <Sprite texture="Content/Items/Alien/AlienRuins_Items.png" sourcerect="641,1634,30,173" depth="0.81" origin="0.5,0.0" />
+      <sound file="Content/Items/Alien/AlienDoorOpen1.ogg" type="OnOpen" range="1000.0" />
+      <sound file="Content/Items/Alien/AlienDoorClose1.ogg" type="OnClose" range="1000.0" />
+      <sound file="Content/Items/Tools/Crowbar.ogg" type="OnPicked" range="2000.0" />
+    </Door>
+    <ConnectionPanel canbeselected="true" hudpriority="10">
+      <requireditem items="screwdriver" type="Equipped" />
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
+      <input name="toggle" displayname="connection.togglestate" />
+      <input name="set_state" displayname="connection.setstate" />
+      <output name="state_out" displayname="connection.stateout" fallbackdisplayname="connection.signalout" />
+    </ConnectionPanel>
+  </Item>
+  <Item name="" identifier="alienhatchsmall" nameidentifier="alienhatch" category="Alien" Tags="alien,door,aliendoor,weldable" damagedbyrepairtools="true" scale="0.5">
+    <Sprite texture="Content/Items/Alien/AlienRuins_Items.png" sourcerect="706,1427,173,107" depth="0.8" origin="0.5,0.5" />
+    <BrokenSprite texture="Content/Items/Alien/AlienRuins_Items_Destroyed.png" sourcerect="706,1537,173,107" depth="0.799" origin="0.5,0.5" scale="true" />
+    <Door canbeselected="true" canbepicked="true" horizontal="true" pickkey="Action" msg="ItemMsgForceOpenCrowbar" PickingTime="30.0">
+      <RequiredItem items="crowbar" type="Equipped" />
+      <Sprite texture="Content/Items/Alien/AlienRuins_Items.png" sourcerect="706,1889,173,30" depth="0.81" origin="0.0,0.5" />
+      <sound file="Content/Items/Alien/AlienDoorOpen1.ogg" type="OnOpen" range="1000.0" />
+      <sound file="Content/Items/Alien/AlienDoorClose1.ogg" type="OnClose" range="1000.0" />
+      <sound file="Content/Items/Tools/Crowbar.ogg" type="OnPicked" range="2000.0" />
+    </Door>
+    <ConnectionPanel canbeselected="true" hudpriority="10">
+      <requireditem items="screwdriver" type="Equipped" />
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
+      <input name="toggle" displayname="connection.togglestate" />
+      <input name="set_state" displayname="connection.setstate" />
+      <output name="state_out" displayname="connection.stateout" fallbackdisplayname="connection.signalout" />
+    </ConnectionPanel>
+  </Item>
+  <Item name="" identifier="aliendoorsmallwbuttons" nameidentifier="aliendoorwbuttons" descriptionidentifier="aliendoor" tags="alien,door,aliendoor,weldable" health="100" requirebodyinsidetrigger="false" damagedbyrepairtools="true" damagedbymonsters="true" damagedbyexplosions="true" explosiondamagemultiplier="0.1" allowrotatingineditor="false" allowedlinks="structure,item" linkable="true" scale="0.5">
+    <Sprite texture="Content/Items/Alien/AlienRuins_Items.png" sourcerect="898,1602,109,173" depth="0.8" origin="0.5,0.5" />
+    <BrokenSprite texture="Content/Items/Alien/AlienRuins_Items_Destroyed.png" sourcerect="897,1778,109,173" depth="0.799" origin="0.5,0.5" scale="true" />
+    <Door canbeselected="true" canbepicked="true" pickkey="Action" msg="ItemMsgForceOpenCrowbar" PickingTime="30.0" shadowscale="0.7,1" hasintegratedbuttons="true">
+      <Sprite texture="Content/Items/Alien/AlienRuins_Items.png" sourcerect="641,1634,30,173" depth="0.81" origin="0.5,0.0" />
+      <sound file="Content/Items/Alien/AlienDoorOpen1.ogg" type="OnOpen" range="1000.0" />
+      <sound file="Content/Items/Alien/AlienDoorClose1.ogg" type="OnClose" range="1000.0" />
+      <sound file="Content/Items/Tools/Crowbar.ogg" type="OnPicked" range="2000.0" />
+    </Door>
+    <trigger x="0" y="-50" width="109" height="72" />
+    <AiTarget sightrange="2000.0" static="True" />
+    <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
+      <RequiredItem items="screwdriver" type="Equipped" />
+      <input name="toggle" displayname="connection.togglestate" />
+      <input name="set_state" displayname="connection.setstate" />
+      <output name="state_out" displayname="connection.stateout" fallbackdisplayname="connection.signalout" />
+    </ConnectionPanel>
+  </Item>
+  <Item name="" identifier="alienhatchsmallwbuttons" nameidentifier="alienhatchwbuttons" descriptionidentifier="alienhatch" allowedlinks="gap,hull,structure,item" linkable="true" tags="alien,door,aliendoor,weldable" scale="0.5" health="100" requirebodyinsidetrigger="false" damagedbyrepairtools="true" damagedbymonsters="true" damagedbyexplosions="true" explosiondamagemultiplier="0.1" allowrotatingineditor="false">
+    <Sprite texture="Content/Items/Alien/AlienRuins_Items.png" sourcerect="706,1650,173,107" depth="0.8" origin="0.5,0.5" />
+    <BrokenSprite texture="Content/Items/Alien/AlienRuins_Items_Destroyed.png" sourcerect="706,1764,173,107" depth="0.799" origin="0.5,0.5" scale="true" />
+    <Door canbeselected="true" canbepicked="true" horizontal="true" pickkey="Action" msg="ItemMsgOpen" PickingTime="7.5" shadowscale="1,0.8" hasintegratedbuttons="true">
+      <Sprite texture="Content/Items/Alien/AlienRuins_Items.png" sourcerect="706,1889,173,30" depth="0.81" origin="0.0,0.5" />
+      <sound file="Content/Items/Alien/AlienDoorOpen1.ogg" type="OnOpen" range="1000.0" />
+      <sound file="Content/Items/Alien/AlienDoorClose1.ogg" type="OnClose" range="1000.0" />
+      <sound file="Content/Items/Tools/Crowbar.ogg" type="OnPicked" range="2000.0" />
+    </Door>
+    <trigger x="50" y="0" width="72" height="109" />
+    <AiTarget sightrange="2000.0" static="True" />
+    <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
+      <RequiredItem items="screwdriver" type="Equipped" />
+      <input name="toggle" displayname="connection.togglestate" />
+      <input name="set_state" displayname="connection.setstate" />
+      <output name="state_out" displayname="connection.stateout" fallbackdisplayname="connection.signalout" />
+    </ConnectionPanel>
+  </Item>
+  <Item name="" identifier="aliendoorheavy" nameidentifier="aliendoor" category="Alien" Tags="alien,door,aliendoor,weldable" damagedbyrepairtools="true" scale="0.5">
+    <Sprite texture="Content/Items/Alien/AlienRuins_Items.png" sourcerect="196,223,152,435" depth="0.8" origin="0.5,0.5" />
+    <BrokenSprite texture="Content/Items/Alien/AlienRuins_Items_Destroyed.png" sourcerect="196,223,152,435" depth="0.799" origin="0.5,0.5" scale="true" />
+    <Door canbeselected="true" canbepicked="true" pickkey="Action" msg="ItemMsgForceOpenCrowbar" PickingTime="30.0">
+      <RequiredItem items="crowbar" type="Equipped" />
+      <Sprite texture="Content/Items/Alien/AlienRuins_Items.png" sourcerect="496,232,32,417" depth="0.81" origin="0.5,0.0" />
+      <sound file="Content/Items/Alien/AlienDoorOpen1.ogg" type="OnOpen" range="1000.0" />
+      <sound file="Content/Items/Alien/AlienDoorClose1.ogg" type="OnClose" range="1000.0" />
+      <sound file="Content/Items/Tools/Crowbar.ogg" type="OnPicked" range="2000.0" />
+    </Door>
+    <ConnectionPanel canbeselected="true" hudpriority="10">
+      <RequiredItem items="screwdriver" type="Equipped" />
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
+      <input name="toggle" displayname="connection.togglestate" />
+      <input name="set_state" displayname="connection.setstate" />
+      <output name="state_out" displayname="connection.stateout" fallbackdisplayname="connection.signalout" />
+    </ConnectionPanel>
+  </Item>
+  <Item name="" identifier="alienhatchheavy" nameidentifier="alienhatch" category="Alien" Tags="alien,door,aliendoor,weldable" damagedbyrepairtools="true" scale="0.5">
+    <Sprite texture="Content/Items/Alien/AlienRuins_Items.png" sourcerect="529,631,433,149" depth="0.8" origin="0.5,0.5" />
+    <BrokenSprite texture="Content/Items/Alien/AlienRuins_Items_Destroyed.png" sourcerect="529,631,433,149" depth="0.799" origin="0.5,0.5" scale="true" />
+    <Door canbeselected="true" horizontal="true" canbepicked="true" pickkey="Action" msg="ItemMsgForceOpenCrowbar" PickingTime="30.0">
+      <RequiredItem items="crowbar" type="Equipped" />
+      <Sprite texture="Content/Items/Alien/AlienRuins_Items.png" sourcerect="529,577,431,40" depth="0.81" origin="0.0,0.5" />
+      <sound file="Content/Items/Alien/AlienDoorOpen1.ogg" type="OnOpen" range="1000.0" />
+      <sound file="Content/Items/Alien/AlienDoorClose1.ogg" type="OnClose" range="1000.0" />
+      <sound file="Content/Items/Tools/Crowbar.ogg" type="OnPicked" range="2000.0" />
+    </Door>
+    <ConnectionPanel canbeselected="true" hudpriority="10">
+      <RequiredItem items="screwdriver" type="Equipped" />
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
+      <input name="toggle" displayname="connection.togglestate" />
+      <input name="set_state" displayname="connection.setstate" />
+      <output name="state_out" displayname="connection.stateout" fallbackdisplayname="connection.signalout" />
+    </ConnectionPanel>
+  </Item>
+  <Item name="" identifier="aliendoorwbuttons" descriptionidentifier="aliendoor" tags="alien,door,aliendoor,weldable" health="100" requirebodyinsidetrigger="false" damagedbyrepairtools="true" damagedbymonsters="true" damagedbyexplosions="true" explosiondamagemultiplier="0.1" allowrotatingineditor="false" allowedlinks="structure,item" linkable="true" scale="0.5">
+    <Sprite texture="Content/Items/Alien/AlienRuins_Items.png" sourcerect="0,223,189,435" depth="0.8" origin="0.5,0.5" />
+    <BrokenSprite texture="Content/Items/Alien/AlienRuins_Items_Destroyed.png" sourcerect="0,223,189,435" depth="0.799" origin="0.5,0.5" scale="true" />
+    <Door canbeselected="true" canbepicked="true" pickkey="Action" msg="ItemMsgForceOpenCrowbar" PickingTime="30.0" shadowscale="0.7,1" hasintegratedbuttons="true">
+      <Sprite texture="Content/Items/Alien/AlienRuins_Items.png" sourcerect="497,223,30,435" depth="0.81" origin="0.5,0.0" />
+      <sound file="Content/Items/Alien/AlienDoorOpen1.ogg" type="OnOpen" range="1000.0" />
+      <sound file="Content/Items/Alien/AlienDoorClose1.ogg" type="OnClose" range="1000.0" />
+      <sound file="Content/Items/Tools/Crowbar.ogg" type="OnPicked" range="2000.0" />
+    </Door>
+    <trigger x="0" y="-166" width="188" height="72" />
+    <AiTarget sightrange="2000.0" static="True" />
+    <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
+      <RequiredItem items="screwdriver" type="Equipped" />
+      <input name="toggle" displayname="connection.togglestate" />
+      <input name="set_state" displayname="connection.setstate" />
+      <output name="state_out" displayname="connection.stateout" fallbackdisplayname="connection.signalout" />
+    </ConnectionPanel>
+  </Item>
+  <Item name="" identifier="alienhatchwbuttons" descriptionidentifier="alienhatch" allowedlinks="gap,hull,structure,item" linkable="true" tags="alien,door,aliendoor,weldable" scale="0.5" health="100" requirebodyinsidetrigger="false" damagedbyrepairtools="true" damagedbymonsters="true" damagedbyexplosions="true" explosiondamagemultiplier="0.1" allowrotatingineditor="false">
+    <Sprite texture="Content/Items/Alien/AlienRuins_Items.png" sourcerect="529,225,432,190" depth="0.8" origin="0.5,0.5" />
+    <BrokenSprite texture="Content/Items/Alien/AlienRuins_Items_Destroyed.png" sourcerect="529,225,432,190" depth="0.799" origin="0.5,0.5" scale="true" />
+    <Door canbeselected="true" canbepicked="true" horizontal="true" pickkey="Action" msg="ItemMsgOpen" PickingTime="7.5" shadowscale="1,0.8" hasintegratedbuttons="true">
+      <Sprite texture="Content/Items/Alien/AlienRuins_Items.png" sourcerect="529,576,431,40" depth="0.81" origin="0.0,0.5" />
+      <sound file="Content/Items/Alien/AlienDoorOpen1.ogg" type="OnOpen" range="1000.0" />
+      <sound file="Content/Items/Alien/AlienDoorClose1.ogg" type="OnClose" range="1000.0" />
+      <sound file="Content/Items/Tools/Crowbar.ogg" type="OnPicked" range="2000.0" />
+    </Door>
+    <trigger x="78" y="-106" width="73" height="83" />
+    <trigger x="288" y="0" width="73" height="83" />
+    <AiTarget sightrange="2000.0" static="True" />
+    <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
+      <RequiredItem items="screwdriver" type="Equipped" />
+      <input name="toggle" displayname="connection.togglestate" />
+      <input name="set_state" displayname="connection.setstate" />
+      <output name="state_out" displayname="connection.stateout" fallbackdisplayname="connection.signalout" />
+    </ConnectionPanel>
+  </Item>
+  <Item name="" identifier="alienmotionsensor" category="Alien" Tags="alien,alienmotionsensor" scale="0.5">
+    <Sprite texture="Content/Items/Alien/AlienRuins_Items.png" sourcerect="227,1781,110,112" depth="0.8" origin="0.5,0.5" />
+    <DecorativeSprite texture="Content/Items/Alien/AlienRuins_Items.png" sourcerect="338,1768,89,92" depth="0.75" origin="0.5,0.5" rotationspeed="180">
+      <AnimationConditional MotionDetected="true" targetitemcomponent="MotionSensor" />
+    </DecorativeSprite>
+    <DecorativeSprite texture="Content/Items/Alien/AlienRuins_Items.png" sourcerect="428,1778,49,49" depth="0.7" origin="0.5,0.5" offset="80,80" offsetanim="Noise" offsetanimspeed="0.05" />
+    <MotionSensor range="75" output="0" onlyhumans="true" ignoredead="true" />
+    <ConnectionPanel canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
+      <RequiredItem items="screwdriver" type="Equipped" />
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
+      <output name="state_out" displayname="connection.stateout" fallbackdisplayname="connection.signalout" />
+    </ConnectionPanel>
+  </Item>
+  <Item name="" identifier="artifactholder" category="Alien" Tags="alien,artifactholder,artifactcontainer">
+    <Sprite texture="Content/Items/Alien/AlienRuins_Items.png" depth="0.8" sourcerect="725,786,260,425" />
+    <ItemContainer capacity="1" maxstacksize="1" canbeselected="true" hideitems="false" itempos="130,-180" containedspritedepth="0.81" autointeractwithcontained="true" msg="ItemMsgInteractSelect">
+      <GuiFrame relativesize="0.2,0.25" anchor="Center" minsize="140,170" maxsize="280,280" style="ItemUI" />
+      <Containable items="alienartifact" excludebroken="false">
+        <StatusEffect type="OnContaining" target="This" Voltage="1.0" setvalue="true" />
+        <StatusEffect type="OnContaining" target="This">
+          <sound file="Content/Items/Alien/ALIEN_artifactHolderLoop.ogg" range="500.0" loop="true" dontmuffle="true" />
+        </StatusEffect>
+      </Containable>
+      <Containable items="thermalartifact" excludebroken="false">
+        <StatusEffect type="OnContaining" target="This" Charge="1000.0">
+          <ParticleEmitter particle="artifactholderfx" anglemax="360" distancemin="5" distancemax="60" velocitymin="5" velocitymax="20" particlespersecond="30" colormultiplier="240,180,20,255" />
+          <ParticleEmitter particle="mist" anglemax="360" distancemax="40" scalemin="0.5" scalemax="1.0" velocitymin="4" velocitymax="10" scalemultiplier="1,1" particlespersecond="6" colormultiplier="240,180,20,255" />
+        </StatusEffect>
+      </Containable>
+      <Containable items="faradayartifact" excludebroken="false">
+        <StatusEffect type="OnContaining" target="This" Charge="10.0">
+          <ParticleEmitter particle="artifactholderfx" anglemax="360" distancemin="5" distancemax="60" velocitymin="5" velocitymax="20" particlespersecond="30" colormultiplier="20,180,240,255" />
+          <ParticleEmitter particle="mist" anglemax="360" distancemax="40" scalemin="0.5" scalemax="1.0" velocitymin="4" velocitymax="10" scalemultiplier="1,1" particlespersecond="6" colormultiplier="20,180,240,255" />
+        </StatusEffect>
+      </Containable>
+      <Containable items="nasonovartifact" excludebroken="false">
+        <StatusEffect type="OnContaining" target="This">
+          <ParticleEmitter particle="artifactholderfx" anglemax="360" distancemin="5" distancemax="60" velocitymin="5" velocitymax="20" particlespersecond="30" colormultiplier="240,240,100,255" />
+          <ParticleEmitter particle="mist" anglemax="360" distancemax="40" scalemin="0.5" scalemax="1.0" velocitymin="4" velocitymax="10" scalemultiplier="1,1" particlespersecond="6" colormultiplier="240,240,100,255" />
+        </StatusEffect>
+      </Containable>
+      <Containable items="psychosisartifact" excludebroken="false">
+        <StatusEffect type="OnContaining" target="This">
+          <ParticleEmitter particle="artifactholderfx" anglemax="360" distancemin="5" distancemax="60" velocitymin="5" velocitymax="20" particlespersecond="30" colormultiplier="240,20,100,255" />
+          <ParticleEmitter particle="mist" anglemax="360" distancemax="40" scalemin="0.5" scalemax="1.0" velocitymin="4" velocitymax="10" scalemultiplier="1,1" particlespersecond="6" colormultiplier="240,20,100,255" />
+        </StatusEffect>
+      </Containable>
+      <Containable items="skyholderartifact" excludebroken="false">
+        <StatusEffect type="OnContaining" target="This">
+          <ParticleEmitter particle="artifactholderfx" anglemax="360" distancemin="5" distancemax="60" velocitymin="5" velocitymax="20" particlespersecond="30" colormultiplier="20,60,240,255" />
+          <ParticleEmitter particle="mist" anglemax="360" distancemax="40" scalemin="0.5" scalemax="1.0" velocitymin="4" velocitymax="10" scalemultiplier="1,1" particlespersecond="6" colormultiplier="20,60,240,255" />
+        </StatusEffect>
+      </Containable>
+    </ItemContainer>
+    <LightComponent AllowInGameEditing="false" lightcolor="153,204,255,200" powerconsumption="1" canbeselected="false" range="800.0" IsOn="true" castshadows="false">
+      <sprite texture="Content/Items/Alien/AlienRuins_Items.png" sourcerect="1047,1792,255,255" depth="0.025" origin="0.5,0.5" alpha="0.4" />
+    </LightComponent>
+    <PowerContainer capacity="20000.0" canbeselected="false" maxrechargespeed="10000.0" maxoutput="10000.0" />
+    <ConnectionPanel canbeselected="false" hudpriority="10">
+      <RequiredItem items="screwdriver" type="Equipped" />
+      <output name="power_out" displayname="connection.powerout" />
+    </ConnectionPanel>
+    <!--<DecorativeSprite texture="Content/Items/Alien/AlienRuins_Items.png" sourcerect="884,1231,136,136" depth="0.8" offset="0,300" origin="0.5,0.5"/>-->
+    <!--<DecorativeSprite texture="Content/Items/Alien/AlienRuins_Items.png" sourcerect="739,1232,136,136" depth="0.79" offset="0,300" origin="0.5,0.5">
+      <Conditional Voltage="gte 1.0" targetitemcomponent="PowerContainer" />
+    </DecorativeSprite>-->
+    <DecorativeSprite texture="Content/Items/Alien/AlienRuins_Items.png" sourcerect="746,1246,21,153" depth="0.7" offset="-50,0" origin="0.5,0.7" offsetanim="Sine" offsetanimspeed="1.8" />
+    <DecorativeSprite texture="Content/Items/Alien/AlienRuins_Items.png" sourcerect="776,1246,20,153" depth="0.9" offset="50,0" origin="0.5,0.7" offsetanim="Sine" offsetanimspeed="0.6" />
+    <DecorativeSprite texture="Content/Items/Alien/AlienRuins_Items.png" sourcerect="805,1251,7,153" depth="0.7" offset="-50,0" origin="0.5,0.7" offsetanim="Sine" offsetanimspeed="1.3" />
+    <DecorativeSprite texture="Content/Items/Alien/AlienRuins_Items.png" sourcerect="818,1246,19,153" depth="0.9" offset="50,0" origin="0.5,0.7" offsetanim="Sine" offsetanimspeed="0.82" />
+    <DecorativeSprite texture="Content/Items/Alien/AlienRuins_Items.png" sourcerect="837,1246,19,153" depth="0.7" offset="-50,0" origin="0.5,0.7" offsetanim="Sine" offsetanimspeed="2.12" />
+  </Item>
+  <Item name="" identifier="aliengenerator" category="Alien" Tags="alien,aliengenerator" scale="0.3">
+    <Sprite texture="Content/Items/Alien/Legacy/AlienRuin_Legacy.png" depth="0.8" sourcerect="512,0,512,573" />
+    <LightComponent AllowInGameEditing="false" lightcolor="112,146,190,50" canbeselected="false" range="800.0" IsOn="true">
+      <Sprite texture="Content/Items/Alien/Legacy/AlienRuin_Legacy.png" sourcerect="0,486,176,176" origin="0.47, 0.3" alpha="1.0" />
+    </LightComponent>
+    <ItemContainer capacity="1" maxstacksize="1" canbeselected="true" hideitems="false" itempos="264,-321" containedspritedepth="0.01" autointeractwithcontained="true">
+      <GuiFrame relativesize="0.2,0.25" anchor="Center" minsize="140,170" maxsize="280,280" style="ItemUI" />
+      <StatusEffect type="Always" target="This" Charge="-10.0" />
+      <Containable items="alienpowercell">
+        <StatusEffect type="OnContaining" target="This" Charge="100.0" setvalue="true" />
+      </Containable>
+    </ItemContainer>
+    <PowerContainer capacity="10.0" canbeselected="false" maxrechargespeed="1000.0" maxoutput="10000.0" />
+    <ConnectionPanel canbeselected="true" hudpriority="10">
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
+      <RequiredItem items="screwdriver" type="Equipped" />
+      <!-- break the item when a shutdown signal is received -->
+      <input name="shutdown" displayname="connection.shutdown">
+        <StatusEffect type="OnUse" target="This" condition="-100" setvalue="true" />
+      </input>
+      <output name="power_out" displayname="connection.powerout" />
+    </ConnectionPanel>
+  </Item>
+  <Item name="" identifier="alienpowercell" category="Alien,Equipment" maxstacksize="8" Tags="alien,smallitem,alienpowercell" scale="0.3" impactsoundtag="impact_metal_light">
+    <Price baseprice="220" sold="false">
+      <Price storeidentifier="merchantoutpost" />
+      <Price storeidentifier="merchantcity" />
+      <Price storeidentifier="merchantresearch" multiplier="1.3" />
+      <Price storeidentifier="merchantmilitary" multiplier="1.2" />
+      <Price storeidentifier="merchantmine" multiplier="0.9" />
+    </Price>
+    <Deconstruct time="10">
+      <Item identifier="lead" />
+      <Item identifier="fulgurium" />
+    </Deconstruct>
+    <PreferredContainer primary="alienpistol" amount="1" spawnprobability="1.0" />
+    <PreferredContainer primary="wrecksecarmcab" amount="1" spawnprobability="0.05" />
+    <PreferredContainer primary="ruinstorage,ruinstoragesmall" amount="1" spawnprobability="0.1" />
+    <PreferredContainer primary="ruinstoragelarge" amount="1" spawnprobability="0.2" />
+    <PreferredContainer primary="ruintreasure" amount="1" spawnprobability="0.5" />
+    <PreferredContainer secondary="researchcontainer" amount="1" spawnprobability="0.02"/>
+    <Sprite texture="Content/Items/Alien/AlienRuins_Items.png" sourcerect="0,1952,34,77" depth="0.7" origin="0.5,0.5" />
+    <LightComponent AllowInGameEditing="false" lightcolor="112,146,190,30" canbeselected="false" range="100.0" IsOn="true" castshadows="false" />
+    <Body radius="15" height="40" density="30" />
+    <Holdable slots="RightHand,LeftHand,Any" msg="ItemMsgPickUpSelect">
+      <!--<StatusEffect type="OnContained" target="Character">
+        <Affliction identifier="burn" strength="0.15" />
+      </StatusEffect>-->
+    </Holdable>
+    <ItemContainer hideitems="true" capacity="1" drawinventory="false" canbeselected="false" ShowConditionInContainedStateIndicator="true" SpawnWithId="alienprojectile" removecontaineditemsondeconstruct="true" containedstateindicatorstyle="battery">
+      <Containable items="alienprojectile" />
+      <StatusEffect type="OnUse" target="This" condition="-4.0" disabledeltatime="true">
+        <SpawnItem identifiers="alienprojectile" spawnposition="ThisInventory" />
+      </StatusEffect>
+    </ItemContainer>
+  </Item>
+  <Item name="" identifier="alienprojectile" nameidentifier="alienturretammo" category="Weapon,Alien" interactthroughwalls="true" cargocontaineridentifier="metalcrate" tags="smallitem,pistolammoitem" impactsoundtag="impact_metal_light" hideinmenus="true" scale="0.5">
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="896,960,64,64" origin="0.5,0.5" />
+    <Sprite texture="Content/Items/Weapons/weapons_new.png" sourcerect="195,282,17,6" depth="0.55" origin="0.5,0.5" />
+    <Body width="40" height="14" density="40" />
+    <Pickable slots="Any" msg="ItemMsgPickUpSelect" />
+    <Projectile characterusable="false" hitscan="true" removeonhit="true">
+      <ParticleEmitter particle="tracernucleargun" particleamount="1" velocitymin="0" velocitymax="0" scalemultiplier="1,1" colormultiplier="255,200,200,200" />
+      <Attack structuredamage="5" targetforce="5" itemdamage="5" severlimbsprobability="0.1">
+        <Affliction identifier="explosiondamage" strength="10.5" />
+        <Affliction identifier="burn" strength="10.5" />
+        <Affliction identifier="stun" strength="0.1" />
+      </Attack>
+      <StatusEffect type="OnImpact" target="UseTarget">
+        <ParticleEmitter particle="muzzleflashnucleargun" anglemin="0" anglemax="360" particleamount="10" velocitymin="0" scalemultiplier="0.65,0.65" colormultiplier="255,200,200,200" scalemin="0.0" scalemax="0.7" />
+      </StatusEffect>
+      <!--<StatusEffect type="OnImpact" target="UseTarget">
+        <Conditional entitytype="eq Structure"/>
+        <Conditional hastag="eq door"/>
+        <ParticleEmitter particle="spark" copyentityangle="true" anglemin="-10" anglemax="10" particleamount="5" velocitymin="-10" velocitymax="-200" scalemin="0.5" scalemax="1" />
+      </StatusEffect>-->
+    </Projectile>
+  </Item>
+  <Item name="" identifier="alienpump" category="Alien" tags="alien,alienpump">
+    <Sprite texture="Content/Items/Alien/Legacy/AlienRuin_Legacy.png" depth="0.8" sourcerect="271,513,143,182" />
+    <Pump canbeselected="false" maxflow="6000" PowerConsumption="300.0" MinVoltage="0.3">
+      <sound file="Content/Items/Alien/AlienPump.ogg" type="OnUse" range="1500.0" volumeproperty="CurrFlow" volume="0.01" loop="true" />
+      <PumpInEmitter particle="watersplash" particlespersecond="80" position="128,-107" anglemin="90" anglemax="90" velocitymin="400" velocitymax="500" />
+      <PumpInEmitter particle="bubbles" particlespersecond="10" position="128,-107" anglemin="90" anglemax="90" velocitymin="100" velocitymax="200" />
+      <PumpOutEmitter particle="bubbles" particlespersecond="5" position="128,-107" anglemin="0" anglemax="360" velocitymin="0" velocitymax="0" />
+      <PumpOutEmitter particle="bubbles" particlespersecond="5" position="128,-107" anglemin="0" anglemax="360" velocitymin="0" velocitymax="0" />
+    </Pump>
+    <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
+      <RequiredItem items="screwdriver" type="Equipped" />
+      <input name="power_in" displayname="connection.powerin" />
+      <input name="toggle" displayname="connection.togglestate" />
+      <input name="set_active" displayname="connection.setstate" />
+      <input name="set_speed" displayname="connection.setpumpingspeed" />
+      <input name="set_targetlevel" displayname="connection.settargetwaterlevel" />
+    </ConnectionPanel>
+    <Repairable selectkey="Action" header="mechanicalrepairsheader" fixDurationHighSkill="5" fixDurationLowSkill="20" msg="ItemMsgRepairWrench" hudpriority="10">
+      <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,280" anchor="Center" relativeoffset="-0.1,0.27" style="ItemUI" />
+      <RequiredSkill identifier="mechanical" level="40" />
+      <RequiredItem items="wrench" type="Equipped" />
+    </Repairable>
+  </Item>
+  <Item name="" identifier="alienbutton" category="Alien" tags="smallitem,alien,alienbutton" scale="0.5">
+    <Sprite texture="Content/Items/Alien/AlienRuins_Items.png" sourcerect="183,13,100,97" depth="0.8" origin="0.5,0.5" />
+    <Controller direction="None" canbepicked="true" msg="ItemMsgPressSelect">
+      <sound file="Content/Items/Alien/AlienButton.ogg" type="OnUse" range="500.0" />
+    </Controller>
+    <ConnectionPanel canbeselected="true">
+      <RequiredItem items="screwdriver" type="Equipped" />
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
+      <output name="signal_out" displayname="connection.signalout" />
+    </ConnectionPanel>
+    <LightComponent AllowInGameEditing="false" color="183,85,214,100" IsOn="true" range="1.0" castshadows="false">
+      <sprite texture="Content/Items/Alien/AlienRuins_Items.png" sourcerect="183,113,100,97" depth="0.1" origin="0.5,0.5" />
+    </LightComponent>
+  </Item>
+  <Item name="" identifier="alienturretammoemp" category="Alien" tags="alien,alienturretammo" hideinmenus="true">
+    <Sprite texture="Content/Items/Alien/Legacy/AlienRuin_Legacy.png" depth="0.7" sourcerect="0,0,1,1" origin="0.5,0.5" />
+    <Body radius="25" density="10" />
+    <Projectile characterusable="false" launchimpulse="80.0">
+      <Attack structuredamage="0" severlimbsprobability="0.5">
+        <Affliction identifier="psychosis" strength="5" />
+        <Affliction identifier="stun" strength="1" />
+      </Attack>
+      <StatusEffect type="OnActive" target="This">
+        <ParticleEmitter particle="faradayfx" anglemax="360" distancemax="0" particlespersecond="150" scalemultiplier="3,3" />
+        <ParticleEmitter particle="psychosisfx" anglemax="360" distancemax="0" particlespersecond="50" />
+      </StatusEffect>
+      <!-- reduce condition to give the bolt a 5 second lifetime -->
+      <StatusEffect type="OnNotContained" target="This" condition="-20" />
+      <StatusEffect type="OnImpact" target="This" condition="-100" setvalue="true" />
+      <StatusEffect type="OnBroken" target="This">
+        <ParticleEmitter particle="faradayfx" anglemax="360" distancemax="300" scalemultiplier="5,5" particleamount="40" />
+        <sound file="Content/Items/Weapons/ExplosionMedium3.ogg" range="10000" dontmuffle="true" />
+        <Explosion range="1000.0" structuredamage="0" force="20.0" empstrength="0.5" applyFireEffects="false" underwaterbubble="false" shockwave="true" flames="false">
+          <Affliction identifier="stun" strength="1" />
+        </Explosion>
+        <Remove />
+      </StatusEffect>
+    </Projectile>
+  </Item>
+  <Item name="" identifier="cyborgturretammo" category="Alien" tags="alien,alienturretammo" sonarsize="5" hideinmenus="true">
+    <Sprite texture="Content/Items/Alien/EndRuin_Items.png" depth="0.7" sourcerect="839,768,71,256" origin="0.5,0.5" />
+    <Body height="215" width="30" density="30" />
+    <Projectile characterusable="false" launchimpulse="100" launchrotation="90" damagedoors="true">
+      <Attack structuredamage="200" itemdamage="100" severlimbsprobability="0" penetration="0" targetforce="1000">
+        <Affliction identifier="explosiondamage" strength="250" />
+        <Affliction identifier="stun" strength="15" />
+      </Attack>
+      <StatusEffect type="OnActive" target="This">
+        <ParticleEmitter particle="cyborgammotracer" anglemax="360" distancemax="0" particlespersecond="300" scalemultiplier="1.5,1.5" />
+      </StatusEffect>
+      <!-- reduce condition to give the bolt a 5 second lifetime -->
+      <StatusEffect type="OnNotContained" target="This" condition="-5" />
+      <StatusEffect type="OnImpact" target="This" condition="-100" setvalue="true">
+        <ParticleEmitter particle="cyborgammotracer" anglemax="360" distancemax="200" scalemultiplier="3,3" particleamount="40" />
+        <Explosion range="250.0" ballastfloradamage="100" structuredamage="100" itemdamage="200" force="10.0" severlimbsprobability="0.5" decal="explosion" decalsize="0.3" penetration="0.5">
+          <Affliction identifier="explosiondamage" strength="250" />
+          <Affliction identifier="stun" strength="7" />
+        </Explosion>
+      </StatusEffect>
+      <!-- Remove the item after exploding -->
+      <StatusEffect type="OnBroken" target="This">
+        <Remove />
+      </StatusEffect>
+    </Projectile>
+  </Item>
+  <Item name="" health="100" scale="0.5" identifier="anomalyprojectile" category="Alien" tags="alien,alienturretammo" spritecolor="255,250,0,255" damagedbyprojectiles="true" showhealthbar="false" hideinmenus="true" IsAITurretTarget="true" AITurretPriority="2" AISlowTurretPriority="0.5">
+    <Sprite texture="Content/Items/Alien/AlienRuins_Items.png" sourcerect="1075,1367,395,395" depth="0.8" origin="0.5,0.5" offset="0,0" />
+    <DecorativeSprite texture="Content/Items/Alien/AlienRuins_Items.png" sourcerect="21,1367,395,395" depth="0.75" origin="0.5,0.5" offset="0,0" rotationspeed="300" />
+    <DecorativeSprite texture="Content/Items/Alien/AlienRuins_Items.png" sourcerect="1075,1367,395,395" depth="0.7" origin="0.5,0.5" offset="0,0" rotationspeed="-350" />
+    <Body radius="300" density="1" bodytype="Kinematic" ignorecollision="true" />
+    <Projectile characterusable="false" launchimpulse="5" impulsespread="0.2">
+      <StatusEffect type="OnSpawn" target="This" forceplaysounds="true">
+        <Explosion range="500.0" force="1" shockwave="true" smoke="false" flames="false" sparks="false" underwaterbubble="false" camerashake="6.0" />
+        <ParticleEmitter particle="anomaly" particleamount="10" position="0,0" anglemin="0" anglemax="360" velocitymin="0" velocitymax="500" />
+        <sound file="Content/Characters/Jove/Jove_projectile1.ogg" range="5000" selectionmode="random" />
+        <sound file="Content/Characters/Jove/Jove_projectile2.ogg" range="5000" />
+        <sound file="Content/Characters/Jove/Jove_projectile3.ogg" range="5000" />
+        <sound file="Content/Characters/Jove/Jove_projectile4.ogg" range="5000" />
+      </StatusEffect>
+      <!-- reduce condition to give the projectile a limited lifetime -->
+      <StatusEffect type="OnNotContained" target="This" condition="-5" />
+      <StatusEffect type="OnDamaged" target="This">
+        <ParticleEmitter particle="anomaly" particleamount="5" position="0,0" anglemin="0" anglemax="360" />
+      </StatusEffect>
+      <StatusEffect type="OnBroken" target="This">
+        <ParticleEmitter particle="anomaly" particleamount="5" position="0,0" anglemin="0" anglemax="360" />
+        <Remove />
+      </StatusEffect>
+    </Projectile>
+    <AiTarget sonardisruption="1" sightrange="500" soundrange="100000" static="true" sonarlabel="entityname.anomaly" />
+    <LightComponent range="2048.0" lightcolor="255,200,15,255" IsOn="true" castshadows="false" allowingameediting="false" flicker="1.0" flickerspeed="5">
+      <LightTexture texture="Content/Lights/pointlight_rays.png" origin="0.5, 0.5" size="1.0,1.0" />
+      <Sprite texture="Content/Items/Alien/AlienRuins_Items.png" sourcerect="1075,1367,395,395" depth="0.7" origin="0.5,0.5" />
+      <StatusEffect type="Always" target="This">
+        <sound file="Content/Characters/Jove/Jove_projectileLoop.ogg" range="5000.0" volume="1" loop="true" />
+        <ParticleEmitter particle="anomaly" particlespersecond="5" position="0,0" anglemin="0" anglemax="360" scalemin="0.2" scalemax="0.3" velocitymin="0" velocitymax="50" />
+      </StatusEffect>
+      <StatusEffect type="Always" target="NearbyCharacters" range="1500" collapseeffectstrength="1.3">
+        <Affliction identifier="psychosis" strength="1" />
+        <ParticleEmitter particle="anomaly" particlespersecond="10" position="0,0" anglemin="0" anglemax="360" scalemin="0.2" scalemax="0.3" velocitymin="0" velocitymax="50" />
+      </StatusEffect>
+      <!-- fires every 3 seconds -->
+      <StatusEffect type="Always" delay="3" stackable="false">
+        <Fire size="10" />
+      </StatusEffect>
+      <!-- explosions every 10 seconds -->
+      <StatusEffect type="Always" delay="6" stackable="false">
+        <Explosion range="500.0" ballastfloradamage="100" structuredamage="150" itemdamage="500" force="15" severlimbsprobability="0.5" decal="explosion" decalsize="0.5" penetration="0.5">
+          <Affliction identifier="explosiondamage" strength="50" dividebylimbcount="true" />
+          <Affliction identifier="burn" strength="15" probability="0.2" dividebylimbcount="false" />
+          <Affliction identifier="bleeding" strength="40" probability="0.05" dividebylimbcount="false" />
+          <Affliction identifier="stun" strength="7" />
+        </Explosion>
+      </StatusEffect>
+    </LightComponent>
+  </Item>
+  <!--END RUIN ITEMS-->
+  <Item name="" identifier="endruinheavydoorvertical" nameidentifier="endruinheavydoor" tags="alien,door,aliendoor" category="alien" scale="1.0" health="1000" damagedbyrepairtools="false" damagedbymonsters="false" damagedbyexplosions="true" explosiondamagemultiplier="0" allowrotatingineditor="true" allowedlinks="structure,item" ondamagedthreshold="10" linkable="true">
+    <Sprite texture="EndRuin_Items.png" sourcerect="256,0,128,1024" depth="0.51" origin="0.5,0.5" />
+    <!-- hack: hide the normal sprite (implemented as a separate structure) -->
+    <BrokenSprite texture="EndRuin_Items.png" sourcerect="0,0,1,1" origin="0.5,0.5" fadein="false" maxcondition="100" />
+    <Door canbeselected="true" canbepicked="false" pickkey="Action" msg="ItemMsgForceOpenCrowbar" PickingTime="7.5" shadowscale="0.7,1">
+      <RequiredItem items="crowbar" type="Equipped" />
+      <Sprite texture="EndRuin_Items.png" sourcerect="0,0,256,1024" depth="0.05" origin="0.5,0.0" />
+      <sound file="Content/Items/Alien/AlienDoorOpen1.ogg" type="OnOpen" range="1000.0" />
+      <sound file="Content/Items/Alien/AlienDoorClose1.ogg" type="OnClose" range="1000.0" />
+      <sound file="Content/Items/Tools/Crowbar.ogg" type="OnPicked" range="2000.0" />
+    </Door>
+    <ConnectionPanel canbeselected="true" hudpriority="10">
+      <requireditem items="screwdriver" type="Equipped" />
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
+      <input name="toggle" displayname="connection.togglestate" />
+      <input name="set_state" displayname="connection.setstate" />
+      <output name="state_out" displayname="connection.stateout" fallbackdisplayname="connection.signalout" />
+    </ConnectionPanel>
+  </Item>
+  <Item name="" identifier="endruinheavydoorhorizontal" nameidentifier="endruinheavydoor" allowedlinks="gap,hull,structure,item" linkable="true" tags="alien,door,aliendoor" category="alien" scale="1.0" health="1000" damagedbyrepairtools="false" damagedbymonsters="false" damagedbyexplosions="true" explosiondamagemultiplier="0.1" ondamagedthreshold="10" allowrotatingineditor="false">
+    <Sprite texture="EndRuin_Items.png" sourcerect="384,256,1024,128" depth="0.51" origin="0.5,0.5" />
+    <!-- hack: hide the normal sprite (implemented as a separate structure) -->
+    <BrokenSprite texture="EndRuin_Items.png" sourcerect="0,0,1,1" origin="0.5,0.5" fadein="false" maxcondition="100" />
+    <Door canbeselected="true" canbepicked="true" horizontal="true" pickkey="Action" msg="ItemMsgForceOpenCrowbar" PickingTime="7.5" shadowscale="1,0.8">
+      <RequiredItem items="crowbar" type="Equipped" />
+      <Sprite texture="EndRuin_Items.png" sourcerect="384,0,1024,256" depth="0.05" origin="0.0,0.5" />
+      <sound file="Content/Items/Alien/AlienDoorOpen1.ogg" type="OnOpen" range="1000.0" />
+      <sound file="Content/Items/Alien/AlienDoorClose1.ogg" type="OnClose" range="1000.0" />
+      <sound file="Content/Items/Tools/Crowbar.ogg" type="OnPicked" range="2000.0" />
+    </Door>
+    <AiTarget sightrange="1500.0" static="True" />
+    <ConnectionPanel canbeselected="true" hudpriority="10">
+      <requireditem items="screwdriver" type="Equipped" />
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
+      <input name="toggle" displayname="connection.togglestate" />
+      <input name="set_state" displayname="connection.setstate" />
+      <output name="state_out" displayname="connection.stateout" fallbackdisplayname="connection.signalout" />
+    </ConnectionPanel>
+  </Item>
+  <!--Not used-->
+  <Item name="" identifier="alienturret" category="Alien" Tags="turret,alien" scale="0.5" damagedbyexplosions="true" damagedbyprojectiles="true" damagedbyrepairtools="true" damagedbymeleeweapons="true" health="1000">
+    <Sprite texture="Content/Items/Alien/EndRuin_Items.png" depth="0.4" sourcerect="384,768,455,256" canflipy="false" />
+    <ItemContainer hideitems="true" drawinventory="true" capacity="1" maxstacksize="1" canbeselected="false" characterusable="true">
+      <Containable items="alienturretammo" />
+      <!-- when the turret is fired, it triggers this statuseffect and spawns new ammo -->
+      <StatusEffect type="OnUse" target="Contained">
+        <SpawnItem identifier="alienturretammo" spawnposition="ThisInventory" />
+      </StatusEffect>
+    </ItemContainer>
+    <Turret autooperate="true" friendlytag="ancientalien" canbeselected="false" characterusable="false" linkable="true" barrelpos="228,85" rotationlimits="180,360" powerconsumption="10000.0" showchargeindicator="true" showprojectileindicator="true" recoildistance="50" reload="3" springstiffnesslowskill="2" springstiffnesshighskill="2" springdampinglowskill="0.5" springdampinghighskill="0.5" rotationspeedlowskill="1" rotationspeedhighskill="1">
+      <sound file="Content/Items/Alien/AlienTurret1.ogg" range="10000" type="OnUse" />
+      <sound file="Content/Items/Alien/AlienTurret2.ogg" range="10000" type="OnUse" />
+      <RailSprite texture="Content/Items/Alien/EndRuin_Items.png" depth="0.5" sourcerect="384,384,351,384" origin="0.5, 0.66" />
+      <BarrelSprite texture="Content/Items/Alien/EndRuin_Items.png" depth="0.6" sourcerect="735,384,175,384" origin="0.5,1.0" />
+    </Turret>
+    <ConnectionPanel canbeselected="true" hudpriority="10">
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
+      <input name="power_in" displayname="connection.powerin" />
+      <input name="position_in" displayname="connection.turretaimingin" />
+      <input name="trigger_in" displayname="connection.turrettriggerin" />
+      <input name="toggle_light" displayname="connection.togglelight" />
+    </ConnectionPanel>
+  </Item>
+  <Item name="" identifier="alienturretammo" category="Alien" tags="alien,alienturretammo">
+    <!-- TODO: alien projectile sprite -->
+    <Sprite texture="Content/Items/Alien/EndRuin_Items.png" depth="0.7" sourcerect="839,768,71,256" origin="0.5,0.5" />
+    <Body radius="25" density="10" />
+    <Projectile characterusable="false" launchimpulse="20.0" launchrotation="90">
+      <Attack structuredamage="0" severlimbsprobability="0.5">
+        <Affliction identifier="psychosis" strength="5" />
+      </Attack>
+      <StatusEffect type="OnActive" target="This">
+        <ParticleEmitter particle="blackwaterblood" anglemin="0" anglemax="360" particlespersecond="30" scalemin="1" scalemax="2" />
+      </StatusEffect>
+      <!-- reduce condition to give the bolt a 5 second lifetime -->
+      <StatusEffect type="OnNotContained" target="This" condition="-20" />
+      <StatusEffect type="OnImpact" target="This" condition="-100" />
+      <StatusEffect type="OnBroken" target="This">
+        <!--TODO: revisit to match the other explosions. Explosion damage 15 is pretty insignificant damage. Misses item damage, ballast flora damage etc-->
+        <Explosion range="300.0" structuredamage="0" force="20.0">
+          <Affliction identifier="explosiondamage" strength="15" />
+        </Explosion>
+        <Remove />
+      </StatusEffect>
+    </Projectile>
+  </Item>
+  <Item name="" identifier="alienwritingdecal1" nameidentifier="alienwriting" Tags="alienwritingdecal" width="285" height="160" scale="1.0" noninteractable="true" category="alien, Decorative">
+    <sprite texture="Content/Items/Alien/EndRuin_Items.png" sourcerect="1123,384,285,160" depth="0.97" premultiplyalpha="false" origin="0.5,0.5" />
+    <LightComponent range="256" lightcolor="100,153,153,102" powerconsumption="0" IsOn="true" castshadows="false" allowingameediting="false">
+      <sprite texture="Content/Items/Alien/EndRuin_Items.png" sourcerect="1123,544,285,160" depth="0.97" premultiplyalpha="false" origin="0.5,0.5" />
+    </LightComponent>
+  </Item>
+  <Item name="" identifier="alienwritingdecal2" nameidentifier="alienwriting" Tags="alienwritingdecal" width="285" height="160" scale="1.0" noninteractable="true" category="alien, Decorative">
+    <sprite texture="Content/Items/Alien/EndRuin_Items.png" sourcerect="1123,705,285,160" depth="0.97" premultiplyalpha="false" origin="0.5,0.5" />
+    <LightComponent range="256" lightcolor="100,153,153,102" powerconsumption="0" IsOn="true" pulsefrequency="0.3" pulseamount="0.2" castshadows="false" allowingameediting="false">
+      <sprite texture="Content/Items/Alien/EndRuin_Items.png" sourcerect="1123,864,285,160" depth="0.97" premultiplyalpha="false" origin="0.5,0.5" />
+    </LightComponent>
+  </Item>
+  <Item name="" identifier="alienwritingdecal3" nameidentifier="alienwriting" Tags="alienwritingdecal" width="117" height="117" scale="1.0" noninteractable="true" category="alien, Decorative">
+    <sprite texture="Content/Map/AlienRuins_LevelAssets1.png" sourcerect="1915,2,131,132" depth="0.97" premultiplyalpha="false" origin="0.5,0.5" />
+    <LightComponent range="256" lightcolor="100,153,153,102" powerconsumption="0" IsOn="true" pulsefrequency="0.3" pulseamount="0.2" castshadows="false" allowingameediting="false">
+      <sprite texture="Content/Map/AlienRuins_LevelAssets1.png" sourcerect="1915,137,131,132" depth="0.97" premultiplyalpha="false" origin="0.5,0.5" />
+    </LightComponent>
+  </Item>
+  <Item name="" identifier="alienwritingdecal4" nameidentifier="alienwriting" Tags="alienwritingdecal" width="261" height="87" scale="1.0" noninteractable="true" category="alien, Decorative">
+    <sprite texture="Content/Map/AlienRuins_LevelAssets1.png" sourcerect="1658,2,254,97" depth="0.97" premultiplyalpha="false" origin="0.5,0.5" />
+    <LightComponent range="256" lightcolor="100,153,153,102" powerconsumption="0" IsOn="true" pulsefrequency="0.3" pulseamount="0.2" castshadows="false" allowingameediting="false">
+      <sprite texture="Content/Map/AlienRuins_LevelAssets1.png" sourcerect="1658,200,250,93" depth="0.97" premultiplyalpha="false" origin="0.5,0.5" />
+    </LightComponent>
+  </Item>
+  <Item name="" identifier="alienwritingdecal5" nameidentifier="alienwriting" Tags="alienwritingdecal" width="264" height="87" scale="1.0" noninteractable="true" category="alien, Decorative">
+    <sprite texture="Content/Map/AlienRuins_LevelAssets1.png" sourcerect="1658,102,255,95" depth="0.97" premultiplyalpha="false" origin="0.5,0.5" />
+    <LightComponent range="256" lightcolor="100,153,153,102" powerconsumption="0" IsOn="true" castshadows="false" allowingameediting="false">
+      <sprite texture="Content/Map/AlienRuins_LevelAssets1.png" sourcerect="1658,296,251,91" depth="0.97" premultiplyalpha="false" origin="0.5,0.5" />
+    </LightComponent>
+  </Item>
+
+  <Item name="Alien writing: force alienwriting1 event" nameidentifier="alienwriting" identifier="alienwriting_alienwriting1" Tags="alienwritingdecal" width="264" height="87" scale="1.0" noninteractable="false" hideinmenus="true" category="alien, Decorative">
+    <sprite texture="Content/Items/Alien/EndRuin_Items.png" sourcerect="1123,384,285,160" depth="0.97" premultiplyalpha="false" origin="0.5,0.5" />
+    <LightComponent range="256" lightcolor="100,153,153,102" powerconsumption="0" IsOn="true" castshadows="false" allowingameediting="false">
+      <sprite texture="Content/Items/Alien/EndRuin_Items.png" sourcerect="1123,544,285,160" depth="0.97" premultiplyalpha="false" origin="0.5,0.5" />
+      <StatusEffect target="This" type="OnSpawn" evententitytag="alienwriting1">
+        <TriggerEvent identifier="alienwriting1"/>
+      </StatusEffect>
+    </LightComponent>
+  </Item>
+  <Item name="Alien writing: force alienwriting2 event" nameidentifier="alienwriting" identifier="alienwriting_alienwriting2" Tags="alienwritingdecal" width="264" height="87" scale="1.0" noninteractable="false" hideinmenus="true" category="alien, Decorative">
+    <sprite texture="Content/Items/Alien/EndRuin_Items.png" sourcerect="1123,705,285,160" depth="0.97" premultiplyalpha="false" origin="0.5,0.5" />
+    <LightComponent range="256" lightcolor="100,153,153,102" powerconsumption="0" IsOn="true" pulsefrequency="0.3" pulseamount="0.2" castshadows="false" allowingameediting="false">
+      <sprite texture="Content/Items/Alien/EndRuin_Items.png" sourcerect="1123,864,285,160" depth="0.97" premultiplyalpha="false" origin="0.5,0.5" />
+      <StatusEffect target="This" type="OnSpawn" evententitytag="alienwriting2">
+        <TriggerEvent identifier="alienwriting2"/>
+      </StatusEffect>
+    </LightComponent>
+  </Item>
+  
+  <!--/END RUIN ITEMS-->
+  <Item name="" identifier="aliencoil" Tags="alien,aliencoil" category="Alien">
+    <Sprite texture="Content/Items/Alien/AlienRuins_Items.png" depth="0.55" sourcerect="513,1008,176,301" origin="0.5,0.5" />
+    <!--<LightComponent AllowInGameEditing="false" lightcolor="112,146,190,100" flicker="0.2" canbeselected="false" range="800.0" IsOn="true" />-->
+    <ElectricalDischarger duration="0.25" range="500" rangemultiplierinwalls="5" powerconsumption="0" minvoltage="0.0">
+      <Attack targetimpulse="50">
+        <Affliction identifier="stun" strength="1" />
+        <Affliction identifier="burn" strength="10" />
+      </Attack>
+      <StatusEffect type="OnUse">
+        <sound file="Content/Items/Alien/AlienCoil1.ogg" range="8000" />
+        <sound file="Content/Items/Alien/AlienCoil2.ogg" range="8000" />
+        <sound file="Content/Items/Alien/AlienCoil3.ogg" range="8000" />
+        <ParticleEmitter particle="risingbubbles" anglemin="0" anglemax="360" particleamount="50" velocitymin="50" velocitymax="100" scalemin="1" scalemax="2" />
+        <Explosion range="500.0" stun="0" force="0.0" flames="false" shockwave="false" sparks="true" underwaterbubble="false" />
+      </StatusEffect>
+    </ElectricalDischarger>
+    <ConnectionPanel canbeselected="true" hudpriority="10">
+      <RequiredItem items="screwdriver" type="Equipped" />
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
+      <!-- break the item when a shutdown signal is received -->
+      <!--TODO: particle effect?-->
+      <input name="activate" displayname="connection.turrettriggerin" />
+      <input name="shutdown" displayname="connection.shutdown">
+        <StatusEffect type="OnUse" target="This" condition="-100" setvalue="true" />
+      </input>
+      <input name="power_in" displayname="connection.powerin" />
+    </ConnectionPanel>
+    <LightComponent range="0.0" lightcolor="255,255,255,111" IsOn="true" castshadows="false" allowingameediting="false">
+      <sprite texture="Content/Items/Alien/AlienRuins_Items.png" sourcerect="513,1315,176,301" depth="0.1" origin="0.5,0.5" alpha="1.0" />
+    </LightComponent>
+  </Item>
+  <Item name="" identifier="alienvent" category="Alien" tags="alien,alienvent" interactdistance="0" scale="0.5" linkable="true">
+    <Upgrade gameversion="0.10.0.0" scale="0.5" />
+    <Sprite texture="Content/Items/Alien/Legacy/AlienRuin_Legacy.png" depth="0.91" sourcerect="203,512,53,52" />
+    <Vent>
+      <sound file="Content/Items/OxygenGenerator/Ventilation.ogg" type="OnActive" range="400.0" loop="true" />
+      <StatusEffect type="NotInWater" target="NearbyCharacters" range="300">
+        <Affliction identifier="psychosis" strength="4" />
+        <ParticleEmitter particle="aliengas" anglemin="0" anglemax="360" particlespersecond="5" velocitymin="0" velocitymax="10" scalemin="1" scalemax="2" />
+      </StatusEffect>
+    </Vent>
+  </Item>
+  <Item name="" identifier="alienitemcontainersmall" category="Alien" tags="aliencontainer,artifactcontainer" linkable="true" pickdistance="150" scale="0.5">
+    <Sprite texture="Content/Items/Alien/AlienRuins_Items.png" depth="0.84" sourcerect="1,130,146,92" origin="0.5,0.5" />
+    <ItemContainer capacity="5" canbeselected="true" hideitems="true" msg="ItemMsgInteractSelect">
+      <GuiFrame relativesize="0.3,0.2" anchor="Center" style="ItemUI" />
+      <Containable items="smallitem,mediumitem,alienartifact" />
+    </ItemContainer>
+  </Item>
+  <Item name="" identifier="alienitemcontainermedium" nameidentifier="alienitemcontainersmall" category="Alien" tags="aliencontainer,artifactcontainer" linkable="true" pickdistance="150" scale="0.5">
+    <Sprite texture="Content/Items/Alien/AlienRuins_Items.png" depth="0.84" sourcerect="1,0,176,129" origin="0.5,0.5" />
+    <ItemContainer capacity="8" canbeselected="true" hideitems="true" msg="ItemMsgInteractSelect" slotsperrow="4">
+      <GuiFrame relativesize="0.3,0.2" anchor="Center" style="ItemUI" />
+      <Containable items="smallitem,mediumitem,alienartifact" />
+    </ItemContainer>
+  </Item>
+  <Item name="" identifier="alienitemcontainerlarge" category="Alien" tags="aliencontainer,artifactcontainer" linkable="true" pickdistance="150" scale="0.5">
+    <Sprite texture="Content/Items/Alien/AlienRuins_Items.png" depth="0.84" sourcerect="289,0,252,216" origin="0.5,0.5" />
+    <ItemContainer capacity="10" canbeselected="true" hideitems="true" msg="ItemMsgInteractSelect">
+      <GuiFrame relativesize="0.3,0.2" anchor="Center" style="ItemUI" />
+      <Containable items="smallitem,mediumitem,alienartifact" />
+    </ItemContainer>
+  </Item>
+  <Item name="" identifier="alienlightcomponent" category="Alien" Tags="smallitem,alienlight" cargocontaineridentifier="metalcrate">
+    <Sprite texture="AlienRuins_Items.png" depth="0.8" sourcerect="128,1889,16,16" origin="0.5,0.5" />
+    <LightComponent AllowInGameEditing="false" color="1.0,0.0,0.0,0.5" castshadows="false">
+      <LightTexture texture="Content/Lights/pointlight_bounce.png" origin="0.5,0.5" />
+      <sprite texture="Content/Items/Electricity/signalcomp.png" sourcerect="228,3,23,24" origin="0.5,0.5" />
+    </LightComponent>
+    <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
+      <RequiredItem items="screwdriver" type="Equipped" />
+      <input name="toggle" displayname="connection.togglestate" />
+      <input name="set_state" displayname="connection.setstate" />
+      <input name="set_color" displayname="connection.setcolor" />
+    </ConnectionPanel>
+  </Item>
+  <!--   made destructible, fixed inventory UI + small effect -->
+  <Item name="" identifier="incubationbubble" category="Alien" tags="aliencontainer" linkable="true" pickdistance="150" scale="0.5" damagedbyexplosions="true" damagedbymeleeweapons="true" damagedbyprojectiles="true" damagedbyrepairtools="true" health="30">
+    <Sprite texture="Content/Items/Alien/AlienRuins_Items.png" depth="0.84" sourcerect="0,1022,464,340" origin="0.5,0.5" />
+    <BrokenSprite texture="Content/Items/Alien/AlienRuins_Items.png" sourcerect="1040,1022,464,340" depth="0.799" origin="0.5,0.5" scale="true" />
+    <Body radius="150" bodytype="Static"/>
+    <ItemContainer capacity="9" canbeselected="True" hideitems="true" msg="ItemMsgInteractSelect" slotsperrow="3" accessonlywhenbroken="true">
+      <GuiFrame relativesize="0.2,0.3" anchor="Center" style="ItemUI" />
+      <Containable items="smallitem,mediumitem" />
+        <StatusEffect Type="OnBroken" target="This" >
+        <ParticleEmitter particle="whitegoosplash" drawontop="true" particleamount="20" velocitymin="0" velocitymax="300" anglemin="0" anglemax="360" scalemin="0.5" scalemax="1"/>
+        <ParticleEmitter particle="damagebubbles" drawontop="true" particleamount="10" scalemin="0.5" scalemax="1" anglemin="45" anglemax="135" velocitymin="100" velocitymax="200" />
+        <Sound file="Content/Map/Thalamus/Sounds/CARRIER_organs2.ogg" range="500" volume="0.2" />
+      </StatusEffect>
+    </ItemContainer>
+  </Item>
+  <Item name="" identifier="gravitysphere" category="Alien" linkable="true" scale="0.5">
+    <Sprite texture="Content/Items/Alien/AlienRuins_Items.png" depth="0.84" sourcerect="21,1367,395,395" origin="0.5,0.5" />
+    <DecorativeSprite texture="Content/Items/Alien/AlienRuins_Items.png" sourcerect="226,700,301,296" depth="0.78" origin="0.5,0.5" offset="0,-375" />
+    <LightComponent range="600" lightcolor="140,197,180,111" IsOn="true" castshadows="true" allowingameediting="false" flicker="0.2" flickerspeed="5.0" pulsefrequency="0.2" pulseamount="0.4">
+      <sprite texture="Content/Items/Alien/AlienRuins_Items.png" sourcerect="1075,1367,395,395" origin="0.5,0.5" />
+      <StatusEffect type="Always" target="This">
+        <sound file="Content/Items/Alien/ALIEN_gravitySphereLoop.ogg" range="800.0" loop="true" dontmuffle="true" />
+      </StatusEffect>
+    </LightComponent>
+    <!--Apply force towards the center at range 1000-->
+    <TriggerComponent triggeredby="Human, Item" force="75" radius="1000" distancebasedforce="true">
+      <StatusEffect type="OnActive" target="This">
+        <ParticleEmitter particle="gravityspherefx" particleamount="1" emitinterval="1.25" />
+      </StatusEffect>
+    </TriggerComponent>
+    <!--Start damaging entities at range 500-->
+    <TriggerComponent triggeredby="Human, Item" force="0" radius="500">
+      <Attack onlyhumans="true">
+        <Affliction identifier="internaldamage" strength="3" />
+      </Attack>
+      <StatusEffect type="OnActive" target="This">
+        <ParticleEmitter particle="gravityspherefx2" particlespersecond="3" />
+        <ParticleEmitter particle="skyholderfx2" anglemax="360" distancemin="400" distancemax="500" velocitymin="-500" velocitymax="-900" particlespersecond="200" colormultiplier="255,180,255,255" />
+      </StatusEffect>
+    </TriggerComponent>
+    <!--Heavily damage entities close to the center-->
+    <TriggerComponent triggeredby="Human, Item" force="0" radius="100">
+      <Attack onlyhumans="true">
+        <Affliction identifier="internaldamage" strength="8" />
+      </Attack>
+      <StatusEffect type="OnActive" target="This">
+        <ParticleEmitter particle="gravityspherefx2" particlespersecond="5" scalemin="0.7" scalemax="0.7" />
+        <ParticleEmitter particle="skyholderfx2" anglemax="360" distancemin="300" distancemax="400" velocitymin="-700" velocitymax="-1200" particlespersecond="100" colormultiplier="255,180,255,255" />
+      </StatusEffect>
+    </TriggerComponent>
+    <ConnectionPanel canbeselected="true" hudpriority="10">
+      <RequiredItem items="screwdriver" type="Equipped" />
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
+      <input name="toggle" displayname="connection.togglestate" />
+      <input name="set_state" displayname="connection.setstate" />
+      <output name="state_out" displayname="connection.stateout" fallbackdisplayname="connection.signalout" />
+    </ConnectionPanel>
+  </Item>
+  <Item name="" identifier="alienterminal" category="Alien" Tags="smallitem,logic" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light" isshootable="true">
+    <Sprite texture="Content/Items/Alien/AlienRuins_Items.png" depth="0.8" sourcerect="533,793,160,79" origin="0.5,0.5" />
+    <ButtonTerminal activatingitems="smallalienartifact" canbeselected="true" msg="ItemMsgInteractSelect">
+      <GuiFrame relativesize="0.25,0.2" style="ItemUI" anchor="Center" />
+      <TerminalButton style="alienbuttongreen" />
+      <TerminalButton style="alienbuttonred" />
+    </ButtonTerminal>
+    <ItemContainer capacity="1" canbeselected="true" hideitems="true" slotsperrow="1" uilabel="" allowuioverlap="true">
+      <Containable items="smallitem" />
+    </ItemContainer>
+    <ConnectionPanel selectkey="Action" canbeselected="true" hudpriority="10">
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
+      <RequiredItem identifier="screwdriver" type="Equipped" />
+      <output name="signal_out1" displayname="connection.signaloutx~[num]=1" />
+      <output name="signal_out2" displayname="connection.signaloutx~[num]=2" />
+    </ConnectionPanel>
+    <LightComponent range="0.0" lightcolor="255,255,255,111" IsOn="true" castshadows="false" allowingameediting="false">
+      <sprite texture="Content/Items/Alien/AlienRuins_Items.png" sourcerect="532,878,160,79" depth="0.1" origin="0.5,0.5" alpha="1.0" />
+    </LightComponent>
+  </Item>
+  <Item name="" identifier="alientranslator" category="Alien" Tags="smallitem" cargocontaineridentifier="metalcrate" scale="0.25" impactsoundtag="impact_metal_light" hideinmenus="true">
+    <Price baseprice="500" sold="false">
+      <Price storeidentifier="merchantoutpost" multiplier="0.2" />
+      <Price storeidentifier="merchantcity" multiplier="0.2" />
+      <Price storeidentifier="merchantresearch" multiplier="2" />
+      <Price storeidentifier="merchantmilitary" multiplier="0.2 " />
+      <Price storeidentifier="merchantmine" />
+    </Price>
+    <PreferredContainer primary="reactorcab" secondary="engcab" />
+    <PreferredContainer primary="ruinstorage,ruinstoragesmall" amount="1" spawnprobability="0.02" />
+    <PreferredContainer primary="ruinstoragelarge" amount="1" spawnprobability="0.05" />
+    <PreferredContainer secondary="researchcontainer" amount="1" spawnprobability="0.01"/>
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas2.png" sourcerect="251,833,60,61" origin="0.5,0.5" />
+    <Sprite texture="Content/Items/Alien/AlienRuins_Items.png" sourcerect="323,1950,90,90" depth="0.8" origin="0.5,0.5" />
+    <Body width="90" height="90" density="8" />
+    <Holdable slots="Any,RightHand,LeftHand" holdangle="30" handle1="-10,0" msg="ItemMsgPickUpSelect" />
+  </Item>
+  <Item name="" nameidentifier="ruinvent" identifier="ruinvent" description="" width="128" height="192" texturescale="0.5,0.5" scale="0.5" category="Alien">
+    <sprite texture="Content/Map/AlienWallSet1.png" sourcerect="896,0,128,192" depth="0.975" premultiplyalpha="false" origin="0.5,0.5" />
+    <EntitySpawnerComponent />
+  </Item>
+  <Item name="" nameidentifier="RuinDecal1" identifier="ruinpipeconnection" description="" width="64" height="80" texturescale="0.5,0.5" scale="0.5" noninteractable="true" category="Alien">
+    <sprite texture="Content/Map/AlienWallSet1.png" sourcerect="960,256,64,80" depth="0.9" premultiplyalpha="false" origin="0.5,0.5" />
+    <LightComponent range="0.0" lightcolor="255,255,255,111" IsOn="true" castshadows="false" allowingameediting="false">
+      <sprite texture="Content/Map/AlienWallSet1.png" sourcerect="896,256,64,80" depth="0.1" origin="0.5,0.5" alpha="1.0" />
+    </LightComponent>
+    <Upgrade gameversion="0.15.9.0" noninteractable="true" />
+  </Item>
+  <Item name="" nameidentifier="RuinDecal1" identifier="ruindecalpulse1" width="64" height="80" texturescale="0.5,0.5" scale="0.5" noninteractable="true" category="Alien">
+    <sprite texture="Content/Map/AlienRuins_LevelAssets1.png" sourcerect="0,1,406,401" depth="0.9" premultiplyalpha="false" origin="0.5,0.5" />
+    <LightComponent range="0.0" lightcolor="111,111,255,33" IsOn="true" castshadows="false" allowingameediting="false" pulseamount="0.5" pulsefrequency="0.25">
+      <sprite texture="Content/Map/AlienRuins_LevelAssets1.png" sourcerect="433,0,404,402" depth="0.1" origin="0.5,0.5" alpha="1.0" />
+    </LightComponent>
+    <LightComponent range="0.0" lightcolor="111,111,255,11" IsOn="true" castshadows="false" allowingameediting="false" pulseamount="0.9" pulsefrequency="0.5">
+      <sprite texture="Content/Map/AlienRuins_LevelAssets1.png" sourcerect="836,1,406,405" depth="0.1" origin="0.5,0.5" alpha="1.0" />
+    </LightComponent>
+    <LightComponent range="0.0" lightcolor="111,111,255,11" IsOn="true" castshadows="false" allowingameediting="false" pulseamount="0.9" pulsefrequency="0.6">
+      <sprite texture="Content/Map/AlienRuins_LevelAssets1.png" sourcerect="1240,3,406,402" depth="0.1" origin="0.5,0.5" alpha="1.0" />
+    </LightComponent>
+    <Upgrade gameversion="0.15.9.0" noninteractable="true" />
+  </Item>
+  <Item identifier="guardianpod" description="" texturescale="0.5,0.5" scale="0.5" category="Alien" Tags="alien,guardianshelter" damagedbyexplosions="true" damagedbyprojectiles="true" damagedbyrepairtools="true" damagedbymeleeweapons="true" health="300">
+    <Body width="330" height="650" bodytype="Static" />
+    <sprite name="guardianpod_background" texture="Content/Items/Alien/guardianpod.png" sourcerect="8,0,338,658" depth="0.6" origin="0.5,0.5" />
+    <DecorativeSprite name="guardianpod" texture="Content/Items/Alien/guardianpod.png" sourcerect="345,0,338,658" depth="0.03" origin="0.5,0.5" />
+    <BrokenSprite name="guardianpod_broken_gradual" texture="Content/Items/Alien/guardianpod.png" sourcerect="681,0,338,658" origin="0.5,0.5" depth="0.02" fadein="true" maxcondition="99" />
+    <BrokenSprite name="guardianpod_broken" texture="Content/Items/Alien/guardianpod.png" sourcerect="681,0,338,658" origin="0.5,0.5" depth="0.01" fadein="false" />
+    <TriggerComponent triggeredby="Creature" force="0" radius="100" allowingameediting="false">
+      <StatusEffect type="OnActive" target="This,Character" comparison="And">
+        <Conditional group="ancientalien" />
+        <Conditional IsDead="false" />
+        <Conditional AIState="FleeTo" />
+        <ReduceAffliction type="damage" amount="1.25" />
+        <ReduceAffliction type="burn" strength="1.25" />
+        <Affliction identifier="damageimmunity" amount="100" />
+        <Affliction identifier="concealed" amount="100" />
+        <Sound file="Content/Items/Alien/ALIEN_guardianPodLoop.ogg" loop="true" range="3000" />
+      </StatusEffect>
+    </TriggerComponent>
+    <ItemComponent IsActive="true">
+      <!-- keep the AI target active when the item is active -->
+      <StatusEffect type="OnActive" target="This" sightrange="5000" soundrange="5000" setvalue="true" />      
+    </ItemComponent>
+    <LightComponent range="200" lightcolor="255,62,62,255" IsOn="false" castshadows="false" allowingameediting="false" vulnerabletoemp="false" flicker="0.8" flickerspeed="0.1" pulsefrequency="0.1" pulseamount="0.1">
+      <sprite texture="Content/Items/Alien/AlienRuins_Items.png" sourcerect="1704,504,338,658" origin="0.5,0.5" size="1,1" alpha="1.0" />
+      <IsActive targetitemcomponent="TriggerComponent" triggeractive="true" />
+    </LightComponent>
+    <LightComponent range="0" lightcolor="224,81,255,70" IsOn="true" castshadows="false" allowingameediting="false" vulnerabletoemp="false" flickerspeed="0.1">
+      <sprite texture="Content/Items/Alien/AlienRuins_Items.png" sourcerect="1704,504,338,658" origin="0.5,0.5" size="1,1" alpha="1.0" />
+    </LightComponent>
+    <ConnectionPanel canbeselected="true" hudpriority="10">
+      <RequiredItem items="screwdriver" type="Equipped" />
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
+      <input name="toggle" displayname="connection.togglestate" />
+      <input name="set_state" displayname="connection.setstate" />
+      <input name="shutdown" displayname="connection.shutdown">
+        <StatusEffect type="OnUse" target="This" condition="-1000" setvalue="true" />
+      </input>
+      <output name="state_out" displayname="connection.stateout" fallbackdisplayname="connection.signalout" />
+      <StatusEffect type="OnDamaged" target="This">
+        <Sound file="Content/Items/Alien/DAMAGE_guardianPodImpact1.ogg" range="2000" selectionmode="Random" />
+        <Sound file="Content/Items/Alien/DAMAGE_guardianPodImpact2.ogg" range="2000" selectionmode="Random" />
+        <Sound file="Content/Items/Alien/DAMAGE_guardianPodImpact3.ogg" range="2000" selectionmode="Random" />
+        <Sound file="Content/Items/Alien/DAMAGE_guardianPodImpact4.ogg" range="2000" selectionmode="Random" />
+        <Sound file="Content/Items/Alien/DAMAGE_guardianPodImpact5.ogg" range="2000" selectionmode="Random" />
+        <ParticleEmitter particle="plasmaspark" drawontop="true" particleamount="10" scalemin="0.3" scalemax="0.5" velocitymin="300" velocitymax="800" anglemin="0" anglemax="360" />
+      </StatusEffect>
+      <StatusEffect type="OnBroken" target="This">
+        <Sound file="Content/Sounds/Damage/GlassBreak1.ogg" range="3000" selectionmode="Random" />
+        <Sound file="Content/Sounds/Damage/GlassBreak2.ogg" range="3000" selectionmode="Random" />
+        <Sound file="Content/Sounds/Damage/GlassBreak3.ogg" range="3000" selectionmode="Random" />
+        <Sound file="Content/Sounds/Damage/GlassBreak4.ogg" range="3000" selectionmode="Random" />
+        <ParticleEmitter particle="plasmaspark" drawontop="true" particleamount="50" scalemin="0.5" scalemax="1" velocitymin="600" velocitymax="1000" anglemin="0" anglemax="360" />
+        <Explosion range="100.0" structuredamage="0" itemdamage="0" force="5" severlimbsprobability="0" decal="explosion" showeffects="true" flames="false" applyfireeffects="false">
+          <Affliction identifier="explosiondamage" strength="50" />
+          <Affliction identifier="stun" strength="5" />
+          <StatusEffect type="OnUse" target="NearbyCharacters" range="60" disabledeltatime="true">
+            <Conditional group="ancientalien" />
+            <ReduceAffliction identifier="damageimmunity" amount="100" />
+          </StatusEffect>
+        </Explosion>
+      </StatusEffect>
+    </ConnectionPanel>
+    <aitarget sightrange="5000" soundrange="5000" />
+  </Item>
+  <Item name="" identifier="alienlight1" nameidentifier="ruinlight" width="100" height="50" texturescale="1.0,1.0" scale="0.5" category="Alien" spritecolor="255,255,255,255" noninteractable="true">
+    <sprite texture="Content/Items/Alien/AlienRuins_Items.png" sourcerect="1030,0,100,50" depth="0.94" premultiplyalpha="false" origin="0.5,0.5" />
+    <LightComponent range="150.0" lightcolor="246,165,255,250" IsOn="true" castshadows="false" allowingameediting="false" flicker="0.1" flickerspeed="5">
+      <sprite texture="Content/Items/Alien/AlienRuins_Items.png" sourcerect="1030,62,100,50" depth="0.1" origin="0.5,0.5" alpha="1.0" />
+    </LightComponent>
+  </Item>
+  <Item name="" identifier="alienlight2" nameidentifier="ruinlight" width="50" height="100" texturescale="1.0,1.0" scale="0.5" category="Alien" spritecolor="255,255,255,255" noninteractable="true">
+    <sprite texture="Content/Items/Alien/AlienRuins_Items.png" sourcerect="1029,116,50,100" depth="0.94" premultiplyalpha="false" origin="0.5,0.5" />
+    <LightComponent range="150.0" lightcolor="246,165,255,250" IsOn="true" castshadows="false" allowingameediting="false" flicker="0.1" flickerspeed="5">
+      <sprite texture="Content/Items/Alien/AlienRuins_Items.png" sourcerect="1080,116,50,100" depth="0.1" origin="0.5,0.5" alpha="1.0" />
+    </LightComponent>
+  </Item>
+  <Item name="" identifier="alienlight3" nameidentifier="ruinlight" width="76" height="70" texturescale="1.0,1.0" scale="0.5" category="Alien" spritecolor="255,255,255,255" noninteractable="true">
+    <sprite texture="Content/Items/Alien/AlienRuins_Items.png" sourcerect="1137,0,76,70" depth="0.94" premultiplyalpha="false" origin="0.5,0.5" />
+    <LightComponent range="150.0" lightcolor="246,165,255,250" IsOn="true" castshadows="false" allowingameediting="false" flicker="0.1" flickerspeed="5">
+      <sprite texture="Content/Items/Alien/AlienRuins_Items.png" sourcerect="1218,0,76,70" depth="0.1" origin="0.5,0.5" alpha="1.0" />
+    </LightComponent>
+  </Item>
+  <Item name="" identifier="anomaly" texturescale="1.0,1.0" scale="5" category="Alien" spritecolor="255,255,255,100" noninteractable="true" hideinmenus="true">
+    <Sprite texture="Content/Items/Alien/AlienRuins_Items.png" sourcerect="1075,1367,395,395" depth="0.8" origin="0.5,0.5" offset="0,0" />
+    <DecorativeSprite texture="Content/Items/Alien/AlienRuins_Items.png" sourcerect="21,1367,395,395" depth="0.75" origin="0.5,0.5" offset="0,0" scale="1.2" rotationspeed="300" />
+    <DecorativeSprite texture="Content/Items/Alien/AlienRuins_Items.png" sourcerect="1075,1367,395,395" depth="0.7" origin="0.5,0.5" offset="0,0" rotationspeed="-350" />
+    <AiTarget sonardisruption="1" sightrange="500" soundrange="100000" static="true" sonarlabel="entityname.anomaly" />
+    <LightComponent range="2048.0" lightcolor="255,200,15,255" IsOn="true" castshadows="false" allowingameediting="false" flicker="0.1" flickerspeed="5">
+      <DecorativeSprite texture="Content/Items/Alien/AlienRuins_Items.png" sourcerect="1075,1367,395,395" depth="0.7" origin="0.5,0.5" />
+      <StatusEffect type="Always" target="This">
+        <Sound file="Content/Items/Alien/AlienPump.ogg" range="20000" position="0,0" />
+        <ParticleEmitter particle="anomaly" particlespersecond="60" position="0,0" anglemin="0" anglemax="306" velocitymin="0" velocitymax="1500" />
+      </StatusEffect>
+      <StatusEffect type="Always" target="NearbyCharacters" range="100" onlyoutside="true" disabledeltatime="false">
+        <Affliction identifier="radiationsickness" strength="40" />
+        <Affliction identifier="burn" strength="40" />
+        <Affliction identifier="hallucinating" strength="100" />
+      </StatusEffect>
+      <StatusEffect type="OnSpawn">
+        <TriggerEvent identifier="endevent1" />
+      </StatusEffect>
+    </LightComponent>
+    <TriggerComponent triggeredby="Human,Submarine" force="10000" radius="600" distancebasedforce="true" moveoutsidesub="true">
+      <Attack onlyhumans="true">
+        <Affliction identifier="hallucinating" strength="20" />
+      </Attack>
+    </TriggerComponent>
+  </Item>
+
+  <Item name="submarinepusher" identifier="submarinepusher" texturescale="1.0,1.0" scale="5" category="Alien" spritecolor="255,255,255,100" noninteractable="true" hideinmenus="true">
+    <Sprite texture="Content/Items/Alien/AlienRuins_Items.png" sourcerect="1075,1367,395,395" depth="0.8" origin="0.5,0.5" offset="0,0" />
+    <TriggerComponent triggeredby="Submarine" force="-100000" radius="250" distancebasedforce="false" moveoutsidesub="true" />
+  </Item>
+
+  <Item name="" identifier="sparkemitter" hiddeningame="true" scale="5" category="Alien" spritecolor="255,255,255,100" noninteractable="true" hideinmenus="true">
+    <Sprite texture="Content/Particles/LightningParticleSheet.png" sourcerect="0,0,256,256" depth="0.8" origin="0.5,0.5" offset="0,0" />
+    <ItemComponent>
+      <StatusEffect type="OnActive" target="This" IsActive="false" />
+      <!-- reactivate after one second -->
+      <StatusEffect type="Always" target="This" stackable="false" delay="2.0" IsActive="true" />
+      <StatusEffect type="Always" target="This">
+        <ParticleEmitter particle="ElectricShock" distancemin="100" distancemax="800" particleamount="5" emitinterval="2.1" anglemin="0" anglemax="360" scalemin="1.5" scalemax="3.0" />
+      </StatusEffect>
+    </ItemComponent>
+  </Item>
+  <Item identifier="pylon" description="" texturescale="0.5,0.5" scale="2" sonarsize="10" category="Alien" Tags="alien" damagedbyexplosions="true" damagedbyprojectiles="true" damagedbyrepairtools="true" damagedbymeleeweapons="true" health="500" hideinmenus="true">
+    <Body width="210" height="210" bodytype="Static" />
+    <StaticBody width="210" height="210" />
+    <!--<sprite name="guardianpod_background" texture="Content/Items/Alien/guardianpod.png" sourcerect="8,0,338,658" depth="0.6" origin="0.5,0.5" />-->
+    <Sprite name="guardianpod" texture="Content/Items/Alien/EndRuin_Items.png" sourcerect="912,385,210,210" depth="0.03" origin="0.5,0.5" />
+    <BrokenSprite name="guardianpod_broken_gradual" texture="Content/Items/Alien/EndRuin_Items.png" sourcerect="912,598,210,210" origin="0.5,0.5" depth="0.02" fadein="true" maxcondition="99" />
+    <BrokenSprite name="guardianpod_broken" texture="Content/Items/Alien/EndRuin_Items.png" sourcerect="912,598,210,210" origin="0.5,0.5" depth="0.01" fadein="false" />
+    <LightComponent range="200" lightcolor="255,62,62,255" IsOn="true" castshadows="false" allowingameediting="false" vulnerabletoemp="false" flicker="0.8" flickerspeed="0.1" pulsefrequency="0.1" pulseamount="0.1">
+      <sprite texture="Content/Items/Alien/EndRuin_Items.png" sourcerect="912,813,210,210" origin="0.5,0.5" size="1,1" alpha="1.0" />
+      <StatusEffect type="OnActive" target="This">
+        <sound file="Content/Items/Alien/AlienArtifactLoop1.ogg" range="10000.0" loop="true" volume="0.1" frequencymultiplier="0.5" />
+        <ParticleEmitter particle="faradayfx" anglemax="360" distancemax="200" particlespersecond="10" scalemin="2.0" scalemax="3.0" colormultiplier="255,0,0,255" />
+      </StatusEffect>
+      <StatusEffect type="OnDamaged" target="This">
+        <ParticleEmitter particle="shrapnel" anglemin="0" anglemax="360" distancemin="0" distancemax="200" particleamount="50" velocitymin="100" velocitymax="2000" scalemin="1" scalemax="2" />
+        <Sound file="Content/Sounds/Damage/HitArmor1.ogg" range="2000" />
+        <ParticleEmitter particle="ElectricShock" distancemin="100" distancemax="120" particleamount="5" anglemin="0" anglemax="360" scalemin="1.0" scalemax="1.2" colormultiplier="255,0,0,255" />
+      </StatusEffect>
+      <StatusEffect type="OnBroken" target="This" IsOn="false">
+        <ParticleEmitter particle="shrapnel" anglemin="0" anglemax="360" distancemin="0" distancemax="200" particleamount="200" velocitymin="100" velocitymax="2000" scalemin="1" scalemax="2" />
+        <sound file="Content/Items/Weapons/ExplosionLarge1.ogg" range="50000" dontmuffle="true" soundselectionmode="All" />
+        <sound file="Content/Items/Weapons/Emp.ogg" dontmuffle="true" range="100000" />
+        <ParticleEmitter particle="ElectricShock" distancemin="100" distancemax="120" particlespersecond="5.0" particleamount="5" anglemin="0" anglemax="360" scalemin="1.0" scalemax="1.2" colormultiplier="255,0,0,255" />
+        <Explosion range="1500.0" structuredamage="600" itemdamage="1000" ballastfloradamage="1000" force="50.0" severlimbsprobability="2" decal="explosion" decalsize="1.0" camerashake="1000" camerashakerange="50000" flashrange="10000" flashduration="5.0" screencolor="255,255,255,255" screencolorrange="5000" screencolorduration="5.0" penetration="0.5">
+          <Affliction identifier="explosiondamage" strength="1000" />
+          <Affliction identifier="burn" strength="1000" />
+          <Affliction identifier="radiationsickness" strength="100" />
+          <Affliction identifier="bleeding" strength="40" probability="0.05" dividebylimbcount="false" />
+          <Affliction identifier="stun" strength="30" />
+        </Explosion>
+        <Explosion range="6000" force="1" empstrength="0.5" showeffects="false" ignorecover="true">
+          <Affliction identifier="stun" strength="1" />
+        </Explosion>
+      </StatusEffect>
+      <StatusEffect type="OnBroken" target="NearbyCharacters" range="1000000" targets="jove" disabledeltatime="true" oneshot="true" delay="2">
+        <!-- 10% damage on jove to trigger effects and new states -->
+        <Affliction identifier="doomofjove" strength="10" />
+      </StatusEffect>
+    </LightComponent>
+  </Item>
+  <Item name="fakeexplosion" identifier="fakeexplosion" Scale="0.5" tags="" sonarsize="20" hideinmenus="true">
+    <AiTarget sightrange="10000.0" soundrange="10000" sonardisruption="10" static="True" />
+    <Sprite texture="Content/Items/Weapons/weapons_new.png" sourcerect="0,0,2,2" depth="0.55" origin="0.5,0.5" />
+    <ItemComponent>
+      <StatusEffect type="Always" target="This">
+        <Explosion range="50000.0" structuredamage="0" force="0.0" camerashake="500" camerashakerange="50000" smoke="false" flames="false" flash="false" sparks="false" underwaterbubble="false" />
+        <sound file="Content/Sounds/Damage/IceCreak2.ogg" range="500000" dontmuffle="true" selectionmode="All" />
+        <sound file="Content/Items/Weapons/ExplosionLarge2.ogg" range="500000" dontmuffle="true" />
+        <ParticleEmitter particle="iceshardslarge" anglemin="90" anglemax="170" distancemax="80" particleamount="200" velocitymin="5000" velocitymax="30000" />
+        <SpawnItem identifier="iceshardprojectile" spawnposition="This" count="30" rotation="120" spread="1000" aimspread="60" impulse="50000" />
+      </StatusEffect>
+      <StatusEffect type="Always" target="This">
+        <Remove />
+      </StatusEffect>
+    </ItemComponent>
+  </Item>
+  <Item name="fakeexplosionnodamage" identifier="fakeexplosionnodamage" Scale="0.5" tags="" sonarsize="20" hideinmenus="true">
+    <AiTarget sightrange="10000.0" soundrange="10000" sonardisruption="10" static="True" />
+    <Sprite texture="Content/Items/Weapons/weapons_new.png" sourcerect="0,0,2,2" depth="0.55" origin="0.5,0.5" />
+    <ItemComponent>
+      <StatusEffect type="Always" target="This">
+        <Explosion range="50000.0" structuredamage="0" force="0.0" camerashake="500" camerashakerange="50000" smoke="false" flames="false" flash="false" sparks="false" underwaterbubble="false" />
+        <sound file="Content/Sounds/Damage/IceCreak2.ogg" range="500000" dontmuffle="true" selectionmode="All" />
+        <sound file="Content/Items/Weapons/ExplosionLarge2.ogg" range="500000" dontmuffle="true" />
+        <ParticleEmitter particle="iceshardslarge" anglemin="90" anglemax="170" distancemax="80" particleamount="200" velocitymin="5000" velocitymax="30000" />
+      </StatusEffect>
+      <StatusEffect type="Always" target="This">
+        <Remove />
+      </StatusEffect>
+    </ItemComponent>
+  </Item>
+  <Item name="" identifier="iceshardprojectile" nameidentifier="iceshardprojectile" Tags="ignorebyai" sonarsize="2" health="10" scale="0.2" damagedbyexplosions="true" damagedbyprojectiles="true" damagedbymeleeweapons="true" damagedbyrepairtools="true" category="Misc" impacttolerance="0.05" spritecolor="186,196,199" hideinmenus="true">
+    <Sprite texture="Content/Map/Biomes/ColdCaverns/BackgroundChunks.png" sourcerect="0,0,683,1024" depth="0.18" origin="0.5,0.5" />
+    <Body radius="500" mindensity="100" maxdensity="300" />
+    <Projectile characterusable="false" launchimpulse="450" deactivationtime="10" IgnoreProjectilesWhileActive="true">
+      <StatusEffect type="OnImpact" target="This" Condition="-100" setvalue="true">
+        <Explosion range="100" structuredamage="200" itemdamage="75" smoke="false" flames="false" force="0" sparks="false" shockwave="true" underwaterbubble="false" camerashake="0" flash="false" playtinnitus="false">
+          <Affliction identifier="stun" strength="5" probability="1" />
+          <Affliction identifier="blunttrauma" strength="50" probability="1" />
+        </Explosion>
+        <Sound file="Content/Sounds/Damage/GlassBreak1.ogg" range="2000" dontmuffle="true" volume="0.5" />
+        <Sound file="Content/Sounds/Damage/GlassBreak2.ogg" range="2000" dontmuffle="true" volume="0.5" />
+        <Sound file="Content/Sounds/Damage/GlassBreak3.ogg" range="2000" dontmuffle="true" volume="0.5" />
+        <Sound file="Content/Sounds/Damage/GlassBreak4.ogg" range="2000" dontmuffle="true" volume="0.5" />
+        <particleemitter particle="iceshards" particleamount="50" velocitymin="0" velocitymax="5000" distancemin="0" distancemax="100" anglemin="0" anglemax="360" scalemin="1" scalemax="5" />
+        <Remove />
+      </StatusEffect>
+      <!-- a 10 second lifetime after being fired -->
+      <StatusEffect type="OnNotContained" target="This" stackable="false" delay="10">
+        <Remove />
+      </StatusEffect>
+    </Projectile>
+  </Item>
+  <Item identifier="guardianhookcannon" category="hidden" tags="" Scale="0.5" impactsoundtag="impact_metal_light" hideinmenus="true" nonplayerteaminteractable="True">
+    <Sprite texture="Content/Characters/Fractalguardian/Fractalguardian.png" sourcerect="409,520,92,42" depth="0.55" origin="0.5,0.5" />
+    <Body width="80" height="25" density="30" />
+    <Holdable slots="Any,RightHand" controlpose="false" aimpos="150,0" handle1="-50,-2" holdangle="0" usehandrotationforholdangle="true" msg="ItemMsgPickUpSelect" />
+    <RangedWeapon barrelpos="45,0" spread="0" drawhudwhenequipped="true" crosshairscale="0.2">
+      <Crosshair texture="Content/Items/Weapons/Crosshairs.png" sourcerect="0,256,256,256" />
+      <CrosshairPointer texture="Content/Items/Weapons/Crosshairs.png" sourcerect="256,256,256,256" />
+      <Sound file="Content/Items/Weapons/HarpoonGun1.ogg" type="OnUse" range="1000"/>
+      <Sound file="Content/Items/Weapons/HarpoonGun2.ogg" type="OnUse" range="1000"/>
+      <Sound file="Content/Items/Weapons/HarpoonGun3.ogg" type="OnUse" range="1000"/>
+      <StatusEffect type="OnUse">
+        <Explosion range="150.0" force="5" shockwave="false" smoke="false" flames="false" flash="false" sparks="false" underwaterbubble="false" camerashake="6.0" />
+      </StatusEffect>
+      <StatusEffect type="OnSpawn" target="This" targetitemcomponent="ItemContainer">
+        <SpawnItem identifier="guardianspear" spawnposition="ThisInventory" />
+      </StatusEffect>
+      <StatusEffect type="OnUse" target="This" targetitemcomponent="ItemContainer">
+        <SpawnItem identifier="guardianspear" spawnposition="ThisInventory" />
+      </StatusEffect>
+      <!-- remove if the weapon ends up outside the guardian's inventory (arm severed?) -->
+      <StatusEffect type="OnNotContained" target="This">
+        <Remove />
+      </StatusEffect>
+    </RangedWeapon>
+    <ItemContainer hideitems="true" capacity="1" maxstacksize="1" containedstateindicatorstyle="spear">
+      <Containable items="guardianspear" />
+    </ItemContainer>
+  </Item>
+  <Item identifier="guardiansteamcannon" category="hidden" Tags="" cargocontaineridentifier="metalcrate" Scale="0.5" impactsoundtag="impact_metal_light" hideinmenus="true" nonplayerteaminteractable="True">
+    <Sprite texture="Content/Characters/Fractalguardian/Fractalguardian.png" sourcerect="214,514,130,64" depth="0.55" origin="0.5,0.5" />
+    <Body width="100" height="35" density="30" />
+    <Holdable slots="Any,RightHand" controlpose="false" aimpos="120,0" handle1="-55,0" holdangle="0" usehandrotationforholdangle="true" msg="ItemMsgPickUpSelect" />
+    <RepairTool structurefixamount="0.0" range="500" barrelpos="45,0" fireprobability="0.0" spread="25">
+      <ParticleEmitterHitCharacter particle="fleshsmoke" particlespersecond="3" anglemin="-5" anglemax="5" velocitymin="10" velocitymax="100" />
+      <ParticleEmitter particle="steamspray" particlespersecond="80" anglemin="0" anglemax="0" velocitymin="300" velocitymax="500" highqualitycollisiondetection="true"/>
+      <ParticleEmitter particle="bubbles" particlespersecond="20" anglemin="-10" anglemax="10" scalemin="0.3" scalemax="0.7" velocitymin="5" velocitymax="100" copyentityangle="true"/>
+      <sound file="Content/Items/Weapons/FlameThrowerLoop.ogg" type="OnUse" range="750.0" loop="true" />
+      <StatusEffect type="OnUse" target="UseTarget">
+        <Affliction identifier="burn" amount="1.25" />
+      </StatusEffect>
+    </RepairTool>
+  </Item>
+  <Item name="" identifier="guardianbeamweapon" category="hidden" Tags="" scale="0.5" impactsoundtag="impact_metal_light" hideinmenus="true" nonplayerteaminteractable="True">
+    <Sprite texture="AlienRuins_Items.png" depth="0.55" sourcerect="0,1776,185,96" origin="0.5,0.4" scale="0.5" />
+    <Body width="85" height="40" density="15" />
+    <Holdable slots="Any,RightHand" controlpose="false" aimpos="120,0" handle1="0,11" holdangle="0" usehandrotationforholdangle="true" msg="ItemMsgPickUpSelect" />
+    <RepairTool structurefixamount="-0.75" range="400" barrelpos="75,0" targetforce="50" repairmultiple="true" repairthroughwalls="true" maxoverlappingwalldist="0.0" repairthroughholes="true" levelwallfixamount="-20.0">
+      <Fixable identifier="structure" />
+      <StatusEffect type="OnUse" targettype="UseTarget" targets="weldable" Stuck="-80.0" />
+      <!--Damage doors-->
+      <StatusEffect type="OnUse" targettype="UseTarget" Condition="-24.0" />
+      <ParticleEmitter particle="largeplasma" particlespersecond="50" copyentityangle="true" />
+      <ParticleEmitterHitStructure particle="plasmaspark" particlespersecond="100" anglemin="-40" anglemax="40" velocitymin="100" velocitymax="800" />
+      <ParticleEmitterHitStructure particle="plasmasmoke" particlespersecond="3" anglemin="-5" anglemax="5" velocitymin="10" velocitymax="20" />
+      <ParticleEmitterHitItem identifiers="door,hatch,ductblock" particle="plasmaspark" particlespersecond="100" anglemin="-40" anglemax="40" velocitymin="100" velocitymax="800" />
+      <ParticleEmitterHitItem identifiers="door,hatch,ductblock" particle="plasmasmoke" particlespersecond="3" anglemin="-5" anglemax="5" velocitymin="10" velocitymax="100" />
+      <ParticleEmitterHitItem identifiers="ore" particle="iceshards" particlespersecond="5" anglemin="-40" anglemax="40" velocitymin="10" velocitymax="300" scalemin="0.5" scalemax="1.0" />
+      <ParticleEmitterHitCharacter particle="fleshsmoke" particlespersecond="3" anglemin="-5" anglemax="5" velocitymin="10" velocitymax="100" />
+      <StatusEffect type="OnUse" target="Limb" severlimbsprobability="0.05">
+        <Affliction identifier="burn" amount="20" />
+      </StatusEffect>
+      <sound file="Content/Items/Alien/alienweapon.ogg" type="OnUse" range="800.0" loop="true" />
+      <LightComponent AllowInGameEditing="false" LightColor="0.8,0.7,1.0,1.0" Flicker="0.5" range="500">
+        <sprite texture="Content/Items/Electricity/lightsprite.png" origin="0.5,0.5" />
+      </LightComponent>
+      <!-- remove if the weapon ends up outside the guardian's inventory (arm severed?) -->
+      <StatusEffect type="OnNotContained" target="This">
+        <Remove />
+      </StatusEffect>
+    </RepairTool>
+  </Item>
+  <Item name="" identifier="guardianlaserprojectile" category="hidden" scale="0.5" sonarsize="2" hideinmenus="true">
+    <Sprite texture="Content/Items/Weapons/weapons_new.png" sourcerect="143,414,113,9" depth="0.55" />
+    <Body width="170" height="10" density="20" />
+    <Projectile characterusable="false" hitscan="true" removeonhit="true" friendlyfire="false" damagedoors="true">
+      <ParticleEmitter particle="tracerguardianlaser" particleamount="1" velocitymin="0" velocitymax="0" />
+      <Attack structuredamage="25" targetforce="100" itemdamage="25" severlimbsprobability="1.0" penetration="0.5">
+        <Affliction identifier="explosiondamage" strength="40" />
+        <Affliction identifier="stun" strength="0.5" />
+      </Attack>
+      <StatusEffect type="OnImpact" target="UseTarget">
+        <ParticleEmitter particle="muzzleflashpulselaser" anglemin="0" anglemax="360" particleamount="10" velocitymin="0" scalemin="0.5" scalemax="0.8" />
+        <ParticleEmitter particle="weldspark" particleamount="5" anglemin="0" anglemax="360" velocitymin="300" velocitymax="350" scalemin="1.5" scalemax="1.9" drawontop="true" colormultiplier="255,200,225,180" />
+        <ParticleEmitter particle="FlareBubbles" particleamount="3" anglemin="0" anglemax="360" velocitymin="0" velocitymax="50" />
+      </StatusEffect>
+      <StatusEffect type="OnImpact" target="UseTarget">
+        <Conditional entitytype="eq Structure" />
+        <Conditional hastag="eq door" />
+        <ParticleEmitter particle="spark" copyentityangle="true" anglemin="-10" anglemax="10" particleamount="5" velocitymin="-10" velocitymax="-200" scalemin="0.5" scalemax="1" />
+      </StatusEffect>
+      <StatusEffect type="OnUse" target="This" disabledeltatime="true">
+        <Explosion range="150.0" ballastfloradamage="50" structuredamage="50" itemdamage="250" force="10.0" flames="false" smoke="false" sparks="false" underwaterbubble="false" flashcolor="255,0,0,255">
+          <Affliction identifier="burn" strength="100" />
+        </Explosion>
+      </StatusEffect>
+      <StatusEffect type="OnNotContained" target="This">
+        <Remove />
+      </StatusEffect>
+    </Projectile>
+  </Item>
+  <Item name="" identifier="guardianrepairprojectile" category="hidden" hideinmenus="true" scale="0.5">
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="896,960,64,64" origin="0.5,0.5" />
+    <Sprite texture="Content/Items/Weapons/weapons_new.png" sourcerect="195,282,17,6" depth="0.55" origin="0.5,0.5" />
+    <Body width="40" height="14" density="40" />
+    <Projectile characterusable="false" hitscan="true" removeonhit="true">
+      <ParticleEmitter particle="tracerguardianrepair" particleamount="1" velocitymin="0" velocitymax="0" scalemultiplier="1,3" colormultiplier="200,50,150,255" />
+      <StatusEffect type="OnImpact" target="UseTarget">
+        <Conditional group="ancientalien" />
+        <ReduceAffliction type="damage" strength="0.1" />
+        <ReduceAffliction type="burn" strength="0.1" />
+      </StatusEffect>
+      <StatusEffect type="OnImpact" target="UseTarget">
+        <ParticleEmitter particle="weldspark" particleamount="2" anglemin="-40" anglemax="40" velocitymin="200" velocitymax="800" colormultiplier="255,100,200,255" />
+        <ParticleEmitter particle="GlowDot" particleamount="2" scalemin="1.1" scalemax="1.3" anglemin="0" anglemax="360" velocitymin="10" velocitymax="50" colormultiplier="255,100,200,255" />
+      </StatusEffect>
+    </Projectile>
+  </Item>
+  <Item identifier="guardianspear" category="hidden" interactthroughwalls="true" tags="mediumitem,harpoonammo" Scale="0.5" impactsoundtag="impact_metal_light" hideinmenus="true" nonplayerteaminteractable="True">
+    <Sprite texture="Content/Characters/Fractalguardian/Fractalguardian.png" sourcerect="395,609,117,40" depth="0.55" origin="0.3,0.5" />
+    <Body width="70" height="20" density="20" />
+    <Rope sourcepullforce="0" targetpullforce="300" projectilepullforce="5" maxlength="1000" snaponcollision="true" spritewidth="8" tile="true" origin="0.30,0.5" targetminmass="0" lerpforces="true" SnapWhenNotAimed="False" snapanimduration="0.5">
+      <Sprite name="Guardian rope component" texture="Content/Characters/Fractalguardian/Fractalguardian.png" sourcerect="343,622,32,15" depth="0.57" origin="0.5,0.5" />
+      <!-- Remove 1 second after snapping -->
+      <StatusEffect type="Always" target="This" delay="1" checkconditionalalways="true">
+        <Conditional Snapped="true" />
+        <Remove />
+      </StatusEffect>
+      <!-- Snap after 1 seconds if not stuck to anything -->
+      <StatusEffect type="OnUse" target="This" Snapped="true" delay="1" checkconditionalalways="true">
+        <Conditional targetitemcomponent="Projectile" IsStuckToTarget="false" />
+      </StatusEffect>
+      <!-- Always snap after 45 seconds -->
+      <StatusEffect type="OnUse" target="This" Snapped="true" delay="45" />
+    </Rope>
+    <Projectile characterusable="false" launchimpulse="25.0" sticktocharacters="true" sticktoitems="false" sticktostructures="false" sticktodoors="false" sticktodeflective="true">
+      <Attack structuredamage="20" itemdamage="100" targetforce="10" severlimbsprobability="0">
+        <Affliction identifier="bleeding" strength="30" />
+        <Affliction identifier="lacerations" strength="30" />
+        <Affliction identifier="stun" strength="0.3" />
+      </Attack>
+      <StatusEffect type="OnActive" target="UseTarget,This" comparison="And">
+        <Conditional Snapped="false" />
+        <Conditional mass="lt 50" />
+        <Affliction identifier="drag" strength="1" />
+      </StatusEffect>
+    </Projectile>
+    <Upgrade gameversion="0.10.0.0" scale="0.5" />
+  </Item>
+  <Item identifier="guardianempcannon" category="hidden" Tags="" cargocontaineridentifier="metalcrate" Scale="1" impactsoundtag="impact_metal_light" hideinmenus="true" nonplayerteaminteractable="True">
+    <Sprite texture="Content/Characters/Fractalguardian/Fractalguardian.png" sourcerect="214,514,130,64" depth="0.55" origin="0.5,0.5" />
+    <Body width="100" height="35" density="50" />
+    <Holdable slots="RightHand" controlpose="false" aimpos="120,0" handle1="-55,0" holdangle="0" usehandrotationforholdangle="true" msg="ItemMsgPickUpSelect" />
+    <RangedWeapon reload="2" holdtrigger="false" barrelpos="50,10" spread="0" drawhudwhenequipped="true" crosshairscale="0.2">
+      <sound file="Content/Items/Alien/AlienTurret1.ogg" range="10000" type="OnUse" dontmuffle="true" />
+      <sound file="Content/Items/Alien/AlienTurret2.ogg" range="10000" type="OnUse" dontmuffle="true" />
+      <StatusEffect type="OnUse">
+        <Explosion range="1500.0" force="1" shockwave="true" smoke="false" flames="false" sparks="false" underwaterbubble="false" camerashake="12.0" />
+        <SpawnItem identifier="alienturretammoemp" spawnposition="ThisInventory" />
+      </StatusEffect>
+      <RequiredSkill identifier="weapons" level="100" />
+      <!-- remove if the weapon ends up outside the guardian's inventory (arm severed?) -->
+      <StatusEffect type="OnNotContained" target="This">
+        <Remove />
+      </StatusEffect>
+    </RangedWeapon>
+    <ItemContainer hideitems="true" drawinventory="true" capacity="1" maxstacksize="1" canbeselected="false" characterusable="true">
+      <Containable items="alienturretammoemp" />
+    </ItemContainer>
+  </Item>
+  <Item name="acidemitter" identifier="acidemitter" Scale="1" tags="" sonarsize="0" hideinmenus="true" impacttolerance="0.001" health="30">
+    <Body radius="200" density="10" />
+    <Sprite texture="Content/Items/Weapons/weapons_new.png" sourcerect="0,0,2,2" depth="0.55" origin="0.5,0.5" />
+    <ItemComponent>
+      <StatusEffect type="Always" target="This" lifetime="1">
+        <ParticleEmitter particle="acidmist" particlespersecond="6" scalemin="0.9" scalemax="1" velocitymin="50" velocitymax="150" anglemin="0" anglemax="360" copyentityangle="false" />
+      </StatusEffect>
+      <!-- reduce condition to remove the emitter after 30 seconds -->
+      <StatusEffect type="Always" target="This" condition="-1" />
+      <StatusEffect type="OnImpact" target="This">
+        <Explosion range="300" structuredamage="60" itemdamage="30" smoke="true" flames="false" force="0" sparks="false" shockwave="false" underwaterbubble="false" camerashake="0" flash="false" playtinnitus="false" />
+      </StatusEffect>
+      <StatusEffect type="OnImpact" target="This" delay="0.2">
+        <Explosion range="300" structuredamage="60" itemdamage="30" smoke="true" flames="false" force="0" sparks="false" shockwave="false" underwaterbubble="false" camerashake="0" flash="false" playtinnitus="false" />
+      </StatusEffect>
+      <StatusEffect type="OnImpact" target="This" delay="0.4">
+        <Explosion range="300" structuredamage="60" itemdamage="30" smoke="true" flames="false" force="0" sparks="false" shockwave="false" underwaterbubble="false" camerashake="0" flash="false" playtinnitus="false" />
+      </StatusEffect>
+      <StatusEffect type="OnImpact" target="This" delay="0.6">
+        <Explosion range="300" structuredamage="60" itemdamage="30" smoke="true" flames="false" force="0" sparks="false" shockwave="false" underwaterbubble="false" camerashake="0" flash="false" playtinnitus="false" />
+      </StatusEffect>
+      <StatusEffect type="OnImpact" target="This" delay="0.8">
+        <Explosion range="300" structuredamage="60" itemdamage="30" smoke="true" flames="false" force="0" sparks="false" shockwave="false" underwaterbubble="false" camerashake="0" flash="false" playtinnitus="false" />
+      </StatusEffect>
+      <StatusEffect type="OnImpact" target="This" delay="1">
+        <Explosion range="300" structuredamage="60" itemdamage="30" smoke="true" flames="false" force="0" sparks="false" shockwave="false" underwaterbubble="false" camerashake="0" flash="false" playtinnitus="false" />
+        <Remove />
+      </StatusEffect>
+      <StatusEffect type="OnBroken" target="This">
+        <Remove />
+      </StatusEffect>
+    </ItemComponent>
+    <TriggerComponent triggeredby="Human" force="0" radius="250" allowingameediting="false">
+      <StatusEffect type="OnActive" target="Character" delay="0.5" stackable="false" disabledeltatime="true">
+        <Affliction identifier="acidburn" strength="0.5" />
+      </StatusEffect>
+    </TriggerComponent>
+  </Item>
+  <Item name="ballastfloratoxins" identifier="ballastfloratoxins" Scale="1" tags="" sonarsize="0" hideinmenus="true" health="10" depth="0.1" isdangerous="true">
+    <Sprite texture="Content/Items/Weapons/weapons_new.png" sourcerect="0,0,2,2" depth="0.55" origin="0.5,0.5" />
+    <ItemComponent>
+      <StatusEffect type="Always" target="This" condition="-1">
+        <ParticleEmitter particle="toxins" particlespersecond="1" scalemin="0.2" scalemax="0.3" anglemin="0" anglemax="360" />
+        <sound file="Content/Items/Alien/AlienPump.ogg" range="500.0" loop="true" />
+      </StatusEffect>
+      <StatusEffect type="Always" target="NearbyCharacters" range="200" disabledeltatime="false">
+        <Affliction identifier="acidburn" strength="0.15" />
+      </StatusEffect>
+      <StatusEffect type="OnBroken" target="This">
+        <Remove />
+      </StatusEffect>
+    </ItemComponent>
+  </Item>
+  <Item name="ruintoxins" identifier="ruintoxins" Scale="1" tags="" sonarsize="0" hideinmenus="true" health="10" depth="0.1" isdangerous="true">
+    <Sprite texture="Content/Items/Weapons/weapons_new.png" sourcerect="0,0,2,2" depth="0.55" origin="0.5,0.5" />
+    <ItemComponent>
+      <StatusEffect type="Always" target="This" condition="-0.5">
+        <ParticleEmitter particle="toxins" particlespersecond="5" scalemin="0.2" scalemax="0.5" distancemax="50" anglemax="360" />
+        <ParticleEmitter particle="toxinmist" anglemax="360" velocitymin="10" velocitymax="20" scalemin="0.2" scalemax="0.5" particlespersecond="20" />
+        <sound file="Content/Items/Alien/AlienPump.ogg" range="500.0" loop="true" />
+      </StatusEffect>
+      <StatusEffect type="Always" target="NearbyCharacters" range="200" targets="human" disabledeltatime="false">
+        <Affliction identifier="psychosis" strength="0.5" />
+        <Affliction identifier="nausea" strength="0.5" />
+      </StatusEffect>
+      <StatusEffect type="OnBroken" target="This">
+        <Remove />
+      </StatusEffect>
+    </ItemComponent>
+  </Item>
+  <Item name="" identifier="spinelingspike" category="Misc" scale="0.5" sonarsize="2" hideinmenus="true">
+    <Sprite texture="Content/Characters/Spineling/Spineling.png" sourcerect="0,215,180,18" depth="0.55" />
+    <Body width="160" height="10" density="20" />
+    <Projectile characterusable="false" launchimpulse="200" maxtargetstohit="3" sticktocharacters="true" sticktoitems="false" sticktodoors="false" sticktostructures="true" penetration="0.25" friendlyfire="false" damagedoors="true">
+      <Attack structuredamage="20" itemdamage="20" severlimbsprobability="0.5" penetration="0.2">
+        <!--Hits up to 3 limbs, so the actual damage can be 3x-->
+        <Affliction identifier="lacerations" strength="10" />
+        <Affliction identifier="bleeding" strength="10" />
+        <Affliction identifier="stun" strength="0.25" />
+      </Attack>
+      <StatusEffect type="OnActive" target="This" lifetime="0.5">
+        <ParticleEmitter particle="ammotrailwater" copyentityangle="true" anglemin="0" anglemax="0" particleamount="10" velocitymin="-10" velocitymax="-100" scalemin="0.5" scalemax="1" />
+      </StatusEffect>
+      <StatusEffect type="OnNotContained" target="This" stackable="false" delay="1">
+        <Remove />
+      </StatusEffect>
+      <StatusEffect type="OnImpact" target="This" condition="-34" />
+      <StatusEffect type="OnImpact" target="UseTarget">
+        <Conditional entitytype="eq Structure" />
+        <ParticleEmitter particle="shrapnel" copyentityangle="true" anglemin="0" anglemax="360" particleamount="5" velocitymin="100" velocitymax="2000" scalemin="0.1" scalemax="0.2" />
+      </StatusEffect>
+      <StatusEffect type="OnImpact" target="UseTarget">
+        <Conditional entitytype="eq Structure" />
+        <Conditional hastag="eq door" />
+        <ParticleEmitter particle="spark" copyentityangle="true" anglemin="-10" anglemax="10" particleamount="5" velocitymin="-10" velocitymax="-200" scalemin="0.5" scalemax="1" />
+      </StatusEffect>
+      <StatusEffect type="OnBroken" target="This">
+        <Remove />
+      </StatusEffect>
+    </Projectile>
+    <LightComponent range="200" castshadows="False" drawbehindsubs="False" ison="True" blinkfrequency="0" lightcolor="200,200,255,20" isactive="True" minvoltage="0" powerconsumption="0" vulnerabletoemp="False" pickingtime="0" canbepicked="False" allowingameediting="False" msg="">
+      <Sprite texture="Content/Characters/Spineling/Spineling.png" sourcerect="0,230,180,23" origin="0.5,0.6" alpha="0.5" />
+    </LightComponent>
+  </Item>
+  <Item name="" identifier="giantspinelingspike" nameidentifier="spinelingspike" translationidentifier="spinelingspike" category="Misc" scale="0.5" sonarsize="6" hideinmenus="true">
+    <Sprite texture="Content/Characters/Spineling_giant/Spineling_giant.png" sourcerect="0,860,720,72" depth="0.55" />
+    <Body width="600" height="35" density="20" />
+    <Projectile characterusable="false" launchimpulse="400" maxtargetstohit="10" sticktocharacters="false" sticktoitems="false" sticktodoors="false" sticktostructures="true" friendlyfire="false" damagedoors="true">
+      <Attack structuredamage="100" itemdamage="100" severlimbsprobability="2.0" penetration="0.5">
+        <!--Hits up to 10 limbs, so the actual damage can be 10x-->
+        <Affliction identifier="lacerations" strength="15" />
+        <Affliction identifier="bleeding" strength="10" />
+        <Affliction identifier="stun" strength="1" />
+      </Attack>
+      <StatusEffect type="OnActive" target="This" lifetime="0.5">
+        <ParticleEmitter particle="ammotrailwater" copyentityangle="true" anglemin="0" anglemax="0" particleamount="10" velocitymin="-10" velocitymax="-100" scalemin="0.5" scalemax="1" />
+      </StatusEffect>
+      <StatusEffect type="OnNotContained" target="This" stackable="false" delay="2">
+        <Remove />
+      </StatusEffect>
+      <StatusEffect type="OnImpact" target="UseTarget">
+        <Conditional entitytype="eq Structure" />
+        <ParticleEmitter particle="shrapnel" copyentityangle="true" anglemin="0" anglemax="360" particleamount="5" velocitymin="100" velocitymax="2000" scalemin="0.1" scalemax="0.2" />
+        <!--Add some impact effect-->
+        <Explosion ignorecover="true" onlyinside="true" range="600" force="10" playtinnitus="false" showeffects="false" applyfireeffects="false">
+          <Affliction identifier="stun" strength="1" />
+        </Explosion>
+      </StatusEffect>
+      <StatusEffect type="OnImpact" target="UseTarget">
+        <Conditional entitytype="eq Structure" />
+        <Conditional hastag="eq door" />
+        <ParticleEmitter particle="spark" copyentityangle="true" anglemin="-10" anglemax="10" particleamount="5" velocitymin="-10" velocitymax="-200" scalemin="0.5" scalemax="1" />
+      </StatusEffect>
+      <StatusEffect type="OnBroken" target="This">
+        <Remove />
+      </StatusEffect>
+    </Projectile>
+    <LightComponent range="400" castshadows="False" drawbehindsubs="False" ison="True" blinkfrequency="0" lightcolor="255,255,255,30" isactive="True" minvoltage="0" powerconsumption="0" vulnerabletoemp="False" pickingtime="0" canbepicked="False" allowingameediting="False" msg="">
+      <Sprite texture="Content/Characters/Spineling_giant/Spineling_giant.png" sourcerect="0,940,720,72" origin="0.55,0.5" alpha="0.5" />
+    </LightComponent>
+  </Item>
+  <Item name="" identifier="smallcrawleregg" nameidentifier="crawleregg" Tags="smallitem,ignorebyai,monsterfood" sonarsize="2" health="10" damagedbyexplosions="true" damagedbyprojectiles="true" damagedbymeleeweapons="true" damagedbyrepairtools="true" category="Misc" scale="1" impactsoundtag="impact_soft" impacttolerance="0.05" hideinmenus="true" IsAITurretTarget="true" AITurretPriority="0.75" AISlowTurretPriority="0" AITurretTargetingMaxDistance="2000">
+    <Sprite texture="Content/Items/CreatureLoot/CreatureLoot.png" depth="0.18" sourcerect="323,203,45,53" origin="0.5,0.5" />
+    <Body radius="20" mindensity="9" maxdensity="11" />
+    <Price baseprice="80" sold="false" />
+    <Deconstruct time="10">
+      <Item identifier="sulphuricacid" />
+    </Deconstruct>
+    <Holdable slots="RightHand,LeftHand,Any" holdpos="0,-70" handle1="0,10" handle2="0,-10">
+      <StatusEffect type="OnBroken" target="This">
+        <particleemitter particle="mudrapeggbrownchunks" particleamount="30" velocitymin="100" velocitymax="2000" anglemin="0" anglemax="360" scalemin="0.2" scalemax="0.5" />
+        <particleemitter particle="acidmistsmall" particleamount="1" />
+        <particleemitter particle="eggsplashwater" particleamount="5" scalemin="0.7" scalemax="0.8" anglemin="0" anglemax="360" />
+        <Sound file="Content/Characters/Crawlerbroodmother/CRAWLERBR_eggHit1.ogg" range="2000" selectionmode="Random" />
+        <Sound file="Content/Characters/Crawlerbroodmother/CRAWLERBR_eggHit2.ogg" range="2000" selectionmode="Random" />
+        <Sound file="Content/Characters/Crawlerbroodmother/CRAWLERBR_eggHit3.ogg" range="2000" selectionmode="Random" />
+        <Sound file="Content/Characters/Crawlerbroodmother/CRAWLERBR_eggHit4.ogg" range="2000" selectionmode="Random" />
+        <Sound file="Content/Characters/Crawlerbroodmother/CRAWLERBR_eggHit5.ogg" range="2000" selectionmode="Random" />
+        <Remove />
+      </StatusEffect>
+      <StatusEffect type="OnDamaged" target="This">
+        <particleemitter particle="mudrapeggbrownchunks" particleamount="1" velocitymin="100" velocitymax="1000" anglemin="0" anglemax="360" scalemin="0.2" scalemax="0.3" />
+      </StatusEffect>
+      <StatusEffect type="OnImpact" target="This" Condition="-100" setvalue="true">
+        <Explosion range="100" structuredamage="200" itemdamage="75" smoke="false" flames="false" force="0" sparks="false" shockwave="true" underwaterbubble="false" camerashake="0" flash="false" playtinnitus="false">
+          <Affliction identifier="stun" strength="0.5" probability="1" />
+          <Affliction identifier="acidburn" strength="25" probability="1" />
+        </Explosion>
+      </StatusEffect>
+    </Holdable>
+    <LightComponent range="20" lightcolor="127,196,196,61" powerconsumption="0" IsOn="true" castshadows="false" allowingameediting="false">
+      <sprite texture="Content/Items/CreatureLoot/CreatureLoot.png" depth="0.025" sourcerect="327,165,35,38" origin="0.5,0.5" alpha="1.0" />
+    </LightComponent>
+    <aitarget sightrange="1000" static="true" />
+  </Item>
+  <Item name="" identifier="crawlereggprojectile" nameidentifier="crawleregg" Tags="ignorebyai" sonarsize="2" health="10" scale="1" damagedbyexplosions="true" damagedbyprojectiles="true" damagedbymeleeweapons="true" damagedbyrepairtools="true" category="Misc" impactsoundtag="impact_soft" impacttolerance="0.05" hideinmenus="true" IsAITurretTarget="true" AITurretPriority="2" AISlowTurretPriority="0">
+    <Sprite texture="Content/Items/CreatureLoot/CreatureLoot.png" depth="0.18" sourcerect="323,203,45,53" origin="0.5,0.5" />
+    <Body radius="20" mindensity="9" maxdensity="11" />
+    <Deconstruct time="10">
+      <Item identifier="sulphuricacid" />
+    </Deconstruct>
+    <Holdable slots="RightHand,LeftHand,Any" holdpos="0,-70" handle1="0,10" handle2="0,-10" />
+    <Projectile characterusable="false" launchimpulse="18" deactivationtime="1" IgnoreProjectilesWhileActive="true" damagedoors="true">
+      <Attack structuredamage="10" itemdamage="10" targetforce="100">
+        <Affliction identifier="stun" strength="3" probability="1" />
+        <Affliction identifier="blunttrauma" strength="20" probability="1" />
+      </Attack>
+      <StatusEffect type="OnActive" target="This">
+        <ParticleEmitter particle="bubbles" particlespersecond="10" scalemin="1" scalemax="2" anglemin="0" anglemax="360" />
+      </StatusEffect>
+      <StatusEffect type="OnBroken" target="This">
+        <particleemitter particle="mudrapeggbrownchunks" particleamount="30" velocitymin="100" velocitymax="2000" anglemin="0" anglemax="360" scalemin="0.2" scalemax="0.5" />
+        <particleemitter particle="acidmistsmall" particleamount="1" />
+        <particleemitter particle="eggsplashwater" particleamount="5" scalemin="0.7" scalemax="0.8" anglemin="0" anglemax="360" />
+        <Sound file="Content/Characters/Crawlerbroodmother/CRAWLERBR_eggHit1.ogg" range="2000" selectionmode="Random" />
+        <Sound file="Content/Characters/Crawlerbroodmother/CRAWLERBR_eggHit2.ogg" range="2000" selectionmode="Random" />
+        <Sound file="Content/Characters/Crawlerbroodmother/CRAWLERBR_eggHit3.ogg" range="2000" selectionmode="Random" />
+        <Sound file="Content/Characters/Crawlerbroodmother/CRAWLERBR_eggHit4.ogg" range="2000" selectionmode="Random" />
+        <Sound file="Content/Characters/Crawlerbroodmother/CRAWLERBR_eggHit5.ogg" range="2000" selectionmode="Random" />
+        <Remove />
+      </StatusEffect>
+      <StatusEffect type="OnDamaged" target="This">
+        <particleemitter particle="mudrapeggbrownchunks" particleamount="1" velocitymin="100" velocitymax="1000" anglemin="0" anglemax="360" scalemin="0.2" scalemax="0.3" />
+      </StatusEffect>
+      <StatusEffect type="OnImpact" target="This" Condition="-100" setvalue="true">
+        <Explosion range="100" structuredamage="200" itemdamage="75" smoke="false" flames="false" force="0" sparks="false" shockwave="true" underwaterbubble="false" camerashake="0" flash="false" playtinnitus="false">
+          <Affliction identifier="stun" strength="0.5" probability="1" />
+          <Affliction identifier="acidburn" strength="25" probability="1" />
+        </Explosion>
+      </StatusEffect>
+    </Projectile>
+    <LightComponent range="20" lightcolor="127,196,196,61" powerconsumption="0" IsOn="true" castshadows="false" allowingameediting="false">
+      <sprite texture="Content/Items/CreatureLoot/CreatureLoot.png" depth="0.025" sourcerect="327,165,35,38" origin="0.5,0.5" alpha="1.0" />
+    </LightComponent>
+  </Item>
+  <Item name="" identifier="tonguetendon" tags="" health="50" hideinmenus="true" category="" sonarsize="0" scale="1" damagedbyexplosions="false" damagedbyprojectiles="false" damagedbyrepairtools="false" damagedbymeleeweapons="false" impactsoundtag="impact_soft">
+    <Sprite texture="Content/Characters/Latcher/Latcher.png" sourcerect="0,0,1,1" depth="0.55" origin="0.5,0.5" />
+    <Body radius="100" density="10" />
+    <Rope sourcepullforce="0" targetpullforce="200000" projectilepullforce="0" maxlength="5000" snaponcollision="false" spritewidth="256" tile="true" snapanimduration="1" breakfrommiddle="false" maxangle="60">
+      <Sprite name="tongue" texture="Content/Characters/Latcher/Latcher.png" sourcerect="16,0,480,256" depth="0.57" origin="0.5,0.5" />
+      <EndSprite texture="Content/Characters/Latcher/Latcher.png" sourcerect="544,0,228,256" depth="0.56" origin="0.5,0.5" />
+      <!-- Automatically snap after 14 seconds -->
+      <StatusEffect type="OnUse" target="This" Snapped="true" delay="14" />
+      <!-- Remove 1 second after snapping -->
+      <StatusEffect type="Always" target="This" delay="1" checkconditionalalways="true">
+        <Conditional Snapped="true" />
+        <Remove />
+      </StatusEffect>
+      <!-- Snap after 3 seconds if not stuck to anything -->
+      <StatusEffect type="OnUse" target="This" Snapped="true" delay="3" checkconditionalalways="true">
+        <Conditional targetitemcomponent="Projectile" IsStuckToTarget="false" />
+      </StatusEffect>
+    </Rope>
+    <Projectile characterusable="false" launchimpulse="60.0" sticktostructures="true" sticktoitems="false" sticktodoors="false" sticktodeflective="true" sticktocharacters="false" maxtargetstohit="1" prismatic="false">
+      <Attack structuredamage="10" />
+      <StatusEffect type="OnImpact" target="This">
+        <sound file="Content/Characters/Latcher/ABYSSM_tongueHit.ogg" range="20000" volume="1" selectionmode="random" dontmuffle="true" />
+        <sound file="Content/Characters/Latcher/ABYSSM_tongueHit_1.ogg" range="20000" volume="1" selectionmode="random" dontmuffle="true" />
+        <particleemitter drawontop="true" particle="tonguehitsplash" particleamount="20" scalemin="1" scalemax="3" anglemin="0" anglemax="360" />
+        <particleemitter drawontop="false" particle="damagebubbles" particleamount="20" scalemin="1" scalemax="3" anglemin="0" anglemax="360" />
+        <particleemitter drawontop="true" particle="damagebubbles" particleamount="10" scalemin="1" scalemax="3" anglemin="0" anglemax="360" />
+        <!--Add some impact effect-->
+        <Explosion ignorecover="true" onlyinside="true" range="2000" force="20" playtinnitus="false" showeffects="false" applyfireeffects="false">
+          <Affliction identifier="stun" strength="3" />
+        </Explosion>
+      </StatusEffect>
+      <StatusEffect type="Always" target="This">
+        <Conditional Snapped="true" />
+        <sound file="Content/Characters/Latcher/ABYSSM_tongueMove_1.ogg" range="20000" volume="1" dontmuffle="false" />
+      </StatusEffect>
+    </Projectile>
+  </Item>
+  <Item name="" identifier="tonguetendoncharacter" nameidentifier="tonguetendon" tags="" health="100" hideinmenus="true" category="" sonarsize="0" scale="1" damagedbyexplosions="false" damagedbyprojectiles="false" damagedbyrepairtools="false" damagedbymeleeweapons="false" impactsoundtag="impact_soft">
+    <Sprite texture="Content/Characters/Latcher/Latcher.png" sourcerect="0,0,1,1" depth="0.55" origin="0.5,0.5" />
+    <Body radius="100" density="10" />
+    <Rope sourcepullforce="0" targetpullforce="500" projectilepullforce="0" maxlength="3000" snaponcollision="false" spritewidth="256" tile="true" snapanimduration="1" breakfrommiddle="false" maxangle="60" lerpforces="false">
+      <Sprite name="tongue" texture="Content/Characters/Latcher/Latcher.png" sourcerect="16,0,480,256" depth="0.57" origin="0.5,0.5" />
+      <EndSprite texture="Content/Characters/Latcher/Latcher.png" sourcerect="544,0,228,256" depth="0.56" origin="0.5,0.5" />
+      <!-- Automatically snap after 5 seconds -->
+      <StatusEffect type="OnUse" target="This" Snapped="true" delay="5" />
+      <!-- Remove 1 second after snapping -->
+      <StatusEffect type="Always" target="This" delay="1" checkconditionalalways="true">
+        <Conditional Snapped="true" />
+        <Remove />
+      </StatusEffect>
+      <!-- Snap after 3 seconds if not stuck to anything -->
+      <StatusEffect type="OnUse" target="This" Snapped="true" delay="3" checkconditionalalways="true">
+        <Conditional targetitemcomponent="Projectile" IsStuckToTarget="false" />
+      </StatusEffect>
+    </Rope>
+    <Projectile characterusable="false" launchimpulse="60.0" sticktostructures="false" sticktoitems="false" sticktodoors="false" sticktodeflective="true" sticktocharacters="true" maxtargetstohit="1" sticktolighttargets="true" prismatic="false">
+      <Attack structuredamage="10">
+        <Affliction identifier="blunttrauma" strength="20" />
+        <Affliction identifier="stun" strength="5" />
+      </Attack>
+      <StatusEffect type="OnActive" target="UseTarget,This" comparison="And">
+        <Conditional Snapped="false" />
+        <Affliction identifier="drag" strength="1" />
+      </StatusEffect>
+      <StatusEffect type="OnImpact" target="This">
+        <particleemitter drawontop="true" particle="tonguehitsplash" particleamount="20" scalemin="1" scalemax="3" anglemin="0" anglemax="360" />
+        <particleemitter drawontop="false" particle="damagebubbles" particleamount="20" scalemin="1" scalemax="3" anglemin="0" anglemax="360" />
+        <particleemitter drawontop="true" particle="damagebubbles" particleamount="10" scalemin="1" scalemax="3" anglemin="0" anglemax="360" />
+      </StatusEffect>
+      <StatusEffect type="Always" target="This">
+        <Conditional Snapped="true" />
+        <sound file="Content/Characters/Latcher/ABYSSM_tongueMove_1.ogg" range="20000" volume="1" dontmuffle="false" />
+      </StatusEffect>
+    </Projectile>
+  </Item>
+  <Item name="" identifier="toothspike" category="Misc" scale="1" sonarsize="2" hideinmenus="true">
+    <Sprite texture="Content/Characters/Latcher/Latcher.png" sourcerect="1794,924,256,64" depth="0.55" origin="0.5,0.5" />
+    <Body width="240" height="40" density="20" />
+    <Projectile characterusable="false" launchimpulse="200" maxtargetstohit="5" sticktocharacters="false" sticktoitems="false" sticktodoors="false" sticktostructures="false" penetration="0.25" friendlyfire="false" damagedoors="true">
+      <Attack structuredamage="30" itemdamage="30" severlimbsprobability="0.5" penetration="0.3">
+        <!--Hits up to 5 limbs, so the actual damage can be 5x-->
+        <Affliction identifier="lacerations" strength="10" />
+        <Affliction identifier="bleeding" strength="10" />
+        <Affliction identifier="stun" strength="0.25" />
+      </Attack>
+      <StatusEffect type="OnActive" target="This" lifetime="0.5">
+        <ParticleEmitter particle="ammotrailwater" copyentityangle="true" anglemin="0" anglemax="0" particleamount="10" velocitymin="-10" velocitymax="-100" scalemin="1" scalemax="2" />
+      </StatusEffect>
+      <StatusEffect type="OnNotContained" target="This" stackable="false" delay="1">
+        <Remove />
+      </StatusEffect>
+      <StatusEffect type="OnImpact" target="This" condition="-34">
+        <!--Add some impact effect-->
+        <Explosion ignorecover="true" onlyinside="true" range="500" force="5" playtinnitus="false" showeffects="false" applyfireeffects="false">
+          <Affliction identifier="stun" strength="0.5" />
+        </Explosion>
+      </StatusEffect>
+      <StatusEffect type="OnImpact" target="UseTarget">
+        <Conditional entitytype="eq Structure" />
+        <ParticleEmitter particle="shrapnel" copyentityangle="true" anglemin="0" anglemax="360" particleamount="5" velocitymin="100" velocitymax="2000" scalemin="0.1" scalemax="0.2" />
+      </StatusEffect>
+      <StatusEffect type="OnImpact" target="UseTarget">
+        <Conditional entitytype="eq Structure" />
+        <Conditional hastag="eq door" />
+        <ParticleEmitter particle="spark" copyentityangle="true" anglemin="-10" anglemax="10" particleamount="5" velocitymin="-10" velocitymax="-200" scalemin="0.5" scalemax="1" />
+      </StatusEffect>
+      <StatusEffect type="OnBroken" target="This">
+        <Remove />
+      </StatusEffect>
+    </Projectile>
+  </Item>
+</Items>
