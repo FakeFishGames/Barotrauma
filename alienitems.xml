@@ -50,6 +50,7 @@
       <Price storeidentifier="merchantmilitary" multiplier="1.25 "/>
       <Price storeidentifier="merchantmine" />
     </Price>
+	<PreferredContainer primary="artifactholder" minamount="0" maxamount="1" spawnprobability="0.15"/>
     <PreferredContainer primary="wrecksecarmcab" amount="1" spawnprobability="0.01" />
     <PreferredContainer primary="ruintreasure" amount="1" spawnprobability="0.05" />
     <Sprite texture="Content/Items/Alien/AlienRuins_Items.png" depth="0.6" sourcerect="542,112,102,99" origin="0.5,0.5" />
@@ -74,21 +75,25 @@
         <ParticleEmitter particle="thermalfx" anglemax="360" distancemax="5" particlespersecond="40" />
         <sound file="Content/Items/Alien/AlienArtifactLoop1.ogg" range="500.0" loop="true" />
       </StatusEffect>
-		<!-- Emits steam periodically when in water, burns -->
-      <StatusEffect type="InWater" target="This" Delay="15" duration="1" interval="0.5" disabledeltatime="false" stackable="True" checkconditionalalways="true" networksyncing="true">
+	</Holdable>
+		<!-- Emits steam periodically when in water, burns. Had to use Lightcomponent to make it work -->
+    <LightComponent range="150.0" lightcolor="210,120,30,120" IsOn="False" castshadows="false" allowingameediting="false" pulseamount="0.1" pulsefrequency="4">
+      <Statuseffect type="InWater" target="This" IsOn="True" Interval="15" />
+      <Statuseffect type="NotInWater" target="This" IsOn="False" />
+      <StatusEffect type="OnActive" target="This" IsOn="False" delay="5" stackable="False" />
+      <StatusEffect type="OnActive" target="This" checkconditionalalways="true" >
         <Conditional hastag="neq artifactcontainer" targetcontainer="true" />
         <Conditional Voltage="lte 0.0" targetcontainer="true" />
-        <ParticleEmitter particle="bubbles" particlespersecond="5" anglemin="60" anglemax="120" scalemin="1" scalemax="2" velocitymin="5" velocitymax="100" copyentityangle="false"/>
-        <ParticleEmitter particle="fleshsmoke" particlespersecond="5" anglemin="60" anglemax="120" scalemin="3" scalemax="5" velocitymin="10" velocitymax="20" copyentityangle="false"/>
-        <ParticleEmitter particle="steamspray" particlespersecond="30" anglemin="60" anglemax="120" scalemin="1" scalemax="2" velocitymin="300" velocitymax="500" copyentityangle="false" highqualitycollisiondetection="true" />
+        <ParticleEmitter particle="bubbles" particlespersecond="5" anglemin="60" anglemax="120" scalemin="1" scalemax="2" velocitymin="5" velocitymax="100" copyentityangle="false" drawontop="true"/>
+        <ParticleEmitter particle="steamspray" particlespersecond="30" anglemin="60" anglemax="120" scalemin="1" scalemax="2" velocitymin="300" velocitymax="500" copyentityangle="false" highqualitycollisiondetection="true" drawontop="true" />
         <sound file="Content/Items/Weapons/FlameThrowerLoop.ogg" type="OnUse" range="700.0" loop="true" />
-		<!-- burns via explosion every 0.5 seconds. burns on statuseffect would instead afflict you with burns for the entire duration even when away from the artifact -->
-        <Explosion range="200" structuredamage="1" itemdamage="0" smoke="False" flames="false" force="0" sparks="false" shockwave="False" underwaterbubble="false" camerashake="2" flash="false" playtinnitus="false" >
-          <Affliction identifier="burn" amount="1"/>			
+		<!-- burns via explosion -->
+        <Explosion range="200" structuredamage="0.1" itemdamage="0" smoke="False" flames="false" force="0" sparks="false" shockwave="False" underwaterbubble="false" camerashake="2" flash="false" playtinnitus="false" >
+          <Affliction identifier="burn" amount="0.05"/>			
         </Explosion>
       </StatusEffect>
-	</Holdable>
-  </Item>  
+    </LightComponent>
+  </Item>
   <Item name="" identifier="faradayartifact" category="Alien" Tags="alien,alienartifact" sonarsize="30" scale="0.5" impactsoundtag="impact_metal_heavy" allowsellingwhenbroken="true" hideconditionbar="true">
     <Upgrade gameversion="0.9.3.1" scale="0.5" />
     <Price baseprice="2000" sold="false">
