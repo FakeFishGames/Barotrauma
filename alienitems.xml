@@ -9,9 +9,8 @@
       <Price storeidentifier="merchantmilitary" multiplier="1.25 "/>
       <Price storeidentifier="merchantmine" />
     </Price>
-    <!--I've put spawning the sky artifact inside ruins on hold until I can figure out how to make it trigger inside submarines only, otherwise it constantly drains water inside ruins and that might soft lock people if it drains a room and there's no way to break the walls -->
     <PreferredContainer primary="wrecksecarmcab" amount="1" spawnprobability="0.01" />
-    <!--PreferredContainer primary="ruintreasure" amount="1" spawnprobability="0.05" /-->
+    <PreferredContainer primary="ruintreasure" amount="1" spawnprobability="0.05" >
     <Sprite texture="Content/Items/Alien/AlienRuins_Items.png" depth="0.6" sourcerect="630,0,82,108" origin="0.5,0.5" />
     <Deconstruct time="30">
       <Item identifier="steel" />
@@ -20,21 +19,26 @@
       <Item identifier="oxygeniteshard" />
     </Deconstruct>
     <Body radius="45" density="50" friction="0.95" />
-     <!-- drains water if not contained  -->
-    <Pump maxflow="1000" IsOn="false" flowpercentage="-100">
+     <!-- Drains water if not contained, only in the player sub to prevent draining water from ruins. Statuseffect jank ahead, but this was the only combination that worked  -->
+    <Pump maxflow="2000" IsOn="False" flowpercentage="-100" powerconsumption="10">
       <PumpOutEmitter particle="shockwaveinverted" particlespersecond="10" position="41,-40" anglemin="0" anglemax="360" velocitymin="0" velocitymax="0" scalemin="0.25" scalemax="0.5"/>
-      <StatusEffect type="InWater" targettype="This" IsOn="True" setvalue="true" checkconditionalalways="true">
-        <Conditional hastag="neq artifactcontainer" targetcontainer="true" />
-        <Conditional Voltage="0.0" targetcontainer="true" />
-        <Conditional Insidesubmarine="true" />
-        <sound file="Content/Items/Alien/Alienpump.ogg" range="500.0" loop="false" frequencymultiplier="2" />
+      <sound file="Content/Items/Alien/AlienPump.ogg" type="OnActive" range="500.0" volume="1" loop="true" frequencymultiplier="2" />
+      <StatusEffect type="InWater" target="This" IsOn="True" checkconditionalalways="true" >
+        <Conditional hastag="neq artifactcontainer" targetcontainer="true"  />
+        <Conditional Voltage="lte 0.0" targetcontainer="true" />
       </StatusEffect>
-      <StatusEffect type="NotInWater" targettype="This" IsOn="False" setvalue="true" />
+      <StatusEffect type="NotInWater" target="This" IsOn="False" setvalue="true" />
+      <StatusEffect type="Always" target="This" IsOn="False" setvalue="true" >
+        <Conditional InPlayerSubmarine="False" />
+      </StatusEffect>
+      <StatusEffect type="InWater" target="This" voltage="1.0" checkconditionalalways="true" >
+         <Conditional InPlayerSubmarine="true" />
+      </StatusEffect>
     </Pump>
     <Holdable slots="RightHand+LeftHand" holdpos="30,-15" handle1="0,10" handle2="0,-10" msg="ItemMsgPickUpSelect">
-      <StatusEffect type="Always" target="This,Hull" oxygen="-50000.0">
+      <StatusEffect type="Always" target="This,Hull" oxygen="-50000.0" >
         <Conditional hastag="neq artifactcontainer" targetcontainer="true" />
-        <Conditional voltage="lte 0" targetcontainer="true" />
+        <Conditional voltage="lte 0.0" targetcontainer="true" />
         <ParticleEmitter particle="skyholderfx2" anglemax="360" distancemin="100" distancemax="300" velocitymin="-700" velocitymax="-1200" particlespersecond="100" />
         <ParticleEmitter particle="skyholderfx" anglemax="360" particlespersecond="2" />
         <sound file="Content/Items/Alien/AlienArtifactLoop1.ogg" range="500.0" loop="true" />
@@ -50,7 +54,6 @@
       <Price storeidentifier="merchantmilitary" multiplier="1.25 "/>
       <Price storeidentifier="merchantmine" />
     </Price>
-	<PreferredContainer primary="artifactholder" minamount="0" maxamount="1" spawnprobability="0.15"/>
     <PreferredContainer primary="wrecksecarmcab" amount="1" spawnprobability="0.01" />
     <PreferredContainer primary="ruintreasure" amount="1" spawnprobability="0.05" />
     <Sprite texture="Content/Items/Alien/AlienRuins_Items.png" depth="0.6" sourcerect="542,112,102,99" origin="0.5,0.5" />
@@ -61,24 +64,24 @@
       <Item identifier="incendium" />
     </Deconstruct>
     <Body radius="40" density="11" friction="0.95" />
-	<Holdable slots="RightHand+LeftHand" holdpos="30,-15" handle1="0,10" handle2="0,-10" msg="ItemMsgPickUpSelect">
+    <Holdable slots="RightHand+LeftHand" holdpos="30,-15" handle1="0,10" handle2="0,-10" msg="ItemMsgPickUpSelect">
       <StatusEffect type="NotInWater" target="This" stackable="false" delay="30" checkconditionalalways="true">
         <Conditional hastag="neq artifactcontainer" targetcontainer="true" />
-        <Conditional voltage="lte 0" targetcontainer="true" />
+        <Conditional voltage="lte 0.0" targetcontainer="true" />
         <ParticleEmitter particle="thermalSetFire" anglemax="360" scalemultiplier="3,3" particleamount="40" />
         <sound file="Content/Items/Alien/AlienTurret1.ogg" range="500.0" loop="false" />
         <Fire />
       </StatusEffect>
       <StatusEffect type="Always" target="This">
         <Conditional hastag="neq artifactcontainer" targetcontainer="true" />
-        <Conditional voltage="lte 0" targetcontainer="true" />
+        <Conditional voltage="lte 0.0" targetcontainer="true" />
         <ParticleEmitter particle="thermalfx" anglemax="360" distancemax="5" particlespersecond="40" />
         <sound file="Content/Items/Alien/AlienArtifactLoop1.ogg" range="500.0" loop="true" />
       </StatusEffect>
-	</Holdable>
-		<!-- Emits steam periodically when in water, burns. Had to use Lightcomponent to make it work -->
+    </Holdable>
+        <!-- Emits steam periodically when in water, burns. Had to use Lightcomponent to make it work -->
     <LightComponent range="150.0" lightcolor="210,120,30,120" IsOn="False" castshadows="false" allowingameediting="false" pulseamount="0.1" pulsefrequency="4">
-      <Statuseffect type="InWater" target="This" IsOn="True" Interval="15" />
+      <Statuseffect type="InWater" target="This" IsOn="True" Interval="20" />
       <Statuseffect type="NotInWater" target="This" IsOn="False" />
       <StatusEffect type="OnActive" target="This" IsOn="False" delay="5" stackable="False" />
       <StatusEffect type="OnActive" target="This" checkconditionalalways="true" >
@@ -87,20 +90,20 @@
         <ParticleEmitter particle="bubbles" particlespersecond="5" anglemin="60" anglemax="120" scalemin="1" scalemax="2" velocitymin="5" velocitymax="100" copyentityangle="false" drawontop="true"/>
         <ParticleEmitter particle="steamspray" particlespersecond="30" anglemin="60" anglemax="120" scalemin="1" scalemax="2" velocitymin="300" velocitymax="500" copyentityangle="false" highqualitycollisiondetection="true" drawontop="true" />
         <sound file="Content/Items/Weapons/FlameThrowerLoop.ogg" type="OnUse" range="700.0" loop="true" />
-		<!-- burns via explosion -->
+        <!-- burns via explosion -->
         <Explosion range="200" structuredamage="0.1" itemdamage="0" smoke="False" flames="false" force="0" sparks="false" shockwave="False" underwaterbubble="false" camerashake="2" flash="false" playtinnitus="false" >
-          <Affliction identifier="burn" amount="0.05"/>			
+          <Affliction identifier="burn" amount="0.05"/>         
         </Explosion>
       </StatusEffect>
     </LightComponent>
-  </Item>
+  </Item>  
   <Item name="" identifier="faradayartifact" category="Alien" Tags="alien,alienartifact" sonarsize="30" scale="0.5" impactsoundtag="impact_metal_heavy" allowsellingwhenbroken="true" hideconditionbar="true">
     <Upgrade gameversion="0.9.3.1" scale="0.5" />
     <Price baseprice="2000" sold="false">
       <Price storeidentifier="merchantoutpost" multiplier="0.85" />
       <Price storeidentifier="merchantcity" multiplier="0.85" />
       <Price storeidentifier="merchantresearch" multiplier="2" />
-      <Price storeidentifier="merchantmilitary" multiplier="1.25 " />
+      <Price storeidentifier="merchantmilitary" multiplier="1.25 "/>
       <Price storeidentifier="merchantmine" />
     </Price>
     <PreferredContainer primary="wrecksecarmcab" amount="1" spawnprobability="0.01" />
@@ -114,41 +117,40 @@
     </Deconstruct>
     <Body radius="45" density="50" friction="0.95" />
     <Holdable slots="RightHand+LeftHand" holdpos="30,-15" handle1="0,10" handle2="0,-10" msg="ItemMsgPickUpSelect">
-      <!-- EMP explosion every 15 seconds. Increased range x4 and reduced EMP strength by a lot -->
-	  <StatusEffect type="Always" target="This" delay="15" stackable="false" checkconditionalalways="true">
-        <Conditional hastag="neq artifactcontainer" targetcontainer="true" />
-        <Conditional Voltage="0.0" targetcontainer="true" />
-        <Explosion range="800.0" empstrength="0.25" camerashake="2" stun="0" force="2.0" flames="false" smoke="false" shockwave="false" sparks="true" underwaterbubble="false" />
-        <!-- separate smaller explosion for EMP affliction so it doesn't fry guardians from across the room -->
-        <Explosion range="200.0" camerashake="0" stun="0" force="0" flames="false" smoke="false" shockwave="false" sparks="false" underwaterbubble="false" >
-          <Affliction identifier="emp" strength="25" multiplybymaxvitality="true" />
-        </Explosion>
-        <sound file="Content/Items/Alien/AlienCoil1.ogg" range="1000" />
-        <ParticleEmitter particle="faradayfx" anglemax="360" distancemax="80" scalemultiplier="2.6,2.6" particleamount="40" />
+      <!-- EMP explosion every 15 seconds. Increased range and reduced EMP strength -->
+      <StatusEffect type="Always" target="This" delay="15" stackable="false" checkconditionalalways="true">
+            <Conditional hastag="neq artifactcontainer" targetcontainer="true" />
+            <Conditional Voltage="0.0" targetcontainer="true" />
+            <Explosion range="800.0" empstrength="0.25" camerashake="2" stun="0" force="2.0" flames="false" smoke="false" shockwave="false" sparks="true" underwaterbubble="false" />
+            <!-- separate smaller explosion for EMP affliction so it doesn't fry guardians -->
+            <Explosion range="200.0" camerashake="0" stun="0" force="0" flames="false" smoke="false" shockwave="false" sparks="false" underwaterbubble="false" >
+              <Affliction identifier="emp" strength="25" multiplybymaxvitality="true" />
+            </Explosion>
+            <sound file="Content/Items/Alien/AlienCoil1.ogg" range="1000" />
+            <ParticleEmitter particle="faradayfx" anglemax="360" distancemax="80" scalemultiplier="2.6,2.6" particleamount="40" />
       </StatusEffect>
       <StatusEffect type="Always" target="This">
         <Conditional hastag="neq artifactcontainer" targetcontainer="true" />
-        <Conditional voltage="lte 0" targetcontainer="true" />
-        <sound file="Content/Items/Alien/AlienArtifactLoop1.ogg" range="500.0" loop="true" />
+        <Conditional Voltage="0.0" targetcontainer="true" />
+        <sound file="Content/Items/Alien/AlienArtifactLoop1.ogg" range="500.0" loop="true" volume="0.5"/>
         <ParticleEmitter particle="faradayfx" anglemax="360" distancemax="10" particlespersecond="10" />
       </StatusEffect>
     </Holdable>
-    <!-- EDC effect on artifact -->
     <ElectricalDischarger duration="0.2" outdoorsonly="False" powerconsumption="0" range="500" rangemultiplierinwalls="1">
       <Attack targetimpulse="20">
         <Affliction identifier="stun" strength="2"/>
         <Affliction identifier="burn" strength="5"/>
       </Attack>
-	  <!-- trigger discharge coil when not in water -->
-	  <StatusEffect type="NotInWater" target="This" delay="15" stackable="false" checkconditionalalways="true">
+      <!-- trigger discharge coil when not in water -->
+      <StatusEffect type="NotInWater" target="This" delay="15" stackable="false" checkconditionalalways="true">
         <Conditional hastag="neq artifactcontainer" targetcontainer="true" />
-		<Conditional Voltage="0.0" targetcontainer="true" />
-		<Use/>
+        <Conditional Voltage="0.0" targetcontainer="true" />
+        <Use/>
         <sound file="Content/Items/Weapons/WEAPONS_electricalDischarge1.ogg" range="6000" volume="0.5" selectionmode="random" />
         <sound file="Content/Items/Weapons/WEAPONS_electricalDischarge2.ogg" range="6000" volume="0.5" />
-	  </StatusEffect>
+      </StatusEffect>
     </ElectricalDischarger>
-  </Item>
+  </Item>  
   <Item name="" identifier="nasonovartifact" category="Alien" Tags="alien,nasonov,alienartifact" pickdistance="150" sonarsize="30" scale="0.5" impactsoundtag="impact_metal_heavy" allowsellingwhenbroken="true" hideconditionbar="true">
     <Upgrade gameversion="0.9.3.1" scale="0.5" />
     <Price baseprice="2000" sold="false">
@@ -168,21 +170,22 @@
       <Item identifier="physicorium" />
     </Deconstruct>
     <Body radius="45" density="50" friction="0.95" />
-	<!-- Added sonar disruption -->
-	<AiTarget sightrange="10000" Soundrange="50000" sonardisruption="0.5" />
+    <!-- Added sonar disruption -->
+    <AiTarget sightrange="10000" Soundrange="50000" sonardisruption="0.5" />
     <Holdable slots="RightHand+LeftHand" holdpos="30,-15" handle1="0,10" handle2="0,-10" msg="ItemMsgPickUpSelect">
-      <StatusEffect type="Always" target="This">
-        <Conditional hastag="neq artifactcontainer" targetcontainer="true" />
-        <Conditional voltage="lte 0" targetcontainer="true" />
-        <ParticleEmitter particle="nasonovsparkles" anglemax="360" distancemax="10" velocitymin="10" velocitymax="60" emitinterval="0.55" particleamount="5" particlespersecond="5" />
-        <sound file="Content/Items/Alien/AlienArtifactLoop1.ogg" range="500.0" loop="true" />
-      </StatusEffect>
-      <StatusEffect type="Always" target="This" delay="1.1" stackable="false" targettype="this" SoundRange="50000" setvalue="true" >
-        <Conditional hastag="neq artifactcontainer" targetcontainer="true" />
-        <Conditional Voltage="0.0" targetcontainer="true" />
-        <ParticleEmitter particle="nasonovfx" anglemax="360" particleamount="3" />
-        <sound file="Content/Items/Alien/Alien_ArtifactHolderLoop.ogg" range="1000.0" loop="true" volume="3"/>
-      </StatusEffect>
+        <StatusEffect type="Always" target="This" >
+            <Conditional hastag="neq artifactcontainer" targetcontainer="true" />
+            <Conditional Voltage="0.0" targetcontainer="true" />
+            <!-- Added particle -->
+            <ParticleEmitter particle="nasonovsparkles" anglemax="360" distancemax="10" velocitymin="10" velocitymax="60" emitinterval="0.55" particleamount="5" particlespersecond="5" />
+            <sound file="Content/Items/Alien/AlienArtifactLoop1.ogg" range="500.0" loop="true" volume="0.5"/>
+        </StatusEffect>
+        <StatusEffect type="Always" target="This" delay="1.1" stackable="false" SoundRange="50000" setvalue="true" >
+            <Conditional hastag="neq artifactcontainer" targetcontainer="true" />
+            <Conditional Voltage="0.0" targetcontainer="true" />
+            <ParticleEmitter particle="nasonovfx" anglemax="360" particleamount="3" />
+            <sound file="Content/Items/Alien/Alien_ArtifactHolderLoop.ogg" range="1000.0" loop="true" volume="3"/>
+        </StatusEffect>
     </Holdable>
   </Item>  
   <Item name="" identifier="psychosisartifact" category="Alien" Tags="alien,alienartifact" sonarsize="30" spritecolor="200,200,200,255" scale="0.5" impactsoundtag="impact_metal_heavy">
@@ -194,7 +197,7 @@
       <Price storeidentifier="merchantmilitary" multiplier="1.25 "/>
       <Price storeidentifier="merchantmine" />
     </Price>
-	<PreferredContainer primary="wrecksecarmcab" amount="1" spawnprobability="0.01" />
+    <PreferredContainer primary="wrecksecarmcab" amount="1" spawnprobability="0.01" />
     <PreferredContainer primary="ruintreasure" amount="1" spawnprobability="0.05" />
     <Sprite texture="Content/Items/Alien/AlienRuins_Items.png" depth="0.6" sourcerect="541,0,88,108" origin="0.5,0.5" />
     <Deconstruct time="30">
@@ -207,24 +210,24 @@
     <Holdable slots="RightHand+LeftHand" holdpos="30,-15" handle1="0,10" handle2="0,-10" msg="ItemMsgPickUpSelect">
       <StatusEffect type="Always" target="This">
         <Conditional hastag="neq artifactcontainer" targetcontainer="true" />
-        <Conditional voltage="lte 0" targetcontainer="true" />
-        <sound file="Content/Items/Alien/AlienArtifactLoop1.ogg" range="500.0" loop="true" />
+        <Conditional Voltage="0.0" targetcontainer="true" />
+        <sound file="Content/Items/Alien/AlienArtifactLoop1.ogg" range="500.0" loop="true" volume="0.5"/>
         <ParticleEmitter particle="psychosisfx" scalemultiplier="0.7,0.7" anglemax="360" emitinterval="1.1" particleamount="1" particlespersecond="1" />
       </StatusEffect>
-	  <!-- Releases a burst of watchers gaze in a 1500 radius periodically -->
+      <!-- Releases a burst of watchers gaze in a 1500 radius periodically -->
       <StatusEffect type="Always" target="This,NearbyCharacters" range="1500" Delay="30" Duration="5" stackable="false" setvalue="true" checkconditionalalways="true">
         <Conditional hastag="neq artifactcontainer" targetcontainer="true" />
-		<Conditional Voltage="0.0" targetcontainer="true" />
-		<Affliction identifier="watchersgaze" strength="0.20"/>
+        <Conditional Voltage="0.0" targetcontainer="true" />
+        <Affliction identifier="watchersgaze" strength="0.20"/>
         <Affliction identifier="psychosis" strength="0.02" />
         <ParticleEmitter particle="psychosisfx" anglemax="360" particlespersecond="12" />
-		<sound file="Content/Items/Alien/Alienpump.ogg" range="500.0" loop="true" volume="0.5" />
+        <sound file="Content/Items/Alien/Alienpump.ogg" range="500.0" loop="true" volume="1" />
       </StatusEffect>
     </Holdable>
     <LightComponent range="150.0" lightcolor="255,56,144,111" IsOn="true" castshadows="false" allowingameediting="false" pulseamount="0.9" pulsefrequency="0.25" />
   </Item>
   <Item name="" identifier="psychosisartifact_event" nameidentifier="psychosisartifact" variantof="psychosisartifact" hideinmenus="true">
-    <Price baseprice="1000" sold="false" canbespecial="false">
+    <Price baseprice="2000" sold="false" canbespecial="false">
       <Price storeidentifier="merchantoutpost" multiplier="0.85" />
       <Price storeidentifier="merchantcity" multiplier="0.85" />
       <Price storeidentifier="merchantresearch" multiplier="2" />
