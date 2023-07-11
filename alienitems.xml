@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Items>
+<Items> 
   <Item name="" identifier="skyholderartifact" category="Alien" Tags="alien,alienartifact" sonarsize="30" scale="0.5" impactsoundtag="impact_metal_heavy" allowsellingwhenbroken="true" hideconditionbar="true">
     <Upgrade gameversion="0.9.3.1" scale="0.5" />
     <Price baseprice="2000" sold="false">
@@ -10,7 +10,7 @@
       <Price storeidentifier="merchantmine" />
     </Price>
     <PreferredContainer primary="wrecksecarmcab" amount="1" spawnprobability="0.01" />
-    <PreferredContainer primary="ruintreasure" amount="1" spawnprobability="0.05" >
+    <PreferredContainer primary="ruintreasure" amount="1" spawnprobability="0.05" />
     <Sprite texture="Content/Items/Alien/AlienRuins_Items.png" depth="0.6" sourcerect="630,0,82,108" origin="0.5,0.5" />
     <Deconstruct time="30">
       <Item identifier="steel" />
@@ -19,7 +19,7 @@
       <Item identifier="oxygeniteshard" />
     </Deconstruct>
     <Body radius="45" density="50" friction="0.95" />
-     <!-- Drains water if not contained, only in the player sub to prevent draining water from ruins. Statuseffect jank ahead, but this was the only combination that worked  -->
+     <!-- drains water if not contained  -->
     <Pump maxflow="2000" IsOn="False" flowpercentage="-100" powerconsumption="10">
       <PumpOutEmitter particle="shockwaveinverted" particlespersecond="10" position="41,-40" anglemin="0" anglemax="360" velocitymin="0" velocitymax="0" scalemin="0.25" scalemax="0.5"/>
       <sound file="Content/Items/Alien/AlienPump.ogg" type="OnActive" range="500.0" volume="1" loop="true" frequencymultiplier="2" />
@@ -79,21 +79,27 @@
         <sound file="Content/Items/Alien/AlienArtifactLoop1.ogg" range="500.0" loop="true" />
       </StatusEffect>
     </Holdable>
-        <!-- Emits steam periodically when in water, burns. Had to use Lightcomponent to make it work -->
+    <!-- Emits steam periodically when in water, burns. Had to use Lightcomponent to make it work -->
     <LightComponent range="150.0" lightcolor="210,120,30,120" IsOn="False" castshadows="false" allowingameediting="false" pulseamount="0.1" pulsefrequency="4">
       <Statuseffect type="InWater" target="This" IsOn="True" Interval="20" />
       <Statuseffect type="NotInWater" target="This" IsOn="False" />
       <StatusEffect type="OnActive" target="This" IsOn="False" delay="5" stackable="False" />
+      <StatusEffect type="OnActive" target="This" interval="1" checkconditionalalways="true" >
+        <Conditional hastag="neq artifactcontainer" targetcontainer="true" />
+        <Conditional Voltage="lte 0.0" targetcontainer="true" />
+        <!-- burns via explosion, damages structures every second  -->
+        <Explosion range="200" structuredamage="3" itemdamage="0" smoke="False" flames="false" force="0" sparks="false" shockwave="False" underwaterbubble="false" camerashake="3" flash="false" playtinnitus="false" >
+          <Affliction identifier="burn" amount="5"/>         
+        </Explosion>
+      </StatusEffect>
+      <!-- second statuseffect for visuals. Too many statuseffects? -->
       <StatusEffect type="OnActive" target="This" checkconditionalalways="true" >
         <Conditional hastag="neq artifactcontainer" targetcontainer="true" />
         <Conditional Voltage="lte 0.0" targetcontainer="true" />
-        <ParticleEmitter particle="bubbles" particlespersecond="5" anglemin="60" anglemax="120" scalemin="1" scalemax="2" velocitymin="5" velocitymax="100" copyentityangle="false" drawontop="true"/>
-        <ParticleEmitter particle="steamspray" particlespersecond="30" anglemin="60" anglemax="120" scalemin="1" scalemax="2" velocitymin="300" velocitymax="500" copyentityangle="false" highqualitycollisiondetection="true" drawontop="true" />
-        <sound file="Content/Items/Weapons/FlameThrowerLoop.ogg" type="OnUse" range="700.0" loop="true" />
-        <!-- burns via explosion -->
-        <Explosion range="200" structuredamage="0.1" itemdamage="0" smoke="False" flames="false" force="0" sparks="false" shockwave="False" underwaterbubble="false" camerashake="2" flash="false" playtinnitus="false" >
-          <Affliction identifier="burn" amount="0.05"/>         
-        </Explosion>
+        <ParticleEmitter particle="bubbles" particlespersecond="10" anglemin="60" anglemax="120" scalemin="0.5" scalemax="1" velocitymin="20" velocitymax="100" copyentityangle="false" drawontop="true"/>
+        <ParticleEmitter particle="steamspray" particlespersecond="20" anglemin="60" anglemax="120" scalemin="1" scalemax="2" velocitymin="300" velocitymax="500" copyentityangle="false" highqualitycollisiondetection="true" drawontop="true" />
+        <ParticleEmitter particle="steamspray" particlespersecond="10" anglemin="0" anglemax="360" scalemin="0.5" scalemax="1" velocitymin="20" velocitymax="50" copyentityangle="false" highqualitycollisiondetection="true" drawontop="true" colormultiplier="255,255,255,180" />
+        <sound file="Content/Items/Weapons/FlameThrowerLoop.ogg" type="OnUse" range="700.0" loop="True" />
       </StatusEffect>
     </LightComponent>
   </Item>  
@@ -119,15 +125,15 @@
     <Holdable slots="RightHand+LeftHand" holdpos="30,-15" handle1="0,10" handle2="0,-10" msg="ItemMsgPickUpSelect">
       <!-- EMP explosion every 15 seconds. Increased range and reduced EMP strength -->
       <StatusEffect type="Always" target="This" delay="15" stackable="false" checkconditionalalways="true">
-            <Conditional hastag="neq artifactcontainer" targetcontainer="true" />
-            <Conditional Voltage="0.0" targetcontainer="true" />
-            <Explosion range="800.0" empstrength="0.25" camerashake="2" stun="0" force="2.0" flames="false" smoke="false" shockwave="false" sparks="true" underwaterbubble="false" />
-            <!-- separate smaller explosion for EMP affliction so it doesn't fry guardians -->
-            <Explosion range="200.0" camerashake="0" stun="0" force="0" flames="false" smoke="false" shockwave="false" sparks="false" underwaterbubble="false" >
-              <Affliction identifier="emp" strength="25" multiplybymaxvitality="true" />
-            </Explosion>
-            <sound file="Content/Items/Alien/AlienCoil1.ogg" range="1000" />
-            <ParticleEmitter particle="faradayfx" anglemax="360" distancemax="80" scalemultiplier="2.6,2.6" particleamount="40" />
+        <Conditional hastag="neq artifactcontainer" targetcontainer="true" />
+        <Conditional Voltage="0.0" targetcontainer="true" />
+         <Explosion range="800.0" empstrength="0.25" camerashake="2" stun="0" force="2.0" flames="false" smoke="false" shockwave="false" sparks="true" underwaterbubble="false" />
+        <!-- separate smaller explosion for EMP affliction so it doesn't fry guardians -->
+        <Explosion range="200.0" camerashake="0" stun="0" force="0" flames="false" smoke="false" shockwave="false" sparks="false" underwaterbubble="false" >
+          <Affliction identifier="emp" strength="25" multiplybymaxvitality="true" />
+        </Explosion>
+        <sound file="Content/Items/Alien/AlienCoil1.ogg" range="1000" />
+        <ParticleEmitter particle="faradayfx" anglemax="360" distancemax="80" scalemultiplier="2.6,2.6" particleamount="40" />
       </StatusEffect>
       <StatusEffect type="Always" target="This">
         <Conditional hastag="neq artifactcontainer" targetcontainer="true" />
@@ -173,19 +179,19 @@
     <!-- Added sonar disruption -->
     <AiTarget sightrange="10000" Soundrange="50000" sonardisruption="0.5" />
     <Holdable slots="RightHand+LeftHand" holdpos="30,-15" handle1="0,10" handle2="0,-10" msg="ItemMsgPickUpSelect">
-        <StatusEffect type="Always" target="This" >
-            <Conditional hastag="neq artifactcontainer" targetcontainer="true" />
-            <Conditional Voltage="0.0" targetcontainer="true" />
-            <!-- Added particle -->
-            <ParticleEmitter particle="nasonovsparkles" anglemax="360" distancemax="10" velocitymin="10" velocitymax="60" emitinterval="0.55" particleamount="5" particlespersecond="5" />
-            <sound file="Content/Items/Alien/AlienArtifactLoop1.ogg" range="500.0" loop="true" volume="0.5"/>
-        </StatusEffect>
-        <StatusEffect type="Always" target="This" delay="1.1" stackable="false" SoundRange="50000" setvalue="true" >
-            <Conditional hastag="neq artifactcontainer" targetcontainer="true" />
-            <Conditional Voltage="0.0" targetcontainer="true" />
-            <ParticleEmitter particle="nasonovfx" anglemax="360" particleamount="3" />
-            <sound file="Content/Items/Alien/Alien_ArtifactHolderLoop.ogg" range="1000.0" loop="true" volume="3"/>
-        </StatusEffect>
+      <StatusEffect type="Always" target="This" >
+        <Conditional hastag="neq artifactcontainer" targetcontainer="true" />
+        <Conditional Voltage="0.0" targetcontainer="true" />
+        <!-- Added particle -->
+        <ParticleEmitter particle="nasonovsparkles" anglemax="360" distancemax="10" velocitymin="10" velocitymax="60" emitinterval="0.55" particleamount="5" particlespersecond="5" />
+        <sound file="Content/Items/Alien/AlienArtifactLoop1.ogg" range="500.0" loop="true" volume="0.5"/>
+      </StatusEffect>
+      <StatusEffect type="Always" target="This" delay="1.1" stackable="false" SoundRange="50000" setvalue="true" >
+        <Conditional hastag="neq artifactcontainer" targetcontainer="true" />
+        <Conditional Voltage="0.0" targetcontainer="true" />
+        <ParticleEmitter particle="nasonovfx" anglemax="360" particleamount="3" />
+        <sound file="Content/Items/Alien/Alien_ArtifactHolderLoop.ogg" range="1000.0" loop="true" volume="3"/>
+      </StatusEffect>
     </Holdable>
   </Item>  
   <Item name="" identifier="psychosisartifact" category="Alien" Tags="alien,alienartifact" sonarsize="30" spritecolor="200,200,200,255" scale="0.5" impactsoundtag="impact_metal_heavy">
