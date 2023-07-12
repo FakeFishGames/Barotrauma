@@ -409,7 +409,7 @@
       </StatusEffect>
     </Projectile>
   </Item>
-  <Item name="" identifier="riotshield" category="Equipment" tags="mediumitem" health="150" impactsoundtag="impact_metal_light" cargocontaineridentifier="metalcrate" damagedbyprojectiles="true" scale="1" allowasextracargo="true">
+  <Item name="" identifier="riotshield" category="Equipment" tags="mediumitem" health="75" impactsoundtag="impact_metal_light" cargocontaineridentifier="metalcrate" damagedbyprojectiles="true" scale="1" allowasextracargo="true">
     <PreferredContainer primary="armcab" secondary="secarmcab"/>
     <Price baseprice="360" sold="true" minleveldifficulty="50" >
       <Price storeidentifier="merchantoutpost" multiplier="1.4" />
@@ -428,18 +428,18 @@
       <RequiredItem identifier="plastic" amount="3" />
     </Fabricate>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="640,320,64,64" />
-    <Sprite texture="riotgear.png" sourcerect="31,54,27,147" origin="0.5,0.5" depth="0.55" />
-    <Body width="40" height="145" density="20" />
-    <Holdable slots="RightHand+LeftHand" aimpos="60,-30" holdpos="45,-30" handle1="-15,-10" handle2="-15,10" controlpose="true" blocksplayers="true" msg="ItemMsgPickUpSelect">
+    <Sprite texture="Content/Items/Jobgear/Security/riotgear.png" sourcerect="31,54,27,147" origin="0.5,0.5" depth="0.55" />
+    <Body height="120" radius="12" density="30" />
+    <Holdable slots="LeftHand" aimpos="50,-30" holdpos="35,-30" handle1="-10,0" handle2="-10,0" controlpose="true" blocksplayers="true" msg="ItemMsgPickUpSelect">
       <StatusEffect type="OnActive" target="Character" SpeedMultiplier="0.6" setvalue="true" />
       <StatusEffect type="OnBroken" target="This">
-        <particleemitter particle="weldspark" drawontop="true" particleamount="50" velocitymin="100" velocitymax="500" anglemin="0" anglemax="360" distancemin="0" distancemax="30" scalemin="0.1" scalemax="0.35" />
-        <Sound file="Content/Sounds/Damage/HitArmor1.ogg" range="800" />
+        <particleemitter particle="shrapnel" drawontop="true" particleamount="15" velocitymin="100" velocitymax="500" anglemin="0" anglemax="360" distancemin="0" distancemax="30" scalemin="0.35" scalemax="0.5" />
+        <Sound file="Content/Sounds/Damage/ArmorBreak4.ogg" range="800" />
         <Remove />
       </StatusEffect>
       <StatusEffect type="OnDamaged" target="This">
-        <particleemitter particle="weldspark" drawontop="true" particleamount="5" velocitymin="100" velocitymax="500" anglemin="0" anglemax="360" distancemin="0" distancemax="20" scalemin="0.1" scalemax="0.35" />
-        <Sound file="Content/Sounds/Damage/HitArmor1.ogg" range="800" />
+        <particleemitter particle="weldspark" drawontop="true" particleamount="10" velocitymin="100" velocitymax="500" anglemin="-45" anglemax="45" distancemin="0" distancemax="30" scalemin="0.35" scalemax="0.5" copyentityangle="true" />
+        <Sound file="Content/Sounds/Damage/HitArmor1.ogg" range="800" loop="true"/>
         <!-- an invisible explosion to make the user "flinch" -->
         <Explosion range="100.0" force="1" showeffects="false" camerashake="1.0" />
       </StatusEffect>
