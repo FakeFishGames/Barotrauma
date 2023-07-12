@@ -411,7 +411,7 @@
   </Item>
   <Item name="" identifier="riotshield" category="Equipment" tags="mediumitem" health="75" impactsoundtag="impact_metal_light" cargocontaineridentifier="metalcrate" damagedbyprojectiles="true" scale="1" allowasextracargo="true">
     <PreferredContainer primary="armcab" secondary="secarmcab"/>
-    <Price baseprice="360" sold="false" minleveldifficulty="65" >
+    <Price baseprice="360" sold="true" minleveldifficulty="50" >
       <Price storeidentifier="merchantoutpost" multiplier="1.4" />
       <Price storeidentifier="merchantcity" multiplier="1.25" />
       <Price storeidentifier="merchantresearch" multiplier="1.25" />
