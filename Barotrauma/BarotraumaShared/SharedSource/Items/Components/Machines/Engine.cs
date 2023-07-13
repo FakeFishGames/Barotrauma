@@ -24,6 +24,14 @@ namespace Barotrauma.Items.Components
         /// </summary>
         private float targetForce;
 
+        /// <summary>
+        /// Power demand of a marine engine is proportional with the cube of the square root of the thrusting force.
+        /// Reverse exponent defined for use with overvoltage calculation:
+        /// Supplying 2x power will result in 59% more force, 26% more speed, therefore 2x power.
+        /// </summary>
+        private const float forceToPowerExponent = 3f/2f;
+        private const float powerToForceExponent = 2f/3f;
+
         private float maxForce;
         
         private readonly Attack propellerDamage;
@@ -130,7 +138,7 @@ namespace Barotrauma.Items.Components
             if (Math.Abs(Force) > 1.0f)
             {
                 float voltageFactor = MinVoltage <= 0.0f ? 1.0f : Math.Min(Voltage, MaxOverVoltageFactor);
-                float currForce = force * (float)Math.Pow(voltageFactor, 2f/3f);
+                float currForce = force * MathF.Pow(voltageFactor, powerToForceExponent);
                 float condition = item.MaxCondition <= 0.0f ? 0.0f : item.Condition / item.MaxCondition;
                 // Broken engine makes more noise.
                 float noise = Math.Abs(currForce) * MathHelper.Lerp(1.5f, 1f, condition);
@@ -180,7 +188,7 @@ namespace Barotrauma.Items.Components
                 return 0;
             }
 
-            currPowerConsumption = (float)Math.Pow(Math.Abs(targetForce) / 100.0f, 1.5f) * powerConsumption;
+            currPowerConsumption = MathF.Pow(Math.Abs(targetForce) / 100.0f, forceToPowerExponent) * powerConsumption;
             //engines consume more power when in a bad condition
             item.GetComponent<Repairable>()?.AdjustPowerConsumption(ref currPowerConsumption);
             return currPowerConsumption;
