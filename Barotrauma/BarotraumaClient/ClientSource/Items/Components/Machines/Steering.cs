@@ -532,6 +532,18 @@ namespace Barotrauma.Items.Components
             };
         }
 
+        private Vector2 Square2Disc(Vector2 vect)
+        {
+            float xx = vect.X * vect.X;
+            float yy = vect.Y * vect.Y;
+            float magn = MathF.Sqrt(yy + xx);
+            if (magn == 0) return Vector2.Zero;
+
+            float x = vect.X * MathF.Sqrt(xx + yy - xx * yy) / magn;
+            float y = vect.Y * MathF.Sqrt(xx + yy - xx * yy) / magn;
+            return new Vector2(x, y);
+        }
+
         public void DrawHUD(SpriteBatch spriteBatch, Rectangle rect)
         {
             int width = rect.Width, height = rect.Height;
@@ -545,11 +557,8 @@ namespace Barotrauma.Items.Components
 
             if (!AutoPilot)
             {
-                Vector2 unitSteeringInput = steeringInput / 100.0f;
-                //map input from rectangle to circle
-                Vector2 steeringInputPos = new Vector2(
-                    steeringInput.X * (float)Math.Sqrt(1.0f - 0.5f * unitSteeringInput.Y * unitSteeringInput.Y),
-                    -steeringInput.Y * (float)Math.Sqrt(1.0f - 0.5f * unitSteeringInput.X * unitSteeringInput.X));
+                Vector2 steeringInputPos = Square2Disc(steeringInput / 100f) * 100f;
+                steeringInputPos.Y = -steeringInputPos.Y;
                 steeringInputPos += steeringOrigin;
 
                 if (steeringIndicator != null)
@@ -602,12 +611,9 @@ namespace Barotrauma.Items.Components
                     }
                 }
             }
-            
-            //map velocity from rectangle to circle
-            Vector2 unitTargetVel = targetVelocity / 100.0f;
-            Vector2 steeringPos = new Vector2(
-                targetVelocity.X * 0.9f * (float)Math.Sqrt(1.0f - 0.5f * unitTargetVel.Y * unitTargetVel.Y),
-                -targetVelocity.Y * 0.9f * (float)Math.Sqrt(1.0f - 0.5f * unitTargetVel.X * unitTargetVel.X));
+
+            Vector2 steeringPos = Square2Disc(targetVelocity / 100f) * 90f;
+            steeringPos.Y = -steeringPos.Y;
             steeringPos += steeringOrigin;
 
             if (steeringIndicator != null)
