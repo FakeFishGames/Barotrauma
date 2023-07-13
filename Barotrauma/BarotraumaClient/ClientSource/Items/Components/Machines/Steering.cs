@@ -537,7 +537,7 @@ namespace Barotrauma.Items.Components
             float xx = vect.X * vect.X;
             float yy = vect.Y * vect.Y;
             float magn = MathF.Sqrt(yy + xx);
-            if (magn == 0) return Vector2.Zero;
+            if (magn < 1E-30f) return Vector2.Zero;
 
             float x = vect.X * MathF.Sqrt(xx + yy - xx * yy) / magn;
             float y = vect.Y * MathF.Sqrt(xx + yy - xx * yy) / magn;
