@@ -7,6 +7,7 @@ using System.Xml.Linq;
 using Barotrauma.Extensions;
 using System.Collections.Immutable;
 using Barotrauma.Items.Components;
+using System.Linq;
 
 namespace Barotrauma
 {
@@ -730,13 +731,13 @@ namespace Barotrauma
         /// <summary>
         /// How high the strength has to be for the affliction icon to be shown with a health scanner
         /// </summary>
-        public readonly float ShowInHealthScannerThreshold = 0.05f;
+        public readonly float ShowInHealthScannerThreshold;
 
         /// <summary>
         /// How strong the affliction needs to be before bots attempt to treat it.
         /// Also effects when the affliction is shown in the suitable treatments list.
         /// </summary>
-        public readonly float TreatmentThreshold = 5.0f;
+        public readonly float TreatmentThreshold;
 
         /// <summary>
         /// Bots will not try to treat the affliction if the character has any of these afflictions
@@ -841,20 +842,16 @@ namespace Barotrauma
         /// </summary>
         public readonly Sprite AfflictionOverlay;
 
-        public IEnumerable<KeyValuePair<Identifier, float>> TreatmentSuitability
+        public ImmutableDictionary<Identifier, float> TreatmentSuitabilities
         {
-            get
-            {
-                foreach (var itemPrefab in ItemPrefab.Prefabs)
-                {
-                    float suitability = Math.Max(itemPrefab.GetTreatmentSuitability(Identifier), itemPrefab.GetTreatmentSuitability(AfflictionType));
-                    if (!MathUtils.NearlyEqual(suitability, 0.0f))
-                    {
-                        yield return new KeyValuePair<Identifier, float>(itemPrefab.Identifier, suitability);
-                    }
-                }
-            }
-        }
+            get;
+            private set;
+        } = new Dictionary<Identifier, float>().ToImmutableDictionary();
+
+        /// <summary>
+        /// Can this affliction be treated with some item?
+        /// </summary>
+        public bool HasTreatments { get; private set; }
 
         public AfflictionPrefab(ContentXElement element, AfflictionsFile file, Type type) : base(file, element.GetAttributeIdentifier("identifier", ""))
         {
@@ -915,7 +912,7 @@ namespace Barotrauma
 
             ShowInHealthScannerThreshold = element.GetAttributeFloat(nameof(ShowInHealthScannerThreshold), 
                 Math.Max(ActivationThreshold, AfflictionType == "talentbuff" ? float.MaxValue : ShowIconToOthersThreshold));
-            TreatmentThreshold = element.GetAttributeFloat(nameof(TreatmentThreshold), Math.Max(ActivationThreshold, 5.0f));
+            TreatmentThreshold = element.GetAttributeFloat(nameof(TreatmentThreshold), Math.Max(ActivationThreshold, 10.0f));
 
             DamageOverlayAlpha  = element.GetAttributeFloat(nameof(DamageOverlayAlpha), 0.0f);
             BurnOverlayAlpha    = element.GetAttributeFloat(nameof(BurnOverlayAlpha), 0.0f);
@@ -974,6 +971,22 @@ namespace Barotrauma
             constructor = type.GetConstructor(new[] { typeof(AfflictionPrefab), typeof(float) });
         }
 
+        private void RefreshTreatmentSuitabilities()
+        {
+            var newTreatmentSuitabilities = new Dictionary<Identifier, float>();
+
+            foreach (var itemPrefab in ItemPrefab.Prefabs)
+            {
+                float suitability = itemPrefab.GetTreatmentSuitability(Identifier) + itemPrefab.GetTreatmentSuitability(AfflictionType);
+                if (!MathUtils.NearlyEqual(suitability, 0.0f))
+                {
+                    newTreatmentSuitabilities.TryAdd(itemPrefab.Identifier, suitability);
+                }
+            }
+            HasTreatments = newTreatmentSuitabilities.Any(kvp => kvp.Value > 0);
+            TreatmentSuitabilities = newTreatmentSuitabilities.ToImmutableDictionary();
+        }
+
         public LocalizedString GetDescription(float strength, Description.TargetType targetType)
         {
             foreach (var description in Descriptions)
@@ -993,9 +1006,16 @@ namespace Barotrauma
             return defaultDescription;
         }
 
-        public static void LoadAllEffects()
+        /// <summary>
+        /// Should be called before each round: loads all StatusEffects and refreshes treatment suitabilities.
+        /// </summary>
+        public static void LoadAllEffectsAndTreatmentSuitabilities()
         {
-            Prefabs.ForEach(p => p.LoadEffects());
+            foreach (var prefab in Prefabs)
+            {
+                prefab.RefreshTreatmentSuitabilities();
+                prefab.LoadEffects();
+            }
         }
 
         public static void ClearAllEffects()
@@ -1003,7 +1023,7 @@ namespace Barotrauma
             Prefabs.ForEach(p => p.ClearEffects());
         }
         
-        public void LoadEffects()
+        private void LoadEffects()
         {
             ClearEffects();
             foreach (var subElement in configElement.Elements())
@@ -1032,7 +1052,7 @@ namespace Barotrauma
             }
         }
 
-        public void ClearEffects()
+        private void ClearEffects()
         {
             effects.Clear();
             periodicEffects.Clear();

@@ -30,10 +30,16 @@ float xLosAlpha;
 
 float4 xColor;
 
+float blurDistance;
+
 float4 mainPS(VertexShaderOutput input) : COLOR0
 {
 	float4 sampleColor = tex2D(TextureSampler, input.TexCoords);
-	float4 losColor = tex2D(LosSampler, input.TexCoords);
+	float4 losColor = tex2D(LosSampler, float2(input.TexCoords.x + blurDistance, input.TexCoords.y + blurDistance));
+    losColor += tex2D(LosSampler, float2(input.TexCoords.x - blurDistance, input.TexCoords.y - blurDistance));
+    losColor += tex2D(LosSampler, float2(input.TexCoords.x + blurDistance, input.TexCoords.y - blurDistance));
+    losColor += tex2D(LosSampler, float2(input.TexCoords.x - blurDistance, input.TexCoords.y + blurDistance));
+    losColor = losColor * 0.25f;
 
 	float obscureAmount = 1.0f - losColor.r;
 

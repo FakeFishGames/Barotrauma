@@ -9,6 +9,7 @@ using System.Text;
 using System.Xml.Linq;
 using Barotrauma.Networking;
 using System.Collections;
+using System.Collections.Immutable;
 #if SERVER
 using Barotrauma.Networking;
 #endif
@@ -415,14 +416,31 @@ namespace Barotrauma
                 }
             }
 #endif
-            return Submarine.MainSub.GetItems(true).FindAll(item =>
+            return FindAllSellableItems().Where(it => IsItemSellable(it, confirmedSoldEntities)).ToList();
+        }
+
+        public static IReadOnlyCollection<Item> FindAllItemsOnPlayerAndSub(Character character)
+        {
+            List<Item> allItems = new();
+            if (character?.Inventory is { } inv)
             {
-                if (!IsItemSellable(item, confirmedSoldEntities)) { return false; }
+               allItems.AddRange(inv.FindAllItems(recursive: true));
+            }
+            allItems.AddRange(FindAllSellableItems());
+            return allItems;
+        }
+
+        public static IEnumerable<Item> FindAllSellableItems()
+        {
+            if (Submarine.MainSub is null) { return Enumerable.Empty<Item>(); }
+
+            return Submarine.MainSub.GetItems(true).FindAll(static item =>
+            {
                 if (item.GetRootInventoryOwner() is Character) { return false; }
-                if (!item.Components.All(c => !(c is Holdable h) || !h.Attachable || !h.Attached)) { return false; }
-                if (!item.Components.All(c => !(c is Wire w) || w.Connections.All(c => c == null))) { return false; }
+                if (!item.Components.All(static c => c is not Holdable { Attachable: true, Attached: true })) { return false; }
+                if (!item.Components.All(static c => c is not Wire w || w.Connections.All(static c => c is null))) { return false; }
                 if (!ItemAndAllContainersInteractable(item)) { return false; }
-                if (item.GetRootContainer() is Item rootContainer && rootContainer.HasTag("dontsellitems")) { return false; }
+                if (item.RootContainer is Item rootContainer && rootContainer.HasTag("dontsellitems")) { return false; }
                 return true;
             }).Distinct();
 
@@ -592,7 +610,7 @@ namespace Barotrauma
                     (itemContainer?.Item ?? item).CampaignInteractionType = CampaignMode.InteractionType.Cargo;    
                     static void itemSpawned(PurchasedItem purchased, Item item)
                     {
-                        Submarine sub = item.Submarine ?? item.GetRootContainer()?.Submarine;
+                        Submarine sub = item.Submarine ?? item.RootContainer?.Submarine;
                         if (sub != null)
                         {
                             foreach (WifiComponent wifiComponent in item.GetComponents<WifiComponent>())

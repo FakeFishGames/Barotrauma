@@ -1226,7 +1226,7 @@ namespace Barotrauma
                 if (statusEffect.type == ActionType.OnDamaged)
                 {
                     if (!statusEffect.HasRequiredAfflictions(character.LastDamage)) { continue; }
-                    if (statusEffect.OnlyPlayerTriggered)
+                    if (statusEffect.OnlyWhenDamagedByPlayer)
                     {
                         if (character.LastAttacker == null || !character.LastAttacker.IsPlayer)
                         {

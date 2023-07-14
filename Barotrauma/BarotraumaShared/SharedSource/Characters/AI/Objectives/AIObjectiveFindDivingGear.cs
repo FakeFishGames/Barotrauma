@@ -30,7 +30,8 @@ namespace Barotrauma
         public static readonly Identifier DIVING_GEAR_WEARABLE_INDOORS = "divinggear_wearableindoors".ToIdentifier();
         public static readonly Identifier OXYGEN_SOURCE = "oxygensource".ToIdentifier();
 
-        protected override bool CheckObjectiveSpecific() => targetItem != null && character.HasEquippedItem(targetItem, slotType: InvSlotType.OuterClothes | InvSlotType.Head);
+        protected override bool CheckObjectiveSpecific() => 
+            targetItem != null && character.HasEquippedItem(targetItem, slotType: InvSlotType.OuterClothes | InvSlotType.InnerClothes | InvSlotType.Head);
 
         public AIObjectiveFindDivingGear(Character character, bool needsDivingSuit, AIObjectiveManager objectiveManager, float priorityModifier = 1) : base(character, objectiveManager, priorityModifier)
         {
@@ -51,7 +52,7 @@ namespace Barotrauma
                 TrySetTargetItem(character.Inventory.FindItemByTag(HEAVY_DIVING_GEAR, true));
             }
             if (targetItem == null || 
-                !character.HasEquippedItem(targetItem, slotType: InvSlotType.OuterClothes | InvSlotType.Head | InvSlotType.InnerClothes) && 
+                !character.HasEquippedItem(targetItem, slotType: InvSlotType.OuterClothes | InvSlotType.InnerClothes | InvSlotType.Head) && 
                 targetItem.ContainedItems.Any(it => IsSuitableContainedOxygenSource(it)))
             {
                 TryAddSubObjective(ref getDivingGear, () =>
@@ -65,7 +66,7 @@ namespace Barotrauma
                         AllowStealing = HumanAIController.NeedsDivingGear(character.CurrentHull, out _),
                         AllowToFindDivingGear = false,
                         AllowDangerousPressure = true,
-                        EquipSlotType = InvSlotType.OuterClothes | InvSlotType.Head | InvSlotType.InnerClothes,
+                        EquipSlotType = InvSlotType.OuterClothes | InvSlotType.InnerClothes | InvSlotType.Head,
                         Wear = true
                     };
                 }, 

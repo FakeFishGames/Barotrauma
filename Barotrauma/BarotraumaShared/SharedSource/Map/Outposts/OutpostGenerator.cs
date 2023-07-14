@@ -786,7 +786,7 @@ namespace Barotrauma
                         //check if the connection overlaps with this module's connection
                         if (selfGapPos1.HasValue && selfGapPos2.HasValue &&
                             !gapPos1.NearlyEquals(gapPos2) && !selfGapPos1.Value.NearlyEquals(selfGapPos2.Value) &&
-                            MathUtils.LinesIntersect(gapPos1, gapPos2, selfGapPos1.Value, selfGapPos2.Value))
+                            MathUtils.LineSegmentsIntersect(gapPos1, gapPos2, selfGapPos1.Value, selfGapPos2.Value))
                         {
                             return true;
                         }
@@ -1105,8 +1105,8 @@ namespace Barotrauma
                             DebugConsole.AddWarning($"Failed to connect junction boxes between outpost modules (not enough free connections in module \"{module.PreviousModule.Info.Name}\")");
                             continue;
                         }
-                        wire.Connect(thisJunctionBox.Connections[i], addNode: false);
-                        wire.Connect(previousJunctionBox.Connections[i], addNode: false);
+                        wire.TryConnect(thisJunctionBox.Connections[i], addNode: false);
+                        wire.TryConnect(previousJunctionBox.Connections[i], addNode: false);
                         wire.SetNodes(new List<Vector2>());
                     }
                 }
@@ -1353,20 +1353,27 @@ namespace Barotrauma
 
                     if (startWaypoint.WorldPosition.X > endWaypoint.WorldPosition.X)
                     {
-                        var temp = startWaypoint;
-                        startWaypoint = endWaypoint;
-                        endWaypoint = temp;
+                        (endWaypoint, startWaypoint) = (startWaypoint, endWaypoint);
                     }
 
                     if (hallwayLength > 100 && isHorizontal)
                     {
+                        //if the hallway is longer than 100 pixels, generate some waypoints inside it
+                        //for vertical hallways this isn't necessarily, it's done as a part of the ladder generation in AlignLadders
                         WayPoint prevWayPoint = startWaypoint;
+                        WayPoint firstWayPoint = null;
                         for (float x = leftHull.Rect.Right + 50; x < rightHull.Rect.X - 50; x += 100.0f)
                         {
                             var newWayPoint = new WayPoint(new Vector2(x, hullBounds.Y + 110.0f), SpawnType.Path, sub);
+                            firstWayPoint ??= newWayPoint;
                             prevWayPoint.linkedTo.Add(newWayPoint);
                             newWayPoint.linkedTo.Add(prevWayPoint);
                             prevWayPoint = newWayPoint;
+                        }
+                        if (firstWayPoint != null)
+                        {
+                            firstWayPoint.linkedTo.Add(startWaypoint);
+                            startWaypoint.linkedTo.Add(firstWayPoint);
                         }
                         if (prevWayPoint != null)
                         {
@@ -1377,25 +1384,7 @@ namespace Barotrauma
                     else
                     {
                         startWaypoint.linkedTo.Add(endWaypoint);
-                        endWaypoint.linkedTo.Add(startWaypoint);
-                    }
-
-                    WayPoint closestWaypoint = null;
-                    float closestDistSqr = 30.0f * 30.0f;
-                    foreach (WayPoint waypoint in WayPoint.WayPointList)
-                    {
-                        if (waypoint == startWaypoint) { continue; }
-                        float dist = Vector2.DistanceSquared(waypoint.WorldPosition, startWaypoint.WorldPosition);
-                        if (dist < closestDistSqr)
-                        {
-                            closestWaypoint = waypoint;
-                            closestDistSqr = dist;
-                        }
-                    }
-                    if (closestWaypoint != null)
-                    {
-                        startWaypoint.linkedTo.Add(closestWaypoint);
-                        closestWaypoint.linkedTo.Add(startWaypoint);
+                        endWaypoint.linkedTo.Add(startWaypoint);                    
                     }
                 }                
             }
@@ -1449,7 +1438,7 @@ namespace Barotrauma
             {
                 foreach (MapEntity me in entities[module])
                 {
-                    if (!(me is Gap gap)) { continue; }
+                    if (me is not Gap gap) { continue; }
                     var door = gap.ConnectedDoor;
                     if (door != null && !door.UseBetweenOutpostModules) { continue; }
                     if (placedModules.Any(m => m.PreviousGap == gap || m.ThisGap == gap)) 
@@ -1529,14 +1518,37 @@ namespace Barotrauma
 
             static void RemoveLinkedEntity(MapEntity linked)
             {
-                if (linked is Item linkedItem && linkedItem.Connections != null)
+                if (linked is Item linkedItem)
                 {
-                    foreach (Connection connection in linkedItem.Connections)
+                    if (linkedItem.Connections != null)
                     {
-                        foreach (Wire w in connection.Wires.ToArray())
+                        foreach (Connection connection in linkedItem.Connections)
                         {
-                            w?.Item.Remove();
+                            foreach (Wire w in connection.Wires.ToArray())
+                            {
+                                w?.Item.Remove();
+                            }
                         }
+                    }
+                    //if we end up removing a ladder, remove its waypoints too
+                    if (linkedItem.GetComponent<Ladder>() is Ladder ladder)
+                    {
+                        var ladderWaypoints = WayPoint.WayPointList.FindAll(wp => wp.Ladders == ladder);
+                        foreach (var ladderWaypoint in ladderWaypoints)
+                        {
+                            //got through all waypoints linked to the ladder waypoints, and link them together
+                            //so we don't end up breaking up any paths by removing the ladder waypoints
+                            for (int i = 0; i < ladderWaypoint.linkedTo.Count; i++)
+                            {
+                                if (ladderWaypoint.linkedTo[i] is not WayPoint waypoint1 || waypoint1.Ladders == ladder) { continue; }
+                                for (int j = i + 1; j < ladderWaypoint.linkedTo.Count; j++)
+                                {
+                                    if (ladderWaypoint.linkedTo[j] is not WayPoint waypoint2 || waypoint2.Ladders == ladder) { continue; }
+                                    waypoint1.ConnectTo(waypoint2);
+                                }
+                            }
+                        }
+                        ladderWaypoints.ForEach(wp => wp.Remove());
                     }
                 }
                 linked.Remove();
@@ -1595,10 +1607,11 @@ namespace Barotrauma
                     {
                         var startWaypoint = WayPoint.WayPointList.Find(wp => wp.ConnectedGap == bottomGap);
                         var endWaypoint = WayPoint.WayPointList.Find(wp => wp.ConnectedGap == topGap);
+                        float margin = 100;
                         if (startWaypoint != null && endWaypoint != null)
                         {
                             WayPoint prevWaypoint = startWaypoint;
-                            for (float y = startWaypoint.Position.Y + WayPoint.LadderWaypointInterval; y <= endWaypoint.Position.Y - WayPoint.LadderWaypointInterval; y += WayPoint.LadderWaypointInterval)
+                            for (float y = bottomGap.Position.Y + margin; y <= topGap.Position.Y - margin; y += WayPoint.LadderWaypointInterval)
                             {
                                 var wayPoint = new WayPoint(new Vector2(startWaypoint.Position.X, y), SpawnType.Path, ladder.Item.Submarine)
                                 {

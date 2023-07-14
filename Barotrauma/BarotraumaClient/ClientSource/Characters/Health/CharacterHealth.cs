@@ -850,7 +850,7 @@ namespace Barotrauma
                     if (treatmentButton.Enabled && treatmentButton.State == GUIComponent.ComponentState.Hover)
                     {
                         //highlight the slot the treatment item is in
-                        var rootContainer = matchingItem.GetRootContainer() ?? matchingItem;
+                        var rootContainer = matchingItem.RootContainer ?? matchingItem;
                         var index = Character.Controlled.Inventory.FindIndex(rootContainer);
                         if (Character.Controlled.Inventory.visualSlots != null && index > -1 && index < Character.Controlled.Inventory.visualSlots.Length &&
                             Character.Controlled.Inventory.visualSlots[index].HighlightTimer <= 0.0f)

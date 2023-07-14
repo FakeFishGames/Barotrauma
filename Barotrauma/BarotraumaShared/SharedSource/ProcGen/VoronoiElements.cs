@@ -205,7 +205,7 @@ namespace Voronoi2
             Vector2 transformedPoint = point - Translation;
             foreach (GraphEdge edge in Edges)
             {
-                if (MathUtils.LinesIntersect(transformedPoint, Center - Translation, edge.Point1, edge.Point2)) { return false; }
+                if (MathUtils.LineSegmentsIntersect(transformedPoint, Center - Translation, edge.Point1, edge.Point2)) { return false; }
             }
             return true;
         }

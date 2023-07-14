@@ -135,6 +135,9 @@ namespace Barotrauma.Particles
         [Editable(0.0f, 10000.0f), Serialize(0.0f, IsPropertySaveable.No, description: "Radius of the particle's collider. Only has an effect if UseCollision is set to true.")]
         public float CollisionRadius { get; private set; }
 
+        [Editable, Serialize(false, IsPropertySaveable.No, description: "If enabled, the size (or changes in size) of the particle doesn't affect the size of the collider.")]
+        public bool InvariantCollisionSize { get; private set; }
+
         [Editable, Serialize(false, IsPropertySaveable.No, description: "Does the particle collide with the walls of the submarine and the level.")]
         public bool UseCollision { get; private set; }
 

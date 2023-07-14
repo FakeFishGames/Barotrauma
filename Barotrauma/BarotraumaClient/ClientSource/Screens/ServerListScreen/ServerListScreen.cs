@@ -812,7 +812,7 @@ namespace Barotrauma
 
         private bool SortList(GUIButton button, object obj)
         {
-            if (!(obj is ColumnLabel sortBy)) { return false; }
+            if (obj is not ColumnLabel sortBy) { return false; }
             SortList(sortBy, toggle: true);
             return true;
         }
@@ -848,8 +848,7 @@ namespace Barotrauma
             {
                 if (c1.GUIComponent.UserData is not ServerInfo s1) { return 0; }
                 if (c2.GUIComponent.UserData is not ServerInfo s2) { return 0; }
-                int comparison = sortedAscending ? 1 : -1;
-                return CompareServer(sortBy, s1, s2) * comparison;
+                return CompareServer(sortBy, s1, s2, sortedAscending);
             });
         }
 
@@ -857,22 +856,31 @@ namespace Barotrauma
         {
             var children = serverList.Content.RectTransform.Children.Reverse().ToList();
 
-            int comparison = sortedAscending ? 1 : -1;
             foreach (var child in children)
             {
                 if (child.GUIComponent.UserData is not ServerInfo serverInfo2 || serverInfo.Equals(serverInfo2)) { continue; }
-                if (CompareServer(sortedBy, serverInfo, serverInfo2) * comparison >= 0)
+                if (CompareServer(sortedBy, serverInfo, serverInfo2, sortedAscending) >= 0)
                 {
                     var index = serverList.Content.RectTransform.GetChildIndex(child);
-                    component.RectTransform.RepositionChildInHierarchy(index + 1);
+                    component.RectTransform.RepositionChildInHierarchy(Math.Min(index + 1, serverList.Content.CountChildren - 1));
                     return;
                 }
             }
             component.RectTransform.SetAsFirstChild();
         }
 
-        private static int CompareServer(ColumnLabel sortBy, ServerInfo s1, ServerInfo s2)
+        private static int CompareServer(ColumnLabel sortBy, ServerInfo s1, ServerInfo s2, bool ascending)
         {
+            //always put servers with unknown ping at the bottom (unless we're specifically sorting by ping)
+            //servers without a ping are often unreachable/spam
+            bool s1HasPing = s1.Ping.IsSome();
+            bool s2HasPing = s2.Ping.IsSome();
+            if (s1HasPing != s2HasPing)
+            {
+                return s1HasPing ? -1 : 1;
+            }            
+
+            int comparison = ascending ? 1 : -1;
             switch (sortBy)
             {
                 case ColumnLabel.ServerListCompatible:
@@ -880,18 +888,18 @@ namespace Barotrauma
                     bool s2Compatible = NetworkMember.IsCompatible(GameMain.Version, s2.GameVersion);
 
                     if (s1Compatible == s2Compatible) { return 0; }
-                    return s1Compatible ? -1 : 1;
+                    return (s1Compatible ? -1 : 1) * comparison;
                 case ColumnLabel.ServerListHasPassword:
                     if (s1.HasPassword == s2.HasPassword) { return 0; }
-                    return s1.HasPassword ? 1 : -1;
+                    return (s1.HasPassword ? 1 : -1) * comparison;
                 case ColumnLabel.ServerListName:
                     // I think we actually want culture-specific sorting here?
-                    return string.Compare(s1.ServerName, s2.ServerName, StringComparison.CurrentCulture);
+                    return string.Compare(s1.ServerName, s2.ServerName, StringComparison.CurrentCulture) * comparison;
                 case ColumnLabel.ServerListRoundStarted:
                     if (s1.GameStarted == s2.GameStarted) { return 0; }
-                    return s1.GameStarted ? 1 : -1;
+                    return (s1.GameStarted ? 1 : -1) * comparison;
                 case ColumnLabel.ServerListPlayers:
-                    return s2.PlayerCount.CompareTo(s1.PlayerCount);
+                    return s2.PlayerCount.CompareTo(s1.PlayerCount) * comparison;
                 case ColumnLabel.ServerListPing:
                     return (s1.Ping.TryUnwrap(out var s1Ping), s2.Ping.TryUnwrap(out var s2Ping)) switch
                     {
@@ -899,7 +907,7 @@ namespace Barotrauma
                         (true, true) => s2Ping.CompareTo(s1Ping),
                         (false, true) => 1,
                         (true, false) => -1
-                    };
+                    } * comparison;
                 default:
                     return 0;
             }
@@ -1504,9 +1512,41 @@ namespace Barotrauma
 
         private void AddToServerList(ServerInfo serverInfo, bool skipPing = false)
         {
+            const int MaxAllowedPlayers = 1000;
+            const int MaxAllowedSimilarServers = 10;
+            const float MinSimilarityPercentage = 0.8f;
+
+            if (string.IsNullOrWhiteSpace(serverInfo.ServerName)) { return; }
             if (serverInfo.PlayerCount > serverInfo.MaxPlayers) { return; }
             if (serverInfo.PlayerCount < 0) { return; }
             if (serverInfo.MaxPlayers <= 0) { return; }
+            //no way a legit server can have this many players
+            if (serverInfo.MaxPlayers > MaxAllowedPlayers) { return; }
+
+            int similarServerCount = 0;
+            string serverInfoStr = getServerInfoStr(serverInfo);
+            foreach (var serverElement in serverList.Content.Children)
+            {
+                if (!serverElement.Visible) { continue; }
+                if (serverElement.UserData is not ServerInfo otherServer || otherServer == serverInfo) { continue; }
+                if (ToolBox.LevenshteinDistance(serverInfoStr, getServerInfoStr(otherServer)) < serverInfoStr.Length * (1.0f - MinSimilarityPercentage))
+                {
+                    similarServerCount++;
+                    if (similarServerCount > MaxAllowedSimilarServers) 
+                    {  
+                        DebugConsole.Log($"Server {serverInfo.ServerName} seems to be almost identical to {otherServer.ServerName}. Hiding as a potential spam server.");
+                        break;
+                    }
+                }
+            }
+            if (similarServerCount > MaxAllowedSimilarServers) { return; }
+
+            static string getServerInfoStr(ServerInfo serverInfo)
+            {
+                string str = serverInfo.ServerName + serverInfo.ServerMessage + serverInfo.MaxPlayers;
+                if (str.Length > 200) { return str.Substring(0, 200); }
+                return str;
+            }
 
             RemoveMsgFromServerList(MsgUserData.RefreshingServerList);
             RemoveMsgFromServerList(MsgUserData.NoServers);
@@ -1522,7 +1562,6 @@ namespace Barotrauma
             UpdateServerInfoUI(serverInfo);
             if (!skipPing) { PingUtils.GetServerPing(serverInfo, UpdateServerInfoUI); }
 
-            InsertServer(serverInfo, serverFrame);
         }
 
         private void UpdateServerInfoUI(ServerInfo serverInfo)
@@ -1736,7 +1775,7 @@ namespace Barotrauma
                 AddToFavoriteServers(serverInfo);
             }
 
-            SortList(sortedBy, toggle: false);
+            InsertServer(serverInfo, serverFrame);
             FilterServers();
         }
 

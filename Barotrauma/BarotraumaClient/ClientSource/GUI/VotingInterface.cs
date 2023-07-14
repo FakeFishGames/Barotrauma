@@ -23,8 +23,11 @@ namespace Barotrauma
         private float votingTime = 100f;
         private float timer;
         private VoteType currentVoteType;
-        private Color SubmarineColor => GUIStyle.Orange;
+        private static Color SubmarineColor => GUIStyle.Orange;
         private Point createdForResolution;
+
+        //timer ran out but server still hasn't notified of the result of the vote        
+        public bool TimedOut => VoteRunning && timer - votingTime > 10.0f;
 
         public static VotingInterface CreateSubmarineVotingInterface(Client starter, SubmarineInfo info, VoteType type, bool transferItems, float votingTime)
         {

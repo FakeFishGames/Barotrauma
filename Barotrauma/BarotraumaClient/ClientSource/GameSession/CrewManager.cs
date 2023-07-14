@@ -95,6 +95,7 @@ namespace Barotrauma
             {
                 CanBeFocused = false
             };
+            crewArea.RectTransform.NonScaledSize = HUDLayoutSettings.CrewArea.Size;
 
             // AbsoluteOffset is set in UpdateProjectSpecific based on crewListOpenState
             crewList = new GUIListBox(new RectTransform(Vector2.One, crewArea.RectTransform), style: null, isScrollBarOnDefaultSide: false)
@@ -376,6 +377,7 @@ namespace Barotrauma
                 - (0.1f * iconRelativeWidth)
                 // Spacing
                 - (7 * layoutGroup.RelativeSpacing);
+            nameRelativeWidth = Math.Max(nameRelativeWidth, 0.25f);
 
             var font = layoutGroup.Rect.Width < 150 ? GUIStyle.SmallFont : GUIStyle.Font;
             var nameBlock = new GUITextBlock(

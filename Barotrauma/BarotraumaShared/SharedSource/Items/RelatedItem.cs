@@ -35,7 +35,11 @@ namespace Barotrauma
             /// The item this relation is defined in must be inside a specific kind of container. 
             /// Can for example by used to make an item do something when it's inside some other type of item.
             /// </summary>
-            Container
+            Container,
+            /// <summary>
+            /// Signifies an error (type could not be parsed)
+            /// </summary>
+            Invalid
         }
 
         /// <summary>
@@ -60,9 +64,9 @@ namespace Barotrauma
         /// </summary>
         public ImmutableHashSet<Identifier> ExcludedIdentifiers { get; private set; }
 
-        private RelationType type;
+        private readonly RelationType type;
 
-        public List<StatusEffect> statusEffects;
+        public List<StatusEffect> StatusEffects = new List<StatusEffect>();
 
         /// <summary>
         /// Only valid for the RequiredItems of an ItemComponent. A message displayed if the required item isn't found (e.g. a notification about lack of ammo or fuel).
@@ -198,8 +202,121 @@ namespace Barotrauma
         {
             this.Identifiers = identifiers.Select(id => id.Value.Trim().ToIdentifier()).ToImmutableHashSet();
             this.ExcludedIdentifiers = excludedIdentifiers.Select(id => id.Value.Trim().ToIdentifier()).ToImmutableHashSet();
+        }
 
-            statusEffects = new List<StatusEffect>();
+        public RelatedItem(ContentXElement element, string parentDebugName)
+        {
+            Identifier[] identifiers;
+            if (element.GetAttribute("name") != null)
+            {
+                //backwards compatibility + a console warning
+                DebugConsole.ThrowError($"Error in RelatedItem config (" + (string.IsNullOrEmpty(parentDebugName) ? element.ToString() : parentDebugName) + ") - use item tags or identifiers instead of names.");
+                Identifier[] itemNames = element.GetAttributeIdentifierArray("name", Array.Empty<Identifier>());
+                //attempt to convert to identifiers and tags
+                List<Identifier> convertedIdentifiers = new List<Identifier>();
+                foreach (Identifier itemName in itemNames)
+                {
+                    var matchingItem = ItemPrefab.Prefabs.Find(me => me.Name == itemName.Value);
+                    if (matchingItem != null)
+                    {
+                        convertedIdentifiers.Add(matchingItem.Identifier);
+                    }
+                    else
+                    {
+                        //no matching item found, this must be a tag
+                        convertedIdentifiers.Add(itemName);
+                    }
+                }
+                identifiers = convertedIdentifiers.ToArray();
+            }
+            else
+            {
+                identifiers = element.GetAttributeIdentifierArray("items", null) ?? element.GetAttributeIdentifierArray("item", null);
+                if (identifiers == null)
+                {
+                    identifiers = element.GetAttributeIdentifierArray("identifiers", null) ?? element.GetAttributeIdentifierArray("tags", null);
+                    if (identifiers == null)
+                    {
+                        identifiers = element.GetAttributeIdentifierArray("identifier", null) ?? element.GetAttributeIdentifierArray("tag", Array.Empty<Identifier>());
+                    }
+                }
+            }
+            this.Identifiers = identifiers.ToImmutableHashSet();
+
+            Identifier[] excludedIdentifiers = element.GetAttributeIdentifierArray("excludeditems", null) ?? element.GetAttributeIdentifierArray("excludeditem", null);
+            if (excludedIdentifiers == null)
+            {
+                excludedIdentifiers = element.GetAttributeIdentifierArray("excludedidentifiers", null) ?? element.GetAttributeIdentifierArray("excludedtags", null);
+                if (excludedIdentifiers == null)
+                {
+                    excludedIdentifiers = element.GetAttributeIdentifierArray("excludedidentifier", null) ?? element.GetAttributeIdentifierArray("excludedtag", Array.Empty<Identifier>());
+                }
+            }
+            this.ExcludedIdentifiers = excludedIdentifiers.ToImmutableHashSet();
+
+            ExcludeBroken = element.GetAttributeBool("excludebroken", true);
+            RequireEmpty = element.GetAttributeBool("requireempty", false);
+            ExcludeFullCondition = element.GetAttributeBool("excludefullcondition", false);
+            AllowVariants = element.GetAttributeBool("allowvariants", true);
+            Rotation = element.GetAttributeFloat("rotation", 0f);
+            SetActive = element.GetAttributeBool("setactive", false);
+
+            if (element.GetAttribute(nameof(Hide)) != null)
+            {
+                Hide = element.GetAttributeBool(nameof(Hide), false);
+            }
+            if (element.GetAttribute(nameof(ItemPos)) != null)
+            {
+                ItemPos = element.GetAttributeVector2(nameof(ItemPos), Vector2.Zero);
+            }
+            string typeStr = element.GetAttributeString("type", "");
+            if (string.IsNullOrEmpty(typeStr))
+            {
+                switch (element.Name.ToString().ToLowerInvariant())
+                {
+                    case "containable":
+                        typeStr = "Contained";
+                        break;
+                    case "suitablefertilizer":
+                    case "suitableseed":
+                        typeStr = "None";
+                        break;
+                }
+            }
+            if (!Enum.TryParse(typeStr, true, out type))
+            {
+                DebugConsole.ThrowError("Error in RelatedItem config (" + parentDebugName + ") - \"" + typeStr + "\" is not a valid relation type.");
+                type = RelationType.Invalid;
+            }
+
+            MsgTag = element.GetAttributeIdentifier("msg", Identifier.Empty);
+            LocalizedString msg = TextManager.Get(MsgTag);
+            if (!msg.Loaded)
+            {
+                Msg = MsgTag.Value;
+            }
+            else
+            {
+#if CLIENT
+                foreach (InputType inputType in Enum.GetValues(typeof(InputType)))
+                {
+                    msg = msg.Replace("[" + inputType.ToString().ToLowerInvariant() + "]", GameSettings.CurrentConfig.KeyMap.KeyBindText(inputType));
+                }
+                Msg = msg;
+#endif
+            }
+
+            foreach (var subElement in element.Elements())
+            {
+                if (!subElement.Name.ToString().Equals("statuseffect", StringComparison.OrdinalIgnoreCase)) { continue; }
+                StatusEffects.Add(StatusEffect.Load(subElement, parentDebugName));
+            }
+
+            IsOptional = element.GetAttributeBool("optional", false);
+            IgnoreInEditor = element.GetAttributeBool("ignoreineditor", false);
+            MatchOnEmpty = element.GetAttributeBool("matchonempty", false);
+            TargetSlot = element.GetAttributeInt("targetslot", -1);
+
         }
 
         public bool CheckRequirements(Character character, Item parentItem)
@@ -301,120 +418,10 @@ namespace Barotrauma
         }
 
         public static RelatedItem Load(ContentXElement element, bool returnEmpty, string parentDebugName)
-        {
-            Identifier[] identifiers;
-            if (element.GetAttribute("name") != null)
-            {
-                //backwards compatibility + a console warning
-                DebugConsole.ThrowError("Error in RelatedItem config (" + (string.IsNullOrEmpty(parentDebugName) ? element.ToString() : parentDebugName) + ") - use item tags or identifiers instead of names.");
-                Identifier[] itemNames = element.GetAttributeIdentifierArray("name", Array.Empty<Identifier>());
-                //attempt to convert to identifiers and tags
-                List<Identifier> convertedIdentifiers = new List<Identifier>();
-                foreach (Identifier itemName in itemNames)
-                {
-                    var matchingItem = ItemPrefab.Prefabs.Find(me => me.Name == itemName.Value);
-                    if (matchingItem != null)
-                    {
-                        convertedIdentifiers.Add(matchingItem.Identifier);
-                    }
-                    else
-                    {
-                        //no matching item found, this must be a tag
-                        convertedIdentifiers.Add(itemName);
-                    }
-                }
-                identifiers = convertedIdentifiers.ToArray();
-            }
-            else
-            {
-                identifiers = element.GetAttributeIdentifierArray("items", null) ?? element.GetAttributeIdentifierArray("item", null);
-                if (identifiers == null)
-                {
-                    identifiers = element.GetAttributeIdentifierArray("identifiers", null) ?? element.GetAttributeIdentifierArray("tags", null);
-                    if (identifiers == null)
-                    {
-                        identifiers = element.GetAttributeIdentifierArray("identifier", null) ?? element.GetAttributeIdentifierArray("tag", Array.Empty<Identifier>());
-                    }
-                }
-            }
-
-            Identifier[] excludedIdentifiers = element.GetAttributeIdentifierArray("excludeditems", null) ?? element.GetAttributeIdentifierArray("excludeditem", null);
-            if (excludedIdentifiers == null)
-            {
-                excludedIdentifiers = element.GetAttributeIdentifierArray("excludedidentifiers", null) ?? element.GetAttributeIdentifierArray("excludedtags", null);
-                if (excludedIdentifiers == null)
-                {
-                    excludedIdentifiers = element.GetAttributeIdentifierArray("excludedidentifier", null) ?? element.GetAttributeIdentifierArray("excludedtag", Array.Empty<Identifier>());
-                }
-            }
-
-            if (identifiers.Length == 0 && excludedIdentifiers.Length == 0 && !returnEmpty) { return null; }
-
-            RelatedItem ri = new RelatedItem(identifiers, excludedIdentifiers)
-            {
-                ExcludeBroken = element.GetAttributeBool("excludebroken", true),
-                RequireEmpty = element.GetAttributeBool("requireempty", false),
-                ExcludeFullCondition = element.GetAttributeBool("excludefullcondition", false),
-                AllowVariants = element.GetAttributeBool("allowvariants", true),
-                Rotation = element.GetAttributeFloat("rotation", 0f),
-                SetActive = element.GetAttributeBool("setactive", false)
-            };
-            if (element.GetAttribute(nameof(Hide)) != null)
-            {
-                ri.Hide = element.GetAttributeBool(nameof(Hide), false);
-            }
-            if (element.GetAttribute(nameof(ItemPos)) != null)
-            {
-                ri.ItemPos = element.GetAttributeVector2(nameof(ItemPos), Vector2.Zero);
-            }
-            string typeStr = element.GetAttributeString("type", "");
-            if (string.IsNullOrEmpty(typeStr))
-            {
-                switch (element.Name.ToString().ToLowerInvariant())
-                {
-                    case "containable":
-                        typeStr = "Contained";
-                        break;
-                    case "suitablefertilizer":
-                    case "suitableseed":
-                        typeStr = "None";
-                        break;
-                }
-            }
-            if (!Enum.TryParse(typeStr, true, out ri.type))
-            {
-                DebugConsole.ThrowError("Error in RelatedItem config (" + parentDebugName + ") - \"" + typeStr + "\" is not a valid relation type.");
-                return null;
-            }
-
-            ri.MsgTag = element.GetAttributeIdentifier("msg", Identifier.Empty);
-            LocalizedString msg = TextManager.Get(ri.MsgTag);
-            if (!msg.Loaded)
-            {
-                ri.Msg = ri.MsgTag.Value;
-            }
-            else
-            {
-#if CLIENT
-                foreach (InputType inputType in Enum.GetValues(typeof(InputType)))
-                {
-                    msg = msg.Replace("[" + inputType.ToString().ToLowerInvariant() + "]", GameSettings.CurrentConfig.KeyMap.KeyBindText(inputType));
-                }
-                ri.Msg = msg;
-#endif
-            }
-
-            foreach (var subElement in element.Elements())
-            {
-                if (!subElement.Name.ToString().Equals("statuseffect", StringComparison.OrdinalIgnoreCase)) { continue; }
-                ri.statusEffects.Add(StatusEffect.Load(subElement, parentDebugName));
-            }
-
-            ri.IsOptional = element.GetAttributeBool("optional", false);
-            ri.IgnoreInEditor = element.GetAttributeBool("ignoreineditor", false);
-            ri.MatchOnEmpty = element.GetAttributeBool("matchonempty", false);
-            ri.TargetSlot = element.GetAttributeInt("targetslot", -1);
-
+        {           
+            RelatedItem ri = new RelatedItem(element, parentDebugName);
+            if (ri.Type == RelationType.Invalid) { return null; }
+            if (ri.Identifiers.None() && ri.ExcludedIdentifiers.None() && !returnEmpty) { return null; }
             return ri;
         }
     }

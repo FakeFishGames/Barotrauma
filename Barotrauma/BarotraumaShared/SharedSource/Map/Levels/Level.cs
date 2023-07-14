@@ -1454,7 +1454,7 @@ namespace Barotrauma
                         if (node2.X <= pathNodes.Last().X) { continue; }
                         if (MathUtils.NearlyEqual(node1.X, pathNodes.Last().X)) { continue; }
                         if (Math.Abs(node1.Y - nodePos.Y) > tunnel.MinWidth && Math.Abs(node2.Y - nodePos.Y) > tunnel.MinWidth &&
-                            !MathUtils.LinesIntersect(node1.ToVector2(), node2.ToVector2(), pathNodes.Last().ToVector2(), nodePos.ToVector2())) 
+                            !MathUtils.LineSegmentsIntersect(node1.ToVector2(), node2.ToVector2(), pathNodes.Last().ToVector2(), nodePos.ToVector2())) 
                         { 
                             continue; 
                         }
@@ -1550,7 +1550,7 @@ namespace Barotrauma
                     foreach (GraphEdge edge in tunnel.Cells[i].Edges)
                     {
                         if (edge.AdjacentCell(tunnel.Cells[i])?.CellType == CellType.Solid && 
-                            MathUtils.LinesIntersect(newWaypoint.WorldPosition, prevWayPoint.WorldPosition, edge.Point1, edge.Point2))
+                            MathUtils.LineSegmentsIntersect(newWaypoint.WorldPosition, prevWayPoint.WorldPosition, edge.Point1, edge.Point2))
                         {
                             solidCellBetween = true;
                             break;
@@ -2801,7 +2801,7 @@ namespace Barotrauma
                                 if (Vector2.DistanceSquared(c.EdgeCenter, validLocation.EdgeCenter) > (intervalRange.X * intervalRange.X))  { return true; }
                                 // If there is a line from a previous path point to one of its existing cluster locations
                                 // which intersects with the line from this path point to the new possible cluster location
-                                if (MathUtils.LinesIntersect(anotherPathPoint.Position, c.EdgeCenter, pathPoint.Position, validLocation.EdgeCenter))  { return true; }
+                                if (MathUtils.LineSegmentsIntersect(anotherPathPoint.Position, c.EdgeCenter, pathPoint.Position, validLocation.EdgeCenter))  { return true; }
                                 return false;
                             }
                         }
@@ -2975,13 +2975,13 @@ namespace Barotrauma
         }
 
         /// <param name="rotation">Used by clients to set the rotation for the resources</param>
-        public List<Item> GenerateMissionResources(ItemPrefab prefab, int requiredAmount, PositionType positionType, out float rotation, IEnumerable<Cave> targetCaves = null)
+        public List<Item> GenerateMissionResources(ItemPrefab prefab, int requiredAmount, PositionType positionType, IEnumerable<Cave> targetCaves = null)
         {
             var allValidLocations = GetAllValidClusterLocations();
             var placedResources = new List<Item>();
-            rotation = 0.0f;
 
-            if (allValidLocations.None()) { return placedResources; } // TODO: WHAT?!
+            // if there are no valid locations, don't place anything
+            if (allValidLocations.None()) { return placedResources; }
 
             // Make sure not to pick a spot that already has other level resources
             for (int i = allValidLocations.Count - 1; i >= 0; i--)
@@ -3077,7 +3077,6 @@ namespace Barotrauma
             }
             PlaceResources(prefab, requiredAmount, selectedLocation, out placedResources);
             Vector2 edgeNormal = selectedLocation.Edge.GetNormal(selectedLocation.Cell);
-            rotation = MathHelper.ToDegrees(-MathUtils.VectorToAngle(edgeNormal) + MathHelper.PiOver2);
             return placedResources;
 
             static bool IsOnMainPath(ClusterLocation location) => location.Edge.NextToMainPath;
@@ -3182,13 +3181,11 @@ namespace Barotrauma
                 Vector2 edgeNormal = location.Edge.GetNormal(location.Cell);
                 float moveAmount = (item.body == null ? item.Rect.Height / 2 : ConvertUnits.ToDisplayUnits(item.body.GetMaxExtent() * 0.7f));
                 moveAmount += (item.GetComponent<LevelResource>()?.RandomOffsetFromWall ?? 0.0f) * Rand.Range(-0.5f, 0.5f, Rand.RandSync.ServerAndClient);
-                item.Move(edgeNormal * moveAmount, ignoreContacts: true);
+                item.Move(edgeNormal * moveAmount);
                 if (item.GetComponent<Holdable>() is Holdable h)
                 {
                     h.AttachToWall();
-#if CLIENT
                     item.Rotation = MathHelper.ToDegrees(-MathUtils.VectorToAngle(edgeNormal) + MathHelper.PiOver2);
-#endif
                 }
                 else if (item.body != null)
                 {
@@ -3509,7 +3506,7 @@ namespace Barotrauma
             {
                 foreach (GraphEdge e in cell.Edges)
                 {
-                    if (!MathUtils.LinesIntersect(closestPathCell.Center, pos.ToVector2(), e.Point1, e.Point2)) { continue; }
+                    if (!MathUtils.LineSegmentsIntersect(closestPathCell.Center, pos.ToVector2(), e.Point1, e.Point2)) { continue; }
                     
                     cell.CellType = CellType.Removed;
                     for (int x = 0; x < cellGrid.GetLength(0); x++)

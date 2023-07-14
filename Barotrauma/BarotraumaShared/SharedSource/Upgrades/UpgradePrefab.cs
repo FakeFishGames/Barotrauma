@@ -538,23 +538,25 @@ namespace Barotrauma
             if (character is null) { return false; }
             if (!ResourceCosts.Any()) { return true; }
 
-            List<Item> allItems = character.Inventory.FindAllItems(recursive: true);
+            var allItems = CargoManager.FindAllItemsOnPlayerAndSub(character);
+
             return ResourceCosts.Where(cost => cost.AppliesForLevel(currentLevel)).All(cost => cost.Amount <= allItems.Count(cost.MatchesItem));
         }
 
+        // ReSharper disable PossibleMultipleEnumeration
         public bool TryTakeResources(Character character, int currentLevel)
         {
-            IEnumerable<UpgradeResourceCost> costs = ResourceCosts.Where(cost => cost.AppliesForLevel(currentLevel));
+            var costs = ResourceCosts.Where(cost => cost.AppliesForLevel(currentLevel));
 
             if (!costs.Any()) { return true; }
 
-            List<Item> allItems = character.Inventory.FindAllItems(recursive: true);
+            var inventoryItems = CargoManager.FindAllItemsOnPlayerAndSub(character);
             HashSet<Item> itemsToRemove = new HashSet<Item>();
 
             foreach (UpgradeResourceCost cost in costs)
             {
                 int amountNeeded = cost.Amount;
-                foreach (Item item in allItems.Where(cost.MatchesItem))
+                foreach (Item item in inventoryItems.Where(cost.MatchesItem))
                 {
                     itemsToRemove.Add(item);
                     amountNeeded--;

@@ -121,6 +121,23 @@ namespace Barotrauma
         {
             return AllowedToManageCampaign(ClientPermissions.ManageMoney);
         }
+        protected GUIButton CreateEndRoundButton()
+        {
+            int buttonWidth = (int)(450 * GUI.xScale * (GUI.IsUltrawide ? 3.0f : 1.0f));
+            int buttonHeight = (int)(40 * GUI.yScale);
+            var rectT = HUDLayoutSettings.ToRectTransform(new Rectangle((GameMain.GraphicsWidth / 2), HUDLayoutSettings.ButtonAreaTop.Center.Y, buttonWidth, buttonHeight), GUI.Canvas);
+            rectT.Pivot = Pivot.Center;
+            return new GUIButton(rectT, TextManager.Get("EndRound"), textAlignment: Alignment.Center, style: "EndRoundButton")
+            {
+                Pulse = true,
+                TextBlock =
+                {
+                    Shadow = true,
+                    AutoScaleHorizontal = true
+                }
+            };
+        }
+
 
         public override void Draw(SpriteBatch spriteBatch)
         {

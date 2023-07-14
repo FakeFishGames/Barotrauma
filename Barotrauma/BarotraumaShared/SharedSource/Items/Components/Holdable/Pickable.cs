@@ -241,12 +241,9 @@ namespace Barotrauma.Items.Components
             }                       
         }
         
-        public override void Drop(Character dropper)
+        public override void Drop(Character dropper, bool setTransform = true)
         {            
-            if (picker == null)
-            {
-                picker = dropper;
-            }
+            picker ??= dropper;
 
             Vector2 bodyDropPos = Vector2.Zero;
 
@@ -255,8 +252,7 @@ namespace Barotrauma.Items.Components
                 if (item.ParentInventory != null && item.ParentInventory.Owner != null && !item.ParentInventory.Owner.Removed)
                 {
                     bodyDropPos = item.ParentInventory.Owner.SimPosition;
-
-                    if (item.body != null) item.body.ResetDynamics();                    
+                    item.body?.ResetDynamics();                    
                 }
             }
             else if (!picker.Removed)
@@ -270,7 +266,7 @@ namespace Barotrauma.Items.Components
                 picker = null;
             }
 
-            if (item.body != null && !item.body.Enabled)
+            if (item.body != null && !item.body.Enabled && setTransform)
             {
                 if (item.body.Removed)
                 {

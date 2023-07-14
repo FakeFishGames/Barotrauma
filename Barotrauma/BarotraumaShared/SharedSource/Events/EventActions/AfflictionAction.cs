@@ -49,7 +49,7 @@ namespace Barotrauma
                             var limb = character.AnimController.GetLimb(LimbType);
                             if (Strength > 0.0f)
                             {
-                                character.CharacterHealth.ApplyAffliction(limb, afflictionPrefab.Instantiate(Strength));
+                                character.CharacterHealth.ApplyAffliction(limb, afflictionPrefab.Instantiate(Strength), ignoreUnkillability: true);
                             }
                             else if (Strength < 0.0f)
                             {
@@ -60,7 +60,7 @@ namespace Barotrauma
                         {
                             if (Strength > 0.0f)
                             {
-                                character.CharacterHealth.ApplyAffliction(null, afflictionPrefab.Instantiate(Strength));
+                                character.CharacterHealth.ApplyAffliction(null, afflictionPrefab.Instantiate(Strength), ignoreUnkillability: true);
                             }
                             else if (Strength < 0.0f)
                             {

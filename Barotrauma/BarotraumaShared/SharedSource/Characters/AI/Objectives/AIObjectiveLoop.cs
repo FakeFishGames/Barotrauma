@@ -48,6 +48,8 @@ namespace Barotrauma
         protected virtual bool ResetWhenClearingIgnoreList => true;
         protected virtual bool ForceOrderPriority => true;
 
+        protected virtual int MaxTargets => int.MaxValue;
+
         public override bool IsLoop { get => true; set => throw new Exception("Trying to set the value for IsLoop from: " + System.Environment.StackTrace.CleanupStackTrace()); }
 
         public override void Update(float deltaTime)
@@ -188,6 +190,10 @@ namespace Barotrauma
                 if (!ignoreList.Contains(target))
                 {
                     Targets.Add(target);
+                    if (Targets.Count > MaxTargets)
+                    {
+                        break;
+                    }
                 }
             }
         }

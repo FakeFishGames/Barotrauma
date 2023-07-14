@@ -19,9 +19,6 @@ namespace Barotrauma
         protected List<ushort> linkedToID;
         public List<ushort> unresolvedLinkedToID;
 
-        private const int GapUpdateInterval = 4;
-        private static int gapUpdateTimer;
-
         /// <summary>
         /// List of upgrades this item has
         /// </summary>
@@ -315,7 +312,7 @@ namespace Barotrauma
             }
         }
 
-        public virtual void Move(Vector2 amount, bool ignoreContacts = false)
+        public virtual void Move(Vector2 amount, bool ignoreContacts = true)
         {
             rect.X += (int)amount.X;
             rect.Y += (int)amount.Y;
@@ -452,7 +449,7 @@ namespace Barotrauma
             List<Wire> orphanedWires = new List<Wire>();
             for (int i = 0; i < clones.Count; i++)
             {
-                if (!(clones[i] is Item cloneItem)) { continue; }
+                if (clones[i] is not Item cloneItem) { continue; }
 
                 var door = cloneItem.GetComponent<Door>();
                 door?.RefreshLinkedGap();
@@ -507,10 +504,12 @@ namespace Barotrauma
                     }
 
                     (clones[itemIndex] as Item).Connections[connectionIndex].TryAddLink(cloneWire);
-                    cloneWire.Connect((clones[itemIndex] as Item).Connections[connectionIndex], false);
+                    cloneWire.Connect((clones[itemIndex] as Item).Connections[connectionIndex], n, addNode: false);
                 }
 
-                if ((cloneWire.Connections[0] == null || cloneWire.Connections[1] == null) && cloneItem.GetComponent<DockingPort>() == null)
+                if (originalWire.Connections.Any(c => c != null) &&
+                    (cloneWire.Connections[0] == null || cloneWire.Connections[1] == null) && 
+                    cloneItem.GetComponent<DockingPort>() == null)
                 {
                     if (!clones.Any(c => (c as Item)?.GetComponent<ConnectionPanel>()?.DisconnectedWires.Contains(cloneWire) ?? false))
                     {
@@ -628,14 +627,9 @@ namespace Barotrauma
             //the water/air will always tend to flow through the first gap in the list,
             //which may lead to weird behavior like water draining down only through
             //one gap in a room even if there are several
-            gapUpdateTimer++;
-            if (gapUpdateTimer >= GapUpdateInterval)
+            foreach (Gap gap in Gap.GapList.OrderBy(g => Rand.Int(int.MaxValue)))
             {
-                foreach (Gap gap in Gap.GapList.OrderBy(g => Rand.Int(int.MaxValue)))
-                {
-                    gap.Update(deltaTime * GapUpdateInterval, cam);
-                }
-                gapUpdateTimer = 0;
+                gap.Update(deltaTime, cam);
             }
 
 #if CLIENT

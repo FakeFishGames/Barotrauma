@@ -1,4 +1,5 @@
-﻿using Barotrauma.Networking;
+﻿using Barotrauma.Lights;
+using Barotrauma.Networking;
 using FarseerPhysics;
 using FarseerPhysics.Collision;
 using Microsoft.Xna.Framework;
@@ -9,6 +10,8 @@ namespace Barotrauma.Items.Components
     partial class DockingPort : ItemComponent, IDrawableComponent, IServerSerializable, IClientSerializable
     {
         private GUIMessageBox autodockingVerification;
+
+        private readonly ConvexHull[] convexHulls = new ConvexHull[2];
 
         public Vector2 DrawSize
         {
@@ -106,6 +109,15 @@ namespace Barotrauma.Items.Components
                     bodyDrawPos,
                     ConvertUnits.ToDisplayUnits(aabb.Extents * 2),
                     Color.Gray, false, 0, 8);
+            }
+        }
+
+        partial void RemoveConvexHulls()
+        {
+            for (int i = 0; i < convexHulls.Length; i++)
+            {
+                convexHulls[i]?.Remove();
+                convexHulls[i] = null;
             }
         }
 

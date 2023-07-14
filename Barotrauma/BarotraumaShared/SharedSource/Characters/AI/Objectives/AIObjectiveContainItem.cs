@@ -198,7 +198,7 @@ namespace Barotrauma
                         TargetName = container.Item.Name,
                         AbortCondition = obj =>
                             container?.Item == null || container.Item.Removed || !container.Item.HasAccess(character) || 
-                            (container.Item.GetRootContainer()?.OwnInventory?.Locked ?? false) ||
+                            (container.Item.RootContainer?.OwnInventory?.Locked ?? false) ||
                             ItemToContain == null || ItemToContain.Removed ||
                             !ItemToContain.IsOwnedBy(character) || container.Item.GetRootInventoryOwner() is Character c && c != character,
                         SpeakIfFails = !objectiveManager.IsCurrentOrder<AIObjectiveCleanupItems>(),

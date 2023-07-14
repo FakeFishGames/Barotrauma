@@ -213,7 +213,7 @@ namespace Barotrauma
                                     {
                                         foreach (Voronoi2.GraphEdge edge in cell.Edges)
                                         {
-                                            if (MathUtils.GetLineIntersection(edge.Point1, edge.Point2, character.WorldPosition, cell.Center, out Vector2 intersection))
+                                            if (MathUtils.GetLineSegmentIntersection(edge.Point1, edge.Point2, character.WorldPosition, cell.Center, out Vector2 intersection))
                                             {
                                                 Vector2 potentialAttachPos = ConvertUnits.ToSimUnits(intersection);
                                                 float distSqr = Vector2.DistanceSquared(character.SimPosition, potentialAttachPos);

@@ -139,7 +139,7 @@ namespace Barotrauma.Items.Components
 
         public override void DrawHUD(SpriteBatch spriteBatch, Character character)
         {
-            if (character == null || !character.IsKeyDown(InputType.Aim)) { return; }
+            if (character == null || !character.IsKeyDown(InputType.Aim) || !character.CanAim) { return; }
 
             //camera focused on some other item/device, don't draw the crosshair
             if (character.ViewTarget != null && (character.ViewTarget is Item viewTargetItem) && viewTargetItem.Prefab.FocusOnSelected) { return; }

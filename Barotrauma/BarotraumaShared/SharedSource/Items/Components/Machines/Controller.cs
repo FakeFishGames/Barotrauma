@@ -98,6 +98,20 @@ namespace Barotrauma.Items.Components
             set;
         }
 
+        [Serialize(true, IsPropertySaveable.No, description: "Can another character select this controller when another character has already selected it?")]
+        public bool AllowSelectingWhenSelectedByOther
+        {
+            get;
+            set;
+        }
+
+        [Serialize(true, IsPropertySaveable.No, description: "Can another character select this controller when a bot has already selected it?")]
+        public bool AllowSelectingWhenSelectedByBot
+        {
+            get;
+            set;
+        }
+
         public bool ControlCharacterPose
         {
             get { return limbPositions.Count > 0; }
@@ -466,8 +480,18 @@ namespace Barotrauma.Items.Components
                     IsActive = false;
                     CancelUsing(user);
                     user = null;
-                    return false;
                 }
+                else if (user.IsBot && !activator.IsBot)
+                {
+                    if (AllowSelectingWhenSelectedByBot)
+                    {
+                        CancelUsing(user);
+                        user = activator;
+                        IsActive = true;
+                        return true;
+                    }
+                }
+                return AllowSelectingWhenSelectedByOther;
             }
             else
             {

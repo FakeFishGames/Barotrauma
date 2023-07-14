@@ -21,7 +21,8 @@ namespace Barotrauma.Items.Components
         public float FlashTimer { get; private set; }
         public static Wire DraggingConnected { get; private set; }
 
-        public static void DrawConnections(SpriteBatch spriteBatch, ConnectionPanel panel, Rectangle dragArea, Character character)
+        public static void DrawConnections(SpriteBatch spriteBatch, ConnectionPanel panel, Rectangle dragArea, Character character, 
+            out (Vector2 tooltipPos, LocalizedString text) tooltip)
         {
             if (DraggingConnected?.Item?.Removed ?? true)
             {
@@ -64,6 +65,8 @@ namespace Barotrauma.Items.Components
                 }
             }
 
+            tooltip = (Vector2.Zero, string.Empty);
+
             //two passes: first the connector, then the wires to get the wires to render in front
             for (int i = 0; i < 2; i++)
             {
@@ -97,6 +100,42 @@ namespace Barotrauma.Items.Components
                         }
                     }
 
+                    Vector2 position = c.IsOutput ? rightPos : leftPos;
+                    Color highlightColor = Color.Transparent;
+                    if (ConnectionPanel.ShouldDebugDrawWiring)
+                    {
+                        if (c.IsPower)
+                        {
+                            highlightColor = VisualizeSignal(0.0f, highlightColor, Color.Red);
+                        }
+                        else
+                        {
+                            highlightColor = VisualizeSignal(c.LastReceivedSignal.TimeSinceCreated, highlightColor, Color.LightGreen);
+                            highlightColor = VisualizeSignal(c.LastSentSignal.TimeSinceCreated, highlightColor, Color.Orange);
+                        }
+                        bool mouseOn = Vector2.DistanceSquared(position, PlayerInput.MousePosition) < MathUtils.Pow2(35 * GUI.Scale);
+
+                        LocalizedString toolTipText = c.GetToolTip();
+                        if (mouseOn) { tooltip = (position, toolTipText); }
+                        if (!toolTipText.IsNullOrEmpty())
+                        {
+                            var glowSprite = GUIStyle.UIGlowCircular.Value.Sprite;
+                            glowSprite.Draw(spriteBatch, position, highlightColor, glowSprite.size / 2,
+                                scale: 45.0f / glowSprite.size.X * panel.Scale);
+                        }
+                    }
+
+                    static Color VisualizeSignal(double timeSinceCreated, Color defaultColor, Color color)
+                    {
+                        if (timeSinceCreated < 1.0f)
+                        {
+                            float pulseAmount = (MathF.Sin((float)Timing.TotalTimeUnpaused * 10.0f) + 3.0f) / 4.0f;
+                            Color targetColor = Color.Lerp(defaultColor, color, pulseAmount);
+                            return Color.Lerp(targetColor, defaultColor, (float)timeSinceCreated);
+                        }
+                        return defaultColor;
+                    }
+
                     //outputs are drawn at the right side of the panel, inputs at the left
                     if (c.IsOutput)
                     {
@@ -126,7 +165,6 @@ namespace Barotrauma.Items.Components
                     }
                 }
             }
-
 
             if (DraggingConnected != null)
             {
@@ -225,7 +263,9 @@ namespace Barotrauma.Items.Components
             GUI.DrawString(spriteBatch, labelPos, text, GUIStyle.TextColorBright, font: GUIStyle.SmallFont);
 
             float connectorSpriteScale = (35.0f / connectionSprite.SourceRect.Width) * panel.Scale;
+
             connectionSprite.Draw(spriteBatch, position, scale: connectorSpriteScale);
+
         }
 
         private void DrawWires(SpriteBatch spriteBatch, ConnectionPanel panel, Vector2 position, Vector2 wirePosition, bool mouseIn, Wire equippedWire, float wireInterval)
@@ -259,7 +299,7 @@ namespace Barotrauma.Items.Components
                         {
                             bool alreadyConnected = DraggingConnected.IsConnectedTo(panel.Item);
                             DraggingConnected.RemoveConnection(panel.Item);
-                            if (DraggingConnected.Connect(this, !alreadyConnected, true))
+                            if (DraggingConnected.TryConnect(this, !alreadyConnected, true))
                             {
                                 var otherConnection = DraggingConnected.OtherConnection(this);
                                 ConnectWire(DraggingConnected);
@@ -305,6 +345,63 @@ namespace Barotrauma.Items.Components
         {
             if (FlashTimer <= 0) return;
             FlashTimer -= deltaTime;
+        }
+
+        private (string signal, LocalizedString tooltip) lastSignalToolTip;
+        private  (int powerValue, LocalizedString tooltip) lastPowerToolTip;
+
+        private LocalizedString GetToolTip()
+        {
+            if (LastReceivedSignal.TimeSinceCreated < 1.0f)
+            {
+                return getSignalTooltip(LastReceivedSignal, "receivedsignal");
+            }
+            else if (LastSentSignal.TimeSinceCreated < 1.0f)
+            {
+                return getSignalTooltip(LastSentSignal, "sentsignal");
+            }
+
+            LocalizedString getSignalTooltip(Signal signal, string textTag)
+            {
+                if (lastSignalToolTip.signal == signal.value && !lastSignalToolTip.tooltip.IsNullOrEmpty()) { return lastSignalToolTip.tooltip; }
+                lastSignalToolTip = (signal.value, TextManager.GetWithVariable(textTag, "[signal]", signal.value));
+                return lastSignalToolTip.tooltip;
+            }
+
+            if (IsPower)
+            {
+                if (item.GetComponent<Powered>() is Powered powered)
+                {
+                    if (IsOutput)
+                    {
+                        if (powered.CurrPowerConsumption < 0)
+                        {
+                            return getPowerTooltip(-(int)powered.CurrPowerConsumption, "reactoroutput");
+                        }
+                        else if (powered is PowerTransfer || powered is PowerContainer)
+                        {
+                            return getPowerTooltip((int)(Grid?.Power ?? 0), "reactoroutput");
+                        }
+                    }
+                    else if (!IsOutput)
+                    {
+                        float powerConsumption = powered.GetCurrentPowerConsumption(this);
+                        if (!MathUtils.NearlyEqual((int)powerConsumption, 0.0f))
+                        {
+                            return getPowerTooltip((int)powerConsumption, "reactorload");
+                        }
+                    }
+                }
+            }
+
+            LocalizedString getPowerTooltip(int powerValue, string textTag)
+            {
+                if (lastPowerToolTip.powerValue == powerValue && !lastPowerToolTip.tooltip.IsNullOrEmpty()) { return lastPowerToolTip.tooltip; }
+                lastPowerToolTip = (powerValue, TextManager.GetWithVariable(textTag, "[kw]", powerValue.ToString()));
+                return lastPowerToolTip.tooltip;
+            }
+
+            return null;
         }
 
         private static void DrawWire(SpriteBatch spriteBatch, Wire wire, Vector2 end, Vector2 start, Wire equippedWire, ConnectionPanel panel, LocalizedString label)

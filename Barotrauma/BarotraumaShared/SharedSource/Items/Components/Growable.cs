@@ -409,6 +409,7 @@ namespace Barotrauma.Items.Components
         private int leafVariants;
         private int[] flowerTiles;
 
+        [Serialize(100.0f, IsPropertySaveable.Yes)]
         public float Health
         {
             get => health;

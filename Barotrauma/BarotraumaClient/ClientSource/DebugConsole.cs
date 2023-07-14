@@ -9,6 +9,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using System.Text;
@@ -1143,6 +1144,26 @@ namespace Barotrauma
                 }
                 GameMain.DebugDraw = state;
                 NewMessage("Debug draw mode " + (GameMain.DebugDraw ? "enabled" : "disabled"), Color.Yellow);
+            });
+            AssignRelayToServer("debugdraw", false);
+
+            AssignOnExecute("debugdrawlos", (string[] args) =>
+            {
+                if (args.None() || !bool.TryParse(args[0], out bool state))
+                {
+                    state = !GameMain.LightManager.DebugLos;
+                }
+                GameMain.LightManager.DebugLos = state;
+                NewMessage("Los debug draw mode " + (GameMain.LightManager.DebugLos ? "enabled" : "disabled"), Color.Yellow);
+            });
+            AssignOnExecute("debugwiring", (string[] args) =>
+            {
+                if (args.None() || !bool.TryParse(args[0], out bool state))
+                {
+                    state = !ConnectionPanel.DebugWiringMode;
+                }
+                ConnectionPanel.DebugWiringMode = state;
+                NewMessage("Wiring debug mode " + (ConnectionPanel.DebugWiringMode ? "enabled" : "disabled"), Color.Yellow);
             });
             AssignRelayToServer("debugdraw", false);
 
@@ -2814,7 +2835,26 @@ namespace Barotrauma
                 ContentPackageManager.EnabledPackages.ReloadCore();
             }));
 
-            #warning TODO: reimplement?
+#if WINDOWS
+            commands.Add(new Command("startdedicatedserver", "", (string[] args) =>
+            {
+                Process.Start("DedicatedServer.exe");
+            }));
+
+            commands.Add(new Command("editserversettings", "", (string[] args) =>
+            {
+                if (Process.GetProcessesByName("DedicatedServer").Length > 0)
+                {
+                    NewMessage("Can't be edited if DedicatedServer.exe is already running", Color.Red);
+                }
+                else
+                {
+                    Process.Start("notepad.exe", "serversettings.xml");
+                }
+            }));
+#endif
+
+#warning TODO: reimplement?
             /*commands.Add(new Command("ingamemodswap", "", (string[] args) =>
             {
                 ContentPackage.IngameModSwap = !ContentPackage.IngameModSwap;

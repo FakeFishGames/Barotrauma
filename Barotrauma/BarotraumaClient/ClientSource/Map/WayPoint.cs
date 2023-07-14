@@ -67,6 +67,10 @@ namespace Barotrauma
             else if (ConnectedDoor != null)
             {
                 sprite = iconSprites["Door"];
+                if (ConnectedDoor.IsHorizontal && Ladders == null)
+                {
+                    clr = Color.Yellow;
+                }
             }
             else if (Ladders != null)
             {

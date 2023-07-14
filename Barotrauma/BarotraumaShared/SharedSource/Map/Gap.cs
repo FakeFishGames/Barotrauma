@@ -32,6 +32,8 @@ namespace Barotrauma
         /// </summary>
         public bool IsDiagonal { get; }
 
+        public readonly float GlowEffectT;
+
         //a value between 0.0f-1.0f (0.0 = closed, 1.0f = open)
         private float open;
 
@@ -193,6 +195,8 @@ namespace Barotrauma
             GapList.Add(this);
             InsertToList();
 
+            GlowEffectT = Rand.Range(0.0f, 1.0f);
+
             float blockerSize = ConvertUnits.ToSimUnits(Math.Max(rect.Width, rect.Height)) / 2;
             outsideCollisionBlocker = GameMain.World.CreateEdge(-Vector2.UnitX * blockerSize, Vector2.UnitX * blockerSize, 
                 BodyType.Static, 
@@ -215,7 +219,7 @@ namespace Barotrauma
             return new Gap(rect, IsHorizontal, Submarine);
         }
 
-        public override void Move(Vector2 amount, bool ignoreContacts = false)
+        public override void Move(Vector2 amount, bool ignoreContacts = true)
         {
             if (!MathUtils.IsValid(amount))
             {
@@ -223,7 +227,7 @@ namespace Barotrauma
                 return;
             }
 
-            base.Move(amount);
+            base.Move(amount, ignoreContacts);
 
             if (!DisableHullRechecks) { FindHulls(); }
         }
@@ -336,8 +340,28 @@ namespace Barotrauma
             }
         }
 
+        private int updateCount;
+
         public override void Update(float deltaTime, Camera cam)
         {
+            int updateInterval = 4;
+            float flowMagnitude = flowForce.LengthSquared();
+            if (flowMagnitude < 1.0f)
+            {
+                //very sparse updates if there's practically no water moving
+                updateInterval = 8;
+            }
+            else if (linkedTo.Count == 2 && flowMagnitude > 10.0f)
+            {
+                //frequent updates if water is moving between hulls
+                updateInterval = 1;
+            }
+
+            updateCount++;
+            if (updateCount < updateInterval) { return; }
+            deltaTime *= updateCount;
+            updateCount = 0;
+
             flowForce = Vector2.Zero;
             outsideColliderRaycastTimer -= deltaTime;
 

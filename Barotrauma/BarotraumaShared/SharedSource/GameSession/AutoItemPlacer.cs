@@ -335,7 +335,7 @@ namespace Barotrauma
                 var item = new Item(itemPrefab, validContainer.Key.Item.Position, validContainer.Key.Item.Submarine, callOnItemLoaded: false)
                 {
                     SpawnedInCurrentOutpost = validContainer.Key.Item.SpawnedInCurrentOutpost,
-                    AllowStealing = validContainer.Key.Item.AllowStealing,
+                    AllowStealing = validContainer.Key.Item.AllowStealing || validContainer.Key.Item.Prefab.AllowStealingContainedItems,
                     Quality = quality,
                     OriginalModuleIndex = validContainer.Key.Item.OriginalModuleIndex,
                     OriginalContainerIndex = 

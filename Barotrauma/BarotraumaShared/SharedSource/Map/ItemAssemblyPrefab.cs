@@ -136,7 +136,7 @@ namespace Barotrauma
             {
                 me.Move(position);
                 me.Submarine = sub;
-                if (!(me is Item item)) { continue; }
+                if (me is not Item item) { continue; }
                 Wire wire = item.GetComponent<Wire>();
                 //Vector2 subPosition = Submarine == null ? Vector2.Zero : Submarine.HiddenSubPosition;
                 if (wire != null) 

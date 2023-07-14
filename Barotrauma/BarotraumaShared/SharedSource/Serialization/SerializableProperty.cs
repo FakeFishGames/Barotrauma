@@ -67,12 +67,14 @@ namespace Barotrauma
     [AttributeUsage(AttributeTargets.Property)]
     class ConditionallyEditable : Editable
     {
-        public ConditionallyEditable(ConditionType conditionType)
+        public ConditionallyEditable(ConditionType conditionType, bool onlyInEditors = true)
         {
             this.conditionType = conditionType;
+            this.onlyInEditors = onlyInEditors;
         }
-
         private readonly ConditionType conditionType;
+
+        private readonly bool onlyInEditors;
 
         public enum ConditionType
         {
@@ -81,26 +83,37 @@ namespace Barotrauma
             AllowLinkingWifiToChat,
             IsSwappableItem,
             AllowRotating,
-            Attachable
+            Attachable,
+            HasBody,
+            Pickable
         }
 
         public bool IsEditable(ISerializableEntity entity)
         {
+            if (onlyInEditors && Screen.Selected is { IsEditor: false }) { return false; }
             switch (conditionType)
             {
                 case ConditionType.AllowLinkingWifiToChat:
                     return GameMain.NetworkMember?.ServerSettings?.AllowLinkingWifiToChat ?? true;
                 case ConditionType.IsSwappableItem:
                     {
-                        return entity is Item item && item.Prefab.SwappableItem != null && Screen.Selected == GameMain.SubEditorScreen;
+                        return entity is Item item && item.Prefab.SwappableItem != null;
                     }
                 case ConditionType.AllowRotating:
                     {
-                        return entity is Item item && item.body == null && item.Prefab.AllowRotatingInEditor && Screen.Selected == GameMain.SubEditorScreen;
+                        return entity is Item item && item.body == null && item.Prefab.AllowRotatingInEditor;
                     }
                 case ConditionType.Attachable:
                     {
-                        return entity is Holdable holdable && holdable.Attachable && Screen.Selected == GameMain.SubEditorScreen;
+                        return entity is Holdable holdable && holdable.Attachable;
+                    }
+                case ConditionType.HasBody:
+                    {
+                        return entity is Structure { HasBody: true } || entity is Item { body: not null };
+                    }
+                case ConditionType.Pickable:
+                    {
+                        return entity is Item item && item.GetComponent<Pickable>() != null;
                     }
             }
             return false;

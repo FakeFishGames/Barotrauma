@@ -64,6 +64,7 @@ namespace Barotrauma
                     SubEditorBackground = new Color(13, 37, 69, 255),
                     EnableSplashScreen = true,
                     PauseOnFocusLost = true,
+                    RemoteMainMenuContentUrl = "https://www.barotraumagame.com/gamedata/",
                     AimAssistAmount = DefaultAimAssist,
                     ShowEnemyHealthBars = EnemyHealthBarMode.ShowAll,
                     EnableMouseLook = true,
@@ -112,6 +113,11 @@ namespace Barotrauma
                     retVal.Language = TextManager.DefaultLanguage;
                 }
 #endif
+                //RemoteMainMenuContentUrl gets set to default it left empty - lets allow leaving it empty to make it possible to disable the remote content 
+                if (element.Attribute("RemoteMainMenuContentUrl")?.Value == string.Empty)
+                {
+                    retVal.RemoteMainMenuContentUrl = string.Empty;
+                }
                 retVal.Graphics = GraphicsSettings.FromElements(element.GetChildElements("graphicsmode", "graphicssettings"), retVal.Graphics);
                 retVal.Audio = AudioSettings.FromElements(element.GetChildElements("audio"), retVal.Audio);
 #if CLIENT
@@ -147,6 +153,7 @@ namespace Barotrauma
             public bool DisableInGameHints;
             public bool EnableSubmarineAutoSave;
             public Identifier QuickStartSub;
+            public string RemoteMainMenuContentUrl;
 #if CLIENT
             public XElement SavedCampaignSettings;
 #endif

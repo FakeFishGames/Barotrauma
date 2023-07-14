@@ -3070,8 +3070,12 @@ namespace Barotrauma.Networking
                     if (votingInterface != null)
                     {
                         votingInterface.Update(deltaTime);
-                        if (!votingInterface.VoteRunning)
+                        if (!votingInterface.VoteRunning || votingInterface.TimedOut)
                         {
+                            if (votingInterface.TimedOut)
+                            {
+                                DebugConsole.AddWarning($"Voting interface timed out.");
+                            }
                             votingInterface.Remove();
                             votingInterface = null;
                         }

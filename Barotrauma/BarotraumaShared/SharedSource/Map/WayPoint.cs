@@ -19,7 +19,7 @@ namespace Barotrauma
 
         public static bool ShowWayPoints = true, ShowSpawnPoints = true;
 
-        public const float LadderWaypointInterval = 55.0f;
+        public const float LadderWaypointInterval = 75.0f;
 
         protected SpawnType spawnType;
         private string[] idCardTags;

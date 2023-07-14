@@ -173,6 +173,8 @@ namespace Barotrauma.Items.Components
             set
             {
                 lightColor = value;
+                //reset previously received signal to force updating the color if we receive a set_color signal after the color has been modified manually
+                prevColorSignal = string.Empty;
 #if CLIENT
                 if (Light != null)
                 {
@@ -249,6 +251,11 @@ namespace Barotrauma.Items.Components
             base.OnItemLoaded();
             SetLightSourceState(IsActive, lightBrightness);
             turret = item.GetComponent<Turret>();
+            if (item.body != null)
+            {
+                item.body.FarseerBody.OnEnabled += CheckIfNeedsUpdate;
+                item.body.FarseerBody.OnDisabled += CheckIfNeedsUpdate;
+            }
 #if CLIENT
             Drawable = AlphaBlend && Light.LightSprite != null;
             if (Screen.Selected.IsEditor)
@@ -277,15 +284,24 @@ namespace Barotrauma.Items.Components
                 return; 
             }
 
-            if (item.body == null && powerConsumption <= 0.0f && Parent == null && turret == null &&
+            if ((item.body == null || !item.body.Enabled) && 
+                powerConsumption <= 0.0f && Parent == null && turret == null &&
                 (statusEffectLists == null || !statusEffectLists.ContainsKey(ActionType.OnActive)) &&
                 (IsActiveConditionals == null || IsActiveConditionals.Count == 0))
             {
-                lightBrightness = 1.0f;
-                SetLightSourceState(true, lightBrightness);
+                if (item.body != null && !item.body.Enabled)
+                {
+                    lightBrightness = 0.0f;
+                    SetLightSourceState(false, 0.0f);
+                }
+                else
+                {
+                    lightBrightness = 1.0f;
+                    SetLightSourceState(true, lightBrightness);
+                }
+                isOn = true;
                 SetLightSourceTransformProjSpecific();
                 base.IsActive = false;
-                isOn = true;
 #if CLIENT
                 Light.ParentSub = item.Submarine;
 #endif

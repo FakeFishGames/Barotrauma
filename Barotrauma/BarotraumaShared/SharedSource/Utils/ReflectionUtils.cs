@@ -12,15 +12,27 @@ namespace Barotrauma
         private static readonly Dictionary<Assembly, ImmutableArray<Type>> cachedNonAbstractTypes
             = new Dictionary<Assembly, ImmutableArray<Type>>();
 
+        private static readonly Dictionary<Assembly, Dictionary<Type, ImmutableArray<Type>>> cachedDerivedNonAbstract
+            = new Dictionary<Assembly, Dictionary<Type, ImmutableArray<Type>>>();
+
         public static IEnumerable<Type> GetDerivedNonAbstract<T>()
         {
+            Type t = typeof(T);
             Assembly assembly = typeof(T).Assembly;
             if (!cachedNonAbstractTypes.ContainsKey(assembly))
             {
                 cachedNonAbstractTypes[assembly] = assembly.GetTypes()
                     .Where(t => !t.IsAbstract).ToImmutableArray();
+
+                cachedDerivedNonAbstract[assembly] = new Dictionary<Type, ImmutableArray<Type>>();
             }
-            return cachedNonAbstractTypes[assembly].Where(t => t.IsSubclassOf(typeof(T)));
+            if (cachedDerivedNonAbstract[assembly].TryGetValue(t, out var cachedArray))
+            {
+                return cachedArray;
+            }
+            var newArray = cachedNonAbstractTypes[assembly].Where(t2 => t2.IsSubclassOf(t)).ToImmutableArray();
+            cachedDerivedNonAbstract[assembly].Add(t, newArray);
+            return newArray;
         }
 
         public static Option<TBase> ParseDerived<TBase, TInput>(TInput input) where TInput : notnull where TBase : notnull

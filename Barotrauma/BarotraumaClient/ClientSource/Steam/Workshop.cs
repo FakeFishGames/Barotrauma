@@ -189,6 +189,7 @@ namespace Barotrauma.Steam
                 ModProject modProject = new ModProject(tempPkg)
                 {
                     ModVersion = modVersion,
+                    Name = title,
                     ExpectedHash = tempPkg.CalculateHash(name: title, modVersion: modVersion)
                 };
                 modProject.Save(stagingFileListPath);

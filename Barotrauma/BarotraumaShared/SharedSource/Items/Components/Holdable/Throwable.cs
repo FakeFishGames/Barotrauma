@@ -56,9 +56,9 @@ namespace Barotrauma.Items.Components
             return false;
         }
 
-        public override void Drop(Character dropper)
+        public override void Drop(Character dropper, bool setTransform = true)
         {
-            base.Drop(dropper);
+            base.Drop(dropper, setTransform);
             throwState = ThrowState.None;
             throwAngle = ThrowAngleStart;
             Item.ResetWaterDragCoefficient();

@@ -168,7 +168,7 @@ namespace Barotrauma
                 CleanupItems(deltaTime);
             }
 
-            if (behavior == BehaviorType.StayInHull && TargetHull == null && character.CurrentHull != null)
+            if (behavior == BehaviorType.StayInHull && TargetHull == null && character.CurrentHull != null && !IsForbidden(character.CurrentHull))
             {
                 TargetHull = character.CurrentHull;
             }
@@ -178,7 +178,7 @@ namespace Barotrauma
                 IsForbidden(currentTarget) ||
                 (PathSteering.CurrentPath != null && PathSteering.CurrentPath.Nodes.Any(n => HumanAIController.UnsafeHulls.Contains(n.CurrentHull)));
 
-            if (behavior == BehaviorType.StayInHull && !currentTargetIsInvalid && !HumanAIController.UnsafeHulls.Contains(TargetHull))
+            if (behavior == BehaviorType.StayInHull && TargetHull != null && !IsForbidden(TargetHull) && !currentTargetIsInvalid && !HumanAIController.UnsafeHulls.Contains(TargetHull))
             {
                 currentTarget = TargetHull;
                 bool stayInHull = character.CurrentHull == currentTarget && IsSteeringFinished() && !character.IsClimbing;
@@ -258,7 +258,8 @@ namespace Barotrauma
                         currentTarget = ToolBox.SelectWeightedRandom(targetHulls, hullWeights, Rand.RandSync.Unsynced);
                         bool isInWrongSub = (character.TeamID == CharacterTeamType.FriendlyNPC && !character.IsEscorted) && character.Submarine.TeamID != character.TeamID;
                         bool isCurrentHullAllowed = !isInWrongSub && !IsForbidden(character.CurrentHull);
-                        var path = PathSteering.PathFinder.FindPath(character.SimPosition, currentTarget.SimPosition, character.Submarine, nodeFilter: node =>
+                        Vector2 targetPos = character.GetRelativeSimPosition(currentTarget);
+                        var path = PathSteering.PathFinder.FindPath(character.SimPosition, targetPos, character.Submarine, nodeFilter: node =>
                         {
                             if (node.Waypoint.CurrentHull == null) { return false; }
                             // Check that there is no unsafe hulls on the way to the target
@@ -278,7 +279,7 @@ namespace Barotrauma
                             return;
                         }
                         character.AIController.SelectTarget(currentTarget.AiTarget);
-                        PathSteering.SetPath(path);
+                        PathSteering.SetPath(targetPos, path);
                         SetTargetTimerNormal();
                         searchingNewHull = false;
                     }

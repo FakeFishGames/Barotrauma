@@ -53,7 +53,7 @@ namespace Barotrauma.Networking
             }
         }
 
-        private readonly ref struct LobbyDataChangedEventHandler
+        private readonly struct LobbyDataChangedEventHandler : IDisposable
         {
             private readonly Action<Lobby> action;
             

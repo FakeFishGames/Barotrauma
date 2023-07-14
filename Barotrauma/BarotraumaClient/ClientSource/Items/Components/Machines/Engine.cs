@@ -73,6 +73,7 @@ namespace Barotrauma.Items.Components
                 Step = 0.05f,
                 OnMoved = (GUIScrollBar scrollBar, float barScroll) =>
                 {
+                    lastReceivedTargetForce = null;
                     float newTargetForce = barScroll * 200.0f - 100.0f;
                     if (Math.Abs(newTargetForce - targetForce) < 0.01) { return false; }
 

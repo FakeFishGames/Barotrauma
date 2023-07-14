@@ -19,7 +19,7 @@ namespace Barotrauma
                 var target = _selectedAiTarget ?? _lastAiTarget;
                 if (target != null && target.Entity != null)
                 {
-                    var memory = GetTargetMemory(target, false);
+                    var memory = GetTargetMemory(target);
                     if (memory != null)
                     {
                         Vector2 targetPos = memory.Location;

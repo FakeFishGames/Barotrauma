@@ -213,6 +213,16 @@ namespace Barotrauma
             return splitValue;
         }
 
+        public static Identifier[] GetAttributeIdentifierArray(this XElement element, Identifier[] defaultValue, params string[] matchingAttributeName)
+        {
+            if (element == null) { return defaultValue; }
+            foreach (string name in matchingAttributeName)
+            {
+                var value = element.GetAttributeIdentifierArray(name, defaultValue);
+                if (value != defaultValue) { return value; }
+            }
+            return defaultValue;
+        }
 
         public static Identifier[] GetAttributeIdentifierArray(this XElement element, string name, Identifier[] defaultValue, bool trim = true)
         {

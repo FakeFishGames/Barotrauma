@@ -46,8 +46,9 @@ namespace Barotrauma
             
             CJK = 0x1,
             Cyrillic = 0x2,
-            
-            All = 0x3
+            Japanese = 0x4,
+
+            All = 0x7
         }
 
         public static readonly ImmutableArray<SpeciallyHandledCharCategory> SpeciallyHandledCharCategories
@@ -60,8 +61,6 @@ namespace Barotrauma
             {
                 (SpeciallyHandledCharCategory.CJK, UnicodeToIntRanges(
                     UnicodeRanges.HangulJamo,
-                    UnicodeRanges.Hiragana,
-                    UnicodeRanges.Katakana,
                     UnicodeRanges.CjkRadicalsSupplement,
                     UnicodeRanges.CjkSymbolsandPunctuation,
                     UnicodeRanges.EnclosedCjkLettersandMonths,
@@ -69,7 +68,13 @@ namespace Barotrauma
                     UnicodeRanges.CjkUnifiedIdeographsExtensionA,
                     UnicodeRanges.CjkUnifiedIdeographs,
                     UnicodeRanges.HangulSyllables,
-                    UnicodeRanges.CjkCompatibilityForms
+                    UnicodeRanges.CjkCompatibilityForms,
+                    //not really CJK symbols, but these seem to be present in the CJK fonts but not in the default ones, so we can use them as a fallback
+                    UnicodeRanges.BlockElements
+                )),
+                (SpeciallyHandledCharCategory.Japanese, UnicodeToIntRanges(
+                    UnicodeRanges.Hiragana,
+                    UnicodeRanges.Katakana
                 )),
                 (SpeciallyHandledCharCategory.Cyrillic, UnicodeToIntRanges(
                     UnicodeRanges.Cyrillic,

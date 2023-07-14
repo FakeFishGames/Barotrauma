@@ -64,7 +64,7 @@ namespace Barotrauma.Items.Components
             set;
         }
 
-        [ConditionallyEditable(ConditionallyEditable.ConditionType.AllowLinkingWifiToChat)]
+        [ConditionallyEditable(ConditionallyEditable.ConditionType.AllowLinkingWifiToChat, onlyInEditors: false)]
         [Serialize(false, IsPropertySaveable.No, description: "If enabled, any signals received from another chat-linked wifi component are displayed " +
             "as chat messages in the chatbox of the player holding the item.", alwaysUseInstanceValues: true)]
         public bool LinkToChat

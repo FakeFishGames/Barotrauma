@@ -343,12 +343,11 @@ namespace Barotrauma
             if (property.PropertyType == typeof(string) && value == null)
             {
                 value = "";
-            }            
+            }
 
             Identifier propertyTag = $"{property.PropertyInfo.DeclaringType.Name}.{property.PropertyInfo.Name}".ToIdentifier();
             Identifier fallbackTag = property.PropertyInfo.Name.ToIdentifier();
-            LocalizedString displayName =
-                TextManager.Get(propertyTag, $"sp.{propertyTag}.name".ToIdentifier());
+            LocalizedString displayName = TextManager.Get(propertyTag, $"sp.{propertyTag}.name".ToIdentifier());
             if (displayName.IsNullOrEmpty())
             {
                 Editable editable = property.GetAttribute<Editable>();
@@ -380,10 +379,14 @@ namespace Barotrauma
             }
 
             LocalizedString toolTip = TextManager.Get($"sp.{propertyTag}.description");
-            if (toolTip.IsNullOrEmpty() && entity.GetType() != property.PropertyInfo.DeclaringType)
+            if (entity.GetType() != property.PropertyInfo.DeclaringType)
             {
                 Identifier propertyTagForDerivedClass = $"{entity.GetType().Name}.{property.PropertyInfo.Name}".ToIdentifier();
-                toolTip = TextManager.Get($"{propertyTagForDerivedClass}.description", $"sp.{propertyTagForDerivedClass}.description");
+                var toolTipForDerivedClass = TextManager.Get($"{propertyTagForDerivedClass}.description", $"sp.{propertyTagForDerivedClass}.description");
+                if (!toolTipForDerivedClass.IsNullOrEmpty())
+                {
+                    toolTip = toolTipForDerivedClass;
+                }
             }
             if (toolTip.IsNullOrEmpty())
             {

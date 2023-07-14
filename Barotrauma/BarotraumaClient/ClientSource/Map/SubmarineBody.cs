@@ -1,6 +1,7 @@
 ﻿using FarseerPhysics;
 using Microsoft.Xna.Framework;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Barotrauma
 {
@@ -18,7 +19,7 @@ namespace Barotrauma
                 return;
             }
 
-            List<Submarine> subsToMove = submarine.GetConnectedSubs();
+            var subsToMove = submarine.GetConnectedSubs();
             foreach (Submarine dockedSub in subsToMove)
             {
                 if (dockedSub == submarine) { continue; }
@@ -51,7 +52,6 @@ namespace Barotrauma
                     sub.PhysicsBody.SetTransformIgnoreContacts(sub.PhysicsBody.SimPosition + ConvertUnits.ToSimUnits(moveAmount), 0.0f);
                 }
             }
-
             if (closestSub != null && subsToMove.Contains(closestSub))
             {
                 GameMain.GameScreen.Cam.Position += moveAmount;

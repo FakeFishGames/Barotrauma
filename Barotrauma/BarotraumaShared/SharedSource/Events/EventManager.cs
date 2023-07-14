@@ -5,6 +5,7 @@ using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Xml.Linq;
 
 namespace Barotrauma
 {
@@ -75,7 +76,6 @@ namespace Barotrauma
 
         private readonly HashSet<Event> finishedEvents = new HashSet<Event>();
         private readonly HashSet<Identifier> nonRepeatableEvents = new HashSet<Identifier>();
-        private readonly HashSet<EventSet> usedUniqueSets = new HashSet<EventSet>();
 
 
 #if DEBUG && SERVER
@@ -102,7 +102,9 @@ namespace Barotrauma
         
         public readonly Queue<Event> QueuedEvents = new Queue<Event>();
 
-        private struct TimeStamp
+        public readonly Queue<Identifier> QueuedEventsForNextRound = new Queue<Identifier>();
+
+        private readonly struct TimeStamp
         {
             public readonly double Time;
             public readonly Event Event;
@@ -221,6 +223,21 @@ namespace Barotrauma
                         RegisterNonRepeatableChildEvents(childSet);
                     }
                 }                
+            }
+
+            while (QueuedEventsForNextRound.TryDequeue(out var id))
+            {
+                var eventPrefab = EventSet.GetEventPrefab(id);
+                if (eventPrefab == null)
+                {
+                    DebugConsole.ThrowError($"Error in EventManager.StartRound - could not find an event with the identifier {id}.");
+                    continue;
+                }
+                var ev = eventPrefab.CreateInstance();
+                if (ev != null)
+                {
+                    QueuedEvents.Enqueue(ev);
+                }
             }
 
             PreloadContent(GetFilesToPreload());
@@ -355,7 +372,6 @@ namespace Barotrauma
             QueuedEvents.Clear();
             finishedEvents.Clear();
             nonRepeatableEvents.Clear();
-            usedUniqueSets.Clear();
 
             preloadedSprites.ForEach(s => s.Remove());
             preloadedSprites.Clear();
@@ -1152,6 +1168,21 @@ namespace Barotrauma
             }
 
             return false;
+        }
+
+        public void Load(XElement element)
+        {
+            foreach (var id in element.GetAttributeIdentifierArray(nameof(QueuedEventsForNextRound), Array.Empty<Identifier>()))
+            {
+                QueuedEventsForNextRound.Enqueue(id);
+            }
+        }
+
+        public XElement Save()
+        {
+            return new XElement("eventmanager",
+                new XAttribute(nameof(QueuedEventsForNextRound),
+                    string.Join(',', QueuedEventsForNextRound)));
         }
     }
 }

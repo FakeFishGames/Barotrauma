@@ -435,37 +435,34 @@ namespace Barotrauma
                     spawnPoint ??= WayPoint.WayPointList.Where(wp => wp.SpawnType == SpawnType.Human && wp.Submarine?.Info.Type == SubmarineType.Player).GetRandomUnsynced();
                     spawnPos = spawnPoint?.WorldPosition ?? Submarine.MainSub.WorldPosition;
                 }
-                var pet = Character.Create(speciesName, spawnPos, seed, spawnInitialItems: false);
-                var petBehavior = (pet?.AIController as EnemyAIController)?.PetBehavior;
-                if (petBehavior != null)
+                
+                var characterPrefab = CharacterPrefab.FindBySpeciesName(speciesName.ToIdentifier());
+                if (characterPrefab == null)
                 {
-                    petBehavior.Owner = owner;
-                    var petBehaviorElement = subElement.Element("petbehavior");
-                    if (petBehaviorElement != null)
+                    DebugConsole.ThrowError($"Failed to load the pet \"{speciesName}\". Character prefab not found.");
+                    continue;
+                }
+                var pet = Character.Create(characterPrefab, spawnPos, seed, spawnInitialItems: false);
+                if (pet != null)
+                {
+                    var petBehavior = (pet.AIController as EnemyAIController)?.PetBehavior;
+                    if (petBehavior != null)
                     {
-                        petBehavior.Hunger = petBehaviorElement.GetAttributeFloat("hunger", 50.0f);
-                        petBehavior.Happiness = petBehaviorElement.GetAttributeFloat("happiness", 50.0f);
+                        petBehavior.Owner = owner;
+                        var petBehaviorElement = subElement.Element("petbehavior");
+                        if (petBehaviorElement != null)
+                        {
+                            petBehavior.Hunger = petBehaviorElement.GetAttributeFloat("hunger", 50.0f);
+                            petBehavior.Happiness = petBehaviorElement.GetAttributeFloat("happiness", 50.0f);
+                        }
                     }
                 }
-
                 var inventoryElement = subElement.Element("inventory");
                 if (inventoryElement != null)
                 {
                     pet.SpawnInventoryItems(pet.Inventory, inventoryElement.FromPackage(null));
-                }
+                }                
             }
-        }
-
-        public void ServerWrite(IWriteMessage msg)
-        {
-            msg.WriteRangedSingle(Happiness, 0.0f, MaxHappiness, 8);
-            msg.WriteRangedSingle(Hunger, 0.0f, MaxHunger, 8);
-        }
-
-        public void ClientRead(IReadMessage msg)
-        {
-            Happiness = msg.ReadRangedSingle(0.0f, MaxHappiness, 8);
-            Hunger = msg.ReadRangedSingle(0.0f, MaxHunger, 8);
         }
     }
 }

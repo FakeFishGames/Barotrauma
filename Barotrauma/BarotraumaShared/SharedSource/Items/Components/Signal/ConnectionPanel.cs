@@ -295,8 +295,8 @@ namespace Barotrauma.Items.Components
 
             for (int i = 0; i < loadedConnections.Count && i < Connections.Count; i++)
             {
-                Connections[i].LoadedWireIds.Clear();
-                Connections[i].LoadedWireIds.AddRange(loadedConnections[i].LoadedWireIds);
+                Connections[i].LoadedWires.Clear();
+                Connections[i].LoadedWires.AddRange(loadedConnections[i].LoadedWires);
             }
 
             disconnectedWireIds = element.GetAttributeUshortArray("disconnectedwires", Array.Empty<ushort>()).ToList();

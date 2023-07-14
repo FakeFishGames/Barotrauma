@@ -129,7 +129,7 @@ namespace Barotrauma.Networking
                 listBox.UpdateScrollBarSize();
             }
 #endif
-            if (unsavedLines.Count() >= LinesPerFile)
+            if (unsavedLines.Count >= LinesPerFile)
             {
                 Save();
                 unsavedLines.Clear();
@@ -143,7 +143,7 @@ namespace Barotrauma.Networking
 #if CLIENT
             while (listBox != null && listBox.Content.CountChildren > LinesPerFile)
             {
-                listBox.RemoveChild(reverseOrder ? listBox.Content.Children.First() : listBox.Content.Children.Last());
+                listBox.Content.RemoveChild(!reverseOrder ? listBox.Content.Children.First() : listBox.Content.Children.Last());
             }
 #endif
         }

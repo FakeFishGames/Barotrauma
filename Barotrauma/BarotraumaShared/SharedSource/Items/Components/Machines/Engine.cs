@@ -10,6 +10,18 @@ namespace Barotrauma.Items.Components
     {
         private float force;
 
+        /// <summary>
+        /// Latest signal the set_force connection received, used to set <see cref="targetForce"/> in the Update method.
+        /// We use a separate variable, because otherwise specific item update orders and sending multiple signals to set_force would lead to bugs:
+        /// targetForce could be set to 0, then a power grid might update as if the engine was off and mark the voltage of the grid as 1, 
+        /// then another item could set the targetForce to 100 and make it run without power.
+        /// </summary>
+        private float? lastReceivedTargetForce;
+
+        /// <summary>
+        /// The amount of force the engine is aiming for (the actual force may be less than this, 
+        /// depending on the amount of power, the condition of the engine or boosts from talents)
+        /// </summary>
         private float targetForce;
 
         private float maxForce;
@@ -58,7 +70,7 @@ namespace Barotrauma.Items.Components
 
         public float CurrentVolume
         {
-            get { return Math.Abs((force / 100.0f) * (MinVoltage <= 0.0f ? 1.0f : Math.Min(prevVoltage / MinVoltage, 1.0f))); }
+            get { return Math.Abs((force / 100.0f) * (MinVoltage <= 0.0f ? 1.0f : Math.Min(prevVoltage, 1.0f))); }
         }
 
         public float CurrentBrokenVolume
@@ -110,7 +122,10 @@ namespace Barotrauma.Items.Components
                 hasPower = Voltage > MinVoltage;
             }
 
-
+            if (lastReceivedTargetForce.HasValue)
+            {
+                targetForce = lastReceivedTargetForce.Value;
+            }
             Force = MathHelper.Lerp(force, (Voltage < MinVoltage) ? 0.0f : targetForce, deltaTime * 10.0f);
             if (Math.Abs(Force) > 1.0f)
             {
@@ -254,7 +269,7 @@ namespace Barotrauma.Items.Components
                 if (float.TryParse(signal.value, NumberStyles.Float, CultureInfo.InvariantCulture, out float tempForce))
                 {
                     controlLockTimer = 0.1f;
-                    targetForce = MathHelper.Clamp(tempForce, -100.0f, 100.0f);
+                    lastReceivedTargetForce = MathHelper.Clamp(tempForce, -100.0f, 100.0f);
                     User = signal.sender;
                 }
             }  

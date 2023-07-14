@@ -15,6 +15,8 @@ namespace Barotrauma
         [Serialize(false, IsPropertySaveable.Yes)]
         public bool AddToCrew { get; set; }
 
+
+
         [Serialize(false, IsPropertySaveable.Yes)]
         public bool RemoveFromCrew { get; set; }
 
@@ -38,6 +40,8 @@ namespace Barotrauma
         {
             if (isFinished) { return; }
 
+            bool isPlayerTeam = TeamID == CharacterTeamType.Team1 || TeamID == CharacterTeamType.Team2;
+
             affectedNpcs = ParentEvent.GetTargets(NPCTag).Where(c => c is Character).Select(c => c as Character).ToList();
             foreach (var npc in affectedNpcs)
             {
@@ -49,9 +53,13 @@ namespace Barotrauma
                     if (idCard != null)
                     {
                         idCard.TeamID = TeamID;
+                        if (isPlayerTeam)
+                        {
+                            idCard.SubmarineSpecificID = 0;
+                        }
                     }
                 }
-                if (AddToCrew && (TeamID == CharacterTeamType.Team1 || TeamID == CharacterTeamType.Team2))
+                if (AddToCrew && isPlayerTeam)
                 {
                     npc.Info.StartItemsGiven = true;
                     GameMain.GameSession.CrewManager.AddCharacter(npc);

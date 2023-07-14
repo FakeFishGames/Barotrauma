@@ -187,7 +187,7 @@ namespace Barotrauma.Networking
                 int botSpawnMode = 0,
                 bool? useRespawnShuttle = null)
         {
-            if (!GameMain.Client.HasPermission(Networking.ClientPermissions.ManageSettings)) return;
+            if (!GameMain.Client.HasPermission(Networking.ClientPermissions.ManageSettings)) { return; }
 
             IWriteMessage outMsg = new WriteOnlyMessage();
 

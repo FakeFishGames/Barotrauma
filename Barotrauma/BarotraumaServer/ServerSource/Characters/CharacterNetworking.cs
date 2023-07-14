@@ -60,6 +60,10 @@ namespace Barotrauma
             {
                 distance = Math.Min(distance, Vector2.Distance(recipient.Character.ViewTarget.WorldPosition, WorldPosition));
             }
+            if (ViewTarget != null && ViewTarget != this)
+            {
+                distance = Math.Min(distance, Vector2.Distance(comparePosition, ViewTarget.WorldPosition));
+            }
 
             float priority = 1.0f - MathUtils.InverseLerp(
                 NetConfig.HighPrioCharacterPositionUpdateDistance, 
@@ -154,8 +158,6 @@ namespace Barotrauma
                     }
 
                     memInput.RemoveAt(memInput.Count - 1);
-
-                    TransformCursorPos();
 
                     if ((dequeuedInput == InputNetFlags.None || dequeuedInput == InputNetFlags.FacingLeft) && Math.Abs(AnimController.Collider.LinearVelocity.X) < 0.005f && Math.Abs(AnimController.Collider.LinearVelocity.Y) < 0.2f)
                     {
@@ -374,10 +376,9 @@ namespace Barotrauma
                 tempBuffer.WriteBoolean(aiming);
                 tempBuffer.WriteBoolean(shoot);
                 tempBuffer.WriteBoolean(use);
-                if (AnimController is HumanoidAnimController)
-                {
-                    tempBuffer.WriteBoolean(((HumanoidAnimController)AnimController).Crouching);
-                }
+
+                tempBuffer.WriteBoolean(AnimController is HumanoidAnimController { Crouching: true });
+                
                 tempBuffer.WriteBoolean(attack);
 
                 Vector2 relativeCursorPos = cursorPosition - AimRefPosition;
@@ -428,7 +429,17 @@ namespace Barotrauma
             if (writeStatus)
             {
                 WriteStatus(tempBuffer);
-                AIController?.ServerWrite(tempBuffer);
+                tempBuffer.WriteBoolean(AIController is EnemyAIController);
+                if (AIController is EnemyAIController enemyAi)
+                {
+                    tempBuffer.WriteByte((byte)enemyAi.State);
+                    tempBuffer.WriteBoolean(enemyAi.PetBehavior is PetBehavior);
+                    if (enemyAi.PetBehavior is PetBehavior petBehavior)
+                    {
+                        tempBuffer.WriteByte((byte)((petBehavior.Happiness / petBehavior.MaxHappiness) * byte.MaxValue));
+                        tempBuffer.WriteByte((byte)((petBehavior.Hunger / petBehavior.MaxHunger) * byte.MaxValue));
+                    }
+                }
                 HealthUpdatePending = false;
             }
         }

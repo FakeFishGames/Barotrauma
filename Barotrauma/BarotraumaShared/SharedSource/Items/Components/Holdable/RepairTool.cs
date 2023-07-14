@@ -912,17 +912,16 @@ namespace Barotrauma.Items.Components
                 // A general purpose system could be better, but it would most likely require changes in the way we define the status effects in xml.
                 foreach (ISerializableEntity target in currentTargets)
                 {
-                    if (!(target is Door door)) { continue; }                    
+                    if (target is not Door door) { continue; }                    
                     if (!door.CanBeWelded || !door.Item.IsInteractable(user)) { continue; }
-                    for (int i = 0; i < effect.propertyNames.Length; i++)
+                    foreach (var propertyEffect in effect.PropertyEffects)
                     {
-                        Identifier propertyName = effect.propertyNames[i];
-                        if (propertyName != "stuck") { continue; }
-                        if (door.SerializableProperties == null || !door.SerializableProperties.TryGetValue(propertyName, out SerializableProperty property)) { continue; }
+                        if (propertyEffect.propertyName != "stuck") { continue; }
+                        if (door.SerializableProperties == null || !door.SerializableProperties.TryGetValue(propertyEffect.propertyName, out SerializableProperty property)) { continue; }
                         object value = property.GetValue(target);
                         if (door.Stuck > 0)
                         {
-                            bool isCutting = effect.propertyEffects[i].GetType() == typeof(float) && (float)effect.propertyEffects[i] < 0;
+                            bool isCutting = propertyEffect.value is float and < 0;
                             var progressBar = user.UpdateHUDProgressBar(door, door.Item.WorldPosition, door.Stuck / 100, Color.DarkGray * 0.5f, Color.White,
                                 textTag: isCutting ? "progressbar.cutting" : "progressbar.welding");
                             if (progressBar != null) { progressBar.Size = new Vector2(60.0f, 20.0f); }

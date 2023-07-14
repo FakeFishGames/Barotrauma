@@ -59,7 +59,7 @@ namespace Barotrauma
         private static Explosion explosionOnBroken;
 
 #if DEBUG
-        [Serialize(false, IsPropertySaveable.Yes), Editable]
+        [Serialize(false, IsPropertySaveable.Yes), ConditionallyEditable(ConditionallyEditable.ConditionType.HasBody)]
 #else
         [Serialize(false, IsPropertySaveable.Yes)]
 #endif
@@ -104,9 +104,11 @@ namespace Barotrauma
 
         public List<Body> Bodies { get; private set; }
 
+        [Serialize(false, IsPropertySaveable.Yes), ConditionallyEditable(ConditionallyEditable.ConditionType.HasBody)]
         public bool CastShadow
         {
-            get { return Prefab.CastShadow; }
+            get;
+            set;
         }
 
         public bool IsHorizontal { get; private set; }
@@ -118,7 +120,7 @@ namespace Barotrauma
 
         private float? maxHealth;
 
-        [Serialize(100.0f, IsPropertySaveable.Yes), Editable(MinValueFloat = 0)]
+        [Serialize(100.0f, IsPropertySaveable.Yes), ConditionallyEditable(ConditionallyEditable.ConditionType.HasBody, MinValueFloat = 0)]
         public float MaxHealth
         {
             get => maxHealth ?? Prefab.Health;
@@ -189,14 +191,14 @@ namespace Barotrauma
             set { spriteColor = value; }
         }
 
-        [Editable, Serialize(false, IsPropertySaveable.Yes)]
+        [ConditionallyEditable(ConditionallyEditable.ConditionType.HasBody), Serialize(false, IsPropertySaveable.Yes)]
         public bool UseDropShadow
         {
             get;
             private set;
         }
 
-        [Editable, Serialize("0,0", IsPropertySaveable.Yes, description: "The position of the drop shadow relative to the structure. If set to zero, the shadow is positioned automatically so that it points towards the sub's center of mass.")]
+        [ConditionallyEditable(ConditionallyEditable.ConditionType.HasBody), Serialize("0,0", IsPropertySaveable.Yes, description: "The position of the drop shadow relative to the structure. If set to zero, the shadow is positioned automatically so that it points towards the sub's center of mass.")]
         public Vector2 DropShadowOffset
         {
             get;
@@ -367,7 +369,7 @@ namespace Barotrauma
             private set;
         }
 
-        public override void Move(Vector2 amount, bool ignoreContacts = false)
+        public override void Move(Vector2 amount, bool ignoreContacts = true)
         {
             if (!MathUtils.IsValid(amount))
             {
@@ -375,7 +377,7 @@ namespace Barotrauma
                 return;
             }
 
-            base.Move(amount);
+            base.Move(amount, ignoreContacts);
 
             for (int i = 0; i < Sections.Length; i++)
             {
@@ -440,13 +442,11 @@ namespace Barotrauma
             }
             else
             {
+                float width = BodyWidth > 0.0f ? BodyWidth : rect.Width;
+                float height = BodyHeight > 0.0f ? BodyHeight : rect.Height;
                 if (BodyWidth > 0.0f && BodyHeight > 0.0f)
                 {
-                    IsHorizontal = BodyWidth > BodyHeight;
-                }
-                else
-                {
-                    IsHorizontal = (rect.Width > rect.Height);
+                    IsHorizontal = width > height;
                 }
             }
 
@@ -455,29 +455,28 @@ namespace Barotrauma
 
             InitProjSpecific();
 
-            if (!HiddenInGame)
+            SerializableProperties = element != null ? SerializableProperty.DeserializeProperties(this, element) : SerializableProperty.GetProperties(this);
+            if (element?.GetAttribute(nameof(CastShadow)) == null)
             {
-                if (Prefab.Body)
-                {
-                    Bodies = new List<Body>();
-                    WallList.Add(this);
-
-                    CreateSections();
-                    UpdateSections();
-                }
-                else
-                {
-                    Sections = new WallSection[1];
-                    Sections[0] = new WallSection(rect, this);
-
-                    if (StairDirection != Direction.None)
-                    {
-                        CreateStairBodies();
-                    }
-                }
+                CastShadow = Prefab.CastShadow;
             }
 
-            SerializableProperties = element != null ? SerializableProperty.DeserializeProperties(this, element) : SerializableProperty.GetProperties(this);
+            if (Prefab.Body)
+            {
+                Bodies = new List<Body>();
+                WallList.Add(this);
+                CreateSections();
+                UpdateSections();
+            }
+            else if (StairDirection != Direction.None)
+            {
+                CreateStairBodies();
+            }
+            if (Sections == null)
+            {
+                Sections = new WallSection[1];
+                Sections[0] = new WallSection(rect, this);
+            }
 
 #if CLIENT
             foreach (var subElement in sp.ConfigElement.Elements())
@@ -1546,16 +1545,16 @@ namespace Barotrauma
                 }
             }
 
-            if (element.GetAttributeBool("flippedx", false)) { s.FlipX(false); }
-            if (element.GetAttributeBool("flippedy", false)) { s.FlipY(false); }
+            if (element.GetAttributeBool(nameof(FlippedX), false)) { s.FlipX(false); }
+            if (element.GetAttributeBool(nameof(FlippedY), false)) { s.FlipY(false); }
 
             //structures with a body drop a shadow by default
-            if (element.GetAttribute("usedropshadow") == null)
+            if (element.GetAttribute(nameof(UseDropShadow)) == null)
             {
                 s.UseDropShadow = prefab.Body;
             }
 
-            if (element.GetAttribute("noaitarget") == null)
+            if (element.GetAttribute(nameof(NoAITarget)) == null)
             {
                 s.NoAITarget = prefab.NoAITarget;
             }
@@ -1604,12 +1603,12 @@ namespace Barotrauma
                     (int)(rect.Y - Submarine.HiddenSubPosition.Y) + "," +
                     width + "," + height));
 
-            if (FlippedX) element.Add(new XAttribute("flippedx", true));
-            if (FlippedY) element.Add(new XAttribute("flippedy", true));
+            if (FlippedX) { element.Add(new XAttribute("flippedx", true)); }
+            if (FlippedY) { element.Add(new XAttribute("flippedy", true)); }
 
             for (int i = 0; i < Sections.Length; i++)
             {
-                if (Sections[i].damage == 0.0f) continue;
+                if (Sections[i].damage == 0.0f) { continue; }
                 var sectionElement =
                     new XElement("section",
                         new XAttribute("i", i),
@@ -1618,6 +1617,11 @@ namespace Barotrauma
             }
 
             SerializableProperty.SerializeProperties(this, element);
+
+            if (CastShadow == Prefab.CastShadow)
+            {
+                element.GetAttribute(nameof(CastShadow))?.Remove();
+            }
 
             foreach (var upgrade in Upgrades)
             {

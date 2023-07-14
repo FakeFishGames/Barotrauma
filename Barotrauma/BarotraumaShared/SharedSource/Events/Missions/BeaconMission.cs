@@ -91,7 +91,7 @@ namespace Barotrauma
             if (IsClient) { return; }
             if (!swarmSpawned && level.CheckBeaconActive())
             {
-                List<Submarine> connectedSubs = level.BeaconStation.GetConnectedSubs();
+                IEnumerable<Submarine> connectedSubs = level.BeaconStation.GetConnectedSubs();
                 foreach (Item item in Item.ItemList)
                 {
                     if (!connectedSubs.Contains(item.Submarine) || item.Submarine?.Info is { IsPlayer: true  }) { continue; }

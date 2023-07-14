@@ -88,12 +88,15 @@ namespace Barotrauma
 
             public abstract ItemPrefab FirstMatchingPrefab { get; }
 
-            public RequiredItem(int amount, float minCondition, float maxCondition, bool useCondition)
+            public LocalizedString OverrideDescription { get; }
+
+            public RequiredItem(int amount, float minCondition, float maxCondition, bool useCondition, LocalizedString overrideDescription)
             {
                 Amount = amount;
                 MinCondition = minCondition;
                 MaxCondition = maxCondition;
                 UseCondition = useCondition;
+                OverrideDescription = overrideDescription;
             }
             public readonly int Amount;
             public readonly float MinCondition;
@@ -129,12 +132,14 @@ namespace Barotrauma
 
             public override ItemPrefab FirstMatchingPrefab => ItemPrefab;
 
+
             public override bool MatchesItem(Item item)
             {
                 return item?.Prefab.Identifier == ItemPrefabIdentifier;
             }
 
-            public RequiredItemByIdentifier(Identifier itemPrefab, int amount, float minCondition, float maxCondition, bool useCondition) : base(amount, minCondition, maxCondition, useCondition)
+            public RequiredItemByIdentifier(Identifier itemPrefab, int amount, float minCondition, float maxCondition, bool useCondition, LocalizedString overrideDescription) :
+                base(amount, minCondition, maxCondition, useCondition, overrideDescription)
             {
                 ItemPrefabIdentifier = itemPrefab;
                 using MD5 md5 = MD5.Create();
@@ -163,7 +168,8 @@ namespace Barotrauma
                 return item.HasTag(Tag);
             }
 
-            public RequiredItemByTag(Identifier tag, int amount, float minCondition, float maxCondition, bool useCondition) : base(amount, minCondition, maxCondition, useCondition)
+            public RequiredItemByTag(Identifier tag, int amount, float minCondition, float maxCondition, bool useCondition, LocalizedString overrideDescription)
+                : base(amount, minCondition, maxCondition, useCondition, overrideDescription)
             {
                 Tag = tag;
                 using MD5 md5 = MD5.Create();
@@ -260,6 +266,12 @@ namespace Barotrauma
                         bool useCondition = subElement.GetAttributeBool("usecondition", true);
                         int amount = subElement.GetAttributeInt("count", subElement.GetAttributeInt("amount", 1));
 
+                        LocalizedString description = string.Empty;
+                        if (subElement.GetAttributeString("description", string.Empty) is string texTag && !texTag.IsNullOrEmpty())
+                        {
+                            description = TextManager.Get(texTag);
+                        }
+
                         if (requiredItemIdentifier != Identifier.Empty)
                         {
                             var existing = requiredItems.FindIndex(r =>
@@ -272,7 +284,7 @@ namespace Barotrauma
                                 amount += requiredItems[existing].Amount;
                                 requiredItems.RemoveAt(existing);
                             }
-                            requiredItems.Add(new RequiredItemByIdentifier(requiredItemIdentifier, amount, minCondition, maxCondition, useCondition));
+                            requiredItems.Add(new RequiredItemByIdentifier(requiredItemIdentifier, amount, minCondition, maxCondition, useCondition, description));
                         }
                         else
                         {
@@ -286,7 +298,7 @@ namespace Barotrauma
                                 amount += requiredItems[existing].Amount;
                                 requiredItems.RemoveAt(existing);
                             }
-                            requiredItems.Add(new RequiredItemByTag(requiredItemTag, amount, minCondition, maxCondition, useCondition));
+                            requiredItems.Add(new RequiredItemByTag(requiredItemTag, amount, minCondition, maxCondition, useCondition, description));
                         }
                         break;
                 }
@@ -669,8 +681,19 @@ namespace Barotrauma
         [Serialize(0.0f, IsPropertySaveable.No)]
         public float OffsetOnSelected { get; private set; }
 
+        private float health;
+
         [Serialize(100.0f, IsPropertySaveable.No)]
-        public float Health { get; private set; }
+        public float Health 
+        {
+            get { return health; }
+            private set
+            {
+                //don't allow health values higher than this, because they lead to various issues:
+                //e.g. integer overflows when we're casting to int to display a health value, value being set to float.Infinity if it's high enough
+                health = Math.Min(value, 1000000.0f);
+            }
+        }
 
         [Serialize(false, IsPropertySaveable.No)]
         public bool AllowSellingWhenBroken { get; private set; }
@@ -701,12 +724,6 @@ namespace Barotrauma
 
         [Serialize(false, IsPropertySaveable.No)]
         public bool DamagedByMonsters { get; private set; }
-
-        [Serialize(false, IsPropertySaveable.No)]
-        public bool FireProof { get; private set; }
-
-        [Serialize(false, IsPropertySaveable.No)]
-        public bool WaterProof { get; private set; }
 
         private float impactTolerance;
         [Serialize(0.0f, IsPropertySaveable.No)]
@@ -813,9 +830,12 @@ namespace Barotrauma
 
         [Serialize(1.0f, IsPropertySaveable.No, description: "How much the bots prioritize shooting this item with slow turrets, like railguns? Defaults to 1. Not used if AITurretPriority is 0. Distance to the target affects the decision making.")]
         public float AISlowTurretPriority { get; private set; }
-
+        
         [Serialize(float.PositiveInfinity, IsPropertySaveable.No, description: "The max distance at which the bots are allowed to target the items. Defaults to infinity.")]
         public float AITurretTargetingMaxDistance { get; private set; }
+
+        [Serialize(false, IsPropertySaveable.Yes, description: "If enabled, taking items from this container is never considered stealing.")]
+        public bool AllowStealingContainedItems { get; private set; }
 
         protected override Identifier DetermineIdentifier(XElement element)
         {
@@ -1435,6 +1455,22 @@ namespace Barotrauma
                             $"the base item \"{parent.Identifier}\" requires x{originalAmount} \"{originalIdentifier}\" to fabricate. " +
                             $"The variant only overrides the required item, not the amount, resulting in a requirement of x{originalAmount} \"{resultIdentifier}\". "+
                             "Specify the amount in the variant to fix this.");
+                    }
+                }
+                if (originalElement?.Name.ToIdentifier() == "Deconstruct" && 
+                    variantElement?.Name.ToIdentifier() == "Deconstruct")
+                {
+                    if (originalElement.Elements().Any(e => e.Name.ToIdentifier() == "Item") &&
+                        variantElement.Elements().Any(e => e.Name.ToIdentifier() == "RequiredItem"))
+                    {
+                        DebugConsole.AddWarning($"Potential error in item variant \"{Identifier}\": " +
+                            $"the item defines deconstruction recipes using 'RequiredItem' instead of 'Item'. Overriding the base recipe may not work correctly.");
+                    }
+                    if (variantElement.Elements().Any(e => e.Name.ToIdentifier() == "Item") &&
+                        originalElement.Elements().Any(e => e.Name.ToIdentifier() == "RequiredItem"))
+                    {
+                        DebugConsole.AddWarning($"Potential error in item \"{parent.Identifier}\": " +
+                            $"the item defines deconstruction recipes using 'RequiredItem' instead of 'Item'. The item variant \"{Identifier}\" may not override the base recipe correctly.");
                     }
                 }
             }

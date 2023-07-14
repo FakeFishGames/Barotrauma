@@ -784,8 +784,10 @@ namespace Barotrauma.Items.Components
                     }
                     else
                     {
+                        float condition1 = MathUtils.IsValid(item1.Condition) ? item1.Condition : 0;
+                        float condition2 = MathUtils.IsValid(item2.Condition) ? item2.Condition : 0;
                         //prefer items in worse condition
-                        return Math.Sign(item2.Condition - item1.Condition);
+                        return Math.Sign(condition2 - condition1);
                     }
                 }
 

@@ -15,7 +15,7 @@ namespace Barotrauma
         private RenderTarget2D renderTargetWater;
         private RenderTarget2D renderTargetFinal;
 
-        private readonly Effect damageEffect;
+        public readonly Effect DamageEffect;
         private readonly Texture2D damageStencil;
         private readonly Texture2D distortTexture;        
 
@@ -39,7 +39,7 @@ namespace Barotrauma
             };
 
             //var blurEffect = LoadEffect("Effects/blurshader");
-            damageEffect = EffectLoader.Load("Effects/damageshader");
+            DamageEffect = EffectLoader.Load("Effects/damageshader");
             PostProcessEffect = EffectLoader.Load("Effects/postprocess");
             GradientEffect = EffectLoader.Load("Effects/gradientshader");
             GrainEffect = EffectLoader.Load("Effects/grainshader");
@@ -47,9 +47,9 @@ namespace Barotrauma
             BlueprintEffect = EffectLoader.Load("Effects/blueprintshader");
 
             damageStencil = TextureLoader.FromFile("Content/Map/walldamage.png");
-            damageEffect.Parameters["xStencil"].SetValue(damageStencil);
-            damageEffect.Parameters["aMultiplier"].SetValue(50.0f);
-            damageEffect.Parameters["cMultiplier"].SetValue(200.0f);
+            DamageEffect.Parameters["xStencil"].SetValue(damageStencil);
+            DamageEffect.Parameters["aMultiplier"].SetValue(50.0f);
+            DamageEffect.Parameters["cMultiplier"].SetValue(200.0f);
 
             distortTexture = TextureLoader.FromFile("Content/Effects/distortnormals.png");
             PostProcessEffect.Parameters["xDistortTexture"].SetValue(distortTexture);
@@ -345,12 +345,13 @@ namespace Barotrauma
             GameMain.PerformanceCounter.AddElapsedTicks("Draw:Map:FrontParticles", sw.ElapsedTicks);
             sw.Restart();
 
+            DamageEffect.CurrentTechnique = DamageEffect.Techniques["StencilShader"];
             spriteBatch.Begin(SpriteSortMode.Immediate,
                 BlendState.NonPremultiplied, SamplerState.LinearWrap,
                 null, null,
-                damageEffect,
+                DamageEffect,
                 cam.Transform);
-            Submarine.DrawDamageable(spriteBatch, damageEffect, false);
+            Submarine.DrawDamageable(spriteBatch, DamageEffect, false);
             spriteBatch.End();
 
             sw.Stop();
@@ -377,7 +378,7 @@ namespace Barotrauma
 			{
                 graphics.DepthStencilState = DepthStencilState.None;
                 graphics.SamplerStates[0] = SamplerState.LinearWrap;
-                graphics.BlendState = Lights.CustomBlendStates.Multiplicative;
+                graphics.BlendState = CustomBlendStates.Multiplicative;
                 Quad.UseBasicEffect(GameMain.LightManager.LightMap);
                 Quad.Render();
             }
@@ -408,6 +409,7 @@ namespace Barotrauma
             {
                 GameMain.LightManager.LosEffect.CurrentTechnique = GameMain.LightManager.LosEffect.Techniques["LosShader"];
 
+                GameMain.LightManager.LosEffect.Parameters["blurDistance"].SetValue(0.005f);
                 GameMain.LightManager.LosEffect.Parameters["xTexture"].SetValue(renderTargetBackground);
                 GameMain.LightManager.LosEffect.Parameters["xLosTexture"].SetValue(GameMain.LightManager.LosTexture);
                 GameMain.LightManager.LosEffect.Parameters["xLosAlpha"].SetValue(GameMain.LightManager.LosAlpha);
@@ -433,8 +435,11 @@ namespace Barotrauma
 
                 graphics.BlendState = BlendState.NonPremultiplied;
                 graphics.SamplerStates[0] = SamplerState.PointClamp;
+                graphics.SamplerStates[1] = SamplerState.PointClamp;
                 GameMain.LightManager.LosEffect.CurrentTechnique.Passes[0].Apply();
                 Quad.Render();
+                graphics.SamplerStates[0] = SamplerState.LinearWrap;
+                graphics.SamplerStates[1] = SamplerState.LinearWrap;
             }
 
             if (Character.Controlled is { } character)
@@ -516,6 +521,11 @@ namespace Barotrauma
                 spriteBatch.Begin(SpriteSortMode.Deferred);
                 GUI.DrawRectangle(spriteBatch, new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight), Color.Lerp(Color.TransparentBlack, Color.Black, fadeToBlackState), isFilled: true);
                 spriteBatch.End();
+            }
+
+            if (GameMain.LightManager.DebugLos)
+            {
+                GameMain.LightManager.DebugDrawLos(spriteBatch, cam);
             }
 
             sw.Stop();

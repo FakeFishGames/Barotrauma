@@ -18,11 +18,11 @@ namespace Barotrauma.Items.Components
 
             if (item.CanClientAccess(c))
             {
+                lastReceivedTargetForce = null;
                 if (Math.Abs(newTargetForce - targetForce) > 0.01f)
                 {
                     GameServer.Log(GameServer.CharacterLogName(c.Character) + " set the force of " + item.Name + " to " + (int)(newTargetForce) + " %", ServerLog.MessageType.ItemInteraction);
                 }
-
                 targetForce = newTargetForce;
                 User = c.Character;
             }

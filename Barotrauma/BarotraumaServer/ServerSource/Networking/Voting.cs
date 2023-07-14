@@ -42,7 +42,11 @@ namespace Barotrauma
             {
                 if (passed)
                 {
-                    GameMain.Server?.SwitchSubmarine();
+                    if (GameMain.Server != null && !GameMain.Server.TrySwitchSubmarine())
+                    {
+                        passed = false;
+                        State = VoteState.Failed;
+                    }
                 }
                 else
                 {

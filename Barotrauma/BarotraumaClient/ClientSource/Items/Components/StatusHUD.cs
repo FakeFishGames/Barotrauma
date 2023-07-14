@@ -46,6 +46,13 @@ namespace Barotrauma.Items.Components
             private set;
         }
 
+        [Serialize(false, IsPropertySaveable.No)]
+        public bool DebugWiring
+        {
+            get;
+            private set;
+        }
+
         [Serialize(true, IsPropertySaveable.No)]
         public bool ShowDeadCharacters
         {
@@ -111,6 +118,11 @@ namespace Barotrauma.Items.Components
                 refEntity = item;
             }
 
+            if (equipper != null && equipper == Character.Controlled && DebugWiring)
+            {
+                ConnectionPanel.DebugWiringEnabledUntil = Timing.TotalTimeUnpaused + 0.5;
+            }
+
             thermalEffectState += deltaTime;
             thermalEffectState %= 10000.0f;
 
@@ -151,6 +163,11 @@ namespace Barotrauma.Items.Components
         {
             equipper = null;
             IsActive = false;
+        }
+
+        public override void Drop(Character dropper, bool setTransform = true)
+        {
+            Unequip(dropper);
         }
 
         public override void DrawHUD(SpriteBatch spriteBatch, Character character)
