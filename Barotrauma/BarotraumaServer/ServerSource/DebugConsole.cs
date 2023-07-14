@@ -1146,14 +1146,14 @@ namespace Barotrauma
                 NewMessage(client.Name + " " + (GameMain.Server.ServerSettings.HasPassword ? " changed the server password to \"" + args[0] + "\"." : " removed password protection from the server."));
                 GameMain.Server.SendConsoleMessage(GameMain.Server.ServerSettings.HasPassword ? "Changed the server password." : "Removed password protection from the server.", client);
             });
-            AssignOnClientRequestExecute("togglewiring", (Client client, Vector2 cursorPos, string[] args) =>
+            /*AssignOnClientRequestExecute("togglewiring", (Client client, Vector2 cursorPos, string[] args) =>
             {
                 if (GameMain.Server == null) { return; }
                 GameMain.Server.ServerSettings.AllowRewiring = !GameMain.Server.ServerSettings.AllowRewiring;
 
                 NewMessage(client.Name + " hat Verkabeln umgeschalten. " + "Vekabeln= " + GameMain.Server.ServerSettings.AllowRewiring);
                 GameMain.Server.SendConsoleMessage("Verkabeln= " + GameMain.Server.ServerSettings.AllowRewiring, client);
-            });
+            });*/
 
             commands.Add(new Command("setmaxplayers|maxplayers", "setmaxplayers [max players]: Sets the maximum player count of the server that's being hosted.", (string[] args) =>
             {
