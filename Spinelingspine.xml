@@ -3,9 +3,23 @@
   <limb id="13" width="10" height="60" name="Spike1" type="None" notes="" scale="0.7" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="False" spriteorientation="0" steerforce="0" radius="0" density="1" ignorecollisions="False" angulardamping="7" attackpriority="1" pullpos="0,0" stepoffset="0,0" refjoint="-1" mouthpos="0,0" constanttorque="600" constantangle="0" attackforcemultiplier="1" minseverancedamage="1" severedfadeouttime="10" applytailangle="False" sinefrequencymultiplier="1" sineamplitudemultiplier="1" blinkfrequency="0" blinkdurationin="0.2" blinkdurationout="0.5" blinkholdtime="0" blinkrotationin="0" blinkrotationout="45" blinkforce="50" blinktransitionin="Linear" blinktransitionout="Linear" healthindex="0" friction="0.3" restitution="0.05">
     <sprite texture="Content/Characters/Spineling/Spineling.png" sourcerect="229,0,26,183" origin="0.5385919,0.47905606" depth="0.61" color="255,255,255,255" deadcolor="255,255,255,255" deadcolortime="0" />
     <attack ranged="True" avoidfriendlyfire="True" requiredangle="10" structuresoundtype="StructureBlunt" context="Any" targettype="Any" targetlimbtype="None" hitdetectiontype="None" afterattack="FallBackUntilCanAttack" afterattackdelay="0.1" reverse="False" retreat="False" fullspeedafterattack="True" range="700" damagerange="700" duration="0.1" cooldown="60" secondarycooldown="0.3" cooldownrandomfactor="0" structuredamage="0" itemdamage="0" stun="0" onlyhumans="False" applyforceonlimbs="1" force="0" rootforceworldstart="0,0" rootforceworldmiddle="0,0" rootforceworldend="0,0" roottransitioneasing="Linear" torque="0" applyforcesonlyonce="False" targetimpulse="0" targetimpulseworld="0,0" targetforce="0" targetforceworld="0,0" severlimbsprobability="0" priority="0">
-      <StatusEffect type="OnFailure" target="This">
+      <!-- checks the value of spineling gene, additional damage taken under 66/33% quality -->
+      <StatusEffect type="OnFailure" target="This" >
+        <Affliction identifier="bleeding" strength="3"/>
+        <Affliction identifier="bloodloss" strength="4" />
+        <Conditional naturalrangedweapon="lt 66" />
+      </StatusEffect>
+      <StatusEffect type="OnFailure" target="This" >
+        <Affliction identifier="bleeding" strength="3"/>
+        <Affliction identifier="bloodloss" strength="4" />
+        <Conditional naturalrangedweapon="lt 33" />
+      </StatusEffect>
+      <!-- ejects the spineling spike -->
+      <StatusEffect type="OnFailure" target="This" >
+        <Affliction identifier="bleeding" strength="0"/>
+        <Affliction identifier="bloodloss" strength="4" />
         <HideLimb duration="60" />
-        <SpawnItem identifier="spinelingspike" spawnposition="This" count="1" aimspread="5" rotationtype="Limb" rotation="90" />
+        <SpawnItem identifier="spinelingspikegene" spawnposition="This" count="1" aimspread="5" rotationtype="Limb" rotation="90" />
         <ParticleEmitter particle="bloodsplash" anglemin="0" anglemax="360" particleamount="5" velocitymin="0" velocitymax="500" scalemin="0.75" scalemax="1.75" />
         <Explosion range="150.0" force="5" shockwave="false" smoke="false" flames="false" sparks="false" underwaterbubble="false" camerashake="6.0" />
         <sound file="Content/Characters/Spineling/SPINELING_attackProjectile1.ogg" range="800" volume="0.1" selectionmode="random" dontmuffle="true" />
@@ -17,9 +31,23 @@
   <limb id="14" width="10" height="60" name="Spike1" type="None" notes="" scale="0.6" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="False" spriteorientation="0" steerforce="0" radius="0" density="1" ignorecollisions="False" angulardamping="7" attackpriority="1" pullpos="0,0" stepoffset="0,0" refjoint="-1" mouthpos="0,0" constanttorque="600" constantangle="0" attackforcemultiplier="1" minseverancedamage="1" severedfadeouttime="10" applytailangle="False" sinefrequencymultiplier="1" sineamplitudemultiplier="1" blinkfrequency="0" blinkdurationin="0.2" blinkdurationout="0.5" blinkholdtime="0" blinkrotationin="0" blinkrotationout="45" blinkforce="50" blinktransitionin="Linear" blinktransitionout="Linear" healthindex="0" friction="0.3" restitution="0.05">
     <sprite texture="Content/Characters/Spineling/Spineling.png" sourcerect="229,0,26,183" origin="0.5385919,0.47905606" depth="0.61" color="255,255,255,255" deadcolor="255,255,255,255" deadcolortime="0" />
     <attack ranged="True" avoidfriendlyfire="True" requiredangle="10" structuresoundtype="StructureBlunt" context="Any" targettype="Any" targetlimbtype="None" hitdetectiontype="None" afterattack="FallBackUntilCanAttack" afterattackdelay="0.1" reverse="False" retreat="False" fullspeedafterattack="True" range="700" damagerange="700" duration="0.1" cooldown="60" secondarycooldown="0.3" cooldownrandomfactor="0" structuredamage="0" itemdamage="0" stun="0" onlyhumans="False" applyforceonlimbs="1" force="0" rootforceworldstart="0,0" rootforceworldmiddle="0,0" rootforceworldend="0,0" roottransitioneasing="Linear" torque="0" applyforcesonlyonce="False" targetimpulse="0" targetimpulseworld="0,0" targetforce="0" targetforceworld="0,0" severlimbsprobability="0" priority="0">
-      <StatusEffect type="OnFailure" target="This">
+      <!-- checks the value of spineling gene, additional damage taken under 66/33% quality -->
+      <StatusEffect type="OnFailure" target="This" >
+        <Affliction identifier="bleeding" strength="3"/>
+        <Affliction identifier="bloodloss" strength="4" />
+        <Conditional naturalrangedweapon="lt 66" />
+      </StatusEffect>
+      <StatusEffect type="OnFailure" target="This" >
+        <Affliction identifier="bleeding" strength="3"/>
+        <Affliction identifier="bloodloss" strength="4" />
+        <Conditional naturalrangedweapon="lt 33" />
+      </StatusEffect>
+      <!-- ejects the spineling spike -->
+      <StatusEffect type="OnFailure" target="This" >
+        <Affliction identifier="bleeding" strength="0"/>
+        <Affliction identifier="bloodloss" strength="4" />
         <HideLimb duration="60" />
-        <SpawnItem identifier="spinelingspike" spawnposition="This" count="1" aimspread="5" rotationtype="Limb" rotation="90" />
+        <SpawnItem identifier="spinelingspikegene" spawnposition="This" count="1" aimspread="5" rotationtype="Limb" rotation="90" />
         <ParticleEmitter particle="bloodsplash" anglemin="0" anglemax="360" particleamount="5" velocitymin="0" velocitymax="500" scalemin="0.75" scalemax="1.75" />
         <Explosion range="150.0" force="5" shockwave="false" smoke="false" flames="false" sparks="false" underwaterbubble="false" camerashake="6.0" />
         <sound file="Content/Characters/Spineling/SPINELING_attackProjectile1.ogg" range="800" volume="0.1" selectionmode="random" dontmuffle="true" />
@@ -30,10 +58,24 @@
   </limb>
   <limb id="15" width="10" height="60" name="Spike1" type="None" notes="" scale="0.5" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="False" spriteorientation="0" steerforce="0" radius="0" density="1" ignorecollisions="False" angulardamping="7" attackpriority="1" pullpos="0,0" stepoffset="0,0" refjoint="-1" mouthpos="0,0" constanttorque="600" constantangle="0" attackforcemultiplier="1" minseverancedamage="1" severedfadeouttime="10" applytailangle="False" sinefrequencymultiplier="1" sineamplitudemultiplier="1" blinkfrequency="0" blinkdurationin="0.2" blinkdurationout="0.5" blinkholdtime="0" blinkrotationin="0" blinkrotationout="45" blinkforce="50" blinktransitionin="Linear" blinktransitionout="Linear" healthindex="0" friction="0.3" restitution="0.05">
     <sprite texture="Content/Characters/Spineling/Spineling.png" sourcerect="229,0,26,183" origin="0.5385919,0.47905606" depth="0.61" color="255,255,255,255" deadcolor="255,255,255,255" deadcolortime="0" />
-    <attack ranged="True" avoidfriendlyfire="True" requiredangle="10" structuresoundtype="StructureBlunt" context="Any" targettype="Any" targetlimbtype="None" hitdetectiontype="None" afterattack="FallBackUntilCanAttack" afterattackdelay="0.1" reverse="False" retreat="False" fullspeedafterattack="True" range="700" damagerange="700" duration="0.1" cooldown="60" secondarycooldown="0.3" cooldownrandomfactor="0" structuredamage="0" itemdamage="0" stun="0" onlyhumans="False" applyforceonlimbs="1" force="0" rootforceworldstart="0,0" rootforceworldmiddle="0,0" rootforceworldend="0,0" roottransitioneasing="Linear" torque="0" applyforcesonlyonce="False" targetimpulse="0" targetimpulseworld="0,0" targetforce="0" targetforceworld="0,0" severlimbsprobability="0" priority="0">
-      <StatusEffect type="OnFailure" target="This">
+    <attack ranged="True" avoidfriendlyfire="False" requiredangle="10" structuresoundtype="StructureBlunt" context="Any" targettype="Any" targetlimbtype="None" hitdetectiontype="Distance" afterattack="FallBackUntilCanAttack" afterattackdelay="0.1" reverse="False" retreat="False" fullspeedafterattack="True" range="700" damagerange="700" duration="0.1" cooldown="5" secondarycooldown="0.3" cooldownrandomfactor="0" structuredamage="0" itemdamage="0" stun="0" onlyhumans="False" applyforceonlimbs="" force="0" rootforceworldstart="0,0" rootforceworldmiddle="0,0" rootforceworldend="0,0" roottransitioneasing="Linear" torque="0" applyforcesonlyonce="False" targetimpulse="0" targetimpulseworld="0,0" targetforce="0" targetforceworld="0,0" severlimbsprobability="0" priority="0">
+      <!-- checks the value of spineling gene, additional damage taken under 66/33% quality -->
+      <StatusEffect type="OnFailure" target="This" >
+        <Affliction identifier="bleeding" strength="3"/>
+        <Affliction identifier="bloodloss" strength="4" />
+        <Conditional naturalrangedweapon="lt 66" />
+      </StatusEffect>
+      <StatusEffect type="OnFailure" target="This" >
+        <Affliction identifier="bleeding" strength="3"/>
+        <Affliction identifier="bloodloss" strength="4" />
+        <Conditional naturalrangedweapon="lt 33" />
+      </StatusEffect>
+      <!-- ejects the spineling spike -->
+      <StatusEffect type="OnFailure" target="This" >
+        <Affliction identifier="bleeding" strength="0"/>
+        <Affliction identifier="bloodloss" strength="4" />
         <HideLimb duration="60" />
-        <SpawnItem identifier="spinelingspike" spawnposition="This" count="1" aimspread="5" rotationtype="Limb" rotation="90" />        
+        <SpawnItem identifier="spinelingspikegene" spawnposition="This" count="1" aimspread="5" rotationtype="Limb" rotation="90" />
         <ParticleEmitter particle="bloodsplash" anglemin="0" anglemax="360" particleamount="5" velocitymin="0" velocitymax="500" scalemin="0.75" scalemax="1.75" />
         <Explosion range="150.0" force="5" shockwave="false" smoke="false" flames="false" sparks="false" underwaterbubble="false" camerashake="6.0" />
         <sound file="Content/Characters/Spineling/SPINELING_attackProjectile1.ogg" range="800" volume="0.1" selectionmode="random" dontmuffle="true" />
