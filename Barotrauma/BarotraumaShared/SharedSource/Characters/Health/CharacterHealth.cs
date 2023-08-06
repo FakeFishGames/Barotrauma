@@ -1136,7 +1136,7 @@ namespace Barotrauma
                     }
                 }
 
-                foreach (KeyValuePair<Identifier, float> treatment in affliction.Prefab.TreatmentSuitability)
+                foreach (KeyValuePair<Identifier, float> treatment in affliction.Prefab.TreatmentSuitabilities)
                 {
                     float suitability = treatment.Value * strength;
                     if (treatment.Value > strength)

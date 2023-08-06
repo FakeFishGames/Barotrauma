@@ -201,9 +201,9 @@ namespace Barotrauma
                 keys[(int)InputType.Use].Held = useInput;
                 keys[(int)InputType.Use].SetState(false, useInput);
 
+                bool crouching = msg.ReadBoolean();
                 if (AnimController is HumanoidAnimController)
                 {
-                    bool crouching = msg.ReadBoolean();
                     keys[(int)InputType.Crouch].Held = crouching;
                     keys[(int)InputType.Crouch].SetState(false, crouching);
                 }
@@ -269,7 +269,34 @@ namespace Barotrauma
             if (readStatus)
             {
                 ReadStatus(msg);
-                AIController?.ClientRead(msg);
+                bool isEnemyAi = msg.ReadBoolean();
+                if (isEnemyAi)
+                {
+                    byte aiState = msg.ReadByte();
+                    if (AIController is EnemyAIController enemyAi)
+                    {
+                        enemyAi.State = (AIState)aiState;
+                    }
+                    else
+                    {
+                        DebugConsole.AddWarning($"Received enemy AI data for a character with no {nameof(EnemyAIController)}. Ignoring...");
+                    }
+                    bool isPet = msg.ReadBoolean();
+                    if (isPet)
+                    {
+                        byte happiness = msg.ReadByte();
+                        byte hunger = msg.ReadByte();
+                        if ((AIController as EnemyAIController)?.PetBehavior is PetBehavior petBehavior)
+                        {
+                            petBehavior.Happiness = (float)happiness / byte.MaxValue * petBehavior.MaxHappiness;
+                            petBehavior.Hunger = (float)hunger / byte.MaxValue * petBehavior.MaxHunger;
+                        }
+                        else
+                        {
+                            DebugConsole.AddWarning($"Received pet AI data for a character with no {nameof(PetBehavior)}. Ignoring...");
+                        }
+                    }
+                }
             }
 
             msg.ReadPadBits();

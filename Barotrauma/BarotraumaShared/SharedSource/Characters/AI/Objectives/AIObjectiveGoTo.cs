@@ -223,23 +223,30 @@ namespace Barotrauma
             Hull targetHull = GetTargetHull();
             if (!IsFollowOrder)
             {
+                // Abandon if going through unsafe paths or targeting unsafe hulls.
                 bool isUnreachable = HumanAIController.UnreachableHulls.Contains(targetHull);
                 if (!objectiveManager.CurrentObjective.IgnoreUnsafeHulls)
                 {
-                    if (HumanAIController.UnsafeHulls.Contains(targetHull))
+                    // Wait orders check this so that the bot temporarily leaves the unsafe hull.
+                    // Non-orders (that are not set to ignore the unsafe hulls) abandon. In practice this means e.g. repair and clean up item subobjectives (of the looping parent objective).
+                    // Other orders are only abandoned if the hull is unreachable, because the path is invalid or not found at all.
+                    if (IsWaitOrder || !objectiveManager.HasOrders())
                     {
-                        isUnreachable = true;
-                        HumanAIController.AskToRecalculateHullSafety(targetHull);
-                    }
-                    else if (PathSteering?.CurrentPath != null)
-                    {
-                        foreach (WayPoint wp in PathSteering.CurrentPath.Nodes)
+                        if (HumanAIController.UnsafeHulls.Contains(targetHull))
                         {
-                            if (wp.CurrentHull == null) { continue; }
-                            if (HumanAIController.UnsafeHulls.Contains(wp.CurrentHull))
+                            isUnreachable = true;
+                            HumanAIController.AskToRecalculateHullSafety(targetHull);
+                        }
+                        else if (PathSteering?.CurrentPath != null)
+                        {
+                            foreach (WayPoint wp in PathSteering.CurrentPath.Nodes)
                             {
-                                isUnreachable = true;
-                                HumanAIController.AskToRecalculateHullSafety(wp.CurrentHull);
+                                if (wp.CurrentHull == null) { continue; }
+                                if (HumanAIController.UnsafeHulls.Contains(wp.CurrentHull))
+                                {
+                                    isUnreachable = true;
+                                    HumanAIController.AskToRecalculateHullSafety(wp.CurrentHull);
+                                }
                             }
                         }
                     }
