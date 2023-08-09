@@ -46,7 +46,7 @@
     <sprite sourcerect="0,0,1,1" origin="0.36,0.36" depth="0.049" color="230,200,150,255" deadcolor="255,255,255,255" deadcolortime="0" texture="Content/Items/Genetic/Genetic.png" ignoretint="true" />
     <Conditionalsprite exclusive="True">
       <Conditional naturalmeleeweapon="gte 66" />
-      <sprite sourcerect="437,5,68,96" origin="0.36,0.36" depth="0.049" color="230,200,150,255" texture="Content/Items/Genetic/Genetic.png" />
+      <sprite sourcerect="437,5,68,96" origin="0.36,0.36" depth="0.049" texture="Content/Items/Genetic/Genetic.png" />
     </Conditionalsprite>
     <damagemodifier armorsector="0,360" afflictiontypes="damage" damagemultiplier="0.1" damagesound="LimbArmor" damageparticle="brownchunks" deflectprojectiles="True" afflictionidentifiers="" probabilitymultiplier="1" />
     <damagemodifier armorsector="0,360" afflictiontypes="bleeding" damagemultiplier="0" damagesound="LimbArmor" deflectprojectiles="True" afflictionidentifiers="" probabilitymultiplier="1" damageparticle="" />
