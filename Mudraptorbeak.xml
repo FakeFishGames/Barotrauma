@@ -13,6 +13,11 @@
       <conditional targetself="true" naturalmeleeweapon="lt 33" />
       <Affliction identifier="bitewounds" strength="10" probability="1" />
       <Affliction identifier="stun" strength="1" probability="1" />
+      <StatusEffect type="OnUse" target="This">
+        <sound file="Content/Characters/Mudraptor/MUDRAPTOR_attack1.ogg" range="1200" volume="1" selectionmode="random" />
+        <sound file="Content/Characters/Mudraptor/MUDRAPTOR_attack2.ogg" range="1200" volume="1" selectionmode="random" />
+        <sound file="Content/Characters/Mudraptor/MUDRAPTOR_attack3.ogg" range="1200" volume="1" selectionmode="random" />
+      </StatusEffect>
     </attack>
   </limb>
   <limb id="14" name="Beak2" type="None" inheritlimbdepth="Head" width="0" height="0" notes="" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" radius="20" mass="0" density="5" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05" spriteorientation="NaN" mirrorvertically="False" mirrorhorizontally="False" hide="False" angulardamping="100" mouthpos="0,0" constanttorque="0" constantangle="0" scale="0.65" attackforcemultiplier="1" minseverancedamage="0.8" severedfadeouttime="0" applytailangle="False" applysinemovement="True">
@@ -30,13 +35,18 @@
       <conditional targetself="true" naturalmeleeweapon="lt 66" />
       <Affliction identifier="bitewounds" strength="15" probability="1" />
       <Affliction identifier="stun" strength="1" probability="1" />
+      <StatusEffect type="OnUse" target="This">
+        <sound file="Content/Characters/Mudraptor/MUDRAPTOR_attack1.ogg" range="1200" volume="1" selectionmode="random" />
+        <sound file="Content/Characters/Mudraptor/MUDRAPTOR_attack2.ogg" range="1200" volume="1" selectionmode="random" />
+        <sound file="Content/Characters/Mudraptor/MUDRAPTOR_attack3.ogg" range="1200" volume="1" selectionmode="random" />
+      </StatusEffect>
     </attack>
   </limb>
   <limb id="15" name="Beak3" type="None" inheritlimbdepth="Head" width="0" height="0" notes="" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" radius="20" mass="0" density="5" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05" spriteorientation="NaN" mirrorvertically="False" mirrorhorizontally="False" hide="False" angulardamping="100" mouthpos="0,0" constanttorque="0" constantangle="0" scale="0.8" attackforcemultiplier="1" minseverancedamage="0.8" severedfadeouttime="0" applytailangle="False" applysinemovement="True">
     <sprite sourcerect="0,0,1,1" origin="0.36,0.36" depth="0.049" color="230,200,150,255" deadcolor="255,255,255,255" deadcolortime="0" texture="Content/Items/Genetic/Genetic.png" ignoretint="true" />
     <Conditionalsprite exclusive="True">
       <Conditional naturalmeleeweapon="gte 66" />
-      <sprite sourcerect="437,5,68,96" origin="0.36,0.36" depth="0.049" texture="Content/Items/Genetic/Genetic.png" />
+      <sprite sourcerect="437,5,68,96" origin="0.36,0.36" depth="0.049" color="230,200,150,255" texture="Content/Items/Genetic/Genetic.png" />
     </Conditionalsprite>
     <damagemodifier armorsector="0,360" afflictiontypes="damage" damagemultiplier="0.1" damagesound="LimbArmor" damageparticle="brownchunks" deflectprojectiles="True" afflictionidentifiers="" probabilitymultiplier="1" />
     <damagemodifier armorsector="0,360" afflictiontypes="bleeding" damagemultiplier="0" damagesound="LimbArmor" deflectprojectiles="True" afflictionidentifiers="" probabilitymultiplier="1" damageparticle="" />
@@ -45,6 +55,11 @@
       <conditional targetself="true" naturalmeleeweapon="gte 66" />
       <Affliction identifier="bitewounds" strength="20" probability="1" />
       <Affliction identifier="stun" strength="1" probability="1" />
+      <StatusEffect type="OnUse" target="This">
+        <sound file="Content/Characters/Mudraptor/MUDRAPTOR_attack1.ogg" range="1200" volume="1" selectionmode="random" />
+        <sound file="Content/Characters/Mudraptor/MUDRAPTOR_attack2.ogg" range="1200" volume="1" selectionmode="random" />
+        <sound file="Content/Characters/Mudraptor/MUDRAPTOR_attack3.ogg" range="1200" volume="1" selectionmode="random" />
+      </StatusEffect>
     </attack>
   </limb>
   <!-- Head to husk appendage -->
