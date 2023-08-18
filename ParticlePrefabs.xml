@@ -5507,4 +5507,10 @@
         texture="Content/Particles/LightningParticleSheet.png"
         sourcerect="256,256,256,256" />
   </cyborgammotracer>
+  <grenpin lifetime="6" startdelaymin="0" startdelaymax="0" angularvelocitymin="90" angularvelocitymax="120" startrotationmin="0" startrotationmax="360" rotatetodirection="false" drag="0" waterdrag="1" velocitychange="0,-10" velocitychangewater="0,-6" collisionradius="1" usecollision="true" deleteoncollision="False" friction="0.1" restitution="0.4" startsizemin=".15,.15" startsizemax=".15,.15" growtime="0.0" startcolor="255,255,255,255" endcolor="255,255,255,0" drawtarget="Both" drawontop="True" blendstate="AlphaBlend" animduration="1" loopanim="false" lifetimemin="0" sizechangemin="0,0" sizechangemax="0,0" middlecolor="255,255,255,255" usemiddlecolor="False" priority="10">
+    <sprite name="grenpin" texture="%ModDir%/ParticleAtlas2.png" sourcerect="40,11,198,131" origin="0.48055297,0.53349656" depth="0.565" />
+  </grenpin>
+  <grenlever lifetime="6" startdelaymin="0" startdelaymax="0" angularvelocitymin="50" angularvelocitymax="70" startrotationmin="0" startrotationmax="180" rotatetodirection="false" drag="0" waterdrag="0.5" velocitychange="0,-10" velocitychangewater="0,-6" collisionradius="1" usecollision="true" deleteoncollision="False" friction="0.1" restitution="0.4" startsizemin=".15,.15" startsizemax=".15,.15" growtime="0.0" startcolor="255,255,255,255" endcolor="255,255,255,0" drawtarget="Both" drawontop="True" blendstate="AlphaBlend" animduration="1" loopanim="false" lifetimemin="0" sizechangemin="0,0" sizechangemax="0,0" middlecolor="255,255,255,255" usemiddlecolor="False" priority="10">
+    <sprite name="grenlever" texture="%ModDir%/ParticleAtlas2.png" sourcerect="105,220,56,262" origin="0.48055297,0.53349656" depth="0.565" />
+  </grenlever>
 </prefabs>
