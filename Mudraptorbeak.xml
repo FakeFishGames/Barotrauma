@@ -1,15 +1,15 @@
-﻿<?xml version="1.0" encoding="utf-8" ?>
+<?xml version="1.0" encoding="utf-8" ?>
 <huskappendage>
-  <limb id="13" name="Beak" type="None" inheritlimbdepth="Head" width="0" height="0" notes="" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" radius="20" mass="0" density="5" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05" spriteorientation="NaN" mirrorvertically="False" mirrorhorizontally="False" hide="False" angulardamping="100" mouthpos="0,0" constanttorque="0" constantangle="0" scale="0.5" attackforcemultiplier="1" minseverancedamage="0.8" severedfadeouttime="0" applytailangle="False" applysinemovement="True">
-    <sprite sourcerect="0,0,1,1" origin="0.3,0.3" depth="0.049" color="180,115,115,255" deadcolor="255,255,255,255" deadcolortime="0" texture="Content/Items/Genetic/Genetic.png" ignoretint="true" />
+  <limb id="13" name="Beak0" type="None" inheritlimbdepth="Head" width="0" height="0" notes="" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" radius="50" mass="0" density="0" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05" spriteorientation="90" mirrorvertically="False" mirrorhorizontally="False" hide="False" angulardamping="100" mouthpos="0,0" constanttorque="0" constantangle="0" scale="0.5" attackforcemultiplier="1" minseverancedamage="0.8" severedfadeouttime="0" applytailangle="False" applysinemovement="True">
+    <sprite sourcerect="0,0,1,1" origin="0.36,0.64" depth="0.049" color="180,115,115,255" deadcolor="255,255,255,255" deadcolortime="0" texture="Content/Items/Genetic/Genetic.png" ignoretint="true" />
     <Conditionalsprite exclusive="True">
       <Conditional naturalmeleeweapon="lt 33" />
-      <sprite sourcerect="437,5,68,96" origin="0.3,0.3" depth="0.049" texture="Content/Items/Genetic/Genetic.png" />
+      <sprite sourcerect="410,18,97,67" origin="0.29,0.6" depth="0.049" texture="Content/Items/Genetic/Genetic.png" />
     </Conditionalsprite>
-    <damagemodifier armorsector="0,360" afflictiontypes="damage" damagemultiplier="0.1" damagesound="LimbArmor" damageparticle="brownchunks" deflectprojectiles="True" afflictionidentifiers="" probabilitymultiplier="1" />
-    <damagemodifier armorsector="0,360" afflictiontypes="bleeding" damagemultiplier="0" damagesound="LimbArmor" deflectprojectiles="True" afflictionidentifiers="" probabilitymultiplier="1" damageparticle="" />
+    <damagemodifier armorsector="0,360" afflictiontypes="damage" damagemultiplier="0.4" damagesound="LimbArmor" damageparticle="brownchunks" deflectprojectiles="True" afflictionidentifiers="" probabilitymultiplier="1" />
+    <damagemodifier armorsector="0,360" afflictiontypes="bleeding" damagemultiplier="0.3" damagesound="LimbArmor" deflectprojectiles="True" afflictionidentifiers="" probabilitymultiplier="1" damageparticle="" />
     <damagemodifier armorsector="0,360" afflictiontypes="burn" damagemultiplier="0.25" damagesound="" deflectprojectiles="True" afflictionidentifiers="" probabilitymultiplier="1" damageparticle="" />
-    <attack context="Any" cooldown="2" afterattack="Pursue" range="50" damagerange="50" duration="0.5" structuredamage="0" itemdamage="25" structuresoundtype="StructureSlash" targetforce="0" severlimbsprobability="0.3" torque="100" force="30" applyforceonlimbs="0,1" targettype="Any" hitdetectiontype="Distance" stun="0" onlyhumans="False" applyforcesonlyonce="True" targetimpulse="5" targetimpulseworld="0,0" targetforceworld="0,-5" stickchance="0" priority="1" secondarycooldown="0" cooldownrandomfactor="0.5" reverse="False" targetlimbtype="None" afterattackdelay="0" retreat="False" rootforceworldstart="0,0" rootforceworldmiddle="0,0" rootforceworldend="0,0" roottransitioneasing="Linear">
+    <attack context="Any" cooldown="2" afterattack="Pursue" range="50" damagerange="50" duration="0.5" structuredamage="0" itemdamage="25" structuresoundtype="StructureSlash" targetforce="0" severlimbsprobability="0.3" torque="100" force="30" applyforceonlimbs="0,1" targettype="Any" hitdetectiontype="Distance" stun="0" onlyhumans="False" applyforcesonlyonce="True" targetimpulse="5" targetimpulseworld="0,0" targetforceworld="0,-5" stickchance="0" priority="1" secondarycooldown="2" cooldownrandomfactor="0.5" reverse="False" targetlimbtype="None" afterattackdelay="0" retreat="False" rootforceworldstart="0,0" rootforceworldmiddle="0,0" rootforceworldend="0,0" roottransitioneasing="Linear">
       <conditional targetself="true" naturalmeleeweapon="lt 33" />
       <Affliction identifier="bitewounds" strength="10" probability="1" />
       <Affliction identifier="stun" strength="1" probability="1" />
@@ -20,19 +20,41 @@
       </StatusEffect>
     </attack>
   </limb>
-  <limb id="14" name="Beak2" type="None" inheritlimbdepth="Head" width="0" height="0" notes="" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" radius="20" mass="0" density="5" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05" spriteorientation="NaN" mirrorvertically="False" mirrorhorizontally="False" hide="False" angulardamping="100" mouthpos="0,0" constanttorque="0" constantangle="0" scale="0.65" attackforcemultiplier="1" minseverancedamage="0.8" severedfadeouttime="0" applytailangle="False" applysinemovement="True">
-    <sprite sourcerect="0,0,1,1" origin="0.33,0.33" depth="0.049" color="90,110,150,255" deadcolor="255,255,255,255" deadcolortime="0" texture="Content/Items/Genetic/Genetic.png" ignoretint="true" />
+  <limb id="14" name="Beak33" type="None" inheritlimbdepth="Head" width="0" height="0" notes="" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" radius="42" mass="0" density="0" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05" spriteorientation="90" mirrorvertically="False" mirrorhorizontally="False" hide="False" angulardamping="100" mouthpos="0,0" constanttorque="0" constantangle="0" scale="0.6" attackforcemultiplier="1" minseverancedamage="0.8" severedfadeouttime="0" applytailangle="False" applysinemovement="True">
+    <sprite sourcerect="0,0,1,1" origin="0.36,0.64" depth="0.049" color="90,110,150,255" deadcolor="255,255,255,255" deadcolortime="0" texture="Content/Items/Genetic/Genetic.png" ignoretint="true" />
     <Conditionalsprite exclusive="True">
       <Conditional naturalmeleeweapon="gte 33" />
       <Conditional naturalmeleeweapon="lt 66" />
-      <sprite sourcerect="437,5,68,96" origin="0.33,0.33" depth="0.049" texture="Content/Items/Genetic/Genetic.png" />
+      <sprite sourcerect="410,18,97,67" origin="0.36,0.57" depth="0.049" texture="Content/Items/Genetic/Genetic.png" />
     </Conditionalsprite>
-    <damagemodifier armorsector="0,360" afflictiontypes="damage" damagemultiplier="0.1" damagesound="LimbArmor" damageparticle="brownchunks" deflectprojectiles="True" afflictionidentifiers="" probabilitymultiplier="1" />
-    <damagemodifier armorsector="0,360" afflictiontypes="bleeding" damagemultiplier="0" damagesound="LimbArmor" deflectprojectiles="True" afflictionidentifiers="" probabilitymultiplier="1" damageparticle="" />
+    <damagemodifier armorsector="0,360" afflictiontypes="damage" damagemultiplier="0.3" damagesound="LimbArmor" damageparticle="brownchunks" deflectprojectiles="True" afflictionidentifiers="" probabilitymultiplier="1" />
+    <damagemodifier armorsector="0,360" afflictiontypes="bleeding" damagemultiplier="0.2" damagesound="LimbArmor" deflectprojectiles="True" afflictionidentifiers="" probabilitymultiplier="1" damageparticle="" />
     <damagemodifier armorsector="0,360" afflictiontypes="burn" damagemultiplier="0.25" damagesound="" deflectprojectiles="True" afflictionidentifiers="" probabilitymultiplier="1" damageparticle="" />
-    <attack context="Any" cooldown="2" afterattack="Pursue" range="50" damagerange="50" duration="0.5" structuredamage="0" itemdamage="40" structuresoundtype="StructureSlash" targetforce="0" severlimbsprobability="0.3" torque="100" force="30" applyforceonlimbs="0,1" targettype="Any" hitdetectiontype="Distance" stun="0" onlyhumans="False" applyforcesonlyonce="True" targetimpulse="5" targetimpulseworld="0,0" targetforceworld="0,-5" stickchance="0" priority="3" secondarycooldown="0" cooldownrandomfactor="0.5" reverse="False" targetlimbtype="None" afterattackdelay="0" retreat="False" rootforceworldstart="0,0" rootforceworldmiddle="0,0" rootforceworldend="0,0" roottransitioneasing="Linear">
+    <attack context="Any" cooldown="2" afterattack="Pursue" range="50" damagerange="50" duration="0.5" structuredamage="0" itemdamage="40" structuresoundtype="StructureSlash" targetforce="0" severlimbsprobability="0.3" torque="100" force="30" applyforceonlimbs="0,1" targettype="Any" hitdetectiontype="Distance" stun="0" onlyhumans="False" applyforcesonlyonce="True" targetimpulse="5" targetimpulseworld="0,0" targetforceworld="0,-5" stickchance="0" priority="3" secondarycooldown="2" cooldownrandomfactor="0.5" reverse="False" targetlimbtype="None" afterattackdelay="0" retreat="False" rootforceworldstart="0,0" rootforceworldmiddle="0,0" rootforceworldend="0,0" roottransitioneasing="Linear">
       <conditional targetself="true" naturalmeleeweapon="gte 33" />
       <conditional targetself="true" naturalmeleeweapon="lt 66" />
+      <Affliction identifier="bitewounds" strength="12.5" probability="1" />
+      <Affliction identifier="stun" strength="1" probability="1" />
+      <StatusEffect type="OnUse" target="This">
+        <sound file="Content/Characters/Mudraptor/MUDRAPTOR_attack1.ogg" range="1200" volume="1" selectionmode="random" />
+        <sound file="Content/Characters/Mudraptor/MUDRAPTOR_attack2.ogg" range="1200" volume="1" selectionmode="random" />
+        <sound file="Content/Characters/Mudraptor/MUDRAPTOR_attack3.ogg" range="1200" volume="1" selectionmode="random" />
+      </StatusEffect>
+    </attack>
+  </limb>
+  <limb id="15" name="Beak66" type="None" inheritlimbdepth="Head" width="0" height="0" notes="" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" radius="36" mass="0" density="0" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05" spriteorientation="90" mirrorvertically="False" mirrorhorizontally="False" hide="False" angulardamping="100" mouthpos="0,0" constanttorque="0" constantangle="0" scale="0.7" attackforcemultiplier="1" minseverancedamage="0.8" severedfadeouttime="0" applytailangle="False" applysinemovement="True">
+    <sprite sourcerect="0,0,1,1" origin="0.36,0.64" depth="0.049" color="230,200,150,255" deadcolor="255,255,255,255" deadcolortime="0" texture="Content/Items/Genetic/Genetic.png" ignoretint="true" />
+    <Conditionalsprite exclusive="True">
+      <Conditional naturalmeleeweapon="gte 66" />
+      <Conditional naturalmeleeweapon="lte 99" />      
+      <sprite sourcerect="410,18,97,67" origin="0.36,0.5" depth="0.049" texture="Content/Items/Genetic/Genetic.png" />
+    </Conditionalsprite>
+    <damagemodifier armorsector="0,360" afflictiontypes="damage" damagemultiplier="0.2" damagesound="LimbArmor" damageparticle="brownchunks" deflectprojectiles="True" afflictionidentifiers="" probabilitymultiplier="1" />
+    <damagemodifier armorsector="0,360" afflictiontypes="bleeding" damagemultiplier="0.2" damagesound="LimbArmor" deflectprojectiles="True" afflictionidentifiers="" probabilitymultiplier="1" damageparticle="" />
+    <damagemodifier armorsector="0,360" afflictiontypes="burn" damagemultiplier="0.25" damagesound="" deflectprojectiles="True" afflictionidentifiers="" probabilitymultiplier="1" damageparticle="" />
+    <attack context="Any" cooldown="2" afterattack="Pursue" range="50" damagerange="50" duration="0.5" structuredamage="0" itemdamage="55" structuresoundtype="StructureSlash" targetforce="0" severlimbsprobability="0.3" torque="100" force="30" applyforceonlimbs="0,1" targettype="Any" hitdetectiontype="Distance" stun="0" onlyhumans="False" applyforcesonlyonce="True" targetimpulse="5" targetimpulseworld="0,0" targetforceworld="0,-5" stickchance="0" priority="3" secondarycooldown="2" cooldownrandomfactor="0.5" reverse="False" targetlimbtype="None" afterattackdelay="0" retreat="False" rootforceworldstart="0,0" rootforceworldmiddle="0,0" rootforceworldend="0,0" roottransitioneasing="Linear">
+      <conditional targetself="true" naturalmeleeweapon="gte 66" />
+      <conditional targetself="true" naturalmeleeweapon="lt 100" />
       <Affliction identifier="bitewounds" strength="15" probability="1" />
       <Affliction identifier="stun" strength="1" probability="1" />
       <StatusEffect type="OnUse" target="This">
@@ -42,17 +64,17 @@
       </StatusEffect>
     </attack>
   </limb>
-  <limb id="15" name="Beak3" type="None" inheritlimbdepth="Head" width="0" height="0" notes="" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" radius="20" mass="0" density="5" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05" spriteorientation="NaN" mirrorvertically="False" mirrorhorizontally="False" hide="False" angulardamping="100" mouthpos="0,0" constanttorque="0" constantangle="0" scale="0.8" attackforcemultiplier="1" minseverancedamage="0.8" severedfadeouttime="0" applytailangle="False" applysinemovement="True">
-    <sprite sourcerect="0,0,1,1" origin="0.36,0.36" depth="0.049" color="230,200,150,255" deadcolor="255,255,255,255" deadcolortime="0" texture="Content/Items/Genetic/Genetic.png" ignoretint="true" />
+  <limb id="16" name="Beak100" type="None" inheritlimbdepth="Head" width="0" height="0" notes="" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" radius="36" mass="0" density="0" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05" spriteorientation="90" mirrorvertically="False" mirrorhorizontally="False" hide="False" angulardamping="100" mouthpos="0,0" constanttorque="0" constantangle="0" scale="0.7" attackforcemultiplier="1" minseverancedamage="0.8" severedfadeouttime="0" applytailangle="False" applysinemovement="True">
+    <sprite sourcerect="0,0,1,1" origin="0.36,0.64" depth="0.049" color="255,255,255,255" deadcolor="255,255,255,255" deadcolortime="0" texture="Content/Items/Genetic/Genetic.png" ignoretint="true" />
     <Conditionalsprite exclusive="True">
-      <Conditional naturalmeleeweapon="gte 66" />
-      <sprite sourcerect="437,5,68,96" origin="0.36,0.36" depth="0.049" texture="Content/Items/Genetic/Genetic.png" />
+      <Conditional naturalmeleeweapon="gte 100" />
+      <sprite sourcerect="410,18,97,67" origin="0.36,0.5" depth="0.049" texture="Content/Items/Genetic/Genetic.png" />
     </Conditionalsprite>
     <damagemodifier armorsector="0,360" afflictiontypes="damage" damagemultiplier="0.1" damagesound="LimbArmor" damageparticle="brownchunks" deflectprojectiles="True" afflictionidentifiers="" probabilitymultiplier="1" />
     <damagemodifier armorsector="0,360" afflictiontypes="bleeding" damagemultiplier="0" damagesound="LimbArmor" deflectprojectiles="True" afflictionidentifiers="" probabilitymultiplier="1" damageparticle="" />
     <damagemodifier armorsector="0,360" afflictiontypes="burn" damagemultiplier="0.25" damagesound="" deflectprojectiles="True" afflictionidentifiers="" probabilitymultiplier="1" damageparticle="" />
-    <attack context="Any" cooldown="2" afterattack="Pursue" range="50" damagerange="50" duration="0.5" structuredamage="0" itemdamage="55" structuresoundtype="StructureSlash" targetforce="0" severlimbsprobability="0.3" torque="100" force="30" applyforceonlimbs="0,1" targettype="Any" hitdetectiontype="Distance" stun="0" onlyhumans="False" applyforcesonlyonce="True" targetimpulse="5" targetimpulseworld="0,0" targetforceworld="0,-5" stickchance="0" priority="3" secondarycooldown="0" cooldownrandomfactor="0.5" reverse="False" targetlimbtype="None" afterattackdelay="0" retreat="False" rootforceworldstart="0,0" rootforceworldmiddle="0,0" rootforceworldend="0,0" roottransitioneasing="Linear">
-      <conditional targetself="true" naturalmeleeweapon="gte 66" />
+    <attack context="Any" cooldown="2" afterattack="Pursue" range="50" damagerange="50" duration="0.5" structuredamage="0" itemdamage="55" structuresoundtype="StructureSlash" targetforce="0" severlimbsprobability="0.3" torque="100" force="30" applyforceonlimbs="0,1" targettype="Any" hitdetectiontype="Distance" stun="0" onlyhumans="False" applyforcesonlyonce="True" targetimpulse="5" targetimpulseworld="0,0" targetforceworld="0,-5" stickchance="0" priority="4" secondarycooldown="2" cooldownrandomfactor="0.5" reverse="False" targetlimbtype="None" afterattackdelay="0" retreat="False" rootforceworldstart="0,0" rootforceworldmiddle="0,0" rootforceworldend="0,0" roottransitioneasing="Linear">
+      <conditional targetself="true" naturalmeleeweapon="gte 100" />
       <Affliction identifier="bitewounds" strength="20" probability="1" />
       <Affliction identifier="stun" strength="1" probability="1" />
       <StatusEffect type="OnUse" target="This">
@@ -61,9 +83,10 @@
         <sound file="Content/Characters/Mudraptor/MUDRAPTOR_attack3.ogg" range="1200" volume="1" selectionmode="random" />
       </StatusEffect>
     </attack>
-  </limb>
+  </limb>  
   <!-- Head to husk appendage -->
-  <joint name="Head to Mudraptor Beak" limb1="1" limb2="13" limb1anchor="6,-5" limb2anchor="-2,0" upperlimit="89" weldjoint="False" lowerlimit="91" canbesevered="False" limitenabled="True" />
-  <joint name="Head to Mudraptor Beak2" limb1="1" limb2="14" limb1anchor="6,-5" limb2anchor="-2,0" upperlimit="89" weldjoint="False" lowerlimit="91" canbesevered="False" limitenabled="True" />
-  <joint name="Head to Mudraptor Beak3" limb1="1" limb2="15" limb1anchor="6,-5" limb2anchor="-2,0" upperlimit="89" weldjoint="False" lowerlimit="91" canbesevered="False" limitenabled="True" />
+  <joint name="Head to Mudraptor Beak0" limb1="1" limb2="13" limb1anchor="0,0" limb2anchor="0,0" lowerlimit="0" upperlimit="0" weldjoint="True"  canbesevered="False" limitenabled="True" />
+  <joint name="Head to Mudraptor Beak33" limb1="1" limb2="14" limb1anchor="0,0" limb2anchor="0,0" lowerlimit="0" upperlimit="0" weldjoint="True"  canbesevered="False" limitenabled="True" />
+  <joint name="Head to Mudraptor Beak66" limb1="1" limb2="15" limb1anchor="0,0" limb2anchor="0,0" lowerlimit="0" upperlimit="0" weldjoint="True" canbesevered="False" limitenabled="True" />
+  <joint name="Head to Mudraptor Beak100" limb1="1" limb2="16" limb1anchor="0,0" limb2anchor="0,0" lowerlimit="0" upperlimit="0" weldjoint="True" canbesevered="False" limitenabled="True" />  
 </huskappendage>
