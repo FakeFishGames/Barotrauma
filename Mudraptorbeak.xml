@@ -1,11 +1,12 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <huskappendage>
   <limb id="13" name="Beak0" type="None" inheritlimbdepth="Head" width="0" height="0" notes="" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" radius="50" mass="0" density="0" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05" spriteorientation="90" mirrorvertically="False" mirrorhorizontally="False" hide="False" angulardamping="100" mouthpos="0,0" constanttorque="0" constantangle="0" scale="0.5" attackforcemultiplier="1" minseverancedamage="0.8" severedfadeouttime="0" applytailangle="False" applysinemovement="True">
-    <sprite sourcerect="0,0,1,1" origin="0.36,0.64" depth="0.049" color="180,115,115,255" deadcolor="255,255,255,255" deadcolortime="0" texture="Content/Items/Genetic/Genetic.png" ignoretint="true" />
-    <Conditionalsprite exclusive="True">
-      <Conditional naturalmeleeweapon="lt 33" />
-      <sprite sourcerect="410,18,97,67" origin="0.29,0.6" depth="0.049" texture="Content/Items/Genetic/Genetic.png" />
-    </Conditionalsprite>
+    <sprite sourcerect="410,18,97,67" origin="0.29,0.6" depth="0.049" color="180,115,115,255" deadcolor="255,255,255,255" deadcolortime="0" texture="Content/Items/Genetic/Genetic.png" ignoretint="true" />
+    <!-- hides the limb using conditions -->
+    <StatusEffect type="Always" target="This" interval="1" >
+      <HideLimb duration="100000" />
+      <conditional naturalmeleeweapon="gt 33" />
+    </StatusEffect>
     <damagemodifier armorsector="0,360" afflictiontypes="damage" damagemultiplier="0.4" damagesound="LimbArmor" damageparticle="brownchunks" deflectprojectiles="True" afflictionidentifiers="" probabilitymultiplier="1" />
     <damagemodifier armorsector="0,360" afflictiontypes="bleeding" damagemultiplier="0.3" damagesound="LimbArmor" deflectprojectiles="True" afflictionidentifiers="" probabilitymultiplier="1" damageparticle="" />
     <damagemodifier armorsector="0,360" afflictiontypes="burn" damagemultiplier="0.25" damagesound="" deflectprojectiles="True" afflictionidentifiers="" probabilitymultiplier="1" damageparticle="" />
@@ -20,13 +21,14 @@
       </StatusEffect>
     </attack>
   </limb>
-  <limb id="14" name="Beak33" type="None" inheritlimbdepth="Head" width="0" height="0" notes="" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" radius="42" mass="0" density="0" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05" spriteorientation="90" mirrorvertically="False" mirrorhorizontally="False" hide="False" angulardamping="100" mouthpos="0,0" constanttorque="0" constantangle="0" scale="0.6" attackforcemultiplier="1" minseverancedamage="0.8" severedfadeouttime="0" applytailangle="False" applysinemovement="True">
-    <sprite sourcerect="0,0,1,1" origin="0.36,0.64" depth="0.049" color="90,110,150,255" deadcolor="255,255,255,255" deadcolortime="0" texture="Content/Items/Genetic/Genetic.png" ignoretint="true" />
-    <Conditionalsprite exclusive="True">
-      <Conditional naturalmeleeweapon="gte 33" />
-      <Conditional naturalmeleeweapon="lt 66" />
-      <sprite sourcerect="410,18,97,67" origin="0.36,0.57" depth="0.049" texture="Content/Items/Genetic/Genetic.png" />
-    </Conditionalsprite>
+  <limb id="14" name="Beak33" type="None" inheritlimbdepth="Head" width="0" height="0" notes="" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" radius="50" mass="0" density="0" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05" spriteorientation="90" mirrorvertically="False" mirrorhorizontally="False" hide="False" angulardamping="100" mouthpos="0,0" constanttorque="0" constantangle="0" scale="0.6" attackforcemultiplier="1" minseverancedamage="0.8" severedfadeouttime="0" applytailangle="False" applysinemovement="True">
+    <sprite sourcerect="410,18,97,67" origin="0.36,0.57" depth="0.049" color="90,110,150,255" deadcolor="255,255,255,255" deadcolortime="0" texture="Content/Items/Genetic/Genetic.png" ignoretint="true" />
+    <!-- hides the limb using conditions -->
+    <StatusEffect type="Always" target="This" interval="1" >
+      <HideLimb duration="100000" />
+      <conditional naturalmeleeweapon="lte 33" />
+      <conditional naturalmeleeweapon="gt 66" />
+    </StatusEffect>
     <damagemodifier armorsector="0,360" afflictiontypes="damage" damagemultiplier="0.3" damagesound="LimbArmor" damageparticle="brownchunks" deflectprojectiles="True" afflictionidentifiers="" probabilitymultiplier="1" />
     <damagemodifier armorsector="0,360" afflictiontypes="bleeding" damagemultiplier="0.2" damagesound="LimbArmor" deflectprojectiles="True" afflictionidentifiers="" probabilitymultiplier="1" damageparticle="" />
     <damagemodifier armorsector="0,360" afflictiontypes="burn" damagemultiplier="0.25" damagesound="" deflectprojectiles="True" afflictionidentifiers="" probabilitymultiplier="1" damageparticle="" />
@@ -42,13 +44,14 @@
       </StatusEffect>
     </attack>
   </limb>
-  <limb id="15" name="Beak66" type="None" inheritlimbdepth="Head" width="0" height="0" notes="" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" radius="36" mass="0" density="0" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05" spriteorientation="90" mirrorvertically="False" mirrorhorizontally="False" hide="False" angulardamping="100" mouthpos="0,0" constanttorque="0" constantangle="0" scale="0.7" attackforcemultiplier="1" minseverancedamage="0.8" severedfadeouttime="0" applytailangle="False" applysinemovement="True">
-    <sprite sourcerect="0,0,1,1" origin="0.36,0.64" depth="0.049" color="230,200,150,255" deadcolor="255,255,255,255" deadcolortime="0" texture="Content/Items/Genetic/Genetic.png" ignoretint="true" />
-    <Conditionalsprite exclusive="True">
-      <Conditional naturalmeleeweapon="gte 66" />
-      <Conditional naturalmeleeweapon="lte 99" />      
-      <sprite sourcerect="410,18,97,67" origin="0.36,0.5" depth="0.049" texture="Content/Items/Genetic/Genetic.png" />
-    </Conditionalsprite>
+  <limb id="15" name="Beak66" type="None" inheritlimbdepth="Head" width="0" height="0" notes="" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" radius="50" mass="0" density="0" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05" spriteorientation="90" mirrorvertically="False" mirrorhorizontally="False" hide="False" angulardamping="100" mouthpos="0,0" constanttorque="0" constantangle="0" scale="0.7" attackforcemultiplier="1" minseverancedamage="0.8" severedfadeouttime="0" applytailangle="False" applysinemovement="True">
+    <sprite sourcerect="410,18,97,67" origin="0.36,0.5" depth="0.049" color="230,200,150,255" deadcolor="255,255,255,255" deadcolortime="0" texture="Content/Items/Genetic/Genetic.png" ignoretint="true" />
+    <!-- hides the limb using conditions -->
+    <StatusEffect type="Always" target="This" interval="1" >
+      <HideLimb duration="100000" />
+      <conditional naturalmeleeweapon="lte 66" />
+      <conditional naturalmeleeweapon="gt 99" />
+    </StatusEffect>
     <damagemodifier armorsector="0,360" afflictiontypes="damage" damagemultiplier="0.2" damagesound="LimbArmor" damageparticle="brownchunks" deflectprojectiles="True" afflictionidentifiers="" probabilitymultiplier="1" />
     <damagemodifier armorsector="0,360" afflictiontypes="bleeding" damagemultiplier="0.2" damagesound="LimbArmor" deflectprojectiles="True" afflictionidentifiers="" probabilitymultiplier="1" damageparticle="" />
     <damagemodifier armorsector="0,360" afflictiontypes="burn" damagemultiplier="0.25" damagesound="" deflectprojectiles="True" afflictionidentifiers="" probabilitymultiplier="1" damageparticle="" />
@@ -64,12 +67,13 @@
       </StatusEffect>
     </attack>
   </limb>
-  <limb id="16" name="Beak100" type="None" inheritlimbdepth="Head" width="0" height="0" notes="" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" radius="36" mass="0" density="0" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05" spriteorientation="90" mirrorvertically="False" mirrorhorizontally="False" hide="False" angulardamping="100" mouthpos="0,0" constanttorque="0" constantangle="0" scale="0.7" attackforcemultiplier="1" minseverancedamage="0.8" severedfadeouttime="0" applytailangle="False" applysinemovement="True">
-    <sprite sourcerect="0,0,1,1" origin="0.36,0.64" depth="0.049" color="255,255,255,255" deadcolor="255,255,255,255" deadcolortime="0" texture="Content/Items/Genetic/Genetic.png" ignoretint="true" />
-    <Conditionalsprite exclusive="True">
-      <Conditional naturalmeleeweapon="gte 100" />
-      <sprite sourcerect="410,18,97,67" origin="0.36,0.5" depth="0.049" texture="Content/Items/Genetic/Genetic.png" />
-    </Conditionalsprite>
+  <limb id="16" name="Beak100" type="None" inheritlimbdepth="Head" width="0" height="0" notes="" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" radius="50" mass="0" density="0" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05" spriteorientation="90" mirrorvertically="False" mirrorhorizontally="False" hide="False" angulardamping="100" mouthpos="0,0" constanttorque="0" constantangle="0" scale="0.7" attackforcemultiplier="1" minseverancedamage="0.8" severedfadeouttime="0" applytailangle="False" applysinemovement="True">
+    <sprite sourcerect="410,18,97,67" origin="0.36,0.5" depth="0.049" color="255,255,255,255" deadcolor="255,255,255,255" deadcolortime="0" texture="Content/Items/Genetic/Genetic.png" ignoretint="true" />
+    <!-- hides the limb using conditions -->
+    <StatusEffect type="Always" target="This" interval="1" >
+      <HideLimb duration="100000" />
+      <Conditional naturalmeleeweapon="lt 100" />
+    </StatusEffect>
     <damagemodifier armorsector="0,360" afflictiontypes="damage" damagemultiplier="0.1" damagesound="LimbArmor" damageparticle="brownchunks" deflectprojectiles="True" afflictionidentifiers="" probabilitymultiplier="1" />
     <damagemodifier armorsector="0,360" afflictiontypes="bleeding" damagemultiplier="0" damagesound="LimbArmor" deflectprojectiles="True" afflictionidentifiers="" probabilitymultiplier="1" damageparticle="" />
     <damagemodifier armorsector="0,360" afflictiontypes="burn" damagemultiplier="0.25" damagesound="" deflectprojectiles="True" afflictionidentifiers="" probabilitymultiplier="1" damageparticle="" />
