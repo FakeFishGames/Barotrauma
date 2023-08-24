@@ -591,73 +591,8 @@
     <Body radius="32" density="15" />
     <Holdable slots="Any,RightHand+LeftHand" holdpos="0,-80" handle1="-30,14" handle2="30,14" aimable="false" msg="ItemMsgPickUpSelect" />
   </Item>
-
-  <Item name="" identifier="spinelingspikeloot" category="Weapon" tags="smallitem,harpoonammo" maxstacksize="1" cargocontaineridentifier="metalcrate" impactsoundtag="impact_metal_light" scale="0.5" allowasextracargo="true" RequireAimToUse="True" nameidentifier="spinelingspike" translationidentifier="spinelingspike" hideconditionbar="true">
-    <Price baseprice="100" sold="false">
-      <Price storeidentifier="merchantoutpost" multiplier="1" />
-      <Price storeidentifier="merchantcity" multiplier="1" />
-      <Price storeidentifier="merchantresearch" multiplier="1.5" />
-      <Price storeidentifier="merchantmilitary" multiplier="1" />
-      <Price storeidentifier="merchantmine" multiplier="1" />
-    </Price>
-    <Deconstruct time="10">
-      <Item identifier="carbon" />
-      <Item identifier="zinc" />
-    </Deconstruct>
-    <PreferredContainer primary="armcab"/>
-    <Sprite texture="Content/Characters/Spineling/Spineling.png" sourcerect="0,215,180,18" depth="0.55" />
-    <Body width="160" height="10" density="11" />
-    <MeleeWeapon slots="Any,RightHand,LeftHand" aimpos="30,5" handle1="-20,0" holdangle="65" reload="1.0" range="50" combatpriority="10" msg="ItemMsgPickUpSelect">
-      <!-- increased melee damage, breaks after 7 hits -->
-      <StatusEffect type="OnSuccess" target="This" Condition="-15.0" disabledeltatime="true"/>
-      <Attack targetimpulse="2" severlimbsprobability="0.1" itemdamage="2" structuredamage="2" structuresoundtype="StructureSlash">
-      <Affliction identifier="lacerations" strength="15" />
-        <Affliction identifier="bleeding" strength="10" />
-        <Affliction identifier="stun" strength="0.2" />
-        <StatusEffect type="OnUse" target="UseTarget">
-          <Conditional entitytype="eq Character"/>
-          <Sound file="Content/Sounds/Damage/LimbSlash1.ogg" selectionmode="random" range="500" />
-          <Sound file="Content/Sounds/Damage/LimbSlash2.ogg" range="500" />
-          <Sound file="Content/Sounds/Damage/LimbSlash3.ogg" range="500" />
-          <Sound file="Content/Sounds/Damage/LimbSlash4.ogg" range="500" />
-          <Sound file="Content/Sounds/Damage/LimbSlash5.ogg" range="500" />
-          <Sound file="Content/Sounds/Damage/LimbSlash6.ogg" range="500" />
-        </StatusEffect>
-      </Attack>
-    </MeleeWeapon>
-    <!--  Can be used as a harpoon projectile. Base projectile values kept low to prevent the spike "ejection" to pass through walls. Still deals damage -->
-    <Projectile characterusable="false" launchimpulse="10" maxtargetstohit="3" sticktostructures="true" penetration="0.75" damagedoors="true" >
-      <Attack structuredamage="10" itemdamage="20" severlimbsprobability="0.5" penetration="0.2" targetforce="0.5">
-        <Affliction identifier="lacerations" strength="20" />
-        <Affliction identifier="bleeding" strength="10" />
-        <Affliction identifier="stun" strength="0.25" />
-      </Attack>
-      <StatusEffect type="OnActive" target="This" lifetime="0.5" >
-        <ParticleEmitter particle="ammotrailwater" copyentityangle="true" anglemin="0" anglemax="0" particleamount="10" velocitymin="-10" velocitymax="-100" scalemin="0.5" scalemax="1" />
-      </StatusEffect>
-      <StatusEffect type="OnImpact" target="UseTarget">
-        <Conditional entitytype="eq Structure" />
-        <ParticleEmitter particle="shrapnel" copyentityangle="true" anglemin="0" anglemax="360" particleamount="5" velocitymin="100" velocitymax="2000" scalemin="0.1" scalemax="0.2" />
-      </StatusEffect>
-      <StatusEffect type="OnImpact" target="UseTarget">
-        <Conditional entitytype="eq Structure" />
-        <Conditional hastag="eq door" />
-        <ParticleEmitter particle="spark" copyentityangle="true" anglemin="-10" anglemax="10" particleamount="5" velocitymin="-10" velocitymax="-200" scalemin="0.5" scalemax="1" />
-      </StatusEffect>
-      <!-- break 2s after being shot -->
-      <StatusEffect type="OnUse" target="This" delay="2" condition="-100" disabledeltatime="true" />
-      <StatusEffect type="OnBroken" target="This">
-        <Remove />
-        <particleemitter particle="brownchunks" drawontop="true" particleamount="30" velocitymin="100" velocitymax="200" anglemin="0" anglemax="360" scalemin="0.1" scalemax="0.4" />
-      </StatusEffect>
-    </Projectile>
-    <LightComponent range="200" castshadows="False" drawbehindsubs="False" ison="True" blinkfrequency="0" lightcolor="200,200,255,20" isactive="True" minvoltage="0" powerconsumption="0" vulnerabletoemp="False" pickingtime="0" canbepicked="False" allowingameediting="False" msg="">
-      <Sprite texture="Content/Characters/Spineling/Spineling.png" sourcerect="0,230,180,23" origin="0.5,0.6" alpha="0.5"/>
-    </LightComponent>
-  </Item>
   
-  <!-- the gene variant of the spike -->
-  <Item name="" identifier="spinelingspikegene" category="Weapon" tags="smallitem,harpoonammo" maxstacksize="1" cargocontaineridentifier="metalcrate" impactsoundtag="impact_metal_light" scale="0.5" allowasextracargo="true" RequireAimToUse="True" nameidentifier="spinelingspike" translationidentifier="spinelingspike" hideconditionbar="true">
+  <Item name="" identifier="spinelingspikeloot" category="Weapon" tags="smallitem,harpoonammo" maxstacksize="1" cargocontaineridentifier="metalcrate" impactsoundtag="impact_metal_light" scale="0.5" allowasextracargo="true" RequireAimToUse="True" nameidentifier="spinelingspike" translationidentifier="spinelingspike" hideconditionbar="true">
     <!-- no sell price, no deconstruct yield -->
     <Deconstruct time="3"/>
     <PreferredContainer primary="armcab"/>
@@ -688,10 +623,12 @@
         <Affliction identifier="bleeding" strength="10" />
         <Affliction identifier="stun" strength="0.25" />
       </Attack>
-      <!-- Sets the proper projectile values when grabbed -->
-      <StatusEffect type="OnContained" target="This" launchimpulse="10" maxtargetstohit="3" sticktostructures="true" penetration="0.75" damagedoors="true" setvalue="true"/>
+      <!-- Sets the proper projectile values and condition to 99 when grabbed -->
+      <StatusEffect type="OnContained" target="This" launchimpulse="10" maxtargetstohit="3" sticktostructures="true" penetration="0.75" damagedoors="true" condition="99" setvalue="true">
+        <Conditional condition="eq 100"/>
+      </StatusEffect>
       <!-- Reduces condition so it can actually break -->
-      <StatusEffect type="OnActive" target="This" lifetime="0.5" Condition="-50" >
+      <StatusEffect type="OnActive" target="This" lifetime="0.5" >
         <ParticleEmitter particle="ammotrailwater" copyentityangle="true" anglemin="0" anglemax="0" particleamount="10" velocitymin="-10" velocitymax="-100" scalemin="0.5" scalemax="1" />
       </StatusEffect>
       <StatusEffect type="OnImpact" target="UseTarget">
@@ -704,7 +641,7 @@
         <ParticleEmitter particle="spark" copyentityangle="true" anglemin="-10" anglemax="10" particleamount="5" velocitymin="-10" velocitymax="-200" scalemin="0.5" scalemax="1" />
       </StatusEffect>
       <!-- break 2s after being shot, checks condition so it doesnt break on ejecting the spike from body -->
-      <StatusEffect type="OnUse" target="This" delay="2" condition="-100" disabledeltatime="true">
+      <StatusEffect type="OnUse" target="This" delay="2" condition="-1000" disabledeltatime="true">
         <Conditional condition="lt 100" />
       </StatusEffect>
       <StatusEffect type="OnBroken" target="This">
@@ -715,6 +652,6 @@
     <LightComponent range="200" castshadows="False" drawbehindsubs="False" ison="True" blinkfrequency="0" lightcolor="200,200,255,20" isactive="True" minvoltage="0" powerconsumption="0" vulnerabletoemp="False" pickingtime="0" canbepicked="False" allowingameediting="False" msg="">
       <Sprite texture="Content/Characters/Spineling/Spineling.png" sourcerect="0,230,180,23" origin="0.5,0.6" alpha="0.5"/>
     </LightComponent>
-  </Item>    
-  
+  </Item>
+    
 </Items>
