@@ -245,7 +245,7 @@ namespace Barotrauma.Items.Components
         public bool hasSignalConnections;
 
         string totalConditionValueString = "", totalConditionPercentageString = "", totalItemsString = "";
-        int prevTotalConditionValue = 0, prevTotalConditionPercentage = 0, prevTotalItems = 0;
+        float prevTotalConditionValue = 0, prevTotalConditionPercentage = 0; int prevTotalItems = 0;
 
         public ItemContainer(Item item, ContentXElement element)
             : base(item, element)
@@ -469,26 +469,26 @@ namespace Barotrauma.Items.Components
 
             if (hasSignalConnections)
             {
-                int totalConditionValue = 0, totalConditionPercentage = 0, totalItems = 0;
+                float totalConditionValue = 0, totalConditionPercentage = 0; int totalItems = 0;
                 foreach (var item in Inventory.AllItems)
                 {
-                    if (item.Condition != 0)
+                    if (!MathUtils.NearlyEqual(item.Condition, 0))
                     {
-                        totalConditionValue += (int)item.Condition;
-                        totalConditionPercentage += (int)item.ConditionPercentage;
+                        totalConditionValue += item.Condition;
+                        totalConditionPercentage += item.ConditionPercentage;
                         totalItems++;
                     }
                 }
 
-                if (totalConditionValue != prevTotalConditionValue)
+                if (!MathUtils.NearlyEqual(totalConditionValue, prevTotalConditionValue))
                 {
-                    totalConditionValueString = totalConditionValue.ToString(CultureInfo.InvariantCulture);
+                    totalConditionValueString = ((int)totalConditionValue).ToString(CultureInfo.InvariantCulture);
                     prevTotalConditionValue = totalConditionValue;
                 }
 
-                if (totalConditionPercentage != prevTotalConditionPercentage)
+                if (!MathUtils.NearlyEqual(totalConditionPercentage, prevTotalConditionPercentage))
                 {
-                    totalConditionPercentageString = totalConditionPercentage.ToString(CultureInfo.InvariantCulture);
+                    totalConditionPercentageString = ((int)totalConditionPercentage).ToString(CultureInfo.InvariantCulture);
                     prevTotalConditionPercentage = totalConditionPercentage;
                 }
 
