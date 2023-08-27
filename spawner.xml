@@ -2,7 +2,7 @@
 <Items>
 
   <Item name="Spawner" nameidentifier="spawner" identifier="spawner" description="" width="128" height="192" texturescale="0.5,0.5" scale="0.5" category="Electrical" noninteractable="true" spritecolor="255,255,150,255" >
-    <sprite texture="Content/Map/MapAtlas.png" sourcerect="784,526,100,100" depth="0.975" premultiplyalpha="false" origin="0.5,0.5" />
+    <sprite texture="Content/Map/MapAtlas.png" sourcerect="784,526,100,100" depth="0.800" premultiplyalpha="false" origin="0.5,0.5" />
     <EntitySpawnerComponent />
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
