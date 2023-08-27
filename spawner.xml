@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Items>
 
-  <Item name="Spawner" nameidentifier="spawner" identifier="spawner" description="" width="128" height="192" texturescale="0.5,0.5" scale="0.5" category="Alien" noninteractable="true" spritecolor="255,255,150,255" >
+  <Item name="Spawner" nameidentifier="spawner" identifier="spawner" description="" width="128" height="192" texturescale="0.5,0.5" scale="0.5" category="Electrical" noninteractable="true" spritecolor="255,255,150,255" >
     <sprite texture="Content/Map/MapAtlas.png" sourcerect="784,526,100,100" depth="0.975" premultiplyalpha="false" origin="0.5,0.5" />
     <EntitySpawnerComponent />
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
