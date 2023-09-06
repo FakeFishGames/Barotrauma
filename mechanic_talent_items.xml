@@ -270,7 +270,7 @@
     </MeleeWeapon>
   </Item>
     <Item name="" identifier="fixfoamgrenade" category="Equipment" maxstacksize="8" cargocontaineridentifier="explosivecrate" allowasextracargo="true" tags="smallitem,weapon,explosive,demolitionsexpert" Scale="0.5" impactsoundtag="impact_metal_light">
-      <PreferredContainer primary="engcab" secondary="locker"/>
+      <PreferredContainer primary="engcab" secondary="locker" />
       <Price baseprice="95" sold="false">
         <Price storeidentifier="merchantoutpost" multiplier="1.1" />
         <Price storeidentifier="merchantcity" multiplier="1.3" />
@@ -293,7 +293,7 @@
       <Body width="30" height="62" density="30" />
       <Throwable characterusable="false" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10" msg="ItemMsgPickUpSelect">
         <StatusEffect type="OnBroken" target="This">
-          <sound file="Content/Items/Weapons/StunGrenade.ogg" range="2000"/>
+          <sound file="Content/Items/Weapons/StunGrenade.ogg" range="2000" />
           <Explosion range="200" force="0.5" smoke="false" flames="false" underwaterbubble="false" sparks="false" />
         </StatusEffect>
         <StatusEffect type="OnBroken" target="This">
@@ -307,16 +307,16 @@
           <ParticleEmitter particle="fixfoamgoosplash" anglemax="360" distancemax="10" scalemultiplier="2.0,2.0" particlespersecond="20" />
         </StatusEffect>
         <StatusEffect type="OnUse" targettype="This" Condition="0" setvalue="true" comparison="OR">
-          <Conditional HasTag="detonator" targetcontainer="true"/>
-          <Conditional HasTag="railgunammo" targetcontainer="true"/>
-          <Conditional HasTag="depthchargeammo" targetcontainer="true"/>
+          <Conditional HasTag="detonator" targetcontainer="true" />
+          <Conditional HasTag="railgunammo" targetcontainer="true" />
+          <Conditional HasTag="depthchargeammo" targetcontainer="true" />
         </StatusEffect>
       </Throwable>
       <LightComponent LightColor="0.0,0.0,0.0,0.0" range="1" IsOn="false" castshadows="false">
         <StatusEffect type="OnUse" targettype="This" IsOn="true" comparison="AND">
-          <Conditional HasTag="neq detonator" targetcontainer="true"/>
-          <Conditional HasTag="neq railgunammo" targetcontainer="true"/>
-          <Conditional HasTag="neq depthchargeammo" targetcontainer="true"/>
+          <Conditional HasTag="neq detonator" targetcontainer="true" />
+          <Conditional HasTag="neq railgunammo" targetcontainer="true" />
+          <Conditional HasTag="neq depthchargeammo" targetcontainer="true" />
           <Conditional IsOn="eq False" targetitemcomponent="LightComponent" />
           <!-- No lever cause it has no lever-->
           <ParticleEmitter particle="grenpin" emitinterval="2.1" particleamount="1" particlespersecond="50" anglemin="70" anglemax="100" velocitymin="100" velocitymax="200" copyentityangle="true" scalemin="0.5" scalemax="0.5" />

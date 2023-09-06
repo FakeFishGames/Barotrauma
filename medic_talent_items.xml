@@ -380,7 +380,7 @@
         <RequiredItem identifier="sulphuricacid" />
       </Fabricate>
       <Sprite texture="Content/Items/Weapons/weapons_new.png" sourcerect="79,414,26,54" depth="0.55" origin="0.5,0.5" />
-      <BrokenSprite texture="Content/Items/Weapons/grenades.png" name="chem" sourcerect="136,10,27,54" depth="0.55" origin="0.5,0.5185185" maxcondition="99.9" />
+      <BrokenSprite texture="Content/Items/Weapons/weapons_new.png" name="chem" sourcerect="487,186,24,54" depth="0.55" origin="0.5,0.5185185" maxcondition="99.9" />
       <Body width="26" height="54" density="30" />
       <Throwable characterusable="false" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10" msg="ItemMsgPickUpSelect">
         <StatusEffect type="OnBroken" target="This">
@@ -426,16 +426,16 @@
           <Remove />
         </StatusEffect>
         <StatusEffect type="OnUse" targettype="This" Condition="0" setvalue="true" comparison="OR">
-          <Conditional HasTag="detonator" targetcontainer="true"/>
-          <Conditional HasTag="railgunammo" targetcontainer="true"/>
-          <Conditional HasTag="depthchargeammo" targetcontainer="true"/>
+          <Conditional HasTag="detonator" targetcontainer="true" />
+          <Conditional HasTag="railgunammo" targetcontainer="true" />
+          <Conditional HasTag="depthchargeammo" targetcontainer="true" />
         </StatusEffect>
       </Throwable>
       <LightComponent LightColor="0.0,0.0,0.0,0.0" range="1" IsOn="false" castshadows="false">
         <StatusEffect type="OnUse" targettype="This" IsOn="true" comparison="AND">
-          <Conditional HasTag="neq detonator" targetcontainer="true"/>
-          <Conditional HasTag="neq railgunammo" targetcontainer="true"/>
-          <Conditional HasTag="neq depthchargeammo" targetcontainer="true"/>
+          <Conditional HasTag="neq detonator" targetcontainer="true" />
+          <Conditional HasTag="neq railgunammo" targetcontainer="true" />
+          <Conditional HasTag="neq depthchargeammo" targetcontainer="true" />
           <Conditional IsOn="eq False" targetitemcomponent="LightComponent" />
           <ParticleEmitter particle="grenpin" emitinterval="2.1" particleamount="1" particlespersecond="50" anglemin="70" anglemax="100" velocitymin="100" velocitymax="200" copyentityangle="true" scalemin="0.5" scalemax="0.5" />
           <ParticleEmitter particle="grenlever" emitinterval="2.1" particleamount="1" particlespersecond="50" anglemin="120" anglemax="210" velocitymin="100" velocitymax="200" copyentityangle="true" scalemin="0.5" scalemax="0.5" />

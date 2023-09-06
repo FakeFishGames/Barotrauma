@@ -474,11 +474,11 @@
       </Fabricate>
       <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="384,0,64,64" origin="0.5,0.5" />
       <Sprite texture="Content/Items/Weapons/weapons_new.png" sourcerect="130,312,27,54" depth="0.55" origin="0.5,0.5" />
-      <BrokenSprite texture="Content/Items/Weapons/grenades.png" name="stun" sourcerect="53,10,27,54" depth="0.55" origin="0.5,0.5" maxcondition="99.9" />
+      <BrokenSprite texture="Content/Items/Weapons/weapons_new.png" name="stun" sourcerect="467,125,27,54" depth="0.55" origin="0.5,0.5" maxcondition="99.9" />
       <Body width="26" height="50" density="30" />
       <Throwable characterusable="false" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10" msg="ItemMsgPickUpSelect">
         <StatusEffect type="OnBroken" target="This">
-          <sound file="%ModDir%/StunGrenade.ogg" />
+          <sound file="Content/Items/Weapons/TrueStunGrenade.ogg" range="3000"/>
           <!-- stun grenade is mroe of a flashbang now i guess. Should probably do the same with 40mm stuns-->
           <Explosion range="500" force="0.1" smoke="false" penetration="100" playtinnitus="false">
             <Affliction identifier="explosiondamage" strength="5" />
@@ -495,16 +495,16 @@
           <Remove />
         </StatusEffect>
         <StatusEffect type="OnUse" targettype="This" Condition="0" setvalue="true" comparison="OR">
-          <Conditional HasTag="detonator" targetcontainer="true"/>
-          <Conditional HasTag="railgunammo" targetcontainer="true"/>
-          <Conditional HasTag="depthchargeammo" targetcontainer="true"/>
+          <Conditional HasTag="detonator" targetcontainer="true" />
+          <Conditional HasTag="railgunammo" targetcontainer="true" />
+          <Conditional HasTag="depthchargeammo" targetcontainer="true" />
         </StatusEffect>
       </Throwable>
       <LightComponent LightColor="0.0,0.0,0.0,0.0" range="1" IsOn="false" castshadows="false">
         <StatusEffect type="OnUse" targettype="This" IsOn="true" comparison="AND">
-          <Conditional HasTag="neq detonator" targetcontainer="true"/>
-          <Conditional HasTag="neq railgunammo" targetcontainer="true"/>
-          <Conditional HasTag="neq depthchargeammo" targetcontainer="true"/>
+          <Conditional HasTag="neq detonator" targetcontainer="true" />
+          <Conditional HasTag="neq railgunammo" targetcontainer="true" />
+          <Conditional HasTag="neq depthchargeammo" targetcontainer="true" />
           <Conditional IsOn="eq False" targetitemcomponent="LightComponent" />
           <ParticleEmitter particle="grenpin" emitinterval="2.1" particleamount="1" particlespersecond="50" anglemin="70" anglemax="100" velocitymin="100" velocitymax="200" copyentityangle="true" scalemin="0.5" scalemax="0.5" />
           <ParticleEmitter particle="grenlever" emitinterval="2.1" particleamount="1" particlespersecond="50" anglemin="120" anglemax="210" velocitymin="100" velocitymax="200" copyentityangle="true" scalemin="0.5" scalemax="0.5" />
@@ -546,7 +546,7 @@
       </Fabricate>
       <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="450,450,64,64" origin="0.5,0.5" />
       <Sprite texture="Content/Items/Weapons/weapons_new.png" sourcerect="159,311,27,54" depth="0.55" origin="0.5,0.5185185" />
-      <BrokenSprite texture="Content/Items/Weapons/grenades.png" name="emp" sourcerect="81,10,27,54" depth="0.55" origin="0.5,0.5185185" maxcondition="99.9" />
+      <BrokenSprite texture="Content/Items/Weapons/weapons_new.png" name="emp" sourcerect="434,186,27,54" depth="0.55" origin="0.5,0.5185185" maxcondition="99.9" />
       <Body width="26" height="50" density="30" />
       <Throwable characterusable="false" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10" msg="ItemMsgPickUpSelect">
         <StatusEffect type="OnBroken" target="This">
@@ -560,9 +560,9 @@
           <Remove />
         </StatusEffect>
         <StatusEffect type="OnUse" targettype="This" Condition="0" setvalue="true" comparison="OR">
-          <Conditional HasTag="detonator" targetcontainer="true"/>
-          <Conditional HasTag="railgunammo" targetcontainer="true"/>
-          <Conditional HasTag="depthchargeammo" targetcontainer="true"/>
+          <Conditional HasTag="detonator" targetcontainer="true" />
+          <Conditional HasTag="railgunammo" targetcontainer="true" />
+          <Conditional HasTag="depthchargeammo" targetcontainer="true" />
         </StatusEffect>
         <!-- YOU SHOULD DAMAGE JUNCTION BOXES RIGHT NOW-->
         <StatusEffect type="OnBroken" target="This" duration="0.65">
@@ -573,9 +573,9 @@
       </Throwable>
       <LightComponent LightColor="0.0,0.0,0.0,0.0" range="1" IsOn="false" castshadows="false">
         <StatusEffect type="OnUse" targettype="This" IsOn="true" comparison="AND">
-          <Conditional HasTag="neq detonator" targetcontainer="true"/>
-          <Conditional HasTag="neq railgunammo" targetcontainer="true"/>
-          <Conditional HasTag="neq depthchargeammo" targetcontainer="true"/>
+          <Conditional HasTag="neq detonator" targetcontainer="true" />
+          <Conditional HasTag="neq railgunammo" targetcontainer="true" />
+          <Conditional HasTag="neq depthchargeammo" targetcontainer="true" />
           <Conditional IsOn="eq False" targetitemcomponent="LightComponent" />
           <ParticleEmitter particle="grenpin" emitinterval="2.1" particleamount="1" particlespersecond="50" anglemin="70" anglemax="100" velocitymin="100" velocitymax="200" copyentityangle="true" scalemin="0.5" scalemax="0.5" />
           <ParticleEmitter particle="grenlever" emitinterval="2.1" particleamount="1" particlespersecond="50" anglemin="120" anglemax="210" velocitymin="100" velocitymax="200" copyentityangle="true" scalemin="0.5" scalemax="0.5" />
@@ -615,7 +615,7 @@
       <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="580,770,54,63" origin="0.5,0.5" />
       <Sprite texture="Content/Items/Weapons/weapons_new.png" sourcerect="217,305,40,61" depth="0.55" origin="0.5,0.5" />
       <!-- broken sprite is just that same sprite but without pin and lever-->
-      <BrokenSprite texture="Content/Items/Weapons/grenades.png" name="frag" sourcerect="3,6,40,61" depth="0.55" origin="0.5,0.5" maxcondition="99.9" />
+      <BrokenSprite texture="Content/Items/Weapons/weapons_new.png" name="frag" sourcerect="423,120,40,61" depth="0.55" origin="0.5,0.5" maxcondition="99.9" />
       <Body radius="20" height="10" density="30" />
       <Throwable characterusable="false" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10" msg="ItemMsgPickUpSelect">
         <StatusEffect type="OnBroken" target="This">
@@ -631,28 +631,24 @@
         </StatusEffect>
         <!-- skip the whole pulling the pin thing and explode immediatly if in a detonator or a railgun shell or a depth charge-->
         <StatusEffect type="OnUse" targettype="This" Condition="0" setvalue="true" comparison="OR">
-          <Conditional HasTag="detonator" targetcontainer="true"/>
-          <Conditional HasTag="railgunammo" targetcontainer="true"/>
-          <Conditional HasTag="depthchargeammo" targetcontainer="true"/>
+          <Conditional HasTag="detonator" targetcontainer="true" />
+          <Conditional HasTag="railgunammo" targetcontainer="true" />
+          <Conditional HasTag="depthchargeammo" targetcontainer="true" />
         </StatusEffect>
       </Throwable>
       <LightComponent LightColor="0.0,0.0,0.0,0.0" range="1" IsOn="false" castshadows="false">
-        <!-- Turns out you can Use light components by pressing E. We use it for our Pin pulling action. Also this logic is only applied if its not ina  detonator. TBH id make a whole new bind just for this thing and also added same logic to flares and chemlights so you can ignite them in your hand --> -->
-        <StatusEffect type="OnUse" targettype="This" IsOn="true" comparison="AND">
-          <Conditional HasTag="neq detonator" targetcontainer="true"/>
-          <Conditional HasTag="neq railgunammo" targetcontainer="true"/>
-          <Conditional HasTag="neq depthchargeammo" targetcontainer="true"/>
-          <Conditional IsOn="eq False" targetitemcomponent="LightComponent" />
-          <!-- particles that immitate a lever and a pin of grenade -->
-          <ParticleEmitter particle="grenpin" emitinterval="2.1" particleamount="1" particlespersecond="50" anglemin="70" anglemax="100" velocitymin="100" velocitymax="200" copyentityangle="true" scalemin="0.5" scalemax="0.5" />
-          <ParticleEmitter particle="grenlever" emitinterval="2.1" particleamount="1" particlespersecond="50" anglemin="120" anglemax="210" velocitymin="100" velocitymax="200" copyentityangle="true" scalemin="0.5" scalemax="0.5" />
-          <!-- each grenade has its own activation sound usefull for pvp i guess-->
-          <Sound file="%ModDir%/grenadepin.ogg" type="OnUse" range="720" />
-        </StatusEffect>
-        <!-- emmit smoke when live like normal grenades irl do. Also helps to distinguish a live grenade from one that still has safeties on -->
-        <StatusEffect type="OnActive" targettype="This" Condition="-0.4" disabledeltatime="true" stackable="true">
-          <ParticleEmitter particle="flamethrowersmoke" particlespersecond="25" anglemin="0" anglemax="0" velocitymin="75" velocitymax="125" copyentityangle="true" scalemin="0.1" scalemax="0.15" colormultiplier="255,255,255,150" />
-        </StatusEffect>
+        <!-- Turns out you can Use light components by pressing E. We use it for our Pin pulling action. Also this logic is only applied if its not ina  detonator. TBH id make a whole new bind just for this thing and also added same logic to flares and chemlights so you can ignite them in your hand --> --&gt;
+       <StatusEffect type="OnUse" targettype="This" IsOn="true" comparison="AND"><Conditional HasTag="neq detonator" targetcontainer="true" />
+	  <Conditional HasTag="neq railgunammo" targetcontainer="true" />
+	  <Conditional HasTag="neq depthchargeammo" targetcontainer="true" />
+	  <Conditional IsOn="eq False" targetitemcomponent="LightComponent" />
+	  <ParticleEmitter particle="grenpin" emitinterval="2.1" particleamount="1" particlespersecond="50" anglemin="70" anglemax="100" velocitymin="100" velocitymax="200" copyentityangle="true" scalemin="0.5" scalemax="0.5" />
+	  <ParticleEmitter particle="grenlever" emitinterval="2.1" particleamount="1" particlespersecond="50" anglemin="120" anglemax="210" velocitymin="100" velocitymax="200" copyentityangle="true" scalemin="0.5" scalemax="0.5" />
+	  <Sound file="Content/Items/Weapons/pinpull.ogg" type="OnUse" range="720" />
+	</StatusEffect>
+	<StatusEffect type="OnActive" targettype="This" Condition="-0.4" disabledeltatime="true" stackable="true">
+	  <ParticleEmitter particle="flamethrowersmoke" particlespersecond="25" anglemin="0" anglemax="0" velocitymin="75" velocitymax="125" copyentityangle="true" scalemin="0.1" scalemax="0.15" colormultiplier="255,255,255,150" />
+	</StatusEffect>
       </LightComponent>
       <Quality>
         <QualityStat stattype="ExplosionRadius" value="0.1" />
@@ -661,7 +657,7 @@
     </Item>
     <!-- emitters shoot themselves into the air and then land, creating an effcet of "spreading" incendiary compound, covering giving surfaces -->
     <Item name="emitter" identifier="incendiumemitter" category="Weapon" maxstacksize="8" interactthroughwalls="true" cargocontaineridentifier="metalcrate" tags="smallitem" Scale="0.5" impactsoundtag="impact_metal_light" hideinmenus="true">
-      <Sprite texture="Content/Items/Weapons/grenades.png" sourcerect="1,1,1,1" depth="0.55" origin="0.5,0.5" />
+      <Sprite texture="Content/Items/Weapons/weapons_new.png" sourcerect="1,1,1,1" depth="0.55" origin="0.5,0.5" />
       <Body width="38" height="15" density="30" />
       <!-- Sticks to characters for additional damage, armor cannot save you. haha imagine being covered in burning liquid incendium. -->
       <Projectile characterusable="false" launchimpulse="5.0" sticktocharacters="true" sticktostructures="false" sticktoitems="true" sticktodeflective="true">
@@ -672,9 +668,9 @@
             <ParticleEmitter particle="smoke" particlespersecond="6" scalemin="2" scalemax="2.5" />
           </StatusEffect>
           <StatusEffect type="OnActive" target="NearbyCharacters" range="120" delay="0.1" stackable="false" disabledeltatime="true">
-            <Affliction identifier="burn" strength="0.025"/>
-            <Affliction identifier="slow" strength="20"/>
-            <Affliction identifier="bg_burning" strength="0.3" dividebylimbcount="false"/>
+            <Affliction identifier="burn" strength="0.025" />
+            <Affliction identifier="slow" strength="20" />
+            <Affliction identifier="bg_burning" strength="0.3" dividebylimbcount="false" />
           </StatusEffect>
           <StatusEffect type="OnBroken" target="This">
             <Remove />
@@ -689,12 +685,12 @@
       </Projectile>
       <Upgrade gameversion="0.10.0.0" scale="0.5" />
     </Item>
-    <!-- an item that ensures that emitters will shoot vertically independent of grenades position and rotation-->
+    <!-- an item that ensures that e,itters will shoot vertically independent of grenades position and rotation-->
     <Item name="proxyincendium" identifier="incendium_proxy" category="Weapon" maxstacksize="8" cargocontaineridentifier="explosivecrate" tags="smallitem" hideinmenus="true" Scale="0.5" impactsoundtag="impact_metal_heavy">
       <PreferredContainer primary="secarmcab" />
       <PreferredContainer secondary="armcab" />
       <Deconstruct time="5" />
-      <Sprite texture="Content/Items/Weapons/grenades.png" sourcerect="1,1,1,1" depth="0.55" origin="0.5,0.5" />
+      <Sprite texture="Content/Items/Weapons/weapons_new.png" sourcerect="1,1,1,1" depth="0.55" origin="0.5,0.5" />
       <Body width="26" height="90" bodytype="Static" />
       <ItemComponent characterusable="false">
         <StatusEffect type="Always" target="This" delay="0.01">
@@ -728,7 +724,7 @@
       </Fabricate>
       <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="68,320,56,64" origin="0.5,0.5" />
       <Sprite texture="Content/Items/Weapons/weapons_new.png" sourcerect="188,312,26,54" depth="0.55" origin="0.5,0.5" />
-      <BrokenSprite texture="Content/Items/Weapons/grenades.png" name="incendiary" sourcerect="109,10,27,54" depth="0.55" origin="0.5,0.5" maxcondition="99.9" />
+      <BrokenSprite texture="Content/Items/Weapons/weapons_new.png" name="incendiary" sourcerect="460,186,27,54" depth="0.55" origin="0.5,0.5" maxcondition="99.9" />
       <Body width="24" height="52" density="30" />
       <Throwable characterusable="false" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10" msg="ItemMsgPickUpSelect">
         <StatusEffect type="OnBroken" target="This">
@@ -736,7 +732,7 @@
           <!-- Incendiary grenade tweaked: now instead of causing fires it spawn a bunch of emitters that act as lasting area-denial effect, similar to acid grenade, but with afterburn. This is done to encourage usage of this grenade indoors, Also buffed damage against ballast flora -->
           <Explosion range="300" ballastfloradamage="360" itemdamage="200" force="5" smoke="false">
             <Affliction identifier="burn" strength="75" />
-            <Affliction identifier="bg_burning" strength="20" dividebylimbcount="false"/>
+            <Affliction identifier="bg_burning" strength="20" dividebylimbcount="false" />
             <Affliction identifier="burn" strength="15" probability="0.2" dividebylimbcount="false" />
             <Affliction identifier="stun" strength="7" />
           </Explosion>
@@ -744,16 +740,16 @@
           <Remove />
         </StatusEffect>
         <StatusEffect type="OnUse" targettype="This" Condition="0" setvalue="true" comparison="OR">
-          <Conditional HasTag="detonator" targetcontainer="true"/>
-          <Conditional HasTag="railgunammo" targetcontainer="true"/>
-          <Conditional HasTag="depthchargeammo" targetcontainer="true"/>
+          <Conditional HasTag="detonator" targetcontainer="true" />
+          <Conditional HasTag="railgunammo" targetcontainer="true" />
+          <Conditional HasTag="depthchargeammo" targetcontainer="true" />
         </StatusEffect>
       </Throwable>
       <LightComponent LightColor="0.0,0.0,0.0,0.0" range="1" IsOn="false" castshadows="false">
         <StatusEffect type="OnUse" targettype="This" IsOn="true" comparison="AND">
-          <Conditional HasTag="neq detonator" targetcontainer="true"/>
-          <Conditional HasTag="neq railgunammo" targetcontainer="true"/>
-          <Conditional HasTag="neq depthchargeammo" targetcontainer="true"/>
+          <Conditional HasTag="neq detonator" targetcontainer="true" />
+          <Conditional HasTag="neq railgunammo" targetcontainer="true" />
+          <Conditional HasTag="neq depthchargeammo" targetcontainer="true" />
           <Conditional IsOn="eq False" targetitemcomponent="LightComponent" />
           <ParticleEmitter particle="grenpin" emitinterval="2.1" particleamount="1" particlespersecond="50" anglemin="70" anglemax="100" velocitymin="100" velocitymax="200" copyentityangle="true" scalemin="0.5" scalemax="0.5" />
           <ParticleEmitter particle="grenlever" emitinterval="2.1" particleamount="1" particlespersecond="50" anglemin="120" anglemax="210" velocitymin="100" velocitymax="200" copyentityangle="true" scalemin="0.5" scalemax="0.5" />
