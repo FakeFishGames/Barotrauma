@@ -1,4 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
+<Override>
 <Corpses>
   
   <Corpse identifier="captaincorpse1" spawnposition="wreck" job="captain" commonness="0.5" minmoney="50" maxmoney="100">
@@ -12,6 +13,7 @@
     </ItemSet>
     <ItemSet commonness="1">
       <Item identifier="idcardwreck" equip="true" tags="wreck_captain"/>
+      <Item identifier="brokensuit" equip="true" />      
       <Item identifier="captainsuniform1" equip="true" />
       <Item identifier="headset" equip="true"/>
       <Item identifier="captainspipe" equip="false"/>
@@ -27,6 +29,7 @@
     </ItemSet>
     <ItemSet commonness="1">
       <Item identifier="idcardwreck" equip="true" tags="wreck_captain"/>
+      <Item identifier="brokensuit" equip="true" />  
       <Item identifier="captainsuniform2" equip="true"/>
       <Item identifier="headset" equip="true"/>
       <Item identifier="steroids"/>
@@ -67,7 +70,14 @@
       <Item identifier="orangejumpsuit2" equip="true" />
       <Item identifier="headset" equip="true"/>
     </ItemSet>
+    <ItemSet commonness="1">
+      <Item identifier="idcardwreck" equip="true" tags="wreck_engineer"/>
+      <Item identifier="screwdriver" equip="true"/>
+      <Item identifier="brokensuit" equip="true" />
+      <Item identifier="orangejumpsuit2" equip="true" />
+    </ItemSet>    
   </Corpse>
+  
   
   <Corpse identifier="officercorpse1" spawnposition="wreck" job="securityofficer" commonness="0.5" minmoney="10" maxmoney="50">
     <ItemSet commonness="1">
@@ -94,6 +104,13 @@
       <Item identifier="antibleeding1"/>
       <Item identifier="headset" equip="true"/>
     </ItemSet>
+    <ItemSet commonness="1">
+      <Item identifier="securityuniform3" equip="true" />
+      <Item identifier="idcardwreck" equip="true" tags="wreck_security"/>
+      <Item identifier="brokensuit" equip="true" />
+      <Item identifier="antibleeding1"/>
+      <Item identifier="headset" equip="true"/>
+    </ItemSet>    
   </Corpse>
 
   <Corpse identifier="mediccorpse1" spawnposition="wreck" job="medicaldoctor" commonness="0.5" minmoney="10" maxmoney="50">
@@ -118,6 +135,14 @@
       <Item identifier="doctorsuniform2" equip="true" />
       <Item identifier="healthscanner" equip="true"/>
     </ItemSet>
+    <ItemSet commonness="1">
+      <Item identifier="idcardwreck" equip="true" tags="wreck_medic" />
+      <Item identifier="doctorsuniform1" equip="true" >
+        <Item identifier="antibloodloss1"/>
+      </Item>
+      <Item identifier="brokensuit" equip="true" />
+      <Item identifier="antibleeding1"/>
+    </ItemSet>    
   </Corpse>
 
   <Corpse identifier="mechaniccorpse1" spawnposition="wreck" job="mechanic" commonness="1" minmoney="10" maxmoney="50">
@@ -142,7 +167,7 @@
       <Item identifier="idcardwreck" equip="true" tags="wreck_mechanic"/>
       <Item identifier="toolbelt"/>
       <Item identifier="bluejumpsuit2" equip="true" />
-      <Item identifier="divingsuit" equip="true">
+      <Item identifier="brokensuit" equip="true">
         <Item identifier="oxygentank"/>
       </Item>
       <Item identifier="weldingtool" equip="true">
@@ -167,7 +192,7 @@
     <ItemSet commonness="0.4">
       <Item identifier="idcardwreck" equip="true"/>
       <Item identifier="assistantclothes" equip="true"/>
-      <Item identifier="divingsuit" equip="true">
+      <Item identifier="brokensuit" equip="true">
         <Item identifier="oxygentank"/>
       </Item>
       <Item identifier="plasmacutter" equip="true">
@@ -177,9 +202,7 @@
     <ItemSet commonness="0.4">
       <Item identifier="idcardwreck" equip="true"/>
       <Item identifier="assistantclothes" equip="true"/>
-      <Item identifier="divingsuit" equip="true">
-        <Item identifier="oxygentank"/>
-      </Item>
+      <Item identifier="brokensuit" equip="true" />
       <Item identifier="weldingtool" equip="true">
         <Item identifier="weldingfueltank"/>
       </Item>
@@ -187,7 +210,7 @@
     <ItemSet commonness="0.4">
       <Item identifier="idcardwreck" equip="true"/>
       <Item identifier="assistantclothes" equip="true"/>
-      <Item identifier="divingsuit" equip="true">
+      <Item identifier="brokensuit" equip="true" >
         <Item identifier="oxygentank"/>
       </Item>
       <Item identifier="plasmacutter" equip="true">
@@ -197,7 +220,7 @@
     <ItemSet commonness="0.3">
       <Item identifier="idcardwreck" equip="true"/>
       <Item identifier="assistantclothes" equip="true"/>
-      <Item identifier="divingsuit" equip="true">
+      <Item identifier="brokensuit" equip="true">
         <Item identifier="weldingfueltank"/>
       </Item>
       <Item identifier="weldingtool" equip="true">
@@ -312,3 +335,4 @@
   </Corpse>
 
 </Corpses>
+</Override>
