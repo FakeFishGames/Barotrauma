@@ -920,7 +920,7 @@ namespace Barotrauma
             {
                 spectateIcon.Draw(spriteBatch, area, Color.White);
             }
-            else if (client.Character != null && client.Character.IsDead)
+            else if (client.Character != null && client.Character.IsDead && CrewListIsDisabled == false)
             {
                 if (client.Character.Info != null)
                 {

@@ -484,7 +484,7 @@ namespace Barotrauma
         {
             if (evaluateDisguise && IsDisguised) return;
             var icon = !IsDisguisedAsAnother || !evaluateDisguise ? Job?.Prefab?.Icon : disguisedJobIcon;
-            if (icon == null || GameMain.NetworkMember.ServerSettings.DisableCrewList == true) { return; }
+            if (icon == null) { return; }
             Color iconColor = !IsDisguisedAsAnother || !evaluateDisguise ? Job.Prefab.UIColor : disguisedJobColor;
 
             icon.Draw(spriteBatch, area.Center.ToVector2(), iconColor, scale: Math.Min(area.Width / (float)icon.SourceRect.Width, area.Height / (float)icon.SourceRect.Height));
