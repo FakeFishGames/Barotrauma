@@ -626,6 +626,13 @@ namespace Barotrauma.Networking
             set;
         }
 
+        [Serialize(false, IsPropertySaveable.Yes)]
+        public bool DisableCrewList
+        {
+            get;
+            set;
+        }
+
         public float SelectedLevelDifficulty
         {
             get { return selectedLevelDifficulty; }
@@ -954,6 +961,8 @@ namespace Barotrauma.Networking
         }
 
         private bool allowModeVoting;
+        private bool disableCrewList;
+
         //Don't serialize: the value is set based on ModeSelectionMode
         public bool AllowModeVoting
         {

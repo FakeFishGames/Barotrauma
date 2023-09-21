@@ -2563,6 +2563,7 @@ namespace Barotrauma.Networking
             msg.WriteBoolean(ServerSettings.AllowFriendlyFire);
             msg.WriteBoolean(ServerSettings.LockAllDefaultWires);
             msg.WriteBoolean(ServerSettings.AllowRagdollButton);
+            msg.WriteBoolean(ServerSettings.DisableCrewList);
             msg.WriteBoolean(ServerSettings.AllowLinkingWifiToChat);
             msg.WriteInt32(ServerSettings.MaximumMoneyTransferRequest);
             msg.WriteBoolean(IsUsingRespawnShuttle());

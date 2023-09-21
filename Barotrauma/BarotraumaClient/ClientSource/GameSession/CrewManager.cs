@@ -57,6 +57,7 @@ namespace Barotrauma
                 PreferCrewMenuOpen = value;
             }
         }
+        public bool CrewListDisabled = GameMain.NetworkMember.ServerSettings.DisableCrewList;
 
         public static bool PreferCrewMenuOpen = true;
 
@@ -1642,7 +1643,7 @@ namespace Barotrauma
                     Math.Min(crewListOpenState + deltaTime * 2.0f, 1.0f) :
                     Math.Max(crewListOpenState - deltaTime * 2.0f, 0.0f);
 
-                if (GUI.KeyboardDispatcher.Subscriber == null && PlayerInput.KeyHit(InputType.CrewOrders))
+                if (GUI.KeyboardDispatcher.Subscriber == null && CrewListDisabled == false && PlayerInput.KeyHit(InputType.CrewOrders))
                 {
                     SoundPlayer.PlayUISound(GUISoundType.PopupMenu);
                     IsCrewMenuOpen = !IsCrewMenuOpen;

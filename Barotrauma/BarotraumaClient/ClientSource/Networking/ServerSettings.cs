@@ -707,6 +707,9 @@ namespace Barotrauma.Networking
             var disableBotConversationsBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.05f), numberLayout.RectTransform), TextManager.Get("ServerSettingsDisableBotConversations"));
             GetPropertyData(nameof(DisableBotConversations)).AssignGUIComponent(disableBotConversationsBox);
 
+            var disableCrewListBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.05f), numberLayout.RectTransform), TextManager.Get("ServerSettingsDisableCrewList"));
+            GetPropertyData(nameof(DisableCrewList)).AssignGUIComponent(disableCrewListBox);
+
             GUILayoutGroup buttonHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.1f), roundsContent.RectTransform), isHorizontal: true)
             {
                 Stretch = true,

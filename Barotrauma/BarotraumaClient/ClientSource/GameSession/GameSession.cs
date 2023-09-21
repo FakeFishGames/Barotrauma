@@ -75,7 +75,7 @@ namespace Barotrauma
                 ToolTip = TextManager.GetWithVariable("hudbutton.crewlist", "[key]", GameSettings.CurrentConfig.KeyMap.KeyBindText(InputType.CrewOrders)),
                 OnClicked = (GUIButton btn, object userdata) =>
                 {
-                    if (CrewManager == null) { return false; }
+                    if (CrewManager == null || CrewManager.CrewListDisabled == false) { return false; }
                     CrewManager.IsCrewMenuOpen = !CrewManager.IsCrewMenuOpen;
                     return true;
                 }

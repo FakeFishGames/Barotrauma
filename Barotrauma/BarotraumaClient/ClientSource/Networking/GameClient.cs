@@ -1373,6 +1373,7 @@ namespace Barotrauma.Networking
             ServerSettings.AllowFriendlyFire = inc.ReadBoolean();
             ServerSettings.LockAllDefaultWires = inc.ReadBoolean();
             ServerSettings.AllowRagdollButton = inc.ReadBoolean();
+            ServerSettings.DisableCrewList = inc.ReadBoolean();
             ServerSettings.AllowLinkingWifiToChat = inc.ReadBoolean();
             ServerSettings.MaximumMoneyTransferRequest = inc.ReadInt32();
             bool usingShuttle = GameMain.NetLobbyScreen.UsingShuttle = inc.ReadBoolean();
