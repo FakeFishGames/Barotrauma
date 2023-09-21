@@ -2275,6 +2275,7 @@ namespace Barotrauma
             options.Add(new ContextMenuOption("Rank", isEnabled: canManagePermissions, options: rankOptions.ToArray()));
 
             Color clientColor = client.Character?.Info?.Job.Prefab.UIColor ?? Color.White;
+            if (GameMain.NetworkMember.ServerSettings.DisableCrewList == true) { clientColor = Color.White; }
 
             if (GameMain.Client.ConnectedClients.Contains(client))
             {
