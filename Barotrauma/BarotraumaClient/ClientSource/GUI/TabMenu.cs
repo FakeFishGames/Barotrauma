@@ -743,7 +743,7 @@ namespace Barotrauma
                 new GUITextBlock(new RectTransform(new Point(pingColumnWidth, paddedFrame.Rect.Height), paddedFrame.RectTransform), client.Ping.ToString(), textAlignment: Alignment.Center),
                 permissionIcon));
 
-            if (client.Character is { } character)
+            if (client.Character is { } character && GameMain.NetworkMember.ServerSettings.DisableCrewList == false)
             {
                 CreateWalletCrewFrame(character, paddedFrame);
             }
