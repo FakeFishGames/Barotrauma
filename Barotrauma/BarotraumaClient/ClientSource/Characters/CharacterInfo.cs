@@ -9,6 +9,7 @@ using System.Xml.Linq;
 using Barotrauma.IO;
 using Barotrauma.Items.Components;
 using System.Collections.Immutable;
+using System.Numerics;
 
 namespace Barotrauma
 {
@@ -56,15 +57,16 @@ namespace Barotrauma
 
         public GUIComponent CreateInfoFrame(GUIFrame frame, bool returnParent, Sprite permissionIcon = null)
         {
+            var CrewListDisabled = GameMain.NetworkMember.ServerSettings.DisableCrewList;
             var paddedFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.874f, 0.58f), frame.RectTransform, Anchor.TopCenter) { RelativeOffset = new Vector2(0.0f, 0.05f) })
             {
-                RelativeSpacing = 0.05f
-               //Stretch = true
+                RelativeSpacing = 0.05f,
+                //Stretch = true
             };
 
             var headerArea = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.322f), paddedFrame.RectTransform), isHorizontal: true);
 
-            new GUICustomComponent(new RectTransform(new Vector2(0.425f, 1.0f), headerArea.RectTransform), 
+            new GUICustomComponent(new RectTransform(new Vector2(0.425f, 1.0f), headerArea.RectTransform),
                 onDraw: (sb, component) => DrawInfoFrameCharacterIcon(sb, component.Rect));
 
             GUIFont font = paddedFrame.Rect.Width < 280 ? GUIStyle.SmallFont : GUIStyle.Font;
@@ -75,108 +77,108 @@ namespace Barotrauma
                 Stretch = true
             };
 
-            var CrewListDisabled = GameMain.NetworkMember.ServerSettings.DisableCrewList;
-
             Color? nameColor = null;
             if (Job != null) { nameColor = Job.Prefab.UIColor; }
-
-            if (CrewListDisabled == false)
+            GUITextBlock characterNameBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.25f), headerTextArea.RectTransform), ToolBox.LimitString(Name, GUIStyle.Font, headerTextArea.Rect.Width), textColor: nameColor, font: GUIStyle.Font)
             {
-                GUITextBlock characterNameBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.25f), headerTextArea.RectTransform), ToolBox.LimitString(Name, GUIStyle.Font, headerTextArea.Rect.Width), textColor: nameColor, font: GUIStyle.Font)
+                ForceUpperCase = ForceUpperCase.Yes,
+                Padding = Vector4.Zero
+            };
+
+            if (permissionIcon != null)
+            {
+                Point iconSize = permissionIcon.SourceRect.Size;
+                int iconWidth = (int)((float)characterNameBlock.Rect.Height / iconSize.Y * iconSize.X);
+                new GUIImage(new RectTransform(new Point(iconWidth, characterNameBlock.Rect.Height), characterNameBlock.RectTransform) { AbsoluteOffset = new Point(-iconWidth - 2, 0) }, permissionIcon) { IgnoreLayoutGroups = true };
+            }
+
+            if (Job != null)
+            {
+                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.25f), headerTextArea.RectTransform), Job.Name, textColor: Job.Prefab.UIColor, font: font)
                 {
-                    ForceUpperCase = ForceUpperCase.Yes,
                     Padding = Vector4.Zero
                 };
+            }
 
-                if (permissionIcon != null)
+            if (PersonalityTrait != null)
+            {
+                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.25f), headerTextArea.RectTransform),
+                    TextManager.AddPunctuation(':', TextManager.Get("PersonalityTrait"), PersonalityTrait.DisplayName),
+                    font: font)
                 {
-                    Point iconSize = permissionIcon.SourceRect.Size;
-                    int iconWidth = (int)((float)characterNameBlock.Rect.Height / iconSize.Y * iconSize.X);
-                    new GUIImage(new RectTransform(new Point(iconWidth, characterNameBlock.Rect.Height), characterNameBlock.RectTransform) { AbsoluteOffset = new Point(-iconWidth - 2, 0) }, permissionIcon) { IgnoreLayoutGroups = true };
-                }
+                    Padding = Vector4.Zero
+                };
+            }
 
-                if (Job != null)
-                {
-                    new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.25f), headerTextArea.RectTransform), Job.Name, textColor: Job.Prefab.UIColor, font: font)
-                    {
-                        Padding = Vector4.Zero
-                    };
-                }
-
-                if (PersonalityTrait != null)
-                {
-                    new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.25f), headerTextArea.RectTransform),
-                        TextManager.AddPunctuation(':', TextManager.Get("PersonalityTrait"), PersonalityTrait.DisplayName),
-                        font: font)
-                    {
-                        Padding = Vector4.Zero
-                    };
-                }
-
-                GUIButton manageTalentButton = new GUIButton(new RectTransform(new Vector2(1.0f, 0.25f), headerTextArea.RectTransform),
-                    text: TextManager.Get("ClientPermission.ManageBotTalents"), style: "GUIButtonSmall")
-                {
-                    Enabled = false,
-                    UserData = TalentMenu.ManageBotTalentsButtonUserData,
-                    TextBlock =
+            GUIButton manageTalentButton = new GUIButton(new RectTransform(new Vector2(1.0f, 0.25f), headerTextArea.RectTransform),
+                text: TextManager.Get("ClientPermission.ManageBotTalents"), style: "GUIButtonSmall")
+            {
+                Enabled = false,
+                UserData = TalentMenu.ManageBotTalentsButtonUserData,
+                TextBlock =
                 {
                     AutoScaleHorizontal = true
                 }
+            };
+
+            if (TalentMenu.CanManageTalents(this))
+            {
+                manageTalentButton.Enabled = true;
+            }
+
+            if (Job != null && Character is not { IsDead: true })
+            {
+                var skillsArea = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.63f), paddedFrame.RectTransform, Anchor.BottomCenter, Pivot.BottomCenter))
+                {
+                    Stretch = true
                 };
 
-                if (TalentMenu.CanManageTalents(this))
+                var skills = Job.GetSkills().ToList();
+                skills.Sort((s1, s2) => -s1.Level.CompareTo(s2.Level));
+
+                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), skillsArea.RectTransform), TextManager.AddPunctuation(':', TextManager.Get("skills"), string.Empty), font: font) { Padding = Vector4.Zero };
+
+                foreach (Skill skill in skills)
                 {
-                    manageTalentButton.Enabled = true;
-                }
+                    Color textColor = Color.White * (0.5f + skill.Level / 200.0f);
 
-                if (Job != null && Character is not { IsDead: true })
-                {
-                    var skillsArea = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.63f), paddedFrame.RectTransform, Anchor.BottomCenter, Pivot.BottomCenter))
+                    var skillName = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), skillsArea.RectTransform), TextManager.Get("SkillName." + skill.Identifier), textColor: textColor, font: font) { Padding = Vector4.Zero };
+
+                    float modifiedSkillLevel = skill.Level;
+                    if (Character != null)
                     {
-                        Stretch = true
-                    };
-
-                    var skills = Job.GetSkills().ToList();
-                    skills.Sort((s1, s2) => -s1.Level.CompareTo(s2.Level));
-
-                    new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), skillsArea.RectTransform), TextManager.AddPunctuation(':', TextManager.Get("skills"), string.Empty), font: font) { Padding = Vector4.Zero };
-
-                    foreach (Skill skill in skills)
+                        modifiedSkillLevel = Character.GetSkillLevel(skill.Identifier);
+                    }
+                    if (!MathUtils.NearlyEqual(MathF.Round(modifiedSkillLevel), MathF.Round(skill.Level)))
                     {
-                        Color textColor = Color.White * (0.5f + skill.Level / 200.0f);
-
-                        var skillName = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), skillsArea.RectTransform), TextManager.Get("SkillName." + skill.Identifier), textColor: textColor, font: font) { Padding = Vector4.Zero };
-
-                        float modifiedSkillLevel = skill.Level;
-                        if (Character != null)
-                        {
-                            modifiedSkillLevel = Character.GetSkillLevel(skill.Identifier);
-                        }
-                        if (!MathUtils.NearlyEqual(MathF.Round(modifiedSkillLevel), MathF.Round(skill.Level)))
-                        {
-                            int skillChange = (int)MathF.Round(modifiedSkillLevel - skill.Level);
-                            string changeText = $"{(skillChange > 0 ? "+" : "") + skillChange}";
-                            new GUITextBlock(new RectTransform(new Vector2(1.0f, 1.0f), skillName.RectTransform), $"{(int)skill.Level} ({changeText})", textColor: textColor, font: font, textAlignment: Alignment.CenterRight);
-                        }
-                        else
-                        {
-                            new GUITextBlock(new RectTransform(new Vector2(1.0f, 1.0f), skillName.RectTransform), ((int)skill.Level).ToString(), textColor: textColor, font: font, textAlignment: Alignment.CenterRight);
-                        }
+                        int skillChange = (int)MathF.Round(modifiedSkillLevel - skill.Level);
+                        string changeText = $"{(skillChange > 0 ? "+" : "") + skillChange}";
+                        new GUITextBlock(new RectTransform(new Vector2(1.0f, 1.0f), skillName.RectTransform), $"{(int)skill.Level} ({changeText})", textColor: textColor, font: font, textAlignment: Alignment.CenterRight);
+                    }
+                    else
+                    {
+                        new GUITextBlock(new RectTransform(new Vector2(1.0f, 1.0f), skillName.RectTransform), ((int)skill.Level).ToString(), textColor: textColor, font: font, textAlignment: Alignment.CenterRight);
                     }
                 }
-                else if (Character is { IsDead: true })
+            }
+            else if (Character is { IsDead: true })
+            {
+                var deadArea = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.63f), paddedFrame.RectTransform, Anchor.BottomCenter, Pivot.BottomCenter))
                 {
-                    var deadArea = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.63f), paddedFrame.RectTransform, Anchor.BottomCenter, Pivot.BottomCenter))
-                    {
-                        Stretch = true
-                    };
+                    Stretch = true
+                };
 
-                    LocalizedString deadDescription =
-                        TextManager.Get("deceased") + "\n" +
-                       (Character.CauseOfDeath.Affliction?.CauseOfDeathDescription ?? TextManager.Get("CauseOfDeath." + Character.CauseOfDeath.Type.ToString()));
+                LocalizedString deadDescription =
+                    TextManager.Get("deceased") + "\n" +
+                   (Character.CauseOfDeath.Affliction?.CauseOfDeathDescription ?? TextManager.Get("CauseOfDeath." + Character.CauseOfDeath.Type.ToString()));
 
-                    new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), deadArea.RectTransform), deadDescription, textColor: GUIStyle.Red, font: font, textAlignment: Alignment.TopLeft) { Padding = Vector4.Zero };
-                }
+                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), deadArea.RectTransform), deadDescription, textColor: GUIStyle.Red, font: font, textAlignment: Alignment.TopLeft) { Padding = Vector4.Zero };
+            }
+
+            if (CrewListDisabled == true)
+            {
+                paddedFrame.Visible = false;
+                return paddedFrame;
             }
 
             if (returnParent)
