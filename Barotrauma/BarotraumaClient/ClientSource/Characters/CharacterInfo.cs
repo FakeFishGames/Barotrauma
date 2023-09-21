@@ -9,7 +9,6 @@ using System.Xml.Linq;
 using Barotrauma.IO;
 using Barotrauma.Items.Components;
 using System.Collections.Immutable;
-using System.Numerics;
 
 namespace Barotrauma
 {
