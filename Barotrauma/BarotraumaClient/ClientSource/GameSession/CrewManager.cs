@@ -108,8 +108,10 @@ namespace Barotrauma
                 OnSelected = (component, userData) => false,
                 SelectMultiple = false,
                 Spacing = (int)(GUI.Scale * 10),
-                OnRearranged = OnCrewListRearranged
+                OnRearranged = OnCrewListRearranged,
             };
+
+            if (CrewListDisabled == true) { AutoHideCrewList(); }
 
             jobIndicatorBackground = new Sprite("Content/UI/CommandUIAtlas.png", new Rectangle(0, 512, 128, 128));
             previousOrderArrow = new Sprite("Content/UI/CommandUIAtlas.png", new Rectangle(128, 512, 128, 128));

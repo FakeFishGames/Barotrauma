@@ -72,6 +72,7 @@ namespace Barotrauma
             Point buttonSize = new Point(buttonWidth, buttonHeight);
             crewListButton = new GUIButton(new RectTransform(buttonSize, parent: topLeftButtonGroup.RectTransform), style: "CrewListToggleButton")
             {
+                Visible = !CrewManager.CrewListDisabled,
                 ToolTip = TextManager.GetWithVariable("hudbutton.crewlist", "[key]", GameSettings.CurrentConfig.KeyMap.KeyBindText(InputType.CrewOrders)),
                 OnClicked = (GUIButton btn, object userdata) =>
                 {
