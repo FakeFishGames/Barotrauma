@@ -45,6 +45,7 @@ namespace Barotrauma
         private bool transferMenuStateCompleted;
         private readonly HashSet<Identifier> registeredEvents = new HashSet<Identifier>();
         private readonly TalentMenu talentMenu = new TalentMenu();
+        public bool CrewListIsDisabled = GameMain.NetworkMember.ServerSettings.DisableCrewList;
 
         private class LinkedGUI
         {
@@ -626,7 +627,6 @@ namespace Barotrauma
             linkedGUIList = new List<LinkedGUI>();
 
             var connectedClients = GameMain.Client.ConnectedClients;
-            var CrewListIsDisabled = GameMain.NetworkMember.ServerSettings.DisableCrewList;
             if (CrewListIsDisabled == false)
             {
                 for (int i = 0; i < teamIDs.Count; i++)
@@ -743,7 +743,7 @@ namespace Barotrauma
                 new GUITextBlock(new RectTransform(new Point(pingColumnWidth, paddedFrame.Rect.Height), paddedFrame.RectTransform), client.Ping.ToString(), textAlignment: Alignment.Center),
                 permissionIcon));
 
-            if (client.Character is { } character && GameMain.NetworkMember.ServerSettings.DisableCrewList == false)
+            if (client.Character is { } character && CrewListIsDisabled == false)
             {
                 CreateWalletCrewFrame(character, paddedFrame);
             }
@@ -878,6 +878,9 @@ namespace Barotrauma
             GUITextBlock characterNameBlock;
             Sprite permissionIconSprite = GetPermissionIcon(client);
             JobPrefab prefab = client.Character?.Info?.Job?.Prefab;
+
+            if (CrewListIsDisabled == true) { prefab = null; } // Set prefab to null if crew list is disabled, we don't want to show their job. Only the client.
+
             Color nameColor = prefab != null ? prefab.UIColor : Color.White;
 
             Point iconSize = new Point((int)(paddedFrame.Rect.Height * 0.8f));
