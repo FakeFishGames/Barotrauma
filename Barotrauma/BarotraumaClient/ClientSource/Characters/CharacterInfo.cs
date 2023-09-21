@@ -75,57 +75,66 @@ namespace Barotrauma
                 Stretch = true
             };
 
+            var CrewListDisabled = GameMain.NetworkMember.ServerSettings.DisableCrewList == false;
+
             Color? nameColor = null;
             if (Job != null) { nameColor = Job.Prefab.UIColor; }
 
-            GUITextBlock characterNameBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.25f), headerTextArea.RectTransform), ToolBox.LimitString(Name, GUIStyle.Font, headerTextArea.Rect.Width), textColor: nameColor, font: GUIStyle.Font)
+            if (CrewListDisabled == false)
             {
-                ForceUpperCase = ForceUpperCase.Yes,
-                Padding = Vector4.Zero
-            };
-
-            if (permissionIcon != null)
-            {
-                Point iconSize = permissionIcon.SourceRect.Size;
-                int iconWidth = (int)((float)characterNameBlock.Rect.Height / iconSize.Y * iconSize.X);
-                new GUIImage(new RectTransform(new Point(iconWidth, characterNameBlock.Rect.Height), characterNameBlock.RectTransform) { AbsoluteOffset = new Point(-iconWidth - 2, 0) }, permissionIcon) { IgnoreLayoutGroups = true };
-            }
-
-            if (Job != null)
-            {
-                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.25f), headerTextArea.RectTransform), Job.Name, textColor: Job.Prefab.UIColor, font: font)
+                GUITextBlock characterNameBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.25f), headerTextArea.RectTransform), ToolBox.LimitString(Name, GUIStyle.Font, headerTextArea.Rect.Width), textColor: nameColor, font: GUIStyle.Font)
                 {
+                    ForceUpperCase = ForceUpperCase.Yes,
                     Padding = Vector4.Zero
                 };
-            }
 
-            if (PersonalityTrait != null)
-            {
-                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.25f), headerTextArea.RectTransform),
-                    TextManager.AddPunctuation(':', TextManager.Get("PersonalityTrait"), PersonalityTrait.DisplayName),
-                    font: font)
+                if (permissionIcon != null)
                 {
-                    Padding = Vector4.Zero
-                };
-            }
+                    Point iconSize = permissionIcon.SourceRect.Size;
+                    int iconWidth = (int)((float)characterNameBlock.Rect.Height / iconSize.Y * iconSize.X);
+                    new GUIImage(new RectTransform(new Point(iconWidth, characterNameBlock.Rect.Height), characterNameBlock.RectTransform) { AbsoluteOffset = new Point(-iconWidth - 2, 0) }, permissionIcon) { IgnoreLayoutGroups = true };
+                }
 
-            GUIButton manageTalentButton = new GUIButton(new RectTransform(new Vector2(1.0f, 0.25f), headerTextArea.RectTransform),
-                text: TextManager.Get("ClientPermission.ManageBotTalents"), style: "GUIButtonSmall")
-            {
-                Enabled = false,
-                UserData = TalentMenu.ManageBotTalentsButtonUserData,
-                TextBlock =
+                if (Job != null)
+                {
+                    new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.25f), headerTextArea.RectTransform), Job.Name, textColor: Job.Prefab.UIColor, font: font)
+                    {
+                        Padding = Vector4.Zero
+                    };
+                }
+
+                if (PersonalityTrait != null)
+                {
+                    new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.25f), headerTextArea.RectTransform),
+                        TextManager.AddPunctuation(':', TextManager.Get("PersonalityTrait"), PersonalityTrait.DisplayName),
+                        font: font)
+                    {
+                        Padding = Vector4.Zero
+                    };
+                }
+
+                GUIButton manageTalentButton = new GUIButton(new RectTransform(new Vector2(1.0f, 0.25f), headerTextArea.RectTransform),
+                    text: TextManager.Get("ClientPermission.ManageBotTalents"), style: "GUIButtonSmall")
+                {
+                    Enabled = false,
+                    UserData = TalentMenu.ManageBotTalentsButtonUserData,
+                    TextBlock =
                 {
                     AutoScaleHorizontal = true
                 }
-            };
+                };
 
-            if (TalentMenu.CanManageTalents(this))
+                if (TalentMenu.CanManageTalents(this))
+                {
+                    manageTalentButton.Enabled = true;
+                }
+            }
+            else
             {
-                manageTalentButton.Enabled = true;
+                nameColor = Color.White;
             }
 
-            if (Job != null && Character is not { IsDead: true })
+            if (Job != null && Character is not { IsDead: true } && CrewListDisabled == false)
             {
                 var skillsArea = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.63f), paddedFrame.RectTransform, Anchor.BottomCenter, Pivot.BottomCenter))
                 {
@@ -160,7 +169,7 @@ namespace Barotrauma
                     }
                 }
             }
-            else if (Character is { IsDead: true })
+            else if (Character is { IsDead: true } && CrewListDisabled == false)
             {
                 var deadArea = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.63f), paddedFrame.RectTransform, Anchor.BottomCenter, Pivot.BottomCenter))
                 {
@@ -478,7 +487,7 @@ namespace Barotrauma
         {
             if (evaluateDisguise && IsDisguised) return;
             var icon = !IsDisguisedAsAnother || !evaluateDisguise ? Job?.Prefab?.Icon : disguisedJobIcon;
-            if (icon == null) { return; }
+            if (icon == null || GameMain.NetworkMember.ServerSettings.DisableCrewList == true) { return; }
             Color iconColor = !IsDisguisedAsAnother || !evaluateDisguise ? Job.Prefab.UIColor : disguisedJobColor;
 
             icon.Draw(spriteBatch, area.Center.ToVector2(), iconColor, scale: Math.Min(area.Width / (float)icon.SourceRect.Width, area.Height / (float)icon.SourceRect.Height));
