@@ -128,59 +128,55 @@ namespace Barotrauma
                 {
                     manageTalentButton.Enabled = true;
                 }
-            }
-            else
-            {
-                nameColor = Color.White;
-            }
 
-            if (Job != null && Character is not { IsDead: true } && CrewListDisabled == false)
-            {
-                var skillsArea = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.63f), paddedFrame.RectTransform, Anchor.BottomCenter, Pivot.BottomCenter))
+                if (Job != null && Character is not { IsDead: true })
                 {
-                    Stretch = true
-                };
-
-                var skills = Job.GetSkills().ToList();
-                skills.Sort((s1, s2) => -s1.Level.CompareTo(s2.Level));
-
-                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), skillsArea.RectTransform), TextManager.AddPunctuation(':', TextManager.Get("skills"), string.Empty), font: font) { Padding = Vector4.Zero };
-
-                foreach (Skill skill in skills)
-                {
-                    Color textColor = Color.White * (0.5f + skill.Level / 200.0f);
-
-                    var skillName = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), skillsArea.RectTransform), TextManager.Get("SkillName." + skill.Identifier), textColor: textColor, font: font) { Padding = Vector4.Zero };
-
-                    float modifiedSkillLevel = skill.Level;
-                    if (Character != null)
+                    var skillsArea = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.63f), paddedFrame.RectTransform, Anchor.BottomCenter, Pivot.BottomCenter))
                     {
-                        modifiedSkillLevel = Character.GetSkillLevel(skill.Identifier);
-                    }
-                    if (!MathUtils.NearlyEqual(MathF.Round(modifiedSkillLevel), MathF.Round(skill.Level)))
+                        Stretch = true
+                    };
+
+                    var skills = Job.GetSkills().ToList();
+                    skills.Sort((s1, s2) => -s1.Level.CompareTo(s2.Level));
+
+                    new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), skillsArea.RectTransform), TextManager.AddPunctuation(':', TextManager.Get("skills"), string.Empty), font: font) { Padding = Vector4.Zero };
+
+                    foreach (Skill skill in skills)
                     {
-                        int skillChange = (int)MathF.Round(modifiedSkillLevel - skill.Level);
-                        string changeText = $"{(skillChange > 0 ? "+" : "") + skillChange}";
-                        new GUITextBlock(new RectTransform(new Vector2(1.0f, 1.0f), skillName.RectTransform), $"{(int)skill.Level} ({changeText})", textColor: textColor, font: font, textAlignment: Alignment.CenterRight);
-                    }
-                    else
-                    {
-                        new GUITextBlock(new RectTransform(new Vector2(1.0f, 1.0f), skillName.RectTransform), ((int)skill.Level).ToString(), textColor: textColor, font: font, textAlignment: Alignment.CenterRight);
+                        Color textColor = Color.White * (0.5f + skill.Level / 200.0f);
+
+                        var skillName = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), skillsArea.RectTransform), TextManager.Get("SkillName." + skill.Identifier), textColor: textColor, font: font) { Padding = Vector4.Zero };
+
+                        float modifiedSkillLevel = skill.Level;
+                        if (Character != null)
+                        {
+                            modifiedSkillLevel = Character.GetSkillLevel(skill.Identifier);
+                        }
+                        if (!MathUtils.NearlyEqual(MathF.Round(modifiedSkillLevel), MathF.Round(skill.Level)))
+                        {
+                            int skillChange = (int)MathF.Round(modifiedSkillLevel - skill.Level);
+                            string changeText = $"{(skillChange > 0 ? "+" : "") + skillChange}";
+                            new GUITextBlock(new RectTransform(new Vector2(1.0f, 1.0f), skillName.RectTransform), $"{(int)skill.Level} ({changeText})", textColor: textColor, font: font, textAlignment: Alignment.CenterRight);
+                        }
+                        else
+                        {
+                            new GUITextBlock(new RectTransform(new Vector2(1.0f, 1.0f), skillName.RectTransform), ((int)skill.Level).ToString(), textColor: textColor, font: font, textAlignment: Alignment.CenterRight);
+                        }
                     }
                 }
-            }
-            else if (Character is { IsDead: true } && CrewListDisabled == false)
-            {
-                var deadArea = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.63f), paddedFrame.RectTransform, Anchor.BottomCenter, Pivot.BottomCenter))
+                else if (Character is { IsDead: true })
                 {
-                    Stretch = true
-                };
+                    var deadArea = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.63f), paddedFrame.RectTransform, Anchor.BottomCenter, Pivot.BottomCenter))
+                    {
+                        Stretch = true
+                    };
 
-                LocalizedString deadDescription = 
-                    TextManager.Get("deceased") + "\n" + 
-                   (Character.CauseOfDeath.Affliction?.CauseOfDeathDescription ?? TextManager.Get("CauseOfDeath." + Character.CauseOfDeath.Type.ToString()));
+                    LocalizedString deadDescription =
+                        TextManager.Get("deceased") + "\n" +
+                       (Character.CauseOfDeath.Affliction?.CauseOfDeathDescription ?? TextManager.Get("CauseOfDeath." + Character.CauseOfDeath.Type.ToString()));
 
-                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), deadArea.RectTransform), deadDescription, textColor: GUIStyle.Red, font: font, textAlignment: Alignment.TopLeft) { Padding = Vector4.Zero };
+                    new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), deadArea.RectTransform), deadDescription, textColor: GUIStyle.Red, font: font, textAlignment: Alignment.TopLeft) { Padding = Vector4.Zero };
+                }
             }
 
             if (returnParent)
