@@ -101,6 +101,7 @@ namespace Barotrauma
             // AbsoluteOffset is set in UpdateProjectSpecific based on crewListOpenState
             crewList = new GUIListBox(new RectTransform(Vector2.One, crewArea.RectTransform), style: null, isScrollBarOnDefaultSide: false)
             {
+                Visible = !CrewListDisabled,
                 AutoHideScrollBar = false,
                 CanBeFocused = false,
                 CurrentDragMode = GUIListBox.DragMode.DragWithinBox,
@@ -110,8 +111,6 @@ namespace Barotrauma
                 Spacing = (int)(GUI.Scale * 10),
                 OnRearranged = OnCrewListRearranged,
             };
-
-            if (CrewListDisabled == true) { AutoHideCrewList(); }
 
             jobIndicatorBackground = new Sprite("Content/UI/CommandUIAtlas.png", new Rectangle(0, 512, 128, 128));
             previousOrderArrow = new Sprite("Content/UI/CommandUIAtlas.png", new Rectangle(128, 512, 128, 128));

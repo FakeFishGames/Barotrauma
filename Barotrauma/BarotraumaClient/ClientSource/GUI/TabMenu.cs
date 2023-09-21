@@ -626,8 +626,8 @@ namespace Barotrauma
             linkedGUIList = new List<LinkedGUI>();
 
             var connectedClients = GameMain.Client.ConnectedClients;
-            var CrewListIsEnabled = !GameMain.NetworkMember.ServerSettings.DisableCrewList;
-            if (CrewListIsEnabled == true)
+            var CrewListIsDisabled = GameMain.NetworkMember.ServerSettings.DisableCrewList;
+            if (CrewListIsDisabled == false)
             {
                 for (int i = 0; i < teamIDs.Count; i++)
                 {
@@ -642,7 +642,7 @@ namespace Barotrauma
             for (int j = 0; j < connectedClients.Count; j++)
             {
                 Client client = connectedClients[j];
-                if (!client.InGame || client.Character == null || client.Character.IsDead || CrewListIsEnabled == false)
+                if (!client.InGame || client.Character == null || client.Character.IsDead || CrewListIsDisabled == true)
                 {
                     CreateMultiPlayerClientElement(client);
                 }
