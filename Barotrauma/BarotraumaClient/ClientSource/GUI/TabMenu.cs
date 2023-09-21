@@ -894,7 +894,7 @@ namespace Barotrauma
             permissionIcon = new GUIImage(new RectTransform(new Vector2(iconWidth, 1f), paddedFrame.RectTransform) { AbsoluteOffset = new Point(xOffset + 2, 0) }, permissionIconSprite) { IgnoreLayoutGroups = true };
        
 
-            if (client.Character != null && client.Character.IsDead)
+            if (client.Character != null && client.Character.IsDead && CrewListIsDisabled == false)
             {
                 characterNameBlock.Strikethrough = new GUITextBlock.StrikethroughSettings(null, GUI.IntScale(1f), GUI.IntScale(5f));
             }
