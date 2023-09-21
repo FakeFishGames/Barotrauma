@@ -75,7 +75,7 @@ namespace Barotrauma
                 Stretch = true
             };
 
-            var CrewListDisabled = GameMain.NetworkMember.ServerSettings.DisableCrewList == false;
+            var CrewListDisabled = GameMain.NetworkMember.ServerSettings.DisableCrewList;
 
             Color? nameColor = null;
             if (Job != null) { nameColor = Job.Prefab.UIColor; }
