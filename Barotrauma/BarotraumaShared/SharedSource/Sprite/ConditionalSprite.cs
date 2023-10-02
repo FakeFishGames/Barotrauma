@@ -19,8 +19,7 @@ namespace Barotrauma
         {
             Target = target;
             Exclusive = element.GetAttributeBool("exclusive", Exclusive);
-            LogicalOperator = element.GetAttributeEnum(nameof(LogicalOperator),
-                element.GetAttributeEnum("comparison", LogicalOperator));
+            LogicalOperator = element.GetAttributeEnum("comparison", LogicalOperator);
             foreach (var subElement in element.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())

@@ -19,6 +19,7 @@ namespace Barotrauma
         protected override bool Filter(PowerContainer battery)
         {
             if (battery == null) { return false; }
+            if (battery.OutputDisabled) { return false; }
             var item = battery.Item;
             if (item.IgnoreByAI(character)) { return false; }
             if (!item.IsInteractable(character)) { return false; }

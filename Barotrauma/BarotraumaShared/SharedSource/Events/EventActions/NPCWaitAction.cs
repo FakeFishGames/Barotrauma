@@ -27,6 +27,7 @@ namespace Barotrauma
 
             foreach (var npc in affectedNpcs)
             {
+                if (npc.Removed) { continue; }
                 if (npc.AIController is not HumanAIController humanAiController) { continue; }
 
                 if (Wait)

@@ -532,6 +532,22 @@ namespace Barotrauma.Items.Components
             };
         }
 
+        /// <summary>
+        /// Map the rectangular steering vector to a circular area using FG-Squircular Mapping which preserves the angle of the vector.
+        /// </summary>
+        private static Vector2 MapSquareToCircle(Vector2 steeringVector)
+        {
+            float xSqr = steeringVector.X * steeringVector.X;
+            float ySqr = steeringVector.Y * steeringVector.Y;
+            float length = MathF.Sqrt(ySqr + xSqr);
+            if (MathUtils.NearlyEqual(length, 0.0f)) { return Vector2.Zero; }
+
+            //FG-Squircular mapping formula from https://arxiv.org/ftp/arxiv/papers/1509/1509.06344.pdf
+            float x = steeringVector.X * MathF.Sqrt(xSqr + ySqr - xSqr * ySqr) / length;
+            float y = steeringVector.Y * MathF.Sqrt(xSqr + ySqr - xSqr * ySqr) / length;
+            return new Vector2(x, y);
+        }
+
         public void DrawHUD(SpriteBatch spriteBatch, Rectangle rect)
         {
             int width = rect.Width, height = rect.Height;
@@ -545,11 +561,9 @@ namespace Barotrauma.Items.Components
 
             if (!AutoPilot)
             {
-                Vector2 unitSteeringInput = steeringInput / 100.0f;
                 //map input from rectangle to circle
-                Vector2 steeringInputPos = new Vector2(
-                    steeringInput.X * (float)Math.Sqrt(1.0f - 0.5f * unitSteeringInput.Y * unitSteeringInput.Y),
-                    -steeringInput.Y * (float)Math.Sqrt(1.0f - 0.5f * unitSteeringInput.X * unitSteeringInput.X));
+                Vector2 steeringInputPos = MapSquareToCircle(steeringInput / 100f) * 100.0f; 
+                steeringInputPos.Y = -steeringInputPos.Y;
                 steeringInputPos += steeringOrigin;
 
                 if (steeringIndicator != null)
@@ -604,10 +618,8 @@ namespace Barotrauma.Items.Components
             }
             
             //map velocity from rectangle to circle
-            Vector2 unitTargetVel = targetVelocity / 100.0f;
-            Vector2 steeringPos = new Vector2(
-                targetVelocity.X * 0.9f * (float)Math.Sqrt(1.0f - 0.5f * unitTargetVel.Y * unitTargetVel.Y),
-                -targetVelocity.Y * 0.9f * (float)Math.Sqrt(1.0f - 0.5f * unitTargetVel.X * unitTargetVel.X));
+            Vector2 steeringPos = MapSquareToCircle(targetVelocity / 100f) * 90.0f; 
+            steeringPos.Y = -steeringPos.Y;
             steeringPos += steeringOrigin;
 
             if (steeringIndicator != null)
@@ -682,7 +694,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public override void UpdateHUD(Character character, float deltaTime, Camera cam)
+        public override void UpdateHUDComponentSpecific(Character character, float deltaTime, Camera cam)
         {
             if (swapDestinationOrder == null)
             {

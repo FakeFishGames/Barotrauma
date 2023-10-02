@@ -1,12 +1,11 @@
 ﻿using Microsoft.Xna.Framework;
-using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
 {
     partial class RemoteController : ItemComponent
     {
         [Serialize("", IsPropertySaveable.No, description: "Tag or identifier of the item that should be controlled.")]
-        public string Target
+        public Identifier Target
         {
             get;
             private set;

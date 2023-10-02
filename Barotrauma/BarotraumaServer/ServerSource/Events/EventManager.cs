@@ -1,12 +1,29 @@
 ﻿using Barotrauma.Networking;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 
 namespace Barotrauma
 {
     partial class EventManager
     {
+        public static void ServerWriteEventLog(Client client, NetEventLogEntry entry)
+        {
+            IWriteMessage outmsg = new WriteOnlyMessage();
+            outmsg.WriteByte((byte)ServerPacketHeader.EVENTACTION);
+            outmsg.WriteByte((byte)NetworkEventType.EVENTLOG);
+            outmsg.WriteNetSerializableStruct(entry);
+            GameMain.Server?.ServerPeer?.Send(outmsg, client.Connection, DeliveryMethod.Reliable);
+        }
+
+        public static void ServerWriteObjective(Client client, NetEventObjective entry)
+        {
+            IWriteMessage outmsg = new WriteOnlyMessage();
+            outmsg.WriteByte((byte)ServerPacketHeader.EVENTACTION);
+            outmsg.WriteByte((byte)NetworkEventType.EVENTOBJECTIVE);
+            outmsg.WriteNetSerializableStruct(entry);
+            GameMain.Server?.ServerPeer?.Send(outmsg, client.Connection, DeliveryMethod.Reliable);
+        }
+
         public void ServerRead(IReadMessage inc, Client sender)
         {
             UInt16 actionId = inc.ReadUInt16();
@@ -16,14 +33,14 @@ namespace Barotrauma
             {
                 if (ev is not ScriptedEvent scriptedEvent) { continue; }
                 
-                var actions = FindActions(scriptedEvent);
-                foreach (EventAction action in actions.Select(a => a.Item2))
+                var actions = scriptedEvent.GetAllActions();
+                foreach (EventAction action in actions.Select(a => a.action))
                 {
                     if (action is not ConversationAction convAction || convAction.Identifier != actionId) { continue; }
                     if (!convAction.TargetClients.Contains(sender))
                     {
 #if DEBUG || UNSTABLE
-                        DebugConsole.ThrowError($"Client \"{sender.Name}\" tried to respond to a ConversationAction that was not targeted to them.");
+                        DebugConsole.ThrowError($"Client \"{sender.Name}\" tried to respond to a ConversationAction that was not targeted to them ({convAction.Text}).");
 #endif
                         continue;
                     }

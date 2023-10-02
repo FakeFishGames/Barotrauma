@@ -315,20 +315,26 @@ namespace Barotrauma
         protected void CreateColliders()
         {
             Colliders.Clear();
-            for (int i = 0; i < MainElement.GetChildElements("collider").Count(); i++)
+            if (MainElement?.GetChildElements("collider") is { } colliderElements)
             {
-                var element = MainElement.GetChildElements("collider").ElementAt(i);
-                string name = i > 0 ? "Secondary Collider" : "Main Collider";
-                Colliders.Add(new ColliderParams(element, this, name));
+                for (int i = 0; i < colliderElements.Count(); i++)
+                {
+                    var element = colliderElements.ElementAt(i);
+                    string name = i > 0 ? "Secondary Collider" : "Main Collider";
+                    Colliders.Add(new ColliderParams(element, this, name));
+                }
             }
         }
 
         protected void CreateLimbs()
         {
             Limbs.Clear();
-            foreach (var element in MainElement.GetChildElements("limb"))
+            if (MainElement?.GetChildElements("limb") is { } childElements)
             {
-                Limbs.Add(new LimbParams(element, this));
+                foreach (var element in childElements)
+                {
+                    Limbs.Add(new LimbParams(element, this));
+                }
             }
             Limbs = Limbs.OrderBy(l => l.ID).ToList();
         }
@@ -430,8 +436,8 @@ namespace Barotrauma
             copy.Serialize();
             Memento.Store(copy);
         }
-        public void Undo() => RevertTo(Memento.Undo() as RagdollParams);
-        public void Redo() => RevertTo(Memento.Redo() as RagdollParams);
+        public void Undo() => RevertTo(Memento.Undo());
+        public void Redo() => RevertTo(Memento.Redo());
         public void ClearHistory() => Memento.Clear();
 
         private void RevertTo(RagdollParams source)

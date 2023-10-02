@@ -10,6 +10,45 @@ namespace Barotrauma
 {
     public partial class Sprite
     {
+        public Identifier Identifier { get; private set; }
+        public static IEnumerable<Sprite> LoadedSprites
+        {
+            get
+            {
+                List<Sprite> retVal = null;
+                lock (list)
+                {
+                    retVal = list.Select(wRef =>
+                    {
+                        if (wRef.TryGetTarget(out Sprite spr))
+                        {
+                            return spr;
+                        }
+                        return null;
+                    }).Where(s => s != null).ToList();
+                }
+                return retVal;
+            }
+        }
+
+        private static readonly List<WeakReference<Sprite>> list = new List<WeakReference<Sprite>>();
+
+        static partial void AddToList(Sprite elem)
+        {
+            lock (list)
+            {
+                list.Add(new WeakReference<Sprite>(elem));
+            }
+        }
+
+        static partial void RemoveFromList(Sprite sprite)
+        {
+            lock (list)
+            {
+                list.RemoveAll(wRef => !wRef.TryGetTarget(out Sprite s) || s == sprite);
+            }
+        }
+
         private class TextureRefCounter
         {
             public Texture2D Texture;
@@ -130,6 +169,11 @@ namespace Barotrauma
         public void ReloadTexture()
         {
             var oldTexture = texture;
+            if (texture == null)
+            {
+                DebugConsole.ThrowError("Sprite: Failed to reload the texture, texture is null.");
+                return;
+            }
             texture.Dispose();
             texture = TextureLoader.FromFile(FilePath.Value, Compress);
             Identifier pathKey = FullPath.ToIdentifier();

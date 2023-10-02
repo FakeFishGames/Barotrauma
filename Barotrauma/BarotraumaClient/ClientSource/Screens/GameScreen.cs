@@ -392,7 +392,7 @@ namespace Barotrauma
             Level.Loaded?.DrawDebugOverlay(spriteBatch, cam);            
             if (GameMain.DebugDraw)
             {
-                MapEntity.mapEntityList.ForEach(me => me.AiTarget?.Draw(spriteBatch));
+                MapEntity.MapEntityList.ForEach(me => me.AiTarget?.Draw(spriteBatch));
                 Character.CharacterList.ForEach(c => c.AiTarget?.Draw(spriteBatch));
                 if (GameMain.GameSession?.EventManager != null)
                 {
@@ -415,7 +415,7 @@ namespace Barotrauma
                 GameMain.LightManager.LosEffect.Parameters["xLosAlpha"].SetValue(GameMain.LightManager.LosAlpha);
 
                 Color losColor;
-                if (GameMain.LightManager.LosMode is LosMode.Transparent or LosMode.BlockOutsideView)
+                if (GameMain.LightManager.LosMode == LosMode.Transparent)
                 {
                     //convert the los color to HLS and make sure the luminance of the color is always the same
                     //as the luminance of the ambient light color

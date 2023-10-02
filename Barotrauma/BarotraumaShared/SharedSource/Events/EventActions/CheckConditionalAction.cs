@@ -46,7 +46,7 @@ namespace Barotrauma
             }
             if (target == null)
             {
-                DebugConsole.LogError($"CheckConditionalAction error: {GetEventName()} uses a CheckConditionalAction but no valid target was found for tag \"{TargetTag}\"! This will cause the check to automatically succeed.");
+                DebugConsole.LogError($"{nameof(CheckConditionalAction)} error: {GetEventName()} uses a {nameof(CheckConditionalAction)} but no valid target was found for tag \"{TargetTag}\"! This will cause the check to automatically succeed.");
             }
             if (target == null || Conditional == null)
             {

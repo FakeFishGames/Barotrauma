@@ -188,6 +188,10 @@ namespace Barotrauma
                     msg.WriteBoolean(false); //not initiating a vote
                     msg.WriteInt32(money);
                     break;
+                case VoteType.Traitor:
+                    //use 0 to indicate we voted for no-one
+                    msg.WriteInt32((data as Client)?.SessionId ?? 0);
+                    break;
             }
 
             msg.WritePadBits();

@@ -17,6 +17,8 @@ namespace Barotrauma
             set => throw new Exception("Trying to set the value for AIObjectiveLoadItem.IsLoop from: " + Environment.StackTrace.CleanupStackTrace());
         }
 
+        public override bool AllowWhileHandcuffed => false;
+
         private AIObjectiveLoadItems.ItemCondition TargetItemCondition { get; }
         private Item Container { get; }
         private ItemContainer ItemContainer { get; }
@@ -161,8 +163,7 @@ namespace Barotrauma
         {
             if (!IsAllowed)
             {
-                Priority = 0;
-                Abandon = true;
+                HandleNonAllowed();
                 return Priority;
             }
             else if (!AIObjectiveLoadItems.IsValidTarget(Container, character, targetCondition: TargetItemCondition))
@@ -299,7 +300,7 @@ namespace Barotrauma
             if (rootInventoryOwner is Character owner && owner != character) { return false; }
             if (rootInventoryOwner is Item parentItem)
             {
-                if (parentItem.HasTag("donttakeitems")) { return false; }
+                if (parentItem.HasTag(Tags.DontTakeItems)) { return false; }
             }
             if (!item.HasAccess(character)) { return false; }
             if (!character.HasItem(item) && !CanEquip(item, allowWearing: false)) { return false; }

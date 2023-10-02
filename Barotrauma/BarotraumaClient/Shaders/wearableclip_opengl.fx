@@ -25,7 +25,7 @@ float4 main(float4 position : POSITION0, float4 color : COLOR0, float2 texCoord 
     float2 stencilUV = mul(float4(texCoord.x, texCoord.y, 0, 1), wearableUvToClipperUv).xy;
     clip(stencilUV.x - stencilUVmin.x);
     clip(stencilUV.y - stencilUVmin.y);
-    clip(stencilUVmax.y - stencilUV.x);
+    clip(stencilUVmax.x - stencilUV.x);
     clip(stencilUVmax.y - stencilUV.y);
 
 	float minStencil = stencilSample(texCoord, float2(0,0));

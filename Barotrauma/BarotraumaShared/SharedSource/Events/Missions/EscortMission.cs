@@ -315,27 +315,21 @@ namespace Barotrauma
             }
         }
 
-        private bool Survived(Character character)
+        private static bool Survived(Character character)
         {
             return IsAlive(character) && character.CurrentHull?.Submarine != null && 
                 (character.CurrentHull.Submarine == Submarine.MainSub || Submarine.MainSub.DockedTo.Contains(character.CurrentHull.Submarine));
         }
 
-        private bool IsAlive(Character character)
+        private static bool IsAlive(Character character)
         {
             return character != null && !character.Removed && !character.IsDead;
-        }
-
-        private bool IsCaptured(Character character)
-        {
-            return character.LockHands && character.HasTeamChange(TerroristTeamChangeIdentifier);
         }
 
         protected override bool DetermineCompleted()
         {
             if (Submarine.MainSub != null && Submarine.MainSub.AtEndExit)
             {
-                bool terroristsSurvived = terroristCharacters.Any(c => Survived(c) && !IsCaptured(c));
                 bool friendliesSurvived = characters.Except(terroristCharacters).All(c => Survived(c));
                 bool vipDied = false;
 
@@ -345,7 +339,7 @@ namespace Barotrauma
                     vipDied = !Survived(vipCharacter);
                 }
 
-                if (friendliesSurvived && !terroristsSurvived && !vipDied)
+                if (friendliesSurvived && !vipDied)
                 {
                     return true;
                 }

@@ -45,8 +45,7 @@ namespace Barotrauma.Items.Components
         public void ServerEventWrite(IWriteMessage msg, Client c, NetEntityEvent.IData extraData = null)
         {
             msg.WriteSingle(deteriorationTimer);
-            msg.WriteSingle(deteriorateAlwaysResetTimer);
-            msg.WriteBoolean(DeteriorateAlways);
+            msg.WriteSingle(ForceDeteriorationTimer);
             msg.WriteSingle(tinkeringDuration);
             msg.WriteSingle(tinkeringStrength);
             msg.WriteBoolean(tinkeringPowersDevices);

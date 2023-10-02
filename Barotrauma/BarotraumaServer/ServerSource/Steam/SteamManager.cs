@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System.Globalization;
+using System.Linq;
 using Barotrauma.Networking;
 
 namespace Barotrauma.Steam
@@ -71,7 +72,7 @@ namespace Barotrauma.Steam
             Steamworks.SteamServer.SetKey("voicechatenabled", server.ServerSettings.VoiceChatEnabled.ToString());
             Steamworks.SteamServer.SetKey("allowspectating", server.ServerSettings.AllowSpectating.ToString());
             Steamworks.SteamServer.SetKey("allowrespawn", server.ServerSettings.AllowRespawn.ToString());
-            Steamworks.SteamServer.SetKey("traitors", server.ServerSettings.TraitorsEnabled.ToString());
+            Steamworks.SteamServer.SetKey("traitors", server.ServerSettings.TraitorProbability.ToString(CultureInfo.InvariantCulture));
             Steamworks.SteamServer.SetKey("friendlyfireenabled", server.ServerSettings.AllowFriendlyFire.ToString());
             Steamworks.SteamServer.SetKey("karmaenabled", server.ServerSettings.KarmaEnabled.ToString());
             Steamworks.SteamServer.SetKey("gamestarted", server.GameStarted.ToString());

@@ -55,20 +55,6 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        private Vector2 GetSourcePos()
-        {
-            Vector2 sourcePos = source.WorldPosition;
-            if (source is Item sourceItem)
-            {
-                sourcePos = sourceItem.DrawPosition;
-            }
-            else if (source is Limb sourceLimb && sourceLimb.body != null)
-            {
-                sourcePos = sourceLimb.body.DrawPosition;
-            }
-            return sourcePos;
-        }
-
         partial void InitProjSpecific(ContentXElement element)
         {
             foreach (var subElement in element.Elements())
@@ -88,34 +74,22 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public void Draw(SpriteBatch spriteBatch, bool editing, float itemDepth = -1)
+        public void Draw(SpriteBatch spriteBatch, bool editing, float itemDepth = -1, Color? overrideColor = null)
         {
             if (target == null || target.Removed) { return; }
             if (target.ParentInventory != null) { return; }
             if (source is Limb limb && limb.Removed) { return; }
             if (source is Entity e && e.Removed) { return; }
 
-            Vector2 startPos = GetSourcePos();
+            Vector2 startPos = GetSourcePos(useDrawPosition: true);
             startPos.Y = -startPos.Y;
-            if (source is Item sourceItem && !sourceItem.Removed)
+            if ((source as Item)?.GetComponent<Turret>() is { } turret)
             {
-                var turret = sourceItem.GetComponent<Turret>();
-                var weapon = sourceItem.GetComponent<RangedWeapon>();
-                if (turret != null)
+                if (turret.BarrelSprite != null)
                 {
-                    startPos = new Vector2(sourceItem.WorldRect.X + turret.TransformedBarrelPos.X, -(sourceItem.WorldRect.Y - turret.TransformedBarrelPos.Y));
-                    if (turret.BarrelSprite != null)
-                    {
-                        startPos += new Vector2((float)Math.Cos(turret.Rotation), (float)Math.Sin(turret.Rotation)) * turret.BarrelSprite.size.Y * turret.BarrelSprite.RelativeOrigin.Y * item.Scale * 0.9f;
-                    }
-                    startPos -= turret.GetRecoilOffset();
+                    startPos += new Vector2((float)Math.Cos(turret.Rotation), (float)Math.Sin(turret.Rotation)) * turret.BarrelSprite.size.Y * turret.BarrelSprite.RelativeOrigin.Y * item.Scale * 0.9f;
                 }
-                else if (weapon != null)
-                {
-                    Vector2 barrelPos = FarseerPhysics.ConvertUnits.ToDisplayUnits(weapon.TransformedBarrelPos);
-                    barrelPos.Y = -barrelPos.Y;
-                    startPos += barrelPos;
-                }
+                startPos -= turret.GetRecoilOffset();
             }
             Vector2 endPos = new Vector2(target.DrawPosition.X, target.DrawPosition.Y);
             Vector2 flippedPos = target.Sprite.size * target.Scale * (Origin - new Vector2(0.5f));
@@ -156,28 +130,28 @@ namespace Barotrauma.Items.Components
                 if (startSprite != null)
                 {
                     float depth = Math.Min(item.GetDrawDepth() + (startSprite.Depth - item.Sprite.Depth), 0.999f);
-                    startSprite?.Draw(spriteBatch, startPos, SpriteColor, angle, depth: depth);
+                    startSprite?.Draw(spriteBatch, startPos, overrideColor ?? SpriteColor, angle, depth: depth);
                 }
                 if (endSprite != null && (!Snapped || BreakFromMiddle))
                 {
                     float depth = Math.Min(item.GetDrawDepth() + (endSprite.Depth - item.Sprite.Depth), 0.999f);
-                    endSprite?.Draw(spriteBatch, endPos, SpriteColor, angle, depth: depth);
+                    endSprite?.Draw(spriteBatch, endPos, overrideColor ?? SpriteColor, angle, depth: depth);
                 }
             }
         }
 
-        private void DrawRope(SpriteBatch spriteBatch, Vector2 startPos, Vector2 endPos, int width)
+        private void DrawRope(SpriteBatch spriteBatch, Vector2 startPos, Vector2 endPos, int width, Color? overrideColor = null)
         {
             float depth = sprite == null ?
                 item.Sprite.Depth + 0.001f :
                 Math.Min(item.GetDrawDepth() + (sprite.Depth - item.Sprite.Depth), 0.999f);
-            
+
             if (sprite?.Texture == null)
             {
                 GUI.DrawLine(spriteBatch,
                     startPos,
                     endPos,
-                    SpriteColor, depth: depth, width: width);
+                    overrideColor ?? SpriteColor, depth: depth, width: width);
                 return;
             }
 
@@ -191,7 +165,7 @@ namespace Barotrauma.Items.Components
                     GUI.DrawLine(spriteBatch, sprite,
                         startPos + dir * (x - 5.0f),
                         startPos + dir * (x + sprite.size.X),
-                        SpriteColor, depth: depth, width: width);
+                        overrideColor ?? SpriteColor, depth: depth, width: width);
                 }
                 float leftOver = length - x;
                 if (leftOver > 0.0f)
@@ -199,7 +173,7 @@ namespace Barotrauma.Items.Components
                     GUI.DrawLine(spriteBatch, sprite,
                         startPos + dir * (x - 5.0f),
                         endPos,
-                        SpriteColor, depth: depth, width: width);
+                        overrideColor ?? SpriteColor, depth: depth, width: width);
                 }
             }
             else
@@ -207,7 +181,7 @@ namespace Barotrauma.Items.Components
                 GUI.DrawLine(spriteBatch, sprite,
                     startPos,
                     endPos,
-                    SpriteColor, depth: depth, width: width);
+                    overrideColor ?? SpriteColor, depth: depth, width: width);
             }
         }
 

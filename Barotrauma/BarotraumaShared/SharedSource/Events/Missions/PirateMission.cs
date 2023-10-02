@@ -239,7 +239,7 @@ namespace Barotrauma
         private void InitPirateShip()
         {
             enemySub.NeutralizeBallast();
-            if (enemySub.GetItems(alsoFromConnectedSubs: false).Find(i => i.HasTag("reactor") && !i.NonInteractable)?.GetComponent<Reactor>() is Reactor reactor)
+            if (enemySub.GetItems(alsoFromConnectedSubs: false).Find(i => i.HasTag(Tags.Reactor) && !i.NonInteractable)?.GetComponent<Reactor>() is Reactor reactor)
             {
                 reactor.PowerUpImmediately();
             }

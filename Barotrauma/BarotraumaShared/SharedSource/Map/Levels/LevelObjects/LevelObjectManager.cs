@@ -20,6 +20,8 @@ namespace Barotrauma
         private List<LevelObject> updateableObjects;
         private List<LevelObject>[,] objectGrid;
 
+        const float ParallaxStrength = 0.0001f;
+
         public float GlobalForceDecreaseTimer
         {
             get;
@@ -237,7 +239,6 @@ namespace Barotrauma
                     PlaceObject(prefab, spawnPosition, level, cave);
                     if (amount > prefab.MaxCount && objects.Count > prefab.MaxCount)
                     {
-                        bool maxReached = false;
                         int objectCount = 0;
                         for (int j = 0; j < objects.Count; j++)
                         {
@@ -406,11 +407,11 @@ namespace Barotrauma
                 }
             }
 
-            float minX = spriteCorners.Min(c => c.X) - newObject.Position.Z / 10000.0f;
-            float maxX = spriteCorners.Max(c => c.X) + newObject.Position.Z / 10000.0f;
+            float minX = spriteCorners.Min(c => c.X) - newObject.Position.Z * ParallaxStrength;
+            float maxX = spriteCorners.Max(c => c.X) + newObject.Position.Z * ParallaxStrength;
 
-            float minY = spriteCorners.Min(c => c.Y) - newObject.Position.Z / 10000.0f - level.BottomPos;
-            float maxY = spriteCorners.Max(c => c.Y) + newObject.Position.Z / 10000.0f - level.BottomPos;
+            float minY = spriteCorners.Min(c => c.Y) - newObject.Position.Z * ParallaxStrength - level.BottomPos;
+            float maxY = spriteCorners.Max(c => c.Y) + newObject.Position.Z * ParallaxStrength - level.BottomPos;
 
             if (newObject.Triggers != null)
             {
@@ -465,7 +466,7 @@ namespace Barotrauma
                 for (int y = yStart; y <= yEnd; y++)
                 {
                     var list = objectGrid[x, y];
-                    if (objectGrid[x, y] == null) { list = objectGrid[x, y] = new List<LevelObject>(); }
+                    if (list == null) { objectGrid[x, y] = list = new List<LevelObject>(); }
 
                     //insertion sort in ascending order (= prefer rendering objects in front)
                     int drawOrderIndex = 0;
@@ -478,9 +479,9 @@ namespace Barotrauma
             }            
         }
 
-        public static Microsoft.Xna.Framework.Point GetGridIndices(Vector2 worldPosition)        
+        public static Point GetGridIndices(Vector2 worldPosition)        
         {
-            return new Microsoft.Xna.Framework.Point(
+            return new Point(
                 (int)Math.Floor(worldPosition.X / GridSize),
                 (int)Math.Floor((worldPosition.Y - Level.Loaded.BottomPos) / GridSize));
         }
@@ -521,7 +522,7 @@ namespace Barotrauma
             return objectsInRange;
         }
 
-        private static List<SpawnPosition> GetAvailableSpawnPositions(IEnumerable<VoronoiCell> cells, LevelObjectPrefab.SpawnPosType spawnPosType, bool checkFlags = true)
+        private static List<SpawnPosition> GetAvailableSpawnPositions(IEnumerable<VoronoiCell> cells, LevelObjectPrefab.SpawnPosType spawnPosType)
         {
             List<LevelObjectPrefab.SpawnPosType> spawnPosTypes = new List<LevelObjectPrefab.SpawnPosType>(4);
             List<SpawnPosition> availableSpawnPositions = new List<SpawnPosition>();

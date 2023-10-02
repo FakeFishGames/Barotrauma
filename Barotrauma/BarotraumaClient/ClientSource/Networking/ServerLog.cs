@@ -146,7 +146,9 @@ namespace Barotrauma.Networking
             List<GUITickBox> tickBoxes = new List<GUITickBox>();
             foreach (MessageType msgType in Enum.GetValues(typeof(MessageType)))
             {
-                var tickBox = new GUITickBox(new RectTransform(new Point(tickBoxContainer.Rect.Width, (int)(25 * GUI.Scale)), tickBoxContainer.RectTransform), TextManager.Get("ServerLog." + messageTypeName[msgType]), font: GUIStyle.SmallFont)
+                var tickBox = new GUITickBox(new RectTransform(new Point(tickBoxContainer.Rect.Width, (int)(25 * GUI.Scale)), tickBoxContainer.RectTransform), 
+                    TextManager.Get("ServerLog." + messageTypeName[msgType]).Fallback(messageTypeName[msgType]), 
+                    font: GUIStyle.SmallFont)
                 {
                     Selected = true,
                     TextColor = messageColor[msgType],

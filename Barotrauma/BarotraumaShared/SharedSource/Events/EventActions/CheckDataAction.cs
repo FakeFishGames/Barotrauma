@@ -85,7 +85,7 @@ namespace Barotrauma
                         case bool bool1 when metadata2 is bool bool2:
                             return CompareBool(bool1, bool2) ?? false;
                         case float float1 when metadata2 is float float2:
-                            return CompareFloat(float1, float2) ?? false;
+                            return PropertyConditional.CompareFloat(float1, float2, Operator);
                     }
                 }
 
@@ -143,33 +143,10 @@ namespace Barotrauma
         {
             if (float.TryParse(value, out float f))
             {
-                return CompareFloat(GetFloat(campaignMode), f);
+                return PropertyConditional.CompareFloat(GetFloat(campaignMode), f, Operator);
             }
 
             DebugConsole.Log($"{value} != float");
-            return null;
-        }
-
-        private bool? CompareFloat(float val1, float val2)
-        {
-            value1 = val1;
-            value2 = val2;
-            switch (Operator)
-            {
-                case PropertyConditional.ComparisonOperatorType.Equals:
-                    return MathUtils.NearlyEqual(val1, val2);
-                case PropertyConditional.ComparisonOperatorType.GreaterThan:
-                    return val1 > val2;
-                case PropertyConditional.ComparisonOperatorType.GreaterThanEquals:
-                    return val1 >= val2;
-                case PropertyConditional.ComparisonOperatorType.LessThan:
-                    return val1 < val2;
-                case PropertyConditional.ComparisonOperatorType.LessThanEquals:
-                    return val1 <= val2;
-                case PropertyConditional.ComparisonOperatorType.NotEquals:
-                    return !MathUtils.NearlyEqual(val1, val2);
-            }
-
             return null;
         }
 

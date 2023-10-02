@@ -59,6 +59,9 @@ namespace Barotrauma
         [Serialize(false, IsPropertySaveable.Yes)]
         public bool ContinueConversation { get; set; }
 
+        [Serialize(false, IsPropertySaveable.Yes, description: "If enabled, the event will not stop to wait for the conversation to be dismissed.")]
+        public bool ContinueAutomatically { get; set; }
+
         [Serialize(false, IsPropertySaveable.Yes)]
         public bool IgnoreInterruptDistance { get; set; }
 
@@ -86,6 +89,8 @@ namespace Barotrauma
 
         private bool interrupt;
 
+        private readonly XElement textElement;
+
         public ConversationAction(ScriptedEvent parentEvent, ContentXElement element) : base(parentEvent, element)
         {
             actionCount++;
@@ -93,15 +98,41 @@ namespace Barotrauma
             Options = new List<SubactionGroup>();
             foreach (var elem in element.Elements())
             {
-                if (elem.Name.LocalName.Equals("option", StringComparison.InvariantCultureIgnoreCase))
+                if (elem.Name.LocalName.Equals("option", StringComparison.OrdinalIgnoreCase))
                 {
                     Options.Add(new SubactionGroup(ParentEvent, elem));
                 }
-                else if (elem.Name.LocalName.Equals("interrupt", StringComparison.InvariantCultureIgnoreCase))
+                else if (elem.Name.LocalName.Equals("interrupt", StringComparison.OrdinalIgnoreCase))
                 {
                     Interrupted = new SubactionGroup(ParentEvent, elem);
                 }
+                else if (elem.Name.LocalName.Equals("text", StringComparison.OrdinalIgnoreCase))
+                {
+                    Text = elem.GetAttributeString("tag", string.Empty);
+                    textElement = elem;
+                }
             }
+            if (element.GetChildElement("Replace") != null)
+            {
+                DebugConsole.ThrowError(
+                    $"Error in {nameof(EventObjectiveAction)} in the event \"{parentEvent.Prefab.Identifier}\"" +
+                    $" - unrecognized child element \"Replace\".");
+            }
+        }
+
+        public LocalizedString GetDisplayText()
+        {
+            LocalizedString text = string.Empty;
+
+            if (textElement != null)
+            {
+                TextManager.ConstructDescription(ref text, textElement, ParentEvent.GetTextForReplacementElement);
+            }
+            else
+            {
+                text = TextManager.Get(Text).Fallback(Text);
+            }
+            return ParentEvent.ReplaceVariablesInEventText(text);
         }
 
         public override IEnumerable<EventAction> GetSubActions()
@@ -145,9 +176,14 @@ namespace Barotrauma
                 }
             }
 
+            if (ContinueAutomatically && Options.None())
+            {
+                return dialogOpened;
+            }
+
             if (selectedOption >= 0)
             {
-                if (!Options.Any() || Options[selectedOption].IsFinished(ref goTo))
+                if (Options.None() || Options[selectedOption].IsFinished(ref goTo))
                 {
                     ResetSpeaker();
                     return true;

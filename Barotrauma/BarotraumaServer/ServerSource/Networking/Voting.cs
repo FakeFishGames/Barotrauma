@@ -337,6 +337,20 @@ namespace Barotrauma
                         sender.SetVote(voteType, (int)inc.ReadByte());
                     }
                     break;
+                case VoteType.Traitor:
+                    int clientId = inc.ReadInt32();
+                    if (sender.InGame && sender.Character != null)
+                    {
+                        var client = GameMain.Server.ConnectedClients.FirstOrDefault(c => c.SessionId == clientId);
+                        sender.SetVote(voteType, client);
+                        if (client?.Character != null)
+                        {
+                            GameMain.Server.SendChatMessage(
+                                TextManager.GetWithVariable("traitor.blamebutton.dialog", "[name]", client.Character.DisplayName).Value, 
+                                ChatMessageType.Radio, senderClient: sender, senderCharacter: sender.Character);
+                        }
+                    }
+                    break;
             }
 
             inc.ReadPadBits();

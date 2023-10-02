@@ -7,7 +7,7 @@ using Steamworks.Data;
 
 namespace Steamworks
 {
-	internal class ISteamAppList : SteamInterface
+	internal unsafe class ISteamAppList : SteamInterface
 	{
 		
 		internal ISteamAppList( bool IsGameServer )
@@ -49,8 +49,7 @@ namespace Steamworks
 		#endregion
 		internal int GetAppName( AppId nAppID, out string pchName )
 		{
-			using var memory = Helpers.TakeMemory();
-			IntPtr mempchName = memory;
+			using var mempchName = Helpers.TakeMemory();
 			var returnValue = _GetAppName( Self, nAppID, mempchName, (1024 * 32) );
 			pchName = Helpers.MemoryToString( mempchName );
 			return returnValue;
@@ -63,8 +62,7 @@ namespace Steamworks
 		#endregion
 		internal int GetAppInstallDir( AppId nAppID, out string pchDirectory )
 		{
-			using var memory = Helpers.TakeMemory();
-			IntPtr mempchDirectory = memory;
+			using var mempchDirectory = Helpers.TakeMemory();
 			var returnValue = _GetAppInstallDir( Self, nAppID, mempchDirectory, (1024 * 32) );
 			pchDirectory = Helpers.MemoryToString( mempchDirectory );
 			return returnValue;

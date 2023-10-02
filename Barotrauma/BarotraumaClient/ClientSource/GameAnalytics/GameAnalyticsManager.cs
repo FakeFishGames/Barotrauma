@@ -11,7 +11,7 @@ namespace Barotrauma
         {
             if (consentTextAvailable)
             {
-                var background = new GUIFrame(new RectTransform(Vector2.One, GUI.Canvas), style: "GUIBackgroundBlocker");
+                var background = new GUIFrame(new RectTransform(GUI.Canvas.RelativeSize, GUI.Canvas), style: "GUIBackgroundBlocker");
                 var frame = new GUIFrame(new RectTransform(new Vector2(0.5f, 0.7f), background.RectTransform, Anchor.Center) { MinSize = new Point(800, 0), MaxSize = new Point(1500, int.MaxValue) });
 
                 var content = new GUILayoutGroup(new RectTransform(new Vector2(0.95f), frame.RectTransform, Anchor.Center))
@@ -55,7 +55,8 @@ namespace Barotrauma
                 yesBtn.OnClicked += (btn, userdata) =>
                 {
                     GUIMessageBox.MessageBoxes.Remove(background);
-                    SetConsentInternal(Consent.Yes);
+                    var loadingBox = GUIMessageBox.CreateLoadingBox(TextManager.Get("PleaseWait"));
+                    SetConsentInternal(Consent.Yes, onAnswerSent: loadingBox.Close);
                     return true;
                 };
                 yesBtn.Enabled = false;
@@ -76,7 +77,8 @@ namespace Barotrauma
                 noBtn.OnClicked += (btn, userdata) =>
                 {
                     GUIMessageBox.MessageBoxes.Remove(background);
-                    SetConsent(Consent.No);
+                    var loadingBox = GUIMessageBox.CreateLoadingBox(TextManager.Get("PleaseWait"));
+                    SetConsent(Consent.No, onAnswerSent: loadingBox.Close);
                     return true;
                 };
                 noBtn.Enabled = false;

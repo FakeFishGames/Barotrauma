@@ -382,7 +382,9 @@ namespace Barotrauma
                     {
                         foreach (Item item in Item.ItemList)
                         {
-                            if (item.CurrentHull != currentHull || !item.HasTag("chair")) { continue; }
+                            if (item.CurrentHull != currentHull || !item.HasTag(Tags.ChairItem)) { continue; }
+                            //not possible in vanilla game, but a mod might have holdable/attachable chairs
+                            if (item.ParentInventory != null || item.body is { Enabled: true }) { continue; } 
                             var controller = item.GetComponent<Controller>();
                             if (controller == null || controller.User != null) { continue; }
                             item.TryInteract(character, forceSelectKey: true);

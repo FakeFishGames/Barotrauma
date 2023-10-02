@@ -111,7 +111,7 @@ namespace Barotrauma
         /// </summary>
         public static float AspectRatioAdjustment => HorizontalAspectRatio < 1.4f ? (1.0f - (1.4f - HorizontalAspectRatio)) : 1.0f;
 
-        public static bool IsUltrawide => HorizontalAspectRatio > 2.0f;
+        public static bool IsUltrawide => HorizontalAspectRatio > 2.3f;
 
         public static int UIWidth
         {
@@ -1010,16 +1010,13 @@ namespace Barotrauma
                         // Sub editor drag and highlight
                         case SubEditorScreen editor:
                         {
-                            foreach (var mapEntity in MapEntity.mapEntityList)
+                            if (MapEntity.StartMovingPos != Vector2.Zero || MapEntity.Resizing)
                             {
-                                if (MapEntity.StartMovingPos != Vector2.Zero)
-                                {
-                                    return CursorState.Dragging;
-                                }
-                                if (mapEntity.IsHighlighted)
-                                {
-                                    return CursorState.Hand;
-                                }
+                                return CursorState.Dragging;
+                            }
+                            if (MapEntity.HighlightedEntities.Any(h => !h.IsSelected))
+                            {
+                                return CursorState.Hand;
                             }
                             break;
                         }
@@ -2438,13 +2435,14 @@ namespace Barotrauma
 
                 var pauseMenuInner = new GUIFrame(new RectTransform(new Vector2(0.13f, 0.3f), PauseMenu.RectTransform, Anchor.Center) { MinSize = new Point(250, 300) });
 
-                var buttonContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.7f, 0.6f), pauseMenuInner.RectTransform, Anchor.Center))
+                float padding = 0.06f;
+
+                var buttonContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.7f, 0.8f), pauseMenuInner.RectTransform, Anchor.BottomCenter) { RelativeOffset = new Vector2(0.0f, padding) })
                 {
-                    Stretch = true,
-                    RelativeSpacing = 0.05f
+                    AbsoluteSpacing = IntScale(15)
                 };
 
-                new GUIButton(new RectTransform(new Vector2(0.1f, 0.1f), pauseMenuInner.RectTransform, Anchor.TopRight) { AbsoluteOffset = new Point((int)(15 * GUI.Scale)) },
+                new GUIButton(new RectTransform(new Vector2(0.1f, 0.07f), pauseMenuInner.RectTransform, Anchor.TopRight) { RelativeOffset = new Vector2(padding) },
                     "", style: "GUIBugButton")
                 {
                     IgnoreLayoutGroups = true,
@@ -2520,6 +2518,13 @@ namespace Barotrauma
                 }
 
                 GUITextBlock.AutoScaleAndNormalize(buttonContainer.Children.Where(c => c is GUIButton).Select(c => ((GUIButton)c).TextBlock));
+                //scale to ensure there's enough room for all the buttons
+                pauseMenuInner.RectTransform.MinSize = new Point(
+                    pauseMenuInner.RectTransform.MinSize.X,
+                        Math.Max(
+                            (int)(buttonContainer.Children.Sum(c => c.Rect.Height + buttonContainer.AbsoluteSpacing) / buttonContainer.RectTransform.RelativeSize.Y),
+                            pauseMenuInner.RectTransform.MinSize.X));
+
             }
 
             void CreateButton(string textTag, GUIComponent parent, Action action, string verificationTextTag = null)

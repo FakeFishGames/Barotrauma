@@ -257,7 +257,8 @@ namespace Barotrauma
                 {
                     for (int i = 0; i < character.Inventory.Capacity; i++)
                     {
-                        if (character.Inventory.SlotTypes[i] != InvSlotType.HealthInterface || Character.Controlled != Character) { continue; }
+                        if (character.Inventory.SlotTypes[i] != InvSlotType.HealthInterface) { continue; }
+                        if (character.Inventory.HideSlot(i)) { continue; }
 
                         //don't draw the item if it's being dragged out of the slot
                         bool drawItem = !Inventory.DraggingItems.Any() || !Character.Inventory.GetItemsAt(i).All(it => Inventory.DraggingItems.Contains(it)) || character.Inventory.visualSlots[i].MouseOn();
@@ -479,6 +480,17 @@ namespace Barotrauma
             inventoryScale = Inventory.UIScale;
             uiScale = GUI.Scale;
 
+            showHiddenAfflictionsButton.RectTransform.NonScaledSize = new Point(afflictionIconContainer.Rect.Height);
+            //remove affliction icons so we recreate and resize them
+            for (int i = afflictionIconContainer.CountChildren - 1; i >= 0; i--)
+            {
+                var child = afflictionIconContainer.GetChild(i);
+                if (child.UserData is AfflictionPrefab)
+                {
+                    afflictionIconContainer.RemoveChild(child);
+                }
+            }
+
             healthBarHolder.RectTransform.AbsoluteOffset = HUDLayoutSettings.HealthBarArea.Location;
             healthBarHolder.RectTransform.NonScaledSize = HUDLayoutSettings.HealthBarArea.Size;
             healthBarHolder.RectTransform.RelativeOffset = Vector2.Zero;
@@ -496,6 +508,8 @@ namespace Barotrauma
             }
 
             healthWindow.RectTransform.RecalculateChildren(false);
+
+            Character.Inventory?.RefreshSlotPositions();
         }
 
         public void UpdateClientSpecific(float deltaTime)
@@ -579,7 +593,7 @@ namespace Barotrauma
 
                 bool inWater = Character.AnimController.InWater;
                 var drawTarget = inWater ? Particles.ParticlePrefab.DrawTargetType.Water : Particles.ParticlePrefab.DrawTargetType.Air;
-                var emitter = Character.BloodEmitters.FirstOrDefault(e => e.Prefab.ParticlePrefab.DrawTarget == drawTarget || e.Prefab.ParticlePrefab.DrawTarget == Particles.ParticlePrefab.DrawTargetType.Both);
+                var emitter = Character.BloodEmitters.FirstOrDefault(e => e.Prefab.ParticlePrefab?.DrawTarget == drawTarget || e.Prefab.ParticlePrefab?.DrawTarget == Particles.ParticlePrefab.DrawTargetType.Both);
                 float particleMinScale = emitter?.Prefab.Properties.ScaleMin ?? 0.5f;
                 float particleMaxScale = emitter?.Prefab.Properties.ScaleMax ?? 1;
                 float severity = Math.Min(affliction.Strength / affliction.Prefab.MaxStrength * Character.Params.BleedParticleMultiplier, 1);
@@ -2129,7 +2143,7 @@ namespace Barotrauma
                 {
                     var affliction = kvp.Key;
                     float burnStrength = affliction.Strength / Math.Min(affliction.Prefab.MaxStrength, 100) * affliction.Prefab.BurnOverlayAlpha;
-                    if (kvp.Value == limbHealths[limb.HealthIndex])
+                    if (kvp.Value == limbHealths[limb.HealthIndex] || !affliction.Prefab.LimbSpecific)
                     {
                         limb.BurnOverlayStrength += burnStrength;
                         limb.DamageOverlayStrength += affliction.Strength / Math.Min(affliction.Prefab.MaxStrength, 100) * affliction.Prefab.DamageOverlayAlpha;

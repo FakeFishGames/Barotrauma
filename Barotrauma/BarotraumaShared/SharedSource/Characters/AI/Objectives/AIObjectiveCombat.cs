@@ -46,7 +46,6 @@ namespace Barotrauma
                 _weapon = value;
                 _weaponComponent = null;
                 hasAimed = false;
-                RemoveSubObjective(ref seekAmmunitionObjective);
             }
         }
         private ItemComponent _weaponComponent;
@@ -55,14 +54,7 @@ namespace Barotrauma
             get
             {
                 if (Weapon == null) { return null; }
-                if (_weaponComponent == null)
-                {
-                    _weaponComponent =
-                        Weapon.GetComponent<RangedWeapon>() ??
-                        Weapon.GetComponent<MeleeWeapon>() ??
-                        Weapon.GetComponent<RepairTool>() as ItemComponent;
-                }
-                return _weaponComponent;
+                return _weaponComponent ?? GetWeaponComponent(Weapon);
             }
         }
 
@@ -280,13 +272,13 @@ namespace Barotrauma
                         }
                         break;
                     case CombatMode.Arrest:
-                        if (HumanAIController.HasItem(Enemy, "handlocker".ToIdentifier(), out _, requireEquipped: true))
+                        if (HumanAIController.HasItem(Enemy, Tags.HandLockerItem, out _, requireEquipped: true))
                         {
                             IsCompleted = true;
                         }
                         else if (Enemy.IsKnockedDown && 
                             !objectiveManager.IsCurrentObjective<AIObjectiveFightIntruders>() && 
-                            !HumanAIController.HasItem(character, "handlocker".ToIdentifier(), out _, requireEquipped: false))
+                            !HumanAIController.HasItem(character, Tags.HandLockerItem, out _, requireEquipped: false))
                         {
                             IsCompleted = true;
                         }
@@ -348,8 +340,10 @@ namespace Barotrauma
             if (character.LockHands || Enemy == null)
             {
                 Weapon = null;
+                RemoveSubObjective(ref seekAmmunitionObjective);
                 return false;
             }
+            bool isAllowedToSeekWeapons = character.CurrentHull != null && !IsEnemyCloserThan(300) && character.IsOnPlayerTeam && IsOffensiveOrArrest;
             if (checkWeaponsTimer < 0)
             {
                 checkWeaponsTimer = checkWeaponsInterval;
@@ -375,7 +369,7 @@ namespace Barotrauma
                         // All good, the weapon is loaded
                         break;
                     }
-                    if (Reload(seekAmmo: false))
+                    if (Reload(seekAmmo: isAllowedToSeekWeapons))
                     {
                         // All good, we can use the weapon.
                         break;
@@ -407,7 +401,6 @@ namespace Barotrauma
                         }
                     }
                 }
-                bool isAllowedToSeekWeapons = character.CurrentHull != null && !IsEnemyCloserThan(300) && character.IsOnPlayerTeam && IsOffensiveOrArrest;
                 if (!isAllowedToSeekWeapons)
                 {
                     if (WeaponComponent == null)
@@ -416,7 +409,7 @@ namespace Barotrauma
                         Mode = CombatMode.Retreat;
                     }
                 }
-                else if (seekAmmunitionObjective == null && (WeaponComponent == null || WeaponComponent.CombatPriority < goodWeaponPriority))
+                else if (seekAmmunitionObjective == null && (WeaponComponent == null || (WeaponComponent.CombatPriority < goodWeaponPriority)))
                 {
                     // Poor weapon equipped -> try to find better.
                     RemoveSubObjective(ref seekAmmunitionObjective);
@@ -431,27 +424,10 @@ namespace Barotrauma
                             {
                                 if (Weapon != null && (i == Weapon || i.Prefab.Identifier == Weapon.Prefab.Identifier)) { return 0; }
                                 if (i.IsOwnedBy(character)) { return 0; }
-                                var mw = i.GetComponent<MeleeWeapon>();
-                                var rw = i.GetComponent<RangedWeapon>();
                                 float priority = 0;
-                                if (mw != null)
+                                if (GetWeaponComponent(i) is ItemComponent ic)
                                 {
-                                    priority = mw.CombatPriority / 100;
-                                }
-                                else if (rw != null)
-                                {
-                                    priority = rw.CombatPriority / 100;
-                                }
-                                if (i.HasTag("stunner"))
-                                {
-                                    if (Mode == CombatMode.Arrest)
-                                    {
-                                        priority *= 2;
-                                    }
-                                    else
-                                    {
-                                        priority /= 2;
-                                    }
+                                    priority = GetWeaponPriority(ic, prioritizeMelee: false, isCloseToEnemy: false, out _) / 100;
                                 }
                                 return priority;
                             }
@@ -477,6 +453,7 @@ namespace Barotrauma
                 if (!CheckWeapon(seekAmmo: false))
                 {
                     Weapon = null;
+                    RemoveSubObjective(ref seekAmmunitionObjective);
                 }
             }
             return Weapon != null;
@@ -521,111 +498,164 @@ namespace Barotrauma
 
         private Item FindWeapon(out ItemComponent weaponComponent) => GetWeapon(FindWeaponsFromInventory(), out weaponComponent);
 
+        private static ItemComponent GetWeaponComponent(Item item) => 
+            item.GetComponent<MeleeWeapon>() ??
+            item.GetComponent<RangedWeapon>() ??
+            item.GetComponent<RepairTool>() ??
+            item.GetComponent<Holdable>() as ItemComponent;
+
+        private float GetWeaponPriority(ItemComponent weapon, bool prioritizeMelee, bool isCloseToEnemy, out float lethalDmg)
+        {
+            lethalDmg = -1;
+            float priority = weapon.CombatPriority;
+            if (weapon is RepairTool repairTool)
+            {
+                switch (repairTool.UsableIn)
+                {
+                    case RepairTool.UseEnvironment.Air:
+                        if (character.InWater) { return 0; }
+                        break;
+                    case RepairTool.UseEnvironment.Water:
+                        if (!character.InWater) { return 0; }
+                        break;
+                    case RepairTool.UseEnvironment.None:
+                        return 0;
+                    case RepairTool.UseEnvironment.Both:
+                    default:
+                        break;
+                }
+            }
+            if (prioritizeMelee && weapon is MeleeWeapon)
+            {
+                priority *= 5;
+            }
+            if (weapon.IsEmpty(character))
+            {
+                if (weapon is RangedWeapon && isCloseToEnemy)
+                {
+                    // Ignore weapons that don't have any ammunition (-> Don't seek ammo).
+                    return 0;
+                }
+                else
+                {
+                    // Reduce the priority for weapons that don't have proper ammunition loaded.
+                    if (character.HasEquippedItem(Weapon, predicate: CharacterInventory.IsHandSlotType))
+                    {
+                        // Yet prefer the equipped weapon.
+                        priority *= 0.75f;
+                    }
+                    else
+                    {
+                        priority *= 0.5f;
+                    }
+                }
+            }
+            if (Enemy.Params.Health.StunImmunity)
+            {
+                if (weapon.Item.HasTag(Tags.StunnerItem))
+                {
+                    priority /= 2;
+                }
+            }
+            else if (Enemy.IsKnockedDown)
+            {
+                // Enemy is stunned, reduce the priority of stunner weapons.
+                Attack attack = GetAttackDefinition(weapon);
+                if (attack != null)
+                {
+                    lethalDmg = attack.GetTotalDamage();
+                    float max = lethalDmg + 1;
+                    if (weapon.Item.HasTag(Tags.StunnerItem))
+                    {
+                        priority = max;
+                    }
+                    else
+                    {
+                        float stunDmg = ApproximateStunDamage(weapon, attack);
+                        float diff = stunDmg - lethalDmg;
+                        priority = Math.Clamp(priority - Math.Max(diff * 2, 0), min: 1, max);
+                    }
+                }
+            }
+            else if (Mode == CombatMode.Arrest)
+            {
+                // Enemy is not stunned, increase the priority of stunner weapons and decrease the priority of lethal weapons.
+                if (weapon.Item.HasTag(Tags.StunnerItem))
+                {
+                    priority *= 5;
+                }
+                else
+                {
+                    Attack attack = GetAttackDefinition(weapon);
+                    if (attack != null)
+                    {
+                        lethalDmg = attack.GetTotalDamage();
+                        float stunDmg = ApproximateStunDamage(weapon, attack);
+                        float diff = stunDmg - lethalDmg;
+                        if (diff < 0)
+                        {
+                            priority /= 2;
+                        }
+                    }
+                }
+            }
+            else if (weapon is MeleeWeapon && weapon.Item.HasTag(Tags.StunnerItem) && (Enemy.Params.Health.StunImmunity || !CanMeleeStunnerStun(weapon)))
+            {
+                // Cannot do stun damage -> use the melee damage to determine the priority.
+                Attack attack = GetAttackDefinition(weapon);
+                priority = attack?.GetTotalDamage() ?? priority / 2;
+            }
+            return priority;
+        }
+
+        private float ApproximateStunDamage(ItemComponent weapon, Attack attack)
+        {
+            // Try to reduce the priority using the actual damage values and status effects.
+            // This is an approximation, because we can't check the status effect conditions here.
+            // The result might be incorrect if there is a high stun effect that's only applied in certain conditions.
+            var statusEffects = attack.StatusEffects.Where(se => !se.HasConditions && se.type == ActionType.OnUse && se.HasRequiredItems(character));
+            if (weapon.statusEffectLists != null && weapon.statusEffectLists.TryGetValue(ActionType.OnUse, out List<StatusEffect> hitEffects))
+            {
+                statusEffects = statusEffects.Concat(hitEffects);
+            }
+            float afflictionsStun = attack.Afflictions.Keys.Sum(a => a.Identifier == AfflictionPrefab.StunType ? a.Strength : 0);
+            float effectsStun = statusEffects.None() ? 0 : statusEffects.Max(se =>
+            {
+                float stunAmount = 0;
+                var stunAffliction = se.Afflictions.Find(a => a.Identifier == AfflictionPrefab.StunType);
+                if (stunAffliction != null)
+                {
+                    stunAmount = stunAffliction.Strength;
+                }
+                return stunAmount;
+            });
+            return attack.Stun + afflictionsStun + effectsStun;
+        }
+
+        private bool CanMeleeStunnerStun(ItemComponent weapon)
+        {
+            // If there's an item container that takes a battery,
+            // assume that it's required for the stun effect
+            // as we can't check the status effect conditions here.
+            var mobileBatteryTag = Tags.MobileBattery;
+            var containers = weapon.Item.Components.Where(ic =>
+                ic is ItemContainer container &&
+                container.ContainableItemIdentifiers.Contains(mobileBatteryTag));
+            // If there's no such container, assume that the melee weapon can stun without a battery.
+            return containers.None() || containers.Any(container =>
+                (container as ItemContainer)?.Inventory.AllItems.Any(i => i != null && i.HasTag(mobileBatteryTag) && i.Condition > 0.0f) ?? false);
+        }
+
         private Item GetWeapon(IEnumerable<ItemComponent> weaponList, out ItemComponent weaponComponent)
         {
             weaponComponent = null;
             float bestPriority = 0;
             float lethalDmg = -1;
-            bool isAllowedToSeekWeapons = !IsEnemyCloserThan(300);
+            bool isCloseToEnemy = IsEnemyCloserThan(300);
             bool prioritizeMelee = IsEnemyCloserThan(50) || EnemyAIController.IsLatchedTo(Enemy, character);
             foreach (var weapon in weaponList)
             {
-                float priority = weapon.CombatPriority;
-                if (weapon is RepairTool repairTool)
-                {
-                    switch (repairTool.UsableIn)
-                    {
-                        case RepairTool.UseEnvironment.Air:
-                            if (character.InWater) { continue; }
-                            break;
-                        case RepairTool.UseEnvironment.Water:
-                            if (!character.InWater) { continue; }
-                            break;
-                        case RepairTool.UseEnvironment.None:
-                            continue;
-                        case RepairTool.UseEnvironment.Both:
-                        default:
-                            break;
-                    }
-                }
-                if (prioritizeMelee)
-                {
-                    if (weapon is MeleeWeapon)
-                    {
-                        priority *= 5;
-                    }
-                    else
-                    {
-                        priority /= 2;
-                    }
-                }
-                if (weapon.IsEmpty(character))
-                {
-                    if (weapon is RangedWeapon && !isAllowedToSeekWeapons)
-                    {
-                        // Close to the enemy. Ignore weapons that don't have any ammunition (-> Don't seek ammo).
-                        continue;
-                    }
-                    else
-                    {
-                        // Halve the priority for weapons that don't have proper ammunition loaded.
-                        priority /= 2;
-                    }
-                }
-                if (Enemy.Params.Health.StunImmunity)
-                {
-                    if (weapon.Item.HasTag("stunner"))
-                    {
-                        priority /= 2;
-                    }
-                }
-                else if (Enemy.IsKnockedDown)
-                {
-                    // Enemy is stunned, reduce the priority of stunner weapons.
-                    Attack attack = GetAttackDefinition(weapon);
-                    if (attack != null)
-                    {
-                        lethalDmg = attack.GetTotalDamage();
-                        float max = lethalDmg + 1;
-                        if (weapon.Item.HasTag("stunner"))
-                        {
-                            priority = max;
-                        }
-                        else
-                        {
-                            float stunDmg = ApproximateStunDamage(weapon, attack);
-                            float diff = stunDmg - lethalDmg;
-                            priority = Math.Clamp(priority - Math.Max(diff * 2, 0), min: 1, max);
-                        }
-                    }
-                }
-                else if (Mode == CombatMode.Arrest)
-                {
-                    // Enemy is not stunned, increase the priority of stunner weapons and decrease the priority of lethal weapons.
-                    if (weapon.Item.HasTag("stunner"))
-                    {
-                        priority *= 2;
-                    }
-                    else
-                    {
-                        Attack attack = GetAttackDefinition(weapon);
-                        if (attack != null)
-                        {
-                            lethalDmg = attack.GetTotalDamage();
-                            float stunDmg = ApproximateStunDamage(weapon, attack);
-                            float diff = stunDmg - lethalDmg;
-                            if (diff < 0)
-                            {
-                                priority /= 2;
-                            }
-                        }
-                    }
-                }
-                else if (weapon is MeleeWeapon && weapon.Item.HasTag("stunner") && !CanMeleeStunnerStun(weapon))
-                {
-                    Attack attack = GetAttackDefinition(weapon);
-                    priority = attack?.GetTotalDamage() ?? priority / 2;
-                }
+                float priority = GetWeaponPriority(weapon, prioritizeMelee, isCloseToEnemy, out lethalDmg);
                 if (priority > bestPriority)
                 {
                     weaponComponent = weapon;
@@ -636,7 +666,7 @@ namespace Barotrauma
             if (bestPriority < 1) { return null; }
             if (Mode == CombatMode.Arrest)
             {
-                if (weaponComponent.Item.HasTag("stunner"))
+                if (weaponComponent.Item.HasTag(Tags.StunnerItem))
                 {
                     isLethalWeapon = false;
                 }
@@ -654,44 +684,6 @@ namespace Barotrauma
                 }
             }
             return weaponComponent.Item;
-
-            float ApproximateStunDamage(ItemComponent weapon, Attack attack)
-            {
-                // Try to reduce the priority using the actual damage values and status effects.
-                // This is an approximation, because we can't check the status effect conditions here.
-                // The result might be incorrect if there is a high stun effect that's only applied in certain conditions.
-                var statusEffects = attack.StatusEffects.Where(se => !se.HasConditions && se.type == ActionType.OnUse && se.HasRequiredItems(character));
-                if (weapon.statusEffectLists != null && weapon.statusEffectLists.TryGetValue(ActionType.OnUse, out List<StatusEffect> hitEffects))
-                {
-                    statusEffects = statusEffects.Concat(hitEffects);
-                }
-                float afflictionsStun = attack.Afflictions.Keys.Sum(a => a.Identifier == AfflictionPrefab.StunType ? a.Strength : 0);
-                float effectsStun = statusEffects.None() ? 0 : statusEffects.Max(se =>
-                {
-                    float stunAmount = 0;
-                    var stunAffliction = se.Afflictions.Find(a => a.Identifier == AfflictionPrefab.StunType);
-                    if (stunAffliction != null)
-                    {
-                        stunAmount = stunAffliction.Strength;
-                    }
-                    return stunAmount;
-                });
-                return attack.Stun + afflictionsStun + effectsStun;
-            }
-
-            bool CanMeleeStunnerStun(ItemComponent weapon)
-            {
-                // If there's an item container that takes a battery,
-                // assume that it's required for the stun effect
-                // as we can't check the status effect conditions here.
-                var mobileBatteryTag = "mobilebattery".ToIdentifier();
-                var containers = weapon.Item.Components.Where(ic => 
-                    ic is ItemContainer container &&
-                    container.ContainableItemIdentifiers.Contains(mobileBatteryTag));
-                // If there's no such container, assume that the melee weapon can stun without a battery.
-                return containers.None() || containers.Any(container =>
-                    (container as ItemContainer)?.Inventory.AllItems.Any(i => i != null && i.HasTag(mobileBatteryTag) && i.Condition > 0.0f) ?? false);
-            }
         }
 
         public static float GetLethalDamage(ItemComponent weapon)
@@ -771,13 +763,13 @@ namespace Barotrauma
             {
                 return false;
             }
-            if (!character.HasEquippedItem(Weapon, predicate: IsHandSlotType))
+            if (!character.HasEquippedItem(Weapon, predicate: CharacterInventory.IsHandSlotType))
             {
                 //clear aim and shoot inputs so the bot doesn't immediately fire the weapon if it was previously e.g. using a scooter
                 character.ClearInput(InputType.Aim);
                 character.ClearInput(InputType.Shoot);
                 Weapon.TryInteract(character, forceSelectKey: true);
-                var slots = Weapon.AllowedSlots.Where(s => IsHandSlotType(s));
+                var slots = Weapon.AllowedSlots.Where(s => CharacterInventory.IsHandSlotType(s));
                 if (character.Inventory.TryPutItem(Weapon, character, slots))
                 {
                     SetAimTimer(Rand.Range(0.2f, 0.4f) / AimSpeed);
@@ -791,8 +783,6 @@ namespace Barotrauma
                 }
             }
             return true;
-
-            static bool IsHandSlotType(InvSlotType s) => s == InvSlotType.LeftHand || s == InvSlotType.RightHand || s == (InvSlotType.LeftHand | InvSlotType.RightHand);
         }
 
         private float findHullTimer;
@@ -926,7 +916,7 @@ namespace Barotrauma
             if (followTargetObjective == null) { return; }
             if (Mode == CombatMode.Arrest && Enemy.IsKnockedDown)
             {
-                if (HumanAIController.HasItem(character, "handlocker".ToIdentifier(), out _))
+                if (HumanAIController.HasItem(character, Tags.HandLockerItem, out _))
                 {
                     if (!arrestingRegistered)
                     {
@@ -986,7 +976,7 @@ namespace Barotrauma
                 foreach (var item in Enemy.Inventory.AllItemsMod)
                 {
                     if (character.TeamID == CharacterTeamType.FriendlyNPC && item.StolenDuringRound ||
-                        item.HasTag("weapon") ||
+                        item.HasTag(Tags.Weapon) ||
                         item.GetComponent<MeleeWeapon>() != null ||
                         item.GetComponent<RangedWeapon>() != null)
                     {
@@ -997,9 +987,9 @@ namespace Barotrauma
             }
 
             //prefer using handcuffs already on the enemy's inventory
-            if (!HumanAIController.HasItem(Enemy, "handlocker".ToIdentifier(), out IEnumerable<Item> matchingItems))
+            if (!HumanAIController.HasItem(Enemy, Tags.HandLockerItem, out IEnumerable<Item> matchingItems))
             {
-                HumanAIController.HasItem(character, "handlocker".ToIdentifier(), out matchingItems);
+                HumanAIController.HasItem(character, Tags.HandLockerItem, out matchingItems);
             }
 
             if (matchingItems.Any() && 
@@ -1079,7 +1069,7 @@ namespace Barotrauma
             if (ammunitionIdentifiers != null)
             {
                 // Try reload ammunition from inventory
-                static bool IsInsideHeadset(Item i) => i.ParentInventory?.Owner is Item ownerItem && ownerItem.HasTag("mobileradio");
+                static bool IsInsideHeadset(Item i) => i.ParentInventory?.Owner is Item ownerItem && ownerItem.HasTag(Tags.MobileRadio);
                 Item ammunition = character.Inventory.FindItem(i => i.HasIdentifierOrTags(ammunitionIdentifiers) && i.Condition > 0 && !IsInsideHeadset(i), recursive: true);
                 if (ammunition != null)
                 {
@@ -1205,7 +1195,7 @@ namespace Barotrauma
                         myBodies = character.AnimController.Limbs.Select(l => l.body.FarseerBody);
                     }
                     // Check that we don't hit friendlies. No need to check the walls, because there's a separate check for that at 1096 (which intentionally has a small delay)
-                    var pickedBodies = Submarine.PickBodies(Weapon.SimPosition, Character.GetRelativeSimPosition(from: Weapon, to: Enemy), myBodies, Physics.CollisionCharacter);
+                    var pickedBodies = Submarine.PickBodies(Weapon.SimPosition, Submarine.GetRelativeSimPosition(from: Weapon, to: Enemy), myBodies, Physics.CollisionCharacter);
                     foreach (var body in pickedBodies)
                     {
                         Character target = null;
@@ -1248,7 +1238,7 @@ namespace Barotrauma
                 }
             }
             character.SetInput(InputType.Shoot, false, true);
-            Weapon.Use(deltaTime, character);
+            Weapon.Use(deltaTime, user: character);
             reloadTimer = Math.Max(reloadTime, reloadTime * Rand.Range(1f, 1.25f) / AimSpeed);
         }
 
@@ -1265,7 +1255,7 @@ namespace Barotrauma
             {
                 Unequip();
             }
-            SteeringManager.Reset();
+            SteeringManager?.Reset();
         }
 
         protected override void OnAbandon()
@@ -1275,7 +1265,7 @@ namespace Barotrauma
             {
                 Unequip();
             }
-            SteeringManager.Reset();
+            SteeringManager?.Reset();
         }
 
         public override void Reset()

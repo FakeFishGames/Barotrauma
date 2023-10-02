@@ -14,8 +14,6 @@ namespace Barotrauma
 
         public readonly List<Item> prioritizedItems = new List<Item>();
 
-        public static readonly Identifier AllowCleanupTag = "allowcleanup".ToIdentifier();
-
         protected override int MaxTargets => 100;
 
         public AIObjectiveCleanupItems(Character character, AIObjectiveManager objectiveManager, Item prioritizedItem = null, float priorityModifier = 1)
@@ -83,9 +81,8 @@ namespace Barotrauma
             return true;
         }
 
-        public static bool IsValidContainer(Item container, Character character, bool allowUnloading = true) =>
-            allowUnloading &&
-            container.HasTag(AllowCleanupTag) && 
+        public static bool IsValidContainer(Item container, Character character) =>
+            container.HasTag(Tags.AllowCleanup) && 
             container.HasAccess(character) && 
             container.ParentInventory == null && container.OwnInventory != null && container.OwnInventory.AllItems.Any() && 
             container.GetComponent<ItemContainer>() != null &&
@@ -103,15 +100,18 @@ namespace Barotrauma
                     // In a character inventory
                     return false;
                 }
-                if (!IsValidContainer(item.Container, character, allowUnloading)) { return false; }
+                if (!allowUnloading) { return false; }
+                if (!IsValidContainer(item.Container, character)) { return false; }
             }
             if (!item.HasAccess(character)) { return false; }
             if (character != null && !IsItemInsideValidSubmarine(item, character)) { return false; }
             if (item.HasBallastFloraInHull) { return false; }
+            //something (e.g. a pet) was eating the item within the last second - don't clean up
+            if (item.LastEatenTime > Timing.TotalTimeUnpaused - 1.0) { return false; }
             var wire = item.GetComponent<Wire>();
             if (wire != null)
             {
-                if (wire.Connections.Any()) { return false; }
+                if (wire.Connections.Any(c => c != null)) { return false; }
             }
             else
             {

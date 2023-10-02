@@ -300,7 +300,7 @@ namespace Barotrauma.Items.Components
                 user = null;
             }
 
-            ApplyStatusEffects(ActionType.OnActive, deltaTime, null);
+            ApplyStatusEffects(ActionType.OnActive, deltaTime);
 
             float userSkill = 0.0f;
             if (user != null && controlledSub != null &&
@@ -508,7 +508,7 @@ namespace Barotrauma.Items.Components
             var closeCells = Level.Loaded.GetCells(controlledSub.WorldPosition, 4);
             foreach (VoronoiCell cell in closeCells)
             {
-                if (cell.DoesDamage)
+                if (cell.DoesDamage || cell.Body is { BodyType: BodyType.Dynamic })
                 {
                     foreach (GraphEdge edge in cell.Edges)
                     {
@@ -525,7 +525,7 @@ namespace Barotrauma.Items.Components
                         newAvoidStrength += avoid;
                         debugDrawObstacles.Add(new ObstacleDebugInfo(edge, edge.Center, 1.0f, avoid, cell.Translation));
 
-                        if (dot > 0.0f)
+                        if (dot > 0.0f && cell.DoesDamage)
                         {
                             showIceSpireWarning = true;
                         }

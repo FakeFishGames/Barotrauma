@@ -22,7 +22,7 @@ namespace Barotrauma.Items.Components
         /// </summary>
         Vector2 DrawSize { get; }
 
-        void Draw(SpriteBatch spriteBatch, bool editing, float itemDepth = -1);
+        void Draw(SpriteBatch spriteBatch, bool editing, float itemDepth = -1, Color? overrideColor = null);
 #endif
     }
 
@@ -111,7 +111,6 @@ namespace Barotrauma.Items.Components
 
         private bool drawable = true;
 
-        #warning TODO: misnomer - should be IsActiveConditionalLogicalOperator
         [Serialize(PropertyConditional.LogicalOperatorType.And, IsPropertySaveable.No)]
         public PropertyConditional.LogicalOperatorType IsActiveConditionalComparison
         {
@@ -158,6 +157,12 @@ namespace Barotrauma.Items.Components
             get;
             protected set;
         }
+
+        [Serialize(false, IsPropertySaveable.Yes), ConditionallyEditable(ConditionallyEditable.ConditionType.OnlyByStatusEffectsAndNetwork, onlyInEditors: false)]
+        public bool LockGuiFramePosition { get; set; }
+
+        [Serialize("0,0", IsPropertySaveable.Yes), ConditionallyEditable(ConditionallyEditable.ConditionType.OnlyByStatusEffectsAndNetwork, onlyInEditors: false)]
+        public Point GuiFrameOffset { get; set; }
 
         [Serialize(false, IsPropertySaveable.No, description: "Can the item be selected by interacting with it.")]
         public bool CanBeSelected
@@ -251,6 +256,9 @@ namespace Barotrauma.Items.Components
         /// </summary>
         public float Speed => item.Speed;
 
+        public readonly record struct ItemUseInfo(Item Item, Character User);
+        public readonly NamedEvent<ItemUseInfo> OnUsed = new();
+
         public readonly bool InheritStatusEffects;
 
         public ItemComponent(Item item, ContentXElement element)
@@ -339,6 +347,7 @@ namespace Barotrauma.Items.Components
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
                     case "activeconditional":
+                    case "isactiveconditional":
                     case "isactive":
                         IsActiveConditionals ??= new List<PropertyConditional>();
                         IsActiveConditionals.AddRange(PropertyConditional.FromXElement(subElement));
@@ -487,7 +496,7 @@ namespace Barotrauma.Items.Components
                 case "trigger_in":
                     if (signal.value != "0")
                     {
-                        item.Use(1.0f, signal.sender);
+                        item.Use(1.0f, user: signal.sender);
                     }
                     break;
                 case "toggle":
@@ -524,7 +533,7 @@ namespace Barotrauma.Items.Components
                             }
                             item.ParentInventory.RemoveItem(item);
                         }
-                        Entity.Spawner.AddItemToRemoveQueue(item);
+                        RemoveItem(item);
                     }
                     else
                     {
@@ -540,11 +549,22 @@ namespace Barotrauma.Items.Components
                             }
                             this.Item.ParentInventory.RemoveItem(this.Item);
                         }
-                        Entity.Spawner.AddItemToRemoveQueue(this.Item);
+                        RemoveItem(this.Item);
                     }
                     else
                     {
                         this.Item.Condition += transferAmount;
+                    }
+                    static void RemoveItem(Item item)
+                    {
+                        if (Screen.Selected is { IsEditor: true })
+                        {
+                            item?.Remove();
+                        }
+                        else
+                        {
+                            Entity.Spawner?.AddItemToRemoveQueue(item);
+                        }
                     }
                 }
                 else
@@ -746,7 +766,7 @@ namespace Barotrauma.Items.Components
         /// </summary>
         private bool CheckIdCardAccess(RelatedItem relatedItem, IdCard idCard)
         {
-            if (item.Submarine != null)
+            if (item.Submarine != null && item.Submarine != GameMain.NetworkMember?.RespawnManager?.RespawnShuttle)
             {
                 //id cards don't work in enemy subs (except on items that only require the default "idcard" tag)
                 if (idCard.TeamID != CharacterTeamType.None && idCard.TeamID != item.Submarine.TeamID && relatedItem.Identifiers.Any(id => id != "idcard"))
@@ -906,7 +926,16 @@ namespace Barotrauma.Items.Components
                 ParseMsg();
                 OverrideRequiredItems(componentElement);
             }
-
+#if CLIENT
+            if (GuiFrame != null)
+            {
+                GuiFrame.RectTransform.ScreenSpaceOffset = GuiFrameOffset;
+                if (guiFrameDragHandle != null)
+                { 
+                    guiFrameDragHandle.Enabled = !LockGuiFramePosition;
+                }
+            }
+#endif
             if (item.Submarine != null) { SerializableProperty.UpgradeGameVersion(this, originalElement, item.Submarine.Info.GameVersion); }
         }
 
@@ -921,6 +950,11 @@ namespace Barotrauma.Items.Components
         public virtual void OnItemLoaded() { }
 
         public virtual void OnScaleChanged() { }
+
+        /// <summary>
+        /// Called when the item has an ItemContainer and the contents inside of it changed.
+        /// </summary>
+        public virtual void OnInventoryChanged() { }
 
         public static ItemComponent Load(ContentXElement element, Item item, bool errorMessages = true)
         {

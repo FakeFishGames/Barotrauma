@@ -156,6 +156,12 @@ namespace Barotrauma
             }
         }
 
+        /// <summary>
+        /// How much vitality the character would have if it was alive? 
+        /// E.g. a character killed by disconnection or with console commands may not have any vitality-reducing afflictions despite being dead
+        /// </summary>
+        public float VitalityDisregardingDeath => vitality;
+
         public float HealthPercentage => MathUtils.Percentage(Vitality, MaxVitality);
 
         public float MaxVitality
@@ -228,6 +234,8 @@ namespace Barotrauma
                 stunAffliction.Strength = MathHelper.Clamp(value, 0.0f, stunAffliction.Prefab.MaxStrength); 
             }
         }
+
+        public bool IsParalyzed { get; private set; }
 
         public float StunTimer { get; private set; }
 
@@ -402,7 +410,17 @@ namespace Barotrauma
             return strength;
         }
 
-        public float GetAfflictionStrength(Identifier afflictionType, bool allowLimbAfflictions = true)
+        public float GetAfflictionStrengthByType(Identifier afflictionType, bool allowLimbAfflictions = true)
+        {
+            return GetAfflictionStrength(afflictionType, afflictionidentifier: Identifier.Empty, allowLimbAfflictions);
+        }
+
+        public float GetAfflictionStrengthByIdentifier(Identifier afflictionIdentifier, bool allowLimbAfflictions = true)
+        {
+            return GetAfflictionStrength(afflictionType: Identifier.Empty, afflictionIdentifier, allowLimbAfflictions);
+        }
+
+        public float GetAfflictionStrength(Identifier afflictionType, Identifier afflictionidentifier, bool allowLimbAfflictions = true)
         {
             float strength = 0.0f;
             foreach (KeyValuePair<Affliction, LimbHealth> kvp in afflictions)
@@ -410,7 +428,8 @@ namespace Barotrauma
                 if (!allowLimbAfflictions && kvp.Value != null) { continue; }
                 var affliction = kvp.Key;
                 if (affliction.Strength < affliction.Prefab.ActivationThreshold) { continue; }
-                if (affliction.Prefab.AfflictionType == afflictionType)
+                if ((affliction.Prefab.AfflictionType == afflictionType || afflictionType.IsEmpty) &&
+                    (affliction.Prefab.Identifier == afflictionidentifier || afflictionidentifier.IsEmpty))
                 {
                     strength += affliction.Strength;
                 }
@@ -714,7 +733,7 @@ namespace Barotrauma
             if (!Character.NeedsOxygen && newAffliction.Prefab == AfflictionPrefab.OxygenLow) { return; }
             if (Character.Params.Health.StunImmunity && newAffliction.Prefab.AfflictionType == AfflictionPrefab.StunType)
             {
-                if (Character.EmpVulnerability <= 0 || GetAfflictionStrength(AfflictionPrefab.EMPType, allowLimbAfflictions: false) <= 0)
+                if (Character.EmpVulnerability <= 0 || GetAfflictionStrengthByType(AfflictionPrefab.EMPType, allowLimbAfflictions: false) <= 0)
                 {
                     return;
                 }
@@ -953,6 +972,7 @@ namespace Barotrauma
         public void CalculateVitality()
         {
             Vitality = MaxVitality;
+            IsParalyzed = false;
             if (Unkillable || Character.GodMode) { return; }
 
             foreach (KeyValuePair<Affliction, LimbHealth> kvp in afflictions)
@@ -966,6 +986,12 @@ namespace Barotrauma
                 }
                 Vitality -= vitalityDecrease;
                 affliction.CalculateDamagePerSecond(vitalityDecrease);
+
+                if (affliction.Strength >= affliction.Prefab.MaxStrength &&
+                    affliction.Prefab.AfflictionType == AfflictionPrefab.ParalysisType)
+                {
+                    IsParalyzed = true;
+                }
             }
 #if CLIENT
             if (IsUnconscious)
@@ -1136,7 +1162,7 @@ namespace Barotrauma
                     }
                 }
 
-                foreach (KeyValuePair<Identifier, float> treatment in affliction.Prefab.TreatmentSuitability)
+                foreach (KeyValuePair<Identifier, float> treatment in affliction.Prefab.TreatmentSuitabilities)
                 {
                     float suitability = treatment.Value * strength;
                     if (treatment.Value > strength)

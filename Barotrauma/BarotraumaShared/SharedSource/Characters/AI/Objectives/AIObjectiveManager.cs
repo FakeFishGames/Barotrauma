@@ -530,7 +530,7 @@ namespace Barotrauma
                 case "cleanupitems":
                     if (order.TargetEntity is Item targetItem)
                     {
-                        if (targetItem.HasTag("allowcleanup") && targetItem.ParentInventory == null && targetItem.OwnInventory != null)
+                        if (targetItem.HasTag(Tags.AllowCleanup) && targetItem.ParentInventory == null && targetItem.OwnInventory != null)
                         {
                             // Target all items inside the container
                             newObjective = new AIObjectiveCleanupItems(character, this, targetItem.OwnInventory.AllItems, priorityModifier);

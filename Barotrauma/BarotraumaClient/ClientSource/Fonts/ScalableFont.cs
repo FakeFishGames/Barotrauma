@@ -99,10 +99,10 @@ namespace Barotrauma
                 }))
                 .Aggregate(TextManager.SpeciallyHandledCharCategory.None, (current, category) => current | category);
 
-        public ScalableFont(ContentXElement element, GraphicsDevice gd = null)
+        public ScalableFont(ContentXElement element, uint defaultSize = 14, GraphicsDevice gd = null)
             : this(
                 element.GetAttributeContentPath("file")?.Value,
-                (uint)element.GetAttributeInt("size", 14),
+                (uint)element.GetAttributeInt("size", (int)defaultSize),
                 gd,
                 element.GetAttributeBool("dynamicloading", false),
                 ExtractShccFromXElement(element))

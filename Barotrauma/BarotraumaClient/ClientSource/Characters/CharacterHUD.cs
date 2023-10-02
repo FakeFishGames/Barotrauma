@@ -99,7 +99,7 @@ namespace Barotrauma
             public override bool Interrupted => Character.Removed || !Character.Enabled;
 
             public override Color Color => 
-                Character.CharacterHealth.GetAfflictionStrength(AfflictionPrefab.PoisonType) > 0 || Character.CharacterHealth.GetAfflictionStrength(AfflictionPrefab.ParalysisType) > 0 ? 
+                Character.CharacterHealth.GetAfflictionStrengthByType(AfflictionPrefab.PoisonType) > 0 || Character.CharacterHealth.GetAfflictionStrengthByType(AfflictionPrefab.ParalysisType) > 0 ? 
                     GUIStyle.HealthBarColorPoisoned : GUIStyle.Red;
 
             public override string NumberToDisplay => string.Empty;

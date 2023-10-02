@@ -236,6 +236,7 @@ namespace Barotrauma
                 }
             };
 
+
             new GUIButton(new RectTransform(new Vector2(1.0f, 0.05f), paddedRightPanel.RectTransform),
                 TextManager.Get("leveleditor.test"))
             {
@@ -313,6 +314,52 @@ namespace Barotrauma
             topPanel = new GUIFrame(new RectTransform(new Point(400, 100), GUI.Canvas)
             { RelativeOffset = new Vector2(leftPanel.RectTransform.RelativeSize.X * 2, 0.0f) }, style: "GUIFrameTop");
         }
+
+        public void TestLevelGenerationForErrors(int amountOfLevelsToGenerate)
+        {
+            CoroutineManager.StartCoroutine(GenerateLevels());
+
+            IEnumerable<CoroutineStatus> GenerateLevels()
+            {
+                using var errorCatcher = DebugConsole.ErrorCatcher.Create();
+                for (int i = 0; i < amountOfLevelsToGenerate; i++)
+                {
+                    Submarine.Unload();
+                    GameMain.LightManager.ClearLights();
+
+                    currentLevelData = LevelData.CreateRandom(ToolBox.RandomSeed(10), generationParams: selectedParams);
+                    currentLevelData.ForceOutpostGenerationParams = outpostParamsList.SelectedData as OutpostGenerationParams;
+                    currentLevelData.AllowInvalidOutpost = allowInvalidOutpost.Selected;
+                    var dummyLocations = GameSession.CreateDummyLocations(currentLevelData);
+                    DebugConsole.NewMessage("*****************************************************************************");
+                    DebugConsole.NewMessage($"Generating level {(i + 1)}/{amountOfLevelsToGenerate}: ");
+                    DebugConsole.NewMessage("  Seed: " + currentLevelData.Seed);
+                    DebugConsole.NewMessage("  Outpost parameters: " + (currentLevelData.ForceOutpostGenerationParams?.Name ?? "None"));
+                    DebugConsole.NewMessage("  Level generation params: " + selectedParams.Identifier);
+                    DebugConsole.NewMessage("  Mirrored: " + mirrorLevel.Selected);
+                    DebugConsole.NewMessage("  Adjacent locations: " + (dummyLocations[0]?.Type.Identifier ?? "none".ToIdentifier()) + ", " + (dummyLocations[1]?.Type.Identifier ?? "none".ToIdentifier()));
+
+                    yield return CoroutineStatus.Running;
+
+                    Level.Generate(currentLevelData, mirror: mirrorLevel.Selected, startLocation: dummyLocations[0], endLocation: dummyLocations[1]);
+                    Submarine.MainSub?.SetPosition(Level.Loaded.StartPosition);
+                    GameMain.LightManager.AddLight(pointerLightSource);
+                    seedBox.Deselect();
+                
+                    if (errorCatcher.Errors.Any())
+                    {
+                        DebugConsole.ThrowError("Error while generating level:");
+                        errorCatcher.Errors.ToList().ForEach(e => DebugConsole.ThrowError(e.Text));
+                        yield return CoroutineStatus.Success;
+                    }
+                    yield return CoroutineStatus.Running;
+                }
+            }
+
+
+        }
+
+
 
         public override void Select()
         {
@@ -902,6 +949,7 @@ namespace Barotrauma
             GUI.Draw(Cam, spriteBatch);
             spriteBatch.End();
         }
+
 
         public override void Update(double deltaTime)
         {

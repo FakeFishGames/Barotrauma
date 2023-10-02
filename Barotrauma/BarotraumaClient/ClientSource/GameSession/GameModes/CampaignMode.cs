@@ -157,11 +157,15 @@ namespace Barotrauma
 
             SlideshowPlayer?.DrawManually(spriteBatch);
 
-            if (GUI.DisableHUD || GUI.DisableUpperHUD || ForceMapUI || CoroutineManager.IsCoroutineRunning("LevelTransition"))
+            if (GUI.DisableHUD || GUI.DisableUpperHUD || ForceMapUI || 
+                CoroutineManager.IsCoroutineRunning("LevelTransition"))
             {
                 endRoundButton.Visible = false;
-                if (ReadyCheckButton != null) { ReadyCheckButton.Visible = false; }
-                return; 
+                if (ReadyCheckButton != null) 
+                { 
+                    ReadyCheckButton.Visible = false;
+                }
+                return;
             }
             if (Submarine.MainSub == null || Level.Loaded == null) { return; }
 
@@ -216,11 +220,15 @@ namespace Barotrauma
                     }
                     break;
             }
-            if (Level.IsLoadedOutpost && !ObjectiveManager.AllActiveObjectivesCompleted())
+            if (Level.IsLoadedOutpost && 
+                (!ObjectiveManager.AllActiveObjectivesCompleted() && this is not MultiPlayerCampaign))
             {
                 allowEndingRound = false;
             }
-            if (ReadyCheckButton != null) { ReadyCheckButton.Visible = allowEndingRound; }
+            if (ReadyCheckButton != null) 
+            { 
+                ReadyCheckButton.Visible = allowEndingRound && GameMain.GameSession != null && GameMain.GameSession.RoundDuration > 10.0f; 
+            }
 
             endRoundButton.Visible = allowEndingRound && Character.Controlled is { IsIncapacitated: false };
             if (endRoundButton.Visible)
@@ -384,8 +392,11 @@ namespace Barotrauma
         protected void TryEndRoundWithFuelCheck(Action onConfirm, Action onReturnToMapScreen)
         {
             Submarine.MainSub.CheckFuel();
-            SubmarineInfo nextSub = PendingSubmarineSwitch ?? Submarine.MainSub.Info;
-            bool lowFuel = nextSub.Name == Submarine.MainSub.Info.Name ? Submarine.MainSub.Info.LowFuel : nextSub.LowFuel;
+            bool lowFuel = Submarine.MainSub.Info.LowFuel;
+            if (PendingSubmarineSwitch != null)
+            {
+                lowFuel = TransferItemsOnSubSwitch ? (lowFuel && PendingSubmarineSwitch.LowFuel) : PendingSubmarineSwitch.LowFuel;
+            }
             if (Level.IsLoadedFriendlyOutpost && lowFuel && CargoManager.PurchasedItems.None(i => i.Value.Any(pi => pi.ItemPrefab.Tags.Contains("reactorfuel"))))
             {
                 var extraConfirmationBox =
@@ -433,11 +444,21 @@ namespace Barotrauma
             {
                 GUIMessageBox.MessageBoxes.RemoveAll(mb => mb.UserData is RoundSummary);
             }
+#if DEBUG
+            if (GUI.KeyboardDispatcher.Subscriber == null && PlayerInput.KeyHit(Microsoft.Xna.Framework.Input.Keys.M))
+            {
+                if (GUIMessageBox.MessageBoxes.Any()) { GUIMessageBox.MessageBoxes.Remove(GUIMessageBox.MessageBoxes.Last()); }
 
+                GUIFrame summaryFrame = GameMain.GameSession.RoundSummary.CreateSummaryFrame(GameMain.GameSession, "");
+                GUIMessageBox.MessageBoxes.Add(summaryFrame);
+                GameMain.GameSession.RoundSummary.ContinueButton.OnClicked = (_, __) => { GUIMessageBox.MessageBoxes.Remove(summaryFrame); return true; };
+            }
+#endif
             if (ShowCampaignUI || ForceMapUI)
             {
                 CampaignUI?.Update(deltaTime);
             }
         }
+
     }
 }

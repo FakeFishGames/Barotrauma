@@ -59,6 +59,8 @@ namespace Barotrauma
         public LocalizedString Description { get; }
         public LocalizedString ShortDescription { get; }
 
+        public Identifier OpposingFaction { get; }
+
         public class HireableCharacter
         {
             public readonly Identifier NPCSetIdentifier;
@@ -150,6 +152,7 @@ namespace Barotrauma
             Name = element.GetAttributeString("name", null) ?? TextManager.Get($"faction.{Identifier}").Fallback("Unnamed");
             Description = element.GetAttributeString("description", null) ?? TextManager.Get($"faction.{Identifier}.description").Fallback("");
             ShortDescription = element.GetAttributeString("shortdescription", null) ?? TextManager.Get($"faction.{Identifier}.shortdescription").Fallback("");
+            OpposingFaction = element.GetAttributeIdentifier(nameof(OpposingFaction), Identifier.Empty);
 
             List<HireableCharacter> hireableCharacters = new List<HireableCharacter>();
             List<AutomaticMission> automaticMissions = new List<AutomaticMission>();

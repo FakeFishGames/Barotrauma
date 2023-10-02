@@ -255,7 +255,7 @@ namespace Barotrauma
         /// </summary>
         public bool Freeze { get; set; }
 
-        public void MoveCamera(float deltaTime, bool allowMove = true, bool allowZoom = true, bool? followSub = null)
+        public void MoveCamera(float deltaTime, bool allowMove = true, bool allowZoom = true, bool allowInput = true, bool? followSub = null)
         {
             prevPosition = position;
             prevZoom = zoom;
@@ -268,7 +268,7 @@ namespace Barotrauma
                 Vector2 moveInput = Vector2.Zero;
                 if (allowMove && !Freeze)
                 {
-                    if (GUI.KeyboardDispatcher.Subscriber == null)
+                    if (GUI.KeyboardDispatcher.Subscriber == null && allowInput)
                     {
                         if (PlayerInput.KeyDown(Keys.LeftShift)) { moveSpeed *= 2.0f; }
                         if (PlayerInput.KeyDown(Keys.LeftControl)) { moveSpeed *= 0.5f; }

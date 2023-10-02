@@ -12,8 +12,7 @@ namespace Barotrauma.Abilities
 
         protected override bool MatchesConditionSpecific()
         {
-            bool result = character.HasTalent(talentIdentifier);
-            return result;
+            return character.HasTalent(talentIdentifier);
         }
     }
 }

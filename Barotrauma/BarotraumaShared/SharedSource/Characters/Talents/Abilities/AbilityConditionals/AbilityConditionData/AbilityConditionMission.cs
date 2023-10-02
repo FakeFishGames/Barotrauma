@@ -41,10 +41,10 @@ namespace Barotrauma.Abilities
 
                 if (GameMain.GameSession?.Campaign?.Factions is not { } factions) { return false; }
 
-                foreach (var (factionIdentifier, amount) in mission.ReputationRewards)
+                foreach (var reputationReward in mission.ReputationRewards)
                 {
-                    if (amount <= 0) { continue; }
-                    if (GetMatchingFaction(factionIdentifier) is { } faction &&
+                    if (reputationReward.Amount <= 0) { continue; }
+                    if (GetMatchingFaction(reputationReward.FactionIdentifier) is { } faction &&
                         Faction.GetPlayerAffiliationStatus(faction) is FactionAffiliation.Positive)
                     {
                         return CheckMissionType();

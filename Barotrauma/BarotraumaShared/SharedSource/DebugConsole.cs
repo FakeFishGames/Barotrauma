@@ -336,7 +336,14 @@ namespace Barotrauma
                 NewMessage("Enemy AI enabled", Color.Green);
             }, isCheat: true));
 
-            commands.Add(new Command("starttraitormissionimmediately", "starttraitormissionimmediately: Skip the initial delay of the traitor mission and start one immediately.", null));
+            commands.Add(new Command("triggertraitorevent|starttraitoreventimmediately", "triggertraitorevent [eventidentifier]: Skip the initial delay of the traitor events and start one immediately. You can optionally specify which event to start (otherwise a random event is chosen).", null, 
+                () =>
+            {
+                return new string[][]
+                {
+                    EventPrefab.Prefabs.Where(p => p is TraitorEventPrefab).Select(p => p.Identifier.ToString()).ToArray()
+                };
+            }));
 
             commands.Add(new Command("botcount", "botcount [x]: Set the number of bots in the crew in multiplayer.", null));
 
@@ -644,7 +651,7 @@ namespace Barotrauma
             commands.Add(new Command("findentityids", "findentityids [entityname]", (string[] args) =>
             {
                 if (args.Length == 0) { return; }
-                foreach (MapEntity mapEntity in MapEntity.mapEntityList)
+                foreach (MapEntity mapEntity in MapEntity.MapEntityList)
                 {
                     if (mapEntity.Name.Equals(args[0], StringComparison.OrdinalIgnoreCase))
                     {
@@ -815,8 +822,12 @@ namespace Barotrauma
                 if (GameMain.GameSession?.EventManager != null && args.Length > 0)
                 {
                     EventPrefab eventPrefab = eventPrefabs.Find(prefab => prefab.Identifier == args[0]);
-
-                    if (eventPrefab != null)
+                    if (eventPrefab is TraitorEventPrefab)
+                    {
+                        ThrowError($"{eventPrefab.Identifier} is a traitor event. You need to use the 'triggertraitorevent' command to start it.");
+                        return;
+                    }
+                    else if (eventPrefab != null)
                     {
                         var newEvent = eventPrefab.CreateInstance();
                         if (newEvent == null)
@@ -824,8 +835,7 @@ namespace Barotrauma
                             NewMessage($"Could not initialize event {args[0]} because level did not meet requirements");
                             return;
                         }
-                        GameMain.GameSession.EventManager.ActiveEvents.Add(newEvent);
-                        newEvent.Init();
+                        GameMain.GameSession.EventManager.ActivateEvent(newEvent);
                         NewMessage($"Initialized event {eventPrefab.Identifier}", Color.Aqua);
                         return;
                     }
@@ -844,9 +854,36 @@ namespace Barotrauma
                 };
             }));
 
+            commands.Add(new Command("debugevent", "debugevent [identifier]: outputs debug info about a specific event that's currently active. Mainly intended for debugging events in multiplayer: in single player, the same information is available by enabling debugdraw.", (string[] args) =>
+            {
+                if (GameMain.GameSession?.EventManager is EventManager eventManager && args.Length > 0)
+                {
+                    var ev = eventManager.ActiveEvents.FirstOrDefault(ev => ev.Prefab?.Identifier == args[0]);
+                    if (ev == null)
+                    {
+                        ThrowError($"Event \"{args[0]}\" not found.");
+                    }
+                    else
+                    {
+                        string info = ev.GetDebugInfo();
+#if SERVER
+                        //strip rich text tags
+                        RichTextData.GetRichTextData(info, out info);
+#endif
+                        NewMessage(info);
+                    }
+                }
+            }, isCheat: true, getValidArgs: () =>
+            {
+                return new[]
+                {
+                   GameMain.GameSession?.EventManager?.ActiveEvents.Select(ev => ev.Prefab.Identifier.ToString()).ToArray() ?? Array.Empty<string>()
+                };
+            }));
+
             commands.Add(new Command("unlockmission", "unlockmission [identifier/tag]: Unlocks a mission in a random adjacent level.", (string[] args) =>
             {
-                if (!(GameMain.GameSession?.GameMode is CampaignMode campaign))
+                if (GameMain.GameSession?.GameMode is not CampaignMode campaign)
                 {
                     ThrowError("The unlockmission command is only usable in the campaign mode.");
                     return;
@@ -1640,7 +1677,7 @@ namespace Barotrauma
                     List<Pump> pumps = new List<Pump>();
                     foreach (Item item in Submarine.MainSub.GetItems(true))
                     {
-                        if (item.CurrentHull != null && item.HasTag("ballast") && item.GetComponent<Pump>() is { } pump)
+                        if (item.CurrentHull != null && item.HasTag(Tags.Ballast) && item.GetComponent<Pump>() is { } pump)
                         {
                             if (item.CurrentHull.BallastFlora != null) { continue; }
                             pumps.Add(pump);
@@ -2224,8 +2261,8 @@ namespace Barotrauma
 
             string itemNameOrId = args[0].ToLowerInvariant();
             ItemPrefab itemPrefab =
-                (MapEntityPrefab.Find(itemNameOrId, identifier: null, showErrorMessages: false) ??
-                MapEntityPrefab.Find(null, identifier: itemNameOrId, showErrorMessages: false)) as ItemPrefab;
+                (MapEntityPrefab.FindByName(itemNameOrId) ??
+                MapEntityPrefab.FindByIdentifier(itemNameOrId.ToIdentifier())) as ItemPrefab;
             if (itemPrefab == null)
             {
                 errorMsg = "Item \"" + itemNameOrId + "\" not found!";
@@ -2318,6 +2355,19 @@ namespace Barotrauma
                     }
                 }
             }
+        }
+
+        /// <summary>
+        /// Throws the error in debug builds. In non-debug builds, logs it instead.
+        /// Use for handling non-critical errors that shouldn't go unnoticed in debug builds (like warnings might), but which don't break the game and thus doesn't have to open the console.
+        /// </summary>
+        public static void AddSafeError(string error)
+        {
+#if DEBUG
+            DebugConsole.ThrowError(error);
+#else
+            DebugConsole.LogError(error);
+#endif
         }
 
         public static void LogError(string msg, Color? color = null)
@@ -2493,7 +2543,16 @@ namespace Barotrauma
 
             LogError(error);
         }
-        
+
+        public static void ThrowErrorAndLogToGA(string gaIdentifier, string errorMsg)
+        {
+            ThrowError(errorMsg);
+            GameAnalyticsManager.AddErrorEventOnce(
+                gaIdentifier,
+                GameAnalyticsManager.ErrorSeverity.Error,
+                errorMsg);
+        }
+
         public static void AddWarning(string warning)
         {
             System.Diagnostics.Debug.WriteLine(warning);

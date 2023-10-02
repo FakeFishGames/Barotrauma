@@ -455,6 +455,10 @@ namespace Barotrauma.Lights
                         if (drawDeformSprites == (limb.DeformSprite == null)) { continue; }
                         limb.Draw(spriteBatch, cam, lightColor);
                     }
+                    foreach (var heldItem in character.HeldItems)
+                    {
+                        heldItem.Draw(spriteBatch, editing: false, overrideColor: Color.Black);
+                    }
                 }
             }
 
@@ -480,9 +484,9 @@ namespace Barotrauma.Lights
 
             if (ConnectionPanel.ShouldDebugDrawWiring)
             {
-                foreach (MapEntity e in (Submarine.VisibleEntities ?? MapEntity.mapEntityList))
+                foreach (MapEntity e in (Submarine.VisibleEntities ?? MapEntity.MapEntityList))
                 {
-                    if (e is Item item && item.GetComponent<Wire>() is Wire wire)
+                    if (e is Item item && !item.HiddenInGame && item.GetComponent<Wire>() is Wire wire)
                     {
                         wire.DebugDraw(spriteBatch, alpha: 0.4f);
                     }
@@ -719,6 +723,7 @@ namespace Barotrauma.Lights
                 {
                     foreach (var ch in convexHulls)
                     {
+                        if (!ch.Enabled) { continue; }
                         Vector2 currentViewPos = pos;
                         Vector2 defaultViewPos = ViewTarget.DrawPosition;
                         if (ch.ParentEntity?.Submarine != null)
@@ -742,10 +747,13 @@ namespace Barotrauma.Lights
                     {
                         if (!convexHull.Enabled || !convexHull.Intersects(camView)) { continue; }
 
-                        Vector2 relativeLightPos = pos;
-                        if (convexHull.ParentEntity?.Submarine != null) { relativeLightPos -= convexHull.ParentEntity.Submarine.Position; }
+                        Vector2 relativeViewPos = pos;
+                        if (convexHull.ParentEntity?.Submarine != null) 
+                        { 
+                            relativeViewPos -= convexHull.ParentEntity.Submarine.DrawPosition;
+                        }
 
-                        convexHull.CalculateLosVertices(relativeLightPos);
+                        convexHull.CalculateLosVertices(relativeViewPos);
 
                         for (int i = 0; i < convexHull.ShadowVertexCount; i++)
                         {

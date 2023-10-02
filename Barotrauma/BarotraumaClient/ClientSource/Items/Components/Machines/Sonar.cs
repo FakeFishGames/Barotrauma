@@ -109,7 +109,7 @@ namespace Barotrauma.Items.Components
             },
             {
                 BlipType.Destructible,
-                new Color[] { Color.TransparentBlack, new Color(74, 113, 75) * 0.8f, new Color(151, 236, 172) * 0.8f, new Color(153, 217, 234) * 0.8f }
+                new Color[] { Color.TransparentBlack, new Color(94, 114, 73) * 0.8f, new Color(255, 236, 151) * 0.8f, new Color(242, 243, 194) * 0.8f }
             },
             {
                 BlipType.Door,
@@ -358,11 +358,6 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        protected override void TryCreateDragHandle()
-        {
-            base.TryCreateDragHandle();
-        }
-
         private void SetPingDirection(Vector2 direction)
         {
             pingDirection = direction;
@@ -471,7 +466,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public override void UpdateHUD(Character character, float deltaTime, Camera cam)
+        public override void UpdateHUDComponentSpecific(Character character, float deltaTime, Camera cam)
         {
             showDirectionalIndicatorTimer -= deltaTime;
             if (GameMain.Client != null)
@@ -981,38 +976,41 @@ namespace Barotrauma.Items.Components
                 }
             }
 
-            if (GameMain.GameSession == null || Level.Loaded == null) { return; }
+            if (GameMain.GameSession == null) { return; }
 
-            if (Level.Loaded.StartLocation?.Type is { ShowSonarMarker: true })
+            if (Level.Loaded != null)
             {
-                DrawMarker(spriteBatch,
-                    Level.Loaded.StartLocation.Name,
-                    (Level.Loaded.StartOutpost != null ? "outpost" : "location").ToIdentifier(),
-                    "startlocation",
-                    Level.Loaded.StartExitPosition, transducerCenter,
-                    displayScale, center, DisplayRadius);
-            }
+                if (Level.Loaded.StartLocation?.Type is { ShowSonarMarker: true })
+                {
+                    DrawMarker(spriteBatch,
+                        Level.Loaded.StartLocation.Name,
+                        (Level.Loaded.StartOutpost != null ? "outpost" : "location").ToIdentifier(),
+                        "startlocation",
+                        Level.Loaded.StartExitPosition, transducerCenter,
+                        displayScale, center, DisplayRadius);
+                }
 
-            if (Level.Loaded is { EndLocation.Type.ShowSonarMarker: true, Type: LevelData.LevelType.LocationConnection })
-            {
-                DrawMarker(spriteBatch,
-                    Level.Loaded.EndLocation.Name,
-                    (Level.Loaded.EndOutpost != null ? "outpost" : "location").ToIdentifier(),
-                    "endlocation",
-                    Level.Loaded.EndExitPosition, transducerCenter,
-                    displayScale, center, DisplayRadius);
-            }
+                if (Level.Loaded is { EndLocation.Type.ShowSonarMarker: true, Type: LevelData.LevelType.LocationConnection })
+                {
+                    DrawMarker(spriteBatch,
+                        Level.Loaded.EndLocation.Name,
+                        (Level.Loaded.EndOutpost != null ? "outpost" : "location").ToIdentifier(),
+                        "endlocation",
+                        Level.Loaded.EndExitPosition, transducerCenter,
+                        displayScale, center, DisplayRadius);
+                }
 
-            for (int i = 0; i < Level.Loaded.Caves.Count; i++)
-            {
-                var cave = Level.Loaded.Caves[i];
-                if (!cave.DisplayOnSonar) { continue; }
-                DrawMarker(spriteBatch,
-                    caveLabel.Value,
-                    "cave".ToIdentifier(),
-                    "cave" + i,
-                    cave.StartPos.ToVector2(), transducerCenter,
-                    displayScale, center, DisplayRadius);
+                for (int i = 0; i < Level.Loaded.Caves.Count; i++)
+                {
+                    var cave = Level.Loaded.Caves[i];
+                    if (cave.MissionsToDisplayOnSonar.None()) { continue; }
+                    DrawMarker(spriteBatch,
+                        caveLabel.Value,
+                        "cave".ToIdentifier(),
+                        "cave" + i,
+                        cave.StartPos.ToVector2(), transducerCenter,
+                        displayScale, center, DisplayRadius);
+                }
             }
 
             int missionIndex = 0;
@@ -1070,7 +1068,7 @@ namespace Barotrauma.Items.Components
             {
                 if (!sub.ShowSonarMarker) { continue; }
                 if (connectedSubs.Contains(sub)) { continue; }
-                if (sub.WorldPosition.Y > Level.Loaded.Size.Y) { continue; }
+                if (Level.Loaded != null && sub.WorldPosition.Y > Level.Loaded.Size.Y) { continue; }
 
                 if (item.Submarine != null || Character.Controlled != null)
                 {

@@ -81,8 +81,6 @@ namespace Barotrauma
             get { return base.Prefab.Sprite; }
         }
 
-        public bool IsExteriorWall { get; private set; } = true;
-
         public bool IsPlatform
         {
             get { return Prefab.Platform; }
@@ -406,8 +404,6 @@ namespace Barotrauma
                 }
             }
 
-            CheckIsExteriorWall();
-
 #if CLIENT
             convexHulls?.ForEach(x => x.Move(amount));
 
@@ -700,41 +696,15 @@ namespace Barotrauma
             }
         }
 
-        public void CheckIsExteriorWall()
+        private static Vector2[] CalculateExtremes(Rectangle sectionRect)
         {
-            if (!HasBody) 
-            {
-                IsExteriorWall = false;
-                return;
-            }
+            Vector2[] corners = new Vector2[4];
+            corners[0] = new Vector2(sectionRect.X, sectionRect.Y - sectionRect.Height);
+            corners[1] = new Vector2(sectionRect.X, sectionRect.Y);
+            corners[2] = new Vector2(sectionRect.Right, sectionRect.Y);
+            corners[3] = new Vector2(sectionRect.Right, sectionRect.Y - sectionRect.Height);
 
-            Vector2 point1 = WorldPosition + BodyOffset * Scale;
-            //point1 = MathUtils.RotatePointAroundTarget(WorldPosition, point1, BodyRotation);
-            Vector2 point2 = point1;
-
-            Vector2 normal = new Vector2(
-                    (float)-Math.Sin(IsHorizontal ? -BodyRotation : MathHelper.PiOver2 - BodyRotation),
-                    (float)Math.Cos(IsHorizontal ? -BodyRotation : MathHelper.PiOver2 - BodyRotation));
-
-            float thickness = IsHorizontal ?
-                (BodyHeight > 0 ? BodyHeight : rect.Height) :
-                (BodyWidth > 0 ? BodyWidth : rect.Width);
-
-            point1 += normal * (thickness / 2 + 16);
-            point2 -= normal * (thickness / 2 + 16);
-
-            IsExteriorWall =
-                Hull.FindHullUnoptimized(point1, null, useWorldCoordinates: true) == null ||
-                Hull.FindHullUnoptimized(point2, null, useWorldCoordinates: true) == null;
-#if CLIENT
-            if (convexHulls != null)
-            {
-                foreach (ConvexHull ch in convexHulls)
-                {
-                    ch.IsExteriorWall = IsExteriorWall;
-                }
-            }
-#endif
+            return corners;
         }
 
         /// <summary>
@@ -742,9 +712,9 @@ namespace Barotrauma
         /// </summary>
         public static Structure GetAttachTarget(Vector2 worldPosition)
         {
-            foreach (MapEntity mapEntity in mapEntityList)
+            foreach (MapEntity mapEntity in MapEntityList)
             {
-                if (mapEntity is not Structure structure) { continue; }
+                if (!(mapEntity is Structure structure)) { continue; }
                 if (!structure.Prefab.AllowAttachItems) { continue; }
                 if (structure.Bodies != null && structure.Bodies.Count > 0) { continue; }
                 Rectangle worldRect = mapEntity.WorldRect;
@@ -1273,7 +1243,7 @@ namespace Barotrauma
             UpdateSections();
         }
 
-        private void CreateWallDamageExplosion(Gap gap, Character attacker)
+        private static void CreateWallDamageExplosion(Gap gap, Character attacker)
         {
             const float explosionRange = 750.0f;
             float explosionStrength = gap.Open;
@@ -1294,20 +1264,23 @@ namespace Barotrauma
 
             if (explosionOnBroken == null)
             {
-                explosionOnBroken = new Explosion(explosionRange * gap.Open, force: 10.0f, damage: 0.0f, structureDamage: 0.0f, itemDamage: 0.0f);
+                explosionOnBroken = new Explosion(explosionRange, force: 10.0f, damage: 0.0f, structureDamage: 0.0f, itemDamage: 0.0f);
                 if (AfflictionPrefab.Prefabs.TryGet("lacerations".ToIdentifier(), out AfflictionPrefab lacerations))
                 {
-                    explosionOnBroken.Attack.Afflictions.Add(lacerations.Instantiate(50.0f), null);
+                    explosionOnBroken.Attack.Afflictions.Add(lacerations.Instantiate(3.0f), null);
                 }
                 else
                 {
-                    explosionOnBroken.Attack.Afflictions.Add(AfflictionPrefab.InternalDamage.Instantiate(5.0f), null);
+                    explosionOnBroken.Attack.Afflictions.Add(AfflictionPrefab.InternalDamage.Instantiate(3.0f), null);
                 }
+                explosionOnBroken.IgnoreCover = true;
                 explosionOnBroken.OnlyInside = true;
                 explosionOnBroken.DisableParticles();
             }
 
+            explosionOnBroken.Attack.Range = explosionRange * gap.Open;
             explosionOnBroken.Attack.DamageMultiplier = explosionStrength;
+            explosionOnBroken.Attack.Stun = MathHelper.Clamp(explosionStrength, 0.5f, 1.0f);
             explosionOnBroken?.Explode(gap.WorldPosition, damageSource: null, attacker: attacker);
 #if CLIENT
             if (linkedHull != null)
@@ -1669,7 +1642,6 @@ namespace Barotrauma
             {
                 SetDamage(i, Sections[i].damage, createNetworkEvent: false, createExplosionEffect: false);
             }
-            CheckIsExteriorWall();
         }
 
         public virtual void Reset()

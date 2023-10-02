@@ -10,6 +10,10 @@ namespace Barotrauma.Items.Components
         private GUITickBox highVoltageIndicator;
         private GUITickBox lowVoltageIndicator;
 
+        private GUITextBlock powerLabel, loadLabel;
+
+        private LanguageIdentifier prevLanguage;
+
         partial void InitProjectSpecific(XElement element)
         {
             if (GuiFrame == null) { return; }
@@ -56,12 +60,12 @@ namespace Barotrauma.Items.Components
                 Stretch = true
             };
 
-            var powerLabel = new GUITextBlock(new RectTransform(new Vector2(0.4f, 1), upperTextArea.RectTransform),
+            powerLabel = new GUITextBlock(new RectTransform(new Vector2(0.4f, 1), upperTextArea.RectTransform),
                 TextManager.Get("PowerTransferPowerLabel"), textColor: GUIStyle.TextColorBright, font: GUIStyle.LargeFont, textAlignment: Alignment.CenterRight)
             {
                 ToolTip = TextManager.Get("PowerTransferTipPower")
             };
-            var loadLabel = new GUITextBlock(new RectTransform(new Vector2(0.4f, 1), lowerTextArea.RectTransform),
+            loadLabel = new GUITextBlock(new RectTransform(new Vector2(0.4f, 1), lowerTextArea.RectTransform),
                 TextManager.Get("PowerTransferLoadLabel"), textColor: GUIStyle.TextColorBright, font: GUIStyle.LargeFont, textAlignment: Alignment.CenterRight)
             {
                 ToolTip = TextManager.Get("PowerTransferTipLoad")
@@ -75,7 +79,7 @@ namespace Barotrauma.Items.Components
                 ToolTip = TextManager.Get("PowerTransferTipPower"),
                 TextGetter = () => {
                     float currPower = powerLoad < 0 ? -powerLoad: 0;
-                    if (!(this is RelayComponent) && PowerConnections != null && PowerConnections.Count > 0 && PowerConnections[0].Grid != null)
+                    if (this is not RelayComponent && PowerConnections != null && PowerConnections.Count > 0 && PowerConnections[0].Grid != null)
                     {
                         currPower = PowerConnections[0].Grid.Power;
                     }
@@ -119,9 +123,11 @@ namespace Barotrauma.Items.Components
             GUITextBlock.AutoScaleAndNormalize(powerLabel, loadLabel);
             GUITextBlock.AutoScaleAndNormalize(true, true, powerText, loadText);
             GUITextBlock.AutoScaleAndNormalize(kw1, kw2);
+
+            prevLanguage = GameSettings.CurrentConfig.Language;
         }
 
-        public override void UpdateHUD(Character character, float deltaTime, Camera cam)
+        public override void UpdateHUDComponentSpecific(Character character, float deltaTime, Camera cam)
         {
             if (GuiFrame == null) return;
 
@@ -129,6 +135,13 @@ namespace Barotrauma.Items.Components
             powerIndicator.Selected = IsActive && voltage > 0;
             highVoltageIndicator.Selected = Timing.TotalTime % 0.5f < 0.25f && powerIndicator.Selected && voltage > 1.2f;
             lowVoltageIndicator.Selected = Timing.TotalTime % 0.5f < 0.25f && powerIndicator.Selected && voltage < 0.8f;
+
+            if (prevLanguage != GameSettings.CurrentConfig.Language)
+            {
+                GUITextBlock.AutoScaleAndNormalize(powerIndicator.TextBlock, highVoltageIndicator.TextBlock, lowVoltageIndicator.TextBlock);
+                GUITextBlock.AutoScaleAndNormalize(powerLabel, loadLabel);
+                prevLanguage = GameSettings.CurrentConfig.Language;
+            }
         }
     }
 }

@@ -38,6 +38,11 @@ namespace Barotrauma.Items.Components
         }
         private FabricationRecipe selectedItem;
 
+        /// <summary>
+        /// Which character's skills the current view is displayed based on
+        /// </summary>
+        private Character displayingForCharacter;
+
         public Identifier SelectedItemIdentifier => SelectedItem?.TargetItem.Identifier ?? Identifier.Empty;
 
         private GUIComponent inSufficientPowerWarning;
@@ -358,9 +363,11 @@ namespace Barotrauma.Items.Components
             if (inputInventoryHolder != null)
             {
                 inputContainer.AllowUIOverlap = true;
+                inputContainer.Inventory.DrawWhenEquipped = true;
                 inputContainer.Inventory.RectTransform = inputInventoryHolder.RectTransform;
             }
             outputContainer.AllowUIOverlap = true;
+            outputContainer.Inventory.DrawWhenEquipped = true;
             outputContainer.Inventory.RectTransform = outputInventoryHolder.RectTransform;
         }
 
@@ -453,13 +460,8 @@ namespace Barotrauma.Items.Components
                 requiresRecipeText.RectTransform.RepositionChildInHierarchy(itemList.Content.RectTransform.GetChildIndex(firstRequiresRecipe.RectTransform));
             }
 
+            FilterEntities(selectedItemCategory, itemFilterBox?.Text ?? string.Empty);
             HideEmptyItemListCategories();
-
-            if (selectedItem != null)
-            {
-                //reselect to recreate the info based on the new user's skills
-                SelectItem(character, selectedItem);
-            }
         }
 
         private readonly Dictionary<FabricationRecipe.RequiredItem, int> missingIngredientCounts = new Dictionary<FabricationRecipe.RequiredItem, int>();
@@ -538,6 +540,8 @@ namespace Barotrauma.Items.Components
                 int slotIndex = 0;
                 foreach (var kvp in missingIngredientCounts)
                 {
+                    if (inputContainer.Inventory?.visualSlots == null) { break; }
+
                     var requiredItem = kvp.Key;
                     int missingCount = kvp.Value;
 
@@ -560,11 +564,10 @@ namespace Barotrauma.Items.Components
                     var requiredItemPrefab = requiredItem.FirstMatchingPrefab;
 
                     float iconAlpha = 0.0f;
-                    ItemPrefab requiredItemToDisplay;
-                    int count = requiredItem.ItemPrefabs.Count();
-                    if (count > 1)
+                    ItemPrefab requiredItemToDisplay = requiredItem.DefaultItem.IsEmpty ? null : requiredItem.ItemPrefabs.FirstOrDefault(p => p.Identifier == requiredItem.DefaultItem);
+                    if (requiredItemToDisplay == null && requiredItem.ItemPrefabs.Multiple())
                     {
-                        float iconCycleSpeed = 0.5f / count;
+                        float iconCycleSpeed = 0.75f;
                         float iconCycleT = (float)Timing.TotalTime * iconCycleSpeed;
                         int iconIndex = (int)(iconCycleT % requiredItem.ItemPrefabs.Count());
 
@@ -573,7 +576,7 @@ namespace Barotrauma.Items.Components
                     }
                     else
                     {
-                        requiredItemToDisplay = requiredItem.ItemPrefabs.FirstOrDefault();
+                        requiredItemToDisplay ??= requiredItem.ItemPrefabs.FirstOrDefault();
                         iconAlpha = 1.0f;
                     }
                     if (iconAlpha > 0.0f)
@@ -616,9 +619,12 @@ namespace Barotrauma.Items.Components
 
                     if (slotRect.Contains(PlayerInput.MousePosition))
                     {
-                        var suitableIngredients = requiredItem.ItemPrefabs.Select(ip => ip.Name).Distinct();
-                        LocalizedString toolTipText = string.Join(", ", suitableIngredients.Count() > 3 ? suitableIngredients.SkipLast(suitableIngredients.Count() - 3) : suitableIngredients);
-                        if (suitableIngredients.Count() > 3) { toolTipText += "..."; }
+                        LocalizedString toolTipText = requiredItem.OverrideHeader;
+                        if (requiredItem.OverrideHeader.IsNullOrEmpty())
+                        {
+                            var suitableIngredients = requiredItem.ItemPrefabs.Where(ip => !ip.HideInMenus).OrderBy(ip => ip.DefaultPrice?.Price ?? 0).Select(ip => ip.Name).Distinct();
+                            toolTipText = GetSuitableIngredientText(suitableIngredients);
+                        }
                         if (requiredItem.UseCondition && requiredItem.MinCondition < 1.0f)
                         {
                             toolTipText += " " + (int)Math.Round(requiredItem.MinCondition * 100) + "%";
@@ -656,15 +662,68 @@ namespace Barotrauma.Items.Components
             }
         }
 
+        private LocalizedString GetSuitableIngredientText(IEnumerable<LocalizedString> itemNameList)
+        {
+            int count = itemNameList.Count();
+            if (count == 0)
+            {
+                return string.Empty;
+            }
+            else if (count == 1)
+            {
+                return itemNameList.First();
+            }
+            else if (count == 2)
+            {
+                //[item1] or [item2]
+                return TextManager.GetWithVariables(
+                    "DialogRequiredTreatmentOptionsLast",
+                    ("[treatment1]", itemNameList.ElementAt(0)),
+                    ("[treatment2]", itemNameList.ElementAt(1)));
+            }
+            else
+            {
+                // [item1], [item2], [item3] ... or [lastitem]
+                LocalizedString itemListStr = TextManager.GetWithVariables(
+                    "DialogRequiredTreatmentOptionsFirst",
+                    ("[treatment1]", itemNameList.ElementAt(0)),
+                    ("[treatment2]", itemNameList.ElementAt(1)));
+
+                int i;
+                bool isTruncated = false;
+                for (i = 2; i < count - 1; i++)
+                {
+                    if (itemListStr.Length > 50)
+                    {
+                        isTruncated = true;
+                        break;
+                    }
+                    itemListStr = TextManager.GetWithVariables(
+                      "DialogRequiredTreatmentOptionsFirst",
+                      ("[treatment1]", itemListStr),
+                      ("[treatment2]", itemNameList.ElementAt(i)));
+                }
+                itemListStr = TextManager.GetWithVariables(
+                    "DialogRequiredTreatmentOptionsLast",
+                    ("[treatment1]", itemListStr),
+                    ("[treatment2]", itemNameList.ElementAt(i)));
+
+                if (isTruncated)
+                {
+                    itemListStr += TextManager.Get("ellipsis");
+                }
+                return itemListStr;
+            }
+        }
+
         private void DrawOutputOverLay(SpriteBatch spriteBatch, GUICustomComponent overlayComponent)
         {
             overlayComponent.RectTransform.SetAsLastChild();
 
             FabricationRecipe targetItem = fabricatedItem ?? selectedItem;
-            if (targetItem != null)
+            if (targetItem != null && outputContainer.Inventory?.visualSlots != null)
             {
                 Rectangle slotRect = outputContainer.Inventory.visualSlots[0].Rect;
-
                 if (fabricatedItem != null)
                 {
                     float clampedProgressState = Math.Clamp(progressState, 0f, 1f);
@@ -699,6 +758,16 @@ namespace Barotrauma.Items.Components
             {
                 FabricationRecipe recipe = child.UserData as FabricationRecipe;
                 if (recipe?.DisplayName == null) { continue; }
+
+                if (recipe.HideForNonTraitors)
+                {
+                    if (Character.Controlled is not { IsTraitor: true })
+                    {
+                        child.Visible = false;
+                        continue;
+                    }
+                }
+
                 child.Visible =
                     (string.IsNullOrWhiteSpace(filter) || recipe.DisplayName.Contains(filter, StringComparison.OrdinalIgnoreCase)) &&
                     (!category.HasValue || recipe.TargetItem.Category.HasFlag(category.Value));
@@ -749,8 +818,9 @@ namespace Barotrauma.Items.Components
         private bool SelectItem(Character user, FabricationRecipe selectedItem, float? overrideRequiredTime = null)
         {
             this.selectedItem = selectedItem;
+            displayingForCharacter = user;
 
-            int max = Math.Max(selectedItem.TargetItem.MaxStackSize / selectedItem.Amount, 1);
+            int max = Math.Max(selectedItem.TargetItem.GetMaxStackSize(outputContainer.Inventory) / selectedItem.Amount, 1);
 
             if (amountInput != null)
             {
@@ -924,7 +994,7 @@ namespace Barotrauma.Items.Components
             return true;
         }
 
-        public override void UpdateHUD(Character character, float deltaTime, Camera cam)
+        public override void UpdateHUDComponentSpecific(Character character, float deltaTime, Camera cam)
         {
             activateButton.Enabled = false;
             inSufficientPowerWarning.Visible = IsActive && !hasPower;
@@ -933,6 +1003,12 @@ namespace Barotrauma.Items.Components
 
             if (!IsActive)
             {
+                if (selectedItem != null && displayingForCharacter != character)
+                {
+                    //reselect to recreate the info based on the new user's skills
+                    SelectItem(character, selectedItem);
+                }
+
                 //only check ingredients if the fabricator isn't active (if it is, this is done in Update)
                 if (refreshIngredientsTimer <= 0.0f)
                 {
@@ -998,9 +1074,13 @@ namespace Barotrauma.Items.Components
             {
                 fabricationLimits[msg.ReadUInt32()] = 0;
             }
-
             State = newState;
-            this.amountToFabricate = amountToFabricate;
+            //don't touch the amount unless another character changed it or the fabricator is running
+            //otherwise we may end up reverting the changes the client just did to the amount
+            if ((user != null && user != Character.Controlled) || State != FabricatorState.Stopped)
+            {
+                this.amountToFabricate = amountToFabricate;
+            }
             this.amountRemaining = amountRemaining;
             if (newState == FabricatorState.Stopped || recipeHash == 0)
             {

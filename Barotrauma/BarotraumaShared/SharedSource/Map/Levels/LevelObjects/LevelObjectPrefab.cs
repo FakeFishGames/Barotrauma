@@ -366,6 +366,7 @@ namespace Barotrauma
         private void LoadElements(LevelObjectPrefabsFile file, ContentXElement element, int parentTriggerIndex)
         {
             int propertyOverrideCount = 0;
+            //load sprites first, OverrideProperties may need them (defaulting to the default sprite if no override is defined)
             foreach (var subElement in element.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
@@ -384,6 +385,12 @@ namespace Barotrauma
                     case "deformablesprite":
                         DeformableSprite = new DeformableSprite(subElement, lazyLoad: true);
                         break;
+                }
+            }
+            foreach (var subElement in element.Elements())
+            {
+                switch (subElement.Name.ToString().ToLowerInvariant())
+                {
                     case "overridecommonness":
                         Identifier levelType = subElement.GetAttributeIdentifier("leveltype", Identifier.Empty);
                         if (!OverrideCommonness.ContainsKey(levelType))

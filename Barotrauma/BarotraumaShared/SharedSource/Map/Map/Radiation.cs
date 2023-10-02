@@ -110,7 +110,13 @@ namespace Barotrauma
                 return;
             }
 
-            radiationAffliction ??= new Affliction(AfflictionPrefab.RadiationSickness, Params.RadiationDamageAmount);
+            if (radiationAffliction == null)
+            {
+                float radiationStrengthChange = AfflictionPrefab.RadiationSickness.Effects.FirstOrDefault()?.StrengthChange ?? 0.0f;
+                radiationAffliction = new Affliction(
+                    AfflictionPrefab.RadiationSickness, 
+                    (Params.RadiationDamageAmount - radiationStrengthChange) * Params.RadiationDamageDelay);
+            }
 
             radiationTimer = Params.RadiationDamageDelay;
 
@@ -120,11 +126,9 @@ namespace Barotrauma
 
                 if (IsEntityRadiated(character))
                 {
-                    foreach (Limb limb in character.AnimController.Limbs)
-                    {
-                        AttackResult attackResult = limb.AddDamage(limb.SimPosition, radiationAffliction.ToEnumerable(), playSound: false);
-                        character.CharacterHealth.ApplyDamage(limb, attackResult);
-                    }
+                    var limb = character.AnimController.MainLimb;
+                    AttackResult attackResult = limb.AddDamage(limb.SimPosition, radiationAffliction.ToEnumerable(), playSound: false);
+                    character.CharacterHealth.ApplyDamage(limb, attackResult);
                 }
             }
         }

@@ -144,7 +144,7 @@ namespace Barotrauma.Items.Components
             }            
         }
 #if DEBUG
-        public void Draw(SpriteBatch spriteBatch, bool editing, float itemDepth = -1)
+        public void Draw(SpriteBatch spriteBatch, bool editing, float itemDepth = -1, Color? overrideColor = null)
         {
             if (GameMain.DebugDraw && IsActive)
             {

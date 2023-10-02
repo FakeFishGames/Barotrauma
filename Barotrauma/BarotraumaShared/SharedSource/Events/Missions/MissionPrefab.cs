@@ -4,7 +4,6 @@ using System.Collections.Immutable;
 using System.Linq;
 using System.Reflection;
 using System.Xml.Linq;
-using Microsoft.Xna.Framework;
 
 namespace Barotrauma
 {
@@ -54,6 +53,20 @@ namespace Barotrauma
             { MissionType.Combat, typeof(CombatMission) }
         };
 
+        public class ReputationReward
+        {
+            public readonly Identifier FactionIdentifier;
+            public readonly float Amount;
+            public readonly float AmountForOpposingFaction;
+
+            public ReputationReward(XElement element)
+            {
+                FactionIdentifier = element.GetAttributeIdentifier("identifier", Identifier.Empty);
+                Amount = element.GetAttributeFloat(nameof(Amount), 0.0f);
+                AmountForOpposingFaction = element.GetAttributeFloat(nameof(AmountForOpposingFaction), 0.0f);
+            }
+        }
+
         public static readonly HashSet<MissionType> HiddenMissionClasses = new HashSet<MissionType>() { MissionType.GoTo, MissionType.End };
 
         private readonly ConstructorInfo constructor;
@@ -75,7 +88,7 @@ namespace Barotrauma
 
         public readonly Identifier AchievementIdentifier;
 
-        public readonly Dictionary<Identifier, float> ReputationRewards = new Dictionary<Identifier, float>();
+        public readonly ImmutableList<ReputationReward> ReputationRewards;
 
         public readonly List<(Identifier Identifier, object Value, SetDataAction.OperationType OperationType)>
             DataRewards = new List<(Identifier Identifier, object Value, SetDataAction.OperationType OperationType)>();
@@ -252,7 +265,8 @@ namespace Barotrauma
                     messages.Add(message);
                 }
             }
-            
+
+            List<ReputationReward> reputationRewards = new List<ReputationReward>();
             int messageIndex = 0;
             foreach (var subElement in element.Elements())
             {
@@ -292,14 +306,7 @@ namespace Barotrauma
                         break;
                     case "reputation":
                     case "reputationreward":
-                        Identifier factionIdentifier = subElement.GetAttributeIdentifier("identifier", Identifier.Empty);
-                        float amount = subElement.GetAttributeFloat("amount", 0.0f);
-                        if (ReputationRewards.ContainsKey(factionIdentifier))
-                        {
-                            DebugConsole.ThrowError($"Error in mission prefab \"{Identifier}\". Multiple reputation changes defined for the identifier \"{factionIdentifier}\".");
-                            continue;
-                        }
-                        ReputationRewards.Add(factionIdentifier, amount);
+                        reputationRewards.Add(new ReputationReward(subElement));
                         break;
                     case "metadata":
                         Identifier identifier = subElement.GetAttributeIdentifier("identifier", Identifier.Empty);
@@ -325,6 +332,7 @@ namespace Barotrauma
             }
             Headers = headers.ToImmutableArray();
             Messages = messages.ToImmutableArray();
+            ReputationRewards = reputationRewards.ToImmutableList();
 
             Identifier missionTypeName = element.GetAttributeIdentifier("type", Identifier.Empty);
             //backwards compatibility
@@ -399,7 +407,7 @@ namespace Barotrauma
             else if (Type == MissionType.ScanAlienRuins || Type == MissionType.ClearAlienRuins)
             {
                 var connection = from.Connections.Find(c => c.Locations.Contains(from) && c.Locations.Contains(to));
-                if (connection?.LevelData == null || connection.LevelData.GenerationParams.RuinCount < 1) { return false; }
+                if (connection?.LevelData == null || connection.LevelData.GenerationParams.GetMaxRuinCount() < 1) { return false; }
             }
 
             return false;

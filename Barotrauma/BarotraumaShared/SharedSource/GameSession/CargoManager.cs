@@ -440,7 +440,7 @@ namespace Barotrauma
                 if (!item.Components.All(static c => c is not Holdable { Attachable: true, Attached: true })) { return false; }
                 if (!item.Components.All(static c => c is not Wire w || w.Connections.All(static c => c is null))) { return false; }
                 if (!ItemAndAllContainersInteractable(item)) { return false; }
-                if (item.RootContainer is Item rootContainer && rootContainer.HasTag("dontsellitems")) { return false; }
+                if (item.RootContainer is Item rootContainer && rootContainer.HasTag(Tags.DontSellItems)) { return false; }
                 return true;
             }).Distinct();
 
@@ -498,7 +498,7 @@ namespace Barotrauma
             .Distinct();
 
         public static IEnumerable<Item> FilterCargoCrates(IEnumerable<Item> items, Func<Item, bool> conditional = null)
-            => items.Where(it => it.HasTag("crate") && !it.NonInteractable && !it.NonPlayerTeamInteractable && !it.HiddenInGame && !it.Removed && (conditional == null || conditional(it)));
+            => items.Where(it => it.HasTag(Tags.Crate) && !it.NonInteractable && !it.NonPlayerTeamInteractable && !it.HiddenInGame && !it.Removed && (conditional == null || conditional(it)));
 
         public static IEnumerable<ItemContainer> FindReusableCargoContainers(IEnumerable<Submarine> subs, IEnumerable<Hull> cargoRooms = null) =>
             FilterCargoCrates(Item.ItemList, it => subs.Contains(it.Submarine) && (cargoRooms == null || cargoRooms.Contains(it.CurrentHull)))
@@ -533,6 +533,12 @@ namespace Barotrauma
                     if (itemContainer == null)
                     {
                         DebugConsole.AddWarning($"CargoManager: No ItemContainer component found in {containerItem.Prefab.Identifier}!");
+                        return null;
+                    }
+                    if (!itemContainer.CanBeContained(item))
+                    {
+                        // Can't contain the item in the crate -> let's not create it.
+                        containerItem.Remove();
                         return null;
                     }
                     availableContainers.Add(itemContainer);
@@ -607,7 +613,7 @@ namespace Barotrauma
 #if SERVER
                     Entity.Spawner?.CreateNetworkEvent(new EntitySpawner.SpawnEntity(item));
 #endif
-                    (itemContainer?.Item ?? item).CampaignInteractionType = CampaignMode.InteractionType.Cargo;    
+                    (itemContainer?.Item ?? item).AssignCampaignInteractionType(CampaignMode.InteractionType.Cargo);    
                     static void itemSpawned(PurchasedItem purchased, Item item)
                     {
                         Submarine sub = item.Submarine ?? item.RootContainer?.Submarine;

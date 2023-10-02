@@ -12,6 +12,7 @@ namespace Barotrauma
         public override Identifier Identifier { get; set; } = "pump water".ToIdentifier();
         public override bool KeepDivingGearOn => true;
         public override bool AllowAutomaticItemUnequipping => true;
+        public override bool AllowWhileHandcuffed => false;
 
         private List<Pump> pumpList;
 
@@ -54,7 +55,7 @@ namespace Barotrauma
                     var pump = item.GetComponent<Pump>();
                     if (pump == null || pump.Item.Submarine == null || pump.Item.CurrentHull == null) { continue; }
                     if (pump.Item.Submarine.TeamID != character.TeamID) { continue; }
-                    if (pump.Item.HasTag("ballast")) { continue; }
+                    if (pump.Item.HasTag(Tags.Ballast)) { continue; }
                     pumpList.Add(pump);
                 }
             }

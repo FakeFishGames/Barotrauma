@@ -176,6 +176,7 @@ namespace Barotrauma
                             BackgroundSections[i].SetColor(color);
                         },
                         out int sectorToUpdate);
+                    RefreshAveragePaintedColor();
                     //add to pending updates to notify other clients as well
                     pendingSectionUpdates.Add(sectorToUpdate);
                     break;

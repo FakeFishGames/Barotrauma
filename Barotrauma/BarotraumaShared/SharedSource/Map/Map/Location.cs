@@ -69,9 +69,11 @@ namespace Barotrauma
         public int LocationTypeChangeCooldown;
 
         /// <summary>
-        /// Is some mission blocking this location from changing its type?
+        /// Is some mission blocking this location from changing its type, or have location type changes been forcibly disabled on the location?
         /// </summary>
-        public bool LocationTypeChangesBlocked => availableMissions.Any(m => m.Prefab.BlockLocationTypeChanges);
+        public bool LocationTypeChangesBlocked => DisallowLocationTypeChanges || availableMissions.Any(m => m.Prefab.BlockLocationTypeChanges);
+
+        public bool DisallowLocationTypeChanges;
 
         public string BaseName { get => baseName; }
 
@@ -1146,6 +1148,7 @@ namespace Barotrauma
             foreach (Item item in items)
             {
                 if (takenItems.Any(it => it.Matches(item) && it.OriginalID == item.ID)) { continue; }
+                if (item.IsSalvageMissionItem) { continue; }
                 if (item.OriginalModuleIndex < 0)
                 {
                     DebugConsole.ThrowError("Tried to register a non-outpost item as being taken from the outpost.");
@@ -1417,7 +1420,7 @@ namespace Barotrauma
 
         public void Reset(CampaignMode campaign)
         {
-            if (Type != OriginalType)
+            if (Type != OriginalType && !DisallowLocationTypeChanges)
             {
                 ChangeType(campaign, OriginalType);
                 PendingLocationTypeChange = null;

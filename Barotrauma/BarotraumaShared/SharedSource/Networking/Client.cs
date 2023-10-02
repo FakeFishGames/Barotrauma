@@ -80,7 +80,7 @@ namespace Barotrauma.Networking
                 {
                     if (value != null)
                     {
-                        DebugConsole.NewMessage(value.Name, Microsoft.Xna.Framework.Color.Yellow);
+                        DebugConsole.NewMessage(value.Name, Color.Yellow);
                     }
                 }
                 character = value;
@@ -90,12 +90,6 @@ namespace Barotrauma.Networking
                     UsingFreeCam = false;
 #if CLIENT
                     GameMain.GameSession?.CrewManager?.SetPlayerVoiceIconState(this, muted, mutedLocally);
-
-                    if (character == GameMain.Client.Character && GameMain.Client.SpawnAsTraitor)
-                    {
-                        character.IsTraitor = true;
-                        character.TraitorCurrentObjective = GameMain.Client.TraitorFirstObjective;
-                    }
 #endif
                 }
             }

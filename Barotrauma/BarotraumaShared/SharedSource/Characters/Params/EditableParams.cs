@@ -71,7 +71,7 @@ namespace Barotrauma
             element ??= MainElement;
             if (element == null)
             {
-                DebugConsole.ThrowError("[EditableParams] The XML element is null!");
+                DebugConsole.ThrowError("[EditableParams] The XML element is null! Failed to save the parameters.");
                 return false;
             }
             SerializableProperty.SerializeProperties(this, element, true);
@@ -82,7 +82,16 @@ namespace Barotrauma
         {
             UpdatePath(file);
             doc = XMLExtensions.TryLoadXml(Path);
-            if (doc == null) { return false; }
+            if (doc == null)
+            {
+                DebugConsole.ThrowError("[EditableParams] The document is null! Failed to load the parameters.");
+                return false;
+            }
+            if (MainElement == null)
+            {
+                DebugConsole.ThrowError("[EditableParams] The main element is null! Failed to load the parameters.");
+                return false;
+            }
             IsLoaded = Deserialize(MainElement);
             OriginalElement = new XElement(MainElement).FromPackage(MainElement.ContentPackage);
             return IsLoaded;

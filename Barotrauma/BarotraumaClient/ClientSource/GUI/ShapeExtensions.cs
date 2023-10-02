@@ -91,8 +91,8 @@ namespace Barotrauma
             var angle = (float)Math.Atan2(point2.Y - point1.Y, point2.X - point1.X);
             var scale = new Vector2(length, thickness);
             Vector2 middle = new Vector2((point1.X + point2.X) / 2f, (point1.Y + point2.Y) / 2f);
-            Texture2D tex = GetTexture(spriteBatch);
-            spriteBatch.Draw(GetTexture(spriteBatch), middle, null, color, angle, new Vector2(tex.Width / 2f, tex.Height / 2f), scale, SpriteEffects.None, 0);
+            Texture2D tex = GUI.WhiteTexture;
+            spriteBatch.Draw(tex, middle, null, color, angle, new Vector2(tex.Width / 2f, tex.Height / 2f), scale, SpriteEffects.None, 0);
         }
 
         private static void DrawPolygonEdge(SpriteBatch spriteBatch, Vector2 point1, Vector2 point2, Color color, float thickness)
@@ -112,6 +112,18 @@ namespace Barotrauma
             DrawLine(spriteBatch, new Vector2(x1, y1), new Vector2(x2, y2), color, thickness);
         }
 
+        public static void DrawLineWithTexture(this SpriteBatch spriteBatch, Texture2D tex, Vector2 point1, Vector2 point2,
+                                               Color color, float thickness = 1f)
+        {
+            // calculate the distance between the two vectors
+            var distance = Vector2.Distance(point1, point2);
+
+            // calculate the angle between the two vectors
+            var angle = (float)Math.Atan2(point2.Y - point1.Y, point2.X - point1.X);
+
+            DrawLine(spriteBatch, tex, point1, distance, angle, color, thickness);
+        }
+
         /// <summary>
         ///     Draws a line from point1 to point2 with an offset
         /// </summary>
@@ -124,18 +136,18 @@ namespace Barotrauma
             // calculate the angle between the two vectors
             var angle = (float)Math.Atan2(point2.Y - point1.Y, point2.X - point1.X);
 
-            DrawLine(spriteBatch, point1, distance, angle, color, thickness);
+            DrawLine(spriteBatch, GetTexture(spriteBatch), point1, distance, angle, color, thickness);
         }
 
         /// <summary>
         ///     Draws a line from point1 to point2 with an offset
         /// </summary>
-        public static void DrawLine(this SpriteBatch spriteBatch, Vector2 point, float length, float angle, Color color,
+        public static void DrawLine(this SpriteBatch spriteBatch, Texture2D tex, Vector2 point, float length, float angle, Color color,
             float thickness = 1f)
         {
-            var origin = new Vector2(0f, 0.5f);
-            var scale = new Vector2(length, thickness);
-            spriteBatch.Draw(GetTexture(spriteBatch), point, null, color, angle, origin, scale, SpriteEffects.None, 0);
+            var origin = new Vector2(0f, tex.Height / 2f);
+            var scale = new Vector2(length / tex.Width, thickness / tex.Height);
+            spriteBatch.Draw(tex, point, null, color, angle, origin, scale, SpriteEffects.None, 0);
         }
 
         /// <summary>

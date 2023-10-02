@@ -328,7 +328,7 @@ namespace Barotrauma
             if (checkedSpeakers.Any(s => !potentialSpeaker.CanHearCharacter(s))) { return false; }
 
             //check if the character is close enough to see the rest of the speakers (this should be replaced with a more performant method)
-            if (checkedSpeakers.Any(s => !potentialSpeaker.CanSeeCharacter(s))) { return false; }
+            if (checkedSpeakers.Any(s => !potentialSpeaker.CanSeeTarget(s))) { return false; }
 
             //check if the character has an appropriate personality
             if (selectedConversation.allowedSpeakerTags.Count > 0)

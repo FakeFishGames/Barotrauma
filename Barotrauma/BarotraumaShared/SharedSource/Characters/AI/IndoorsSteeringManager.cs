@@ -241,7 +241,6 @@ namespace Barotrauma
                     float priority = MathHelper.Lerp(3, 1, character.Params.PathFinderPriority);
                     findPathTimer = priority * Rand.Range(1.0f, 1.2f);
                     IsPathDirty = false;
-                    return DiffToCurrentNode();
 
                     void SkipCurrentPathNodes()
                     {
@@ -284,15 +283,6 @@ namespace Barotrauma
             }
 
             Vector2 diff = DiffToCurrentNode();
-            var collider = character.AnimController.Collider;
-            // Only humanoids can climb ladders
-            bool canClimb = character.AnimController is HumanoidAnimController;
-            //if not in water and the waypoint is between the top and bottom of the collider, no need to move vertically
-            if (canClimb && !character.AnimController.InWater && !character.IsClimbing && diff.Y < collider.Height / 2 + collider.Radius)
-            {
-                // TODO: might cause some edge cases -> do we need this?
-                diff.Y = 0.0f;
-            }
             if (diff == Vector2.Zero) { return Vector2.Zero; }
             return Vector2.Normalize(diff) * weight;
         }
@@ -401,16 +391,15 @@ namespace Barotrauma
                 else
                 {
                     bool nextLadderSameAsCurrent = currentLadder == nextLadder;
+                    float colliderHeight = collider.Height / 2 + collider.Radius;
+                    float heightDiff = currentPath.CurrentNode.SimPosition.Y - collider.SimPosition.Y;
+                    float distanceMargin = ConvertUnits.ToDisplayUnits(colliderSize.X);
                     if (currentLadder != null && nextLadder != null)
                     {
                         //climbing ladders -> don't move horizontally
                         diff.X = 0.0f;
                     }
-                    //at the same height as the waypoint
-                    float heightDiff = Math.Abs(collider.SimPosition.Y - currentPath.CurrentNode.SimPosition.Y);
-                    float colliderHeight = collider.Height / 2 + collider.Radius;
-                    float distanceMargin = ConvertUnits.ToDisplayUnits(colliderSize.X);
-                    if (heightDiff < colliderHeight * 1.25f)
+                    if (Math.Abs(heightDiff) < colliderHeight * 1.25f)
                     {
                         if (nextLadder != null && !nextLadderSameAsCurrent)
                         {
@@ -463,10 +452,10 @@ namespace Barotrauma
                         }
                     }
                 }
-                return ConvertUnits.ToSimUnits(diff);
             }
             else if (character.AnimController.InWater)
             {
+                // Swimming
                 var door = currentPath.CurrentNode.ConnectedDoor;
                 if (door == null || door.CanBeTraversed)
                 {
@@ -502,6 +491,13 @@ namespace Barotrauma
                 bool isTargetTooLow = currentPath.CurrentNode.SimPosition.Y < colliderBottom.Y;
                 var door = currentPath.CurrentNode.ConnectedDoor;
                 float margin = MathHelper.Lerp(1, 10, MathHelper.Clamp(Math.Abs(velocity.X) / 5, 0, 1));
+                float colliderHeight = collider.Height / 2 + collider.Radius;
+                float heightDiff = currentPath.CurrentNode.SimPosition.Y - collider.SimPosition.Y;
+                if (heightDiff < colliderHeight)
+                {
+                    //the waypoint is between the top and bottom of the collider, no need to move vertically.
+                    diff.Y = 0.0f;
+                }
                 if (currentPath.CurrentNode.Stairs != null)
                 {
                     bool isNextNodeInSameStairs = currentPath.NextNode?.Stairs == currentPath.CurrentNode.Stairs;

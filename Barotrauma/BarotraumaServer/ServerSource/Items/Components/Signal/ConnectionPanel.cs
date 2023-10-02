@@ -12,7 +12,8 @@ namespace Barotrauma.Items.Components
             List<Wire>[] wires = new List<Wire>[Connections.Count];
 
             //read wire IDs for each connection
-            for (int i = 0; i < Connections.Count; i++)
+            byte connectionCount = msg.ReadByte();
+            for (int i = 0; i < Connections.Count && i < connectionCount; i++)
             {
                 wires[i] = new List<Wire>();
                 uint wireCount = msg.ReadVariableUInt32();

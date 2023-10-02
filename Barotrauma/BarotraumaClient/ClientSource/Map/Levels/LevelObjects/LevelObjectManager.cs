@@ -199,7 +199,7 @@ namespace Barotrauma
                 Sprite activeSprite = obj.Sprite;
                 activeSprite?.Draw(
                     spriteBatch,
-                    new Vector2(obj.Position.X, -obj.Position.Y) - camDiff * obj.Position.Z / 10000.0f,
+                    new Vector2(obj.Position.X, -obj.Position.Y) - camDiff * obj.Position.Z * ParallaxStrength,
                     Color.Lerp(obj.Prefab.SpriteColor, obj.Prefab.SpriteColor.Multiply(Level.Loaded.BackgroundTextureColor), obj.Position.Z / 3000.0f),
                     activeSprite.Origin,
                     obj.CurrentRotation,
@@ -218,7 +218,7 @@ namespace Barotrauma
                         obj.ActivePrefab.DeformableSprite.Reset();
                     }
                     obj.ActivePrefab.DeformableSprite?.Draw(cam,
-                        new Vector3(new Vector2(obj.Position.X, obj.Position.Y) - camDiff * obj.Position.Z / 10000.0f, z * 10.0f),
+                        new Vector3(new Vector2(obj.Position.X, obj.Position.Y) - camDiff * obj.Position.Z * ParallaxStrength, z * 10.0f),
                         obj.ActivePrefab.DeformableSprite.Origin,
                         obj.CurrentRotation,
                         obj.CurrentScale,

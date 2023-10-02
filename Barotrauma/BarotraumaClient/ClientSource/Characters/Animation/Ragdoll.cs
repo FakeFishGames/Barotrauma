@@ -469,6 +469,7 @@ namespace Barotrauma
                 float gibParticleAmount = MathHelper.Clamp(limb.Mass / character.AnimController.Mass, 0.1f, 1.0f);
                 foreach (ParticleEmitter emitter in character.GibEmitters)
                 {
+                    if (emitter?.Prefab == null) { continue; }
                     if (inWater && emitter.Prefab.ParticlePrefab.DrawTarget == ParticlePrefab.DrawTargetType.Air) { continue; }
                     if (!inWater && emitter.Prefab.ParticlePrefab.DrawTarget == ParticlePrefab.DrawTargetType.Water) { continue; }
 

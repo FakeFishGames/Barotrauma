@@ -178,7 +178,7 @@ namespace Barotrauma
                     if (eventSet is null) { continue; }
                     int count = childElement.GetAttributeInt("count", 0);
                     if (count < 1) { continue; }
-                    FinishedEvents.Add(eventSet, count);
+                    FinishedEvents.TryAdd(eventSet, count);
                 }
 
                 static EventSet FindSetRecursive(EventSet parentSet, Identifier setIdentifier)

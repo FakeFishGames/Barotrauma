@@ -75,6 +75,7 @@ namespace Barotrauma
             NoCargoSpawnpoints,
             NoBallastTag,
             NonLinkedGaps,
+            NoHiddenContainers,
             StructureCount,
             WallCount,
             ItemCount,
@@ -231,6 +232,8 @@ namespace Barotrauma
         private KeyOrMouse toggleEntityListBind; 
 
         public override Camera Cam => cam;
+
+        public bool DrawCharacterInventory => dummyCharacter != null && WiringMode;
 
         public static XDocument AutoSaveInfo;
         private static readonly string autoSavePath = Path.Combine("Submarines", ".AutoSaves");
@@ -583,7 +586,7 @@ namespace Barotrauma
                     if (!(o is string layer)) { return false; }
 
                     MapEntity.SelectedList.Clear();
-                    foreach (MapEntity entity in MapEntity.mapEntityList.Where(me => !me.Removed && me.Layer == layer))
+                    foreach (MapEntity entity in MapEntity.MapEntityList.Where(me => !me.Removed && me.Layer == layer))
                     {
                         if (entity.IsSelected) { continue; }
 
@@ -842,7 +845,7 @@ namespace Barotrauma
             var structureCount = new GUITextBlock(new RectTransform(new Vector2(0.33f, 1.0f), structureCountText.RectTransform, Anchor.TopRight, Pivot.TopLeft), "", textAlignment: Alignment.CenterRight);
             structureCount.TextGetter = () =>
             {
-                int count = MapEntity.mapEntityList.Count - Item.ItemList.Count - Hull.HullList.Count - WayPoint.WayPointList.Count - Gap.GapList.Count;
+                int count = MapEntity.MapEntityList.Count - Item.ItemList.Count - Hull.HullList.Count - WayPoint.WayPointList.Count - Gap.GapList.Count;
                 structureCount.TextColor = count > MaxStructures ? GUIStyle.Red : Color.Lerp(GUIStyle.Green, GUIStyle.Orange, count / (float)MaxStructures);
                 return count.ToString();
             };
@@ -1163,7 +1166,7 @@ namespace Barotrauma
                 foreach (MapEntityPrefab ep in entityLists[categoryKey])
                 {
 #if !DEBUG
-                    if (ep.HideInMenus && !GameMain.DebugDraw) { continue; }
+                    if ((ep.HideInMenus || ep.HideInEditors) && !GameMain.DebugDraw) { continue; }
 #endif
                     CreateEntityElement(ep, entitiesPerRow, entityListInner.Content);
                 }
@@ -1182,7 +1185,7 @@ namespace Barotrauma
             foreach (MapEntityPrefab ep in MapEntityPrefab.List)
             {
 #if !DEBUG
-                if (ep.HideInMenus && !GameMain.DebugDraw) { continue; }
+                if ((ep.HideInMenus || ep.HideInEditors) && !GameMain.DebugDraw) { continue; }
 #endif
                 CreateEntityElement(ep, entitiesPerRow, allEntityList.Content);
             }
@@ -1220,7 +1223,7 @@ namespace Barotrauma
                 frame.Color = Color.Magenta;
                 frame.ToolTip = $"{frame.ToolTip}\n‖color:{XMLExtensions.ToStringHex(Color.MediumPurple)}‖{ep.ContentPackage?.Name}‖color:end‖";
             }
-            if (ep.HideInMenus)
+            if (ep.HideInMenus || ep.HideInEditors)
             {
                 frame.Color = Color.Red;
                 name = "[HIDDEN] " + name;
@@ -1638,7 +1641,7 @@ namespace Barotrauma
         /// <remarks>The saving is ran in another thread to avoid lag spikes</remarks>
         private static void AutoSave()
         {
-            if (MapEntity.mapEntityList.Any() && GameSettings.CurrentConfig.EnableSubmarineAutoSave && !isAutoSaving)
+            if (MapEntity.MapEntityList.Any() && GameSettings.CurrentConfig.EnableSubmarineAutoSave && !isAutoSaving)
             {
                 if (MainSub != null)
                 {
@@ -1939,7 +1942,7 @@ namespace Barotrauma
                     var matchingFile = modProject.Files.FirstOrDefault(f => f.Type == subFileType && filePath.CleanUpPath().Equals(f.Path.CleanUpPath(), StringComparison.OrdinalIgnoreCase));
                     if (matchingFile != null)
                     {
-                        File.Delete(matchingFile.Path.Replace(ContentPath.ModDirStr, packageDir));
+                        File.Delete(matchingFile.Path.Replace(ContentPath.ModDirStr, packageDir, StringComparison.OrdinalIgnoreCase));
                         modProject.RemoveFile(matchingFile);
                     }
                     var newFile = ModProject.File.FromPath(filePath, subFileType);
@@ -2852,7 +2855,7 @@ namespace Barotrauma
             {
                 OnClicked = (button, o) =>
                 {
-                    var requiredPackages = MapEntity.mapEntityList.Select(e => e?.Prefab?.ContentPackage)
+                    var requiredPackages = MapEntity.MapEntityList.Select(e => e?.Prefab?.ContentPackage)
                         .Where(cp => cp != null)
                         .Distinct().OfType<ContentPackage>().Select(p => p.Name).ToHashSet();
                     var tickboxes = requiredContentPackList.Content.Children.OfType<GUITickBox>().ToArray();
@@ -3493,7 +3496,15 @@ namespace Barotrauma
             var ownerPackage = GetLocalPackageThatOwnsSub(selectedSubInfo);
             if (ownerPackage is null)
             {
-                if (GetWorkshopPackageThatOwnsSub(selectedSubInfo) is ContentPackage workshopPackage)
+                if (IsVanillaSub(selectedSubInfo))
+                {
+#if DEBUG
+                    LoadSub(selectedSubInfo);
+#else
+                    AskLoadVanillaSub(selectedSubInfo);
+#endif
+                }
+                else if (GetWorkshopPackageThatOwnsSub(selectedSubInfo) is ContentPackage workshopPackage)
                 {
                     if (workshopPackage.TryExtractSteamWorkshopId(out var workshopId)
                         && publishedWorkshopItemIds.Contains(workshopId.Value))
@@ -3504,14 +3515,6 @@ namespace Barotrauma
                     {
                         AskLoadSubscribedSub(selectedSubInfo);
                     }
-                }
-                else if (IsVanillaSub(selectedSubInfo))
-                {
-#if DEBUG
-                    LoadSub(selectedSubInfo);
-#else
-                    AskLoadVanillaSub(selectedSubInfo);
-#endif
                 }
             }
             else
@@ -3792,10 +3795,7 @@ namespace Barotrauma
             wiringModeTickBox.Selected = newMode == Mode.Wiring;
             lockMode = false;
 
-            foreach (MapEntity me in MapEntity.mapEntityList)
-            {
-                me.IsHighlighted = false;
-            }
+            MapEntity.ClearHighlightedEntities();
 
             MapEntity.DeselectAll();
             MapEntity.FilteredSelectedList.Clear();
@@ -3806,7 +3806,8 @@ namespace Barotrauma
             {
                 var item = new Item(MapEntityPrefab.Find(null, "screwdriver") as ItemPrefab, Vector2.Zero, null);
                 dummyCharacter.Inventory.TryPutItem(item, null, new List<InvSlotType>() { InvSlotType.RightHand });
-                wiringToolPanel = CreateWiringPanel();
+                Point wirePos = new Point((int)(10 * GUI.Scale), TopPanel.Rect.Height + entityCountPanel.Rect.Height + (int)(10 * GUI.Scale));
+                wiringToolPanel = CreateWiringPanel(wirePos, SelectWire);
             }
         }
 
@@ -3830,11 +3831,11 @@ namespace Barotrauma
             Item target = null;
 
             var single = targets.Count == 1 ? targets.Single() : null;
-            if (single is Item item && item.Components.Any(ic => !(ic is ConnectionPanel) && ic is not Repairable && ic.GuiFrame != null))
+            if (single is Item item && item.Components.Any(static ic => ic is not ConnectionPanel && ic is not Repairable && ic.GuiFrame != null))
             {
                 // Do not offer the ability to open the inventory if the inventory should never be drawn
-                var container = item.GetComponent<ItemContainer>();
-                if (container == null || container.DrawInventory) { target = item; }
+                var containers = item.GetComponents<ItemContainer>();
+                if (containers.Any(static c => c.DrawInventory) || item.GetComponent<CircuitBox>() is not null) { target = item; }
             }
 
             bool hasTargets = targets.Count > 0;
@@ -3850,7 +3851,7 @@ namespace Barotrauma
                     new ContextMenuOption("Editor.SelectSame", isEnabled: hasTargets, onSelected: delegate
                     {
                         bool doorGapSelected = targets.Any(t => t is Gap gap && gap.ConnectedDoor != null);
-                        foreach (MapEntity match in MapEntity.mapEntityList.Where(e => e.Prefab != null && targets.Any(t => t.Prefab?.Identifier == e.Prefab.Identifier) && !MapEntity.SelectedList.Contains(e)))
+                        foreach (MapEntity match in MapEntity.MapEntityList.Where(e => e.Prefab != null && targets.Any(t => t.Prefab?.Identifier == e.Prefab.Identifier) && !MapEntity.SelectedList.Contains(e)))
                         {
                             if (MapEntity.SelectedList.Contains(match)) { continue; }
                             if (match is Gap gap)
@@ -3892,7 +3893,7 @@ namespace Barotrauma
                     new ContextMenuOption("editor.layer.createlayer", isEnabled: hasTargets, onSelected: () => { CreateNewLayer(null, targets); }),
                     new ContextMenuOption("editor.layer.selectall", isEnabled: hasTargets, onSelected: () =>
                     {
-                        foreach (MapEntity match in MapEntity.mapEntityList.Where(e => targets.Any(t => !string.IsNullOrWhiteSpace(t.Layer) && t.Layer == e.Layer && !MapEntity.SelectedList.Contains(e))))
+                        foreach (MapEntity match in MapEntity.MapEntityList.Where(e => targets.Any(t => !string.IsNullOrWhiteSpace(t.Layer) && t.Layer == e.Layer && !MapEntity.SelectedList.Contains(e))))
                         {
                             if (MapEntity.SelectedList.Contains(match)) { continue; }
                             MapEntity.SelectedList.Add(match);
@@ -3965,7 +3966,7 @@ namespace Barotrauma
         {
             Layers.Remove(original);
 
-            foreach (MapEntity entity in MapEntity.mapEntityList.Where(entity => entity.Layer == original))
+            foreach (MapEntity entity in MapEntity.MapEntityList.Where(entity => entity.Layer == original))
             {
                 entity.Layer = newName ?? string.Empty;
             }
@@ -3980,7 +3981,7 @@ namespace Barotrauma
         private void ReconstructLayers()
         {
             ClearLayers();
-            foreach (MapEntity entity in MapEntity.mapEntityList)
+            foreach (MapEntity entity in MapEntity.MapEntityList)
             {
                 if (!string.IsNullOrWhiteSpace(entity.Layer))
                 {
@@ -4307,15 +4308,15 @@ namespace Barotrauma
             static string ColorToHex(Color color) => $"#{(color.R << 16 | color.G << 8 | color.B):X6}";
         }
 
-        private GUIFrame CreateWiringPanel()
+        public static GUIFrame CreateWiringPanel(Point offset, GUIListBox.OnSelectedHandler onWireSelected)
         {
             GUIFrame frame = new GUIFrame(new RectTransform(new Vector2(0.03f, 0.35f), GUI.Canvas)
-                { MinSize = new Point(120, 300), AbsoluteOffset = new Point((int)(10 * GUI.Scale), TopPanel.Rect.Height + entityCountPanel.Rect.Height + (int)(10 * GUI.Scale)) });
+                { MinSize = new Point(120, 300), AbsoluteOffset = offset });
 
             GUIListBox listBox = new GUIListBox(new RectTransform(new Vector2(0.9f, 0.9f), frame.RectTransform, Anchor.Center))
             {
                 PlaySoundOnSelect = true,
-                OnSelected = SelectWire,
+                OnSelected = onWireSelected,
                 CanTakeKeyBoardFocus = false
             };
 
@@ -4323,12 +4324,14 @@ namespace Barotrauma
 
             foreach (ItemPrefab itemPrefab in ItemPrefab.Prefabs)
             {
-                if (itemPrefab.Name.IsNullOrEmpty() || itemPrefab.HideInMenus) { continue; }
-                if (!itemPrefab.Tags.Contains("wire")) { continue; }
+                if (itemPrefab.Name.IsNullOrEmpty() || itemPrefab.HideInMenus || itemPrefab.HideInEditors) { continue; }
+                if (!itemPrefab.Tags.Contains(Tags.WireItem)) { continue; }
+                if (CircuitBox.IsInGame() && itemPrefab.Tags.Contains(Tags.Thalamus)) { continue; }
+
                 wirePrefabs.Add(itemPrefab);
             }
 
-            foreach (ItemPrefab itemPrefab in wirePrefabs.OrderBy(w => !w.CanBeBought).ThenBy(w => w.UintIdentifier))
+            foreach (ItemPrefab itemPrefab in wirePrefabs.OrderBy(static w => !w.CanBeBought).ThenBy(static w => w.UintIdentifier))
             {
                 GUIFrame imgFrame = new GUIFrame(new RectTransform(new Point(listBox.Content.Rect.Width, listBox.Rect.Width / 2), listBox.Content.RectTransform), style: "ListBoxElement")
                 {
@@ -4393,7 +4396,7 @@ namespace Barotrauma
         {
             if (dummyCharacter == null || itemContainer == null) { return; }
 
-            if (((itemContainer.GetComponent<Holdable>() is { } holdable && !holdable.Attached) || itemContainer.GetComponent<Wearable>() != null) && itemContainer.GetComponent<ItemContainer>() != null)
+            if ((itemContainer.GetComponent<Holdable>() is { Attached: false } || itemContainer.GetComponent<Wearable>() != null) && itemContainer.GetComponent<ItemContainer>() != null)
             {
                 // We teleport our dummy character to the item so it appears as the entity stays still when in reality the dummy is holding it
                 oldItemPosition = itemContainer.SimPosition;
@@ -4614,9 +4617,9 @@ namespace Barotrauma
 
         public void AutoHull()
         {
-            for (int i = 0; i < MapEntity.mapEntityList.Count; i++)
+            for (int i = 0; i < MapEntity.MapEntityList.Count; i++)
             {
-                MapEntity h = MapEntity.mapEntityList[i];
+                MapEntity h = MapEntity.MapEntityList[i];
                 if (h is Hull || h is Gap)
                 {
                     h.Remove();
@@ -4629,7 +4632,7 @@ namespace Barotrauma
 
             List<MapEntity> mapEntityList = new List<MapEntity>();
 
-            foreach (MapEntity e in MapEntity.mapEntityList)
+            foreach (MapEntity e in MapEntity.MapEntityList)
             {
                 if (e is Item it)
                 {
@@ -5086,10 +5089,12 @@ namespace Barotrauma
 
                 layerGroup.Recalculate();
 
-                new GUITextBlock(new RectTransform(new Vector2(0.6f, 1f), layerGroup.RectTransform), layer, textAlignment: Alignment.CenterLeft)
+                var textBlock = new GUITextBlock(new RectTransform(new Vector2(0.6f, 1f), layerGroup.RectTransform), layer, textAlignment: Alignment.CenterLeft);
+                if (textBlock.TextSize.X > textBlock.Rect.Width)
                 {
-                    CanBeFocused = false
-                };
+                    textBlock.ToolTip = textBlock.Text;
+                    textBlock.Text = ToolBox.LimitString(textBlock.Text, textBlock.Font, textBlock.Rect.Width);
+                }
 
                 layerGroup.Recalculate();
                 layerChainLayout.Recalculate();
@@ -5212,7 +5217,7 @@ namespace Barotrauma
                     var highlightedEntities = new List<MapEntity>();
 
                     // ReSharper disable once LoopCanBeConvertedToQuery
-                    foreach (Item item in MapEntity.mapEntityList.Where(entity => entity is Item).Cast<Item>())
+                    foreach (Item item in MapEntity.MapEntityList.Where(entity => entity is Item).Cast<Item>())
                     {
                         var wire = item.GetComponent<Wire>();
                         if (wire == null || !wire.IsMouseOn()) { continue; }
@@ -5225,8 +5230,9 @@ namespace Barotrauma
 
             hullVolumeFrame.Visible = MapEntity.SelectedList.Any(s => s is Hull);
             hullVolumeFrame.RectTransform.AbsoluteOffset = new Point(Math.Max(showEntitiesPanel.Rect.Right, previouslyUsedPanel.Rect.Right), 0);
-            saveAssemblyFrame.Visible = MapEntity.SelectedList.Count > 0 && !WiringMode;
-            snapToGridFrame.Visible = MapEntity.SelectedList.Count > 0 && !WiringMode;
+            bool isCircuitBoxOpened = dummyCharacter?.SelectedItem?.GetComponent<CircuitBox>() is not null;
+            saveAssemblyFrame.Visible = MapEntity.SelectedList.Count > 0 && !WiringMode && !isCircuitBoxOpened;
+            snapToGridFrame.Visible = MapEntity.SelectedList.Count > 0 && !WiringMode && !isCircuitBoxOpened;
 
             var offset = cam.WorldView.Top - cam.ScreenToWorld(new Vector2(0, GameMain.GraphicsHeight - EntityMenu.Rect.Top)).Y;
 
@@ -5285,7 +5291,7 @@ namespace Barotrauma
                 {
                     if (wiringToolPanel.GetChild<GUIListBox>() is { } listBox)
                     {
-                        if (!dummyCharacter.HeldItems.Any(it => it.HasTag("wire")))
+                        if (!dummyCharacter.HeldItems.Any(it => it.HasTag(Tags.WireItem)))
                         {
                             listBox.Deselect();
                         }
@@ -5394,7 +5400,7 @@ namespace Barotrauma
                         }
                         else
                         {
-                            var selectables = MapEntity.mapEntityList.Where(entity => entity.SelectableInEditor).ToList();
+                            var selectables = MapEntity.MapEntityList.Where(entity => entity.SelectableInEditor).ToList();
                             foreach (var item in Item.ItemList)
                             {
                                 //attached wires are not normally selectable (by clicking),
@@ -5418,7 +5424,7 @@ namespace Barotrauma
                 }
                 else
                 {
-                    cam.MoveCamera((float) deltaTime, allowMove: true, allowZoom: GUI.MouseOn == null);
+                    cam.MoveCamera((float) deltaTime, allowMove: !CircuitBox.IsCircuitBoxSelected(dummyCharacter), allowZoom: GUI.MouseOn == null);
                 }
             }
             else
@@ -5426,7 +5432,7 @@ namespace Barotrauma
                 cam.MoveCamera((float) deltaTime, allowMove: false, allowZoom: GUI.MouseOn == null);
             }
 
-            if (PlayerInput.MidButtonHeld())
+            if (PlayerInput.MidButtonHeld() && !CircuitBox.IsCircuitBoxSelected(dummyCharacter))
             {
                 Vector2 moveSpeed = PlayerInput.MouseSpeed * (float)deltaTime * 60.0f / cam.Zoom;
                 moveSpeed.X = -moveSpeed.X;
@@ -5460,10 +5466,7 @@ namespace Barotrauma
             {
                 if (WiringMode)
                 {
-                    foreach (MapEntity me in MapEntity.mapEntityList)
-                    {
-                        me.IsHighlighted = false;
-                    }
+                    MapEntity.ClearHighlightedEntities();
 
                     if (dummyCharacter.SelectedItem == null)
                     {
@@ -5948,13 +5951,10 @@ namespace Barotrauma
                 }
             }
 
-            if (dummyCharacter != null)
+            if (DrawCharacterInventory)
             {
-                if (WiringMode)
-                {
-                    dummyCharacter.DrawHUD(spriteBatch, cam, false);
-                    wiringToolPanel.DrawManually(spriteBatch);
-                }
+                dummyCharacter.DrawHUD(spriteBatch, cam, false);
+                wiringToolPanel.DrawManually(spriteBatch);                
             }
             MapEntity.DrawEditor(spriteBatch, cam);
 
@@ -5991,10 +5991,7 @@ namespace Barotrauma
         private void CreateImage(int width, int height, System.IO.Stream stream)
         {
             MapEntity.SelectedList.Clear();
-            foreach (MapEntity me in MapEntity.mapEntityList)
-            {
-                me.IsHighlighted = false;
-            }
+            MapEntity.ClearHighlightedEntities();
 
             var prevScissorRect = GameMain.Instance.GraphicsDevice.ScissorRectangle;
 
@@ -6037,16 +6034,21 @@ namespace Barotrauma
         private void DrawGrid(SpriteBatch spriteBatch)
         {
             // don't render at high zoom levels because it would just turn the screen white
-            if (cam.Zoom < 0.5f || !ShouldDrawGrid) { return; }
+            if (!ShouldDrawGrid) { return; }
 
             var (gridX, gridY) = Submarine.GridSize;
+            DrawGrid(spriteBatch, cam, gridX, gridY, zoomTreshold: true);
+        }
 
+        public static void DrawGrid(SpriteBatch spriteBatch, Camera cam, float sizeX, float sizeY, bool zoomTreshold)
+        {
+            if (zoomTreshold && cam.Zoom < 0.5f) { return; }
             int scale = Math.Max(1, GUI.IntScale(1));
             float zoom = cam.Zoom / 2f; // Don't ask
             float lineThickness = Math.Max(1, scale / zoom);
 
             Color gridColor = gridBaseColor;
-            if (cam.Zoom < 1.0f)
+            if (zoomTreshold && cam.Zoom < 1.0f)
             {
                 // fade the grid when zooming out
                 gridColor *= Math.Max(0, (cam.Zoom - 0.5f) * 2f);
@@ -6054,18 +6056,66 @@ namespace Barotrauma
 
             Rectangle camRect = cam.WorldView;
 
-            for (float x = snapX(camRect.X); x < snapX(camRect.X + camRect.Width) + gridX; x += gridX)
+            for (float x = snapX(camRect.X); x < snapX(camRect.X + camRect.Width) + sizeX; x += sizeX)
             {
                 spriteBatch.DrawLine(new Vector2(x, -camRect.Y), new Vector2(x, -(camRect.Y - camRect.Height)), gridColor, thickness: lineThickness);
             }
 
-            for (float y = snapY(camRect.Y); y >= snapY(camRect.Y - camRect.Height) - gridY; y -= Submarine.GridSize.Y)
+            for (float y = snapY(camRect.Y); y >= snapY(camRect.Y - camRect.Height) - sizeY; y -= sizeY)
             {
                 spriteBatch.DrawLine(new Vector2(camRect.X, -y), new Vector2(camRect.Right, -y), gridColor, thickness: lineThickness);
             }
 
-            float snapX(int x) => (float) Math.Floor(x / gridX) * gridX;
-            float snapY(int y) => (float) Math.Ceiling(y / gridY) * gridY;
+            float snapX(int x) => (float) Math.Floor(x / sizeX) * sizeX;
+            float snapY(int y) => (float) Math.Ceiling(y / sizeY) * sizeY;
+        }
+
+        public static void DrawOutOfBoundsArea(SpriteBatch spriteBatch, Camera cam, float playableAreaSize, Color color)
+        {
+            Rectangle camRect = cam.WorldView;
+
+            RectangleF playableArea = new RectangleF(
+                -playableAreaSize / 2f,
+                -playableAreaSize / 2f,
+                playableAreaSize,
+                playableAreaSize
+            );
+
+            RectangleF topRect = new(
+                camRect.Left,
+                -camRect.Top,
+                camRect.Width,
+                playableArea.Top + camRect.Top
+            );
+
+            // idk why camRect.Bottom doesn't work here
+            float camRectBottom = -camRect.Top + camRect.Height;
+
+            RectangleF bottomRect = new(
+                camRect.Left,
+                playableArea.Bottom,
+                camRect.Width,
+                camRectBottom + playableArea.Bottom
+            );
+
+            RectangleF rightRect = new(
+                playableArea.Right,
+                playableArea.Top,
+                camRect.Right - playableArea.Right,
+                playableArea.Height
+            );
+
+            RectangleF leftRect = new(
+                playableArea.Left,
+                playableArea.Top,
+                camRect.Left - playableArea.Left,
+                playableArea.Height
+            );
+
+            GUI.DrawFilledRectangle(spriteBatch, topRect, color);
+            GUI.DrawFilledRectangle(spriteBatch, leftRect, color);
+            GUI.DrawFilledRectangle(spriteBatch, rightRect, color);
+            GUI.DrawFilledRectangle(spriteBatch, bottomRect, color);
         }
 
         public void SaveScreenShot(int width, int height, string filePath)
@@ -6116,7 +6166,7 @@ namespace Barotrauma
         public static ImmutableHashSet<MapEntity> GetEntitiesInSameLayer(MapEntity entity)
         {
             if (string.IsNullOrWhiteSpace(entity.Layer)) { return ImmutableHashSet<MapEntity>.Empty; }
-            return MapEntity.mapEntityList.Where(me => me.Layer == entity.Layer).ToImmutableHashSet();
+            return MapEntity.MapEntityList.Where(me => me.Layer == entity.Layer).ToImmutableHashSet();
         }
     }
 }
