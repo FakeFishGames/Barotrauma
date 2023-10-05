@@ -773,28 +773,23 @@ namespace Barotrauma.Items.Components
                 if (!ignorePower)
                 {
                     var batteries = GetDirectlyConnectedBatteries().Where(static b => !b.OutputDisabled && b.Charge > 0.0001f && b.MaxOutPut > 0.0001f);
-                    int batteryCount = batteries.Count();
-                    if (batteryCount > 0)
+                    float neededPower = GetPowerRequiredToShoot();
+                    // tinkering is currently not factored into the common method as it is checked only when shooting
+                    // but this is a minor issue that causes mostly cosmetic woes. might still be worth refactoring later
+                    neededPower /= 1f + (tinkeringStrength * TinkeringPowerCostReduction);
+                    while (neededPower > 0.0001f && batteries.Any())
                     {
-                        float neededPower = GetPowerRequiredToShoot();
-                        // tinkering is currently not factored into the common method as it is checked only when shooting
-                        // but this is a minor issue that causes mostly cosmetic woes. might still be worth refactoring later
-                        neededPower /= 1f + (tinkeringStrength * TinkeringPowerCostReduction);
-                        while (neededPower > 0.0001f)
+                        float takePower = neededPower / batteries.Count();
+                        takePower = Math.Min(takePower, batteries.Min(b => Math.Min(b.Charge * 3600.0f, b.MaxOutPut)));
+                        foreach (PowerContainer battery in batteries)
                         {
-                            float takePower = neededPower / batteryCount;
-                            takePower = Math.Min(takePower, batteries.Min(b => Math.Min(b.Charge * 3600.0f, b.MaxOutPut)));
-                            foreach (PowerContainer battery in batteries)
-                            {
-                                neededPower -= takePower;
-                                battery.Charge -= takePower / 3600.0f;
+                            neededPower -= takePower;
+                            battery.Charge -= takePower / 3600.0f;
 #if SERVER
-                                battery.Item.CreateServerEvent(battery);                        
+                            battery.Item.CreateServerEvent(battery);                        
 #endif
-                            }
                         }
                     }
-
                 }
 
                 launchedProjectile = projectiles.FirstOrDefault();

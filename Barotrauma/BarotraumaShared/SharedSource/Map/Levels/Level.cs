@@ -1378,6 +1378,9 @@ namespace Barotrauma
             {
                 if (sub.Info.IsOutpost)
                 {
+#if CLIENT
+                    if (GameMain.GameSession.GameMode is TutorialMode) { continue; }
+#endif
                     OutpostGenerator.PowerUpOutpost(sub);
                 }
             }

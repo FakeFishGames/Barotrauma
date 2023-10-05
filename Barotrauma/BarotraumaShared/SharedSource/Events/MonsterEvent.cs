@@ -611,6 +611,8 @@ namespace Barotrauma
                     {
                         //round ended before the coroutine finished
                         if (GameMain.GameSession == null || Level.Loaded == null) { return; }
+
+                        if (monster.Removed) { return; }
 						
                         System.Diagnostics.Debug.Assert(GameMain.NetworkMember == null || GameMain.NetworkMember.IsServer, "Clients should not create monster events.");
 

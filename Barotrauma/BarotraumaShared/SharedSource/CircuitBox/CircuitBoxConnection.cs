@@ -25,7 +25,7 @@ namespace Barotrauma
                 if (connector is CircuitBoxOutputConnection output)
                 {
                     output.ReceiveSignal(signal);
-                    return;
+                    continue;
                 }
                 Connection.SendSignalIntoConnection(signal, connector.Connection);
             }

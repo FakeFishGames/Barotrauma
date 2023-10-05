@@ -1,4 +1,5 @@
-﻿using Barotrauma.Networking;
+﻿using Barotrauma.Extensions;
+using Barotrauma.Networking;
 using FarseerPhysics;
 using Microsoft.Xna.Framework;
 using System;
@@ -181,24 +182,20 @@ namespace Barotrauma.Items.Components
                 if (hasPower)
                 {
                     var batteries = GetDirectlyConnectedBatteries().Where(static b => !b.OutputDisabled && b.Charge > 0.0001f && b.MaxOutPut > 0.0001f);
-                    int batteryCount = batteries.Count();
-                    if (batteryCount > 0)
+                    float neededPower = PowerConsumption;
+                    while (neededPower > 0.0001f && batteries.Any())
                     {
-                        float neededPower = PowerConsumption;
-                        while (neededPower > 0.0001f)
+                        float takePower = neededPower / batteries.Count();
+                        takePower = Math.Min(takePower, batteries.Min(b => Math.Min(b.Charge * 3600.0f, b.MaxOutPut)));
+                        foreach (PowerContainer battery in batteries)
                         {
-                            float takePower = neededPower / batteryCount;
-                            takePower = Math.Min(takePower, batteries.Min(b => Math.Min(b.Charge * 3600.0f, b.MaxOutPut)));
-                            foreach (PowerContainer battery in batteries)
-                            {
-                                neededPower -= takePower;
-                                battery.Charge -= takePower / 3600.0f;
+                            neededPower -= takePower;
+                            battery.Charge -= takePower / 3600.0f;
 #if SERVER
-                                if (GameMain.Server != null) { battery.Item.CreateServerEvent(battery); }
+                            if (GameMain.Server != null) { battery.Item.CreateServerEvent(battery); }
 #endif
-                            }
                         }
-                    }
+                    }                    
                     Discharge();
                 }
             }

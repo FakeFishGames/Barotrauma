@@ -133,15 +133,13 @@ namespace Barotrauma
                 tempTargetItems.Clear();
                 foreach (var target in targets)
                 {
-                    if (target is not Item item) { continue; }                    
-                    if (itemTags.Any() && itemTags.None(item.HasTag) && 
-                        itemIdentifierSplit.Any() && !itemIdentifierSplit.Contains(item.Prefab.Identifier))
+                    if (target is not Item item) { continue; }
+                    if (itemTags.Any(item.HasTag) || itemIdentifierSplit.Contains(item.Prefab.Identifier))
                     {
-                        continue;
-                    } 
-                    if (ConditionalsMatch(item, character: null))
-                    {
-                        tempTargetItems.Add(item);
+                        if (ConditionalsMatch(item, character: null))
+                        {
+                            tempTargetItems.Add(item);
+                        }
                     }
                 }
                 if (EnoughTargets(targetCount, tempTargetItems.Count))

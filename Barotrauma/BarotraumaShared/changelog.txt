@@ -1,4 +1,14 @@
 -------------------------------------------------------------------------------------------------------------------------------------------------
+v1.1.15.0
+-------------------------------------------------------------------------------------------------------------------------------------------------
+
+- Fixed console errors when there are swarm feeders (or other monsters that immediately despawn when killed) in an irradiated level.
+- Fixed occasional crashes when firing a turret makes a supercapacitor drop to 0% charge.
+- Fixed circuit box only outputting to one pin when wired directly from input to multiple output pins.
+- Fixed tutorial reactor starting already powered up, making the first engineer tutorial objectives complete immediately.
+- Miscellaneous tutorial fixes.
+
+-------------------------------------------------------------------------------------------------------------------------------------------------
 v1.1.14.0
 -------------------------------------------------------------------------------------------------------------------------------------------------
 
