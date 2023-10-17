@@ -25,7 +25,7 @@ namespace Barotrauma
         {
             if (maxProgressStateDeterminsCompleted)
             {
-                return Prefab.MaxProgressState == State;
+                return Prefab.MaxProgressState >= State;
             }
 
             if (Level.Loaded?.Type == LevelData.LevelType.Outpost)
