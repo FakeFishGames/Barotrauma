@@ -4,9 +4,11 @@ namespace Barotrauma
 {
     partial class GoToMission : Mission
     {
+        private readonly bool maxProgressStateDeterminsCompleted;
         public GoToMission(MissionPrefab prefab, Location[] locations, Submarine sub)
             : base(prefab, locations, sub)
         {
+            maxProgressStateDeterminsCompleted = prefab.ConfigElement.GetAttributeBool("maxprogressdeterminescompleted", false);
         }
 
         protected override void UpdateMissionSpecific(float deltaTime)
@@ -19,6 +21,11 @@ namespace Barotrauma
 
         protected override bool DetermineCompleted()
         {
+            if (maxProgressStateDeterminsCompleted)
+            {
+                return Prefab.MaxProgressState == State;
+            }
+
             if (Level.Loaded?.Type == LevelData.LevelType.Outpost)
             {
                 return true;
