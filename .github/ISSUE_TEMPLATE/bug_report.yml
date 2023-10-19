@@ -47,14 +47,33 @@ body:
         - Happens regularly
         - Happens every time I play
     validations:
-      required: true
+      required: true      
+  - type: dropdown
+    id: mporsp
+    attributes:
+      label: Single player or multiplayer?
+      description: Did the issue happen in single player, multiplayer, or both? How was the server being hosted?
+      options:      
+        - Single player
+        - Multiplayer hosted from the in-game menu (= using a listen server)
+        - Multiplayer hosted using a dedicated server
+        - Happens in both single player and multiplayer
+        - Happens outside single player or multiplayer game modes (e.g. game launches on startup, something broken in the main menu)
+        - Other
+    validations:
+      required: true      
+  - type: input
+    id: othermporsp
+    attributes:
+      label: "-"
+      description: If you selected "Other" in the above dropdown, please clarify here.
   - type: dropdown
     id: version
     attributes:
       label: Version
       description: Which version of the game did the bug happen in? You can see the current version number in the bottom left corner of your screen in the main menu.
       options:      
-        - v1.0.21.0
+        - v1.1.18.0 (Treacherous Tides)
         - Other
     validations:
       required: true

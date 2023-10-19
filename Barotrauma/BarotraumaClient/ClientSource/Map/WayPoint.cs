@@ -60,6 +60,7 @@ namespace Barotrauma
             }
 
             Sprite sprite = iconSprites[SpawnType.ToString()];
+            Sprite sprite2 = null;
             if (spawnType == SpawnType.Human && AssignedJob?.Icon != null)
             {
                 sprite = iconSprites["Path"];
@@ -67,17 +68,29 @@ namespace Barotrauma
             else if (ConnectedDoor != null)
             {
                 sprite = iconSprites["Door"];
-                if (ConnectedDoor.IsHorizontal && Ladders == null)
+                if (Ladders != null)
                 {
+                    sprite2 = iconSprites["Ladder"];
+                }
+                else if (ConnectedDoor.IsHorizontal)
+                {
+                    //connected to a hatch but not ladders, something's probably off here
                     clr = Color.Yellow;
+                }
+                if (!Submarine.RectContains(ConnectedDoor.Item.WorldRect, WorldPosition))
+                {
+                    clr = Color.Red;
                 }
             }
             else if (Ladders != null)
             {
                 sprite = iconSprites["Ladder"];
             }
-            sprite.Draw(spriteBatch, drawPos, clr, scale: iconSize / (float)sprite.SourceRect.Width, depth: 0.001f);
-            sprite.RelativeOrigin = Vector2.One * 0.5f;
+
+            float spriteScale = iconSize / (float)sprite.SourceRect.Width;
+            sprite.Draw(spriteBatch, drawPos, clr, origin: sprite.size / 2, scale: spriteScale, depth: 0.001f);
+            sprite2?.Draw(spriteBatch, drawPos + sprite.size * spriteScale * 0.5f, clr, origin: sprite2.size / 2, scale: spriteScale, depth: 0.001f);
+
             if (spawnType == SpawnType.Human && AssignedJob?.Icon != null)
             {
                 AssignedJob.Icon.Draw(spriteBatch, drawPos, AssignedJob.UIColor, scale: iconSize / (float)AssignedJob.Icon.SourceRect.Width * 0.8f, depth: 0.0f);

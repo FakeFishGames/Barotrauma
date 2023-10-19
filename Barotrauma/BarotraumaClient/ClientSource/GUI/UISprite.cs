@@ -117,6 +117,9 @@ namespace Barotrauma
             return MathHelper.Clamp(Math.Min(Math.Min(scale.X, scale.Y), GUI.SlicedSpriteScale), minBorderScale, maxBorderScale);
         }
 
+        public void Draw(SpriteBatch spriteBatch, RectangleF rect, Color color, SpriteEffects spriteEffects = SpriteEffects.None, Vector2? uvOffset = null) 
+            => Draw(spriteBatch, new Rectangle(rect.Location.ToPoint(), rect.Size.ToPoint()), color, spriteEffects, uvOffset);
+
         public void Draw(SpriteBatch spriteBatch, Rectangle rect, Color color, SpriteEffects spriteEffects = SpriteEffects.None, Vector2? uvOffset = null)
         {
             uvOffset ??= Vector2.Zero;

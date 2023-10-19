@@ -7,7 +7,7 @@ using Steamworks.Data;
 
 namespace Steamworks
 {
-	internal class ISteamUser : SteamInterface
+	internal unsafe class ISteamUser : SteamInterface
 	{
 		
 		internal ISteamUser( bool IsGameServer )
@@ -15,9 +15,9 @@ namespace Steamworks
 			SetupInterface( IsGameServer );
 		}
 		
-		[DllImport( Platform.LibraryName, EntryPoint = "SteamAPI_SteamUser_v020", CallingConvention = Platform.CC)]
-		internal static extern IntPtr SteamAPI_SteamUser_v020();
-		public override IntPtr GetUserInterfacePointer() => SteamAPI_SteamUser_v020();
+		[DllImport( Platform.LibraryName, EntryPoint = "SteamAPI_SteamUser_v023", CallingConvention = Platform.CC)]
+		internal static extern IntPtr SteamAPI_SteamUser_v023();
+		public override IntPtr GetUserInterfacePointer() => SteamAPI_SteamUser_v023();
 		
 		
 		#region FunctionMeta
@@ -55,24 +55,24 @@ namespace Steamworks
 		}
 		
 		#region FunctionMeta
-		[DllImport( Platform.LibraryName, EntryPoint = "SteamAPI_ISteamUser_InitiateGameConnection", CallingConvention = Platform.CC)]
-		private static extern int _InitiateGameConnection( IntPtr self, IntPtr pAuthBlob, int cbMaxAuthBlob, SteamId steamIDGameServer, uint unIPServer, ushort usPortServer, [MarshalAs( UnmanagedType.U1 )] bool bSecure );
+		[DllImport( Platform.LibraryName, EntryPoint = "SteamAPI_ISteamUser_InitiateGameConnection_DEPRECATED", CallingConvention = Platform.CC)]
+		private static extern int _InitiateGameConnection_DEPRECATED( IntPtr self, IntPtr pAuthBlob, int cbMaxAuthBlob, SteamId steamIDGameServer, uint unIPServer, ushort usPortServer, [MarshalAs( UnmanagedType.U1 )] bool bSecure );
 		
 		#endregion
-		internal int InitiateGameConnection( IntPtr pAuthBlob, int cbMaxAuthBlob, SteamId steamIDGameServer, uint unIPServer, ushort usPortServer, [MarshalAs( UnmanagedType.U1 )] bool bSecure )
+		internal int InitiateGameConnection_DEPRECATED( IntPtr pAuthBlob, int cbMaxAuthBlob, SteamId steamIDGameServer, uint unIPServer, ushort usPortServer, [MarshalAs( UnmanagedType.U1 )] bool bSecure )
 		{
-			var returnValue = _InitiateGameConnection( Self, pAuthBlob, cbMaxAuthBlob, steamIDGameServer, unIPServer, usPortServer, bSecure );
+			var returnValue = _InitiateGameConnection_DEPRECATED( Self, pAuthBlob, cbMaxAuthBlob, steamIDGameServer, unIPServer, usPortServer, bSecure );
 			return returnValue;
 		}
 		
 		#region FunctionMeta
-		[DllImport( Platform.LibraryName, EntryPoint = "SteamAPI_ISteamUser_TerminateGameConnection", CallingConvention = Platform.CC)]
-		private static extern void _TerminateGameConnection( IntPtr self, uint unIPServer, ushort usPortServer );
+		[DllImport( Platform.LibraryName, EntryPoint = "SteamAPI_ISteamUser_TerminateGameConnection_DEPRECATED", CallingConvention = Platform.CC)]
+		private static extern void _TerminateGameConnection_DEPRECATED( IntPtr self, uint unIPServer, ushort usPortServer );
 		
 		#endregion
-		internal void TerminateGameConnection( uint unIPServer, ushort usPortServer )
+		internal void TerminateGameConnection_DEPRECATED( uint unIPServer, ushort usPortServer )
 		{
-			_TerminateGameConnection( Self, unIPServer, usPortServer );
+			_TerminateGameConnection_DEPRECATED( Self, unIPServer, usPortServer );
 		}
 		
 		#region FunctionMeta
@@ -93,8 +93,7 @@ namespace Steamworks
 		#endregion
 		internal bool GetUserDataFolder( out string pchBuffer )
 		{
-			using var memory = Helpers.TakeMemory();
-			IntPtr mempchBuffer = memory;
+			using var mempchBuffer = Helpers.TakeMemory();
 			var returnValue = _GetUserDataFolder( Self, mempchBuffer, (1024 * 32) );
 			pchBuffer = Helpers.MemoryToString( mempchBuffer );
 			return returnValue;
@@ -166,12 +165,23 @@ namespace Steamworks
 		
 		#region FunctionMeta
 		[DllImport( Platform.LibraryName, EntryPoint = "SteamAPI_ISteamUser_GetAuthSessionTicket", CallingConvention = Platform.CC)]
-		private static extern HAuthTicket _GetAuthSessionTicket( IntPtr self, IntPtr pTicket, int cbMaxTicket, ref uint pcbTicket );
+		private static extern HAuthTicket _GetAuthSessionTicket( IntPtr self, IntPtr pTicket, int cbMaxTicket, ref uint pcbTicket, ref NetIdentity pSteamNetworkingIdentity );
 		
 		#endregion
-		internal HAuthTicket GetAuthSessionTicket( IntPtr pTicket, int cbMaxTicket, ref uint pcbTicket )
+		internal HAuthTicket GetAuthSessionTicket( IntPtr pTicket, int cbMaxTicket, ref uint pcbTicket, ref NetIdentity pSteamNetworkingIdentity )
 		{
-			var returnValue = _GetAuthSessionTicket( Self, pTicket, cbMaxTicket, ref pcbTicket );
+			var returnValue = _GetAuthSessionTicket( Self, pTicket, cbMaxTicket, ref pcbTicket, ref pSteamNetworkingIdentity );
+			return returnValue;
+		}
+		
+		#region FunctionMeta
+		[DllImport( Platform.LibraryName, EntryPoint = "SteamAPI_ISteamUser_GetAuthTicketForWebApi", CallingConvention = Platform.CC)]
+		private static extern HAuthTicket _GetAuthTicketForWebApi( IntPtr self, [MarshalAs( UnmanagedType.CustomMarshaler, MarshalTypeRef = typeof( Utf8StringToNative ) )] string pchIdentity );
+		
+		#endregion
+		internal HAuthTicket GetAuthTicketForWebApi( [MarshalAs( UnmanagedType.CustomMarshaler, MarshalTypeRef = typeof( Utf8StringToNative ) )] string pchIdentity )
+		{
+			var returnValue = _GetAuthTicketForWebApi( Self, pchIdentity );
 			return returnValue;
 		}
 		
@@ -363,6 +373,18 @@ namespace Steamworks
 		{
 			var returnValue = _GetDurationControl( Self );
 			return new CallResult<DurationControl_t>( returnValue, IsServer );
+		}
+		
+		#region FunctionMeta
+		[DllImport( Platform.LibraryName, EntryPoint = "SteamAPI_ISteamUser_BSetDurationControlOnlineState", CallingConvention = Platform.CC)]
+		[return: MarshalAs( UnmanagedType.I1 )]
+		private static extern bool _BSetDurationControlOnlineState( IntPtr self, DurationControlOnlineState eNewState );
+		
+		#endregion
+		internal bool BSetDurationControlOnlineState( DurationControlOnlineState eNewState )
+		{
+			var returnValue = _BSetDurationControlOnlineState( Self, eNewState );
+			return returnValue;
 		}
 		
 	}

@@ -45,7 +45,7 @@ namespace Barotrauma
             base.Select();
             if (dummyCharacter is { Removed: false })
             {
-                dummyCharacter?.Remove();
+                dummyCharacter.Remove();
             }
 
             dummyCharacter = Character.Create(CharacterPrefab.HumanSpeciesName, Vector2.Zero, "", id: Entity.DummyID, hasAi: false);
@@ -54,15 +54,11 @@ namespace Barotrauma
             dummyCharacter.Inventory.CreateSlots();
             dummyCharacter.Info.GiveExperience(999999);
 
-            miniMapItem = new Item(ItemPrefab.Find(null, "deconstructor".ToIdentifier()), Vector2.Zero, null, 1337, false);
+            miniMapItem = new Item(ItemPrefab.Find(null, "circuitbox".ToIdentifier()), Vector2.Zero, null, 1337, false);
+            miniMapItem.GetComponent<Holdable>().AttachToWall();
 
-            foreach (ItemComponent component in miniMapItem.Components)
-            {
-                component.OnItemLoaded();
-            }
             Character.Controlled = dummyCharacter;
             GameMain.World.ProcessChanges();
-            TabMenu = new TabMenu();
         }
 
         public override void AddToGUIUpdateList()
@@ -78,29 +74,30 @@ namespace Barotrauma
             base.Update(deltaTime);
             TabMenu?.Update((float)deltaTime);
 
-            // if (dummyCharacter is { } dummy && miniMapItem is { } item)
-            // {
-            //     if (dummy.SelectedConstruction != item)
-            //     {
-            //         dummy.SelectedConstruction = item;
-            //     }
-            //
-            //     dummy.SelectedConstruction?.UpdateHUD(Cam, dummy, (float)deltaTime);
-            //     Vector2 pos = FarseerPhysics.ConvertUnits.ToSimUnits(item.Position);
-            //
-            //     foreach (Limb limb in dummy.AnimController.Limbs)
-            //     {
-            //         limb.body.SetTransform(pos, 0.0f);
-            //     }
-            //
-            //     if (dummy.AnimController?.Collider is { } collider)
-            //     {
-            //         collider.SetTransform(pos, 0);
-            //     }
-            //
-            //     dummy.ControlLocalPlayer((float)deltaTime, Cam, false);
-            //     dummy.Control((float)deltaTime, Cam);
-            // }
+            if (dummyCharacter is { } dummy && miniMapItem is { } item)
+            {
+                if (dummy.SelectedItem != item)
+                {
+                    dummy.SelectedItem = item;
+                }
+
+                dummy.SelectedItem?.UpdateHUD(Cam, dummy, (float)deltaTime);
+                item.SendSignal("1", "signal_in1");
+                Vector2 pos = FarseerPhysics.ConvertUnits.ToSimUnits(item.Position);
+
+                foreach (Limb limb in dummy.AnimController.Limbs)
+                {
+                    limb.body.SetTransform(pos, 0.0f);
+                }
+
+                if (dummy.AnimController?.Collider is { } collider)
+                {
+                    collider.SetTransform(pos, 0);
+                }
+
+                dummy.ControlLocalPlayer((float)deltaTime, Cam, false);
+                dummy.Control((float)deltaTime, Cam);
+            }
         }
 
         public override void Draw(double deltaTime, GraphicsDevice graphics, SpriteBatch spriteBatch)

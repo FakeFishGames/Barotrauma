@@ -31,6 +31,12 @@ namespace Barotrauma
             set;
         }
 
+        [Serialize(-1, IsPropertySaveable.Yes, description: "The closer to the current level difficulty this value is, the higher the probability of choosing these generation params are. Defaults to -1, which means we use the current difficulty."), Editable(MinValueInt = 1, MaxValueInt = 50)]
+        public int PreferredDifficulty
+        {
+            get;
+            set;
+        }
 
         [Serialize(10, IsPropertySaveable.Yes, description: "Total number of modules in the outpost."), Editable(MinValueInt = 1, MaxValueInt = 50)]
         public int TotalModuleCount

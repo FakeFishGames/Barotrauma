@@ -100,7 +100,7 @@ namespace Barotrauma
                         WayPoint.WayPointList.Find(wp => wp.Submarine == sub && wp.SpawnType == SpawnType.Human);
                     if (subWaypoint != null)
                     {
-                        npc.GiveIdCardTags(subWaypoint, createNetworkEvent: true);
+                        npc.GiveIdCardTags(subWaypoint, requireSpawnPointTagsNotGiven: false, createNetworkEvent: true);
                     }
                 }
             }

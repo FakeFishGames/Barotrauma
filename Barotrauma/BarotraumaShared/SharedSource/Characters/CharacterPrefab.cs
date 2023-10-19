@@ -46,6 +46,8 @@ namespace Barotrauma
         public static IEnumerable<ContentXElement> ConfigElements => Prefabs.Select(p => p.ConfigElement);
 
         public static readonly Identifier HumanSpeciesName = "human".ToIdentifier();
+        public static readonly Identifier HumanGroup = "human".ToIdentifier();
+
         public static CharacterFile HumanConfigFile => HumanPrefab.ContentFile as CharacterFile;
         public static CharacterPrefab HumanPrefab => FindBySpeciesName(HumanSpeciesName);
 

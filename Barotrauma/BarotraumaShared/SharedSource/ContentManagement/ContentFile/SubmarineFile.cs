@@ -28,6 +28,10 @@ namespace Barotrauma
         {
             //Overrides for subs don't exist! Should we change this?
         }
+
+        // Use byte-perfect hash because this is compressed, trimming whitespace is incorrect and needlessly slow here
+        public override Md5Hash CalculateHash()
+            => Md5Hash.CalculateForFile(Path.FullPath, Md5Hash.StringHashOptions.BytePerfect);
     }
 
     [NotSyncedInMultiplayer]

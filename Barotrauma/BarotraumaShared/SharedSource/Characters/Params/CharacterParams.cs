@@ -143,7 +143,14 @@ namespace Barotrauma
 
         protected override string GetName() => "Character Config File";
 
-        public override ContentXElement MainElement => base.MainElement.IsOverride() ? base.MainElement.FirstElement() : base.MainElement;
+        public override ContentXElement MainElement
+        {
+            get
+            {
+                if (base.MainElement == null) { return null; }
+                return base.MainElement.IsOverride() ? base.MainElement.FirstElement() : base.MainElement;
+            }
+        }
 
         public static XElement CreateVariantXml(XElement variantXML, XElement baseXML)
         {
@@ -182,6 +189,11 @@ namespace Barotrauma
         {
             UpdatePath(File.Path);
             doc = XMLExtensions.TryLoadXml(Path);
+            if (MainElement == null)
+            {
+                DebugConsole.ThrowError("Main element null! Failed to load character params.");
+                return false;
+            }
             Identifier variantOf = MainElement.VariantOf();
             if (!variantOf.IsEmpty)
             {
@@ -230,6 +242,11 @@ namespace Barotrauma
 
         protected void CreateSubParams()
         {
+            if (MainElement == null)
+            {
+                DebugConsole.ThrowError("Main element null, cannot create sub params!");
+                return;
+            }
             SubParams.Clear();
             var healthElement = MainElement.GetChildElement("health");
             if (healthElement != null)
@@ -745,7 +762,7 @@ namespace Barotrauma
             {
                 if (!TryGetTarget(targetCharacter.SpeciesName, out target))
                 {
-                    target = targets.FirstOrDefault(t => string.Equals(t.Tag, targetCharacter.Params.Group.ToString(), StringComparison.OrdinalIgnoreCase));
+                    target = targets.FirstOrDefault(t => t.Tag == targetCharacter.Params.Group);
                 }
                 return target != null;
             }
@@ -791,7 +808,7 @@ namespace Barotrauma
             public override string Name => "Target";
 
             [Serialize("", IsPropertySaveable.Yes, description: "Can be an item tag, species name or something else. Examples: decoy, provocative, light, dead, human, crawler, wall, nasonov, sonar, door, stronger, weaker, light, human, room..."), Editable()]
-            public string Tag { get; private set; }
+            public Identifier Tag { get; private set; }
 
             [Serialize(AIState.Idle, IsPropertySaveable.Yes), Editable]
             public AIState State { get; set; }

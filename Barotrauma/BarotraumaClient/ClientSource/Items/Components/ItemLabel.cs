@@ -311,7 +311,7 @@ namespace Barotrauma.Items.Components
             prevRect = item.Rect;
         }
         
-        public void Draw(SpriteBatch spriteBatch, bool editing = false, float itemDepth = -1)
+        public void Draw(SpriteBatch spriteBatch, bool editing = false, float itemDepth = -1, Color? overrideColor = null)
         {
             if (item.ParentInventory != null) { return; }
             if (editing)

@@ -16,7 +16,7 @@ namespace Barotrauma
         protected readonly HashSet<Character> requireKill = new HashSet<Character>();
         protected readonly HashSet<Character> requireRescue = new HashSet<Character>();
 
-        private readonly string itemTag;
+        private readonly Identifier itemTag;
         private readonly XElement itemConfig;
         private readonly List<Item> items = new List<Item>();
 
@@ -90,7 +90,7 @@ namespace Barotrauma
             hostagesKilledMessage = TextManager.Get(msgTag).Fallback(msgTag);
 
             itemConfig = prefab.ConfigElement.GetChildElement("Items");
-            itemTag = prefab.ConfigElement.GetAttributeString("targetitem", "");
+            itemTag = prefab.ConfigElement.GetAttributeIdentifier("targetitem", Identifier.Empty);
         }
 
         protected override void StartMissionSpecific(Level level)
@@ -118,7 +118,7 @@ namespace Barotrauma
 
         private void InitItems(Submarine submarine)
         {
-            if (!string.IsNullOrEmpty(itemTag))
+            if (!itemTag.IsEmpty)
             {
                 var itemsToDestroy = Item.ItemList.FindAll(it => it.Submarine?.Info.Type != SubmarineType.Player && it.HasTag(itemTag));
                 if (!itemsToDestroy.Any())

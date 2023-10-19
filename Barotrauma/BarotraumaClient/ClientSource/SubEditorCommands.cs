@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Linq;
 using Barotrauma.Items.Components;
@@ -131,7 +132,7 @@ namespace Barotrauma
             {
                 foreach (MapEntity receiver in receivers)
                 {
-                    if (receiver is Item it && it.ParentInventory != null)
+                    if (receiver is Item { ParentInventory: not null } it)
                     {
                         PreviousInventories.Add(new InventorySlotItem(it.ParentInventory.FindIndex(it), it), it.ParentInventory);
                     }
@@ -192,14 +193,35 @@ namespace Barotrauma
 
         public override void Execute()
         {
-            DeleteUndelete(true);
-            ContainedItemsCommand?.ForEach(cmd => cmd.Execute());
+            var items = DeleteUndelete(true);
+            ContainedItemsCommand?.ForEach(static cmd => cmd.Execute());
+            CircuitBoxWorkaround(items);
         }
 
         public override void UnExecute()
         {
-            DeleteUndelete(false);
-            ContainedItemsCommand?.ForEach(cmd => cmd.UnExecute());
+            var items = DeleteUndelete(false);
+            ContainedItemsCommand?.ForEach(static cmd => cmd.UnExecute());
+            CircuitBoxWorkaround(items);
+        }
+
+        // FIXME Temporary workaround for circuit boxes throwing console errors and breaking completely when undoing a deletion
+        private static void CircuitBoxWorkaround(Option<ImmutableArray<MapEntity>> entitiesOption)
+        {
+            if (!entitiesOption.TryUnwrap(out var entities)) { return; }
+
+            foreach (var entity in entities)
+            {
+                if (entity is not Item it) { continue; }
+
+                if (it.GetComponent<CircuitBox>() is not null)
+                {
+                    foreach (var container in it.GetComponents<ItemContainer>())
+                    {
+                        container.Inventory.DeleteAllItems();
+                    }
+                }
+            }
         }
 
         public override void Cleanup()
@@ -215,10 +237,10 @@ namespace Barotrauma
             CloneList?.Clear();
             Receivers.Clear();
             PreviousInventories?.Clear();
-            ContainedItemsCommand?.ForEach(cmd => cmd.Cleanup());
+            ContainedItemsCommand?.ForEach(static cmd => cmd.Cleanup());
         }
 
-        private void DeleteUndelete(bool redo)
+        private Option<ImmutableArray<MapEntity>> DeleteUndelete(bool redo)
         {
             bool wasDeleted = WasDeleted;
 
@@ -227,13 +249,14 @@ namespace Barotrauma
 
             if (wasDeleted)
             {
-                Debug.Assert(Receivers.All(entity => entity.GetReplacementOrThis().Removed), "Tried to redo a deletion but some items were not deleted");
+                Debug.Assert(Receivers.All(static entity => entity.GetReplacementOrThis().Removed), "Tried to redo a deletion but some items were not deleted");
 
                 List<MapEntity> clones = MapEntity.Clone(CloneList);
                 int length = Math.Min(Receivers.Count, clones.Count);
                 for (int i = 0; i < length; i++)
                 {
-                    MapEntity clone = clones[i], receiver = Receivers[i];
+                    MapEntity clone = clones[i],
+                              receiver = Receivers[i];
 
                     if (receiver.GetReplacementOrThis() is Item item && clone is Item cloneItem)
                     {
@@ -245,7 +268,7 @@ namespace Barotrauma
                             {
                                 case null:
                                     continue;
-                                case ItemContainer newContainer when newContainer.Inventory != null && ic is ItemContainer itemContainer && itemContainer.Inventory != null:
+                                case ItemContainer { Inventory: not null } newContainer when ic is ItemContainer { Inventory: not null } itemContainer:
                                     itemContainer.Inventory.GetReplacementOrThiS().ReplacedBy = newContainer.Inventory;
                                     goto default;
                                 default:
@@ -260,7 +283,8 @@ namespace Barotrauma
 
                 for (int i = 0; i < length; i++)
                 {
-                    MapEntity clone = clones[i], receiver = Receivers[i];
+                    MapEntity clone = clones[i],
+                              receiver = Receivers[i];
 
                     if (clone is Item it)
                     {
@@ -278,6 +302,8 @@ namespace Barotrauma
                 {
                     clone.Submarine = Submarine.MainSub;
                 }
+
+                return Option.Some(clones.ToImmutableArray());
             }
             else
             {
@@ -289,6 +315,8 @@ namespace Barotrauma
                         receiver.Remove();
                     }
                 }
+
+                return Option.None;
             }
         }
 

@@ -1,5 +1,6 @@
 ﻿using Barotrauma.Networking;
 using System;
+using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -114,7 +115,7 @@ namespace Barotrauma.Steam
             currentLobby?.SetData("allowrespawn", serverSettings.AllowRespawn.ToString());
             currentLobby?.SetData("karmaenabled", serverSettings.KarmaEnabled.ToString());
             currentLobby?.SetData("friendlyfireenabled", serverSettings.AllowFriendlyFire.ToString());
-            currentLobby?.SetData("traitors", serverSettings.TraitorsEnabled.ToString());
+            currentLobby?.SetData("traitors", serverSettings.TraitorProbability.ToString(CultureInfo.InvariantCulture));
             currentLobby?.SetData("gamestarted", GameMain.Client.GameStarted.ToString());
             currentLobby?.SetData("playstyle", serverSettings.PlayStyle.ToString());
             currentLobby?.SetData("gamemode", GameMain.NetLobbyScreen?.SelectedMode?.Identifier.Value ?? "");

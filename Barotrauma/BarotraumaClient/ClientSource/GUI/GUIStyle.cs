@@ -142,11 +142,13 @@ namespace Barotrauma
         public readonly static GUIColor HealthBarColorHigh = new GUIColor("HealthBarColorHigh");
         public readonly static GUIColor HealthBarColorPoisoned = new GUIColor("HealthBarColorPoisoned");
 
+        private readonly static Point defaultItemFrameMargin = new Point(50, 56);
+
         public static Point ItemFrameMargin 
         {
             get 
             { 
-                Point size = new Point(50, 56).Multiply(GUI.SlicedSpriteScale);
+                Point size = defaultItemFrameMargin.Multiply(GUI.SlicedSpriteScale);
 
                 var style = GetComponentStyle("ItemUI"); 
                 var sprite = style?.Sprites[GUIComponent.ComponentState.None].First();
@@ -157,6 +159,16 @@ namespace Barotrauma
                 }
                 return size;
             } 
+        }
+
+        public static int ItemFrameTopBarHeight
+        {
+            get
+            {
+                var style = GetComponentStyle("ItemUI");
+                var sprite = style?.Sprites[GUIComponent.ComponentState.None].First();
+                return (int)Math.Min(sprite?.Slices[0].Height ?? 0, defaultItemFrameMargin.Y / 2 * GUI.SlicedSpriteScale);   
+            }
         }
 
         public static Point ItemFrameOffset => new Point(0, 3).Multiply(GUI.SlicedSpriteScale);

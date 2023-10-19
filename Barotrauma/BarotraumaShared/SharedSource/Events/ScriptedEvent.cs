@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Barotrauma.Extensions;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -9,9 +10,18 @@ namespace Barotrauma
         private readonly Dictionary<Identifier, List<Predicate<Entity>>> targetPredicates = new Dictionary<Identifier, List<Predicate<Entity>>>();
 
         private readonly Dictionary<Identifier, List<Entity>> cachedTargets = new Dictionary<Identifier, List<Entity>>();
+
+        /// <summary>
+        /// How many targets were there when they were tagged for the first time? Can be used by some EventActions to check how many entities
+        /// there are still left (e.g. how much of the initial cargo still exists)
+        /// </summary>
+        private readonly Dictionary<Identifier, int> initialAmounts = new Dictionary<Identifier, int>();
+
         private int prevEntityCount;
         private int prevPlayerCount, prevBotCount;
         private Character prevControlled;
+
+        public readonly OnRoundEndAction OnRoundEndAction;
 
         private readonly string[] requiredDestinationTypes;
         public readonly bool RequireBeaconStation;
@@ -20,16 +30,25 @@ namespace Barotrauma
         public List<EventAction> Actions { get; } = new List<EventAction>();
         public Dictionary<Identifier, List<Entity>> Targets { get; } = new Dictionary<Identifier, List<Entity>>();
 
+        protected virtual IEnumerable<Identifier> NonActionChildElementNames => Enumerable.Empty<Identifier>();
+
         public override string ToString()
         {
-            return $"ScriptedEvent ({prefab.Identifier})";
+            return $"{nameof(ScriptedEvent)} ({prefab.Identifier})";
         }
         
         public ScriptedEvent(EventPrefab prefab) : base(prefab)
         {
             foreach (var element in prefab.ConfigElement.Elements())
             {
-                if (element.Name.ToString().Equals("statuseffect", StringComparison.OrdinalIgnoreCase))
+                Identifier elementId = element.Name.ToIdentifier();
+                if (NonActionChildElementNames.Contains(elementId)) { continue; }
+                if (elementId == nameof(Barotrauma.OnRoundEndAction))
+                {
+                    OnRoundEndAction = EventAction.Instantiate(this, element) as OnRoundEndAction;
+                    continue;
+                }
+                if (elementId == "statuseffect")
                 {
                     DebugConsole.ThrowError($"Error in event prefab \"{prefab.Identifier}\". Status effect configured as an action. Please configure status effects as child elements of a StatusEffectAction.");
                     continue;
@@ -46,31 +65,125 @@ namespace Barotrauma
             requiredDestinationTypes = prefab.ConfigElement.GetAttributeStringArray("requireddestinationtypes", null);
             RequireBeaconStation = prefab.ConfigElement.GetAttributeBool("requirebeaconstation", false);
 
+            var allActions = GetAllActions().Select(a => a.action);
+            foreach (var gotoAction in allActions.OfType<GoTo>())
+            {
+                if (allActions.None(a => a is Label label && label.Name == gotoAction.Name))
+                {
+                    DebugConsole.ThrowError($"Error in event \"{prefab.Identifier}\". Could not find a label matching the GoTo \"{gotoAction.Name}\".");
+                }
+            }
+
             GameAnalyticsManager.AddDesignEvent($"ScriptedEvent:{prefab.Identifier}:Start");
+        }
+
+        public override string GetDebugInfo()
+        {
+            EventAction currentAction = !IsFinished ? Actions[CurrentActionIndex] : null;
+
+            string text = $"Finished: {IsFinished.ColorizeObject()}\n" +
+                          $"Action index: {CurrentActionIndex.ColorizeObject()}\n" +
+                          $"Current action: {currentAction?.ToDebugString() ?? ToolBox.ColorizeObject(null)}\n";
+
+            text += "All actions:\n";
+            text += GetAllActions().Aggregate(string.Empty, (current, action) => current + $"{new string(' ', action.indent * 6)}{action.action.ToDebugString()}\n");
+
+            text += "Targets:\n";
+            foreach (var (key, value) in Targets)
+            {
+                text += $"    {key.ColorizeObject()}: {value.Aggregate(string.Empty, (current, entity) => current + $"{entity.ColorizeObject()} ")}\n";
+            }
+            return text;
+        }
+
+        public virtual string GetTextForReplacementElement(string tag)
+        {
+            if (tag.StartsWith("eventtag:"))
+            {
+                string targetTag = tag["eventtag:".Length..];
+                Entity target = GetTargets(targetTag.ToIdentifier()).FirstOrDefault();
+                if (target != null)
+                {
+                    if (target is Item item) { return item.Name; }
+                    if (target is Character character) { return character.Name; }
+                    if (target is Hull hull) { return hull.DisplayName.Value; }
+                    if (target is Submarine sub) { return sub.Info.DisplayName.Value; }
+                    DebugConsole.AddWarning($"Failed to get the name of the event target {target} as a replacement for the tag {tag} in an event text.");
+                    return target.ToString();
+                }
+                else
+                {
+                    return $"[target \"{targetTag}\" not found]";
+                }
+            }
+            return string.Empty;
+        }
+
+        public virtual LocalizedString ReplaceVariablesInEventText(LocalizedString str)
+        {
+            return str;
+        }
+
+        /// <summary>
+        /// Finds all actions in the ScriptedEvent (recursively going through the subactions as well). 
+        /// Returns a list of tuples where the first value is the indentation level (or "how deep in the hierarchy") the action is.
+        /// </summary>
+        public List<(int indent, EventAction action)> GetAllActions()
+        {
+            var list = new List<(int indent, EventAction action)>();
+            foreach (EventAction eventAction in Actions)
+            {
+                list.AddRange(FindActionsRecursive(eventAction));
+            }
+            return list;
+
+            static List<(int indent, EventAction action)> FindActionsRecursive(EventAction eventAction, int indent = 1)
+            {
+                var eventActions = new List<(int indent, EventAction action)> { (indent, eventAction) };
+                indent++;
+                foreach (var action in eventAction.GetSubActions())
+                {
+                    eventActions.AddRange(FindActionsRecursive(action, indent));
+                }
+                return eventActions;
+            }
         }
 
         public void AddTarget(Identifier tag, Entity target)
         {
             if (target == null)
             {
-                throw new System.ArgumentException("Target was null");
+                throw new ArgumentException($"Target was null (tag: {tag})");
             }
             if (target.Removed)
             {
-                throw new System.ArgumentException("Target has been removed");
+                throw new ArgumentException($"Target has been removed (tag: {tag})");
             }
-            if (!Targets.ContainsKey(tag))
+            if (Targets.ContainsKey(tag))
             {
-                Targets.Add(tag, new List<Entity>());
-            }
-            Targets[tag].Add(target);
-            if (cachedTargets.ContainsKey(tag))
-            {
-                cachedTargets[tag].Add(target);
+                if (!Targets[tag].Contains(target))
+                {
+                    Targets[tag].Add(target);
+                }
             }
             else
             {
-                cachedTargets.Add(tag, new List<Entity> { target });
+                Targets.Add(tag, new List<Entity>() { target });
+            }
+            if (cachedTargets.ContainsKey(tag))
+            {
+                if (!cachedTargets[tag].Contains(target))
+                {
+                    cachedTargets[tag].Add(target);
+                }
+            }
+            else
+            {
+                cachedTargets.Add(tag, Targets[tag].ToList());
+            }
+            if (!initialAmounts.ContainsKey(tag))
+            {
+                initialAmounts.Add(tag, cachedTargets[tag].Count);
             }
         }
 
@@ -86,6 +199,15 @@ namespace Barotrauma
             {
                 cachedTargets.Remove(tag);
             }
+        }
+
+        public int GetInitialTargetCount(Identifier tag)
+        {
+            if (initialAmounts.TryGetValue(tag, out int count))
+            {
+                return count;
+            }
+            return 0;
         }
 
         public IEnumerable<Entity> GetTargets(Identifier tag)
@@ -136,8 +258,23 @@ namespace Barotrauma
                 }
             }
 
-            cachedTargets.Add(tag, targetsToReturn);            
+            cachedTargets.Add(tag, targetsToReturn);
+            if (!initialAmounts.ContainsKey(tag))
+            {
+                initialAmounts.Add(tag, targetsToReturn.Count);
+            }
             return targetsToReturn;
+        }
+
+        public void InheritTags(Entity originalEntity, Entity newEntity)
+        {
+            foreach (var kvp in Targets)
+            {
+                if (kvp.Value.Contains(originalEntity))
+                {
+                    kvp.Value.Add(newEntity);
+                }
+            }
         }
 
         public void RemoveTag(Identifier tag)
@@ -152,8 +289,14 @@ namespace Barotrauma
         {
             int botCount = 0;
             int playerCount = 0;
+            bool forceRefreshTargets = false;
             foreach (Character c in Character.CharacterList)
             {
+                if (c.Removed)
+                {
+                    forceRefreshTargets = true;
+                    continue;
+                }
                 if (c.IsPlayer)
                 {
                     playerCount++;
@@ -163,7 +306,7 @@ namespace Barotrauma
                     botCount++;
                 }
             }
-            if (Entity.EntityCount != prevEntityCount || botCount != prevBotCount || playerCount != prevPlayerCount || prevControlled != Character.Controlled)
+            if (forceRefreshTargets || Entity.EntityCount != prevEntityCount || botCount != prevBotCount || playerCount != prevPlayerCount || prevControlled != Character.Controlled)
             {
                 cachedTargets.Clear();
                 prevEntityCount = Entity.EntityCount;
@@ -203,6 +346,10 @@ namespace Barotrauma
                             CurrentActionIndex = i;
                             break;
                         }
+                    }
+                    if (CurrentActionIndex == -1)
+                    {
+                        DebugConsole.AddWarning($"Could not find the GoTo label \"{goTo}\" in the event \"{Prefab.Identifier}\". Ending the event.");
                     }
                 }
 

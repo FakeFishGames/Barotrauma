@@ -61,7 +61,7 @@ namespace Barotrauma.Networking
             deliveryMethod switch
             {
                 DeliveryMethod.Reliable => Steamworks.P2PSend.Reliable,
-                DeliveryMethod.ReliableOrdered => Steamworks.P2PSend.Unreliable,
+                DeliveryMethod.ReliableOrdered => Steamworks.P2PSend.Reliable,
                 _ => Steamworks.P2PSend.Unreliable
             };
     }

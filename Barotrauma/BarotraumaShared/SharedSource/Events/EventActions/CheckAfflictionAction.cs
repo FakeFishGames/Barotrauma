@@ -12,6 +12,9 @@ namespace Barotrauma
         [Serialize("", IsPropertySaveable.Yes)]
         public Identifier TargetTag { get; set; } = Identifier.Empty;
 
+        [Serialize("", IsPropertySaveable.Yes, description: "Tag referring to the character who caused the affliction.")]
+        public Identifier SourceCharacter { get; set; } = Identifier.Empty;
+
         [Serialize(LimbType.None, IsPropertySaveable.Yes, "Only check afflictions on the specified limb type")]
         public LimbType TargetLimb { get; set; }
 
@@ -33,8 +36,7 @@ namespace Barotrauma
                 if (target.CharacterHealth == null) { continue; }
                 if (TargetLimb == LimbType.None)
                 {
-                    var affliction = target.CharacterHealth.GetAffliction(Identifier, AllowLimbAfflictions);
-                    if (affliction != null && affliction.Strength >= MinStrength) { return true; }
+                    if (target.CharacterHealth.GetAfflictionStrengthByIdentifier(Identifier, AllowLimbAfflictions) >= MinStrength) { return true; }
                 }
                 IEnumerable<Affliction> afflictions = target.CharacterHealth.GetAllAfflictions().Where(affliction =>
                 {
@@ -43,9 +45,13 @@ namespace Barotrauma
                         LimbType? limbType = target.CharacterHealth.GetAfflictionLimb(affliction)?.type;
                         if (limbType == null || limbType != TargetLimb) { return false; }
                     }
+                    if (!SourceCharacter.IsEmpty)
+                    {
+                        if (!ParentEvent.GetTargets(SourceCharacter).Contains(affliction.Source)) { return false; }
+                    }
+
                     return affliction.Strength >= MinStrength;
                 });
-
                 if (afflictions.Any(a => a.Identifier == Identifier)) { return true; }
             }
             return false;

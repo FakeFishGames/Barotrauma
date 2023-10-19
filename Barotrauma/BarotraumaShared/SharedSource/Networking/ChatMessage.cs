@@ -282,12 +282,12 @@ namespace Barotrauma.Networking
             return length;
         }
 
-        public static bool CanUseRadio(Character sender)
+        public static bool CanUseRadio(Character sender, bool ignoreJamming = false)
         {
-            return CanUseRadio(sender, out _);
+            return CanUseRadio(sender, out _, ignoreJamming);
         }
 
-        public static bool CanUseRadio(Character sender, out WifiComponent radio)
+        public static bool CanUseRadio(Character sender, out WifiComponent radio, bool ignoreJamming = false)
         {
             radio = null;
             if (sender?.Inventory == null || sender.Removed) { return false; }
@@ -295,7 +295,7 @@ namespace Barotrauma.Networking
             foreach (Item item in sender.Inventory.AllItems)
             {
                 var wifiComponent = item.GetComponent<WifiComponent>();
-                if (wifiComponent == null || !wifiComponent.LinkToChat || !wifiComponent.CanTransmit() || !sender.HasEquippedItem(item)) { continue; }
+                if (wifiComponent == null || !wifiComponent.LinkToChat || !wifiComponent.CanTransmit(ignoreJamming) || !sender.HasEquippedItem(item)) { continue; }
                 if (radio == null || wifiComponent.Range > radio.Range)
                 {
                     radio = wifiComponent;

@@ -74,13 +74,21 @@ namespace Barotrauma.Networking
         private bool initiatedStartGame;
         private CoroutineHandle startGameCoroutine;
 
-        public TraitorManager TraitorManager;
-
         private readonly ServerEntityEventManager entityEventManager;
 
         public FileSender FileSender { get; private set; }
 
         public ModSender ModSender { get; private set; }
+
+        private TraitorManager traitorManager;
+        public TraitorManager TraitorManager
+        {
+            get 
+            {
+                traitorManager ??= new TraitorManager(this);
+                return traitorManager; 
+            }
+        }
         
 #if DEBUG
         public void PrintSenderTransters()
@@ -358,22 +366,31 @@ namespace Barotrauma.Networking
                 for (int i = Character.CharacterList.Count - 1; i >= 0; i--)
                 {
                     Character character = Character.CharacterList[i];
-                    if (character.IsDead || !character.ClientDisconnected) { continue; }
-
-                    character.KillDisconnectedTimer += deltaTime;
-                    character.SetStun(1.0f);
+                    if (!character.ClientDisconnected) { continue; }
 
                     Client owner = connectedClients.Find(c => (c.Character == null || c.Character == character) && character.IsClientOwner(c));
-                    if ((OwnerConnection == null || owner?.Connection != OwnerConnection) && character.KillDisconnectedTimer > ServerSettings.KillDisconnectedTime)
+                    if (!character.IsDead)
                     {
-                        character.Kill(CauseOfDeathType.Disconnected, null);
-                        continue;
-                    }
+                        character.KillDisconnectedTimer += deltaTime;
+                        character.SetStun(1.0f);
 
-                    if (owner != null && owner.InGame && !owner.NeedsMidRoundSync &&
-                        (!ServerSettings.AllowSpectating || !owner.SpectateOnly))
+                        if ((OwnerConnection == null || owner?.Connection != OwnerConnection) && character.KillDisconnectedTimer > ServerSettings.KillDisconnectedTime)
+                        {
+                            character.Kill(CauseOfDeathType.Disconnected, null);
+                            continue;
+                        }
+                        if (owner != null && owner.InGame && !owner.NeedsMidRoundSync &&
+                            (!ServerSettings.AllowSpectating || !owner.SpectateOnly))
+                        {
+                            SetClientCharacter(owner, character);
+                        }
+                    }
+                    else if (owner != null &&
+                        character.CauseOfDeath?.Type == CauseOfDeathType.Disconnected &&
+                        character.CharacterHealth.VitalityDisregardingDeath > 0)
                     {
                         SetClientCharacter(owner, character);
+                        character.Revive(removeAfflictions: false);
                     }
                 }
 
@@ -412,12 +429,7 @@ namespace Barotrauma.Networking
                 }
 
                 float endRoundDelay = 1.0f;
-                if (TraitorManager?.ShouldEndRound ?? false)
-                {
-                    endRoundDelay = 5.0f;
-                    endRoundTimer += deltaTime;
-                }
-                else if (ServerSettings.AutoRestart && isCrewDead)
+                if (ServerSettings.AutoRestart && isCrewDead)
                 {
                     endRoundDelay = 5.0f;
                     endRoundTimer += deltaTime;
@@ -452,11 +464,7 @@ namespace Barotrauma.Networking
 
                 if (endRoundTimer >= endRoundDelay)
                 {
-                    if (TraitorManager?.ShouldEndRound ?? false)
-                    {
-                        Log("Ending round (a traitor completed their mission)", ServerLog.MessageType.ServerMessage);
-                    }
-                    else if (ServerSettings.AutoRestart && isCrewDead)
+                    if (ServerSettings.AutoRestart && isCrewDead)
                     {
                         Log("Ending round (entire crew dead)", ServerLog.MessageType.ServerMessage);
                     }
@@ -829,6 +837,9 @@ namespace Barotrauma.Networking
                     break;
                 case ClientPacketHeader.MEDICAL:
                     ReadMedicalMessage(inc, connectedClient);
+                    break;
+                case ClientPacketHeader.CIRCUITBOX:
+                    ReadCircuitBoxMessage(inc, connectedClient);
                     break;
                 case ClientPacketHeader.READY_CHECK:
                     ReadyCheck.ServerRead(inc, connectedClient);
@@ -1296,6 +1307,22 @@ namespace Barotrauma.Networking
             if (GameMain.GameSession?.Campaign is MultiPlayerCampaign mpCampaign)
             {
                 mpCampaign.MedicalClinic.ServerRead(inc, sender);
+            }
+        }
+
+        private static void ReadCircuitBoxMessage(IReadMessage inc, Client sender)
+        {
+            var header = INetSerializableStruct.Read<NetCircuitBoxHeader>(inc);
+
+            INetSerializableStruct data = header.Opcode switch
+            {
+                CircuitBoxOpcode.Cursor => INetSerializableStruct.Read<NetCircuitBoxCursorInfo>(inc),
+                _ => throw new ArgumentOutOfRangeException(nameof(header.Opcode), header.Opcode, "This data cannot be handled using direct network messages.")
+            };
+
+            if (header.FindTarget().TryUnwrap(out var box))
+            {
+                box.ServerRead(data, sender);
             }
         }
 
@@ -1775,7 +1802,7 @@ namespace Barotrauma.Networking
                 while (!c.NeedsMidRoundSync && c.PendingPositionUpdates.Count > 0)
                 {
                     var entity = c.PendingPositionUpdates.Peek();
-                    if (!(entity is IServerPositionSync entityPositionSync) ||
+                    if (entity is not IServerPositionSync entityPositionSync ||
                         entity.Removed ||
                         (entity is Item item && float.IsInfinity(item.PositionUpdateInterval)))
                     {
@@ -1957,7 +1984,8 @@ namespace Barotrauma.Networking
 
                     outmsg.WriteBoolean(ServerSettings.AllowSpectating);
 
-                    outmsg.WriteRangedInteger((int)ServerSettings.TraitorsEnabled, 0, 2);
+                    outmsg.WriteSingle(ServerSettings.TraitorProbability);
+                    outmsg.WriteRangedInteger(ServerSettings.TraitorDangerLevel, TraitorEventPrefab.MinDangerLevel, TraitorEventPrefab.MaxDangerLevel);
 
                     outmsg.WriteRangedInteger((int)GameMain.NetLobbyScreen.MissionType, 0, (int)MissionType.All);
 
@@ -2212,6 +2240,7 @@ namespace Barotrauma.Networking
             //don't instantiate a new gamesession if we're playing a campaign
             if (campaign == null || GameMain.GameSession == null)
             {
+                traitorManager = new TraitorManager(this);
                 GameMain.GameSession = new GameSession(selectedSub, "", selectedMode, settings, GameMain.NetLobbyScreen.LevelSeed, missionType: GameMain.NetLobbyScreen.MissionType);
             }
             else
@@ -2509,16 +2538,8 @@ namespace Barotrauma.Networking
                 }
             }
 
-            TraitorManager = null;
-            if (ServerSettings.TraitorsEnabled == YesNoMaybe.Yes ||
-                (ServerSettings.TraitorsEnabled == YesNoMaybe.Maybe && Rand.Range(0.0f, 1.0f) < 0.5f))
-            {
-                if (!(GameMain.GameSession?.GameMode is CampaignMode))
-                {
-                    TraitorManager = new TraitorManager();
-                    TraitorManager.Start(this);
-                }
-            }
+            TraitorManager.Initialize(GameMain.GameSession.EventManager, Level.Loaded);
+            TraitorManager.Enabled = Rand.Range(0.0f, 1.0f) < ServerSettings.TraitorProbability;
 
             GameAnalyticsManager.AddDesignEvent("Traitors:" + (TraitorManager == null ? "Disabled" : "Enabled"));
 
@@ -2562,7 +2583,6 @@ namespace Barotrauma.Networking
             msg.WriteBoolean(ServerSettings.AllowRewiring);
             msg.WriteBoolean(ServerSettings.AllowFriendlyFire);
             msg.WriteBoolean(ServerSettings.LockAllDefaultWires);
-            msg.WriteBoolean(ServerSettings.AllowRagdollButton);
             msg.WriteBoolean(ServerSettings.AllowLinkingWifiToChat);
             msg.WriteInt32(ServerSettings.MaximumMoneyTransferRequest);
             msg.WriteBoolean(IsUsingRespawnShuttle());
@@ -2685,13 +2705,12 @@ namespace Barotrauma.Networking
             }
 
             string endMessage = TextManager.FormatServerMessage("RoundSummaryRoundHasEnded");
-            var traitorResults = TraitorManager?.GetEndResults() ?? new List<TraitorMissionResult>();
-
             List<Mission> missions = GameMain.GameSession.Missions.ToList();
             if (GameMain.GameSession is { IsRunning: true })
             {
-                GameMain.GameSession.EndRound(endMessage, traitorResults);
+                GameMain.GameSession.EndRound(endMessage);
             }
+            TraitorManager.TraitorResults? traitorResults = traitorManager?.GetEndResults() ?? null;
 
             endRoundTimer = 0.0f;
 
@@ -2736,10 +2755,10 @@ namespace Barotrauma.Networking
                 }
                 msg.WriteByte(GameMain.GameSession?.WinningTeam == null ? (byte)0 : (byte)GameMain.GameSession.WinningTeam);
 
-                msg.WriteByte((byte)traitorResults.Count);
-                foreach (var traitorResult in traitorResults)
+                msg.WriteBoolean(traitorResults.HasValue);
+                if (traitorResults.HasValue)
                 {
-                    traitorResult.ServerWrite(msg);
+                    msg.WriteNetSerializableStruct(traitorResults.Value);
                 }
 
                 foreach (Client client in connectedClients)
@@ -2788,13 +2807,14 @@ namespace Barotrauma.Networking
             if (c == null || string.IsNullOrEmpty(newName) || !NetIdUtils.IdMoreRecent(nameId, c.NameId)) { return false; }
 
             var timeSinceNameChange = DateTime.Now - c.LastNameChangeTime;
-            if (timeSinceNameChange < Client.NameChangeCoolDown)
+            if (timeSinceNameChange < Client.NameChangeCoolDown && newName != c.Name)
             {
                 //only send once per second at most to prevent using this for spamming
                 if (timeSinceNameChange.TotalSeconds > 1)
                 {
                     var coolDownRemaining = Client.NameChangeCoolDown - timeSinceNameChange;
                     SendDirectChatMessage($"ServerMessage.NameChangeFailedCooldownActive~[seconds]={(int)coolDownRemaining.TotalSeconds}", c);
+                    LastClientListUpdateID++;
                 }
                 c.NameId = nameId;
                 c.RejectedName = newName;
@@ -3558,14 +3578,9 @@ namespace Barotrauma.Networking
             serverPeer.Send(msg, client.Connection, DeliveryMethod.Reliable);
         }
 
-        public void SendTraitorMessage(Client client, string message, Identifier missionIdentifier, TraitorMessageType messageType)
+        public void SendTraitorMessage(WriteOnlyMessage msg, Client client)
         {
-            if (client == null) { return; }
-            var msg = new WriteOnlyMessage();
-            msg.WriteByte((byte)ServerPacketHeader.TRAITOR_MESSAGE);
-            msg.WriteByte((byte)messageType);
-            msg.WriteIdentifier(missionIdentifier);
-            msg.WriteString(message);
+            if (client == null) { return; };
             serverPeer.Send(msg, client.Connection, DeliveryMethod.ReliableOrdered);
         }
 

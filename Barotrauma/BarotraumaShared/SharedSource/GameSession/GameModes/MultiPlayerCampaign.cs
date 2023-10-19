@@ -230,6 +230,9 @@ namespace Barotrauma
                         Bank = new Wallet(Option<Character>.None(), subElement);
                         break;
 #if SERVER
+                    case "traitormanager":
+                        GameMain.Server?.TraitorManager?.Load(subElement);
+                        break;
                     case "savedexperiencepoints":
                         foreach (XElement savedExp in subElement.Elements())
                         {

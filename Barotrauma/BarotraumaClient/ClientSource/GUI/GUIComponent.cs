@@ -781,7 +781,7 @@ namespace Barotrauma
 
             if (toolTipBlock.Rect.Right > GameMain.GraphicsWidth - 10)
             {
-                toolTipBlock.RectTransform.AbsoluteOffset -= new Point(toolTipBlock.Rect.Width, 0);
+                toolTipBlock.RectTransform.AbsoluteOffset -= new Point(toolTipBlock.Rect.Width + targetElement.Width, 0);
             }
             if (toolTipBlock.Rect.Bottom > GameMain.GraphicsHeight - 10)
             {

@@ -1,10 +1,9 @@
 #nullable enable
 
+using Barotrauma.IO;
 using System;
-using System.Globalization;
 using System.Linq;
 using System.Text.RegularExpressions;
-using Barotrauma.IO;
 
 namespace Barotrauma
 {
@@ -93,10 +92,21 @@ namespace Barotrauma
         }
 
         public static ContentPath FromRaw(string? rawValue)
-            => new ContentPath(null, rawValue);
-        
+            => FromRaw(null, rawValue);
+
+        private static ContentPath? prevCreatedRaw;
+
         public static ContentPath FromRaw(ContentPackage? contentPackage, string? rawValue)
-            => new ContentPath(contentPackage, rawValue);
+        {
+            var newRaw = new ContentPath(contentPackage, rawValue);
+            if (prevCreatedRaw is not null && prevCreatedRaw.ContentPackage == contentPackage &&
+                prevCreatedRaw.RawValue == rawValue)
+            {
+                newRaw.cachedValue = prevCreatedRaw.Value;
+            }
+            prevCreatedRaw = newRaw;
+            return newRaw;
+        }
 
         public static ContentPath FromEvaluated(ContentPackage? contentPackage, string? evaluatedValue)
         {
@@ -146,8 +156,8 @@ namespace Barotrauma
             return HashCode.Combine(RawValue, ContentPackage, cachedValue, cachedFullPath);
         }
 
-        public bool IsNullOrEmpty() => string.IsNullOrEmpty(Value);
-        public bool IsNullOrWhiteSpace() => string.IsNullOrWhiteSpace(Value);
+        public bool IsPathNullOrEmpty() => string.IsNullOrEmpty(Value);
+        public bool IsPathNullOrWhiteSpace() => string.IsNullOrWhiteSpace(Value);
 
         public bool EndsWith(string suffix) => Value.EndsWith(suffix, StringComparison.OrdinalIgnoreCase);
         

@@ -413,23 +413,9 @@ namespace Barotrauma
 
         private Rectangle DrawScriptedEvent(SpriteBatch spriteBatch, ScriptedEvent scriptedEvent, Rectangle? parentRect = null)
         {
-            EventAction? currentEvent = !scriptedEvent.IsFinished ? scriptedEvent.Actions[scriptedEvent.CurrentActionIndex] : null;
-
             List<DebugLine> positions = new List<DebugLine>();
 
-            string text = $"Finished: {scriptedEvent.IsFinished.ColorizeObject()}\n" +
-                          $"Action index: {scriptedEvent.CurrentActionIndex.ColorizeObject()}\n" +
-                          $"Current action: {currentEvent?.ToDebugString() ?? ToolBox.ColorizeObject(null)}\n";
-
-            text += "All actions:\n";
-            text += FindActions(scriptedEvent).Aggregate(string.Empty, (current, action) => current + $"{new string(' ', action.Item1 * 6)}{action.Item2.ToDebugString()}\n");
-
-            text += "Targets:\n";
-            foreach (var (key, value) in scriptedEvent.Targets)
-            {
-                text += $"    {key.ColorizeObject()}: {value.Aggregate(string.Empty, (current, entity) => current + $"{entity.ColorizeObject()} ")}\n";
-            }
-
+            string text = scriptedEvent.GetDebugInfo();
             if (scriptedEvent.Targets != null)
             {
                 foreach ((_, List<Entity> entities) in scriptedEvent.Targets)
@@ -452,10 +438,7 @@ namespace Barotrauma
         {
             debugPositions.Clear();
 
-            string text = $"Finished: {artifactEvent.IsFinished.ColorizeObject()}\n" +
-                          $"Item: {artifactEvent.Item.ColorizeObject()}\n" +
-                          $"Spawn pending: {artifactEvent.SpawnPending.ColorizeObject()}\n" +
-                          $"Spawn position: {artifactEvent.SpawnPos.ColorizeObject()}\n";
+            string text = artifactEvent.GetDebugInfo();
 
             if (artifactEvent.Item != null && !artifactEvent.Item.Removed)
             {
@@ -470,10 +453,7 @@ namespace Barotrauma
         {
             debugPositions.Clear();
 
-            string text = $"Finished: {monsterEvent.IsFinished.ColorizeObject()}\n" +
-                          $"Amount: {monsterEvent.MinAmount.ColorizeObject()} - {monsterEvent.MaxAmount.ColorizeObject()}\n" +
-                          $"Spawn pending: {monsterEvent.SpawnPending.ColorizeObject()}\n" +
-                          $"Spawn position: {monsterEvent.SpawnPos.ColorizeObject()}\n";
+            string text = monsterEvent.GetDebugInfo();
 
             if (monsterEvent.SpawnPos != null && Submarine.MainSub != null)
             {
@@ -712,7 +692,30 @@ namespace Barotrauma
                         }
                     }
                     break;
+                case NetworkEventType.EVENTLOG:
+                    ClientReadEventLog(GameMain.Client, msg);
+                    break;
+                case NetworkEventType.EVENTOBJECTIVE:
+                    ClientReadEventObjective(GameMain.Client, msg);
+                    break;
             }
+        }
+    
+        private void ClientReadEventLog(GameClient client, IReadMessage msg)
+        {
+            NetEventLogEntry entry = INetSerializableStruct.Read<NetEventLogEntry>(msg);
+            EventLog.AddEntry(entry.EventPrefabId, entry.LogEntryId, entry.Text.Replace("\\n", "\n"));
+        }
+        private static void ClientReadEventObjective(GameClient client, IReadMessage msg)
+        {
+            NetEventObjective entry = INetSerializableStruct.Read<NetEventObjective>(msg);
+            EventObjectiveAction.Trigger(
+                entry.Type,
+                entry.Identifier,
+                entry.ObjectiveTag,
+                entry.ParentObjectiveId,
+                entry.TextTag,
+                entry.CanBeCompleted);
         }
     }
 }

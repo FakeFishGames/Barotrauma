@@ -7,7 +7,7 @@ using Steamworks.Data;
 
 namespace Steamworks
 {
-	internal class ISteamNetworkingUtils : SteamInterface
+	internal unsafe class ISteamNetworkingUtils : SteamInterface
 	{
 		
 		internal ISteamNetworkingUtils( bool IsGameServer )
@@ -15,20 +15,20 @@ namespace Steamworks
 			SetupInterface( IsGameServer );
 		}
 		
-		[DllImport( Platform.LibraryName, EntryPoint = "SteamAPI_SteamNetworkingUtils_v003", CallingConvention = Platform.CC)]
-		internal static extern IntPtr SteamAPI_SteamNetworkingUtils_v003();
-		public override IntPtr GetGlobalInterfacePointer() => SteamAPI_SteamNetworkingUtils_v003();
+		[DllImport( Platform.LibraryName, EntryPoint = "SteamAPI_SteamNetworkingUtils_SteamAPI_v004", CallingConvention = Platform.CC)]
+		internal static extern IntPtr SteamAPI_SteamNetworkingUtils_SteamAPI_v004();
+		public override IntPtr GetGlobalInterfacePointer() => SteamAPI_SteamNetworkingUtils_SteamAPI_v004();
 		
 		
 		#region FunctionMeta
 		[DllImport( Platform.LibraryName, EntryPoint = "SteamAPI_ISteamNetworkingUtils_AllocateMessage", CallingConvention = Platform.CC)]
-		private static extern IntPtr _AllocateMessage( IntPtr self, int cbAllocateBuffer );
+		private static extern NetMsg* _AllocateMessage( IntPtr self, int cbAllocateBuffer );
 		
 		#endregion
-		internal NetMsg AllocateMessage( int cbAllocateBuffer )
+		internal NetMsg* AllocateMessage( int cbAllocateBuffer )
 		{
 			var returnValue = _AllocateMessage( Self, cbAllocateBuffer );
-			return returnValue.ToType<NetMsg>();
+			return returnValue;
 		}
 		
 		#region FunctionMeta
@@ -92,8 +92,7 @@ namespace Steamworks
 		#endregion
 		internal void ConvertPingLocationToString( ref NetPingLocation location, out string pszBuf )
 		{
-			using var memory = Helpers.TakeMemory();
-			IntPtr mempszBuf = memory;
+			using var mempszBuf = Helpers.TakeMemory();
 			_ConvertPingLocationToString( Self, ref location, mempszBuf, (1024 * 32) );
 			pszBuf = Helpers.MemoryToString( mempszBuf );
 		}
@@ -188,6 +187,40 @@ namespace Steamworks
 		}
 		
 		#region FunctionMeta
+		[DllImport( Platform.LibraryName, EntryPoint = "SteamAPI_ISteamNetworkingUtils_IsFakeIPv4", CallingConvention = Platform.CC)]
+		[return: MarshalAs( UnmanagedType.I1 )]
+		private static extern bool _IsFakeIPv4( IntPtr self, uint nIPv4 );
+		
+		#endregion
+		internal bool IsFakeIPv4( uint nIPv4 )
+		{
+			var returnValue = _IsFakeIPv4( Self, nIPv4 );
+			return returnValue;
+		}
+		
+		#region FunctionMeta
+		[DllImport( Platform.LibraryName, EntryPoint = "SteamAPI_ISteamNetworkingUtils_GetIPv4FakeIPType", CallingConvention = Platform.CC)]
+		private static extern SteamNetworkingFakeIPType _GetIPv4FakeIPType( IntPtr self, uint nIPv4 );
+		
+		#endregion
+		internal SteamNetworkingFakeIPType GetIPv4FakeIPType( uint nIPv4 )
+		{
+			var returnValue = _GetIPv4FakeIPType( Self, nIPv4 );
+			return returnValue;
+		}
+		
+		#region FunctionMeta
+		[DllImport( Platform.LibraryName, EntryPoint = "SteamAPI_ISteamNetworkingUtils_GetRealIdentityForFakeIP", CallingConvention = Platform.CC)]
+		private static extern Result _GetRealIdentityForFakeIP( IntPtr self, ref NetAddress fakeIP, [In,Out] NetIdentity[]  pOutRealIdentity );
+		
+		#endregion
+		internal Result GetRealIdentityForFakeIP( ref NetAddress fakeIP, [In,Out] NetIdentity[]  pOutRealIdentity )
+		{
+			var returnValue = _GetRealIdentityForFakeIP( Self, ref fakeIP, pOutRealIdentity );
+			return returnValue;
+		}
+		
+		#region FunctionMeta
 		[DllImport( Platform.LibraryName, EntryPoint = "SteamAPI_ISteamNetworkingUtils_SetGlobalConfigValueInt32", CallingConvention = Platform.CC)]
 		[return: MarshalAs( UnmanagedType.I1 )]
 		private static extern bool _SetGlobalConfigValueInt32( IntPtr self, NetConfig eValue, int val );
@@ -220,6 +253,18 @@ namespace Steamworks
 		internal bool SetGlobalConfigValueString( NetConfig eValue, [MarshalAs( UnmanagedType.CustomMarshaler, MarshalTypeRef = typeof( Utf8StringToNative ) )] string val )
 		{
 			var returnValue = _SetGlobalConfigValueString( Self, eValue, val );
+			return returnValue;
+		}
+		
+		#region FunctionMeta
+		[DllImport( Platform.LibraryName, EntryPoint = "SteamAPI_ISteamNetworkingUtils_SetGlobalConfigValuePtr", CallingConvention = Platform.CC)]
+		[return: MarshalAs( UnmanagedType.I1 )]
+		private static extern bool _SetGlobalConfigValuePtr( IntPtr self, NetConfig eValue, IntPtr val );
+		
+		#endregion
+		internal bool SetGlobalConfigValuePtr( NetConfig eValue, IntPtr val )
+		{
+			var returnValue = _SetGlobalConfigValuePtr( Self, eValue, val );
 			return returnValue;
 		}
 		
@@ -260,6 +305,78 @@ namespace Steamworks
 		}
 		
 		#region FunctionMeta
+		[DllImport( Platform.LibraryName, EntryPoint = "SteamAPI_ISteamNetworkingUtils_SetGlobalCallback_SteamNetConnectionStatusChanged", CallingConvention = Platform.CC)]
+		[return: MarshalAs( UnmanagedType.I1 )]
+		private static extern bool _SetGlobalCallback_SteamNetConnectionStatusChanged( IntPtr self, FnSteamNetConnectionStatusChanged fnCallback );
+		
+		#endregion
+		internal bool SetGlobalCallback_SteamNetConnectionStatusChanged( FnSteamNetConnectionStatusChanged fnCallback )
+		{
+			var returnValue = _SetGlobalCallback_SteamNetConnectionStatusChanged( Self, fnCallback );
+			return returnValue;
+		}
+		
+		#region FunctionMeta
+		[DllImport( Platform.LibraryName, EntryPoint = "SteamAPI_ISteamNetworkingUtils_SetGlobalCallback_SteamNetAuthenticationStatusChanged", CallingConvention = Platform.CC)]
+		[return: MarshalAs( UnmanagedType.I1 )]
+		private static extern bool _SetGlobalCallback_SteamNetAuthenticationStatusChanged( IntPtr self, FnSteamNetAuthenticationStatusChanged fnCallback );
+		
+		#endregion
+		internal bool SetGlobalCallback_SteamNetAuthenticationStatusChanged( FnSteamNetAuthenticationStatusChanged fnCallback )
+		{
+			var returnValue = _SetGlobalCallback_SteamNetAuthenticationStatusChanged( Self, fnCallback );
+			return returnValue;
+		}
+		
+		#region FunctionMeta
+		[DllImport( Platform.LibraryName, EntryPoint = "SteamAPI_ISteamNetworkingUtils_SetGlobalCallback_SteamRelayNetworkStatusChanged", CallingConvention = Platform.CC)]
+		[return: MarshalAs( UnmanagedType.I1 )]
+		private static extern bool _SetGlobalCallback_SteamRelayNetworkStatusChanged( IntPtr self, FnSteamRelayNetworkStatusChanged fnCallback );
+		
+		#endregion
+		internal bool SetGlobalCallback_SteamRelayNetworkStatusChanged( FnSteamRelayNetworkStatusChanged fnCallback )
+		{
+			var returnValue = _SetGlobalCallback_SteamRelayNetworkStatusChanged( Self, fnCallback );
+			return returnValue;
+		}
+		
+		#region FunctionMeta
+		[DllImport( Platform.LibraryName, EntryPoint = "SteamAPI_ISteamNetworkingUtils_SetGlobalCallback_FakeIPResult", CallingConvention = Platform.CC)]
+		[return: MarshalAs( UnmanagedType.I1 )]
+		private static extern bool _SetGlobalCallback_FakeIPResult( IntPtr self, FnSteamNetworkingFakeIPResult fnCallback );
+		
+		#endregion
+		internal bool SetGlobalCallback_FakeIPResult( FnSteamNetworkingFakeIPResult fnCallback )
+		{
+			var returnValue = _SetGlobalCallback_FakeIPResult( Self, fnCallback );
+			return returnValue;
+		}
+		
+		#region FunctionMeta
+		[DllImport( Platform.LibraryName, EntryPoint = "SteamAPI_ISteamNetworkingUtils_SetGlobalCallback_MessagesSessionRequest", CallingConvention = Platform.CC)]
+		[return: MarshalAs( UnmanagedType.I1 )]
+		private static extern bool _SetGlobalCallback_MessagesSessionRequest( IntPtr self, FnSteamNetworkingMessagesSessionRequest fnCallback );
+		
+		#endregion
+		internal bool SetGlobalCallback_MessagesSessionRequest( FnSteamNetworkingMessagesSessionRequest fnCallback )
+		{
+			var returnValue = _SetGlobalCallback_MessagesSessionRequest( Self, fnCallback );
+			return returnValue;
+		}
+		
+		#region FunctionMeta
+		[DllImport( Platform.LibraryName, EntryPoint = "SteamAPI_ISteamNetworkingUtils_SetGlobalCallback_MessagesSessionFailed", CallingConvention = Platform.CC)]
+		[return: MarshalAs( UnmanagedType.I1 )]
+		private static extern bool _SetGlobalCallback_MessagesSessionFailed( IntPtr self, FnSteamNetworkingMessagesSessionFailed fnCallback );
+		
+		#endregion
+		internal bool SetGlobalCallback_MessagesSessionFailed( FnSteamNetworkingMessagesSessionFailed fnCallback )
+		{
+			var returnValue = _SetGlobalCallback_MessagesSessionFailed( Self, fnCallback );
+			return returnValue;
+		}
+		
+		#region FunctionMeta
 		[DllImport( Platform.LibraryName, EntryPoint = "SteamAPI_ISteamNetworkingUtils_SetConfigValue", CallingConvention = Platform.CC)]
 		[return: MarshalAs( UnmanagedType.I1 )]
 		private static extern bool _SetConfigValue( IntPtr self, NetConfig eValue, NetConfigScope eScopeType, IntPtr scopeObj, NetConfigType eDataType, IntPtr pArg );
@@ -296,24 +413,23 @@ namespace Steamworks
 		
 		#region FunctionMeta
 		[DllImport( Platform.LibraryName, EntryPoint = "SteamAPI_ISteamNetworkingUtils_GetConfigValueInfo", CallingConvention = Platform.CC)]
-		[return: MarshalAs( UnmanagedType.I1 )]
-		private static extern bool _GetConfigValueInfo( IntPtr self, NetConfig eValue, [MarshalAs( UnmanagedType.CustomMarshaler, MarshalTypeRef = typeof( Utf8StringToNative ) )] string pOutName, ref NetConfigType pOutDataType, [In,Out] NetConfigScope[]  pOutScope, [In,Out] NetConfig[]  pOutNextValue );
+		private static extern Utf8StringPointer _GetConfigValueInfo( IntPtr self, NetConfig eValue, ref NetConfigType pOutDataType, [In,Out] NetConfigScope[]  pOutScope );
 		
 		#endregion
-		internal bool GetConfigValueInfo( NetConfig eValue, [MarshalAs( UnmanagedType.CustomMarshaler, MarshalTypeRef = typeof( Utf8StringToNative ) )] string pOutName, ref NetConfigType pOutDataType, [In,Out] NetConfigScope[]  pOutScope, [In,Out] NetConfig[]  pOutNextValue )
+		internal string GetConfigValueInfo( NetConfig eValue, ref NetConfigType pOutDataType, [In,Out] NetConfigScope[]  pOutScope )
 		{
-			var returnValue = _GetConfigValueInfo( Self, eValue, pOutName, ref pOutDataType, pOutScope, pOutNextValue );
+			var returnValue = _GetConfigValueInfo( Self, eValue, ref pOutDataType, pOutScope );
 			return returnValue;
 		}
 		
 		#region FunctionMeta
-		[DllImport( Platform.LibraryName, EntryPoint = "SteamAPI_ISteamNetworkingUtils_GetFirstConfigValue", CallingConvention = Platform.CC)]
-		private static extern NetConfig _GetFirstConfigValue( IntPtr self );
+		[DllImport( Platform.LibraryName, EntryPoint = "SteamAPI_ISteamNetworkingUtils_IterateGenericEditableConfigValues", CallingConvention = Platform.CC)]
+		private static extern NetConfig _IterateGenericEditableConfigValues( IntPtr self, NetConfig eCurrent, [MarshalAs( UnmanagedType.U1 )] bool bEnumerateDevVars );
 		
 		#endregion
-		internal NetConfig GetFirstConfigValue()
+		internal NetConfig IterateGenericEditableConfigValues( NetConfig eCurrent, [MarshalAs( UnmanagedType.U1 )] bool bEnumerateDevVars )
 		{
-			var returnValue = _GetFirstConfigValue( Self );
+			var returnValue = _IterateGenericEditableConfigValues( Self, eCurrent, bEnumerateDevVars );
 			return returnValue;
 		}
 		
@@ -324,8 +440,7 @@ namespace Steamworks
 		#endregion
 		internal void SteamNetworkingIPAddr_ToString( ref NetAddress addr, out string buf, [MarshalAs( UnmanagedType.U1 )] bool bWithPort )
 		{
-			using var memory = Helpers.TakeMemory();
-			IntPtr membuf = memory;
+			using var membuf = Helpers.TakeMemory();
 			_SteamNetworkingIPAddr_ToString( Self, ref addr, membuf, (1024 * 32), bWithPort );
 			buf = Helpers.MemoryToString( membuf );
 		}
@@ -343,14 +458,24 @@ namespace Steamworks
 		}
 		
 		#region FunctionMeta
+		[DllImport( Platform.LibraryName, EntryPoint = "SteamAPI_ISteamNetworkingUtils_SteamNetworkingIPAddr_GetFakeIPType", CallingConvention = Platform.CC)]
+		private static extern SteamNetworkingFakeIPType _SteamNetworkingIPAddr_GetFakeIPType( IntPtr self, ref NetAddress addr );
+		
+		#endregion
+		internal SteamNetworkingFakeIPType SteamNetworkingIPAddr_GetFakeIPType( ref NetAddress addr )
+		{
+			var returnValue = _SteamNetworkingIPAddr_GetFakeIPType( Self, ref addr );
+			return returnValue;
+		}
+		
+		#region FunctionMeta
 		[DllImport( Platform.LibraryName, EntryPoint = "SteamAPI_ISteamNetworkingUtils_SteamNetworkingIdentity_ToString", CallingConvention = Platform.CC)]
 		private static extern void _SteamNetworkingIdentity_ToString( IntPtr self, ref NetIdentity identity, IntPtr buf, uint cbBuf );
 		
 		#endregion
 		internal void SteamNetworkingIdentity_ToString( ref NetIdentity identity, out string buf )
 		{
-			using var memory = Helpers.TakeMemory();
-			IntPtr membuf = memory;
+			using var membuf = Helpers.TakeMemory();
 			_SteamNetworkingIdentity_ToString( Self, ref identity, membuf, (1024 * 32) );
 			buf = Helpers.MemoryToString( membuf );
 		}

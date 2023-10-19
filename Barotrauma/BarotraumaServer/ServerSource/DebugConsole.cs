@@ -8,6 +8,7 @@ using System.Globalization;
 using System.Linq;
 using System.Text;
 using Barotrauma.Steam;
+using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
@@ -1020,11 +1021,6 @@ namespace Barotrauma
                 client.SpectateOnly = false;
             });
 
-            AssignOnExecute("starttraitormissionimmediately", (string[] args) =>
-            {
-                GameMain.Server?.TraitorManager?.SkipStartDelay();
-            });
-
             AssignOnExecute("difficulty|leveldifficulty", (string[] args) =>
             {
                 if (GameMain.Server == null || args.Length < 1) return;
@@ -1082,56 +1078,83 @@ namespace Barotrauma
                 GameMain.Server?.UpdateCheatsEnabled();
             });
 
-            commands.Add(new Command("traitorlist", "traitorlist: List all the traitors and their targets.", (string[] args) =>
+
+            AssignOnExecute("triggertraitorevent", (string[] args) =>
             {
-                if (GameMain.Server == null) return;
-                TraitorManager traitorManager = GameMain.Server.TraitorManager;
-                if (traitorManager == null || traitorManager.Traitors == null || !traitorManager.Traitors.Any())
+                if (GameMain.Server?.TraitorManager == null)
                 {
-                    NewMessage("There are no traitors at the moment.", Color.Cyan);
+                    ThrowError($"Could not start a traitor event. {nameof(TraitorManager)} hasn't been created.");
                     return;
                 }
-                foreach (Traitor t in traitorManager.Traitors)
+                if (args.Length > 0)
                 {
-                    if (t.CurrentObjective != null)
+                    Identifier traitorEventId = args[0].ToIdentifier();
+                    if (EventPrefab.Prefabs.TryGet(traitorEventId, out EventPrefab prefab) && prefab is TraitorEventPrefab traitorEventPrefab)
                     {
-                        NewMessage(string.Format("- Traitor {0}'s current goals are:\n{1}", t.Character.Name, t.CurrentObjective.GoalInfos), Color.Cyan);
+                        GameMain.Server?.TraitorManager?.ForceTraitorEvent(traitorEventPrefab);
                     }
                     else
                     {
-                        NewMessage(string.Format("- Traitor {0} has no current objective.", t.Character.Name), Color.Cyan);
+                        ThrowError($"Could not find a traitor event prefab with the identifier \"{traitorEventId}\".");
+                        return;
                     }
                 }
-                //NewMessage("The code words are: " + traitorManager.CodeWords + ", response: " + traitorManager.CodeResponse + ".", Color.Cyan);
+                if (GameMain.Server?.TraitorManager is { } traitorManager)
+                {
+                    traitorManager.Enabled = true;
+                    traitorManager.SkipStartDelay();
+                }
+            });
+
+            commands.Add(new Command("traitorlist", "traitorlist: List all the traitors and their current objectives.", (string[] args) =>
+            {
+                if (GameMain.Server == null) { return; }
+                CreateTraitorList((string msg) => NewMessage(msg, Color.Cyan));
             }));
             AssignOnClientRequestExecute("traitorlist", (Client client, Vector2 cursorPos, string[] args) =>
             {
-                TraitorManager traitorManager = GameMain.Server.TraitorManager;
-                if (traitorManager == null || traitorManager.Traitors == null || !traitorManager.Traitors.Any())
+                if (GameMain.Server == null) { return; }
+                CreateTraitorList((string msg) => 
                 {
-                    GameMain.Server.SendTraitorMessage(client, "There are no traitors at the moment.", Identifier.Empty, TraitorMessageType.Console);
+                    GameMain.Server.SendDirectChatMessage(msg, client);
+                });
+            });
+
+            void CreateTraitorList(Action<string> createMessage)
+            {
+                if (GameMain.Server == null) return;
+                TraitorManager traitorManager = GameMain.Server.TraitorManager;
+                if (traitorManager == null || traitorManager.ActiveEvents.None())
+                {
+                    createMessage("There are no traitors at the moment.");
                     return;
                 }
-                foreach (Traitor t in traitorManager.Traitors)
+                createMessage("Traitors:");
+                foreach (var ev in traitorManager.ActiveEvents)
                 {
-                    if (t.CurrentObjective != null)
+                    createMessage($" - {ev.Traitor.Name}: {ev.TraitorEvent.Prefab.Identifier} ({ev.TraitorEvent.CurrentState})");
+                }
+            }
+
+            AssignOnClientRequestExecute(
+                "debugevent",
+                (Client client, Vector2 cursorWorldPos, string[] args) =>
+                {
+                    if (GameMain.Server == null) { return; }
+                    if (GameMain.GameSession?.EventManager is EventManager eventManager && args.Length > 0)
                     {
-                        var traitorGoals = TextManager.FormatServerMessage(t.CurrentObjective.GoalInfos);
-                        var traitorGoalsStart = traitorGoals.LastIndexOf('/') + 1;
-                        GameMain.Server.SendTraitorMessage(client, string.Join("/", new[] {
-                            traitorGoals.Substring(0, traitorGoalsStart),
-                            $"[traitorgoals]={traitorGoals.Substring(traitorGoalsStart)}",
-                            $"[traitorname]={t.Character.Name}",
-                            "Traitor [traitorname]'s current goals are:\n[traitorgoals]"
-                            }.Where(s => !string.IsNullOrEmpty(s))), t.Mission.Identifier, TraitorMessageType.Console);
-                    }
-                    else
-                    {
-                        GameMain.Server.SendTraitorMessage(client, string.Format("- Traitor {0} has no current objective.", t.Character.Name), Identifier.Empty, TraitorMessageType.Console);
+                        var ev = eventManager.ActiveEvents.FirstOrDefault(ev => ev.Prefab?.Identifier == args[0]);
+                        if (ev == null)
+                        {
+                            GameMain.Server.SendConsoleMessage($"Event \"{args[0]}\" not found.", client);
+                        }
+                        else
+                        {
+                            GameMain.Server.SendConsoleMessage(ev.GetDebugInfo(), client);
+                        }
                     }
                 }
-                //GameMain.Server.SendTraitorMessage(client, "The code words are: " + traitorManager.CodeWords + ", response: " + traitorManager.CodeResponse + ".", TraitorMessageType.Console);
-            });
+            );
 
             commands.Add(new Command("setpassword|setserverpassword|password", "setpassword [password]: Changes the password of the server that's being hosted.", (string[] args) =>
             {
@@ -2409,7 +2432,7 @@ namespace Barotrauma
                 }
             }));
 
-            commands.Add(new Command("sendchatmessage", "Sends a chat message with specified type and color.", (string[] args) =>
+            commands.Add(new Command("sendchatmessage", "sendchatmessage [sendername] [message] [type] [r] [g] [b] [a]: Sends a chat message with specified type and color.", (string[] args) =>
             {
                 if (args.Length < 2) { return; }
 

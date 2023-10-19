@@ -30,25 +30,9 @@ namespace Barotrauma
                 GameMain.Server.ServerSettings.SelectedLevelDifficulty = difficulty;
                 lastUpdateID++;
             }
-#endif
-#if CLIENT
+#elif CLIENT
             levelDifficultyScrollBar.BarScroll = difficulty / 100.0f;
             levelDifficultyScrollBar.OnMoved(levelDifficultyScrollBar, levelDifficultyScrollBar.BarScroll);
-#endif
-        }
-
-        public void ToggleTraitorsEnabled(int dir)
-        {
-#if SERVER
-            if (GameMain.Server == null) return;
-
-            lastUpdateID++;
-            
-            int index = (int)GameMain.Server.ServerSettings.TraitorsEnabled + dir;
-            if (index < 0) index = 2;
-            if (index > 2) index = 0;
-
-            SetTraitorsEnabled((YesNoMaybe)index);
 #endif
         }
 
@@ -89,13 +73,28 @@ namespace Barotrauma
 #endif
         }
 
-        public void SetTraitorsEnabled(YesNoMaybe enabled)
+        public void SetTraitorProbability(float probability)
         {
-#if SERVER
-            if (GameMain.Server != null) GameMain.Server.ServerSettings.TraitorsEnabled = enabled;
-#endif
+            if (GameMain.NetworkMember != null)
+            {
+                GameMain.NetworkMember.ServerSettings.TraitorProbability = probability;
+            }
 #if CLIENT
-            traitorProbabilityText.Text = TextManager.Get(enabled.ToString());
+            traitorProbabilitySlider.BarScroll = probability;
+            traitorProbabilitySlider.OnMoved(traitorProbabilitySlider, traitorProbabilitySlider.BarScroll);
+#endif
+        }
+
+        public void SetTraitorDangerLevel(int dangerLevel)
+        {
+            if (GameMain.NetworkMember != null)
+            {
+                GameMain.NetworkMember.ServerSettings.TraitorDangerLevel = dangerLevel;
+            }
+#if SERVER
+            if (GameMain.Server != null) { GameMain.Server.ServerSettings.TraitorDangerLevel = dangerLevel; }
+#elif CLIENT
+            SetTraitorDangerIndicators(dangerLevel);
 #endif
         }
     }

@@ -132,7 +132,7 @@ namespace Barotrauma
 
             try
             {
-                if (exception is GameMain.LoadingException)
+                if (exception.StackTrace.Contains("Barotrauma.GameMain.Load"))
                 {
                     //exception occurred in loading screen:
                     //assume content packages are the culprit and reset them

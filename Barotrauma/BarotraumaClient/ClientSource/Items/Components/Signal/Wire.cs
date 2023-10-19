@@ -186,12 +186,12 @@ namespace Barotrauma.Items.Components
             return Color.LightBlue;
         }
 
-        public void Draw(SpriteBatch spriteBatch, bool editing, float itemDepth = -1)
+        public void Draw(SpriteBatch spriteBatch, bool editing, float itemDepth = -1, Color? overrideColor = null)
         {
-            Draw(spriteBatch, editing, Vector2.Zero, itemDepth);
+            Draw(spriteBatch, editing, Vector2.Zero, itemDepth, overrideColor);
         }
 
-        public void Draw(SpriteBatch spriteBatch, bool editing, Vector2 offset, float itemDepth = -1)
+        public void Draw(SpriteBatch spriteBatch, bool editing, Vector2 offset, float itemDepth = -1, Color? overrideColor = null)
         {
             if (sections.Count == 0 && !IsActive || Hidden)
             {
@@ -223,7 +223,7 @@ namespace Barotrauma.Items.Components
 
             foreach (WireSection section in sections)
             {
-                section.Draw(spriteBatch, wireSprite, item.Color, drawOffset, depth, Width);
+                section.Draw(spriteBatch, wireSprite, overrideColor ?? item.Color, drawOffset, depth, Width);
             }
 
             if (nodes.Count > 0)
@@ -271,13 +271,13 @@ namespace Barotrauma.Items.Components
                             spriteBatch, wireSprite,
                             nodes[^1] + drawOffset,
                             new Vector2(newNodePos.X, newNodePos.Y) + drawOffset,
-                            item.Color, 0.0f, Width);
+                            overrideColor ?? item.Color, 0.0f, Width);
 
                         WireSection.Draw(
                             spriteBatch, wireSprite,
                             new Vector2(newNodePos.X, newNodePos.Y) + drawOffset,
                             item.DrawPosition,
-                            item.Color, itemDepth, Width);
+                            overrideColor ?? item.Color, itemDepth, Width);
 
                         GUI.DrawRectangle(spriteBatch, new Vector2(newNodePos.X + drawOffset.X, -(newNodePos.Y + drawOffset.Y)) - Vector2.One * 3, Vector2.One * 6, item.Color);
                     }
@@ -287,7 +287,7 @@ namespace Barotrauma.Items.Components
                             spriteBatch, wireSprite,
                             nodes[^1] + drawOffset,
                             item.DrawPosition,
-                            item.Color, 0.0f, Width);
+                            overrideColor ?? item.Color, 0.0f, Width);
                     }
                 }
             }
@@ -594,7 +594,7 @@ namespace Barotrauma.Items.Components
                                 
                                     selectedWire.shouldClearConnections = false;
                                     Character.Controlled.Inventory.TryPutItem(selectedWire.item, Character.Controlled, new List<InvSlotType> { InvSlotType.LeftHand, InvSlotType.RightHand });
-                                    foreach (var entity in MapEntity.mapEntityList)
+                                    foreach (var entity in MapEntity.MapEntityList)
                                     {
                                         if (entity is Item item)
                                         {

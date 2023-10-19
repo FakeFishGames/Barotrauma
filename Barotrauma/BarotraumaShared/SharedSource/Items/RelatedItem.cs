@@ -43,20 +43,23 @@ namespace Barotrauma
         }
 
         /// <summary>
-        /// Should an empty inventory be considered valid? Can be used to, for example, make an item do something if there's a specific item, or nothing, inside it.
+        /// Should an empty inventory (or an empty inventory slot if <see cref="TargetSlot"/> is set) be considered valid? Can be used to, for example, make an item do something if there's a specific item, or nothing, inside it.
         /// </summary>
         public bool MatchOnEmpty { get; set; }
 
         /// <summary>
-        /// Should only an empty inventory be considered valid? Can be used to, for example, make an item do something when there's nothing inside it.
+        /// Should only an empty inventory (or an empty inventory slot if <see cref="TargetSlot"/> is set) be considered valid? Can be used to, for example, make an item do something when there's nothing inside it.
         /// </summary>
         public bool RequireEmpty { get; set; }
+
+        private bool RequireOrMatchOnEmpty => MatchOnEmpty || RequireEmpty;
 
         /// <summary>
         /// Only valid for the RequiredItems of an ItemComponent. Can be used to ignore the requirement in the submarine editor, 
         /// making it easier to for example make rewire things that require some special tool to rewire.
         /// </summary>
         public bool IgnoreInEditor { get; set; }
+
 
         /// <summary>
         /// Identifier(s) or tag(s) of the items that are NOT considered valid. 
@@ -102,6 +105,11 @@ namespace Barotrauma
         /// Index of the slot the target must be in when targeting a Contained item
         /// </summary>
         public int TargetSlot = -1;
+
+        /// <summary>
+        /// The slot type the target must be in when targeting an item contained inside a character's inventory
+        /// </summary>
+        public InvSlotType CharacterInventorySlotType;
 
         /// <summary>
         /// Overrides the position defined in ItemContainer. Only valid when used in the Containable definitions of an ItemContainer.
@@ -166,6 +174,10 @@ namespace Barotrauma
             foreach (var excludedIdentifier in ExcludedIdentifiers)
             {
                 if (item.HasTag(excludedIdentifier)) { return false; }
+            }
+            if (item.ParentInventory?.Owner is Character character && CharacterInventorySlotType != InvSlotType.None)
+            {
+                if (!character.HasEquippedItem(item, CharacterInventorySlotType)) { return false; }
             }
             if (Identifiers.Contains(item.Prefab.Identifier)) { return true; }
             foreach (var identifier in Identifiers)
@@ -261,6 +273,8 @@ namespace Barotrauma
             Rotation = element.GetAttributeFloat("rotation", 0f);
             SetActive = element.GetAttributeBool("setactive", false);
 
+            CharacterInventorySlotType = element.GetAttributeEnum(nameof(CharacterInventorySlotType), InvSlotType.None);
+
             if (element.GetAttribute(nameof(Hide)) != null)
             {
                 Hide = element.GetAttributeBool(nameof(Hide), false);
@@ -332,7 +346,7 @@ namespace Barotrauma
                 case RelationType.Equipped:
                     if (character == null) { return false; }
                     var heldItems = character.HeldItems;
-                    if ((RequireEmpty || MatchOnEmpty) && heldItems.None()) { return true; }
+                    if (RequireOrMatchOnEmpty && heldItems.None()) { return true; }
                     foreach (Item equippedItem in heldItems)
                     {
                         if (equippedItem == null) { continue; }
@@ -347,7 +361,7 @@ namespace Barotrauma
                     if (character == null) { return false; }
                     if (character.Inventory == null) { return MatchOnEmpty || RequireEmpty; }
                     var allItems = character.Inventory.AllItems;
-                    if ((RequireEmpty || MatchOnEmpty) && allItems.None()) { return true; }
+                    if (RequireOrMatchOnEmpty && allItems.None()) { return true; }
                     foreach (Item pickedItem in allItems)
                     {
                         if (pickedItem == null) { continue; }
@@ -370,11 +384,21 @@ namespace Barotrauma
         private bool CheckContained(Item parentItem)
         {
             if (parentItem.OwnInventory == null) { return false; }
-            bool isEmpty = parentItem.OwnInventory.IsEmpty();
-            if (RequireEmpty && !isEmpty) { return false; }
-            if (MatchOnEmpty && isEmpty) { return true; }
+
+            if (TargetSlot == -1 && RequireOrMatchOnEmpty)
+            {
+                bool isEmpty = parentItem.OwnInventory.IsEmpty();
+                if (RequireEmpty) { return isEmpty; }
+                if (MatchOnEmpty && isEmpty) { return true; }
+            }
             foreach (var container in parentItem.GetComponents<Items.Components.ItemContainer>())
             {
+                if (TargetSlot > -1 && RequireOrMatchOnEmpty)
+                {
+                    var itemInSlot = container.Inventory.GetItemAt(TargetSlot);
+                    if (RequireEmpty) { return itemInSlot == null; }
+                    if (MatchOnEmpty && itemInSlot == null) { return true; }
+                }
                 foreach (Item contained in container.Inventory.AllItems)
                 {
                     if (TargetSlot > -1 && parentItem.OwnInventory.FindIndex(contained) != TargetSlot) { continue; }
@@ -389,7 +413,8 @@ namespace Barotrauma
         {
             element.Add(
                 new XAttribute("items", JoinedIdentifiers),
-                new XAttribute("type", type.ToString()),
+                new XAttribute("type", type.ToString()), 
+                new XAttribute("characterinventoryslottype", CharacterInventorySlotType.ToString()),
                 new XAttribute("optional", IsOptional),
                 new XAttribute("ignoreineditor", IgnoreInEditor),
                 new XAttribute("excludebroken", ExcludeBroken),

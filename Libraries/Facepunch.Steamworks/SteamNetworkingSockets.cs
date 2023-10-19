@@ -12,10 +12,32 @@ namespace Steamworks
 	{
 		internal static ISteamNetworkingSockets? Internal => Interface as ISteamNetworkingSockets;
 
-		internal override void InitializeInterface( bool server )
+		/// <summary>
+		/// Get the identity assigned to this interface.
+		/// E.g. on Steam, this is the user's SteamID, or for the gameserver interface, the SteamID assigned
+		/// to the gameserver.  Returns false and sets the result to an invalid identity if we don't know
+		/// our identity yet.  (E.g. GameServer has not logged in.  On Steam, the user will know their SteamID
+		/// even if they are not signed into Steam.)
+		/// </summary>
+		public static NetIdentity Identity
+		{
+			get
+			{
+				NetIdentity identity = default;
+
+				Internal?.GetIdentity( ref identity );
+
+				return identity;
+			}
+		}
+
+		internal override bool InitializeInterface( bool server )
 		{
 			SetInterface( server, new ISteamNetworkingSockets( server ) );
+			if ( Interface is null || Interface.Self == IntPtr.Zero ) return false;
+
 			InstallEvents( server );
+			return true;
 		}
 	
 #region SocketInterface
@@ -66,6 +88,7 @@ namespace Steamworks
 		internal void InstallEvents( bool server )
 		{
 			Dispatch.Install<SteamNetConnectionStatusChangedCallback_t>( ConnectionStatusChanged, server );
+			Dispatch.Install<SteamNetworkingFakeIPResult_t>( FakeIPResult, server );
 		}
 
 
@@ -90,12 +113,25 @@ namespace Steamworks
 
 		public static event Action<Connection, ConnectionInfo>? OnConnectionStatusChanged;
 
+		private static void FakeIPResult( SteamNetworkingFakeIPResult_t data )
+		{
+			foreach ( var port in data.Ports )
+			{
+				if ( port == 0 ) continue;
+
+				var address = NetAddress.From( Utility.Int32ToIp( data.IP ), port );
+
+				OnFakeIPResult?.Invoke( address );
+			}
+		}
+
+		public static event Action<NetAddress>? OnFakeIPResult;
 
 		/// <summary>
 		/// Creates a "server" socket that listens for clients to connect to by calling
 		/// Connect, over ordinary UDP (IPv4 or IPv6)
 		/// 
-		/// To use this derive a class from SocketManager and override as much as you want.
+		/// To use this derive a class from <see cref="SocketManager"/> and override as much as you want.
 		/// 
 		/// </summary>
 		public static T? CreateNormalSocket<T>( NetAddress address ) where T : SocketManager, new()
@@ -115,7 +151,7 @@ namespace Steamworks
 		/// Creates a "server" socket that listens for clients to connect to by calling
 		/// Connect, over ordinary UDP (IPv4 or IPv6).
 		/// 
-		/// To use this you should pass a class that inherits ISocketManager. You can use
+		/// To use this you should pass a class that inherits <see cref="ISocketManager"/>. You can use
 		/// SocketManager to get connections and send messages, but the ISocketManager class
 		/// will received all the appropriate callbacks.
 		/// 
@@ -140,7 +176,7 @@ namespace Steamworks
 		}
 
 		/// <summary>
-		/// Connect to a socket created via <method>CreateListenSocketIP</method>
+		/// Connect to a socket created via <c>CreateListenSocketIP</c>.
 		/// </summary>
 		public static T? ConnectNormal<T>( NetAddress address ) where T : ConnectionManager, new()
 		{
@@ -154,7 +190,7 @@ namespace Steamworks
 		}
 
 		/// <summary>
-		/// Connect to a socket created via <method>CreateListenSocketIP</method>
+		/// Connect to a socket created via <c>CreateListenSocketIP</c>.
 		/// </summary>
 		public static ConnectionManager? ConnectNormal( NetAddress address, IConnectionManager iface )
 		{
@@ -174,9 +210,9 @@ namespace Steamworks
 		}
 
 		/// <summary>
-		/// Creates a server that will be relayed via Valve's network (hiding the IP and improving ping)
+		/// Creates a server that will be relayed via Valve's network (hiding the IP and improving ping).
 		/// 
-		/// To use this derive a class from SocketManager and override as much as you want.
+		/// To use this derive a class from <see cref="SocketManager"/> and override as much as you want.
 		/// 
 		/// </summary>
 		public static T? CreateRelaySocket<T>( int virtualport = 0 ) where T : SocketManager, new()
@@ -192,10 +228,10 @@ namespace Steamworks
 		}
 
 		/// <summary>
-		/// Creates a server that will be relayed via Valve's network (hiding the IP and improving ping)
+		/// Creates a server that will be relayed via Valve's network (hiding the IP and improving ping).
 		/// 
-		/// To use this you should pass a class that inherits ISocketManager. You can use
-		/// SocketManager to get connections and send messages, but the ISocketManager class
+		/// To use this you should pass a class that inherits <see cref="ISocketManager"/>. You can use
+		/// <see cref="SocketManager"/> to get connections and send messages, but the <see cref="ISocketManager"/> class
 		/// will received all the appropriate callbacks.
 		/// 
 		/// </summary>
@@ -219,7 +255,7 @@ namespace Steamworks
 		}
 
 		/// <summary>
-		/// Connect to a relay server
+		/// Connect to a relay server.
 		/// </summary>
 		public static T? ConnectRelay<T>( SteamId serverId, int virtualport = 0 ) where T : ConnectionManager, new()
 		{
@@ -230,6 +266,104 @@ namespace Steamworks
 			var options = Array.Empty<NetKeyValue>();
 			t.Connection = Internal.ConnectP2P( ref identity, virtualport, options.Length, options );
 			SetConnectionManager( t.Connection.Id, t );
+			return t;
+		}
+
+		/// <summary>
+		/// Connect to a relay server.
+		/// </summary>
+		public static ConnectionManager? ConnectRelay( SteamId serverId, int virtualport, IConnectionManager iface )
+		{
+			if ( Internal is null ) return null;
+
+			NetIdentity identity = serverId;
+			var options = Array.Empty<NetKeyValue>();
+			var connection = Internal.ConnectP2P( ref identity, virtualport, options.Length, options );
+
+			var t = new ConnectionManager
+			{
+				Connection = connection,
+				Interface = iface
+			};
+
+			SetConnectionManager( t.Connection.Id, t );
+			return t;
+		}
+
+		/// <summary>
+		/// Begin asynchronous process of allocating a fake IPv4 address that other
+		/// peers can use to contact us via P2P. IP addresses returned by this
+		/// function are globally unique for a given appid.
+		///
+		/// For gameservers, you *must* call this after initializing the SDK but before
+		/// beginning login.  Steam needs to know in advance that FakeIP will be used.
+		/// </summary>
+		public static bool RequestFakeIP( int numFakePorts = 1 )
+		{
+			return Internal != null && Internal.BeginAsyncRequestFakeIP( numFakePorts );
+		}
+
+		/// <summary>
+		/// Return info about the FakeIP and port that we have been assigned, if any.
+		/// 
+		/// </summary>
+		public static Result GetFakeIP( int fakePortIndex, out NetAddress address )
+		{
+			if ( Internal is null )
+			{
+				address = default;
+				return Result.Fail;
+			}
+
+			var pInfo = default( SteamNetworkingFakeIPResult_t );
+
+			Internal.GetFakeIP( 0, ref pInfo );
+
+			address = NetAddress.From( Utility.Int32ToIp( pInfo.IP ), pInfo.Ports[fakePortIndex] );
+			return pInfo.Result;
+		}
+
+		/// <summary>
+		/// Creates a server that will be relayed via Valve's network (hiding the IP and improving ping).
+		/// 
+		/// To use this derive a class from <see cref="SocketManager"/> and override as much as you want.
+		/// 
+		/// </summary>
+		public static T? CreateRelaySocketFakeIP<T>( int fakePortIndex = 0 ) where T : SocketManager, new()
+		{
+			if ( Internal is null ) { return null; }
+			var t = new T();
+			var options = Array.Empty<NetKeyValue>();
+			t.Socket = Internal.CreateListenSocketP2PFakeIP( 0, options.Length, options );
+			t.Initialize();
+			SetSocketManager( t.Socket.Id, t );
+			return t;
+		}
+
+		/// <summary>
+		/// Creates a server that will be relayed via Valve's network (hiding the IP and improving ping).
+		/// 
+		/// To use this you should pass a class that inherits <see cref="ISocketManager"/>. You can use
+		/// <see cref="SocketManager"/> to get connections and send messages, but the <see cref="ISocketManager"/> class
+		/// will received all the appropriate callbacks.
+		/// 
+		/// </summary>
+		public static SocketManager? CreateRelaySocketFakeIP( int fakePortIndex, ISocketManager intrface )
+		{
+			if ( Internal is null ) { return null; }
+
+			var options = Array.Empty<NetKeyValue>();
+			var socket = Internal.CreateListenSocketP2PFakeIP( 0, options.Length, options );
+
+			var t = new SocketManager
+			{
+				Socket = socket,
+				Interface = intrface
+			};
+
+			t.Initialize();
+
+			SetSocketManager( t.Socket.Id, t );
 			return t;
 		}
 	}

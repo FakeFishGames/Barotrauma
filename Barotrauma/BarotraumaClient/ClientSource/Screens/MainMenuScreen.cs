@@ -83,7 +83,6 @@ namespace Barotrauma
             {
                 SetMenuTabPositioning();
                 CreateHostServerFields();
-                CreateCampaignSetupUI();
                 SettingsMenu.Create(menuTabs[Tab.Settings].RectTransform);
                 if (remoteContentDoc?.Root != null)
                 {
@@ -634,7 +633,7 @@ namespace Barotrauma
                     campaignSetupUI.UpdateSubList(SubmarineInfo.SavedSubmarines);
                     break;
                 case Tab.LoadGame:
-                    campaignSetupUI.UpdateLoadMenu();
+                    campaignSetupUI.CreateLoadMenu();
                     break;
                 case Tab.Settings:
                     SettingsMenu.Create(menuTabs[Tab.Settings].RectTransform);
@@ -1224,7 +1223,7 @@ namespace Barotrauma
             var paddedLoadGame = new GUIFrame(new RectTransform(new Vector2(0.9f, 0.9f), menuTabs[Tab.LoadGame].RectTransform, Anchor.Center) { AbsoluteOffset = new Point(0, 10) },
                 style: null);
 
-            campaignSetupUI = new SinglePlayerCampaignSetupUI(newGameContent, paddedLoadGame, SubmarineInfo.SavedSubmarines)
+            campaignSetupUI = new SinglePlayerCampaignSetupUI(newGameContent, paddedLoadGame)
             {
                 LoadGame = LoadGame,
                 StartNewGame = StartGame
@@ -1550,6 +1549,14 @@ namespace Barotrauma
             try
             {
                 if (!t.TryGetResult(out IRestResponse remoteContentResponse)) { throw new Exception("Task did not return a valid result"); }
+                if (remoteContentResponse.StatusCode != HttpStatusCode.OK)
+                {
+                    DebugConsole.AddWarning(
+                        "Failed to receive remote main menu content. " +
+                        "There may be an issue with your internet connection, or the master server might be temporarily unavailable " +
+                        $"(error code: {remoteContentResponse.StatusCode})");
+                    return;
+                }
                 string xml = remoteContentResponse.Content;
                 int index = xml.IndexOf('<');
                 if (index > 0) { xml = xml.Substring(index, xml.Length - index); }

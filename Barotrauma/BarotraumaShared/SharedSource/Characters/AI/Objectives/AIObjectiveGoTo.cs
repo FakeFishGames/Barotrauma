@@ -810,7 +810,7 @@ namespace Barotrauma
 
         private void StopMovement()
         {
-            SteeringManager.Reset();
+            SteeringManager?.Reset();
             if (Target != null)
             {
                 character.AnimController.TargetDir = Target.WorldPosition.X > character.WorldPosition.X ? Direction.Right : Direction.Left;

@@ -15,6 +15,7 @@ namespace Barotrauma
 
         public override bool AbandonWhenCannotCompleteSubjectives => false;
         public override bool AllowMultipleInstances => true;
+        public override bool AllowWhileHandcuffed => false;
 
         public HashSet<Item> ignoredItems = new HashSet<Item>();
 
@@ -158,11 +159,6 @@ namespace Barotrauma
 
         protected override void Act(float deltaTime)
         {
-            if (character.LockHands)
-            {
-                Abandon = true;
-                return;
-            }
             if (IdentifiersOrTags != null && !isDoneSeeking)
             {
                 if (checkInventory)
@@ -271,15 +267,49 @@ namespace Barotrauma
 
                 Inventory itemInventory = targetItem.ParentInventory;
                 var slots = itemInventory?.FindIndices(targetItem);
+                var droppedStack = TargetItem.DroppedStack.ToList();
                 if (HumanAIController.TakeItem(targetItem, character.Inventory, Equip, Wear, storeUnequipped: true, targetTags: IdentifiersOrTags))
                 {
-                    if (TakeWholeStack && slots != null)
+                    if (TakeWholeStack)
                     {
-                        foreach (int slot in slots)
+                        //taking the whole stack in this context means "as many items that can fit in one of the bot's slots", 
+                        //and the stack means either a stack of items in an inventory slot or a "dropped stack"
+                        //so we need a bit of extra logic here
+                        int maxStackSize = 0;
+                        int takenItemCount = 1;
+                        for (int i = 0; i < character.Inventory.Capacity; i++)
                         {
-                            foreach (Item item in itemInventory.GetItemsAt(slot).ToList())
+                            maxStackSize = Math.Max(maxStackSize, character.Inventory.HowManyCanBePut(targetItem.Prefab, i, condition: null));
+                        }
+                        if (slots != null)
+                        {
+                            foreach (int slot in slots)
                             {
-                                HumanAIController.TakeItem(item, character.Inventory, equip: false, storeUnequipped: true);
+                                foreach (Item item in itemInventory.GetItemsAt(slot).ToList())
+                                {
+                                    if (HumanAIController.TakeItem(item, character.Inventory, equip: false, storeUnequipped: true))
+                                    {
+                                        takenItemCount++;
+                                        if (takenItemCount >= maxStackSize) { break; }
+                                    }
+                                    else
+                                    {
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                        foreach (var item in droppedStack)
+                        {
+                            if (item == TargetItem) { continue; }
+                            if (HumanAIController.TakeItem(item, character.Inventory, equip: false, storeUnequipped: true))
+                            {
+                                takenItemCount++;
+                                if (takenItemCount >= maxStackSize) { break; }
+                            }
+                            else
+                            {
+                                break;
                             }
                         }
                     }
@@ -411,7 +441,7 @@ namespace Barotrauma
                 if (!CheckItem(item)) { continue; }
                 if (item.Container != null)
                 {
-                    if (item.Container.HasTag("donttakeitems")) { continue; }
+                    if (item.Container.HasTag(Tags.DontTakeItems)) { continue; }
                     if (ignoredItems.Contains(item.Container)) { continue; }
                     if (ignoredContainerIdentifiers != null)
                     {

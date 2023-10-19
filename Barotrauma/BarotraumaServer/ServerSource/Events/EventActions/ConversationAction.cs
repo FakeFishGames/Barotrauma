@@ -132,7 +132,7 @@ namespace Barotrauma
             else
             {
                 outmsg.WriteUInt16(speaker?.ID ?? Entity.NullEntityID);
-                outmsg.WriteString(Text ?? string.Empty);
+                outmsg.WriteString(GetDisplayText()?.Value ?? string.Empty);
                 outmsg.WriteBoolean(FadeToBlack);
                 outmsg.WriteByte((byte)Options.Count);
                 for (int i = 0; i < Options.Count; i++)

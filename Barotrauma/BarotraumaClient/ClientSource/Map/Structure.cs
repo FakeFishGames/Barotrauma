@@ -56,15 +56,43 @@ namespace Barotrauma
             if (!CastShadow) { return; }
 
             convexHulls ??= new List<ConvexHull>();
-            var h = new ConvexHull(
-                new Rectangle((position - size / 2).ToPoint(), size.ToPoint()),
-                IsHorizontal, 
-                this);
-            if (Math.Abs(rotation) > 0.001f)
+
+            //if the convex hull is longer than this, we need to split it to multiple parts
+            //very large convex hulls don't play nicely with the lighting or LOS, because the shadow cast
+            //by the convex hull would need to be extruded very far to cover the whole screen
+            const float MaxConvexHullLength = 1024.0f;
+            float length = IsHorizontal ? size.X : size.Y;
+            int convexHullCount = (int)Math.Max(1, Math.Ceiling(length / MaxConvexHullLength));
+
+            Vector2 sectionSize = size;
+            if (convexHullCount > 1)
             {
-                h.Rotate(position, rotation);
+                if (IsHorizontal)
+                {
+                    sectionSize.X = length / convexHullCount;
+                }
+                else
+                {
+                    sectionSize.Y = length / convexHullCount;
+                }
             }
-            convexHulls.Add(h);
+
+            for (int i = 0; i < convexHullCount; i++)
+            {
+                Vector2 offset =
+                    (IsHorizontal ? Vector2.UnitX : Vector2.UnitY) *
+                    (i * length / convexHullCount);
+
+                var h = new ConvexHull(
+                    new Rectangle((position - size / 2 + offset).ToPoint(), sectionSize.ToPoint()),
+                    IsHorizontal,
+                    this);
+                if (Math.Abs(rotation) > 0.001f)
+                {
+                    h.Rotate(position, rotation);
+                }
+                convexHulls.Add(h);
+            }
         }
 
         public override void UpdateEditing(Camera cam, float deltaTime)
@@ -498,7 +526,7 @@ namespace Barotrauma
 
         private bool ConditionalMatches(PropertyConditional conditional)
         {
-            if (!string.IsNullOrEmpty(conditional.TargetItemComponentName))
+            if (!string.IsNullOrEmpty(conditional.TargetItemComponent))
             {
                 return false;
             }

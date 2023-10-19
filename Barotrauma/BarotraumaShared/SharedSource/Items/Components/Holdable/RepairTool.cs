@@ -608,6 +608,7 @@ namespace Barotrauma.Items.Components
                 float closestDist = float.MaxValue;
                 foreach (Limb limb in targetCharacter.AnimController.Limbs)
                 {
+                    if (limb.Removed || limb.IgnoreCollisions || limb.Hidden || limb.IsSevered) { continue; }
                     float dist = Vector2.DistanceSquared(item.SimPosition, limb.SimPosition);
                     if (dist < closestDist)
                     {
@@ -716,7 +717,7 @@ namespace Barotrauma.Items.Components
         private readonly float repairTimeOut = 5;
         public override bool CrewAIOperate(float deltaTime, Character character, AIObjectiveOperateItem objective)
         {
-            if (!(objective.OperateTarget is Gap leak))
+            if (objective.OperateTarget is not Gap leak)
             {
                 Reset();
                 return true;
@@ -806,36 +807,50 @@ namespace Barotrauma.Items.Components
                 // Press the trigger only when the tool is approximately facing the target.
                 Vector2 fromItemToLeak = leak.WorldPosition - item.WorldPosition;
                 var angle = VectorExtensions.Angle(VectorExtensions.Forward(item.body.TransformedRotation), fromItemToLeak);
+                bool repair = true;
                 if (angle < MathHelper.PiOver4)
                 {
                     if (Submarine.PickBody(item.SimPosition, leak.SimPosition, collisionCategory: Physics.CollisionWall, allowInsideFixture: true)?.UserData is Item i)
-                    {
-                        var door = i.GetComponent<Door>();
-                        // Hit a door, abandon so that we don't weld it shut.
-                        return door != null && !door.CanBeTraversed;
+                    { 
+                        if (i.GetComponent<Door>() is Door door && !door.CanBeTraversed )
+                        {
+                            // Hit a door, don't repair so that we don't weld it shut.
+                            if (door.Stuck > 90)
+                            {
+                                // Almost stuck -> just abandon.
+                                return false;
+                            }
+                            if (door.Stuck > 50)
+                            {
+                                repair = false;
+                            }
+                        }
                     }
-                    // Check that we don't hit any friendlies
-                    if (Submarine.PickBodies(item.SimPosition, leak.SimPosition, collisionCategory: Physics.CollisionCharacter).None(hit =>
+                    if (repair)
                     {
-                        if (hit.UserData is Character c)
+                        // Check that we don't hit any friendlies
+                        if (Submarine.PickBodies(item.SimPosition, leak.SimPosition, collisionCategory: Physics.CollisionCharacter).None(hit =>
                         {
-                            if (c == character) { return false; }
-                            return HumanAIController.IsFriendly(character, c);
+                            if (hit.UserData is Character c)
+                            {
+                                if (c == character) { return false; }
+                                return HumanAIController.IsFriendly(character, c);
+                            }
+                            return false;
+                        }))
+                        {
+                            character.SetInput(InputType.Shoot, false, true);
+                            Use(deltaTime, character);
                         }
-                        return false;
-                    }))
+                    }
+                    repairTimer += deltaTime;
+                    if (repairTimer > repairTimeOut)
                     {
-                        character.SetInput(InputType.Shoot, false, true);
-                        Use(deltaTime, character);
-                        repairTimer += deltaTime;
-                        if (repairTimer > repairTimeOut)
-                        {
 #if DEBUG
-                            DebugConsole.NewMessage($"{character.Name}: timed out while welding a leak in {leak.FlowTargetHull.DisplayName}.", color: Color.Yellow);
+                        DebugConsole.NewMessage($"{character.Name}: timed out while welding a leak in {leak.FlowTargetHull.DisplayName}.", color: Color.Yellow);
 #endif
-                            Reset();
-                            return true;
-                        }
+                        Reset();
+                        return true;
                     }
                 }
             }
@@ -912,7 +927,7 @@ namespace Barotrauma.Items.Components
                 // A general purpose system could be better, but it would most likely require changes in the way we define the status effects in xml.
                 foreach (ISerializableEntity target in currentTargets)
                 {
-                    if (target is not Door door) { continue; }                    
+                    if (target is not Door door) { continue; }
                     if (!door.CanBeWelded || !door.Item.IsInteractable(user)) { continue; }
                     foreach (var propertyEffect in effect.PropertyEffects)
                     {

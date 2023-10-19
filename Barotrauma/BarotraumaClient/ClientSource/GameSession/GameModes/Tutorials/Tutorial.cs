@@ -8,7 +8,7 @@ namespace Barotrauma.Tutorials
 {
     enum AutoPlayVideo { Yes, No };
 
-    enum TutorialSegmentType { MessageBox, InfoBox, Objective };
+    enum SegmentType { MessageBox, InfoBox, Objective };
 
     sealed class Tutorial
     {
@@ -108,7 +108,7 @@ namespace Barotrauma.Tutorials
                 GameMain.GameSession.StartRound(LevelSeed);
             }
 
-            GameMain.GameSession.EventManager.ActiveEvents.Clear();
+            GameMain.GameSession.EventManager.ClearEvents();
             GameMain.GameSession.EventManager.Enabled = true;
             GameMain.GameScreen.Select();
 
