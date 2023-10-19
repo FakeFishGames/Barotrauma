@@ -1319,17 +1319,20 @@ namespace Barotrauma
                 }
             }
 
-            for (int i = 0; i < components.Count && i < clone.components.Count; i++)
+            if (clonedContainedItems.Any())
             {
-                ItemComponent component = components[i],
-                              cloneComp = clone.components[i];
-
-                if (component is not CircuitBox origBox || cloneComp is not CircuitBox cloneBox)
+                for (int i = 0; i < components.Count && i < clone.components.Count; i++)
                 {
-                    continue;
-                }
+                    ItemComponent component = components[i],
+                                  cloneComp = clone.components[i];
 
-                cloneBox.CloneFrom(origBox, clonedContainedItems);
+                    if (component is not CircuitBox origBox || cloneComp is not CircuitBox cloneBox)
+                    {
+                        continue;
+                    }
+
+                    cloneBox.CloneFrom(origBox, clonedContainedItems);
+                }
             }
 
             clone.FullyInitialized = true;
@@ -3230,7 +3233,7 @@ namespace Barotrauma
             SetDroppedStackItemStates();
             droppedStack = null;
 #if SERVER
-            if (GameMain.NetworkMember is { IsServer: true } server)
+            if (GameMain.NetworkMember is { IsServer: true } server && !Removed)
             {
                 server.CreateEntityEvent(this, new DroppedStackEventData(Enumerable.Empty<Item>()));
             }

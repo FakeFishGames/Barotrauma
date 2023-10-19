@@ -79,8 +79,11 @@ namespace Barotrauma
             {
                 DebugConsole.ThrowError($"Error in event \"{ParentEvent.Prefab.Identifier}\". {nameof(CheckItemAction)} does't define either tags or identifiers of the item to check.");
             }
-
             checkPercentage = element.GetAttribute(nameof(RequiredConditionalMatchPercentage)) is not null;
+            if (checkPercentage && conditionals.None())
+            {
+                DebugConsole.ThrowError($"Error in event \"{ParentEvent.Prefab.Identifier}\". {nameof(CheckItemAction)} requires conditionals to be met on {requiredConditionalMatchPercentage}% of the targets, but there are no conditionals defined.");
+            }
             if (Amount != 1 && checkPercentage)
             {
                 DebugConsole.ThrowError($"Error in event \"{ParentEvent.Prefab.Identifier}\". Cannot define both '{Amount}' and '{RequiredConditionalMatchPercentage}' in {nameof(CheckItemAction)}.");
@@ -134,7 +137,8 @@ namespace Barotrauma
                 foreach (var target in targets)
                 {
                     if (target is not Item item) { continue; }
-                    if (itemTags.Any(item.HasTag) || itemIdentifierSplit.Contains(item.Prefab.Identifier))
+                    if (itemTags.Any(item.HasTag) || itemIdentifierSplit.Contains(item.Prefab.Identifier) ||
+                        (itemTags.None() && itemIdentifierSplit.None() && conditionals.Any()))
                     {
                         if (ConditionalsMatch(item, character: null))
                         {

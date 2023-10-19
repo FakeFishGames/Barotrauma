@@ -1,14 +1,13 @@
 ﻿#nullable enable
+using Barotrauma.IO;
+using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Xml.Linq;
-using Barotrauma.Extensions;
-using Barotrauma.IO;
-using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
-using Microsoft.Xna.Framework.Input;
 using Directory = System.IO.Directory;
 
 namespace Barotrauma
@@ -37,7 +36,9 @@ namespace Barotrauma
         private OutpostGenerationParams? lastTestParam;
         private LocationType? lastTestType;
 
-        private int CreateID()
+        private GUITickBox? isTraitorEventBox;
+
+        private static int CreateID()
         {
             int maxId = nodeList.Any() ? nodeList.Max(node => node.ID) : 0;
             return ++maxId;
@@ -54,8 +55,8 @@ namespace Barotrauma
 
         private void CreateGUI()
         {
-            GuiFrame = new GUIFrame(new RectTransform(new Vector2(0.2f, 0.4f), GUI.Canvas) { MinSize = new Point(300, 400) });
-            GUILayoutGroup layoutGroup = new GUILayoutGroup(RectTransform(0.9f, 0.9f, GuiFrame, Anchor.Center)) { Stretch = true };
+            GuiFrame = new GUIFrame(new RectTransform(new Vector2(0.2f, 0.4f), GUI.Canvas) { MinSize = new Point(300, 420) });
+            GUILayoutGroup layoutGroup = new GUILayoutGroup(RectTransform(0.9f, 0.9f, GuiFrame, Anchor.Center)) { Stretch = true, AbsoluteSpacing = GUI.IntScale(5) };
 
             // === BUTTONS === //
             GUILayoutGroup buttonLayout = new GUILayoutGroup(RectTransform(1.0f, 0.50f, layoutGroup)) { RelativeSpacing = 0.04f };
@@ -99,13 +100,18 @@ namespace Barotrauma
             GUIButton addSpecialButton = new GUIButton(RectTransform(0.2f, 1.0f, addSpecialDropdownLayout), TextManager.Get("EventEditor.Add"));
 
             // Add event prefabs with identifiers to the list
-            foreach (EventPrefab eventPrefab in EventSet.GetAllEventPrefabs().Where(prefab => !prefab.Identifier.IsEmpty).Distinct())
+            foreach (EventPrefab eventPrefab in EventSet.GetAllEventPrefabs().Where(p => !p.Identifier.IsEmpty).Distinct().OrderBy(p => p.Identifier))
             {
-                loadDropdown.AddItem(eventPrefab.Identifier.Value!, eventPrefab);
+                if (!typeof(ScriptedEvent).IsAssignableFrom(eventPrefab.EventType)) { continue; }
+                var textBlock = loadDropdown.AddItem(eventPrefab.Identifier.Value!, eventPrefab) as GUITextBlock;
+                if (eventPrefab is TraitorEventPrefab && textBlock != null)
+                {
+                    textBlock.TextColor = Color.MediumPurple;
+                }
             }
 
             // Add all types that inherit the EventAction class
-            foreach (Type type in Assembly.GetExecutingAssembly().GetTypes().Where(type => type.IsSubclassOf(typeof(EventAction))))
+            foreach (Type type in Assembly.GetExecutingAssembly().GetTypes().Where(type => type.IsSubclassOf(typeof(EventAction))).OrderBy(t => t.Name))
             {
                 addActionDropdown.AddItem(type.Name, type);
             }
@@ -149,6 +155,9 @@ namespace Barotrauma
                 FileSelection.Open = true;
                 return true;
             };
+
+            isTraitorEventBox = new GUITickBox(RectTransform(1.0f, 0.125f, layoutGroup), "Traitor event");
+
             screenResolution = new Point(GameMain.GraphicsWidth, GameMain.GraphicsHeight);
         }
 
@@ -304,7 +313,10 @@ namespace Barotrauma
                 nodeList.Clear();
                 selectedNodes.Clear();
                 markedNodes.Clear();
-
+                if (isTraitorEventBox != null)
+                {
+                    isTraitorEventBox.Selected = prefab is TraitorEventPrefab;
+                }
                 bool hadNodes = true;
                 CreateNodes(prefab.ConfigElement, ref hadNodes);
                 if (!hadNodes)
@@ -409,17 +421,18 @@ namespace Barotrauma
                     }
 
                     var parentElement = subElement.Parent;
-
                     foreach (var xElement in subElement.Elements())
                     {
-                        if (xElement.Name.ToString().ToLowerInvariant() == "option")
+                        switch (xElement.Name.ToString().ToLowerInvariant())
                         {
-                            EventEditorNodeConnection optionConnection = new EventEditorNodeConnection(newNode, NodeConnectionType.Option)
-                            {
-                                OptionText = xElement.GetAttributeString("text", string.Empty),
-                                EndConversation = xElement.GetAttributeBool("endconversation", false)
-                            };
-                            newNode.Connections.Add(optionConnection);
+                            case "option":
+                                EventEditorNodeConnection optionConnection = new EventEditorNodeConnection(newNode, NodeConnectionType.Option)
+                                {
+                                    OptionText = xElement.GetAttributeString("text", string.Empty),
+                                    EndConversation = xElement.GetAttributeBool("endconversation", false)
+                                };
+                                newNode.Connections.Add(optionConnection);
+                                break;
                         }
                     }
 
@@ -466,37 +479,48 @@ namespace Barotrauma
                         }
                     }
 
-                    if (parentElement?.FirstElement() == subElement)
+                    if (subElement.Name.ToString().ToLowerInvariant() is "text" or "conditional")
                     {
-                        switch (parentElement?.Name.ToString().ToLowerInvariant())
-                        {
-                            case "failure":
-                                parent?.Connect(newNode, NodeConnectionType.Failure);
-                                break;
-                            case "success":
-                                parent?.Connect(newNode, NodeConnectionType.Success);
-                                break;
-                            case "option":
-                                if (parent != null)
-                                {
-                                    EventEditorNodeConnection? activateConnection = newNode.Connections.Find(connection => connection.Type == NodeConnectionType.Activate);
-                                    EventEditorNodeConnection? optionConnection = parent.Connections.FirstOrDefault(connection =>
-                                        connection.Type == NodeConnectionType.Option && string.Equals(connection.OptionText, parentElement.GetAttributeString("text", string.Empty), StringComparison.Ordinal));
-
-                                    if (activateConnection != null)
-                                    {
-                                        optionConnection?.ConnectedTo.Add(activateConnection);
-                                    }
-                                }
-                                break;
-                            default:
-                                parent?.Connect(newNode, NodeConnectionType.Add);
-                                break;
-                        }
+                        parent?.AddConnection(NodeConnectionType.Add);
+                        parent?.Connect(newNode, NodeConnectionType.Add);
                     }
                     else
                     {
-                        lastNode?.Connect(newNode, NodeConnectionType.Next);
+                        if (parentElement?.FirstElement() == subElement)
+                        {
+                            switch (parentElement?.Name.ToString().ToLowerInvariant())
+                            {
+                                case "failure":
+                                    parent?.Connect(newNode, NodeConnectionType.Failure);
+                                    break;
+                                case "success":
+                                    parent?.Connect(newNode, NodeConnectionType.Success);
+                                    break;
+                                case "onroundendaction":
+                                    parent?.Connect(newNode, NodeConnectionType.Next);
+                                    break;
+                                case "option":
+                                    if (parent != null)
+                                    {
+                                        EventEditorNodeConnection? activateConnection = newNode.Connections.Find(connection => connection.Type == NodeConnectionType.Activate);
+                                        EventEditorNodeConnection? optionConnection = parent.Connections.FirstOrDefault(connection =>
+                                            connection.Type == NodeConnectionType.Option && string.Equals(connection.OptionText, parentElement.GetAttributeString("text", string.Empty), StringComparison.Ordinal));
+
+                                        if (activateConnection != null)
+                                        {
+                                            optionConnection?.ConnectedTo.Add(activateConnection);
+                                        }
+                                    }
+                                    break;
+                                default:
+                                    parent?.Connect(newNode, NodeConnectionType.Add);
+                                    break;
+                            }
+                        }
+                        else
+                        {
+                            lastNode?.Connect(newNode, NodeConnectionType.Next);
+                        }
                     }
 
                     lastNode = newNode;
@@ -542,7 +566,9 @@ namespace Barotrauma
 
         private XElement? ExportXML()
         {
-            XElement mainElement = new XElement("ScriptedEvent", new XAttribute("identifier", projectName.RemoveWhitespace().ToLowerInvariant()));
+            XElement mainElement = new XElement(
+                isTraitorEventBox is { Selected: true } ? nameof(TraitorEvent) : nameof(ScriptedEvent), 
+                new XAttribute("identifier", projectName.RemoveWhitespace().ToLowerInvariant()));
             EditorNode? startNode = null;
             foreach (EditorNode eventNode in nodeList.Where(node => node is EventNode || node is SpecialNode))
             {
@@ -614,7 +640,7 @@ namespace Barotrauma
             }
         }
 
-        private XElement SaveEvent(string name)
+        private static XElement SaveEvent(string name)
         {
             XElement mainElement = new XElement("SavedEvent", new XAttribute("name", name));
             XElement nodes = new XElement("Nodes");
@@ -635,7 +661,7 @@ namespace Barotrauma
             return mainElement;
         }
 
-        private void Load(XElement saveElement)
+        private static void Load(XElement saveElement)
         {
             nodeList.Clear();
             projectName = saveElement.GetAttributeString("name", TextManager.Get("EventEditor.Unnamed").Value);
@@ -671,7 +697,7 @@ namespace Barotrauma
             }
         }
 
-        private void CreateContextMenu(EditorNode node, EventEditorNodeConnection? connection = null)
+        private static void CreateContextMenu(EditorNode node, EventEditorNodeConnection? connection = null)
         {
             if (GUIContextMenu.CurrentContextMenu != null) { return; }
 
@@ -884,8 +910,8 @@ namespace Barotrauma
             XElement? eventXml = ExportXML();
             EventPrefab? prefab;
             if (eventXml != null)
-            { 
-                prefab = new EventPrefab(eventXml.FromPackage(null), null);
+            {
+                prefab = EventPrefab.Create(eventXml.FromPackage(null), file: null);
             }
             else
             {

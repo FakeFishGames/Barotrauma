@@ -1379,7 +1379,7 @@ namespace Barotrauma
                 if (sub.Info.IsOutpost)
                 {
 #if CLIENT
-                    if (GameMain.GameSession.GameMode is TutorialMode) { continue; }
+                    if (GameMain.GameSession?.GameMode is TutorialMode) { continue; }
 #endif
                     OutpostGenerator.PowerUpOutpost(sub);
                 }
@@ -2106,7 +2106,7 @@ namespace Barotrauma
                 DebugConsole.ThrowError("Failed to generate alien ruins. Could not find any RuinGenerationParameters!");
                 return;
             }
-            DebugConsole.NewMessage($"Creating alien ruins using {selectedRuinGenerationParams.Identifier} (preferred difficulty: {selectedRuinGenerationParams.PreferredDifficulty}, current difficulty {Difficulty})", color: Color.Yellow);
+            DebugConsole.NewMessage($"Creating alien ruins using {selectedRuinGenerationParams.Identifier} (preferred difficulty: {selectedRuinGenerationParams.PreferredDifficulty}, current difficulty {Difficulty})", color: Color.Yellow, debugOnly: true);
 
             LocationType locationType = StartLocation?.Type;
             if (locationType == null)
@@ -4559,7 +4559,7 @@ namespace Barotrauma
             {
                 if (sub?.Info?.OutpostGenerationParams != null)
                 {
-                    OutpostGenerator.SpawnNPCs((GameMain.GameSession?.GameMode as CampaignMode)?.Map?.CurrentLocation, sub);
+                    OutpostGenerator.SpawnNPCs(StartLocation, sub);
                 }
             }
         }

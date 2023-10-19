@@ -339,6 +339,8 @@ namespace Barotrauma
 
         public bool IsOriginallyOnPlayerTeam => originalTeamID == CharacterTeamType.Team1 || originalTeamID == CharacterTeamType.Team2;
 
+        public bool IsFriendlyNPCTurnedHostile => originalTeamID == CharacterTeamType.FriendlyNPC && teamID == CharacterTeamType.Team2;
+
         public bool IsInstigator => CombatAction != null && CombatAction.IsInstigator;
         public CombatAction CombatAction;
 

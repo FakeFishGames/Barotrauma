@@ -152,8 +152,6 @@ namespace Barotrauma
                 .Where(e => playerCount >= e.MinPlayerCount)
                 .ToList();
 
-            var minDangerLevelPrefabs = suitablePrefabs.FindAll(e => e.DangerLevel == TraitorEventPrefab.MinDangerLevel);
-
             if (!suitablePrefabs.Any())
             {
                 //this is normal, there e.g. might be no missions for an abandoned outpost or end level
@@ -161,14 +159,13 @@ namespace Barotrauma
                 return false;
             }
 
-            foreach (var previousEvent in previousTraitorEvents.DistinctBy(e => e.Traitor).Reverse())
+            foreach (var previousEvent in previousTraitorEvents.Reverse<PreviousTraitorEvent>().DistinctBy(e => e.Traitor))
             {
                 if (previousEvent.State == TraitorEvent.State.Completed &&
-                    previousEvent.TraitorEvent.DangerLevel < maxDangerLevel &&
                     previousEvent.TraitorEvent.IsChainable &&
                     IsClientViableTraitor(previousEvent.Traitor))
                 {
-                    GameServer.Log($"{NetworkMember.ClientLogName(previousEvent.Traitor)} successfully completed a traitor event on a previous round. Attempting to give choose them a new, more dangerous event...", ServerLog.MessageType.Traitors);
+                    GameServer.Log($"{NetworkMember.ClientLogName(previousEvent.Traitor)} successfully completed a traitor event ({previousEvent.TraitorEvent.Identifier}) on a previous round. Attempting to give choose them a new, more dangerous event...", ServerLog.MessageType.Traitors);
                     
                     var suitablePrefab = 
                         //try finding an event that's continuation from the previous one (= requires the previous one to be completed 1st)
@@ -201,7 +198,20 @@ namespace Barotrauma
             }
             else
             {
-                selectedPrefab = minDangerLevelPrefabs.GetRandomByWeight(GetTraitorEventPrefabCommonness, Rand.RandSync.Unsynced);
+                //events that are suitable as initial traitor events (not requiring some other event to be completed first)
+                var suitableInitialPrefabs = suitablePrefabs.FindAll(e => e.RequiredCompletedTags.None() && IsSuitableDangerLevel(e));
+
+                bool IsSuitableDangerLevel(TraitorEventPrefab prefab)
+                {
+                    if (prefab.DangerLevel == TraitorEventPrefab.MinDangerLevel) { return true; }
+                    //events that require another event to be completed are handled earlier in the method
+                    if (prefab.RequirePreviousDangerLevelCompleted) { return false; }     
+                    return 
+                        prefab.RequiredPreviousDangerLevel < TraitorEventPrefab.MinDangerLevel || 
+                        previousTraitorEvents.Any(e2 => e2.TraitorEvent.DangerLevel >= prefab.RequiredPreviousDangerLevel);                    
+                }
+
+                selectedPrefab = suitableInitialPrefabs.GetRandomByWeight(GetTraitorEventPrefabCommonness, Rand.RandSync.Unsynced);
                 if (selectedPrefab == null)
                 {
                     GameServer.Log($"Could not find a suitable danger level {TraitorEventPrefab.MinDangerLevel} traitor event. Choosing a random event instead.", ServerLog.MessageType.Traitors);

@@ -28,6 +28,9 @@ namespace Barotrauma
         [Serialize(false, IsPropertySaveable.Yes)]
         public bool ChooseRandom { get; set; }
 
+        [Serialize(false, IsPropertySaveable.Yes, description: "Should the event continue if the TagAction can't find any valid targets?")]
+        public bool ContinueIfNoTargetsFound { get; set; }
+
         [Serialize(0.0f, IsPropertySaveable.Yes, description: "If larger than 0, the specified percentage of the matching targets are tagged. Between 0-100.")]
         public float ChoosePercentage { get; set; }
 
@@ -279,7 +282,14 @@ namespace Barotrauma
                 }
             }
 
-            isFinished = !targetNotFound;
+            if (ContinueIfNoTargetsFound)
+            {
+                isFinished = true;
+            }
+            else
+            {
+                isFinished = !targetNotFound;
+            }
         }
 
         public override string ToDebugString()
