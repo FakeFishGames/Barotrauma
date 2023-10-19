@@ -21,9 +21,11 @@ namespace Barotrauma.Items.Components
                 Vector2 simPosition = new Vector2(msg.ReadSingle(), msg.ReadSingle());
                 float rotation = msg.ReadSingle();
                 spreadIndex = msg.ReadByte();
+                ushort submarineID = msg.ReadUInt16();
                 if (User != null)
                 {
                     Shoot(User, simPosition, simPosition, rotation, ignoredBodies: User.AnimController.Limbs.Where(l => !l.IsSevered).Select(l => l.body.FarseerBody).ToList(), createNetworkEvent: false);
+                    item.Submarine = Entity.FindEntityByID(submarineID) as Submarine;
                 }
                 else
                 {

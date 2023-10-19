@@ -133,6 +133,11 @@ namespace Barotrauma
         public readonly List<Identifier> AllowedLocationTypes = new List<Identifier>();
 
         /// <summary>
+        /// The mission can only happen in locations owned by this faction. In the mission mode, the location is forced to be owned by this faction.
+        /// </summary>
+        public readonly Identifier RequiredLocationFaction;
+
+        /// <summary>
         /// Show entities belonging to these sub categories when the mission starts
         /// </summary>
         public readonly List<string> UnhideEntitySubCategories = new List<string>();
@@ -198,6 +203,7 @@ namespace Barotrauma
             RequireWreck = element.GetAttributeBool("requirewreck", false);
             RequireRuin = element.GetAttributeBool("requireruin", false);
             BlockLocationTypeChanges = element.GetAttributeBool(nameof(BlockLocationTypeChanges), false);
+            RequiredLocationFaction = element.GetAttributeIdentifier(nameof(RequiredLocationFaction), Identifier.Empty);
             Commonness  = element.GetAttributeInt("commonness", 1);
             AllowOtherMissionsInLevel = element.GetAttributeBool("allowothermissionsinlevel", true);
             if (element.GetAttribute("difficulty") != null)
@@ -378,7 +384,11 @@ namespace Barotrauma
         {
             if (from == to)
             {
-                return 
+                if (!RequiredLocationFaction.IsEmpty && from.Faction?.Prefab.Identifier != RequiredLocationFaction)
+                {
+                    return false;
+                }
+                return
                     AllowedLocationTypes.Any(lt => lt == "any") ||
                     AllowedLocationTypes.Any(lt => lt == "anyoutpost" && from.HasOutpost()) ||
                     AllowedLocationTypes.Any(lt => lt == from.Type.Identifier);

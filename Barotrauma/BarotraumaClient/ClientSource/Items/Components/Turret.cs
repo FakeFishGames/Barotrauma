@@ -57,13 +57,6 @@ namespace Barotrauma.Items.Components
         private readonly List<ParticleEmitter> particleEmitters = new List<ParticleEmitter>();
         private readonly List<ParticleEmitter> particleEmitterCharges = new List<ParticleEmitter>();
 
-        [Editable, Serialize("0,0,0,0", IsPropertySaveable.Yes, description: "Optional screen tint color when the item is being operated (R,G,B,A).")]
-        public Color HudTint
-        {
-            get;
-            private set;
-        }
-
         [Serialize(false, IsPropertySaveable.No, description: "Should the charge of the connected batteries/supercapacitors be shown at the top of the screen when operating the item.")]
         public bool ShowChargeIndicator
         {

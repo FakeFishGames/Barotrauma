@@ -273,6 +273,11 @@ namespace Barotrauma
             GUIStyle.SubHeadingFont.DrawString(spriteBatch, Name, HeaderRectangle.Location.ToVector2() + (HeaderRectangle.Size.ToVector2() / 2) - (headerSize / 2), fontColor);
         }
 
+        public void AddConnection(NodeConnectionType connectionType)
+        {
+            Connections.Add(new EventEditorNodeConnection(this, connectionType));
+        }
+
         public virtual void AddOption()
         {
             Connections.Add(new EventEditorNodeConnection(this, NodeConnectionType.Option));

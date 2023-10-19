@@ -1129,7 +1129,11 @@ namespace Barotrauma
                         var preferredContainer = new PreferredContainer(subElement);
                         if (preferredContainer.Primary.Count == 0 && preferredContainer.Secondary.Count == 0)
                         {
-                            DebugConsole.ThrowError($"Error in item prefab \"{ToString()}\": preferred container has no preferences defined ({subElement}).");
+                            //it's ok for variants to clear the primary and secondary containers to disable the PreferredContainer element
+                            if (variantOf == null)
+                            {
+                                DebugConsole.ThrowError($"Error in item prefab \"{ToString()}\": preferred container has no preferences defined ({subElement}).");
+                            }
                         }
                         else
                         {

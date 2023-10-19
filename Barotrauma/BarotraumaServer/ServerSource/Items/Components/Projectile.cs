@@ -35,6 +35,7 @@ namespace Barotrauma.Items.Components
                 msg.WriteSingle(launchPos.Y);
                 msg.WriteSingle(launchRot);
                 msg.WriteByte(eventData.SpreadCounter);
+                msg.WriteUInt16(LaunchSub?.ID ?? Entity.NullEntityID);
             }
 
             bool stuck = StickTarget != null && !item.Removed && !StickTargetRemoved();

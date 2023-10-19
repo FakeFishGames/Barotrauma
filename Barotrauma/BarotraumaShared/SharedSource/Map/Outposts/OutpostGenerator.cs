@@ -490,8 +490,8 @@ namespace Barotrauma
                 foreach (var moduleCount in generationParams.ModuleCounts)
                 {
                     if (!moduleCount.RequiredFaction.IsEmpty && 
-                        location.Faction?.Prefab.Identifier != moduleCount.RequiredFaction && 
-                        location.SecondaryFaction?.Prefab.Identifier != moduleCount.RequiredFaction)
+                        location?.Faction?.Prefab.Identifier != moduleCount.RequiredFaction && 
+                        location?.SecondaryFaction?.Prefab.Identifier != moduleCount.RequiredFaction)
                     {
                         continue;
                     }

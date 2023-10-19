@@ -2,7 +2,6 @@
 using Microsoft.Xna.Framework;
 using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Linq;
 
 namespace Barotrauma
 {
@@ -18,7 +17,7 @@ namespace Barotrauma
         public Reputation Reputation { get; }
         public FactionPrefab Prefab { get; }
 
-        public Faction(CampaignMetadata metadata, FactionPrefab prefab)
+        public Faction(CampaignMetadata? metadata, FactionPrefab prefab)
         {
             Prefab = prefab;
             Reputation = new Reputation(metadata, this, prefab.MinReputation, prefab.MaxReputation, prefab.InitialReputation);

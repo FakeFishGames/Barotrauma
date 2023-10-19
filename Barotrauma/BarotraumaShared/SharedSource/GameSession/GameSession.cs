@@ -388,6 +388,11 @@ namespace Barotrauma
                         .Where(lt => missionPrefab.AllowedLocationTypes.Any(m => m == lt.Identifier))
                         .GetRandom(rand);
                     dummyLocations = CreateDummyLocations(levelSeed, locationType);
+                    if (!mission.Prefab.RequiredLocationFaction.IsEmpty &&
+                        FactionPrefab.Prefabs.TryGet(mission.Prefab.RequiredLocationFaction, out var factionPrefab))
+                    {
+                        dummyLocations[0].Faction = dummyLocations[1].Faction = new Faction(metadata: null, factionPrefab);
+                    }
                     randomLevel = LevelData.CreateRandom(levelSeed, difficulty, levelGenerationParams, requireOutpost: true);
                     break;
                 }

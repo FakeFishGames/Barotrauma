@@ -83,6 +83,7 @@ namespace Barotrauma.Items.Components
         public Attack Attack { get; private set; }
 
         private Vector2 launchPos;
+        public Submarine LaunchSub;
 
         private readonly HashSet<Body> hits = new HashSet<Body>();
 
@@ -362,6 +363,7 @@ namespace Barotrauma.Items.Components
             User = user;
             if (Item.Removed) { return; }
             launchPos = simPosition;
+            LaunchSub = item.Submarine;
             //set the rotation of the projectile again because dropping the projectile resets the rotation
             Item.SetTransform(simPosition, rotation + (Item.body.Dir * LaunchRotationRadians), findNewHull: false);
             if (DeactivationTime > 0)
@@ -478,6 +480,7 @@ namespace Barotrauma.Items.Components
             Item.WaterDragCoefficient = WaterDragCoefficient;
 
             launchPos = item.SimPosition;
+            LaunchSub = item.Submarine;
 
             item.body.Enabled = true;
             if (item.body.BodyType == BodyType.Kinematic)

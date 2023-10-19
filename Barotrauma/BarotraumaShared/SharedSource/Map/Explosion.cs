@@ -173,6 +173,8 @@ namespace Barotrauma
 
         public readonly HashSet<Submarine> IgnoredSubmarines = new HashSet<Submarine>();
 
+        public readonly HashSet<Character> IgnoredCharacters = new HashSet<Character>();
+
         /// <summary>
         /// Strength of the EMP effect created by the explosion.
         /// </summary>
@@ -437,6 +439,8 @@ namespace Barotrauma
 
             foreach (Character c in Character.CharacterList)
             {
+                if (IgnoredCharacters.Contains(c)) { continue; }
+
                 if (!c.Enabled || 
                     Math.Abs(c.WorldPosition.X - worldPosition.X) > broadRange ||
                     Math.Abs(c.WorldPosition.Y - worldPosition.Y) > broadRange)

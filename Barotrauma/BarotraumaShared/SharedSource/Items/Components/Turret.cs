@@ -369,6 +369,13 @@ namespace Barotrauma.Items.Components
         [Serialize("", IsPropertySaveable.Yes, description: "[Auto Operate] Group or SpeciesName that the AI ignores when the turret is operated automatically."), Editable]
         public Identifier FriendlyTag { get; private set; }
 
+        [Editable, Serialize("0,0,0,0", IsPropertySaveable.Yes, description: "Optional screen tint color when the item is being operated (R,G,B,A).")]
+        public Color HudTint
+        {
+            get;
+            private set;
+        }
+
         public Turret(Item item, ContentXElement element)
             : base(item, element)
         {

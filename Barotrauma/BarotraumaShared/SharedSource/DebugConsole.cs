@@ -1188,6 +1188,33 @@ namespace Barotrauma
                 throw new Exception("crash command issued");
             }));
 
+            commands.Add(new Command("listeditableproperties", "", (string[] args) =>
+            {
+                StringBuilder sb = new StringBuilder();
+                string filename;
+#if CLIENT
+                filename = "ItemComponent properties (client).txt";
+                sb.AppendLine("Client-side ItemComponent properties:");
+#else
+                filename = "ItemComponent properties (server).txt";
+                sb.AppendLine("Server-side ItemComponent properties:");
+#endif
+                var itemComponents = typeof(ItemComponent).Assembly.GetTypes().Where(type => type.IsSubclassOf(typeof(ItemComponent)));
+                foreach (var ic in itemComponents.OrderBy(ic => ic.Name))
+                {
+                    sb.AppendLine(ic.Name+":");
+                    foreach (var prop in ic.GetProperties())
+                    {
+                        if (prop.DeclaringType != ic) { continue; }
+                        if (prop.GetCustomAttributes(inherit: false).OfType<Editable>().Any())
+                        {
+                            sb.AppendLine(prop.Name);
+                        }
+                    }
+                }
+                File.WriteAllText(filename, sb.ToString());
+            }));
+
             commands.Add(new Command("fastforward", "fastforward [seconds]: Fast forwards the game by x seconds. Note that large numbers may cause a long freeze.", (string[] args) =>
             {
                 float seconds = 0;
@@ -1300,7 +1327,7 @@ namespace Barotrauma
             }
 #endif
 
-            commands.Add(new Command("showreputation", "showreputation: List the current reputation values.", (string[] args) =>
+                commands.Add(new Command("showreputation", "showreputation: List the current reputation values.", (string[] args) =>
             {
                 if (GameMain.GameSession?.GameMode is CampaignMode campaign)
                 {

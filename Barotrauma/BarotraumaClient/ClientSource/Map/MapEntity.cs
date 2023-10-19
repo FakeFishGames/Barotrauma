@@ -163,10 +163,22 @@ namespace Barotrauma
                 {
                     if (SelectedAny)
                     {
-                        SubEditorScreen.StoreCommand(new AddOrDeleteCommand(new List<MapEntity>(SelectedList), true));
+                        if (SelectedList.Any(static t => t is Item it && it.GetComponent<CircuitBox>() is not null))
+                        {
+                            GUI.AskForConfirmation(SubEditorScreen.CircuitBoxDeletionWarningHeader, SubEditorScreen.CircuitBoxDeletionWarningBody, onConfirm: Delete);
+                        }
+                        else
+                        {
+                            Delete();
+                        }
+
+                        void Delete()
+                        {
+                            SubEditorScreen.StoreCommand(new AddOrDeleteCommand(new List<MapEntity>(SelectedList), true));
+                            SelectedList.ForEach(static e => { if (!e.Removed) { e.Remove(); } });
+                            SelectedList.Clear();
+                        }
                     }
-                    SelectedList.ForEach(e => { if (!e.Removed) { e.Remove(); } });
-                    SelectedList.Clear();
                 }
 
                 if (PlayerInput.IsCtrlDown())
