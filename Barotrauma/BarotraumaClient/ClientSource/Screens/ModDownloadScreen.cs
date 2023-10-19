@@ -378,7 +378,7 @@ namespace Barotrauma
             }
             string dir = path.RemoveFromEnd(ModReceiver.Extension, StringComparison.OrdinalIgnoreCase);
             
-            SaveUtil.DecompressToDirectory(path, dir, file => { });
+            SaveUtil.DecompressToDirectory(path, dir);
             var result = ContentPackage.TryLoad(Path.Combine(dir, ContentPackage.FileListFileName));
 
             if (!result.TryUnwrapSuccess(out var newPackage))

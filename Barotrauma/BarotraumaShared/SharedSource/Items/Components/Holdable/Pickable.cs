@@ -73,6 +73,7 @@ namespace Barotrauma.Items.Components
         {
             //return if someone is already trying to pick the item
             if (pickTimer > 0.0f) { return false; }
+            if (PickingTime >= float.MaxValue) { return false; }
             if (picker == null || picker.Inventory == null) { return false; }
             if (!picker.Inventory.AccessibleWhenAlive && !picker.Inventory.AccessibleByOwner) { return false; }
 
@@ -112,10 +113,16 @@ namespace Barotrauma.Items.Components
             }
         }
 
+
         public virtual bool OnPicked(Character picker)
         {
+            return OnPicked(picker, pickDroppedStack: true);
+        }
+
+        public virtual bool OnPicked(Character picker, bool pickDroppedStack)
+        {
             //if the item has multiple Pickable components (e.g. Holdable and Wearable, check that we don't equip it in hands when the item is worn or vice versa)
-            if (item.GetComponents<Pickable>().Count() > 0)
+            if (item.GetComponents<Pickable>().Any())
             {
                 bool alreadyEquipped = false;
                 for (int i = 0; i < picker.Inventory.Capacity; i++)
@@ -132,10 +139,12 @@ namespace Barotrauma.Items.Components
                 }
                 if (alreadyEquipped) { return false; }
             }
+            var droppedStack = pickDroppedStack ? item.DroppedStack.ToList() : null;
             if (picker.Inventory.TryPutItemWithAutoEquipCheck(item, picker, allowedSlots))
             {
                 if (!picker.HeldItems.Contains(item) && item.body != null) { item.body.Enabled = false; }
                 this.picker = picker;
+
 
                 for (int i = item.linkedTo.Count - 1; i >= 0; i--)
                 {
@@ -147,14 +156,22 @@ namespace Barotrauma.Items.Components
 
                 ApplyStatusEffects(ActionType.OnPicked, 1.0f, picker);
 #if CLIENT
-                if (!GameMain.Instance.LoadingScreenOpen && picker == Character.Controlled) SoundPlayer.PlayUISound(GUISoundType.PickItem);
+                if (!GameMain.Instance.LoadingScreenOpen && picker == Character.Controlled) { SoundPlayer.PlayUISound(GUISoundType.PickItem); }
                 PlaySound(ActionType.OnPicked,  picker);
 #endif
+                if (pickDroppedStack)
+                {
+                    foreach (var droppedItem in droppedStack)
+                    {
+                        if (droppedItem == item) { continue; }
+                        droppedItem.GetComponent<Pickable>().OnPicked(picker, pickDroppedStack: false);
+                    }
+                }
                 return true;
             }
 
 #if CLIENT
-            if (!GameMain.Instance.LoadingScreenOpen && picker == Character.Controlled) SoundPlayer.PlayUISound(GUISoundType.PickItemFail);
+            if (!GameMain.Instance.LoadingScreenOpen && picker == Character.Controlled) { SoundPlayer.PlayUISound(GUISoundType.PickItemFail); }
 #endif
 
             return false;
@@ -183,12 +200,15 @@ namespace Barotrauma.Items.Components
                     }
 
 #if CLIENT
-                    Character.Controlled?.UpdateHUDProgressBar(
-                        this,
-                        item.WorldPosition,
-                        pickTimer / requiredTime,
-                        GUIStyle.Red, GUIStyle.Green,
-                        !string.IsNullOrWhiteSpace(PickingMsg) ? PickingMsg : this is Door ? "progressbar.opening" : "progressbar.deattaching");
+                    if (requiredTime < float.MaxValue)
+                    {
+                        Character.Controlled?.UpdateHUDProgressBar(
+                            this,
+                            item.WorldPosition,
+                            pickTimer / requiredTime,
+                            GUIStyle.Red, GUIStyle.Green,
+                            !string.IsNullOrWhiteSpace(PickingMsg) ? PickingMsg : this is Door ? "progressbar.opening" : "progressbar.deattaching");
+                    }
 #endif
                     picker.AnimController.UpdateUseItem(!picker.IsClimbing, item.WorldPosition + new Vector2(0.0f, 100.0f) * ((pickTimer / 10.0f) % 0.1f));
                     pickTimer += CoroutineManager.DeltaTime;
@@ -197,12 +217,14 @@ namespace Barotrauma.Items.Components
             }
 
             StopPicking(picker);
-
-            bool isNotRemote = true;
+            if (!item.Removed)
+            {
+                bool isNotRemote = true;
 #if CLIENT
-            isNotRemote = !picker.IsRemotePlayer;
+                isNotRemote = !picker.IsRemotePlayer;
 #endif
-            if (isNotRemote) OnPicked(picker);
+                if (isNotRemote) { OnPicked(picker); }
+            }
 
             yield return CoroutineStatus.Success;
         }

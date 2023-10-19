@@ -756,7 +756,7 @@ namespace Barotrauma
 
         private bool CreateRenamingComponent(GUIButton button, object userData)
         {
-            if (!HasPermission || !(userData is CharacterInfo characterInfo)) { return false; }
+            if (!HasPermission || userData is not CharacterInfo characterInfo) { return false; }
             var outerGlowFrame = new GUIFrame(new RectTransform(new Vector2(1.25f, 1.25f), parentComponent.RectTransform, Anchor.Center),
                 style: "OuterGlow", color: Color.Black * 0.7f);
             var frame = new GUIFrame(new RectTransform(new Vector2(0.33f, 0.4f), outerGlowFrame.RectTransform, anchor: Anchor.Center)
@@ -843,7 +843,7 @@ namespace Barotrauma
 
         private bool FireCharacter(GUIButton button, object selection)
         {
-            if (!(selection is CharacterInfo characterInfo)) { return false; }
+            if (selection is not CharacterInfo characterInfo) { return false; }
 
             campaign.CrewManager.FireCharacter(characterInfo);
             SelectCharacter(null, null, null);

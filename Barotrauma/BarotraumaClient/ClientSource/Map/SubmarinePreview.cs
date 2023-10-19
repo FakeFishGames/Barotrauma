@@ -1,5 +1,6 @@
 ﻿using Barotrauma.Extensions;
 using Barotrauma.IO;
+using Barotrauma.Items.Components;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -9,7 +10,6 @@ using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Xml.Linq;
-using Barotrauma.Items.Components;
 
 namespace Barotrauma
 {
@@ -26,22 +26,51 @@ namespace Barotrauma
 
         private GUIFrame previewFrame;
 
+        private sealed class LoadedHull
+        {
+            public UInt16 ID;
+            public readonly ImmutableList<UInt16> LinkedHulls;
+            public readonly Rectangle Rect;
+            public readonly Identifier NameIdentifier;
+
+            public LoadedHull(XElement element)
+            {
+                ID = (ushort)element.GetAttributeInt("id", Entity.NullEntityID);
+                NameIdentifier = element.GetAttributeIdentifier("roomname", "");
+                Rect = element.GetAttributeRect("rect", Rectangle.Empty);
+                Rect.Y = -Rect.Y;
+                LinkedHulls = element.GetAttributeUshortArray("linked", Array.Empty<ushort>()).ToImmutableList();
+            }
+        }
+
         private sealed class HullCollection
         {
-            public readonly List<Rectangle> Rects;
+            public readonly List<LoadedHull> Hulls = new List<LoadedHull>();
+            public readonly List<Rectangle> Rects = new List<Rectangle>();
             public readonly LocalizedString Name;
 
-            public HullCollection(Identifier identifier)
+            public HullCollection(LoadedHull hull)
             {
-                Rects = new List<Rectangle>();
-                Name = TextManager.Get(identifier).Fallback(identifier.Value);
+                Name = TextManager.Get(hull.NameIdentifier).Fallback(hull.NameIdentifier.ToString());
+                AddHull(hull);
             }
 
-            public void AddRect(XElement element)
+            public void AddHull(LoadedHull hull)
             {
-                Rectangle rect = element.GetAttributeRect("rect", Rectangle.Empty);
-                rect.Y = -rect.Y;
-                Rects.Add(rect);
+                Hulls.Add(hull);
+                Rects.Add(hull.Rect);
+            }
+
+            private bool Contains(UInt16 hullId)
+            {
+                return Hulls.Any(h => h.ID == hullId);
+            }
+
+            public bool IsLinkedTo(HullCollection other)
+            {
+                return
+                    Hulls.Any(h => h.LinkedHulls.Any(id => other.Contains(id))) ||
+                    other.Hulls.Any(h => h.LinkedHulls.Any(id => Contains(id)));
             }
         }
 
@@ -56,7 +85,7 @@ namespace Barotrauma
             }
         }
 
-        private readonly Dictionary<Identifier,HullCollection> hullCollections;
+        private readonly List<HullCollection> hullCollections = new List<HullCollection>();
         private readonly List<Door> doors;
 
         private static SubmarinePreview instance = null;
@@ -80,7 +109,7 @@ namespace Barotrauma
             isDisposed = false;
             loadTask = null;
 
-            hullCollections = new Dictionary<Identifier, HullCollection>();
+            hullCollections = new List<HullCollection>();
             doors = new List<Door>();
 
             previewFrame = new GUIFrame(new RectTransform(Vector2.One, GUI.Canvas, Anchor.Center), style: null);
@@ -253,7 +282,7 @@ namespace Barotrauma
             }
 
             var wireNodes = new List<XElement>();
-
+            List<LoadedHull> loadedHulls = new List<LoadedHull>();
             foreach (var subElement in submarineInfo.SubmarineElement.Elements())
             {
                 if (subElement.GetAttributeBool("hiddeningame", false)) { continue; }
@@ -275,18 +304,41 @@ namespace Barotrauma
                         Identifier identifier = subElement.GetAttributeIdentifier("roomname", "");
                         if (!identifier.IsEmpty)
                         {
-                            if (!hullCollections.TryGetValue(identifier, out HullCollection hullCollection))
-                            {
-                                hullCollection = new HullCollection(identifier);
-                                hullCollections.Add(identifier, hullCollection);
-                            }
-                            hullCollection.AddRect(subElement);
+                            loadedHulls.Add(new LoadedHull(subElement));
                         }
                         break;
                 }
                 if (isDisposed) { return; }
                 await Task.Yield();
             }
+
+            //List<HullCollection> tempHullCollections = new List<HullCollection>();
+            foreach (LoadedHull hull in loadedHulls)
+            {
+                hullCollections.Add(new HullCollection(hull));
+            }
+
+            bool intersectionFound;
+            do
+            {
+                intersectionFound = false;
+                for (int i = 0; i < hullCollections.Count; i++)
+                {
+                    for (int j = i + 1; j < hullCollections.Count; j++)
+                    {
+                        var collection1 = hullCollections[i];
+                        var collection2 = hullCollections[j];
+                        if (collection1.IsLinkedTo(collection2))
+                        {
+                            collection2.Hulls.ForEach(h => collection1.AddHull(h));
+                            hullCollections.Remove(collection2);
+                            intersectionFound = true;
+                            break;
+                        }
+                    }
+                    if (intersectionFound) { break; }
+                }
+            } while (intersectionFound);
 
             bounds = (spriteRecorder.Min, spriteRecorder.Max);
             wireNodes.ForEach(BakeWireNodes);
@@ -682,7 +734,7 @@ namespace Barotrauma
 
             spriteBatch.Begin(SpriteSortMode.BackToFront, rasterizerState: GameMain.ScissorTestEnable, transformMatrix: camera.Transform);
             GameMain.Instance.GraphicsDevice.ScissorRectangle = scissorRectangle;
-            foreach (var hullCollection in hullCollections.Values)
+            foreach (var hullCollection in hullCollections)
             {
                 bool mouseOver = false;
                 if (GUI.MouseOn == null || GUI.MouseOn == component)

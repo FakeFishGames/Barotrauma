@@ -25,7 +25,7 @@ namespace Barotrauma
 
         public event Action<Rectangle> Resized;
 
-        private static bool resizing;
+        public static bool Resizing { get; private set; }
         private int resizeDirX, resizeDirY;
         private Rectangle? prevRect;
 
@@ -122,11 +122,11 @@ namespace Barotrauma
         /// </summary>
         public static void UpdateSelecting(Camera cam)
         {
-            if (resizing)
+            if (Resizing)
             {
                 if (!SelectedAny)
                 {
-                    resizing = false;
+                    Resizing = false;
                 }
                 return;
             }
@@ -163,10 +163,22 @@ namespace Barotrauma
                 {
                     if (SelectedAny)
                     {
-                        SubEditorScreen.StoreCommand(new AddOrDeleteCommand(new List<MapEntity>(SelectedList), true));
+                        if (SelectedList.Any(static t => t is Item it && it.GetComponent<CircuitBox>() is not null))
+                        {
+                            GUI.AskForConfirmation(SubEditorScreen.CircuitBoxDeletionWarningHeader, SubEditorScreen.CircuitBoxDeletionWarningBody, onConfirm: Delete);
+                        }
+                        else
+                        {
+                            Delete();
+                        }
+
+                        void Delete()
+                        {
+                            SubEditorScreen.StoreCommand(new AddOrDeleteCommand(new List<MapEntity>(SelectedList), true));
+                            SelectedList.ForEach(static e => { if (!e.Removed) { e.Remove(); } });
+                            SelectedList.Clear();
+                        }
                     }
-                    SelectedList.ForEach(e => { if (!e.Removed) { e.Remove(); } });
-                    SelectedList.Clear();
                 }
 
                 if (PlayerInput.IsCtrlDown())
@@ -243,7 +255,7 @@ namespace Barotrauma
                 }
                 else
                 {
-                    foreach (MapEntity e in mapEntityList)
+                    foreach (MapEntity e in MapEntityList)
                     {
                         if (!e.SelectableInEditor) { continue; }
                         if (e.IsMouseOn(position))
@@ -352,7 +364,7 @@ namespace Barotrauma
                 selectionSize.X = position.X - selectionPos.X;
                 selectionSize.Y = selectionPos.Y - position.Y;
 
-                foreach (MapEntity entity in mapEntityList)
+                foreach (MapEntity entity in MapEntityList)
                 {
                     entity.IsIncludedInSelection = false;
                 }
@@ -454,7 +466,7 @@ namespace Barotrauma
 
                     selectionPos = Vector2.Zero;
                     selectionSize = Vector2.Zero;
-                    foreach (MapEntity entity in mapEntityList)
+                    foreach (MapEntity entity in MapEntityList)
                     {
                         entity.IsIncludedInSelection = false;
                     }
@@ -525,7 +537,7 @@ namespace Barotrauma
 
             if (!isShiftDown) { return null; }
 
-            foreach (MapEntity e in mapEntityList)
+            foreach (MapEntity e in MapEntityList)
             {
                 if (!e.SelectableInEditor || e is not Item potentialContainer) { continue; }
 
@@ -730,7 +742,7 @@ namespace Barotrauma
 
         static partial void UpdateAllProjSpecific(float deltaTime)
         {
-            var entitiesToRender = Submarine.VisibleEntities ?? mapEntityList;
+            var entitiesToRender = Submarine.VisibleEntities ?? MapEntityList;
             foreach (MapEntity me in entitiesToRender)
             {
                 if (me is Item item)
@@ -832,33 +844,37 @@ namespace Barotrauma
             }
             if (selectionPos != Vector2.Zero)
             {
-                var (sizeX, sizeY) = selectionSize;
-                var (posX, posY) = selectionPos;
-
-                posY = -posY;
-
-                Vector2[] corners =
-                {
-                    new Vector2(posX, posY),
-                    new Vector2(posX + sizeX, posY),
-                    new Vector2(posX + sizeX, posY + sizeY),
-                    new Vector2(posX, posY + sizeY)
-                };
-
-                Color selectionColor = GUIStyle.Blue;
-                float thickness = Math.Max(2f, 2f / Screen.Selected.Cam.Zoom);
-
-                GUI.DrawFilledRectangle(spriteBatch, corners[0], selectionSize, selectionColor * 0.1f);
-
-                Vector2 offset = new Vector2(0f, thickness / 2f);
-
-                if (sizeY < 0) { offset.Y = -offset.Y; }
-
-                spriteBatch.DrawLine(corners[0], corners[1], selectionColor, thickness);
-                spriteBatch.DrawLine(corners[1] - offset, corners[2] + offset, selectionColor, thickness);
-                spriteBatch.DrawLine(corners[2], corners[3], selectionColor, thickness);
-                spriteBatch.DrawLine(corners[3] + offset, corners[0] - offset, selectionColor, thickness);
+                DrawSelectionRect(spriteBatch, selectionPos, selectionSize, GUIStyle.Blue);
             }
+        }
+
+        public static void DrawSelectionRect(SpriteBatch spriteBatch, Vector2 pos, Vector2 size, Color color)
+        {
+            var (sizeX, sizeY) = size;
+            var (posX, posY) = pos;
+
+            posY = -posY;
+
+            Vector2[] corners =
+            {
+                new Vector2(posX, posY),
+                new Vector2(posX + sizeX, posY),
+                new Vector2(posX + sizeX, posY + sizeY),
+                new Vector2(posX, posY + sizeY)
+            };
+
+            float thickness = Math.Max(2f, 2f / Screen.Selected.Cam.Zoom);
+
+            GUI.DrawFilledRectangle(spriteBatch, corners[0], size, color * 0.1f);
+
+            Vector2 offset = new Vector2(0f, thickness / 2f);
+
+            if (sizeY < 0) { offset.Y = -offset.Y; }
+
+            spriteBatch.DrawLine(corners[0], corners[1], color, thickness);
+            spriteBatch.DrawLine(corners[1] - offset, corners[2] + offset, color, thickness);
+            spriteBatch.DrawLine(corners[2], corners[3], color, thickness);
+            spriteBatch.DrawLine(corners[3] + offset, corners[0] - offset, color, thickness);
         }
 
         public static List<MapEntity> FilteredSelectedList { get; private set; } = new List<MapEntity>();
@@ -995,10 +1011,10 @@ namespace Barotrauma
         {
             if (CopiedList.Count == 0) { return; }
 
-            List<MapEntity> prevEntities = new List<MapEntity>(mapEntityList);
+            List<MapEntity> prevEntities = new List<MapEntity>(MapEntityList);
             Clone(CopiedList);
 
-            var clones = mapEntityList.Except(prevEntities).ToList();
+            var clones = MapEntityList.Except(prevEntities).ToList();
             var nonWireClones = clones.Where(c => !(c is Item item) || item.GetComponent<Wire>() == null);
             if (!nonWireClones.Any()) { nonWireClones = clones; }
 
@@ -1027,12 +1043,12 @@ namespace Barotrauma
         /// </summary>
         public static List<MapEntity> CopyEntities(List<MapEntity> entities)
         {
-            List<MapEntity> prevEntities = new List<MapEntity>(mapEntityList);
+            List<MapEntity> prevEntities = new List<MapEntity>(MapEntityList);
 
             CopiedList = Clone(entities);
 
             //find all new entities created during cloning
-            var newEntities = mapEntityList.Except(prevEntities).ToList();
+            var newEntities = MapEntityList.Except(prevEntities).ToList();
 
             //do a "shallow remove" (removes the entities from the game without removing links between them)
             //  -> items will stay in their containers
@@ -1089,37 +1105,36 @@ namespace Barotrauma
 
         public virtual void DrawEditing(SpriteBatch spriteBatch, Camera cam) { }
 
+        float ResizeHandleSize => 10 * GUI.Scale;
+        float ResizeHandleHighlightDistance => 8 * GUI.Scale;
+
         private void UpdateResizing(Camera cam)
         {
             IsHighlighted = true;
 
             int startX = ResizeHorizontal ? -1 : 0;
-            int StartY = ResizeVertical ? -1 : 0;
+            int startY = ResizeVertical ? -1 : 0;
 
             for (int x = startX; x < 2; x += 2)
             {
-                for (int y = StartY; y < 2; y += 2)
+                for (int y = startY; y < 2; y += 2)
                 {
-                    Vector2 handlePos = cam.WorldToScreen(Position + new Vector2(x * (rect.Width * 0.5f + 5), y * (rect.Height * 0.5f + 5)));
+                    Vector2 handlePos = cam.WorldToScreen(Position + new Vector2(x * (rect.Width * 0.5f), y * (rect.Height * 0.5f)));
 
-                    bool highlighted = Vector2.Distance(PlayerInput.MousePosition, handlePos) < 5.0f;
-
+                    bool highlighted = Vector2.DistanceSquared(PlayerInput.MousePosition, handlePos) < ResizeHandleHighlightDistance * ResizeHandleHighlightDistance;
                     if (highlighted && PlayerInput.PrimaryMouseButtonDown())
                     {
                         selectionPos = Vector2.Zero;
                         resizeDirX = x;
                         resizeDirY = y;
-                        resizing = true;
+                        Resizing = true;
                         startMovingPos = Vector2.Zero;
-                        foreach (var mapEntity in mapEntityList)
-                        {
-                            if (mapEntity != this) { mapEntity.isHighlighted = false; }
-                        }
+                        ClearHighlightedEntities();
                     }
                 }
             }
 
-            if (resizing)
+            if (Resizing)
             {
                 if (prevRect == null)
                 {
@@ -1129,7 +1144,7 @@ namespace Barotrauma
                 Vector2 placePosition = new Vector2(rect.X, rect.Y);
                 Vector2 placeSize = new Vector2(rect.Width, rect.Height);
 
-                Vector2 mousePos = Submarine.MouseToWorldGrid(cam, Submarine.MainSub);
+                Vector2 mousePos = Submarine.MouseToWorldGrid(cam, Submarine.MainSub, round: true);
 
                 if (PlayerInput.IsShiftDown())
                 {
@@ -1145,8 +1160,8 @@ namespace Barotrauma
                 {
                     mousePos.X = Math.Min(mousePos.X, rect.Right - Submarine.GridSize.X);
 
-                    placeSize.X = (placePosition.X + placeSize.X) - mousePos.X;
-                    placePosition.X = mousePos.X;
+                    placeSize.X = MathF.Round((placePosition.X + placeSize.X) - mousePos.X);
+                    placePosition.X = MathF.Round(mousePos.X);
                 }
                 if (resizeDirY < 0)
                 {
@@ -1168,7 +1183,7 @@ namespace Barotrauma
 
                 if (!PlayerInput.PrimaryMouseButtonHeld())
                 {
-                    resizing = false;
+                    Resizing = false;
                     Resized?.Invoke(rect);
                     if (prevRect != null)
                     {
@@ -1201,13 +1216,16 @@ namespace Barotrauma
             {
                 for (int y = StartY; y < 2; y += 2)
                 {
-                    Vector2 handlePos = cam.WorldToScreen(Position + new Vector2(x * (rect.Width * 0.5f + 5), y * (rect.Height * 0.5f + 5)));
+                    Vector2 handlePos = cam.WorldToScreen(Position + new Vector2(x * (rect.Width * 0.5f), y * (rect.Height * 0.5f)));
 
-                    bool highlighted = Vector2.Distance(PlayerInput.MousePosition, handlePos) < 5.0f;
-
+                    bool highlighted = Vector2.DistanceSquared(PlayerInput.MousePosition, handlePos) < ResizeHandleHighlightDistance * ResizeHandleHighlightDistance;
+                    if (highlighted && !PlayerInput.PrimaryMouseButtonHeld())
+                    {
+                        GUI.MouseCursor = CursorState.Hand;
+                    }
                     GUI.DrawRectangle(spriteBatch,
-                        handlePos - new Vector2(3.0f, 3.0f),
-                        new Vector2(6.0f, 6.0f),
+                        handlePos - new Vector2(ResizeHandleSize / 2),
+                        new Vector2(ResizeHandleSize),
                         Color.White * (highlighted ? 1.0f : 0.6f),
                         true, 0,
                         (int)Math.Max(1.5f / GameScreen.Selected.Cam.Zoom, 1.0f));
@@ -1224,7 +1242,7 @@ namespace Barotrauma
 
             Rectangle selectionRect = Submarine.AbsRect(pos, size);
 
-            foreach (MapEntity entity in mapEntityList)
+            foreach (MapEntity entity in MapEntityList)
             {
                 if (!entity.SelectableInEditor) { continue; }
 

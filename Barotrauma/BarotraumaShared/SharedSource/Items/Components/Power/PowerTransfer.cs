@@ -197,7 +197,7 @@ namespace Barotrauma.Items.Components
                 isBroken = false;
             }
 
-            ApplyStatusEffects(ActionType.OnActive, deltaTime, null);
+            ApplyStatusEffects(ActionType.OnActive, deltaTime);
 
             float powerReadingOut = 0;
             float loadReadingOut = ExtraLoad;

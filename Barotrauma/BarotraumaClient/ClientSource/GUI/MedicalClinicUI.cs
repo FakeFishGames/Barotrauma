@@ -946,7 +946,7 @@ namespace Barotrauma
             }
             if (truncated)
             {
-                descriptionBlock.Text += "...";
+                descriptionBlock.Text += TextManager.Get("ellipsis");
             }
 
             GUITextBlock priceBlock = new GUITextBlock(new RectTransform(new Vector2(1f, 0.25f), bottomTextLayout.RectTransform), TextManager.FormatCurrency(affliction.Price), font: GUIStyle.SubHeadingFont);

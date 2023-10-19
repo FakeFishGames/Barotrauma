@@ -12,8 +12,6 @@ namespace Barotrauma
         public delegate bool OnSelectedHandler(GUITickBox obj);
         public OnSelectedHandler OnSelected;
 
-        public static int size = 20;
-
         private GUIRadioButtonGroup radioButtonGroup;
 
         public override bool Selected
@@ -21,21 +19,7 @@ namespace Barotrauma
             get { return isSelected; }
             set 
             {
-                if (value == isSelected) { return; } 
-                if (radioButtonGroup != null && radioButtonGroup.SelectedRadioButton == this)
-                {
-                    isSelected = true;
-                    return;
-                }
-                
-                isSelected = value;
-                State = isSelected ? ComponentState.Selected : ComponentState.None;
-                if (value && radioButtonGroup != null)
-                {
-                    radioButtonGroup.SelectRadioButton(this);
-                }
-
-                OnSelected?.Invoke(this);
+                SetSelected(value, callOnSelected: true);
             }
         }
 
@@ -185,6 +169,27 @@ namespace Barotrauma
             box.RectTransform.Resize(box.RectTransform.MinSize);
             text.SetTextPos();
             ContentWidth = box.Rect.Width + text.Padding.X + text.TextSize.X + text.Padding.Z;
+        }
+
+        public void SetSelected(bool selected, bool callOnSelected = true)
+        {
+            if (selected == isSelected) { return; }
+            if (radioButtonGroup != null && radioButtonGroup.SelectedRadioButton == this)
+            {
+                isSelected = true;
+                return;
+            }
+
+            isSelected = selected;
+            State = isSelected ? ComponentState.Selected : ComponentState.None;
+            if (selected && radioButtonGroup != null)
+            {
+                radioButtonGroup.SelectRadioButton(this);
+            }
+            if (callOnSelected)
+            {
+                OnSelected?.Invoke(this);
+            }
         }
         
         protected override void Update(float deltaTime)

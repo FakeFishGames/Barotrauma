@@ -455,6 +455,10 @@ namespace Barotrauma.Lights
                         if (drawDeformSprites == (limb.DeformSprite == null)) { continue; }
                         limb.Draw(spriteBatch, cam, lightColor);
                     }
+                    foreach (var heldItem in character.HeldItems)
+                    {
+                        heldItem.Draw(spriteBatch, editing: false, overrideColor: Color.Black);
+                    }
                 }
             }
 
@@ -480,7 +484,7 @@ namespace Barotrauma.Lights
 
             if (ConnectionPanel.ShouldDebugDrawWiring)
             {
-                foreach (MapEntity e in (Submarine.VisibleEntities ?? MapEntity.mapEntityList))
+                foreach (MapEntity e in (Submarine.VisibleEntities ?? MapEntity.MapEntityList))
                 {
                     if (e is Item item && !item.HiddenInGame && item.GetComponent<Wire>() is Wire wire)
                     {

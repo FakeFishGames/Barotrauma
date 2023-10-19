@@ -19,7 +19,6 @@ namespace Barotrauma
         public bool LastControlled;
         public int CrewListIndex { get; set; } = -1;
 
-        #warning TODO: Refactor
         private Sprite disguisedPortrait;
         private List<WearableSprite> disguisedAttachmentSprites;
         private Vector2? disguisedSheetIndex;
@@ -609,7 +608,6 @@ namespace Barotrauma
                 CharacterInfo = info;
                 parentComponent = parent;
                 HasIcon = hasIcon;
-
                 RecreateFrameContents();
             }
 
@@ -848,6 +846,12 @@ namespace Barotrauma
 
                 var info = CharacterInfo;
 
+                if (info.HeadSprite == null)
+                {
+                    DebugConsole.ThrowError($"Head Selection: the head sprite is null! Failed to open the head selection.");
+                    return false;
+                }
+
                 float characterHeightWidthRatio = info.HeadSprite.size.Y / info.HeadSprite.size.X;
                 HeadSelectionList ??= new GUIListBox(
                     new RectTransform(
@@ -885,8 +889,13 @@ namespace Barotrauma
                 GUILayoutGroup row = null;
                 int itemsInRow = 0;
 
-                ContentXElement headElement = info.Ragdoll.MainElement.Elements().FirstOrDefault(e =>
+                ContentXElement headElement = info.Ragdoll.MainElement?.Elements().FirstOrDefault(e =>
                     e.GetAttributeString("type", "").Equals("head", StringComparison.OrdinalIgnoreCase));
+                if (headElement == null)
+                {
+                    DebugConsole.ThrowError($"Head Selection: the head element is null in {info.ragdoll.FileName}! Failed to open the head selection.");
+                    return false;
+                }
                 ContentXElement headSpriteElement = headElement.GetChildElement("sprite");
                 ContentPath spritePathWithTags = headSpriteElement.GetAttributeContentPath("texture");
 
@@ -963,7 +972,7 @@ namespace Barotrauma
             private bool SwitchAttachment(GUIScrollBar scrollBar, WearableType type)
             {
                 var info = CharacterInfo;
-                int index = (int)scrollBar.BarScrollValue;
+                int index = (int)Math.Round(scrollBar.BarScrollValue);
                 switch (type)
                 {
                     case WearableType.Beard:

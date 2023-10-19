@@ -64,7 +64,16 @@ namespace Barotrauma
 
             spawnPending = true;
         }
-        
+
+        public override string GetDebugInfo()
+        {
+            return 
+                $"Finished: {IsFinished.ColorizeObject()}\n" +
+                $"Item: {Item.ColorizeObject()}\n" +
+                $"Spawn pending: {SpawnPending.ColorizeObject()}\n" +
+                $"Spawn position: {SpawnPos.ColorizeObject()}";
+        }
+
         private void SpawnItem()
         {
             item = new Item(itemPrefab, spawnPos, null);
@@ -73,7 +82,7 @@ namespace Barotrauma
             //try to find an artifact holder and place the artifact inside it
             foreach (Item it in Item.ItemList)
             {
-                if (it.Submarine != null || !it.HasTag("artifactholder")) continue;
+                if (it.Submarine != null || !it.HasTag(Tags.ArtifactHolder)) { continue; }
 
                 var itemContainer = it.GetComponent<Items.Components.ItemContainer>();
                 if (itemContainer == null) continue;

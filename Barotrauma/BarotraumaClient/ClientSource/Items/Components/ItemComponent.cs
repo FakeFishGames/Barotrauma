@@ -150,7 +150,9 @@ namespace Barotrauma.Items.Components
 
         public GUIFrame GuiFrame { get; set; }
 
-        public bool LockGuiFramePosition;
+        private GUIDragHandle guiFrameDragHandle;
+
+        private bool guiFrameUpdatePending;
 
         [Serialize(false, IsPropertySaveable.No)]
         public bool AllowUIOverlap
@@ -466,7 +468,21 @@ namespace Barotrauma.Items.Components
             GuiFrame?.AddToGUIUpdateList(order: order);
         }
 
-        public virtual void UpdateHUD(Character character, float deltaTime, Camera cam) { }
+        public void UpdateHUD(Character character, float deltaTime, Camera cam)
+        {
+            UpdateHUDComponentSpecific(character, deltaTime, cam);
+            if (guiFrameUpdatePending && !PlayerInput.PrimaryMouseButtonHeld())
+            {
+                //send a guiframe position update once the player stops dragging the frame
+                guiFrameUpdatePending = false;
+                if (SerializableProperties.TryGetValue(nameof(GuiFrameOffset).ToIdentifier(), out var property))
+                {
+                    GameMain.Client?.CreateEntityEvent(Item, new Item.ChangePropertyEventData(property, this));
+                }
+            }
+        }
+
+        public virtual void UpdateHUDComponentSpecific(Character character, float deltaTime, Camera cam) { }
 
         public virtual void UpdateEditing(float deltaTime) { }
 
@@ -572,6 +588,7 @@ namespace Barotrauma.Items.Components
             }
             string style = GuiFrameSource.Attribute("style") == null ? null : GuiFrameSource.GetAttributeString("style", "");
             GuiFrame = new GUIFrame(RectTransform.Load(GuiFrameSource, GUI.Canvas, Anchor.Center), style, color);
+            GuiFrame.RectTransform.ScreenSpaceOffset = GuiFrameOffset;
 
             TryCreateDragHandle();
 
@@ -583,24 +600,25 @@ namespace Barotrauma.Items.Components
             GameMain.Instance.ResolutionChanged += OnResolutionChangedPrivate;
         }
 
-        protected virtual void TryCreateDragHandle()
+        protected void TryCreateDragHandle()
         {
             if (GuiFrame != null && GuiFrameSource.GetAttributeBool("draggable", true))
             {
                 bool hideDragIcons = GuiFrameSource.GetAttributeBool("hidedragicons", false);
 
-                var handle = new GUIDragHandle(new RectTransform(Vector2.One, GuiFrame.RectTransform, Anchor.Center),
+                guiFrameDragHandle = new GUIDragHandle(new RectTransform(Vector2.One, GuiFrame.RectTransform, Anchor.Center),
                     GuiFrame.RectTransform, style: null)
                 {
+                    Enabled = !LockGuiFramePosition,
                     DragArea = HUDLayoutSettings.ItemHUDArea
                 };
 
                 int iconHeight = GUIStyle.ItemFrameMargin.Y / 4;
-                var dragIcon = new GUIImage(new RectTransform(new Point(GuiFrame.Rect.Width, iconHeight), handle.RectTransform, Anchor.TopCenter) { AbsoluteOffset = new Point(0, iconHeight / 2) },
+                var dragIcon = new GUIImage(new RectTransform(new Point(GuiFrame.Rect.Width, iconHeight), guiFrameDragHandle.RectTransform, Anchor.TopCenter) { AbsoluteOffset = new Point(0, iconHeight / 2) },
                     style: "GUIDragIndicatorHorizontal");
                 dragIcon.RectTransform.MinSize = new Point(0, iconHeight);
 
-                handle.ValidatePosition = (RectTransform rectT) =>
+                guiFrameDragHandle.ValidatePosition = (RectTransform rectT) =>
                 {
                     var activeHuds = Character.Controlled?.SelectedItem?.ActiveHUDs ?? item.ActiveHUDs;
                     foreach (ItemComponent ic in activeHuds)
@@ -624,11 +642,13 @@ namespace Barotrauma.Items.Components
                         //refresh slots to ensure they're rendered at the correct position
                         (ic as ItemContainer)?.Inventory.CreateSlots();
                     }
+                    GuiFrameOffset = GuiFrame.RectTransform.ScreenSpaceOffset;
+                    guiFrameUpdatePending = true;
                     return true;
                 };
 
                 int buttonHeight = (int)(GUIStyle.ItemFrameMargin.Y * 0.4f);
-                var settingsIcon = new GUIButton(new RectTransform(new Point(buttonHeight), handle.RectTransform, Anchor.TopLeft) { AbsoluteOffset = new Point(buttonHeight / 4), MinSize = new Point(buttonHeight) },
+                var settingsIcon = new GUIButton(new RectTransform(new Point(buttonHeight), guiFrameDragHandle.RectTransform, Anchor.TopLeft) { AbsoluteOffset = new Point(buttonHeight / 4), MinSize = new Point(buttonHeight) },
                     style: "GUIButtonSettings")
                 {
                     OnClicked = (btn, userdata) =>
@@ -636,6 +656,14 @@ namespace Barotrauma.Items.Components
                         GUIContextMenu.CreateContextMenu(
                             new ContextMenuOption("item.resetuiposition", isEnabled: true, onSelected: () =>
                             {
+                                foreach (var ic in item.Components)
+                                {
+                                    if (ic.GuiFrame != null && ic.GuiFrameOffset != Point.Zero)
+                                    {
+                                        ic.GuiFrameOffset = Point.Zero;
+                                        ic.guiFrameUpdatePending = true;
+                                    }
+                                }
                                 if (Character.Controlled?.SelectedItem != null && item != Character.Controlled.SelectedItem)
                                 {
                                     Character.Controlled.SelectedItem.ForceHUDLayoutUpdate(ignoreLocking: true);
@@ -648,7 +676,11 @@ namespace Barotrauma.Items.Components
                             new ContextMenuOption(TextManager.Get(LockGuiFramePosition ? "item.unlockuiposition" : "item.lockuiposition"), isEnabled: true, onSelected: () =>
                             {
                                 LockGuiFramePosition = !LockGuiFramePosition;
-                                handle.Enabled = !LockGuiFramePosition;
+                                guiFrameDragHandle.Enabled = !LockGuiFramePosition;
+                                if (SerializableProperties.TryGetValue(nameof(LockGuiFramePosition).ToIdentifier(), out var property))
+                                {
+                                    GameMain.Client?.CreateEntityEvent(Item, new Item.ChangePropertyEventData(property, this));
+                                }
                             }));
                         return true;
                     }

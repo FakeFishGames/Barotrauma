@@ -70,7 +70,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        [Editable, Serialize(true, IsPropertySaveable.Yes, description: "Can the relay currently pass power and signals through it.", alwaysUseInstanceValues: true)]
+        [InGameEditable, Serialize(true, IsPropertySaveable.Yes, description: "Can the relay currently pass power and signals through it.", alwaysUseInstanceValues: true)]
         public bool IsOn
         {
             get
@@ -139,7 +139,7 @@ namespace Barotrauma.Items.Components
                 isBroken = false;
             }
 
-            ApplyStatusEffects(ActionType.OnActive, deltaTime, null);
+            ApplyStatusEffects(ActionType.OnActive, deltaTime);
 
             if (Voltage > OverloadVoltage && CanBeOverloaded && item.Repairables.Any())
             {

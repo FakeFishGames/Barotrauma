@@ -315,7 +315,7 @@ namespace Barotrauma
                 else
                 {
                     var textBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), listBox.Content.RectTransform),
-                    msg.Text, font: GUIStyle.SmallFont, wrap: true)
+                        RichString.Rich(msg.Text), font: GUIStyle.SmallFont, wrap: true)
                     {
                         CanBeFocused = false,
                         TextColor = msg.Color
@@ -403,7 +403,7 @@ namespace Barotrauma
             {
                 if (Screen.Selected != GameMain.SubEditorScreen) return;
 
-                if (MapEntity.mapEntityList.Any(e => e is Hull || e is Gap))
+                if (MapEntity.MapEntityList.Any(e => e is Hull || e is Gap))
                 {
                     ShowQuestionPrompt("This submarine already has hulls and/or gaps. This command will delete them. Do you want to continue? Y/N",
                         (option) =>
@@ -974,7 +974,7 @@ namespace Barotrauma
                 if (Screen.Selected == GameMain.SubEditorScreen)
                 {
                     bool entityFound = false;
-                    foreach (MapEntity entity in MapEntity.mapEntityList)
+                    foreach (MapEntity entity in MapEntity.MapEntityList)
                     {
                         if (entity is Item item)
                         {
@@ -1096,19 +1096,19 @@ namespace Barotrauma
 
             commands.Add(new Command("cleansub", "", (string[] args) =>
             {
-                for (int i = MapEntity.mapEntityList.Count - 1; i >= 0; i--)
+                for (int i = MapEntity.MapEntityList.Count - 1; i >= 0; i--)
                 {
-                    MapEntity me = MapEntity.mapEntityList[i];
+                    MapEntity me = MapEntity.MapEntityList[i];
 
                     if (me.SimPosition.Length() > 2000.0f)
                     {
                         NewMessage("Removed " + me.Name + " (simposition " + me.SimPosition + ")", Color.Orange);
-                        MapEntity.mapEntityList.RemoveAt(i);
+                        MapEntity.MapEntityList.RemoveAt(i);
                     }
                     else if (!me.ShouldBeSaved)
                     {
                         NewMessage("Removed " + me.Name + " (!ShouldBeSaved)", Color.Orange);
-                        MapEntity.mapEntityList.RemoveAt(i);
+                        MapEntity.MapEntityList.RemoveAt(i);
                     }
                     else if (me is Item)
                     {
@@ -1477,12 +1477,17 @@ namespace Barotrauma
                 string itemNameOrId = args[0].ToLowerInvariant();
 
                 ItemPrefab itemPrefab =
-                    (MapEntityPrefab.Find(itemNameOrId, identifier: null, showErrorMessages: false) ??
-                    MapEntityPrefab.Find(null, identifier: itemNameOrId.ToIdentifier(), showErrorMessages: false)) as ItemPrefab;
+                    (MapEntityPrefab.FindByName(itemNameOrId) ??
+                    MapEntityPrefab.FindByIdentifier(itemNameOrId.ToIdentifier())) as ItemPrefab;
 
                 if (itemPrefab == null)
                 {
                     NewMessage("Item not found for analyzing.");
+                    return;
+                }
+                if (itemPrefab.DefaultPrice == null)
+                {
+                    NewMessage($"Item \"{itemPrefab.Name}\" is not sellable/purchaseable.");
                     return;
                 }
                 NewMessage("Analyzing item " + itemPrefab.Name + " with base cost " + itemPrefab.DefaultPrice.Price);
@@ -1845,6 +1850,12 @@ namespace Barotrauma
                                 addIfMissing($"MissionMessage{i}.{missionId}".ToIdentifier(), language);
                             }
                         }
+                    }
+
+                    foreach (var eventPrefab in EventPrefab.Prefabs)
+                    {
+                        if (eventPrefab is not TraitorEventPrefab traitorEventPrefab) { continue; }
+                        addIfMissing($"eventname.{traitorEventPrefab.Identifier}".ToIdentifier(), language);
                     }
 
                     foreach (Type itemComponentType in typeof(ItemComponent).Assembly.GetTypes().Where(type => type.IsSubclassOf(typeof(ItemComponent))))
@@ -2346,7 +2357,20 @@ namespace Barotrauma
                 WaterRenderer.BlurAmount = blurAmount;
             }));
 
-
+            commands.Add(new Command("generatelevels", "generatelevels [amount]: generate a bunch of levels with the currently selected parameters in the level editor.", (string[] args) =>
+            {
+                if (GameMain.GameSession == null)
+                {
+                    int amount = 1;
+                    if (args.Length > 0) { int.TryParse(args[0], out amount); }
+                    GameMain.LevelEditorScreen.TestLevelGenerationForErrors(amount);
+                }
+                else
+                {
+                    NewMessage("Can't use the command while round is running.");
+                }
+            }));
+            
             commands.Add(new Command("refreshrect", "Updates the dimensions of the selected items to match the ones defined in the prefab. Applied only in the subeditor.", (string[] args) =>
             {
                 //TODO: maybe do this automatically during loading when possible?
@@ -2528,8 +2552,11 @@ namespace Barotrauma
                 HashSet<XDocument> docs = new HashSet<XDocument>();
                 HashSet<string> textIds = new HashSet<string>();
 
+                Dictionary<string, string> existingTexts = new Dictionary<string, string>();
+
                 foreach (EventPrefab eventPrefab in EventSet.GetAllEventPrefabs())
                 {
+                    if (eventPrefab is not TraitorEventPrefab) { continue; }
                     if (eventPrefab.Identifier.IsEmpty) 
                     {
                         continue;
@@ -2566,35 +2593,74 @@ namespace Barotrauma
                 void getTextsFromElement(XElement element, List<string> list, string parentName)
                 {
                     string text = element.GetAttributeString("text", null);
-                    string textId = $"EventText.{parentName}";
-                    if (!string.IsNullOrEmpty(text) && !text.Contains("EventText.", StringComparison.OrdinalIgnoreCase)) 
-                    { 
-                        list.Add($"<{textId}>{text}</{textId}>");
-                        element.SetAttributeValue("text", textId);
+                    string textAttribute = "text";
+                    XElement textElement = element;
+                    if (text == null)
+                    {
+                        var subTextElement = element?.Element("Text");
+                        if (subTextElement != null)
+                        {
+                            textAttribute = "tag";
+                            text = subTextElement?.GetAttributeString(textAttribute, null);
+                            textElement = subTextElement;
+                        }
+                        if (text == null)
+                        {
+                            AddWarning("Failed to find text from the element " + element.ToString());
+                        }
                     }
 
-                    int i = 1;
+                    string textId = $"EventText.{parentName}";
+                    if (!string.IsNullOrEmpty(text) && !text.Contains("EventText.", StringComparison.OrdinalIgnoreCase)) 
+                    {
+                        if (existingTexts.TryGetValue(text, out string existingTextId))
+                        {
+                            textElement.SetAttributeValue(textAttribute, existingTextId);
+                        }
+                        else
+                        {
+                            textIds.Add(parentName);
+                            list.Add($"<{textId}>{text}</{textId}>");
+                            existingTexts.Add(text, textId);
+                            textElement.SetAttributeValue(textAttribute, textId);
+                        }
+                    }
+
+                    int conversationIndex = 1;
+                    int objectiveIndex = 1;
                     foreach (var subElement in element.Elements())
                     {
+                        string elementName = parentName;
+                        bool ignore = false;
                         switch (subElement.Name.ToString().ToLowerInvariant())
                         {
-                            case "conversationaction":     
-                                while (textIds.Contains(parentName+".c"+i))
+                            case "conversationaction":
+                                while (textIds.Contains(elementName + ".c" + conversationIndex))
                                 {
-                                    i++;
+                                    conversationIndex++;
                                 }
-                                parentName += ".c" + i;           
+                                elementName += ".c" + conversationIndex;
+                                break;
+                            case "eventlogaction":
+                                while (textIds.Contains(elementName + ".objective" + objectiveIndex))
+                                {
+                                    objectiveIndex++;
+                                }
+                                elementName += ".objective" + objectiveIndex;
                                 break;
                             case "option":
-                                while (textIds.Contains(parentName.Substring(0, parentName.Length - 3) + ".o" + i))
+                                while (textIds.Contains(elementName.Substring(0, elementName.Length - 3) + ".o" + conversationIndex))
                                 {
-                                    i++;
+                                    conversationIndex++;
                                 }
-                                parentName = parentName.Substring(0, parentName.Length - 3) + ".o" + i;
+                                elementName = elementName.Substring(0, elementName.Length - 3) + ".o" + conversationIndex;
+                                break;
+                            case "text":
+                                ignore = true;
                                 break;
                         }
-                        textIds.Add(parentName);
-                        getTextsFromElement(subElement, list, parentName);
+                        if (ignore) { continue; }
+                        getTextsFromElement(subElement, list, elementName);
                     }
                 }
             }));
@@ -2759,9 +2825,9 @@ namespace Barotrauma
                     ep.DebugCreateInstance();
                 }
 
-                for (int i = 0; i < MapEntity.mapEntityList.Count; i++)
+                for (int i = 0; i < MapEntity.MapEntityList.Count; i++)
                 {
-                    var entity = MapEntity.mapEntityList[i] as ISerializableEntity;
+                    var entity = MapEntity.MapEntityList[i] as ISerializableEntity;
                     if (entity != null)
                     {
                         List<(object obj, SerializableProperty property)> allProperties = new List<(object obj, SerializableProperty property)>();

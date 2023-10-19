@@ -37,10 +37,11 @@ namespace Barotrauma.Abilities
 
         protected override void ApplyEffect()
         {
-            if (Character?.Submarine is null) { return; }
+            if (Character is null) { return; }
 
-            foreach (Item item in Character.Submarine.GetItems(true))
+            foreach (Item item in Item.ItemList)
             {
+                if (item.Submarine?.TeamID != Character.TeamID) { continue; }
                 if (item.HasTag(tags) || tags.Contains(item.Prefab.Identifier))
                 {
                     item.StatManager.ApplyStat(stat, stackable, value, CharacterTalent);

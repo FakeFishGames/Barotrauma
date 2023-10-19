@@ -4,12 +4,13 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 
 namespace Barotrauma
 {
-    class LoadingScreen
+    sealed class LoadingScreen
     {
         private readonly Sprite defaultBackgroundTexture, overlay;
         private readonly SpriteSheet decorativeGraph, decorativeMap;
@@ -37,36 +38,16 @@ namespace Barotrauma
             }
         }
 
-        private Queue<PendingSplashScreen> pendingSplashScreens = new Queue<PendingSplashScreen>();
         /// <summary>
         /// Triplet.first = filepath, Triplet.second = resolution, Triplet.third = audio gain
         /// </summary>
-        public Queue<PendingSplashScreen> PendingSplashScreens
-        {
-            get
-            {
-                lock (loadMutex)
-                {
-                    return pendingSplashScreens;
-                }
-            }
-            set
-            {
-                lock (loadMutex)
-                {
-                    pendingSplashScreens = value;
-                }
-            }
-        }
+        public readonly ConcurrentQueue<PendingSplashScreen> PendingSplashScreens = new ConcurrentQueue<PendingSplashScreen>();
 
         public bool PlayingSplashScreen
         {
             get
             {
-                lock (loadMutex)
-                {
-                    return currSplashScreen != null || pendingSplashScreens.Count > 0;
-                }
+                return currSplashScreen != null || PendingSplashScreens.Count > 0;
             }
         }
 
@@ -76,33 +57,7 @@ namespace Barotrauma
             selectedTip = RichString.Rich(tip);
         }
 
-        private readonly object loadMutex = new object();
-        private float? loadState;
-
-        public float? LoadState
-        {
-            get
-            {
-                lock (loadMutex)
-                {
-                    return loadState;
-                }
-            }
-            set
-            {
-                lock (loadMutex)
-                {
-                    loadState = value;
-                    DrawLoadingText = true;
-                }
-            }
-        }
-
-        public bool DrawLoadingText
-        {
-            get;
-            set;
-        }
+        public float LoadState;
 
         public bool WaitForLanguageSelection
         {
@@ -121,7 +76,7 @@ namespace Barotrauma
 
             overlay = new Sprite("Content/UI/MainMenuVignette.png", Vector2.Zero);
             noiseSprite = new Sprite("Content/UI/noise.png", Vector2.Zero);
-            DrawLoadingText = true;
+
             SetSelectedTip(TextManager.Get("LoadingScreenTip"));
         }
 
@@ -170,10 +125,11 @@ namespace Barotrauma
             {
                 DrawLanguageSelectionPrompt(spriteBatch, graphics);
             }
-            else if (DrawLoadingText)
+            else
             {
                 LocalizedString loadText;
-                if (LoadState == 100.0f)
+                var loadState = LoadState; // avoid multiple reads here to prevent jank
+                if (loadState >= 100.0f)
                 {
 #if DEBUG
                     if (GameSettings.CurrentConfig.AutomaticQuickStartEnabled || GameSettings.CurrentConfig.AutomaticCampaignLoadEnabled || (GameSettings.CurrentConfig.TestScreenEnabled && GameMain.FirstLoad))
@@ -191,17 +147,17 @@ namespace Barotrauma
                 else
                 {
                     loadText = TextManager.Get("Loading");
-                    if (LoadState != null)
+                    if (loadState >= 0f)
                     {
-                        loadText += " " + (int)LoadState + " %";
+                        loadText += $" {loadState:N0} %";
+                    }
 
 #if DEBUG
-                        if (GameMain.FirstLoad && GameMain.CancelQuickStart)
-                        {
-                            loadText += " (Quickstart aborted)";
-                        }
-#endif
+                    if (GameMain.FirstLoad && GameMain.CancelQuickStart)
+                    {
+                        loadText += " (Quickstart aborted)";
                     }
+#endif
                 }
 
                 if (GUIStyle.LargeFont.HasValue)
@@ -343,11 +299,9 @@ namespace Barotrauma
 
         private void DrawSplashScreen(SpriteBatch spriteBatch, GraphicsDevice graphics)
         {
-            if (currSplashScreen == null && PendingSplashScreens.Count == 0) { return; }
-
             if (currSplashScreen == null)
             {
-                var newSplashScreen = PendingSplashScreens.Dequeue();
+                if (!PendingSplashScreens.TryDequeue(out var newSplashScreen)) { return; }
                 string fileName = newSplashScreen.Filename;
                 try
                 {
@@ -362,9 +316,9 @@ namespace Barotrauma
                     PendingSplashScreens.Clear();
                     currSplashScreen = null;
                 }
-
-                if (currSplashScreen == null) { return; }
             }
+
+            if (currSplashScreen == null) { return; }
 
             if (currSplashScreen.IsPlaying)
             {
@@ -425,7 +379,7 @@ namespace Barotrauma
         public IEnumerable<CoroutineStatus> DoLoading(IEnumerable<CoroutineStatus> loader)
         {
             drawn = false;
-            LoadState = null;
+            LoadState = -1f;
             SetSelectedTip(TextManager.Get("LoadingScreenTip"));
             currentBackgroundTexture = LocationType.Prefabs.Where(p => p.UsePortraitInRandomLoadingScreens).GetRandomUnsynced()?.GetPortrait(Rand.Int(int.MaxValue));
             if (GameMain.GameSession?.GameMode?.Missions is { } missions && missions.Any(m => m.Prefab.HasPortraits))

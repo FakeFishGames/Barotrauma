@@ -14,7 +14,7 @@ namespace Barotrauma.Networking
         /// <summary>
         /// How much skills drop towards the job's default skill levels when dying
         /// </summary>
-        const float SkillReductionOnDeath = 0.75f;
+        public static float SkillLossPercentageOnDeath => GameMain.NetworkMember?.ServerSettings?.SkillLossPercentageOnDeath ?? 50.0f;
 
         public enum State
         {
@@ -26,7 +26,6 @@ namespace Barotrauma.Networking
         private readonly NetworkMember networkMember;
         private readonly Steering shuttleSteering;
         private readonly List<Door> shuttleDoors;
-        private const string RespawnContainerTag = "respawncontainer";
         private readonly ItemContainer respawnContainer;
 
         //items created during respawn
@@ -109,7 +108,7 @@ namespace Barotrauma.Networking
                 {
                     if (item.Submarine != RespawnShuttle) { continue; }
 
-                    if (item.HasTag(RespawnContainerTag))
+                    if (item.HasTag(Tags.RespawnContainer))
                     {
                         respawnContainer = item.GetComponent<ItemContainer>();
                     }

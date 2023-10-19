@@ -262,6 +262,12 @@ namespace Barotrauma
                 SpawnedInCurrentOutpost = true,
                 AllowStealing = false
             };
+            item.AddTag("cargomission");
+            item.AddTag(Prefab.Identifier);
+            foreach (var tag in Prefab.Tags)
+            {
+                item.AddTag(tag);
+            }
             item.FindHull();
             items.Add(item);
 

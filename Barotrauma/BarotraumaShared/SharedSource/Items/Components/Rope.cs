@@ -181,7 +181,7 @@ namespace Barotrauma.Items.Components
                 return;
             }
 
-            Vector2 diff = target.WorldPosition - source.WorldPosition;
+            Vector2 diff = target.WorldPosition - GetSourcePos(useDrawPosition: false);
             float lengthSqr = diff.LengthSquared();
             if (lengthSqr > MaxLength * MaxLength)
             {
@@ -372,7 +372,40 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        private PhysicsBody GetBodyToPull(ISpatialEntity target)
+        /// <summary>
+        /// Get the position the rope starts from (taking into account barrel positions if needed)
+        /// </summary>
+        /// <param name="useDrawPosition">Should the interpolated draw position be used? If not, the WorldPosition is used.</param>
+        private Vector2 GetSourcePos(bool useDrawPosition = false)
+        {
+            Vector2 sourcePos = source.WorldPosition;
+            if (source is Item sourceItem)
+            {
+                if (useDrawPosition)
+                {
+                    sourcePos = sourceItem.DrawPosition;
+                }
+                if (!sourceItem.Removed)
+                {
+                    if (sourceItem.GetComponent<Turret>() is { } turret)
+                    {
+                        sourcePos = new Vector2(sourceItem.WorldRect.X + turret.TransformedBarrelPos.X, sourceItem.WorldRect.Y - turret.TransformedBarrelPos.Y);
+                    }
+                    else if (sourceItem.GetComponent<RangedWeapon>() is { } weapon)
+                    {
+                        sourcePos += ConvertUnits.ToDisplayUnits(weapon.TransformedBarrelPos);
+                    }
+                }
+            }
+            else if (useDrawPosition && source is Limb sourceLimb && sourceLimb.body != null)
+            {
+                sourcePos = sourceLimb.body.DrawPosition;                
+            }
+            return sourcePos;
+        }
+
+
+        private static PhysicsBody GetBodyToPull(ISpatialEntity target)
         {
             if (target is Item targetItem)
             {

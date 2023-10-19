@@ -43,13 +43,14 @@ namespace Barotrauma
 
             foreach (var npc in affectedNpcs)
             {
-                if (!(npc.AIController is HumanAIController humanAiController)) { continue; }
+                if (npc.Removed) { continue; }
+                if (npc.AIController is not HumanAIController humanAiController) { continue; }
 
                 Character enemy = null;
                 float closestDist = float.MaxValue;
                 foreach (Entity target in ParentEvent.GetTargets(EnemyTag))
                 {
-                    if (!(target is Character character)) { continue; }
+                    if (target is not Character character) { continue; }
                     float dist = Vector2.DistanceSquared(npc.WorldPosition, target.WorldPosition);
                     if (dist < closestDist)
                     {
@@ -82,7 +83,7 @@ namespace Barotrauma
             {
                 foreach (var npc in affectedNpcs)
                 {
-                    if (npc.Removed || !(npc.AIController is HumanAIController humanAiController)) { continue; }
+                    if (npc.Removed || npc.AIController is not HumanAIController humanAiController) { continue; }
                     foreach (var combatObjective in humanAiController.ObjectiveManager.GetActiveObjectives<AIObjectiveCombat>())
                     {
                         combatObjective.Abandon = true;

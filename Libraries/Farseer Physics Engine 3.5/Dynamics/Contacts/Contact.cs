@@ -249,11 +249,11 @@ namespace FarseerPhysics.Dynamics.Contacts
         /// <param name="contactManager">The contact manager.</param>
         internal void Update(ContactManager contactManager)
         {
-            Body bodyA = FixtureA.Body;
-            Body bodyB = FixtureB.Body;
-
             if (FixtureA == null || FixtureB == null)
                 return;
+
+            Body bodyA = FixtureA.Body;
+            Body bodyB = FixtureB.Body;
 
             Manifold oldManifold = Manifold;
 

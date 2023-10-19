@@ -4,8 +4,6 @@ namespace Barotrauma
 {
     partial class NestMission : Mission
     {
-        private Level.Cave selectedCave; 
-
         public override void ServerWriteInitial(IWriteMessage msg, Client c)
         {
             base.ServerWriteInitial(msg, c);

@@ -440,10 +440,9 @@ namespace Barotrauma
             {
                 if (handleBuff)
                 {
-                    var head = Character.AnimController.GetLimb(LimbType.Head);
-                    if (head != null)
+                    if (AfflictionPrefab.Prefabs.TryGet("disguised", out AfflictionPrefab afflictionPrefab))
                     {
-                        Character.CharacterHealth.ApplyAffliction(head, AfflictionPrefab.List.FirstOrDefault(a => a.Identifier == "disguised").Instantiate(100f));
+                        Character.CharacterHealth.ApplyAffliction(null, afflictionPrefab.Instantiate(100f));
                     }
                 }
 
@@ -464,11 +463,7 @@ namespace Barotrauma
 
             if (handleBuff)
             {
-                var head = Character.AnimController.GetLimb(LimbType.Head);
-                if (head != null)
-                {
-                    Character.CharacterHealth.ReduceAfflictionOnLimb(head, "disguised".ToIdentifier(), 100f);
-                }
+                Character.CharacterHealth.ReduceAfflictionOnAllLimbs("disguised".ToIdentifier(), 100f);
             }
         }
 
@@ -683,11 +678,15 @@ namespace Barotrauma
                 FacialHairColors = CharacterConfigElement.GetAttributeTupleArray("facialhaircolors", new (Color, float)[] { (Color.WhiteSmoke, 100f) }).ToImmutableArray();
                 SkinColors = CharacterConfigElement.GetAttributeTupleArray("skincolors", new (Color, float)[] { (new Color(255, 215, 200, 255), 100f) }).ToImmutableArray();
 
-                var headPreset = Prefab.Heads.GetRandom(randSync);
+                var headPreset = Prefab?.Heads.GetRandom(randSync);
+                if (headPreset == null)
+                {
+                    DebugConsole.ThrowError("Failed to find a head preset!");
+                }
                 Head = new HeadInfo(this, headPreset);
                 SetAttachments(randSync);
                 SetColors(randSync);
-                
+
                 Job = job ?? ((jobPrefab == null) ? Job.Random(Rand.RandSync.Unsynced) : new Job(jobPrefab, randSync, variant));
 
                 if (!string.IsNullOrEmpty(name))
@@ -1089,6 +1088,7 @@ namespace Barotrauma
         
         private void LoadHeadSprite()
         {
+            if (Ragdoll?.MainElement == null) { return; }
             foreach (var limbElement in Ragdoll.MainElement.Elements())
             {
                 if (!limbElement.GetAttributeString("type", string.Empty).Equals("head", StringComparison.OrdinalIgnoreCase)) { continue; }
@@ -1386,7 +1386,7 @@ namespace Barotrauma
             // Replace the name tag of any existing id cards or duffel bags
             foreach (var item in Item.ItemList)
             {
-                if (!item.HasTag("identitycard") && !item.HasTag("despawncontainer")) { continue; }
+                if (!item.HasTag("identitycard".ToIdentifier()) && !item.HasTag("despawncontainer".ToIdentifier())) { continue; }
                 foreach (var tag in item.Tags.Split(','))
                 {
                     var splitTag = tag.Split(":");
@@ -1446,7 +1446,7 @@ namespace Barotrauma
             if (MinReputationToHire.factionId != default)
             {
                 charElement.Add(
-                    new XAttribute("factionId", Name),
+                    new XAttribute("factionId", MinReputationToHire.factionId),
                     new XAttribute("minreputation", MinReputationToHire.reputation));
             }
 
@@ -1527,7 +1527,10 @@ namespace Barotrauma
                             break;
                         }
                     }
-                    targetAvailableInNextLevel = !isOutside && GameMain.GameSession?.Campaign?.PendingSubmarineSwitch == null && (isOnConnectedLinkedSub || entitySub == Submarine.MainSub);
+                    targetAvailableInNextLevel = 
+                        !isOutside && 
+                        GameMain.GameSession?.Campaign is not { SwitchedSubsThisRound: true } && 
+                        (isOnConnectedLinkedSub || entitySub == Submarine.MainSub);
                     if (!targetAvailableInNextLevel)
                     {
                         if (!order.Prefab.CanBeGeneralized)
@@ -1652,8 +1655,12 @@ namespace Barotrauma
                     continue;
                 }
                 var targetType = (Order.OrderTargetType)orderElement.GetAttributeInt("targettype", 0);
-                int orderGiverInfoId = orderElement.GetAttributeInt("ordergiver", -1);
-                var orderGiver = orderGiverInfoId >= 0 ? Character.CharacterList.FirstOrDefault(c => c.Info?.GetIdentifier() == orderGiverInfoId) : null;
+                Character orderGiver = null;
+                if (orderElement.GetAttribute("ordergiver") is XAttribute orderGiverIdAttribute)
+                {
+                    int orderGiverInfoId = orderGiverIdAttribute.GetAttributeInt(0);
+                    orderGiver = Character.CharacterList.FirstOrDefault(c => c.Info?.GetIdentifier() == orderGiverInfoId);
+                }
                 Entity targetEntity = null;
                 switch (targetType)
                 {
@@ -1717,6 +1724,7 @@ namespace Barotrauma
                     {
                         targetId = GetOffsetId(parentSub, targetId);
                         targetEntity = Entity.FindEntityByID(targetId);
+                        return targetEntity != null;
                     }
                     else
                     {
@@ -1730,8 +1738,8 @@ namespace Barotrauma
                         {
                             DebugConsole.AddWarning($"Trying to load a previously saved order ({orderIdentifier}). Can't find the parent sub of the target entity. The order doesn't require a target so a more generic version of the order will be loaded instead.");
                         }
+                        return true;
                     }
-                    return true;
                 }
             }
             return orders;

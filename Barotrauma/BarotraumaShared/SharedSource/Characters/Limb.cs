@@ -591,7 +591,10 @@ namespace Barotrauma
         public bool IsDead => character.IsDead;
         public float Health => character.Health;
         public float HealthPercentage => character.HealthPercentage;
+        public bool IsHuman => character.IsHuman;
+
         public AIState AIState => character.AIController is EnemyAIController enemyAI ? enemyAI.State : AIState.Idle;
+        public bool IsFlipped => character.AnimController.IsFlipped;
 
         public bool CanBeSeveredAlive
         {
@@ -881,7 +884,9 @@ namespace Barotrauma
         public void Update(float deltaTime)
         {
             UpdateProjSpecific(deltaTime);
-            
+            ApplyStatusEffects(ActionType.Always, deltaTime);
+            ApplyStatusEffects(ActionType.OnActive, deltaTime);
+
             if (InWater)
             {
                 body.ApplyWaterForces();
@@ -1223,6 +1228,7 @@ namespace Barotrauma
             if (!statusEffects.TryGetValue(actionType, out var statusEffectList)) { return; }
             foreach (StatusEffect statusEffect in statusEffectList)
             {
+                statusEffect.sourceBody = body;
                 if (statusEffect.type == ActionType.OnDamaged)
                 {
                     if (!statusEffect.HasRequiredAfflictions(character.LastDamage)) { continue; }
@@ -1241,65 +1247,64 @@ namespace Barotrauma
                     statusEffect.AddNearbyTargets(WorldPosition, targets);
                     statusEffect.Apply(actionType, deltaTime, character, targets);
                 }
-                else
+                else if (statusEffect.targetLimbs != null)
                 {
-
-                    if (statusEffect.HasTargetType(StatusEffect.TargetType.Contained) && character.Inventory is { } inventory)
+                    foreach (var limbType in statusEffect.targetLimbs)
                     {
-                        foreach (Item item in inventory.AllItems)
+                        if (statusEffect.HasTargetType(StatusEffect.TargetType.AllLimbs))
                         {
-                            if (statusEffect.TargetIdentifiers != null &&
-                                !statusEffect.TargetIdentifiers.Contains(item.Prefab.Identifier) &&
-                                statusEffect.TargetIdentifiers.None(id => item.HasTag(id)))
+                            // Target all matching limbs
+                            foreach (var limb in ragdoll.Limbs)
                             {
-                                continue;
-                            }
-                            if (statusEffect.TargetSlot > -1)
-                            {
-                                if (inventory.FindIndex(item) != statusEffect.TargetSlot) { continue; }
-                            }
-                            targets.Add(item);
-                        }
-                    }
-                    else if (statusEffect.HasTargetType(StatusEffect.TargetType.Character))
-                    {
-                        statusEffect.Apply(actionType, deltaTime, character, character, WorldPosition);
-                    }
-                    else if (statusEffect.targetLimbs != null)
-                    {
-                        foreach (var limbType in statusEffect.targetLimbs)
-                        {
-                            if (statusEffect.HasTargetType(StatusEffect.TargetType.AllLimbs))
-                            {
-                                // Target all matching limbs
-                                foreach (var limb in ragdoll.Limbs)
+                                if (limb.IsSevered) { continue; }
+                                if (limb.type == limbType)
                                 {
-                                    if (limb.IsSevered) { continue; }
-                                    if (limb.type == limbType)
-                                    {
-                                        statusEffect.Apply(actionType, deltaTime, character, limb);
-                                    }
+                                    ApplyToLimb(actionType, deltaTime, statusEffect, character, limb);
                                 }
                             }
-                            else if (statusEffect.HasTargetType(StatusEffect.TargetType.Limb))
+                        }
+                        else if (statusEffect.HasTargetType(StatusEffect.TargetType.Limb) || statusEffect.HasTargetType(StatusEffect.TargetType.Character) || statusEffect.HasTargetType(StatusEffect.TargetType.This))
+                        {
+                            // Target just the first matching limb
+                            Limb limb = ragdoll.GetLimb(limbType);
+                            if (limb != null)
                             {
-                                // Target just the first matching limb
-                                Limb limb = ragdoll.GetLimb(limbType);
-                                statusEffect.Apply(actionType, deltaTime, character, limb);
+                                ApplyToLimb(actionType, deltaTime, statusEffect, character, limb);
                             }
-                            else if (statusEffect.HasTargetType(StatusEffect.TargetType.LastLimb))
+                        }
+                        else if (statusEffect.HasTargetType(StatusEffect.TargetType.LastLimb))
+                        {
+                            // Target just the last matching limb
+                            Limb limb = ragdoll.Limbs.LastOrDefault(l => l.type == limbType && !l.IsSevered && !l.Hidden);
+                            if (limb != null)
                             {
-                                // Target just the last matching limb
-                                Limb limb = ragdoll.Limbs.LastOrDefault(l => l.type == limbType && !l.IsSevered && !l.Hidden);
-                                statusEffect.Apply(actionType, deltaTime, character, limb);
+                                ApplyToLimb(actionType, deltaTime, statusEffect, character, limb);
                             }
                         }
                     }
-                    else
+                }
+                else if (statusEffect.HasTargetType(StatusEffect.TargetType.AllLimbs))
+                {
+                    // Target all limbs
+                    foreach (var limb in ragdoll.Limbs)
                     {
-                        statusEffect.Apply(actionType, deltaTime, character, this, WorldPosition);
+                        if (limb.IsSevered) { continue; }
+                        ApplyToLimb(actionType, deltaTime, statusEffect, character, limb);
                     }
                 }
+                else if (statusEffect.HasTargetType(StatusEffect.TargetType.Character))
+                {
+                    statusEffect.Apply(actionType, deltaTime, character, character, WorldPosition);
+                }
+                else if (statusEffect.HasTargetType(StatusEffect.TargetType.This) || statusEffect.HasTargetType(StatusEffect.TargetType.Limb))
+                {
+                    ApplyToLimb(actionType, deltaTime, statusEffect, character, limb: this);
+                }
+            }
+            static void ApplyToLimb(ActionType actionType, float deltaTime, StatusEffect statusEffect, Character character, Limb limb)
+            {
+                statusEffect.sourceBody = limb.body;
+                statusEffect.Apply(actionType, deltaTime, entity: character, target: limb);
             }
         }
 

@@ -7,7 +7,7 @@ namespace Barotrauma
     {
         public delegate void TaskDelegate();
 
-        private class Task
+        private sealed class Task
         {
             public TaskDelegate Deleg;
             public ManualResetEvent Mre;

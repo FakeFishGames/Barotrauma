@@ -392,7 +392,7 @@ namespace Barotrauma
             Level.Loaded?.DrawDebugOverlay(spriteBatch, cam);            
             if (GameMain.DebugDraw)
             {
-                MapEntity.mapEntityList.ForEach(me => me.AiTarget?.Draw(spriteBatch));
+                MapEntity.MapEntityList.ForEach(me => me.AiTarget?.Draw(spriteBatch));
                 Character.CharacterList.ForEach(c => c.AiTarget?.Draw(spriteBatch));
                 if (GameMain.GameSession?.EventManager != null)
                 {

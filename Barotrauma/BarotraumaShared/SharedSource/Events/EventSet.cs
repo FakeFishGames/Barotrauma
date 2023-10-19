@@ -94,6 +94,7 @@ namespace Barotrauma
         public readonly bool ChooseRandom;
 
         private readonly int eventCount = 1;
+        public readonly int SubSetCount = 1;
         private readonly Dictionary<Identifier, int> overrideEventCount = new Dictionary<Identifier, int>();
 
         /// <summary>
@@ -280,6 +281,7 @@ namespace Barotrauma
 
             ChooseRandom = element.GetAttributeBool("chooserandom", false);
             eventCount = element.GetAttributeInt("eventcount", 1);
+            SubSetCount = element.GetAttributeInt("setcount", 1);
             Exhaustible = element.GetAttributeBool("exhaustible", false);
             MinDistanceTraveled = element.GetAttributeFloat("mindistancetraveled", 0.0f);
             MinMissionTime = element.GetAttributeFloat("minmissiontime", 0.0f);
@@ -295,7 +297,7 @@ namespace Barotrauma
             OncePerLevel = element.GetAttributeBool("onceperlevel", element.GetAttributeBool("onceperoutpost", false));
             TriggerEventCooldown = element.GetAttributeBool("triggereventcooldown", true);
             IsCampaignSet = element.GetAttributeBool("campaign", LevelType == LevelData.LevelType.Outpost || (parentSet?.IsCampaignSet ?? false));
-            ResetTime = element.GetAttributeFloat("resettime", 0);
+            ResetTime = element.GetAttributeFloat(nameof(ResetTime), parentSet?.ResetTime ?? 0);
             CampaignTutorialOnly = element.GetAttributeBool(nameof(CampaignTutorialOnly), false);
 
             ForceAtDiscoveredNr = element.GetAttributeInt(nameof(ForceAtDiscoveredNr), -1);
@@ -474,7 +476,7 @@ namespace Barotrauma
                 if (eventPrefab.EventType == typeof(MonsterEvent) && eventPrefab.TryCreateInstance(out MonsterEvent monsterEvent))
                 {
                     if (filter != null && !filter(monsterEvent)) { return; }
-                    float spawnProbability = monsterEvent.Prefab.Probability;
+                    float spawnProbability = monsterEvent.Prefab?.Probability ?? 0.0f;
                     if (Rand.Value() > spawnProbability) { return; }
                     int count = Rand.Range(monsterEvent.MinAmount, monsterEvent.MaxAmount + 1);
                     if (count <= 0) { return; }

@@ -23,6 +23,7 @@ namespace Barotrauma
         private readonly CharacterPrefab minionPrefab;
 
         private readonly Identifier spawnPointTag;
+        private WayPoint bossSpawnPoint;
         private readonly Identifier destructibleItemTag;
 
         private readonly string endCinematicSound;
@@ -68,7 +69,13 @@ namespace Barotrauma
                         {
                             if (boss != null && !boss.Removed)
                             {
+                                Vector2 prevPos = boss.AnimController.Collider.SimPosition;
                                 boss.AnimController.ColliderIndex = 1;
+                                if (bossSpawnPoint != null)
+                                {
+                                    //ensure the new collider stays in the same position (the 2nd one has a different shape than the 1st one)
+                                    boss.AnimController.Collider.SetTransform(prevPos, 0.0f);
+                                }
                             }
                         }, delay: wakeUpCinematicDelay + bossWakeUpDelay + 2);
                     }
@@ -142,21 +149,21 @@ namespace Barotrauma
 
         protected override void StartMissionSpecific(Level level)
         {
-            var spawnPoint = WayPoint.WayPointList.FirstOrDefault(wp => wp.Tags.Contains(spawnPointTag));
-            if (spawnPoint == null)
+            bossSpawnPoint = WayPoint.WayPointList.FirstOrDefault(wp => wp.Tags.Contains(spawnPointTag));
+            if (bossSpawnPoint == null)
             {
                 DebugConsole.ThrowError($"Error in end mission \"{Prefab.Identifier}\". Could not find a spawn point \"{spawnPointTag}\".");
                 return;
             }
             if (!IsClient)
             {
-                boss = Character.Create(bossPrefab.Identifier, spawnPoint.WorldPosition, ToolBox.RandomSeed(8), createNetworkEvent: false);
+                boss = Character.Create(bossPrefab.Identifier, bossSpawnPoint.WorldPosition, ToolBox.RandomSeed(8), createNetworkEvent: false);
                 var minionList = new List<Character>();
                 float angle = 0;
                 float angleStep = MathHelper.TwoPi / Math.Max(minionCount, 1);
                 for (int i = 0; i < minionCount; i++)
                 {
-                    minionList.Add(Character.Create(minionPrefab.Identifier, MathUtils.GetPointOnCircumference(spawnPoint.WorldPosition, minionScatter, angle), ToolBox.RandomSeed(8), createNetworkEvent: false));
+                    minionList.Add(Character.Create(minionPrefab.Identifier, MathUtils.GetPointOnCircumference(bossSpawnPoint.WorldPosition, minionScatter, angle), ToolBox.RandomSeed(8), createNetworkEvent: false));
                     angle += angleStep;
                 }
                 SwarmBehavior.CreateSwarm(minionList.Cast<AICharacter>());

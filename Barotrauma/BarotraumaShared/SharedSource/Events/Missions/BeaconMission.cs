@@ -73,7 +73,7 @@ namespace Barotrauma
         {
             get
             {
-                if (level.BeaconStation == null)
+                if (level.BeaconStation == null || state > 0)
                 {
                     yield break;
                 }
@@ -95,9 +95,10 @@ namespace Barotrauma
                 foreach (Item item in Item.ItemList)
                 {
                     if (!connectedSubs.Contains(item.Submarine) || item.Submarine?.Info is { IsPlayer: true  }) { continue; }
-                    if (item.GetComponent<PowerTransfer>() != null ||
+                    bool isReactor = item.GetComponent<Reactor>() != null;
+                    if ((isReactor && GameMain.GameSession is not { TraitorsEnabled: true }) ||
+                        item.GetComponent<PowerTransfer>() != null ||
                         item.GetComponent<PowerContainer>() != null ||
-                        item.GetComponent<Reactor>() != null ||
                         item.GetComponent<Sonar>() != null)
                     {
                         item.InvulnerableToDamage = true;

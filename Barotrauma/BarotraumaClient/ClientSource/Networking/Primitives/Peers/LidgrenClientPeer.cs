@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Text;
 using Lidgren.Network;
 using Barotrauma.Steam;
+using System.Net.Sockets;
 
 namespace Barotrauma.Networking
 {
@@ -28,8 +29,12 @@ namespace Barotrauma.Networking
 
             netPeerConfiguration = new NetPeerConfiguration("barotrauma")
             {
-                UseDualModeSockets = GameSettings.CurrentConfig.UseDualModeSockets
+                DualStack = GameSettings.CurrentConfig.UseDualModeSockets
             };
+            if (endpoint.NetEndpoint.Address.AddressFamily == AddressFamily.InterNetworkV6)
+            {
+                netPeerConfiguration.LocalAddress = System.Net.IPAddress.IPv6Any;
+            }
 
             netPeerConfiguration.DisableMessageType(
                 NetIncomingMessageType.DebugMessage
@@ -53,8 +58,8 @@ namespace Barotrauma.Networking
 
             if (SteamManager.IsInitialized)
             {
-                steamAuthTicket = SteamManager.GetAuthSessionTicket();
-                if (steamAuthTicket == null)
+                steamAuthTicket = SteamManager.GetAuthSessionTicketForMultiplayer(ServerEndpoint);
+                if (steamAuthTicket.IsNone())
                 {
                     throw new Exception("GetAuthSessionTicket returned null");
                 }
@@ -207,8 +212,8 @@ namespace Barotrauma.Networking
             netClient.Shutdown(peerDisconnectPacket.ToLidgrenStringRepresentation());
             netClient = null;
 
-            steamAuthTicket?.Cancel();
-            steamAuthTicket = null;
+            if (steamAuthTicket.TryUnwrap(out var ticket)) { ticket.Cancel(); }
+            steamAuthTicket = Option.None;
 
             callbacks.OnDisconnect.Invoke(peerDisconnectPacket);
         }

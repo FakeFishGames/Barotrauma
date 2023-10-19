@@ -158,11 +158,22 @@ namespace Barotrauma
         {
             if (name.IsNullOrEmpty()) { throw new ArgumentException($"{nameof(name)} must not be null or empty"); }
 
-            return Find(prefab =>
-                prefab.Name.Equals(name, StringComparison.OrdinalIgnoreCase) ||
-                prefab.OriginalName.Equals(name, StringComparison.OrdinalIgnoreCase) ||
-                (prefab.Aliases != null &&
-                 prefab.Aliases.Any(a => a.Equals(name, StringComparison.OrdinalIgnoreCase))));
+            var matches = 
+                List.Where(prefab =>
+                    prefab.Name.Equals(name, StringComparison.OrdinalIgnoreCase) ||
+                    prefab.OriginalName.Equals(name, StringComparison.OrdinalIgnoreCase) ||
+                    (prefab.Aliases != null &&
+                     prefab.Aliases.Any(a => a.Equals(name, StringComparison.OrdinalIgnoreCase))));
+            //if there's multiple matches, prefer ones that aren't hidden in menus and base items
+            //(hidden ones and variants are often e.g. some kind of special ones used in an event or versions unlockable with talents)
+            if (matches.Count() > 1)
+            {
+                var bestMatch = 
+                    matches.FirstOrDefault(prefab => !prefab.HideInMenus) ??
+                    matches.FirstOrDefault(prefab => prefab is ItemPrefab ip && ip.VariantOf.IsEmpty);
+                if (bestMatch != null) { return bestMatch; }
+            }
+            return matches.FirstOrDefault();
         }
         
         public static MapEntityPrefab FindByIdentifier(Identifier identifier)
@@ -209,6 +220,9 @@ namespace Barotrauma
 
         [Serialize(false, IsPropertySaveable.No)]
         public bool HideInMenus { get; protected set; }
+
+        [Serialize(false, IsPropertySaveable.No)]
+        public bool HideInEditors { get; protected set; }
 
         [Serialize("", IsPropertySaveable.No)]
         public string Subcategory { get; protected set; }

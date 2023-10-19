@@ -122,7 +122,7 @@ namespace Barotrauma.Items.Components
             }
         }
         
-        public override void UpdateHUD(Character character, float deltaTime, Camera cam)
+        public override void UpdateHUDComponentSpecific(Character character, float deltaTime, Camera cam)
         {
             if (chargeIndicator != null)
             {
@@ -131,7 +131,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public void Draw(SpriteBatch spriteBatch, bool editing = false, float itemDepth = -1)
+        public void Draw(SpriteBatch spriteBatch, bool editing = false, float itemDepth = -1, Color? overrideColor = null)
         {
             Vector2 scaledIndicatorSize = indicatorSize * item.Scale;
             if (scaledIndicatorSize.X <= 2.0f || scaledIndicatorSize.Y <= 2.0f) { return; }

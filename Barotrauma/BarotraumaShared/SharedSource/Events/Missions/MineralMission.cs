@@ -139,7 +139,7 @@ namespace Barotrauma
                     {
                         if (cave.Area.Contains(spawnedResource.WorldPosition))
                         {
-                            cave.DisplayOnSonar = true;
+                            cave.MissionsToDisplayOnSonar.Add(this);
                             caves.Add(cave);
                             break;
                         }

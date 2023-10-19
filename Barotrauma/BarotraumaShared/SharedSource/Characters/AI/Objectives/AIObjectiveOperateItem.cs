@@ -14,6 +14,7 @@ namespace Barotrauma
         public override bool AllowAutomaticItemUnequipping => true;
         public override bool AllowMultipleInstances => true;
         public override bool AllowInAnySub => true;
+        public override bool AllowWhileHandcuffed => false;
         public override bool PrioritizeIfSubObjectivesActive => component != null && (component is Reactor || component is Turret);
 
         private readonly ItemComponent component, controller;
@@ -47,10 +48,9 @@ namespace Barotrauma
         protected override float GetPriority()
         {
             bool isOrder = objectiveManager.IsOrder(this);
-            if (!IsAllowed || character.LockHands)
+            if (!IsAllowed)
             {
-                Priority = 0;
-                Abandon = !isOrder;
+                HandleNonAllowed();
                 return Priority;
             }
             if (!isOrder && component.Item.ConditionPercentage <= 0)

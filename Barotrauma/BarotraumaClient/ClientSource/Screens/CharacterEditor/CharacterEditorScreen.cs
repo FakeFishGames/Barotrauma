@@ -1187,6 +1187,11 @@ namespace Barotrauma.CharacterEditor
 
         private void CreateLimb(ContentXElement newElement)
         {
+            if (RagdollParams.MainElement == null)
+            {
+                DebugConsole.ThrowError("Main element null! Failed to create a limb.");
+                return;
+            }
             var lastElement = RagdollParams.MainElement.GetChildElements("limb").LastOrDefault();
             if (lastElement != null)
             {
@@ -1215,6 +1220,11 @@ namespace Barotrauma.CharacterEditor
             if (RagdollParams.Joints.Any(j => j.Limb1 == fromLimb && j.Limb2 == toLimb))
             {
                 DebugConsole.ThrowError(GetCharacterEditorTranslation("ExistingJointFound").Replace("[limbid1]", fromLimb.ToString()).Replace("[limbid2]", toLimb.ToString()));
+                return;
+            }
+            if (RagdollParams.MainElement == null)
+            {
+                DebugConsole.ThrowError("The main element of the ragdoll params is null! Failed to create a joint.");
                 return;
             }
             //RagdollParams.StoreState();
@@ -1775,7 +1785,7 @@ namespace Barotrauma.CharacterEditor
             string ragdollPath = RagdollParams.GetDefaultFile(name, contentPackage);
             RagdollParams ragdollParams = isHumanoid
                 ? RagdollParams.CreateDefault<HumanRagdollParams>(ragdollPath, name, ragdoll)
-                : RagdollParams.CreateDefault<FishRagdollParams>(ragdollPath, name, ragdoll) as RagdollParams;
+                : RagdollParams.CreateDefault<FishRagdollParams>(ragdollPath, name, ragdoll);
 
             // Animations
             AnimationParams.ClearCache();
@@ -1789,6 +1799,7 @@ namespace Barotrauma.CharacterEditor
                 foreach (var animation in animations)
                 {
                     XElement element = animation.MainElement;
+                    if (element == null) { continue; }
                     element.SetAttributeValue("type", name);
                     string fullPath = AnimationParams.GetDefaultFile(name, animation.AnimationType);
                     element.Name = AnimationParams.GetDefaultFileName(name, animation.AnimationType);
@@ -2140,7 +2151,8 @@ namespace Barotrauma.CharacterEditor
             {
                 foreach (var limb in character.AnimController.Limbs)
                 {
-                    limb.ActiveSprite.ReloadTexture();
+                    if (limb == null) { continue; }
+                    limb.ActiveSprite?.ReloadTexture();
                     limb.WearingItems.ForEach(i => i.Sprite.ReloadTexture());
                     limb.OtherWearables.ForEach(w => w.Sprite.ReloadTexture());
                 }

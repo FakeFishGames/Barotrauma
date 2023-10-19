@@ -9,6 +9,7 @@ using System.Linq;
 using System.Reflection;
 using System.Xml.Linq;
 using Barotrauma.Steam;
+using System.Globalization;
 
 namespace Barotrauma.Networking
 {
@@ -65,8 +66,8 @@ namespace Barotrauma.Networking
         [Serialize(false, IsPropertySaveable.Yes)]
         public bool AllowRespawn { get; set; }
         
-        [Serialize(YesNoMaybe.No, IsPropertySaveable.Yes)]
-        public YesNoMaybe TraitorsEnabled { get; set; }
+        [Serialize(0.0f, IsPropertySaveable.Yes)]
+        public float TraitorProbability { get; set; }
         
         [Serialize(PlayStyle.Casual, IsPropertySaveable.Yes)]
         public PlayStyle PlayStyle { get; set; }
@@ -397,10 +398,10 @@ namespace Barotrauma.Networking
         public IEnumerable<Identifier> GetPlayStyleTags()
         {
             yield return $"Karma.{KarmaEnabled}".ToIdentifier();
-            yield return (TraitorsEnabled == YesNoMaybe.Yes ? $"Traitors.True" : $"Traitors.False").ToIdentifier();
+            yield return (TraitorProbability > 0.0f ? $"Traitors.True" : $"Traitors.False").ToIdentifier();
             yield return $"VoIP.{VoipEnabled}".ToIdentifier();
             yield return $"FriendlyFire.{FriendlyFireEnabled}".ToIdentifier();
-            yield return $"Modded.{ContentPackages.Any()}".ToIdentifier();
+            yield return $"Modded.{IsModded}".ToIdentifier();
         }
 
         public void UpdateInfo(Func<string, string?> valueGetter)
@@ -424,7 +425,7 @@ namespace Barotrauma.Networking
             VoipEnabled = getBool("voicechatenabled");
 
             GameMode = valueGetter("gamemode")?.ToIdentifier() ?? Identifier.Empty;
-            if (Enum.TryParse(valueGetter("traitors"), out YesNoMaybe traitorsEnabled)) { TraitorsEnabled = traitorsEnabled; }
+            if (float.TryParse(valueGetter("traitors"), NumberStyles.Any, CultureInfo.InvariantCulture, out float traitorProbability)) { TraitorProbability = traitorProbability; }
             if (Enum.TryParse(valueGetter("playstyle"), out PlayStyle playStyle)) { PlayStyle = playStyle; }
             Language = valueGetter("language")?.ToLanguageIdentifier() ?? LanguageIdentifier.None;
 

@@ -331,6 +331,11 @@ namespace Barotrauma
                     }
                 }
                 if (targetSlot < 0) { return false; }
+                //the item should always stay in the Any slot if it's containable in one
+                if (pickable.AllowedSlots.Contains(InvSlotType.Any))
+                {
+                    targetInventory.TryPutItem(item, Character, CharacterInventory.AnySlot);
+                }
                 return targetInventory.TryPutItem(item, targetSlot, allowSwapping, allowCombine: false, Character);
             }
             else

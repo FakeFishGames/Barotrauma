@@ -4,7 +4,7 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace Barotrauma
 {
-    public class GUIScissorComponent: GUIComponent
+    public sealed class GUIScissorComponent : GUIComponent
     {
         public GUIComponent Content;
 
@@ -14,19 +14,14 @@ namespace Barotrauma
             {
                 CanBeFocused = false
             };
+
+            rectT.ChildrenChanged += CheckForChildren;
         }
 
-        protected override void Update(float deltaTime)
+        private void CheckForChildren(RectTransform rectT)
         {
-            base.Update(deltaTime);
-
-            foreach (GUIComponent child in Children)
-            {
-                if (child == Content) { continue; }
-                throw new InvalidOperationException($"Children were found in {nameof(GUIScissorComponent)}, Add them to {nameof(GUIScissorComponent)}.{nameof(Content)} instead.");
-            }
-
-            ClampChildMouseRects(Content);
+            if (rectT == Content.RectTransform) { return; }
+            throw new InvalidOperationException($"Children were found in {nameof(GUIScissorComponent)}, Add them to {nameof(GUIScissorComponent)}.{nameof(Content)} instead.");
         }
 
         public override void DrawChildren(SpriteBatch spriteBatch, bool recursive)
@@ -57,7 +52,13 @@ namespace Barotrauma
             spriteBatch.Begin(SpriteSortMode.Deferred, samplerState: GUI.SamplerState, rasterizerState: prevRasterizerState);
         }
 
-        private void ClampChildMouseRects(GUIComponent child)
+        protected override void Update(float deltaTime)
+        {
+            base.Update(deltaTime);
+            ClampChildMouseRects(Content);
+        }
+
+        private static void ClampChildMouseRects(GUIComponent child)
         {
             child.ClampMouseRectToParent = true;
 

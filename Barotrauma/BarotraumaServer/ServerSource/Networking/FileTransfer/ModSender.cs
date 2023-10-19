@@ -49,7 +49,7 @@ namespace Barotrauma.Networking
         {
             await Task.Yield();
             string dir = mod.Dir;
-            SaveUtil.CompressDirectory(dir, GetCompressedModPath(mod), fileName => { });
+            SaveUtil.CompressDirectory(dir, GetCompressedModPath(mod));
         }
         
         private void DeleteDir()

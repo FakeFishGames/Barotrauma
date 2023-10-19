@@ -244,7 +244,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public override void UpdateHUD(Character character, float deltaTime, Camera cam)
+        public override void UpdateHUDComponentSpecific(Character character, float deltaTime, Camera cam)
         {
             bool elementVisibilityChanged = false;
             int visibleElementCount = 0;
@@ -335,17 +335,18 @@ namespace Barotrauma.Items.Components
             if (signals == null) { return; }
             for (int i = 0; i < signals.Length && i < uiElements.Count; i++)
             {
+                string signal = customInterfaceElementList[i].Signal;
                 if (uiElements[i] is GUITextBox tb)
                 {
                     tb.Text = Screen.Selected is { IsEditor: true } ?
-                        customInterfaceElementList[i].Signal :
-                        TextManager.Get(customInterfaceElementList[i].Signal).Value;
+                        signal :
+                        TextManager.Get(signal).Fallback(signal).Value;
                 }
                 else if (uiElements[i] is GUINumberInput ni)
                 {
                     if (ni.InputType == NumberType.Int)
                     {
-                        int.TryParse(customInterfaceElementList[i].Signal, out int value);
+                        int.TryParse(signal, out int value);
                         ni.IntValue = value;
                     }
                 }

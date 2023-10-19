@@ -17,7 +17,7 @@ namespace Barotrauma
 {
     public static class XMLExtensions
     {
-        private static ImmutableDictionary<Type, Func<string, object, object>> converters
+        private readonly static ImmutableDictionary<Type, Func<string, object, object>> Converters
             = new Dictionary<Type, Func<string, object, object>>()
             {
                 { typeof(string), (str, defVal) => str },
@@ -349,10 +349,11 @@ namespace Barotrauma
             }
             return false;
         }
-        
-        public static int GetAttributeInt(this XElement element, string name, int defaultValue)
+
+        public static int GetAttributeInt(this XElement element, string name, int defaultValue) => GetAttributeInt(element?.GetAttribute(name), defaultValue);
+
+        public static int GetAttributeInt(this XAttribute attribute, int defaultValue)
         {
-            var attribute = element?.GetAttribute(name);
             if (attribute == null) { return defaultValue; }
 
             int val = defaultValue;
@@ -361,12 +362,12 @@ namespace Barotrauma
             {
                 if (!Int32.TryParse(attribute.Value, NumberStyles.Any, CultureInfo.InvariantCulture, out val))
                 {
-                    val = (int)float.Parse(element.GetAttribute(name).Value, CultureInfo.InvariantCulture);
+                    val = (int)float.Parse(attribute.Value, CultureInfo.InvariantCulture);
                 }
             }
             catch (Exception e)
             {
-                LogAttributeError(attribute, element, e);
+                LogAttributeError(attribute, attribute.Parent, e);
             }
 
             return val;
@@ -382,6 +383,25 @@ namespace Barotrauma
             try
             {
                 val = UInt32.Parse(attribute.Value);
+            }
+            catch (Exception e)
+            {
+                LogAttributeError(attribute, element, e);
+            }
+
+            return val;
+        }
+
+        public static ushort GetAttributeUInt16(this XElement element, string name, ushort defaultValue)
+        {
+            var attribute = element?.GetAttribute(name);
+            if (attribute == null) { return defaultValue; }
+
+            ushort val = defaultValue;
+
+            try
+            {
+                val = ushort.Parse(attribute.Value);
             }
             catch (Exception e)
             {
@@ -738,8 +758,8 @@ namespace Barotrauma
             string[] elems = strValue.Split(',');
             if (elems.Length != 2) { return defaultValue; }
             
-            return ((T1)converters[typeof(T1)].Invoke(elems[0], defaultValue.Item1),
-                (T2)converters[typeof(T2)].Invoke(elems[1], defaultValue.Item2));
+            return ((T1)Converters[typeof(T1)].Invoke(elems[0], defaultValue.Item1),
+                (T2)Converters[typeof(T2)].Invoke(elems[1], defaultValue.Item2));
         }
         
         public static Point ParsePoint(string stringPoint, bool errorMessages = true)

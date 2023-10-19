@@ -12,7 +12,7 @@ namespace Barotrauma
 {
     abstract partial class MapEntity : Entity, ISpatialEntity
     {
-        public static List<MapEntity> mapEntityList = new List<MapEntity>();
+        public readonly static List<MapEntity> MapEntityList = new List<MapEntity>();
 
         public readonly MapEntityPrefab Prefab;
 
@@ -82,8 +82,8 @@ namespace Barotrauma
         {
             get { return isHighlighted || ExternalHighlight; }
             set 
-            { 
-                if (value != IsHighlighted)
+            {
+                if (value != isHighlighted)
                 {
                     isHighlighted = value; 
                     CheckIsHighlighted();
@@ -531,32 +531,32 @@ namespace Barotrauma
         {
             if (Sprite == null)
             {
-                mapEntityList.Add(this);
+                MapEntityList.Add(this);
                 return;
             }
 
             int i = 0;
-            while (i < mapEntityList.Count)
+            while (i < MapEntityList.Count)
             {
                 i++;
-                if (mapEntityList[i - 1]?.Prefab == Prefab)
+                if (MapEntityList[i - 1]?.Prefab == Prefab)
                 {
-                    mapEntityList.Insert(i, this);
+                    MapEntityList.Insert(i, this);
                     return;
                 }
             }
 
 #if CLIENT
             i = 0;
-            while (i < mapEntityList.Count)
+            while (i < MapEntityList.Count)
             {
                 i++;
-                Sprite existingSprite = mapEntityList[i - 1].Sprite;
+                Sprite existingSprite = MapEntityList[i - 1].Sprite;
                 if (existingSprite == null) { continue; }
                 if (existingSprite.Texture == this.Sprite.Texture) { break; }
             }
 #endif
-            mapEntityList.Insert(i, this);
+            MapEntityList.Insert(i, this);
         }
 
         /// <summary>
@@ -566,7 +566,7 @@ namespace Barotrauma
         {
             base.Remove();
 
-            mapEntityList.Remove(this);
+            MapEntityList.Remove(this);
 
             if (aiTarget != null) aiTarget.Remove();
         }
@@ -575,7 +575,7 @@ namespace Barotrauma
         {
             base.Remove();
 
-            mapEntityList.Remove(this);
+            MapEntityList.Remove(this);
 
 #if CLIENT
             Submarine.ForceRemoveFromVisibleEntities(this);
@@ -638,6 +638,7 @@ namespace Barotrauma
             sw.Restart();
 #endif
             Powered.UpdatePower(deltaTime);
+            Item.UpdatePendingConditionUpdates(deltaTime);
             foreach (Item item in Item.ItemList)
             {
                 item.Update(deltaTime, cam);
@@ -689,6 +690,20 @@ namespace Barotrauma
         {
             IdRemap idRemap = new IdRemap(parentElement, idOffset);
 
+            bool containsHiddenContainers = false;
+            bool hiddenContainerCreated = false;
+            MTRandom hiddenContainerRNG = new MTRandom(ToolBox.StringToInt(submarine.Info.Name));
+            foreach (var element in parentElement.Elements())
+            {
+                if (element.NameAsIdentifier() != "Item") { continue; }
+                var tags = element.GetAttributeIdentifierArray("tags", Array.Empty<Identifier>());
+                if (tags.Contains(Tags.HiddenItemContainer))
+                {
+                    containsHiddenContainers = true; 
+                    break;
+                }
+            }
+
             List<MapEntity> entities = new List<MapEntity>();
             foreach (var element in parentElement.Elements())
             {
@@ -713,10 +728,11 @@ namespace Barotrauma
                     continue;
                 }
 
+                Identifier identifier = element.GetAttributeIdentifier("identifier", "");
+                Identifier replacementIdentifier = Identifier.Empty;
                 if (t == typeof(Structure))
                 {
                     string name = element.Attribute("name").Value;
-                    Identifier identifier = element.GetAttributeIdentifier("identifier", "");
                     StructurePrefab structurePrefab = Structure.FindPrefab(name, identifier);
                     if (structurePrefab == null)
                     {
@@ -725,6 +741,20 @@ namespace Barotrauma
                         {
                             t = typeof(Item);
                         }
+                    }
+                }
+                else if (t == typeof(Item) && !containsHiddenContainers && identifier == "vent" && 
+                    submarine.Info.Type == SubmarineType.Player && !submarine.Info.HasTag(SubmarineTag.Shuttle))
+                {
+                    if (!hiddenContainerCreated)
+                    {
+                        DebugConsole.AddWarning($"There are no hidden containers such as loose vents or loose panels in the submarine \"{submarine.Info.Name}\". Certain traitor events require these to function properly. Converting one of the vents to a loose vent...");
+                    }
+                    if (!hiddenContainerCreated || hiddenContainerRNG.NextDouble() < 0.2)
+                    {
+                        replacementIdentifier = "loosevent".ToIdentifier();
+                        containsHiddenContainers = true;
+                        hiddenContainerCreated = true;
                     }
                 }
 
@@ -741,7 +771,12 @@ namespace Barotrauma
                     }
                     else
                     {
-                        object newEntity = loadMethod.Invoke(t, new object[] { element.FromPackage(null), submarine, idRemap });
+                        var newElement = element.FromPackage(null);
+                        if (!replacementIdentifier.IsEmpty)
+                        {
+                            newElement.SetAttributeValue("identifier", replacementIdentifier.ToString());
+                        }
+                        object newEntity = loadMethod.Invoke(t, new object[] { newElement, submarine, idRemap });
                         if (newEntity != null)
                         {
                             entities.Add((MapEntity)newEntity);
@@ -774,9 +809,9 @@ namespace Barotrauma
             for (int i = 0; i < entities.Count; i++)
             {
                 if (entities[i].mapLoadedCalled || entities[i].Removed) { continue; }
-                if (entities[i] is LinkedSubmarine)
+                if (entities[i] is LinkedSubmarine sub)
                 {
-                    linkedSubs.Add((LinkedSubmarine)entities[i]);
+                    linkedSubs.Add(sub);
                     continue;
                 }
 
@@ -794,6 +829,35 @@ namespace Barotrauma
             foreach (LinkedSubmarine linkedSub in linkedSubs)
             {
                 linkedSub.OnMapLoaded();
+            }
+
+            CreateDroppedStacks(entities);
+        }
+
+        private static void CreateDroppedStacks(List<MapEntity> entities)
+        {
+            const float MaxDist = 10.0f;
+            List<Item> itemsInStack = new List<Item>();
+            for (int i = 0; i < entities.Count; i++)
+            {
+                if (entities[i] is not Item item1 || item1.Prefab.MaxStackSize <= 1 || item1.body is not { Enabled: true }) { continue; }
+                itemsInStack.Clear();
+                itemsInStack.Add(item1);
+                for (int j = i + 1; j < entities.Count; j++)
+                {
+                    if (entities[j] is not Item item2) { continue; }
+                    if (item1.Prefab != item2.Prefab) { continue; }
+                    if (item2.body is not { Enabled: true }) { continue; }
+                    if (item2.DroppedStack.Any()) { continue; }
+                    if (Math.Abs(item1.Position.X - item2.Position.X) > MaxDist) { continue; }
+                    if (Math.Abs(item1.Position.Y - item2.Position.Y) > MaxDist) { continue; }
+                    itemsInStack.Add(item2);
+                }
+                if (itemsInStack.Count > 1)
+                {
+                    item1.CreateDroppedStack(itemsInStack, allowClientExecute: true);
+                    DebugConsole.Log($"Merged x{itemsInStack.Count} of {item1.Name} into a dropped stack.");
+                }
             }
         }
 

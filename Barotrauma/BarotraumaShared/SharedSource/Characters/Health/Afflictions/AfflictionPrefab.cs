@@ -603,7 +603,6 @@ namespace Barotrauma
         public static readonly Identifier SpaceHerpesType = "spaceherpes".ToIdentifier();
         public static readonly Identifier AlienInfectedType = "alieninfected".ToIdentifier();
         public static readonly Identifier InvertControlsType = "invertcontrols".ToIdentifier();
-        public static readonly Identifier HuskInfectionType = "huskinfection".ToIdentifier();
 
         public static AfflictionPrefab InternalDamage => Prefabs["internaldamage"];
         public static AfflictionPrefab BiteWounds => Prefabs["bitewounds"];
@@ -613,6 +612,7 @@ namespace Barotrauma
         public static AfflictionPrefab OxygenLow => Prefabs["oxygenlow"];
         public static AfflictionPrefab Bloodloss => Prefabs["bloodloss"];
         public static AfflictionPrefab Pressure => Prefabs["pressure"];
+        public static AfflictionPrefab OrganDamage => Prefabs["organdamage"];
         public static AfflictionPrefab Stun => Prefabs[StunType];
         public static AfflictionPrefab RadiationSickness => Prefabs["radiationsickness"];
 

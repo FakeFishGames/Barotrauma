@@ -1,4 +1,5 @@
-﻿using Barotrauma.Items.Components;
+﻿using Barotrauma.Extensions;
+using Barotrauma.Items.Components;
 using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
 using System;
@@ -18,9 +19,23 @@ namespace Barotrauma
             get { return base.Prefab?.Sprite; }
         }
 
-        partial void AssignCampaignInteractionTypeProjSpecific(CampaignMode.InteractionType interactionType)
+        private readonly Dictionary<Client, CampaignMode.InteractionType> campaignInteractionTypePerClient = new Dictionary<Client, CampaignMode.InteractionType>();
+
+        partial void AssignCampaignInteractionTypeProjSpecific(CampaignMode.InteractionType interactionType, IEnumerable<Client> targetClients)
         {
-            GameMain.NetworkMember.CreateEntityEvent(this, new AssignCampaignInteractionEventData());
+            if (Removed) { return; }
+            if (targetClients == null || targetClients.None())
+            {
+                campaignInteractionTypePerClient.Clear();
+            }
+            else
+            {
+                foreach (Client client in targetClients)
+                {
+                    campaignInteractionTypePerClient[client] = interactionType;
+                }
+            }
+            GameMain.NetworkMember.CreateEntityEvent(this, new AssignCampaignInteractionEventData(targetClients));
         }
 
         public void ServerEventWrite(IWriteMessage msg, Client c, NetEntityEvent.IData extraData = null)
@@ -33,7 +48,7 @@ namespace Barotrauma
             }
             
             if (extraData is null) { throw error("event data was null"); }
-            if (!(extraData is IEventData itemEventData)) { throw error($"event data was of the wrong type (\"{extraData.GetType().Name}\")"); }
+            if (extraData is not IEventData itemEventData) { throw error($"event data was of the wrong type (\"{extraData.GetType().Name}\")"); }
 
             msg.WriteRangedInteger((int)itemEventData.EventType, (int)EventType.MinValue, (int)EventType.MaxValue);
             switch (itemEventData)
@@ -44,7 +59,7 @@ namespace Barotrauma
                     {
                         throw error($"component index out of range ({componentIndex})");
                     }
-                    if (!(components[componentIndex] is IServerSerializable serializableComponent))
+                    if (components[componentIndex] is not IServerSerializable serializableComponent)
                     {
                         throw error($"component \"{components[componentIndex]}\" is not server serializable");
                     }
@@ -57,20 +72,28 @@ namespace Barotrauma
                     {
                         throw error($"container index out of range ({containerIndex})");
                     }
-                    if (!(components[containerIndex] is ItemContainer itemContainer))
+                    if (components[containerIndex] is not ItemContainer itemContainer)
                     {
                         throw error("component \"" + components[containerIndex] + "\" is not server serializable");
                     }
                     msg.WriteRangedInteger(containerIndex, 0, components.Count - 1);
                     msg.WriteUInt16(GameMain.Server.EntityEventManager.Events.Last()?.ID ?? (ushort)0);
-                    itemContainer.Inventory.ServerEventWrite(msg, c);
+                    itemContainer.Inventory.ServerEventWrite(msg, c, inventoryStateEventData);
                     break;
                 case ItemStatusEventData statusEvent:
                     msg.WriteBoolean(statusEvent.LoadingRound);
                     msg.WriteSingle(condition);
                     break;
-                case AssignCampaignInteractionEventData _:
-                    msg.WriteByte((byte)CampaignInteractionType);
+                case AssignCampaignInteractionEventData campaignInteractionData:
+                    bool isVisibleToClient =
+                        campaignInteractionData.TargetClients == null ||
+                        campaignInteractionData.TargetClients.IsEmpty ||
+                        campaignInteractionData.TargetClients.Contains(c);
+                    msg.WriteBoolean(isVisibleToClient);
+                    if (isVisibleToClient)
+                    {
+                        msg.WriteByte((byte)CampaignInteractionType);
+                    }
                     break;
                 case ApplyStatusEffectEventData applyStatusEffectEventData:
                     {
@@ -129,6 +152,13 @@ namespace Barotrauma
                             object originalValue = propertyReference.OriginalValue;
                             msg.WriteSingle((float)(originalValue ?? -1));
                         }
+                    }
+                    break;
+                case DroppedStackEventData droppedStackEventData:
+                    msg.WriteRangedInteger(droppedStackEventData.Items.Length, 0, Inventory.MaxPossibleStackSize);
+                    foreach (Item droppedItem in droppedStackEventData.Items)
+                    {
+                        msg.WriteUInt16(droppedItem.ID);
                     }
                     break;
                 default:
@@ -257,10 +287,10 @@ namespace Barotrauma
                 msg.WriteInt32(idCardComponent.SubmarineSpecificID);
                 msg.WriteString(idCardComponent.OwnerName);
                 msg.WriteString(idCardComponent.OwnerTags);
-                msg.WriteByte((byte)Math.Max(0, idCardComponent.OwnerBeardIndex+1));
-                msg.WriteByte((byte)Math.Max(0, idCardComponent.OwnerHairIndex+1));
-                msg.WriteByte((byte)Math.Max(0, idCardComponent.OwnerMoustacheIndex+1));
-                msg.WriteByte((byte)Math.Max(0, idCardComponent.OwnerFaceAttachmentIndex+1));
+                msg.WriteByte((byte)Math.Max(0, idCardComponent.OwnerBeardIndex + 1));
+                msg.WriteByte((byte)Math.Max(0, idCardComponent.OwnerHairIndex + 1));
+                msg.WriteByte((byte)Math.Max(0, idCardComponent.OwnerMoustacheIndex + 1));
+                msg.WriteByte((byte)Math.Max(0, idCardComponent.OwnerFaceAttachmentIndex + 1));
                 msg.WriteColorR8G8B8(idCardComponent.OwnerHairColor);
                 msg.WriteColorR8G8B8(idCardComponent.OwnerFacialHairColor);
                 msg.WriteColorR8G8B8(idCardComponent.OwnerSkinColor);

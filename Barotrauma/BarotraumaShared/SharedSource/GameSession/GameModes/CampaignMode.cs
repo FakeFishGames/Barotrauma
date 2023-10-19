@@ -95,6 +95,8 @@ namespace Barotrauma
         public SubmarineInfo PendingSubmarineSwitch;
         public bool TransferItemsOnSubSwitch { get; set; }
 
+        public bool SwitchedSubsThisRound { get; private set; }
+
         protected Map map;
         public Map Map
         {
@@ -293,6 +295,7 @@ namespace Barotrauma
             PurchasedLostShuttlesInLatestSave = PurchasedLostShuttles = false;
             var connectedSubs = Submarine.MainSub.GetConnectedSubs();
             wasDocked = Level.Loaded.StartOutpost != null && connectedSubs.Contains(Level.Loaded.StartOutpost);
+            SwitchedSubsThisRound = false;
         }
 
         public static int GetHullRepairCost()
@@ -590,7 +593,7 @@ namespace Barotrauma
         /// </summary>
         protected abstract void LoadInitialLevel();
 
-        protected abstract IEnumerable<CoroutineStatus> DoLevelTransition(TransitionType transitionType, LevelData newLevel, Submarine leavingSub, bool mirror, List<TraitorMissionResult> traitorResults = null);
+        protected abstract IEnumerable<CoroutineStatus> DoLevelTransition(TransitionType transitionType, LevelData newLevel, Submarine leavingSub, bool mirror);
 
         /// <summary>
         /// Which type of transition between levels is currently possible (if any)
@@ -623,8 +626,7 @@ namespace Barotrauma
                     }
                     else if (map.SelectedConnection != null)
                     {
-                        nextLevel = Level.Loaded.LevelData != map.SelectedConnection?.LevelData || (map.SelectedConnection.Locations[0] == Level.Loaded.EndLocation == Level.Loaded.Mirrored) ? 
-                            map.SelectedConnection.LevelData : null;
+                        nextLevel = map.SelectedConnection.LevelData;
                         return TransitionType.ProgressToNextEmptyLocation;
                     }
                     else
@@ -878,6 +880,19 @@ namespace Barotrauma
                     port.Door.IsOpen = false;
                 }
             }
+
+            foreach (Item item in Item.ItemList)
+            {
+                if (item.Submarine is not Submarine sub) { continue; }
+                if (!sub.Info.IsPlayer) { continue; }
+                if (sub.TeamID != CharacterTeamType.Team1 && sub.TeamID != CharacterTeamType.Team2) { continue; }
+                if (item.GetComponent<Reactor>() is Reactor reactor && reactor.LastAIUser != null && reactor.LastUser == reactor.LastAIUser)
+                {
+                    // Reactor managed by an AI crew ->
+                    // Turn auto temp on, so that the reactor won't be unmanaged at beginning of the next round.
+                    reactor.AutoTemp = true;
+                }
+            }
         }
 
         /// <summary>
@@ -896,7 +911,7 @@ namespace Barotrauma
             {
                 if (c.IsOnPlayerTeam)
                 {
-                    c.CharacterHealth.RemoveAllAfflictions();
+                    c.CharacterHealth.RemoveNegativeAfflictions();
                 }
             }
             foreach (LocationConnection connection in Map.Connections)
@@ -904,13 +919,17 @@ namespace Barotrauma
                 connection.Difficulty = connection.Biome.AdjustedMaxDifficulty;
                 connection.LevelData = new LevelData(connection)
                 {
-                    IsBeaconActive = false
+                    IsBeaconActive = false,
+                    ForceOutpostGenerationParams = connection.LevelData.ForceOutpostGenerationParams
                 };
                 connection.LevelData.HasHuntingGrounds = connection.LevelData.OriginallyHadHuntingGrounds;
             }
             foreach (Location location in Map.Locations)
             {
-                location.LevelData = new LevelData(location, Map, location.Biome.AdjustedMaxDifficulty);
+                location.LevelData = new LevelData(location, Map, location.Biome.AdjustedMaxDifficulty)
+                {
+                    ForceOutpostGenerationParams = location.LevelData.ForceOutpostGenerationParams
+                };
                 location.Reset(this);
             }
             Map.ClearLocationHistory();
@@ -1294,7 +1313,7 @@ namespace Barotrauma
                 foreach (Submarine sub in subsToLeaveBehind)
                 {
                     GameMain.GameSession.OwnedSubmarines.RemoveAll(s => s != leavingSub.Info && s.Name == sub.Info.Name);
-                    MapEntity.mapEntityList.RemoveAll(e => e.Submarine == sub && e is LinkedSubmarine);
+                    MapEntity.MapEntityList.RemoveAll(e => e.Submarine == sub && e is LinkedSubmarine);
                     LinkedSubmarine.CreateDummy(leavingSub, sub);
                 }
             }
@@ -1307,6 +1326,7 @@ namespace Barotrauma
                 TransferItemsBetweenSubs();
             }
             RefreshOwnedSubmarines();
+            SwitchedSubsThisRound = true;
             PendingSubmarineSwitch = null;
         }
 
@@ -1368,7 +1388,7 @@ namespace Barotrauma
                     return;
                 }
                 // First move the cargo containers, so that we can reuse them
-                var cargoContainers = itemsToTransfer.Where(it => it.item.HasTag("crate"));
+                var cargoContainers = itemsToTransfer.Where(it => it.item.HasTag(Tags.Crate));
                 foreach (var (item, oldContainer) in cargoContainers)
                 {
                     Vector2 simPos = ConvertUnits.ToSimUnits(CargoManager.GetCargoPos(spawnHull, item.Prefab));

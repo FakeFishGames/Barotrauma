@@ -712,7 +712,7 @@ namespace Barotrauma
         /// </summary>
         public static Structure GetAttachTarget(Vector2 worldPosition)
         {
-            foreach (MapEntity mapEntity in mapEntityList)
+            foreach (MapEntity mapEntity in MapEntityList)
             {
                 if (!(mapEntity is Structure structure)) { continue; }
                 if (!structure.Prefab.AllowAttachItems) { continue; }
@@ -1243,7 +1243,7 @@ namespace Barotrauma
             UpdateSections();
         }
 
-        private void CreateWallDamageExplosion(Gap gap, Character attacker)
+        private static void CreateWallDamageExplosion(Gap gap, Character attacker)
         {
             const float explosionRange = 750.0f;
             float explosionStrength = gap.Open;
@@ -1264,20 +1264,23 @@ namespace Barotrauma
 
             if (explosionOnBroken == null)
             {
-                explosionOnBroken = new Explosion(explosionRange * gap.Open, force: 10.0f, damage: 0.0f, structureDamage: 0.0f, itemDamage: 0.0f);
+                explosionOnBroken = new Explosion(explosionRange, force: 10.0f, damage: 0.0f, structureDamage: 0.0f, itemDamage: 0.0f);
                 if (AfflictionPrefab.Prefabs.TryGet("lacerations".ToIdentifier(), out AfflictionPrefab lacerations))
                 {
-                    explosionOnBroken.Attack.Afflictions.Add(lacerations.Instantiate(50.0f), null);
+                    explosionOnBroken.Attack.Afflictions.Add(lacerations.Instantiate(3.0f), null);
                 }
                 else
                 {
-                    explosionOnBroken.Attack.Afflictions.Add(AfflictionPrefab.InternalDamage.Instantiate(5.0f), null);
+                    explosionOnBroken.Attack.Afflictions.Add(AfflictionPrefab.InternalDamage.Instantiate(3.0f), null);
                 }
+                explosionOnBroken.IgnoreCover = true;
                 explosionOnBroken.OnlyInside = true;
                 explosionOnBroken.DisableParticles();
             }
 
+            explosionOnBroken.Attack.Range = explosionRange * gap.Open;
             explosionOnBroken.Attack.DamageMultiplier = explosionStrength;
+            explosionOnBroken.Attack.Stun = MathHelper.Clamp(explosionStrength, 0.5f, 1.0f);
             explosionOnBroken?.Explode(gap.WorldPosition, damageSource: null, attacker: attacker);
 #if CLIENT
             if (linkedHull != null)

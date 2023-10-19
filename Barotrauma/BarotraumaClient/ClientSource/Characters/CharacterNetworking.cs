@@ -350,7 +350,7 @@ namespace Barotrauma
                     }
                     else
                     {
-                        Inventory.ClientEventRead(msg, sendingTime);
+                        Inventory.ClientEventRead(msg);
                     }
                     break;
                 case EventType.Control:
@@ -406,7 +406,7 @@ namespace Barotrauma
                     float targetY = msg.ReadSingle();
                     Vector2 targetSimPos = new Vector2(targetX, targetY);
                     //255 = entity already removed, no need to do anything
-                    if (attackLimbIndex == 255 || Removed) { break; }
+                    if (attackLimbIndex == 255 || targetEntityID == NullEntityID || Removed) { break; }
                     if (attackLimbIndex >= AnimController.Limbs.Length)
                     {
                         //it's possible to get these errors when mid-round syncing, as the client may not
@@ -666,7 +666,7 @@ namespace Barotrauma
                         }
                         else
                         {
-                            DebugConsole.ThrowError("Could not set order \"" + orderPrefab.Identifier + "\" for character \"" + character.Name + "\" because required target entity was not found.");
+                            DebugConsole.AddSafeError("Could not set order \"" + orderPrefab.Identifier + "\" for character \"" + character.Name + "\" because required target entity was not found.");
                         }
                     }
                     else

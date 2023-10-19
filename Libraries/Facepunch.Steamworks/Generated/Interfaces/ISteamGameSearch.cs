@@ -7,7 +7,7 @@ using Steamworks.Data;
 
 namespace Steamworks
 {
-	internal class ISteamGameSearch : SteamInterface
+	internal unsafe class ISteamGameSearch : SteamInterface
 	{
 		
 		internal ISteamGameSearch( bool IsGameServer )
@@ -82,8 +82,7 @@ namespace Steamworks
 		#endregion
 		internal GameSearchErrorCode_t RetrieveConnectionDetails( SteamId steamIDHost, out string pchConnectionDetails )
 		{
-			using var memory = Helpers.TakeMemory();
-			IntPtr mempchConnectionDetails = memory;
+			using var mempchConnectionDetails = Helpers.TakeMemory();
 			var returnValue = _RetrieveConnectionDetails( Self, steamIDHost, mempchConnectionDetails, (1024 * 32) );
 			pchConnectionDetails = Helpers.MemoryToString( mempchConnectionDetails );
 			return returnValue;

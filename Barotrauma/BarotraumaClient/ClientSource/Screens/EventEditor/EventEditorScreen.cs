@@ -25,7 +25,7 @@ namespace Barotrauma
         private readonly List<EditorNode> selectedNodes = new List<EditorNode>();
 
         public static Vector2 DraggingPosition = Vector2.Zero;
-        public static NodeConnection? DraggedConnection;
+        public static EventEditorNodeConnection? DraggedConnection;
 
         private EditorNode? draggedNode;
         private Vector2 dragOffset;
@@ -394,7 +394,7 @@ namespace Barotrauma
                         newNode = new CustomNode(subElement.Name.ToString()) { Position = new Vector2(ident, 0), ID = CreateID() };
                         foreach (XAttribute attribute in subElement.Attributes().Where(attribute => !attribute.ToString().StartsWith("_")))
                         {
-                            newNode.Connections.Add(new NodeConnection(newNode, NodeConnectionType.Value, attribute.Name.ToString(), typeof(string)));
+                            newNode.Connections.Add(new EventEditorNodeConnection(newNode, NodeConnectionType.Value, attribute.Name.ToString(), typeof(string)));
                         }
                     }
 
@@ -414,7 +414,7 @@ namespace Barotrauma
                     {
                         if (xElement.Name.ToString().ToLowerInvariant() == "option")
                         {
-                            NodeConnection optionConnection = new NodeConnection(newNode, NodeConnectionType.Option)
+                            EventEditorNodeConnection optionConnection = new EventEditorNodeConnection(newNode, NodeConnectionType.Option)
                             {
                                 OptionText = xElement.GetAttributeString("text", string.Empty),
                                 EndConversation = xElement.GetAttributeBool("endconversation", false)
@@ -423,7 +423,7 @@ namespace Barotrauma
                         }
                     }
 
-                    foreach (NodeConnection connection in newNode.Connections)
+                    foreach (EventEditorNodeConnection connection in newNode.Connections)
                     {
                         if (connection.Type == NodeConnectionType.Value)
                         {
@@ -479,8 +479,8 @@ namespace Barotrauma
                             case "option":
                                 if (parent != null)
                                 {
-                                    NodeConnection? activateConnection = newNode.Connections.Find(connection => connection.Type == NodeConnectionType.Activate);
-                                    NodeConnection? optionConnection = parent.Connections.FirstOrDefault(connection =>
+                                    EventEditorNodeConnection? activateConnection = newNode.Connections.Find(connection => connection.Type == NodeConnectionType.Activate);
+                                    EventEditorNodeConnection? optionConnection = parent.Connections.FirstOrDefault(connection =>
                                         connection.Type == NodeConnectionType.Option && string.Equals(connection.OptionText, parentElement.GetAttributeString("text", string.Empty), StringComparison.Ordinal));
 
                                     if (activateConnection != null)
@@ -671,7 +671,7 @@ namespace Barotrauma
             }
         }
 
-        private void CreateContextMenu(EditorNode node, NodeConnection? connection = null)
+        private void CreateContextMenu(EditorNode node, EventEditorNodeConnection? connection = null)
         {
             if (GUIContextMenu.CurrentContextMenu != null) { return; }
 
@@ -757,7 +757,7 @@ namespace Barotrauma
             return true;
         }
 
-        private static void CreateEditMenu(ValueNode? node, NodeConnection? connection = null)
+        private static void CreateEditMenu(ValueNode? node, EventEditorNodeConnection? connection = null)
         {
             object? newValue;
             Type? type;
@@ -972,7 +972,7 @@ namespace Barotrauma
             {
                 if (PlayerInput.PrimaryMouseButtonDown())
                 {
-                    NodeConnection? connection = node.GetConnectionOnMouse(mousePos);
+                    EventEditorNodeConnection? connection = node.GetConnectionOnMouse(mousePos);
                     if (connection != null && connection.Type.NodeSide == NodeConnectionType.Side.Right)
                     {
                         if (connection.Type != NodeConnectionType.Out)
@@ -1019,7 +1019,7 @@ namespace Barotrauma
 
                 if (PlayerInput.SecondaryMouseButtonClicked())
                 {
-                    NodeConnection? connection = node.GetConnectionOnMouse(mousePos);
+                    EventEditorNodeConnection? connection = node.GetConnectionOnMouse(mousePos);
                     if (node.GetDrawRectangle().Contains(mousePos) || connection != null)
                     {
                         CreateContextMenu(node, node.GetConnectionOnMouse(mousePos));
@@ -1088,7 +1088,7 @@ namespace Barotrauma
                             if (!DraggedConnection.CanConnect(nodeOnMouse)) { continue; }
 
                             nodeOnMouse.ClearConnections();
-                            DraggedConnection.Parent.Connect(DraggedConnection, nodeOnMouse);
+                            EditorNode.Connect(DraggedConnection, nodeOnMouse);
                             break;
                         }
                     }

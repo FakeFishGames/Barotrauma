@@ -300,7 +300,7 @@ namespace Barotrauma.Items.Components
                 var (x, y, z, w) = Parent.GrowthWeights;
                 float[] weights = { x, y, z, w };
 
-                value = pool.RandomElementByWeight(i => weights[i]);
+                value = pool.GetRandomByWeight(i => weights[i], Rand.RandSync.Unsynced);
             }
             
             return (TileSide) (1 << value);
@@ -416,8 +416,8 @@ namespace Barotrauma.Items.Components
             set => health = Math.Clamp(value, 0, MaxHealth);
         }
 
-        public bool Decayed;
-        public bool FullyGrown;
+        public bool Decayed { get; set; }
+        public bool FullyGrown { get; set; }
 
         private const int maxProductDelay = 10,
                           maxVineGrowthDelay = 10;
@@ -562,7 +562,7 @@ namespace Barotrauma.Items.Components
 
             if (spawnProduct && ProducedItems.Any())
             {
-                SpawnItem(Item, ProducedItems.RandomElementByWeight(it => it.Probability), spawnPos);
+                SpawnItem(Item, ProducedItems.GetRandomByWeight(it => it.Probability, Rand.RandSync.Unsynced), spawnPos);
                 return;
             }
 

@@ -7,7 +7,7 @@ using Steamworks.Data;
 
 namespace Steamworks
 {
-	internal class ISteamUserStats : SteamInterface
+	internal unsafe class ISteamUserStats : SteamInterface
 	{
 		
 		internal ISteamUserStats( bool IsGameServer )
@@ -15,9 +15,9 @@ namespace Steamworks
 			SetupInterface( IsGameServer );
 		}
 		
-		[DllImport( Platform.LibraryName, EntryPoint = "SteamAPI_SteamUserStats_v011", CallingConvention = Platform.CC)]
-		internal static extern IntPtr SteamAPI_SteamUserStats_v011();
-		public override IntPtr GetUserInterfacePointer() => SteamAPI_SteamUserStats_v011();
+		[DllImport( Platform.LibraryName, EntryPoint = "SteamAPI_SteamUserStats_v012", CallingConvention = Platform.CC)]
+		internal static extern IntPtr SteamAPI_SteamUserStats_v012();
+		public override IntPtr GetUserInterfacePointer() => SteamAPI_SteamUserStats_v012();
 		
 		
 		#region FunctionMeta
@@ -361,9 +361,6 @@ namespace Steamworks
 		private static extern SteamAPICall_t _DownloadLeaderboardEntriesForUsers( IntPtr self, SteamLeaderboard_t hSteamLeaderboard, [In,Out] SteamId[]  prgUsers, int cUsers );
 		
 		#endregion
-		/// <summary>
-		/// Downloads leaderboard entries for an arbitrary set of users - ELeaderboardDataRequest is k_ELeaderboardDataRequestUsers
-		/// </summary>
 		internal CallResult<LeaderboardScoresDownloaded_t> DownloadLeaderboardEntriesForUsers( SteamLeaderboard_t hSteamLeaderboard, [In,Out] SteamId[]  prgUsers, int cUsers )
 		{
 			var returnValue = _DownloadLeaderboardEntriesForUsers( Self, hSteamLeaderboard, prgUsers, cUsers );
@@ -433,8 +430,7 @@ namespace Steamworks
 		#endregion
 		internal int GetMostAchievedAchievementInfo( out string pchName, ref float pflPercent, [MarshalAs( UnmanagedType.U1 )] ref bool pbAchieved )
 		{
-			using var memory = Helpers.TakeMemory();
-			IntPtr mempchName = memory;
+			using var mempchName = Helpers.TakeMemory();
 			var returnValue = _GetMostAchievedAchievementInfo( Self, mempchName, (1024 * 32), ref pflPercent, ref pbAchieved );
 			pchName = Helpers.MemoryToString( mempchName );
 			return returnValue;
@@ -447,8 +443,7 @@ namespace Steamworks
 		#endregion
 		internal int GetNextMostAchievedAchievementInfo( int iIteratorPrevious, out string pchName, ref float pflPercent, [MarshalAs( UnmanagedType.U1 )] ref bool pbAchieved )
 		{
-			using var memory = Helpers.TakeMemory();
-			IntPtr mempchName = memory;
+			using var mempchName = Helpers.TakeMemory();
 			var returnValue = _GetNextMostAchievedAchievementInfo( Self, iIteratorPrevious, mempchName, (1024 * 32), ref pflPercent, ref pbAchieved );
 			pchName = Helpers.MemoryToString( mempchName );
 			return returnValue;
@@ -520,6 +515,30 @@ namespace Steamworks
 		internal int GetGlobalStatHistory( [MarshalAs( UnmanagedType.CustomMarshaler, MarshalTypeRef = typeof( Utf8StringToNative ) )] string pchStatName, [In,Out] double[]  pData, uint cubData )
 		{
 			var returnValue = _GetGlobalStatHistory( Self, pchStatName, pData, cubData );
+			return returnValue;
+		}
+		
+		#region FunctionMeta
+		[DllImport( Platform.LibraryName, EntryPoint = "SteamAPI_ISteamUserStats_GetAchievementProgressLimitsInt32", CallingConvention = Platform.CC)]
+		[return: MarshalAs( UnmanagedType.I1 )]
+		private static extern bool _GetAchievementProgressLimits( IntPtr self, [MarshalAs( UnmanagedType.CustomMarshaler, MarshalTypeRef = typeof( Utf8StringToNative ) )] string pchName, ref int pnMinProgress, ref int pnMaxProgress );
+		
+		#endregion
+		internal bool GetAchievementProgressLimits( [MarshalAs( UnmanagedType.CustomMarshaler, MarshalTypeRef = typeof( Utf8StringToNative ) )] string pchName, ref int pnMinProgress, ref int pnMaxProgress )
+		{
+			var returnValue = _GetAchievementProgressLimits( Self, pchName, ref pnMinProgress, ref pnMaxProgress );
+			return returnValue;
+		}
+		
+		#region FunctionMeta
+		[DllImport( Platform.LibraryName, EntryPoint = "SteamAPI_ISteamUserStats_GetAchievementProgressLimitsFloat", CallingConvention = Platform.CC)]
+		[return: MarshalAs( UnmanagedType.I1 )]
+		private static extern bool _GetAchievementProgressLimits( IntPtr self, [MarshalAs( UnmanagedType.CustomMarshaler, MarshalTypeRef = typeof( Utf8StringToNative ) )] string pchName, ref float pfMinProgress, ref float pfMaxProgress );
+		
+		#endregion
+		internal bool GetAchievementProgressLimits( [MarshalAs( UnmanagedType.CustomMarshaler, MarshalTypeRef = typeof( Utf8StringToNative ) )] string pchName, ref float pfMinProgress, ref float pfMaxProgress )
+		{
+			var returnValue = _GetAchievementProgressLimits( Self, pchName, ref pfMinProgress, ref pfMaxProgress );
 			return returnValue;
 		}
 		

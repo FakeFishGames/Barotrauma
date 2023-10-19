@@ -19,7 +19,7 @@ namespace Barotrauma
         public Item PrioritizedItem { get; private set; }
 
         public override bool AllowMultipleInstances => true;
-        public override bool AllowInAnySub => true;
+        public override bool AllowInFriendlySubs => true;
 
         public readonly static float RequiredSuccessFactor = 0.4f;
 

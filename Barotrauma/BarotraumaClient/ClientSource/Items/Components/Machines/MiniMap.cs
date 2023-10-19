@@ -295,7 +295,7 @@ namespace Barotrauma.Items.Components
                 }
             }
 
-            OrderPrefab[] reports = OrderPrefab.Prefabs.Where(o => o.IsReport && o.SymbolSprite != null && !o.Hidden).OrderBy(o => o.Identifier).ToArray();
+            OrderPrefab[] reports = OrderPrefab.Prefabs.Where(o => o.IsVisibleAsReportButton).OrderBy(o => o.Identifier).ToArray();
 
             GUIFrame bottomFrame = new GUIFrame(new RectTransform(new Vector2(0.5f, 0.15f), paddedContainer.RectTransform, Anchor.BottomCenter) { MaxSize = new Point(int.MaxValue, GUI.IntScale(40)) }, style: null)
             {
@@ -350,10 +350,16 @@ namespace Barotrauma.Items.Components
                 }
             };
 
+            List<ItemPrefab> shownItemPrefabs = new List<ItemPrefab>();
             foreach (ItemPrefab prefab in ItemPrefab.Prefabs.OrderBy(prefab => prefab.Name))
             {
                 if (prefab.HideInMenus) { continue; }
+                if (shownItemPrefabs.Any(ip => DisplayAsSameItem(ip, prefab)))
+                {
+                    continue;
+                }
                 CreateItemFrame(prefab, listBox.Content.RectTransform);
+                shownItemPrefabs.Add(prefab);
             }
 
             searchBar.OnDeselected += (sender, key) =>
@@ -398,6 +404,27 @@ namespace Barotrauma.Items.Components
                 new Point(int.MaxValue, paddedContainer.Rect.Height - bottomFrame.Rect.Height - buttonLayout.Rect.Height);
         }
 
+        private static Sprite GetPreviewSprite(ItemPrefab prefab)
+        {
+            return prefab.InventoryIcon ?? prefab.Sprite;
+        }
+
+        /// <summary>
+        /// If the items have an identical name and icon (e.g. a variant with an alternative fabrication/deconstruction recipe),
+        /// they're displayed as if they were the same item, not as two separate entries.
+        /// </summary>
+        private static bool DisplayAsSameItem(ItemPrefab prefab1, ItemPrefab prefab2)
+        {
+            if (prefab1 == prefab2) { return true; }
+            if (prefab1.Name == prefab2.Name)
+            {
+                var sprite1 = GetPreviewSprite(prefab1);
+                var sprite2 = GetPreviewSprite(prefab2);
+                return sprite1?.FullPath == sprite2?.FullPath && sprite1?.SourceRect == sprite2?.SourceRect;
+            }
+            return false;
+        }
+
         private bool VisibleOnItemFinder(Item it)
         {
             if (it?.Submarine == null) { return false; }
@@ -413,7 +440,7 @@ namespace Barotrauma.Items.Components
 
             if (it.Container?.GetComponent<ItemContainer>() is { DrawInventory: false } or { AllowAccess: false }) { return false; }
 
-            if (it.HasTag("traitormissionitem")) { return false; }
+            if (it.HasTag(Tags.TraitorMissionItem)) { return false; }
 
             return true;
         }
@@ -539,13 +566,13 @@ namespace Barotrauma.Items.Components
             displayedSubs.Add(item.Submarine);
             displayedSubs.AddRange(item.Submarine.DockedTo.Where(s => s.TeamID == item.Submarine.TeamID));
 
-            subEntities = MapEntity.mapEntityList.Where(me => (item.Submarine is { } sub && sub.IsEntityFoundOnThisSub(me, includingConnectedSubs: true, allowDifferentType: false)) && !me.HiddenInGame).OrderByDescending(w => w.SpriteDepth).ToList();
+            subEntities = MapEntity.MapEntityList.Where(me => (item.Submarine is { } sub && sub.IsEntityFoundOnThisSub(me, includingConnectedSubs: true, allowDifferentType: false)) && !me.HiddenInGame).OrderByDescending(w => w.SpriteDepth).ToList();
 
             BakeSubmarine(item.Submarine, parentRect);
             elementSize = GuiFrame.Rect.Size;
         }
 
-        public override void UpdateHUD(Character character, float deltaTime, Camera cam)
+        public override void UpdateHUDComponentSpecific(Character character, float deltaTime, Camera cam)
         {
             //recreate HUD if the subs we should display have changed
             if (item.Submarine == null && displayedSubs.Count > 0 ||                                         // item not inside a sub anymore, but display is still showing subs
@@ -824,7 +851,8 @@ namespace Barotrauma.Items.Components
             foreach (GUIComponent component in listBox.Content.Children)
             {
                 component.Visible = false;
-                if (component.UserData is ItemPrefab { Name: { } prefabName} prefab && itemsFoundOnSub.Contains(prefab))
+                if (component.UserData is ItemPrefab { Name: { } prefabName} prefab && 
+                    (itemsFoundOnSub.Contains(prefab) || itemsFoundOnSub.Any(ip => DisplayAsSameItem(ip, prefab))))
                 {
                     component.Visible = prefabName.ToLower().Contains(text.ToLower());
 
@@ -851,9 +879,9 @@ namespace Barotrauma.Items.Components
             tooltip.RectTransform.ScreenSpaceOffset = new Point(box.Rect.X, box.Rect.Y - height);
         }
 
-        private void CreateItemFrame(ItemPrefab prefab, RectTransform parent)
+        private static void CreateItemFrame(ItemPrefab prefab, RectTransform parent)
         {
-            Sprite sprite = prefab.InventoryIcon ?? prefab.Sprite;
+            Sprite sprite = GetPreviewSprite(prefab);
             if (sprite is null) { return; }
             GUIFrame frame = new GUIFrame(new RectTransform(new Vector2(1f, 0.25f), parent), style: "ListBoxElement")
             {
@@ -899,7 +927,7 @@ namespace Barotrauma.Items.Components
             {
                 if (!VisibleOnItemFinder(it)) { continue; }
 
-                if (it.Prefab == searchedPrefab)
+                if (DisplayAsSameItem(it.Prefab, searchedPrefab))
                 {
                     // ignore items on players and hidden inventories
                     if (it.FindParentInventory(inv => inv is CharacterInventory || inv is ItemInventory { Owner: Item { HiddenInGame: true }}) is { }) { continue; }
@@ -1079,7 +1107,7 @@ namespace Barotrauma.Items.Components
                 if (ShowHullIntegrity)
                 {
                     float amount = 1f + hullData.LinkedHulls.Count;
-                    gapOpenSum = hull.ConnectedGaps.Concat(hullData.LinkedHulls.SelectMany(h => h.ConnectedGaps)).Where(g => !g.IsRoomToRoom && !g.HiddenInGame).Sum(g => g.Open) / amount;
+                    gapOpenSum = hull.ConnectedGaps.Concat(hullData.LinkedHulls.SelectMany(h => h.ConnectedGaps)).Where(g => g.linkedTo.Count == 1 && !g.HiddenInGame).Sum(g => g.Open) / amount;
                     borderColor = Color.Lerp(neutralColor, GUIStyle.Red, Math.Min(gapOpenSum, 1.0f));
                 }
 

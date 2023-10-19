@@ -421,7 +421,7 @@ namespace Barotrauma
             }
         }
 
-        public abstract void UpdateLoadMenu(IEnumerable<CampaignMode.SaveInfo> saveFiles = null);
+        public abstract void CreateLoadMenu(IEnumerable<CampaignMode.SaveInfo> saveFiles = null);
 
         protected bool DeleteSave(GUIButton button, object obj)
         {
@@ -434,7 +434,7 @@ namespace Barotrauma
             {
                 SaveUtil.DeleteSave(saveInfo.FilePath);
                 prevSaveFiles?.RemoveAll(s => s.FilePath == saveInfo.FilePath);
-                UpdateLoadMenu(prevSaveFiles.ToList());
+                CreateLoadMenu(prevSaveFiles.ToList());
                 return true;
             });
 

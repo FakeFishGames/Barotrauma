@@ -44,7 +44,7 @@ namespace Barotrauma.RuinGeneration
 
             //prevent the ruin from extending above the level "ceiling"
             position.Y = Math.Min(level.Size.Y - (Submarine.Borders.Height / 2) - 100, position.Y);
-            Submarine.SetPosition(position.ToVector2());
+            Submarine.SetPosition(position.ToVector2(), forceUndockFromStaticSubmarines: false);
 
             if (mirror)
             {

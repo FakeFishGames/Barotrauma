@@ -812,7 +812,7 @@ namespace Barotrauma.Sounds
         {
             for (int i = loadedSounds.Count - 1; i >= 0; i--)
             {
-                loadedSounds[i].InitializeALBuffers();
+                loadedSounds[i].InitializeAlBuffers();
             }
         }
 
@@ -834,7 +834,7 @@ namespace Barotrauma.Sounds
             {
                 if (keepSounds)
                 {
-                    loadedSounds[i].DeleteALBuffers();
+                    loadedSounds[i].DeleteAlBuffers();
                 }
                 else
                 {

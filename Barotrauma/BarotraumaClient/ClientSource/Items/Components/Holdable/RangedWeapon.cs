@@ -60,7 +60,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public override void UpdateHUD(Character character, float deltaTime, Camera cam)
+        public override void UpdateHUDComponentSpecific(Character character, float deltaTime, Camera cam)
         {
             currentCrossHairScale = currentCrossHairPointerScale = cam == null ? 1.0f : cam.Zoom;
             if (crosshairSprite != null)
@@ -118,6 +118,7 @@ namespace Barotrauma.Items.Components
                     else if (chargeSoundChannel != null)
                     {
                         chargeSoundChannel.FrequencyMultiplier = MathHelper.Lerp(0.5f, 1.5f, chargeRatio);
+                        chargeSoundChannel.Position = new Vector3(item.WorldPosition, 0.0f);
                     }
                     break;
                 default:

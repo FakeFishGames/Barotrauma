@@ -42,8 +42,6 @@ namespace Barotrauma.Networking
 
         public string RejectedName;
 
-        public int RoundsSincePlayedAsTraitor;
-
         public float KickAFKTimer;
 
         public double MidRoundSyncTimeOut;
