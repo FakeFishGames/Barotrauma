@@ -219,6 +219,18 @@ namespace Barotrauma
         public readonly int DangerLevel;
 
         /// <summary>
+        /// An event of this danger level (or higher) must have been selected previously for this event to trigger. 
+        /// It does not matter whether the event was completed successfully or not. Defaults to one less than the DangerLevel of this event.
+        /// </summary>
+        public readonly int RequiredPreviousDangerLevel;
+
+        /// <summary>
+        /// An event of a lower danger level must have been completed on the previous round for this event to trigger.
+        /// Defaults to false (no requirements)
+        /// </summary>
+        public readonly bool RequirePreviousDangerLevelCompleted;
+
+        /// <summary>
         /// Minimum number of non-spectating human players on the server for the event to get selected.
         /// </summary>
         public readonly int MinPlayerCount;
@@ -254,7 +266,10 @@ namespace Barotrauma
         public TraitorEventPrefab(ContentXElement element, RandomEventsFile file, Identifier fallbackIdentifier = default)
             : base(element, file, fallbackIdentifier)
         {
-            DangerLevel = MathHelper.Clamp(element.GetAttributeInt(nameof(DangerLevel), MinDangerLevel), MinDangerLevel, MaxDangerLevel);
+            DangerLevel = MathHelper.Clamp(element.GetAttributeInt(nameof(DangerLevel), MinDangerLevel), min: MinDangerLevel, max: MaxDangerLevel);
+
+            RequiredPreviousDangerLevel = MathHelper.Clamp(element.GetAttributeInt(nameof(RequiredPreviousDangerLevel), def: DangerLevel - 1), min: 0, max: MaxDangerLevel - 1);
+            RequirePreviousDangerLevelCompleted = element.GetAttributeBool(nameof(RequirePreviousDangerLevelCompleted), false);
 
             MinPlayerCount = element.GetAttributeInt(nameof(MinPlayerCount), 0);
 

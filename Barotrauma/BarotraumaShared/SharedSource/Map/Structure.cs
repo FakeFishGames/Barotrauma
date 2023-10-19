@@ -1281,6 +1281,8 @@ namespace Barotrauma
             explosionOnBroken.Attack.Range = explosionRange * gap.Open;
             explosionOnBroken.Attack.DamageMultiplier = explosionStrength;
             explosionOnBroken.Attack.Stun = MathHelper.Clamp(explosionStrength, 0.5f, 1.0f);
+            explosionOnBroken.IgnoredCharacters.Clear();
+            if (attacker?.AIController is EnemyAIController) { explosionOnBroken.IgnoredCharacters.Add(attacker); }           
             explosionOnBroken?.Explode(gap.WorldPosition, damageSource: null, attacker: attacker);
 #if CLIENT
             if (linkedHull != null)

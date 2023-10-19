@@ -13,7 +13,7 @@ namespace Barotrauma
             Identifier eventIdentifier = msg.ReadIdentifier();
             if (GameMain.Client?.Character == null)
             {
-                DebugConsole.ThrowError("Received a traitor update when not controlling a character.");
+                DebugConsole.AddSafeError("Received a traitor update when not controlling a character.");
                 return;
             }
             GameMain.Client.Character.IsTraitor = true;            

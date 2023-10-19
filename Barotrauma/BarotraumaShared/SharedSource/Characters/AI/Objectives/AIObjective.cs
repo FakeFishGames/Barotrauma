@@ -265,7 +265,7 @@ namespace Barotrauma
         {
             if (!IgnoreAtOutpost) { return false; }
             if (!Level.IsLoadedFriendlyOutpost) { return false; }
-            if (!character.IsOnPlayerTeam) { return false; }
+            if (!character.IsOnPlayerTeam || character.IsFriendlyNPCTurnedHostile) { return false; }
             if (character.Submarine?.Info == null) { return false; }
             return character.Submarine.Info.IsOutpost && character.Submarine.TeamID == CharacterTeamType.FriendlyNPC;
         }

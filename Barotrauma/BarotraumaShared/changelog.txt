@@ -1,4 +1,40 @@
 -------------------------------------------------------------------------------------------------------------------------------------------------
+v1.1.18.0
+-------------------------------------------------------------------------------------------------------------------------------------------------
+
+- Updated translations.
+- Modding: Added ContinueIfNoTargetsFound property to TagAction. Can be used to allow the event to continue even if the TagAction can't find any valid targets (by default the event wont continue until at least one target is found).
+
+-------------------------------------------------------------------------------------------------------------------------------------------------
+v1.1.17.0
+-------------------------------------------------------------------------------------------------------------------------------------------------
+
+- Changed traitor event selection logic a bit: most of the more dangerous events can trigger as long as a less dangerous event has been selected previously, even if that event wasn't completed successfully. Previously many of the dangerous events were extremely rare, because they required 1. completing an easier event first 2. a specific mission to be selected on the following round.
+- Adjusted traitor event probabilities a bit to make some of the rarer ones more common.
+- Fixes to some oddities and inconsistencies in containers: backpacks can't go in crates, duffel bags or outpost cabinets, fixed storage containers going in outpost cabinets.
+- Fixed searchlights appearing as turrets in the "operate weapon" order (and the bots would complain about not being able to load ammo into them if you ordered them to operate one).
+- Fixed security fleeing from the player during jailbreak missions.
+- Fixed security not spawning in jailbreak missions in the mission mode.
+- Fixed morphine not being shown as a suitable treatment for the concussion in the medic tutorial.
+- Fixed abandoned outpost you're supposed to rescue Jacov Subra from sometimes turning into a normal outpost and cancelling the mission.
+- Fixed some scripted events throwing unnecessary "no conditionals defined" console errors.
+
+-------------------------------------------------------------------------------------------------------------------------------------------------
+v1.1.16.0
+-------------------------------------------------------------------------------------------------------------------------------------------------
+
+- Fixed several issues when editing traitor events in the event editor (console errors, some actions not loading properly, inability to set a new event as a traitor event).
+- Backpacks can't be put in cargo scooters.
+- Fixed some traitor events being impossible to complete (harbringer of honks, faulty robes, handcuff shortage).
+
+- Fixed latcher's tongue failing to attach to submarines.
+- Fixed crashing when deleting a circuit box in the submarine editor. Undoing the deletion still does not work unfortunately, but we are looking into fixing that.
+- Fixed errors when modifying any properties of an ItemLabel or Turret component in multiplayer.
+- Fixed flashlights in guns (or other contained items) not getting flipped in the same direction as the container when put inside the container. 
+- Monsters don't get damaged by the hull shrapnel when they break a wall themselves.
+- Fixed "can't create an entity event" error when ending a multiplayer round when there's dropped stacks around. 
+
+-------------------------------------------------------------------------------------------------------------------------------------------------
 v1.1.15.0
 -------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -122,7 +158,6 @@ Multiplayer:
 - Fixed characters getting removed at the end of the round if they've died and then been revived with the "revive" console command.
 
 AI:
-- Fixed searchlights not attracting monsters.
 - Fixed bots "cleaning up" (or stealing) batteries from portable pumps.
 - Fixed bots never cleaning up detached wires.
 - Fixed bots sometimes ignoring the leaks right next to doors/hatches.

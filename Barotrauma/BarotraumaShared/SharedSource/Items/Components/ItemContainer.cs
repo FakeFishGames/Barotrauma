@@ -443,11 +443,11 @@ namespace Barotrauma.Items.Components
                 // Set the contained items active if there's an item inserted inside the container. Enables e.g. the rifle flashlight when it's attached to the rifle (put inside of it).
                 SetContainedActive(true);
             }
-            if (containedItem.FlippedX)
+            if (containedItem.FlippedX != item.FlippedX)
             {
                 containedItem.FlipX(relativeToSub: false);
             }
-            if (containedItem.FlippedY)
+            if (containedItem.FlippedY != item.FlippedY)
             {
                 containedItem.FlipY(relativeToSub: false);
             }

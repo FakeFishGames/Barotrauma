@@ -2155,11 +2155,11 @@ namespace Barotrauma
                                     rotation += spread;
                                     if (projectile != null)
                                     {
-                                        var sourceEntity = (sourceBody as ISpatialEntity) ?? entity;
+                                        var sourceEntity = (sourceBody?.UserData as ISpatialEntity) ?? entity;
                                         Vector2 spawnPos = sourceEntity.SimPosition;
                                         projectile.Shoot(user, spawnPos, spawnPos, rotation,
                                             ignoredBodies: user?.AnimController.Limbs.Where(l => !l.IsSevered).Select(l => l.body.FarseerBody).ToList(), createNetworkEvent: true);
-                                        projectile.Item.Submarine = sourceEntity?.Submarine;
+                                        projectile.Item.Submarine = projectile.LaunchSub = sourceEntity?.Submarine;
                                     }
                                     else if (newItem.body != null)
                                     {
