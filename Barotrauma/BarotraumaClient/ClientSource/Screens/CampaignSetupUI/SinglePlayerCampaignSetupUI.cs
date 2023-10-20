@@ -583,7 +583,9 @@ namespace Barotrauma
 
             if (saveFiles == null)
             {
-                saveFiles = SaveUtil.GetSaveFiles(SaveUtil.SaveType.Singleplayer);
+                //we don't need to log errors at this point,
+                //if any file fails to load the error will get logged when we try to extract the root from the game session doc later in the method
+                saveFiles = SaveUtil.GetSaveFiles(SaveUtil.SaveType.Singleplayer, logLoadErrors: false);
             }
 
             var leftColumn = new GUILayoutGroup(new RectTransform(new Vector2(0.5f, 1.0f), loadGameContainer.RectTransform), childAnchor: Anchor.TopCenter)
