@@ -4,13 +4,21 @@ namespace Barotrauma
 {
     partial class GoToMission : Mission
     {
-        private readonly bool maxProgressStateDeterminsCompleted;
-        private readonly int failState;
+        private readonly bool stateControlsCompletion;
+        private readonly int successState;
+        private readonly int displayAsFailedState;
+
         public GoToMission(MissionPrefab prefab, Location[] locations, Submarine sub)
             : base(prefab, locations, sub)
         {
-            maxProgressStateDeterminsCompleted = prefab.ConfigElement.GetAttributeBool("maxprogressdeterminescompleted", false);
-            failState = prefab.ConfigElement.GetAttributeInt("failstate", -1);
+            stateControlsCompletion = prefab.ConfigElement.GetAttributeBool("statecontrolscompletion", false);
+            successState = prefab.ConfigElement.GetAttributeInt("successstate", 1);
+            displayAsFailedState = prefab.ConfigElement.GetAttributeInt("displayasfailedstate", -1);
+
+            if (successState == displayAsFailedState)
+            {
+                DebugConsole.AddWarning($"GoTo mission with identifier: '{prefab.Identifier}' has the successstate equal to the displayasfailedstate, this may cause unintentional side effects.");
+            }
         }
 
         protected override void UpdateMissionSpecific(float deltaTime)
@@ -23,9 +31,9 @@ namespace Barotrauma
 
         protected override bool DetermineCompleted()
         {
-            if (maxProgressStateDeterminsCompleted)
+            if (stateControlsCompletion)
             {
-                return Prefab.MaxProgressState >= State;
+                return State == successState;
             }
 
             if (Level.Loaded?.Type == LevelData.LevelType.Outpost)
