@@ -1,19 +1,22 @@
-#nullable enable
 using Microsoft.Xna.Framework;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace Barotrauma;
 
-partial class HighlightAction : EventAction
+partial class TutorialHighlightAction : EventAction
 {
-    partial void SetHighlightProjSpecific(Entity entity, IEnumerable<Character>? targetCharacters)
-    {
-        if (targetCharacters != null && !targetCharacters.Contains(Character.Controlled))
-        {
-            return;
-        }
+    private static readonly Color highlightColor = Color.Orange;
 
+    partial void UpdateProjSpecific()
+    {
+        if (GameMain.GameSession?.GameMode is not TutorialMode) { return; }
+        foreach (var target in ParentEvent.GetTargets(TargetTag))
+        {
+            SetHighlight(target);
+        }
+    }
+
+    private void SetHighlight(Entity entity)
+    {
         if (entity is Item i)
         {
             SetItemHighlight(i);

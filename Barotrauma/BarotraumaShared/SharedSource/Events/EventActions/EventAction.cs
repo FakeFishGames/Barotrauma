@@ -140,11 +140,7 @@ namespace Barotrauma
                 Identifier typeName = element.Name.ToString().ToIdentifier();
                 if (typeName == "TutorialSegmentAction")
                 {
-                    typeName = nameof(EventObjectiveAction).ToIdentifier();
-                }
-                else if (typeName == "TutorialHighlightAction")
-                {
-                    typeName = nameof(HighlightAction).ToIdentifier();
+                    typeName = "EventObjectiveAction".ToIdentifier();
                 }
                 actionType = Type.GetType("Barotrauma." + typeName, throwOnError: true, ignoreCase: true);
                 if (actionType == null) { throw new NullReferenceException(); }
