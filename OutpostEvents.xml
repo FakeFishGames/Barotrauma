@@ -1927,11 +1927,15 @@
         </Failure>
       </CheckDataAction>
     </ScriptedEvent>
+    
     <!--Captive souls-->
     <ScriptedEvent identifier="captivesouls" commonness="50">
       <TagAction criteria="player" tag="player" />
+      <!-- needs a containement tank preplaced or event will end. hopefully in research module -->
+      <TagAction criteria="itemidentifier:op_researchcontainmenttank3" tag="captivesoulstank" SubmarineType="Outpost" ContinueIfNoTargetsFound="false" />
       <SpawnAction npcsetidentifier="outpostnpcs1" npcidentifier="researcher" targettag="captivesouls_scientist" targetmoduletags="airlock" spawnlocation="Outpost" />
       <NPCWaitAction npctag="captivesouls_scientist" wait="true" />
+      <!-- scientist conversation -->
       <TriggerAction target1tag="player" target2tag="captivesouls_scientist" applytotarget1="triggerer_player" waitforinteraction="true" />
       <ConversationAction text="EventText.captivesouls.c1" targettag="triggerer_player" eventsprite="mediator">
         <Option text="EventText.captivesouls.o1">
@@ -1953,8 +1957,8 @@
           <!--END-->
         </Option>
       </ConversationAction>
-      <!--Trigger at research module-->
-      <TriggerAction target1tag="triggerer_player" targetmoduletype="researchmodule" radius="100" />
+      <!--Interact with containement tank-->
+      <TriggerAction target1tag="triggerer_player" target2tag="captivesoulstank" waitforinteraction="true" />
       <ConversationAction text="EventText.captivesouls.c1.c1" targettag="triggerer_player">
         <Option text="EventText.captivesouls.c1.o1">
           <ConversationAction text="EventText.captivesouls.c1.o1.c1" targettag="triggerer_player">
@@ -1964,7 +1968,31 @@
                   <ConversationAction text="EventText.captivesouls.c1.o1.o1.o1.c1" targettag="triggerer_player">
                     <Option text="EventText.captivesouls.c1.o1.o1.o1.o1">
                       <ConversationAction text="EventText.captivesouls.c1.o1.o1.o1.o1.c1" targettag="triggerer_player">
-                        <Option text="EventText.captivesouls.c1.o1.o1.o1.o1.o1">
+                        <!-- break the glass and spawn the crawler -->
+                        <Option text="EventText.captivesouls.c1.o1.o1.o1.o1.o1" endconversation="true" >
+                          <StatusEffectAction targettag="captivesoulstank">
+                            <StatusEffect>
+                              <SpawnItem identifier="banditprop7" spawnposition="This" Offset="0,-10"/>
+                              <Sound file="Content/Sounds/Damage/GlassImpact2.ogg" range="500" />
+                              <ParticleEmitter particle="watersplash" particleamount="10" velocitymin="0" velocitymax="50" anglemin="240" anglemax="300" scalemin="1" scalemax="2"  />
+                            </StatusEffect>
+                          </StatusEffectAction>
+                          <SpawnAction speciesname="crawler_hatchling" spawnlocation="Outpost" targetmoduletags="researchmodule" SpawnPointTag="captivesoulstank" TargetTag="crawlerhybrid" />
+                          <StatusEffectAction targettag="crawlerhybrid">
+                            <StatusEffect disabledeltatime="true" >
+                              <!-- stun to prevent crazy ragdolling when it spawns -->
+                              <Affliction identifier="stun" strength="1" />
+                              <Affliction identifier="nausea" strength="100" />    
+                            </StatusEffect>
+                            <StatusEffect delay="2" duration="10">
+                              <!-- dies after a few seconds from organ failure -->
+                              <Affliction identifier="organdamage" strength="3" />                          
+                            </StatusEffect>
+                          </StatusEffectAction>
+                          <!-- add combataction to make crawler flee instead of fighting? make crawler neutral? how? -->
+                          <!-- 3 seconds after breaking glass, interact with the tank again to grab the curio -->
+                          <WaitAction time="3" />
+                          <TriggerAction target1tag="triggerer_player" target2tag="captivesoulstank" waitforinteraction="true" />
                           <ConversationAction text="EventText.captivesouls.c1.o1.o1.o1.o1.o1.c1" targettag="triggerer_player">
                             <Option text="EventText.generic.continue">
                               <ConversationAction text="EventText.captivesouls.c1.o1.o1.o1.o1.o1.o1.c1" targettag="triggerer_player">
