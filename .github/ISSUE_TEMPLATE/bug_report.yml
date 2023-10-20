@@ -73,7 +73,7 @@ body:
       label: Version
       description: Which version of the game did the bug happen in? You can see the current version number in the bottom left corner of your screen in the main menu.
       options:      
-        - v1.1.18.0 (Treacherous Tides)
+        - v1.1.18.1 (Treacherous Tides)
         - Other
     validations:
       required: true
