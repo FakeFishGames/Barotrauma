@@ -4,20 +4,19 @@ namespace Barotrauma
 {
     partial class GoToMission : Mission
     {
-        private readonly bool stateControlsCompletion;
+        private bool StateControlsCompletion => successState != -1;
         private readonly int successState;
-        private readonly int displayAsFailedState;
+        private readonly int failState;
 
         public GoToMission(MissionPrefab prefab, Location[] locations, Submarine sub)
             : base(prefab, locations, sub)
         {
-            stateControlsCompletion = prefab.ConfigElement.GetAttributeBool(nameof(stateControlsCompletion), false);
-            successState = prefab.ConfigElement.GetAttributeInt(nameof(successState), 1);
-            displayAsFailedState = prefab.ConfigElement.GetAttributeInt(nameof(displayAsFailedState), -1);
+            successState = prefab.ConfigElement.GetAttributeInt(nameof(successState), -1);
+            failState = prefab.ConfigElement.GetAttributeInt(nameof(failState), -1);
 
-            if (successState == displayAsFailedState)
+            if (successState == failState && StateControlsCompletion)
             {
-                DebugConsole.AddWarning($"GoTo mission with identifier: '{prefab.Identifier}' has the successstate equal to the displayasfailedstate, this may cause unintentional side effects.");
+                DebugConsole.AddWarning($"GoTo mission with identifier: '{prefab.Identifier}' has the successstate equal to the failstate, this may cause unintentional side effects.");
             }
         }
 
@@ -31,7 +30,7 @@ namespace Barotrauma
 
         protected override bool DetermineCompleted()
         {
-            if (stateControlsCompletion)
+            if (StateControlsCompletion)
             {
                 return State == successState;
             }
