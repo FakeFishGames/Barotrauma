@@ -11,9 +11,9 @@ namespace Barotrauma
         public GoToMission(MissionPrefab prefab, Location[] locations, Submarine sub)
             : base(prefab, locations, sub)
         {
-            stateControlsCompletion = prefab.ConfigElement.GetAttributeBool("statecontrolscompletion", false);
-            successState = prefab.ConfigElement.GetAttributeInt("successstate", 1);
-            displayAsFailedState = prefab.ConfigElement.GetAttributeInt("displayasfailedstate", -1);
+            stateControlsCompletion = prefab.ConfigElement.GetAttributeBool(nameof(stateControlsCompletion), false);
+            successState = prefab.ConfigElement.GetAttributeInt(nameof(successState), 1);
+            displayAsFailedState = prefab.ConfigElement.GetAttributeInt(nameof(displayAsFailedState), -1);
 
             if (successState == displayAsFailedState)
             {
