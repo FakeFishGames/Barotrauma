@@ -1540,6 +1540,23 @@ namespace Barotrauma
                         RemoveFromDroppedStack(allowClientExecute: true);
                     }
                     break;
+                case EventType.SetHighlight:
+                    bool isTargetedForThisClient = msg.ReadBoolean();
+                    if (isTargetedForThisClient)
+                    {
+                        bool highlight = msg.ReadBoolean();
+                        ExternalHighlight = highlight;
+                        if (highlight)
+                        { 
+                            Color highlightColor = msg.ReadColorR8G8B8A8();
+                            HighlightColor = highlightColor;
+                        }
+                        else
+                        {
+                            HighlightColor = null;
+                        }
+                    }
+                    break;
                 default:
                     throw new Exception($"Malformed incoming item event: unsupported event type {eventType}");
             }
