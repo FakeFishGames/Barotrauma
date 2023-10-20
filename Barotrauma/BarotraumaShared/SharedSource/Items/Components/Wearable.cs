@@ -282,6 +282,9 @@ namespace Barotrauma.Items.Components
         private readonly Limb[] limb;
 
         private readonly List<DamageModifier> damageModifiers;
+
+        public readonly Sprite WearableOverlay;
+
         public readonly Dictionary<Identifier, float> SkillModifiers;
 
         public readonly Dictionary<StatTypes, float> WearableStatValues = new Dictionary<StatTypes, float>();
@@ -413,6 +416,9 @@ namespace Barotrauma.Items.Components
                         {
                             WearableStatValues.TryAdd(statType, statValue);
                         }
+                        break;
+                    case "wearableoverlay":
+                        WearableOverlay = new Sprite(subElement);
                         break;
                 }
             }
