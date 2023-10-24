@@ -415,16 +415,38 @@ namespace Barotrauma.Networking
                             !c.Character.IsDead && !c.Character.IsUnconscious &&
                             c.Character.Submarine != Level.Loaded.EndOutpost);
 
-                        //level finished if the sub is docked to the outpost
+                        //level finished if any player sub is docked to the outpost
                         //or very close and someone from the crew made it inside the outpost
-                        subAtLevelEnd =
-                            Submarine.MainSub.DockedTo.Contains(Level.Loaded.EndOutpost) ||
-                            (Submarine.MainSub.AtEndExit && charactersInsideOutpost > 0) ||
-                            (charactersInsideOutpost > charactersOutsideOutpost);
+                        if (charactersInsideOutpost > charactersOutsideOutpost)
+                        {
+                            subAtLevelEnd = true;
+                        }
+                        else
+                        {
+                            //all subs are checked you can have a drone/escape pod/etc dock to the outpost and end the round
+                            foreach (var sub in Submarine.Loaded)
+                            {
+                                if (sub.TeamID != Submarine.MainSub.TeamID)
+                                    continue;
+                                subAtLevelEnd =
+                                    sub.DockedTo.Contains(Level.Loaded.EndOutpost) ||
+                                    sub.AtEndExit && charactersInsideOutpost > 0);
+                                if (subAtLevelEnd)
+                                    break;
+                            }
+                        }
                     }
                     else
                     {
-                        subAtLevelEnd = Submarine.MainSub.AtEndExit;
+                        //check all player subs like above
+                        foreach (var sub in Submarine.Loaded)
+                        {
+                            if (sub.TeamID == Submarine.MainSub.TeamID && sub.AtEndExit)
+                            {
+                                subAtLevelEnd = true;
+                                break;
+                            }
+                        }
                     }
                 }
 
