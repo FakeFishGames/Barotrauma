@@ -148,60 +148,82 @@
     -follow-up event?-->
     <ScriptedEvent identifier="soundinthevent" commonness="100">
       <TagAction criteria="player" tag="player" />
-      <TagAction criteria="itemtag:mudraptorspawnvent" tag="mudraptorspawnvent" />
-      <TriggerAction target1tag="mudraptorspawnvent" target2tag="player" applytotarget1="selectedmudraptorspawnvent" applytotarget2="triggerer_player" radius="50"/>
+      <TagAction criteria="itemtag:mudraptorspawnvent" tag="mudraptorspawnvent" SubmarineType="Outpost" chooserandom="true" />
+      <TriggerAction target1tag="mudraptorspawnvent" target2tag="player" applytotarget1="looseventspawnpoint" applytotarget2="triggerer_player" radius="80"/>
+      <SpawnAction itemidentifier="loosevent" spawnlocation="Outpost" SpawnPointTag="looseventspawnpoint" TargetTag="selectedmudraptorspawnvent" offset="0"/>
       <StatusEffectAction targettag="selectedmudraptorspawnvent">
-        <StatusEffect>
-          <Sound file="Content/Sounds/Damage/Creak1.ogg" range="500" />
+        <StatusEffect spritecolor="0,0,0,0" spritedepth="0.89" setvalue="true">
+          <Sound file="Content/Sounds/Damage/Creak4.ogg" range="400" volume="3" frequencymultiplier="2" />
         </StatusEffect>
       </StatusEffectAction>
-      <ConversationAction targettag="triggerer_player" text="EventText.soundinthevent.c1" eventsprite="vent">
+      <ConversationAction targettag="triggerer_player" text="EventText.soundinthevent.c1" eventsprite="vent"/>
+      <Label name="UseitemOnVent" />
+      <TriggerAction target1tag="selectedmudraptorspawnvent" target2tag="player" radius="80" waitforinteraction="true"/>
+      <ConversationAction targettag="triggerer_player" text="What do you do?" eventsprite="vent">
+        <!-- use a screwdriver -->
         <Option text="EventText.soundinthevent.o1">
-          <SkillCheckAction targettag="triggerer_player" requiredskill="Mechanical" requiredlevel="60">
+          <CheckItemAction targettag="triggerer_player" itemtags="screwdriveritem" RequireEquipped="true">
             <Success>
-              <GiveSkillEXPAction skill="mechanical" amount="5" targettag="triggerer_player" />
-              <ConversationAction targettag="triggerer_player" text="EventText.soundinthevent.o1.c1" />
-              <MoneyAction amount="1000" />
+              <SkillCheckAction targettag="triggerer_player" requiredskill="Mechanical" requiredlevel="60">
+                <Success>
+                  <GiveSkillEXPAction skill="mechanical" amount="5" targettag="triggerer_player" />
+                  <ConversationAction targettag="triggerer_player" text="EventText.soundinthevent.o1.c1" />
+                  <MoneyAction amount="1000" />
+                </Success>
+                <Failure>
+                  <AfflictionAction affliction="lacerations" strength="15" limbtype="LeftHand" targettag="triggerer_player" />
+                  <StatusEffectAction targettag="selectedmudraptorspawnvent">
+                    <StatusEffect>
+                      <Explosion range="200.0" stun="0.2" force="5.0" flames="false" flash="false" shockwave="false" sparks="false" underwaterbubble="false" />
+                      <Sound file="Content/Sounds/Damage/StructureCrunch2.ogg" range="500" />
+                    </StatusEffect>
+                  </StatusEffectAction>
+                  <ConversationAction targettag="triggerer_player" text="EventText.soundinthevent.o1.c2" />
+                </Failure>
+              </SkillCheckAction>                
             </Success>
             <Failure>
-              <AfflictionAction affliction="lacerations" strength="15" limbtype="LeftHand" targettag="triggerer_player" />
-              <StatusEffectAction targettag="selectedmudraptorspawnvent">
-                <StatusEffect>
-                  <Explosion range="200.0" stun="0.2" force="5.0" flames="false" flash="false" shockwave="false" sparks="false" underwaterbubble="false" />
-                  <Sound file="Content/Sounds/Damage/StructureCrunch2.ogg" range="500" />
-                </StatusEffect>
-              </StatusEffectAction>
-              <ConversationAction targettag="triggerer_player" text="EventText.soundinthevent.o1.c2" />
+              <ConversationAction targettag="triggerer_player" text="eventtext.soundinthevent.getscrewdriver" />
+              <Goto name="UseitemOnVent" />
             </Failure>
-          </SkillCheckAction>
+          </CheckItemAction>
         </Option>
+        <!-- shine a flashlight -->
         <Option text="EventText.soundinthevent.o2">
-          <SkillCheckAction targettag="triggerer_player" requiredskill="weapons" requiredlevel="70">
+          <CheckItemAction targettag="triggerer_player" itemidentifiers="flashlight" RequireEquipped="true">
             <Success>
-              <ConversationAction targettag="triggerer_player" text="EventText.soundinthevent.o2.c1" eventsprite="ambush"/>
-              <WaitAction time="1.5" />
-              <SpawnAction speciesname="Mudraptor_hatchling" spawnlocation="Outpost" spawnpointtag="selectedmudraptorspawnvent" />
-              <StatusEffectAction targettag="selectedmudraptorspawnvent">
-                <StatusEffect>
-                  <Explosion range="200.0" stun="0.5" force="5.0" flash="false" flames="false" shockwave="false" sparks="false" underwaterbubble="false" />
-                  <Sound file="Content/Items/Door/DoorBreak1.ogg" range="500" />
-                </StatusEffect>
-              </StatusEffectAction>
+              <SkillCheckAction targettag="triggerer_player" requiredskill="weapons" requiredlevel="70">
+                <Success>
+                  <ConversationAction targettag="triggerer_player" text="EventText.soundinthevent.o2.c1" eventsprite="ambush"/>
+                  <WaitAction time="1.5" />
+                  <SpawnAction speciesname="Mudraptor_hatchling" spawnlocation="Outpost" spawnpointtag="looseventspawnpoint" />
+                  <StatusEffectAction targettag="selectedmudraptorspawnvent">
+                    <StatusEffect>
+                      <Explosion range="200.0" stun="0.5" force="5.0" flash="false" flames="false" shockwave="false" sparks="false" underwaterbubble="false" />
+                      <Sound file="Content/Items/Door/DoorBreak1.ogg" range="500" />
+                    </StatusEffect>
+                  </StatusEffectAction>
+                </Success>
+                <Failure>
+                  <ConversationAction targettag="triggerer_player" text="EventText.soundinthevent.o2.c2" eventsprite="ambush"/>
+                  <StatusEffectAction targettag="selectedmudraptorspawnvent">
+                    <StatusEffect>
+                      <Explosion range="200.0" stun="0.5" force="5.0" flash="false" flames="false" shockwave="false" sparks="false" underwaterbubble="false" />
+                      <Sound file="Content/Items/Door/DoorBreak1.ogg" range="500" />
+                    </StatusEffect>
+                  </StatusEffectAction>
+                  <WaitAction time="1.5" />
+                  <SpawnAction speciesname="Mudraptor_hatchling" spawnlocation="Outpost" spawnpointtag="looseventspawnpoint" />
+                  <SpawnAction speciesname="Mudraptor_hatchling" spawnlocation="Outpost" spawnpointtag="looseventspawnpoint" />
+                  <SpawnAction speciesname="Mudraptor_hatchling" spawnlocation="Outpost" spawnpointtag="looseventspawnpoint" />
+                </Failure>
+              </SkillCheckAction>
             </Success>
             <Failure>
-              <ConversationAction targettag="triggerer_player" text="EventText.soundinthevent.o2.c2" eventsprite="ambush"/>
-              <StatusEffectAction targettag="selectedmudraptorspawnvent">
-                <StatusEffect>
-                  <Explosion range="200.0" stun="0.5" force="5.0" flash="false" flames="false" shockwave="false" sparks="false" underwaterbubble="false" />
-                  <Sound file="Content/Items/Door/DoorBreak1.ogg" range="500" />
-                </StatusEffect>
-              </StatusEffectAction>
-              <WaitAction time="1.5" />
-              <SpawnAction speciesname="Mudraptor_hatchling" spawnlocation="Outpost" spawnpointtag="selectedmudraptorspawnvent" />
-              <SpawnAction speciesname="Mudraptor_hatchling" spawnlocation="Outpost" spawnpointtag="selectedmudraptorspawnvent" />
-              <SpawnAction speciesname="Mudraptor_hatchling" spawnlocation="Outpost" spawnpointtag="selectedmudraptorspawnvent" />
+              <ConversationAction targettag="triggerer_player" text="eventtext.soundinthevent.getflashlight" />
+              <Goto name="UseitemOnVent" />
             </Failure>
-          </SkillCheckAction>
+          </CheckItemAction>
         </Option>
         <Option text="EventText.soundinthevent.o3">
           <RNGAction chance="0.33">
@@ -372,24 +394,46 @@
     <!--"Propaganda"-->
     <ScriptedEvent identifier="propaganda" commonness="100">
       <TagAction criteria="player" tag="player" />
-      <TagAction criteria="itemidentifier:opdeco_hrflyers" tag="potentialflyers" submarinetype="outpost" />
-      <!--<TagAction criteria="structureidentifier:opdeco_propagandaposter1" tag="potentialflyers" submarinetype="outpost" />
-      <TagAction criteria="structureidentifier:opdeco_propagandaposter2" tag="potentialflyers" submarinetype="outpost" />
-      <TagAction criteria="structureidentifier:opdeco_propagandaposter3" tag="potentialflyers" submarinetype="outpost" />
-      <TagAction criteria="structureidentifier:opdeco_propagandaposter4" tag="potentialflyers" submarinetype="outpost" />
-      <TagAction criteria="structureidentifier:opdeco_propagandaposter5" tag="potentialflyers" submarinetype="outpost" />
-      <TagAction criteria="structureidentifier:opdeco_propagandaposter6" tag="potentialflyers" submarinetype="outpost" />
-      <TagAction criteria="structureidentifier:opdeco_propagandaposter7" tag="potentialflyers" submarinetype="outpost" />-->
+      <TagAction criteria="itemidentifier:opdeco_hrflyers" tag="potentialflyers" submarinetype="outpost" chooserandom="true" />
       <TriggerAction target1tag="potentialflyers" target2tag="player" applytotarget2="triggerer_player" radius="250" waitforinteraction="true"/>
       <ConversationAction targettag="triggerer_player" text="EventText.propaganda.c1" eventsprite="noticeboard">
         <Option text="EventText.propaganda.o1">
           <ConversationAction targettag="triggerer_player" text="EventText.propaganda.o1.c1">
             <Option text="EventText.propaganda.o1.o1">
-              <ReputationAction targettype="Faction" identifier="separatists" increase="3" />
-              <ReputationAction targettype="Faction" identifier="coalition" increase="-2" />
-              <ConversationAction targettag="triggerer_player" text="EventText.propaganda.o1.o1.c1">
-                <Option text="EventText.propaganda.o1.o1.o1" />
-              </ConversationAction>
+              <RNGAction chance="0.66">
+                <Success>
+                  <SpawnAction itemidentifier="op_sepgraffiti" spawnlocation="Outpost" SpawnPointTag="potentialflyers" TargetTag="separatistgraffiti" offset="0"/>
+                  <StatusEffectAction targettag="separatistgraffiti">
+                    <StatusEffect duration="0.5" spritecolor="255,255,255,150" spritedepth="0.89" setvalue="true">
+                      <Sound file="Content/Items/MechanicalRepairFail.ogg" range="800" volume="0.8" loop="true" frequencymultiplier="2"  />
+                      <ParticleEmitter particle="dustcloud" particleamount="5" velocitymin="50" velocitymax="100" anglemin="0" anglemax="360" scalemin="0.15" scalemax="0.25" Spread="50" distancemin="-50" distancemax="50" colormultiplier="255,255,255,255" />
+                    </StatusEffect>
+                  </StatusEffectAction>
+                  <WaitAction time="0.5" />
+                  <ReputationAction targettype="Faction" identifier="separatists" increase="3" />
+                  <ReputationAction targettype="Faction" identifier="coalition" increase="-2" />
+                  <ConversationAction targettag="triggerer_player" text="EventText.propaganda.o1.o1.c1">
+                    <Option text="EventText.propaganda.o1.o1.o1" />
+                  </ConversationAction>
+                </Success>
+                <Failure>
+                  <SpawnAction itemidentifier="banditprop13" spawnlocation="Outpost" SpawnPointTag="potentialflyers" TargetTag="uglygraffiti1" offset="0"/>
+                  <SpawnAction itemidentifier="banditprop16" spawnlocation="Outpost" SpawnPointTag="potentialflyers" TargetTag="uglygraffiti2" offset="0" />
+                  <StatusEffectAction targettag="uglygraffiti1">
+                    <StatusEffect duration="0.5" spritecolor="255,50,0,150" spritedepth="0.89" setvalue="true">
+                      <Sound file="Content/Items/MechanicalRepairFail.ogg" range="800" volume="0.8" loop="true" frequencymultiplier="2"  />
+                      <ParticleEmitter particle="dustcloud" particleamount="5" velocitymin="50" velocitymax="100" anglemin="0" anglemax="360" scalemin="0.15" scalemax="0.25" Spread="50" distancemin="-50" distancemax="50" colormultiplier="255,255,255,255" />
+                    </StatusEffect>
+                  </StatusEffectAction>
+                  <StatusEffectAction targettag="uglygraffiti2">
+                    <StatusEffect spritecolor="255,50,0,150" spritedepth="0.89" setvalue="true"/>
+                  </StatusEffectAction>
+                  <WaitAction time="0.5" />
+                  <ConversationAction targettag="triggerer_player" text="EventText.propaganda.o1.o2.c1">
+                    <Option text="EventText.propaganda.o1.o2.o1" />
+                  </ConversationAction>
+                </Failure>                
+              </RNGAction>  
             </Option>
             <Option text="EventText.propaganda.o1.o2" />
           </ConversationAction>
@@ -444,12 +488,25 @@
     </ScriptedEvent>
     <!--"Crawler outbreak"-->
     <ScriptedEvent identifier="crawleroutbreak" commonness="250">
-      <TagAction criteria="player" tag="player" />
-      <TriggerAction target1tag="player" targetmoduletype="researchmodule" radius="200" applytotarget1="triggerer_player" />
-      <SpawnAction speciesname="crawler" spawnlocation="Outpost" targetmoduletags="researchmodule" />
-      <SpawnAction speciesname="crawler" spawnlocation="Outpost" targetmoduletags="researchmodule" />
-      <SpawnAction speciesname="crawler" spawnlocation="Outpost" targetmoduletags="researchmodule" />
+      <TagAction criteria="player" tag="player" />  
+      <TagAction criteria="itemtag:containementdoor" tag="containementdoorevent" SubmarineType="Outpost" ContinueIfNoTargetsFound="false"  />
+      <SpawnAction npcsetidentifier="outpostnpcs1" npcidentifier="researcher" targettag="panickedresearcher" spawnlocation="Outpost" targetmoduletags="researchmodule" SpawnPointTag="research" />
+      <!-- make npc run towards you as you enter research module  -->
+      <TriggerAction target1tag="player" targetmoduletype="researchmodule" radius="100" applytotarget1="triggerer_player" />
+      <NPCFollowAction npctag="panickedresearcher" targettag="triggerer_player" follow="True" />
+      <TriggerAction target1tag="panickedresearcher" target2tag="triggerer_player" radius="150" waitforinteraction="false"/>
+      <!-- break down containement door and spawn crawlers -->
+      <StatusEffectAction targettag="containementdoorevent">
+        <StatusEffect indestructible="false" condition="0" setvalue="true" />
+        <Sound file="Content/Items/Door/Doorbreak1.ogg" range="800" volume="1" />
+      </StatusEffectAction>
+      <SpawnAction speciesname="crawler" spawnlocation="Outpost" targetmoduletags="researchmodule" SpawnPointTag="testsubject" spawnpointtype="enemy" RequireSpawnPointTag="true" />
+      <SpawnAction speciesname="crawler" spawnlocation="Outpost" targetmoduletags="researchmodule" SpawnPointTag="testsubject" spawnpointtype="enemy" RequireSpawnPointTag="true" />
+      <SpawnAction speciesname="crawler" spawnlocation="Outpost" targetmoduletags="researchmodule" SpawnPointTag="testsubject" spawnpointtype="enemy" RequireSpawnPointTag="true" />
       <ConversationAction targettag="triggerer_player" text="EventText.crawleroutbreak.c1" eventsprite="ambush"/>
+      <!-- make researcher run out of module after conversation -->
+      <TagAction criteria="hullname:airlock" tag="airlock" submarinetype="Outpost" />
+      <NPCFollowAction npctag="panickedresearcher" targettag="airlock" follow="true" />
     </ScriptedEvent>
     <!--"Taste test"-->
     <ScriptedEvent identifier="tastetest" commonness="150">
@@ -633,24 +690,43 @@
     <!--"Firefighting"-->
     <ScriptedEvent identifier="firefighting" commonness="100">
       <TagAction criteria="player" tag="player" />
-      <TagAction criteria="itemidentifier:opdeco_trashcan" tag="potentialtrashcan" submarinetype="outpost" />
+      <TagAction criteria="itemidentifier:opdeco_trashcan" tag="potentialtrashcan" submarinetype="outpost" chooserandom="true" />
+      <!-- trash can smokes until either extinguished or catches on fire via options. sets conditon to 0 to make it stop -->
+      <StatusEffectAction targettag="potentialtrashcan">
+          <StatusEffect duration="999" interval="1" checkconditionalalways="true" >
+            <Conditional condition="gt 1" />
+            <ParticleEmitter particle="swirlysmoke" particlespersecond="3" velocitymin="25" velocitymax="50" anglemin="70" anglemax="110" scalemin="0.5" scalemax="1" distancemin="20" distancemax="20" colormultiplier="255,255,255,255" drawontop="true" />
+          </StatusEffect>
+      </StatusEffectAction>
       <TriggerAction target1tag="potentialtrashcan" target2tag="player" applytotarget1="selectedtrashcan" applytotarget2="triggerer_player" radius="100" waitforinteraction="true"/>
       <ConversationAction targettag="triggerer_player" text="EventText.firefighting.c1" eventsprite="trashcan">
         <Option text="EventText.firefighting.o1">
           <ConversationAction targettag="triggerer_player" text="EventText.firefighting.o1.c1">
             <Option text="EventText.firefighting.o1.o1">
+              <AfflictionAction targettag="triggerer_player" affliction="burn" strength="15" limbtype="rightarm" />
               <ConversationAction targettag="triggerer_player" text="EventText.firefighting.o1.o1.c1" />
-              <AfflictionAction targettag="triggerer_player" affliction="burn" strength="5" limbtype="rightarm" />
+              <!-- more burns, but you get a cigar. -->
+              <SpawnAction itemidentifier="cigar" TargetTag="burntcigar" targetinventory="triggerer_player" />
+              <StatusEffectAction targettag="potentialtrashcan">
+                <StatusEffect condition="0" setvalue="true" />
+              </StatusEffectAction>
+              <StatusEffectAction targettag="burntcigar">
+                <StatusEffect condition="62" setvalue="true" />
+              </StatusEffectAction>
             </Option>
             <Option text="EventText.firefighting.o1.o2" endconversation="true">
+              <!-- causes a fire after 30 seconds -->
+              <Label name="waitforfire" /> 
               <WaitAction time="30" />
               <FireAction size="10" targettag="selectedtrashcan" />
+              <StatusEffectAction targettag="potentialtrashcan">
+                <StatusEffect condition="0" setvalue="true" />
+              </StatusEffectAction>
             </Option>
           </ConversationAction>
         </Option>
         <Option text="EventText.firefighting.o2" endconversation="true">
-          <WaitAction time="30" />
-          <FireAction size="10" targettag="selectedtrashcan" />
+          <Goto name="waitforfire" />
         </Option>
       </ConversationAction>
     </ScriptedEvent>
@@ -1930,8 +2006,11 @@
     <!--Captive souls-->
     <ScriptedEvent identifier="captivesouls" commonness="50">
       <TagAction criteria="player" tag="player" />
+      <!-- needs a containement tank preplaced or event will not trigger. hopefully in research module -->
+      <TagAction criteria="itemidentifier:op_researchcontainmenttank3" tag="captivesoulstank" SubmarineType="Outpost" chooserandom="true" ContinueIfNoTargetsFound="false" />
       <SpawnAction npcsetidentifier="outpostnpcs1" npcidentifier="researcher" targettag="captivesouls_scientist" targetmoduletags="airlock" spawnlocation="Outpost" />
       <NPCWaitAction npctag="captivesouls_scientist" wait="true" />
+      <!-- scientist conversation -->
       <TriggerAction target1tag="player" target2tag="captivesouls_scientist" applytotarget1="triggerer_player" waitforinteraction="true" />
       <ConversationAction text="EventText.captivesouls.c1" targettag="triggerer_player" eventsprite="mediator">
         <Option text="EventText.captivesouls.o1">
@@ -1953,8 +2032,8 @@
           <!--END-->
         </Option>
       </ConversationAction>
-      <!--Trigger at research module-->
-      <TriggerAction target1tag="triggerer_player" targetmoduletype="researchmodule" radius="100" />
+      <!--Interact with containement tank-->
+      <TriggerAction target1tag="triggerer_player" target2tag="captivesoulstank" waitforinteraction="true" />
       <ConversationAction text="EventText.captivesouls.c1.c1" targettag="triggerer_player">
         <Option text="EventText.captivesouls.c1.o1">
           <ConversationAction text="EventText.captivesouls.c1.o1.c1" targettag="triggerer_player">
@@ -1964,18 +2043,39 @@
                   <ConversationAction text="EventText.captivesouls.c1.o1.o1.o1.c1" targettag="triggerer_player">
                     <Option text="EventText.captivesouls.c1.o1.o1.o1.o1">
                       <ConversationAction text="EventText.captivesouls.c1.o1.o1.o1.o1.c1" targettag="triggerer_player">
-                        <Option text="EventText.captivesouls.c1.o1.o1.o1.o1.o1">
-                          <ConversationAction text="EventText.captivesouls.c1.o1.o1.o1.o1.o1.c1" targettag="triggerer_player">
-                            <Option text="EventText.generic.continue">
-                              <ConversationAction text="EventText.captivesouls.c1.o1.o1.o1.o1.o1.o1.c1" targettag="triggerer_player">
-                                <Option text="EventText.captivesouls.c1.o1.o1.o1.o1.o1.o1.o1">
-                                  <ConversationAction text="EventText.captivesouls.c1.o1.o1.o1.o1.o1.o1.o1.c1" targettag="triggerer_player" endconversation="true" />
-                                  <SpawnAction itemidentifier="alientrinket1" targetinventory="triggerer_player" />
-                                </Option>
-                                <Option text="EventText.captivesouls.c1.o1.o1.o1.o1.o1.o1.o2">
-                                  <ConversationAction text="EventText.captivesouls.c1.o1.o1.o1.o1.o1.o1.o2.c1" targettag="triggerer_player" endconversation="true" />
-                                </Option>
-                              </ConversationAction>
+                        <!-- break the glass and spawn the crawler -->
+                        <Option text="EventText.captivesouls.c1.o1.o1.o1.o1.o1" endconversation="true" >
+                          <StatusEffectAction targettag="captivesoulstank">
+                            <StatusEffect>
+                              <SpawnItem identifier="banditprop7" spawnposition="This" Offset="0,-10"/>
+                              <Sound file="Content/Sounds/Damage/GlassImpact2.ogg" range="500" />
+                              <ParticleEmitter particle="watersplash" particleamount="10" velocitymin="0" velocitymax="50" anglemin="240" anglemax="300" scalemin="1" scalemax="2"  />
+                            </StatusEffect>
+                          </StatusEffectAction>
+                          <SpawnAction speciesname="crawler_hatchling" spawnlocation="Outpost" targetmoduletags="researchmodule" SpawnPointTag="captivesoulstank" TargetTag="crawlerhybrid" />
+                          <StatusEffectAction targettag="crawlerhybrid">
+                            <StatusEffect disabledeltatime="true" >
+                              <!-- stun to prevent crazy ragdolling when it spawns -->
+                              <Affliction identifier="stun" strength="1" />
+                              <Affliction identifier="nausea" strength="100" />    
+                            </StatusEffect>
+                            <StatusEffect delay="2" duration="10">
+                              <!-- dies after a few seconds from organ failure -->
+                              <Affliction identifier="organdamage" strength="3" />                          
+                            </StatusEffect>
+                          </StatusEffectAction>
+                          <!-- 5 seconds after breaking glass, interact with the tank again to grab the curio -->
+                          <!--TODO: make curio "stolen" instead of -reputation? -->
+                          <WaitAction time="5" />
+                          <TriggerAction target1tag="triggerer_player" target2tag="captivesoulstank" waitforinteraction="true" />
+                          <ConversationAction text="EventText.captivesouls.c1.o1.o1.o1.o1.o1.o1.c1" targettag="triggerer_player">
+                            <Option text="EventText.captivesouls.c1.o1.o1.o1.o1.o1.o1.o1">
+                              <ConversationAction text="EventText.captivesouls.c1.o1.o1.o1.o1.o1.o1.o1.c1" targettag="triggerer_player" endconversation="true" />
+                              <SpawnAction itemidentifier="alientrinket1" targetinventory="triggerer_player" />
+                              <ReputationAction targettype="Location" increase="-2" />
+                            </Option>
+                            <Option text="EventText.captivesouls.c1.o1.o1.o1.o1.o1.o1.o2">
+                              <ConversationAction text="EventText.captivesouls.c1.o1.o1.o1.o1.o1.o1.o2.c1" targettag="triggerer_player" endconversation="true" />
                             </Option>
                           </ConversationAction>
                         </Option>

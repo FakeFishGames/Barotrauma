@@ -5701,11 +5701,26 @@
 <eventtext.givingdirections.o2.c2>Just as you’re about to lift the gun, the captain suddenly turns around. Your eyes meet and theirs widen as the situation dawns on them. They reach for the gun.</eventtext.givingdirections.o2.c2>
 <eventtext.givingdirections.o2.o2>Uh oh.</eventtext.givingdirections.o2.o2>
 <eventtext.givingdirections.o3>Ignore them and keep walking.</eventtext.givingdirections.o3>
+
+<!-- Soundinthevent event
+
+added:
+eventtext.soundinthevent.getscrewdriver
+eventtext.soundinthevent.getflashlight
+
+changed:
+eventtext.soundinthevent.o1
+eventtext.soundinthevent.o2 -->
+
 <eventtext.soundinthevent.c1>You hear a strange scraping sound coming from a nearby vent. Curious, you peer through the slats of the vent cover, but it’s far too dark in there to see anything... A moment later you hear the sound again, you’re sure of it!</eventtext.soundinthevent.c1>
-<eventtext.soundinthevent.o1>Unscrew the vent cover to take a better look inside.</eventtext.soundinthevent.o1>
+
+<eventtext.soundinthevent.o1>Try to remove the vent cover to take a better look inside.</eventtext.soundinthevent.o1>
+
 <eventtext.soundinthevent.o1.c1>You manage to get the vent off easily enough and spot the source of the noise right away: The fan blade is brushing against a small metal box. Carefully retrieving it, you open it and find 1,000 marks!</eventtext.soundinthevent.o1.c1>
 <eventtext.soundinthevent.o1.c2>You fumble the vent cover as you’re removing it and brush against the spinning blade. It slices into your hand before you can pull away, nicking an artery.</eventtext.soundinthevent.o1.c2>
-<eventtext.soundinthevent.o2>Shine your flashlight through the vent slats and see if you can spot anything unusual.</eventtext.soundinthevent.o2>
+
+<eventtext.soundinthevent.o2>See if you can spot anything unusual...</eventtext.soundinthevent.o2>
+
 <eventtext.soundinthevent.o2.c1>An enraged mudraptor bursts from the vent!</eventtext.soundinthevent.o2.c1>
 <eventtext.soundinthevent.o2.c2>Three enraged mudraptors burst from the vent!</eventtext.soundinthevent.o2.c2>
 <eventtext.soundinthevent.o3>Ignore it.</eventtext.soundinthevent.o3>
@@ -5715,6 +5730,10 @@
 <eventtext.soundinthevent.o3.o2>Bah!</eventtext.soundinthevent.o3.o2>
 <eventtext.soundinthevent.o3.c3>You decide you don’t have time for this nonsense and creep past the noisy vent, but you get the nagging feeling you've not seen the end of this yet...</eventtext.soundinthevent.o3.c3>
 <eventtext.soundinthevent.o3.o3>A foreshadowing?</eventtext.soundinthevent.o3.o3>
+
+<eventtext.soundinthevent.getscrewdriver>The grate is shut tight. Maybe you could try to unscrew it...</eventtext.soundinthevent.getscrewdriver>
+<eventtext.soundinthevent.getflashlight>It's too dark inside, you can't see anything. Maybe shining some light would help?</eventtext.soundinthevent.getflashlight>
+
 <eventtext.impromptuengineering.c1>A nearby research terminal draws your attention. It flickers on and off rapidly for a while, then goes dark.</eventtext.impromptuengineering.c1>
 <eventtext.impromptuengineering.o1>Diagnose.</eventtext.impromptuengineering.o1>
 <eventtext.impromptuengineering.o1.c1>You try pressing a couple buttons. No response. Opening a side panel reveals a tangle of wires and some kind of a processing unit seemingly in perfect condition.</eventtext.impromptuengineering.o1.c1>
@@ -5763,14 +5782,25 @@
 <eventtext.goodsamaritan.o2>Check their pockets.</eventtext.goodsamaritan.o2>
 <eventtext.goodsamaritan.o2.c1>You find some spare change in their pocket, but a passerby catches you in the act. It seems looting injured people is frowned upon here.</eventtext.goodsamaritan.o2.c1>
 <eventtext.goodsamaritan.o3>Step over their body and continue on.</eventtext.goodsamaritan.o3>
+
+<!-- Propaganda event
+added:
+eventtext.propaganda.o1.o2.c1
+eventtext.propaganda.o1.o2.o1 -->
+
 <eventtext.propaganda.c1>A row of posters line the wall. It looks like the outpost directorial election is coming up. A gallery of stern-looking people are observing the hallway, conveniently grouped according to their political affiliation.</eventtext.propaganda.c1>
 <eventtext.propaganda.o1>Inspect the posters.</eventtext.propaganda.o1>
 <eventtext.propaganda.o1.c1>Some of the Coalition Party’s boards have fallen victim to vandalism. “Bring power back to the hands of the people!” and “Down with the oligarchy!” are some of the catchphrases spray-painted on candidates’ faces. Separatists up to their usual tricks.</eventtext.propaganda.o1.c1>
 <eventtext.propaganda.o1.o1>Add some of your own flair too.</eventtext.propaganda.o1.o1>
 <eventtext.propaganda.o1.o1.c1>You draw some vulgar art of your own, then quickly move on before the fascists catch you in the act.</eventtext.propaganda.o1.o1.c1>
 <eventtext.propaganda.o1.o1.o1>That'll show them.</eventtext.propaganda.o1.o1.o1>
+
+<eventtext.propaganda.o1.o2.c1>You might be a rebel, but you're not an artist. Your "drawing" is too abstract, even for your own crew.</eventtext.propaganda.o1.o2.c1>
+<eventtext.propaganda.o1.o2.o1>It's not that ugly...</eventtext.propaganda.o1.o2.o1>
+
 <eventtext.propaganda.o1.o2>Keep walking.</eventtext.propaganda.o1.o2>
 <eventtext.propaganda.o2>Not interested in outpost politics.</eventtext.propaganda.o2>
+
 <eventtext.goblincooking1.c1>As you’re walking down the hallway, you catch a whiff of something sweet.</eventtext.goblincooking1.c1>
 <eventtext.goblincooking1.o1>“Who’s cooking?”</eventtext.goblincooking1.o1>
 <eventtext.goblincooking1.o1.c1>You sniff around and find the aroma coming from a nearby vent. Suddenly you feel very hungry.</eventtext.goblincooking1.o1.c1>
@@ -6253,6 +6283,21 @@
 <eventtext.bombscare.o1.o1.o1.c1.o1.o1.c1>You drop the bomb and dive down onto the floor, covering your head with your hands. Seconds pass by, but nothing happens. Gingerly, you stand up and dust yourself off. Seems like this bomb is a dud. The guard from earlier should be interested in seeing this.</eventtext.bombscare.o1.o1.o1.c1.o1.o1.c1>
 <eventtext.bombscare.o1.o1.o1.c1.o1.o1.c1.c1>You report finding a bomb in the hallway and the guard immediately springs to action. They thank you for finding and reporting the bomb.</eventtext.bombscare.o1.o1.o1.c1.o1.o1.c1.c1>
 <eventtext.bombscare.o1.o2>Leave the guard.</eventtext.bombscare.o1.o2>
+
+<!-- Terrorism101 event
+added:
+eventtext.terrorism101.bombsound
+eventtext.terrorism101.aftermath
+eventtext.terrorism101.bootlicker
+
+modified:
+eventtext.terrorism101.bombarmed
+
+delete, the event was using duplicate lines instead of looping to an earlier option
+eventtext.terrorism101.o1.o2.o1.o2
+eventtext.terrorism101.o1.o2.o2
+-->
+
 <eventtext.terrorism101.c1>You see a person crouched next to a vending machine, assembling or fixing something.</eventtext.terrorism101.c1>
 <eventtext.terrorism101.o1>Find out what they're working on.</eventtext.terrorism101.o1>
 <eventtext.terrorism101.o1.c1>You sneak behind the person and crane your neck. It seems they're fiddling with some kind of a device with lots of wires. They glance back and jump up when they see you. “Shit! Don't just stand there!”</eventtext.terrorism101.o1.c1>
@@ -6265,15 +6310,26 @@
 <eventtext.terrorism101.help>“I could help you with that.”</eventtext.terrorism101.help>
 <eventtext.terrorism101.novice>The novice terrorist scrutinizes you for a minute, then warily hands you a bunch of wires. “I think I can trust you,” they say.</eventtext.terrorism101.novice>
 <eventtext.terrorism101.armbomb>Arm the bomb.</eventtext.terrorism101.armbomb>
-<eventtext.terrorism101.bombarmed>It's only a matter of connecting the detonator wire to get the bomb armed. You hand the bomb to the person and they give you some change and a promise to talk you up to their Separatist friends.</eventtext.terrorism101.bombarmed>
+
+<eventtext.terrorism101.bombarmed>It's only a matter of connecting the detonator wire to get the bomb armed. "You know your way around explosives!".</eventtext.terrorism101.bombarmed>
+
+<eventtext.terrorism101.bombsound>Wait, what's that sound?</eventtext.terrorism101.bombsound>
+<eventtext.terrorism101.aftermath>"We almost died there!". The freshly-graduated terrorist is visibly shaken. "This was WAY too dangerous. I'll stick to distributing leaflets for the revolution..." </eventtext.terrorism101.aftermath>
+
 <eventtext.terrorism101.dismantlebomb>Quietly dismantle the bomb.</eventtext.terrorism101.dismantlebomb>
 <eventtext.terrorism101.bombdismantled>You pretend to arm the bomb, but instead you remove some of the wires, making sure the bomb can't go off. The person hands you some change as a reward and promises to talk you up to their Separatist friends.</eventtext.terrorism101.bombdismantled>
 <eventtext.terrorism101.o1.o1.o1.o1.o2>“Keep it that way. Terrorism is no way of life.”</eventtext.terrorism101.o1.o1.o1.o1.o2>
+
+<eventtext.terrorism101.bootlicker>"Always the same thing with you bootlickers!" You've angered the wannabe bomber. "Someone has to rise up and take down the system!". Probably not that one... </eventtext.terrorism101.bootlicker>
+
 <eventtext.terrorism101.o1.o1.o1.o2>“Never mind. I'm getting the guards.”</eventtext.terrorism101.o1.o1.o1.o2>
 <eventtext.terrorism101.o1.o1.o2>“Sorry to hear that. See you later.”</eventtext.terrorism101.o1.o1.o2>
 <eventtext.terrorism101.o1.o2>“What's that you're working on?”</eventtext.terrorism101.o1.o2>
+
+<!-- delete this -->
 <eventtext.terrorism101.o1.o2.o1.o2>“Keep it that way. Terrorism is no way of life.”</eventtext.terrorism101.o1.o2.o1.o2>
 <eventtext.terrorism101.o1.o2.o2>“Never mind. I'm getting the guards.”</eventtext.terrorism101.o1.o2.o2>
+
 <eventtext.stuckinthemiddle.c1>This colony is in a hurry. Lots of workers are loading supplies onto submarines.  You see a pair of them arguing quietly and gesturing toward you.</eventtext.stuckinthemiddle.c1>
 <eventtext.stuckinthemiddle.o1>Walk up to them.</eventtext.stuckinthemiddle.o1>
 <eventtext.stuckinthemiddle.o1.c1>On your approach, the pair instantly quiets down. Up close you can see an anarchist patch on one of their jackets, revealing them to be separatists. “Didn't you help us out earlier?” the other asks.</eventtext.stuckinthemiddle.o1.c1>
