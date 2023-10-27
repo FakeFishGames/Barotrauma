@@ -238,7 +238,7 @@ namespace Barotrauma
             return folder;
         }
 
-        public static IReadOnlyList<CampaignMode.SaveInfo> GetSaveFiles(SaveType saveType, bool includeInCompatible = true)
+        public static IReadOnlyList<CampaignMode.SaveInfo> GetSaveFiles(SaveType saveType, bool includeInCompatible = true, bool logLoadErrors = true)
         {
             string defaultFolder = saveType == SaveType.Singleplayer ? DefaultSaveFolder : DefaultMultiplayerSaveFolder;
             if (!Directory.Exists(defaultFolder))
@@ -273,7 +273,7 @@ namespace Barotrauma
             List<CampaignMode.SaveInfo> saveInfos = new List<CampaignMode.SaveInfo>();   
             foreach (string file in files)
             {
-                var docRoot = ExtractGameSessionRootElementFromSaveFile(file);
+                var docRoot = ExtractGameSessionRootElementFromSaveFile(file, logLoadErrors);
                 if (!includeInCompatible && !IsSaveFileCompatible(docRoot))
                 {
                     continue;
@@ -561,7 +561,7 @@ namespace Barotrauma
         /// Extract *only* the root element of the gamesession.xml file in the given save.
         /// For performance reasons, none of its child elements are returned.
         /// </summary>
-        public static XElement? ExtractGameSessionRootElementFromSaveFile(string savePath)
+        public static XElement? ExtractGameSessionRootElementFromSaveFile(string savePath, bool logLoadErrors = true)
         {
             const int maxRetries = 4;
             for (int i = 0; i <= maxRetries; i++)
@@ -617,12 +617,19 @@ namespace Barotrauma
                     if (i >= maxRetries || !File.Exists(savePath)) { throw; }
 
                     DebugConsole.NewMessage(
-                        $"Failed to decompress file \"{savePath}\" for root extraction {{{e.Message}}}, retrying in 250 ms...",
+                        $"Failed to decompress file \"{savePath}\" for root extraction ({e.Message}), retrying in 250 ms...",
                         Color.Red);
                     Thread.Sleep(250);
                 }
+                catch (System.IO.InvalidDataException e)
+                {
+                    if (logLoadErrors)
+                    {
+                        DebugConsole.ThrowError($"Failed to decompress file \"{savePath}\" for root extraction.", e);
+                    }
+                    return null;
+                }
             }
-
             return null;
         }
 
