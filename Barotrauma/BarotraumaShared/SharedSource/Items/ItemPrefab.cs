@@ -843,7 +843,7 @@ namespace Barotrauma
         }
 
         private int maxStackSizeCharacterInventory;
-        [Serialize(-1, IsPropertySaveable.No)]
+        [Serialize(-1, IsPropertySaveable.No, description: "Maximum stack size when the item is in a character inventory.")]
         public int MaxStackSizeCharacterInventory
         {
             get { return maxStackSizeCharacterInventory; }
@@ -851,7 +851,9 @@ namespace Barotrauma
         }
 
         private int maxStackSizeHoldableOrWearableInventory;
-        [Serialize(-1, IsPropertySaveable.No)]
+        [Serialize(-1, IsPropertySaveable.No, description: 
+            "Maximum stack size when the item is inside a holdable or wearable item. "+
+            "If not set, defaults to MaxStackSizeCharacterInventory.")]
         public int MaxStackSizeHoldableOrWearableInventory
         {
             get { return maxStackSizeHoldableOrWearableInventory; }
@@ -864,15 +866,20 @@ namespace Barotrauma
             {
                 return maxStackSizeCharacterInventory;
             }
-            else if (maxStackSizeHoldableOrWearableInventory > 0 &&
-                inventory?.Owner is Item item && (item.GetComponent<Holdable>() != null || item.GetComponent<Wearable>() != null))
+            else if (inventory?.Owner is Item item && 
+                (item.GetComponent<Holdable>() is { Attachable: false } || item.GetComponent<Wearable>() != null))
             {
-                return maxStackSizeHoldableOrWearableInventory;
+                if (maxStackSizeHoldableOrWearableInventory > 0)
+                {
+                    return maxStackSizeHoldableOrWearableInventory;
+                }
+                else if (maxStackSizeCharacterInventory > 0)
+                {
+                    //if maxStackSizeHoldableOrWearableInventory is not set, it defaults to maxStackSizeCharacterInventory
+                    return maxStackSizeCharacterInventory;
+                }
             }
-            else
-            {
-                return maxStackSize;
-            }
+            return maxStackSize;            
         }
 
         [Serialize(false, IsPropertySaveable.No)]
@@ -880,7 +887,7 @@ namespace Barotrauma
 
         public ImmutableHashSet<Identifier> AllowDroppingOnSwapWith { get; private set; }
 
-        [Serialize(false, IsPropertySaveable.No)]
+        [Serialize(false, IsPropertySaveable.No, "If enabled, the item is not transferred when the player transfers items between subs.")]
         public bool DontTransferBetweenSubs { get; private set; }
 
         [Serialize(true, IsPropertySaveable.No)]
@@ -1032,6 +1039,7 @@ namespace Barotrauma
             var levelCommonness = new Dictionary<Identifier, CommonnessInfo>();
             var levelQuantity = new Dictionary<Identifier, FixedQuantityResourceInfo>();
 
+            List<FabricationRecipe> loadedRecipes = new List<FabricationRecipe>();
             foreach (ContentXElement subElement in ConfigElement.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
@@ -1114,9 +1122,10 @@ namespace Barotrauma
                         var newRecipe = new FabricationRecipe(subElement, Identifier);
                         if (fabricationRecipes.TryGetValue(newRecipe.RecipeHash, out var prevRecipe))
                         {
+                            int prevRecipeIndex = loadedRecipes.IndexOf(prevRecipe);
                             DebugConsole.ThrowError(
                                 $"Error in item prefab \"{ToString()}\": " +
-                                $"{prevRecipe.TargetItemPrefabIdentifier} has the same hash as {newRecipe.TargetItemPrefabIdentifier}. " +
+                                $"Fabrication recipe #{loadedRecipes.Count + 1} has the same hash as recipe #{prevRecipeIndex + 1}. This is most likely caused by identical, duplicate recipes." +
                                 $"This will cause issues with fabrication."
                             );
                         }
@@ -1124,6 +1133,7 @@ namespace Barotrauma
                         {
                             fabricationRecipes.Add(newRecipe.RecipeHash, newRecipe);
                         }
+                        loadedRecipes.Add(newRecipe);
                         break;
                     case "preferredcontainer":
                         var preferredContainer = new PreferredContainer(subElement);

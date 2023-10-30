@@ -1245,7 +1245,7 @@ namespace Barotrauma
 
         private static void CreateWallDamageExplosion(Gap gap, Character attacker)
         {
-            const float explosionRange = 750.0f;
+            const float explosionRange = 500.0f;
             float explosionStrength = gap.Open;
 
             var linkedHull = gap.linkedTo.FirstOrDefault() as Hull;
@@ -1264,20 +1264,22 @@ namespace Barotrauma
 
             if (explosionOnBroken == null)
             {
-                explosionOnBroken = new Explosion(explosionRange, force: 10.0f, damage: 0.0f, structureDamage: 0.0f, itemDamage: 0.0f);
+                explosionOnBroken = new Explosion(explosionRange, force: 5.0f, damage: 0.0f, structureDamage: 0.0f, itemDamage: 0.0f);
                 if (AfflictionPrefab.Prefabs.TryGet("lacerations".ToIdentifier(), out AfflictionPrefab lacerations))
                 {
-                    explosionOnBroken.Attack.Afflictions.Add(lacerations.Instantiate(3.0f), null);
+                    explosionOnBroken.Attack.Afflictions.Add(lacerations.Instantiate(5.0f), null);
                 }
                 else
                 {
-                    explosionOnBroken.Attack.Afflictions.Add(AfflictionPrefab.InternalDamage.Instantiate(3.0f), null);
+                    explosionOnBroken.Attack.Afflictions.Add(AfflictionPrefab.InternalDamage.Instantiate(5.0f), null);
                 }
-                explosionOnBroken.IgnoreCover = true;
+                explosionOnBroken.IgnoreCover = false;
                 explosionOnBroken.OnlyInside = true;
+                explosionOnBroken.DistanceFalloff = false;
                 explosionOnBroken.DisableParticles();
             }
 
+            explosionOnBroken.IgnoredCover = gap.ConnectedWall?.ToEnumerable();
             explosionOnBroken.Attack.Range = explosionRange * gap.Open;
             explosionOnBroken.Attack.DamageMultiplier = explosionStrength;
             explosionOnBroken.Attack.Stun = MathHelper.Clamp(explosionStrength, 0.5f, 1.0f);

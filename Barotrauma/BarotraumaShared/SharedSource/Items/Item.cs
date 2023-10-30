@@ -862,7 +862,25 @@ namespace Barotrauma
         {
             get
             {
-                return ownInventory?.AllItems ?? Enumerable.Empty<Item>();
+                if (OwnInventories.Length < 2)
+                {
+                    if (OwnInventory == null) { yield break; }
+
+                    foreach (var item in OwnInventory.AllItems)
+                    {
+                        yield return item;
+                    }
+                }
+                else
+                {
+                    foreach (var inventory in OwnInventories)
+                    {
+                        foreach (var item in inventory.AllItems)
+                        {
+                            yield return item;
+                        }
+                    }
+                }
             }
         }
 
@@ -870,6 +888,8 @@ namespace Barotrauma
         {
             get { return ownInventory; }
         }
+
+        public readonly ImmutableArray<ItemInventory> OwnInventories = ImmutableArray<ItemInventory>.Empty;
 
         [Editable, Serialize(false, IsPropertySaveable.Yes, description:
             "Enable if you want to display the item HUD side by side with another item's HUD, when linked together. " +
@@ -1191,6 +1211,8 @@ namespace Barotrauma
             {
                 ownInventory = itemContainer.Inventory;
             }
+
+            OwnInventories = GetComponents<ItemContainer>().Select(ic => ic.Inventory).ToImmutableArray();
 
             qualityComponent = GetComponent<Quality>();
 
@@ -2533,8 +2555,7 @@ namespace Barotrauma
             foreach (Connection c in connectionPanel.Connections)
             {
                 if (connectionFilter != null && !connectionFilter.Invoke(c)) { continue; }
-                var recipients = c.Recipients;
-                foreach (Connection recipient in recipients)
+                foreach (Connection recipient in c.Recipients)
                 {
                     var component = recipient.Item.GetComponent<T>();
                     if (component != null && !connectedComponents.Contains(component))
@@ -2587,9 +2608,20 @@ namespace Barotrauma
         private void GetConnectedComponentsRecursive<T>(Connection c, HashSet<Connection> alreadySearched, List<T> connectedComponents, bool ignoreInactiveRelays, bool allowTraversingBackwards = true) where T : ItemComponent
         {
             alreadySearched.Add(c);
-                        
-            var recipients = c.Recipients;
-            foreach (Connection recipient in recipients)
+            static IEnumerable<Connection> GetRecipients(Connection c)
+            {
+                foreach (Connection recipient in c.Recipients)
+                {
+                    yield return recipient;
+                }
+                //check circuit box inputs/outputs this connection is connected to
+                foreach (var circuitBoxConnection in c.CircuitBoxConnections)
+                {
+                    yield return circuitBoxConnection.Connection;
+                }
+            }
+
+            foreach (Connection recipient in GetRecipients(c))
             {
                 if (alreadySearched.Contains(recipient)) { continue; }
                 var component = recipient.Item.GetComponent<T>();                    
@@ -2598,23 +2630,53 @@ namespace Barotrauma
                     connectedComponents.Add(component);
                 }
 
-                //connected to a wifi component -> see which other wifi components it can communicate with
-                var wifiComponent = recipient.Item.GetComponent<WifiComponent>();
-                if (wifiComponent != null && wifiComponent.CanTransmit())
+                var circuitBox = recipient.Item.GetComponent<CircuitBox>();
+                if (circuitBox != null)
                 {
-                    foreach (var wifiReceiver in wifiComponent.GetTransmittersInRange())
+                    //if this is a circuit box, check what the connection is connected to inside the box
+                    var potentialCbConnection = circuitBox.FindInputOutputConnection(recipient);
+                    if (potentialCbConnection.TryUnwrap(out var cbConnection))
                     {
-                        var receiverConnections = wifiReceiver.Item.Connections;
-                        if (receiverConnections == null) { continue; }
-                        foreach (Connection wifiOutput in receiverConnections)
+                        if (cbConnection is CircuitBoxInputConnection inputConnection)
                         {
-                            if ((wifiOutput.IsOutput == recipient.IsOutput) || alreadySearched.Contains(wifiOutput)) { continue; }
-                            GetConnectedComponentsRecursive(wifiOutput, alreadySearched, connectedComponents, ignoreInactiveRelays, allowTraversingBackwards);
+                            foreach (var connectedTo in inputConnection.ExternallyConnectedTo)
+                            {
+                                if (alreadySearched.Contains(connectedTo.Connection)) { continue; }
+                                CheckRecipient(connectedTo.Connection);
+                            }
+                        }
+                        else
+                        {
+                            foreach (var connectedFrom in cbConnection.ExternallyConnectedFrom)
+                            {
+                                if (alreadySearched.Contains(connectedFrom.Connection) || !allowTraversingBackwards) { continue; }
+                                CheckRecipient(connectedFrom.Connection);
+                            }
                         }
                     }
                 }
+                CheckRecipient(recipient);
 
-                recipient.Item.GetConnectedComponentsRecursive(recipient, alreadySearched, connectedComponents, ignoreInactiveRelays, allowTraversingBackwards);                   
+                void CheckRecipient(Connection recipient)
+                {
+                    //connected to a wifi component -> see which other wifi components it can communicate with
+                    var wifiComponent = recipient.Item.GetComponent<WifiComponent>();
+                    if (wifiComponent != null && wifiComponent.CanTransmit())
+                    {
+                        foreach (var wifiReceiver in wifiComponent.GetTransmittersInRange())
+                        {
+                            var receiverConnections = wifiReceiver.Item.Connections;
+                            if (receiverConnections == null) { continue; }
+                            foreach (Connection wifiOutput in receiverConnections)
+                            {
+                                if ((wifiOutput.IsOutput == recipient.IsOutput) || alreadySearched.Contains(wifiOutput)) { continue; }
+                                GetConnectedComponentsRecursive(wifiOutput, alreadySearched, connectedComponents, ignoreInactiveRelays, allowTraversingBackwards);
+                            }
+                        }
+                    }
+
+                    recipient.Item.GetConnectedComponentsRecursive(recipient, alreadySearched, connectedComponents, ignoreInactiveRelays, allowTraversingBackwards); 
+                }                  
             }
 
             if (ignoreInactiveRelays)

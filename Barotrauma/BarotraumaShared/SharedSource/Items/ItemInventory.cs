@@ -58,12 +58,12 @@ namespace Barotrauma
             return itemPrefab != null && slots[i].CanBePut(itemPrefab, condition, quality) && slots[i].Items.Count < container.GetMaxStackSize(i);
         }
 
-        public override int HowManyCanBePut(ItemPrefab itemPrefab, int i, float? condition)
+        public override int HowManyCanBePut(ItemPrefab itemPrefab, int i, float? condition, bool ignoreItemsInSlot = false)
         {
             if (itemPrefab == null) { return 0; }
             if (i < 0 || i >= slots.Length) { return 0; }
             if (!container.CanBeContained(itemPrefab, i)) { return 0; }
-            return slots[i].HowManyCanBePut(itemPrefab, maxStackSize: Math.Min(itemPrefab.GetMaxStackSize(this), container.GetMaxStackSize(i)), condition);
+            return slots[i].HowManyCanBePut(itemPrefab, maxStackSize: Math.Min(itemPrefab.GetMaxStackSize(this), container.GetMaxStackSize(i)), condition, ignoreItemsInSlot);
         }
 
         public override bool IsFull(bool takeStacksIntoAccount = false)

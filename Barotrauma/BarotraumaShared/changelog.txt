@@ -1,4 +1,30 @@
 -------------------------------------------------------------------------------------------------------------------------------------------------
+v1.1.19.3
+-------------------------------------------------------------------------------------------------------------------------------------------------
+
+- Fixed shrapnel from flak cannon ammo always launching upwards.
+- Fixed wall damage shrapnel going through walls and being a little excessive overall.
+- Fixes to pressure distribution logic: fixes pressure sometimes being lethal in breached rooms that weren't full of water.
+- Fixed clients not regaining control of their braindead character after rejoining if the character's taken any amount of damage while braindead. 
+- Fixes to inconsistent stack sizes (e.g. certain ammo types stacking up to 12 in character inventories, but only 8 holdable/wearable items like backpacks and toolbelts.
+- Fixed console errors when switching subs with circuit boxes on board.
+- Fixed items that are inside a container that doesn't get transferred getting duplicated during item transfer when switching subs.
+- Fixed bots not cleaning up circuit boxes from the floor.
+- Fixed stack size being displayed incorrectly in the tooltip when dragging a stack of items to an already-occupied slot.
+- Fixed nav terminal's docking button not working if the signal is routed from the terminal to the docking port through a circuit box.
+- Fixed double-clicking a component while a circuit box is equipped making the component vanish inside the circuit box.
+- Fixed chat messages sent when accusing someone as a traitor not triggering the spam filter.
+- Fixed connection names not being translated in circuit boxes (always showed up in English).
+- Fixed right-side crew panel overlapping with the mission panel in the PvP mode round summary.
+- Fixed depleted and fulgurium fuel rods stacking up to 32 (should be 8 like all other fuel rods).
+
+Modding:
+- Added "UseHumanAI" property to characters (can be used to enable the human AI on characters other than humans). While using the human AI on non-humans isn't a fully supported or tested feature, it was previously possible to do that by creating a human prefab using a different species than human, but that no longer worked as of the Treacherous Tides update.
+- Attachable holdable items don't count as "HoldableOrWearableInventories". Fixes e.g. tanks only stacking up to 1 in things like movable cabinets and shelves. Does not affect any vanilla content.
+- Fixed fabricator reducing the condition of all the available ingredients if the crafting recipe reduces condition instead of consuming the whole item.
+- Fixed TagAction continuing in some situations when it can't find targets, even if it's been configured not to with the "ContinueIfNoTargetsFound" attribute. 
+
+-------------------------------------------------------------------------------------------------------------------------------------------------
 v1.1.18.1
 -------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -316,25 +342,6 @@ Modding:
 - Fixed only properties that are editable in the editor getting copied to cloned entities in the sub editor. E.g. if you'd edited something like a door's welding state in an item assembly, copypasting the door would make it unwelded.
 - New actions for scripted events: CheckVisibilityAction, CountTargetsAction, WaitForItemUsedAction, WaitForItemFabricatedAction, OnRoundEndAction, EventLogAction.
 - Made the tutorial objective list non-tutorial-specific and usable in multiplayer, and renamed TutorialSegmentAction as EventObjectiveAction.
-
----------------------------------------------------------------------------------------------------------
-v1.0.21.0
----------------------------------------------------------------------------------------------------------
-
-Fixes:
-- Fixed LOS effect sometimes "lagging behind" when the sub is moving fast.
-- Fixed some minor visual issues (occasional jitter/flickering) on the LOS effect.
-- Fixed some issues in the bot AI that we're causing a large performance hit particularly in situations when there's lots of bots in a sub with leaks.
-- Fixed bots abandoning their orders (such as operating a turret) if the room is unsafe (e.g. flooded).
-- Fixed an issue in character syncing that occasionally caused disconnects with the error message "Exception thrown while reading segment EntityPosition, tried to read too much data from segment".
-- Fixed wires set to be hidden in-game (e.g. invisible circuits built outside the sub) being visible on the Electrician's Goggles.
-- Fixed an issue with level resources that caused crashes with certain mods (e.g. ones that include subs with piezo crystals).
-- Fixed NPCs waiting on some outpost modules never reaching their targets, causing peculiar behavior.
-- Fixed waypoints sometimes not getting connected between outpost modules if there's a very short hallway between them. Addresses some cities missing connections between waypoints, causing AI to be unable to navigate through the modules.
-- Fixed some UI layout issues (most noticeably, ultra-wide crew list) on certain resolutions like 3440x1440.
-- Fixed campaign saves occasionally failing to load with the error "an item with the same key has already been added". Seemed to only occur when using certain mods.
-- Fixed crashing when you e.g. use a pet from some mod in the campaign, disable the mod and reload the save.
-- Waypoint adjustments to most submarines, outposts, wrecks, and beacons. Especially on ladders. Should take care of the remaining AI issues on ladders (the old subs in the saves don't get updated, but the fixes apply to new subs that you don't yet own. And ofc all the subs in a new game!)
 
 ---------------------------------------------------------------------------------------------------------
 v1.0.21.0

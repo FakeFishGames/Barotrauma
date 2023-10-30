@@ -98,11 +98,11 @@ namespace Barotrauma
             }
 
             /// <param name="maxStackSize">Defaults to <see cref="ItemPrefab.MaxStackSize"/> if null</param>
-            public int HowManyCanBePut(ItemPrefab itemPrefab, int? maxStackSize = null, float? condition = null)
+            public int HowManyCanBePut(ItemPrefab itemPrefab, int? maxStackSize = null, float? condition = null, bool ignoreItemsInSlot = false)
             {
                 if (itemPrefab == null) { return 0; }
                 maxStackSize ??= itemPrefab.GetMaxStackSize(inventory);
-                if (items.Count > 0)
+                if (items.Count > 0 && !ignoreItemsInSlot)
                 {
                     if (condition.HasValue)
                     {
@@ -517,10 +517,10 @@ namespace Barotrauma
             return count;
         }
 
-        public virtual int HowManyCanBePut(ItemPrefab itemPrefab, int i, float? condition)
+        public virtual int HowManyCanBePut(ItemPrefab itemPrefab, int i, float? condition, bool ignoreItemsInSlot = false)
         {
             if (i < 0 || i >= slots.Length) { return 0; }
-            return slots[i].HowManyCanBePut(itemPrefab, condition: condition);
+            return slots[i].HowManyCanBePut(itemPrefab, condition: condition, ignoreItemsInSlot: ignoreItemsInSlot);
         }
 
         /// <summary>

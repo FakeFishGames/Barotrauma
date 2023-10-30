@@ -1505,14 +1505,28 @@ namespace Barotrauma
                         int stackAmount = DraggingItems.Count;
                         if (selectedSlot?.ParentInventory != null)
                         {
-                            stackAmount = Math.Min(
-                                stackAmount,
-                                selectedSlot.ParentInventory.HowManyCanBePut(draggedItem.Prefab, selectedSlot.SlotIndex, draggedItem.Condition));
+                            if (selectedSlot.Item?.OwnInventory != null)
+                            {
+                                int maxAmountPerSlot = 0;
+                                for (int i = 0; i < SelectedSlot.Item.OwnInventory.Capacity; i++)
+                                {
+                                    maxAmountPerSlot = Math.Max(
+                                        maxAmountPerSlot,
+                                        selectedSlot.Item.OwnInventory.HowManyCanBePut(draggedItem.Prefab, i, draggedItem.Condition, ignoreItemsInSlot: true));
+                                }
+                                stackAmount = Math.Min(stackAmount, maxAmountPerSlot);
+                            }
+                            else
+                            {
+                                stackAmount = Math.Min(
+                                    stackAmount,
+                                    selectedSlot.ParentInventory.HowManyCanBePut(draggedItem.Prefab, selectedSlot.SlotIndex, draggedItem.Condition, ignoreItemsInSlot: true));
+                            }
                         }
                         Vector2 stackCountPos = itemPos + Vector2.One * iconSize * 0.25f;
                         string stackCountText = "x" + stackAmount;
                         GUIStyle.SmallFont.DrawString(spriteBatch, stackCountText, stackCountPos + Vector2.One, Color.Black);
-                        GUIStyle.SmallFont.DrawString(spriteBatch, stackCountText, stackCountPos, GUIStyle.TextColorBright);
+                        GUIStyle.SmallFont.DrawString(spriteBatch, stackCountText, stackCountPos, GUIStyle.TextColorBright);                        
                     }
                 }
             }

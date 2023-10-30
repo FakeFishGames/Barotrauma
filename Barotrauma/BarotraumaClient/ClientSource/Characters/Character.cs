@@ -336,7 +336,10 @@ namespace Barotrauma
                         float pressure = AnimController.CurrentHull == null ? 100.0f : AnimController.CurrentHull.LethalPressure;
                         if (pressure > 0.0f)
                         {
-                            float zoomInEffectStrength = MathHelper.Clamp(pressure / 100.0f, 0.1f, 1.0f);
+                            //lerp in during the 1st second of the pressure timer so the zoom doesn't
+                            //"flicker" in and out if the pressure fluctuates around the minimum threshold
+                            float timerMultiplier = (PressureTimer / 100.0f);
+                            float zoomInEffectStrength = MathHelper.Clamp(pressure / 100.0f * timerMultiplier, 0.0f, 1.0f);
                             cam.Zoom = MathHelper.Lerp(cam.Zoom,
                                 cam.DefaultZoom + (Math.Max(pressure, 10) / 150.0f) * Rand.Range(0.9f, 1.1f),
                                 zoomInEffectStrength);

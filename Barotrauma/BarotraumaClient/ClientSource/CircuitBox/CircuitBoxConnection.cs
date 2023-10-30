@@ -8,24 +8,25 @@ namespace Barotrauma
 {
     internal abstract partial class CircuitBoxConnection
     {
-        public string Name => Label.Value.Value;
+        public string Name => Connection.Name;
+
         public CircuitBoxLabel Label { get; private set; }
 
         private Sprite? knobSprite,
                         screwSprite,
                         connectorSprite;
 
-        private static int padding => GUI.IntScale(8);
+        private static int Padding => GUI.IntScale(8);
 
         private Option<LocalizedString> tooltip = Option.None;
 
         private partial void InitProjSpecific(CircuitBox circuitBox)
         {
-            Label = new CircuitBoxLabel(Connection.Name, GUIStyle.SubHeadingFont);
+            Label = new CircuitBoxLabel(Connection.DisplayName, GUIStyle.SubHeadingFont);
             knobSprite = circuitBox.ConnectionSprite;
             screwSprite = circuitBox.ConnectionScrewSprite;
             connectorSprite = circuitBox.WireConnectorSprite;
-            Length = Rect.Width + padding + Label.Size.X;
+            Length = Rect.Width + Padding + Label.Size.X;
         }
 
         public void Draw(SpriteBatch spriteBatch, Vector2 drawPos, Vector2 parentPos, Color color)
@@ -41,11 +42,11 @@ namespace Barotrauma
             float xPos;
             if (IsOutput)
             {
-                xPos = drawRect.Left - padding - Label.Size.X;
+                xPos = drawRect.Left - Padding - Label.Size.X;
             }
             else
             {
-                xPos = drawRect.Right + padding;
+                xPos = drawRect.Right + Padding;
             }
 
             Vector2 stringPos = new Vector2(xPos, drawRect.Center.Y - Label.Size.Y / 2f);

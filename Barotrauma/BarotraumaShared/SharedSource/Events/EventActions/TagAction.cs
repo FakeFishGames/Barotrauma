@@ -36,7 +36,19 @@ namespace Barotrauma
 
         private bool isFinished = false;
 
-        private bool targetNotFound = false;
+        /// <summary>
+        /// If the action tags some entities directly (not trying to find targets on the fly), 
+        /// we may be able to determine that targets can not be found even if we'd recheck
+        /// </summary>
+        private bool cantFindTargets = false;
+
+        /// <summary>
+        /// If the TagAction adds a target predicate (a criteria that keeps finding targets on the fly),
+        /// we must keep checking if targets have been found to determine if the action can continue or not
+        /// </summary>
+        private bool mustRecheckTargets = false;
+
+        private bool taggingDone = false;
 
         public TagAction(ScriptedEvent parentEvent, ContentXElement element) : base(parentEvent, element)
         {
@@ -198,6 +210,7 @@ namespace Barotrauma
             else
             {
                 ParentEvent.AddTargetPredicate(tag, predicate);
+                mustRecheckTargets = true;
             }
         }
 
@@ -205,7 +218,7 @@ namespace Barotrauma
         {
             if (entities.None())
             {
-                targetNotFound = true;
+                cantFindTargets = true;
                 return;
             }
             if (ChoosePercentage > 0.0f)
@@ -230,7 +243,7 @@ namespace Barotrauma
         {
             if (entities.None())
             {
-                targetNotFound = true;
+                cantFindTargets = true;
                 return;
             }
 
@@ -250,7 +263,7 @@ namespace Barotrauma
         {
             if (entities.None()) 
             {
-                targetNotFound = true;
+                cantFindTargets = true;
                 return; 
             }
             ParentEvent.AddTarget(tag, entities.GetRandomUnsynced());
@@ -260,26 +273,29 @@ namespace Barotrauma
         
         public override void Update(float deltaTime)
         {
-            if (isFinished || targetNotFound) { return; }
+            if (isFinished || cantFindTargets) { return; }
 
-            string[] criteriaSplit = Criteria.Split(';');
-
-            targetNotFound = false;
-            foreach (string entry in criteriaSplit)
+            if (!taggingDone)
             {
-                string[] kvp = entry.Split(':');
-                Identifier key = kvp[0].Trim().ToIdentifier();
-                Identifier value = kvp.Length > 1 ? kvp[1].Trim().ToIdentifier() : Identifier.Empty;
-                if (Taggers.TryGetValue(key, out Action<Identifier> tagger))
+                cantFindTargets = false;
+                string[] criteriaSplit = Criteria.Split(';');
+                foreach (string entry in criteriaSplit)
                 {
-                    tagger(value);
+                    string[] kvp = entry.Split(':');
+                    Identifier key = kvp[0].Trim().ToIdentifier();
+                    Identifier value = kvp.Length > 1 ? kvp[1].Trim().ToIdentifier() : Identifier.Empty;
+                    if (Taggers.TryGetValue(key, out Action<Identifier> tagger))
+                    {
+                        tagger(value);
+                    }
+                    else
+                    {
+                        string errorMessage = $"Error in TagAction (event \"{ParentEvent.Prefab.Identifier}\") - unrecognized target criteria \"{key}\".";
+                        DebugConsole.ThrowError(errorMessage);
+                        GameAnalyticsManager.AddErrorEventOnce($"TagAction.Update:InvalidCriteria_{ParentEvent.Prefab.Identifier}_{key}", GameAnalyticsManager.ErrorSeverity.Error, errorMessage);
+                    }
                 }
-                else
-                {
-                    string errorMessage = $"Error in TagAction (event \"{ParentEvent.Prefab.Identifier}\") - unrecognized target criteria \"{key}\".";
-                    DebugConsole.ThrowError(errorMessage);
-                    GameAnalyticsManager.AddErrorEventOnce($"TagAction.Update:InvalidCriteria_{ParentEvent.Prefab.Identifier}_{key}", GameAnalyticsManager.ErrorSeverity.Error, errorMessage);
-                }
+                taggingDone = true;
             }
 
             if (ContinueIfNoTargetsFound)
@@ -288,7 +304,14 @@ namespace Barotrauma
             }
             else
             {
-                isFinished = !targetNotFound;
+                if (mustRecheckTargets)
+                {
+                    isFinished = ParentEvent.GetTargets(Tag).Any();
+                }
+                else
+                {
+                    isFinished = !cantFindTargets;
+                }
             }
         }
 
