@@ -1999,69 +1999,120 @@
       </ConversationAction>
     </ScriptedEvent>
 
-    <!--Explosive Mishap-->
     <ScriptedEvent identifier="explosivemishap" commonness="50">
       <TagAction criteria="player" tag="player" />
-      <TriggerAction target1tag="player" targetmoduletype="armorymodule" applytotarget1="triggerer_player" />
+      <SpawnAction itemidentifier="ancientweapon" targettag="mishapweapon" spawnlocation="Outpost" targetmoduletags="researchmodule" SpawnPointTag="research" ignorebyai="true" />
+      <SpawnAction itemidentifier="aliencircuitry" SpawnPointTag="mishapweapon" amount="3" offset="120" />
+      <StatusEffectAction targettag="mishapweapon">
+        <StatusEffect noninteractable="true" setvalue="true" />
+      </StatusEffectAction>
+      <SpawnAction npcsetidentifier="outpostnpcs1" npcidentifier="researcher" targettag="exploder1" spawnlocation="Outpost" targetmoduletags="researchmodule" SpawnPointTag="mishapweapon" AllowInPlayerView="false" ignorebyai="true"  />
+      <SpawnAction npcsetidentifier="outpostnpcs1" npcidentifier="researcher" targettag="exploder2" spawnlocation="Outpost" targetmoduletags="researchmodule" SpawnPointTag="exploder1" AllowInPlayerView="false" offset="50" />
+      <SpawnAction npcsetidentifier="outpostnpcs1" npcidentifier="securitynpc[faction]" targettag="securitymishap" spawnlocation="Outpost" targetmoduletags="airlock"  />
+      <NPCWaitAction npctag="securitymishap" wait="true" />
+      <NPCWaitAction npctag="exploder1" wait="true" />
+      <NPCFollowAction npctag="exploder2" targettag="exploder1" follow="true" />
+      <!-- proximity trigger -->
+      <TriggerAction target1tag="player" target2tag="mishapweapon" applytotarget1="triggerer_player" radius="350"/>
       <ConversationAction text="EventText.explosivemishap.c1" targettag="triggerer_player" eventsprite="Stowaway2">
         <Option text="EventText.explosivemishap.o1">
           <ConversationAction text="EventText.explosivemishap.o1.c1" targettag="triggerer_player">
             <Option text="EventText.generic.continue">
-              <ConversationAction text="EventText.explosivemishap.o1.o1.c1" targettag="triggerer_player" endconversation="true"/>
-              <StatusEffectAction targettag="triggerer_player">
-                <StatusEffect>
-                  <Explosion range="200.0" stun="1.0" force="15.0" flames="true" flash="true" shockwave="true" sparks="true" underwaterbubble="true" />
-                  <Sound file="Content/Sounds/Damage/StructureCrunch2.ogg" range="500" />
+              <ConversationAction text="EventText.explosivemishap.o1.o1.c1" targettag="triggerer_player" ContinueAutomatically="true" />
+              <!-- explosions ahoy -->
+              <StatusEffectAction targettag="mishapweapon">
+                <StatusEffect duration="2" spritecolor="255,255,255,255" noninteractable="false" spawnedincurrentoutpost="true" allowstealing="false" setvalue="true">
+                  <sound file="Content/Items/Weapons/WEAPONS_laserGunShot1.ogg" range="1000" frequencymultiplier="0.5" />
+                  <ParticleEmitter particle="electricshock" particlespersecond="2" velocitymin="0" velocitymax="0" anglemin="0" anglemax="360" scalemin="0.15" scalemax="0.25" Spread="0" distancemin="0" distancemax="0" colormultiplier="255,255,255,255" />
+                  <ParticleEmitter particle="plasmaspark" particleamount="2" velocitymin="100" velocitymax="300" anglemin="20" anglemax="160" scalemin="0.5" scalemax="1" Spread="50" distancemin="0" distancemax="100" colormultiplier="255,255,255,255" />
+                </StatusEffect>
+                <StatusEffect delay="2">
+                  <Explosion range="800.0" structuredamage="0" itemdamage="200" force="5" severlimbsprobability="0" debris="true" decal="explosion" decalsize="0.5">                   
+                    <Affliction identifier="stun" strength="4" />
+                  </Explosion>
+                  <Sound file="Content/Sounds/Damage/StructureCrunch2.ogg" range="800" volume="2" />
                 </StatusEffect>
               </StatusEffectAction>
-              <ConversationAction text="EventText.explosivemishap.o1.o1.o1.c1" targettag="triggerer_player">
-                <Option text="EventText.explosivemishap.o1.o1.o1.o1">
-                  <ConversationAction text="EventText.explosivemishap.o1.o1.o1.o1.c1" targettag="triggerer_player">
-                    <Option text="EventText.explosivemishap.o1.o1.o1.o1.o1">
-                      <ConversationAction text="EventText.explosivemishap.o1.o1.o1.o1.o1.c1" targettag="triggerer_player">
-                        <Option text="EventText.explosivemishap.o1.o1.o1.o1.o1.o1">
-                          <ConversationAction text="EventText.explosivemishap.o1.o1.o1.o1.o1.o1.c1" targettag="triggerer_player">
-                            <Option text="EventText.explosivemishap.o1.o1.o1.o1.o1.o1.o1">
-                              <RNGAction chance="0.25">
+              <StatusEffectAction targettag="exploder1">
+                <StatusEffect delay="2">
+                  <Explosion range="200.0" structuredamage="0" itemdamage="200" force="5" severlimbsprobability="1" debris="true" decal="explosion" decalsize="0.5">                   
+                    <Affliction identifier="explosiondamage" strength="500" />
+                    <Affliction identifier="bleeding" strength="50" />
+                    <Affliction identifier="stun" strength="5" />
+                  </Explosion>
+                  <sound file="Content/Items/Weapons/ExplosionMedium1.ogg" range="1000" volume="1" />
+                </StatusEffect>
+              </StatusEffectAction>
+              <WaitAction time="2" />
+              <!-- security hurries to the module -->
+              <NPCFollowAction npctag="securitymishap" targettag="exploder1" follow="True" />
+              <ConversationAction text="EventText.explosivemishap.o1.o1.o1.c1" targettag="triggerer_player" endconversation="true" />
+              <TriggerAction target1tag="player" target2tag="mishapweapon" applytotarget1="lootermishap" radius="50" waitforinteraction="true"/>
+              <ConversationAction text="EventText.explosivemishap.o1.o1.o1.o1.c1" targettag="lootermishap">
+                <Option text="EventText.explosivemishap.o1.o1.o1.o1.o1">
+                  <ConversationAction text="EventText.explosivemishap.o1.o1.o1.o1.o1.c1" targettag="lootermishap" ContinueConversation="true" >
+                    <Option text="EventText.explosivemishap.o1.o1.o1.o1.o1.o1">
+                      <ConversationAction text="EventText.explosivemishap.o1.o1.o1.o1.o1.o1.c1" targettag="lootermishap">
+                        <Option text="EventText.explosivemishap.o1.o1.o1.o1.o1.o1.o1">
+                          <!-- remove the weapon from the floor and spawn it in inventory -->
+                          <StatusEffectAction targettag="mishapweapon">
+                            <StatusEffect>
+                              <Remove />
+                            </StatusEffect>
+                          </StatusEffectAction>
+                          <SpawnAction itemidentifier="ancientweapon" targettag="mishapweaponlooted" targetinventory="lootermishap" />
+                          <StatusEffectAction targettag="mishapweaponlooted">
+                            <StatusEffect spawnedincurrentoutpost="true" allowstealing="false" setvalue="true"/>
+                          </StatusEffectAction>                 
+                          <RNGAction chance="0.25">
+                            <Success>
+                              <SpawnAction itemidentifier="alienpowercell" targetinventory="mishapweaponlooted" />
+                              <ConversationAction targettag="lootermishap" text="EventText.explosivemishap.o1.o1.o1.o1.o1.o1.o1.c1" endconversation="true"/>
+                            </Success>
+                            <Failure>
+                              <ConversationAction targettag="lootermishap" text="EventText.explosivemishap.o1.o1.o1.o1.o1.o1.o1.c2" endconversation="true" />
+                            </Failure>
+                          </RNGAction>
+                          <!-- trigger the guard if you get near it -->
+                          <TriggerAction target1tag="lootermishap" target2tag="securitymishap" radius="100" waitforinteraction="false" />
+                          <NPCFollowAction npctag="securitymishap" targettag="lootermishap" follow="true" />
+                          <ConversationAction text="EventText.explosivemishap.securitycheck" targettag="lootermishap" eventsprite="security" >
+                            <Option text="EventText.explosivemishap.didntseeanything">
+                              <!-- if you have the weapon on you, guard arrests you -->
+                              <CheckItemAction targettag="lootermishap" itemtags="mishapweaponlooted">
                                 <Success>
-                                  <ConversationAction targettag="triggerer_player" text="EventText.explosivemishap.o1.o1.o1.o1.o1.o1.o1.c1">
-                                    <Option text="EventText.explosivemishap.o1.o1.o1.o1.o1.o1.o1.o1" endconversation="true">
-                                      <SpawnAction itemidentifier="ancientweapon" targettag="ancientweapon" targetinventory="triggerer_player" />
-                                      <SpawnAction itemidentifier="alienpowercell" targetinventory="ancientweapon" />
-                                    </Option>
-                                    <Option text="EventText.explosivemishap.o1.o1.o1.o1.o1.o1.o1.o2">
-                                      <ConversationAction targettag="triggerer_player" text="EventText.explosivemishap.o1.o1.o1.o1.o1.o1.o1.o2.c1" endconversation="true" />
-                                      <ReputationAction targettype="Location" increase="3" />
-                                    </Option>
-                                  </ConversationAction>
+                                  <ConversationAction text="EventText.explosivemishap.noticedweapon" targettag="lootermishap" eventsprite="security" endconversation="true" />
+                                  <CombatAction combatmode="Arrest" npctag="securitymishap" enemytag="lootermishap" isinstigator="true" guardreaction="none" witnessreaction="retreat" />
                                 </Success>
                                 <Failure>
-                                  <ConversationAction targettag="triggerer_player" text="EventText.explosivemishap.o1.o1.o1.o1.o1.o1.o1.c2" endconversation="true" />
-                                  <SpawnAction itemidentifier="ancientweapon" targettag="ancientweapon" targetinventory="triggerer_player" />
+                                  <ConversationAction text="EventText.explosivemishap.noweapon" targettag="lootermishap" eventsprite="security" endconversation="true" />
+                                  <NPCFollowAction npctag="securitymishap" targettag="lootermishap" follow="false" />
                                 </Failure>
-                              </RNGAction>
-                            </Option>
-                            <Option text="EventText.explosivemishap.o1.o1.o1.o1.o1.o1.o2" endconversation="true">
-                              <SpawnAction itemidentifier="ancientweapon" targettag="ancientweapon" targetinventory="triggerer_player" />
+                              </CheckItemAction>
                             </Option>
                             <Option text="EventText.explosivemishap.o1.o1.o1.o1.o1.o1.o1.o2">
-                              <ConversationAction targettag="triggerer_player" text="EventText.explosivemishap.o1.o1.o1.o1.o1.o1.o1.o2.c1" endconversation="true" />
+                              <StatusEffectAction targettag="mishapweaponlooted">
+                                <StatusEffect>
+                                  <Remove />
+                                </StatusEffect>
+                              </StatusEffectAction>
+                              <ConversationAction targettag="lootermishap" text="EventText.explosivemishap.o1.o1.o1.o1.o1.o1.o1.o2.c1" endconversation="true" />
                               <ReputationAction targettype="Location" increase="3" />
                             </Option>
-                          </ConversationAction>
+                          </ConversationAction>  
                         </Option>
                       </ConversationAction>
                     </Option>
-                    <Option text="EventText.explosivemishap.o1.o1.o1.o1.o2">
-                      <!--END-->
-                    </Option>
                   </ConversationAction>
+                </Option>
+                <Option text="EventText.explosivemishap.o1.o1.o1.o1.o2">
+                  <!--END-->
                 </Option>
               </ConversationAction>
             </Option>
           </ConversationAction>
         </Option>
-        <Option text="EventText.generic.ignore">
+        <Option text="EventText.generic.ignore" endconversation="true">
           <!--END-->
         </Option>
       </ConversationAction>
@@ -3076,7 +3127,6 @@
     <EventSet identifier="outpostevent.military.randomevents" minleveldifficulty="0" maxleveldifficulty="80" locationtype="military" allowatstart="true" chooserandom="true" onceperoutpost="true">
       <!-- 50% chance of getting a military-specific event (TODO: increase if/when we have more of these available?) -->
       <ScriptedEvent identifier="bigbrother" commonness="150" probability="0.5" faction="coalition"/>
-      <ScriptedEvent identifier="explosivemishap" commonness="50" probability="0.5" />
     </EventSet>
     
     <!-- Events specific to research outposts -->
@@ -3087,6 +3137,7 @@
       <ScriptedEvent identifier="impromptuengineering" commonness="150" probability="0.5" />
       <ScriptedEvent identifier="captivesouls" commonness="50" probability="0.5" />
       <ScriptedEvent identifier="researcherescort" commonness="50" />
+      <ScriptedEvent identifier="explosivemishap" commonness="50" probability="0.5" />
     </EventSet>
     
     <!-- Events specific to mining outposts -->

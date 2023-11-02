@@ -6357,13 +6357,34 @@
 <EventText.captivesouls.c1.o1.o1.o1.o1.o2.c1>You decide to leave the creature in its tank.</EventText.captivesouls.c1.o1.o1.o1.o1.o2.c1>
 <EventText.captivesouls.c1.o1.o2>Leave.</EventText.captivesouls.c1.o1.o2>
 <EventText.captivesouls.c1.o2>Don't approach.</EventText.captivesouls.c1.o2>
-<EventText.explosivemishap.c1>You hear voices from behind a closed door. “...so I just hold down this button?”</EventText.explosivemishap.c1>
-<EventText.explosivemishap.o1>Listen at the door.</EventText.explosivemishap.o1>
+
+<!-- 
+explosivemishap event
+
+added:
+EventText.explosivemishap.securitycheck
+EventText.explosivemishap.didntseeanything
+EventText.explosivemishap.noticedweapon
+EventText.explosivemishap.noweapon
+
+changed:
+EventText.explosivemishap.c1
+EventText.explosivemishap.o1
+EventText.explosivemishap.o1.o1.o1
+EventText.explosivemishap.o1.o1.o1.c1
+EventText.explosivemishap.o1.o1.o1.o1
+-->
+
+<EventText.explosivemishap.c1>You hear two scientists talking nearby. “...so I just hold down this button?”</EventText.explosivemishap.c1>
+<EventText.explosivemishap.o1>Listen.</EventText.explosivemishap.o1>
+
 <EventText.explosivemishap.o1.c1>A low humming voice can be heard in the background, like an old-timey vacuum cleaner. “Basically. Though you should be careful not to overheat it.”</EventText.explosivemishap.o1.c1>
 <EventText.explosivemishap.o1.o1.c1>“Overheat?” The humming noise grows louder and louder, increasing in pitch.</EventText.explosivemishap.o1.o1.c1>
-<EventText.explosivemishap.o1.o1.o1>Keep your ear to the door.</EventText.explosivemishap.o1.o1.o1>
-<EventText.explosivemishap.o1.o1.o1.c1>The door is blown off its hinges, knocking you down.</EventText.explosivemishap.o1.o1.o1.c1>
+
+<EventText.explosivemishap.o1.o1.o1>What is that sound?</EventText.explosivemishap.o1.o1.o1>
+<EventText.explosivemishap.o1.o1.o1.c1>Something just exploded!</EventText.explosivemishap.o1.o1.o1.c1>
 <EventText.explosivemishap.o1.o1.o1.o1>Look inside.</EventText.explosivemishap.o1.o1.o1.o1>
+
 <EventText.explosivemishap.o1.o1.o1.o1.c1>It looks as if a bomb had gone off inside the laboratory. Expensive instruments are strewn broken on the floor and the once-white walls are decorated with streaks of dark red and pieces of brain matter. Two smoking corpses lie on the floor, along with an alien device of some kind. Someone nearby is yelling for a security guard.</EventText.explosivemishap.o1.o1.o1.o1.c1>
 <EventText.explosivemishap.o1.o1.o1.o1.o1>Examine the device before security gets here.</EventText.explosivemishap.o1.o1.o1.o1.o1>
 <EventText.explosivemishap.o1.o1.o1.o1.o1.c1>The device is made of black metallic material and is heavy to hold. There is a handle that your hand fits into, and a button that lies directly under your index finger.</EventText.explosivemishap.o1.o1.o1.o1.o1.c1>
@@ -6377,6 +6398,12 @@
 <EventText.explosivemishap.o1.o1.o1.o1.o1.o1.o1.c2>You find nothing. You decide to hold on to the device and leave before security gets here.</EventText.explosivemishap.o1.o1.o1.o1.o1.o1.o1.c2>
 <EventText.explosivemishap.o1.o1.o1.o1.o1.o1.o2>Hightail it.</EventText.explosivemishap.o1.o1.o1.o1.o1.o1.o2>
 <EventText.explosivemishap.o1.o1.o1.o1.o2>Leave.</EventText.explosivemishap.o1.o1.o1.o1.o2>
+
+<EventText.explosivemishap.securitycheck>A security guard signals you to stop. "Hey you, what was that explosion? Did you see what happened?"</EventText.explosivemishap.securitycheck>
+<EventText.explosivemishap.didntseeanything>Nope, not at all.</EventText.explosivemishap.didntseeanything>
+<EventText.explosivemishap.noticedweapon>The guard notices the weapon. "I've got a suspect carrying an unidentified alien device!"</EventText.explosivemishap.noticedweapon>
+<EventText.explosivemishap.noweapon>"What a mess..." The guard calls over the radio: "We need viscera cleanup detail over here."</EventText.explosivemishap.noweapon>
+
 <EventText.occupationalhazards.c1>A man with a hard hat is nursing a drink.</EventText.occupationalhazards.c1>
 <EventText.occupationalhazards.o1>Join him.</EventText.occupationalhazards.o1>
 <EventText.occupationalhazards.o1.c1>You pull a seat next to him and he acknowledges you with a nod. “Here to work?”</EventText.occupationalhazards.o1.c1>
