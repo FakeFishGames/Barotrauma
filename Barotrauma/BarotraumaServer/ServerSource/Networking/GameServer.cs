@@ -369,6 +369,9 @@ namespace Barotrauma.Networking
                     if (!character.ClientDisconnected) { continue; }
 
                     Client owner = connectedClients.Find(c => (c.Character == null || c.Character == character) && character.IsClientOwner(c));
+                    bool canOwnerTakeControl =
+                        owner != null && owner.InGame && !owner.NeedsMidRoundSync &&
+                        (!ServerSettings.AllowSpectating || !owner.SpectateOnly);
                     if (!character.IsDead)
                     {
                         character.KillDisconnectedTimer += deltaTime;
@@ -379,18 +382,19 @@ namespace Barotrauma.Networking
                             character.Kill(CauseOfDeathType.Disconnected, null);
                             continue;
                         }
-                        if (owner != null && owner.InGame && !owner.NeedsMidRoundSync &&
-                            (!ServerSettings.AllowSpectating || !owner.SpectateOnly))
+                        if (canOwnerTakeControl)
                         {
                             SetClientCharacter(owner, character);
                         }
                     }
-                    else if (owner != null &&
+                    else if (canOwnerTakeControl &&
                         character.CauseOfDeath?.Type == CauseOfDeathType.Disconnected &&
                         character.CharacterHealth.VitalityDisregardingDeath > 0)
                     {
+                        //create network event immediately to ensure the character is revived client-side
+                        //before the client gains control of it (normally status events are created periodically)                        
+                        character.Revive(removeAfflictions: false, createNetworkEvent: true);
                         SetClientCharacter(owner, character);
-                        character.Revive(removeAfflictions: false);
                     }
                 }
 

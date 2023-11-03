@@ -50,6 +50,9 @@ namespace Barotrauma
         [Serialize(false, IsPropertySaveable.Yes, description: "Can the creature live without water or does it die on dry land?"), Editable]
         public bool NeedsWater { get; set; }
 
+        [Serialize(false, IsPropertySaveable.Yes, description: "Note: non-humans with a human AI aren't fully supported. Enabling this on a non-human character may lead to issues.")]
+        public bool UseHumanAI { get; set; }
+
         [Serialize(false, IsPropertySaveable.Yes, description: "Is this creature an artificial creature, like robot or machine that shouldn't be affected by afflictions that affect only organic creatures? Overrides DoesBleed."), Editable]
         public bool IsMachine { get; set; }
 

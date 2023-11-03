@@ -26,19 +26,37 @@ namespace Barotrauma.Items.Components
 
         public override bool IsActive => true;
 
+        // We don't want the components and wires to transfer between subs as it would cause issues.
+        public override bool DontTransferInventoryBetweenSubs => true;
+
         public Option<CircuitBoxConnection> FindInputOutputConnection(Identifier connectionName)
         {
             foreach (CircuitBoxInputConnection input in Inputs)
             {
                 if (input.Name != connectionName) { continue; }
-
                 return Option.Some<CircuitBoxConnection>(input);
             }
 
             foreach (CircuitBoxOutputConnection output in Outputs)
             {
                 if (output.Name != connectionName) { continue; }
+                return Option.Some<CircuitBoxConnection>(output);
+            }
 
+            return Option.None;
+        }
+
+        public Option<CircuitBoxConnection> FindInputOutputConnection(Connection connection)
+        {
+            foreach (CircuitBoxInputConnection input in Inputs)
+            {
+                if (input.Connection != connection) { continue; }
+                return Option.Some<CircuitBoxConnection>(input);
+            }
+
+            foreach (CircuitBoxOutputConnection output in Outputs)
+            {
+                if (output.Connection != connection) { continue; }
                 return Option.Some<CircuitBoxConnection>(output);
             }
 
@@ -338,7 +356,7 @@ namespace Barotrauma.Items.Components
                 return;
             }
 
-            SpawnItem(this, prefab, WireContainer, wire =>
+            SpawnItem(prefab, user: null, container: WireContainer, onSpawned: wire =>
             {
                 AddWireDirect(wireId, prefab, Option.Some(wire), one, two);
                 onItemSpawned(wire);
@@ -359,7 +377,7 @@ namespace Barotrauma.Items.Components
         private void AddWireDirect(ushort id, ItemPrefab prefab, Option<Item> backingItem, CircuitBoxConnection one, CircuitBoxConnection two)
             => Wires.Add(new CircuitBoxWire(this, id, backingItem, one, two, prefab));
 
-        private bool AddComponentInternal(ushort id, ItemPrefab prefab, ItemPrefab usedResource, Vector2 pos, Action<Item> onItemSpawned)
+        private bool AddComponentInternal(ushort id, ItemPrefab prefab, ItemPrefab usedResource, Vector2 pos, Character? user, Action<Item>? onItemSpawned)
         {
             if (id is ICircuitBoxIdentifiable.NullComponentID)
             {
@@ -373,10 +391,10 @@ namespace Barotrauma.Items.Components
                 return false;
             }
 
-            SpawnItem(this, prefab, ComponentContainer, spawnedItem =>
+            SpawnItem(prefab, user, ComponentContainer, spawnedItem =>
             {
                 Components.Add(new CircuitBoxComponent(id, spawnedItem, pos, this, usedResource));
-                onItemSpawned(spawnedItem);
+                onItemSpawned?.Invoke(spawnedItem);
             });
 
             OnViewUpdateProjSpecific();
@@ -646,7 +664,7 @@ namespace Barotrauma.Items.Components
             return Option.None;
         }
 
-        public static void SpawnItem(CircuitBox circuitBox, ItemPrefab prefab, ItemContainer? container, Action<Item> onSpawned)
+        public static void SpawnItem(ItemPrefab prefab, Character? user, ItemContainer? container, Action<Item> onSpawned)
         {
             if (container is null)
             {
@@ -655,13 +673,27 @@ namespace Barotrauma.Items.Components
 
             if (IsInGame())
             {
-                Entity.Spawner?.AddItemToSpawnQueue(prefab, container.Inventory, onSpawned: onSpawned);
+                Entity.Spawner?.AddItemToSpawnQueue(prefab, container.Inventory, onSpawned: it =>
+                {
+                    AssignWifiComponentTeam(it, user);
+                    onSpawned(it);
+                });
                 return;
             }
 
             Item forceSpawnedItem = new Item(prefab, Vector2.Zero, null);
             container.Inventory.TryPutItem(forceSpawnedItem, null);
             onSpawned(forceSpawnedItem);
+            AssignWifiComponentTeam(forceSpawnedItem, user);
+
+            static void AssignWifiComponentTeam(Item item, Character? user)
+            {
+                if (user == null) { return; }
+                foreach (WifiComponent wifiComponent in item.GetComponents<WifiComponent>())
+                {
+                    wifiComponent.TeamID = user.TeamID;
+                }
+            }
         }
 
         public static void RemoveItem(Item item)

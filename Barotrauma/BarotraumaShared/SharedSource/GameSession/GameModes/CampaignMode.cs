@@ -1353,6 +1353,7 @@ namespace Barotrauma
                     if (item.HiddenInGame) { continue; }
                     if (!connectedSubs.Contains(item.Submarine)) { continue; }
                     if (item.Prefab.DontTransferBetweenSubs) { continue; }
+                    if (AnyParentInventoryDisableTransfer(item)) { continue; }
                     var rootOwner = item.GetRootInventoryOwner();
                     if (rootOwner is Character) { continue; }
                     if (rootOwner is Item ownerItem && (ownerItem.NonInteractable || item.NonPlayerTeamInteractable || ownerItem.HiddenInGame)) { continue; }
@@ -1362,6 +1363,15 @@ namespace Barotrauma
                     if (item.Components.Any(c => c is Wire w && w.Connections.Any(c => c != null))) { continue; }
                     itemsToTransfer.Add((item, item.Container));
                     item.Submarine = null;
+
+                    static bool AnyParentInventoryDisableTransfer(Item item)
+                    {
+                        if (item.ParentInventory?.Owner is not Item parentOwner) { return false; }
+                        return HasProblematicComponent(parentOwner) || AnyParentInventoryDisableTransfer(parentOwner);
+
+                        static bool HasProblematicComponent(Item it)
+                            => it.Components.Any(static c => c.DontTransferInventoryBetweenSubs);
+                    }
                 }
                 foreach (var (item, container) in itemsToTransfer)
                 {
@@ -1369,8 +1379,15 @@ namespace Barotrauma
                     {
                         // Drop the item if it's not inside another item set to be transferred.
                         item.Drop(null, createNetworkEvent: false, setTransform: false);
+                        //dropping items sets the sub, set it back to null
+                        item.Submarine = null;
+                        foreach (var itemContainer in item.GetComponents<ItemContainer>())
+                        {
+                            itemContainer.Inventory.FindAllItems((_) => true, recursive: true).ForEach(it => it.Submarine = null);
+                        }
                     }
                 }
+                System.Diagnostics.Debug.Assert(itemsToTransfer.None(it => it.item.Submarine != null), "Item that was set to be transferred was not removed from the sub!");
                 currentSub.Info.NoItems = true;
             }
             // Serialize the current sub
@@ -1408,6 +1425,7 @@ namespace Barotrauma
                     {
                         newContainer = newSub.FindContainerFor(item, onlyPrimary: true, checkTransferConditions: true, allowConnectedSubs: true);
                     }
+                    string newContainerName = newContainer == null ? "(null)" : $"{newContainer.Prefab.Identifier} ({newContainer.Tags})";
                     if (item.Container == null && (newContainer == null || !newContainer.OwnInventory.TryPutItem(item, user: null, createNetworkEvent: false)))
                     {
                         var cargoContainer = CargoManager.GetOrCreateCargoContainerFor(item.Prefab, spawnHull, ref availableContainers);
@@ -1416,13 +1434,16 @@ namespace Barotrauma
                             Vector2 simPos = ConvertUnits.ToSimUnits(CargoManager.GetCargoPos(spawnHull, item.Prefab));
                             item.SetTransform(simPos, 0.0f, findNewHull: false, setPrevTransform: false);
                         }
-                        else if (cargoContainer.Item.Submarine is Submarine containerSub)
+                        else
                         {
-                            // Use the item's sub in case the sub consists of multiple linked subs.
-                            item.Submarine = containerSub;
+                            if (cargoContainer.Item.Submarine is Submarine containerSub)
+                            {
+                                // Use the item's sub in case the sub consists of multiple linked subs.
+                                item.Submarine = containerSub;
+                            }
+                            newContainerName = cargoContainer.Item.Prefab.Identifier.ToString();
                         }
                     }
-                    string newContainerName = newContainer == null ? "(null)" : $"{newContainer.Prefab.Identifier} ({newContainer.Tags})";
                     string msg = "Item transfer log error.";
                     if (oldContainer != null)
                     {

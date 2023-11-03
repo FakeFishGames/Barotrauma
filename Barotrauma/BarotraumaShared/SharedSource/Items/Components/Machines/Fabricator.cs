@@ -416,7 +416,7 @@ namespace Barotrauma.Items.Components
                             if (requiredItem.UseCondition && suitableIngredient.ConditionPercentage - requiredItem.MinCondition * 100 > 0.0f)
                             {
                                 suitableIngredient.Condition -= suitableIngredient.Prefab.Health * requiredItem.MinCondition;
-                                continue;
+                                break;
                             }
                             if (suitableIngredient.OwnInventory != null)
                             {

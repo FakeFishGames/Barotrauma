@@ -1606,28 +1606,7 @@ namespace Barotrauma
                     }
                 }
             }
-            if (removeItem)
-            {
-                for (int i = 0; i < targets.Count; i++)
-                {
-                    if (targets[i] is Item item) { Entity.Spawner?.AddItemToRemoveQueue(item); }
-                }
-            }
-            if (removeCharacter)
-            {
-                for (int i = 0; i < targets.Count; i++)
-                {
-                    var target = targets[i];
-                    if (target is Character character) 
-                    { 
-                        Entity.Spawner?.AddEntityToRemoveQueue(character); 
-                    }
-                    else if (target is Limb limb)
-                    {
-                        Entity.Spawner?.AddEntityToRemoveQueue(limb.character);
-                    }
-                }
-            }
+            
             if (breakLimb || hideLimb)
             {
                 for (int i = 0; i < targets.Count; i++)
@@ -2291,6 +2270,30 @@ namespace Barotrauma
             }
 
             ApplyProjSpecific(deltaTime, entity, targets, hull, position, playSound: true);
+
+            //do this last - the entities spawned by the effect might need the entity for something, so better to remove it last
+            if (removeItem)
+            {
+                for (int i = 0; i < targets.Count; i++)
+                {
+                    if (targets[i] is Item item) { Entity.Spawner?.AddItemToRemoveQueue(item); }
+                }
+            }
+            if (removeCharacter)
+            {
+                for (int i = 0; i < targets.Count; i++)
+                {
+                    var target = targets[i];
+                    if (target is Character character)
+                    {
+                        Entity.Spawner?.AddEntityToRemoveQueue(character);
+                    }
+                    else if (target is Limb limb)
+                    {
+                        Entity.Spawner?.AddEntityToRemoveQueue(limb.character);
+                    }
+                }
+            }
 
             if (oneShot)
             {

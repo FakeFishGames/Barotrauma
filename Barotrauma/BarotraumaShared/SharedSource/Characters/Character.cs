@@ -1223,19 +1223,15 @@ namespace Barotrauma
         public static Character Create(CharacterPrefab prefab, Vector2 position, string seed, CharacterInfo characterInfo = null, ushort id = Entity.NullEntityID, bool isRemotePlayer = false, bool hasAi = true, bool createNetworkEvent = true, RagdollParams ragdoll = null, bool spawnInitialItems = true)
         {
             Character newCharacter = null;
-            if (prefab.Identifier != CharacterPrefab.HumanSpeciesName)
+            if (prefab.Identifier != CharacterPrefab.HumanSpeciesName || hasAi)
             {
                 var aiCharacter = new AICharacter(prefab, position, seed, characterInfo, id, isRemotePlayer, ragdoll, spawnInitialItems);
-                var ai = new EnemyAIController(aiCharacter, seed);
+
+                var ai = (prefab.Identifier == CharacterPrefab.HumanSpeciesName || aiCharacter.Params.UseHumanAI) ?
+                    new HumanAIController(aiCharacter) as AIController :
+                    new EnemyAIController(aiCharacter, seed);
                 aiCharacter.SetAI(ai);
-                newCharacter = aiCharacter;
-            }
-            else if (hasAi)
-            {
-                var aiCharacter = new AICharacter(prefab, position, seed, characterInfo, id, isRemotePlayer, ragdoll, spawnInitialItems);
-                var ai = new HumanAIController(aiCharacter);
-                aiCharacter.SetAI(ai);
-                newCharacter = aiCharacter;
+                newCharacter = aiCharacter;            
             }
             else
             {
@@ -4656,7 +4652,7 @@ namespace Barotrauma
         }
         partial void KillProjSpecific(CauseOfDeathType causeOfDeath, Affliction causeOfDeathAffliction, bool log);
 
-        public void Revive(bool removeAfflictions = true)
+        public void Revive(bool removeAfflictions = true, bool createNetworkEvent = false)
         {
             if (Removed)
             {
@@ -4705,7 +4701,11 @@ namespace Barotrauma
                 limb.IsSevered = false;
             }
 
-            GameMain.GameSession?.ReviveCharacter(this);            
+            GameMain.GameSession?.ReviveCharacter(this);
+            if (createNetworkEvent && GameMain.NetworkMember is { IsServer: true })
+            {
+                GameMain.NetworkMember.CreateEntityEvent(this, new CharacterStatusEventData());
+            }
         }
 
         public override void Remove()

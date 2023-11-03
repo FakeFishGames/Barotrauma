@@ -71,6 +71,12 @@ namespace Barotrauma.Items.Components
         protected const float CorrectionDelay = 1.0f;
         protected CoroutineHandle delayedCorrectionCoroutine;
 
+        /// <summary>
+        /// If enabled, the contents of the item are not transferred when the player transfers items between subs.
+        /// Use this if this component uses item containers in a way where removing the item from the container via external means would cause problems.
+        /// </summary>
+        public virtual bool DontTransferInventoryBetweenSubs => false;
+
         [Editable, Serialize(0.0f, IsPropertySaveable.No, description: "How long it takes to pick up the item (in seconds).")]
         public float PickingTime
         {

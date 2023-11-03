@@ -130,10 +130,17 @@ namespace Barotrauma
         /// <summary>
         /// When set to true, the explosion don't deal less damage when the target is behind a solid object.
         /// </summary>
-        public bool IgnoreCover
-        {
-            get; set;
-        }
+        public bool IgnoreCover { get; set; }
+
+        /// <summary>
+        /// Does the damage from the explosion decrease with distance from the origin of the explosion?
+        /// </summary>
+        public bool DistanceFalloff { get; set; } = true;
+
+        /// <summary>
+        /// Structures that don't count as "cover" that reduces damage from the explosion. Only relevant if IgnoreCover is set to false.
+        /// </summary>
+        public IEnumerable<Structure> IgnoredCover;
 
         /// <summary>
         /// How long the light source created by the explosion lasts.
@@ -311,12 +318,15 @@ namespace Barotrauma
 
             if (!MathUtils.NearlyEqual(Attack.GetStructureDamage(1.0f), 0.0f) || !MathUtils.NearlyEqual(Attack.GetLevelWallDamage(1.0f), 0.0f))
             {
-                RangedStructureDamage(worldPosition, displayRange, Attack.GetStructureDamage(1.0f), Attack.GetLevelWallDamage(1.0f), attacker, IgnoredSubmarines, Attack.EmitStructureDamageParticles);
+                RangedStructureDamage(worldPosition, displayRange, Attack.GetStructureDamage(1.0f), Attack.GetLevelWallDamage(1.0f), attacker, 
+                    IgnoredSubmarines, 
+                    Attack.EmitStructureDamageParticles,
+                    DistanceFalloff);
             }
 
             if (BallastFloraDamage > 0.0f)
             {
-                RangedBallastFloraDamage(worldPosition, displayRange, BallastFloraDamage, attacker);
+                RangedBallastFloraDamage(worldPosition, displayRange, BallastFloraDamage, attacker, DistanceFalloff);
             }
 
             if (EmpStrength > 0.0f)
@@ -326,7 +336,7 @@ namespace Barotrauma
                 {
                     float distSqr = Vector2.DistanceSquared(item.WorldPosition, worldPosition);
                     if (distSqr > displayRangeSqr) { continue; }
-                    float distFactor = CalculateDistanceFactor(distSqr, displayRange);
+                    float distFactor = DistanceFalloff ? CalculateDistanceFactor(distSqr, displayRange) : 1.0f;
 
                     //damage repairable power-consuming items
                     var powered = item.GetComponent<Powered>();
@@ -362,7 +372,10 @@ namespace Barotrauma
                     float distSqr = Vector2.DistanceSquared(item.WorldPosition, worldPosition);
                     if (distSqr > displayRangeSqr) { continue; }
 
-                    float distFactor = 1.0f - (float)Math.Sqrt(distSqr) / displayRange;
+                    float distFactor = 
+                        DistanceFalloff ? 
+                        1.0f - (float)Math.Sqrt(distSqr) / displayRange :
+                        1.0f;
                     //repair repairable items
                     if (item.Repairables.Any())
                     {
@@ -415,13 +428,16 @@ namespace Barotrauma
 
                     if (item.Prefab.DamagedByExplosions && !item.Indestructible)
                     {
-                        float distFactor = 1.0f - dist / displayRange;
+                        float distFactor = 
+                            DistanceFalloff ? 
+                            1.0f - dist / displayRange : 
+                            1.0f;
                         float damageAmount = Attack.GetItemDamage(1.0f, item.Prefab.ExplosionDamageMultiplier);
 
                         Vector2 explosionPos = worldPosition;
                         if (item.Submarine != null) { explosionPos -= item.Submarine.Position; }
 
-                        damageAmount *= GetObstacleDamageMultiplier(ConvertUnits.ToSimUnits(explosionPos), worldPosition, item.SimPosition);
+                        damageAmount *= GetObstacleDamageMultiplier(ConvertUnits.ToSimUnits(explosionPos), worldPosition, item.SimPosition, IgnoredCover);
                         item.Condition -= damageAmount * distFactor;
                     }
                 }
@@ -482,12 +498,15 @@ namespace Barotrauma
 
                     if (dist > attack.Range) { continue; }
 
-                    float distFactor = 1.0f - dist / attack.Range;
+                    float distFactor = 
+                        DistanceFalloff ? 
+                        1.0f - dist / attack.Range : 
+                        1.0f;
 
                     //solid obstacles between the explosion and the limb reduce the effect of the explosion
                     if (!IgnoreCover)
                     {
-                        distFactor *= GetObstacleDamageMultiplier(explosionPos, worldPosition, limb.SimPosition);
+                        distFactor *= GetObstacleDamageMultiplier(explosionPos, worldPosition, limb.SimPosition, IgnoredCover);
                     }
                     if (distFactor > 0)
                     {
@@ -602,7 +621,8 @@ namespace Barotrauma
         /// <summary>
         /// Returns a dictionary where the keys are the structures that took damage and the values are the amount of damage taken
         /// </summary>
-        public static Dictionary<Structure, float> RangedStructureDamage(Vector2 worldPosition, float worldRange, float damage, float levelWallDamage, Character attacker = null, IEnumerable<Submarine> ignoredSubmarines = null, bool emitWallDamageParticles = true)
+        public static Dictionary<Structure, float> RangedStructureDamage(Vector2 worldPosition, float worldRange, float damage, float levelWallDamage, Character attacker = null, IEnumerable<Submarine> ignoredSubmarines = null, 
+            bool emitWallDamageParticles = true, bool distanceFalloff = true)
         {
             float dist = 600.0f;
             damagedStructures.Clear();
@@ -616,7 +636,10 @@ namespace Barotrauma
                 {
                     for (int i = 0; i < structure.SectionCount; i++)
                     {
-                        float distFactor = 1.0f - (Vector2.Distance(structure.SectionPosition(i, true), worldPosition) / worldRange);
+                        float distFactor = 
+                            distanceFalloff ? 
+                            1.0f - (Vector2.Distance(structure.SectionPosition(i, true), worldPosition) / worldRange) :
+                            1.0f;
                         if (distFactor <= 0.0f) { continue; }
 
                         structure.AddDamage(i, damage * distFactor, attacker, emitParticles: emitWallDamageParticles);
@@ -680,7 +703,7 @@ namespace Barotrauma
             return damagedStructures;
         }
 
-        public static void RangedBallastFloraDamage(Vector2 worldPosition, float worldRange, float damage, Character attacker = null)
+        public static void RangedBallastFloraDamage(Vector2 worldPosition, float worldRange, float damage, Character attacker = null, bool distanceFalloff = true)
         {
             List<BallastFloraBehavior> ballastFlorae = new List<BallastFloraBehavior>();
 
@@ -698,7 +721,10 @@ namespace Barotrauma
                     float branchDist = Vector2.Distance(branchWorldPos, worldPosition);
                     if (branchDist < worldRange)
                     {
-                        float distFactor = 1.0f - (branchDist / worldRange);
+                        float distFactor = 
+                            distanceFalloff ? 
+                            1.0f - (branchDist / worldRange) : 
+                            1.0f;
                         if (distFactor <= 0.0f) { return; }
 
                         Vector2 explosionPos = worldPosition;
@@ -715,7 +741,7 @@ namespace Barotrauma
             }
         }
 
-        private static float GetObstacleDamageMultiplier(Vector2 explosionSimPos, Vector2 explosionWorldPos, Vector2 targetSimPos)
+        private static float GetObstacleDamageMultiplier(Vector2 explosionSimPos, Vector2 explosionWorldPos, Vector2 targetSimPos, IEnumerable<Structure> ignoredCover = null)
         {
             float damageMultiplier = 1.0f;
             var obstacles = Submarine.PickBodies(targetSimPos, explosionSimPos, collisionCategory: Physics.CollisionItem | Physics.CollisionItemBlocking | Physics.CollisionWall);
@@ -728,6 +754,10 @@ namespace Barotrauma
                 }
                 else if (body.UserData is Structure structure)
                 {
+                    if (ignoredCover != null)
+                    {
+                        if (ignoredCover.Contains(structure)) { continue; }
+                    }
                     int sectionIndex = structure.FindSectionIndex(explosionWorldPos, world: true, clamp: true);
                     if (structure.SectionBodyDisabled(sectionIndex))
                     {

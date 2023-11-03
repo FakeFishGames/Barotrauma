@@ -269,7 +269,7 @@ namespace Barotrauma.Items.Components
                     resource = ItemPrefab.Prefabs[Tags.FPGACircuit];
                 }
 
-                AddComponentInternal(ICircuitBoxIdentifiable.FindFreeID(Components), prefab, resource, pos, static delegate { });
+                AddComponentInternal(ICircuitBoxIdentifiable.FindFreeID(Components), prefab, resource, pos, Character.Controlled, onItemSpawned: null);
                 return;
             }
 
