@@ -9,11 +9,12 @@ namespace Barotrauma
     class AIObjectiveDecontainItem : AIObjective
     {
         public override Identifier Identifier { get; set; } = "decontain item".ToIdentifier();
+        public override bool AllowWhileHandcuffed => false;
 
         public Func<Item, float> GetItemPriority;
 
         //can either be a tag or an identifier
-        private readonly string[] itemIdentifiers;
+        private readonly Identifier[] itemIdentifiers;
         private readonly ItemContainer sourceContainer;
         private readonly ItemContainer targetContainer;
         private readonly Item targetItem;
@@ -52,16 +53,16 @@ namespace Barotrauma
             this.targetContainer = targetContainer;
         }
 
-        public AIObjectiveDecontainItem(Character character, string itemIdentifier, AIObjectiveManager objectiveManager, ItemContainer sourceContainer, ItemContainer targetContainer = null, float priorityModifier = 1) 
-            : this(character, new string[] { itemIdentifier }, objectiveManager, sourceContainer, targetContainer, priorityModifier) { }
+        public AIObjectiveDecontainItem(Character character, Identifier itemIdentifier, AIObjectiveManager objectiveManager, ItemContainer sourceContainer, ItemContainer targetContainer = null, float priorityModifier = 1) 
+            : this(character, new Identifier[] { itemIdentifier }, objectiveManager, sourceContainer, targetContainer, priorityModifier) { }
 
-        public AIObjectiveDecontainItem(Character character, string[] itemIdentifiers, AIObjectiveManager objectiveManager, ItemContainer sourceContainer, ItemContainer targetContainer = null, float priorityModifier = 1) 
+        public AIObjectiveDecontainItem(Character character, Identifier[] itemIdentifiers, AIObjectiveManager objectiveManager, ItemContainer sourceContainer, ItemContainer targetContainer = null, float priorityModifier = 1) 
             : base(character, objectiveManager, priorityModifier)
         {
             this.itemIdentifiers = itemIdentifiers;
             for (int i = 0; i < itemIdentifiers.Length; i++)
             {
-                itemIdentifiers[i] = itemIdentifiers[i].ToLowerInvariant();
+                itemIdentifiers[i] = itemIdentifiers[i];
             }
             this.sourceContainer = sourceContainer;
             this.targetContainer = targetContainer;

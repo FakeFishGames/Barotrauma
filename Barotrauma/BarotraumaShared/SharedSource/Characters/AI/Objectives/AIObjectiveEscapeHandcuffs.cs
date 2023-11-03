@@ -88,7 +88,7 @@ namespace Barotrauma
                 escapeProgress += Rand.Range(2, 5);
                 if (escapeProgress > 15)
                 {
-                    Item handcuffs = character.Inventory.FindItemByTag("handlocker".ToIdentifier());
+                    Item handcuffs = character.Inventory.FindItemByTag(Tags.HandLockerItem);
                     if (handcuffs != null)
                     {
                         handcuffs.Drop(character);

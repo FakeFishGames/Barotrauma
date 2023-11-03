@@ -163,7 +163,7 @@ namespace Barotrauma
                 {
                     farseerBody.BodyType = BodyType.Static;
                 }
-                foreach (var mapEntity in MapEntity.mapEntityList)
+                foreach (var mapEntity in MapEntity.MapEntityList)
                 {
                     if (mapEntity.Submarine != submarine || mapEntity is not Structure wall) { continue; }
 
@@ -521,20 +521,25 @@ namespace Barotrauma
         {
             if (Submarine.LockY) { return Vector2.Zero; }
 
+            //calculate the buoyancy for all connected subs
+            //doing it separately for each connected sub means e.g. a flooded drone barely
+            //affects the buoyancy of the main sub even if there was as much water in the
+            //drone as the whole ballast volume of the sub
+            var connectedSubs = submarine.GetConnectedSubs();
             float waterVolume = 0.0f;
             float volume = 0.0f;
+            float totalMass = connectedSubs.Sum(s => s.SubBody.Body.Mass);
             foreach (Hull hull in Hull.HullList)
             {
-                if (hull.Submarine != submarine) { continue; }
-
+                if (hull.Submarine == null || !connectedSubs.Contains(hull.Submarine)) { continue; }
+                if (hull.Submarine.PhysicsBody is not { BodyType: BodyType.Dynamic }) { continue; }
                 waterVolume += hull.WaterVolume;
-                volume += hull.Volume;
+                volume += hull.Volume;                            
             }
 
-            float waterPercentage = volume <= 0.0f ? 0.0f : waterVolume / volume;
-            
+            float waterPercentage = volume <= 0.0f ? 0.0f : waterVolume / volume;            
             float buoyancy = NeutralBallastPercentage - waterPercentage;
-
+            float massRatio = Body.Mass / totalMass;
             if (buoyancy > 0.0f)
             {
                 buoyancy *= 2.0f;
@@ -543,13 +548,11 @@ namespace Barotrauma
             {
                 buoyancy = Math.Max(buoyancy, -0.5f);
             }
-
             if (forceUpwardsTimer > 0.0f)
             {
                 buoyancy = MathHelper.Lerp(buoyancy, 0.1f, forceUpwardsTimer / ForceUpwardsDelay);
             }
-
-            return new Vector2(0.0f, buoyancy * Body.Mass * 10.0f);
+            return new Vector2(0.0f, buoyancy * Body.Mass * 10.0f) * massRatio;
         }
 
         public void ApplyForce(Vector2 force)
@@ -1009,7 +1012,8 @@ namespace Barotrauma
                     //stun for up to 2 second if the impact equal or higher to the maximum impact
                     if (impact >= MaxCollisionImpact)
                     {
-                        c.AddDamage(impactPos, AfflictionPrefab.ImpactDamage.Instantiate(3.0f).ToEnumerable(), stun: Math.Min(impulse.Length() * 0.2f, 2.0f), playSound: true);
+                        float impactDamage = c.AnimController.GetImpactDamage(impact);
+                        c.AddDamage(impactPos, AfflictionPrefab.ImpactDamage.Instantiate(impactDamage).ToEnumerable(), stun: Math.Min(impulse.Length() * 0.2f, 2.0f), playSound: true);
                     }
                 }
             }

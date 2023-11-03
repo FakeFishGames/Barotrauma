@@ -41,6 +41,8 @@ namespace Barotrauma
 
         public bool IsEnterable { get; private set; }
 
+        public bool AllowAsBiomeGate { get; private set; }
+
         /// <summary>
         /// Can this location type be used in the random, non-campaign levels that don't take place in any specific zone
         /// </summary>
@@ -120,6 +122,7 @@ namespace Barotrauma
             UsePortraitInRandomLoadingScreens = element.GetAttributeBool(nameof(UsePortraitInRandomLoadingScreens), true);
             HasOutpost = element.GetAttributeBool("hasoutpost", true);
             IsEnterable = element.GetAttributeBool("isenterable", HasOutpost);
+            AllowAsBiomeGate = element.GetAttributeBool(nameof(AllowAsBiomeGate), true);
             AllowInRandomLevels = element.GetAttributeBool(nameof(AllowInRandomLevels), true);
 
             ShowSonarMarker = element.GetAttributeBool("showsonarmarker", true);

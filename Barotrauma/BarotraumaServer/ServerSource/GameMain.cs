@@ -327,6 +327,7 @@ namespace Barotrauma
                 while (Timing.Accumulator >= Timing.Step)
                 {
                     Timing.TotalTime += Timing.Step;
+                    Timing.TotalTimeUnpaused += Timing.Step;                    
                     DebugConsole.Update();
                     if (GameSession?.GameMode == null || !GameSession.GameMode.Paused)
                     {

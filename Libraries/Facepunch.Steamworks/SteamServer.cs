@@ -15,10 +15,14 @@ namespace Steamworks
 	{
 		internal static ISteamGameServer? Internal => Interface as ISteamGameServer;
 
-		internal override void InitializeInterface( bool server )
+		internal override bool InitializeInterface( bool server )
 		{
 			SetInterface( server, new ISteamGameServer( server ) );
+			if ( Interface is null || Interface.Self == IntPtr.Zero ) return false;
+
 			InstallEvents();
+
+			return true;
 		}
 
 		public static bool IsValid => Internal != null && Internal.IsValid;
@@ -33,35 +37,35 @@ namespace Steamworks
 		}
 
 		/// <summary>
-		/// User has been authed or rejected
+		/// Invoked when aser has been authed or rejected
 		/// </summary>
 		public static event Action<SteamId, SteamId, AuthResponse>? OnValidateAuthTicketResponse;
 
 		/// <summary>
-		/// Called when a connections to the Steam back-end has been established.
+		/// Invoked when a connection to the Steam back-end has been established.
 		/// This means the server now is logged on and has a working connection to the Steam master server.
 		/// </summary>
 		public static event Action? OnSteamServersConnected;
 
 		/// <summary>
-		/// This will occur periodically if the Steam client is not connected, and has failed when retrying to establish a connection (result, stilltrying)
+		/// This will occur periodically if the Steam client is not connected, and has failed when retrying to establish a connection (result, stilltrying).
 		/// </summary>
 		public static event Action<Result, bool>? OnSteamServerConnectFailure;
 
 		/// <summary>
-		/// Disconnected from Steam
+		/// Invoked when the server is disconnected from Steam
 		/// </summary>
 		public static event Action<Result>? OnSteamServersDisconnected;
 
 		/// <summary>
-		/// Called when authentication status changes, useful for grabbing SteamId once aavailability is current
+		/// Invoked when authentication status changes, useful for grabbing <see cref="SteamId"/> once availability is current.
 		/// </summary>
 		public static event Action<SteamNetworkingAvailability>? OnSteamNetAuthenticationStatus;
 
 
 		/// <summary>
 		/// Initialize the steam server.
-		/// If asyncCallbacks is false you need to call RunCallbacks manually every frame.
+		/// If <paramref name="asyncCallbacks"/> is <see langword="false"/> you need to call <see cref="RunCallbacks"/> manually every frame.
 		/// </summary>
 		public static void Init( AppId appid, SteamServerInit init, bool asyncCallbacks = true )
 		{
@@ -69,9 +73,6 @@ namespace Steamworks
 				throw new System.Exception( "Calling SteamServer.Init but is already initialized" );
 
 			uint ipaddress = 0; // Any Port
-
-			if ( init.SteamPort == 0 )
-				init = init.WithRandomSteamPort();
 
 			if ( init.IpAddress != null )
 				ipaddress = Utility.IpToInt32( init.IpAddress );
@@ -82,9 +83,9 @@ namespace Steamworks
 			//
 			// Get other interfaces
 			//
-			if ( !SteamInternal.GameServer_Init( ipaddress, init.SteamPort, init.GamePort, init.QueryPort, (int)init.Mode, init.VersionString ) )
+			if ( !SteamInternal.GameServer_Init( ipaddress, 0, init.GamePort, init.QueryPort, (int)init.Mode, init.VersionString ) )
 			{
-				throw new System.Exception( $"InitGameServer returned false ({ipaddress},{init.SteamPort},{init.GamePort},{init.QueryPort},{init.Mode},\"{init.VersionString}\")" );
+				throw new System.Exception( $"InitGameServer returned false ({ipaddress},{0},{init.GamePort},{init.QueryPort},{init.Mode},\"{init.VersionString}\")" );
 			}
 
 			//
@@ -109,7 +110,7 @@ namespace Steamworks
 			//
 			// Initial settings
 			//
-			AutomaticHeartbeats = true;
+			AdvertiseServer = true;
 			MaxPlayers = 32;
 			BotCount = 0;
 			Product = $"{appid.Value}";
@@ -210,7 +211,7 @@ namespace Steamworks
 		private static string _mapname = "";
 
 		/// <summary>
-		/// Gets or sets the current ModDir
+		/// Gets or sets the current ModDir.
 		/// </summary>
 		public static string ModDir
 		{
@@ -220,7 +221,7 @@ namespace Steamworks
 		private static string _modDir = "";
 
 		/// <summary>
-		/// Gets the current product
+		/// Gets the current product.
 		/// </summary>
 		public static string Product
 		{
@@ -230,7 +231,7 @@ namespace Steamworks
 		private static string _product = "";
 
 		/// <summary>
-		/// Gets or sets the current Product
+		/// Gets or sets the current Product.
 		/// </summary>
 		public static string GameDescription
 		{
@@ -240,7 +241,7 @@ namespace Steamworks
 		private static string _gameDescription = "";
 
 		/// <summary>
-		/// Gets or sets the current ServerName
+		/// Gets or sets the current ServerName.
 		/// </summary>
 		public static string ServerName
 		{
@@ -250,7 +251,7 @@ namespace Steamworks
 		private static string _serverName = "";
 
 		/// <summary>
-		/// Set whether the server should report itself as passworded
+		/// Set whether the server should report itself as passworded.
 		/// </summary>
 		public static bool Passworded
 		{
@@ -275,6 +276,9 @@ namespace Steamworks
 		}
 		private static string _gametags = "";
 
+		/// <summary>
+		/// Gets the SteamId of the server.
+		/// </summary>
 		public static SteamId SteamId => Internal?.GetSteamID() ?? default;
 
 		/// <summary>
@@ -287,7 +291,7 @@ namespace Steamworks
 		}
 
 		/// <summary>
-		/// Log onto Steam anonymously.
+		/// Log off of Steam.
 		/// </summary>
 		public static void LogOff()
 		{
@@ -296,14 +300,14 @@ namespace Steamworks
 
 		/// <summary>
 		/// Returns true if the server is connected and registered with the Steam master server
-		/// You should have called LogOnAnonymous etc on startup.
+		/// You should have called <see cref="LogOnAnonymous"/> etc on startup.
 		/// </summary>
 		public static bool LoggedOn => Internal != null && Internal.BLoggedOn();
 
 		/// <summary>
 		/// To the best of its ability this tries to get the server's
-		/// current public ip address. Be aware that this is likely to return
-		/// null for the first few seconds after initialization.
+		/// current public IP address. Be aware that this is likely to return
+		/// <see langword="null"/> for the first few seconds after initialization.
 		/// </summary>
 		public static System.Net.IPAddress? PublicIp => Internal?.GetPublicIP();
 
@@ -311,27 +315,29 @@ namespace Steamworks
 		/// Enable or disable heartbeats, which are sent regularly to the master server.
 		/// Enabled by default.
 		/// </summary>
+		[Obsolete( "Renamed to AdvertiseServer in 1.52" )]
 		public static bool AutomaticHeartbeats
 		{
-			set { Internal?.EnableHeartbeats( value ); }
-		}
+			set { Internal?.SetAdvertiseServerActive( value ); }
+		}		
+
 
 		/// <summary>
-		/// Set heartbeat interval, if automatic heartbeats are enabled.
-		/// You can leave this at the default.
+		/// Enable or disable heartbeats, which are sent regularly to the master server.
+		/// Enabled by default.
 		/// </summary>
-		public static int AutomaticHeartbeatRate
+		public static bool AdvertiseServer
 		{
-			set { Internal?.SetHeartbeatInterval( value ); }
+			set { Internal?.SetAdvertiseServerActive( value ); }
 		}
 
 		/// <summary>
 		/// Force send a heartbeat to the master server instead of waiting
 		/// for the next automatic update (if you've left them enabled)
 		/// </summary>
+		[Obsolete( "No longer used" )]
 		public static void ForceHeartbeat()
 		{
-			Internal?.ForceHeartbeat();
 		}
 
 		/// <summary>
@@ -372,7 +378,7 @@ namespace Steamworks
 		}
 
 		/// <summary>
-		/// Remove all key values
+		/// Remove all key values.
 		/// </summary>
 		public static void ClearKeys()
 		{
@@ -456,7 +462,7 @@ namespace Steamworks
 		}		
 		
 		/// <summary>
-		/// Does the user own this app (which could be DLC)
+		/// Does the user own this app (which could be DLC).
 		/// </summary>
 		public static UserHasLicenseForAppResult UserHasLicenseForApp( SteamId steamid, AppId appid )
 		{

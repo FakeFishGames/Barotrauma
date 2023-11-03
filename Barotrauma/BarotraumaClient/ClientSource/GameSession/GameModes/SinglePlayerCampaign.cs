@@ -368,7 +368,7 @@ namespace Barotrauma
             yield return CoroutineStatus.Success;
         }
 
-        protected override IEnumerable<CoroutineStatus> DoLevelTransition(TransitionType transitionType, LevelData newLevel, Submarine leavingSub, bool mirror, List<TraitorMissionResult> traitorResults = null)
+        protected override IEnumerable<CoroutineStatus> DoLevelTransition(TransitionType transitionType, LevelData newLevel, Submarine leavingSub, bool mirror)
         {
             NextLevel = newLevel;
             bool success = CrewManager.GetCharacters().Any(c => !c.IsDead);
@@ -382,7 +382,7 @@ namespace Barotrauma
                 // Event history must be registered before ending the round or it will be cleared
                 GameMain.GameSession.EventManager.RegisterEventHistory();
             }
-            GameMain.GameSession.EndRound("", traitorResults, transitionType);
+            GameMain.GameSession.EndRound("", transitionType);
             var continueButton = GameMain.GameSession.RoundSummary?.ContinueButton;
             RoundSummary roundSummary = null;
             if (GUIMessageBox.VisibleBox?.UserData is RoundSummary)
@@ -512,17 +512,6 @@ namespace Barotrauma
                     GUIMessageBox.MessageBoxes.Remove(GUIMessageBox.VisibleBox);
                 }
             }
-
-#if DEBUG
-            if (GUI.KeyboardDispatcher.Subscriber == null && PlayerInput.KeyHit(Microsoft.Xna.Framework.Input.Keys.M))
-            {
-                if (GUIMessageBox.MessageBoxes.Any()) { GUIMessageBox.MessageBoxes.Remove(GUIMessageBox.MessageBoxes.Last()); }
-
-                GUIFrame summaryFrame = GameMain.GameSession.RoundSummary.CreateSummaryFrame(GameMain.GameSession, "", null);
-                GUIMessageBox.MessageBoxes.Add(summaryFrame);
-                GameMain.GameSession.RoundSummary.ContinueButton.OnClicked = (_, __) => { GUIMessageBox.MessageBoxes.Remove(summaryFrame); return true; };
-            }
-#endif
 
             if (ShowCampaignUI || ForceMapUI)
             {

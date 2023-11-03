@@ -154,7 +154,8 @@ namespace Barotrauma
                 }
                 var order = new Order(orderPrefab, autonomousObjective.Option, item ?? character.CurrentHull as Entity, orderPrefab.GetTargetItemComponent(item), orderGiver: character);
                 if (order == null) { continue; }
-                if ((order.IgnoreAtOutpost || autonomousObjective.IgnoreAtOutpost) && Level.IsLoadedFriendlyOutpost && character.TeamID != CharacterTeamType.FriendlyNPC)
+                if ((order.IgnoreAtOutpost || autonomousObjective.IgnoreAtOutpost) && 
+                    Level.IsLoadedFriendlyOutpost && character.TeamID != CharacterTeamType.FriendlyNPC && !character.IsFriendlyNPCTurnedHostile)
                 {
                     if (Submarine.MainSub != null && Submarine.MainSub.DockedTo.None(s => s.TeamID != CharacterTeamType.FriendlyNPC && s.TeamID != character.TeamID))
                     {
@@ -530,7 +531,7 @@ namespace Barotrauma
                 case "cleanupitems":
                     if (order.TargetEntity is Item targetItem)
                     {
-                        if (targetItem.HasTag("allowcleanup") && targetItem.ParentInventory == null && targetItem.OwnInventory != null)
+                        if (targetItem.HasTag(Tags.AllowCleanup) && targetItem.ParentInventory == null && targetItem.OwnInventory != null)
                         {
                             // Target all items inside the container
                             newObjective = new AIObjectiveCleanupItems(character, this, targetItem.OwnInventory.AllItems, priorityModifier);

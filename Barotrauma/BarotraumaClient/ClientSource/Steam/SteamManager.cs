@@ -69,7 +69,7 @@ namespace Barotrauma.Steam
                 //Steamworks is completely insane so the following needs comments:
                 
                 //This callback seems to take place when the item in question has not been downloaded recently
-                Steamworks.SteamUGC.GlobalOnItemInstalled = id => Workshop.OnItemDownloadComplete(id);
+                Steamworks.SteamUGC.OnItemInstalled += (appId, itemId) => Workshop.OnItemDownloadComplete(itemId);
                 
                 //This callback seems to take place when the item has been downloaded recently and an update
                 //or a redownload has taken place

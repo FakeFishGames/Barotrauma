@@ -22,8 +22,6 @@ namespace Barotrauma
 
         private GUIComponent jobVariantTooltip;
 
-        private SubmarinePreview submarinePreview;
-
         private readonly GUITextBox chatInput;
         private readonly GUITextBox serverLogFilter;
         public GUITextBox ChatInput
@@ -38,8 +36,10 @@ namespace Barotrauma
 
         private readonly GUIScrollBar levelDifficultyScrollBar;
 
-        private readonly GUIButton[] traitorProbabilityButtons;
+        private readonly List<GUIComponent> traitorElements = new List<GUIComponent>();
+        private readonly GUIScrollBar traitorProbabilitySlider;
         private readonly GUITextBlock traitorProbabilityText;
+        private readonly GUILayoutGroup traitorDangerGroup;
 
         private readonly GUIButton[] botCountButtons;
         private readonly GUITextBlock botCountText;
@@ -68,6 +68,7 @@ namespace Barotrauma
         public static GUIButton JobInfoFrame;
 
         private readonly GUITickBox spectateBox;
+        public bool Spectating => spectateBox is { Selected: true, Visible: true };
 
         private readonly GUIFrame playerInfoContainer;
 
@@ -1070,15 +1071,27 @@ namespace Barotrauma
 
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.055f), settingsHolder.RectTransform) { MinSize = new Point(0, 25) },
                 TextManager.Get("Settings"), font: GUIStyle.SubHeadingFont);
-            var settingsFrame = new GUIFrame(new RectTransform(Vector2.One, settingsHolder.RectTransform), style: "InnerFrame");
-            var settingsContent = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.95f), settingsFrame.RectTransform, Anchor.Center))
+
+            var settingsFrameTop = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.55f), settingsHolder.RectTransform), style: "InnerFrame");
+            var settingsContentTop = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.9f), settingsFrameTop.RectTransform, Anchor.Center))
             {
-                RelativeSpacing = 0.025f
+                Stretch = true,
+                AbsoluteSpacing = GUI.IntScale(10)
+            };
+
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.055f), settingsHolder.RectTransform) { MinSize = new Point(0, 30) },
+                TextManager.Get("TraitorSettings"), font: GUIStyle.SubHeadingFont);
+
+            var settingsFrameBottom = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.35f), settingsHolder.RectTransform), style: "InnerFrame");
+            var settingsContentBottom = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.85f), settingsFrameBottom.RectTransform, Anchor.Center))
+            {
+                Stretch = true,
+                AbsoluteSpacing = GUI.IntScale(10)
             };
 
             //seed ------------------------------------------------------------------
 
-            var seedLabel = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.1f), settingsContent.RectTransform), TextManager.Get("LevelSeed"));
+            var seedLabel = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.1f), settingsContentTop.RectTransform), TextManager.Get("LevelSeed"));
             SeedBox = new GUITextBox(new RectTransform(new Vector2(0.5f, 1.0f), seedLabel.RectTransform, Anchor.CenterRight));
             SeedBox.OnDeselected += (textBox, key) =>
             {
@@ -1089,7 +1102,10 @@ namespace Barotrauma
 
             //level difficulty ------------------------------------------------------------------
 
-            var difficultyHolder = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.2f), settingsContent.RectTransform), style: null);
+            var difficultyHolder = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.2f), settingsContentTop.RectTransform), style: null)
+            {
+                CanBeFocused = true
+            };
 
             var difficultyLabel = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.5f), difficultyHolder.RectTransform), TextManager.Get("LevelDifficulty"))
             {
@@ -1116,46 +1132,16 @@ namespace Barotrauma
                 if (!EventManagerSettings.Prefabs.Any()) { return true; }
                 difficultyName.Text =
                     EventManagerSettings.GetByDifficultyPercentile(value).Name
-                    + " (" + ((int)Math.Round(scrollbar.BarScrollValue)) + " %)";
+                    + $" ({TextManager.GetWithVariable("percentageformat", "[value]", ((int)Math.Round(scrollbar.BarScrollValue)).ToString())})";
                 difficultyName.TextColor = ToolBox.GradientLerp(scrollbar.BarScroll, GUIStyle.Green, GUIStyle.Orange, GUIStyle.Red);
                 return true;
             };
 
             clientDisabledElements.Add(levelDifficultyScrollBar);
 
-            //traitor probability ------------------------------------------------------------------
-
-            var traitorsSettingHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.1f), settingsContent.RectTransform), isHorizontal: true, childAnchor: Anchor.CenterLeft) { Stretch = true };
-
-            new GUITextBlock(new RectTransform(new Vector2(0.7f, 0.0f), traitorsSettingHolder.RectTransform), TextManager.Get("Traitors"), wrap: true);
-
-            var traitorProbContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.5f, 1.0f), traitorsSettingHolder.RectTransform), isHorizontal: true, childAnchor: Anchor.CenterLeft) { RelativeSpacing = 0.05f, Stretch = true };
-            traitorProbabilityButtons = new GUIButton[2];
-            traitorProbabilityButtons[0] = new GUIButton(new RectTransform(new Vector2(0.15f, 1.0f), traitorProbContainer.RectTransform), style: "GUIButtonToggleLeft")
-            {
-                OnClicked = (button, obj) =>
-                {
-                    GameMain.Client?.ServerSettings.ClientAdminWrite(ServerSettings.NetFlags.Misc, traitorSetting: -1);
-                    return true;
-                }
-            };
-
-            traitorProbabilityText = new GUITextBlock(new RectTransform(new Vector2(0.7f, 1.0f), traitorProbContainer.RectTransform), TextManager.Get("No"),
-                textAlignment: Alignment.Center, style: "GUITextBox");
-            traitorProbabilityButtons[1] = new GUIButton(new RectTransform(new Vector2(0.15f, 1.0f), traitorProbContainer.RectTransform), style: "GUIButtonToggleRight")
-            {
-                OnClicked = (button, obj) =>
-                {
-                    GameMain.Client?.ServerSettings.ClientAdminWrite(ServerSettings.NetFlags.Misc, traitorSetting: 1);
-                    return true;
-                }
-            };
-
-            clientDisabledElements.AddRange(traitorProbabilityButtons);
-
             //bot count ------------------------------------------------------------------
 
-            var botCountSettingHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.1f), settingsContent.RectTransform), isHorizontal: true, childAnchor: Anchor.CenterLeft) { Stretch = true };
+            var botCountSettingHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.1f), settingsContentTop.RectTransform), isHorizontal: true, childAnchor: Anchor.CenterLeft) { Stretch = true };
 
             new GUITextBlock(new RectTransform(new Vector2(0.7f, 0.0f), botCountSettingHolder.RectTransform), TextManager.Get("BotCount"), wrap: true);
             var botCountContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.5f, 1.0f), botCountSettingHolder.RectTransform), isHorizontal: true, childAnchor: Anchor.CenterLeft) { RelativeSpacing = 0.05f, Stretch = true };
@@ -1178,10 +1164,10 @@ namespace Barotrauma
                     return true;
                 }
             };
-
+            botCountSettingHolder.RectTransform.MinSize = new Point(0, SeedBox.RectTransform.MinSize.Y);
             clientDisabledElements.AddRange(botCountButtons);
 
-            var botSpawnModeSettingHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.1f), settingsContent.RectTransform), isHorizontal: true, childAnchor: Anchor.CenterLeft) { Stretch = true };
+            var botSpawnModeSettingHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.1f), settingsContentTop.RectTransform), isHorizontal: true, childAnchor: Anchor.CenterLeft) { Stretch = true };
 
             new GUITextBlock(new RectTransform(new Vector2(0.7f, 0.0f), botSpawnModeSettingHolder.RectTransform), TextManager.Get("BotSpawnMode"), wrap: true);
             var botSpawnModeContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.5f, 1.0f), botSpawnModeSettingHolder.RectTransform), isHorizontal: true, childAnchor: Anchor.CenterLeft) { RelativeSpacing = 0.05f, Stretch = true };
@@ -1205,23 +1191,108 @@ namespace Barotrauma
                 }
             };
 
-            List<GUIComponent> settingsElements = settingsContent.Children.ToList();
-            for (int i = 0; i < settingsElements.Count; i++)
-            {
-                if (settingsElements[i].CountChildren > 0)
-                {
-                    settingsElements[i].RectTransform.MinSize = new Point(0, Math.Max(settingsElements[i].RectTransform.Children.Max(c => c.Rect.Height), (int)(20 * GUI.Scale)));
-                }
-            }
+            clientDisabledElements.AddRange(botSpawnModeButtons);
 
-            settingsBlocker = new GUIFrame(new RectTransform(Vector2.One, settingsFrame.RectTransform), style: "InnerFrame")
+            settingsBlocker = new GUIFrame(new RectTransform(Vector2.One, settingsFrameTop.RectTransform), style: "InnerFrame")
             {
-                Color = Color.Black * 0.5f,
+                Color = Color.Black * 0.85f,
                 IgnoreLayoutGroups = true,
                 Visible = false
             };
+            new GUITextBlock(new RectTransform(new Vector2(0.75f, 0.3f), settingsBlocker.RectTransform, Anchor.Center),
+                TextManager.Get("settings.campaigndisabled"), wrap: true, style: "InnerFrame", textAlignment: Alignment.Center, textColor: GUIStyle.TextColorNormal);
 
-            clientDisabledElements.AddRange(botSpawnModeButtons);
+            //traitor probability ------------------------------------------------------------------
+
+            var traitorsProbHolder = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.6f), settingsContentBottom.RectTransform), style: null);
+
+            var traitorProbLabel = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.5f), traitorsProbHolder.RectTransform), TextManager.Get("traitor.probability"));
+
+            traitorProbabilitySlider = new GUIScrollBar(new RectTransform(new Vector2(1.0f, 0.5f), traitorsProbHolder.RectTransform, Anchor.BottomCenter), style: "GUISlider", barSize: 0.2f)
+            {
+                Step = 0.05f,
+                Range = new Vector2(0.0f, 1.0f),
+                ToolTip = TextManager.Get("traitor.probability.tooltip"),
+                OnReleased = (scrollbar, value) =>
+                {
+                    GameMain.Client?.ServerSettings.ClientAdminWrite(ServerSettings.NetFlags.Misc, traitorProbability: value);
+                    return true;
+                }
+            };
+            var traitorProbabilityText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 1.0f), traitorProbLabel.RectTransform), "", textAlignment: Alignment.CenterRight)
+            {
+                ToolTip = TextManager.Get("traitor.probability.tooltip")
+            };
+            traitorProbabilitySlider.OnMoved = (scrollbar, value) =>
+            {
+                traitorProbabilityText.Text = TextManager.GetWithVariable("percentageformat", "[value]", ((int)Math.Round(scrollbar.BarScrollValue * 100)).ToString());
+                traitorProbabilityText.TextColor =
+                    value <= 0.0f ?
+                        GUIStyle.Green :
+                        ToolBox.GradientLerp(scrollbar.BarScroll, GUIStyle.Yellow, GUIStyle.Orange, GUIStyle.Red);
+                return true;
+            };
+
+            traitorElements.Clear();
+            traitorElements.Add(traitorProbabilityText);
+            traitorElements.Add(traitorProbabilitySlider);
+            clientDisabledElements.Add(traitorProbabilitySlider);
+
+            var traitorDangerHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.4f), settingsContentBottom.RectTransform), isHorizontal: true, childAnchor: Anchor.CenterLeft) 
+            {
+                Stretch = true
+            };
+
+            new GUITextBlock(new RectTransform(new Vector2(0.7f, 1.0f), traitorDangerHolder.RectTransform), TextManager.Get("traitor.dangerlevelsetting"), wrap: true)
+            {
+                ToolTip = TextManager.Get("traitor.dangerlevelsetting.tooltip")
+            };
+
+            var traitorDangerContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.5f, 1.0f), traitorDangerHolder.RectTransform), isHorizontal: true, childAnchor: Anchor.CenterLeft) { RelativeSpacing = 0.05f, Stretch = true };
+            var traitorDangerButtons = new GUIButton[2];
+            traitorDangerButtons[0] = new GUIButton(new RectTransform(new Vector2(0.15f, 1.0f), traitorDangerContainer.RectTransform), style: "GUIButtonToggleLeft")
+            {
+                OnClicked = (button, obj) =>
+                {
+                    GameMain.Client?.ServerSettings.ClientAdminWrite(ServerSettings.NetFlags.Misc, traitorDangerLevel: -1);
+                    return true;
+                }
+            };
+
+            traitorDangerGroup = new GUILayoutGroup(new RectTransform(new Vector2(0.7f, 1.0f), traitorDangerContainer.RectTransform), isHorizontal: true, childAnchor: Anchor.CenterLeft)
+            {
+                Stretch = true,
+                AbsoluteSpacing = 1
+            };
+            for (int i = TraitorEventPrefab.MinDangerLevel; i <= TraitorEventPrefab.MaxDangerLevel; i++)
+            {
+                var difficultyColor = Mission.GetDifficultyColor(i);
+                new GUIImage(new RectTransform(new Vector2(0.75f), traitorDangerGroup.RectTransform), "DifficultyIndicator", scaleToFit: true)
+                {
+                    ToolTip =
+                        RichString.Rich(
+                            $"‖color:{Color.White.ToStringHex()}‖{TextManager.Get($"traitor.dangerlevel.{i}")}‖color:end‖" + '\n' +
+                            TextManager.Get($"traitor.dangerlevel.{i}.description")),
+                    Color = difficultyColor,
+                    DisabledColor = Color.Gray * 0.5f,
+                };
+            }
+
+            traitorDangerButtons[1] = new GUIButton(new RectTransform(new Vector2(0.15f, 1.0f), traitorDangerContainer.RectTransform), style: "GUIButtonToggleRight")
+            {
+                OnClicked = (button, obj) =>
+                {
+                    GameMain.Client?.ServerSettings.ClientAdminWrite(ServerSettings.NetFlags.Misc, traitorDangerLevel: 1);
+                    return true;
+                }
+            };
+
+            SetTraitorDangerIndicators(GameMain.Client?.ServerSettings.TraitorDangerLevel ?? TraitorEventPrefab.MinDangerLevel);
+            traitorElements.AddRange(traitorDangerButtons);
+            clientDisabledElements.AddRange(traitorDangerButtons);
+
+            settingsContentTop.Recalculate();
+            settingsContentBottom.Recalculate();
         }
 
         public void StopWaitingForStartRound()
@@ -1264,6 +1335,7 @@ namespace Barotrauma
 
         public override void Deselect()
         {
+            SaveAppearance();
             chatInput.Deselect();
             CampaignCharacterDiscarded = false;
             
@@ -1338,34 +1410,35 @@ namespace Barotrauma
 
         public void RefreshEnabledElements()
         {
-            ServerName.Readonly = !GameMain.Client.HasPermission(ClientPermissions.ManageSettings);
-            ServerMessage.Readonly = !GameMain.Client.HasPermission(ClientPermissions.ManageSettings);
-            missionTypeList.Enabled = GameMain.Client.HasPermission(ClientPermissions.ManageSettings);
+            bool manageSettings = GameMain.Client.HasPermission(ClientPermissions.ManageSettings);
+
+            ServerName.Readonly = !manageSettings;
+            ServerMessage.Readonly = !manageSettings;
+            missionTypeList.Enabled = manageSettings;
             foreach (var tickBox in missionTypeTickBoxes)
             {
-                tickBox.Enabled = GameMain.Client.HasPermission(ClientPermissions.ManageSettings);
+                tickBox.Enabled = manageSettings;
             }
-            SeedBox.Enabled = !CampaignFrame.Visible && !CampaignSetupFrame.Visible && GameMain.Client.HasPermission(ClientPermissions.ManageSettings);
-            levelDifficultyScrollBar.Enabled = !CampaignFrame.Visible && !CampaignSetupFrame.Visible && GameMain.Client.HasPermission(ClientPermissions.ManageSettings);
+            SeedBox.Enabled = !CampaignFrame.Visible && !CampaignSetupFrame.Visible && manageSettings;
+            levelDifficultyScrollBar.Enabled = !CampaignFrame.Visible && !CampaignSetupFrame.Visible && manageSettings;
             levelDifficultyScrollBar.ToolTip = string.Empty;
             if (!levelDifficultyScrollBar.Enabled)
             {
                 levelDifficultyScrollBar.ToolTip = TextManager.Get("campaigndifficultydisabled");
             }
 
-            traitorProbabilityButtons[0].Enabled = traitorProbabilityButtons[1].Enabled = traitorProbabilityText.Enabled =
-                !CampaignFrame.Visible && !CampaignSetupFrame.Visible && GameMain.Client.HasPermission(ClientPermissions.ManageSettings);
-            botCountButtons[0].Enabled = botCountButtons[1].Enabled = GameMain.Client.HasPermission(ClientPermissions.ManageSettings);
-            botSpawnModeButtons[0].Enabled = botSpawnModeButtons[1].Enabled = GameMain.Client.HasPermission(ClientPermissions.ManageSettings);
+            traitorElements.ForEach(e => e.Enabled = manageSettings);
+            botCountButtons[0].Enabled = botCountButtons[1].Enabled = manageSettings;
+            botSpawnModeButtons[0].Enabled = botSpawnModeButtons[1].Enabled = manageSettings;
 
-            autoRestartBox.Enabled = GameMain.Client.HasPermission(ClientPermissions.ManageSettings);
+            autoRestartBox.Enabled = manageSettings;
 
-            SettingsButton.Visible = GameMain.Client.HasPermission(ClientPermissions.ManageSettings);
+            SettingsButton.Visible = manageSettings;
             SettingsButton.OnClicked = GameMain.Client.ServerSettings.ToggleSettingsFrame;
             StartButton.Visible = GameMain.Client.HasPermission(ClientPermissions.ManageRound) && !GameMain.Client.GameStarted && !CampaignSetupFrame.Visible && !CampaignFrame.Visible;
-            ServerName.Readonly = !GameMain.Client.HasPermission(ClientPermissions.ManageSettings);
-            ServerMessage.Readonly = !GameMain.Client.HasPermission(ClientPermissions.ManageSettings);
-            shuttleTickBox.Enabled = GameMain.Client.HasPermission(ClientPermissions.ManageSettings) && !GameMain.Client.GameStarted;
+            ServerName.Readonly = !manageSettings;
+            ServerMessage.Readonly = !manageSettings;
+            shuttleTickBox.Enabled = manageSettings && !GameMain.Client.GameStarted;
             SubList.Enabled = !CampaignFrame.Visible && (GameMain.Client.ServerSettings.AllowSubVoting || GameMain.Client.HasPermission(ClientPermissions.SelectSub));
             ShuttleList.Enabled = ShuttleList.ButtonEnabled = GameMain.Client.HasPermission(ClientPermissions.SelectSub) && !GameMain.Client.GameStarted;
             ModeList.Enabled = !GameMain.Client.GameStarted && (GameMain.Client.ServerSettings.AllowModeVoting || GameMain.Client.HasPermission(ClientPermissions.SelectMode));
@@ -1375,7 +1448,7 @@ namespace Barotrauma
             roundControlsHolder.Children.ForEach(c => c.RectTransform.RelativeSize = Vector2.One);
             roundControlsHolder.Recalculate();
 
-            SubVisibilityButton.Visible = GameMain.Client.HasPermission(ClientPermissions.ManageSettings);
+            SubVisibilityButton.Visible = manageSettings;
 
             ReadyToStartBox.Parent.Visible = !GameMain.Client.GameStarted;
 
@@ -1415,6 +1488,7 @@ namespace Barotrauma
 
         public void CreatePlayerFrame(GUIComponent parent, bool createPendingText = true, bool alwaysAllowEditing = false)
         {
+            if (GameMain.Client == null) { return; }
             UpdatePlayerFrame(
                 Character.Controlled?.Info ?? playerInfoContainer.Children?.First().UserData as CharacterInfo ?? GameMain.Client.CharacterInfo,
                 allowEditing: alwaysAllowEditing || campaignCharacterInfo == null,
@@ -1424,6 +1498,7 @@ namespace Barotrauma
 
         private void UpdatePlayerFrame(CharacterInfo characterInfo, bool allowEditing, GUIComponent parent, bool createPendingText = true)
         {
+            if (GameMain.Client == null) { return; }
             createPendingChangesText = createPendingText;
             if (characterInfo == null || CampaignCharacterDiscarded)
             {
@@ -1446,7 +1521,6 @@ namespace Barotrauma
 
             bool nameChangePending = isGameRunning && GameMain.Client.PendingName != string.Empty && GameMain.Client?.Character?.Name != GameMain.Client.PendingName;
             changesPendingText = null;
-
 
             if (TabMenu.PendingChanges)
             {
@@ -1752,6 +1826,16 @@ namespace Barotrauma
                 onDraw: (sb, component) => { DrawJobVariantItems(sb, component, new JobVariant(jobPrefab, variant), itemsPerRow); });
 
             jobVariantTooltip.RectTransform.MinSize = new Point(0, content.RectTransform.Children.Sum(c => c.Rect.Height + content.AbsoluteSpacing));
+        }
+
+        private void SetTraitorDangerIndicators(int dangerLevel)
+        {
+            int i = 0;
+            foreach (var child in traitorDangerGroup.Children)
+            {
+                child.Enabled = i < dangerLevel;
+                i++;
+            }
         }
 
         public bool ToggleSpectate(GUITickBox tickBox)
@@ -2088,7 +2172,7 @@ namespace Barotrauma
         private Action<SpriteBatch, GUICustomComponent> DrawDownloadThrobber(Client client, params GUIComponent[] otherComponents)
             => (sb, c) => DrawDownloadThrobber(client, otherComponents, sb, c); //poor man's currying
 
-        private void DrawDownloadThrobber(Client client, GUIComponent[] otherComponents, SpriteBatch spriteBatch, GUICustomComponent component)
+        private static void DrawDownloadThrobber(Client client, GUIComponent[] otherComponents, SpriteBatch spriteBatch, GUICustomComponent component)
         {
             if (!client.IsDownloading)
             {
@@ -2322,7 +2406,14 @@ namespace Barotrauma
 
             PlayerFrame = new GUIButton(new RectTransform(Vector2.One, GUI.Canvas, Anchor.Center), style: null)
             {
-                OnClicked = (btn, userdata) => { if (GUI.MouseOn == btn || GUI.MouseOn == btn.TextBlock) ClosePlayerFrame(btn, userdata); return true; }
+                OnClicked = (btn, userdata) => 
+                { 
+                    if (GUI.MouseOn == btn || GUI.MouseOn == btn.TextBlock)
+                    {
+                        ClosePlayerFrame(btn, userdata);
+                    }
+                    return true; 
+                }
             };
 
             new GUIFrame(new RectTransform(GUI.Canvas.RelativeSize, PlayerFrame.RectTransform, Anchor.Center), style: "GUIBackgroundBlocker");
@@ -2412,7 +2503,7 @@ namespace Barotrauma
                         //reset rank to custom
                         rankDropDown.SelectItem(null);
 
-                        if (!(PlayerFrame.UserData is Client client)) { return false; }
+                        if (PlayerFrame.UserData is not Client client) { return false; }
 
                         foreach (GUIComponent child in tickbox.Parent.GetChild<GUIListBox>().Content.Children)
                         {
@@ -2432,7 +2523,7 @@ namespace Barotrauma
 
                 foreach (ClientPermissions permission in Enum.GetValues(typeof(ClientPermissions)))
                 {
-                    if (permission == ClientPermissions.None || permission == ClientPermissions.All) continue;
+                    if (permission == ClientPermissions.None || permission == ClientPermissions.All) { continue; }
 
                     var permissionTick = new GUITickBox(new RectTransform(new Vector2(0.15f, 0.15f), permissionsBox.Content.RectTransform),
                         TextManager.Get("ClientPermission." + permission), font: GUIStyle.SmallFont)
@@ -2445,7 +2536,7 @@ namespace Barotrauma
                             //reset rank to custom
                             rankDropDown.SelectItem(null);
 
-                            if (!(PlayerFrame.UserData is Client client)) { return false; }
+                            if (PlayerFrame.UserData is not Client client) { return false; }
 
                             var thisPermission = (ClientPermissions)tickBox.UserData;
                             if (tickBox.Selected)
@@ -2480,7 +2571,7 @@ namespace Barotrauma
                         //reset rank to custom
                         rankDropDown.SelectItem(null);
 
-                        if (!(PlayerFrame.UserData is Client client)) { return false; }
+                        if (PlayerFrame.UserData is not Client client) { return false; }
 
                         foreach (GUIComponent child in tickbox.Parent.GetChild<GUIListBox>().Content.Children)
                         {
@@ -2803,7 +2894,7 @@ namespace Barotrauma
             publicOrPrivate.RectTransform.NonScaledSize = (publicOrPrivate.Font.MeasureString(publicOrPrivate.Text) + new Vector2(25, 8) * GUI.Scale).ToPoint();
         }
 
-        private void DrawJobVariantItems(SpriteBatch spriteBatch, GUICustomComponent component, JobVariant jobPrefab, int itemsPerRow)
+        private static void DrawJobVariantItems(SpriteBatch spriteBatch, GUICustomComponent component, JobVariant jobPrefab, int itemsPerRow)
         {
             var itemIdentifiers = jobPrefab.Prefab.PreviewItems[jobPrefab.Variant]
                 .Where(it => it.ShowPreview)
@@ -2938,28 +3029,22 @@ namespace Barotrauma
             {
                 OnHeadSwitch = menu =>
                 {
-                    StoreHead(true);
                     UpdateJobPreferences(info);
                     SelectAppearanceTab(button, _);
-                },
-                OnSliderMoved = (bar, scroll) =>
-                {
-                    StoreHead(false);
-                    return false;
-                },
-                OnSliderReleased = SaveHead
+                }
             };
             return false;
         }
         
-        private bool SaveHead(GUIScrollBar scrollBar, float barScroll) => StoreHead(true);
-        private bool StoreHead(bool save)
+        public bool SaveAppearance()
         {
-            var info = GameMain.Client.CharacterInfo;
+            var info = GameMain.Client?.CharacterInfo;
+            if (info?.Head == null) { return false; }
 
             var characterConfig = MultiplayerPreferences.Instance;
             
-            characterConfig.TagSet.Clear(); characterConfig.TagSet.UnionWith(info.Head.Preset.TagSet);
+            characterConfig.TagSet.Clear();
+            characterConfig.TagSet.UnionWith(info.Head.Preset.TagSet);
             characterConfig.HairIndex = info.Head.HairIndex;
             characterConfig.BeardIndex = info.Head.BeardIndex;
             characterConfig.MoustacheIndex = info.Head.MoustacheIndex;
@@ -2968,15 +3053,12 @@ namespace Barotrauma
             characterConfig.FacialHairColor = info.Head.FacialHairColor;
             characterConfig.SkinColor = info.Head.SkinColor;
 
-            if (save)
+            if (GameMain.GameSession?.IsRunning ?? false)
             {
-                if (GameMain.GameSession?.IsRunning ?? false)
-                {
-                    TabMenu.PendingChanges = true;
-                    CreateChangesPendingText();
-                }
-                GameSettings.SaveCurrentConfig();
+                TabMenu.PendingChanges = true;
+                CreateChangesPendingText();
             }
+            GameSettings.SaveCurrentConfig();
             return true;
         }
 
@@ -3143,7 +3225,7 @@ namespace Barotrauma
             return true;
         }
 
-        private GUIImage[][] AddJobSpritesToGUIComponent(GUIComponent parent, JobPrefab jobPrefab, bool selectedByPlayer)
+        private static GUIImage[][] AddJobSpritesToGUIComponent(GUIComponent parent, JobPrefab jobPrefab, bool selectedByPlayer)
         {
             GUIFrame innerFrame = null;
             List<JobPrefab.OutfitPreview> outfitPreviews = jobPrefab.GetJobOutfitSprites(CharacterPrefab.HumanPrefab.CharacterInfoPrefab, useInventoryIcon: true, out var maxDimensions);
@@ -3221,6 +3303,7 @@ namespace Barotrauma
 
             if ((prevMode == GameModePreset.PvP) != (SelectedMode == GameModePreset.PvP))
             {
+                SaveAppearance();
                 UpdatePlayerFrame(null);
                 GameMain.Client.ConnectedClients.ForEach(c => SetPlayerNameAndJobPreference(c));
             }
@@ -3363,7 +3446,11 @@ namespace Barotrauma
             if (!enabled)
             {
                 //remove campaign character from the panel
-                if (campaignCharacterInfo != null) { UpdatePlayerFrame(null); }
+                if (campaignCharacterInfo != null) 
+                { 
+                    UpdatePlayerFrame(null);
+                    SetSpectate(spectateBox.Selected);
+                }
                 campaignCharacterInfo = null;
                 CampaignCharacterDiscarded = false;
             }
@@ -3411,7 +3498,7 @@ namespace Barotrauma
 
         private bool ViewJobInfo(GUIButton button, object obj)
         {
-            if (!(button.UserData is JobVariant jobPrefab)) { return false; }
+            if (button.UserData is not JobVariant jobPrefab) { return false; }
 
             JobInfoFrame = jobPrefab.Prefab.CreateInfoFrame(out GUIComponent buttonContainer);
             GUIButton closeButton = new GUIButton(new RectTransform(new Vector2(0.25f, 0.05f), buttonContainer.RectTransform, Anchor.BottomRight),
@@ -3541,7 +3628,7 @@ namespace Barotrauma
             }
         }
 
-        private GUIButton CreateJobVariantButton(JobVariant jobPrefab, int variantIndex, int variantCount, GUIComponent slot)
+        private static GUIButton CreateJobVariantButton(JobVariant jobPrefab, int variantIndex, int variantCount, GUIComponent slot)
         {
             float relativeSize = 0.15f;
 
@@ -3631,9 +3718,13 @@ namespace Barotrauma
                 }
 
                 if (subList == SubList)
+                {
                     FailedSelectedSub = null;
+                }
                 else
+                {
                     FailedSelectedShuttle = null;
+                }
 
                 //hashes match, all good
                 if (sub.MD5Hash?.StringRepresentation == md5Hash && SubmarineInfo.SavedSubmarines.Contains(sub))

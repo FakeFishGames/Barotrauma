@@ -712,7 +712,7 @@ namespace Barotrauma
         /// </summary>
         public static Structure GetAttachTarget(Vector2 worldPosition)
         {
-            foreach (MapEntity mapEntity in mapEntityList)
+            foreach (MapEntity mapEntity in MapEntityList)
             {
                 if (!(mapEntity is Structure structure)) { continue; }
                 if (!structure.Prefab.AllowAttachItems) { continue; }
@@ -1243,9 +1243,9 @@ namespace Barotrauma
             UpdateSections();
         }
 
-        private void CreateWallDamageExplosion(Gap gap, Character attacker)
+        private static void CreateWallDamageExplosion(Gap gap, Character attacker)
         {
-            const float explosionRange = 750.0f;
+            const float explosionRange = 500.0f;
             float explosionStrength = gap.Open;
 
             var linkedHull = gap.linkedTo.FirstOrDefault() as Hull;
@@ -1264,20 +1264,27 @@ namespace Barotrauma
 
             if (explosionOnBroken == null)
             {
-                explosionOnBroken = new Explosion(explosionRange * gap.Open, force: 10.0f, damage: 0.0f, structureDamage: 0.0f, itemDamage: 0.0f);
+                explosionOnBroken = new Explosion(explosionRange, force: 5.0f, damage: 0.0f, structureDamage: 0.0f, itemDamage: 0.0f);
                 if (AfflictionPrefab.Prefabs.TryGet("lacerations".ToIdentifier(), out AfflictionPrefab lacerations))
                 {
-                    explosionOnBroken.Attack.Afflictions.Add(lacerations.Instantiate(50.0f), null);
+                    explosionOnBroken.Attack.Afflictions.Add(lacerations.Instantiate(5.0f), null);
                 }
                 else
                 {
                     explosionOnBroken.Attack.Afflictions.Add(AfflictionPrefab.InternalDamage.Instantiate(5.0f), null);
                 }
+                explosionOnBroken.IgnoreCover = false;
                 explosionOnBroken.OnlyInside = true;
+                explosionOnBroken.DistanceFalloff = false;
                 explosionOnBroken.DisableParticles();
             }
 
+            explosionOnBroken.IgnoredCover = gap.ConnectedWall?.ToEnumerable();
+            explosionOnBroken.Attack.Range = explosionRange * gap.Open;
             explosionOnBroken.Attack.DamageMultiplier = explosionStrength;
+            explosionOnBroken.Attack.Stun = MathHelper.Clamp(explosionStrength, 0.5f, 1.0f);
+            explosionOnBroken.IgnoredCharacters.Clear();
+            if (attacker?.AIController is EnemyAIController) { explosionOnBroken.IgnoredCharacters.Add(attacker); }           
             explosionOnBroken?.Explode(gap.WorldPosition, damageSource: null, attacker: attacker);
 #if CLIENT
             if (linkedHull != null)

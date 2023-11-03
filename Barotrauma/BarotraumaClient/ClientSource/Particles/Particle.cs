@@ -85,7 +85,7 @@ namespace Barotrauma.Particles
         public float StartDelay
         {
             get { return startDelay; }
-            set { startDelay = MathHelper.Clamp(value, Prefab.StartDelayMin, prefab.StartDelayMax); }
+            set { startDelay = Math.Max(value, 0.0f); }
         }
         
         public Vector2 Size
@@ -311,7 +311,8 @@ namespace Barotrauma.Particles
             {
                 foreach (ParticleEmitter emitter in subEmitters)
                 {
-                    emitter.Emit(deltaTime, position, currentHull);
+                    emitter.Emit(deltaTime, position, currentHull, particleRotation: rotation, 
+                        sizeMultiplier: emitter.Prefab.Properties.CopyParentParticleScale ? Math.Max(size.X, size.Y) : 1.0f);
                 }
             }
 
@@ -566,11 +567,12 @@ namespace Barotrauma.Particles
             drawPosition = Timing.Interpolate(prevPosition, position);
             drawRotation = Timing.Interpolate(prevRotation, rotation);
         }
-        
+
         public void Draw(SpriteBatch spriteBatch)
         {
-            Vector2 drawSize = size;
+            if (startDelay > 0.0f) { return; }
 
+            Vector2 drawSize = size;
             if (prefab.GrowTime > 0.0f && totalLifeTime - lifeTime < prefab.GrowTime)
             {
                 drawSize *= MathUtils.SmoothStep((totalLifeTime - lifeTime) / prefab.GrowTime);

@@ -7,7 +7,7 @@ using Steamworks.Data;
 
 namespace Steamworks
 {
-	internal class ISteamUGC : SteamInterface
+	internal unsafe class ISteamUGC : SteamInterface
 	{
 		
 		internal ISteamUGC( bool IsGameServer )
@@ -15,12 +15,12 @@ namespace Steamworks
 			SetupInterface( IsGameServer );
 		}
 		
-		[DllImport( Platform.LibraryName, EntryPoint = "SteamAPI_SteamUGC_v014", CallingConvention = Platform.CC)]
-		internal static extern IntPtr SteamAPI_SteamUGC_v014();
-		public override IntPtr GetUserInterfacePointer() => SteamAPI_SteamUGC_v014();
-		[DllImport( Platform.LibraryName, EntryPoint = "SteamAPI_SteamGameServerUGC_v014", CallingConvention = Platform.CC)]
-		internal static extern IntPtr SteamAPI_SteamGameServerUGC_v014();
-		public override IntPtr GetServerInterfacePointer() => SteamAPI_SteamGameServerUGC_v014();
+		[DllImport( Platform.LibraryName, EntryPoint = "SteamAPI_SteamUGC_v017", CallingConvention = Platform.CC)]
+		internal static extern IntPtr SteamAPI_SteamUGC_v017();
+		public override IntPtr GetUserInterfacePointer() => SteamAPI_SteamUGC_v017();
+		[DllImport( Platform.LibraryName, EntryPoint = "SteamAPI_SteamGameServerUGC_v017", CallingConvention = Platform.CC)]
+		internal static extern IntPtr SteamAPI_SteamGameServerUGC_v017();
+		public override IntPtr GetServerInterfacePointer() => SteamAPI_SteamGameServerUGC_v017();
 		
 		
 		#region FunctionMeta
@@ -91,6 +91,45 @@ namespace Steamworks
 		}
 		
 		#region FunctionMeta
+		[DllImport( Platform.LibraryName, EntryPoint = "SteamAPI_ISteamUGC_GetQueryUGCNumTags", CallingConvention = Platform.CC)]
+		private static extern uint _GetQueryUGCNumTags( IntPtr self, UGCQueryHandle_t handle, uint index );
+		
+		#endregion
+		internal uint GetQueryUGCNumTags( UGCQueryHandle_t handle, uint index )
+		{
+			var returnValue = _GetQueryUGCNumTags( Self, handle, index );
+			return returnValue;
+		}
+		
+		#region FunctionMeta
+		[DllImport( Platform.LibraryName, EntryPoint = "SteamAPI_ISteamUGC_GetQueryUGCTag", CallingConvention = Platform.CC)]
+		[return: MarshalAs( UnmanagedType.I1 )]
+		private static extern bool _GetQueryUGCTag( IntPtr self, UGCQueryHandle_t handle, uint index, uint indexTag, IntPtr pchValue, uint cchValueSize );
+		
+		#endregion
+		internal bool GetQueryUGCTag( UGCQueryHandle_t handle, uint index, uint indexTag, out string pchValue )
+		{
+			using var mempchValue = Helpers.TakeMemory();
+			var returnValue = _GetQueryUGCTag( Self, handle, index, indexTag, mempchValue, (1024 * 32) );
+			pchValue = Helpers.MemoryToString( mempchValue );
+			return returnValue;
+		}
+		
+		#region FunctionMeta
+		[DllImport( Platform.LibraryName, EntryPoint = "SteamAPI_ISteamUGC_GetQueryUGCTagDisplayName", CallingConvention = Platform.CC)]
+		[return: MarshalAs( UnmanagedType.I1 )]
+		private static extern bool _GetQueryUGCTagDisplayName( IntPtr self, UGCQueryHandle_t handle, uint index, uint indexTag, IntPtr pchValue, uint cchValueSize );
+		
+		#endregion
+		internal bool GetQueryUGCTagDisplayName( UGCQueryHandle_t handle, uint index, uint indexTag, out string pchValue )
+		{
+			using var mempchValue = Helpers.TakeMemory();
+			var returnValue = _GetQueryUGCTagDisplayName( Self, handle, index, indexTag, mempchValue, (1024 * 32) );
+			pchValue = Helpers.MemoryToString( mempchValue );
+			return returnValue;
+		}
+		
+		#region FunctionMeta
 		[DllImport( Platform.LibraryName, EntryPoint = "SteamAPI_ISteamUGC_GetQueryUGCPreviewURL", CallingConvention = Platform.CC)]
 		[return: MarshalAs( UnmanagedType.I1 )]
 		private static extern bool _GetQueryUGCPreviewURL( IntPtr self, UGCQueryHandle_t handle, uint index, IntPtr pchURL, uint cchURLSize );
@@ -98,8 +137,7 @@ namespace Steamworks
 		#endregion
 		internal bool GetQueryUGCPreviewURL( UGCQueryHandle_t handle, uint index, out string pchURL )
 		{
-			using var memory = Helpers.TakeMemory();
-			IntPtr mempchURL = memory;
+			using var mempchURL = Helpers.TakeMemory();
 			var returnValue = _GetQueryUGCPreviewURL( Self, handle, index, mempchURL, (1024 * 32) );
 			pchURL = Helpers.MemoryToString( mempchURL );
 			return returnValue;
@@ -113,8 +151,7 @@ namespace Steamworks
 		#endregion
 		internal bool GetQueryUGCMetadata( UGCQueryHandle_t handle, uint index, out string pchMetadata )
 		{
-			using var memory = Helpers.TakeMemory();
-			IntPtr mempchMetadata = memory;
+			using var mempchMetadata = Helpers.TakeMemory();
 			var returnValue = _GetQueryUGCMetadata( Self, handle, index, mempchMetadata, (1024 * 32) );
 			pchMetadata = Helpers.MemoryToString( mempchMetadata );
 			return returnValue;
@@ -163,10 +200,8 @@ namespace Steamworks
 		#endregion
 		internal bool GetQueryUGCAdditionalPreview( UGCQueryHandle_t handle, uint index, uint previewIndex, out string pchURLOrVideoID, out string pchOriginalFileName, ref ItemPreviewType pPreviewType )
 		{
-			using var memoryUrlOrId = Helpers.TakeMemory();
-			using var memoryFileName = Helpers.TakeMemory();
-			IntPtr mempchURLOrVideoID = memoryUrlOrId;
-			IntPtr mempchOriginalFileName = memoryFileName;
+			using var mempchURLOrVideoID = Helpers.TakeMemory();
+			using var mempchOriginalFileName = Helpers.TakeMemory();
 			var returnValue = _GetQueryUGCAdditionalPreview( Self, handle, index, previewIndex, mempchURLOrVideoID, (1024 * 32), mempchOriginalFileName, (1024 * 32), ref pPreviewType );
 			pchURLOrVideoID = Helpers.MemoryToString( mempchURLOrVideoID );
 			pchOriginalFileName = Helpers.MemoryToString( mempchOriginalFileName );
@@ -192,10 +227,8 @@ namespace Steamworks
 		#endregion
 		internal bool GetQueryUGCKeyValueTag( UGCQueryHandle_t handle, uint index, uint keyValueTagIndex, out string pchKey, out string pchValue )
 		{
-			using var memoryKey = Helpers.TakeMemory();
-			using var memoryValue = Helpers.TakeMemory();
-			IntPtr mempchKey = memoryKey;
-			IntPtr mempchValue = memoryValue;
+			using var mempchKey = Helpers.TakeMemory();
+			using var mempchValue = Helpers.TakeMemory();
 			var returnValue = _GetQueryUGCKeyValueTag( Self, handle, index, keyValueTagIndex, mempchKey, (1024 * 32), mempchValue, (1024 * 32) );
 			pchKey = Helpers.MemoryToString( mempchKey );
 			pchValue = Helpers.MemoryToString( mempchValue );
@@ -210,10 +243,20 @@ namespace Steamworks
 		#endregion
 		internal bool GetQueryUGCKeyValueTag( UGCQueryHandle_t handle, uint index, [MarshalAs( UnmanagedType.CustomMarshaler, MarshalTypeRef = typeof( Utf8StringToNative ) )] string pchKey, out string pchValue )
 		{
-			using var memory = Helpers.TakeMemory();
-			IntPtr mempchValue = memory;
+			using var mempchValue = Helpers.TakeMemory();
 			var returnValue = _GetQueryUGCKeyValueTag( Self, handle, index, pchKey, mempchValue, (1024 * 32) );
 			pchValue = Helpers.MemoryToString( mempchValue );
+			return returnValue;
+		}
+		
+		#region FunctionMeta
+		[DllImport( Platform.LibraryName, EntryPoint = "SteamAPI_ISteamUGC_GetQueryUGCContentDescriptors", CallingConvention = Platform.CC)]
+		private static extern uint _GetQueryUGCContentDescriptors( IntPtr self, UGCQueryHandle_t handle, uint index, [In,Out] UGCContentDescriptorID[]  pvecDescriptors, uint cMaxEntries );
+		
+		#endregion
+		internal uint GetQueryUGCContentDescriptors( UGCQueryHandle_t handle, uint index, [In,Out] UGCContentDescriptorID[]  pvecDescriptors, uint cMaxEntries )
+		{
+			var returnValue = _GetQueryUGCContentDescriptors( Self, handle, index, pvecDescriptors, cMaxEntries );
 			return returnValue;
 		}
 		
@@ -430,6 +473,30 @@ namespace Steamworks
 		internal bool SetRankedByTrendDays( UGCQueryHandle_t handle, uint unDays )
 		{
 			var returnValue = _SetRankedByTrendDays( Self, handle, unDays );
+			return returnValue;
+		}
+		
+		#region FunctionMeta
+		[DllImport( Platform.LibraryName, EntryPoint = "SteamAPI_ISteamUGC_SetTimeCreatedDateRange", CallingConvention = Platform.CC)]
+		[return: MarshalAs( UnmanagedType.I1 )]
+		private static extern bool _SetTimeCreatedDateRange( IntPtr self, UGCQueryHandle_t handle, RTime32 rtStart, RTime32 rtEnd );
+		
+		#endregion
+		internal bool SetTimeCreatedDateRange( UGCQueryHandle_t handle, RTime32 rtStart, RTime32 rtEnd )
+		{
+			var returnValue = _SetTimeCreatedDateRange( Self, handle, rtStart, rtEnd );
+			return returnValue;
+		}
+		
+		#region FunctionMeta
+		[DllImport( Platform.LibraryName, EntryPoint = "SteamAPI_ISteamUGC_SetTimeUpdatedDateRange", CallingConvention = Platform.CC)]
+		[return: MarshalAs( UnmanagedType.I1 )]
+		private static extern bool _SetTimeUpdatedDateRange( IntPtr self, UGCQueryHandle_t handle, RTime32 rtStart, RTime32 rtEnd );
+		
+		#endregion
+		internal bool SetTimeUpdatedDateRange( UGCQueryHandle_t handle, RTime32 rtStart, RTime32 rtEnd )
+		{
+			var returnValue = _SetTimeUpdatedDateRange( Self, handle, rtStart, rtEnd );
 			return returnValue;
 		}
 		
@@ -672,6 +739,30 @@ namespace Steamworks
 		}
 		
 		#region FunctionMeta
+		[DllImport( Platform.LibraryName, EntryPoint = "SteamAPI_ISteamUGC_AddContentDescriptor", CallingConvention = Platform.CC)]
+		[return: MarshalAs( UnmanagedType.I1 )]
+		private static extern bool _AddContentDescriptor( IntPtr self, UGCUpdateHandle_t handle, UGCContentDescriptorID descid );
+		
+		#endregion
+		internal bool AddContentDescriptor( UGCUpdateHandle_t handle, UGCContentDescriptorID descid )
+		{
+			var returnValue = _AddContentDescriptor( Self, handle, descid );
+			return returnValue;
+		}
+		
+		#region FunctionMeta
+		[DllImport( Platform.LibraryName, EntryPoint = "SteamAPI_ISteamUGC_RemoveContentDescriptor", CallingConvention = Platform.CC)]
+		[return: MarshalAs( UnmanagedType.I1 )]
+		private static extern bool _RemoveContentDescriptor( IntPtr self, UGCUpdateHandle_t handle, UGCContentDescriptorID descid );
+		
+		#endregion
+		internal bool RemoveContentDescriptor( UGCUpdateHandle_t handle, UGCContentDescriptorID descid )
+		{
+			var returnValue = _RemoveContentDescriptor( Self, handle, descid );
+			return returnValue;
+		}
+		
+		#region FunctionMeta
 		[DllImport( Platform.LibraryName, EntryPoint = "SteamAPI_ISteamUGC_SubmitItemUpdate", CallingConvention = Platform.CC)]
 		private static extern SteamAPICall_t _SubmitItemUpdate( IntPtr self, UGCUpdateHandle_t handle, [MarshalAs( UnmanagedType.CustomMarshaler, MarshalTypeRef = typeof( Utf8StringToNative ) )] string pchChangeNote );
 		
@@ -800,8 +891,7 @@ namespace Steamworks
 		#endregion
 		internal bool GetItemInstallInfo( PublishedFileId nPublishedFileID, ref ulong punSizeOnDisk, out string pchFolder, ref uint punTimeStamp )
 		{
-			using var memory = Helpers.TakeMemory();
-			IntPtr mempchFolder = memory;
+			using var mempchFolder = Helpers.TakeMemory();
 			var returnValue = _GetItemInstallInfo( Self, nPublishedFileID, ref punSizeOnDisk, mempchFolder, (1024 * 32), ref punTimeStamp );
 			pchFolder = Helpers.MemoryToString( mempchFolder );
 			return returnValue;
@@ -950,6 +1040,29 @@ namespace Steamworks
 		{
 			var returnValue = _DeleteItem( Self, nPublishedFileID );
 			return new CallResult<DeleteItemResult_t>( returnValue, IsServer );
+		}
+		
+		#region FunctionMeta
+		[DllImport( Platform.LibraryName, EntryPoint = "SteamAPI_ISteamUGC_ShowWorkshopEULA", CallingConvention = Platform.CC)]
+		[return: MarshalAs( UnmanagedType.I1 )]
+		private static extern bool _ShowWorkshopEULA( IntPtr self );
+		
+		#endregion
+		internal bool ShowWorkshopEULA()
+		{
+			var returnValue = _ShowWorkshopEULA( Self );
+			return returnValue;
+		}
+		
+		#region FunctionMeta
+		[DllImport( Platform.LibraryName, EntryPoint = "SteamAPI_ISteamUGC_GetWorkshopEULAStatus", CallingConvention = Platform.CC)]
+		private static extern SteamAPICall_t _GetWorkshopEULAStatus( IntPtr self );
+		
+		#endregion
+		internal CallResult<WorkshopEULAStatus_t> GetWorkshopEULAStatus()
+		{
+			var returnValue = _GetWorkshopEULAStatus( Self );
+			return new CallResult<WorkshopEULAStatus_t>( returnValue, IsServer );
 		}
 		
 	}

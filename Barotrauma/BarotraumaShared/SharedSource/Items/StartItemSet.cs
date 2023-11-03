@@ -9,11 +9,13 @@ namespace Barotrauma
     {
         public Identifier Item;
         public int Amount;
-        
+        public bool MultiPlayerOnly;
+
         public StartItem(XElement element)
         {
             Item = element.GetAttributeIdentifier("identifier", Identifier.Empty);
-            Amount = element.GetAttributeInt("amount", 1);
+            Amount = element.GetAttributeInt(nameof(Amount), 1);
+            MultiPlayerOnly = element.GetAttributeBool(nameof(MultiPlayerOnly), false);
         }
     }
 

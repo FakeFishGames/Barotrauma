@@ -165,7 +165,7 @@ namespace Barotrauma.Particles
         [Editable, Serialize("0.0,0.0", IsPropertySaveable.No, description: "How much the size of the particle changes per second. The rate of growth for each particle is randomize between SizeChangeMin and SizeChangeMax.")]
         public Vector2 SizeChangeMax { get; private set; }
 
-        [Editable, Serialize(0.0f, IsPropertySaveable.No, description: "How many seconds it takes for the particle to grow to it's initial size.")]
+        [Editable(minValue: 0, maxValue: float.MaxValue, decimals: 2), Serialize(0.0f, IsPropertySaveable.No, description: "How many seconds it takes for the particle to grow to it's initial size.")]
         public float GrowTime { get; private set; }
 
         //rendering -----------------------------------------

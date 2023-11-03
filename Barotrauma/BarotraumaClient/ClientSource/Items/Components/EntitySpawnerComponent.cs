@@ -8,7 +8,7 @@ namespace Barotrauma.Items.Components
     {
         public Vector2 DrawSize => Vector2.Zero;
 
-        public void Draw(SpriteBatch spriteBatch, bool editing, float itemDepth = -1)
+        public void Draw(SpriteBatch spriteBatch, bool editing, float itemDepth = -1, Color? overrideColor = null)
         {
             if (!editing) { return; }
 

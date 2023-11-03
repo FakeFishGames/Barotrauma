@@ -2,7 +2,7 @@
 using System.Threading;
 using System.Collections.Generic;
 using System.Net;
-
+using System.Net.Sockets;
 #if !__NOIPENDPOINT__
 using NetEndPoint = System.Net.IPEndPoint;
 #endif
@@ -121,9 +121,16 @@ namespace Lidgren.Network
 			m_connections = new List<NetConnection>();
 			m_connectionLookup = new Dictionary<NetEndPoint, NetConnection>();
 			m_handshakes = new Dictionary<NetEndPoint, NetConnection>();
-            m_senderRemote = (EndPoint)new NetEndPoint(IPAddress.IPv6Any, 0);
-            m_status = NetPeerStatus.NotRunning;
-			m_receivedFragmentGroups = new Dictionary<NetConnection, Dictionary<int, ReceivedFragmentGroup>>();	
+            if (m_configuration.LocalAddress.AddressFamily == AddressFamily.InterNetworkV6)
+            {
+                m_senderRemote = (EndPoint)new IPEndPoint(IPAddress.IPv6Any, 0);
+            }
+            else
+            {
+                m_senderRemote = (EndPoint)new IPEndPoint(IPAddress.Any, 0);
+            }
+			m_status = NetPeerStatus.NotRunning;
+			m_receivedFragmentGroups = new Dictionary<NetConnection, Dictionary<int, ReceivedFragmentGroup>>();
 		}
 
 		/// <summary>
@@ -292,10 +299,10 @@ namespace Lidgren.Network
 		{
 			if (remoteEndPoint == null)
 				throw new ArgumentNullException("remoteEndPoint");
+            if(m_configuration.DualStack)
+                remoteEndPoint = NetUtility.MapToIPv6(remoteEndPoint);
 
-            remoteEndPoint = remoteEndPoint.MapToFamily(m_socket.AddressFamily);
-
-            lock (m_connections)
+			lock (m_connections)
 			{
 				if (m_status == NetPeerStatus.NotRunning)
 					throw new NetException("Must call Start() first");

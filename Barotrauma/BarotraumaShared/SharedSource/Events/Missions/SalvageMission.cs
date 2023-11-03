@@ -30,8 +30,8 @@ namespace Barotrauma
 
             public readonly ItemPrefab ItemPrefab;
             public readonly Level.PositionType SpawnPositionType;
-            public readonly string ContainerTag;
-            public readonly string ExistingItemTag;
+            public readonly Identifier ContainerTag;
+            public readonly Identifier ExistingItemTag;
 
             public readonly bool RemoveItem;
 
@@ -87,7 +87,7 @@ namespace Barotrauma
             public Target(ContentXElement element, SalvageMission mission)
             {
                 this.mission = mission;
-                ContainerTag = element.GetAttributeString("containertag", "");
+                ContainerTag = element.GetAttributeIdentifier("containertag", Identifier.Empty);
                 RequiredRetrievalState = element.GetAttributeEnum("requireretrieval", RetrievalState.RetrievedToSub);
                 AllowContinueBeforeRetrieved = element.GetAttributeBool("allowcontinuebeforeretrieved", false);
                 HideLabelAfterRetrieved = element.GetAttributeBool("hidelabelafterretrieved", false);
@@ -100,7 +100,7 @@ namespace Barotrauma
                         .Fallback(TextManager.Get(sonarLabelTag))
                         .Fallback(element.GetAttributeString("sonarlabel", ""));
                 }
-                ExistingItemTag = element.GetAttributeString("existingitemtag", "");
+                ExistingItemTag = element.GetAttributeIdentifier("existingitemtag", Identifier.Empty);
 
                 RemoveItem = element.GetAttributeBool("removeitem", true);
 
@@ -109,7 +109,7 @@ namespace Barotrauma
                     DebugConsole.ThrowError("Error in SalvageMission - use item identifier instead of the name of the item.");
                     string itemName = element.GetAttributeString("itemname", "");
                     ItemPrefab = MapEntityPrefab.Find(itemName) as ItemPrefab;
-                    if (ItemPrefab == null && ExistingItemTag.IsNullOrEmpty())
+                    if (ItemPrefab == null && ExistingItemTag.IsEmpty)
                     {
                         DebugConsole.ThrowError($"Error in SalvageMission: couldn't find an item prefab with the name \"{itemName}\"");
                     }
@@ -126,7 +126,7 @@ namespace Barotrauma
                         string itemTag = element.GetAttributeString("itemtag", "");
                         ItemPrefab = MapEntityPrefab.GetRandom(p => p.Tags.Contains(itemTag), Rand.RandSync.Unsynced) as ItemPrefab;
                     }
-                    if (ItemPrefab == null && ExistingItemTag.IsNullOrEmpty())
+                    if (ItemPrefab == null && ExistingItemTag.IsEmpty)
                     {
                         DebugConsole.ThrowError($"Error in SalvageMission - couldn't find an item prefab with the identifier \"{itemIdentifier}\"");
                     }
@@ -233,7 +233,7 @@ namespace Barotrauma
                         Vector2.Zero : 
                         Level.Loaded.GetRandomItemPos(target.SpawnPositionType, 100.0f, minDistance, 30.0f);
 
-                    if (!string.IsNullOrEmpty(target.ExistingItemTag))
+                    if (!target.ExistingItemTag.IsEmpty)
                     {
                         var suitableItems = Item.ItemList.Where(it => it.HasTag(target.ExistingItemTag));
                         if (GameMain.GameSession?.Missions != null)
@@ -284,9 +284,9 @@ namespace Barotrauma
 
                     if (target.Item == null)
                     {
-                        if (target.ItemPrefab == null && string.IsNullOrEmpty(target.ContainerTag))
+                        if (target.ItemPrefab == null && target.ContainerTag.IsEmpty)
                         {
-                            DebugConsole.ThrowError($"Failed to find a target item for the mission \"{Prefab.Identifier}\". Item tag: {target.ExistingItemTag ?? "null"}");
+                            DebugConsole.ThrowError($"Failed to find a target item for the mission \"{Prefab.Identifier}\". Item tag: {target.ExistingItemTag}");
                             continue;
                         }
                         target.Item = new Item(target.ItemPrefab, position, null);
@@ -312,8 +312,10 @@ namespace Barotrauma
 #endif
                     }
 
+                    target.Item.IsSalvageMissionItem = true;
+
                     //try to find a container and place the item inside it
-                    if (!string.IsNullOrEmpty(target.ContainerTag) && target.Item.ParentInventory == null)
+                    if (!target.ContainerTag.IsEmpty && target.Item.ParentInventory == null)
                     {
                         List<ItemContainer> validContainers = new List<ItemContainer>();
                         foreach (Item it in Item.ItemList)

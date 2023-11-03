@@ -19,7 +19,7 @@ namespace Barotrauma
 
         public void Draw(DeformableSprite deformSprite, Camera cam, Vector2 scale, Color color, bool invert = false)
         {
-            if (!Enabled) return;
+            if (!Enabled) { return; }
             UpdateDrawPosition();
             deformSprite?.Draw(cam, 
                 new Vector3(DrawPosition, MathHelper.Clamp(deformSprite.Sprite.Depth, 0, 1)), 
@@ -28,11 +28,11 @@ namespace Barotrauma
                 scale, color, Dir < 0, invert);
         }
 
-        public void Draw(SpriteBatch spriteBatch, Sprite sprite, Color color, float? depth = null, float scale = 1.0f, bool mirrorX = false, bool mirrorY = false)
+        public void Draw(SpriteBatch spriteBatch, Sprite sprite, Color color, float? depth = null, float scale = 1.0f, bool mirrorX = false, bool mirrorY = false, Vector2? origin =  null)
         {
-            if (!Enabled) return;
+            if (!Enabled) { return; }
             UpdateDrawPosition();
-            if (sprite == null) return;
+            if (sprite == null) { return; }
             SpriteEffects spriteEffect = (Dir == 1.0f) ? SpriteEffects.None : SpriteEffects.FlipHorizontally;
             if (mirrorX)
             {
@@ -42,7 +42,7 @@ namespace Barotrauma
             {
                 spriteEffect |= SpriteEffects.FlipVertically;
             }
-            sprite.Draw(spriteBatch, new Vector2(DrawPosition.X, -DrawPosition.Y), color, -drawRotation, scale, spriteEffect, depth);
+            sprite.Draw(spriteBatch, new Vector2(DrawPosition.X, -DrawPosition.Y), color, origin ?? sprite.Origin, - drawRotation, scale, spriteEffect, depth);
         }
 
         public void DebugDraw(SpriteBatch spriteBatch, Color color, bool forceColor = false)

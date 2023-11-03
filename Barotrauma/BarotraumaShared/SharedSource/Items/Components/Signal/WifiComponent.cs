@@ -89,6 +89,26 @@ namespace Barotrauma.Items.Components
             set;
         }
 
+        private float jamTimer;
+        public float JamTimer
+        {
+            get { return jamTimer; }
+            set 
+            {
+                if (value > 0) 
+                {
+#if CLIENT
+                    if (jamTimer <= 0)
+                    {
+                        HintManager.OnRadioJammed(Item);
+                    }
+#endif
+                    IsActive = true; 
+                }
+                jamTimer = Math.Max(0, value); 
+            }
+        }
+
         public WifiComponent(Item item, ContentXElement element)
             : base (item, element)
         {
@@ -123,8 +143,12 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public bool CanTransmit()
+        public bool CanTransmit(bool ignoreJamming = false)
         {
+            if (!ignoreJamming)
+            {
+                if (jamTimer > 0) { return false; }
+            }
             return HasRequiredContainedItems(user: null, addMessage: false);
         }
 
@@ -140,12 +164,13 @@ namespace Barotrauma.Items.Components
         {
             if (sender == null || sender.channel != channel) { return false; }
             if (sender.TeamID != TeamID && !AllowCrossTeamCommunication) { return false; }
+            if (jamTimer > 0) { return false; }
 
             //if the component is not linked to chat and has nothing connected to the output, sending a signal to it does nothing
             // = no point in receiving
             if (!LinkToChat)
             {
-                if (signalOutConnection == null || signalOutConnection.Wires.Count <= 0)
+                if (signalOutConnection == null || !signalOutConnection.IsConnectedToSomething())
                 {
                     return false;
                 }
@@ -169,12 +194,16 @@ namespace Barotrauma.Items.Components
             if (sender == null || sender.channel != channel) { return false; }
             if (sender.TeamID != TeamID && !AllowCrossTeamCommunication) { return false; }
             if (Vector2.DistanceSquared(item.WorldPosition, sender.item.WorldPosition) > sender.range * sender.range) { return false; }
+            if (jamTimer > 0) { return false; }
             return HasRequiredContainedItems(user: null, addMessage: false);
         }
+
         public override void Update(float deltaTime, Camera cam)
         {
             chatMsgCooldown -= deltaTime;
-            if (chatMsgCooldown <= 0.0f)
+            JamTimer -= deltaTime;
+            ApplyStatusEffects(ActionType.OnActive, deltaTime);
+            if (chatMsgCooldown <= 0.0f && JamTimer <= 0.0f)
             {
                 IsActive = false;
             }

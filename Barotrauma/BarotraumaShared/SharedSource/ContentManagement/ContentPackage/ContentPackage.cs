@@ -23,7 +23,7 @@ namespace Barotrauma
                        : string.Empty);
         }
 
-        public static readonly Version MinimumHashCompatibleVersion = new Version(1, 0, 13, 2);
+        public static readonly Version MinimumHashCompatibleVersion = new Version(1, 1, 0, 0);
         
         public const string LocalModsDir = "LocalMods";
         public static readonly string WorkshopModsDir = Barotrauma.IO.Path.Combine(
@@ -110,6 +110,7 @@ namespace Barotrauma
             InstallTime = rootElement.GetAttributeDateTime("installtime");
 
             var fileResults = rootElement.Elements()
+                .Where(e => !ContentFile.IsLegacyContentType(e, this, logWarning: true))
                 .Select(e => ContentFile.CreateFromXElement(this, e))
                 .ToArray();
 
@@ -337,6 +338,7 @@ namespace Barotrauma
             XElement rootElement = doc.Root ?? throw new NullReferenceException("XML document is invalid: root element is null.");
             
             var fileResults = rootElement.Elements()
+                .Where(e => !ContentFile.IsLegacyContentType(e, this, logWarning: true))
                 .Select(e => ContentFile.CreateFromXElement(this, e))
                 .ToArray();
 

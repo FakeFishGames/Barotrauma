@@ -132,7 +132,7 @@ namespace Barotrauma.Items.Components
 
             UpdateProjSpecific(deltaTime);
 
-            ApplyStatusEffects(ActionType.OnActive, deltaTime, null);
+            ApplyStatusEffects(ActionType.OnActive, deltaTime);
 
             if (item.CurrentHull == null) { return; }      
 

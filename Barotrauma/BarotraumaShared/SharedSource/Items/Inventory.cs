@@ -8,17 +8,26 @@ using System.Linq;
 
 namespace Barotrauma
 {
-    partial class Inventory : IServerSerializable, IClientSerializable
+    partial class Inventory
     {
-        public const int MaxStackSize = (1 << 6) - 1; //the max value that will fit in 6 bits, i.e 63
+        public const int MaxPossibleStackSize = (1 << 6) - 1; //the max value that will fit in 6 bits, i.e 63
+
+        public const int MaxItemsPerNetworkEvent = 128;
 
         public class ItemSlot
         {
-            private readonly List<Item> items = new List<Item>(MaxStackSize);
+            private readonly List<Item> items = new List<Item>(MaxPossibleStackSize);
 
             public bool HideIfEmpty;
 
             public IReadOnlyList<Item> Items => items;
+
+            private readonly Inventory inventory;
+
+            public ItemSlot(Inventory inventory)
+            {
+                this.inventory = inventory;
+            }
 
             public bool CanBePut(Item item, bool ignoreCondition = false)
             {
@@ -41,7 +50,7 @@ namespace Barotrauma
                         }
                     }
                     if (items[0].Quality != item.Quality) { return false; }
-                    if (items[0].Prefab.Identifier != item.Prefab.Identifier || items.Count + 1 > item.Prefab.MaxStackSize)
+                    if (items[0].Prefab.Identifier != item.Prefab.Identifier || items.Count + 1 > item.Prefab.GetMaxStackSize(inventory))
                     {
                         return false;
                     }
@@ -80,7 +89,7 @@ namespace Barotrauma
                     }
 
                     if (items[0].Prefab.Identifier != itemPrefab.Identifier ||
-                        items.Count + 1 > itemPrefab.MaxStackSize)
+                        items.Count + 1 > itemPrefab.GetMaxStackSize(inventory))
                     {
                         return false;
                     }
@@ -89,11 +98,11 @@ namespace Barotrauma
             }
 
             /// <param name="maxStackSize">Defaults to <see cref="ItemPrefab.MaxStackSize"/> if null</param>
-            public int HowManyCanBePut(ItemPrefab itemPrefab, int? maxStackSize = null, float? condition = null)
+            public int HowManyCanBePut(ItemPrefab itemPrefab, int? maxStackSize = null, float? condition = null, bool ignoreItemsInSlot = false)
             {
                 if (itemPrefab == null) { return 0; }
-                maxStackSize ??= itemPrefab.MaxStackSize;
-                if (items.Count > 0)
+                maxStackSize ??= itemPrefab.GetMaxStackSize(inventory);
+                if (items.Count > 0 && !ignoreItemsInSlot)
                 {
                     if (condition.HasValue)
                     {
@@ -135,9 +144,9 @@ namespace Barotrauma
                     {
                         throw new InvalidOperationException("Tried to stack different types of items.");
                     }
-                    else if (items.Count + 1 > item.Prefab.MaxStackSize)
+                    else if (items.Count + 1 > item.Prefab.GetMaxStackSize(inventory))
                     {
-                        throw new InvalidOperationException("Tried to add an item to a full inventory slot (stack already full).");
+                        throw new InvalidOperationException($"Tried to add an item to a full inventory slot (stack already full, x{items.Count} {items.First().Prefab.Identifier}).");
                     }
                 }
                 if (items.Contains(item)) { return; }
@@ -229,34 +238,11 @@ namespace Barotrauma
         /// <summary>
         /// All items contained in the inventory. Stacked items are returned as individual instances. DO NOT modify the contents of the inventory while enumerating this list.
         /// </summary>
-        public IEnumerable<Item> AllItems
+        public virtual IEnumerable<Item> AllItems
         {
             get
             {
-                for (int i = 0; i < capacity; i++)
-                {
-                    foreach (var item in slots[i].Items)
-                    {
-                        if (item == null)
-                        {
-#if DEBUG
-                            DebugConsole.ThrowError($"Null item in inventory {Owner.ToString() ?? "null"}, slot {i}!");
-#endif
-                            continue;
-                        }
-
-                        bool duplicateFound = false;
-                        for (int j = 0; j < i; j++)
-                        {
-                            if (slots[j].Items.Contains(item))
-                            {
-                                duplicateFound = true;
-                                break;
-                            }
-                        }
-                        if (!duplicateFound) { yield return item; }
-                    }
-                }
+                return GetAllItems(checkForDuplicates: this is CharacterInventory);
             }
         }
 
@@ -292,7 +278,7 @@ namespace Barotrauma
             slots = new ItemSlot[capacity];
             for (int i = 0; i < capacity; i++)
             {
-                slots[i] = new ItemSlot();
+                slots[i] = new ItemSlot(this);
             }
 
 #if CLIENT
@@ -313,6 +299,60 @@ namespace Barotrauma
                 UnequippedClickedIndicator = new Sprite("Content/UI/InventoryUIAtlas.png", new Rectangle(550, 237, 87, 16), new Vector2(0.5f, 0.5f), 0);
             }
 #endif
+        }
+
+        protected IEnumerable<Item> GetAllItems(bool checkForDuplicates)
+        {
+            for (int i = 0; i < capacity; i++)
+            {
+                foreach (var item in slots[i].Items)
+                {
+                    if (item == null)
+                    {
+#if DEBUG
+                        DebugConsole.ThrowError($"Null item in inventory {Owner.ToString() ?? "null"}, slot {i}!");
+#endif
+                        continue;
+                    }
+
+                    if (checkForDuplicates)
+                    {
+                        bool duplicateFound = false;
+                        for (int j = 0; j < i; j++)
+                        {
+                            if (slots[j].Items.Contains(item))
+                            {
+                                duplicateFound = true;
+                                break;
+                            }
+                        }
+                        if (!duplicateFound) { yield return item; }
+                    }
+                    else
+                    {
+                        yield return item;
+                    }
+                }
+            }            
+        }
+
+        private void NotifyItemComponentsOfChange()
+        {
+#if CLIENT
+            if (Owner is Character character && character == Character.Controlled)
+            {
+                character.SelectedItem?.GetComponent<CircuitBox>()?.OnViewUpdateProjSpecific();
+            }
+#endif
+
+            if (Owner is not Item it) { return; }
+
+            foreach (var c in it.Components)
+            {
+                c.OnInventoryChanged();
+            }
+
+            it.ParentInventory?.NotifyItemComponentsOfChange();
         }
 
         /// <summary>
@@ -365,6 +405,13 @@ namespace Barotrauma
         {
             if (index < 0 || index >= slots.Length) { return Enumerable.Empty<Item>(); }
             return slots[index].Items;
+        }
+
+        public int GetItemStackSlotIndex(Item item, int index)
+        {
+            if (index < 0 || index >= slots.Length) { return -1; }
+
+            return slots[index].Items.IndexOf(item);
         }
 
         /// <summary>
@@ -470,10 +517,10 @@ namespace Barotrauma
             return count;
         }
 
-        public virtual int HowManyCanBePut(ItemPrefab itemPrefab, int i, float? condition)
+        public virtual int HowManyCanBePut(ItemPrefab itemPrefab, int i, float? condition, bool ignoreItemsInSlot = false)
         {
             if (i < 0 || i >= slots.Length) { return 0; }
-            return slots[i].HowManyCanBePut(itemPrefab, condition: condition);
+            return slots[i].HowManyCanBePut(itemPrefab, condition: condition, ignoreItemsInSlot: ignoreItemsInSlot);
         }
 
         /// <summary>
@@ -534,7 +581,7 @@ namespace Barotrauma
                 var itemInSlot = slots[i].First();
                 if (itemInSlot.OwnInventory != null && 
                     !itemInSlot.OwnInventory.Contains(item) &&
-                    (itemInSlot.GetComponent<ItemContainer>()?.GetMaxStackSize(0) ?? 0) == 1 && 
+                    itemInSlot.GetComponent<ItemContainer>()?.GetMaxStackSize(0) == 1 && 
                     itemInSlot.OwnInventory.TrySwapping(0, item, user, createNetworkEvent, swapWholeStack: false))
                 {
                     return true;
@@ -575,7 +622,7 @@ namespace Barotrauma
 
             if (removeItem)
             {
-                item.Drop(user, setTransform: false);
+                item.Drop(user, setTransform: false, createNetworkEvent: createNetworkEvent && GameMain.NetworkMember is { IsServer: true });
                 item.ParentInventory?.RemoveItem(item);
             }
 
@@ -597,7 +644,7 @@ namespace Barotrauma
                 item.body.BodyType = FarseerPhysics.BodyType.Dynamic;
                 item.SetTransform(item.SimPosition, rotation: 0.0f, findNewHull: false);
                 //update to refresh the interpolated draw rotation and position (update doesn't run on disabled bodies)
-                item.body.Update();
+                item.body.UpdateDrawPosition(interpolate: false);
             }
             
 #if SERVER
@@ -624,6 +671,8 @@ namespace Barotrauma
                     }
                 }
             }
+
+            NotifyItemComponentsOfChange();
         }
 
         public bool IsEmpty()
@@ -648,7 +697,7 @@ namespace Barotrauma
                 {
                     if (!slots[i].Any()) { return false; }
                     var item = slots[i].FirstOrDefault();
-                    if (slots[i].Items.Count < item.Prefab.MaxStackSize) { return false; }
+                    if (slots[i].Items.Count < item.Prefab.GetMaxStackSize(this)) { return false; }
                 }
             }
             else
@@ -878,20 +927,34 @@ namespace Barotrauma
             }
         }
 
-        public virtual void CreateNetworkEvent()
+        public void CreateNetworkEvent()
         {
             if (GameMain.NetworkMember == null) { return; }
             if (GameMain.NetworkMember.IsClient) { syncItemsDelay = 1.0f; }
 
-            if (Owner is Character character)
+            //split into multiple events because one might not be enough to fit all the items
+            List<Range> slotRanges = new List<Range>();
+            int startIndex = 0;
+            int itemCount = 0;
+            for (int i = 0; i < capacity; i++)
             {
-                GameMain.NetworkMember.CreateEntityEvent(character, new Character.InventoryStateEventData());
+                int count = slots[i].Items.Count;
+                if (itemCount + count > MaxItemsPerNetworkEvent || i == capacity - 1)
+                {
+                    slotRanges.Add(new Range(startIndex, i + 1));
+                    startIndex = i + 1;
+                    itemCount = 0;
+                }
+                itemCount += count;
             }
-            else if (Owner is Item item)
+
+            foreach (var slotRange in slotRanges)
             {
-                GameMain.NetworkMember.CreateEntityEvent(item, new Item.InventoryStateEventData());
+                CreateNetworkEvent(slotRange);
             }
         }
+
+        protected virtual void CreateNetworkEvent(Range slotRange) { }
 
         public Item FindItem(Func<Item, bool> predicate, bool recursive)
         {
@@ -955,9 +1018,12 @@ namespace Barotrauma
                     visualSlots[n].ShowBorderHighlight(Color.White, 0.1f, 0.4f);
                     if (selectedSlot?.Inventory == this) { selectedSlot.ForceTooltipRefresh = true; }
                 }
+                syncItemsDelay = 1.0f;
 #endif
                 CharacterHUD.RecreateHudTextsIfFocused(item);
             }
+
+            NotifyItemComponentsOfChange();
         }
 
         /// <summary>
@@ -989,28 +1055,48 @@ namespace Barotrauma
             return slots[index].Contains(item);
         }
 
-        public void SharedRead(IReadMessage msg, out List<ushort>[] newItemIds)
+        public void SharedRead(IReadMessage msg, List<ushort>[] receivedItemIds, out bool readyToApply)
         {
-            byte slotCount = msg.ReadByte();
-            newItemIds = new List<ushort>[slotCount];
-            for (int i = 0; i < slotCount; i++)
+            byte start = msg.ReadByte();
+            byte end = msg.ReadByte();
+
+            //if we received the first chunk of item IDs, clear the rest
+            //to ensure we don't have anything outdated in the list - we're about to receive the rest of the IDs next
+            if (start == 0)
             {
-                newItemIds[i] = new List<ushort>();
-                int itemCount = msg.ReadRangedInteger(0, MaxStackSize);
-                for (int j = 0; j < itemCount; j++)
+                for (int i = 0; i < capacity; i++)
                 {
-                    newItemIds[i].Add(msg.ReadUInt16());
+                    receivedItemIds[i] = null;
                 }
             }
+
+            for (int i = start; i < end; i++)
+            {
+                var newItemIds = new List<ushort>();
+                int itemCount = msg.ReadRangedInteger(0, MaxPossibleStackSize);
+                for (int j = 0; j < itemCount; j++)
+                {
+                    newItemIds.Add(msg.ReadUInt16());
+                }
+                receivedItemIds[i] = newItemIds;
+            }
+
+            //if all IDs haven't been received yet (chunked into multiple events?)
+            //don't apply the state yet
+            readyToApply = !receivedItemIds.Contains(null);
         }
         
-        public void SharedWrite(IWriteMessage msg, NetEntityEvent.IData extraData = null)
+        public void SharedWrite(IWriteMessage msg, Range slotRange)
         {
-            msg.WriteByte((byte)capacity);
-            for (int i = 0; i < capacity; i++)
+            int start = slotRange.Start.Value;
+            int end = slotRange.End.Value;
+
+            msg.WriteByte((byte)start);
+            msg.WriteByte((byte)end);
+            for (int i = start; i < end; i++)
             {
-                msg.WriteRangedInteger(slots[i].Items.Count, 0, MaxStackSize);
-                for (int j = 0; j < Math.Min(slots[i].Items.Count, MaxStackSize); j++)
+                msg.WriteRangedInteger(slots[i].Items.Count, 0, MaxPossibleStackSize);
+                for (int j = 0; j < Math.Min(slots[i].Items.Count, MaxPossibleStackSize); j++)
                 {
                     var item = slots[i].Items[j];
                     msg.WriteUInt16(item?.ID ?? (ushort)0);

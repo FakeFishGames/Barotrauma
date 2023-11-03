@@ -27,7 +27,8 @@ namespace Barotrauma.Networking
                 AutoExpandMTU = false,
                 MaximumConnections = NetConfig.MaxPlayers * 2,
                 EnableUPnP = serverSettings.EnableUPnP,
-                Port = serverSettings.Port
+                Port = serverSettings.Port,
+                DualStack = GameSettings.CurrentConfig.UseDualModeSockets
             };
 
             netPeerConfiguration.DisableMessageType(

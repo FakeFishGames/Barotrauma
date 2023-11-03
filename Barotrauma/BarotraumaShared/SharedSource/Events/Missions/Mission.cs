@@ -95,7 +95,7 @@ namespace Barotrauma
             }
         }
 
-        public Dictionary<Identifier, float> ReputationRewards
+        public ImmutableList<MissionPrefab.ReputationReward> ReputationRewards
         {
             get { return Prefab.ReputationRewards; }
         }
@@ -268,7 +268,7 @@ namespace Barotrauma
             delayedTriggerEvents.Clear();
             foreach (string categoryToShow in Prefab.UnhideEntitySubCategories)
             {
-                foreach (MapEntity entityToShow in MapEntity.mapEntityList.Where(me => me.Prefab?.HasSubCategory(categoryToShow) ?? false))
+                foreach (MapEntity entityToShow in MapEntity.MapEntityList.Where(me => me.Prefab?.HasSubCategory(categoryToShow) ?? false))
                 {
                     entityToShow.HiddenInGame = false;
                 }
@@ -353,8 +353,7 @@ namespace Barotrauma
             if (GameMain.GameSession?.EventManager != null)
             {
                 var newEvent = eventPrefab.CreateInstance();
-                GameMain.GameSession.EventManager.ActiveEvents.Add(newEvent);
-                newEvent.Init();
+                GameMain.GameSession.EventManager.ActivateEvent(newEvent);
             }
         }
 
@@ -372,7 +371,19 @@ namespace Barotrauma
                 {
                     ChangeLocationType(Prefab.LocationTypeChangeOnCompleted);
                 }
-                GiveReward();
+                try
+                {
+                    GiveReward();
+                }
+                catch (Exception e)
+                {
+                    string errorMsg = "Unknown error while giving mission rewards.";
+                    DebugConsole.ThrowError(errorMsg, e);
+                    GameAnalyticsManager.AddErrorEventOnce("Mission.End:GiveReward", GameAnalyticsManager.ErrorSeverity.Error, errorMsg + "\n" + e.StackTrace);
+#if SERVER
+                    GameMain.Server?.SendChatMessage(errorMsg + "\n" + e.StackTrace, Networking.ChatMessageType.Error);
+#endif
+                }
             }
 
             TimesAttempted++;
@@ -423,30 +434,7 @@ namespace Barotrauma
             crewCharacters.ForEach(c => c.CheckTalents(AbilityEffectType.OnAllyGainMissionExperience, experienceGainMultiplier));
             crewCharacters.ForEach(c => experienceGainMultiplier.Value += c.GetStatValue(StatTypes.MissionExperienceGainMultiplier));
 
-            int experienceGain = (int)(baseExperienceGain * experienceGainMultiplier.Value);
-#if CLIENT
-            foreach (Character character in crewCharacters)
-            {
-                GiveMissionExperience(character.Info);
-            }
-#else
-            foreach (Barotrauma.Networking.Client c in GameMain.Server.ConnectedClients)
-            {
-                //give the experience to the stored characterinfo if the client isn't currently controlling a character
-                GiveMissionExperience(c.Character?.Info ?? c.CharacterInfo);
-            }
-            foreach (Character bot in GameSession.GetSessionCrewCharacters(CharacterType.Bot))
-            {
-                GiveMissionExperience(bot.Info);
-            }
-#endif
-
-            void GiveMissionExperience(CharacterInfo info)
-            {
-                var experienceGainMultiplierIndividual = new AbilityMissionExperienceGainMultiplier(this, 1f);
-                info?.Character?.CheckTalents(AbilityEffectType.OnGainMissionExperience, experienceGainMultiplierIndividual);
-                info?.GiveExperience((int)((experienceGain * experienceGainMultiplier.Value) * experienceGainMultiplierIndividual.Value));
-            }
+            DistributeExperienceToCrew(crewCharacters, (int)(baseExperienceGain * experienceGainMultiplier.Value));
 
             CalculateFinalReward(Submarine.MainSub);
 #if SERVER
@@ -465,17 +453,32 @@ namespace Barotrauma
                     character.Info.MissionsCompletedSinceDeath++;
                 }
 
-                foreach (KeyValuePair<Identifier, float> reputationReward in ReputationRewards)
+                foreach (var reputationReward in ReputationRewards)
                 {
-                    if (reputationReward.Key == "location")
+                    if (reputationReward.FactionIdentifier == "location")
                     {
-                        OriginLocation.Reputation?.AddReputation(reputationReward.Value);
+                        OriginLocation.Reputation?.AddReputation(reputationReward.Amount);
+                        TryGiveReputationForOpposingFaction(OriginLocation.Faction, reputationReward.AmountForOpposingFaction);
                     }
                     else
                     {
-                        Faction faction = campaign.Factions.Find(faction1 => faction1.Prefab.Identifier == reputationReward.Key);
-                           float prevValue = faction.Reputation.Value;
-                        faction?.Reputation.AddReputation(reputationReward.Value);
+                        Faction faction = campaign.Factions.Find(faction1 => faction1.Prefab.Identifier == reputationReward.FactionIdentifier);
+                        if (faction != null)
+                        {
+                            faction.Reputation.AddReputation(reputationReward.Amount);
+                            TryGiveReputationForOpposingFaction(faction, reputationReward.AmountForOpposingFaction);
+                        }
+                    }
+                }
+
+                void TryGiveReputationForOpposingFaction(Faction thisFaction, float amount)
+                {
+                    if (MathUtils.NearlyEqual(amount, 0.0f)) { return; }
+                    if (thisFaction?.Prefab != null && 
+                        !thisFaction.Prefab.OpposingFaction.IsEmpty)
+                    {
+                        Faction faction = campaign.Factions.Find(faction1 => faction1.Prefab.Identifier == thisFaction.Prefab.OpposingFaction);
+                        faction?.Reputation.AddReputation(amount);
                     }
                 }
             }
@@ -489,29 +492,9 @@ namespace Barotrauma
             }
         }
 
-#if SERVER
-        public static int DistributeRewardsToCrew(IEnumerable<Character> crew, int totalReward)
-        {
-            int remainingRewards = totalReward;
-            float sum = GetRewardDistibutionSum(crew);
-            if (MathUtils.NearlyEqual(sum, 0)) { return remainingRewards; }
-            foreach (Character character in crew)
-            {
-                int rewardDistribution = character.Wallet.RewardDistribution;
-                float rewardWeight = sum > 100 ? rewardDistribution / sum : rewardDistribution / 100f;
-                int reward = (int)(totalReward * rewardWeight);
-                reward = Math.Min(remainingRewards, reward);
-                character.Wallet.Give(reward);
-                remainingRewards -= reward;
-                if (remainingRewards <= 0) { break; }
-            }
-
-            return remainingRewards;
-        }
-#endif
+        partial void DistributeExperienceToCrew(IEnumerable<Character> crew, int experienceGain);
 
         public static int GetRewardDistibutionSum(IEnumerable<Character> crew, int rewardDistribution = 0) => crew.Sum(c => c.Wallet.RewardDistribution) + rewardDistribution;
-
 
         public static (int Amount, int Percentage, float Sum) GetRewardShare(int rewardDistribution, IEnumerable<Character> crew, Option<int> reward)
         {

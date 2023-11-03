@@ -218,7 +218,7 @@ namespace Barotrauma
 #endif
         }
 
-        private bool IsValidScanPosition(Scanner scanner, KeyValuePair<WayPoint, bool> scanStatus, float scanRadiusSquared)
+        private static bool IsValidScanPosition(Scanner scanner, KeyValuePair<WayPoint, bool> scanStatus, float scanRadiusSquared)
         {
             if (scanStatus.Value) { return false; }
             if (scanStatus.Key.Submarine != scanner.Item.Submarine) { return false; }
@@ -232,39 +232,15 @@ namespace Barotrauma
             switch (State)
             {
                 case 0:
-                    if (!AllTargetsScanned) { return; }
-                    State = 1;
-                    break;
-                case 1:
-                    if (!Submarine.MainSub.AtEndExit && !Submarine.MainSub.AtStartExit) { return; }
-                    State = 2;
+                    if (AllTargetsScanned)
+                    {
+                        State = 1;
+                    }
                     break;
             }
         }
 
-        protected override bool DetermineCompleted()
-        {
-            return State == 2 && AllScannersReturned();
-
-            bool AllScannersReturned()
-            {
-                foreach (var scanner in scanners)
-                {
-                    if (scanner?.Item == null || scanner.Item.Removed) { return false; }
-                    var owner = scanner.Item.GetRootInventoryOwner();
-                    if (owner.Submarine != null && owner.Submarine.Info.Type == SubmarineType.Player)
-                    {
-                        continue;
-                    }
-                    else if (owner is Character c && c.Info != null && GameMain.GameSession.CrewManager.CharacterInfos.Contains(c.Info))
-                    {
-                        continue;
-                    }
-                    return false;
-                }
-                return true;
-            }
-        }
+        protected override bool DetermineCompleted() => State > 0;
 
         protected override void EndMissionSpecific(bool completed)
         {

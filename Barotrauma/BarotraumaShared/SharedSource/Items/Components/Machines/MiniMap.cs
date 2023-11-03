@@ -83,7 +83,7 @@ namespace Barotrauma.Items.Components
             hasPower = Voltage > MinVoltage;
             if (hasPower)
             {
-                ApplyStatusEffects(ActionType.OnActive, deltaTime, null);
+                ApplyStatusEffects(ActionType.OnActive, deltaTime);
             }
         }
 

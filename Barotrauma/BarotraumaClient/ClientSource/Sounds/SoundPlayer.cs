@@ -156,6 +156,12 @@ namespace Barotrauma
                     insideSubFactor = 1.0f;
                 }
 
+                if (Character.Controlled != null && Character.Controlled.PressureTimer > 0.0f && !Character.Controlled.IsDead)
+                {
+                    //make the sound lerp to the "outside" sound when under pressure
+                    insideSubFactor -= Character.Controlled.PressureTimer / 100.0f;
+                }
+
                 movementSoundVolume = Math.Max(movementSoundVolume, movementFactor);
                 if (!MathUtils.IsValid(movementSoundVolume))
                 {
@@ -183,7 +189,7 @@ namespace Barotrauma
                 if (chn is null || !chn.IsPlaying)
                 {
                     if (volume < 0.01f) { return; }
-                    if (!(chn is null)) { waterAmbienceChannels.Remove(chn); }
+                    if (chn is not null) { waterAmbienceChannels.Remove(chn); }
                     chn = sound.Play(volume, "waterambience");
                     chn.Looping = true;
                     waterAmbienceChannels.Add(chn);
@@ -194,6 +200,15 @@ namespace Barotrauma
                     if (chn.Gain < 0.01f)
                     {
                         chn.FadeOutAndDispose();
+                    }
+                    if (Character.Controlled != null && Character.Controlled.PressureTimer > 0.0f && !Character.Controlled.IsDead)
+                    {
+                        //make the sound decrease in pitch when under pressure
+                        chn.FrequencyMultiplier = MathHelper.Clamp(Character.Controlled.PressureTimer / 200.0f, 0.75f, 1.0f);
+                    }
+                    else
+                    {
+                        chn.FrequencyMultiplier = Math.Min(chn.frequencyMultiplier + deltaTime, 1.0f);
                     }
                 }
             }
@@ -652,6 +667,7 @@ namespace Barotrauma
                     }
                 }
 
+                LogCurrentMusic();
                 updateMusicTimer = UpdateMusicInterval;
             }
 
@@ -713,6 +729,26 @@ namespace Barotrauma
                     musicChannel[i].Gain = MathHelper.Lerp(musicChannel[i].Gain, targetGain, MusicLerpSpeed * deltaTime);
                 }
             } 
+        }
+
+        private static double lastMusicLogTime;
+        const double MusicLogInterval = 60.0;
+        private static void LogCurrentMusic()
+        {
+            if (Screen.Selected != GameMain.GameScreen) { return; }
+            if (Timing.TotalTime < lastMusicLogTime + MusicLogInterval) { return; }
+            for (int i = 0; i < musicChannel.Length; i++)
+            {
+                if (musicChannel[i] != null &&
+                    musicChannel[i].IsPlaying &&
+                    musicChannel[i].Sound?.Filename != null)
+                {
+                    GameAnalyticsManager.AddDesignEvent(
+                        "BackgroundMusic:" + 
+                        Path.GetFileNameWithoutExtension(musicChannel[i].Sound.Filename.Replace(":", string.Empty).Replace(" ", string.Empty)));
+                }
+            }
+            lastMusicLogTime = Timing.TotalTime;
         }
 
         private static void DisposeMusicChannel(int index)

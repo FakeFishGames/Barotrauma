@@ -11,9 +11,9 @@ namespace Barotrauma.Items.Components
             get { return new Vector2(range * 2); }
         }
 
-        public void Draw(SpriteBatch spriteBatch, bool editing, float itemDepth = -1)
+        public void Draw(SpriteBatch spriteBatch, bool editing, float itemDepth = -1, Color? overrideColor = null)
         {
-            if (!editing || !MapEntity.SelectedList.Contains(item)) return;
+            if (!editing || !MapEntity.SelectedList.Contains(item)) { return; }
 
             Vector2 pos = new Vector2(item.DrawPosition.X, -item.DrawPosition.Y);
             ShapeExtensions.DrawLine(spriteBatch, pos + Vector2.UnitY * range, pos - Vector2.UnitY * range, Color.Cyan * 0.5f, 2);

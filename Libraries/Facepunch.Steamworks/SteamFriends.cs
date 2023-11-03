@@ -8,19 +8,22 @@ using Steamworks.Data;
 namespace Steamworks
 {
 	/// <summary>
-	/// Undocumented Parental Settings
+	/// Class for utilizing the Steam Friends API.
 	/// </summary>
 	public class SteamFriends : SteamClientClass<SteamFriends>
 	{
 		internal static ISteamFriends? Internal => Interface as ISteamFriends;
 
-		internal override void InitializeInterface( bool server )
+		internal override bool InitializeInterface( bool server )
 		{
 			SetInterface( server, new ISteamFriends( server ) );
+			if ( Interface is null || Interface.Self == IntPtr.Zero ) return false;
 
 			richPresence = new Dictionary<string, string>();
 
 			InstallEvents();
+
+			return true;
 		}
 
 		static Dictionary<string, string>? richPresence;
@@ -30,52 +33,66 @@ namespace Steamworks
 			Dispatch.Install<PersonaStateChange_t>( x => OnPersonaStateChange?.Invoke( new Friend( x.SteamID ) ) );
 			Dispatch.Install<GameRichPresenceJoinRequested_t>( x => OnGameRichPresenceJoinRequested?.Invoke( new Friend( x.SteamIDFriend), x.ConnectUTF8() ) );
 			Dispatch.Install<GameConnectedFriendChatMsg_t>( OnFriendChatMessage );
+			Dispatch.Install<GameConnectedClanChatMsg_t>( OnGameConnectedClanChatMessage );
 			Dispatch.Install<GameOverlayActivated_t>( x => OnGameOverlayActivated?.Invoke( x.Active != 0 ) );
 			Dispatch.Install<GameServerChangeRequested_t>( x => OnGameServerChangeRequested?.Invoke( x.ServerUTF8(), x.PasswordUTF8() ) );
 			Dispatch.Install<GameLobbyJoinRequested_t>( x => OnGameLobbyJoinRequested?.Invoke( new Lobby( x.SteamIDLobby ), x.SteamIDFriend ) );
 			Dispatch.Install<FriendRichPresenceUpdate_t>( x => OnFriendRichPresenceUpdate?.Invoke( new Friend( x.SteamIDFriend ) ) );
+			Dispatch.Install<OverlayBrowserProtocolNavigation_t>( x => OnOverlayBrowserProtocol?.Invoke( x.RgchURIUTF8() ) );
 		}
 
 		/// <summary>
-		/// Called when chat message has been received from a friend. You'll need to turn on
-		/// ListenForFriendsMessages to recieve this. (friend, msgtype, message)
+		/// Invoked when a chat message has been received from a friend. You'll need to enable
+		/// <see cref="ListenForFriendsMessages"/> to recieve this. (friend, msgtype, message)
 		/// </summary>
 		public static event Action<Friend, string, string>? OnChatMessage;
 
 		/// <summary>
-		/// called when a friends' status changes
+		/// Invoked when a chat message has been received in a Steam group chat that we are in. Associated Functions: JoinClanChatRoom. (friend, msgtype, message)
+		/// </summary>
+		public static event Action<Friend, string, string>? OnClanChatMessage;
+
+		/// <summary>
+		/// Invoked when a friends' status changes.
 		/// </summary>
 		public static event Action<Friend>? OnPersonaStateChange;
 
 
 		/// <summary>
-		/// Called when the user tries to join a game from their friends list
-		///	rich presence will have been set with the "connect" key which is set here
+		/// Invoked when the user tries to join a game from their friends list.
+		///	Rich presence will have been set with the "connect" key which is set here.
 		/// </summary>
 		public static event Action<Friend, string>? OnGameRichPresenceJoinRequested;
 
 		/// <summary>
-		/// Posted when game overlay activates or deactivates
-		///	the game can use this to be pause or resume single player games
+		/// Invoked when game overlay activates or deactivates.
+		///	The game can use this to be pause or resume single player games.
 		/// </summary>
 		public static event Action<bool>? OnGameOverlayActivated;
 
 		/// <summary>
-		/// Called when the user tries to join a different game server from their friends list
-		///	game client should attempt to connect to specified server when this is received
+		/// Invoked when the user tries to join a different game server from their friends list.
+		///	Game client should attempt to connect to specified server when this is received.
 		/// </summary>
 		public static event Action<string, string>? OnGameServerChangeRequested;
 
 		/// <summary>
-		/// Called when the user tries to join a lobby from their friends list
-		///	game client should attempt to connect to specified lobby when this is received
+		/// Invoked when the user tries to join a lobby from their friends list.
+		///	Game client should attempt to connect to specified lobby when this is received.
 		/// </summary>
 		public static event Action<Lobby, SteamId>? OnGameLobbyJoinRequested;
 
 		/// <summary>
-		/// Callback indicating updated data about friends rich presence information
+		/// Invoked when a friend's rich presence data is updated.
 		/// </summary>
 		public static event Action<Friend>? OnFriendRichPresenceUpdate;
+
+		/// <summary>
+		/// Invoked when an overlay browser instance is navigated to a
+		/// protocol/scheme registered by <see cref="RegisterProtocolInOverlayBrowser(string)"/>.
+		/// </summary>
+		public static event Action<string>? OnOverlayBrowserProtocol;
+
 
 		static unsafe void OnFriendChatMessage( GameConnectedFriendChatMsg_t data )
 		{
@@ -96,7 +113,29 @@ namespace Steamworks
 
 			OnChatMessage( friend, typeName, message );
 		}
-		
+
+		static unsafe void OnGameConnectedClanChatMessage( GameConnectedClanChatMsg_t data )
+		{
+			if ( OnClanChatMessage == null ) return;
+			if ( Internal is null ) return;
+
+			var friend = new Friend( data.SteamIDUser );
+
+			using var buffer = Helpers.TakeMemory();
+			var type = ChatEntryType.ChatMsg;
+			SteamId chatter = data.SteamIDUser;
+
+			var len = Internal.GetClanChatMessage( data.SteamIDClanChat, data.MessageID, buffer, Helpers.MemoryBufferSize, ref type, ref chatter );
+
+			if ( len == 0 && type == ChatEntryType.Invalid )
+				return;
+
+			var typeName = type.ToString();
+			var message = Helpers.MemoryToString( buffer );
+
+			OnClanChatMessage( friend, typeName, message );
+		}
+
 		private static IEnumerable<Friend> GetFriendsWithFlag(FriendFlags flag)
 		{
 			if (Internal is null) { yield break; }
@@ -108,21 +147,28 @@ namespace Steamworks
 			}
 		}
 
-        public static string? GetFriendPersonaName( SteamId steamId )
-        {
-            return Internal?.GetFriendPersonaName(steamId);
-        }
-
+		/// <summary>
+		/// Gets an <see cref="IEnumerable{T}"/> of friends that the current user has.
+		/// </summary>
+		/// <returns>An <see cref="IEnumerable{T}"/> of friends.</returns>
 		public static IEnumerable<Friend> GetFriends()
 		{
 			return GetFriendsWithFlag(FriendFlags.Immediate);
 		}
 
+		/// <summary>
+		/// Gets an <see cref="IEnumerable{T}"/> of blocked users that the current user has.
+		/// </summary>
+		/// <returns>An <see cref="IEnumerable{T}"/> of blocked users.</returns>
 		public static IEnumerable<Friend> GetBlocked()
 		{
 			return GetFriendsWithFlag(FriendFlags.Blocked);
 		}
 
+		/// <summary>
+		/// Gets an <see cref="IEnumerable{T}"/> of friend requests that the current user has.
+		/// </summary>
+		/// <returns>An <see cref="IEnumerable{T}"/> of friend requests.</returns>
 		public static IEnumerable<Friend> GetFriendsRequested()
 		{
 			return GetFriendsWithFlag( FriendFlags.FriendshipRequested );
@@ -177,7 +223,7 @@ namespace Steamworks
 		}
 
 		/// <summary>
-		/// The dialog to open. Valid options are: 
+		/// Opens a specific overlay window. Valid options are:
 		/// "friends", 
 		/// "community", 
 		/// "players", 
@@ -204,7 +250,7 @@ namespace Steamworks
 		/// <summary>
 		/// Activates the Steam Overlay to the Steam store page for the provided app.
 		/// </summary>
-		public static void OpenStoreOverlay( AppId id ) => Internal?.ActivateGameOverlayToStore( id.Value, OverlayToStoreFlag.None );
+		public static void OpenStoreOverlay( AppId id, OverlayToStoreFlag overlayToStoreFlag = OverlayToStoreFlag.None ) => Internal?.ActivateGameOverlayToStore( id.Value, overlayToStoreFlag );
 
 		/// <summary>
 		/// Activates Steam Overlay web browser directly to the specified URL.
@@ -249,6 +295,11 @@ namespace Steamworks
 			await Task.Delay( 500 );
 		}
 
+		/// <summary>
+		/// Returns a small avatar of the user with the given <paramref name="steamid"/>.
+		/// </summary>
+		/// <param name="steamid">The <see cref="SteamId"/> of the user to get.</param>
+		/// <returns>A <see cref="Data.Image"/> with a value if the image was successfully retrieved.</returns>
 		public static async Task<Data.Image?> GetSmallAvatarAsync( SteamId steamid )
 		{
 			if (Internal is null) { return null; }
@@ -256,6 +307,11 @@ namespace Steamworks
 			return SteamUtils.GetImage( Internal.GetSmallFriendAvatar( steamid ) );
 		}
 
+		/// <summary>
+		/// Returns a medium avatar of the user with the given <paramref name="steamid"/>.
+		/// </summary>
+		/// <param name="steamid">The <see cref="SteamId"/> of the user to get.</param>
+		/// <returns>A <see cref="Data.Image"/> with a value if the image was successfully retrieved.</returns>
 		public static async Task<Data.Image?> GetMediumAvatarAsync( SteamId steamid )
 		{
 			if (Internal is null) { return null; }
@@ -263,6 +319,11 @@ namespace Steamworks
 			return SteamUtils.GetImage( Internal.GetMediumFriendAvatar( steamid ) );
 		}
 
+		/// <summary>
+		/// Returns a large avatar of the user with the given <paramref name="steamid"/>.
+		/// </summary>
+		/// <param name="steamid">The <see cref="SteamId"/> of the user to get.</param>
+		/// <returns>A <see cref="Data.Image"/> with a value if the image was successfully retrieved.</returns>
 		public static async Task<Data.Image?> GetLargeAvatarAsync( SteamId steamid )
 		{
 			if (Internal is null) { return null; }
@@ -335,6 +396,11 @@ namespace Steamworks
 			}
 		}
 
+		/// <summary>
+		/// Gets whether or not the current user is following the user with the given <paramref name="steamID"/>.
+		/// </summary>
+		/// <param name="steamID">The <see cref="SteamId"/> to check.</param>
+		/// <returns>Boolean.</returns>
 		public static async Task<bool> IsFollowing(SteamId steamID)
 		{
 			if (Internal is null) { return false; }
@@ -369,5 +435,29 @@ namespace Steamworks
 
             return steamIds.ToArray();
         }
-    }
+
+		/// <summary>
+		/// Call this before calling ActivateGameOverlayToWebPage() to have the Steam Overlay Browser block navigations
+		///  to your specified protocol (scheme) uris and instead dispatch a OverlayBrowserProtocolNavigation callback to your game.
+		/// </summary>
+		public static bool RegisterProtocolInOverlayBrowser( string protocol )
+        {
+			return Internal != null && Internal.RegisterProtocolInOverlayBrowser( protocol );
+        }
+
+		public static async Task<bool> JoinClanChatRoom( SteamId chatId )
+		{
+			if ( Internal is null ) return false;
+			var result = await Internal.JoinClanChatRoom( chatId );
+			if ( !result.HasValue )
+				return false;
+
+			return result.Value.ChatRoomEnterResponse == RoomEnter.Success ;
+		}
+
+		public static bool SendClanChatRoomMessage( SteamId chatId, string message )
+		{
+			return Internal != null && Internal.SendClanChatMessage( chatId, message );
+		}
+	}
 }

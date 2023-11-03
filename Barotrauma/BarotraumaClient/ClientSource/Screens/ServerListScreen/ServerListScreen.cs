@@ -1047,7 +1047,7 @@ namespace Barotrauma
             }
             if (filterTraitorValue != TernaryOption.Any)
             {
-                if ((serverInfo.TraitorsEnabled == YesNoMaybe.Yes || serverInfo.TraitorsEnabled == YesNoMaybe.Maybe) != (filterTraitorValue == TernaryOption.Enabled)) 
+                if ((serverInfo.TraitorProbability > 0.0f) != (filterTraitorValue == TernaryOption.Enabled)) 
                 { 
                     return false; 
                 }
@@ -1828,8 +1828,6 @@ namespace Barotrauma
         public override void Draw(double deltaTime, GraphicsDevice graphics, SpriteBatch spriteBatch)
         {
             graphics.Clear(Color.CornflowerBlue);
-
-            GameMain.TitleScreen.DrawLoadingText = false;
 
             spriteBatch.Begin(SpriteSortMode.Deferred, null, GUI.SamplerState, null, GameMain.ScissorTestEnable);
             GameMain.MainMenuScreen.DrawBackground(graphics, spriteBatch);            

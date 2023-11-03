@@ -85,6 +85,12 @@ namespace Barotrauma
         public readonly bool TargetAllCharacters;
         public bool IsReport => TargetAllCharacters && !MustSetTarget;
 
+        public bool IsVisibleAsReportButton => 
+            IsReport && !Hidden && SymbolSprite != null &&
+            (!TraitorModeOnly || GameMain.GameSession is { TraitorsEnabled: true });
+
+        public bool TraitorModeOnly;
+
         public bool IsDismissal => Identifier == DismissalIdentifier;
 
         public readonly float FadeOutTime;
@@ -172,6 +178,7 @@ namespace Barotrauma
             ControllerTags = orderElement.GetAttributeIdentifierArray("controllertags", Array.Empty<Identifier>()).ToImmutableArray();
             TargetAllCharacters = orderElement.GetAttributeBool("targetallcharacters", false);
             AppropriateJobs = orderElement.GetAttributeIdentifierArray("appropriatejobs", Array.Empty<Identifier>()).ToImmutableArray();
+            TraitorModeOnly = orderElement.GetAttributeBool("TraitorModeOnly", false);
             PreferredJobs = orderElement.GetAttributeIdentifierArray("preferredjobs", Array.Empty<Identifier>()).ToImmutableArray();
             Options = orderElement.GetAttributeIdentifierArray("options", Array.Empty<Identifier>()).ToImmutableArray();
             HiddenOptions = orderElement.GetAttributeIdentifierArray("hiddenoptions", Array.Empty<Identifier>()).ToImmutableArray();

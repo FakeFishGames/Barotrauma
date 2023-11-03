@@ -111,7 +111,8 @@ namespace Barotrauma
         public static LoadingScreen TitleScreen;
         private bool loadingScreenOpen;
 
-        private CoroutineHandle loadingCoroutine;
+        private Thread initialLoadingThread;
+
         public bool HasLoaded { get; private set; }
 
         private readonly GameTime fixedTime;
@@ -411,24 +412,21 @@ namespace Barotrauma
                 WaitForLanguageSelection = GameSettings.CurrentConfig.Language == LanguageIdentifier.None
             };
 
-            bool canLoadInSeparateThread = true;
-
-            loadingCoroutine = CoroutineManager.StartCoroutine(Load(canLoadInSeparateThread), "Load", canLoadInSeparateThread);
+            initialLoadingThread = new Thread(Load);
+            initialLoadingThread.Start();
         }
 
-        public class LoadingException : Exception
+        private void Load()
         {
-            public LoadingException(Exception e) : base("Loading was interrupted due to an error.", innerException: e)
+            static void log(string str)
             {
+                if (GameSettings.CurrentConfig.VerboseLogging)
+                {
+                    DebugConsole.NewMessage(str, Color.Lime);
+                }
             }
-        }
-
-        private IEnumerable<CoroutineStatus> Load(bool isSeparateThread)
-        {
-            if (GameSettings.CurrentConfig.VerboseLogging)
-            {
-                DebugConsole.NewMessage("LOADING COROUTINE", Color.Lime);
-            }
+            
+            log("LOADING COROUTINE");
 
             ContentPackageManager.LoadVanillaFileList();
 
@@ -438,7 +436,7 @@ namespace Barotrauma
                 TitleScreen.AvailableLanguages = TextManager.AvailableLanguages.OrderBy(l => l.Value != "english".ToIdentifier()).ThenBy(l => l.Value).ToArray();
                 while (TitleScreen.WaitForLanguageSelection)
                 {
-                    yield return CoroutineStatus.Running;
+                    Thread.Sleep((int)(Timing.Step * 1000));
                 }
                 ContentPackageManager.VanillaCorePackage.UnloadFilesOfType<TextFile>();
             }
@@ -450,24 +448,12 @@ namespace Barotrauma
             {
                 var pendingSplashScreens = TitleScreen.PendingSplashScreens;
                 float baseVolume = MathHelper.Clamp(GameSettings.CurrentConfig.Audio.SoundVolume * 2.0f, 0.0f, 1.0f);
-                pendingSplashScreens?.Enqueue(new LoadingScreen.PendingSplashScreen("Content/SplashScreens/Splash_UTG.webm", baseVolume * 0.5f));
-                pendingSplashScreens?.Enqueue(new LoadingScreen.PendingSplashScreen("Content/SplashScreens/Splash_FF.webm", baseVolume));
-                pendingSplashScreens?.Enqueue(new LoadingScreen.PendingSplashScreen("Content/SplashScreens/Splash_Daedalic.webm", baseVolume * 0.1f));
-            }
-
-            //if not loading in a separate thread, wait for the splash screens to finish before continuing the loading
-            //otherwise the videos will look extremely choppy
-            if (!isSeparateThread)
-            {
-                while (TitleScreen.PlayingSplashScreen || TitleScreen.PendingSplashScreens.Count > 0)
-                {
-                    yield return CoroutineStatus.Running;
-                }
+                pendingSplashScreens.Enqueue(new LoadingScreen.PendingSplashScreen("Content/SplashScreens/Splash_UTG.webm", baseVolume * 0.5f));
+                pendingSplashScreens.Enqueue(new LoadingScreen.PendingSplashScreen("Content/SplashScreens/Splash_FF.webm", baseVolume));
+                pendingSplashScreens.Enqueue(new LoadingScreen.PendingSplashScreen("Content/SplashScreens/Splash_Daedalic.webm", baseVolume * 0.1f));
             }
 
             GUI.Init();
-
-            yield return CoroutineStatus.Running;
 
             LegacySteamUgcTransition.Prepare();
             var contentPackageLoadRoutine = ContentPackageManager.Init();
@@ -476,7 +462,6 @@ namespace Barotrauma
             {
                 const float min = 1f, max = 70f;
                 TitleScreen.LoadState = MathHelper.Lerp(min, max, progress);
-                yield return CoroutineStatus.Running;
             }
 
             var corePackage = ContentPackageManager.EnabledPackages.Core;
@@ -505,7 +490,6 @@ namespace Barotrauma
             TaskPool.Add("InitRelayNetworkAccess", SteamManager.InitRelayNetworkAccess(), (t) => { });
 
             HintManager.Init();
-        yield return CoroutineStatus.Running;
             CoreEntityPrefab.InitCorePrefabs();
             GameModePreset.Init();
 
@@ -513,7 +497,6 @@ namespace Barotrauma
             SubmarineInfo.RefreshSavedSubs();
 
             TitleScreen.LoadState = 75.0f;
-        yield return CoroutineStatus.Running;
 
             GameScreen = new GameScreen(GraphicsDeviceManager.GraphicsDevice);
 
@@ -521,13 +504,11 @@ namespace Barotrauma
             LightManager = new Lights.LightManager(base.GraphicsDevice);
             
             TitleScreen.LoadState = 80.0f;
-        yield return CoroutineStatus.Running;
 
             MainMenuScreen          = new MainMenuScreen(this);
             ServerListScreen        = new ServerListScreen();
 
             TitleScreen.LoadState = 85.0f;
-        yield return CoroutineStatus.Running;
 
 #if USE_STEAM
             if (SteamManager.IsInitialized)
@@ -553,20 +534,16 @@ namespace Barotrauma
             TestScreen              = new TestScreen();
 
             TitleScreen.LoadState = 90.0f;
-        yield return CoroutineStatus.Running;
 
             ParticleEditorScreen    = new ParticleEditorScreen();
 
             TitleScreen.LoadState = 95.0f;
-        yield return CoroutineStatus.Running;
 
             LevelEditorScreen       = new LevelEditorScreen();
             SpriteEditorScreen      = new SpriteEditorScreen();
             EventEditorScreen       = new EventEditorScreen();
             CharacterEditorScreen   = new CharacterEditor.CharacterEditorScreen();
             CampaignEndScreen       = new CampaignEndScreen();
-
-        yield return CoroutineStatus.Running;
 
 #if DEBUG
             LevelGenerationParams.CheckValidity();
@@ -583,12 +560,7 @@ namespace Barotrauma
 
             TitleScreen.LoadState = 100.0f;
             HasLoaded = true;
-            if (GameSettings.CurrentConfig.VerboseLogging)
-            {
-                DebugConsole.NewMessage("LOADING COROUTINE FINISHED", Color.Lime);
-            }
-            yield return CoroutineStatus.Success;
-
+            log("LOADING COROUTINE FINISHED");
         }
 
         /// <summary>
@@ -741,11 +713,6 @@ namespace Barotrauma
 #endif
 
                     Client?.Update((float)Timing.Step);
-
-                    if (!HasLoaded && !CoroutineManager.IsCoroutineRunning(loadingCoroutine))
-                    {
-                        throw new LoadingException(loadingCoroutine.Exception);
-                    }
                 }
                 else if (HasLoaded)
                 {
@@ -1174,7 +1141,7 @@ namespace Barotrauma
         {
             waitForKeyHit = waitKeyHit;
             loadingScreenOpen = true;
-            TitleScreen.LoadState = null;
+            TitleScreen.LoadState = 0f;
             return CoroutineManager.StartCoroutine(TitleScreen.DoLoading(loader));
         }
 

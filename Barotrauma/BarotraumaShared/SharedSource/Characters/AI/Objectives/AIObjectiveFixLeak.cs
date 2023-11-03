@@ -12,7 +12,9 @@ namespace Barotrauma
         public override Identifier Identifier { get; set; } = "fix leak".ToIdentifier();
         public override bool ForceRun => true;
         public override bool KeepDivingGearOn => true;
+        public override bool AllowInFriendlySubs => true;
         public override bool AllowInAnySub => true;
+        public override bool AllowWhileHandcuffed => false;
 
         public Gap Leak { get; private set; }
 
@@ -35,8 +37,7 @@ namespace Barotrauma
         {
             if (!IsAllowed)
             {
-                Priority = 0;
-                Abandon = true;
+                HandleNonAllowed();
                 return Priority;
             }
             float coopMultiplier = 1;
@@ -94,6 +95,7 @@ namespace Barotrauma
         protected override void Act(float deltaTime)
         {
             var weldingTool = character.Inventory.FindItemByTag("weldingequipment".ToIdentifier(), true);
+            var repairTool = weldingTool?.GetComponent<RepairTool>();
             if (weldingTool == null)
             {
                 TryAddSubObjective(ref getWeldingTool, () => new AIObjectiveGetItem(character, "weldingequipment".ToIdentifier(), objectiveManager, equip: true, spawnItemIfNotFound: character.TeamID == CharacterTeamType.FriendlyNPC), 
@@ -110,17 +112,25 @@ namespace Barotrauma
             }
             else
             {
-                if (weldingTool.OwnInventory == null)
+                if (repairTool == null)
                 {
 #if DEBUG
-                    DebugConsole.ThrowError($"{character.Name}: AIObjectiveFixLeak failed - the item \"" + weldingTool + "\" has no proper inventory");
+                    DebugConsole.ThrowError($"{character.Name}: AIObjectiveFixLeak failed - the item \"{weldingTool}\" has no RepairTool component but is tagged as a welding tool");
 #endif
                     Abandon = true;
                     return;
                 }
-                if (weldingTool.OwnInventory != null && weldingTool.OwnInventory.AllItems.None(i => i.HasTag("weldingfuel") && i.Condition > 0.0f))
+                if (weldingTool.OwnInventory == null && repairTool.requiredItems.Any(r => r.Key == RelatedItem.RelationType.Contained))
                 {
-                    TryAddSubObjective(ref refuelObjective, () => new AIObjectiveContainItem(character, "weldingfuel".ToIdentifier(), weldingTool.GetComponent<ItemContainer>(), objectiveManager, spawnItemIfNotFound: character.TeamID == CharacterTeamType.FriendlyNPC)
+#if DEBUG
+                    DebugConsole.ThrowError($"{character.Name}: AIObjectiveFixLeak failed - the item \"{weldingTool}\" has no proper inventory");
+#endif
+                    Abandon = true;
+                    return;
+                }
+                if (weldingTool.OwnInventory != null && weldingTool.OwnInventory.AllItems.None(i => i.HasTag(Tags.WeldingFuel) && i.Condition > 0.0f))
+                {
+                    TryAddSubObjective(ref refuelObjective, () => new AIObjectiveContainItem(character, Tags.WeldingFuel, weldingTool.GetComponent<ItemContainer>(), objectiveManager, spawnItemIfNotFound: character.TeamID == CharacterTeamType.FriendlyNPC)
                     {
                         RemoveExisting = true
                     },
@@ -138,7 +148,7 @@ namespace Barotrauma
                     void ReportWeldingFuelTankCount()
                     {
                         if (character.Submarine != Submarine.MainSub) { return; }
-                        int remainingOxygenTanks = Submarine.MainSub.GetItems(false).Count(i => i.HasTag("weldingfuel") && i.Condition > 1);
+                        int remainingOxygenTanks = Submarine.MainSub.GetItems(false).Count(i => i.HasTag(Tags.WeldingFuel) && i.Condition > 1);
                         if (remainingOxygenTanks == 0)
                         {
                             character.Speak(TextManager.Get("DialogOutOfWeldingFuel").Value, null, 0.0f, "outofweldingfuel".ToIdentifier(), 30.0f);
@@ -152,15 +162,6 @@ namespace Barotrauma
                 }
             }
             if (subObjectives.Any()) { return; }
-            var repairTool = weldingTool.GetComponent<RepairTool>();
-            if (repairTool == null)
-            {
-#if DEBUG
-                DebugConsole.ThrowError($"{character.Name}: AIObjectiveFixLeak failed - the item \"" + weldingTool + "\" has no RepairTool component but is tagged as a welding tool");
-#endif
-                Abandon = true;
-                return;
-            }
             Vector2 toLeak = Leak.WorldPosition - character.AnimController.AimSourceWorldPos;
             // TODO: use the collider size/reach?
             if (!character.AnimController.InWater && Math.Abs(toLeak.X) < 100 && toLeak.Y < 0.0f && toLeak.Y > -150)

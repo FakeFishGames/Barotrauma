@@ -40,24 +40,21 @@ namespace Barotrauma
 
         protected override float GetPriority()
         {
-            if (!IsAllowed)
-            {
-                Priority = 0;
-                return Priority;
-            }
             if (character.CurrentHull == null)
             {
                 Priority = (
                     objectiveManager.HasOrder<AIObjectiveGoTo>(o => o.Priority > 0) ||
-                    objectiveManager.HasOrder<AIObjectiveReturn>(o => o.Priority > 0) ||
                     objectiveManager.HasActiveObjective<AIObjectiveRescue>() ||
-                    objectiveManager.Objectives.Any(o => o is AIObjectiveCombat && o.Priority > 0))
+                    objectiveManager.Objectives.Any(o => (o is AIObjectiveCombat || o is AIObjectiveReturn) && o.Priority > 0))
                     && ((!character.IsLowInOxygen && character.IsImmuneToPressure)|| HumanAIController.HasDivingSuit(character)) ? 0 : AIObjectiveManager.EmergencyObjectivePriority - 10;
             }
             else
             {
-                if ((character.IsLowInOxygen && !character.AnimController.HeadInWater && HumanAIController.HasDivingSuit(character, requireOxygenTank: false)) ||
-                    NeedMoreDivingGear(character.CurrentHull, AIObjectiveFindDivingGear.GetMinOxygen(character)))
+                bool isSuffocatingInDivingSuit = character.IsLowInOxygen && !character.AnimController.HeadInWater && HumanAIController.HasDivingSuit(character, requireOxygenTank: false);
+                static bool IsSuffocatingWithoutDivingGear(Character c) => c.IsLowInOxygen && c.AnimController.HeadInWater && !HumanAIController.HasDivingGear(c, requireOxygenTank: true);
+                if (isSuffocatingInDivingSuit || 
+                    NeedMoreDivingGear(character.CurrentHull, AIObjectiveFindDivingGear.GetMinOxygen(character)) ||
+                    (!objectiveManager.HasActiveObjective<AIObjectiveFindDivingGear>() && IsSuffocatingWithoutDivingGear(character)))
                 {
                     Priority = AIObjectiveManager.MaxObjectivePriority;
                 }
@@ -215,7 +212,7 @@ namespace Barotrauma
                             AllowGoingOutside =
                                 character.IsProtectedFromPressure ||
                                 character.CurrentHull == null || 
-                                character.CurrentHull.IsTaggedAirlock() ||
+                                character.CurrentHull.IsAirlock ||
                                 character.CurrentHull.LeadsOutside(character)
                         },
                         onCompleted: () =>
@@ -258,6 +255,13 @@ namespace Barotrauma
                 }
                 if (subObjectives.Any(so => so.CanBeCompleted)) { return; }
                 UpdateSimpleEscape(deltaTime);
+                if (cannotFindSafeHull && !character.IsInFriendlySub && objectiveManager.Objectives.None(o => o is AIObjectiveReturn))
+                {
+                    if (OrderPrefab.Prefabs.TryGet("return".ToIdentifier(), out OrderPrefab orderPrefab))
+                    {
+                        objectiveManager.AddObjective(new AIObjectiveReturn(character, character, objectiveManager));
+                    }
+                }
             }
         }
 
@@ -433,8 +437,7 @@ namespace Barotrauma
             }
             else
             {
-                // TODO: could also target gaps that get us inside?
-                if (potentialHull.IsTaggedAirlock())
+                if (potentialHull.IsAirlock)
                 {
                     hullSafety = 100;
                     hullIsAirlock = true;

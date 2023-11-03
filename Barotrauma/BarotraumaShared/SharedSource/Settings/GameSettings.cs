@@ -74,11 +74,11 @@ namespace Barotrauma
                     TutorialSkipWarning = true,
                     CorpseDespawnDelay = 600,
                     CorpsesPerSubDespawnThreshold = 5,
-                    #if OSX
+#if OSX
                     UseDualModeSockets = false,
-                    #else
+#else
                     UseDualModeSockets = true,
-                    #endif
+#endif
                     DisableInGameHints = false,
                     EnableSubmarineAutoSave = true,
                     Graphics = GraphicsSettings.GetDefault(),
@@ -114,7 +114,7 @@ namespace Barotrauma
                 }
 #endif
                 //RemoteMainMenuContentUrl gets set to default it left empty - lets allow leaving it empty to make it possible to disable the remote content 
-                if (element.Attribute("RemoteMainMenuContentUrl")?.Value == string.Empty)
+                if (element.GetAttribute("RemoteMainMenuContentUrl")?.Value == string.Empty)
                 {
                     retVal.RemoteMainMenuContentUrl = string.Empty;
                 }

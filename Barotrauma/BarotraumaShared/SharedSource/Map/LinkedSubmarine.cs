@@ -398,7 +398,8 @@ namespace Barotrauma
                 }
             }
 
-            if (GameMain.GameSession?.GameMode is CampaignMode campaign && campaign.PurchasedLostShuttles)
+            if (GameMain.GameSession?.GameMode is CampaignMode campaign && 
+                (campaign.PurchasedLostShuttles || campaign.PurchasedLostShuttlesInLatestSave))
             {
                 foreach (Structure wall in Structure.WallList)
                 {

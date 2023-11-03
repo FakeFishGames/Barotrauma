@@ -41,6 +41,19 @@ namespace Barotrauma
         public Option<TType> Bind<TType>(Func<T, Option<TType>> binder) where TType : notnull
             => TryUnwrap(out T? selfValue) ? binder(selfValue) : Option.None;
 
+        public T Match(Func<T, T> some, Func<T> none)
+            => TryUnwrap(out T? selfValue) ? some(selfValue) : none();
+
+        public void Match(Action<T> some, Action none)
+        {
+            if (TryUnwrap(out T? selfValue))
+            {
+                some(selfValue);
+                return;
+            }
+            none();
+        }
+
         public T Fallback(T fallback)
             => TryUnwrap(out var v) ? v : fallback;
 

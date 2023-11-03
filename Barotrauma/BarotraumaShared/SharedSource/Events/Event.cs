@@ -52,6 +52,11 @@ namespace Barotrauma
             ParentSet = parentSet;
         }
 
+        public virtual string GetDebugInfo()
+        {
+            return $"Finished: {IsFinished.ColorizeObject()}";
+        }
+
         public virtual void Update(float deltaTime)
         {
         }

@@ -210,8 +210,8 @@ namespace Barotrauma
         [Serialize(5f, IsPropertySaveable.Yes, description: "How fast the held weapon is swayed back and forth while aiming. Only affects monsters using ranged weapons (items)."), Editable]
         public float SwayFrequency { get; set; }
 
-        [Serialize(0.0f, IsPropertySaveable.No, description: "Legacy support. Use Afflictions.")]
-        public float Stun { get; private set; }
+        [Serialize(0.0f, IsPropertySaveable.No, description: "Legacy functionality. Behaves otherwise the same as stuns defined as afflictions, but explosions only apply the stun once instead of dividing it between the limbs.")]
+        public float Stun { get; set; }
 
         [Serialize(false, IsPropertySaveable.Yes, description: "Can damage only Humans."), Editable]
         public bool OnlyHumans { get; set; }
@@ -434,13 +434,7 @@ namespace Barotrauma
                         }
                         break;
                     case "conditional":
-                        foreach (XAttribute attribute in subElement.Attributes())
-                        {
-                            if (PropertyConditional.IsValid(attribute))
-                            {
-                                Conditionals.Add(new PropertyConditional(attribute));
-                            }
-                        }
+                        Conditionals.AddRange(PropertyConditional.FromXElement(subElement));
                         break;
                 }
             }
@@ -544,8 +538,7 @@ namespace Barotrauma
                     }                    
                     if (effect.HasTargetType(StatusEffect.TargetType.AllLimbs))
                     {
-                        // TODO: do we need the conversion to list here? It generates garbage.
-                        var targets = targetCharacter.AnimController.Limbs.Cast<ISerializableEntity>().ToList();
+                        var targets = targetCharacter.AnimController.Limbs;
                         if (additionalEffectType != ActionType.OnEating)
                         {
                             effect.Apply(conditionalEffectType, deltaTime, targetCharacter, targets);
@@ -612,7 +605,10 @@ namespace Barotrauma
 
             float penetration = Penetration;
 
-            float? penetrationValue = SourceItem?.GetComponent<RangedWeapon>()?.Penetration;
+            RangedWeapon weapon = 
+                SourceItem?.GetComponent<RangedWeapon>() ?? 
+                SourceItem?.GetComponent<Projectile>()?.Launcher?.GetComponent<RangedWeapon>();
+            float? penetrationValue = weapon?.Penetration;
             if (penetrationValue.HasValue)
             {
                 penetration += penetrationValue.Value;
@@ -646,8 +642,7 @@ namespace Barotrauma
                 }
                 if (effect.HasTargetType(StatusEffect.TargetType.AllLimbs))
                 {
-                    // TODO: do we need the conversion to list here? It generates garbage.
-                    var targets = targetLimb.character.AnimController.Limbs.Cast<ISerializableEntity>().ToList();
+                    var targets = targetLimb.character.AnimController.Limbs;
                     effect.Apply(conditionalEffectType, deltaTime, targetLimb.character, targets);
                     effect.Apply(ActionType.OnUse, deltaTime, targetLimb.character, targets);
                 }

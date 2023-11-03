@@ -49,11 +49,15 @@ namespace Barotrauma.Networking
 
             respawnPromptCoroutine = CoroutineManager.Invoke(() =>
             {
-                if (Character.Controlled != null || (!(GameMain.GameSession?.IsRunning ?? false))) { return; }
+                if (Character.Controlled != null || (GameMain.GameSession is not { IsRunning: true })) { return; }
 
-                LocalizedString text =
-                    TextManager.GetWithVariable("respawnskillpenalty", "[percentage]", ((int)(SkillReductionOnDeath * 100)).ToString())
-                    + "\n\n" + TextManager.Get("respawnquestionprompt");
+                LocalizedString text = TextManager.Get("respawnquestionprompt");
+                if (SkillLossPercentageOnDeath > 0)
+                {
+                    text =
+                        TextManager.GetWithVariable("respawnskillpenalty", "[percentage]", ((int)SkillLossPercentageOnDeath).ToString()) + 
+                        "\n\n" + text;
+                };
 
                 var respawnPrompt = new GUIMessageBox(
                     TextManager.Get("tutorial.tryagainheader"), text,

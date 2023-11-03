@@ -116,6 +116,15 @@ namespace Steamworks.Ugc
         /// The number of downvotes of this item
         /// </summary>
         public uint VotesDown => details.VotesDown;
+		/// <summary>
+		/// Dependencies/children of this item or collection, available only from WithDependencies(true) queries
+		/// </summary>
+		public PublishedFileId[]? Children;
+
+		/// <summary>
+		/// Additional previews of this item or collection, available only from WithAdditionalPreviews(true) queries
+		/// </summary>
+		public UgcAdditionalPreview[]? AdditionalPreviews { get; internal set; }
 
         public bool IsInstalled => (State & ItemState.Installed) == ItemState.Installed;
 		public bool IsDownloading => (State & ItemState.Downloading) == ItemState.Downloading;
@@ -410,7 +419,21 @@ namespace Steamworks.Ugc
 		{
 			return new Ugc.Editor( Id );
 		}
-		
+
+		public async Task<bool> AddDependency( PublishedFileId child )
+		{
+			if ( SteamUGC.Internal is null ) { return false; }
+			var r = await SteamUGC.Internal.AddDependency( Id, child );
+			return r?.Result == Result.OK;
+		}
+
+		public async Task<bool> RemoveDependency( PublishedFileId child )
+		{
+			if ( SteamUGC.Internal is null ) { return false; }
+			var r = await SteamUGC.Internal.RemoveDependency( Id, child );
+			return r?.Result == Result.OK;
+		}
+
 		public Result Result => details.Result;
 	}
 }

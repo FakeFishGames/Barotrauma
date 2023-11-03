@@ -132,7 +132,7 @@ namespace Barotrauma
                 if (subElement.NameAsIdentifier() != "override") { continue; }
                 if (ScalableFont.ExtractShccFromXElement(subElement).HasFlag(flag))
                 {
-                    return new ScalableFont(subElement, GameMain.Instance.GraphicsDevice);
+                    return new ScalableFont(subElement, font.Size, GameMain.Instance.GraphicsDevice);
                 }
             }
 

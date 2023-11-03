@@ -734,10 +734,16 @@ namespace Barotrauma
             {
                 OnSelected = tickBox =>
                 {
+                    GUIMessageBox? loadingBox = null;
+                    if (!tickBox.Selected)
+                    {
+                        loadingBox = GUIMessageBox.CreateLoadingBox(TextManager.Get("PleaseWait"));
+                    }
                     GameAnalyticsManager.SetConsent(
                         tickBox.Selected
                             ? GameAnalyticsManager.Consent.Ask
-                            : GameAnalyticsManager.Consent.No);
+                            : GameAnalyticsManager.Consent.No,
+                        onAnswerSent: () => loadingBox?.Close());
                     return false;
                 }
             };
@@ -766,7 +772,7 @@ namespace Barotrauma
                 statisticsTickBox.OnSelected = null;
                 statisticsTickBox.Selected = shouldTickBoxBeSelected;
                 statisticsTickBox.OnSelected = prevHandler;
-                statisticsTickBox.Enabled = GameAnalyticsManager.UserConsented != GameAnalyticsManager.Consent.Error;
+                statisticsTickBox.Enabled &= GameAnalyticsManager.UserConsented != GameAnalyticsManager.Consent.Error;
             });
 #endif
         }

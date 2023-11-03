@@ -68,7 +68,7 @@ namespace Barotrauma
 
         public void TransformInToOutside()
         {
-            var sub = Submarine.FindContaining(ConvertUnits.ToDisplayUnits(Position));
+            var sub = Submarine.FindContainingInLocalCoordinates(ConvertUnits.ToDisplayUnits(Position));
             if (sub != null)
             {
                 Position += ConvertUnits.ToSimUnits(sub.Position);
@@ -869,11 +869,21 @@ namespace Barotrauma
             }
         }
 
-        public void UpdateDrawPosition()
+        public void UpdateDrawPosition(bool interpolate = true)
         {
-            drawPosition = Timing.Interpolate(prevPosition, FarseerBody.Position);
-            drawPosition = ConvertUnits.ToDisplayUnits(drawPosition + drawOffset);
-            drawRotation = Timing.InterpolateRotation(prevRotation, FarseerBody.Rotation) + rotationOffset;
+            if (interpolate)
+            {
+                drawPosition = Timing.Interpolate(prevPosition, FarseerBody.Position);
+                drawPosition = ConvertUnits.ToDisplayUnits(drawPosition + drawOffset);
+                drawRotation = Timing.InterpolateRotation(prevRotation, FarseerBody.Rotation) + rotationOffset;
+            }
+            else
+            {
+                drawPosition = prevPosition = ConvertUnits.ToDisplayUnits(FarseerBody.Position);
+                drawRotation = prevRotation = FarseerBody.Rotation;
+                drawOffset = Vector2.Zero;
+                drawRotation = 0.0f;
+            }
         }
         
         public void CorrectPosition<T>(List<T> positionBuffer,

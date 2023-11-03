@@ -162,7 +162,7 @@ namespace Barotrauma
 
             verticalLayout.Recalculate();
 
-            UpdateLoadMenu(saveFiles);
+            CreateLoadMenu(saveFiles);
         }
 
         private IEnumerable<CoroutineStatus> WaitForCampaignSetup()
@@ -192,7 +192,7 @@ namespace Barotrauma
             yield return CoroutineStatus.Success;
         }
 
-        public override void UpdateLoadMenu(IEnumerable<CampaignMode.SaveInfo> saveFiles = null)
+        public override void CreateLoadMenu(IEnumerable<CampaignMode.SaveInfo> saveFiles = null)
         {
             prevSaveFiles?.Clear();
             prevSaveFiles = null;

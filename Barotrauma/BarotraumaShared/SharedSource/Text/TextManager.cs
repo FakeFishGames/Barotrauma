@@ -406,7 +406,7 @@ namespace Barotrauma
             return new ReplaceLString(new TagLString(tag), StringComparison.OrdinalIgnoreCase, replacements);
         }
         
-        public static void ConstructDescription(ref LocalizedString description, XElement descriptionElement)
+        public static void ConstructDescription(ref LocalizedString description, XElement descriptionElement, Func<string, string>? customTagReplacer = null)
         {
             /*
             <Description tag="talentdescription.simultaneousskillgain">
@@ -415,21 +415,28 @@ namespace Barotrauma
                 <Replace tag="[somevalue]" value="45.3"/>
             </Description>
             */
-
-            LocalizedString extraDescriptionLine = Get(descriptionElement.GetAttributeIdentifier("tag", Identifier.Empty));
+            Identifier tag = descriptionElement.GetAttributeIdentifier("tag", Identifier.Empty);
+            LocalizedString extraDescriptionLine = Get(tag).Fallback(tag.Value);
             foreach (XElement replaceElement in descriptionElement.Elements())
             {
                 if (replaceElement.NameAsIdentifier() != "replace") { continue; }
 
-                Identifier tag = replaceElement.GetAttributeIdentifier("tag", Identifier.Empty);
-                string[] replacementValues = replaceElement.GetAttributeStringArray("value", Array.Empty<string>());
+                Identifier variableTag = replaceElement.GetAttributeIdentifier("tag", Identifier.Empty);
                 LocalizedString replacementValue = string.Empty;
-                for (int i = 0; i < replacementValues.Length; i++)
+                if (customTagReplacer != null)
                 {
-                    replacementValue += Get(replacementValues[i]).Fallback(replacementValues[i]);
-                    if (i < replacementValues.Length - 1)
+                    replacementValue = customTagReplacer(replaceElement.GetAttributeString("value", string.Empty));
+                }
+                if (replacementValue.IsNullOrWhiteSpace())
+                {
+                    string[] replacementValues = replaceElement.GetAttributeStringArray("value", Array.Empty<string>());
+                    for (int i = 0; i < replacementValues.Length; i++)
                     {
-                        replacementValue += ", ";
+                        replacementValue += Get(replacementValues[i]).Fallback(replacementValues[i]);
+                        if (i < replacementValues.Length - 1)
+                        {
+                            replacementValue += ", ";
+                        }
                     }
                 }
                 if (replaceElement.Attribute("color") != null)
@@ -437,15 +444,18 @@ namespace Barotrauma
                     string colorStr = replaceElement.GetAttributeString("color", "255,255,255,255");
                     replacementValue = $"‖color:{colorStr}‖" + replacementValue + "‖color:end‖";
                 }
-                extraDescriptionLine = extraDescriptionLine.Replace(tag, replacementValue);
+                extraDescriptionLine = extraDescriptionLine.Replace(variableTag, replacementValue);
             }
             if (!(description is RawLString { Value: "" })) { description += "\n"; } //TODO: this is cursed
             description += extraDescriptionLine;
         }
 
-        public static LocalizedString FormatCurrency(int amount)
+        public static LocalizedString FormatCurrency(int amount, bool includeCurrencySymbol = true)
         {
-             return GetWithVariable("currencyformat", "[credits]", string.Format(CultureInfo.InvariantCulture, "{0:N0}", amount));
+            string valueString = string.Format(CultureInfo.InvariantCulture, "{0:N0}", amount);
+             return includeCurrencySymbol ? 
+                GetWithVariable("currencyformat", "[credits]", valueString) :
+                valueString;
         }
 
         public static LocalizedString GetServerMessage(string serverMessage)

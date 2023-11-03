@@ -365,7 +365,7 @@ namespace Barotrauma
                 if (FinishedEvents.Any())
                 {
                     var finishedEventsElement = new XElement(nameof(FinishedEvents));
-                    foreach (var (set, count) in FinishedEvents.DistinctBy(f => f.Key.Identifier))
+                    foreach (var (set, count) in FinishedEvents)
                     {
                         var element = new XElement(nameof(FinishedEvents),
                             new XAttribute("set", set.Identifier),

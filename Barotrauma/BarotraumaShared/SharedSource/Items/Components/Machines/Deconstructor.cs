@@ -92,7 +92,7 @@ namespace Barotrauma.Items.Components
                 repairable.LastActiveTime = (float)Timing.TotalTime + 10.0f;
             }
 
-            ApplyStatusEffects(ActionType.OnActive, deltaTime, null);
+            ApplyStatusEffects(ActionType.OnActive, deltaTime);
 
             progressTimer += deltaTime * Math.Min(powerConsumption <= 0.0f ? 1 : Voltage, MaxOverVoltageFactor);
 
