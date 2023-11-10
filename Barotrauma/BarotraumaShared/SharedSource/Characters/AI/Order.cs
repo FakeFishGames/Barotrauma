@@ -441,7 +441,8 @@ namespace Barotrauma
             }
             catch (NotImplementedException e)
             {
-                DebugConsole.LogError($"Error creating a new Order instance: unexpected target type \"{targetType}\".\n{e.StackTrace.CleanupStackTrace()}");
+                DebugConsole.LogError($"Error creating a new Order instance: unexpected target type \"{targetType}\".\n{e.StackTrace.CleanupStackTrace()}",
+                    contentPackage: ContentPackage);
                 return null;
             }
         }

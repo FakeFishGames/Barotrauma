@@ -50,7 +50,8 @@ namespace Barotrauma
                 }
                 if (elementId == "statuseffect")
                 {
-                    DebugConsole.ThrowError($"Error in event prefab \"{prefab.Identifier}\". Status effect configured as an action. Please configure status effects as child elements of a StatusEffectAction.");
+                    DebugConsole.ThrowError($"Error in event prefab \"{prefab.Identifier}\". Status effect configured as an action. Please configure status effects as child elements of a StatusEffectAction.", 
+                        contentPackage: prefab.ContentPackage);
                     continue;
                 }
                 var action = EventAction.Instantiate(this, element);
@@ -59,7 +60,8 @@ namespace Barotrauma
 
             if (!Actions.Any())
             {
-                DebugConsole.ThrowError($"Scripted event \"{prefab.Identifier}\" has no actions. The event will do nothing.");
+                DebugConsole.ThrowError($"Scripted event \"{prefab.Identifier}\" has no actions. The event will do nothing.", 
+                    contentPackage: prefab.ContentPackage);
             }
 
             requiredDestinationTypes = prefab.ConfigElement.GetAttributeStringArray("requireddestinationtypes", null);
@@ -69,8 +71,9 @@ namespace Barotrauma
             foreach (var gotoAction in allActions.OfType<GoTo>())
             {
                 if (allActions.None(a => a is Label label && label.Name == gotoAction.Name))
-                {
-                    DebugConsole.ThrowError($"Error in event \"{prefab.Identifier}\". Could not find a label matching the GoTo \"{gotoAction.Name}\".");
+                {                    
+                    DebugConsole.ThrowError($"Error in event \"{prefab.Identifier}\". Could not find a label matching the GoTo \"{gotoAction.Name}\".", 
+                        contentPackage: prefab.ContentPackage);
                 }
             }
 
@@ -108,7 +111,8 @@ namespace Barotrauma
                     if (target is Character character) { return character.Name; }
                     if (target is Hull hull) { return hull.DisplayName.Value; }
                     if (target is Submarine sub) { return sub.Info.DisplayName.Value; }
-                    DebugConsole.AddWarning($"Failed to get the name of the event target {target} as a replacement for the tag {tag} in an event text.");
+                    DebugConsole.AddWarning($"Failed to get the name of the event target {target} as a replacement for the tag {tag} in an event text.",
+                        prefab.ContentPackage);
                     return target.ToString();
                 }
                 else
@@ -349,7 +353,8 @@ namespace Barotrauma
                     }
                     if (CurrentActionIndex == -1)
                     {
-                        DebugConsole.AddWarning($"Could not find the GoTo label \"{goTo}\" in the event \"{Prefab.Identifier}\". Ending the event.");
+                        DebugConsole.AddWarning($"Could not find the GoTo label \"{goTo}\" in the event \"{Prefab.Identifier}\". Ending the event.",
+                            prefab.ContentPackage);
                     }
                 }
 

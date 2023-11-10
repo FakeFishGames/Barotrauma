@@ -1098,6 +1098,15 @@ namespace Barotrauma
             set { CharacterHealth.Unkillable = value; }
         }
 
+        /// <summary>
+        /// Is the health interface available on this character? Can be used by status effects
+        /// </summary>
+        public bool UseHealthWindow
+        {
+            get { return CharacterHealth.UseHealthWindow; }
+            set { CharacterHealth.UseHealthWindow = value; }
+        }
+
         public CampaignMode.InteractionType CampaignInteractionType;
         public Identifier MerchantIdentifier;
 
@@ -1223,19 +1232,15 @@ namespace Barotrauma
         public static Character Create(CharacterPrefab prefab, Vector2 position, string seed, CharacterInfo characterInfo = null, ushort id = Entity.NullEntityID, bool isRemotePlayer = false, bool hasAi = true, bool createNetworkEvent = true, RagdollParams ragdoll = null, bool spawnInitialItems = true)
         {
             Character newCharacter = null;
-            if (prefab.Identifier != CharacterPrefab.HumanSpeciesName)
+            if (prefab.Identifier != CharacterPrefab.HumanSpeciesName || hasAi)
             {
                 var aiCharacter = new AICharacter(prefab, position, seed, characterInfo, id, isRemotePlayer, ragdoll, spawnInitialItems);
-                var ai = new EnemyAIController(aiCharacter, seed);
+
+                var ai = (prefab.Identifier == CharacterPrefab.HumanSpeciesName || aiCharacter.Params.UseHumanAI) ?
+                    new HumanAIController(aiCharacter) as AIController :
+                    new EnemyAIController(aiCharacter, seed);
                 aiCharacter.SetAI(ai);
-                newCharacter = aiCharacter;
-            }
-            else if (hasAi)
-            {
-                var aiCharacter = new AICharacter(prefab, position, seed, characterInfo, id, isRemotePlayer, ragdoll, spawnInitialItems);
-                var ai = new HumanAIController(aiCharacter);
-                aiCharacter.SetAI(ai);
-                newCharacter = aiCharacter;
+                newCharacter = aiCharacter;            
             }
             else
             {
@@ -1282,7 +1287,8 @@ namespace Barotrauma
             {
                 if (!VariantOf.IsEmpty)
                 {
-                    DebugConsole.ThrowError("The variant system does not yet support humans, sorry. It does support other humanoids though!");
+                    DebugConsole.ThrowError("The variant system does not yet support humans, sorry. It does support other humanoids though!",
+                        contentPackage: Prefab.ContentPackage);
                 }
                 if (characterInfo == null)
                 {
@@ -1406,7 +1412,8 @@ namespace Barotrauma
                 if (matchingAffliction == null || nonHuskedSpeciesName.IsEmpty)
                 {
                     DebugConsole.ThrowError($"Cannot find a husk infection that matches {speciesName}! Please make sure that the speciesname is added as 'targets' in the husk affliction prefab definition!\n"
-                        + "Note that all the infected speciesnames and files must stick the following pattern: [nonhuskedspeciesname][huskedspeciesname]. E.g. Humanhusk, Crawlerhusk, or Humancustomhusk, or Crawlerzombie. Not \"Customhumanhusk!\" or \"Zombiecrawler\"");
+                        + "Note that all the infected speciesnames and files must stick the following pattern: [nonhuskedspeciesname][huskedspeciesname]. E.g. Humanhusk, Crawlerhusk, or Humancustomhusk, or Crawlerzombie. Not \"Customhumanhusk!\" or \"Zombiecrawler\"",
+                        contentPackage: Prefab.ContentPackage);
                     // Crashes if we fail to create a ragdoll -> Let's just use some ragdoll so that the user sees the error msg.
                     nonHuskedSpeciesName = IsHumanoid ? CharacterPrefab.HumanSpeciesName : "crawler".ToIdentifier();
                     speciesName = nonHuskedSpeciesName;
@@ -2407,6 +2414,11 @@ namespace Barotrauma
                 }
                 else if (body.UserData is Item item)
                 {
+                    if (item.GetComponent<Door>() is { HasWindow: true } door)
+                    {
+                        if (door.IsPositionOnWindow(ConvertUnits.ToDisplayUnits(Submarine.LastPickedPosition))) { return false; }
+                    }
+
                     return item != target;
                 }
                 return true;
@@ -2768,9 +2780,17 @@ namespace Barotrauma
             if (!item.Prefab.InteractThroughWalls && Screen.Selected != GameMain.SubEditorScreen && !insideTrigger)
             {
                 var body = Submarine.CheckVisibility(SimPosition, itemPosition, ignoreLevel: true);
-                if (body != null && body.UserData as Item != item && (body.UserData as ItemComponent)?.Item != item && Submarine.LastPickedFixture?.UserData as Item != item) 
-                { 
-                    return false; 
+                if (body != null)
+                {
+                    var otherItem = body.UserData as Item ?? (body.UserData as ItemComponent)?.Item;
+                    if (otherItem != item && 
+                        (body.UserData as ItemComponent)?.Item != item && 
+                        /*allow interacting through open doors (e.g. duct blocks' colliders stay active despite being open)*/
+                        otherItem?.GetComponent<Door>() is not { IsOpen: true } && 
+                        Submarine.LastPickedFixture?.UserData as Item != item) 
+                    { 
+                        return false; 
+                    }
                 }
             }
 
@@ -2797,7 +2817,12 @@ namespace Barotrauma
         public void DeselectCharacter()
         {
             if (SelectedCharacter == null) { return; }
-            SelectedCharacter.AnimController?.ResetPullJoints();
+            if (!SelectedCharacter.AllowInput)
+            {
+                //we cannot reset the pull joints if the target is conscious (moving on its own),
+                //that'd interfere with its animations
+                SelectedCharacter.AnimController?.ResetPullJoints();
+            }
             SelectedCharacter = null;
         }
 
@@ -3301,10 +3326,7 @@ namespace Barotrauma
                     IsRagdolled = IsKeyDown(InputType.Ragdoll); //Handle this here instead of Control because we can stop being ragdolled ourselves
                     if (wasRagdolled != IsRagdolled) { ragdollingLockTimer = 0.2f; }
                 }
-                if (IsRagdolled)
-                {
-                    SetInput(InputType.Ragdoll, false, true);
-                }
+                SetInput(InputType.Ragdoll, false, IsRagdolled);
             }
             if (!wasRagdolled && IsRagdolled)
             {
@@ -3980,15 +4002,15 @@ namespace Barotrauma
             CharacterHealth.SetAllDamage(damageAmount, bleedingDamageAmount, burnDamageAmount);
         }
 
-        public AttackResult AddDamage(Character attacker, Vector2 worldPosition, Attack attack, float deltaTime, bool playSound = true)
+        public AttackResult AddDamage(Character attacker, Vector2 worldPosition, Attack attack, Vector2 impulseDirection, float deltaTime, bool playSound = true)
         {
-            return ApplyAttack(attacker, worldPosition, attack, deltaTime, playSound, null);
+            return ApplyAttack(attacker, worldPosition, attack, deltaTime, impulseDirection, playSound);
         }
 
         /// <summary>
         /// Apply the specified attack to this character. If the targetLimb is not specified, the limb closest to worldPosition will receive the damage.
         /// </summary>
-        public AttackResult ApplyAttack(Character attacker, Vector2 worldPosition, Attack attack, float deltaTime, bool playSound = false, Limb targetLimb = null, float penetration = 0f)
+        public AttackResult ApplyAttack(Character attacker, Vector2 worldPosition, Attack attack, float deltaTime, Vector2 impulseDirection, bool playSound = false, Limb targetLimb = null, float penetration = 0f)
         {
             if (Removed)
             {
@@ -4000,7 +4022,16 @@ namespace Barotrauma
 
             Limb limbHit = targetLimb;
 
-            float attackImpulse = attack.TargetImpulse + attack.TargetForce  * attack.ImpactMultiplier * deltaTime;
+            float impulseMagnitude = (attack.TargetImpulse + attack.TargetForce * attack.ImpactMultiplier) * deltaTime;
+
+            Vector2 attackImpulse = Vector2.Zero;
+            if (Math.Abs(impulseMagnitude) > 0.0f)
+            {
+                impulseDirection = impulseDirection.LengthSquared() > 0.0001f ?
+                    Vector2.Normalize(impulseDirection) :
+                    Vector2.UnitX;
+                attackImpulse = impulseDirection * impulseMagnitude;
+            }
 
             AbilityAttackData attackData = new AbilityAttackData(attack, this, attacker);
             IEnumerable<Affliction> attackAfflictions;
@@ -4129,12 +4160,12 @@ namespace Barotrauma
             }            
         }
 
-        public AttackResult AddDamage(Vector2 worldPosition, IEnumerable<Affliction> afflictions, float stun, bool playSound, float attackImpulse = 0.0f, Character attacker = null, float damageMultiplier = 1f)
+        public AttackResult AddDamage(Vector2 worldPosition, IEnumerable<Affliction> afflictions, float stun, bool playSound, Vector2? attackImpulse = null, Character attacker = null, float damageMultiplier = 1f)
         {
-            return AddDamage(worldPosition, afflictions, stun, playSound, attackImpulse, out _, attacker, damageMultiplier: damageMultiplier);
+            return AddDamage(worldPosition, afflictions, stun, playSound, attackImpulse ?? Vector2.Zero, out _, attacker, damageMultiplier: damageMultiplier);
         }
 
-        public AttackResult AddDamage(Vector2 worldPosition, IEnumerable<Affliction> afflictions, float stun, bool playSound, float attackImpulse, out Limb hitLimb, Character attacker = null, float damageMultiplier = 1)
+        public AttackResult AddDamage(Vector2 worldPosition, IEnumerable<Affliction> afflictions, float stun, bool playSound, Vector2 attackImpulse, out Limb hitLimb, Character attacker = null, float damageMultiplier = 1)
         {
             hitLimb = null;
 
@@ -4167,7 +4198,7 @@ namespace Barotrauma
             CreatureMetrics.RecordKill(target.SpeciesName);
         }
 
-        public AttackResult DamageLimb(Vector2 worldPosition, Limb hitLimb, IEnumerable<Affliction> afflictions, float stun, bool playSound, float attackImpulse, Character attacker = null, float damageMultiplier = 1, bool allowStacking = true, float penetration = 0f, bool shouldImplode = false)
+        public AttackResult DamageLimb(Vector2 worldPosition, Limb hitLimb, IEnumerable<Affliction> afflictions, float stun, bool playSound, Vector2 attackImpulse, Character attacker = null, float damageMultiplier = 1, bool allowStacking = true, float penetration = 0f, bool shouldImplode = false)
         {
             if (Removed) { return new AttackResult(); }
 
@@ -4200,18 +4231,17 @@ namespace Barotrauma
             }
 
             Vector2 dir = hitLimb.WorldPosition - worldPosition;
-            if (Math.Abs(attackImpulse) > 0.0f)
+            if (attackImpulse.LengthSquared() > 0.0f)
             {
                 Vector2 diff = dir;
                 if (diff == Vector2.Zero) { diff = Rand.Vector(1.0f); }
-                Vector2 impulse = Vector2.Normalize(diff) * attackImpulse;
                 Vector2 hitPos = hitLimb.SimPosition + ConvertUnits.ToSimUnits(diff);
-                hitLimb.body.ApplyLinearImpulse(impulse, hitPos, maxVelocity: NetConfig.MaxPhysicsBodyVelocity * 0.5f);
+                hitLimb.body.ApplyLinearImpulse(attackImpulse, hitPos, maxVelocity: NetConfig.MaxPhysicsBodyVelocity * 0.5f);
                 var mainLimb = hitLimb.character.AnimController.MainLimb;
                 if (hitLimb != mainLimb)
                 {
                     // Always add force to mainlimb
-                    mainLimb.body.ApplyLinearImpulse(impulse, hitPos, maxVelocity: NetConfig.MaxPhysicsBodyVelocity);
+                    mainLimb.body.ApplyLinearImpulse(attackImpulse, hitPos, maxVelocity: NetConfig.MaxPhysicsBodyVelocity);
                 }
             }
             bool wasDead = IsDead;
@@ -4656,7 +4686,7 @@ namespace Barotrauma
         }
         partial void KillProjSpecific(CauseOfDeathType causeOfDeath, Affliction causeOfDeathAffliction, bool log);
 
-        public void Revive(bool removeAfflictions = true)
+        public void Revive(bool removeAfflictions = true, bool createNetworkEvent = false)
         {
             if (Removed)
             {
@@ -4705,7 +4735,11 @@ namespace Barotrauma
                 limb.IsSevered = false;
             }
 
-            GameMain.GameSession?.ReviveCharacter(this);            
+            GameMain.GameSession?.ReviveCharacter(this);
+            if (createNetworkEvent && GameMain.NetworkMember is { IsServer: true })
+            {
+                GameMain.NetworkMember.CreateEntityEvent(this, new CharacterStatusEventData());
+            }
         }
 
         public override void Remove()
@@ -4986,7 +5020,9 @@ namespace Barotrauma
                 float maxDistance = 1000f;
                 foreach (var hull in adjacentHulls)
                 {
-                    if (hull.ConnectedGaps.Any(g => g.Open > 0.9f && g.linkedTo.Contains(CurrentHull) &&
+                    if (hull.ConnectedGaps.Any(g => 
+                        (g.Open > 0.9f || g.ConnectedDoor is { HasWindow: true }) && 
+                        g.linkedTo.Contains(CurrentHull) &&
                         Vector2.DistanceSquared(g.WorldPosition, WorldPosition) < Math.Pow(maxDistance / 2, 2)))
                     {
                         if (Vector2.DistanceSquared(hull.WorldPosition, WorldPosition) < Math.Pow(maxDistance, 2))
@@ -5005,7 +5041,7 @@ namespace Barotrauma
                     else
                     {
                         if (h.ConnectedGaps.Any(g =>
-                            g.Open > 0.9f &&
+                            (g.Open > 0.9f || g.ConnectedDoor is { HasWindow: true }) &&
                             Vector2.DistanceSquared(g.WorldPosition, WorldPosition) < Math.Pow(maxDistance / 2, 2) &&
                             CanSeeTarget(g)))
                         {
@@ -5027,7 +5063,7 @@ namespace Barotrauma
         public bool IsEngineer => HasJob("engineer");
         public bool IsMechanic => HasJob("mechanic");
         public bool IsMedic => HasJob("medicaldoctor");
-        public bool IsSecurity => HasJob("securityofficer") || HasJob("vipsecurityofficer");
+        public bool IsSecurity => HasJob("securityofficer") || HasJob("vipsecurityofficer") || HasJob("outpostsecurityofficer");
         public bool IsAssistant => HasJob("assistant");
         public bool IsWatchman => HasJob("watchman");
         public bool IsVip => HasJob("prisoner");

@@ -262,7 +262,8 @@ namespace Barotrauma
             
             if (aiElements.Count == 0)
             {
-                DebugConsole.ThrowError("Error in file \"" + c.Params.File + "\" - no AI element found.");
+                DebugConsole.ThrowError("Error in file \"" + c.Params.File + "\" - no AI element found.",
+                    contentPackage: c.Prefab?.ContentPackage);
                 outsideSteering = new SteeringManager(this);
                 insideSteering = new IndoorsSteeringManager(this, false, false);
                 return;
@@ -330,7 +331,8 @@ namespace Barotrauma
                     _aiParams = Character.Params.AI;
                     if (_aiParams == null)
                     {
-                        DebugConsole.ThrowError($"No AI Params defined for {Character.SpeciesName}. AI disabled.");
+                        DebugConsole.ThrowError($"No AI Params defined for {Character.SpeciesName}. AI disabled.",
+                            contentPackage: Character.Prefab.ContentPackage);
                         Enabled = false;
                         _aiParams = new CharacterParams.AIParams(null, Character.Params);
                     }
@@ -2503,7 +2505,8 @@ namespace Barotrauma
                 Limb mouthLimb = Character.AnimController.GetLimb(LimbType.Head);
                 if (mouthLimb == null)
                 {
-                    DebugConsole.ThrowError("Character \"" + Character.SpeciesName + "\" failed to eat a target (No head limb defined)");
+                    DebugConsole.ThrowError("Character \"" + Character.SpeciesName + "\" failed to eat a target (No head limb defined)",
+                        contentPackage: Character.Prefab.ContentPackage);
                     State = AIState.Idle;
                     return;
                 }
@@ -2540,7 +2543,11 @@ namespace Barotrauma
                                 item.body.LinearVelocity -= velocity * 0.25f;
                                 bool wasBroken = item.Condition <= 0.0f;
                                 item.LastEatenTime = (float)Timing.TotalTimeUnpaused;
-                                item.AddDamage(Character, item.WorldPosition, new Attack(0.0f, 0.0f, 0.0f, 0.0f, 0.02f * Character.Params.EatingSpeed), deltaTime);
+                                item.AddDamage(Character,
+                                    item.WorldPosition,
+                                    new Attack(0.0f, 0.0f, 0.0f, 0.0f, 0.02f * Character.Params.EatingSpeed),
+                                    impulseDirection: Vector2.Zero,
+                                    deltaTime);
                                 Character.ApplyStatusEffects(ActionType.OnEating, deltaTime);
                                 if (item.Condition <= 0.0f)
                                 {

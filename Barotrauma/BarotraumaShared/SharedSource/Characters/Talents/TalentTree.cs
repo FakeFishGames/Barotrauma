@@ -37,7 +37,8 @@ namespace Barotrauma
 
             if (Identifier.IsEmpty)
             {
-                DebugConsole.ThrowError($"No job defined for talent tree in \"{file.Path}\"!");
+                DebugConsole.ThrowError($"No job defined for talent tree in \"{file.Path}\"!",
+                    contentPackage: element.ContentPackage);
                 return;
             }
 
@@ -304,7 +305,8 @@ namespace Barotrauma
 
             if (RequiredTalents > MaxChosenTalents)
             {
-                DebugConsole.ThrowError($"Error in talent tree {debugIdentifier} - MaxChosenTalents is larger than RequiredTalents.");
+                DebugConsole.ThrowError($"Error in talent tree {debugIdentifier} - MaxChosenTalents is larger than RequiredTalents.",
+                    contentPackage: talentOptionsElement.ContentPackage);
             }
 
             HashSet<Identifier> identifiers = new HashSet<Identifier>();
@@ -333,11 +335,13 @@ namespace Barotrauma
 
             if (RequiredTalents > talentIdentifiers.Count)
             {
-                DebugConsole.ThrowError($"Error in talent tree {debugIdentifier} - completing a stage of the tree requires more talents than there are in the stage.");
+                DebugConsole.ThrowError($"Error in talent tree {debugIdentifier} - completing a stage of the tree requires more talents than there are in the stage.",
+                    contentPackage: talentOptionsElement.ContentPackage);
             }
             if (MaxChosenTalents > talentIdentifiers.Count)
             {
-                DebugConsole.ThrowError($"Error in talent tree {debugIdentifier} - maximum number of talents to choose is larger than the number of talents.");
+                DebugConsole.ThrowError($"Error in talent tree {debugIdentifier} - maximum number of talents to choose is larger than the number of talents.",
+                    contentPackage: talentOptionsElement.ContentPackage);
             }
         }
     }

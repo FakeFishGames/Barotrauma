@@ -151,13 +151,13 @@ namespace Barotrauma
             output[outputOffset + 10] = (byte)((g2_565 << 5) | b2_565);
         }
 
-        public static Texture2D FromFile(string path, bool compress = true, bool mipmap = false)
+        public static Texture2D FromFile(string path, bool compress = true, bool mipmap = false, ContentPackage contentPackage = null)
         {
             using FileStream fileStream = File.OpenRead(path);
-            return FromStream(fileStream, path, compress, mipmap);
+            return FromStream(fileStream, path, compress, mipmap, contentPackage);
         }
 
-        public static Texture2D FromStream(System.IO.Stream stream, string path = null, bool compress = true, bool mipmap = false)
+        public static Texture2D FromStream(System.IO.Stream stream, string path = null, bool compress = true, bool mipmap = false, ContentPackage contentPackage = null)
         {
             try
             {
@@ -176,7 +176,8 @@ namespace Barotrauma
                     }
                     else
                     {
-                        DebugConsole.AddWarning($"Could not compress a texture because the dimensions aren't a multiple of 4 (path: {path ?? "null"}, size: {width}x{height})");
+                        DebugConsole.AddWarning($"Could not compress a texture because the dimensions aren't a multiple of 4 (path: {path ?? "null"}, size: {width}x{height})",
+                            contentPackage);
                     }
                 }
 

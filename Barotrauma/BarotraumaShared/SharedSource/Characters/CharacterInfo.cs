@@ -767,7 +767,7 @@ namespace Barotrauma
         }
 
         // Used for loading the data
-        public CharacterInfo(XElement infoElement, Identifier npcIdentifier = default)
+        public CharacterInfo(ContentXElement infoElement, Identifier npcIdentifier = default)
         {
             ID = idCounter;
             idCounter++;
@@ -1311,12 +1311,12 @@ namespace Barotrauma
             OnExperienceChanged(prevAmount, ExperiencePoints);
         }
 
-        const int BaseExperienceRequired = -50;
+        const int BaseExperienceRequired = 450;
         const int AddedExperienceRequiredPerLevel = 500;
 
         public int GetTotalTalentPoints()
         {
-            return GetCurrentLevel() + AdditionalTalentPoints - 1;
+            return GetCurrentLevel() + AdditionalTalentPoints;
         }
 
         public int GetAvailableTalentPoints()
@@ -1342,16 +1342,19 @@ namespace Barotrauma
             return experienceRequired + ExperienceRequiredPerLevel(level);
         }
 
+        /// <summary>
+        /// How much more experience does the character need to reach the specified level?
+        /// </summary>
         public int GetExperienceRequiredForLevel(int level)
         {
-            int currentLevel = GetCurrentLevel(out int experienceRequired);
+            int currentLevel = GetCurrentLevel();
             if (currentLevel >= level) { return 0; }
-            int required = experienceRequired;
-            for (int i = currentLevel + 1; i <= level; i++)
+            int required = 0;
+            for (int i = 0; i < level; i++)
             {
                 required += ExperienceRequiredPerLevel(i);
             }
-            return required;
+            return required - ExperiencePoints;
         }
 
         public int GetCurrentLevel()
@@ -1361,7 +1364,7 @@ namespace Barotrauma
 
         private int GetCurrentLevel(out int experienceRequired)
         {
-            int level = 1;
+            int level = 0;
             experienceRequired = 0;
             while (experienceRequired + ExperienceRequiredPerLevel(level) <= ExperiencePoints)
             {

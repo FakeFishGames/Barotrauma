@@ -11,9 +11,9 @@ namespace Barotrauma
 {
     partial class PirateMission : Mission
     {
-        private readonly XElement submarineTypeConfig;
-        private readonly XElement characterConfig;
-        private readonly XElement characterTypeConfig;
+        private readonly ContentXElement submarineTypeConfig;
+        private readonly ContentXElement characterConfig;
+        private readonly ContentXElement characterTypeConfig;
         private readonly float addedMissionDifficultyPerPlayer;
 
         private float missionDifficulty;
@@ -103,7 +103,8 @@ namespace Barotrauma
                 var characterTypeElement = characterTypeConfig.Elements().FirstOrDefault(e => e.GetAttributeString("typeidentifier", string.Empty) == characterId);
                 if (characterTypeElement == null)
                 {
-                    DebugConsole.ThrowError($"Error in mission \"{prefab.Identifier}\". Could not find a character type element for the character \"{characterId}\".");
+                    DebugConsole.ThrowError($"Error in mission \"{prefab.Identifier}\". Could not find a character type element for the character \"{characterId}\".",
+                        contentPackage: Prefab.ContentPackage);
                 }
             }
             //make sure all defined character types can be found from human prefabs
@@ -116,7 +117,8 @@ namespace Barotrauma
                     HumanPrefab humanPrefab = NPCSet.Get(characterFrom, characterIdentifier);
                     if (humanPrefab == null)
                     {
-                        DebugConsole.ThrowError($"Error in mission \"{prefab.Identifier}\". Character prefab \"{characterIdentifier}\" not found in the NPC set \"{characterFrom}\".");
+                        DebugConsole.ThrowError($"Error in mission \"{prefab.Identifier}\". Character prefab \"{characterIdentifier}\" not found in the NPC set \"{characterFrom}\".",
+                            contentPackage: Prefab.ContentPackage);
                     }
                 }
             }
@@ -151,7 +153,8 @@ namespace Barotrauma
             ContentPath submarinePath = submarineConfig.GetAttributeContentPath("path", Prefab.ContentPackage);
             if (submarinePath.IsNullOrEmpty())
             {
-                DebugConsole.ThrowError($"No path used for submarine for the pirate mission \"{Prefab.Identifier}\"!");
+                DebugConsole.ThrowError($"No path used for submarine for the pirate mission \"{Prefab.Identifier}\"!", 
+                    contentPackage: Prefab.ContentPackage);
                 return;
             }
 
@@ -165,7 +168,8 @@ namespace Barotrauma
 
             if (contentFile == null)
             {
-                DebugConsole.ThrowError($"No submarine file found from the path {submarinePath}!");
+                DebugConsole.ThrowError($"No submarine file found from the path {submarinePath}!", 
+                    contentPackage: Prefab.ContentPackage);
                 return;
             }
 
@@ -201,16 +205,28 @@ namespace Barotrauma
 
         private void CreateMissionPositions(out Vector2 preferredSpawnPos)
         {
-            Vector2 patrolPos = enemySub.WorldPosition;
+            Vector2 patrolPos = Level.Loaded.EndPosition;
             Point subSize = enemySub.GetDockedBorders().Size;
 
-            if (!Level.Loaded.TryGetInterestingPosition(true, Level.PositionType.MainPath, Level.Loaded.Size.X * 0.3f, out preferredSpawnPos))
+            preferredSpawnPos = Level.Loaded.EndPosition;
+
+            if (Level.Loaded.TryGetInterestingPosition(true, Level.PositionType.MainPath, Level.Loaded.Size.X * 0.3f, out var potentialSpawnPos))
             {
-                DebugConsole.ThrowError("Could not spawn pirate submarine in an interesting location! " + this);
+                preferredSpawnPos = potentialSpawnPos.Position.ToVector2();
             }
-            if (!Level.Loaded.TryGetInterestingPositionAwayFromPoint(true, Level.PositionType.MainPath, Level.Loaded.Size.X * 0.3f, out patrolPos, preferredSpawnPos, minDistFromPoint: 10000f))
+            else
             {
-                DebugConsole.ThrowError("Could not give pirate submarine an interesting location to patrol to! " + this);
+                DebugConsole.ThrowError("Could not spawn pirate submarine in an interesting location! " + this,
+                    contentPackage: Prefab.ContentPackage);
+            }
+            if (Level.Loaded.TryGetInterestingPositionAwayFromPoint(true, Level.PositionType.MainPath, Level.Loaded.Size.X * 0.3f, out var potentialPatrolPos, preferredSpawnPos, minDistFromPoint: 10000f))
+            {
+                patrolPos = potentialPatrolPos.Position.ToVector2();
+            }
+            else
+            {
+                DebugConsole.ThrowError("Could not give pirate submarine an interesting location to patrol to! " + this,
+                    contentPackage: Prefab.ContentPackage);
             }
 
             patrolPos = enemySub.FindSpawnPos(patrolPos, subSize);
@@ -266,7 +282,8 @@ namespace Barotrauma
 
             if (characterConfig == null)
             {
-                DebugConsole.ThrowError("Failed to initialize characters for escort mission (characterConfig == null)");
+                DebugConsole.ThrowError("Failed to initialize characters for escort mission (characterConfig == null)", 
+                    contentPackage: Prefab.ContentPackage);
                 return;
             }
 
@@ -281,7 +298,7 @@ namespace Barotrauma
             Random rand = new MTRandom(ToolBox.StringToInt(levelData.Seed));
 
             bool commanderAssigned = false;
-            foreach (XElement element in characterConfig.Elements())
+            foreach (ContentXElement element in characterConfig.Elements())
             {
                 // it is possible to get more than the "max" amount of characters if the modified difficulty is high enough; this is intentional
                 // if necessary, another "hard max" value could be used to clamp the value for performance/gameplay concerns
@@ -293,7 +310,8 @@ namespace Barotrauma
 
                     if (characterType == null)
                     {
-                        DebugConsole.ThrowError($"No character types defined in CharacterTypes for a declared type identifier in mission \"{Prefab.Identifier}\".");
+                        DebugConsole.ThrowError($"No character types defined in CharacterTypes for a declared type identifier in mission \"{Prefab.Identifier}\".",
+                            contentPackage: element.ContentPackage);
                         return;
                     }
 
@@ -356,12 +374,12 @@ namespace Barotrauma
             {
                 DebugConsole.ThrowError(submarineInfo == null ? 
                     $"Error in PirateMission: enemy sub was not created (submarineInfo == null)." :
-                    $"Error in PirateMission: enemy sub was not created.");
+                    $"Error in PirateMission: enemy sub was not created.", 
+                    contentPackage: Prefab.ContentPackage);
                 return;
             }
 
-            Vector2 spawnPos = Level.Loaded.EndPosition; // in case TryGetInterestingPosition fails, though this should not happen
-            CreateMissionPositions(out spawnPos); // patrol positions are not explicitly replicated, instead they are acquired the same way the server acquires them
+            CreateMissionPositions(out Vector2 spawnPos); // patrol positions are not explicitly replicated, instead they are acquired the same way the server acquires them
 #if DEBUG
             if (IsClient)
             {

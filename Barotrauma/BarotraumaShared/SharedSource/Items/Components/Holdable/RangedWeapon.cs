@@ -134,7 +134,8 @@ namespace Barotrauma.Items.Components
             suitableProjectiles = element.GetAttributeIdentifierArray(nameof(suitableProjectiles), Array.Empty<Identifier>()).ToHashSet();
             if (ReloadSkillRequirement > 0 && ReloadNoSkill <= reload)
             {
-                DebugConsole.AddWarning($"Invalid XML at {item.Name}: ReloadNoSkill is lower or equal than it's reload skill, despite having ReloadSkillRequirement.");
+                DebugConsole.AddWarning($"Invalid XML at {item.Name}: ReloadNoSkill is lower or equal than it's reload skill, despite having ReloadSkillRequirement.",
+                    item.Prefab.ContentPackage);
             }
             InitProjSpecific(element);
         }

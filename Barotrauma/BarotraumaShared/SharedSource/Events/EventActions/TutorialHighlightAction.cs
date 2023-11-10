@@ -14,7 +14,8 @@ partial class TutorialHighlightAction : EventAction
     {
         if (GameMain.NetworkMember != null)
         {
-            DebugConsole.ThrowError($"Error in event \"{parentEvent.Prefab.Identifier}\": {nameof(TutorialHighlightAction)} is not supported in multiplayer.");
+            DebugConsole.ThrowError($"Error in event \"{parentEvent.Prefab.Identifier}\": {nameof(TutorialHighlightAction)} is not supported in multiplayer.",
+                contentPackage: element.ContentPackage);
         }
     }
 

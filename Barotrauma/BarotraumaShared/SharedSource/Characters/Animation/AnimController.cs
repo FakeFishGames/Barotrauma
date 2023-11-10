@@ -552,7 +552,8 @@ namespace Barotrauma
 #if DEBUG
                     if (handlePos[i].LengthSquared() > ArmLength)
                     {
-                        DebugConsole.AddWarning($"Aim position for the item {item.Name} may be incorrect (further than the length of the character's arm)");
+                        DebugConsole.AddWarning($"Aim position for the item {item.Name} may be incorrect (further than the length of the character's arm)",
+                            item.Prefab.ContentPackage);
                     }
 #endif
                     HandIK(

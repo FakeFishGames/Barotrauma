@@ -150,7 +150,7 @@ namespace Barotrauma
 
         private readonly float movementLerp;
 
-        private float cprAnimTimer,cprPump;
+        private float cprAnimTimer, cprPumpTimer;
 
         private float fallingProneAnimTimer;
         const float FallingProneAnimDuration = 1.0f;
@@ -243,14 +243,17 @@ namespace Barotrauma
             if (MainLimb == null) { return; }
 
             levitatingCollider = !IsHanging;
-            if ((character.SelectedItem?.GetComponent<Controller>()?.ControlCharacterPose ?? false) ||
-                (character.SelectedSecondaryItem?.GetComponent<Controller>()?.ControlCharacterPose ?? false) ||
-                character.SelectedSecondaryItem?.GetComponent<Ladder>() != null ||
-                (ForceSelectAnimationType != AnimationType.Crouch && ForceSelectAnimationType != AnimationType.NotDefined))
+            if (onGround && character.CanMove)
             {
-                Crouching = false;
+                if ((character.SelectedItem?.GetComponent<Controller>()?.ControlCharacterPose ?? false) ||
+                    (character.SelectedSecondaryItem?.GetComponent<Controller>()?.ControlCharacterPose ?? false) ||
+                    character.SelectedSecondaryItem?.GetComponent<Ladder>() != null ||
+                    (ForceSelectAnimationType != AnimationType.Crouch && ForceSelectAnimationType != AnimationType.NotDefined))
+                {
+                    Crouching = false;
+                }
+                ColliderIndex = Crouching && !swimming ? 1 : 0;
             }
-            ColliderIndex = Crouching && !swimming ? 1 : 0;
 
             //stun (= disable the animations) if the ragdoll receives a large enough impact
             if (strongestImpact > 0.0f)
@@ -276,7 +279,7 @@ namespace Barotrauma
 
             if (!character.CanMove)
             {
-                if (fallingProneAnimTimer < FallingProneAnimDuration)
+                if (fallingProneAnimTimer < FallingProneAnimDuration && onGround)
                 {
                     fallingProneAnimTimer += deltaTime;
                     UpdateFallingProne(1.0f);
@@ -285,7 +288,12 @@ namespace Barotrauma
                 Collider.FarseerBody.FixedRotation = false;
                 if (GameMain.NetworkMember == null || !GameMain.NetworkMember.IsClient)
                 {
-                    Collider.Enabled = false;
+                    if (Collider.Enabled)
+                    {
+                        //deactivating the collider -> make the main limb inherit the collider's velocity because it'll control the movement now
+                        MainLimb.body.LinearVelocity = Collider.LinearVelocity;
+                        Collider.Enabled = false;
+                    }
                     Collider.LinearVelocity = MainLimb.LinearVelocity;
                     Collider.SetTransformIgnoreContacts(MainLimb.SimPosition, MainLimb.Rotation);
                     //reset pull joints to prevent the character from "hanging" mid-air if pull joints had been active when the character was still moving
@@ -384,6 +392,12 @@ namespace Barotrauma
             if (character.SelectedCharacter != null)
             {
                 DragCharacter(character.SelectedCharacter, deltaTime);
+            }
+
+            if (Anim != Animation.CPR)
+            {
+                cprAnimTimer = 0.0f;
+                cprPumpTimer = 0.0f;
             }
 
             switch (Anim)
@@ -648,14 +662,6 @@ namespace Barotrauma
 
             if (!onGround)
             {
-                Vector2 move = torso.PullJointWorldAnchorB - torso.SimPosition;
-
-                foreach (Limb limb in Limbs)
-                {
-                    if (limb.IsSevered) { continue; }
-                    MoveLimb(limb, limb.SimPosition + move, 15.0f, true);
-                }
-
                 return;
             }
 
@@ -1318,14 +1324,14 @@ namespace Barotrauma
             }
         }
 
-        void UpdateFallingProne(float strength)
+        void UpdateFallingProne(float strength, bool moveHands = true, bool moveTorso = true, bool moveLegs = true)
         {
             if (strength <= 0.0f) { return; }
 
             Limb head = GetLimb(LimbType.Head);
             Limb torso = GetLimb(LimbType.Torso);
 
-            if (head != null && head.LinearVelocity.LengthSquared() > 1.0f && !head.IsSevered)
+            if (moveHands && head != null && head.LinearVelocity.LengthSquared() > 1.0f && !head.IsSevered)
             {
                 //if the head is moving, try to protect it with the hands
                 Limb leftHand = GetLimb(LimbType.LeftHand);
@@ -1347,7 +1353,7 @@ namespace Barotrauma
 
             //make the torso tip over
             //otherwise it tends to just drop straight down, pinning the characters legs in a weird pose
-            if (!InWater)
+            if (moveTorso && !InWater)
             {
                 //prefer tipping over in the same direction the torso is rotating
                 //or moving
@@ -1358,27 +1364,30 @@ namespace Barotrauma
             }
 
             //attempt to make legs stay in a straight line with the torso to prevent the character from doing a split
-            for (int i = 0; i < 2; i++)
+            if (moveLegs)
             {
-                var thigh = i == 0 ? GetLimb(LimbType.LeftThigh) : GetLimb(LimbType.RightThigh);
-                if (thigh == null) { continue; }
-                if (thigh.IsSevered) { continue; }
-                float thighDiff = Math.Abs(MathUtils.GetShortestAngle(torso.Rotation, thigh.Rotation));
-                float diff = torso.Rotation - thigh.Rotation;
-                if (MathUtils.IsValid(diff))
+                for (int i = 0; i < 2; i++)
                 {
-                    float thighTorque = thighDiff * thigh.Mass * Math.Sign(diff) * 5.0f;
-                    thigh.body.ApplyTorque(thighTorque * strength);
-                }               
+                    var thigh = i == 0 ? GetLimb(LimbType.LeftThigh) : GetLimb(LimbType.RightThigh);
+                    if (thigh == null) { continue; }
+                    if (thigh.IsSevered) { continue; }
+                    float thighDiff = Math.Abs(MathUtils.GetShortestAngle(torso.Rotation, thigh.Rotation));
+                    float diff = torso.Rotation - thigh.Rotation;
+                    if (MathUtils.IsValid(diff))
+                    {
+                        float thighTorque = thighDiff * thigh.Mass * Math.Sign(diff) * 5.0f;
+                        thigh.body.ApplyTorque(thighTorque * strength);
+                    }               
 
-                var leg = i == 0 ? GetLimb(LimbType.LeftLeg) : GetLimb(LimbType.RightLeg);
-                if (leg == null || leg.IsSevered) { continue; }
-                float legDiff = Math.Abs(MathUtils.GetShortestAngle(torso.Rotation, leg.Rotation));
-                diff = torso.Rotation - leg.Rotation;
-                if (MathUtils.IsValid(diff))
-                {
-                    float legTorque = legDiff * leg.Mass * Math.Sign(diff) * 5.0f;
-                    leg.body.ApplyTorque(legTorque * strength);
+                    var leg = i == 0 ? GetLimb(LimbType.LeftLeg) : GetLimb(LimbType.RightLeg);
+                    if (leg == null || leg.IsSevered) { continue; }
+                    float legDiff = Math.Abs(MathUtils.GetShortestAngle(torso.Rotation, leg.Rotation));
+                    diff = torso.Rotation - leg.Rotation;
+                    if (MathUtils.IsValid(diff))
+                    {
+                        float legTorque = legDiff * leg.Mass * Math.Sign(diff) * 5.0f;
+                        leg.body.ApplyTorque(legTorque * strength);
+                    }
                 }
             }
         }
@@ -1398,7 +1407,8 @@ namespace Barotrauma
 
             Crouching = true;
 
-            Vector2 diff = target.SimPosition - character.SimPosition;
+            Vector2 offset = Vector2.UnitX * -Dir * 0.75f;
+            Vector2 diff = (target.SimPosition + offset) - character.SimPosition;
             Limb targetHead = target.AnimController.GetLimb(LimbType.Head);
             Limb targetTorso = target.AnimController.GetLimb(LimbType.Torso);
             if (targetTorso == null)
@@ -1412,7 +1422,23 @@ namespace Barotrauma
 
             Vector2 headDiff = targetHead == null ? diff : targetHead.SimPosition - character.SimPosition;
             targetMovement = new Vector2(diff.X, 0.0f);
+            const float CloseEnough = 0.1f;
+            if (Math.Abs(targetMovement.X) < CloseEnough)
+            {
+                targetMovement.X = 0.0f;
+            }
+
             TargetDir = headDiff.X > 0.0f ? Direction.Right : Direction.Left;
+            //if the target's in some weird pose, we may not be able to flip it so it's facing up,
+            //so let's only try it once so we don't end up constantly flipping it
+            if (cprAnimTimer <= 0.0f && target.AnimController.Direction == TargetDir)
+            {
+                target.AnimController.Flip();
+            }
+            (target.AnimController as HumanoidAnimController)?.UpdateFallingProne(strength: 1.0f, moveHands: false, moveTorso: false);
+
+            head.Disabled = true;
+            torso.Disabled = true;
 
             UpdateStanding();
 
@@ -1443,73 +1469,64 @@ namespace Barotrauma
                 }
             }
 
-            //pump for 15 seconds (cprAnimTimer 0-15), then do mouth-to-mouth for 2 seconds (cprAnimTimer 15-17)
-            if (cprAnimTimer > 15.0f && targetHead != null && head != null)
+            //Serverside code
+            if (GameMain.NetworkMember is not { IsClient: true })
             {
-                float yPos = (float)Math.Sin(cprAnimTimer) * 0.2f;
-                head.PullJointWorldAnchorB = new Vector2(targetHead.SimPosition.X, targetHead.SimPosition.Y + 0.3f + yPos);
+                if (target.Oxygen < -10.0f)
+                {
+                    //stabilize the oxygen level but don't allow it to go positive and revive the character yet
+                    float stabilizationAmount = skill * CPRSettings.Active.StabilizationPerSkill;
+                    stabilizationAmount = MathHelper.Clamp(stabilizationAmount, CPRSettings.Active.StabilizationMin, CPRSettings.Active.StabilizationMax);
+                    character.Oxygen -= 1.0f / stabilizationAmount * deltaTime; //Worse skill = more oxygen required
+                    if (character.Oxygen > 0.0f) { target.Oxygen += stabilizationAmount * deltaTime; } //we didn't suffocate yet did we
+                }
+            }
+
+            if (targetHead != null && head != null)
+            {
+                head.PullJointWorldAnchorB = new Vector2(targetHead.SimPosition.X, targetHead.SimPosition.Y + 0.8f);
                 head.PullJointEnabled = true;
-                torso.PullJointWorldAnchorB = new Vector2(torso.SimPosition.X, colliderPos.Y + (TorsoPosition.Value - 0.2f));
-                torso.PullJointEnabled = true;
-
-                //Serverside code
-                if (GameMain.NetworkMember is not { IsClient: true })
-                {
-                    if (target.Oxygen < -10.0f)
-                    {
-                        //stabilize the oxygen level but don't allow it to go positive and revive the character yet
-                        float stabilizationAmount = skill * CPRSettings.Active.StabilizationPerSkill;
-                        stabilizationAmount = MathHelper.Clamp(stabilizationAmount, CPRSettings.Active.StabilizationMin, CPRSettings.Active.StabilizationMax);
-                        character.Oxygen -= 1.0f / stabilizationAmount * deltaTime; //Worse skill = more oxygen required
-                        if (character.Oxygen > 0.0f) { target.Oxygen += stabilizationAmount * deltaTime; } //we didn't suffocate yet did we
-                    }
-                }
             }
-            else
+
+            torso.PullJointWorldAnchorB = new Vector2(torso.SimPosition.X, colliderPos.Y + (TorsoPosition.Value - 0.1f));
+            torso.PullJointEnabled = true;
+
+            if (cprPumpTimer >= 1)
             {
-                if (targetHead != null && head != null)
+                torso.body.ApplyLinearImpulse(new Vector2(0, -20f), maxVelocity: NetConfig.MaxPhysicsBodyVelocity);
+                targetTorso.body.ApplyLinearImpulse(new Vector2(0, -20f), maxVelocity: NetConfig.MaxPhysicsBodyVelocity);
+                cprPumpTimer = 0;
+
+                if (skill < CPRSettings.Active.DamageSkillThreshold)
                 {
-                    head.PullJointWorldAnchorB = new Vector2(targetHead.SimPosition.X, targetHead.SimPosition.Y + 0.8f);
-                    head.PullJointEnabled = true;
+                    target.LastDamageSource = null;
+                    target.DamageLimb(
+                        targetTorso.WorldPosition, targetTorso,
+                        new[] { CPRSettings.Active.InsufficientSkillAffliction.Instantiate((CPRSettings.Active.DamageSkillThreshold - skill) * CPRSettings.Active.DamageSkillMultiplier, source: character) },
+                        stun: 0.0f,
+                        playSound: true,
+                        attackImpulse: Vector2.Zero,
+                        attacker: null);
                 }
-
-                torso.PullJointWorldAnchorB = new Vector2(torso.SimPosition.X, colliderPos.Y + (TorsoPosition.Value - 0.1f));
-                torso.PullJointEnabled = true;
-
-                if (cprPump >= 1)
+                //need to CPR for at least a couple of seconds before the target can be revived
+                //(reviving the target when the CPR has barely started looks strange)
+                if (cprAnimTimer > 2.0f && GameMain.NetworkMember is not { IsClient: true })
                 {
-                    torso.body.ApplyLinearImpulse(new Vector2(0, -20f), maxVelocity: NetConfig.MaxPhysicsBodyVelocity);
-                    targetTorso.body.ApplyLinearImpulse(new Vector2(0, -20f), maxVelocity: NetConfig.MaxPhysicsBodyVelocity);
-                    cprPump = 0;
+                    float reviveChance = skill * CPRSettings.Active.ReviveChancePerSkill;
+                    reviveChance = (float)Math.Pow(reviveChance, CPRSettings.Active.ReviveChanceExponent);
+                    reviveChance = MathHelper.Clamp(reviveChance, CPRSettings.Active.ReviveChanceMin, CPRSettings.Active.ReviveChanceMax);
+                    reviveChance *= 1f + cprBoost;
 
-                    if (skill < CPRSettings.Active.DamageSkillThreshold)
+                    if (Rand.Range(0.0f, 1.0f, Rand.RandSync.ServerAndClient) <= reviveChance)
                     {
-                        target.LastDamageSource = null;
-                        target.DamageLimb(
-                            targetTorso.WorldPosition, targetTorso, 
-                            new[] { CPRSettings.Active.InsufficientSkillAffliction.Instantiate((CPRSettings.Active.DamageSkillThreshold - skill) * CPRSettings.Active.DamageSkillMultiplier, source: character) },
-                            0.0f, true, 0.0f, attacker: null);
-                    }
-                    if (GameMain.NetworkMember == null || !GameMain.NetworkMember.IsClient) //Serverside code
-                    {
-                        float reviveChance = skill * CPRSettings.Active.ReviveChancePerSkill;
-                        reviveChance = (float)Math.Pow(reviveChance, CPRSettings.Active.ReviveChanceExponent);
-                        reviveChance = MathHelper.Clamp(reviveChance, CPRSettings.Active.ReviveChanceMin, CPRSettings.Active.ReviveChanceMax);
-
-                        reviveChance *= 1f + cprBoost;
-
-                        if (Rand.Range(0.0f, 1.0f, Rand.RandSync.ServerAndClient) <= reviveChance)
-                        {
-                            //increase oxygen and clamp it above zero 
-                            // -> the character should be revived if there are no major afflictions in addition to lack of oxygen
-                            target.Oxygen = Math.Max(target.Oxygen + 10.0f, 10.0f);
-                        }
+                        //increase oxygen and clamp it above zero 
+                        // -> the character should be revived if there are no major afflictions in addition to lack of oxygen
+                        target.Oxygen = Math.Max(target.Oxygen + 10.0f, 10.0f);
                     }
                 }
-                cprPump += deltaTime;
             }
-
-            cprAnimTimer = (cprAnimTimer + deltaTime) % 17;
+            cprPumpTimer += deltaTime;
+            cprAnimTimer += deltaTime;
 
             //got the character back into a non-critical state, increase medical skill
             //BUT only if it has been more than 10 seconds since the character revived someone

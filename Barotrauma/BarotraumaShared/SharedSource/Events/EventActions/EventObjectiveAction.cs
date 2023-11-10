@@ -49,13 +49,15 @@ namespace Barotrauma
             {
                 DebugConsole.ThrowError(
                     $"Error in {nameof(EventObjectiveAction)} in the event \"{parentEvent.Prefab.Identifier}\""+
-                    $" - {nameof(TextTag)} will do nothing unless the action triggers a message box or a video.");
+                    $" - {nameof(TextTag)} will do nothing unless the action triggers a message box or a video.",
+                    contentPackage: element.ContentPackage);
             }
             if (element.GetChildElement("Replace") != null)
             {
                 DebugConsole.ThrowError(
                     $"Error in {nameof(EventObjectiveAction)} in the event \"{parentEvent.Prefab.Identifier}\"" +
-                    $" - unrecognized child element \"Replace\".");
+                    $" - unrecognized child element \"Replace\".",
+                    contentPackage: element.ContentPackage);
             }
         }
 

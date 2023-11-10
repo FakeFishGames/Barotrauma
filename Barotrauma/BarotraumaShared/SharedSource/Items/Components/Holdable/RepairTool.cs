@@ -137,7 +137,8 @@ namespace Barotrauma.Items.Components
 
             if (element.GetAttribute("limbfixamount") != null)
             {
-                DebugConsole.ThrowError("Error in item \"" + item.Name + "\" - RepairTool damage should be configured using a StatusEffect with Afflictions, not the limbfixamount attribute.");
+                DebugConsole.ThrowError("Error in item \"" + item.Name + "\" - RepairTool damage should be configured using a StatusEffect with Afflictions, not the limbfixamount attribute.",
+                    contentPackage: element.ContentPackage);
             }
 
             fixableEntities = new HashSet<Identifier>();
@@ -149,7 +150,8 @@ namespace Barotrauma.Items.Components
                     case "fixable":
                         if (subElement.GetAttribute("name") != null)
                         {
-                            DebugConsole.ThrowError("Error in RepairTool " + item.Name + " - use identifiers instead of names to configure fixable entities.");
+                            DebugConsole.ThrowError("Error in RepairTool " + item.Name + " - use identifiers instead of names to configure fixable entities.",
+                                contentPackage: element.ContentPackage);
                             fixableEntities.Add(subElement.GetAttribute("name").Value.ToIdentifier());
                         }
                         else
@@ -536,7 +538,7 @@ namespace Barotrauma.Items.Components
                 {
                     Vector2 displayPos = ConvertUnits.ToDisplayUnits(rayStart + (rayEnd - rayStart) * lastPickedFraction * 0.9f);
                     if (item.CurrentHull.Submarine != null) { displayPos += item.CurrentHull.Submarine.Position; }
-                    new FireSource(displayPos);
+                    new FireSource(displayPos, sourceCharacter: user);
                 }
             }
         }

@@ -12,7 +12,8 @@ namespace Barotrauma.Abilities
             statIdentifier = abilityElement.GetAttributeIdentifier("statidentifier", Identifier.Empty); 
             if (statIdentifier.IsEmpty)
             {
-                DebugConsole.ThrowError($"Error in talent {CharacterTalent.DebugIdentifier}, {nameof(CharacterAbilityResetPermanentStat)} - statIdentifier is empty.");
+                DebugConsole.ThrowError($"Error in talent {CharacterTalent.DebugIdentifier}, {nameof(CharacterAbilityResetPermanentStat)} - statIdentifier is empty.",
+                    contentPackage: abilityElement.ContentPackage);
             }
         }
         protected override void ApplyEffect(AbilityObject abilityObject)

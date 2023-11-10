@@ -71,6 +71,18 @@ namespace Barotrauma.Items.Components
         protected const float CorrectionDelay = 1.0f;
         protected CoroutineHandle delayedCorrectionCoroutine;
 
+        /// <summary>
+        /// If enabled, the contents of the item are not transferred when the player transfers items between subs.
+        /// Use this if this component uses item containers in a way where removing the item from the container via external means would cause problems.
+        /// </summary>
+        public virtual bool DontTransferInventoryBetweenSubs => false;
+
+        /// <summary>
+        /// If enabled, the items inside any of the item containers on this item cannot be sold at an outpost.
+        /// Use in similar cases as <see cref="DontTransferInventoryBetweenSubs"/>.
+        /// </summary>
+        public virtual bool DisallowSellingItemsFromContainer => false;
+
         [Editable, Serialize(0.0f, IsPropertySaveable.No, description: "How long it takes to pick up the item (in seconds).")]
         public float PickingTime
         {
@@ -285,7 +297,8 @@ namespace Barotrauma.Items.Components
             }
             catch (Exception e)
             {
-                DebugConsole.ThrowError("Invalid select key in " + element + "!", e);
+                DebugConsole.ThrowError("Invalid select key in " + element + "!", e,
+                    contentPackage: element.ContentPackage);
             }
 
             PickKey = InputType.Select;
@@ -298,7 +311,8 @@ namespace Barotrauma.Items.Components
             }
             catch (Exception e)
             {
-                DebugConsole.ThrowError("Invalid pick key in " + element + "!", e);
+                DebugConsole.ThrowError("Invalid pick key in " + element + "!", e,
+                    contentPackage: element.ContentPackage);
             }
 
             SerializableProperties = SerializableProperty.DeserializeProperties(this, element);
@@ -310,7 +324,8 @@ namespace Barotrauma.Items.Components
                 var component = item.Components.Find(ic => ic.Name.Equals(inheritRequiredSkillsFrom, StringComparison.OrdinalIgnoreCase));
                 if (component == null)
                 {
-                    DebugConsole.ThrowError($"Error in item \"{item.Name}\" - component \"{name}\" is set to inherit its required skills from \"{inheritRequiredSkillsFrom}\", but a component of that type couldn't be found.");
+                    DebugConsole.ThrowError($"Error in item \"{item.Name}\" - component \"{name}\" is set to inherit its required skills from \"{inheritRequiredSkillsFrom}\", but a component of that type couldn't be found.",
+                        contentPackage: element.ContentPackage);
                 }
                 else
                 {
@@ -325,7 +340,8 @@ namespace Barotrauma.Items.Components
                 var component = item.Components.Find(ic => ic.Name.Equals(inheritStatusEffectsFrom, StringComparison.OrdinalIgnoreCase));
                 if (component == null)
                 {
-                    DebugConsole.ThrowError($"Error in item \"{item.Name}\" - component \"{name}\" is set to inherit its StatusEffects from \"{inheritStatusEffectsFrom}\", but a component of that type couldn't be found.");
+                    DebugConsole.ThrowError($"Error in item \"{item.Name}\" - component \"{name}\" is set to inherit its StatusEffects from \"{inheritStatusEffectsFrom}\", but a component of that type couldn't be found.", 
+                        contentPackage: element.ContentPackage);
                 }
                 else if (component.statusEffectLists != null)
                 {
@@ -360,7 +376,8 @@ namespace Barotrauma.Items.Components
                     case "requiredskills":
                         if (subElement.GetAttribute("name") != null)
                         {
-                            DebugConsole.ThrowError("Error in item config \"" + item.ConfigFilePath + "\" - skill requirement in component " + GetType().ToString() + " should use a skill identifier instead of the name of the skill.");
+                            DebugConsole.ThrowError("Error in item config \"" + item.ConfigFilePath + "\" - skill requirement in component " + GetType().ToString() + " should use a skill identifier instead of the name of the skill.",
+                                contentPackage: element.ContentPackage);
                             continue;
                         }
 
@@ -426,7 +443,8 @@ namespace Barotrauma.Items.Components
             }
             else if (!allowEmpty)
             {
-                DebugConsole.ThrowError("Error in item config \"" + item.ConfigFilePath + "\" - component " + GetType().ToString() + " requires an item with no identifiers.");
+                DebugConsole.ThrowError("Error in item config \"" + item.ConfigFilePath + "\" - component " + GetType().ToString() + " requires an item with no identifiers.", 
+                    contentPackage: element.ContentPackage);
             }
         }
 
@@ -968,7 +986,8 @@ namespace Barotrauma.Items.Components
                 {
                     if (errorMessages)
                     {
-                        DebugConsole.ThrowError($"Could not find the component \"{typeName}\" ({item.Prefab.ContentFile.Path})");
+                        DebugConsole.ThrowError($"Could not find the component \"{typeName}\" ({item.Prefab.ContentFile.Path})", 
+                            contentPackage: element.ContentPackage);
                     }
                     return null;
                 }
@@ -977,7 +996,8 @@ namespace Barotrauma.Items.Components
             {
                 if (errorMessages)
                 {
-                    DebugConsole.ThrowError($"Could not find the component \"{typeName}\" ({item.Prefab.ContentFile.Path})", e);
+                    DebugConsole.ThrowError($"Could not find the component \"{typeName}\" ({item.Prefab.ContentFile.Path})", e,
+                        contentPackage: element.ContentPackage);
                 }
                 return null;
             }
@@ -990,14 +1010,16 @@ namespace Barotrauma.Items.Components
                 if (constructor == null)
                 {
                     DebugConsole.ThrowError(
-                        $"Could not find the constructor of the component \"{typeName}\" ({item.Prefab.ContentFile.Path})");
+                        $"Could not find the constructor of the component \"{typeName}\" ({item.Prefab.ContentFile.Path})", 
+                        contentPackage: element.ContentPackage);
                     return null;
                 }
             }
             catch (Exception e)
             {
                 DebugConsole.ThrowError(
-                    $"Could not find the constructor of the component \"{typeName}\" ({item.Prefab.ContentFile.Path})", e);
+                    $"Could not find the constructor of the component \"{typeName}\" ({item.Prefab.ContentFile.Path})", e,
+                    contentPackage: element.ContentPackage);
                 return null;
             }
             ItemComponent ic = null;
@@ -1010,7 +1032,7 @@ namespace Barotrauma.Items.Components
             }
             catch (TargetInvocationException e)
             {
-                DebugConsole.ThrowError($"Error while loading component of the type {type}.", e.InnerException);
+                DebugConsole.ThrowError($"Error while loading component of the type {type}.", e.InnerException, contentPackage: element.ContentPackage);
                 GameAnalyticsManager.AddErrorEventOnce(
                     $"ItemComponent.Load:TargetInvocationException{item.Name}{element.Name}",
                     GameAnalyticsManager.ErrorSeverity.Error,

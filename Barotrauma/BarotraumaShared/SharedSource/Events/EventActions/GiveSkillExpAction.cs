@@ -17,7 +17,8 @@ namespace Barotrauma
         {
             if (TargetTag.IsEmpty)
             {
-                DebugConsole.ThrowError($"Error in event \"{parentEvent.Prefab.Identifier}\": {nameof(GiveSkillExpAction)} without a target tag (the action needs to know whose skill to check).");
+                DebugConsole.ThrowError($"Error in event \"{parentEvent.Prefab.Identifier}\": {nameof(GiveSkillExpAction)} without a target tag (the action needs to know whose skill to check).",
+                    contentPackage: element.ContentPackage);
             }
         }
 

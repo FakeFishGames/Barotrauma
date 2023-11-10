@@ -158,7 +158,8 @@ namespace Barotrauma.Items.Components
                 IndicatorStyle = GUIStyle.GetComponentStyle("ContainedStateIndicator." + ContainedStateIndicatorStyle);
                 if (ContainedStateIndicator != null || ContainedStateIndicatorEmpty != null)
                 {
-                    DebugConsole.AddWarning($"Item \"{item.Name}\" defines both a contained state indicator style and a custom indicator sprite. Will use the custom sprite...");
+                    DebugConsole.AddWarning($"Item \"{item.Name}\" defines both a contained state indicator style and a custom indicator sprite. Will use the custom sprite...",
+                        contentPackage: item.Prefab.ContentPackage);
                 }
             }
             if (GuiFrame == null)

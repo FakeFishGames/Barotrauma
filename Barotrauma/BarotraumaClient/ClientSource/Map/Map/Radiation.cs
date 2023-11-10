@@ -29,7 +29,7 @@ namespace Barotrauma
 
             Vector2 spriteScale = new Vector2(zoom);
 
-            uiSprite.Sprite.DrawTiled(spriteBatch, topLeft, size, Params.RadiationAreaColor, Vector2.Zero, textureScale: spriteScale);
+            uiSprite.Sprite.DrawTiled(spriteBatch, topLeft, size, color: Params.RadiationAreaColor, startOffset: Vector2.Zero, textureScale: spriteScale);
 
             Vector2 topRight = topLeft + Vector2.UnitX * size.X;
 

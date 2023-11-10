@@ -15,11 +15,13 @@
 
             if (resistanceId.IsEmpty)
             {
-                DebugConsole.ThrowError($"Error in talent {CharacterTalent.DebugIdentifier} - resistance identifier not set in {nameof(CharacterAbilityModifyResistance)}.");
+                DebugConsole.ThrowError($"Error in talent {CharacterTalent.DebugIdentifier} - resistance identifier not set in {nameof(CharacterAbilityModifyResistance)}.",
+                    contentPackage: abilityElement.ContentPackage);
             }
             if (MathUtils.NearlyEqual(multiplier, 1.0f))
             {
-                DebugConsole.AddWarning($"Possible error in talent {CharacterTalent.DebugIdentifier} - resistance set to 1, which will do nothing.");
+                DebugConsole.AddWarning($"Possible error in talent {CharacterTalent.DebugIdentifier} - resistance set to 1, which will do nothing.",
+                    contentPackage: abilityElement.ContentPackage);
             }
         }
 

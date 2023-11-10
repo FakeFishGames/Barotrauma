@@ -1318,7 +1318,7 @@ namespace Barotrauma.Lights
 
                 if (LightTextureTargetSize != Vector2.Zero)
                 {
-                    LightSprite.DrawTiled(spriteBatch, drawPos, LightTextureTargetSize, color, startOffset: LightTextureOffset, textureScale: LightTextureScale);
+                    LightSprite.DrawTiled(spriteBatch, drawPos, LightTextureTargetSize, color: color, startOffset: LightTextureOffset, textureScale: LightTextureScale);
                 }
                 else
                 {

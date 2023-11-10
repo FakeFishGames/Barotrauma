@@ -34,7 +34,7 @@ namespace Barotrauma
                 bool allowCheats = GameMain.NetworkMember == null && (GameMain.GameSession?.GameMode is TestGameMode || Screen.Selected is { IsEditor: true });
                 if (!allowCheats && !CheatsEnabled && IsCheat)
                 {
-                    NewMessage("You need to enable cheats using the command \"enablecheats\" before you can use the command \"" + names[0] + "\".", Color.Red);
+                    NewMessage("You need to enable cheats using the command \"enablecheats\" before you can use the command \"" + Names[0] + "\".", Color.Red);
 #if USE_STEAM
                     NewMessage("Enabling cheats will disable Steam achievements during this play session.", Color.Red);
 #endif
@@ -215,9 +215,9 @@ namespace Barotrauma
             SoundPlayer.PlayUISound(GUISoundType.Select);
         }
 
-        private static bool IsCommandPermitted(string command, GameClient client)
+        private static bool IsCommandPermitted(Identifier command, GameClient client)
         {
-            switch (command)
+            switch (command.Value.ToLowerInvariant())
             {
                 case "kick":
                     return client.HasPermission(ClientPermissions.Kick);
@@ -304,7 +304,7 @@ namespace Barotrauma
                         }
                     };
                     var textBlock = new GUITextBlock(new RectTransform(new Point(listBox.Content.Rect.Width - 5, 0), textContainer.RectTransform, Anchor.TopLeft) { AbsoluteOffset = new Point(2, 2) },
-                        msg.Text, textAlignment: Alignment.TopLeft, font: GUIStyle.SmallFont, wrap: true)
+                        RichString.Rich(msg.Text), textAlignment: Alignment.TopLeft, font: GUIStyle.SmallFont, wrap: true)
                     {
                         CanBeFocused = false,
                         TextColor = msg.Color
@@ -346,7 +346,7 @@ namespace Barotrauma
                 CanBeFocused = false
             };
             var textBlock = new GUITextBlock(new RectTransform(new Point(listBox.Content.Rect.Width - 170, 0), textContainer.RectTransform, Anchor.TopRight) { AbsoluteOffset = new Point(20, 0) },
-                command.help, textAlignment: Alignment.TopLeft, font: GUIStyle.SmallFont, wrap: true)
+                command.Help, textAlignment: Alignment.TopLeft, font: GUIStyle.SmallFont, wrap: true)
             {
                 CanBeFocused = false,
                 TextColor = Color.White
@@ -354,7 +354,7 @@ namespace Barotrauma
             textContainer.RectTransform.NonScaledSize = new Point(textContainer.RectTransform.NonScaledSize.X, textBlock.RectTransform.NonScaledSize.Y + 5);
             textBlock.SetTextPos();
             new GUITextBlock(new RectTransform(new Point(150, textContainer.Rect.Height), textContainer.RectTransform),
-                command.names[0], textAlignment: Alignment.TopLeft);
+                command.Names[0].Value, textAlignment: Alignment.TopLeft);
 
             listBox.UpdateScrollBarSize();
             listBox.BarScroll = 1.0f;
@@ -364,7 +364,7 @@ namespace Barotrauma
 
         private static void AssignOnClientExecute(string names, Action<string[]> onClientExecute)
         {
-            Command command = commands.Find(c => c.names.Intersect(names.Split('|')).Count() > 0);
+            Command command = commands.Find(c => c.Names.Intersect(names.Split('|').ToIdentifiers()).Any());
             if (command == null)
             {
                 throw new Exception("AssignOnClientExecute failed. Command matching the name(s) \"" + names + "\" not found.");
@@ -378,7 +378,7 @@ namespace Barotrauma
 
         private static void AssignRelayToServer(string names, bool relay)
         {
-            Command command = commands.Find(c => c.names.Intersect(names.Split('|')).Count() > 0);
+            Command command = commands.Find(c => c.Names.Intersect(names.Split('|').ToIdentifiers()).Any());
             if (command == null)
             {
                 DebugConsole.Log("Could not assign to relay to server: " + names);
@@ -706,6 +706,8 @@ namespace Barotrauma
             AssignRelayToServer("showmoney", true);
             AssignRelayToServer("setskill", true);
             AssignRelayToServer("readycheck", true);
+            commands.Add(new Command("debugjobassignment", "", (string[] args) => { }));
+            AssignRelayToServer("debugjobassignment", true);
 
             AssignRelayToServer("givetalent", true);
             AssignRelayToServer("unlocktalents", true);

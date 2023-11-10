@@ -284,7 +284,8 @@ namespace Barotrauma.Items.Components
                         RelatedItem containable = RelatedItem.Load(subElement, returnEmpty: false, parentDebugName: item.Name);
                         if (containable == null)
                         {
-                            DebugConsole.ThrowError("Error in item config \"" + item.ConfigFilePath + "\" - containable with no identifiers.");
+                            DebugConsole.ThrowError("Error in item config \"" + item.ConfigFilePath + "\" - containable with no identifiers.",
+                                contentPackage: element.ContentPackage);
                             continue;
                         }
                         ContainableItems ??= new List<RelatedItem>();
@@ -321,7 +322,8 @@ namespace Barotrauma.Items.Components
                     RelatedItem containable = RelatedItem.Load(subSubElement, returnEmpty: false, parentDebugName: item.Name);
                     if (containable == null)
                     {
-                        DebugConsole.ThrowError("Error in item config \"" + item.ConfigFilePath + "\" - containable with no identifiers.");
+                        DebugConsole.ThrowError("Error in item config \"" + item.ConfigFilePath + "\" - containable with no identifiers.",
+                            contentPackage: element.ContentPackage);
                         continue;
                     }
                     subContainableItems.Add(containable);
@@ -349,7 +351,8 @@ namespace Barotrauma.Items.Components
                 RelatedItem containable = RelatedItem.Load(subElement, returnEmpty: false, parentDebugName: item.Name);
                 if (containable == null)
                 {
-                    DebugConsole.ThrowError("Error when loading containable restrictions for \"" + item.Name + "\" - containable with no identifiers.");
+                    DebugConsole.ThrowError("Error when loading containable restrictions for \"" + item.Name + "\" - containable with no identifiers.",
+                        contentPackage: element.ContentPackage);
                     continue;
                 }
                 ContainableItems[containableIndex] = containable;

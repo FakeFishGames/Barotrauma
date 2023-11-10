@@ -132,9 +132,9 @@ namespace Barotrauma
             return GetDrawDepth(SpriteDepth + DrawDepthOffset, Sprite);
         }
 
-        public Color GetSpriteColor(bool withHighlight = false)
+        public Color GetSpriteColor(Color? defaultColor = null, bool withHighlight = false)
         {
-            Color color = spriteColor;
+            Color color = defaultColor ?? spriteColor;
             if (Prefab.UseContainedSpriteColor && ownInventory != null)
             {
                 foreach (Item item in ContainedItems)
@@ -333,9 +333,7 @@ namespace Barotrauma
                 else if (!ShowItems) { return; }
             }
 
-            Color color = 
-                overrideColor ??
-                (IsIncludedInSelection && editing ?  GUIStyle.Blue : GetSpriteColor(withHighlight: true));
+            Color color = GetSpriteColor(spriteColor);
 
             bool isWiringMode = editing && SubEditorScreen.TransparentWiringMode && SubEditorScreen.IsWiringMode() && !isWire && parentInventory == null;
             bool renderTransparent = isWiringMode && GetComponent<ConnectionPanel>() == null;
@@ -406,12 +404,14 @@ namespace Barotrauma
                             foreach (var decorativeSprite in Prefab.DecorativeSprites)
                             {
                                 if (!spriteAnimState[decorativeSprite].IsActive) { continue; }
+
+                                Color decorativeSpriteColor = GetSpriteColor(decorativeSprite.Color);
                                 Vector2 offset = decorativeSprite.GetOffset(ref spriteAnimState[decorativeSprite].OffsetState, spriteAnimState[decorativeSprite].RandomOffsetMultiplier, flippedX && Prefab.CanSpriteFlipX ? RotationRad : -RotationRad) * Scale;
                                 if (flippedX && Prefab.CanSpriteFlipX) { offset.X = -offset.X; }
                                 if (flippedY && Prefab.CanSpriteFlipY) { offset.Y = -offset.Y; }
                                 decorativeSprite.Sprite.DrawTiled(spriteBatch,
                                     new Vector2(DrawPosition.X + offset.X - rect.Width / 2, -(DrawPosition.Y + offset.Y + rect.Height / 2)),
-                                    size, color: color,
+                                    size, color: decorativeSpriteColor,
                                     textureScale: Vector2.One * Scale,
                                     depth: Math.Min(depth + (decorativeSprite.Sprite.Depth - activeSprite.Depth), 0.999f));
                             }
@@ -437,13 +437,15 @@ namespace Barotrauma
                         foreach (var decorativeSprite in Prefab.DecorativeSprites)
                         {
                             if (!spriteAnimState[decorativeSprite].IsActive) { continue; }
+
+                            Color decorativeSpriteColor = GetSpriteColor(decorativeSprite.Color);
                             float rot = decorativeSprite.GetRotation(ref spriteAnimState[decorativeSprite].RotationState, spriteAnimState[decorativeSprite].RandomRotationFactor);
                             bool flipX = flippedX && Prefab.CanSpriteFlipX;
                             bool flipY = flippedY && Prefab.CanSpriteFlipY;
                             Vector2 offset = decorativeSprite.GetOffset(ref spriteAnimState[decorativeSprite].OffsetState, spriteAnimState[decorativeSprite].RandomOffsetMultiplier, flipX ^ flipY ? RotationRad : -RotationRad) * Scale;
                             if (flipX) { offset.X = -offset.X; }
                             if (flipY) { offset.Y = -offset.Y; }
-                            decorativeSprite.Sprite.Draw(spriteBatch, new Vector2(DrawPosition.X + offset.X, -(DrawPosition.Y + offset.Y)), color,
+                            decorativeSprite.Sprite.Draw(spriteBatch, new Vector2(DrawPosition.X + offset.X, -(DrawPosition.Y + offset.Y)), decorativeSpriteColor,
                                 RotationRad + rot, decorativeSprite.GetScale(spriteAnimState[decorativeSprite].RandomScaleFactor) * Scale, activeSprite.effects,
                                 depth: Math.Min(depth + (decorativeSprite.Sprite.Depth - activeSprite.Depth), 0.999f));
                         }
@@ -617,6 +619,13 @@ namespace Barotrauma
                     origin.Y = sprite.SourceRect.Height - origin.Y;
                 }
                 return origin;
+            }
+
+            Color GetSpriteColor(Color defaultColor)
+            {
+                return
+                    overrideColor ??
+                    (IsIncludedInSelection && editing ? GUIStyle.Blue : this.GetSpriteColor(defaultColor: defaultColor, withHighlight: true));
             }
         }
 
@@ -852,7 +861,7 @@ namespace Barotrauma
                     CanBeFocused = true
                 };
 
-                new GUIButton(new RectTransform(new Vector2(0.23f, 1.0f), buttonContainer.RectTransform), TextManager.Get("MirrorEntityX"), style: "GUIButtonSmall")
+                var mirrorX = new GUIButton(new RectTransform(new Vector2(0.23f, 1.0f), buttonContainer.RectTransform), TextManager.Get("MirrorEntityX"), style: "GUIButtonSmall")
                 {
                     ToolTip = TextManager.Get("MirrorEntityXToolTip"),
                     Enabled = Prefab.CanFlipX,
@@ -863,10 +872,12 @@ namespace Barotrauma
                             me.FlipX(relativeToSub: false);
                         }
                         if (!SelectedList.Contains(this)) { FlipX(relativeToSub: false); }
+                        ColorFlipButton(button, FlippedX);
                         return true;
                     }
                 };
-                new GUIButton(new RectTransform(new Vector2(0.23f, 1.0f), buttonContainer.RectTransform), TextManager.Get("MirrorEntityY"), style: "GUIButtonSmall")
+                ColorFlipButton(mirrorX, FlippedX);
+                var mirrorY = new GUIButton(new RectTransform(new Vector2(0.23f, 1.0f), buttonContainer.RectTransform), TextManager.Get("MirrorEntityY"), style: "GUIButtonSmall")
                 {
                     ToolTip = TextManager.Get("MirrorEntityYToolTip"),
                     Enabled = Prefab.CanFlipY,
@@ -877,9 +888,11 @@ namespace Barotrauma
                             me.FlipY(relativeToSub: false);
                         }
                         if (!SelectedList.Contains(this)) { FlipY(relativeToSub: false); }
+                        ColorFlipButton(button, FlippedY);
                         return true;
                     }
                 };
+                ColorFlipButton(mirrorY, FlippedY);
                 if (Sprite != null)
                 {
                     var reloadTextureButton = new GUIButton(new RectTransform(new Vector2(0.23f, 1.0f), buttonContainer.RectTransform), TextManager.Get("ReloadSprite"), style: "GUIButtonSmall");

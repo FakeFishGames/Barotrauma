@@ -30,7 +30,8 @@ namespace Barotrauma
             var enums = Enum.GetValues(typeof(CharacterTeamType)).Cast<CharacterTeamType>();
             if (!enums.Contains(TeamID))
             {
-                DebugConsole.ThrowError($"Error in {nameof(NPCChangeTeamAction)} in the event {ParentEvent.Prefab.Identifier}. \"{TeamID}\" is not a valid Team ID. Valid values are {string.Join(',', Enum.GetNames(typeof(CharacterTeamType)))}.");
+                DebugConsole.ThrowError($"Error in {nameof(NPCChangeTeamAction)} in the event {ParentEvent.Prefab.Identifier}. \"{TeamID}\" is not a valid Team ID. Valid values are {string.Join(',', Enum.GetNames(typeof(CharacterTeamType)))}.",
+                    contentPackage: element.ContentPackage);
             }
         }
 

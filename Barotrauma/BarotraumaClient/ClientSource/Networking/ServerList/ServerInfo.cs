@@ -75,6 +75,9 @@ namespace Barotrauma.Networking
         [Serialize("", IsPropertySaveable.Yes)]
         public LanguageIdentifier Language { get; set; }
 
+        [Serialize("", IsPropertySaveable.Yes)]
+        public string SelectedSub { get; set; } = string.Empty;
+
         public Version GameVersion { get; set; } = new Version(0, 0, 0, 0);
 
         public Option<int> Ping = Option<int>.None();
@@ -103,6 +106,8 @@ namespace Barotrauma.Networking
         }
 
         public ImmutableArray<ContentPackageInfo> ContentPackages;
+
+        public int ContentPackageCount;
 
         public bool IsModded => ContentPackages.Any(p => !GameMain.VanillaContent.NameMatches(p.Name));
 
@@ -309,6 +314,14 @@ namespace Barotrauma.Networking
                 TextManager.Get(GameMode.IsEmpty ? "Unknown" : "GameMode." + GameMode).Fallback(GameMode.Value),
                 textAlignment: Alignment.Right);
 
+            if (!string.IsNullOrEmpty(SelectedSub))
+            {
+                var submarineText = new GUITextBlock(new RectTransform(new Vector2(1.0f, elementHeight), content.RectTransform), TextManager.Get("Submarine"));
+                new GUITextBlock(new RectTransform(Vector2.One, submarineText.RectTransform),
+                    SelectedSub,
+                    textAlignment: Alignment.Right);
+            }
+
             GUITextBlock playStyleText = new GUITextBlock(new RectTransform(new Vector2(1.0f, elementHeight), content.RectTransform), TextManager.Get("serverplaystyle"));
             new GUITextBlock(new RectTransform(Vector2.One, playStyleText.RectTransform), TextManager.Get("servertag." + playStyle), textAlignment: Alignment.Right);
 
@@ -385,6 +398,15 @@ namespace Barotrauma.Networking
                         }
                     }
                 }
+                if (ContentPackageCount > ContentPackages.Length)
+                {
+                    new GUITextBlock(
+                        new RectTransform(new Vector2(1.0f, 0.15f), contentPackageList.Content.RectTransform) { MinSize = new Point(0, 15) },
+                        TextManager.GetWithVariable("workshopitemdownloadprompttruncated", "[number]", (ContentPackageCount - ContentPackages.Length).ToString()))
+                    {
+                        CanBeFocused = false
+                    };
+                }
             }
 
             // -----------------------------------------------------------------------------
@@ -423,14 +445,16 @@ namespace Barotrauma.Networking
             AllowSpectating = getBool("allowspectating");
             AllowRespawn = getBool("allowrespawn");
             VoipEnabled = getBool("voicechatenabled");
-
             GameMode = valueGetter("gamemode")?.ToIdentifier() ?? Identifier.Empty;
             if (float.TryParse(valueGetter("traitors"), NumberStyles.Any, CultureInfo.InvariantCulture, out float traitorProbability)) { TraitorProbability = traitorProbability; }
             if (Enum.TryParse(valueGetter("playstyle"), out PlayStyle playStyle)) { PlayStyle = playStyle; }
             Language = valueGetter("language")?.ToLanguageIdentifier() ?? LanguageIdentifier.None;
+            SelectedSub = valueGetter("submarine") ?? string.Empty;
 
             ContentPackages = ExtractContentPackageInfo(ServerName, valueGetter).ToImmutableArray();
-            
+            ContentPackageCount = ContentPackages.Length;
+            if (int.TryParse(valueGetter("packagecount"), out int packageCount)) { ContentPackageCount = packageCount; }
+
             bool getBool(string key)
             {
                 string? data = valueGetter(key);

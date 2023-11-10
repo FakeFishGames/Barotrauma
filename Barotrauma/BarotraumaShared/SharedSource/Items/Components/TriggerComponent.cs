@@ -97,7 +97,8 @@ namespace Barotrauma.Items.Components
             string triggeredByAttribute = element.GetAttributeString("triggeredby", "Character");
             if (!Enum.TryParse(triggeredByAttribute, out triggeredBy))
             {
-                DebugConsole.ThrowError($"Error in ForceComponent config: \"{triggeredByAttribute}\" is not a valid triggerer type.");
+                DebugConsole.ThrowError($"Error in ForceComponent config: \"{triggeredByAttribute}\" is not a valid triggerer type.",
+                    contentPackage: element.ContentPackage);
             }
             triggerOnce = element.GetAttributeBool("triggeronce", false);
             string parentDebugName = $"TriggerComponent in {item.Name}";

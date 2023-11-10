@@ -240,7 +240,21 @@ namespace Barotrauma
             }
         }
 
-        public Item RootContainer { get; private set; }
+        private Item rootContainer;
+        public Item RootContainer 
+        {
+            get { return rootContainer; }
+            private set
+            {
+                if (value == this)
+                {
+                    DebugConsole.ThrowError($"Attempted to set the item \"{Prefab.Identifier}\" as it's own root container!\n{Environment.StackTrace.CleanupStackTrace()}");
+                    rootContainer = null;
+                    return;
+                }
+                rootContainer = value;
+            }
+        }
 
         private bool inWaterProofContainer;
 
@@ -443,7 +457,7 @@ namespace Barotrauma
             set
             {
                 if (scale == value) { return; }
-                scale = MathHelper.Clamp(value, 0.01f, 10.0f);
+                scale = MathHelper.Clamp(value, Prefab.MinScale, Prefab.MaxScale);
 
                 float relativeScale = scale / base.Prefab.Scale;
 
@@ -862,7 +876,25 @@ namespace Barotrauma
         {
             get
             {
-                return ownInventory?.AllItems ?? Enumerable.Empty<Item>();
+                if (OwnInventories.Length < 2)
+                {
+                    if (OwnInventory == null) { yield break; }
+
+                    foreach (var item in OwnInventory.AllItems)
+                    {
+                        yield return item;
+                    }
+                }
+                else
+                {
+                    foreach (var inventory in OwnInventories)
+                    {
+                        foreach (var item in inventory.AllItems)
+                        {
+                            yield return item;
+                        }
+                    }
+                }
             }
         }
 
@@ -870,6 +902,8 @@ namespace Barotrauma
         {
             get { return ownInventory; }
         }
+
+        public readonly ImmutableArray<ItemInventory> OwnInventories = ImmutableArray<ItemInventory>.Empty;
 
         [Editable, Serialize(false, IsPropertySaveable.Yes, description:
             "Enable if you want to display the item HUD side by side with another item's HUD, when linked together. " +
@@ -1057,7 +1091,8 @@ namespace Barotrauma
                         {                            
                             if (!Physics.TryParseCollisionCategory(collisionCategoryStr, out Category cat))
                             {
-                                DebugConsole.ThrowError("Invalid collision category in item \"" + Name + "\" (" + collisionCategoryStr + ")");
+                                DebugConsole.ThrowError("Invalid collision category in item \"" + Name + "\" (" + collisionCategoryStr + ")",
+                                    contentPackage: element.ContentPackage);
                             }
                             else
                             {
@@ -1192,6 +1227,8 @@ namespace Barotrauma
                 ownInventory = itemContainer.Inventory;
             }
 
+            OwnInventories = GetComponents<ItemContainer>().Select(ic => ic.Inventory).ToImmutableArray();
+
             qualityComponent = GetComponent<Quality>();
 
             IsLadder = GetComponent<Ladder>() != null;
@@ -1210,7 +1247,8 @@ namespace Barotrauma
             var holdables = components.Where(c => c is Holdable);
             if (holdables.Count() > 1)
             {
-                DebugConsole.AddWarning($"Item {Prefab.Identifier} has multiple {nameof(Holdable)} components ({string.Join(", ", holdables.Select(h => h.GetType().Name))}).");
+                DebugConsole.AddWarning($"Item {Prefab.Identifier} has multiple {nameof(Holdable)} components ({string.Join(", ", holdables.Select(h => h.GetType().Name))}).",
+                    Prefab.ContentPackage);
             }
 
             InsertToList();
@@ -1654,6 +1692,12 @@ namespace Barotrauma
                 while (rootContainer.Container != null)
                 {
                     rootContainer = rootContainer.Container;
+                    if (rootContainer == this)
+                    {
+                        DebugConsole.ThrowError($"Invalid container hierarchy: \"{Prefab.Identifier}\" was contained inside itself!\n{Environment.StackTrace.CleanupStackTrace()}");
+                        rootContainer = null;
+                        break;
+                    }
                     inWaterProofContainer |= rootContainer.WaterProof;
                 }
                 newRootContainer = rootContainer;
@@ -1916,7 +1960,7 @@ namespace Barotrauma
         }
 
 
-        public AttackResult AddDamage(Character attacker, Vector2 worldPosition, Attack attack, float deltaTime, bool playSound = true)
+        public AttackResult AddDamage(Character attacker, Vector2 worldPosition, Attack attack,  Vector2 impulseDirection, float deltaTime,bool playSound = true)
         {
             if (Indestructible || InvulnerableToDamage) { return new AttackResult(); }
 
@@ -2533,8 +2577,7 @@ namespace Barotrauma
             foreach (Connection c in connectionPanel.Connections)
             {
                 if (connectionFilter != null && !connectionFilter.Invoke(c)) { continue; }
-                var recipients = c.Recipients;
-                foreach (Connection recipient in recipients)
+                foreach (Connection recipient in c.Recipients)
                 {
                     var component = recipient.Item.GetComponent<T>();
                     if (component != null && !connectedComponents.Contains(component))
@@ -2587,9 +2630,20 @@ namespace Barotrauma
         private void GetConnectedComponentsRecursive<T>(Connection c, HashSet<Connection> alreadySearched, List<T> connectedComponents, bool ignoreInactiveRelays, bool allowTraversingBackwards = true) where T : ItemComponent
         {
             alreadySearched.Add(c);
-                        
-            var recipients = c.Recipients;
-            foreach (Connection recipient in recipients)
+            static IEnumerable<Connection> GetRecipients(Connection c)
+            {
+                foreach (Connection recipient in c.Recipients)
+                {
+                    yield return recipient;
+                }
+                //check circuit box inputs/outputs this connection is connected to
+                foreach (var circuitBoxConnection in c.CircuitBoxConnections)
+                {
+                    yield return circuitBoxConnection.Connection;
+                }
+            }
+
+            foreach (Connection recipient in GetRecipients(c))
             {
                 if (alreadySearched.Contains(recipient)) { continue; }
                 var component = recipient.Item.GetComponent<T>();                    
@@ -2598,23 +2652,53 @@ namespace Barotrauma
                     connectedComponents.Add(component);
                 }
 
-                //connected to a wifi component -> see which other wifi components it can communicate with
-                var wifiComponent = recipient.Item.GetComponent<WifiComponent>();
-                if (wifiComponent != null && wifiComponent.CanTransmit())
+                var circuitBox = recipient.Item.GetComponent<CircuitBox>();
+                if (circuitBox != null)
                 {
-                    foreach (var wifiReceiver in wifiComponent.GetTransmittersInRange())
+                    //if this is a circuit box, check what the connection is connected to inside the box
+                    var potentialCbConnection = circuitBox.FindInputOutputConnection(recipient);
+                    if (potentialCbConnection.TryUnwrap(out var cbConnection))
                     {
-                        var receiverConnections = wifiReceiver.Item.Connections;
-                        if (receiverConnections == null) { continue; }
-                        foreach (Connection wifiOutput in receiverConnections)
+                        if (cbConnection is CircuitBoxInputConnection inputConnection)
                         {
-                            if ((wifiOutput.IsOutput == recipient.IsOutput) || alreadySearched.Contains(wifiOutput)) { continue; }
-                            GetConnectedComponentsRecursive(wifiOutput, alreadySearched, connectedComponents, ignoreInactiveRelays, allowTraversingBackwards);
+                            foreach (var connectedTo in inputConnection.ExternallyConnectedTo)
+                            {
+                                if (alreadySearched.Contains(connectedTo.Connection)) { continue; }
+                                CheckRecipient(connectedTo.Connection);
+                            }
+                        }
+                        else
+                        {
+                            foreach (var connectedFrom in cbConnection.ExternallyConnectedFrom)
+                            {
+                                if (alreadySearched.Contains(connectedFrom.Connection) || !allowTraversingBackwards) { continue; }
+                                CheckRecipient(connectedFrom.Connection);
+                            }
                         }
                     }
                 }
+                CheckRecipient(recipient);
 
-                recipient.Item.GetConnectedComponentsRecursive(recipient, alreadySearched, connectedComponents, ignoreInactiveRelays, allowTraversingBackwards);                   
+                void CheckRecipient(Connection recipient)
+                {
+                    //connected to a wifi component -> see which other wifi components it can communicate with
+                    var wifiComponent = recipient.Item.GetComponent<WifiComponent>();
+                    if (wifiComponent != null && wifiComponent.CanTransmit())
+                    {
+                        foreach (var wifiReceiver in wifiComponent.GetTransmittersInRange())
+                        {
+                            var receiverConnections = wifiReceiver.Item.Connections;
+                            if (receiverConnections == null) { continue; }
+                            foreach (Connection wifiOutput in receiverConnections)
+                            {
+                                if ((wifiOutput.IsOutput == recipient.IsOutput) || alreadySearched.Contains(wifiOutput)) { continue; }
+                                GetConnectedComponentsRecursive(wifiOutput, alreadySearched, connectedComponents, ignoreInactiveRelays, allowTraversingBackwards);
+                            }
+                        }
+                    }
+
+                    recipient.Item.GetConnectedComponentsRecursive(recipient, alreadySearched, connectedComponents, ignoreInactiveRelays, allowTraversingBackwards); 
+                }                  
             }
 
             if (ignoreInactiveRelays)

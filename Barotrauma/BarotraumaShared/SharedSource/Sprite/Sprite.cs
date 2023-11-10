@@ -306,7 +306,8 @@ namespace Barotrauma
             }
             if (file == "")
             {
-                DebugConsole.ThrowError("Sprite " + SourceElement + " doesn't have a texture specified!");
+                DebugConsole.ThrowError("Sprite " + SourceElement.Element + " doesn't have a texture specified!",
+                    contentPackage: SourceElement.ContentPackage);
                 return false;
             }
             if (!string.IsNullOrEmpty(path))

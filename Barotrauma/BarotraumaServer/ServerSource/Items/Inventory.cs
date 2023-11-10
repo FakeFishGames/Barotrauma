@@ -110,7 +110,8 @@ namespace Barotrauma
                         (pickable.IsAttached && !pickable.PickingDone) ||
                         item.AllowedSlots.None())
                     {
-                        DebugConsole.AddWarning($"Client {c.Name} tried to pick up a non-pickable item \"{item}\" (parent inventory: {item.ParentInventory?.Owner.ToString() ?? "null"})");
+                        DebugConsole.AddWarning($"Client {c.Name} tried to pick up a non-pickable item \"{item}\" (parent inventory: {item.ParentInventory?.Owner.ToString() ?? "null"})",
+                            item.Prefab.ContentPackage);
                         continue;
                     }
 

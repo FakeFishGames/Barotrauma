@@ -306,7 +306,8 @@ namespace Barotrauma.Items.Components
 
             if (item.body == null)
             {
-                DebugConsole.ThrowError($"Error in projectile definition ({item.Name}): No body defined!");
+                DebugConsole.ThrowError($"Error in projectile definition ({item.Name}): No body defined!",
+                    contentPackage: element.ContentPackage);
                 return;
             }
 

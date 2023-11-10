@@ -14,12 +14,14 @@ namespace Barotrauma
         {
             if (TargetTag.IsEmpty)
             {
-                DebugConsole.LogError($"CheckConditionalAction error: {GetEventName()} uses a CheckConditionalAction with no target tag! This will cause the check to automatically succeed.");
+                DebugConsole.LogError($"CheckConditionalAction error: {GetEventName()} uses a CheckConditionalAction with no target tag! This will cause the check to automatically succeed.",
+                    contentPackage: parentEvent.Prefab.ContentPackage);
             }
             Conditional = PropertyConditional.FromXElement(element, IsNotTargetTagAttribute).FirstOrDefault();
             if (Conditional == null)
             {
-                DebugConsole.LogError($"CheckConditionalAction error: {GetEventName()} uses a CheckConditionalAction with no valid PropertyConditional! This will cause the check to automatically succeed.");
+                DebugConsole.LogError($"CheckConditionalAction error: {GetEventName()} uses a CheckConditionalAction with no valid PropertyConditional! This will cause the check to automatically succeed.",
+                    contentPackage: parentEvent.Prefab.ContentPackage);
             }
 
             static bool IsNotTargetTagAttribute(XAttribute attribute) => attribute.NameAsIdentifier() != "targettag";
@@ -46,7 +48,8 @@ namespace Barotrauma
             }
             if (target == null)
             {
-                DebugConsole.LogError($"{nameof(CheckConditionalAction)} error: {GetEventName()} uses a {nameof(CheckConditionalAction)} but no valid target was found for tag \"{TargetTag}\"! This will cause the check to automatically succeed.");
+                DebugConsole.LogError($"{nameof(CheckConditionalAction)} error: {GetEventName()} uses a {nameof(CheckConditionalAction)} but no valid target was found for tag \"{TargetTag}\"! This will cause the check to automatically succeed.",
+                    contentPackage: ParentEvent.Prefab.ContentPackage);
             }
             if (target == null || Conditional == null)
             {

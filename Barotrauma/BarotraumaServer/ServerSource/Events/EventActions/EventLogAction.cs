@@ -27,7 +27,8 @@ partial class EventLogAction : EventAction
                 }
                 else
                 {
-                    DebugConsole.AddWarning($"{target} is not a valid target for an EventLogAction. The target should be a character.");
+                    DebugConsole.AddWarning($"{target} is not a valid target for an EventLogAction. The target should be a character.",
+                        ParentEvent.Prefab.ContentPackage);
                 }
             }
             if (eventLog.TryAddEntry(ParentEvent.Prefab.Identifier, Id, displayText, targetClients) && ShowInServerLog)

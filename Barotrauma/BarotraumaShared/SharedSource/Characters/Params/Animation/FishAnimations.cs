@@ -63,7 +63,8 @@ namespace Barotrauma
         {
             if (!character.AnimController.CanWalk)
             {
-                DebugConsole.ThrowError($"{character.SpeciesName} cannot use run animations!");
+                DebugConsole.ThrowError($"{character.SpeciesName} cannot use run animations!", 
+                    contentPackage: character.Prefab.ContentPackage);
                 return false;
             }
             return true;

@@ -14,23 +14,25 @@ internal sealed class CharacterAbilityGiveExperience : CharacterAbility
 
         if (amount == 0 && level == 0)
         {
-            DebugConsole.ThrowError($"Error in talent {CharacterTalent.DebugIdentifier} - no exp amount or level defined in {nameof(CharacterAbilityGiveExperience)}.");
+            DebugConsole.ThrowError($"Error in talent {CharacterTalent.DebugIdentifier} - no exp amount or level defined in {nameof(CharacterAbilityGiveExperience)}.",
+                contentPackage: abilityElement.ContentPackage);
         }
         if (amount > 0 && level > 0)
         {
-            DebugConsole.ThrowError($"Error in talent {CharacterTalent.DebugIdentifier} - {nameof(CharacterAbilityGiveExperience)} defines both an exp amount and a level.");
+            DebugConsole.ThrowError($"Error in talent {CharacterTalent.DebugIdentifier} - {nameof(CharacterAbilityGiveExperience)} defines both an exp amount and a level.",
+                contentPackage: abilityElement.ContentPackage);
         }
     }
 
     private void ApplyEffectSpecific(Character targetCharacter)
     {
-        if (amount != 0)
-        {
-            targetCharacter.Info?.GiveExperience(amount);
-        }
         if (level > 0)
         {
-            targetCharacter.Info?.GiveExperience(targetCharacter.Info.GetExperienceRequiredForLevel(level));            
+            targetCharacter.Info?.GiveExperience(targetCharacter.Info.GetExperienceRequiredForLevel(level) + amount);
+        }
+        else if (amount != 0)
+        {
+            targetCharacter.Info?.GiveExperience(amount);
         }
     }
 

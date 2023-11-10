@@ -644,6 +644,13 @@ namespace Barotrauma.Networking
             set;
         }
 
+        [Serialize(true, IsPropertySaveable.Yes)]
+        public bool AllowImmediateItemDelivery
+        {
+            get;
+            set;
+        }
+
         [Serialize(false, IsPropertySaveable.Yes)]
         public bool LockAllDefaultWires
         {

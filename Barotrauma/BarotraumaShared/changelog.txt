@@ -1,4 +1,84 @@
 -------------------------------------------------------------------------------------------------------------------------------------------------
+v1.2.1.0
+-------------------------------------------------------------------------------------------------------------------------------------------------
+
+Changes:
+- Structures can now be rotated in the sub editor!
+- Option to get the items you're buying from an outpost store in your inventory immediately, as opposed to them being delivered to the sub at the start of the round. There's also now an anti-griefing setting for disabling this, in case you want to make sure a griefer can't easily gain access to dangerous items in the outposts. Players with campaign management permissions aren't affected by the setting.
+- When running an outdated executable (i.e. a mod that overrides the game executable, but hasn't been updated yet after a new vanilla update has been released), there's a notification in the main menu and the "host server" menu warning you about the potential issues caused by running an outdated executable with the other up-to-date vanilla files.
+
+Fixes:
+- Fixed dedicated servers with lots of mods enabled not showing up in the server browser.
+- Fixed ability to sell components from inside circuit boxes in outposts.
+
+-------------------------------------------------------------------------------------------------------------------------------------------------
+v1.2.0.0
+-------------------------------------------------------------------------------------------------------------------------------------------------
+
+Changes:
+- Outpost security is now better at catching thieves: they can do random inspections to check for stolen items (more frequently if your reputation is low or if they've caught someone in your crew stealing), and notice if you're visibly carrying or wearing any stolen items.
+- Bots can see through windowed walls (also making it easier for them to spot stealing).
+- Added bilge pumps and duct blocks throughout outposts. Otherwise the outposts can never drain if the player causes a flood.
+- Removed karma restrictions from jobs. This feature wasn't communicated anywhere, and it often just seemed like a bug when someone didn't get assign the job they wanted due to their karma being too low.
+- Console errors and warnings caused by modded content include the name of the mod to make it easier to diagnose which mod is causing some issue or whether it's an issue in the vanilla game.
+- Added bullet casing particles to firearms.
+- Adjusted default throwing pose a bit: characters don't extend their arm as high up, because it could cause the throwable item to hit the ceiling in roughly door-height rooms. 
+- Optimized labels (large labels with a scaled down texture in particular were unnecessarily heavy).
+- Optimized Watcher's status effects.
+- Most message boxes can be closed by pressing enter (more specifically, all boxes that are created with just the "ok" button).
+- ID cards left in a duffel bag are automatically removed at the end of the round.
+- Added a light to handheld sonar to indicate when it's on + made the ping a bit higher in pitch to differentiate it from the sub's sonar.
+- Reduced the forces applied on characters by fractal guardian's melee attacks. The previous values were so high they often lead to characters getting stunlocked when the attacks threw them against the walls of the ruin.
+
+Multiplayer:
+- Fixed Text and NPCConversation files being required to be in sync between clients and the server, meaning if you were using a mod that changes the game to a different language, it'd get disabled when you joined a server that's not using the mod.
+- Fixed lack of unban option in the "manage client" menu and the client context menu.
+
+Fixes:
+- Fixed outpost NPCs not caring about the players starting fires.
+- Fixed purchased items sometimes spawning in the cargo crates when you've got a cargo mission active, making them potentially very hard to find.
+- Fixed a couple of inaccurate talent and mission descriptions in Russian.
+- Fixed inability to select a component you've just placed in the circuit box until you move the component for the first time.
+- Fixed health scanner HUD texts overlapping on high resolutions.
+- Fixed "maintain position" marker being misplaced on the navigation terminal on some resolutions.
+- Fixed chance of tainting the genetic material when refining sometimes being displayed incorrectly on research stations.
+- Disable the health interface of the patient in the "good samaritan" event. Prevents being able to heal the opiate overdose "normally" before triggering the event.
+- Fixed item hover texts (e.g. "[E] Repair") not refreshing when changing keybinds.
+- Fixed fabricator listbox scroll always resetting to the top when someone selects the fabricator.
+- Fixed bandoliers not affecting pulse laser fire rate.
+
+Modding:
+- Fixed some ConversationAction options going outside the bounds of the dialog if there's a very large number of them.
+- Fixed inability to use %ModDir% in LevelGenerationParams.ForceBeaconStation.
+- Fixed status effects configured to spawn an item in ContainedInventory not spawning the item if it can't go inside the first item in the contained inventory.
+
+-------------------------------------------------------------------------------------------------------------------------------------------------
+v1.1.19.3
+-------------------------------------------------------------------------------------------------------------------------------------------------
+
+- Fixed shrapnel from flak cannon ammo always launching upwards.
+- Fixed wall damage shrapnel going through walls and being a little excessive overall.
+- Fixes to pressure distribution logic: fixes pressure sometimes being lethal in breached rooms that weren't full of water.
+- Fixed clients not regaining control of their braindead character after rejoining if the character's taken any amount of damage while braindead. 
+- Fixes to inconsistent stack sizes (e.g. certain ammo types stacking up to 12 in character inventories, but only 8 holdable/wearable items like backpacks and toolbelts.
+- Fixed console errors when switching subs with circuit boxes on board.
+- Fixed items that are inside a container that doesn't get transferred getting duplicated during item transfer when switching subs.
+- Fixed bots not cleaning up circuit boxes from the floor.
+- Fixed stack size being displayed incorrectly in the tooltip when dragging a stack of items to an already-occupied slot.
+- Fixed nav terminal's docking button not working if the signal is routed from the terminal to the docking port through a circuit box.
+- Fixed double-clicking a component while a circuit box is equipped making the component vanish inside the circuit box.
+- Fixed chat messages sent when accusing someone as a traitor not triggering the spam filter.
+- Fixed connection names not being translated in circuit boxes (always showed up in English).
+- Fixed right-side crew panel overlapping with the mission panel in the PvP mode round summary.
+- Fixed depleted and fulgurium fuel rods stacking up to 32 (should be 8 like all other fuel rods).
+
+Modding:
+- Added "UseHumanAI" property to characters (can be used to enable the human AI on characters other than humans). While using the human AI on non-humans isn't a fully supported or tested feature, it was previously possible to do that by creating a human prefab using a different species than human, but that no longer worked as of the Treacherous Tides update.
+- Attachable holdable items don't count as "HoldableOrWearableInventories". Fixes e.g. tanks only stacking up to 1 in things like movable cabinets and shelves. Does not affect any vanilla content.
+- Fixed fabricator reducing the condition of all the available ingredients if the crafting recipe reduces condition instead of consuming the whole item.
+- Fixed TagAction continuing in some situations when it can't find targets, even if it's been configured not to with the "ContinueIfNoTargetsFound" attribute. 
+
+-------------------------------------------------------------------------------------------------------------------------------------------------
 v1.1.18.1
 -------------------------------------------------------------------------------------------------------------------------------------------------
 

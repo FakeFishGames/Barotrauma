@@ -17,7 +17,7 @@ namespace Barotrauma.Abilities
                 conditionElement.GetAttributeStringArray("targettypes", 
                 conditionElement.GetAttributeStringArray("targettype", Array.Empty<string>())));
 
-            foreach (XElement subElement in conditionElement.Elements())
+            foreach (ContentXElement subElement in conditionElement.Elements())
             {
                 if (subElement.NameAsIdentifier() == "conditional")
                 {
@@ -27,7 +27,8 @@ namespace Barotrauma.Abilities
 
             if (!targetTypes.Any() && !conditionals.Any())
             {
-                DebugConsole.ThrowError($"Error in talent \"{characterTalent}\". No target types or conditionals defined - the condition will match any character.");
+                DebugConsole.ThrowError($"Error in talent \"{characterTalent}\". No target types or conditionals defined - the condition will match any character.",
+                    contentPackage: conditionElement.ContentPackage);
             }
         }
 

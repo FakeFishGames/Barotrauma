@@ -120,7 +120,7 @@ namespace Barotrauma
             foreach (var characterElement in element.Elements())
             {
                 if (!characterElement.Name.ToString().Equals("character", StringComparison.OrdinalIgnoreCase)) { continue; }
-                CharacterInfo characterInfo = new CharacterInfo(characterElement);
+                CharacterInfo characterInfo = new CharacterInfo(new ContentXElement(contentPackage: null, characterElement));
 #if CLIENT
                 if (characterElement.GetAttributeBool("lastcontrolled", false)) { characterInfo.LastControlled = true; }
                 characterInfo.CrewListIndex = characterElement.GetAttributeInt("crewlistindex", -1);

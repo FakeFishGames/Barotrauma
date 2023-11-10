@@ -121,6 +121,16 @@ namespace Barotrauma
         {
             return AllowedToManageCampaign(ClientPermissions.ManageMoney);
         }
+
+        public static bool AllowImmediateItemDelivery()
+        {
+            if (GameMain.Client == null) { return true; }
+            return 
+                GameMain.Client.ServerSettings.AllowImmediateItemDelivery ||
+                GameMain.Client.HasPermission(ClientPermissions.ManageCampaign) ||
+                GameMain.Client.IsServerOwner;
+        }
+
         protected GUIButton CreateEndRoundButton()
         {
             int buttonWidth = (int)(450 * GUI.xScale * (GUI.IsUltrawide ? 3.0f : 1.0f));

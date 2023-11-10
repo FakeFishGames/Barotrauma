@@ -266,7 +266,8 @@ namespace Barotrauma
                 }
                 else
                 {
-                    DebugConsole.ThrowError($"[AnimationParams] Failed to load an animation {a} at {selectedFile} of type {animType} for the character {speciesName}");
+                    DebugConsole.ThrowError($"[AnimationParams] Failed to load an animation {a} at {selectedFile} of type {animType} for the character {speciesName}",
+                        contentPackage: characterPrefab.ContentPackage);
                 }
                 return a;
             }

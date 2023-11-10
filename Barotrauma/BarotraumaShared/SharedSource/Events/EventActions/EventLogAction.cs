@@ -24,7 +24,8 @@ namespace Barotrauma
         {
             if (Id == Identifier.Empty)
             {
-                DebugConsole.ThrowError($"Error in event \"{parentEvent.Prefab.Identifier}\". {nameof(EventLogAction)} with no id.");
+                DebugConsole.ThrowError($"Error in event \"{parentEvent.Prefab.Identifier}\". {nameof(EventLogAction)} with no id.",
+                    contentPackage: element.ContentPackage);
             }
             //append the target tag so logs targeted to different players don't interfere with each other even if they use the same Id
             Id = (Id.ToString() + TargetTag).ToIdentifier();
@@ -42,7 +43,8 @@ namespace Barotrauma
             {
                 if (Text.IsNullOrEmpty())
                 {
-                    DebugConsole.ThrowError($"Error in event \"{parentEvent.Prefab.Identifier}\". {nameof(EventLogAction)} with no text set ({element}).");
+                    DebugConsole.ThrowError($"Error in event \"{parentEvent.Prefab.Identifier}\". {nameof(EventLogAction)} with no text set ({element}).",
+                        contentPackage: element.ContentPackage);
                 }
                 else
                 {

@@ -277,12 +277,21 @@ namespace Barotrauma
             Rectangle drawRect =
                 Submarine == null ? rect : new Rectangle((int)(Submarine.DrawPosition.X + rect.X), (int)(Submarine.DrawPosition.Y + rect.Y), rect.Width, rect.Height);
 
-            if ((IsSelected || IsHighlighted) && editing)
+            if (editing)
             {
+                if (IsSelected || IsHighlighted)
+                {
+                    GUI.DrawRectangle(spriteBatch,
+                        new Vector2(drawRect.X, -drawRect.Y),
+                        new Vector2(rect.Width, rect.Height),
+                        (IsHighlighted ? Color.LightBlue * 0.8f : GUIStyle.Red * 0.5f) * alpha, false, 0, (int)Math.Max(5.0f / Screen.Selected.Cam.Zoom, 1.0f));
+                }
+
+                float waterHeight = WaterVolume / rect.Width;
                 GUI.DrawRectangle(spriteBatch,
-                    new Vector2(drawRect.X, -drawRect.Y),
-                    new Vector2(rect.Width, rect.Height),
-                    (IsHighlighted ? Color.LightBlue * 0.8f : GUIStyle.Red * 0.5f) * alpha, false, 0, (int)Math.Max(5.0f / Screen.Selected.Cam.Zoom, 1.0f));
+                    new Vector2(drawRect.X, -drawRect.Y + drawRect.Height - waterHeight),
+                    new Vector2(drawRect.Width, waterHeight),
+                    Color.Blue * 0.25f, isFilled: true);
             }
 
             GUI.DrawRectangle(spriteBatch,
@@ -300,13 +309,27 @@ namespace Barotrauma
                     " - Oxygen: " + ((int)OxygenPercentage), new Vector2(drawRect.X + 5, -drawRect.Y + 5), Color.White);
                 GUIStyle.SmallFont.DrawString(spriteBatch, waterVolume + " / " + Volume, new Vector2(drawRect.X + 5, -drawRect.Y + 20), Color.White);
 
-                GUI.DrawRectangle(spriteBatch, new Rectangle(drawRect.Center.X, -drawRect.Y + drawRect.Height / 2, 10, (int)(100 * Math.Min(waterVolume / Volume, 1.0f))), Color.Cyan, true);
-                if (WaterVolume > Volume)
+                if (WaterVolume > 0)
                 {
-                    float maxExcessWater = Volume * MaxCompress;
-                    GUI.DrawRectangle(spriteBatch, new Rectangle(drawRect.Center.X, -drawRect.Y + drawRect.Height / 2, 10, (int)(100 * (waterVolume - Volume) / maxExcessWater)), GUIStyle.Red, true);
+                    drawProgressBar(50, new Point(0, 0), Math.Min(waterVolume / Volume, 1.0f), Color.Cyan);
+                    if (WaterVolume > Volume)
+                    {
+                        float maxExcessWater = Volume * MaxCompress;
+                        drawProgressBar(50, new Point(0, 0), (waterVolume - Volume) / maxExcessWater, GUIStyle.Red);
+                    }
                 }
-                GUI.DrawRectangle(spriteBatch, new Rectangle(drawRect.Center.X, -drawRect.Y + drawRect.Height / 2, 10, 100), Color.Black);
+                if (lethalPressure > 0)
+                {
+                    drawProgressBar(50, new Point(20, 0), lethalPressure / 100.0f, Color.Red);
+                }
+
+                void drawProgressBar(int height, Point offset, float fillAmount, Color color)
+                { 
+                    GUI.DrawRectangle(spriteBatch, new Rectangle(drawRect.Center.X - 2 + offset.X, -drawRect.Y - 2 + drawRect.Height / 2 + offset.Y, 14, height+4), Color.Black * 0.8f, depth: 0.01f, isFilled: true);
+               
+                    int barHeight = (int)(fillAmount * height);
+                    GUI.DrawRectangle(spriteBatch, new Rectangle(drawRect.Center.X + offset.X, -drawRect.Y + drawRect.Height / 2 + height - barHeight + offset.Y, 10, barHeight), color, isFilled: true);
+                }
 
                 foreach (FireSource fs in FireSources)
                 {
@@ -732,7 +755,7 @@ namespace Barotrauma
 
                 var newFire = i < FireSources.Count ?
                     FireSources[i] :
-                    new FireSource(Submarine == null ? pos : pos + Submarine.Position, null, true);
+                    new FireSource(Submarine == null ? pos : pos + Submarine.Position, sourceCharacter: null, isNetworkMessage: true);
                 newFire.Position = pos;
                 newFire.Size = new Vector2(size, newFire.Size.Y);
 

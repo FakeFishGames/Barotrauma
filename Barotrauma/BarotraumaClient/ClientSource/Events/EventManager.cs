@@ -47,7 +47,7 @@ namespace Barotrauma
             }
 
             float theoreticalMaxMonsterStrength = 10000;
-            float relativeMaxMonsterStrength = theoreticalMaxMonsterStrength * (GameMain.GameSession?.LevelData?.Difficulty ?? 0f) / 100;
+            float relativeMaxMonsterStrength = theoreticalMaxMonsterStrength * (GameMain.GameSession?.Level?.Difficulty ?? 0f) / 100;
             float absoluteMonsterStrength = monsterStrength / theoreticalMaxMonsterStrength;
             float relativeMonsterStrength = monsterStrength / relativeMaxMonsterStrength;
 

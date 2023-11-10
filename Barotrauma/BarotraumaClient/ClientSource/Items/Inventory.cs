@@ -258,7 +258,7 @@ namespace Barotrauma
                 else
                 {
                     LocalizedString description = item.Description;
-                    if (item.HasTag(Tags.IdCard) || item.HasTag(Tags.DespawnContainer))
+                    if (item.HasTag(Tags.IdCardTag) || item.HasTag(Tags.DespawnContainer))
                     {
                         string[] readTags = item.Tags.Split(',');
                         string idName = null;
@@ -1505,14 +1505,28 @@ namespace Barotrauma
                         int stackAmount = DraggingItems.Count;
                         if (selectedSlot?.ParentInventory != null)
                         {
-                            stackAmount = Math.Min(
-                                stackAmount,
-                                selectedSlot.ParentInventory.HowManyCanBePut(draggedItem.Prefab, selectedSlot.SlotIndex, draggedItem.Condition));
+                            if (selectedSlot.Item?.OwnInventory != null)
+                            {
+                                int maxAmountPerSlot = 0;
+                                for (int i = 0; i < SelectedSlot.Item.OwnInventory.Capacity; i++)
+                                {
+                                    maxAmountPerSlot = Math.Max(
+                                        maxAmountPerSlot,
+                                        selectedSlot.Item.OwnInventory.HowManyCanBePut(draggedItem.Prefab, i, draggedItem.Condition, ignoreItemsInSlot: true));
+                                }
+                                stackAmount = Math.Min(stackAmount, maxAmountPerSlot);
+                            }
+                            else
+                            {
+                                stackAmount = Math.Min(
+                                    stackAmount,
+                                    selectedSlot.ParentInventory.HowManyCanBePut(draggedItem.Prefab, selectedSlot.SlotIndex, draggedItem.Condition, ignoreItemsInSlot: true));
+                            }
                         }
                         Vector2 stackCountPos = itemPos + Vector2.One * iconSize * 0.25f;
                         string stackCountText = "x" + stackAmount;
                         GUIStyle.SmallFont.DrawString(spriteBatch, stackCountText, stackCountPos + Vector2.One, Color.Black);
-                        GUIStyle.SmallFont.DrawString(spriteBatch, stackCountText, stackCountPos, GUIStyle.TextColorBright);
+                        GUIStyle.SmallFont.DrawString(spriteBatch, stackCountText, stackCountPos, GUIStyle.TextColorBright);                        
                     }
                 }
             }
@@ -1908,6 +1922,15 @@ namespace Barotrauma
                 foreach (UInt16 id in receivedItemIDs[i])
                 {
                     if (Entity.FindEntityByID(id) is not Item item || slots[i].Contains(item)) { continue; }
+
+                    if (Owner is Item thisItem && thisItem.Container == item)
+                    {
+                        //if this item is inside the item we're trying to contain inside it, we need to drop it (both items can't be inside each other!)
+                        //can happen when a player swaps the items to be "the other way around", and we receive a message about the contained item
+                        //before the message about the "parent item" being placed in some other inventory (like the player's inventory)
+                        thisItem.Drop(null);
+                    }
+
                     if (!TryPutItem(item, i, false, false, null, false))
                     {
                         ForceToSlot(item, i);

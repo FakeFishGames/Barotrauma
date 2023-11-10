@@ -28,7 +28,8 @@
             statIdentifier = abilityElement.GetAttributeIdentifier("statidentifier", Identifier.Empty);
             if (statIdentifier.IsEmpty)
             {
-                DebugConsole.ThrowError($"Error in talent \"{CharacterTalent.DebugIdentifier}\" - stat identifier not defined.");
+                DebugConsole.ThrowError($"Error in talent \"{CharacterTalent.DebugIdentifier}\" - stat identifier not defined.",
+                    contentPackage: abilityElement.ContentPackage);
             }
             string statTypeName = abilityElement.GetAttributeString("stattype", string.Empty);
             statType = string.IsNullOrEmpty(statTypeName) ? StatTypes.None : CharacterAbilityGroup.ParseStatType(statTypeName, CharacterTalent.DebugIdentifier);

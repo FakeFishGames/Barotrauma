@@ -347,7 +347,8 @@ namespace Barotrauma
             var eventPrefab = EventSet.GetAllEventPrefabs().Find(p => p.Identifier == trigger.EventIdentifier);
             if (eventPrefab == null)
             {
-                DebugConsole.ThrowError($"Mission \"{Name}\" failed to trigger an event (couldn't find an event with the identifier \"{trigger.EventIdentifier}\").");
+                DebugConsole.ThrowError($"Mission \"{Name}\" failed to trigger an event (couldn't find an event with the identifier \"{trigger.EventIdentifier}\").",
+                    contentPackage: Prefab.ContentPackage);
                 return;
             }
             if (GameMain.GameSession?.EventManager != null)
@@ -378,7 +379,7 @@ namespace Barotrauma
                 catch (Exception e)
                 {
                     string errorMsg = "Unknown error while giving mission rewards.";
-                    DebugConsole.ThrowError(errorMsg, e);
+                    DebugConsole.ThrowError(errorMsg, e, contentPackage: Prefab.ContentPackage);
                     GameAnalyticsManager.AddErrorEventOnce("Mission.End:GiveReward", GameAnalyticsManager.ErrorSeverity.Error, errorMsg + "\n" + e.StackTrace);
 #if SERVER
                     GameMain.Server?.SendChatMessage(errorMsg + "\n" + e.StackTrace, Networking.ChatMessageType.Error);
@@ -547,7 +548,8 @@ namespace Barotrauma
         {
             if (element.Attribute("name") != null)
             {
-                DebugConsole.ThrowError("Error in mission \"" + Name + "\" - use character identifiers instead of names to configure the characters.");
+                DebugConsole.ThrowError($"Error in mission \"{Name}\" - use character identifiers instead of names to configure the characters.",
+                    contentPackage: Prefab.ContentPackage);
                 return null;
             }
 
@@ -556,7 +558,8 @@ namespace Barotrauma
             HumanPrefab humanPrefab = NPCSet.Get(characterFrom, characterIdentifier);
             if (humanPrefab == null)
             {
-                DebugConsole.ThrowError($"Couldn't spawn character for mission: character prefab \"{characterIdentifier}\" not found in the NPC set \"{characterFrom}\".");
+                DebugConsole.ThrowError($"Couldn't spawn character for mission: character prefab \"{characterIdentifier}\" not found in the NPC set \"{characterFrom}\".",
+                    contentPackage: Prefab.ContentPackage);
                 return null;
             }
 
@@ -587,12 +590,14 @@ namespace Barotrauma
             ItemPrefab itemPrefab;
             if (element.Attribute("name") != null)
             {
-                DebugConsole.ThrowError($"Error in mission \"{Name}\" - use item identifiers instead of names to configure the items");
+                DebugConsole.ThrowError($"Error in mission \"{Name}\" - use item identifiers instead of names to configure the items", 
+                    contentPackage: Prefab.ContentPackage);
                 string itemName = element.GetAttributeString("name", "");
                 itemPrefab = MapEntityPrefab.Find(itemName) as ItemPrefab;
                 if (itemPrefab == null)
                 {
-                    DebugConsole.ThrowError($"Couldn't spawn item for mission \"{Name}\": item prefab \"{itemName}\" not found");
+                    DebugConsole.ThrowError($"Couldn't spawn item for mission \"{Name}\": item prefab \"{itemName}\" not found", 
+                        contentPackage: Prefab.ContentPackage);
                 }
             }
             else
@@ -601,7 +606,8 @@ namespace Barotrauma
                 itemPrefab = MapEntityPrefab.Find(null, itemIdentifier) as ItemPrefab;
                 if (itemPrefab == null)
                 {
-                    DebugConsole.ThrowError($"Couldn't spawn item for mission \"{Name}\": item prefab \"{itemIdentifier}\" not found");
+                    DebugConsole.ThrowError($"Couldn't spawn item for mission \"{Name}\": item prefab \"{itemIdentifier}\" not found",
+                        contentPackage: Prefab.ContentPackage);
                 }
             }
             return itemPrefab;
@@ -614,14 +620,16 @@ namespace Barotrauma
             WayPoint cargoSpawnPos = WayPoint.GetRandom(SpawnType.Cargo, null, Submarine.MainSub, useSyncedRand: true);
             if (cargoSpawnPos == null)
             {
-                DebugConsole.ThrowError($"Couldn't spawn items for mission \"{Name}\": no waypoints marked as Cargo were found");
+                DebugConsole.ThrowError($"Couldn't spawn items for mission \"{Name}\": no waypoints marked as Cargo were found",
+                    contentPackage: Prefab.ContentPackage);
                 return null;
             }
 
             var cargoRoom = cargoSpawnPos.CurrentHull;
             if (cargoRoom == null)
             {
-                DebugConsole.ThrowError($"Couldn't spawn items for mission \"{Name}\": waypoints marked as Cargo must be placed inside a room");
+                DebugConsole.ThrowError($"Couldn't spawn items for mission \"{Name}\": waypoints marked as Cargo must be placed inside a room",
+                    contentPackage: Prefab.ContentPackage);
                 return null;
             }
 

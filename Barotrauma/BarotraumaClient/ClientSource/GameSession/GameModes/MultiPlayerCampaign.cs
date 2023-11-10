@@ -535,7 +535,7 @@ namespace Barotrauma
 
             bool refreshCampaignUI = false;
 
-            if (!(GameMain.GameSession?.GameMode is MultiPlayerCampaign campaign) || campaignID != campaign.CampaignID)
+            if (GameMain.GameSession?.GameMode is not MultiPlayerCampaign campaign || campaignID != campaign.CampaignID)
             {
                 string savePath = SaveUtil.CreateSavePath(SaveUtil.SaveType.Multiplayer);
 

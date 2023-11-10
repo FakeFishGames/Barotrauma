@@ -261,6 +261,9 @@ namespace Barotrauma
                 {
                     crashHeader += " " + exception.TargetSite.ToString();
                 }
+                //log the message separately, so the same error messages get grouped as the same error in GA
+                //(the full crash report tends to always have some differences between clients, so they get displayed separately)
+                GameAnalyticsManager.AddErrorEvent(GameAnalyticsManager.ErrorSeverity.Critical, crashHeader);
                 GameAnalyticsManager.AddErrorEvent(GameAnalyticsManager.ErrorSeverity.Critical, crashHeader + "\n\n" + sb.ToString());
                 GameAnalyticsManager.ShutDown();
             }

@@ -655,7 +655,7 @@ namespace Barotrauma
                 ScrollBarVisible = true,
                 OnSelected = (btn, obj) =>
                 {
-                    if (!(obj is ServerInfo serverInfo)) { return false; }
+                    if (obj is not ServerInfo serverInfo) { return false; }
 
                     joinButton.Enabled = true;
                     selectedServer = Option<ServerInfo>.Some(serverInfo);

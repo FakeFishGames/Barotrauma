@@ -806,7 +806,7 @@ namespace Barotrauma
                 UInt16 itemToRemoveID = msg.ReadUInt16();
                 Identifier itemToInstallIdentifier = msg.ReadIdentifier();
                 ItemPrefab itemToInstall = itemToInstallIdentifier.IsEmpty ? null : ItemPrefab.Find(string.Empty, itemToInstallIdentifier);
-                if (!(Entity.FindEntityByID(itemToRemoveID) is Item itemToRemove)) { continue; }
+                if (Entity.FindEntityByID(itemToRemoveID) is not Item itemToRemove) { continue; }
                 purchasedItemSwaps.Add(new PurchasedItemSwap(itemToRemove, itemToInstall));
             }
 
@@ -894,7 +894,7 @@ namespace Barotrauma
                     int availableQuantity = map.CurrentLocation.Stores[store.Key].Stock.Find(s => s.ItemPrefab == item.ItemPrefab)?.Quantity ?? 0;
                     int alreadyPurchasedQuantity = 
                         CargoManager.GetBuyCrateItem(store.Key, item.ItemPrefab)?.Quantity ?? 0 +
-                        CargoManager.GetPurchasedItem(store.Key, item.ItemPrefab)?.Quantity ?? 0;
+                        CargoManager.GetPurchasedItemCount(store.Key, item.ItemPrefab);
                     item.Quantity = MathHelper.Clamp(item.Quantity, 0, availableQuantity - alreadyPurchasedQuantity);
                     CargoManager.ModifyItemQuantityInBuyCrate(store.Key, item.ItemPrefab, item.Quantity, sender);
                 }
@@ -905,9 +905,41 @@ namespace Barotrauma
             {
                 prevPurchasedItems.Add(kvp.Key, new List<PurchasedItem>(kvp.Value));
             }
-            foreach (var kvp in prevPurchasedItems)
+
+            foreach (var storeId in purchasedItems.Keys)
             {
-                CargoManager.SellBackPurchasedItems(kvp.Key, kvp.Value, sender);
+                DebugConsole.Log($"Purchased items ({storeId}):\n");
+                if (prevPurchasedItems.TryGetValue(storeId, out var alreadyPurchased))
+                {
+                    var delivered = alreadyPurchased.Where(it => it.Delivered);
+                    var notDelivered = alreadyPurchased.Where(it => !it.Delivered);
+                    if (delivered.Any())
+                    {
+                        DebugConsole.Log($"  Already delivered:\n" + string.Concat(delivered.Select(it => $"    - {it.ItemPrefab.Name} (x{it.Quantity})")));
+                    }
+                    if (notDelivered.Any())
+                    {
+                        DebugConsole.Log($"  Already purchased:\n" + string.Concat(notDelivered.Where(it => !it.Delivered).Select(it => $"    - {it.ItemPrefab.Name} (x{it.Quantity})")));
+                    }
+                }
+                DebugConsole.Log($"  New purchases:");
+                foreach (var purchasedItem in purchasedItems[storeId])
+                {
+                    if (purchasedItem.Delivered) { continue; }
+                    int quantity = purchasedItem.Quantity;
+                    if (alreadyPurchased != null)
+                    {
+                        quantity -= alreadyPurchased.Where(it => it.DeliverImmediately == purchasedItem.DeliverImmediately && it.ItemPrefab == purchasedItem.ItemPrefab).Sum(it => it.Quantity);
+                    }
+                    if (quantity > 0)
+                    {
+                        DebugConsole.Log($"    - {purchasedItem.ItemPrefab.Name} (x{quantity})");
+                    }
+                }
+            }
+            foreach (var storeId in soldItems.Keys)
+            {
+                DebugConsole.Log($"Sold items:\n" + string.Concat(soldItems[storeId].Select(it => $" - {it.ItemPrefab.Name}")));
             }
 
             foreach (var kvp in purchasedItems)
@@ -916,17 +948,23 @@ namespace Barotrauma
                 var purchasedItemList = kvp.Value;
                 foreach (var purchasedItem in purchasedItemList)
                 {
+                    int desiredQuantity = purchasedItem.Quantity;
+                    if (prevPurchasedItems.TryGetValue(storeId, out var alreadyPurchasedList) &&
+                        alreadyPurchasedList.FirstOrDefault(p => p.ItemPrefab == purchasedItem.ItemPrefab) is { } alreadyPurchased)
+                    {
+                        desiredQuantity -= alreadyPurchased.Quantity;
+                    }
                     int availableQuantity = map.CurrentLocation.Stores[storeId].Stock.Find(s => s.ItemPrefab == purchasedItem.ItemPrefab)?.Quantity ?? 0;
-                    purchasedItem.Quantity = Math.Min(purchasedItem.Quantity, availableQuantity);
-                }                
-                CargoManager.PurchaseItems(storeId, purchasedItemList, false, sender);
+                    purchasedItem.Quantity = Math.Min(desiredQuantity, availableQuantity);
+                }
+                CargoManager.PurchaseItems(storeId, purchasedItemList, removeFromCrate: false, client: sender);
             }
 
             foreach (var (storeIdentifier, items) in CargoManager.PurchasedItems)
             {
                 if (!prevPurchasedItems.ContainsKey(storeIdentifier))
                 {
-                    CargoManager.OnNewItemsPurchased(storeIdentifier, items, sender);
+                    CargoManager.LogNewItemPurchases(storeIdentifier, items, sender);
                     continue;
                 }
 
@@ -941,7 +979,6 @@ namespace Barotrauma
                         newItems.Add(item);
                         continue;
                     }
-
                     if (matching.Quantity < item.Quantity)
                     {
                         newItems.Add(new PurchasedItem(item.ItemPrefab, item.Quantity - matching.Quantity, sender));
@@ -950,7 +987,7 @@ namespace Barotrauma
 
                 if (newItems.Any())
                 {
-                    CargoManager.OnNewItemsPurchased(storeIdentifier, newItems, sender);
+                    CargoManager.LogNewItemPurchases(storeIdentifier, newItems, sender);
                 }
             }
 
@@ -1015,7 +1052,7 @@ namespace Barotrauma
                 UpgradeManager.PurchaseUpgrade(prefab, category, client: sender);
 
                 // unstable logging
-                int price = prefab.Price.GetBuyPrice(UpgradeManager.GetUpgradeLevel(prefab, category), Map?.CurrentLocation, characterList);
+                int price = prefab.Price.GetBuyPrice(prefab, UpgradeManager.GetUpgradeLevel(prefab, category), Map?.CurrentLocation, characterList);
                 int level = UpgradeManager.GetUpgradeLevel(prefab, category);
                 GameServer.Log($"SERVER: Purchased level {level} {category.Identifier}.{prefab.Identifier} for {price}", ServerLog.MessageType.ServerMessage);
             }

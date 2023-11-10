@@ -218,7 +218,7 @@ namespace Barotrauma.Networking
                 msg.WriteUInt16((UInt16)PermittedConsoleCommands.Count);
                 foreach (DebugConsole.Command command in PermittedConsoleCommands)
                 {
-                    msg.WriteString(command.names[0]);
+                    msg.WriteIdentifier(command.Names[0]);
                 }
             }
         }
@@ -240,8 +240,8 @@ namespace Barotrauma.Networking
                 UInt16 commandCount = inc.ReadUInt16();
                 for (int i = 0; i < commandCount; i++)
                 {
-                    string commandName = inc.ReadString();
-                    var consoleCommand = DebugConsole.Commands.Find(c => c.names.Contains(commandName));
+                    Identifier commandName = inc.ReadIdentifier();
+                    var consoleCommand = DebugConsole.Commands.Find(c => c.Names.Contains(commandName));
                     if (consoleCommand != null)
                     {
                         permittedCommands.Add(consoleCommand);

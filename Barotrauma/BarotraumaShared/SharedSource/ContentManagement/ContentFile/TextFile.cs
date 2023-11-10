@@ -4,6 +4,7 @@ using System.Xml.Linq;
 
 namespace Barotrauma
 {
+    [NotSyncedInMultiplayer]
     public sealed class TextFile : ContentFile
     {
         public TextFile(ContentPackage contentPackage, ContentPath path) : base(contentPackage, path) { }
@@ -37,6 +38,13 @@ namespace Barotrauma
                 if (newHashSet.Count != 0) { TextManager.TextPacks.TryAdd(kvp.Key, newHashSet); }
             }
             TextManager.IncrementLanguageVersion();
+            if (!TextManager.TextPacks.ContainsKey(GameSettings.CurrentConfig.Language))
+            {
+                DebugConsole.AddWarning($"The language {GameSettings.CurrentConfig.Language} is no longer available. Switching to {TextManager.DefaultLanguage}...");
+                var config = GameSettings.CurrentConfig;
+                config.Language = TextManager.DefaultLanguage;
+                GameSettings.SetCurrentConfig(config);
+            }
         }
 
         public override void Sort()

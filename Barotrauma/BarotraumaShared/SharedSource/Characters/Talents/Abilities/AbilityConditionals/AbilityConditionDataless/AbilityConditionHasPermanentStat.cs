@@ -12,7 +12,8 @@
             statIdentifier = conditionElement.GetAttributeIdentifier("statidentifier", Identifier.Empty);
             if (statIdentifier.IsEmpty)
             {
-                DebugConsole.ThrowError($"No stat identifier defined for {this} in talent {characterTalent.DebugIdentifier}!");
+                DebugConsole.ThrowError($"No stat identifier defined for {this} in talent {characterTalent.DebugIdentifier}!",
+                    contentPackage: conditionElement.ContentPackage);
             }
             string statTypeName = conditionElement.GetAttributeString("stattype", string.Empty);
             statType = string.IsNullOrEmpty(statTypeName) ? StatTypes.None : CharacterAbilityGroup.ParseStatType(statTypeName, characterTalent.DebugIdentifier);

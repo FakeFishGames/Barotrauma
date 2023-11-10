@@ -76,6 +76,8 @@ namespace Barotrauma
         private GUITextBlock tutorialHeader, tutorialDescription;
         private GUIListBox tutorialList;
 
+        private GUIComponent versionMismatchWarning;
+
         #region Creation
         public MainMenuScreen(GameMain game)
         {
@@ -103,6 +105,28 @@ namespace Barotrauma
                             "Reading received remote main menu content failed. " + e.Message);
                     }
                 }
+            };
+
+            versionMismatchWarning = new GUIFrame(new RectTransform(new Vector2(0.7f, 0.065f), Frame.RectTransform) { AbsoluteOffset = new Point(GUI.IntScale(15)) }, style: "InnerFrame", color: GUIStyle.Red)
+            {
+                IgnoreLayoutGroups = true,
+                Visible = false
+            };
+            var versionMismatchContent = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.9f), versionMismatchWarning.RectTransform, Anchor.Center), isHorizontal: true)
+            {
+                RelativeSpacing = 0.05f,
+            };
+            new GUIImage(new RectTransform(new Vector2(1.0f), versionMismatchContent.RectTransform, scaleBasis: ScaleBasis.Smallest), style: "GUINotificationButton")
+            {
+                Color = GUIStyle.Orange
+            };
+            new GUITextBlock(new RectTransform(new Vector2(0.85f, 1.0f), versionMismatchContent.RectTransform),
+                TextManager.GetWithVariables("versionmismatchwarning",
+                    ("[gameversion]", GameMain.Version.ToString()),
+                    ("[contentversion]", ContentPackageManager.VanillaCorePackage.GameVersion.ToString())),
+                wrap: true)
+            {
+                TextColor = GUIStyle.Orange
             };
 
             new GUIImage(new RectTransform(new Vector2(0.4f, 0.25f), Frame.RectTransform, Anchor.BottomRight)
@@ -587,7 +611,9 @@ namespace Barotrauma
 
             GameMain.SubEditorScreen?.ClearBackedUpSubInfo();
             Submarine.Unload();
-            
+
+            versionMismatchWarning.Visible = GameMain.Version < ContentPackageManager.VanillaCorePackage.GameVersion;
+
             ResetButtonStates(null);
         }
 
@@ -663,7 +689,18 @@ namespace Barotrauma
                             .ToArray();
                     foreach (var newServerExe in newServerExes)
                     {
-                        serverExecutableDropdown.AddItem($"{newServerExe.ContentPackage.Name} - {Path.GetFileNameWithoutExtension(newServerExe.Path.Value)}", userData: newServerExe);
+                        var serverExeEntry = serverExecutableDropdown.AddItem($"{newServerExe.ContentPackage.Name} - {Path.GetFileNameWithoutExtension(newServerExe.Path.Value)}", userData: newServerExe);
+                        if (newServerExe.ContentPackage.GameVersion < GameMain.VanillaContent.GameVersion)
+                        {
+                            serverExeEntry.ToolTip =
+                                TextManager.GetWithVariables("versionmismatchwarning",
+                                    ("[gameversion]", newServerExe.ContentPackage.GameVersion.ToString()),
+                                    ("[contentversion]", GameMain.VanillaContent.GameVersion.ToString()));
+                            if (serverExeEntry is GUITextBlock serverExeText)
+                            {
+                                serverExeText.TextColor = GUIStyle.Red;
+                            }
+                        }
                     }
                     serverExecutableDropdown.ListBox.Content.Children.ForEach(c =>
                     {
@@ -1472,34 +1509,58 @@ namespace Barotrauma
             {
                 OnClicked = (btn, userdata) =>
                 {
-                    string name = serverNameBox.Text;
-                    if (string.IsNullOrEmpty(name))
-                    {
-                        serverNameBox.Flash();
-                        return false;
-                    }
-
-                    if (isPublicBox.Selected && ForbiddenWordFilter.IsForbidden(name, out string forbiddenWord))
-                    {
-                        var msgBox = new GUIMessageBox("", 
-                            TextManager.GetWithVariables("forbiddenservernameverification", ("[forbiddenword]", forbiddenWord), ("[servername]", name)), 
-                            new LocalizedString[] { TextManager.Get("yes"), TextManager.Get("no") });
-                        msgBox.Buttons[0].OnClicked += (_, __) =>
-                        {
-                            TryStartServer();
-                            msgBox.Close();
-                            return true;
-                        };
-                        msgBox.Buttons[1].OnClicked += msgBox.Close;
-                    }
-                    else
-                    {
-                        TryStartServer();
-                    }
-
+                    CheckServerName();
                     return true;
                 }
             };
+
+            void CheckServerName()
+            {
+                string name = serverNameBox.Text;
+                if (string.IsNullOrEmpty(name))
+                {
+                    serverNameBox.Flash();
+                    return;
+                }
+                if (isPublicBox.Selected && ForbiddenWordFilter.IsForbidden(name, out string forbiddenWord))
+                {
+                    var msgBox = new GUIMessageBox("",
+                        TextManager.GetWithVariables("forbiddenservernameverification", ("[forbiddenword]", forbiddenWord), ("[servername]", name)),
+                        new LocalizedString[] { TextManager.Get("yes"), TextManager.Get("no") });
+                    msgBox.Buttons[0].OnClicked += (_, __) =>
+                    {
+                        CheckServerExe();
+                        msgBox.Close();
+                        return true;
+                    };
+                    msgBox.Buttons[1].OnClicked += msgBox.Close;
+                    return;
+                }
+                CheckServerExe();                
+            }
+
+            void CheckServerExe()
+            {
+                if (serverExecutableDropdown?.SelectedData is ServerExecutableFile serverExe &&
+                    serverExe.ContentPackage.GameVersion < GameMain.VanillaContent.GameVersion)
+                {
+                    var msgBox = new GUIMessageBox(string.Empty,
+                        TextManager.GetWithVariables("versionmismatchwarning",
+                            ("[gameversion]", serverExe.ContentPackage.GameVersion.ToString()),
+                            ("[contentversion]", GameMain.VanillaContent.GameVersion.ToString())) + "\n\n"+ 
+                        TextManager.GetWithVariable("versionmismatch.verifylaunch", "[exename]", serverExe.ContentPackage.Name),
+                        new LocalizedString[] { TextManager.Get("yes"), TextManager.Get("no") });
+                    msgBox.Buttons[0].OnClicked += (_, __) =>
+                    {
+                        TryStartServer();
+                        msgBox.Close();
+                        return true;
+                    };
+                    msgBox.Buttons[1].OnClicked += msgBox.Close;
+                    return;
+                }
+                TryStartServer();                
+            }
         }
 
         private void SetServerPlayStyle(PlayStyle playStyle)

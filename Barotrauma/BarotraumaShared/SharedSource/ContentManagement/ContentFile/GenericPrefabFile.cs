@@ -55,7 +55,7 @@ namespace Barotrauma
             }
             else
             {
-                DebugConsole.ThrowError($"GenericPrefabFile: Invalid {GetType().Name} element: {parentElement.Name} in {Path}");
+                DebugConsole.ThrowError($"GenericPrefabFile: Invalid {GetType().Name} element: {parentElement.Name} in {Path}", contentPackage: ContentPackage);
             }
         }
 

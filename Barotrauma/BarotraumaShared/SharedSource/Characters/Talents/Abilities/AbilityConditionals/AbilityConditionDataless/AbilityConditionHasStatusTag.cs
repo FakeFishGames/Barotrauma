@@ -13,7 +13,8 @@ namespace Barotrauma.Abilities
             tag = conditionElement.GetAttributeIdentifier("tag", Identifier.Empty);
             if (tag.IsEmpty)
             {
-                DebugConsole.AddWarning($"Error in talent \"{characterTalent.Prefab.OriginalName}\" - tag not defined in AbilityConditionHasStatusTag.");
+                DebugConsole.AddWarning($"Error in talent \"{characterTalent.Prefab.OriginalName}\" - tag not defined in AbilityConditionHasStatusTag.",
+                    characterTalent.Prefab.ContentPackage);
             }
         }
 

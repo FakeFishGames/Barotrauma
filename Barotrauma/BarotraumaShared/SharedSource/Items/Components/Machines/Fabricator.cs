@@ -101,7 +101,8 @@ namespace Barotrauma.Items.Components
             {
                 if (subElement.Name.ToString().Equals("fabricableitem", StringComparison.OrdinalIgnoreCase))
                 {
-                    DebugConsole.ThrowError("Error in item " + item.Name + "! Fabrication recipes should be defined in the craftable item's xml, not in the fabricator.");
+                    DebugConsole.ThrowError("Error in item " + item.Name + "! Fabrication recipes should be defined in the craftable item's xml, not in the fabricator.",
+                        contentPackage: element.ContentPackage);
                     break;
                 }
             }
@@ -119,12 +120,16 @@ namespace Barotrauma.Items.Components
                         }
                     }
 
+                    //the errors below may be caused by a mod overriding a base item instead of this one, log the package of the base item in that case
+                    var packageToLog = itemPrefab.GetParentModPackageOrThisPackage();                   
+
                     bool recipeInvalid = false;
                     foreach (var requiredItem in recipe.RequiredItems)
                     {
                         if (requiredItem.ItemPrefabs.None())
                         {
-                            DebugConsole.ThrowError($"Error in the fabrication recipe for \"{itemPrefab.Name}\". Could not find the ingredient \"{requiredItem}\".");
+                            DebugConsole.ThrowError($"Error in the fabrication recipe for \"{itemPrefab.Name}\". Could not find the ingredient \"{requiredItem}\".", 
+                                contentPackage: packageToLog);
                             recipeInvalid = true;
                         }
                     }
@@ -132,7 +137,8 @@ namespace Barotrauma.Items.Components
 
                     if (fabricationRecipes.TryGetValue(recipe.RecipeHash, out var duplicateRecipe))
                     {
-                        DebugConsole.ThrowError($"Error in the fabrication recipe for \"{itemPrefab.Name}\". Duplicate recipe in \"{duplicateRecipe.TargetItem.Identifier}\".");
+                        DebugConsole.ThrowError($"Error in the fabrication recipe for \"{itemPrefab.Name}\". Duplicate recipe in \"{duplicateRecipe.TargetItem.Identifier}\".", 
+                            contentPackage: packageToLog);
                         continue;
                     }
                     fabricationRecipes.Add(recipe.RecipeHash, recipe);
@@ -416,7 +422,7 @@ namespace Barotrauma.Items.Components
                             if (requiredItem.UseCondition && suitableIngredient.ConditionPercentage - requiredItem.MinCondition * 100 > 0.0f)
                             {
                                 suitableIngredient.Condition -= suitableIngredient.Prefab.Health * requiredItem.MinCondition;
-                                continue;
+                                break;
                             }
                             if (suitableIngredient.OwnInventory != null)
                             {

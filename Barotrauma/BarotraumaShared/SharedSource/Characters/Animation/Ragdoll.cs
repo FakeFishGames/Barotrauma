@@ -437,7 +437,18 @@ namespace Barotrauma
                     foreach (var huskAppendage in mainElement.GetChildElements("huskappendage"))
                     {
                         if (!inEditor && huskAppendage.GetAttributeBool("onlyfromafflictions", false)) { continue; }
-                        AfflictionHusk.AttachHuskAppendage(character, huskAppendage.GetAttributeIdentifier("affliction", Identifier.Empty), huskAppendage, ragdoll: this);
+
+                        Identifier afflictionIdentifier = huskAppendage.GetAttributeIdentifier("affliction", Identifier.Empty);
+                        if (!AfflictionPrefab.Prefabs.TryGet(afflictionIdentifier, out AfflictionPrefab affliction) ||
+                            affliction is not AfflictionPrefabHusk matchingAffliction)
+                        {
+                            DebugConsole.ThrowError($"Could not find an affliction of type 'huskinfection' that matches the affliction '{afflictionIdentifier}'!",
+                                contentPackage: huskAppendage.ContentPackage);
+                        }
+                        else
+                        {
+                            AfflictionHusk.AttachHuskAppendage(character, matchingAffliction, huskAppendage, ragdoll: this);
+                        }
                     }
                 }
             }

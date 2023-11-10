@@ -362,7 +362,8 @@ namespace Barotrauma.Items.Components
                     case "sprite":
                         if (subElement.GetAttribute("texture") == null)
                         {
-                            DebugConsole.ThrowError("Item \"" + item.Name + "\" doesn't have a texture specified!");
+                            DebugConsole.ThrowError("Item \"" + item.Name + "\" doesn't have a texture specified!",
+                                contentPackage: element.ContentPackage);
                             return;
                         }
 

@@ -14,7 +14,8 @@
 
             if (amount == 0)
             {
-                DebugConsole.ThrowError($"Error in talent {CharacterTalent.DebugIdentifier}, CharacterAbilityGiveMoney - amount of money set to 0.");
+                DebugConsole.ThrowError($"Error in talent {CharacterTalent.DebugIdentifier}, CharacterAbilityGiveMoney - amount of money set to 0.",
+                    contentPackage: abilityElement.ContentPackage);
             }
         }
 

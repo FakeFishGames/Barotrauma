@@ -800,7 +800,10 @@ namespace Barotrauma
                     float damageAmount = contactDot * Body.Mass / limb.character.Mass;
                     limb.character.LastDamageSource = submarine;
                     limb.character.DamageLimb(ConvertUnits.ToDisplayUnits(collision.ImpactPos), limb, 
-                        AfflictionPrefab.ImpactDamage.Instantiate(damageAmount).ToEnumerable(), 0.0f, true, 0.0f);
+                        AfflictionPrefab.ImpactDamage.Instantiate(damageAmount).ToEnumerable(), 
+                        stun: 0.0f, 
+                        playSound: true, 
+                        attackImpulse: Vector2.Zero);
 
                     if (limb.character.IsDead)
                     {

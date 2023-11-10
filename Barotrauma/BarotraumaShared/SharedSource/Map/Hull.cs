@@ -1016,7 +1016,11 @@ namespace Barotrauma
 
             if (waterVolume < Volume)
             {
-                LethalPressure -= PressureDropSpeed * deltaTime;
+                //pressure drop speed is inversely proportionate to water percentage
+                //= pressure drops very fast if the hull is nowhere near full
+                float waterVolumeFactor = Math.Max((100.0f - WaterPercentage) / 10.0f, 1.0f);
+                LethalPressure -=
+                    PressureDropSpeed * waterVolumeFactor * deltaTime;
                 if (WaterVolume <= 0.0f)
                 {
 #if CLIENT

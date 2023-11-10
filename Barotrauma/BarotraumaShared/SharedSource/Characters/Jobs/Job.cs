@@ -47,13 +47,14 @@ namespace Barotrauma
             }
         }
 
-        public Job(XElement element)
+        public Job(ContentXElement element)
         {
             Identifier identifier = element.GetAttributeIdentifier("identifier", "");
             JobPrefab p;
             if (!JobPrefab.Prefabs.ContainsKey(identifier))
             {
-                DebugConsole.ThrowError($"Could not find the job {identifier}. Giving the character a random job.");
+                DebugConsole.ThrowError($"Could not find the job {identifier}. Giving the character a random job.",
+                    contentPackage: element.ContentPackage);
                 p = JobPrefab.Random(Rand.RandSync.Unsynced);
             }
             else

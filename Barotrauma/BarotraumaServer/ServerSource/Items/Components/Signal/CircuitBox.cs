@@ -1,11 +1,11 @@
 #nullable enable
 
+using Barotrauma.Networking;
+using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
-using Barotrauma.Networking;
-using Microsoft.Xna.Framework;
 
 namespace Barotrauma.Items.Components
 {
@@ -138,7 +138,7 @@ namespace Barotrauma.Items.Components
                         return;
                     }
 
-                    bool result = AddComponentInternal(id, prefab, resource.Prefab, data.Position,  it =>
+                    bool result = AddComponentInternal(id, prefab, resource.Prefab, data.Position, c.Character, it =>
                     {
                         CreateServerEvent(new CircuitBoxServerCreateComponentEvent(it.ID, resource.Prefab.UintIdentifier, id, data.Position));
                     });
@@ -304,7 +304,8 @@ namespace Barotrauma.Items.Components
 
         private void ThrowError(string message, Client c)
         {
-            DebugConsole.ThrowError(message);
+            DebugConsole.ThrowError(message,
+                contentPackage: item.Prefab.ContentPackage);
             SendToClient(CircuitBoxOpcode.Error, new CircuitBoxErrorEvent(message), c);
         }
 

@@ -497,7 +497,8 @@ namespace Barotrauma.Items.Components
                 case "guiframe":
                     if (subElement.GetAttribute("rect") != null)
                     {
-                        DebugConsole.ThrowError($"Error in item config \"{item.ConfigFilePath}\" - GUIFrame defined as rect, use RectTransform instead.");
+                        DebugConsole.ThrowError($"Error in item config \"{item.ConfigFilePath}\" - GUIFrame defined as rect, use RectTransform instead.",
+                            contentPackage: subElement.ContentPackage);
                         break;
                     }
                     GuiFrameSource = subElement;
@@ -516,7 +517,8 @@ namespace Barotrauma.Items.Components
                     if (filePath.IsNullOrEmpty())
                     {
                         DebugConsole.ThrowError(
-                            $"Error when instantiating item \"{item.Name}\" - sound with no file path set");
+                            $"Error when instantiating item \"{item.Name}\" - sound with no file path set",
+                            contentPackage: subElement.ContentPackage);
                         break;
                     }
 
@@ -528,7 +530,8 @@ namespace Barotrauma.Items.Components
                     }
                     catch (Exception e)
                     {
-                        DebugConsole.ThrowError($"Invalid sound type \"{typeStr}\" in item \"{item.Prefab.Identifier}\"!", e);
+                        DebugConsole.ThrowError($"Invalid sound type \"{typeStr}\" in item \"{item.Prefab.Identifier}\"!", e,
+                            contentPackage: subElement.ContentPackage);
                         break;
                     }
                     

@@ -98,7 +98,7 @@ namespace Barotrauma
             if (gameSession.Missions.Any(m => m is CombatMission))
             {
                 crewHeader.Text = CombatMission.GetTeamName(CharacterTeamType.Team1);
-                GUIFrame crewFrame2 = new GUIFrame(new RectTransform(new Vector2(0.35f, 0.45f), background.RectTransform, Anchor.TopCenter, minSize: new Point(minWidth, minHeight)));
+                GUIFrame crewFrame2 = new GUIFrame(new RectTransform(crewFrame.RectTransform.RelativeSize, background.RectTransform, Anchor.TopCenter, minSize: new Point(minWidth, minHeight)));
                 rightPanels.Add(crewFrame2);
                 GUIFrame crewFrameInner2 = new GUIFrame(new RectTransform(new Point(crewFrame2.Rect.Width - padding * 2, crewFrame2.Rect.Height - padding * 2), crewFrame2.RectTransform, Anchor.Center), style: "InnerFrame");
                 var crewContent2 = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.95f), crewFrameInner2.RectTransform, Anchor.Center))

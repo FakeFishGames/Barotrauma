@@ -393,6 +393,8 @@ namespace Barotrauma.Items.Components
 
         partial void SelectProjSpecific(Character character)
         {
+            if (character != Character.Controlled) { return; }
+
             var nonItems = itemList.Content.Children.Where(c => c.UserData is not FabricationRecipe).ToList();
             nonItems.ForEach(i => itemList.Content.RemoveChild(i));
 
@@ -784,6 +786,7 @@ namespace Barotrauma.Items.Components
 
         private void HideEmptyItemListCategories()
         {
+            bool visibleElementsChanged = false;
             //go through the elements backwards, and disable the labels ("insufficient skills to fabricate", "recipe required...") if there's no items below them
             bool recipeVisible = false;
             foreach (GUIComponent child in itemList.Content.Children.Reverse())
@@ -792,7 +795,11 @@ namespace Barotrauma.Items.Components
                 {
                     if (child.Enabled)
                     {
-                        child.Visible = recipeVisible;
+                        if (child.Visible != recipeVisible)
+                        {
+                            child.Visible = recipeVisible;
+                            visibleElementsChanged = true;
+                        }
                     }
                     recipeVisible = false;
                 }
@@ -802,8 +809,11 @@ namespace Barotrauma.Items.Components
                 }
             }
 
-            itemList.UpdateScrollBarSize();
-            itemList.BarScroll = 0.0f;
+            if (visibleElementsChanged)
+            {
+                itemList.UpdateScrollBarSize();
+                itemList.BarScroll = 0.0f;
+            }
         }
 
         public bool ClearFilter()

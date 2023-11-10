@@ -54,7 +54,8 @@ namespace Barotrauma
                             }
                             else
                             {
-                                DebugConsole.ThrowError($"Faction with the identifier \"{Identifier}\" was not found.");
+                                DebugConsole.ThrowError($"Faction with the identifier \"{Identifier}\" was not found.",
+                                    contentPackage: ParentEvent.Prefab.ContentPackage);
                             }
 
                             break;
@@ -66,7 +67,8 @@ namespace Barotrauma
                         }
                     default:
                         {
-                            DebugConsole.ThrowError("ReputationAction requires a \"TargetType\" but none were specified.");
+                            DebugConsole.ThrowError("ReputationAction requires a \"TargetType\" but none were specified.",
+                                contentPackage: ParentEvent.Prefab.ContentPackage);
                             break;
                         }
                 }

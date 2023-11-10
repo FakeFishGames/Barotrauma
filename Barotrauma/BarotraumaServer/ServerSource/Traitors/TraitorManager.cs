@@ -224,7 +224,8 @@ namespace Barotrauma
                 var selectedTraitor = SelectRandomTraitor();
                 if (selectedTraitor == null)
                 {
-                    DebugConsole.ThrowError($"Could not find a suitable traitor for the event \"{selectedPrefab.Identifier}\".");
+                    DebugConsole.ThrowError($"Could not find a suitable traitor for the event \"{selectedPrefab.Identifier}\".",
+                        contentPackage: selectedPrefab.ContentPackage);
                     return false;
                 }
                 CreateTraitorEvent(eventManager, selectedPrefab, selectedTraitor);
@@ -263,7 +264,8 @@ namespace Barotrauma
             {
                 DebugConsole.ThrowError(
                     $"Error in traitor event {traitorEvent.Prefab.Identifier}. Not enough players to choose {amountToChoose} secondary traitors."+
-                    $"Make sure the {nameof(traitorEvent.Prefab.MinPlayerCount)} of the event is high enough to support to desired amount of secondary traitors.");
+                    $"Make sure the {nameof(traitorEvent.Prefab.MinPlayerCount)} of the event is high enough to support to desired amount of secondary traitors.",
+                        contentPackage: traitorEvent.Prefab.ContentPackage);
                 amountToChoose = viableTraitors.Count;
             }
 
@@ -352,7 +354,8 @@ namespace Barotrauma
             }
             else
             {
-                DebugConsole.ThrowError($"Failed to create an instance of the traitor event prefab \"{selectedPrefab.Identifier}\"!");
+                DebugConsole.ThrowError($"Failed to create an instance of the traitor event prefab \"{selectedPrefab.Identifier}\"!",
+                    contentPackage: selectedPrefab.ContentPackage);
             }
         }
 
@@ -365,7 +368,8 @@ namespace Barotrauma
             var traitor = SelectRandomTraitor();
             if (traitor == null)
             {
-                DebugConsole.ThrowError($"Could not find a suitable traitor for the event \"{traitorEventPrefab.Identifier}\".");
+                DebugConsole.ThrowError($"Could not find a suitable traitor for the event \"{traitorEventPrefab.Identifier}\".",
+                    contentPackage: traitorEventPrefab.ContentPackage);
                 return;
             }
             CreateTraitorEvent(eventManager, traitorEventPrefab, traitor);

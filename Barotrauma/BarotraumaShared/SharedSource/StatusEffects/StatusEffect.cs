@@ -227,17 +227,17 @@ namespace Barotrauma
 
             public bool InheritEventTags { get; private set; }
 
-            public ItemSpawnInfo(XElement element, string parentDebugName)
+            public ItemSpawnInfo(ContentXElement element, string parentDebugName)
             {
-                if (element.Attribute("name") != null)
+                if (element.GetAttribute("name") != null)
                 {
                     //backwards compatibility
-                    DebugConsole.ThrowError("Error in StatusEffect config (" + element.ToString() + ") - use item identifier instead of the name.");
+                    DebugConsole.ThrowError("Error in StatusEffect config (" + element.ToString() + ") - use item identifier instead of the name.", contentPackage: element.ContentPackage);
                     string itemPrefabName = element.GetAttributeString("name", "");
                     ItemPrefab = ItemPrefab.Prefabs.Find(m => m.NameMatches(itemPrefabName, StringComparison.InvariantCultureIgnoreCase) || m.Tags.Contains(itemPrefabName));
                     if (ItemPrefab == null)
                     {
-                        DebugConsole.ThrowError("Error in StatusEffect \"" + parentDebugName + "\" - item prefab \"" + itemPrefabName + "\" not found.");
+                        DebugConsole.ThrowError("Error in StatusEffect \"" + parentDebugName + "\" - item prefab \"" + itemPrefabName + "\" not found.", contentPackage: element.ContentPackage);
                     }
                 }
                 else
@@ -246,12 +246,12 @@ namespace Barotrauma
                     if (string.IsNullOrEmpty(itemPrefabIdentifier)) itemPrefabIdentifier = element.GetAttributeString("identifiers", "");
                     if (string.IsNullOrEmpty(itemPrefabIdentifier))
                     {
-                        DebugConsole.ThrowError("Invalid item spawn in StatusEffect \"" + parentDebugName + "\" - identifier not found in the element \"" + element.ToString() + "\"");
+                        DebugConsole.ThrowError("Invalid item spawn in StatusEffect \"" + parentDebugName + "\" - identifier not found in the element \"" + element.ToString() + "\".", contentPackage: element.ContentPackage);
                     }
                     ItemPrefab = ItemPrefab.Prefabs.Find(m => m.Identifier == itemPrefabIdentifier);
                     if (ItemPrefab == null)
                     {
-                        DebugConsole.ThrowError("Error in StatusEffect config - item prefab with the identifier \"" + itemPrefabIdentifier + "\" not found.");
+                        DebugConsole.ThrowError("Error in StatusEffect config - item prefab with the identifier \"" + itemPrefabIdentifier + "\" not found.", contentPackage: element.ContentPackage);
                         return;
                     }
                 }
@@ -332,7 +332,7 @@ namespace Barotrauma
             /// </summary>
             public readonly bool TriggerTalents;
 
-            public GiveSkill(XElement element, string parentDebugName)
+            public GiveSkill(ContentXElement element, string parentDebugName)
             {
                 SkillIdentifier = element.GetAttributeIdentifier(nameof(SkillIdentifier), Identifier.Empty);
                 Amount = element.GetAttributeFloat(nameof(Amount), 0);
@@ -340,7 +340,7 @@ namespace Barotrauma
 
                 if (SkillIdentifier == Identifier.Empty)
                 {
-                    DebugConsole.ThrowError($"GiveSkill StatusEffect did not have a skill identifier defined in {parentDebugName}!");
+                    DebugConsole.ThrowError($"GiveSkill StatusEffect did not have a skill identifier defined in {parentDebugName}!", contentPackage: element.ContentPackage);
                 }
             }
         }
@@ -410,12 +410,12 @@ namespace Barotrauma
             [Serialize(false, IsPropertySaveable.No)]
             public bool InheritEventTags { get; private set; }
 
-            public CharacterSpawnInfo(XElement element, string parentDebugName)
+            public CharacterSpawnInfo(ContentXElement element, string parentDebugName)
             {
                 SerializableProperties = SerializableProperty.DeserializeProperties(this, element);
                 if (SpeciesName.IsEmpty)
                 {
-                    DebugConsole.ThrowError($"Invalid character spawn ({Name}) in StatusEffect \"{parentDebugName}\" - identifier not found in the element \"{element}\"");
+                    DebugConsole.ThrowError($"Invalid character spawn ({Name}) in StatusEffect \"{parentDebugName}\" - identifier not found in the element \"{element}\".", contentPackage: element.ContentPackage);
                 }
             }
         }
@@ -798,7 +798,7 @@ namespace Barotrauma
             {
                 if (!Enum.TryParse(s, true, out TargetType targetType))
                 {
-                    DebugConsole.ThrowError($"Invalid target type \"{s}\" in StatusEffect ({parentDebugName})");
+                    DebugConsole.ThrowError($"Invalid target type \"{s}\" in StatusEffect ({parentDebugName})", contentPackage: element.ContentPackage);
                 }
                 else
                 {
@@ -837,7 +837,7 @@ namespace Barotrauma
                     case "type":
                         if (!Enum.TryParse(attribute.Value, true, out type))
                         {
-                            DebugConsole.ThrowError($"Invalid action type \"{attribute.Value}\" in StatusEffect ({parentDebugName})");
+                            DebugConsole.ThrowError($"Invalid action type \"{attribute.Value}\" in StatusEffect ({parentDebugName})", contentPackage: element.ContentPackage);
                         }
                         break;
                     case "targettype":
@@ -866,11 +866,11 @@ namespace Barotrauma
                     case "comparison":
                         if (!Enum.TryParse(attribute.Value, ignoreCase: true, out conditionalLogicalOperator))
                         {
-                            DebugConsole.ThrowError($"Invalid conditional comparison type \"{attribute.Value}\" in StatusEffect ({parentDebugName})");
+                            DebugConsole.ThrowError($"Invalid conditional comparison type \"{attribute.Value}\" in StatusEffect ({parentDebugName})", contentPackage: element.ContentPackage);
                         }
                         break;
                     case "sound":
-                        DebugConsole.ThrowError($"Error in StatusEffect ({parentDebugName}): sounds should be defined as child elements of the StatusEffect, not as attributes.");
+                        DebugConsole.ThrowError($"Error in StatusEffect ({parentDebugName}): sounds should be defined as child elements of the StatusEffect, not as attributes.", contentPackage: element.ContentPackage);
                         break;
                     case "range":
                         if (!HasTargetType(TargetType.NearbyCharacters) && !HasTargetType(TargetType.NearbyItems))
@@ -951,7 +951,7 @@ namespace Barotrauma
                         RelatedItem newRequiredItem = RelatedItem.Load(subElement, returnEmpty: false, parentDebugName: parentDebugName);
                         if (newRequiredItem == null)
                         {
-                            DebugConsole.ThrowError("Error in StatusEffect config - requires an item with no identifiers.");
+                            DebugConsole.ThrowError("Error in StatusEffect config - requires an item with no identifiers.", contentPackage: element.ContentPackage);
                             continue;
                         }
                         requiredItems.Add(newRequiredItem);
@@ -973,12 +973,12 @@ namespace Barotrauma
                         AfflictionPrefab afflictionPrefab;
                         if (subElement.GetAttribute("name") != null)
                         {
-                            DebugConsole.ThrowError("Error in StatusEffect (" + parentDebugName + ") - define afflictions using identifiers instead of names.");
+                            DebugConsole.ThrowError("Error in StatusEffect (" + parentDebugName + ") - define afflictions using identifiers instead of names.", contentPackage: element.ContentPackage);
                             string afflictionName = subElement.GetAttributeString("name", "");
                             afflictionPrefab = AfflictionPrefab.List.FirstOrDefault(ap => ap.Name.Equals(afflictionName, StringComparison.OrdinalIgnoreCase));
                             if (afflictionPrefab == null)
                             {
-                                DebugConsole.ThrowError("Error in StatusEffect (" + parentDebugName + ") - Affliction prefab \"" + afflictionName + "\" not found.");
+                                DebugConsole.ThrowError("Error in StatusEffect (" + parentDebugName + ") - Affliction prefab \"" + afflictionName + "\" not found.", contentPackage: element.ContentPackage);
                                 continue;
                             }
                         }
@@ -988,7 +988,7 @@ namespace Barotrauma
                             afflictionPrefab = AfflictionPrefab.List.FirstOrDefault(ap => ap.Identifier == afflictionIdentifier);
                             if (afflictionPrefab == null)
                             {
-                                DebugConsole.ThrowError("Error in StatusEffect (" + parentDebugName + ") - Affliction prefab with the identifier \"" + afflictionIdentifier + "\" not found.");
+                                DebugConsole.ThrowError("Error in StatusEffect (" + parentDebugName + ") - Affliction prefab with the identifier \"" + afflictionIdentifier + "\" not found.", contentPackage: element.ContentPackage);
                                 continue;
                             }
                         }
@@ -1001,7 +1001,7 @@ namespace Barotrauma
                     case "reduceaffliction":
                         if (subElement.GetAttribute("name") != null)
                         {
-                            DebugConsole.ThrowError("Error in StatusEffect (" + parentDebugName + ") - define afflictions using identifiers or types instead of names.");
+                            DebugConsole.ThrowError("Error in StatusEffect (" + parentDebugName + ") - define afflictions using identifiers or types instead of names.", contentPackage: element.ContentPackage);
                             ReduceAffliction.Add((
                                 subElement.GetAttributeIdentifier("name", ""),
                                 subElement.GetAttributeFloat(1.0f, "amount", "strength", "reduceamount")));
@@ -1016,7 +1016,7 @@ namespace Barotrauma
                             }
                             else
                             {
-                                DebugConsole.ThrowError("Error in StatusEffect (" + parentDebugName + ") - Affliction prefab with the identifier or type \"" + name + "\" not found.");
+                                DebugConsole.ThrowError("Error in StatusEffect (" + parentDebugName + ") - Affliction prefab with the identifier or type \"" + name + "\" not found.", contentPackage: element.ContentPackage);
                             }
                         }
                         break;
@@ -1374,6 +1374,10 @@ namespace Barotrauma
             if (OnlyOutside && character.CurrentHull != null) { return false; }
             if (TargetIdentifiers == null) { return true; }
             if (TargetIdentifiers.Contains("character")) { return true; }
+            if (TargetIdentifiers.Contains("monster"))
+            {
+                return !character.IsHuman && character.Group != CharacterPrefab.HumanSpeciesName;
+            }
             return TargetIdentifiers.Contains(character.SpeciesName);
         }
 
@@ -1606,28 +1610,7 @@ namespace Barotrauma
                     }
                 }
             }
-            if (removeItem)
-            {
-                for (int i = 0; i < targets.Count; i++)
-                {
-                    if (targets[i] is Item item) { Entity.Spawner?.AddItemToRemoveQueue(item); }
-                }
-            }
-            if (removeCharacter)
-            {
-                for (int i = 0; i < targets.Count; i++)
-                {
-                    var target = targets[i];
-                    if (target is Character character) 
-                    { 
-                        Entity.Spawner?.AddEntityToRemoveQueue(character); 
-                    }
-                    else if (target is Limb limb)
-                    {
-                        Entity.Spawner?.AddEntityToRemoveQueue(limb.character);
-                    }
-                }
-            }
+            
             if (breakLimb || hideLimb)
             {
                 for (int i = 0; i < targets.Count; i++)
@@ -1718,7 +1701,7 @@ namespace Barotrauma
                             if (limb.Removed) { continue; }
                             if (limb.IsSevered) { continue; }
                             if (targetLimbs != null && !targetLimbs.Contains(limb.type)) { continue; }
-                            AttackResult result = limb.character.DamageLimb(position, limb, newAffliction.ToEnumerable(), stun: 0.0f, playSound: false, attackImpulse: 0.0f, attacker: affliction.Source, allowStacking: !setValue);
+                            AttackResult result = limb.character.DamageLimb(position, limb, newAffliction.ToEnumerable(), stun: 0.0f, playSound: false, attackImpulse: Vector2.Zero, attacker: affliction.Source, allowStacking: !setValue);
                             limb.character.TrySeverLimbJoints(limb, SeverLimbsProbability, disableDeltaTime ? result.Damage : result.Damage / deltaTime, allowBeheading: true, attacker: affliction.Source);
                             RegisterTreatmentResults(user, entity as Item, limb, affliction, result);
                             //only apply non-limb-specific afflictions to the first limb
@@ -1731,7 +1714,7 @@ namespace Barotrauma
                         if (limb.character.Removed || limb.Removed) { continue; }
                         if (targetLimbs != null && !targetLimbs.Contains(limb.type)) { continue; }
                         newAffliction = GetMultipliedAffliction(affliction, entity, limb.character, deltaTime, multiplyAfflictionsByMaxVitality);
-                        AttackResult result = limb.character.DamageLimb(position, limb, newAffliction.ToEnumerable(), stun: 0.0f, playSound: false, attackImpulse: 0.0f, attacker: affliction.Source, allowStacking: !setValue);
+                        AttackResult result = limb.character.DamageLimb(position, limb, newAffliction.ToEnumerable(), stun: 0.0f, playSound: false, attackImpulse: Vector2.Zero, attacker: affliction.Source, allowStacking: !setValue);
                         limb.character.TrySeverLimbJoints(limb, SeverLimbsProbability, disableDeltaTime ? result.Damage : result.Damage / deltaTime, allowBeheading: true, attacker: affliction.Source);
                         RegisterTreatmentResults(user, entity as Item, limb, affliction, result);
                     }
@@ -1899,7 +1882,7 @@ namespace Barotrauma
 
             if (FireSize > 0.0f && entity != null)
             {
-                var fire = new FireSource(position, hull);
+                var fire = new FireSource(position, hull, sourceCharacter: user);
                 fire.Size = new Vector2(FireSize, fire.Size.Y);
             }
 
@@ -2266,8 +2249,8 @@ namespace Barotrauma
                                             {
                                                 OnItemSpawned(newItem, chosenItemSpawnInfo);
                                             });
+                                            break;
                                         }
-                                        break;
                                     }
                                 }
                             }
@@ -2291,6 +2274,30 @@ namespace Barotrauma
             }
 
             ApplyProjSpecific(deltaTime, entity, targets, hull, position, playSound: true);
+
+            //do this last - the entities spawned by the effect might need the entity for something, so better to remove it last
+            if (removeItem)
+            {
+                for (int i = 0; i < targets.Count; i++)
+                {
+                    if (targets[i] is Item item) { Entity.Spawner?.AddItemToRemoveQueue(item); }
+                }
+            }
+            if (removeCharacter)
+            {
+                for (int i = 0; i < targets.Count; i++)
+                {
+                    var target = targets[i];
+                    if (target is Character character)
+                    {
+                        Entity.Spawner?.AddEntityToRemoveQueue(character);
+                    }
+                    else if (target is Limb limb)
+                    {
+                        Entity.Spawner?.AddEntityToRemoveQueue(limb.character);
+                    }
+                }
+            }
 
             if (oneShot)
             {
@@ -2406,7 +2413,7 @@ namespace Barotrauma
                         {
                             if (limb.character.Removed || limb.Removed) { continue; }
                             newAffliction = element.Parent.GetMultipliedAffliction(affliction, element.Entity, limb.character, deltaTime, element.Parent.multiplyAfflictionsByMaxVitality);
-                            var result = limb.character.DamageLimb(limb.WorldPosition, limb, newAffliction.ToEnumerable(), stun: 0.0f, playSound: false, attackImpulse: 0.0f, attacker: element.User);
+                            var result = limb.character.DamageLimb(limb.WorldPosition, limb, newAffliction.ToEnumerable(), stun: 0.0f, playSound: false, attackImpulse: Vector2.Zero, attacker: element.User);
                             element.Parent.RegisterTreatmentResults(element.Parent.user, element.Entity as Item, limb, affliction, result);
                         }
                     }

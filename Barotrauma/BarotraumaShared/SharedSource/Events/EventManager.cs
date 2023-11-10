@@ -518,7 +518,8 @@ namespace Barotrauma
             {
                 foreach (Identifier missingId in subEventPrefab.GetMissingIdentifiers())
                 {
-                    DebugConsole.ThrowError($"Error in event set \"{eventSet.Identifier}\" ({eventSet.ContentFile?.ContentPackage?.Name ?? "null"}) - could not find an event prefab with the identifier \"{missingId}\".");
+                    DebugConsole.ThrowError($"Error in event set \"{eventSet.Identifier}\" ({eventSet.ContentFile?.ContentPackage?.Name ?? "null"}) - could not find an event prefab with the identifier \"{missingId}\".",
+                        contentPackage: eventSet.ContentPackage);
                 }
             }
 

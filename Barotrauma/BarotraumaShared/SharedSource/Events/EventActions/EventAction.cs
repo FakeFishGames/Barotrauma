@@ -36,7 +36,8 @@ namespace Barotrauma
                 {
                     if (e.Name.ToString().Equals("statuseffect", StringComparison.OrdinalIgnoreCase))
                     {
-                        DebugConsole.ThrowError($"Error in event prefab \"{scriptedEvent.Prefab.Identifier}\". Status effect configured as a sub action (text: \"{Text}\"). Please configure status effects as child elements of a StatusEffectAction.");
+                        DebugConsole.ThrowError($"Error in event prefab \"{scriptedEvent.Prefab.Identifier}\". Status effect configured as a sub action (text: \"{Text}\"). Please configure status effects as child elements of a StatusEffectAction.",
+                            contentPackage: elem.ContentPackage);
                         continue;
                     }
                     var action = Instantiate(scriptedEvent, e);
@@ -102,7 +103,7 @@ namespace Barotrauma
 
         public EventAction(ScriptedEvent parentEvent, ContentXElement element)
         {
-            ParentEvent = parentEvent;
+            ParentEvent = parentEvent ?? throw new ArgumentNullException(nameof(parentEvent));
             SerializableProperty.DeserializeProperties(this, element);
         }
 
@@ -147,7 +148,8 @@ namespace Barotrauma
             }
             catch
             {
-                DebugConsole.ThrowError($"Could not find an {nameof(EventAction)} class of the type \"{element.Name}\".");
+                DebugConsole.ThrowError($"Could not find an {nameof(EventAction)} class of the type \"{element.Name}\".",
+                    contentPackage: element.ContentPackage);
                 return null;
             }
 
@@ -162,7 +164,8 @@ namespace Barotrauma
             }
             catch (Exception ex)
             {
-                DebugConsole.ThrowError(ex.InnerException != null ? ex.InnerException.ToString() : ex.ToString());
+                DebugConsole.ThrowError(ex.InnerException != null ? ex.InnerException.ToString() : ex.ToString(),
+                    contentPackage: element.ContentPackage);
                 return null;
             }
         }

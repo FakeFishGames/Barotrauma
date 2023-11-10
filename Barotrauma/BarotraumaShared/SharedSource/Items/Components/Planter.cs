@@ -82,6 +82,9 @@ namespace Barotrauma.Items.Components
 
         private List<LightComponent>? lightComponents;
 
+        // We don't want the seeds to be transferred to a new submarine as seeds are not supposed to leave the container after they have been planted.
+        public override bool DontTransferInventoryBetweenSubs => true;
+
         public Planter(Item item, ContentXElement element) : base(item, element)
         {
             canBePicked = true;

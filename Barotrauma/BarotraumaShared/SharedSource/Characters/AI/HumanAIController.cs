@@ -167,10 +167,6 @@ namespace Barotrauma
 
         public HumanAIController(Character c) : base(c)
         {
-            if (!c.IsHuman)
-            {
-                throw new Exception($"Tried to create a human ai controller for a non-human: {c.SpeciesName}!");
-            }
             insideSteering = new IndoorsSteeringManager(this, true, false);
             outsideSteering = new SteeringManager(this);
             objectiveManager = new AIObjectiveManager(c);
@@ -1800,7 +1796,7 @@ namespace Barotrauma
                     if (!TriggerSecurity(otherHumanAI, combatMode))
                     {
                         // Else call the others
-                        foreach (Character security in Character.CharacterList.Where(c => c.TeamID == otherCharacter.TeamID).OrderByDescending(c => Vector2.DistanceSquared(character.WorldPosition, c.WorldPosition)))
+                        foreach (Character security in Character.CharacterList.Where(c => c.TeamID == otherCharacter.TeamID).OrderBy(c => Vector2.DistanceSquared(character.WorldPosition, c.WorldPosition)))
                         {
                             if (!TriggerSecurity(security.AIController as HumanAIController, combatMode))
                             {
@@ -1861,16 +1857,11 @@ namespace Barotrauma
                     }
                     if (!someoneSpoke)
                     {
-                        if (!item.StolenDuringRound && 
-                            Level.Loaded?.Type == LevelData.LevelType.Outpost && 
-                            GameMain.GameSession?.Campaign?.Map?.CurrentLocation != null)
+                        if (!item.StolenDuringRound)
                         {
-                            var reputationLoss = MathHelper.Clamp(
-                                (item.Prefab.GetMinPrice() ?? 0) * Reputation.ReputationLossPerStolenItemPrice, 
-                                Reputation.MinReputationLossPerStolenItem, Reputation.MaxReputationLossPerStolenItem);
-                            GameMain.GameSession.Campaign.Map.CurrentLocation.Reputation?.AddReputation(-reputationLoss);
+                            ApplyStealingReputationLoss(item);
+                            item.StolenDuringRound = true;
                         }
-                        item.StolenDuringRound = true;
                         otherCharacter.Speak(TextManager.Get("dialogstealwarning").Value, null, Rand.Range(0.5f, 1.0f), "thief".ToIdentifier(), 10.0f);
                         someoneSpoke = true;
 #if CLIENT
@@ -1881,7 +1872,7 @@ namespace Barotrauma
                     if (!TriggerSecurity(otherHumanAI))
                     {
                         // Else call the others
-                        foreach (Character security in Character.CharacterList.Where(c => c.TeamID == otherCharacter.TeamID).OrderByDescending(c => Vector2.DistanceSquared(thief.WorldPosition, c.WorldPosition)))
+                        foreach (Character security in Character.CharacterList.Where(c => c.TeamID == otherCharacter.TeamID).OrderBy(c => Vector2.DistanceSquared(thief.WorldPosition, c.WorldPosition)))
                         {
                             if (TriggerSecurity(security.AIController as HumanAIController))
                             {
@@ -1902,6 +1893,10 @@ namespace Barotrauma
                 if (humanAI == null) { return false; }
                 if (!humanAI.Character.IsSecurity) { return false; }
                 if (humanAI.ObjectiveManager.IsCurrentObjective<AIObjectiveCombat>()) { return false; }
+                if (humanAI.ObjectiveManager.GetObjective<AIObjectiveFindThieves>() is { } findThieves)
+                {
+                    findThieves.InspectEveryone();
+                }
                 humanAI.AddCombatObjective(AIObjectiveCombat.CombatMode.Arrest, thief, delay: GetReactionTime(),
                     abortCondition: obj => thief.Inventory.FindItem(it => it != null && it.StolenDuringRound, true) == null,
                     onAbort: () =>
@@ -1916,6 +1911,18 @@ namespace Barotrauma
                     },
                     allowHoldFire: true);
                 return true;
+            }
+        }
+
+        public static void ApplyStealingReputationLoss(Item item)
+        {
+            if (Level.Loaded?.Type == LevelData.LevelType.Outpost &&
+                GameMain.GameSession?.Campaign?.Map?.CurrentLocation != null)
+            {
+                var reputationLoss = MathHelper.Clamp(
+                    (item.Prefab.GetMinPrice() ?? 0) * Reputation.ReputationLossPerStolenItemPrice,
+                    Reputation.MinReputationLossPerStolenItem, Reputation.MaxReputationLossPerStolenItem);
+                GameMain.GameSession.Campaign.Map.CurrentLocation.Reputation?.AddReputation(-reputationLoss);
             }
         }
 

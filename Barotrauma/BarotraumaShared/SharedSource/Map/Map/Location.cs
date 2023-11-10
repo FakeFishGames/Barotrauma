@@ -639,7 +639,7 @@ namespace Barotrauma
             System.Diagnostics.Debug.Assert(Type != null, $"Could not find the location type \"{locationTypeId}\"!");
             Type ??= LocationType.Prefabs.First();
 
-            LevelData = new LevelData(element.Element("Level"), clampDifficultyToBiome: true);
+            LevelData = new LevelData(element.GetChildElement("Level"), clampDifficultyToBiome: true);
 
             PortraitId = ToolBox.StringToInt(Name);
 
@@ -659,15 +659,12 @@ namespace Barotrauma
                     if (type == null)
                     {
                         DebugConsole.AddWarning($"Could not find location type \"{identifier}\". Using location type \"None\" instead.");
-                        LocationType.Prefabs.TryGet("None".ToIdentifier(), out type);
-                        if (type == null)
-                        {
-                            type = LocationType.Prefabs.First();
-                        }
+                        LocationType.Prefabs.TryGet("None".ToIdentifier(), out type);                
+                        type ??= LocationType.Prefabs.First();                        
                     }
                     if (type != null)
                     {
-                        element.SetAttributeValue("type", type.Identifier);
+                        element.SetAttributeValue("type", type.Identifier.ToString());
                     }
                     return false;
                 }
@@ -776,11 +773,11 @@ namespace Barotrauma
         {
             if (Type.MissionIdentifiers.Any())
             {
-                UnlockMissionByIdentifier(Type.MissionIdentifiers.GetRandom(randSync));
+                UnlockMissionByIdentifier(Type.MissionIdentifiers.GetRandom(randSync), invokingContentPackage: Type.ContentPackage);
             }
             if (Type.MissionTags.Any())
             {
-                UnlockMissionByTag(Type.MissionTags.GetRandom(randSync));
+                UnlockMissionByTag(Type.MissionTags.GetRandom(randSync), invokingContentPackage: Type.ContentPackage);
             }
         }
 
@@ -798,7 +795,7 @@ namespace Barotrauma
             AddMission(InstantiateMission(missionPrefab));
         }
 
-        public Mission UnlockMissionByIdentifier(Identifier identifier)
+        public Mission UnlockMissionByIdentifier(Identifier identifier, ContentPackage invokingContentPackage = null)
         {
             if (AvailableMissions.Any(m => m.Prefab.Identifier == identifier)) { return null; }
             if (AvailableMissions.Any(m => !m.Prefab.AllowOtherMissionsInLevel)) { return null; }
@@ -806,7 +803,8 @@ namespace Barotrauma
             var missionPrefab = MissionPrefab.Prefabs.Find(mp => mp.Identifier == identifier);
             if (missionPrefab == null)
             {
-                DebugConsole.ThrowError($"Failed to unlock a mission with the identifier \"{identifier}\": matching mission not found.");
+                DebugConsole.ThrowError($"Failed to unlock a mission with the identifier \"{identifier}\": matching mission not found.", 
+                    contentPackage: invokingContentPackage);
             }
             else
             {
@@ -823,13 +821,13 @@ namespace Barotrauma
             return null;
         }
 
-        public Mission UnlockMissionByTag(Identifier tag, Random random = null)
+        public Mission UnlockMissionByTag(Identifier tag, Random random = null, ContentPackage invokingContentPackage = null)
         {
             if (AvailableMissions.Any(m => !m.Prefab.AllowOtherMissionsInLevel)) { return null; }
             var matchingMissions = MissionPrefab.Prefabs.Where(mp => mp.Tags.Contains(tag));
             if (matchingMissions.None())
             {
-                DebugConsole.ThrowError($"Failed to unlock a mission with the tag \"{tag}\": no matching missions found.");
+                DebugConsole.ThrowError($"Failed to unlock a mission with the tag \"{tag}\": no matching missions found.", contentPackage: invokingContentPackage);
             }
             else
             {
@@ -841,7 +839,16 @@ namespace Barotrauma
                     {
                         suitableMissions = unusedMissions;
                     }
-
+                    var filteredMissions = suitableMissions.Where(m => LevelData.Difficulty >= m.MinLevelDifficulty && LevelData.Difficulty <= m.MaxLevelDifficulty);
+                    if (filteredMissions.None())
+                    {
+                        DebugConsole.AddWarning($"No suitable mission matching the level difficulty {LevelData.Difficulty} found with the tag \"{tag}\". Ignoring the restriction.", 
+                            contentPackage: invokingContentPackage);
+                    }
+                    else
+                    {
+                        suitableMissions = filteredMissions;
+                    }
                     MissionPrefab missionPrefab = 
                         random != null ? 
                         ToolBox.SelectWeightedRandom(suitableMissions.OrderBy(m => m.Identifier), m => m.Commonness, random) :
@@ -854,12 +861,13 @@ namespace Barotrauma
                         return null;
                     }
                     AddMission(mission);
-                    DebugConsole.NewMessage($"Unlocked a random mission by \"{tag}\".", debugOnly: true);
+                    DebugConsole.NewMessage($"Unlocked a random mission by \"{tag}\": {mission.Prefab.Identifier} (difficulty level: {LevelData.Difficulty})", debugOnly: true);
                     return mission;
                 }
                 else
                 {
-                    DebugConsole.AddWarning($"Failed to unlock a mission with the tag \"{tag}\": all available missions have already been unlocked.");
+                    DebugConsole.AddWarning($"Failed to unlock a mission with the tag \"{tag}\": all available missions have already been unlocked.", 
+                        contentPackage: invokingContentPackage);
                 }
             }
 
@@ -988,11 +996,11 @@ namespace Barotrauma
             {
                 if (addInitialMissionsForType.MissionIdentifiers.Any())
                 {
-                    UnlockMissionByIdentifier(addInitialMissionsForType.MissionIdentifiers.GetRandomUnsynced());
+                    UnlockMissionByIdentifier(addInitialMissionsForType.MissionIdentifiers.GetRandomUnsynced(), invokingContentPackage: Type.ContentPackage);
                 }
                 if (addInitialMissionsForType.MissionTags.Any())
                 {
-                    UnlockMissionByTag(addInitialMissionsForType.MissionTags.GetRandomUnsynced());
+                    UnlockMissionByTag(addInitialMissionsForType.MissionTags.GetRandomUnsynced(), invokingContentPackage: Type.ContentPackage);
                 }
                 addInitialMissionsForType = null;
             }

@@ -30,7 +30,8 @@ namespace Barotrauma.Abilities
                 }
                 else
                 {
-                    DebugConsole.ThrowError($"Error in talent \"{characterAbilityGroup.CharacterTalent.DebugIdentifier}\" - \"{limbTypeStr}\" is not a valid limb type.");
+                    DebugConsole.ThrowError($"Error in talent \"{characterAbilityGroup.CharacterTalent.DebugIdentifier}\" - \"{limbTypeStr}\" is not a valid limb type.",
+                        contentPackage: abilityElement.ContentPackage);
                 }
             }
         }

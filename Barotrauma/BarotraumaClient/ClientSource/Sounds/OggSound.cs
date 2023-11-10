@@ -16,7 +16,7 @@ namespace Barotrauma.Sounds
 
         private short[] sampleBuffer = Array.Empty<short>();
         private short[] muffleBuffer = Array.Empty<short>();
-        public OggSound(SoundManager owner, string filename, bool stream, XElement xElement) : base(owner, filename,
+        public OggSound(SoundManager owner, string filename, bool stream, ContentXElement xElement) : base(owner, filename,
             stream, true, xElement)
         {
             var reader = new VorbisReader(Filename);

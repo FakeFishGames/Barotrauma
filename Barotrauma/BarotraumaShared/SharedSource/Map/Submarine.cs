@@ -624,7 +624,7 @@ namespace Barotrauma
 
         //math/physics stuff ----------------------------------------------------
 
-        public static Vector2 VectorToWorldGrid(Vector2 position, bool round = false)
+        public static Vector2 VectorToWorldGrid(Vector2 position, Submarine sub = null, bool round = false)
         {
             if (round)
             {
@@ -635,6 +635,12 @@ namespace Barotrauma
             {
                 position.X = MathF.Floor(position.X / GridSize.X) * GridSize.X;
                 position.Y = MathF.Ceiling(position.Y / GridSize.Y) * GridSize.Y;
+            }
+
+            if (sub != null)
+            {
+                position.X += sub.Position.X % GridSize.X;
+                position.Y += sub.Position.Y % GridSize.Y;
             }
             return position;
         }
@@ -1840,6 +1846,7 @@ namespace Barotrauma
                 FilePath = filePath,
                 OutpostModuleInfo = Info.OutpostModuleInfo != null ? new OutpostModuleInfo(Info.OutpostModuleInfo) : null,
                 BeaconStationInfo = Info.BeaconStationInfo != null ? new BeaconStationInfo(Info.BeaconStationInfo) : null,
+                WreckInfo = Info.WreckInfo != null ? new WreckInfo(Info.WreckInfo) : null,
                 Name = Path.GetFileNameWithoutExtension(filePath)
             };
 #if CLIENT

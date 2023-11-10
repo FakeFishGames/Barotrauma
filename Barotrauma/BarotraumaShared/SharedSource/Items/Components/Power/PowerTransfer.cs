@@ -407,7 +407,7 @@ namespace Barotrauma.Items.Components
                 }
             }
 
-            if (!(this is RelayComponent))
+            if (this is not RelayComponent)
             {
                 if (PowerConnections.Any(p => !p.IsOutput) && PowerConnections.Any(p => p.IsOutput))
                 {

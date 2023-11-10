@@ -15,135 +15,6 @@ using Barotrauma.Networking;
 
 namespace Barotrauma
 {
-    [AttributeUsage(AttributeTargets.Property)]
-    class Editable : Attribute
-    {
-        public int MaxLength;
-        public int DecimalCount = 1;
-
-        public int MinValueInt = int.MinValue, MaxValueInt = int.MaxValue;
-        public float MinValueFloat = float.MinValue, MaxValueFloat = float.MaxValue;
-        public float ValueStep;
-
-        /// <summary>
-        /// Labels of the components of a vector property (defaults to x,y,z,w)
-        /// </summary>
-        public string[] VectorComponentLabels;
-
-        /// <summary>
-        /// If a translation can't be found for the property name, this tag is used instead
-        /// </summary>
-        public string FallBackTextTag;
-
-        /// <summary>
-        /// Currently implemented only for int and bool fields. TODO: implement the remaining types (SerializableEntityEditor)
-        /// </summary>
-        public bool ReadOnly;
-
-        public Editable(int maxLength = 20)
-        {
-            MaxLength = maxLength;
-        }
-
-        public Editable(int minValue, int maxValue)
-        {
-            MinValueInt = minValue;
-            MaxValueInt = maxValue;
-        }
-
-        public Editable(float minValue, float maxValue, int decimals = 1)
-        {
-            MinValueFloat = minValue;
-            MaxValueFloat = maxValue;
-            DecimalCount = decimals;
-        }
-    }
-
-    [AttributeUsage(AttributeTargets.Property)]
-    class InGameEditable : Editable
-    {
-    }
-
-    [AttributeUsage(AttributeTargets.Property)]
-    class ConditionallyEditable : Editable
-    {
-        public ConditionallyEditable(ConditionType conditionType, bool onlyInEditors = true)
-        {
-            this.conditionType = conditionType;
-            this.onlyInEditors = onlyInEditors;
-        }
-        private readonly ConditionType conditionType;
-
-        private readonly bool onlyInEditors;
-
-        public enum ConditionType
-        {
-            //These need to exist at compile time, so it is a little awkward
-            //I would love to see a better way to do this
-            AllowLinkingWifiToChat,
-            IsSwappableItem,
-            AllowRotating,
-            Attachable,
-            HasBody,
-            Pickable,
-            OnlyByStatusEffectsAndNetwork,
-            HasIntegratedButtons,
-            IsToggleableController,
-            HasConnectionPanel
-        }
-
-        public bool IsEditable(ISerializableEntity entity)
-        {
-            if (onlyInEditors && Screen.Selected is { IsEditor: false }) { return false; }
-            switch (conditionType)
-            {
-                case ConditionType.AllowLinkingWifiToChat:
-                    return GameMain.NetworkMember?.ServerSettings?.AllowLinkingWifiToChat ?? true;
-                case ConditionType.IsSwappableItem:
-                    {
-                        return entity is Item item && item.Prefab.SwappableItem != null;
-                    }
-                case ConditionType.AllowRotating:
-                    {
-                        return entity is Item item && item.body == null && item.Prefab.AllowRotatingInEditor;
-                    }
-                case ConditionType.Attachable:
-                    {
-                        return entity is Holdable holdable && holdable.Attachable;
-                    }
-                case ConditionType.HasBody:
-                    {
-                        return entity is Structure { HasBody: true } || entity is Item { body: not null };
-                    }
-                case ConditionType.Pickable:
-                    {
-                        return entity is Item item && item.GetComponent<Pickable>() != null;
-                    }
-                case ConditionType.HasIntegratedButtons:
-                    {
-                        return entity is Door door && door.HasIntegratedButtons;
-                    }
-                case ConditionType.OnlyByStatusEffectsAndNetwork:
-#if SERVER
-                    return true;
-#else
-                    return false;
-#endif
-                case ConditionType.IsToggleableController:
-                    {
-                        return entity is Controller controller && controller.IsToggle && controller.Item.GetComponent<ConnectionPanel>() != null;
-                    }
-                case ConditionType.HasConnectionPanel:
-                    {
-                        return
-                            (entity is Item item && item.GetComponent<ConnectionPanel>() != null) ||
-                            (entity is ItemComponent ic && ic.Item.GetComponent<ConnectionPanel>() != null);
-                    }
-            }
-            return false;
-        }
-    }
-
     public enum IsPropertySaveable
     {
         Yes,
@@ -151,7 +22,7 @@ namespace Barotrauma
     }
 
     [AttributeUsage(AttributeTargets.Property)]
-    public class Serialize : Attribute
+    public sealed class Serialize : Attribute
     {
         public readonly object DefaultValue;
         public readonly IsPropertySaveable IsSaveable;
@@ -182,9 +53,9 @@ namespace Barotrauma
         }
     }
 
-    public class SerializableProperty
+    public sealed class SerializableProperty
     {
-        private readonly static ImmutableDictionary<Type, string> supportedTypes = new Dictionary<Type, string>
+        private static readonly ImmutableDictionary<Type, string> supportedTypes = new Dictionary<Type, string>
         {
             { typeof(bool), "bool" },
             { typeof(int), "int" },

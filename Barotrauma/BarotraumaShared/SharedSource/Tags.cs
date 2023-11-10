@@ -45,7 +45,7 @@ public static class Tags
     public static readonly Identifier ToolItem = "tool".ToIdentifier();
     public static readonly Identifier LogicItem = "logic".ToIdentifier();
     public static readonly Identifier NavTerminal = "navterminal".ToIdentifier();
-    public static readonly Identifier IdCard = "identitycard".ToIdentifier();
+    public static readonly Identifier IdCardTag = "identitycard".ToIdentifier();
     public static readonly Identifier WireItem = "wire".ToIdentifier();
     public static readonly Identifier ChairItem = "chair".ToIdentifier();
     public static readonly Identifier ArtifactHolder = "artifactholder".ToIdentifier();
@@ -54,6 +54,8 @@ public static class Tags
     public static readonly Identifier Crate = "crate".ToIdentifier();
     public static readonly Identifier DontSellItems = "dontsellitems".ToIdentifier();
     public static readonly Identifier CargoContainer = "cargocontainer".ToIdentifier();
+
+    public static readonly Identifier CargoMissionItem = "cargomission".ToIdentifier();
 
     public static readonly Identifier ItemIgnoredByAI = "ignorebyai".ToIdentifier();
 

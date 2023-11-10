@@ -65,7 +65,7 @@ namespace Barotrauma.Networking
         public bool LateCampaignJoin = false;
 
         private ClientPermissions permissions = ClientPermissions.None;
-        private List<string> permittedConsoleCommands = new List<string>();
+        private List<Identifier> permittedConsoleCommands = new List<Identifier>();
 
         private bool connected;
 
@@ -170,9 +170,9 @@ namespace Barotrauma.Networking
         internal readonly struct PermissionChangedEvent
         {
             public readonly ClientPermissions NewPermissions;
-            public readonly ImmutableArray<string> NewPermittedConsoleCommands;
+            public readonly ImmutableArray<Identifier> NewPermittedConsoleCommands;
 
-            public PermissionChangedEvent(ClientPermissions newPermissions, IReadOnlyList<string> newPermittedConsoleCommands)
+            public PermissionChangedEvent(ClientPermissions newPermissions, IReadOnlyList<Identifier> newPermittedConsoleCommands)
             {
                 NewPermissions = newPermissions;
                 NewPermittedConsoleCommands = newPermittedConsoleCommands.ToImmutableArray();
@@ -1211,11 +1211,11 @@ namespace Barotrauma.Networking
             targetClient?.SetPermissions(permissions, permittedCommands);
             if (clientId == SessionId)
             {
-                SetMyPermissions(permissions, permittedCommands.Select(command => command.names[0]));
+                SetMyPermissions(permissions, permittedCommands.Select(command => command.Names[0]));
             }
         }
 
-        private void SetMyPermissions(ClientPermissions newPermissions, IEnumerable<string> permittedConsoleCommands)
+        private void SetMyPermissions(ClientPermissions newPermissions, IEnumerable<Identifier> permittedConsoleCommands)
         {
             if (!(this.permittedConsoleCommands.Any(c => !permittedConsoleCommands.Contains(c)) ||
                   permittedConsoleCommands.Any(c => !this.permittedConsoleCommands.Contains(c))))
@@ -1227,7 +1227,7 @@ namespace Barotrauma.Networking
                                      permissions.HasFlag(ClientPermissions.ManageRound) != newPermissions.HasFlag(ClientPermissions.ManageRound);
 
             permissions = newPermissions;
-            this.permittedConsoleCommands = new List<string>(permittedConsoleCommands);
+            this.permittedConsoleCommands = permittedConsoleCommands.ToList();
             //don't show the "permissions changed" popup if the client owns the server
             if (!IsServerOwner)
             {
@@ -1265,10 +1265,10 @@ namespace Barotrauma.Networking
                     var commandsLabel = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), rightColumn.RectTransform),
                         TextManager.Get("PermittedConsoleCommands"), wrap: true, font: GUIStyle.SubHeadingFont);
                     var commandList = new GUIListBox(new RectTransform(new Vector2(1.0f, 1.0f), rightColumn.RectTransform));
-                    foreach (string permittedCommand in permittedConsoleCommands)
+                    foreach (Identifier permittedCommand in permittedConsoleCommands)
                     {
                         new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), commandList.Content.RectTransform, minSize: new Point(0, 15)),
-                            permittedCommand, font: GUIStyle.SmallFont)
+                            permittedCommand.Value, font: GUIStyle.SmallFont)
                         {
                             CanBeFocused = false
                         };
@@ -1348,6 +1348,7 @@ namespace Barotrauma.Networking
             bool respawnAllowed = inc.ReadBoolean();
             ServerSettings.AllowDisguises = inc.ReadBoolean();
             ServerSettings.AllowRewiring = inc.ReadBoolean();
+            ServerSettings.AllowImmediateItemDelivery = inc.ReadBoolean();
             ServerSettings.AllowFriendlyFire = inc.ReadBoolean();
             ServerSettings.LockAllDefaultWires = inc.ReadBoolean();
             ServerSettings.AllowLinkingWifiToChat = inc.ReadBoolean();
@@ -2551,18 +2552,18 @@ namespace Barotrauma.Networking
             return permissions.HasFlag(permission);
         }
 
-        public bool HasConsoleCommandPermission(string commandName)
+        public bool HasConsoleCommandPermission(Identifier commandName)
         {
             if (!permissions.HasFlag(ClientPermissions.ConsoleCommands)) { return false; }
 
-            if (permittedConsoleCommands.Any(c => c.Equals(commandName, StringComparison.OrdinalIgnoreCase))) { return true; }
+            if (permittedConsoleCommands.Contains(commandName)) { return true; }
 
             //check aliases
             foreach (DebugConsole.Command command in DebugConsole.Commands)
             {
-                if (command.names.Contains(commandName))
+                if (command.Names.Contains(commandName))
                 {
-                    if (command.names.Intersect(permittedConsoleCommands).Any()) { return true; }
+                    if (command.Names.Intersect(permittedConsoleCommands).Any()) { return true; }
                     break;
                 }
             }

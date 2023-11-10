@@ -50,6 +50,9 @@ namespace Barotrauma
         [Serialize(false, IsPropertySaveable.Yes, description: "Can the creature live without water or does it die on dry land?"), Editable]
         public bool NeedsWater { get; set; }
 
+        [Serialize(false, IsPropertySaveable.Yes, description: "Note: non-humans with a human AI aren't fully supported. Enabling this on a non-human character may lead to issues.")]
+        public bool UseHumanAI { get; set; }
+
         [Serialize(false, IsPropertySaveable.Yes, description: "Is this creature an artificial creature, like robot or machine that shouldn't be affected by afflictions that affect only organic creatures? Overrides DoesBleed."), Editable]
         public bool IsMachine { get; set; }
 
@@ -556,7 +559,8 @@ namespace Barotrauma
                     DebugConsole.AddWarning($"Character \"{character.SpeciesName}\" has a negative crush depth. "+
                         "Previously the crush depths were defined as display units (e.g. -30000 would correspond to 300 meters below the level), "+
                         "but now they're in meters (e.g. 3000 would correspond to a depth of 3000 meters displayed on the nav terminal). "+
-                        $"Changing the crush depth from {CrushDepth} to {newCrushDepth}.");
+                        $"Changing the crush depth from {CrushDepth} to {newCrushDepth}.",
+                        element.ContentPackage);
                     CrushDepth = newCrushDepth;
                 }
             }
@@ -708,7 +712,8 @@ namespace Barotrauma
                 if (HasTag(tag))
                 {
                     target = null;
-                    DebugConsole.AddWarning($"Trying to add multiple targets with the same tag ('{tag}') defined! Only the first will be used!");
+                    DebugConsole.AddWarning($"Trying to add multiple targets with the same tag ('{tag}') defined! Only the first will be used!",
+                        targetElement.ContentPackage);
                     return false;
                 }
                 else

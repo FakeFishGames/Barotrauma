@@ -412,41 +412,29 @@ namespace Barotrauma
             return false;
         }
 
-        /*public static List<Vector2> GetLineRectangleIntersections(Vector2 a1, Vector2 a2, Rectangle rect)
-        {
-            List<Vector2> intersections = new List<Vector2>();
+        public static Vector2 FlipX(this Vector2 vector)
+            => new Vector2(-vector.X, vector.Y);
 
-            Vector2? intersection = GetAxisAlignedLineIntersection(a1, a2,
-                new Vector2(rect.X, rect.Y),
-                new Vector2(rect.Right, rect.Y),
-                true);
+        public static Vector2 FlipY(this Vector2 vector)
+            => new Vector2(vector.X, -vector.Y);
 
-            if (intersection != null) intersections.Add((Vector2)intersection);
+        public static Vector2 YX(this Vector2 vector)
+            => new Vector2(x: vector.Y, y: vector.X);
+        
+        public static Point FlipY(this Point point)
+            => new Point(point.X, -point.Y);
 
-            intersection = GetAxisAlignedLineIntersection(a1, a2,
-                new Vector2(rect.X, rect.Y - rect.Height),
-                new Vector2(rect.Right, rect.Y - rect.Height),
-                true);
+        public static Point YX(this Point point)
+            => new Point(x: point.Y, y: point.X);
+        
+        public static Vector2 RotatedUnitXRadians(float radians)
+            => new Vector2(MathF.Cos(radians), MathF.Sin(radians));
 
-            if (intersection != null) intersections.Add((Vector2)intersection);
+        public static Vector2 RotatedUnitYRadians(float radians)
+            => RotatedUnitXRadians(radians).YX().FlipX();
 
-            intersection = GetAxisAlignedLineIntersection(a1, a2,
-                new Vector2(rect.X, rect.Y),
-                new Vector2(rect.X, rect.Y - rect.Height),
-                false);
-
-            if (intersection != null) intersections.Add((Vector2)intersection);
-
-            intersection = GetAxisAlignedLineIntersection(a1, a2,
-                new Vector2(rect.Right, rect.Y),
-                new Vector2(rect.Right, rect.Y - rect.Height),
-                false);
-
-            if (intersection != null) intersections.Add((Vector2)intersection);
-
-            return intersections;
-        }*/
-
+        public static Vector2 Round(this Vector2 vector)
+            => new Vector2((int)MathF.Round(vector.X), (int)MathF.Round(vector.Y));
 
         /// <summary>
         /// Get the intersections between a line (either infinite or a line segment) and a circle
