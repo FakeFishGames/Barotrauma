@@ -47,7 +47,8 @@ namespace Barotrauma
         public void SetOrder(Character orderedCharacter)
         {
             OrderedCharacter = orderedCharacter;
-            if (OrderedCharacter.AIController is HumanAIController humanAI && humanAI.ObjectiveManager.CurrentOrders.None(o => o.MatchesOrder(SuggestedOrder.Identifier, Option)))
+            if (OrderedCharacter.AIController is HumanAIController humanAI && 
+                humanAI.ObjectiveManager.CurrentOrders.None(o => o.MatchesOrder(SuggestedOrder.Identifier, Option) && o.TargetEntity == TargetItem))
             {
                 if (orderedCharacter != CommandingCharacter)
                 {
@@ -116,10 +117,10 @@ namespace Barotrauma
             }
 
             // accept only the highest priority order
-            if (CurrentOrder != null && OrderedCharacter.GetCurrentOrderWithTopPriority() != CurrentOrder)
+            if (CurrentOrder == null || OrderedCharacter.GetCurrentOrderWithTopPriority() != CurrentOrder)
             {
 #if DEBUG
-                ShipCommandManager.ShipCommandLog($"Order {CurrentOrder.Name} did not match current order for character {OrderedCharacter} in {this}");
+                ShipCommandManager.ShipCommandLog($"{this} is no longer the top priority of {OrderedCharacter}, considering the issue unattended.");
 #endif
                 return false;
             }

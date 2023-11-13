@@ -11,6 +11,7 @@ namespace Barotrauma
             left = l; right = r;
         }
 
+        // TODO: should this be && instead of ||?
         public override bool Loaded => left.Loaded || right.Loaded;
         public override void RetrieveValue()
         {

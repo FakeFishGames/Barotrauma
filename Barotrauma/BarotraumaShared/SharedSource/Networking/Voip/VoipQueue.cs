@@ -1,12 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using Microsoft.Xna.Framework;
 
 namespace Barotrauma.Networking
 {
-
-    public class VoipQueue : IDisposable
+    class VoipQueue : IDisposable
     {
         public const int BUFFER_COUNT = 8;
         protected int[] bufferLengths;
@@ -123,16 +119,16 @@ namespace Barotrauma.Networking
         {
             if (!CanSend) { throw new Exception("Called Write on a VoipQueue not set up for sending"); }
 
-            msg.Write((UInt16)LatestBufferID);
-            msg.Write(ForceLocal); msg.WritePadBits();
+            msg.WriteUInt16((UInt16)LatestBufferID);
+            msg.WriteBoolean(ForceLocal); msg.WritePadBits();
             lock (buffers)
             {
                 for (int i = 0; i < BUFFER_COUNT; i++)
                 {
                     int index = (newestBufferInd + i + 1) % BUFFER_COUNT;
 
-                    msg.Write((byte)bufferLengths[index]);
-                    msg.Write(buffers[index], 0, bufferLengths[index]);
+                    msg.WriteByte((byte)bufferLengths[index]);
+                    msg.WriteBytes(buffers[index], 0, bufferLengths[index]);
                 }
             }
         }

@@ -1,8 +1,4 @@
-﻿using Barotrauma.Sounds;
-using System.Collections.Generic;
-using System.Xml.Linq;
-
-namespace Barotrauma.Items.Components
+﻿namespace Barotrauma.Items.Components
 {
     partial class Powered : ItemComponent
     {

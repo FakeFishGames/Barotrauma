@@ -21,7 +21,7 @@ namespace Barotrauma
             level = MathHelper.Clamp(level + value, 0.0f, increasePastMax ? SkillSettings.Current.MaximumSkillWithTalents : MaximumSkill);
         }
 
-        private Identifier iconJobId;
+        private readonly Identifier iconJobId;
 
         public Sprite Icon => !iconJobId.IsEmpty && JobPrefab.Prefabs.TryGet(iconJobId, out var jobPrefab)
             ? jobPrefab.Icon

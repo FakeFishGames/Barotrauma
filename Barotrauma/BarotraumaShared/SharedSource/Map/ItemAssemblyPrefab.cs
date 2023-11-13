@@ -50,6 +50,12 @@ namespace Barotrauma
             Description = TextManager.Get($"EntityDescription.{Identifier}");
             Tags = Enumerable.Empty<Identifier>().ToImmutableHashSet();
 
+            string description = element.GetAttributeString("description", string.Empty);
+            if (!description.IsNullOrEmpty())
+            {
+                Description = Description.Fallback(description);
+            }
+
             List<ushort> containedItemIDs = new List<ushort>();
             foreach (XElement entityElement in element.Elements())
             {
@@ -130,7 +136,7 @@ namespace Barotrauma
             {
                 me.Move(position);
                 me.Submarine = sub;
-                if (!(me is Item item)) { continue; }
+                if (me is not Item item) { continue; }
                 Wire wire = item.GetComponent<Wire>();
                 //Vector2 subPosition = Submarine == null ? Vector2.Zero : Submarine.HiddenSubPosition;
                 if (wire != null) 
@@ -157,7 +163,7 @@ namespace Barotrauma
         
         public void Delete()
         {
-            Dispose();
+            Prefabs.Remove(this);
             try
             {
                 if (ContentPackage is { Files: { Length: 1 } }

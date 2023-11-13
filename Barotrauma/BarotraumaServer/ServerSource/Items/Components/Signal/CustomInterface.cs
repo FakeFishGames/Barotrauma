@@ -72,15 +72,15 @@ namespace Barotrauma.Items.Components
                 var element = customInterfaceElementList[i];
                 if (element.HasPropertyName)
                 {
-                    msg.Write(element.Signal);
+                    msg.WriteString(element.Signal);
                 }
                 else if(element.ContinuousSignal)
                 {
-                    msg.Write(element.State);
+                    msg.WriteBoolean(element.State);
                 }
                 else
                 {
-                    msg.Write(extraData is Item.ComponentStateEventData { ComponentData: EventData eventData } && eventData.BtnElement == customInterfaceElementList[i]);
+                    msg.WriteBoolean(extraData is Item.ComponentStateEventData { ComponentData: EventData eventData } && eventData.BtnElement == customInterfaceElementList[i]);
                 }
             }
         }

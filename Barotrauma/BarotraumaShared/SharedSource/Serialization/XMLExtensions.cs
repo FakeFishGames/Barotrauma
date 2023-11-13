@@ -1,15 +1,14 @@
-﻿using System;
+﻿using Microsoft.Xna.Framework;
+using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Globalization;
-using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Xml;
 using System.Xml.Linq;
-using Microsoft.Xna.Framework;
 using File = Barotrauma.IO.File;
 using FileStream = Barotrauma.IO.FileStream;
 using Path = Barotrauma.IO.Path;
@@ -18,7 +17,7 @@ namespace Barotrauma
 {
     public static class XMLExtensions
     {
-        private static ImmutableDictionary<Type, Func<string, object, object>> converters
+        private readonly static ImmutableDictionary<Type, Func<string, object, object>> Converters
             = new Dictionary<Type, Func<string, object, object>>()
             {
                 { typeof(string), (str, defVal) => str },
@@ -214,11 +213,28 @@ namespace Barotrauma
             return splitValue;
         }
 
+        public static Identifier[] GetAttributeIdentifierArray(this XElement element, Identifier[] defaultValue, params string[] matchingAttributeName)
+        {
+            if (element == null) { return defaultValue; }
+            foreach (string name in matchingAttributeName)
+            {
+                var value = element.GetAttributeIdentifierArray(name, defaultValue);
+                if (value != defaultValue) { return value; }
+            }
+            return defaultValue;
+        }
+
         public static Identifier[] GetAttributeIdentifierArray(this XElement element, string name, Identifier[] defaultValue, bool trim = true)
         {
             return element.GetAttributeStringArray(name, null, trim: trim, convertToLowerInvariant: false)
                     ?.ToIdentifiers()
                 ?? defaultValue;
+        }
+
+        public static ImmutableHashSet<Identifier> GetAttributeIdentifierImmutableHashSet(this XElement element, string key, ImmutableHashSet<Identifier> defaultValue, bool trim = true)
+        {
+            return element.GetAttributeIdentifierArray(key, null, trim)?.ToImmutableHashSet()
+                   ?? defaultValue;
         }
 
         public static float GetAttributeFloat(this XElement element, float defaultValue, params string[] matchingAttributeName)
@@ -308,16 +324,36 @@ namespace Barotrauma
                 }
                 catch (Exception e)
                 {
-                    DebugConsole.ThrowError("Error in " + element + "! ", e);
+                    LogAttributeError(attribute, element, e);
                 }
             }
 
             return floatValue;
         }
 
-        public static int GetAttributeInt(this XElement element, string name, int defaultValue)
+        public static bool TryGetAttributeInt(this XElement element, string name, out int result)
         {
             var attribute = element?.GetAttribute(name);
+            result = default;
+            if (attribute == null) { return false; }
+
+            if (int.TryParse(attribute.Value, NumberStyles.Any, CultureInfo.InvariantCulture, out var intVal))
+            {
+                result = intVal;
+                return true;
+            }
+            if (float.TryParse(attribute.Value, NumberStyles.Any, CultureInfo.InvariantCulture, out var floatVal))
+            {
+                result = (int)floatVal;
+                return true;
+            }
+            return false;
+        }
+
+        public static int GetAttributeInt(this XElement element, string name, int defaultValue) => GetAttributeInt(element?.GetAttribute(name), defaultValue);
+
+        public static int GetAttributeInt(this XAttribute attribute, int defaultValue)
+        {
             if (attribute == null) { return defaultValue; }
 
             int val = defaultValue;
@@ -326,12 +362,12 @@ namespace Barotrauma
             {
                 if (!Int32.TryParse(attribute.Value, NumberStyles.Any, CultureInfo.InvariantCulture, out val))
                 {
-                    val = (int)float.Parse(element.GetAttribute(name).Value, CultureInfo.InvariantCulture);
+                    val = (int)float.Parse(attribute.Value, CultureInfo.InvariantCulture);
                 }
             }
             catch (Exception e)
             {
-                DebugConsole.ThrowError("Error in " + element + "! ", e);
+                LogAttributeError(attribute, attribute.Parent, e);
             }
 
             return val;
@@ -350,7 +386,26 @@ namespace Barotrauma
             }
             catch (Exception e)
             {
-                DebugConsole.ThrowError("Error in " + element + "! ", e);
+                LogAttributeError(attribute, element, e);
+            }
+
+            return val;
+        }
+
+        public static ushort GetAttributeUInt16(this XElement element, string name, ushort defaultValue)
+        {
+            var attribute = element?.GetAttribute(name);
+            if (attribute == null) { return defaultValue; }
+
+            ushort val = defaultValue;
+
+            try
+            {
+                val = ushort.Parse(attribute.Value);
+            }
+            catch (Exception e)
+            {
+                LogAttributeError(attribute, element, e);
             }
 
             return val;
@@ -369,10 +424,20 @@ namespace Barotrauma
             }
             catch (Exception e)
             {
-                DebugConsole.ThrowError("Error in " + element + "! ", e);
+                LogAttributeError(attribute, element, e);
             }
 
             return val;
+        }
+
+        public static Option<SerializableDateTime> GetAttributeDateTime(
+            this XElement element, string name)
+        {
+            var attribute = element?.GetAttribute(name);
+            if (attribute == null) { return Option<SerializableDateTime>.None(); }
+
+            string attrVal = attribute.Value;
+            return SerializableDateTime.Parse(attrVal);
         }
 
         public static Version GetAttributeVersion(this XElement element, string name, Version defaultValue)
@@ -388,26 +453,7 @@ namespace Barotrauma
             }
             catch (Exception e)
             {
-                DebugConsole.ThrowError("Error in " + element + "! ", e);
-            }
-
-            return val;
-        }
-
-        public static UInt64 GetAttributeSteamID(this XElement element, string name, UInt64 defaultValue)
-        {
-            var attribute = element?.GetAttribute(name);
-            if (attribute == null) { return defaultValue; }
-
-            UInt64 val = defaultValue;
-
-            try
-            {
-                val = Steam.SteamManager.SteamIDStringToUInt64(attribute.Value);
-            }
-            catch (Exception e)
-            {
-                DebugConsole.ThrowError("Error in " + element + "! ", e);
+                LogAttributeError(attribute, element, e);
             }
 
             return val;
@@ -432,7 +478,7 @@ namespace Barotrauma
                 }
                 catch (Exception e)
                 {
-                    DebugConsole.ThrowError("Error in " + element + "! ", e);
+                    LogAttributeError(attribute, element, e);
                 }
             }
 
@@ -457,7 +503,7 @@ namespace Barotrauma
                 }
                 catch (Exception e)
                 {
-                    DebugConsole.ThrowError("Error in " + element + "! ", e);
+                    LogAttributeError(attribute, element, e);
                 }
             }
 
@@ -468,9 +514,18 @@ namespace Barotrauma
         {
             var attr = element?.GetAttribute(name);
             if (attr == null) { return defaultValue; }
-            return Enum.TryParse(attr.Value, true, out T result) ? result :
-                   int.TryParse(attr.Value, NumberStyles.Any, CultureInfo.InvariantCulture, out int resultInt) ? Unsafe.As<int, T>(ref resultInt) :
-                   defaultValue;
+
+            if (Enum.TryParse(attr.Value, true, out T result))
+            {
+                return result;
+            }
+            else if (int.TryParse(attr.Value, NumberStyles.Any, CultureInfo.InvariantCulture, out int resultInt))
+            {
+                return Unsafe.As<int, T>(ref resultInt);
+            }
+            DebugConsole.ThrowError($"Error in {attr}! \"{attr}\" is not a valid {typeof(T).Name} value");
+            return default;
+            
         }
 
         public static bool GetAttributeBool(this XElement element, string name, bool defaultValue)
@@ -559,11 +614,24 @@ namespace Barotrauma
                 }
                 catch (Exception e)
                 {
-                    DebugConsole.ThrowError("Error in " + element + "! ", e);
+                    LogAttributeError(attribute, element, e);
                 }
             }
 
             return colorValue;
+        }
+
+        private static void LogAttributeError(XAttribute attribute, XElement element, Exception e)
+        {
+            string elementStr = element.ToString();
+            if (elementStr.Length > 500)
+            {
+                DebugConsole.ThrowError($"Error when reading attribute \"{attribute}\"!", e);
+            }
+            else
+            {
+                DebugConsole.ThrowError($"Error when reading attribute \"{attribute.Name}\" from {elementStr}!", e);
+            }
         }
 
 #if CLIENT
@@ -579,9 +647,17 @@ namespace Barotrauma
                 return mouseButton;
             }
             else if (int.TryParse(strValue, NumberStyles.Any, CultureInfo.InvariantCulture, out int mouseButtonInt) &&
-                     (Enum.GetValues(typeof(MouseButton)) as MouseButton[]).Contains((MouseButton)mouseButtonInt))
+                     Enum.GetValues<MouseButton>().Contains((MouseButton)mouseButtonInt))
             {
                 return (MouseButton)mouseButtonInt;
+            }
+            else if (string.Equals(strValue, "LeftMouse", StringComparison.OrdinalIgnoreCase))
+            {
+                return !PlayerInput.MouseButtonsSwapped() ? MouseButton.PrimaryMouse : MouseButton.SecondaryMouse;
+            }
+            else if (string.Equals(strValue, "RightMouse", StringComparison.OrdinalIgnoreCase))
+            {
+                return !PlayerInput.MouseButtonsSwapped() ? MouseButton.SecondaryMouse : MouseButton.PrimaryMouse;
             }
             return defaultValue;
         }
@@ -612,6 +688,15 @@ namespace Barotrauma
             if (string.IsNullOrEmpty(stringValue)) { return defaultValue; }
 
             return stringValue.Split(';').Select(s => ParseTuple<T1, T2>(s, default)).ToArray();
+        }
+
+        public static Range<int> GetAttributeRange(this XElement element, string name, Range<int> defaultValue)
+        {
+            var attribute = element?.GetAttribute(name);
+            if (attribute is null) { return defaultValue; }
+
+            string stringValue = attribute.Value;
+            return string.IsNullOrEmpty(stringValue) ? defaultValue : ParseRange(stringValue);
         }
 
         public static string ElementInnerText(this XElement el)
@@ -673,8 +758,8 @@ namespace Barotrauma
             string[] elems = strValue.Split(',');
             if (elems.Length != 2) { return defaultValue; }
             
-            return ((T1)converters[typeof(T1)].Invoke(elems[0], defaultValue.Item1),
-                (T2)converters[typeof(T2)].Invoke(elems[1], defaultValue.Item2));
+            return ((T1)Converters[typeof(T1)].Invoke(elems[0], defaultValue.Item1),
+                (T2)Converters[typeof(T2)].Invoke(elems[1], defaultValue.Item2));
         }
         
         public static Point ParsePoint(string stringPoint, bool errorMessages = true)
@@ -769,7 +854,15 @@ namespace Barotrauma
 #endif
                 return Color.White;
             }
-
+            if (stringColor.StartsWith("faction.", StringComparison.OrdinalIgnoreCase))
+            {
+                Identifier factionId = stringColor.Substring(8).ToIdentifier();
+                if (FactionPrefab.Prefabs.TryGet(factionId, out var faction))
+                {
+                    return faction.IconColor;
+                }
+                return Color.White;
+            }
 
             string[] strComponents = stringColor.Split(',');
 
@@ -886,6 +979,37 @@ namespace Barotrauma
             }
 
             return floatArray;
+        }
+
+        // parse a range string, e.g "1-3" or "3"
+        public static Range<int> ParseRange(string rangeString)
+        {
+            if (string.IsNullOrWhiteSpace(rangeString)) { return GetDefault(rangeString); }
+
+            string[] split = rangeString.Split('-');
+            return split.Length switch
+            {
+                1 when TryParseInt(split[0], out int value) => new Range<int>(value, value),
+                2 when TryParseInt(split[0], out int min) && TryParseInt(split[1], out int max) && min < max => new Range<int>(min, max),
+                _ => GetDefault(rangeString)
+            };
+
+            static bool TryParseInt(string value, out int result)
+            {
+                if (!string.IsNullOrWhiteSpace(value))
+                {
+                    return int.TryParse(value, NumberStyles.Any, CultureInfo.InvariantCulture, out result);
+                }
+
+                result = default;
+                return false;
+            }
+
+            static Range<int> GetDefault(string rangeString)
+            {
+                DebugConsole.ThrowError($"Error parsing range: \"{rangeString}\" (using default value 0-99)");
+                return new Range<int>(0, 99);
+            }
         }
 
         public static Identifier VariantOf(this XElement element) =>

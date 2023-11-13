@@ -1,14 +1,15 @@
 #nullable enable
 
 using Barotrauma.IO;
+using Barotrauma.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Collections.Concurrent;
 using System.Collections.Immutable;
 using System.Linq;
-using System.Text.RegularExpressions;
 using System.Xml.Linq;
 using System.Globalization;
+using System.Text.Unicode;
 
 namespace Barotrauma
 {
@@ -19,6 +20,8 @@ namespace Barotrauma
 
     public static class TextManager
     {
+        public static bool DebugDraw;
+
         public readonly static LanguageIdentifier DefaultLanguage = "English".ToLanguageIdentifier();
         public readonly static ConcurrentDictionary<LanguageIdentifier, ImmutableHashSet<TextPack>> TextPacks = new ConcurrentDictionary<LanguageIdentifier, ImmutableHashSet<TextPack>>();
         public static IEnumerable<LanguageIdentifier> AvailableLanguages => TextPacks.Keys;
@@ -30,33 +33,109 @@ namespace Barotrauma
 
         public static int LanguageVersion { get; private set; } = 0;
 
-        private readonly static Regex isCJK = new Regex(
-            @"\p{IsHangulJamo}|" +
-            @"\p{IsHiragana}|" +
-            @"\p{IsKatakana}|" +
-            @"\p{IsCJKRadicalsSupplement}|" +
-            @"\p{IsCJKSymbolsandPunctuation}|" +
-            @"\p{IsEnclosedCJKLettersandMonths}|" +
-            @"\p{IsCJKCompatibility}|" +
-            @"\p{IsCJKUnifiedIdeographsExtensionA}|" +
-            @"\p{IsCJKUnifiedIdeographs}|" +
-            @"\p{IsHangulSyllables}|" +
-            @"\p{IsCJKCompatibilityForms}");
+        private static ImmutableArray<Range<int>> UnicodeToIntRanges(params UnicodeRange[] ranges)
+            => ranges
+                .Select(r => new Range<int>(r.FirstCodePoint, r.FirstCodePoint + r.Length - 1))
+                .OrderBy(r => r.Start)
+                .ToImmutableArray();
 
-        /// <summary>
-        /// Does the string contain symbols from Chinese, Japanese or Korean languages
-        /// </summary>
-        public static bool IsCJK(LocalizedString text)
+        [Flags]
+        public enum SpeciallyHandledCharCategory
         {
-            return IsCJK(text.Value);
+            None = 0x0,
+            
+            CJK = 0x1,
+            Cyrillic = 0x2,
+            Japanese = 0x4,
+
+            All = 0x7
         }
+
+        public static readonly ImmutableArray<SpeciallyHandledCharCategory> SpeciallyHandledCharCategories
+            = Enum.GetValues<SpeciallyHandledCharCategory>()
+                .Where(c => c is not (SpeciallyHandledCharCategory.None or SpeciallyHandledCharCategory.All))
+                .ToImmutableArray();
+        
+        private static readonly ImmutableDictionary<SpeciallyHandledCharCategory, ImmutableArray<Range<int>>> SpeciallyHandledCharacterRanges
+            = new[]
+            {
+                (SpeciallyHandledCharCategory.CJK, UnicodeToIntRanges(
+                    UnicodeRanges.HangulJamo,
+                    UnicodeRanges.CjkRadicalsSupplement,
+                    UnicodeRanges.CjkSymbolsandPunctuation,
+                    UnicodeRanges.EnclosedCjkLettersandMonths,
+                    UnicodeRanges.CjkCompatibility,
+                    UnicodeRanges.CjkUnifiedIdeographsExtensionA,
+                    UnicodeRanges.CjkUnifiedIdeographs,
+                    UnicodeRanges.HangulSyllables,
+                    UnicodeRanges.CjkCompatibilityForms,
+                    //not really CJK symbols, but these seem to be present in the CJK fonts but not in the default ones, so we can use them as a fallback
+                    UnicodeRanges.BlockElements
+                )),
+                (SpeciallyHandledCharCategory.Japanese, UnicodeToIntRanges(
+                    UnicodeRanges.Hiragana,
+                    UnicodeRanges.Katakana
+                )),
+                (SpeciallyHandledCharCategory.Cyrillic, UnicodeToIntRanges(
+                    UnicodeRanges.Cyrillic,
+                    UnicodeRanges.CyrillicSupplement,
+                    UnicodeRanges.CyrillicExtendedA,
+                    UnicodeRanges.CyrillicExtendedB,
+                    UnicodeRanges.CyrillicExtendedC
+                ))
+            }.ToImmutableDictionary();
+
+        public static SpeciallyHandledCharCategory GetSpeciallyHandledCategories(LocalizedString text)
+            => GetSpeciallyHandledCategories(text.Value);
+
+        public static SpeciallyHandledCharCategory GetSpeciallyHandledCategories(string text)
+        {
+            if (string.IsNullOrEmpty(text)) { return SpeciallyHandledCharCategory.None; }
+
+            var retVal = SpeciallyHandledCharCategory.None;
+            for (int i = 0; i < text.Length; i++)
+            {
+                char chr = text[i];
+
+                foreach (var category in SpeciallyHandledCharCategories)
+                {
+                    if (retVal.HasFlag(category)) { continue; }
+                    
+                    for (int j = 0; j < SpeciallyHandledCharacterRanges[category].Length; j++)
+                    {
+                        var range = SpeciallyHandledCharacterRanges[category][j];
+
+                        // If chr < range.Start, we know that it can't
+                        // be in any of the following ranges, so let's
+                        // not even bother checking them
+                        if (chr < range.Start) { break; }
+
+                        // This character is in a range, set the flag
+                        if (range.Contains(chr))
+                        {
+                            retVal |= category;
+                            break;
+                        }
+                    }
+                }
+
+                if (retVal == SpeciallyHandledCharCategory.All)
+                {
+                    // Input contains characters from all
+                    // specially handled categories, there's
+                    // no need to inspect the string further
+                    return SpeciallyHandledCharCategory.All;
+                }
+            }
+            return retVal;
+        }
+
+        public static bool IsCJK(LocalizedString text)
+            => IsCJK(text.Value);
 
         public static bool IsCJK(string text)
-        {
-            if (string.IsNullOrEmpty(text)) { return false; }
-            return isCJK.IsMatch(text);
-        }
-
+            => GetSpeciallyHandledCategories(text).HasFlag(SpeciallyHandledCharCategory.CJK);
+        
         /// <summary>
         /// Check if the currently selected language is available, and switch to English if not
         /// </summary>
@@ -262,9 +341,9 @@ namespace Barotrauma
                 string.Join(separator, parts.Select((part, index) => $"[{namePrefix}{index}]")));
         }
         
-        public static LocalizedString ParseInputTypes(LocalizedString str)
+        public static LocalizedString ParseInputTypes(LocalizedString str, bool useColorHighlight = false)
         {
-            return new InputTypeLString(str);
+            return new InputTypeLString(str, useColorHighlight);
         }
 
         public static LocalizedString GetWithVariable(string tag, string varName, LocalizedString value, FormatCapitals formatCapitals = FormatCapitals.No)
@@ -327,7 +406,7 @@ namespace Barotrauma
             return new ReplaceLString(new TagLString(tag), StringComparison.OrdinalIgnoreCase, replacements);
         }
         
-        public static void ConstructDescription(ref LocalizedString description, XElement descriptionElement)
+        public static void ConstructDescription(ref LocalizedString description, XElement descriptionElement, Func<string, string>? customTagReplacer = null)
         {
             /*
             <Description tag="talentdescription.simultaneousskillgain">
@@ -336,21 +415,28 @@ namespace Barotrauma
                 <Replace tag="[somevalue]" value="45.3"/>
             </Description>
             */
-
-            LocalizedString extraDescriptionLine = Get(descriptionElement.GetAttributeIdentifier("tag", Identifier.Empty));
+            Identifier tag = descriptionElement.GetAttributeIdentifier("tag", Identifier.Empty);
+            LocalizedString extraDescriptionLine = Get(tag).Fallback(tag.Value);
             foreach (XElement replaceElement in descriptionElement.Elements())
             {
                 if (replaceElement.NameAsIdentifier() != "replace") { continue; }
 
-                Identifier tag = replaceElement.GetAttributeIdentifier("tag", Identifier.Empty);
-                string[] replacementValues = replaceElement.GetAttributeStringArray("value", Array.Empty<string>());
+                Identifier variableTag = replaceElement.GetAttributeIdentifier("tag", Identifier.Empty);
                 LocalizedString replacementValue = string.Empty;
-                for (int i = 0; i < replacementValues.Length; i++)
+                if (customTagReplacer != null)
                 {
-                    replacementValue += Get(replacementValues[i]).Fallback(replacementValues[i]);
-                    if (i < replacementValues.Length - 1)
+                    replacementValue = customTagReplacer(replaceElement.GetAttributeString("value", string.Empty));
+                }
+                if (replacementValue.IsNullOrWhiteSpace())
+                {
+                    string[] replacementValues = replaceElement.GetAttributeStringArray("value", Array.Empty<string>());
+                    for (int i = 0; i < replacementValues.Length; i++)
                     {
-                        replacementValue += ", ";
+                        replacementValue += Get(replacementValues[i]).Fallback(replacementValues[i]);
+                        if (i < replacementValues.Length - 1)
+                        {
+                            replacementValue += ", ";
+                        }
                     }
                 }
                 if (replaceElement.Attribute("color") != null)
@@ -358,15 +444,18 @@ namespace Barotrauma
                     string colorStr = replaceElement.GetAttributeString("color", "255,255,255,255");
                     replacementValue = $"‖color:{colorStr}‖" + replacementValue + "‖color:end‖";
                 }
-                extraDescriptionLine = extraDescriptionLine.Replace(tag, replacementValue);
+                extraDescriptionLine = extraDescriptionLine.Replace(variableTag, replacementValue);
             }
             if (!(description is RawLString { Value: "" })) { description += "\n"; } //TODO: this is cursed
             description += extraDescriptionLine;
         }
 
-        public static LocalizedString FormatCurrency(int amount)
+        public static LocalizedString FormatCurrency(int amount, bool includeCurrencySymbol = true)
         {
-             return GetWithVariable("currencyformat", "[credits]", string.Format(CultureInfo.InvariantCulture, "{0:N0}", amount));
+            string valueString = string.Format(CultureInfo.InvariantCulture, "{0:N0}", amount);
+             return includeCurrencySymbol ? 
+                GetWithVariable("currencyformat", "[credits]", valueString) :
+                valueString;
         }
 
         public static LocalizedString GetServerMessage(string serverMessage)

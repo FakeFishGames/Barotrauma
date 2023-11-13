@@ -129,7 +129,7 @@ namespace Barotrauma
             private set;
         }
 
-        [Serialize("0.0,1.0", IsPropertySaveable.Yes), Editable]
+        [Serialize("0.0,1.0", IsPropertySaveable.Yes, description: "The sprite depth of the object (min, max). Values of 0 or less make the object render in front of walls, values larger than 0 make it render behind walls with a parallax effect."), Editable]
         public Vector2 DepthRange
         {
             get;
@@ -273,15 +273,22 @@ namespace Barotrauma
             private set;
         }
 
-        [Serialize(false, IsPropertySaveable.Yes), Editable]
+        [Serialize(false, IsPropertySaveable.Yes, description: "Should the object disappear if the object is destroyed? Only relevant if TakeLevelWallDamage is true."), Editable]
         public bool HideWhenBroken
         {
             get;
             private set;
         }
 
-        [Serialize(100.0f, IsPropertySaveable.Yes), Editable]
+        [Serialize(100.0f, IsPropertySaveable.Yes, description: "Amount of health the object has. Only relevant if TakeLevelWallDamage is true."), Editable]
         public float Health
+        {
+            get;
+            private set;
+        }
+
+        [Serialize("1.0,1.0,1.0,1.0", IsPropertySaveable.Yes), Editable]
+        public Color SpriteColor
         {
             get;
             private set;
@@ -359,6 +366,7 @@ namespace Barotrauma
         private void LoadElements(LevelObjectPrefabsFile file, ContentXElement element, int parentTriggerIndex)
         {
             int propertyOverrideCount = 0;
+            //load sprites first, OverrideProperties may need them (defaulting to the default sprite if no override is defined)
             foreach (var subElement in element.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
@@ -377,6 +385,12 @@ namespace Barotrauma
                     case "deformablesprite":
                         DeformableSprite = new DeformableSprite(subElement, lazyLoad: true);
                         break;
+                }
+            }
+            foreach (var subElement in element.Elements())
+            {
+                switch (subElement.Name.ToString().ToLowerInvariant())
+                {
                     case "overridecommonness":
                         Identifier levelType = subElement.GetAttributeIdentifier("leveltype", Identifier.Empty);
                         if (!OverrideCommonness.ContainsKey(levelType))

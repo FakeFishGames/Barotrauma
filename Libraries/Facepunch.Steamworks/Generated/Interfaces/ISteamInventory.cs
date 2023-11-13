@@ -7,7 +7,7 @@ using Steamworks.Data;
 
 namespace Steamworks
 {
-	internal class ISteamInventory : SteamInterface
+	internal unsafe class ISteamInventory : SteamInterface
 	{
 		
 		internal ISteamInventory( bool IsGameServer )
@@ -28,9 +28,6 @@ namespace Steamworks
 		private static extern Result _GetResultStatus( IntPtr self, SteamInventoryResult_t resultHandle );
 		
 		#endregion
-		/// <summary>
-		/// Find out the status of an asynchronous inventory result handle.
-		/// </summary>
 		internal Result GetResultStatus( SteamInventoryResult_t resultHandle )
 		{
 			var returnValue = _GetResultStatus( Self, resultHandle );
@@ -40,13 +37,10 @@ namespace Steamworks
 		#region FunctionMeta
 		[DllImport( Platform.LibraryName, EntryPoint = "SteamAPI_ISteamInventory_GetResultItems", CallingConvention = Platform.CC)]
 		[return: MarshalAs( UnmanagedType.I1 )]
-		private static extern bool _GetResultItems( IntPtr self, SteamInventoryResult_t resultHandle, [In,Out] SteamItemDetails_t[]  pOutItemsArray, ref uint punOutItemsArraySize );
+		private static extern bool _GetResultItems( IntPtr self, SteamInventoryResult_t resultHandle, [In,Out] SteamItemDetails_t[]? pOutItemsArray, ref uint punOutItemsArraySize );
 		
 		#endregion
-		/// <summary>
-		/// Copies the contents of a result set into a flat array. The specific contents of the result set depend on which query which was used.
-		/// </summary>
-		internal bool GetResultItems( SteamInventoryResult_t resultHandle, [In,Out] SteamItemDetails_t[]  pOutItemsArray, ref uint punOutItemsArraySize )
+		internal bool GetResultItems( SteamInventoryResult_t resultHandle, [In,Out] SteamItemDetails_t[]?  pOutItemsArray, ref uint punOutItemsArraySize )
 		{
 			var returnValue = _GetResultItems( Self, resultHandle, pOutItemsArray, ref punOutItemsArraySize );
 			return returnValue;
@@ -55,13 +49,12 @@ namespace Steamworks
 		#region FunctionMeta
 		[DllImport( Platform.LibraryName, EntryPoint = "SteamAPI_ISteamInventory_GetResultItemProperty", CallingConvention = Platform.CC)]
 		[return: MarshalAs( UnmanagedType.I1 )]
-		private static extern bool _GetResultItemProperty( IntPtr self, SteamInventoryResult_t resultHandle, uint unItemIndex, [MarshalAs( UnmanagedType.CustomMarshaler, MarshalTypeRef = typeof( Utf8StringToNative ) )] string pchPropertyName, IntPtr pchValueBuffer, ref uint punValueBufferSizeOut );
+		private static extern bool _GetResultItemProperty( IntPtr self, SteamInventoryResult_t resultHandle, uint unItemIndex, [MarshalAs( UnmanagedType.CustomMarshaler, MarshalTypeRef = typeof( Utf8StringToNative ) )] string? pchPropertyName, IntPtr pchValueBuffer, ref uint punValueBufferSizeOut );
 		
 		#endregion
-		internal bool GetResultItemProperty( SteamInventoryResult_t resultHandle, uint unItemIndex, [MarshalAs( UnmanagedType.CustomMarshaler, MarshalTypeRef = typeof( Utf8StringToNative ) )] string pchPropertyName, out string pchValueBuffer, ref uint punValueBufferSizeOut )
+		internal bool GetResultItemProperty( SteamInventoryResult_t resultHandle, uint unItemIndex, [MarshalAs( UnmanagedType.CustomMarshaler, MarshalTypeRef = typeof( Utf8StringToNative ) )] string? pchPropertyName, out string pchValueBuffer, ref uint punValueBufferSizeOut )
 		{
-			using var memory = Helpers.TakeMemory();
-			IntPtr mempchValueBuffer = memory;
+			using var mempchValueBuffer = Helpers.TakeMemory();
 			var returnValue = _GetResultItemProperty( Self, resultHandle, unItemIndex, pchPropertyName, mempchValueBuffer, ref punValueBufferSizeOut );
 			pchValueBuffer = Helpers.MemoryToString( mempchValueBuffer );
 			return returnValue;
@@ -72,9 +65,6 @@ namespace Steamworks
 		private static extern uint _GetResultTimestamp( IntPtr self, SteamInventoryResult_t resultHandle );
 		
 		#endregion
-		/// <summary>
-		/// Returns the server time at which the result was generated. Compare against the value of IClientUtils::GetServerRealTime() to determine age.
-		/// </summary>
 		internal uint GetResultTimestamp( SteamInventoryResult_t resultHandle )
 		{
 			var returnValue = _GetResultTimestamp( Self, resultHandle );
@@ -87,9 +77,6 @@ namespace Steamworks
 		private static extern bool _CheckResultSteamID( IntPtr self, SteamInventoryResult_t resultHandle, SteamId steamIDExpected );
 		
 		#endregion
-		/// <summary>
-		/// Returns true if the result belongs to the target steam ID or false if the result does not. This is important when using DeserializeResult to verify that a remote player is not pretending to have a different users inventory.
-		/// </summary>
 		internal bool CheckResultSteamID( SteamInventoryResult_t resultHandle, SteamId steamIDExpected )
 		{
 			var returnValue = _CheckResultSteamID( Self, resultHandle, steamIDExpected );
@@ -101,9 +88,6 @@ namespace Steamworks
 		private static extern void _DestroyResult( IntPtr self, SteamInventoryResult_t resultHandle );
 		
 		#endregion
-		/// <summary>
-		/// Destroys a result handle and frees all associated memory.
-		/// </summary>
 		internal void DestroyResult( SteamInventoryResult_t resultHandle )
 		{
 			_DestroyResult( Self, resultHandle );
@@ -115,9 +99,6 @@ namespace Steamworks
 		private static extern bool _GetAllItems( IntPtr self, ref SteamInventoryResult_t pResultHandle );
 		
 		#endregion
-		/// <summary>
-		/// Captures the entire state of the current users Steam inventory.
-		/// </summary>
 		internal bool GetAllItems( ref SteamInventoryResult_t pResultHandle )
 		{
 			var returnValue = _GetAllItems( Self, ref pResultHandle );
@@ -130,9 +111,6 @@ namespace Steamworks
 		private static extern bool _GetItemsByID( IntPtr self, ref SteamInventoryResult_t pResultHandle, ref InventoryItemId pInstanceIDs, uint unCountInstanceIDs );
 		
 		#endregion
-		/// <summary>
-		/// Captures the state of a subset of the current users Steam inventory identified by an array of item instance IDs.
-		/// </summary>
 		internal bool GetItemsByID( ref SteamInventoryResult_t pResultHandle, ref InventoryItemId pInstanceIDs, uint unCountInstanceIDs )
 		{
 			var returnValue = _GetItemsByID( Self, ref pResultHandle, ref pInstanceIDs, unCountInstanceIDs );
@@ -181,9 +159,6 @@ namespace Steamworks
 		private static extern bool _GrantPromoItems( IntPtr self, ref SteamInventoryResult_t pResultHandle );
 		
 		#endregion
-		/// <summary>
-		/// GrantPromoItems() checks the list of promotional items for which the user may be eligible and grants the items (one time only).
-		/// </summary>
 		internal bool GrantPromoItems( ref SteamInventoryResult_t pResultHandle )
 		{
 			var returnValue = _GrantPromoItems( Self, ref pResultHandle );
@@ -220,9 +195,6 @@ namespace Steamworks
 		private static extern bool _ConsumeItem( IntPtr self, ref SteamInventoryResult_t pResultHandle, InventoryItemId itemConsume, uint unQuantity );
 		
 		#endregion
-		/// <summary>
-		/// ConsumeItem() removes items from the inventory permanently.
-		/// </summary>
 		internal bool ConsumeItem( ref SteamInventoryResult_t pResultHandle, InventoryItemId itemConsume, uint unQuantity )
 		{
 			var returnValue = _ConsumeItem( Self, ref pResultHandle, itemConsume, unQuantity );
@@ -258,9 +230,6 @@ namespace Steamworks
 		private static extern void _SendItemDropHeartbeat( IntPtr self );
 		
 		#endregion
-		/// <summary>
-		/// Deprecated method. Playtime accounting is performed on the Steam servers.
-		/// </summary>
 		internal void SendItemDropHeartbeat()
 		{
 			_SendItemDropHeartbeat( Self );
@@ -272,9 +241,6 @@ namespace Steamworks
 		private static extern bool _TriggerItemDrop( IntPtr self, ref SteamInventoryResult_t pResultHandle, InventoryDefId dropListDefinition );
 		
 		#endregion
-		/// <summary>
-		/// Playtime credit must be consumed and turned into item drops by your game.
-		/// </summary>
 		internal bool TriggerItemDrop( ref SteamInventoryResult_t pResultHandle, InventoryDefId dropListDefinition )
 		{
 			var returnValue = _TriggerItemDrop( Self, ref pResultHandle, dropListDefinition );
@@ -299,9 +265,6 @@ namespace Steamworks
 		private static extern bool _LoadItemDefinitions( IntPtr self );
 		
 		#endregion
-		/// <summary>
-		/// LoadItemDefinitions triggers the automatic load and refresh of item definitions.
-		/// </summary>
 		internal bool LoadItemDefinitions()
 		{
 			var returnValue = _LoadItemDefinitions( Self );
@@ -311,10 +274,10 @@ namespace Steamworks
 		#region FunctionMeta
 		[DllImport( Platform.LibraryName, EntryPoint = "SteamAPI_ISteamInventory_GetItemDefinitionIDs", CallingConvention = Platform.CC)]
 		[return: MarshalAs( UnmanagedType.I1 )]
-		private static extern bool _GetItemDefinitionIDs( IntPtr self, [In,Out] InventoryDefId[]  pItemDefIDs, ref uint punItemDefIDsArraySize );
+		private static extern bool _GetItemDefinitionIDs( IntPtr self, [In,Out] InventoryDefId[]?  pItemDefIDs, ref uint punItemDefIDsArraySize );
 		
 		#endregion
-		internal bool GetItemDefinitionIDs( [In,Out] InventoryDefId[]  pItemDefIDs, ref uint punItemDefIDsArraySize )
+		internal bool GetItemDefinitionIDs( [In,Out] InventoryDefId[]?  pItemDefIDs, ref uint punItemDefIDsArraySize )
 		{
 			var returnValue = _GetItemDefinitionIDs( Self, pItemDefIDs, ref punItemDefIDsArraySize );
 			return returnValue;
@@ -323,13 +286,12 @@ namespace Steamworks
 		#region FunctionMeta
 		[DllImport( Platform.LibraryName, EntryPoint = "SteamAPI_ISteamInventory_GetItemDefinitionProperty", CallingConvention = Platform.CC)]
 		[return: MarshalAs( UnmanagedType.I1 )]
-		private static extern bool _GetItemDefinitionProperty( IntPtr self, InventoryDefId iDefinition, [MarshalAs( UnmanagedType.CustomMarshaler, MarshalTypeRef = typeof( Utf8StringToNative ) )] string pchPropertyName, IntPtr pchValueBuffer, ref uint punValueBufferSizeOut );
+		private static extern bool _GetItemDefinitionProperty( IntPtr self, InventoryDefId iDefinition, [MarshalAs( UnmanagedType.CustomMarshaler, MarshalTypeRef = typeof( Utf8StringToNative ) )] string? pchPropertyName, IntPtr pchValueBuffer, ref uint punValueBufferSizeOut );
 		
 		#endregion
-		internal bool GetItemDefinitionProperty( InventoryDefId iDefinition, [MarshalAs( UnmanagedType.CustomMarshaler, MarshalTypeRef = typeof( Utf8StringToNative ) )] string pchPropertyName, out string pchValueBuffer, ref uint punValueBufferSizeOut )
+		internal bool GetItemDefinitionProperty( InventoryDefId iDefinition, [MarshalAs( UnmanagedType.CustomMarshaler, MarshalTypeRef = typeof( Utf8StringToNative ) )] string? pchPropertyName, out string pchValueBuffer, ref uint punValueBufferSizeOut )
 		{
-			using var memory = Helpers.TakeMemory();
-			IntPtr mempchValueBuffer = memory;
+			using var mempchValueBuffer = Helpers.TakeMemory();
 			var returnValue = _GetItemDefinitionProperty( Self, iDefinition, pchPropertyName, mempchValueBuffer, ref punValueBufferSizeOut );
 			pchValueBuffer = Helpers.MemoryToString( mempchValueBuffer );
 			return returnValue;
@@ -495,6 +457,18 @@ namespace Steamworks
 		internal bool SubmitUpdateProperties( SteamInventoryUpdateHandle_t handle, ref SteamInventoryResult_t pResultHandle )
 		{
 			var returnValue = _SubmitUpdateProperties( Self, handle, ref pResultHandle );
+			return returnValue;
+		}
+		
+		#region FunctionMeta
+		[DllImport( Platform.LibraryName, EntryPoint = "SteamAPI_ISteamInventory_InspectItem", CallingConvention = Platform.CC)]
+		[return: MarshalAs( UnmanagedType.I1 )]
+		private static extern bool _InspectItem( IntPtr self, ref SteamInventoryResult_t pResultHandle, [MarshalAs( UnmanagedType.CustomMarshaler, MarshalTypeRef = typeof( Utf8StringToNative ) )] string pchItemToken );
+		
+		#endregion
+		internal bool InspectItem( ref SteamInventoryResult_t pResultHandle, [MarshalAs( UnmanagedType.CustomMarshaler, MarshalTypeRef = typeof( Utf8StringToNative ) )] string pchItemToken )
+		{
+			var returnValue = _InspectItem( Self, ref pResultHandle, pchItemToken );
 			return returnValue;
 		}
 		

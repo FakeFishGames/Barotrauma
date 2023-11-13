@@ -413,23 +413,9 @@ namespace Barotrauma
 
         private Rectangle DrawScriptedEvent(SpriteBatch spriteBatch, ScriptedEvent scriptedEvent, Rectangle? parentRect = null)
         {
-            EventAction? currentEvent = !scriptedEvent.IsFinished ? scriptedEvent.Actions[scriptedEvent.CurrentActionIndex] : null;
-
             List<DebugLine> positions = new List<DebugLine>();
 
-            string text = $"Finished: {scriptedEvent.IsFinished.ColorizeObject()}\n" +
-                          $"Action index: {scriptedEvent.CurrentActionIndex.ColorizeObject()}\n" +
-                          $"Current action: {currentEvent?.ToDebugString() ?? ToolBox.ColorizeObject(null)}\n";
-
-            text += "All actions:\n";
-            text += FindActions(scriptedEvent).Aggregate(string.Empty, (current, action) => current + $"{new string(' ', action.Item1 * 6)}{action.Item2.ToDebugString()}\n");
-
-            text += "Targets:\n";
-            foreach (var (key, value) in scriptedEvent.Targets)
-            {
-                text += $"    {key.ColorizeObject()}: {value.Aggregate(string.Empty, (current, entity) => current + $"{entity.ColorizeObject()} ")}\n";
-            }
-
+            string text = scriptedEvent.GetDebugInfo();
             if (scriptedEvent.Targets != null)
             {
                 foreach ((_, List<Entity> entities) in scriptedEvent.Targets)
@@ -452,10 +438,7 @@ namespace Barotrauma
         {
             debugPositions.Clear();
 
-            string text = $"Finished: {artifactEvent.IsFinished.ColorizeObject()}\n" +
-                          $"Item: {artifactEvent.Item.ColorizeObject()}\n" +
-                          $"Spawn pending: {artifactEvent.SpawnPending.ColorizeObject()}\n" +
-                          $"Spawn position: {artifactEvent.SpawnPos.ColorizeObject()}\n";
+            string text = artifactEvent.GetDebugInfo();
 
             if (artifactEvent.Item != null && !artifactEvent.Item.Removed)
             {
@@ -470,10 +453,7 @@ namespace Barotrauma
         {
             debugPositions.Clear();
 
-            string text = $"Finished: {monsterEvent.IsFinished.ColorizeObject()}\n" +
-                          $"Amount: {monsterEvent.MinAmount.ColorizeObject()} - {monsterEvent.MaxAmount.ColorizeObject()}\n" +
-                          $"Spawn pending: {monsterEvent.SpawnPending.ColorizeObject()}\n" +
-                          $"Spawn position: {monsterEvent.SpawnPos.ColorizeObject()}\n";
+            string text = monsterEvent.GetDebugInfo();
 
             if (monsterEvent.SpawnPos != null && Submarine.MainSub != null)
             {
@@ -608,58 +588,92 @@ namespace Barotrauma
                     }
                     break;
                 case NetworkEventType.CONVERSATION:
-                    UInt16 identifier = msg.ReadUInt16();
-                    string eventSprite = msg.ReadString();
-                    byte dialogType = msg.ReadByte();
-                    bool continueConversation = msg.ReadBoolean();
-                    UInt16 speakerId = msg.ReadUInt16();
-                    string text = msg.ReadString();
-                    bool fadeToBlack = msg.ReadBoolean();
-                    byte optionCount = msg.ReadByte();
-                    List<string> options = new List<string>();
-                    for (int i = 0; i < optionCount; i++)
                     {
-                        options.Add(msg.ReadString());
-                    }
-
-                    byte endCount = msg.ReadByte();
-                    int[] endings = new int[endCount];
-                    for (int i = 0; i < endCount; i++)
-                    {
-                        endings[i] = msg.ReadByte();
-                    }
-
-                    if (string.IsNullOrEmpty(text) && optionCount == 0)
-                    {
-                        GUIMessageBox.MessageBoxes.ForEachMod(mb =>
+                        UInt16 identifier = msg.ReadUInt16();
+                        string eventSprite = msg.ReadString();
+                        byte dialogType = msg.ReadByte();
+                        bool continueConversation = msg.ReadBoolean();
+                        UInt16 speakerId = msg.ReadUInt16();
+                        string text = msg.ReadString();
+                        bool fadeToBlack = msg.ReadBoolean();
+                        byte optionCount = msg.ReadByte();
+                        List<string> options = new List<string>();
+                        for (int i = 0; i < optionCount; i++)
                         {
-                            if (mb.UserData is Pair<string, UInt16> pair && pair.First == "ConversationAction" && pair.Second == identifier)
+                            options.Add(msg.ReadString());
+                        }
+
+                        byte endCount = msg.ReadByte();
+                        int[] endings = new int[endCount];
+                        for (int i = 0; i < endCount; i++)
+                        {
+                            endings[i] = msg.ReadByte();
+                        }
+
+                        if (string.IsNullOrEmpty(text) && optionCount == 0)
+                        {
+                            GUIMessageBox.MessageBoxes.ForEachMod(mb =>
                             {
-                                (mb as GUIMessageBox)?.Close();
-                            }
-                        });
+                                if (mb.UserData is Pair<string, UInt16> pair && pair.First == "ConversationAction" && pair.Second == identifier)
+                                {
+                                    (mb as GUIMessageBox)?.Close();
+                                }
+                            });
+                        }
+                        else
+                        {
+                            ConversationAction.CreateDialog(text, Entity.FindEntityByID(speakerId) as Character, options, endings, eventSprite, identifier, fadeToBlack, (ConversationAction.DialogTypes)dialogType, continueConversation);
+                        }
+                        if (Entity.FindEntityByID(speakerId) is Character speaker)
+                        {
+                            speaker.CampaignInteractionType = CampaignMode.InteractionType.None;
+                            speaker.SetCustomInteract(null, null);
+                        }
+                        break;
                     }
-                    else
+                case NetworkEventType.CONVERSATION_SELECTED_OPTION:
                     {
-                        ConversationAction.CreateDialog(text, Entity.FindEntityByID(speakerId) as Character, options, endings, eventSprite, identifier, fadeToBlack, (ConversationAction.DialogTypes)dialogType, continueConversation);
+                        UInt16 identifier = msg.ReadUInt16();
+                        int selectedOption = msg.ReadByte() - 1;
+                        ConversationAction.SelectOption(identifier, selectedOption);
+                        break;
                     }
-                    if (Entity.FindEntityByID(speakerId) is Character speaker)
-                    {
-                        speaker.CampaignInteractionType = CampaignMode.InteractionType.None;
-                        speaker.SetCustomInteract(null, null);
-                    }
-                    break;
                 case NetworkEventType.MISSION:
                     Identifier missionIdentifier = msg.ReadIdentifier();
-
-                    MissionPrefab? prefab = MissionPrefab.Prefabs.Find(mp => mp.Identifier == missionIdentifier);
-                    if (prefab != null)
+                    int locationIndex = msg.ReadInt32();
+                    int destinationIndex = msg.ReadInt32();
+                    string missionName = msg.ReadString();
+                    if (Screen.Selected != GameMain.NetLobbyScreen)
                     {
-                        new GUIMessageBox(string.Empty, TextManager.GetWithVariable("missionunlocked", "[missionname]", prefab.Name), 
-                            Array.Empty<LocalizedString>(), type: GUIMessageBox.Type.InGame, icon: prefab.Icon, relativeSize: new Vector2(0.3f, 0.15f), minSize: new Point(512, 128))
+                        MissionPrefab? prefab = MissionPrefab.Prefabs.Find(mp => mp.Identifier == missionIdentifier);
+                        if (prefab != null)
                         {
-                            IconColor = prefab.IconColor
-                        };
+                            new GUIMessageBox(string.Empty, TextManager.GetWithVariable("missionunlocked", "[missionname]", missionName),
+                                Array.Empty<LocalizedString>(), type: GUIMessageBox.Type.InGame, icon: prefab.Icon, relativeSize: new Vector2(0.3f, 0.15f), minSize: new Point(512, 128))
+                            {
+                                IconColor = prefab.IconColor
+                            };
+                            if (GameMain.GameSession?.Map is { } map && locationIndex >= 0 && locationIndex < map.Locations.Count)
+                            {
+                                Location location = map.Locations[locationIndex];
+                                map.Discover(location, checkTalents: false);
+
+                                LocationConnection? connection = null;
+                                if (destinationIndex != locationIndex && destinationIndex >= 0 && destinationIndex < map.Locations.Count)
+                                {
+                                    Location destination = map.Locations[destinationIndex];
+                                    connection = map.Connections.FirstOrDefault(c => c.Locations.Contains(location) && c.Locations.Contains(destination));
+                                }
+                                if (connection != null)
+                                {
+                                    location.UnlockMission(prefab, connection);
+                                }
+                                else
+                                {
+                                    location.UnlockMission(prefab);
+                                }
+                            }
+                        }
                     }
                     break;
                 case NetworkEventType.UNLOCKPATH:
@@ -678,7 +692,30 @@ namespace Barotrauma
                         }
                     }
                     break;
+                case NetworkEventType.EVENTLOG:
+                    ClientReadEventLog(GameMain.Client, msg);
+                    break;
+                case NetworkEventType.EVENTOBJECTIVE:
+                    ClientReadEventObjective(GameMain.Client, msg);
+                    break;
             }
+        }
+    
+        private void ClientReadEventLog(GameClient client, IReadMessage msg)
+        {
+            NetEventLogEntry entry = INetSerializableStruct.Read<NetEventLogEntry>(msg);
+            EventLog.AddEntry(entry.EventPrefabId, entry.LogEntryId, entry.Text.Replace("\\n", "\n"));
+        }
+        private static void ClientReadEventObjective(GameClient client, IReadMessage msg)
+        {
+            NetEventObjective entry = INetSerializableStruct.Read<NetEventObjective>(msg);
+            EventObjectiveAction.Trigger(
+                entry.Type,
+                entry.Identifier,
+                entry.ObjectiveTag,
+                entry.ParentObjectiveId,
+                entry.TextTag,
+                entry.CanBeCompleted);
         }
     }
 }

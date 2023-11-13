@@ -4,11 +4,12 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Linq;
+using Barotrauma.Networking;
 using Color = Microsoft.Xna.Framework.Color;
 
 namespace Barotrauma
 {
-    public static partial class ToolBox
+    static partial class ToolBox
     {
         /// <summary>
         /// Checks if point is inside of a polygon
@@ -450,21 +451,26 @@ namespace Barotrauma
         public static string WrapText(string text, float lineLength, ScalableFont font, float textScale = 1.0f)
             => font.WrapText(text, lineLength / textScale);
 
-        public static void ParseConnectCommand(string[] args, out string name, out string endpoint, out UInt64 lobbyId)
+        public static Option<ConnectCommand> ParseConnectCommand(string[] args)
         {
-            name = null; endpoint = null; lobbyId = 0;
-            if (args == null || args.Length < 2) { return; }
+            if (args == null || args.Length < 2) { return Option<ConnectCommand>.None(); }
 
             if (args[0].Equals("-connect", StringComparison.OrdinalIgnoreCase))
             {
-                if (args.Length < 3) { return; }
-                name = args[1];
-                endpoint = args[2];
+                if (args.Length < 3) { return Option<ConnectCommand>.None(); }
+                if (!(Endpoint.Parse(args[2]).TryUnwrap(out var endpoint))) { return Option<ConnectCommand>.None(); }
+                return Option<ConnectCommand>.Some(
+                    new ConnectCommand(
+                        serverName: args[1],
+                        endpoint: endpoint));
             }
             else if (args[0].Equals("+connect_lobby", StringComparison.OrdinalIgnoreCase))
             {
-                UInt64.TryParse(args[1], out lobbyId);
+                return UInt64.TryParse(args[1], out var lobbyId)
+                    ? Option<ConnectCommand>.Some(new ConnectCommand(lobbyId))
+                    : Option<ConnectCommand>.None();
             }
+            return Option<ConnectCommand>.None();
         }
 
         public static bool VersionNewerIgnoreRevision(Version a, Version b)
@@ -505,6 +511,35 @@ namespace Barotrauma
             if (swap) { (paddingX, paddingY) = (paddingY, paddingX); }
 
             return new Vector2(paddingX, paddingY);
+        }
+
+        public static string ColorSectionOfString(string text, int start, int length, Color color)
+        {
+            int end = start + length;
+
+            if (start < 0 || length < 0 || end > text.Length)
+            {
+                throw new ArgumentOutOfRangeException($"Invalid start ({start}) or length ({length}) for text \"{text}\".");
+            }
+
+            string stichedString = string.Empty;
+
+            if (start > 0)
+            {
+                stichedString += text[..start];
+            }
+
+            // this is the highlighted part
+            stichedString += ColorString(text[start..end], color);
+
+            if (end < text.Length)
+            {
+                stichedString += text[end..];
+            }
+
+            return stichedString;
+
+            static string ColorString(string text, Color color) => $"‖color:{color.ToStringHex()}‖{text}‖end‖";
         }
     }
 }

@@ -107,10 +107,11 @@ namespace Steamworks.Data
 		/// <summary>
 		/// We override tostring to provide a sensible representation
 		/// </summary>
-		public override string ToString()
+		public override string? ToString()
 		{
 			var id = this;
-			SteamNetworkingUtils.Internal.SteamNetworkingIdentity_ToString( ref id, out var str );
+			string? str = null;
+			SteamNetworkingUtils.Internal?.SteamNetworkingIdentity_ToString( ref id, out str );
 			return str;
 		}
 

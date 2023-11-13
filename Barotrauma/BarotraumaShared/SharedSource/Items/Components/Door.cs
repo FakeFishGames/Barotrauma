@@ -1,12 +1,10 @@
 ﻿using Barotrauma.Networking;
 using FarseerPhysics;
-using FarseerPhysics.Dynamics;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
-using Barotrauma.IO;
 using System.Linq;
-using System.Xml.Linq;
+using FarseerPhysics.Dynamics;
 #if CLIENT
 using Barotrauma.Lights;
 #endif
@@ -16,6 +14,10 @@ namespace Barotrauma.Items.Components
 {
     partial class Door : Pickable, IDrawableComponent, IServerSerializable
     {
+        private static readonly HashSet<Door> doorList = new HashSet<Door>();
+
+        public static IReadOnlyCollection<Door> DoorList { get { return doorList; } }
+
         private Gap linkedGap;
         private bool isOpen;
 
@@ -39,6 +41,8 @@ namespace Barotrauma.Items.Components
         }
 
         private bool isStuck;
+
+        [Serialize(false, IsPropertySaveable.Yes, alwaysUseInstanceValues: true)]
         public bool IsStuck
         {
             get { return isStuck; }
@@ -47,7 +51,10 @@ namespace Barotrauma.Items.Components
                 if (isStuck == value) { return; }
                 isStuck = value;
 #if SERVER
-                item.CreateServerEvent(this);
+                if (item.FullyInitialized)
+                {
+                    item.CreateServerEvent(this);
+                }
 #endif
             }
         }
@@ -67,7 +74,7 @@ namespace Barotrauma.Items.Components
 
         private bool isBroken;
 
-        public bool CanBeTraversed => (IsOpen || IsBroken) && !IsJammed && !IsStuck && !Impassable;
+        public bool CanBeTraversed => !Impassable && (IsBroken || IsOpen);
         
         public bool IsBroken
         {
@@ -92,6 +99,9 @@ namespace Barotrauma.Items.Components
 
         public PhysicsBody Body { get; private set; }
 
+        //the fixture that's part of the submarine's collider (= fixture that things outside the sub can collide with if the door is outside hulls)
+        public Fixture OutsideSubmarineFixture;
+
         private float RepairThreshold
         {
             get { return item.GetComponent<Repairable>() == null ? 0.0f : item.MaxCondition; }
@@ -100,7 +110,7 @@ namespace Barotrauma.Items.Components
         public bool CanBeWelded = true;
 
         private float stuck;
-        [Serialize(0.0f, IsPropertySaveable.No, description: "How badly stuck the door is (in percentages). If the percentage reaches 100, the door needs to be cut open to make it usable again.")]
+        [Serialize(0.0f, IsPropertySaveable.Yes, description: "How badly stuck the door is (in percentages). If the percentage reaches 100, the door needs to be cut open to make it usable again.")]
         public float Stuck
         {
             get { return stuck; }
@@ -165,24 +175,39 @@ namespace Barotrauma.Items.Components
             set 
             {
                 isOpen = value;
-                OpenState = (isOpen) ? 1.0f : 0.0f;
+                OpenState = isOpen ? 1.0f : 0.0f;
             }
         }
+        public bool IsClosed => !IsOpen;
+
+        public bool IsFullyOpen => IsOpen && OpenState >= 1.0f;
+
+        public bool IsFullyClosed => IsClosed && OpenState <= 0f;
 
         [Serialize(false, IsPropertySaveable.No, description: "If the door has integrated buttons, it can be opened by interacting with it directly (instead of using buttons wired to it).")]
         public bool HasIntegratedButtons { get; private set; }
-                
+
+        [ConditionallyEditable(ConditionallyEditable.ConditionType.HasIntegratedButtons), 
+        Serialize(true, IsPropertySaveable.No, description: "If the door has integrated buttons, should clicking on it perform the default action of opening the door? Can be used in conjunction with the \"activate_out\" output to pass a signal to a circuit without toggling the door when someone tries to open/close the door.")]
+        public bool ToggleWhenClicked { get; private set; }
+
         public float OpenState
         {
             get { return openState; }
             set 
-            {                
+            {
                 openState = MathHelper.Clamp(value, 0.0f, 1.0f);
 #if CLIENT
                 float size = IsHorizontal ? item.Rect.Width : item.Rect.Height;
-                if (Math.Abs(lastConvexHullState - openState) * size < 5.0f) { return; }
-                UpdateConvexHulls();
-                lastConvexHullState = openState;
+                //refresh convex hulls if the body of the door has moved by 5 pixels,
+                //or if it becomes fully closed or fully open
+                if (Math.Abs(lastConvexHullState - openState) * size > 5.0f ||
+                    (openState <= 0.0f && lastConvexHullState > 0.0f) ||
+                    (openState >= 1.0f && lastConvexHullState < 1.0f)) 
+                {
+                    UpdateConvexHulls();
+                    lastConvexHullState = openState; 
+                }
 #endif
             }
         }
@@ -206,6 +231,8 @@ namespace Barotrauma.Items.Components
             IsHorizontal = element.GetAttributeBool("horizontal", false);
             canBePicked = element.GetAttributeBool("canbepicked", false);
             autoOrientGap = element.GetAttributeBool("autoorientgap", false);
+
+            allowedSlots.Clear();
             
             foreach (var subElement in element.Elements())
             {
@@ -227,6 +254,7 @@ namespace Barotrauma.Items.Components
             }
                         
             IsActive = true;
+            doorList.Add(this);
         }
 
         public override void OnItemLoaded()
@@ -323,8 +351,12 @@ namespace Barotrauma.Items.Components
                 OnFailedToOpen();
                 return;
             }
+            item.SendSignal("1", "activate_out");
             lastUser = user;
-            SetState(PredictedState == null ? !isOpen : !PredictedState.Value, false, true, forcedOpen: actionType == ActionType.OnPicked);
+            if (ToggleWhenClicked)
+            {
+                SetState(PredictedState == null ? !isOpen : !PredictedState.Value, false, true, forcedOpen: actionType == ActionType.OnPicked);
+            }
         }
 
         public override bool Select(Character character)
@@ -359,7 +391,11 @@ namespace Barotrauma.Items.Components
             {
                 lastBrokenTime = Timing.TotalTime;
                 //the door has to be restored to 50% health before collision detection on the body is re-enabled
-                if (item.ConditionPercentage > 50.0f && (GameMain.NetworkMember == null || GameMain.NetworkMember.IsServer))
+
+                //multiply by MaxRepairConditionMultiplier so the item gets repaired at 50% of the _default max condition_
+                //otherwise increasing the max condition is arguably harmful, as the door needs to be repaired further to re-enable the collider
+                if (item.ConditionPercentage * Math.Max(item.MaxRepairConditionMultiplier, 1.0f) > 50.0f && 
+                    (GameMain.NetworkMember == null || GameMain.NetworkMember.IsServer))
                 {
                     IsBroken = false;
                 }
@@ -391,11 +427,20 @@ namespace Barotrauma.Items.Components
             if (isClosing)
             {
                 if (OpenState < 0.9f) { PushCharactersAway(); }
+                if (CheckSubmarinesInDoorWay())
+                {
+                    PredictedState = null;
+                    isOpen = true;
+                }
             }
             else
             {
                 bool wasEnabled = Body.Enabled;
                 Body.Enabled = Impassable || openState < 1.0f;
+                if (OutsideSubmarineFixture != null)
+                {
+                    OutsideSubmarineFixture.CollidesWith = Body.Enabled ? SubmarineBody.CollidesWith : Category.None;
+                }
                 if (wasEnabled && !Body.Enabled && IsHorizontal)
                 {
                     //when opening a hatch, force characters above it to refresh the floor position
@@ -439,6 +484,10 @@ namespace Barotrauma.Items.Components
                 }
                 PushCharactersAway();
             }
+            if (OutsideSubmarineFixture != null && Body.Enabled)
+            {
+                OutsideSubmarineFixture.CollidesWith = SubmarineBody.CollidesWith;
+            }
 #if CLIENT
             UpdateConvexHulls();
 #endif
@@ -459,7 +508,16 @@ namespace Barotrauma.Items.Components
                     ce = ce.Next;
                 }
             }
-            linkedGap.Open = 1.0f;
+
+            if (OutsideSubmarineFixture != null)
+            {
+                OutsideSubmarineFixture.CollidesWith = Category.None;
+            }
+            if (linkedGap != null)
+            {
+                linkedGap.Open = 1.0f;
+            }
+
             IsOpen = false;
 #if CLIENT
             if (convexHull != null) { convexHull.Enabled = false; }
@@ -482,11 +540,11 @@ namespace Barotrauma.Items.Components
         {
             RefreshLinkedGap();
 #if CLIENT
-            Vector2[] corners = GetConvexHullCorners(Rectangle.Empty);
-
-            convexHull = new ConvexHull(corners, Color.Black, item);
-            if (Window != Rectangle.Empty) convexHull2 = new ConvexHull(corners, Color.Black, item);
-
+            convexHull = new ConvexHull(doorRect, IsHorizontal, item);
+            if (Window != Rectangle.Empty)
+            {
+                convexHull2 = new ConvexHull(doorRect, IsHorizontal, item);
+            }
             UpdateConvexHulls();
 #endif
         }
@@ -520,6 +578,12 @@ namespace Barotrauma.Items.Components
                     gap.ConnectedDoor = null;
                 }
             }
+
+            if (OutsideSubmarineFixture != null)
+            {
+                OutsideSubmarineFixture.Body.Remove(OutsideSubmarineFixture);
+                OutsideSubmarineFixture = null;
+            }
             
             //no need to remove the gap if we're unloading the whole submarine
             //otherwise the gap will be removed twice and cause console warnings
@@ -534,6 +598,36 @@ namespace Barotrauma.Items.Components
             convexHull?.Remove();
             convexHull2?.Remove();
 #endif
+
+            doorList.Remove(this);
+        }
+
+        private bool CheckSubmarinesInDoorWay()
+        {
+            if (linkedGap != null && linkedGap.IsRoomToRoom) { return false; }
+
+            Rectangle doorRect = item.WorldRect;
+            if (IsHorizontal)
+            {
+                doorRect.Width = (int)(item.Rect.Width * (1.0f - openState));
+            }
+            else
+            {
+                doorRect.Height = (int)(item.Rect.Height * (1.0f - openState));
+            }
+
+            foreach (Submarine sub in Submarine.Loaded)
+            {
+                if (sub == item.Submarine || sub.DockedTo.Contains(item.Submarine)) { continue; }
+                Rectangle worldBorders = sub.Borders;
+                worldBorders.Location += sub.WorldPosition.ToPoint();
+                if (!Submarine.RectsOverlap(worldBorders, doorRect)) { continue; }                
+                foreach (Hull hull in sub.GetHulls(alsoFromConnectedSubs: false))
+                {
+                    if (Submarine.RectsOverlap(hull.WorldRect, doorRect)) { return true; }
+                }
+            }
+            return false;
         }
 
         bool itemPosErrorShown;
@@ -557,7 +651,6 @@ namespace Barotrauma.Items.Components
             Vector2 currSize = IsHorizontal ?
                 new Vector2(item.Rect.Width * (1.0f - openState), doorSprite.size.Y * item.Scale) :
                 new Vector2(doorSprite.size.X * item.Scale, item.Rect.Height * (1.0f - openState));
-
             Vector2 simSize = ConvertUnits.ToSimUnits(currSize);
 
             foreach (Character c in Character.CharacterList)

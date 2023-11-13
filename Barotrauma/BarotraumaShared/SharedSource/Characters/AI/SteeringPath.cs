@@ -115,6 +115,8 @@ namespace Barotrauma
             }
         }
 
+        public bool IsAtEndNode => currentIndex >= nodes.Count - 1;
+
         public List<WayPoint> Nodes
         {
             get { return nodes; }

@@ -1,7 +1,5 @@
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Xml.Linq;
+using System.Collections.Immutable;
 
 namespace Barotrauma
 {
@@ -11,17 +9,20 @@ namespace Barotrauma
         public Identifier TargetTag { get; set; }
 
         [Serialize("", IsPropertySaveable.Yes)]
-        public Identifier ItemIdentifier { get; set; }
+        public string ItemIdentifiers { get; set; }
 
         [Serialize(1, IsPropertySaveable.Yes)]
         public int Amount { get; set; }
 
-        public RemoveItemAction(ScriptedEvent parentEvent, ContentXElement element) : base(parentEvent, element) 
-        { 
-            if (ItemIdentifier.IsEmpty)
+        private readonly ImmutableHashSet<Identifier> itemIdentifierSplit;
+
+        public RemoveItemAction(ScriptedEvent parentEvent, ContentXElement element) : base(parentEvent, element)
+        {
+            if (string.IsNullOrEmpty(ItemIdentifiers))
             {
-                ItemIdentifier = element.GetAttributeIdentifier("itemidentifiers", element.GetAttributeIdentifier("identifier", Identifier.Empty));
+                ItemIdentifiers = element.GetAttributeString("itemidentifier", element.GetAttributeString("identifier", string.Empty));
             }
+            itemIdentifierSplit = ItemIdentifiers.Split(',').ToIdentifiers().ToImmutableHashSet();
         }
 
         private bool isFinished = false;
@@ -62,7 +63,7 @@ namespace Barotrauma
                         var item = inventory.FindItem(it => 
                             it != null && 
                             !removedItems.Contains(it) &&
-                            (ItemIdentifier.IsEmpty || it.Prefab.Identifier == ItemIdentifier), recursive: true);
+                            (itemIdentifierSplit.Count == 0 || itemIdentifierSplit.Contains(it.Prefab.Identifier)), recursive: true);
                         if (item == null) { break; }
                         Entity.Spawner.AddItemToRemoveQueue(item);
                         removedItems.Add(item);
@@ -70,7 +71,7 @@ namespace Barotrauma
                 }
                 else if (target is Item item)
                 {
-                    if (ItemIdentifier.IsEmpty || item.Prefab.Identifier == ItemIdentifier)
+                    if (itemIdentifierSplit.Count == 0 || itemIdentifierSplit.Contains(item.Prefab.Identifier))
                     {
                         Entity.Spawner.AddItemToRemoveQueue(item);
                         removedItems.Add(item);

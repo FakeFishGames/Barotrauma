@@ -18,6 +18,13 @@ namespace Barotrauma.Items.Components
             set;
         }
 
+        [Editable, Serialize(false, IsPropertySaveable.Yes)]
+        public bool IgnoreLocalization
+        {
+            get;
+            set;
+        }
+
         [Editable, Serialize("0,0,0,255", IsPropertySaveable.Yes, description: "The color of the text displayed on the label.", alwaysUseInstanceValues: true)]
         public Color TextColor
         {
@@ -78,7 +85,7 @@ namespace Barotrauma.Items.Components
 
         public void ServerEventWrite(IWriteMessage msg, Client c, NetEntityEvent.IData extraData = null)
         {
-            msg.Write(Text);
+            msg.WriteString(Text);
             lastSentText = Text;
         }
     }

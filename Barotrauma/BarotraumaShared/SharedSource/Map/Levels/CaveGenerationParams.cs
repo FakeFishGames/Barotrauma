@@ -65,28 +65,28 @@ namespace Barotrauma
             set { maxHeight = Math.Max(value, minHeight); }
         }
 
-        [Serialize(2, IsPropertySaveable.Yes), Editable(MinValueInt = 0, MaxValueInt = 10)]
+        [Serialize(2, IsPropertySaveable.Yes, description: "Minimum number of tunnel branches in the cave."), Editable(MinValueInt = 0, MaxValueInt = 10)]
         public int MinBranchCount
         {
             get { return minBranchCount; }
             set { minBranchCount = Math.Max(value, 0); }
         }
 
-        [Serialize(4, IsPropertySaveable.Yes), Editable(MinValueInt = 0, MaxValueInt = 10)]
+        [Serialize(4, IsPropertySaveable.Yes, description: "Maximum number of tunnel branches in the cave."), Editable(MinValueInt = 0, MaxValueInt = 10)]
         public int MaxBranchCount
         {
             get { return maxBranchCount; }
             set { maxBranchCount = Math.Max(value, minBranchCount); }
         }
 
-        [Serialize(50, IsPropertySaveable.Yes), Editable(MinValueInt = 0, MaxValueInt = 1000)]
+        [Serialize(50, IsPropertySaveable.Yes, description: "Total amount of level objects in the cave."), Editable(MinValueInt = 0, MaxValueInt = 10000)]
         public int LevelObjectAmount
         {
             get;
             set;
         }
 
-        [Serialize(0.1f, IsPropertySaveable.Yes), Editable(MinValueFloat = 0, MaxValueFloat = 1.0f, DecimalCount = 2 )]
+        [Serialize(0.1f, IsPropertySaveable.Yes, description: "What portion of the empty cells in the cave should be turned into destructible walls? For example, 0.1 = 10%."), Editable(MinValueFloat = 0, MaxValueFloat = 1.0f, DecimalCount = 2 )]
         public float DestructibleWallRatio
         {
             get;

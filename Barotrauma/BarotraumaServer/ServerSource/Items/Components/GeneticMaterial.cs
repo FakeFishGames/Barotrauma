@@ -6,14 +6,14 @@ namespace Barotrauma.Items.Components
     {
         public void ServerEventWrite(IWriteMessage msg, Client c, NetEntityEvent.IData extraData = null)
         {
-            msg.Write(tainted);
+            msg.WriteBoolean(tainted);
             if (tainted)
             {
-                msg.Write(selectedTaintedEffect?.UintIdentifier ?? 0);
+                msg.WriteUInt32(selectedTaintedEffect?.UintIdentifier ?? 0);
             }
             else
             {
-                msg.Write(selectedEffect?.UintIdentifier ?? 0);
+                msg.WriteUInt32(selectedEffect?.UintIdentifier ?? 0);
             }
         }
     }

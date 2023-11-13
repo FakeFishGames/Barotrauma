@@ -10,6 +10,7 @@ namespace Barotrauma
     [Flags]
     enum MapEntityCategory
     {
+        None = 0,
         Structure = 1, 
         Decorative = 2,
         Machine = 4,
@@ -157,11 +158,22 @@ namespace Barotrauma
         {
             if (name.IsNullOrEmpty()) { throw new ArgumentException($"{nameof(name)} must not be null or empty"); }
 
-            return Find(prefab =>
-                prefab.Name.Equals(name, StringComparison.OrdinalIgnoreCase) ||
-                prefab.OriginalName.Equals(name, StringComparison.OrdinalIgnoreCase) ||
-                (prefab.Aliases != null &&
-                 prefab.Aliases.Any(a => a.Equals(name, StringComparison.OrdinalIgnoreCase))));
+            var matches = 
+                List.Where(prefab =>
+                    prefab.Name.Equals(name, StringComparison.OrdinalIgnoreCase) ||
+                    prefab.OriginalName.Equals(name, StringComparison.OrdinalIgnoreCase) ||
+                    (prefab.Aliases != null &&
+                     prefab.Aliases.Any(a => a.Equals(name, StringComparison.OrdinalIgnoreCase))));
+            //if there's multiple matches, prefer ones that aren't hidden in menus and base items
+            //(hidden ones and variants are often e.g. some kind of special ones used in an event or versions unlockable with talents)
+            if (matches.Count() > 1)
+            {
+                var bestMatch = 
+                    matches.FirstOrDefault(prefab => !prefab.HideInMenus) ??
+                    matches.FirstOrDefault(prefab => prefab is ItemPrefab ip && ip.VariantOf.IsEmpty);
+                if (bestMatch != null) { return bestMatch; }
+            }
+            return matches.FirstOrDefault();
         }
         
         public static MapEntityPrefab FindByIdentifier(Identifier identifier)
@@ -172,6 +184,9 @@ namespace Barotrauma
                 : (MapEntityPrefab)null;
         
         public abstract Sprite Sprite { get; }
+
+        public virtual bool CanSpriteFlipX { get; } = false;
+        public virtual bool CanSpriteFlipY { get; } = false;
 
         public abstract string OriginalName { get; }
 
@@ -205,6 +220,9 @@ namespace Barotrauma
 
         [Serialize(false, IsPropertySaveable.No)]
         public bool HideInMenus { get; protected set; }
+
+        [Serialize(false, IsPropertySaveable.No)]
+        public bool HideInEditors { get; protected set; }
 
         [Serialize("", IsPropertySaveable.No)]
         public string Subcategory { get; protected set; }
@@ -279,6 +297,30 @@ namespace Barotrauma
             if (this is LinkedSubmarinePrefab && target.Tags.Contains("dock".ToIdentifier())) { return true; }
             return AllowedLinks.Contains(target.Identifier) || target.AllowedLinks.Contains(Identifier)
                    || target.Tags.Any(t => AllowedLinks.Contains(t)) || Tags.Any(t => target.AllowedLinks.Contains(t));
+        }
+
+        protected void LoadDescription(ContentXElement element)
+        {
+            Identifier descriptionIdentifier = element.GetAttributeIdentifier("descriptionidentifier", "");
+            Identifier nameIdentifier = element.GetAttributeIdentifier("nameidentifier", "");
+
+            string originalDescription = Description.Value;
+            if (descriptionIdentifier != Identifier.Empty)
+            {
+                Description = TextManager.Get($"EntityDescription.{descriptionIdentifier}");
+            }
+            else if (nameIdentifier == Identifier.Empty)
+            {
+                Description = TextManager.Get($"EntityDescription.{Identifier}");
+            }
+            else
+            {
+                Description = TextManager.Get($"EntityDescription.{nameIdentifier}");
+            }
+            if (!originalDescription.IsNullOrEmpty())
+            {
+                Description = Description.Fallback(originalDescription);
+            }
         }
     }
 }

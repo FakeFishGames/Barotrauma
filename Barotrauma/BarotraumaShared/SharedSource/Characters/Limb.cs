@@ -200,7 +200,7 @@ namespace Barotrauma
             }
         }
     }
-    
+
     partial class Limb : ISerializableEntity, ISpatialEntity
     {
         //how long it takes for severed limbs to fade out
@@ -215,8 +215,10 @@ namespace Barotrauma
 
         //the physics body of the limb
         public PhysicsBody body;
-                        
+
         public Vector2 StepOffset => ConvertUnits.ToSimUnits(Params.StepOffset) * ragdoll.RagdollParams.JointScale;
+
+        public Hull Hull;
 
         public bool InWater { get; set; }
 
@@ -247,7 +249,7 @@ namespace Barotrauma
                 }
             }
         }
-        
+
         private bool isSevered;
         private float severedFadeOutTimer;
 
@@ -267,7 +269,7 @@ namespace Barotrauma
                 mouthPos = value;
             }
         }
-        
+
         public readonly Attack attack;
         public List<DamageModifier> DamageModifiers { get; private set; } = new List<DamageModifier>();
 
@@ -280,21 +282,25 @@ namespace Barotrauma
         {
             get
             {
-                if (character.AnimController.CurrentAnimationParams is GroundedMovementParams)
+                if (character?.AnimController.CurrentAnimationParams is GroundedMovementParams && IsLeg)
                 {
-                    switch (type)
-                    {
-                        case LimbType.LeftFoot:
-                        case LimbType.LeftLeg:
-                        case LimbType.LeftThigh:
-                        case LimbType.RightFoot:
-                        case LimbType.RightLeg:
-                        case LimbType.RightThigh:
-                            // Legs always has to flip
-                            return true;
-                    }
+                    // Legs always has to flip when not swimming
+                    return true;
                 }
                 return Params.Flip;
+            }
+        }
+
+        public bool DoesMirror
+        {
+            get
+            {
+                if (IsLeg)
+                {
+                    // Legs always has to mirror
+                    return true;
+                }
+                return DoesFlip;
             }
         }
 
@@ -302,6 +308,47 @@ namespace Barotrauma
         
         public Vector2 DebugTargetPos;
         public Vector2 DebugRefPos;
+
+        public bool IsLowerBody
+        {
+            get
+            {
+                switch (type)
+                {
+                    case LimbType.LeftLeg:
+                    case LimbType.RightLeg:
+                    case LimbType.LeftFoot:
+                    case LimbType.RightFoot:
+                    case LimbType.Tail:
+                    case LimbType.Legs:
+                    case LimbType.LeftThigh:
+                    case LimbType.RightThigh:
+                    case LimbType.Waist:
+                        return true;
+                    default:
+                        return false;
+                }
+            }
+        }
+
+        public bool IsLeg
+        {
+            get
+            {
+                switch (type)
+                {
+                    case LimbType.LeftFoot:
+                    case LimbType.LeftLeg:
+                    case LimbType.LeftThigh:
+                    case LimbType.RightFoot:
+                    case LimbType.RightLeg:
+                    case LimbType.RightThigh:
+                        return true;
+                    default:
+                        return false;
+                }
+            }
+        }
 
         public bool IsSevered
         {
@@ -443,13 +490,9 @@ namespace Barotrauma
 
         public int RefJointIndex => Params.RefJoint;
 
-        private List<WearableSprite> wearingItems;
-        public List<WearableSprite> WearingItems
-        {
-            get { return wearingItems; }
-        }
+        public readonly List<WearableSprite> WearingItems = new List<WearableSprite>();
 
-        public List<WearableSprite> OtherWearables { get; private set; } = new List<WearableSprite>();
+        public readonly List<WearableSprite> OtherWearables = new List<WearableSprite>();
 
         public bool PullJointEnabled
         {
@@ -548,7 +591,10 @@ namespace Barotrauma
         public bool IsDead => character.IsDead;
         public float Health => character.Health;
         public float HealthPercentage => character.HealthPercentage;
+        public bool IsHuman => character.IsHuman;
+
         public AIState AIState => character.AIController is EnemyAIController enemyAI ? enemyAI.State : AIState.Idle;
+        public bool IsFlipped => character.AnimController.IsFlipped;
 
         public bool CanBeSeveredAlive
         {
@@ -593,7 +639,6 @@ namespace Barotrauma
             this.ragdoll = ragdoll;
             this.character = character;
             this.Params = limbParams;
-            wearingItems = new List<WearableSprite>();            
             dir = Direction.Right;
             body = new PhysicsBody(limbParams);
             type = limbParams.Type;
@@ -624,13 +669,13 @@ namespace Barotrauma
                             switch (body.BodyShape)
                             {
                                 case PhysicsBody.Shape.Circle:
-                                    attack.DamageRange = body.radius;
+                                    attack.DamageRange = body.Radius;
                                     break;
                                 case PhysicsBody.Shape.Capsule:
-                                    attack.DamageRange = body.height / 2 + body.radius;
+                                    attack.DamageRange = body.Height / 2 + body.Radius;
                                     break;
                                 case PhysicsBody.Shape.Rectangle:
-                                    attack.DamageRange = new Vector2(body.width / 2.0f, body.height / 2.0f).Length();
+                                    attack.DamageRange = new Vector2(body.Width / 2.0f, body.Height / 2.0f).Length();
                                     break;
                             }
                             attack.DamageRange = ConvertUnits.ToDisplayUnits(attack.DamageRange);
@@ -709,11 +754,12 @@ namespace Barotrauma
                 tempModifiers.Clear();
                 var newAffliction = affliction;
                 float random = Rand.Value(Rand.RandSync.Unsynced);
-                if (random > affliction.Probability) { continue; }
+                bool foundMatchingModifier = false;
                 bool applyAffliction = true;
                 foreach (DamageModifier damageModifier in DamageModifiers)
                 {
                     if (!damageModifier.MatchesAffliction(affliction)) { continue; }
+                    foundMatchingModifier = true;
                     if (random > affliction.Probability * damageModifier.ProbabilityMultiplier)
                     {
                         applyAffliction = false;
@@ -724,11 +770,12 @@ namespace Barotrauma
                         tempModifiers.Add(damageModifier);
                     }
                 }
-                foreach (WearableSprite wearable in wearingItems)
+                foreach (WearableSprite wearable in WearingItems)
                 {
                     foreach (DamageModifier damageModifier in wearable.WearableComponent.DamageModifiers)
                     {
                         if (!damageModifier.MatchesAffliction(affliction)) { continue; }
+                        foundMatchingModifier = true;
                         if (random > affliction.Probability * damageModifier.ProbabilityMultiplier)
                         {
                             applyAffliction = false;
@@ -740,7 +787,17 @@ namespace Barotrauma
                         }
                     }
                 }
+                if (!foundMatchingModifier && random > affliction.Probability) { continue; }
                 float finalDamageModifier = damageMultiplier;
+                if (character.EmpVulnerability > 0 && affliction.Prefab.AfflictionType == AfflictionPrefab.EMPType)
+                {
+                    finalDamageModifier *= character.EmpVulnerability;
+                }
+                if (!character.Params.Health.PoisonImmunity && 
+                    (affliction.Prefab.AfflictionType == AfflictionPrefab.PoisonType || affliction.Prefab.AfflictionType == AfflictionPrefab.ParalysisType))
+                {
+                    finalDamageModifier *= character.PoisonVulnerability;
+                }
                 foreach (DamageModifier damageModifier in tempModifiers)
                 {
                     float damageModifierValue = damageModifier.DamageMultiplier;
@@ -750,9 +807,13 @@ namespace Barotrauma
                     }
                     finalDamageModifier *= damageModifierValue;
                 }
+                if (affliction.MultiplyByMaxVitality)
+                {
+                    finalDamageModifier *= character.MaxVitality / 100f;
+                }
                 if (!MathUtils.NearlyEqual(finalDamageModifier, 1.0f))
                 {
-                    newAffliction = affliction.CreateMultiplied(finalDamageModifier);
+                    newAffliction = affliction.CreateMultiplied(finalDamageModifier, affliction);
                 }
                 else
                 {
@@ -762,6 +823,7 @@ namespace Barotrauma
                 {
                     var abilityAfflictionCharacter = new AbilityAfflictionCharacter(newAffliction, character);
                     attacker.CheckTalents(AbilityEffectType.OnAddDamageAffliction, abilityAfflictionCharacter);
+                    newAffliction = abilityAfflictionCharacter.Affliction;
                 }
                 if (applyAffliction)
                 {
@@ -822,7 +884,9 @@ namespace Barotrauma
         public void Update(float deltaTime)
         {
             UpdateProjSpecific(deltaTime);
-            
+            ApplyStatusEffects(ActionType.Always, deltaTime);
+            ApplyStatusEffects(ActionType.OnActive, deltaTime);
+
             if (InWater)
             {
                 body.ApplyWaterForces();
@@ -880,6 +944,12 @@ namespace Barotrauma
             {
                 reEnableTimer = duration;
             }
+#if CLIENT
+            if (Hidden && LightSource != null)
+            {
+                LightSource.Enabled = false;
+            }
+#endif
         }
 
         public void ReEnable()
@@ -1044,7 +1114,7 @@ namespace Barotrauma
             Vector2 forceWorld = attack.CalculateAttackPhase(attack.RootTransitionEasing);
             forceWorld.X *= character.AnimController.Dir;
             character.AnimController.MainLimb.body.ApplyLinearImpulse(character.Mass * forceWorld, character.SimPosition, maxVelocity: NetConfig.MaxPhysicsBodyVelocity);
-            if (!attack.IsRunning)
+            if (!attack.IsRunning && !attack.Ranged)
             {
                 // Set the main collider where the body lands after the attack
                 if (Vector2.DistanceSquared(character.AnimController.Collider.SimPosition, character.AnimController.MainLimb.body.SimPosition) > 0.1f * 0.1f)
@@ -1158,10 +1228,11 @@ namespace Barotrauma
             if (!statusEffects.TryGetValue(actionType, out var statusEffectList)) { return; }
             foreach (StatusEffect statusEffect in statusEffectList)
             {
+                statusEffect.sourceBody = body;
                 if (statusEffect.type == ActionType.OnDamaged)
                 {
                     if (!statusEffect.HasRequiredAfflictions(character.LastDamage)) { continue; }
-                    if (statusEffect.OnlyPlayerTriggered)
+                    if (statusEffect.OnlyWhenDamagedByPlayer)
                     {
                         if (character.LastAttacker == null || !character.LastAttacker.IsPlayer)
                         {
@@ -1173,55 +1244,73 @@ namespace Barotrauma
                     statusEffect.HasTargetType(StatusEffect.TargetType.NearbyCharacters))
                 {
                     targets.Clear();
-                    targets.AddRange(statusEffect.GetNearbyTargets(WorldPosition, targets));
+                    statusEffect.AddNearbyTargets(WorldPosition, targets);
                     statusEffect.Apply(actionType, deltaTime, character, targets);
                 }
-                else
+                else if (statusEffect.targetLimbs != null)
                 {
-                    if (statusEffect.HasTargetType(StatusEffect.TargetType.Character))
+                    foreach (var limbType in statusEffect.targetLimbs)
                     {
-                        statusEffect.Apply(actionType, deltaTime, character, character, WorldPosition);
-                    }
-                    else if (statusEffect.targetLimbs != null)
-                    {
-                        foreach (var limbType in statusEffect.targetLimbs)
+                        if (statusEffect.HasTargetType(StatusEffect.TargetType.AllLimbs))
                         {
-                            if (statusEffect.HasTargetType(StatusEffect.TargetType.AllLimbs))
+                            // Target all matching limbs
+                            foreach (var limb in ragdoll.Limbs)
                             {
-                                // Target all matching limbs
-                                foreach (var limb in ragdoll.Limbs)
+                                if (limb.IsSevered) { continue; }
+                                if (limb.type == limbType)
                                 {
-                                    if (limb.IsSevered) { continue; }
-                                    if (limb.type == limbType)
-                                    {
-                                        statusEffect.Apply(actionType, deltaTime, character, limb);
-                                    }
+                                    ApplyToLimb(actionType, deltaTime, statusEffect, character, limb);
                                 }
                             }
-                            else if (statusEffect.HasTargetType(StatusEffect.TargetType.Limb))
+                        }
+                        else if (statusEffect.HasTargetType(StatusEffect.TargetType.Limb) || statusEffect.HasTargetType(StatusEffect.TargetType.Character) || statusEffect.HasTargetType(StatusEffect.TargetType.This))
+                        {
+                            // Target just the first matching limb
+                            Limb limb = ragdoll.GetLimb(limbType);
+                            if (limb != null)
                             {
-                                // Target just the first matching limb
-                                Limb limb = ragdoll.GetLimb(limbType);
-                                statusEffect.Apply(actionType, deltaTime, character, limb);
+                                ApplyToLimb(actionType, deltaTime, statusEffect, character, limb);
                             }
-                            else if (statusEffect.HasTargetType(StatusEffect.TargetType.LastLimb))
+                        }
+                        else if (statusEffect.HasTargetType(StatusEffect.TargetType.LastLimb))
+                        {
+                            // Target just the last matching limb
+                            Limb limb = ragdoll.Limbs.LastOrDefault(l => l.type == limbType && !l.IsSevered && !l.Hidden);
+                            if (limb != null)
                             {
-                                // Target just the last matching limb
-                                Limb limb = ragdoll.Limbs.LastOrDefault(l => l.type == limbType && !l.IsSevered && !l.Hidden);
-                                statusEffect.Apply(actionType, deltaTime, character, limb);
+                                ApplyToLimb(actionType, deltaTime, statusEffect, character, limb);
                             }
                         }
                     }
-                    else
+                }
+                else if (statusEffect.HasTargetType(StatusEffect.TargetType.AllLimbs))
+                {
+                    // Target all limbs
+                    foreach (var limb in ragdoll.Limbs)
                     {
-                        statusEffect.Apply(actionType, deltaTime, character, this, WorldPosition);
+                        if (limb.IsSevered) { continue; }
+                        ApplyToLimb(actionType, deltaTime, statusEffect, character, limb);
                     }
                 }
+                else if (statusEffect.HasTargetType(StatusEffect.TargetType.Character))
+                {
+                    statusEffect.Apply(actionType, deltaTime, character, character, WorldPosition);
+                }
+                else if (statusEffect.HasTargetType(StatusEffect.TargetType.This) || statusEffect.HasTargetType(StatusEffect.TargetType.Limb))
+                {
+                    ApplyToLimb(actionType, deltaTime, statusEffect, character, limb: this);
+                }
+            }
+            static void ApplyToLimb(ActionType actionType, float deltaTime, StatusEffect statusEffect, Character character, Limb limb)
+            {
+                statusEffect.sourceBody = limb.body;
+                statusEffect.Apply(actionType, deltaTime, entity: character, target: limb);
             }
         }
 
         private float blinkTimer;
-        private float blinkPhase;
+        public float BlinkPhase;
+        public bool FreezeBlinkState;
 
         private float TotalBlinkDurationOut => Params.BlinkDurationOut + Params.BlinkHoldTime;
 
@@ -1234,16 +1323,25 @@ namespace Barotrauma
         {
             if (blinkTimer > -TotalBlinkDurationOut)
             {
-                blinkPhase -= deltaTime;
-                if (blinkPhase > 0)
+                if (!FreezeBlinkState)
+                {
+                    BlinkPhase -= deltaTime;
+                }
+                if (BlinkPhase > 0)
                 {
                     // in
-                    float t = ToolBox.GetEasing(Params.BlinkTransitionIn, MathUtils.InverseLerp(1, 0, blinkPhase / Params.BlinkDurationIn));
+                    float t = ToolBox.GetEasing(Params.BlinkTransitionIn, MathUtils.InverseLerp(1, 0, BlinkPhase / Params.BlinkDurationIn));
                     body.SmoothRotate(referenceRotation + MathHelper.ToRadians(Params.BlinkRotationIn) * Dir, Mass * Params.BlinkForce * t, wrapAngle: true);
+                    if (Params.UseTextureOffsetForBlinking)
+                    {
+#if CLIENT
+                        ActiveSprite.RelativeOrigin = Vector2.Lerp(Params.BlinkTextureOffsetOut, Params.BlinkTextureOffsetIn, t);
+#endif
+                    }
                 }
                 else
                 {
-                    if (Math.Abs(blinkPhase) < Params.BlinkHoldTime)
+                    if (Math.Abs(BlinkPhase) < Params.BlinkHoldTime)
                     {
                         // hold
                         body.SmoothRotate(referenceRotation + MathHelper.ToRadians(Params.BlinkRotationIn) * Dir, Mass * Params.BlinkForce, wrapAngle: true);
@@ -1251,15 +1349,25 @@ namespace Barotrauma
                     else
                     {
                         // out
-                        float t = ToolBox.GetEasing(Params.BlinkTransitionOut, MathUtils.InverseLerp(0, 1, -blinkPhase / TotalBlinkDurationOut));
+                        //float t = ToolBox.GetEasing(Params.BlinkTransitionOut, MathUtils.InverseLerp(0, 1, -blinkPhase / TotalBlinkDurationOut));
+                        float t = ToolBox.GetEasing(Params.BlinkTransitionOut, MathUtils.InverseLerp(0, 1, (-BlinkPhase - Params.BlinkHoldTime) / Params.BlinkDurationOut));
                         body.SmoothRotate(referenceRotation + MathHelper.ToRadians(Params.BlinkRotationOut) * Dir, Mass * Params.BlinkForce * t, wrapAngle: true);
+                        if (Params.UseTextureOffsetForBlinking)
+                        {
+#if CLIENT
+                            ActiveSprite.RelativeOrigin = Vector2.Lerp(Params.BlinkTextureOffsetIn, Params.BlinkTextureOffsetOut, t);
+#endif
+                        }
                     }
                 }
             }
             else
             {
                 // out
-                blinkPhase = Params.BlinkDurationIn;
+                if (!FreezeBlinkState)
+                {
+                    BlinkPhase = Params.BlinkDurationIn;
+                }
                 body.SmoothRotate(referenceRotation + MathHelper.ToRadians(Params.BlinkRotationOut) * Dir, Mass * Params.BlinkForce, wrapAngle: true);
             }
         }

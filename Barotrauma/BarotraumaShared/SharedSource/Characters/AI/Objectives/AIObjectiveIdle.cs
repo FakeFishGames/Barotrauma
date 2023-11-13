@@ -161,19 +161,24 @@ namespace Barotrauma
                 character.DeselectCharacter();
             }
 
+            character.SelectedItem = null;
+
             if (!character.IsClimbing)
             {
-                character.SelectedConstruction = null;
+                CleanupItems(deltaTime);
             }
 
-            CleanupItems(deltaTime);
-
-            if (behavior == BehaviorType.StayInHull && TargetHull == null && character.CurrentHull != null)
+            if (behavior == BehaviorType.StayInHull && TargetHull == null && character.CurrentHull != null && !IsForbidden(character.CurrentHull))
             {
                 TargetHull = character.CurrentHull;
             }
 
-            if (behavior == BehaviorType.StayInHull)
+            bool currentTargetIsInvalid = 
+                currentTarget == null || 
+                IsForbidden(currentTarget) ||
+                (PathSteering.CurrentPath != null && PathSteering.CurrentPath.Nodes.Any(n => HumanAIController.UnsafeHulls.Contains(n.CurrentHull)));
+
+            if (behavior == BehaviorType.StayInHull && TargetHull != null && !IsForbidden(TargetHull) && !currentTargetIsInvalid && !HumanAIController.UnsafeHulls.Contains(TargetHull))
             {
                 currentTarget = TargetHull;
                 bool stayInHull = character.CurrentHull == currentTarget && IsSteeringFinished() && !character.IsClimbing;
@@ -193,9 +198,6 @@ namespace Barotrauma
             }
             else
             {
-                bool currentTargetIsInvalid = currentTarget == null || IsForbidden(currentTarget) ||
-                    (PathSteering.CurrentPath != null && PathSteering.CurrentPath.Nodes.Any(n => HumanAIController.UnsafeHulls.Contains(n.CurrentHull)));
-
                 if (currentTarget != null && !currentTargetIsInvalid)
                 {
                     if (character.TeamID == CharacterTeamType.FriendlyNPC && !character.IsEscorted)
@@ -256,13 +258,15 @@ namespace Barotrauma
                         currentTarget = ToolBox.SelectWeightedRandom(targetHulls, hullWeights, Rand.RandSync.Unsynced);
                         bool isInWrongSub = (character.TeamID == CharacterTeamType.FriendlyNPC && !character.IsEscorted) && character.Submarine.TeamID != character.TeamID;
                         bool isCurrentHullAllowed = !isInWrongSub && !IsForbidden(character.CurrentHull);
-                        var path = PathSteering.PathFinder.FindPath(character.SimPosition, currentTarget.SimPosition, character.Submarine, nodeFilter: node =>
+                        Vector2 targetPos = character.GetRelativeSimPosition(currentTarget);
+                        var path = PathSteering.PathFinder.FindPath(character.SimPosition, targetPos, character.Submarine, nodeFilter: node =>
                         {
                             if (node.Waypoint.CurrentHull == null) { return false; }
                             // Check that there is no unsafe hulls on the way to the target
                             if (node.Waypoint.CurrentHull != character.CurrentHull && HumanAIController.UnsafeHulls.Contains(node.Waypoint.CurrentHull)) { return false; }
                             return true;
-                        }, endNodeFilter: node => !isCurrentHullAllowed | !IsForbidden(node.Waypoint.CurrentHull));
+                            //don't stop at ladders when idling
+                        }, endNodeFilter: node => node.Waypoint.Ladders == null && (!isCurrentHullAllowed || !IsForbidden(node.Waypoint.CurrentHull)));
                         if (path.Unreachable)
                         {
                             //can't go to this room, remove it from the list and try another room
@@ -275,7 +279,7 @@ namespace Barotrauma
                             return;
                         }
                         character.AIController.SelectTarget(currentTarget.AiTarget);
-                        PathSteering.SetPath(path);
+                        PathSteering.SetPath(targetPos, path);
                         SetTargetTimerNormal();
                         searchingNewHull = false;
                     }
@@ -293,7 +297,9 @@ namespace Barotrauma
                 }
                 else if (currentTarget != null)
                 {
-                    PathSteering.SteeringSeek(character.GetRelativeSimPosition(currentTarget), weight: 1, nodeFilter: node => node.Waypoint.CurrentHull != null);
+                    PathSteering.SteeringSeek(character.GetRelativeSimPosition(currentTarget), weight: 1, 
+                        nodeFilter: node => node.Waypoint.CurrentHull != null, 
+                        endNodeFilter: node => node.Waypoint.Ladders == null);
                 }
                 else
                 {
@@ -307,12 +313,8 @@ namespace Barotrauma
         {
             if (character.IsClimbing)
             {
-                if (character.AnimController.GetHeightFromFloor() < 0.1f)
-                {
-                    character.AnimController.Anim = AnimController.Animation.None;
-                    character.SelectedConstruction = null;
-                }
-                return;
+                PathSteering.Reset();
+                character.StopClimbing();
             }
             var currentHull = character.CurrentHull;
             if (!character.AnimController.InWater && currentHull != null)
@@ -364,6 +366,7 @@ namespace Barotrauma
                         }
                         else
                         {
+                            character.ReleaseSecondaryItem();
                             PathSteering.SteeringManual(deltaTime, Vector2.Normalize(diff));
                         }
                         return;
@@ -375,11 +378,13 @@ namespace Barotrauma
                     }
 
                     chairCheckTimer -= deltaTime;
-                    if (chairCheckTimer <= 0.0f && character.SelectedConstruction == null)
+                    if (chairCheckTimer <= 0.0f && character.SelectedSecondaryItem == null)
                     {
                         foreach (Item item in Item.ItemList)
                         {
-                            if (item.CurrentHull != currentHull || !item.HasTag("chair")) { continue; }
+                            if (item.CurrentHull != currentHull || !item.HasTag(Tags.ChairItem)) { continue; }
+                            //not possible in vanilla game, but a mod might have holdable/attachable chairs
+                            if (item.ParentInventory != null || item.body is { Enabled: true }) { continue; } 
                             var controller = item.GetComponent<Controller>();
                             if (controller == null || controller.User != null) { continue; }
                             item.TryInteract(character, forceSelectKey: true);

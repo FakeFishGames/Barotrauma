@@ -61,10 +61,7 @@ namespace Barotrauma
             GameMain.GameSession?.CrewManager?.AutoShowCrewList();
 #endif
 
-            foreach (MapEntity entity in MapEntity.mapEntityList)
-            {
-                entity.IsHighlighted = false;
-            }
+            MapEntity.ClearHighlightedEntities();
 
 #if RUN_PHYSICS_IN_SEPARATE_THREAD
             var physicsThread = new Thread(ExecutePhysics)
@@ -87,10 +84,12 @@ namespace Barotrauma
             GameSettings.SaveCurrentConfig();
             GameMain.SoundManager.SetCategoryMuffle("default", false);
             GUI.ClearMessages();
+#if !DEBUG
             if (GameMain.GameSession?.GameMode is TestGameMode)
             {
                 DebugConsole.DeactivateCheats();
             }
+#endif
 #endif
         }
 
@@ -138,10 +137,7 @@ namespace Barotrauma
             {
                 if (body.Enabled && body.BodyType != FarseerPhysics.BodyType.Static) { body.Update(); }               
             }
-            foreach (MapEntity e in MapEntity.mapEntityList)
-            {
-                e.IsHighlighted = false;
-            }
+            MapEntity.ClearHighlightedEntities();
 
 #if CLIENT
             var sw = new System.Diagnostics.Stopwatch();
@@ -166,26 +162,25 @@ namespace Barotrauma
             sw.Stop();
             GameMain.PerformanceCounter.AddElapsedTicks("Update:Level", sw.ElapsedTicks);
 
-            if (Character.Controlled != null)
+            if (Character.Controlled is { } controlled)
             {
-                if (Character.Controlled.SelectedConstruction != null && Character.Controlled.CanInteractWith(Character.Controlled.SelectedConstruction))
+                if (controlled.SelectedItem != null && controlled.CanInteractWith(controlled.SelectedItem))
                 {
-                    Character.Controlled.SelectedConstruction.UpdateHUD(cam, Character.Controlled, (float)deltaTime);                
+                    controlled.SelectedItem.UpdateHUD(cam, controlled, (float)deltaTime);
                 }
-                if (Character.Controlled.Inventory != null)
+                if (controlled.Inventory != null)
                 {
-                    foreach (Item item in Character.Controlled.Inventory.AllItems)
+                    foreach (Item item in controlled.Inventory.AllItems)
                     {
-                        if (Character.Controlled.HasEquippedItem(item))
+                        if (controlled.HasEquippedItem(item))
                         {
-                            item.UpdateHUD(cam, Character.Controlled, (float)deltaTime);
+                            item.UpdateHUD(cam, controlled, (float)deltaTime);
                         }
                     }
                 }
             }
 
-
-            sw.Restart();              
+            sw.Restart();
 
             Character.UpdateAll((float)deltaTime, cam);
 #elif SERVER

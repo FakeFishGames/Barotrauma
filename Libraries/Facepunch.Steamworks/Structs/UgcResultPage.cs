@@ -15,6 +15,8 @@ namespace Steamworks.Ugc
 		internal bool ReturnsKeyValueTags;
 		internal bool ReturnsDefaultStats;
 		internal bool ReturnsMetadata;
+		internal bool ReturnsChildren;
+		internal bool ReturnsAdditionalPreviews;
 
 		public IEnumerable<Item> Entries
 		{
@@ -24,6 +26,7 @@ namespace Steamworks.Ugc
 				var details = default( SteamUGCDetails_t );
 				for ( uint i=0; i< ResultCount; i++ )
 				{
+					if (SteamUGC.Internal is null) { yield break; }
 					if ( SteamUGC.Internal.GetQueryUGCResult( Handle, i, ref details ) )
 					{
 						var item = Item.From( details );
@@ -73,8 +76,36 @@ namespace Steamworks.Ugc
 							}
 						}
 
-						// TODO GetQueryUGCAdditionalPreview
-						// TODO GetQueryUGCChildren
+						uint numChildren = item.details.NumChildren;
+						if ( ReturnsChildren && numChildren > 0 )
+						{
+							var children = new PublishedFileId[numChildren];
+							if ( SteamUGC.Internal.GetQueryUGCChildren( Handle, i, children, numChildren ) )
+							{
+								item.Children = children;
+							}
+						}
+
+						if ( ReturnsAdditionalPreviews )
+						{
+							var previewsCount = SteamUGC.Internal.GetQueryUGCNumAdditionalPreviews( Handle, i );
+							if ( previewsCount > 0 )
+							{
+								item.AdditionalPreviews = new UgcAdditionalPreview[previewsCount];
+								for ( uint j = 0; j < previewsCount; j++ )
+								{
+									string previewUrlOrVideo;
+									string originalFileName; //what is this???
+									ItemPreviewType previewType = default;
+									if ( SteamUGC.Internal.GetQueryUGCAdditionalPreview(
+										Handle, i, j, out previewUrlOrVideo, out originalFileName, ref previewType ) )
+									{
+										item.AdditionalPreviews[j] = new UgcAdditionalPreview( 
+											previewUrlOrVideo, originalFileName, previewType );
+									}
+								}
+							}
+						}
 
 						yield return item;
 					}
@@ -86,7 +117,7 @@ namespace Steamworks.Ugc
 		{
 			ulong val = 0;
 
-			if ( !SteamUGC.Internal.GetQueryUGCStatistic( Handle, index, stat, ref val ) )
+			if ( SteamUGC.Internal is null || !SteamUGC.Internal.GetQueryUGCStatistic( Handle, index, stat, ref val ) )
 				return 0;
 
 			return val;
@@ -96,7 +127,7 @@ namespace Steamworks.Ugc
 		{
 			if ( Handle > 0 )
 			{
-				SteamUGC.Internal.ReleaseQueryUGCRequest( Handle );
+				SteamUGC.Internal?.ReleaseQueryUGCRequest( Handle );
 				Handle = 0;
 			}
 		}

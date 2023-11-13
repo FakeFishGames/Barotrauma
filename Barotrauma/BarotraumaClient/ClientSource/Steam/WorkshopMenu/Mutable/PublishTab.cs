@@ -9,6 +9,7 @@ using Barotrauma.Extensions;
 using Barotrauma.IO;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Steamworks;
 using Directory = Barotrauma.IO.Directory;
 using ItemOrPackage = Barotrauma.Either<Steamworks.Ugc.Item, Barotrauma.ContentPackage>;
 using Path = Barotrauma.IO.Path;
@@ -95,6 +96,9 @@ namespace Barotrauma.Steam
             SelectTab(Tab.Publish);
         }
         
+        private static bool PackageMatchesItem(ContentPackage p, Steamworks.Ugc.Item workshopItem)
+            => p.TryExtractSteamWorkshopId(out var workshopId) && workshopId.Value == workshopItem.Id;
+        
         private void PopulatePublishTab(ItemOrPackage itemOrPackage, GUIFrame parentFrame)
         {
             ContentPackageManager.LocalPackages.Refresh();
@@ -105,18 +109,19 @@ namespace Barotrauma.Steam
                 childAnchor: Anchor.TopCenter);
 
             Steamworks.Ugc.Item workshopItem = itemOrPackage.TryGet(out Steamworks.Ugc.Item item) ? item : default;
+
             ContentPackage? localPackage = itemOrPackage.TryGet(out ContentPackage package)
                 ? package
-                : ContentPackageManager.LocalPackages.FirstOrDefault(p => p.SteamWorkshopId == workshopItem.Id);
+                : ContentPackageManager.LocalPackages.FirstOrDefault(p => PackageMatchesItem(p, workshopItem));
             ContentPackage? workshopPackage
-                = ContentPackageManager.WorkshopPackages.FirstOrDefault(p => p.SteamWorkshopId == workshopItem.Id);
+                = ContentPackageManager.WorkshopPackages.FirstOrDefault(p => PackageMatchesItem(p, workshopItem));
             if (localPackage is null)
             {
                 new GUIFrame(new RectTransform((1.0f, 0.15f), mainLayout.RectTransform), style: null);
 
                 //Local copy does not exist; check for Workshop copy
                 bool workshopCopyExists =
-                    ContentPackageManager.WorkshopPackages.Any(p => p.SteamWorkshopId == workshopItem.Id);
+                    ContentPackageManager.WorkshopPackages.Any(p => PackageMatchesItem(p, workshopItem));
 
                 new GUITextBlock(new RectTransform((0.7f, 0.4f), mainLayout.RectTransform),
                     TextManager.Get(workshopCopyExists ? "LocalCopyRequired" : "ItemInstallRequired"),
@@ -153,7 +158,7 @@ namespace Barotrauma.Steam
                 }
 
                 var selectedTitle =
-                    new GUITextBlock(new RectTransform((1.0f, 0.05f), mainLayout.RectTransform), workshopItem.Title ?? localPackage.Name,
+                    new GUITextBlock(new RectTransform((1.0f, 0.05f), mainLayout.RectTransform), localPackage.Name,
                         font: GUIStyle.LargeFont);
                 if (workshopItem.Id != 0)
                 {
@@ -208,11 +213,25 @@ namespace Barotrauma.Steam
                     };
 
                 Label(rightTop, TextManager.Get("WorkshopItemTitle"), GUIStyle.SubHeadingFont);
-                var titleTextBox = new GUITextBox(NewItemRectT(rightTop), workshopItem.Title ?? localPackage.Name);
+                var titleTextBox = new GUITextBox(NewItemRectT(rightTop), localPackage.Name);
 
                 Label(rightTop, TextManager.Get("WorkshopItemDescription"), GUIStyle.SubHeadingFont);
                 var descriptionTextBox
                     = ScrollableTextBox(rightTop, 6.0f, workshopItem.Description ?? string.Empty);
+
+                if (workshopItem.Id != 0)
+                {
+                    TaskPool.Add(
+                        $"GetFullDescription{workshopItem.Id}",
+                        SteamManager.Workshop.GetItemAsap(workshopItem.Id.Value, withLongDescription: true),
+                        t =>
+                        {
+                            if (!t.TryGetResult(out Steamworks.Ugc.Item? itemWithDescription)) { return; }
+
+                            descriptionTextBox.Text = itemWithDescription?.Description ?? descriptionTextBox.Text;
+                            descriptionTextBox.Deselect();
+                        });
+                }
 
                 var (leftBottom, _, rightBottom)
                     = CreateSidebars(mainLayout, leftWidth: 0.49f, centerWidth: 0.01f, rightWidth: 0.5f, height: 0.5f);
@@ -290,10 +309,11 @@ namespace Barotrauma.Steam
                     {
                         //Reload the package to force hash recalculation
                         string packageName = localPackage.Name;
-                        localPackage = ContentPackageManager.ReloadContentPackage(localPackage);
-                        if (localPackage is null)
+                        var result = ContentPackageManager.ReloadContentPackage(localPackage);
+                        if (!result.TryUnwrapSuccess(out localPackage))
                         {
-                            throw new Exception($"\"{packageName}\" was removed upon reload");
+                            throw new Exception($"\"{packageName}\" was removed upon reload",
+                                result.TryUnwrapFailure(out var exception) ? exception : null);
                         }
 
                         //Set up the Ugc.Editor object that we'll need to publish
@@ -301,7 +321,9 @@ namespace Barotrauma.Steam
                             workshopItem.Id == 0
                                 ? Steamworks.Ugc.Editor.NewCommunityFile
                                 : new Steamworks.Ugc.Editor(workshopItem.Id);
-                        ugcEditor = ugcEditor.WithTitle(titleTextBox.Text)
+                        ugcEditor = ugcEditor
+                            .InLanguage(SteamUtils.SteamUILanguage ?? string.Empty)
+                            .WithTitle(titleTextBox.Text)
                             .WithDescription(descriptionTextBox.Text)
                             .WithTags(tagButtons.Where(kvp => kvp.Value.Selected).Select(kvp => kvp.Key.Value))
                             .WithChangeLog(changeNoteTextBox.Text)
@@ -357,7 +379,7 @@ namespace Barotrauma.Steam
 
         private IEnumerable<CoroutineStatus> MessageBoxCoroutine(Func<GUITextBlock, GUIMessageBox, IEnumerable<CoroutineStatus>> subcoroutine)
         {
-            var messageBox = new GUIMessageBox("", "...", buttons: new [] { TextManager.Get("Cancel") });
+            var messageBox = new GUIMessageBox("", TextManager.Get("ellipsis"), buttons: new [] { TextManager.Get("Cancel") });
             messageBox.Buttons[0].OnClicked = (button, o) =>
             {
                 messageBox.Close();
@@ -403,7 +425,7 @@ namespace Barotrauma.Steam
         private IEnumerable<CoroutineStatus> CreateLocalCopy(GUITextBlock currentStepText, Steamworks.Ugc.Item workshopItem, GUIFrame parentFrame)
         {
             ContentPackage? workshopCopy =
-                ContentPackageManager.WorkshopPackages.FirstOrDefault(p => p.SteamWorkshopId == workshopItem.Id);
+                ContentPackageManager.WorkshopPackages.FirstOrDefault(p => PackageMatchesItem(p, workshopItem));
             if (workshopCopy is null)
             {
                 if (!SteamManager.Workshop.CanBeInstalled(workshopItem))
@@ -417,7 +439,7 @@ namespace Barotrauma.Steam
                     {
                         ContentPackageManager.WorkshopPackages.Refresh();
                     });
-                while (!ContentPackageManager.WorkshopPackages.Any(p => p.SteamWorkshopId == workshopItem.Id))
+                while (!ContentPackageManager.WorkshopPackages.Any(p => PackageMatchesItem(p, workshopItem)))
                 {
                     currentStepText.Text = SteamManager.Workshop.CanBeInstalled(workshopItem)
                         ? TextManager.Get("PublishPopupInstall")
@@ -426,7 +448,7 @@ namespace Barotrauma.Steam
                 }
 
                 workshopCopy =
-                    ContentPackageManager.WorkshopPackages.First(p => p.SteamWorkshopId == workshopItem.Id);
+                    ContentPackageManager.WorkshopPackages.First(p => PackageMatchesItem(p, workshopItem));
             }
 
             bool localCopyMade = false;
@@ -459,7 +481,7 @@ namespace Barotrauma.Steam
             bool stagingReady = false;
             Exception? stagingException = null;
             TaskPool.Add("CreatePublishStagingCopy",
-                SteamManager.Workshop.CreatePublishStagingCopy(modVersion, localPackage),
+                SteamManager.Workshop.CreatePublishStagingCopy(editor.Title ?? localPackage.Name, modVersion, localPackage),
                 (t) =>
                 {
                     stagingReady = true;
@@ -480,7 +502,7 @@ namespace Barotrauma.Steam
             messageBox.Buttons[0].Enabled = false;
             Steamworks.Ugc.PublishResult? result = null;
             Exception? resultException = null;
-            TaskPool.Add($"Publishing {localPackage.Name} ({localPackage.SteamWorkshopId})",
+            TaskPool.Add($"Publishing {localPackage.Name} ({localPackage.UgcId})",
                 editor.SubmitAsync(),
                 t =>
                 {
@@ -496,6 +518,8 @@ namespace Barotrauma.Steam
             if (result is { Success: true })
             {
                 var resultId = result.Value.FileId;
+                bool packageMatchesResult(ContentPackage p)
+                    => p.TryExtractSteamWorkshopId(out var workshopId) && workshopId.Value == resultId;
                 Steamworks.Ugc.Item resultItem = new Steamworks.Ugc.Item(resultId);
                 Task downloadTask = SteamManager.Workshop.ForceRedownload(resultItem);
                 while (!resultItem.IsInstalled && !downloadTask.IsCompleted)
@@ -504,14 +528,22 @@ namespace Barotrauma.Steam
                     yield return new WaitForSeconds(0.5f);
                 }
 
-                if (!resultItem.IsInstalled)
+                //there seems to sometimes be a brief delay between the download task and the item being installed, wait a bit before deeming the install as failed
+                DateTime waitInstallUntil = DateTime.Now + new TimeSpan(0, 0, seconds: 30);
+                while (!resultItem.IsInstalled || resultItem.IsDownloading)
                 {
-                    throw new Exception($"Failed to install item: download task ended with status {downloadTask.Status}, " +
-                                        $"exception was {downloadTask.Exception?.GetInnermost()?.ToString().CleanupStackTrace() ?? "[NULL]"}");
+                    if (DateTime.Now > waitInstallUntil)
+                    {
+                        throw new Exception($"Failed to install item: download task ended with status {downloadTask.Status}," +
+                            $" item installed: {resultItem.IsInstalled}, " +
+                            $" item downloading: {resultItem.IsDownloading}, " +
+                            $"exception was {downloadTask.Exception?.GetInnermost()?.ToString().CleanupStackTrace() ?? "[NULL]"}");
+                    }
+                    yield return new WaitForSeconds(0.5f);
                 }
 
                 ContentPackage? pkgToNuke
-                    = ContentPackageManager.WorkshopPackages.FirstOrDefault(p => p.SteamWorkshopId == resultId);
+                    = ContentPackageManager.WorkshopPackages.FirstOrDefault(packageMatchesResult);
                 if (pkgToNuke != null)
                 {
                     Directory.Delete(pkgToNuke.Dir, recursive: true);
@@ -537,7 +569,8 @@ namespace Barotrauma.Steam
                 
                 var localModProject = new ModProject(localPackage)
                 {
-                    SteamWorkshopId = resultId
+                    UgcId = Option<ContentPackageId>.Some(new SteamWorkshopId(resultId)),
+                    ModVersion = modVersion
                 };
                 localModProject.DiscardHashAndInstallTime();
                 localModProject.Save(localPackage.Path);
@@ -546,7 +579,7 @@ namespace Barotrauma.Steam
 
                 if (result.Value.NeedsWorkshopAgreement)
                 {
-                    SteamManager.OverlayCustomURL(resultItem.Url);
+                    SteamManager.OverlayCustomUrl(resultItem.Url);
                 }
                 new GUIMessageBox(string.Empty, TextManager.GetWithVariable("workshopitempublished", "[itemname]", localPackage.Name));
             }

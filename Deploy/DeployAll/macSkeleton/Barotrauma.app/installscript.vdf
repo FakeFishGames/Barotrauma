@@ -1,0 +1,31 @@
+"InstallScript"
+{
+	"version"		"2"
+	"chmod"
+	{
+		"0"
+		{
+			"file"		"Barotrauma.app/Contents/MacOS/Barotrauma"
+			"mode"		"755"
+		}
+		"1"
+		{
+			"file"		"Barotrauma.app/Contents/MacOS/Barotrauma.bin.osx"
+			"mode"		"755"
+		}
+		"2"
+		{
+			"file"		"Barotrauma.app/Contents/MacOS/DedicatedServer"
+			"mode"		"755"
+		}
+		"3"
+		{
+			"file"		"Barotrauma.app/Contents/MacOS/DedicatedServer.bin.osx"
+			"mode"		"755"
+		}
+	}
+}
+"kvsignatures"
+{
+	"InstallScript"		"2d0e72227a48d72bfda9810a7f5478af6670d8653f25a92974ceaa4d2e1009e0f5e8a5312a092a64790635d574b0adb84a265ee89df71470d7e8e15c915420da429eb4a15d4ee68840d19c8928a970ab25b8bbfb13f22ce3a061bbb604a94f92299d6e94d7543f3f7bd51170a4c31b3f9808f2f98e85ffd4bd074e88da44491e"
+}

@@ -43,10 +43,5 @@ namespace Barotrauma
                     "Core package requires at least one of the following content types: " +
                             string.Join(", ", missingFileTypes.Select(t => t.Type.Name)));
         }
-
-        protected override void HandleLoadException(Exception e)
-        {
-            throw new Exception($"An exception was thrown while loading \"{Name}\"", e);
-        }
     }
 }

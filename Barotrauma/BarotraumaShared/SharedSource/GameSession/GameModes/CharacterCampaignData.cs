@@ -1,27 +1,16 @@
 ﻿using System.Xml.Linq;
+using Barotrauma.Networking;
 
 namespace Barotrauma
 {
     partial class CharacterCampaignData
     {
-        public CharacterInfo CharacterInfo
-        {
-            get;
-            private set;
-        }
+        public readonly CharacterInfo CharacterInfo;
 
         public readonly string Name;
 
-        public string ClientEndPoint
-        {
-            get;
-            private set;
-        }
-        public ulong SteamID
-        {
-            get;
-            private set;
-        }
+        public readonly Address ClientAddress;
+        public readonly Option<AccountId> AccountId;
 
         private XElement itemData;
         private XElement healthData;

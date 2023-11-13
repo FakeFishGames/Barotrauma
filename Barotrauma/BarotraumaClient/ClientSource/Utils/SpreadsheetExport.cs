@@ -94,8 +94,7 @@ namespace Barotrauma
                     if (name.Equals(nameof(StatusEffect), StringComparison.OrdinalIgnoreCase))
                     {
                         StatusEffect statusEffect = StatusEffect.Load(subElement, debugIdentifier);
-                        if (statusEffect == null || !statusEffect.HasTag("medical")) { continue; }
-
+                        if (statusEffect == null || !statusEffect.HasTag(Tags.MedicalItem)) { continue; }
                         statusEffects.Add(statusEffect);
                     }
                     else if (IsRequiredSkill(subElement, out Skill? skill) && skill != null)
@@ -104,7 +103,7 @@ namespace Barotrauma
                     }
                 }
 
-                List<StatusEffect> successEffects = statusEffects.Where(se => se.type == ActionType.OnUse).ToList();
+                List<StatusEffect> successEffects = statusEffects.Where(se => se.type == ActionType.OnSuccess).ToList();
                 List<StatusEffect> failureEffects = statusEffects.Where(se => se.type == ActionType.OnFailure).ToList();
 
                 foreach (StatusEffect statusEffect in successEffects)

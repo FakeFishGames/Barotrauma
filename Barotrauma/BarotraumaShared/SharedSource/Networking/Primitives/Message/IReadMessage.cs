@@ -4,11 +4,12 @@ using System.Text;
 
 namespace Barotrauma.Networking
 {
-    public interface IReadMessage
+    interface IReadMessage
     {
         bool ReadBoolean();
         void ReadPadBits();
         byte ReadByte();
+        byte PeekByte();
         UInt16 ReadUInt16();
         Int16 ReadInt16();
         UInt32 ReadUInt32();

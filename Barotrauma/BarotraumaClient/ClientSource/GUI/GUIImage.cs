@@ -85,11 +85,11 @@ namespace Barotrauma
             get { return sprite; }
             set
             {
-                if (sprite == value) return;
+                if (sprite == value) { return; }
                 sprite = value;
                 sourceRect = value == null ? Rectangle.Empty : value.SourceRect;
                 origin = value == null ? Vector2.Zero : value.size / 2;
-                if (scaleToFit) RecalculateScale();                
+                if (scaleToFit) { RecalculateScale(); }        
             }
         }
 

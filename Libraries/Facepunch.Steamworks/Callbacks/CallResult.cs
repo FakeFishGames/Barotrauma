@@ -14,7 +14,7 @@ namespace Steamworks
 	internal struct CallResult<T> : INotifyCompletion where T : struct, ICallbackData
 	{
 		SteamAPICall_t call;
-		ISteamUtils utils;
+		ISteamUtils? utils;
 		bool server;
 
 		public CallResult( SteamAPICall_t call, bool server )
@@ -35,7 +35,10 @@ namespace Steamworks
 		/// </summary>
 		public void OnCompleted( Action continuation )
 		{
-			Dispatch.OnCallComplete<T>( call, continuation, server );
+			if (IsCompleted)
+				continuation();
+			else
+				Dispatch.OnCallComplete<T>(call, continuation, server);
 		}
 
 		/// <summary>
@@ -43,6 +46,8 @@ namespace Steamworks
 		/// </summary>
 		public T? GetResult()
 		{
+			if (utils is null) { return null; }
+			
 			bool failed = false;
 			if ( !utils.IsAPICallCompleted( call, ref failed ) || failed )
 				return null;
@@ -76,6 +81,8 @@ namespace Steamworks
 		{
 			get
 			{
+				if (utils is null) { return true; }
+
 				bool failed = false;
 				if ( utils.IsAPICallCompleted( call, ref failed ) || failed )
 					return true;

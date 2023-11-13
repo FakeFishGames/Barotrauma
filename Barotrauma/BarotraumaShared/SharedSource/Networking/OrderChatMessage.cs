@@ -31,7 +31,7 @@ namespace Barotrauma.Networking
         /// </summary>
         public OrderChatMessage(Order order, Character targetCharacter, Character sender, bool isNewOrder = true)
             : this(order,
-                   order?.GetChatMessage(targetCharacter?.Name, sender?.CurrentHull?.DisplayName?.Value, givingOrderToSelf: targetCharacter == sender, orderOption: order.Option, isNewOrder: isNewOrder),
+                   order?.GetChatMessage(targetCharacter?.Name, (order.TargetEntity as Hull ?? sender?.CurrentHull)?.DisplayName?.Value, givingOrderToSelf: targetCharacter == sender, orderOption: order.Option, isNewOrder: isNewOrder),
                    targetCharacter, sender, isNewOrder)
         {
             
@@ -47,32 +47,32 @@ namespace Barotrauma.Networking
 
         public static void WriteOrder(IWriteMessage msg, Order order, Character targetCharacter, bool isNewOrder)
         {
-            msg.Write(order.Prefab.Identifier);
-            msg.Write(targetCharacter == null ? (UInt16)0 : targetCharacter.ID);
-            msg.Write(order.TargetSpatialEntity is Entity ? (order.TargetEntity as Entity).ID : (UInt16)0);
+            msg.WriteIdentifier(order.Prefab.Identifier);
+            msg.WriteUInt16(targetCharacter == null ? (UInt16)0 : targetCharacter.ID);
+            msg.WriteUInt16(order.TargetSpatialEntity is Entity ? (order.TargetEntity as Entity).ID : (UInt16)0);
 
             // The option of a Dismiss order is written differently so we know what order we target
             // now that the game supports multiple current orders simultaneously
             if (!order.IsDismissal)
             {
-                msg.Write((byte)order.Options.IndexOf(order.Option));
+                msg.WriteByte((byte)order.Options.IndexOf(order.Option));
             }
             else
             {
                 if (order.Option != Identifier.Empty)
                 {
-                    msg.Write(true);
+                    msg.WriteBoolean(true);
                     string[] dismissedOrder = order.Option.Value.Split('.');
-                    msg.Write((byte)dismissedOrder.Length);
+                    msg.WriteByte((byte)dismissedOrder.Length);
                     if (dismissedOrder.Length > 0)
                     {
                         Identifier dismissedOrderIdentifier = dismissedOrder[0].ToIdentifier();
                         var orderPrefab = OrderPrefab.Prefabs[dismissedOrderIdentifier];
-                        msg.Write(dismissedOrderIdentifier);
+                        msg.WriteIdentifier(dismissedOrderIdentifier);
                         if (dismissedOrder.Length > 1)
                         {
                             Identifier dismissedOrderOption = dismissedOrder[1].ToIdentifier();
-                            msg.Write((byte)orderPrefab.Options.IndexOf(dismissedOrderOption));
+                            msg.WriteByte((byte)orderPrefab.Options.IndexOf(dismissedOrderOption));
                         }
                     }
                 }
@@ -80,29 +80,29 @@ namespace Barotrauma.Networking
                 {
                     // If the order option is not specified for a Dismiss order,
                     // we dismiss all current orders for the character
-                    msg.Write(false);
+                    msg.WriteBoolean(false);
                 }
             }
 
-            msg.Write((byte)order.ManualPriority);
-            msg.Write((byte)order.TargetType);
+            msg.WriteByte((byte)order.ManualPriority);
+            msg.WriteByte((byte)order.TargetType);
             if (order.TargetType == Order.OrderTargetType.Position && order.TargetSpatialEntity is OrderTarget orderTarget)
             {
-                msg.Write(true);
-                msg.Write(orderTarget.Position.X);
-                msg.Write(orderTarget.Position.Y);
-                msg.Write(orderTarget.Hull == null ? (UInt16)0 : orderTarget.Hull.ID);
+                msg.WriteBoolean(true);
+                msg.WriteSingle(orderTarget.Position.X);
+                msg.WriteSingle(orderTarget.Position.Y);
+                msg.WriteUInt16(orderTarget.Hull == null ? (UInt16)0 : orderTarget.Hull.ID);
             }
             else
             {
-                msg.Write(false);
+                msg.WriteBoolean(false);
                 if (order.TargetType == Order.OrderTargetType.WallSection)
                 {
-                    msg.Write((byte)(order.WallSectionIndex ?? 0));
+                    msg.WriteByte((byte)(order.WallSectionIndex ?? 0));
                 }
             }
 
-            msg.Write(isNewOrder);
+            msg.WriteBoolean(isNewOrder);
         }
 
         private void WriteOrder(IWriteMessage msg)
@@ -110,7 +110,7 @@ namespace Barotrauma.Networking
             WriteOrder(msg, Order, TargetCharacter, IsNewOrder);
         }
 
-        public struct OrderMessageInfo
+        public readonly struct OrderMessageInfo
         {
             public Identifier OrderIdentifier { get; }
             public OrderPrefab OrderPrefab => OrderPrefab.Prefabs[OrderIdentifier];

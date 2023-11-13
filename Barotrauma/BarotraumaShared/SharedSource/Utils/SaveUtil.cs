@@ -1,26 +1,29 @@
-﻿using System;
-using System.Collections;
+﻿#nullable enable
+using System;
 using System.Collections.Generic;
-using Barotrauma.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Xml.Linq;
-using Steamworks.Data;
-using Color = Microsoft.Xna.Framework.Color;
 using System.Text.RegularExpressions;
+using Barotrauma.IO;
+using Microsoft.Xna.Framework;
+using System.Collections.Immutable;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Barotrauma
 {
     static class SaveUtil
     {
+        public const string GameSessionFileName = "gamesession.xml";
+
         private static readonly string LegacySaveFolder = Path.Combine("Data", "Saves");
         private static readonly string LegacyMultiplayerSaveFolder = Path.Combine(LegacySaveFolder, "Multiplayer");
 
 #if OSX
         //"/*user*/Library/Application Support/Daedalic Entertainment GmbH/" on Mac
-        public static string SaveFolder = Path.Combine(
+        public static readonly string DefaultSaveFolder = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.Personal), 
             "Library",
             "Application Support",
@@ -29,25 +32,23 @@ namespace Barotrauma
 #else
         //"C:/Users/*user*/AppData/Local/Daedalic Entertainment GmbH/" on Windows
         //"/home/*user*/.local/share/Daedalic Entertainment GmbH/" on Linux
-        public static string SaveFolder = Path.Combine(
+        public static readonly string DefaultSaveFolder = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
             "Daedalic Entertainment GmbH",
             "Barotrauma");
 #endif
 
-        public static string MultiplayerSaveFolder = Path.Combine(SaveFolder, "Multiplayer");
+        public static string DefaultMultiplayerSaveFolder = Path.Combine(DefaultSaveFolder, "Multiplayer");
 
         public static readonly string SubmarineDownloadFolder = Path.Combine("Submarines", "Downloaded");
         public static readonly string CampaignDownloadFolder = Path.Combine("Data", "Saves", "Multiplayer_Downloaded");
 
-        public delegate void ProgressDelegate(string sMessage);
-
         public static string TempPath
         {
 #if SERVER
-            get { return Path.Combine(SaveFolder, "temp_server"); }
+            get { return Path.Combine(GetSaveFolder(SaveType.Singleplayer), "temp_server"); }
 #else
-            get { return Path.Combine(SaveFolder, "temp"); }
+            get { return Path.Combine(GetSaveFolder(SaveType.Singleplayer), "temp"); }
 #endif
         }
 
@@ -73,7 +74,7 @@ namespace Barotrauma
 
             try
             {
-                GameMain.GameSession.Save(Path.Combine(TempPath, "gamesession.xml"));
+                GameMain.GameSession.Save(Path.Combine(TempPath, GameSessionFileName));
             }
             catch (Exception e)
             {
@@ -83,7 +84,7 @@ namespace Barotrauma
 
             try
             {
-                string mainSubPath = null;
+                string? mainSubPath = null;
                 if (GameMain.GameSession.SubmarineInfo != null)
                 {
                     mainSubPath = Path.Combine(TempPath, GameMain.GameSession.SubmarineInfo.Name + ".sub");
@@ -116,7 +117,7 @@ namespace Barotrauma
 
             try
             {
-                CompressDirectory(TempPath, filePath, null);
+                CompressDirectory(TempPath, filePath);
             }
             catch (Exception e)
             {
@@ -131,9 +132,9 @@ namespace Barotrauma
             Submarine.Unload();
             GameMain.GameSession = null;
             DebugConsole.Log("Loading save file: " + filePath);
-            DecompressToDirectory(filePath, TempPath, null);
+            DecompressToDirectory(filePath, TempPath);
 
-            XDocument doc = XMLExtensions.TryLoadXml(Path.Combine(TempPath, "gamesession.xml"));
+            XDocument doc = XMLExtensions.TryLoadXml(Path.Combine(TempPath, GameSessionFileName));
             if (doc == null) { return; }
 
             if (!IsSaveFileCompatible(doc))
@@ -150,49 +151,26 @@ namespace Barotrauma
             string subPath = Path.Combine(TempPath, saveDoc.Root.GetAttributeString("submarine", "")) + ".sub";
             selectedSub = new SubmarineInfo(subPath);
 
-            List<SubmarineInfo> ownedSubmarines = null;
-            var ownedSubsElement = saveDoc.Root.Element("ownedsubmarines");
-            if (ownedSubsElement != null)
+            List<SubmarineInfo> ownedSubmarines = new List<SubmarineInfo>();
+
+            var ownedSubsElement = saveDoc.Root?.Element("ownedsubmarines");
+            if (ownedSubsElement == null) { return ownedSubmarines; }
+
+            foreach (var subElement in ownedSubsElement.Elements())
             {
-                ownedSubmarines = new List<SubmarineInfo>();
-                foreach (var subElement in ownedSubsElement.Elements())
-                {
-                    string subName = subElement.GetAttributeString("name", "");
-                    string ownedSubPath = Path.Combine(TempPath, subName + ".sub");
-                    ownedSubmarines.Add(new SubmarineInfo(ownedSubPath));
-                }
+                string subName = subElement.GetAttributeString("name", "");
+                string ownedSubPath = Path.Combine(TempPath, subName + ".sub");
+                ownedSubmarines.Add(new SubmarineInfo(ownedSubPath));
             }
             return ownedSubmarines;
         }
 
-        /*public static void LoadMultiplayerCampaignState(string filePath, MultiPlayerCampaign multiplayerCampaign)
-        {
-            DebugConsole.Log("Loading save file for an existing game session (" + filePath + ")");
-            DecompressToDirectory(filePath, TempPath, null);
-            XDocument doc = XMLExtensions.TryLoadXml(Path.Combine(TempPath, "gamesession.xml"));
-            if (doc == null) { return; }
-            gameSession.Load(doc.Root);
-        }*/
+        public static bool IsSaveFileCompatible(XDocument? saveDoc)
+            => IsSaveFileCompatible(saveDoc?.Root);
 
-        public static XDocument LoadGameSessionDoc(string filePath)
+        public static bool IsSaveFileCompatible(XElement? saveDocRoot)
         {
-            DebugConsole.Log("Loading game session doc: " + filePath);
-            try
-            {
-                DecompressToDirectory(filePath, TempPath, null);
-            }
-            catch (Exception e)
-            {
-                DebugConsole.ThrowError("Error decompressing " + filePath, e);
-                return null;
-            }
-
-            return XMLExtensions.TryLoadXml(Path.Combine(TempPath, "gamesession.xml"));
-        }
-
-        public static bool IsSaveFileCompatible(XDocument saveDoc)
-        {
-            if (saveDoc?.Root?.Attribute("version") == null) { return false; }
+            if (saveDocRoot?.Attribute("version") == null) { return false; }
             return true;
         }
 
@@ -202,14 +180,16 @@ namespace Barotrauma
             {
                 File.Delete(filePath);
             }
-
             catch (Exception e)
             {
                 DebugConsole.ThrowError("ERROR: deleting save file \"" + filePath + "\" failed.", e);
             }
 
             //deleting a multiplayer save file -> also delete character data
-            if (Path.GetFullPath(Path.GetDirectoryName(filePath)).Equals(Path.GetFullPath(MultiplayerSaveFolder)))
+            var fullPath = Path.GetFullPath(Path.GetDirectoryName(filePath) ?? "");
+
+            if (fullPath.Equals(Path.GetFullPath(DefaultMultiplayerSaveFolder)) ||
+                fullPath == Path.GetFullPath(GetSaveFolder(SaveType.Multiplayer)))
             {
                 string characterDataSavePath = MultiPlayerCampaign.GetCharacterDataSavePath(filePath);
                 if (File.Exists(characterDataSavePath))
@@ -226,56 +206,92 @@ namespace Barotrauma
             }
         }
 
-        public static string GetSavePath(SaveType saveType, string saveName)
+        public static string GetSaveFolder(SaveType saveType)
         {
-            string folder = saveType == SaveType.Singleplayer ? SaveFolder : MultiplayerSaveFolder;
-            return Path.Combine(folder, saveName);
+            string folder = string.Empty;
+
+            if (!string.IsNullOrEmpty(GameSettings.CurrentConfig.SavePath))
+            {
+                folder = GameSettings.CurrentConfig.SavePath;
+                if (saveType == SaveType.Multiplayer)
+                {
+                    folder = Path.Combine(folder, "Multiplayer");
+                }
+                if (!Directory.Exists(folder))
+                {
+                    DebugConsole.AddWarning($"Could not find the custom save folder \"{folder}\", creating the folder...");
+                    try
+                    {
+                        Directory.CreateDirectory(folder);
+                    }
+                    catch (Exception e)
+                    {
+                        DebugConsole.ThrowError($"Could not find the custom save folder \"{folder}\". Using the default save path instead.", e);
+                        folder = string.Empty;
+                    }
+                }
+            }
+            if (string.IsNullOrEmpty(folder))
+            {
+                folder = saveType == SaveType.Singleplayer ? DefaultSaveFolder : DefaultMultiplayerSaveFolder;
+            }
+            return folder;
         }
 
-        public static IReadOnlyList<CampaignMode.SaveInfo> GetSaveFiles(SaveType saveType, bool includeInCompatible = true)
+        public static IReadOnlyList<CampaignMode.SaveInfo> GetSaveFiles(SaveType saveType, bool includeInCompatible = true, bool logLoadErrors = true)
         {
-            string folder = saveType == SaveType.Singleplayer ? SaveFolder : MultiplayerSaveFolder;
-            if (!Directory.Exists(folder))
+            string defaultFolder = saveType == SaveType.Singleplayer ? DefaultSaveFolder : DefaultMultiplayerSaveFolder;
+            if (!Directory.Exists(defaultFolder))
             {
-                DebugConsole.Log("Save folder \"" + folder + " not found! Attempting to create a new folder...");
+                DebugConsole.Log("Save folder \"" + defaultFolder + " not found! Attempting to create a new folder...");
                 try
                 {
-                    Directory.CreateDirectory(folder);
+                    Directory.CreateDirectory(defaultFolder);
                 }
                 catch (Exception e)
                 {
-                    DebugConsole.ThrowError("Failed to create the folder \"" + folder + "\"!", e);
+                    DebugConsole.ThrowError("Failed to create the folder \"" + defaultFolder + "\"!", e);
                 }
             }
 
-            List<string> files = Directory.GetFiles(folder, "*.save", System.IO.SearchOption.TopDirectoryOnly).ToList();
+            List<string> files = Directory.GetFiles(defaultFolder, "*.save", System.IO.SearchOption.TopDirectoryOnly).ToList();
+
+            var folder = GetSaveFolder(saveType);
+            if (!string.IsNullOrEmpty(folder) && Directory.Exists(folder))
+            {
+                files.AddRange(Directory.GetFiles(folder, "*.save", System.IO.SearchOption.TopDirectoryOnly));
+            }
+
             string legacyFolder = saveType == SaveType.Singleplayer ? LegacySaveFolder : LegacyMultiplayerSaveFolder;
             if (Directory.Exists(legacyFolder))
             {
                 files.AddRange(Directory.GetFiles(legacyFolder, "*.save", System.IO.SearchOption.TopDirectoryOnly));
             }
 
+            files = files.Distinct().ToList();
+
             List<CampaignMode.SaveInfo> saveInfos = new List<CampaignMode.SaveInfo>();   
             foreach (string file in files)
             {
-                XDocument doc = LoadGameSessionDoc(file);
-                if (!includeInCompatible && !IsSaveFileCompatible(doc))
+                var docRoot = ExtractGameSessionRootElementFromSaveFile(file, logLoadErrors);
+                if (!includeInCompatible && !IsSaveFileCompatible(docRoot))
                 {
                     continue;
                 }
-                if (doc?.Root == null)
+                if (docRoot == null)
                 {
-                    saveInfos.Add(new CampaignMode.SaveInfo()
-                    {
-                        FilePath = file
-                    });
+                    saveInfos.Add(new CampaignMode.SaveInfo(
+                        FilePath: file,
+                        SaveTime: Option.None,
+                        SubmarineName: "",
+                        EnabledContentPackageNames: ImmutableArray<string>.Empty));
                 }
                 else
                 {
                     List<string> enabledContentPackageNames = new List<string>();
 
                     //backwards compatibility
-                    string enabledContentPackagePathsStr = doc.Root.GetAttributeStringUnrestricted("selectedcontentpackages", string.Empty);
+                    string enabledContentPackagePathsStr = docRoot.GetAttributeStringUnrestricted("selectedcontentpackages", string.Empty);
                     foreach (string packagePath in enabledContentPackagePathsStr.Split('|'))
                     {
                         if (string.IsNullOrEmpty(packagePath)) { continue; }
@@ -283,7 +299,7 @@ namespace Barotrauma
                         string fileName = Path.GetFileNameWithoutExtension(packagePath);
                         if (fileName == "filelist")
                         { 
-                            enabledContentPackageNames.Add(Path.GetFileName(Path.GetDirectoryName(packagePath)));
+                            enabledContentPackageNames.Add(Path.GetFileName(Path.GetDirectoryName(packagePath) ?? ""));
                         }
                         else
                         {
@@ -291,7 +307,7 @@ namespace Barotrauma
                         }
                     }
 
-                    string enabledContentPackageNamesStr = doc.Root.GetAttributeStringUnrestricted("selectedcontentpackagenames", string.Empty);
+                    string enabledContentPackageNamesStr = docRoot.GetAttributeStringUnrestricted("selectedcontentpackagenames", string.Empty);
                     //split on pipes, excluding pipes preceded by \
                     foreach (string packageName in Regex.Split(enabledContentPackageNamesStr, @"(?<!(?<!\\)*\\)\|"))
                     {
@@ -299,13 +315,11 @@ namespace Barotrauma
                         enabledContentPackageNames.Add(packageName.Replace(@"\|", "|"));                        
                     }
 
-                    saveInfos.Add(new CampaignMode.SaveInfo()
-                    {
-                        FilePath = file,
-                        SubmarineName = doc?.Root?.GetAttributeStringUnrestricted("submarine", ""),
-                        SaveTime = doc.Root.GetAttributeInt("savetime", 0),
-                        EnabledContentPackageNames = enabledContentPackageNames.ToArray(),
-                    });
+                    saveInfos.Add(new CampaignMode.SaveInfo(
+                        FilePath: file,
+                        SaveTime: docRoot.GetAttributeDateTime("savetime"),
+                        SubmarineName: docRoot.GetAttributeStringUnrestricted("submarine", ""),
+                        EnabledContentPackageNames: enabledContentPackageNames.ToImmutableArray()));
                 }
             }
             
@@ -316,7 +330,7 @@ namespace Barotrauma
         {
             fileName = ToolBox.RemoveInvalidFileNameChars(fileName);
 
-            string folder = saveType == SaveType.Singleplayer ? SaveFolder : MultiplayerSaveFolder;
+            string folder = GetSaveFolder(saveType);
             if (fileName == "Save_Default")
             {
                 fileName = TextManager.Get("SaveFile.DefaultName").Value;
@@ -354,20 +368,28 @@ namespace Barotrauma
 
             // B.
             // Use GZipStream to write compressed bytes to target file.
-            using (FileStream f2 = File.Open(fileName, System.IO.FileMode.Create))
-            using (GZipStream gz = new GZipStream(f2, CompressionMode.Compress, false))
-            {
-                gz.Write(b, 0, b.Length);
-            }
+            using FileStream f2 = File.Open(fileName, System.IO.FileMode.Create)
+                ?? throw new Exception($"Failed to create file \"{fileName}\"");;
+            using GZipStream gz = new GZipStream(f2, CompressionMode.Compress, false);
+            gz.Write(b, 0, b.Length);
         }
 
-        public static void CompressFile(string sDir, string sRelativePath, GZipStream zipStream)
+        private static void CompressFile(string sDir, string sRelativePath, GZipStream zipStream)
         {
             //Compress file name
-            char[] chars = sRelativePath.ToCharArray();
-            zipStream.Write(BitConverter.GetBytes(chars.Length), 0, sizeof(int));
-            foreach (char c in chars)
-                zipStream.Write(BitConverter.GetBytes(c), 0, sizeof(char));
+            if (sRelativePath.Length > 255)
+            {
+                throw new Exception(
+                    $"Failed to compress \"{sDir}\" (file name length > 255).");
+            }
+            // File name length is encoded as a 32-bit little endian integer here
+            zipStream.WriteByte((byte)sRelativePath.Length);
+            zipStream.WriteByte(0);
+            zipStream.WriteByte(0);
+            zipStream.WriteByte(0);
+            // File name content is encoded as little-endian UTF-16
+            var strBytes = Encoding.Unicode.GetBytes(sRelativePath.CleanUpPathCrossPlatform(correctFilenameCase: false));
+            zipStream.Write(strBytes, 0, strBytes.Length);
 
             //Compress file content
             byte[] bytes = File.ReadAllBytes(Path.Combine(sDir, sRelativePath));
@@ -375,142 +397,103 @@ namespace Barotrauma
             zipStream.Write(bytes, 0, bytes.Length);
         }
 
-        public static void CompressDirectory(string sInDir, string sOutFile, ProgressDelegate progress)
+        public static void CompressDirectory(string sInDir, string sOutFile)
         {
             IEnumerable<string> sFiles = Directory.GetFiles(sInDir, "*.*", System.IO.SearchOption.AllDirectories);
-            int iDirLen = sInDir[sInDir.Length - 1] == Path.DirectorySeparatorChar ? sInDir.Length : sInDir.Length + 1;
+            int iDirLen = sInDir[^1] == Path.DirectorySeparatorChar ? sInDir.Length : sInDir.Length + 1;
 
-            using (FileStream outFile = File.Open(sOutFile, System.IO.FileMode.Create, System.IO.FileAccess.Write))
-            using (GZipStream str = new GZipStream(outFile, CompressionMode.Compress))
-                foreach (string sFilePath in sFiles)
-                {
-                    string sRelativePath = sFilePath.Substring(iDirLen);
-                    progress?.Invoke(sRelativePath);
-                    CompressFile(sInDir, sRelativePath, str);
-                }
-        }
-
-
-        public static System.IO.Stream DecompressFiletoStream(string fileName)
-        {
-            using (FileStream originalFileStream = File.Open(fileName, System.IO.FileMode.Open))
+            using var outFile = File.Open(sOutFile, System.IO.FileMode.Create, System.IO.FileAccess.Write)
+                ?? throw new Exception($"Failed to create file \"{sOutFile}\"");
+            using GZipStream str = new GZipStream(outFile, CompressionMode.Compress);
+            foreach (string sFilePath in sFiles)
             {
-                System.IO.MemoryStream decompressedFileStream = new System.IO.MemoryStream();
-
-                using (GZipStream decompressionStream = new GZipStream(originalFileStream, CompressionMode.Decompress))
-                {
-                    decompressionStream.CopyTo(decompressedFileStream);
-                    return decompressedFileStream;
-                }
+                string sRelativePath = sFilePath.Substring(iDirLen);
+                CompressFile(sInDir, sRelativePath, str);
             }
         }
 
-        private static bool DecompressFile(bool writeFile, string sDir, GZipStream zipStream, ProgressDelegate progress, out string fileName)
+
+        public static System.IO.Stream DecompressFileToStream(string fileName)
+        {
+            using FileStream originalFileStream = File.Open(fileName, System.IO.FileMode.Open, System.IO.FileAccess.Read)
+                ?? throw new Exception($"Failed to open file \"{fileName}\"");
+            System.IO.MemoryStream streamToReturn = new System.IO.MemoryStream();
+
+            using GZipStream gzipStream = new GZipStream(originalFileStream, CompressionMode.Decompress);
+            gzipStream.CopyTo(streamToReturn);
+            
+            streamToReturn.Position = 0;
+            return streamToReturn;
+        }
+
+        private static bool IsExtractionPathValid(string rootDir, string fileDir)
+        {
+            string getFullPath(string dir)
+                => (string.IsNullOrEmpty(dir)
+                        ? Directory.GetCurrentDirectory()
+                        : Path.GetFullPath(dir))
+                    .CleanUpPathCrossPlatform(correctFilenameCase: false);
+            
+            string rootDirFull = getFullPath(rootDir);
+            string fileDirFull = getFullPath(fileDir);
+
+            return fileDirFull.StartsWith(rootDirFull, StringComparison.OrdinalIgnoreCase);
+        }
+
+        private static bool DecompressFile(System.IO.BinaryReader reader, [NotNullWhen(returnValue: true)]out string? fileName, [NotNullWhen(returnValue: true)]out byte[]? fileContent)
         {
             fileName = null;
+            fileContent = null;
 
+            if (reader.PeekChar() < 0) { return false; }
+            
             //Decompress file name
-            byte[] bytes = new byte[sizeof(int)];
-            int Readed = Read(zipStream, bytes, sizeof(int));
-            if (Readed < sizeof(int))
-                return false;
-
-            int iNameLen = BitConverter.ToInt32(bytes, 0);
-            if (iNameLen > 255)
+            int nameLen = reader.ReadInt32();
+            if (nameLen > 255)
             {
-                throw new Exception("Failed to decompress \"" + sDir + "\" (file name length > 255). The file may be corrupted.");
+                throw new Exception(
+                    $"Failed to decompress (file name length > 255). The file may be corrupted.");
             }
 
-            bytes = new byte[sizeof(char)];
-            StringBuilder sb = new StringBuilder();
-            for (int i = 0; i < iNameLen; i++)
-            {
-                Read(zipStream, bytes, sizeof(char));
-                char c = BitConverter.ToChar(bytes, 0);
-                sb.Append(c);
-            }
-            string sFileName = sb.ToString().Replace('\\', '/');
+            byte[] strBytes = reader.ReadBytes(nameLen * sizeof(char));
+            string sFileName = Encoding.Unicode.GetString(strBytes)
+                .Replace('\\', '/');
 
             fileName = sFileName;
-            progress?.Invoke(sFileName);
 
             //Decompress file content
-            bytes = new byte[sizeof(int)];
-            Read(zipStream, bytes, sizeof(int));
-            int iFileLen = BitConverter.ToInt32(bytes, 0);
+            int contentLen = reader.ReadInt32();
+            fileContent = reader.ReadBytes(contentLen);
 
-            bytes = new byte[iFileLen];
-            Read(zipStream, bytes, bytes.Length);
-
-            string sFilePath = Path.Combine(sDir, sFileName);
-            string sFinalDir = Path.GetDirectoryName(sFilePath);
-
-            string sDirFull = (string.IsNullOrEmpty(sDir) ? Directory.GetCurrentDirectory() : Path.GetFullPath(sDir)).CleanUpPathCrossPlatform(correctFilenameCase: false);
-            string sFinalDirFull = (string.IsNullOrEmpty(sFinalDir) ? Directory.GetCurrentDirectory() : Path.GetFullPath(sFinalDir)).CleanUpPathCrossPlatform(correctFilenameCase: false);
-
-            if (!sFinalDirFull.StartsWith(sDirFull, StringComparison.OrdinalIgnoreCase))
-            {
-                throw new InvalidOperationException(
-                    $"Error extracting \"{sFileName}\": cannot be extracted to parent directory");
-            }
-
-            if (!writeFile) { return true; }
-            if (!Directory.Exists(sFinalDir))
-                Directory.CreateDirectory(sFinalDir);
-
-            int maxRetries = 4;
-            for (int i = 0; i <= maxRetries; i++)
-            {
-                try
-                {
-                    using (FileStream outFile = File.Open(sFilePath, System.IO.FileMode.Create, System.IO.FileAccess.Write))
-                    {
-                        outFile.Write(bytes, 0, iFileLen);
-                    }
-                    break;
-                }
-                catch (System.IO.IOException e)
-                {
-                    if (i >= maxRetries || !File.Exists(sFilePath)) { throw; }
-                    DebugConsole.NewMessage("Failed decompress file \"" + sFilePath + "\" {" + e.Message + "}, retrying in 250 ms...", Color.Red);
-                    Thread.Sleep(250);
-                }
-            }
             return true;
         }
 
-        private static int Read(GZipStream zipStream, byte[] bytes, int amount)
-        {
-            int read = 0;
-
-            // BUG workaround for .NET6 causing save decompression to fail
-#if NET6_0
-            for (int i = 0; i < amount; i++)
-            {
-                int result = zipStream.ReadByte();
-                if (result < 0) { break; }
-
-                bytes[i] = (byte) result;
-                read++;
-            }
-#else
-            read = zipStream.Read(bytes, 0, amount);
-#endif
-            return read;
-        }
-
-        public static void DecompressToDirectory(string sCompressedFile, string sDir, ProgressDelegate progress)
+        public static void DecompressToDirectory(string sCompressedFile, string sDir)
         {
             DebugConsole.Log("Decompressing " + sCompressedFile + " to " + sDir + "...");
-            int maxRetries = 4;
+            const int maxRetries = 4;
             for (int i = 0; i <= maxRetries; i++)
             {
                 try
                 {
-                    using (FileStream inFile = File.Open(sCompressedFile, System.IO.FileMode.Open, System.IO.FileAccess.Read))
-                    using (GZipStream zipStream = new GZipStream(inFile, CompressionMode.Decompress, true))
-                        while (DecompressFile(true, sDir, zipStream, progress, out _)) { };
+                    using var memStream = DecompressFileToStream(sCompressedFile);
+                    using var reader = new System.IO.BinaryReader(memStream);
+                    while (DecompressFile(reader, out var fileName, out var contentBytes))
+                    {
+                        string sFilePath = Path.Combine(sDir, fileName);
+                        string sFinalDir = Path.GetDirectoryName(sFilePath) ?? "";
 
+                        if (!IsExtractionPathValid(sDir, sFinalDir))
+                        {
+                            throw new InvalidOperationException(
+                                $"Error extracting \"{fileName}\": cannot be extracted to parent directory");
+                        }
+
+                        Directory.CreateDirectory(sFinalDir);
+                        using var outFile = File.Open(sFilePath, System.IO.FileMode.Create, System.IO.FileAccess.Write)
+                            ?? throw new Exception($"Failed to create file \"{sFilePath}\"");
+                        outFile.Write(contentBytes, 0, contentBytes.Length);
+                    }
                     break;
                 }
                 catch (System.IO.IOException e)
@@ -524,18 +507,20 @@ namespace Barotrauma
 
         public static IEnumerable<string> EnumerateContainedFiles(string sCompressedFile)
         {
-            int maxRetries = 4;
+            const int maxRetries = 4;
             HashSet<string> paths = new HashSet<string>();
             for (int i = 0; i <= maxRetries; i++)
             {
                 try
                 {
-                    using FileStream inFile = File.Open(sCompressedFile, System.IO.FileMode.Open, System.IO.FileAccess.Read);
-                    using GZipStream zipStream = new GZipStream(inFile, CompressionMode.Decompress, true);
-                    while (DecompressFile(false, "", zipStream, null, out string fileName))
+                    paths.Clear();
+                    using var memStream = DecompressFileToStream(sCompressedFile);
+                    using var reader = new System.IO.BinaryReader(memStream);
+                    while (DecompressFile(reader, out var fileName, out _))
                     {
                         paths.Add(fileName);
                     }
+                    break;
                 }
                 catch (System.IO.IOException e)
                 {
@@ -551,44 +536,103 @@ namespace Barotrauma
             return paths;
         }
 
-        public static void CopyFolder(string sourceDirName, string destDirName, bool copySubDirs, bool overwriteExisting = false)
+        /// <summary>
+        /// Extracts the save file (including all the subs in it) to a temporary folder and returns the game session document.
+        /// If you only need the gamesession doc, use <see cref="ExtractGameSessionRootElementFromSaveFile"/> instead.
+        /// </summary>
+        /// <param name="savePath"></param>
+        /// <returns></returns>
+        public static XDocument? DecompressSaveAndLoadGameSessionDoc(string savePath)
         {
-            // Get the subdirectories for the specified directory.
-            DirectoryInfo dir = new DirectoryInfo(sourceDirName);
-
-            if (!dir.Exists)
+            DebugConsole.Log("Loading game session doc: " + savePath);
+            try
             {
-                throw new System.IO.DirectoryNotFoundException(
-                    "Source directory does not exist or could not be found: "
-                    + sourceDirName);
+                DecompressToDirectory(savePath, TempPath);
             }
-
-            IEnumerable<DirectoryInfo> dirs = dir.GetDirectories();
-            // If the destination directory doesn't exist, create it.
-            if (!Directory.Exists(destDirName))
+            catch (Exception e)
             {
-                Directory.CreateDirectory(destDirName);
+                DebugConsole.ThrowError("Error decompressing " + savePath, e);
+                return null;
             }
+            return XMLExtensions.TryLoadXml(Path.Combine(TempPath, "gamesession.xml"));
+        }
 
-            // Get the files in the directory and copy them to the new location.
-            IEnumerable<FileInfo> files = dir.GetFiles();
-            foreach (FileInfo file in files)
+        /// <summary>
+        /// Extract *only* the root element of the gamesession.xml file in the given save.
+        /// For performance reasons, none of its child elements are returned.
+        /// </summary>
+        public static XElement? ExtractGameSessionRootElementFromSaveFile(string savePath, bool logLoadErrors = true)
+        {
+            const int maxRetries = 4;
+            for (int i = 0; i <= maxRetries; i++)
             {
-                string tempPath = Path.Combine(destDirName, file.Name);
-                if (!overwriteExisting && File.Exists(tempPath)) { continue; }
-                file.CopyTo(tempPath, true);
-            }
-
-            // If copying subdirectories, copy them and their contents to new location.
-            if (copySubDirs)
-            {
-                foreach (DirectoryInfo subdir in dirs)
+                try
                 {
-                    string tempPath = Path.Combine(destDirName, subdir.Name);
-                    CopyFolder(subdir.FullName, tempPath, copySubDirs, overwriteExisting);
+                    using var memStream = DecompressFileToStream(savePath);
+                    using var reader = new System.IO.BinaryReader(memStream);
+                    while (DecompressFile(reader, out var fileName, out var fileContent))
+                    {
+                        if (fileName != GameSessionFileName) { continue; }
+
+                        // Found the file! Here's a quick byte-wise parser to find the root element
+                        int tagOpenerStartIndex = -1;
+                        for (int j = 0; j < fileContent.Length; j++)
+                        {
+                            if (fileContent[j] == '<')
+                            {
+                                // Found a tag opener: return null if we had already found one
+                                if (tagOpenerStartIndex >= 0) { return null; }
+                                tagOpenerStartIndex = j;
+                            }
+                            else if (j > 0 && fileContent[j] == '?' && fileContent[j - 1] == '<')
+                            {
+                                // Found the XML version element, skip this
+                                tagOpenerStartIndex = -1;
+                            }
+                            else if (fileContent[j] == '>')
+                            {
+                                // Found a tag closer, if we know where the tag opener is then we've found the root element
+                                if (tagOpenerStartIndex < 0) { continue; }
+
+                                string elemStr = Encoding.UTF8.GetString(fileContent.AsSpan()[tagOpenerStartIndex..j]) + "/>";
+                                try
+                                {
+                                    return XElement.Parse(elemStr);
+                                }
+                                catch (Exception e)
+                                {
+                                    DebugConsole.NewMessage(
+                                        $"Failed to parse gamesession root in \"{savePath}\": {{{e.Message}}}.",
+                                        Color.Red);
+                                    // Parsing the element failed! Return null instead of crashing here
+                                    return null;
+                                }
+                            }
+                        }
+                    }
+                    break;
+                }
+                catch (System.IO.IOException e)
+                {
+                    if (i >= maxRetries || !File.Exists(savePath)) { throw; }
+
+                    DebugConsole.NewMessage(
+                        $"Failed to decompress file \"{savePath}\" for root extraction ({e.Message}), retrying in 250 ms...",
+                        Color.Red);
+                    Thread.Sleep(250);
+                }
+                catch (System.IO.InvalidDataException e)
+                {
+                    if (logLoadErrors)
+                    {
+                        DebugConsole.ThrowError($"Failed to decompress file \"{savePath}\" for root extraction.", e);
+                    }
+                    return null;
                 }
             }
+            return null;
         }
+
         public static void DeleteDownloadedSubs()
         {
             if (Directory.Exists(SubmarineDownloadFolder)) 
@@ -611,7 +655,7 @@ namespace Barotrauma
             }
         }
 
-        public static void ClearFolder(string folderName, string[] ignoredFileNames = null)
+        public static void ClearFolder(string folderName, string[]? ignoredFileNames = null)
         {
             DirectoryInfo dir = new DirectoryInfo(folderName);
 
@@ -637,7 +681,7 @@ namespace Barotrauma
             foreach (DirectoryInfo di in dir.GetDirectories())
             {
                 ClearFolder(di.FullName, ignoredFileNames);
-                int maxRetries = 4;
+                const int maxRetries = 4;
                 for (int i = 0; i <= maxRetries; i++)
                 {
                     try

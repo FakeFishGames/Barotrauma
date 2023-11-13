@@ -55,19 +55,19 @@ namespace Steamworks
 
 	public abstract class SteamClass
 	{
-		internal abstract void InitializeInterface( bool server );
+		internal abstract bool InitializeInterface( bool server );
 		internal abstract void DestroyInterface( bool server );
 	}
 
 	public class SteamSharedClass<T> : SteamClass
 	{
-		internal static SteamInterface Interface => InterfaceClient ?? InterfaceServer;
-		internal static SteamInterface InterfaceClient;
-		internal static SteamInterface InterfaceServer;
+		internal static SteamInterface? Interface => InterfaceClient ?? InterfaceServer;
+		internal static SteamInterface? InterfaceClient;
+		internal static SteamInterface? InterfaceServer;
 
-		internal override void InitializeInterface( bool server )
+		internal override bool InitializeInterface( bool server )
 		{
-
+			return false;
 		}
 
 		internal virtual void SetInterface( bool server, SteamInterface iface )
@@ -99,11 +99,11 @@ namespace Steamworks
 
 	public class SteamClientClass<T> : SteamClass
 	{
-		internal static SteamInterface Interface;
+		internal static SteamInterface? Interface;
 
-		internal override void InitializeInterface( bool server )
+		internal override bool InitializeInterface( bool server )
 		{
-
+			return false;
 		}
 
 		internal virtual void SetInterface( bool server, SteamInterface iface )
@@ -122,11 +122,11 @@ namespace Steamworks
 	
 	public class SteamServerClass<T> : SteamClass
 	{
-		internal static SteamInterface Interface;
+		internal static SteamInterface? Interface;
 
-		internal override void InitializeInterface( bool server )
+		internal override bool InitializeInterface( bool server )
 		{
-
+			return false;
 		}
 
 		internal virtual void SetInterface( bool server, SteamInterface iface )

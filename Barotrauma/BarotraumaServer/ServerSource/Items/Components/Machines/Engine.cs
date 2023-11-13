@@ -9,7 +9,7 @@ namespace Barotrauma.Items.Components
         {
             //force can only be adjusted at 10% intervals -> no need for more accuracy than this
             msg.WriteRangedInteger((int)(targetForce / 10.0f), -10, 10);
-            msg.Write(User == null ? Entity.NullEntityID : User.ID);
+            msg.WriteUInt16(User == null ? Entity.NullEntityID : User.ID);
         }
 
         public void ServerEventRead(IReadMessage msg, Client c)
@@ -18,11 +18,11 @@ namespace Barotrauma.Items.Components
 
             if (item.CanClientAccess(c))
             {
+                lastReceivedTargetForce = null;
                 if (Math.Abs(newTargetForce - targetForce) > 0.01f)
                 {
                     GameServer.Log(GameServer.CharacterLogName(c.Character) + " set the force of " + item.Name + " to " + (int)(newTargetForce) + " %", ServerLog.MessageType.ItemInteraction);
                 }
-
                 targetForce = newTargetForce;
                 User = c.Character;
             }

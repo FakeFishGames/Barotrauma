@@ -29,7 +29,7 @@ namespace Barotrauma
             }
         }
 
-        public bool Contains(in T v)
+        public readonly bool Contains(in T v)
             => start.CompareTo(v) <= 0 && end.CompareTo(v) >= 0;
 
         private void VerifyStartLessThanEnd()

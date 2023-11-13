@@ -114,7 +114,11 @@ namespace Barotrauma
 
             graphics.Clear(BackgroundColor);
 
-            renderer?.DrawBackground(spriteBatch, cam, LevelObjectManager, backgroundCreatureManager);
+            if (renderer != null)
+            {
+                GameMain.LightManager.AmbientLight = GameMain.LightManager.AmbientLight.Add(renderer.FlashColor);
+                renderer?.DrawBackground(spriteBatch, cam, LevelObjectManager, backgroundCreatureManager);
+            }
         }
 
         public void DrawFront(SpriteBatch spriteBatch, Camera cam)

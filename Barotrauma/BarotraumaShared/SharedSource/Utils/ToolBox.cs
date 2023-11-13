@@ -3,13 +3,14 @@ using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
+using System.Collections.Immutable;
+using System.Diagnostics.CodeAnalysis;
 using Barotrauma.IO;
 using System.Linq;
+using System.Net;
 using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
-using System.Runtime.CompilerServices;
 
 namespace Barotrauma
 {
@@ -26,51 +27,33 @@ namespace Barotrauma
         }
     }
 
-    public static partial class ToolBox
+    internal readonly record struct SquareLine(Vector2[] Points, SquareLine.LineType Type)
     {
-        static internal class Epoch
+        internal enum LineType
         {
-            private static readonly DateTime epoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
-
             /// <summary>
-            /// Returns the current Unix Epoch (Coordinated Universal Time )
+            /// Normal 4 point line
             /// </summary>
-            public static int NowUTC
-            {
-                get
-                {
-                    return (int)(DateTime.UtcNow.Subtract(epoch).TotalSeconds);
-                }
-            }
-
+            /// <example>
+            ///          ┏━━━ end
+            ///          ┃
+            /// start ━━━┛
+            /// </example>
+            FourPointForwardsLine,
             /// <summary>
-            /// Returns the current Unix Epoch (user's current time)
+            /// A line where the end is behind the start and 2 extra points are used to draw it
             /// </summary>
-            public static int NowLocal
-            {
-                get
-                {
-                    return (int)(DateTime.Now.Subtract(epoch).TotalSeconds);
-                }
-            }
-
-            /// <summary>
-            /// Convert an epoch to a datetime
-            /// </summary>
-            public static DateTime ToDateTime(decimal unixTime)
-            {
-                return epoch.AddSeconds((long)unixTime);
-            }
-
-            /// <summary>
-            /// Convert a DateTime to a unix time
-            /// </summary>
-            public static uint FromDateTime(DateTime dt)
-            {
-                return (uint)(dt.Subtract(epoch).TotalSeconds);
-            }
+            /// <example>
+            /// start ━┓
+            /// ┏━━━━━━┛
+            /// ┗━ end
+            /// </example>
+            SixPointBackwardsLine
         }
+    }
 
+    static partial class ToolBox
+    {
         public static bool IsProperFilenameCase(string filename)
         {
             //File case only matters on Linux where the filesystem is case-sensitive, so we don't need these errors in release builds.
@@ -102,7 +85,7 @@ namespace Barotrauma
 
             string startPath = directory ?? "";
 
-            string saveFolder = SaveUtil.SaveFolder.Replace('\\', '/');
+            string saveFolder = SaveUtil.DefaultSaveFolder.Replace('\\', '/');
             if (originalFilename.Replace('\\', '/').StartsWith(saveFolder))
             {
                 //paths that lead to the save folder might have incorrect case,
@@ -161,7 +144,7 @@ namespace Barotrauma
 
         public static string RemoveInvalidFileNameChars(string fileName)
         {
-            var invalidChars = Path.GetInvalidFileNameChars().Concat(new char[] {':', ';', '<', '>', '"', '/', '\\', '|', '?', '*'});
+            var invalidChars = Path.GetInvalidFileNameCharsCrossPlatform().Concat(new char[] {';'});
             foreach (char invalidChar in invalidChars)
             {
                 fileName = fileName.Replace(invalidChar.ToString(), "");
@@ -424,7 +407,7 @@ namespace Barotrauma
             for (int i = 0; i < numberOfBits; i++)
             {
                 bool bit = originalBuffer.ReadBoolean();
-                buffer.Write(bit);
+                buffer.WriteBoolean(bit);
             }
             buffer.BitPosition = 0;
 
@@ -436,9 +419,12 @@ namespace Barotrauma
             return SelectWeightedRandom(objects, weightMethod, Rand.GetRNG(randSync));
         }
 
-
         public static T SelectWeightedRandom<T>(IEnumerable<T> objects, Func<T, float> weightMethod, Random random)
         {
+            if (typeof(PrefabWithUintIdentifier).IsAssignableFrom(typeof(T)))
+            {
+                objects = objects.OrderBy(p => (p as PrefabWithUintIdentifier)?.UintIdentifier ?? 0);
+            }
             List<T> objectList = objects.ToList();
             List<float> weights = objectList.Select(o => weightMethod(o)).ToList();
             return SelectWeightedRandom(objectList, weights, random);
@@ -451,7 +437,7 @@ namespace Barotrauma
 
         public static T SelectWeightedRandom<T>(IList<T> objects, IList<float> weights, Random random)
         {
-            if (objects.Count == 0) return default(T);
+            if (objects.Count == 0) { return default; }
 
             if (objects.Count != weights.Count)
             {
@@ -470,7 +456,7 @@ namespace Barotrauma
                 }
                 randomNum -= weights[i];
             }
-            return default(T);
+            return default;
         }
 
         public static UInt32 IdentifierToUint32Hash(Identifier id, MD5 md5)
@@ -711,6 +697,181 @@ namespace Barotrauma
             while (e.InnerException != null) { e = e.InnerException; }
 
             return e;
+        }
+
+        public static void ThrowIfNull<T>([NotNull] T o)
+        {
+            if (o is null) { throw new ArgumentNullException(); }
+        }
+
+        public static string GetFormattedPercentage(float v)
+        {
+            return TextManager.GetWithVariable("percentageformat", "[value]", ((int)MathF.Round(v * 100)).ToString()).Value;
+        }
+
+        private static readonly ImmutableHashSet<char> affectedCharacters = ImmutableHashSet.Create('%', '+', '％');
+
+        /// <summary>
+        /// Extends % and + characters to color tags in talent name tooltips to make them look nicer.
+        /// This obviously does not work in languages like French where a non breaking space is used
+        /// so it's just a a bit extra for the languages it works with.
+        /// </summary>
+        /// <param name="original"></param>
+        /// <returns></returns>
+        public static string ExtendColorToPercentageSigns(string original)
+        {
+            const string colorEnd = "‖color:end‖",
+                         colorStart = "‖color:";
+
+            const char definitionIndicator = '‖';
+
+            char[] chars = original.ToCharArray();
+
+            for (int i = 0; i < chars.Length; i++)
+            {
+                if (!TryGetAt(i, chars, out char currentChar) || !affectedCharacters.Contains(currentChar)) { continue; }
+
+                // look behind
+                if (TryGetAt(i - 1, chars, out char c) && c is definitionIndicator)
+                {
+                    int offset = colorEnd.Length;
+
+                    if (MatchesSequence(i - offset, colorEnd, chars))
+                    {
+                        // push the color end tag forwards until the character is within the tag
+                        char prev = currentChar;
+                        for (int k = i - offset; k <= i; k++)
+                        {
+                            if (!TryGetAt(k, chars, out c)) { continue; }
+
+                            chars[k] = prev;
+                            prev = c;
+                        }
+                        continue;
+                    }
+                }
+
+                // look ahead
+                if (TryGetAt(i + 1, chars, out c) && c is definitionIndicator)
+                {
+                    if (!MatchesSequence(i + 1, colorStart, chars)) { continue; }
+
+                    int offset = FindNextDefinitionOffset(i, colorStart.Length, chars);
+
+                    // we probably reached the end of the string
+                    if (offset > chars.Length) { continue; }
+
+                    // push the color start tag back until the character is within the tag
+                    char prev = currentChar;
+                    for (int k = i + offset; k >= i; k--)
+                    {
+                        if (!TryGetAt(k, chars, out c)) { continue; }
+
+                        chars[k] = prev;
+                        prev = c;
+                    }
+
+                    // skip needlessly checking this section again since we already know what's ahead
+                    i += offset;
+                }
+            }
+
+            static int FindNextDefinitionOffset(int index, int initialOffset, char[] chars)
+            {
+                int offset = initialOffset;
+                while (TryGetAt(index + offset, chars, out char c) && c is not definitionIndicator) { offset++; }
+                return offset;
+            }
+
+            static bool MatchesSequence(int index, string sequence, char[] chars)
+            {
+                for (int i = 0; i < sequence.Length; i++)
+                {
+                    if (!TryGetAt(index + i, chars, out char c) || c != sequence[i]) { return false; }
+                }
+
+                return true;
+            }
+
+            static bool TryGetAt(int i, char[] chars, out char c)
+            {
+                if (i >= 0 && i < chars.Length)
+                {
+                    c = chars[i];
+                    return true;
+                }
+
+                c = default;
+                return false;
+            }
+
+            return new string(chars);
+        }
+
+        public static bool StatIdentifierMatches(Identifier original, Identifier match)
+        {
+            if (original == match) { return true; }
+            return Matches(original, match) || Matches(match, original);
+
+            static bool Matches(Identifier a, Identifier b)
+            {
+                for (int i = 0; i < b.Value.Length; i++)
+                {
+                    if (i >= a.Value.Length) { return b[i] is '~'; }
+                    if (!CharEquals(a[i], b[i])) { return false; }
+                }
+                return false;
+            }
+
+            static bool CharEquals(char a, char b) => char.ToLowerInvariant(a) == char.ToLowerInvariant(b);
+        }
+
+        public static bool EquivalentTo(this IPEndPoint self, IPEndPoint other)
+            => self.Address.EquivalentTo(other.Address) && self.Port == other.Port;
+
+        public static bool EquivalentTo(this IPAddress self, IPAddress other)
+        {
+            if (self.IsIPv4MappedToIPv6) { self = self.MapToIPv4(); }
+            if (other.IsIPv4MappedToIPv6) { other = other.MapToIPv4(); }
+            return self.Equals(other);
+        }
+
+        public static SquareLine GetSquareLineBetweenPoints(Vector2 start, Vector2 end, float knobLength = 24f)
+        {
+            Vector2[] points = new Vector2[6];
+
+            // set the start and end points
+            points[0] = points[1] = points[2] = start;
+            points[5] = points[4] = points[3] = end;
+
+            points[2].X += (points[3].X - points[2].X) / 2;
+            points[2].X = Math.Max(points[2].X, points[0].X + knobLength);
+            points[3].X = points[2].X;
+
+            bool isBehind = false;
+
+            // if the node is "behind" us do some magic to make the line curve to prevent overlapping
+            if (points[2].X <= points[0].X + knobLength)
+            {
+                isBehind = true;
+                points[1].X += knobLength;
+                points[2].X = points[2].X;
+                points[2].Y += (points[4].Y - points[1].Y) / 2;
+            }
+
+            if (points[3].X >= points[5].X - knobLength)
+            {
+                isBehind = true;
+                points[4].X -= knobLength;
+                points[3].X = points[4].X;
+                points[3].Y -= points[3].Y - points[2].Y;
+            }
+
+            SquareLine.LineType type = isBehind
+                ? SquareLine.LineType.SixPointBackwardsLine
+                : SquareLine.LineType.FourPointForwardsLine;
+
+            return new SquareLine(points, type);
         }
     }
 }

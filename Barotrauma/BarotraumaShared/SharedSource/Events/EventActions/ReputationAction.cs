@@ -46,43 +46,29 @@ namespace Barotrauma
                 switch (TargetType)
                 {
                     case ReputationType.Faction:
-                    {
-                        Faction faction = campaign.Factions.Find(faction1 => faction1.Prefab.Identifier == Identifier);
-                        if (faction != null)
                         {
-                            faction.Reputation.AddReputation(Increase);
-                        }
-                        else
-                        {
-                            DebugConsole.ThrowError($"Faction with the identifier \"{Identifier}\" was not found.");
-                        }
-
-                        break;
-                    }
-                    case ReputationType.Location:
-                    {
-                        Location location = campaign.Map.CurrentLocation;
-                        if (location != null)
-                        {
-                            location.Reputation.AddReputation(Increase);
-                            IEnumerable<Location> locations = location.Connections.SelectMany(c => c.Locations).Distinct().Where(l => l != null && l != location);
-                            foreach (Location connectedLocation in locations)
+                            Faction faction = campaign.Factions.Find(faction1 => faction1.Prefab.Identifier == Identifier);
+                            if (faction != null)
                             {
-                                Debug.Assert(connectedLocation.Reputation != null, "connectedLocation.Reputation != null");
-                                if (connectedLocation.Reputation != null)
-                                {
-                                    connectedLocation.Reputation.AddReputation(Increase / 4);
-                                }
+                                faction.Reputation.AddReputation(Increase);
                             }
-                        }
+                            else
+                            {
+                                DebugConsole.ThrowError($"Faction with the identifier \"{Identifier}\" was not found.");
+                            }
 
-                        break;
-                    }
+                            break;
+                        }
+                    case ReputationType.Location:
+                        {
+                            campaign.Map.CurrentLocation?.Reputation?.AddReputation(Increase);
+                            break;
+                        }
                     default:
-                    {
-                        DebugConsole.ThrowError("ReputationAction requires a \"TargetType\" but none were specified.");
-                        break;
-                    }
+                        {
+                            DebugConsole.ThrowError("ReputationAction requires a \"TargetType\" but none were specified.");
+                            break;
+                        }
                 }
             }
 

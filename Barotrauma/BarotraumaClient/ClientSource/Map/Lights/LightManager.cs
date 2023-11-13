@@ -1,11 +1,11 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using Microsoft.Xna.Framework.Content;
 using System.Collections.Generic;
 using System.Linq;
 using System;
 using Barotrauma.Items.Components;
 using Barotrauma.Extensions;
+using System.Threading;
 
 namespace Barotrauma.Lights
 {
@@ -22,6 +22,9 @@ namespace Barotrauma.Lights
         /// Improves performance, and isn't very noticeable if we do it after zoomed far out enough.
         /// </summary>
         const float ObstructLightsBehindCharactersZoomThreshold = 0.5f;
+
+        private Thread rayCastThread;
+        private Queue<RayCastTask> pendingRayCasts = new Queue<RayCastTask>();
 
         public static Entity ViewTarget { get; set; }
 
@@ -59,6 +62,8 @@ namespace Barotrauma.Lights
 
         private readonly List<LightSource> lights;
 
+        public bool DebugLos;
+
         public bool LosEnabled = true;
         public float LosAlpha = 1f;
         public LosMode LosMode = LosMode.Transparent;
@@ -69,23 +74,35 @@ namespace Barotrauma.Lights
 
         private readonly Texture2D visionCircle;
 
+        private readonly Texture2D gapGlowTexture;
+
         private Vector2 losOffset;
 
         private int recalculationCount;
+
+        private float time;
 
         public IEnumerable<LightSource> Lights
         {
             get { return lights; }
         }
 
-        public LightManager(GraphicsDevice graphics, ContentManager content)
+        public LightManager(GraphicsDevice graphics)
         {
             lights = new List<LightSource>(100);
 
             AmbientLight = new Color(20, 20, 20, 255);
 
+            rayCastThread = new Thread(UpdateRayCasts)
+            {
+                Name = "LightManager Raycast thread",
+                IsBackground = true //this should kill the thread if the game crashes
+            };
+            rayCastThread.Start();
+
             visionCircle = Sprite.LoadTexture("Content/Lights/visioncircle.png");
             highlightRaster = Sprite.LoadTexture("Content/UI/HighlightRaster.png");
+            gapGlowTexture = Sprite.LoadTexture("Content/Lights/pointlight_rays.png");
 
             GameMain.Instance.ResolutionChanged += () =>
             {
@@ -96,23 +113,15 @@ namespace Barotrauma.Lights
             {
                 CreateRenderTargets(graphics);
 
-#if WINDOWS
-                LosEffect = content.Load<Effect>("Effects/losshader");
-                SolidColorEffect = content.Load<Effect>("Effects/solidcolor");
-#else
-                LosEffect = content.Load<Effect>("Effects/losshader_opengl");
-                SolidColorEffect = content.Load<Effect>("Effects/solidcolor_opengl");
-#endif
+                LosEffect = EffectLoader.Load("Effects/losshader");
+                SolidColorEffect = EffectLoader.Load("Effects/solidcolor");
 
-                if (lightEffect == null)
-                {
-                    lightEffect = new BasicEffect(GameMain.Instance.GraphicsDevice)
+                lightEffect ??= new BasicEffect(GameMain.Instance.GraphicsDevice)
                     {
                         VertexColorEnabled = true,
                         TextureEnabled = true,
                         Texture = LightSource.LightTexture
                     };
-                }
             });
         }
 
@@ -159,7 +168,7 @@ namespace Barotrauma.Lights
         {
             foreach (LightSource light in lights)
             {
-                light.NeedsHullCheck = true;
+                light.HullsUpToDate.Clear();
                 light.NeedsRecalculation = true;
             }
         }
@@ -171,10 +180,57 @@ namespace Barotrauma.Lights
 
         public void Update(float deltaTime)
         {
+            //wrap around if the timer gets very large, otherwise we'd start running into floating point accuracy issues
+            time = (time + deltaTime) % 100000.0f;
             foreach (LightSource light in activeLights)
             {
                 if (!light.Enabled) { continue; }
-                light.Update(deltaTime);
+                light.Update(time);
+            }
+        }
+
+        private sealed class RayCastTask
+        {
+            public LightSource LightSource;
+            public Vector2 DrawPos;
+            public float Rotation;
+
+            public RayCastTask(LightSource lightSource, Vector2 drawPos, float rotation)
+            {
+                LightSource = lightSource;
+                DrawPos = drawPos;
+                Rotation = rotation;
+            }
+
+            public void Calculate()
+            {
+                LightSource.RayCastTask(DrawPos, Rotation);
+            }
+        }
+
+        private static readonly object mutex = new object();
+
+        public void AddRayCastTask(LightSource lightSource, Vector2 drawPos, float rotation)
+        {
+            lock (mutex)
+            {
+                if (pendingRayCasts.Any(p => p.LightSource == lightSource)) { return; }
+                pendingRayCasts.Enqueue(new RayCastTask(lightSource, drawPos, rotation));
+            }
+        }
+
+        private void UpdateRayCasts()
+        {
+            while (true)
+            {
+                lock (mutex)
+                {
+                    while (pendingRayCasts.Count > 0)
+                    {
+                        pendingRayCasts.Dequeue().Calculate();
+                    }
+                }
+                Thread.Sleep(10);
             }
         }
 
@@ -242,7 +298,8 @@ namespace Barotrauma.Lights
                     range *
                     ((Character.Controlled?.Submarine != null && light.ParentSub == Character.Controlled?.Submarine) ? 2.0f : 1.0f) *
                     (light.CastShadows ? 10.0f : 1.0f) *
-                    (light.LightSourceParams.OverrideLightSpriteAlpha ?? (light.Color.A / 255.0f));
+                    (light.LightSourceParams.OverrideLightSpriteAlpha ?? (light.Color.A / 255.0f)) *
+                    light.PriorityMultiplier;
             }
 
             //find the lights with an active light volume
@@ -289,8 +346,8 @@ namespace Barotrauma.Lights
             foreach (LightSource light in activeLights)
             {
                 if (!light.IsBackground || light.CurrentBrightness <= 0.0f) { continue; }
-                light.DrawSprite(spriteBatch, cam);
                 light.DrawLightVolume(spriteBatch, lightEffect, transform, recalculationCount < MaxLightVolumeRecalculationsPerFrame, ref recalculationCount);
+                light.DrawSprite(spriteBatch, cam);
             }
             GameMain.ParticleManager.Draw(spriteBatch, true, null, Particles.ParticleBlendState.Additive);
             spriteBatch.End();
@@ -309,14 +366,45 @@ namespace Barotrauma.Lights
             }
             spriteBatch.End();
 
-            SolidColorEffect.CurrentTechnique = SolidColorEffect.Techniques["SolidColor"];
-            SolidColorEffect.Parameters["color"].SetValue(AmbientLight.Opaque().ToVector4());
-            spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.NonPremultiplied, transformMatrix: spriteBatchTransform, effect: SolidColorEffect);
-            Submarine.DrawDamageable(spriteBatch, null);
+            spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, transformMatrix: spriteBatchTransform);
+            Vector3 glowColorHSV = ToolBox.RGBToHSV(AmbientLight);
+            glowColorHSV.Z = Math.Max(glowColorHSV.Z, 0.4f);
+            Color glowColor = ToolBox.HSVToRGB(glowColorHSV.X, glowColorHSV.Y, glowColorHSV.Z);
+            Vector2 glowSpriteSize = new Vector2(gapGlowTexture.Width, gapGlowTexture.Height);
+            foreach (var gap in Gap.GapList)
+            {
+                if (gap.IsRoomToRoom || gap.Open <= 0.0f || gap.ConnectedWall == null) { continue; }
+
+                float a = MathHelper.Lerp(0.5f, 1.0f,
+                    PerlinNoise.GetPerlin((float)Timing.TotalTime * 0.05f, gap.GlowEffectT));
+
+                float scale = MathHelper.Lerp(0.5f, 2.0f,
+                    PerlinNoise.GetPerlin((float)Timing.TotalTime * 0.01f, gap.GlowEffectT));
+
+                float rot = PerlinNoise.GetPerlin((float)Timing.TotalTime * 0.001f, gap.GlowEffectT) * MathHelper.TwoPi;
+
+                Vector2 spriteScale = new Vector2(gap.Rect.Width, gap.Rect.Height) / glowSpriteSize;
+                Vector2 drawPos = new Vector2(gap.DrawPosition.X, -gap.DrawPosition.Y);
+
+                spriteBatch.Draw(gapGlowTexture,
+                    drawPos,
+                    null,
+                    glowColor * a,
+                    rot,
+                    glowSpriteSize / 2,
+                    scale: Math.Max(spriteScale.X, spriteScale.Y) * scale,
+                    SpriteEffects.None,
+                    layerDepth: 0);
+            }
+            spriteBatch.End();
+
+            GameMain.GameScreen.DamageEffect.CurrentTechnique = GameMain.GameScreen.DamageEffect.Techniques["StencilShaderSolidColor"];
+            GameMain.GameScreen.DamageEffect.Parameters["solidColor"].SetValue(Color.Black.ToVector4());
+            spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.NonPremultiplied, SamplerState.LinearWrap, transformMatrix: spriteBatchTransform, effect: GameMain.GameScreen.DamageEffect);
+            Submarine.DrawDamageable(spriteBatch, GameMain.GameScreen.DamageEffect);
             spriteBatch.End();
 
             graphics.BlendState = BlendState.Additive;
-
 
             //draw the focused item and character to highlight them,
             //and light sprites (done before drawing the actual light volumes so we can make characters obstruct the highlights and sprites)
@@ -343,38 +431,35 @@ namespace Barotrauma.Lights
             {
                 SolidColorEffect.CurrentTechnique = SolidColorEffect.Techniques["SolidVertexColor"];
                 spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.NonPremultiplied, effect: SolidColorEffect, transformMatrix: spriteBatchTransform);
-                foreach (Character character in Character.CharacterList)
-                {
-                    if (character.CurrentHull == null || !character.Enabled || !character.IsVisible) { continue; }
-                    if (Character.Controlled?.FocusedCharacter == character) { continue; }
-                    Color lightColor = character.CurrentHull.AmbientLight == Color.TransparentBlack ?
-                        Color.Black :
-                        character.CurrentHull.AmbientLight.Multiply(character.CurrentHull.AmbientLight.A / 255.0f).Opaque();
-                    foreach (Limb limb in character.AnimController.Limbs)
-                    {
-                        if (limb.DeformSprite != null) { continue; }
-                        limb.Draw(spriteBatch, cam, lightColor);
-                    }
-                }
+                DrawCharacters(spriteBatch, cam, drawDeformSprites: false);
                 spriteBatch.End();
 
                 DeformableSprite.Effect.CurrentTechnique = DeformableSprite.Effect.Techniques["DeformShaderSolidVertexColor"];
                 DeformableSprite.Effect.CurrentTechnique.Passes[0].Apply();
                 spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.NonPremultiplied, transformMatrix: spriteBatchTransform);
+                DrawCharacters(spriteBatch, cam, drawDeformSprites: true);
+                spriteBatch.End();
+            }
+
+            static void DrawCharacters(SpriteBatch spriteBatch, Camera cam, bool drawDeformSprites)
+            {
                 foreach (Character character in Character.CharacterList)
                 {
-                    if (character.CurrentHull == null || !character.Enabled || !character.IsVisible) { continue; }
+                    if (character.CurrentHull == null || !character.Enabled || !character.IsVisible || character.InvisibleTimer > 0.0f) { continue; }
                     if (Character.Controlled?.FocusedCharacter == character) { continue; }
                     Color lightColor = character.CurrentHull.AmbientLight == Color.TransparentBlack ?
                         Color.Black :
                         character.CurrentHull.AmbientLight.Multiply(character.CurrentHull.AmbientLight.A / 255.0f).Opaque();
                     foreach (Limb limb in character.AnimController.Limbs)
                     {
-                        if (limb.DeformSprite == null) { continue; }
+                        if (drawDeformSprites == (limb.DeformSprite == null)) { continue; }
                         limb.Draw(spriteBatch, cam, lightColor);
                     }
+                    foreach (var heldItem in character.HeldItems)
+                    {
+                        heldItem.Draw(spriteBatch, editing: false, overrideColor: Color.Black);
+                    }
                 }
-                spriteBatch.End();
             }
 
             DeformableSprite.Effect.CurrentTechnique = DeformableSprite.Effect.Techniques["DeformShader"];
@@ -395,6 +480,17 @@ namespace Barotrauma.Lights
             {
                 if (light.IsBackground || light.CurrentBrightness <= 0.0f) { continue; }
                 light.DrawLightVolume(spriteBatch, lightEffect, transform, recalculationCount < MaxLightVolumeRecalculationsPerFrame, ref recalculationCount);
+            }
+
+            if (ConnectionPanel.ShouldDebugDrawWiring)
+            {
+                foreach (MapEntity e in (Submarine.VisibleEntities ?? MapEntity.MapEntityList))
+                {
+                    if (e is Item item && !item.HiddenInGame && item.GetComponent<Wire>() is Wire wire)
+                    {
+                        wire.DebugDraw(spriteBatch, alpha: 0.4f);
+                    }
+                }
             }
 
             lightEffect.World = transform;
@@ -458,9 +554,9 @@ namespace Barotrauma.Lights
                 {
                     highlightedEntities.Add(Character.Controlled.FocusedCharacter);
                 }
-                foreach (Item item in Item.ItemList)
+                foreach (MapEntity me in MapEntity.HighlightedEntities)
                 {
-                    if ((item.IsHighlighted || item.IconStyle != null) && !highlightedEntities.Contains(item))
+                    if (me is Item item && item != Character.Controlled.FocusedItem)
                     {
                         highlightedEntities.Add(item);
                     }
@@ -574,7 +670,7 @@ namespace Barotrauma.Lights
 
         public void UpdateObstructVision(GraphicsDevice graphics, SpriteBatch spriteBatch, Camera cam, Vector2 lookAtPosition)
         {
-            if ((!LosEnabled || LosMode == LosMode.None) && !ObstructVision) return;
+            if ((!LosEnabled || LosMode == LosMode.None) && !ObstructVision) { return; }
             if (ViewTarget == null) return;
 
             graphics.SetRenderTarget(LosTexture);
@@ -606,25 +702,58 @@ namespace Barotrauma.Lights
             if (LosEnabled && LosMode != LosMode.None && ViewTarget != null)
             {
                 Vector2 pos = ViewTarget.DrawPosition;
+                bool centeredOnHead = false;
+                if (ViewTarget is Character character &&
+                    character.AnimController?.GetLimb(LimbType.Head) is Limb head &&
+                    !head.IsSevered && !head.Removed)
+                {
+                    pos = head.body.DrawPosition;
+                    centeredOnHead = true;
+                }
 
                 Rectangle camView = new Rectangle(cam.WorldView.X, cam.WorldView.Y - cam.WorldView.Height, cam.WorldView.Width, cam.WorldView.Height);
-
                 Matrix shadowTransform = cam.ShaderTransform
                     * Matrix.CreateOrthographic(GameMain.GraphicsWidth, GameMain.GraphicsHeight, -1, 1) * 0.5f;
 
-                var convexHulls = ConvexHull.GetHullsInRange(ViewTarget.Position, cam.WorldView.Width*0.75f, ViewTarget.Submarine);
+                var convexHulls = ConvexHull.GetHullsInRange(ViewTarget.Position, cam.WorldView.Width * 0.75f, ViewTarget.Submarine);
+
+                //make sure the head isn't peeking through any LOS segments, and if it is,
+                //center the LOS on the character's collider instead
+                if (centeredOnHead)
+                {
+                    foreach (var ch in convexHulls)
+                    {
+                        if (!ch.Enabled) { continue; }
+                        Vector2 currentViewPos = pos;
+                        Vector2 defaultViewPos = ViewTarget.DrawPosition;
+                        if (ch.ParentEntity?.Submarine != null)
+                        {
+                            defaultViewPos -= ch.ParentEntity.Submarine.DrawPosition;
+                            currentViewPos -= ch.ParentEntity.Submarine.DrawPosition;
+                        }
+                        //check if a line from the character's collider to the head intersects with the los segment (= head poking through it)
+                        if (ch.LosIntersects(defaultViewPos, currentViewPos))
+                        {
+                            pos = ViewTarget.DrawPosition;
+                        }
+                    }
+                }
+
                 if (convexHulls != null)
                 {
                     List<VertexPositionColor> shadowVerts = new List<VertexPositionColor>();
                     List<VertexPositionTexture> penumbraVerts = new List<VertexPositionTexture>();
                     foreach (ConvexHull convexHull in convexHulls)
                     {
-                        if (!convexHull.Enabled || !convexHull.Intersects(camView)) continue;
+                        if (!convexHull.Enabled || !convexHull.Intersects(camView)) { continue; }
 
-                        Vector2 relativeLightPos = pos;
-                        if (convexHull.ParentEntity?.Submarine != null) relativeLightPos -= convexHull.ParentEntity.Submarine.Position;
+                        Vector2 relativeViewPos = pos;
+                        if (convexHull.ParentEntity?.Submarine != null) 
+                        { 
+                            relativeViewPos -= convexHull.ParentEntity.Submarine.DrawPosition;
+                        }
 
-                        convexHull.CalculateLosVertices(relativeLightPos);
+                        convexHull.CalculateLosVertices(relativeViewPos);
 
                         for (int i = 0; i < convexHull.ShadowVertexCount; i++)
                         {
@@ -653,6 +782,21 @@ namespace Barotrauma.Lights
                 }
             }
             graphics.SetRenderTarget(null);
+        }
+
+        public void DebugDrawLos(SpriteBatch spriteBatch, Camera cam)
+        {
+            Vector2 pos = ViewTarget?.Position ?? cam.Position;
+            spriteBatch.Begin(SpriteSortMode.Deferred, transformMatrix: cam.Transform);
+            var convexHulls = ConvexHull.GetHullsInRange(pos, cam.WorldView.Width * 0.75f, ViewTarget?.Submarine);
+            Rectangle camView = new Rectangle(cam.WorldView.X, cam.WorldView.Y - cam.WorldView.Height, cam.WorldView.Width, cam.WorldView.Height);
+            foreach (ConvexHull convexHull in convexHulls)
+            {
+                if (!convexHull.Enabled || !convexHull.Intersects(camView)) { continue; }
+                if (convexHull.ParentEntity is Structure { CastShadow: false }) { continue; }
+                convexHull.DebugDraw(spriteBatch);
+            }
+            spriteBatch.End();
         }
 
         public void ClearLights()

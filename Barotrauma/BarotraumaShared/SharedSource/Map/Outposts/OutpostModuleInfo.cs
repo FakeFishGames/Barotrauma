@@ -93,13 +93,11 @@ namespace Barotrauma
             {
                 moduleFlags.Add("hallwayhorizontal".ToIdentifier());
                 if (newFlags.Contains("ruin".ToIdentifier())) { moduleFlags.Add("ruin".ToIdentifier()); }
-                return;
             }
             if (newFlags.Contains("hallwayvertical".ToIdentifier()))
             {
                 moduleFlags.Add("hallwayvertical".ToIdentifier());
                 if (newFlags.Contains("ruin".ToIdentifier())) { moduleFlags.Add("ruin".ToIdentifier()); }
-                return;
             }
             if (!newFlags.Any())
             {

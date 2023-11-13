@@ -79,12 +79,42 @@ namespace Barotrauma
 
         public ref readonly ImmutableArray<Identifier> ParsedAfflictionTypes => ref parsedAfflictionTypes;
 
-        public DamageModifier(XElement element, string parentDebugName)
+        public DamageModifier(XElement element, string parentDebugName, bool checkErrors = true)
         {
             Deserialize(element);
             if (element.Attribute("afflictionnames") != null)
             {
                 DebugConsole.ThrowError("Error in DamageModifier config (" + parentDebugName + ") - define afflictions using identifiers or types instead of names.");
+            }
+            if (checkErrors)
+            {
+                foreach (var afflictionType in parsedAfflictionTypes)
+                {
+                    if (!AfflictionPrefab.Prefabs.Any(p => p.AfflictionType == afflictionType))
+                    {
+                        createWarningOrError($"Potentially invalid damage modifier in \"{parentDebugName}\". Could not find any afflictions of the type \"{afflictionType}\". Did you mean to use an affliction identifier instead?");
+                    }
+                }
+                foreach (var afflictionIdentifier in parsedAfflictionIdentifiers)
+                {
+                    if (!AfflictionPrefab.Prefabs.ContainsKey(afflictionIdentifier))
+                    {
+                        createWarningOrError($"Potentially invalid damage modifier in \"{parentDebugName}\". Could not find any afflictions with the identifier \"{afflictionIdentifier}\". Did you mean to use an affliction type instead?");
+                    }
+                }
+                if (!parsedAfflictionTypes.Any() && !parsedAfflictionIdentifiers.Any())
+                {
+                    createWarningOrError($"Potentially invalid damage modifier in \"{parentDebugName}\". Neither affliction types of identifiers defined.");
+                }
+            }
+
+            static void createWarningOrError(string msg)
+            {
+#if DEBUG
+                DebugConsole.ThrowError(msg);
+#else
+                DebugConsole.AddWarning(msg);
+#endif
             }
         }
 

@@ -19,7 +19,9 @@ namespace Barotrauma
 
         public static float DisplayToRealWorldRatio = 1.0f / 100.0f;
 
-        public const float DisplayToSimRation = 100.0f;    
+        public const float DisplayToSimRation = 100.0f;
+
+        public const float NeutralDensity = 10.0f;
 
         public static bool TryParseCollisionCategory(string categoryName, out Category category)
         {

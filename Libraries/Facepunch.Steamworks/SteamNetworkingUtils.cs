@@ -8,16 +8,20 @@ using Steamworks.Data;
 namespace Steamworks
 {
 	/// <summary>
-	/// Undocumented Parental Settings
+	/// Provides Steam Networking utilities.
 	/// </summary>
 	public class SteamNetworkingUtils : SteamSharedClass<SteamNetworkingUtils>
 	{
-		internal static ISteamNetworkingUtils Internal => Interface as ISteamNetworkingUtils;
+		internal static ISteamNetworkingUtils? Internal => Interface as ISteamNetworkingUtils;
 
-		internal override void InitializeInterface( bool server )
+		internal override bool InitializeInterface( bool server )
 		{
 			SetInterface( server, new ISteamNetworkingUtils( server ) );
+			if ( Interface is null || Interface.Self == IntPtr.Zero ) return false;
+
 			InstallCallbacks( server );
+
+			return true;
 		}
 
 		static void InstallCallbacks( bool server )
@@ -36,14 +40,14 @@ namespace Steamworks
 
 		/// <summary>
 		/// A function to receive debug network information on. This will do nothing
-		/// unless you set DebugLevel to something other than None.
+		/// unless you set <see cref="DebugLevel"/> to something other than <see cref="NetDebugOutput.None"/>.
 		/// 
 		/// You should set this to an appropriate level instead of setting it to the highest
 		/// and then filtering it by hand because a lot of energy is used by creating the strings
 		/// and your frame rate will tank and you won't know why.
 		/// </summary>
 
-		public static event Action<NetDebugOutput, string> OnDebugOutput;
+		public static event Action<NetDebugOutput, string>? OnDebugOutput;
 
 		public struct SteamRelayNetworkStatus
 		{
@@ -64,25 +68,28 @@ namespace Steamworks
 		/// relay network.  If you do not call this, the initialization will
 		/// be delayed until the first time you use a feature that requires access
 		/// to the relay network, which will delay that first access.
-		///
+		/// <para>
 		/// You can also call this to force a retry if the previous attempt has failed.
 		/// Performing any action that requires access to the relay network will also
 		/// trigger a retry, and so calling this function is never strictly necessary,
 		/// but it can be useful to call it a program launch time, if access to the
 		/// relay network is anticipated.
-		///
+		/// </para>
+		/// <para>
 		/// Use GetRelayNetworkStatus or listen for SteamRelayNetworkStatus_t
 		/// callbacks to know when initialization has completed.
 		/// Typically initialization completes in a few seconds.
-		///
+		/// </para>
+		/// <para>
 		/// Note: dedicated servers hosted in known data centers do *not* need
 		/// to call this, since they do not make routing decisions.  However, if
 		/// the dedicated server will be using P2P functionality, it will act as
 		/// a "client" and this should be called.
+		/// </para>
 		/// </summary>
 		public static void InitRelayNetworkAccess()
 		{
-			Internal.InitRelayNetworkAccess();
+			Internal?.InitRelayNetworkAccess();
 		}
 
 		/// <summary>
@@ -98,6 +105,8 @@ namespace Steamworks
 		{
 			get
 			{
+				if (Internal is null) { return null; }
+
 				NetPingLocation location = default;
 				var age = Internal.GetLocalPingLocation( ref location );
 				if ( age < 0 )
@@ -114,17 +123,17 @@ namespace Steamworks
 		/// </summary>
 		public static int EstimatePingTo( NetPingLocation target )
 		{
-			return Internal.EstimatePingTimeFromLocalHost( ref target );
+			return Internal?.EstimatePingTimeFromLocalHost( ref target ) ?? 0;
 		}
 
 		/// <summary>
 		/// If you need ping information straight away, wait on this. It will return
-		/// immediately if you already have up to date ping data
+		/// immediately if you already have up to date ping data.
 		/// </summary>
 		public static async Task WaitForPingDataAsync( float maxAgeInSeconds = 60 * 5 )
 		{
 			await Task.Yield();
-			if ( Internal.CheckPingDataUpToDate( maxAgeInSeconds ) )
+			if ( Internal is null || Internal.CheckPingDataUpToDate( maxAgeInSeconds ) )
 				return;
 
 			SteamRelayNetworkStatus_t status = default;
@@ -135,11 +144,11 @@ namespace Steamworks
 			}
 		}
 
-		public static long LocalTimestamp => Internal.GetLocalTimestamp();
+		public static long LocalTimestamp => Internal?.GetLocalTimestamp() ?? 0;
 
 
 		/// <summary>
-		/// [0 - 100] - Randomly discard N pct of packets
+		/// [0 - 100] - Randomly discard N pct of packets.
 		/// </summary>
 		public static float FakeSendPacketLoss
 		{
@@ -148,7 +157,7 @@ namespace Steamworks
 		}
 
 		/// <summary>
-		/// [0 - 100] - Randomly discard N pct of packets 
+		/// [0 - 100] - Randomly discard N pct of packets.
 		/// </summary>
 		public static float FakeRecvPacketLoss
 		{
@@ -157,7 +166,7 @@ namespace Steamworks
 		}
 
 		/// <summary>
-		/// Delay all packets by N ms 
+		/// Delay all packets by N ms.
 		/// </summary>
 		public static float FakeSendPacketLag
 		{
@@ -166,7 +175,7 @@ namespace Steamworks
 		}
 
 		/// <summary>
-		/// Delay all packets by N ms 
+		/// Delay all packets by N ms.
 		/// </summary>
 		public static float FakeRecvPacketLag
 		{
@@ -175,7 +184,7 @@ namespace Steamworks
 		}
 
 		/// <summary>
-		/// Timeout value (in ms) to use when first connecting
+		/// Timeout value (in ms) to use when first connecting.
 		/// </summary>
 		public static int ConnectionTimeout
 		{
@@ -184,7 +193,7 @@ namespace Steamworks
 		}
 
 		/// <summary>
-		/// Timeout value (in ms) to use after connection is established
+		/// Timeout value (in ms) to use after connection is established.
 		/// </summary>
 		public static int Timeout
 		{
@@ -195,7 +204,7 @@ namespace Steamworks
 		/// <summary>
 		/// Upper limit of buffered pending bytes to be sent.
 		/// If this is reached SendMessage will return LimitExceeded.
-		/// Default is 524288 bytes (512k)
+		/// Default is 524288 bytes (512k).
 		/// </summary>
 		public static int SendBufferSize
 		{
@@ -203,17 +212,144 @@ namespace Steamworks
 			set => SetConfigInt( NetConfig.SendBufferSize, value );
 		}
 
+		/// <summary>
+		/// Minimum send rate clamp, 0 is no limit.
+		/// This value will control the min allowed sending rate that 
+		/// bandwidth estimation is allowed to reach.  Default is 0 (no-limit)
+		/// </summary>
+		public static int SendRateMin
+		{
+			get => GetConfigInt( NetConfig.SendRateMin );
+			set => SetConfigInt( NetConfig.SendRateMin, value );
+		}
 
 		/// <summary>
-		/// Get Debug Information via OnDebugOutput event
-		/// 
-		/// Except when debugging, you should only use NetDebugOutput.Msg
-		/// or NetDebugOutput.Warning.  For best performance, do NOT
+		/// Maximum send rate clamp, 0 is no limit.
+		/// This value will control the max allowed sending rate that 
+		/// bandwidth estimation is allowed to reach.  Default is 0 (no-limit)
+		/// </summary>
+		public static int SendRateMax
+		{
+			get => GetConfigInt( NetConfig.SendRateMax );
+			set => SetConfigInt( NetConfig.SendRateMax, value );
+		}
+
+		/// <summary>
+		/// Nagle time, in microseconds.  When SendMessage is called, if
+		/// the outgoing message is less than the size of the MTU, it will be
+		/// queued for a delay equal to the Nagle timer value.  This is to ensure
+		/// that if the application sends several small messages rapidly, they are
+		/// coalesced into a single packet.
+		/// See historical RFC 896.  Value is in microseconds. 
+		/// Default is 5000us (5ms).
+		/// </summary>
+		public static int NagleTime
+		{
+			get => GetConfigInt( NetConfig.NagleTime );
+			set => SetConfigInt( NetConfig.NagleTime, value );
+		}
+
+		/// <summary>
+		/// Don't automatically fail IP connections that don't have
+		/// strong auth.  On clients, this means we will attempt the connection even if
+		/// we don't know our identity or can't get a cert.  On the server, it means that
+		/// we won't automatically reject a connection due to a failure to authenticate.
+		/// (You can examine the incoming connection and decide whether to accept it.)
+		/// <para>
+		/// This is a dev configuration value, and you should not let users modify it in
+		/// production.
+		/// </para>
+		/// </summary>
+		public static int AllowWithoutAuth
+		{
+			get => GetConfigInt( NetConfig.IP_AllowWithoutAuth );
+			set => SetConfigInt( NetConfig.IP_AllowWithoutAuth, value );
+		}
+
+		/// <summary>
+		/// Allow unencrypted (and unauthenticated) communication.
+		/// 0: Not allowed (the default)
+		/// 1: Allowed, but prefer encrypted
+		/// 2: Allowed, and preferred
+		/// 3: Required.  (Fail the connection if the peer requires encryption.)
+		/// <para>
+		/// This is a dev configuration value, since its purpose is to disable encryption.
+		/// You should not let users modify it in production.  (But note that it requires
+		/// the peer to also modify their value in order for encryption to be disabled.)
+		/// </para>
+		/// </summary>
+		public static int Unencrypted
+		{
+			get => GetConfigInt( NetConfig.Unencrypted );
+			set => SetConfigInt( NetConfig.Unencrypted, value );
+		}
+
+		/// <summary>
+		/// Log RTT calculations for inline pings and replies.
+		/// </summary>
+		public static int DebugLevelAckRTT
+		{
+			get => GetConfigInt( NetConfig.LogLevel_AckRTT );
+			set => SetConfigInt( NetConfig.LogLevel_AckRTT, value );
+		}
+
+		/// <summary>
+		/// Log SNP packets send.
+		/// </summary>
+		public static int DebugLevelPacketDecode
+		{
+			get => GetConfigInt( NetConfig.LogLevel_PacketDecode );
+			set => SetConfigInt( NetConfig.LogLevel_PacketDecode, value );
+		}
+
+		/// <summary>
+		/// Log each message send/recv.
+		/// </summary>
+		public static int DebugLevelMessage
+		{
+			get => GetConfigInt( NetConfig.LogLevel_Message );
+			set => SetConfigInt( NetConfig.LogLevel_Message, value );
+		}
+
+		/// <summary>
+		/// Log dropped packets.
+		/// </summary>
+		public static int DebugLevelPacketGaps
+		{
+			get => GetConfigInt( NetConfig.LogLevel_PacketGaps );
+			set => SetConfigInt( NetConfig.LogLevel_PacketGaps, value );
+		}
+
+		/// <summary>
+		/// Log P2P rendezvous messages.
+		/// </summary>
+		public static int DebugLevelP2PRendezvous
+		{
+			get => GetConfigInt( NetConfig.LogLevel_P2PRendezvous );
+			set => SetConfigInt( NetConfig.LogLevel_P2PRendezvous, value );
+		}
+
+		/// <summary>
+		/// Log ping relays.
+		/// </summary>
+		public static int DebugLevelSDRRelayPings
+		{
+			get => GetConfigInt( NetConfig.LogLevel_SDRRelayPings );
+			set => SetConfigInt( NetConfig.LogLevel_SDRRelayPings, value );
+		}
+
+		/// <summary>
+		/// Get Debug Information via <see cref="OnDebugOutput"/> event.
+		/// <para>
+		/// Except when debugging, you should only use <see cref="NetDebugOutput.Msg"/>
+		/// or <see cref="NetDebugOutput.Warning"/>.  For best performance, do NOT
 		/// request a high detail level and then filter out messages in the callback.  
-		/// 
+		/// </para>
+		/// <para>
 		/// This incurs all of the expense of formatting the messages, which are then discarded.  
 		/// Setting a high priority value (low numeric value) here allows the library to avoid 
 		/// doing this work.
+		/// </para>
 		/// </summary>
 		public static NetDebugOutput DebugLevel
 		{
@@ -223,19 +359,19 @@ namespace Steamworks
 				_debugLevel = value;
 				_debugFunc = new NetDebugFunc( OnDebugMessage );
 
-				Internal.SetDebugOutputFunction( value, _debugFunc );
+				Internal?.SetDebugOutputFunction( value, _debugFunc );
 			}
 		}
 
 		/// <summary>
-		/// So we can remember and provide a Get for DebugLEvel
+		/// So we can remember and provide a Get for DebugLevel.
 		/// </summary>
 		private static NetDebugOutput _debugLevel;
 
 		/// <summary>
-		/// We need to keep the delegate around until it's not used anymore
+		/// We need to keep the delegate around until it's not used anymore.
 		/// </summary>
-		static NetDebugFunc _debugFunc;
+		static NetDebugFunc? _debugFunc;
 
 		struct DebugMessage
 		{
@@ -254,6 +390,11 @@ namespace Steamworks
 			debugMessages.Enqueue( new DebugMessage { Type = nType, Msg = Helpers.MemoryToString( str ) } );
 		}
 
+		internal static void LogDebugMessage( NetDebugOutput type, string message )
+        {
+			debugMessages.Enqueue( new DebugMessage { Type = type, Msg = message } );
+        }
+
 		/// <summary>
 		/// Called regularly from the Dispatch loop so we can provide a timely
 		/// stream of messages.
@@ -269,12 +410,17 @@ namespace Steamworks
 			}
 		}
 
+        internal static unsafe NetMsg* AllocateMessage()
+        {
+            return Internal != null ? Internal.AllocateMessage(0) : null;
+        }
+
 		#region Config Internals
 
 		internal unsafe static bool SetConfigInt( NetConfig type, int value )
 		{
 			int* ptr = &value;
-			return Internal.SetConfigValue( type, NetConfigScope.Global, IntPtr.Zero, NetConfigType.Int32, (IntPtr)ptr );
+			return Internal != null && Internal.SetConfigValue( type, NetConfigScope.Global, IntPtr.Zero, NetConfigType.Int32, (IntPtr)ptr );
 		}
 
 		internal unsafe static int GetConfigInt( NetConfig type )
@@ -283,7 +429,7 @@ namespace Steamworks
 			NetConfigType dtype = NetConfigType.Int32;
 			int* ptr = &value;
 			UIntPtr size = new UIntPtr( sizeof( int ) );
-			var result = Internal.GetConfigValue( type, NetConfigScope.Global, IntPtr.Zero, ref dtype, (IntPtr) ptr, ref size );
+			var result = Internal?.GetConfigValue( type, NetConfigScope.Global, IntPtr.Zero, ref dtype, (IntPtr) ptr, ref size );
 			if ( result != NetConfigResult.OK )
 				return 0;
 
@@ -293,7 +439,7 @@ namespace Steamworks
 		internal unsafe static bool SetConfigFloat( NetConfig type, float value )
 		{
 			float* ptr = &value;
-			return Internal.SetConfigValue( type, NetConfigScope.Global, IntPtr.Zero, NetConfigType.Float, (IntPtr)ptr );
+			return Internal != null && Internal.SetConfigValue( type, NetConfigScope.Global, IntPtr.Zero, NetConfigType.Float, (IntPtr)ptr );
 		}
 
 		internal unsafe static float GetConfigFloat( NetConfig type )
@@ -302,7 +448,7 @@ namespace Steamworks
 			NetConfigType dtype = NetConfigType.Float;
 			float* ptr = &value;
 			UIntPtr size = new UIntPtr( sizeof( float ) );
-			var result = Internal.GetConfigValue( type, NetConfigScope.Global, IntPtr.Zero, ref dtype, (IntPtr)ptr, ref size );
+			var result = Internal?.GetConfigValue( type, NetConfigScope.Global, IntPtr.Zero, ref dtype, (IntPtr)ptr, ref size );
 			if ( result != NetConfigResult.OK )
 				return 0;
 
@@ -315,7 +461,7 @@ namespace Steamworks
 
 			fixed ( byte* ptr = bytes )
 			{
-				return Internal.SetConfigValue( type, NetConfigScope.Global, IntPtr.Zero, NetConfigType.String, (IntPtr)ptr );
+				return Internal != null && Internal.SetConfigValue( type, NetConfigScope.Global, IntPtr.Zero, NetConfigType.String, (IntPtr)ptr );
 			}
 		}
 

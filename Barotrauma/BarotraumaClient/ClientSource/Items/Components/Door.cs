@@ -4,6 +4,7 @@ using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
+using System.Linq;
 
 namespace Barotrauma.Items.Components
 {
@@ -91,9 +92,6 @@ namespace Barotrauma.Items.Components
                 rect.Height = (int)(rect.Height * (1.0f - openState));
             }
 
-            //only merge the door's convex hull with overlapping wall segments if it's fully open or fully closed
-            //it's the heaviest part of changing the convex hull, and doesn't need to be done while the door is still in motion
-            bool mergeOverlappingSegments = openState <= 0.0f || openState >= 1.0f;
             if (Window.Height > 0 && Window.Width > 0)
             {
                 if (IsHorizontal)
@@ -116,7 +114,7 @@ namespace Barotrauma.Items.Components
                         else
                         {
                             convexHull2.Enabled = true;
-                            convexHull2.SetVertices(GetConvexHullCorners(rect2), mergeOverlappingSegments);
+                            SetVertices(convexHull2, rect2);
                         }
                     }
                 }
@@ -140,7 +138,7 @@ namespace Barotrauma.Items.Components
                         else
                         {
                             convexHull2.Enabled = true;
-                            convexHull2.SetVertices(GetConvexHullCorners(rect2), mergeOverlappingSegments);
+                            SetVertices(convexHull2, rect2);
                         }
                     }
                 }
@@ -155,10 +153,22 @@ namespace Barotrauma.Items.Components
             else
             {
                 convexHull.Enabled = true;
-                convexHull.SetVertices(GetConvexHullCorners(rect), mergeOverlappingSegments);
+                SetVertices(convexHull, rect);
             }
         }
 
+
+        private void SetVertices(ConvexHull convexHull, Rectangle rect)
+        {
+            var verts = GetConvexHullCorners(rect);
+            Vector2 center = (verts[0] + verts[2]) / 2;
+            convexHull.SetVertices(
+                verts, 
+                IsHorizontal ? 
+                    new Vector2[] { new Vector2(verts[0].X, center.Y), new Vector2(verts[2].X, center.Y) } :
+                    new Vector2[] { new Vector2(center.X, verts[0].Y), new Vector2(center.X, verts[2].Y) });
+            convexHull.MaxMergeLosVerticesDist = 35.0f;
+        }
 
         partial void UpdateProjSpecific(float deltaTime)
         {
@@ -175,13 +185,13 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public void Draw(SpriteBatch spriteBatch, bool editing, float itemDepth = -1)
+        public void Draw(SpriteBatch spriteBatch, bool editing, float itemDepth = -1, Color? overrideColor = null)
         {
-            Color color = item.SpriteColor;
+            Color color = overrideColor ?? item.GetSpriteColor(withHighlight: true);
             if (brokenSprite == null)
             {
                 //broken doors turn black if no broken sprite has been configured
-                color *= (item.Condition / item.MaxCondition);
+                color = color.Multiply(item.Condition / item.MaxCondition);
                 color.A = 255;
             }
             
@@ -192,7 +202,7 @@ namespace Barotrauma.Items.Components
                 weldSpritePos.Y = -weldSpritePos.Y;
 
                 weldedSprite.Draw(spriteBatch,
-                    weldSpritePos, item.SpriteColor * (stuck / 100.0f), scale: item.Scale);
+                    weldSpritePos, overrideColor ?? (item.SpriteColor * (stuck / 100.0f)), scale: item.Scale);
             }
 
             if (openState >= 1.0f) { return; }
@@ -215,16 +225,23 @@ namespace Barotrauma.Items.Components
 
             if (brokenSprite == null || !IsBroken)
             {
-                spriteBatch.Draw(doorSprite.Texture, pos,
-                    getSourceRect(doorSprite, openState, IsHorizontal),
-                    color, 0.0f, doorSprite.Origin, item.Scale, item.SpriteEffects, doorSprite.Depth);
+                if (doorSprite?.Texture != null)
+                {
+                    spriteBatch.Draw(doorSprite.Texture, pos,
+                        getSourceRect(doorSprite, openState, IsHorizontal),
+                        color, 0.0f, doorSprite.Origin, item.Scale, item.SpriteEffects, doorSprite.Depth);
+                }
             }
 
-            if (brokenSprite != null && item.Health < item.MaxCondition)
+            float maxCondition = item.Repairables.Any() ? 
+                item.Repairables.Min(r => r.RepairThreshold) / 100.0f * item.MaxCondition : 
+                item.MaxCondition;
+            float healthRatio = item.Health / maxCondition;
+            if (brokenSprite?.Texture != null && healthRatio < 1.0f)
             {
-                Vector2 scale = scaleBrokenSprite ? new Vector2(1.0f - item.Health / item.MaxCondition) : Vector2.One;
+                Vector2 scale = scaleBrokenSprite ? new Vector2(1.0f - healthRatio) : Vector2.One;
                 if (IsHorizontal) { scale.X = 1; } else { scale.Y = 1; }
-                float alpha = fadeBrokenSprite ? 1.0f - item.Health / item.MaxCondition : 1.0f;
+                float alpha = fadeBrokenSprite ? 1.0f - healthRatio : 1.0f;
                 spriteBatch.Draw(brokenSprite.Texture, pos,
                     getSourceRect(brokenSprite, openState, IsHorizontal),
                     color * alpha, 0.0f, brokenSprite.Origin, scale * item.Scale, item.SpriteEffects,
@@ -280,34 +297,45 @@ namespace Barotrauma.Items.Components
                 //sent by the server, or reverting it back to its old state if no msg from server was received
                 PredictedState = open;
                 resetPredictionTimer = CorrectionDelay;
-                if (stateChanged) PlaySound(forcedOpen ? ActionType.OnPicked : ActionType.OnUse);
+                if (stateChanged && !IsBroken)
+                {
+                    PlayInteractionSound();
+                }
             }
             else
             {
                 isOpen = open;
                 if (!isNetworkMessage || open != PredictedState)
                 {
-                    StopPicking(null);
-                    ActionType actionType = ActionType.OnUse;
-                    if (forcedOpen)
+                    StopPicking(null); 
+                    if (!IsBroken)
                     {
-                        actionType = ActionType.OnPicked;
+                        PlayInteractionSound();
                     }
-                    else
-                    {
-                        if (open && HasSoundsOfType[(int)ActionType.OnOpen])
-                        {
-                            actionType = ActionType.OnOpen;
-                        }
-                        else if (!open && HasSoundsOfType[(int)ActionType.OnClose])
-                        {
-                            actionType = ActionType.OnClose;
-                        }
-                    }
-                    PlaySound(actionType);
                     if (isOpen) { stuck = MathHelper.Clamp(stuck - StuckReductionOnOpen, 0.0f, 100.0f); }
                 }
-            }       
+            }
+            
+            void PlayInteractionSound()
+            {
+                ActionType actionType = ActionType.OnUse;
+                if (forcedOpen)
+                {
+                    actionType = ActionType.OnPicked;
+                }
+                else
+                {
+                    if (open && HasSoundsOfType[(int)ActionType.OnOpen])
+                    {
+                        actionType = ActionType.OnOpen;
+                    }
+                    else if (!open && HasSoundsOfType[(int)ActionType.OnClose])
+                    {
+                        actionType = ActionType.OnClose;
+                    }
+                }
+                PlaySound(actionType);
+            }
         }
 
         public override void ClientEventRead(IReadMessage msg, float sendingTime)

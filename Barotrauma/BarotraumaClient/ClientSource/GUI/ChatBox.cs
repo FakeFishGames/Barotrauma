@@ -38,6 +38,7 @@ namespace Barotrauma
         private float prevUIScale;
 
         private readonly GUIFrame channelSettingsFrame;
+        private readonly GUITextBlock radioJammedWarning;
         private readonly GUITextBox channelText;
         private readonly GUILayoutGroup channelPickerContent;
         private readonly GUIButton memButton;
@@ -105,6 +106,13 @@ namespace Barotrauma
                 Stretch = true,
                 CanBeFocused = true,
                 RelativeSpacing = 0.01f
+            };
+
+            radioJammedWarning = new GUITextBlock(new RectTransform(Vector2.One, channelSettingsFrame.RectTransform), TextManager.Get("radiojammedwarning"),
+                textColor: GUIStyle.Orange, color: Color.Black,
+                textAlignment: Alignment.Center, style: "OuterGlow")
+            {
+                ToolTip = TextManager.Get("hint.radiojammed")
             };
 
             var buttonLeft = new GUIButton(new RectTransform(new Vector2(0.1f, 0.8f), channelSettingsContent.RectTransform), style: "DeviceButton")
@@ -323,6 +331,12 @@ namespace Barotrauma
 
             showNewMessagesButton.Visible = false;
             ToggleOpen = PreferChatBoxOpen = GameSettings.CurrentConfig.ChatOpen;
+        }
+
+        public void Toggle()
+        {
+            ToggleOpen = !ToggleOpen;
+            CloseAfterMessageSent = false;
         }
 
         public bool TypingChatMessage(GUITextBox textBox, string text)
@@ -605,22 +619,29 @@ namespace Barotrauma
                 showNewMessagesButton.Visible = false;
             }
 
-            if (PlayerInput.KeyHit(InputType.ToggleChatMode) && GUI.KeyboardDispatcher.Subscriber == null && Screen.Selected == GameMain.GameScreen)
+            if (Screen.Selected == GameMain.GameScreen && GUI.KeyboardDispatcher.Subscriber == null)
             {
-                try
+                if (PlayerInput.KeyHit(InputType.ToggleChatMode))
                 {
-                    var mode = GameMain.ActiveChatMode switch
+                    try
                     {
-                        ChatMode.Local => ChatMode.Radio,
-                        ChatMode.Radio => ChatMode.Local,
-                        _ => throw new NotImplementedException()
-                    };
-                    ChatModeDropDown.SelectItem(mode);
-                    // TODO: Play a sound?
+                        var mode = GameMain.ActiveChatMode switch
+                        {
+                            ChatMode.Local => ChatMode.Radio,
+                            ChatMode.Radio => ChatMode.Local,
+                            _ => throw new NotImplementedException()
+                        };
+                        ChatModeDropDown.SelectItem(mode);
+                        // TODO: Play a sound?
+                    }
+                    catch (NotImplementedException)
+                    {
+                        DebugConsole.ThrowError($"Error toggling chat mode: not implemented for current mode \"{GameMain.ActiveChatMode}\"");
+                    }
                 }
-                catch (NotImplementedException)
+                else if (PlayerInput.KeyHit(InputType.ChatBox))
                 {
-                    DebugConsole.ThrowError($"Error toggling chat mode: not implemented for current mode \"{GameMain.ActiveChatMode}\"");
+                    Toggle();
                 }
             }
 
@@ -630,7 +651,7 @@ namespace Barotrauma
                 ToggleButton.RectTransform.AbsoluteOffset = new Point(GUIFrame.Rect.Right, GUIFrame.Rect.Y + HUDLayoutSettings.ChatBoxArea.Height - ToggleButton.Rect.Height);
             }
 
-            if (Character.Controlled != null && ChatMessage.CanUseRadio(Character.Controlled, out WifiComponent radio))
+            if (Character.Controlled != null && ChatMessage.CanUseRadio(Character.Controlled, out WifiComponent radio, ignoreJamming: true))
             {
                 if (prevRadio != radio)
                 {
@@ -659,10 +680,11 @@ namespace Barotrauma
                     }
                 }
                 channelSettingsFrame.Visible = true;
+                radioJammedWarning.Visible = radio is { JamTimer: > 0 };
             }
             else
             {
-                channelSettingsFrame.Visible = false;
+                radioJammedWarning.Visible = channelSettingsFrame.Visible = false;
                 channelPickerContent.Children.First().CanBeFocused = true;
                 channelMemPending = false;
                 memButton.Enabled = true;
@@ -756,7 +778,7 @@ namespace Barotrauma
             if (Character.Controlled != null && ChatMessage.CanUseRadio(Character.Controlled, out WifiComponent radio))
             {
                 radio.Channel = channel;
-                GameMain.Client?.CreateEntityEvent(radio.Item, new Item.ChangePropertyEventData(radio.SerializableProperties["channel".ToIdentifier()]));
+                GameMain.Client?.CreateEntityEvent(radio.Item, new Item.ChangePropertyEventData(radio.SerializableProperties["channel".ToIdentifier()], radio));
 
                 if (setText)
                 {

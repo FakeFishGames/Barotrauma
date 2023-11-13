@@ -1,6 +1,7 @@
 ﻿#nullable enable
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
@@ -9,12 +10,12 @@ namespace Barotrauma
 {
     internal partial class ReadyCheck
     {
-        private static LocalizedString readyCheckBody(string name) => string.IsNullOrWhiteSpace(name) ? TextManager.Get("readycheck.serverbody") : TextManager.GetWithVariable("readycheck.body", "[player]", name);
+        private static LocalizedString ReadyCheckBody(string name) => string.IsNullOrWhiteSpace(name) ? TextManager.Get("readycheck.serverbody") : TextManager.GetWithVariable("readycheck.body", "[player]", name);
 
-        private static LocalizedString readyCheckStatus(int ready, int total) => TextManager.GetWithVariables("readycheck.readycount",
+        private static LocalizedString ReadyCheckStatus(int ready, int total) => TextManager.GetWithVariables("readycheck.readycount",
             ("[ready]", ready.ToString()),
             ("[total]", total.ToString()));
-        private static LocalizedString readyCheckPleaseWait(int seconds) => TextManager.GetWithVariable("readycheck.pleasewait", "[seconds]", seconds.ToString());
+        private static LocalizedString ReadyCheckPleaseWait(int seconds) => TextManager.GetWithVariable("readycheck.pleasewait", "[seconds]", seconds.ToString());
 
         private static readonly LocalizedString readyCheckHeader = TextManager.Get("ReadyCheck.Title");
 
@@ -39,9 +40,9 @@ namespace Barotrauma
 
         private void CreateMessageBox(string author)
         {
-            Vector2 relativeSize = new Vector2(GUI.IsFourByThree() ? 0.3f : 0.2f, 0.15f);
+            Vector2 relativeSize = new Vector2(0.2f / GUI.AspectRatioAdjustment, 0.15f);
             Point minSize = new Point(300, 200);
-            msgBox = new GUIMessageBox(readyCheckHeader, readyCheckBody(author), new[] { yesButton, noButton }, relativeSize, minSize, type: GUIMessageBox.Type.Vote) { UserData = PromptData, Draggable = true };
+            msgBox = new GUIMessageBox(readyCheckHeader, ReadyCheckBody(author), new[] { yesButton, noButton }, relativeSize, minSize, type: GUIMessageBox.Type.Vote) { UserData = PromptData, Draggable = true };
 
             GUILayoutGroup contentLayout = new GUILayoutGroup(new RectTransform(new Vector2(1f, 0.125f), msgBox.Content.RectTransform), childAnchor: Anchor.Center);
             new GUIProgressBar(new RectTransform(new Vector2(0.8f, 1f), contentLayout.RectTransform), 0.0f, GUIStyle.Orange) { UserData = TimerData };
@@ -81,9 +82,15 @@ namespace Barotrauma
 
             GUIListBox listBox = new GUIListBox(new RectTransform(new Vector2(1f, 0.8f), resultsBox.Content.RectTransform)) { UserData = UserListData };
 
-            foreach (var (id, _) in Clients)
+            foreach (var (id, status) in Clients)
             {
-                Client? client = GameMain.Client.ConnectedClients.FirstOrDefault(c => c.ID == id);
+                Client? client = GameMain.Client.ConnectedClients.FirstOrDefault(c => c.SessionId == id);
+                if (client == null)
+                {
+                    string list = GameMain.Client.ConnectedClients.Aggregate("Available clients:\n", (current, c) => current + $"{c.SessionId}: {c.Name}\n");
+                    DebugConsole.AddWarning($"Client ID {id} was reported in ready check but was not found.\n" + list.TrimEnd('\n'));
+                    continue;
+                }
                 GUIFrame container = new GUIFrame(new RectTransform(new Vector2(1f, 0.15f), listBox.Content.RectTransform), style: "ListBoxElement") { UserData = id };
                 GUILayoutGroup frame = new GUILayoutGroup(new RectTransform(Vector2.One, container.RectTransform), isHorizontal: true) { Stretch = true };
 
@@ -91,11 +98,6 @@ namespace Barotrauma
 
                 JobPrefab? jobPrefab = client?.Character?.Info?.Job?.Prefab;
 
-                if (client == null)
-                {
-                    string list = GameMain.Client.ConnectedClients.Aggregate("Available clients:\n", (current, c) => current + $"{c.ID}: {c.Name}\n");
-                    DebugConsole.ThrowError($"Client ID {id} was reported in ready check but was not found.\n" + list.TrimEnd('\n'));
-                }
 
                 if (jobPrefab?.Icon != null)
                 {
@@ -104,7 +106,8 @@ namespace Barotrauma
                 }
 
                 new GUITextBlock(new RectTransform(new Vector2(0.75f, 1), frame.RectTransform), client?.Name ?? $"Unknown ID {id}", jobPrefab?.UIColor ?? Color.White, textAlignment: Alignment.Center) { AutoScaleHorizontal = true };
-                new GUIImage(new RectTransform(new Point(height, height), frame.RectTransform), null, scaleToFit: true) { UserData = ReadySpriteData };
+                var statusIcon = new GUIImage(new RectTransform(new Point(height, height), frame.RectTransform), null, scaleToFit: true) { UserData = ReadySpriteData };
+                UpdateStatusIcon(statusIcon, status);
             }
 
             resultsBox.Buttons[0].OnClicked = delegate
@@ -117,7 +120,7 @@ namespace Barotrauma
         private void UpdateBar()
         {
             double elapsedTime = (DateTime.Now - startTime).TotalSeconds;
-            if (msgBox != null && !msgBox.Closed && GUIMessageBox.MessageBoxes.Contains(msgBox))
+            if (msgBox is { Closed: false } && GUIMessageBox.MessageBoxes.Contains(msgBox))
             {
                 if (msgBox.FindChild(TimerData, true) is GUIProgressBar bar)
                 {
@@ -129,7 +132,7 @@ namespace Barotrauma
             int second = (int)Math.Ceiling(elapsedTime);
             if (second > lastSecond)
             {
-                if (msgBox != null && !msgBox.Closed)
+                if (msgBox is { Closed: false })
                 {
                     SoundPlayer.PlayUISound(GUISoundType.PopupMenu);
                 }
@@ -137,11 +140,24 @@ namespace Barotrauma
             }
         }
 
+        private static void CloseLingeringPopups()
+        {
+            foreach (GUIComponent box in GUIMessageBox.MessageBoxes.ToImmutableArray())
+            {
+                if (box is not GUIMessageBox msgBox) { continue; }
+
+                if (msgBox.UserData is PromptData or ResultData)
+                {
+                    msgBox.Close();
+                }
+            }
+        }
+
         public static void ClientRead(IReadMessage inc)
         {
-            ReadyCheckState state = (ReadyCheckState) inc.ReadByte();
+            ReadyCheckState state = (ReadyCheckState)inc.ReadByte();
             CrewManager? crewManager = GameMain.GameSession?.CrewManager;
-            List<Client> otherClients = GameMain.Client.ConnectedClients;
+            var otherClients = GameMain.Client.ConnectedClients;
             if (crewManager == null || otherClients == null)
             {
                 if (state == ReadyCheckState.Start)
@@ -154,6 +170,8 @@ namespace Barotrauma
             switch (state)
             {
                 case ReadyCheckState.Start:
+                    CloseLingeringPopups();
+
                     bool isOwn = false;
                     byte authorId = 0;
 
@@ -165,7 +183,7 @@ namespace Barotrauma
                     if (hasAuthor)
                     {
                         authorId = inc.ReadByte();
-                        isOwn = authorId == GameMain.Client.ID;
+                        isOwn = authorId == GameMain.Client.SessionId;
                     }
 
                     ushort clientCount = inc.ReadUInt16();
@@ -175,8 +193,8 @@ namespace Barotrauma
                         clients.Add(inc.ReadByte());
                     }
 
-                    ReadyCheck rCheck = new ReadyCheck(clients, 
-                        DateTimeOffset.FromUnixTimeSeconds(startTime).LocalDateTime, 
+                    ReadyCheck rCheck = new ReadyCheck(clients,
+                        DateTimeOffset.FromUnixTimeSeconds(startTime).LocalDateTime,
                         DateTimeOffset.FromUnixTimeSeconds(endTime).LocalDateTime);
                     crewManager.ActiveReadyCheck = rCheck;
 
@@ -196,19 +214,16 @@ namespace Barotrauma
                     }
                     break;
                 case ReadyCheckState.Update:
-                    ReadyStatus newState = (ReadyStatus) inc.ReadByte();
+                    ReadyStatus newState = (ReadyStatus)inc.ReadByte();
                     byte targetId = inc.ReadByte();
-                    if (crewManager.ActiveReadyCheck != null)
-                    {
-                        crewManager.ActiveReadyCheck?.UpdateState(targetId, newState);
-                    }
+                    crewManager.ActiveReadyCheck?.UpdateState(targetId, newState);                    
                     break;
                 case ReadyCheckState.End:
                     ushort count = inc.ReadUInt16();
                     for (int i = 0; i < count; i++)
                     {
                         byte id = inc.ReadByte();
-                        ReadyStatus status = (ReadyStatus) inc.ReadByte();
+                        ReadyStatus status = (ReadyStatus)inc.ReadByte();
                         crewManager.ActiveReadyCheck?.UpdateState(id, status);
                     }
 
@@ -224,9 +239,9 @@ namespace Barotrauma
             if (IsFinished) { return; }
             IsFinished = true;
 
-            int readyCount = Clients.Count(pair => pair.Value == ReadyStatus.Yes);
+            int readyCount = Clients.Count(static pair => pair.Value == ReadyStatus.Yes);
             int totalCount = Clients.Count;
-            GameMain.Client.AddChatMessage(ChatMessage.Create(string.Empty, readyCheckStatus(readyCount, totalCount).Value, ChatMessageType.Server, null));
+            GameMain.Client.AddChatMessage(ChatMessage.Create(string.Empty, ReadyCheckStatus(readyCount, totalCount).Value, ChatMessageType.Server, null));
         }
 
         private void UpdateState(byte id, ReadyStatus status)
@@ -237,41 +252,36 @@ namespace Barotrauma
             }
 
             if (resultsBox == null || resultsBox.Closed || !GUIMessageBox.MessageBoxes.Contains(resultsBox)) { return; }
+            if (resultsBox.Content.FindChild(UserListData) is not GUIListBox userList) { return; }
 
-            if (resultsBox.Content.FindChild(UserListData) is GUIListBox userList)
+            var child = userList.Content.FindChild(id);
+            if (child?.GetChild<GUILayoutGroup>().FindChild(ReadySpriteData) is not GUIImage image) { return; }
+            UpdateStatusIcon(image, status);
+        }
+
+        private static void UpdateStatusIcon(GUIImage image, ReadyStatus status)
+        {
+            string style;
+            switch (status)
             {
-                // for some reason FindChild doesn't work here?
-                foreach (GUIComponent child in userList.Content.Children)
-                {
-                    if (!(child.UserData is byte b) || b != id) { continue; }
-
-                    if (child.GetChild<GUILayoutGroup>().FindChild(ReadySpriteData) is GUIImage image)
-                    {
-                        string style;
-                        switch (status)
-                        {
-                            case ReadyStatus.Yes:
-                                style = "MissionCompletedIcon";
-                                break;
-                            case ReadyStatus.No:
-                                style = "MissionFailedIcon";
-                                break;
-                            default:
-                                return;
-                        }
-
-                        image.ApplyStyle(GUIStyle.GetComponentStyle(style));
-                    }
-                }
+                case ReadyStatus.Yes:
+                    style = "MissionCompletedIcon";
+                    break;
+                case ReadyStatus.No:
+                    style = "MissionFailedIcon";
+                    break;
+                default:
+                    return;
             }
+            image.ApplyStyle(GUIStyle.GetComponentStyle(style));
         }
 
         private static void SendState(ReadyStatus status)
         {
             IWriteMessage msg = new WriteOnlyMessage();
-            msg.Write((byte) ClientPacketHeader.READY_CHECK);
-            msg.Write((byte) ReadyCheckState.Update);
-            msg.Write((byte) status);
+            msg.WriteByte((byte)ClientPacketHeader.READY_CHECK);
+            msg.WriteByte((byte)ReadyCheckState.Update);
+            msg.WriteByte((byte)status);
             GameMain.Client?.ClientPeer?.Send(msg, DeliveryMethod.Reliable);
         }
 
@@ -283,13 +293,13 @@ namespace Barotrauma
                 ReadyCheckCooldown = DateTime.Now.AddMinutes(1);
 #endif
                 IWriteMessage msg = new WriteOnlyMessage();
-                msg.Write((byte) ClientPacketHeader.READY_CHECK);
-                msg.Write((byte) ReadyCheckState.Start);
+                msg.WriteByte((byte)ClientPacketHeader.READY_CHECK);
+                msg.WriteByte((byte)ReadyCheckState.Start);
                 GameMain.Client?.ClientPeer?.Send(msg, DeliveryMethod.Reliable);
                 return;
             }
 
-            GUIMessageBox msgBox = new GUIMessageBox(readyCheckHeader, readyCheckPleaseWait((ReadyCheckCooldown - DateTime.Now).Seconds), new[] { closeButton });
+            GUIMessageBox msgBox = new GUIMessageBox(readyCheckHeader, ReadyCheckPleaseWait((ReadyCheckCooldown - DateTime.Now).Seconds), new[] { closeButton });
             msgBox.Buttons[0].OnClicked = delegate
             {
                 msgBox.Close();

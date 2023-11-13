@@ -16,24 +16,20 @@ namespace Barotrauma
         /// <summary>
         /// There is a client-side implementation of the method in <see cref="CampaignMode"/>
         /// </summary>
-        public bool AllowedToManageCampaign(Client client, ClientPermissions permissions)
+        public static bool AllowedToManageCampaign(Client client, ClientPermissions permissions)
         {
             //allow managing the campaign if the client has permissions, is the owner, or the only client in the server,
             //or if no-one has management permissions
             return
                 client.HasPermission(permissions) ||
                 client.HasPermission(ClientPermissions.ManageCampaign) ||
-                GameMain.Server.ConnectedClients.Count == 1 ||
                 IsOwner(client) ||
-                GameMain.Server.ConnectedClients.None(c => c.InGame && (IsOwner(c) || c.HasPermission(permissions)));
+                AnyOneAllowedToManageCampaign(permissions);
         }
 
-        public bool AllowedToManageWallets(Client client)
+        public static bool AllowedToManageWallets(Client client)
         {
-            return
-                client.HasPermission(ClientPermissions.ManageCampaign) ||
-                client.HasPermission(ClientPermissions.ManageMoney) ||
-                IsOwner(client);
+            return AllowedToManageCampaign(client, ClientPermissions.ManageMoney);
         }
 
         public override void ShowStartMessage()

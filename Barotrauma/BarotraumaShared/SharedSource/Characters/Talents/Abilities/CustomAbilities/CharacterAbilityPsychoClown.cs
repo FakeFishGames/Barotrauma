@@ -1,12 +1,10 @@
-﻿using System.Xml.Linq;
-
-namespace Barotrauma.Abilities
+﻿namespace Barotrauma.Abilities
 {
     class CharacterAbilityPsychoClown : CharacterAbility
     {
-        private StatTypes statType;
-        private float maxValue;
-        private string afflictionIdentifier;
+        private readonly StatTypes statType;
+        private readonly float maxValue;
+        private readonly string afflictionIdentifier;
         private float lastValue = 0f;
         public override bool AllowClientSimulation => true;
 

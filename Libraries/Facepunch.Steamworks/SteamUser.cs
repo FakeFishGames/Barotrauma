@@ -15,18 +15,22 @@ namespace Steamworks
 	/// </summary>
 	public class SteamUser : SteamClientClass<SteamUser>
 	{
-		internal static ISteamUser Internal => Interface as ISteamUser;
+		internal static ISteamUser? Internal => Interface as ISteamUser;
 
-		internal override void InitializeInterface( bool server )
+		internal override bool InitializeInterface( bool server )
 		{
 			SetInterface( server, new ISteamUser( server ) );
+			if ( Interface is null || Interface.Self == IntPtr.Zero ) return false;
+
 			InstallEvents();
 
 			richPresence = new Dictionary<string, string>();
 			SampleRate = OptimalSampleRate;
+
+			return true;
 		}
 
-		static Dictionary<string, string> richPresence;
+		static Dictionary<string, string>? richPresence;
 
 		internal static void InstallEvents()
 		{
@@ -39,29 +43,30 @@ namespace Steamworks
 			Dispatch.Install<MicroTxnAuthorizationResponse_t>( x => OnMicroTxnAuthorizationResponse?.Invoke( x.AppID, x.OrderID, x.Authorized != 0 ) );
 			Dispatch.Install<GameWebCallback_t>( x => OnGameWebCallback?.Invoke( x.URLUTF8() ) );
 			Dispatch.Install<GetAuthSessionTicketResponse_t>( x => OnGetAuthSessionTicketResponse?.Invoke( x ) );
+			Dispatch.Install<GetTicketForWebApiResponse_t>( x => OnGetAuthTicketForWebApiResponse?.Invoke( x ) );
 			Dispatch.Install<DurationControl_t>( x => OnDurationControl?.Invoke( new DurationControl { _inner = x } ) );
 		}
 
 		/// <summary>
-		/// Called when a connections to the Steam back-end has been established.
+		/// Invoked when a connections to the Steam back-end has been established.
 		/// This means the Steam client now has a working connection to the Steam servers. 
 		/// Usually this will have occurred before the game has launched, and should only be seen if the 
 		/// user has dropped connection due to a networking issue or a Steam server update.
 		/// </summary>
-		public static event Action OnSteamServersConnected;
+		public static event Action? OnSteamServersConnected;
 
 		/// <summary>
-		/// Called when a connection attempt has failed.
+		/// Invoked when a connection attempt has failed.
 		///	This will occur periodically if the Steam client is not connected, 
 		///	and has failed when retrying to establish a connection.
 		/// </summary>
-		public static event Action OnSteamServerConnectFailure;
+		public static event Action? OnSteamServerConnectFailure;
 
 		/// <summary>
-		/// Called if the client has lost connection to the Steam servers.
+		/// Invoked when the client has lost connection to the Steam servers.
 		/// Real-time services will be disabled until a matching OnSteamServersConnected has been posted.
 		/// </summary>
-		public static event Action OnSteamServersDisconnected;
+		public static event Action? OnSteamServersDisconnected;
 
 		/// <summary>
 		/// Sent by the Steam server to the client telling it to disconnect from the specified game server, 
@@ -69,31 +74,36 @@ namespace Steamworks
 		/// The game client should immediately disconnect upon receiving this message.
 		/// This can usually occur if the user doesn't have rights to play on the game server.
 		/// </summary>
-		public static event Action OnClientGameServerDeny;
+		public static event Action? OnClientGameServerDeny;
 
 		/// <summary>
-		/// Called whenever the users licenses (owned packages) changes.
+		/// Invoked whenever the users licenses (owned packages) changes.
 		/// </summary>
-		public static event Action OnLicensesUpdated;
+		public static event Action? OnLicensesUpdated;
 
 		/// <summary>
-		/// Called when an auth ticket has been validated. 
-		/// The first parameter is the steamid of this user
-		/// The second is the Steam ID that owns the game, this will be different from the first 
-		/// if the game is being borrowed via Steam Family Sharing
+		/// Invoked when an auth ticket has been validated. 
+		/// The first parameter is the <see cref="SteamId"/> of this user
+		/// The second is the <see cref="SteamId"/> that owns the game, which will be different from the first 
+		/// if the game is being borrowed via Steam Family Sharing.
 		/// </summary>
-		public static event Action<SteamId, SteamId, AuthResponse> OnValidateAuthTicketResponse;
+		public static event Action<SteamId, SteamId, AuthResponse>? OnValidateAuthTicketResponse;
 
 		/// <summary>
-		/// Used internally for GetAuthSessionTicketAsync
+		/// Used internally for <see cref="GetAuthSessionTicketAsync(double)"/>.
 		/// </summary>
-		internal static event Action<GetAuthSessionTicketResponse_t> OnGetAuthSessionTicketResponse;
+		internal static event Action<GetAuthSessionTicketResponse_t>? OnGetAuthSessionTicketResponse;
+		
+		/// <summary>
+		/// Used internally for <see cref="GetAuthTicketForWebApi(string)"/>.
+		/// </summary>
+		internal static event Action<GetTicketForWebApiResponse_t>? OnGetAuthTicketForWebApiResponse;
 
 		/// <summary>
-		/// Called when a user has responded to a microtransaction authorization request.
+		/// Invoked when a user has responded to a microtransaction authorization request.
 		/// ( appid, orderid, user authorized )
 		/// </summary>
-		public static event Action<AppId, ulong, bool> OnMicroTxnAuthorizationResponse;
+		public static event Action<AppId, ulong, bool>? OnMicroTxnAuthorizationResponse;
 
 		/// <summary>
 		/// Sent to your game in response to a steam://gamewebcallback/(appid)/command/stuff command from a user clicking a 
@@ -101,17 +111,14 @@ namespace Steamworks
 		/// You can use this to add support for external site signups where you want to pop back into the browser after some web page 
 		/// signup sequence, and optionally get back some detail about that.
 		/// </summary>
-		public static event Action<string> OnGameWebCallback;
+		public static event Action<string>? OnGameWebCallback;
 
 		/// <summary>
 		/// Sent for games with enabled anti indulgence / duration control, for enabled users.
 		/// Lets the game know whether persistent rewards or XP should be granted at normal rate, 
 		/// half rate, or zero rate.
 		/// </summary>
-		public static event Action<DurationControl> OnDurationControl;
-
-
-
+		public static event Action<DurationControl>? OnDurationControl;
 
 		static bool _recordingVoice;
 
@@ -120,21 +127,20 @@ namespace Steamworks
 		/// Once started, use GetAvailableVoice and GetVoice to get the data, and then call StopVoiceRecording 
 		/// when the user has released their push-to-talk hotkey or the game session has completed.
 		/// </summary>
-
 		public static bool VoiceRecord
 		{
 			get => _recordingVoice;
 			set
 			{
 				_recordingVoice = value;
-				if ( value ) Internal.StartVoiceRecording();
-				else Internal.StopVoiceRecording();
+				if ( value ) Internal?.StartVoiceRecording();
+				else Internal?.StopVoiceRecording();
 			}
 		}
 
 
 		/// <summary>
-		/// Returns true if we have voice data waiting to be read
+		/// Returns true if we have voice data waiting to be read.
 		/// </summary>
 		public static bool HasVoiceData
 		{
@@ -142,7 +148,7 @@ namespace Steamworks
 			{
 				uint szCompressed = 0, deprecated = 0;
 
-				if ( Internal.GetAvailableVoice( ref szCompressed, ref deprecated, 0 ) != VoiceResult.OK )
+				if ( Internal is null || Internal.GetAvailableVoice( ref szCompressed, ref deprecated, 0 ) != VoiceResult.OK )
 					return false;
 
 				return szCompressed > 0;
@@ -168,7 +174,7 @@ namespace Steamworks
 
 			fixed ( byte* b = readBuffer )
 			{
-				if ( Internal.GetVoice( true, (IntPtr)b, (uint)readBuffer.Length, ref szWritten, false, IntPtr.Zero, 0, ref deprecated, 0 ) != VoiceResult.OK )
+				if ( Internal is null || Internal.GetVoice( true, (IntPtr)b, (uint)readBuffer.Length, ref szWritten, false, IntPtr.Zero, 0, ref deprecated, 0 ) != VoiceResult.OK )
 					return 0;
 			}
 
@@ -185,7 +191,7 @@ namespace Steamworks
 		/// ReadVoiceData because it won't be creating a new byte array every call. But this 
 		/// makes it easier to get it working, so let the babies have their bottle.
 		/// </summary>
-		public static unsafe byte[] ReadVoiceDataBytes()
+		public static unsafe byte[]? ReadVoiceDataBytes()
 		{
 			if ( !HasVoiceData )
 				return null;
@@ -195,7 +201,7 @@ namespace Steamworks
 
 			fixed ( byte* b = readBuffer )
 			{
-				if ( Internal.GetVoice( true, (IntPtr)b, (uint)readBuffer.Length, ref szWritten, false, IntPtr.Zero, 0, ref deprecated, 0 ) != VoiceResult.OK )
+				if ( Internal is null || Internal.GetVoice( true, (IntPtr)b, (uint)readBuffer.Length, ref szWritten, false, IntPtr.Zero, 0, ref deprecated, 0 ) != VoiceResult.OK )
 					return null;
 			}
 
@@ -222,7 +228,7 @@ namespace Steamworks
 			}
 		}
 
-		public static uint OptimalSampleRate => Internal.GetVoiceOptimalSampleRate();
+		public static uint OptimalSampleRate => Internal?.GetVoiceOptimalSampleRate() ?? 0;
 
 
 		/// <summary>
@@ -247,7 +253,7 @@ namespace Steamworks
 			fixed ( byte* frm = from )
 			fixed ( byte* dst = to )
 			{
-				if ( Internal.DecompressVoice( (IntPtr) frm, (uint) length, (IntPtr)dst, (uint)to.Length, ref szWritten, SampleRate ) != VoiceResult.OK )
+				if ( Internal is null || Internal.DecompressVoice( (IntPtr) frm, (uint) length, (IntPtr)dst, (uint)to.Length, ref szWritten, SampleRate ) != VoiceResult.OK )
 					return 0;
 			}
 
@@ -273,7 +279,7 @@ namespace Steamworks
 			fixed ( byte* frm = from )
 			fixed ( byte* dst = to )
 			{
-				if ( Internal.DecompressVoice( (IntPtr)frm, (uint)from.Length, (IntPtr)dst, (uint)to.Length, ref szWritten, SampleRate ) != VoiceResult.OK )
+				if ( Internal is null || Internal.DecompressVoice( (IntPtr)frm, (uint)from.Length, (IntPtr)dst, (uint)to.Length, ref szWritten, SampleRate ) != VoiceResult.OK )
 					return 0;
 			}
 
@@ -297,23 +303,23 @@ namespace Steamworks
 
 			uint szWritten = 0;
 
-			if ( Internal.DecompressVoice( from, (uint) length, to, (uint)bufferSize, ref szWritten, SampleRate ) != VoiceResult.OK )
+			if ( Internal is null || Internal.DecompressVoice( from, (uint) length, to, (uint)bufferSize, ref szWritten, SampleRate ) != VoiceResult.OK )
 				return 0;
 			
 			return (int)szWritten;
 		}
 
 		/// <summary>
-		/// Retrieve a authentication ticket to be sent to the entity who wishes to authenticate you.
+		/// Retrieve an authentication ticket to be sent to the entity who wishes to authenticate you.
 		/// </summary>
-		public static unsafe AuthTicket GetAuthSessionTicket()
+		public static unsafe AuthTicket? GetAuthSessionTicket( NetIdentity identity )
 		{
 			var data = Helpers.TakeBuffer( 1024 );
 
 			fixed ( byte* b = data )
 			{
 				uint ticketLength = 0;
-				uint ticket = Internal.GetAuthSessionTicket( (IntPtr)b, data.Length, ref ticketLength );
+				uint ticket = Internal?.GetAuthSessionTicket( (IntPtr)b, data.Length, ref ticketLength, ref identity ) ?? 0;
 
 				if ( ticket == 0 )
 					return null;
@@ -326,21 +332,64 @@ namespace Steamworks
 			}
 		}
 
+		public static async Task<AuthTicketForWebApi?> GetAuthTicketForWebApi( string identity )
+		{
+			if ( Internal is null ) { return null; }
+
+			HAuthTicket handle = default;
+			AuthTicketForWebApi? ticket = null;
+			Result result = Result.Pending;
+
+			Action<GetTicketForWebApiResponse_t> responseHandler = response =>
+			{
+				if ( response.Ticket == handle ) { return; }
+
+				result = response.Result == Result.Pending
+					? Result.Fail
+					: response.Result;
+				ticket = result == Result.OK
+					? new AuthTicketForWebApi(
+						response.GubTicket.Take( response.Ticket ).ToArray(),
+						response.AuthTicket )
+					: null;
+			};
+
+			OnGetAuthTicketForWebApiResponse += responseHandler;
+			try
+			{
+				handle = Internal.GetAuthTicketForWebApi( identity );
+
+				if ( handle == 0 ) { return null; }
+
+				var timeout = DateTime.Now + TimeSpan.FromSeconds( 60f );
+				while ( result == Result.Pending && DateTime.Now < timeout )
+				{
+					await Task.Delay( 10 );
+				}
+			}
+			finally
+			{
+				OnGetAuthTicketForWebApiResponse -= responseHandler;
+			}
+
+			return ticket;
+		}
+
 		/// <summary>
 		/// Retrieve a authentication ticket to be sent to the entity who wishes to authenticate you.
 		/// This waits for a positive response from the backend before returning the ticket. This means
-		/// the ticket is definitely ready to go as soon as it returns. Will return null if the callback
+		/// the ticket is definitely ready to go as soon as it returns. Will return <see langword="null"/> if the callback
 		/// times out or returns negatively.
 		/// </summary>
-		public static async Task<AuthTicket> GetAuthSessionTicketAsync( double timeoutSeconds = 10.0f )
+		public static async Task<AuthTicket?> GetAuthSessionTicketAsync( NetIdentity identity, double timeoutSeconds = 10.0f )
 		{
 			var result = Result.Pending;
-			AuthTicket ticket = null;
+			AuthTicket? ticket = null;
 			var stopwatch = Stopwatch.StartNew();
 
 			void f( GetAuthSessionTicketResponse_t t )
 			{
-				if ( t.AuthTicket != ticket.Handle ) return;
+				if ( t.AuthTicket != ticket?.Handle ) return;
 				result = t.Result;
 			}
 
@@ -348,7 +397,7 @@ namespace Steamworks
 
 			try
 			{
-				ticket = GetAuthSessionTicket();
+				ticket = GetAuthSessionTicket( identity );
 				if ( ticket == null )
 					return null;
 
@@ -379,11 +428,11 @@ namespace Steamworks
 		{
 			fixed ( byte* ptr = ticketData )
 			{
-				return Internal.BeginAuthSession( (IntPtr) ptr, ticketData.Length, steamid );
+				return Internal?.BeginAuthSession( (IntPtr) ptr, ticketData.Length, steamid ) ?? BeginAuthResult.ServerNotConnectedToSteam;
 			}
 		}
 
-		public static void EndAuthSession( SteamId steamid ) => Internal.EndAuthSession( steamid );
+		public static void EndAuthSession( SteamId steamid ) => Internal?.EndAuthSession( steamid );
 
 
 		// UserHasLicenseForApp - SERVER VERSION ( DLC CHECKING )
@@ -392,12 +441,12 @@ namespace Steamworks
 		/// Checks if the current users looks like they are behind a NAT device.
 		/// This is only valid if the user is connected to the Steam servers and may not catch all forms of NAT.
 		/// </summary>
-		public static bool IsBehindNAT => Internal.BIsBehindNAT();
+		public static bool IsBehindNAT => Internal != null && Internal.BIsBehindNAT();
 
 		/// <summary>
 		/// Gets the Steam level of the user, as shown on their Steam community profile.
 		/// </summary>
-		public static int SteamLevel => Internal.GetPlayerSteamLevel();
+		public static int SteamLevel => Internal?.GetPlayerSteamLevel() ?? 0;
 
 		/// <summary>
 		/// Requests a URL which authenticates an in-game browser for store check-out, and then redirects to the specified URL.
@@ -405,8 +454,10 @@ namespace Steamworks
 		/// NOTE: The URL has a very short lifetime to prevent history-snooping attacks, so you should only call this API when you are about to launch the browser, or else immediately navigate to the result URL using a hidden browser window.
 		/// NOTE: The resulting authorization cookie has an expiration time of one day, so it would be a good idea to request and visit a new auth URL every 12 hours.
 		/// </summary>
-		public static async Task<string> GetStoreAuthUrlAsync( string url )
+		public static async Task<string?> GetStoreAuthUrlAsync( string url )
 		{
+			if (Internal is null) { return null; }
+			
 			var response = await Internal.RequestStoreAuthURL( url );
 			if ( !response.HasValue )
 				return null;
@@ -417,22 +468,22 @@ namespace Steamworks
 		/// <summary>
 		/// Checks whether the current user has verified their phone number.
 		/// </summary>
-		public static bool IsPhoneVerified => Internal.BIsPhoneVerified();
+		public static bool IsPhoneVerified => Internal != null && Internal.BIsPhoneVerified();
 
 		/// <summary>
 		/// Checks whether the current user has Steam Guard two factor authentication enabled on their account.
 		/// </summary>
-		public static bool IsTwoFactorEnabled => Internal.BIsTwoFactorEnabled();
+		public static bool IsTwoFactorEnabled => Internal != null && Internal.BIsTwoFactorEnabled();
 
 		/// <summary>
 		/// Checks whether the user's phone number is used to uniquely identify them.
 		/// </summary>
-		public static bool IsPhoneIdentifying => Internal.BIsPhoneIdentifying();
+		public static bool IsPhoneIdentifying => Internal != null && Internal.BIsPhoneIdentifying();
 
 		/// <summary>
 		/// Checks whether the current user's phone number is awaiting (re)verification.
 		/// </summary>
-		public static bool IsPhoneRequiringVerification => Internal.BIsPhoneRequiringVerification();
+		public static bool IsPhoneRequiringVerification => Internal != null && Internal.BIsPhoneRequiringVerification();
 
 		/// <summary>
 		/// Requests an application ticket encrypted with the secret "encrypted app ticket key".
@@ -441,8 +492,10 @@ namespace Steamworks
 		/// If you get a null result from this it's probably because you're calling it too often.
 		/// This can fail if you don't have an encrypted ticket set for your app here https://partner.steamgames.com/apps/sdkauth/
 		/// </summary>
-		public static async Task<byte[]> RequestEncryptedAppTicketAsync( byte[] dataToInclude )
+		public static async Task<byte[]?> RequestEncryptedAppTicketAsync( byte[] dataToInclude )
 		{
+			if (Internal is null) { return null; }
+			
 			var dataPtr = Marshal.AllocHGlobal( dataToInclude.Length );
 			Marshal.Copy( dataToInclude, 0, dataPtr, dataToInclude.Length );
 
@@ -453,7 +506,7 @@ namespace Steamworks
 
 				var ticketData = Marshal.AllocHGlobal( 1024 );
 				uint outSize = 0;
-				byte[] data = null;
+				byte[]? data = null;
 
 				if ( Internal.GetEncryptedAppTicket( ticketData, 1024, ref outSize ) )
 				{
@@ -477,14 +530,16 @@ namespace Steamworks
 		/// There can only be one call pending, and this call is subject to a 60 second rate limit.
 		/// This can fail if you don't have an encrypted ticket set for your app here https://partner.steamgames.com/apps/sdkauth/
 		/// </summary>
-		public static async Task<byte[]> RequestEncryptedAppTicketAsync()
+		public static async Task<byte[]?> RequestEncryptedAppTicketAsync()
 		{
+			if (Internal is null) { return null; }
+			
 			var result = await Internal.RequestEncryptedAppTicket( IntPtr.Zero, 0 );
 			if ( !result.HasValue || result.Value.Result != Result.OK ) return null;
 
 			var ticketData = Marshal.AllocHGlobal( 1024 );
 			uint outSize = 0;
-			byte[] data = null;
+			byte[]? data = null;
 
 			if ( Internal.GetEncryptedAppTicket( ticketData, 1024, ref outSize ) )
 			{
@@ -504,6 +559,8 @@ namespace Steamworks
 		/// </summary>
 		public static async Task<DurationControl> GetDurationControl()
 		{
+			if (Internal is null) { return default; }
+
 			var response = await Internal.GetDurationControl();
 			if ( !response.HasValue ) return default;
 

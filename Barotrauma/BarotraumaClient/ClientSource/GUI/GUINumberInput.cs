@@ -179,6 +179,11 @@ namespace Barotrauma
             private set;
         }
 
+        /// <summary>
+        /// If enabled, the value wraps around to Max when you go below Min, and vice versa
+        /// </summary>
+        public bool WrapAround;
+
         public float valueStep;
 
         private float pressedTimer;
@@ -308,7 +313,9 @@ namespace Barotrauma
                     break;
             }
 
-            RectTransform.MinSize = TextBox.RectTransform.MinSize;
+            RectTransform.MinSize = new Point(
+                Math.Max(rectT.MinSize.X, TextBox.RectTransform.MinSize.X), 
+                Math.Max(rectT.MinSize.Y, TextBox.RectTransform.MinSize.Y));
             LayoutGroup.Recalculate();
         }
 
@@ -403,13 +410,19 @@ namespace Barotrauma
         {
             if (MinValueFloat != null)
             {
-                floatValue = Math.Max(floatValue, MinValueFloat.Value);
-                MinusButton.Enabled = floatValue > MinValueFloat;
+                floatValue = 
+                    WrapAround && MinValueFloat.HasValue && floatValue < MinValueFloat.Value ? 
+                    MaxValueFloat.Value : 
+                    Math.Max(floatValue, MinValueFloat.Value);
+                MinusButton.Enabled = WrapAround || floatValue > MinValueFloat;
             }
             if (MaxValueFloat != null)
             {
-                floatValue = Math.Min(floatValue, MaxValueFloat.Value);
-                PlusButton.Enabled = floatValue < MaxValueFloat;
+                floatValue =
+                    WrapAround && MaxValueFloat.HasValue && floatValue > MaxValueFloat.Value ?
+                    MinValueFloat.Value : 
+                    Math.Min(floatValue, MaxValueFloat.Value);
+                PlusButton.Enabled = WrapAround || floatValue < MaxValueFloat;
             }
         }
 
@@ -417,16 +430,16 @@ namespace Barotrauma
         {
             if (MinValueInt != null && intValue < MinValueInt.Value)
             {
-                intValue = Math.Max(intValue, MinValueInt.Value);
+                intValue = WrapAround && MaxValueInt.HasValue ? MaxValueInt.Value : Math.Max(intValue, MinValueInt.Value);
                 UpdateText();
             }
             if (MaxValueInt != null && intValue > MaxValueInt.Value)
             {
-                intValue = Math.Min(intValue, MaxValueInt.Value);
+                intValue = WrapAround && MinValueInt.HasValue ? MinValueInt.Value : Math.Min(intValue, MaxValueInt.Value);
                 UpdateText();
             }
-            PlusButton.Enabled = MaxValueInt == null || intValue < MaxValueInt;
-            MinusButton.Enabled = MinValueInt == null || intValue > MinValueInt;
+            PlusButton.Enabled = WrapAround || MaxValueInt == null || intValue < MaxValueInt;
+            MinusButton.Enabled = WrapAround || MinValueInt == null || intValue > MinValueInt;
         }
 
         private void UpdateText()

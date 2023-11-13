@@ -7,7 +7,7 @@ namespace Barotrauma
     {
         public delegate void TaskDelegate();
 
-        private class Task
+        private sealed class Task
         {
             public TaskDelegate Deleg;
             public ManualResetEvent Mre;
@@ -25,7 +25,7 @@ namespace Barotrauma
                 if (!Done) { Mre.WaitOne(); }
             }
         }
-        private static List<Task> enqueuedTasks;
+        private static readonly List<Task> enqueuedTasks;
 
         static CrossThread() { enqueuedTasks = new List<Task>(); }
 

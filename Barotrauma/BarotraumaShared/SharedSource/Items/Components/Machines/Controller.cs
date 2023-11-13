@@ -36,6 +36,7 @@ namespace Barotrauma.Items.Components
         private readonly List<LimbPos> limbPositions = new List<LimbPos>();
 
         private Direction dir;
+        public Direction Direction => dir;
 
         //the position where the user walks to when using the controller 
         //(relative to the position of the item)
@@ -61,18 +62,58 @@ namespace Barotrauma.Items.Components
 
         public IEnumerable<LimbPos> LimbPositions { get { return limbPositions; } }
 
-        [Editable, Serialize(false, IsPropertySaveable.No, description: "When enabled, the item will continuously send out a 0/1 signal and interacting with it will flip the signal (making the item behave like a switch). When disabled, the item will simply send out 1 when interacted with.", alwaysUseInstanceValues: true)]
+        [Editable, Serialize(false, IsPropertySaveable.No, description: "When enabled, the item will continuously send out a signal and interacting with it will flip the signal (making the item behave like a switch). When disabled, the item will simply send out a signal when interacted with.", alwaysUseInstanceValues: true)]
         public bool IsToggle
         {
             get;
             set;
         }
 
-        [Editable, Serialize(false, IsPropertySaveable.No, description: "Whether the item is toggled on/off. Only valid if IsToggle is set to true.", alwaysUseInstanceValues: true)]
+        private string output;
+        [ConditionallyEditable(ConditionallyEditable.ConditionType.HasConnectionPanel, onlyInEditors: false), 
+            Serialize("1", IsPropertySaveable.Yes, description: "The signal sent when the controller is being activated or is toggled on. If empty, no signal is sent.", alwaysUseInstanceValues: true)]
+        public string Output
+        {
+            get { return output; }
+            set
+            {
+                if (value == null || value == output) { return; }
+                output = value;
+                //reactivate if signal isn't empty (we may not have been previously sending a signal, but might now)
+                if (!value.IsNullOrEmpty()) { IsActive = true; }
+            }
+        }
+
+        private string falseOutput;
+        [ConditionallyEditable(ConditionallyEditable.ConditionType.IsToggleableController, onlyInEditors: false), 
+            Serialize("0", IsPropertySaveable.Yes, description: "The signal sent when the controller is toggled off. If empty, no signal is sent. Only valid if IsToggle is true.", alwaysUseInstanceValues: true)]
+        public string FalseOutput
+        {
+            get { return falseOutput; }
+            set
+            {
+                if (value == null || value == falseOutput) { return; }
+                falseOutput = value;
+                //reactivate if signal isn't empty (we may not have been previously sending a signal, but might now)
+                if (!value.IsNullOrEmpty()) { IsActive = true; }
+            }
+        }
+
+        private bool state;
+        [ConditionallyEditable(ConditionallyEditable.ConditionType.IsToggleableController, onlyInEditors: true), 
+            Serialize(false, IsPropertySaveable.No, description: "Whether the item is toggled on/off. Only valid if IsToggle is set to true.", alwaysUseInstanceValues: true)]
         public bool State
         {
-            get;
-            set;
+            get { return state; }
+            set
+            {
+                if (state != value)
+                {
+                    state = value;
+                    string newOutput = state ? output : falseOutput;
+                    IsActive = !string.IsNullOrEmpty(newOutput);
+                }
+            }
         }
 
         [Serialize(true, IsPropertySaveable.No, description: "Should the HUD (inventory, health bar, etc) be hidden when this item is selected.")]
@@ -92,6 +133,20 @@ namespace Barotrauma.Items.Components
 
         [Serialize(false, IsPropertySaveable.No, description: "Should the character using the item be drawn behind the item.")]
         public bool DrawUserBehind
+        {
+            get;
+            set;
+        }
+
+        [Serialize(true, IsPropertySaveable.No, description: "Can another character select this controller when another character has already selected it?")]
+        public bool AllowSelectingWhenSelectedByOther
+        {
+            get;
+            set;
+        }
+
+        [Serialize(true, IsPropertySaveable.No, description: "Can another character select this controller when a bot has already selected it?")]
+        public bool AllowSelectingWhenSelectedByBot
         {
             get;
             set;
@@ -128,6 +183,13 @@ namespace Barotrauma.Items.Components
             set;
         }
 
+        [Serialize(false, IsPropertySaveable.No, description: "If true, other items can be used simultaneously.")]
+        public bool IsSecondaryItem
+        {
+            get;
+            private set;
+        }
+
         public Controller(Item item, ContentXElement element)
             : base(item, element)
         {
@@ -142,15 +204,16 @@ namespace Barotrauma.Items.Components
             this.cam = cam;
             UserInCorrectPosition = false;
 
-            if (IsToggle)
+            string signal = IsToggle && State ? output : falseOutput;
+            if (item.Connections != null && IsToggle && !string.IsNullOrEmpty(signal))
             {
-                item.SendSignal(State ? "1" : "0", "signal_out");
-                item.SendSignal(State ? "1" : "0", "trigger_out");
+                item.SendSignal(signal, "signal_out");
+                item.SendSignal(signal, "trigger_out");
             }
 
             if (user == null 
                 || user.Removed
-                || user.SelectedConstruction != item
+                || !user.IsAnySelectedItem(item)
                 || item.ParentInventory != null
                 || !user.CanInteractWith(item) 
                 || (UsableIn == UseEnvironment.Water && !user.AnimController.InWater)
@@ -161,11 +224,11 @@ namespace Barotrauma.Items.Components
                     CancelUsing(user);
                     user = null;
                 }
-                if (!IsToggle || item.Connections == null) { IsActive = false; }
+                if (item.Connections == null || !IsToggle || string.IsNullOrEmpty(signal)) { IsActive = false; }
                 return;
             }
 
-            user.AnimController.Anim = AnimController.Animation.UsingConstruction;
+            user.AnimController.StartUsingItem();
 
             if (userPos != Vector2.Zero)
             {
@@ -186,32 +249,34 @@ namespace Barotrauma.Items.Components
                 }
                 else
                 {
-                    diff.Y = 0.0f;
-                    if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient && user != Character.Controlled)
+                    // Secondary items (like ladders or chairs) will control the character position over primary items
+                    // Only control the character position if the character doesn't have another secondary item already controlling it
+                    if (!user.HasSelectedAnotherSecondaryItem(Item))
                     {
-                        if (Math.Abs(diff.X) > 20.0f)
+                        diff.Y = 0.0f;
+                        if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient && user != Character.Controlled)
                         {
-                            //wait for the character to walk to the correct position
-                            return;
+                            if (Math.Abs(diff.X) > 20.0f)
+                            {
+                                //wait for the character to walk to the correct position
+                                return;
+                            }
+                            else if (Math.Abs(diff.X) > 0.1f)
+                            {
+                                //aim to keep the collider at the correct position once close enough
+                                user.AnimController.Collider.LinearVelocity = new Vector2(
+                                    diff.X * 0.1f,
+                                    user.AnimController.Collider.LinearVelocity.Y);
+                            }
                         }
-                        else if (Math.Abs(diff.X) > 0.1f)
-                        {
-                            //aim to keep the collider at the correct position once close enough
-                            user.AnimController.Collider.LinearVelocity = new Vector2(
-                                diff.X * 0.1f, 
-                                user.AnimController.Collider.LinearVelocity.Y);
-                        }
-                    }
-                    else
-                    {
-                        if (Math.Abs(diff.X) > 10.0f)
+                        else if (Math.Abs(diff.X) > 10.0f)
                         {
                             user.AnimController.TargetMovement = Vector2.Normalize(diff);
                             user.AnimController.TargetDir = diff.X > 0.0f ? Direction.Right : Direction.Left;
                             return;
                         }
+                        user.AnimController.TargetMovement = Vector2.Zero;
                     }
-                    user.AnimController.TargetMovement = Vector2.Zero;
                     UserInCorrectPosition = true;
                 }
             }
@@ -220,9 +285,16 @@ namespace Barotrauma.Items.Components
 
             if (limbPositions.Count == 0) { return; }
 
-            user.AnimController.Anim = AnimController.Animation.UsingConstruction;
+            user.AnimController.StartUsingItem();
 
-            user.AnimController.ResetPullJoints();
+            if (user.SelectedItem != null)
+            {
+                user.AnimController.ResetPullJoints(l => l.IsLowerBody);
+            }
+            else
+            {
+                user.AnimController.ResetPullJoints();
+            }
 
             if (dir != 0) { user.AnimController.TargetDir = dir; }
 
@@ -230,7 +302,10 @@ namespace Barotrauma.Items.Components
             {
                 Limb limb = user.AnimController.GetLimb(lb.LimbType);
                 if (limb == null || !limb.body.Enabled) { continue; }
-
+                // Don't move lower body limbs if there's another selected secondary item that should control them
+                if (limb.IsLowerBody && user.HasSelectedAnotherSecondaryItem(Item)) { continue; }
+                // Don't move hands if there's a selected primary item that should control them
+                if (!limb.IsLowerBody && Item == user.SelectedSecondaryItem && user.SelectedItem != null) { continue; }
                 if (lb.AllowUsingLimb)
                 {
                     switch (lb.LimbType)
@@ -247,12 +322,9 @@ namespace Barotrauma.Items.Components
                             break;
                     }
                 }
-
                 limb.Disabled = true;
-
                 Vector2 worldPosition = new Vector2(item.WorldRect.X, item.WorldRect.Y) + lb.Position * item.Scale;
                 Vector2 diff = worldPosition - limb.WorldPosition;
-
                 limb.PullJointEnabled = true;
                 limb.PullJointWorldAnchorB = limb.SimPosition + ConvertUnits.ToSimUnits(diff);
             }
@@ -266,9 +338,7 @@ namespace Barotrauma.Items.Components
             {
                 return false;
             }
-
-            if (user == null || user.Removed ||
-                user.SelectedConstruction != item || !user.CanInteractWith(item))
+            if (user == null || user.Removed || !user.IsAnySelectedItem(item) || !user.CanInteractWith(item))
             {
                 user = null;
                 return false;
@@ -284,52 +354,50 @@ namespace Barotrauma.Items.Components
 #endif
                 }
             }
-            else
+            else if (!string.IsNullOrEmpty(output))
             {
-                item.SendSignal(new Signal("1", sender: user), "trigger_out");
+                item.SendSignal(new Signal(output, sender: user), "trigger_out");
             }
 
             lastUsed = Timing.TotalTime;
-
-            ApplyStatusEffects(ActionType.OnUse, 1.0f, activator);
-            
+            ApplyStatusEffects(ActionType.OnUse, 1.0f, activator);          
             return true;
         }
                 
         public override bool SecondaryUse(float deltaTime, Character character = null)
         {
-            if (this.user != character)
+            if (user != character)
             {
                 return false;
             }
-
-            if (this.user == null || character.Removed ||
-                this.user.SelectedConstruction != item || !character.CanInteractWith(item))
+            if (user == null || character.Removed || !user.IsAnySelectedItem(item) || !character.CanInteractWith(item))
             {
-                this.user = null;
+                user = null;
                 return false;
             }
-            if (character == null) return false;
+            if (character == null)
+            {
+                return false;
+            }
 
             focusTarget = GetFocusTarget();
+
             if (focusTarget == null)
             {
                 Vector2 centerPos = new Vector2(item.WorldRect.Center.X, item.WorldRect.Center.Y);
-
                 Vector2 offset = character.CursorWorldPosition - centerPos;
                 offset.Y = -offset.Y;
-
                 targetRotation = MathUtils.WrapAngleTwoPi(MathUtils.VectorToAngle(offset));
                 return false;
             }
 
             character.ViewTarget = focusTarget;
+
 #if CLIENT
             if (character == Character.Controlled && cam != null)
             {
                 Lights.LightManager.ViewTarget = focusTarget;
                 cam.TargetPos = focusTarget.WorldPosition;
-
                 cam.OffsetAmount = MathHelper.Lerp(cam.OffsetAmount, (focusTarget as Item).Prefab.OffsetOnSelected * focusTarget.OffsetOnSelectedMultiplier, deltaTime * 10.0f);
                 HideHUDs(true);
             }
@@ -338,16 +406,12 @@ namespace Barotrauma.Items.Components
             if (!character.IsRemotePlayer || character.ViewTarget == focusTarget)
             {
                 Vector2 centerPos = new Vector2(focusTarget.WorldRect.Center.X, focusTarget.WorldRect.Center.Y);
-
-                Turret turret = focusTarget.GetComponent<Turret>();
-                if (turret != null)
+                if (focusTarget.GetComponent<Turret>() is { } turret)
                 {
                     centerPos = new Vector2(focusTarget.WorldRect.X + turret.TransformedBarrelPos.X, focusTarget.WorldRect.Y - turret.TransformedBarrelPos.Y);
                 }
-
                 Vector2 offset = character.CursorWorldPosition - centerPos;
                 offset.Y = -offset.Y;
-
                 targetRotation = MathUtils.WrapAngleTwoPi(MathUtils.VectorToAngle(offset));
             }
             return true;
@@ -396,9 +460,9 @@ namespace Barotrauma.Items.Components
 #endif
                 }
             }
-            else
+            else if (!string.IsNullOrEmpty(output))
             {
-                item.SendSignal(new Signal("1", sender: picker), "signal_out");
+                item.SendSignal(new Signal(output, sender: picker), "signal_out");
             }
 #if CLIENT
             PlaySound(ActionType.OnUse, picker);
@@ -422,12 +486,13 @@ namespace Barotrauma.Items.Components
             //disable flipping for 0.5 seconds, because flipping the character when it's in a weird pose (e.g. lying in bed) can mess up the ragdoll
             if (character.AnimController is HumanoidAnimController humanoidAnim)
             {
-                humanoidAnim.LockFlippingUntil = (float)Timing.TotalTime + 0.5f;
+                humanoidAnim.LockFlipping(0.5f);
             }
 
-            if (character.SelectedConstruction == this.item) { character.SelectedConstruction = null; }
+            if (character.SelectedItem == item) { character.SelectedItem = null; }
+            if (character.SelectedSecondaryItem == item) { character.SelectedSecondaryItem = null; }
 
-            character.AnimController.Anim = AnimController.Animation.None;
+            character.AnimController.StopUsingItem();
             if (character == Character.Controlled)
             {
                 HideHUDs(false);
@@ -440,6 +505,7 @@ namespace Barotrauma.Items.Components
         public override bool Select(Character activator)
         {
             if (activator == null || activator.Removed) { return false; }
+            if (Item.Condition <= 0.0f && !UpdateWhenInactive) { return false; }
 
             if (UsableIn == UseEnvironment.Water && !activator.AnimController.InWater ||
                 UsableIn == UseEnvironment.Air && activator.AnimController.InWater)
@@ -457,6 +523,17 @@ namespace Barotrauma.Items.Components
                     user = null;
                     return false;
                 }
+                else if (user.IsBot && !activator.IsBot)
+                {
+                    if (AllowSelectingWhenSelectedByBot)
+                    {
+                        CancelUsing(user);
+                        user = activator;
+                        IsActive = true;
+                        return true;
+                    }
+                }
+                return AllowSelectingWhenSelectedByOther;
             }
             else
             {
@@ -465,8 +542,11 @@ namespace Barotrauma.Items.Components
             }
 #if SERVER
             item.CreateServerEvent(this);
-#endif
-            item.SendSignal(new Signal("1", sender: user), "signal_out");
+#endif            
+            if (!string.IsNullOrEmpty(output))
+            {
+                item.SendSignal(new Signal(output, sender: user), "signal_out");
+            }
             return true;
         }
 

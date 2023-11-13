@@ -1,4 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Collections.Immutable;
+using System.Linq;
 using Barotrauma.Items.Components;
 using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
@@ -18,9 +21,11 @@ namespace Barotrauma
             AssignCampaignInteraction = 6,
             ApplyStatusEffect = 7,
             Upgrade = 8,
-            
+            ItemStat = 9,
+            DroppedStack = 10,
+
             MinValue = 0,
-            MaxValue = 6
+            MaxValue = 10
         }
 
         public interface IEventData : NetEntityEvent.IData
@@ -28,7 +33,7 @@ namespace Barotrauma
             public EventType EventType { get; }
         }
 
-        public struct ComponentStateEventData : IEventData
+        public readonly struct ComponentStateEventData : IEventData
         {
             public EventType EventType => EventType.ComponentState;
             public readonly ItemComponent Component;
@@ -45,10 +50,12 @@ namespace Barotrauma
         {
             public EventType EventType => EventType.InventoryState;
             public readonly ItemContainer Component;
+            public readonly Range SlotRange;
             
-            public InventoryStateEventData(ItemContainer component)
+            public InventoryStateEventData(ItemContainer component, Range slotRange)
             {
                 Component = component;
+                SlotRange = slotRange;
             }
         }
 
@@ -56,21 +63,53 @@ namespace Barotrauma
         {
             public EventType EventType => EventType.ChangeProperty;
             public readonly SerializableProperty SerializableProperty;
+            public readonly ISerializableEntity Entity;
 
-            public ChangePropertyEventData(SerializableProperty serializableProperty)
+            public ChangePropertyEventData(SerializableProperty serializableProperty, ISerializableEntity entity)
             {
+                if (serializableProperty.GetAttribute<Editable>() == null)
+                {
+                    DebugConsole.ThrowError($"Attempted to create {nameof(ChangePropertyEventData)} for the non-editable property {serializableProperty.Name}.");
+                }
                 SerializableProperty = serializableProperty;
+                Entity = entity;
+            }
+        }
+
+        public readonly struct SetItemStatEventData : IEventData
+        {
+            public EventType EventType => EventType.ItemStat;
+
+            public readonly Dictionary<TalentStatIdentifier, float> Stats;
+
+            public SetItemStatEventData(Dictionary<TalentStatIdentifier, float> stats)
+            {
+                Stats = stats;
             }
         }
 
         private readonly struct ItemStatusEventData : IEventData
         {
             public EventType EventType => EventType.Status;
+
+            public readonly bool LoadingRound;
+
+            public ItemStatusEventData(bool loadingRound)
+            {
+                LoadingRound = loadingRound;
+            }
         }
         
         private readonly struct AssignCampaignInteractionEventData : IEventData
         {
             public EventType EventType => EventType.AssignCampaignInteraction;
+
+            public readonly ImmutableArray<Client> TargetClients;
+
+            public AssignCampaignInteractionEventData(IEnumerable<Client> targetClients)
+            {
+                TargetClients = (targetClients ?? Enumerable.Empty<Client>()).ToImmutableArray();
+            }
         }
 
         public readonly struct ApplyStatusEffectEventData : IEventData

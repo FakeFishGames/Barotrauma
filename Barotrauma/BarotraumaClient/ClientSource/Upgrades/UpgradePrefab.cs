@@ -2,7 +2,7 @@
 
 namespace Barotrauma
 {
-    partial class UpgradePrefab
+    sealed partial class UpgradePrefab
     {
         public readonly ImmutableArray<DecorativeSprite> DecorativeSprites = new ImmutableArray<DecorativeSprite>();
         public Sprite Sprite { get; private set; }

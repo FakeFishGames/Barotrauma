@@ -109,6 +109,8 @@ namespace Barotrauma
     {
         public delegate float? GetNodePenaltyHandler(PathNode node, PathNode prevNode);
         public GetNodePenaltyHandler GetNodePenalty;
+        public delegate float? GetSingleNodePenaltyHandler(PathNode node);
+        public GetSingleNodePenaltyHandler GetSingleNodePenalty;
 
         private readonly List<PathNode> nodes;
         private readonly bool isCharacter;
@@ -226,8 +228,8 @@ namespace Barotrauma
                 {
                     continue;
                 }
-                //optimization: node extremely close (< 1 m). If it's valid, choose it as the start node and skip the more exhaustive search for the closest one
-                if (node.TempDistance < 1.0f)
+                //optimization: node close enough. If it's valid, choose it as the start node and skip the more exhaustive search for the closest one
+                if (node.TempDistance < FarseerPhysics.ConvertUnits.ToSimUnits(AIObjectiveGetItem.DefaultReach))
                 {
                     if (IsValidStartNode(node))
                     {
@@ -282,8 +284,6 @@ namespace Barotrauma
                     }
                     //avoid stopping at a doorway
                     if (node.Waypoint.ConnectedDoor != null) { node.TempDistance *= 10.0f; }
-                    //avoid stopping at a ladder
-                    if (node.Waypoint.Ladders != null) { node.TempDistance *= 10.0f; }
                 }
                 //optimization: node extremely far (> 100m / 800 m) from the end position, don't try to use it as an end node
                 if (node.TempDistance > (InsideSubmarine ? 100.0f * 100.0f : 800.0f * 800.0f))
@@ -325,52 +325,32 @@ namespace Barotrauma
 #endif
                 return new SteeringPath(true);
             }
-            var path = FindPath(startNode, endNode, nodeFilter, errorMsgStr, minGapSize);
-            return path;
+            return FindPath(startNode, endNode, nodeFilter, errorMsgStr, minGapSize);
 
-            bool IsWaypointVisible(PathNode node, Vector2 rayStart, bool checkVisibility = true)
+            bool IsValidStartNode(PathNode node) => IsValidNode(node, (isCharacter, start), startNodeFilter);
+
+            bool IsValidEndNode(PathNode node) => IsValidNode(node, (isCharacter && checkVisibility, end), endNodeFilter);
+
+            bool IsValidNode(PathNode node, (bool check, Vector2 start) visibilityCheck, Func<PathNode, bool> extraFilter)
             {
-                //if searching for a path inside the sub, make sure the waypoint is visible
-                if (checkVisibility && isCharacter)
+                if (nodeFilter != null && !nodeFilter(node)) { return false; }
+                if (extraFilter != null && !extraFilter(node)) { return false; }
+                if (GetSingleNodePenalty != null && GetSingleNodePenalty(node) == null) { return false; }
+                if (node.Waypoint.ConnectedGap != null)
                 {
-                    var body = Submarine.PickBody(rayStart, node.TempPosition,
+                    if (!CanFitThroughGap(node.Waypoint.ConnectedGap, minGapSize)) { return false; }
+                }
+                if (visibilityCheck.check)
+                {
+                    var body = Submarine.PickBody(visibilityCheck.start, node.TempPosition,
                         collisionCategory: Physics.CollisionWall | Physics.CollisionLevel | Physics.CollisionStairs);
                     if (body != null)
                     {
                         if (body.UserData is Submarine) { return false; }
                         if (body.UserData is Structure s && !s.IsPlatform) { return false; }
+                        if (body.UserData is Voronoi2.VoronoiCell) { return false; }
                         if (body.UserData is Item && body.FixtureList[0].CollisionCategories.HasFlag(Physics.CollisionWall)) { return false; }
                     }
-                }
-                return true;
-            }
-
-            bool IsValidStartNode(PathNode node)
-            {
-                if (nodeFilter != null && !nodeFilter(node)) { return false; }
-                if (startNodeFilter != null && !startNodeFilter(node)) { return false; }
-                if (node.Waypoint.isObstructed) { return false; }
-                // Always check the visibility for the start node
-                if (!IsWaypointVisible(node, start)) { return false; }
-                if (node.IsBlocked()) { return false; }
-                if (node.Waypoint.ConnectedGap != null)
-                {
-                    if (!CanFitThroughGap(node.Waypoint.ConnectedGap, minGapSize)) { return false; }
-                }
-                return true;
-            }
-
-            bool IsValidEndNode(PathNode node)
-            {
-                if (nodeFilter != null && !nodeFilter(node)) { return false; }
-                if (endNodeFilter != null && !endNodeFilter(node)) { return false; }
-                if (node.Waypoint.isObstructed) { return false; }
-                // Only check the visibility for the end node when allowed (fix leaks)
-                if (!IsWaypointVisible(node, end, checkVisibility: checkVisibility)) { return false; }
-                if (node.IsBlocked()) { return false; }
-                if (node.Waypoint.ConnectedGap != null)
-                {
-                    if (!CanFitThroughGap(node.Waypoint.ConnectedGap, minGapSize)) { return false; }
                 }
                 return true;
             }
@@ -402,15 +382,13 @@ namespace Barotrauma
                 foreach (PathNode node in nodes)
                 {
                     if (node.state != 1 || node.F > dist) { continue; }
-                    if (isCharacter && node.Waypoint.isObstructed) { continue; }
                     if (filter != null && !filter(node)) { continue; }
-                    if (node.IsBlocked()) { continue; }
                     if (node.Waypoint.ConnectedGap != null)
                     {
                         if (!CanFitThroughGap(node.Waypoint.ConnectedGap, minGapSize)) { continue; }
-                    }              
+                    }
                     dist = node.F;
-                    currNode = node;                    
+                    currNode = node;
                 }
 
                 if (currNode == null || currNode == end) { break; }
@@ -516,6 +494,3 @@ namespace Barotrauma
         private bool CanFitThroughGap(Gap gap, float minWidth) => gap.IsHorizontal ? gap.RectHeight > minWidth : gap.RectWidth > minWidth;
     }
 }
-
-
-

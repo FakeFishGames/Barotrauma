@@ -129,20 +129,15 @@ namespace Barotrauma
 
             Vector2 position = cam.ScreenToWorld(PlayerInput.MousePosition);
 
-            foreach (MapEntity entity in mapEntityList)
+            foreach (MapEntity entity in HighlightedEntities)
             {
-                if (entity == this || !entity.IsHighlighted) { continue; }
+                if (entity == this) { continue; }
                 if (!entity.IsMouseOn(position)) { continue; }
                 if (entity.linkedTo == null || !entity.Linkable) { continue; }
                 if (entity.linkedTo.Contains(this) || linkedTo.Contains(entity) || rClick)
                 {
-                    if (entity == this || !entity.IsHighlighted) { continue; }
-                    if (!entity.IsMouseOn(position)) { continue; }
-                    if (entity.linkedTo.Contains(this))
-                    {
-                        entity.linkedTo.Remove(this);
-                        linkedTo.Remove(entity);
-                    }
+                    entity.linkedTo.Remove(this);
+                    linkedTo.Remove(entity);                    
                 }
                 else
                 {
@@ -293,11 +288,11 @@ namespace Barotrauma
             GUI.DrawRectangle(spriteBatch,
                 new Vector2(drawRect.X, -drawRect.Y),
                 new Vector2(rect.Width, rect.Height),
-                Color.Blue * alpha, false, (ID % 255) * 0.000001f, (int)Math.Max(1.5f / Screen.Selected.Cam.Zoom, 1.0f));
+                Color.Blue * alpha, false, (ID % 255) * 0.000001f, (int)Math.Max(MathF.Ceiling(1.5f / Screen.Selected.Cam.Zoom), 1.0f));
 
             GUI.DrawRectangle(spriteBatch,
                 new Rectangle(drawRect.X, -drawRect.Y, rect.Width, rect.Height),
-                GUIStyle.Red * ((100.0f - OxygenPercentage) / 400.0f) * alpha, true, 0, (int)Math.Max(1.5f / Screen.Selected.Cam.Zoom, 1.0f));
+                GUIStyle.Red * ((100.0f - OxygenPercentage) / 400.0f) * alpha, true, 0, (int)Math.Max(MathF.Ceiling(1.5f / Screen.Selected.Cam.Zoom), 1.0f));
 
             if (GameMain.DebugDraw)
             {
@@ -305,13 +300,27 @@ namespace Barotrauma
                     " - Oxygen: " + ((int)OxygenPercentage), new Vector2(drawRect.X + 5, -drawRect.Y + 5), Color.White);
                 GUIStyle.SmallFont.DrawString(spriteBatch, waterVolume + " / " + Volume, new Vector2(drawRect.X + 5, -drawRect.Y + 20), Color.White);
 
-                GUI.DrawRectangle(spriteBatch, new Rectangle(drawRect.Center.X, -drawRect.Y + drawRect.Height / 2, 10, (int)(100 * Math.Min(waterVolume / Volume, 1.0f))), Color.Cyan, true);
-                if (WaterVolume > Volume)
+                if (WaterVolume > 0)
                 {
-                    float maxExcessWater = Volume * MaxCompress;
-                    GUI.DrawRectangle(spriteBatch, new Rectangle(drawRect.Center.X, -drawRect.Y + drawRect.Height / 2, 10, (int)(100 * (waterVolume - Volume) / maxExcessWater)), GUIStyle.Red, true);
+                    drawProgressBar(50, new Point(0, 0), Math.Min(waterVolume / Volume, 1.0f), Color.Cyan);
+                    if (WaterVolume > Volume)
+                    {
+                        float maxExcessWater = Volume * MaxCompress;
+                        drawProgressBar(50, new Point(0, 0), (waterVolume - Volume) / maxExcessWater, GUIStyle.Red);
+                    }
                 }
-                GUI.DrawRectangle(spriteBatch, new Rectangle(drawRect.Center.X, -drawRect.Y + drawRect.Height / 2, 10, 100), Color.Black);
+                if (lethalPressure > 0)
+                {
+                    drawProgressBar(50, new Point(20, 0), lethalPressure / 100.0f, Color.Red);
+                }
+
+                void drawProgressBar(int height, Point offset, float fillAmount, Color color)
+                { 
+                    GUI.DrawRectangle(spriteBatch, new Rectangle(drawRect.Center.X - 2 + offset.X, -drawRect.Y - 2 + drawRect.Height / 2 + offset.Y, 14, height+4), Color.Black * 0.8f, depth: 0.01f, isFilled: true);
+               
+                    int barHeight = (int)(fillAmount * height);
+                    GUI.DrawRectangle(spriteBatch, new Rectangle(drawRect.Center.X + offset.X, -drawRect.Y + drawRect.Height / 2 + height - barHeight + offset.Y, 10, barHeight), color, isFilled: true);
+                }
 
                 foreach (FireSource fs in FireSources)
                 {
@@ -329,13 +338,13 @@ namespace Barotrauma
                 }
 
 
-                /*GUI.DrawLine(spriteBatch, new Vector2(drawRect.X, -WorldSurface), new Vector2(drawRect.Right, -WorldSurface), Color.Cyan * 0.5f);
+                GUI.DrawLine(spriteBatch, new Vector2(drawRect.X, -WorldSurface), new Vector2(drawRect.Right, -WorldSurface), Color.Cyan * 0.5f);
                 for (int i = 0; i < waveY.Length - 1; i++)
                 {
                     GUI.DrawLine(spriteBatch,
                         new Vector2(drawRect.X + WaveWidth * i, -WorldSurface - waveY[i] - 10),
                         new Vector2(drawRect.X + WaveWidth * (i + 1), -WorldSurface - waveY[i + 1] - 10), Color.Blue * 0.5f);
-                }*/
+                }
             }
 
             foreach (MapEntity e in linkedTo)
@@ -611,7 +620,7 @@ namespace Barotrauma
                 case DecalEventData decalEventData:
                     var decal = decalEventData.Decal;
                     int decalIndex = decals.IndexOf(decal);
-                    msg.Write((byte)(decalIndex < 0 ? 255 : decalIndex));
+                    msg.WriteByte((byte)(decalIndex < 0 ? 255 : decalIndex));
                     msg.WriteRangedSingle(decal.BaseAlpha, 0.0f, 1.0f, 8);
                     break;
                 default:

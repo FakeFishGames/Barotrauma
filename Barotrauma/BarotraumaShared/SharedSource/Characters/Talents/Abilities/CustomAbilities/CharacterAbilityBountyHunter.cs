@@ -1,11 +1,8 @@
-﻿using System.Collections.Generic;
-using System.Xml.Linq;
-
-namespace Barotrauma.Abilities
+﻿namespace Barotrauma.Abilities
 {
     class CharacterAbilityBountyHunter : CharacterAbility
     {
-        private float vitalityPercentage;
+        private readonly float vitalityPercentage;
 
         public CharacterAbilityBountyHunter(CharacterAbilityGroup characterAbilityGroup, ContentXElement abilityElement) : base(characterAbilityGroup, abilityElement)
         {

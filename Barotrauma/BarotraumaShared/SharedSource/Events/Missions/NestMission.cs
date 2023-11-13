@@ -4,7 +4,6 @@ using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Xml.Linq;
 using Voronoi2;
 
 namespace Barotrauma
@@ -30,18 +29,20 @@ namespace Barotrauma
 
         private Vector2 nestPosition;
 
+        private Level.Cave selectedCave;
 
-        public override IEnumerable<Vector2> SonarPositions
+
+        public override IEnumerable<(LocalizedString Label, Vector2 Position)> SonarLabels
         {
             get
             {
                 if (State > 0)
                 {
-                    Enumerable.Empty<Vector2>();
+                    yield break;
                 }
                 else
                 {
-                    yield return nestPosition;
+                    yield return (Prefab.SonarLabel, nestPosition);
                 }
             }
         }
@@ -125,11 +126,9 @@ namespace Barotrauma
                     }
                     if (closestCave != null)
                     {
-                        closestCave.DisplayOnSonar = true;
-                        SpawnNestObjects(level, closestCave);
-#if SERVER
                         selectedCave = closestCave;
-#endif
+                        selectedCave.MissionsToDisplayOnSonar.Add(this);
+                        SpawnNestObjects(level, closestCave);
                     }
                     var nearbyCells = Level.Loaded.GetCells(nestPosition, searchDepth: 3);
                     if (nearbyCells.Any())
@@ -172,8 +171,8 @@ namespace Barotrauma
 
                 foreach (var subElement in itemConfig.Elements())
                 {
-                    string itemIdentifier = subElement.GetAttributeString("identifier", "");
-                    if (!(MapEntityPrefab.Find(null, itemIdentifier) is ItemPrefab itemPrefab))
+                    var itemIdentifier = subElement.GetAttributeIdentifier("identifier", Identifier.Empty);
+                    if (MapEntityPrefab.FindByIdentifier(itemIdentifier) is not ItemPrefab itemPrefab)
                     {
                         DebugConsole.ThrowError("Couldn't spawn item for nest mission: item prefab \"" + itemIdentifier + "\" not found");
                         continue;
@@ -183,25 +182,34 @@ namespace Barotrauma
                     float rotation = 0.0f;
                     if (spawnEdges.Any())
                     {
-                        var edge = spawnEdges.GetRandom(Rand.RandSync.ServerAndClient);
-                        spawnPos = Vector2.Lerp(edge.Point1, edge.Point2, Rand.Range(0.1f, 0.9f, Rand.RandSync.ServerAndClient));
-                        Vector2 normal = Vector2.UnitY;
-                        if (edge.Cell1 != null && edge.Cell1.CellType == CellType.Solid)
+                        const float MinDistanceFromOtherItems = 30.0f;
+                        const int MaxTries = 10;
+                        for (int i = 0; i < MaxTries; i++)
                         {
-                            normal = edge.GetNormal(edge.Cell1);
+                            var edge = spawnEdges.GetRandom(Rand.RandSync.ServerAndClient);
+                            spawnPos = Vector2.Lerp(edge.Point1, edge.Point2, Rand.Range(0.1f, 0.9f, Rand.RandSync.ServerAndClient));
+                            Vector2 normal = Vector2.UnitY;
+                            if (edge.Cell1 != null && edge.Cell1.CellType == CellType.Solid)
+                            {
+                                normal = edge.GetNormal(edge.Cell1);
+                            }
+                            else if (edge.Cell2 != null && edge.Cell2.CellType == CellType.Solid)
+                            {
+                                normal = edge.GetNormal(edge.Cell2);
+                            }
+                            spawnPos += normal * 10.0f;
+                            rotation = MathUtils.VectorToAngle(normal) - MathHelper.PiOver2;
+
+                            if (items.All(it => Vector2.DistanceSquared(it.WorldPosition, spawnPos) > MinDistanceFromOtherItems)) { break; }
                         }
-                        else if (edge.Cell2 != null && edge.Cell2.CellType == CellType.Solid)
-                        {
-                            normal = edge.GetNormal(edge.Cell2);
-                        }
-                        spawnPos += normal * 10.0f;
-                        rotation = MathUtils.VectorToAngle(normal) - MathHelper.PiOver2;
                     }
 
                     var item = new Item(itemPrefab, spawnPos, null);
                     item.body.FarseerBody.BodyType = BodyType.Kinematic;
                     item.body.SetTransformIgnoreContacts(item.body.SimPosition, rotation);
                     item.FindHull();
+                    item.AddTag("nestmission");
+                    item.AddTag(Prefab.Identifier);
                     items.Add(item);
 
                     var statusEffectElement =
@@ -260,8 +268,24 @@ namespace Barotrauma
                                     int amount = Rand.Range(monster.Item2.X, monster.Item2.Y + 1);
                                     for (int i = 0; i < amount; i++)
                                     {
-                                        Character.Create(monster.Item1.Identifier, nestPosition + Rand.Vector(100.0f), ToolBox.RandomSeed(8), createNetworkEvent: true);
+                                        Vector2 offsetPosition;
+                                        int tries = 0;
+                                        do
+                                        {
+                                            offsetPosition = nestPosition + Rand.Vector(100.0f);
+                                            tries++;
+                                            if (tries > 10)
+                                            {
+                                                offsetPosition = nestPosition;
+                                                break;
+                                            }
+                                        } while (Level.Loaded.IsPositionInsideWall(offsetPosition));
+                                        Character.Create(monster.Item1.Identifier, offsetPosition, ToolBox.RandomSeed(8), createNetworkEvent: true);
                                     }
+                                }
+                                if (Level.Loaded.IsPositionInsideWall(nestPosition))
+                                {
+                                    DebugConsole.AddWarning($"Error in nest mission \"{Prefab.Identifier}\": nest position was inside a wall ({nestPosition}).");
                                 }
                                 monsterPrefabs.Clear();
                                 break;
@@ -270,11 +294,14 @@ namespace Barotrauma
                     }
 
                     //continue when all items are in the sub or destroyed
-                    if (AllItemsDestroyedOrRetrieved()) { State = 1; }                   
+                    if (AllItemsDestroyedOrRetrieved())
+                    {
+                        State = 1; 
+                    }                   
                    
                     break;
                 case 1:
-                    if (!Submarine.MainSub.AtEndExit && !Submarine.MainSub.AtStartExit) { return; }
+                    if (!Submarine.MainSub.AtEitherExit) { return; }
                     State = 2;
                     break;
             }
@@ -305,20 +332,13 @@ namespace Barotrauma
             return true;
         }
 
-        public override void End()
+        protected override bool DetermineCompleted()
         {
-            if (AllItemsDestroyedOrRetrieved())
-            {
-                GiveReward();
-                completed = true;
-                if (completed)
-                {
-                    if (Prefab.LocationTypeChangeOnCompleted != null)
-                    {
-                        ChangeLocationType(Prefab.LocationTypeChangeOnCompleted);
-                    }
-                }
-            }
+            return AllItemsDestroyedOrRetrieved();
+        }
+
+        protected override void EndMissionSpecific(bool completed)
+        {
             foreach (Item item in items)
             {
                 if (item != null && !item.Removed)

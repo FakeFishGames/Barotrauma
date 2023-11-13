@@ -54,10 +54,10 @@ namespace Barotrauma
                 return (loaded ? candidates.GetRandomUnsynced() : "", loaded);
             }
 
-            var (value, loaded) = tryLoad(language);
+            var (value, loaded) = tryLoad(Language);
             loadedSuccessfully = loaded ? LoadedSuccessfully.Yes : LoadedSuccessfully.No;
             cachedValue = value;
-            if (!loaded && language != TextManager.DefaultLanguage)
+            if (!loaded && Language != TextManager.DefaultLanguage)
             {
                 (value, _) = tryLoad(TextManager.DefaultLanguage);
                 cachedValue = value;

@@ -5,6 +5,7 @@ using Barotrauma.Steam;
 using FarseerPhysics;
 using Microsoft.Xna.Framework;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Globalization;
@@ -15,12 +16,12 @@ using Barotrauma.MapCreatures.Behavior;
 
 namespace Barotrauma
 {
-    struct ColoredText
+    readonly struct ColoredText
     {
-        public string Text;
-        public Color Color;
-		public bool IsCommand;
-        public bool IsError;
+        public readonly string Text;
+        public readonly Color Color;
+        public readonly bool IsCommand;
+        public readonly bool IsError;
 
         public readonly string Time;
 
@@ -31,7 +32,7 @@ namespace Barotrauma
 			this.IsCommand = isCommand;
             this.IsError = isError;
 
-            Time = DateTime.Now.ToString();
+            Time = DateTime.Now.ToString(CultureInfo.InvariantCulture);
         }
     }
 
@@ -71,7 +72,7 @@ namespace Barotrauma
 
                 bool allowCheats = false;
 #if CLIENT
-                allowCheats = GameMain.NetworkMember == null && (GameMain.GameSession?.GameMode is TestGameMode || Screen.Selected is EditorScreen);
+                allowCheats = GameMain.NetworkMember == null && (GameMain.GameSession?.GameMode is TestGameMode || Screen.Selected is { IsEditor: true });
 #endif
                 if (!allowCheats && !CheatsEnabled && IsCheat)
                 {
@@ -91,13 +92,57 @@ namespace Barotrauma
             }
         }
 
-        private static readonly Queue<ColoredText> queuedMessages = new Queue<ColoredText>();
+        private static readonly ConcurrentQueue<ColoredText> queuedMessages
+            = new ConcurrentQueue<ColoredText>();
 
+        public static readonly NamedEvent<ColoredText> MessageHandler = new NamedEvent<ColoredText>();
+
+        public struct ErrorCatcher : IDisposable
+        {
+            private readonly List<ColoredText> errors;
+            private readonly bool wasConsoleOpen;
+            private Identifier handlerId;
+            public IReadOnlyList<ColoredText> Errors => errors;
+
+            private ErrorCatcher(Identifier handlerId)
+            {
+                this.handlerId = handlerId;
+#if CLIENT
+                this.wasConsoleOpen = IsOpen;
+#else
+                this.wasConsoleOpen = false;
+#endif
+                this.errors = new List<ColoredText>();
+
+                //create a local variable that can be captured by lambdas
+                var errs = this.errors;
+                
+                MessageHandler.Register(handlerId, msg =>
+                {
+                    if (!msg.IsError) { return; }
+                    errs.Add(msg);
+                });
+            }
+            
+            public static ErrorCatcher Create()
+                => new ErrorCatcher(ToolBox.RandomSeed(25).ToIdentifier());
+
+            public void Dispose()
+            {
+                if (handlerId.IsEmpty) { return; }
+                MessageHandler.Deregister(handlerId);
+                handlerId = Identifier.Empty;
+#if CLIENT
+                DebugConsole.IsOpen = wasConsoleOpen;
+#endif
+            }
+        }
+        
         static partial void ShowHelpMessage(Command command);
         
         const int MaxMessages = 300;
 
-        public static List<ColoredText> Messages = new List<ColoredText>();
+        public static readonly List<ColoredText> Messages = new List<ColoredText>();
 
         public delegate void QuestionCallback(string answer);
         private static QuestionCallback activeQuestionCallback;
@@ -291,7 +336,14 @@ namespace Barotrauma
                 NewMessage("Enemy AI enabled", Color.Green);
             }, isCheat: true));
 
-            commands.Add(new Command("starttraitormissionimmediately", "starttraitormissionimmediately: Skip the initial delay of the traitor mission and start one immediately.", null));
+            commands.Add(new Command("triggertraitorevent|starttraitoreventimmediately", "triggertraitorevent [eventidentifier]: Skip the initial delay of the traitor events and start one immediately. You can optionally specify which event to start (otherwise a random event is chosen).", null, 
+                () =>
+            {
+                return new string[][]
+                {
+                    EventPrefab.Prefabs.Where(p => p is TraitorEventPrefab).Select(p => p.Identifier.ToString()).ToArray()
+                };
+            }));
 
             commands.Add(new Command("botcount", "botcount [x]: Set the number of bots in the crew in multiplayer.", null));
 
@@ -339,7 +391,7 @@ namespace Barotrauma
                     return new string[][]
                     {
                         GameMain.NetworkMember.ConnectedClients.Select(c => c.Name).ToArray(),
-                        PermissionPreset.List.Select(pp => pp.Name.Value).ToArray()
+                        PermissionPreset.List.Select(pp => pp.DisplayName.Value).ToArray()
                     };
                 }));
 
@@ -430,7 +482,7 @@ namespace Barotrauma
                 if (GameMain.NetworkMember == null || args.Length == 0) return;
 
                 int.TryParse(args[0], out int id);
-                var client = GameMain.NetworkMember.ConnectedClients.Find(c => c.ID == id);
+                var client = GameMain.NetworkMember.ConnectedClients.Find(c => c.SessionId == id);
                 if (client == null)
                 {
                     ThrowError("Client id \"" + id + "\" not found.");
@@ -466,7 +518,7 @@ namespace Barotrauma
                             banDuration = parsedBanDuration;
                         }
 
-                        GameMain.NetworkMember.BanPlayer(clientName, reason, false, banDuration);
+                        GameMain.NetworkMember.BanPlayer(clientName, reason, banDuration);
                     });
                 });
             },
@@ -485,7 +537,7 @@ namespace Barotrauma
                 if (GameMain.NetworkMember == null || args.Length == 0) return;
 
                 int.TryParse(args[0], out int id);
-                var client = GameMain.NetworkMember.ConnectedClients.Find(c => c.ID == id);
+                var client = GameMain.NetworkMember.ConnectedClients.Find(c => c.SessionId == id);
                 if (client == null)
                 {
                     ThrowError("Client id \"" + id + "\" not found.");
@@ -509,12 +561,12 @@ namespace Barotrauma
                             banDuration = parsedBanDuration;
                         }
 
-                        GameMain.NetworkMember.BanPlayer(client.Name, reason, false, banDuration);
+                        GameMain.NetworkMember.BanPlayer(client.Name, reason, banDuration);
                     });
                 });
             }));
             
-            commands.Add(new Command("banendpoint|banip", "banendpoint [endpoint]: Ban the IP address/SteamID from the server.", null));
+            commands.Add(new Command("banaddress|banip", "banaddress [endpoint]: Ban the IP address/SteamID from the server.", null));
             
             commands.Add(new Command("teleportcharacter|teleport", "teleport [character name]: Teleport the specified character to the position of the cursor. If the name parameter is omitted, the controlled character will be teleported.", null,
             () =>
@@ -599,7 +651,7 @@ namespace Barotrauma
             commands.Add(new Command("findentityids", "findentityids [entityname]", (string[] args) =>
             {
                 if (args.Length == 0) { return; }
-                foreach (MapEntity mapEntity in MapEntity.mapEntityList)
+                foreach (MapEntity mapEntity in MapEntity.MapEntityList)
                 {
                     if (mapEntity.Name.Equals(args[0], StringComparison.OrdinalIgnoreCase))
                     {
@@ -692,7 +744,7 @@ namespace Barotrauma
             commands.Add(new Command("revive", "revive [character name]: Bring the specified character back from the dead. If the name parameter is omitted, the controlled character will be revived.", (string[] args) =>
             {
                 Character revivedCharacter = (args.Length == 0) ? Character.Controlled : FindMatchingCharacter(args);
-                if (revivedCharacter == null) return;
+                if (revivedCharacter == null) { return; }
 
                 revivedCharacter.Revive();
 #if SERVER
@@ -700,7 +752,7 @@ namespace Barotrauma
                 {
                     foreach (Client c in GameMain.Server.ConnectedClients)
                     {
-                        if (c.Character != revivedCharacter) continue;
+                        if (c.Character != revivedCharacter) { continue; }
 
                         //clients stop controlling the character when it dies, force control back
                         GameMain.Server.SetClientCharacter(c, revivedCharacter);
@@ -770,8 +822,12 @@ namespace Barotrauma
                 if (GameMain.GameSession?.EventManager != null && args.Length > 0)
                 {
                     EventPrefab eventPrefab = eventPrefabs.Find(prefab => prefab.Identifier == args[0]);
-
-                    if (eventPrefab != null)
+                    if (eventPrefab is TraitorEventPrefab)
+                    {
+                        ThrowError($"{eventPrefab.Identifier} is a traitor event. You need to use the 'triggertraitorevent' command to start it.");
+                        return;
+                    }
+                    else if (eventPrefab != null)
                     {
                         var newEvent = eventPrefab.CreateInstance();
                         if (newEvent == null)
@@ -779,8 +835,7 @@ namespace Barotrauma
                             NewMessage($"Could not initialize event {args[0]} because level did not meet requirements");
                             return;
                         }
-                        GameMain.GameSession.EventManager.ActiveEvents.Add(newEvent);
-                        newEvent.Init();
+                        GameMain.GameSession.EventManager.ActivateEvent(newEvent);
                         NewMessage($"Initialized event {eventPrefab.Identifier}", Color.Aqua);
                         return;
                     }
@@ -798,7 +853,90 @@ namespace Barotrauma
                    eventPrefabs.Select(prefab => prefab.Identifier).Distinct().Select(id => id.Value).ToArray()
                 };
             }));
-            
+
+            commands.Add(new Command("debugevent", "debugevent [identifier]: outputs debug info about a specific event that's currently active. Mainly intended for debugging events in multiplayer: in single player, the same information is available by enabling debugdraw.", (string[] args) =>
+            {
+                if (GameMain.GameSession?.EventManager is EventManager eventManager && args.Length > 0)
+                {
+                    var ev = eventManager.ActiveEvents.FirstOrDefault(ev => ev.Prefab?.Identifier == args[0]);
+                    if (ev == null)
+                    {
+                        ThrowError($"Event \"{args[0]}\" not found.");
+                    }
+                    else
+                    {
+                        string info = ev.GetDebugInfo();
+#if SERVER
+                        //strip rich text tags
+                        RichTextData.GetRichTextData(info, out info);
+#endif
+                        NewMessage(info);
+                    }
+                }
+            }, isCheat: true, getValidArgs: () =>
+            {
+                return new[]
+                {
+                   GameMain.GameSession?.EventManager?.ActiveEvents.Select(ev => ev.Prefab.Identifier.ToString()).ToArray() ?? Array.Empty<string>()
+                };
+            }));
+
+            commands.Add(new Command("unlockmission", "unlockmission [identifier/tag]: Unlocks a mission in a random adjacent level.", (string[] args) =>
+            {
+                if (GameMain.GameSession?.GameMode is not CampaignMode campaign)
+                {
+                    ThrowError("The unlockmission command is only usable in the campaign mode.");
+                    return;
+                }
+                if (args.Length == 0)
+                {
+                    ThrowError("Please enter the identifier or a tag of the mission you want to unlock.");
+                    return;
+                }
+                var currentLocation = campaign.Map.CurrentLocation;
+                if (MissionPrefab.Prefabs.Any(p => p.Identifier == args[0]))
+                {
+                    currentLocation.UnlockMissionByIdentifier(args[0].ToIdentifier());
+                }
+                else
+                {
+                    currentLocation.UnlockMissionByTag(args[0].ToIdentifier());
+                }
+                if (campaign is MultiPlayerCampaign mpCampaign)
+                {
+                    mpCampaign.IncrementLastUpdateIdForFlag(MultiPlayerCampaign.NetFlags.MapAndMissions);
+                }
+            }, isCheat: true, getValidArgs: () =>
+            {
+                return new[]
+                {
+                   MissionPrefab.Prefabs.Select(p => p.Identifier.ToString()).ToArray()
+                };
+            }));
+
+            commands.Add(new Command("setcampaignmetadata", "setcampaignmetadata [identifier] [value]: Sets the specified campaign metadata value.", (string[] args) =>
+            {
+                if (!(GameMain.GameSession?.GameMode is CampaignMode campaign))
+                {
+                    ThrowError("The setcampaignmetadata command is only usable in the campaign mode.");
+                    return;
+                }
+                if (args.Length < 2)
+                {
+                    ThrowError("Please specify an identifier and a value.");
+                    return;
+                }
+                if (float.TryParse(args[1], out float floatVal))
+                {
+                    SetDataAction.PerformOperation(campaign.CampaignMetadata, args[0].ToIdentifier(), floatVal, SetDataAction.OperationType.Set);
+                }
+                else
+                {
+                    SetDataAction.PerformOperation(campaign.CampaignMetadata, args[0].ToIdentifier(), args[1], SetDataAction.OperationType.Set);
+                }
+
+            }, isCheat: true));
+
             commands.Add(new Command("setskill", "setskill [all/identifier] [max/level] [character]: Set your skill level.", (string[] args) =>
             {
                 if (args.Length < 2)
@@ -917,16 +1055,10 @@ namespace Barotrauma
 
                 foreach (var talentTree in talentTrees)
                 {
-                    foreach (var subTree in talentTree.TalentSubTrees)
+                    foreach (var talentId in talentTree.AllTalentIdentifiers)
                     {
-                        foreach (var option in subTree.TalentOptionStages)
-                        {
-                            foreach (var talent in option.Talents)
-                            {
-                                character.GiveTalent(talent);
-                                NewMessage($"Unlocked talent \"{talent.DisplayName}\".");
-                            }
-                        }
+                        character.GiveTalent(talentId);
+                        NewMessage($"Unlocked talent \"{talentId}\".");                        
                     }
                 }
             },
@@ -1004,11 +1136,6 @@ namespace Barotrauma
             commands.Add(new Command("teleportsub", "teleportsub [start/end/cursor]: Teleport the submarine to the position of the cursor, or the start or end of the level. WARNING: does not take outposts into account, so often leads to physics glitches. Only use for debugging.", (string[] args) =>
             {
                 if (Submarine.MainSub == null) { return; }
-                if (Level.Loaded?.Type == LevelData.LevelType.Outpost && GameMain.GameSession != null)
-                {
-                    NewMessage("The teleportsub command is unavailable in outpost levels!", Color.Red);
-                    return;
-                }
 
                 if (args.Length == 0 || args[0].Equals("cursor", StringComparison.OrdinalIgnoreCase))
                 {
@@ -1059,6 +1186,33 @@ namespace Barotrauma
             commands.Add(new Command("crash", "crash: Crashes the game.", (string[] args) =>
             {
                 throw new Exception("crash command issued");
+            }));
+
+            commands.Add(new Command("listeditableproperties", "", (string[] args) =>
+            {
+                StringBuilder sb = new StringBuilder();
+                string filename;
+#if CLIENT
+                filename = "ItemComponent properties (client).txt";
+                sb.AppendLine("Client-side ItemComponent properties:");
+#else
+                filename = "ItemComponent properties (server).txt";
+                sb.AppendLine("Server-side ItemComponent properties:");
+#endif
+                var itemComponents = typeof(ItemComponent).Assembly.GetTypes().Where(type => type.IsSubclassOf(typeof(ItemComponent)));
+                foreach (var ic in itemComponents.OrderBy(ic => ic.Name))
+                {
+                    sb.AppendLine(ic.Name+":");
+                    foreach (var prop in ic.GetProperties())
+                    {
+                        if (prop.DeclaringType != ic) { continue; }
+                        if (prop.GetCustomAttributes(inherit: false).OfType<Editable>().Any())
+                        {
+                            sb.AppendLine(prop.Name);
+                        }
+                    }
+                }
+                File.WriteAllText(filename, sb.ToString());
             }));
 
             commands.Add(new Command("fastforward", "fastforward [seconds]: Fast forwards the game by x seconds. Note that large numbers may cause a long freeze.", (string[] args) =>
@@ -1173,6 +1327,22 @@ namespace Barotrauma
             }
 #endif
 
+                commands.Add(new Command("showreputation", "showreputation: List the current reputation values.", (string[] args) =>
+            {
+                if (GameMain.GameSession?.GameMode is CampaignMode campaign)
+                {
+                    NewMessage("Reputation:");
+                    foreach (var faction in campaign.Factions)
+                    {
+                        NewMessage($" - {faction.Prefab.Name}: {faction.Reputation.Value}");
+                    }
+                }
+                else
+                {
+                    ThrowError("Could not show reputation (no active campaign).");
+                }
+            }, null));
+
             commands.Add(new Command("setlocationreputation", "setlocationreputation [value]: Set the reputation in the current location to the specified value.", (string[] args) =>
             {
                 if (GameMain.GameSession?.GameMode is CampaignMode campaign)
@@ -1180,7 +1350,7 @@ namespace Barotrauma
                     if (args.Length == 0) { return; }
                     if (float.TryParse(args[0], NumberStyles.Any, CultureInfo.InvariantCulture, out float reputation))
                     {
-                        campaign.Map.CurrentLocation.Reputation.SetReputation(reputation);
+                        campaign.Map.CurrentLocation.Reputation?.SetReputation(reputation);
                     }
                     else
                     {
@@ -1225,7 +1395,11 @@ namespace Barotrauma
                 }
             }, () =>
             {
-                return new[] { FactionPrefab.Prefabs.Select(f => f.Identifier.Value).ToArray() };
+                return new[]
+                {
+                    FactionPrefab.Prefabs.Select(static f => f.Identifier.Value).ToArray(),
+                    GameMain.GameSession?.Campaign?.Factions.Select(static f => f.Prefab.Identifier.ToString()).ToArray() ?? Array.Empty<string>()
+                };
             }, true));
 
             commands.Add(new Command("fixitems", "fixitems: Repairs all items and restores them to full condition.", (string[] args) =>
@@ -1256,102 +1430,7 @@ namespace Barotrauma
                     }
                 }
             }, null, true));
-            
-            commands.Add(new Command("upgradeitem", "upgradeitem [upgrade] [level] [items]: Adds an upgrade to the current targeted item.", args =>
-            {
-                if (args.Length > 0)
-                {
-                    int level;
-                    if (args.Length > 1)
-                    {
-                        if (int.TryParse(args[1], out int result))
-                        {
-                            level = result;
-                        }
-                        else
-                        {
-                            ThrowError($"\"{args[1]}\" is not a valid level.");
-                            return;
-                        }
-                        
-                    }
-                    else
-                    {
-                        ThrowError("Parameter \"level\" is required.");
-                        return;
-                    }
 
-                    var upgradePrefab = UpgradePrefab.Find(args[0].ToIdentifier());
-
-                    if (upgradePrefab == null)
-                    {
-                        ThrowError($"Unknown upgrade: {args[0]}.");
-                        return;
-                    }
-
-                    List<MapEntity> targetItems = new List<MapEntity>();
-
-                    if (upgradePrefab.IsWallUpgrade)
-                    {
-                        targetItems.AddRange(Submarine.MainSub.GetWalls(true).Cast<MapEntity>());
-                    }
-                    else
-                    {
-                        if (args.Length > 2)
-                        {
-                            targetItems.AddRange(Item.ItemList.Where(item => item.Submarine == Submarine.MainSub).Where(item => item.HasTag(args[2])).Cast<MapEntity>());
-                        }
-                        else
-                        {
-                            ThrowError("Argument \"tag\" is required.");
-                            return;
-                        }
-                    }
-
-                    if (!targetItems.Any())
-                    {
-                        ThrowError("No valid items found.");
-                        return;
-                    }
-
-                    foreach (MapEntity targetItem in targetItems)
-                    {
-                        Upgrade existingUpgrade = targetItem.GetUpgrade(args[0].ToIdentifier());
-
-                        if (!(targetItem is ISerializableEntity sEntity)) { continue; }
-
-                        var upgrade = new Upgrade(sEntity, upgradePrefab, level);
-                        if (targetItem.AddUpgrade(upgrade, true))
-                        {
-                            if (existingUpgrade == null)
-                            {
-                                NewMessage($"Added {upgradePrefab.Identifier}:{level} to {sEntity.Name}.", Color.Green);
-                                upgrade.ApplyUpgrade(); 
-                            }
-                            else
-                            {
-                                NewMessage($"Set {sEntity.Name}'s {upgradePrefab.Identifier} upgrade to level {existingUpgrade.Level}.", Color.Cyan);
-                                existingUpgrade.ApplyUpgrade(); 
-                            }
-                        }
-                        else
-                        {
-                            ThrowError($"{upgrade.Prefab.Identifier} cannot be applied to {sEntity.Name}");
-                        }
-                    }
-                }
-                else
-                {
-                    ThrowError("Parameter \"upgrade\" is required.");
-                }
-            }, () =>
-            {
-                return new[]
-                {
-                    UpgradePrefab.Prefabs.Select(c => c.Identifier).Distinct().Select(i => i.Value).ToArray()
-                };
-            }, true));
-            
             commands.Add(new Command("maxupgrades", "maxupgrades [category] [prefab]: Maxes out all upgrades or only specific one if given arguments.", args =>
             {
                 UpgradeManager upgradeManager = GameMain.GameSession?.Campaign?.UpgradeManager;
@@ -1383,7 +1462,7 @@ namespace Barotrauma
                         if (!prefab.UpgradeCategories.Contains(category)) { continue; }
                         if (!string.IsNullOrWhiteSpace(prefabIdentifier) && prefab.Identifier != prefabIdentifier) { continue; }
                         
-                        int targetLevel = prefab.MaxLevel - upgradeManager.GetRealUpgradeLevel(prefab, category);
+                        int targetLevel = prefab.GetMaxLevelForCurrentSub() - upgradeManager.GetRealUpgradeLevel(prefab, category);
                         for (int i = 0; i < targetLevel; i++)
                         {
                             upgradeManager.PurchaseUpgrade(prefab, category, force: true);
@@ -1428,7 +1507,7 @@ namespace Barotrauma
             commands.Add(new Command("kill", "kill [character]: Immediately kills the specified character.", (string[] args) =>
             {
                 Character killedCharacter = (args.Length == 0) ? Character.Controlled : FindMatchingCharacter(args);
-                killedCharacter?.SetAllDamage(200.0f, 0.0f, 0.0f);
+                killedCharacter?.Kill(CauseOfDeathType.Unknown, causeOfDeathAffliction: null);
             },
             () =>
             {
@@ -1625,7 +1704,7 @@ namespace Barotrauma
                     List<Pump> pumps = new List<Pump>();
                     foreach (Item item in Submarine.MainSub.GetItems(true))
                     {
-                        if (item.CurrentHull != null && item.HasTag("ballast") && item.GetComponent<Pump>() is { } pump)
+                        if (item.CurrentHull != null && item.HasTag(Tags.Ballast) && item.GetComponent<Pump>() is { } pump)
                         {
                             if (item.CurrentHull.BallastFlora != null) { continue; }
                             pumps.Add(pump);
@@ -1704,6 +1783,8 @@ namespace Barotrauma
             }, isCheat: false));
 
             commands.Add(new Command("listtasks", "listtasks: Lists all asynchronous tasks currently in the task pool.", (string[] args) => { TaskPool.ListTasks(); }));
+            
+            commands.Add(new Command("listcoroutines", "listcoroutines: Lists all coroutines currently running.", (string[] args) => { CoroutineManager.ListCoroutines(); }));
 
             commands.Add(new Command("calculatehashes", "calculatehashes [content package name]: Show the MD5 hashes of the files in the selected content package. If the name parameter is omitted, the first content package is selected.", (string[] args) =>
             {
@@ -1797,6 +1878,17 @@ namespace Barotrauma
                 NewMessage("Set minimum loading time to " + time + " seconds.", Color.White);
             }));
 
+
+            commands.Add(new Command("resetcharacternetstate", "resetcharacternetstate [character name]: A debug-only command that resets a character's network state, intended for diagnosing character syncing issues.", null,
+            () =>
+            {
+                if (GameMain.NetworkMember == null) { return null; }
+                return new string[][]
+                {
+                    Character.CharacterList.Select(c => c.Name).Distinct().OrderBy(n => n).ToArray()
+                };
+            }));
+
             commands.Add(new Command("storeinfo", "", (string[] args) =>
             {
                 if (GameMain.GameSession?.Map?.CurrentLocation is Location location)
@@ -1850,6 +1942,9 @@ namespace Barotrauma
             commands.Add(new Command("lighting|lights", "Toggle lighting on/off (client-only).", null, isCheat: true));
             commands.Add(new Command("ambientlight", "ambientlight [color]: Change the color of the ambient light in the level.", null, isCheat: true));
             commands.Add(new Command("debugdraw", "Toggle the debug drawing mode on/off (client-only).", null, isCheat: true));
+            commands.Add(new Command("debugwiring", "Toggle the wiring debug mode on/off (client-only).", null, isCheat: true));
+            commands.Add(new Command("debugdrawlocalization", "Toggle the localization debug drawing mode on/off (client-only). Colors all text that hasn't been fetched from a localization file magenta, making it easier to spot hard-coded or missing texts.", null, isCheat: false));
+            commands.Add(new Command("debugdrawlos", "Toggle the los debug drawing mode on/off (client-only).", null, isCheat: true));
             commands.Add(new Command("togglevoicechatfilters", "Toggle the radio/muffle filters in the voice chat (client-only).", null, isCheat: false));
             commands.Add(new Command("togglehud|hud", "Toggle the character HUD (inventories, icons, buttons, etc) on/off (client-only).", null));
             commands.Add(new Command("toggleupperhud", "Toggle the upper part of the ingame HUD (chatbox, crewmanager) on/off (client-only).", null));
@@ -1858,6 +1953,9 @@ namespace Barotrauma
             commands.Add(new Command("followsub", "Toggle whether the camera should follow the nearest submarine (client-only).", null));
             commands.Add(new Command("toggleaitargets|aitargets", "Toggle the visibility of AI targets (= targets that enemies can detect and attack/escape from) (client-only).", null, isCheat: true));
             commands.Add(new Command("debugai", "Toggle the ai debug mode on/off (works properly only in single player).", null, isCheat: true));
+            commands.Add(new Command("devmode", "Toggle the dev mode on/off (client-only).", null, isCheat: true));
+            commands.Add(new Command("showmonsters", "Permanently unlocks all the monsters in the character editor. Use \"hidemonsters\" to undo.", null, isCheat: true));
+            commands.Add(new Command("hidemonsters", "Permanently hides in the character editor all the monsters that haven't been encountered in the game. Use \"showmonsters\" to undo.", null, isCheat: true));
 
             InitProjectSpecific();
 
@@ -2190,8 +2288,8 @@ namespace Barotrauma
 
             string itemNameOrId = args[0].ToLowerInvariant();
             ItemPrefab itemPrefab =
-                (MapEntityPrefab.Find(itemNameOrId, identifier: null, showErrorMessages: false) ??
-                MapEntityPrefab.Find(null, identifier: itemNameOrId, showErrorMessages: false)) as ItemPrefab;
+                (MapEntityPrefab.FindByName(itemNameOrId) ??
+                MapEntityPrefab.FindByIdentifier(itemNameOrId.ToIdentifier())) as ItemPrefab;
             if (itemPrefab == null)
             {
                 errorMsg = "Item \"" + itemNameOrId + "\" not found!";
@@ -2234,7 +2332,7 @@ namespace Barotrauma
                         //Dont do a thing, random is basically Human points anyways - its in the help description.
                         break;
                     default:
-                        var matchingCharacter = FindMatchingCharacter(args.Skip(1).ToArray());
+                        var matchingCharacter = FindMatchingCharacter(args.Skip(1).Take(1).ToArray());
                         if (matchingCharacter != null){ spawnInventory = matchingCharacter.Inventory; }
                         break;
                 }
@@ -2286,7 +2384,20 @@ namespace Barotrauma
             }
         }
 
-        public static void ShowError(string msg, Color? color = null)
+        /// <summary>
+        /// Throws the error in debug builds. In non-debug builds, logs it instead.
+        /// Use for handling non-critical errors that shouldn't go unnoticed in debug builds (like warnings might), but which don't break the game and thus doesn't have to open the console.
+        /// </summary>
+        public static void AddSafeError(string error)
+        {
+#if DEBUG
+            DebugConsole.ThrowError(error);
+#else
+            DebugConsole.LogError(error);
+#endif
+        }
+
+        public static void LogError(string msg, Color? color = null)
         {
             color ??= Color.Red;
             NewMessage(msg, color.Value, isCommand: false, isError: true);
@@ -2314,7 +2425,7 @@ namespace Barotrauma
             {
                 NewMessage(msg, color.Value, isCommand: false, isError: false);
             }
-#if DEBUG
+#if DEBUG && CLIENT
             Console.WriteLine(msg);
 #endif
         }
@@ -2322,11 +2433,10 @@ namespace Barotrauma
         private static void NewMessage(string msg, Color color, bool isCommand, bool isError)
         {
             if (string.IsNullOrEmpty(msg)) { return; }
-            
-            lock (queuedMessages)
-            {
-                queuedMessages.Enqueue(new ColoredText(msg, color, isCommand, isError));
-            }
+
+            var newMsg = new ColoredText(msg, color, isCommand, isError);
+            queuedMessages.Enqueue(newMsg);
+            MessageHandler.Invoke(newMsg);
         }
 
         public static void ShowQuestionPrompt(string question, QuestionCallback onAnswered, string[] args = null, int argCount = -1)
@@ -2458,9 +2568,18 @@ namespace Barotrauma
             }
 #endif
 
-            ShowError(error);
+            LogError(error);
         }
-        
+
+        public static void ThrowErrorAndLogToGA(string gaIdentifier, string errorMsg)
+        {
+            ThrowError(errorMsg);
+            GameAnalyticsManager.AddErrorEventOnce(
+                gaIdentifier,
+                GameAnalyticsManager.ErrorSeverity.Error,
+                errorMsg);
+        }
+
         public static void AddWarning(string warning)
         {
             System.Diagnostics.Debug.WriteLine(warning);
@@ -2499,7 +2618,7 @@ namespace Barotrauma
 #endif
 
             fileName += DateTime.Now.ToShortDateString() + "_" + DateTime.Now.ToShortTimeString();
-            var invalidChars = Path.GetInvalidFileNameChars();
+            var invalidChars = Path.GetInvalidFileNameCharsCrossPlatform();
             foreach (char invalidChar in invalidChars)
             {
                 fileName = fileName.Replace(invalidChar.ToString(), "");
@@ -2532,9 +2651,12 @@ namespace Barotrauma
 #if CLIENT
             GameMain.DebugDraw = false;
             GameMain.LightManager.LightingEnabled = true;
+            Character.DebugDrawInteract = false;
 #endif
             Hull.EditWater = false;
             Hull.EditFire = false;
+            EnemyAIController.DisableEnemyAI = false;
+            HumanAIController.DisableCrewAI = false;
         }
     }
 }

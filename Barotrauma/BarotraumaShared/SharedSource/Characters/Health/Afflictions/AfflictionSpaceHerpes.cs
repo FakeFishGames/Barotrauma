@@ -1,11 +1,12 @@
 ﻿using Microsoft.Xna.Framework;
-using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 
 namespace Barotrauma
 {
+    /// <summary>
+    /// A special affliction type that periodically inverts the character's controls and stuns the character. 
+    /// The frequency and duration of the effects increases the higher the strength of the affliction is.
+    /// </summary>
     class AfflictionSpaceHerpes : Affliction
     {
         private float invertControlsCooldown = 60.0f;

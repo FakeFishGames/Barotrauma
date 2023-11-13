@@ -32,21 +32,21 @@ namespace Barotrauma
         {
             if (!(extraData is IEventData eventData)) { throw new Exception($"Malformed level event: expected {nameof(Level)}.{nameof(IEventData)}"); }
 
-            msg.Write((byte)eventData.EventType);
+            msg.WriteByte((byte)eventData.EventType);
             switch (eventData)
             {
                 case SingleLevelWallEventData { Wall: var destructibleWall }:
                     int index = ExtraWalls.IndexOf(destructibleWall);
-                    msg.Write((ushort)(index == -1 ? ushort.MaxValue : index));
+                    msg.WriteUInt16((ushort)(index == -1 ? ushort.MaxValue : index));
                     //write health using one byte
-                    msg.Write((byte)MathHelper.Clamp((int)(MathUtils.InverseLerp(0.0f, destructibleWall.MaxHealth, destructibleWall.Damage) * 255.0f), 0, 255));
+                    msg.WriteByte((byte)MathHelper.Clamp((int)(MathUtils.InverseLerp(0.0f, destructibleWall.MaxHealth, destructibleWall.Damage) * 255.0f), 0, 255));
                     break;
                 case GlobalLevelWallEventData _:
                     foreach (LevelWall levelWall in ExtraWalls)
                     {
                         if (levelWall.Body.BodyType == BodyType.Static) { continue; }
-                        msg.Write(levelWall.Body.Position.X);
-                        msg.Write(levelWall.Body.Position.Y);
+                        msg.WriteSingle(levelWall.Body.Position.X);
+                        msg.WriteSingle(levelWall.Body.Position.Y);
                         msg.WriteRangedSingle(levelWall.MoveState, 0.0f, MathHelper.TwoPi, 16);                    
                     }
                     break;

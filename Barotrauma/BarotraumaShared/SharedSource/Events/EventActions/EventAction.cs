@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using System.Xml.Linq;
 
 namespace Barotrauma
 {
@@ -40,7 +39,8 @@ namespace Barotrauma
                         DebugConsole.ThrowError($"Error in event prefab \"{scriptedEvent.Prefab.Identifier}\". Status effect configured as a sub action (text: \"{Text}\"). Please configure status effects as child elements of a StatusEffectAction.");
                         continue;
                     }
-                    Actions.Add(Instantiate(scriptedEvent, e));
+                    var action = Instantiate(scriptedEvent, e);
+                    if (action != null) { Actions.Add(action); }
                 }
             }
 
@@ -134,21 +134,30 @@ namespace Barotrauma
 
         public static EventAction Instantiate(ScriptedEvent scriptedEvent, ContentXElement element)
         {
-            Type actionType = null;
+            Type actionType;
             try
             {
-                actionType = Type.GetType("Barotrauma." + element.Name, true, true);
+                Identifier typeName = element.Name.ToString().ToIdentifier();
+                if (typeName == "TutorialSegmentAction")
+                {
+                    typeName = "EventObjectiveAction".ToIdentifier();
+                }
+                actionType = Type.GetType("Barotrauma." + typeName, throwOnError: true, ignoreCase: true);
                 if (actionType == null) { throw new NullReferenceException(); }
             }
             catch
             {
-                DebugConsole.ThrowError("Could not find an event class of the type \"" + element.Name + "\".");
+                DebugConsole.ThrowError($"Could not find an {nameof(EventAction)} class of the type \"{element.Name}\".");
                 return null;
             }
 
             ConstructorInfo constructor = actionType.GetConstructor(new[] { typeof(ScriptedEvent), typeof(ContentXElement) });
             try
             {
+                if (constructor == null)
+                {
+                    throw new Exception($"Error in scripted event \"{scriptedEvent.Prefab.Identifier}\" - could not find a constructor for the EventAction \"{actionType}\".");
+                }
                 return constructor.Invoke(new object[] { scriptedEvent, element }) as EventAction;
             }
             catch (Exception ex)

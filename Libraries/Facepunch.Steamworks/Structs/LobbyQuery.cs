@@ -197,6 +197,8 @@ namespace Steamworks.Data
 
 		void ApplyFilters()
 		{
+			if (SteamMatchmaking.Internal is null) { return; }
+			
 			if ( distance.HasValue )
 			{
 				SteamMatchmaking.Internal.AddRequestLobbyListDistanceFilter( distance.Value );
@@ -251,8 +253,10 @@ namespace Steamworks.Data
 		/// <summary>
 		/// Run the query, get the matching lobbies
 		/// </summary>
-		public async Task<Lobby[]> RequestAsync()
+		public async Task<Lobby[]?> RequestAsync()
 		{
+			if (SteamMatchmaking.Internal is null) { return null; }
+
 			await Task.Yield();
 			ApplyFilters();
 

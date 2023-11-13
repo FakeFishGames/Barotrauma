@@ -10,7 +10,27 @@ namespace Barotrauma.Items.Components
     {
         private float force;
 
+        /// <summary>
+        /// Latest signal the set_force connection received, used to set <see cref="targetForce"/> in the Update method.
+        /// We use a separate variable, because otherwise specific item update orders and sending multiple signals to set_force would lead to bugs:
+        /// targetForce could be set to 0, then a power grid might update as if the engine was off and mark the voltage of the grid as 1, 
+        /// then another item could set the targetForce to 100 and make it run without power.
+        /// </summary>
+        private float? lastReceivedTargetForce;
+
+        /// <summary>
+        /// The amount of force the engine is aiming for (the actual force may be less than this, 
+        /// depending on the amount of power, the condition of the engine or boosts from talents)
+        /// </summary>
         private float targetForce;
+
+        /// <summary>
+        /// Power demand of a marine engine is proportional with the cube of the square root of the thrusting force.
+        /// In practice meaning lower thrust is more effective at conserving power than it would be if the relationship between thrust and power consumption was linear.
+        /// Reverse exponent defined for use with overvoltage calculation: Supplying 2x power will result in 59% more force, 26% more speed, therefore 2x power.
+        /// </summary>
+        private const float ForceToPowerExponent = 3f / 2f;
+        private const float PowerToForceExponent = 1.0f / ForceToPowerExponent;
 
         private float maxForce;
         
@@ -30,11 +50,8 @@ namespace Barotrauma.Items.Components
         Serialize(500.0f, IsPropertySaveable.Yes, description: "The amount of force exerted on the submarine when the engine is operating at full power.")]
         public float MaxForce
         {
-            get { return maxForce; }
-            set
-            {
-                maxForce = Math.Max(0.0f, value);
-            }
+            get => maxForce;
+            set => maxForce = Math.Max(0.0f, value);
         }
 
         [Editable, Serialize("0.0,0.0", IsPropertySaveable.Yes, 
@@ -61,7 +78,7 @@ namespace Barotrauma.Items.Components
 
         public float CurrentVolume
         {
-            get { return Math.Abs((force / 100.0f) * (MinVoltage <= 0.0f ? 1.0f : Math.Min(prevVoltage / MinVoltage, 1.0f))); }
+            get { return Math.Abs((force / 100.0f) * (MinVoltage <= 0.0f ? 1.0f : Math.Min(prevVoltage, 1.0f))); }
         }
 
         public float CurrentBrokenVolume
@@ -94,7 +111,7 @@ namespace Barotrauma.Items.Components
         }
 
         partial void InitProjSpecific(ContentXElement element);
-    
+
         public override void Update(float deltaTime, Camera cam)
         {
             UpdateOnActiveEffects(deltaTime);
@@ -113,13 +130,16 @@ namespace Barotrauma.Items.Components
                 hasPower = Voltage > MinVoltage;
             }
 
-
+            if (lastReceivedTargetForce.HasValue)
+            {
+                targetForce = lastReceivedTargetForce.Value;
+            }
             Force = MathHelper.Lerp(force, (Voltage < MinVoltage) ? 0.0f : targetForce, deltaTime * 10.0f);
             if (Math.Abs(Force) > 1.0f)
             {
-                float voltageFactor = MinVoltage <= 0.0f ? 1.0f : Math.Min(Voltage, 1.0f);
-                float currForce = force * voltageFactor;
-                float condition = item.Condition / item.MaxCondition;
+                float voltageFactor = MinVoltage <= 0.0f ? 1.0f : Math.Min(Voltage, MaxOverVoltageFactor);
+                float currForce = force * MathF.Pow(voltageFactor, PowerToForceExponent);
+                float condition = item.MaxCondition <= 0.0f ? 0.0f : item.Condition / item.MaxCondition;
                 // Broken engine makes more noise.
                 float noise = Math.Abs(currForce) * MathHelper.Lerp(1.5f, 1f, condition);
                 UpdateAITargets(noise);
@@ -129,11 +149,13 @@ namespace Barotrauma.Items.Components
                 {
                     forceMultiplier *= MathHelper.Lerp(0.5f, 2.0f, (float)Math.Sqrt(User.GetSkillLevel("helm") / 100));
                 }
-                currForce *= maxForce * forceMultiplier;
-                if (item.GetComponent<Repairable>() is Repairable repairable && repairable.IsTinkering)
+                currForce *= item.StatManager.GetAdjustedValue(ItemTalentStats.EngineMaxSpeed, MaxForce) * forceMultiplier;
+                if (item.GetComponent<Repairable>() is { IsTinkering: true } repairable)
                 {
                     currForce *= 1f + repairable.TinkeringStrength * TinkeringForceIncrease;
                 }
+
+                currForce = item.StatManager.GetAdjustedValue(ItemTalentStats.EngineSpeed, currForce);
 
                 //less effective when in a bad condition
                 currForce *= MathHelper.Lerp(0.5f, 2.0f, condition);
@@ -166,7 +188,7 @@ namespace Barotrauma.Items.Components
                 return 0;
             }
 
-            currPowerConsumption = Math.Abs(targetForce) / 100.0f * powerConsumption;
+            currPowerConsumption = MathF.Pow(Math.Abs(targetForce) / 100.0f, ForceToPowerExponent) * powerConsumption;
             //engines consume more power when in a bad condition
             item.GetComponent<Repairable>()?.AdjustPowerConsumption(ref currPowerConsumption);
             return currPowerConsumption;
@@ -255,7 +277,7 @@ namespace Barotrauma.Items.Components
                 if (float.TryParse(signal.value, NumberStyles.Float, CultureInfo.InvariantCulture, out float tempForce))
                 {
                     controlLockTimer = 0.1f;
-                    targetForce = MathHelper.Clamp(tempForce, -100.0f, 100.0f);
+                    lastReceivedTargetForce = MathHelper.Clamp(tempForce, -100.0f, 100.0f);
                     User = signal.sender;
                 }
             }  

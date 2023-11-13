@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Barotrauma.Extensions;
 using Barotrauma.Items.Components;
+using FarseerPhysics;
 
 namespace Barotrauma
 {
@@ -11,8 +12,9 @@ namespace Barotrauma
     {
         public readonly Identifier SpeciesName;
         public readonly int MinAmount, MaxAmount;
-        private List<Character> monsters;
+        private readonly List<Character> monsters = new List<Character>();
 
+        public readonly float SpawnDistance;
         private readonly float scatter;
         private readonly float offset;
         private readonly float delayBetweenSpawns;
@@ -30,7 +32,7 @@ namespace Barotrauma
 
         public readonly int MaxAmountPerLevel = int.MaxValue;
 
-        public List<Character> Monsters => monsters;
+        public IReadOnlyList<Character> Monsters => monsters;
         public Vector2? SpawnPos => spawnPos;
         public bool SpawnPending => spawnPending;
 
@@ -56,7 +58,7 @@ namespace Barotrauma
         }
 
         public MonsterEvent(EventPrefab prefab)
-            : base (prefab)
+            : base(prefab)
         {
             string speciesFile = prefab.ConfigElement.GetAttributeString("characterfile", "");
             CharacterPrefab characterPrefab = CharacterPrefab.FindByFilePath(speciesFile);
@@ -94,7 +96,7 @@ namespace Barotrauma
             }
 
             spawnPointTag = prefab.ConfigElement.GetAttributeString("spawnpointtag", string.Empty);
-
+            SpawnDistance = prefab.ConfigElement.GetAttributeFloat("spawndistance", 0);
             offset = prefab.ConfigElement.GetAttributeFloat("offset", 0);
             scatter = Math.Clamp(prefab.ConfigElement.GetAttributeFloat("scatter", 500), 0, 3000);
             delayBetweenSpawns = prefab.ConfigElement.GetAttributeFloat("delaybetweenspawns", 0.1f);
@@ -115,7 +117,7 @@ namespace Barotrauma
             }
         }
 
-        private Submarine GetReferenceSub()
+        private static Submarine GetReferenceSub()
         {
             return EventManager.GetRefEntity() as Submarine ?? Submarine.MainSub;
         }
@@ -146,6 +148,41 @@ namespace Barotrauma
             {
                 DebugConsole.NewMessage("Initialized MonsterEvent (" + SpeciesName + ")", Color.White);
             }
+
+            monsters.Clear();
+
+            //+1 because Range returns an integer less than the max value
+            int amount = Rand.Range(MinAmount, MaxAmount + 1);
+            for (int i = 0; i < amount; i++)
+            {
+                string seed = Level.Loaded.Seed + i.ToString();
+                Character createdCharacter = Character.Create(SpeciesName, Vector2.Zero, seed, characterInfo: null, isRemotePlayer: false, hasAi: true, createNetworkEvent: true, throwErrorIfNotFound: false);
+                if (createdCharacter == null)
+                {
+                    DebugConsole.AddWarning($"Error in MonsterEvent: failed to spawn the character \"{SpeciesName}\". Content package: \"{prefab.ConfigElement?.ContentPackage?.Name ?? "unknown"}\".");
+                    disallowed = true;
+                    continue;
+                }
+                if (GameMain.GameSession.IsCurrentLocationRadiated())
+                {
+                    AfflictionPrefab radiationPrefab = AfflictionPrefab.RadiationSickness;
+                    Affliction affliction = new Affliction(radiationPrefab, radiationPrefab.MaxStrength);
+                    createdCharacter?.CharacterHealth.ApplyAffliction(null, affliction);
+                    // TODO test multiplayer
+                    createdCharacter?.Kill(CauseOfDeathType.Affliction, affliction, log: false);
+                }
+                createdCharacter.DisabledByEvent = true;
+                monsters.Add(createdCharacter);
+            }
+        }
+
+        public override string GetDebugInfo()
+        {
+            return 
+                $"Finished: {IsFinished.ColorizeObject()}\n" +
+                $"Amount: {MinAmount.ColorizeObject()} - {MaxAmount.ColorizeObject()}\n" +
+                $"Spawn pending: {SpawnPending.ColorizeObject()}\n" +
+                $"Spawn position: {SpawnPos.ColorizeObject()}";
         }
 
         private List<Level.InterestingPosition> GetAvailableSpawnPositions()
@@ -175,7 +212,7 @@ namespace Barotrauma
                 { 
                     continue; 
                 }
-                if (Level.Loaded.ExtraWalls.Any(w => w.IsPointInside(position.Position.ToVector2())))
+                if (Level.Loaded.IsPositionInsideWall(position.Position.ToVector2()))
                 {
                     removals.Add(position);
                 }
@@ -188,13 +225,14 @@ namespace Barotrauma
             return availablePositions;
         }
 
+        private Level.InterestingPosition chosenPosition;
         private void FindSpawnPosition(bool affectSubImmediately)
         {
             if (disallowed) { return; }
 
             spawnPos = Vector2.Zero;
             var availablePositions = GetAvailableSpawnPositions();
-            var chosenPosition = new Level.InterestingPosition(Point.Zero, Level.PositionType.MainPath, isValid: false);
+            chosenPosition = new Level.InterestingPosition(Point.Zero, Level.PositionType.MainPath, isValid: false);
             bool isRuinOrWreck = SpawnPosType.HasFlag(Level.PositionType.Ruin) || SpawnPosType.HasFlag(Level.PositionType.Wreck);
             if (affectSubImmediately && !isRuinOrWreck && !SpawnPosType.HasFlag(Level.PositionType.Abyss))
             {
@@ -218,7 +256,12 @@ namespace Barotrauma
                     float dist = Vector2.DistanceSquared(pos, refSub.WorldPosition);
                     foreach (Submarine sub in Submarine.Loaded)
                     {
-                        if (sub.Info.Type != SubmarineType.Player && sub != GameMain.NetworkMember?.RespawnManager?.RespawnShuttle) { continue; }
+                        if (sub.Info.Type != SubmarineType.Player &&
+                            sub.Info.Type != SubmarineType.EnemySubmarine &&
+                            sub != GameMain.NetworkMember?.RespawnManager?.RespawnShuttle) 
+                        { 
+                            continue; 
+                        }
                         
                         float minDistToSub = GetMinDistanceToSub(sub);
                         if (dist < minDistToSub * minDistToSub) { continue; }
@@ -423,51 +466,108 @@ namespace Barotrauma
                     {
                         if (submarine.Info.Type != SubmarineType.Player) { continue; }
                         float minDist = GetMinDistanceToSub(submarine);
-                        if (Vector2.DistanceSquared(submarine.WorldPosition, spawnPos.Value) < minDist * minDist) { return; }
+                        if (Vector2.DistanceSquared(submarine.WorldPosition, spawnPos.Value) < minDist * minDist)
+                        {
+                            // Too close to a player sub.
+                            return;
+                        }
                     }
                 }
-                float minDistance = Prefab.SpawnDistance;
-                if (minDistance <= 0)
+                float spawnDistance = SpawnDistance;
+                if (spawnDistance <= 0)
                 {
                     if (SpawnPosType.HasFlag(Level.PositionType.Cave))
                     {
-                        minDistance = 8000;
+                        spawnDistance = 8000;
                     }
                     else if (SpawnPosType.HasFlag(Level.PositionType.Ruin))
                     {
-                        minDistance = 5000;
+                        spawnDistance = 5000;
                     }
                     else if (SpawnPosType.HasFlag(Level.PositionType.Wreck) || SpawnPosType.HasFlag(Level.PositionType.BeaconStation))
                     {
-                        minDistance = 3000;
+                        spawnDistance = 3000;
                     }
                 }
-                if (minDistance > 0)
+                if (spawnDistance > 0)
                 {
                     bool someoneNearby = false;
                     foreach (Submarine submarine in Submarine.Loaded)
                     {
                         if (submarine.Info.Type != SubmarineType.Player) { continue; }
-                        if (Vector2.DistanceSquared(submarine.WorldPosition, spawnPos.Value) < MathUtils.Pow2(minDistance))
+                        float distanceSquared = Vector2.DistanceSquared(submarine.WorldPosition, spawnPos.Value);
+                        if (distanceSquared < MathUtils.Pow2(spawnDistance))
                         {
                             someoneNearby = true;
-                            break;
+                            if (chosenPosition.Submarine != null)
+                            {
+                                Vector2 from = Submarine.GetRelativeSimPositionFromWorldPosition(spawnPos.Value, chosenPosition.Submarine, chosenPosition.Submarine);
+                                Vector2 to = Submarine.GetRelativeSimPositionFromWorldPosition(submarine.WorldPosition, chosenPosition.Submarine, submarine);
+                                if (CheckLineOfSight(from, to, chosenPosition.Submarine))
+                                {
+                                    // Line of sight to a player sub -> don't spawn yet.
+                                    return;
+                                }
+                            }
+                            else
+                            {
+                                break;
+                            }
                         }
                     }
                     foreach (Character c in Character.CharacterList)
                     {
                         if (c == Character.Controlled || c.IsRemotePlayer)
                         {
-                            if (Vector2.DistanceSquared(c.WorldPosition, spawnPos.Value) < MathUtils.Pow2(minDistance))
+                            float distanceSquared = Vector2.DistanceSquared(c.WorldPosition, spawnPos.Value);
+                            if (distanceSquared < MathUtils.Pow2(spawnDistance))
                             {
                                 someoneNearby = true;
-                                break;
+                                if (chosenPosition.Submarine != null)
+                                {
+                                    Vector2 from = Submarine.GetRelativeSimPositionFromWorldPosition(spawnPos.Value, chosenPosition.Submarine, chosenPosition.Submarine);
+                                    Vector2 to = Submarine.GetRelativeSimPositionFromWorldPosition(c.WorldPosition, chosenPosition.Submarine, c.Submarine);
+                                    if (CheckLineOfSight(from, to, chosenPosition.Submarine))
+                                    {
+                                        // Line of sight to a player character -> don't spawn. Disable the event to prevent monsters "magically" spawning here.
+                                        Finish();
+                                        return;
+                                    }
+                                }
+                                else
+                                {
+                                    break;
+                                }
                             }
                         }
                     }
                     if (!someoneNearby) { return; }
+                    
+                    static bool CheckLineOfSight(Vector2 from, Vector2 to, Submarine targetSub)
+                    {
+                        var bodies = Submarine.PickBodies(from, to, ignoredBodies: null, Physics.CollisionWall);
+                        foreach (var b in bodies)
+                        {
+                            if (b.UserData is ISpatialEntity spatialEntity && spatialEntity.Submarine != targetSub)
+                            {
+                                // Different sub -> ignore
+                                continue;
+                            }
+                            if (b.UserData is Structure s && !s.IsPlatform && s.CastShadow)
+                            {
+                                return false;
+                            }
+                            if (b.UserData is Item item && item.GetComponent<Door>() is Door door)
+                            {
+                                if (!door.IsBroken && !door.IsOpen)
+                                {
+                                    return false;
+                                }
+                            }
+                        }
+                        return true;
+                    }
                 }
-
 
                 if (SpawnPosType.HasFlag(Level.PositionType.Abyss) || SpawnPosType.HasFlag(Level.PositionType.AbyssCave))
                 {
@@ -486,9 +586,6 @@ namespace Barotrauma
 
                 spawnPending = false;
 
-                //+1 because Range returns an integer less than the max value
-                int amount = Rand.Range(MinAmount, MaxAmount + 1);
-                monsters = new List<Character>();
                 float scatterAmount = scatter;
                 if (SpawnPosType.HasFlag(Level.PositionType.SidePath))
                 {
@@ -507,13 +604,15 @@ namespace Barotrauma
                     scatterAmount = 0;
                 }
 
-                for (int i = 0; i < amount; i++)
+                int i = 0;
+                foreach (Character monster in monsters)
                 {
-                    string seed = Level.Loaded.Seed + i.ToString();
                     CoroutineManager.Invoke(() =>
                     {
                         //round ended before the coroutine finished
                         if (GameMain.GameSession == null || Level.Loaded == null) { return; }
+
+                        if (monster.Removed) { return; }
 						
                         System.Diagnostics.Debug.Assert(GameMain.NetworkMember == null || GameMain.NetworkMember.IsServer, "Clients should not create monster events.");
 
@@ -532,45 +631,33 @@ namespace Barotrauma
                             }
                         }
 
-                        Character createdCharacter = Character.Create(SpeciesName, pos, seed, characterInfo: null, isRemotePlayer: false, hasAi: true, createNetworkEvent: true, throwErrorIfNotFound: false);
-                        if (createdCharacter == null)
-                        {
-                            disallowed = true;
-                            return;
-                        }
-                        
+                        monster.Enabled = true;
+                        monster.DisabledByEvent = false;
+                        monster.AnimController.SetPosition(FarseerPhysics.ConvertUnits.ToSimUnits(pos));
+
                         var eventManager = GameMain.GameSession.EventManager;
                         if (eventManager != null)
                         {
                             if (SpawnPosType.HasFlag(Level.PositionType.MainPath) || SpawnPosType.HasFlag(Level.PositionType.SidePath))
                             {
-                                eventManager.CumulativeMonsterStrengthMain += createdCharacter.Params.AI.CombatStrength;
+                                eventManager.CumulativeMonsterStrengthMain += monster.Params.AI.CombatStrength;
                                 eventManager.AddTimeStamp(this);
                             }
                             else if (SpawnPosType.HasFlag(Level.PositionType.Ruin))
                             {
-                                eventManager.CumulativeMonsterStrengthRuins += createdCharacter.Params.AI.CombatStrength;
+                                eventManager.CumulativeMonsterStrengthRuins += monster.Params.AI.CombatStrength;
                             }
                             else if (SpawnPosType.HasFlag(Level.PositionType.Wreck))
                             {
-                                eventManager.CumulativeMonsterStrengthWrecks += createdCharacter.Params.AI.CombatStrength;
+                                eventManager.CumulativeMonsterStrengthWrecks += monster.Params.AI.CombatStrength;
                             }
                             else if (SpawnPosType.HasFlag(Level.PositionType.Cave))
                             {
-                                eventManager.CumulativeMonsterStrengthCaves += createdCharacter.Params.AI.CombatStrength;
+                                eventManager.CumulativeMonsterStrengthCaves += monster.Params.AI.CombatStrength;
                             }
                         }
-                        if (GameMain.GameSession.IsCurrentLocationRadiated())
-                        {
-                            AfflictionPrefab radiationPrefab = AfflictionPrefab.RadiationSickness;
-                            Affliction affliction = new Affliction(radiationPrefab, radiationPrefab.MaxStrength);
-                            createdCharacter?.CharacterHealth.ApplyAffliction(null, affliction);
-                            // TODO test multiplayer
-                            createdCharacter?.Kill(CauseOfDeathType.Affliction, affliction, log: false);
-                        }
-                        monsters.Add(createdCharacter);
 
-                        if (monsters.Count == amount)
+                        if (monster == monsters.Last())
                         {
                             spawnReady = true;
                             //this will do nothing if the monsters have no swarm behavior defined, 
@@ -583,9 +670,10 @@ namespace Barotrauma
                         {
                             GameAnalyticsManager.AddDesignEvent(
                                 $"MonsterSpawn:{GameMain.GameSession.GameMode?.Preset?.Identifier.Value ?? "none"}:{Level.Loaded?.LevelData?.Biome?.Identifier.Value ?? "none"}:{SpawnPosType}:{SpeciesName}",
-                                value: Timing.TotalTime - GameMain.GameSession.RoundStartTime);
+                                value: GameMain.GameSession.RoundDuration);
                         }
                     }, delayBetweenSpawns * i);
+                    i++;
                 }
             }
 

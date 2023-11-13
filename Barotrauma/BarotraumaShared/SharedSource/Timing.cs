@@ -7,7 +7,14 @@ namespace Barotrauma
     {
         private static double alpha;
 
+        /// <summary>
+        /// Total amount of the time the game has run.
+        /// </summary>
         public static double TotalTime;
+        /// <summary>
+        /// Total amount of time the game has run, excluding when the game is paused.
+        /// </summary>
+        public static double TotalTimeUnpaused;
 
         public static double Accumulator;
         public const int FixedUpdateRate = 60;
@@ -37,8 +44,9 @@ namespace Barotrauma
 
         public static float InterpolateRotation(float previous, float current)
         {
+            //use a somewhat high epsilon - very small differences aren't visible
+            if (MathUtils.NearlyEqual(previous, current, epsilon: 0.02f)) { return current; }
             float angleDiff = MathUtils.GetShortestAngle(previous, current);
-
             return previous + angleDiff * (float)alpha;
         }
 

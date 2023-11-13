@@ -37,7 +37,7 @@ namespace Barotrauma.Steam
                 });
         }
 
-        internal static void SubscribeToServerMods(IEnumerable<UInt64> missingIds, string rejoinEndpoint, ulong rejoinLobby, string rejoinServerName)
+        internal static void SubscribeToServerMods(IEnumerable<UInt64> missingIds, ConnectCommand rejoinCommand)
         {
             CloseAllMessageBoxes();
             GUIMessageBox msgBox = new GUIMessageBox(headerText: "", text: TextManager.Get("PreparingWorkshopDownloads"),
@@ -59,20 +59,21 @@ namespace Barotrauma.Steam
                     InitiateDownloads(items, onComplete: () =>
                     {
                         ContentPackageManager.UpdateContentPackageList();
-                        GameMain.Instance.ConnectEndpoint = rejoinEndpoint;
-                        GameMain.Instance.ConnectLobby = rejoinLobby;
-                        GameMain.Instance.ConnectName = rejoinServerName;
+                        GameMain.Instance.ConnectCommand = Option<ConnectCommand>.Some(rejoinCommand);
                     });
                 });
         }
 
-        private static async Task<IReadOnlyList<Steamworks.Ugc.Item>> GetItemsThatNeedUpdating()
+        public static async Task<IReadOnlyList<Steamworks.Ugc.Item>> GetItemsThatNeedUpdating()
         {
             var determiningTasks = ContentPackageManager.WorkshopPackages.Select(async p => (p, await p.IsUpToDate()));
             (ContentPackage Package, bool IsUpToDate)[] outOfDatePackages = await Task.WhenAll(determiningTasks);
 
             return (await Task.WhenAll(outOfDatePackages.Where(p => !p.IsUpToDate)
-                    .Select(async p => await SteamManager.Workshop.GetItem(p.Package.SteamWorkshopId))))
+                    .Select(p => p.Package.UgcId)
+                    .NotNone()
+                    .OfType<SteamWorkshopId>()
+                    .Select(async id => await SteamManager.Workshop.GetItem(id.Value))))
                 .Where(p => p.HasValue).Select(p => p ?? default).ToArray();
         }
 
@@ -93,7 +94,7 @@ namespace Barotrauma.Steam
                     CanBeFocused = false
                 };
                 var itemTitle = new GUITextBlock(new RectTransform(Vector2.One, itemFrame.RectTransform),
-                    text: item.Title);
+                    text: item.Title ?? "");
                 var itemDownloadProgress
                     = new GUIProgressBar(new RectTransform((0.5f, 0.75f),
                             itemFrame.RectTransform, Anchor.CenterRight), 0.0f)
@@ -125,6 +126,7 @@ namespace Barotrauma.Steam
                 {
                     mutableWorkshopMenu.PopulateInstalledModLists(forceRefreshEnabled: true);
                 }
+                GameMain.MainMenuScreen.ResetModUpdateButton();
             });
         }
 

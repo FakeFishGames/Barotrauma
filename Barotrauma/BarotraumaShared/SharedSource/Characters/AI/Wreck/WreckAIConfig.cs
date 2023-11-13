@@ -27,7 +27,7 @@ namespace Barotrauma
         public string Brain { get; private set; }
 
         [Serialize("", IsPropertySaveable.No)]
-        public string Spawner { get; private set; }
+        public Identifier Spawner { get; private set; }
 
         [Serialize("", IsPropertySaveable.No)]
         public string BrainRoomBackground { get; private set; }

@@ -22,7 +22,7 @@ namespace Barotrauma
 
         public float CurrentRotation;
 
-        private List<SpriteDeformation> spriteDeformations = new List<SpriteDeformation>();
+        private readonly List<SpriteDeformation> spriteDeformations = new List<SpriteDeformation>();
 
         public Vector2 CurrentScale
         {
@@ -85,6 +85,8 @@ namespace Barotrauma
             get;
             private set;
         }
+
+        public bool CanBeVisible { get; private set; }
 
         partial void InitProjSpecific()
         {
@@ -156,6 +158,11 @@ namespace Barotrauma
             {
                 SonarRadius = Triggers.Select(t => t.ColliderRadius * 1.5f).Max();
             }
+
+            CanBeVisible =
+                Sprite != null ||
+                Prefab.DeformableSprite != null ||
+                Prefab.OverrideProperties.Any(p => p != null && (p.Sprites.Any() || p.DeformableSprite != null));
         }
 
         public void Update(float deltaTime)
@@ -226,7 +233,7 @@ namespace Barotrauma
                     {
                         if (SoundChannels[i] == null || !SoundChannels[i].IsPlaying)
                         {
-                            SoundChannels[i] = roundSound.Sound.Play(roundSound.Volume, roundSound.Range, soundPos);
+                            SoundChannels[i] = roundSound.Sound.Play(roundSound.Volume, roundSound.Range, roundSound.GetRandomFrequencyMultiplier(), soundPos);
                         }
                         SoundChannels[i].Position = new Vector3(soundPos.X, soundPos.Y, 0.0f);
                     }

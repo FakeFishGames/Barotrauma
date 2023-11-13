@@ -102,6 +102,8 @@ namespace Barotrauma
 
         private bool inDetectable;
 
+        public double InDetectableSetTime;
+
         /// <summary>
         /// Should be reset to false each frame and kept indetectable by e.g. a status effect.
         /// </summary>
@@ -115,7 +117,8 @@ namespace Barotrauma
             { 
                 inDetectable = value;
                 if (inDetectable) 
-                { 
+                {
+                    InDetectableSetTime = Timing.TotalTime;
                     NeedsUpdate = true; 
                 }
             }
@@ -257,9 +260,14 @@ namespace Barotrauma
             SightRange -= speed * deltaTime * (MaxSightRange / FadeOutTime);
         }
 
+        public bool HasSector()
+        {
+            return sectorRad < MathHelper.TwoPi;
+        }
+
         public bool IsWithinSector(Vector2 worldPosition)
         {
-            if (sectorRad >= MathHelper.TwoPi) { return true; }
+            if (!HasSector()) { return true; }
             Vector2 diff = worldPosition - WorldPosition;
             return Math.Abs(MathUtils.GetShortestAngle(MathUtils.VectorToAngle(diff), MathUtils.VectorToAngle(sectorDir))) <= sectorRad * 0.5f;
         }

@@ -1,14 +1,12 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Xml.Linq;
-
 namespace Barotrauma
 {
     class GodModeAction : EventAction
     {
         [Serialize(true, IsPropertySaveable.Yes)]
         public bool Enabled { get; set; }
+
+        [Serialize(false, IsPropertySaveable.Yes, description: "Should the character's active afflictions be updated (e.g. applying visual effects of the afflictions)")]
+        public bool UpdateAfflictions { get; set; }
 
         [Serialize("", IsPropertySaveable.Yes)]
         public Identifier TargetTag { get; set; }
@@ -35,9 +33,16 @@ namespace Barotrauma
             {
                 if (target != null && target is Character character)
                 {
-                    character.GodMode = Enabled;
+                    if (UpdateAfflictions)
+                    {
+                        character.CharacterHealth.Unkillable = Enabled;
+                    }
+                    else
+                    {
+                        character.GodMode = Enabled;
+                    }
                 }
-            }            
+            }
             isFinished = true;
         }
 

@@ -1,4 +1,5 @@
-﻿using Barotrauma.Items.Components;
+﻿using Barotrauma.Extensions;
+using Barotrauma.Items.Components;
 using Barotrauma.Networking;
 using FarseerPhysics;
 using Microsoft.Xna.Framework;
@@ -35,6 +36,13 @@ namespace Barotrauma
             Rectangle camView = cam.WorldView;
             camView = new Rectangle(camView.X - CullMargin, camView.Y + CullMargin, camView.Width + CullMargin * 2, camView.Height + CullMargin * 2);
 
+            if (Level.Loaded?.Renderer?.CollapseEffectStrength is > 0.0f)
+            {
+                //force everything to be visible when the collapse effect (which moves everything to a single point) is active
+                camView = Rectangle.Union(AbsRect(camView.Location.ToVector2(), camView.Size.ToVector2()), new Rectangle(Point.Zero, Level.Loaded.Size));
+                camView.Y += camView.Height;
+            }
+
             if (Math.Abs(camView.X - prevCullArea.X) < CullMoveThreshold &&
                 Math.Abs(camView.Y - prevCullArea.Y) < CullMoveThreshold &&
                 Math.Abs(camView.Right - prevCullArea.Right) < CullMoveThreshold &&
@@ -63,15 +71,16 @@ namespace Barotrauma
 
             if (visibleEntities == null)
             {
-                visibleEntities = new List<MapEntity>(MapEntity.mapEntityList.Count);
+                visibleEntities = new List<MapEntity>(MapEntity.MapEntityList.Count);
             }
             else
             {
                 visibleEntities.Clear();
             }
 
-            foreach (MapEntity entity in MapEntity.mapEntityList)
+            foreach (MapEntity entity in MapEntity.MapEntityList)
             {
+                if (entity == null || entity.Removed) { continue; }
                 if (entity.Submarine != null)
                 {
                     if (!visibleSubs.Contains(entity.Submarine)) { continue; }
@@ -95,7 +104,7 @@ namespace Barotrauma
 
         public static void Draw(SpriteBatch spriteBatch, bool editing = false)
         {
-            var entitiesToRender = !editing && visibleEntities != null ? visibleEntities : MapEntity.mapEntityList;
+            var entitiesToRender = !editing && visibleEntities != null ? visibleEntities : MapEntity.MapEntityList;
 
             foreach (MapEntity e in entitiesToRender)
             {
@@ -105,15 +114,15 @@ namespace Barotrauma
 
         public static void DrawFront(SpriteBatch spriteBatch, bool editing = false, Predicate<MapEntity> predicate = null)
         {
-            var entitiesToRender = !editing && visibleEntities != null ? visibleEntities : MapEntity.mapEntityList;
+            var entitiesToRender = !editing && visibleEntities != null ? visibleEntities : MapEntity.MapEntityList;
 
             foreach (MapEntity e in entitiesToRender)
             {
-                if (!e.DrawOverWater) continue;
+                if (!e.DrawOverWater) { continue; }
 
                 if (predicate != null)
                 {
-                    if (!predicate(e)) continue;
+                    if (!predicate(e)) { continue; }
                 }
 
                 e.Draw(spriteBatch, editing, false);
@@ -154,7 +163,7 @@ namespace Barotrauma
         private static readonly List<Structure> depthSortedDamageable = new List<Structure>();
         public static void DrawDamageable(SpriteBatch spriteBatch, Effect damageEffect, bool editing = false, Predicate<MapEntity> predicate = null)
         {
-            var entitiesToRender = !editing && visibleEntities != null ? visibleEntities : MapEntity.mapEntityList;
+            var entitiesToRender = !editing && visibleEntities != null ? visibleEntities : MapEntity.MapEntityList;
 
             depthSortedDamageable.Clear();
 
@@ -193,7 +202,7 @@ namespace Barotrauma
 
         public static void DrawPaintedColors(SpriteBatch spriteBatch, bool editing = false, Predicate<MapEntity> predicate = null)
         {
-            var entitiesToRender = !editing && visibleEntities != null ? visibleEntities : MapEntity.mapEntityList;
+            var entitiesToRender = !editing && visibleEntities != null ? visibleEntities : MapEntity.MapEntityList;
 
             foreach (MapEntity e in entitiesToRender)
             {
@@ -213,7 +222,7 @@ namespace Barotrauma
 
         public static void DrawBack(SpriteBatch spriteBatch, bool editing = false, Predicate<MapEntity> predicate = null)
         {
-            var entitiesToRender = !editing && visibleEntities != null ? visibleEntities : MapEntity.mapEntityList;
+            var entitiesToRender = !editing && visibleEntities != null ? visibleEntities : MapEntity.MapEntityList;
 
             foreach (MapEntity e in entitiesToRender)
             {
@@ -494,7 +503,7 @@ namespace Barotrauma
             {
                 foreach (Item item in Item.ItemList)
                 {
-                    if (item.GetComponent<Items.Components.Vent>() == null) { continue; }
+                    if (item.GetComponent<Vent>() == null) { continue; }
                     if (!item.linkedTo.Any())
                     {
                         if (!IsWarningSuppressed(SubEditorScreen.WarningType.DisconnectedVents))
@@ -522,12 +531,20 @@ namespace Barotrauma
                         warnings.Add(SubEditorScreen.WarningType.NoCargoSpawnpoints);
                     }
                 }
-                if (!Item.ItemList.Any(it => it.GetComponent<Items.Components.Pump>() != null && it.HasTag("ballast")))
+                if (Item.ItemList.None(it => it.GetComponent<Pump>() != null && it.HasTag(Tags.Ballast)))
                 {
                     if (!IsWarningSuppressed(SubEditorScreen.WarningType.NoBallastTag))
                     {
                         errorMsgs.Add(TextManager.Get("NoBallastTagsWarning").Value);
                         warnings.Add(SubEditorScreen.WarningType.NoBallastTag);
+                    }
+                }
+                if (Item.ItemList.None(it => it.HasTag(Tags.HiddenItemContainer)))
+                {
+                    if (!IsWarningSuppressed(SubEditorScreen.WarningType.NoHiddenContainers))
+                    {
+                        errorMsgs.Add(TextManager.Get("NoHiddenContainersWarning").Value);
+                        warnings.Add(SubEditorScreen.WarningType.NoHiddenContainers);
                     }
                 }
             }
@@ -574,7 +591,7 @@ namespace Barotrauma
                 }
             }
 
-            if ((MapEntity.mapEntityList.Count - Item.ItemList.Count - Hull.HullList.Count - WayPoint.WayPointList.Count - Gap.GapList.Count) > SubEditorScreen.MaxStructures * entityCountWarningThreshold)
+            if ((MapEntity.MapEntityList.Count - Item.ItemList.Count - Hull.HullList.Count - WayPoint.WayPointList.Count - Gap.GapList.Count) > SubEditorScreen.MaxStructures * entityCountWarningThreshold)
             {
                 if (!IsWarningSuppressed(SubEditorScreen.WarningType.StructureCount))
                 {
@@ -634,7 +651,7 @@ namespace Barotrauma
                 }
             }
 
-            foreach (MapEntity e in MapEntity.mapEntityList)
+            foreach (MapEntity e in MapEntity.MapEntityList)
             {
                 if (Vector2.Distance(e.Position, HiddenSubPosition) > 20000)
                 {
@@ -646,7 +663,7 @@ namespace Barotrauma
                 }
             }
 
-            foreach (MapEntity e in MapEntity.mapEntityList)
+            foreach (MapEntity e in MapEntity.MapEntityList)
             {
                 if (Vector2.Distance(e.Position, HiddenSubPosition) > 20000)
                 {
@@ -696,12 +713,12 @@ namespace Barotrauma
             return GameMain.LightManager.Lights.Count(l => l.CastShadows && !l.IsBackground) - disabledItemLightCount;
         }
 
-        public static Vector2 MouseToWorldGrid(Camera cam, Submarine sub)
+        public static Vector2 MouseToWorldGrid(Camera cam, Submarine sub, bool round = false)
         {
             Vector2 position = PlayerInput.MousePosition;
             position = cam.ScreenToWorld(position);
 
-            Vector2 worldGridPos = VectorToWorldGrid(position);
+            Vector2 worldGridPos = VectorToWorldGrid(position, round);
 
             if (sub != null)
             {

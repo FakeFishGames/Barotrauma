@@ -7,7 +7,7 @@ namespace Steamworks.Data
 		public Friend User;
 		public int GlobalRank;
 		public int Score;
-		public int[] Details;
+		public int[]? Details;
 		// UGCHandle_t m_hUGC
 
 		internal static LeaderboardEntry From( LeaderboardEntry_t e, int[] detailsBuffer )

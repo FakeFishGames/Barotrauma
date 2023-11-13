@@ -3,6 +3,10 @@ using System;
 
 namespace Barotrauma
 {
+    /// <summary>
+    /// A special affliction type that increases the duration of buffs (afflictions of the type "buff"). The increase is defined using the 
+    /// <see cref="AfflictionPrefab.Effect.MinBuffMultiplier"/> and <see cref="AfflictionPrefab.Effect.MaxBuffMultiplier"/> attributes of the affliction effect.
+    /// </summary>
     class BuffDurationIncrease : Affliction
     {
         public BuffDurationIncrease(AfflictionPrefab prefab, float strength) : base(prefab, strength)
@@ -20,9 +24,9 @@ namespace Barotrauma
             {
                 foreach (Affliction affliction in afflictions)
                 {
-                    if (!affliction.Prefab.IsBuff || affliction == this || affliction.MultiplierSource != this) { continue; }
-                    affliction.MultiplierSource = null;
-                    affliction.StrengthDiminishMultiplier = 1f;
+                    if (!affliction.Prefab.IsBuff || affliction == this || affliction.StrengthDiminishMultiplier.Source != this) { continue; }
+                    affliction.StrengthDiminishMultiplier.Source = null;
+                    affliction.StrengthDiminishMultiplier.Value = 1f;
                 }
             }
             else
@@ -31,10 +35,10 @@ namespace Barotrauma
                 {
                     if (!affliction.Prefab.IsBuff || affliction == this) { continue; }
                     float multiplier = GetDiminishMultiplier();
-                    if (affliction.StrengthDiminishMultiplier < multiplier && affliction.MultiplierSource != this) { continue; }
+                    if (affliction.StrengthDiminishMultiplier.Value < multiplier && affliction.StrengthDiminishMultiplier.Source != this) { continue; }
 
-                    affliction.MultiplierSource = this;
-                    affliction.StrengthDiminishMultiplier = multiplier;
+                    affliction.StrengthDiminishMultiplier.Source = this;
+                    affliction.StrengthDiminishMultiplier.Value = multiplier;
                 }
             }
         }
@@ -48,7 +52,7 @@ namespace Barotrauma
             float multiplier = MathHelper.Lerp(
                 currentEffect.MinBuffMultiplier,
                 currentEffect.MaxBuffMultiplier,
-                (Strength - currentEffect.MinStrength) / (currentEffect.MaxStrength - currentEffect.MinStrength));
+                currentEffect.GetStrengthFactor(this));
             return 1.0f / Math.Max(multiplier, 0.001f);
         }
     }

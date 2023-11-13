@@ -16,8 +16,8 @@ namespace Barotrauma
             GameMain.LightManager.LosEnabled = true;
             Hull.EditFire = false;
             Hull.EditWater = false;
-#endif
             HumanAIController.DisableCrewAI = false;
+#endif
         }
 
         protected virtual void DeselectEditorSpecific() { }

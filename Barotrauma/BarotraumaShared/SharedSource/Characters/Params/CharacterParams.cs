@@ -21,7 +21,7 @@ namespace Barotrauma
         public Identifier SpeciesName { get; private set; }
 
         [Serialize("", IsPropertySaveable.Yes, description: "If the creature is a variant that needs to use a pre-existing translation."), Editable]
-        public string SpeciesTranslationOverride { get; private set; }
+        public Identifier SpeciesTranslationOverride { get; private set; }
 
         [Serialize("", IsPropertySaveable.Yes, description: "If the display name is not defined, the game first tries to find the translated name. If that is not found, the species name will be used."), Editable]
         public string DisplayName { get; private set; }
@@ -50,8 +50,17 @@ namespace Barotrauma
         [Serialize(false, IsPropertySaveable.Yes, description: "Can the creature live without water or does it die on dry land?"), Editable]
         public bool NeedsWater { get; set; }
 
+        [Serialize(false, IsPropertySaveable.Yes, description: "Note: non-humans with a human AI aren't fully supported. Enabling this on a non-human character may lead to issues.")]
+        public bool UseHumanAI { get; set; }
+
+        [Serialize(false, IsPropertySaveable.Yes, description: "Is this creature an artificial creature, like robot or machine that shouldn't be affected by afflictions that affect only organic creatures? Overrides DoesBleed."), Editable]
+        public bool IsMachine { get; set; }
+
         [Serialize(false, IsPropertySaveable.No), Editable]
         public bool CanSpeak { get; set; }
+
+        [Serialize(true, IsPropertySaveable.Yes), Editable]
+        public bool ShowHealthBar { get; private set; }
 
         [Serialize(false, IsPropertySaveable.Yes), Editable]
         public bool UseBossHealthBar { get; private set; }
@@ -107,6 +116,15 @@ namespace Barotrauma
         [Serialize(false, IsPropertySaveable.Yes), Editable]
         public bool DrawLast { get; set; }
 
+        [Serialize(1.0f, IsPropertySaveable.Yes, "Tells the bots how much they should prefer targeting this character with submarine weapons. Defaults to 1. Set 0 to tell the bots not to target this character at all. Distance to the target affects the decision making."), Editable]
+        public float AITurretPriority { get; set; }
+
+        [Serialize(1.0f, IsPropertySaveable.Yes, "Tells the bots how much they should prefer targeting this character with submarine weapons tagged as \"slowturret\", like railguns. The tag is arbitrary and can be added to any turrets, just like the priority. Defaults to 1. Not used if AITurretPriority is 0. Distance to the target affects the decision making."), Editable]
+        public float AISlowTurretPriority { get; set; }
+
+        [Serialize("", IsPropertySaveable.Yes, description: "Identifier or tag of the item the character's items are placed inside when the character despawns."), Editable]
+        public Identifier DespawnContainer { get; private set; }
+
         public readonly CharacterFile File;
 
         public XDocument VariantFile { get; private set; }
@@ -128,7 +146,14 @@ namespace Barotrauma
 
         protected override string GetName() => "Character Config File";
 
-        public override ContentXElement MainElement => base.MainElement.IsOverride() ? base.MainElement.FirstElement() : base.MainElement;
+        public override ContentXElement MainElement
+        {
+            get
+            {
+                if (base.MainElement == null) { return null; }
+                return base.MainElement.IsOverride() ? base.MainElement.FirstElement() : base.MainElement;
+            }
+        }
 
         public static XElement CreateVariantXml(XElement variantXML, XElement baseXML)
         {
@@ -167,6 +192,11 @@ namespace Barotrauma
         {
             UpdatePath(File.Path);
             doc = XMLExtensions.TryLoadXml(Path);
+            if (MainElement == null)
+            {
+                DebugConsole.ThrowError("Main element null! Failed to load character params.");
+                return false;
+            }
             Identifier variantOf = MainElement.VariantOf();
             if (!variantOf.IsEmpty)
             {
@@ -211,17 +241,27 @@ namespace Barotrauma
             return true;
         }
 
-        public bool CompareGroup(Identifier group) => group != Identifier.Empty && Group != Identifier.Empty && group == Group;
+        public static bool CompareGroup(Identifier group1, Identifier group2) => group1 != Identifier.Empty && group2 != Identifier.Empty && group1 == group2;
 
         protected void CreateSubParams()
         {
-            SubParams.Clear();
-            var health = MainElement.GetChildElement("health");
-            if (health != null)
+            if (MainElement == null)
             {
-                Health = new HealthParams(health, this);
-                SubParams.Add(Health);
+                DebugConsole.ThrowError("Main element null, cannot create sub params!");
+                return;
             }
+            SubParams.Clear();
+            var healthElement = MainElement.GetChildElement("health");
+            if (healthElement != null)
+            {
+                Health = new HealthParams(healthElement, this);
+            }
+            else
+            {
+                DebugConsole.ThrowError($"No health parameters defined for character \"{(SpeciesName)}\".");
+                Health = new HealthParams(null, this);
+            }
+            SubParams.Add(Health);
             // TODO: support for multiple ai elements?
             var ai = MainElement.GetChildElement("ai");
             if (ai != null)
@@ -473,7 +513,7 @@ namespace Barotrauma
             [Serialize(true, IsPropertySaveable.Yes), Editable]
             public bool DoesBleed { get; set; }
 
-            [Serialize(float.NegativeInfinity, IsPropertySaveable.Yes), Editable(minValue: float.NegativeInfinity, maxValue: 0)]
+            [Serialize(float.PositiveInfinity, IsPropertySaveable.Yes), Editable(minValue: 0, maxValue: float.PositiveInfinity)]
             public float CrushDepth { get; set; }
 
             // Make editable?
@@ -498,12 +538,31 @@ namespace Barotrauma
             [Serialize(false, IsPropertySaveable.Yes), Editable]
             public bool PoisonImmunity { get; set; }
 
+            [Serialize(1f, IsPropertySaveable.Yes, description: "1 = default, 0 = immune."), Editable(MinValueFloat = 0f, MaxValueFloat = 1000, DecimalCount = 1)]
+            public float PoisonVulnerability { get; set; }
+
+            [Serialize(0f, IsPropertySaveable.Yes), Editable]
+            public float EmpVulnerability { get; set; }
+
             [Serialize(false, IsPropertySaveable.Yes, description: "Can afflictions affect the face/body tint of the character."), Editable]
             public bool ApplyAfflictionColors { get; private set; }
 
             // TODO: limbhealths, sprite?
 
-            public HealthParams(ContentXElement element, CharacterParams character) : base(element, character) { }
+            public HealthParams(ContentXElement element, CharacterParams character) : base(element, character) 
+            { 
+                //backwards compatibility
+                if (CrushDepth < 0)
+                {
+                    //invert y, convert to meters, and add 1000 to be on the safe side (previously the value would be from the bottom of the level)
+                    float newCrushDepth = -CrushDepth * Physics.DisplayToRealWorldRatio + 1000;
+                    DebugConsole.AddWarning($"Character \"{character.SpeciesName}\" has a negative crush depth. "+
+                        "Previously the crush depths were defined as display units (e.g. -30000 would correspond to 300 meters below the level), "+
+                        "but now they're in meters (e.g. 3000 would correspond to a depth of 3000 meters displayed on the nav terminal). "+
+                        $"Changing the crush depth from {CrushDepth} to {newCrushDepth}.");
+                    CrushDepth = newCrushDepth;
+                }
+            }
         }
 
         public class InventoryParams : SubParam
@@ -606,6 +665,9 @@ namespace Barotrauma
             [Serialize(false, IsPropertySaveable.Yes, description:"Does the creature know how to open doors (still requires a proper ID card). Humans can always open doors (They don't use this AI definition)."), Editable]
             public bool CanOpenDoors { get; private set; }
 
+            [Serialize(false, IsPropertySaveable.Yes), Editable]
+            public bool UsePathFindingToGetInside { get; set; }
+
             [Serialize(false, IsPropertySaveable.Yes, description: "Does the creature close the doors behind it. Humans don't use this AI definition."), Editable]
             public bool KeepDoorsClosed { get; private set; }
 
@@ -649,7 +711,7 @@ namespace Barotrauma
                 if (HasTag(tag))
                 {
                     target = null;
-                    DebugConsole.ThrowError($"Multiple targets with the same tag ('{tag}') defined! Only the first will be used!");
+                    DebugConsole.AddWarning($"Trying to add multiple targets with the same tag ('{tag}') defined! Only the first will be used!");
                     return false;
                 }
                 else
@@ -703,7 +765,7 @@ namespace Barotrauma
             {
                 if (!TryGetTarget(targetCharacter.SpeciesName, out target))
                 {
-                    target = targets.FirstOrDefault(t => string.Equals(t.Tag, targetCharacter.Params.Group.ToString(), StringComparison.OrdinalIgnoreCase));
+                    target = targets.FirstOrDefault(t => t.Tag == targetCharacter.Params.Group);
                 }
                 return target != null;
             }
@@ -749,7 +811,7 @@ namespace Barotrauma
             public override string Name => "Target";
 
             [Serialize("", IsPropertySaveable.Yes, description: "Can be an item tag, species name or something else. Examples: decoy, provocative, light, dead, human, crawler, wall, nasonov, sonar, door, stronger, weaker, light, human, room..."), Editable()]
-            public string Tag { get; private set; }
+            public Identifier Tag { get; private set; }
 
             [Serialize(AIState.Idle, IsPropertySaveable.Yes), Editable]
             public AIState State { get; set; }
@@ -814,10 +876,19 @@ namespace Barotrauma
             [Serialize(5000f, IsPropertySaveable.Yes), Editable(MinValueFloat = 0f, MaxValueFloat = 20000f)]
             public float CircleStartDistance { get; private set; }
 
-            [Serialize(1f, IsPropertySaveable.Yes), Editable(MinValueFloat = 0.5f, MaxValueFloat = 2f)]
+            [Serialize(false, IsPropertySaveable.Yes, description:"Normally the target size is taken into account when calculating the distance to the target. Set this true to skip that.")]
+            public bool IgnoreTargetSize { get; private set; }
+
+            [Serialize(1f, IsPropertySaveable.Yes), Editable(MinValueFloat = 0f, MaxValueFloat = 100f)]
             public float CircleRotationSpeed { get; private set; }
 
-            [Serialize(5f, IsPropertySaveable.Yes), Editable(MinValueFloat = 1f, MaxValueFloat = 10f)]
+            [Serialize(false, IsPropertySaveable.Yes, description:"When enabled, the circle rotation speed can change when the target is far. When this setting is disabled (default), the character will head directly towards the target when it's too far."), Editable]
+            public bool DynamicCircleRotationSpeed { get; private set; }
+
+            [Serialize(0f, IsPropertySaveable.Yes), Editable(MinValueFloat = 0f, MaxValueFloat = 1f)]
+            public float CircleRandomRotationFactor { get; private set; }
+
+            [Serialize(5f, IsPropertySaveable.Yes), Editable(MinValueFloat = 0f, MaxValueFloat = 10f)]
             public float CircleStrikeDistanceMultiplier { get; private set; }
 
             [Serialize(0f, IsPropertySaveable.Yes), Editable(MinValueFloat = 0f, MaxValueFloat = 50f)]

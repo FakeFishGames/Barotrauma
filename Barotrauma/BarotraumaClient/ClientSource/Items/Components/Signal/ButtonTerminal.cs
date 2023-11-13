@@ -94,7 +94,6 @@ namespace Barotrauma.Items.Components
 
         protected override void OnResolutionChanged()
         {
-            base.OnResolutionChanged();
             OnItemLoadedProjSpecific();
         }
 

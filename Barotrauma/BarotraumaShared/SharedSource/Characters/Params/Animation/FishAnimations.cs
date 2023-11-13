@@ -177,6 +177,9 @@ namespace Barotrauma
             set => SetFootAngles(FootAnglesInRadians, value);
         }
 
+        [Serialize(false, IsPropertySaveable.Yes, description: "Should the animation be updated even if the character is not moving?"), Editable]
+        public bool UpdateAnimationWhenNotMoving { get; set; }
+
         /// <summary>
         /// Key = limb id, value = angle in radians
         /// </summary>

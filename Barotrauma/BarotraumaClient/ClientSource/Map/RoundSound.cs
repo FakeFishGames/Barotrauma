@@ -56,12 +56,12 @@ namespace Barotrauma
         }
         
         private static readonly List<RoundSound> roundSounds = new List<RoundSound>();
+        private static readonly Dictionary<string, RoundSound> roundSoundByPath = new Dictionary<string, RoundSound>();
         public static RoundSound? Load(ContentXElement element, bool stream = false)
         {
             if (GameMain.SoundManager?.Disabled ?? true) { return null; }
 
             var filename = element.GetAttributeContentPath("file") ?? element.GetAttributeContentPath("sound");
-
             if (filename is null)
             {
                 string errorMsg = "Error when loading round sound (" + element + ") - file path not set";
@@ -70,7 +70,11 @@ namespace Barotrauma
                 return null;
             }
 
-            Sound? existingSound = roundSounds.Find(s => s.Filename == filename?.FullPath && s.Stream == stream && s.Sound is { Disposed: false })?.Sound;
+            Sound? existingSound = null;
+            if (roundSoundByPath.TryGetValue(filename.FullPath, out RoundSound? rs) && rs.Sound is { Disposed: false })
+            {
+                existingSound = rs.Sound;
+            }
 
             if (existingSound is null)
             {
@@ -83,7 +87,10 @@ namespace Barotrauma
                 {
                     string errorMsg = "Failed to load sound file \"" + filename + "\" (file not found).";
                     DebugConsole.ThrowError(errorMsg, e);
-                    GameAnalyticsManager.AddErrorEventOnce("RoundSound.LoadRoundSound:FileNotFound" + filename, GameAnalyticsManager.ErrorSeverity.Error, errorMsg + "\n" + Environment.StackTrace.CleanupStackTrace());
+                    if (!ContentPackageManager.ModsEnabled)
+                    {
+                        GameAnalyticsManager.AddErrorEventOnce("RoundSound.LoadRoundSound:FileNotFound" + filename, GameAnalyticsManager.ErrorSeverity.Error, errorMsg + "\n" + Environment.StackTrace.CleanupStackTrace());
+                    }
                     return null;
                 }
                 catch (System.IO.InvalidDataException e)
@@ -96,7 +103,10 @@ namespace Barotrauma
             }
 
             RoundSound newSound = new RoundSound(element, existingSound);
-
+            if (filename is not null && !newSound.Stream)
+            {
+                roundSoundByPath.TryAdd(filename.FullPath, newSound);
+            }
             roundSounds.Add(newSound);
             return newSound;
         }
@@ -121,24 +131,14 @@ namespace Barotrauma
             roundSound.Sound = existingSound;
         }
 
-        private static void Remove(RoundSound roundSound)
-        {
-            #warning TODO: what is going on here????
-            roundSound.Sound?.Dispose();
-
-            if (roundSounds.Contains(roundSound)) { roundSounds.Remove(roundSound); }
-            foreach (RoundSound otherSound in roundSounds)
-            {
-                if (otherSound.Sound == roundSound.Sound) { otherSound.Sound = null; }
-            }
-        }
-
         public static void RemoveAllRoundSounds()
         {
-            for (int i = roundSounds.Count - 1; i >= 0; i--)
+            foreach (var roundSound in roundSounds)
             {
-                Remove(roundSounds[i]);
+                roundSound.Sound?.Dispose();
             }
+            roundSounds.Clear();
+            roundSoundByPath.Clear();
         }
     }
 }

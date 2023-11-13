@@ -20,6 +20,8 @@ namespace Barotrauma
             MaxValue = 2
         }
 
+        public const float MaxObjectivePriority = 100;
+        public const float EmergencyObjectivePriority = 90;
         public const float HighestOrderPriority = 70;
         public const float LowestOrderPriority = 60;
         public const float RunPriority = 50;
@@ -125,11 +127,21 @@ namespace Barotrauma
             {
                 CoroutineManager.StopCoroutines(delayedObjective.Value);
             }
+
+            var prevIdleObjective = GetObjective<AIObjectiveIdle>();
+
             DelayedObjectives.Clear();
             Objectives.Clear();
             FailedAutonomousObjectives = false;
             AddObjective(new AIObjectiveFindSafety(character, this));
-            AddObjective(new AIObjectiveIdle(character, this));
+            var newIdleObjective = new AIObjectiveIdle(character, this);
+            if (prevIdleObjective != null)
+            {
+                newIdleObjective.TargetHull = prevIdleObjective.TargetHull;
+                newIdleObjective.Behavior = prevIdleObjective.Behavior;
+                prevIdleObjective.PreferredOutpostModuleTypes.ForEach(t => newIdleObjective.PreferredOutpostModuleTypes.Add(t));
+            }
+            AddObjective(newIdleObjective);
             int objectiveCount = Objectives.Count;
             foreach (var autonomousObjective in character.Info.Job.Prefab.AutonomousObjectives)
             {
@@ -142,7 +154,8 @@ namespace Barotrauma
                 }
                 var order = new Order(orderPrefab, autonomousObjective.Option, item ?? character.CurrentHull as Entity, orderPrefab.GetTargetItemComponent(item), orderGiver: character);
                 if (order == null) { continue; }
-                if ((order.IgnoreAtOutpost || autonomousObjective.IgnoreAtOutpost) && Level.IsLoadedFriendlyOutpost && character.TeamID != CharacterTeamType.FriendlyNPC)
+                if ((order.IgnoreAtOutpost || autonomousObjective.IgnoreAtOutpost) && 
+                    Level.IsLoadedFriendlyOutpost && character.TeamID != CharacterTeamType.FriendlyNPC && !character.IsFriendlyNPCTurnedHostile)
                 {
                     if (Submarine.MainSub != null && Submarine.MainSub.DockedTo.None(s => s.TeamID != CharacterTeamType.FriendlyNPC && s.TeamID != character.TeamID))
                     {
@@ -155,7 +168,7 @@ namespace Barotrauma
                     AddObjective(objective, delay: Rand.Value() / 2);
                     objectiveCount++;
                 }
-            }
+            }          
             _waitTimer = Math.Max(_waitTimer, Rand.Range(0.5f, 1f) * objectiveCount);
         }
 
@@ -364,8 +377,7 @@ namespace Barotrauma
                     CurrentOrders.RemoveAt(i);
                     continue;
                 }
-                var currentOrderInfo = character.GetCurrentOrder(currentOrder);
-                if (currentOrderInfo is Order)
+                if (character.GetCurrentOrder(currentOrder) is Order currentOrderInfo)
                 {
                     int currentPriority = currentOrderInfo.ManualPriority;
                     if (currentOrder.ManualPriority != currentPriority)
@@ -411,12 +423,12 @@ namespace Barotrauma
                     newObjective = new AIObjectiveGoTo(order.OrderGiver, character, this, repeat: true, priorityModifier: priorityModifier)
                     {
                         CloseEnough = Rand.Range(80f, 100f),
-                        CloseEnoughMultiplier = Math.Min(1 + HumanAIController.CountCrew(c => c.ObjectiveManager.HasOrder<AIObjectiveGoTo>(o => o.Target == order.OrderGiver), onlyBots: true) * Rand.Range(0.8f, 1f), 4),
+                        CloseEnoughMultiplier = Math.Min(1 + HumanAIController.CountBotsInTheCrew(c => c.ObjectiveManager.HasOrder<AIObjectiveGoTo>(o => o.Target == order.OrderGiver)) * Rand.Range(0.8f, 1f), 4),
                         ExtraDistanceOutsideSub = 100,
                         ExtraDistanceWhileSwimming = 100,
                         AllowGoingOutside = true,
                         IgnoreIfTargetDead = true,
-                        IsFollowOrderObjective = true,
+                        IsFollowOrder = true,
                         Mimic = character.IsOnPlayerTeam,
                         DialogueIdentifier = "dialogcannotreachplace".ToIdentifier()
                     };
@@ -424,7 +436,11 @@ namespace Barotrauma
                 case "wait":
                     newObjective = new AIObjectiveGoTo(order.TargetSpatialEntity ?? character, character, this, repeat: true, priorityModifier: priorityModifier)
                     {
-                        AllowGoingOutside = true
+                        AllowGoingOutside = true,
+                        IsWaitOrder = true,
+                        DebugLogWhenFails = false,
+                        SpeakIfFails = false,
+                        CloseEnough = 100
                     };
                     break;
                 case "return":
@@ -515,7 +531,7 @@ namespace Barotrauma
                 case "cleanupitems":
                     if (order.TargetEntity is Item targetItem)
                     {
-                        if (targetItem.HasTag("allowcleanup") && targetItem.ParentInventory == null && targetItem.OwnInventory != null)
+                        if (targetItem.HasTag(Tags.AllowCleanup) && targetItem.ParentInventory == null && targetItem.OwnInventory != null)
                         {
                             // Target all items inside the container
                             newObjective = new AIObjectiveCleanupItems(character, this, targetItem.OwnInventory.AllItems, priorityModifier);
@@ -539,7 +555,8 @@ namespace Barotrauma
                         KeepActiveWhenReady = true,
                         CheckInventory = true,
                         Equip = false,
-                        FindAllItems = true
+                        FindAllItems = true,
+                        RequireNonEmpty = false
                     };
                     break;
                 case "findweapon":
@@ -555,7 +572,8 @@ namespace Barotrauma
                             KeepActiveWhenReady = false,
                             CheckInventory = false,
                             EvaluateCombatPriority = true,
-                            FindAllItems = false
+                            FindAllItems = false,
+                            RequireNonEmpty = true
                         };
                     }
                     prepareObjective.KeepActiveWhenReady = false;
@@ -600,9 +618,9 @@ namespace Barotrauma
 
             Order dismissOrder = currentOrder.GetDismissal();
 #if CLIENT
-            if (GameMain.GameSession?.CrewManager != null && GameMain.GameSession.CrewManager.IsSinglePlayer)
+            if (GameMain.GameSession?.CrewManager is CrewManager cm && cm.IsSinglePlayer)
             {
-                GameMain.GameSession.CrewManager.SetCharacterOrder(character, dismissOrder);
+                character.SetOrder(dismissOrder, isNewOrder: true, speak: false);
             }
 #else
             GameMain.Server?.SendOrderChatMessage(new OrderChatMessage(dismissOrder, character, character));
@@ -632,10 +650,11 @@ namespace Barotrauma
         public AIObjective GetActiveObjective() => CurrentObjective?.GetActiveObjective();
         public T GetOrder<T>() where T : AIObjective => CurrentOrders.FirstOrDefault(o => o.Objective is T)?.Objective as T;
 
-        /// <summary>
-        /// Returns the last active objective of the specific type.
-        /// </summary>
-        public T GetActiveObjective<T>() where T : AIObjective => CurrentObjective?.GetSubObjectivesRecursive(includingSelf: true).LastOrDefault(so => so is T) as T;
+        public T GetLastActiveObjective<T>() where T : AIObjective
+            => CurrentObjective?.GetSubObjectivesRecursive(includingSelf: true).LastOrDefault(so => so is T) as T;
+
+        public T GetFirstActiveObjective<T>() where T : AIObjective
+            => CurrentObjective?.GetSubObjectivesRecursive(includingSelf: true).FirstOrDefault(so => so is T) as T;
 
         /// <summary>
         /// Returns all active objectives of the specific type. Creates a new collection -> don't use too frequently.

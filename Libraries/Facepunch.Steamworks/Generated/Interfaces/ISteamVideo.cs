@@ -7,7 +7,7 @@ using Steamworks.Data;
 
 namespace Steamworks
 {
-	internal class ISteamVideo : SteamInterface
+	internal unsafe class ISteamVideo : SteamInterface
 	{
 		
 		internal ISteamVideo( bool IsGameServer )
@@ -60,8 +60,7 @@ namespace Steamworks
 		#endregion
 		internal bool GetOPFStringForApp( AppId unVideoAppID, out string pchBuffer, ref int pnBufferSize )
 		{
-			using var memory = Helpers.TakeMemory();
-			IntPtr mempchBuffer = memory;
+			using var mempchBuffer = Helpers.TakeMemory();
 			var returnValue = _GetOPFStringForApp( Self, unVideoAppID, mempchBuffer, ref pnBufferSize );
 			pchBuffer = Helpers.MemoryToString( mempchBuffer );
 			return returnValue;

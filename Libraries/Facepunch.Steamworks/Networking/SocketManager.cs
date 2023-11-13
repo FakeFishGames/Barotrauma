@@ -14,10 +14,11 @@ namespace Steamworks
 	/// </summary>
 	public partial class SocketManager
 	{
-		public ISocketManager Interface { get; set; }
+		public ISocketManager? Interface { get; set; }
 
-		public List<Connection> Connecting = new List<Connection>();
-		public List<Connection> Connected = new List<Connection>();
+		public HashSet<Connection> Connecting = new HashSet<Connection>();
+		public HashSet<Connection> Connected = new HashSet<Connection>();
+
 		public Socket Socket { get; internal set; }
 
 		public override string ToString() => Socket.ToString();
@@ -26,12 +27,12 @@ namespace Steamworks
 
 		internal void Initialize()
 		{
-			pollGroup = SteamNetworkingSockets.Internal.CreatePollGroup();
+			pollGroup = SteamNetworkingSockets.Internal?.CreatePollGroup() ?? default;
 		}
 
 		public bool Close()
 		{
-			if ( SteamNetworkingSockets.Internal.IsValid )
+			if ( SteamNetworkingSockets.Internal is { IsValid: true } )
 			{
 				SteamNetworkingSockets.Internal.DestroyPollGroup( pollGroup );
 				Socket.Close();
@@ -44,17 +45,23 @@ namespace Steamworks
 
 		public virtual void OnConnectionChanged( Connection connection, ConnectionInfo info )
 		{
+			//
+			// Some notes:
+			// - Update state before the callbacks, in case an exception is thrown
+			// - ConnectionState.None happens when a connection is destroyed, even if it was already disconnected (ClosedByPeer / ProblemDetectedLocally)
+			//
 			switch ( info.State )
 			{
 				case ConnectionState.Connecting:
-					if ( !Connecting.Contains( connection ) )
+					if ( !Connecting.Contains( connection ) && !Connected.Contains( connection ) )
 					{
 						Connecting.Add( connection );
+
 						OnConnecting( connection, info );
 					}
 					break;
 				case ConnectionState.Connected:
-					if ( !Connected.Contains( connection ) )
+					if ( Connecting.Contains( connection ) && !Connected.Contains( connection ) )
 					{
 						Connecting.Remove( connection );
 						Connected.Add( connection );
@@ -67,6 +74,9 @@ namespace Steamworks
 				case ConnectionState.None:
 					if ( Connecting.Contains( connection ) || Connected.Contains( connection ) )
 					{
+						Connecting.Remove( connection );
+						Connected.Remove( connection );
+
 						OnDisconnected( connection, info );
 					}
 					break;
@@ -81,7 +91,6 @@ namespace Steamworks
 			if ( Interface != null )
 			{
 				Interface.OnConnecting( connection, info );
-				return;
 			}
 			else
 			{
@@ -94,7 +103,7 @@ namespace Steamworks
 		/// </summary>
 		public virtual void OnConnected( Connection connection, ConnectionInfo info )
 		{
-			SteamNetworkingSockets.Internal.SetConnectionPollGroup( connection, pollGroup );
+			SteamNetworkingSockets.Internal?.SetConnectionPollGroup( connection, pollGroup );
 
 			Interface?.OnConnected( connection, info );
 		}
@@ -104,24 +113,24 @@ namespace Steamworks
 		/// </summary>
 		public virtual void OnDisconnected( Connection connection, ConnectionInfo info )
 		{
-			SteamNetworkingSockets.Internal.SetConnectionPollGroup( connection, 0 );
-
-			connection.Close();
-
-			Connecting.Remove( connection );
-			Connected.Remove( connection );
-
-			Interface?.OnDisconnected( connection, info );
+			if ( Interface != null )
+			{
+				Interface.OnDisconnected( connection, info );
+			}
+			else
+			{
+				connection.Close();
+			}
 		}
 
-		public void Receive( int bufferSize = 32 )
+		public int Receive( int bufferSize = 32, bool receiveToEnd = true )
 		{
 			int processed = 0;
 			IntPtr messageBuffer = Marshal.AllocHGlobal( IntPtr.Size * bufferSize );
 
 			try
 			{
-				processed = SteamNetworkingSockets.Internal.ReceiveMessagesOnPollGroup( pollGroup, messageBuffer, bufferSize );
+				processed = SteamNetworkingSockets.Internal?.ReceiveMessagesOnPollGroup( pollGroup, messageBuffer, bufferSize ) ?? 0;
 
 				for ( int i = 0; i < processed; i++ )
 				{
@@ -137,8 +146,10 @@ namespace Steamworks
 			//
 			// Overwhelmed our buffer, keep going
 			//
-			if ( processed == bufferSize )
-				Receive( bufferSize );
+			if ( receiveToEnd && processed == bufferSize )
+				processed += Receive( bufferSize );
+
+			return processed;
 		}
 
 		internal unsafe void ReceiveMessage( IntPtr msgPtr )

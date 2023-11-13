@@ -6,6 +6,9 @@ using System.Text;
 
 namespace Steamworks.Data
 {
+	/// <summary>
+	/// Represents a screenshot that was taken by a user.
+	/// </summary>
 	public struct Screenshot
 	{
 		internal ScreenshotHandle Value;
@@ -15,23 +18,20 @@ namespace Steamworks.Data
 		/// </summary>
 		public bool TagUser( SteamId user )
 		{
-			return SteamScreenshots.Internal.TagUser( Value, user );
+			return SteamScreenshots.Internal != null && SteamScreenshots.Internal.TagUser( Value, user );
 		}
 
 		/// <summary>
-		/// Tags a user as being visible in the screenshot
+		/// Sets the location of the screenshot.
 		/// </summary>
 		public bool SetLocation( string location )
 		{
-			return SteamScreenshots.Internal.SetLocation( Value, location );
+			return SteamScreenshots.Internal != null && SteamScreenshots.Internal.SetLocation( Value, location );
 		}
 
-		/// <summary>
-		/// Tags a user as being visible in the screenshot
-		/// </summary>
 		public bool TagPublishedFile( PublishedFileId file )
 		{
-			return SteamScreenshots.Internal.TagPublishedFile( Value, file );
+			return SteamScreenshots.Internal != null && SteamScreenshots.Internal.TagPublishedFile( Value, file );
 		}
 	}
 }

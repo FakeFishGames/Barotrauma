@@ -67,10 +67,17 @@ namespace Barotrauma.Items.Components
         [Serialize(true, IsPropertySaveable.Yes, "")]
         public bool CanSpawn { get; set; } = true;
 
+        [Editable, Serialize(false, IsPropertySaveable.Yes, "")]
+        public bool PreloadCharacter { get; set; }
+
         private float spawnTimer;
         private float? spawnTimerGoal;
 
         private int spawnedAmount = 0;
+
+        private Character? preloadedCharacter;
+
+        private bool preloadInitiated;
 
         public EntitySpawnerComponent(Item item, ContentXElement element) : base(item, element)
         {
@@ -103,12 +110,21 @@ namespace Barotrauma.Items.Components
                     }
                 }
             }
-
-            base.OnItemLoaded();
         }
 
         public override void Update(float deltaTime, Camera cam)
         {
+            if (PreloadCharacter && !Screen.Selected.IsEditor && !preloadInitiated)
+            {
+                SpawnCharacter(Vector2.Zero, onSpawn: (Character c) =>
+                {
+                    preloadedCharacter = c;
+                    c.DisabledByEvent = true;
+                });
+                preloadInitiated = true;
+                return;
+            }
+
             base.Update(deltaTime, cam);
 
             item.SendSignal(CanSpawn ? "1" : "0", "state_out");
@@ -269,10 +285,18 @@ namespace Barotrauma.Items.Components
             {
                 if (!string.IsNullOrWhiteSpace(SpeciesName))
                 {
-                    Identifier[] allSpecies = SpeciesName.Split(',').Select(s => s.Trim()).ToIdentifiers().ToArray();
-                    Identifier species = allSpecies.GetRandomUnsynced();
-                    Entity.Spawner?.AddCharacterToSpawnQueue(species, pos);
-                    spawnedAmount++;
+                    if (preloadedCharacter != null)
+                    {
+                        preloadedCharacter.DisabledByEvent = false;
+                        preloadedCharacter.TeleportTo(pos);
+                        preloadedCharacter = null;
+                        spawnedAmount++;
+                    }
+                    else
+                    {
+                        SpawnCharacter(pos);
+                        spawnedAmount++;
+                    }
                 }
                 else if (!string.IsNullOrWhiteSpace(ItemIdentifier))
                 {
@@ -289,6 +313,16 @@ namespace Barotrauma.Items.Components
                     Entity.Spawner?.AddItemToSpawnQueue(prefab, pos, item.Submarine);
                     spawnedAmount++;
                 }
+            }
+        }
+
+        private void SpawnCharacter(Vector2 pos, Action<Character>? onSpawn = null)
+        {
+            if (!string.IsNullOrWhiteSpace(SpeciesName))
+            {
+                Identifier[] allSpecies = SpeciesName.Split(',').Select(s => s.Trim()).ToIdentifiers().ToArray();
+                Identifier species = allSpecies.GetRandomUnsynced();
+                Entity.Spawner?.AddCharacterToSpawnQueue(species, pos, onSpawn);
             }
         }
     }

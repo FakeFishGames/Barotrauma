@@ -17,7 +17,7 @@ namespace Barotrauma.Networking
 
         public void Write(IWriteMessage msg)
         {
-            msg.Write(CharacterStateID);
+            msg.WriteUInt16(CharacterStateID);
             serializable.ClientEventWrite(msg, Data);
         }
     }

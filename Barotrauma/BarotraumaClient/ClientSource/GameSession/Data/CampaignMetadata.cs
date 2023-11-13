@@ -1,9 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using System.Collections.Immutable;
 using System.Linq;
-using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
 
 namespace Barotrauma
 {
@@ -11,21 +9,22 @@ namespace Barotrauma
     {
         private const int MaxDrawnElements = 12;
 
-        public void DebugDraw(SpriteBatch spriteBatch, Vector2 pos, int debugDrawMetadataOffset, string[] ignoredMetadataInfo)
+        public void DebugDraw(SpriteBatch spriteBatch, Vector2 pos, CampaignMode campaign, GUI.DebugDrawMetaData debugDrawMetaData)
         {
             var campaignData = data;
-            foreach (string ignored in ignoredMetadataInfo)
+            if (!debugDrawMetaData.FactionMetadata) { removeData("reputation.faction"); }
+            if (!debugDrawMetaData.UpgradeLevels) { removeData("upgrade."); }
+            if (!debugDrawMetaData.UpgradePrices) { removeData("upgradeprice."); }
+
+            void removeData(string keyStartsWith)
             {
-                if (!string.IsNullOrWhiteSpace(ignored))
-                {
-                    campaignData = campaignData.Where(pair => !pair.Key.StartsWith(ignored)).ToDictionary(i => i.Key, i => i.Value);
-                }
+                campaignData = campaignData.Where(pair => !pair.Key.StartsWith(keyStartsWith)).ToDictionary(i => i.Key, i => i.Value);
             }
             
             int offset = 0;;
             if (campaignData.Count > 0)
             {
-                offset = debugDrawMetadataOffset % campaignData.Count;
+                offset = debugDrawMetaData.Offset % campaignData.Count;
                 if (offset < 0) { offset += campaignData.Count; }
             }
 
@@ -72,7 +71,7 @@ namespace Barotrauma
             }
 
             float y = infoRect.Bottom + 16;
-            if (Campaign.Factions != null)
+            if (campaign.Factions != null)
             {
                 const string factionHeader = "Reputations";
                 Vector2 factionHeaderSize = GUIStyle.SubHeadingFont.MeasureString(factionHeader);
@@ -81,7 +80,7 @@ namespace Barotrauma
                 GUI.DrawString(spriteBatch, factionPos, factionHeader, Color.White, font: GUIStyle.SubHeadingFont);
                 y += factionHeaderSize.Y + 8;
 
-                foreach (Faction faction in Campaign.Factions)
+                foreach (Faction faction in campaign.Factions)
                 {
                     LocalizedString name = faction.Prefab.Name;
                     Vector2 nameSize = GUIStyle.SmallFont.MeasureString(name);
@@ -93,20 +92,6 @@ namespace Barotrauma
                     GUI.DrawRectangle(spriteBatch, new Rectangle(GameMain.GraphicsWidth - 264, (int) y, 256, 10), Color.White);
                     y += 15;
                 }
-            }
-
-            Location location = Campaign.Map?.CurrentLocation;
-            if (location?.Reputation != null)
-            {
-                string name = Campaign.Map?.CurrentLocation.Name;
-                Vector2 nameSize = GUIStyle.SmallFont.MeasureString(name);
-                GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth - 264, y), name, Color.White, font: GUIStyle.SmallFont);
-                y += nameSize.Y + 5;
-
-                float normalizedReputation = MathUtils.InverseLerp(location.Reputation.MinReputation, location.Reputation.MaxReputation, location.Reputation.Value);
-                Color color = ToolBox.GradientLerp(normalizedReputation, Color.Red, Color.Yellow, Color.LightGreen);
-                GUI.DrawRectangle(spriteBatch, new Rectangle(GameMain.GraphicsWidth - 264, (int) y, (int)(normalizedReputation * 255), 10), color, isFilled: true);
-                GUI.DrawRectangle(spriteBatch, new Rectangle(GameMain.GraphicsWidth - 264, (int) y, 256, 10), Color.White);
             }
         }
     }

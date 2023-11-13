@@ -2,3 +2,4 @@
 *.sln text eol=crlf
 *.cs text eol=crlf
 *.xml text eol=crlf
+Barotrauma\BarotraumaServer\DedicatedServer.exe text eol=lf

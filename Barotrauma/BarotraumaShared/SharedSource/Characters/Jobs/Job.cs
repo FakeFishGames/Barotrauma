@@ -19,7 +19,7 @@ namespace Barotrauma
 
         public int Variant;
 
-        public Skill PrimarySkill { get; }
+        public Skill PrimarySkill { get; private set; }
 
         public Job(JobPrefab jobPrefab) : this(jobPrefab, randSync: Rand.RandSync.Unsynced, variant: 0) { }
 
@@ -102,9 +102,14 @@ namespace Barotrauma
         public void OverrideSkills(Dictionary<Identifier, float> newSkills)
         {
             skills.Clear();            
-            foreach (var newSkill in newSkills)
+            foreach (var newSkillInfo in newSkills)
             {
-                skills.Add(newSkill.Key, new Skill(newSkill.Key, newSkill.Value));
+                var newSkill = new Skill(newSkillInfo.Key, newSkillInfo.Value);
+                if (PrimarySkill != null && newSkill.Identifier == PrimarySkill.Identifier)
+                {
+                    PrimarySkill = newSkill;
+                }
+                skills.Add(newSkillInfo.Key, newSkill);
             }
         }
 
@@ -129,7 +134,13 @@ namespace Barotrauma
             foreach (XElement itemElement in spawnItems.GetChildElements("Item"))
             {
                 InitializeJobItem(character, itemElement, spawnPoint);
-            }            
+            }
+
+            if (GameMain.GameSession is { TraitorsEnabled: true } && character.IsSecurity)
+            {
+                var traitorGuidelineItem = ItemPrefab.Prefabs.Find(ip => ip.Tags.Contains(Tags.TraitorGuidelinesForSecurity));
+                Entity.Spawner.AddItemToSpawnQueue(traitorGuidelineItem, character.Inventory);
+            }
         }
 
         private void InitializeJobItem(Character character, XElement itemElement, WayPoint spawnPoint = null, Item parentItem = null)
@@ -139,7 +150,7 @@ namespace Barotrauma
             {
                 string itemName = itemElement.Attribute("name").Value;
                 DebugConsole.ThrowError("Error in Job config (" + Name + ") - use item identifiers instead of names to configure the items.");
-                itemPrefab = MapEntityPrefab.Find(itemName) as ItemPrefab;
+                itemPrefab = MapEntityPrefab.FindByName(itemName) as ItemPrefab;
                 if (itemPrefab == null)
                 {
                     DebugConsole.ThrowError("Tried to spawn \"" + Name + "\" with the item \"" + itemName + "\". Matching item prefab not found.");

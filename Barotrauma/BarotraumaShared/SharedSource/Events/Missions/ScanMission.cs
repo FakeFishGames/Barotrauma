@@ -32,25 +32,20 @@ namespace Barotrauma
             }
         } 
 
-        public override IEnumerable<Vector2> SonarPositions
+        public override IEnumerable<(LocalizedString Label, Vector2 Position)> SonarLabels
         {
             get
             {
-                if (State > 0)
+                if (State > 0 || scanTargets.None())
                 {
-                    return Enumerable.Empty<Vector2>();
-                }
-                else if (scanTargets.Any())
-                {
-                    return scanTargets
-                        .Where(kvp => !kvp.Value)
-                        .Select(kvp => kvp.Key.WorldPosition);
+                    return Enumerable.Empty<(LocalizedString Label, Vector2 Position)>();
                 }
                 else
                 {
-                    return Enumerable.Empty<Vector2>();
-                }
-                
+                    return scanTargets
+                        .Where(kvp => !kvp.Value)
+                        .Select(kvp => (Prefab.SonarLabel, kvp.Key.WorldPosition));
+                }             
             }
         }
 
@@ -223,7 +218,7 @@ namespace Barotrauma
 #endif
         }
 
-        private bool IsValidScanPosition(Scanner scanner, KeyValuePair<WayPoint, bool> scanStatus, float scanRadiusSquared)
+        private static bool IsValidScanPosition(Scanner scanner, KeyValuePair<WayPoint, bool> scanStatus, float scanRadiusSquared)
         {
             if (scanStatus.Value) { return false; }
             if (scanStatus.Key.Submarine != scanner.Item.Submarine) { return false; }
@@ -237,23 +232,18 @@ namespace Barotrauma
             switch (State)
             {
                 case 0:
-                    if (!AllTargetsScanned) { return; }
-                    State = 1;
-                    break;
-                case 1:
-                    if (!Submarine.MainSub.AtEndExit && !Submarine.MainSub.AtStartExit) { return; }
-                    State = 2;
+                    if (AllTargetsScanned)
+                    {
+                        State = 1;
+                    }
                     break;
             }
         }
 
-        public override void End()
+        protected override bool DetermineCompleted() => State > 0;
+
+        protected override void EndMissionSpecific(bool completed)
         {
-            if (State == 2 && AllScannersReturned())
-            {
-                GiveReward();
-                completed = true;
-            }
             foreach (var scanner in scanners)
             {
                 if (scanner.Item != null && !scanner.Item.Removed)
@@ -265,25 +255,6 @@ namespace Barotrauma
             }
             Reset();
             failed = !completed && state > 0;
-
-            bool AllScannersReturned()
-            {
-                foreach (var scanner in scanners)
-                {
-                    if (scanner?.Item == null || scanner.Item.Removed) { return false; }
-                    var owner = scanner.Item.GetRootInventoryOwner();
-                    if (owner.Submarine != null && owner.Submarine.Info.Type == SubmarineType.Player)
-                    {
-                        continue;
-                    }
-                    else if (owner is Character c && c.Info != null && GameMain.GameSession.CrewManager.CharacterInfos.Contains(c.Info))
-                    {
-                        continue;
-                    }
-                    return false;
-                }
-                return true;
-            }
         }
     }
 }

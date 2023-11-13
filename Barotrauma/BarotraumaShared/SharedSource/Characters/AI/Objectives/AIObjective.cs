@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Microsoft.Xna.Framework;
 using Barotrauma.Extensions;
+using System.Collections.Immutable;
 
 namespace Barotrauma
 {
@@ -39,6 +40,7 @@ namespace Barotrauma
         public virtual bool AllowOutsideSubmarine => false;
         public virtual bool AllowInFriendlySubs => false;
         public virtual bool AllowInAnySub => false;
+        public virtual bool AllowWhileHandcuffed => true;
 
         protected readonly List<AIObjective> subObjectives = new List<AIObjective>();
         private float _cumulatedDevotion;
@@ -245,30 +247,43 @@ namespace Barotrauma
         {
             get 
             {
-                if (IgnoreAtOutpost && Level.IsLoadedFriendlyOutpost && character.TeamID != CharacterTeamType.FriendlyNPC)
-                {
-                    if (Submarine.MainSub != null && Submarine.MainSub.DockedTo.None(s => s.TeamID != CharacterTeamType.FriendlyNPC && s.TeamID != character.TeamID))
-                    {
-                        return false;
-                    }
-                }
+                if (!AllowWhileHandcuffed && character.LockHands) { return false; }
                 if (!AllowOutsideSubmarine && character.Submarine == null) { return false; }
+                // Evaluate ignored at outpost first, because it has higher priority than AllowInAnySub or AllowInFriendlySubs.
+                if (IsIgnoredAtOutpost()) { return false; }
                 if (AllowInAnySub) { return true; }
                 if ((AllowInFriendlySubs && character.Submarine.TeamID == CharacterTeamType.FriendlyNPC) || character.IsEscorted) { return true; }
-                return character.Submarine.TeamID == character.TeamID || character.Submarine.DockedTo.Any(sub => sub.TeamID == character.TeamID);
+                return character.Submarine.TeamID == character.TeamID || character.Submarine.TeamID == character.OriginalTeamID;
             }
+        }
+
+        /// <summary>
+        /// Returns true only when at a friendly outpost and when the order is set to be ignored there.
+        /// Note that even if this returns false, the objective can be disallowed, because AllowInFriendlySubs is false.
+        /// </summary>
+        public bool IsIgnoredAtOutpost()
+        {
+            if (!IgnoreAtOutpost) { return false; }
+            if (!Level.IsLoadedFriendlyOutpost) { return false; }
+            if (!character.IsOnPlayerTeam || character.IsFriendlyNPCTurnedHostile) { return false; }
+            if (character.Submarine?.Info == null) { return false; }
+            return character.Submarine.Info.IsOutpost && character.Submarine.TeamID == CharacterTeamType.FriendlyNPC;
+        }
+
+        protected void HandleNonAllowed()
+        {
+            Priority = 0;
+            Abandon = !IsIgnoredAtOutpost();
         }
 
         protected virtual float GetPriority()
         {
-            bool isOrder = objectiveManager.IsOrder(this);
             if (!IsAllowed)
             {
-                Priority = 0;
-                Abandon = true;
+                HandleNonAllowed();
                 return Priority;
             }
-            if (isOrder)
+            if (objectiveManager.IsOrder(this))
             {
                 Priority = objectiveManager.GetOrderPriority(this);
             }
@@ -443,7 +458,7 @@ namespace Barotrauma
             }
         }
 
-        protected virtual bool Check()
+        private bool Check()
         {
             if (AbortCondition != null && AbortCondition(this))
             {
@@ -503,15 +518,31 @@ namespace Barotrauma
             }
         }
 
-        protected static bool CanEquip(Character character, Item item)
+        public virtual void SpeakAfterOrderReceived() { }
+
+        protected static bool CanEquip(Character character, Item item, bool allowWearing)
         {
-            bool canEquip = item != null;
-            if (canEquip && !item.AllowedSlots.Contains(InvSlotType.Any))
+            if (item == null) { return false; }
+            bool canEquip = false;
+            if (item.AllowedSlots.Contains(InvSlotType.Any))
             {
-                canEquip = false;
+                if (character.Inventory.IsAnySlotAvailable(item))
+                {
+                    canEquip = true;
+                }
+            }
+            if (!canEquip)
+            {
                 var inv = character.Inventory;
                 foreach (var allowedSlot in item.AllowedSlots)
                 {
+                    if (!allowWearing)
+                    {
+                        if (!allowedSlot.HasFlag(InvSlotType.RightHand) && !allowedSlot.HasFlag(InvSlotType.LeftHand))
+                        {
+                            continue;
+                        }
+                    }
                     foreach (var slotType in inv.SlotTypes)
                     {
                         if (!allowedSlot.HasFlag(slotType)) { continue; }
@@ -527,9 +558,9 @@ namespace Barotrauma
                     }
                 }
             }
-            return canEquip;
+            return canEquip && character.Inventory.CanBePut(item);
         }
 
-        protected bool CanEquip(Item item) => CanEquip(character, item);
+        protected bool CanEquip(Item item, bool allowWearing) => CanEquip(character, item, allowWearing);
     }
 }

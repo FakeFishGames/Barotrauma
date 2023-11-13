@@ -34,7 +34,7 @@
     interface IServerPositionSync : IServerSerializable
     {
 #if SERVER
-        void ServerWritePosition(IWriteMessage msg, Client c);
+        void ServerWritePosition(ReadWriteMessage tempBuffer, Client c);
 #endif
 #if CLIENT
         void ClientReadPosition(IReadMessage msg, float sendingTime);

@@ -12,6 +12,7 @@ namespace Barotrauma
         public override string DebugTag => $"{Identifier}";
         public override bool KeepDivingGearOn => true;
         public override bool AllowMultipleInstances => true;
+        public override bool AllowWhileHandcuffed => false;
 
         public bool AllowStealing { get; set; }
         public bool TakeWholeStack { get; set; }
@@ -21,11 +22,11 @@ namespace Barotrauma
         public bool CheckInventory { get; set; }
         public bool EvaluateCombatPriority { get; set; }
         public bool CheckPathForEachItem { get; set; }
-        public bool RequireLoaded { get; set; }
+        public bool RequireNonEmpty { get; set; }
         public bool RequireAllItems { get; set; }
 
         private readonly ImmutableArray<Identifier> gearTags;
-        private readonly Identifier[] ignoredTags;
+        private readonly ImmutableHashSet<Identifier> ignoredTags;
         private bool subObjectivesCreated;
 
         public readonly HashSet<Item> achievedItems = new HashSet<Item>();
@@ -33,62 +34,55 @@ namespace Barotrauma
         public AIObjectiveGetItems(Character character, AIObjectiveManager objectiveManager, IEnumerable<Identifier> identifiersOrTags, float priorityModifier = 1) : base(character, objectiveManager, priorityModifier)
         {
             gearTags = AIObjectiveGetItem.ParseGearTags(identifiersOrTags).ToImmutableArray();
-            ignoredTags = AIObjectiveGetItem.ParseIgnoredTags(identifiersOrTags).ToArray();
+            ignoredTags = AIObjectiveGetItem.ParseIgnoredTags(identifiersOrTags).ToImmutableHashSet();
         }
 
         protected override bool CheckObjectiveSpecific() => subObjectivesCreated && subObjectives.None();
 
         protected override void Act(float deltaTime)
         {
-            if (character.LockHands)
+            if (subObjectivesCreated) { return; }
+            foreach (Identifier tag in gearTags)
             {
-                Abandon = true;
-                return;
+                if (subObjectives.Any(so => so is AIObjectiveGetItem getItem && getItem.IdentifiersOrTags.Contains(tag))) { continue; }
+                int count = gearTags.Count(t => t == tag);
+                AIObjectiveGetItem? getItem = null;
+                TryAddSubObjective(ref getItem, () =>
+                    new AIObjectiveGetItem(character, tag, objectiveManager, Equip, CheckInventory && count <= 1)
+                    {
+                        AllowVariants = AllowVariants,
+                        Wear = Wear,
+                        TakeWholeStack = TakeWholeStack,
+                        AllowStealing = AllowStealing,
+                        ignoredIdentifiersOrTags = ignoredTags,
+                        CheckPathForEachItem = CheckPathForEachItem,
+                        RequireNonEmpty = RequireNonEmpty,
+                        ItemCount = count,
+                        SpeakIfFails = RequireAllItems
+                    },
+                    onCompleted: () =>
+                    {
+                        var item = getItem?.TargetItem;
+                        if (item?.IsOwnedBy(character) != null)
+                        {
+                            achievedItems.Add(item);
+                        }
+                    },
+                    onAbandon: () =>
+                    {
+                        var item = getItem?.TargetItem;
+                        if (item != null)
+                        {
+                            achievedItems.Remove(item);
+                        }
+                        RemoveSubObjective(ref getItem);
+                        if (RequireAllItems)
+                        {
+                            Abandon = true;
+                        }
+                    });
             }
-            if (!subObjectivesCreated)
-            {
-                foreach (Identifier tag in gearTags)
-                {
-                    if (subObjectives.Any(so => so is AIObjectiveGetItem getItem && getItem.IdentifiersOrTags.Contains(tag))) { continue; }
-                    int count = gearTags.Count(t => t == tag);
-                    AIObjectiveGetItem? getItem = null;
-                    TryAddSubObjective(ref getItem, () =>
-                        new AIObjectiveGetItem(character, tag, objectiveManager, Equip, CheckInventory && count <= 1)
-                        {
-                            AllowVariants = AllowVariants,
-                            Wear = Wear,
-                            TakeWholeStack = TakeWholeStack,
-                            AllowStealing = AllowStealing,
-                            ignoredIdentifiersOrTags = ignoredTags,
-                            CheckPathForEachItem = CheckPathForEachItem,
-                            RequireLoaded = RequireLoaded,
-                            ItemCount = count,
-                            SpeakIfFails = RequireAllItems
-                        },
-                        onCompleted: () =>
-                        {
-                            var item = getItem?.TargetItem;
-                            if (item?.IsOwnedBy(character) != null)
-                            {
-                                achievedItems.Add(item);
-                            }
-                        },
-                        onAbandon: () =>
-                        {
-                            var item = getItem?.TargetItem;
-                            if (item != null)
-                            {
-                                achievedItems.Remove(item);
-                            }
-                            RemoveSubObjective(ref getItem);
-                            if (RequireAllItems)
-                            {
-                                Abandon = true;
-                            }
-                        });
-                }
-                subObjectivesCreated = true;
-            }
+            subObjectivesCreated = true;
         }
 
         public override void Reset()

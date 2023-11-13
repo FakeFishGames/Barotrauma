@@ -254,7 +254,7 @@ namespace Barotrauma
                 d.ForceRefreshFadeTimer(Math.Min(d.FadeTimer, d.FadeInTime));
             }
 
-            UpdateProjSpecific(growModifier);
+            UpdateProjSpecific(growModifier, deltaTime);
 
             
             if (size.X < 1.0f && (GameMain.NetworkMember == null || GameMain.NetworkMember.IsServer))
@@ -273,7 +273,7 @@ namespace Barotrauma
             position.X -= GrowSpeed * growModifier * 0.5f * deltaTime;
         }
 
-        partial void UpdateProjSpecific(float growModifier);
+        partial void UpdateProjSpecific(float growModifier, float deltaTime);
 
         private void OnChangeHull(Vector2 pos, Hull particleHull)
         {

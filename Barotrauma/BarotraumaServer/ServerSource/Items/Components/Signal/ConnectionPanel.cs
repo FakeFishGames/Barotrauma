@@ -12,7 +12,8 @@ namespace Barotrauma.Items.Components
             List<Wire>[] wires = new List<Wire>[Connections.Count];
 
             //read wire IDs for each connection
-            for (int i = 0; i < Connections.Count; i++)
+            byte connectionCount = msg.ReadByte();
+            for (int i = 0; i < Connections.Count && i < connectionCount; i++)
             {
                 wires[i] = new List<Wire>();
                 uint wireCount = msg.ReadVariableUInt32();
@@ -185,7 +186,7 @@ namespace Barotrauma.Items.Components
                     //already connected, no need to do anything
                     if (Connections[i].Wires.Contains(newWire)) { continue; }
 
-                    newWire.Connect(Connections[i], true, true);
+                    newWire.TryConnect(Connections[i], true, true);
                     Connections[i].TryAddLink(newWire);
 
                     var otherConnection = newWire.OtherConnection(Connections[i]);
@@ -208,7 +209,7 @@ namespace Barotrauma.Items.Components
 
         public void ServerEventWrite(IWriteMessage msg, Client c, NetEntityEvent.IData extraData = null)
         {
-            msg.Write(user == null ? (ushort)0 : user.ID);
+            msg.WriteUInt16(user == null ? (ushort)0 : user.ID);
             ClientEventWrite(msg, extraData);
         }
     }

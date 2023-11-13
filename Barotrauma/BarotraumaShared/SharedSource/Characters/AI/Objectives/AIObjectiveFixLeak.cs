@@ -12,7 +12,9 @@ namespace Barotrauma
         public override Identifier Identifier { get; set; } = "fix leak".ToIdentifier();
         public override bool ForceRun => true;
         public override bool KeepDivingGearOn => true;
+        public override bool AllowInFriendlySubs => true;
         public override bool AllowInAnySub => true;
+        public override bool AllowWhileHandcuffed => false;
 
         public Gap Leak { get; private set; }
 
@@ -35,42 +37,57 @@ namespace Barotrauma
         {
             if (!IsAllowed)
             {
-                Priority = 0;
-                Abandon = true;
+                HandleNonAllowed();
+                return Priority;
             }
-            else if (HumanAIController.IsTrueForAnyCrewMember(
-                other => other != HumanAIController && 
-                other.Character.IsBot &&
-                other.ObjectiveManager.GetActiveObjective<AIObjectiveFixLeaks>() is AIObjectiveFixLeaks fixLeaks &&
-                fixLeaks.SubObjectives.Any(so => so is AIObjectiveFixLeak fixObjective && fixObjective.Leak == Leak)))
+            float coopMultiplier = 1;
+            foreach (var c in Character.CharacterList)
             {
-                Priority = 0;
+                if (!HumanAIController.IsActive(c)) { continue; }
+                if (c.TeamID != character.TeamID) { continue; }
+                if (c == character) { continue; }
+                if (c.IsPlayer) { continue; }
+                if (c.AIController is HumanAIController otherAI )
+                {
+                    if (otherAI.ObjectiveManager.GetFirstActiveObjective<AIObjectiveFixLeak>() is AIObjectiveFixLeak fixLeak)
+                    {
+                        if (fixLeak.Leak == Leak)
+                        {
+                            // Ignore leaks that others are already targeting
+                            Priority = 0;
+                            return Priority;
+                        }
+                        if (fixLeak.Leak.FlowTargetHull == Leak.FlowTargetHull)
+                        {
+                            // Reduce the priority of leaks that others should be targeting
+                            coopMultiplier = 0.1f;
+                            break;
+                        }
+                    }
+                }
+            }
+            float reduction = isPriority ? 1 : 2;
+            float maxPriority = AIObjectiveManager.LowestOrderPriority - reduction;
+            if (operateObjective != null && objectiveManager.GetFirstActiveObjective<AIObjectiveFixLeaks>() is AIObjectiveFixLeaks fixLeaks && fixLeaks.CurrentSubObjective == this)
+            {
+                // Prioritize leaks that we are already fixing
+                Priority = maxPriority;
             }
             else
             {
-                float reduction = isPriority ? 1 : 2;
-                float maxPriority = AIObjectiveManager.LowestOrderPriority - reduction;
-                if (operateObjective != null && objectiveManager.GetActiveObjective<AIObjectiveFixLeaks>() is AIObjectiveFixLeaks fixLeaks && fixLeaks.CurrentSubObjective == this)
+                float xDist = Math.Abs(character.WorldPosition.X - Leak.WorldPosition.X);
+                float yDist = Math.Abs(character.WorldPosition.Y - Leak.WorldPosition.Y);
+                // Vertical distance matters more than horizontal (climbing up/down is harder than moving horizontally).
+                // If the target is close, ignore the distance factor alltogether so that we keep fixing the leaks that are nearby.
+                float distanceFactor = isPriority || xDist < 200 && yDist < 100 ? 1 : MathHelper.Lerp(1, 0.1f, MathUtils.InverseLerp(0, 3000, xDist + yDist * 3.0f));
+                if (Leak.linkedTo.Any(e => e is Hull h && h == character.CurrentHull))
                 {
-                    // Prioritize leaks that we are already fixing
-                    Priority = maxPriority;
+                    // Double the distance when the leak can be accessed from the current hull.
+                    distanceFactor *= 2;
                 }
-                else
-                {
-                    float xDist = Math.Abs(character.WorldPosition.X - Leak.WorldPosition.X);
-                    float yDist = Math.Abs(character.WorldPosition.Y - Leak.WorldPosition.Y);
-                    // Vertical distance matters more than horizontal (climbing up/down is harder than moving horizontally).
-                    // If the target is close, ignore the distance factor alltogether so that we keep fixing the leaks that are nearby.
-                    float distanceFactor = isPriority || xDist < 200 && yDist < 100 ? 1 : MathHelper.Lerp(1, 0.1f, MathUtils.InverseLerp(0, 3000, xDist + yDist * 3.0f));
-                    if (Leak.linkedTo.Any(e => e is Hull h && h == character.CurrentHull))
-                    {
-                        // Double the distance when the leak can be accessed from the current hull.
-                        distanceFactor *= 2;
-                    }
-                    float severity = isPriority ? 1 : AIObjectiveFixLeaks.GetLeakSeverity(Leak) / 100;
-                    float devotion = CumulatedDevotion / 100;
-                    Priority = MathHelper.Lerp(0, maxPriority, MathHelper.Clamp(devotion + (severity * distanceFactor * PriorityModifier), 0, 1));
-                }
+                float severity = isPriority ? 1 : AIObjectiveFixLeaks.GetLeakSeverity(Leak) / 100;
+                float devotion = CumulatedDevotion / 100;
+                Priority = MathHelper.Lerp(0, maxPriority, MathHelper.Clamp(devotion + (severity * distanceFactor * PriorityModifier * coopMultiplier), 0, 1));
             }
             return Priority;
         }
@@ -78,6 +95,7 @@ namespace Barotrauma
         protected override void Act(float deltaTime)
         {
             var weldingTool = character.Inventory.FindItemByTag("weldingequipment".ToIdentifier(), true);
+            var repairTool = weldingTool?.GetComponent<RepairTool>();
             if (weldingTool == null)
             {
                 TryAddSubObjective(ref getWeldingTool, () => new AIObjectiveGetItem(character, "weldingequipment".ToIdentifier(), objectiveManager, equip: true, spawnItemIfNotFound: character.TeamID == CharacterTeamType.FriendlyNPC), 
@@ -94,17 +112,25 @@ namespace Barotrauma
             }
             else
             {
-                if (weldingTool.OwnInventory == null)
+                if (repairTool == null)
                 {
 #if DEBUG
-                    DebugConsole.ThrowError($"{character.Name}: AIObjectiveFixLeak failed - the item \"" + weldingTool + "\" has no proper inventory");
+                    DebugConsole.ThrowError($"{character.Name}: AIObjectiveFixLeak failed - the item \"{weldingTool}\" has no RepairTool component but is tagged as a welding tool");
 #endif
                     Abandon = true;
                     return;
                 }
-                if (weldingTool.OwnInventory != null && weldingTool.OwnInventory.AllItems.None(i => i.HasTag("weldingfuel") && i.Condition > 0.0f))
+                if (weldingTool.OwnInventory == null && repairTool.requiredItems.Any(r => r.Key == RelatedItem.RelationType.Contained))
                 {
-                    TryAddSubObjective(ref refuelObjective, () => new AIObjectiveContainItem(character, "weldingfuel".ToIdentifier(), weldingTool.GetComponent<ItemContainer>(), objectiveManager, spawnItemIfNotFound: character.TeamID == CharacterTeamType.FriendlyNPC)
+#if DEBUG
+                    DebugConsole.ThrowError($"{character.Name}: AIObjectiveFixLeak failed - the item \"{weldingTool}\" has no proper inventory");
+#endif
+                    Abandon = true;
+                    return;
+                }
+                if (weldingTool.OwnInventory != null && weldingTool.OwnInventory.AllItems.None(i => i.HasTag(Tags.WeldingFuel) && i.Condition > 0.0f))
+                {
+                    TryAddSubObjective(ref refuelObjective, () => new AIObjectiveContainItem(character, Tags.WeldingFuel, weldingTool.GetComponent<ItemContainer>(), objectiveManager, spawnItemIfNotFound: character.TeamID == CharacterTeamType.FriendlyNPC)
                     {
                         RemoveExisting = true
                     },
@@ -122,7 +148,7 @@ namespace Barotrauma
                     void ReportWeldingFuelTankCount()
                     {
                         if (character.Submarine != Submarine.MainSub) { return; }
-                        int remainingOxygenTanks = Submarine.MainSub.GetItems(false).Count(i => i.HasTag("weldingfuel") && i.Condition > 1);
+                        int remainingOxygenTanks = Submarine.MainSub.GetItems(false).Count(i => i.HasTag(Tags.WeldingFuel) && i.Condition > 1);
                         if (remainingOxygenTanks == 0)
                         {
                             character.Speak(TextManager.Get("DialogOutOfWeldingFuel").Value, null, 0.0f, "outofweldingfuel".ToIdentifier(), 30.0f);
@@ -136,15 +162,6 @@ namespace Barotrauma
                 }
             }
             if (subObjectives.Any()) { return; }
-            var repairTool = weldingTool.GetComponent<RepairTool>();
-            if (repairTool == null)
-            {
-#if DEBUG
-                DebugConsole.ThrowError($"{character.Name}: AIObjectiveFixLeak failed - the item \"" + weldingTool + "\" has no RepairTool component but is tagged as a welding tool");
-#endif
-                Abandon = true;
-                return;
-            }
             Vector2 toLeak = Leak.WorldPosition - character.AnimController.AimSourceWorldPos;
             // TODO: use the collider size/reach?
             if (!character.AnimController.InWater && Math.Abs(toLeak.X) < 100 && toLeak.Y < 0.0f && toLeak.Y > -150)
@@ -155,17 +172,21 @@ namespace Barotrauma
             bool canOperate = toLeak.LengthSquared() < reach * reach;
             if (canOperate)
             {
-                TryAddSubObjective(ref operateObjective, () => new AIObjectiveOperateItem(repairTool, character, objectiveManager, option: Identifier.Empty, requireEquip: true, operateTarget: Leak), 
-                    onAbandon: () => Abandon = true,
-                    onCompleted: () =>
+                TryAddSubObjective(ref operateObjective, () => new AIObjectiveOperateItem(repairTool, character, objectiveManager, option: Identifier.Empty, requireEquip: true, operateTarget: Leak)
+                {
+                    // Use an empty filter to override the default
+                    EndNodeFilter = n => true
+                }, 
+                onAbandon: () => Abandon = true,
+                onCompleted: () =>
+                {
+                    if (CheckObjectiveSpecific()) { IsCompleted = true; }
+                    else
                     {
-                        if (CheckObjectiveSpecific()) { IsCompleted = true; }
-                        else
-                        {
-                            // Failed to operate. Probably too far.
-                            Abandon = true;
-                        }
-                    });
+                        // Failed to operate. Probably too far.
+                        Abandon = true;
+                    }
+                });
             }
             else
             {
@@ -177,10 +198,11 @@ namespace Barotrauma
                     TargetName = Leak.FlowTargetHull?.DisplayName,
                     requiredCondition = () => 
                         Leak.Submarine == character.Submarine &&
-                        Leak.linkedTo.Any(e => e is Hull h && character.CurrentHull == h),
-                    endNodeFilter = n => n.Waypoint.CurrentHull != null && Leak.linkedTo.Any(e => e is Hull h && h == n.Waypoint.CurrentHull),
+                        Leak.linkedTo.Any(e => e is Hull h && (character.CurrentHull == h || h.linkedTo.Contains(character.CurrentHull))),
+                    endNodeFilter = IsSuitableEndNode,
                     // The Go To objective can be abandoned if the leak is fixed (in which case we don't want to use the dialogue)
-                    SpeakCannotReachCondition = () => !CheckObjectiveSpecific()
+                    // Only report about contextual targets.
+                    SpeakCannotReachCondition = () => isPriority && !CheckObjectiveSpecific()
                 },
                 onAbandon: () =>
                 {
@@ -197,6 +219,14 @@ namespace Barotrauma
                     }
                 },
                 onCompleted: () => RemoveSubObjective(ref gotoObjective));
+
+                bool IsSuitableEndNode(PathNode n)
+                {
+                    if (n.Waypoint.CurrentHull is null) { return false; }
+                    if (n.Waypoint.CurrentHull.ConnectedGaps.Contains(Leak)) { return true; }
+                    // Accept also nodes located in the linked hulls (multi-hull rooms)
+                    return Leak.linkedTo.Any(e => e is Hull h && h.linkedTo.Contains(n.Waypoint.CurrentHull));
+                }
             }
         }
 

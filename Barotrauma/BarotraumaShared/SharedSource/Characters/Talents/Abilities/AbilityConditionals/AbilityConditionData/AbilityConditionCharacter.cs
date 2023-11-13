@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Xml.Linq;
 
 namespace Barotrauma.Abilities
@@ -8,25 +9,25 @@ namespace Barotrauma.Abilities
     {
         private readonly List<TargetType> targetTypes;
 
-        private List<PropertyConditional> conditionals = new List<PropertyConditional>();
+        private readonly List<PropertyConditional> conditionals = new List<PropertyConditional>();
 
         public AbilityConditionCharacter(CharacterTalent characterTalent, ContentXElement conditionElement) : base(characterTalent, conditionElement)
         {
-            targetTypes = ParseTargetTypes(conditionElement.GetAttributeStringArray("targettypes", Array.Empty<string>(), convertToLowerInvariant: true));
+            targetTypes = ParseTargetTypes(
+                conditionElement.GetAttributeStringArray("targettypes", 
+                conditionElement.GetAttributeStringArray("targettype", Array.Empty<string>())));
 
             foreach (XElement subElement in conditionElement.Elements())
             {
-                if (subElement.Name.ToString().Equals("conditional", StringComparison.OrdinalIgnoreCase))
+                if (subElement.NameAsIdentifier() == "conditional")
                 {
-                    foreach (XAttribute attribute in subElement.Attributes())
-                    {
-                        if (PropertyConditional.IsValid(attribute))
-                        {
-                            conditionals.Add(new PropertyConditional(attribute));
-                        }
-                    }
-                    break;
+                    conditionals.AddRange(PropertyConditional.FromXElement(subElement));
                 }
+            }
+
+            if (!targetTypes.Any() && !conditionals.Any())
+            {
+                DebugConsole.ThrowError($"Error in talent \"{characterTalent}\". No target types or conditionals defined - the condition will match any character.");
             }
         }
 
@@ -34,7 +35,7 @@ namespace Barotrauma.Abilities
         {
             if (abilityObject is IAbilityCharacter abilityCharacter)
             {
-                if (!(abilityCharacter.Character is Character character)) { return false; }
+                if (abilityCharacter.Character is not Character character) { return false; }
                 if (!IsViableTarget(targetTypes, character)) { return false; }
                 foreach (var conditional in conditionals)
                 {

@@ -1,0 +1,15 @@
+"appbuild"
+{
+	"appid" "1026340"
+	"desc" ""
+	"buildoutput" "[steamworks_sdk_install_folder]\sdk\tools\ContentBuilder\output"
+	"contentroot" ""
+	"setlive" ""
+	"preview" "0"
+	"local"	""
+	"depots"
+	{
+		"1026341"	"[steamworks_sdk_install_folder]\sdk\tools\ContentBuilder\scripts\depot_1026341.vdf"
+		"1026342"	"[steamworks_sdk_install_folder]\sdk\tools\ContentBuilder\scripts\depot_1026342.vdf"
+	}
+}

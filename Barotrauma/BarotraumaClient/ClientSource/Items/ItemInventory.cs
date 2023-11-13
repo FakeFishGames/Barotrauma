@@ -1,4 +1,4 @@
-﻿using System;
+﻿using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System.Linq;
@@ -17,7 +17,7 @@ namespace Barotrauma
             {
                 if (PlayerInput.KeyHit(InputType.Select))
                 {
-                    Character.Controlled.SelectedConstruction = null;
+                    Character.Controlled.SelectedItem = null;
                 }
             }*/            
         }
@@ -83,6 +83,12 @@ namespace Barotrauma
             {
                 base.Draw(spriteBatch, subInventory);
             }
+        }
+
+        public void ClientEventWrite(IWriteMessage msg, Item.InventoryStateEventData extraData)
+        {
+            SharedWrite(msg, extraData.SlotRange);
+            syncItemsDelay = 1.0f;
         }
     }
 }

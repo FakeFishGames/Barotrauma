@@ -64,9 +64,10 @@ namespace Barotrauma.Items.Components
         private const float MinZoom = 1.0f, MaxZoom = 4.0f;
         private float zoom = 1.0f;
 
+        /// <remarks>Accessed through event actions. Do not remove even if there are no references in code.</remarks>
+        public bool UseDirectionalPing => useDirectionalPing;
         private bool useDirectionalPing = false;
         private Vector2 pingDirection = new Vector2(1.0f, 0.0f);
-        private bool useMineralScanner;
 
         private bool aiPingCheckPending;
 
@@ -113,13 +114,37 @@ namespace Barotrauma.Items.Components
             set;
         }
 
-        [Editable, Serialize(false, IsPropertySaveable.No, description: "Does the sonar have mineral scanning mode. " +
-                                                                        "Only available in-game when the Item has no Steering component.")]
-        public bool HasMineralScanner { get; set; }
+        private bool hasMineralScanner;
+
+        [Editable, Serialize(false, IsPropertySaveable.No, description: "Does the sonar have mineral scanning mode. ")]
+        public bool HasMineralScanner
+        {
+            get => hasMineralScanner;
+            set
+            {
+#if CLIENT
+                if (controlContainer != null && !hasMineralScanner && value)
+                {
+                    AddMineralScannerSwitchToGUI();
+                }
+#endif
+                hasMineralScanner = value;
+            }
+        }
+
+        [Serialize(true, IsPropertySaveable.Yes, alwaysUseInstanceValues: true)]
+        public bool UseMineralScanner { get; set; }
 
         public float Zoom
         {
             get { return zoom; }
+            set 
+            { 
+                zoom = MathHelper.Clamp(value, MinZoom, MaxZoom);
+#if CLIENT
+                zoomSlider.BarScroll = MathUtils.InverseLerp(MinZoom, MaxZoom, zoom);
+#endif
+            }
         }
 
         public Mode CurrentMode
@@ -128,23 +153,13 @@ namespace Barotrauma.Items.Components
             set
             {
                 bool changed = currentMode != value;
-
                 currentMode = value;
-                if (value == Mode.Passive)
-                {
-                    if (item.AiTarget != null)
-                    {
-                        item.AiTarget.SectorDegrees = 360.0f;
-                    }
-                }
 #if CLIENT
                 if (changed) { prevPassivePingRadius = float.MaxValue; }
                 UpdateGUIElements();
 #endif
             }
         }
-
-        public override bool RecreateGUIOnResolutionChange => true;
 
         public Sonar(Item item, ContentXElement element)
             : base(item, element)
@@ -185,13 +200,6 @@ namespace Barotrauma.Items.Components
                         var activePing = activePings[currentPingIndex];
                         if (activePing.State > 1.0f)
                         {
-                            if (item.AiTarget != null)
-                            {
-                                float range = MathUtils.InverseLerp(item.AiTarget.MinSoundRange, item.AiTarget.MaxSoundRange, Range * activePing.State / zoom);
-                                item.AiTarget.SoundRange = MathHelper.Lerp(item.AiTarget.MinSoundRange, item.AiTarget.MaxSoundRange, range);
-                                item.AiTarget.SectorDegrees = activePing.IsDirectional ? DirectionalPingSector : 360.0f;
-                                item.AiTarget.SectorDir = new Vector2(pingDirection.X, -pingDirection.Y);
-                            }
                             aiPingCheckPending = true;
                             currentPingIndex = -1;
                         }
@@ -207,21 +215,27 @@ namespace Barotrauma.Items.Components
                         activePings[currentPingIndex].Direction = pingDirection;
                         activePings[currentPingIndex].State = 0.0f;
                         activePings[currentPingIndex].PrevPingRadius = 0.0f;
+                        if (item.AiTarget != null)
+                        {
+                            item.AiTarget.SectorDegrees = useDirectionalPing ? DirectionalPingSector : 360.0f;
+                            item.AiTarget.SectorDir = new Vector2(pingDirection.X, -pingDirection.Y);
+                        }
                         item.Use(deltaTime);
                     }
                 }
                 else
                 {
-                    if (item.AiTarget != null)
-                    {
-                        item.AiTarget.SectorDegrees = 360.0f;
-                    }
                     aiPingCheckPending = false;
                 }
             }
 
             for (var pingIndex = 0; pingIndex < activePingsCount;)
             {
+                if (item.AiTarget != null)
+                {
+                    float range = MathUtils.InverseLerp(item.AiTarget.MinSoundRange, item.AiTarget.MaxSoundRange, Range * activePings[pingIndex].State / zoom);
+                    item.AiTarget.SoundRange = Math.Max(item.AiTarget.SoundRange, MathHelper.Lerp(item.AiTarget.MinSoundRange, item.AiTarget.MaxSoundRange, range));
+                }
                 if (activePings[pingIndex].State > 1.0f)
                 {
                     var lastIndex = --activePingsCount;
@@ -260,7 +274,7 @@ namespace Barotrauma.Items.Components
 
         private static readonly Dictionary<string, List<Character>> targetGroups = new Dictionary<string, List<Character>>();
 
-        public override bool AIOperate(float deltaTime, Character character, AIObjectiveOperateItem objective)
+        public override bool CrewAIOperate(float deltaTime, Character character, AIObjectiveOperateItem objective)
         {
             if (currentMode == Mode.Passive || !aiPingCheckPending) { return false; }
 
@@ -354,7 +368,7 @@ namespace Barotrauma.Items.Components
             bool isActive = msg.ReadBoolean();
             bool directionalPing = useDirectionalPing;
             float zoomT = zoom, pingDirectionT = 0.0f;
-            bool mineralScanner = useMineralScanner;
+            bool mineralScanner = UseMineralScanner;
             if (isActive)
             {
                 zoomT = msg.ReadRangedSingle(0.0f, 1.0f, 8);
@@ -379,13 +393,13 @@ namespace Barotrauma.Items.Components
                     float pingAngle = MathHelper.Lerp(0.0f, MathHelper.TwoPi, pingDirectionT);
                     pingDirection = new Vector2((float)Math.Cos(pingAngle), (float)Math.Sin(pingAngle));
                 }
-                useMineralScanner = mineralScanner;
+                UseMineralScanner = mineralScanner;
 #if CLIENT
                 zoomSlider.BarScroll = zoomT;
                 directionalModeSwitch.Selected = useDirectionalPing;
                 if (mineralScannerSwitch != null)
                 {
-                    mineralScannerSwitch.Selected = useMineralScanner;
+                    mineralScannerSwitch.Selected = UseMineralScanner;
                 }
 #endif
             }
@@ -396,17 +410,17 @@ namespace Barotrauma.Items.Components
 
         public void ServerEventWrite(IWriteMessage msg, Client c, NetEntityEvent.IData extraData = null)
         {
-            msg.Write(currentMode == Mode.Active);
+            msg.WriteBoolean(currentMode == Mode.Active);
             if (currentMode == Mode.Active)
             {
                 msg.WriteRangedSingle(zoom, MinZoom, MaxZoom, 8);
-                msg.Write(useDirectionalPing);
+                msg.WriteBoolean(useDirectionalPing);
                 if (useDirectionalPing)
                 {
                     float pingAngle = MathUtils.WrapAngleTwoPi(MathUtils.VectorToAngle(pingDirection));
                     msg.WriteRangedSingle(MathUtils.InverseLerp(0.0f, MathHelper.TwoPi, pingAngle), 0.0f, 1.0f, 8);
                 }
-                msg.Write(useMineralScanner);
+                msg.WriteBoolean(UseMineralScanner);
             }
         }
     }

@@ -1,10 +1,9 @@
 #nullable enable
 
+using Barotrauma.IO;
 using System;
-using System.Globalization;
 using System.Linq;
 using System.Text.RegularExpressions;
-using Barotrauma.IO;
 
 namespace Barotrauma
 {
@@ -43,10 +42,10 @@ namespace Barotrauma
                     cachedValue = cachedValue
                         .Replace(ModDirStr, modPath, StringComparison.OrdinalIgnoreCase)
                         .Replace(string.Format(OtherModDirFmt, ContentPackage.Name), modPath, StringComparison.OrdinalIgnoreCase);
-                    if (ContentPackage.SteamWorkshopId != 0)
+                    if (ContentPackage.UgcId.TryUnwrap(out var ugcId))
                     {
                         cachedValue = cachedValue
-                            .Replace(string.Format(OtherModDirFmt, ContentPackage.SteamWorkshopId.ToString(CultureInfo.InvariantCulture)), modPath, StringComparison.OrdinalIgnoreCase);
+                            .Replace(string.Format(OtherModDirFmt, ugcId.StringRepresentation), modPath, StringComparison.OrdinalIgnoreCase);
                     }
                 }
                 var allPackages = ContentPackageManager.AllPackages;
@@ -55,9 +54,9 @@ namespace Barotrauma
 #endif
                 foreach (Identifier otherModName in otherMods)
                 {
-                    if (!UInt64.TryParse(otherModName.Value, out UInt64 workshopId)) { workshopId = 0; }
+                    Option<ContentPackageId> ugcId = ContentPackageId.Parse(otherModName.Value);
                     ContentPackage? otherMod =
-                        allPackages.FirstOrDefault(p => workshopId != 0 && p.SteamWorkshopId != 0 && workshopId == p.SteamWorkshopId)
+                        allPackages.FirstOrDefault(p => ugcId.IsSome() && ugcId == p.UgcId)
                         ?? allPackages.FirstOrDefault(p => p.Name == otherModName)
                         ?? allPackages.FirstOrDefault(p => p.NameMatches(otherModName))
                         ?? throw new MissingContentPackageException(ContentPackage, otherModName.Value);
@@ -93,10 +92,21 @@ namespace Barotrauma
         }
 
         public static ContentPath FromRaw(string? rawValue)
-            => new ContentPath(null, rawValue);
-        
+            => FromRaw(null, rawValue);
+
+        private static ContentPath? prevCreatedRaw;
+
         public static ContentPath FromRaw(ContentPackage? contentPackage, string? rawValue)
-            => new ContentPath(contentPackage, rawValue);
+        {
+            var newRaw = new ContentPath(contentPackage, rawValue);
+            if (prevCreatedRaw is not null && prevCreatedRaw.ContentPackage == contentPackage &&
+                prevCreatedRaw.RawValue == rawValue)
+            {
+                newRaw.cachedValue = prevCreatedRaw.Value;
+            }
+            prevCreatedRaw = newRaw;
+            return newRaw;
+        }
 
         public static ContentPath FromEvaluated(ContentPackage? contentPackage, string? evaluatedValue)
         {
@@ -146,8 +156,8 @@ namespace Barotrauma
             return HashCode.Combine(RawValue, ContentPackage, cachedValue, cachedFullPath);
         }
 
-        public bool IsNullOrEmpty() => string.IsNullOrEmpty(Value);
-        public bool IsNullOrWhiteSpace() => string.IsNullOrWhiteSpace(Value);
+        public bool IsPathNullOrEmpty() => string.IsNullOrEmpty(Value);
+        public bool IsPathNullOrWhiteSpace() => string.IsNullOrWhiteSpace(Value);
 
         public bool EndsWith(string suffix) => Value.EndsWith(suffix, StringComparison.OrdinalIgnoreCase);
         

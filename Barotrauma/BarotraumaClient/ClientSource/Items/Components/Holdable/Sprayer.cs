@@ -51,7 +51,7 @@ namespace Barotrauma.Items.Components
         private int spraySetting = 0;
         private readonly Point[] sprayArray = new Point[8];
 
-        public override void UpdateHUD(Character character, float deltaTime, Camera cam)
+        public override void UpdateHUDComponentSpecific(Character character, float deltaTime, Camera cam)
         {
             if (character == null || !character.IsKeyDown(InputType.Aim)) return;
 
@@ -130,7 +130,7 @@ namespace Barotrauma.Items.Components
                 if (body.UserData is Item item)
                 {
                     var door = item.GetComponent<Door>();
-                    if (door != null && door.CanBeTraversed) { continue; }
+                    if (door != null && (door.IsOpen || door.IsBroken)) { continue; }
                 }
 
                 targetHull = null;
@@ -224,68 +224,59 @@ namespace Barotrauma.Items.Components
             if (character == null) { return false; }
             if (character == Character.Controlled)
             {
-                if (targetSections.Count == 0) { return false; }           
-                Spray(deltaTime);
+                Spray(character, deltaTime, applyColors: targetSections.Count > 0);
                 return true;
             }
             else
             {
                 //allow remote players to use the sprayer, but don't actually color the walls (we'll receive the data from the server)
-                return character.IsRemotePlayer;
+                Spray(character, deltaTime, applyColors: false);
+                return true;
             }
         }
 
-        public void Spray(float deltaTime)
+        public void Spray(Character user, float deltaTime, bool applyColors)
         {
-            if (targetSections.Count == 0) { return; }
-
             Item liquidItem = liquidContainer?.Inventory.FirstOrDefault();
             if (liquidItem == null) { return; }
 
             bool isCleaning = false;
             liquidColors.TryGetValue(liquidItem.Prefab.Identifier, out color);
 
-            // Ethanol or other cleaning solvent
-            if (color.A == 0) { isCleaning = true; }
-
-            float sizeAdjustedSprayStrength = SprayStrength / targetSections.Count;
-
-            if (!isCleaning)
+            if (applyColors && targetSections.Any())
             {
-                for (int i = 0; i < targetSections.Count; i++)
+                // Ethanol or other cleaning solvent
+                if (color.A == 0) { isCleaning = true; }
+                float sizeAdjustedSprayStrength = SprayStrength / targetSections.Count;
+                if (!isCleaning)
                 {
-                    targetHull.IncreaseSectionColorOrStrength(targetSections[i], color, sizeAdjustedSprayStrength * deltaTime, true, false);
+                    for (int i = 0; i < targetSections.Count; i++)
+                    {
+                        targetHull.IncreaseSectionColorOrStrength(targetSections[i], color, sizeAdjustedSprayStrength * deltaTime, true, false);
+                    }
+                    if (GameMain.GameSession != null)
+                    {
+                        GameMain.GameSession.TimeSpentCleaning += deltaTime;
+                    }
                 }
-                if (GameMain.GameSession != null)
+                else
                 {
-                    GameMain.GameSession.TimeSpentCleaning += deltaTime;
-                }
-            }
-            else
-            {
-                for (int i = 0; i < targetSections.Count; i++)
-                {
-                    targetHull.CleanSection(targetSections[i], -sizeAdjustedSprayStrength * deltaTime, true);
-                }
-                if (GameMain.GameSession != null)
-                {
-                    GameMain.GameSession.TimeSpentPainting += deltaTime;
+                    for (int i = 0; i < targetSections.Count; i++)
+                    {
+                        targetHull.CleanSection(targetSections[i], -sizeAdjustedSprayStrength * deltaTime, true);
+                    }
+                    if (GameMain.GameSession != null)
+                    {
+                        GameMain.GameSession.TimeSpentPainting += deltaTime;
+                    }
                 }
             }
 
             Vector2 particleStartPos = item.WorldPosition + ConvertUnits.ToDisplayUnits(TransformedBarrelPos);
-            Vector2 particleEndPos = Vector2.Zero;
-            for (int i = 0; i < targetSections.Count; i++)
-            {
-                particleEndPos += new Vector2(targetSections[i].Rect.Center.X, targetSections[i].Rect.Y - targetSections[i].Rect.Height / 2) + targetHull.Rect.Location.ToVector2();
-            }
-            particleEndPos /= targetSections.Count;
-            if (targetHull?.Submarine != null)
-            {
-                particleEndPos += targetHull.Submarine.Position;
-            }
-            float dist = Vector2.Distance(particleStartPos, particleEndPos);
-
+            Vector2 particleEndPos = user.CursorWorldPosition;
+            //the cursor position is not exact for remote players, we only know the direction they're aiming at but not the distance
+            // -> use 50% range, looks good enough
+            float dist = Math.Min(Vector2.Distance(particleStartPos, particleEndPos), Range * 0.5f);
             foreach (ParticleEmitter particleEmitter in particleEmitters)
             {
                 float particleAngle = item.body.Rotation + ((item.body.Dir > 0.0f) ? 0.0f : MathHelper.Pi);
@@ -297,7 +288,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public void Draw(SpriteBatch spriteBatch, bool editing, float itemDepth = -1)
+        public void Draw(SpriteBatch spriteBatch, bool editing, float itemDepth = -1, Color? overrideColor = null)
         {
 #if DEBUG
             if (GameMain.DebugDraw && Character.Controlled != null && Character.Controlled.IsKeyDown(InputType.Aim))

@@ -23,13 +23,22 @@ namespace Barotrauma.Networking
         {
             Success = 0x00,
             Heartbeat = 0x01,
+            RequestShutdown = 0xCC,
             Crash = 0xFF
         }
 
         private static ManualResetEvent writeManualResetEvent;
 
-        private static volatile bool shutDown;
-        public static bool HasShutDown => shutDown;
+        private enum StatusEnum
+        {
+            NeverStarted,
+            Active,
+            RequestedShutDown,
+            ShutDown
+        }
+        
+        private static volatile StatusEnum status = StatusEnum.NeverStarted;
+        public static bool HasShutDown => status is StatusEnum.ShutDown;
 
         private const int ReadBufferSize = MsgConstants.MTU * 2;
         private static byte[] readTempBytes;
@@ -38,7 +47,7 @@ namespace Barotrauma.Networking
 
         private static ConcurrentQueue<byte[]> msgsToWrite;
         private static ConcurrentQueue<string> errorsToWrite;
-        
+
         private static ConcurrentQueue<byte[]> msgsToRead;
 
         private static Thread readThread;
@@ -48,6 +57,8 @@ namespace Barotrauma.Networking
 
         private static void PrivateStart()
         {
+            status = StatusEnum.Active;
+
             readIncOffset = 0;
             readIncTotal = 0;
 
@@ -57,8 +68,6 @@ namespace Barotrauma.Networking
             errorsToWrite = new ConcurrentQueue<string>();
             
             msgsToRead = new ConcurrentQueue<byte[]>();
-
-            shutDown = false;
 
             readCancellationToken = new CancellationTokenSource();
 
@@ -80,7 +89,13 @@ namespace Barotrauma.Networking
 
         private static void PrivateShutDown()
         {
-            shutDown = true;
+            if (Thread.CurrentThread != GameMain.MainThread)
+            {
+                throw new InvalidOperationException(
+                    $"Cannot call {nameof(ChildServerRelay)}.{nameof(PrivateShutDown)} from a thread other than the main one");
+            }
+            if (status is StatusEnum.NeverStarted) { return; }
+            status = StatusEnum.ShutDown;
             writeManualResetEvent?.Set();
             readCancellationToken?.Cancel();
             readThread?.Join(); readThread = null;
@@ -93,62 +108,58 @@ namespace Barotrauma.Networking
         }
 
 
-        private static int ReadIncomingMsgs()
+        private static Option<int> ReadIncomingMsgs()
         {
             Task<int> readTask = readStream?.ReadAsync(readTempBytes, 0, readTempBytes.Length, readCancellationToken.Token);
-            if (readTask is null) { return -1; }
+            if (readTask is null) { return Option<int>.None(); }
 
-            TimeSpan timeOut = TimeSpan.FromMilliseconds(100);
+            int timeOutMilliseconds = 100;
             for (int i = 0; i < 150; i++)
             {
-                if (shutDown)
+                if (status is StatusEnum.ShutDown)
                 {
                     readCancellationToken?.Cancel();
-                    return -1;
+                    return Option<int>.None();
                 }
-
-                // BUG workaround for crash when closing the server under .NET 6.0, not sure if this is the proper way to fix it but it prevents it from crashing the client. - Markus
-#if NET6_0
                 try
                 {
-                    if (readTask.IsCompleted || readTask.Wait(100, readCancellationToken.Token))
+                    if (readTask.IsCompleted || readTask.Wait(timeOutMilliseconds, readCancellationToken.Token))
                     {
                         break;
                     }
                 }
+                catch (AggregateException aggregateException)
+                {
+                    if (aggregateException.InnerException is OperationCanceledException) { return Option<int>.None(); }
+                    throw;
+                }
                 catch (OperationCanceledException)
                 {
-                    return -1;
+                    return Option<int>.None();
                 }
-#else
-                if (readTask.IsCompleted || readTask.Wait(timeOut))
-                {
-                    break;
-                }
-#endif
             }
 
-            if (readTask.Status != TaskStatus.RanToCompletion)
+            if (readTask.Status == TaskStatus.RanToCompletion)
             {
-                bool swallowException = shutDown
-                    && ((readTask.Exception?.InnerException is ObjectDisposedException)
-                        || (readTask.Exception?.InnerException is System.IO.IOException));
-                if (swallowException)
-                {
-                    readCancellationToken?.Cancel();
-                    return -1;
-                }
-                throw new Exception(
-                    $"ChildServerRelay readTask did not run to completion: status was {readTask.Status}.",
-                    readTask.Exception);
+                return Option<int>.Some(readTask.Result);
             }
 
-            return readTask.Result;
+            bool swallowException =
+                status is not StatusEnum.Active
+                && readTask.Exception?.InnerException is ObjectDisposedException or System.IO.IOException;
+            if (swallowException)
+            {
+                readCancellationToken?.Cancel();
+                return Option<int>.None();
+            }
+            throw new Exception(
+                $"ChildServerRelay readTask did not run to completion: status was {readTask.Status}.",
+                readTask.Exception);
         }
 
         private static void CheckPipeConnected(string name, PipeType pipe)
         {
-            if (!(pipe is { IsConnected: true }))
+            if (status is StatusEnum.Active && pipe is not { IsConnected: true })
             {
                 throw new Exception($"{name} was disconnected unexpectedly");
             }
@@ -159,7 +170,7 @@ namespace Barotrauma.Networking
         private static void UpdateRead()
         {
             Span<byte> msgLengthSpan = stackalloc byte[4 + 1];
-            while (!shutDown)
+            while (!HasShutDown)
             {
                 CheckPipeConnected(nameof(readStream), readStream);
 
@@ -169,10 +180,9 @@ namespace Barotrauma.Networking
                     {
                         if (readIncOffset >= readIncTotal)
                         {
-                            readIncTotal = ReadIncomingMsgs();
+                            if (!ReadIncomingMsgs().TryUnwrap(out readIncTotal)) { return false; }
                             readIncOffset = 0;
                             if (readIncTotal == 0) { Thread.Yield(); continue; }
-                            if (readIncTotal < 0) { return false; }
                         }
                         readTo[i] = readTempBytes[readIncOffset];
                         readIncOffset++;
@@ -180,7 +190,7 @@ namespace Barotrauma.Networking
                     return true;
                 }
 
-                if (!readBytes(msgLengthSpan)) { shutDown = true; break; }
+                if (!readBytes(msgLengthSpan)) { status = StatusEnum.ShutDown; break; }
 
                 int msgLength = msgLengthSpan[0]
                                 | (msgLengthSpan[1] << 8)
@@ -188,24 +198,24 @@ namespace Barotrauma.Networking
                                 | (msgLengthSpan[3] << 24);
                 WriteStatus writeStatus = (WriteStatus)msgLengthSpan[4];
 
-                if (msgLength > 0)
-                {
-                    byte[] msg = new byte[msgLength];
-                    if (!readBytes(msg.AsSpan())) { shutDown = true; break; }
+                byte[] msg = msgLength > 0 ? new byte[msgLength] : Array.Empty<byte>();
+                if (msg.Length > 0 && !readBytes(msg.AsSpan())) { status = StatusEnum.ShutDown; break; }
 
-                    switch (writeStatus)
-                    {
-                        case WriteStatus.Success:
-                            msgsToRead.Enqueue(msg);
-                            break;
-                        case WriteStatus.Heartbeat:
-                            //do nothing
-                            break;
-                        case WriteStatus.Crash:
-                            HandleCrashString(Encoding.UTF8.GetString(msg));
-                            shutDown = true;
-                            break;
-                    }
+                switch (writeStatus)
+                {
+                    case WriteStatus.Success:
+                        msgsToRead.Enqueue(msg);
+                        break;
+                    case WriteStatus.Heartbeat:
+                        //do nothing
+                        break;
+                    case WriteStatus.RequestShutdown:
+                        status = StatusEnum.ShutDown;
+                        break;
+                    case WriteStatus.Crash:
+                        HandleCrashString(Encoding.UTF8.GetString(msg));
+                        status = StatusEnum.ShutDown;
+                        break;
                 }
 
                 Thread.Yield();
@@ -214,13 +224,11 @@ namespace Barotrauma.Networking
 
         private static void UpdateWrite()
         {
-            while (!shutDown)
+            while (!HasShutDown)
             {
                 CheckPipeConnected(nameof(writeStream), writeStream);
 
-                byte[] msg;
-
-                void writeMsg(WriteStatus writeStatus)
+                void writeMsg(WriteStatus writeStatus, byte[] msg)
                 {
                     // It's SUPER IMPORTANT that this stack allocation
                     // remains in this local function and is never inlined,
@@ -228,21 +236,19 @@ namespace Barotrauma.Networking
                     // when the function returns; placing it in the loop
                     // this method is based around would lead to a stack
                     // overflow real quick!
-                    Span<byte> bytesToWrite = stackalloc byte[4 + 1 + msg.Length];
+                    Span<byte> headerBytes = stackalloc byte[4 + 1];
 
-                    bytesToWrite[0] = (byte)(msg.Length & 0xFF);
-                    bytesToWrite[1] = (byte)((msg.Length >> 8) & 0xFF);
-                    bytesToWrite[2] = (byte)((msg.Length >> 16) & 0xFF);
-                    bytesToWrite[3] = (byte)((msg.Length >> 24) & 0xFF);
+                    headerBytes[0] = (byte)(msg.Length & 0xFF);
+                    headerBytes[1] = (byte)((msg.Length >> 8) & 0xFF);
+                    headerBytes[2] = (byte)((msg.Length >> 16) & 0xFF);
+                    headerBytes[3] = (byte)((msg.Length >> 24) & 0xFF);
                     
-                    bytesToWrite[4] = (byte)writeStatus;
-                    Span<byte> msgSlice = bytesToWrite.Slice(4 + 1, msg.Length);
-
-                    msg.AsSpan().CopyTo(msgSlice);
+                    headerBytes[4] = (byte)writeStatus;
 
                     try
                     {
-                        writeStream?.Write(bytesToWrite);
+                        writeStream?.Write(headerBytes);
+                        writeStream?.Write(msg);
                     }
                     catch (Exception exception)
                     {
@@ -250,7 +256,7 @@ namespace Barotrauma.Networking
                         {
                             case ObjectDisposedException _:
                             case System.IO.IOException _:
-                                if (!shutDown) { throw; }
+                                if (!HasShutDown) { throw; }
                                 break;
                             default:
                                 throw;
@@ -258,29 +264,34 @@ namespace Barotrauma.Networking
                     }
                 }
 
+                if (status is StatusEnum.RequestedShutDown)
+                {
+                    writeMsg(WriteStatus.RequestShutdown, Array.Empty<byte>());
+                    status = StatusEnum.ShutDown;
+                }
+                
                 while (errorsToWrite.TryDequeue(out var error))
                 {
-                    msg = Encoding.UTF8.GetBytes(error);
-                    writeMsg(WriteStatus.Crash);
-                    shutDown = true;
+                    writeMsg(WriteStatus.Crash, Encoding.UTF8.GetBytes(error));
+                    status = StatusEnum.ShutDown;
                 }
                 
-                while (msgsToWrite.TryDequeue(out msg))
+                while (msgsToWrite.TryDequeue(out var msg))
                 {
-                    writeMsg(WriteStatus.Success);
+                    writeMsg(WriteStatus.Success, msg);
 
-                    if (shutDown) { break; }
+                    if (HasShutDown) { break; }
                 }
                 
-                if (!shutDown)
+                if (!HasShutDown)
                 {
                     writeManualResetEvent.Reset();
                     if (!writeManualResetEvent.WaitOne(1000))
                     {
-                        if (shutDown) { return; }
+                        if (HasShutDown) { return; }
 
                         //heartbeat to keep the other end alive
-                        msg = Array.Empty<byte>(); writeMsg(WriteStatus.Heartbeat);
+                        writeMsg(WriteStatus.Heartbeat, Array.Empty<byte>());
                     }
                 }
             }
@@ -288,7 +299,7 @@ namespace Barotrauma.Networking
 
         public static void Write(byte[] msg)
         {
-            if (shutDown) { return; }
+            if (HasShutDown) { return; }
 
             if (msg.Length > 0x1fff_ffff)
             {
@@ -302,7 +313,7 @@ namespace Barotrauma.Networking
 
         public static bool Read(out byte[] msg)
         {
-            if (shutDown) { msg = null; return false; }
+            if (HasShutDown) { msg = null; return false; }
 
             return msgsToRead.TryDequeue(out msg);
         }

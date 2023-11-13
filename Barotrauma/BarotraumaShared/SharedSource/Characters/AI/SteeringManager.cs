@@ -43,9 +43,9 @@ namespace Barotrauma
             steering += DoSteeringSeek(targetSimPos, weight);
         }
 
-        public void SteeringWander(float weight = 1)
+        public void SteeringWander(float weight = 1, bool avoidWanderingOutsideLevel = false)
         {
-            steering += DoSteeringWander(weight);
+            steering += DoSteeringWander(weight, avoidWanderingOutsideLevel);
         }
 
         public void SteeringAvoid(float deltaTime, float lookAheadDistance, float weight = 1)
@@ -119,7 +119,7 @@ namespace Barotrauma
             //return newSteering;
         }
 
-        protected virtual Vector2 DoSteeringWander(float weight)
+        protected virtual Vector2 DoSteeringWander(float weight, bool avoidWanderingOutsideLevel)
         {
             Vector2 circleCenter = (host.Steering == Vector2.Zero) ? Vector2.UnitY : host.Steering;
             circleCenter = Vector2.Normalize(circleCenter) * CircleDistance;
@@ -127,18 +127,34 @@ namespace Barotrauma
             Vector2 displacement = new Vector2(
                 (float)Math.Cos(wanderAngle),
                 (float)Math.Sin(wanderAngle));
-            displacement = displacement * CircleRadius;
+            displacement *= CircleRadius;
 
             float angleChange = 1.5f;
             
             wanderAngle += Rand.Range(0.0f, 1.0f) * angleChange - angleChange * 0.5f;
 
             Vector2 newSteering = circleCenter + displacement;
+            if (avoidWanderingOutsideLevel && Level.Loaded != null)
+            {
+                float margin = 5000.0f;
+                if (host.WorldPosition.X < -margin)
+                {
+                    // Too far left
+                    newSteering.X += (-margin - host.WorldPosition.X) * weight / margin;
+                }
+                else if (host.WorldPosition.X > Level.Loaded.Size.X - margin)
+                {
+                    // Too far right
+                    newSteering.X -= (host.WorldPosition.X - (Level.Loaded.Size.X - margin)) * weight / margin;
+                }
+            }
+
             float steeringSpeed = (newSteering + host.Steering).Length();
             if (steeringSpeed > weight)
             {
                 newSteering = Vector2.Normalize(newSteering) * weight;
             }
+
 
             return newSteering;
         }

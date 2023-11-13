@@ -13,6 +13,7 @@ namespace Barotrauma
         public override bool KeepDivingGearOn => true;
         public override bool KeepDivingGearOnAlsoWhenInactive => true;
         public override bool PrioritizeIfSubObjectivesActive => true;
+        public override bool AllowWhileHandcuffed => false;
 
         private AIObjectiveGetItem getSingleItemObjective;
         private AIObjectiveGetItems getAllItemsObjective;
@@ -27,6 +28,7 @@ namespace Barotrauma
         public bool FindAllItems { get; set; }
         public bool Equip { get; set; }
         public bool EvaluateCombatPriority { get; set; }
+        public bool RequireNonEmpty { get; set; }
 
         private AIObjective GetSubObjective()
         {
@@ -59,8 +61,7 @@ namespace Barotrauma
         {
             if (!IsAllowed)
             {
-                Priority = 0;
-                Abandon = true;
+                HandleNonAllowed();
                 return Priority;
             }
             Priority = objectiveManager.GetOrderPriority(this);
@@ -68,27 +69,12 @@ namespace Barotrauma
             if (subObjective != null && subObjective.IsCompleted)
             {
                 Priority = 0;
-                items.RemoveWhere(i => i == null || i.Removed || !i.IsOwnedBy(character));
-                if (items.None())
-                {
-                    Abandon = true;
-
-                }
-                else if (items.Any(i => i.Components.Any(i => !i.IsLoaded(character))))
-                {
-                    Reset();
-                }
             }
             return Priority;
         }
 
         protected override void Act(float deltaTime)
         {
-            if (character.LockHands)
-            {
-                Abandon = true;
-                return;
-            }
             if (!subObjectivesCreated)
             {
                 if (FindAllItems && targetItem == null)
@@ -106,7 +92,7 @@ namespace Barotrauma
                             CheckInventory = CheckInventory,
                             Equip = Equip,
                             EvaluateCombatPriority = EvaluateCombatPriority,
-                            RequireLoaded = true,
+                            RequireNonEmpty = RequireNonEmpty,
                             RequireAllItems = requireAll
                         },
                         onCompleted: () =>
@@ -157,29 +143,29 @@ namespace Barotrauma
                         {
                             EvaluateCombatPriority = EvaluateCombatPriority,
                             SpeakIfFails = true,
-                            RequireLoaded = true
+                            RequireNonEmpty = RequireNonEmpty
                         };
                     }
                     if (!TryAddSubObjective(ref getSingleItemObjective, getItemConstructor,
-                    onCompleted: () =>
-                    {
-                        if (KeepActiveWhenReady)
+                        onCompleted: () =>
                         {
-                            if (getSingleItemObjective != null)
+                            if (KeepActiveWhenReady)
                             {
-                                var item = getSingleItemObjective?.TargetItem;
-                                if (item?.IsOwnedBy(character) != null)
+                                if (getSingleItemObjective != null)
                                 {
-                                    items.Add(item);
+                                    var item = getSingleItemObjective?.TargetItem;
+                                    if (item?.IsOwnedBy(character) != null)
+                                    {
+                                        items.Add(item);
+                                    }
                                 }
                             }
-                        }
-                        else
-                        {
-                            IsCompleted = true;
-                        }
-                    },
-                    onAbandon: () => Abandon = true))
+                            else
+                            {
+                                IsCompleted = true;
+                            }
+                        },
+                        onAbandon: () => Abandon = true))
                     {
                         Abandon = true;
                     }

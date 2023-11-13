@@ -6,10 +6,9 @@ namespace Barotrauma
     {
         public Tutorial Tutorial;
 
-        public TutorialMode(GameModePreset preset)
-            : base(preset)
-        {
-        }
+        public override bool Paused => Tutorial.Paused;
+
+        public TutorialMode(GameModePreset preset) : base(preset) { }
 
         public override void Start()
         {
@@ -22,16 +21,10 @@ namespace Barotrauma
             }
         }
 
-        public override void AddToGUIUpdateList()
-        {
-            base.AddToGUIUpdateList();
-            Tutorial.AddToGUIUpdateList();
-        }
-
         public override void Update(float deltaTime)
         {
             base.Update(deltaTime);
-            Tutorial.Update(deltaTime);
+            Tutorial.Update();
         }
     }
 }

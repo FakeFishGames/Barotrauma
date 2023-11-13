@@ -24,7 +24,7 @@ namespace Barotrauma
         public bool IsAiming => wasAiming;
         public bool IsAimingMelee => wasAimingMelee;
 
-        protected bool Aiming => aiming || aimingMelee || LockFlippingUntil > Timing.TotalTime && character.IsKeyDown(InputType.Aim);
+        protected bool Aiming => aiming || aimingMelee || FlipLockTime > Timing.TotalTime && character.IsKeyDown(InputType.Aim);
 
         public float ArmLength => upperArmLength + forearmLength;
 
@@ -87,7 +87,7 @@ namespace Barotrauma
         }
 
         public bool CanWalk => RagdollParams.CanWalk;
-        public bool IsMovingBackwards => !InWater && Math.Sign(targetMovement.X) == -Math.Sign(Dir);
+        public bool IsMovingBackwards => !InWater && Math.Sign(targetMovement.X) == -Math.Sign(Dir) && CurrentAnimationParams is not FishGroundedParams { Flip: false };
 
         // TODO: define death anim duration in XML
         protected float deathAnimTimer, deathAnimDuration = 5.0f;
@@ -101,7 +101,7 @@ namespace Barotrauma
             {
                 if (InWater || !CanWalk)
                 {
-                    return TargetMovement.LengthSquared() > MathUtils.Pow2(SwimSlowParams.MovementSpeed);
+                    return TargetMovement.LengthSquared() > MathUtils.Pow2(SwimSlowParams.MovementSpeed + 0.0001f);
                 }
                 else
                 {
@@ -134,8 +134,11 @@ namespace Barotrauma
             }
         }
 
-        public enum Animation { None, Climbing, UsingConstruction, Struggle, CPR };
+        public enum Animation { None, Climbing, UsingItem, Struggle, CPR, UsingItemWhileClimbing };
         public Animation Anim;
+
+        public bool IsUsingItem => Anim == Animation.UsingItem || Anim == Animation.UsingItemWhileClimbing;
+        public bool IsClimbing => Anim == Animation.Climbing || Anim == Animation.UsingItemWhileClimbing;
 
         public Vector2 AimSourceWorldPos
         {
@@ -275,21 +278,40 @@ namespace Barotrauma
         // We need some margin, because if a hatch has closed, it's possible that the height from floor is slightly negative.
         public bool IsAboveFloor => GetHeightFromFloor() > -0.1f;
 
-        public float LockFlippingUntil;
+        public float FlipLockTime { get; private set; }
+        public void LockFlipping(float time = 0.2f)
+        {
+            FlipLockTime = (float)Timing.TotalTime + time;
+        }
 
         public void UpdateUseItem(bool allowMovement, Vector2 handWorldPos)
         {
-            useItemTimer = 0.5f;
-            Anim = Animation.UsingConstruction;
+            useItemTimer = 0.05f;
+            StartUsingItem();
 
             if (!allowMovement)
             {
                 TargetMovement = Vector2.Zero;
                 TargetDir = handWorldPos.X > character.WorldPosition.X ? Direction.Right : Direction.Left;
-                float sqrDist = Vector2.DistanceSquared(character.WorldPosition, handWorldPos);
-                if (sqrDist > MathUtils.Pow(ConvertUnits.ToDisplayUnits(upperArmLength + forearmLength), 2))
+                if (InWater)
                 {
-                    TargetMovement = Vector2.Normalize(handWorldPos - character.WorldPosition) * GetCurrentSpeed(false) * Math.Max(character.SpeedMultiplier, 1);
+                    float sqrDist = Vector2.DistanceSquared(character.WorldPosition, handWorldPos);
+                    if (sqrDist > MathUtils.Pow(ConvertUnits.ToDisplayUnits(upperArmLength + forearmLength), 2))
+                    {
+                        TargetMovement = GetTargetMovement(Vector2.Normalize(handWorldPos - character.WorldPosition));
+                    }
+                }
+                else
+                {
+                    float distX = Math.Abs(handWorldPos.X - character.WorldPosition.X);
+                    if (distX > ConvertUnits.ToDisplayUnits(upperArmLength + forearmLength))
+                    {
+                        TargetMovement = GetTargetMovement(Vector2.UnitX * Math.Sign(handWorldPos.X - character.WorldPosition.X));
+                    }
+                }
+                Vector2 GetTargetMovement(Vector2 dir)
+                {
+                    return dir * GetCurrentSpeed(false) * Math.Max(character.SpeedMultiplier, 1);
                 }
             }
 
@@ -299,6 +321,15 @@ namespace Barotrauma
             if (character.Submarine != null)
             {
                 handSimPos -= character.Submarine.SimPosition;
+            }
+
+            Vector2 refPos = rightShoulder?.WorldAnchorA ?? leftShoulder?.WorldAnchorA ?? MainLimb.SimPosition;
+            Vector2 diff = handSimPos - refPos;
+            float dist = diff.Length();
+            float maxDist = ArmLength * 0.9f;
+            if (dist > maxDist)
+            {
+                handSimPos = refPos + diff / dist * maxDist;
             }
 
             var leftHand = GetLimb(LimbType.LeftHand);
@@ -315,6 +346,16 @@ namespace Barotrauma
                 rightHand.Disabled = true;
                 rightHand.PullJointEnabled = true;
                 rightHand.PullJointWorldAnchorB = handSimPos;
+            }
+
+            //make the character crouch if using an item some distance below them (= on the floor)
+            if (!inWater && 
+                character.WorldPosition.Y - handWorldPos.Y > ConvertUnits.ToDisplayUnits(CurrentGroundedParams.TorsoPosition) / 4 &&
+                this is HumanoidAnimController humanoidAnimController)
+            {
+                humanoidAnimController.Crouching = true;
+                humanoidAnimController.ForceSelectAnimationType = AnimationType.Crouch;
+                character.SetInput(InputType.Crouch, hit: false, held: true);
             }
         }
 
@@ -345,13 +386,8 @@ namespace Barotrauma
 
             //calculate the handle positions
             Matrix itemTransfrom = Matrix.CreateRotationZ(item.body.Rotation);
-            float horizontalOffset = ConvertUnits.ToSimUnits((item.Sprite.size.X / 2 - item.Sprite.Origin.X) * item.Scale);
-
-            //handlePos[0] = ConvertUnits.ToSimUnits(new Vector2(-45,25) * 0.5f);
-            //handlePos[1] = ConvertUnits.ToSimUnits(new Vector2(-65,30) * 0.5f);
-
-            transformedHandlePos[0] = Vector2.Transform(new Vector2(handlePos[0].X + horizontalOffset, handlePos[0].Y), itemTransfrom);
-            transformedHandlePos[1] = Vector2.Transform(new Vector2(handlePos[1].X + horizontalOffset, handlePos[1].Y), itemTransfrom);
+            transformedHandlePos[0] = Vector2.Transform(handlePos[0], itemTransfrom);
+            transformedHandlePos[1] = Vector2.Transform(handlePos[1], itemTransfrom);
 
             Limb torso = GetLimb(LimbType.Torso) ?? MainLimb;
             Limb leftHand = GetLimb(LimbType.LeftHand);
@@ -359,8 +395,13 @@ namespace Barotrauma
 
             Vector2 itemPos = aim ? aimPos : holdPos;
 
-            var controller = character.SelectedConstruction?.GetComponent<Controller>();
+            var controller = character.SelectedItem?.GetComponent<Controller>();
             bool usingController = controller != null && !controller.AllowAiming;
+            if (!usingController)
+            {
+                controller = character.SelectedSecondaryItem?.GetComponent<Controller>();
+                usingController = controller != null && !controller.AllowAiming;
+            }
             bool isClimbing = character.IsClimbing && Math.Abs(character.AnimController.TargetMovement.Y) > 0.01f;
             float itemAngle;
             Holdable holdable = item.GetComponent<Holdable>();
@@ -373,7 +414,9 @@ namespace Barotrauma
             if (aim && !isClimbing && !usingController && character.Stun <= 0.0f && itemPos != Vector2.Zero && !character.IsIncapacitated)
             {
                 Vector2 mousePos = ConvertUnits.ToSimUnits(character.SmoothedCursorPosition);
-                Vector2 diff = holdable.Aimable ? (mousePos - AimSourceSimPos) * Dir : Vector2.UnitX;
+                Vector2 diff = holdable.Aimable ?
+                    (mousePos - AimSourceSimPos) * Dir : 
+                    MathUtils.RotatePoint(Vector2.UnitX, torsoRotation);
                 holdAngle = MathUtils.VectorToAngle(new Vector2(diff.X, diff.Y * Dir)) - torsoRotation * Dir;
                 holdAngle += GetAimWobble(rightHand, leftHand, item);
                 itemAngle = torsoRotation + holdAngle * Dir;
@@ -468,6 +511,16 @@ namespace Barotrauma
                 return;
             }
 
+            float targetAngle = MathUtils.WrapAngleTwoPi(itemAngle + itemAngleRelativeToHoldAngle * Dir);
+            float currentRotation = MathUtils.WrapAngleTwoPi(item.body.Rotation);
+            float itemRotation = MathHelper.SmoothStep(currentRotation, targetAngle, deltaTime * 25);
+            if (previousDirection != dir || Math.Abs(targetAngle - currentRotation) > MathHelper.Pi)
+            {
+                itemRotation = targetAngle;
+            }
+            item.SetTransform(currItemPos, itemRotation, setPrevTransform: false);
+            previousDirection = dir;
+
             if (holdable.Pusher != null)
             {
                 if (character.Stun > 0.0f || character.IsIncapacitated)
@@ -485,24 +538,11 @@ namespace Barotrauma
                     else
                     {
                         holdable.Pusher.TargetPosition = currItemPos;
-                        holdable.Pusher.TargetRotation = holdAngle * Dir;
-
+                        holdable.Pusher.TargetRotation = itemRotation;
                         holdable.Pusher.MoveToTargetPosition(true);
-
-                        currItemPos = holdable.Pusher.SimPosition;
-                        itemAngle = holdable.Pusher.Rotation;
                     }
                 }
             }
-            float targetAngle = MathUtils.WrapAngleTwoPi(itemAngle + itemAngleRelativeToHoldAngle * Dir);
-            float currentRotation = MathUtils.WrapAngleTwoPi(item.body.Rotation);
-            float itemRotation = MathHelper.SmoothStep(currentRotation, targetAngle, deltaTime * 25);
-            if (previousDirection != dir || Math.Abs(targetAngle - currentRotation) > MathHelper.Pi)
-            {
-                itemRotation = targetAngle;
-            }
-            item.SetTransform(currItemPos, itemRotation, setPrevTransform: false);
-            previousDirection = dir;
 
             if (!isClimbing && !character.IsIncapacitated && itemPos != Vector2.Zero && (aim || !holdable.UseHandRotationForHoldAngle))
             {
@@ -529,11 +569,11 @@ namespace Barotrauma
             float wobbleStrength = 0.0f;
             if (character.Inventory?.GetItemInLimbSlot(InvSlotType.RightHand) == heldItem)
             {
-                wobbleStrength += Character.CharacterHealth.GetLimbDamage(rightHand, afflictionType: "damage");
+                wobbleStrength += Character.CharacterHealth.GetLimbDamage(rightHand, afflictionType: AfflictionPrefab.DamageType);
             }
             if (character.Inventory?.GetItemInLimbSlot(InvSlotType.LeftHand) == heldItem)
             {
-                wobbleStrength += Character.CharacterHealth.GetLimbDamage(leftHand, afflictionType: "damage");
+                wobbleStrength += Character.CharacterHealth.GetLimbDamage(leftHand, afflictionType: AfflictionPrefab.DamageType);
             }
             if (wobbleStrength <= 0.1f) { return 0.0f; }
             wobbleStrength = (float)Math.Min(wobbleStrength, 1.0f);
@@ -722,5 +762,45 @@ namespace Barotrauma
                 CalculateArmLengths();
             }
         }
+
+        private void StartAnimation(Animation animation)
+        {
+            if (animation == Animation.UsingItem)
+            {
+                Anim = IsClimbing ? Animation.UsingItemWhileClimbing : Animation.UsingItem;
+            }
+            else if (animation == Animation.Climbing)
+            {
+                Anim = IsUsingItem ? Animation.UsingItemWhileClimbing : Animation.Climbing;
+            }
+            else
+            {
+                Anim = animation;
+            }
+        }
+
+        private void StopAnimation(Animation animation)
+        {
+            if (animation == Animation.UsingItem)
+            {
+                Anim = IsClimbing ? Animation.Climbing : Animation.None;
+            }
+            else if (animation == Animation.Climbing)
+            {
+                Anim = IsUsingItem ? Animation.UsingItem : Animation.None;
+            }
+            else
+            {
+                Anim = Animation.None;
+            }
+        }
+
+        public void StartUsingItem() => StartAnimation(Animation.UsingItem);
+
+        public void StartClimbing() => StartAnimation(Animation.Climbing);
+
+        public void StopUsingItem() => StopAnimation(Animation.UsingItem);
+
+        public void StopClimbing() => StopAnimation(Animation.Climbing);
     }
 }

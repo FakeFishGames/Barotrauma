@@ -229,7 +229,7 @@ namespace Barotrauma
 #if DEBUG
                     ShipCommandLog("Current importance for " + shipIssueWorker + " was " + importance + " and it was already being attended by " + shipIssueWorker.OrderedCharacter);
 #endif
-                    attendedIssues.Add(shipIssueWorker);
+                    InsertIssue(shipIssueWorker, attendedIssues);
                 }
                 else
                 {
@@ -237,19 +237,26 @@ namespace Barotrauma
                     ShipCommandLog("Current importance for " + shipIssueWorker + " was " + importance + " and it is not attended to");
 #endif
                     shipIssueWorker.RemoveOrder();
-                    availableIssues.Add(shipIssueWorker);
+                    InsertIssue(shipIssueWorker, availableIssues);
                 }
             }
 
-            availableIssues.Sort((x, y) => y.Importance.CompareTo(x.Importance));
-            attendedIssues.Sort((x, y) => x.Importance.CompareTo(y.Importance));
+            static void InsertIssue(ShipIssueWorker issue, List<ShipIssueWorker> list)
+            {
+                int index = 0;
+                while (index < list.Count && list[index].Importance > issue.Importance)
+                {
+                    index++;
+                }
+                list.Insert(index, issue);
+            }
 
             ShipIssueWorker mostImportantIssue = availableIssues.FirstOrDefault();
 
             float bestValue = 0f;
             Character bestCharacter = null;
 
-            if (mostImportantIssue != null && mostImportantIssue.Importance > MinimumIssueThreshold)
+            if (mostImportantIssue != null && mostImportantIssue.Importance >= MinimumIssueThreshold)
             {
                 IEnumerable<Character> bestCharacters = CrewManager.GetCharactersSortedForOrder(mostImportantIssue.SuggestedOrder, AlliedCharacters, character, true);
 
@@ -343,20 +350,20 @@ namespace Barotrauma
 
             ShipIssueWorkers.Clear();
 
-            if (CommandedSubmarine.GetItems(false).Find(i => i.HasTag("reactor") && !i.NonInteractable)?.GetComponent<Reactor>() is Reactor reactor)
+            if (CommandedSubmarine.GetItems(false).Find(i => i.HasTag(Tags.Reactor) && !i.NonInteractable)?.GetComponent<Reactor>() is Reactor reactor)
             {
                 var order = new Order(OrderPrefab.Prefabs["operatereactor"], "powerup".ToIdentifier(), reactor.Item, reactor);
                 ShipIssueWorkers.Add(new ShipIssueWorkerPowerUpReactor(this, order));
             }
 
-            if (CommandedSubmarine.GetItems(false).Find(i => i.HasTag("navterminal") && !i.NonInteractable) is Item nav && nav.GetComponent<Steering>() is Steering steeringComponent)
+            if (CommandedSubmarine.GetItems(false).Find(i => i.HasTag(Tags.NavTerminal) && !i.NonInteractable) is Item nav && nav.GetComponent<Steering>() is Steering steeringComponent)
             {
                 steering = steeringComponent;
                 var order = new Order(OrderPrefab.Prefabs["steer"], "navigatetactical".ToIdentifier(), nav, steeringComponent);
                 ShipIssueWorkers.Add(new ShipIssueWorkerSteer(this, order));
             }
 
-            foreach (Item item in CommandedSubmarine.GetItems(true).FindAll(i => i.HasTag("turret")))
+            foreach (Item item in CommandedSubmarine.GetItems(true).FindAll(i => i.HasTag(Tags.Turret) && !i.HasTag(Tags.Hardpoint)))
             {
                 var order = new Order(OrderPrefab.Prefabs["operateweapons"], item, item.GetComponent<Turret>());
                 ShipIssueWorkers.Add(new ShipIssueWorkerOperateWeapons(this, order));

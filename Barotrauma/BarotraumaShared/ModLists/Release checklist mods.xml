@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mods name="Release checklist mods">
+  <Vanilla />
+  <Workshop name="FrithsBiomes" id="2020332046" />
+  <Workshop name="Improved Husks" id="2085783214" />
+  <Workshop name="Meaningful Upgrades" id="2183524355" />
+  <Workshop name="Community Conversation Pack" id="2435017882" />
+  <Workshop name="Stations from beyond" id="2585543390" />
+  <Workshop name="FrithsMissionTweak" id="2788861460" />
+  <Workshop name="New Wrecks For Barotrauma (With sellable wrecks)" id="2184257427" />
+  <Workshop name="DynamicEuropa" id="2532991202" />
+  <Workshop name="32x Stack" id="2683570256" />
+  <Workshop name="Transparent Diving Helmets" id="2670466527" />
+  <Workshop name="Better Vanilla Weapons" id="2655476933" />
+  <Workshop name="AnimEuropa" id="2723467015" />
+</mods>

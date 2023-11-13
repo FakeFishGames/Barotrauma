@@ -1,8 +1,4 @@
-﻿using System;
-using System.Threading;
-#if WINDOWS
-using System.Windows;
-#endif
+﻿using Barotrauma;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 
@@ -14,6 +10,7 @@ namespace EventInput
         void ReceiveTextInput(string text);
         void ReceiveCommandInput(char command);
         void ReceiveSpecialInput(Keys key);
+        void ReceiveEditingInput(string text, int start, int length);
 
         bool Selected { get; set; } //or Focused
     }
@@ -25,47 +22,27 @@ namespace EventInput
             EventInput.Initialize(window);
             EventInput.CharEntered += EventInput_CharEntered;
             EventInput.KeyDown += EventInput_KeyDown;
+            EventInput.EditingText += EventInput_TextEditing;
+            GameMain.ResetIMEWorkaround();
+        }
+
+        public void EventInput_TextEditing(object sender, TextEditingEventArgs e)
+        {
+            _subscriber?.ReceiveEditingInput(e.Text, e.Start, e.Length);
         }
 
         public void EventInput_KeyDown(object sender, KeyEventArgs e)
         {
-            if (_subscriber == null)
-                return;
-
-            _subscriber.ReceiveSpecialInput(e.KeyCode);
+            _subscriber?.ReceiveSpecialInput(e.KeyCode);
+            if (char.IsControl(e.Character))
+            {
+                _subscriber?.ReceiveCommandInput(e.Character);
+            }
         }
 
         void EventInput_CharEntered(object sender, CharacterEventArgs e)
         {
-            if (_subscriber == null)
-                return;
-            if (char.IsControl(e.Character))
-            {
-                _subscriber.ReceiveCommandInput(e.Character);
-                // Doesn't work as expected. Not sure why this should be run in a separate thread.
-                //#if WINDOWS
-                //                //ctrl-v
-                //                if (e.Character == 0x16) // 22
-                //                {
-                //                    //XNA runs in Multiple Thread Apartment state, which cannot recieve clipboard
-                //                    Thread thread = new Thread(PasteThread);
-                //                    thread.SetApartmentState(ApartmentState.STA);
-                //                    thread.Start();
-                //                    thread.Join();
-                //                    _subscriber.ReceiveTextInput(_pasteResult);
-                //                }
-                //                else
-                //                {
-                //                    _subscriber.ReceiveCommandInput(e.Character);
-                //                }
-                //#else
-                //                _subscriber.ReceiveCommandInput(e.Character);
-                //#endif
-            }
-            else
-            {
-                _subscriber.ReceiveTextInput(e.Character);
-            }
+            _subscriber?.ReceiveTextInput(e.Character);
         }
 
         IKeyboardSubscriber _subscriber;
@@ -74,12 +51,26 @@ namespace EventInput
             get { return _subscriber; }
             set
             {
-                if (_subscriber == value) return;
-                if (_subscriber != null)
+                if (_subscriber == value) { return; }
+
+                if (_subscriber is GUITextBox)
+                {
+                    TextInput.StopTextInput();
                     _subscriber.Selected = false;
+                }
+
+                if (value is GUITextBox box)
+                {
+                    TextInput.SetTextInputRect(box.MouseRect);
+                    TextInput.StartTextInput();
+                    TextInput.SetTextInputRect(box.MouseRect);
+                }
+
                 _subscriber = value;
                 if (value != null)
+                {
                     value.Selected = true;
+                }
             }
         }
     }

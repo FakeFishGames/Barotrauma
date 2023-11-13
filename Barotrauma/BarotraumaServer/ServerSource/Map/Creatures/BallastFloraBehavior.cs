@@ -56,7 +56,7 @@ namespace Barotrauma.MapCreatures.Behavior
 
         public void ServerWrite(IWriteMessage msg, IEventData eventData)
         {
-            msg.Write((byte)eventData.NetworkHeader);
+            msg.WriteByte((byte)eventData.NetworkHeader);
             
             switch (eventData)
             {
@@ -80,51 +80,51 @@ namespace Barotrauma.MapCreatures.Behavior
                     break;
             }
             
-            msg.Write(PowerConsumptionTimer);
+            msg.WriteSingle(PowerConsumptionTimer);
         }
 
         private void ServerWriteSpawn(IWriteMessage msg)
         {
-            msg.Write(Prefab.Identifier);
-            msg.Write(Offset.X);
-            msg.Write(Offset.Y);
+            msg.WriteIdentifier(Prefab.Identifier);
+            msg.WriteSingle(Offset.X);
+            msg.WriteSingle(Offset.Y);
         }
 
         private void ServerWriteBranchGrowth(IWriteMessage msg, BallastFloraBranch branch, int parentId = -1)
         {
             var (x, y) = branch.Position;
-            msg.Write(parentId);
-            msg.Write((int)branch.ID);
-            msg.Write(branch.IsRootGrowth);
+            msg.WriteInt32(parentId);
+            msg.WriteInt32((int)branch.ID);
+            msg.WriteBoolean(branch.IsRootGrowth);
             msg.WriteRangedInteger((byte)branch.Type, 0b0000, 0b1111);
             msg.WriteRangedInteger((byte)branch.Sides, 0b0000, 0b1111);
             msg.WriteRangedInteger(branch.FlowerConfig.Serialize(), 0, 0xFFF);
             msg.WriteRangedInteger(branch.LeafConfig.Serialize(), 0, 0xFFF);
-            msg.Write((ushort)branch.MaxHealth);
-            msg.Write((int)(x / VineTile.Size));
-            msg.Write((int)(y / VineTile.Size));
-            msg.Write(branch.ParentBranch == null ? -1 : Branches.IndexOf(branch.ParentBranch));
+            msg.WriteUInt16((ushort)branch.MaxHealth);
+            msg.WriteInt32((int)(x / VineTile.Size));
+            msg.WriteInt32((int)(y / VineTile.Size));
+            msg.WriteInt32(branch.ParentBranch == null ? -1 : Branches.IndexOf(branch.ParentBranch));
         }
 
         private void ServerWriteBranchDamage(IWriteMessage msg, BallastFloraBranch branch)
         {
-            msg.Write((int)branch.ID);
-            msg.Write(branch.Health);
+            msg.WriteInt32((int)branch.ID);
+            msg.WriteSingle(branch.Health);
         }
         
         private void ServerWriteInfect(IWriteMessage msg, UInt16 itemID, InfectEventData.InfectState infect, BallastFloraBranch infector = null)
         {
-            msg.Write(itemID);
-            msg.Write(infect == InfectEventData.InfectState.Yes);
+            msg.WriteUInt16(itemID);
+            msg.WriteBoolean(infect == InfectEventData.InfectState.Yes);
             if (infect == InfectEventData.InfectState.Yes)
             {
-                msg.Write(infector?.ID ?? -1);
+                msg.WriteInt32(infector?.ID ?? -1);
             }
         }
 
         private void ServerWriteBranchRemove(IWriteMessage msg, BallastFloraBranch branch)
         {
-            msg.Write(branch.ID);
+            msg.WriteInt32(branch.ID);
         }
 
         public void CreateNetworkMessage(IEventData extraData)

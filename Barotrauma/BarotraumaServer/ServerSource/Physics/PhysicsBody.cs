@@ -11,8 +11,8 @@ namespace Barotrauma
             float MaxVel = NetConfig.MaxPhysicsBodyVelocity;
             float MaxAngularVel = NetConfig.MaxPhysicsBodyAngularVelocity;
 
-            msg.Write(SimPosition.X);
-            msg.Write(SimPosition.Y);
+            msg.WriteSingle(SimPosition.X);
+            msg.WriteSingle(SimPosition.Y);
 
 #if DEBUG
             if (Math.Abs(FarseerBody.LinearVelocity.X) > MaxVel || 
@@ -22,8 +22,8 @@ namespace Barotrauma
             }
 #endif
 
-            msg.Write(FarseerBody.Awake);
-            msg.Write(FarseerBody.FixedRotation);
+            msg.WriteBoolean(FarseerBody.Awake);
+            msg.WriteBoolean(FarseerBody.FixedRotation);
 
             if (!FarseerBody.FixedRotation)
             {

@@ -15,13 +15,15 @@ namespace Steamworks
 	/// </summary>
 	public class SteamMusic : SteamClientClass<SteamMusic>
 	{
-		internal static ISteamMusic Internal => Interface as ISteamMusic;
+		internal static ISteamMusic? Internal => Interface as ISteamMusic;
 
-		internal override void InitializeInterface( bool server )
+		internal override bool InitializeInterface( bool server )
 		{
 			SetInterface( server, new ISteamMusic( server ) );
+			if ( Interface is null || Interface.Self == IntPtr.Zero ) return false;
 
 			InstallEvents();
+			return true;
 		}
 
 		internal static void InstallEvents()
@@ -31,52 +33,57 @@ namespace Steamworks
 		}
 
 		/// <summary>
-		/// Playback status changed
+		/// Invoked when playback status is changed.
 		/// </summary>
-		public static event Action OnPlaybackChanged;
+		public static event Action? OnPlaybackChanged;
 
 		/// <summary>
-		/// Volume changed, parameter is new volume
+		/// Invoked when the volume of the music player is changed.
 		/// </summary>
-		public static event Action<float> OnVolumeChanged;
+		public static event Action<float>? OnVolumeChanged;
 
 		/// <summary>
-		/// Checks if Steam Music is enabled
+		/// Checks if Steam Music is enabled.
 		/// </summary>
-		public static bool IsEnabled => Internal.BIsEnabled();
+		public static bool IsEnabled => Internal != null && Internal.BIsEnabled();
 
 		/// <summary>
-		/// true if a song is currently playing, paused, or queued up to play; otherwise false.
+		/// <see langword="true"/> if a song is currently playing, paused, or queued up to play; otherwise <see langword="false"/>.
 		/// </summary>
-		public static bool IsPlaying => Internal.BIsPlaying();
+		public static bool IsPlaying => Internal != null && Internal.BIsPlaying();
 
 		/// <summary>
 		/// Gets the current status of the Steam Music player
 		/// </summary>
-		public static MusicStatus Status => Internal.GetPlaybackStatus();
-
-
-		public static void Play() => Internal.Play();
-
-		public static void Pause() => Internal.Pause();
+		public static MusicStatus Status => Internal?.GetPlaybackStatus() ?? MusicStatus.Undefined;
 
 		/// <summary>
-		/// Have the Steam Music player play the previous song.
+		/// Plays the music player.
 		/// </summary>
-		public static void PlayPrevious() => Internal.PlayPrevious();
+		public static void Play() => Internal?.Play();
 
 		/// <summary>
-		/// Have the Steam Music player skip to the next song
+		/// Pauses the music player.
 		/// </summary>
-		public static void PlayNext() => Internal.PlayNext();
+		public static void Pause() => Internal?.Pause();
 
 		/// <summary>
-		/// Gets/Sets the current volume of the Steam Music player
+		/// Forces the music player to play the previous song.
+		/// </summary>
+		public static void PlayPrevious() => Internal?.PlayPrevious();
+
+		/// <summary>
+		/// Forces the music player to skip to the next song.
+		/// </summary>
+		public static void PlayNext() => Internal?.PlayNext();
+
+		/// <summary>
+		/// Gets and sets the current volume of the Steam Music player
 		/// </summary>
 		public static float Volume
 		{
-			get => Internal.GetVolume();
-			set => Internal.SetVolume( value );
+			get => Internal?.GetVolume() ?? 0f;
+			set => Internal?.SetVolume( value );
 		}
 	}
 }

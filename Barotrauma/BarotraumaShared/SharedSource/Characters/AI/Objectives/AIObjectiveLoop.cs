@@ -44,9 +44,13 @@ namespace Barotrauma
         public override bool CanBeCompleted => true;
         public override bool AbandonWhenCannotCompleteSubjectives => false;
         public override bool AllowSubObjectiveSorting => true;
+        public override bool AllowWhileHandcuffed => false;
+
         public virtual bool InverseTargetEvaluation => false;
         protected virtual bool ResetWhenClearingIgnoreList => true;
         protected virtual bool ForceOrderPriority => true;
+
+        protected virtual int MaxTargets => int.MaxValue;
 
         public override bool IsLoop { get => true; set => throw new Exception("Trying to set the value for IsLoop from: " + System.Environment.StackTrace.CleanupStackTrace()); }
 
@@ -89,12 +93,7 @@ namespace Barotrauma
                     var target = objective.Key;
                     if (!Targets.Contains(target))
                     {
-                        var subObjective = objective.Value;
-                        if (CurrentSubObjective == subObjective)
-                        {
-                            CurrentSubObjective.Abandon = !CurrentSubObjective.IsCompleted;
-                        }
-                        subObjectives.Remove(subObjective);
+                        subObjectives.Remove(objective.Value);
                     }
                 }
                 SyncRemovedObjectives(Objectives, GetList());
@@ -120,46 +119,44 @@ namespace Barotrauma
         {
             if (!IsAllowed)
             {
-                Priority = 0;
+                HandleNonAllowed();
                 return Priority;
             }
-            if (character.LockHands)
+            // Allow the target value to be more than 100.
+            float targetValue = TargetEvaluation();
+            if (InverseTargetEvaluation)
+            {
+                targetValue = 100 - targetValue;
+            }
+            var currentSubObjective = CurrentSubObjective;
+            if (currentSubObjective != null && currentSubObjective.Priority > targetValue)
+            {
+                // If the priority is higher than the target value, let's just use it.
+                // The priority calculation is more precise, but it takes into account things like distances,
+                // so it's better not to use it if it's lower than the rougher targetValue.
+                targetValue = currentSubObjective.Priority;
+            }
+            // If the target value is less than 1% of the max value, let's just treat it as zero.
+            if (targetValue < 1)
             {
                 Priority = 0;
             }
             else
             {
-                // Allow the target value to be more than 100.
-                float targetValue = TargetEvaluation();
-                if (InverseTargetEvaluation)
+                if (objectiveManager.IsOrder(this))
                 {
-                    targetValue = 100 - targetValue;
-                }
-                var currentSubObjective = CurrentSubObjective;
-                if (currentSubObjective != null && currentSubObjective.Priority > targetValue)
-                {
-                    // If the priority is higher than the target value, let's just use it.
-                    // The priority calculation is more precise, but it takes into account things like distances,
-                    // so it's better not to use it if it's lower than the rougher targetValue.
-                    targetValue = currentSubObjective.Priority;
-                }
-                // If the target value is less than 1% of the max value, let's just treat it as zero.
-                if (targetValue < 1)
-                {
-                    Priority = 0;
+                    Priority = ForceOrderPriority ? objectiveManager.GetOrderPriority(this) : targetValue;
                 }
                 else
                 {
-                    if (objectiveManager.IsOrder(this))
+                    float max = AIObjectiveManager.LowestOrderPriority - 1;
+                    if (this is AIObjectiveRescueAll rescueObjective && rescueObjective.Targets.Contains(character))
                     {
-                        Priority = ForceOrderPriority ? objectiveManager.GetOrderPriority(this) : targetValue;
+                        // Allow higher prio
+                        max = AIObjectiveManager.EmergencyObjectivePriority;
                     }
-                    else
-                    {
-                        float max = AIObjectiveManager.LowestOrderPriority - 1;
-                        float value = MathHelper.Clamp((CumulatedDevotion + (targetValue * PriorityModifier)) / 100, 0, 1);
-                        Priority = MathHelper.Lerp(0, max, value);
-                    }
+                    float value = MathHelper.Clamp((CumulatedDevotion + (targetValue * PriorityModifier)) / 100, 0, 1);
+                    Priority = MathHelper.Lerp(0, max, value);
                 }
             }
             return Priority;
@@ -188,6 +185,10 @@ namespace Barotrauma
                 if (!ignoreList.Contains(target))
                 {
                     Targets.Add(target);
+                    if (Targets.Count > MaxTargets)
+                    {
+                        break;
+                    }
                 }
             }
         }

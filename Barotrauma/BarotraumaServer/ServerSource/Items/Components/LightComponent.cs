@@ -38,7 +38,7 @@ namespace Barotrauma.Items.Components
 
         public void ServerEventWrite(IWriteMessage msg, Client c, NetEntityEvent.IData extraData = null)
         {
-            msg.Write(IsActive);
+            msg.WriteBoolean(IsActive);
             lastSentState = IsActive;
         }
     }

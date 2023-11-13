@@ -94,8 +94,8 @@ namespace Barotrauma
                     msg.WriteRangedInteger(decals.Count, 0, MaxDecalsPerHull);
                     foreach (Decal decal in decals)
                     {
-                        msg.Write(decal.Prefab.UintIdentifier);
-                        msg.Write((byte)decal.SpriteIndex);
+                        msg.WriteUInt32(decal.Prefab.UintIdentifier);
+                        msg.WriteByte((byte)decal.SpriteIndex);
                         float normalizedXPos = MathHelper.Clamp(MathUtils.InverseLerp(0.0f, rect.Width, decal.CenterPosition.X), 0.0f, 1.0f);
                         float normalizedYPos = MathHelper.Clamp(MathUtils.InverseLerp(-rect.Height, 0.0f, decal.CenterPosition.Y), 0.0f, 1.0f);
                         msg.WriteRangedSingle(normalizedXPos, 0.0f, 1.0f, 8);
@@ -176,6 +176,7 @@ namespace Barotrauma
                             BackgroundSections[i].SetColor(color);
                         },
                         out int sectorToUpdate);
+                    RefreshAveragePaintedColor();
                     //add to pending updates to notify other clients as well
                     pendingSectionUpdates.Add(sectorToUpdate);
                     break;

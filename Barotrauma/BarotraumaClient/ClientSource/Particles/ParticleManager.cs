@@ -3,7 +3,6 @@ using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Xml.Linq;
 
 namespace Barotrauma.Particles
 {
@@ -44,6 +43,13 @@ namespace Barotrauma.Particles
         }
         private Particle[] particles;
 
+        /// <summary>
+        /// Used for rendering the particles in the order in which they were created (starting from the most recent one) 
+        /// to avoid the order of the particles shuffling around when particles are removed from the pool.
+        /// Linked list for fast additions and removals at the middle of the list.
+        /// </summary>
+        private readonly LinkedList<Particle> particlesInCreationOrder = new LinkedList<Particle>();
+
         private Camera cam;
 
         public Camera Camera
@@ -79,18 +85,18 @@ namespace Barotrauma.Particles
         public Particle CreateParticle(ParticlePrefab prefab, Vector2 position, Vector2 velocity, float rotation = 0.0f, Hull hullGuess = null, bool drawOnTop = false, float collisionIgnoreTimer = 0f, float lifeTimeMultiplier = 1f, Tuple<Vector2, Vector2> tracerPoints = null)
         {
             if (prefab == null || prefab.Sprites.Count == 0) { return null; }
-
             if (particleCount >= MaxParticles)
             {
                 for (int i = 0; i < particleCount; i++)
                 {
-                    if (particles[i].Prefab.Priority < prefab.Priority)
+                    if (particles[i].Prefab.Priority < prefab.Priority ||
+                        (!particles[i].Prefab.DrawAlways && prefab.DrawAlways))
                     {
                         RemoveParticle(i);
                         break;
                     }
                 }
-                if (particleCount >= MaxParticles) { return null; }
+                if (particleCount >= MaxParticles) { return null; }                
             }
 
             Vector2 particleEndPos = prefab.CalculateEndPosition(position, velocity);
@@ -110,35 +116,39 @@ namespace Barotrauma.Particles
 
             Rectangle expandedViewRect = MathUtils.ExpandRect(cam.WorldView, MaxOutOfViewDist);
 
-            if (minPos.X > expandedViewRect.Right || maxPos.X < expandedViewRect.X) { return null; }
-            if (minPos.Y > expandedViewRect.Y || maxPos.Y < expandedViewRect.Y - expandedViewRect.Height) { return null; }
+            if (!prefab.DrawAlways)
+            {
+                if (minPos.X > expandedViewRect.Right || maxPos.X < expandedViewRect.X) { return null; }
+                if (minPos.Y > expandedViewRect.Y || maxPos.Y < expandedViewRect.Y - expandedViewRect.Height) { return null; }
+            }
 
             if (particles[particleCount] == null) { particles[particleCount] = new Particle(); }
+            Particle particle = particles[particleCount];
 
-            particles[particleCount].Init(prefab, position, velocity, rotation, hullGuess, drawOnTop, collisionIgnoreTimer, lifeTimeMultiplier, tracerPoints: tracerPoints);
-
+            particle.Init(prefab, position, velocity, rotation, hullGuess, drawOnTop, collisionIgnoreTimer, lifeTimeMultiplier, tracerPoints: tracerPoints);
             particleCount++;
+            particlesInCreationOrder.AddFirst(particle);
 
-            return particles[particleCount - 1];
+            return particle;
         }
 
-        public List<ParticlePrefab> GetPrefabList()
+        public static List<ParticlePrefab> GetPrefabList()
         {
             return ParticlePrefab.Prefabs.ToList();
         }
 
-        public ParticlePrefab FindPrefab(string prefabName)
+        public static ParticlePrefab FindPrefab(string prefabName)
         {
-            return ParticlePrefab.Prefabs.Find(p => p.Identifier == prefabName);
+            ParticlePrefab.Prefabs.TryGet(prefabName, out ParticlePrefab prefab);
+            return prefab;
         }
 
         private void RemoveParticle(int index)
         {
+            particlesInCreationOrder.Remove(particles[index]);
             particleCount--;
 
-            Particle swap = particles[index];
-            particles[index] = particles[particleCount];
-            particles[particleCount] = swap;
+            (particles[particleCount], particles[index]) = (particles[index], particles[particleCount]);
         }
 
 
@@ -171,7 +181,7 @@ namespace Barotrauma.Particles
                     remove = true;
                 }
 
-                if (remove) RemoveParticle(i);
+                if (remove) { RemoveParticle(i); }
             }
         }
 
@@ -198,9 +208,8 @@ namespace Barotrauma.Particles
         {
             ParticlePrefab.DrawTargetType drawTarget = inWater ? ParticlePrefab.DrawTargetType.Water : ParticlePrefab.DrawTargetType.Air;
 
-            for (int i = 0; i < particleCount; i++)
+            foreach (var particle in particlesInCreationOrder)
             {
-                var particle = particles[i];
                 if (particle.BlendState != blendState) { continue; }
                 //equivalent to !particles[i].DrawTarget.HasFlag(drawTarget) but garbage free and faster
                 if ((particle.DrawTarget & drawTarget) == 0) { continue; } 
@@ -212,9 +221,15 @@ namespace Barotrauma.Particles
                         continue;
                     }
                 }
-                
-                particles[i].Draw(spriteBatch);
+
+                particle.Draw(spriteBatch);
             }
+        }
+
+        public void ClearParticles()
+        {
+            particleCount = 0;
+            particlesInCreationOrder.Clear();
         }
 
         public void RemoveByPrefab(ParticlePrefab prefab)
@@ -226,6 +241,7 @@ namespace Barotrauma.Particles
                 {
                     if (i < particleCount) { particleCount--; }
 
+                    particlesInCreationOrder.Remove(particles[particleCount]);   
                     Particle swap = particles[particleCount];
                     particles[particleCount] = null;
                     particles[i] = swap;

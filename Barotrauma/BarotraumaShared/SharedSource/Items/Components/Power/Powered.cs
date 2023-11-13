@@ -1,6 +1,7 @@
 ﻿using System;
 using Microsoft.Xna.Framework;
 using System.Collections.Generic;
+using System.Linq;
 #if CLIENT
 using Barotrauma.Sounds;
 #endif
@@ -93,6 +94,11 @@ namespace Barotrauma.Items.Components
         protected float powerConsumption;
 
         protected Connection powerIn, powerOut;
+
+        /// <summary>
+        /// Maximum voltage factor when the device is being overvolted. I.e. how many times more effectively the device can function when it's being overvolted
+        /// </summary>
+        protected const float MaxOverVoltageFactor = 2.0f;
 
         protected virtual PowerPriority Priority { get { return PowerPriority.Default; } }
 
@@ -188,20 +194,20 @@ namespace Barotrauma.Items.Components
             {
                 //if the item consumes no power, ignore the voltage requirement and
                 //apply OnActive statuseffects as long as this component is active
-                ApplyStatusEffects(ActionType.OnActive, deltaTime, null);                
+                ApplyStatusEffects(ActionType.OnActive, deltaTime);                
                 return;
             }
 
             if (Voltage > minVoltage)
             {
-                ApplyStatusEffects(ActionType.OnActive, deltaTime, null);
+                ApplyStatusEffects(ActionType.OnActive, deltaTime);
             }
 #if CLIENT
             if (Voltage > minVoltage)
             {
                 if (!powerOnSoundPlayed && powerOnSound != null)
                 {
-                    SoundPlayer.PlaySound(powerOnSound.Sound, item.WorldPosition, powerOnSound.Volume, powerOnSound.Range, hullGuess: item.CurrentHull, ignoreMuffling: powerOnSound.IgnoreMuffling);                    
+                    SoundPlayer.PlaySound(powerOnSound.Sound, item.WorldPosition, powerOnSound.Volume, powerOnSound.Range, hullGuess: item.CurrentHull, ignoreMuffling: powerOnSound.IgnoreMuffling, freqMult: powerOnSound.GetRandomFrequencyMultiplier());                    
                     powerOnSoundPlayed = true;
                 }
             }
@@ -661,7 +667,7 @@ namespace Barotrauma.Items.Components
             return 
                 conn1.IsPower && conn2.IsPower && 
                 conn1.Item.Condition > 0.0f && conn2.Item.Condition > 0.0f &&
-                (conn1.Item.HasTag("junctionbox") || conn2.Item.HasTag("junctionbox") || conn1.Item.HasTag("dock") || conn2.Item.HasTag("dock") || conn1.IsOutput != conn2.IsOutput);
+                (conn1.Item.HasTag(Tags.JunctionBox) || conn2.Item.HasTag(Tags.JunctionBox) || conn1.Item.HasTag(Tags.DockingPort) || conn2.Item.HasTag(Tags.DockingPort) || conn1.IsOutput != conn2.IsOutput);
         }
 
         /// <summary>
@@ -677,6 +683,7 @@ namespace Barotrauma.Items.Components
                 if (!recipient.IsPower || !recipient.IsOutput) { continue; }
                 var battery = recipient.Item?.GetComponent<PowerContainer>();
                 if (battery == null || battery.Item.Condition <= 0.0f) { continue; }
+                if (battery.OutputDisabled) { continue; }
                 float maxOutputPerFrame = battery.MaxOutPut / 60.0f;
                 float framesPerMinute = 3600.0f;
                 availablePower += Math.Min(battery.Charge * framesPerMinute, maxOutputPerFrame);
@@ -684,45 +691,19 @@ namespace Barotrauma.Items.Components
             return availablePower;
         }
 
-        /// <summary>
-        /// Efficient method to retrieve the batteries connected to the device
-        /// </summary>
-        /// <returns>All connected PowerContainers</returns>
-        protected List<PowerContainer> GetConnectedBatteries(bool outputOnly = true)
+        protected IEnumerable<PowerContainer> GetDirectlyConnectedBatteries()
         {
-            List<PowerContainer> batteries = new List<PowerContainer>();
-            GridInfo supplyingGrid = null;
-
-            //Determine supplying grid, prefer PowerIn connection 
-            if (powerIn != null)
+            if (item.Connections != null && powerIn != null)
             {
-                if (powerIn.Grid != null)
+                foreach (Connection recipient in powerIn.Recipients)
                 {
-                    supplyingGrid = powerIn.Grid;
-                }
-            }
-            else if (powerOut != null)
-            {
-                if (powerOut.Grid != null)
-                {
-                    supplyingGrid = powerOut.Grid;
-                }
-            }
-
-            if (supplyingGrid != null)
-            {
-                //Iterate through all connections to fine powerContainers
-                foreach (Connection c in supplyingGrid.Connections)
-                {
-                    PowerContainer pc = c.Item.GetComponent<PowerContainer>();
-                    if (pc != null && (!outputOnly || pc.powerOut == c))
+                    if (!recipient.IsPower || !recipient.IsOutput) { continue; }
+                    if (recipient.Item?.GetComponent<PowerContainer>() is PowerContainer battery)
                     {
-                        batteries.Add(pc);
+                        yield return battery;
                     }
                 }
             }
-
-            return batteries;
         }
 
         protected override void RemoveComponentSpecific()

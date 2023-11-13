@@ -1,4 +1,5 @@
 ﻿using Barotrauma.Networking;
+using System.Linq;
 
 namespace Barotrauma
 {
@@ -7,30 +8,29 @@ namespace Barotrauma
         public override void ServerWriteInitial(IWriteMessage msg, Client c)
         {
             base.ServerWriteInitial(msg, c);
-            msg.Write((byte)caves.Count);
+            msg.WriteByte((byte)caves.Count);
             foreach (var cave in caves)
             {
-                msg.Write((byte)(Level.Loaded == null || !Level.Loaded.Caves.Contains(cave) ? 255 : Level.Loaded.Caves.IndexOf(cave)));
+                msg.WriteByte((byte)(Level.Loaded == null || !Level.Loaded.Caves.Contains(cave) ? 255 : Level.Loaded.Caves.IndexOf(cave)));
             }
 
             foreach (var kvp in spawnedResources)
             {
-                msg.Write((byte)kvp.Value.Count);
-                var rotation = resourceClusters[kvp.Key].Rotation;
-                msg.Write(rotation);
-                foreach (var r in kvp.Value)
+                msg.WriteByte((byte)kvp.Value.Count);
+                msg.WriteSingle(kvp.Value.FirstOrDefault()?.Rotation ?? 0.0f);
+                foreach (var item in kvp.Value)
                 {
-                    r.WriteSpawnData(msg, r.ID, Entity.NullEntityID, 0, -1);
+                    item.WriteSpawnData(msg, item.ID, Entity.NullEntityID, 0, -1);
                 }
             }
 
             foreach (var kvp in relevantLevelResources)
             {
-                msg.Write(kvp.Key);
-                msg.Write((byte)kvp.Value.Length);
-                foreach (var i in kvp.Value)
+                msg.WriteIdentifier(kvp.Key);
+                msg.WriteByte((byte)kvp.Value.Length);
+                foreach (var item in kvp.Value)
                 {
-                    msg.Write(i.ID);
+                    msg.WriteUInt16(item.ID);
                 }
             }
         }

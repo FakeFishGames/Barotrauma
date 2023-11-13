@@ -106,6 +106,16 @@ namespace Microsoft.Xna.Framework {
 		/// This event is only supported on the Windows DirectX, Windows OpenGL and Linux platforms.
 		/// </remarks>
 		public event EventHandler<TextInputEventArgs> TextInput;
+
+        /// <summary>
+        /// Used for displaying uncommitted IME text.
+        /// </summary>
+		public event EventHandler<TextEditingEventArgs> TextEditing;
+
+        /// <summary>
+        /// Used for when a key is pressed, including modifiers.
+        /// </summary>
+        public event EventHandler<TextInputEventArgs> KeyDown;
 #endif
 
 		#endregion Events
@@ -152,6 +162,16 @@ namespace Microsoft.Xna.Framework {
 		{
             EventHelpers.Raise(this, TextInput, e);
 		}
+
+        protected void OnKeyDown(object sender, TextInputEventArgs e)
+        {
+            EventHelpers.Raise(this, KeyDown, e);
+        }
+
+        protected void OnTextEditing(object sender, TextEditingEventArgs e)
+        {
+            EventHelpers.Raise(this, TextEditing, e);
+        }
 #endif
 
         protected internal abstract void SetSupportedOrientations (DisplayOrientation orientations);

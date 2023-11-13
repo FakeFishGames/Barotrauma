@@ -1,6 +1,4 @@
-﻿using System.Xml.Linq;
-
-namespace Barotrauma.Abilities
+﻿namespace Barotrauma.Abilities
 {
     class AbilityConditionAboveVitality : AbilityConditionDataless
     {
@@ -13,7 +11,7 @@ namespace Barotrauma.Abilities
 
         protected override bool MatchesConditionSpecific()
         {
-            return character.HealthPercentage / 100f > vitalityPercentage;
+            return character.Vitality / character.MaxVitality > vitalityPercentage;
         }
     }
 }

@@ -23,7 +23,7 @@ namespace Steamworks
 			{
 				uint cnt = 0;
 
-				if ( !SteamInventory.Internal.GetResultItems( _id, null, ref cnt ) )
+				if ( SteamInventory.Internal is null || !SteamInventory.Internal.GetResultItems( _id, null, ref cnt ) )
 					return 0;
 
 				return (int) cnt;
@@ -36,17 +36,17 @@ namespace Steamworks
 		/// </summary>
 		public bool BelongsTo( SteamId steamId )
 		{
-			return SteamInventory.Internal.CheckResultSteamID( _id, steamId );
+			return SteamInventory.Internal != null && SteamInventory.Internal.CheckResultSteamID( _id, steamId );
 		}
 
-		public InventoryItem[] GetItems( bool includeProperties = false )
+		public InventoryItem[]? GetItems( bool includeProperties = false )
 		{
 			uint cnt = (uint) ItemCount;
 			if ( cnt <= 0 ) return null;
 
 			var pOutItemsArray = new SteamItemDetails_t[cnt];
 
-			if ( !SteamInventory.Internal.GetResultItems( _id, pOutItemsArray, ref cnt ) )
+			if ( SteamInventory.Internal is null || !SteamInventory.Internal.GetResultItems( _id, pOutItemsArray, ref cnt ) )
 				return null;
 
 			var items = new InventoryItem[cnt];
@@ -69,7 +69,7 @@ namespace Steamworks
 		{
 			if ( _id.Value == -1 ) return;
 
-			SteamInventory.Internal.DestroyResult( _id );
+			SteamInventory.Internal?.DestroyResult( _id );
 		}
 
 		internal static async Task<InventoryResult?> GetAsync( SteamInventoryResult_t sresult )
@@ -77,7 +77,7 @@ namespace Steamworks
 			var _result = Result.Pending;
 			while ( _result == Result.Pending )
 			{
-				_result = SteamInventory.Internal.GetResultStatus( sresult );
+				_result = SteamInventory.Internal?.GetResultStatus( sresult ) ?? Result.Fail;
 				await Task.Delay( 10 );
 			}
 
@@ -97,11 +97,11 @@ namespace Steamworks
 		/// Results have a built-in timestamp which will be considered "expired" after an hour has elapsed.See DeserializeResult
 		/// for expiration handling.
 		/// </summary>
-		public unsafe byte[] Serialize()
+		public unsafe byte[]? Serialize()
 		{
 			uint size = 0;
 
-			if ( !SteamInventory.Internal.SerializeResult( _id, IntPtr.Zero, ref size ) )
+			if ( SteamInventory.Internal is null || !SteamInventory.Internal.SerializeResult( _id, IntPtr.Zero, ref size ) )
 				return null;
 
 			var data = new byte[size];

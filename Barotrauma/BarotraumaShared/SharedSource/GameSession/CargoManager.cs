@@ -8,6 +8,8 @@ using System.Linq;
 using System.Text;
 using System.Xml.Linq;
 using Barotrauma.Networking;
+using System.Collections;
+using System.Collections.Immutable;
 #if SERVER
 using Barotrauma.Networking;
 #endif
@@ -80,7 +82,7 @@ namespace Barotrauma
         {
             if (ID != Entity.NullEntityID)
             {
-                DebugConsole.ShowError("Error setting SoldItem.ID: ID has already been set and should not be changed.");
+                DebugConsole.LogError("Error setting SoldItem.ID: ID has already been set and should not be changed.");
                 return;
             }
             ID = id;
@@ -128,7 +130,7 @@ namespace Barotrauma
             {
                 if (Item != null)
                 {
-                    DebugConsole.ShowError($"Trying to set SoldEntity.Item, but it's already set!\n{Environment.StackTrace.CleanupStackTrace()}");
+                    DebugConsole.LogError($"Trying to set SoldEntity.Item, but it's already set!\n{Environment.StackTrace.CleanupStackTrace()}");
                     return;
                 }
                 Item = item;
@@ -156,6 +158,16 @@ namespace Barotrauma
         public CargoManager(CampaignMode campaign)
         {
             this.campaign = campaign;
+        }
+
+        public static bool HasUnlockedStoreItem(ItemPrefab prefab)
+        {
+            foreach (Character character in GameSession.GetSessionCrewCharacters(CharacterType.Both))
+            {
+                if (character.HasStoreAccessForItem(prefab)) { return true; }
+            }
+
+            return false;
         }
 
         private List<T> GetItems<T>(Identifier identifier, Dictionary<Identifier, List<T>> items, bool create = false)
@@ -302,6 +314,10 @@ namespace Barotrauma
             var itemsInStoreCrate = GetBuyCrateItems(storeIdentifier, create: true);
             foreach (PurchasedItem item in itemsToPurchase)
             {
+                // Exchange money
+                int itemValue = item.Quantity * buyValues[item.ItemPrefab];
+                if (!campaign.TryPurchase(client, itemValue)) { continue; }
+
                 // Add to the purchased items
                 var purchasedItem = itemsPurchasedFromStore.Find(pi => pi.ItemPrefab == item.ItemPrefab);
                 if (purchasedItem != null)
@@ -313,9 +329,6 @@ namespace Barotrauma
                     purchasedItem = new PurchasedItem(item.ItemPrefab, item.Quantity, client);
                     itemsPurchasedFromStore.Add(purchasedItem);
                 }
-                // Exchange money
-                int itemValue = item.Quantity * buyValues[item.ItemPrefab];
-                campaign.TryPurchase(client, itemValue);
                 if (GameMain.IsSingleplayer)
                 {
                     GameAnalyticsManager.AddMoneySpentEvent(itemValue, GameAnalyticsManager.MoneySink.Store, item.ItemPrefab.Identifier.Value);
@@ -403,14 +416,31 @@ namespace Barotrauma
                 }
             }
 #endif
-            return Submarine.MainSub.GetItems(true).FindAll(item =>
+            return FindAllSellableItems().Where(it => IsItemSellable(it, confirmedSoldEntities)).ToList();
+        }
+
+        public static IReadOnlyCollection<Item> FindAllItemsOnPlayerAndSub(Character character)
+        {
+            List<Item> allItems = new();
+            if (character?.Inventory is { } inv)
             {
-                if (!IsItemSellable(item, confirmedSoldEntities)) { return false; }
+               allItems.AddRange(inv.FindAllItems(recursive: true));
+            }
+            allItems.AddRange(FindAllSellableItems());
+            return allItems;
+        }
+
+        public static IEnumerable<Item> FindAllSellableItems()
+        {
+            if (Submarine.MainSub is null) { return Enumerable.Empty<Item>(); }
+
+            return Submarine.MainSub.GetItems(true).FindAll(static item =>
+            {
                 if (item.GetRootInventoryOwner() is Character) { return false; }
-                if (!item.Components.All(c => !(c is Holdable h) || !h.Attachable || !h.Attached)) { return false; }
-                if (!item.Components.All(c => !(c is Wire w) || w.Connections.All(c => c == null))) { return false; }
+                if (!item.Components.All(static c => c is not Holdable { Attachable: true, Attached: true })) { return false; }
+                if (!item.Components.All(static c => c is not Wire w || w.Connections.All(static c => c is null))) { return false; }
                 if (!ItemAndAllContainersInteractable(item)) { return false; }
-                if (item.GetRootContainer() is Item rootContainer && rootContainer.HasTag("dontsellitems")) { return false; }
+                if (item.RootContainer is Item rootContainer && rootContainer.HasTag(Tags.DontSellItems)) { return false; }
                 return true;
             }).Distinct();
 
@@ -460,6 +490,21 @@ namespace Barotrauma
             return true;
         }
 
+        public static IEnumerable<Hull> FindCargoRooms(IEnumerable<Submarine> subs) => subs.SelectMany(s => FindCargoRooms(s));
+
+        public static IEnumerable<Hull> FindCargoRooms(Submarine sub) => WayPoint.WayPointList
+            .Where(wp => wp.Submarine == sub && wp.SpawnType == SpawnType.Cargo)
+            .Select(wp => wp.CurrentHull)
+            .Distinct();
+
+        public static IEnumerable<Item> FilterCargoCrates(IEnumerable<Item> items, Func<Item, bool> conditional = null)
+            => items.Where(it => it.HasTag(Tags.Crate) && !it.NonInteractable && !it.NonPlayerTeamInteractable && !it.HiddenInGame && !it.Removed && (conditional == null || conditional(it)));
+
+        public static IEnumerable<ItemContainer> FindReusableCargoContainers(IEnumerable<Submarine> subs, IEnumerable<Hull> cargoRooms = null) =>
+            FilterCargoCrates(Item.ItemList, it => subs.Contains(it.Submarine) && (cargoRooms == null || cargoRooms.Contains(it.CurrentHull)))
+                .Select(it => it.GetComponent<ItemContainer>())
+                .Where(c => c != null);
+
         public static ItemContainer GetOrCreateCargoContainerFor(ItemPrefab item, ISpatialEntity cargoRoomOrSpawnPoint, ref List<ItemContainer> availableContainers)
         {
             ItemContainer itemContainer = null;
@@ -488,6 +533,12 @@ namespace Barotrauma
                     if (itemContainer == null)
                     {
                         DebugConsole.AddWarning($"CargoManager: No ItemContainer component found in {containerItem.Prefab.Identifier}!");
+                        return null;
+                    }
+                    if (!itemContainer.CanBeContained(item))
+                    {
+                        // Can't contain the item in the crate -> let's not create it.
+                        containerItem.Remove();
                         return null;
                     }
                     availableContainers.Add(itemContainer);
@@ -542,8 +593,8 @@ namespace Barotrauma
                 }
 #endif
             }
-
-            List<ItemContainer> availableContainers = new List<ItemContainer>();
+            var connectedSubs = sub.GetConnectedSubs().Where(s => s.Info.Type == SubmarineType.Player);
+            List<ItemContainer> availableContainers = FindReusableCargoContainers(connectedSubs, FindCargoRooms(connectedSubs)).ToList();
             foreach (PurchasedItem pi in itemsToSpawn)
             {
                 Vector2 position = GetCargoPos(cargoRoom, pi.ItemPrefab);
@@ -562,10 +613,10 @@ namespace Barotrauma
 #if SERVER
                     Entity.Spawner?.CreateNetworkEvent(new EntitySpawner.SpawnEntity(item));
 #endif
-                    (itemContainer?.Item ?? item).CampaignInteractionType = CampaignMode.InteractionType.Cargo;    
+                    (itemContainer?.Item ?? item).AssignCampaignInteractionType(CampaignMode.InteractionType.Cargo);    
                     static void itemSpawned(PurchasedItem purchased, Item item)
                     {
-                        Submarine sub = item.Submarine ?? item.GetRootContainer()?.Submarine;
+                        Submarine sub = item.Submarine ?? item.RootContainer?.Submarine;
                         if (sub != null)
                         {
                             foreach (WifiComponent wifiComponent in item.GetComponents<WifiComponent>())

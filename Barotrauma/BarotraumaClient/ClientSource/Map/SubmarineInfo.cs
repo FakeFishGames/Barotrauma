@@ -80,7 +80,8 @@ namespace Barotrauma
             {
                 UserData = "descriptionbox",
                 ScrollBarVisible = true,
-                Spacing = 5
+                Spacing = 5,
+                CurrentSelectMode = GUIListBox.SelectMode.None
             };
             
             GUIFont font = parent.Rect.Width < 350 ? GUIStyle.SmallFont : GUIStyle.Font;
@@ -88,26 +89,41 @@ namespace Barotrauma
             CreateSpecsWindow(descriptionBox, font, includeDescription: true);
         }
 
-        public void CreateSpecsWindow(GUIListBox parent, GUIFont font, bool includeTitle = true, bool includeClass = true, bool includeDescription = false)
+        public void CreateSpecsWindow(GUIListBox parent, GUIFont font,
+            bool includeTitle = true,
+            bool includeClass = true,
+            bool includeDescription = false,
+            bool includeCrushDepth = false)
         {
             float leftPanelWidth = 0.6f;
             float rightPanelWidth = 0.4f / leftPanelWidth;
-            LocalizedString className = !HasTag(SubmarineTag.Shuttle) ? TextManager.Get($"submarineclass.{SubmarineClass}") : TextManager.Get("shuttle");
+            LocalizedString className = !HasTag(SubmarineTag.Shuttle) ?
+                TextManager.GetWithVariables("submarine.classandtier",
+                    ("[class]", TextManager.Get($"submarineclass.{SubmarineClass}")),
+                    ("[tier]", TextManager.Get($"submarinetier.{Tier}"))) :
+                TextManager.Get("shuttle");
 
             int classHeight = (int)GUIStyle.SubHeadingFont.MeasureString(className).Y;
-            int leftPanelWidthInt = (int)(parent.Rect.Width * leftPanelWidth);
+            int leftPanelWidthInt = (int)(parent.Rect.Width * leftPanelWidth); 
 
             GUITextBlock submarineNameText = null;
             GUITextBlock submarineClassText = null;
             if (includeTitle)
             {
                 int nameHeight = (int)GUIStyle.LargeFont.MeasureString(DisplayName, true).Y;
-                submarineNameText = new GUITextBlock(new RectTransform(new Point(leftPanelWidthInt, nameHeight + HUDLayoutSettings.Padding / 2), parent.Content.RectTransform), DisplayName, textAlignment: Alignment.CenterLeft, font: GUIStyle.LargeFont) { CanBeFocused = false };
+                submarineNameText = new GUITextBlock(new RectTransform(new Point(leftPanelWidthInt, nameHeight + HUDLayoutSettings.Padding / 2), parent.Content.RectTransform), DisplayName, textAlignment: Alignment.CenterLeft, font: GUIStyle.LargeFont)
+                {
+                    CanBeFocused = false
+                };
                 submarineNameText.RectTransform.MinSize = new Point(0, (int)submarineNameText.TextSize.Y);
             }
             if (includeClass)
             {
-                submarineClassText = new GUITextBlock(new RectTransform(new Point(leftPanelWidthInt, classHeight), parent.Content.RectTransform), className, textAlignment: Alignment.CenterLeft, font: GUIStyle.SubHeadingFont) { CanBeFocused = false };
+                submarineClassText = new GUITextBlock(new RectTransform(new Point(leftPanelWidthInt, classHeight), parent.Content.RectTransform), className, textAlignment: Alignment.CenterLeft, font: GUIStyle.SubHeadingFont)
+                {
+                    ToolTip = TextManager.Get("submarinetierandclass.description")+"\n\n"+ TextManager.Get($"submarineclass.{SubmarineClass}.description")
+                };
+                submarineClassText.HoverColor = Color.Transparent;
                 submarineClassText.RectTransform.MinSize = new Point(0, (int)submarineClassText.TextSize.Y);
             }
 
@@ -142,6 +158,22 @@ namespace Barotrauma
                 cargoCapacityStr, textAlignment: Alignment.TopLeft, font: font, wrap: true)
             { CanBeFocused = false };
             cargoCapacityText.RectTransform.MinSize = new Point(0, cargoCapacityText.Children.First().Rect.Height);
+
+            if (includeCrushDepth)
+            {
+                var crushDepthText = new GUITextBlock(new RectTransform(new Vector2(leftPanelWidth, 0), parent.Content.RectTransform),
+                    TextManager.Get("CrushDepth"), textAlignment: Alignment.TopLeft, font: font, wrap: true)
+                {
+                    CanBeFocused = false
+                };
+                new GUITextBlock(new RectTransform(new Vector2(rightPanelWidth, 0.0f), crushDepthText.RectTransform, Anchor.TopRight, Pivot.TopLeft),
+                    TextManager.GetWithVariable("meterformat", "[meters]", string.Format(CultureInfo.InvariantCulture, "{0:N0}", GetSubCrushDepth())),
+                    textAlignment: Alignment.TopLeft, font: font, wrap: true)
+                {
+                    CanBeFocused = false
+                };
+                crushDepthText.RectTransform.MinSize = new Point(0, crushDepthText.Children.First().Rect.Height);
+            }
 
             if (RecommendedCrewSizeMax > 0)
             {
@@ -214,6 +246,58 @@ namespace Barotrauma
             }
             GUITextBlock.AutoScaleAndNormalize(parent.Content.GetAllChildren<GUITextBlock>().Where(c => c != submarineNameText && c != descBlock));
             parent.ForceLayoutRecalculation();
+        }
+
+        public readonly record struct PendingSubInfo(SubmarineInfo PendingSub = null, bool StructuresDefineRealWorldCrushDepth = false, float RealWorldCrushDepth = Level.DefaultRealWorldCrushDepth);
+
+        private float GetSubCrushDepth()
+        {
+            var pendingSubInfo = new PendingSubInfo();
+            return GetSubCrushDepth(this, ref pendingSubInfo);
+        }
+
+        public static float GetSubCrushDepth(SubmarineInfo subInfo, ref PendingSubInfo pendingSubInfo)
+        {
+            float subCrushDepth = Level.DefaultRealWorldCrushDepth;
+            if (Submarine.MainSub != null && Submarine.MainSub.Info == subInfo)
+            {
+                subCrushDepth = Submarine.MainSub.RealWorldCrushDepth;
+            }
+            else if (subInfo != null)
+            {
+                if (pendingSubInfo.PendingSub != subInfo)
+                {
+                    // Store the real world crush depth for the pending sub so that we don't have to calculate it again every time
+                    pendingSubInfo = new PendingSubInfo(subInfo, subInfo.IsCrushDepthDefinedInStructures(out float realWorldCrushDepth), realWorldCrushDepth);
+                }
+                subCrushDepth = pendingSubInfo.RealWorldCrushDepth;
+            }
+            if (GameMain.GameSession?.Campaign?.UpgradeManager != null && UpgradePrefab.Find("increasewallhealth".ToIdentifier()) is UpgradePrefab hullUpgradePrefab)
+            {
+                int pendingLevel = GameMain.GameSession.Campaign.UpgradeManager.GetUpgradeLevel(hullUpgradePrefab, hullUpgradePrefab.UpgradeCategories.First(), info: subInfo);
+                // If there is a sub switch pending, unless its structures have crush depth defined in their elements,
+                // calculate the value based on the default crush depth and pending upgrade level
+                int currentLevel = 0;
+                if (pendingSubInfo.PendingSub is null || pendingSubInfo.StructuresDefineRealWorldCrushDepth)
+                {
+                    currentLevel = GameMain.GameSession.Campaign.UpgradeManager.GetRealUpgradeLevelForSub(hullUpgradePrefab, hullUpgradePrefab.UpgradeCategories.First(), subInfo);
+                }
+                if (pendingLevel > currentLevel)
+                {
+                    string updateValueStr = hullUpgradePrefab.SourceElement?.GetChildElement("Structure")?.GetAttributeString("crushdepth", null);
+                    if (!string.IsNullOrEmpty(updateValueStr))
+                    {
+                        if (currentLevel > 0)
+                        {
+                            // If the current level is greater than 0, reset the crush depth value back to the base value before calculating the upgrade
+                            int upgradePercentage = UpgradePrefab.ParsePercentage(updateValueStr, Identifier.Empty, suppressWarnings: true);
+                            subCrushDepth /= (1f + (upgradePercentage / 100f * currentLevel));
+                        }
+                        subCrushDepth = PropertyReference.CalculateUpgrade(subCrushDepth, pendingLevel, updateValueStr);
+                    }
+                }
+            }
+            return subCrushDepth;
         }
     }
 }

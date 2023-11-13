@@ -6,18 +6,18 @@ namespace Barotrauma.Items.Components
     {
         public void ServerEventWrite(IWriteMessage msg, Client c, NetEntityEvent.IData extraData = null)
         {
-            msg.Write(docked);
+            msg.WriteBoolean(docked);
             if (docked)
             {
-                msg.Write(DockingTarget.item.ID);
-                msg.Write(IsLocked);
+                msg.WriteUInt16(DockingTarget.item.ID);
+                msg.WriteBoolean(IsLocked);
             }
         }
         public void ServerEventRead(IReadMessage msg, Client c)
         {
             var allowOutpostAutoDocking = (AllowOutpostAutoDocking)msg.ReadByte();
             if (outpostAutoDockingPromptShown &&
-                (GameMain.GameSession?.Campaign?.AllowedToManageCampaign(c, ClientPermissions.ManageMap) ?? false))
+                CampaignMode.AllowedToManageCampaign(c, ClientPermissions.ManageMap))
             {
                 this.allowOutpostAutoDocking = allowOutpostAutoDocking;
             }

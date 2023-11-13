@@ -379,6 +379,9 @@ namespace Barotrauma
 
             void CreateSprite(ContentXElement element)
             {
+                //empty element, probably an item variant?
+                if (element.Attributes().None()) { return; }
+
                 string spriteFolder = "";
                 ContentPath texturePath = null;
                 

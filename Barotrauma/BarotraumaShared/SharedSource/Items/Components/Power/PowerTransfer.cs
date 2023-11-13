@@ -197,7 +197,7 @@ namespace Barotrauma.Items.Components
                 isBroken = false;
             }
 
-            ApplyStatusEffects(ActionType.OnActive, deltaTime, null);
+            ApplyStatusEffects(ActionType.OnActive, deltaTime);
 
             float powerReadingOut = 0;
             float loadReadingOut = ExtraLoad;
@@ -243,8 +243,13 @@ namespace Barotrauma.Items.Components
 
                 //damage the item if voltage is too high (except if running as a client)
                 float prevCondition = item.Condition;
-                item.Condition -= deltaTime * 10.0f;
-
+                //some randomness to prevent all junction boxes from breaking at the same time
+                if (Rand.Range(0.0f, 1.0f) < 0.01f)
+                {
+                    //damaged boxes are more sensitive to overvoltage (also preventing all boxes from breaking at the same time)
+                    float conditionFactor = MathHelper.Lerp(5.0f, 1.0f, item.Condition / item.MaxCondition);
+                    item.Condition -= deltaTime * Rand.Range(10.0f, 500.0f) * conditionFactor;
+                }
                 if (item.Condition <= 0.0f && prevCondition > 0.0f)
                 {
                     overloadCooldownTimer = OverloadCooldown;
@@ -273,7 +278,8 @@ namespace Barotrauma.Items.Components
 
         public override float GetConnectionPowerOut(Connection conn, float power, PowerRange minMaxPower, float load)
         {
-            return conn == powerOut ? PowerConsumption + ExtraLoad : 0;
+            //not used in the vanilla game (junction boxes or relays don't output power)
+            return conn == powerOut ? MathHelper.Max(-(PowerConsumption + ExtraLoad), 0) : 0;
         }
 
         public override bool Pick(Character picker)
@@ -429,7 +435,7 @@ namespace Barotrauma.Items.Components
                 {
                     //other junction boxes don't need to receive the signal in the pass-through signal connections
                     //because we relay it straight to the connected items without going through the whole chain of junction boxes
-                    if (ic is PowerTransfer && !(ic is RelayComponent)) { continue; }
+                    if (ic is PowerTransfer && ic is not RelayComponent) { continue; }
                     ic.ReceiveSignal(signal, recipient);
                 }
 

@@ -1,4 +1,5 @@
-﻿using Barotrauma.Items.Components;
+﻿using Barotrauma.Extensions;
+using Barotrauma.Items.Components;
 using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
 using System.Collections.Generic;
@@ -6,20 +7,29 @@ using System.Linq;
 
 namespace Barotrauma
 {
-    partial class Inventory : IServerSerializable, IClientSerializable
+    partial class Inventory : IClientSerializable
     {
+        private readonly Dictionary<Client, List<ushort>[]> receivedItemIds = new Dictionary<Client, List<ushort>[]>();
+
         public void ServerEventRead(IReadMessage msg, Client c)
         {
             List<Item> prevItems = new List<Item>(AllItems.Distinct());
 
-            SharedRead(msg, out var newItemIDs);
+            if (!receivedItemIds.TryGetValue(c, out List<ushort>[] receivedItemIdsFromClient))
+            {
+                receivedItemIdsFromClient = new List<ushort>[capacity];
+                receivedItemIds.Add(c, receivedItemIdsFromClient);
+            }
+
+            SharedRead(msg, receivedItemIdsFromClient, out bool readyToApply);
+            if (!readyToApply) { return; }
 
             if (c == null || c.Character == null) { return; }
 
             bool accessible = c.Character.CanAccessInventory(this);
             if (this is CharacterInventory characterInventory && accessible)
             {
-                if (Owner == null || !(Owner is Character ownerCharacter))
+                if (Owner == null || Owner is not Character ownerCharacter)
                 {
                     accessible = false;
                 }
@@ -37,9 +47,9 @@ namespace Barotrauma
                 CreateNetworkEvent();
                 for (int i = 0; i < capacity; i++)
                 {
-                    foreach (ushort id in newItemIDs[i])
+                    foreach (ushort id in receivedItemIdsFromClient[i])
                     {
-                        if (!(Entity.FindEntityByID(id) is Item item)) { continue; }
+                        if (Entity.FindEntityByID(id) is not Item item) { continue; }
                         item.PositionUpdateInterval = 0.0f;
                         if (item.ParentInventory != null && item.ParentInventory != this)
                         {
@@ -56,7 +66,7 @@ namespace Barotrauma
             {
                 foreach (Item item in slots[i].Items.ToList())
                 {
-                    if (!newItemIDs[i].Contains(item.ID))
+                    if (!receivedItemIdsFromClient[i].Contains(item.ID))
                     {
                         Item droppedItem = item;
                         Entity prevOwner = Owner;
@@ -83,7 +93,7 @@ namespace Barotrauma
                     }
                 }
 
-                foreach (ushort id in newItemIDs[i])
+                foreach (ushort id in receivedItemIdsFromClient[i])
                 {
                     Item newItem = id == 0 ? null : Entity.FindEntityByID(id) as Item;
                     prevItemInventories.Add(newItem?.ParentInventory);
@@ -92,9 +102,17 @@ namespace Barotrauma
 
             for (int i = 0; i < capacity; i++)
             {
-                foreach (ushort id in newItemIDs[i])
+                foreach (ushort id in receivedItemIdsFromClient[i])
                 {
-                    if (!(Entity.FindEntityByID(id) is Item item) || slots[i].Contains(item)) { continue; }
+                    if (Entity.FindEntityByID(id) is not Item item || slots[i].Contains(item)) { continue; }
+
+                    if (item.GetComponent<Pickable>() is not Pickable pickable ||
+                        (pickable.IsAttached && !pickable.PickingDone) ||
+                        item.AllowedSlots.None())
+                    {
+                        DebugConsole.AddWarning($"Client {c.Name} tried to pick up a non-pickable item \"{item}\" (parent inventory: {item.ParentInventory?.Owner.ToString() ?? "null"})");
+                        continue;
+                    }
 
                     if (GameMain.Server != null)
                     {
@@ -105,7 +123,7 @@ namespace Barotrauma
                             (c.Character == null || item.PreviousParentInventory == null || !c.Character.CanAccessInventory(item.PreviousParentInventory)))
                         {
     #if DEBUG || UNSTABLE
-                            DebugConsole.NewMessage($"Client {c.Name} failed to pick up item \"{item}\" (parent inventory: {(item.ParentInventory?.Owner.ToString() ?? "null")}). No access.", Color.Yellow);
+                            DebugConsole.NewMessage($"Client {c.Name} failed to pick up item \"{item}\" (parent inventory: {item.ParentInventory?.Owner.ToString() ?? "null"}). No access.", Color.Yellow);
     #endif
                             if (item.body != null && !c.PendingPositionUpdates.Contains(item))
                             {
@@ -118,7 +136,7 @@ namespace Barotrauma
                     TryPutItem(item, i, true, true, c.Character, false);
                     for (int j = 0; j < capacity; j++)
                     {
-                        if (slots[j].Contains(item) && !newItemIDs[j].Contains(item.ID))
+                        if (slots[j].Contains(item) && !receivedItemIdsFromClient[j].Contains(item.ID))
                         {
                             slots[j].RemoveItem(item);
                         }
@@ -126,48 +144,78 @@ namespace Barotrauma
                 }
             }
 
+            EnsureItemsInBothHands(c.Character);
+
+            receivedItemIds.Remove(c);
+
             CreateNetworkEvent();
             foreach (Inventory prevInventory in prevItemInventories.Distinct())
             {
                 if (prevInventory != this) { prevInventory?.CreateNetworkEvent(); }
             }
 
-            foreach (Item item in AllItems.Distinct())
+            foreach (Item item in AllItems.DistinctBy(it => it.Prefab))
             {
                 if (item == null) { continue; }
                 if (!prevItems.Contains(item))
                 {
+                    int amount = AllItems.Count(it => it.Prefab == item.Prefab && !prevItems.Contains(it));
+                    string amountText = amount > 1 ? $"x{amount} " : string.Empty;
                     if (Owner == c.Character)
                     {
                         HumanAIController.ItemTaken(item, c.Character);
-                        GameServer.Log(GameServer.CharacterLogName(c.Character) + " picked up " + item.Name, ServerLog.MessageType.Inventory);
+                        GameServer.Log($"{GameServer.CharacterLogName(c.Character)} picked up {amountText}{item.Name}", ServerLog.MessageType.Inventory);
                     }
                     else
                     {
-                        GameServer.Log(GameServer.CharacterLogName(c.Character) + " placed " + item.Name + " in " + Owner, ServerLog.MessageType.Inventory);
+                        GameServer.Log($"{GameServer.CharacterLogName(c.Character)} placed {amountText}{item.Name} in {Owner}", ServerLog.MessageType.Inventory);
                     }
                 }
             }
-            foreach (Item item in prevItems.Distinct())
+
+            var droppedItems = prevItems.Where(it => it != null && !AllItems.Contains(it));
+            foreach (Item item in droppedItems.DistinctBy(it => it.Prefab))
             {
-                if (item == null) { continue; }
-                if (!AllItems.Contains(item))
+                var matchingItems = prevItems.Where(it => it.Prefab == item.Prefab && !AllItems.Contains(it));
+                int amount = matchingItems.Count();
+                string amountText = amount > 1 ? $"x{amount} " : string.Empty;
+                if (Owner == c.Character)
                 {
-                    if (Owner == c.Character)
-                    {
-                        GameServer.Log(GameServer.CharacterLogName(c.Character) + " dropped " + item.Name, ServerLog.MessageType.Inventory);
-                    }
-                    else
-                    {
-                        GameServer.Log(GameServer.CharacterLogName(c.Character) + " removed " + item.Name + " from " + Owner, ServerLog.MessageType.Inventory);
-                    }
+                    GameServer.Log($"{GameServer.CharacterLogName(c.Character)} dropped {amountText}{item.Name}", ServerLog.MessageType.Inventory);
                 }
+                else
+                {
+                    GameServer.Log($"{GameServer.CharacterLogName(c.Character)} removed {amountText}{item.Name} from {Owner}", ServerLog.MessageType.Inventory);
+                }
+                item.CreateDroppedStack(matchingItems, allowClientExecute: true);                
             }
         }
 
-        public void ServerEventWrite(IWriteMessage msg, Client c, NetEntityEvent.IData extraData = null)
+        private void EnsureItemsInBothHands(Character character)
         {
-            SharedWrite(msg, extraData);
+            if (this is not CharacterInventory charInv) { return; }
+
+            int leftHandSlot = charInv.FindLimbSlot(InvSlotType.LeftHand),
+                rightHandSlot = charInv.FindLimbSlot(InvSlotType.RightHand);
+
+            if (IsSlotIndexOutOfBound(leftHandSlot) || IsSlotIndexOutOfBound(rightHandSlot)) { return; }
+
+            TryPutInOppositeHandSlot(rightHandSlot, leftHandSlot);
+            TryPutInOppositeHandSlot(leftHandSlot, rightHandSlot);
+
+            void TryPutInOppositeHandSlot(int originalSlot, int otherHandSlot)
+            {
+                const InvSlotType bothHandSlot = InvSlotType.LeftHand | InvSlotType.RightHand;
+
+                foreach (Item it in slots[originalSlot].Items)
+                {
+                    if (it.AllowedSlots.None(static s => s.HasFlag(bothHandSlot)) || slots[otherHandSlot].Contains(it)) { continue; }
+
+                    TryPutItem(it, otherHandSlot, true, true, character, false);
+                }
+            }
+
+            bool IsSlotIndexOutOfBound(int index) => index < 0 || index >= slots.Length;
         }
     }
 }

@@ -1,13 +1,11 @@
-﻿using System;
+﻿using Microsoft.Xna.Framework;
 using OpenAL;
-using Microsoft.Xna.Framework;
-using System.Collections.Generic;
+using System;
 using System.Threading;
-using System.Diagnostics;
 
 namespace Barotrauma.Sounds
 {
-    public class SoundSourcePool : IDisposable
+    class SoundSourcePool : IDisposable
     {
         public uint[] ALSources
         {
@@ -17,7 +15,7 @@ namespace Barotrauma.Sounds
 
         public SoundSourcePool(int sourceCount = SoundManager.SOURCE_COUNT)
         {
-            int alError = Al.NoError;
+            int alError;
 
             ALSources = new uint[sourceCount];
             for (int i = 0; i < sourceCount; i++)
@@ -80,10 +78,10 @@ namespace Barotrauma.Sounds
         }
     }
 
-    public class SoundChannel : IDisposable
+    class SoundChannel : IDisposable
     {
         private const int STREAM_BUFFER_SIZE = 8820;
-        private short[] streamShortBuffer;
+        private readonly short[] streamShortBuffer;
 
         private string debugName = "SoundChannel";
 
@@ -312,56 +310,54 @@ namespace Barotrauma.Sounds
 
                 if (ALSourceIndex < 0) { return; }
 
-                if (!IsPlaying) return;
+                if (!IsPlaying) { return; }
 
-                if (!IsStream)
+                if (IsStream) { return; }
+
+                uint alSource = Sound.Owner.GetSourceFromIndex(Sound.SourcePoolIndex, ALSourceIndex);
+                Al.GetSourcei(alSource, Al.SampleOffset, out int playbackPos);
+                int alError = Al.GetError();
+                if (alError != Al.NoError)
                 {
-                    uint alSource = Sound.Owner.GetSourceFromIndex(Sound.SourcePoolIndex, ALSourceIndex);
-                    int playbackPos; Al.GetSourcei(alSource, Al.SampleOffset, out playbackPos);
-                    int alError = Al.GetError();
-                    if (alError != Al.NoError)
-                    {
-                        DebugConsole.ThrowError("Failed to get source's playback position: " + debugName + ", " + Al.GetErrorString(alError), appendStackTrace: true);
-                        return;
-                    }
+                    DebugConsole.ThrowError("Failed to get source's playback position: " + debugName + ", " + Al.GetErrorString(alError), appendStackTrace: true);
+                    return;
+                }
 
-                    Al.SourceStop(alSource);
+                Al.SourceStop(alSource);
 
-                    alError = Al.GetError();
-                    if (alError != Al.NoError)
-                    {
-                        DebugConsole.ThrowError("Failed to stop source: " + debugName + ", " + Al.GetErrorString(alError), appendStackTrace: true);
-                        return;
-                    }
+                alError = Al.GetError();
+                if (alError != Al.NoError)
+                {
+                    DebugConsole.ThrowError("Failed to stop source: " + debugName + ", " + Al.GetErrorString(alError), appendStackTrace: true);
+                    return;
+                }
 
-                    if (Sound.Buffers.RequestAlBuffers())
-                    {
-                        Sound.FillBuffers();
-                    }
-                    Al.Sourcei(alSource, Al.Buffer, muffled ? (int)Sound.Buffers.AlMuffledBuffer : (int)Sound.Buffers.AlBuffer);
+                Sound.FillAlBuffers();
+                if (Sound.Buffers is not { AlBuffer: not 0, AlMuffledBuffer: not 0 }) { return; }
 
-                    alError = Al.GetError();
-                    if (alError != Al.NoError)
-                    {
-                        DebugConsole.ThrowError("Failed to bind buffer to source: " + debugName + ", " + Al.GetErrorString(alError), appendStackTrace: true);
-                        return;
-                    }
+                Al.Sourcei(alSource, Al.Buffer, muffled ? (int)Sound.Buffers.AlMuffledBuffer : (int)Sound.Buffers.AlBuffer);
 
-                    Al.SourcePlay(alSource);
-                    alError = Al.GetError();
-                    if (alError != Al.NoError)
-                    {
-                        DebugConsole.ThrowError("Failed to replay source: " + debugName + ", " + Al.GetErrorString(alError), appendStackTrace: true);
-                        return;
-                    }
+                alError = Al.GetError();
+                if (alError != Al.NoError)
+                {
+                    DebugConsole.ThrowError("Failed to bind buffer to source: " + debugName + ", " + Al.GetErrorString(alError), appendStackTrace: true);
+                    return;
+                }
 
-                    Al.Sourcei(alSource, Al.SampleOffset, playbackPos);
-                    alError = Al.GetError();
-                    if (alError != Al.NoError)
-                    {
-                        DebugConsole.ThrowError("Failed to reset playback position: " + debugName + ", " + Al.GetErrorString(alError), appendStackTrace: true);
-                        return;
-                    }
+                Al.SourcePlay(alSource);
+                alError = Al.GetError();
+                if (alError != Al.NoError)
+                {
+                    DebugConsole.ThrowError("Failed to replay source: " + debugName + ", " + Al.GetErrorString(alError), appendStackTrace: true);
+                    return;
+                }
+
+                Al.Sourcei(alSource, Al.SampleOffset, playbackPos);
+                alError = Al.GetError();
+                if (alError != Al.NoError)
+                {
+                    DebugConsole.ThrowError("Failed to reset playback position: " + debugName + ", " + Al.GetErrorString(alError), appendStackTrace: true);
+                    return;
                 }
             }
         }
@@ -379,7 +375,7 @@ namespace Barotrauma.Sounds
 
                 if (!IsStream)
                 {
-                    int playbackPos; Al.GetSourcei(alSource, Al.SampleOffset, out playbackPos);
+                    Al.GetSourcei(alSource, Al.SampleOffset, out int playbackPos);
                     int alError = Al.GetError();
                     if (alError != Al.NoError)
                     {
@@ -390,7 +386,7 @@ namespace Barotrauma.Sounds
                 }
                 else
                 {
-                    float retVal = -1.0f;
+                    float retVal;
                     Monitor.Enter(mutex);
                     retVal = streamAmplitude;
                     Monitor.Exit(mutex);
@@ -432,8 +428,8 @@ namespace Barotrauma.Sounds
         private bool reachedEndSample;
         private int queueStartIndex;
         private readonly uint[] streamBuffers;
-        private uint[] unqueuedBuffers;
-        private float[] streamBufferAmplitudes;
+        private readonly uint[] unqueuedBuffers;
+        private readonly float[] streamBufferAmplitudes;
 
         public int StreamSeekPos
         {
@@ -448,18 +444,17 @@ namespace Barotrauma.Sounds
             }
         }
 
-        private object mutex;
+        private readonly object mutex;
 
         public bool IsPlaying
         {
             get
             {
-                if (ALSourceIndex < 0) return false;
-                if (IsStream && !reachedEndSample) return true;
-                int state;
+                if (ALSourceIndex < 0) { return false; }
+                if (IsStream && !reachedEndSample) { return true; }
                 uint alSource = Sound.Owner.GetSourceFromIndex(Sound.SourcePoolIndex, ALSourceIndex);
-                if (!Al.IsSource(alSource)) return false;
-                Al.GetSourcei(alSource, Al.SourceState, out state);
+                if (!Al.IsSource(alSource)) { return false; }
+                Al.GetSourcei(alSource, Al.SourceState, out int state);
                 int alError = Al.GetError();
                 if (alError != Al.NoError)
                 {
@@ -512,10 +507,8 @@ namespace Barotrauma.Sounds
                             throw new Exception("Failed to reset source buffer: " + debugName + ", " + Al.GetErrorString(alError));
                         }
 
-                        if (Sound.Buffers.RequestAlBuffers())
-                        {
-                            Sound.FillBuffers();
-                        }
+                        Sound.FillAlBuffers();
+                        if (Sound.Buffers is not { AlBuffer: not 0, AlMuffledBuffer: not 0 }) { return; }
 
                         uint alBuffer = sound.Owner.GetCategoryMuffle(category) || muffled ? Sound.Buffers.AlMuffledBuffer : Sound.Buffers.AlBuffer;
                         Al.Sourcei(sound.Owner.GetSourceFromIndex(Sound.SourcePoolIndex, ALSourceIndex), Al.Buffer, (int)alBuffer);
@@ -710,8 +703,7 @@ namespace Barotrauma.Sounds
                 {
                     uint alSource = Sound.Owner.GetSourceFromIndex(Sound.SourcePoolIndex, ALSourceIndex);
 
-                    int state;
-                    Al.GetSourcei(alSource, Al.SourceState, out state);
+                    Al.GetSourcei(alSource, Al.SourceState, out int state);
                     bool playing = state == Al.Playing;
                     int alError = Al.GetError();
                     if (alError != Al.NoError)
@@ -719,8 +711,7 @@ namespace Barotrauma.Sounds
                         throw new Exception("Failed to determine playing state from streamed source: " + debugName + ", " + Al.GetErrorString(alError));
                     }
 
-                    int unqueuedBufferCount;
-                    Al.GetSourcei(alSource, Al.BuffersProcessed, out unqueuedBufferCount);
+                    Al.GetSourcei(alSource, Al.BuffersProcessed, out int unqueuedBufferCount);
                     alError = Al.GetError();
                     if (alError != Al.NoError)
                     {

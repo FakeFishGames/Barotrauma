@@ -238,17 +238,24 @@ namespace Barotrauma
         public readonly float Volume;
 
         public readonly Vector2 IntensityRange;
+        public readonly bool MuteIntensityTracks;
+        public readonly float? ForceIntensityTrack;
 
         public readonly bool ContinueFromPreviousTime;
         public int PreviousTime;
 
         public BackgroundMusic(ContentXElement element, SoundsFile file) : base(element, file, stream: true)
         {
-            Type = element.GetAttributeIdentifier("type", "");
-            IntensityRange = element.GetAttributeVector2("intensityrange", new Vector2(0.0f, 100.0f));
-            DuckVolume = element.GetAttributeBool("duckvolume", false);
-            this.Volume = element.GetAttributeFloat("volume", 1.0f);
-            ContinueFromPreviousTime = element.GetAttributeBool("continuefromprevioustime", false);
+            Type = element.GetAttributeIdentifier(nameof(Type), "");
+            IntensityRange = element.GetAttributeVector2(nameof(IntensityRange), new Vector2(0.0f, 100.0f));
+            DuckVolume = element.GetAttributeBool(nameof(DuckVolume), false);
+            MuteIntensityTracks = element.GetAttributeBool(nameof(MuteIntensityTracks), false);
+            if (element.GetAttribute(nameof(ForceIntensityTrack)) != null)
+            {
+                ForceIntensityTrack = element.GetAttributeFloat(nameof(ForceIntensityTrack), 0.0f);
+            }
+            Volume = element.GetAttributeFloat(nameof(Volume), 1.0f);
+            ContinueFromPreviousTime = element.GetAttributeBool(nameof(ContinueFromPreviousTime), false);
         }
     }
 

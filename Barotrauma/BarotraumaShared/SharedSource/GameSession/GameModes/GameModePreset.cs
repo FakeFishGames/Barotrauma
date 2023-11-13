@@ -46,15 +46,15 @@ namespace Barotrauma
         public static void Init()
         {
 #if CLIENT
-            Tutorial = new GameModePreset("tutorial".ToIdentifier(), typeof(TutorialMode), true);
-            DevSandbox = new GameModePreset("devsandbox".ToIdentifier(), typeof(GameMode), true);
-            SinglePlayerCampaign = new GameModePreset("singleplayercampaign".ToIdentifier(), typeof(SinglePlayerCampaign), true);
-            TestMode = new GameModePreset("testmode".ToIdentifier(), typeof(TestGameMode), true);
+            Tutorial = new GameModePreset("tutorial".ToIdentifier(), typeof(TutorialMode), isSinglePlayer: true);
+            DevSandbox = new GameModePreset("devsandbox".ToIdentifier(), typeof(GameMode), isSinglePlayer: true);
+            SinglePlayerCampaign = new GameModePreset("singleplayercampaign".ToIdentifier(), typeof(SinglePlayerCampaign), isSinglePlayer: true);
+            TestMode = new GameModePreset("testmode".ToIdentifier(), typeof(TestGameMode), isSinglePlayer: true);
 #endif
-            Sandbox = new GameModePreset("sandbox".ToIdentifier(), typeof(GameMode), false);
-            Mission = new GameModePreset("mission".ToIdentifier(), typeof(CoOpMode), false);
-            PvP = new GameModePreset("pvp".ToIdentifier(), typeof(PvPMode), false);
-            MultiPlayerCampaign = new GameModePreset("multiplayercampaign".ToIdentifier(), typeof(MultiPlayerCampaign), false, false);
+            Sandbox = new GameModePreset("sandbox".ToIdentifier(), typeof(GameMode), isSinglePlayer: false);
+            Mission = new GameModePreset("mission".ToIdentifier(), typeof(CoOpMode), isSinglePlayer: false);
+            PvP = new GameModePreset("pvp".ToIdentifier(), typeof(PvPMode), isSinglePlayer: false);
+            MultiPlayerCampaign = new GameModePreset("multiplayercampaign".ToIdentifier(), typeof(MultiPlayerCampaign), isSinglePlayer: false);
         }
     }
 }

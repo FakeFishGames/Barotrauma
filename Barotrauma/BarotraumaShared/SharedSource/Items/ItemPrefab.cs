@@ -1,19 +1,38 @@
-﻿using Barotrauma.IO;
+﻿using Barotrauma.Extensions;
+using Barotrauma.IO;
 using Barotrauma.Items.Components;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
-using Barotrauma.Extensions;
 using System.Security.Cryptography;
 using System.Xml.Linq;
 
 namespace Barotrauma
 {
+    readonly struct SkillRequirementHint
+    {
+        public readonly Identifier Skill;
+        public readonly float Level;
+        public readonly LocalizedString SkillName;
+
+        public LocalizedString GetFormattedText(int skillLevel, string levelColorTag) => 
+            $"{SkillName} {Level} (‖color:{levelColorTag}‖{skillLevel}‖color:end‖)";
+
+        public SkillRequirementHint(ContentXElement element)
+        {
+            Skill = element.GetAttributeIdentifier("identifier", Identifier.Empty);
+            Level = element.GetAttributeFloat("level", 0);
+            SkillName = TextManager.Get("skillname." + Skill);
+        }
+    }
+
     readonly struct DeconstructItem
     {
         public readonly Identifier ItemIdentifier;
+        //number of items to output
+        public readonly int Amount;
         //minCondition does <= check, meaning that below or equal to min condition will be skipped.
         public readonly float MinCondition;
         //maxCondition does > check, meaning that above this max the deconstruct item will be skipped.
@@ -24,9 +43,9 @@ namespace Barotrauma
         public readonly bool CopyCondition;
 
         //tag/identifier of the deconstructor(s) that can be used to deconstruct the item into this
-        public readonly string[] RequiredDeconstructor;
+        public readonly Identifier[] RequiredDeconstructor;
         //tag/identifier of other item(s) that that need to be present in the deconstructor to deconstruct the item into this
-        public readonly string[] RequiredOtherItem;
+        public readonly Identifier[] RequiredOtherItem;
         //text to display on the deconstructor's activate button when this output is available
         public readonly string ActivateButtonText;
         public readonly string InfoText;
@@ -37,18 +56,24 @@ namespace Barotrauma
         public DeconstructItem(XElement element, Identifier parentDebugName)
         {
             ItemIdentifier = element.GetAttributeIdentifier("identifier", "");
+            Amount = element.GetAttributeInt("amount", 1);
             MinCondition = element.GetAttributeFloat("mincondition", -0.1f);
             MaxCondition = element.GetAttributeFloat("maxcondition", 1.0f);
             OutConditionMin = element.GetAttributeFloat("outconditionmin", element.GetAttributeFloat("outcondition", 1.0f));
             OutConditionMax = element.GetAttributeFloat("outconditionmax", element.GetAttributeFloat("outcondition", 1.0f));
             CopyCondition = element.GetAttributeBool("copycondition", false);
             Commonness = element.GetAttributeFloat("commonness", 1.0f);
-            RequiredDeconstructor = element.GetAttributeStringArray("requireddeconstructor", 
-                element.Parent?.GetAttributeStringArray("requireddeconstructor", new string[0]) ?? new string[0]);
-            RequiredOtherItem = element.GetAttributeStringArray("requiredotheritem", new string[0]);
+            RequiredDeconstructor = element.GetAttributeIdentifierArray("requireddeconstructor", 
+                element.Parent?.GetAttributeIdentifierArray("requireddeconstructor", Array.Empty<Identifier>()) ?? Array.Empty<Identifier>());
+            RequiredOtherItem = element.GetAttributeIdentifierArray("requiredotheritem", Array.Empty<Identifier>());
             ActivateButtonText = element.GetAttributeString("activatebuttontext", string.Empty);
             InfoText = element.GetAttributeString("infotext", string.Empty);
             InfoTextOnOtherItemMissing = element.GetAttributeString("infotextonotheritemmissing", string.Empty);
+        }
+
+        public bool IsValidDeconstructor(Item deconstructor)
+        {
+            return RequiredDeconstructor.Length == 0 || RequiredDeconstructor.Any(r => deconstructor.HasTag(r) || deconstructor.Prefab.Identifier == r);
         }
     }
 
@@ -59,48 +84,125 @@ namespace Barotrauma
             public abstract IEnumerable<ItemPrefab> ItemPrefabs { get; }
             public abstract UInt32 UintIdentifier { get; }
 
-            public RequiredItem(int amount, float minCondition, float maxCondition, bool useCondition)
+            public abstract bool MatchesItem(Item item);
+
+            public abstract ItemPrefab FirstMatchingPrefab { get; }
+
+            public LocalizedString OverrideHeader { get; }
+            public LocalizedString OverrideDescription { get; }
+
+            public RequiredItem(int amount, float minCondition, float maxCondition, bool useCondition, LocalizedString overrideDescription, LocalizedString overrideHeader, Identifier defaultItem)
             {
                 Amount = amount;
                 MinCondition = minCondition;
                 MaxCondition = maxCondition;
                 UseCondition = useCondition;
+                OverrideHeader = overrideHeader;
+                OverrideDescription = overrideDescription;
+                DefaultItem = defaultItem;
             }
             public readonly int Amount;
             public readonly float MinCondition;
             public readonly float MaxCondition;
             public readonly bool UseCondition;
+            /// <summary>
+            /// Used only when there's multiple optional items.
+            /// </summary>
+            public readonly Identifier DefaultItem;
+
+            public bool IsConditionSuitable(float conditionPercentage)
+            {
+                float normalizedCondition = conditionPercentage / 100.0f;
+                if (MathUtils.NearlyEqual(normalizedCondition, MinCondition) || MathUtils.NearlyEqual(normalizedCondition, MaxCondition))
+                {
+                    return true;
+                }
+                else if (normalizedCondition >= MinCondition && normalizedCondition <= MaxCondition)
+                {
+                    return true;
+                }
+                return false;
+            }
         }
 
         public class RequiredItemByIdentifier : RequiredItem
         {
             public readonly Identifier ItemPrefabIdentifier;
-            public ItemPrefab ItemPrefab => ItemPrefab.Prefabs.TryGet(ItemPrefabIdentifier, out var prefab) ? prefab
-                : MapEntityPrefab.FindByName(ItemPrefabIdentifier.Value) as ItemPrefab ?? throw new Exception($"No ItemPrefab with identifier or name \"{ItemPrefabIdentifier}\"");
+
+            public ItemPrefab ItemPrefab => 
+                ItemPrefab.Prefabs.TryGet(ItemPrefabIdentifier, out var prefab) ? prefab
+                : MapEntityPrefab.FindByName(ItemPrefabIdentifier.Value) as ItemPrefab;
+            
             public override UInt32 UintIdentifier { get; }
 
-            public override IEnumerable<ItemPrefab> ItemPrefabs => ItemPrefab.ToEnumerable();
+            public override IEnumerable<ItemPrefab> ItemPrefabs => ItemPrefab == null ? Enumerable.Empty<ItemPrefab>() : ItemPrefab.ToEnumerable();
 
-            public RequiredItemByIdentifier(Identifier itemPrefab, int amount, float minCondition, float maxCondition, bool useCondition) : base(amount, minCondition, maxCondition, useCondition)
+            public override ItemPrefab FirstMatchingPrefab => ItemPrefab;
+
+
+            public override bool MatchesItem(Item item)
+            {
+                return item?.Prefab.Identifier == ItemPrefabIdentifier;
+            }
+
+            public RequiredItemByIdentifier(Identifier itemPrefab, int amount, float minCondition, float maxCondition, bool useCondition, LocalizedString overrideDescription, LocalizedString overrideHeader) :
+                base(amount, minCondition, maxCondition, useCondition, overrideDescription, overrideHeader, defaultItem: Identifier.Empty)
             {
                 ItemPrefabIdentifier = itemPrefab;
                 using MD5 md5 = MD5.Create();
                 UintIdentifier = ToolBox.IdentifierToUint32Hash(itemPrefab, md5);
+            }
+
+            public override string ToString()
+            {
+                return $"{base.ToString()} ({ItemPrefabIdentifier})";
             }
         }
 
         public class RequiredItemByTag : RequiredItem
         {
             public readonly Identifier Tag;
+
             public override UInt32 UintIdentifier { get; }
 
-            public override IEnumerable<ItemPrefab> ItemPrefabs => ItemPrefab.Prefabs.Where(p => p.Tags.Contains(Tag));
+            private readonly List<ItemPrefab> cachedPrefabs = new List<ItemPrefab>();
 
-            public RequiredItemByTag(Identifier tag, int amount, float minCondition, float maxCondition, bool useCondition) : base(amount, minCondition, maxCondition, useCondition)
+            private Md5Hash prevContentPackagesHash;
+
+            public override IEnumerable<ItemPrefab> ItemPrefabs
+            {
+                get
+                {
+                    if (prevContentPackagesHash == null ||
+                        !prevContentPackagesHash.Equals(ContentPackageManager.EnabledPackages.MergedHash))
+                    {
+                        cachedPrefabs.Clear();
+                        cachedPrefabs.AddRange(ItemPrefab.Prefabs.Where(p => p.Tags.Contains(Tag)));
+                        prevContentPackagesHash = ContentPackageManager.EnabledPackages.MergedHash;
+                    }
+                    return cachedPrefabs;
+                }
+            }
+
+            public override ItemPrefab FirstMatchingPrefab => ItemPrefabs.FirstOrDefault();
+
+            public override bool MatchesItem(Item item)
+            {
+                if (item == null) { return false; }
+                return item.HasTag(Tag);
+            }
+
+            public RequiredItemByTag(Identifier tag, int amount, float minCondition, float maxCondition, bool useCondition, LocalizedString overrideDescription, LocalizedString overrideHeader, Identifier defaultItem)
+                : base(amount, minCondition, maxCondition, useCondition, overrideDescription, overrideHeader, defaultItem)
             {
                 Tag = tag;
                 using MD5 md5 = MD5.Create();
                 UintIdentifier = ToolBox.IdentifierToUint32Hash(tag, md5);
+            }
+
+            public override string ToString()
+            {
+                return $"{base.ToString()} ({Tag})";
             }
         }
 
@@ -108,7 +210,7 @@ namespace Barotrauma
         public ItemPrefab TargetItem => ItemPrefab.Prefabs[TargetItemPrefabIdentifier];
 
         private readonly Lazy<LocalizedString> displayName;
-        public LocalizedString DisplayName
+        public LocalizedString DisplayName  
             => ItemPrefab.Prefabs.ContainsKey(TargetItemPrefabIdentifier) ? displayName.Value : "";
         public readonly ImmutableArray<RequiredItem> RequiredItems;
         public readonly ImmutableArray<Identifier> SuitableFabricatorIdentifiers;
@@ -120,6 +222,7 @@ namespace Barotrauma
         public readonly uint RecipeHash;
         public readonly int Amount;
         public readonly int? Quality;
+        public readonly bool HideForNonTraitors;
 
         /// <summary>
         /// How many of this item the fabricator can create (< 0 = unlimited)
@@ -151,6 +254,8 @@ namespace Barotrauma
             int limitDefault = element.GetAttributeInt("fabricationlimit", -1);
             FabricationLimitMin = element.GetAttributeInt(nameof(FabricationLimitMin), limitDefault);
             FabricationLimitMax = element.GetAttributeInt(nameof(FabricationLimitMax), limitDefault);
+
+            HideForNonTraitors = element.GetAttributeBool(nameof(HideForNonTraitors), false);
 
             if (element.GetAttribute(nameof(Quality)) != null)
             {
@@ -188,33 +293,45 @@ namespace Barotrauma
                         bool useCondition = subElement.GetAttributeBool("usecondition", true);
                         int amount = subElement.GetAttributeInt("count", subElement.GetAttributeInt("amount", 1));
 
+                        LocalizedString overrideDescription = string.Empty;
+                        if (subElement.GetAttributeString("description", string.Empty) is string descriptionTag && !descriptionTag.IsNullOrEmpty())
+                        {
+                            overrideDescription = TextManager.Get(descriptionTag);
+                        }
+                        LocalizedString overrideHeader = string.Empty;
+                        if (subElement.GetAttributeString("header", string.Empty) is string headerTag && !headerTag.IsNullOrEmpty())
+                        {
+                            overrideHeader = TextManager.Get(headerTag);
+                        }
+
                         if (requiredItemIdentifier != Identifier.Empty)
                         {
                             var existing = requiredItems.FindIndex(r =>
-                            r is RequiredItemByIdentifier ri &&
-                            ri.ItemPrefabIdentifier == requiredItemIdentifier &&
-                            MathUtils.NearlyEqual(r.MinCondition, minCondition) &&
-                            MathUtils.NearlyEqual(r.MaxCondition, maxCondition));
+                                r is RequiredItemByIdentifier ri &&
+                                ri.ItemPrefabIdentifier == requiredItemIdentifier &&
+                                MathUtils.NearlyEqual(r.MinCondition, minCondition) &&
+                                MathUtils.NearlyEqual(r.MaxCondition, maxCondition));
                             if (existing >= 0)
                             {
                                 amount += requiredItems[existing].Amount;
                                 requiredItems.RemoveAt(existing);
                             }
-                            requiredItems.Add(new RequiredItemByIdentifier(requiredItemIdentifier, amount, minCondition, maxCondition, useCondition));
+                            requiredItems.Add(new RequiredItemByIdentifier(requiredItemIdentifier, amount, minCondition, maxCondition, useCondition, overrideDescription, overrideHeader));
                         }
                         else
                         {
                             var existing = requiredItems.FindIndex(r =>
-                            r is RequiredItemByTag rt &&
-                            rt.Tag == requiredItemTag &&
-                            MathUtils.NearlyEqual(r.MinCondition, minCondition) &&
-                            MathUtils.NearlyEqual(r.MaxCondition, maxCondition));
+                                r is RequiredItemByTag rt &&
+                                rt.Tag == requiredItemTag &&
+                                MathUtils.NearlyEqual(r.MinCondition, minCondition) &&
+                                MathUtils.NearlyEqual(r.MaxCondition, maxCondition));
                             if (existing >= 0)
                             {
                                 amount += requiredItems[existing].Amount;
                                 requiredItems.RemoveAt(existing);
                             }
-                            requiredItems.Add(new RequiredItemByTag(requiredItemTag, amount, minCondition, maxCondition, useCondition));
+                            Identifier defaultItem = subElement.GetAttributeIdentifier("defaultitem", Identifier.Empty);
+                            requiredItems.Add(new RequiredItemByTag(requiredItemTag, amount, minCondition, maxCondition, useCondition, overrideDescription, overrideHeader, defaultItem));
                         }
                         break;
                 }
@@ -232,12 +349,13 @@ namespace Barotrauma
             uint outputId = ToolBox.IdentifierToUint32Hash(TargetItemPrefabIdentifier, md5);
 
             var requiredItems = string.Join(':', RequiredItems
-                .Select(i => i.UintIdentifier)
-                .Select(i => string.Join(',', i)));
+                .Select(static i => $"{i.UintIdentifier}:{i.Amount}")
+                .Select(static i => string.Join(',', i)));
+            // above but include the item amount
 
             var requiredSkills = string.Join(':', RequiredSkills.Select(s => $"{s.Identifier}:{s.Level}"));
 
-            uint retVal = ToolBox.StringToUInt32Hash($"{Amount}|{outputId}|{RequiredTime}|{requiredItems}|{requiredSkills}", md5);
+            uint retVal = ToolBox.StringToUInt32Hash($"{Amount}|{outputId}|{RequiredTime}|{RequiresRecipe}|{requiredItems}|{requiredSkills}", md5);
             if (retVal == 0) { retVal = 1; }
             return retVal;
         }
@@ -260,6 +378,8 @@ namespace Barotrauma
         public readonly bool TransferOnlyOnePerContainer;
         public readonly bool AllowTransfersHere = true;
 
+        public readonly float MinLevelDifficulty, MaxLevelDifficulty;
+
         public PreferredContainer(XElement element)
         {
             Primary = XMLExtensions.GetAttributeIdentifierArray(element, "primary", Array.Empty<Identifier>()).ToImmutableHashSet();
@@ -274,6 +394,9 @@ namespace Barotrauma
             NotCampaign = element.GetAttributeBool("notcampaign", NotCampaign);
             TransferOnlyOnePerContainer = element.GetAttributeBool("TransferOnlyOnePerContainer", TransferOnlyOnePerContainer);
             AllowTransfersHere = element.GetAttributeBool("AllowTransfersHere", AllowTransfersHere);
+
+            MinLevelDifficulty = element.GetAttributeFloat(nameof(MinLevelDifficulty), float.MinValue);
+            MaxLevelDifficulty = element.GetAttributeFloat(nameof(MaxLevelDifficulty), float.MaxValue);
 
             if (element.GetAttribute("spawnprobability") == null)
             {
@@ -346,6 +469,8 @@ namespace Barotrauma
     {
         public static readonly PrefabCollection<ItemPrefab> Prefabs = new PrefabCollection<ItemPrefab>();
 
+        public const float DefaultInteractDistance = 120.0f;
+
         //default size
         public Vector2 Size { get; private set; }
 
@@ -366,7 +491,6 @@ namespace Barotrauma
         public ImmutableArray<Rectangle> Triggers { get; private set; }
 
         private ImmutableDictionary<Identifier, float> treatmentSuitability;
-        private readonly List<XElement> fabricationRecipeElements = new List<XElement>();
 
         /// <summary>
         /// Is this prefab overriding a prefab in another content package
@@ -387,18 +511,114 @@ namespace Barotrauma
         //Containers (by identifiers or tags) that this item should be placed in. These are preferences, which are not enforced.
         public ImmutableArray<PreferredContainer> PreferredContainers { get; private set; }
 
+        public ImmutableArray<SkillRequirementHint> SkillRequirementHints { get; private set; }
+
         public SwappableItem SwappableItem
         {
             get;
             private set;
         }
 
+        public readonly struct CommonnessInfo
+        {
+            public float Commonness
+            {
+                get
+                {
+                    return commonness;
+                }
+            }
+            public float AbyssCommonness
+            {
+                get
+                {
+                    return abyssCommonness ?? 0.0f;
+                }
+            }
+            public float CaveCommonness
+            {
+                get
+                {
+                    return caveCommonness ?? Commonness;
+                }
+            }
+            public bool CanAppear
+            {
+                get
+                {
+                    if (Commonness > 0.0f) { return true; }
+                    if (AbyssCommonness > 0.0f) { return true; }
+                    if (CaveCommonness > 0.0f) { return true; }
+                    return false;
+                }
+            }
+
+            public readonly float commonness;
+            public readonly float? abyssCommonness;
+            public readonly float? caveCommonness;
+
+            public CommonnessInfo(XElement element)
+            {
+                this.commonness = Math.Max(element?.GetAttributeFloat("commonness", 0.0f) ?? 0.0f, 0.0f);
+
+                float? abyssCommonness = null;
+                XAttribute abyssCommonnessAttribute = element?.GetAttribute("abysscommonness") ?? element?.GetAttribute("abyss");
+                if (abyssCommonnessAttribute != null)
+                {
+                    abyssCommonness = Math.Max(abyssCommonnessAttribute.GetAttributeFloat(0.0f), 0.0f);
+                }
+                this.abyssCommonness = abyssCommonness;
+
+                float? caveCommonness = null;
+                XAttribute caveCommonnessAttribute = element?.GetAttribute("cavecommonness") ?? element?.GetAttribute("cave");
+                if (caveCommonnessAttribute != null)
+                {
+                    caveCommonness =  Math.Max(caveCommonnessAttribute.GetAttributeFloat(0.0f), 0.0f);
+                }
+                this.caveCommonness = caveCommonness;
+            }
+
+            public CommonnessInfo(float commonness, float? abyssCommonness, float? caveCommonness)
+            {
+                this.commonness = commonness;
+                this.abyssCommonness = abyssCommonness != null ? (float?)Math.Max(abyssCommonness.Value, 0.0f) : null;
+                this.caveCommonness = caveCommonness != null ? (float?)Math.Max(caveCommonness.Value, 0.0f) : null;
+            }
+
+            public CommonnessInfo WithInheritedCommonness(CommonnessInfo? parentInfo)
+            {
+                return new CommonnessInfo(commonness,
+                    abyssCommonness ?? parentInfo?.abyssCommonness,
+                    caveCommonness ?? parentInfo?.caveCommonness);
+            }
+
+            public CommonnessInfo WithInheritedCommonness(params CommonnessInfo?[] parentInfos)
+            {
+                CommonnessInfo info = this;
+                foreach (var parentInfo in parentInfos)
+                {
+                    info = info.WithInheritedCommonness(parentInfo);
+                }
+                return info;
+            }
+
+            public float GetCommonness(Level.TunnelType tunnelType)
+            {
+                if (tunnelType == Level.TunnelType.Cave)
+                {
+                    return CaveCommonness;
+                }
+                else
+                {
+                    return Commonness;
+                }
+            }
+        }
+
         /// <summary>
         /// How likely it is for the item to spawn in a level of a given type.
-        /// Key = name of the LevelGenerationParameters (empty string = default value) /* TODO: empty string = default value???? */
-        /// Value = commonness
         /// </summary>
-        public ImmutableDictionary<Identifier, float> LevelCommonness { get; private set; }
+        private ImmutableDictionary<Identifier, CommonnessInfo> LevelCommonness { get; set; }
 
         public readonly struct FixedQuantityResourceInfo
         {
@@ -418,9 +638,11 @@ namespace Barotrauma
 
         public ImmutableDictionary<Identifier, FixedQuantityResourceInfo> LevelQuantity { get; private set; }
 
-        public bool CanSpriteFlipX { get; private set; }
+        private bool canSpriteFlipX;
+        public override bool CanSpriteFlipX => canSpriteFlipX;
 
-        public bool CanSpriteFlipY { get; private set; }
+        private bool canSpriteFlipY;
+        public override bool CanSpriteFlipY => canSpriteFlipY;
 
         /// <summary>
         /// Can the item be chosen as extra cargo in multiplayer. If not set, the item is available if it can be bought from outposts in the campaign.
@@ -452,7 +674,7 @@ namespace Barotrauma
         public override ImmutableHashSet<string> Aliases => aliases;
 
         //how close the Character has to be to the item to pick it up
-        [Serialize(120.0f, IsPropertySaveable.No)]
+        [Serialize(DefaultInteractDistance, IsPropertySaveable.No)]
         public float InteractDistance { get; private set; }
 
         // this can be used to allow items which are behind other items tp
@@ -493,11 +715,28 @@ namespace Barotrauma
         [Serialize(0.0f, IsPropertySaveable.No)]
         public float OffsetOnSelected { get; private set; }
 
+        [Serialize(false, IsPropertySaveable.No, description: "Should the character who's selected the item grab it (hold their hand on it, the same way as they do when repairing)? Defaults to true on items that have an ItemContainer component.")]
+        public bool GrabWhenSelected { get; set; }
+
+        private float health;
+
         [Serialize(100.0f, IsPropertySaveable.No)]
-        public float Health { get; private set; }
+        public float Health 
+        {
+            get { return health; }
+            private set
+            {
+                //don't allow health values higher than this, because they lead to various issues:
+                //e.g. integer overflows when we're casting to int to display a health value, value being set to float.Infinity if it's high enough
+                health = Math.Min(value, 1000000.0f);
+            }
+        }
 
         [Serialize(false, IsPropertySaveable.No)]
         public bool AllowSellingWhenBroken { get; private set; }
+
+        [Serialize(false, IsPropertySaveable.No)]
+        public bool AllowStealingAlways { get; private set; }
 
         [Serialize(false, IsPropertySaveable.No)]
         public bool Indestructible { get; private set; }
@@ -507,6 +746,9 @@ namespace Barotrauma
 
         [Serialize(1f, IsPropertySaveable.No)]
         public float ExplosionDamageMultiplier { get; private set; }
+
+        [Serialize(1f, IsPropertySaveable.No)]
+        public float ItemDamageMultiplier { get; private set; }
 
         [Serialize(false, IsPropertySaveable.No)]
         public bool DamagedByProjectiles { get; private set; }
@@ -519,12 +761,6 @@ namespace Barotrauma
 
         [Serialize(false, IsPropertySaveable.No)]
         public bool DamagedByMonsters { get; private set; }
-
-        [Serialize(false, IsPropertySaveable.No)]
-        public bool FireProof { get; private set; }
-
-        [Serialize(false, IsPropertySaveable.No)]
-        public bool WaterProof { get; private set; }
 
         private float impactTolerance;
         [Serialize(0.0f, IsPropertySaveable.No)]
@@ -550,7 +786,7 @@ namespace Barotrauma
         [Serialize(false, IsPropertySaveable.No)]
         public bool DisableItemUsageWhenSelected { get; private set; }
 
-        [Serialize("", IsPropertySaveable.No)]        
+        [Serialize("metalcrate", IsPropertySaveable.No)]
         public string CargoContainerIdentifier { get; private set; }
 
         [Serialize(false, IsPropertySaveable.No)]
@@ -603,7 +839,47 @@ namespace Barotrauma
         public int MaxStackSize
         {
             get { return maxStackSize; }
-            private set { maxStackSize = MathHelper.Clamp(value, 1, Inventory.MaxStackSize); }
+            private set { maxStackSize = MathHelper.Clamp(value, 1, Inventory.MaxPossibleStackSize); }
+        }
+
+        private int maxStackSizeCharacterInventory;
+        [Serialize(-1, IsPropertySaveable.No, description: "Maximum stack size when the item is in a character inventory.")]
+        public int MaxStackSizeCharacterInventory
+        {
+            get { return maxStackSizeCharacterInventory; }
+            private set { maxStackSizeCharacterInventory = Math.Min(value, Inventory.MaxPossibleStackSize); }
+        }
+
+        private int maxStackSizeHoldableOrWearableInventory;
+        [Serialize(-1, IsPropertySaveable.No, description: 
+            "Maximum stack size when the item is inside a holdable or wearable item. "+
+            "If not set, defaults to MaxStackSizeCharacterInventory.")]
+        public int MaxStackSizeHoldableOrWearableInventory
+        {
+            get { return maxStackSizeHoldableOrWearableInventory; }
+            private set { maxStackSizeHoldableOrWearableInventory = Math.Min(value, Inventory.MaxPossibleStackSize); }
+        }
+
+        public int GetMaxStackSize(Inventory inventory)
+        {
+            if (inventory is CharacterInventory && maxStackSizeCharacterInventory > 0)
+            {
+                return maxStackSizeCharacterInventory;
+            }
+            else if (inventory?.Owner is Item item && 
+                (item.GetComponent<Holdable>() is { Attachable: false } || item.GetComponent<Wearable>() != null))
+            {
+                if (maxStackSizeHoldableOrWearableInventory > 0)
+                {
+                    return maxStackSizeHoldableOrWearableInventory;
+                }
+                else if (maxStackSizeCharacterInventory > 0)
+                {
+                    //if maxStackSizeHoldableOrWearableInventory is not set, it defaults to maxStackSizeCharacterInventory
+                    return maxStackSizeCharacterInventory;
+                }
+            }
+            return maxStackSize;            
         }
 
         [Serialize(false, IsPropertySaveable.No)]
@@ -611,8 +887,38 @@ namespace Barotrauma
 
         public ImmutableHashSet<Identifier> AllowDroppingOnSwapWith { get; private set; }
 
-        [Serialize(false, IsPropertySaveable.No)]
+        [Serialize(false, IsPropertySaveable.No, "If enabled, the item is not transferred when the player transfers items between subs.")]
         public bool DontTransferBetweenSubs { get; private set; }
+
+        [Serialize(true, IsPropertySaveable.No)]
+        public bool ShowHealthBar { get; private set; }
+
+        [Serialize(1f, IsPropertySaveable.No, description: "How much the bots prioritize this item when they seek for items. For example, bots prioritize less exosuit than the other diving suits. Defaults to 1. Note that there's also a specific CombatPriority for items that can be used as weapons.")]
+        public float BotPriority { get; private set; }
+
+        [Serialize(true, IsPropertySaveable.No)]
+        public bool ShowNameInHealthBar { get; private set; }
+
+        [Serialize(false, IsPropertySaveable.No, description:"Should the bots shoot at this item with turret or not? Disabled by default.")]
+        public bool IsAITurretTarget { get; private set; }
+
+        [Serialize(1.0f, IsPropertySaveable.No, description: "How much the bots prioritize shooting this item with turrets? Defaults to 1. Distance to the target affects the decision making.")]
+        public float AITurretPriority { get; private set; }
+
+        [Serialize(1.0f, IsPropertySaveable.No, description: "How much the bots prioritize shooting this item with slow turrets, like railguns? Defaults to 1. Not used if AITurretPriority is 0. Distance to the target affects the decision making.")]
+        public float AISlowTurretPriority { get; private set; }
+
+        [Serialize(float.PositiveInfinity, IsPropertySaveable.No, description: "The max distance at which the bots are allowed to target the items. Defaults to infinity.")]
+        public float AITurretTargetingMaxDistance { get; private set; }
+
+        [Serialize(false, IsPropertySaveable.Yes, description: "If enabled, taking items from this container is never considered stealing.")]
+        public bool AllowStealingContainedItems { get; private set; }
+
+        [Serialize("255,255,255,255", IsPropertySaveable.No, description: "Used in circuit box to set the color of the nodes.")]
+        public Color SignalComponentColor { get; private set; }
+
+        [Serialize(false, IsPropertySaveable.No, description: "If enabled, the player is unable to open the middle click menu when this item is selected.")]
+        public bool DisableCommandMenuWhenSelected { get; set; }
 
         protected override Identifier DetermineIdentifier(XElement element)
         {
@@ -661,34 +967,22 @@ namespace Barotrauma
                 ? category
                 : MapEntityCategory.Misc;
 
-            var parentType = ConfigElement.Parent?.GetAttributeIdentifier("itemtype", "");
-
             //nameidentifier can be used to make multiple items use the same names and descriptions
             Identifier nameIdentifier = ConfigElement.GetAttributeIdentifier("nameidentifier", "");
 
             //only used if the item doesn't have a name/description defined in the currently selected language
             string fallbackNameIdentifier = ConfigElement.GetAttributeString("fallbacknameidentifier", "");
 
-            //works the same as nameIdentifier, but just replaces the description
-            Identifier descriptionIdentifier = ConfigElement.GetAttributeIdentifier("descriptionidentifier", "");
-
-            if (string.IsNullOrEmpty(OriginalName))
-            {
-                name = TextManager.Get(nameIdentifier.IsEmpty
-                        ? $"EntityName.{Identifier}"
-                        : $"EntityName.{nameIdentifier}",
-                    $"EntityName.{fallbackNameIdentifier}");
-            }
-            else if (Category.HasFlag(MapEntityCategory.Legacy))
-            {
-                // Legacy items use names as identifiers, so we have to define them in the xml. But we also want to support the translations. Therefore
-                name = TextManager.Get(nameIdentifier.IsEmpty
+            name = TextManager.Get(nameIdentifier.IsEmpty
                     ? $"EntityName.{Identifier}"
-                    : $"EntityName.{nameIdentifier}");
+                    : $"EntityName.{nameIdentifier}",
+                $"EntityName.{fallbackNameIdentifier}");
+            if (!string.IsNullOrEmpty(OriginalName))
+            {
                 name = name.Fallback(OriginalName);
             }
 
-            if (parentType == "wrecked")
+            if (category == MapEntityCategory.Wrecked)
             {
                 name = TextManager.GetWithVariable("wreckeditemformat", "[name]", name);
             }
@@ -727,29 +1021,25 @@ namespace Barotrauma
 
             SerializableProperty.DeserializeProperties(this, ConfigElement);
 
-            if (Description.IsNullOrEmpty())
+            LoadDescription(ConfigElement);
+            var skillRequirementHints = new List<SkillRequirementHint>();
+            foreach (var skillRequirementHintElement in ConfigElement.GetChildElements("SkillRequirementHint"))
             {
-                if (descriptionIdentifier != Identifier.Empty)
-                {
-                    Description = TextManager.Get($"EntityDescription.{descriptionIdentifier}");
-                }
-                else if (nameIdentifier == Identifier.Empty)
-                {
-                    Description = TextManager.Get($"EntityDescription.{Identifier}");
-                }
-                else
-                {
-                    Description = TextManager.Get($"EntityDescription.{nameIdentifier}");
-                }
+                skillRequirementHints.Add(new SkillRequirementHint(skillRequirementHintElement));
+            }
+            if (skillRequirementHints.Any())
+            {
+                SkillRequirementHints = skillRequirementHints.ToImmutableArray();
             }
 
             var allowDroppingOnSwapWith = ConfigElement.GetAttributeIdentifierArray("allowdroppingonswapwith", Array.Empty<Identifier>());
             AllowDroppingOnSwapWith = allowDroppingOnSwapWith.ToImmutableHashSet();
             AllowDroppingOnSwap = allowDroppingOnSwapWith.Any();
 
-            var levelCommonness = new Dictionary<Identifier, float>();
+            var levelCommonness = new Dictionary<Identifier, CommonnessInfo>();
             var levelQuantity = new Dictionary<Identifier, FixedQuantityResourceInfo>();
 
+            List<FabricationRecipe> loadedRecipes = new List<FabricationRecipe>();
             foreach (ContentXElement subElement in ConfigElement.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
@@ -757,8 +1047,8 @@ namespace Barotrauma
                     case "sprite":
                         string spriteFolder = GetTexturePath(subElement, variantOf);
 
-                        CanSpriteFlipX = subElement.GetAttributeBool("canflipx", true);
-                        CanSpriteFlipY = subElement.GetAttributeBool("canflipy", true);
+                        canSpriteFlipX = subElement.GetAttributeBool("canflipx", true);
+                        canSpriteFlipY = subElement.GetAttributeBool("canflipy", true);
 
                         sprite = new Sprite(subElement, spriteFolder, lazyLoad: true);
                         if (subElement.GetAttribute("sourcerect") == null &&
@@ -809,14 +1099,20 @@ namespace Barotrauma
                         AllowDeconstruct = true;
                         RandomDeconstructionOutput = subElement.GetAttributeBool("chooserandom", false);
                         RandomDeconstructionOutputAmount = subElement.GetAttributeInt("amount", 1);
-                        foreach (XElement deconstructItem in subElement.Elements())
+                        foreach (XElement itemElement in subElement.Elements())
                         {
-                            if (deconstructItem.Attribute("name") != null)
+                            if (itemElement.Attribute("name") != null)
                             {
                                 DebugConsole.ThrowError($"Error in item config \"{ToString()}\" - use item identifiers instead of names to configure the deconstruct items.");
                                 continue;
                             }
-                            deconstructItems.Add(new DeconstructItem(deconstructItem, Identifier));
+                            var deconstructItem = new DeconstructItem(itemElement, Identifier);
+                            if (deconstructItem.ItemIdentifier.IsEmpty)
+                            {
+                                DebugConsole.ThrowError($"Error in item config \"{ToString()}\" - deconstruction output contains an item with no identifier.");
+                                continue;
+                            }
+                            deconstructItems.Add(deconstructItem);
                         }
                         RandomDeconstructionOutputAmount = Math.Min(RandomDeconstructionOutputAmount, deconstructItems.Count);
                         break;
@@ -826,9 +1122,10 @@ namespace Barotrauma
                         var newRecipe = new FabricationRecipe(subElement, Identifier);
                         if (fabricationRecipes.TryGetValue(newRecipe.RecipeHash, out var prevRecipe))
                         {
+                            int prevRecipeIndex = loadedRecipes.IndexOf(prevRecipe);
                             DebugConsole.ThrowError(
                                 $"Error in item prefab \"{ToString()}\": " +
-                                $"{prevRecipe.DisplayName} has the same hash as {newRecipe.DisplayName}. " +
+                                $"Fabrication recipe #{loadedRecipes.Count + 1} has the same hash as recipe #{prevRecipeIndex + 1}. This is most likely caused by identical, duplicate recipes." +
                                 $"This will cause issues with fabrication."
                             );
                         }
@@ -836,12 +1133,17 @@ namespace Barotrauma
                         {
                             fabricationRecipes.Add(newRecipe.RecipeHash, newRecipe);
                         }
+                        loadedRecipes.Add(newRecipe);
                         break;
                     case "preferredcontainer":
                         var preferredContainer = new PreferredContainer(subElement);
                         if (preferredContainer.Primary.Count == 0 && preferredContainer.Secondary.Count == 0)
                         {
-                            DebugConsole.ThrowError($"Error in item prefab \"{ToString()}\": preferred container has no preferences defined ({subElement}).");
+                            //it's ok for variants to clear the primary and secondary containers to disable the PreferredContainer element
+                            if (variantOf == null)
+                            {
+                                DebugConsole.ThrowError($"Error in item prefab \"{ToString()}\": preferred container has no preferences defined ({subElement}).");
+                            }
                         }
                         else
                         {
@@ -871,7 +1173,7 @@ namespace Barotrauma
                             {
                                 if (!levelCommonness.ContainsKey(levelName))
                                 {
-                                    levelCommonness.Add(levelName, levelCommonnessElement.GetAttributeFloat("commonness", 0.0f));
+                                    levelCommonness.Add(levelName, new CommonnessInfo(levelCommonnessElement));
                                 }
                             }
                             else
@@ -960,6 +1262,45 @@ namespace Barotrauma
 #endif
 
             this.allowedLinks = ConfigElement.GetAttributeIdentifierArray("allowedlinks", Array.Empty<Identifier>()).ToImmutableHashSet();
+
+            GrabWhenSelected = ConfigElement.GetAttributeBool(
+                nameof(GrabWhenSelected), 
+                ConfigElement.GetChildElement(nameof(ItemContainer)) != null &&
+                ConfigElement.GetChildElement("Body") == null);
+        }
+
+        public CommonnessInfo? GetCommonnessInfo(Level level)
+        {
+            CommonnessInfo? levelCommonnessInfo = GetValueOrNull(level.GenerationParams.Identifier);
+            CommonnessInfo? biomeCommonnessInfo = GetValueOrNull(level.LevelData.Biome.Identifier);
+            CommonnessInfo? defaultCommonnessInfo = GetValueOrNull(Identifier.Empty);
+
+            if (levelCommonnessInfo.HasValue)
+            {
+                return levelCommonnessInfo?.WithInheritedCommonness(biomeCommonnessInfo, defaultCommonnessInfo);
+            }
+            else if (biomeCommonnessInfo.HasValue)
+            {
+                return biomeCommonnessInfo?.WithInheritedCommonness(defaultCommonnessInfo);
+            }
+            else if (defaultCommonnessInfo.HasValue)
+            {
+                return defaultCommonnessInfo;
+            }
+
+            return null;
+
+            CommonnessInfo? GetValueOrNull(Identifier identifier)
+            {
+                if (LevelCommonness.TryGetValue(identifier, out CommonnessInfo info))
+                {
+                    return info;
+                }
+                else
+                {
+                    return null;
+                }
+            }
         }
 
         public float GetTreatmentSuitability(Identifier treatmentIdentifier)
@@ -975,7 +1316,7 @@ namespace Barotrauma
             {
                 string message = $"Tried to get price info for \"{Identifier}\" with a null store parameter!\n{Environment.StackTrace.CleanupStackTrace()}";
 #if DEBUG
-                DebugConsole.ShowError(message);
+                DebugConsole.LogError(message);
 #else
                 DebugConsole.AddWarning(message);
                 GameAnalyticsManager.AddErrorEventOnce("ItemPrefab.GetPriceInfo:StoreParameterNull", GameAnalyticsManager.ErrorSeverity.Error, message);
@@ -995,7 +1336,10 @@ namespace Barotrauma
         public bool CanBeBoughtFrom(Location.StoreInfo store, out PriceInfo priceInfo)
         {
             priceInfo = GetPriceInfo(store);
-            return priceInfo != null && priceInfo.CanBeBought && (store.Location?.LevelData?.Difficulty ?? 0) >= priceInfo.MinLevelDifficulty;
+            return
+                priceInfo is { CanBeBought: true } &&
+                (store?.Location.LevelData?.Difficulty ?? 0) >= priceInfo.MinLevelDifficulty &&
+                (!priceInfo.MinReputation.Any() || priceInfo.MinReputation.Any(p => store?.Location.Faction?.Prefab.Identifier == p.Key || store?.Location.SecondaryFaction?.Prefab.Identifier == p.Key));
         }
 
         public bool CanBeBoughtFrom(Location location)
@@ -1006,7 +1350,16 @@ namespace Barotrauma
                 var priceInfo = GetPriceInfo(store.Value);
                 if (priceInfo == null) { continue; }
                 if (!priceInfo.CanBeBought) { continue; }
-                if ((location.LevelData?.Difficulty ?? 0) < priceInfo.MinLevelDifficulty) { continue; }
+                if (location.LevelData.Difficulty < priceInfo.MinLevelDifficulty) { continue; }
+                if (priceInfo.MinReputation.Any())
+                {
+                    if (!priceInfo.MinReputation.Any(p =>
+                        location?.Faction?.Prefab.Identifier == p.Key ||
+                        location?.SecondaryFaction?.Prefab.Identifier == p.Key))
+                    {
+                        continue;
+                    }
+                }
                 return true;
             }
             return false;
@@ -1092,13 +1445,12 @@ namespace Barotrauma
                 throw new ArgumentException("Both name and identifier cannot be null.");
             }
 
-            ItemPrefab prefab;
             if (identifier.IsEmpty)
             {
                 //legacy support
                 identifier = GenerateLegacyIdentifier(name);
             }
-            Prefabs.TryGet(identifier, out prefab);
+            Prefabs.TryGet(identifier, out ItemPrefab prefab);
 
             //not found, see if we can find a prefab with a matching alias
             if (prefab == null && !string.IsNullOrEmpty(name))
@@ -1146,8 +1498,8 @@ namespace Barotrauma
             return PreferredContainers.Any(pc => IsItemConditionAcceptable(item, pc) && IsContainerPreferred(pc.Secondary, identifiersOrTags));
         }
 
-        private bool IsItemConditionAcceptable(Item item, PreferredContainer pc) => item.ConditionPercentage >= pc.MinCondition && item.ConditionPercentage <= pc.MaxCondition;
-        private bool CanBeTransferred(Identifier item, PreferredContainer pc, ItemContainer targetContainer) => 
+        private static bool IsItemConditionAcceptable(Item item, PreferredContainer pc) => item.ConditionPercentage >= pc.MinCondition && item.ConditionPercentage <= pc.MaxCondition;
+        private static bool CanBeTransferred(Identifier item, PreferredContainer pc, ItemContainer targetContainer) => 
             pc.AllowTransfersHere && (!pc.TransferOnlyOnePerContainer || targetContainer.Inventory.AllItems.None(i => i.Prefab.Identifier == item));
 
         public static bool IsContainerPreferred(IEnumerable<Identifier> preferences, ItemContainer c) => preferences.Any(id => c.Item.Prefab.Identifier == id || c.Item.HasTag(id));
@@ -1158,21 +1510,65 @@ namespace Barotrauma
             throw new InvalidOperationException("Can't call ItemPrefab.CreateInstance");
         }
 
-        private bool disposed = false;
         public override void Dispose()
         {
-            if (disposed) { return; }
-            disposed = true;
-            Prefabs.Remove(this);
             Item.RemoveByPrefab(this);
         }
 
         public Identifier VariantOf { get; }
-        
+        public ItemPrefab ParentPrefab { get; set; }
+
         public void InheritFrom(ItemPrefab parent)
         {
-            ConfigElement = originalElement.CreateVariantXML(parent.ConfigElement).FromPackage(ConfigElement.ContentPackage);
+            ConfigElement = originalElement.CreateVariantXML(parent.ConfigElement, CheckXML).FromPackage(ConfigElement.ContentPackage);
             ParseConfigElement(parent);
+
+            void CheckXML(XElement originalElement, XElement variantElement, XElement result)
+            {
+                if (result == null) { return; }
+                if (result.Name.ToIdentifier() == "RequiredItem" &&
+                    result.Parent?.Name.ToIdentifier() == "Fabricate")
+                {
+                    int originalAmount = originalElement.GetAttributeInt("amount", 1);
+                    Identifier originalIdentifier = originalElement.GetAttributeIdentifier("identifier", Identifier.Empty);
+                    if (variantElement == null)
+                    {
+                        //if the variant defines some fabrication requirements, we probably don't want to inherit anything extra from the base item?
+                        if (this.originalElement.GetChildElement("Fabricate")?.GetChildElement("RequiredItem") != null)
+                        {
+                            DebugConsole.AddWarning($"Potential error in item variant \"{Identifier}\": " +
+                                $"the item inherits the fabrication requirement of x{originalAmount} \"{originalIdentifier}\"  from the base item \"{parent.Identifier}\". " +
+                                $"If this is not intentional, you can use empty <RequiredItem /> elements in the item variant to remove any excess inherited fabrication requirements.");
+                        }
+                        return;
+                    }
+
+                    Identifier resultIdentifier = result.GetAttributeIdentifier("identifier", Identifier.Empty);
+                    if (originalAmount > 1 && variantElement.GetAttribute("amount") == null)
+                    {
+                        DebugConsole.AddWarning($"Potential error in item variant \"{Identifier}\": " +
+                            $"the base item \"{parent.Identifier}\" requires x{originalAmount} \"{originalIdentifier}\" to fabricate. " +
+                            $"The variant only overrides the required item, not the amount, resulting in a requirement of x{originalAmount} \"{resultIdentifier}\". "+
+                            "Specify the amount in the variant to fix this.");
+                    }
+                }
+                if (originalElement?.Name.ToIdentifier() == "Deconstruct" && 
+                    variantElement?.Name.ToIdentifier() == "Deconstruct")
+                {
+                    if (originalElement.Elements().Any(e => e.Name.ToIdentifier() == "Item") &&
+                        variantElement.Elements().Any(e => e.Name.ToIdentifier() == "RequiredItem"))
+                    {
+                        DebugConsole.AddWarning($"Potential error in item variant \"{Identifier}\": " +
+                            $"the item defines deconstruction recipes using 'RequiredItem' instead of 'Item'. Overriding the base recipe may not work correctly.");
+                    }
+                    if (variantElement.Elements().Any(e => e.Name.ToIdentifier() == "Item") &&
+                        originalElement.Elements().Any(e => e.Name.ToIdentifier() == "RequiredItem"))
+                    {
+                        DebugConsole.AddWarning($"Potential error in item \"{parent.Identifier}\": " +
+                            $"the item defines deconstruction recipes using 'RequiredItem' instead of 'Item'. The item variant \"{Identifier}\" may not override the base recipe correctly.");
+                    }
+                }
+            }
         }
 
         public override string ToString()

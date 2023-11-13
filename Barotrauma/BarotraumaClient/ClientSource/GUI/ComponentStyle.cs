@@ -1,9 +1,9 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Barotrauma.Extensions;
+using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
-using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
@@ -199,8 +199,8 @@ namespace Barotrauma
                 if (GameMain.GraphicsWidth <= maxResolution.X && GameMain.GraphicsHeight <= maxResolution.Y)
                 {
                     size = new Point(
-                        subElement.GetAttributeInt("width", 0), 
-                        subElement.GetAttributeInt("height", 0));
+                        ParseSize(subElement, "width"),
+                        ParseSize(subElement, "height"));
                     break;
                 }
             }

@@ -5,13 +5,13 @@ namespace Barotrauma.Abilities
 {
     class AbilityConditionHasStatusTag : AbilityConditionDataless
     {
-        private readonly string tag;
+        private readonly Identifier tag;
 
 
         public AbilityConditionHasStatusTag(CharacterTalent characterTalent, ContentXElement conditionElement) : base(characterTalent, conditionElement)
         {
-            tag = conditionElement.GetAttributeString("tag", "");
-            if (string.IsNullOrEmpty(tag))
+            tag = conditionElement.GetAttributeIdentifier("tag", Identifier.Empty);
+            if (tag.IsEmpty)
             {
                 DebugConsole.AddWarning($"Error in talent \"{characterTalent.Prefab.OriginalName}\" - tag not defined in AbilityConditionHasStatusTag.");
             }
@@ -19,7 +19,7 @@ namespace Barotrauma.Abilities
 
         protected override bool MatchesConditionSpecific()
         {
-            if (!string.IsNullOrEmpty(tag))
+            if (!tag.IsEmpty)
             {
                 return 
                     StatusEffect.DurationList.Any(d => d.Targets.Contains(character) && d.Parent.HasTag(tag)) || 

@@ -32,23 +32,23 @@ namespace Barotrauma
             if (GameMain.Server is null) { return; }
             if (!(extraData is SpawnOrRemove entities)) { throw new Exception($"Malformed {nameof(EntitySpawner)} event: expected {nameof(SpawnOrRemove)}"); }
 
-            message.Write(entities is RemoveEntity);
+            message.WriteBoolean(entities is RemoveEntity);
             if (entities is RemoveEntity)
             {
-                message.Write(entities.ID);
+                message.WriteUInt16(entities.ID);
             }
             else
             {
                 switch (entities.Entity)
                 {
                     case Item item:
-                        message.Write((byte)SpawnableType.Item);
+                        message.WriteByte((byte)SpawnableType.Item);
                         DebugConsole.Log(
                             $"Writing item spawn data {item} (ID: {entities.ID})");
                         item.WriteSpawnData(message, entities.ID, entities.InventoryID, entities.ItemContainerIndex, entities.SlotIndex);
                         break;
                     case Character character:
-                        message.Write((byte)SpawnableType.Character);
+                        message.WriteByte((byte)SpawnableType.Character);
                         DebugConsole.Log(
                             $"Writing character spawn data: {character} (ID: {entities.ID})");
                         character.WriteSpawnData(message, entities.ID, restrictMessageSize: true);

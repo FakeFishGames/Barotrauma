@@ -7,12 +7,12 @@ namespace Barotrauma
         public override void ServerWriteInitial(IWriteMessage msg, Client c)
         {
             base.ServerWriteInitial(msg, c);
-            msg.Write((ushort)existingTargets.Count);
+            msg.WriteUInt16((ushort)existingTargets.Count);
             foreach (var t in existingTargets)
             {
-                msg.Write(t != null ? t.ID : Entity.NullEntityID);
+                msg.WriteUInt16(t != null ? t.ID : Entity.NullEntityID);
             }
-            msg.Write((ushort)spawnedTargets.Count);
+            msg.WriteUInt16((ushort)spawnedTargets.Count);
             foreach (var t in spawnedTargets)
             {
                 t.WriteSpawnData(msg, t.ID, false);

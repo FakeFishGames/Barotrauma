@@ -17,6 +17,8 @@ namespace Barotrauma.Abilities
 
         readonly List<ISerializableEntity> targets = new List<ISerializableEntity>();
 
+        private bool effectBeingApplied;
+
         public CharacterAbilityApplyStatusEffects(CharacterAbilityGroup characterAbilityGroup, ContentXElement abilityElement) : base(characterAbilityGroup, abilityElement)
         {
             statusEffects = CharacterAbilityGroup.ParseStatusEffects(CharacterTalent, abilityElement.GetChildElement("statuseffects"));
@@ -27,45 +29,63 @@ namespace Barotrauma.Abilities
             nearbyCharactersAppliesToEnemies = abilityElement.GetAttributeBool("nearbycharactersappliestoenemies", true);
         }
 
-        protected void ApplyEffectSpecific(Character targetCharacter)
+        protected void ApplyEffectSpecific(Character targetCharacter, Limb targetLimb = null)
         {
-            foreach (var statusEffect in statusEffects)
+            //prevent an infinite loop if an effect triggers itself
+            //(e.g. a talent that triggers when an affliction is applied, and applies that same affliction)
+            if (effectBeingApplied) { return; }
+
+            effectBeingApplied = true;
+
+            try
             {
-                if (statusEffect.HasTargetType(StatusEffect.TargetType.UseTarget))
+                foreach (var statusEffect in statusEffects)
                 {
-                    // currently used to spawn items on the targeted character
-                    statusEffect.SetUser(targetCharacter);
-                    statusEffect.Apply(ActionType.OnAbility, EffectDeltaTime, targetCharacter, targetCharacter);
-                }
-                else if (statusEffect.HasTargetType(StatusEffect.TargetType.NearbyCharacters))
-                {
-                    targets.Clear();
-                    targets.AddRange(statusEffect.GetNearbyTargets(targetCharacter.WorldPosition, targets));
-                    if (!nearbyCharactersAppliesToSelf)
+                    if (statusEffect.HasTargetType(StatusEffect.TargetType.UseTarget))
                     {
-                        targets.RemoveAll(c => c == Character);
+                        // currently used to spawn items on the targeted character
+                        statusEffect.SetUser(targetCharacter);
+                        statusEffect.Apply(ActionType.OnAbility, EffectDeltaTime, targetCharacter, targetCharacter);
                     }
-                    if (!nearbyCharactersAppliesToAllies)
+                    else if (statusEffect.HasTargetType(StatusEffect.TargetType.NearbyCharacters))
                     {
-                        targets.RemoveAll(c => c is Character otherCharacter && HumanAIController.IsFriendly(otherCharacter, Character));
+                        targets.Clear();
+                        statusEffect.AddNearbyTargets(targetCharacter.WorldPosition, targets);
+                        if (!nearbyCharactersAppliesToSelf)
+                        {
+                            targets.RemoveAll(c => c == Character);
+                        }
+                        if (!nearbyCharactersAppliesToAllies)
+                        {
+                            targets.RemoveAll(c => c is Character otherCharacter && HumanAIController.IsFriendly(otherCharacter, Character));
+                        }
+                        if (!nearbyCharactersAppliesToEnemies)
+                        {
+                            targets.RemoveAll(c => c is Character otherCharacter && !HumanAIController.IsFriendly(otherCharacter, Character));
+                        }
+                        statusEffect.SetUser(Character);
+                        statusEffect.Apply(ActionType.OnAbility, EffectDeltaTime, targetCharacter, targets);
                     }
-                    if (!nearbyCharactersAppliesToEnemies)
+                    else if (statusEffect.HasTargetType(StatusEffect.TargetType.Limb) && targetLimb != null)
                     {
-                        targets.RemoveAll(c => c is Character otherCharacter && !HumanAIController.IsFriendly(otherCharacter, Character));
+                        statusEffect.SetUser(Character);
+                        statusEffect.Apply(ActionType.OnAbility, EffectDeltaTime, Character, targetLimb);
                     }
-                    statusEffect.SetUser(Character);
-                    statusEffect.Apply(ActionType.OnAbility, EffectDeltaTime, targetCharacter, targets);
+                    else if (statusEffect.HasTargetType(StatusEffect.TargetType.Character))
+                    {
+                        statusEffect.SetUser(Character);
+                        statusEffect.Apply(ActionType.OnAbility, EffectDeltaTime, Character, targetCharacter);
+                    }
+                    else
+                    {
+                        statusEffect.SetUser(Character);
+                        statusEffect.Apply(ActionType.OnAbility, EffectDeltaTime, Character, Character);
+                    }
                 }
-                else if (statusEffect.HasTargetType(StatusEffect.TargetType.Character))
-                {
-                    statusEffect.SetUser(Character);
-                    statusEffect.Apply(ActionType.OnAbility, EffectDeltaTime, Character, targetCharacter);
-                }
-                else
-                {
-                    statusEffect.SetUser(Character);
-                    statusEffect.Apply(ActionType.OnAbility, EffectDeltaTime, Character, Character);
-                }
+            }
+            finally
+            {
+                effectBeingApplied = false;
             }
         }
         protected override void ApplyEffect()
@@ -84,7 +104,7 @@ namespace Barotrauma.Abilities
         {
             if ((abilityObject as IAbilityCharacter)?.Character is Character targetCharacter && !applyToSelf)
             {
-                ApplyEffectSpecific(targetCharacter);
+                ApplyEffectSpecific(targetCharacter, targetLimb: (abilityObject as AbilityApplyTreatment)?.TargetLimb);
             }
             else
             {

@@ -44,13 +44,12 @@ namespace Barotrauma.Items.Components
 
         public void ServerEventWrite(IWriteMessage msg, Client c, NetEntityEvent.IData extraData = null)
         {
-            msg.Write(deteriorationTimer);
-            msg.Write(deteriorateAlwaysResetTimer);
-            msg.Write(DeteriorateAlways);
-            msg.Write(tinkeringDuration);
-            msg.Write(tinkeringStrength);
-            msg.Write(tinkeringPowersDevices);
-            msg.Write(CurrentFixer == null ? (ushort)0 : CurrentFixer.ID);
+            msg.WriteSingle(deteriorationTimer);
+            msg.WriteSingle(ForceDeteriorationTimer);
+            msg.WriteSingle(tinkeringDuration);
+            msg.WriteSingle(tinkeringStrength);
+            msg.WriteBoolean(tinkeringPowersDevices);
+            msg.WriteUInt16(CurrentFixer == null ? (ushort)0 : CurrentFixer.ID);
             msg.WriteRangedInteger((int)currentFixerAction, 0, 2);
         }
     }

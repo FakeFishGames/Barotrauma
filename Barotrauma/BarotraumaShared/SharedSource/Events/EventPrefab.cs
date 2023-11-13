@@ -1,6 +1,6 @@
 ﻿using System;
+using System.Linq;
 using System.Reflection;
-using System.Xml.Linq;
 
 namespace Barotrauma
 {
@@ -14,12 +14,25 @@ namespace Barotrauma
         public readonly bool TriggerEventCooldown;
         public readonly float Commonness;
         public readonly Identifier BiomeIdentifier;
-        public readonly float SpawnDistance;
+        public readonly Identifier Faction;
+
+        public readonly LocalizedString Name;
 
         public readonly bool UnlockPathEvent;
         public readonly string UnlockPathTooltip;
         public readonly int UnlockPathReputation;
-        public readonly string UnlockPathFaction;
+
+        public static EventPrefab Create(ContentXElement element, RandomEventsFile file, Identifier fallbackIdentifier = default)
+        {
+            if (element.NameAsIdentifier() == nameof(TraitorEvent))
+            {
+                return new TraitorEventPrefab(element, file, fallbackIdentifier);
+            }
+            else
+            {
+                return new EventPrefab(element, file, fallbackIdentifier);
+            }
+        }
 
         public EventPrefab(ContentXElement element, RandomEventsFile file, Identifier fallbackIdentifier = default)
             : base(file, element.GetAttributeIdentifier("identifier", fallbackIdentifier))
@@ -39,7 +52,10 @@ namespace Barotrauma
                 DebugConsole.ThrowError("Could not find an event class of the type \"" + ConfigElement.Name + "\".");
             }
 
+            Name = TextManager.Get($"eventname.{Identifier}").Fallback(Identifier.ToString());
+
             BiomeIdentifier = ConfigElement.GetAttributeIdentifier("biome", Identifier.Empty);
+            Faction = ConfigElement.GetAttributeIdentifier("faction", Identifier.Empty);
             Commonness = element.GetAttributeFloat("commonness", 1.0f);
             Probability = Math.Clamp(element.GetAttributeFloat(1.0f, "probability", "spawnprobability"), 0, 1);
             TriggerEventCooldown = element.GetAttributeBool("triggereventcooldown", EventType != typeof(ScriptedEvent));
@@ -47,20 +63,17 @@ namespace Barotrauma
             UnlockPathEvent = element.GetAttributeBool("unlockpathevent", false);
             UnlockPathTooltip = element.GetAttributeString("unlockpathtooltip", "lockedpathtooltip");
             UnlockPathReputation = element.GetAttributeInt("unlockpathreputation", 0);
-            UnlockPathFaction = element.GetAttributeString("unlockpathfaction", "");
-
-            SpawnDistance = element.GetAttributeFloat("spawndistance", 0);
         }
 
         public bool TryCreateInstance<T>(out T instance) where T : Event
         {
             instance = CreateInstance() as T;
-            return instance is T;
+            return instance is not null;
         }
 
         public Event CreateInstance()
         {
-            ConstructorInfo constructor = EventType.GetConstructor(new[] { typeof(EventPrefab) });
+            ConstructorInfo constructor = EventType.GetConstructor(new[] { GetType() });
             Event instance = null;
             try
             {
@@ -78,7 +91,19 @@ namespace Barotrauma
 
         public override string ToString()
         {
-            return $"EventPrefab ({Identifier})";
+            return $"{nameof(EventPrefab)} ({Identifier})";
+        }
+
+        public static EventPrefab GetUnlockPathEvent(Identifier biomeIdentifier, Faction faction)
+        {
+            var unlockPathEvents = Prefabs.OrderBy(p => p.Identifier).Where(e => e.UnlockPathEvent);
+            if (faction != null && unlockPathEvents.Any(e => e.Faction == faction.Prefab.Identifier))
+            {
+                unlockPathEvents = unlockPathEvents.Where(e => e.Faction == faction.Prefab.Identifier);
+            }
+            return
+                unlockPathEvents.FirstOrDefault(ep => ep.BiomeIdentifier == biomeIdentifier) ??
+                unlockPathEvents.FirstOrDefault(ep => ep.BiomeIdentifier == Identifier.Empty);
         }
     }
 }

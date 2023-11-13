@@ -112,19 +112,19 @@ namespace Barotrauma
             CheckReminders();
         }
 
-        public static void OnSetSelectedConstruction(Character character, Item oldConstruction, Item newConstruction)
+        public static void OnSetSelectedItem(Character character, Item oldItem, Item newItem)
         {
-            if (oldConstruction == newConstruction) { return; }
+            if (oldItem == newItem) { return; }
 
-            if (Character.Controlled != null && Character.Controlled == character && oldConstruction != null && oldConstruction.GetComponent<Ladder>() == null)
+            if (Character.Controlled != null && Character.Controlled == character && oldItem != null && !oldItem.IsLadder)
             {
                 TimeStoppedInteracting = Timing.TotalTime;
             }
 
-            if (newConstruction == null) { return; }
-            if (newConstruction.GetComponent<Ladder>() != null) { return; }
-            if (newConstruction.GetComponent<ConnectionPanel>() is ConnectionPanel cp && cp.User == character) { return; }
-            OnStartedInteracting(character, newConstruction);
+            if (newItem == null) { return; }
+            if (newItem.IsLadder) { return; }
+            if (newItem.GetComponent<ConnectionPanel>() is ConnectionPanel cp && cp.User == character) { return; }
+            OnStartedInteracting(character, newItem);
         }
 
         private static void OnStartedInteracting(Character character, Item item)
@@ -151,8 +151,8 @@ namespace Barotrauma
             }
 
             // onstartedinteracting.turretperiscope
-            if (item.HasTag("periscope") &&
-                item.GetConnectedComponents<Turret>().FirstOrDefault(t => t.Item.HasTag("turret")) is Turret)
+            if (item.HasTag(Tags.Periscope) &&
+                item.GetConnectedComponents<Turret>().FirstOrDefault(t => t.Item.HasTag(Tags.Turret)) is Turret)
             {
                 if (DisplayHint($"{hintIdentifierBase}.turretperiscope".ToIdentifier(),
                         variables: new[]
@@ -174,14 +174,25 @@ namespace Barotrauma
             }
         }
 
+        public static void OnStartRepairing(Character character, Repairable repairable)
+        {
+            if (repairable.ForceDeteriorationTimer > 0.0f && !character.IsTraitor)
+            {
+                CoroutineManager.Invoke(() => 
+                { 
+                    DisplayHint($"repairingsabotageditem".ToIdentifier()); 
+                }, delay: 5.0f);
+            }
+        }
+
         private static void CheckIsInteracting()
         {
             if (!CanDisplayHints()) { return; }
-            if (Character.Controlled?.SelectedConstruction == null) { return; }
+            if (Character.Controlled?.SelectedItem == null) { return; }
 
-            if (Character.Controlled.SelectedConstruction.GetComponent<Reactor>() is Reactor reactor && reactor.PowerOn &&
-                Character.Controlled.SelectedConstruction.OwnInventory?.AllItems is IEnumerable<Item> containedItems &&
-                containedItems.Count(i => i.HasTag("reactorfuel")) > 1)
+            if (Character.Controlled.SelectedItem.GetComponent<Reactor>() is Reactor reactor && reactor.PowerOn &&
+                Character.Controlled.SelectedItem.OwnInventory?.AllItems is IEnumerable<Item> containedItems &&
+                containedItems.Count(i => i.HasTag(Tags.Fuel)) > 1)
             {
                 if (DisplayHint("onisinteracting.reactorwithextrarods".ToIdentifier())) { return; }
             }
@@ -209,7 +220,7 @@ namespace Barotrauma
                     {
                         if (item.CurrentHull == null) { continue; }
                         if (item.GetComponent<Pump>() == null) { continue; }
-                        if (!item.HasTag("ballast")) { continue; }
+                        if (!item.HasTag(Tags.Ballast) && !item.CurrentHull.RoomName.Contains("ballast", StringComparison.OrdinalIgnoreCase)) { continue; }
                         BallastHulls.Add(item.CurrentHull);
                     }
                 }
@@ -245,8 +256,14 @@ namespace Barotrauma
                     });
                 }
 
+                if (GameMain.GameSession is { TraitorsEnabled: true })
+                {
+                    DisplayHint("traitorsonboard".ToIdentifier());
+                    DisplayHint("traitorsonboard2".ToIdentifier());
+                }
                 yield return CoroutineStatus.Success;
             }
+
         }
 
         public static void OnRoundEnded()
@@ -272,7 +289,7 @@ namespace Barotrauma
             if (!CanDisplayHints()) { return; }
             if (sonar == null || sonar.Removed) { return; }
             if (spottedCharacter == null || spottedCharacter.Removed || spottedCharacter.IsDead) { return; }
-            if (Character.Controlled.SelectedConstruction != sonar) { return; }
+            if (Character.Controlled.SelectedItem != sonar) { return; }
             if (HumanAIController.IsFriendly(Character.Controlled, spottedCharacter)) { return; }
             DisplayHint("onsonarspottedenemy".ToIdentifier());
         }
@@ -305,7 +322,7 @@ namespace Barotrauma
         {
             if (!CanDisplayHints()) { return; }
             if (character != Character.Controlled) { return; }
-            if (character.SelectedConstruction != null || character.FocusedItem != null) { return; }
+            if (character.HasSelectedAnyItem || character.FocusedItem != null) { return; }
             if (item == null || !item.IsShootable || !item.RequireAimToUse) { return; }
             if (TimeStoppedInteracting + 1 > Timing.TotalTime) { return; }
             if (GUI.MouseOn != null) { return; }
@@ -317,7 +334,7 @@ namespace Barotrauma
                 variables: new[] { ("[key]".ToIdentifier(), GameSettings.CurrentConfig.KeyMap.KeyBindText(InputType.Aim)) },
                 onUpdate: () =>
                 {
-                    if (character.SelectedConstruction == null && GUI.MouseOn == null && PlayerInput.KeyDown(InputType.Aim))
+                    if (character.SelectedItem == null && GUI.MouseOn == null && PlayerInput.KeyDown(InputType.Aim))
                     {
                         ActiveHintMessageBox.Close();
                     }
@@ -383,6 +400,34 @@ namespace Barotrauma
             IgnoreReminder("tabmenu");
         }
 
+        public static void OnObtainedItem(Character character, Item item)
+        {
+            if (!CanDisplayHints()) { return; }
+            if (character != Character.Controlled || item == null) { return; }
+
+            if (DisplayHint($"onobtaineditem.{item.Prefab.Identifier}".ToIdentifier())) { return; }
+            foreach (Identifier tag in item.GetTags())
+            {
+                if (DisplayHint($"onobtaineditem.{tag}".ToIdentifier())) { return; }
+            }
+
+            if ((item.HasTag(Tags.GeneticMaterial) && character.Inventory.FindItemByTag(Tags.GeneticMaterial, recursive: true) != null) ||
+                (item.HasTag(Tags.GeneticDevice) && character.Inventory.FindItemByTag(Tags.GeneticDevice, recursive: true) != null))
+            {
+                if (DisplayHint($"geneticmaterial.useinstructions".ToIdentifier())) { return; }
+            }
+        }
+
+        public static void OnStartDeconstructing(Character character, Deconstructor deconstructor)
+        {
+            if (!CanDisplayHints()) { return; }
+            if (character != Character.Controlled || deconstructor == null) { return; }
+            if (deconstructor.InputContainer.Inventory.AllItems.All(it => it.GetComponent<GeneticMaterial>() is not null))
+            {
+                DisplayHint($"geneticmaterial.onrefiningorcombining".ToIdentifier());
+            }
+        }
+
         public static void OnStoleItem(Character character, Item item)
         {
             if (!CanDisplayHints()) { return; }
@@ -408,6 +453,14 @@ namespace Barotrauma
             });
         }
 
+        public static void OnRadioJammed(Item radioItem)
+        {
+            if (!CanDisplayHints()) { return; }
+            if (radioItem?.ParentInventory is not CharacterInventory characterInventory) { return; }
+            if (characterInventory.Owner != Character.Controlled) { return; }
+            DisplayHint("radiojammed".ToIdentifier());
+        }
+
         public static void OnReactorOutOfFuel(Reactor reactor)
         {
             if (!CanDisplayHints()) { return; }
@@ -419,6 +472,13 @@ namespace Barotrauma
                 if (reactor?.Item != null && !reactor.Item.Removed && reactor.AvailableFuel < 1) { return; }
                 ActiveHintMessageBox.Close();
             });
+        }
+
+        public static void OnAssignedAsTraitor()
+        {
+            if (!CanDisplayHints()) { return; }
+            DisplayHint("assignedastraitor".ToIdentifier());
+            DisplayHint("assignedastraitor2".ToIdentifier());        
         }
 
         public static void OnAvailableTransition(CampaignMode.TransitionType transitionType)
@@ -507,7 +567,7 @@ namespace Barotrauma
             if (!CanDisplayHints()) { return; }
             if (character != Character.Controlled) { return; }
             // Could make this more generic if there will ever be any other status effect related hints
-            if (!(component is Repairable) || actionType != ActionType.OnFailure) { return; }
+            if (component is not Repairable || actionType != ActionType.OnFailure) { return; }
             DisplayHint("onrepairfailed".ToIdentifier());
         }
 
@@ -527,7 +587,7 @@ namespace Barotrauma
         private static void CheckIfDivingGearOutOfOxygen()
         {
             if (!CanDisplayHints()) { return; }
-            var divingGear = Character.Controlled.GetEquippedItem("diving", InvSlotType.OuterClothes);
+            var divingGear = Character.Controlled.GetEquippedItem(Tags.DivingGear, InvSlotType.OuterClothes);
             if (divingGear?.OwnInventory == null) { return; }
             if (divingGear.GetContainedItemConditionPercentage() > 0.0f) { return; }
             DisplayHint("ondivinggearoutofoxygen".ToIdentifier(), onUpdate: () =>
@@ -556,21 +616,21 @@ namespace Barotrauma
                 if (!gap.IsRoomToRoom)
                 {
                     if (!IsWearingDivingSuit()) { continue; }
-                    if (Character.Controlled.IsProtectedFromPressure()) { continue; }
+                    if (Character.Controlled.IsProtectedFromPressure) { continue; }
                     if (DisplayHint("divingsuitwarning".ToIdentifier(), extendTextTag: false)) { return; }
                     continue;
                 }
                 foreach (var me in gap.linkedTo)
                 {
                     if (me == Character.Controlled.CurrentHull) { continue; }
-                    if (!(me is Hull adjacentHull)) { continue; }
+                    if (me is not Hull adjacentHull) { continue; }
                     if (!IsOnFriendlySub()) { continue; }
                     if (IsWearingDivingSuit()) { continue; }
                     if (adjacentHull.LethalPressure > 5.0f && DisplayHint("onadjacenthull.highpressure".ToIdentifier())) { return; }
                     if (adjacentHull.WaterPercentage > 75 && !BallastHulls.Contains(adjacentHull) && DisplayHint("onadjacenthull.highwaterpercentage".ToIdentifier())) { return; }
                 }
 
-                static bool IsWearingDivingSuit() => Character.Controlled.GetEquippedItem("deepdiving", InvSlotType.OuterClothes) is Item;
+                static bool IsWearingDivingSuit() => Character.Controlled.GetEquippedItem(Tags.HeavyDivingGear, InvSlotType.OuterClothes) is Item;
             }
 
             static bool IsOnFriendlySub() => Character.Controlled.Submarine is Submarine sub && (sub.TeamID == Character.Controlled.TeamID || sub.TeamID == CharacterTeamType.FriendlyNPC);
@@ -720,6 +780,7 @@ namespace Barotrauma
             if (requireControllingCharacter && Character.Controlled == null) { return false; }
             var gameMode = GameMain.GameSession?.GameMode;
             if (!(gameMode is CampaignMode || gameMode is MissionMode)) { return false; }
+            if (ObjectiveManager.AnyObjectives) { return false; }
             if (requireGameScreen && Screen.Selected != GameMain.GameScreen) { return false; }
             return true;
         }

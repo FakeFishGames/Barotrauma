@@ -3,9 +3,8 @@ using Barotrauma.Items.Components;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
-using System.Xml.Linq;
-using System.Linq;
 using System.Collections.Immutable;
+using System.Linq;
 
 namespace Barotrauma
 {
@@ -86,6 +85,12 @@ namespace Barotrauma
         public readonly bool TargetAllCharacters;
         public bool IsReport => TargetAllCharacters && !MustSetTarget;
 
+        public bool IsVisibleAsReportButton => 
+            IsReport && !Hidden && SymbolSprite != null &&
+            (!TraitorModeOnly || GameMain.GameSession is { TraitorsEnabled: true });
+
+        public bool TraitorModeOnly;
+
         public bool IsDismissal => Identifier == DismissalIdentifier;
 
         public readonly float FadeOutTime;
@@ -151,7 +156,7 @@ namespace Barotrauma
         public OrderPrefab(ContentXElement orderElement, OrdersFile file) : base(file, orderElement.GetAttributeIdentifier("identifier", ""))
         {
             Name = TextManager.Get($"OrderName.{Identifier}");
-            ContextualName = TextManager.Get($"OrderNameContextual.{Identifier}");
+            ContextualName = TextManager.Get($"OrderNameContextual.{Identifier}").Fallback(Name);
 
             string targetItemType = orderElement.GetAttributeString("targetitemtype", "");
             if (!string.IsNullOrWhiteSpace(targetItemType))
@@ -173,6 +178,7 @@ namespace Barotrauma
             ControllerTags = orderElement.GetAttributeIdentifierArray("controllertags", Array.Empty<Identifier>()).ToImmutableArray();
             TargetAllCharacters = orderElement.GetAttributeBool("targetallcharacters", false);
             AppropriateJobs = orderElement.GetAttributeIdentifierArray("appropriatejobs", Array.Empty<Identifier>()).ToImmutableArray();
+            TraitorModeOnly = orderElement.GetAttributeBool("TraitorModeOnly", false);
             PreferredJobs = orderElement.GetAttributeIdentifierArray("preferredjobs", Array.Empty<Identifier>()).ToImmutableArray();
             Options = orderElement.GetAttributeIdentifierArray("options", Array.Empty<Identifier>()).ToImmutableArray();
             HiddenOptions = orderElement.GetAttributeIdentifierArray("hiddenoptions", Array.Empty<Identifier>()).ToImmutableArray();
@@ -435,7 +441,7 @@ namespace Barotrauma
             }
             catch (NotImplementedException e)
             {
-                DebugConsole.ShowError($"Error creating a new Order instance: unexpected target type \"{targetType}\".\n{e.StackTrace.CleanupStackTrace()}");
+                DebugConsole.LogError($"Error creating a new Order instance: unexpected target type \"{targetType}\".\n{e.StackTrace.CleanupStackTrace()}");
                 return null;
             }
         }
@@ -466,6 +472,10 @@ namespace Barotrauma
         public readonly OrderTarget TargetPosition;
 
         private ISpatialEntity targetSpatialEntity;
+
+        /// <summary>
+        /// Note this property doesn't return the follow target of the Follow objective, as expected!
+        /// </summary>
         public ISpatialEntity TargetSpatialEntity
         {
             get

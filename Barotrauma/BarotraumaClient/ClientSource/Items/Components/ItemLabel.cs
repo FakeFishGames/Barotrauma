@@ -169,7 +169,7 @@ namespace Barotrauma.Items.Components
             {
                 //whole text can fit in the textblock, no need to scroll
                 needsScrolling = false;
-                scrollingText = DisplayText.Value;
+                TextBlock.Text = scrollingText = DisplayText.Value;
                 scrollPadding = 0;
                 scrollAmount = 0.0f;
                 scrollIndex = 0;
@@ -311,7 +311,7 @@ namespace Barotrauma.Items.Components
             prevRect = item.Rect;
         }
         
-        public void Draw(SpriteBatch spriteBatch, bool editing = false, float itemDepth = -1)
+        public void Draw(SpriteBatch spriteBatch, bool editing = false, float itemDepth = -1, Color? overrideColor = null)
         {
             if (item.ParentInventory != null) { return; }
             if (editing)

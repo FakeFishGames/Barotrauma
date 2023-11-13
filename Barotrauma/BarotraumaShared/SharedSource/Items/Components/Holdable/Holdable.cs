@@ -22,7 +22,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        const float MaxAttachDistance = 150.0f;
+        private const float MaxAttachDistance = ItemPrefab.DefaultInteractDistance * 0.95f;
 
         //the position(s) in the item that the Character grabs
         protected Vector2[] handlePos;
@@ -57,9 +57,6 @@ namespace Barotrauma.Items.Components
             get;
             set;
         }
-
-        //the angle in which the Character holds the item
-        protected float holdAngle;
 
         public PhysicsBody Body
         {
@@ -127,7 +124,7 @@ namespace Barotrauma.Items.Components
             set { attachedByDefault = value; }
         }
 
-        [Editable, Serialize("0.0,0.0", IsPropertySaveable.No, description: "The position the character holds the item at (in pixels, as an offset from the character's shoulder)."+
+        [Serialize("0.0,0.0", IsPropertySaveable.No, description: "The position the character holds the item at (in pixels, as an offset from the character's shoulder)."+
             " For example, a value of 10,-100 would make the character hold the item 100 pixels below the shoulder and 10 pixels forwards.")]
         public Vector2 HoldPos
         {
@@ -143,32 +140,79 @@ namespace Barotrauma.Items.Components
             set { aimPos = ConvertUnits.ToSimUnits(value); }
         }
 
+        protected float holdAngle;
+#if DEBUG
         [Editable, Serialize(0.0f, IsPropertySaveable.No, description: "The rotation at which the character holds the item (in degrees, relative to the rotation of the character's hand).")]
+#else
+        [Serialize(0.0f, IsPropertySaveable.No)] 
+#endif
         public float HoldAngle
         {
             get { return MathHelper.ToDegrees(holdAngle); }
             set { holdAngle = MathHelper.ToRadians(value); }
         }
 
+        protected float aimAngle;
+#if DEBUG
+        [Editable, Serialize(0.0f, IsPropertySaveable.No, description: "The rotation at which the character holds the item while aiming (in degrees, relative to the rotation of the character's hand).")]
+#else
+        [Serialize(0.0f, IsPropertySaveable.No)] 
+#endif
+        public float AimAngle
+        {
+            get { return MathHelper.ToDegrees(aimAngle); }
+            set { aimAngle = MathHelper.ToRadians(value); }
+        }
+
         private Vector2 swingAmount;
+#if DEBUG
         [Editable, Serialize("0.0,0.0", IsPropertySaveable.No, description: "How much the item swings around when aiming/holding it (in pixels, as an offset from AimPos/HoldPos).")]
+#else
+        [Serialize("0.0,0.0", IsPropertySaveable.No)] 
+#endif
         public Vector2 SwingAmount
         {
             get { return ConvertUnits.ToDisplayUnits(swingAmount); }
             set { swingAmount = ConvertUnits.ToSimUnits(value); }
         }
-        
+#if DEBUG
         [Editable, Serialize(0.0f, IsPropertySaveable.No, description: "How fast the item swings around when aiming/holding it (only valid if SwingAmount is set).")]
+#else
+        [Serialize(0.0f, IsPropertySaveable.No)]
+#endif
+
         public float SwingSpeed { get; set; }
 
+#if DEBUG
         [Editable, Serialize(false, IsPropertySaveable.No, description: "Should the item swing around when it's being held.")]
+#else
+        [Serialize(false, IsPropertySaveable.No)]
+#endif
         public bool SwingWhenHolding { get; set; }
+
+#if DEBUG
         [Editable, Serialize(false, IsPropertySaveable.No, description: "Should the item swing around when it's being aimed.")]
+#else
+        [Serialize(false, IsPropertySaveable.No)]
+#endif
         public bool SwingWhenAiming { get; set; }
+
+#if DEBUG
         [Editable, Serialize(false, IsPropertySaveable.No, description: "Should the item swing around when it's being used (for example, when firing a weapon or a welding tool).")]
+#else
+        [Serialize(false, IsPropertySaveable.No)]
+#endif
         public bool SwingWhenUsing { get; set; }
+
+#if DEBUG
         [Editable, Serialize(false, IsPropertySaveable.No)]
+#else
+        [Serialize(false, IsPropertySaveable.No)]
+#endif
         public bool DisableHeadRotation { get; set; }
+
+        [Serialize(false, IsPropertySaveable.No, description: "If true, this item can't be used if the character is also holding a ranged weapon.")]
+        public bool DisableWhenRangedWeaponEquipped { get; set; }
 
         [ConditionallyEditable(ConditionallyEditable.ConditionType.Attachable, MinValueFloat = 0.0f, MaxValueFloat = 0.999f, DecimalCount = 3), Serialize(0.55f, IsPropertySaveable.No, description: "Sprite depth that's used when the item is NOT attached to a wall.")]
         public float SpriteDepthWhenDropped
@@ -185,7 +229,7 @@ namespace Barotrauma.Items.Components
             Pusher = null;
             if (element.GetAttributeBool("blocksplayers", false))
             {
-                Pusher = new PhysicsBody(item.body.width, item.body.height, item.body.radius, 
+                Pusher = new PhysicsBody(item.body.Width, item.body.Height, item.body.Radius, 
                     item.body.Density,
                     BodyType.Dynamic,
                     Physics.CollisionItemBlocking, 
@@ -280,12 +324,12 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public override void Drop(Character dropper)
+        public override void Drop(Character dropper, bool setTransform = true)
         {
-            Drop(true, dropper);
+            Drop(true, dropper, setTransform);
         }
 
-        private void Drop(bool dropConnectedWires, Character dropper)
+        private void Drop(bool dropConnectedWires, Character dropper, bool setTransform = true)
         {
             GetRope()?.Snap();
             if (dropConnectedWires)
@@ -295,16 +339,16 @@ namespace Barotrauma.Items.Components
 
             if (attachable)
             {
-                DeattachFromWall();
-
                 if (body != null)
                 {
                     item.body = body;
                 }
+                DeattachFromWall();
             }
 
             if (Pusher != null) { Pusher.Enabled = false; }
             if (item.body != null) { item.body.Enabled = true; }
+
             IsActive = false;
             attachTargetCell = null;
 
@@ -317,7 +361,7 @@ namespace Barotrauma.Items.Components
 
             item.Submarine = picker.Submarine;
 
-            if (item.body != null)
+            if (item.body != null && setTransform)
             {
                 if (item.body.Removed)
                 {
@@ -387,10 +431,11 @@ namespace Barotrauma.Items.Components
                 return;
             }
 
+            //cannot hold and wear an item at the same time
+            //(unless the slot in which it's held and worn are equal - e.g. a suit with built-in tool or weapon on one hand)
             var wearable = item.GetComponent<Wearable>();
-            if (wearable != null)
+            if (wearable != null && !wearable.AllowedSlots.SequenceEqual(allowedSlots))
             {
-                //cannot hold and wear an item at the same time
                 wearable.Unequip(character);
             }
 
@@ -518,10 +563,17 @@ namespace Barotrauma.Items.Components
 
         public override bool OnPicked(Character picker)
         {
+#if CLIENT
             if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient)
             {
+                if (!picker.Inventory.CanBeAutoMovedToCorrectSlots(item))
+                {
+                    picker.Inventory.FlashAllowedSlots(item, Color.Red);
+                }
                 return false;
             }
+#endif
+            bool wasAttached = IsAttached;
             if (base.OnPicked(picker))
             {
                 DeattachFromWall();
@@ -530,7 +582,7 @@ namespace Barotrauma.Items.Components
                 if (GameMain.Server != null && attachable)
                 {
                     item.CreateServerEvent(this);
-                    if (picker != null)
+                    if (picker != null && wasAttached)
                     {
                         GameServer.Log(GameServer.CharacterLogName(picker) + " detached " + item.Name + " from a wall", ServerLog.MessageType.ItemInteraction);
                     }
@@ -551,6 +603,10 @@ namespace Barotrauma.Items.Components
                 throw new InvalidOperationException($"Tried to attach an item with no physics body to a wall ({item.Prefab.Identifier}).");
             }
 
+            body.Enabled = false;
+            body.SetTransformIgnoreContacts(body.SimPosition, rotation: 0.0f);
+            item.body = null;
+
             //outside hulls/subs -> we need to check if the item is being attached on a structure outside the sub
             if (item.CurrentHull == null && item.Submarine == null)
             {
@@ -561,6 +617,7 @@ namespace Barotrauma.Items.Components
                     {
                         //set to submarine-relative position
                         item.SetTransform(ConvertUnits.ToSimUnits(item.WorldPosition - attachTarget.Submarine.Position), 0.0f, false);
+                        body.SetTransformIgnoreContacts(item.SimPosition, 0.0f);
                     }
                     item.Submarine = attachTarget.Submarine;
                 }
@@ -590,9 +647,6 @@ namespace Barotrauma.Items.Components
                 }
             }
 
-            body.Enabled = false;
-            item.body = null;
-
             DisplayMsg = prevMsg;
             PickKey = prevPickKey;
             requiredItems = new Dictionary<RelatedItem.RelationType, List<RelatedItem>>(prevRequiredItems);
@@ -619,6 +673,10 @@ namespace Barotrauma.Items.Components
 #if CLIENT
             item.DrawDepthOffset = SpriteDepthWhenDropped - item.SpriteDepth;
 #endif
+            foreach (LightComponent light in item.GetComponents<LightComponent>())
+            {
+                light.CheckIfNeedsUpdate();
+            }
         }
 
         public override void ParseMsg()
@@ -632,6 +690,7 @@ namespace Barotrauma.Items.Components
 
         public override bool Use(float deltaTime, Character character = null)
         {
+            if (UsageDisabledByRangedWeapon(character)) { return false; }
             if (!attachable || item.body == null) { return character == null || (character.IsKeyDown(InputType.Aim) && characterUsable); }
             if (character != null)
             {
@@ -647,24 +706,30 @@ namespace Barotrauma.Items.Components
                         return false; 
                     }
                     Vector2 attachPos = GetAttachPosition(character, useWorldCoordinates: true);
-                    Structure attachTarget = Structure.GetAttachTarget(attachPos);
+                    Submarine attachSubmarine = Structure.GetAttachTarget(attachPos)?.Submarine ?? item.Submarine;
+                    int maxAttachableCount = (int)character.Info.GetSavedStatValueWithBotsInMp(StatTypes.MaxAttachableCount, item.Prefab.Identifier);
 
-                    int maxAttachableCount = (int)character.Info.GetSavedStatValue(StatTypes.MaxAttachableCount, item.Prefab.Identifier);
                     int currentlyAttachedCount = Item.ItemList.Count(
-                        i => i.Submarine == attachTarget?.Submarine && i.GetComponent<Holdable>() is Holdable holdable && holdable.Attached && i.Prefab.Identifier == item.Prefab.Identifier);
+                        i => i.Submarine == attachSubmarine && i.GetComponent<Holdable>() is Holdable holdable && holdable.Attached && i.Prefab.Identifier == item.Prefab.Identifier);
                     if (maxAttachableCount == 0)
                     {
 #if CLIENT
-                        GUI.AddMessage(TextManager.Get("itemmsgrequiretraining"), Color.Red);
+                        if (character == Character.Controlled)
+                        {
+                            GUI.AddMessage(TextManager.Get("itemmsgrequiretraining"), Color.Red);
+                        }
 #endif
                         return false;
                     }
                     else if (currentlyAttachedCount >= maxAttachableCount)
                     {
 #if CLIENT
-                        GUI.AddMessage($"{TextManager.Get("itemmsgtotalnumberlimited")} ({currentlyAttachedCount}/{maxAttachableCount})", Color.Red);
+                        if (character == Character.Controlled)
+                        {
+                            GUI.AddMessage($"{TextManager.Get("itemmsgtotalnumberlimited")} ({currentlyAttachedCount}/{maxAttachableCount})", Color.Red);
+                        }
 #endif
-                        return false; 
+                        return false;
                     }
                 }
 
@@ -691,11 +756,29 @@ namespace Barotrauma.Items.Components
                 {
                     item.Drop(character);
                     item.SetTransform(ConvertUnits.ToSimUnits(GetAttachPosition(character)), 0.0f, findNewHull: false);
+                    //the light source won't get properly updated if lighting is disabled (even though the light sprite is still drawn when lighting is disabled)
+                    //so let's ensure the light source is up-to-date
+                    RefreshLightSources(item);
                 }
                 AttachToWall();
             }
             return true;
+
+            static void RefreshLightSources(Item item)
+            {
+                item.body?.UpdateDrawPosition();
+                foreach (var light in item.GetComponents<LightComponent>())
+                {
+                    light.SetLightSourceTransform();
+                }
+                item.GetComponent<ItemContainer>()?.SetContainedItemPositions();
+                foreach (var containedItem in item.ContainedItems)
+                {
+                    RefreshLightSources(containedItem);
+                }
+            }
         }
+
 
         public override bool SecondaryUse(float deltaTime, Character character = null)
         {
@@ -710,10 +793,32 @@ namespace Barotrauma.Items.Components
             mouseDiff = mouseDiff.ClampLength(MaxAttachDistance);
 
             Vector2 userPos = useWorldCoordinates ? user.WorldPosition : user.Position;
-
             Vector2 attachPos = userPos + mouseDiff;
 
-            if (user.Submarine == null && Level.Loaded != null)
+            //offset the position by half the size of the grid to get the item to adhere to the grid in the same way as in the sub editor
+            //in the sub editor, we align the top-left corner of the item with the grid
+            //but here the origin of the item is placed at the attach position, so we need to offset it
+            Vector2 offset = new Vector2(
+                -(item.Rect.Width / 2) % Submarine.GridSize.X,
+                (item.Rect.Height / 2) % Submarine.GridSize.Y);
+
+            if (user.Submarine != null)
+            {
+                if (Submarine.PickBody(
+                    ConvertUnits.ToSimUnits(user.Position), 
+                    ConvertUnits.ToSimUnits(user.Position + mouseDiff), collisionCategory: Physics.CollisionWall) != null)
+                {
+                    attachPos = userPos + mouseDiff * Submarine.LastPickedFraction + offset;
+
+                    //round down if we're placing on the right side and vice versa: ensures we don't round the position inside a wall
+                    return
+                        new Vector2(
+                            (mouseDiff.X > 0 ? MathF.Floor(attachPos.X / Submarine.GridSize.X) : MathF.Ceiling(attachPos.X / Submarine.GridSize.X)) * Submarine.GridSize.X,
+                            (mouseDiff.Y > 0 ? MathF.Floor(attachPos.Y / Submarine.GridSize.Y) : MathF.Ceiling(attachPos.Y / Submarine.GridSize.Y)) * Submarine.GridSize.Y)
+                         - offset;
+                }
+            }
+            else if (Level.Loaded != null)
             {
                 bool edgeFound = false;
                 foreach (var cell in Level.Loaded.GetCells(attachPos))
@@ -722,7 +827,7 @@ namespace Barotrauma.Items.Components
                     foreach (var edge in cell.Edges)
                     {
                         if (!edge.IsSolid) { continue; }
-                        if (MathUtils.GetLineIntersection(edge.Point1, edge.Point2, user.WorldPosition, attachPos, out Vector2 intersection))
+                        if (MathUtils.GetLineSegmentIntersection(edge.Point1, edge.Point2, user.WorldPosition, attachPos, out Vector2 intersection))
                         {
                             attachPos = intersection;
                             edgeFound = true;
@@ -733,10 +838,9 @@ namespace Barotrauma.Items.Components
                 }
             }
 
-            return
-                new Vector2(
-                    MathUtils.RoundTowardsClosest(attachPos.X, Submarine.GridSize.X),
-                    MathUtils.RoundTowardsClosest(attachPos.Y, Submarine.GridSize.Y));
+            return new Vector2(
+                    MathUtils.RoundTowardsClosest(attachPos.X + offset.X, Submarine.GridSize.X),
+                    MathUtils.RoundTowardsClosest(attachPos.Y + offset.Y, Submarine.GridSize.Y)) - offset;
         }
 
         private Voronoi2.VoronoiCell GetAttachTargetCell(float maxDist)
@@ -777,10 +881,18 @@ namespace Barotrauma.Items.Components
         public override void Update(float deltaTime, Camera cam)
         {
             if (item.body == null || !item.body.Enabled) { return; }
+
+            Character owner = picker ?? item.GetRootInventoryOwner() as Character;
+
+            if (owner != null)
+            {
+                ApplyStatusEffects(ActionType.OnActive, deltaTime, owner);
+            }
+
             if (picker == null || !picker.HasEquippedItem(item))
             {
                 if (Pusher != null) { Pusher.Enabled = false; }
-                if (attachTargetCell == null) { IsActive = false; }
+                if (attachTargetCell == null && owner == null) { IsActive = false; }
                 return;
             }
 
@@ -789,23 +901,7 @@ namespace Barotrauma.Items.Components
                 Drawable = true;
             }
 
-            Vector2 swing = Vector2.Zero;
-            if (swingAmount != Vector2.Zero && !picker.IsUnconscious && picker.Stun <= 0.0f)
-            {
-                swingState += deltaTime;
-                swingState %= 1.0f;
-                if (SwingWhenHolding ||
-                    (SwingWhenAiming && picker.IsKeyDown(InputType.Aim)) ||
-                    (SwingWhenUsing && picker.IsKeyDown(InputType.Aim) && picker.IsKeyDown(InputType.Shoot)))
-                {
-                    swing = swingAmount * new Vector2(
-                        PerlinNoise.GetPerlin(swingState * SwingSpeed * 0.1f, swingState * SwingSpeed * 0.1f) - 0.5f,
-                        PerlinNoise.GetPerlin(swingState * SwingSpeed * 0.1f + 0.5f, swingState * SwingSpeed * 0.1f + 0.5f) - 0.5f);
-                }
-            }
-            
-            ApplyStatusEffects(ActionType.OnActive, deltaTime, picker);
-
+            UpdateSwingPos(deltaTime, out Vector2 swingPos);
             if (item.body.Dir != picker.AnimController.Dir) 
             {
                 item.FlipX(relativeToSub: false);
@@ -817,10 +913,14 @@ namespace Barotrauma.Items.Components
             {
                 scaledHandlePos[0] = handlePos[0] * item.Scale;
                 scaledHandlePos[1] = handlePos[1] * item.Scale;
-                bool aim = picker.IsKeyDown(InputType.Aim) && aimPos != Vector2.Zero && picker.CanAim;
-                picker.AnimController.HoldItem(deltaTime, item, scaledHandlePos, holdPos + swing, aimPos + swing, aim, holdAngle);
-                if (!aim)
+                bool aim = picker.IsKeyDown(InputType.Aim) && aimPos != Vector2.Zero && picker.CanAim && !UsageDisabledByRangedWeapon(picker);
+                if (aim)
                 {
+                    picker.AnimController.HoldItem(deltaTime, item, scaledHandlePos, holdPos + swingPos, aimPos + swingPos, aim, holdAngle, aimAngle);
+                }
+                else
+                {
+                    picker.AnimController.HoldItem(deltaTime, item, scaledHandlePos, holdPos + swingPos, aimPos + swingPos, aim, holdAngle);
                     var rope = GetRope();
                     if (rope != null && rope.SnapWhenNotAimed && rope.Item.ParentInventory == null)
                     {
@@ -853,6 +953,33 @@ namespace Barotrauma.Items.Components
                     item.SetTransform(equipLimb.SimPosition - transformedHandlePos, itemAngle);
                 }
             }
+        }
+
+        public void UpdateSwingPos(float deltaTime, out Vector2 swingPos)
+        {
+            swingPos = Vector2.Zero;
+            if (swingAmount != Vector2.Zero && !picker.IsUnconscious && picker.Stun <= 0.0f)
+            {
+                swingState += deltaTime;
+                swingState %= 1.0f;
+                if (SwingWhenHolding ||
+                    (SwingWhenAiming && picker.IsKeyDown(InputType.Aim)) ||
+                    (SwingWhenUsing && picker.IsKeyDown(InputType.Aim) && picker.IsKeyDown(InputType.Shoot)))
+                {
+                    swingPos = swingAmount * new Vector2(
+                        PerlinNoise.GetPerlin(swingState * SwingSpeed * 0.1f, swingState * SwingSpeed * 0.1f) - 0.5f,
+                        PerlinNoise.GetPerlin(swingState * SwingSpeed * 0.1f + 0.5f, swingState * SwingSpeed * 0.1f + 0.5f) - 0.5f);
+                }
+            }
+        }
+
+        protected bool UsageDisabledByRangedWeapon(Character character)
+        {
+            if (DisableWhenRangedWeaponEquipped && character != null)
+            {
+                if (character.HeldItems.Any(it => it.GetComponent<RangedWeapon>() != null)) { return true; }
+            }
+            return false;
         }
 
         public override void ReceiveSignal(Signal signal, Connection connection)
@@ -897,14 +1024,12 @@ namespace Barotrauma.Items.Components
             }
             else
             {
-                if (item.ParentInventory != null)
+                if (body != null)
                 {
-                    if (body != null)
-                    {
-                        item.body = body;
-                        body.Enabled = false;
-                    }
-                }
+                    body.SetTransformIgnoreContacts(item.SimPosition, item.Rotation);
+                    item.body = body;
+                    body.Enabled = item.ParentInventory == null;
+                }                
                 DeattachFromWall();
             }
         }

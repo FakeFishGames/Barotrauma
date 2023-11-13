@@ -82,7 +82,13 @@ namespace Barotrauma.Extensions
                 return count == 0 ? default : source.ElementAt(Rand.Range(0, count, Rand.RandSync.Unsynced));
             }
         }
-        
+
+        public static T GetRandom<T>(this IEnumerable<T> source, Random rand)
+            where T : PrefabWithUintIdentifier
+        {
+            return source.OrderBy(p => p.UintIdentifier).ToArray().GetRandom(rand);
+        }
+
         public static T GetRandom<T>(this IEnumerable<T> source, Rand.RandSync randSync)
             where T : PrefabWithUintIdentifier
         {
@@ -95,27 +101,9 @@ namespace Barotrauma.Extensions
             return source.Where(predicate).OrderBy(p => p.UintIdentifier).ToArray().GetRandom(randSync);
         }
 
-
-        public static T RandomElementByWeight<T>(this IList<T> source, Func<T, float> weightSelector, Rand.RandSync randSync = Rand.RandSync.Unsynced)
+        public static T GetRandomByWeight<T>(this IEnumerable<T> source, Func<T, float> weightSelector, Rand.RandSync randSync)
         {
-            float totalWeight = source.Sum(weightSelector);
-
-            float itemWeightIndex = Rand.Range(0f, 1f, randSync) * totalWeight;
-            float currentWeightIndex = 0;
-
-            for (int i = 0; i < source.Count; i++)
-            {
-                T weightedItem = source[i];
-                float weight = weightSelector(weightedItem);
-                currentWeightIndex += weight;
-
-                if (currentWeightIndex >= itemWeightIndex)
-                {
-                    return weightedItem;
-                }
-            }
-
-            return default;
+            return ToolBox.SelectWeightedRandom(source, weightSelector, randSync);
         }
 
         /// <summary>
@@ -218,6 +206,8 @@ namespace Barotrauma.Extensions
             return new Dictionary<TKey, TValue>(immutableDictionary);
         }
 
+        public static NetCollection<T> ToNetCollection<T>(this IEnumerable<T> enumerable) => new NetCollection<T>(enumerable.ToImmutableArray());
+
         /// <summary>
         /// Returns whether a given collection has at least a certain amount
         /// of elements for which the predicate returns true.
@@ -298,5 +288,30 @@ namespace Barotrauma.Extensions
 
             return null;
         }
+
+        public static IEnumerable<T> NotNull<T>(this IEnumerable<T?> source) where T : struct
+            => source
+                .Where(nullable => nullable.HasValue)
+                .Select(nullable => nullable.Value);
+
+        public static IEnumerable<T> NotNone<T>(this IEnumerable<Option<T>> source)
+        {
+            foreach (var o in source)
+            {
+                if (o.TryUnwrap(out var v)) { yield return v; }
+            }
+        }
+
+        public static IEnumerable<TSuccess> Successes<TSuccess, TFailure>(
+            this IEnumerable<Result<TSuccess, TFailure>> source)
+            => source
+                .OfType<Success<TSuccess, TFailure>>()
+                .Select(s => s.Value);
+        
+        public static IEnumerable<TFailure> Failures<TSuccess, TFailure>(
+            this IEnumerable<Result<TSuccess, TFailure>> source)
+            => source
+                .OfType<Failure<TSuccess, TFailure>>()
+                .Select(f => f.Error);
     }
 }

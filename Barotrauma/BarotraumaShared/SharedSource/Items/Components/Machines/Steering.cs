@@ -144,6 +144,11 @@ namespace Barotrauma.Items.Components
             }
         }
 
+        public float TargetVelocityLengthSquared
+        {
+            get => TargetVelocity.LengthSquared();
+        }
+
         public Vector2 SteeringInput
         {
             get { return steeringInput; }
@@ -165,8 +170,6 @@ namespace Barotrauma.Items.Components
             get { return posToMaintain; }
             set { posToMaintain = value; }
         }
-
-        public override bool RecreateGUIOnResolutionChange => true;
 
         struct ObstacleDebugInfo
         {
@@ -297,11 +300,11 @@ namespace Barotrauma.Items.Components
                 user = null;
             }
 
-            ApplyStatusEffects(ActionType.OnActive, deltaTime, null);
+            ApplyStatusEffects(ActionType.OnActive, deltaTime);
 
             float userSkill = 0.0f;
             if (user != null && controlledSub != null &&
-                (user.SelectedConstruction == item || item.linkedTo.Contains(user.SelectedConstruction)))
+                (user.SelectedItem == item || item.linkedTo.Contains(user.SelectedItem)))
             {
                 userSkill = user.GetSkillLevel("helm") / 100.0f;
             }
@@ -333,7 +336,7 @@ namespace Barotrauma.Items.Components
             {
                 showIceSpireWarning = false;
                 if (user != null && user.Info != null && 
-                    user.SelectedConstruction == item && 
+                    user.SelectedItem == item && 
                     controlledSub != null && controlledSub.Velocity.LengthSquared() > 0.01f)
                 {
                     IncreaseSkillLevel(user, deltaTime);
@@ -389,7 +392,7 @@ namespace Barotrauma.Items.Components
             }
 
             // if our tactical AI pilot has left, revert back to maintaining position
-            if (navigateTactically && (user == null || user.SelectedConstruction != item))
+            if (navigateTactically && (user == null || user.SelectedItem != item))
             {
                 navigateTactically = false;
                 AIRamTimer = 0f;
@@ -441,7 +444,7 @@ namespace Barotrauma.Items.Components
             if (connectedSubUpdateTimer <= 0.0f)
             {
                 connectedSubs.Clear();
-                connectedSubs = controlledSub?.GetConnectedSubs();                
+                connectedSubs.AddRange(controlledSub.GetConnectedSubs());                
                 connectedSubUpdateTimer = ConnectedSubUpdateInterval;
             }
 
@@ -505,7 +508,7 @@ namespace Barotrauma.Items.Components
             var closeCells = Level.Loaded.GetCells(controlledSub.WorldPosition, 4);
             foreach (VoronoiCell cell in closeCells)
             {
-                if (cell.DoesDamage)
+                if (cell.DoesDamage || cell.Body is { BodyType: BodyType.Dynamic })
                 {
                     foreach (GraphEdge edge in cell.Edges)
                     {
@@ -522,7 +525,7 @@ namespace Barotrauma.Items.Components
                         newAvoidStrength += avoid;
                         debugDrawObstacles.Add(new ObstacleDebugInfo(edge, edge.Center, 1.0f, avoid, cell.Translation));
 
-                        if (dot > 0.0f)
+                        if (dot > 0.0f && cell.DoesDamage)
                         {
                             showIceSpireWarning = true;
                         }
@@ -532,7 +535,7 @@ namespace Barotrauma.Items.Components
 
                 foreach (GraphEdge edge in cell.Edges)
                 {
-                    if (MathUtils.GetLineIntersection(edge.Point1 + cell.Translation, edge.Point2 + cell.Translation, controlledSub.WorldPosition, cell.Center, out Vector2 intersection))
+                    if (MathUtils.GetLineSegmentIntersection(edge.Point1 + cell.Translation, edge.Point2 + cell.Translation, controlledSub.WorldPosition, cell.Center, out Vector2 intersection))
                     {
                         Vector2 diff = controlledSub.WorldPosition - intersection;
                         //far enough -> ignore
@@ -717,12 +720,12 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public override bool AIOperate(float deltaTime, Character character, AIObjectiveOperateItem objective)
+        public override bool CrewAIOperate(float deltaTime, Character character, AIObjectiveOperateItem objective)
         {
             character.AIController.SteeringManager.Reset();
             if (objective.Override)
             {
-                if (user != character && user != null && user.SelectedConstruction == item && character.IsOnPlayerTeam)
+                if (user != character && user != null && user.SelectedItem == item && character.IsOnPlayerTeam)
                 {
                     character.Speak(TextManager.Get("DialogSteeringTaken").Value, null, 0.0f, "steeringtaken".ToIdentifier(), 10.0f);
                 }
@@ -810,7 +813,7 @@ namespace Barotrauma.Items.Components
                 }
             }
 
-            sonar?.AIOperate(deltaTime, character, objective);
+            sonar?.CrewAIOperate(deltaTime, character, objective);
             if (!MaintainPos && showIceSpireWarning && character.IsOnPlayerTeam)
             {
                 character.Speak(TextManager.Get("dialogicespirespottedsonar").Value, null, 0.0f, "icespirespottedsonar".ToIdentifier(), 60.0f);

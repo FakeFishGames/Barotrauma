@@ -84,7 +84,6 @@ namespace Barotrauma
             }
         }
 
-        private bool disposed = false;
 
         public override Sprite Sprite => null;
 
@@ -102,9 +101,8 @@ namespace Barotrauma
 
         public override void Dispose()
         {
-            if (disposed) { return; }
-            disposed = true;
-            Prefabs.Remove(this);
+            throw new InvalidOperationException(
+                $"{nameof(CoreEntityPrefab)}.{nameof(Dispose)} should never be called");
         }
     }
 }

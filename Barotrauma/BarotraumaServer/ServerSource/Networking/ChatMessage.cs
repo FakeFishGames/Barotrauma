@@ -80,58 +80,10 @@ namespace Barotrauma.Networking
             {
                 c.LastSentChatMessages.RemoveRange(0, c.LastSentChatMessages.Count - 10);
             }
-
-            float similarity = 0.0f;
-            for (int i = 0; i < c.LastSentChatMessages.Count; i++)
-            {
-                float closeFactor = 1.0f / (c.LastSentChatMessages.Count - i);
-                    
-                if (string.IsNullOrEmpty(txt))
-                {
-                    similarity += closeFactor;
-                }
-                else
-                {
-                    int levenshteinDist = ToolBox.LevenshteinDistance(txt, c.LastSentChatMessages[i]);
-                    similarity += Math.Max((txt.Length - levenshteinDist) / (float)txt.Length * closeFactor, 0.0f);
-                }
-            }
-            //order/report messages can be sent a little faster than normal messages without triggering the spam filter
-            if (orderMsg != null)
-            {
-                similarity *= 0.25f;
-            }
-
-            bool isOwner = GameMain.Server.OwnerConnection != null && c.Connection == GameMain.Server.OwnerConnection;
-
-            if (similarity + c.ChatSpamSpeed > 5.0f && !isOwner)
-            {
-                GameMain.Server.KarmaManager.OnSpamFilterTriggered(c);
-
-                c.ChatSpamCount++;
-                if (c.ChatSpamCount > 3)
-                {
-                    //kick for spamming too much
-                    GameMain.Server.KickClient(c, TextManager.Get("SpamFilterKicked").Value);
-                }
-                else
-                {
-                    ChatMessage denyMsg = Create("", TextManager.Get("SpamFilterBlocked").Value, ChatMessageType.Server, null);
-                    c.ChatSpamTimer = 10.0f;
-                    GameMain.Server.SendDirectChatMessage(denyMsg, c);
-                }
-                return;
-            }
-
-            c.ChatSpamSpeed += similarity + 0.5f;
-
-            if (c.ChatSpamTimer > 0.0f && !isOwner)
-            {
-                ChatMessage denyMsg = Create("", TextManager.Get("SpamFilterBlocked").Value, ChatMessageType.Server, null);
-                c.ChatSpamTimer = 10.0f;
-                GameMain.Server.SendDirectChatMessage(denyMsg, c);
-                return;
-            }
+            //order/report messages can be sent a little faster than normal messages without triggering the spam filter;
+            float similarityMultiplier = orderMsg != null ? 0.25f : 1.0f;
+            HandleSpamFilter(c, txt, out bool flaggedAsSpam, similarityMultiplier);
+            if (flaggedAsSpam) { return; }
 
             if (type == ChatMessageType.Order)
             {
@@ -177,6 +129,65 @@ namespace Barotrauma.Networking
             }
         }
 
+        /// <summary>
+        /// Increase the client's chat spam speed and check whether the spam filter should kick in
+        /// </summary>
+        public static void HandleSpamFilter(Client c, string messageText, out bool flaggedAsSpam, float similarityMultiplier = 1.0f)
+        {
+            float similarity = 0.0f;
+            for (int i = 0; i < c.LastSentChatMessages.Count; i++)
+            {
+                float closeFactor = 1.0f / (c.LastSentChatMessages.Count - i);
+
+                if (string.IsNullOrEmpty(messageText))
+                {
+                    similarity += closeFactor;
+                }
+                else
+                {
+                    int levenshteinDist = ToolBox.LevenshteinDistance(messageText, c.LastSentChatMessages[i]);
+                    similarity += Math.Max((messageText.Length - levenshteinDist) / (float)messageText.Length * closeFactor, 0.0f);
+                }
+            }
+            
+            similarity *= similarityMultiplier;            
+
+            bool isSpamExempt = RateLimiter.IsExempt(c);
+
+            if (similarity + c.ChatSpamSpeed > 5.0f && !isSpamExempt)
+            {
+                GameMain.Server.KarmaManager.OnSpamFilterTriggered(c);
+
+                c.ChatSpamCount++;
+                if (c.ChatSpamCount > 3)
+                {
+                    //kick for spamming too much
+                    GameMain.Server.KickClient(c, TextManager.Get("SpamFilterKicked").Value);
+                }
+                else
+                {
+                    ChatMessage denyMsg = Create("", TextManager.Get("SpamFilterBlocked").Value, ChatMessageType.Server, null);
+                    c.ChatSpamTimer = 10.0f;
+                    GameMain.Server.SendDirectChatMessage(denyMsg, c);
+                }
+                flaggedAsSpam = true;
+                return;
+            }
+
+            c.ChatSpamSpeed += similarity + 0.5f;
+
+            if (c.ChatSpamTimer > 0.0f && !isSpamExempt)
+            {
+                ChatMessage denyMsg = Create("", TextManager.Get("SpamFilterBlocked").Value, ChatMessageType.Server, null);
+                c.ChatSpamTimer = 10.0f;
+                GameMain.Server.SendDirectChatMessage(denyMsg, c);
+                flaggedAsSpam = true;
+                return;
+            }
+
+            flaggedAsSpam = false;
+        }
+
         public int EstimateLengthBytesServer(Client c)
         {
             int length = 1 + //(byte)ServerNetObject.CHAT_MESSAGE
@@ -200,26 +211,26 @@ namespace Barotrauma.Networking
             return length;
         }
 
-        public virtual void ServerWrite(IWriteMessage msg, Client c)
+        public virtual void ServerWrite(in SegmentTableWriter<ServerNetSegment> segmentTable, IWriteMessage msg, Client c)
         {
-            msg.Write((byte)ServerNetObject.CHAT_MESSAGE);
-            msg.Write(NetStateID);
+            segmentTable.StartNewSegment(ServerNetSegment.ChatMessage);
+            msg.WriteUInt16(NetStateID);
             msg.WriteRangedInteger((int)Type, 0, Enum.GetValues(typeof(ChatMessageType)).Length - 1);
-            msg.Write((byte)ChangeType);
-            msg.Write(Text);
+            msg.WriteByte((byte)ChangeType);
+            msg.WriteString(Text);
 
-            msg.Write(SenderName);
-            msg.Write(SenderClient != null);
+            msg.WriteString(SenderName);
+            msg.WriteBoolean(SenderClient != null);
             if (SenderClient != null)
             {
-                msg.Write((SenderClient.SteamID != 0) ? SenderClient.SteamID : SenderClient.ID);
+                msg.WriteString(SenderClient.AccountId.TryUnwrap(out var accountId) ? accountId.StringRepresentation : SenderClient.SessionId.ToString());
             }
-            msg.Write(Sender != null && c.InGame);
+            msg.WriteBoolean(Sender != null && c.InGame);
             if (Sender != null && c.InGame)
             {
-                msg.Write(Sender.ID);
+                msg.WriteUInt16(Sender.ID);
             }
-            msg.Write(customTextColor != null);
+            msg.WriteBoolean(customTextColor != null);
             if (customTextColor != null)
             {
                 msg.WriteColorR8G8B8A8(customTextColor.Value);
@@ -227,7 +238,7 @@ namespace Barotrauma.Networking
             msg.WritePadBits();
             if (Type == ChatMessageType.ServerMessageBoxInGame)
             {
-                msg.Write(IconStyle);
+                msg.WriteString(IconStyle);
             }
         }
     }

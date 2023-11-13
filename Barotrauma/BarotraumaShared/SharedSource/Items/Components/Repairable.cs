@@ -1,11 +1,11 @@
-﻿using Barotrauma.Extensions;
+﻿using Barotrauma.Abilities;
+using Barotrauma.Extensions;
 using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
 {
@@ -14,7 +14,14 @@ namespace Barotrauma.Items.Components
         private readonly LocalizedString header;
 
         private float deteriorationTimer;
-        private float deteriorateAlwaysResetTimer;
+        public float ForceDeteriorationTimer
+        {
+            get;
+            private set;
+        }
+
+        private int updateDeteriorationCounter;
+        private const int UpdateDeteriorationInterval = 10;
 
         private int prevSentConditionValue;
         private string conditionSignal;
@@ -59,6 +66,13 @@ namespace Barotrauma.Items.Components
             set;
         }
 
+        [Serialize(60f, IsPropertySaveable.Yes, description: "How long will the item spontaneously deteriorate after being sabotaged.")]
+        public float SabotageDeteriorationDuration
+        {
+            get;
+            set;
+        }
+
         [Serialize(80.0f, IsPropertySaveable.Yes, description: "The condition of the item has to be below this for it to become repairable. Percentages of max condition."), Editable(MinValueFloat = 0.0f, MaxValueFloat = 100.0f)]
         public float RepairThreshold
         {
@@ -75,13 +89,6 @@ namespace Barotrauma.Items.Components
 
         [Serialize(10.0f, IsPropertySaveable.Yes, description: "The amount of time it takes to fix the item with sufficient skill levels."), Editable(MinValueFloat = 0.0f, MaxValueFloat = 100.0f)]
         public float FixDurationHighSkill
-        {
-            get;
-            set;
-        }
-
-        [Serialize(false, IsPropertySaveable.No, description: "If set to true, the deterioration timer will always run regardless if the item is being used or not.")]
-        public bool DeteriorateAlways
         {
             get;
             set;
@@ -231,6 +238,7 @@ namespace Barotrauma.Items.Components
         public float RepairDegreeOfSuccess(Character character, List<Skill> skills)
         {
             if (skills.Count == 0) { return 1.0f; }
+            if (character == null) { return 0.0f; }
 
             float skillSum = (from t in skills let characterLevel = character.GetSkillLevel(t.Identifier) select (characterLevel - (t.Level * SkillRequirementMultiplier))).Sum();
             float average = skillSum / skills.Count;
@@ -240,6 +248,7 @@ namespace Barotrauma.Items.Components
 
         public void RepairBoost(bool qteSuccess)
         {
+            if (CurrentFixer == null) { return; }
             if (qteSuccess)
             {
                 item.Condition += RepairDegreeOfSuccess(CurrentFixer, requiredSkills) * 3 * (currentFixerAction == FixActions.Repair ? 1.0f : -1.0f);
@@ -343,7 +352,7 @@ namespace Barotrauma.Items.Components
                 {
                     CurrentFixer.CheckTalents(AbilityEffectType.OnStopTinkering);
                 }
-                CurrentFixer.AnimController.Anim = AnimController.Animation.None;
+                CurrentFixer.AnimController.StopUsingItem();
                 CurrentFixer = null;
                 currentRepairItem = null;
                 currentFixerAction = FixActions.None;
@@ -389,39 +398,24 @@ namespace Barotrauma.Items.Components
 
             item.SendSignal(conditionSignal, "condition_out");
 
+            if (ForceDeteriorationTimer > 0.0f)
+            {
+                ForceDeteriorationTimer -= deltaTime;
+                if (ForceDeteriorationTimer <= 0.0f)
+                {
+#if SERVER
+                    //let the clients know the deterioration delay
+                    item.CreateServerEvent(this);
+#endif
+                }
+            }
             if (CurrentFixer == null)
             {
-                if (deteriorateAlwaysResetTimer > 0.0f)
+                updateDeteriorationCounter++;
+                if (updateDeteriorationCounter >= UpdateDeteriorationInterval)
                 {
-                    deteriorateAlwaysResetTimer -= deltaTime;
-                    if (deteriorateAlwaysResetTimer <= 0.0f)
-                    {
-                        DeteriorateAlways = false;
-#if SERVER
-                        //let the clients know the deterioration delay
-                        item.CreateServerEvent(this);
-#endif
-                    }
-                }
-                if (!ShouldDeteriorate()) { return; }
-                if (item.Condition > 0.0f)
-                {
-                    if (deteriorationTimer > 0.0f)
-                    {
-                        if (GameMain.NetworkMember == null || !GameMain.NetworkMember.IsClient)
-                        {
-                            deteriorationTimer -= deltaTime * GetDeteriorationDelayMultiplier();
-#if SERVER
-                            if (deteriorationTimer <= 0.0f) { item.CreateServerEvent(this); }
-#endif
-                        }
-                        return;
-                    }
-
-                    if (item.ConditionPercentage > MinDeteriorationCondition)
-                    {
-                        item.Condition -= DeteriorationSpeed * deltaTime;
-                    }
+                    UpdateDeterioration(deltaTime * UpdateDeteriorationInterval);
+                    updateDeteriorationCounter = 0;
                 }
                 return;
             }
@@ -430,7 +424,7 @@ namespace Barotrauma.Items.Components
 
             if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) { return; }
 
-            if (CurrentFixer != null && (CurrentFixer.SelectedConstruction != item || !CurrentFixer.CanInteractWith(item) || CurrentFixer.IsDead))
+            if (CurrentFixer != null && (CurrentFixer.SelectedItem != item || !CurrentFixer.CanInteractWith(item) || CurrentFixer.IsDead))
             {
                 StopRepairing(CurrentFixer);
                 return;
@@ -467,8 +461,14 @@ namespace Barotrauma.Items.Components
                 wasGoodCondition = true;
             }
 
+            float talentMultiplier = CurrentFixer.GetStatValue(StatTypes.RepairSpeed);
+            if (requiredSkills.Any(static skill => skill.Identifier == "mechanical"))
+            {
+                talentMultiplier += CurrentFixer.GetStatValue(StatTypes.MechanicalRepairSpeed);
+            }
+
             float fixDuration = MathHelper.Lerp(FixDurationLowSkill, FixDurationHighSkill, successFactor);
-            fixDuration /= 1 + CurrentFixer.GetStatValue(StatTypes.RepairSpeed) + currentRepairItem?.Prefab.AddedRepairSpeedMultiplier ?? 0f;
+            fixDuration /= 1 + talentMultiplier + currentRepairItem?.Prefab.AddedRepairSpeedMultiplier ?? 0f;
             fixDuration /= 1 + item.GetQualityModifier(Quality.StatType.RepairSpeed);
             
             item.MaxRepairConditionMultiplier = GetMaxRepairConditionMultiplier(CurrentFixer);
@@ -500,9 +500,9 @@ namespace Barotrauma.Items.Components
                                 SkillSettings.Current.SkillIncreasePerRepair / Math.Max(characterSkillLevel, 1.0f));
                         }
                         SteamAchievementManager.OnItemRepaired(item, CurrentFixer);
-                        CurrentFixer.CheckTalents(AbilityEffectType.OnRepairComplete);
+                        CurrentFixer.CheckTalents(AbilityEffectType.OnRepairComplete, new AbilityRepairable(item));
                     }
-                    if (CurrentFixer?.SelectedConstruction == item) { CurrentFixer.SelectedConstruction = null; }
+                    if (CurrentFixer?.SelectedItem == item) { CurrentFixer.SelectedItem = null; }
                     deteriorationTimer = Rand.Range(MinDeteriorationDelay, MaxDeteriorationDelay);
                     wasBroken = false;
                     StopRepairing(CurrentFixer);
@@ -537,8 +537,7 @@ namespace Barotrauma.Items.Components
                         }
 
                         deteriorationTimer = 0.0f;
-                        deteriorateAlwaysResetTimer = item.Condition / DeteriorationSpeed;
-                        DeteriorateAlways = true;
+                        ForceDeteriorationTimer = SabotageDeteriorationDuration;
                         item.Condition = item.MaxCondition * (MinSabotageCondition / 100);
                         wasGoodCondition = false;
                     }
@@ -549,6 +548,32 @@ namespace Barotrauma.Items.Components
             {
                 throw new NotImplementedException(currentFixerAction.ToString());
             }
+        }
+
+        private void UpdateDeterioration(float deltaTime)
+        {
+            if (item.Condition <= 0.0f) { return; }
+            if (!ShouldDeteriorate()) { return; }
+
+            //forced deterioration doesn't tick down the timer for spontaneous deterioration
+            if (deteriorationTimer > 0.0f && ForceDeteriorationTimer <= 0.0f)
+            {
+                if (GameMain.NetworkMember == null || !GameMain.NetworkMember.IsClient)
+                {
+                    deteriorationTimer -= deltaTime * GetDeteriorationDelayMultiplier();
+#if SERVER
+                    if (deteriorationTimer <= 0.0f) { item.CreateServerEvent(this); }
+#endif
+                }
+                return;
+            }
+
+            if (item.ConditionPercentage > MinDeteriorationCondition)
+            {
+                float deteriorationSpeed = item.StatManager.GetAdjustedValue(ItemTalentStats.DetoriationSpeed, DeteriorationSpeed);
+                if (ForceDeteriorationTimer > 0.0f) { deteriorationSpeed = Math.Max(deteriorationSpeed, 1.0f); }
+                item.Condition -= deteriorationSpeed * deltaTime;
+            }            
         }
 
         private float GetMaxRepairConditionMultiplier(Character character)
@@ -571,7 +596,7 @@ namespace Barotrauma.Items.Components
             if (!character.HasAbilityFlag(AbilityFlags.CanTinker)) { return false; }
             if (item.GetComponent<Engine>() != null) { return true; }
             if (item.GetComponent<Pump>() != null) { return true; }
-            if (item.HasTag("turretammosource")) { return true; }
+            if (item.HasTag(Tags.TurretAmmoSource)) { return true; }
             if (!character.HasAbilityFlag(AbilityFlags.CanTinkerFabricatorsAndDeconstructors)) { return false; }
             if (item.GetComponent<Fabricator>() != null) { return true; }
             if (item.GetComponent<Deconstructor>() != null) { return true; }
@@ -602,7 +627,12 @@ namespace Barotrauma.Items.Components
 
         private bool ShouldDeteriorate()
         {
+            if (ForceDeteriorationTimer > 0.0f) { return true; }
+
             if (Level.IsLoadedFriendlyOutpost) { return false; }
+#if CLIENT
+            if (GameMain.GameSession?.GameMode is TutorialMode) { return false; }
+#endif
 
             if (LastActiveTime > Timing.TotalTime) { return true; }
             foreach (ItemComponent ic in item.Components)
@@ -642,13 +672,13 @@ namespace Barotrauma.Items.Components
                     //oxygen generators don't deteriorate if they're not running
                     if (oxyGenerator.CurrFlow > 0.1f) { return true; }
                 }
-                else if (ic is Powered powered && !(powered is LightComponent))
+                else if (ic is Powered powered && powered is not LightComponent)
                 {
                     if (powered.Voltage >= powered.MinVoltage) { return true; }
                 }
             }
 
-            return DeteriorateAlways;
+            return false;
         }
 
         private float GetDeteriorationDelayMultiplier()
@@ -682,6 +712,16 @@ namespace Barotrauma.Items.Components
             //do nothing
             //Repairables should always stay active, so we don't want to use the default behavior
             //where set_active/set_state signals can disable the component
+        }
+    }
+
+    internal sealed class AbilityRepairable : AbilityObject, IAbilityItem
+    {
+        public Item Item { get; set; }
+
+        public AbilityRepairable(Item item)
+        {
+            Item = item;
         }
     }
 }

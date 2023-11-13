@@ -9,7 +9,8 @@ namespace Barotrauma.Items.Components
 {
     partial class ConnectionPanel : ItemComponent, IServerSerializable, IClientSerializable
     {
-        public List<Connection> Connections;
+        const int MaxConnectionCount = 256;
+        public readonly List<Connection> Connections = new List<Connection>();
 
         private Character user;
 
@@ -67,10 +68,13 @@ namespace Barotrauma.Items.Components
         public ConnectionPanel(Item item, ContentXElement element)
             : base(item, element)
         {
-            Connections = new List<Connection>();
-
             foreach (var subElement in element.Elements())
             {
+                if (Connections.Count == MaxConnectionCount)
+                {
+                    DebugConsole.ThrowError($"Too many connections in the item {item.Prefab.Identifier} (> {MaxConnectionCount}).");
+                    break;
+                }
                 switch (subElement.Name.ToString())
                 {
                     case "input":                        
@@ -179,7 +183,7 @@ namespace Barotrauma.Items.Components
         {
             UpdateProjSpecific(deltaTime);
 
-            if (user == null || user.SelectedConstruction != item)
+            if (user == null || (user.SelectedItem != item && user.SelectedSecondaryItem != item))
             {
 #if SERVER
                 if (user != null) { item.CreateServerEvent(this); }
@@ -196,7 +200,7 @@ namespace Barotrauma.Items.Components
                 return; 
             }
 
-            user.AnimController.UpdateUseItem(true, item.WorldPosition + new Vector2(0.0f, 100.0f) * (((float)Timing.TotalTime / 10.0f) % 0.1f));
+            user.AnimController.UpdateUseItem(!user.IsClimbing, item.WorldPosition + new Vector2(0.0f, 100.0f) * (((float)Timing.TotalTime / 10.0f) % 0.1f));
         }
 
         public override void UpdateBroken(float deltaTime, Camera cam)
@@ -206,11 +210,24 @@ namespace Barotrauma.Items.Components
 
         partial void UpdateProjSpecific(float deltaTime);
 
-        public override bool Select(Character picker)
+        public bool CanRewire()
         {
+            if (item.Container?.GetComponent<CircuitBox>() != null)
+            {
+                return true;
+            }
             //attaching wires to items with a body is not allowed
             //(signal items remove their bodies when attached to a wall)
             if (item.body != null && item.body.BodyType == FarseerPhysics.BodyType.Dynamic)
+            {
+                return false;
+            }
+            return true;
+        }
+
+        public override bool Select(Character picker)
+        {
+            if (!CanRewire())
             {
                 return false;
             }
@@ -286,8 +303,8 @@ namespace Barotrauma.Items.Components
 
             for (int i = 0; i < loadedConnections.Count && i < Connections.Count; i++)
             {
-                Connections[i].LoadedWireIds.Clear();
-                Connections[i].LoadedWireIds.AddRange(loadedConnections[i].LoadedWireIds);
+                Connections[i].LoadedWires.Clear();
+                Connections[i].LoadedWires.AddRange(loadedConnections[i].LoadedWires);
             }
 
             disconnectedWireIds = element.GetAttributeUshortArray("disconnectedwires", Array.Empty<ushort>()).ToList();
@@ -386,20 +403,20 @@ namespace Barotrauma.Items.Components
 #if CLIENT
             TriggerRewiringSound();
 #endif
-
+            msg.WriteByte((byte)Connections.Count);
             foreach (Connection connection in Connections)
             {
                 msg.WriteVariableUInt32((uint)connection.Wires.Count);
                 foreach (Wire wire in connection.Wires)
                 {
-                    msg.Write(wire?.Item == null ? (ushort)0 : wire.Item.ID);
+                    msg.WriteUInt16(wire?.Item == null ? (ushort)0 : wire.Item.ID);
                 }
             }
 
-            msg.Write((ushort)DisconnectedWires.Count);
+            msg.WriteUInt16((ushort)DisconnectedWires.Count);
             foreach (Wire disconnectedWire in DisconnectedWires)
             {
-                msg.Write(disconnectedWire.Item.ID);
+                msg.WriteUInt16(disconnectedWire.Item.ID);
             }
         }
     }

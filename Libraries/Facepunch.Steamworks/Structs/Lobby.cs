@@ -5,6 +5,9 @@ using System.Threading.Tasks;
 
 namespace Steamworks.Data
 {
+	/// <summary>
+	/// Represents a Steam lobby.
+	/// </summary>
 	public struct Lobby
 	{
 		public SteamId Id { get; internal set; }
@@ -18,11 +21,13 @@ namespace Steamworks.Data
 		}
 
 		/// <summary>
-		/// Try to join this room. Will return RoomEnter.Success on success,
-		/// and anything else is a failure
+		/// Try to join this room. Will return <see cref="RoomEnter.Success"/> on success,
+		/// and anything else is a failure.
 		/// </summary>
 		public async Task<RoomEnter> Join()
 		{
+			if (SteamMatchmaking.Internal is null) { return RoomEnter.Error; }
+
 			var result = await SteamMatchmaking.Internal.JoinLobby( Id );
 			if ( !result.HasValue ) return RoomEnter.Error;
 
@@ -35,26 +40,26 @@ namespace Steamworks.Data
 		/// </summary>
 		public void Leave()
 		{
-			SteamMatchmaking.Internal.LeaveLobby( Id );
+			SteamMatchmaking.Internal?.LeaveLobby( Id );
 		}
 
 		/// <summary>
-		/// Invite another user to the lobby
-		/// will return true if the invite is successfully sent, whether or not the target responds
-		/// returns false if the local user is not connected to the Steam servers
+		/// Invite another user to the lobby.
+		/// Will return <see langword="true"/> if the invite is successfully sent, whether or not the target responds
+		/// returns <see langword="false"/> if the local user is not connected to the Steam servers
 		/// </summary>
 		public bool InviteFriend( SteamId steamid )
 		{
-			return SteamMatchmaking.Internal.InviteUserToLobby( Id, steamid );
+			return SteamMatchmaking.Internal != null && SteamMatchmaking.Internal.InviteUserToLobby( Id, steamid );
 		}
 
 		/// <summary>
-		/// returns the number of users in the specified lobby
+		/// Gets the number of users in this lobby.
 		/// </summary>
-		public int MemberCount => SteamMatchmaking.Internal.GetNumLobbyMembers( Id );
+		public int MemberCount => SteamMatchmaking.Internal?.GetNumLobbyMembers( Id ) ?? 0;
 
 		/// <summary>
-		/// Returns current members. Need to be in the lobby to see the users.
+		/// Returns current members in the lobby. The current user must be in the lobby in order to see the users.
 		/// </summary>
 		public IEnumerable<Friend> Members
 		{
@@ -62,6 +67,7 @@ namespace Steamworks.Data
 			{
 				for( int i = 0; i < MemberCount; i++ )
 				{
+					if (SteamMatchmaking.Internal is null) { break; }
 					yield return new Friend( SteamMatchmaking.Internal.GetLobbyMemberByIndex( Id, i ) );
 				}
 			}
@@ -69,43 +75,44 @@ namespace Steamworks.Data
 
 
 		/// <summary>
-		/// Get data associated with this lobby
+		/// Get data associated with this lobby.
 		/// </summary>
-		public string GetData( string key )
+		public string? GetData( string key )
 		{
-			return SteamMatchmaking.Internal.GetLobbyData( Id, key );
+			return SteamMatchmaking.Internal?.GetLobbyData( Id, key );
 		}
 
 		/// <summary>
-		/// Get data associated with this lobby
+		/// Set data associated with this lobby.
 		/// </summary>
 		public bool SetData( string key, string value )
 		{
 			if ( key.Length > 255 ) throw new System.ArgumentException( "Key should be < 255 chars", nameof( key ) );
 			if ( value.Length > 8192 ) throw new System.ArgumentException( "Value should be < 8192 chars", nameof( key ) );
 
-			return SteamMatchmaking.Internal.SetLobbyData( Id, key, value );
+			return SteamMatchmaking.Internal != null && SteamMatchmaking.Internal.SetLobbyData( Id, key, value );
 		}
 
 		/// <summary>
-		/// Removes a metadata key from the lobby
+		/// Removes a metadata key from the lobby.
 		/// </summary>
 		public bool DeleteData( string key )
 		{
-			return SteamMatchmaking.Internal.DeleteLobbyData( Id, key );
+			return SteamMatchmaking.Internal != null && SteamMatchmaking.Internal.DeleteLobbyData( Id, key );
 		}
 
 		/// <summary>
-		/// Get all data for this lobby
+		/// Get all data for this lobby.
 		/// </summary>
 		public IEnumerable<KeyValuePair<string, string>> Data
 		{
 			get
 			{
-				var cnt = SteamMatchmaking.Internal.GetLobbyDataCount( Id );
+				var cnt = SteamMatchmaking.Internal?.GetLobbyDataCount( Id ) ?? 0;
 
 				for ( int i =0; i<cnt; i++)
 				{
+					if (SteamMatchmaking.Internal is null) { break; }
 					if ( SteamMatchmaking.Internal.GetLobbyDataByIndex( Id, i, out var a, out var b ) )
 					{
 						yield return new KeyValuePair<string, string>( a, b );
@@ -115,95 +122,120 @@ namespace Steamworks.Data
 		}
 
 		/// <summary>
-		/// Gets per-user metadata for someone in this lobby
+		/// Gets per-user metadata for someone in this lobby.
 		/// </summary>
-		public string GetMemberData( Friend member, string key )
+		public string? GetMemberData( Friend member, string key )
 		{
-			return SteamMatchmaking.Internal.GetLobbyMemberData( Id, member.Id, key );
+			return SteamMatchmaking.Internal?.GetLobbyMemberData( Id, member.Id, key );
 		}
 
 		/// <summary>
-		/// Sets per-user metadata (for the local user implicitly)
+		/// Sets per-user metadata (for the local user implicitly).
 		/// </summary>
 		public void SetMemberData( string key, string value )
 		{
-			SteamMatchmaking.Internal.SetLobbyMemberData( Id, key, value );
+			SteamMatchmaking.Internal?.SetLobbyMemberData( Id, key, value );
 		}
 
 		/// <summary>
-		/// Sends a string to the chat room
+		/// Sends a string to the chat room.
 		/// </summary>
 		public bool SendChatString( string message )
 		{
-			var data = System.Text.Encoding.UTF8.GetBytes( message );
+			//adding null terminator as it's used in Helpers.MemoryToString
+			var data = System.Text.Encoding.UTF8.GetBytes( message + '\0' );
 			return SendChatBytes( data );
 		}
 
 		/// <summary>
-		/// Sends bytes the the chat room
-		/// this isn't exposed because there's no way to read raw bytes atm, 
-		/// and I figure people can send json if they want something more advanced
+		/// Sends bytes to the chat room.
 		/// </summary>
-		internal unsafe bool SendChatBytes( byte[] data )
+		public unsafe bool SendChatBytes( byte[] data )
 		{
 			fixed ( byte* ptr = data )
 			{
-				return SteamMatchmaking.Internal.SendLobbyChatMsg( Id, (IntPtr)ptr, data.Length );
+				return SendChatBytesUnsafe( ptr, data.Length );
 			}
 		}
 
 		/// <summary>
-		/// Refreshes metadata for a lobby you're not necessarily in right now
-		/// you never do this for lobbies you're a member of, only if your
-		/// this will send down all the metadata associated with a lobby
-		/// this is an asynchronous call
-		/// returns false if the local user is not connected to the Steam servers
-		/// results will be returned by a LobbyDataUpdate_t callback
-		/// if the specified lobby doesn't exist, LobbyDataUpdate_t::m_bSuccess will be set to false
+		/// Sends bytes to the chat room from an unsafe buffer.
 		/// </summary>
-		public bool Refresh()
+		public unsafe bool SendChatBytesUnsafe( byte* ptr, int length )
 		{
-			return SteamMatchmaking.Internal.RequestLobbyData( Id );
+			return SteamMatchmaking.Internal != null && SteamMatchmaking.Internal.SendLobbyChatMsg( Id, (IntPtr)ptr, length );
 		}
 
 		/// <summary>
-		/// Max members able to join this lobby. Cannot be over 250.
-		/// Can only be set by the owner
+		/// Refreshes metadata for a lobby you're not necessarily in right now.
+		/// <para>
+		/// You never do this for lobbies you're a member of, only if your
+		/// this will send down all the metadata associated with a lobby.
+		/// This is an asynchronous call.
+		/// Returns <see langword="false"/> if the local user is not connected to the Steam servers.
+		/// Results will be returned by a LobbyDataUpdate_t callback.
+		/// If the specified lobby doesn't exist, LobbyDataUpdate_t::m_bSuccess will be set to <see langword="false"/>.
+		/// </para>
+		/// </summary>
+		public bool Refresh()
+		{
+			return SteamMatchmaking.Internal != null && SteamMatchmaking.Internal.RequestLobbyData( Id );
+		}
+
+		/// <summary>
+		/// Max members able to join this lobby. Cannot be over <c>250</c>.
+		/// Can only be set by the owner of the lobby.
 		/// </summary>
 		public int MaxMembers
 		{
-			get => SteamMatchmaking.Internal.GetLobbyMemberLimit( Id );
-			set => SteamMatchmaking.Internal.SetLobbyMemberLimit( Id, value );
+			get => SteamMatchmaking.Internal?.GetLobbyMemberLimit( Id ) ?? 0;
+			set => SteamMatchmaking.Internal?.SetLobbyMemberLimit( Id, value );
 		}
 
+		/// <summary>
+		/// Sets the lobby as public.
+		/// </summary>
 		public bool SetPublic()
 		{
-			return SteamMatchmaking.Internal.SetLobbyType( Id, LobbyType.Public );
+			return SteamMatchmaking.Internal != null && SteamMatchmaking.Internal.SetLobbyType( Id, LobbyType.Public );
 		}
 
+		/// <summary>
+		/// Sets the lobby as private.
+		/// </summary>
 		public bool SetPrivate()
 		{
-			return SteamMatchmaking.Internal.SetLobbyType( Id, LobbyType.Private );
+			return SteamMatchmaking.Internal != null && SteamMatchmaking.Internal.SetLobbyType( Id, LobbyType.Private );
 		}
 
+		/// <summary>
+		/// Sets the lobby as invisible.
+		/// </summary>
 		public bool SetInvisible()
 		{
-			return SteamMatchmaking.Internal.SetLobbyType( Id, LobbyType.Invisible );
+			return SteamMatchmaking.Internal != null && SteamMatchmaking.Internal.SetLobbyType( Id, LobbyType.Invisible );
 		}
 
+		/// <summary>
+		/// Sets the lobby as friends only.
+		/// </summary>
 		public bool SetFriendsOnly()
 		{
-			return SteamMatchmaking.Internal.SetLobbyType( Id, LobbyType.FriendsOnly );
+			return SteamMatchmaking.Internal != null && SteamMatchmaking.Internal.SetLobbyType( Id, LobbyType.FriendsOnly );
 		}
 
+		/// <summary>
+		/// Set whether or not the lobby can be joined.
+		/// </summary>
+		/// <param name="b">Whether or not the lobby can be joined.</param>
 		public bool SetJoinable( bool b )
 		{
-			return SteamMatchmaking.Internal.SetLobbyJoinable( Id, b );
+			return SteamMatchmaking.Internal != null && SteamMatchmaking.Internal.SetLobbyJoinable( Id, b );
 		}
 
 		/// <summary>
 		/// [SteamID variant]
-		/// Allows the owner to set the game server associated with the lobby. Triggers the 
+		/// Allows the owner to set the game server associated with the lobby. Triggers the
 		/// Steammatchmaking.OnLobbyGameCreated event.
 		/// </summary>
 		public void SetGameServer( SteamId steamServer )
@@ -211,12 +243,12 @@ namespace Steamworks.Data
 			if ( !steamServer.IsValid )
 				throw new ArgumentException( $"SteamId for server is invalid" );
 
-			SteamMatchmaking.Internal.SetLobbyGameServer( Id, 0, 0, steamServer );
+			SteamMatchmaking.Internal?.SetLobbyGameServer( Id, 0, 0, steamServer );
 		}
 
 		/// <summary>
 		/// [IP/Port variant]
-		/// Allows the owner to set the game server associated with the lobby. Triggers the 
+		/// Allows the owner to set the game server associated with the lobby. Triggers the
 		/// Steammatchmaking.OnLobbyGameCreated event.
 		/// </summary>
 		public void SetGameServer( string ip, ushort port )
@@ -224,29 +256,29 @@ namespace Steamworks.Data
 			if ( !IPAddress.TryParse( ip, out IPAddress add ) )
 				throw new ArgumentException( $"IP address for server is invalid" );
 
-			SteamMatchmaking.Internal.SetLobbyGameServer( Id, add.IpToInt32(), port, new SteamId() );
+			SteamMatchmaking.Internal?.SetLobbyGameServer( Id, add.IpToInt32(), port, new SteamId() );
 		}
 
 		/// <summary>
-		/// Gets the details of the lobby's game server, if set. Returns true if the lobby is 
+		/// Gets the details of the lobby's game server, if set. Returns true if the lobby is
 		/// valid and has a server set, otherwise returns false.
 		/// </summary>
 		public bool GetGameServer( ref uint ip, ref ushort port, ref SteamId serverId )
 		{
-			return SteamMatchmaking.Internal.GetLobbyGameServer( Id, ref ip, ref port, ref serverId );
+			return SteamMatchmaking.Internal != null && SteamMatchmaking.Internal.GetLobbyGameServer( Id, ref ip, ref port, ref serverId );
 		}
 
 		/// <summary>
-		/// You must be the lobby owner to set the owner
+		/// Gets or sets the owner of the lobby. You must be the lobby owner to set the owner
 		/// </summary>
 		public Friend Owner
 		{
-			get => new Friend( SteamMatchmaking.Internal.GetLobbyOwner( Id ) );
-			set => SteamMatchmaking.Internal.SetLobbyOwner( Id, value.Id );
+			get => new Friend( SteamMatchmaking.Internal?.GetLobbyOwner( Id ) ?? 0 );
+			set => SteamMatchmaking.Internal?.SetLobbyOwner( Id, value.Id );
 		}
 
 		/// <summary>
-		/// Check if the specified SteamId owns the lobby
+		/// Check if the specified SteamId owns the lobby.
 		/// </summary>
 		public bool IsOwnedBy( SteamId k ) => Owner.Id == k;
 	}

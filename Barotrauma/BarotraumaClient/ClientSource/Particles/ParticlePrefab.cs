@@ -135,6 +135,9 @@ namespace Barotrauma.Particles
         [Editable(0.0f, 10000.0f), Serialize(0.0f, IsPropertySaveable.No, description: "Radius of the particle's collider. Only has an effect if UseCollision is set to true.")]
         public float CollisionRadius { get; private set; }
 
+        [Editable, Serialize(false, IsPropertySaveable.No, description: "If enabled, the size (or changes in size) of the particle doesn't affect the size of the collider.")]
+        public bool InvariantCollisionSize { get; private set; }
+
         [Editable, Serialize(false, IsPropertySaveable.No, description: "Does the particle collide with the walls of the submarine and the level.")]
         public bool UseCollision { get; private set; }
 
@@ -162,7 +165,7 @@ namespace Barotrauma.Particles
         [Editable, Serialize("0.0,0.0", IsPropertySaveable.No, description: "How much the size of the particle changes per second. The rate of growth for each particle is randomize between SizeChangeMin and SizeChangeMax.")]
         public Vector2 SizeChangeMax { get; private set; }
 
-        [Editable, Serialize(0.0f, IsPropertySaveable.No, description: "How many seconds it takes for the particle to grow to it's initial size.")]
+        [Editable(minValue: 0, maxValue: float.MaxValue, decimals: 2), Serialize(0.0f, IsPropertySaveable.No, description: "How many seconds it takes for the particle to grow to it's initial size.")]
         public float GrowTime { get; private set; }
 
         //rendering -----------------------------------------
@@ -184,6 +187,9 @@ namespace Barotrauma.Particles
 
         [Editable, Serialize(false, IsPropertySaveable.No, description: "Should the particle be always rendered on top of entities?")]
         public bool DrawOnTop { get; private set; }
+
+        [Editable, Serialize(false, IsPropertySaveable.No, description: "Draw the particle even when it's calculated to be outside of view (the formula doesn't take scales into account). ")]
+        public bool DrawAlways { get; private set; }
 
         [Editable, Serialize(ParticleBlendState.AlphaBlend, IsPropertySaveable.No, description: "The type of blending to use when rendering the particle.")]
         public ParticleBlendState BlendState { get; private set; }

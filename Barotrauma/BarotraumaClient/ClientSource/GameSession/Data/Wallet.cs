@@ -13,7 +13,7 @@ namespace Barotrauma
 
         partial void SettingsChanged(Option<int> balanceChanged, Option<int> rewardChanged)
         {
-            if (Owner is Some<Character> { Value: var character })
+            if (Owner.TryUnwrap(out var character))
             {
                 if (!character.IsPlayer) { return; }
             }

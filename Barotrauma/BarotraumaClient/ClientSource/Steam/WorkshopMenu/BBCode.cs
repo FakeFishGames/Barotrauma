@@ -45,18 +45,26 @@ namespace Barotrauma.Steam
         protected static readonly Regex bbTagRegex = new Regex(@"\[(.+?)\]",
             RegexOptions.Compiled | RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
 
-        protected static GUICustomComponent CreateBBCodeElement(string bbCode, GUIListBox container)
+        protected static void CreateBBCodeElement(Steamworks.Ugc.Item workshopItem, GUIListBox container)
         {
             Point cachedContainerSize = Point.Zero;
             List<BBWord> bbWords = new List<BBWord>();
             Stack<BBWord.TagType> tagStack = new Stack<BBWord.TagType>();
 
-            void recalculate()
+            string bbCode = "";
+
+            void forceReset()
             {
-                if (cachedContainerSize == container.Content.RectTransform.NonScaledSize) { return; }
+                bbWords.Clear();
+                cachedContainerSize = Point.Zero;
+            }
+            
+            void recalculate(GUICustomComponent component)
+            {
+                if (cachedContainerSize == component.RectTransform.NonScaledSize) { return; }
 
                 bbWords.Clear();
-                cachedContainerSize = container.Content.RectTransform.NonScaledSize;
+                cachedContainerSize = component.RectTransform.NonScaledSize;
 
                 var matches = new Stack<Match>(bbTagRegex.Matches(bbCode).Reverse());
                 Match? nextTag = null;
@@ -133,11 +141,14 @@ namespace Barotrauma.Steam
                 {
                     bbWords.Add(new BBWord(finalWord, currTagType));
                 }
+
+                container.RecalculateChildren();
+                container.UpdateScrollBarSize();
             }
 
             void draw(SpriteBatch spriteBatch, GUICustomComponent component)
             {
-                recalculate();
+                recalculate(component);
                 Vector2 currPos = Vector2.Zero;
                 Vector2 rectPos = component.Rect.Location.ToVector2();
                 for (int i = 0; i < bbWords.Count; i++)
@@ -180,7 +191,19 @@ namespace Barotrauma.Steam
                     = component.RectTransform.NonScaledSize.ToVector2() / component.Parent.Rect.Size.ToVector2();
             }
 
-            return new GUICustomComponent(new RectTransform(Vector2.One, container.Content.RectTransform),
+            TaskPool.Add(
+                $"GetWorkshopItemLongDescriptionFor{workshopItem.Id.Value}",
+                SteamManager.Workshop.GetItemAsap(workshopItem.Id.Value, withLongDescription: true),
+                t =>
+                {
+                    if (!t.TryGetResult(out Steamworks.Ugc.Item? workshopItemWithDescription)) { return; }
+
+                    bbCode = workshopItemWithDescription?.Description ?? "";
+                    forceReset();
+                });
+
+            new GUICustomComponent(
+                new RectTransform(Vector2.One, container.Content.RectTransform),
                 onDraw: draw);
         }
     }

@@ -42,12 +42,7 @@ namespace Barotrauma
         {
             if (effect == null)
             {
-#if WINDOWS
-                effect = GameMain.Instance.Content.Load<Effect>("Effects/deformshader");
-#endif
-#if LINUX || OSX                
-                effect = GameMain.Instance.Content.Load<Effect>("Effects/deformshader_opengl");
-#endif
+                effect = EffectLoader.Load("Effects/deformshader");
             }
 
             Invert = invert;

@@ -7,7 +7,7 @@ using System.Xml.Linq;
 
 namespace Barotrauma
 {
-    public abstract class Prefab : IDisposable
+    public abstract class Prefab
     {
         public readonly static ImmutableHashSet<Type> Types;
         static Prefab()

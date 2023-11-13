@@ -17,26 +17,26 @@ namespace Barotrauma
                 if (client != null && !client.Spectating)
                 {
                     IWriteMessage msg = new WriteOnlyMessage();
-                    msg.Write((byte) ServerPacketHeader.READY_CHECK);
-                    msg.Write((byte) ReadyCheckState.Start);
-                    msg.Write(new DateTimeOffset(startTime).ToUnixTimeSeconds());
-                    msg.Write(new DateTimeOffset(endTime).ToUnixTimeSeconds());
-                    msg.Write(author);
+                    msg.WriteByte((byte)ServerPacketHeader.READY_CHECK);
+                    msg.WriteByte((byte)ReadyCheckState.Start);
+                    msg.WriteInt64(new DateTimeOffset(startTime).ToUnixTimeSeconds());
+                    msg.WriteInt64(new DateTimeOffset(endTime).ToUnixTimeSeconds());
+                    msg.WriteString(author);
 
                     if (sender != null)
                     {
-                        msg.Write(true);
-                        msg.Write(sender.ID);
+                        msg.WriteBoolean(true);
+                        msg.WriteByte(sender.SessionId);
                     }
                     else
                     {
-                        msg.Write(false);
+                        msg.WriteBoolean(false);
                     }
 
-                    msg.Write((ushort) ActivePlayers.Count);
+                    msg.WriteUInt16((ushort)ActivePlayers.Count);
                     foreach (byte clientId in Clients.Keys)
                     {
-                        msg.Write(clientId);
+                        msg.WriteByte(clientId);
                     }
 
                     GameMain.Server.ServerPeer.Send(msg, client.Connection, DeliveryMethod.Reliable);
@@ -55,10 +55,10 @@ namespace Barotrauma
             foreach (Client client in ActivePlayers)
             {
                 IWriteMessage msg = new WriteOnlyMessage();
-                msg.Write((byte)ServerPacketHeader.READY_CHECK);
-                msg.Write((byte)ReadyCheckState.Update);
-                msg.Write((byte)state);
-                msg.Write(otherClient);
+                msg.WriteByte((byte)ServerPacketHeader.READY_CHECK);
+                msg.WriteByte((byte)ReadyCheckState.Update);
+                msg.WriteByte((byte)state);
+                msg.WriteByte(otherClient);
                 GameMain.Server.ServerPeer.Send(msg, client.Connection, DeliveryMethod.Reliable);
             }
         }
@@ -72,13 +72,13 @@ namespace Barotrauma
                 if (client != null && !client.Spectating)
                 {
                     IWriteMessage msg = new WriteOnlyMessage();
-                    msg.Write((byte) ServerPacketHeader.READY_CHECK);
-                    msg.Write((byte) ReadyCheckState.End);
-                    msg.Write((ushort) Clients.Count);
+                    msg.WriteByte((byte)ServerPacketHeader.READY_CHECK);
+                    msg.WriteByte((byte)ReadyCheckState.End);
+                    msg.WriteUInt16((ushort)Clients.Count);
                     foreach (var (id, state) in Clients)
                     {
-                        msg.Write(id);
-                        msg.Write((byte) state);
+                        msg.WriteByte(id);
+                        msg.WriteByte((byte)state);
                     }
 
                     GameMain.Server.ServerPeer.Send(msg, client.Connection, DeliveryMethod.Reliable);
@@ -88,7 +88,7 @@ namespace Barotrauma
 
         public static void ServerRead(IReadMessage inc, Client client)
         {
-            ReadyCheckState state = (ReadyCheckState) inc.ReadByte();
+            ReadyCheckState state = (ReadyCheckState)inc.ReadByte();
             ReadyCheck? readyCheck = GameMain.GameSession?.CrewManager?.ActiveReadyCheck;
 
             switch (state)
@@ -98,11 +98,11 @@ namespace Barotrauma
                     break;
                 case ReadyCheckState.Update when readyCheck != null:
 
-                    ReadyStatus status = (ReadyStatus) inc.ReadByte();
-                    if (!readyCheck.Clients.ContainsKey(client.ID)) { return; }
+                    ReadyStatus status = (ReadyStatus)inc.ReadByte();
+                    if (!readyCheck.Clients.ContainsKey(client.SessionId)) { return; }
 
-                    readyCheck.Clients[client.ID] = status;
-                    readyCheck.UpdateReadyCheck(client.ID, status);
+                    readyCheck.Clients[client.SessionId] = status;
+                    readyCheck.UpdateReadyCheck(client.SessionId, status);
                     break;
             }
         }
@@ -111,8 +111,8 @@ namespace Barotrauma
         {
             if (GameMain.GameSession?.CrewManager == null || GameMain.GameSession.CrewManager.ActiveReadyCheck != null) { return; }
 
-            List<Client> connectedClients = GameMain.Server.ConnectedClients;
-            ReadyCheck newReadyCheck = new ReadyCheck(connectedClients.Where(c => !c.Spectating).Select(c => c.ID).ToList(), 30);
+            var connectedClients = GameMain.Server.ConnectedClients;
+            ReadyCheck newReadyCheck = new ReadyCheck(connectedClients.Where(c => !c.Spectating).Select(c => c.SessionId).ToList(), 30);
             GameMain.GameSession.CrewManager.ActiveReadyCheck = newReadyCheck;
             newReadyCheck.InitializeReadyCheck(author, sender);
         }

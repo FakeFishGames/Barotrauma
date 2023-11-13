@@ -5,7 +5,6 @@ using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
 {
@@ -25,14 +24,14 @@ namespace Barotrauma.Items.Components
         public static Color editorHighlightColor = Color.Yellow;
         public static Color editorSelectedColor = Color.Red;
 
-        partial class WireSection
+        public partial class WireSection
         {
             public VertexPositionColorTexture[] vertices;
             public VertexPositionColorTexture[] shiftedVertices;
 
             private float cachedWidth = 0f;
 
-            private void RecalculateVertices(Wire wire, float width)
+            private void RecalculateVertices(Sprite wireSprite, float width)
             {
                 if (MathUtils.NearlyEqual(cachedWidth, width)) { return; }
                 cachedWidth = width;
@@ -45,13 +44,13 @@ namespace Barotrauma.Items.Components
                 expandDir.X = -expandDir.Y;
                 expandDir.Y = -temp;
 
-                Rectangle srcRect = wire.wireSprite.SourceRect;
+                Rectangle srcRect = wireSprite.SourceRect;
 
                 expandDir *= width * srcRect.Height * 0.5f;
 
                 Vector2 rectLocation = srcRect.Location.ToVector2();
                 Vector2 rectSize = srcRect.Size.ToVector2();
-                Vector2 textureSize = new Vector2(wire.wireSprite.Texture.Width, wire.wireSprite.Texture.Height);
+                Vector2 textureSize = new Vector2(wireSprite.Texture.Width, wireSprite.Texture.Height);
 
                 Vector2 topLeftUv = rectLocation / textureSize;
                 Vector2 bottomRightUv = (rectLocation + rectSize) / textureSize;
@@ -67,10 +66,10 @@ namespace Barotrauma.Items.Components
                 shiftedVertices = (VertexPositionColorTexture[])vertices.Clone();
             }
 
-            public void Draw(SpriteBatch spriteBatch, Wire wire, Color color, Vector2 offset, float depth, float width = 0.3f)
+            public void Draw(ISpriteBatch spriteBatch, Sprite wireSprite, Color color, Vector2 offset, float depth, float width = 0.3f)
             {
                 if (width <= 0f) { return; }
-                RecalculateVertices(wire, width);
+                RecalculateVertices(wireSprite, width);
 
                 for (int i = 0; i < vertices.Length; i++)
                 {
@@ -79,21 +78,22 @@ namespace Barotrauma.Items.Components
                     shiftedVertices[i].Position.X += offset.X;
                     shiftedVertices[i].Position.Y -= offset.Y;
                 }
-                spriteBatch.Draw(wire.wireSprite.Texture,
+                spriteBatch.Draw(
+                    wireSprite.Texture,
                     shiftedVertices,
                     depth);
             }
 
-            public static void Draw(SpriteBatch spriteBatch, Wire wire, Vector2 start, Vector2 end, Color color, float depth, float width = 0.3f)
+            public static void Draw(ISpriteBatch spriteBatch, Sprite wireSprite, Vector2 start, Vector2 end, Color color, float depth, float width = 0.3f)
             {
                 start.Y = -start.Y;
                 end.Y = -end.Y;
                 
-                spriteBatch.Draw(wire.wireSprite.Texture,
-                    start, wire.wireSprite.SourceRect, color,
+                spriteBatch.Draw(wireSprite.Texture,
+                    start, wireSprite.SourceRect, color,
                     MathUtils.VectorToAngle(end - start),
-                    new Vector2(0.0f, wire.wireSprite.size.Y / 2.0f),
-                    new Vector2((Vector2.Distance(start, end)) / wire.wireSprite.size.X, width),
+                    new Vector2(0.0f, wireSprite.size.Y / 2.0f),
+                    new Vector2((Vector2.Distance(start, end)) / wireSprite.size.X, width),
                     SpriteEffects.None,
                     depth);
             }
@@ -118,21 +118,27 @@ namespace Barotrauma.Items.Components
             get { return sectionExtents; }
         }
 
+        public readonly record struct VisualSignal(
+            float TimeSent,
+            Color Color,
+            int Direction);
+
+        private VisualSignal lastReceivedSignal;
+
         public static Wire DraggingWire
         {
             get => draggingWire;
         }
 
-        partial void InitProjSpecific(ContentXElement element)
+        public static Sprite ExtractWireSprite(ContentXElement element)
         {
-            if (defaultWireSprite == null)
-            {
-                defaultWireSprite = new Sprite("Content/Items/Electricity/signalcomp.png", new Rectangle(970, 47, 14, 16), new Vector2(0.5f, 0.5f))
+            defaultWireSprite ??= 
+                new Sprite("Content/Items/Electricity/signalcomp.png", new Rectangle(970, 47, 14, 16), new Vector2(0.5f, 0.5f))
                 {
                     Depth = 0.855f
                 };
-            }
 
+            Sprite overrideSprite = null;
             foreach (var subElement in element.Elements())
             {
                 if (subElement.Name.ToString().Equals("wiresprite", StringComparison.OrdinalIgnoreCase))
@@ -142,16 +148,50 @@ namespace Barotrauma.Items.Components
                 }
             }
 
-            wireSprite = overrideSprite ?? defaultWireSprite;
+            return overrideSprite ?? defaultWireSprite;
         }
-
-
-        public void Draw(SpriteBatch spriteBatch, bool editing, float itemDepth = -1)
+        
+        partial void InitProjSpecific(ContentXElement element)
         {
-            Draw(spriteBatch, editing, Vector2.Zero, itemDepth);
+            wireSprite = ExtractWireSprite(element);
+            if (wireSprite != defaultWireSprite) { overrideSprite = wireSprite; }
         }
 
-        public void Draw(SpriteBatch spriteBatch, bool editing, Vector2 offset, float itemDepth = -1)
+        public void RegisterSignal(Signal signal, Connection source)
+        {
+            lastReceivedSignal = new VisualSignal(
+                (float)Timing.TotalTimeUnpaused,
+                GetSignalColor(signal), 
+                Direction: source == connections[0] ? 1 : -1);
+        }
+
+        private static readonly Color[] dataSignalColors = new Color[] { Color.White, Color.LightBlue, Color.CornflowerBlue, Color.Blue, Color.BlueViolet, Color.Violet };
+
+        private static Color GetSignalColor(Signal signal)
+        {
+            if (signal.value == "0")
+            {
+                return Color.Red;
+            }
+            else if (signal.value == "1")
+            {
+                return Color.LightGreen;
+            }
+            else if (float.TryParse(signal.value, out float floatValue))
+            {
+                //convert numeric values to a color (guessing the value might be somewhere in the range of 0-200)
+                //so a player with a keen eye can get some info out of the color of the signal
+                return ToolBox.GradientLerp(Math.Abs(floatValue / 200.0f), dataSignalColors);
+            }
+            return Color.LightBlue;
+        }
+
+        public void Draw(SpriteBatch spriteBatch, bool editing, float itemDepth = -1, Color? overrideColor = null)
+        {
+            Draw(spriteBatch, editing, Vector2.Zero, itemDepth, overrideColor);
+        }
+
+        public void Draw(SpriteBatch spriteBatch, bool editing, Vector2 offset, float itemDepth = -1, Color? overrideColor = null)
         {
             if (sections.Count == 0 && !IsActive || Hidden)
             {
@@ -159,20 +199,7 @@ namespace Barotrauma.Items.Components
                 return;
             }
 
-            Vector2 drawOffset = Vector2.Zero;
-            Submarine sub = item.Submarine;
-            if (IsActive && sub == null) // currently being rewired, we need to get the sub from the connections in case the wire has been taken outside
-            {
-                if (connections[0] != null && connections[0].Item.Submarine != null) { sub = connections[0].Item.Submarine; }
-                if (connections[1] != null && connections[1].Item.Submarine != null) { sub = connections[1].Item.Submarine; }
-            }
-
-            if (sub != null)
-            {
-                drawOffset = sub.DrawPosition + sub.HiddenSubPosition;
-            }
-
-            drawOffset += offset;
+            Vector2 drawOffset = GetDrawOffset() + offset;
 
             float baseDepth = UseSpriteDepth ? item.SpriteDepth : wireSprite.Depth;
             float depth = item.IsSelected ? 0.0f : SubEditorScreen.IsWiringMode() ? 0.02f : baseDepth + (item.ID % 100) * 0.000001f;// item.GetDrawDepth(wireSprite.Depth, wireSprite);
@@ -181,20 +208,22 @@ namespace Barotrauma.Items.Components
             {
                 foreach (WireSection section in sections)
                 {
-                    section.Draw(spriteBatch, this, Screen.Selected == GameMain.GameScreen ? higlightColor : editorHighlightColor, drawOffset, depth + 0.00001f, Width * 2.0f);
+                    section.Draw(spriteBatch, wireSprite, 
+                        Screen.Selected == GameMain.GameScreen ? higlightColor : editorHighlightColor, 
+                        drawOffset, depth + 0.00001f, Width * 2.0f);
                 }
             }
             else if (item.IsSelected)
             {
                 foreach (WireSection section in sections)
                 {
-                    section.Draw(spriteBatch, this, editorSelectedColor, drawOffset, depth + 0.00001f, Width * 2.0f);
+                    section.Draw(spriteBatch, wireSprite, editorSelectedColor, drawOffset, depth + 0.00001f, Width * 2.0f);
                 }
             }
 
             foreach (WireSection section in sections)
             {
-                section.Draw(spriteBatch, this, item.Color, drawOffset, depth, Width);
+                section.Draw(spriteBatch, wireSprite, overrideColor ?? item.Color, drawOffset, depth, Width);
             }
 
             if (nodes.Count > 0)
@@ -239,28 +268,34 @@ namespace Barotrauma.Items.Components
                         }
 
                         WireSection.Draw(
-                            spriteBatch, this,
-                            new Vector2(nodes[nodes.Count - 1].X, nodes[nodes.Count - 1].Y) + drawOffset,
+                            spriteBatch, wireSprite,
+                            nodes[^1] + drawOffset,
                             new Vector2(newNodePos.X, newNodePos.Y) + drawOffset,
-                            item.Color, 0.0f, Width);
+                            overrideColor ?? item.Color, 0.0f, Width);
 
                         WireSection.Draw(
-                            spriteBatch, this,
+                            spriteBatch, wireSprite,
                             new Vector2(newNodePos.X, newNodePos.Y) + drawOffset,
                             item.DrawPosition,
-                            item.Color, itemDepth, Width);
+                            overrideColor ?? item.Color, itemDepth, Width);
 
                         GUI.DrawRectangle(spriteBatch, new Vector2(newNodePos.X + drawOffset.X, -(newNodePos.Y + drawOffset.Y)) - Vector2.One * 3, Vector2.One * 6, item.Color);
                     }
                     else
                     {
                         WireSection.Draw(
-                            spriteBatch, this,
-                            new Vector2(nodes[nodes.Count - 1].X, nodes[nodes.Count - 1].Y) + drawOffset,
+                            spriteBatch, wireSprite,
+                            nodes[^1] + drawOffset,
                             item.DrawPosition,
-                            item.Color, 0.0f, Width);
+                            overrideColor ?? item.Color, 0.0f, Width);
                     }
                 }
+            }
+
+
+            if (ConnectionPanel.ShouldDebugDrawWiring)
+            {
+                DebugDraw(spriteBatch, alpha: 0.2f);
             }
 
             if (!editing || !GameMain.SubEditorScreen.WiringMode) { return; }
@@ -288,18 +323,114 @@ namespace Barotrauma.Items.Components
             }
         }
 
+        public void DebugDraw(SpriteBatch spriteBatch, float alpha = 1.0f)
+        {
+            if (sections.Count == 0 || Hidden)
+            {
+                return;
+            }
+
+            const float PowerPulseSpeedLow = 5.0f;
+            const float PowerPulseSpeedHigh = 10.0f;
+            const float PowerHighlightScaleLow = 1.5f;
+            const float PowerHighlightScaleHigh = 2.5f;
+
+            const float SignalIndicatorInterval = 15.0f;
+            const float SignalIndicatorSpeed = 100.0f;
+
+            Vector2 drawOffset = GetDrawOffset();
+
+            Color currentHighlightColor = Color.Transparent;
+            float highlightScale = 0.0f;
+            if (connections[0] != null && connections[1] != null)
+            {
+                float voltage = Math.Max(GetVoltage(0), GetVoltage(1));
+                float GetVoltage(int connectionIndex)
+                {
+                    var connection1 = connections[connectionIndex];
+                    var connection2 = connections[1 - connectionIndex];
+                    if (connection1.IsOutput && connection1.Grid is { Power: > 0.01f } grid1)
+                    {
+                        if (connection2.Item.GetComponent<Powered>() is Powered powered &&
+                            (powered.GetCurrentPowerConsumption(connection2) > 0 || powered is PowerTransfer))
+                        {
+                            return grid1.Voltage;
+                        }
+                    }
+                    return 0.0f;
+                }
+                if (voltage > 0.0f)
+                {
+                    //pulse faster when there's overvoltage
+                    float pulseSpeed = voltage > 1.2f ? PowerPulseSpeedHigh : PowerPulseSpeedLow;
+                    float pulseAmount = (MathF.Sin((float)Timing.TotalTimeUnpaused * pulseSpeed) + 1.5f) / 2.5f;
+                    voltage = Math.Min(voltage, 1.0f);
+                    highlightScale = MathHelper.Lerp(PowerHighlightScaleLow, PowerHighlightScaleHigh, voltage);
+                    currentHighlightColor = Color.Red * voltage * pulseAmount;
+                }
+            }
+            if (highlightScale > 0.0f)
+            {
+                foreach (WireSection section in sections)
+                {
+                    section.Draw(spriteBatch, wireSprite, currentHighlightColor * alpha, drawOffset, 0.0f, Width * highlightScale);
+                }
+            }
+ 
+            float signalDuration = (float)Timing.TotalTimeUnpaused - lastReceivedSignal.TimeSent;
+            if (ConnectionPanel.ShouldDebugDrawWiring && signalDuration < 1.0f)
+            {
+                //make some wires "off sync" so it's easier to differentiate signals on overlapping wires
+                float offset = item.ID % 2 == 1 ? SignalIndicatorInterval / 2 : 0.0f;
+                float signalProgress = ((float)(Timing.TotalTimeUnpaused * SignalIndicatorSpeed + offset) % SignalIndicatorInterval) * lastReceivedSignal.Direction;
+                foreach (WireSection section in sections)
+                {
+                    for (float x = 0; x < section.Length; x += SignalIndicatorInterval)
+                    {
+                        Vector2 dir = (section.End - section.Start) / section.Length;
+                        float posOnSection = x + signalProgress;
+                        if (posOnSection < 0 || posOnSection > section.Length) { continue; }
+                        Vector2 signalPos = section.Start + drawOffset + dir * posOnSection;
+                        float a = 1.0f - Vector2.Distance(Screen.Selected.Cam.WorldViewCenter, signalPos) / 500.0f;
+                        if (a < 0) { continue; }
+                        signalPos.Y = -signalPos.Y;
+                        GUI.DrawRectangle(spriteBatch, signalPos - Vector2.One * 2.5f, Vector2.One * 5, lastReceivedSignal.Color * a * (1.0f - signalDuration) * alpha, isFilled: true);
+                    }
+                }                
+            }
+        }
+
+        private Vector2 GetDrawOffset()
+        {
+            Submarine sub = item.Submarine;
+            if (IsActive && sub == null) // currently being rewired, we need to get the sub from the connections in case the wire has been taken outside
+            {
+                if (connections[0] != null && connections[0].Item.Submarine != null) { sub = connections[0].Item.Submarine; }
+                if (connections[1] != null && connections[1].Item.Submarine != null) { sub = connections[1].Item.Submarine; }
+            }
+
+            if (sub == null)
+            {
+                return Vector2.Zero;
+            }
+            else
+            {
+                return sub.DrawPosition + sub.HiddenSubPosition;
+            }
+        }
+
         private void DrawHangingWire(SpriteBatch spriteBatch, Vector2 start, float depth)
         {
             float angle = (float)Math.Sin(GameMain.GameScreen.GameTime * 2.0f + item.ID) * 0.2f;
             Vector2 endPos = start + new Vector2((float)Math.Sin(angle), -(float)Math.Cos(angle)) * 50.0f;
 
             WireSection.Draw(
-                spriteBatch, this,
+                spriteBatch, wireSprite,
                 start, endPos,
                 GUIStyle.Orange, depth + 0.00001f, 0.2f);
 
             WireSection.Draw(
-                spriteBatch, this,
+                spriteBatch, wireSprite,
                 start, start + (endPos - start) * 0.7f,
                 item.Color, depth, 0.3f);
         }
@@ -311,7 +442,7 @@ namespace Barotrauma.Items.Components
             Wire equippedWire = Character.Controlled.HeldItems.FirstOrDefault(it => it.GetComponent<Wire>() != null)?.GetComponent<Wire>();
             if (equippedWire != null && GUI.MouseOn == null)
             {
-                if (PlayerInput.PrimaryMouseButtonClicked() && Character.Controlled.SelectedConstruction == null)
+                if (PlayerInput.PrimaryMouseButtonClicked() && Character.Controlled.SelectedItem == null)
                 {
                     equippedWire.Use(1.0f, Character.Controlled);
                 }
@@ -324,7 +455,7 @@ namespace Barotrauma.Items.Components
                 if (Character.Controlled != null)
                 {
                     Character.Controlled.FocusedItem = null;
-                    Character.Controlled.ResetInteract = true;
+                    Character.Controlled.DisableInteract = true;
                     Character.Controlled.ClearInputs();
                 }
                 //cancel dragging
@@ -401,7 +532,7 @@ namespace Barotrauma.Items.Components
                         {
                             if (Character.Controlled != null)
                             {
-                                Character.Controlled.ResetInteract = true;
+                                Character.Controlled.DisableInteract = true;
                                 Character.Controlled.ClearInputs();
                             }
                             int closestSectionIndex = selectedWire.GetClosestSectionIndex(mousePos, sectionSelectDist, out _);
@@ -431,7 +562,7 @@ namespace Barotrauma.Items.Components
                             {
                                 if (Character.Controlled != null)
                                 {
-                                    Character.Controlled.ResetInteract = true;
+                                    Character.Controlled.DisableInteract = true;
                                     Character.Controlled.ClearInputs();
                                 }
                                 draggingWire = selectedWire;
@@ -463,7 +594,7 @@ namespace Barotrauma.Items.Components
                                 
                                     selectedWire.shouldClearConnections = false;
                                     Character.Controlled.Inventory.TryPutItem(selectedWire.item, Character.Controlled, new List<InvSlotType> { InvSlotType.LeftHand, InvSlotType.RightHand });
-                                    foreach (var entity in MapEntity.mapEntityList)
+                                    foreach (var entity in MapEntity.MapEntityList)
                                     {
                                         if (entity is Item item)
                                         {
@@ -603,11 +734,11 @@ namespace Barotrauma.Items.Components
         {
             var eventData = ExtractEventData<ClientEventData>(extraData);
             int nodeCount = eventData.NodeCount;
-            msg.Write((byte)nodeCount);
+            msg.WriteByte((byte)nodeCount);
             if (nodeCount > 0)
             {
-                msg.Write(nodes.Last().X);
-                msg.Write(nodes.Last().Y);
+                msg.WriteSingle(nodes.Last().X);
+                msg.WriteSingle(nodes.Last().Y);
             }
         }
     }

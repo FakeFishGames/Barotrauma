@@ -15,5 +15,4 @@ namespace Barotrauma.Abilities
         }
         public Character Character { get; set; }
     }
-    
 }

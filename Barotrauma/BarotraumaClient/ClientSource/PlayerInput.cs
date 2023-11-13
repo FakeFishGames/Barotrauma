@@ -11,15 +11,13 @@ namespace Barotrauma
     public enum MouseButton
     {
         None = -1,
-        LeftMouse = 0,
-        RightMouse = 1,
+        PrimaryMouse = 0,
+        SecondaryMouse = 1,
         MiddleMouse = 2,
         MouseButton4 = 3,
         MouseButton5 = 4,
         MouseWheelUp = 5,
-        MouseWheelDown = 6,
-        PrimaryMouse,
-        SecondaryMouse
+        MouseWheelDown = 6
     }
 
     public class KeyOrMouse
@@ -59,15 +57,12 @@ namespace Barotrauma
             switch (MouseButton)
             {
                 case MouseButton.None:
+                    if (Key == Keys.None) { return false; }
                     return PlayerInput.KeyDown(Key);
                 case MouseButton.PrimaryMouse:
                     return PlayerInput.PrimaryMouseButtonHeld();
                 case MouseButton.SecondaryMouse:
                     return PlayerInput.SecondaryMouseButtonHeld();
-                case MouseButton.LeftMouse:
-                    return PlayerInput.LeftButtonHeld();
-                case MouseButton.RightMouse:
-                    return PlayerInput.RightButtonHeld();
                 case MouseButton.MiddleMouse:
                     return PlayerInput.MidButtonHeld();
                 case MouseButton.MouseButton4:
@@ -88,15 +83,12 @@ namespace Barotrauma
             switch (MouseButton)
             {
                 case MouseButton.None:
+                    if (Key == Keys.None) { return false; }
                     return PlayerInput.KeyHit(Key);
                 case MouseButton.PrimaryMouse:
                     return PlayerInput.PrimaryMouseButtonClicked();
                 case MouseButton.SecondaryMouse:
                     return PlayerInput.SecondaryMouseButtonClicked();
-                case MouseButton.LeftMouse:
-                    return PlayerInput.LeftButtonClicked();
-                case MouseButton.RightMouse:
-                    return PlayerInput.RightButtonClicked();
                 case MouseButton.MiddleMouse:
                     return PlayerInput.MidButtonClicked();
                 case MouseButton.MouseButton4:
@@ -132,11 +124,11 @@ namespace Barotrauma
             }
             else if (a.MouseButton != MouseButton.None)
             {
-                return a.MouseButton == b.MouseButton;
+                return !(b is null) && a.MouseButton == b.MouseButton;
             }
             else
             {
-                return a.Key.Equals(b.Key);
+                return !(b is null) && a.Key.Equals(b.Key);
             }
         }
 
@@ -216,11 +208,11 @@ namespace Barotrauma
                 switch (MouseButton)
                 {
                     case MouseButton.PrimaryMouse:
-                        return PlayerInput.MouseButtonsSwapped() ? TextManager.Get("input.rightmouse") : TextManager.Get("input.leftmouse");
+                        return PlayerInput.PrimaryMouseLabel;
                     case MouseButton.SecondaryMouse:
-                        return PlayerInput.MouseButtonsSwapped() ? TextManager.Get("input.leftmouse") : TextManager.Get("input.rightmouse");
+                        return PlayerInput.SecondaryMouseLabel;
                     default:
-                        return TextManager.Get("input." + MouseButton.ToString().ToLowerInvariant());
+                        return TextManager.Get($"Input.{MouseButton}");
                 }
             }
             else
@@ -267,6 +259,9 @@ namespace Barotrauma
             return false; //TODO: implement on other platforms?
         }
 #endif
+
+        public static readonly LocalizedString PrimaryMouseLabel = TextManager.Get($"Input.{(!MouseButtonsSwapped() ? "Left" : "Right")}Mouse");
+        public static readonly LocalizedString SecondaryMouseLabel = TextManager.Get($"Input.{(!MouseButtonsSwapped() ? "Right" : "Left")}Mouse");
 
         public static Vector2 MousePosition
         {
@@ -316,119 +311,47 @@ namespace Barotrauma
 
         public static bool PrimaryMouseButtonHeld()
         {
-            if (MouseButtonsSwapped())
-            {
-                return RightButtonHeld();
-            }
-            return LeftButtonHeld();
-        }
-
-        public static bool PrimaryMouseButtonDown()
-        {
-            if (MouseButtonsSwapped())
-            {
-                return RightButtonDown();
-            }
-            return LeftButtonDown();
-        }
-
-        public static bool PrimaryMouseButtonReleased()
-        {
-            if (MouseButtonsSwapped())
-            {
-                return RightButtonReleased();
-            }
-            return LeftButtonReleased();
-        }
-
-        public static bool PrimaryMouseButtonClicked()
-        {
-            if (MouseButtonsSwapped())
-            {
-                return RightButtonClicked();
-            }
-            return LeftButtonClicked();
-        }
-
-        public static bool SecondaryMouseButtonHeld()
-        {
-            if (!MouseButtonsSwapped())
-            {
-                return RightButtonHeld();
-            }
-            return LeftButtonHeld();
-        }
-
-        public static bool SecondaryMouseButtonDown()
-        {
-            if (!MouseButtonsSwapped())
-            {
-                return RightButtonDown();
-            }
-            return LeftButtonDown();
-        }
-
-        public static bool SecondaryMouseButtonReleased()
-        {
-            if (!MouseButtonsSwapped())
-            {
-                return RightButtonReleased();
-            }
-            return LeftButtonReleased();
-        }
-
-        public static bool SecondaryMouseButtonClicked()
-        {
-            if (!MouseButtonsSwapped())
-            {
-                return RightButtonClicked();
-            }
-            return LeftButtonClicked();
-        }
-
-        public static bool LeftButtonHeld()
-        {
             return AllowInput && mouseState.LeftButton == ButtonState.Pressed;
         }
 
-        public static bool LeftButtonDown()
+        public static bool PrimaryMouseButtonDown()
         {
             return AllowInput &&
                 oldMouseState.LeftButton == ButtonState.Released &&
                 mouseState.LeftButton == ButtonState.Pressed;
         }
 
-        public static bool LeftButtonReleased()
+        public static bool PrimaryMouseButtonReleased()
         {
             return AllowInput && mouseState.LeftButton == ButtonState.Released;
         }
 
 
-        public static bool LeftButtonClicked()
+        public static bool PrimaryMouseButtonClicked()
         {
             return (AllowInput &&
                 oldMouseState.LeftButton == ButtonState.Pressed
                 && mouseState.LeftButton == ButtonState.Released);
         }
 
-        public static bool RightButtonHeld()
+        public static bool SecondaryMouseButtonHeld()
         {
             return AllowInput && mouseState.RightButton == ButtonState.Pressed;
         }
 
-        public static bool RightButtonDown()
+        public static bool SecondaryMouseButtonDown()
         {
             return AllowInput &&
                 oldMouseState.RightButton == ButtonState.Released &&
                 mouseState.RightButton == ButtonState.Pressed;
         }
 
-        public static bool RightButtonReleased()
+        public static bool SecondaryMouseButtonReleased()
         {
             return AllowInput && mouseState.RightButton == ButtonState.Released;
         }
 
-        public static bool RightButtonClicked()
+        public static bool SecondaryMouseButtonClicked()
         {
             return (AllowInput &&
                 oldMouseState.RightButton == ButtonState.Pressed

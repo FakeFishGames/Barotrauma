@@ -7,28 +7,30 @@ using System.Text;
 
 namespace Barotrauma
 {
-    public class SpriteRecorder : ISpriteBatch, IDisposable
+    sealed class SpriteRecorder : ISpriteBatch, IDisposable
     {
-        private struct Command
+        public readonly record struct Command(
+            Texture2D Texture,
+            VertexPositionColorTexture VertexBL,
+            VertexPositionColorTexture VertexBR,
+            VertexPositionColorTexture VertexTL,
+            VertexPositionColorTexture VertexTR,
+            float Depth,
+            Vector2 Min,
+            Vector2 Max,
+            int Index)
         {
-            public readonly Texture2D Texture;
-            public readonly VertexPositionColorTexture VertexBL;
-            public readonly VertexPositionColorTexture VertexBR;
-            public readonly VertexPositionColorTexture VertexTL;
-            public readonly VertexPositionColorTexture VertexTR;
-            public readonly float Depth;
-            public readonly Vector2 Min;
-            public readonly Vector2 Max;
-            public readonly int Index;
-
-            public bool Overlaps(Command other)
-            {
-                return
-                    Min.X <= other.Max.X && Max.X >= other.Min.X &&
-                    Min.Y <= other.Max.Y && Max.Y >= other.Min.Y;
-            }
-
-            public Command(
+            public static Vector2 GetMinPosition(params VertexPositionColorTexture[] vertices)
+                => new Vector2(
+                    MathUtils.Min(vertices.Select(v => v.Position.X).ToArray()),
+                    MathUtils.Min(vertices.Select(v => v.Position.Y).ToArray()));
+            
+            public static Vector2 GetMaxPosition(params VertexPositionColorTexture[] vertices)
+                => new Vector2(
+                    MathUtils.Max(vertices.Select(v => v.Position.X).ToArray()),
+                    MathUtils.Max(vertices.Select(v => v.Position.Y).ToArray()));
+            
+            public static Command FromTransform(
                 Texture2D texture,
                 Vector2 pos,
                 Rectangle srcRect,
@@ -46,15 +48,11 @@ namespace Barotrauma
                 int srcRectBottom = srcRect.Bottom;
                 if (effects.HasFlag(SpriteEffects.FlipHorizontally))
                 {
-                    var temp = srcRectRight;
-                    srcRectRight = srcRectLeft;
-                    srcRectLeft = temp;
+                    (srcRectRight, srcRectLeft) = (srcRectLeft, srcRectRight);
                 }
                 if (effects.HasFlag(SpriteEffects.FlipVertically))
                 {
-                    var temp = srcRectBottom;
-                    srcRectBottom = srcRectTop;
-                    srcRectTop = temp;
+                    (srcRectBottom, srcRectTop) = (srcRectTop, srcRectBottom);
                 }
 
                 rotation = MathHelper.ToRadians(rotation);
@@ -68,59 +66,63 @@ namespace Barotrauma
                 pos.X -= origin.X * scale.X * cos - origin.Y * scale.Y * sin;
                 pos.Y -= origin.Y * scale.Y * cos + origin.X * scale.X * sin;
 
-                Texture = texture;
+                var vertexTl = new VertexPositionColorTexture
+                {
+                    Color = color,
+                    Position = new Vector3(pos.X, pos.Y, 0f),
+                    TextureCoordinate = new Vector2((float)srcRectLeft / (float)texture.Width, (float)srcRectTop / (float)texture.Height)
+                };
 
-                Depth = depth;
+                var vertexTr = new VertexPositionColorTexture
+                {
+                    Color = color,
+                    Position = new Vector3(pos.X + wAdd.X, pos.Y + wAdd.Y, 0f),
+                    TextureCoordinate = new Vector2((float)srcRectRight / (float)texture.Width, (float)srcRectTop / (float)texture.Height)
+                };
 
-                VertexTL.Color = color;
-                VertexTR.Color = color;
-                VertexBL.Color = color;
-                VertexBR.Color = color;
+                var vertexBl = new VertexPositionColorTexture
+                {
+                    Color = color,
+                    Position = new Vector3(pos.X + hAdd.X, pos.Y + hAdd.Y, 0f),
+                    TextureCoordinate = new Vector2((float)srcRectLeft / (float)texture.Width, (float)srcRectBottom / (float)texture.Height)
+                };
 
-                VertexTL.Position = new Vector3(pos.X, pos.Y, 0f);
-                VertexTR.Position = new Vector3(pos.X + wAdd.X, pos.Y + wAdd.Y, 0f);
-                VertexBL.Position = new Vector3(pos.X + hAdd.X, pos.Y + hAdd.Y, 0f);
-                VertexBR.Position = new Vector3(pos.X + wAdd.X + hAdd.X, pos.Y + wAdd.Y + hAdd.Y, 0f);
+                var vertexBr = new VertexPositionColorTexture
+                {
+                    Color = color,
+                    Position = new Vector3(pos.X + wAdd.X + hAdd.X, pos.Y + wAdd.Y + hAdd.Y, 0f),
+                    TextureCoordinate = new Vector2((float)srcRectRight / (float)texture.Width, (float)srcRectBottom / (float)texture.Height)
+                };
 
-                Min = new Vector2(
-                    MathUtils.Min
-                    (
-                        VertexTL.Position.X,
-                        VertexTR.Position.X,
-                        VertexBL.Position.X,
-                        VertexBR.Position.X
-                    ),
-                    MathUtils.Min
-                    (
-                        VertexTL.Position.Y,
-                        VertexTR.Position.Y,
-                        VertexBL.Position.Y,
-                        VertexBR.Position.Y
-                    ));
+                var min = GetMinPosition(
+                    vertexTl,
+                    vertexTr,
+                    vertexBl,
+                    vertexBr);
 
-                Max = new Vector2(
-                    MathUtils.Max
-                    (
-                        VertexTL.Position.X,
-                        VertexTR.Position.X,
-                        VertexBL.Position.X,
-                        VertexBR.Position.X
-                    ),
-                    MathUtils.Max
-                    (
-                        VertexTL.Position.Y,
-                        VertexTR.Position.Y,
-                        VertexBL.Position.Y,
-                        VertexBR.Position.Y
-                    ));
+                var max = GetMaxPosition(
+                    vertexTl,
+                    vertexTr,
+                    vertexBl,
+                    vertexBr);
 
-                VertexTL.TextureCoordinate = new Vector2((float)srcRectLeft / (float)texture.Width, (float)srcRectTop / (float)texture.Height);
-                VertexTR.TextureCoordinate = new Vector2((float)srcRectRight / (float)texture.Width, (float)srcRectTop / (float)texture.Height);
-                VertexBL.TextureCoordinate = new Vector2((float)srcRectLeft / (float)texture.Width, (float)srcRectBottom / (float)texture.Height);
-                VertexBR.TextureCoordinate = new Vector2((float)srcRectRight / (float)texture.Width, (float)srcRectBottom / (float)texture.Height);
+                return new Command(
+                    texture,
+                    vertexBl,
+                    vertexBr,
+                    vertexTl,
+                    vertexTr,
+                    depth,
+                    min,
+                    max,
+                    index);
+            }
 
-                Index = index;
-
+            public bool Overlaps(Command other)
+            {
+                return
+                    Min.X <= other.Max.X && Max.X >= other.Min.X &&
+                    Min.Y <= other.Max.Y && Max.Y >= other.Min.Y;
             }
         }
 
@@ -151,8 +153,8 @@ namespace Barotrauma
 
         public static BasicEffect BasicEffect = null;
 
-        private List<RecordedBuffer> recordedBuffers = new List<RecordedBuffer>();
-        private List<Command> commandList = new List<Command>();
+        private readonly List<RecordedBuffer> recordedBuffers = new List<RecordedBuffer>();
+        private readonly List<Command> commandList = new List<Command>();
         private SpriteSortMode currentSortMode;
 
         private IndexBuffer indexBuffer = null;
@@ -170,16 +172,45 @@ namespace Barotrauma
             currentSortMode = sortMode;
         }
 
-        public void Draw(Texture2D texture, Vector2 pos, Rectangle? srcRect, Color color, float rotation, Vector2 origin, Vector2 scale, SpriteEffects effects, float depth)
+        private void AppendCommand(Command command)
         {
             if (isDisposed) { return; }
-
-            Command command = new Command(texture, pos, srcRect ?? texture.Bounds, color, rotation, origin, scale, effects, depth, commandList?.Count ?? 0);
+            
             if (commandList.Count == 0) { Min = command.Min; Max = command.Max; }
             Min = new Vector2(Math.Min(command.Min.X, Min.X), Math.Min(command.Min.Y, Min.Y));
             Max = new Vector2(Math.Max(command.Max.X, Max.X), Math.Max(command.Max.Y, Max.Y));
 
-            commandList?.Add(command);
+            commandList.Add(command);
+        }
+        
+        public void Draw(Texture2D texture, Vector2 pos, Rectangle? srcRect, Color color, float rotation, Vector2 origin, Vector2 scale, SpriteEffects effects, float depth)
+        {
+            if (isDisposed) { return; }
+
+            var command = Command.FromTransform(texture, pos, srcRect ?? texture.Bounds, color, rotation, origin, scale, effects, depth, commandList.Count);
+            AppendCommand(command);
+        }
+
+        public void Draw(Texture2D texture, VertexPositionColorTexture[] vertices, float layerDepth, int? count = null)
+        {
+            if (isDisposed) { return; }
+            
+            int iters = count ?? (vertices.Length / 4);
+            for (int i=0;i<iters;i++)
+            {
+                var subset = vertices[((i * 4) + 0)..((i * 4) + 4)];
+                var command = new Command(
+                    texture,
+                    subset[2],
+                    subset[3],
+                    subset[0],
+                    subset[1],
+                    layerDepth,
+                    Command.GetMinPosition(subset),
+                    Command.GetMaxPosition(subset),
+                    commandList.Count);
+                AppendCommand(command);
+            }
         }
 
         public void End()
@@ -309,15 +340,12 @@ namespace Barotrauma
         public void Dispose()
         {
             isDisposed = true;
-            if (recordedBuffers != null)
+            foreach (var buffer in recordedBuffers)
             {
-                foreach (var buffer in recordedBuffers)
-                {
-                    buffer.VertexBuffer.Dispose();
-                }
-                recordedBuffers.Clear(); recordedBuffers = null;
+                buffer.VertexBuffer.Dispose();
             }
-            commandList?.Clear(); commandList = null;
+            recordedBuffers.Clear();
+            commandList.Clear();
             indexBuffer?.Dispose(); indexBuffer = null;
             ReadyToRender = false;
         }

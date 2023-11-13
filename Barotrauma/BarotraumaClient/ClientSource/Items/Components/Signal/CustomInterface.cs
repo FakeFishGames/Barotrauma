@@ -12,7 +12,11 @@ namespace Barotrauma.Items.Components
         private readonly List<GUIComponent> uiElements = new List<GUIComponent>();
         private GUILayoutGroup uiElementContainer;
 
+        private bool readingNetworkEvent;
+
         private Point ElementMaxSize => new Point(uiElementContainer.Rect.Width, (int)(65 * GUI.yScale));
+
+        public override bool RecreateGUIOnResolutionChange => true;
 
         partial void InitProjSpecific()
         {
@@ -98,7 +102,7 @@ namespace Barotrauma.Items.Components
                                     {
                                         ValueChanged(ni.UserData as CustomInterfaceElement, ni.FloatValue);
                                     }
-                                    else
+                                    else if (!readingNetworkEvent)
                                     {
                                         item.CreateClientEvent(this);
                                     }
@@ -124,7 +128,7 @@ namespace Barotrauma.Items.Components
                                     {
                                         ValueChanged(ni.UserData as CustomInterfaceElement, ni.IntValue);
                                     }
-                                    else
+                                    else if (!readingNetworkEvent)
                                     {
                                         item.CreateClientEvent(this);
                                     }
@@ -133,7 +137,7 @@ namespace Barotrauma.Items.Components
                         }
                         else
                         {
-                            DebugConsole.ShowError($"Error creating a CustomInterface component: unexpected NumberType \"{(ciElement.NumberType.HasValue ? ciElement.NumberType.Value.ToString() : "none")}\"");
+                            DebugConsole.LogError($"Error creating a CustomInterface component: unexpected NumberType \"{(ciElement.NumberType.HasValue ? ciElement.NumberType.Value.ToString() : "none")}\"");
                         }
                         if (numberInput != null)
                         {
@@ -159,7 +163,7 @@ namespace Barotrauma.Items.Components
                         {
                             TickBoxToggled(tBox.UserData as CustomInterfaceElement, tBox.Selected);
                         }
-                        else
+                        else if (!readingNetworkEvent)
                         {
                             item.CreateClientEvent(this);
                         }
@@ -179,12 +183,12 @@ namespace Barotrauma.Items.Components
                     };
                     btn.OnClicked += (_, userdata) =>
                     {
-                        CustomInterfaceElement btnElement = userdata as CustomInterfaceElement;;
+                        CustomInterfaceElement btnElement = userdata as CustomInterfaceElement;
                         if (GameMain.Client == null)
                         {
                             ButtonClicked(btnElement);
                         }
-                        else
+                        else if (!readingNetworkEvent)
                         {
                             item.CreateClientEvent(this, new EventData(btnElement));
                         }
@@ -240,13 +244,13 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public override void UpdateHUD(Character character, float deltaTime, Camera cam)
+        public override void UpdateHUDComponentSpecific(Character character, float deltaTime, Camera cam)
         {
             bool elementVisibilityChanged = false;
             int visibleElementCount = 0;
             foreach (var uiElement in uiElements)
             {
-                if (!(uiElement.UserData is CustomInterfaceElement element)) { continue; }
+                if (uiElement.UserData is not CustomInterfaceElement element) { continue; }
                 bool visible = Screen.Selected == GameMain.SubEditorScreen || element.StatusEffects.Any() || element.HasPropertyName || (element.Connection != null && element.Connection.Wires.Count > 0);
                 if (visible) { visibleElementCount++; }
                 if (uiElement.Visible != visible)
@@ -295,9 +299,10 @@ namespace Barotrauma.Items.Components
 
             LocalizedString CreateLabelText(int elementIndex)
             {
-                return string.IsNullOrWhiteSpace(customInterfaceElementList[elementIndex].Label) ?
+                var label = customInterfaceElementList[elementIndex].Label;
+                return string.IsNullOrWhiteSpace(label) ?
                     TextManager.GetWithVariable("connection.signaloutx", "[num]", (elementIndex + 1).ToString()) :
-                    customInterfaceElementList[elementIndex].Label;
+                    TextManager.Get(label).Fallback(label);
             }
 
             uiElementContainer.Recalculate();
@@ -327,17 +332,21 @@ namespace Barotrauma.Items.Components
 
         partial void UpdateSignalsProjSpecific()
         {
+            if (signals == null) { return; }
             for (int i = 0; i < signals.Length && i < uiElements.Count; i++)
             {
+                string signal = customInterfaceElementList[i].Signal;
                 if (uiElements[i] is GUITextBox tb)
                 {
-                    tb.Text = customInterfaceElementList[i].Signal;
+                    tb.Text = Screen.Selected is { IsEditor: true } ?
+                        signal :
+                        TextManager.Get(signal).Fallback(signal).Value;
                 }
                 else if (uiElements[i] is GUINumberInput ni)
                 {
                     if (ni.InputType == NumberType.Int)
                     {
-                        int.TryParse(customInterfaceElementList[i].Signal, out int value);
+                        int.TryParse(signal, out int value);
                         ni.IntValue = value;
                     }
                 }
@@ -354,74 +363,82 @@ namespace Barotrauma.Items.Components
                 {
                     if (!element.IsNumberInput)
                     {
-                        msg.Write(((GUITextBox)uiElements[i]).Text);
+                        msg.WriteString(((GUITextBox)uiElements[i]).Text);
                     }
                     else
                     {
                         switch (element.NumberType)
                         {
                             case NumberType.Float:
-                                msg.Write(((GUINumberInput)uiElements[i]).FloatValue.ToString());
+                                msg.WriteString(((GUINumberInput)uiElements[i]).FloatValue.ToString());
                                 break;
                             case NumberType.Int:
                             default:
-                                msg.Write(((GUINumberInput)uiElements[i]).IntValue.ToString());
+                                msg.WriteString(((GUINumberInput)uiElements[i]).IntValue.ToString());
                                 break;
                         }
                     }
                 }
                 else if (element.ContinuousSignal)
                 {
-                    msg.Write(((GUITickBox)uiElements[i]).Selected);
+                    msg.WriteBoolean(((GUITickBox)uiElements[i]).Selected);
                 }
                 else
                 {
-                    msg.Write(extraData is Item.ComponentStateEventData { ComponentData: EventData eventData } && eventData.BtnElement == customInterfaceElementList[i]);
+                    msg.WriteBoolean(extraData is Item.ComponentStateEventData { ComponentData: EventData eventData } && eventData.BtnElement == customInterfaceElementList[i]);
                 }
             }
         }
 
         public void ClientEventRead(IReadMessage msg, float sendingTime)
         {
-            for (int i = 0; i < customInterfaceElementList.Count; i++)
+            readingNetworkEvent = true;
+            try
             {
-                var element = customInterfaceElementList[i];
-                if (element.HasPropertyName)
+                for (int i = 0; i < customInterfaceElementList.Count; i++)
                 {
-                    string newValue = msg.ReadString();
-                    if (!element.IsNumberInput)
+                    var element = customInterfaceElementList[i];
+                    if (element.HasPropertyName)
                     {
-                        TextChanged(element, newValue);
+                        string newValue = msg.ReadString();
+                        if (!element.IsNumberInput)
+                        {
+                            TextChanged(element, newValue);
+                        }
+                        else
+                        {
+                            switch (element.NumberType)
+                            {
+                                case NumberType.Int when int.TryParse(newValue, out int value):
+                                    ValueChanged(element, value);
+                                    break;
+                                case NumberType.Float when TryParseFloatInvariantCulture(newValue, out float value):
+                                    ValueChanged(element, value);
+                                    break;
+                            }
+                        }
                     }
                     else
                     {
-                        switch (element.NumberType)
+                        bool elementState = msg.ReadBoolean();
+                        if (element.ContinuousSignal)
                         {
-                            case NumberType.Int when int.TryParse(newValue, out int value):
-                                ValueChanged(element, value);
-                                break;
-                            case NumberType.Float when TryParseFloatInvariantCulture(newValue, out float value):
-                                ValueChanged(element, value);
-                                break;
+                            ((GUITickBox)uiElements[i]).Selected = elementState;
+                            TickBoxToggled(element, elementState);
+                        }
+                        else if (elementState)
+                        {
+                            ButtonClicked(element);
                         }
                     }
                 }
-                else
-                {
-                    bool elementState = msg.ReadBoolean();
-                    if (element.ContinuousSignal)
-                    {
-                        ((GUITickBox)uiElements[i]).Selected = elementState;
-                        TickBoxToggled(element, elementState);
-                    }
-                    else if (elementState)
-                    {
-                        ButtonClicked(element);
-                    }
-                }
-            }
 
-            UpdateSignalsProjSpecific();
+                UpdateSignalsProjSpecific();
+            }
+            finally
+            {
+                readingNetworkEvent = false;
+            }
         }
     }
 }

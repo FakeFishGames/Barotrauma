@@ -1,4 +1,6 @@
-﻿using System;
+﻿#nullable enable
+
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -10,6 +12,8 @@ namespace Barotrauma
     {
         public Identifier VariantOf { get; }
 
+        public T? ParentPrefab { get; set; }
+
         public void InheritFrom(T parent);
     }
 
@@ -20,8 +24,10 @@ namespace Barotrauma
             #warning TODO: fix %ModDir% instances in the base element such that they become %ModDir:BaseMod% if necessary
             return variantElement.Element.CreateVariantXML(baseElement.Element).FromPackage(variantElement.ContentPackage);
         }
-        
-        public static XElement CreateVariantXML(this XElement variantElement, XElement baseElement)
+
+        public delegate void VariantXMLChecker(XElement originalElement, XElement? variantElement, XElement result);
+
+        public static XElement CreateVariantXML(this XElement variantElement, XElement baseElement, VariantXMLChecker? checker = null)
         {
             XElement newElement = new XElement(variantElement.Name);
             newElement.Add(baseElement.Attributes());
@@ -31,6 +37,9 @@ namespace Barotrauma
 
             void ReplaceElement(XElement element, XElement replacement)
             {
+                XElement originalElement = new XElement(element);
+
+                List<XElement> newElementsFromBase = new List<XElement>(element.Elements());
                 List<XElement> elementsToRemove = new List<XElement>();
                 foreach (XAttribute attribute in replacement.Attributes())
                 {
@@ -48,6 +57,7 @@ namespace Barotrauma
                         if (replacementSubElement.Name.ToString().Equals("clear", StringComparison.OrdinalIgnoreCase))
                         {
                             matchingElementFound = true;
+                            newElementsFromBase.Clear();
                             elementsToRemove.AddRange(element.Elements());
                             break;
                         }
@@ -65,6 +75,7 @@ namespace Barotrauma
                                 ReplaceElement(subElement, replacementSubElement);
                             }
                             matchingElementFound = true;
+                            newElementsFromBase.Remove(subElement);
                             break;
                         }
                         i++;
@@ -75,11 +86,16 @@ namespace Barotrauma
                     }
                 }
                 elementsToRemove.ForEach(e => e.Remove());
+                checker?.Invoke(originalElement, replacement, element);
+                foreach (XElement newElement in newElementsFromBase)
+                {
+                    checker?.Invoke(newElement, null, newElement);
+                }
             }
 
             void ReplaceAttribute(XElement element, XAttribute newAttribute)
             {
-                XAttribute existingAttribute = element.Attributes().FirstOrDefault(a => a.Name.ToString().Equals(newAttribute.Name.ToString(), StringComparison.OrdinalIgnoreCase));
+                XAttribute? existingAttribute = element.Attributes().FirstOrDefault(a => a.Name.ToString().Equals(newAttribute.Name.ToString(), StringComparison.OrdinalIgnoreCase));
                 if (existingAttribute == null)
                 {
                     element.Add(newAttribute);

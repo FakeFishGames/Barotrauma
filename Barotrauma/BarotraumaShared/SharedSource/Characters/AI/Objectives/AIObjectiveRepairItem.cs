@@ -10,14 +10,14 @@ namespace Barotrauma
     {
         public override Identifier Identifier { get; set; } = "repair item".ToIdentifier();
 
-        public override bool AllowInAnySub => true;
+        public override bool AllowInFriendlySubs => true;
         public override bool KeepDivingGearOn => Item?.CurrentHull == null;
+        public override bool AllowWhileHandcuffed => false;
 
         public Item Item { get; private set; }
 
         private AIObjectiveGoTo goToObjective;
         private AIObjectiveContainItem refuelObjective;
-        private float previousCondition = -1;
         private RepairTool repairTool;
 
         private const float WaitTimeBeforeRepair = 0.5f;
@@ -26,7 +26,7 @@ namespace Barotrauma
         private bool IsRepairing() => IsRepairing(character, Item);
         private readonly bool isPriority;
 
-        public static bool IsRepairing(Character character, Item item) => character.SelectedConstruction == item && item.Repairables.Any(r => r.CurrentFixer == character);
+        public static bool IsRepairing(Character character, Item item) => character.SelectedItem == item && item.Repairables.Any(r => r.CurrentFixer == character);
 
         public AIObjectiveRepairItem(Character character, Item item, AIObjectiveManager objectiveManager, float priorityModifier = 1, bool isPriority = false)
             : base(character, objectiveManager, priorityModifier)
@@ -37,10 +37,13 @@ namespace Barotrauma
 
         protected override float GetPriority()
         {
-            if (!IsAllowed || Item.IgnoreByAI(character))
+            if (!IsAllowed) { HandleNonAllowed(); }
+            if (Item.IgnoreByAI(character))
             {
-                Priority = 0;
                 Abandon = true;
+            }
+            if (Abandon)
+            {
                 if (IsRepairing())
                 {
                     Item.Repairables.ForEach(r => r.StopRepairing(character));
@@ -137,44 +140,45 @@ namespace Barotrauma
             }
             if (repairTool != null)
             {
-                if (repairTool.Item.OwnInventory == null)
+                if (repairTool.requiredItems.TryGetValue(RelatedItem.RelationType.Contained, out var requiredItems))
                 {
-#if DEBUG
-                    DebugConsole.ThrowError($"{character.Name}: AIObjectiveRepairItem failed - the item \"" + repairTool + "\" has no proper inventory");
-#endif
-                    Abandon = true;
-                    return;
-                }
-                RelatedItem item = null;
-                Item fuel = null;
-                foreach (RelatedItem requiredItem in repairTool.requiredItems[RelatedItem.RelationType.Contained])
-                {
-                    item = requiredItem;
-                    fuel = repairTool.Item.OwnInventory.AllItems.FirstOrDefault(it => it.Condition > 0.0f && requiredItem.MatchesItem(it));
-                    if (fuel != null) { break; }
-                }
-                if (fuel == null)
-                {
-                    RemoveSubObjective(ref goToObjective);
-                    TryAddSubObjective(ref refuelObjective, () => new AIObjectiveContainItem(character, item.Identifiers, repairTool.Item.GetComponent<ItemContainer>(), objectiveManager, spawnItemIfNotFound: character.TeamID == CharacterTeamType.FriendlyNPC)
+                    if (repairTool.Item.OwnInventory == null)
                     {
-                        RemoveExisting = true
-                    },
-                    onCompleted: () => RemoveSubObjective(ref refuelObjective),
-                    onAbandon: () => Abandon = true);
-                    return;
+#if DEBUG
+                        DebugConsole.ThrowError($"{character.Name}: AIObjectiveRepairItem failed - the item \"{repairTool}\" has no proper inventory.");
+#endif
+                        Abandon = true;
+                        return;
+                    }
+                    RelatedItem item = null;
+                    Item fuel = null;
+                    foreach (RelatedItem requiredItem in requiredItems)
+                    {
+                        item = requiredItem;
+                        fuel = repairTool.Item.OwnInventory.AllItems.FirstOrDefault(it => it.Condition > 0.0f && requiredItem.MatchesItem(it));
+                        if (fuel != null) { break; }
+                    }
+                    if (fuel == null)
+                    {
+                        RemoveSubObjective(ref goToObjective);
+                        TryAddSubObjective(ref refuelObjective, () => new AIObjectiveContainItem(character, item.Identifiers, repairTool.Item.GetComponent<ItemContainer>(), objectiveManager, spawnItemIfNotFound: character.TeamID == CharacterTeamType.FriendlyNPC)
+                        {
+                            RemoveExisting = true
+                        },
+                        onCompleted: () => RemoveSubObjective(ref refuelObjective),
+                        onAbandon: () => Abandon = true);
+                        return;
+                    }
                 }
             }
-            if (!character.IsClimbing && character.CanInteractWith(Item, out _, checkLinked: false))
+            if (character.CanInteractWith(Item, out _, checkLinked: false))
             {
                 waitTimer += deltaTime;
                 if (waitTimer < WaitTimeBeforeRepair) { return; }
 
                 HumanAIController.FaceTarget(Item);
-                if (repairTool != null)
-                {
-                    OperateRepairTool(deltaTime);
-                }
+
+                bool repairThroughRepairInterface = false;
                 foreach (Repairable repairable in Item.Repairables)
                 {
                     if (repairable.CurrentFixer != null && repairable.CurrentFixer != character)
@@ -184,27 +188,20 @@ namespace Barotrauma
                     }
                     if (!Abandon)
                     {
-                        if (character.SelectedConstruction != Item)
+                        if (character.SelectedItem != Item)
                         {
-                            if (Item.TryInteract(character, ignoreRequiredItems: true, forceSelectKey: true) ||
-                                Item.TryInteract(character, ignoreRequiredItems: true, forceUseKey: true))
+                            if (Item.TryInteract(character, forceUseKey: true) ||
+                                Item.TryInteract(character, forceSelectKey: true))
                             {
-                                character.SelectedConstruction = Item;
+                                character.SelectedItem = Item;
+                                repairThroughRepairInterface = true;
                             }
                             else
                             {
                                 Abandon = true;
                             }
                         }
-                        if (previousCondition == -1)
-                        {
-                            previousCondition = Item.Condition;
-                        }
-                        else if (Item.Condition < previousCondition)
-                        {
-                            // If the current condition is less than the previous condition, we can't complete the task, so let's abandon it. The item is probably deteriorating at a greater speed than we can repair it.
-                            Abandon = true;
-                        }
+                        CheckPreviousCondition(deltaTime);
                     }
                     if (Abandon)
                     {
@@ -218,7 +215,16 @@ namespace Barotrauma
                     {
                         repairable.StartRepairing(character, Repairable.FixActions.Repair);
                     }
+                    else
+                    {
+                        repairThroughRepairInterface = true;
+                    }
                     break;
+                }
+
+                if (!repairThroughRepairInterface && repairTool != null && !Abandon)
+                {
+                    OperateRepairTool(deltaTime);
                 }
             }
             else
@@ -229,12 +235,10 @@ namespace Barotrauma
                 TryAddSubObjective(ref goToObjective,
                     constructor: () =>
                     {
-                        previousCondition = -1;
                         var objective = new AIObjectiveGoTo(Item, character, objectiveManager)
                         {
-                            // Don't stop in ladders, because we can't interact with other items while holding the ladders.
-                            endNodeFilter = node => node.Waypoint.Ladders == null,
-                            TargetName = Item.Name
+                            TargetName = Item.Name,
+                            SpeakCannotReachCondition = () => isPriority
                         };
                         if (repairTool != null)
                         {
@@ -250,6 +254,27 @@ namespace Barotrauma
                             character.Speak(TextManager.GetWithVariable("DialogCannotRepair", "[itemname]", Item.Name, FormatCapitals.Yes).Value, null, 0.0f, "cannotrepair".ToIdentifier(), 10.0f);
                         }
                     });
+            }
+        }
+
+        private const float conditionCheckDelay = 1;
+        private float conditionCheckTimer;
+        private float previousCondition;
+        private void CheckPreviousCondition(float deltaTime)
+        {
+            if (Item == null || Item.Removed) { return; }
+            conditionCheckTimer -= deltaTime;
+            if (conditionCheckTimer > 0) { return; }
+            conditionCheckTimer = conditionCheckDelay;
+            if (previousCondition > -1 && Item.Condition < previousCondition)
+            {
+                // If the current condition is less than the previous condition, we can't complete the task, so let's abandon it. The item is probably deteriorating at a greater speed than we can repair it.
+                Abandon = true;
+            }
+            else
+            {
+                // If the previous condition is not yet stored or if it's valid (greater or equal to current condition), save the condition for the next check here.
+                previousCondition = Item.Condition;
             }
         }
 
@@ -305,7 +330,6 @@ namespace Barotrauma
             base.Reset();
             goToObjective = null;
             refuelObjective = null;
-            previousCondition = -1;
             repairTool = null;
         }
     }

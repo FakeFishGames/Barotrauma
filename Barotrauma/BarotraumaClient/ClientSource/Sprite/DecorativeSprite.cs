@@ -144,13 +144,7 @@ namespace Barotrauma
                     default:
                         continue;
                 }
-                foreach (XAttribute attribute in subElement.Attributes())
-                {
-                    if (PropertyConditional.IsValid(attribute))
-                    {
-                        conditionalList.Add(new PropertyConditional(attribute));
-                    }
-                }
+                conditionalList.AddRange(PropertyConditional.FromXElement(subElement));
             }
         }
 
@@ -188,7 +182,6 @@ namespace Barotrauma
 
         public float GetRotation(ref float rotationState, float randomRotationFactor)
         {
-            RotationSpeed = -Math.Abs(RotationSpeed);
             switch (RotationAnim)
             {
                 case AnimationType.Sine:

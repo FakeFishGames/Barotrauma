@@ -11,6 +11,11 @@ namespace Barotrauma.Networking
 {
     partial class RespawnManager : Entity, IServerSerializable
     {
+        /// <summary>
+        /// How much skills drop towards the job's default skill levels when dying
+        /// </summary>
+        public static float SkillLossPercentageOnDeath => GameMain.NetworkMember?.ServerSettings?.SkillLossPercentageOnDeath ?? 50.0f;
+
         public enum State
         {
             Waiting,
@@ -21,7 +26,6 @@ namespace Barotrauma.Networking
         private readonly NetworkMember networkMember;
         private readonly Steering shuttleSteering;
         private readonly List<Door> shuttleDoors;
-        private const string RespawnContainerTag = "respawncontainer";
         private readonly ItemContainer respawnContainer;
 
         //items created during respawn
@@ -60,7 +64,7 @@ namespace Barotrauma.Networking
 
         public State CurrentState { get; private set; }
 
-        public bool UseRespawnPrompt
+        public static bool UseRespawnPrompt
         {
             get
             {
@@ -104,7 +108,7 @@ namespace Barotrauma.Networking
                 {
                     if (item.Submarine != RespawnShuttle) { continue; }
 
-                    if (item.HasTag(RespawnContainerTag))
+                    if (item.HasTag(Tags.RespawnContainer))
                     {
                         respawnContainer = item.GetComponent<ItemContainer>();
                     }
@@ -186,6 +190,7 @@ namespace Barotrauma.Networking
         public void ForceRespawn()
         {
             ResetShuttle();
+            RespawnCountdownStarted = true;
             RespawnTime = DateTime.Now;
             CurrentState = State.Waiting;
         }
@@ -253,7 +258,7 @@ namespace Barotrauma.Networking
                 var powerContainer = item.GetComponent<PowerContainer>();
                 if (powerContainer != null)
                 {
-                    powerContainer.Charge = powerContainer.Capacity;
+                    powerContainer.Charge = powerContainer.GetCapacity();
                 }
 
                 var door = item.GetComponent<Door>();
@@ -269,6 +274,7 @@ namespace Barotrauma.Networking
 #endif
                 }
             }
+            respawnItems.Clear();
 
             foreach (Structure wall in Structure.WallList)
             {
@@ -327,10 +333,14 @@ namespace Barotrauma.Networking
             RespawnCharactersProjSpecific(shuttlePos);
         }
 
+        public static AfflictionPrefab GetRespawnPenaltyAfflictionPrefab()
+        {
+            return AfflictionPrefab.Prefabs.First(a => a.AfflictionType == "respawnpenalty");
+        }
+
         public static Affliction GetRespawnPenaltyAffliction()
         {
-            var respawnPenaltyAffliction = AfflictionPrefab.Prefabs.First(a => a.AfflictionType == "respawnpenalty");
-            return respawnPenaltyAffliction?.Instantiate(10.0f);
+            return GetRespawnPenaltyAfflictionPrefab()?.Instantiate(10.0f);
         }
 
         public static void GiveRespawnPenaltyAffliction(Character character)

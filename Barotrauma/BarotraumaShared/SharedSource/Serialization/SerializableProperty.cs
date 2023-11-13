@@ -67,12 +67,14 @@ namespace Barotrauma
     [AttributeUsage(AttributeTargets.Property)]
     class ConditionallyEditable : Editable
     {
-        public ConditionallyEditable(ConditionType conditionType)
+        public ConditionallyEditable(ConditionType conditionType, bool onlyInEditors = true)
         {
             this.conditionType = conditionType;
+            this.onlyInEditors = onlyInEditors;
         }
-
         private readonly ConditionType conditionType;
+
+        private readonly bool onlyInEditors;
 
         public enum ConditionType
         {
@@ -81,26 +83,61 @@ namespace Barotrauma
             AllowLinkingWifiToChat,
             IsSwappableItem,
             AllowRotating,
-            Attachable
+            Attachable,
+            HasBody,
+            Pickable,
+            OnlyByStatusEffectsAndNetwork,
+            HasIntegratedButtons,
+            IsToggleableController,
+            HasConnectionPanel
         }
 
         public bool IsEditable(ISerializableEntity entity)
         {
+            if (onlyInEditors && Screen.Selected is { IsEditor: false }) { return false; }
             switch (conditionType)
             {
                 case ConditionType.AllowLinkingWifiToChat:
                     return GameMain.NetworkMember?.ServerSettings?.AllowLinkingWifiToChat ?? true;
                 case ConditionType.IsSwappableItem:
                     {
-                        return entity is Item item && item.Prefab.SwappableItem != null && Screen.Selected == GameMain.SubEditorScreen;
+                        return entity is Item item && item.Prefab.SwappableItem != null;
                     }
                 case ConditionType.AllowRotating:
                     {
-                        return entity is Item item && item.body == null && item.Prefab.AllowRotatingInEditor && Screen.Selected == GameMain.SubEditorScreen;
+                        return entity is Item item && item.body == null && item.Prefab.AllowRotatingInEditor;
                     }
                 case ConditionType.Attachable:
                     {
-                        return entity is Holdable holdable && holdable.Attachable && Screen.Selected == GameMain.SubEditorScreen;
+                        return entity is Holdable holdable && holdable.Attachable;
+                    }
+                case ConditionType.HasBody:
+                    {
+                        return entity is Structure { HasBody: true } || entity is Item { body: not null };
+                    }
+                case ConditionType.Pickable:
+                    {
+                        return entity is Item item && item.GetComponent<Pickable>() != null;
+                    }
+                case ConditionType.HasIntegratedButtons:
+                    {
+                        return entity is Door door && door.HasIntegratedButtons;
+                    }
+                case ConditionType.OnlyByStatusEffectsAndNetwork:
+#if SERVER
+                    return true;
+#else
+                    return false;
+#endif
+                case ConditionType.IsToggleableController:
+                    {
+                        return entity is Controller controller && controller.IsToggle && controller.Item.GetComponent<ConnectionPanel>() != null;
+                    }
+                case ConditionType.HasConnectionPanel:
+                    {
+                        return
+                            (entity is Item item && item.GetComponent<ConnectionPanel>() != null) ||
+                            (entity is ItemComponent ic && ic.Item.GetComponent<ConnectionPanel>() != null);
                     }
             }
             return false;
@@ -154,6 +191,7 @@ namespace Barotrauma
             { typeof(float), "float" },
             { typeof(string), "string" },
             { typeof(Identifier), "identifier" },
+            { typeof(LanguageIdentifier), "languageidentifier" },
             { typeof(LocalizedString), "localizedstring" },
             { typeof(Point), "point" },
             { typeof(Vector2), "vector2" },
@@ -214,7 +252,7 @@ namespace Barotrauma
                     }
                     catch (Exception e)
                     {
-                        DebugConsole.ThrowError("Failed to set the value of the property \"" + Name + "\" of \"" + parentObject + "\" to " + value + " (not a valid " + PropertyInfo.PropertyType + ")", e);
+                        DebugConsole.ThrowError($"Failed to set the value of the property \"{Name}\" of \"{parentObject}\" to {value} (not a valid {PropertyInfo.PropertyType})", e);
                         return false;
                     }
                     try
@@ -223,7 +261,7 @@ namespace Barotrauma
                     }
                     catch (Exception e)
                     {
-                        DebugConsole.ThrowError("Failed to set the value of the property \"" + Name + "\" of \"" + parentObject.ToString() + "\" to " + value.ToString(), e);
+                        DebugConsole.ThrowError($"Failed to set the value of the property \"{Name}\" of \"{parentObject}\" to {value}", e);
                         return false;
                     }
                 }
@@ -240,7 +278,7 @@ namespace Barotrauma
                 switch (typeName)
                 {
                     case "bool":
-                        bool boolValue = value == "true" || value == "True";
+                        bool boolValue = value.ToIdentifier() == "true";
                         if (TrySetBoolValueWithoutReflection(parentObject, boolValue)) { return true; }
                         PropertyInfo.SetValue(parentObject, boolValue, null);
                         break;
@@ -290,6 +328,9 @@ namespace Barotrauma
                     case "identifier":
                         PropertyInfo.SetValue(parentObject, value.ToIdentifier());
                         break;
+                    case "languageidentifier":
+                        PropertyInfo.SetValue(parentObject, value.ToLanguageIdentifier());
+                        break;
                     case "localizedstring":
                         PropertyInfo.SetValue(parentObject, new RawLString(value));
                         break;
@@ -303,7 +344,7 @@ namespace Barotrauma
             }
             catch (Exception e)
             {
-                DebugConsole.ThrowError("Failed to set the value of the property \"" + Name + "\" of \"" + parentObject.ToString() + "\" to " + value.ToString(), e);
+                DebugConsole.ThrowError($"Failed to set the value of the property \"{Name}\" of \"{parentObject}\" to {value}", e);
                 return false;
             }
 
@@ -373,6 +414,9 @@ namespace Barotrauma
                             case "identifier":
                                 PropertyInfo.SetValue(parentObject, new Identifier((string)value));
                                 return true;
+                            case "languageidentifier":
+                                PropertyInfo.SetValue(parentObject, ((string)value).ToLanguageIdentifier());
+                                return true;
                             case "localizedstring":
                                 PropertyInfo.SetValue(parentObject, new RawLString((string)value));
                                 return true;
@@ -383,14 +427,14 @@ namespace Barotrauma
                                 PropertyInfo.SetValue(parentObject, XMLExtensions.ParseStringArray((string)value).ToIdentifiers().ToArray());
                                 return true;
                             default:
-                                DebugConsole.ThrowError("Failed to set the value of the property \"" + Name + "\" of \"" + parentObject.ToString() + "\" to " + value.ToString());
-                                DebugConsole.ThrowError("(Cannot convert a string to a " + PropertyType.ToString() + ")");
+                                DebugConsole.ThrowError($"Failed to set the value of the property \"{Name}\" of \"{parentObject}\" to {value}");
+                                DebugConsole.ThrowError($"(Cannot convert a string to a {PropertyType})");
                                 return false;
                         }
                     }
                     else if (PropertyType != value.GetType())
                     {
-                        DebugConsole.ThrowError("Failed to set the value of the property \"" + Name + "\" of \"" + parentObject.ToString() + "\" to " + value.ToString());
+                        DebugConsole.ThrowError($"Failed to set the value of the property \"{Name}\" of \"{parentObject}\" to {value}");
                         DebugConsole.ThrowError("(Non-matching type, should be " + PropertyType + " instead of " + value.GetType() + ")");
                         return false;
                     }
@@ -400,7 +444,7 @@ namespace Barotrauma
 
                 catch (Exception e)
                 {
-                    DebugConsole.ThrowError("Failed to set the value of the property \"" + Name + "\" of \"" + parentObject.ToString() + "\" to " + value.ToString(), e);
+                    DebugConsole.ThrowError($"Failed to set the value of the property \"{Name}\" of \"{parentObject}\" to {value}", e);
                     return false;
                 }
 
@@ -408,7 +452,7 @@ namespace Barotrauma
             }
             catch (Exception e)
             {
-                DebugConsole.ThrowError("Error in SerializableProperty.TrySetValue", e);
+                DebugConsole.ThrowError($"Error in SerializableProperty.TrySetValue (Property: {PropertyInfo.Name})", e);
                 return false;
             }
         }
@@ -427,7 +471,7 @@ namespace Barotrauma
             }
             catch (Exception e)
             {
-                DebugConsole.ThrowError("Error in SerializableProperty.TrySetValue", e);
+                DebugConsole.ThrowError($"Error in SerializableProperty.TrySetValue (Property: {PropertyInfo.Name})", e);
                 return false;
             }
 
@@ -448,7 +492,7 @@ namespace Barotrauma
             }
             catch (Exception e)
             {
-                DebugConsole.ThrowError("Error in SerializableProperty.TrySetValue", e);
+                DebugConsole.ThrowError($"Error in SerializableProperty.TrySetValue (Property: {PropertyInfo.Name})", e);
                 return false;
             }
             return true;
@@ -468,7 +512,7 @@ namespace Barotrauma
             }
             catch (Exception e)
             {
-                DebugConsole.ThrowError("Error in SerializableProperty.TrySetValue", e);
+                DebugConsole.ThrowError($"Error in SerializableProperty.TrySetValue (Property: {PropertyInfo.Name})", e);
                 return false;
             }
             return true;
@@ -508,7 +552,14 @@ namespace Barotrauma
 
             try
             {
-                return (float)PropertyInfo.GetValue(parentObject, null);
+                if (PropertyType == typeof(int))
+                {
+                    return (int)PropertyInfo.GetValue(parentObject, null);
+                }
+                else
+                {
+                    return (float)PropertyInfo.GetValue(parentObject, null);
+                }
             }
             catch (TargetInvocationException e)
             {
@@ -549,7 +600,7 @@ namespace Barotrauma
 
         public static string GetSupportedTypeName(Type type)
         {
-            if (type.IsEnum) return "Enum";
+            if (type.IsEnum) { return "Enum"; }
             if (!supportedTypes.TryGetValue(type, out string typeName))
             {
                 return null;
@@ -686,6 +737,29 @@ namespace Barotrauma
                 case nameof(Character.SpeedMultiplier):
                     { if (parentObject is Character character) { value = character.SpeedMultiplier; return true; } }
                     break;
+                case nameof(Character.PropulsionSpeedMultiplier):
+                    { if (parentObject is Character character) { value = character.PropulsionSpeedMultiplier; return true; } }
+                    break;
+                case nameof(Character.LowPassMultiplier):
+                    { if (parentObject is Character character) { value = character.LowPassMultiplier; return true; } }
+                    break;
+                case nameof(Character.HullOxygenPercentage):
+                    {
+                        if (parentObject is Character character) 
+                        { 
+                            value = character.HullOxygenPercentage;
+                            return true;
+                        }
+                        else if (parentObject is Item item)
+                        {
+                            value = item.HullOxygenPercentage;
+                            return true;
+                        }
+                    }
+                    break;
+                case nameof(Door.Stuck):
+                    { if (parentObject is Door door) { value = door.Stuck; return true; } }
+                    break;
             }
             return false;
         }
@@ -733,6 +807,23 @@ namespace Barotrauma
                 case nameof(Controller.State):
                     if (parentObject is Controller controller) { value = controller.State; return true; }
                     break;
+                case nameof(Character.InWater):
+                    {
+                        if (parentObject is Character character)
+                        {
+                            value = character.InWater;
+                            return true;
+                        }
+                        else if (parentObject is Item item)
+                        {
+                            value = item.InWater;
+                            return true;
+                        }
+                    }
+                    break;
+                case nameof(Rope.Snapped):
+                    if (parentObject is Rope rope) { value = rope.Snapped; return true; }
+                    break;
             }
             return false;
         }
@@ -762,7 +853,7 @@ namespace Barotrauma
             switch (Name)
             {
                 case nameof(Item.Condition):
-                    if (parentObject is Item item) { item.Condition = value; return true; }
+                    { if (parentObject is Item item) { item.Condition = value; return true; } }
                     break;
                 case nameof(Powered.Voltage):
                     if (parentObject is Powered powered) { powered.Voltage = value; return true; }
@@ -793,6 +884,9 @@ namespace Barotrauma
                     break;
                 case nameof(Character.PropulsionSpeedMultiplier):
                     { if (parentObject is Character character) { character.PropulsionSpeedMultiplier = value; return true; } }
+                    break;
+                case nameof(Item.Scale):
+                    { if (parentObject is Item item) { item.Scale = value; return true; } }
                     break;
             }
             return false;
@@ -981,12 +1075,18 @@ namespace Barotrauma
             {
                 if (!subElement.Name.ToString().Equals("upgrade", StringComparison.OrdinalIgnoreCase)) { continue; }
                 var upgradeVersion = new Version(subElement.GetAttributeString("gameversion", "0.0.0.0"));
-                if (savedVersion >= upgradeVersion) { continue; }
-
+                if (subElement.GetAttributeBool("campaignsaveonly", false))
+                {
+                    if ((GameMain.GameSession?.LastSaveVersion ?? GameMain.Version) >= upgradeVersion) { continue; }
+                }
+                else
+                {
+                    if (savedVersion >= upgradeVersion) { continue; }
+                }
                 foreach (XAttribute attribute in subElement.Attributes())
                 {
                     var attributeName = attribute.NameAsIdentifier();
-                    if (attributeName == "gameversion") { continue; }
+                    if (attributeName == "gameversion" || attributeName == "campaignsaveonly") { continue; }
 
                     if (attributeName == "refreshrect")
                     {

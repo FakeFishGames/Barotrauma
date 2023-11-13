@@ -21,8 +21,7 @@ namespace Steamworks
     /// </summary>
     public struct SteamServerInit
     {
-        public IPAddress IpAddress;
-        public ushort SteamPort;
+	    public IPAddress? IpAddress;
         public ushort GamePort;
         public ushort QueryPort;
         public InitServerMode Mode;
@@ -60,17 +59,7 @@ namespace Steamworks
             Mode = InitServerMode.Authentication;
 			VersionString = "1.0.0.0";
 			IpAddress = null;
-			SteamPort = 0;
 		}
-
-        /// <summary>
-        /// Set the Steam quert port 
-        /// </summary>
-        public SteamServerInit WithRandomSteamPort()
-        {
-            SteamPort = (ushort)new Random().Next( 10000, 60000 );
-            return this;
-        }
 
         /// <summary>
         /// If you pass MASTERSERVERUPDATERPORT_USEGAMESOCKETSHARE into usQueryPort, then it causes the game server API to use 

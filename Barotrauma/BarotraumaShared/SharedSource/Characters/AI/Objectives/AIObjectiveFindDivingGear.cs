@@ -1,5 +1,5 @@
-﻿using Barotrauma.Items.Components;
-using Barotrauma.Extensions;
+﻿using Barotrauma.Extensions;
+using Barotrauma.Items.Components;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -12,43 +12,35 @@ namespace Barotrauma
         public override bool ForceRun => true;
         public override bool KeepDivingGearOn => true;
         public override bool AbandonWhenCannotCompleteSubjectives => false;
+        public override bool AllowWhileHandcuffed => false;
 
         private readonly Identifier gearTag;
 
         private AIObjectiveGetItem getDivingGear;
         private AIObjectiveContainItem getOxygen;
         private Item targetItem;
+        private int? oxygenSourceSlotIndex;
 
         public const float MIN_OXYGEN = 10;
 
-        public static readonly Identifier HEAVY_DIVING_GEAR = "deepdiving".ToIdentifier();
-        public static readonly Identifier LIGHT_DIVING_GEAR = "lightdiving".ToIdentifier();
-        /// <summary>
-        /// Diving gear that's suitable for wearing indoors (-> the bots don't try to unequip it when they don't need diving gear)
-        /// </summary>
-        public static readonly Identifier DIVING_GEAR_WEARABLE_INDOORS = "divinggear_wearableindoors".ToIdentifier();
-        public static readonly Identifier OXYGEN_SOURCE = "oxygensource".ToIdentifier();
-
-        protected override bool CheckObjectiveSpecific() => targetItem != null && character.HasEquippedItem(targetItem, slotType: InvSlotType.OuterClothes | InvSlotType.Head);
+        protected override bool CheckObjectiveSpecific() => 
+            targetItem != null && character.HasEquippedItem(targetItem, slotType: InvSlotType.OuterClothes | InvSlotType.InnerClothes | InvSlotType.Head);
 
         public AIObjectiveFindDivingGear(Character character, bool needsDivingSuit, AIObjectiveManager objectiveManager, float priorityModifier = 1) : base(character, objectiveManager, priorityModifier)
         {
-            gearTag = needsDivingSuit ? HEAVY_DIVING_GEAR : LIGHT_DIVING_GEAR;
+            gearTag = needsDivingSuit ? Tags.HeavyDivingGear : Tags.LightDivingGear;
         }
 
         protected override void Act(float deltaTime)
         {
-            if (character.LockHands)
+            TrySetTargetItem(character.Inventory.FindItemByTag(gearTag, true));
+            if (targetItem == null && gearTag == Tags.LightDivingGear)
             {
-                Abandon = true;
-                return;
+                TrySetTargetItem(character.Inventory.FindItemByTag(Tags.HeavyDivingGear, true));
             }
-            targetItem = character.Inventory.FindItemByTag(gearTag, true);
-            if (targetItem == null && gearTag == LIGHT_DIVING_GEAR)
-            {
-                targetItem = character.Inventory.FindItemByTag(HEAVY_DIVING_GEAR, true);
-            }
-            if (targetItem == null || !character.HasEquippedItem(targetItem, slotType: InvSlotType.OuterClothes | InvSlotType.Head | InvSlotType.InnerClothes) && targetItem.ContainedItems.Any(i => i.HasTag(OXYGEN_SOURCE) && i.Condition > 0))
+            if (targetItem == null || 
+                !character.HasEquippedItem(targetItem, slotType: InvSlotType.OuterClothes | InvSlotType.InnerClothes | InvSlotType.Head) && 
+                targetItem.ContainedItems.Any(it => IsSuitableContainedOxygenSource(it)))
             {
                 TryAddSubObjective(ref getDivingGear, () =>
                 {
@@ -61,7 +53,7 @@ namespace Barotrauma
                         AllowStealing = HumanAIController.NeedsDivingGear(character.CurrentHull, out _),
                         AllowToFindDivingGear = false,
                         AllowDangerousPressure = true,
-                        EquipSlotType = InvSlotType.OuterClothes | InvSlotType.Head | InvSlotType.InnerClothes,
+                        EquipSlotType = InvSlotType.OuterClothes | InvSlotType.InnerClothes | InvSlotType.Head,
                         Wear = true
                     };
                 }, 
@@ -69,13 +61,13 @@ namespace Barotrauma
                 onCompleted: () =>
                 {
                     RemoveSubObjective(ref getDivingGear);
-                    if (gearTag == HEAVY_DIVING_GEAR && HumanAIController.HasItem(character, LIGHT_DIVING_GEAR, out IEnumerable<Item> masks, requireEquipped: true))
+                    if (gearTag == Tags.HeavyDivingGear && HumanAIController.HasItem(character, Tags.LightDivingGear, out IEnumerable<Item> masks, requireEquipped: true))
                     {
                         foreach (Item mask in masks)
                         {
                             if (mask != targetItem)
                             {
-                                character.Inventory.TryPutItem(mask, character, CharacterInventory.anySlot);
+                                character.Inventory.TryPutItem(mask, character, CharacterInventory.AnySlot);
                             }
                         }
                     }
@@ -84,16 +76,16 @@ namespace Barotrauma
             else
             {
                 float min = GetMinOxygen(character);
-                if (targetItem.OwnInventory != null && targetItem.OwnInventory.AllItems.None(it => it != null && it.HasTag(OXYGEN_SOURCE) && it.Condition > min))
+                if (targetItem.OwnInventory != null && targetItem.OwnInventory.AllItems.None(it => IsSuitableContainedOxygenSource(it)))
                 {
                     TryAddSubObjective(ref getOxygen, () =>
                     {
                         if (character.IsOnPlayerTeam)
                         {
-                            if (HumanAIController.HasItem(character, OXYGEN_SOURCE, out _, conditionPercentage: min))
+                            if (HumanAIController.HasItem(character, Tags.OxygenSource, out _, conditionPercentage: min))
                             {
                                 character.Speak(TextManager.Get("dialogswappingoxygentank").Value, null, 0, "swappingoxygentank".ToIdentifier(), 30.0f);
-                                if (character.Inventory.FindAllItems(i => i.HasTag(OXYGEN_SOURCE) && i.Condition > min).Count == 1)
+                                if (character.Inventory.FindAllItems(i => i.HasTag(Tags.OxygenSource) && i.Condition > min, recursive: true).Count == 1)
                                 {
                                     character.Speak(TextManager.Get("dialoglastoxygentank").Value, null, 0.0f, "dialoglastoxygentank".ToIdentifier(), 30.0f);
                                 }
@@ -103,13 +95,22 @@ namespace Barotrauma
                                 character.Speak(TextManager.Get("DialogGetOxygenTank").Value, null, 0, "getoxygentank".ToIdentifier(), 30.0f);
                             }
                         }
-                        return new AIObjectiveContainItem(character, OXYGEN_SOURCE, targetItem.GetComponent<ItemContainer>(), objectiveManager, spawnItemIfNotFound: character.TeamID == CharacterTeamType.FriendlyNPC)
+                        var container = targetItem.GetComponent<ItemContainer>();                        
+                        var objective = new AIObjectiveContainItem(character, Tags.OxygenSource, container, objectiveManager, spawnItemIfNotFound: character.TeamID == CharacterTeamType.FriendlyNPC)
                         {
                             AllowToFindDivingGear = false,
                             AllowDangerousPressure = true,
                             ConditionLevel = MIN_OXYGEN,
-                            RemoveExistingWhenNecessary = true
+                            RemoveExistingWhenNecessary = true,
+                            TargetSlot = oxygenSourceSlotIndex
                         };
+                        if (container.HasSubContainers)
+                        {
+                            objective.TargetSlot = container.FindSuitableSubContainerIndex(Tags.OxygenSource);
+                        }
+                        // Only remove the oxygen source being replaced
+                        objective.RemoveExistingPredicate = i => objective.IsInTargetSlot(i);
+                        return objective;
                     },
                     onAbandon: () =>
                     {
@@ -118,7 +119,7 @@ namespace Barotrauma
                         // Try to seek any oxygen sources, even if they have minimal amount of oxygen.
                         TryAddSubObjective(ref getOxygen, () =>
                         {
-                            return new AIObjectiveContainItem(character, OXYGEN_SOURCE, targetItem.GetComponent<ItemContainer>(), objectiveManager, spawnItemIfNotFound: character.TeamID == CharacterTeamType.FriendlyNPC)
+                            return new AIObjectiveContainItem(character, Tags.OxygenSource, targetItem.GetComponent<ItemContainer>(), objectiveManager, spawnItemIfNotFound: character.TeamID == CharacterTeamType.FriendlyNPC)
                             {
                                 AllowToFindDivingGear = false,
                                 AllowDangerousPressure = true,
@@ -128,7 +129,7 @@ namespace Barotrauma
                         onAbandon: () =>
                         {
                             Abandon = true;
-                            if (remainingTanks > 0 && !HumanAIController.HasItem(character, OXYGEN_SOURCE, out _, conditionPercentage: 0.01f))
+                            if (remainingTanks > 0 && !HumanAIController.HasItem(character, Tags.OxygenSource, out _, conditionPercentage: 0.01f))
                             {
                                 character.Speak(TextManager.Get("dialogcantfindtoxygen").Value, null, 0, "cantfindoxygen".ToIdentifier(), 30.0f);
                             }
@@ -144,7 +145,7 @@ namespace Barotrauma
                     int ReportOxygenTankCount()
                     {
                         if (character.Submarine != Submarine.MainSub) { return 1; }
-                        int remainingOxygenTanks = Submarine.MainSub.GetItems(false).Count(i => i.HasTag(OXYGEN_SOURCE) && i.Condition > 1);
+                        int remainingOxygenTanks = Submarine.MainSub.GetItems(false).Count(i => i.HasTag(Tags.OxygenSource) && i.Condition > 1);
                         if (remainingOxygenTanks == 0)
                         {
                             character.Speak(TextManager.Get("DialogOutOfOxygenTanks").Value, null, 0.0f, "outofoxygentanks".ToIdentifier(), 30.0f);
@@ -159,12 +160,36 @@ namespace Barotrauma
             }
         }
 
+        private bool IsSuitableContainedOxygenSource(Item item)
+        {
+            return 
+                item != null &&
+                item.HasTag(Tags.OxygenSource) && 
+                item.Condition > 0 && 
+                (oxygenSourceSlotIndex == null || item.ParentInventory.IsInSlot(item, oxygenSourceSlotIndex.Value));
+        }
+
+        private void TrySetTargetItem(Item item)
+        {
+            if (targetItem == item) { return; }
+            targetItem = item;
+            if (targetItem != null)
+            {
+                oxygenSourceSlotIndex = targetItem.GetComponent<ItemContainer>()?.FindSuitableSubContainerIndex(Tags.OxygenSource);
+            }
+            else
+            {
+                oxygenSourceSlotIndex = null;
+            }
+        }
+
         public override void Reset()
         {
             base.Reset();
             getDivingGear = null;
             getOxygen = null;
             targetItem = null;
+            oxygenSourceSlotIndex = null;
         }
 
         public static float GetMinOxygen(Character character)
@@ -174,7 +199,7 @@ namespace Barotrauma
             // When we are venturing outside of our sub, let's just suppose that we have enough oxygen with us and optimize it so that we don't keep switching off half used tanks.
             float min = 0.01f;
             float minOxygen = character.IsInFriendlySub ? MIN_OXYGEN : min;
-            if (minOxygen > min && character.Inventory.AllItems.Any(i => i.HasTag("oxygensource") && i.ConditionPercentage >= minOxygen))
+            if (minOxygen > min && character.Inventory.AllItems.Any(i => i.HasTag(Tags.OxygenSource) && i.ConditionPercentage >= minOxygen))
             {
                 // There's a valid oxygen tank in the inventory -> no need to swap the tank too early.
                 minOxygen = min;

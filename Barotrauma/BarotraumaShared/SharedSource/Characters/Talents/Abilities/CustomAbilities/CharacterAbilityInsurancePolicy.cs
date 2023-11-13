@@ -1,10 +1,4 @@
-﻿using Barotrauma.Networking;
-using Microsoft.Xna.Framework;
-using System.Collections.Generic;
-using System.Linq;
-using System.Xml.Linq;
-
-namespace Barotrauma.Abilities
+﻿namespace Barotrauma.Abilities
 {
     class CharacterAbilityInsurancePolicy : CharacterAbility
     {
@@ -19,10 +13,10 @@ namespace Barotrauma.Abilities
 
         protected override void ApplyEffect(AbilityObject abilityObject)
         {
-            if (Character?.Info is CharacterInfo info)
+            if (Character?.Info is CharacterInfo info && GameMain.GameSession?.GameMode is CampaignMode campaign)
             {
                 int totalAmount = moneyPerMission * info.MissionsCompletedSinceDeath;
-                Character.GiveMoney(totalAmount);
+                campaign.Bank.Give(totalAmount);
                 GameAnalyticsManager.AddMoneyGainedEvent(totalAmount, GameAnalyticsManager.MoneySource.Ability, CharacterTalent.Prefab.Identifier.Value);
             }
         }

@@ -6,6 +6,9 @@ using System.Threading.Tasks;
 
 namespace Steamworks.Data
 {
+	/// <summary>
+	/// Represents a Steam Achievement.
+	/// </summary>
 	public struct Achievement
 	{
 		internal string Value;
@@ -18,27 +21,36 @@ namespace Steamworks.Data
 		public override string ToString() => Value;
 
 		/// <summary>
-		/// True if unlocked
+		/// Gets whether or not the achievement has been unlocked.
 		/// </summary>
 		public bool State
 		{
 			get
 			{
 				var state = false;
-				SteamUserStats.Internal.GetAchievement( Value, ref state );
+				SteamUserStats.Internal?.GetAchievement( Value, ref state );
 				return state;
 			}
 		}
 
+		/// <summary>
+		/// Gets the identifier of the achievement. This is the "API Name" on Steamworks.
+		/// </summary>
 		public string Identifier => Value;
 
-		public string Name => SteamUserStats.Internal.GetAchievementDisplayAttribute( Value, "name" );
+		/// <summary>
+		/// Gets the display name of the achievement.
+		/// </summary>
+		public string? Name => SteamUserStats.Internal?.GetAchievementDisplayAttribute( Value, "name" );
 
-		public string Description => SteamUserStats.Internal.GetAchievementDisplayAttribute( Value, "desc" );
+		/// <summary>
+		/// Gets the description of the achievement.
+		/// </summary>
+		public string? Description => SteamUserStats.Internal?.GetAchievementDisplayAttribute( Value, "desc" );
 
 
 		/// <summary>
-		/// Should hold the unlock time if State is true
+		/// If <see cref="State"/> is <see langword="true"/>, this value represents the time that the achievement was unlocked.
 		/// </summary>
 		public DateTime? UnlockTime
 		{
@@ -47,7 +59,7 @@ namespace Steamworks.Data
 				var state = false;
 				uint time = 0;
 
-				if ( !SteamUserStats.Internal.GetAchievementAndUnlockTime( Value, ref state, ref time ) || !state )
+				if ( SteamUserStats.Internal is null || !SteamUserStats.Internal.GetAchievementAndUnlockTime( Value, ref state, ref time ) || !state )
 					return null;
 
 				return Epoch.ToDateTime( time );
@@ -56,19 +68,22 @@ namespace Steamworks.Data
 
 		/// <summary>
 		/// Gets the icon of the achievement. This can return a null image even though the image exists if the image
-		/// hasn't been downloaded by Steam yet. You can use GetIconAsync if you want to wait for the image to be downloaded.
+		/// hasn't been downloaded by Steam yet. You should use <see cref="GetIconAsync(int)"/> if you want to wait for the image to be downloaded.
 		/// </summary>
 		public Image? GetIcon()
 		{
+			if (SteamUserStats.Internal is null) { return null; }
 			return SteamUtils.GetImage( SteamUserStats.Internal.GetAchievementIcon( Value ) );
 		}
 
 
 		/// <summary>
-		/// Gets the icon of the achievement, waits for it to load if we have to
+		/// Gets the icon of the achievement, yielding until the icon is received or the <paramref name="timeout"/> is reached.
 		/// </summary>
+		/// <param name="timeout">The timeout in milliseconds before the request will be canceled. Defaults to <c>5000</c>.</param>
 		public async Task<Image?> GetIconAsync( int timeout = 5000 )
 		{
+			if (SteamUserStats.Internal is null) { return null; }
 			var i = SteamUserStats.Internal.GetAchievementIcon( Value );
 			if ( i != 0 ) return SteamUtils.GetImage( i );
 
@@ -107,7 +122,7 @@ namespace Steamworks.Data
 		}
 
 		/// <summary>
-		/// Returns the fraction (0-1) of users who have unlocked the specified achievement, or -1 if no data available.
+		/// Gets a decimal (0-1) representing the global amount of users who have unlocked the specified achievement, or -1 if no data available.
 		/// </summary>
 		public float GlobalUnlocked
 		{
@@ -115,7 +130,7 @@ namespace Steamworks.Data
 			{
 				float pct = 0;
 
-				if ( !SteamUserStats.Internal.GetAchievementAchievedPercent( Value, ref pct ) )
+				if ( SteamUserStats.Internal is null || !SteamUserStats.Internal.GetAchievementAchievedPercent( Value, ref pct ) )
 					return -1.0f;
 
 				return pct / 100.0f;
@@ -123,10 +138,12 @@ namespace Steamworks.Data
 		}
 
 		/// <summary>
-		/// Make this achievement earned
+		/// Unlock this achievement.
 		/// </summary>
 		public bool Trigger( bool apply = true )
 		{
+			if (SteamUserStats.Internal is null) { return false; }
+
 			var r = SteamUserStats.Internal.SetAchievement( Value );
 
 			if ( apply && r )
@@ -138,10 +155,11 @@ namespace Steamworks.Data
 		}
 
 		/// <summary>
-		/// Reset this achievement to not achieved
+		/// Reset this achievement to be locked.
 		/// </summary>
 		public bool Clear()
 		{
+			if (SteamUserStats.Internal is null) { return false; }
 			return SteamUserStats.Internal.ClearAchievement( Value );
 		}
 	}

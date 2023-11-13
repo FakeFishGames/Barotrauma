@@ -166,10 +166,10 @@ namespace Barotrauma.Items.Components
                 List<VineTile> tiles = new List<VineTile>();
                 for (int i = 0; i < vineCount; i++)
                 {
-                    VineTileType vineType = (VineTileType) msg.ReadRangedInteger(0b0000, 0b1111);
+                    VineTileType vineType = (VineTileType)msg.ReadRangedInteger(0b0000, 0b1111);
                     int flowerConfig = msg.ReadRangedInteger(0, 0xFFF);
                     int leafConfig = msg.ReadRangedInteger(0, 0xFFF);
-                    sbyte posX = (sbyte) msg.ReadByte(), posY = (sbyte) msg.ReadByte();
+                    sbyte posX = (sbyte)msg.ReadByte(), posY = (sbyte)msg.ReadByte();
                     Vector2 pos = new Vector2(posX * VineTile.Size, posY * VineTile.Size);
 
                     tiles.Add(new VineTile(this, pos, vineType, FoliageConfig.Deserialize(flowerConfig), FoliageConfig.Deserialize(leafConfig)));

@@ -8,6 +8,8 @@ using System.Globalization;
 using System.Linq;
 using System.Xml.Linq;
 using Barotrauma.MapCreatures.Behavior;
+using Barotrauma.Items.Components;
+using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
@@ -139,6 +141,16 @@ namespace Barotrauma
         {
             get { return properties; }
         }
+
+        /// <summary>
+        /// How fast the pressure in the hull builds up when there's a gap leading outside
+        /// </summary>
+        public const float PressureBuildUpSpeed = 15.0f;
+
+        /// <summary>
+        /// How fast the pressure in the hull goes back to normal when it's no longer full of water
+        /// </summary>
+        public const float PressureDropSpeed = 10.0f;
 
         private float lethalPressure;
 
@@ -310,6 +322,8 @@ namespace Barotrauma
             }
         }
 
+        public bool IsAirlock { get; private set; }
+
         private bool ForceAsWetRoom => 
             roomName != null && (
             roomName.Contains("ballast", StringComparison.OrdinalIgnoreCase) || 
@@ -403,6 +417,26 @@ namespace Barotrauma
 
         private bool networkUpdatePending;
         private float networkUpdateTimer;
+
+        /// <summary>
+        /// Average color of the background sections
+        /// </summary>
+        public Color AveragePaintedColor { get; private set; }
+
+        /// <summary>
+        /// Returns true if the red component of the background color is twice as bright as the blue and green. Can be used by StatusEffects.
+        /// </summary>
+        public bool IsRed => ColorExtensions.IsRedDominant(AveragePaintedColor, minimumAlpha: 100);
+
+        /// <summary>
+        /// Returns true if the green component of the background color is twice as bright as the red and blue. Can be used by StatusEffects.
+        /// </summary>
+        public bool IsGreen => ColorExtensions.IsGreenDominant(AveragePaintedColor, minimumAlpha: 100);
+
+        /// <summary>
+        /// Returns true if the blue component of the background color is twice as bright as the red and green. Can be used by StatusEffects.
+        /// </summary>
+        public bool IsBlue => ColorExtensions.IsBlueDominant(AveragePaintedColor, minimumAlpha: 100);
 
         public List<FireSource> FireSources { get; private set; }
 
@@ -556,7 +590,9 @@ namespace Barotrauma
                 }
             }
             Pressure = rect.Y - rect.Height + waterVolume / rect.Width;
-            
+                
+            DetermineIsAirlock();
+
             BallastFlora?.OnMapLoaded();
 #if CLIENT
             lastAmbientLightEditTime = 0.0;
@@ -590,7 +626,7 @@ namespace Barotrauma
             return index;
         }
 
-        public override void Move(Vector2 amount, bool ignoreContacts = false)
+        public override void Move(Vector2 amount, bool ignoreContacts = true)
         {
             if (!MathUtils.IsValid(amount))
             {
@@ -759,7 +795,7 @@ namespace Barotrauma
             for (int i = start; i < end; i++)
             {
                 msg.WriteRangedSingle(BackgroundSections[i].ColorStrength, 0.0f, 1.0f, 8);
-                msg.Write(BackgroundSections[i].Color.PackedValue);
+                msg.WriteUInt32(BackgroundSections[i].Color.PackedValue);
             }
         }
         #endregion
@@ -851,7 +887,21 @@ namespace Barotrauma
             {
                 decal.Update(deltaTime);
             }
-            decals.RemoveAll(d => d.FadeTimer >= d.LifeTime || d.BaseAlpha <= 0.001f);
+            //clients don't remove decals unless the server says so
+            if (GameMain.NetworkMember is not { IsClient: true })
+            {
+                for (int i = decals.Count - 1; i >= 0; i--)
+                {
+                    var decal = decals[i];
+                    if (decal.FadeTimer >= decal.LifeTime || decal.BaseAlpha <= 0.001f)
+                    {
+                        decals.RemoveAt(i);
+    #if SERVER
+                        decalUpdatePending = true;
+    #endif
+                    }
+                }
+            }
 
             if (aiTarget != null)
             {
@@ -966,7 +1016,11 @@ namespace Barotrauma
 
             if (waterVolume < Volume)
             {
-                LethalPressure -= 10.0f * deltaTime;
+                //pressure drop speed is inversely proportionate to water percentage
+                //= pressure drops very fast if the hull is nowhere near full
+                float waterVolumeFactor = Math.Max((100.0f - WaterPercentage) / 10.0f, 1.0f);
+                LethalPressure -=
+                    PressureDropSpeed * waterVolumeFactor * deltaTime;
                 if (WaterVolume <= 0.0f)
                 {
 #if CLIENT
@@ -994,7 +1048,11 @@ namespace Barotrauma
             foreach (var gap in ConnectedGaps.Where(gap => gap.Open > 0))
             {
                 var distance = MathHelper.Max(Vector2.DistanceSquared(item.Position, gap.Position) / 1000, 1f);
-                item.body.ApplyForce((gap.LerpedFlowForce / distance) * deltaTime);
+                Vector2 force = (gap.LerpedFlowForce / distance) * deltaTime;
+                if (force.LengthSquared() > 0.01f)
+                {
+                    item.body.ApplyForce(force);
+                }
             }
         }
 
@@ -1079,7 +1137,7 @@ namespace Barotrauma
                 if (g.ConnectedDoor != null && !g.ConnectedDoor.IsBroken)
                 {
                     //gap blocked if the door is not open or the predicted state is not open
-                    if ((!g.ConnectedDoor.IsOpen && !g.ConnectedDoor.IsBroken) || (g.ConnectedDoor.PredictedState.HasValue && !g.ConnectedDoor.PredictedState.Value))
+                    if ((g.ConnectedDoor.IsClosed && !g.ConnectedDoor.IsBroken) || (g.ConnectedDoor.PredictedState.HasValue && !g.ConnectedDoor.PredictedState.Value))
                     {
                         if (g.ConnectedDoor.OpenState < 0.1f)
                         {
@@ -1246,7 +1304,7 @@ namespace Barotrauma
                 {
                     if (g.ConnectedDoor != null && !HullList.Any(h => h.ConnectedGaps.Contains(g) && h != this)) return true;
                 }
-                List<MapEntity> structures = mapEntityList.FindAll(me => me is Structure && me.Rect.Intersects(Rect));
+                List<MapEntity> structures = MapEntityList.FindAll(me => me is Structure && me.Rect.Intersects(Rect));
                 return structures.Any(st => !(st as Structure).CastShadow);
             }
             return false;
@@ -1262,7 +1320,7 @@ namespace Barotrauma
                 if (item.GetComponent<Items.Components.Engine>() != null) roomItems.Add("engine");
                 if (item.GetComponent<Items.Components.Steering>() != null) roomItems.Add("steering");
                 if (item.GetComponent<Items.Components.Sonar>() != null) roomItems.Add("sonar");
-                if (item.HasTag("ballast")) roomItems.Add("ballast");
+                if (item.HasTag(Tags.Ballast)) roomItems.Add("ballast");
             }
 
             if (roomItems.Contains("reactor"))
@@ -1279,7 +1337,7 @@ namespace Barotrauma
             if (moduleFlags != null && moduleFlags.Any() && 
                 (Submarine.Info.Type == SubmarineType.OutpostModule || Submarine.Info.Type == SubmarineType.Outpost))
             {
-                if (moduleFlags.Contains("airlock".ToIdentifier()) &&
+                if (moduleFlags.Contains(Tags.Airlock) &&
                     ConnectedGaps.Any(g => !g.IsRoomToRoom && g.ConnectedDoor != null))
                 {
                     return "RoomName.Airlock";
@@ -1316,23 +1374,26 @@ namespace Barotrauma
         /// <summary>
         /// Is this hull or any of the items inside it tagged as "airlock"?
         /// </summary>
-        public bool IsTaggedAirlock()
+        private void DetermineIsAirlock()
         {
             if (RoomName != null && RoomName.Contains("airlock", StringComparison.OrdinalIgnoreCase))
             {
-                return true;
+                IsAirlock = true;
+                return;
             }
             else
             {
+                var airlockTag = "airlock".ToIdentifier();
                 foreach (Item item in Item.ItemList)
                 {
-                    if (item.CurrentHull != this && item.HasTag("airlock"))
+                    if (item.CurrentHull != this && item.HasTag(airlockTag))
                     {
-                        return true;
+                        IsAirlock = true;
+                        return;
                     }
                 }
             }
-            return false;
+            IsAirlock = false;
         }
 
         /// <summary>
@@ -1471,6 +1532,7 @@ namespace Barotrauma
 #endif
                     sectionUpdated = true;
                 }
+                RefreshAveragePaintedColor();
             }
 
             if (sectionUpdated && GameMain.NetworkMember != null && requiresUpdate)
@@ -1481,6 +1543,17 @@ namespace Barotrauma
                 serverUpdateDelay = 0.5f;
 #endif
             }
+        }
+
+        private void RefreshAveragePaintedColor()
+        {
+            Vector4 avgColor = Vector4.Zero;
+            foreach (var anySection in BackgroundSections)
+            {
+                avgColor += anySection.Color.ToVector4();
+            }
+            avgColor /= BackgroundSections.Count;
+            AveragePaintedColor = new Color(avgColor);
         }
 
         public void SetSectionColorOrStrength(BackgroundSection section, Color? color, float? strength)
@@ -1505,9 +1578,8 @@ namespace Barotrauma
         public void CleanSection(BackgroundSection section, float cleanVal, bool updateRequired)
         {
             bool decalsCleaned = false;
-            for (int i = 0; i < decals.Count; i++)
+            foreach (Decal decal in decals)
             {
-                Decal decal = decals[i];
                 if (decal.AffectsSection(section))
                 {
                     decal.Clean(cleanVal);
@@ -1545,7 +1617,7 @@ namespace Barotrauma
 
             var hull = new Hull(rect, submarine, idRemap.GetOffsetId(element))
             {
-                WaterVolume = element.GetAttributeFloat("pressure", 0.0f)
+                WaterVolume = element.GetAttributeFloat("water", 0.0f)
             };
             hull.linkedToID = new List<ushort>();
 
@@ -1602,6 +1674,7 @@ namespace Barotrauma
                     }
                 }
             }
+            hull.RefreshAveragePaintedColor();
 
             SerializableProperty.DeserializeProperties(hull, element);
             if (element.GetAttribute("oxygen") == null) { hull.Oxygen = hull.Volume; }
@@ -1668,5 +1741,9 @@ namespace Barotrauma
             return element;
         }
 
+        public override string ToString()
+        {
+            return $"{base.ToString()} ({DisplayName ?? "unnamed"}, {(Submarine?.Info?.Name ?? "no sub")})";
+        }
     }
 }

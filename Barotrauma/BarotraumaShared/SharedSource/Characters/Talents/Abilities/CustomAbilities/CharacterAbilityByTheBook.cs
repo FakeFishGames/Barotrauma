@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using System.Xml.Linq;
 
 namespace Barotrauma.Abilities
 {
@@ -19,7 +18,7 @@ namespace Barotrauma.Abilities
 
         protected override void ApplyEffect()
         {
-            IEnumerable<Character> enemyCharacters = Character.CharacterList.Where(c => c.TeamID == CharacterTeamType.None);
+            IEnumerable<Character> enemyCharacters = Character.CharacterList.Where(c => !Character.IsFriendly(c));
 
             int timesGiven = 0;
             foreach (Character enemyCharacter in enemyCharacters)
@@ -28,7 +27,6 @@ namespace Barotrauma.Abilities
                 if (enemyCharacter.Submarine == null || enemyCharacter.Submarine != Submarine.MainSub) { continue; }
                 if (enemyCharacter.IsDead) { continue; }
                 if (!enemyCharacter.LockHands) { continue; }
-                if (timesGiven > max) { continue; }
                 Character.GiveMoney(moneyAmount);
                 GameAnalyticsManager.AddMoneyGainedEvent(moneyAmount, GameAnalyticsManager.MoneySource.Ability, CharacterTalent.Prefab.Identifier.Value);
                 foreach (Character character in Character.GetFriendlyCrew(Character))
@@ -36,6 +34,7 @@ namespace Barotrauma.Abilities
                     character.Info?.GiveExperience(experienceAmount);
                 }
                 timesGiven++;
+                if (max > 0 && timesGiven >= max) { break; }
             }
 
         }

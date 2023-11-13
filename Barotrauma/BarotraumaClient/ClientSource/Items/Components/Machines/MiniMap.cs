@@ -125,18 +125,15 @@ namespace Barotrauma.Items.Components
     {
         public static MiniMapSettings Default = new MiniMapSettings
         (
-            ignoreOutposts: false,
             createHullElements: true,
             elementColor: MiniMap.MiniMapBaseColor
         );
 
-        public readonly bool IgnoreOutposts;
         public readonly bool CreateHullElements;
         public readonly Color ElementColor;
 
-        public MiniMapSettings(bool ignoreOutposts = false, bool createHullElements = false, Color? elementColor = null)
+        public MiniMapSettings(bool createHullElements = false, Color? elementColor = null)
         {
-            IgnoreOutposts = ignoreOutposts;
             CreateHullElements = createHullElements;
             ElementColor = elementColor ?? MiniMap.MiniMapBaseColor;
         }
@@ -144,6 +141,9 @@ namespace Barotrauma.Items.Components
 
     partial class MiniMap : Powered
     {
+        private Dictionary<Hull, HullData> hullDatas;
+        private DateTime resetDataTime;
+
         private GUIFrame submarineContainer;
 
         private GUIFrame? hullInfoFrame;
@@ -226,6 +226,8 @@ namespace Barotrauma.Items.Components
 
         partial void InitProjSpecific()
         {
+            hullDatas = new Dictionary<Hull, HullData>();
+
             SetDefaultMode();
 
             noPowerTip = TextManager.Get("SteeringNoPowerTip");
@@ -246,6 +248,7 @@ namespace Barotrauma.Items.Components
         protected override void CreateGUI()
         {
             GuiFrame.ClearChildren();
+            TryCreateDragHandle();
 
             GuiFrame.RectTransform.RelativeOffset = new Vector2(0.05f, 0.0f);
             GuiFrame.CanBeFocused = true;
@@ -292,7 +295,7 @@ namespace Barotrauma.Items.Components
                 }
             }
 
-            OrderPrefab[] reports = OrderPrefab.Prefabs.Where(o => o.IsReport && o.SymbolSprite != null && !o.Hidden).ToArray();
+            OrderPrefab[] reports = OrderPrefab.Prefabs.Where(o => o.IsVisibleAsReportButton).OrderBy(o => o.Identifier).ToArray();
 
             GUIFrame bottomFrame = new GUIFrame(new RectTransform(new Vector2(0.5f, 0.15f), paddedContainer.RectTransform, Anchor.BottomCenter) { MaxSize = new Point(int.MaxValue, GUI.IntScale(40)) }, style: null)
             {
@@ -347,10 +350,16 @@ namespace Barotrauma.Items.Components
                 }
             };
 
+            List<ItemPrefab> shownItemPrefabs = new List<ItemPrefab>();
             foreach (ItemPrefab prefab in ItemPrefab.Prefabs.OrderBy(prefab => prefab.Name))
             {
                 if (prefab.HideInMenus) { continue; }
+                if (shownItemPrefabs.Any(ip => DisplayAsSameItem(ip, prefab)))
+                {
+                    continue;
+                }
                 CreateItemFrame(prefab, listBox.Content.RectTransform);
+                shownItemPrefabs.Add(prefab);
             }
 
             searchBar.OnDeselected += (sender, key) =>
@@ -395,9 +404,31 @@ namespace Barotrauma.Items.Components
                 new Point(int.MaxValue, paddedContainer.Rect.Height - bottomFrame.Rect.Height - buttonLayout.Rect.Height);
         }
 
+        private static Sprite GetPreviewSprite(ItemPrefab prefab)
+        {
+            return prefab.InventoryIcon ?? prefab.Sprite;
+        }
+
+        /// <summary>
+        /// If the items have an identical name and icon (e.g. a variant with an alternative fabrication/deconstruction recipe),
+        /// they're displayed as if they were the same item, not as two separate entries.
+        /// </summary>
+        private static bool DisplayAsSameItem(ItemPrefab prefab1, ItemPrefab prefab2)
+        {
+            if (prefab1 == prefab2) { return true; }
+            if (prefab1.Name == prefab2.Name)
+            {
+                var sprite1 = GetPreviewSprite(prefab1);
+                var sprite2 = GetPreviewSprite(prefab2);
+                return sprite1?.FullPath == sprite2?.FullPath && sprite1?.SourceRect == sprite2?.SourceRect;
+            }
+            return false;
+        }
+
         private bool VisibleOnItemFinder(Item it)
         {
-            if (!item.Submarine.IsEntityFoundOnThisSub(it, includingConnectedSubs: true)) { return false; }
+            if (it?.Submarine == null) { return false; }
+            if (item.Submarine == null || !item.Submarine.IsEntityFoundOnThisSub(it, includingConnectedSubs: true)) { return false; }
             if (it.NonInteractable || it.HiddenInGame) { return false; }
             if (it.GetComponent<Pickable>() == null) { return false; }
 
@@ -407,7 +438,9 @@ namespace Barotrauma.Items.Components
             var wire = it.GetComponent<Wire>();
             if (wire != null && wire.Connections.Any(c => c != null)) { return false; }
 
-            if (it.HasTag("traitormissionitem")) { return false; }
+            if (it.Container?.GetComponent<ItemContainer>() is { DrawInventory: false } or { AllowAccess: false }) { return false; }
+
+            if (it.HasTag(Tags.TraitorMissionItem)) { return false; }
 
             return true;
         }
@@ -428,7 +461,11 @@ namespace Barotrauma.Items.Components
             prevResolution = new Point(GameMain.GraphicsWidth, GameMain.GraphicsHeight);
             submarineContainer.ClearChildren();
 
-            if (item.Submarine is null) { return; }
+            if (item.Submarine is null) 
+            {
+                displayedSubs.Clear();
+                return; 
+            }
 
             scissorComponent = new GUIScissorComponent(new RectTransform(Vector2.One, submarineContainer.RectTransform, Anchor.Center));
             miniMapContainer = new GUIFrame(new RectTransform(Vector2.One, scissorComponent.Content.RectTransform, Anchor.Center), style: null) { CanBeFocused = false };
@@ -436,15 +473,15 @@ namespace Barotrauma.Items.Components
             ImmutableHashSet<Item> hullPointsOfInterest = Item.ItemList.Where(it => item.Submarine.IsEntityFoundOnThisSub(it, includingConnectedSubs: true) && !it.HiddenInGame && !it.NonInteractable && it.Prefab.ShowInStatusMonitor && (it.GetComponent<Door>() != null || it.GetComponent<Turret>() != null)).ToImmutableHashSet();
             miniMapFrame = CreateMiniMap(item.Submarine, submarineContainer, MiniMapSettings.Default, hullPointsOfInterest, out hullStatusComponents);
 
-            IEnumerable<Item> electrialPointsOfInterest = Item.ItemList.Where(it => item.Submarine.IsEntityFoundOnThisSub(it, includingConnectedSubs: true) && !it.HiddenInGame && !it.NonInteractable && it.GetComponent<Repairable>() != null);
-            electricalFrame = CreateMiniMap(item.Submarine, miniMapContainer, new MiniMapSettings(createHullElements: false), electrialPointsOfInterest, out electricalMapComponents);
+            IEnumerable<Item> electricalPointsOfInterest = Item.ItemList.Where(it => item.Submarine.IsEntityFoundOnThisSub(it, includingConnectedSubs: true) && !it.HiddenInGame && !it.NonInteractable && it.GetComponent<Repairable>() != null);
+            electricalFrame = CreateMiniMap(item.Submarine, miniMapContainer, new MiniMapSettings(createHullElements: false), electricalPointsOfInterest, out electricalMapComponents);
 
             Dictionary<MiniMapGUIComponent, GUIComponent> electricChildren = new Dictionary<MiniMapGUIComponent, GUIComponent>();
 
             foreach (var (entity, component) in electricalMapComponents)
             {
                 GUIComponent parent = component.RectComponent;
-                if (!(entity is Item it )) { continue; }
+                if (entity is not Item it ) { continue; }
                 Sprite? sprite = it.Prefab.UpgradePreviewSprite;
                 if (sprite is null) { continue; }
 
@@ -468,7 +505,7 @@ namespace Barotrauma.Items.Components
             {
                 if (!hullPointsOfInterest.Contains(entity)) { continue; }
 
-                if (!(entity is Item it)) { continue; }
+                if (entity is not Item it) { continue; }
                 const int borderMaxSize = 2;
 
                 if (it.GetComponent<Door>() is { })
@@ -509,9 +546,12 @@ namespace Barotrauma.Items.Components
                             Vector2 origin = weaponSprite.Origin;
                             float scale = parentWidth / Math.Max(weaponSprite.size.X, weaponSprite.size.Y);
                             Color color = !hasPower ? NoPowerColor : turret.ActiveUser is null ? Color.DimGray : GUIStyle.Green;
-                            weaponSprite.Draw(batch, center, color, origin, rotation, scale, it.SpriteEffects);
+                            weaponSprite.Draw(batch, center, color, origin, rotation, scale, SpriteEffects.None);
                         }
-                    });
+                    })
+                    {
+                        CanBeFocused = false
+                    };
 
                     weaponChilds.Add(component, frame);
                 }
@@ -524,28 +564,56 @@ namespace Barotrauma.Items.Components
 
             displayedSubs.Clear();
             displayedSubs.Add(item.Submarine);
-            displayedSubs.AddRange(item.Submarine.DockedTo);
+            displayedSubs.AddRange(item.Submarine.DockedTo.Where(s => s.TeamID == item.Submarine.TeamID));
 
-            subEntities = MapEntity.mapEntityList.Where(me => (item.Submarine is { } sub && sub.IsEntityFoundOnThisSub(me, includingConnectedSubs: true, allowDifferentType: false)) && !me.HiddenInGame).OrderByDescending(w => w.SpriteDepth).ToList();
+            subEntities = MapEntity.MapEntityList.Where(me => (item.Submarine is { } sub && sub.IsEntityFoundOnThisSub(me, includingConnectedSubs: true, allowDifferentType: false)) && !me.HiddenInGame).OrderByDescending(w => w.SpriteDepth).ToList();
 
             BakeSubmarine(item.Submarine, parentRect);
             elementSize = GuiFrame.Rect.Size;
         }
 
-        public override void UpdateHUD(Character character, float deltaTime, Camera cam)
+        public override void UpdateHUDComponentSpecific(Character character, float deltaTime, Camera cam)
         {
             //recreate HUD if the subs we should display have changed
             if (item.Submarine == null && displayedSubs.Count > 0 ||                                         // item not inside a sub anymore, but display is still showing subs
                 item.Submarine is { } itemSub &&
                 (
                     !displayedSubs.Contains(itemSub) ||                                                                     // current sub not displayed
-                    itemSub.DockedTo.Any(s => !displayedSubs.Contains(s) && itemSub.ConnectedDockingPorts[s].IsLocked) ||   // some of the docked subs not displayed
+                    itemSub.DockedTo.Where(s => s.TeamID == item.Submarine.TeamID).Any(s => !displayedSubs.Contains(s) && itemSub.ConnectedDockingPorts[s].IsLocked) ||   // some of the docked subs not displayed
                     displayedSubs.Any(s => s != itemSub && !itemSub.DockedTo.Contains(s))                                   // displaying a sub that shouldn't be displayed
                 ) ||
                 prevResolution.X != GameMain.GraphicsWidth || prevResolution.Y != GameMain.GraphicsHeight || // resolution changed
                 !submarineContainer.Children.Any())                                                          // We lack a GUI
             {
                 CreateHUD();
+            }
+
+            //reset data if we haven't received anything in a while
+            //(so that outdated hull info won't be shown if detectors stop sending signals)
+            if (DateTime.Now > resetDataTime)
+            {
+                foreach (HullData hullData in hullDatas.Values)
+                {
+                    if (!hullData.Distort)
+                    {
+                        if (Timing.TotalTime > hullData.LastOxygenDataTime + 1.0) { hullData.ReceivedOxygenAmount = null; }
+                        if (Timing.TotalTime > hullData.LastWaterDataTime + 1.0) { hullData.ReceivedWaterAmount = null; }
+                    }
+                }
+                resetDataTime = DateTime.Now + new TimeSpan(0, 0, 1);
+            }
+
+            if (cardRefreshTimer > cardRefreshDelay)
+            {
+                if (item.Submarine is { } sub)
+                {
+                    UpdateIDCards(sub);
+                }
+                cardRefreshTimer = 0;
+            }
+            else
+            {
+                cardRefreshTimer += deltaTime;
             }
 
             if (scissorComponent != null)
@@ -604,7 +672,7 @@ namespace Barotrauma.Items.Components
                 elementSize = GuiFrame.Rect.Size;
             }
 
-            float distort = 1.0f - item.Condition / item.MaxCondition;
+            float distort = item.Repairables.Any(r => r.IsBelowRepairThreshold) ? 1.0f - item.Condition / item.MaxCondition : 0.0f;
             foreach (HullData hullData in hullDatas.Values)
             {
                 hullData.DistortionTimer -= deltaTime;
@@ -663,6 +731,12 @@ namespace Barotrauma.Items.Components
 
         private void DrawHUDFront(SpriteBatch spriteBatch, GUICustomComponent container)
         {
+            if (miniMapFrame == null)
+            {
+                //frame not created yet, could happen if the item hasn't been inside any sub this round?
+                return;
+            }
+
             if (Voltage < MinVoltage)
             {
                 Vector2 textSize = GUIStyle.Font.MeasureString(noPowerTip);
@@ -685,7 +759,7 @@ namespace Barotrauma.Items.Components
                 if (sprite != null && ShowHullIntegrity)
                 {
                     Vector2 spriteSize = sprite.size;
-                    Rectangle worldBorders = item.Submarine.GetDockedBorders();
+                    Rectangle worldBorders = item.Submarine.GetDockedBorders(allowDifferentTeam: false);
                     worldBorders.Location += item.Submarine.WorldPosition.ToPoint();
                     foreach (Gap gap in Gap.GapList)
                     {
@@ -777,7 +851,8 @@ namespace Barotrauma.Items.Components
             foreach (GUIComponent component in listBox.Content.Children)
             {
                 component.Visible = false;
-                if (component.UserData is ItemPrefab { Name: { } prefabName} prefab && itemsFoundOnSub.Contains(prefab))
+                if (component.UserData is ItemPrefab { Name: { } prefabName} prefab && 
+                    (itemsFoundOnSub.Contains(prefab) || itemsFoundOnSub.Any(ip => DisplayAsSameItem(ip, prefab))))
                 {
                     component.Visible = prefabName.ToLower().Contains(text.ToLower());
 
@@ -804,9 +879,9 @@ namespace Barotrauma.Items.Components
             tooltip.RectTransform.ScreenSpaceOffset = new Point(box.Rect.X, box.Rect.Y - height);
         }
 
-        private void CreateItemFrame(ItemPrefab prefab, RectTransform parent)
+        private static void CreateItemFrame(ItemPrefab prefab, RectTransform parent)
         {
-            Sprite sprite = prefab.InventoryIcon ?? prefab.Sprite;
+            Sprite sprite = GetPreviewSprite(prefab);
             if (sprite is null) { return; }
             GUIFrame frame = new GUIFrame(new RectTransform(new Vector2(1f, 0.25f), parent), style: "ListBoxElement")
             {
@@ -852,7 +927,7 @@ namespace Barotrauma.Items.Components
             {
                 if (!VisibleOnItemFinder(it)) { continue; }
 
-                if (it.Prefab == searchedPrefab)
+                if (DisplayAsSameItem(it.Prefab, searchedPrefab))
                 {
                     // ignore items on players and hidden inventories
                     if (it.FindParentInventory(inv => inv is CharacterInventory || inv is ItemInventory { Owner: Item { HiddenInGame: true }}) is { }) { continue; }
@@ -869,7 +944,7 @@ namespace Barotrauma.Items.Components
             }
 
 
-            RectangleF dockedBorders = item.Submarine.GetDockedBorders();
+            RectangleF dockedBorders = item.Submarine.GetDockedBorders(allowDifferentTeam: false);
             dockedBorders.Location += item.Submarine.WorldPosition;
             RectangleF parentRect = miniMapFrame.Rect;
 
@@ -951,11 +1026,8 @@ namespace Barotrauma.Items.Components
                     component.Color = borderComponent.OutlineColor = NoPowerColor;
                 }
 
-                if (Voltage < MinVoltage) { continue; }
-
                 if (!component.Visible) { continue; }
-                if (!(entity is Hull hull)) { continue; }
-
+                if (entity is not Hull hull) { continue; }
                 if (!submarineContainer.Rect.Contains(component.Rect))
                 {
                     if (hull.Submarine.Info.Type != SubmarineType.Player)
@@ -964,6 +1036,8 @@ namespace Barotrauma.Items.Components
                         continue;
                     }
                 }
+
+                if (Voltage < MinVoltage) { continue; }
 
                 hullDatas.TryGetValue(hull, out HullData? hullData);
                 if (hullData is null)
@@ -1012,12 +1086,16 @@ namespace Barotrauma.Items.Components
                 }
                 else if (hullData.LinkedHulls.Any())
                 {
-                    hullData.HullWaterAmount = 0.0f;
+                    float waterVolume = 0.0f;
+                    float totalVolume = 0.0f;
                     foreach (Hull linkedHull in hullData.LinkedHulls)
                     {
-                        hullData.HullWaterAmount += WaterDetector.GetWaterPercentage(linkedHull);
+                        waterVolume += linkedHull.WaterVolume;
+                        totalVolume += linkedHull.Volume;
                     }
-                    hullData.HullWaterAmount /= hullData.LinkedHulls.Count;
+                    hullData.HullWaterAmount =
+                        waterVolume > 1.0f ?
+                        MathHelper.Clamp((int)Math.Ceiling(waterVolume / totalVolume * 100), 0, 100) : 0.0f;
                 }
                 else
                 {
@@ -1029,7 +1107,7 @@ namespace Barotrauma.Items.Components
                 if (ShowHullIntegrity)
                 {
                     float amount = 1f + hullData.LinkedHulls.Count;
-                    gapOpenSum = hull.ConnectedGaps.Concat(hullData.LinkedHulls.SelectMany(h => h.ConnectedGaps)).Where(g => !g.IsRoomToRoom && !g.HiddenInGame).Sum(g => g.Open) / amount;
+                    gapOpenSum = hull.ConnectedGaps.Concat(hullData.LinkedHulls.SelectMany(h => h.ConnectedGaps)).Where(g => g.linkedTo.Count == 1 && !g.HiddenInGame).Sum(g => g.Open) / amount;
                     borderColor = Color.Lerp(neutralColor, GUIStyle.Red, Math.Min(gapOpenSum, 1.0f));
                 }
 
@@ -1090,7 +1168,7 @@ namespace Barotrauma.Items.Components
         {
             foreach (var (entity, miniMapGuiComponent) in electricalMapComponents)
             {
-                if (!(entity is Item it)) { continue; }
+                if (entity is not Item it) { continue; }
                 if (!electricalChildren.TryGetValue(miniMapGuiComponent, out GUIComponent? component)) { continue; }
 
                 if (entity.Removed)
@@ -1116,7 +1194,7 @@ namespace Barotrauma.Items.Components
 
                     if (it.GetComponent<PowerContainer>() is { } battery)
                     {
-                        int batteryCapacity = (int)(battery.Charge / battery.Capacity * 100f);
+                        int batteryCapacity = (int)(battery.Charge / battery.GetCapacity() * 100f);
                         line2 = TextManager.GetWithVariable("statusmonitor.battery.tooltip", "[amount]", batteryCapacity.ToString());
                     }
                     else if (it.GetComponent<PowerTransfer>() is { } powerTransfer)
@@ -1180,7 +1258,7 @@ namespace Barotrauma.Items.Components
                 {
                     foreach (var (entity, component) in hullStatusComponents)
                     {
-                        if (!(entity is Hull hull)) { continue; }
+                        if (entity is not Hull hull) { continue; }
                         if (!hullDatas.TryGetValue(hull, out HullData? hullData) || hullData is null) { continue; }
 
                         if (hullData.Distort) { continue; }
@@ -1256,7 +1334,7 @@ namespace Barotrauma.Items.Components
             GameMain.Instance.GraphicsDevice.SetRenderTarget(rt);
             GameMain.Instance.GraphicsDevice.Clear(Color.Transparent);
             spriteBatch.Begin(SpriteSortMode.Deferred, samplerState: GUI.SamplerState, rasterizerState: GameMain.ScissorTestEnable);
-            Rectangle worldBorders = sub.GetDockedBorders();
+            Rectangle worldBorders = sub.GetDockedBorders(allowDifferentTeam: false);
             worldBorders.Location += sub.WorldPosition.ToPoint();
 
             parentRect.Inflate(-inflate, -inflate);
@@ -1477,7 +1555,7 @@ namespace Barotrauma.Items.Components
 
             Dictionary<MapEntity, MiniMapGUIComponent> pointsOfInterestCollection = new Dictionary<MapEntity, MiniMapGUIComponent>();
 
-            RectangleF worldBorders = sub.GetDockedBorders();
+            RectangleF worldBorders = sub.GetDockedBorders(allowDifferentTeam: false);
             worldBorders.Location += sub.WorldPosition;
 
             // create a container that has the same "aspect ratio" as the sub
@@ -1490,7 +1568,7 @@ namespace Barotrauma.Items.Components
 
             GUIFrame hullContainer = new GUIFrame(new RectTransform(containerScale * elementPadding, parent.RectTransform, Anchor.Center), style: null);
 
-            ImmutableHashSet<Submarine> connectedSubs = sub.GetConnectedSubs().ToImmutableHashSet();
+            ImmutableHashSet<Submarine> connectedSubs = sub.GetConnectedSubs().Where(s => s.TeamID == sub.TeamID).ToImmutableHashSet();
             ImmutableArray<Hull> hullList = ImmutableArray<Hull>.Empty;
             ImmutableDictionary<Hull, ImmutableArray<Hull>> combinedHulls = ImmutableDictionary<Hull, ImmutableArray<Hull>>.Empty;
 
@@ -1637,7 +1715,7 @@ namespace Barotrauma.Items.Components
             bool IsPartofSub(MapEntity entity)
             {
                 if (entity.Submarine != sub && !connectedSubs.Contains(entity.Submarine) || entity.HiddenInGame) { return false; }
-                return !settings.IgnoreOutposts || sub.IsEntityFoundOnThisSub(entity, true);
+                return sub.IsEntityFoundOnThisSub(entity, true);
             }
 
             bool IsStandaloneHull(Hull hull)
@@ -1729,6 +1807,67 @@ namespace Barotrauma.Items.Components
             }
 
             return new MiniMapHullData(scaledPolygon, worldRect, parentRect.Size, snappedRectangles, hullRefs.ToImmutableArray());
+        }
+
+        public override void ReceiveSignal(Signal signal, Connection connection)
+        {
+            Item source = signal.source;
+            if (source == null || source.CurrentHull == null) { return; }
+
+            Hull sourceHull = source.CurrentHull;
+            if (!hullDatas.TryGetValue(sourceHull, out HullData? hullData))
+            {
+                hullData = new HullData();
+                hullDatas.Add(sourceHull, hullData);
+            }
+
+            if (hullData.Distort) { return; }
+
+            switch (connection.Name)
+            {
+                case "water_data_in":
+                    //cheating a bit because water detectors don't actually send the water level
+                    bool fromWaterDetector = source.GetComponent<WaterDetector>() != null;
+                    hullData.ReceivedWaterAmount = null;
+                    hullData.LastWaterDataTime = Timing.TotalTime;
+                    if (fromWaterDetector)
+                    {
+                        hullData.ReceivedWaterAmount = WaterDetector.GetWaterPercentage(sourceHull);
+                    }
+                    foreach (var linked in sourceHull.linkedTo)
+                    {
+                        if (linked is not Hull linkedHull) { continue; }
+                        if (!hullDatas.TryGetValue(linkedHull, out HullData? linkedHullData))
+                        {
+                            linkedHullData = new HullData();
+                            hullDatas.Add(linkedHull, linkedHullData);
+                        }
+                        linkedHullData.ReceivedWaterAmount = null;
+                        if (fromWaterDetector)
+                        {
+                            linkedHullData.ReceivedWaterAmount = WaterDetector.GetWaterPercentage(linkedHull);
+                        }
+                    }
+                    break;
+                case "oxygen_data_in":
+                    if (!float.TryParse(signal.value, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out float oxy))
+                    {
+                        oxy = Rand.Range(0.0f, 100.0f);
+                    }
+                    hullData.ReceivedOxygenAmount = oxy;
+                    hullData.LastOxygenDataTime = Timing.TotalTime;
+                    foreach (var linked in sourceHull.linkedTo)
+                    {
+                        if (linked is not Hull linkedHull) { continue; }
+                        if (!hullDatas.TryGetValue(linkedHull, out HullData? linkedHullData))
+                        {
+                            linkedHullData = new HullData();
+                            hullDatas.Add(linkedHull, linkedHullData);
+                        }
+                        linkedHullData.ReceivedOxygenAmount = oxy;
+                    }
+                    break;
+            }
         }
 
         protected override void RemoveComponentSpecific()

@@ -22,13 +22,13 @@ namespace Barotrauma.Abilities
         private static readonly List<WeaponType> WeaponTypeValues = Enum.GetValues(typeof(WeaponType)).Cast<WeaponType>().ToList();
 
         private readonly string itemIdentifier;
-        private readonly string[] tags;
+        private readonly Identifier[] tags;
         private readonly WeaponType weapontype;
         private readonly bool ignoreNonHarmfulAttacks;
         public AbilityConditionAttackData(CharacterTalent characterTalent, ContentXElement conditionElement) : base(characterTalent, conditionElement)
         {
             itemIdentifier = conditionElement.GetAttributeString("itemidentifier", string.Empty);
-            tags = conditionElement.GetAttributeStringArray("tags", Array.Empty<string>(), convertToLowerInvariant: true);
+            tags = conditionElement.GetAttributeIdentifierArray("tags", Array.Empty<Identifier>());
             ignoreNonHarmfulAttacks = conditionElement.GetAttributeBool("ignorenonharmfulattacks", false);
 
             string weaponTypeStr = conditionElement.GetAttributeString("weapontype", "Any");
@@ -75,13 +75,14 @@ namespace Barotrauma.Abilities
                         if (wt == WeaponType.Any || !weapontype.HasFlag(wt)) { continue; }
                         switch (wt)
                         {
-                            // it is possible that an item that has both a melee and a projectile component will return true
-                            // even when not used as a melee/ranged weapon respectively
-                            // attackdata should contain data regarding whether the attack is melee or not
                             case WeaponType.Melee:
+                                //if the item has an active projectile component (has been fired), don't consider it a melee weapon
+                                if (item?.GetComponent<Projectile>() is { IsActive: true }) { continue; }
                                 if (item?.GetComponent<MeleeWeapon>() != null) { return true; }
                                 break;
                             case WeaponType.Ranged:
+                                //if the item has a melee weapon component that's being used now, don't consider it a projectile
+                                if (item?.GetComponent<MeleeWeapon>() is { Hitting: true }) { continue; }
                                 if (item?.GetComponent<Projectile>() != null) { return true; }
                                 break;
                             case WeaponType.HandheldRanged:

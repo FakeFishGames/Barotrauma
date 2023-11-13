@@ -6,6 +6,8 @@ namespace Barotrauma
     {
         private readonly Queue<WalletChangedData> transactions = new Queue<WalletChangedData>();
 
+        public bool ShouldForceUpdate;
+
         partial void SettingsChanged(Option<int> balanceChanged, Option<int> rewardChanged)
         {
             transactions.Enqueue(new WalletChangedData
@@ -13,6 +15,15 @@ namespace Barotrauma
                 BalanceChanged = balanceChanged,
                 RewardDistributionChanged =  rewardChanged
             });
+        }
+
+        /// <summary>
+        /// Forces the server to sync the state of the wallet regardless if the balance/reward has changed
+        /// </summary>
+        public void ForceUpdate()
+        {
+            SettingsChanged(balanceChanged: Option<int>.Some(0), rewardChanged: Option<int>.None());
+            ShouldForceUpdate = true;
         }
 
         public bool HasTransactions() => transactions.Count > 0;

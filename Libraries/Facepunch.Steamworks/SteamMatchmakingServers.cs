@@ -8,15 +8,18 @@ using Steamworks.Data;
 namespace Steamworks
 {
 	/// <summary>
-	/// Functions for clients to access matchmaking services, favorites, and to operate on game lobbies
+	/// Methods for clients to access matchmaking services, favorites, and to operate on game lobbies
 	/// </summary>
 	internal class SteamMatchmakingServers : SteamClientClass<SteamMatchmakingServers>
 	{
-		internal static ISteamMatchmakingServers Internal => Interface as ISteamMatchmakingServers;
+		internal static ISteamMatchmakingServers? Internal => Interface as ISteamMatchmakingServers;
 
-		internal override void InitializeInterface( bool server )
+		internal override bool InitializeInterface( bool server )
 		{
 			SetInterface( server, new ISteamMatchmakingServers( server ) );
+			if ( Interface is null || Interface.Self == IntPtr.Zero ) return false;
+
+			return true;
 		}
 	}
 }

@@ -175,6 +175,7 @@ namespace Barotrauma
             {
                 if (relativeOffset.NearlyEquals(value)) { return; }
                 relativeOffset = value;
+                recalculateRect = true;
                 RecalculateChildren(false, false);
             }
         }
@@ -233,7 +234,9 @@ namespace Barotrauma
             get
             {
                 Point absoluteOffset = ConvertOffsetRelativeToAnchor(AbsoluteOffset, Anchor);
-                Point relativeOffset = NonScaledParentRect.MultiplySize(RelativeOffset);
+                Point relativeOffset = new Point(
+                    (int)(NonScaledParentSize.X * RelativeOffset.X),
+                    (int)(NonScaledParentSize.Y * RelativeOffset.Y));
                 relativeOffset = ConvertOffsetRelativeToAnchor(relativeOffset, Anchor);
                 return AnchorPoint + PivotOffset + absoluteOffset + relativeOffset + ScreenSpaceOffset;
             }
@@ -256,6 +259,7 @@ namespace Barotrauma
         public Rectangle ParentRect => Parent != null ? Parent.Rect : UIRect;
         protected Rectangle NonScaledRect => new Rectangle(NonScaledTopLeft, NonScaledSize);
         protected virtual Rectangle NonScaledUIRect => NonScaledRect;
+        protected Point NonScaledParentSize => parent?.NonScaledSize ?? new Point(GUI.UIWidth, GameMain.GraphicsHeight);
         protected Rectangle NonScaledParentRect => parent != null ? Parent.NonScaledRect : UIRect;
         protected Rectangle NonScaledParentUIRect => parent != null ? Parent.NonScaledUIRect : UIRect;
         protected Rectangle UIRect => new Rectangle(0, 0, GUI.UIWidth, GameMain.GraphicsHeight);
@@ -302,6 +306,8 @@ namespace Barotrauma
             {
                 _scaleBasis = value;
                 RecalculateAbsoluteSize();
+                RecalculateAnchorPoint();
+                RecalculatePivotOffset();
             }
         }
 
@@ -336,6 +342,11 @@ namespace Barotrauma
         public event Action<RectTransform> ChildrenChanged;
         public event Action ScaleChanged;
         public event Action SizeChanged;
+
+        public void ResetSizeChanged()
+        {
+            SizeChanged = null;
+        }
         #endregion
 
         #region Initialization
@@ -730,17 +741,17 @@ namespace Barotrauma
             get { return animTargetPos ?? AbsoluteOffset; }
         }
 
-        public void MoveOverTime(Point targetPos, float duration)
+        public void MoveOverTime(Point targetPos, float duration, Action onDoneMoving = null)
         {
             animTargetPos = targetPos;
-            CoroutineManager.StartCoroutine(DoMoveAnimation(targetPos, duration));
+            CoroutineManager.StartCoroutine(DoMoveAnimation(targetPos, duration, onDoneMoving));
         }
         public void ScaleOverTime(Point targetSize, float duration)
         {
             CoroutineManager.StartCoroutine(DoScaleAnimation(targetSize, duration));
         }
 
-        private IEnumerable<CoroutineStatus> DoMoveAnimation(Point targetPos, float duration)
+        private IEnumerable<CoroutineStatus> DoMoveAnimation(Point targetPos, float duration, Action onDoneMoving = null)
         {
             Vector2 startPos = AbsoluteOffset.ToVector2();
             float t = 0.0f;
@@ -752,6 +763,7 @@ namespace Barotrauma
             }
             AbsoluteOffset = targetPos;
             animTargetPos = null;
+            onDoneMoving?.Invoke();
             yield return CoroutineStatus.Success;
         }
         private IEnumerable<CoroutineStatus> DoScaleAnimation(Point targetSize, float duration)

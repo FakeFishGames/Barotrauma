@@ -50,9 +50,9 @@ namespace Barotrauma
                 }
                 else if (Entity is Item i)
                 {
-                    if (i.Submarine != null && i.GetComponent<Items.Components.Door>() == null)
+                    if (i.Submarine != null && i.Container != null)
                     {
-                        // Don't show items that are inside the submarine, because monsters shouldn't target them when they are inside and the monsters are outside.
+                        // Don't show contained items that are inside the submarine, because they shouldn't attract monsters.
                         return;
                     }
                     color = Color.CadetBlue;

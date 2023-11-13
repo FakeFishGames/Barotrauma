@@ -11,7 +11,7 @@ using Barotrauma.Media;
 
 namespace Barotrauma.Sounds
 {
-    public class VideoSound : Sound
+    class VideoSound : Sound
     {
         private readonly object mutex;
         private Queue<short[]> sampleQueue;

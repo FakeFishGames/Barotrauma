@@ -22,7 +22,7 @@ namespace Steamworks
 			/// If we don't know about this item definition this might be null.
 			/// In which case, DefinitionId should still hold the correct id.
 			/// </summary>
-			public InventoryDef Definition;
+			public InventoryDef? Definition;
 
 			/// <summary>
 			/// The amount of this item needed. Generally this will be 1.

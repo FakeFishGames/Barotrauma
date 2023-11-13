@@ -12,7 +12,7 @@
     <Exec Command="dotnet publish $(ProjectDir)../../Libraries/GameAnalytics/GA_SDK_NETSTANDARD/GA_SDK_NETSTANDARD.csproj -c Release -r $(GARuntime) --no-self-contained --nologo -o $(ProjectDir)$(OutputPath)" ContinueOnError="$(IsDebug)" />
   </Target>
   <Target Name="DeployGameAnalyticsPublish" AfterTargets="PrepareForPublish" >
-    <Exec Command="dotnet publish $(ProjectDir)../../Libraries/GameAnalytics/GA_SDK_NETSTANDARD/GA_SDK_NETSTANDARD.csproj -c Release -r $(GARuntime) --no-self-contained --nologo -o $(ProjectDir)$(PublishDir)" ContinueOnError="$(IsDebug)" />
+    <Exec Command="dotnet publish $(ProjectDir)../../Libraries/GameAnalytics/GA_SDK_NETSTANDARD/GA_SDK_NETSTANDARD.csproj -c Release -r $(GARuntime) --no-self-contained --nologo -o &quot;$(PublishDir)&quot;" ContinueOnError="$(IsDebug)" />
   </Target>
 
 </Project>

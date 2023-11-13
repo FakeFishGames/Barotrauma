@@ -9,6 +9,8 @@ namespace Barotrauma
         public event Action Finished;
         protected bool isFinished;
 
+        public int RandomSeed;
+
         protected readonly EventPrefab prefab;
         
         public EventPrefab Prefab => prefab;
@@ -48,6 +50,11 @@ namespace Barotrauma
         public virtual void Init(EventSet parentSet = null)
         {
             ParentSet = parentSet;
+        }
+
+        public virtual string GetDebugInfo()
+        {
+            return $"Finished: {IsFinished.ColorizeObject()}";
         }
 
         public virtual void Update(float deltaTime)

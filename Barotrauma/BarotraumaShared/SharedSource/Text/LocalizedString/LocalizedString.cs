@@ -13,7 +13,7 @@ namespace Barotrauma
             Yes
         }
         
-        protected LanguageIdentifier language { get; private set; } = LanguageIdentifier.None;
+        public LanguageIdentifier Language { get; private set; } = LanguageIdentifier.None;
         private int languageVersion = 0;
 
         protected string cachedValue = "";
@@ -32,13 +32,13 @@ namespace Barotrauma
 
         protected void UpdateLanguage()
         {
-            language = GameSettings.CurrentConfig.Language;
+            Language = GameSettings.CurrentConfig.Language;
             languageVersion = TextManager.LanguageVersion;
         }
         
         protected virtual bool MustRetrieveValue() //this can't be called on other LocalizedStrings by derived classes
         {
-            return language != GameSettings.CurrentConfig.Language || languageVersion != TextManager.LanguageVersion;
+            return Language != GameSettings.CurrentConfig.Language || languageVersion != TextManager.LanguageVersion;
         }
 
         protected static bool MustRetrieveValue(LocalizedString str) //this can be called by derived classes

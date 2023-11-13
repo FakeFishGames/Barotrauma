@@ -9,11 +9,12 @@ namespace Barotrauma.Items.Components
         public void ServerEventRead(IReadMessage msg, Client c)
         {
             uint recipeHash = msg.ReadUInt32();
-
+            int amountToFabricate = msg.ReadRangedInteger(1, MaxAmountToFabricate);
             item.CreateServerEvent(this);
 
             if (!item.CanClientAccess(c)) { return; }
 
+            AmountToFabricate = amountToFabricate;
             if (recipeHash == 0)
             {
                 CancelFabricating(c.Character);
@@ -23,6 +24,8 @@ namespace Barotrauma.Items.Components
                 //if already fabricating the selected item, return
                 if (fabricatedItem != null && fabricatedItem.RecipeHash == recipeHash) { return; }
                 if (recipeHash == 0) { return; }
+
+                amountRemaining = AmountToFabricate;
 
                 StartFabricating(fabricationRecipes[recipeHash], c.Character);
             }
@@ -55,18 +58,20 @@ namespace Barotrauma.Items.Components
         public void ServerEventWrite(IWriteMessage msg, Client c, NetEntityEvent.IData extraData = null)
         {
             var componentData = ExtractEventData<EventData>(extraData);
-            msg.Write((byte)componentData.State);
-            msg.Write(timeUntilReady);
+            msg.WriteByte((byte)componentData.State);
+            msg.WriteRangedInteger(AmountToFabricate, 0, MaxAmountToFabricate);
+            msg.WriteRangedInteger(amountRemaining, 0, MaxAmountToFabricate);
+            msg.WriteSingle(timeUntilReady);
             uint recipeHash = fabricatedItem?.RecipeHash ?? 0;
-            msg.Write(recipeHash);
-            UInt16 userID = fabricatedItem is null || user is null ? (UInt16)0 : user.ID;
-            msg.Write(userID);
+            msg.WriteUInt32(recipeHash);
+            UInt16 userId = fabricatedItem is null || user is null ? (UInt16)0 : user.ID;
+            msg.WriteUInt16(userId);
 
             var reachedLimits = fabricationLimits.Where(kvp => kvp.Value <= 0);
-            msg.Write((ushort)reachedLimits.Count());
+            msg.WriteUInt16((ushort)reachedLimits.Count());
             foreach (var kvp in reachedLimits)
             {
-                msg.Write(kvp.Key);
+                msg.WriteUInt32(kvp.Key);
             }
         }
     }
