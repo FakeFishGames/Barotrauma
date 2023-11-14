@@ -1569,6 +1569,48 @@ namespace Barotrauma
             return keys[(int)inputType].Hit;
         }
 
+        public bool IsKeyPressed(InputType inputType)
+        {
+#if SERVER
+            if (GameMain.Server != null && IsRemotePlayer)
+            {
+                switch (inputType)
+                {
+                    case InputType.Left:
+                        return dequeuedInput.HasFlag(InputNetFlags.Left) && !prevDequeuedInput.HasFlag(InputNetFlags.Left);
+                    case InputType.Right:
+                        return dequeuedInput.HasFlag(InputNetFlags.Right) && !prevDequeuedInput.HasFlag(InputNetFlags.Right);
+                    case InputType.Up:
+                        return dequeuedInput.HasFlag(InputNetFlags.Up) && !prevDequeuedInput.HasFlag(InputNetFlags.Up);
+                    case InputType.Down:
+                        return dequeuedInput.HasFlag(InputNetFlags.Down) && !prevDequeuedInput.HasFlag(InputNetFlags.Down);
+                    case InputType.Run:
+                        return dequeuedInput.HasFlag(InputNetFlags.Run) && prevDequeuedInput.HasFlag(InputNetFlags.Run);
+                    case InputType.Crouch:
+                        return dequeuedInput.HasFlag(InputNetFlags.Crouch) && !prevDequeuedInput.HasFlag(InputNetFlags.Crouch);
+                    case InputType.Select:
+                        return dequeuedInput.HasFlag(InputNetFlags.Select); //TODO: clean up the way this input is registered
+                    case InputType.Deselect:
+                        return dequeuedInput.HasFlag(InputNetFlags.Deselect);
+                    case InputType.Health:
+                        return dequeuedInput.HasFlag(InputNetFlags.Health);
+                    case InputType.Grab:
+                        return dequeuedInput.HasFlag(InputNetFlags.Grab);
+                    case InputType.Use:
+                        return dequeuedInput.HasFlag(InputNetFlags.Use) && !prevDequeuedInput.HasFlag(InputNetFlags.Use);
+                    case InputType.Shoot:
+                        return dequeuedInput.HasFlag(InputNetFlags.Shoot) && !prevDequeuedInput.HasFlag(InputNetFlags.Shoot);
+                    case InputType.Ragdoll:
+                        return dequeuedInput.HasFlag(InputNetFlags.Ragdoll) && !prevDequeuedInput.HasFlag(InputNetFlags.Ragdoll);
+                    default:
+                        return false;
+                }
+            }
+#endif
+
+            return keys[(int)inputType].Pressed;
+        }
+
         public bool IsKeyDown(InputType inputType)
         {
 #if SERVER
@@ -2230,7 +2272,7 @@ namespace Barotrauma
                         item.Use(deltaTime, user: this);
                     }
                 }
-                if (IsKeyDown(InputType.Shoot) && item.IsShootable)
+                if (item.GetComponent<RangedWeapon>()?.HoldTrigger ?? false || item.GetComponent<MeleeWeapon>() != null ? IsKeyDown(InputType.Shoot) : IsKeyPressed(InputType.Shoot) && item.IsShootable)
                 {
                     if (!item.RequireAimToUse || IsKeyDown(InputType.Aim))
                     {
