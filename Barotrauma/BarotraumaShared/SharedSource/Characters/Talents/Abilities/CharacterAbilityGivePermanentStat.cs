@@ -66,12 +66,12 @@
             {
                 foreach (Character c in Character.GetFriendlyCrew(Character))
                 {
-                    c?.Info.ChangeSavedStatValue(statType, value, identifier, removeOnDeath, maxValue: maxValue, setValue: setValue);
+                    c?.Info?.ChangeSavedStatValue(statType, value, identifier, removeOnDeath, maxValue: maxValue, setValue: setValue);
                 }
             }
             else
             {
-                Character?.Info.ChangeSavedStatValue(statType, value, identifier, removeOnDeath, maxValue: maxValue, setValue: setValue);
+                Character?.Info?.ChangeSavedStatValue(statType, value, identifier, removeOnDeath, maxValue: maxValue, setValue: setValue);
             }
         }
 

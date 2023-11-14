@@ -38,6 +38,7 @@ namespace Barotrauma
         private float prevUIScale;
 
         private readonly GUIFrame channelSettingsFrame;
+        private readonly GUITextBlock radioJammedWarning;
         private readonly GUITextBox channelText;
         private readonly GUILayoutGroup channelPickerContent;
         private readonly GUIButton memButton;
@@ -105,6 +106,13 @@ namespace Barotrauma
                 Stretch = true,
                 CanBeFocused = true,
                 RelativeSpacing = 0.01f
+            };
+
+            radioJammedWarning = new GUITextBlock(new RectTransform(Vector2.One, channelSettingsFrame.RectTransform), TextManager.Get("radiojammedwarning"),
+                textColor: GUIStyle.Orange, color: Color.Black,
+                textAlignment: Alignment.Center, style: "OuterGlow")
+            {
+                ToolTip = TextManager.Get("hint.radiojammed")
             };
 
             var buttonLeft = new GUIButton(new RectTransform(new Vector2(0.1f, 0.8f), channelSettingsContent.RectTransform), style: "DeviceButton")
@@ -643,7 +651,7 @@ namespace Barotrauma
                 ToggleButton.RectTransform.AbsoluteOffset = new Point(GUIFrame.Rect.Right, GUIFrame.Rect.Y + HUDLayoutSettings.ChatBoxArea.Height - ToggleButton.Rect.Height);
             }
 
-            if (Character.Controlled != null && ChatMessage.CanUseRadio(Character.Controlled, out WifiComponent radio))
+            if (Character.Controlled != null && ChatMessage.CanUseRadio(Character.Controlled, out WifiComponent radio, ignoreJamming: true))
             {
                 if (prevRadio != radio)
                 {
@@ -672,10 +680,11 @@ namespace Barotrauma
                     }
                 }
                 channelSettingsFrame.Visible = true;
+                radioJammedWarning.Visible = radio is { JamTimer: > 0 };
             }
             else
             {
-                channelSettingsFrame.Visible = false;
+                radioJammedWarning.Visible = channelSettingsFrame.Visible = false;
                 channelPickerContent.Children.First().CanBeFocused = true;
                 channelMemPending = false;
                 memButton.Enabled = true;

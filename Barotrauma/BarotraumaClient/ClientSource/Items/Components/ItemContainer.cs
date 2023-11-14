@@ -1,9 +1,9 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Barotrauma.Extensions;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
-using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
-using static Barotrauma.Inventory;
 
 namespace Barotrauma.Items.Components
 {
@@ -97,6 +97,8 @@ namespace Barotrauma.Items.Components
         partial void InitProjSpecific(ContentXElement element)
         {
             slotIcons = new Sprite[capacity];
+
+            int currCapacity = MainContainerCapacity;
             foreach (var subElement in element.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
@@ -126,6 +128,19 @@ namespace Barotrauma.Items.Components
                                 slotIcons[i] = icon;
                             }
                         }
+                        break;
+                    case "subcontainer":
+                        int subContainerCapacity = subElement.GetAttributeInt("capacity", 1);
+                        var slotIconElement = subElement.GetChildElement("sloticon");
+                        if (slotIconElement != null)
+                        {
+                            var slotIcon = new Sprite(slotIconElement);
+                            for (int i = currCapacity; i < currCapacity + subContainerCapacity; i++)
+                            {
+                                slotIcons[i] = slotIcon;                                
+                            }
+                        }
+                        currCapacity += subContainerCapacity;
                         break;
                 }
             }
@@ -180,11 +195,40 @@ namespace Barotrauma.Items.Components
             };
 
             LocalizedString labelText = GetUILabel();
-            GUITextBlock label = null;
-            if (!labelText.IsNullOrEmpty())
+            GUITextBlock label = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), content.RectTransform, Anchor.TopCenter),
+                labelText, font: GUIStyle.SubHeadingFont, textAlignment: Alignment.CenterLeft, wrap: true)
+                {
+                    IgnoreLayoutGroups = true
+                };
+            
+            int buttonSize = GUIStyle.ItemFrameTopBarHeight;
+            Point margin = new Point(buttonSize / 4, buttonSize / 6);
+
+            GUILayoutGroup buttonArea = new GUILayoutGroup(new RectTransform(new Point(GuiFrame.Rect.Width - margin.X * 2, buttonSize - margin.Y * 2), GuiFrame.RectTransform, Anchor.TopCenter) { AbsoluteOffset = new Point(0, margin.Y) }, 
+                isHorizontal: true, childAnchor: Anchor.TopRight)
             {
-                label = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), content.RectTransform, Anchor.TopCenter), 
-                    labelText, font: GUIStyle.SubHeadingFont, textAlignment: Alignment.Center, wrap: true);
+                AbsoluteSpacing = margin.X / 2
+            };
+            if (Inventory.Capacity > 1)
+            {
+                new GUIButton(new RectTransform(Vector2.One, buttonArea.RectTransform, scaleBasis: ScaleBasis.Smallest), style: "SortItemsButton")
+                {
+                    ToolTip = TextManager.Get("SortItemsAlphabetically"),
+                    OnClicked = (btn, userdata) =>
+                    {
+                        SortItems();
+                        return true;
+                    }
+                };
+                new GUIButton(new RectTransform(Vector2.One, buttonArea.RectTransform, scaleBasis: ScaleBasis.Smallest), style: "MergeStacksButton")
+                {
+                    ToolTip = TextManager.Get("MergeItemStacks"),
+                    OnClicked = (btn, userdata) =>
+                    {
+                        MergeStacks();
+                        return true;
+                    }
+                };
             }
 
             float minInventoryAreaSize = 0.5f;
@@ -213,6 +257,71 @@ namespace Barotrauma.Items.Components
             }
 
             Inventory.RectTransform = guiCustomComponent.RectTransform;
+        }
+
+        private void SortItems()
+        {
+            List<List<Item>> itemsPerSlot = new List<List<Item>>();
+
+            for (int i = 0; i < Inventory.Capacity; i++)
+            {
+                var items = Inventory.GetItemsAt(i).ToList();
+                if (items.Any()) 
+                { 
+                    itemsPerSlot.Add(items);
+                    items.ForEach(it => it.Drop(dropper: null, createNetworkEvent: false, setTransform: false));
+                }
+            }
+
+            itemsPerSlot.Sort((i1, i2) => i1.First().Name.CompareTo(i2.First().Name));
+            foreach (var items in itemsPerSlot)
+            {
+                int firstFreeSlot = -1;
+                for (int i = 0; i < Inventory.Capacity; i++)
+                {
+                    if (Inventory.GetItemAt(i) == null && Inventory.CanBePut(items.First()))
+                    {
+                        firstFreeSlot = i;
+                        break;
+                    }
+                }
+                if (firstFreeSlot == -1) 
+                { 
+                    items.ForEach(it => it.Drop(dropper: null));
+                    continue; 
+                }
+                foreach (var item in items)
+                {
+                   if (!Inventory.TryPutItem(item, firstFreeSlot, allowSwapping: false, allowCombine: false, user: null, createNetworkEvent: false))
+                    {
+                        //if putting in the specific slot fails (prevented by containable restrictions?), just put in the first free slot
+                        if (!Inventory.TryPutItem(item, user: null, createNetworkEvent: false))
+                        {
+                            item.Drop(dropper: null);
+                        }
+                    }
+                }
+            }
+            Inventory.CreateNetworkEvent();
+        }
+
+        private void MergeStacks()
+        {
+            for (int i = Inventory.Capacity - 1; i >= 0; i--)
+            {
+                var items = Inventory.GetItemsAt(i).ToList();
+                if (items.None()) { continue; }
+                //find the first stack we can put the item in
+                for (int j = 0; j < i; j++)
+                {
+                    if (Inventory.GetItemsAt(j).Any() && Inventory.CanBePutInSlot(items.First(), j))
+                    {
+                        items.ForEach(it => Inventory.TryPutItem(it, j, allowSwapping: false, allowCombine: false, user: null, createNetworkEvent: false));
+                        break;
+                    }
+                }
+            }
+            Inventory.CreateNetworkEvent();
         }
 
         public LocalizedString GetUILabel()
@@ -277,7 +386,7 @@ namespace Barotrauma.Items.Components
                 
                 int ignoredItemCount = 0;
                 var subContainableItems = AllSubContainableItems;
-                float targetSlotCapacity = GetMaxStackSize(targetSlot);
+                float targetSlotCapacity = Math.Min(containedItem.Prefab.MaxStackSize, GetMaxStackSize(targetSlot));
                 float capacity = targetSlotCapacity * MainContainerCapacity;
                 if (subContainableItems != null)
                 {
@@ -310,29 +419,36 @@ namespace Barotrauma.Items.Components
                 int itemCount = Inventory.AllItems.Count() - ignoredItemCount;
                 return Math.Min(itemCount / Math.Max(capacity, 1), 1);                
             }
+
+            //display the state of an item in a specific slot
+            if (Inventory.Capacity == 1 || ContainedStateIndicatorSlot > -1)
+            {
+                if (containedItem == null) { return 0.0f; }
+                //if the contained item has some contained state indicator, show that
+                if (containedItem.GetComponent<ItemContainer>() is { ShowContainedStateIndicator: true } containedItemContainer)
+                {
+                    return containedItemContainer.GetContainedIndicatorState();
+                }
+                int maxStackSize = Math.Min(containedItem.Prefab.GetMaxStackSize(Inventory), GetMaxStackSize(targetSlot));
+                if (maxStackSize == 1)
+                {
+                    return containedItem.Condition / containedItem.MaxCondition;
+                }
+                return containedItems.Count() / (float)maxStackSize;                    
+            }
             else
             {
-                if (containedItem != null && (Inventory.Capacity == 1 || HasSubContainers))
-                {
-                    int maxStackSize = Math.Min(containedItem.Prefab.MaxStackSize, GetMaxStackSize(targetSlot));
-                    if (maxStackSize > 1 || containedItem.Prefab.HideConditionBar)
-                    {
-                        return containedItems.Count() / (float)maxStackSize;
-                    }
-                }
-                return Inventory.Capacity == 1 || ContainedStateIndicatorSlot > -1 ?
-                    (containedItem == null ? 0.0f : containedItem.Condition / containedItem.MaxCondition) :
-                    Inventory.EmptySlotCount / (float)Inventory.Capacity;
-            }                  
+                return Inventory.EmptySlotCount / (float)Inventory.Capacity;
+            }
         }
 
-        public void Draw(SpriteBatch spriteBatch, bool editing = false, float itemDepth = -1)
+        public void Draw(SpriteBatch spriteBatch, bool editing = false, float itemDepth = -1, Color? overrideColor = null)
         {
             if (hideItems || (item.body != null && !item.body.Enabled)) { return; }
-            DrawContainedItems(spriteBatch, itemDepth);
+            DrawContainedItems(spriteBatch, itemDepth, overrideColor);
         }
 
-        public void DrawContainedItems(SpriteBatch spriteBatch, float itemDepth)
+        public void DrawContainedItems(SpriteBatch spriteBatch, float itemDepth, Color? overrideColor = null)
         {
             Vector2 transformedItemPos = ItemPos * item.Scale;
             Vector2 transformedItemInterval = ItemInterval * item.Scale;
@@ -388,7 +504,7 @@ namespace Barotrauma.Items.Components
             bool isWiringMode = SubEditorScreen.TransparentWiringMode && SubEditorScreen.IsWiringMode();
 
             int i = 0;
-            foreach (DrawableContainedItem contained in drawableContainedItems)
+            foreach (ContainedItem contained in containedItems)
             {
                 Vector2 itemPos = currentItemPos;
 
@@ -466,7 +582,7 @@ namespace Barotrauma.Items.Components
                 contained.Item.Sprite.Draw(
                     spriteBatch,
                     new Vector2(itemPos.X, -itemPos.Y),
-                    isWiringMode ? contained.Item.GetSpriteColor(withHighlight: true) * 0.15f : contained.Item.GetSpriteColor(withHighlight: true),
+                    overrideColor ?? (isWiringMode ? contained.Item.GetSpriteColor(withHighlight: true) * 0.15f : contained.Item.GetSpriteColor(withHighlight: true)),
                     origin,
                     -(contained.Item.body == null ? 0.0f : contained.Item.body.DrawRotation),
                     contained.Item.Scale,
@@ -476,7 +592,7 @@ namespace Barotrauma.Items.Components
                 foreach (ItemContainer ic in contained.Item.GetComponents<ItemContainer>())
                 {
                     if (ic.hideItems) { continue; }
-                    ic.DrawContainedItems(spriteBatch, containedSpriteDepth);
+                    ic.DrawContainedItems(spriteBatch, containedSpriteDepth, overrideColor);
                 }
 
                 i++;
@@ -497,7 +613,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public override void UpdateHUD(Character character, float deltaTime, Camera cam)
+        public override void UpdateHUDComponentSpecific(Character character, float deltaTime, Camera cam)
         {
             if (!item.IsInteractable(character)) { return; }
             if (Inventory.RectTransform != null)
@@ -512,19 +628,10 @@ namespace Barotrauma.Items.Components
 
             //if the item is in the character's inventory, no need to update the item's inventory 
             //because the player can see it by hovering the cursor over the item        
-            guiCustomComponent.Visible = DrawInventory && item.ParentInventory?.Owner != character;
+            guiCustomComponent.Visible = DrawInventory && (item.ParentInventory?.Owner != character || Inventory.DrawWhenEquipped);
             if (!guiCustomComponent.Visible) { return; }           
 
             Inventory.Update(deltaTime, cam);
         }
-
-        /*public override void DrawHUD(SpriteBatch spriteBatch, Character character)
-        {
-            //if the item is in the character's inventory, no need to draw the item's inventory 
-            //because the player can see it by hovering the cursor over the item
-            if (item.ParentInventory?.Owner == character || !DrawInventory) return;
-            
-            Inventory.Draw(spriteBatch);            
-        }*/
     }
 }

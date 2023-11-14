@@ -115,7 +115,7 @@ namespace Barotrauma.Steam
             var searchBox = new GUITextBox(new RectTransform(Vector2.One, searchHolder.RectTransform), "", createClearButton: true);
             var searchTitle = new GUITextBlock(new RectTransform(Vector2.One, searchHolder.RectTransform) {Anchor = Anchor.TopLeft},
                 textColor: Color.DarkGray * 0.6f,
-                text: TextManager.Get("Search") + "...",
+                text: TextManager.Get("Search") + TextManager.Get("ellipsis"),
                 textAlignment: Alignment.CenterLeft)
             {
                 CanBeFocused = false

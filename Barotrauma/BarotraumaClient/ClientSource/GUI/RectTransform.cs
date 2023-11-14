@@ -306,6 +306,8 @@ namespace Barotrauma
             {
                 _scaleBasis = value;
                 RecalculateAbsoluteSize();
+                RecalculateAnchorPoint();
+                RecalculatePivotOffset();
             }
         }
 

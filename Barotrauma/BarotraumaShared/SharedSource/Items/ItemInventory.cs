@@ -58,12 +58,12 @@ namespace Barotrauma
             return itemPrefab != null && slots[i].CanBePut(itemPrefab, condition, quality) && slots[i].Items.Count < container.GetMaxStackSize(i);
         }
 
-        public override int HowManyCanBePut(ItemPrefab itemPrefab, int i, float? condition)
+        public override int HowManyCanBePut(ItemPrefab itemPrefab, int i, float? condition, bool ignoreItemsInSlot = false)
         {
             if (itemPrefab == null) { return 0; }
             if (i < 0 || i >= slots.Length) { return 0; }
             if (!container.CanBeContained(itemPrefab, i)) { return 0; }
-            return slots[i].HowManyCanBePut(itemPrefab, maxStackSize: Math.Min(itemPrefab.MaxStackSize, container.GetMaxStackSize(i)), condition);
+            return slots[i].HowManyCanBePut(itemPrefab, maxStackSize: Math.Min(itemPrefab.GetMaxStackSize(this), container.GetMaxStackSize(i)), condition, ignoreItemsInSlot);
         }
 
         public override bool IsFull(bool takeStacksIntoAccount = false)
@@ -74,7 +74,7 @@ namespace Barotrauma
                 {
                     if (!slots[i].Any()) { return false; }
                     var item = slots[i].FirstOrDefault();
-                    if (slots[i].Items.Count < Math.Min(item.Prefab.MaxStackSize, container.GetMaxStackSize(i))) { return false; }
+                    if (slots[i].Items.Count < Math.Min(item.Prefab.GetMaxStackSize(this), container.GetMaxStackSize(i))) { return false; }
                 }
             }
             else
@@ -133,7 +133,7 @@ namespace Barotrauma
             return wasPut;
         }
 
-        public override void CreateNetworkEvent()
+        protected override void CreateNetworkEvent(Range slotRange)
         {
             if (!Item.ItemList.Contains(container.Item))
             {
@@ -150,11 +150,17 @@ namespace Barotrauma
                 DebugConsole.Log("Creating a network event for the item \"" + container.Item + "\" failed, ItemContainer not found in components");
                 return;
             }
-            
+
+            if (slotRange.Start.Value < 0 || slotRange.End.Value > capacity)
+            {
+                DebugConsole.ThrowError($"Error when creating an inventory event: invalid slot range ({slotRange})\n" + Environment.StackTrace);
+                return;
+            }
+
             if (GameMain.NetworkMember != null)
             {
                 if (GameMain.NetworkMember.IsClient) { syncItemsDelay = 1.0f; }
-                GameMain.NetworkMember.CreateEntityEvent(Owner as INetSerializable, new Item.InventoryStateEventData(container));
+                GameMain.NetworkMember.CreateEntityEvent(Owner as INetSerializable, new Item.InventoryStateEventData(container, slotRange));
             }
         }    
 

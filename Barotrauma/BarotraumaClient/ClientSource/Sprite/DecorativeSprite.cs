@@ -144,13 +144,7 @@ namespace Barotrauma
                     default:
                         continue;
                 }
-                foreach (XAttribute attribute in subElement.Attributes())
-                {
-                    if (PropertyConditional.IsValid(attribute))
-                    {
-                        conditionalList.Add(new PropertyConditional(attribute));
-                    }
-                }
+                conditionalList.AddRange(PropertyConditional.FromXElement(subElement));
             }
         }
 

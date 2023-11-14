@@ -7,7 +7,7 @@ using Steamworks.Data;
 
 namespace Steamworks
 {
-	internal class ISteamParties : SteamInterface
+	internal unsafe class ISteamParties : SteamInterface
 	{
 		
 		internal ISteamParties( bool IsGameServer )
@@ -50,8 +50,7 @@ namespace Steamworks
 		#endregion
 		internal bool GetBeaconDetails( PartyBeaconID_t ulBeaconID, ref SteamId pSteamIDBeaconOwner, ref SteamPartyBeaconLocation_t pLocation, out string pchMetadata )
 		{
-			using var memory = Helpers.TakeMemory();
-			IntPtr mempchMetadata = memory;
+			using var mempchMetadata = Helpers.TakeMemory();
 			var returnValue = _GetBeaconDetails( Self, ulBeaconID, ref pSteamIDBeaconOwner, ref pLocation, mempchMetadata, (1024 * 32) );
 			pchMetadata = Helpers.MemoryToString( mempchMetadata );
 			return returnValue;
@@ -154,8 +153,7 @@ namespace Steamworks
 		#endregion
 		internal bool GetBeaconLocationData( SteamPartyBeaconLocation_t BeaconLocation, SteamPartyBeaconLocationData eData, out string pchDataStringOut )
 		{
-			using var memory = Helpers.TakeMemory();
-			IntPtr mempchDataStringOut = memory;
+			using var mempchDataStringOut = Helpers.TakeMemory();
 			var returnValue = _GetBeaconLocationData( Self, BeaconLocation, eData, mempchDataStringOut, (1024 * 32) );
 			pchDataStringOut = Helpers.MemoryToString( mempchDataStringOut );
 			return returnValue;

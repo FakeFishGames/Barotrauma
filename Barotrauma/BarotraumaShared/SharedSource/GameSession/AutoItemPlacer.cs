@@ -58,9 +58,13 @@ namespace Barotrauma
             }
         }
 
-        public static void RegenerateLoot(Submarine sub, ItemContainer regeneratedContainer)
+        /// <summary>
+        /// Spawns loot in the specified container. 
+        /// </summary>
+        /// <param name="skipItemProbability">Probability for an individual loot item to be skipped. I.e. a value of 1.0 means nothing spawns, 0.5 means there's about 50% of the normal amount of loot.</param>
+        public static void RegenerateLoot(Submarine sub, ItemContainer regeneratedContainer, float skipItemProbability = 0.0f)
         {
-            CreateAndPlace(sub.ToEnumerable(), regeneratedContainer: regeneratedContainer);
+            CreateAndPlace(sub.ToEnumerable(), regeneratedContainer: regeneratedContainer, skipItemProbability);
         }
 
         public static Identifier DefaultStartItemSet = new Identifier("normal");
@@ -105,6 +109,7 @@ namespace Barotrauma
                     DebugConsole.AddWarning($"Cannot find a start item with with the identifier \"{startItem.Item}\"");
                     continue;
                 }
+                if (startItem.MultiPlayerOnly && GameMain.GameSession?.GameMode is { IsSinglePlayer: true }) { continue; }
                 for (int i = 0; i < startItem.Amount; i++)
                 {
                     var item = new Item(itemPrefab, initialSpawnPos.Position, sub, callOnItemLoaded: false);
@@ -136,7 +141,7 @@ namespace Barotrauma
             }
         }
 
-        private static void CreateAndPlace(IEnumerable<Submarine> subs, ItemContainer regeneratedContainer = null)
+        private static void CreateAndPlace(IEnumerable<Submarine> subs, ItemContainer regeneratedContainer = null, float skipItemProbability = 0.0f)
         {
             if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient)
             {
@@ -249,16 +254,16 @@ namespace Barotrauma
                 }
             }
 
-            bool SpawnItems(ItemPrefab itemPrefab)
+            void SpawnItems(ItemPrefab itemPrefab, float skipItemProbability = 0.0f)
             {
+                if (Rand.Range(0.0f, 1.0f, Rand.RandSync.ServerAndClient) < skipItemProbability) { return; }
                 if (itemPrefab == null)
                 {
                     string errorMsg = "Error in AutoItemPlacer.SpawnItems - itemPrefab was null.\n" + Environment.StackTrace.CleanupStackTrace();
                     DebugConsole.ThrowError(errorMsg);
                     GameAnalyticsManager.AddErrorEventOnce("AutoItemPlacer.SpawnItems:ItemNull", GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
-                    return false;
+                    return;
                 }
-                bool success = false;
                 bool isCampaign = GameMain.GameSession?.GameMode is CampaignMode;
                 float levelDifficulty = Level.Loaded?.Difficulty ?? 0.0f;
                 foreach (PreferredContainer preferredContainer in itemPrefab.PreferredContainers)
@@ -278,11 +283,9 @@ namespace Barotrauma
                         if (newItems.Any())
                         {
                             itemsToSpawn.AddRange(newItems);
-                            success = true;
                         }
                     }
                 }
-                return success;
             }
         }
 

@@ -1010,16 +1010,13 @@ namespace Barotrauma
                         // Sub editor drag and highlight
                         case SubEditorScreen editor:
                         {
-                            foreach (var mapEntity in MapEntity.mapEntityList)
+                            if (MapEntity.StartMovingPos != Vector2.Zero || MapEntity.Resizing)
                             {
-                                if (MapEntity.StartMovingPos != Vector2.Zero)
-                                {
-                                    return CursorState.Dragging;
-                                }
-                                if (mapEntity.IsHighlighted)
-                                {
-                                    return CursorState.Hand;
-                                }
+                                return CursorState.Dragging;
+                            }
+                            if (MapEntity.HighlightedEntities.Any(h => !h.IsSelected))
+                            {
+                                return CursorState.Hand;
                             }
                             break;
                         }
@@ -2442,8 +2439,7 @@ namespace Barotrauma
 
                 var buttonContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.7f, 0.8f), pauseMenuInner.RectTransform, Anchor.BottomCenter) { RelativeOffset = new Vector2(0.0f, padding) })
                 {
-                    Stretch = true,
-                    RelativeSpacing = 0.05f
+                    AbsoluteSpacing = IntScale(15)
                 };
 
                 new GUIButton(new RectTransform(new Vector2(0.1f, 0.07f), pauseMenuInner.RectTransform, Anchor.TopRight) { RelativeOffset = new Vector2(padding) },
@@ -2526,7 +2522,7 @@ namespace Barotrauma
                 pauseMenuInner.RectTransform.MinSize = new Point(
                     pauseMenuInner.RectTransform.MinSize.X,
                         Math.Max(
-                            (int)(buttonContainer.Children.Sum(c => c.Rect.Height + buttonContainer.Rect.Height * buttonContainer.RelativeSpacing)),
+                            (int)(buttonContainer.Children.Sum(c => c.Rect.Height + buttonContainer.AbsoluteSpacing) / buttonContainer.RectTransform.RelativeSize.Y),
                             pauseMenuInner.RectTransform.MinSize.X));
 
             }

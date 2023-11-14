@@ -147,7 +147,7 @@ namespace Barotrauma
                     monster.Params.AI.FleeHealthThreshold = 0;
                     foreach (var targetParam in monster.Params.AI.Targets)
                     {
-                        if (targetParam.Tag.Equals("engine", StringComparison.OrdinalIgnoreCase)) { continue; }
+                        if (targetParam.Tag == "engine") { continue; }
                         switch (targetParam.State)
                         {
                             case AIState.Avoid:

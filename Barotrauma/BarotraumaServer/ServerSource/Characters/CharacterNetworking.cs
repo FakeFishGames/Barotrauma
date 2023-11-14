@@ -446,14 +446,14 @@ namespace Barotrauma
 
         public virtual void ServerEventWrite(IWriteMessage msg, Client c, NetEntityEvent.IData extraData = null)
         {
-            if (!(extraData is IEventData eventData)) { throw new Exception($"Malformed character event: expected {nameof(Character)}.{nameof(IEventData)}, got {extraData?.GetType().Name ?? "[NULL]"}"); }
+            if (extraData is not IEventData eventData) { throw new Exception($"Malformed character event: expected {nameof(Character)}.{nameof(IEventData)}, got {extraData?.GetType().Name ?? "[NULL]"}"); }
 
             msg.WriteRangedInteger((int)eventData.EventType, (int)EventType.MinValue, (int)EventType.MaxValue);
             switch (eventData)
             {
-                case InventoryStateEventData _:
+                case InventoryStateEventData inventoryData:
                     msg.WriteUInt16(GameMain.Server.EntityEventManager.Events.Last()?.ID ?? (ushort)0);
-                    Inventory.ServerEventWrite(msg, c);
+                    Inventory.ServerEventWrite(msg, c, inventoryData);
                     break;
                 case ControlEventData controlEventData:
                     Client owner = controlEventData.Owner;
@@ -482,12 +482,12 @@ namespace Barotrauma
                 case IAttackEventData attackEventData:
                     {
                         int attackLimbIndex = Removed ? -1 : Array.IndexOf(AnimController.Limbs, attackEventData.AttackLimb);
-                        ushort targetEntityId = 0;
+                        ushort targetEntityId = NullEntityID;
                         int targetLimbIndex = -1;
                         if (attackEventData.TargetEntity is Entity { Removed: false } targetEntity)
                         {
                             targetEntityId = targetEntity.ID;
-                            if (targetEntity is Character { AnimController: { Limbs: var targetLimbsArray } })
+                            if (targetEntity is Character { AnimController.Limbs: var targetLimbsArray })
                             {
                                 targetLimbIndex = targetLimbsArray.IndexOf(attackEventData.TargetLimb);
                             }

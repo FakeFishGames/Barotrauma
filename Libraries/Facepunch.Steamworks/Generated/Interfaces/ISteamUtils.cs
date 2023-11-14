@@ -7,7 +7,7 @@ using Steamworks.Data;
 
 namespace Steamworks
 {
-	internal class ISteamUtils : SteamInterface
+	internal unsafe class ISteamUtils : SteamInterface
 	{
 		
 		internal ISteamUtils( bool IsGameServer )
@@ -15,12 +15,12 @@ namespace Steamworks
 			SetupInterface( IsGameServer );
 		}
 		
-		[DllImport( Platform.LibraryName, EntryPoint = "SteamAPI_SteamUtils_v009", CallingConvention = Platform.CC)]
-		internal static extern IntPtr SteamAPI_SteamUtils_v009();
-		public override IntPtr GetUserInterfacePointer() => SteamAPI_SteamUtils_v009();
-		[DllImport( Platform.LibraryName, EntryPoint = "SteamAPI_SteamGameServerUtils_v009", CallingConvention = Platform.CC)]
-		internal static extern IntPtr SteamAPI_SteamGameServerUtils_v009();
-		public override IntPtr GetServerInterfacePointer() => SteamAPI_SteamGameServerUtils_v009();
+		[DllImport( Platform.LibraryName, EntryPoint = "SteamAPI_SteamUtils_v010", CallingConvention = Platform.CC)]
+		internal static extern IntPtr SteamAPI_SteamUtils_v010();
+		public override IntPtr GetUserInterfacePointer() => SteamAPI_SteamUtils_v010();
+		[DllImport( Platform.LibraryName, EntryPoint = "SteamAPI_SteamGameServerUtils_v010", CallingConvention = Platform.CC)]
+		internal static extern IntPtr SteamAPI_SteamGameServerUtils_v010();
+		public override IntPtr GetServerInterfacePointer() => SteamAPI_SteamGameServerUtils_v010();
 		
 		
 		#region FunctionMeta
@@ -99,18 +99,6 @@ namespace Steamworks
 		internal bool GetImageRGBA( int iImage, [In,Out] byte[]  pubDest, int nDestBufferSize )
 		{
 			var returnValue = _GetImageRGBA( Self, iImage, pubDest, nDestBufferSize );
-			return returnValue;
-		}
-		
-		#region FunctionMeta
-		[DllImport( Platform.LibraryName, EntryPoint = "SteamAPI_ISteamUtils_GetCSERIPPort", CallingConvention = Platform.CC)]
-		[return: MarshalAs( UnmanagedType.I1 )]
-		private static extern bool _GetCSERIPPort( IntPtr self, ref uint unIP, ref ushort usPort );
-		
-		#endregion
-		internal bool GetCSERIPPort( ref uint unIP, ref ushort usPort )
-		{
-			var returnValue = _GetCSERIPPort( Self, ref unIP, ref usPort );
 			return returnValue;
 		}
 		
@@ -268,8 +256,7 @@ namespace Steamworks
 		#endregion
 		internal bool GetEnteredGamepadTextInput( out string pchText )
 		{
-			using var memory = Helpers.TakeMemory();
-			IntPtr mempchText = memory;
+			using var mempchText = Helpers.TakeMemory();
 			var returnValue = _GetEnteredGamepadTextInput( Self, mempchText, (1024 * 32) );
 			pchText = Helpers.MemoryToString( mempchText );
 			return returnValue;
@@ -367,25 +354,24 @@ namespace Steamworks
 		#region FunctionMeta
 		[DllImport( Platform.LibraryName, EntryPoint = "SteamAPI_ISteamUtils_InitFilterText", CallingConvention = Platform.CC)]
 		[return: MarshalAs( UnmanagedType.I1 )]
-		private static extern bool _InitFilterText( IntPtr self );
+		private static extern bool _InitFilterText( IntPtr self, uint unFilterOptions );
 		
 		#endregion
-		internal bool InitFilterText()
+		internal bool InitFilterText( uint unFilterOptions )
 		{
-			var returnValue = _InitFilterText( Self );
+			var returnValue = _InitFilterText( Self, unFilterOptions );
 			return returnValue;
 		}
 		
 		#region FunctionMeta
 		[DllImport( Platform.LibraryName, EntryPoint = "SteamAPI_ISteamUtils_FilterText", CallingConvention = Platform.CC)]
-		private static extern int _FilterText( IntPtr self, IntPtr pchOutFilteredText, uint nByteSizeOutFilteredText, [MarshalAs( UnmanagedType.CustomMarshaler, MarshalTypeRef = typeof( Utf8StringToNative ) )] string pchInputMessage, [MarshalAs( UnmanagedType.U1 )] bool bLegalOnly );
+		private static extern int _FilterText( IntPtr self, TextFilteringContext eContext, SteamId sourceSteamID, [MarshalAs( UnmanagedType.CustomMarshaler, MarshalTypeRef = typeof( Utf8StringToNative ) )] string pchInputMessage, IntPtr pchOutFilteredText, uint nByteSizeOutFilteredText );
 		
 		#endregion
-		internal int FilterText( out string pchOutFilteredText, [MarshalAs( UnmanagedType.CustomMarshaler, MarshalTypeRef = typeof( Utf8StringToNative ) )] string pchInputMessage, [MarshalAs( UnmanagedType.U1 )] bool bLegalOnly )
+		internal int FilterText( TextFilteringContext eContext, SteamId sourceSteamID, [MarshalAs( UnmanagedType.CustomMarshaler, MarshalTypeRef = typeof( Utf8StringToNative ) )] string pchInputMessage, out string pchOutFilteredText )
 		{
-			using var memory = Helpers.TakeMemory();
-			IntPtr mempchOutFilteredText = memory;
-			var returnValue = _FilterText( Self, mempchOutFilteredText, (1024 * 32), pchInputMessage, bLegalOnly );
+			using var mempchOutFilteredText = Helpers.TakeMemory();
+			var returnValue = _FilterText( Self, eContext, sourceSteamID, pchInputMessage, mempchOutFilteredText, (1024 * 32) );
 			pchOutFilteredText = Helpers.MemoryToString( mempchOutFilteredText );
 			return returnValue;
 		}
@@ -398,6 +384,52 @@ namespace Steamworks
 		internal SteamIPv6ConnectivityState GetIPv6ConnectivityState( SteamIPv6ConnectivityProtocol eProtocol )
 		{
 			var returnValue = _GetIPv6ConnectivityState( Self, eProtocol );
+			return returnValue;
+		}
+		
+		#region FunctionMeta
+		[DllImport( Platform.LibraryName, EntryPoint = "SteamAPI_ISteamUtils_IsSteamRunningOnSteamDeck", CallingConvention = Platform.CC)]
+		[return: MarshalAs( UnmanagedType.I1 )]
+		private static extern bool _IsSteamRunningOnSteamDeck( IntPtr self );
+		
+		#endregion
+		internal bool IsSteamRunningOnSteamDeck()
+		{
+			var returnValue = _IsSteamRunningOnSteamDeck( Self );
+			return returnValue;
+		}
+		
+		#region FunctionMeta
+		[DllImport( Platform.LibraryName, EntryPoint = "SteamAPI_ISteamUtils_ShowFloatingGamepadTextInput", CallingConvention = Platform.CC)]
+		[return: MarshalAs( UnmanagedType.I1 )]
+		private static extern bool _ShowFloatingGamepadTextInput( IntPtr self, TextInputMode eKeyboardMode, int nTextFieldXPosition, int nTextFieldYPosition, int nTextFieldWidth, int nTextFieldHeight );
+		
+		#endregion
+		internal bool ShowFloatingGamepadTextInput( TextInputMode eKeyboardMode, int nTextFieldXPosition, int nTextFieldYPosition, int nTextFieldWidth, int nTextFieldHeight )
+		{
+			var returnValue = _ShowFloatingGamepadTextInput( Self, eKeyboardMode, nTextFieldXPosition, nTextFieldYPosition, nTextFieldWidth, nTextFieldHeight );
+			return returnValue;
+		}
+		
+		#region FunctionMeta
+		[DllImport( Platform.LibraryName, EntryPoint = "SteamAPI_ISteamUtils_SetGameLauncherMode", CallingConvention = Platform.CC)]
+		private static extern void _SetGameLauncherMode( IntPtr self, [MarshalAs( UnmanagedType.U1 )] bool bLauncherMode );
+		
+		#endregion
+		internal void SetGameLauncherMode( [MarshalAs( UnmanagedType.U1 )] bool bLauncherMode )
+		{
+			_SetGameLauncherMode( Self, bLauncherMode );
+		}
+		
+		#region FunctionMeta
+		[DllImport( Platform.LibraryName, EntryPoint = "SteamAPI_ISteamUtils_DismissFloatingGamepadTextInput", CallingConvention = Platform.CC)]
+		[return: MarshalAs( UnmanagedType.I1 )]
+		private static extern bool _DismissFloatingGamepadTextInput( IntPtr self );
+		
+		#endregion
+		internal bool DismissFloatingGamepadTextInput()
+		{
+			var returnValue = _DismissFloatingGamepadTextInput( Self );
 			return returnValue;
 		}
 		

@@ -19,7 +19,7 @@ namespace Barotrauma.Items.Components
             get { return Vector2.Zero; }
         }
 
-        public void Draw(SpriteBatch spriteBatch, bool editing, float itemDepth = -1)
+        public void Draw(SpriteBatch spriteBatch, bool editing, float itemDepth = -1, Color? overrideColor = null)
         {
             if (dockingState == 0.0f) return;
 
@@ -39,7 +39,8 @@ namespace Barotrauma.Items.Components
                             drawPos,
                             new Rectangle(
                                 rect.Center.X + (int)(rect.Width / 2 * (1.0f - dockingState)), rect.Y,
-                                (int)(rect.Width / 2 * dockingState), rect.Height), Color.White);
+                                (int)(rect.Width / 2 * dockingState), rect.Height),
+                            overrideColor ?? Color.White);
 
                     }
                     else
@@ -48,7 +49,8 @@ namespace Barotrauma.Items.Components
                             drawPos - Vector2.UnitX * (rect.Width / 2 * dockingState),
                             new Rectangle(
                                 rect.X, rect.Y,
-                                (int)(rect.Width / 2 * dockingState), rect.Height), Color.White);
+                                (int)(rect.Width / 2 * dockingState), rect.Height),
+                            overrideColor ?? Color.White);
                     }
                 }
                 else
@@ -61,7 +63,8 @@ namespace Barotrauma.Items.Components
                             drawPos - Vector2.UnitY * (rect.Height / 2 * dockingState),
                             new Rectangle(
                                 rect.X, rect.Y,
-                                rect.Width, (int)(rect.Height / 2 * dockingState)), Color.White);
+                                rect.Width, (int)(rect.Height / 2 * dockingState)), 
+                            overrideColor ?? Color.White);
                     }
                     else
                     {
@@ -69,7 +72,8 @@ namespace Barotrauma.Items.Components
                             drawPos,
                             new Rectangle(
                                 rect.X, rect.Y + rect.Height / 2 + (int)(rect.Height / 2 * (1.0f - dockingState)),
-                                rect.Width, (int)(rect.Height / 2 * dockingState)), Color.White);
+                                rect.Width, (int)(rect.Height / 2 * dockingState)), 
+                            overrideColor ?? Color.White);
                     }
                 }
             }

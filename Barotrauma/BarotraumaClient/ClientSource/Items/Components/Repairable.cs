@@ -373,12 +373,19 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public void Draw(SpriteBatch spriteBatch, bool editing, float itemDepth = -1)
+        public void Draw(SpriteBatch spriteBatch, bool editing, float itemDepth = -1, Color? overrideColor = null)
         {
             if (GameMain.DebugDraw && Character.Controlled?.FocusedItem == item)
             {
-                bool paused = !ShouldDeteriorate();
-                if (deteriorationTimer > 0.0f)
+                bool paused = !ShouldDeteriorate() && ForceDeteriorationTimer <= 0.0f;
+                if (ForceDeteriorationTimer > 0.0f)
+                {
+                    GUI.DrawString(spriteBatch,
+                        new Vector2(item.DrawPosition.X, -item.DrawPosition.Y), "Forced deterioration for " + ((int)ForceDeteriorationTimer) + " s",
+                        Color.Red, Color.Black * 0.5f);
+
+                }
+                else if (deteriorationTimer > 0.0f)
                 {
                     GUI.DrawString(spriteBatch,
                         new Vector2(item.DrawPosition.X, -item.DrawPosition.Y), "Deterioration delay " + ((int)deteriorationTimer) + (paused ? " [PAUSED]" : ""),
@@ -430,8 +437,7 @@ namespace Barotrauma.Items.Components
         public void ClientEventRead(IReadMessage msg, float sendingTime)
         {
             deteriorationTimer = msg.ReadSingle();
-            deteriorateAlwaysResetTimer = msg.ReadSingle();
-            DeteriorateAlways = msg.ReadBoolean();
+            ForceDeteriorationTimer = msg.ReadSingle();
             tinkeringDuration = msg.ReadSingle();
             tinkeringStrength = msg.ReadSingle();
             tinkeringPowersDevices = msg.ReadBoolean();

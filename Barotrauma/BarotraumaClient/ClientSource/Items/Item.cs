@@ -38,7 +38,7 @@ namespace Barotrauma
             }
         }
 
-        partial void AssignCampaignInteractionTypeProjSpecific(CampaignMode.InteractionType interactionType)
+        partial void AssignCampaignInteractionTypeProjSpecific(CampaignMode.InteractionType interactionType, IEnumerable<Client> targetClients)
         {
             if (interactionType == CampaignMode.InteractionType.None)
             {
@@ -317,6 +317,11 @@ namespace Barotrauma
 
         public override void Draw(SpriteBatch spriteBatch, bool editing, bool back = true)
         {
+            Draw(spriteBatch, editing, back, overrideColor: null);
+        }
+
+        public void Draw(SpriteBatch spriteBatch, bool editing, bool back = true, Color? overrideColor = null)
+        {
             if (!Visible || (!editing && HiddenInGame) || !SubEditorScreen.IsLayerVisible(this)) { return; }
 
             if (editing)
@@ -328,7 +333,9 @@ namespace Barotrauma
                 else if (!ShowItems) { return; }
             }
 
-            Color color = IsIncludedInSelection && editing ?  GUIStyle.Blue : GetSpriteColor(withHighlight: true);
+            Color color = 
+                overrideColor ??
+                (IsIncludedInSelection && editing ?  GUIStyle.Blue : GetSpriteColor(withHighlight: true));
 
             bool isWiringMode = editing && SubEditorScreen.TransparentWiringMode && SubEditorScreen.IsWiringMode() && !isWire && parentInventory == null;
             bool renderTransparent = isWiringMode && GetComponent<ConnectionPanel>() == null;
@@ -412,15 +419,7 @@ namespace Barotrauma
                     }
                     else
                     {
-                        Vector2 origin = activeSprite.Origin;
-                        if ((activeSprite.effects & SpriteEffects.FlipHorizontally) == SpriteEffects.FlipHorizontally)
-                        {
-                            origin.X = activeSprite.SourceRect.Width - origin.X;
-                        }
-                        if ((activeSprite.effects & SpriteEffects.FlipVertically) == SpriteEffects.FlipVertically)
-                        {
-                            origin.Y = activeSprite.SourceRect.Height - origin.Y;
-                        }
+                        Vector2 origin = GetSpriteOrigin(activeSprite);
                         if (color.A > 0)
                         {
                             activeSprite.Draw(spriteBatch, new Vector2(DrawPosition.X, -DrawPosition.Y) + drawOffset, color, origin, RotationRad, Scale, activeSprite.effects, depth);
@@ -484,7 +483,8 @@ namespace Barotrauma
                             }
                         }
                     }
-                    body.Draw(spriteBatch, activeSprite, color, depth, Scale);
+                    Vector2 origin = GetSpriteOrigin(activeSprite);
+                    body.Draw(spriteBatch, activeSprite, color, depth, Scale, origin: origin);
                     if (fadeInBrokenSprite != null)
                     {
                         float d = Math.Min(depth + (fadeInBrokenSprite.Sprite.Depth - activeSprite.Depth - 0.000001f), 0.999f);
@@ -497,12 +497,12 @@ namespace Barotrauma
                         Vector2 offset = decorativeSprite.GetOffset(ref spriteAnimState[decorativeSprite].OffsetState, spriteAnimState[decorativeSprite].RandomOffsetMultiplier, -RotationRad) * Scale;
                         if (flippedX && Prefab.CanSpriteFlipX) { offset.X = -offset.X; }
                         if (flippedY && Prefab.CanSpriteFlipY) { offset.Y = -offset.Y; }
-                        var ca = (float)Math.Cos(-body.Rotation);
-                        var sa = (float)Math.Sin(-body.Rotation);
+                        var ca = MathF.Cos(-body.DrawRotation);
+                        var sa = MathF.Sin(-body.DrawRotation);
                         Vector2 transformedOffset = new Vector2(ca * offset.X + sa * offset.Y, -sa * offset.X + ca * offset.Y);
 
-                        decorativeSprite.Sprite.Draw(spriteBatch, new Vector2(DrawPosition.X + transformedOffset.X, -(DrawPosition.Y + transformedOffset.Y)), color,
-                            -body.Rotation + rotation, decorativeSprite.GetScale(spriteAnimState[decorativeSprite].RandomScaleFactor) * Scale, activeSprite.effects,
+                        decorativeSprite.Sprite.Draw(spriteBatch, new Vector2(body.DrawPosition.X + transformedOffset.X, -(body.DrawPosition.Y + transformedOffset.Y)), color,
+                            -body.DrawRotation + rotation, decorativeSprite.GetScale(spriteAnimState[decorativeSprite].RandomScaleFactor) * Scale, activeSprite.effects,
                             depth: depth + (decorativeSprite.Sprite.Depth - activeSprite.Depth));
                     }
                 }
@@ -536,7 +536,7 @@ namespace Barotrauma
             //causing them to be removed from the list
             for (int i = drawableComponents.Count - 1; i >= 0; i--)
             {
-                drawableComponents[i].Draw(spriteBatch, editing, depth);
+                drawableComponents[i].Draw(spriteBatch, editing, depth, overrideColor);
             }
 
             if (GameMain.DebugDraw)
@@ -603,6 +603,20 @@ namespace Barotrauma
                 GUI.DrawLine(spriteBatch, from, to, lineColor * 0.25f, width: 3);
                 GUI.DrawLine(spriteBatch, from, to, lineColor, width: 1);
                 //GUI.DrawString(spriteBatch, from, $"Linked to {e.Name}", lineColor, Color.Black * 0.5f);
+            }
+
+            Vector2 GetSpriteOrigin(Sprite sprite)
+            {
+                Vector2 origin = sprite.Origin;
+                if ((sprite.effects & SpriteEffects.FlipHorizontally) == SpriteEffects.FlipHorizontally)
+                {
+                    origin.X = sprite.SourceRect.Width - origin.X;
+                }
+                if ((sprite.effects & SpriteEffects.FlipVertically) == SpriteEffects.FlipVertically)
+                {
+                    origin.Y = sprite.SourceRect.Height - origin.Y;
+                }
+                return origin;
             }
         }
 
@@ -1076,7 +1090,7 @@ namespace Barotrauma
                 if (!ignoreLocking && ic.LockGuiFramePosition) { continue; }
                 //if the frame covers nearly all of the screen, don't trying to prevent overlaps because it'd fail anyway
                 if (ic.GuiFrame.Rect.Width >= GameMain.GraphicsWidth * 0.9f && ic.GuiFrame.Rect.Height >= GameMain.GraphicsHeight * 0.9f) { continue; }
-                ic.GuiFrame.RectTransform.ScreenSpaceOffset = Point.Zero;
+                ic.GuiFrame.RectTransform.ScreenSpaceOffset = ic.GuiFrameOffset;
                 elementsToMove.Add(ic.GuiFrame);
                 debugInitialHudPositions.Add(ic.GuiFrame.Rect);
             }
@@ -1281,6 +1295,11 @@ namespace Barotrauma
                     nameText += $" ({idName})";
                 }
             }
+            if (DroppedStack.Any())
+            {
+                nameText += $" x{DroppedStack.Count()}";
+            }
+
             texts.Add(new ColoredText(nameText, GUIStyle.TextColorNormal, false, false));
 
             if (CampaignMode.BlocksInteraction(CampaignInteractionType))
@@ -1350,10 +1369,16 @@ namespace Barotrauma
                 }
             }
 
-            if (Character.Controlled != null && Character.Controlled.SelectedItem != this && GetComponent<RemoteController>() == null)
+            var character = Character.Controlled;
+            var selectedItem = Character.Controlled?.SelectedItem;
+            if (character != null && selectedItem != this && GetComponent<RemoteController>() == null)
             {
-                if (Character.Controlled.SelectedItem?.GetComponent<RemoteController>()?.TargetItem != this &&
-                    !Character.Controlled.HeldItems.Any(it => it.GetComponent<RemoteController>()?.TargetItem == this))
+                bool insideCircuitBox = 
+                    selectedItem?.GetComponent<CircuitBox>() != null &&
+                    selectedItem.ContainedItems.Contains(this);
+                if (!insideCircuitBox &&
+                    selectedItem?.GetComponent<RemoteController>()?.TargetItem != this &&
+                    !character.HeldItems.Any(it => it.GetComponent<RemoteController>()?.TargetItem == this))
                 {
                     return;
                 }
@@ -1407,7 +1432,7 @@ namespace Barotrauma
                         int containerIndex = msg.ReadRangedInteger(0, components.Count - 1);
                         if (components[containerIndex] is ItemContainer container)
                         {
-                            container.Inventory.ClientEventRead(msg, sendingTime);
+                            container.Inventory.ClientEventRead(msg);
                         }
                         else
                         {
@@ -1421,7 +1446,12 @@ namespace Barotrauma
                     SetCondition(newCondition, isNetworkEvent: true, executeEffects: !loadingRound);
                     break;
                 case EventType.AssignCampaignInteraction:
-                    CampaignInteractionType = (CampaignMode.InteractionType)msg.ReadByte();
+                    bool isVisible = msg.ReadBoolean();
+                    if (isVisible)
+                    {
+                        var interactionType = (CampaignMode.InteractionType)msg.ReadByte();
+                        AssignCampaignInteractionType(interactionType);
+                    }
                     break;
                 case EventType.ApplyStatusEffect:
                     {
@@ -1486,6 +1516,30 @@ namespace Barotrauma
                         AddUpgrade(upgrade, false);
                     }
                     break;
+                case EventType.DroppedStack:
+                    int itemCount = msg.ReadRangedInteger(0, Inventory.MaxPossibleStackSize);
+                    if (itemCount > 0)
+                    {
+                        List<Item> droppedStack = new List<Item>();
+                        for (int i = 0; i < itemCount; i++)
+                        {
+                            var id = msg.ReadUInt16();
+                            if (FindEntityByID(id) is not Item droppedItem)
+                            {
+                                DebugConsole.ThrowError($"Error while reading {EventType.DroppedStack} message: could not find an item with the ID {id}.");
+                            }
+                            else
+                            {
+                                droppedStack.Add(droppedItem);
+                            }
+                        }
+                        CreateDroppedStack(droppedStack, allowClientExecute: true);
+                    }
+                    else
+                    {
+                        RemoveFromDroppedStack(allowClientExecute: true);
+                    }
+                    break;
                 default:
                     throw new Exception($"Malformed incoming item event: unsupported event type {eventType}");
             }
@@ -1511,7 +1565,7 @@ namespace Barotrauma
                 {
                     var component = componentStateEventData.Component;
                     if (component is null) { throw error("component was null"); }
-                    if (!(component is IClientSerializable clientSerializable)) { throw error($"component was not {nameof(IClientSerializable)}"); }
+                    if (component is not IClientSerializable clientSerializable) { throw error($"component was not {nameof(IClientSerializable)}"); }
                     int componentIndex = components.IndexOf(component);
                     if (componentIndex < 0) { throw error("component did not belong to item"); }
                     msg.WriteRangedInteger(componentIndex, 0, components.Count - 1);
@@ -1525,7 +1579,7 @@ namespace Barotrauma
                     int containerIndex = components.IndexOf(container);
                     if (containerIndex < 0) { throw error("container did not belong to item"); }
                     msg.WriteRangedInteger(containerIndex, 0, components.Count - 1);
-                    container.Inventory.ClientEventWrite(msg, extraData);
+                    container.Inventory.ClientEventWrite(msg, inventoryStateEventData);
                 }
                 break;
                 case TreatmentEventData treatmentEventData:
@@ -1551,7 +1605,7 @@ namespace Barotrauma
         {
             if (GameMain.Client == null) { return; }
 
-            if (parentInventory != null || body == null || !body.Enabled || Removed || (GetComponent<Projectile>()?.IsStuckToTarget ?? false))
+            if (parentInventory != null || body == null || !body.Enabled || Removed || (GetComponent<Projectile>() is { IsStuckToTarget: true }))
             {
                 positionBuffer.Clear();
                 return;
@@ -1567,12 +1621,20 @@ namespace Barotrauma
             body.CorrectPosition(positionBuffer, out Vector2 newPosition, out Vector2 newVelocity, out float newRotation, out float newAngularVelocity);
             body.LinearVelocity = newVelocity;
             body.AngularVelocity = newAngularVelocity;
-            if (Vector2.DistanceSquared(newPosition, body.SimPosition) > 0.0001f ||
+            float distSqr = Vector2.DistanceSquared(newPosition, body.SimPosition);
+
+            if (distSqr > 0.0001f ||
                 Math.Abs(newRotation - body.Rotation) > 0.01f)
             {
                 body.TargetPosition = newPosition;
                 body.TargetRotation = newRotation;
                 body.MoveToTargetPosition(lerp: true);
+                if (distSqr > 10.0f * 10.0f)
+                {
+                    //very large change in position, we need to recheck which submarine the item is in
+                    Submarine = null;
+                    UpdateTransform();
+                }
             }
 
             Vector2 displayPos = ConvertUnits.ToDisplayUnits(body.SimPosition);
@@ -1594,8 +1656,12 @@ namespace Barotrauma
                 return;
             }
 
+
             var posInfo = body.ClientRead(msg, sendingTime, parentDebugName: Name);
             msg.ReadPadBits();
+
+            if (GetComponent<Projectile>() is { IsStuckToTarget: true }) { return; }
+
             if (posInfo != null)
             {
                 int index = 0;

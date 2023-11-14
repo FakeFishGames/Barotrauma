@@ -390,7 +390,7 @@ namespace Barotrauma
             }
             if (toolTip.IsNullOrEmpty())
             {
-                toolTip = TextManager.Get($"{propertyTag}.description", $"sp.{fallbackTag}.description");
+                toolTip = TextManager.Get($"{propertyTag}.description", $"{fallbackTag}.description", $"sp.{fallbackTag}.description");
             }
             if (toolTip.IsNullOrEmpty())
             {
@@ -1334,9 +1334,11 @@ namespace Barotrauma
                 }
             }
         }
-        
+
         private static void TrySendNetworkUpdate(ISerializableEntity entity, SerializableProperty property)
         {
+            if (IsEntityRemoved(entity)) { return; }
+
             if (GameMain.Client != null)
             {
                 if (entity is Item item)
@@ -1352,7 +1354,7 @@ namespace Barotrauma
 
         private bool SetPropertyValue(SerializableProperty property, object entity, object value)
         {
-            if (LockEditing) { return false; }
+            if (LockEditing || IsEntityRemoved(entity)) { return false; }
 
             object oldData = property.GetValue(entity);
             // some properties have null as the default string value
@@ -1402,6 +1404,9 @@ namespace Barotrauma
 
             return property.TrySetValue(entity, value);
         }
+
+        public static bool IsEntityRemoved(object entity)
+            => entity is Entity { Removed: true } or ItemComponent { Item.Removed: true };
 
         public static void CommitCommandBuffer()
         {

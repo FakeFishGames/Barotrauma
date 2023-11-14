@@ -198,6 +198,22 @@ namespace Barotrauma.Items.Components
             set;
         }
 
+        /// <summary>
+        /// Returns true if the red component of the light is twice as bright as the blue and green. Can be used by StatusEffects.
+        /// </summary>
+        public bool IsRed => ColorExtensions.IsRedDominant(LightColor);
+
+        /// <summary>
+        /// Returns true if the green component of the light is twice as bright as the red and blue. Can be used by StatusEffects.
+        /// </summary>
+        public bool IsGreen => ColorExtensions.IsGreenDominant(LightColor);
+
+        /// <summary>
+        /// Returns true if the blue component of the light is twice as bright as the red and green. Can be used by StatusEffects.
+        /// </summary>
+        public bool IsBlue => ColorExtensions.IsBlueDominant(LightColor);
+
+
         public float TemporaryFlickerTimer;
 
         public override void Move(Vector2 amount, bool ignoreContacts = false)

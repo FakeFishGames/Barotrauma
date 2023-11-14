@@ -2,7 +2,6 @@
 using Microsoft.Xna.Framework;
 using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Linq;
 
 namespace Barotrauma
 {
@@ -18,7 +17,7 @@ namespace Barotrauma
         public Reputation Reputation { get; }
         public FactionPrefab Prefab { get; }
 
-        public Faction(CampaignMetadata metadata, FactionPrefab prefab)
+        public Faction(CampaignMetadata? metadata, FactionPrefab prefab)
         {
             Prefab = prefab;
             Reputation = new Reputation(metadata, this, prefab.MinReputation, prefab.MaxReputation, prefab.InitialReputation);
@@ -58,6 +57,8 @@ namespace Barotrauma
 
         public LocalizedString Description { get; }
         public LocalizedString ShortDescription { get; }
+
+        public Identifier OpposingFaction { get; }
 
         public class HireableCharacter
         {
@@ -150,6 +151,7 @@ namespace Barotrauma
             Name = element.GetAttributeString("name", null) ?? TextManager.Get($"faction.{Identifier}").Fallback("Unnamed");
             Description = element.GetAttributeString("description", null) ?? TextManager.Get($"faction.{Identifier}.description").Fallback("");
             ShortDescription = element.GetAttributeString("shortdescription", null) ?? TextManager.Get($"faction.{Identifier}.shortdescription").Fallback("");
+            OpposingFaction = element.GetAttributeIdentifier(nameof(OpposingFaction), Identifier.Empty);
 
             List<HireableCharacter> hireableCharacters = new List<HireableCharacter>();
             List<AutomaticMission> automaticMissions = new List<AutomaticMission>();

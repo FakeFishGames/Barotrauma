@@ -112,9 +112,8 @@ namespace Barotrauma.Networking
         //has the client been given a character to control this round
         public bool HasSpawned;
 
-        public bool SpawnAsTraitor;
         public LocalizedString TraitorFirstObjective;
-        public TraitorMissionPrefab TraitorMission = null;
+        public TraitorEventPrefab TraitorMission = null;
 
         public byte SessionId { get; private set; }
 
@@ -404,7 +403,7 @@ namespace Barotrauma.Networking
                         if (SteamManager.IsInitialized && steamConnection.AccountInfo.AccountId.TryUnwrap(out var accountId) && accountId is SteamId steamId)
                         {
                             serverDisplayName = steamId.ToString();
-                            string steamUserName = Steamworks.SteamFriends.GetFriendPersonaName(steamId.Value);
+                            string steamUserName = new Steamworks.Friend(steamId.Value).Name;
                             if (!string.IsNullOrEmpty(steamUserName) && steamUserName != "[unknown]")
                             {
                                 serverDisplayName = steamUserName;
@@ -775,15 +774,15 @@ namespace Barotrauma.Networking
                         }
                     }
 
-                    byte traitorCount = inc.ReadByte();
-                    List<TraitorMissionResult> traitorResults = new List<TraitorMissionResult>();
-                    for (int i = 0; i<traitorCount; i++)
+                    bool includesTraitorInfo = inc.ReadBoolean();
+                    TraitorManager.TraitorResults? traitorResults = null;
+                    if (includesTraitorInfo)
                     {
-                        traitorResults.Add(new TraitorMissionResult(inc));
+                        traitorResults = INetSerializableStruct.Read<TraitorManager.TraitorResults>(inc);
                     }
 
                     roundInitStatus = RoundInitStatus.Interrupted;
-                    CoroutineManager.StartCoroutine(EndGame(endMessage, traitorResults, transitionType), "EndGame");
+                    CoroutineManager.StartCoroutine(EndGame(endMessage, transitionType, traitorResults), "EndGame");
                     GUI.SetSavingIndicatorState(save);
                     break;
                 case ServerPacketHeader.CAMPAIGN_SETUP_INFO:
@@ -829,17 +828,20 @@ namespace Barotrauma.Networking
                 case ServerPacketHeader.MEDICAL:
                     campaign?.MedicalClinic?.ClientRead(inc);
                     break;
+                case ServerPacketHeader.CIRCUITBOX:
+                    ReadCircuitBoxMessage(inc);
+                    break;
                 case ServerPacketHeader.MONEY:
                     campaign?.ClientReadMoney(inc);
                     break;
                 case ServerPacketHeader.READY_CHECK:
                     ReadyCheck.ClientRead(inc);
                     break;
+                case ServerPacketHeader.TRAITOR_MESSAGE:
+                    TraitorManager.ClientRead(inc);
+                    break;
                 case ServerPacketHeader.FILE_TRANSFER:
                     FileReceiver.ReadMessage(inc);
-                    break;
-                case ServerPacketHeader.TRAITOR_MESSAGE:
-                    ReadTraitorMessage(inc);
                     break;
                 case ServerPacketHeader.MISSION:
                     {
@@ -985,7 +987,7 @@ namespace Barotrauma.Networking
                 if (disconnectPacket.IsEventSyncError)
                 {
                     GameMain.NetLobbyScreen.Select();
-                    GameMain.GameSession?.EndRound("", null);
+                    GameMain.GameSession?.EndRound("");
                     GameStarted = false;
                     myCharacter = null;
                 }
@@ -1179,44 +1181,20 @@ namespace Barotrauma.Networking
             }
         }
 
-        private void ReadTraitorMessage(IReadMessage inc)
+        private static void ReadCircuitBoxMessage(IReadMessage inc)
         {
-            TraitorMessageType messageType = (TraitorMessageType)inc.ReadByte();
-            string missionIdentifier = inc.ReadString();
-            string messageFmt = inc.ReadString();
-            LocalizedString message = TextManager.GetServerMessage(messageFmt);
+            var header = INetSerializableStruct.Read<NetCircuitBoxHeader>(inc);
 
-            var missionPrefab = TraitorMissionPrefab.Prefabs.Find(t => t.Identifier == missionIdentifier);
-            Sprite icon = missionPrefab?.Icon;
-
-            switch (messageType)
+            INetSerializableStruct data = header.Opcode switch
             {
-                case TraitorMessageType.Objective:
-                    var isTraitor = !message.IsNullOrEmpty();
-                    SpawnAsTraitor = isTraitor;
-                    TraitorFirstObjective = message;
-                    TraitorMission = missionPrefab;
-                    if (Character != null)
-                    {
-                        Character.IsTraitor = isTraitor;
-                        Character.TraitorCurrentObjective = message;
-                    }
-                    break;
-                case TraitorMessageType.Console:
-                    GameMain.Client.AddChatMessage(ChatMessage.Create("", message.Value, ChatMessageType.Console, null));
-                    DebugConsole.NewMessage(message);
-                    break;
-                case TraitorMessageType.ServerMessageBox:
-                    var msgBox = new GUIMessageBox("", message, Array.Empty<LocalizedString>(), type: GUIMessageBox.Type.InGame, icon: icon);
-                    if (msgBox.Icon != null)
-                    {
-                        msgBox.IconColor = missionPrefab.IconColor;
-                    }
-                    break;
-                case TraitorMessageType.Server:
-                default:
-                    GameMain.Client.AddChatMessage(message.Value, ChatMessageType.Server);
-                    break;
+                CircuitBoxOpcode.Cursor => INetSerializableStruct.Read<NetCircuitBoxCursorInfo>(inc),
+                CircuitBoxOpcode.Error => INetSerializableStruct.Read<CircuitBoxErrorEvent>(inc),
+                _ => throw new ArgumentOutOfRangeException(nameof(header.Opcode), header.Opcode, "This data cannot be handled using direct network messages.")
+            };
+
+            if (header.FindTarget().TryUnwrap(out CircuitBox box))
+            {
+                box.ClientRead(data);
             }
         }
 
@@ -1372,7 +1350,6 @@ namespace Barotrauma.Networking
             ServerSettings.AllowRewiring = inc.ReadBoolean();
             ServerSettings.AllowFriendlyFire = inc.ReadBoolean();
             ServerSettings.LockAllDefaultWires = inc.ReadBoolean();
-            ServerSettings.AllowRagdollButton = inc.ReadBoolean();
             ServerSettings.AllowLinkingWifiToChat = inc.ReadBoolean();
             ServerSettings.MaximumMoneyTransferRequest = inc.ReadInt32();
             bool usingShuttle = GameMain.NetLobbyScreen.UsingShuttle = inc.ReadBoolean();
@@ -1698,7 +1675,7 @@ namespace Barotrauma.Networking
             yield return CoroutineStatus.Success;
         }
 
-        public IEnumerable<CoroutineStatus> EndGame(string endMessage, List<TraitorMissionResult> traitorResults = null, CampaignMode.TransitionType transitionType = CampaignMode.TransitionType.None)
+        public IEnumerable<CoroutineStatus> EndGame(string endMessage, CampaignMode.TransitionType transitionType = CampaignMode.TransitionType.None, TraitorManager.TraitorResults? traitorResults = null)
         {
             //round starting up, wait for it to finish
             DateTime timeOut = DateTime.Now + new TimeSpan(0, 0, 60);
@@ -1717,14 +1694,13 @@ namespace Barotrauma.Networking
                 yield return CoroutineStatus.Success;
             }
 
-            GameMain.GameSession?.EndRound(endMessage, traitorResults, transitionType);
+            GameMain.GameSession?.EndRound(endMessage, transitionType, traitorResults);
             
             ServerSettings.ServerDetailsChanged = true;
 
             GameStarted = false;
             Character.Controlled = null;
             WaitForNextRoundRespawn = null;
-            SpawnAsTraitor = false;
             GameMain.GameScreen.Cam.TargetPos = Vector2.Zero;
             GameMain.LightManager.LosEnabled = false;
             RespawnManager = null;
@@ -1976,7 +1952,9 @@ namespace Barotrauma.Networking
 
                             bool allowSpectating = inc.ReadBoolean();
 
-                            YesNoMaybe traitorsEnabled = (YesNoMaybe)inc.ReadRangedInteger(0, 2);
+                            float traitorProbability = inc.ReadSingle();
+                            int traitorDangerLevel = inc.ReadRangedInteger(TraitorEventPrefab.MinDangerLevel, TraitorEventPrefab.MaxDangerLevel);
+
                             MissionType missionType = (MissionType)inc.ReadRangedInteger(0, (int)MissionType.All);
                             int modeIndex = inc.ReadByte();
 
@@ -2020,7 +1998,9 @@ namespace Barotrauma.Networking
                                 if (!allowSubVoting) { GameMain.NetLobbyScreen.TrySelectSub(selectSubName, selectSubHash, GameMain.NetLobbyScreen.SubList); }
                                 GameMain.NetLobbyScreen.TrySelectSub(selectShuttleName, selectShuttleHash, GameMain.NetLobbyScreen.ShuttleList.ListBox);
 
-                                GameMain.NetLobbyScreen.SetTraitorsEnabled(traitorsEnabled);
+                                GameMain.NetLobbyScreen.SetTraitorProbability(traitorProbability);
+                                GameMain.NetLobbyScreen.SetTraitorDangerLevel(traitorDangerLevel);
+
                                 GameMain.NetLobbyScreen.SetMissionType(missionType);
 
                                 GameMain.NetLobbyScreen.SelectMode(modeIndex);
@@ -2498,9 +2478,9 @@ namespace Barotrauma.Networking
 
                     break;
                 case FileTransferType.CampaignSave:
-                    XDocument gameSessionDoc = SaveUtil.LoadGameSessionDoc(transfer.FilePath);
-                    byte campaignID = (byte)MathHelper.Clamp(gameSessionDoc.Root.GetAttributeInt("campaignid", 0), 0, 255);
-                    if (!(GameMain.GameSession?.GameMode is MultiPlayerCampaign campaign) || campaign.CampaignID != campaignID)
+                    XElement gameSessionDocRoot = SaveUtil.DecompressSaveAndLoadGameSessionDoc(transfer.FilePath)?.Root;
+                    byte campaignID = (byte)MathHelper.Clamp(gameSessionDocRoot.GetAttributeInt("campaignid", 0), 0, 255);
+                    if (GameMain.GameSession?.GameMode is not MultiPlayerCampaign campaign || campaign.CampaignID != campaignID)
                     {
                         string savePath = transfer.FilePath;
                         GameMain.GameSession = new GameSession(null, savePath, GameModePreset.MultiPlayerCampaign, CampaignSettings.Empty);
@@ -2512,7 +2492,7 @@ namespace Barotrauma.Networking
                     GameMain.GameSession.SavePath = transfer.FilePath;
                     if (GameMain.GameSession.SubmarineInfo == null || campaign.Map == null)
                     {
-                        string subPath = Path.Combine(SaveUtil.TempPath, gameSessionDoc.Root.GetAttributeString("submarine", "")) + ".sub";
+                        string subPath = Path.Combine(SaveUtil.TempPath, gameSessionDocRoot.GetAttributeString("submarine", "")) + ".sub";
                         GameMain.GameSession.SubmarineInfo = new SubmarineInfo(subPath, "");
                     }
 
@@ -2528,7 +2508,8 @@ namespace Barotrauma.Networking
 
                     if (Screen.Selected == GameMain.NetLobbyScreen)
                     {
-                        //reselect to refrest the state of the lobby screen (enable spectate button, etc)
+                        //reselect to refresh the state of the lobby screen (enable spectate button, etc)
+                        GameMain.NetLobbyScreen.SaveAppearance();
                         GameMain.NetLobbyScreen.Select();
                     }
 
@@ -2606,7 +2587,7 @@ namespace Barotrauma.Networking
 
         public void WriteCharacterInfo(IWriteMessage msg, string newName = null)
         {
-            msg.WriteBoolean(characterInfo == null);
+            msg.WriteBoolean(GameMain.NetLobbyScreen.Spectating);
             msg.WritePadBits();
             if (characterInfo == null) { return; }
 

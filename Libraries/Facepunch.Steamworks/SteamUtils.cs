@@ -14,10 +14,14 @@ namespace Steamworks
 	{
 		internal static ISteamUtils? Internal => Interface as ISteamUtils;
 
-		internal override void InitializeInterface( bool server )
+		internal override bool InitializeInterface( bool server )
 		{
 			SetInterface( server, new ISteamUtils( server ) );
+			if ( Interface is null || Interface.Self == IntPtr.Zero ) return false;
+
 			InstallEvents( server );
+
+			return true;
 		}
 
 		internal static void InstallEvents( bool server )
@@ -36,33 +40,33 @@ namespace Steamworks
 		}
 
 		/// <summary>
-		/// The country of the user changed
+		/// Invoked when the country of the user changed.
 		/// </summary>
 		public static event Action? OnIpCountryChanged;
 
 		/// <summary>
-		/// Fired when running on a laptop and less than 10 minutes of battery is left, fires then every minute
-		/// The parameter is the number of minutes left
+		/// Invoked when running on a laptop and less than 10 minutes of battery is left, fires then every minute.
+		/// The parameter is the number of minutes left.
 		/// </summary>
 		public static event Action<int>? OnLowBatteryPower;
 
 		/// <summary>
-		/// Called when Steam wants to shutdown
+		/// Invoked when Steam wants to shutdown.
 		/// </summary>
 		public static event Action? OnSteamShutdown;
 
 		/// <summary>
-		/// Big Picture gamepad text input has been closed. Parameter is true if text was submitted, false if cancelled etc.
+		/// Invoked when Big Picture gamepad text input has been closed. Parameter is <see langword="true"/> if text was submitted, <see langword="false"/> if cancelled etc.
 		/// </summary>
 		public static event Action<bool>? OnGamepadTextInputDismissed;
 
 		/// <summary>
-		/// Returns the number of seconds since the application was active
+		/// Returns the number of seconds since the application was active.
 		/// </summary>
 		public static uint SecondsSinceAppActive => Internal?.GetSecondsSinceAppActive() ?? 0;
 
 		/// <summary>
-		/// Returns the number of seconds since the user last moved the mouse etc
+		/// Returns the number of seconds since the user last moved the mouse and/or provided other input.
 		/// </summary>
 		public static uint SecondsSinceComputerActive => Internal?.GetSecondsSinceComputerActive() ?? 0;
 
@@ -70,7 +74,7 @@ namespace Steamworks
 		public static Universe ConnectedUniverse => Internal?.GetConnectedUniverse() ?? Universe.Invalid;
 
 		/// <summary>
-		/// Steam server time.  Number of seconds since January 1, 1970, GMT (i.e unix time)
+		/// Steam server time. Number of seconds since January 1, 1970, GMT (i.e unix time)
 		/// </summary>
 		public static DateTime SteamServerTime => Internal != null ? Epoch.ToDateTime( Internal.GetServerRealTime() ) : default;
 
@@ -81,9 +85,9 @@ namespace Steamworks
 		public static string? IpCountry => Internal?.GetIPCountry();
 
 		/// <summary>
-		/// returns true if the image exists, and the buffer was successfully filled out
-		/// results are returned in RGBA format
-		/// the destination buffer size should be 4 * height * width * sizeof(char)
+		/// Returns true if the image exists, and the buffer was successfully filled out.
+		/// Results are returned in RGBA format.
+		/// The destination buffer size should be 4 * height * width * sizeof(char).
 		/// </summary>
 		public static bool GetImageSize( int image, out uint width, out uint height )
 		{
@@ -93,7 +97,7 @@ namespace Steamworks
 		}
 
 		/// <summary>
-		/// returns the image in RGBA format
+		/// returns the image in RGBA format.
 		/// </summary>
 		public static Data.Image? GetImage( int image )
 		{
@@ -118,12 +122,12 @@ namespace Steamworks
 		}
 
 		/// <summary>
-		/// Returns true if we're using a battery (ie, a laptop not plugged in)
+		/// Returns true if we're using a battery (ie, a laptop not plugged in).
 		/// </summary>
 		public static bool UsingBatteryPower => Internal != null && Internal.GetCurrentBatteryPower() != 255;
 
 		/// <summary>
-		/// Returns battery power [0-1]
+		/// Returns battery power [0-1].
 		/// </summary>
 		public static float CurrentBatteryPower => Math.Min( (Internal?.GetCurrentBatteryPower() ?? 0f) / 100, 1.0f );
 
@@ -182,7 +186,7 @@ namespace Steamworks
 		}
 
 		/// <summary>
-		/// Activates the Big Picture text input dialog which only supports gamepad input
+		/// Activates the Big Picture text input dialog which only supports gamepad input.
 		/// </summary>
 		public static bool ShowGamepadTextInput( GamepadTextInputMode inputMode, GamepadTextInputLineMode lineInputMode, string description, int maxChars, string existingText = "" )
 		{
@@ -190,7 +194,7 @@ namespace Steamworks
 		}
 
 		/// <summary>
-		/// Returns previously entered text
+		/// Returns previously entered text.
 		/// </summary>
 		public static string GetEnteredGamepadText()
 		{
@@ -206,18 +210,18 @@ namespace Steamworks
 		}
 
 		/// <summary>
-		/// returns the language the steam client is running in, you probably want 
-		/// Apps.CurrentGameLanguage instead, this is for very special usage cases
+		/// Returns the language the steam client is running in. You probably want 
+		/// <see cref="SteamApps.GameLanguage"/> instead, this is for very special usage cases.
 		/// </summary>
 		public static string? SteamUILanguage => Internal?.GetSteamUILanguage();
 
 		/// <summary>
-		/// returns true if Steam itself is running in VR mode
+		/// Returns <see langword="true"/> if Steam itself is running in VR mode.
 		/// </summary>
 		public static bool IsSteamRunningInVR => Internal != null && Internal.IsSteamRunningInVR();
 
 		/// <summary>
-		/// Sets the inset of the overlay notification from the corner specified by SetOverlayNotificationPosition
+		/// Sets the inset of the overlay notification from the corner specified by SetOverlayNotificationPosition.
 		/// </summary>
 		public static void SetOverlayNotificationInset( int x, int y )
 		{
@@ -225,24 +229,26 @@ namespace Steamworks
 		}
 
 		/// <summary>
-		/// returns true if Steam and the Steam Overlay are running in Big Picture mode
+		/// returns <see langword="true"/> if Steam and the Steam Overlay are running in Big Picture mode
 		/// Games much be launched through the Steam client to enable the Big Picture overlay. During development,
-		/// a game can be added as a non-steam game to the developers library to test this feature
+		/// a game can be added as a non-steam game to the developers library to test this feature.
 		/// </summary>
 		public static bool IsSteamInBigPictureMode => Internal != null && Internal.IsSteamInBigPictureMode();
 
 
 		/// <summary>
-		/// ask SteamUI to create and render its OpenVR dashboard
+		/// Ask Steam UI to create and render its OpenVR dashboard.
 		/// </summary>
 		public static void StartVRDashboard() => Internal?.StartVRDashboard();
 
 		/// <summary>
-		/// Set whether the HMD content will be streamed via Steam In-Home Streaming
-		/// If this is set to true, then the scene in the HMD headset will be streamed, and remote input will not be allowed.
-		/// If this is set to false, then the application window will be streamed instead, and remote input will be allowed.
-		/// The default is true unless "VRHeadsetStreaming" "0" is in the extended appinfo for a game.
-		/// (this is useful for games that have asymmetric multiplayer gameplay)
+		/// Gets or sets whether the HMD content will be streamed via Steam In-Home Streaming.
+		/// <para>
+		/// If this is set to <see langword="true"/>, then the scene in the HMD headset will be streamed, and remote input will not be allowed.
+		/// If this is set to <see langword="false"/>, then the application window will be streamed instead, and remote input will be allowed.
+		/// The default is <see langword="true"/> unless "VRHeadsetStreaming" "0" is in the extended app info for a game
+		/// (this is useful for games that have asymmetric multiplayer gameplay).
+		/// </para>
 		/// </summary>
 		public static bool VrHeadsetStreaming
 		{
@@ -262,8 +268,42 @@ namespace Steamworks
 
 
 		/// <summary>
-		/// Returns whether this steam client is a Steam China specific client, vs the global client
+		/// Gets whether this steam client is a Steam China specific client (<see langword="true"/>), or the global client (<see langword="false"/>).
 		/// </summary>
 		public static bool IsSteamChinaLauncher => Internal != null && Internal.IsSteamChinaLauncher();
+
+		/// <summary>
+		/// Initializes text filtering, loading dictionaries for the language the game is running in.
+		/// Users can customize the text filter behavior in their Steam Account preferences.
+		/// </summary>
+		public static bool InitFilterText() => Internal != null && Internal.InitFilterText( 0 );
+
+		/// <summary>
+		/// Filters the provided input message and places the filtered result into pchOutFilteredText,
+		/// using legally required filtering and additional filtering based on the context and user settings.
+		/// </summary>
+		public static string FilterText( TextFilteringContext context, SteamId sourceSteamID, string inputMessage )
+		{
+			if ( Internal is null ) { return inputMessage; }
+			Internal.FilterText( context, sourceSteamID, inputMessage, out var filteredString );
+			return filteredString;
+		}
+
+		/// <summary>
+		/// Gets whether or not Steam itself is running on the Steam Deck.
+		/// </summary>
+		public static bool IsRunningOnSteamDeck => Internal != null && Internal.IsSteamRunningOnSteamDeck();
+
+
+		/// <summary>
+		/// In game launchers that don't have controller support: You can call this to have 
+		/// Steam Input translate the controller input into mouse/kb to navigate the launcher
+		/// </summary>
+		public static void SetGameLauncherMode( bool mode ) => Internal?.SetGameLauncherMode( mode );
+
+		//public void ShowFloatingGamepadTextInput( TextInputMode mode, int left, int top, int width, int height )
+		//{
+		//	Internal.ShowFloatingGamepadTextInput( mode, left, top, width, height );
+		//}
 	}
 }

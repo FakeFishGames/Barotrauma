@@ -51,7 +51,7 @@ namespace Barotrauma.Items.Components
         private int spraySetting = 0;
         private readonly Point[] sprayArray = new Point[8];
 
-        public override void UpdateHUD(Character character, float deltaTime, Camera cam)
+        public override void UpdateHUDComponentSpecific(Character character, float deltaTime, Camera cam)
         {
             if (character == null || !character.IsKeyDown(InputType.Aim)) return;
 
@@ -130,7 +130,7 @@ namespace Barotrauma.Items.Components
                 if (body.UserData is Item item)
                 {
                     var door = item.GetComponent<Door>();
-                    if (door != null && door.CanBeTraversed) { continue; }
+                    if (door != null && (door.IsOpen || door.IsBroken)) { continue; }
                 }
 
                 targetHull = null;
@@ -288,7 +288,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public void Draw(SpriteBatch spriteBatch, bool editing, float itemDepth = -1)
+        public void Draw(SpriteBatch spriteBatch, bool editing, float itemDepth = -1, Color? overrideColor = null)
         {
 #if DEBUG
             if (GameMain.DebugDraw && Character.Controlled != null && Character.Controlled.IsKeyDown(InputType.Aim))

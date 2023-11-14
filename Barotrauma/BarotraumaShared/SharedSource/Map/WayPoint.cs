@@ -562,7 +562,7 @@ namespace Barotrauma
             removals.ForEach(wp => wp.Remove());
             removals.Clear();
             // Stairs
-            foreach (MapEntity mapEntity in mapEntityList.ToList())
+            foreach (MapEntity mapEntity in MapEntityList.ToList())
             {
                 if (!(mapEntity is Structure structure)) { continue; }
                 if (structure.StairDirection == Direction.None) { continue; }

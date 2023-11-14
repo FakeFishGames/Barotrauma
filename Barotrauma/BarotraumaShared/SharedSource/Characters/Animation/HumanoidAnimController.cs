@@ -144,7 +144,7 @@ namespace Barotrauma
             set { HumanSwimFastParams = value as HumanSwimFastParams; }
         }
 
-        public bool Crouching;
+        public bool Crouching { get; set; }
 
         private float upperLegLength = 0.0f, lowerLegLength = 0.0f;
 
@@ -197,7 +197,7 @@ namespace Barotrauma
         public HumanoidAnimController(Character character, string seed, HumanRagdollParams ragdollParams = null) : base(character, seed, ragdollParams)
         {
             // TODO: load from the character info file?
-            movementLerp = RagdollParams.MainElement.GetAttributeFloat("movementlerp", 0.4f);
+            movementLerp = RagdollParams?.MainElement?.GetAttributeFloat("movementlerp", 0.4f) ?? 0f;
         }
 
         public override void Recreate(RagdollParams ragdollParams = null)
@@ -243,19 +243,14 @@ namespace Barotrauma
             if (MainLimb == null) { return; }
 
             levitatingCollider = !IsHanging;
-            ColliderIndex = Crouching && !swimming ? 1 : 0;
             if ((character.SelectedItem?.GetComponent<Controller>()?.ControlCharacterPose ?? false) ||
                 (character.SelectedSecondaryItem?.GetComponent<Controller>()?.ControlCharacterPose ?? false) ||
                 character.SelectedSecondaryItem?.GetComponent<Ladder>() != null ||
                 (ForceSelectAnimationType != AnimationType.Crouch && ForceSelectAnimationType != AnimationType.NotDefined))
             {
                 Crouching = false;
-                ColliderIndex = 0;
             }
-            else if (!Crouching && ColliderIndex == 1) 
-            { 
-                Crouching = true; 
-            }
+            ColliderIndex = Crouching && !swimming ? 1 : 0;
 
             //stun (= disable the animations) if the ragdoll receives a large enough impact
             if (strongestImpact > 0.0f)
@@ -416,6 +411,22 @@ namespace Barotrauma
                         //prevents rapid switches between swimming/walking if the water level is fluctuating around the minimum swimming depth
                         swimming = inWater;
                         swimmingStateLockTimer = 0.5f;
+                    }
+                    if (character.SelectedItem?.Prefab is { GrabWhenSelected: true } && 
+                        character.SelectedItem.ParentInventory == null &&
+                        character.SelectedItem.body is not { Enabled: true } &&
+                        character.SelectedItem.GetComponent<Repairable>()?.CurrentFixer != character)
+                    {
+                        bool moving = character.IsKeyDown(InputType.Left) || character.IsKeyDown(InputType.Right);
+                        moving |= (character.InWater || character.IsClimbing) && (character.IsKeyDown(InputType.Up) || character.IsKeyDown(InputType.Down));
+                        if (!moving)
+                        {
+                            Vector2 handPos = character.SelectedItem.WorldPosition - Vector2.UnitY * ConvertUnits.ToDisplayUnits(ArmLength / 2);
+                            handPos.Y = Math.Max(handPos.Y, character.SelectedItem.WorldRect.Y - character.SelectedItem.WorldRect.Height);
+                            UpdateUseItem(
+                                allowMovement: false,
+                                handPos);
+                        }
                     }
                     if (swimming)
                     {
@@ -616,7 +627,7 @@ namespace Barotrauma
             if (TorsoAngle.HasValue && !torso.Disabled)
             {
                 float torsoAngle = TorsoAngle.Value;
-                float herpesStrength = character.CharacterHealth.GetAfflictionStrength(AfflictionPrefab.SpaceHerpesType);
+                float herpesStrength = character.CharacterHealth.GetAfflictionStrengthByType(AfflictionPrefab.SpaceHerpesType);
                 if (Crouching && !movingHorizontally && !Aiming) { torsoAngle -= HumanCrouchParams.ExtraTorsoAngleWhenStationary; }
                 torsoAngle -= herpesStrength / 150.0f;
                 torso.body.SmoothRotate(torsoAngle * Dir, currentGroundedParams.TorsoTorque);

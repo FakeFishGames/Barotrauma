@@ -161,7 +161,7 @@ namespace Barotrauma
                 return 1;
             }
 
-            return string.Compare(file1, file2);
+            return string.Compare(file1, file2, StringComparison.OrdinalIgnoreCase);
         }
 
         private static void InitIfNecessary()
@@ -418,6 +418,8 @@ namespace Barotrauma
                     CanBeFocused = false
                 };
             }
+
+            fileList.Content.RectTransform.SortChildren(SortFiles);
 
             directoryBox!.Text = currentDirectory;
             fileBox!.Text = "";

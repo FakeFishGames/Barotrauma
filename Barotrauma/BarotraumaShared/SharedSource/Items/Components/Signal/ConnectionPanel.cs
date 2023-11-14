@@ -9,7 +9,8 @@ namespace Barotrauma.Items.Components
 {
     partial class ConnectionPanel : ItemComponent, IServerSerializable, IClientSerializable
     {
-        public List<Connection> Connections;
+        const int MaxConnectionCount = 256;
+        public readonly List<Connection> Connections = new List<Connection>();
 
         private Character user;
 
@@ -67,10 +68,13 @@ namespace Barotrauma.Items.Components
         public ConnectionPanel(Item item, ContentXElement element)
             : base(item, element)
         {
-            Connections = new List<Connection>();
-
             foreach (var subElement in element.Elements())
             {
+                if (Connections.Count == MaxConnectionCount)
+                {
+                    DebugConsole.ThrowError($"Too many connections in the item {item.Prefab.Identifier} (> {MaxConnectionCount}).");
+                    break;
+                }
                 switch (subElement.Name.ToString())
                 {
                     case "input":                        
@@ -179,7 +183,7 @@ namespace Barotrauma.Items.Components
         {
             UpdateProjSpecific(deltaTime);
 
-            if (user == null || user.SelectedItem != item)
+            if (user == null || (user.SelectedItem != item && user.SelectedSecondaryItem != item))
             {
 #if SERVER
                 if (user != null) { item.CreateServerEvent(this); }
@@ -208,6 +212,10 @@ namespace Barotrauma.Items.Components
 
         public bool CanRewire()
         {
+            if (item.Container?.GetComponent<CircuitBox>() != null)
+            {
+                return true;
+            }
             //attaching wires to items with a body is not allowed
             //(signal items remove their bodies when attached to a wall)
             if (item.body != null && item.body.BodyType == FarseerPhysics.BodyType.Dynamic)
@@ -395,7 +403,7 @@ namespace Barotrauma.Items.Components
 #if CLIENT
             TriggerRewiringSound();
 #endif
-
+            msg.WriteByte((byte)Connections.Count);
             foreach (Connection connection in Connections)
             {
                 msg.WriteVariableUInt32((uint)connection.Wires.Count);

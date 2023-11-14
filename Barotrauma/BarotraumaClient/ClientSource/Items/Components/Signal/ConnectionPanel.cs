@@ -22,11 +22,6 @@ namespace Barotrauma.Items.Components
         private SoundChannel rewireSoundChannel;
         private float rewireSoundTimer;
 
-        public float Scale
-        {
-            get { return GuiFrame.Rect.Width / 400.0f; }
-        }
-
         private Point originalMaxSize;
         private Vector2 originalRelativeSize;
 
@@ -104,10 +99,10 @@ namespace Barotrauma.Items.Components
         
         public override bool ShouldDrawHUD(Character character)
         {
-            return character == Character.Controlled && character == user && character.SelectedItem == item;
+            return character == Character.Controlled && character == user && (character.SelectedItem == item || character.SelectedSecondaryItem == item);
         }
         
-        public override void UpdateHUD(Character character, float deltaTime, Camera cam)
+        public override void UpdateHUDComponentSpecific(Character character, float deltaTime, Camera cam)
         {
             if (character != Character.Controlled || character != user || character.SelectedItem != item) { return; }
             
@@ -162,10 +157,11 @@ namespace Barotrauma.Items.Components
                 //because some of the wires connected to the panel may not exist yet
                 long msgStartPos = msg.BitPosition;
                 msg.ReadUInt16(); //user ID
-                foreach (Connection _ in Connections)
+                byte connectionCount = msg.ReadByte();
+                for (int i = 0; i < connectionCount; i++)
                 {
                     uint wireCount = msg.ReadVariableUInt32();
-                    for (int i = 0; i < wireCount; i++)
+                    for (int j = 0; j < wireCount; j++)
                     {
                         msg.ReadUInt16();
                     }
@@ -208,21 +204,25 @@ namespace Barotrauma.Items.Components
                 connection.ClearConnections();
             }
 
-            foreach (Connection connection in Connections)
+            byte connectionCount = msg.ReadByte();
+            for (int i = 0; i < connectionCount; i++)
             {
                 HashSet<Wire> newWires = new HashSet<Wire>();
                 uint wireCount = msg.ReadVariableUInt32();
-                for (int i = 0; i < wireCount; i++)
+                for (int j = 0; j < wireCount; j++)
                 {
                     ushort wireId = msg.ReadUInt16();
-
-                    if (!(Entity.FindEntityByID(wireId) is Item wireItem)) { continue; }
+                    if (Entity.FindEntityByID(wireId) is not Item wireItem) { continue; }
                     Wire wireComponent = wireItem.GetComponent<Wire>();
                     if (wireComponent == null) { continue; }
 
                     newWires.Add(wireComponent);
                 }
 
+                //this may happen if the item has been deleted server-side at the point the server is writing this event to the client
+                if (i >= Connections.Count) { continue; }
+
+                var connection = Connections[i];
                 Wire[] oldWires = connection.Wires.Where(w => !newWires.Contains(w)).ToArray();
                 foreach (var wire in oldWires)
                 {

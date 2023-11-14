@@ -300,13 +300,27 @@ namespace Barotrauma
                     " - Oxygen: " + ((int)OxygenPercentage), new Vector2(drawRect.X + 5, -drawRect.Y + 5), Color.White);
                 GUIStyle.SmallFont.DrawString(spriteBatch, waterVolume + " / " + Volume, new Vector2(drawRect.X + 5, -drawRect.Y + 20), Color.White);
 
-                GUI.DrawRectangle(spriteBatch, new Rectangle(drawRect.Center.X, -drawRect.Y + drawRect.Height / 2, 10, (int)(100 * Math.Min(waterVolume / Volume, 1.0f))), Color.Cyan, true);
-                if (WaterVolume > Volume)
+                if (WaterVolume > 0)
                 {
-                    float maxExcessWater = Volume * MaxCompress;
-                    GUI.DrawRectangle(spriteBatch, new Rectangle(drawRect.Center.X, -drawRect.Y + drawRect.Height / 2, 10, (int)(100 * (waterVolume - Volume) / maxExcessWater)), GUIStyle.Red, true);
+                    drawProgressBar(50, new Point(0, 0), Math.Min(waterVolume / Volume, 1.0f), Color.Cyan);
+                    if (WaterVolume > Volume)
+                    {
+                        float maxExcessWater = Volume * MaxCompress;
+                        drawProgressBar(50, new Point(0, 0), (waterVolume - Volume) / maxExcessWater, GUIStyle.Red);
+                    }
                 }
-                GUI.DrawRectangle(spriteBatch, new Rectangle(drawRect.Center.X, -drawRect.Y + drawRect.Height / 2, 10, 100), Color.Black);
+                if (lethalPressure > 0)
+                {
+                    drawProgressBar(50, new Point(20, 0), lethalPressure / 100.0f, Color.Red);
+                }
+
+                void drawProgressBar(int height, Point offset, float fillAmount, Color color)
+                { 
+                    GUI.DrawRectangle(spriteBatch, new Rectangle(drawRect.Center.X - 2 + offset.X, -drawRect.Y - 2 + drawRect.Height / 2 + offset.Y, 14, height+4), Color.Black * 0.8f, depth: 0.01f, isFilled: true);
+               
+                    int barHeight = (int)(fillAmount * height);
+                    GUI.DrawRectangle(spriteBatch, new Rectangle(drawRect.Center.X + offset.X, -drawRect.Y + drawRect.Height / 2 + height - barHeight + offset.Y, 10, barHeight), color, isFilled: true);
+                }
 
                 foreach (FireSource fs in FireSources)
                 {

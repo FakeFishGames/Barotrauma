@@ -25,8 +25,8 @@ namespace Barotrauma
         public NPCFollowAction(ScriptedEvent parentEvent, ContentXElement element) : base(parentEvent, element) { }
 
 
-        private List<Character> affectedNpcs = null;
-        private Entity target = null;
+        private IEnumerable<Character> affectedNpcs;
+        private Entity target;
 
         public override void Update(float deltaTime)
         {
@@ -36,9 +36,10 @@ namespace Barotrauma
             if (target == null) { return; }
 
             int targetCount = 0;
-            affectedNpcs = ParentEvent.GetTargets(NPCTag).Where(c => c is Character).Select(c => c as Character).ToList();
+            affectedNpcs = ParentEvent.GetTargets(NPCTag).Where(c => c is Character).Select(c => c as Character);
             foreach (var npc in affectedNpcs)
             {
+                if (npc.Removed) { continue; }
                 if (npc.AIController is not HumanAIController humanAiController) { continue; }
 
                 if (Follow)

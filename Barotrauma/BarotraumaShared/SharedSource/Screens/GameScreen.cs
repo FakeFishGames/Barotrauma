@@ -162,26 +162,25 @@ namespace Barotrauma
             sw.Stop();
             GameMain.PerformanceCounter.AddElapsedTicks("Update:Level", sw.ElapsedTicks);
 
-            if (Character.Controlled != null)
+            if (Character.Controlled is { } controlled)
             {
-                if (Character.Controlled.SelectedItem != null && Character.Controlled.CanInteractWith(Character.Controlled.SelectedItem))
+                if (controlled.SelectedItem != null && controlled.CanInteractWith(controlled.SelectedItem))
                 {
-                    Character.Controlled.SelectedItem.UpdateHUD(cam, Character.Controlled, (float)deltaTime);                
+                    controlled.SelectedItem.UpdateHUD(cam, controlled, (float)deltaTime);
                 }
-                if (Character.Controlled.Inventory != null)
+                if (controlled.Inventory != null)
                 {
-                    foreach (Item item in Character.Controlled.Inventory.AllItems)
+                    foreach (Item item in controlled.Inventory.AllItems)
                     {
-                        if (Character.Controlled.HasEquippedItem(item))
+                        if (controlled.HasEquippedItem(item))
                         {
-                            item.UpdateHUD(cam, Character.Controlled, (float)deltaTime);
+                            item.UpdateHUD(cam, controlled, (float)deltaTime);
                         }
                     }
                 }
             }
 
-
-            sw.Restart();              
+            sw.Restart();
 
             Character.UpdateAll((float)deltaTime, cam);
 #elif SERVER

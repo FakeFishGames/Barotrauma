@@ -4,7 +4,6 @@ using System.Collections.Immutable;
 using System.Linq;
 using System.Reflection;
 using System.Xml.Linq;
-using Microsoft.Xna.Framework;
 
 namespace Barotrauma
 {
@@ -54,6 +53,20 @@ namespace Barotrauma
             { MissionType.Combat, typeof(CombatMission) }
         };
 
+        public class ReputationReward
+        {
+            public readonly Identifier FactionIdentifier;
+            public readonly float Amount;
+            public readonly float AmountForOpposingFaction;
+
+            public ReputationReward(XElement element)
+            {
+                FactionIdentifier = element.GetAttributeIdentifier("identifier", Identifier.Empty);
+                Amount = element.GetAttributeFloat(nameof(Amount), 0.0f);
+                AmountForOpposingFaction = element.GetAttributeFloat(nameof(AmountForOpposingFaction), 0.0f);
+            }
+        }
+
         public static readonly HashSet<MissionType> HiddenMissionClasses = new HashSet<MissionType>() { MissionType.GoTo, MissionType.End };
 
         private readonly ConstructorInfo constructor;
@@ -75,7 +88,7 @@ namespace Barotrauma
 
         public readonly Identifier AchievementIdentifier;
 
-        public readonly Dictionary<Identifier, float> ReputationRewards = new Dictionary<Identifier, float>();
+        public readonly ImmutableList<ReputationReward> ReputationRewards;
 
         public readonly List<(Identifier Identifier, object Value, SetDataAction.OperationType OperationType)>
             DataRewards = new List<(Identifier Identifier, object Value, SetDataAction.OperationType OperationType)>();
@@ -118,6 +131,11 @@ namespace Barotrauma
         /// The mission can only be received in these location types
         /// </summary>
         public readonly List<Identifier> AllowedLocationTypes = new List<Identifier>();
+
+        /// <summary>
+        /// The mission can only happen in locations owned by this faction. In the mission mode, the location is forced to be owned by this faction.
+        /// </summary>
+        public readonly Identifier RequiredLocationFaction;
 
         /// <summary>
         /// Show entities belonging to these sub categories when the mission starts
@@ -185,6 +203,7 @@ namespace Barotrauma
             RequireWreck = element.GetAttributeBool("requirewreck", false);
             RequireRuin = element.GetAttributeBool("requireruin", false);
             BlockLocationTypeChanges = element.GetAttributeBool(nameof(BlockLocationTypeChanges), false);
+            RequiredLocationFaction = element.GetAttributeIdentifier(nameof(RequiredLocationFaction), Identifier.Empty);
             Commonness  = element.GetAttributeInt("commonness", 1);
             AllowOtherMissionsInLevel = element.GetAttributeBool("allowothermissionsinlevel", true);
             if (element.GetAttribute("difficulty") != null)
@@ -252,7 +271,8 @@ namespace Barotrauma
                     messages.Add(message);
                 }
             }
-            
+
+            List<ReputationReward> reputationRewards = new List<ReputationReward>();
             int messageIndex = 0;
             foreach (var subElement in element.Elements())
             {
@@ -292,14 +312,7 @@ namespace Barotrauma
                         break;
                     case "reputation":
                     case "reputationreward":
-                        Identifier factionIdentifier = subElement.GetAttributeIdentifier("identifier", Identifier.Empty);
-                        float amount = subElement.GetAttributeFloat("amount", 0.0f);
-                        if (ReputationRewards.ContainsKey(factionIdentifier))
-                        {
-                            DebugConsole.ThrowError($"Error in mission prefab \"{Identifier}\". Multiple reputation changes defined for the identifier \"{factionIdentifier}\".");
-                            continue;
-                        }
-                        ReputationRewards.Add(factionIdentifier, amount);
+                        reputationRewards.Add(new ReputationReward(subElement));
                         break;
                     case "metadata":
                         Identifier identifier = subElement.GetAttributeIdentifier("identifier", Identifier.Empty);
@@ -325,6 +338,7 @@ namespace Barotrauma
             }
             Headers = headers.ToImmutableArray();
             Messages = messages.ToImmutableArray();
+            ReputationRewards = reputationRewards.ToImmutableList();
 
             Identifier missionTypeName = element.GetAttributeIdentifier("type", Identifier.Empty);
             //backwards compatibility
@@ -370,7 +384,11 @@ namespace Barotrauma
         {
             if (from == to)
             {
-                return 
+                if (!RequiredLocationFaction.IsEmpty && from.Faction?.Prefab.Identifier != RequiredLocationFaction)
+                {
+                    return false;
+                }
+                return
                     AllowedLocationTypes.Any(lt => lt == "any") ||
                     AllowedLocationTypes.Any(lt => lt == "anyoutpost" && from.HasOutpost()) ||
                     AllowedLocationTypes.Any(lt => lt == from.Type.Identifier);
@@ -399,7 +417,7 @@ namespace Barotrauma
             else if (Type == MissionType.ScanAlienRuins || Type == MissionType.ClearAlienRuins)
             {
                 var connection = from.Connections.Find(c => c.Locations.Contains(from) && c.Locations.Contains(to));
-                if (connection?.LevelData == null || connection.LevelData.GenerationParams.RuinCount < 1) { return false; }
+                if (connection?.LevelData == null || connection.LevelData.GenerationParams.GetMaxRuinCount() < 1) { return false; }
             }
 
             return false;

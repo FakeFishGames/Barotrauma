@@ -132,28 +132,36 @@ namespace Lidgren.Network
 			catch { }
 		}
 
+        //Avoids allocation on mapping to IPv6
+        private IPEndPoint targetCopy = new IPEndPoint(IPAddress.Any, 0);
+
 		internal bool ActuallySendPacket(byte[] data, int numBytes, NetEndPoint target, out bool connectionReset)
 		{
 			connectionReset = false;
-
-            target = target.MapToFamily(m_socket.AddressFamily);
-
-            IPAddress ba = default(IPAddress);
+			IPAddress ba = default(IPAddress);
 			try
 			{
 				ba = NetUtility.GetCachedBroadcastAddress();
 
-				// TODO: refactor this check outta here
-				if (target.Address == ba)
-				{
-					// Some networks do not allow 
-					// a global broadcast so we use the BroadcastAddress from the configuration
-					// this can be resolved to a local broadcast addresss e.g 192.168.x.255                    
-					target.Address = m_configuration.BroadcastAddress;
-					m_socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.Broadcast, true);
-				}
+                // TODO: refactor this check outta here
+                if (target.Address.Equals(ba))
+                {
+                    // Some networks do not allow 
+                    // a global broadcast so we use the BroadcastAddress from the configuration
+                    // this can be resolved to a local broadcast addresss e.g 192.168.x.255                    
+                    targetCopy.Address = m_configuration.BroadcastAddress;
+                    targetCopy.Port = target.Port;
+                    m_socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.Broadcast, true);
+                }
+                else if(m_configuration.DualStack && m_configuration.LocalAddress.AddressFamily == AddressFamily.InterNetworkV6)
+                    NetUtility.CopyEndpoint(target, targetCopy); //Maps to IPv6 for Dual Mode
+                else
+                {
+	                targetCopy.Port = target.Port;
+	                targetCopy.Address = target.Address;
+                }
 
-				int bytesSent = m_socket.SendTo(data, 0, numBytes, SocketFlags.None, target);
+                int bytesSent = m_socket.SendTo(data, 0, numBytes, SocketFlags.None, targetCopy);
 				if (numBytes != bytesSent)
 					LogWarning("Failed to send the full " + numBytes + "; only " + bytesSent + " bytes sent in packet!");
 
@@ -181,7 +189,7 @@ namespace Lidgren.Network
 			}
 			finally
 			{
-				if (target.Address == ba)
+				if (target.Address.Equals(ba))
 					m_socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.Broadcast, false);
 			}
 			return true;

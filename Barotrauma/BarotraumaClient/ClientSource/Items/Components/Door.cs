@@ -185,9 +185,9 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public void Draw(SpriteBatch spriteBatch, bool editing, float itemDepth = -1)
+        public void Draw(SpriteBatch spriteBatch, bool editing, float itemDepth = -1, Color? overrideColor = null)
         {
-            Color color = item.GetSpriteColor(withHighlight: true);
+            Color color = overrideColor ?? item.GetSpriteColor(withHighlight: true);
             if (brokenSprite == null)
             {
                 //broken doors turn black if no broken sprite has been configured
@@ -202,7 +202,7 @@ namespace Barotrauma.Items.Components
                 weldSpritePos.Y = -weldSpritePos.Y;
 
                 weldedSprite.Draw(spriteBatch,
-                    weldSpritePos, item.SpriteColor * (stuck / 100.0f), scale: item.Scale);
+                    weldSpritePos, overrideColor ?? (item.SpriteColor * (stuck / 100.0f)), scale: item.Scale);
             }
 
             if (openState >= 1.0f) { return; }

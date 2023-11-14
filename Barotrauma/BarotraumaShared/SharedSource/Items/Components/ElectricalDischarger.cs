@@ -1,4 +1,5 @@
-﻿using Barotrauma.Networking;
+﻿using Barotrauma.Extensions;
+using Barotrauma.Networking;
 using FarseerPhysics;
 using Microsoft.Xna.Framework;
 using System;
@@ -17,8 +18,6 @@ namespace Barotrauma.Items.Components
 
         const int MaxNodes = 100;
         const float MaxNodeDistance = 150.0f;
-
-        private bool waitForVoltageRecalculation;
 
         public struct Node
         {
@@ -140,10 +139,6 @@ namespace Barotrauma.Items.Components
             if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) { return false; }
             if (character != null && !CharacterUsable) { return false; }
 
-            CurrPowerConsumption = powerConsumption;
-            Voltage = 0.0f;
-
-            waitForVoltageRecalculation = true;
             charging = true;
             timer = Duration;
             IsActive = true;
@@ -159,12 +154,6 @@ namespace Barotrauma.Items.Components
 #if CLIENT
             frameOffset = Rand.Int(electricitySprite.FrameCount);
 #endif
-            if (waitForVoltageRecalculation)
-            {
-                waitForVoltageRecalculation = false;
-                return;
-            }
-
             if (timer <= 0.0f)
             {
                 if (reloadTimer > 0.0f)
@@ -179,40 +168,45 @@ namespace Barotrauma.Items.Components
             timer -= deltaTime;
             if (charging)
             {
-                if (GetAvailableInstantaneousBatteryPower() >= PowerConsumption)
+                bool hasPower = false;
+                if (item.Connections == null)
                 {
-                    List<PowerContainer> batteries = GetDirectlyConnectedBatteries();
+                    //no connections and can't be wired = must be powered by something like batteries
+                    hasPower = Voltage > MinVoltage;
+                }
+                else
+                {
+                    hasPower = GetAvailableInstantaneousBatteryPower() >= PowerConsumption;
+                }
+
+                if (hasPower)
+                {
+                    var batteries = GetDirectlyConnectedBatteries().Where(static b => !b.OutputDisabled && b.Charge > 0.0001f && b.MaxOutPut > 0.0001f);
                     float neededPower = PowerConsumption;
-                    while (neededPower > 0.0001f && batteries.Count > 0)
+                    while (neededPower > 0.0001f && batteries.Any())
                     {
-                        batteries.RemoveAll(b => b.Charge <= 0.0001f || b.MaxOutPut <= 0.0001f);
-                        float takePower = neededPower / batteries.Count;
+                        float takePower = neededPower / batteries.Count();
                         takePower = Math.Min(takePower, batteries.Min(b => Math.Min(b.Charge * 3600.0f, b.MaxOutPut)));
                         foreach (PowerContainer battery in batteries)
                         {
                             neededPower -= takePower;
                             battery.Charge -= takePower / 3600.0f;
-    #if SERVER
+#if SERVER
                             if (GameMain.Server != null) { battery.Item.CreateServerEvent(battery); }
-    #endif
+#endif
                         }
-                    }
-                    Discharge();
-
-                }
-                else if (Voltage > MinVoltage)
-                {
+                    }                    
                     Discharge();
                 }
             }
         }
 
         /// <summary>
-        /// Discharge coil only draws power when charging
+        /// Discharge coil doesn't consume grid power, directly takes from the batteries on its grid instead.
         /// </summary>
-        public override float GetCurrentPowerConsumption(Connection connection = null)
+        public override float GetCurrentPowerConsumption(Connection conn = null)
         {
-            return charging && IsActive ? PowerConsumption : 0;
+            return 0;
         }
 
         public override void UpdateBroken(float deltaTime, Camera cam)
@@ -294,10 +288,24 @@ namespace Barotrauma.Items.Components
                     if (!submarinesInRange.Contains(structure.Submarine)) { continue; }
                     if (OutdoorsOnly)
                     {
-                        //check if the structure is within a hull
-                        //add a small offset away from the sub's center so structures right at the edge of a hull are still valid
-                        Vector2 offset = Vector2.Normalize(structure.WorldPosition - structure.Submarine.WorldPosition);
-                        if (Hull.FindHull(structure.Position + offset * Submarine.GridSize, useWorldCoordinates: false) != null) { continue; }
+                        //check if there's a hull at either side of the wall
+                        Vector2 normal = new Vector2(
+                            (float)-Math.Sin(structure.IsHorizontal ? -structure.BodyRotation : MathHelper.PiOver2 - structure.BodyRotation),
+                            (float)Math.Cos(structure.IsHorizontal ? -structure.BodyRotation : MathHelper.PiOver2 - structure.BodyRotation));
+                        Vector2 structurePos = structure.Position;
+                        float offsetAmount = Submarine.GridSize.X * 2;
+                        if (structure.HasBody)
+                        {
+                            structurePos = ConvertUnits.ToDisplayUnits(structure.Bodies.First().Position);
+                            offsetAmount = Math.Max(
+                                offsetAmount,
+                                structure.IsHorizontal ? structure.BodyHeight : structure.BodyWidth);
+                        }
+                        if (Hull.FindHull(structurePos + normal * offsetAmount, useWorldCoordinates: false) != null &&
+                            Hull.FindHull(structurePos - normal * offsetAmount, useWorldCoordinates: false) != null) 
+                        { 
+                            continue; 
+                        }
                     }
                 }
 
@@ -586,7 +594,7 @@ namespace Barotrauma.Items.Components
                 case "trigger_in":
                     if (signal.value != "0")
                     {
-                        item.Use(1.0f, null);
+                        item.Use(1.0f);
                     }
                     break;
             }

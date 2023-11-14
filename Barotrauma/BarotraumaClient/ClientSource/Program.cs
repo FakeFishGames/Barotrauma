@@ -132,7 +132,7 @@ namespace Barotrauma
 
             try
             {
-                if (exception is GameMain.LoadingException)
+                if (exception.StackTrace.Contains("Barotrauma.GameMain.Load"))
                 {
                     //exception occurred in loading screen:
                     //assume content packages are the culprit and reset them
@@ -261,6 +261,9 @@ namespace Barotrauma
                 {
                     crashHeader += " " + exception.TargetSite.ToString();
                 }
+                //log the message separately, so the same error messages get grouped as the same error in GA
+                //(the full crash report tends to always have some differences between clients, so they get displayed separately)
+                GameAnalyticsManager.AddErrorEvent(GameAnalyticsManager.ErrorSeverity.Critical, crashHeader);
                 GameAnalyticsManager.AddErrorEvent(GameAnalyticsManager.ErrorSeverity.Critical, crashHeader + "\n\n" + sb.ToString());
                 GameAnalyticsManager.ShutDown();
             }

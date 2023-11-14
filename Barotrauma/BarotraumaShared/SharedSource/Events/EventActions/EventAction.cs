@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using System.Xml.Linq;
 
 namespace Barotrauma
 {
@@ -138,12 +137,17 @@ namespace Barotrauma
             Type actionType;
             try
             {
-                actionType = Type.GetType("Barotrauma." + element.Name, true, true);
+                Identifier typeName = element.Name.ToString().ToIdentifier();
+                if (typeName == "TutorialSegmentAction")
+                {
+                    typeName = "EventObjectiveAction".ToIdentifier();
+                }
+                actionType = Type.GetType("Barotrauma." + typeName, throwOnError: true, ignoreCase: true);
                 if (actionType == null) { throw new NullReferenceException(); }
             }
             catch
             {
-                DebugConsole.ThrowError("Could not find an event class of the type \"" + element.Name + "\".");
+                DebugConsole.ThrowError($"Could not find an {nameof(EventAction)} class of the type \"{element.Name}\".");
                 return null;
             }
 

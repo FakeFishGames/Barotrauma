@@ -6,7 +6,7 @@
     <RootNamespace>Barotrauma</RootNamespace>
     <Authors>FakeFish, Undertow Games</Authors>
     <Product>Barotrauma Dedicated Server</Product>
-    <Version>1.0.21.0</Version>
+    <Version>1.1.19.3</Version>
     <Copyright>Copyright © FakeFish 2018-2023</Copyright>
     <Platforms>AnyCPU;x64</Platforms>
     <AssemblyName>DedicatedServer</AssemblyName>
@@ -56,6 +56,7 @@
 
   <ItemGroup>
     <Content Include="..\BarotraumaShared\**\*" CopyToOutputDirectory="PreserveNewest" Exclude="..\BarotraumaShared\Data\Saves\*.save;..\BarotraumaShared\ModLists\*.xml" />
+    <Content Remove="..\BarotraumaShared\**\EnglishVanillaROS.xml" />
     <Content Remove="..\BarotraumaShared\**\*.cs" />
     <Content Remove="..\BarotraumaShared\**\*.props" />
     <Compile Include="..\BarotraumaShared\**\*.cs" />

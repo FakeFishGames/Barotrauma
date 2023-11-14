@@ -284,7 +284,7 @@ namespace Barotrauma
             yield return CoroutineStatus.Success;
         }
 
-        protected override IEnumerable<CoroutineStatus> DoLevelTransition(TransitionType transitionType, LevelData newLevel, Submarine leavingSub, bool mirror, List<TraitorMissionResult> traitorResults = null)
+        protected override IEnumerable<CoroutineStatus> DoLevelTransition(TransitionType transitionType, LevelData newLevel, Submarine leavingSub, bool mirror)
         {
             yield return CoroutineStatus.Success;
         }
@@ -1014,9 +1014,9 @@ namespace Barotrauma
         public void LoadState(string filePath)
         {
             DebugConsole.Log($"Loading save file for an existing game session ({filePath})");
-            SaveUtil.DecompressToDirectory(filePath, SaveUtil.TempPath, null);
+            SaveUtil.DecompressToDirectory(filePath, SaveUtil.TempPath);
 
-            string gamesessionDocPath = Path.Combine(SaveUtil.TempPath, "gamesession.xml");
+            string gamesessionDocPath = Path.Combine(SaveUtil.TempPath, SaveUtil.GameSessionFileName);
             XDocument doc = XMLExtensions.TryLoadXml(gamesessionDocPath);
             if (doc == null)
             {

@@ -30,6 +30,12 @@ namespace Barotrauma
 
         public static T HighestVoted<T>(VoteType voteType, IEnumerable<Client> voters)
         {
+            return HighestVoted<T>(voteType, voters, out _);
+        }
+
+        public static T HighestVoted<T>(VoteType voteType, IEnumerable<Client> voters, out int voteCount)
+        {
+            voteCount = 0;
             if (voteType == VoteType.Sub && !GameMain.NetworkMember.ServerSettings.AllowSubVoting) { return default; }
             if (voteType == VoteType.Mode && !GameMain.NetworkMember.ServerSettings.AllowModeVoting) { return default; }
 
@@ -52,7 +58,7 @@ namespace Barotrauma
                     selected = votable.Key;
                 }
             }
-
+            voteCount = highestVotes;
             return selected;            
         }
     }

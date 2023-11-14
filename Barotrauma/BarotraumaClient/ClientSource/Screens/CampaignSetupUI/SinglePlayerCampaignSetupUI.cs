@@ -20,11 +20,10 @@ namespace Barotrauma
         private GUIButton nextButton;
         private GUIListBox characterInfoColumns;
     
-        public SinglePlayerCampaignSetupUI(GUIComponent newGameContainer, GUIComponent loadGameContainer, IEnumerable<SubmarineInfo> submarines, IEnumerable<CampaignMode.SaveInfo> saveFiles = null)
+        public SinglePlayerCampaignSetupUI(GUIComponent newGameContainer, GUIComponent loadGameContainer)
             : base(newGameContainer, loadGameContainer)
         {
-            UpdateNewGameMenu(submarines);
-            UpdateLoadMenu(saveFiles);
+            CreateNewGameMenu();
         }
 
         private int currentPage = 0;
@@ -73,7 +72,7 @@ namespace Barotrauma
             });
         }
         
-        private void UpdateNewGameMenu(IEnumerable<SubmarineInfo> submarines)
+        private void CreateNewGameMenu()
         {
             pageContainer =
                 new GUIListBox(new RectTransform(Vector2.One, newGameContainer.RectTransform), style: null, isHorizontal: true)
@@ -92,7 +91,7 @@ namespace Barotrauma
                     Anchor.Center));
             }
             
-            CreateFirstPage(createPageLayout(), submarines);
+            CreateFirstPage(createPageLayout());
             CreateSecondPage(createPageLayout());
             
             pageContainer.RecalculateChildren();
@@ -108,7 +107,7 @@ namespace Barotrauma
             SetPage(0);
         }
 
-        private void CreateFirstPage(GUILayoutGroup firstPageLayout, IEnumerable<SubmarineInfo> submarines)
+        private void CreateFirstPage(GUILayoutGroup firstPageLayout)
         {
             firstPageLayout.RelativeSpacing = 0.02f;
             
@@ -238,8 +237,6 @@ namespace Barotrauma
             columnContainer.Recalculate();
             leftColumn.Recalculate();
             rightColumn.Recalculate();
-
-            if (submarines != null) { UpdateSubList(submarines); }
         }
         
         private void CreateSecondPage(GUILayoutGroup secondPageLayout)
@@ -578,7 +575,7 @@ namespace Barotrauma
             }
         }
 
-        public override void UpdateLoadMenu(IEnumerable<CampaignMode.SaveInfo> saveFiles = null)
+        public override void CreateLoadMenu(IEnumerable<CampaignMode.SaveInfo> saveFiles = null)
         {
             prevSaveFiles?.Clear();
             prevSaveFiles = null;
@@ -586,7 +583,9 @@ namespace Barotrauma
 
             if (saveFiles == null)
             {
-                saveFiles = SaveUtil.GetSaveFiles(SaveUtil.SaveType.Singleplayer);
+                //we don't need to log errors at this point,
+                //if any file fails to load the error will get logged when we try to extract the root from the game session doc later in the method
+                saveFiles = SaveUtil.GetSaveFiles(SaveUtil.SaveType.Singleplayer, logLoadErrors: false);
             }
 
             var leftColumn = new GUILayoutGroup(new RectTransform(new Vector2(0.5f, 1.0f), loadGameContainer.RectTransform), childAnchor: Anchor.TopCenter)
@@ -625,21 +624,21 @@ namespace Barotrauma
                 var saveFrame = CreateSaveElement(saveInfo);
                 if (saveFrame == null) { continue; }
 
-                XDocument doc = SaveUtil.LoadGameSessionDoc(saveInfo.FilePath);
+                XElement docRoot = SaveUtil.ExtractGameSessionRootElementFromSaveFile(saveInfo.FilePath);
 
-                if (doc?.Root == null)
+                if (docRoot == null)
                 {
                     DebugConsole.ThrowError("Error loading save file \"" + saveInfo.FilePath + "\". The file may be corrupted.");
                     saveFrame.GetChild<GUITextBlock>().TextColor = GUIStyle.Red;
                     continue;
                 }
-                if (doc.Root.GetChildElement("multiplayercampaign") != null)
+                if (docRoot.GetChildElement("multiplayercampaign") != null)
                 {
                     //multiplayer campaign save in the wrong folder -> don't show the save
                     saveList.Content.RemoveChild(saveFrame);
                     continue;
                 }
-                if (!SaveUtil.IsSaveFileCompatible(doc))
+                if (!SaveUtil.IsSaveFileCompatible(docRoot))
                 {
                     saveFrame.GetChild<GUITextBlock>().TextColor = GUIStyle.Red;
                     saveFrame.ToolTip = TextManager.Get("campaignmode.incompatiblesave");
@@ -668,14 +667,14 @@ namespace Barotrauma
 
             string fileName = saveInfo.FilePath;
 
-            XDocument doc = SaveUtil.LoadGameSessionDoc(fileName);
-            if (doc?.Root == null)
+            XElement docRoot = SaveUtil.ExtractGameSessionRootElementFromSaveFile(fileName);
+            if (docRoot == null)
             {
                 DebugConsole.ThrowError("Error loading save file \"" + fileName + "\". The file may be corrupted.");
                 return false;
             }
 
-            loadGameButton.Enabled = SaveUtil.IsSaveFileCompatible(doc);
+            loadGameButton.Enabled = SaveUtil.IsSaveFileCompatible(docRoot);
 
             RemoveSaveFrame();
 
@@ -684,7 +683,7 @@ namespace Barotrauma
                 .Select(t => (LocalizedString)t.ToLocalUserString())
                 .Fallback(TextManager.Get("Unknown"));
 
-            string mapseed = doc.Root.GetAttributeString("mapseed", "unknown");
+            string mapseed = docRoot.GetAttributeString("mapseed", "unknown");
 
             var saveFileFrame = new GUIFrame(
                 new RectTransform(new Vector2(0.45f, 0.6f), loadGameContainer.RectTransform, Anchor.TopRight)

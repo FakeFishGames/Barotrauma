@@ -37,7 +37,20 @@ namespace Barotrauma.Items.Components
 
         [Serialize("", IsPropertySaveable.Yes, alwaysUseInstanceValues: true)]
         public string OwnerName { get; set; }
-        
+
+        private string ownerNameLocalized;
+        [Serialize("", IsPropertySaveable.Yes, alwaysUseInstanceValues: true)]
+        public string OwnerNameLocalized 
+        {
+            get { return ownerNameLocalized; }
+            set 
+            { 
+                if (value.IsNullOrWhiteSpace()) { return; }
+                ownerNameLocalized = value;
+                OwnerName = TextManager.Get(value).Fallback(value).Value;
+            }
+        }
+
         [Serialize("", IsPropertySaveable.Yes, alwaysUseInstanceValues: true)]
         public Identifier OwnerJobId { get; set; }
 
@@ -66,6 +79,9 @@ namespace Barotrauma.Items.Components
 
         [Serialize("0,0", IsPropertySaveable.Yes, alwaysUseInstanceValues: true)]
         public Vector2 OwnerSheetIndex { get; set; }
+
+        [Serialize(false, IsPropertySaveable.Yes, alwaysUseInstanceValues: true)]
+        public bool SpawnPointTagsGiven { get; set; }
 
         public IdCard(Item item, ContentXElement element) : base(item, element) { }
 

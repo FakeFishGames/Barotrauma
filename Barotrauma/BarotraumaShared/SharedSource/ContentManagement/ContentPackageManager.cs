@@ -32,6 +32,11 @@ namespace Barotrauma
             private static readonly List<RegularPackage> regular = new List<RegularPackage>();
             public static IReadOnlyList<RegularPackage> Regular => regular;
 
+            /// <summary>
+            /// Combined hash of the currently enabled packages. Can be used to check if the enabled mods or their load order has changed.
+            /// </summary>
+            public static Md5Hash MergedHash { get; private set; } = Md5Hash.Blank;
+
             public static IEnumerable<ContentPackage> All =>
                 Core != null
                     ? (Core as ContentPackage).ToEnumerable().CollectionConcat(Regular)
@@ -149,6 +154,7 @@ namespace Barotrauma
                     .SelectMany(r => r.Files)
                     .Distinct(new TypeComparer<ContentFile>())
                     .ForEach(f => f.Sort());
+                MergedHash = Md5Hash.MergeHashes(All.Select(cp => cp.Hash));
             }
 
             public static int IndexOf(ContentPackage contentPackage)

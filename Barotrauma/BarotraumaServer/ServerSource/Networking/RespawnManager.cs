@@ -433,9 +433,9 @@ namespace Barotrauma.Networking
                     }
 
                     //tell the respawning client they're no longer a traitor
-                    if (GameMain.Server.TraitorManager?.Traitors != null && clients[i].Character != null)
+                    if (GameMain.Server.TraitorManager != null && clients[i].Character != null)
                     {
-                        if (GameMain.Server.TraitorManager.Traitors.Any(t => t.Character == clients[i].Character))
+                        if (GameMain.Server.TraitorManager.IsTraitor(clients[i].Character))
                         {
                             GameMain.Server.SendDirectChatMessage(TextManager.FormatServerMessage("TraitorRespawnMessage"), clients[i], ChatMessageType.ServerMessageBox);
                         }
@@ -537,18 +537,7 @@ namespace Barotrauma.Networking
                 }
 
                 //add the ID card tags they should've gotten when spawning in the shuttle
-                foreach (Item item in character.Inventory.AllItems.Distinct())
-                {
-                    if (item.GetComponent<IdCard>() == null) { continue; }
-                    foreach (string s in shuttleSpawnPoints[i].IdCardTags)
-                    {
-                        item.AddTag(s);
-                    }
-                    if (!string.IsNullOrWhiteSpace(shuttleSpawnPoints[i].IdCardDesc))
-                    {
-                        item.Description = shuttleSpawnPoints[i].IdCardDesc;
-                    }
-                }
+                character.GiveIdCardTags(shuttleSpawnPoints[i], requireSpawnPointTagsNotGiven: false, createNetworkEvent: true);
             }
         }
 
@@ -559,7 +548,7 @@ namespace Barotrauma.Networking
             {
                 var skillPrefab = characterInfo.Job.Prefab.Skills.Find(s => skill.Identifier == s.Identifier);
                 if (skillPrefab == null || skill.Level < skillPrefab.LevelRange.End) { continue; }
-                skill.Level = MathHelper.Lerp(skill.Level, skillPrefab.LevelRange.End, SkillReductionOnDeath);
+                skill.Level = MathHelper.Lerp(skill.Level, skillPrefab.LevelRange.End, SkillLossPercentageOnDeath / 100.0f);
             }
         }
 

@@ -42,10 +42,13 @@ namespace Barotrauma
             }
         }
 
-        public void Refresh(Character character)
+        public void Refresh(Character character, bool refreshHealthData)
         {
-            healthData = new XElement("health");
-            character.CharacterHealth.Save(healthData);
+            if (refreshHealthData)
+            {
+                healthData = new XElement("health");
+                character.CharacterHealth.Save(healthData);
+            }
             if (character.Inventory != null)
             {
                 itemData = new XElement("inventory");

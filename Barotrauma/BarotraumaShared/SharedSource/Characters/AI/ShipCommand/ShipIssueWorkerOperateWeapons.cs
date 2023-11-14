@@ -24,7 +24,7 @@ namespace Barotrauma
             {
                 if (TargetItemComponent is Turret turret)
                 {
-                    if (!turret.CheckTurretAngle(entity.WorldPosition))
+                    if (!turret.IsWithinAimingRadius(entity.WorldPosition))
                     {
                         importance *= 0.1f;
                     }

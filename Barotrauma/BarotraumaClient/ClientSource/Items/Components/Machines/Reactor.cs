@@ -615,7 +615,7 @@ namespace Barotrauma.Items.Components
                 turbineOutputMeter, TurbineOutput, new Vector2(0.0f, 100.0f), clampedOptimalTurbineOutput, clampedAllowedTurbineOutput);
         }
 
-        public override void UpdateHUD(Character character, float deltaTime, Camera cam)
+        public override void UpdateHUDComponentSpecific(Character character, float deltaTime, Camera cam)
         {
             IsActive = true;
             

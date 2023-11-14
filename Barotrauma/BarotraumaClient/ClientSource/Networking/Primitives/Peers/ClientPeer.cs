@@ -53,7 +53,7 @@ namespace Barotrauma.Networking
         protected ConnectionInitialization initializationStep;
         public bool ContentPackageOrderReceived { get; set; }
         protected int passwordSalt;
-        protected Steamworks.AuthTicket? steamAuthTicket;
+        protected Option<Steamworks.AuthTicket> steamAuthTicket;
         private GUIMessageBox? passwordMsgBox;
 
         public bool WaitingForPassword
@@ -82,7 +82,7 @@ namespace Barotrauma.Networking
                         Initialization = ConnectionInitialization.SteamTicketAndVersion
                     };
 
-                    if (steamAuthTicket is { Canceled: true })
+                    if (steamAuthTicket.TryUnwrap(out var authTicket) && authTicket is { Canceled: true })
                     {
                         throw new InvalidOperationException("ReadConnectionInitializationStep failed: Steam auth ticket has been cancelled.");
                     }
@@ -92,11 +92,7 @@ namespace Barotrauma.Networking
                         Name = GameMain.Client.Name,
                         OwnerKey = ownerKey,
                         SteamId = SteamManager.GetSteamId().Select(id => (AccountId)id),
-                        SteamAuthTicket = steamAuthTicket?.Data switch
-                        {
-                            null => Option<byte[]>.None(),
-                            var ticketData => Option<byte[]>.Some(ticketData)
-                        },
+                        SteamAuthTicket = steamAuthTicket.Bind(t => t.Data != null ? Option.Some(t.Data) : Option.None),
                         GameVersion = GameMain.Version.ToString(),
                         Language = GameSettings.CurrentConfig.Language.Value
                     };

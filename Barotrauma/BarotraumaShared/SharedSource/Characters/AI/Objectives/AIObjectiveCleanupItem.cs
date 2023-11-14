@@ -12,6 +12,7 @@ namespace Barotrauma
         public override Identifier Identifier { get; set; } = "cleanup item".ToIdentifier();
         public override bool KeepDivingGearOn => true;
         public override bool AllowAutomaticItemUnequipping => false;
+        public override bool AllowWhileHandcuffed => false;
 
         public readonly Item item;
         public bool IsPriority { get; set; }
@@ -30,8 +31,7 @@ namespace Barotrauma
         {
             if (!IsAllowed)
             {
-                Priority = 0;
-                Abandon = true;
+                HandleNonAllowed();
                 return Priority;
             }
             else
@@ -119,18 +119,21 @@ namespace Barotrauma
             if (item.IgnoreByAI(character))
             {
                 Abandon = true;
-                return false;
             }
-            if (item.ParentInventory != null)
+            else if (item.ParentInventory != null)
             {
-                if (item.Container != null && !AIObjectiveCleanupItems.IsValidContainer(item.Container, character, allowUnloading: objectiveManager.HasOrder<AIObjectiveCleanupItems>()))
+                if (!objectiveManager.HasOrder<AIObjectiveCleanupItems>())
+                {
+                    // Don't allow taking items from containers in the idle state.
+                    Abandon = true;
+                }
+                else if (item.Container != null && !AIObjectiveCleanupItems.IsValidContainer(item.Container, character))
                 {
                     // Target was picked up or moved by someone.
                     Abandon = true;
-                    return false;
                 }
             }
-            return IsCompleted;
+            return !Abandon && IsCompleted;
         }
 
         public override void Reset()

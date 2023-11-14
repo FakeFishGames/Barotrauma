@@ -361,11 +361,11 @@ namespace Barotrauma
             List<Pump> pumps = new List<Pump>();
             List<Item> allItems = GetItems(true);
 
-            bool anyHasTag = allItems.Any(i => i.HasTag("ballast"));
+            bool anyHasTag = allItems.Any(i => i.HasTag(Tags.Ballast));
 
             foreach (Item item in allItems)
             {
-                if ((!anyHasTag || item.HasTag("ballast")) && item.GetComponent<Pump>() is { } pump)
+                if ((!anyHasTag || item.HasTag(Tags.Ballast)) && item.GetComponent<Pump>() is { } pump)
                 {
                     pumps.Add(pump);
                 }
@@ -624,11 +624,18 @@ namespace Barotrauma
 
         //math/physics stuff ----------------------------------------------------
 
-        public static Vector2 VectorToWorldGrid(Vector2 position)
+        public static Vector2 VectorToWorldGrid(Vector2 position, bool round = false)
         {
-            position.X = (float)Math.Floor(position.X / GridSize.X) * GridSize.X;
-            position.Y = (float)Math.Ceiling(position.Y / GridSize.Y) * GridSize.Y;
-
+            if (round)
+            {
+                position.X = MathF.Round(position.X / GridSize.X) * GridSize.X;
+                position.Y = MathF.Round(position.Y / GridSize.Y) * GridSize.Y;
+            }
+            else
+            {
+                position.X = MathF.Floor(position.X / GridSize.X) * GridSize.X;
+                position.Y = MathF.Ceiling(position.Y / GridSize.Y) * GridSize.Y;
+            }
             return position;
         }
 
@@ -636,7 +643,7 @@ namespace Barotrauma
         {
             List<MapEntity> entities = onlyHulls ?
                 Hull.HullList.FindAll(h => h.Submarine == this).Cast<MapEntity>().ToList() :
-                MapEntity.mapEntityList.FindAll(me => me.Submarine == this);
+                MapEntity.MapEntityList.FindAll(me => me.Submarine == this);
 
             //ignore items whose body is disabled (wires, items inside cabinets)
             entities.RemoveAll(e =>
@@ -693,6 +700,22 @@ namespace Barotrauma
             return new Rectangle((int)pos.X, (int)pos.Y, (int)size.X, (int)size.Y);
         }
 
+        public static RectangleF AbsRectF(Vector2 pos, Vector2 size)
+        {
+            if (size.X < 0.0f)
+            {
+                pos.X += size.X;
+                size.X = -size.X;
+            }
+            if (size.Y < 0.0f)
+            {
+                pos.Y += size.Y;
+                size.Y = -size.Y;
+            }
+
+            return new RectangleF(pos.X, pos.Y, size.X, size.Y);
+        }
+
         public static bool RectContains(Rectangle rect, Vector2 pos, bool inclusive = false)
         {
             if (inclusive)
@@ -719,6 +742,18 @@ namespace Barotrauma
                 return !(rect1.X >= rect2.X + rect2.Width || rect1.X + rect1.Width <= rect2.X ||
                     rect1.Y <= rect2.Y - rect2.Height || rect1.Y - rect1.Height >= rect2.Y);
             }
+        }
+
+        public static bool RectsOverlap(RectangleF rect1, RectangleF rect2, bool inclusive = true)
+        {
+            if (inclusive)
+            {
+                return !(rect1.X > rect2.X + rect2.Width || rect1.X + rect1.Width < rect2.X ||
+                         rect1.Y < rect2.Y - rect2.Height || rect1.Y - rect1.Height > rect2.Y);
+            }
+
+            return !(rect1.X >= rect2.X + rect2.Width || rect1.X + rect1.Width <= rect2.X ||
+                     rect1.Y <= rect2.Y - rect2.Height || rect1.Y - rect1.Height >= rect2.Y);
         }
 
         public static Body PickBody(Vector2 rayStart, Vector2 rayEnd, IEnumerable<Body> ignoredBodies = null, Category? collisionCategory = null, bool ignoreSensors = true, Predicate<Fixture> customPredicate = null, bool allowInsideFixture = false)
@@ -965,7 +1000,7 @@ namespace Barotrauma
             Item.UpdateHulls();
 
             List<Item> bodyItems = Item.ItemList.FindAll(it => it.Submarine == this && it.body != null);
-            List<MapEntity> subEntities = MapEntity.mapEntityList.FindAll(me => me.Submarine == this);
+            List<MapEntity> subEntities = MapEntity.MapEntityList.FindAll(me => me.Submarine == this);
 
             foreach (MapEntity e in subEntities)
             {
@@ -1047,7 +1082,7 @@ namespace Barotrauma
 
         public void EnableFactionSpecificEntities(Identifier factionIdentifier)
         {
-            foreach (MapEntity me in MapEntity.mapEntityList)
+            foreach (MapEntity me in MapEntity.MapEntityList)
             {
                 if (string.IsNullOrEmpty(me.Layer) || me.Submarine != this) { continue; }
 
@@ -1202,7 +1237,7 @@ namespace Barotrauma
                 if (item.Submarine != this) { continue; }
                 var pump = item.GetComponent<Pump>();
                 if (pump == null || item.CurrentHull == null) { continue; }
-                if (!item.HasTag("ballast") && !item.CurrentHull.RoomName.Contains("ballast", StringComparison.OrdinalIgnoreCase)) { continue; }
+                if (!item.HasTag(Tags.Ballast) && !item.CurrentHull.RoomName.Contains("ballast", StringComparison.OrdinalIgnoreCase)) { continue; }
                 pump.FlowPercentage = 0.0f;
                 ballastHulls.Add(item.CurrentHull);
             }
@@ -1326,7 +1361,7 @@ namespace Barotrauma
             foreach (Item item in Item.ItemList.ToList())
             {
                 if (!connectedSubs.Contains(item.Submarine)) { continue; }
-                if (!item.HasTag("cargocontainer")) { continue; }
+                if (!item.HasTag(Tags.CargoContainer)) { continue; }
                 if (item.NonInteractable || item.HiddenInGame) { continue; }
                 var itemContainer = item.GetComponent<ItemContainer>();
                 if (itemContainer == null) { continue; }
@@ -1358,22 +1393,38 @@ namespace Barotrauma
         }
 
         /// <summary>
-        /// Finds the sub whose borders contain the position
+        /// Finds the sub whose borders contain the position. Note that this method uses the "actual" position of the sub outside the level:
+        /// only use this if the position is in a submarine's local coordinate space!
         /// </summary>
-        public static Submarine FindContaining(Vector2 position)
+        public static Submarine FindContainingInLocalCoordinates(Vector2 position, float inflate = 500.0f)
         {
             foreach (Submarine sub in Loaded)
             {
                 Rectangle subBorders = sub.Borders;
-                subBorders.Location += MathUtils.ToPoint(sub.HiddenSubPosition) - new Microsoft.Xna.Framework.Point(0, sub.Borders.Height);
-
-                subBorders.Inflate(500.0f, 500.0f);
-
-                if (subBorders.Contains(position)) return sub;
+                subBorders.Location += MathUtils.ToPoint(sub.HiddenSubPosition) - new Point(0, sub.Borders.Height);
+                subBorders.Inflate(inflate, inflate);
+                if (subBorders.Contains(position)) { return sub; }
             }
 
             return null;
         }
+
+        /// <summary>
+        /// Finds the sub whose world borders contain the position.
+        /// </summary>
+        public static Submarine FindContaining(Vector2 worldPosition, float inflate = 500.0f)
+        {
+            foreach (Submarine sub in Loaded)
+            {
+                Rectangle worldBorders = sub.Borders;
+                worldBorders.Location += sub.WorldPosition.ToPoint() - new Point(0, sub.Borders.Height);
+                worldBorders.Inflate(inflate, inflate);
+                if (worldBorders.Contains(worldPosition)) { return sub; }
+            }
+            return null;
+        }
+
+
         public static Rectangle GetBorders(XElement submarineElement)
         {
             Vector4 bounds = Vector4.Zero;
@@ -1430,7 +1481,7 @@ namespace Barotrauma
                     HiddenSubPosition =
                         new Vector2(
                             //1st sub on the left side, 2nd on the right, etc
-                            HiddenSubPosition.X * (i % 2 == 0 ? 1 : -1),
+                            -HiddenSubPosition.X,
                             HiddenSubPosition.Y + sub.Borders.Height + 5000.0f);
                 }
 
@@ -1479,7 +1530,7 @@ namespace Barotrauma
                     center.X -= center.X % GridSize.X;
                     center.Y -= center.Y % GridSize.Y;
 
-                    RepositionEntities(-center, MapEntity.mapEntityList.Where(me => me.Submarine == this));
+                    RepositionEntities(-center, MapEntity.MapEntityList.Where(me => me.Submarine == this));
                 }
 
                 subBody = new SubmarineBody(this, showErrorMessages);
@@ -1497,7 +1548,7 @@ namespace Barotrauma
                         !GameMain.NetworkMember.ServerSettings.DestructibleOutposts &&
                         !(info.OutpostGenerationParams?.AlwaysDestructible ?? false);
 
-                    foreach (MapEntity me in MapEntity.mapEntityList)
+                    foreach (MapEntity me in MapEntity.MapEntityList)
                     {
                         if (me.Submarine != this) { continue; }
                         if (me is Item item)
@@ -1554,16 +1605,16 @@ namespace Barotrauma
                 }
                 entityGrid = Hull.GenerateEntityGrid(this);
 
-                for (int i = 0; i < MapEntity.mapEntityList.Count; i++)
+                for (int i = 0; i < MapEntity.MapEntityList.Count; i++)
                 {
-                    if (MapEntity.mapEntityList[i].Submarine != this) { continue; }
-                    MapEntity.mapEntityList[i].Move(HiddenSubPosition, ignoreContacts: true);
+                    if (MapEntity.MapEntityList[i].Submarine != this) { continue; }
+                    MapEntity.MapEntityList[i].Move(HiddenSubPosition, ignoreContacts: true);
                 }
 
                 Loading = false;
 
                 MapEntity.MapLoaded(newEntities, true);
-                foreach (MapEntity me in MapEntity.mapEntityList)
+                foreach (MapEntity me in MapEntity.MapEntityList)
                 {
                     if (me.Submarine != this) { continue; }
                     if (me is LinkedSubmarine linkedSub)
@@ -1653,7 +1704,7 @@ namespace Barotrauma
 
         public bool CheckFuel()
         {
-            float fuel = GetItems(true).Where(i => i.HasTag("reactorfuel")).Sum(i => i.Condition);
+            float fuel = GetItems(true).Where(i => i.HasTag(Tags.Fuel)).Sum(i => i.Condition);
             Info.LowFuel = fuel < 200;
             return !Info.LowFuel;
         }
@@ -1681,7 +1732,7 @@ namespace Barotrauma
             element.Add(new XAttribute("dimensions", XMLExtensions.Vector2ToString(dimensions.Size.ToVector2())));
             var cargoContainers = GetCargoContainers();
             int cargoCapacity = cargoContainers.Sum(c => c.container.Capacity);
-            foreach (MapEntity me in MapEntity.mapEntityList)
+            foreach (MapEntity me in MapEntity.MapEntityList)
             {
                 if (me is LinkedSubmarine linkedSub && linkedSub.Submarine == this)
                 {
@@ -1702,13 +1753,12 @@ namespace Barotrauma
 
             foreach (Item item in Item.ItemList)
             {
-                if (item.PendingItemSwap?.SwappableItem?.ConnectedItemsToSwap == null) { continue; }
-                foreach (var (requiredTag, swapTo) in item.PendingItemSwap.SwappableItem.ConnectedItemsToSwap)
+                if (item.PendingItemSwap?.SwappableItem?.ConnectedItemsToSwap is not { } connectedItemsToSwap) { continue; }
+                foreach (var (requiredTag, swapTo) in connectedItemsToSwap)
                 {
                     List<Item> itemsToSwap = new List<Item>();
                     itemsToSwap.AddRange(item.linkedTo.Where(lt => (lt as Item)?.HasTag(requiredTag) ?? false).Cast<Item>());
-                    var connectionPanel = item.GetComponent<ConnectionPanel>();
-                    if (connectionPanel != null)
+                    if (item.GetComponent<ConnectionPanel>() is ConnectionPanel connectionPanel)
                     {
                         foreach (Connection c in connectionPanel.Connections)
                         {
@@ -1730,13 +1780,13 @@ namespace Barotrauma
                     foreach (Item itemToSwap in itemsToSwap)
                     {
                         itemToSwap.PurchasedNewSwap = item.PurchasedNewSwap;
-                        if (itemPrefab != itemToSwap.Prefab) { itemToSwap.PendingItemSwap = itemPrefab; }                       
+                        if (itemPrefab != itemToSwap.Prefab) { itemToSwap.PendingItemSwap = itemPrefab; }
                     }
                 }
             }
 
             Dictionary<int, MapEntity> savedEntities = new Dictionary<int, MapEntity>();
-            foreach (MapEntity e in MapEntity.mapEntityList.OrderBy(e => e.ID))
+            foreach (MapEntity e in MapEntity.MapEntityList.OrderBy(e => e.ID))
             {
                 if (!e.ShouldBeSaved) { continue; }
 
@@ -1980,24 +2030,32 @@ namespace Barotrauma
                 {
                     var connectedWp = connection.Waypoint;
                     if (connectedWp.IsObstructed || connectedWp.Ladders != null) { continue; }
-                    Vector2 start = ConvertUnits.ToSimUnits(wp.WorldPosition) - otherSub.SimPosition;
-                    Vector2 end = ConvertUnits.ToSimUnits(connectedWp.WorldPosition) - otherSub.SimPosition;
-                    var body = PickBody(start, end, null, Physics.CollisionWall, allowInsideFixture: true);
-                    if (body != null)
+                    bool isObstructed = wp.CurrentHull is Hull h && h.Submarine != this;
+                    if (!isObstructed)
                     {
-                        if (body.UserData is Structure wall && !wall.IsPlatform || body.UserData is Item && body.FixtureList[0].CollisionCategories.HasFlag(Physics.CollisionWall))
+                        Vector2 start = ConvertUnits.ToSimUnits(wp.WorldPosition) - otherSub.SimPosition;
+                        Vector2 end = ConvertUnits.ToSimUnits(connectedWp.WorldPosition) - otherSub.SimPosition;
+                        var body = PickBody(start, end, null, Physics.CollisionWall, allowInsideFixture: true);
+                        if (body != null)
                         {
-                            connectedWp.IsObstructed = true;
-                            wp.IsObstructed = true;
-                            if (!obstructedNodes.TryGetValue(otherSub, out HashSet<PathNode> nodes))
+                            if (body.UserData is Structure wall && !wall.IsPlatform || body.UserData is Item && body.FixtureList[0].CollisionCategories.HasFlag(Physics.CollisionWall))
                             {
-                                nodes = new HashSet<PathNode>();
-                                obstructedNodes.Add(otherSub, nodes);
+                                isObstructed = true;
                             }
-                            nodes.Add(node);
-                            nodes.Add(connection);
-                            break;
                         }
+                    }
+                    if (isObstructed)
+                    {
+                        connectedWp.IsObstructed = true;
+                        wp.IsObstructed = true;
+                        if (!obstructedNodes.TryGetValue(otherSub, out HashSet<PathNode> nodes))
+                        {
+                            nodes = new HashSet<PathNode>();
+                            obstructedNodes.Add(otherSub, nodes);
+                        }
+                        nodes.Add(node);
+                        nodes.Add(connection);
+                        break;
                     }
                 }
             }
@@ -2053,6 +2111,48 @@ namespace Barotrauma
                 
             }
             return selectedContainer;
+        }
+
+        public static Vector2 GetRelativeSimPosition(ISpatialEntity from, ISpatialEntity to, Vector2? targetWorldPos = null)
+        {
+            return targetWorldPos.HasValue ?
+                GetRelativeSimPositionFromWorldPosition(targetWorldPos.Value, from.Submarine, to.Submarine) :
+                GetRelativeSimPosition(to.SimPosition, from.Submarine, to.Submarine);
+        }
+
+        public static Vector2 GetRelativeSimPositionFromWorldPosition(Vector2 targetWorldPos, Submarine fromSub, Submarine toSub)
+        {
+            Vector2 worldPos = targetWorldPos;
+            if (toSub != null)
+            {
+                worldPos -= toSub.Position;
+            }
+            return GetRelativeSimPosition(ConvertUnits.ToSimUnits(worldPos), fromSub, toSub);
+        }
+
+        public static Vector2 GetRelativeSimPosition(Vector2 targetSimPos, Submarine fromSub, Submarine toSub)
+        {
+            Vector2 targetPos = targetSimPos;
+            if (fromSub == null && toSub != null)
+            {
+                // outside and targeting inside
+                targetPos += toSub.SimPosition;
+            }
+            else if (fromSub != null && toSub == null)
+            {
+                // inside and targeting outside
+                targetPos -= fromSub.SimPosition;
+            }
+            else if (fromSub != toSub)
+            {
+                if (fromSub != null && toSub != null)
+                {
+                    // both inside, but in different subs
+                    Vector2 diff = fromSub.SimPosition - toSub.SimPosition;
+                    targetPos -= diff;
+                }
+            }
+            return targetPos;
         }
     }
 }

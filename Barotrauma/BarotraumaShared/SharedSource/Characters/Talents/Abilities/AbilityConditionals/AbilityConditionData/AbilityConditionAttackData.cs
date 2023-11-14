@@ -22,13 +22,13 @@ namespace Barotrauma.Abilities
         private static readonly List<WeaponType> WeaponTypeValues = Enum.GetValues(typeof(WeaponType)).Cast<WeaponType>().ToList();
 
         private readonly string itemIdentifier;
-        private readonly string[] tags;
+        private readonly Identifier[] tags;
         private readonly WeaponType weapontype;
         private readonly bool ignoreNonHarmfulAttacks;
         public AbilityConditionAttackData(CharacterTalent characterTalent, ContentXElement conditionElement) : base(characterTalent, conditionElement)
         {
             itemIdentifier = conditionElement.GetAttributeString("itemidentifier", string.Empty);
-            tags = conditionElement.GetAttributeStringArray("tags", Array.Empty<string>(), convertToLowerInvariant: true);
+            tags = conditionElement.GetAttributeIdentifierArray("tags", Array.Empty<Identifier>());
             ignoreNonHarmfulAttacks = conditionElement.GetAttributeBool("ignorenonharmfulattacks", false);
 
             string weaponTypeStr = conditionElement.GetAttributeString("weapontype", "Any");

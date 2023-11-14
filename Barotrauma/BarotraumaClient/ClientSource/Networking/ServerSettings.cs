@@ -182,7 +182,8 @@ namespace Barotrauma.Networking
                 int? missionTypeAnd = null,
                 float? levelDifficulty = null,
                 bool? autoRestart = null,
-                int traitorSetting = 0,
+                float? traitorProbability = null,
+                int traitorDangerLevel = 0,
                 int botCount = 0,
                 int botSpawnMode = 0,
                 bool? useRespawnShuttle = null)
@@ -244,7 +245,11 @@ namespace Barotrauma.Networking
             {
                 outMsg.WriteRangedInteger(missionTypeOr ?? (int)Barotrauma.MissionType.None, 0, (int)Barotrauma.MissionType.All);
                 outMsg.WriteRangedInteger(missionTypeAnd ?? (int)Barotrauma.MissionType.All, 0, (int)Barotrauma.MissionType.All);
-                outMsg.WriteByte((byte)(traitorSetting + 1));
+
+                outMsg.WriteBoolean(traitorProbability != null);
+                outMsg.WriteSingle(traitorProbability ?? 0.0f);
+                outMsg.WriteByte((byte)(traitorDangerLevel + 1));
+
                 outMsg.WriteByte((byte)(botCount + 1));
                 outMsg.WriteByte((byte)(botSpawnMode + 1));
 
@@ -557,6 +562,26 @@ namespace Barotrauma.Networking
             };
             slider.OnMoved(slider, slider.BarScroll);
 
+            LocalizedString skillLossLabel = TextManager.Get("ServerSettingsSkillLossPercentageOnDeath");
+            var skillLossText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), roundsContent.RectTransform), skillLossLabel);
+            var skillLossSlider = new GUIScrollBar(new RectTransform(new Vector2(1.0f, 0.05f), roundsContent.RectTransform), barSize: 0.1f, style: "GUISlider")
+            {
+                UserData = skillLossText,
+                Range = new Vector2(0, 100),
+                StepValue = 1,
+                OnMoved = (GUIScrollBar scrollBar, float barScroll) =>
+                {
+                    GUITextBlock text = scrollBar.UserData as GUITextBlock;
+                    text.Text = TextManager.AddPunctuation(
+                        ':', 
+                        skillLossLabel, 
+                        TextManager.GetWithVariable("percentageformat", "[value]", ((int)Math.Round(scrollBar.BarScrollValue)).ToString()));
+                    return true;
+                }
+            };
+            GetPropertyData(nameof(SkillLossPercentageOnDeath)).AssignGUIComponent(skillLossSlider);
+            skillLossSlider.OnMoved(skillLossSlider, skillLossSlider.BarScroll);
+
             var respawnBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.05f), sliderLayout.RectTransform),
                 TextManager.Get("ServerSettingsAllowRespawning"));
             GetPropertyData(nameof(AllowRespawn)).AssignGUIComponent(respawnBox);
@@ -690,7 +715,7 @@ namespace Barotrauma.Networking
                 Stretch = true
             };
 
-            var traitorsMinPlayerCount = CreateLabeledNumberInput(numberLayout, "ServerSettingsTraitorsMinPlayerCount", 1, 16, "ServerSettingsTraitorsMinPlayerCountToolTip");
+            var traitorsMinPlayerCount = CreateLabeledNumberInput(numberLayout, "ServerSettingsTraitorsMinPlayerCount", 2, 16, "ServerSettingsTraitorsMinPlayerCountToolTip");
             GetPropertyData(nameof(TraitorsMinPlayerCount)).AssignGUIComponent(traitorsMinPlayerCount);
 
             var maximumTransferAmount = CreateLabeledNumberInput(numberLayout, "serversettingsmaximumtransferrequest", 0, CampaignMode.MaxMoney, "serversettingsmaximumtransferrequesttooltip");
@@ -700,9 +725,6 @@ namespace Barotrauma.Networking
             lootedMoneyDestination.AddItem(TextManager.Get("lootedmoneydestination.bank"), LootedMoneyDestination.Bank);
             lootedMoneyDestination.AddItem(TextManager.Get("lootedmoneydestination.wallet"), LootedMoneyDestination.Wallet);
             GetPropertyData(nameof(LootedMoneyDestination)).AssignGUIComponent(lootedMoneyDestination);
-
-            var ragdollButtonBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.05f), numberLayout.RectTransform), TextManager.Get("ServerSettingsAllowRagdollButton"));
-            GetPropertyData(nameof(AllowRagdollButton)).AssignGUIComponent(ragdollButtonBox);
 
             var disableBotConversationsBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.05f), numberLayout.RectTransform), TextManager.Get("ServerSettingsDisableBotConversations"));
             GetPropertyData(nameof(DisableBotConversations)).AssignGUIComponent(disableBotConversationsBox);

@@ -215,11 +215,15 @@ namespace Barotrauma.Networking
                 int orBits = incMsg.ReadRangedInteger(0, (int)Barotrauma.MissionType.All) & (int)Barotrauma.MissionType.All;
                 int andBits = incMsg.ReadRangedInteger(0, (int)Barotrauma.MissionType.All) & (int)Barotrauma.MissionType.All;
                 GameMain.NetLobbyScreen.MissionType = (MissionType)(((int)GameMain.NetLobbyScreen.MissionType | orBits) & andBits);
-                
-                int traitorSetting = (int)TraitorsEnabled + incMsg.ReadByte() - 1;
-                if (traitorSetting < 0) { traitorSetting = 2; }
-                if (traitorSetting > 2) { traitorSetting = 0; }
-                TraitorsEnabled = (YesNoMaybe)traitorSetting;
+
+                bool changedTraitorProbability = incMsg.ReadBoolean();
+                float traitorProbability = incMsg.ReadSingle();
+                if (changedTraitorProbability)
+                {
+                    TraitorProbability = traitorProbability;
+                }
+                //the byte indicates the direction we're changing the value, subtract one to get negative values from a byte
+                TraitorDangerLevel = TraitorDangerLevel + incMsg.ReadByte() - 1;
 
                 int botCount = BotCount + incMsg.ReadByte() - 1;
                 if (botCount < 0) { botCount = MaxBotCount; }
@@ -347,7 +351,7 @@ namespace Barotrauma.Networking
             selectedLevelDifficulty = doc.Root.GetAttributeFloat("LevelDifficulty", 20.0f);
             GameMain.NetLobbyScreen.SetLevelDifficulty(selectedLevelDifficulty);
             
-            GameMain.NetLobbyScreen.SetTraitorsEnabled(traitorsEnabled);
+            GameMain.NetLobbyScreen.SetTraitorProbability(traitorProbability);
 
             HiddenSubs.UnionWith(doc.Root.GetAttributeStringArray("HiddenSubs", Array.Empty<string>()));
             if (HiddenSubs.Any())

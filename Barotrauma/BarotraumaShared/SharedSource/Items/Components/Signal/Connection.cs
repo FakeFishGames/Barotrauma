@@ -23,6 +23,15 @@ namespace Barotrauma.Items.Components
         private readonly HashSet<Wire> wires;
         public IReadOnlyCollection<Wire> Wires => wires;
 
+        /// <summary>
+        /// Circuit box input and output connections that are linked to this connection.
+        /// </summary>
+        /// <remarks>
+        /// We don't want to create a wire between the circuit boxes connection panel and the
+        /// connection panel of the item inside the circuit box so we use this to bridge the gap.
+        /// </remarks>
+        public List<CircuitBoxConnection> CircuitBoxConnections = new();
+
         private bool enumeratingWires;
         private readonly HashSet<Wire> removedWires = new HashSet<Wire>();
 
@@ -177,6 +186,12 @@ namespace Barotrauma.Items.Components
             }
         }
 
+        /// <summary>
+        /// Checks if the the connection is connected to a wire or a circuit box connection
+        /// </summary>
+        public bool IsConnectedToSomething()
+            => wires.Count > 0 || CircuitBoxConnections.Count > 0;
+
         public void SetRecipientsDirty()
         {
             recipientsDirty = true;
@@ -304,25 +319,15 @@ namespace Barotrauma.Items.Components
                 if (recipient.item == this.item || signal.source?.LastSentSignalRecipients.LastOrDefault() == recipient) { continue; }
 
                 signal.source?.LastSentSignalRecipients.Add(recipient);
-
-                Connection connection = recipient;
-                connection.LastReceivedSignal = signal;
 #if CLIENT
                 wire.RegisterSignal(signal, source: this);
 #endif
+                SendSignalIntoConnection(signal, recipient);
+            }
 
-                foreach (ItemComponent ic in recipient.item.Components)
-                {
-                    ic.ReceiveSignal(signal, connection);
-                }
-
-                if (recipient.Effects != null && signal.value != "0")
-                {
-                    foreach (StatusEffect effect in recipient.Effects)
-                    {
-                        recipient.Item.ApplyStatusEffect(effect, ActionType.OnUse, (float)Timing.Step);
-                    }
-                }
+            foreach (CircuitBoxConnection connection in CircuitBoxConnections)
+            {
+                connection.ReceiveSignal(signal);
             }
             enumeratingWires = false;
             foreach (var removedWire in removedWires)
@@ -331,7 +336,24 @@ namespace Barotrauma.Items.Components
             }
             removedWires.Clear();
         }
-        
+
+        public static void SendSignalIntoConnection(Signal signal, Connection conn)
+        {
+            conn.LastReceivedSignal = signal;
+
+            foreach (ItemComponent ic in conn.item.Components)
+            {
+                ic.ReceiveSignal(signal, conn);
+            }
+
+            if (conn.Effects == null || signal.value == "0") { return; }
+
+            foreach (StatusEffect effect in conn.Effects)
+            {
+                conn.Item.ApplyStatusEffect(effect, ActionType.OnUse, (float)Timing.Step);
+            }
+        }
+
         public void ClearConnections()
         {
             if (IsPower && Grid != null)

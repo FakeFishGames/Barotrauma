@@ -12,6 +12,7 @@ namespace Barotrauma
         public override string DebugTag => $"{Identifier}";
         public override bool KeepDivingGearOn => true;
         public override bool AllowMultipleInstances => true;
+        public override bool AllowWhileHandcuffed => false;
 
         public bool AllowStealing { get; set; }
         public bool TakeWholeStack { get; set; }
@@ -40,55 +41,48 @@ namespace Barotrauma
 
         protected override void Act(float deltaTime)
         {
-            if (character.LockHands)
+            if (subObjectivesCreated) { return; }
+            foreach (Identifier tag in gearTags)
             {
-                Abandon = true;
-                return;
+                if (subObjectives.Any(so => so is AIObjectiveGetItem getItem && getItem.IdentifiersOrTags.Contains(tag))) { continue; }
+                int count = gearTags.Count(t => t == tag);
+                AIObjectiveGetItem? getItem = null;
+                TryAddSubObjective(ref getItem, () =>
+                    new AIObjectiveGetItem(character, tag, objectiveManager, Equip, CheckInventory && count <= 1)
+                    {
+                        AllowVariants = AllowVariants,
+                        Wear = Wear,
+                        TakeWholeStack = TakeWholeStack,
+                        AllowStealing = AllowStealing,
+                        ignoredIdentifiersOrTags = ignoredTags,
+                        CheckPathForEachItem = CheckPathForEachItem,
+                        RequireNonEmpty = RequireNonEmpty,
+                        ItemCount = count,
+                        SpeakIfFails = RequireAllItems
+                    },
+                    onCompleted: () =>
+                    {
+                        var item = getItem?.TargetItem;
+                        if (item?.IsOwnedBy(character) != null)
+                        {
+                            achievedItems.Add(item);
+                        }
+                    },
+                    onAbandon: () =>
+                    {
+                        var item = getItem?.TargetItem;
+                        if (item != null)
+                        {
+                            achievedItems.Remove(item);
+                        }
+                        RemoveSubObjective(ref getItem);
+                        if (RequireAllItems)
+                        {
+                            Abandon = true;
+                        }
+                    });
             }
-            if (!subObjectivesCreated)
-            {
-                foreach (Identifier tag in gearTags)
-                {
-                    if (subObjectives.Any(so => so is AIObjectiveGetItem getItem && getItem.IdentifiersOrTags.Contains(tag))) { continue; }
-                    int count = gearTags.Count(t => t == tag);
-                    AIObjectiveGetItem? getItem = null;
-                    TryAddSubObjective(ref getItem, () =>
-                        new AIObjectiveGetItem(character, tag, objectiveManager, Equip, CheckInventory && count <= 1)
-                        {
-                            AllowVariants = AllowVariants,
-                            Wear = Wear,
-                            TakeWholeStack = TakeWholeStack,
-                            AllowStealing = AllowStealing,
-                            ignoredIdentifiersOrTags = ignoredTags,
-                            CheckPathForEachItem = CheckPathForEachItem,
-                            RequireNonEmpty = RequireNonEmpty,
-                            ItemCount = count,
-                            SpeakIfFails = RequireAllItems
-                        },
-                        onCompleted: () =>
-                        {
-                            var item = getItem?.TargetItem;
-                            if (item?.IsOwnedBy(character) != null)
-                            {
-                                achievedItems.Add(item);
-                            }
-                        },
-                        onAbandon: () =>
-                        {
-                            var item = getItem?.TargetItem;
-                            if (item != null)
-                            {
-                                achievedItems.Remove(item);
-                            }
-                            RemoveSubObjective(ref getItem);
-                            if (RequireAllItems)
-                            {
-                                Abandon = true;
-                            }
-                        });
-                }
-                subObjectivesCreated = true;
-            }
+            subObjectivesCreated = true;
         }
 
         public override void Reset()
