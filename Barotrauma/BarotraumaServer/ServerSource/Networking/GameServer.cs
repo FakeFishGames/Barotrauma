@@ -1892,7 +1892,11 @@ namespace Barotrauma.Networking
                     }
                 }
 
-                serverPeer.Send(outmsg, c.Connection, DeliveryMethod.Unreliable);
+                // Use reliable mode if message is too large.
+                // This prevents the message from becoming "lost" because of fragmentation
+                // which may not be supported by certain ISPs or network infrastructure.
+                var deliveryMethod = outmsg.LengthBytes <= MsgConstants.MTU ? DeliveryMethod.Unreliable : DeliveryMethod.Reliable;
+                serverPeer.Send(outmsg, c.Connection, deliveryMethod);
             }
         }
 
