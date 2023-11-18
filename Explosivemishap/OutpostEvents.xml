@@ -2098,6 +2098,7 @@
                               </StatusEffectAction>
                               <ConversationAction targettag="lootermishap" text="EventText.explosivemishap.o1.o1.o1.o1.o1.o1.o1.o2.c1" endconversation="true" />
                               <ReputationAction targettype="Location" increase="3" />
+                              <NPCWaitAction npctag="securitymishap" wait="true" />
                             </Option>
                           </ConversationAction>  
                         </Option>
