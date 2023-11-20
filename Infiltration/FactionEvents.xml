@@ -1,0 +1,2405 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<RandomEvents>
+  <EventPrefabs>
+    <!-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+    <!--                               Coalition                                   -->
+    <!-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+    <ScriptedEvent identifier="coalitionspecialhire1">
+      <CheckReputationAction targettype="faction" identifier="coalition" condition="gte 80">
+        <Failure>
+          <!-- Do nothing -->
+        </Failure>
+        <Success>
+          <CheckDataAction identifier="coalitionspecialhire1_hired" condition="eq true">
+            <Success>
+              <!--Don't repeat event if already hired-->
+            </Success>
+            <Failure>
+              <ConversationAction text="eventtext.coalitionspecialhire1.announcement" eventsprite="NoticeBoard" />
+              <TagAction criteria="player" tag="player" />
+              <SpawnAction npcsetidentifier="customnpcs1" npcidentifier="ignatiusmay" targettag="ignatiusmay" allowduplicates="false" spawnlocation="Outpost" targetmoduletags="admin,adminmodule" />
+              <Label name="beginning" />
+              <CheckDataAction identifier="coalitionspecialhire1_declinedonce" condition="eq true">
+                <Failure>
+                  <TriggerAction target1tag="ignatiusmay" target2tag="player" applytotarget2="triggerer_player" waitforinteraction="false" radius="300" />
+                  <NPCFollowAction npctag="ignatiusmay" targettag="triggerer_player" follow="true" />
+                  <!-- we haven't declined the offer before-->
+                  <ConversationAction targettag="triggerer_player" text="eventtext.coalitionspecialhire1.c1" eventsprite="oldman">
+                    <Option text="eventtext.coalitionspecialhire1.o1">
+                      <ConversationAction targettag="triggerer_player" text="eventtext.coalitionspecialhire1.o1.c1">
+                        <Option text="eventtext.coalitionspecialhire1.o1.o1">
+                          <ConversationAction targettag="triggerer_player" text="eventtext.coalitionspecialhire1.o1.o1.c1">
+                            <Option text="eventtext.coalitionspecialhire1.o1.o1.o1">
+                              <ConversationAction targettag="triggerer_player" text="eventtext.coalitionspecialhire1.o1.o1.o1.c1" />
+                              <NPCChangeTeamAction npctag="ignatiusmay" teamid="Team1" addtocrew="true" />
+                              <SetDataAction identifier="coalitionspecialhire1_hired" value="true" />
+                              <NPCFollowAction npctag="ignatiusmay" targettag="triggerer_player" follow="false" />
+                            </Option>
+                            <Option text="eventtext.separatistspecialhire2.o1.o1.o2">
+                              <ConversationAction targettag="triggerer_player" text="eventtext.coalitionspecialhire1.o1.o1.o2.c1" />
+                              <SetDataAction identifier="coalitionspecialhire1_declinedonce" value="true" />
+                              <NPCFollowAction npctag="ignatiusmay" targettag="triggerer_player" follow="false" />
+                              <GoTo name="beginning" />
+                            </Option>
+                          </ConversationAction>
+                        </Option>
+                      </ConversationAction>
+                    </Option>
+                  </ConversationAction>
+                </Failure>
+                <Success>
+                  <!-- we've declined before, show different dialog this time -->
+                  <TriggerAction target1tag="ignatiusmay" target2tag="player" applytotarget2="triggerer_player" waitforinteraction="true" radius="300" />
+                  <ConversationAction targettag="triggerer_player" text="eventtext.coalitionspecialhire1.repeat" eventsprite="oldman">
+                    <Option text="eventtext.separatistspecialhire2.o1.o1.o1">
+                      <ConversationAction targettag="triggerer_player" text="eventtext.coalitionspecialhire1.o1.o1.o1.c1" />
+                      <NPCChangeTeamAction npctag="ignatiusmay" teamid="Team1" addtocrew="true" />
+                      <SetDataAction identifier="coalitionspecialhire1_hired" value="true" />
+                      <NPCFollowAction npctag="ignatiusmay" targettag="triggerer_player" follow="false" />
+                    </Option>
+                    <Option text="eventtext.separatistspecialhire1.o1.o2.repeat" endconversation="true">
+                      <NPCFollowAction npctag="ignatiusmay" targettag="triggerer_player" follow="false" />
+                      <GoTo name="beginning" />
+                    </Option>
+                  </ConversationAction>
+                </Success>
+              </CheckDataAction>
+            </Failure>
+          </CheckDataAction>
+        </Success>
+      </CheckReputationAction>
+    </ScriptedEvent>
+    <ScriptedEvent identifier="coalitionspecialhire2">
+      <CheckReputationAction targettype="faction" identifier="coalition" condition="gte 80">
+        <Failure>
+          <!-- Do nothing -->
+        </Failure>
+        <Success>
+          <CheckDataAction identifier="coalitionspecialhire2_hired" condition="eq true">
+            <Success>
+              <!--Don't repeat event if already hired-->
+            </Success>
+            <Failure>
+              <TagAction criteria="player" tag="player" />
+              <SpawnAction npcsetidentifier="customnpcs1" npcidentifier="auntdoris" targettag="auntdoris" allowduplicates="false" spawnlocation="Outpost" />
+              <Label name="beginning" />
+              <TriggerAction target1tag="auntdoris" target2tag="player" applytotarget2="triggerer_player" waitforinteraction="true" />
+              <NPCFollowAction npctag="auntdoris" targettag="triggerer_player" follow="true" />
+              <CheckDataAction identifier="coalitionspecialhire2_declinedonce" condition="eq true">
+                <Failure>
+                  <!-- we haven't declined the offer before-->
+                  <ConversationAction targettag="triggerer_player" text="eventtext.coalitionspecialhire2.c1">
+                    <Option text="eventtext.coalitionspecialhire2.o1">
+                      <ConversationAction targettag="triggerer_player" text="eventtext.coalitionspecialhire2.o1.c1">
+                        <Option text="eventtext.coalitionspecialhire2.o1.o1">
+                          <ConversationAction targettag="triggerer_player" text="eventtext.coalitionspecialhire2.o1.o1.c1">
+                            <Option text="eventtext.coalitionspecialhire2.o1.o1.o1">
+                              <ConversationAction targettag="triggerer_player" text="eventtext.coalitionspecialhire2.o1.o1.o1.c1" />
+                              <NPCChangeTeamAction npctag="auntdoris" teamid="Team1" addtocrew="true" />
+                              <SetDataAction identifier="coalitionspecialhire2_hired" value="true" />
+                              <NPCFollowAction npctag="auntdoris" targettag="triggerer_player" follow="false" />
+                            </Option>
+                            <Option text="eventtext.separatistspecialhire2.o1.o1.o2">
+                              <ConversationAction targettag="triggerer_player" text="eventtext.coalitionspecialhire2.o1.o1.o2.c1" />
+                              <SetDataAction identifier="coalitionspecialhire2_declinedonce" value="true" />
+                              <NPCFollowAction npctag="auntdoris" targettag="triggerer_player" follow="false" />
+                              <GoTo name="beginning" />
+                            </Option>
+                          </ConversationAction>
+                        </Option>
+                      </ConversationAction>
+                    </Option>
+                  </ConversationAction>
+                </Failure>
+                <Success>
+                  <!-- we've declined before, show different dialog this time -->
+                  <ConversationAction targettag="triggerer_player" text="eventtext.coalitionspecialhire2.repeat">
+                    <Option text="eventtext.separatistspecialhire2.o1.o1.o1">
+                      <ConversationAction targettag="triggerer_player" text="eventtext.coalitionspecialhire2.o1.o1.o1.c1" />
+                      <NPCChangeTeamAction npctag="auntdoris" teamid="Team1" addtocrew="true" />
+                      <SetDataAction identifier="coalitionspecialhire2_hired" value="true" />
+                      <NPCFollowAction npctag="auntdoris" targettag="triggerer_player" follow="false" />
+                    </Option>
+                    <Option text="eventtext.separatistspecialhire1.o1.o2.repeat" endconversation="true">
+                      <NPCFollowAction npctag="auntdoris" targettag="triggerer_player" follow="false" />
+                      <GoTo name="beginning" />
+                    </Option>
+                  </ConversationAction>
+                </Success>
+              </CheckDataAction>
+            </Failure>
+          </CheckDataAction>
+        </Success>
+      </CheckReputationAction>
+    </ScriptedEvent>
+    <!--Bomb scare-->
+    <ScriptedEvent identifier="bombscare" commonness="50">
+      <TagAction criteria="player" tag="player" />
+      <SpawnAction npcsetidentifier="outpostnpcs1" npcidentifier="securitynpc[faction]" targettag="security" spawnlocation="Outpost" />
+      <TriggerAction target1tag="player" target2tag="security" applytotarget1="triggerer_player" waitforinteraction="true" />
+      <ConversationAction text="EventText.bombscare.c1" targettag="triggerer_player" eventsprite="BombScare1">
+        <Option text="EventText.bombscare.o1">
+          <ConversationAction text="EventText.bombscare.o1.c1" targettag="triggerer_player">
+            <Option text="EventText.bombscare.o1.o1">
+              <ConversationAction text="EventText.bombscare.o1.o1.c1" targettag="triggerer_player">
+                <Option text="EventText.bombscare.o1.o1.o1">
+                  <ConversationAction text="EventText.bombscare.o1.o1.o1.c1" targettag="triggerer_player" endconversation="true" />
+                  <WaitAction time="13" />
+                  <ConversationAction text="EventText.bombscare.o1.o1.o1.c1.c1" targettag="triggerer_player" eventsprite="BombScare2">
+                    <Option text="EventText.bombscare.o1.o1.o1.c1.o1">
+                      <SkillCheckAction requiredskill="electrical" requiredlevel="45" targettag="triggerer_player">
+                        <Success>
+                          <GiveSkillEXPAction skill="electrical" amount="10" targettag="triggerer_player" />
+                          <ConversationAction text="EventText.bombscare.o1.o1.o1.c1.o1.c1" targettag="triggerer_player" />
+                          <ConversationAction text="EventText.bombscare.o1.o1.o1.c1.o1.c1.c1" speakertag="security" targettag="triggerer_player" />
+                          <MoneyAction amount="500" />
+                          <ReputationAction targettype="Faction" identifier="coalition" increase="5" />
+                          <ReputationAction targettype="Faction" identifier="separatists" increase="-5" />
+                        </Success>
+                        <Failure>
+                          <ConversationAction text="EventText.bombscare.o1.o1.o1.c1.o1.c2" targettag="triggerer_player">
+                            <Option text="EventText.bombscare.o1.o1.o1.c1.o1.o1">
+                              <ConversationAction text="EventText.bombscare.o1.o1.o1.c1.o1.o1.c1" targettag="triggerer_player" />
+                              <ConversationAction text="EventText.bombscare.o1.o1.o1.c1.o1.o1.c1.c1" speakertag="security" targettag="triggerer_player" />
+                              <ReputationAction targettype="Faction" identifier="coalition" increase="5" />
+                              <ReputationAction targettype="Faction" identifier="separatists" increase="-5" />
+                            </Option>
+                          </ConversationAction>
+                        </Failure>
+                      </SkillCheckAction>
+                    </Option>
+                    <Option text="EventText.generic.ignore">
+                      <!--END-->
+                    </Option>
+                  </ConversationAction>
+                </Option>
+              </ConversationAction>
+            </Option>
+            <Option text="EventText.bombscare.o1.o2">
+              <!--END-->
+            </Option>
+          </ConversationAction>
+        </Option>
+        <Option text="EventText.generic.ignore">
+          <!--END-->
+        </Option>
+      </ConversationAction>
+    </ScriptedEvent>
+    <!--Nothing to see here-->
+    <ScriptedEvent identifier="nothingtoseehere" commonness="50">
+      <SpawnAction npcsetidentifier="customnpcs1" npcidentifier="oldwoman" targettag="nothingtoseehere_oldwoman" spawnlocation="Outpost" spawnpointtype="Path" />
+      <SpawnAction npcsetidentifier="outpostnpcs1" npcidentifier="securitynpc[faction]" targettag="nothingtoseehere_guard" spawnlocation="Outpost" spawnpointtype="Path" targetmoduletags="securitymodule" />
+      <TagAction criteria="player" tag="player" />
+      <NPCWaitAction npctag="oldwoman" wait="true" />
+      <NPCWaitAction npctag="securitynpc[faction]" wait="true" />
+      <TriggerAction target1tag="nothingtoseehere_oldwoman" target2tag="player" applytotarget2="triggerer_player" radius="100" waitforinteraction="true" />
+      <ConversationAction text="EventText.nothingtoseehere.c1" targettag="triggerer_player">
+        <Option text="EventText.nothingtoseehere.o1" endconversation="true">
+          <TagAction criteria="itemidentifier:opdeco_trashcan" tag="potentialtrashcan" submarinetype="outpost" />
+          <TriggerAction target1tag="potentialtrashcan" target2tag="triggerer_player" applytotarget1="selectedtrashcan" radius="100" waitforinteraction="true" />
+          <ConversationAction text="EventText.nothingtoseehere.o1.c1" targettag="triggerer_player" eventsprite="trashcan">
+            <Option text="EventText.nothingtoseehere.o1.o1">
+              <ConversationAction text="EventText.nothingtoseehere.o1.o1.c1" targettag="triggerer_player">
+                <Option text="EventText.generic.continue">
+                  <ConversationAction text="EventText.nothingtoseehere.o1.o1.o1.c1" targettag="triggerer_player" endconversation="true" />
+                  <TriggerAction target1tag="nothingtoseehere_guard" target2tag="player" applytotarget2="triggerer_player" radius="100" waitforinteraction="true" />
+                  <ConversationAction text="EventText.nothingtoseehere.o1.o1.o1.c1.c1" targettag="triggerer_player">
+                    <Option text="EventText.nothingtoseehere.o1.o1.o1.c1.o1">
+                      <ConversationAction text="EventText.nothingtoseehere.o1.o1.o1.c1.o1.c1" targettag="triggerer_player">
+                        <Option text="EventText.nothingtoseehere.o1.o1.o1.c1.o1.o1">
+                          <ConversationAction text="EventText.nothingtoseehere.o1.o1.o1.c1.o1.o1.c1" targettag="triggerer_player" endconversation="true"/>
+                          <MoneyAction amount="500" />
+                          <ReputationAction targettype="Faction" identifier="coalition" increase="5" />
+                        </Option>
+                        <Option text="EventText.nothingtoseehere.o1.o1.o1.c1.o1.o2">
+                          <ConversationAction text="EventText.nothingtoseehere.o1.o1.o1.c1.o1.o2.c1" targettag="triggerer_player">
+                            <Option text="EventText.nothingtoseehere.o1.o1.o1.c1.o1.o2.o1">
+                              <ConversationAction text="EventText.nothingtoseehere.o1.o1.o1.c1.o1.o2.o1.c1" targettag="triggerer_player">
+                                <Option text="EventText.nothingtoseehere.o1.o1.o1.c1.o1.o2.o1.o1" endconversation="true">
+                                  <MoneyAction amount="500" />
+                                  <ReputationAction targettype="Faction" identifier="coalition" increase="1" />
+                                </Option>
+                                <Option text="EventText.nothingtoseehere.o1.o1.o1.c1.o1.o2.o1.o2" endconversation="true">
+                                  <ReputationAction targettype="Faction" identifier="coalition" increase="-5" />
+                                  <ReputationAction targettype="Faction" identifier="separatists" increase="5" />
+                                </Option>
+                              </ConversationAction>
+                            </Option>
+                          </ConversationAction>
+                        </Option>
+                      </ConversationAction>
+                    </Option>
+                    <Option text="EventText.nothingtoseehere.o1.o1.o1.c1.o2">
+                      <!--END-->
+                    </Option>
+                  </ConversationAction>
+                </Option>
+              </ConversationAction>
+            </Option>
+            <Option text="EventText.generic.ignore">
+              <!--END-->
+            </Option>
+          </ConversationAction>
+        </Option>
+        <Option text="EventText.generic.ignore">
+          <!--END-->
+        </Option>
+      </ConversationAction>
+    </ScriptedEvent>
+
+    <ScriptedEvent identifier="missionevent_jailbreak_coalition" commonness="80">
+      <CheckReputationAction targettype="faction" identifier="coalition" condition="gte 30">
+        <Failure>
+          <!-- Do nothing -->
+        </Failure>
+        <Success>
+          <NPCWaitAction npctag="outpostmanager" wait="true" />
+          <ConversationAction text="EventText.missionevent_jailbreak_coalition.c1" speakertag="outpostmanager" invokertag="triggerer_player" endeventifinterrupted="false" eventsprite="Coalition">
+            <Option text="EventText.missionevent.pleasecontinue">
+              <!-- "please continue" -->
+              <ConversationAction text="EventText.missionevent_jailbreak_coalition.o1.c1" targettag="triggerer_player" endeventifinterrupted="false" eventsprite="Coalition" endconversation="true" />
+              <MissionAction missionidentifier="jailbreak_coalition" locationtype="City,Military" requiredfaction="separatists" minlocationdistance="1" />
+            </Option>
+          </ConversationAction>
+        </Success>
+      </CheckReputationAction>
+    </ScriptedEvent>
+    <!-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+    <!--                          Jovian Separatists                               -->
+    <!-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+    <ScriptedEvent identifier="separatistspecialhire1">
+      <CheckReputationAction targettype="faction" identifier="separatists" condition="gte 80">
+        <Failure>
+          <!-- Do nothing -->
+        </Failure>
+        <Success>
+          <CheckDataAction identifier="separatistspecialhire1_hired" condition="eq true">
+            <Success>
+              <!--Don't repeat event if already hired-->
+            </Success>
+            <Failure>
+              <TagAction criteria="player" tag="player" />
+              <SpawnAction npcsetidentifier="customnpcs1" npcidentifier="victoriapetran" targettag="victoria" allowduplicates="false" spawnlocation="Outpost" />
+              <Label name="beginning" />
+              <TriggerAction target1tag="victoria" target2tag="player" applytotarget2="triggerer_player" waitforinteraction="true" />
+              <NPCFollowAction npctag="victoria" targettag="triggerer_player" follow="true" />
+              <CheckDataAction identifier="separatistspecialhire1_declinedonce" condition="eq true">
+                <Failure>
+                  <!-- we haven't declined the offer before-->
+                  <ConversationAction targettag="triggerer_player" text="eventtext.separatistspecialhire1.c1" eventsprite="HeartOfGold">
+                    <Option text="eventtext.separatistspecialhire1.o1">
+                      <ConversationAction targettag="triggerer_player" text="eventtext.separatistspecialhire1.o1.c1">
+                        <Option text="eventtext.separatistspecialhire1.o1.o1">
+                          <ConversationAction targettag="triggerer_player" text="eventtext.separatistspecialhire1.o1.o1.c1">
+                            <Option text="eventtext.separatistspecialhire1.o1.o1.o1">
+                              <ConversationAction targettag="triggerer_player" text="eventtext.separatistspecialhire1.o1.o1.o1.c1" />
+                              <NPCChangeTeamAction npctag="victoria" teamid="Team1" addtocrew="true" />
+                              <SetDataAction identifier="separatistspecialhire1_hired" value="true" />
+                              <NPCFollowAction npctag="victoria" targettag="triggerer_player" follow="false" />
+                            </Option>
+                            <Option text="eventtext.separatistspecialhire1.o1.o1.o2">
+                              <ConversationAction targettag="triggerer_player" text="eventtext.separatistspecialhire1.o1.o1.o2.c1" />
+                              <SetDataAction identifier="separatistspecialhire1_declinedonce" value="true" />
+                              <NPCFollowAction npctag="victoria" targettag="triggerer_player" follow="false" />
+                              <GoTo name="beginning" />
+                            </Option>
+                          </ConversationAction>
+                        </Option>
+                      </ConversationAction>
+                    </Option>
+                  </ConversationAction>
+                </Failure>
+                <Success>
+                  <!-- we've declined before, show different dialog this time -->
+                  <ConversationAction targettag="triggerer_player" text="eventtext.separatistspecialhire1.repeat" eventsprite="HeartOfGold">
+                    <Option text="eventtext.separatistspecialhire1.o1.o1.repeat">
+                      <ConversationAction targettag="triggerer_player" text="eventtext.separatistspecialhire1.o1.o1.o1.c1" />
+                      <NPCChangeTeamAction npctag="victoria" teamid="Team1" addtocrew="true" />
+                      <SetDataAction identifier="separatistspecialhire1_hired" value="true" />
+                      <NPCFollowAction npctag="victoria" targettag="triggerer_player" follow="false" />
+                    </Option>
+                    <Option text="eventtext.separatistspecialhire1.o1.o2.repeat" endconversation="true">
+                      <NPCFollowAction npctag="victoria" targettag="triggerer_player" follow="false" />
+                      <GoTo name="beginning" />
+                    </Option>
+                  </ConversationAction>
+                </Success>
+              </CheckDataAction>
+            </Failure>
+          </CheckDataAction>
+        </Success>
+      </CheckReputationAction>
+    </ScriptedEvent>
+    <ScriptedEvent identifier="separatistspecialhire2">
+      <CheckReputationAction targettype="faction" identifier="separatists" condition="gte 80">
+        <Failure>
+          <!-- Do nothing -->
+        </Failure>
+        <Success>
+          <CheckDataAction identifier="separatistspecialhire2_hired" condition="eq true">
+            <Success>
+              <!--Don't repeat event if already hired-->
+            </Success>
+            <Failure>
+              <CheckDataAction identifier="sootman_freed" condition="eq true">
+                <Failure>
+                  <!-- don't allow hiring until jailbreak mission has been completed -->
+                </Failure>
+                <Success>
+                  <TagAction criteria="player" tag="player" />
+                  <SpawnAction npcsetidentifier="customnpcs1" npcidentifier="sootman" targettag="sootman" allowduplicates="false" spawnlocation="Outpost" />
+                  <Label name="beginning" />
+                  <TriggerAction target1tag="sootman" target2tag="player" applytotarget2="triggerer_player" waitforinteraction="true" />
+                  <NPCFollowAction npctag="sootman" targettag="triggerer_player" follow="true" />
+                  <CheckDataAction identifier="separatistspecialhire2_declinedonce" condition="eq true">
+                    <Failure>
+                      <!-- we haven't declined the offer before-->
+                      <ConversationAction targettag="triggerer_player" text="eventtext.separatistspecialhire2.c1">
+                        <Option text="eventtext.separatistspecialhire2.o1">
+                          <ConversationAction targettag="triggerer_player" text="eventtext.separatistspecialhire2.o1.c1">
+                            <Option text="eventtext.separatistspecialhire2.o1.o1">
+                              <ConversationAction targettag="triggerer_player" text="eventtext.separatistspecialhire2.o1.o1.c1">
+                                <Option text="eventtext.separatistspecialhire2.o1.o1.o1">
+                                  <ConversationAction targettag="triggerer_player" text="eventtext.separatistspecialhire2.o1.o1.o1.c1" />
+                                  <NPCChangeTeamAction npctag="sootman" teamid="Team1" addtocrew="true" />
+                                  <SetDataAction identifier="separatistspecialhire2_hired" value="true" />
+                                  <NPCFollowAction npctag="sootman" targettag="triggerer_player" follow="false" />
+                                </Option>
+                                <Option text="eventtext.separatistspecialhire2.o1.o1.o2">
+                                  <ConversationAction targettag="triggerer_player" text="eventtext.separatistspecialhire2.o1.o1.o2.c1" />
+                                  <SetDataAction identifier="separatistspecialhire2_declinedonce" value="true" />
+                                  <NPCFollowAction npctag="sootman" targettag="triggerer_player" follow="false" />
+                                  <GoTo name="beginning" />
+                                </Option>
+                              </ConversationAction>
+                            </Option>
+                          </ConversationAction>
+                        </Option>
+                      </ConversationAction>
+                    </Failure>
+                    <Success>
+                      <!-- we've declined before, show different dialog this time -->
+                      <ConversationAction targettag="triggerer_player" text="eventtext.separatistspecialhire2.repeat">
+                        <Option text="eventtext.separatistspecialhire1.o1.o1.o1">
+                          <ConversationAction targettag="triggerer_player" text="eventtext.separatistspecialhire2.o1.o1.o1.c1" />
+                          <NPCChangeTeamAction npctag="sootman" teamid="Team1" addtocrew="true" />
+                          <SetDataAction identifier="separatistspecialhire2_hired" value="true" />
+                          <NPCFollowAction npctag="sootman" targettag="triggerer_player" follow="false" />
+                        </Option>
+                        <Option text="eventtext.separatistspecialhire1.o1.o2.repeat" endconversation="true">
+                          <NPCFollowAction npctag="sootman" targettag="triggerer_player" follow="false" />
+                          <GoTo name="beginning" />
+                        </Option>
+                      </ConversationAction>
+                    </Success>
+                  </CheckDataAction>                  
+                </Success>
+              </CheckDataAction>
+            </Failure>
+          </CheckDataAction>
+        </Success>
+      </CheckReputationAction>
+    </ScriptedEvent>
+    <ScriptedEvent identifier="missionevent_tormsdalereport" commonness="80">
+      <CheckReputationAction targettype="faction" identifier="separatists" condition="gte 30">
+        <Failure>
+          <!-- Do nothing -->
+        </Failure>
+        <Success>
+          <CheckDataAction identifier="tormsdalereport" condition="eq 0">
+            <Failure>
+              <!-- do nothing -->
+            </Failure>
+            <Success>
+              <NPCWaitAction npctag="outpostmanager" wait="true" />
+              <ConversationAction text="EventText.missionevent_tormsdalereport.c1" speakertag="outpostmanager" invokertag="triggerer_player" endeventifinterrupted="false" eventsprite="Stuckinthemiddle1">
+                <Option text="EventText.missionevent_tormsdalereport.whosthat">
+                  <ConversationAction text="EventText.missionevent_tormsdalereport.whospetran" targettag="triggerer_player" endeventifinterrupted="false" eventsprite="Stuckinthemiddle1">
+                    <Option text="EventText.missionevent_tormsdalereport.o1.o1">
+                      <Goto name="givemission" />
+                    </Option>
+                  </ConversationAction>
+                </Option>
+                <Option text="EventText.missionevent.pleasecontinue">
+                  <Goto name="givemission" />
+                </Option>
+              </ConversationAction>
+              <Label name="givemission" />
+              <ConversationAction text="EventText.missionevent_tormsdalereport.c1.c1" targettag="triggerer_player" endeventifinterrupted="false" eventsprite="Stuckinthemiddle1">
+                <Option text="EventText.missionevent_tormsdalereport.c1.o1">
+                  <ConversationAction text="EventText.missionevent_tormsdalereport.c1.o1.c1" targettag="triggerer_player" endeventifinterrupted="false" eventsprite="Separatists">
+                    <Option text="EventText.missionevent_tormsdalereport.c1.o1.o1">
+                      <ConversationAction text="EventText.missionevent_tormsdalereport.c1.o1.o1.c1" targettag="triggerer_player" endeventifinterrupted="false" eventsprite="Separatists">
+                        <Option text="EventText.missionevent_tormsdalereport.c1.o1.o1.o1">
+                          <ConversationAction text="EventText.missionevent_tormsdalereport.c1.o1.o1.o1.c1" targettag="triggerer_player" endeventifinterrupted="false" eventsprite="Separatists">
+                            <Option text="EventText.missionevent_tormsdalereport.c1.o1.o1.o1.o1">
+                              <ConversationAction text="EventText.missionevent_tormsdalereport.c1.o1.o1.o1.o1.c1" targettag="triggerer_player" endeventifinterrupted="false" eventsprite="Separatists">
+                                <Option text="EventText.missionevent_tormsdalereport.c1.o1.o1.o1.o1.o1">
+                                  <ConversationAction text="EventText.missionevent_tormsdalereport.c1.o1.o1.o1.o1.o1.c1" targettag="triggerer_player" endeventifinterrupted="false" eventsprite="Separatists" endconversation="true" />
+                                  <MissionAction missionidentifier="tormsdalereport" locationtype="City,Outpost,Military,Research,Mine" requiredfaction="coalition" minlocationdistance="2" CreateLocationIfNotFound="true" />
+                                  <NPCWaitAction npctag="outpostmanager" wait="false" />
+                                  <SetDataAction identifier="tormsdalereport" value="1" />
+                                </Option>
+                              </ConversationAction>
+                            </Option>
+                          </ConversationAction>
+                        </Option>
+                      </ConversationAction>
+                    </Option>
+                  </ConversationAction>
+                </Option>
+              </ConversationAction>
+            </Success>
+          </CheckDataAction>
+        </Success>
+      </CheckReputationAction>
+    </ScriptedEvent>
+    <ScriptedEvent identifier="tormsdalereport_outpost">
+      <StatusEffectAction targettag="outpostmanager">
+        <!-- force the outpost manager to be killable (killing outpost NPCs might be disabled in MP) -->
+        <StatusEffect Unkillable="false" />
+      </StatusEffectAction>      
+      <ConversationAction text="EventText.tormsdalereport_outpost.c1" speakertag="outpostmanager" invokertag="triggerer_player" endeventifinterrupted="false" eventsprite="Separatists">
+        <Option text="EventText.tormsdalereport_outpost.o1">
+          <ConversationAction text="EventText.tormsdalereport_outpost.o1.c1" targettag="triggerer_player" endconversation="true" />
+        </Option>
+        <Option text="EventText.tormsdalereport_outpost.o2">
+          <ConversationAction text="EventText.tormsdalereport_outpost.o2.c1" targettag="triggerer_player" endconversation="true" />
+          <CombatAction combatmode="Offensive" npctag="outpostmanager" enemytag="triggerer_player" isinstigator="true" guardreaction="none" witnessreaction="retreat" />
+        </Option>
+        <Option text="EventText.tormsdalereport_outpost.o3">
+          <ConversationAction text="EventText.tormsdalereport_outpost.o3.c1" targettag="triggerer_player" endconversation="true" />
+          <NPCFollowAction npctag="outpostmanager" targettag="triggerer_player" follow="true" />
+          <WaitAction time="60" />
+          <ConversationAction text="EventText.tormsdalereport_outpost.o3.c1.c1" targettag="triggerer_player" waitforinteraction="false" eventsprite="Separatists" />
+          <NPCFollowAction npctag="outpostmanager" targettag="triggerer_player" follow="false" />
+        </Option>
+        <Option text="EventText.tormsdalereport_outpost.o4" endconversation="true" />
+      </ConversationAction>
+    </ScriptedEvent>
+    <ScriptedEvent identifier="tormsdalereport_complete">
+      <CheckDataAction identifier="tormsdalereport" condition="eq 2">
+        <Failure>
+          <!-- do nothing -->
+        </Failure>
+        <Success>
+          <Label name="beginning" />
+          <ConversationAction text="EventText.tormsdalereport_complete.c1" speakertag="outpostmanager" invokertag="triggerer_player" endeventifinterrupted="false" eventsprite="Stuckinthemiddle1">
+            <Option text="EventText.tormsdalereport_complete.o1">
+              <CheckItemAction targettag="triggerer_player" itemidentifiers="tormsdalereport">
+                <Success>
+                  <ConversationAction text="EventText.tormsdalereport_complete.o1.c1" targettag="triggerer_player" endconversation="true" />
+                  <MoneyAction amount="5000" />
+                  <ReputationAction targettype="Faction" identifier="separatists" increase="10" />
+                  <ReputationAction targettype="Faction" identifier="coalition" increase="-10" />
+                  <SetDataAction identifier="tormsdalereport" value="3" />
+                  <RemoveItemAction targettag="triggerer_player" itemidentifier="tormsdalereport" />
+                </Success>
+                <Failure>
+                  <ConversationAction text="EventText.tormsdalereport_complete.o1.c2" targettag="triggerer_player" endconversation="true" />
+                  <GoTo name="beginning" />
+                </Failure>
+              </CheckItemAction>
+            </Option>
+            <Option text="EventText.tormsdalereport_complete.o2" endconversation="true">
+              <GoTo name="beginning" />
+            </Option>
+          </ConversationAction>
+        </Success>
+      </CheckDataAction>
+    </ScriptedEvent>
+    <ScriptedEvent identifier="missionevent_jailbreak_separatists" commonness="80">
+      <CheckReputationAction targettype="faction" identifier="separatists" condition="gte 30">
+        <Failure>
+          <!-- Do nothing -->
+        </Failure>
+        <Success>
+          <NPCWaitAction npctag="outpostmanager" wait="true" />
+          <ConversationAction text="EventText.missionevent_jailbreak_separatists.c1" speakertag="outpostmanager" invokertag="triggerer_player" endeventifinterrupted="false" eventsprite="Stuckinthemiddle1">
+            <Option text="EventText.missionevent.pleasecontinue">
+              <!-- "please continue" -->
+              <ConversationAction text="EventText.missionevent_jailbreak_separatists.o1.c1" targettag="triggerer_player" endeventifinterrupted="false" eventsprite="Separatists" endconversation="true" />
+              <MissionAction missionidentifier="jailbreak_separatists" locationtype="City,Military" requiredfaction="coalition" minlocationdistance="1" />
+            </Option>
+          </ConversationAction>
+        </Success>
+      </CheckReputationAction>
+    </ScriptedEvent>
+    <ScriptedEvent identifier="missionevent_jailbreak_sootman" commonness="80">
+      <CheckReputationAction targettype="faction" identifier="separatists" condition="gte 50">
+        <Failure>
+          <!-- Do nothing -->
+        </Failure>
+        <Success>
+          <CheckDataAction identifier="jailbreak_sootman_unlocked" condition="eq true">
+            <Success>
+              <!-- do nothing -->
+            </Success>
+            <Failure>
+              <NPCWaitAction npctag="outpostmanager" wait="true" />
+              <ConversationAction text="EventText.missionevent_jailbreak_sootman.c1" speakertag="outpostmanager" invokertag="triggerer_player" endeventifinterrupted="false" eventsprite="Stuckinthemiddle1">
+                <Option text="EventText.missionevent_tormsdalereport.whosthat">
+                  <!-- who's that? -->
+                  <ConversationAction text="EventText.missionevent_tormsdalereport.whospetran" targettag="triggerer_player" endeventifinterrupted="false" eventsprite="Separatists">
+                    <Option text="EventText.missionevent_tormsdalereport.o1.o1">
+                      <!-- ok, what's the mission -->
+                      <Goto name="givemission" />
+                    </Option>
+                  </ConversationAction>
+                </Option>
+                <Option text="EventText.missionevent.pleasecontinue">
+                  <!-- we're interested -->
+                  <Goto name="givemission" />
+                </Option>
+              </ConversationAction>
+              <Label name="givemission" />
+              <ConversationAction text="EventText.missionevent_jailbreak_sootman.c1.c1" targettag="triggerer_player" endeventifinterrupted="false" eventsprite="Stuckinthemiddle1">
+                <Option text="EventText.missionevent_jailbreak_sootman.c1.o1">
+                  <ConversationAction text="EventText.missionevent_jailbreak_sootman.c1.o1.c1" targettag="triggerer_player" endeventifinterrupted="false" eventsprite="Stuckinthemiddle1" />
+                  <MissionAction missionidentifier="jailbreak_sootman" locationtype="City,Military" requiredfaction="coalition" minlocationdistance="1" CreateLocationIfNotFound="true" />
+                  <SetDataAction identifier="jailbreak_sootman_unlocked" value="true" />
+                </Option>
+              </ConversationAction>
+            </Failure>
+          </CheckDataAction>
+        </Success>
+      </CheckReputationAction>
+    </ScriptedEvent>
+    <ScriptedEvent identifier="jailbreak_sootman">
+      <TagAction criteria="player" tag="player" />
+      <TagAction criteria="humanprefabidentifier:sootman" tag="prisoner" />
+      <NPCWaitAction npctag="sootman" wait="true" />
+      <TriggerAction target1tag="sootman" target2tag="player" applytotarget2="triggerer_player" disableiftargetincapacitated="false" radius="50" waitforinteraction="false" />
+      <NPCFollowAction npctag="sootman" targettag="player" follow="true" />
+      <ConversationAction text="EventText.jailbreak_sootman.c1" targettag="triggerer_player" eventsprite="Separatists">
+        <Option text="EventText.jailbreak_sootman.o1">
+          <ConversationAction text="EventText.jailbreak_sootman.o1.c1" targettag="triggerer_player">
+            <Option text="EventText.jailbreak_sootman.o1.o1">
+              <ConversationAction text="EventText.jailbreak_sootman.o1.o1.c1" targettag="triggerer_player" />
+              <NPCWaitAction npctag="sootman" wait="false" />
+              <NPCFollowAction npctag="sootman" targettag="outpostmanager" follow="true" />
+              <WaitAction time="30" />
+              <TriggerEventAction identifier="jailbreak_alarm" />
+              <GodModeAction targettag="sootman" enabled="true" />
+              <FireAction size="100" targettag="outpostmanager" />
+              <TagAction criteria="itemtag:command" submarinetype="Player" tag="commandroom" />
+              <!-- change team to give Sootman access to the sub -->
+              <NPCChangeTeamAction npctag="sootman" teamid="Team1" addtocrew="false" />
+              <NPCFollowAction npctag="sootman" targettag="commandroom" follow="true" />
+              <WaitAction time="120" />
+              <Label name="forcefollow" />
+              <CheckConditionalAction targettag="sootman" IsInPlayerSub="true">
+                <Failure>
+                  <!-- if not in the player sub within 2 minutes (messed up waypoints, no command room in the sub?) make the NPC follow the player -->
+                  <NPCFollowAction npctag="sootman" targettag="player" follow="true" />
+                  <WaitAction time="10" />
+                  <Goto name="forcefollow" />                  
+                </Failure>
+              </CheckConditionalAction>
+            </Option>
+          </ConversationAction>
+        </Option>
+      </ConversationAction>
+    </ScriptedEvent>
+    <ScriptedEvent identifier="jailbreak">
+      <TagAction criteria="player" tag="player" />
+      <TriggerAction target1tag="prisoner" target2tag="player" applytotarget2="triggerer_player" disableiftargetincapacitated="false" radius="50" waitforinteraction="false" />
+      <ConversationAction text="EventText.jailbreak.c1" targettag="triggerer_player" eventsprite="BombScare1" />
+      <TriggerEventAction identifier="jailbreak_alarm" />
+    </ScriptedEvent>
+    <ScriptedEvent identifier="jailbreak_alarm">
+      <!-- trigger alarm if any of the prisoners are close to security -->
+      <TriggerAction target1tag="prisoner" target2tag="securitynpc" applytotarget1="triggerer_prisoner" applytotarget2="triggerer_securitynpc" disableiftargetincapacitated="false" radius="200" waitforinteraction="false" />
+      <NPCFollowAction npctag="triggerer_prisoner" targettag="triggerer_securitynpc" follow="true" />
+      <WaitAction time="3" />
+      <TagAction criteria="itemtag:securityalarm" submarinetype="Outpost" tag="alarmbutton" />
+      <StatusEffectAction targettag="alarmbutton">
+        <StatusEffect State="true" />
+      </StatusEffectAction>
+      <ConversationAction text="EventText.jailbreak_alarm.c1" eventsprite="NoticeBoard" ContinueAutomatically="true" />
+      <NPCFollowAction npctag="triggerer_prisoner" targettag="triggerer_securitynpc" follow="false" />
+      <NPCChangeTeamAction npctag="securitynpc" teamid="Team2" />
+    </ScriptedEvent>
+    <!--"Separatist relations"
+    TODO:
+    -spawn correct npcs-->
+    <ScriptedEvent identifier="separatistrelations" commonness="100">
+      <TagAction criteria="player" tag="player" />
+      <SpawnAction npcsetidentifier="outpostnpcs1" npcidentifier="commoner" targettag="vandal1" spawnlocation="Outpost" targetmoduletags="crewmodule" lootingisstealing="false" />
+      <SpawnAction npcsetidentifier="outpostnpcs1" npcidentifier="commoner" targettag="vandal2" spawnlocation="Outpost" targetmoduletags="crewmodule" lootingisstealing="false" />
+      <SpawnAction itemidentifier="wrench" targetinventory="vandal1" />
+      <SpawnAction itemidentifier="screwdriver" targetinventory="vandal2" />
+      <NPCFollowAction npctag="vandal1" targettag="vandal2" follow="true" />
+      <TriggerAction target1tag="vandal1" target2tag="player" applytotarget2="triggerer_player" radius="100" waitforinteraction="true" />
+      <NPCWaitAction npctag="vandal1" wait="true" />
+      <NPCWaitAction npctag="vandal2" wait="true" />
+      <CheckReputationAction targettype="faction" identifier="separatists" condition="gte 30">
+        <Success>
+          <ConversationAction targettag="triggerer_player" text="EventText.separatistrelations.c1" eventsprite="group" />
+          <ReputationAction targettype="Faction" identifier="separatists" increase="1" />
+        </Success>
+        <Failure>
+          <ConversationAction targettag="triggerer_player" text="EventText.separatistrelations.c2" eventsprite="group">
+            <Option text="EventText.separatistrelations.o1">
+              <ConversationAction targettag="triggerer_player" text="EventText.separatistrelations.o1.c1" />
+              <ReputationAction targettype="Faction" identifier="separatists" increase="-2" />
+              <CombatAction combatmode="offensive" npctag="vandal1" enemytag="triggerer_player" isinstigator="true" guardreaction="arrest" witnessreaction="retreat" />
+              <CombatAction combatmode="offensive" npctag="vandal2" enemytag="triggerer_player" isinstigator="true" guardreaction="arrest" witnessreaction="retreat" />
+            </Option>
+            <Option text="EventText.separatistrelations.o2">
+              <ConversationAction targettag="triggerer_player" text="EventText.separatistrelations.o2.c1" />
+              <ReputationAction targettype="Faction" identifier="separatists" increase="2" />
+            </Option>
+            <Option text="EventText.separatistrelations.o3" />
+          </ConversationAction>
+        </Failure>
+      </CheckReputationAction>
+      <NPCWaitAction npctag="vandal1" wait="false" />
+      <NPCWaitAction npctag="vandal2" wait="false" />
+    </ScriptedEvent>
+    <!--Stuck in the middle-->
+    <ScriptedEvent identifier="stuckinthemiddle" commonness="50">
+      <TagAction criteria="player" tag="player" />
+      <SpawnAction npcsetidentifier="outpostnpcs1" npcidentifier="commoner" targettag="separatist1" targetmoduletags="airlock" spawnlocation="Outpost" />
+      <SpawnAction npcsetidentifier="outpostnpcs1" npcidentifier="commoner" targettag="separatist2" targetmoduletags="airlock" spawnlocation="Outpost" />
+      <NPCWaitAction npctag="separatist1" wait="true" />
+      <NPCWaitAction npctag="separatist2" wait="true" />
+      <TriggerAction target1tag="player" target2tag="separatist1" applytotarget1="triggerer_player" waitforinteraction="true" />
+      <ConversationAction text="EventText.stuckinthemiddle.c1" targettag="triggerer_player">
+        <Option text="EventText.stuckinthemiddle.o1">
+          <ConversationAction text="EventText.stuckinthemiddle.o1.c1" targettag="triggerer_player">
+            <Option text="EventText.stuckinthemiddle.o1.o1">
+              <ConversationAction text="EventText.stuckinthemiddle.o1.o1.c1" targettag="triggerer_player">
+                <Option text="EventText.stuckinthemiddle.o1.o1.o1">
+                  <ConversationAction text="EventText.stuckinthemiddle.o1.o1.o1.c1" targettag="triggerer_player">
+                    <Option text="EventText.stuckinthemiddle.o1.o1.o1.o1">
+                      <ConversationAction text="EventText.stuckinthemiddle.o1.o1.o1.o1.c1" targettag="triggerer_player">
+                        <Option text="EventText.stuckinthemiddle.o1.o1.o1.o1.o1">
+                          <ConversationAction text="EventText.stuckinthemiddle.o1.o1.o1.o1.o1.c1" targettag="triggerer_player">
+                            <Option text="EventText.stuckinthemiddle.o1.o1.o1.o1.o1.o1" endconversation="true">
+                              <SetDataAction identifier="stuckinthemiddle_acceptedmission" value="true" />
+                            </Option>
+                          </ConversationAction>
+                        </Option>
+                      </ConversationAction>
+                    </Option>
+                    <Option text="EventText.stuckinthemiddle.o1.o1.o1.o2">
+                      <!--END-->
+                    </Option>
+                  </ConversationAction>
+                </Option>
+              </ConversationAction>
+            </Option>
+            <Option text="EventText.stuckinthemiddle.o1.o2">
+              <!--END-->
+            </Option>
+          </ConversationAction>
+        </Option>
+        <Option text="EventText.generic.ignore">
+          <!--END-->
+        </Option>
+      </ConversationAction>
+      <!--Conversation #2-->
+      <CheckDataAction identifier="stuckinthemiddle_acceptedmission" condition="eq true">
+        <Success>
+          <TriggerAction target1tag="triggerer_player" targetmoduletype="adminmodule" radius="100" />
+          <ConversationAction text="EventText.stuckinthemiddle.o1.o1.o1.o1.o1.o1.c1" targettag="triggerer_player">
+            <Option text="EventText.stuckinthemiddle.o1.o1.o1.o1.o1.o1.o1">
+              <ConversationAction text="EventText.stuckinthemiddle.o1.o1.o1.o1.o1.o1.o1.c1" targettag="triggerer_player">
+                <Option text="EventText.stuckinthemiddle.o1.o1.o1.o1.o1.o1.o1.o1">
+                  <ConversationAction text="EventText.stuckinthemiddle.o1.o1.o1.o1.o1.o1.o1.o1.c1" targettag="triggerer_player" endconversation="true" />
+                  <TriggerAction target1tag="triggerer_player" target2tag="separatist1" waitforinteraction="true" />
+                  <ConversationAction text="EventText.stuckinthemiddle.o1.o1.o1.o1.o1.o1.o1.o1.c1.c1" targettag="triggerer_player" />
+                  <ReputationAction targettype="Faction" identifier="separatists" increase="3" />
+                </Option>
+                <Option text="EventText.stuckinthemiddle.o1.o1.o1.o1.o1.o1.o1.o2">
+                  <ConversationAction text="EventText.stuckinthemiddle.o1.o1.o1.o1.o1.o1.o1.o2.c1" targettag="triggerer_player" endconversation="true" />
+                  <TriggerAction target1tag="triggerer_player" target2tag="separatist1" waitforinteraction="true" />
+                  <ConversationAction text="EventText.stuckinthemiddle.o1.o1.o1.o1.o1.o1.o1.o2.c1.c1" targettag="triggerer_player" />
+                  <ReputationAction targettype="Faction" identifier="separatists" increase="5" />
+                  <MoneyAction amount="500" />
+                </Option>
+              </ConversationAction>
+            </Option>
+            <Option text="EventText.generic.ignore">
+              <!--END-->
+            </Option>
+          </ConversationAction>
+        </Success>
+        <Failure>
+          <!--Do nothing-->
+        </Failure>
+      </CheckDataAction>
+    </ScriptedEvent>
+    <!--Terrorism 101-->
+    <ScriptedEvent identifier="terrorism101" commonness="50">
+      <TagAction criteria="player" tag="player" />
+      <TagAction criteria="itemidentifier:op_vendingmachine1" tag="selectedvendingmachine" />
+      <TagAction criteria="itemidentifier:op_vendingmachine2" tag="selectedvendingmachine" />
+      <SpawnAction npcsetidentifier="outpostnpcs1" npcidentifier="commoner" targettag="terrorist" spawnpointtag="selectedvendingmachine" spawnlocation="Outpost" />
+      <SpawnAction npcsetidentifier="outpostnpcs1" npcidentifier="securitynpc[faction]" targettag="security" spawnlocation="Outpost" />
+      <NPCWaitAction npctag="terrorist" wait="true" />
+      <TriggerAction target1tag="player" target2tag="terrorist" applytotarget1="triggerer_player" waitforinteraction="true" />
+      <ConversationAction text="EventText.terrorism101.c1" targettag="triggerer_player" eventsprite="Terrorism1">
+        <Option text="EventText.terrorism101.o1">
+          <ConversationAction text="EventText.terrorism101.o1.c1" targettag="triggerer_player" eventsprite="Terrorism2">
+            <Option text="EventText.terrorism101.o1.o1">
+              <ConversationAction text="EventText.terrorism101.o1.o1.c1" targettag="triggerer_player">
+                <Option text="EventText.terrorism101.o1.o1.o1">
+                  <ConversationAction text="EventText.terrorism101.excuse" targettag="triggerer_player">
+                    <Option text="EventText.terrorism101.abomb">
+                      <ConversationAction text="EventText.terrorism101.shh" targettag="triggerer_player">
+                        <Option text="EventText.terrorism101.help">
+                          <ConversationAction text="EventText.terrorism101.novice" targettag="triggerer_player">
+                            <Option text="EventText.terrorism101.armbomb">
+                              <ConversationAction text="EventText.terrorism101.bombarmed" targettag="triggerer_player" />
+                              <ReputationAction targettype="Faction" identifier="separatists" increase="5" />
+                              <MoneyAction amount="250" />
+                            </Option>
+                            <Option text="EventText.terrorism101.dismantlebomb">
+                              <ConversationAction text="EventText.terrorism101.bombdismantled" targettag="triggerer_player" />
+                              <ReputationAction targettype="Faction" identifier="coalition" increase="3" />
+                              <MoneyAction amount="250" />
+                            </Option>
+                          </ConversationAction>
+                        </Option>
+                        <Option text="EventText.terrorism101.o1.o1.o1.o1.o2" endconversation="true">
+                          <ReputationAction targettype="Faction" identifier="separatists" increase="5" />
+                        </Option>
+                      </ConversationAction>
+                    </Option>
+                    <Option text="EventText.terrorism101.o1.o1.o1.o2" endconversation="true">
+                      <CombatAction combatmode="arrest" npctag="security" enemytag="terrorist" isinstigator="false" guardreaction="arrest" witnessreaction="none" />
+                    </Option>
+                  </ConversationAction>
+                </Option>
+                <Option text="EventText.terrorism101.o1.o1.o2">
+                  <!--END-->
+                </Option>
+              </ConversationAction>
+            </Option>
+            <Option text="EventText.terrorism101.o1.o2">
+              <ConversationAction text="EventText.terrorism101.excuse" targettag="triggerer_player">
+                <Option text="EventText.terrorism101.abomb">
+                  <ConversationAction text="EventText.terrorism101.shh" targettag="triggerer_player">
+                    <Option text="EventText.terrorism101.help">
+                      <ConversationAction text="EventText.terrorism101.novice" targettag="triggerer_player">
+                        <Option text="EventText.terrorism101.armbomb">
+                          <ConversationAction text="EventText.terrorism101.bombarmed" targettag="triggerer_player" />
+                          <ReputationAction targettype="Faction" identifier="separatists" increase="5" />
+                          <MoneyAction amount="250" />
+                        </Option>
+                        <Option text="EventText.terrorism101.dismantlebomb">
+                          <ConversationAction text="EventText.terrorism101.bombdismantled" targettag="triggerer_player" />
+                          <ReputationAction targettype="Faction" identifier="coalition" increase="3" />
+                          <MoneyAction amount="250" />
+                        </Option>
+                      </ConversationAction>
+                    </Option>
+                    <Option text="EventText.terrorism101.o1.o2.o1.o2" endconversation="true">
+                      <ReputationAction targettype="Faction" identifier="separatists" increase="5" />
+                    </Option>
+                  </ConversationAction>
+                </Option>
+                <Option text="EventText.terrorism101.o1.o2.o2" endconversation="true">
+                  <CombatAction combatmode="arrest" npctag="security" enemytag="terrorist" isinstigator="false" guardreaction="arrest" witnessreaction="none" />
+                </Option>
+              </ConversationAction>
+            </Option>
+          </ConversationAction>
+        </Option>
+        <Option text="EventText.generic.ignore">
+          <!--END-->
+        </Option>
+      </ConversationAction>
+      <NPCWaitAction npctag="terrorist" wait="false" />
+    </ScriptedEvent>
+    <!-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+    <!--                          Church of the Husk                               -->
+    <!-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+    <ScriptedEvent identifier="missionevent_escort1huskcult" commonness="100">
+      <ConversationAction text="EventText.missionevent_escort1huskcult.c1" speakertag="huskcultist" endeventifinterrupted="false" dialogtype="Small" />
+      <MissionAction missiontag="escortcommonershuskcult" />
+    </ScriptedEvent>
+    <ScriptedEvent identifier="missionevent_cargohuskcult" commonness="100">
+      <ConversationAction text="eventtext.missionevent_cargohuskcult" speakertag="huskcultist" endeventifinterrupted="false" dialogtype="Small" />
+      <MissionAction missiontag="cargohuskcult" />
+    </ScriptedEvent>
+    <ScriptedEvent identifier="huskcultspecialhire1">
+      <CheckDataAction identifier="subraevent_state" condition="lt 3">
+        <Failure>
+          <!-- cannot start the way to ascension if Subra has been assassinated (see assassinationofjacovsubra4) -->
+        </Failure>
+        <Success>
+          <!-- Can't be hired until rescued in the "Way to Ascension" chain -->
+          <CheckDataAction identifier="waytoascension" condition="gt 7">
+            <Failure>
+              <!-- do nothing -->
+            </Failure>
+            <Success>
+              <CheckReputationAction targettype="faction" identifier="huskcult" condition="gte 80">
+                <Failure>
+                  <!-- Do nothing -->
+                </Failure>
+                <Success>
+                  <CheckDataAction identifier="huskcultspecialhire1_hired" condition="eq true">
+                    <Success>
+                      <!--Don't repeat event if already hired-->
+                    </Success>
+                    <Failure>
+                      <TagAction criteria="player" tag="player" />
+                      <SpawnAction npcsetidentifier="customnpcs1" npcidentifier="jacovsubra" targettag="jacovsubra" allowduplicates="false" targetmoduletags="huskmodule" spawnlocation="Outpost" />
+                      <Label name="beginning" />
+                      <TriggerAction target1tag="jacovsubra" target2tag="player" applytotarget2="triggerer_player" waitforinteraction="true" />
+                      <NPCFollowAction npctag="jacovsubra" targettag="triggerer_player" follow="true" />
+                      <CheckDataAction identifier="huskcultspecialhire1_declinedonce" condition="eq true">
+                        <Failure>
+                          <!-- we haven't declined the offer before-->
+                          <ConversationAction targettag="triggerer_player" text="eventtext.huskcultspecialhire1.c1" eventsprite="JacovSubra4">
+                            <Option text="eventtext.huskcultspecialhire1.o1">
+                              <ConversationAction targettag="triggerer_player" text="eventtext.huskcultspecialhire1.o1.c1">
+                                <Option text="eventtext.huskcultspecialhire1.o1.o1">
+                                  <ConversationAction targettag="triggerer_player" text="eventtext.huskcultspecialhire1.o1.o1.c1">
+                                    <Option text="eventtext.huskcultspecialhire1.o1.o1.o1" endconversation="true">
+                                      <ConversationAction targettag="triggerer_player" text="eventtext.huskcultspecialhire1.o1.o1.o1.c1" />
+                                      <NPCChangeTeamAction npctag="jacovsubra" teamid="Team1" addtocrew="true" />
+                                      <SetDataAction identifier="huskcultspecialhire1_hired" value="true" />
+                                      <NPCFollowAction npctag="jacovsubra" targettag="triggerer_player" follow="false" />
+                                    </Option>
+                                    <Option text="eventtext.huskcultspecialhire1.o1.o1.o2" endconversation="true">
+                                      <ConversationAction targettag="triggerer_player" text="eventtext.huskcultspecialhire1.o1.o1.o2.c1" />
+                                      <SetDataAction identifier="huskcultspecialhire1_declinedonce" value="true" />
+                                      <NPCFollowAction npctag="jacovsubra" targettag="triggerer_player" follow="false" />
+                                      <GoTo name="beginning" />
+                                    </Option>
+                                  </ConversationAction>
+                                </Option>
+                              </ConversationAction>
+                            </Option>
+                          </ConversationAction>
+                        </Failure>
+                        <Success>
+                          <!-- we've declined before, show different dialog this time -->
+                          <ConversationAction targettag="triggerer_player" text="eventtext.huskcultspecialhire1.repeat" eventsprite="JacovSubra4">
+                            <Option text="eventtext.huskcultspecialhire1.o1.o1.repeat" endconversation="true">
+                              <ConversationAction targettag="triggerer_player" text="eventtext.huskcultspecialhire1.o1.o1.o1.c1" />
+                              <NPCChangeTeamAction npctag="jacovsubra" teamid="Team1" addtocrew="true" />
+                              <SetDataAction identifier="huskcultspecialhire1_hired" value="true" />
+                              <NPCFollowAction npctag="jacovsubra" targettag="triggerer_player" follow="false" />
+                            </Option>
+                            <Option text="eventtext.huskcultspecialhire1.o1.o2.repeat" endconversation="true">
+                              <NPCFollowAction npctag="jacovsubra" targettag="triggerer_player" follow="false" />
+                              <GoTo name="beginning" />
+                            </Option>
+                          </ConversationAction>
+                        </Success>
+                      </CheckDataAction>
+                    </Failure>
+                  </CheckDataAction>
+                </Success>
+              </CheckReputationAction>
+            </Success>
+          </CheckDataAction>
+        </Success>
+      </CheckDataAction>
+    </ScriptedEvent>
+    <!--"Husk cult relations" -->
+    <ScriptedEvent identifier="huskcultrelations">
+      <TagAction criteria="player" tag="player" />
+      <TriggerAction target1tag="huskcultist" target2tag="player" applytotarget1="targetcultist" applytotarget2="triggerer_player" radius="250" waitforinteraction="true" />
+      <NPCFollowAction npctag="targetcultist" targettag="triggerer_player" follow="true" />
+      <ConversationAction targettag="triggerer_player" text="EventText.huskcultrelations.c1" eventsprite="huskinvite">
+        <Option text="EventText.huskcultrelations.o1">
+          <ConversationAction targettag="triggerer_player" text="EventText.huskcultrelations.o1.c1" fadetoblack="true" eventsprite="dorm">
+            <Option text="EventText.huskcultrelations.o1.o1">
+              <ConversationAction text="EventText.huskcultrelations.o1.o1.c1" targettag="triggerer_player" />
+              <ReputationAction targettype="Faction" identifier="huskcult" increase="5" />
+              <SpawnAction itemidentifier="calyxanide" targetinventory="triggerer_player" />
+              <SpawnAction itemidentifier="calyxanide" targetinventory="triggerer_player" />
+              <AfflictionAction targettag="triggerer_player" affliction="huskinfection" strength="40" />
+            </Option>
+            <Option text="EventText.huskcultrelations.o1.o2" />
+          </ConversationAction>
+        </Option>
+        <Option text="EventText.huskcultrelations.o2" />
+      </ConversationAction>
+      <NPCFollowAction npctag="targetcultist" targettag="triggerer_player" follow="false" />
+    </ScriptedEvent>
+    <!--"Husk cultist"-->
+    <ScriptedEvent identifier="huskcultist">
+      <TagAction criteria="player" tag="player" />
+      <TriggerAction target1tag="huskcultist" target2tag="player" applytotarget1="targetcultist" applytotarget2="triggerer_player" radius="150" waitforinteraction="true" />
+      <ConversationAction targettag="triggerer_player" text="EventText.huskcultist.c1" eventsprite="cultist">
+        <Option text="EventText.huskcultist.o1">
+          <CheckItemAction targettag="triggerer_player" itemidentifiers="huskeggsbasic">
+            <Success>
+              <Label name="checkpockets" />
+              <ConversationAction targettag="triggerer_player" text="EventText.huskcultist.o1.c1">
+                <Option text="EventText.huskcultist.o1.o1">
+                  <RemoveItemAction targettag="triggerer_player" itemidentifier="huskeggsbasic" />
+                  <ConversationAction targettag="triggerer_player" text="EventText.huskcultist.o1.o1.c1" />
+                  <MoneyAction amount="1000" />
+                </Option>
+                <Option text="EventText.huskcultist.o1.o2">
+                  <RemoveItemAction targettag="triggerer_player" itemidentifier="huskeggsbasic" />
+                  <ConversationAction targettag="triggerer_player" text="EventText.huskcultist.o1.o2.c1" />
+                  <ReputationAction targettype="Faction" identifier="huskcult" increase="5" />
+                  <ReputationAction targettype="Faction" identifier="clowns" increase="-3" />
+                </Option>
+                <Option text="EventText.huskcultist.o1.o3" />
+              </ConversationAction>
+            </Success>
+            <Failure>
+              <ConversationAction targettag="triggerer_player" text="EventText.huskcultist.o1.c2">
+                <Option text="EventText.huskcultist.o1.o4">
+                  <ConversationAction targettag="triggerer_player" text="EventText.huskcultist.o1.o4.c1" />
+                  <Label name="waitingforeggs" />
+                  <ConversationAction text="EventText.huskcultist_return.c1" eventsprite="cultist" speakertag="huskcultist" dialogtype="Small">
+                    <Option text="EventText.huskcultist_return.o1" endconversation="true">
+                      <CheckItemAction targettag="triggerer_player" itemidentifiers="huskeggsbasic">
+                        <Success>
+                          <GoTo name="checkpockets" />
+                        </Success>
+                        <Failure>
+                          <ConversationAction targettag="triggerer_player" waitforinteraction="false" text="EventText.huskcultist_return.o1.c2" eventsprite="cultist" dialogtype="Small" />
+                          <GoTo name="waitingforeggs" />
+                        </Failure>
+                      </CheckItemAction>
+                    </Option>
+                    <Option text="EventText.huskcultist_return.o2" endconversation="true">
+                      <GoTo name="waitingforeggs" />
+                    </Option>
+                  </ConversationAction>
+                </Option>
+                <Option text="EventText.huskcultist.o1.o5" />
+              </ConversationAction>
+            </Failure>
+          </CheckItemAction>
+        </Option>
+        <Option text="EventText.huskcultist.o2" />
+      </ConversationAction>
+    </ScriptedEvent>
+    <!--"Husk cult ambush"-->
+    <ScriptedEvent identifier="huskcultambush">
+      <TagAction criteria="player" tag="player" />
+      <SpawnAction npcsetidentifier="outpostnpcs1" npcidentifier="huskcultist" targettag="cultist1" spawnlocation="Outpost" lootingisstealing="false" />
+      <SpawnAction npcsetidentifier="outpostnpcs1" npcidentifier="huskcultist" targettag="cultist2" spawnlocation="Outpost" lootingisstealing="false" />
+      <NPCFollowAction npctag="cultist2" targettag="cultist1" follow="true" />
+      <TriggerAction target1tag="cultist1" target2tag="player" applytotarget2="triggerer_player" radius="300" />
+      <NPCFollowAction npctag="cultist2" targettag="cultist1" follow="false" />
+      <NPCFollowAction npctag="cultist1" targettag="triggerer_player" follow="true" />
+      <NPCFollowAction npctag="cultist2" targettag="triggerer_player" follow="true" />
+      <ConversationAction targettag="triggerer_player" text="EventText.huskcultambush.c1" eventsprite="cultist">
+        <Option text="EventText.huskcultambush.o1">
+          <ConversationAction targettag="triggerer_player" text="EventText.huskcultambush.o1.c1" />
+          <CombatAction combatmode="Offensive" npctag="cultist1" enemytag="triggerer_player" isinstigator="true" guardreaction="arrest" witnessreaction="retreat" />
+          <CombatAction combatmode="Offensive" npctag="cultist2" enemytag="triggerer_player" isinstigator="true" guardreaction="arrest" witnessreaction="retreat" />
+        </Option>
+        <Option text="EventText.huskcultambush.o2">
+          <CheckReputationAction targettype="faction" identifier="huskcult" condition="gte 20">
+            <Success>
+              <ConversationAction targettag="triggerer_player" text="EventText.huskcultambush.o2.c1" />
+              <ReputationAction targettype="Faction" identifier="huskcult" increase="5" />
+            </Success>
+            <Failure>
+              <ConversationAction targettag="triggerer_player" text="EventText.huskcultambush.o2.c2" />
+              <!-- give a bit of rep for the nice try -->
+              <ReputationAction targettype="Faction" identifier="huskcult" increase="3" />
+              <CombatAction combatmode="Offensive" npctag="cultist1" enemytag="triggerer_player" isinstigator="true" guardreaction="arrest" witnessreaction="retreat" />
+              <CombatAction combatmode="Offensive" npctag="cultist2" enemytag="triggerer_player" isinstigator="true" guardreaction="arrest" witnessreaction="retreat" />
+            </Failure>
+          </CheckReputationAction>
+        </Option>
+      </ConversationAction>
+      <NPCFollowAction npctag="cultist1" targettag="triggerer_player" follow="false" />
+      <NPCFollowAction npctag="cultist2" targettag="triggerer_player" follow="false" />
+    </ScriptedEvent>
+    <!--"Young cultists"-->
+    <ScriptedEvent identifier="youngcultists">
+      <CheckDataAction identifier="youngcultists_completed" condition="eq true">
+        <Success>
+          <!--Don't repeat event if already completed -->
+        </Success>
+        <Failure>
+          <TagAction criteria="player" tag="player" />
+          <SpawnAction npcsetidentifier="outpostnpcs1" npcidentifier="huskcultist" targettag="patient" spawnlocation="Outpost" targetmoduletags="huskmodule" />
+          <SpawnAction npcsetidentifier="outpostnpcs1" npcidentifier="huskcultist" targettag="cultist2" spawnlocation="Outpost" targetmoduletags="huskmodule" />
+          <!-- use an existing cultist as the 1st NPC -->
+          <NPCFollowAction npctag="huskcultist" targettag="patient" maxtargets="1" follow="true" />
+          <NPCFollowAction npctag="cultist2" targettag="patient" maxtargets="1" follow="true" />
+          <AfflictionAction targettag="patient" affliction="huskinfection" strength="110" />
+          <GodModeAction targettag="patient" updateafflictions="true" enabled="true" />
+          <TriggerAction target1tag="patient" target2tag="player" applytotarget2="triggerer_player" disableiftargetincapacitated="false" radius="300" waitforinteraction="false" />
+          <ConversationAction targettag="triggerer_player" text="EventText.youngcultists.c1" eventsprite="unconscious">
+            <Option text="EventText.youngcultists.o1">
+              <!-- only mark as completed if the player chooses to interact with the cultists (can occur again if the event is ignored) -->
+              <SetDataAction identifier="youngcultists_completed" value="true" />
+              <GodModeAction targettag="patient" enabled="false" />
+              <AfflictionAction targettag="patient" affliction="huskinfection" strength="-1000" />
+              <NPCFollowAction npctag="patient" targettag="cultist2" follow="true" />
+              <ConversationAction targettag="triggerer_player" text="EventText.youngcultists.o1.c1">
+                <Option text="EventText.youngcultists.o1.o1">
+                  <ConversationAction targettag="triggerer_player" text="EventText.youngcultists.o1.o1.c1">
+                    <Option text="EventText.youngcultists.o1.o1.o1">
+                      <ConversationAction targettag="triggerer_player" text="EventText.youngcultists.o1.o1.o1.c1">
+                        <Option text="EventText.youngcultists.o1.o1.o1.o1">
+                          <Label name="parasite" />
+                          <ConversationAction targettag="triggerer_player" text="EventText.youngcultists.o1.o1.o1.o1.c1">
+                            <Option text="EventText.youngcultists.o1.o1.o1.o1.o1">
+                              <Label name="callsecurity" />
+                              <ConversationAction targettag="triggerer_player" text="EventText.youngcultists.o1.o1.o1.o1.o1.c1" />
+                              <ReputationAction targettype="Faction" identifier="huskcult" increase="-10" />
+                              <CombatAction combatmode="Arrest" npctag="securitynpc" enemytag="cultist2" isinstigator="false" witnessreaction="retreat" />
+                            </Option>
+                            <Option text="EventText.youngcultists.o1.o1.o1.o1.o2"  endconversation="true">
+                              <ReputationAction targettype="Faction" identifier="huskcult" increase="-2" />
+                            </Option>
+                            <Option text="EventText.youngcultists.o1.o1.o1.o1.o3">
+                              <GoTo name="info" />
+                            </Option>
+                          </ConversationAction>
+                        </Option>
+                      </ConversationAction>
+                    </Option>
+                    <Option text="EventText.youngcultists.o1.o1.o2">
+                      <ConversationAction targettag="triggerer_player" text="EventText.youngcultists.o1.o1.o2.c1">
+                        <Option text="EventText.youngcultists.o1.o1.o2.o1">
+                          <Label name="info" />
+                          <ConversationAction targettag="triggerer_player" text="EventText.youngcultists.o1.o1.o2.o1.c1">
+                            <Option text="EventText.youngcultists.o1.o1.o2.o1.o1" endconversation="true">
+                              <ReputationAction targettype="Faction" identifier="huskcult" increase="5" />
+                            </Option>
+                            <Option text="EventText.youngcultists.o1.o1.o2.o1.o2">
+                              <GoTo name="callsecurity" />
+                            </Option>
+                          </ConversationAction>
+                        </Option>
+                        <Option text="EventText.youngcultists.o1.o1.o2.o2">
+                          <GoTo name="parasite" />
+                        </Option>
+                      </ConversationAction>
+                    </Option>
+                  </ConversationAction>
+                </Option>
+              </ConversationAction>
+            </Option>
+            <Option text="EventText.youngcultists.o2" targettag="triggerer_player" endconversation="true">
+              <ReputationAction targettype="Faction" identifier="huskcult" increase="-5" />
+              <GodModeAction targettag="patient" enabled="false" />
+            </Option>
+          </ConversationAction>
+        </Failure>
+      </CheckDataAction>
+    </ScriptedEvent>
+    <!-- 
+    waytoascension states
+    0: not started
+    1: talked to the ecclesiast, but not been able to answer the question about the second metamorphosis
+    2: answered the question correctly, asked to deliver husk eggs
+    3: delivered husk eggs, offered to join the church
+    4: joined the church, will get a new task when talking to the ecclesiast again
+    5: tasked to assassinate someone who knows too much about the church
+    6: assassination done, will get a reward and a task to pick up Jacov Subra when talking to the ecclesiast
+    7: tasked to rescue Jacov Subra from an abandoned outpost
+    8: rescued Subra
+    -->
+    <!-- Way to Ascension 1 -->
+    <ScriptedEvent identifier="waytoascension1">
+      <CheckDataAction identifier="subraevent_state" condition="lt 3">
+        <Failure>
+          <!-- cannot start the way to ascension if Subra has been assassinated (see assassinationofjacovsubra4) -->
+        </Failure>
+        <Success>
+          <CheckReputationAction targettype="faction" identifier="huskcult" condition="gte 0">
+            <Failure>
+              <!-- Do nothing -->
+            </Failure>
+            <Success>              
+              <CheckDataAction identifier="waytoascension" condition="eq 0">
+                <Failure>
+                  <CheckDataAction identifier="waytoascension" condition="eq 1">
+                    <Failure>
+                      <!-- do nothing -->
+                    </Failure>
+                    <Success>
+                      <TagAction criteria="player" tag="player" />
+                      <SpawnAction npcsetidentifier="outpostnpcs1" npcidentifier="huskcultecclesiast" targettag="ecclesiast" spawnlocation="Outpost" targetmoduletags="huskmodule" />
+                      <TriggerAction target1tag="player" target2tag="ecclesiast" applytotarget1="triggerer_player" waitforinteraction="true" />
+                      <NPCFollowAction npctag="ecclesiast" targettag="triggerer_player" follow="true" />
+                      <ConversationAction text="EventText.waytoascension1.c1" targettag="triggerer_player" eventsprite="Ecclesiast">
+                        <Option text="EventText.waytoascension1.o5.o1.o1.o1.o1">
+                          <Label name="wronganswer" />
+                          <ConversationAction text="EventText.waytoascension1.o5.o1.o1.o1.o1.c1" targettag="triggerer_player" eventsprite="Ecclesiast" endconversation="true" />
+                        </Option>
+                        <Option text="EventText.waytoascension1.o5.o1.o1.o1.o2">
+                          <GoTo name="wronganswer" />
+                        </Option>
+                        <Option text="EventText.waytoascension1.o5.o1.o1.o1.o3">
+                          <GoTo name="givetask" />
+                        </Option>
+                        <Option text="EventText.waytoascension1.o5.o1.o1.o1.o4">
+                          <ConversationAction text="EventText.waytoascension1.o5.o1.o1.o1.o4.c1" targettag="triggerer_player" eventsprite="Ecclesiast" endconversation="true" />
+                          <SetDataAction identifier="waytoascension" value="1" />
+                        </Option>
+                      </ConversationAction>
+                    </Success>
+                  </CheckDataAction>
+                </Failure>
+                <Success>
+                  <TagAction criteria="player" tag="player" />
+                  <SpawnAction npcsetidentifier="outpostnpcs1" npcidentifier="huskcultecclesiast" targettag="ecclesiast" spawnlocation="Outpost" targetmoduletags="huskmodule" />
+                  <NPCFollowAction npctag="huskcultist" targettag="ecclesiast" follow="true" />
+                  <TriggerAction target1tag="player" target2tag="ecclesiast" applytotarget1="triggerer_player" waitforinteraction="true" />
+                  <NPCFollowAction npctag="ecclesiast" targettag="triggerer_player" follow="true" />
+                  <ConversationAction text="EventText.waytoascension1.c2" targettag="triggerer_player" eventsprite="Ecclesiast">
+                    <Option text="EventText.waytoascension1.o5">
+                      <ConversationAction text="EventText.waytoascension1.o5.c1" targettag="triggerer_player" eventsprite="Ecclesiast">
+                        <Option text="EventText.waytoascension1.o5.o1">
+                          <ConversationAction text="EventText.waytoascension1.o5.o1.c1" targettag="triggerer_player" eventsprite="Ecclesiast">
+                            <Option text="EventText.waytoascension1.o5.o1.o1">
+                              <ConversationAction text="EventText.waytoascension1.o5.o1.o1.c1" targettag="triggerer_player" eventsprite="Ecclesiast">
+                                <Option text="EventText.waytoascension1.o5.o1.o1.o1">
+                                  <Label name="challenge" />
+                                  <ConversationAction text="EventText.waytoascension1.o5.o1.o1.o1.c1" targettag="triggerer_player" eventsprite="Ecclesiast">
+                                    <Option text="EventText.waytoascension1.o5.o1.o1.o1.o1">
+                                      <Label name="wronganswer" />
+                                      <ConversationAction text="EventText.waytoascension1.o5.o1.o1.o1.o1.c1" targettag="triggerer_player" eventsprite="Ecclesiast" endconversation="true" />
+                                      <SetDataAction identifier="waytoascension" value="1" />
+                                    </Option>
+                                    <Option text="EventText.waytoascension1.o5.o1.o1.o1.o2">
+                                      <GoTo name="wronganswer" />
+                                    </Option>
+                                    <Option text="EventText.waytoascension1.o5.o1.o1.o1.o3">
+                                      <Label name="givetask" />
+                                      <ReputationAction targettype="Faction" identifier="huskcult" increase="2" />
+                                      <ConversationAction text="EventText.waytoascension1.o5.o1.o1.o1.o3.c1" targettag="triggerer_player" eventsprite="Ecclesiast">
+                                        <Option text="EventText.waytoascension1.o5.o1.o1.o1.o3.o1">
+                                          <ConversationAction text="EventText.waytoascension1.o5.o1.o1.o1.o3.o1.c1" targettag="triggerer_player" eventsprite="Ecclesiast" />
+                                          <SetDataAction identifier="waytoascension" value="2" />
+                                        </Option>
+                                      </ConversationAction>
+                                    </Option>
+                                    <Option text="EventText.waytoascension1.o5.o1.o1.o1.o4">
+                                      <ConversationAction text="EventText.waytoascension1.o5.o1.o1.o1.o4.c1" eventsprite="Ecclesiast" targettag="triggerer_player" endconversation="true" />
+                                      <SetDataAction identifier="waytoascension" value="1" />
+                                    </Option>
+                                  </ConversationAction>
+                                </Option>
+                              </ConversationAction>
+                            </Option>
+                            <Option text="EventText.waytoascension1.o5.o1.o2">
+                              <ConversationAction text="EventText.waytoascension1.o5.o1.o2.c1" targettag="triggerer_player" eventsprite="Ecclesiast">
+                                <Option text="EventText.waytoascension1.o5.o1.o1.o1">
+                                  <GoTo name="challenge" />
+                                </Option>
+                              </ConversationAction>
+                            </Option>
+                          </ConversationAction>
+                        </Option>
+                        <Option text="EventText.waytoascension1.o5.o2" endconversation="true" />
+                      </ConversationAction>
+                    </Option>
+                    <Option text="EventText.waytoascension1.o6">
+                      <ConversationAction targettag="triggerer_player" text="EventText.waytoascension1.o6.c1" />
+                      <ReputationAction targettype="Faction" identifier="huskcult" increase="-10" />
+                      <CombatAction combatmode="Arrest" npctag="securitynpc" enemytag="ecclesiast" isinstigator="false" witnessreaction="retreat" />
+                    </Option>
+                    <Option text="EventText.waytoascension1.o7" endconversation="true" />
+                  </ConversationAction>
+                </Success>
+              </CheckDataAction>
+              <NPCFollowAction npctag="ecclesiast" targettag="triggerer_player" follow="false" />
+            </Success>
+          </CheckReputationAction>
+        </Success>
+      </CheckDataAction>
+    </ScriptedEvent>
+    <!-- Way to Ascension 2 -->
+    <ScriptedEvent identifier="waytoascension2">
+
+      <CheckDataAction identifier="subraevent_state" condition="lt 3">
+        <Failure>
+          <!-- cannot continue the way to ascension if Subra has been assassinated (see assassinationofjacovsubra4) -->
+        </Failure>
+        <Success>
+          <CheckDataAction identifier="waytoascension" condition="eq 2">
+            <Failure>
+              <!-- do nothing -->
+            </Failure>
+            <Success>
+              <TagAction criteria="player" tag="player" />
+              <SpawnAction npcsetidentifier="outpostnpcs1" npcidentifier="huskcultecclesiast" targettag="ecclesiast" spawnlocation="Outpost" targetmoduletags="huskmodule" />
+              <Label name="beginning" />
+              <TriggerAction target1tag="player" target2tag="ecclesiast" applytotarget1="triggerer_player" waitforinteraction="true" />
+              <NPCFollowAction npctag="ecclesiast" targettag="triggerer_player" follow="true" />
+              <ConversationAction targettag="triggerer_player" text="EventText.waytoascension2.c1" eventsprite="Ecclesiast">
+                <Option text="EventText.waytoascension2.o1">
+                  <CheckItemAction targettag="triggerer_player" itemidentifiers="huskeggs,huskeggsbasic" amount="12">
+                    <Success>
+                      <RemoveItemAction targettag="triggerer_player" itemidentifier="huskeggs,huskeggsbasic" amount="12" />
+                      <ReputationAction targettype="Faction" identifier="huskcult" increase="5" />
+                      <ConversationAction targettag="triggerer_player" text="EventText.waytoascension2.o1.c1">
+                        <Option text="EventText.waytoascension2.o1.o1">
+                          <ConversationAction targettag="triggerer_player" text="EventText.waytoascension2.o1.o1.c1">
+                            <Option text="EventText.waytoascension2.o1.o1.o1">
+                              <ConversationAction targettag="triggerer_player" text="EventText.waytoascension2.o1.o1.o1.c1" endconversation="true" />
+                              <SetDataAction identifier="waytoascension" value="3" />
+                              <Goto name="answer" />
+                            </Option>
+                          </ConversationAction>
+                        </Option>
+                      </ConversationAction>
+                    </Success>
+                    <Failure>
+                      <ConversationAction text="EventText.waytoascension2.o1.c2" eventsprite="Ecclesiast" />
+                      <NPCFollowAction npctag="ecclesiast" targettag="triggerer_player" follow="false" />
+                      <Goto name="beginning" />
+                    </Failure>
+                  </CheckItemAction>
+                </Option>
+                <Option text="EventText.waytoascension2.o2" endconversation="true">
+                  <NPCFollowAction npctag="ecclesiast" targettag="triggerer_player" follow="false" />
+                  <Goto name="beginning" />
+                </Option>
+              </ConversationAction>
+            </Success>
+          </CheckDataAction>
+          <CheckDataAction identifier="waytoascension" condition="eq 3">
+            <Failure>
+              <!-- do nothing -->
+            </Failure>
+            <Success>
+              <SpawnAction npcsetidentifier="outpostnpcs1" npcidentifier="huskcultecclesiast" targettag="ecclesiast" spawnlocation="Outpost" targetmoduletags="huskmodule" />
+              <Label name="answer" />
+              <NPCFollowAction npctag="ecclesiast" targettag="triggerer_player" follow="false" />
+              <TriggerAction target1tag="player" target2tag="ecclesiast" applytotarget1="triggerer_player" waitforinteraction="true" />
+              <NPCFollowAction npctag="ecclesiast" targettag="triggerer_player" follow="true" />
+              <ConversationAction targettag="triggerer_player" text="EventText.waytoascension2.c2" eventsprite="Ecclesiast">
+                <Option text="EventText.waytoascension2.o3">
+                  <ConversationAction targettag="triggerer_player" text="EventText.waytoascension2.o3.c1">
+                    <Option text="EventText.waytoascension2.o3.o1">
+                      <ConversationAction targettag="triggerer_player" text="EventText.waytoascension2.o3.o1.c1">
+                        <Option text="EventText.waytoascension2.o3.o1">
+                          <ConversationAction targettag="triggerer_player" text="EventText.waytoascension2.o3.o1.o1.c1">
+                            <Option text="EventText.waytoascension2.o3.o1">
+                              <SetDataAction identifier="waytoascension" value="4" />
+                              <ReputationAction targettype="Faction" identifier="huskcult" increase="10" />
+                              <ReputationAction targettype="Faction" identifier="clowns" increase="-10" />
+                              <ConversationAction targettag="triggerer_player" text="EventText.waytoascension2.o3.o1.o1.o1.c1">
+                                <Option text="EventText.waytoascension2.o3.o1.o1.o1.o1">
+                                  <ConversationAction targettag="triggerer_player" text="EventText.waytoascension2.o3.o1.o1.o1.o1.c1" endconversation="true" />
+                                  <SpawnAction itemidentifier="bookofchalices2" targetinventory="triggerer_player" />
+                                  <SpawnAction itemidentifier="cultistrobes" targetinventory="triggerer_player" />
+                                </Option>
+                              </ConversationAction>
+                            </Option>
+                            <Option text="EventText.waytoascension2.thinkaboutthis" endconversation="true">
+                              <Goto name="answer" />
+                            </Option>
+                          </ConversationAction>
+                        </Option>
+                        <Option text="EventText.waytoascension2.thinkaboutthis" endconversation="true">
+                          <Goto name="answer" />
+                        </Option>
+                      </ConversationAction>
+                    </Option>
+                    <Option text="EventText.waytoascension2.thinkaboutthis" endconversation="true">
+                      <Goto name="answer" />
+                    </Option>
+                  </ConversationAction>
+                </Option>
+                <Option text="EventText.waytoascension2.thinkaboutthis" endconversation="true">
+                  <Goto name="answer" />
+                </Option>
+              </ConversationAction>
+            </Success>
+          </CheckDataAction>
+          <NPCFollowAction npctag="ecclesiast" targettag="triggerer_player" follow="false" />
+        </Success>
+      </CheckDataAction>
+    </ScriptedEvent>
+    <!-- Way to Ascension 3 -->
+    <ScriptedEvent identifier="waytoascension3">
+      <CheckDataAction identifier="subraevent_state" condition="lt 3">
+        <Failure>
+          <!-- cannot continue the way to ascension if Subra has been assassinated (see assassinationofjacovsubra4) -->
+        </Failure>
+        <Success>
+          <CheckDataAction identifier="waytoascension" condition="eq 4">
+            <Failure>
+              <!-- do nothing -->
+            </Failure>
+            <Success>
+              <TagAction criteria="player" tag="player" />
+              <SpawnAction npcsetidentifier="outpostnpcs1" npcidentifier="huskcultecclesiast" targettag="ecclesiast" spawnlocation="Outpost" targetmoduletags="huskmodule" />
+              <TriggerAction target1tag="player" target2tag="ecclesiast" applytotarget1="triggerer_player" waitforinteraction="true" />
+              <NPCFollowAction npctag="ecclesiast" targettag="triggerer_player" follow="true" />
+              <ConversationAction targettag="triggerer_player" text="EventText.waytoascension3.c1" eventsprite="Ecclesiast">
+                <Option text="EventText.waytoascension3.o1">
+                  <ConversationAction targettag="triggerer_player" text="EventText.waytoascension3.o1.c1" eventsprite="Ecclesiast">
+                    <Option text="EventText.waytoascension3.o1.o1">
+                      <GoTo name="givemission" />
+                    </Option>
+                    <Option text="EventText.waytoascension3.o1.o2">
+                      <ConversationAction targettag="triggerer_player" text="EventText.waytoascension3.o1.o2.c1" eventsprite="Ecclesiast">
+                        <Option text="EventText.waytoascension3.o1.o2.o1">
+                          <Label name="givemission" />
+                          <ConversationAction targettag="triggerer_player" text="EventText.waytoascension3.o1.o2.o1.c1" eventsprite="Ecclesiast" endconversation="true" />
+                          <MissionAction missionidentifier="huskcultspecialassassinate" minlocationdistance="2" requiredfaction="coalition" locationtype="City,Outpost,Military,Research,Mine" CreateLocationIfNotFound="true" />
+                          <SetDataAction identifier="waytoascension" value="5" />
+                        </Option>
+                      </ConversationAction>
+                    </Option>
+                  </ConversationAction>
+                </Option>
+              </ConversationAction>
+            </Success>
+          </CheckDataAction>
+          <NPCFollowAction npctag="ecclesiast" targettag="triggerer_player" follow="false" />
+        </Success>
+      </CheckDataAction>
+    </ScriptedEvent>
+    <!-- Way to Ascension: assassination mission start -->
+    <ScriptedEvent identifier="waytoascension_assassination1">
+      <ConversationAction text="EventText.waytoascension_assassination1.c1" endeventifinterrupted="false" eventsprite="JacovSubra3" />
+      <ConversationAction text="EventText.waytoascension_assassination1.c1.c1" speakertag="coalitionspy" invokertag="triggerer_player" endeventifinterrupted="false" eventsprite="Infiltration1">
+        <Option text="EventText.waytoascension_assassination1.c1.o1">
+          <ConversationAction text="EventText.waytoascension_assassination1.c1.o1.c1" targettag="triggerer_player" endconversation="true" />
+          <CombatAction combatmode="Offensive" npctag="coalitionspy" enemytag="triggerer_player" isinstigator="true" guardreaction="none" witnessreaction="retreat" />
+        </Option>
+        <Option text="EventText.waytoascension_assassination1.c1.o2">
+          <ConversationAction text="EventText.waytoascension_assassination1.c1.o2.c1" targettag="triggerer_player" endconversation="true" />
+          <NPCFollowAction npctag="coalitionspy" targettag="triggerer_player" follow="true" />
+          <WaitAction time="60" />
+          <ConversationAction targettag="triggerer_player" text="EventText.waytoascension_assassination1.c1.o2.c1.c1" waitforinteraction="false" eventsprite="Infiltration1" />
+          <NPCFollowAction npctag="coalitionspy" targettag="triggerer_player" follow="false" />
+        </Option>
+        <Option text="EventText.waytoascension_assassination1.c1.o3" endconversation="true" />
+      </ConversationAction>
+    </ScriptedEvent>
+    <!-- Way to Ascension 4 -->
+    <ScriptedEvent identifier="waytoascension4">
+      <CheckDataAction identifier="waytoascension" condition="eq 6">
+        <Failure>
+          <!-- do nothing -->
+        </Failure>
+        <Success>
+          <TagAction criteria="player" tag="player" />
+          <SpawnAction npcsetidentifier="outpostnpcs1" npcidentifier="huskcultecclesiast" targettag="ecclesiast" spawnlocation="Outpost" targetmoduletags="huskmodule" />
+          <TriggerAction target1tag="player" target2tag="ecclesiast" applytotarget1="triggerer_player" waitforinteraction="true" />
+          <NPCFollowAction npctag="ecclesiast" targettag="triggerer_player" follow="true" />
+          <ConversationAction targettag="triggerer_player" text="EventText.waytoascension4.c1" eventsprite="Ecclesiast">
+            <Option text="EventText.waytoascension4.o1">
+              <ConversationAction targettag="triggerer_player" text="EventText.waytoascension4.o1.c1" eventsprite="Ecclesiast">
+                <Option text="EventText.waytoascension4.o1.o1">
+                  <ConversationAction targettag="triggerer_player" text="EventText.waytoascension4.o1.o1.c1" eventsprite="Ecclesiast">
+                    <Option text="EventText.waytoascension4.o1.o1.o1">
+                      <ConversationAction targettag="triggerer_player" text="EventText.waytoascension4.o1.o1.o1.c1" eventsprite="Ecclesiast" endconversation="true" />
+                      <MissionAction missionidentifier="huskcultrescuesubra" locationtype="Abandoned" CreateLocationIfNotFound="true" />
+                      <SetDataAction identifier="waytoascension" value="7" />
+                    </Option>
+                  </ConversationAction>
+                </Option>
+              </ConversationAction>
+            </Option>
+          </ConversationAction>
+        </Success>
+      </CheckDataAction>
+      <NPCFollowAction npctag="ecclesiast" targettag="triggerer_player" follow="false" />
+    </ScriptedEvent>
+    <ScriptedEvent identifier="waytoascensionfoundsubra" commonness="0">
+      <TagAction criteria="player" tag="player" />
+      <!-- enable godmode to ensure the player can't get locked from completing the rest of the event chain -->
+      <GodModeAction targettag="jacovsubra" />
+      <TriggerAction target1tag="player" target2tag="jacovsubra" applytotarget1="triggerer_player" radius="300" waitforinteraction="false" />
+      <NPCWaitAction npctag="jacovsubra" wait="true" />
+      <ConversationAction text="EventText.waytoascensionfoundsubra.c1" targettag="triggerer_player" eventsprite="JacovSubra4">
+        <Option text="EventText.waytoascensionfoundsubra.o1">
+          <ConversationAction text="EventText.waytoascensionfoundsubra.o1.c1" targettag="triggerer_player" eventsprite="JacovSubra4">
+            <Option text="EventText.waytoascensionfoundsubra.o1.o1">
+              <ConversationAction text="EventText.waytoascensionfoundsubra.o1.o1.c1" targettag="triggerer_player" eventsprite="JacovSubra4" />
+              <NPCFollowAction npctag="jacovsubra" targettag="triggerer_player" follow="true" />
+              <SpawnAction npcsetidentifier="combatmissioncoalitionnpcs" npcidentifier="coalitionsecuritybrute" spawnlocation="Outpost" teamid="Team2" targetmoduletags="airlock" />
+              <SpawnAction npcsetidentifier="combatmissioncoalitionnpcs" npcidentifier="coalitionsecuritybrute" spawnlocation="Outpost" teamid="Team2" targetmoduletags="airlock" />
+              <SpawnAction npcsetidentifier="combatmissioncoalitionnpcs" npcidentifier="coalitionsecuritygunner" spawnlocation="Outpost" teamid="Team2" targetmoduletags="airlock" />
+              <SpawnAction npcsetidentifier="combatmissioncoalitionnpcs" npcidentifier="coalitionsecurityelite" spawnlocation="Outpost" teamid="Team2" targetmoduletags="airlock" />
+            </Option>
+          </ConversationAction>
+        </Option>
+      </ConversationAction>
+      <TriggerEventAction identifier="waytoascensionsubraescort" nextround="true" />
+      <NPCWaitAction npctag="jacovsubra" wait="false" />
+    </ScriptedEvent>
+
+    <ScriptedEvent identifier="waytoascensionsubraescort" commonness="0">
+      <CheckDataAction identifier="waytoascension" condition="eq 8">
+        <Failure>
+          <!-- do nothing -->
+        </Failure>
+        <Success>
+          <SetDataAction identifier="waytoascension" value="9" />
+          <SpawnAction npcsetidentifier="customnpcs1" npcidentifier="jacovsubra" targettag="jacovsubra" allowduplicates="false" spawnlocation="MainSub" />
+          <TagAction criteria="player" tag="player" />
+          <WaitAction time="5" />
+          <!-- enable godmode to ensure the player can't get locked from completing the rest of the event chain -->
+          <GodModeAction targettag="jacovsubra" />
+          <TriggerAction target1tag="player" target2tag="jacovsubra" applytotarget1="triggerer_player" radius="300" waitforinteraction="false" />
+          <NPCWaitAction npctag="jacovsubra" wait="true" />
+          <ConversationAction text="EventText.waytoascensionsubraescort.c1" targettag="triggerer_player" eventsprite="JacovSubra4">
+            <Option text="EventText.waytoascensionsubraescort.o1">
+              <ConversationAction text="EventText.waytoascensionsubraescort.c2" targettag="triggerer_player" eventsprite="JacovSubra4" />
+            </Option>
+          </ConversationAction>
+          <NPCWaitAction npctag="jacovsubra" wait="false" />
+          <WaitAction time="120" />
+          <TriggerAction target1tag="player" target2tag="jacovsubra" applytotarget1="triggerer_player" radius="300" waitforinteraction="true" />
+          <NPCWaitAction npctag="jacovsubra" wait="true" />
+          <ConversationAction text="EventText.waytoascensionsubraescort.c3" targettag="triggerer_player" eventsprite="JacovSubra4">
+            <Option text="EventText.waytoascensionsubraescort.c3.o1">
+              <ConversationAction text="EventText.waytoascensionsubraescort.c4" targettag="triggerer_player" eventsprite="JacovSubra4" />
+            </Option>
+          </ConversationAction>
+          <ConversationAction text="EventText.waytoascensionsubraescort.c5" targettag="triggerer_player" eventsprite="JacovSubra4">
+            <Option text="EventText.waytoascensionsubraescort.c5.o1" targettag="triggerer_player" eventsprite="JacovSubra4">
+              <ConversationAction text="EventText.waytoascensionsubraescort.c6" targettag="triggerer_player" eventsprite="JacovSubra4" />
+            </Option>
+          </ConversationAction>          
+          <NPCWaitAction npctag="jacovsubra" wait="false" />
+        </Success>
+      </CheckDataAction>
+    </ScriptedEvent>
+
+    <!-- Way to Ascension 4 -->
+    <ScriptedEvent identifier="waytoascension5">
+      <CheckDataAction identifier="waytoascension" condition="eq 9">
+        <Failure>
+          <!-- do nothing -->
+        </Failure>
+        <Success>
+          <TagAction criteria="player" tag="player" />
+          <SpawnAction npcsetidentifier="outpostnpcs1" npcidentifier="huskcultecclesiast" targettag="ecclesiast" spawnpointtag="ritualchamber" spawnlocation="Outpost" targetmoduletags="huskmodule" />
+          <NPCFollowAction npctag="huskcultist" targettag="ecclesiast" follow="true" />
+          <NPCWaitAction npctag="ecclesiast" wait="true" />
+          <SpawnAction itemidentifier="rituallanternspecial" spawnlocation="Outpost" spawnpointtag="ritualchamber" offset="300" />
+          <SpawnAction itemidentifier="rituallanternspecial" spawnlocation="Outpost" spawnpointtag="ritualchamber" offset="300" />
+          <SpawnAction itemidentifier="rituallanternspecial" spawnlocation="Outpost" spawnpointtag="ritualchamber" offset="300" />
+          <SpawnAction itemidentifier="rituallanternspecial" spawnlocation="Outpost" spawnpointtag="ritualchamber" offset="300" />
+          <TriggerAction target1tag="player" target2tag="ecclesiast" applytotarget1="triggerer_player" radius="200" waitforinteraction="false" />
+          <NPCFollowAction npctag="ecclesiast" targettag="triggerer_player" follow="true" />
+          <ConversationAction targettag="triggerer_player" text="EventText.waytoascension5.c1" eventsprite="Ecclesiast">
+            <Option text="EventText.waytoascension5.o1">
+              <ConversationAction targettag="triggerer_player" text="EventText.waytoascension5.o1.c1" eventsprite="Ecclesiast" endconversation="true" />
+              <GoTo name="wait" />
+            </Option>
+          </ConversationAction>
+          <Label name="wait" />
+          <NPCWaitAction npctag="ecclesiast" wait="true" />
+          <NPCFollowAction npctag="huskcultist" targettag="ecclesiast" follow="true" />
+          <TriggerAction target1tag="player" target2tag="ecclesiast" applytotarget1="triggerer_player" waitforinteraction="true" />
+          <ConversationAction targettag="triggerer_player" text="EventText.waytoascension5.c1.c1" eventsprite="Ecclesiast">
+            <Option text="EventText.waytoascension5.c1.o1">
+              <ConversationAction targettag="triggerer_player" text="EventText.waytoascension5.c1.o1.c1" eventsprite="Ecclesiast">
+                <Option text="EventText.waytoascension5.c1.o1.o1">
+                  <ConversationAction targettag="triggerer_player" text="EventText.waytoascension5.c1.o1.o1.c1" eventsprite="Ecclesiast">
+                    <Option text="EventText.waytoascension5.c1.o1.o1.o1">
+                      <ConversationAction targettag="triggerer_player" text="EventText.waytoascension5.c1.o1.o1.o1.c1" eventsprite="Ecclesiast">
+                        <Option text="EventText.waytoascension5.c1.o1.o1.o1.o1" endconversation="true">
+                          <AfflictionAction targettag="ecclesiast" affliction="husksymbiosis" strength="1000" />
+                          <AfflictionAction targettag="huskcultist" affliction="huskinfection" strength="1000" />
+                          <StatusEffectAction targettag="triggerer_player">
+                            <StatusEffect target="NearbyCharacters" range="800" duration="10">
+                              <Conditional TeamID="Team1" />
+                              <Sound file="Content/Items/Alien/AlienTurret2.ogg" range="1000" />
+                              <Affliction identifier="hallucinating" strength="10" />
+                              <Affliction identifier="husksymbiosis" strength="10" />
+                            </StatusEffect>
+                          </StatusEffectAction>
+                          <WaitAction time="3" />
+                          <ConversationAction targettag="triggerer_player" text="EventText.waytoascension5.c1.o1.o1.o1.o1.c1" eventsprite="Ecclesiast">
+                            <Option text="EventText.waytoascension5.c1.o1.o1.o1.o1.o1">
+                              <ConversationAction targettag="triggerer_player" text="EventText.waytoascension5.c1.o1.o1.o1.o1.o1.c1" eventsprite="Ecclesiast">
+                                <Option text="EventText.waytoascension5.c1.o1.o1.o1.o1.o1.o1">
+                                  <ConversationAction targettag="triggerer_player" text="EventText.waytoascension5.c1.o1.o1.o1.o1.o1.o1.c1" eventsprite="Ecclesiast" />
+                                  <ReputationAction targettype="Faction" identifier="huskcult" increase="10" />
+                                  <ReputationAction targettype="Faction" identifier="clowns" increase="-10" />
+                                  <SetDataAction identifier="waytoascension" value="10" />
+                                  <CombatAction combatmode="arrest" npctag="security" enemytag="ecclesiast" isinstigator="false" guardreaction="arrest" witnessreaction="none" />
+                                </Option>
+                              </ConversationAction>
+                            </Option>
+                          </ConversationAction>
+                        </Option>
+                      </ConversationAction>
+                    </Option>
+                  </ConversationAction>
+                </Option>
+              </ConversationAction>
+            </Option>
+            <Option text="EventText.waytoascension5.c1.o2" endconversation="true">
+              <GoTo name="wait" />
+            </Option>
+          </ConversationAction>
+        </Success>
+      </CheckDataAction>
+      <NPCFollowAction npctag="ecclesiast" targettag="triggerer_player" follow="false" />
+    </ScriptedEvent>
+    <!--Husk Extremists-->
+    <ScriptedEvent identifier="huskextremists">
+      <TagAction criteria="player" tag="player" />
+      <TagAction criteria="humanprefabidentifier:huskextremist" tag="cultist" />
+      <TagAction criteria="humanprefabidentifier:huskextremist_leader" tag="cultist" />
+      <NPCChangeTeamAction npctag="cultist" teamid="FriendlyNPC" />
+
+      <Label name="waitforspotting" />
+      <WaitAction time="1" />
+      <CheckVisibilityAction EntityTag="cultist" TargetTag="player" ApplyTagToEntity="talk_cultist" ApplyTagToTarget="triggerer_player">
+        <Failure>
+          <Goto name="waitforspotting" />
+        </Failure>
+      </CheckVisibilityAction>
+      
+      <NPCWaitAction npctag="talk_cultist" wait="true" />
+      <!-- Set cultists to passive until after the conversations -->
+      <ConversationAction text="eventtext.huskextremists1.c1" targettag="triggerer_player">
+        <Option text="eventtext.huskextremists1.o1">
+          <ConversationAction text="eventtext.huskextremists1.o1.c1" targettag="triggerer_player">
+            <Option text="eventtext.huskextremists1.o1.o1">
+              <ConversationAction text="eventtext.huskextremists1.o1.o1.c1" targettag="triggerer_player">
+                <Option text="eventtext.huskextremists1.o1.o1.o1" endconversation="true">
+                  <!-- Combat -->
+                  <NPCChangeTeamAction npctag="cultist" teamid="Team2" />
+                  <CombatAction combatmode="Offensive" npctag="cultist" enemytag="triggerer_player" isinstigator="true" guardreaction="none" witnessreaction="retreat"/>
+                  <ReputationAction targettype="Faction" identifier="huskcult" increase="5" />
+                  <ReputationAction targettype="Faction" identifier="clowns" increase="-5" />
+                </Option>
+                <Option text="eventtext.huskextremists1.o1.o1.o2" endconversation="true">
+                  <!-- Combat -->
+                  <NPCChangeTeamAction npctag="cultist" teamid="Team2" />
+                  <CombatAction combatmode="Offensive" npctag="cultist" enemytag="triggerer_player" isinstigator="true" guardreaction="none" witnessreaction="retreat"/>
+                  <ReputationAction targettype="Faction" identifier="huskcult" increase="-5" />
+                  <ReputationAction targettype="Faction" identifier="clowns" increase="5" />
+                </Option>
+                <Option text="eventtext.huskextremists1.o1.o1.o3" endconversation="true">
+                  <!-- Peace, but no mission reward -->
+                  <SpawnAction itemidentifier="geneticmaterialhusk" targetinventory="triggerer_player"/>
+                  <SpawnAction itemidentifier="geneticmaterialhusk" targetinventory="triggerer_player"/>
+                  <SpawnAction itemidentifier="geneticmaterialhusk" targetinventory="triggerer_player"/>
+                  <ReputationAction targettype="Faction" identifier="clowns" increase="-10" />
+                  <ReputationAction targettype="Faction" identifier="huskcult" increase="-3" />
+                </Option>
+              </ConversationAction>
+            </Option>
+          </ConversationAction>
+        </Option>
+        <Option text="eventtext.huskextremists1.o2">
+          <ConversationAction text="eventtext.huskextremists1.o2.c1" targettag="triggerer_player">
+            <Option text="eventtext.givingdirections.o2.o2" endconversation="true"><!-- Uh oh. -->
+              <!-- Combat -->
+              <NPCChangeTeamAction npctag="cultist" teamid="Team2" />
+              <NPCWaitAction npctag="talk_cultist" wait="false" />
+              <CombatAction combatmode="Offensive" npctag="cultist" enemytag="triggerer_player" isinstigator="true" guardreaction="none" witnessreaction="retreat"/>
+            </Option>
+          </ConversationAction>
+        </Option>
+        <Option text="eventtext.huskextremists1.o3" endconversation="true">
+          <!-- Combat -->
+          <Label name="beforecheck2" />
+          <NPCChangeTeamAction npctag="cultist" teamid="Team2" />
+          <CombatAction combatmode="Offensive" npctag="cultist" enemytag="triggerer_player" isinstigator="true" guardreaction="none" witnessreaction="retreat"/>
+          <ReputationAction targettype="Faction" identifier="clowns" increase="5" />
+          <ReputationAction targettype="Faction" identifier="huskcult" increase="-5" />
+        </Option>
+      </ConversationAction>
+      <NPCWaitAction npctag="talk_cultist" wait="false" />
+    </ScriptedEvent>
+    <!-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+    <!--                                  Clowns                                   -->
+    <!-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+    <ScriptedEvent identifier="missionevent_escort1clowns" commonness="100">
+      <ConversationAction text="EventText.missionevent_escort1clowns.c1" speakertag="clown" endeventifinterrupted="false" dialogtype="Small" />
+      <MissionAction missiontag="escortcommonersclowns" />
+    </ScriptedEvent>
+    <!--"Clown relations 1"-->
+    <ScriptedEvent identifier="clownrelations1" commonness="100">
+      <SpawnAction itemidentifier="toolbelt" spawnlocation="outpost" targettag="clowntoolbelt" targetmoduletags="crewmodule" ignorebyai="true" />
+      <SpawnAction itemidentifier="bikehorn" targetinventory="clowntoolbelt" />
+      <SpawnAction itemidentifier="bikehorn" targetinventory="clowntoolbelt" />
+      <SpawnAction itemidentifier="clownmask" targetinventory="clowntoolbelt" />
+      <SpawnAction itemidentifier="clowncostume" targetinventory="clowntoolbelt" />
+      <TagAction criteria="player" tag="player" />
+      <TriggerAction target1tag="clowntoolbelt" target2tag="player" applytotarget2="triggerer_player" radius="150" waitforinteraction="true" />
+      <ConversationAction targettag="triggerer_player" text="EventText.clownrelations1.c1">
+        <Option text="EventText.clownrelations1.o1">
+          <SpawnAction npcsetidentifier="outpostnpcs1" npcidentifier="clown" targettag="clown1" spawnlocation="Outpost" targetmoduletags="crewmodule" />
+          <SpawnAction npcsetidentifier="outpostnpcs1" npcidentifier="clown" targettag="clown1" spawnlocation="Outpost" targetmoduletags="crewmodule" />
+          <NPCFollowAction npctag="clown1" targettag="clowntoolbelt" follow="true" />
+          <NPCFollowAction npctag="clown2" targettag="triggerer_player" follow="true" />
+          <WaitAction time="2" />
+          <ConversationAction targettag="triggerer_player" text="EventText.clownrelations1.o1.c1" eventsprite="clown">
+            <Option text="EventText.clownrelations1.o1.o1">
+              <ConversationAction targettag="triggerer_player" text="EventText.clownrelations1.o1.o1.c1" />
+            </Option>
+            <Option text="EventText.clownrelations1.o1.o2">
+              <SpawnAction itemidentifier="bikehorn" targetinventory="triggerer_player" />
+              <ReputationAction targettype="Faction" identifier="clowns" increase="10" />
+              <ReputationAction targettype="Faction" identifier="huskcult" increase="-5" />
+              <StatusEffectAction targettag="triggerer_player">
+                <StatusEffect>
+                  <Sound file="Content/Items/Weapons/honk.ogg" range="300" />
+                </StatusEffect>
+              </StatusEffectAction>
+              <ConversationAction targettag="triggerer_player" text="EventText.clownrelations1.o1.o2.c1" />
+            </Option>
+          </ConversationAction>
+        </Option>
+        <Option text="EventText.clownrelations1.o2" />
+      </ConversationAction>
+      <NPCFollowAction npctag="clown1" targettag="clowntoolbelt" follow="false" />
+      <NPCFollowAction npctag="clown2" targettag="triggerer_player" follow="false" />
+    </ScriptedEvent>
+    <!--"Clown relations 2"-->
+    <ScriptedEvent identifier="clownrelations2" commonness="100">
+      <TagAction criteria="player" tag="player" />
+      <SpawnAction npcsetidentifier="outpostnpcs1" npcidentifier="clown" targettag="clown" spawnlocation="Outpost" spawnpointtype="Path" />
+      <TriggerAction target1tag="clown" target2tag="player" applytotarget2="triggerer_player" radius="150" waitforinteraction="true" />
+      <NPCFollowAction npctag="clown" targettag="triggerer_player" follow="true" />
+      <ConversationAction targettag="triggerer_player" text="EventText.clownrelations2.c1" eventsprite="clown">
+        <Option text="EventText.clownrelations2.o1">
+          <CheckReputationAction targettype="faction" identifier="clowns" condition="gte 30">
+            <Success>
+              <ConversationAction targettag="triggerer_player" text="EventText.clownrelations2.o1.c1" endconversation="true"/>
+              <SpawnAction itemidentifier="bikehorn" targetinventory="triggerer_player" />
+            </Success>
+            <Failure>
+              <ConversationAction targettag="triggerer_player" text="EventText.clownrelations2.o1.c2">
+                <Option text="EventText.clownrelations2.o1.o1" />
+              </ConversationAction>
+              <AfflictionAction targettag="triggerer_player" affliction="blunttrauma" strength="3" limbtype="head" />
+              <CombatAction combatmode="retreat" npctag="clown" enemytag="triggerer_player" />
+            </Failure>
+          </CheckReputationAction>
+          <NPCFollowAction npctag="clown" targettag="triggerer_player" follow="false" />
+        </Option>
+        <Option text="EventText.clownrelations2.o2" endconversation="true">
+          <WaitAction time="10" />
+          <NPCFollowAction npctag="clown" targettag="triggerer_player" follow="false" />
+        </Option>
+      </ConversationAction>
+    </ScriptedEvent>
+    <!--"Clown brutality"-->
+    <ScriptedEvent identifier="clownbrutality" commonness="100">
+      <TagAction criteria="player" tag="player" />
+      <SpawnAction npcsetidentifier="outpostnpcs1" npcidentifier="clown" targettag="clownnpc1" spawnlocation="Outpost" targetmoduletags="crewmodule" lootingisstealing="false" />
+      <SpawnAction npcsetidentifier="outpostnpcs1" npcidentifier="clown" targettag="clownnpc2" spawnlocation="Outpost" targetmoduletags="crewmodule" lootingisstealing="false" />
+      <SpawnAction npcsetidentifier="outpostnpcs1" npcidentifier="commoner" targettag="clownvictimnpc" spawnlocation="Outpost" targetmoduletags="crewmodule" />
+      <SpawnAction itemidentifier="toyhammer" targetinventory="clownnpc1" />
+      <SpawnAction itemidentifier="toyhammer" targetinventory="clownnpc2" />
+      <TriggerAction target1tag="clownvictimnpc" target2tag="player" radius="300" />
+      <CombatAction combatmode="offensive" npctag="clownnpc1" enemytag="clownvictimnpc" isinstigator="true" guardreaction="arrest" witnessreaction="retreat" />
+      <CombatAction combatmode="offensive" npctag="clownnpc2" enemytag="clownvictimnpc" isinstigator="true" guardreaction="arrest" witnessreaction="retreat" />
+    </ScriptedEvent>
+    <!--Infiltration-->
+    <ScriptedEvent identifier="infiltration" commonness="50">
+      <CheckDataAction identifier="infiltration_complete" condition="eq true">
+        <Success>
+          <!--Don't repeat-->
+        </Success>
+        <Failure>
+          <TagAction criteria="player" tag="player" />
+          <SpawnAction npcsetidentifier="outpostnpcs1" npcidentifier="clown" targettag="clowntroublemaker" spawnlocation="Outpost" />
+          <SpawnAction npcsetidentifier="outpostnpcs1" npcidentifier="clown" targettag="clowntroublemaker" spawnlocation="Outpost" />
+          <SpawnAction npcsetidentifier="outpostnpcs1" npcidentifier="clown" targettag="clowntroublemaker" spawnlocation="Outpost" />
+          <SpawnAction npcsetidentifier="outpostnpcs1" npcidentifier="clown" targettag="clowntroublemaker" spawnlocation="Outpost" />
+          <SpawnAction npcsetidentifier="outpostnpcs1" npcidentifier="clown" targettag="clowntroublemaker" spawnlocation="Outpost" />
+          <SpawnAction npcsetidentifier="outpostnpcs1" npcidentifier="clown" targettag="clowntroublemaker" spawnlocation="Outpost" />
+          <TriggerAction target1tag="player" target2tag="outpostmanager" applytotarget1="triggerer_player" waitforinteraction="true" />
+          <ConversationAction text="EventText.infiltration.c1" targettag="triggerer_player" eventsprite="Infiltration1">
+            <Option text="EventText.infiltration.o1">
+              <ConversationAction text="EventText.infiltration.o1.c1" targettag="triggerer_player">
+                <Option text="EventText.infiltration.o1.o1">
+                  <ConversationAction text="EventText.infiltration.o1.o1.c1" targettag="triggerer_player" eventsprite="Infiltration2">
+                    <Option text="EventText.infiltration.o1.o1.o1">
+                      <ConversationAction text="EventText.infiltration.o1.o1.o1.c1" targettag="triggerer_player">
+                        <Option text="EventText.infiltration.o1.o1.o1.o1">
+                          <ConversationAction text="EventText.infiltration.o1.o1.o1.o1.c1" targettag="triggerer_player" />
+                          <GoTo name="gotoclowns" />
+                        </Option>
+                        <Option text="EventText.infiltration.o1.o1.o1.o2" endconversation="true">
+                          <Label name="gotoclowns" />
+                          <TriggerAction target1tag="triggerer_player" target2tag="clowntroublemaker" waitforinteraction="true" allowmultipletargets="true" />
+                          <ConversationAction text="EventText.infiltration.o1.o1.o1.o2.c1" targettag="triggerer_player">
+                            <Option text="EventText.infiltration.o1.o1.o1.o2.o1">
+                              <SkillCheckAction requiredskill="weapons" requiredlevel="30" targettag="triggerer_player">
+                                <Success>
+                                  <GiveSkillEXPAction skill="weapons" amount="5" targettag="triggerer_player" />
+                                  <ConversationAction targettag="triggerer_player" text="EventText.infiltration.o1.o1.o1.o2.o1.c1">
+                                    <Option text="EventText.infiltration.o1.o1.o1.o2.o1.o1">
+                                      <ConversationAction targettag="triggerer_player" text="EventText.infiltration.o1.o1.o1.o2.o1.o1.c1" />
+                                      <MoneyAction amount="1000" />
+                                      <TagAction criteria="hullname:airlock" tag="airlock" submarinetype="Outpost" />
+                                      <NPCFollowAction npctag="clowntroublemaker" targettag="airlock" follow="true" />
+                                    </Option>
+                                  </ConversationAction>
+                                </Success>
+                                <Failure>
+                                  <ConversationAction targettag="triggerer_player" text="EventText.infiltration.o1.o1.o1.o2.o1.c2">
+                                    <Option text="EventText.infiltration.o1.o1.o1.o2.o1.o2">
+                                      <ConversationAction targettag="triggerer_player" text="EventText.infiltration.o1.o1.o1.o2.o1.o2.c1" />
+                                    </Option>
+                                  </ConversationAction>
+                                </Failure>
+                              </SkillCheckAction>
+                            </Option>
+                            <Option text="EventText.infiltration.o1.o1.o1.o2.o2">
+                              <ConversationAction targettag="triggerer_player" text="EventText.infiltration.o1.o1.o1.o2.o2.c1">
+                                <Option text="EventText.infiltration.o1.o1.o1.o2.o1.o2">
+                                  <ConversationAction targettag="triggerer_player" text="EventText.infiltration.o1.o1.o1.o2.o1.o2.c1" />
+                                </Option>
+                              </ConversationAction>
+                            </Option>
+                          </ConversationAction>
+                        </Option>
+                      </ConversationAction>
+                    </Option>
+                    <Option text="EventText.infiltration.o1.o1.o2">
+                      <!--END-->
+                    </Option>
+                  </ConversationAction>
+                </Option>
+              </ConversationAction>
+            </Option>
+            <Option text="EventText.infiltration.o2" endconversation="true">
+              <ReputationAction targettype="Faction" identifier="clowns" increase="10" />
+              <ReputationAction targettype="Faction" identifier="huskcult" increase="-5" />
+              <!--END-->
+            </Option>
+          </ConversationAction>
+          <SetDataAction identifier="infiltration_complete" value="true" />
+        </Failure>
+      </CheckDataAction>
+    </ScriptedEvent>
+    <!--Censorship-->
+    <ScriptedEvent identifier="censorship" commonness="50">
+      <TagAction criteria="player" tag="player" />
+      <SpawnAction npcsetidentifier="outpostnpcs1" npcidentifier="clown" targettag="clown" targetmoduletags="clownmodule" spawnlocation="Outpost" />
+      <SpawnAction itemidentifier="metalcrate" spawnlocation="outpost" targettag="clownbox" targetmoduletags="adminmodule" ignorebyai="true" />
+      <SpawnAction itemidentifier="bikehorn" targetinventory="clownbox" ignorebyai="true" />
+      <SpawnAction itemidentifier="bikehorn" targetinventory="clownbox" ignorebyai="true" />
+      <SpawnAction itemidentifier="bikehorn" targetinventory="clownbox" ignorebyai="true" />
+      <SpawnAction itemidentifier="bikehorn" targetinventory="clownbox" ignorebyai="true" />
+      <SpawnAction itemidentifier="bikehorn" targetinventory="clownbox" ignorebyai="true" />
+      <SpawnAction itemidentifier="bikehorn" targetinventory="clownbox" ignorebyai="true" />
+      <NPCWaitAction npctag="clown" wait="true" />
+      <TriggerAction target1tag="player" target2tag="clown" applytotarget1="triggerer_player" waitforinteraction="true" />
+      <ConversationAction text="EventText.censorship.c1" targettag="triggerer_player" eventsprite="Censorship1">
+        <Option text="EventText.censorship.o1">
+          <ConversationAction text="EventText.censorship.o1.c1" targettag="triggerer_player">
+            <Option text="EventText.generic.continue">
+              <ConversationAction text="EventText.censorship.o1.o1.c1" targettag="triggerer_player">
+                <Option text="EventText.censorship.o1.o1.o1">
+                  <ConversationAction text="EventText.censorship.o1.o1.o1.c1" targettag="triggerer_player" endconversation="true" />
+                  <SetDataAction identifier="censorship_acceptedmission" value="true" />
+                </Option>
+                <Option text="EventText.censorship.o1.o1.o2">
+                  <!--END-->
+                </Option>
+              </ConversationAction>
+            </Option>
+          </ConversationAction>
+        </Option>
+        <Option text="EventText.generic.ignore">
+          <!--END-->
+        </Option>
+      </ConversationAction>
+      <!--Trigger at box-->
+      <CheckDataAction identifier="censorship_acceptedmission" condition="eq true">
+        <Success>
+          <TriggerAction target1tag="triggerer_player" target2tag="clownbox" waitforinteraction="true" />
+          <SpawnAction npcsetidentifier="outpostnpcs1" npcidentifier="securitynpc[faction]" targettag="security" spawnpointtag="triggerer_player" />
+          <NPCFollowAction npctag="security" targettag="triggerer_player" follow="true" />
+          <ConversationAction text="EventText.censorship.o1.o1.o1.c1.c1" targettag="triggerer_player" eventsprite="Bombscare1">
+            <Option text="EventText.censorship.o1.o1.o1.c1.o1">
+              <ConversationAction text="EventText.censorship.o1.o1.o1.c1.o1.c1" targettag="triggerer_player">
+                <Option text="EventText.censorship.o1.o1.o1.c1.o1.o1">
+                  <ConversationAction text="EventText.censorship.o1.o1.o1.c1.o1.o1.c1" targettag="triggerer_player" />
+                  <RemoveItemAction targettag="clownbox" />
+                </Option>
+                <Option text="EventText.censorship.o1.o1.o1.c1.o1.o2">
+                  <ConversationAction text="EventText.censorship.o1.o1.o1.c1.o1.o2.c1" targettag="triggerer_player" />
+                  <CombatAction combatmode="arrest" npctag="security" enemytag="triggerer_player" isinstigator="false" guardreaction="arrest" witnessreaction="none" />
+                  <ReputationAction targettype="Faction" identifier="clowns" increase="10" />
+                  <ReputationAction targettype="Faction" identifier="huskcult" increase="-5" />
+                  <RemoveItemAction targettag="clownbox" />
+                </Option>
+              </ConversationAction>
+            </Option>
+            <Option text="EventText.censorship.o1.o1.o1.c1.o2">
+              <ConversationAction text="EventText.censorship.o1.o1.o1.c1.o2.c1" targettag="triggerer_player">
+                <Option text="EventText.censorship.o1.o1.o1.c1.o2.o1">
+                  <SkillCheckAction requiredskill="Helm" requiredlevel="30" targettag="triggerer_player">
+                    <Success>
+                      <NPCFollowAction npctag="security" targettag="triggerer_player" follow="false" />
+                      <ConversationAction text="EventText.censorship.o1.o1.o1.c1.o2.o1.c1" targettag="triggerer_player" />
+                      <Label name="censorship_returnbox" />
+                      <TriggerAction target1tag="triggerer_player" target2tag="clown" waitforinteraction="true" />
+                      <CheckItemAction targettag="triggerer_player" itemtags="clownbox">
+                        <Success>
+                          <ConversationAction text="EventText.censorship.o1.o1.o1.c1.o2.o1.c1.c1" targettag="triggerer_player" eventsprite="Censorship1" />
+                          <RemoveItemAction targettag="clownbox" />
+                          <ReputationAction targettype="Faction" identifier="clowns" increase="10" />
+                          <ReputationAction targettype="Faction" identifier="huskcult" increase="-5" />
+                        </Success>
+                        <Failure>
+                          <ConversationAction text="EventText.censorship.o1.o1.o1.c1.o2.o1.c2.c2" targettag="triggerer_player" eventsprite="Censorship1" />
+                          <GoTo name="censorship_returnbox" />
+                        </Failure>
+                      </CheckItemAction>
+                    </Success>
+                    <Failure>
+                      <ConversationAction text="EventText.censorship.o1.o1.o1.c1.o2.o1.c2" targettag="triggerer_player" />
+                      <RemoveItemAction targettag="clownbox" itemidentifier="metalcrate_event" />
+                      <ConversationAction text="EventText.censorship.o1.o1.o1.c1.o2.o1.c2.c2" speakertag="clown" targettag="triggerer_player" />
+                    </Failure>
+                  </SkillCheckAction>
+                </Option>
+              </ConversationAction>
+            </Option>
+          </ConversationAction>
+          <NPCFollowAction npctag="security" targettag="triggerer_player" follow="false" />
+        </Success>
+        <Failure>
+          <!-- do nothing -->
+        </Failure>
+      </CheckDataAction>
+    </ScriptedEvent>
+    <ScriptedEvent identifier="clownspecialhire1">
+      <CheckDataAction identifier="pathofthebikehorn" condition="eq 7">
+        <Failure>
+          <!-- do nothing -->
+        </Failure>
+        <Success>
+          <CheckReputationAction targettype="faction" identifier="clowns" condition="gte 80">
+            <Failure>
+              <!-- Do nothing -->
+            </Failure>
+            <Success>
+              <CheckDataAction identifier="clownspecialhire1_hired" condition="eq true">
+                <Success>
+                  <!--Don't repeat event if already hired-->
+                </Success>
+                <Failure>
+                  <TagAction criteria="player" tag="player" />
+                  <SpawnAction npcsetidentifier="customnpcs1" npcidentifier="jestmaster" targettag="jestmaster" spawnlocation="Outpost" allowduplicates="false" />
+                  <Label name="beginning" />
+                  <TriggerAction target1tag="jestmaster" target2tag="player" applytotarget2="triggerer_player" waitforinteraction="true" />
+                  <NPCFollowAction npctag="jestmaster" targettag="triggerer_player" follow="true" />
+                  <CheckDataAction identifier="clownspecialhire1_declinedonce" condition="eq true">
+                    <Failure>
+                      <!-- we haven't declined the offer before-->
+                      <ConversationAction targettag="triggerer_player" text="eventtext.clownspecialhire1.c1" eventsprite="Jestmaster">
+                        <Option text="eventtext.clownspecialhire1.o1">
+                          <ConversationAction targettag="triggerer_player" text="eventtext.clownspecialhire1.o1.c1">
+                            <Option text="eventtext.clownspecialhire1.o1.o1">
+                              <ConversationAction targettag="triggerer_player" text="eventtext.clownspecialhire1.o1.o1.c1">
+                                <Option text="eventtext.clownspecialhire1.o1.o1.o1">
+                                  <ConversationAction targettag="triggerer_player" text="eventtext.clownspecialhire1.o1.o1.o1.c1" />
+                                  <NPCChangeTeamAction npctag="jestmaster" teamid="Team1" addtocrew="true" />
+                                  <SetDataAction identifier="clownspecialhire1_hired" value="true" />
+                                  <NPCFollowAction npctag="jestmaster" targettag="triggerer_player" follow="false" />
+                                </Option>
+                                <Option text="eventtext.clownspecialhire1.o1.o1.o2">
+                                  <ConversationAction targettag="triggerer_player" text="eventtext.clownspecialhire1.o1.o1.o2.c1" />
+                                  <SetDataAction identifier="clownspecialhire1_declinedonce" value="true" />
+                                  <NPCFollowAction npctag="jestmaster" targettag="triggerer_player" follow="false" />
+                                  <GoTo name="beginning" />
+                                </Option>
+                              </ConversationAction>
+                            </Option>
+                          </ConversationAction>
+                        </Option>
+                      </ConversationAction>
+                    </Failure>
+                    <Success>
+                      <!-- we've declined before, show different dialog this time -->
+                      <ConversationAction targettag="triggerer_player" text="eventtext.clownspecialhire1.repeat" eventsprite="Jestmaster">
+                        <Option text="eventtext.clownspecialhire1.o1.o1.repeat">
+                          <ConversationAction targettag="triggerer_player" text="eventtext.clownspecialhire1.o1.o1.o1.c1" />
+                          <NPCChangeTeamAction npctag="jestmaster" teamid="Team1" addtocrew="true" />
+                          <SetDataAction identifier="clownspecialhire1_hired" value="true" />
+                          <NPCFollowAction npctag="jestmaster" targettag="triggerer_player" follow="false" />
+                        </Option>
+                        <Option text="eventtext.clownspecialhire1.o1.o2.repeat" endconversation="true">
+                          <NPCFollowAction npctag="jestmaster" targettag="triggerer_player" follow="false" />
+                          <GoTo name="beginning" />
+                        </Option>
+                      </ConversationAction>
+                    </Success>
+                  </CheckDataAction>
+                </Failure>
+              </CheckDataAction>
+            </Success>
+          </CheckReputationAction>
+        </Success>
+      </CheckDataAction>
+    </ScriptedEvent>
+    <!-- Path of the Bike Horn 1-->
+    <ScriptedEvent identifier="pathofthebikehorn1">
+      <CheckReputationAction targettype="faction" identifier="clowns" condition="gte 15">
+        <Failure>
+          <!-- Do nothing -->
+        </Failure>
+        <Success>
+          <CheckDataAction identifier="pathofthebikehorn" condition="eq 0">
+            <Failure>
+              <!-- do nothing -->
+            </Failure>
+            <Success>
+              <TagAction criteria="player" tag="player" />
+              <SpawnAction npcsetidentifier="customnpcs1" npcidentifier="jestmaster" targettag="jestmaster" spawnlocation="Outpost" targetmoduletags="clownmodule" />
+              <TriggerAction target1tag="player" target2tag="jestmaster" applytotarget1="triggerer_player" waitforinteraction="true" />
+              <NPCFollowAction npctag="jestmaster" targettag="triggerer_player" follow="true" />
+              <ConversationAction targettag="triggerer_player" text="EventText.pathofthebikehorn1.c1" eventsprite="Jestmaster">
+                <Option text="EventText.pathofthebikehorn1.o1">
+                  <ConversationAction text="EventText.pathofthebikehorn1.o1.c1" targettag="triggerer_player">
+                    <Option text="EventText.pathofthebikehorn1.o1.o1">
+                      <ConversationAction text="EventText.pathofthebikehorn1.o1.o1.c1" targettag="triggerer_player">
+                        <Option text="EventText.pathofthebikehorn1.o1.o1.o1">
+                          <GoTo name="teaching" />
+                        </Option>
+                      </ConversationAction>
+                    </Option>
+                  </ConversationAction>
+                </Option>
+                <Option text="EventText.pathofthebikehorn1.o2">
+                  <ReputationAction targettype="Faction" identifier="clowns" increase="-2" />
+                  <ConversationAction text="EventText.pathofthebikehorn1.o2.c1" targettag="triggerer_player">
+                    <Option text="EventText.pathofthebikehorn1.o2.o1">
+                      <ReputationAction targettype="Faction" identifier="clowns" increase="-2" />
+                    </Option>
+                    <Option text="EventText.pathofthebikehorn1.o2.o2">
+                      <ConversationAction text="EventText.pathofthebikehorn1.o2.o2.c1" targettag="triggerer_player">
+                        <Option text="EventText.pathofthebikehorn1.o2.o2.o1" endconversation="true" />
+                      </ConversationAction>
+                      <NPCFollowAction npctag="jestmaster" targettag="triggerer_player" follow="false" />
+                      <Label name="waitforcostume" />
+                      <TriggerAction target1tag="triggerer_player" target2tag="jestmaster" waitforinteraction="true" />
+                      <CheckItemAction targettag="triggerer_player" itemtags="clownmask,clowngear">
+                        <Success>
+                          <GoTo name="teaching" />
+                        </Success>
+                        <Failure>
+                          <ConversationAction text="EventText.pathofthebikehorn1.o2.o2.c1.c1" targettag="triggerer_player" eventsprite="Jestmaster" />
+                          <GoTo name="waitforcostume" />
+                        </Failure>
+                      </CheckItemAction>
+                    </Option>
+                  </ConversationAction>
+                </Option>
+                <Option text="EventText.pathofthebikehorn1.o3">
+                  <ConversationAction text="EventText.pathofthebikehorn1.o3.c1" targettag="triggerer_player">
+                    <Option text="EventText.pathofthebikehorn1.o3.o1">
+                      <Label name="teaching" />
+                      <ConversationAction text="EventText.pathofthebikehorn1.o3.o1.c1" targettag="triggerer_player">
+                        <Option text="EventText.pathofthebikehorn1.o3.o1.o1">
+                          <ConversationAction text="EventText.pathofthebikehorn1.o3.o1.o1.c1" targettag="triggerer_player" />
+                          <ReputationAction targettype="Faction" identifier="clowns" increase="2" />
+                          <SetDataAction identifier="pathofthebikehorn" value="1" />
+                          <SpawnAction itemidentifier="honkmotherianscriptures1" targetinventory="triggerer_player" />
+                        </Option>
+                      </ConversationAction>
+                    </Option>
+                  </ConversationAction>
+                </Option>
+              </ConversationAction>
+            </Success>
+          </CheckDataAction>
+          <NPCFollowAction npctag="jestmaster" targettag="triggerer_player" follow="false" />              
+        </Success>
+      </CheckReputationAction>
+    </ScriptedEvent>
+    <!-- Path of the Bike Horn 2-->
+    <ScriptedEvent identifier="pathofthebikehorn2">
+      <CheckDataAction identifier="pathofthebikehorn" condition="eq 1">
+        <Failure>
+          <!-- do nothing -->
+        </Failure>
+        <Success>
+          <TagAction criteria="player" tag="player" />
+          <SpawnAction npcsetidentifier="customnpcs1" npcidentifier="jestmaster" targettag="jestmaster" spawnlocation="Outpost" targetmoduletags="clownmodule" />
+          <Label name="beginning" />
+          <TriggerAction target1tag="player" target2tag="jestmaster" applytotarget1="triggerer_player" waitforinteraction="true" />
+          <NPCFollowAction npctag="jestmaster" targettag="triggerer_player" follow="true" />
+          <ConversationAction targettag="triggerer_player" text="EventText.pathofthebikehorn2.c1" eventsprite="Jestmaster">
+            <Option text="EventText.pathofthebikehorn2.o1">
+              <CheckItemAction targettag="triggerer_player" itemidentifiers="clownmaskunique">
+                <Success>
+                  <ReputationAction targettype="Faction" identifier="clowns" increase="10" />
+                  <ConversationAction targettag="triggerer_player" text="EventText.pathofthebikehorn2.o1.c1" eventsprite="Jestmaster">
+                    <Option text="EventText.pathofthebikehorn2.o1.o1">
+                      <ConversationAction targettag="triggerer_player" text="EventText.pathofthebikehorn2.o1.o1.c1">
+                        <Option text="EventText.pathofthebikehorn2.o1.o1.o1">
+                          <ConversationAction targettag="triggerer_player" text="EventText.pathofthebikehorn2.o1.o1.o1.c1">
+                            <Option text="EventText.pathofthebikehorn2.o1.o1.o1.o1">
+                              <ConversationAction targettag="triggerer_player" text="EventText.pathofthebikehorn2.o1.o1.o1.o1.c1">
+                                <Option text="EventText.pathofthebikehorn2.o1.o1.o1.o1.o1">
+                                  <Label name="teaching" />
+                                  <ConversationAction targettag="triggerer_player" text="EventText.pathofthebikehorn2.o1.o1.o1.o1.o1.c1">
+                                    <Option text="EventText.pathofthebikehorn2.o1.o1.o1.o1.o1.o1">
+                                      <ConversationAction targettag="triggerer_player" text="EventText.pathofthebikehorn2.o1.o1.o1.o1.o1.o1.c1">
+                                        <Option text="EventText.pathofthebikehorn2.o1.o1.o1.o1.o1.o1.o1">
+                                          <ConversationAction targettag="triggerer_player" text="EventText.pathofthebikehorn2.o1.o1.o1.o1.o1.o1.o1.c1"/>
+                                          <SetDataAction identifier="pathofthebikehorn" value="2" />
+                                          <ReputationAction targettype="Faction" identifier="clowns" increase="2" />
+                                          <SpawnAction itemidentifier="honkmotherianscriptures2" targetinventory="triggerer_player" />
+                                        </Option>
+                                        <Option text="EventText.pathofthebikehorn2.o1.o1.o1.o1.o1.o1.o2">
+                                          <ConversationAction targettag="triggerer_player" text="EventText.pathofthebikehorn2.o1.o1.o1.o1.o1.o1.o2.c1"/>
+                                          <SetDataAction identifier="pathofthebikehorn" value="2" />
+                                          <ReputationAction targettype="Faction" identifier="clowns" increase="2" />
+                                          <SpawnAction itemidentifier="honkmotherianscriptures2" targetinventory="triggerer_player" />
+                                        </Option>
+                                      </ConversationAction>
+                                    </Option>
+                                  </ConversationAction>
+                                </Option>
+                                <Option text="EventText.pathofthebikehorn2.o1.o1.o1.o1.o2">
+                                  <ConversationAction targettag="triggerer_player" text="EventText.pathofthebikehorn2.o1.o1.o1.o1.o2.c1">
+                                    <Option text="EventText.pathofthebikehorn2.o1.o1.o1.o1.o2.o1">
+                                      <GoTo name="teaching" />
+                                    </Option>
+                                  </ConversationAction>
+                                </Option>
+                              </ConversationAction>
+                            </Option>
+                          </ConversationAction>
+                        </Option>
+                      </ConversationAction>
+                    </Option>
+                  </ConversationAction>
+                </Success>
+                <Failure>
+                  <ConversationAction targettag="triggerer_player" text="EventText.pathofthebikehorn2.o1.c2" eventsprite="Jestmaster" />
+                  <NPCFollowAction npctag="jestmaster" targettag="triggerer_player" follow="false" />
+                  <Goto name="beginning" />
+                </Failure>
+              </CheckItemAction>
+            </Option>
+            <Option text="EventText.pathofthebikehorn2.o2">
+              <ConversationAction targettag="triggerer_player" text="EventText.pathofthebikehorn2.o2.c1" eventsprite="Jestmaster">
+                <Option text="EventText.pathofthebikehorn2.o2.o1" endconversation="true">
+                  <NPCFollowAction npctag="jestmaster" targettag="triggerer_player" follow="false" />
+                  <Goto name="beginning" />
+                </Option>
+              </ConversationAction>
+            </Option>
+          </ConversationAction>
+        </Success>
+      </CheckDataAction>
+      <NPCFollowAction npctag="jestmaster" targettag="triggerer_player" follow="false" />
+    </ScriptedEvent>
+    <!-- Hitting an abyss monster with a toy hammer-->
+    <ScriptedEvent identifier="toyhammeronabyssmonster">
+      <CheckDataAction identifier="pathofthebikehorn" condition="eq 2">
+        <Failure>
+          <!-- do nothing -->
+        </Failure>
+        <Success>
+          <SetDataAction identifier="pathofthebikehorn" value="3" />
+          <ReputationAction targettype="Faction" identifier="clowns" increase="5" />
+          <!-- target tag is set by the status effect that triggers this event (defined in the toy hammer) -->
+          <ConversationAction text="EventText.toyhammeronabyssmonster.c1" targettag="statuseffectuser" eventsprite="Jestmaster" />
+        </Success>
+      </CheckDataAction>
+    </ScriptedEvent>
+    <!-- Path of the Bike Horn 3 -->
+    <ScriptedEvent identifier="pathofthebikehorn3">
+      <CheckDataAction identifier="pathofthebikehorn" condition="eq 3">
+        <Failure>
+          <!-- do nothing -->
+        </Failure>
+        <Success>
+          <TagAction criteria="player" tag="player" />
+          <SpawnAction npcsetidentifier="customnpcs1" npcidentifier="jestmaster" targettag="jestmaster" spawnlocation="Outpost" targetmoduletags="clownmodule" />
+          <TriggerAction target1tag="player" target2tag="jestmaster" applytotarget1="triggerer_player" waitforinteraction="true" />
+          <NPCFollowAction npctag="jestmaster" targettag="triggerer_player" follow="true" />
+          <ConversationAction targettag="triggerer_player" text="EventText.pathofthebikehorn3.c0" eventsprite="Jestmaster">
+            <Option text="EventText.pathofthebikehorn3.o0">
+              <ConversationAction targettag="triggerer_player" text="EventText.pathofthebikehorn3.c1" eventsprite="Jestmaster">
+                <Option text="EventText.pathofthebikehorn3.o1">
+                  <ConversationAction targettag="triggerer_player" text="EventText.pathofthebikehorn3.o1.c1">
+                    <Option text="EventText.pathofthebikehorn3.o1.o1">
+                      <ConversationAction targettag="triggerer_player" text="EventText.pathofthebikehorn3.o1.o1.c1">
+                        <Option text="EventText.pathofthebikehorn3.o1.o1.o1">
+                          <GoTo name="idontgetit" />
+                        </Option>
+                      </ConversationAction>
+                    </Option>
+                    <Option text="EventText.pathofthebikehorn3.o1.o2">
+                      <GoTo name="idontgetit" />
+                    </Option>
+                  </ConversationAction>
+                </Option>
+                <Option text="EventText.pathofthebikehorn3.o2">
+                  <ConversationAction targettag="triggerer_player" text="EventText.pathofthebikehorn3.o2.c1">
+                    <Option text="EventText.pathofthebikehorn3.o2.o1">
+                      <Label name="idontgetit" />
+                      <ConversationAction targettag="triggerer_player" text="EventText.pathofthebikehorn3.o2.o1.c1">
+                        <Option text="EventText.pathofthebikehorn3.o2.o1.o1">
+                          <ConversationAction targettag="triggerer_player" text="EventText.pathofthebikehorn3.o2.o1.o1.c1">
+                            <Option text="EventText.pathofthebikehorn3.o2.o1.o1.o1">
+                              <ConversationAction targettag="triggerer_player" text="EventText.pathofthebikehorn3.o2.o1.o1.o1.c1" endconversation="true" />
+                              <ReputationAction targettype="Faction" identifier="clowns" increase="3" />
+                              <SetDataAction identifier="pathofthebikehorn" value="4" />
+                            </Option>
+                            <Option text="EventText.pathofthebikehorn3.o2.o1.o1.o2">
+                              <ConversationAction targettag="triggerer_player" text="EventText.pathofthebikehorn3.o2.o1.o1.o2.c1" endconversation="true" />
+                              <ReputationAction targettype="Faction" identifier="clowns" increase="6" />
+                              <SetDataAction identifier="pathofthebikehorn" value="4" />
+                            </Option>
+                            <Option text="EventText.pathofthebikehorn3.o2.o1.o1.o3">
+                              <ConversationAction targettag="triggerer_player" text="EventText.pathofthebikehorn3.o2.o1.o1.o3.c1" endconversation="true" />
+                              <ReputationAction targettype="Faction" identifier="clowns" increase="1" />
+                              <SetDataAction identifier="pathofthebikehorn" value="4" />
+                            </Option>
+                          </ConversationAction>
+                        </Option>
+                      </ConversationAction>
+                    </Option>
+                  </ConversationAction>
+                </Option>
+              </ConversationAction>
+            </Option>
+          </ConversationAction>
+        </Success>
+      </CheckDataAction>
+      <NPCFollowAction npctag="jestmaster" targettag="triggerer_player" follow="false" />
+    </ScriptedEvent>
+    <!-- Path of the Bike Horn 4 -->
+    <ScriptedEvent identifier="pathofthebikehorn4">
+      <CheckDataAction identifier="pathofthebikehorn" condition="eq 4">
+        <Failure>
+          <!-- do nothing -->
+        </Failure>
+        <Success>
+          <TagAction criteria="player" tag="player" />
+          <SpawnAction npcsetidentifier="customnpcs1" npcidentifier="jestmaster" targettag="jestmaster" spawnlocation="Outpost" targetmoduletags="clownmodule" />
+          <Label name="beginning" />
+          <TriggerAction target1tag="player" target2tag="jestmaster" applytotarget1="triggerer_player" waitforinteraction="true" />
+          <NPCFollowAction npctag="jestmaster" targettag="triggerer_player" follow="true" />
+          <ConversationAction targettag="triggerer_player" text="EventText.pathofthebikehorn4.c1" eventsprite="Jestmaster">
+            <Option text="EventText.pathofthebikehorn4.o1">
+              <ConversationAction targettag="triggerer_player" text="EventText.pathofthebikehorn4.o1.c1">
+                <Option text="EventText.pathofthebikehorn4.o1.o1">
+                  <ConversationAction targettag="triggerer_player" text="EventText.pathofthebikehorn4.o1.o1.c1">
+                    <Option text="EventText.pathofthebikehorn4.o1.o1.o1">
+                      <ConversationAction targettag="triggerer_player" text="EventText.pathofthebikehorn4.o1.o1.o1.c1">
+                        <Option text="EventText.pathofthebikehorn4.o1.o1.o1.o1">
+                          <ConversationAction targettag="triggerer_player" text="EventText.pathofthebikehorn4.o1.o1.o1.o1.c1">
+                            <Option text="EventText.pathofthebikehorn4.o1.o1.o1.o1.o1">
+                              <ConversationAction targettag="triggerer_player" text="EventText.pathofthebikehorn4.o1.o1.o1.o1.o1.c1">
+                                <Option text="EventText.pathofthebikehorn4.o1.o1.o1.o1.o1.o1">
+                                  <Label name="takemission" />
+                                  <ConversationAction targettag="triggerer_player" text="EventText.pathofthebikehorn4.o1.o1.o1.o1.o1.o1.c1" endconversation="true" />
+                                  <ReputationAction targettype="Faction" identifier="clowns" increase="1" />
+                                  <SetDataAction identifier="pathofthebikehorn" value="5" />
+                                  <SpawnAction itemidentifier="clownexosuit" targetinventory="triggerer_player" targettag="clownexosuit" />
+                                  <SpawnAction itemidentifier="fuelrod" targetinventory="clownexosuit" />
+                                  <SpawnAction itemidentifier="oxygentank" targetinventory="clownexosuit" />
+                                  <MissionAction missionidentifier="gotoclownhaven" locationtype="City" requiredfaction="clowns" minlocationdistance="1" CreateLocationIfNotFound="true" />
+                                </Option>
+                                <Option text="EventText.pathofthebikehorn4.o1.o1.o1.o1.o1.o2" endconversation="true">
+                                  <Label name="thinkaboutthis" />
+                                  <NPCFollowAction npctag="jestmaster" targettag="triggerer_player" follow="false" />
+                                  <TriggerAction target1tag="player" target2tag="jestmaster" applytotarget1="triggerer_player" waitforinteraction="true" />
+                                  <NPCFollowAction npctag="jestmaster" targettag="triggerer_player" follow="true" />
+                                  <ConversationAction targettag="triggerer_player" text="EventText.pathofthebikehorn4.o1.o1.o1.o1.o1.o2.c1" eventsprite="Jestmaster">
+                                    <Option text="EventText.pathofthebikehorn4.o1.o1.o1.o1.o1.o2.o1">
+                                      <GoTo name="takemission" />
+                                    </Option>
+                                    <Option text="EventText.pathofthebikehorn4.o1.o1.o1.o1.o1.o2.o2" endconversation="true">
+                                      <GoTo name="thinkaboutthis" />
+                                    </Option>
+                                  </ConversationAction>
+                                </Option>
+                              </ConversationAction>
+                            </Option>
+                          </ConversationAction>
+                        </Option>
+                      </ConversationAction>
+                    </Option>
+                  </ConversationAction>
+                </Option>
+              </ConversationAction>
+            </Option>
+            <Option text="EventText.pathofthebikehorn4.o2" endconversation="true">
+              <GoTo name="beginning" />
+            </Option>
+          </ConversationAction>
+        </Success>
+      </CheckDataAction>
+      <NPCFollowAction npctag="jestmaster" targettag="triggerer_player" follow="false" />
+    </ScriptedEvent>
+    <ScriptedEvent identifier="clownhaven1">
+      <SetDataAction identifier="clownhaven_peopleannoyed" operation="Set" value="1" />
+      <CheckDataAction identifier="pathofthebikehorn" condition="eq 5">
+        <Failure>
+          <!-- do nothing -->
+        </Failure>
+        <Success>
+          <TagAction criteria="player" tag="player" />
+          <Label name="beginning" />
+          <WaitAction time="5" />
+          <CheckItemAction targettag="player" itemidentifiers="clownexosuit" applytagtotarget="funbringer">
+            <Success>
+              <!-- do nothing and allow the event to continue-->
+            </Success>
+            <Failure>
+              <GoTo name="beginning" />
+            </Failure>
+          </CheckItemAction>
+          <WaitAction time="1" />
+          <ConversationAction text="EventText.clownhaven1.c1" eventsprite="Infiltration2" />
+          <Label name="state1" />
+          <WaitAction time="1" />
+          <CheckDataAction identifier="clownhaven_peopleannoyed" condition="gt 1">
+            <Failure>
+              <Goto name="state1" />
+            </Failure>
+            <Success>
+              <ConversationAction text="EventText.clownhaven1.c1.c1" eventsprite="Infiltration2" />
+            </Success>
+          </CheckDataAction>
+          <!-- commoners flee -->
+          <Label name="state2" />
+          <CombatAction combatmode="retreat" npctag="commoner" enemytag="funbringer" isinstigator="false" guardreaction="arrest" witnessreaction="retreat" />
+          <WaitAction time="5" />
+          <CheckDataAction identifier="clownhaven_peopleannoyed" condition="gt 10">
+            <Failure>
+              <Goto name="state2" />
+            </Failure>
+            <Success>
+              <ConversationAction text="EventText.clownhaven1.c1.c2" eventsprite="Infiltration2" />
+            </Success>
+          </CheckDataAction>
+          <ReputationAction targettype="Faction" identifier="clowns" increase="2" />
+          <!-- clowns in the outpost start following the player -->
+          <Label name="state3" />
+          <NPCFollowAction npctag="clown" targettag="funbringer" maxtargets="1000" follow="true" />
+          <CombatAction combatmode="retreat" npctag="commoner" enemytag="funbringer" isinstigator="false" guardreaction="arrest" witnessreaction="retreat" />
+          <WaitAction time="5" />
+          <CheckDataAction identifier="clownhaven_peopleannoyed" condition="gt 20">
+            <Failure>
+              <Goto name="state3" />
+            </Failure>
+            <Success>
+              <ConversationAction text="EventText.clownhaven1.c1.c3" eventsprite="Infiltration2" />
+            </Success>
+          </CheckDataAction>
+          <!-- security tries to arrest the player -->
+          <Label name="state4" />
+          <CombatAction combatmode="arrest" npctag="securitynpc" enemytag="funbringer" isinstigator="true" guardreaction="arrest" witnessreaction="retreat" />
+          <WaitAction time="5" />
+          <CheckDataAction identifier="clownhaven_peopleannoyed" condition="gt 35">
+            <Failure>
+              <Goto name="state4" />
+            </Failure>
+            <Success>
+              <ConversationAction text="EventText.clownhaven1.c1.c4" eventsprite="NoticeBoard" />
+            </Success>
+          </CheckDataAction>
+          <!-- security tries to kill the player -->
+          <Label name="state5" />
+          <WaitAction time="5" />
+          <CombatAction combatmode="offensive" npctag="securitynpc" enemytag="funbringer" isinstigator="true" guardreaction="arrest" witnessreaction="retreat" />
+          <CheckDataAction identifier="clownhaven_peopleannoyed" condition="gte 40">
+            <Failure>
+              <Goto name="state5" />
+            </Failure>
+            <Success />
+          </CheckDataAction>
+          <WaitAction time="10" />
+          <NPCFollowAction npctag="securitynpc" targettag="outpostmanager" follow="true" />
+          <NPCFollowAction npctag="commonner" targettag="outpostmanager" follow="true" />
+          <ConversationAction text="EventText.clownhaven1.c1.c5" eventsprite="NoticeBoard" />
+          <ModifyLocationAction faction="Clowns" name="location.clownhaven" />
+          <SetDataAction identifier="pathofthebikehorn" value="6" />
+          <ReputationAction targettype="Faction" identifier="clowns" increase="10" />
+          <ReputationAction targettype="Faction" identifier="huskcult" increase="-5" />
+        </Success>
+      </CheckDataAction>
+    </ScriptedEvent>
+    <ScriptedEvent identifier="clownhaven_progress">
+      <CheckDataAction identifier="pathofthebikehorn" condition="eq 5">
+        <Failure>
+          <!-- do nothing -->
+        </Failure>
+        <Success>          
+          <CheckMissionAction MissionIdentifier="gotoclownhaven" Type="Current">
+            <Failure>
+              <!-- do nothing -->
+            </Failure>
+            <Success>
+              <MissionStateAction missionidentifier="gotoclownhaven" operation="Add" value="1" />
+              <SetDataAction identifier="clownhaven_peopleannoyed" operation="Add" value="1" />
+            </Success>
+          </CheckMissionAction>
+        </Success>
+      </CheckDataAction>
+    </ScriptedEvent>
+    <!-- Path of the Bike Horn 5 -->
+    <ScriptedEvent identifier="pathofthebikehorn5">
+      <!-- check for state 6: state 5 for the clownhaven event -->
+      <CheckDataAction identifier="pathofthebikehorn" condition="gte 6">
+        <Failure>
+          <!-- do nothing -->
+        </Failure>
+        <Success>
+          <TagAction criteria="player" tag="player" />
+          <SpawnAction npcsetidentifier="customnpcs1" npcidentifier="jestmaster" targettag="jestmaster" spawnlocation="Outpost" targetmoduletags="clownmodule" />
+          <CheckDataAction identifier="pathofthebikehorn" condition="eq 6">
+            <Failure>
+              <!-- do nothing -->
+            </Failure>
+            <Success>
+              <TriggerAction target1tag="player" target2tag="jestmaster" applytotarget1="triggerer_player" waitforinteraction="true" />
+              <NPCFollowAction npctag="jestmaster" targettag="triggerer_player" follow="true" />              
+              <ConversationAction targettag="triggerer_player" text="EventText.pathofthebikehorn5.c1" eventsprite="Jestmaster">
+                <Option text="EventText.pathofthebikehorn5.o1">
+                  <ReputationAction targettype="Faction" identifier="clowns" increase="5" />
+                  <ReputationAction targettype="Faction" identifier="huskcult" increase="-2" />
+                  <ConversationAction targettag="triggerer_player" text="EventText.pathofthebikehorn5.o1.c1">
+                    <Option text="EventText.pathofthebikehorn5.o1.o1">
+                      <ConversationAction targettag="triggerer_player" text="EventText.pathofthebikehorn5.o1.o1.c1">
+                        <Option text="EventText.pathofthebikehorn5.o1.o1.o1">
+                          <ConversationAction targettag="triggerer_player" text="EventText.pathofthebikehorn5.o1.o1.o1.c1">
+                            <Option text="EventText.pathofthebikehorn5.o1.o1.o1.o1">
+                              <ConversationAction targettag="triggerer_player" text="EventText.pathofthebikehorn5.o1.o1.o1.o1.c1" endconversation="true" />
+                              <SetDataAction identifier="pathofthebikehorn" value="7" />
+                            </Option>
+                          </ConversationAction>
+                        </Option>
+                      </ConversationAction>
+                    </Option>
+                  </ConversationAction>
+                </Option>
+              </ConversationAction>              
+            </Success>
+          </CheckDataAction>
+          <Label name="moreadvicepls" />
+          <NPCFollowAction npctag="jestmaster" targettag="triggerer_player" follow="false" />
+          <TriggerAction target1tag="player" target2tag="jestmaster" applytotarget1="triggerer_player" waitforinteraction="true" />
+          <NPCFollowAction npctag="jestmaster" targettag="triggerer_player" follow="true" />
+          <ConversationAction targettag="triggerer_player" text="EventText.pathofthebikehorn5.c1.c1" eventsprite="Jestmaster">
+            <Option text="EventText.pathofthebikehorn5.c1.o1">
+              <ConversationAction targettag="triggerer_player" text="EventText.pathofthebikehorn5.c1.o1.c1">
+                <Option text="EventText.pathofthebikehorn5.c1.o1.o1" endconversation="true">
+                  <Goto name="moreadvicepls" />
+                </Option>
+              </ConversationAction>
+            </Option>
+          </ConversationAction>
+        </Success>
+      </CheckDataAction>
+    </ScriptedEvent>
+  </EventPrefabs>
+</RandomEvents>
