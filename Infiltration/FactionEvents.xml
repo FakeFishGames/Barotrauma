@@ -1700,23 +1700,23 @@
     </ScriptedEvent>
     
     <!--Infiltration-->
-    <ScriptedEvent identifier="infiltration2" commonness="50">
+    <ScriptedEvent identifier="infiltration" commonness="50">
       <CheckDataAction identifier="infiltration_complete" condition="eq true">
         <Success>
           <!--Don't repeat-->
         </Success>
         <Failure>
           <TagAction criteria="player" tag="player" />
-          <SpawnAction npcsetidentifier="outpostnpcs1" npcidentifier="clown" targettag="clownhonker" spawnlocation="Outpost" />
           <SpawnAction npcsetidentifier="outpostnpcs1" npcidentifier="clown" targettag="clowntroublemaker" spawnlocation="Outpost" />
           <SpawnAction npcsetidentifier="outpostnpcs1" npcidentifier="clown" targettag="clowntroublemaker" spawnlocation="Outpost" />
           <SpawnAction npcsetidentifier="outpostnpcs1" npcidentifier="clown" targettag="clowntroublemaker" spawnlocation="Outpost" />
           <SpawnAction npcsetidentifier="outpostnpcs1" npcidentifier="clown" targettag="clowntroublemaker" spawnlocation="Outpost" />
-          <SpawnAction npcsetidentifier="outpostnpcs1" npcidentifier="commoner" targettag="clownvictimnpc" spawnlocation="Outpost" targetmoduletags="crewmodule" />
+          <SpawnAction npcsetidentifier="outpostnpcs1" npcidentifier="clown" targettag="clowntroublemaker" spawnlocation="Outpost" />
           <SpawnAction itemidentifier="bikehorn" targetinventory="clownhonker" targettag="bikehorn1" />
           <SpawnAction itemidentifier="toyhammer" targetinventory="clowntroublemaker" />
           <SpawnAction itemidentifier="toyhammer" targetinventory="clowntroublemaker" />
-          <!-- <NPCOperateItemAction npctag="clownhonker" targettag="bikehorn1" Operate="true" RequireEquip="true"/> -->
+          <!-- <SpawnAction npcsetidentifier="outpostnpcs1" npcidentifier="clown" targettag="clownhonker" spawnlocation="Outpost" />
+          <NPCOperateItemAction npctag="clownhonker" targettag="bikehorn1" Operate="true" RequireEquip="true"/> -->
           <TriggerAction target1tag="player" target2tag="outpostmanager" applytotarget1="triggerer_player" waitforinteraction="true" />
           <ConversationAction text="EventText.infiltration.c1" targettag="triggerer_player" eventsprite="Infiltration1">
             <Option text="EventText.infiltration.o1">
@@ -1731,7 +1731,7 @@
                         </Option>
                         <Option text="EventText.infiltration.o1.o1.o1.o2" endconversation="true">
                           <Label name="gotoclowns" />
-                          <TriggerAction target1tag="triggerer_player" target2tag="clowntroublemaker" applytotarget2="chosenclown" waitforinteraction="true" allowmultipletargets="true" />
+                          <TriggerAction target1tag="triggerer_player" target2tag="clowntroublemaker" waitforinteraction="true" allowmultipletargets="true" />
                           <ConversationAction text="EventText.infiltration.o1.o1.o1.o2.c1" targettag="triggerer_player" eventsprite="infiltration2">
                             <!-- threaten the clowns -->
                             <Option text="EventText.infiltration.o1.o1.o1.o2.o1">
