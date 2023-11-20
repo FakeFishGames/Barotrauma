@@ -6152,6 +6152,9 @@
 <eventtext.assassinationofjacovsubra4.o1.o2>“How much?”</eventtext.assassinationofjacovsubra4.o1.o2>
 <eventtext.assassinationofjacovsubra4.o1.o2.c1>“Three thousand for you and we part as friends, right here.”</eventtext.assassinationofjacovsubra4.o1.o2.c1>
 <eventtext.assassinationofjacovsubra4.o2>“Wasn't trying to. (Attack)”</eventtext.assassinationofjacovsubra4.o2>
+
+
+<!-- infiltration event -->
 <eventtext.infiltration.c1>The station manager looks at you with haggard eyes. “You're one of the new arrivals? Man, am I glad to see a non-masked face.”</eventtext.infiltration.c1>
 <eventtext.infiltration.o1>“Now that you mention it, there are a lot of masks around.”</eventtext.infiltration.o1>
 <eventtext.infiltration.o1.c1>“A bunch of clowns. Let me ask you, you ever wake up in the middle of the night to a sound of bike horns? They don't even attempt any kind of melody, just honking away all willy-nilly. I haven't had a full night's sleep in...days?” They stare blankly into space. “Weeks?”</eventtext.infiltration.o1.c1>
@@ -6165,15 +6168,29 @@
 <eventtext.infiltration.o1.o1.o1.o2.c1>You approach a clown. They stare at you.</eventtext.infiltration.o1.o1.o1.o2.c1>
 <eventtext.infiltration.o1.o1.o1.o2.o1>Threaten the clown.</eventtext.infiltration.o1.o1.o1.o2.o1>
 <eventtext.infiltration.o1.o1.o1.o2.o1.c1>You stare the clown down for a minute. They try to grab your nose but you slap their arm away. You point to the direction of the airlock. With slumped shoulders, the clown shuffles away, their friends in tow.</eventtext.infiltration.o1.o1.o1.o2.o1.c1>
+
+<!-- unused -->
 <eventtext.infiltration.o1.o1.o1.o2.o1.o1>Mission complete.</eventtext.infiltration.o1.o1.o1.o2.o1.o1>
+
 <eventtext.infiltration.o1.o1.o1.o2.o1.o1.c1>It's suddenly very quiet. You report your success to the manager on the radio and one thousand marks are deposited to your account.</eventtext.infiltration.o1.o1.o1.o2.o1.o1.c1>
 <eventtext.infiltration.o1.o1.o1.o2.o1.c2>You strain to flex your biceps. For some reason this only succeeds in making the clown laugh in your face and continue their merriments.</eventtext.infiltration.o1.o1.o1.o2.o1.c2>
 <eventtext.infiltration.o1.o1.o1.o2.o1.o2>Mission failed.</eventtext.infiltration.o1.o1.o1.o2.o1.o2>
+
+<!-- unused -->
 <eventtext.infiltration.o1.o1.o1.o2.o1.o2.c1>You have missed your chance at making an impactful impression and dejectedly report failure to the station manager.</eventtext.infiltration.o1.o1.o1.o2.o1.o2.c1>
+
 <eventtext.infiltration.o1.o1.o1.o2.o2>Build rapport.</eventtext.infiltration.o1.o1.o1.o2.o2>
 <eventtext.infiltration.o1.o1.o1.o2.o2.c1>You try to reason with the clowns, explaining that their behaviour is disrupting the lives of the crew here and frankly, quite unacceptable. Your words fall to deaf ears.</eventtext.infiltration.o1.o1.o1.o2.o2.c1>
+
+<!-- added: -->
+<eventtext.infiltration.clowncheckpassed>The clowns hail you as one of their own. You tell them that this outpost had its fair share of laughs and it's time to move on.</eventtext.infiltration.clowncheckpassed>
+<eventtext.infiltration.wemustdepart>"Brothers, we must depart, for another settlement needs our help."</eventtext.infiltration.wemustdepart>
+<eventtext.infiltration.timetoleave>The best jokes are often the shortest. The clowns agree to accompany you.</eventtext.infiltration.timetoleave>
+
 <eventtext.infiltration.o1.o1.o2>“Well, good luck with that.”</eventtext.infiltration.o1.o1.o2>
 <eventtext.infiltration.o2>“Don't speak to me, you harlequin-hater.”</eventtext.infiltration.o2>
+
+
 <eventtext.badvibrations1.c1>A sound of shattering glass makes you jump. Someone is slouched against the wall, shards of glass at her feet. By the looks of it, it might have been a bottle of rum she was holding. She's muttering under her breath.</eventtext.badvibrations1.c1>
 <eventtext.badvibrations1.o1>“You okay?”</eventtext.badvibrations1.o1>
 <eventtext.badvibrations1.o1.c1>No response. You notice she's repeating the same thing over and over. “Bad vibrations, man. Bad vibes.” Drool is slowly dripping from the corner of her mouth onto her jacket.</eventtext.badvibrations1.o1.c1>
