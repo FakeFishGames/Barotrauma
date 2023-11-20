@@ -6234,6 +6234,9 @@
 <eventtext.heartofgold.o2.o2.c1>“I was captured along with the rest of my crew and sub. They're all gone now.” They scowl. “Eaten. They were used as bait for the crawlers that used to inhabit this place. I was spared because I know how to make morphine and fent.”</eventtext.heartofgold.o2.o2.c1>
 <eventtext.heartofgold.o2.o2.o1>“You're a drug dealer?”</eventtext.heartofgold.o2.o2.o1>
 <eventtext.heartofgold.o2.o2.o1.c1>“Give me a break. Like you haven't done any opiates yourself? The way I see it I provided a service and, in return, nobody pointed a gun my way.” A dry smile creeps on their face. “Until you, that is.”</eventtext.heartofgold.o2.o2.o1.c1>
+
+<!-- bombscare event-->
+
 <eventtext.bombscare.c1>“Hey, you there.”</eventtext.bombscare.c1>
 <eventtext.bombscare.o1>“Me?”</eventtext.bombscare.o1>
 <eventtext.bombscare.o1.c1>The guard takes a long look at you. “Never mind. I thought you looked like someone else. You're free to go.”</eventtext.bombscare.o1.c1>
@@ -6241,15 +6244,28 @@
 <eventtext.bombscare.o1.o1.c1>“Just be careful,” the guard cautions. “We received a bomb threat a few hours ago, by some usual suspects. It's been a while and no bomb has been found, but we advise caution.”</eventtext.bombscare.o1.o1.c1>
 <eventtext.bombscare.o1.o1.o1>“Usual suspects?”</eventtext.bombscare.o1.o1.o1>
 <eventtext.bombscare.o1.o1.o1.c1>The guard lowers their voice. “Look, you better stay clear of this separatist business. There have been some serious attacks lately. Just come to me if you see something suspicious.”</eventtext.bombscare.o1.o1.o1.c1>
-<eventtext.bombscare.o1.o1.o1.c1.c1>Out of the corner of your eye, you see a pile of scrap electronics.</eventtext.bombscare.o1.o1.o1.c1.c1>
-<eventtext.bombscare.o1.o1.o1.c1.o1>Salvage.</eventtext.bombscare.o1.o1.o1.c1.o1>
-<eventtext.bombscare.o1.o1.o1.c1.o1.c1>To your surprise, the pile of scrap turns out to be a homemade pipe bomb. As luck would have it some wires have come loose, preventing the bomb from going off. You carefully remove the detonator, pick up the bomb and place it in your bag. The guard from earlier should be interested in seeing this.</eventtext.bombscare.o1.o1.o1.c1.o1.c1>
+
+<!-- added: -->
+<eventtext.bombscare.tickingnoise>What's that noise?</eventtext.bombscare.tickingnoise>
+<eventtext.bombscare.leavethebomb>"I'm out of here!"</eventtext.bombscare.leavethebomb>
+<eventtext.bombscare.nobombtogive>"Yes? Don't waste my time."</eventtext.bombscare.nobombtogive>
+
+<!-- changed: -->
+<eventtext.bombscare.o1.o1.o1.c1.c1>You reach for the source of the sound. It's a bomb, and it's ticking!</eventtext.bombscare.o1.o1.o1.c1.c1>
+<eventtext.bombscare.o1.o1.o1.c1.o1>Try to defuse the bomb.</eventtext.bombscare.o1.o1.o1.c1.o1>
+<eventtext.bombscare.o1.o1.o1.c1.o1.c1>With expert dexterity, you pull some wires to the side and manage to carefully remove the detonator. The ticking stops. The guard from earlier should be interested in seeing this.</eventtext.bombscare.o1.o1.o1.c1.o1.c1>
+<eventtext.bombscare.o1.o1.o1.c1.o1.c2>Your hands shake furiously, you almost drop the bomb. In pure panic, wires are ripped, buttons are pressed and somehow, the timer stops.</eventtext.bombscare.o1.o1.o1.c1.o1.c2>
+<eventtext.bombscare.o1.o1.o1.c1.o1.o1>That wasn't so hard.</eventtext.bombscare.o1.o1.o1.c1.o1.o1>
+<eventtext.bombscare.o1.o1.o1.c1.o1.o1.c1>Before you can catch your breath, the ticking resumes... and accelerates!</eventtext.bombscare.o1.o1.o1.c1.o1.o1.c1>
+
 <eventtext.bombscare.o1.o1.o1.c1.o1.c1.c1>You thrust the bomb to the arms of the guard, who flinches a bit. You recount your experience and the guard thanks you for finding the bomb and gives you a small reward for dismantling it.</eventtext.bombscare.o1.o1.o1.c1.o1.c1.c1>
-<eventtext.bombscare.o1.o1.o1.c1.o1.c2>To your surprise, the pile of scrap is wired to a timer. You turn it around and see “00:01” displayed on the timer.</eventtext.bombscare.o1.o1.o1.c1.o1.c2>
-<eventtext.bombscare.o1.o1.o1.c1.o1.o1>Take cover.</eventtext.bombscare.o1.o1.o1.c1.o1.o1>
-<eventtext.bombscare.o1.o1.o1.c1.o1.o1.c1>You drop the bomb and dive down onto the floor, covering your head with your hands. Seconds pass by, but nothing happens. Gingerly, you stand up and dust yourself off. Seems like this bomb is a dud. The guard from earlier should be interested in seeing this.</eventtext.bombscare.o1.o1.o1.c1.o1.o1.c1>
+
+<!-- unused -->
 <eventtext.bombscare.o1.o1.o1.c1.o1.o1.c1.c1>You report finding a bomb in the hallway and the guard immediately springs to action. They thank you for finding and reporting the bomb.</eventtext.bombscare.o1.o1.o1.c1.o1.o1.c1.c1>
+
 <eventtext.bombscare.o1.o2>Leave the guard.</eventtext.bombscare.o1.o2>
+
+
 <eventtext.terrorism101.c1>You see a person crouched next to a vending machine, assembling or fixing something.</eventtext.terrorism101.c1>
 <eventtext.terrorism101.o1>Find out what they're working on.</eventtext.terrorism101.o1>
 <eventtext.terrorism101.o1.c1>You sneak behind the person and crane your neck. It seems they're fiddling with some kind of a device with lots of wires. They glance back and jump up when they see you. “Shit! Don't just stand there!”</eventtext.terrorism101.o1.c1>
