@@ -24,7 +24,7 @@
     <WifiComponent range="35000.0" LinkToChat="true" MinChatMessageInterval="0.0" />
     <ItemContainer capacity="1" maxstacksize="1" autoinject="true">
       <SlotIcon slotindex="0" texture="Content/UI/StatusMonitorUI.png" sourcerect="384,448,64,64" origin="0.5,0.5" />
-      <Containable items="chem,medical" />
+      <Containable items="chem,syringe" />
     </ItemContainer>
     <Wearable limbtype="Head" slots="Any,Headset" msg="ItemMsgPickUpSelect" displaycontainedstatus="true">
       <sprite name="Headset Wearable" texture="Content/Items/JobGear/TalentGear.png" sourcerect="253,305,76,58" limb="Head" hidelimb="false" inheritlimbdepth="true" inheritscale="true" ignorelimbscale="true" scale="0.7" hideotherwearables="false" origin="0.5,0.5" />
@@ -54,7 +54,7 @@
       </StatusEffect>
     </Holdable>
   </Item>
-  <Item name="" identifier="combatstimulantsyringe" category="Medical" maxstacksize="8" Tags="smallitem,chem,medical,syringe" allowasextracargo="true" description="" useinhealthinterface="true" scale="0.5" impactsoundtag="impact_metal_light">
+  <Item name="" identifier="combatstimulantsyringe" category="Medical" maxstacksize="32" maxstacksizecharacterinventory="8" Tags="smallitem,chem,medical,syringe" allowasextracargo="true" description="" useinhealthinterface="true" scale="0.5" impactsoundtag="impact_metal_light">
     <PreferredContainer primary="medcab"/>
     <Price baseprice="340" sold="false">
       <Price storeidentifier="merchantoutpost" />
@@ -105,7 +105,7 @@
     <Projectile characterusable="false" launchimpulse="18.0" sticktocharacters="true" launchrotation="-90" inheritstatuseffectsfrom="MeleeWeapon" inheritrequiredskillsfrom="MeleeWeapon"/>
     <SkillRequirementHint identifier="medical" level="35" />
   </Item>
-  <Item name="" identifier="pressurestabilizer" category="Medical" maxstacksize="8" Tags="smallitem,chem,medical,syringe" allowasextracargo="true" description="" useinhealthinterface="true" scale="0.5" impactsoundtag="impact_metal_light">
+  <Item name="" identifier="pressurestabilizer" category="Medical" maxstacksize="32" maxstacksizecharacterinventory="8" Tags="smallitem,chem,medical,syringe" allowasextracargo="true" description="" useinhealthinterface="true" scale="0.5" impactsoundtag="impact_metal_light">
     <PreferredContainer primary="medcab"/>
     <Price baseprice="200" sold="false">
       <Price storeidentifier="merchantoutpost" />
@@ -153,7 +153,7 @@
     <Projectile characterusable="false" launchimpulse="18.0" sticktocharacters="true" launchrotation="-90" inheritstatuseffectsfrom="MeleeWeapon" inheritrequiredskillsfrom="MeleeWeapon"/>
     <SkillRequirementHint identifier="medical" level="35" />
   </Item>
-  <Item name="" identifier="endocrinebooster" category="Medical" maxstacksize="8" Tags="smallitem,chem,medical,syringe" allowasextracargo="true" description="" useinhealthinterface="true" scale="0.5" impactsoundtag="impact_metal_light">
+  <Item name="" identifier="endocrinebooster" category="Medical" maxstacksize="32" maxstacksizecharacterinventory="8" Tags="smallitem,chem,medical,syringe" allowasextracargo="true" description="" useinhealthinterface="true" scale="0.5" impactsoundtag="impact_metal_light">
     <PreferredContainer primary="medcab"/>
     <Price baseprice="1400" sold="false">
       <Price storeidentifier="merchantoutpost" />
@@ -183,10 +183,10 @@
       <RequiredSkill identifier="medical" level="60" />
       <StatusEffect type="OnSuccess" target="This" Condition="-100.0" setvalue="true"/>
       <StatusEffect type="OnFailure" target="This" Condition="-100.0" setvalue="true"/>
-      <StatusEffect tags="medical" type="OnSuccess" target="UseTarget">
+      <StatusEffect type="OnSuccess" target="UseTarget">
         <GiveTalentInfo giverandom="true" talentidentifiers="prodigy,downwiththeship,lonewolf, physicalconditioning,swole,beatcop, exampleofhealth,laresistance,drsubmarine, egghead,grounded,unstoppablecuriosity, ballastdenizen,miner,mudraptorwrestler, skedaddle,revengesquad,thewaitinglist" />
       </StatusEffect>
-      <StatusEffect tags="medical" type="OnFailure" target="UseTarget">
+      <StatusEffect type="OnFailure" target="UseTarget">
         <GiveTalentInfo giverandom="true" talentidentifiers="prodigy,downwiththeship, physicalconditioning,swole, exampleofhealth,laresistance, egghead,grounded, ballastdenizen,miner, skedaddle,revengesquad" />
       </StatusEffect>
       <StatusEffect type="OnSuccess" target="UseTarget">
@@ -236,7 +236,7 @@
     <InventoryIcon texture="Content/Items/Genetic/Genetic.png" sourcerect="327,62,73,65" origin="0.5,0.5" />
     <Sprite name="Headset" texture="Content/Items/Genetic/Genetic.png" depth="0.6" sourcerect="148,85,73,35" origin="0.5,0.5" />
     <Body radius="8" width="48" density="15" />
-    <ItemContainer capacity="2" />
+    <ItemContainer capacity="2" maxstacksize="1" />
     <Wearable>
       <sprite name="Gene Splicer Wearable" texture="Content/Items/Genetic/Genetic.png" limb="Head" hidelimb="false" inheritlimbdepth="true" inheritscale="true" ignorelimbscale="true" scale="0.5" hideotherwearables="false" sourcerect="326,131,67,55" origin="0.6,0.0" />
     </Wearable>
@@ -283,7 +283,7 @@
     <SkillRequirementHint identifier="medical" level="50" />
   </Item>
 
-  <Item name="" identifier="europabrew" category="Medical" maxstacksize="16" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical,syringe" description="" useinhealthinterface="true" scale="0.5" impactsoundtag="impact_metal_light" RequireAimToUse="True">
+  <Item name="" identifier="europabrew" category="Medical" maxstacksize="32" maxstacksizecharacterinventory="8" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical,syringe" description="" useinhealthinterface="true" scale="0.5" impactsoundtag="impact_metal_light" RequireAimToUse="True">
     <PreferredContainer primary="toxcab" secondary="toxcontainer"/>
     <PreferredContainer primary="wrecktoxcab,abandonedtoxcab" spawnprobability="0.05" />
     <Price baseprice="200" minavailable="1">
@@ -320,7 +320,7 @@
     <Projectile characterusable="false" launchimpulse="20.0" sticktocharacters="true" launchrotation="-90" inheritstatuseffectsfrom="MeleeWeapon"/>
   </Item>
 
-  <Item name="" identifier="sulphuricacidsyringe" category="Medical" maxstacksize="8" cargocontaineridentifier="chemicalcrate" description="" Tags="smallitem,chem,syringe" useinhealthinterface="true" scale="0.5" impactsoundtag="impact_metal_light" RequireAimToUse="True">
+  <Item name="" identifier="sulphuricacidsyringe" category="Medical" maxstacksize="32" maxstacksizecharacterinventory="8" cargocontaineridentifier="chemicalcrate" description="" Tags="smallitem,chem,syringe" useinhealthinterface="true" scale="0.5" impactsoundtag="impact_metal_light" RequireAimToUse="True">
     <PreferredContainer secondary="wrecktoxcab,abandonedtoxcab" spawnprobability="0" />
     <PreferredContainer primary="toxcab" secondary="toxcontainer"/>
     <Price baseprice="125" sold="false">
@@ -361,7 +361,8 @@
     </MeleeWeapon>
     <Projectile characterusable="false" launchimpulse="18.0" sticktocharacters="true" launchrotation="-90" inheritstatuseffectsfrom="MeleeWeapon"/>
   </Item>
-    <Item name="" identifier="chemgrenade" category="Weapon" maxstacksize="8" cargocontaineridentifier="explosivecrate" tags="smallitem,weapon,explosive,demolitionsexpert" Scale="0.5" impactsoundtag="impact_metal_heavy">
+
+<Item name="" identifier="chemgrenade" category="Weapon" maxstacksize="32" maxstacksizecharacterinventory="8" cargocontaineridentifier="explosivecrate" tags="smallitem,weapon,explosive,demolitionsexpert" Scale="0.5" impactsoundtag="impact_metal_heavy">
       <PreferredContainer primary="secarmcab" minamount="1" maxamount="3" spawnprobability="0.75" notcampaign="true" />
       <PreferredContainer primary="wreckarmcab,abandonedarmcab" minamount="1" maxamount="2" spawnprobability="0.05" />
       <PreferredContainer secondary="armcab" />
@@ -380,7 +381,7 @@
         <RequiredItem identifier="sulphuricacid" />
       </Fabricate>
       <Sprite texture="Content/Items/Weapons/weapons_new.png" sourcerect="79,414,26,54" depth="0.55" origin="0.5,0.5" />
-      <BrokenSprite texture="Content/Items/Weapons/weapons_new.png" name="chem" sourcerect="487,186,24,54" depth="0.55" origin="0.5,0.5185185" maxcondition="99.9" />
+      <BrokenSprite texture="Content/Items/Weapons/weapons_new.png" name="chemgrenade" sourcerect="487,186,24,54" depth="0.55" origin="0.5,0.5185185" maxcondition="99.9" />
       <Body width="26" height="54" density="30" />
       <Throwable characterusable="false" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10" msg="ItemMsgPickUpSelect">
         <StatusEffect type="OnBroken" target="This">
@@ -430,6 +431,10 @@
           <Conditional HasTag="railgunammo" targetcontainer="true" />
           <Conditional HasTag="depthchargeammo" targetcontainer="true" />
         </StatusEffect>
+        <StatusEffect type="OnSecondaryUse" target="This" disabledeltatime="true" checkconditionalalways="true">
+          <Conditional IsOn="false" />
+          <Use />
+        </StatusEffect>
       </Throwable>
       <LightComponent LightColor="0.0,0.0,0.0,0.0" range="1" IsOn="false" castshadows="false">
         <StatusEffect type="OnUse" targettype="This" IsOn="true" comparison="AND">
@@ -437,8 +442,8 @@
           <Conditional HasTag="neq railgunammo" targetcontainer="true" />
           <Conditional HasTag="neq depthchargeammo" targetcontainer="true" />
           <Conditional IsOn="eq False" targetitemcomponent="LightComponent" />
-          <ParticleEmitter particle="grenpin" emitinterval="2.1" particleamount="1" particlespersecond="50" anglemin="70" anglemax="100" velocitymin="100" velocitymax="200" copyentityangle="true" scalemin="0.5" scalemax="0.5" />
-          <ParticleEmitter particle="grenlever" emitinterval="2.1" particleamount="1" particlespersecond="50" anglemin="120" anglemax="210" velocitymin="100" velocitymax="200" copyentityangle="true" scalemin="0.5" scalemax="0.5" />
+          <ParticleEmitter particle="grenadepin" emitinterval="2.1" particleamount="1" particlespersecond="50" anglemin="70" anglemax="100" velocitymin="100" velocitymax="200" copyentityangle="true" scalemin="0.5" scalemax="0.5" />
+          <ParticleEmitter particle="grenadelever" emitinterval="2.1" particleamount="1" particlespersecond="50" anglemin="120" anglemax="210" velocitymin="100" velocitymax="200" copyentityangle="true" scalemin="0.5" scalemax="0.5" />
           <Sound file="Content/Items/Weapons/pinpull.ogg" type="OnUse" range="720" />
         </StatusEffect>
         <StatusEffect type="OnActive" targettype="This" Condition="-0.32" disabledeltatime="true" stackable="true">
@@ -450,7 +455,8 @@
         <QualityStat stattype="ExplosionDamage" value="0.1" />
       </Quality>
     </Item>
-  <Item name="" identifier="40mmchemgrenade" category="Weapon" maxstacksize="8" interactthroughwalls="true" cargocontaineridentifier="metalcrate" tags="smallitem,grenade" Scale="0.5" impactsoundtag="impact_metal_light">
+
+  <Item name="" identifier="40mmchemgrenade" category="Weapon" maxstacksize="32" maxstacksizecharacterinventory="8" interactthroughwalls="true" cargocontaineridentifier="metalcrate" tags="smallitem,grenade" Scale="0.5" impactsoundtag="impact_metal_light">
     <PreferredContainer primary="grenadelauncher" amount="1" spawnprobability="0"/>
     <PreferredContainer secondary="wreckarmcab,abandonedarmcab" minamount="1" maxamount="2" spawnprobability="0"/>
     <PreferredContainer primary="secarmcab" secondary="armcab"/>
@@ -533,13 +539,17 @@
   </Item>
 
   <Item name="Acid Emitter" identifier="acidmistemitter" Scale="1" tags="gas" sonarsize="0" hideinmenus="true" health="3" depth="0.1" isdangerous="true" noninteractable="true">
-    <!--Use this for debugging: sourcerect="185,159,41,17"-->
+    <!-- Use this for debugging: sourcerect="185,159,41,17" -->
     <Sprite texture="Content/Items/Weapons/weapons_new.png" sourcerect="0,0,2,2" depth="0.55" origin="0.5,0.5" />
-    <!--Needs a body or doesn't stay inside the sub.-->
-    <Body width="38" height="15" bodytype="kinematic"/>
+    <!-- Without a body, the item wouldn't stay inside the sub, and could go through sub walls from the outside -->
+    <Body radius="50" bodytype="kinematic"/>
     <ItemComponent>
       <StatusEffect type="OnSpawn" target="This" duration="1">
-        <ParticleEmitter particle="acidmistgrenade" particlespersecond="3" scalemin="0.3" scalemax="0.4" anglemin="0" anglemax="360" copyentityangle="false"/>
+        <ParticleEmitter particle="acidmistgrenade" particlespersecond="3" scalemin="0.3" scalemax="0.4" anglemin="0" anglemax="360" velocity="0.1" copyentityangle="false"/>
+      </StatusEffect>
+      <!-- make the body dynamic outside subs, so subs don't get blocked by it -->
+      <StatusEffect type="InWater" target="This" BodyType="Dynamic">
+        <Conditional CurrentHull="eq null" />
       </StatusEffect>
       <StatusEffect type="Always" target="This" disabledeltatime="false" condition="-1">
         <Sound file="Content/Items/Tools/Sprayer.ogg" range="300" volume="0.1" loop="true"/>

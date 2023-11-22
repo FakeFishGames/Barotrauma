@@ -27,7 +27,7 @@
       <GuiFrame relativesize="0.4,0.4" anchor="CenterLeft" relativeoffset="0.006,-0.01" style="ItemUI" />
     </MiniMap>
   </Item>
-  <Item name="" identifier="repairpack" category="Equipment" maxstacksize="8" Tags="smallitem,tool,wrench,screwdriver" cargocontaineridentifier="metalcrate" allowasextracargo="true" Scale="0.5" impactsoundtag="impact_metal_light" addedrepairspeedmultiplier="1.5">
+  <Item name="" identifier="repairpack" category="Equipment" maxstacksize="32" maxstacksizecharacterinventory="8" Tags="smallitem,tool,wrench,screwdriver" cargocontaineridentifier="metalcrate" allowasextracargo="true" Scale="0.5" impactsoundtag="impact_metal_light" addedrepairspeedmultiplier="1.5">
     <PreferredContainer primary="engcab"/>
     <Price baseprice="43" sold="false">
       <Price storeidentifier="merchantoutpost" />
@@ -52,7 +52,7 @@
     </Holdable>
     <aitarget sightrange="500" soundrange="500" fadeouttime="1" />
   </Item>
-  <Item name="" identifier="portablepump" tags="smallitem" category="Machine" scale="0.5" damagedbyexplosions="true" explosiondamagemultiplier="0.2" allowasextracargo="true" impactsoundtag="impact_metal_heavy" isshootable="true">
+  <Item name="" identifier="portablepump" tags="smallitem,donttakeitems" category="Machine" scale="0.5" damagedbyexplosions="true" explosiondamagemultiplier="0.2" allowasextracargo="true" impactsoundtag="impact_metal_heavy" isshootable="true">
     <PreferredContainer primary="engcab"/>
     <Price baseprice="520" sold="false">
       <Price storeidentifier="merchantoutpost" multiplier="1.2" />
@@ -62,7 +62,7 @@
       <Price storeidentifier="merchantmine" multiplier="1.2" />
     </Price>
     <InventoryIcon texture="Content/Items/JobGear/TalentGear.png" sourcerect="0,312,58,56" origin="0.5,0.5" />
-    <Sprite texture="Content/Items/JobGear/TalentGear.png" depth="0.8" sourcerect="7,129,56,61" origin="0.5,0.5" />
+    <Sprite texture="Content/Items/JobGear/TalentGear.png" depth="0.81" sourcerect="7,129,56,61" origin="0.5,0.5" />
     <Body width="50" height="55" density="25" />
     <Fabricate suitablefabricators="fabricator" requiredtime="30" requiresrecipe="true">
       <RequiredSkill identifier="mechanical" level="50" />
@@ -269,7 +269,7 @@
       </StatusEffect>
     </MeleeWeapon>
   </Item>
-    <Item name="" identifier="fixfoamgrenade" category="Equipment" maxstacksize="8" cargocontaineridentifier="explosivecrate" allowasextracargo="true" tags="smallitem,weapon,explosive,demolitionsexpert" Scale="0.5" impactsoundtag="impact_metal_light">
+  <Item name="" identifier="fixfoamgrenade" category="Equipment" maxstacksize="32" maxstacksizecharacterinventory="8" cargocontaineridentifier="explosivecrate" allowasextracargo="true" tags="smallitem,weapon,explosive,demolitionsexpert" Scale="0.5" impactsoundtag="impact_metal_light">
       <PreferredContainer primary="engcab" secondary="locker" />
       <Price baseprice="95" sold="false">
         <Price storeidentifier="merchantoutpost" multiplier="1.1" />
@@ -311,6 +311,10 @@
           <Conditional HasTag="railgunammo" targetcontainer="true" />
           <Conditional HasTag="depthchargeammo" targetcontainer="true" />
         </StatusEffect>
+        <StatusEffect type="OnSecondaryUse" target="This" disabledeltatime="true" checkconditionalalways="true">
+          <Conditional IsOn="false" />
+          <Use />
+        </StatusEffect>
       </Throwable>
       <LightComponent LightColor="0.0,0.0,0.0,0.0" range="1" IsOn="false" castshadows="false">
         <StatusEffect type="OnUse" targettype="This" IsOn="true" comparison="AND">
@@ -318,8 +322,8 @@
           <Conditional HasTag="neq railgunammo" targetcontainer="true" />
           <Conditional HasTag="neq depthchargeammo" targetcontainer="true" />
           <Conditional IsOn="eq False" targetitemcomponent="LightComponent" />
-          <!-- No lever cause it has no lever-->
-          <ParticleEmitter particle="grenpin" emitinterval="2.1" particleamount="1" particlespersecond="50" anglemin="70" anglemax="100" velocitymin="100" velocitymax="200" copyentityangle="true" scalemin="0.5" scalemax="0.5" />
+          <!-- No lever cause it has no lever on the sprite-->
+          <ParticleEmitter particle="grenadepin" emitinterval="2.1" particleamount="1" particlespersecond="50" anglemin="70" anglemax="100" velocitymin="100" velocitymax="200" copyentityangle="true" scalemin="0.5" scalemax="0.5" />
           <Sound file="Content/Items/Weapons/pinpull.ogg" type="OnUse" range="720" />
         </StatusEffect>
         <!-- shorter fuze time -->
@@ -364,7 +368,7 @@
           <Sound file="Content/Items/Weapons/Smack1.ogg" selectionmode="random" range="500"/>
           <Sound file="Content/Items/Weapons/Smack2.ogg" range="500" />
         </StatusEffect>
-        <StatusEffect type="OnUse" target="This" >
+        <StatusEffect type="OnUse" target="Character" >
           <Conditional skillrequirement="true" mechanical="lt 40" />
           <Affliction identifier="stun" strength="0.3" />
         </StatusEffect>
@@ -420,6 +424,7 @@
       <sprite name="Makeshift Armor Left Leg" texture="Content/Items/Diving/MakeshiftArmor.png" limb="LeftLeg" hidelimb="true" inherittexturescale="true" hideotherwearables="true" inheritorigin="true" inheritsourcerect="true" />
       <sprite name="Makeshift Armor Left Shoe" texture="Content/Items/Diving/MakeshiftArmor.png" limb="LeftFoot" sound="footstep_armor_heavy" hidelimb="true" inherittexturescale="true" hideotherwearables="true" inheritorigin="true" inheritsourcerect="true" />
       <sprite name="Makeshift Armor Right Shoe" texture="Content/Items/Diving/MakeshiftArmor.png" limb="RightFoot" sound="footstep_armor_heavy" hidelimb="true" inherittexturescale="true" hideotherwearables="true" inheritorigin="true" inheritsourcerect="true" />
+      <StatValue stattype="FlowResistance" value="0.5" />
     </Wearable>
   </Item>
   <Item name="" identifier="ironhelmet" category="Equipment" tags="smallitem,clothing" cargocontaineridentifier="metalcrate" description="" impactsoundtag="impact_metal_heavy" scale="0.325">
@@ -453,7 +458,7 @@
   </Item>
 
   <!--TODO: change the priority to 2.5 when the bots can switch the batteries-->
-  <Item name="" identifier="exosuit" category="Diving,Equipment" tags="diving,deepdiving,deepdivinglarge,provocative" scale="0.605" fireproof="true" description="" isshootable="true" allowdroppingonswapwith="diving" impactsoundtag="impact_metal_heavy" botpriority="0.01">
+  <Item name="" identifier="exosuit" category="Diving,Equipment" tags="diving,deepdiving,deepdivinglarge,provocative" scale="0.605" fireproof="true" description="" isshootable="true" allowdroppingonswapwith="diving" impactsoundtag="impact_metal_heavy" botpriority="0.01" cargocontaineridentifier="">
     <Price baseprice="80" canbespecial="false" sold="false" />
     <Deconstruct time="30">
       <Item identifier="titaniumaluminiumalloy" />
@@ -479,7 +484,7 @@
       </sprite>
       <sprite name="Exosuit Right Hand" texture="Content/Items/Jobgear/Mechanic/Exosuit.png" limb="RightHand" hidelimb="true" inherittexturescale="true" hideotherwearables="true" inheritorigin="true" inheritsourcerect="false" inheritlimbdepth="true" SourceRect="383,160,64,48" />
       <sprite name="Exosuit Left Hand" texture="Content/Items/Jobgear/Mechanic/Exosuit.png" limb="LeftHand" hidelimb="true" inherittexturescale="true" hideotherwearables="true" inheritorigin="true" inheritsourcerect="false" SourceRect="447,160,64,48" />
-      <sprite name="Exosuit Right Upper Arm" texture="Content/Items/Jobgear/Mechanic/Exosuit.png" limb="RightArm" hidelimb="true" inherittexturescale="true" hideotherwearables="true" inheritorigin="true" inheritsourcerect="false" inheritlimbdepth="true" SourceRect="383,0,64,96" />
+      <sprite name="Exosuit Right Upper Arm" texture="Content/Items/Jobgear/Mechanic/Exosuit.png" limb="RightArm" depthlimb="Head" hidelimb="true" inherittexturescale="true" hideotherwearables="true" inheritorigin="true" inheritsourcerect="false" inheritlimbdepth="true" SourceRect="383,0,64,96" />
       <sprite name="Exosuit Left Upper Arm" texture="Content/Items/Jobgear/Mechanic/Exosuit.png" limb="LeftArm" hidelimb="true" inherittexturescale="true" hideotherwearables="true" inheritorigin="true" inheritsourcerect="false" SourceRect="447,0,64,96" />
       <sprite name="Exosuit Right Forearm" texture="Content/Items/Jobgear/Mechanic/Exosuit.png" limb="RightForearm" hidelimb="true" inherittexturescale="true" hideotherwearables="true" inheritorigin="true" inheritsourcerect="false" inheritlimbdepth="true" SourceRect="383,96,64,64" />
       <sprite name="Exosuit Left Forearm" texture="Content/Items/Jobgear/Mechanic/Exosuit.png" limb="LeftForearm" hidelimb="true" inherittexturescale="true" hideotherwearables="true" inheritorigin="true" inheritsourcerect="false" SourceRect="447,96,64,64"  />
@@ -554,7 +559,7 @@
           </StatusEffect>
         </Containable>
       </SubContainer>
-      <SubContainer capacity="10">
+      <SubContainer capacity="10" maxstacksize="32">
         <Containable items="smallitem" />
       </SubContainer>
     </ItemContainer>
@@ -610,7 +615,7 @@
       <RequiredSkill identifier="weapons" level="25" />
       <RequiredSkill identifier="mechanical" level="45" />
     </RangedWeapon>
-    <ItemContainer capacity="1" maxstacksize="8" slotsperrow="3" hideitems="true" containedstateindicatorslot="1" containedstateindicatorstyle="battery">
+    <ItemContainer capacity="1" maxstacksize="32" slotsperrow="3" hideitems="true" containedstateindicatorslot="1" containedstateindicatorstyle="battery">
       <Containable items="iron,scrap,steel" />
       <SlotIcon slotindex="1" texture="Content/UI/StatusMonitorUI.png" sourcerect="128,448,64,64" origin="0.5,0.5" />
       <SubContainer capacity="1"  maxstacksize="1">
@@ -678,19 +683,18 @@
       <Price storeidentifier="merchantarmory" sold="true" multiplier="0.9" minavailable="0" maxavailable="2"/>
     </Price>
     <Fabricate suitablefabricators="fabricator" requiredtime="25" requiresrecipe="true">
-      <RequiredItem identifier="magnesium" />
-      <RequiredItem identifier="lead" />
-      <RequiredItem identifier="steel" />
+      <RequiredItem tag="munition_propulsion" description="fabricationdescription.munition_propulsion" />
+      <RequiredItem tag="munition_core" description="fabricationdescription.munition_core" />
+      <RequiredItem tag="munition_jacket" description="fabricationdescription.munition_jacket" />
       <RequiredItem identifier="aluminium"/>
     </Fabricate>
     <Fabricate suitablefabricators="fabricator" requiredtime="15" requiresrecipe="true" displayname="recycleitem">
-      <RequiredItem identifier="magnesium" />
-      <RequiredItem identifier="lead" />
-      <RequiredItem identifier="defensebotammobox" mincondition="0.0" maxcondition="0.1" usecondition="false"/>
+      <RequiredItem tag="munition_propulsion" description="fabricationdescription.munition_propulsion" />
+      <RequiredItem tag="munition_core" description="fabricationdescription.munition_core" />
+      <RequiredItem tag="munition_jacket" description="fabricationdescription.munition_jacket" />
+      <RequiredItem tag="defensebotammo" mincondition="0.0" maxcondition="0.1" usecondition="false" description="entitydescription.defensebotammobox" header="fabricationheader.ammoboxrecycle" defaultitem="defensebotammobox" />
     </Fabricate>
     <Deconstruct time="10">
-      <Item identifier="lead" mincondition="0.95"/>
-      <Item identifier="steel" />
       <Item identifier="aluminium"/>
     </Deconstruct>
     <Sprite texture="Content/Characters/Defensebot/Defensebot.png" depth="0.54" sourcerect="135,189,115,58" origin="0.5,0.5" />
