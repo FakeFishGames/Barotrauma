@@ -1,6 +1,0 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<contentpackage name="Better Grenades R Edition" modversion="6.6.6" corepackage="False" gameversion="1.0.21.0">
-  <Item file="%ModDir%/grenades.xml" />
-  <Particles file="%ModDir%/ParticlePrefabs.xml" />
-  <Afflictions file="%ModDir%/Afflictions.xml" />
-</contentpackage>
