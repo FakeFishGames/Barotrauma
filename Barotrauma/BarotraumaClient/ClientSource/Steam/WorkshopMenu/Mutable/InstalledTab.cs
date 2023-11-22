@@ -142,6 +142,7 @@ namespace Barotrauma.Steam
                 {
                     frame.Parent.RemoveChild(frame);
                     frame.RectTransform.Parent = to.Content.RectTransform;
+                    frame.RectTransform.SetAsFirstChild();
                 }
                 from.RecalculateChildren();
                 from.RectTransform.RecalculateScale(true);
