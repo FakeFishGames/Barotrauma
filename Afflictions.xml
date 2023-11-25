@@ -2790,7 +2790,7 @@
     <AfflictionOverlay texture="Content/UI/blindoverlay.png" />
   </Affliction>
 
-  <Affliction name="Blinded" identifier="blind" description="" type="none" limbspecific="false" indicatorlimb="Head" maxstrength="30" damageoverlayalpha="1" showiconthreshold="1000" showicontoothersthreshold="1000">
+  <Affliction name="Blinded" identifier="blind" description="" type="none" limbspecific="false" indicatorlimb="Head" maxstrength="30" showiconthreshold="1000" showicontoothersthreshold="1000">
     <Effect minstrength="0" maxstrength="20" multiplybymaxvitality="true" strengthchange="-4" minvitalitydecrease="0" maxvitalitydecrease="0" MinAfflictionOverlayAlphaMultiplier="0.0" MaxAfflictionOverlayAlphaMultiplier="0.8" />
     <Effect minstrength="20" maxstrength="30" multiplybymaxvitality="true" strengthchange="-0.8" minvitalitydecrease="0" maxvitalitydecrease="0" MinAfflictionOverlayAlphaMultiplier="0.8" MaxAfflictionOverlayAlphaMultiplier="1" />
     <icon texture="Content/UI/MainIconsAtlas.png" sourcerect="128,768,128,128" color="195,136,60,255" origin="0,0" />
