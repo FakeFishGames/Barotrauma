@@ -2,7 +2,7 @@ namespace Barotrauma
 {
     partial class EventObjectiveAction : EventAction
     {
-        public enum SegmentActionType { Trigger, Add, Complete, CompleteAndRemove, Remove, Fail, FailAndRemove };
+        public enum SegmentActionType { Trigger, Add, AddIfNotFound, Complete, CompleteAndRemove, Remove, Fail, FailAndRemove };
 
         [Serialize(SegmentActionType.Trigger, IsPropertySaveable.Yes)]
         public SegmentActionType Type { get; set; }

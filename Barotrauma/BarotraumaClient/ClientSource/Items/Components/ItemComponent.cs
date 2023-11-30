@@ -260,6 +260,12 @@ namespace Barotrauma.Items.Components
             if (!hasSoundsOfType[(int)type]) { return; }
             if (GameMain.Client?.MidRoundSyncing ?? false) { return; }
 
+            //above the top boundary of the level (in an inactive respawn shuttle?)
+            if (item.Submarine != null && Level.Loaded != null && item.Submarine.WorldPosition.Y > Level.Loaded.Size.Y) 
+            {
+                return; 
+            }
+
             if (loopingSound != null)
             {
                 if (Vector3.DistanceSquared(GameMain.SoundManager.ListenerPosition, new Vector3(item.WorldPosition, 0.0f)) > loopingSound.Range * loopingSound.Range ||
@@ -388,18 +394,21 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public void StopSounds(ActionType type)
+        public void StopLoopingSound()
         {
             if (loopingSound == null) { return; }
-
-            if (loopingSound.Type != type) { return; }
-
             if (loopingSoundChannel != null)
             {
                 loopingSoundChannel.FadeOutAndDispose();
                 loopingSoundChannel = null;
                 loopingSound = null;
             }
+        }
+
+        public void StopSounds(ActionType type)
+        {
+            if (loopingSound == null || loopingSound.Type != type) { return; }
+            StopLoopingSound();
         }
 
         private float GetSoundVolume(ItemSound sound)
@@ -760,6 +769,8 @@ namespace Barotrauma.Items.Components
                 dragHandle.DragArea = HUDLayoutSettings.ItemHUDArea;
             }
         }
+
+        public virtual void OnPlayerSkillsChanged() { }
 
         public virtual void AddTooltipInfo(ref LocalizedString name, ref LocalizedString description) { }
     }

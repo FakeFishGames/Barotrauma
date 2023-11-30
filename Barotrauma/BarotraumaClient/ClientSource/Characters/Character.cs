@@ -136,6 +136,7 @@ namespace Barotrauma
             set
             {
                 if (!MathUtils.IsValid(value)) { return; }
+                if (this != Controlled) { return; }
                 if (Screen.Selected?.Cam != null)
                 {
                     Screen.Selected.Cam.Shake = value;
@@ -521,22 +522,25 @@ namespace Barotrauma
             if (controlled == this)
             {
                 controlled = null;
-                if (!(Screen.Selected?.Cam is null))
+                if (Screen.Selected?.Cam is not null)
                 {
                     Screen.Selected.Cam.TargetPos = Vector2.Zero;
                     Lights.LightManager.ViewTarget = null;
                 }
             }
 
+            sounds.ForEach(s => s.Sound?.Dispose());
+            sounds.Clear();
+
             if (GameMain.GameSession?.CrewManager != null &&
                 GameMain.GameSession.CrewManager.GetCharacters().Contains(this))
             {
                 GameMain.GameSession.CrewManager.RemoveCharacter(this);
             }
-            
-            if (GameMain.Client?.Character == this) GameMain.Client.Character = null;
 
-            if (Lights.LightManager.ViewTarget == this) Lights.LightManager.ViewTarget = null;
+            if (GameMain.Client?.Character == this) { GameMain.Client.Character = null; }
+
+            if (Lights.LightManager.ViewTarget == this) { Lights.LightManager.ViewTarget = null; }
         }
 
 

@@ -275,6 +275,15 @@ namespace Barotrauma.Items.Components
             }
         }
 
+        protected override void RemoveComponentSpecific()
+        {
+            if (PhysicsBody != null)
+            {
+                PhysicsBody.Remove();
+                PhysicsBody = null;
+            }
+        }
+
         public override void ReceiveSignal(Signal signal, Connection connection)
         {
             base.ReceiveSignal(signal, connection);

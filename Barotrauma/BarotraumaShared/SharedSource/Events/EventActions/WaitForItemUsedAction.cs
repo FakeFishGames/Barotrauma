@@ -30,10 +30,15 @@ namespace Barotrauma
         [Serialize("", IsPropertySaveable.Yes, description: "Tag to apply to the hull the target item is inside, and all the hulls it's linked to, when the item is used.")]
         public Identifier ApplyTagToLinkedHulls { get; set; }
 
+        [Serialize(1, IsPropertySaveable.Yes)]
+        public int RequiredUseCount { get; set; }
+
         private bool isFinished;
 
         private readonly HashSet<Entity> targets = new HashSet<Entity>();
         private readonly HashSet<ItemComponent> targetComponents = new HashSet<ItemComponent>();
+
+        private int useCount = 0;
 
         private Identifier onUseEventIdentifier;
         private Identifier OnUseEventIdentifier
@@ -58,6 +63,14 @@ namespace Barotrauma
 
         private void OnItemUsed(Item item, Character user)
         {
+            if (!UserTag.IsEmpty)
+            {
+                if (!ParentEvent.GetTargets(UserTag).Contains(user)) { return; }
+            }
+
+            useCount++;
+            if (useCount < RequiredUseCount) { return; }
+
             if (!ApplyTagToItem.IsEmpty)
             {
                 ParentEvent.AddTarget(ApplyTagToItem, item);
@@ -66,22 +79,7 @@ namespace Barotrauma
             {
                 ParentEvent.AddTarget(ApplyTagToUser, user);
             }
-            if (item.CurrentHull != null)
-            {
-                if (!ApplyTagToHull.IsEmpty)
-                {
-                    ParentEvent.AddTarget(ApplyTagToHull, item.CurrentHull);
-                }
-                if (!ApplyTagToLinkedHulls.IsEmpty)
-                {
-                    ParentEvent.AddTarget(ApplyTagToLinkedHulls, item.CurrentHull);
-                    foreach (var linkedHull in item.CurrentHull.GetLinkedEntities<Hull>())
-                    {
-                        ParentEvent.AddTarget(ApplyTagToLinkedHulls, linkedHull);
-                    }                   
-                }
-            }
-
+            ApplyTagsToHulls(item, ApplyTagToHull, ApplyTagToLinkedHulls);
             DeregisterTargets();
             isFinished = true;
         }
@@ -142,6 +140,7 @@ namespace Barotrauma
         public override void Reset()
         {
             isFinished = false;
+            useCount = 0;
             DeregisterTargets();
         }
 

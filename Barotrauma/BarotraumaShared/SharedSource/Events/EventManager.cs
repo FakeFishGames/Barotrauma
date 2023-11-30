@@ -412,6 +412,7 @@ namespace Barotrauma
             preloadedSprites.ForEach(s => s.Remove());
             preloadedSprites.Clear();
 
+            timeStamps.Clear();
 
             pathFinder = null;
         }
@@ -905,7 +906,18 @@ namespace Barotrauma
                 activeEvents.Add(QueuedEvents.Dequeue());
             }
         }
-                
+
+        public void EntitySpawned(Entity entity)
+        {
+            foreach (var ev in activeEvents)
+            {
+                if (ev is ScriptedEvent scriptedEvent)
+                {
+                    scriptedEvent.EntitySpawned(entity);
+                }
+            }
+        }
+
         private void CalculateCurrentIntensity(float deltaTime)
         {
             intensityUpdateTimer -= deltaTime;

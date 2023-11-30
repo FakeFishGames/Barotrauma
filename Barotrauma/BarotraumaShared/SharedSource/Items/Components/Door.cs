@@ -343,7 +343,12 @@ namespace Barotrauma.Items.Components
                 OnFailedToOpen();
                 return;
             }
-            toggleCooldownTimer = ToggleCoolDown;
+            if (ToggleWhenClicked)
+            {
+                //do not activate cooldown at this point if the door doesn't get toggled when clicked
+                //(i.e. if it just sends out a signal that might get passed back to the door and try to toggle it)
+                toggleCooldownTimer = ToggleCoolDown;
+            }
             if (IsStuck || IsJammed)
             {
 #if CLIENT
@@ -404,7 +409,7 @@ namespace Barotrauma.Items.Components
                     position.Y >= item.Rect.Y + Window.Y && 
                     position.Y <= item.Rect.Y + Window.Y + Window.Height &&
                     position.X >= item.Rect.X - maxPerpendicularDistance &&
-                    position.Y <= item.Rect.Right + maxPerpendicularDistance;
+                    position.X <= item.Rect.Right + maxPerpendicularDistance;
             }
         }
 

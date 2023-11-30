@@ -2127,11 +2127,10 @@ namespace Barotrauma
                 {
                     var dialog = new GUIMessageBox(
                         TextManager.Get("newsupplies"),
-                        TextManager.GetWithVariable("suppliespurchasedmessage", "[location]", campaignUI?.Campaign?.Map?.CurrentLocation?.Name));
+                        TextManager.GetWithVariable("suppliespurchasedmessage", "[location]", campaignUI?.Campaign?.Map?.CurrentLocation?.DisplayName));
                     dialog.Buttons[0].OnClicked += dialog.Close;
                 }
             }
-
             return false;
         }
 

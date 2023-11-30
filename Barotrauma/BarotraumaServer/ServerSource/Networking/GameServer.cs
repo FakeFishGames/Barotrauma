@@ -804,7 +804,7 @@ namespace Barotrauma.Networking
                         {
                             using (dosProtection.Pause(connectedClient))
                             {
-                                MultiPlayerCampaign.LoadCampaign(saveName);
+                                MultiPlayerCampaign.LoadCampaign(saveName, connectedClient);
                             }
                         }
                     }
@@ -1230,11 +1230,6 @@ namespace Barotrauma.Networking
                             }
 
                             c.LastRecvEntityEventID = lastRecvEntityEventID;
-                            #warning TODO: remove this later
-                            /*if (!CoroutineManager.IsCoroutineRunning("RoundRestartLoop"))
-                            {
-                                CoroutineManager.StartCoroutine(RoundRestartLoop(), "RoundRestartLoop");
-                            }*/
                         }
                         else if (lastRecvEntityEventID != c.LastRecvEntityEventID && GameSettings.CurrentConfig.VerboseLogging)
                         {
@@ -1484,7 +1479,7 @@ namespace Barotrauma.Networking
                             {
                                 using (dosProtection.Pause(sender))
                                 {
-                                    MultiPlayerCampaign.LoadCampaign(GameMain.GameSession.SavePath);
+                                    MultiPlayerCampaign.LoadCampaign(GameMain.GameSession.SavePath, sender);
                                 }
                             }
                         }
@@ -3945,7 +3940,6 @@ namespace Barotrauma.Networking
                 if (remainingJobs.None())
                 {
                     DebugConsole.ThrowError("Failed to assign a suitable job for bot \"" + c.Name + "\" (all jobs already have the maximum numbers of players). Assigning a random job...");
-                    #warning TODO: is this randsync correct?
                     c.Job = Job.Random(Rand.RandSync.ServerAndClient);
                     assignedPlayerCount[c.Job.Prefab]++;
                 }

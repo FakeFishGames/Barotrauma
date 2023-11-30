@@ -558,8 +558,8 @@ namespace Barotrauma
             if (availableTransition == TransitionType.None)
             {
                 DebugConsole.ThrowError("Failed to load a new campaign level. No available level transitions " +
-                    "(current location: " + (map.CurrentLocation?.Name ?? "null") + ", " +
-                    "selected location: " + (map.SelectedLocation?.Name ?? "null") + ", " +
+                    "(current location: " + (map.CurrentLocation?.DisplayName ?? "null") + ", " +
+                    "selected location: " + (map.SelectedLocation?.DisplayName ?? "null") + ", " +
                     "leaving sub: " + (leavingSub?.Info?.Name ?? "null") + ", " +
                     "at start: " + (leavingSub?.AtStartExit.ToString() ?? "null") + ", " +
                     "at end: " + (leavingSub?.AtEndExit.ToString() ?? "null") + ")\n" +
@@ -570,8 +570,8 @@ namespace Barotrauma
             {
                 DebugConsole.ThrowError("Failed to load a new campaign level. No available level transitions " +
                     "(transition type: " + availableTransition + ", " +
-                    "current location: " + (map.CurrentLocation?.Name ?? "null") + ", " +
-                    "selected location: " + (map.SelectedLocation?.Name ?? "null") + ", " +
+                    "current location: " + (map.CurrentLocation?.DisplayName ?? "null") + ", " +
+                    "selected location: " + (map.SelectedLocation?.DisplayName ?? "null") + ", " +
                     "leaving sub: " + (leavingSub?.Info?.Name ?? "null") + ", " +
                     "at start: " + (leavingSub?.AtStartExit.ToString() ?? "null") + ", " +
                     "at end: " + (leavingSub?.AtEndExit.ToString() ?? "null") + ")\n" +
@@ -582,8 +582,8 @@ namespace Barotrauma
             ShowCampaignUI = ForceMapUI = false;
 #endif
             DebugConsole.NewMessage("Transitioning to " + (nextLevel?.Seed ?? "null") +
-                " (current location: " + (map.CurrentLocation?.Name ?? "null") + ", " +
-                "selected location: " + (map.SelectedLocation?.Name ?? "null") + ", " +
+                " (current location: " + (map.CurrentLocation?.DisplayName ?? "null") + ", " +
+                "selected location: " + (map.SelectedLocation?.DisplayName ?? "null") + ", " +
                 "leaving sub: " + (leavingSub?.Info?.Name ?? "null") + ", " +
                 "at start: " + (leavingSub?.AtStartExit.ToString() ?? "null") + ", " +
                 "at end: " + (leavingSub?.AtEndExit.ToString() ?? "null") + ", " +
@@ -1024,7 +1024,7 @@ namespace Barotrauma
             return ToolBox.SelectWeightedRandom(factionsList, weights, random);
         }
 
-        public bool TryHireCharacter(Location location, CharacterInfo characterInfo, Client client = null)
+        public bool TryHireCharacter(Location location, CharacterInfo characterInfo, Character hirer, Client client = null)
         {
             if (characterInfo == null) { return false; }
             if (characterInfo.MinReputationToHire.factionId != Identifier.Empty)
@@ -1034,7 +1034,8 @@ namespace Barotrauma
                     return false;
                 }
             }
-            if (!TryPurchase(client, characterInfo.Salary)) { return false; }
+
+            if (!TryPurchase(client, HireManager.GetSalaryFor(characterInfo))) { return false; }
             characterInfo.IsNewHire = true;
             characterInfo.Title = null;
             location.RemoveHireableCharacter(characterInfo);
@@ -1263,7 +1264,7 @@ namespace Barotrauma
         {
             DebugConsole.NewMessage("********* CAMPAIGN STATUS *********", Color.White);
             DebugConsole.NewMessage("   Money: " + Bank.Balance, Color.White);
-            DebugConsole.NewMessage("   Current location: " + map.CurrentLocation.Name, Color.White);
+            DebugConsole.NewMessage("   Current location: " + map.CurrentLocation.DisplayName, Color.White);
 
             DebugConsole.NewMessage("   Available destinations: ", Color.White);
             for (int i = 0; i < map.CurrentLocation.Connections.Count; i++)
@@ -1271,11 +1272,11 @@ namespace Barotrauma
                 Location destination = map.CurrentLocation.Connections[i].OtherLocation(map.CurrentLocation);
                 if (destination == map.SelectedLocation)
                 {
-                    DebugConsole.NewMessage("     " + i + ". " + destination.Name + " [SELECTED]", Color.White);
+                    DebugConsole.NewMessage("     " + i + ". " + destination.DisplayName + " [SELECTED]", Color.White);
                 }
                 else
                 {
-                    DebugConsole.NewMessage("     " + i + ". " + destination.Name, Color.White);
+                    DebugConsole.NewMessage("     " + i + ". " + destination.DisplayName, Color.White);
                 }
             }
 
@@ -1307,7 +1308,7 @@ namespace Barotrauma
             {
                 if (NumberOfMissionsAtLocation(location) > Settings.TotalMaxMissionCount)
                 {
-                    DebugConsole.AddWarning($"Client {sender.Name} had too many missions selected for location {location.Name}! Count was {NumberOfMissionsAtLocation(location)}. Deselecting extra missions.");
+                    DebugConsole.AddWarning($"Client {sender.Name} had too many missions selected for location {location.DisplayName}! Count was {NumberOfMissionsAtLocation(location)}. Deselecting extra missions.");
                     foreach (Mission mission in currentLocation.SelectedMissions.Where(m => m.Locations[1] == location).Skip(Settings.TotalMaxMissionCount).ToList())
                     {
                         currentLocation.DeselectMission(mission);

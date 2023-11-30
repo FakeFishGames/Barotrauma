@@ -120,28 +120,41 @@ namespace Barotrauma
             SaveUtil.SaveGame(GameMain.GameSession.SavePath);
 
             DebugConsole.NewMessage("Campaign started!", Color.Cyan);
-            DebugConsole.NewMessage("Current location: " + GameMain.GameSession.Map.CurrentLocation.Name, Color.Cyan);
+            DebugConsole.NewMessage("Current location: " + GameMain.GameSession.Map.CurrentLocation.DisplayName, Color.Cyan);
             ((MultiPlayerCampaign)GameMain.GameSession.GameMode).LoadInitialLevel();
         }
 
-        public static void LoadCampaign(string selectedSave)
+        public static void LoadCampaign(string selectedSave, Client client)
         {
             GameMain.NetLobbyScreen.ToggleCampaignMode(true);
-            SaveUtil.LoadGame(selectedSave);
-            if (GameMain.GameSession.GameMode is MultiPlayerCampaign mpCampaign)
+            try
             {
-                mpCampaign.LastSaveID++;
+                SaveUtil.LoadGame(selectedSave);
+                if (GameMain.GameSession.GameMode is MultiPlayerCampaign mpCampaign)
+                {
+                    mpCampaign.LastSaveID++;
+                }
+                else
+                {
+                    DebugConsole.ThrowError("Failed to load a campaign. Unexpected game mode: " + GameMain.GameSession.GameMode ?? "none");
+                    return;
+                }
             }
-            else
+            catch (Exception e)
             {
-                DebugConsole.ThrowError("Unexpected game mode: " + GameMain.GameSession.GameMode);
+                string errorMsg = $"Error while loading the save {selectedSave}";
+                if (client != null)
+                {
+                    GameMain.Server?.SendDirectChatMessage($"{errorMsg}: {e.Message}\n{e.StackTrace}", client, ChatMessageType.Error);
+                }
+                DebugConsole.ThrowError(errorMsg, e);
                 return;
             }
             DebugConsole.NewMessage("Campaign loaded!", Color.Cyan);
             DebugConsole.NewMessage(
                 GameMain.GameSession.Map.SelectedLocation == null ?
-                GameMain.GameSession.Map.CurrentLocation.Name :
-                GameMain.GameSession.Map.CurrentLocation.Name + " -> " + GameMain.GameSession.Map.SelectedLocation.Name, Color.Cyan);
+                GameMain.GameSession.Map.CurrentLocation.DisplayName :
+                GameMain.GameSession.Map.CurrentLocation.DisplayName + " -> " + GameMain.GameSession.Map.SelectedLocation.DisplayName, Color.Cyan);
         }
 
         protected override void LoadInitialLevel()
@@ -188,7 +201,14 @@ namespace Barotrauma
                         }
                         else
                         {
-                            LoadCampaign(saveFiles[saveIndex].FilePath);
+                            try
+                            {
+                                LoadCampaign(saveFiles[saveIndex].FilePath, client: null);
+                            }
+                            catch (Exception ex)
+                            {
+                                DebugConsole.ThrowError("Failed to load the campaign.", ex);
+                            }
                         }
                     });
                 }
@@ -377,7 +397,7 @@ namespace Barotrauma
             {
                 PendingSubmarineSwitch = null;
                 GameMain.Server.EndGame(TransitionType.None, wasSaved: false);
-                LoadCampaign(GameMain.GameSession.SavePath);
+                LoadCampaign(GameMain.GameSession.SavePath, client: null);
                 LastSaveID++;
                 IncrementAllLastUpdateIds();
                 yield return CoroutineStatus.Success;
@@ -1231,13 +1251,13 @@ namespace Barotrauma
                     {
                         foreach (CharacterInfo hireInfo in location.HireManager.PendingHires)
                         {
-                            if (TryHireCharacter(location, hireInfo, sender))
+                            if (TryHireCharacter(location, hireInfo, sender.Character, sender))
                             {
                                 hiredCharacters.Add(hireInfo);
-                            };
+                            }
                         }
                     }
-                    
+
                     if (updatePending)
                     {
                         List<CharacterInfo> pendingHireInfos = new List<CharacterInfo>();

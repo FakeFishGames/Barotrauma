@@ -559,6 +559,7 @@ namespace Barotrauma.Items.Components
             foreach (WearableSprite wearableSprite in wearableSprites)
             {
                 wearableSprite?.Sprite?.Remove();
+                wearableSprite.Picker = null;
             }
         }
 

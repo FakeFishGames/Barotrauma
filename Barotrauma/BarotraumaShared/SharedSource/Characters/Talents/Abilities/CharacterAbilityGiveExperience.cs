@@ -38,7 +38,11 @@ internal sealed class CharacterAbilityGiveExperience : CharacterAbility
 
     protected override void ApplyEffect(AbilityObject abilityObject)
     {
-        if ((abilityObject as IAbilityCharacter)?.Character is { } targetCharacter)
+        if (abilityObject is AbilityCharacterKill { Killer: { } killer })
+        {
+            ApplyEffectSpecific(killer);
+        }
+        else if ((abilityObject as IAbilityCharacter)?.Character is { } targetCharacter)
         {
             ApplyEffectSpecific(targetCharacter);
         }

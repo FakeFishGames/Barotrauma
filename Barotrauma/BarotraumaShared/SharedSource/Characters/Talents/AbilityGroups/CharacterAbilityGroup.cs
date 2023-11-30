@@ -44,8 +44,12 @@ namespace Barotrauma.Abilities
                     case "fallbackabilities":
                         LoadFallbackAbilities(subElement);
                         break;
+                    case "condition":
                     case "conditions":
                         LoadConditions(subElement);
+                        break;
+                    default:
+                        DebugConsole.ThrowError($"Error in talent {characterTalent.Prefab.Identifier}: unrecognized xml element \"{subElement.Name}\".");
                         break;
                 }
             }

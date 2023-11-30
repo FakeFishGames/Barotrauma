@@ -2,15 +2,13 @@
 
 namespace Barotrauma.Abilities
 {
-    internal sealed class AbilityConditionCharacterUnconcious : AbilityConditionData
+    internal sealed class AbilityConditionCharacterUnconcious : AbilityConditionCharacter
     {
         public AbilityConditionCharacterUnconcious(CharacterTalent characterTalent, ContentXElement conditionElement) : base(characterTalent, conditionElement) { }
 
-        protected override bool MatchesConditionSpecific(AbilityObject abilityObject)
+        protected override bool MatchesCharacter(Character character)
         {
-            if (abilityObject is not IAbilityCharacter targetCharacter) { return false; }
-
-            return targetCharacter.Character.IsUnconscious;
+            return character is { IsUnconscious: true };
         }
     }
 }

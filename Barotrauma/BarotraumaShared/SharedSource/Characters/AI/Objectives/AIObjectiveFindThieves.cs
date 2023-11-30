@@ -114,7 +114,7 @@ namespace Barotrauma
                 if (!IsValidTarget(target, character)) { continue; }
                 //if we spot someone wearing or holding stolen items, immediately check them (with 100% chance of spotting the stolen items)
                 if (target.Inventory.AllItems.Any(it => it.SpawnedInCurrentOutpost && !it.AllowStealing && target.HasEquippedItem(it)) &&
-                    character.CanSeeTarget(target))
+                    character.CanSeeTarget(target, seeThroughWindows: true))
                 {
                     AIObjectiveCheckStolenItems? existingObjective = 
                         objectiveManager.GetActiveObjectives<AIObjectiveCheckStolenItems>().FirstOrDefault(o => o.TargetCharacter == target);

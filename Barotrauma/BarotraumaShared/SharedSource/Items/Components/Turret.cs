@@ -61,6 +61,22 @@ namespace Barotrauma.Items.Components
         private const float CrewAiFindTargetMaxInterval = 1.0f;
         private const float CrewAIFindTargetMinInverval = 0.2f;
 
+        /// <summary>
+        /// Bots consider the projectile to move at least this fast when calculating how far ahead a moving target they need to aim.
+        /// Aiming ahead doesn't work reliably with very slow projectiles, because we'd need to take into account drag and gravity, 
+        /// and the target would most likely move in a different direction anyway before the projectile reaches it.
+        /// </summary>
+        private const float MinimumProjectileVelocityForAimAhead = 20.0f;
+
+        /// <summary>
+        /// Bots don't try to aim ahead a moving target by more than this amount. If the target is very fast and/or the projectile very slow,
+        /// we'd need to aim so far ahead it'd most likely fail anyway.
+        /// </summary>
+        private const float MaximumAimAhead = 10.0f;
+
+        private float projectileSpeed;
+        private Item previousAmmo;
+
         private int currentLoaderIndex;
 
         private const float TinkeringPowerCostReduction = 0.2f;
@@ -563,8 +579,9 @@ namespace Barotrauma.Items.Components
             // Do not increase the weapons skill when operating a turret in an outpost level
             if (user?.Info != null && (GameMain.GameSession?.Campaign == null || !Level.IsLoadedFriendlyOutpost))
             {
-                user.Info.IncreaseSkillLevel("weapons".ToIdentifier(),
-                    SkillSettings.Current.SkillIncreasePerSecondWhenOperatingTurret * deltaTime / Math.Max(user.GetSkillLevel("weapons"), 1.0f));
+                user.Info.ApplySkillGain(
+                    Tags.WeaponsSkill,
+                    SkillSettings.Current.SkillIncreasePerSecondWhenOperatingTurret * deltaTime);
             }
 
             float rotMidDiff = MathHelper.WrapAngle(rotation - (minRotation + maxRotation) / 2.0f);
@@ -664,6 +681,11 @@ namespace Barotrauma.Items.Components
             return GetAvailableInstantaneousBatteryPower() >= GetPowerRequiredToShoot();
         }
 
+        private Vector2 GetBarrelDir()
+        {
+            return new Vector2((float)Math.Cos(rotation), -(float)Math.Sin(rotation));
+        }
+
         private bool TryLaunch(float deltaTime, Character character = null, bool ignorePower = false)
         {
             tryingToCharge = true;
@@ -709,7 +731,8 @@ namespace Barotrauma.Items.Components
                     ItemContainer projectileContainer = projectiles.First().Item.Container?.GetComponent<ItemContainer>();
                     if (projectileContainer != null && projectileContainer.Item != item)
                     {
-                        projectileContainer?.Item.Use(deltaTime);
+                        //user needs to be null because the ammo boxes shouldn't be directly usable by characters
+                        projectileContainer?.Item.Use(deltaTime, user: null, userForOnUsedEvent: user);
                     }
                 }
                 else
@@ -735,7 +758,7 @@ namespace Barotrauma.Items.Components
                         ItemContainer projectileContainer = containerItem.GetComponent<ItemContainer>();
                         if (projectileContainer != null)
                         {
-                            containerItem.Use(deltaTime);
+                            containerItem.Use(deltaTime, user: null, userForOnUsedEvent: user);
                             projectiles = GetLoadedProjectiles();
                             if (projectiles.Any()) { return true; }                            
                         }
@@ -930,6 +953,7 @@ namespace Barotrauma.Items.Components
                 Projectile projectileComponent = projectile.GetComponent<Projectile>();
                 if (projectileComponent != null)
                 {
+                    TryDetermineProjectileSpeed(projectileComponent);
                     projectileComponent.Launcher = item;
                     projectileComponent.Attacker = projectileComponent.User = user;
                     if (projectileComponent.Attack != null)
@@ -958,6 +982,16 @@ namespace Barotrauma.Items.Components
 
             ApplyStatusEffects(ActionType.OnUse, 1.0f, user: user);
             LaunchProjSpecific();
+        }
+
+        private void TryDetermineProjectileSpeed(Projectile projectile)
+        {
+            if (projectile != null && !projectile.Hitscan)
+            {
+                projectileSpeed =
+                    ConvertUnits.ToDisplayUnits(
+                        MathHelper.Clamp((projectile.LaunchImpulse + LaunchImpulse) / projectile.Item.body.Mass, MinimumProjectileVelocityForAimAhead, NetConfig.MaxPhysicsBodyVelocity));
+            }
         }
 
         partial void LaunchProjSpecific();
@@ -1143,7 +1177,7 @@ namespace Barotrauma.Items.Components
 
             if (target is Hull targetHull)
             {
-                Vector2 barrelDir = new Vector2((float)Math.Cos(rotation), -(float)Math.Sin(rotation));
+                Vector2 barrelDir = GetBarrelDir();
                 if (!MathUtils.GetLineRectangleIntersection(item.WorldPosition, item.WorldPosition + barrelDir * AIRange, targetHull.WorldRect, out _))
                 {
                     return;
@@ -1244,8 +1278,24 @@ namespace Barotrauma.Items.Components
                     if (container != null)
                     {
                         maxProjectileCount += container.Capacity;
-                        int projectiles = projectileContainer.ContainedItems.Count(it => it.Condition > 0.0f);
-                        usableProjectileCount += projectiles;   
+                        var projectiles = projectileContainer.ContainedItems.Where(it => it.Condition > 0.0f);
+                        var firstProjectile = projectiles.FirstOrDefault();
+
+                        if (firstProjectile?.Prefab != previousAmmo?.Prefab)
+                        {
+                            //assume the projectiles are infinitely fast (no aiming ahead of the target) if we can't find projectiles to calculate the speed based on,
+                            //and if the projectile type isn't the same as before
+                            projectileSpeed = float.PositiveInfinity;
+                        }
+                        previousAmmo = firstProjectile;
+                        if (projectiles.Any())
+                        {
+                            var projectile =
+                                firstProjectile.GetComponent<Projectile>() ??
+                                firstProjectile.ContainedItems.FirstOrDefault()?.GetComponent<Projectile>();
+                            TryDetermineProjectileSpeed(projectile);
+                            usableProjectileCount += projectiles.Count();
+                        }
                     }                 
                 }
             }
@@ -1409,6 +1459,7 @@ namespace Barotrauma.Items.Components
                 targetPos = currentTarget.WorldPosition;
             }
             bool iceSpireSpotted = false;
+            Vector2 targetVelocity = Vector2.Zero;
             // Adjust the target character position (limb or submarine)
             if (currentTarget is Character targetCharacter)
             {
@@ -1424,20 +1475,39 @@ namespace Barotrauma.Items.Components
                 else
                 {
                     // Target the closest limb. Doesn't make much difference with smaller creatures, but enables the bots to shoot longer abyss creatures like the endworm. Otherwise they just target the main body = head.
-                    float closestDist = closestDistance;
+                    float closestDistSqr = closestDistance;
                     foreach (Limb limb in targetCharacter.AnimController.Limbs)
                     {
                         if (limb.IsSevered) { continue; }
                         if (limb.Hidden) { continue; }
                         if (!IsWithinAimingRadius(limb.WorldPosition)) { continue; }
-                        float dist = Vector2.DistanceSquared(limb.WorldPosition, item.WorldPosition);
-                        if (dist < closestDist)
+                        float distSqr = Vector2.DistanceSquared(limb.WorldPosition, item.WorldPosition);
+                        if (distSqr < closestDistSqr)
                         {
-                            closestDist = dist;
+                            closestDistSqr = distSqr;
+                            if (limb == targetCharacter.AnimController.MainLimb)
+                            {
+                                //prefer main limb (usually a much better target than the extremities that are often the closest limbs)
+                                closestDistSqr *= 0.5f;
+                            }
                             targetPos = limb.WorldPosition;
                         }
                     }
-                    if (closestDist > shootDistance * shootDistance)
+                    if (projectileSpeed < float.PositiveInfinity && targetPos.HasValue)
+                    {
+                        //lead the target (aim where the target will be in the future)
+                        float dist = MathF.Sqrt(closestDistSqr);
+                        float projectileMovementTime = dist / projectileSpeed;
+
+                        targetVelocity = targetCharacter.AnimController.Collider.LinearVelocity;
+                        Vector2 movementAmount = targetVelocity * projectileMovementTime;
+                        //don't try to compensate more than 10 meters - if the target is so fast or the projectile so slow we need to go beyond that,
+                        //it'd most likely fail anyway
+                        movementAmount = ConvertUnits.ToDisplayUnits(movementAmount.ClampLength(MaximumAimAhead));
+                        Vector2 futurePosition = targetPos.Value + movementAmount;
+                        targetPos = Vector2.Lerp(targetPos.Value, futurePosition, DegreeOfSuccess(character));
+                    }
+                    if (closestDistSqr > shootDistance * shootDistance)
                     {
                         aiFindTargetTimer = CrewAIFindTargetMinInverval;
                         ResetTarget();
@@ -1512,7 +1582,9 @@ namespace Barotrauma.Items.Components
             if (targetPos == null) { return false; }
             // Force the highest priority so that we don't change the objective while targeting enemies.
             objective.ForceHighestPriority = true;
-
+#if CLIENT
+            debugDrawTargetPos = targetPos.Value;
+#endif
             if (closestEnemy != null && character.AIController.SelectedAiTarget != closestEnemy.AiTarget)
             {
                 if (character.IsOnPlayerTeam)
@@ -1563,8 +1635,28 @@ namespace Barotrauma.Items.Components
             
             if (IsPointingTowards(targetPos.Value))
             {
-                Vector2 start = ConvertUnits.ToSimUnits(item.WorldPosition);
-                Vector2 end = ConvertUnits.ToSimUnits(targetPos.Value);
+                Vector2 barrelDir = GetBarrelDir();
+                Vector2 aimStartPos = item.WorldPosition;
+                Vector2 aimEndPos = item.WorldPosition + barrelDir * shootDistance;
+                bool allowShootingIfNothingInWay = false;
+                if (currentTarget != null)
+                {
+                    Vector2 targetStartPos = currentTarget.WorldPosition;
+                    Vector2 targetEndPos = currentTarget.WorldPosition + targetVelocity * ConvertUnits.ToDisplayUnits(MaximumAimAhead);
+
+                    //if there's nothing in the way (not even the target we're trying to aim towards),
+                    //shooting should only be allowed if we're aiming ahead of the target, in which case it's to be expected that we're aiming at "thin air"
+                    allowShootingIfNothingInWay =
+                        targetVelocity.LengthSquared() > 0.001f &&
+                        MathUtils.LineSegmentsIntersect(
+                           aimStartPos, aimEndPos,
+                           targetStartPos, targetEndPos) &&
+                        //target needs to be moving roughly perpendicular to us for aiming ahead of it to make sense
+                        Math.Abs(Vector2.Dot(Vector2.Normalize(aimEndPos - aimStartPos), Vector2.Normalize(targetEndPos - targetStartPos))) < 0.5f;
+                }
+
+                Vector2 start = ConvertUnits.ToSimUnits(aimStartPos);
+                Vector2 end = ConvertUnits.ToSimUnits(aimEndPos);
                 // Check that there's not other entities that shouldn't be targeted (like a friendly sub) between us and the target.
                 Body worldTarget = CheckLineOfSight(start, end);
                 if (closestEnemy != null && closestEnemy.Submarine != null)
@@ -1572,11 +1664,13 @@ namespace Barotrauma.Items.Components
                     start -= closestEnemy.Submarine.SimPosition;
                     end -= closestEnemy.Submarine.SimPosition;
                     Body transformedTarget = CheckLineOfSight(start, end);
-                    canShoot = CanShoot(transformedTarget, character) && (worldTarget == null || CanShoot(worldTarget, character));
+                    canShoot =
+                        CanShoot(transformedTarget, character, allowShootingIfNothingInWay: allowShootingIfNothingInWay) &&
+                        (worldTarget == null || CanShoot(worldTarget, character, allowShootingIfNothingInWay: allowShootingIfNothingInWay));
                 }
                 else
                 {
-                    canShoot = CanShoot(worldTarget, character);
+                    canShoot = CanShoot(worldTarget, character, allowShootingIfNothingInWay: allowShootingIfNothingInWay);
                 }
                 if (!canShoot) { return false; }
                 if (character.IsOnPlayerTeam)
@@ -1666,9 +1760,13 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        private bool CanShoot(Body targetBody, Character user = null, Identifier friendlyTag = default, bool targetSubmarines = true)
+        private bool CanShoot(Body targetBody, Character user = null, Identifier friendlyTag = default, bool targetSubmarines = true, bool allowShootingIfNothingInWay = false)
         {
-            if (targetBody == null) { return false; }
+            if (targetBody == null) 
+            {
+                //nothing in the way (not even the target we're trying to shoot) -> no point in firing at thin air
+                return allowShootingIfNothingInWay; 
+            }
             Character targetCharacter = null;
             if (targetBody.UserData is Character c)
             {

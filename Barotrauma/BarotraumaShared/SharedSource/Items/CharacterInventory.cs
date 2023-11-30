@@ -151,6 +151,19 @@ namespace Barotrauma
 
         partial void InitProjSpecific(XElement element);
 
+        public Item FindEquippedItemByTag(Identifier tag)
+        {
+            if (tag.IsEmpty) { return null; }
+            for (int i = 0; i < slots.Length; i++)
+            {
+                if (SlotTypes[i] == InvSlotType.Any) { continue; }
+
+                var item = slots[i].FirstOrDefault();
+                if (item != null && item.HasTag(tag)) { return item; }
+            }
+            return null;
+        }
+
         public int FindLimbSlot(InvSlotType limbSlot)
         {
             for (int i = 0; i < slots.Length; i++)

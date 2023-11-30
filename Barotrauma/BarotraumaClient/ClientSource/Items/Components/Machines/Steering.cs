@@ -216,7 +216,7 @@ namespace Barotrauma.Items.Components
                 }
             };
             levelStartTickBox = new GUITickBox(new RectTransform(new Vector2(1, 0.333f), paddedAutoPilotControls.RectTransform, Anchor.Center),
-                GameMain.GameSession?.StartLocation == null ? "" : ToolBox.LimitString(GameMain.GameSession.StartLocation.Name, GUIStyle.SmallFont, textLimit),
+                GameMain.GameSession?.StartLocation == null ? "" : ToolBox.LimitString(GameMain.GameSession.StartLocation.DisplayName, GUIStyle.SmallFont, textLimit),
                 font: GUIStyle.SmallFont, style: "GUIRadioButton")
             {
                 Enabled = autoPilot,
@@ -243,7 +243,7 @@ namespace Barotrauma.Items.Components
             };
 
             levelEndTickBox = new GUITickBox(new RectTransform(new Vector2(1, 0.333f), paddedAutoPilotControls.RectTransform, Anchor.BottomCenter),
-                (GameMain.GameSession?.EndLocation == null || Level.IsLoadedOutpost) ? "" : ToolBox.LimitString(GameMain.GameSession.EndLocation.Name, GUIStyle.SmallFont, textLimit),
+                (GameMain.GameSession?.EndLocation == null || Level.IsLoadedOutpost) ? "" : ToolBox.LimitString(GameMain.GameSession.EndLocation.DisplayName, GUIStyle.SmallFont, textLimit),
                 font: GUIStyle.SmallFont, style: "GUIRadioButton")
             {
                 Enabled = autoPilot,
@@ -389,7 +389,7 @@ namespace Barotrauma.Items.Components
                             if (!ObjectiveManager.AllActiveObjectivesCompleted())
                             {
                                 exitOutpostPrompt = new GUIMessageBox("",
-                                    TextManager.GetWithVariable("CampaignExitTutorialOutpostPrompt", "[locationname]", campaign.Map.CurrentLocation.Name),
+                                    TextManager.GetWithVariable("CampaignExitTutorialOutpostPrompt", "[locationname]", campaign.Map.CurrentLocation.DisplayName),
                                     new LocalizedString[] { TextManager.Get("yes"), TextManager.Get("no") });
                                 exitOutpostPrompt.Buttons[0].OnClicked += (_, _) =>
                                 {
@@ -509,9 +509,9 @@ namespace Barotrauma.Items.Components
             noPowerTip = TextManager.Get("SteeringNoPowerTip");
             autoPilotMaintainPosTip = TextManager.Get("SteeringAutoPilotMaintainPosTip");
             autoPilotLevelStartTip = TextManager.GetWithVariable("SteeringAutoPilotLocationTip", "[locationname]",
-                GameMain.GameSession?.StartLocation == null ? "Start" : GameMain.GameSession.StartLocation.Name);
+                GameMain.GameSession?.StartLocation == null ? "Start" : GameMain.GameSession.StartLocation.DisplayName);
             autoPilotLevelEndTip = TextManager.GetWithVariable("SteeringAutoPilotLocationTip", "[locationname]",
-                GameMain.GameSession?.EndLocation == null ? "End" : GameMain.GameSession.EndLocation.Name);
+                GameMain.GameSession?.EndLocation == null ? "End" : GameMain.GameSession.EndLocation.DisplayName);
         }
 
         protected override void OnResolutionChanged()

@@ -1134,7 +1134,12 @@ namespace Barotrauma
                 createMessage("Traitors:");
                 foreach (var ev in traitorManager.ActiveEvents)
                 {
-                    createMessage($" - {ev.Traitor.Name}: {ev.TraitorEvent.Prefab.Identifier} ({ev.TraitorEvent.CurrentState})");
+                    string msg = $" - {ev.TraitorEvent.Prefab.Identifier} ({ev.TraitorEvent.CurrentState}): {ev.Traitor.Name}";
+                    if (ev.TraitorEvent.SecondaryTraitors.Any())
+                    {
+                        msg += $" secondary traitors: {string.Join(", ", ev.TraitorEvent.SecondaryTraitors.Select(t => t.Name))}";
+                    }
+                    createMessage(msg);
                 }
             }
 
@@ -1416,7 +1421,7 @@ namespace Barotrauma
                 if (GameMain.GameSession?.GameMode is MultiPlayerCampaign mpCampaign && 
                     GameMain.NetLobbyScreen.SelectedMode == GameModePreset.MultiPlayerCampaign)
                 {
-                    MultiPlayerCampaign.LoadCampaign(GameMain.GameSession.SavePath);
+                    MultiPlayerCampaign.LoadCampaign(GameMain.GameSession.SavePath, client: null);
                 }
                 else
                 {
@@ -1461,7 +1466,7 @@ namespace Barotrauma
                     return;
                 }
 
-                var location = GameMain.GameSession.Campaign.Map.Locations.FirstOrDefault(l => l.Name.Equals(args[0], StringComparison.OrdinalIgnoreCase));
+                var location = GameMain.GameSession.Campaign.Map.Locations.FirstOrDefault(l => l.DisplayName.Equals(args[0], StringComparison.OrdinalIgnoreCase));
                 if (location == null)
                 {
                     ThrowError($"Could not find a location with the name {args[0]}.");
@@ -1484,7 +1489,7 @@ namespace Barotrauma
 
                 return new string[][]
                 {
-                    GameMain.GameSession.Campaign.Map.Locations.Select(l => l.Name).ToArray(),
+                    GameMain.GameSession.Campaign.Map.Locations.Select(l => l.DisplayName.Value).ToArray(),
                     LocationType.Prefabs.Select(lt => lt.Name.Value).ToArray()
                 };
             }));
@@ -2457,7 +2462,7 @@ namespace Barotrauma
                     }
                     Location location = campaign.Map.CurrentLocation.Connections[destinationIndex].OtherLocation(campaign.Map.CurrentLocation);
                     campaign.Map.SelectLocation(location);
-                    GameMain.Server.SendConsoleMessage(location.Name + " selected.", senderClient);
+                    GameMain.Server.SendConsoleMessage($"{location.DisplayName.Value} selected.", senderClient);
                 }
             );
 

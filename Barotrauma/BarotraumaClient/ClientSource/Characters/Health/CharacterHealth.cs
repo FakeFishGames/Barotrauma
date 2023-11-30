@@ -2170,6 +2170,8 @@ namespace Barotrauma
             medUIExtra?.Remove();
             medUIExtra = null;
 
+            Character.OnAttacked -= OnAttacked;
+
             limbIndicatorOverlay?.Remove();
             limbIndicatorOverlay = null;
 

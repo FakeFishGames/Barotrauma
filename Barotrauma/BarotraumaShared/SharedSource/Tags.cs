@@ -100,5 +100,15 @@ public static class Tags
     /// </summary>
     public static readonly Identifier DespawnContainer = "despawncontainer".ToIdentifier();
 
+    /// <summary>
+    /// Used by talents to target all stat identifiers
+    /// </summary>
+    public static readonly Identifier StatIdentifierTargetAll = "all".ToIdentifier();
+
+    public static readonly Identifier HelmSkill = "helm".ToIdentifier();
+    public static readonly Identifier WeaponsSkill = "weapons".ToIdentifier();
+    public static readonly Identifier ElectricalSkill = "electrical".ToIdentifier();
+    public static readonly Identifier MechanicalSkill = "mechanical".ToIdentifier();
+    public static readonly Identifier MedicalSkill = "medical".ToIdentifier();
 }
 

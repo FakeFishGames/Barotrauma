@@ -16,9 +16,6 @@ namespace Barotrauma
 {
     class SubEditorScreen : EditorScreen
     {
-        public const string CircuitBoxDeletionWarningHeader = "Selection contains circuit boxes",
-                            CircuitBoxDeletionWarningBody = "Are you sure you want to delete the selection? Any wiring inside circuit boxes will be lost and cannot be recovered.";
-
         public const int MaxStructures = 2000;
         public const int MaxWalls = 500;
         public const int MaxItems = 5000;
@@ -1560,8 +1557,17 @@ namespace Barotrauma
             if (editorSelectedTime.TryUnwrap(out DateTime selectedTime))
             {
                 TimeSpan timeInEditor = DateTime.Now - selectedTime;
-                SteamAchievementManager.IncrementStat("hoursineditor".ToIdentifier(), (float)timeInEditor.TotalHours);
-                editorSelectedTime = Option<DateTime>.None();
+                if (timeInEditor.TotalSeconds > Timing.TotalTime)
+                {
+                    DebugConsole.ThrowErrorAndLogToGA(
+                        "SubEditorScreen.DeselectEditorSpecific:InvalidTimeInEditor",
+                        $"Error in sub editor screen. Calculated time in editor {timeInEditor} was larger than the time the game has run ({Timing.TotalTime} s).");
+                }
+                else
+                {
+                    SteamAchievementManager.IncrementStat("hoursineditor".ToIdentifier(), (float)timeInEditor.TotalHours);
+                    editorSelectedTime = Option<DateTime>.None();
+                }
             }
 #endif
 
@@ -3933,28 +3939,15 @@ namespace Barotrauma
                     new ContextMenuOption("editor.cut", isEnabled: hasTargets, onSelected: () => MapEntity.Cut(targets)),
                     new ContextMenuOption("editor.copytoclipboard", isEnabled: hasTargets, onSelected: () => MapEntity.Copy(targets)),
                     new ContextMenuOption("editor.paste", isEnabled: MapEntity.CopiedList.Any(), onSelected: () => MapEntity.Paste(cam.ScreenToWorld(PlayerInput.MousePosition))),
-                    new ContextMenuOption("delete", isEnabled: hasTargets, onSelected: () => RemoveEntitiesWithPossibleWarning(targets)),
-                    new ContextMenuOption(TextManager.Get("editortip.shiftforextraoptions") + '\n' + TextManager.Get("editortip.altforruler"), isEnabled: false, onSelected: null));
-            }
-        }
-
-        public static void RemoveEntitiesWithPossibleWarning(List<MapEntity> targets)
-        {
-            if (targets.Any(static t => t is Item it && it.GetComponent<CircuitBox>() is not null))
-            {
-                GUI.AskForConfirmation(CircuitBoxDeletionWarningHeader, CircuitBoxDeletionWarningBody, onConfirm: Delete);
-                return;
-            }
-
-            Delete();
-
-            void Delete()
-            {
-                StoreCommand(new AddOrDeleteCommand(targets, true));
-                foreach (var me in targets)
-                {
-                    if (!me.Removed) { me.Remove(); }
-                }
+                    new ContextMenuOption("delete", isEnabled: hasTargets, onSelected: () =>
+                    {
+                        StoreCommand(new AddOrDeleteCommand(targets, true));
+                        foreach (var me in targets)
+                        {
+                            if (!me.Removed) { me.Remove(); }
+                        }
+                    }),
+                    new ContextMenuOption(TextManager.GetWithVariable("editortip.shiftforextraoptions", "[button]", PlayerInput.SecondaryMouseLabel) + '\n' + TextManager.Get("editortip.altforruler"), isEnabled: false, onSelected: null));
             }
         }
 
@@ -5485,9 +5478,11 @@ namespace Barotrauma
                 {
                     foreach (LightComponent lightComponent in item.GetComponents<LightComponent>())
                     {
-                        lightComponent.Light.Color = item.Container != null || (item.body != null && !item.body.Enabled) ?
-                            Color.Transparent :
-                            lightComponent.LightColor;
+                        lightComponent.Light.Color = 
+                            item.body == null || item.body.Enabled ||
+                            (item.ParentInventory is ItemInventory itemInventory && !itemInventory.Container.HideItems) ?
+                                lightComponent.LightColor :
+                                Color.Transparent;
                         lightComponent.Light.LightSpriteEffect = lightComponent.Item.SpriteEffects;
                     }
                 }

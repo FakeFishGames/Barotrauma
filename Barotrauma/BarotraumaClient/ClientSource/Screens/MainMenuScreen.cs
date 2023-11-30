@@ -165,6 +165,7 @@ namespace Barotrauma
                 }
             }   
 #else
+            SpamServerFilters.RequestGlobalSpamFilter();
             FetchRemoteContent();
 #endif
 

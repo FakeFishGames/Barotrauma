@@ -848,6 +848,13 @@ namespace Barotrauma.Networking
             private set;
         }
 
+        [Serialize(10.0f, IsPropertySaveable.Yes)]
+        public float MinimumMidRoundSyncTimeout
+        {
+            get;
+            private set;
+        }
+
         private bool karmaEnabled;
         [Serialize(false, IsPropertySaveable.Yes)]
         public bool KarmaEnabled

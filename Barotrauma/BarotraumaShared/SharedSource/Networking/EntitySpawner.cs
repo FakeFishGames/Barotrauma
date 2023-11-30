@@ -1,11 +1,10 @@
-﻿using Barotrauma.Extensions; 
+﻿using Barotrauma.Extensions;
 using Barotrauma.Items.Components;
 using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Steamworks.ServerList;
 
 namespace Barotrauma
 {
@@ -111,7 +110,7 @@ namespace Barotrauma
 
             public void OnSpawned(Entity spawnedItem)
             {
-                if (!(spawnedItem is Item item)) { throw new ArgumentException($"The entity passed to ItemSpawnInfo.OnSpawned must be an Item (value was {spawnedItem?.ToString() ?? "null"})."); }
+                if (spawnedItem is not Item item) { throw new ArgumentException($"The entity passed to ItemSpawnInfo.OnSpawned must be an Item (value was {spawnedItem?.ToString() ?? "null"})."); }
                 onSpawned?.Invoke(item);
             }
         }
@@ -443,6 +442,7 @@ namespace Barotrauma
                         CreateNetworkEventProjSpecific(new SpawnEntity(spawnedEntity)); 
                     }
                     spawnInfo.OnSpawned(spawnedEntity);
+                    GameMain.GameSession?.EventManager?.EntitySpawned(spawnedEntity);
                 }
             }
         }

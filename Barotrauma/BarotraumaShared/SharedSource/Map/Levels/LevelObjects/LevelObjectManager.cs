@@ -639,6 +639,7 @@ namespace Barotrauma
 
         public override void Remove()
         {
+            objectsInRange.Clear();
             if (objects != null)
             {
                 foreach (LevelObject obj in objects)

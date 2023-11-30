@@ -192,12 +192,12 @@ namespace Barotrauma
                     if (Level.Loaded.EndOutpost == null || !Level.Loaded.EndOutpost.DockedTo.Contains(leavingSub))
                     {
                         string textTag = availableTransition == TransitionType.ProgressToNextLocation ? "EnterLocation" : "EnterEmptyLocation";
-                        buttonText = TextManager.GetWithVariable(textTag, "[locationname]", Level.Loaded.EndLocation?.Name ?? "[ERROR]");
+                        buttonText = TextManager.GetWithVariable(textTag, "[locationname]", Level.Loaded.EndLocation?.DisplayName ?? "[ERROR]");
                         allowEndingRound = !ForceMapUI && !ShowCampaignUI;
                     }
                     break;
                 case TransitionType.LeaveLocation:
-                    buttonText = TextManager.GetWithVariable("LeaveLocation", "[locationname]", Level.Loaded.StartLocation?.Name ?? "[ERROR]");
+                    buttonText = TextManager.GetWithVariable("LeaveLocation", "[locationname]", Level.Loaded.StartLocation?.DisplayName ?? "[ERROR]");
                     allowEndingRound = !ForceMapUI && !ShowCampaignUI;
                     break;
                 case TransitionType.ReturnToPreviousLocation:
@@ -205,7 +205,7 @@ namespace Barotrauma
                     if (Level.Loaded.StartOutpost == null || !Level.Loaded.StartOutpost.DockedTo.Contains(leavingSub))
                     {
                         string textTag = availableTransition == TransitionType.ReturnToPreviousLocation ? "EnterLocation" : "EnterEmptyLocation";
-                        buttonText = TextManager.GetWithVariable(textTag, "[locationname]", Level.Loaded.StartLocation?.Name ?? "[ERROR]");
+                        buttonText = TextManager.GetWithVariable(textTag, "[locationname]", Level.Loaded.StartLocation?.DisplayName ?? "[ERROR]");
                         allowEndingRound = !ForceMapUI && !ShowCampaignUI;
                     }
                     break;
@@ -221,7 +221,7 @@ namespace Barotrauma
                             endRoundButton.Color = GUIStyle.Red * 0.7f;
                             endRoundButton.HoverColor = GUIStyle.Red;
                         }
-                        buttonText = TextManager.GetWithVariable("LeaveLocation", "[locationname]", Level.Loaded.StartLocation?.Name ?? "[ERROR]");
+                        buttonText = TextManager.GetWithVariable("LeaveLocation", "[locationname]", Level.Loaded.StartLocation?.DisplayName ?? "[ERROR]");
                         allowEndingRound = !ForceMapUI && !ShowCampaignUI;
                     }
                     else

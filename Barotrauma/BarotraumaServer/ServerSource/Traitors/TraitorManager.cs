@@ -263,7 +263,7 @@ namespace Barotrauma
             if (amountToChoose > viableTraitors.Count)
             {
                 DebugConsole.ThrowError(
-                    $"Error in traitor event {traitorEvent.Prefab.Identifier}. Not enough players to choose {amountToChoose} secondary traitors."+
+                    $"Error in traitor event {traitorEvent.Prefab.Identifier}. Not enough players to choose {amountToChoose} secondary traitors. " +
                     $"Make sure the {nameof(traitorEvent.Prefab.MinPlayerCount)} of the event is high enough to support to desired amount of secondary traitors.",
                         contentPackage: traitorEvent.Prefab.ContentPackage);
                 amountToChoose = viableTraitors.Count;
@@ -455,6 +455,15 @@ namespace Barotrauma
                     activeEvent.TraitorEvent.Prefab,
                     activeEvent.TraitorEvent.CurrentState,
                     activeEvent.Traitor));
+
+                if (activeEvent.TraitorEvent.CurrentState == TraitorEvent.State.Completed)
+                {
+                    SteamAchievementManager.OnTraitorWin(activeEvent.TraitorEvent.Traitor?.Character);
+                    foreach (var secondaryTraitor in activeEvent.TraitorEvent.SecondaryTraitors)
+                    {
+                        SteamAchievementManager.OnTraitorWin(secondaryTraitor?.Character);
+                    }
+                }
             }
             if (previousTraitorEvents.Count > MaxPreviousEventHistory)
             {

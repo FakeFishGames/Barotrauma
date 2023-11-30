@@ -572,7 +572,14 @@ namespace Barotrauma.Items.Components
                     structureFixAmount *= 1 + item.GetQualityModifier(Quality.StatType.RepairToolStructureDamageMultiplier);
                 }
 
+                var didLeak = targetStructure.SectionIsLeakingFromOutside(sectionIndex);
+
                 targetStructure.AddDamage(sectionIndex, -structureFixAmount * degreeOfSuccess, user);
+
+                if (didLeak && !targetStructure.SectionIsLeakingFromOutside(sectionIndex))
+                {
+                    user.CheckTalents(AbilityEffectType.OnRepairedOutsideLeak);
+                }
 
                 //if the next section is small enough, apply the effect to it as well
                 //(to make it easier to fix a small "left-over" section)
@@ -660,9 +667,10 @@ namespace Barotrauma.Items.Components
                     float addedDetachTime = deltaTime * (1f + user.GetStatValue(StatTypes.RepairToolDeattachTimeMultiplier)) * (1f + item.GetQualityModifier(Quality.StatType.RepairToolDeattachTimeMultiplier));
                     levelResource.DeattachTimer += addedDetachTime;
 #if CLIENT
-                    if (targetItem.Prefab.ShowHealthBar)
+                    if (targetItem.Prefab.ShowHealthBar && Character.Controlled != null &&
+                        (user == Character.Controlled || Character.Controlled.CanSeeTarget(item)))
                     {
-                        Character.Controlled?.UpdateHUDProgressBar(
+                        Character.Controlled.UpdateHUDProgressBar(
                             this,
                             targetItem.WorldPosition,
                             levelResource.DeattachTimer / levelResource.DeattachDuration,

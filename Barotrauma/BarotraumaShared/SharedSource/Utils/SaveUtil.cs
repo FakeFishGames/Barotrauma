@@ -160,7 +160,14 @@ namespace Barotrauma
             {
                 string subName = subElement.GetAttributeString("name", "");
                 string ownedSubPath = Path.Combine(TempPath, subName + ".sub");
-                ownedSubmarines.Add(new SubmarineInfo(ownedSubPath));
+                if (!File.Exists(ownedSubPath))
+                {
+                    DebugConsole.ThrowError($"Could not find the submarine \"{subName}\" ({ownedSubPath})! The save file may be corrupted. Removing the submarine from owned submarines...");
+                }
+                else
+                {
+                    ownedSubmarines.Add(new SubmarineInfo(ownedSubPath));
+                }
             }
             return ownedSubmarines;
         }

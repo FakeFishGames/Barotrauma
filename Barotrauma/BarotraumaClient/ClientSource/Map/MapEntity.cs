@@ -162,21 +162,9 @@ namespace Barotrauma
                 {
                     if (SelectedAny)
                     {
-                        if (SelectedList.Any(static t => t is Item it && it.GetComponent<CircuitBox>() is not null))
-                        {
-                            GUI.AskForConfirmation(SubEditorScreen.CircuitBoxDeletionWarningHeader, SubEditorScreen.CircuitBoxDeletionWarningBody, onConfirm: Delete);
-                        }
-                        else
-                        {
-                            Delete();
-                        }
-
-                        void Delete()
-                        {
-                            SubEditorScreen.StoreCommand(new AddOrDeleteCommand(new List<MapEntity>(SelectedList), true));
-                            SelectedList.ForEach(static e => { if (!e.Removed) { e.Remove(); } });
-                            SelectedList.Clear();
-                        }
+                        SubEditorScreen.StoreCommand(new AddOrDeleteCommand(new List<MapEntity>(SelectedList), true));
+                        SelectedList.ForEachMod(static e => { if (!e.Removed) { e.Remove(); } });
+                        SelectedList.Clear();
                     }
                 }
 
@@ -1332,12 +1320,15 @@ namespace Barotrauma
             HashSet<MapEntity> foundEntities = new HashSet<MapEntity>();
 
             Rectangle selectionRect = Submarine.AbsRect(pos, size);
+            Quad2D selectionQuad = Quad2D.FromSubmarineRectangle(selectionRect);
 
             foreach (MapEntity entity in MapEntityList)
             {
                 if (!entity.SelectableInEditor) { continue; }
 
-                if (Submarine.RectsOverlap(selectionRect, entity.rect))
+                Quad2D entityQuad = entity.GetTransformedQuad();
+
+                if (selectionQuad.Intersects(entityQuad))
                 {
                     foundEntities.Add(entity);
                     entity.IsIncludedInSelection = true;

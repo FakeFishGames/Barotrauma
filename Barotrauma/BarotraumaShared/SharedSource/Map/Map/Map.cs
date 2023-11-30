@@ -262,9 +262,9 @@ namespace Barotrauma
             foreach (var endLocation in EndLocations)
             {
                 if (endLocation.Type?.ForceLocationName != null &&
-                    !endLocation.Type.ForceLocationName.IsNullOrEmpty())
+                    !endLocation.Type.ForceLocationName.IsEmpty)
                 {
-                    endLocation.ForceName(endLocation.Type.ForceLocationName.Value);
+                    endLocation.ForceName(endLocation.Type.ForceLocationName);
                 }
             }
 
@@ -1005,10 +1005,10 @@ namespace Barotrauma
             CurrentLocation.CreateStores();
             OnLocationChanged?.Invoke(new LocationChangeInfo(prevLocation, CurrentLocation));
 
-            if (GameMain.GameSession is { Campaign: { CampaignMetadata: { } metadata } })
+            if (GameMain.GameSession is { Campaign.CampaignMetadata: { } metadata })
             {
                 metadata.SetValue("campaign.location.id".ToIdentifier(), CurrentLocationIndex);
-                metadata.SetValue("campaign.location.name".ToIdentifier(), CurrentLocation.Name);
+                metadata.SetValue("campaign.location.name".ToIdentifier(), CurrentLocation.NameIdentifier.Value);
                 metadata.SetValue("campaign.location.biome".ToIdentifier(), CurrentLocation.Biome?.Identifier ?? "null".ToIdentifier());
                 metadata.SetValue("campaign.location.type".ToIdentifier(), CurrentLocation.Type?.Identifier ?? "null".ToIdentifier());
             }
@@ -1077,7 +1077,7 @@ namespace Barotrauma
             if (SelectedConnection?.Locked ?? false)
             {
                 string errorMsg =
-                    $"A locked connection was selected ({SelectedConnection.Locations[0].Name} -> {SelectedConnection.Locations[1].Name}." +
+                    $"A locked connection was selected ({SelectedConnection.Locations[0].DisplayName} -> {SelectedConnection.Locations[1].DisplayName}." +
                     $" Current location: {CurrentLocation}, current display location: {currentDisplayLocation}).\n"
                     + Environment.StackTrace.CleanupStackTrace();
                 GameAnalyticsManager.AddErrorEventOnce("MapSelectLocation:LockedConnectionSelected", GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
@@ -1093,7 +1093,7 @@ namespace Barotrauma
         {
             if (!Locations.Contains(location))
             {
-                string errorMsg = "Failed to select a location. " + (location?.Name ?? "null") + " not found in the map.";
+                string errorMsg = $"Failed to select a location. {location?.DisplayName ?? "null"} not found in the map.";
                 DebugConsole.ThrowError(errorMsg);
                 GameAnalyticsManager.AddErrorEventOnce("Map.SelectLocation:LocationNotFound", GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
                 return;
@@ -1301,11 +1301,11 @@ namespace Barotrauma
 
         private bool ChangeLocationType(CampaignMode campaign, Location location, LocationTypeChange change)
         {
-            string prevName = location.Name;
+            LocalizedString prevName = location.DisplayName;
 
             if (!LocationType.Prefabs.TryGet(change.ChangeToType, out var newType))
             {
-                DebugConsole.ThrowError($"Failed to change the type of the location \"{location.Name}\". Location type \"{change.ChangeToType}\" not found.");
+                DebugConsole.ThrowError($"Failed to change the type of the location \"{location.DisplayName}\". Location type \"{change.ChangeToType}\" not found.");
                 return false;
             }
 
@@ -1372,7 +1372,7 @@ namespace Barotrauma
         }
 
 
-        partial void ChangeLocationTypeProjSpecific(Location location, string prevName, LocationTypeChange change);
+        partial void ChangeLocationTypeProjSpecific(Location location, LocalizedString prevName, LocationTypeChange change);
 
         partial void ClearAnimQueue();
 
@@ -1498,7 +1498,7 @@ namespace Barotrauma
                         }
 
                         Identifier locationType = subElement.GetAttributeIdentifier("type", Identifier.Empty);
-                        string prevLocationName = location.Name;
+                        LocalizedString prevLocationName = location.DisplayName;
                         LocationType prevLocationType = location.Type;
                         LocationType newLocationType = LocationType.Prefabs.Find(lt => lt.Identifier == locationType) ?? LocationType.Prefabs.First();
                         location.ChangeType(campaign, newLocationType);
@@ -1619,7 +1619,7 @@ namespace Barotrauma
                 //this should not be possible, you can't enter non-outpost locations (= natural formations)
                 if (CurrentLocation != null && !CurrentLocation.Type.HasOutpost && SelectedConnection == null)
                 {
-                    DebugConsole.AddWarning($"Error while loading campaign map state. Submarine in a location with no outpost ({CurrentLocation.Name}). Loading the first adjacent connection...");
+                    DebugConsole.AddWarning($"Error while loading campaign map state. Submarine in a location with no outpost ({CurrentLocation.DisplayName}). Loading the first adjacent connection...");
                     SelectLocation(CurrentLocation.Connections[0].OtherLocation(CurrentLocation));
                 }
             }

@@ -57,7 +57,7 @@ namespace Barotrauma
                 if (increase != 0 && Character.Controlled != null)
                 {
                     Character.Controlled.AddMessage(
-                        TextManager.GetWithVariable("reputationgainnotification", "[reputationname]", Location?.Name ?? Faction.Prefab.Name).Value,
+                        TextManager.GetWithVariable("reputationgainnotification", "[reputationname]", Location?.DisplayName ?? Faction.Prefab.Name).Value,
                         increase > 0 ? GUIStyle.Green : GUIStyle.Red,
                         playSound: true, Identifier, increase, lifetime: 5.0f);                    
                 }

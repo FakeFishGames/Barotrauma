@@ -461,14 +461,16 @@ namespace Barotrauma
         }
 
         private ImmutableArray<Vector2> cachedCaretPositions = ImmutableArray<Vector2>.Empty;
-        
+        //which text were the cached caret positions calculated for?
+        private string cachedCaretPositionsText;
         public ImmutableArray<Vector2> GetAllCaretPositions()
         {
-            if (cachedCaretPositions.Any())
+            string textDrawn = Censor ? CensoredText : Text.SanitizedValue;
+            if (cachedCaretPositions.Any() &&
+                textDrawn == cachedCaretPositionsText)
             {
                 return cachedCaretPositions;
             }
-            string textDrawn = Censor ? CensoredText : Text.SanitizedValue;
             float w = Wrap
                 ? (Rect.Width - Padding.X - Padding.Z) / TextScale
                 : float.PositiveInfinity;
@@ -482,6 +484,7 @@ namespace Barotrauma
                 .Select(p => p - new Vector2(alignmentXDiff, 0))
                 .Select(p => p * TextScale + TextPos - Origin * TextScale)
                 .ToImmutableArray();
+            cachedCaretPositionsText = textDrawn;
             return cachedCaretPositions;
         }
 

@@ -572,6 +572,10 @@ namespace Barotrauma
 
         public void AddJoint(JointParams jointParams)
         {
+            if (!checkLimbIndex(jointParams.Limb2, "Limb1") || !checkLimbIndex(jointParams.Limb2, "Limb2"))
+            {
+                return;
+            }
             LimbJoint joint = new LimbJoint(Limbs[jointParams.Limb1], Limbs[jointParams.Limb2], jointParams, this);
             GameMain.World.Add(joint.Joint);
             for (int i = 0; i < LimbJoints.Length; i++)
@@ -582,6 +586,21 @@ namespace Barotrauma
             }
             Array.Resize(ref LimbJoints, LimbJoints.Length + 1);
             LimbJoints[LimbJoints.Length - 1] = joint;
+
+            bool checkLimbIndex(int index, string debugName)
+            {
+                if (index < 0 || index >= limbs.Length)
+                {
+                    string errorMsg = $"Failed to add a joint to character {character.Name}. {debugName} out of bounds (index: {index}, limbs: {limbs.Length}.";
+                    DebugConsole.ThrowError(errorMsg, contentPackage: jointParams.Element?.ContentPackage);
+                    if (jointParams.Element?.ContentPackage == GameMain.VanillaContent)
+                    {
+                        GameAnalyticsManager.AddErrorEventOnce("Ragdoll.AddJoint:IndexOutOfRange", GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
+                    }
+                    return false;
+                }
+                return true;
+            }
         }
 
         protected void AddLimb(LimbParams limbParams)
@@ -668,6 +687,13 @@ namespace Barotrauma
             }
         }
 
+        private enum LimbStairCollisionResponse
+        {
+            DontClimbStairs,
+            ClimbWithoutLimbCollision,
+            ClimbWithLimbCollision
+        }
+
         public bool OnLimbCollision(Fixture f1, Fixture f2, Contact contact)
         {
             if (f2.Body.UserData is Submarine && character.Submarine == (Submarine)f2.Body.UserData) { return false; }
@@ -710,37 +736,53 @@ namespace Barotrauma
             }
             else if (structure.StairDirection != Direction.None)
             {
-                Stairs = null;
-
-                //don't collider with stairs if
-
-                //1. bottom of the collider is at the bottom of the stairs and the character isn't trying to move upwards
-                float stairBottomPos = ConvertUnits.ToSimUnits(structure.Rect.Y - structure.Rect.Height + 10);
-                if (colliderBottom.Y < stairBottomPos && targetMovement.Y < 0.5f) { return false; }
-
-                //2. bottom of the collider is at the top of the stairs and the character isn't trying to move downwards
-                if (targetMovement.Y >= 0.0f && colliderBottom.Y >= ConvertUnits.ToSimUnits(structure.Rect.Y - Submarine.GridSize.Y * 5)) { return false; }
-
-                //3. collided with the stairs from below
-                if (contact.Manifold.LocalNormal.Y < 0.0f) { return false; }
-
-                //4. contact points is above the bottom half of the collider
-                contact.GetWorldManifold(out Vector2 normal, out FarseerPhysics.Common.FixedArray2<Vector2> points);
-                if (points[0].Y > Collider.SimPosition.Y) { return false; }
-
-                //5. in water
-                if (inWater && targetMovement.Y < 0.5f) { return false; }
-
-                //---------------
-
-                //set stairs to that of the one dragging us
                 if (character.SelectedBy != null)
+                {
                     Stairs = character.SelectedBy.AnimController.Stairs;
+                }
                 else
-                    Stairs = structure;
+                {
+                    var collisionResponse = handleLimbStairCollision();
+                    if (collisionResponse == LimbStairCollisionResponse.ClimbWithLimbCollision)
+                    {
+                        Stairs = structure;
+                    }
+                    else
+                    {
+                        if (collisionResponse == LimbStairCollisionResponse.DontClimbStairs) { Stairs = null; }
 
-                if (Stairs == null)
-                    return false;
+                        return false;
+                    }
+                }
+
+                LimbStairCollisionResponse handleLimbStairCollision()
+                {
+                    //don't collide with stairs if
+
+                    //1. bottom of the collider is at the bottom of the stairs and the character isn't trying to move upwards
+                    float stairBottomPos = ConvertUnits.ToSimUnits(structure.Rect.Y - structure.Rect.Height + 10);
+                    if (colliderBottom.Y < stairBottomPos && targetMovement.Y < 0.5f) { return LimbStairCollisionResponse.DontClimbStairs; }
+
+                    //2. bottom of the collider is at the top of the stairs and the character isn't trying to move downwards
+                    if (targetMovement.Y >= 0.0f && colliderBottom.Y >= ConvertUnits.ToSimUnits(structure.Rect.Y - Submarine.GridSize.Y * 5)) { return LimbStairCollisionResponse.DontClimbStairs; }
+
+                    //3. collided with the stairs from below
+                    if (contact.Manifold.LocalNormal.Y < 0.0f)
+                    {
+                        return Stairs != structure
+                            ? LimbStairCollisionResponse.DontClimbStairs
+                            : LimbStairCollisionResponse.ClimbWithoutLimbCollision;
+                    }
+
+                    //4. contact points is above the bottom half of the collider
+                    contact.GetWorldManifold(out _, out FarseerPhysics.Common.FixedArray2<Vector2> points);
+                    if (points[0].Y > Collider.SimPosition.Y) { return LimbStairCollisionResponse.DontClimbStairs; }
+
+                    //5. in water
+                    if (inWater && targetMovement.Y < 0.5f) { return LimbStairCollisionResponse.DontClimbStairs; }
+
+                    return LimbStairCollisionResponse.ClimbWithLimbCollision;
+                }
             }
 
             lock (impactQueue)
@@ -1335,17 +1377,28 @@ namespace Barotrauma
                 if (onGround && Collider.LinearVelocity.Y > -ImpactTolerance)
                 {
                     float targetY = standOnFloorY + ((float)Math.Abs(Math.Cos(Collider.Rotation)) * Collider.Height * 0.5f) + Collider.Radius + ColliderHeightFromFloor;
-                    if (Math.Abs(Collider.SimPosition.Y - targetY) > 0.01f)
+
+                    const float LevitationSpeedMultiplier = 5f;
+
+                    // If the character is walking down a slope, target a position that moves along it
+                    float slopePull = 0f;
+                    if (floorNormal.Y is > 0f and < 1f
+                        && Math.Sign(movement.X) == Math.Sign(floorNormal.X))
                     {
-                        if (Stairs != null)
+                        slopePull = Math.Abs(movement.X * floorNormal.X / floorNormal.Y) / LevitationSpeedMultiplier;
+                    }
+
+                    if (Math.Abs(Collider.SimPosition.Y - targetY - slopePull) > 0.01f)
+                    {
+                        float yVelocity = (targetY - Collider.SimPosition.Y) * LevitationSpeedMultiplier;
+                        if (Stairs != null && targetY < Collider.SimPosition.Y)
                         {
-                            Collider.LinearVelocity = new Vector2(Collider.LinearVelocity.X,
-                                (targetY < Collider.SimPosition.Y ? Math.Sign(targetY - Collider.SimPosition.Y) : (targetY - Collider.SimPosition.Y)) * 5.0f);
+                            yVelocity = Math.Sign(yVelocity);
                         }
-                        else
-                        {
-                            Collider.LinearVelocity = new Vector2(Collider.LinearVelocity.X, (targetY - Collider.SimPosition.Y) * 5.0f);
-                        }
+
+                        yVelocity -= slopePull * LevitationSpeedMultiplier;
+
+                        Collider.LinearVelocity = new Vector2(Collider.LinearVelocity.X, yVelocity);
                     }
                 }
                 else
@@ -1593,10 +1646,10 @@ namespace Barotrauma
         // Force check floor y at least once a second so that we'll drop through gaps that we are standing upon.
         private const float FloorYStaleTime = 1;
         private float floorYCheckTimer;
-        private void RefreshFloorY(float deltaTime, Limb refLimb = null, bool ignoreStairs = false)
+        private void RefreshFloorY(float deltaTime, bool ignoreStairs = false)
         {
             floorYCheckTimer -= deltaTime;
-            PhysicsBody refBody = refLimb == null ? Collider : refLimb.body;
+            PhysicsBody refBody = Collider;
             if (floorYCheckTimer < 0 ||
                 lastFloorCheckIgnoreStairs != ignoreStairs ||
                 lastFloorCheckIgnorePlatforms != IgnorePlatforms ||
@@ -1621,7 +1674,7 @@ namespace Barotrauma
             if (HeadPosition.HasValue && MathUtils.IsValid(HeadPosition.Value)) { height = Math.Max(height, HeadPosition.Value); }
             if (TorsoPosition.HasValue && MathUtils.IsValid(TorsoPosition.Value)) { height = Math.Max(height, TorsoPosition.Value); }
 
-            Vector2 rayEnd = rayStart - new Vector2(0.0f, height);
+            Vector2 rayEnd = rayStart - new Vector2(0.0f, height * 2f);
             Vector2 colliderBottomDisplay = ConvertUnits.ToDisplayUnits(GetColliderBottom());
 
             Fixture standOnFloorFixture = null;
@@ -1700,7 +1753,7 @@ namespace Barotrauma
                 }
             }
 
-            if (closestFraction == 1) //raycast didn't hit anything
+            if (closestFraction >= 1) //raycast didn't hit anything
             {
                 floorNormal = Vector2.UnitY;
                 if (CurrentHull == null)

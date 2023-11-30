@@ -139,17 +139,17 @@ namespace Barotrauma
             return new Rectangle(rect.X - amount, rect.Y + amount, rect.Width + amount * 2, rect.Height + amount * 2);
         }
 
-        public static int VectorOrientation(Vector2 p1, Vector2 p2, Vector2 p)
+        /// <summary>
+        /// Given three points A, B and C,
+        /// returns 1 if AC is oriented clockwise relative to AB,
+        /// -1 if AC is oriented counter-clockwise relative to AB,
+        /// or 0 if A, B and C are collinear.
+        /// </summary>
+        public static int VectorOrientation(Vector2 pointA, Vector2 pointB, Vector2 pointC)
         {
-            // Determinant
-            float Orin = (p2.X - p1.X) * (p.Y - p1.Y) - (p.X - p1.X) * (p2.Y - p1.Y);
+            float determinant = (pointB.X - pointA.X) * (pointC.Y - pointA.Y) - (pointC.X - pointA.X) * (pointB.Y - pointA.Y);
 
-            if (Orin > 0)
-                return -1; //          (* Orientation is to the left-hand side  *)
-            if (Orin < 0)
-                return 1; // (* Orientation is to the right-hand side *)
-
-            return 0; //  (* Orientation is neutral aka collinear  *)
+            return -Math.Sign(determinant);
         }
 
         
@@ -1091,11 +1091,11 @@ namespace Barotrauma
         }
     }
 
-    class CompareCCW : IComparer<Vector2>
+    class CompareCW : IComparer<Vector2>
     {
         private Vector2 center;
 
-        public CompareCCW(Vector2 center)
+        public CompareCW(Vector2 center)
         {
             this.center = center;
         }
@@ -1106,25 +1106,43 @@ namespace Barotrauma
 
         public static int Compare(Vector2 a, Vector2 b, Vector2 center)
         {
-            if (a == b) return 0;
-            if (a.X - center.X >= 0 && b.X - center.X < 0) return -1;
-            if (a.X - center.X < 0 && b.X - center.X >= 0) return 1;
+            if (a == b) { return 0; }
+            if (a.X - center.X >= 0 && b.X - center.X < 0) { return 1; }
+            if (a.X - center.X < 0 && b.X - center.X >= 0) { return -1; }
             if (a.X - center.X == 0 && b.X - center.X == 0)
             {
-                if (a.Y - center.Y >= 0 || b.Y - center.Y >= 0) return Math.Sign(b.Y - a.Y);
+                if (a.Y - center.Y >= 0 || b.Y - center.Y >= 0) { return Math.Sign(a.Y - b.Y); }
                 return Math.Sign(a.Y - b.Y);
             }
 
             // compute the cross product of vectors (center -> a) x (center -> b)
             float det = (a.X - center.X) * (b.Y - center.Y) - (b.X - center.X) * (a.Y - center.Y);
-            if (det < 0) return -1;
-            if (det > 0) return 1;
+            if (det < 0) { return 1; }
+            if (det > 0) { return -1; }
 
             // points a and b are on the same line from the center
             // check which point is closer to the center
             float d1 = (a.X - center.X) * (a.X - center.X) + (a.Y - center.Y) * (a.Y - center.Y);
             float d2 = (b.X - center.X) * (b.X - center.X) + (b.Y - center.Y) * (b.Y - center.Y);
-            return Math.Sign(d2 - d1);
+            return Math.Sign(d1 - d2);
+        }
+    }
+
+    class CompareCCW : IComparer<Vector2>
+    {
+        private Vector2 center;
+
+        public CompareCCW(Vector2 center)
+        {
+            this.center = center;
+        }
+        public int Compare(Vector2 a, Vector2 b)
+        {
+            return -CompareCW.Compare(a, b, center);
+        }
+        public static int Compare(Vector2 a, Vector2 b, Vector2 center)
+        {
+            return -CompareCW.Compare(a, b, center);
         }
     }
 }

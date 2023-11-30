@@ -2222,7 +2222,7 @@ namespace Barotrauma.Networking
                 }
                 outmsg.WriteByte((byte)MultiplayerPreferences.Instance.TeamPreference);
 
-                if (!(GameMain.GameSession?.GameMode is MultiPlayerCampaign campaign) || campaign.LastSaveID == 0)
+                if (GameMain.GameSession?.GameMode is not MultiPlayerCampaign campaign || campaign.LastSaveID == 0)
                 {
                     outmsg.WriteUInt16((UInt16)0);
                 }

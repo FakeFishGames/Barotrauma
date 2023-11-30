@@ -581,7 +581,14 @@ namespace Barotrauma
                             StatusEffect effect = StatusEffect.Load(subElement, $"EventManager.ClientRead ({eventIdentifier})");
                             foreach (Entity target in targets)
                             {
-                                effect.Apply(effect.type, 1.0f, target, target as ISerializableEntity);
+                                if (target is Item item)
+                                {
+                                    effect.Apply(effect.type, 1.0f, item, item.AllPropertyObjects);
+                                }
+                                else
+                                {
+                                    effect.Apply(effect.type, 1.0f, target, target as ISerializableEntity);
+                                }
                             }
                         }
                         break;

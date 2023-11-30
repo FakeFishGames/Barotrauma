@@ -633,14 +633,14 @@ namespace Barotrauma
                 {
                     endHole = new Tunnel(
                         TunnelType.SidePath,
-                        new List<Point>() { startPosition, startExitPosition, new Point(0, Size.Y) },
+                        new List<Point>() { startPosition, new Point(0, startPosition.Y) },
                         minWidth, parentTunnel: mainPath);
                 }
                 else
                 {
                     endHole = new Tunnel(
                         TunnelType.SidePath,
-                        new List<Point>() { endPosition, endExitPosition, Size },
+                        new List<Point>() { endPosition, new Point(Size.X, endPosition.Y) },
                         minWidth, parentTunnel: mainPath);
                 }
                 Tunnels.Add(endHole);
@@ -4122,7 +4122,7 @@ namespace Barotrauma
 
                         if (location != null)
                         {
-                            DebugConsole.NewMessage($"Generating an outpost for the {(isStart ? "start" : "end")} of the level... (Location: {location.Name}, level type: {LevelData.Type})");
+                            DebugConsole.NewMessage($"Generating an outpost for the {(isStart ? "start" : "end")} of the level... (Location: {location.DisplayName}, level type: {LevelData.Type})");
                             outpost = OutpostGenerator.Generate(outpostGenerationParams, location, onlyEntrance: LevelData.Type != LevelData.LevelType.Outpost, LevelData.AllowInvalidOutpost);
                         }
                         else
@@ -4230,7 +4230,20 @@ namespace Barotrauma
                         }
                     }
 
-                    spawnPos = outpost.FindSpawnPos(i == 0 ? StartPosition : EndPosition, minSize, outpostDockingPortOffset != null ? subDockingPortOffset - outpostDockingPortOffset.Value : 0.0f, verticalMoveDir: 1);
+                    Vector2 preferredSpawnPos = i == 0 ? StartPosition : EndPosition;
+                    //if we're placing the outpost at the end of the level, close to the bottom-right,
+                    //and there's a hole leading out the right side of the level, move the spawn position towards that hole.
+                    //Makes outpost placement a little nicer in levels with lots of verticality: if there's a tall vertical
+                    //shaft leading down to the end position, we don't want the outpost to be placed all the way up to wherever the
+                    //ceiling is at the top of that shaft.
+                    if (i == 1 && GenerationParams.CreateHoleNextToEnd && 
+                        preferredSpawnPos.X > Size.X * 0.75f && 
+                        preferredSpawnPos.Y < Size.Y * 0.25f)
+                    {
+                        preferredSpawnPos.X = (preferredSpawnPos.X + Size.X) / 2;
+                    }
+
+                    spawnPos = outpost.FindSpawnPos(preferredSpawnPos, minSize, outpostDockingPortOffset != null ? subDockingPortOffset - outpostDockingPortOffset.Value : 0.0f, verticalMoveDir: 1);
                     if (Type == LevelData.LevelType.Outpost)
                     {
                         spawnPos.Y = Math.Min(Size.Y - outpost.Borders.Height * 0.6f, spawnPos.Y + outpost.Borders.Height / 2);
@@ -4254,7 +4267,7 @@ namespace Barotrauma
                     if (StartLocation != null) 
                     {
                         outpost.TeamID = StartLocation.Type.OutpostTeam;
-                        outpost.Info.Name = StartLocation.Name;
+                        outpost.Info.Name = StartLocation.DisplayName.Value;
                     }
                 }
                 else
@@ -4263,7 +4276,7 @@ namespace Barotrauma
                     if (EndLocation != null)
                     {
                         outpost.TeamID = EndLocation.Type.OutpostTeam; 
-                        outpost.Info.Name = EndLocation.Name; 
+                        outpost.Info.Name = EndLocation.DisplayName.Value; 
                     }
                 }
             }

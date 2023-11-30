@@ -96,9 +96,6 @@ namespace Barotrauma
 
         public override void DrawPlacing(SpriteBatch spriteBatch, Rectangle placeRect, float scale = 1.0f, float rotation = 0.0f, SpriteEffects spriteEffects = SpriteEffects.None)
         {
-            SpriteEffects oldEffects = Sprite.effects;
-            Sprite.effects ^= spriteEffects;
-
             var position = placeRect.Location.ToVector2().FlipY();
             position += placeRect.Size.ToVector2() * 0.5f;
             
@@ -109,9 +106,8 @@ namespace Barotrauma
                 color: Color.White * 0.8f,
                 origin: placeRect.Size.ToVector2() * 0.5f,
                 rotation: rotation,
-                textureScale: TextureScale * scale);
-
-            Sprite.effects = oldEffects;
+                textureScale: TextureScale * scale,
+                spriteEffects: spriteEffects ^ Sprite.effects);
         }
     }
 }

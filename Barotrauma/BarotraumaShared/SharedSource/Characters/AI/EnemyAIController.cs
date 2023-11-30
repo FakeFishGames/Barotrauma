@@ -262,7 +262,7 @@ namespace Barotrauma
             
             if (aiElements.Count == 0)
             {
-                DebugConsole.ThrowError("Error in file \"" + c.Params.File + "\" - no AI element found.",
+                DebugConsole.ThrowError("Error in file \"" + c.Params.File.Path + "\" - no AI element found.",
                     contentPackage: c.Prefab?.ContentPackage);
                 outsideSteering = new SteeringManager(this);
                 insideSteering = new IndoorsSteeringManager(this, false, false);
@@ -312,7 +312,7 @@ namespace Barotrauma
             }
             ReevaluateAttacks();
             outsideSteering = new SteeringManager(this);
-            insideSteering = new IndoorsSteeringManager(this, Character.Params.AI.CanOpenDoors, canAttackDoors);
+            insideSteering = new IndoorsSteeringManager(this, AIParams.CanOpenDoors, canAttackDoors);
             steeringManager = outsideSteering;
             State = AIState.Idle;
             requiredHoleCount = (int)Math.Ceiling(ConvertUnits.ToDisplayUnits(colliderWidth) / Structure.WallSectionSize);
@@ -322,6 +322,10 @@ namespace Barotrauma
         }
 
         private CharacterParams.AIParams _aiParams;
+        /// <summary>
+        /// Shorthand for <see cref="Character.Params.AI"/> with null checking.
+        /// </summary>
+        /// <returns><see cref="Character.Params.AI"/> or an empty params. Does not return nulls.</returns>
         public CharacterParams.AIParams AIParams
         {
             get
@@ -565,7 +569,7 @@ namespace Barotrauma
                 }
             }
 
-            if (Character.Params.UsePathFinding && Character.Params.AI.UsePathFindingToGetInside && AIParams.CanOpenDoors)
+            if (Character.Params.UsePathFinding && AIParams.UsePathFindingToGetInside && AIParams.CanOpenDoors)
             {
                 // Meant for monsters outside the player sub that target something inside the sub and can use the doors to access the sub (Husk).
                 bool IsCloseEnoughToTargetSub(float threshold) => SelectedAiTarget?.Entity?.Submarine is Submarine sub && sub != null && Vector2.DistanceSquared(Character.WorldPosition, sub.WorldPosition) < MathUtils.Pow(Math.Max(sub.Borders.Size.X, sub.Borders.Size.Y) / 2 + threshold, 2);
@@ -3097,7 +3101,10 @@ namespace Barotrauma
                         break;
                 }
 
-                valueModifier *= targetMemory.Priority / (float)Math.Sqrt(dist);
+                valueModifier *= 
+                    targetMemory.Priority / 
+                    //sqrt = the further the target is, the less the distance matters
+                    MathF.Sqrt(dist);
 
                 if (valueModifier > targetValue)
                 {

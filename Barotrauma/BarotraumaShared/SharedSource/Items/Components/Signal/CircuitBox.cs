@@ -157,7 +157,7 @@ namespace Barotrauma.Items.Components
             delayedElementToLoad = Option.None;
         }
 
-        private void LoadFromXML(ContentXElement loadElement)
+        public void LoadFromXML(ContentXElement loadElement)
         {
             foreach (var subElement in loadElement.Elements())
             {

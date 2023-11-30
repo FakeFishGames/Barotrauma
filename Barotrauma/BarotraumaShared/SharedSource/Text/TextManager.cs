@@ -23,7 +23,7 @@ namespace Barotrauma
         public static bool DebugDraw;
 
         public readonly static LanguageIdentifier DefaultLanguage = "English".ToLanguageIdentifier();
-        public readonly static ConcurrentDictionary<LanguageIdentifier, ImmutableHashSet<TextPack>> TextPacks = new ConcurrentDictionary<LanguageIdentifier, ImmutableHashSet<TextPack>>();
+        public readonly static ConcurrentDictionary<LanguageIdentifier, ImmutableList<TextPack>> TextPacks = new ConcurrentDictionary<LanguageIdentifier, ImmutableList<TextPack>>();
         public static IEnumerable<LanguageIdentifier> AvailableLanguages => TextPacks.Keys;
 
         private readonly static Dictionary<Identifier, WeakReference<TagLString>> cachedStrings =
@@ -160,22 +160,48 @@ namespace Barotrauma
             return TextPacks[GameSettings.CurrentConfig.Language].Any(p => p.Texts.ContainsKey(tag));
         }
 
+        public static bool ContainsTag(Identifier tag, LanguageIdentifier language)
+        {
+            return TextPacks[language].Any(p => p.Texts.ContainsKey(tag));
+        }
         public static IEnumerable<string> GetAll(string tag)
             => GetAll(tag.ToIdentifier());
 
         public static IEnumerable<string> GetAll(Identifier tag)
         {
-            return TextPacks[GameSettings.CurrentConfig.Language]
+            var allTexts = TextPacks[GameSettings.CurrentConfig.Language]
                 .SelectMany(p => p.Texts.TryGetValue(tag, out var value)
-                    ? (IEnumerable<string>)value
-                    : Array.Empty<string>());
+                    ? (IEnumerable<TextPack.Text>)value
+                    : Array.Empty<TextPack.Text>());
+
+            var firstOverride = allTexts.FirstOrDefault(t => t.IsOverride);
+            if (firstOverride != default)
+            {
+                return allTexts.Where(t => t.IsOverride && t.TextPack == firstOverride.TextPack).Select(t => t.String);
+            }
+            else
+            {
+                return allTexts.Select(t => t.String);
+            }
         }
-        
+
         public static IEnumerable<KeyValuePair<Identifier, string>> GetAllTagTextPairs()
         {
-            return TextPacks[GameSettings.CurrentConfig.Language]
-                .SelectMany(p => p.Texts)
-                .SelectMany(kvp => kvp.Value.Select(v => new KeyValuePair<Identifier, string>(kvp.Key, v)));
+            var allTexts = TextPacks[GameSettings.CurrentConfig.Language]
+                .SelectMany(p => p.Texts);
+
+            var firstOverride = allTexts.SelectMany(kvp => kvp.Value).FirstOrDefault(t => t.IsOverride);
+            if (firstOverride != default)
+            {
+                return allTexts
+                    .Where(kvp => kvp.Value.Any(t => t.IsOverride && t.TextPack == firstOverride.TextPack))
+                    .SelectMany(kvp => kvp.Value.Select(v => new KeyValuePair<Identifier, string>(kvp.Key, v.String)));
+            }
+            else
+            {
+                return allTexts
+                    .SelectMany(kvp => kvp.Value.Select(v => new KeyValuePair<Identifier, string>(kvp.Key, v.String)));
+            }
         }
 
         public static IEnumerable<string> GetTextFiles()
@@ -214,12 +240,20 @@ namespace Barotrauma
 
         public static LocalizedString Get(params Identifier[] tags)
         {
+            if (tags.Length == 1)
+            {
+                return Get(tags[0]);
+            }
+            return new TagLString(tags);
+        }
+
+        public static LocalizedString Get(Identifier tag)
+        {
             TagLString? str = null;
             lock (cachedStrings)
             {
-                if (tags.Length == 1 && !nonCacheableTags.Contains(tags[0]))
+                if (!nonCacheableTags.Contains(tag))
                 {
-                    var tag = tags[0];
                     if (cachedStrings.TryGetValue(tag, out var strRef))
                     {
                         if (!strRef.TryGetTarget(out str))
@@ -246,15 +280,18 @@ namespace Barotrauma
                         }
                         else
                         {
-                            str = new TagLString(tags);
+                            str = new TagLString(tag);
                             cachedStrings.Add(tag, new WeakReference<TagLString>(str));
                         }
                     }
                 }
             }
-            return str ?? new TagLString(tags);
+            return str ?? new TagLString(tag);
         }
-        
+
+        public static LocalizedString Get(string tag)            
+            => Get(tag.ToIdentifier());
+
         public static LocalizedString Get(params string[] tags)
             => Get(tags.ToIdentifiers());
 

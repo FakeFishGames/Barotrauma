@@ -139,6 +139,11 @@ static class ObjectiveManager
         VideoPlayer.AddToGUIUpdateList(order: 100);
     }
 
+    public static bool IsSegmentActive(Identifier segmentId)
+    {
+        return activeObjectives.Any(o => o.Id == segmentId);
+    }
+
     public static void TriggerSegment(Segment segment, bool connectObjective = false)
     {
         if (segment.SegmentType != SegmentType.InfoBox)
@@ -361,9 +366,18 @@ static class ObjectiveManager
                 activeObjectives.IndexOf(parentSegment) + activeObjectives.Count(s => s.ParentId == segment.ParentId);
             if (objectiveGroup.RectTransform.GetChildIndex(frameRt) != childIndex)
             {
-                frameRt.RepositionChildInHierarchy(childIndex);
-                activeObjectives.Remove(segment);
-                activeObjectives.Insert(childIndex, segment);
+                if (childIndex < 0 || childIndex >= frameRt.Parent.CountChildren)
+                {
+                    DebugConsole.ThrowError(
+                        $"Error in {nameof(ObjectiveManager.AddToObjectiveList)}. " +
+                        $"Failed to reposition an objective in the list. Text \"{segment.ObjectiveText}\", parentId: {segment.ParentId}, childIndex: {childIndex}");
+                }
+                else
+                {
+                    frameRt.RepositionChildInHierarchy(childIndex);
+                    activeObjectives.Remove(segment);
+                    activeObjectives.Insert(childIndex, segment);
+                }
             }
         }
         frameRt.AbsoluteOffset = GetObjectiveHiddenPosition();

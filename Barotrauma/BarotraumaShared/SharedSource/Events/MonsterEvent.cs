@@ -673,7 +673,7 @@ namespace Barotrauma
                         monster.AnimController.SetPosition(FarseerPhysics.ConvertUnits.ToSimUnits(pos));
 
                         var eventManager = GameMain.GameSession.EventManager;
-                        if (eventManager != null)
+                        if (eventManager != null && monster.Params.AI != null)
                         {
                             if (SpawnPosType.HasFlag(Level.PositionType.MainPath) || SpawnPosType.HasFlag(Level.PositionType.SidePath))
                             {
@@ -700,7 +700,7 @@ namespace Barotrauma
                             //this will do nothing if the monsters have no swarm behavior defined, 
                             //otherwise it'll make the spawned characters act as a swarm
                             SwarmBehavior.CreateSwarm(monsters.Cast<AICharacter>());
-                            DebugConsole.NewMessage($"Spawned: {ToString()}. Strength: {StringFormatter.FormatZeroDecimal(monsters.Sum(m => m.Params.AI.CombatStrength))}.", Color.LightBlue, debugOnly: true);
+                            DebugConsole.NewMessage($"Spawned: {ToString()}. Strength: {StringFormatter.FormatZeroDecimal(monsters.Sum(m => m.Params.AI?.CombatStrength ?? 0))}.", Color.LightBlue, debugOnly: true);
                         }
 
                         if (GameMain.GameSession != null)

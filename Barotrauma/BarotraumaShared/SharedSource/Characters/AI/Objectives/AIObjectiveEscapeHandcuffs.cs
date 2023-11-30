@@ -14,7 +14,7 @@ namespace Barotrauma
         private int escapeProgress;
         private bool isBeingWatched;
 
-        private bool shouldSwitchTeams;
+        private readonly bool shouldSwitchTeams;
 
         const string EscapeTeamChangeIdentifier = "escape";
 
@@ -88,10 +88,12 @@ namespace Barotrauma
                 escapeProgress += Rand.Range(2, 5);
                 if (escapeProgress > 15)
                 {
-                    Item handcuffs = character.Inventory.FindItemByTag(Tags.HandLockerItem);
-                    if (handcuffs != null)
+                    foreach (var it in character.HeldItems)
                     {
-                        handcuffs.Drop(character);
+                        if (it.HasTag(Tags.HandLockerItem) && it.IsInteractable(character))
+                        {
+                            it.Drop(character);
+                        }
                     }
                 }
                 escapeTimer = EscapeIntervalTimer * Rand.Range(0.75f, 1.25f);

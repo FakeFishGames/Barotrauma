@@ -664,6 +664,13 @@ namespace Barotrauma
             WallSectionIndex = wallSectionIndex ?? other.WallSectionIndex;
 
             UseController = useController ?? other.UseController;
+
+#if DEBUG
+            if (UseController && ConnectedController == null)
+            {
+                DebugConsole.ThrowError($"AI: Created an Order {Identifier} that's set to use a Controller, but a Controller was not specified.\n{Environment.StackTrace.CleanupStackTrace()}");
+            }
+#endif
         }
 
         public Order WithOption(Identifier option)
@@ -713,7 +720,12 @@ namespace Barotrauma
 
         public Order WithItemComponent(Item item, ItemComponent component = null)
         {
-            return new Order(this, targetEntity: item, targetItemComponent: component ?? GetTargetItemComponent(item));
+            Controller controller = null;
+            if (UseController)
+            {
+                controller = item?.FindController(tags: ControllerTags);
+            }
+           return new Order(this, targetEntity: item, targetItemComponent: component ?? GetTargetItemComponent(item), connectedController: controller);
         }
 
         public Order WithWallSection(Structure wall, int? sectionIndex)

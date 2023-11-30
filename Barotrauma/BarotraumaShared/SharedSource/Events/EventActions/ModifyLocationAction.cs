@@ -12,7 +12,7 @@ namespace Barotrauma
         public Identifier Type { get; set; }
 
         [Serialize("", IsPropertySaveable.Yes)]
-        public string Name { get; set; }
+        public Identifier Name { get; set; }
 
         private bool isFinished;
 
@@ -77,9 +77,9 @@ namespace Barotrauma
                             location.ChangeType(campaign, locationType);
                         }
                     }
-                    if (!string.IsNullOrEmpty(Name))
+                    if (!Name.IsEmpty)
                     {
-                        location.ForceName(TextManager.Get(Name).Fallback(Name).Value);
+                        location.ForceName(Name);
                     }
                 }
             }

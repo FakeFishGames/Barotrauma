@@ -136,6 +136,12 @@ namespace Barotrauma
         public readonly List<ParticleParams> DamageEmitters = new List<ParticleParams>();
         public readonly List<InventoryParams> Inventories = new List<InventoryParams>();
         public HealthParams Health { get; private set; }
+        /// <summary>
+        /// Parameters for EnemyAIController. Not used by HumanAIController.
+        /// </summary>
+        /// <returns>
+        /// AIParams or null. Use <see cref="EnemyAIController.AIParams"/>, if you don't expect nulls.
+        /// </returns>
         public AIParams AI { get; private set; }
 
         public CharacterParams(CharacterFile file)
@@ -603,7 +609,8 @@ namespace Barotrauma
 
             public void AddItem(string identifier = null)
             {
-                identifier = identifier ?? "";
+                if (Element == null) { return; }
+                identifier ??= "";
                 var element = CreateElement("item", new XAttribute("identifier", identifier));
                 Element.Add(element);
                 var item = new InventoryItem(element, Character);
@@ -732,6 +739,11 @@ namespace Barotrauma
                 
             public bool TryAddNewTarget(Identifier tag, AIState state, float priority, out TargetParams targetParams)
             {
+                if (Element == null)
+                {
+                    targetParams = null;
+                    return false;
+                }
                 var element = TargetParams.CreateNewElement(Character, tag, state, priority);
                 if (TryAddTarget(element, out targetParams))
                 {

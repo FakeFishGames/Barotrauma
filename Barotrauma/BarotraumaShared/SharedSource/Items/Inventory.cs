@@ -230,10 +230,18 @@ namespace Barotrauma
 
         protected readonly int capacity;
         protected readonly ItemSlot[] slots;
-        
+
         public bool Locked;
 
         protected float syncItemsDelay;
+
+
+        private int extraStackSize;
+        public int ExtraStackSize
+        {
+            get => extraStackSize;
+            set => extraStackSize = MathHelper.Max(value, 0);
+        }
 
         /// <summary>
         /// All items contained in the inventory. Stacked items are returned as individual instances. DO NOT modify the contents of the inventory while enumerating this list.

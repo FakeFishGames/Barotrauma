@@ -236,6 +236,12 @@ namespace Barotrauma.Items.Components
             get => Inventory.AllItems.Count(it => it.Condition > 0.0f);
         }
 
+        public int ExtraStackSize
+        {
+            get => Inventory.ExtraStackSize;
+            set => Inventory.ExtraStackSize = value;
+        }
+
         private readonly ImmutableArray<SlotRestrictions> slotRestrictions;
 
         readonly List<ISerializableEntity> targets = new List<ISerializableEntity>();
@@ -298,7 +304,10 @@ namespace Barotrauma.Items.Components
                 }
             }
             Inventory = new ItemInventory(item, this, totalCapacity, SlotsPerRow);
-           
+
+            // we have to assign this here because the fields are serialized before the inventory is created otherwise
+            ExtraStackSize = element.GetAttributeInt(nameof(ExtraStackSize), 0);
+
             List<SlotRestrictions> newSlotRestrictions = new List<SlotRestrictions>(totalCapacity);
             for (int i = 0; i < capacity; i++)
             {
@@ -389,6 +398,7 @@ namespace Barotrauma.Items.Components
         public void OnItemContained(Item containedItem)
         {
             int index = Inventory.FindIndex(containedItem);
+            RelatedItem relatedItem = null;
             if (index >= 0 && index < slotRestrictions.Length)
             {
                 if (slotRestrictions[index].ContainableItems != null)
@@ -397,6 +407,8 @@ namespace Barotrauma.Items.Components
                     foreach (var containableItem in slotRestrictions[index].ContainableItems)
                     {
                         if (!containableItem.MatchesItem(containedItem)) { continue; }
+                        //the 1st matching ContainableItem of the slot determines the hiding, position and rotation of the item
+                        relatedItem ??= containableItem;
                         foreach (StatusEffect effect in containableItem.StatusEffects)
                         {
                             activeContainedItems.Add(new ActiveContainedItem(containedItem, effect, containableItem.ExcludeBroken, containableItem.ExcludeFullCondition));
@@ -405,7 +417,6 @@ namespace Barotrauma.Items.Components
                 }
             }
 
-            var relatedItem = FindContainableItem(containedItem);
             var containedItemInfo = new ContainedItem(containedItem,
                         Hide: relatedItem?.Hide ?? false,
                         ItemPos: relatedItem?.ItemPos,
@@ -786,12 +797,9 @@ namespace Barotrauma.Items.Components
 
         private RelatedItem FindContainableItem(Item item)
         {
-            var relatedItem = ContainableItems?.FirstOrDefault(ci => ci.MatchesItem(item));
-            if (relatedItem == null && AllSubContainableItems != null)
-            {
-                relatedItem = AllSubContainableItems.FirstOrDefault(ci => ci.MatchesItem(item));
-            }
-            return relatedItem;
+            int index = Inventory.FindIndex(item);
+            if (index == -1 ) { return null; }
+             return slotRestrictions[index]?.ContainableItems?.FirstOrDefault(ci => ci.MatchesItem(item));
         }
 
         /// <summary>
@@ -1095,6 +1103,7 @@ namespace Barotrauma.Items.Components
                     itemIds[i].Add(idRemap.GetOffsetId(id));
                 }
             }
+            ExtraStackSize = componentElement.GetAttributeInt(nameof(ExtraStackSize), 0);
         }
 
         public override XElement Save(XElement parentElement)
@@ -1107,6 +1116,7 @@ namespace Barotrauma.Items.Components
                 itemIdStrings[i] = string.Join(';', items.Select(it => it.ID.ToString()));
             }
             componentElement.Add(new XAttribute("contained", string.Join(',', itemIdStrings)));
+            componentElement.Add(new XAttribute(nameof(ExtraStackSize), ExtraStackSize));
             return componentElement;
         }
     }

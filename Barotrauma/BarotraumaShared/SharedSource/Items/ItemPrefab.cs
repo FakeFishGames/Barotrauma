@@ -871,24 +871,43 @@ namespace Barotrauma
 
         public int GetMaxStackSize(Inventory inventory)
         {
+            int extraStackSize = inventory switch
+            {
+                ItemInventory { Owner: Item it } i => (int)it.StatManager.GetAdjustedValueAdditive(ItemTalentStats.ExtraStackSize, i.ExtraStackSize),
+                CharacterInventory { Owner: Character { Info: { } info } } i => i.ExtraStackSize + (int)info.GetSavedStatValueWithAll(StatTypes.InventoryExtraStackSize, Category.ToIdentifier()),
+                not null => inventory.ExtraStackSize,
+                null => 0
+            };
+
             if (inventory is CharacterInventory && maxStackSizeCharacterInventory > 0)
             {
-                return maxStackSizeCharacterInventory;
+                return MaxStackWithExtra(maxStackSizeCharacterInventory, extraStackSize);
             }
             else if (inventory?.Owner is Item item && 
                 (item.GetComponent<Holdable>() is { Attachable: false } || item.GetComponent<Wearable>() != null))
             {
                 if (maxStackSizeHoldableOrWearableInventory > 0)
                 {
-                    return maxStackSizeHoldableOrWearableInventory;
+                    return MaxStackWithExtra(maxStackSizeHoldableOrWearableInventory, extraStackSize);
                 }
                 else if (maxStackSizeCharacterInventory > 0)
                 {
                     //if maxStackSizeHoldableOrWearableInventory is not set, it defaults to maxStackSizeCharacterInventory
-                    return maxStackSizeCharacterInventory;
+                    return MaxStackWithExtra(maxStackSizeCharacterInventory, extraStackSize);
                 }
             }
-            return maxStackSize;            
+
+            return MaxStackWithExtra(maxStackSize, extraStackSize);
+
+            static int MaxStackWithExtra(int maxStackSize, int extraStackSize)
+            {
+                extraStackSize = Math.Max(extraStackSize, 0);
+                if (maxStackSize == 1)
+                {
+                    return Math.Min(maxStackSize, Inventory.MaxPossibleStackSize);
+                }
+                return Math.Min(maxStackSize + extraStackSize, Inventory.MaxPossibleStackSize);
+            }
         }
 
         [Serialize(false, IsPropertySaveable.No)]
@@ -1138,10 +1157,13 @@ namespace Barotrauma
                         if (fabricationRecipes.TryGetValue(newRecipe.RecipeHash, out var prevRecipe))
                         {
                             //the errors below may be caused by a mod overriding a base item instead of this one, log the package of the base item in that case
-                            var packageToLog = GetParentModPackageOrThisPackage();                            
+                            var packageToLog =
+                                (variantOf.ContentPackage != null && variantOf.ContentPackage != ContentPackageManager.VanillaCorePackage) ?
+                                variantOf.ContentPackage :
+                                GetParentModPackageOrThisPackage();                            
 
                             int prevRecipeIndex = loadedRecipes.IndexOf(prevRecipe);
-                            DebugConsole.ThrowError(
+                            DebugConsole.AddWarning(
                                 $"Error in item prefab \"{ToString()}\": " +
                                 $"Fabrication recipe #{loadedRecipes.Count + 1} has the same hash as recipe #{prevRecipeIndex + 1}. This is most likely caused by identical, duplicate recipes. " +
                                 $"This will cause issues with fabrication.",

@@ -60,11 +60,18 @@ namespace Barotrauma.Items.Components
             set
             {
                 if (parent == value) { return; }
-                if (parent != null) { parent.OnActiveStateChanged -= SetActiveState; }
-                if (value != null) { value.OnActiveStateChanged += SetActiveState; }
+                if (InheritParentIsActive)
+                {
+                    if (parent != null) { parent.OnActiveStateChanged -= SetActiveState; }
+                    if (value != null) { value.OnActiveStateChanged += SetActiveState; }
+                }
                 parent = value;
             }
         }
+
+
+        [Serialize(true, IsPropertySaveable.No, description: "If this is a child component of another component, should this component inherit the IsActive state of the parent?")]
+        public bool InheritParentIsActive { get; set; }
 
         public readonly ContentXElement originalElement;
 
@@ -394,8 +401,11 @@ namespace Barotrauma.Items.Components
                         if (ic == null) { break; }
 
                         ic.Parent = this;
-                        ic.IsActive = isActive;
-                        OnActiveStateChanged += ic.SetActiveState;
+                        if (ic.InheritParentIsActive)
+                        {
+                            ic.IsActive = isActive;
+                            OnActiveStateChanged += ic.SetActiveState;
+                        }
 
                         item.AddComponent(ic);
                         break;

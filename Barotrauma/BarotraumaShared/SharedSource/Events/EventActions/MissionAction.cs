@@ -123,11 +123,11 @@ namespace Barotrauma
                         campaign.Map.Discover(unlockLocation, checkTalents: false);
                         if (unlockedMission.Locations[0] == unlockedMission.Locations[1] || unlockedMission.Locations[1] == null)
                         {
-                            DebugConsole.NewMessage($"Unlocked mission \"{unlockedMission.Name}\" in the location \"{unlockLocation.Name}\".");
+                            DebugConsole.NewMessage($"Unlocked mission \"{unlockedMission.Name}\" in the location \"{unlockLocation.DisplayName}\".");
                         }
                         else
                         {
-                            DebugConsole.NewMessage($"Unlocked mission \"{unlockedMission.Name}\" in the connection from \"{unlockedMission.Locations[0].Name}\" to \"{unlockedMission.Locations[1].Name}\".");
+                            DebugConsole.NewMessage($"Unlocked mission \"{unlockedMission.Name}\" in the connection from \"{unlockedMission.Locations[0].DisplayName}\" to \"{unlockedMission.Locations[1].DisplayName}\".");
                         }
 #if CLIENT
                         new GUIMessageBox(string.Empty, TextManager.GetWithVariable("missionunlocked", "[missionname]", unlockedMission.Name), 

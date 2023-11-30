@@ -185,7 +185,7 @@ namespace Barotrauma
 
             for (int n = 0; n < 2; n++)
             {
-                string locationName = $"‖color:gui.orange‖{locations[n].Name}‖end‖";
+                string locationName = $"‖color:gui.orange‖{locations[n].DisplayName}‖end‖";
                 if (description != null) { description = description.Replace("[location" + (n + 1) + "]", locationName); }
                 if (successMessage != null) { successMessage = successMessage.Replace("[location" + (n + 1) + "]", locationName); }
                 if (failureMessage != null) { failureMessage = failureMessage.Replace("[location" + (n + 1) + "]", locationName); }
@@ -431,8 +431,7 @@ namespace Barotrauma
             IEnumerable<Character> crewCharacters = GameSession.GetSessionCrewCharacters(CharacterType.Both);
 
             // use multipliers here so that we can easily add them together without introducing multiplicative XP stacking
-            var experienceGainMultiplier = new AbilityMissionExperienceGainMultiplier(this, 1f);
-            crewCharacters.ForEach(c => c.CheckTalents(AbilityEffectType.OnAllyGainMissionExperience, experienceGainMultiplier));
+            var experienceGainMultiplier = new AbilityMissionExperienceGainMultiplier(this, 1f, character: null);
             crewCharacters.ForEach(c => experienceGainMultiplier.Value += c.GetStatValue(StatTypes.MissionExperienceGainMultiplier));
 
             DistributeExperienceToCrew(crewCharacters, (int)(baseExperienceGain * experienceGainMultiplier.Value));
@@ -652,16 +651,18 @@ namespace Barotrauma
         public Mission Mission { get; set; }
     }
 
-    class AbilityMissionExperienceGainMultiplier : AbilityObject, IAbilityValue, IAbilityMission
+    class AbilityMissionExperienceGainMultiplier : AbilityObject, IAbilityValue, IAbilityMission, IAbilityCharacter
     {
-        public AbilityMissionExperienceGainMultiplier(Mission mission, float missionExperienceGainMultiplier)
+        public AbilityMissionExperienceGainMultiplier(Mission mission, float missionExperienceGainMultiplier, Character character)
         {
             Value = missionExperienceGainMultiplier;
             Mission = mission;
+            Character = character;
         }
 
         public float Value { get; set; }
         public Mission Mission { get; set; }
+        public Character Character { get; set; }
     }
 
 }

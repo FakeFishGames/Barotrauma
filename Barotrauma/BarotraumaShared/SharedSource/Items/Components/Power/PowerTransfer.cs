@@ -454,6 +454,7 @@ namespace Barotrauma.Items.Components
             base.RemoveComponentSpecific();
             connectedRecipients?.Clear();
             connectionDirty?.Clear();
+            recipientsToRefresh.Clear();
         }
     }
 }

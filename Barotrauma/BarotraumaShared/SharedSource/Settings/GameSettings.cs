@@ -84,6 +84,7 @@ namespace Barotrauma
                     Graphics = GraphicsSettings.GetDefault(),
                     Audio = AudioSettings.GetDefault(),
 #if CLIENT
+                    DisableGlobalSpamList = false,
                     KeyMap = KeyMapping.GetDefault(),
                     InventoryKeyMap = InventoryKeyMapping.GetDefault()
 #endif
@@ -156,6 +157,7 @@ namespace Barotrauma
             public string RemoteMainMenuContentUrl;
 #if CLIENT
             public XElement SavedCampaignSettings;
+            public bool DisableGlobalSpamList;
 #endif
 #if DEBUG
             public bool UseSteamMatchmaking;

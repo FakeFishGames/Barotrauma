@@ -991,7 +991,7 @@ namespace Barotrauma.Items.Components
                 if (Level.Loaded.StartLocation?.Type is { ShowSonarMarker: true })
                 {
                     DrawMarker(spriteBatch,
-                        Level.Loaded.StartLocation.Name,
+                        Level.Loaded.StartLocation.DisplayName.Value,
                         (Level.Loaded.StartOutpost != null ? "outpost" : "location").ToIdentifier(),
                         "startlocation",
                         Level.Loaded.StartExitPosition, transducerCenter,
@@ -1001,7 +1001,7 @@ namespace Barotrauma.Items.Components
                 if (Level.Loaded is { EndLocation.Type.ShowSonarMarker: true, Type: LevelData.LevelType.LocationConnection })
                 {
                     DrawMarker(spriteBatch,
-                        Level.Loaded.EndLocation.Name,
+                        Level.Loaded.EndLocation.DisplayName.Value,
                         (Level.Loaded.EndOutpost != null ? "outpost" : "location").ToIdentifier(),
                         "endlocation",
                         Level.Loaded.EndExitPosition, transducerCenter,

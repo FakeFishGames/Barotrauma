@@ -236,11 +236,14 @@ namespace Barotrauma
 
         public override bool IsVisible(Rectangle worldView)
         {
-            Rectangle worldRect = WorldRect;
+            RectangleF worldRect = Quad2D.FromSubmarineRectangle(WorldRect).Rotated(
+                FlippedX != FlippedY
+                    ? rotationRad
+                    : -rotationRad).BoundingAxisAlignedRectangle;
             Vector2 worldPos = WorldPosition;
 
-            Vector2 min = new Vector2(worldRect.X, worldRect.Y - worldRect.Height);
-            Vector2 max = new Vector2(worldRect.Right, worldRect.Y);
+            Vector2 min = new Vector2(worldRect.X, worldRect.Y);
+            Vector2 max = new Vector2(worldRect.Right, worldRect.Y + worldRect.Height);
             foreach (DecorativeSprite decorativeSprite in Prefab.DecorativeSprites)
             {
                 float scale = decorativeSprite.GetScale(spriteAnimState[decorativeSprite].RandomScaleFactor) * Scale;
@@ -312,7 +315,12 @@ namespace Barotrauma
 
                 Vector2 bodyPos = WorldPosition + BodyOffset * Scale;
 
-                GUI.DrawRectangle(spriteBatch, new Vector2(bodyPos.X, -bodyPos.Y), rectSize.X, rectSize.Y, BodyRotation, Color.White,
+                GUI.DrawRectangle(sb: spriteBatch,
+                    center: new Vector2(bodyPos.X, -bodyPos.Y),
+                    width: rectSize.X,
+                    height: rectSize.Y,
+                    rotation: BodyRotation,
+                    clr: Color.White,
                     thickness: Math.Max(1, (int)(2 / Screen.Selected.Cam.Zoom)));
             }
 

@@ -103,7 +103,7 @@ namespace Barotrauma
 
         public EventAction(ScriptedEvent parentEvent, ContentXElement element)
         {
-            ParentEvent = parentEvent ?? throw new ArgumentNullException(nameof(parentEvent));
+            ParentEvent = parentEvent;
             SerializableProperty.DeserializeProperties(this, element);
         }
 
@@ -141,7 +141,11 @@ namespace Barotrauma
                 Identifier typeName = element.Name.ToString().ToIdentifier();
                 if (typeName == "TutorialSegmentAction")
                 {
-                    typeName = "EventObjectiveAction".ToIdentifier();
+                    typeName = nameof(EventObjectiveAction).ToIdentifier();
+                }
+                else if (typeName == "TutorialHighlightAction")
+                {
+                    typeName = nameof(HighlightAction).ToIdentifier();
                 }
                 actionType = Type.GetType("Barotrauma." + typeName, throwOnError: true, ignoreCase: true);
                 if (actionType == null) { throw new NullReferenceException(); }
@@ -168,6 +172,30 @@ namespace Barotrauma
                     contentPackage: element.ContentPackage);
                 return null;
             }
+        }
+
+        protected void ApplyTagsToHulls(Entity entity, Identifier hullTag, Identifier linkedHullTag)
+        {
+            var currentHull = entity switch
+            {
+                Item item => item.CurrentHull,
+                Character character => character.CurrentHull,
+                _ => null,
+            };
+            if (currentHull == null) { return; }
+
+            if (!hullTag.IsEmpty)
+            {
+                ParentEvent.AddTarget(hullTag, currentHull);
+            }
+            if (!linkedHullTag.IsEmpty)
+            {
+                ParentEvent.AddTarget(linkedHullTag, currentHull);
+                foreach (var linkedHull in currentHull.GetLinkedEntities<Hull>())
+                {
+                    ParentEvent.AddTarget(linkedHullTag, linkedHull);
+                }
+            }            
         }
 
         /// <summary>

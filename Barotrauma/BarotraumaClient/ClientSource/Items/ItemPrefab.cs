@@ -371,19 +371,27 @@ namespace Barotrauma
         {
             if (!ResizeHorizontal && !ResizeVertical)
             {
-                sprite.Draw(spriteBatch, new Vector2(placeRect.Center.X, -(placeRect.Y - placeRect.Height / 2)), SpriteColor * 0.8f, scale: scale, rotate: rotation);
+                sprite.Draw(
+                    spriteBatch: spriteBatch,
+                    pos: new Vector2(placeRect.Center.X,
+                        -(placeRect.Y - placeRect.Height / 2)),
+                    color: SpriteColor * 0.8f,
+                    scale: scale,
+                    rotate: rotation,
+                    spriteEffect: spriteEffects ^ sprite.effects);
             }
             else
             {
                 Vector2 position = placeRect.Location.ToVector2();
                 Vector2 placeSize = placeRect.Size.ToVector2();
                 sprite?.DrawTiled(
-                    spriteBatch,
-                    new Vector2(position.X, -position.Y),
-                    placeSize,
+                    spriteBatch: spriteBatch,
+                    position: new Vector2(position.X, -position.Y),
+                    targetSize: placeSize,
                     rotation: rotation,
                     textureScale: Vector2.One * scale,
-                    color: SpriteColor * 0.8f);
+                    color: SpriteColor * 0.8f,
+                    spriteEffects: spriteEffects ^ sprite.effects);
             }
         }
 

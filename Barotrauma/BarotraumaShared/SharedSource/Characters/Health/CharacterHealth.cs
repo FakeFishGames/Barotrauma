@@ -1313,6 +1313,8 @@ namespace Barotrauma
         public void Remove()
         {
             RemoveProjSpecific();
+            afflictionsToRemove.Clear();
+            afflictionsToUpdate.Clear();
         }
 
         partial void RemoveProjSpecific();

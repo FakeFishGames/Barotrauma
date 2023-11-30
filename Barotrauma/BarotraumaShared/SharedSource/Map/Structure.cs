@@ -733,6 +733,12 @@ namespace Barotrauma
             }
         }
 
+        public override Quad2D GetTransformedQuad()
+            => Quad2D.FromSubmarineRectangle(rect).Rotated(
+                FlippedX != FlippedY
+                    ? rotationRad
+                    : -rotationRad);
+
         /// <summary>
         /// Checks if there's a structure items can be attached to at the given position and returns it.
         /// </summary>
@@ -910,6 +916,12 @@ namespace Barotrauma
         {
             if (sectionIndex < 0 || sectionIndex >= Sections.Length) { return false; }
             return Sections[sectionIndex].damage >= MaxHealth * LeakThreshold;
+        }
+
+        public bool SectionIsLeakingFromOutside(int sectionIndex)
+        {
+            if (sectionIndex < 0 || sectionIndex >= Sections.Length) { return false; }
+            return SectionIsLeaking(sectionIndex) && !Sections[sectionIndex].gap.IsRoomToRoom;
         }
 
         public int SectionLength(int sectionIndex)
@@ -1304,8 +1316,8 @@ namespace Barotrauma
                 {
                     if (damageDiff < 0.0f)
                     {
-                        attacker.Info?.IncreaseSkillLevel("mechanical".ToIdentifier(),
-                            -damageDiff * SkillSettings.Current.SkillIncreasePerRepairedStructureDamage / Math.Max(attacker.GetSkillLevel("mechanical"), 1.0f));
+                        attacker.Info?.ApplySkillGain(Barotrauma.Tags.MechanicalSkill,
+                            -damageDiff * SkillSettings.Current.SkillIncreasePerRepairedStructureDamage);
                     }
                 }
             }

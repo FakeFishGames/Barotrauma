@@ -254,7 +254,7 @@ namespace Barotrauma
                 RelativeSpacing = 0.02f,
             };
 
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), content.RectTransform), location.Name, font: GUIStyle.LargeFont)
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), content.RectTransform), location.DisplayName, font: GUIStyle.LargeFont)
             {
                 AutoScaleHorizontal = true
             };
@@ -598,9 +598,10 @@ namespace Barotrauma
                     break;
                 case CampaignMode.InteractionType.Crew:
                     CrewManagement.UpdateCrew();
+                    CrewManagement.UpdateHireables();
                     break;
                 case CampaignMode.InteractionType.PurchaseSub:
-                    if (submarineSelection == null) submarineSelection = new SubmarineSelection(false, () => Campaign.ShowCampaignUI = false, tabs[(int)CampaignMode.InteractionType.PurchaseSub].RectTransform);
+                    submarineSelection ??= new SubmarineSelection(false, () => Campaign.ShowCampaignUI = false, tabs[(int)CampaignMode.InteractionType.PurchaseSub].RectTransform);
                     submarineSelection.RefreshSubmarineDisplay(true, setTransferOptionToTrue: true);
                     break;
                 case CampaignMode.InteractionType.Map:

@@ -442,6 +442,11 @@ namespace Barotrauma
 
         public List<DummyFireSource> FakeFireSources { get; private set; }
 
+        /// <summary>
+        /// Can be used by conditionals
+        /// </summary>
+        public int FireCount => FireSources?.Count ?? 0;
+
         public BallastFloraBehavior BallastFlora { get; set; }
 
         public Hull(Rectangle rectangle)

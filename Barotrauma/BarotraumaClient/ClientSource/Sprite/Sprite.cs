@@ -284,13 +284,22 @@ namespace Barotrauma
             }
         }
 
-        public void DrawTiled(ISpriteBatch spriteBatch, Vector2 position, Vector2 targetSize, float rotation = 0f, Vector2? origin = null,
-            Color? color = null, Vector2? startOffset = null, Vector2? textureScale = null, float? depth = null)
+        public void DrawTiled(ISpriteBatch spriteBatch,
+            Vector2 position,
+            Vector2 targetSize,
+            float rotation = 0f,
+            Vector2? origin = null,
+            Color? color = null,
+            Vector2? startOffset = null,
+            Vector2? textureScale = null,
+            float? depth = null,
+            SpriteEffects? spriteEffects = null)
         {
             if (Texture == null) { return; }
 
-            bool flipHorizontal = (effects & SpriteEffects.FlipHorizontally) != 0;
-            bool flipVertical = (effects & SpriteEffects.FlipVertically) != 0;
+            spriteEffects ??= effects;
+            bool flipHorizontal = (spriteEffects.Value & SpriteEffects.FlipHorizontally) != 0;
+            bool flipVertical = (spriteEffects.Value & SpriteEffects.FlipVertically) != 0;
 
             float addedRotation = rotation + this.rotation;
             if (flipHorizontal != flipVertical) { addedRotation = -addedRotation; }
@@ -311,7 +320,7 @@ namespace Barotrauma
                 Vector2 transformedPos = slicePos - position;
                 transformedPos = advanceX * transformedPos.X + advanceY * transformedPos.Y;
                 transformedPos += position - transformedOrigin;
-                spriteBatch.Draw(texture, transformedPos, sliceRect, drawColor, addedRotation, Vector2.Zero, scale, effects, depth ?? this.depth);
+                spriteBatch.Draw(texture, transformedPos, sliceRect, drawColor, addedRotation, Vector2.Zero, scale, spriteEffects.Value, depth ?? this.depth);
             }
 
             //wrap the drawOffset inside the sourceRect

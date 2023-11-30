@@ -681,6 +681,7 @@ namespace Barotrauma
             AssignRelayToServer("savebinds", false);
             AssignRelayToServer("spreadsheetexport", false);
 #if DEBUG
+            AssignRelayToServer("listspamfilters", false);
             AssignRelayToServer("crash", false);
             AssignRelayToServer("showballastflorasprite", false);
             AssignRelayToServer("simulatedlatency", false);
@@ -2234,6 +2235,30 @@ namespace Barotrauma
             }));
 
 #if DEBUG
+            commands.Add(new Command("listspamfilters", "Lists filters that are in the global spam filter.", (string[] args) =>
+            {
+                if (!SpamServerFilters.GlobalSpamFilter.TryUnwrap(out var filter))
+                {
+                    ThrowError("Global spam list is not initialized.");
+                    return;
+                }
+
+                if (!filter.Filters.Any())
+                {
+                    NewMessage("Global spam list is empty.", GUIStyle.Green);
+                    return;
+                }
+
+                StringBuilder sb = new();
+
+                foreach (var f in filter.Filters)
+                {
+                    sb.AppendLine(f.ToString());
+                }
+
+                NewMessage(sb.ToString(), GUIStyle.Green);
+            }));
+
             commands.Add(new Command("setplanthealth", "setplanthealth [value]: Sets the health of the selected plant in sub editor.", (string[] args) =>
             {
                 if (1 > args.Length || Screen.Selected != GameMain.SubEditorScreen) { return; }
@@ -3094,7 +3119,7 @@ namespace Barotrauma
                         int i = 0;
                         foreach (LocationConnection connection in campaign.Map.CurrentLocation.Connections)
                         {
-                            NewMessage("     " + i + ". " + connection.OtherLocation(campaign.Map.CurrentLocation).Name, Color.White);
+                            NewMessage("     " + i + ". " + connection.OtherLocation(campaign.Map.CurrentLocation).DisplayName, Color.White);
                             i++;
                         }
                         ShowQuestionPrompt("Select a destination (0 - " + (campaign.Map.CurrentLocation.Connections.Count - 1) + "):", (string selectedDestination) =>

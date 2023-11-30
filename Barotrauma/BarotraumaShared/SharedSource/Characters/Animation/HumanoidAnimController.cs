@@ -10,6 +10,17 @@ namespace Barotrauma
 {
     class HumanoidAnimController : AnimController
     {
+        private const float SteepestWalkableSlopeAngleDegrees = 50f;
+        private const float SlowlyWalkableSlopeAngleDegrees = 30f;
+
+        private static readonly float SteepestWalkableSlopeNormalX =
+            MathF.Sin(MathHelper.ToRadians(SteepestWalkableSlopeAngleDegrees));
+        private static readonly float SlowlyWalkableSlopeNormalX =
+            MathF.Sin(MathHelper.ToRadians(SlowlyWalkableSlopeAngleDegrees));
+
+        private const float MaxSpeedOnStairs = 1.7f;
+        private const float SteepSlopePushMagnitude = MaxSpeedOnStairs;
+
         public override RagdollParams RagdollParams
         {
             get { return HumanRagdollParams; }
@@ -501,10 +512,14 @@ namespace Barotrauma
             Limb leftLeg = GetLimb(LimbType.LeftLeg);
             Limb rightLeg = GetLimb(LimbType.RightLeg);
 
+            bool onSlopeThatMakesSlow = Math.Abs(floorNormal.X) > SlowlyWalkableSlopeNormalX;
+            bool slowedDownBySlope = onSlopeThatMakesSlow && Math.Sign(floorNormal.X) == -Math.Sign(TargetMovement.X);
+            bool onSlopeTooSteepToClimb = Math.Abs(floorNormal.X) > SteepestWalkableSlopeNormalX;
+
             float walkCycleMultiplier = 1.0f;
-            if (Stairs != null)
+            if (Stairs != null || slowedDownBySlope)
             {
-                TargetMovement = new Vector2(MathHelper.Clamp(TargetMovement.X, -1.7f, 1.7f), TargetMovement.Y);                
+                TargetMovement = new Vector2(MathHelper.Clamp(TargetMovement.X, -MaxSpeedOnStairs, MaxSpeedOnStairs), TargetMovement.Y);
                 walkCycleMultiplier *= 1.5f;                
             }
 
@@ -585,6 +600,15 @@ namespace Barotrauma
             bool onSlope = Math.Abs(movement.X) > 0.01f && Math.Abs(floorNormal.X) > 0.1f && Math.Sign(floorNormal.X) != Math.Sign(movement.X);
 
             bool movingHorizontally = !MathUtils.NearlyEqual(TargetMovement.X, 0.0f);
+
+            if (Stairs == null && onSlopeTooSteepToClimb)
+            {
+                if (Math.Sign(targetMovement.X) != Math.Sign(floorNormal.X))
+                {
+                    targetMovement.X = Math.Sign(floorNormal.X) * SteepSlopePushMagnitude;
+                    movement = targetMovement;
+                }
+            }
 
             if (Stairs != null || onSlope)
             {
@@ -764,7 +788,7 @@ namespace Barotrauma
                     {
                         footPos = new Vector2(colliderPos.X + stepSize.X * i * 0.2f, colliderPos.Y - 0.1f);
                     }
-                    if (Stairs == null)
+                    if (Stairs == null && !onSlopeThatMakesSlow)
                     {
                         footPos.Y = Math.Max(Math.Min(FloorY, footPos.Y + 0.5f), footPos.Y);
                     }
@@ -1536,7 +1560,7 @@ namespace Barotrauma
                 target.CharacterHealth.CalculateVitality();
                 if (wasCritical && target.Vitality > 0.0f && Timing.TotalTime > lastReviveTime + 10.0f)
                 {
-                    character.Info?.IncreaseSkillLevel("medical".ToIdentifier(), SkillSettings.Current.SkillIncreasePerCprRevive);
+                    character.Info?.ApplySkillGain(Tags.MedicalSkill, SkillSettings.Current.SkillIncreasePerCprRevive);
                     SteamAchievementManager.OnCharacterRevived(target, character);
                     lastReviveTime = (float)Timing.TotalTime;
 #if SERVER
@@ -1741,7 +1765,23 @@ namespace Barotrauma
                                 targetAnchor += target.Submarine.SimPosition;
                             }
                         }
-                        pullLimb.PullJointWorldAnchorB = pullLimbAnchor;
+                        if (Vector2.DistanceSquared(pullLimb.PullJointWorldAnchorA, pullLimbAnchor) > 50.0f * 50.0f)
+                        {
+                            //there's a similar error check in the PullJointWorldAnchorB setter, but we seem to be getting quite a lot of
+                            //errors specifically from this method, so let's use a more consistent error message here to prevent clogging GA with
+                            //different error messages that all include a different coordinate
+                            string errorMsg =
+                                $"Attempted to move the anchor B of a limb's pull joint extremely far from the limb in {nameof(DragCharacter)}. " +
+                                $"Character in sub: {character.Submarine != null}, target in sub: {target.Submarine != null}.";
+                            GameAnalyticsManager.AddErrorEventOnce("DragCharacter:PullJointTooFar", GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
+#if DEBUG
+                            DebugConsole.ThrowError(errorMsg);
+#endif
+                        }
+                        else
+                        {
+                            pullLimb.PullJointWorldAnchorB = pullLimbAnchor;
+                        }
                     }
                     else
                     {

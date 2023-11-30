@@ -1026,6 +1026,10 @@ namespace Barotrauma
             }
         }
 
+        /// <summary>
+        /// Removes all the effects of the prefab (including the sounds and other assets defined in them).
+        /// Note that you need to call LoadAllEffectsAndTreatmentSuitabilities before trying to use the affliction again!
+        /// </summary>
         public static void ClearAllEffects()
         {
             Prefabs.ForEach(p => p.ClearEffects());

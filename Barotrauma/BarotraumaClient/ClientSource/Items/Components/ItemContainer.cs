@@ -346,9 +346,9 @@ namespace Barotrauma.Items.Components
 
         public bool KeepOpenWhenEquippedBy(Character character)
         {
-            if (!character.CanAccessInventory(Inventory) ||
-                !KeepOpenWhenEquipped ||
-                !character.HasEquippedItem(Item))
+            if (!KeepOpenWhenEquipped ||
+                !character.HasEquippedItem(Item) ||
+                !character.CanAccessInventory(Inventory))
             {
                 return false;
             }
@@ -571,11 +571,13 @@ namespace Barotrauma.Items.Components
                 {
                     spriteRotation = contained.Rotation;
                 }
-                if ((item.body != null && item.body.Dir == -1) || item.FlippedX)
+                bool flipX = (item.body != null && item.body.Dir == -1) || item.FlippedX;
+                if (flipX)
                 {
                     spriteEffects |= MathUtils.NearlyEqual(spriteRotation % 180, 90.0f) ? SpriteEffects.FlipVertically : SpriteEffects.FlipHorizontally;
                 }
-                if (item.FlippedY)
+                bool flipY = item.FlippedY;
+                if (flipY)
                 {
                     spriteEffects |= MathUtils.NearlyEqual(spriteRotation % 180, 90.0f) ? SpriteEffects.FlipHorizontally : SpriteEffects.FlipVertically;
                 }
@@ -589,6 +591,7 @@ namespace Barotrauma.Items.Components
                     contained.Item.Scale,
                     spriteEffects,
                     depth: containedSpriteDepth);
+                contained.Item.DrawDecorativeSprites(spriteBatch, itemPos, flipX,flipY, (contained.Item.body == null ? 0.0f : contained.Item.body.DrawRotation), containedSpriteDepth);
 
                 foreach (ItemContainer ic in contained.Item.GetComponents<ItemContainer>())
                 {

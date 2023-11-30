@@ -161,16 +161,18 @@ namespace Barotrauma
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
-#if CLIENT
                     case "gamemode": //legacy support
                     case "singleplayercampaign":
+#if CLIENT
                         CrewManager = new CrewManager(true);
                         var campaign = SinglePlayerCampaign.Load(subElement);
                         campaign.LoadNewLevel();
                         GameMode = campaign;
                         InitOwnedSubs(submarineInfo, ownedSubmarines);
-                        break;
+#else
+                        throw new Exception("The server cannot load a single player campaign.");
 #endif
+                        break;            
                     case "multiplayercampaign":
                         CrewManager = new CrewManager(false);
                         var mpCampaign = MultiPlayerCampaign.LoadNew(subElement);
@@ -567,7 +569,7 @@ namespace Barotrauma
                 if (EndLocation != null && levelData != null)
                 {
                     GUI.AddMessage(levelData.Biome.DisplayName, Color.Lerp(Color.CadetBlue, Color.DarkRed, levelData.Difficulty / 100.0f), 5.0f, playSound: false);
-                    GUI.AddMessage(TextManager.AddPunctuation(':', TextManager.Get("Destination"), EndLocation.Name), Color.CadetBlue, playSound: false);
+                    GUI.AddMessage(TextManager.AddPunctuation(':', TextManager.Get("Destination"), EndLocation.DisplayName), Color.CadetBlue, playSound: false);
                     var missionsToShow = missions.Where(m => m.Prefab.ShowStartMessage);
                     if (missionsToShow.Count() > 1)
                     {
@@ -582,7 +584,7 @@ namespace Barotrauma
                 }
                 else
                 {
-                    GUI.AddMessage(TextManager.AddPunctuation(':', TextManager.Get("Location"), StartLocation.Name), Color.CadetBlue, playSound: false);
+                    GUI.AddMessage(TextManager.AddPunctuation(':', TextManager.Get("Location"), StartLocation.DisplayName), Color.CadetBlue, playSound: false);
                 }
             }
 
@@ -871,6 +873,7 @@ namespace Barotrauma
 
             //Clear the grids to allow for garbage collection
             Powered.Grids.Clear();
+            Powered.ChangedConnections.Clear();
 
             try
             {

@@ -39,6 +39,23 @@ namespace Barotrauma
         }
 
         public Item? FindItemInContainer(ItemContainer? container)
-            => container?.Inventory.GetItemsAt(Slot).ElementAt(StackIndex);
+        {
+            var items = container?.Inventory.GetItemsAt(Slot);
+            if (items != null && StackIndex >= 0 && StackIndex < items.Count())
+            {
+                return items.ElementAt(StackIndex);
+            }
+            else
+            {
+                string errorMsg =
+                    $"Circuit box error: failed to find an item in the container {container?.Item.Name ?? "null"}.";
+                DebugConsole.ThrowError(
+                    errorMsg +
+                    $" Items: {items?.Count().ToString() ?? "null"}, " +
+                    $" Slot: {Slot}, StackIndex: {StackIndex}");
+                GameAnalyticsManager.AddErrorEventOnce("ItemSlotIndexPair.FindItemInContainer", GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
+                return null;
+            }
+        }
     }
 }

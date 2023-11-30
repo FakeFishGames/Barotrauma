@@ -181,33 +181,6 @@ namespace Barotrauma.Networking
             };
             title.Text = ToolBox.LimitString(title.Text, title.Font, (int)(title.Rect.Width * 0.85f));
 
-            bool isFavorite = serverListScreen.IsFavorite(this);
-
-            static LocalizedString favoriteTickBoxToolTip(bool isFavorite)
-                => TextManager.Get(isFavorite ? "RemoveFromFavorites" : "AddToFavorites");
-            
-            GUITickBox favoriteTickBox = new GUITickBox(new RectTransform(new Vector2(0.15f, 0.8f), title.RectTransform, Anchor.CenterRight), 
-                "", null, "GUIServerListFavoriteTickBox")
-            {
-                UserData = this,
-                Selected = isFavorite,
-                ToolTip = favoriteTickBoxToolTip(isFavorite),
-                OnSelected = tickbox =>
-                {
-                    ServerInfo info = (ServerInfo)tickbox.UserData;
-                    if (tickbox.Selected)
-                    {
-                        GameMain.ServerListScreen.AddToFavoriteServers(info);
-                    }
-                    else
-                    {
-                        GameMain.ServerListScreen.RemoveFromFavoriteServers(info);
-                    }
-                    tickbox.ToolTip = favoriteTickBoxToolTip(tickbox.Selected);
-                    return true;
-                }
-            };
-
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), frame.RectTransform),
                 TextManager.AddPunctuation(':', TextManager.Get("ServerListVersion"),
                     GameVersion == new Version(0, 0, 0, 0) ? TextManager.Get("Unknown") : GameVersion.ToString()))
@@ -263,6 +236,59 @@ namespace Barotrauma.Networking
             {
                 Stretch = true
             };
+
+            var buttonContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.5f, 0.25f), playStyleBanner.RectTransform, Anchor.BottomRight), 
+                isHorizontal: true, childAnchor: Anchor.BottomRight);
+
+            //shadow behind the buttons
+            new GUIFrame(new RectTransform(new Vector2(3.15f, 1.05f), buttonContainer.RectTransform, Anchor.BottomRight, scaleBasis: ScaleBasis.Smallest), style: null)
+            {
+                Color = Color.Black * 0.7f,
+                IgnoreLayoutGroups = true
+            };
+
+            bool isFavorite = serverListScreen.IsFavorite(this);
+            static LocalizedString favoriteTickBoxToolTip(bool isFavorite)
+                => TextManager.Get(isFavorite ? "RemoveFromFavorites" : "AddToFavorites");
+
+            GUITickBox favoriteTickBox = new GUITickBox(new RectTransform(Vector2.One, buttonContainer.RectTransform, scaleBasis: ScaleBasis.Smallest),
+                "", null, "GUIServerListFavoriteTickBox")
+            {
+                UserData = this,
+                Selected = isFavorite,
+                ToolTip = favoriteTickBoxToolTip(isFavorite),
+                OnSelected = tickbox =>
+                {
+                    ServerInfo info = (ServerInfo)tickbox.UserData;
+                    if (tickbox.Selected)
+                    {
+                        GameMain.ServerListScreen.AddToFavoriteServers(info);
+                    }
+                    else
+                    {
+                        GameMain.ServerListScreen.RemoveFromFavoriteServers(info);
+                    }
+                    tickbox.ToolTip = favoriteTickBoxToolTip(tickbox.Selected);
+                    return true;
+                }
+            };
+
+            new GUIButton(new RectTransform(Vector2.One, buttonContainer.RectTransform, scaleBasis: ScaleBasis.Smallest), style: "GUIServerListReportServer")
+            {
+                ToolTip = TextManager.Get("reportserver"),
+                OnClicked = (_, _) => {ServerListScreen.CreateReportPrompt(this); return true; }
+            };
+
+            new GUIButton(new RectTransform(Vector2.One, buttonContainer.RectTransform, scaleBasis: ScaleBasis.Smallest), style: "GUIServerListHideServer")
+            {
+                ToolTip = TextManager.Get("filterserver"),
+                OnClicked = (_, _) =>
+                {
+                    ServerListScreen.CreateFilterServerPrompt(this);
+                    return true;
+                }
+            };
+
             // playstyle tags -----------------------------------------------------------------------------
 
             var playStyleContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.15f), content.RectTransform), isHorizontal: true)

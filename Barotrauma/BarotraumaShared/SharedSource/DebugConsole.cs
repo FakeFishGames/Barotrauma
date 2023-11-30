@@ -858,7 +858,13 @@ namespace Barotrauma
 
             commands.Add(new Command("debugevent", "debugevent [identifier]: outputs debug info about a specific event that's currently active. Mainly intended for debugging events in multiplayer: in single player, the same information is available by enabling debugdraw.", (string[] args) =>
             {
-                if (GameMain.GameSession?.EventManager is EventManager eventManager && args.Length > 0)
+                if (args.Length == 0)
+                {
+                    ThrowError($"Please specify the identifier of the event you want to debug.");
+                    return;
+                }
+
+                if (GameMain.GameSession?.EventManager is EventManager eventManager)
                 {
                     var ev = eventManager.ActiveEvents.FirstOrDefault(ev => ev.Prefab?.Identifier == args[0]);
                     if (ev == null)
@@ -877,9 +883,18 @@ namespace Barotrauma
                 }
             }, isCheat: true, getValidArgs: () =>
             {
+                IEnumerable<EventPrefab> eventPrefabs;
+                if (GameMain.GameSession?.EventManager == null || GameMain.GameSession.EventManager.ActiveEvents.None())
+                {
+                    eventPrefabs = EventSet.GetAllEventPrefabs().Where(prefab => prefab.Identifier != Identifier.Empty);
+                }
+                else
+                {
+                    eventPrefabs = GameMain.GameSession.EventManager.ActiveEvents.Select(e => e.Prefab);
+                }
                 return new[]
                 {
-                   GameMain.GameSession?.EventManager?.ActiveEvents.Select(ev => ev.Prefab.Identifier.ToString()).ToArray() ?? Array.Empty<string>()
+                    eventPrefabs.Select(ev => ev.Identifier.ToString()).ToArray() ?? Array.Empty<string>()
                 };
             }));
 
@@ -1613,7 +1628,7 @@ namespace Barotrauma
                     int i = 0;
                     foreach (LocationConnection connection in campaign.Map.CurrentLocation.Connections)
                     {
-                        NewMessage("     " + i + ". " + connection.OtherLocation(campaign.Map.CurrentLocation).Name, Color.White);
+                        NewMessage("     " + i + ". " + connection.OtherLocation(campaign.Map.CurrentLocation).DisplayName, Color.White);
                         i++;
                     }
                     ShowQuestionPrompt("Select a destination (0 - " + (campaign.Map.CurrentLocation.Connections.Count - 1) + "):", (string selectedDestination) =>
@@ -1627,7 +1642,7 @@ namespace Barotrauma
                         }
                         Location location = campaign.Map.CurrentLocation.Connections[destinationIndex].OtherLocation(campaign.Map.CurrentLocation);
                         campaign.Map.SelectLocation(location);
-                        NewMessage(location.Name + " selected.", Color.White);
+                        NewMessage(location.DisplayName + " selected.", Color.White);
                     });
                 }
                 else
@@ -1641,7 +1656,7 @@ namespace Barotrauma
                     }
                     Location location = campaign.Map.CurrentLocation.Connections[destinationIndex].OtherLocation(campaign.Map.CurrentLocation);
                     campaign.Map.SelectLocation(location);
-                    NewMessage(location.Name + " selected.", Color.White);
+                    NewMessage(location.DisplayName + " selected.", Color.White);
                 }
             }));
 
@@ -1913,7 +1928,7 @@ namespace Barotrauma
                 {
                     if (location.Stores != null)
                     {
-                        var msg = "--- Location: " + location.Name + " ---";
+                        var msg = "--- Location: " + location.DisplayName + " ---";
                         foreach (var store in location.Stores)
                         {
                             msg += $"\nStore identifier: {store.Value.Identifier}";
@@ -2417,11 +2432,7 @@ namespace Barotrauma
 
         public static void LogError(string msg, Color? color = null, ContentPackage contentPackage = null)
         {
-            if (contentPackage != null)
-            {
-                string colorStr = XMLExtensions.ToStringHex(Color.MediumPurple);
-                msg = $"‖color:{colorStr}‖[{contentPackage.Name}]‖color:end‖ {msg}";
-            }
+            msg = AddContentPackageInfoToMessage(msg, contentPackage);
             color ??= Color.Red;
             NewMessage(msg, color.Value, isCommand: false, isError: true);
         }
@@ -2557,11 +2568,7 @@ namespace Barotrauma
 
         public static void ThrowError(string error, Exception e = null, ContentPackage contentPackage = null, bool createMessageBox = false, bool appendStackTrace = false)
         {
-            if (contentPackage != null)
-            {
-                string color = XMLExtensions.ToStringHex(Color.MediumPurple);
-                error = $"‖color:{color}‖[{contentPackage.Name}]‖color:end‖ {error}";
-            }
+            error = AddContentPackageInfoToMessage(error, contentPackage);
             if (e != null)
             {
                 error += " {" + e.Message + "}\n";
@@ -2610,14 +2617,20 @@ namespace Barotrauma
 
         public static void AddWarning(string warning, ContentPackage contentPackage = null)
         {
-            warning = $"WARNING: {warning}";
-            if (contentPackage != null)
-            {
-                string color = XMLExtensions.ToStringHex(Color.MediumPurple);
-                warning = $"‖color:{color}‖[{contentPackage.Name}]‖color:end‖ {warning}";
-            }
+            warning = AddContentPackageInfoToMessage($"WARNING: {warning}", contentPackage);
             System.Diagnostics.Debug.WriteLine(warning);
             NewMessage(warning, Color.Yellow);
+        }
+
+        private static string AddContentPackageInfoToMessage(string message, ContentPackage contentPackage)
+        {
+            if (contentPackage == null) { return message; }
+#if CLIENT
+            string color = XMLExtensions.ToStringHex(Color.MediumPurple);
+            return $"‖color:{color}‖[{contentPackage.Name}]‖color:end‖ {message}";
+#else
+            return $"[{contentPackage.Name}] {message}";
+#endif
         }
 
 #if CLIENT

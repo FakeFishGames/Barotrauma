@@ -67,10 +67,18 @@ namespace Barotrauma
                 }
                 foreach (var item in HeldItems)
                 {
-                    if (item.body != null)
+                    if (item.body == null) { continue; }
+                    if (!enabled)
                     {
-                        item.body.Enabled = enabled;
+                        item.body.Enabled = false;
                     }
+                    else if (item.GetComponent<Holdable>() is { IsActive: true })
+                    {
+                        //held items includes all items in hand slots
+                        //we only want to enable the physics body if it's an actual holdable item, not e.g. a wearable item like handcuffs
+                        item.body.Enabled = true;
+                    }
+
                 }
                 AnimController.Collider.Enabled = value;
             }
@@ -936,10 +944,16 @@ namespace Barotrauma
             {
                 var prevSelectedItem = _selectedItem;
                 _selectedItem = value;
+                if (value is not null) 
+                {
+                    CheckTalents(AbilityEffectType.OnItemSelected, new AbilityItemSelected(value));
+                }
 #if CLIENT
                 HintManager.OnSetSelectedItem(this, prevSelectedItem, _selectedItem);
                 if (Controlled == this)
                 {
+                    _selectedItem?.GetComponent<Fabricator>()?.RefreshSelectedItem();
+
                     if (_selectedItem == null)
                     {
                         GameMain.GameSession?.CrewManager?.ResetCrewList();
@@ -1694,31 +1708,21 @@ namespace Barotrauma
             info.Job?.GiveJobItems(this, spawnPoint);
         }
 
-
-        public void GiveIdCardTags(WayPoint spawnPoint, bool requireSpawnPointTagsNotGiven = true, bool createNetworkEvent = false)
+        public void GiveIdCardTags(WayPoint spawnPoint, bool createNetworkEvent = false)
         {
-            GiveIdCardTags(spawnPoint.ToEnumerable(), requireSpawnPointTagsNotGiven, createNetworkEvent);
-        }
-
-        public void GiveIdCardTags(IEnumerable<WayPoint> spawnPoints, bool requireSpawnPointTagsNotGiven = true, bool createNetworkEvent = false)
-        {
-            if (info?.Job == null || spawnPoints == null) { return; }
+            if (info?.Job == null || spawnPoint == null) { return; }
 
             foreach (Item item in Inventory.AllItems)
             {
-                if (item?.GetComponent<IdCard>() is not IdCard idCard) { continue; }
-                if (requireSpawnPointTagsNotGiven)
+                var idCard = item?.GetComponent<IdCard>();
+                if (idCard == null) { continue; }
+                //if the card belongs to someone else, don't add any tags.
+                //otherwise you can gain access to places you shouldn't by temporarily giving the card to someone (e.g. a captain bot) at the end of the round
+                if (idCard.OwnerName != info.Name) { continue; }
+                foreach (string s in spawnPoint.IdCardTags)
                 {
-                    if (idCard.SpawnPointTagsGiven) { continue; }
+                    item.AddTag(s);
                 }
-                foreach (var spawnPoint in spawnPoints)
-                {
-                    foreach (string s in spawnPoint.IdCardTags)
-                    {
-                        item.AddTag(s);
-                    }
-                }
-                idCard.SpawnPointTagsGiven = true;
                 if (createNetworkEvent && GameMain.NetworkMember is { IsServer: true })
                 {
                     GameMain.NetworkMember.CreateEntityEvent(item, new Item.ChangePropertyEventData(item.SerializableProperties[nameof(item.Tags).ToIdentifier()], item));
@@ -2303,40 +2307,40 @@ namespace Barotrauma
             return AnimController.GetLimb(LimbType.Head) ?? AnimController.GetLimb(LimbType.Torso) ?? AnimController.MainLimb;
         }
 
-        public bool CanSeeTarget(ISpatialEntity target, ISpatialEntity seeingEntity = null, bool checkFacing = false)
+        public bool CanSeeTarget(ISpatialEntity target, ISpatialEntity seeingEntity = null, bool seeThroughWindows = false, bool checkFacing = false)
         {
             seeingEntity ??= AnimController.SimplePhysicsEnabled ? this : GetSeeingLimb();
             if (target is Character targetCharacter)
             {
-                return IsCharacterVisible(targetCharacter, seeingEntity, checkFacing);
+                return IsCharacterVisible(targetCharacter, seeingEntity, seeThroughWindows, checkFacing);
             }
             else
             {
-                return CheckVisibility(target, seeingEntity, checkFacing);
+                return CheckVisibility(target, seeingEntity, seeThroughWindows, checkFacing);
             }
         }
 
-        public static bool IsTargetVisible(ISpatialEntity target, ISpatialEntity seeingEntity, bool checkFacing = false)
+        public static bool IsTargetVisible(ISpatialEntity target, ISpatialEntity seeingEntity, bool seeThroughWindows = false, bool checkFacing = false)
         {
             if (seeingEntity is Character seeingCharacter)
             {
-                return seeingCharacter.CanSeeTarget(target, checkFacing: checkFacing);
+                return seeingCharacter.CanSeeTarget(target, seeThroughWindows: seeThroughWindows, checkFacing: checkFacing);
             }
             if (target is Character targetCharacter)
             {
-                return IsCharacterVisible(targetCharacter, seeingEntity, checkFacing);
+                return IsCharacterVisible(targetCharacter, seeingEntity, seeThroughWindows, checkFacing);
             }
             else
             {
-                return CheckVisibility(target, seeingEntity, checkFacing);
+                return CheckVisibility(target, seeingEntity, seeThroughWindows, checkFacing);
             }
         }
 
-        private static bool IsCharacterVisible(Character target, ISpatialEntity seeingEntity, bool checkFacing = false)
+        private static bool IsCharacterVisible(Character target, ISpatialEntity seeingEntity, bool seeThroughWindows = false, bool checkFacing = false)
         {
             System.Diagnostics.Debug.Assert(target != null);
             if (target == null || target.Removed) { return false; }
-            if (CheckVisibility(target, seeingEntity, checkFacing)) { return true; }
+            if (CheckVisibility(target, seeingEntity, seeThroughWindows, checkFacing)) { return true; }
             if (!target.AnimController.SimplePhysicsEnabled)
             {
                 //find the limbs that are furthest from the target's position (from the viewer's point of view)
@@ -2365,13 +2369,13 @@ namespace Barotrauma
                         continue;
                     }
                 }
-                if (leftExtremity != null && CheckVisibility(leftExtremity, seeingEntity, checkFacing)) { return true; }
-                if (rightExtremity != null && CheckVisibility(rightExtremity, seeingEntity, checkFacing)) { return true; }
+                if (leftExtremity != null && CheckVisibility(leftExtremity, seeingEntity, seeThroughWindows, checkFacing)) { return true; }
+                if (rightExtremity != null && CheckVisibility(rightExtremity, seeingEntity, seeThroughWindows, checkFacing)) { return true; }
             }
             return false;
         }
 
-        private static bool CheckVisibility(ISpatialEntity target, ISpatialEntity seeingEntity, bool checkFacing = false)
+        private static bool CheckVisibility(ISpatialEntity target, ISpatialEntity seeingEntity, bool seeThroughWindows = true, bool checkFacing = false)
         {
             System.Diagnostics.Debug.Assert(target != null);
             if (target == null) { return false; }
@@ -2382,39 +2386,37 @@ namespace Barotrauma
             {
                 if (Math.Sign(diff.X) != seeingCharacter.AnimController.Dir) { return false; }
             }
-            Body closestBody;
             //both inside the same sub (or both outside)
             //OR the we're inside, the other character outside
             if (target.Submarine == seeingEntity.Submarine || target.Submarine == null)
             {
-                closestBody = Submarine.CheckVisibility(seeingEntity.SimPosition, seeingEntity.SimPosition + diff);
+                return Submarine.CheckVisibility(seeingEntity.SimPosition, seeingEntity.SimPosition + diff, blocksVisibilityPredicate: IsBlocking) == null;
             }
             //we're outside, the other character inside
             else if (seeingEntity.Submarine == null)
             {
-                closestBody = Submarine.CheckVisibility(target.SimPosition, target.SimPosition - diff);
+                return Submarine.CheckVisibility(target.SimPosition, target.SimPosition - diff, blocksVisibilityPredicate: IsBlocking) == null;
             }
             //both inside different subs
             else
             {
-                closestBody = Submarine.CheckVisibility(seeingEntity.SimPosition, seeingEntity.SimPosition + diff);
-                if (!IsBlocking(closestBody))
-                {
-                    closestBody = Submarine.CheckVisibility(target.SimPosition, target.SimPosition - diff);
-                }
+                return 
+                    Submarine.CheckVisibility(seeingEntity.SimPosition, seeingEntity.SimPosition + diff, blocksVisibilityPredicate: IsBlocking) == null &&
+                    Submarine.CheckVisibility(target.SimPosition, target.SimPosition - diff, blocksVisibilityPredicate: IsBlocking) == null;                
             }
-            return !IsBlocking(closestBody);
 
-            bool IsBlocking(Body body)
+            bool IsBlocking(Fixture f)
             {
+                var body = f.Body;
                 if (body == null) { return false; }
-                if (body.UserData is Structure wall && wall.CastShadow)
+                if (body.UserData is Structure wall)
                 {
+                    if (!wall.CastShadow && seeThroughWindows) { return false; }
                     return wall != target;
                 }
                 else if (body.UserData is Item item)
                 {
-                    if (item.GetComponent<Door>() is { HasWindow: true } door)
+                    if (item.GetComponent<Door>() is { HasWindow: true } door && seeThroughWindows)
                     {
                         if (door.IsPositionOnWindow(ConvertUnits.ToDisplayUnits(Submarine.LastPickedPosition))) { return false; }
                     }
@@ -2513,9 +2515,21 @@ namespace Barotrauma
 
             if (inventory.Owner is Item item)
             {
-                if (!CanInteractWith(item) && !item.linkedTo.Any(lt => lt is Item item && item.DisplaySideBySideWhenLinked && CanInteractWith(item))) { return false; }
-                ItemContainer container = item.GetComponents<ItemContainer>().FirstOrDefault(ic => ic.Inventory == inventory);
-                if (container != null && !container.HasRequiredItems(this, addMessage: false)) { return false; }
+                if (!CanInteractWith(item)) 
+                {
+                    //could be simplified with LINQ, but that'd require capturing variables which we shouldn't do in a method that's called as frequently as this
+                    foreach (var linkedEntity in item.linkedTo)
+                    {
+                        if (linkedEntity is Item linkedItem && linkedItem.DisplaySideBySideWhenLinked && CanInteractWith(linkedItem)) { return true; }
+                    }
+                    return false; 
+                }
+                ItemContainer container = (inventory as ItemInventory)?.Container;
+                if (container != null)
+                {
+                    if (!container.HasRequiredItems(this, addMessage: false)) { return false; }
+                    if (!container.DrawInventory) { return false; }
+                }
             }
             return true;
         }
@@ -3584,6 +3598,8 @@ namespace Barotrauma
 
         private void Despawn(bool createNetworkEvents = true)
         {
+            if (!EnableDespawn) { return; }
+
             Identifier despawnContainerId =
                 IsHuman ?
                 "despawncontainer".ToIdentifier() :
@@ -3665,10 +3681,12 @@ namespace Barotrauma
             float massFactor = (float)Math.Sqrt(Mass / 20);
             float targetRange = Math.Min(minRange + massFactor * AnimController.Collider.LinearVelocity.Length() * 2 * Visibility, maxAIRange);
             float newRange = MathHelper.SmoothStep(aiTarget.SightRange, targetRange, deltaTime * aiTargetChangeSpeed);
+            newRange *= 1.0f + GetStatValue(StatTypes.SightRangeMultiplier);
             if (!float.IsNaN(newRange))
             {
                 aiTarget.SightRange = newRange;
             }
+            
         }
 
         private void UpdateSoundRange(float deltaTime)
@@ -3683,6 +3701,7 @@ namespace Barotrauma
                 float massFactor = (float)Math.Sqrt(Mass / 10);
                 float targetRange = Math.Min(massFactor * AnimController.Collider.LinearVelocity.Length() * 2 * Noise, maxAIRange);
                 float newRange = MathHelper.SmoothStep(aiTarget.SoundRange, targetRange, deltaTime * aiTargetChangeSpeed);
+                newRange *= 1.0f + GetStatValue(StatTypes.SoundRangeMultiplier);
                 if (!float.IsNaN(newRange))
                 {
                     aiTarget.SoundRange = newRange;
@@ -4340,19 +4359,16 @@ namespace Barotrauma
             }
             if (medicalDamage > 0)
             {
-                IncreaseSkillLevel("medical".ToIdentifier(), medicalDamage);
+                IncreaseSkillLevel(Tags.MedicalSkill, medicalDamage);
             }
             if (weaponDamage > 0)
             {
-                IncreaseSkillLevel("weapons".ToIdentifier(), weaponDamage);
+                IncreaseSkillLevel(Tags.WeaponsSkill, weaponDamage);
             }
 
             void IncreaseSkillLevel(Identifier skill, float damage)
             {
-                float attackerSkillLevel = attacker.GetSkillLevel(skill);
-                // The formula is too generous on low skill levels, hence the minimum divider.
-                float minSkillDivider = 15f;
-                attacker.Info?.IncreaseSkillLevel(skill, damage * SkillSettings.Current.SkillIncreasePerHostileDamage / Math.Max(attackerSkillLevel, minSkillDivider));
+                attacker.Info?.ApplySkillGain(skill, damage * SkillSettings.Current.SkillIncreasePerHostileDamage, false, 1f);
             }
         }
 
@@ -4366,12 +4382,10 @@ namespace Barotrauma
             {
                 medicalGain += affliction.Strength * affliction.Prefab.MedicalSkillGain;
             }
-            if (medicalGain <= 0) { return; }
-            Identifier skill = new Identifier("medical");
-            float attackerSkillLevel = healer.GetSkillLevel(skill);
-            // The formula is too generous on low skill levels, hence the minimum divider.
-            float minSkillDivider = 15f;
-            healer.Info?.IncreaseSkillLevel(skill, medicalGain * SkillSettings.Current.SkillIncreasePerFriendlyHealed / Math.Max(attackerSkillLevel, minSkillDivider));
+            if (medicalGain > 0)
+            {
+                healer.Info?.ApplySkillGain(Tags.MedicalItem, medicalGain * SkillSettings.Current.SkillIncreasePerFriendlyHealed);
+            }
         }
 
         /// <summary>
@@ -5005,8 +5019,10 @@ namespace Barotrauma
 
         private readonly List<Hull> visibleHulls = new List<Hull>();
         private readonly HashSet<Hull> tempList = new HashSet<Hull>();
+
         /// <summary>
-        /// Returns hulls that are visible to the player, including the current hull.
+        /// Returns hulls that are visible to the character, including the current hull. 
+        /// Note that this is not an accurate visibility check, it only checks for open gaps between the adjacent and linked hulls.
         /// Can be heavy if used every frame.
         /// </summary>
         public List<Hull> GetVisibleHulls()
@@ -5021,7 +5037,7 @@ namespace Barotrauma
                 foreach (var hull in adjacentHulls)
                 {
                     if (hull.ConnectedGaps.Any(g => 
-                        (g.Open > 0.9f || g.ConnectedDoor is { HasWindow: true }) && 
+                        g.Open > 0.9f && 
                         g.linkedTo.Contains(CurrentHull) &&
                         Vector2.DistanceSquared(g.WorldPosition, WorldPosition) < Math.Pow(maxDistance / 2, 2)))
                     {
@@ -5041,7 +5057,7 @@ namespace Barotrauma
                     else
                     {
                         if (h.ConnectedGaps.Any(g =>
-                            (g.Open > 0.9f || g.ConnectedDoor is { HasWindow: true }) &&
+                            g.Open > 0.9f &&
                             Vector2.DistanceSquared(g.WorldPosition, WorldPosition) < Math.Pow(maxDistance / 2, 2) &&
                             CanSeeTarget(g)))
                         {
@@ -5582,4 +5598,12 @@ namespace Barotrauma
         public Character Character { get; set; }
     }
 
+    class AbilityItemSelected : AbilityObject, IAbilityItem
+    {
+        public AbilityItemSelected(Item item)
+        {
+            Item = item;
+        }
+        public Item Item { get; set; }
+    }
 }

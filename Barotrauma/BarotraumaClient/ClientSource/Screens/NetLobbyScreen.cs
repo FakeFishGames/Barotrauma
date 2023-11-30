@@ -1520,6 +1520,7 @@ namespace Barotrauma
             };
 
             bool nameChangePending = isGameRunning && GameMain.Client.PendingName != string.Empty && GameMain.Client?.Character?.Name != GameMain.Client.PendingName;
+            changesPendingText?.Parent?.RemoveChild(changesPendingText);
             changesPendingText = null;
 
             if (TabMenu.PendingChanges)

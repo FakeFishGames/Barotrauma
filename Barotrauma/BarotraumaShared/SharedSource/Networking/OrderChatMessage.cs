@@ -195,7 +195,7 @@ namespace Barotrauma.Networking
             int orderPriority = msg.ReadByte();
             OrderTarget orderTargetPosition = null;
             Order.OrderTargetType orderTargetType = (Order.OrderTargetType)msg.ReadByte();
-            int wallSectionIndex = 0;
+            int? wallSectionIndex = null;
             if (msg.ReadBoolean())
             {
                 float x = msg.ReadSingle();
