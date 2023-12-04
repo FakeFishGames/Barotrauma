@@ -321,7 +321,7 @@ namespace Barotrauma.Items.Components
                         {
                             Vector2 vel = controlledSub == null ? Vector2.Zero : controlledSub.Velocity;
                             var realWorldVel = ConvertUnits.ToDisplayUnits(vel.Y * Physics.DisplayToRealWorldRatio) * 3.6f;
-                            return MathF.Round(-realWorldVel,2).ToString("0.00");
+                            return (-realWorldVel).ToString("0.0");
                         };
                         break;
                     case 1:
@@ -332,7 +332,7 @@ namespace Barotrauma.Items.Components
                             Vector2 vel = controlledSub == null ? Vector2.Zero : controlledSub.Velocity;
                             var realWorldVel = ConvertUnits.ToDisplayUnits(vel.X * Physics.DisplayToRealWorldRatio) * 3.6f;
                             if (controlledSub != null && controlledSub.FlippedX) { realWorldVel *= -1; }
-                            return MathF.Round(realWorldVel,1).ToString("0.0");
+                            return realWorldVel.ToString("0.0");
                         };
                         break;
                     case 2:
