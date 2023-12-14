@@ -18,6 +18,20 @@ namespace Barotrauma
         public GUIButton PlusButton { get; private set; }
         public GUIButton MinusButton { get; private set; }
 
+        private void UpdatePlusMinusButtonVisibility()
+        {
+            if (ForceShowPlusMinusButtons
+                || inputType == NumberType.Int
+                || (inputType == NumberType.Float && MinValueFloat > float.MinValue && MaxValueFloat < float.MaxValue))
+            {
+                ShowPlusMinusButtons();
+            }
+            else
+            {
+                HidePlusMinusButtons();
+            }
+        }
+        
         private NumberType inputType;
         public NumberType InputType
         {
@@ -26,15 +40,7 @@ namespace Barotrauma
             {
                 if (inputType == value) { return; }
                 inputType = value;
-                if (inputType == NumberType.Int ||
-                    (inputType == NumberType.Float && MinValueFloat > float.MinValue && MaxValueFloat < float.MaxValue))
-                {
-                    ShowPlusMinusButtons();
-                }
-                else
-                {
-                    HidePlusMinusButtons();
-                }
+                UpdatePlusMinusButtonVisibility();
             }
         }
 
@@ -46,15 +52,7 @@ namespace Barotrauma
             {
                 minValueFloat = value;
                 ClampFloatValue();
-                if (inputType == NumberType.Int ||
-                    (inputType == NumberType.Float && MinValueFloat > float.MinValue && MaxValueFloat < float.MaxValue))
-                {
-                    ShowPlusMinusButtons();
-                }
-                else
-                {
-                    HidePlusMinusButtons();
-                }
+                UpdatePlusMinusButtonVisibility();
             }                
         }
         public float? MaxValueFloat
@@ -64,15 +62,7 @@ namespace Barotrauma
             {
                 maxValueFloat = value;
                 ClampFloatValue();
-                if (inputType == NumberType.Int ||
-                    (inputType == NumberType.Float && MinValueFloat > float.MinValue && MaxValueFloat < float.MaxValue))
-                {
-                    ShowPlusMinusButtons();
-                }
-                else
-                {
-                    HidePlusMinusButtons();
-                }
+                UpdatePlusMinusButtonVisibility();
             }
         }
 
@@ -93,6 +83,19 @@ namespace Barotrauma
                 //UpdateText may remove decimals from the value, force to full accuracy
                 floatValue = newValue; 
                 OnValueChanged?.Invoke(this);
+            }
+        }
+
+        private bool forceShowPlusMinusButtons;
+
+        public bool ForceShowPlusMinusButtons
+        {
+            get { return forceShowPlusMinusButtons; }
+            set
+            {
+                if (forceShowPlusMinusButtons == value) { return; }
+                forceShowPlusMinusButtons = value;
+                UpdatePlusMinusButtonVisibility();
             }
         }
 
@@ -184,7 +187,7 @@ namespace Barotrauma
         /// </summary>
         public bool WrapAround;
 
-        public float valueStep;
+        public float ValueStep;
 
         private float pressedTimer;
         private readonly float pressedDelay = 0.5f;
@@ -339,12 +342,12 @@ namespace Barotrauma
         {
             if (inputType == NumberType.Int)
             {
-                IntValue -= valueStep > 0 ? (int)valueStep : 1;
+                IntValue -= ValueStep > 0 ? (int)ValueStep : 1;
                 ClampIntValue();
             }
             else if (maxValueFloat.HasValue && minValueFloat.HasValue)
             {
-                FloatValue -= valueStep > 0 ? valueStep : Round();
+                FloatValue -= ValueStep > 0 ? ValueStep : Round();
                 ClampFloatValue();
             }
         }
@@ -353,12 +356,12 @@ namespace Barotrauma
         {
             if (inputType == NumberType.Int)
             {
-                IntValue += valueStep > 0 ? (int)valueStep : 1;
+                IntValue += ValueStep > 0 ? (int)ValueStep : 1;
                 ClampIntValue();
             }
             else if (inputType == NumberType.Float)
             {
-                FloatValue += valueStep > 0 ? valueStep : Round();
+                FloatValue += ValueStep > 0 ? ValueStep : Round();
                 ClampFloatValue();
             }
         }

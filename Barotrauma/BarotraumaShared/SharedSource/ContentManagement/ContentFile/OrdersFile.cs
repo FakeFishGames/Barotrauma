@@ -42,7 +42,8 @@ namespace Barotrauma
             }
             else
             {
-                DebugConsole.ThrowError($"OrdersFile: Invalid {GetType().Name} element: {parentElement.Name} in {Path}");
+                DebugConsole.ThrowError($"OrdersFile: Invalid {GetType().Name} element: {parentElement.Name} in {Path}",
+                    contentPackage: parentElement?.ContentPackage);
             }
         }
 

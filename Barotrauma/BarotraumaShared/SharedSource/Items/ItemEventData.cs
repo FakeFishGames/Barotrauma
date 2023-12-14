@@ -23,9 +23,10 @@ namespace Barotrauma
             Upgrade = 8,
             ItemStat = 9,
             DroppedStack = 10,
+            SetHighlight = 11,
 
             MinValue = 0,
-            MaxValue = 10
+            MaxValue = 11
         }
 
         public interface IEventData : NetEntityEvent.IData

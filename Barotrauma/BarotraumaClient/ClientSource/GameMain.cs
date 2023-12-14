@@ -123,6 +123,10 @@ namespace Barotrauma
 
         private Viewport defaultViewport;
 
+        /// <summary>
+        /// NOTE: Use very carefully. You need to ensure that you ALWAYS unsubscribe from this when you no longer need the subscriber!
+        /// If you're subscribing to this from something else than a singleton or something that there's only ever one instance of, you're probably in dangerous territory.
+        /// </summary>
         public event Action ResolutionChanged;
 
         private bool exiting;
@@ -404,7 +408,7 @@ namespace Barotrauma
             //do this here because we need it for the loading screen
             WaterRenderer.Instance = new WaterRenderer(base.GraphicsDevice);
 
-            Quad.Init(GraphicsDevice);
+            GraphicsQuad.Init(GraphicsDevice);
 
             loadingScreenOpen = true;
             TitleScreen = new LoadingScreen(GraphicsDevice)

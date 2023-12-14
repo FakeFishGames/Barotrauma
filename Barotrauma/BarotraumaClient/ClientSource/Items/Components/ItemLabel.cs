@@ -227,7 +227,7 @@ namespace Barotrauma.Items.Components
             switch (text)
             {
                 case "[CurrentLocationName]":
-                    SetDisplayText(Level.Loaded?.StartLocation?.Name ?? string.Empty);
+                    SetDisplayText(Level.Loaded?.StartLocation?.DisplayName.Value ?? string.Empty);
                     break;
                 case "[CurrentBiomeName]":
                     SetDisplayText(Level.Loaded?.LevelData?.Biome?.DisplayName.Value ?? string.Empty);

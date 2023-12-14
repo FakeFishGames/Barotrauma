@@ -8,7 +8,8 @@ namespace Barotrauma.Abilities
             identifier = abilityElement.GetAttributeIdentifier("identifier", Identifier.Empty);
             if (identifier.IsEmpty)
             {
-                DebugConsole.ThrowError($"Error in talent {CharacterTalent.DebugIdentifier}, identifier is empty in {nameof(CharacterAbilityMarkAsLooted)}.");
+                DebugConsole.ThrowError($"Error in talent {CharacterTalent.DebugIdentifier}, identifier is empty in {nameof(CharacterAbilityMarkAsLooted)}.",
+                    contentPackage: abilityElement.ContentPackage);
             }
         }
 

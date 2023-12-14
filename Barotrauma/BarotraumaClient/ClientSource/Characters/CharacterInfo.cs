@@ -217,6 +217,7 @@ namespace Barotrauma
 
             if ((int)newLevel > (int)prevLevel)
             {
+                Character.Controlled?.SelectedItem?.OnPlayerSkillsChanged();
                 int increase = Math.Max((int)newLevel - (int)prevLevel, 1);
 
                 Character?.AddMessage(
@@ -518,7 +519,7 @@ namespace Barotrauma
             attachment.Sprite.Draw(spriteBatch, drawPos, color ?? Color.White, origin, rotate: 0, scale: scale, depth: depth, spriteEffect: spriteEffects);
         }
 
-        public static CharacterInfo ClientRead(Identifier speciesName, IReadMessage inc)
+        public static CharacterInfo ClientRead(Identifier speciesName, IReadMessage inc, bool requireJobPrefabFound = true)
         {
             ushort infoID = inc.ReadUInt16();
             string newName = inc.ReadString();
@@ -554,14 +555,19 @@ namespace Barotrauma
             if (jobIdentifier > 0)
             {
                 jobPrefab = JobPrefab.Prefabs.Find(jp => jp.UintIdentifier == jobIdentifier);
-                if (jobPrefab == null)
+                if (jobPrefab == null && requireJobPrefabFound)
                 {
                     throw new Exception($"Error while reading {nameof(CharacterInfo)} received from the server: could not find a job prefab with the identifier \"{jobIdentifier}\".");
                 }
-                foreach (SkillPrefab skillPrefab in jobPrefab.Skills.OrderBy(s => s.Identifier))
+                byte skillCount = inc.ReadByte();
+                List<SkillPrefab> jobSkills = jobPrefab?.Skills.OrderBy(s => s.Identifier).ToList();
+                for (int i = 0; i < skillCount; i++)
                 {
                     float skillLevel = inc.ReadSingle();
-                    skillLevels.Add(skillPrefab.Identifier, skillLevel);
+                    if (jobSkills != null && i < jobSkills.Count)
+                    {
+                        skillLevels.Add(jobSkills[i].Identifier, skillLevel);
+                    }
                 }
             }
 

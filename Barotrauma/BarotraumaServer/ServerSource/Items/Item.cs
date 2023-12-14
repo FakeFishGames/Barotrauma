@@ -161,6 +161,20 @@ namespace Barotrauma
                         msg.WriteUInt16(droppedItem.ID);
                     }
                     break;
+                case SetHighlightEventData highlightEventData:
+                    bool isTargetedForClient = 
+                        highlightEventData.TargetClients.IsEmpty ||
+                        highlightEventData.TargetClients.Contains(c);
+                    msg.WriteBoolean(isTargetedForClient);
+                    if (isTargetedForClient)
+                    {
+                        msg.WriteBoolean(highlightEventData.Highlighted);
+                        if (highlightEventData.Highlighted)
+                        {
+                            msg.WriteColorR8G8B8A8(highlightEventData.Color);
+                        }
+                    }
+                    break;
                 default:
                     throw error($"Unsupported event type {itemEventData.GetType().Name}");
             }

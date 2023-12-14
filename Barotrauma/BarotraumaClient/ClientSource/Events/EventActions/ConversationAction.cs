@@ -374,13 +374,12 @@ namespace Barotrauma
                 btn.RectTransform.MinSize = new Point(0, (int)(btn.TextBlock.Rect.Height * 1.2f));
             }
 
-            textContent.RectTransform.MinSize = new Point(0, textContent.Children.Sum(c => c.Rect.Height) + GUI.IntScale(16));
+            textContent.RectTransform.MinSize = new Point(0, textContent.Children.Sum(c => c.Rect.Height + textContent.AbsoluteSpacing) + GUI.IntScale(16));
             content.RectTransform.MinSize = new Point(0, content.Children.Sum(c => c.Rect.Height));
 
             // Recalculate the text size as it is scaled up and no longer matching the text height due to the textContent's minSize increasing
             textBlock.CalculateHeightFromText();
             textBlock.TextAlignment = Alignment.TopLeft;
-            //content.RectTransform.MinSize = new Point(0, textContent.Rect.Height);
 
             return buttons;
         }

@@ -28,7 +28,8 @@ namespace Barotrauma
         { 
             if (ItemTag.IsEmpty && ItemIdentifier.IsEmpty)
             {
-                DebugConsole.ThrowError($"Error in event \"{ParentEvent.Prefab.Identifier}\". {nameof(WaitForItemFabricatedAction)} does't define either a tag or an identifier of the item to check.");
+                DebugConsole.ThrowError($"Error in event \"{ParentEvent.Prefab.Identifier}\". {nameof(WaitForItemFabricatedAction)} does't define either a tag or an identifier of the item to check.", 
+                    contentPackage: element.ContentPackage);
             }
             foreach (var item in Item.ItemList)
             {

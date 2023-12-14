@@ -210,7 +210,7 @@ namespace Barotrauma
                     statusEffect.soundChannel.FadeOutAndDispose();
                     statusEffect.soundChannel = null;
                 }
-                else
+                else if (statusEffect.soundEmitter is { Removed: false })
                 {
                     statusEffect.soundChannel.Position = new Vector3(statusEffect.soundEmitter.WorldPosition, 0.0f);
                     if (doMuffleCheck && !statusEffect.ignoreMuffling)

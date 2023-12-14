@@ -936,6 +936,10 @@ namespace Barotrauma.Networking
                 TextManager.Get("ServerSettingsAllowVoteKick"));
             GetPropertyData(nameof(AllowVoteKick)).AssignGUIComponent(voteKickBox);
 
+            var allowImmediateItemDeliveryBox = new GUITickBox(new RectTransform(new Vector2(0.48f, 0.05f), tickBoxContainer.Content.RectTransform),
+                TextManager.Get("ServerSettingsImmediateItemDelivery"));
+            GetPropertyData(nameof(AllowImmediateItemDelivery)).AssignGUIComponent(allowImmediateItemDeliveryBox);
+
             GUITextBlock.AutoScaleAndNormalize(tickBoxContainer.Content.Children.Select(c => ((GUITickBox)c).TextBlock));
 
             tickBoxContainer.RectTransform.MinSize = new Point(0, (int)(tickBoxContainer.Content.Children.First().Rect.Height * 2.0f + tickBoxContainer.Padding.Y + tickBoxContainer.Padding.W));

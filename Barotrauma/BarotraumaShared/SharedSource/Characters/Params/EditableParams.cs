@@ -84,12 +84,14 @@ namespace Barotrauma
             doc = XMLExtensions.TryLoadXml(Path);
             if (doc == null)
             {
-                DebugConsole.ThrowError("[EditableParams] The document is null! Failed to load the parameters.");
+                DebugConsole.ThrowError("[EditableParams] The document is null! Failed to load the parameters.",
+                    contentPackage: file.ContentPackage);
                 return false;
             }
             if (MainElement == null)
             {
-                DebugConsole.ThrowError("[EditableParams] The main element is null! Failed to load the parameters.");
+                DebugConsole.ThrowError("[EditableParams] The main element is null! Failed to load the parameters.",
+                    contentPackage: file.ContentPackage);
                 return false;
             }
             IsLoaded = Deserialize(MainElement);

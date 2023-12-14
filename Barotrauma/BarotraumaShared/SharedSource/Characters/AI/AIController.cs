@@ -91,6 +91,11 @@ namespace Barotrauma
         private IEnumerable<Hull> visibleHulls;
         private float hullVisibilityTimer;
         const float hullVisibilityInterval = 0.5f;
+
+        /// <summary>
+        /// Returns hulls that are visible to the character, including the current hull. 
+        /// Note that this is not an accurate visibility check, it only checks for open gaps between the adjacent and linked hulls.
+        /// </summary>
         public IEnumerable<Hull> VisibleHulls
         {
             get
@@ -353,7 +358,7 @@ namespace Barotrauma
         public static void UnequipContainedItems(Character character, Item parentItem, Func<Item, bool> predicate, bool avoidDroppingInSea = true, int? unequipMax = null)
         {
             var inventory = parentItem.OwnInventory;
-            if (inventory == null) { return; }
+            if (inventory == null || !inventory.Container.DrawInventory) { return; }
             int removed = 0;
             if (predicate == null || inventory.AllItems.Any(predicate))
             {

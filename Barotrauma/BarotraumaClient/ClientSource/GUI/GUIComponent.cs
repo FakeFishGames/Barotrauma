@@ -775,23 +775,30 @@ namespace Barotrauma
                 toolTipBlock.UserData = toolTip;
             }
 
-            toolTipBlock.RectTransform.AbsoluteOffset =
-                RectTransform.CalculateAnchorPoint(anchor, targetElement) +
-                RectTransform.CalculatePivotOffset(pivot, toolTipBlock.RectTransform.NonScaledSize);
+            CalculateOffset();
 
             if (toolTipBlock.Rect.Right > GameMain.GraphicsWidth - 10)
             {
-                toolTipBlock.RectTransform.AbsoluteOffset -= new Point(toolTipBlock.Rect.Width + targetElement.Width, 0);
+                anchor = RectTransform.MoveAnchorLeft(anchor);
+                pivot = (Pivot)RectTransform.MoveAnchorRight((Anchor)pivot);
+                CalculateOffset();
             }
             if (toolTipBlock.Rect.Bottom > GameMain.GraphicsHeight - 10)
             {
-                toolTipBlock.RectTransform.AbsoluteOffset -= new Point(
-                    0, 
-                    toolTipBlock.Rect.Bottom - (GameMain.GraphicsHeight - 10));
+                anchor = RectTransform.MoveAnchorTop(anchor);
+                pivot = (Pivot)RectTransform.MoveAnchorBottom((Anchor)pivot);
+                CalculateOffset();
             }
             toolTipBlock.SetTextPos();
 
             toolTipBlock.DrawManually(spriteBatch);
+
+            void CalculateOffset()
+            {
+                toolTipBlock.RectTransform.AbsoluteOffset =
+                    RectTransform.CalculateAnchorPoint(anchor, targetElement) +
+                    RectTransform.CalculatePivotOffset(pivot, toolTipBlock.RectTransform.NonScaledSize);
+            }
         }
         #endregion
 

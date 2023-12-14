@@ -159,11 +159,13 @@ namespace Barotrauma
         OnItemDeconstructedInventory,
         OnStopTinkering,
         OnItemPicked,
+        OnItemSelected,
         OnGeneticMaterialCombinedOrRefined,
         OnCrewGeneticMaterialCombinedOrRefined,
         AfterSubmarineAttacked,
         OnApplyTreatment,
         OnStatusEffectIdentifier,
+        OnRepairedOutsideLeak
     }
 
     /// <summary>
@@ -550,7 +552,27 @@ namespace Barotrauma
         /// <summary>
         /// Can be used to prevent certain talents from being unlocked by specifying the talent's identifier via CharacterAbilityGivePermanentStat.
         /// </summary>
-        LockedTalents
+        LockedTalents,
+
+        /// <summary>
+        /// Used to reduce or increase the cost of hiring certain jobs by a percentage.
+        /// </summary>
+        HireCostMultiplier,
+
+        /// <summary>
+        /// Used to increase how much items can stack in the characters inventory.
+        /// </summary>
+        InventoryExtraStackSize,
+
+        /// <summary>
+        /// Modifies the range of the sounds emitted by the character (can be used to make the character easier or more difficult for monsters to hear)
+        /// </summary>
+        SoundRangeMultiplier,
+
+        /// <summary>
+        /// Modifies how far the character can be seen from (can be used to make the character easier or more difficult for monsters to see)
+        /// </summary>
+        SightRangeMultiplier
     }
 
     internal enum ItemTalentStats
@@ -565,7 +587,8 @@ namespace Barotrauma
         ReactorMaxOutput,
         ReactorFuelConsumption,
         DeconstructorSpeed,
-        FabricationSpeed
+        FabricationSpeed,
+        ExtraStackSize
     }
 
     /// <summary>

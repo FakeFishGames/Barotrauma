@@ -142,6 +142,7 @@ namespace Barotrauma
                 prevIdleObjective.PreferredOutpostModuleTypes.ForEach(t => newIdleObjective.PreferredOutpostModuleTypes.Add(t));
             }
             AddObjective(newIdleObjective);
+
             int objectiveCount = Objectives.Count;
             foreach (var autonomousObjective in character.Info.Job.Prefab.AutonomousObjectives)
             {
@@ -548,6 +549,9 @@ namespace Barotrauma
                     break;
                 case "escapehandcuffs":
                     newObjective = new AIObjectiveEscapeHandcuffs(character, this, priorityModifier: priorityModifier);
+                    break;
+                case "findthieves":
+                    newObjective = new AIObjectiveFindThieves(character, this, priorityModifier: priorityModifier);
                     break;
                 case "prepareforexpedition":
                     newObjective = new AIObjectivePrepare(character, this, order.GetTargetItems(order.Option), order.RequireItems)

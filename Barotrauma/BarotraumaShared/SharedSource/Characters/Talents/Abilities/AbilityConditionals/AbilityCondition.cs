@@ -13,7 +13,7 @@ namespace Barotrauma.Abilities
 
         public AbilityCondition(CharacterTalent characterTalent, ContentXElement conditionElement) 
         {
-            this.characterTalent = characterTalent;
+            this.characterTalent = characterTalent ?? throw new ArgumentNullException(nameof(characterTalent));
             character = characterTalent.Character;
             invert = conditionElement.GetAttributeBool("invert", false);
         }
@@ -40,7 +40,8 @@ namespace Barotrauma.Abilities
             {
                 if (!Enum.TryParse(targetTypeString, true, out TargetType targetType))
                 {
-                    DebugConsole.ThrowError("Invalid target type type \"" + targetTypeString + "\" in CharacterTalent (" + characterTalent.DebugIdentifier + ")");
+                    DebugConsole.ThrowError("Invalid target type type \"" + targetTypeString + "\" in CharacterTalent (" + characterTalent.DebugIdentifier + ")",
+                        contentPackage: characterTalent.Prefab.ContentPackage);
                 }
                 targetTypes.Add(targetType);
             }

@@ -240,7 +240,21 @@ namespace Barotrauma
             }
         }
 
-        public Item RootContainer { get; private set; }
+        private Item rootContainer;
+        public Item RootContainer 
+        {
+            get { return rootContainer; }
+            private set
+            {
+                if (value == this)
+                {
+                    DebugConsole.ThrowError($"Attempted to set the item \"{Prefab.Identifier}\" as it's own root container!\n{Environment.StackTrace.CleanupStackTrace()}");
+                    rootContainer = null;
+                    return;
+                }
+                rootContainer = value;
+            }
+        }
 
         private bool inWaterProofContainer;
 
@@ -369,7 +383,7 @@ namespace Barotrauma
 
         public float RotationRad { get; private set; } 
 
-        [ConditionallyEditable(ConditionallyEditable.ConditionType.AllowRotating, MinValueFloat = 0.0f, MaxValueFloat = 360.0f, DecimalCount = 1, ValueStep = 1f), Serialize(0.0f, IsPropertySaveable.Yes)]
+        [ConditionallyEditable(ConditionallyEditable.ConditionType.AllowRotating, DecimalCount = 3, ForceShowPlusMinusButtons = true, ValueStep = 0.1f), Serialize(0.0f, IsPropertySaveable.Yes)]
         public float Rotation
         {
             get
@@ -379,7 +393,7 @@ namespace Barotrauma
             set
             {
                 if (!Prefab.AllowRotatingInEditor) { return; }
-                RotationRad = MathHelper.ToRadians(value);
+                RotationRad = MathUtils.WrapAnglePi(MathHelper.ToRadians(value));
 #if CLIENT
                 if (Screen.Selected == GameMain.SubEditorScreen)
                 {
@@ -443,7 +457,7 @@ namespace Barotrauma
             set
             {
                 if (scale == value) { return; }
-                scale = MathHelper.Clamp(value, 0.01f, 10.0f);
+                scale = MathHelper.Clamp(value, Prefab.MinScale, Prefab.MaxScale);
 
                 float relativeScale = scale / base.Prefab.Scale;
 
@@ -1077,7 +1091,8 @@ namespace Barotrauma
                         {                            
                             if (!Physics.TryParseCollisionCategory(collisionCategoryStr, out Category cat))
                             {
-                                DebugConsole.ThrowError("Invalid collision category in item \"" + Name + "\" (" + collisionCategoryStr + ")");
+                                DebugConsole.ThrowError("Invalid collision category in item \"" + Name + "\" (" + collisionCategoryStr + ")",
+                                    contentPackage: element.ContentPackage);
                             }
                             else
                             {
@@ -1232,7 +1247,8 @@ namespace Barotrauma
             var holdables = components.Where(c => c is Holdable);
             if (holdables.Count() > 1)
             {
-                DebugConsole.AddWarning($"Item {Prefab.Identifier} has multiple {nameof(Holdable)} components ({string.Join(", ", holdables.Select(h => h.GetType().Name))}).");
+                DebugConsole.AddWarning($"Item {Prefab.Identifier} has multiple {nameof(Holdable)} components ({string.Join(", ", holdables.Select(h => h.GetType().Name))}).",
+                    Prefab.ContentPackage);
             }
 
             InsertToList();
@@ -1311,8 +1327,11 @@ namespace Barotrauma
                 }
             }
 
-            if (FlippedX) clone.FlipX(false);
-            if (FlippedY) clone.FlipY(false);
+            if (FlippedX) { clone.FlipX(false); }
+            if (FlippedY) { clone.FlipY(false); }
+
+            // Flipping an item tampers with its rotation, so restore it
+            clone.Rotation = Rotation;
 
             foreach (ItemComponent component in clone.components)
             {
@@ -1624,6 +1643,9 @@ namespace Barotrauma
             return transformedRect;
         }
 
+        public override Quad2D GetTransformedQuad()
+            => Quad2D.FromSubmarineRectangle(rect).Rotated(-RotationRad);
+
         /// <summary>
         /// goes through every item and re-checks which hull they are in
         /// </summary>
@@ -1676,6 +1698,12 @@ namespace Barotrauma
                 while (rootContainer.Container != null)
                 {
                     rootContainer = rootContainer.Container;
+                    if (rootContainer == this)
+                    {
+                        DebugConsole.ThrowError($"Invalid container hierarchy: \"{Prefab.Identifier}\" was contained inside itself!\n{Environment.StackTrace.CleanupStackTrace()}");
+                        rootContainer = null;
+                        break;
+                    }
                     inWaterProofContainer |= rootContainer.WaterProof;
                 }
                 newRootContainer = rootContainer;
@@ -1938,7 +1966,7 @@ namespace Barotrauma
         }
 
 
-        public AttackResult AddDamage(Character attacker, Vector2 worldPosition, Attack attack, float deltaTime, bool playSound = true)
+        public AttackResult AddDamage(Character attacker, Vector2 worldPosition, Attack attack,  Vector2 impulseDirection, float deltaTime,bool playSound = true)
         {
             if (Indestructible || InvulnerableToDamage) { return new AttackResult(); }
 
@@ -2494,7 +2522,7 @@ namespace Barotrauma
 
             if (Prefab.AllowRotatingInEditor)
             {
-                RotationRad = MathUtils.WrapAngleTwoPi(-RotationRad);
+                RotationRad = MathUtils.WrapAnglePi(-RotationRad);
             }
 #if CLIENT
             if (Prefab.CanSpriteFlipX)
@@ -2521,6 +2549,10 @@ namespace Barotrauma
                 return;
             }
 
+            if (Prefab.AllowRotatingInEditor)
+            {
+                RotationRad = MathUtils.WrapAngleTwoPi(-RotationRad);
+            }
 #if CLIENT
             if (Prefab.CanSpriteFlipY)
             {
@@ -3021,7 +3053,10 @@ namespace Barotrauma
             return -1;
         }
 
-        public void Use(float deltaTime, Character user = null, Limb targetLimb = null, Entity useTarget = null)
+        /// <param name="userForOnUsedEvent">User to pass to the OnUsed event. May need to be different than the user in cases like loaders using ammo boxes:
+        /// the box is technically being used by the loader, and doesn't allow a character to use it, but we may still need to know which character caused
+        /// the box to be used.</param>
+        public void Use(float deltaTime, Character user = null, Limb targetLimb = null, Entity useTarget = null, Character userForOnUsedEvent = null)
         {
             if (RequireAimToUse && (user == null || !user.IsKeyDown(InputType.Aim)))
             {
@@ -3046,7 +3081,7 @@ namespace Barotrauma
                     ic.PlaySound(ActionType.OnUse, user); 
 #endif
                     ic.ApplyStatusEffects(ActionType.OnUse, deltaTime, user, targetLimb, useTarget: useTarget, user: user);
-                    ic.OnUsed.Invoke(new ItemComponent.ItemUseInfo(this, user));
+                    ic.OnUsed.Invoke(new ItemComponent.ItemUseInfo(this, user ?? userForOnUsedEvent));
                     if (ic.DeleteOnUse) { remove = true; }
                 }
             }
@@ -3504,7 +3539,26 @@ namespace Barotrauma
 
             if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer)
             {
-                if (!CanClientAccess(sender) || !(property.GetAttribute<ConditionallyEditable>()?.IsEditable(this) ?? true))
+                bool conditionAllowsEditing = true;
+                if (property.GetAttribute<ConditionallyEditable>() is { } condition)
+                {
+                    conditionAllowsEditing = condition.IsEditable(this);
+                }
+
+                bool canAccess = false;
+                if (Container?.GetComponent<CircuitBox>() != null &&
+                    Container.CanClientAccess(sender))
+                {
+                    //items inside circuit boxes are inaccessible by "normal" means,
+                    //but the properties can still be edited through the circuit box UI
+                    canAccess = true;
+                }
+                else
+                {
+                    canAccess = CanClientAccess(sender);
+                }
+
+                if (!canAccess || !conditionAllowsEditing)
                 {
                     allowEditing = false;
                 }
@@ -3777,6 +3831,11 @@ namespace Barotrauma
                             }
                             break;
                         }
+                    case "itemstats":
+                        {
+                            item.StatManager.Load(subElement);
+                            break;
+                        }
                     default:
                         {
                             ItemComponent component = unloadedComponents.Find(x => x.Name == subElement.Name.ToString());
@@ -3902,7 +3961,7 @@ namespace Barotrauma
 
             foreach (ItemComponent component in item.components)
             {
-                if (component.Parent != null) { component.IsActive = component.Parent.IsActive; }
+                if (component.Parent != null && component.InheritParentIsActive) { component.IsActive = component.Parent.IsActive; }
                 component.OnItemLoaded();
             }
 
@@ -3971,6 +4030,8 @@ namespace Barotrauma
             {
                 upgrade.Save(element);
             }
+
+            statManager?.Save(element);
 
             element.Add(new XAttribute("conditionpercentage", ConditionPercentage.ToString("G", CultureInfo.InvariantCulture)));
 

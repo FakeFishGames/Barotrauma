@@ -1520,6 +1520,7 @@ namespace Barotrauma
             };
 
             bool nameChangePending = isGameRunning && GameMain.Client.PendingName != string.Empty && GameMain.Client?.Character?.Name != GameMain.Client.PendingName;
+            changesPendingText?.Parent?.RemoveChild(changesPendingText);
             changesPendingText = null;
 
             if (TabMenu.PendingChanges)
@@ -2389,10 +2390,20 @@ namespace Barotrauma
                 options.Add(kickOption);
             }
 
-            options.Add(new ContextMenuOption("Ban", isEnabled: canBan, onSelected: delegate
+            if (GameMain.Client?.ServerSettings?.BanList?.BannedPlayers?.Any(bp => bp.MatchesClient(client)) ?? false)
             {
-                GameMain.Client?.CreateKickReasonPrompt(client.Name, true);
-            }));
+                options.Add(new ContextMenuOption("clientpermission.unban", isEnabled: canBan, onSelected: delegate
+                {
+                    GameMain.Client?.UnbanPlayer(client.Name);
+                }));
+            }
+            else
+            {
+                options.Add(new ContextMenuOption("Ban", isEnabled: canBan, onSelected: delegate
+                {
+                    GameMain.Client?.CreateKickReasonPrompt(client.Name, true);
+                }));
+            }
 
             GUIContextMenu.CreateContextMenu(null, client.Name, headerColor: clientColor, options.ToArray());
         }
@@ -2591,11 +2602,11 @@ namespace Barotrauma
                 foreach (DebugConsole.Command command in DebugConsole.Commands)
                 {
                     var commandTickBox = new GUITickBox(new RectTransform(new Vector2(0.15f, 0.15f), commandList.Content.RectTransform),
-                        command.names[0], font: GUIStyle.SmallFont)
+                        command.Names[0].Value, font: GUIStyle.SmallFont)
                     {
                         Selected = selectedClient.PermittedConsoleCommands.Contains(command),
                         Enabled = !myClient,
-                        ToolTip = command.help,
+                        ToolTip = command.Help,
                         UserData = command
                     };
                     commandTickBox.OnSelected += (GUITickBox tickBox) =>
@@ -2630,12 +2641,25 @@ namespace Barotrauma
             {
                 if (GameMain.Client.HasPermission(ClientPermissions.Ban))
                 {
-                    var banButton = new GUIButton(new RectTransform(new Vector2(0.34f, 1.0f), buttonAreaTop.RectTransform),
-                        TextManager.Get("Ban"))
+                    GUIButton banButton;
+                    if (GameMain.Client?.ServerSettings?.BanList?.BannedPlayers?.Any(bp => bp.MatchesClient(selectedClient)) ?? false)
                     {
-                        UserData = selectedClient
-                    };
-                    banButton.OnClicked = (bt, userdata) => { BanPlayer(selectedClient); return true; };
+                        banButton = new GUIButton(new RectTransform(new Vector2(0.34f, 1.0f), buttonAreaTop.RectTransform),
+                            TextManager.Get("clientpermission.unban"))
+                        {
+                            UserData = selectedClient
+                        };
+                        banButton.OnClicked = (bt, userdata) => { GameMain.Client?.UnbanPlayer(selectedClient.Name); return true; };
+                    }
+                    else
+                    {
+                        banButton = new GUIButton(new RectTransform(new Vector2(0.34f, 1.0f), buttonAreaTop.RectTransform),
+                            TextManager.Get("Ban"))
+                        {
+                            UserData = selectedClient
+                        };
+                        banButton.OnClicked = (bt, userdata) => { BanPlayer(selectedClient); return true; };
+                    }
                     banButton.OnClicked += ClosePlayerFrame;
                 }
 
@@ -3147,12 +3171,12 @@ namespace Barotrauma
             GUIButton jobButton = null;
 
             var availableJobs = JobPrefab.Prefabs.Where(jobPrefab =>
-                    jobPrefab.MaxNumber > 0 && JobList.Content.Children.All(c => !(c.UserData is JobVariant prefab) || prefab.Prefab != jobPrefab)
+                    !jobPrefab.HiddenJob && jobPrefab.MaxNumber > 0 && JobList.Content.Children.All(c => c.UserData is not JobVariant prefab || prefab.Prefab != jobPrefab)
             ).Select(j => new JobVariant(j, 0));
 
             availableJobs = availableJobs.Concat(
                 JobPrefab.Prefabs.Where(jobPrefab =>
-                    jobPrefab.MaxNumber > 0 && JobList.Content.Children.Any(c => (c.UserData is JobVariant prefab) && prefab.Prefab == jobPrefab)
+                    !jobPrefab.HiddenJob && jobPrefab.MaxNumber > 0 && JobList.Content.Children.Any(c => (c.UserData is JobVariant prefab) && prefab.Prefab == jobPrefab)
             ).Select(j => (JobVariant)JobList.Content.FindChild(c => (c.UserData is JobVariant prefab) && prefab.Prefab == j).UserData));
 
             availableJobs = availableJobs.ToList();

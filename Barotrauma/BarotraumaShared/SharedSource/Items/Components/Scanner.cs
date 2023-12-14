@@ -82,7 +82,8 @@ namespace Barotrauma.Items.Components
             Holdable = item.GetComponent<Holdable>();
             if (Holdable == null || !Holdable.Attachable)
             {
-                DebugConsole.ThrowError("Error in initializing a Scanner component: an attachable Holdable component is required on the same item and none was found");
+                DebugConsole.ThrowError("Error in initializing a Scanner component: an attachable Holdable component is required on the same item and none was found",
+                    contentPackage: item.Prefab.ContentPackage);
                 IsActive = false;
             }
         }

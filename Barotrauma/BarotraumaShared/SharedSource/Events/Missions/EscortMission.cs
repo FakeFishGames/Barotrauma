@@ -77,7 +77,8 @@ namespace Barotrauma
             {
                 if (inMission)
                 {
-                    DebugConsole.ThrowError("MainSub was null when trying to retrieve submarine size for determining escorted character count!");
+                    DebugConsole.ThrowError("MainSub was null when trying to retrieve submarine size for determining escorted character count!",
+                        contentPackage: Prefab.ContentPackage);
                 }
                 return 1;
             }
@@ -117,7 +118,10 @@ namespace Barotrauma
                         {
                             characterStatusEffects[humanPrefab] = new List<StatusEffect> { newEffect };
                         }
-                        characterStatusEffects[humanPrefab].Add(newEffect);                             
+                        else
+                        {
+                            characterStatusEffects[humanPrefab].Add(newEffect);
+                        }                           
                     }
                 }
             }
@@ -180,7 +184,8 @@ namespace Barotrauma
 
             if (scalingCharacterCount * characterConfig.Elements().Count() != characters.Count)
             {
-                DebugConsole.AddWarning("Character count did not match expected character count in InitCharacters of EscortMission");
+                DebugConsole.AddWarning("Character count did not match expected character count in InitCharacters of EscortMission",
+                    Prefab.ContentPackage);
                 return;
             }
             int i = 0;
@@ -220,7 +225,8 @@ namespace Barotrauma
 
             if (characterConfig == null)
             {
-                DebugConsole.ThrowError("Failed to initialize characters for escort mission (characterConfig == null)");
+                DebugConsole.ThrowError("Failed to initialize characters for escort mission (characterConfig == null)",
+                    contentPackage: Prefab.ContentPackage);
                 return;
             }
 
@@ -258,7 +264,7 @@ namespace Barotrauma
                         {
                             character.Speak(TextManager.Get("dialogterroristannounce").Value, null, Rand.Range(0.5f, 3f));
                         }
-                        XElement randomElement = itemConfig.Elements().GetRandomUnsynced(e => e.GetAttributeFloat(0f, "mindifficulty") <= Level.Loaded.Difficulty);
+                        ContentXElement randomElement = itemConfig.Elements().GetRandomUnsynced(e => e.GetAttributeFloat(0f, "mindifficulty") <= Level.Loaded.Difficulty);
                         if (randomElement != null)
                         {
                             HumanPrefab.InitializeItem(character, randomElement, character.Submarine, humanPrefab: null, createNetworkEvents: true);

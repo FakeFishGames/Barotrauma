@@ -16,6 +16,11 @@ partial class EventObjectiveAction : EventAction
         int width = 450,
         int height = 80)
     {
+        if (Type == SegmentActionType.AddIfNotFound)
+        {
+            if (ObjectiveManager.IsSegmentActive(Identifier)) { return; }
+        }
+
         ObjectiveManager.Segment? segment = null;
         // Only need to create the segment when it's being triggered (otherwise the tutorial already has the segment instance)
         if (Type == SegmentActionType.Trigger)
@@ -24,7 +29,8 @@ partial class EventObjectiveAction : EventAction
                 new ObjectiveManager.Segment.Text(TextTag, width, height, Anchor.Center),
                 new ObjectiveManager.Segment.Video(videoFile, TextTag, width, height));
         }
-        else if (Type == SegmentActionType.Add)
+        else if (Type == SegmentActionType.Add ||
+                Type == SegmentActionType.AddIfNotFound)
         {
             segment = ObjectiveManager.Segment.CreateObjectiveSegment(Identifier, !ObjectiveTag.IsEmpty ? ObjectiveTag : Identifier);
         }
@@ -33,10 +39,12 @@ partial class EventObjectiveAction : EventAction
             segment.CanBeCompleted = CanBeCompleted;
             segment.ParentId = ParentObjectiveId;
         }
+
         switch (Type)
         {
             case SegmentActionType.Trigger:
             case SegmentActionType.Add:
+            case SegmentActionType.AddIfNotFound:
                 ObjectiveManager.TriggerSegment(segment);
                 break;
             case SegmentActionType.Complete:

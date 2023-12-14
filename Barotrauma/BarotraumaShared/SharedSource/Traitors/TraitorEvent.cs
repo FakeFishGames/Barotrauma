@@ -96,8 +96,8 @@ namespace Barotrauma
             traitor.Character.IsTraitor = true;
             AddTarget(Tags.Traitor, traitor.Character);
             AddTarget(Tags.AnyTraitor, traitor.Character);
-            AddTargetPredicate(Tags.NonTraitor, e => e is Character c && (c.IsPlayer || c.IsBot) && !c.IsTraitor && c.TeamID == traitor.TeamID && !c.IsIncapacitated);
-            AddTargetPredicate(Tags.NonTraitorPlayer, e => e is Character c && c.IsPlayer && !c.IsTraitor && c.IsOnPlayerTeam && !c.IsIncapacitated);
+            AddTargetPredicate(Tags.NonTraitor, TargetPredicate.EntityType.Character, e => e is Character c && (c.IsPlayer || c.IsBot) && !c.IsTraitor && c.TeamID == traitor.TeamID && !c.IsIncapacitated);
+            AddTargetPredicate(Tags.NonTraitorPlayer, TargetPredicate.EntityType.Character, e => e is Character c && c.IsPlayer && !c.IsTraitor && c.IsOnPlayerTeam && !c.IsIncapacitated);
         }
 
         public void SetSecondaryTraitors(IEnumerable<Client> traitors)

@@ -505,51 +505,58 @@ namespace Barotrauma
             minWidth += padding;
             minHeight += padding;
 
-            Vector2 limits = GetHorizontalLimits(spawnPos, minWidth, minHeight, 0);
-            if (verticalMoveDir != 0)
+            int iterations = 0;            
+            const int maxIterations = 5;
+            do
             {
-                verticalMoveDir = Math.Sign(verticalMoveDir);
-                //do a raycast towards the top/bottom of the level depending on direction
-                Vector2 potentialPos = new Vector2(spawnPos.X, verticalMoveDir > 0 ? Level.Loaded.Size.Y : 0);
-
-                //3 raycasts (left, middle and right side of the sub, so we don't accidentally raycast up a passage too narrow for the sub)
-                for (int x = -1; x <= 1; x++)
+                Vector2 potentialPos = spawnPos;
+                if (verticalMoveDir != 0)
                 {
-                    Vector2 xOffset = Vector2.UnitX * minWidth / 2 * x;
-                    if (PickBody(
-                        ConvertUnits.ToSimUnits(spawnPos + xOffset),
-                        ConvertUnits.ToSimUnits(potentialPos + xOffset),
-                        collisionCategory: Physics.CollisionLevel | Physics.CollisionWall) != null)
+                    verticalMoveDir = Math.Sign(verticalMoveDir);
+                    //do a raycast towards the top/bottom of the level depending on direction
+                    Vector2 rayEnd = new Vector2(potentialPos.X, verticalMoveDir > 0 ? Level.Loaded.Size.Y : 0);
+
+                    Vector2 closestPickedPos = rayEnd;
+                    //multiple raycast across the width of the sub (so we don't accidentally raycast up a passage too narrow for the sub)
+                    for (float x = -1; x <= 1; x += 0.2f)
                     {
-                        int offsetFromWall = 10 * -verticalMoveDir;
-                        //if the raycast hit a wall, attempt to place the spawnpos there
-                        if (verticalMoveDir > 0)
+                        Vector2 xOffset = Vector2.UnitX * minWidth / 2 * x;
+                        xOffset.X += subDockingPortOffset;
+                        if (PickBody(
+                            ConvertUnits.ToSimUnits(potentialPos + xOffset),
+                            ConvertUnits.ToSimUnits(rayEnd + xOffset),
+                            collisionCategory: Physics.CollisionLevel | Physics.CollisionWall,
+                            customPredicate: (Fixture f) =>
+                            {
+                                return f.UserData is not VoronoiCell { IsDestructible: true };
+                            }) != null)
                         {
-                            potentialPos.Y = Math.Min(potentialPos.Y, ConvertUnits.ToDisplayUnits(LastPickedPosition.Y) + offsetFromWall);
-                        }
-                        else
-                        {
-                            potentialPos.Y = Math.Max(potentialPos.Y, ConvertUnits.ToDisplayUnits(LastPickedPosition.Y) + offsetFromWall);
+                            //if the raycast hit a wall, attempt to place the spawnpos there
+                            int offsetFromWall = 10 * -verticalMoveDir;
+                            float pickedPos = ConvertUnits.ToDisplayUnits(LastPickedPosition.Y) + offsetFromWall;
+                            closestPickedPos.Y = 
+                                    verticalMoveDir > 0 ? 
+                                    Math.Min(closestPickedPos.Y, pickedPos) : 
+                                    Math.Max(closestPickedPos.Y, pickedPos);
                         }
                     }
+                    potentialPos.Y = closestPickedPos.Y;
                 }
 
-                //step away from the top/bottom of the level, or from whatever wall the raycast hit,
-                //until we found a spot where there's enough room to place the sub
-                float dist = Math.Abs(potentialPos.Y - spawnPos.Y);
-                for (float d = dist; d > 0; d -= 100.0f)
+                Vector2 limits = GetHorizontalLimits(new Vector2(potentialPos.X, potentialPos.Y - (dockedBorders.Height * 0.5f * verticalMoveDir)),
+                    maxHorizontalMoveAmount: minWidth, minHeight, verticalMoveDir, padding);
+                if (limits.Y - limits.X >= minWidth)
                 {
-                    float y = spawnPos.Y + verticalMoveDir * d;
-                    limits = GetHorizontalLimits(new Vector2(spawnPos.X, y), minWidth, minHeight, verticalMoveDir);
-                    if (limits.Y - limits.X > minWidth)
-                    {
-                        spawnPos = new Vector2(spawnPos.X, y - (dockedBorders.Height * 0.5f * verticalMoveDir));
-                        break;
-                    }
-                }
-            }
+                    Vector2 newSpawnPos = new Vector2(spawnPos.X, potentialPos.Y - (dockedBorders.Height * 0.5f * verticalMoveDir));
+                    bool couldMoveInVerticalMoveDir = Math.Sign(newSpawnPos.Y - spawnPos.Y) == Math.Sign(verticalMoveDir);
+                    if (!couldMoveInVerticalMoveDir) { break; }
+                    spawnPos = ClampToHorizontalLimits(newSpawnPos, limits);
+                }                
 
-            static Vector2 GetHorizontalLimits(Vector2 spawnPos, float minWidth, float minHeight, int verticalMoveDir)
+                iterations++;
+            } while (iterations < maxIterations);
+
+            Vector2 GetHorizontalLimits(Vector2 spawnPos, float maxHorizontalMoveAmount, float minHeight, int verticalMoveDir, int padding)
             {
                 Vector2 refPos = spawnPos - Vector2.UnitY * minHeight * 0.5f * Math.Sign(verticalMoveDir);
 
@@ -580,34 +587,44 @@ namespace Barotrauma
                     if (Math.Abs(ruin.Area.Center.Y - refPos.Y) > (minHeight + ruin.Area.Height) * 0.5f) { continue; }
                     if (ruin.Area.Center.X < refPos.X)
                     {
-                        minX = Math.Max(minX, ruin.Area.Right + 100.0f);
+                        minX = Math.Max(minX, ruin.Area.Right + padding);
                     }
                     else
                     {
-                        maxX = Math.Min(maxX, ruin.Area.X - 100.0f);
+                        maxX = Math.Min(maxX, ruin.Area.X - padding);
                     }
                 }
-                return new Vector2(Math.Max(minX, spawnPos.X - minWidth), Math.Min(maxX, spawnPos.X + minWidth));
+
+                minX += subDockingPortOffset;
+                maxX += subDockingPortOffset;
+
+                return new Vector2(
+                    Math.Max(Math.Max(minX, spawnPos.X - maxHorizontalMoveAmount - padding), 0),
+                    Math.Min(Math.Min(maxX, spawnPos.X + maxHorizontalMoveAmount + padding), Level.Loaded.Size.X));
             }
 
-            if (limits.X < 0.0f && limits.Y > Level.Loaded.Size.X)
+            Vector2 ClampToHorizontalLimits(Vector2 spawnPos, Vector2 limits)
             {
-                //no walls found at either side, just use the initial spawnpos and hope for the best
-            }
-            else if (limits.X < 0)
-            {
-                //no wall found at the left side, spawn to the left from the right-side wall
-                spawnPos.X = limits.Y - minWidth * 0.5f - 100.0f + subDockingPortOffset;
-            }
-            else if (limits.Y > Level.Loaded.Size.X)
-            {
-                //no wall found at right side, spawn to the right from the left-side wall
-                spawnPos.X = limits.X + minWidth * 0.5f + 100.0f + subDockingPortOffset;
-            }
-            else
-            {
-                //walls found at both sides, use their midpoint
-                spawnPos.X = (limits.X + limits.Y) / 2 + subDockingPortOffset;
+                if (limits.X < 0.0f && limits.Y > Level.Loaded.Size.X)
+                {
+                    //no walls found at either side, just use the initial spawnpos and hope for the best
+                }
+                else if (limits.X < 0)
+                {
+                    //no wall found at the left side, spawn to the left from the right-side wall
+                    spawnPos.X = limits.Y - minWidth * 0.5f - 100.0f + subDockingPortOffset;
+                }
+                else if (limits.Y > Level.Loaded.Size.X)
+                {
+                    //no wall found at right side, spawn to the right from the left-side wall
+                    spawnPos.X = limits.X + minWidth * 0.5f + 100.0f + subDockingPortOffset;
+                }
+                else
+                {
+                    //walls found at both sides, use their midpoint
+                    spawnPos.X = (limits.X + limits.Y) / 2 + subDockingPortOffset;
+                }
+                return spawnPos;
             }
 
             spawnPos.Y = MathHelper.Clamp(spawnPos.Y, dockedBorders.Height / 2 + 10, Level.Loaded.Size.Y - dockedBorders.Height / 2 - padding * 2);
@@ -624,7 +641,7 @@ namespace Barotrauma
 
         //math/physics stuff ----------------------------------------------------
 
-        public static Vector2 VectorToWorldGrid(Vector2 position, bool round = false)
+        public static Vector2 VectorToWorldGrid(Vector2 position, Submarine sub = null, bool round = false)
         {
             if (round)
             {
@@ -635,6 +652,12 @@ namespace Barotrauma
             {
                 position.X = MathF.Floor(position.X / GridSize.X) * GridSize.X;
                 position.Y = MathF.Ceiling(position.Y / GridSize.Y) * GridSize.Y;
+            }
+
+            if (sub != null)
+            {
+                position.X += sub.Position.X % GridSize.X;
+                position.Y += sub.Position.Y % GridSize.Y;
             }
             return position;
         }
@@ -923,11 +946,17 @@ namespace Barotrauma
             return true;
         }
 
+
         /// <summary>
-        /// check visibility between two points (in sim units)
+        /// Check visibility between two points (in sim units).
         /// </summary>
-        /// <returns>a physics body that was between the points (or null)</returns>
-        public static Body CheckVisibility(Vector2 rayStart, Vector2 rayEnd, bool ignoreLevel = false, bool ignoreSubs = false, bool ignoreSensors = true, bool ignoreDisabledWalls = true, bool ignoreBranches = true)
+        /// 
+
+        /// <param name="ignoreBranches">Should plants' branches be ignored?</param>
+        /// <param name="blocksVisibilityPredicate">If the predicate returns false, the fixture is ignored even if it would normally block visibility.</param>
+        /// <returns>A physics body that was between the points (or null)</returns>
+        public static Body CheckVisibility(Vector2 rayStart, Vector2 rayEnd, bool ignoreLevel = false, bool ignoreSubs = false, bool ignoreSensors = true, bool ignoreDisabledWalls = true, bool ignoreBranches = true, 
+            Predicate<Fixture> blocksVisibilityPredicate = null)
         {
             Body closestBody = null;
             float closestFraction = 1.0f;
@@ -962,7 +991,10 @@ namespace Barotrauma
                         if (sectionIndex > -1 && structure.SectionBodyDisabled(sectionIndex)) { return -1; }
                     }
                 }
-
+                if (blocksVisibilityPredicate != null && !blocksVisibilityPredicate(fixture))
+                {
+                    return -1;
+                }
                 if (fraction < closestFraction)
                 {
                     closestBody = fixture.Body;
@@ -1840,6 +1872,7 @@ namespace Barotrauma
                 FilePath = filePath,
                 OutpostModuleInfo = Info.OutpostModuleInfo != null ? new OutpostModuleInfo(Info.OutpostModuleInfo) : null,
                 BeaconStationInfo = Info.BeaconStationInfo != null ? new BeaconStationInfo(Info.BeaconStationInfo) : null,
+                WreckInfo = Info.WreckInfo != null ? new WreckInfo(Info.WreckInfo) : null,
                 Name = Path.GetFileNameWithoutExtension(filePath)
             };
 #if CLIENT
@@ -1878,12 +1911,11 @@ namespace Barotrauma
             Unloading = true;
             try
             {
-
 #if CLIENT
                 RoundSound.RemoveAllRoundSounds();
                 GameMain.LightManager?.ClearLights();
+                depthSortedDamageable.Clear();
 #endif
-
                 var _loaded = new List<Submarine>(loaded);
                 foreach (Submarine sub in _loaded)
                 {
@@ -1918,9 +1950,11 @@ namespace Barotrauma
 
                 Ragdoll.RemoveAll();
                 PhysicsBody.RemoveAll();
+                StatusEffect.StopAll();       
                 GameMain.World = null;
 
                 Powered.Grids.Clear();
+                Powered.ChangedConnections.Clear();
 
                 GC.Collect();
 
@@ -1940,6 +1974,7 @@ namespace Barotrauma
 
             outdoorNodes?.Clear();
             outdoorNodes = null;
+            obstructedNodes.Clear();
 
             GameMain.GameSession?.Campaign?.UpgradeManager?.OnUpgradesChanged?.TryDeregister(upgradeEventIdentifier);
 
@@ -1951,10 +1986,16 @@ namespace Barotrauma
 
             visibleEntities = null;
 
+            bodyDist.Clear();
+            bodies.Clear();
+
             if (MainSub == this) { MainSub = null; }
             if (MainSubs[1] == this) { MainSubs[1] = null; }
 
             ConnectedDockingPorts?.Clear();
+
+            Powered.ChangedConnections.Clear();
+            Powered.Grids.Clear();
 
             loaded.Remove(this);
         }

@@ -94,8 +94,19 @@ namespace Barotrauma
             DataRewards = new List<(Identifier Identifier, object Value, SetDataAction.OperationType OperationType)>();
 
         public readonly int Commonness;
+        /// <summary>
+        /// Displayed difficulty (indicator)
+        /// </summary>
         public readonly int? Difficulty;
         public const int MinDifficulty = 1, MaxDifficulty = 4;
+        /// <summary>
+        /// The actual minimum difficulty of the level allowed for this mission to trigger.
+        /// </summary>
+        public readonly int MinLevelDifficulty = 0;
+        /// <summary>
+        /// The actual maximum difficulty of the level allowed for this mission to trigger.
+        /// </summary>
+        public readonly int MaxLevelDifficulty = 100;
 
         public readonly int Reward;
 
@@ -211,6 +222,10 @@ namespace Barotrauma
                 int difficulty = element.GetAttributeInt("difficulty", MinDifficulty);
                 Difficulty = Math.Clamp(difficulty, MinDifficulty, MaxDifficulty);
             }
+            MinLevelDifficulty = element.GetAttributeInt(nameof(MinLevelDifficulty), MinLevelDifficulty);
+            MaxLevelDifficulty = element.GetAttributeInt(nameof(MaxLevelDifficulty), MaxLevelDifficulty);
+            MinLevelDifficulty = Math.Clamp(MinLevelDifficulty, 0, Math.Min(MaxLevelDifficulty, 100));
+            MaxLevelDifficulty = Math.Clamp(MaxLevelDifficulty, Math.Max(MinLevelDifficulty, 0), 100);
 
             ShowProgressBar = element.GetAttributeBool(nameof(ShowProgressBar), false);
             ShowProgressInNumbers = element.GetAttributeBool(nameof(ShowProgressInNumbers), false);
@@ -372,7 +387,8 @@ namespace Barotrauma
             }
             if (constructor == null)
             {
-                DebugConsole.ThrowError($"Failed to find a constructor for the mission type \"{Type}\"!");
+                DebugConsole.ThrowError($"Failed to find a constructor for the mission type \"{Type}\"!",
+                    contentPackage: element.ContentPackage);
             }
 
             InitProjSpecific(element);

@@ -105,7 +105,8 @@ namespace Barotrauma
             {
                 DebugConsole.ThrowError(
                     $"Error in even \"{(parentEvent.Prefab?.Identifier.ToString() ?? "unknown")}\". " +
-                    $"The attribute \"submarinetype\" is not valid in {nameof(SpawnAction)}. Did you mean {nameof(SpawnLocation)}?");
+                    $"The attribute \"submarinetype\" is not valid in {nameof(SpawnAction)}. Did you mean {nameof(SpawnLocation)}?",
+                    contentPackage: ParentEvent.Prefab.ContentPackage);
             }
         }
 
@@ -233,7 +234,8 @@ namespace Barotrauma
             {
                 if (MapEntityPrefab.FindByIdentifier(ItemIdentifier) is not ItemPrefab itemPrefab)
                 {
-                    DebugConsole.ThrowError("Error in SpawnAction (item prefab \"" + ItemIdentifier + "\" not found)");
+                    DebugConsole.ThrowError("Error in SpawnAction (item prefab \"" + ItemIdentifier + "\" not found)",
+                        contentPackage: ParentEvent.Prefab.ContentPackage);
                 }
                 else
                 {
@@ -256,7 +258,8 @@ namespace Barotrauma
 
                         if (spawnInventory == null)
                         {
-                            DebugConsole.ThrowError($"Could not spawn \"{ItemIdentifier}\" in target inventory \"{TargetInventory}\" - matching target not found.");
+                            DebugConsole.ThrowError($"Could not spawn \"{ItemIdentifier}\" in target inventory \"{TargetInventory}\" - matching target not found.",
+                                contentPackage: ParentEvent.Prefab.ContentPackage);
                         }
                     }
 

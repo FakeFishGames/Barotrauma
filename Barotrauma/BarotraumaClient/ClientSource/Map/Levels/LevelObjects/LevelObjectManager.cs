@@ -23,7 +23,14 @@ namespace Barotrauma
         private Rectangle currentGridIndices;
 
         public bool ForceRefreshVisibleObjects;
-        
+
+        partial void RemoveProjSpecific()
+        {
+            visibleObjectsBack.Clear();
+            visibleObjectsMid.Clear();
+            visibleObjectsFront.Clear();
+        }
+
         partial void UpdateProjSpecific(float deltaTime)
         {
             foreach (LevelObject obj in visibleObjectsBack)

@@ -120,6 +120,10 @@ namespace Barotrauma.Steam
             currentLobby?.SetData("playstyle", serverSettings.PlayStyle.ToString());
             currentLobby?.SetData("gamemode", GameMain.NetLobbyScreen?.SelectedMode?.Identifier.Value ?? "");
             currentLobby?.SetData("language", serverSettings.Language.ToString());
+            if (GameMain.NetLobbyScreen?.SelectedSub != null)
+            {
+                currentLobby?.SetData("submarine", GameMain.NetLobbyScreen.SelectedSub.Name);
+            }
 
             DebugConsole.Log("Lobby updated!");
         }

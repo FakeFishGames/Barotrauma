@@ -291,14 +291,14 @@ namespace Barotrauma
 
         private readonly List<MapNotification> mapNotifications = new List<MapNotification>();
 
-        partial void ChangeLocationTypeProjSpecific(Location location, string prevName, LocationTypeChange change)
+        partial void ChangeLocationTypeProjSpecific(Location location, LocalizedString prevName, LocationTypeChange change)
         {
             var messages = change.GetMessages(location.Faction);
             if (!messages.Any()) { return; }
 
             string msg = messages.GetRandom(Rand.RandSync.Unsynced)
                 .Replace("[previousname]", $"‖color:gui.yellow‖{prevName}‖end‖")
-                .Replace("[name]", $"‖color:gui.yellow‖{location.Name}‖end‖");
+                .Replace("[name]", $"‖color:gui.yellow‖{location.DisplayName}‖end‖");
             location.LastTypeChangeMessage = msg;
 
             mapNotifications.Add(new MapNotification(msg, GUIStyle.SubHeadingFont, mapNotifications, location));           
@@ -377,7 +377,7 @@ namespace Barotrauma
 
             bool showReputation = hudVisibility > 0.0f && location.Type.HasOutpost && location.Reputation != null;
 
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), content.RectTransform), location.Name, font: GUIStyle.LargeFont) { Padding = Vector4.Zero };
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), content.RectTransform), location.DisplayName, font: GUIStyle.LargeFont) { Padding = Vector4.Zero };
             if (!location.Type.Name.IsNullOrEmpty())
             {
                 new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), content.RectTransform), location.Type.Name, font: GUIStyle.SubHeadingFont) { Padding = Vector4.Zero };
@@ -1080,6 +1080,7 @@ namespace Barotrauma
                 }
                 float dist = Vector2.Distance(start, end);
                 var connectionSprite = connection.Passed ? generationParams.PassedConnectionSprite : generationParams.ConnectionSprite;
+                if (connectionSprite?.Texture == null) { continue; }
 
                 Color segmentColor = connectionColor;
                 int segmentWidth = width;
@@ -1091,9 +1092,6 @@ namespace Barotrauma
                     { 
                         segmentWidth /= 2; 
                         segmentColor = connection.Passed ? generationParams.ConnectionColor : generationParams.UnvisitedConnectionColor; 
-                    }
-                    else 
-                    { 
                     }
                 }
 

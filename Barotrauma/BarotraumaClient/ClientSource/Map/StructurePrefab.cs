@@ -94,19 +94,20 @@ namespace Barotrauma
             GUI.DrawRectangle(spriteBatch, new Rectangle(newRect.X, -newRect.Y - GameMain.GraphicsHeight, newRect.Width, newRect.Height + GameMain.GraphicsHeight * 2), Color.White);
         }
 
-        public override void DrawPlacing(SpriteBatch spriteBatch, Rectangle placeRect, float scale = 1.0f, SpriteEffects spriteEffects = SpriteEffects.None)
+        public override void DrawPlacing(SpriteBatch spriteBatch, Rectangle placeRect, float scale = 1.0f, float rotation = 0.0f, SpriteEffects spriteEffects = SpriteEffects.None)
         {
-            SpriteEffects oldEffects = Sprite.effects;
-            Sprite.effects ^= spriteEffects;
-
+            var position = placeRect.Location.ToVector2().FlipY();
+            position += placeRect.Size.ToVector2() * 0.5f;
+            
             Sprite.DrawTiled(
                 spriteBatch, 
-                new Vector2(placeRect.X, -placeRect.Y), 
-                new Vector2(placeRect.Width, placeRect.Height), 
-                color: Color.White * 0.8f, 
-                textureScale: TextureScale * scale);
-
-            Sprite.effects = oldEffects;
+                position, 
+                placeRect.Size.ToVector2(), 
+                color: Color.White * 0.8f,
+                origin: placeRect.Size.ToVector2() * 0.5f,
+                rotation: rotation,
+                textureScale: TextureScale * scale,
+                spriteEffects: spriteEffects ^ Sprite.effects);
         }
     }
 }

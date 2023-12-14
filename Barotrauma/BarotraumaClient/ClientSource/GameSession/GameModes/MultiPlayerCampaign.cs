@@ -535,7 +535,7 @@ namespace Barotrauma
 
             bool refreshCampaignUI = false;
 
-            if (!(GameMain.GameSession?.GameMode is MultiPlayerCampaign campaign) || campaignID != campaign.CampaignID)
+            if (GameMain.GameSession?.GameMode is not MultiPlayerCampaign campaign || campaignID != campaign.CampaignID)
             {
                 string savePath = SaveUtil.CreateSavePath(SaveUtil.SaveType.Multiplayer);
 
@@ -614,7 +614,7 @@ namespace Barotrauma
                         {
                             if (availableMission.ConnectionIndex < 0 || availableMission.ConnectionIndex >= campaign.Map.CurrentLocation.Connections.Count)
                             {
-                                DebugConsole.ThrowError($"Error when receiving campaign data from the server: connection index for mission \"{availableMission.Identifier}\" out of range (index: {availableMission.ConnectionIndex}, current location: {campaign.Map.CurrentLocation.Name}, connections: {campaign.Map.CurrentLocation.Connections.Count}).");
+                                DebugConsole.ThrowError($"Error when receiving campaign data from the server: connection index for mission \"{availableMission.Identifier}\" out of range (index: {availableMission.ConnectionIndex}, current location: {campaign.Map.CurrentLocation.DisplayName}, connections: {campaign.Map.CurrentLocation.Connections.Count}).");
                                 continue;
                             }
                             LocationConnection connection = campaign.Map.CurrentLocation.Connections[availableMission.ConnectionIndex];
@@ -647,7 +647,15 @@ namespace Barotrauma
                     {
                         if (ownedSubIndex >= GameMain.Client.ServerSubmarines.Count)
                         {
-                            string errorMsg = $"Error in {nameof(MultiPlayerCampaign.ClientRead)}. Owned submarine index was out of bounds. Index: {ownedSubIndex}, submarines: {string.Join(", ", GameMain.Client.ServerSubmarines.Select(s => s.Name))}";
+                            string errorMsg;
+                            if (GameMain.Client.ServerSubmarines.None())
+                            {
+                                errorMsg = $"Error in {nameof(MultiPlayerCampaign.ClientRead)}. Owned submarine index was out of bounds (list of server submarines is empty).";
+                            }
+                            else
+                            {
+                                errorMsg = $"Error in {nameof(MultiPlayerCampaign.ClientRead)}. Owned submarine index was out of bounds. Index: {ownedSubIndex}, submarines: {string.Join(", ", GameMain.Client.ServerSubmarines.Select(s => s.Name))}";
+                            }
                             DebugConsole.ThrowError(errorMsg);
                             GameAnalyticsManager.AddErrorEventOnce(
                                 "MultiPlayerCampaign.ClientRead.OwnerSubIndexOutOfBounds" + ownedSubIndex,
@@ -822,11 +830,12 @@ namespace Barotrauma
                 UInt16 id = msg.ReadUInt16();
                 bool hasCharacterData = msg.ReadBoolean();
                 CharacterInfo myCharacterInfo = null;
+                bool waitForModsDownloaded = Screen.Selected is ModDownloadScreen;
                 if (hasCharacterData)
                 {
-                    myCharacterInfo = CharacterInfo.ClientRead(CharacterPrefab.HumanSpeciesName, msg);
+                    myCharacterInfo = CharacterInfo.ClientRead(CharacterPrefab.HumanSpeciesName, msg, requireJobPrefabFound: !waitForModsDownloaded);
                 }
-                if (ShouldApply(NetFlags.CharacterInfo, id, requireUpToDateSave: true))
+                if (!waitForModsDownloaded && ShouldApply(NetFlags.CharacterInfo, id, requireUpToDateSave: true))
                 {
                     if (myCharacterInfo != null)
                     {

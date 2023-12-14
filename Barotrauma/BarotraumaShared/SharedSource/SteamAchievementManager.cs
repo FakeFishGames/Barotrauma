@@ -481,6 +481,7 @@ namespace Barotrauma
             }
 
             pathFinder = null;
+            roundData = null;
         }
 
         private static void UnlockAchievement(Character recipient, Identifier identifier)

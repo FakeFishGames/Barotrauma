@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿#nullable enable
+using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Xml.Linq;
@@ -148,7 +149,7 @@ namespace Barotrauma.Particles
             Prefab = prefab;
         }
 
-        public void Emit(float deltaTime, Vector2 position, Hull hullGuess = null, float angle = 0.0f, float particleRotation = 0.0f, float velocityMultiplier = 1.0f, float sizeMultiplier = 1.0f, float amountMultiplier = 1.0f, Color? colorMultiplier = null, ParticlePrefab overrideParticle = null, bool mirrorAngle = false, Tuple<Vector2, Vector2> tracerPoints = null)
+        public void Emit(float deltaTime, Vector2 position, Hull? hullGuess = null, float angle = 0.0f, float particleRotation = 0.0f, float velocityMultiplier = 1.0f, float sizeMultiplier = 1.0f, float amountMultiplier = 1.0f, Color? colorMultiplier = null, ParticlePrefab? overrideParticle = null, bool mirrorAngle = false, Tuple<Vector2, Vector2>? tracerPoints = null)
         {
             if (GameMain.Client?.MidRoundSyncing ?? false) { return; }
 
@@ -191,16 +192,17 @@ namespace Barotrauma.Particles
             burstEmitTimer = Prefab.Properties.EmitInterval;
             for (int i = 0; i < Prefab.Properties.ParticleAmount * amountMultiplier; i++)
             {
-                Emit(position, hullGuess, angle, particleRotation, velocityMultiplier, sizeMultiplier, colorMultiplier, overrideParticle, tracerPoints: tracerPoints);
+                Emit(position, hullGuess, angle, particleRotation, velocityMultiplier, sizeMultiplier, colorMultiplier, overrideParticle, mirrorAngle, tracerPoints: tracerPoints);
             }
         }
 
-        private void Emit(Vector2 position, Hull hullGuess, float angle, float particleRotation, float velocityMultiplier, float sizeMultiplier, Color? colorMultiplier = null, ParticlePrefab overrideParticle = null, bool mirrorAngle = false, Tuple<Vector2, Vector2> tracerPoints = null)
+        private void Emit(Vector2 position, Hull? hullGuess, float angle, float particleRotation, float velocityMultiplier, float sizeMultiplier, Color? colorMultiplier = null, ParticlePrefab? overrideParticle = null, bool mirrorAngle = false, Tuple<Vector2, Vector2>? tracerPoints = null)
         {
             var particlePrefab = overrideParticle ?? Prefab.ParticlePrefab;
             if (particlePrefab == null) 
             {
-                DebugConsole.AddWarning($"Could not find the particle prefab \"{Prefab.ParticlePrefabName}\".");
+                DebugConsole.AddWarning($"Could not find the particle prefab \"{Prefab.ParticlePrefabName}\".",
+                    contentPackage: Prefab.ContentPackage);
                 return; 
             }
 
@@ -271,7 +273,7 @@ namespace Barotrauma.Particles
     {
         public readonly Identifier ParticlePrefabName;
 
-        public ParticlePrefab ParticlePrefab
+        public ParticlePrefab? ParticlePrefab
         {
             get
             {
@@ -282,12 +284,16 @@ namespace Barotrauma.Particles
 
         public readonly ParticleEmitterProperties Properties;
 
-        public bool DrawOnTop => Properties.DrawOnTop || ParticlePrefab.DrawOnTop;
+        public readonly ContentPackage? ContentPackage;
+
+        public bool DrawOnTop => Properties.DrawOnTop || ParticlePrefab is { DrawOnTop: true };
 
         public ParticleEmitterPrefab(ContentXElement element)
         {
-            Properties = new ParticleEmitterProperties(element);
+            if (element == null) { throw new ArgumentNullException(nameof(element)); }
+            Properties = new ParticleEmitterProperties(element!);
             ParticlePrefabName = element.GetAttributeIdentifier("particle", "");
+            ContentPackage = element.ContentPackage;
         }
 
         public ParticleEmitterPrefab(ParticlePrefab prefab, ParticleEmitterProperties properties)

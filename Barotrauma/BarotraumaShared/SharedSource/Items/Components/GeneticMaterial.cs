@@ -168,8 +168,8 @@ namespace Barotrauma.Items.Components
             conditionIncrease += user?.GetStatValue(StatTypes.GeneticMaterialRefineBonus) ?? 0.0f;
             if (item.Prefab == otherGeneticMaterial.item.Prefab)
             {
+                float taintedProbability = GetTaintedProbabilityOnRefine(otherGeneticMaterial, user);
                 item.Condition = Math.Max(item.Condition, otherGeneticMaterial.item.Condition) + conditionIncrease;
-                float taintedProbability = GetTaintedProbabilityOnRefine(user);
                 if (taintedProbability >= Rand.Range(0.0f, 1.0f))
                 {
                     MakeTainted();
@@ -221,10 +221,10 @@ namespace Barotrauma.Items.Components
             return taintedEffectStrength;
         }
 
-        private float GetTaintedProbabilityOnRefine(Character user)
+        private float GetTaintedProbabilityOnRefine(GeneticMaterial otherGeneticMaterial, Character user)
         {
             if (user == null) { return 1.0f; }
-            float probability = MathHelper.Lerp(0.0f, 0.99f, item.Condition / 100.0f);
+            float probability = MathHelper.Lerp(0.0f, 0.99f, Math.Max(item.Condition, otherGeneticMaterial.Item.Condition) / 100.0f);
             probability *= MathHelper.Lerp(1.0f, 0.25f, DegreeOfSuccess(user));
             return MathHelper.Clamp(probability, 0.0f, 1.0f);
         }

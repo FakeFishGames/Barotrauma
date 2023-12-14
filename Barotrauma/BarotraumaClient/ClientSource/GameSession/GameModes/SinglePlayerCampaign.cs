@@ -548,9 +548,12 @@ namespace Barotrauma
                 }
                 else
                 {
-                    //wasn't initially docked (sub doesn't have a docking port?)
-                    // -> choose a destination when the sub is far enough from the start outpost
-                    if (!Submarine.MainSub.AtStartExit && !Level.Loaded.StartOutpost.ExitPoints.Any())
+                    //force the map to open if the sub is somehow not at the start of the outpost level
+                    //UNLESS the level has specific exit points, in that case the sub needs to get to those
+                    if (!Submarine.MainSub.AtStartExit &&
+                        /*there should normally always be a start outpost in outpost levels,
+                         * but that might not always be the case e.g. mods or outdated saves (see #13042)*/
+                        Level.Loaded.StartOutpost is not { ExitPoints.Count: > 0 })
                     {
                         ForceMapUI = true;
                         CampaignUI.SelectTab(InteractionType.Map);

@@ -622,7 +622,7 @@ namespace Barotrauma.Items.Components
             return element;
         }
 
-        private void LoadLimbPositions(XElement element)
+        private void LoadLimbPositions(ContentXElement element)
         {
             limbPositions.Clear();
             foreach (var subElement in element.Elements())
@@ -631,7 +631,8 @@ namespace Barotrauma.Items.Components
                 string limbStr = subElement.GetAttributeString("limb", "");
                 if (!Enum.TryParse(subElement.GetAttribute("limb").Value, out LimbType limbType))
                 {
-                    DebugConsole.ThrowError($"Error in item \"{item.Name}\" - {limbStr} is not a valid limb type.");
+                    DebugConsole.ThrowError($"Error in item \"{item.Name}\" - {limbStr} is not a valid limb type.",
+                        contentPackage: element.ContentPackage);
                 }
                 else
                 {

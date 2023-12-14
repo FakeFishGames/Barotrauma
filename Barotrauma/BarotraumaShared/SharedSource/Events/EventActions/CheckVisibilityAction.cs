@@ -1,5 +1,6 @@
 #nullable enable
-
+using Microsoft.Xna.Framework;
+using System.Linq;
 
 namespace Barotrauma
 {
@@ -8,11 +9,17 @@ namespace Barotrauma
         [Serialize("", IsPropertySaveable.Yes, description: "Tag of the entity to do the visibility check from.")]
         public Identifier EntityTag { get; set; }
 
+        [Serialize("", IsPropertySaveable.Yes, description: "Entities that also have this tag are excluded.")]
+        public Identifier ExcludedEntityTag { get; set; }
+
         [Serialize("", IsPropertySaveable.Yes, description: "Tag of the entity to do the visibility check to.")]
         public Identifier TargetTag { get; set; }
 
         [Serialize(false, IsPropertySaveable.Yes, description: "Does the entity need to be facing the target? Only valid if the entity is a character.")]
         public bool CheckFacing { get; set; }
+
+        [Serialize(1000.0f, IsPropertySaveable.Yes, description: "Maximum distance between the targets.")]
+        public float MaxDistance { get; set; }
 
         [Serialize("", IsPropertySaveable.Yes, description: "Tag to apply to the entity who saw the target when the check succeeds.")]
         public Identifier ApplyTagToEntity { get; set; }
@@ -31,11 +38,17 @@ namespace Barotrauma
         {
             foreach (var entity in ParentEvent.GetTargets(EntityTag))
             {
+                if (!ExcludedEntityTag.IsEmpty)
+                {
+                    if (ParentEvent.GetTargets(ExcludedEntityTag).Contains(entity)) { continue; }
+                }
+
                 foreach (var target in ParentEvent.GetTargets(TargetTag))
                 {
                     if (!AllowSameEntity && entity == target) { continue; }
-                    if (Character.IsTargetVisible(target, entity, CheckFacing)) 
-                    { 
+                    if (Vector2.DistanceSquared(target.WorldPosition, entity.WorldPosition) > MaxDistance * MaxDistance) { continue; }
+                    if (Character.IsTargetVisible(target, entity, seeThroughWindows: true, CheckFacing)) 
+                    {
                         if (!ApplyTagToEntity.IsEmpty)
                         {
                             ParentEvent.AddTarget(ApplyTagToEntity, entity);

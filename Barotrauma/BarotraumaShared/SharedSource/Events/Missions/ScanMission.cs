@@ -64,7 +64,8 @@ namespace Barotrauma
 
             if (itemConfig == null)
             {
-                DebugConsole.ThrowError("Failed to initialize a Scan mission: item config is not set");
+                DebugConsole.ThrowError("Failed to initialize a Scan mission: item config is not set",
+                    contentPackage: Prefab.ContentPackage);
                 return;
             }
 
@@ -77,7 +78,8 @@ namespace Barotrauma
             TargetRuin = Level.Loaded?.Ruins?.GetRandom(randSync: Rand.RandSync.ServerAndClient);
             if (TargetRuin == null)
             {
-                DebugConsole.ThrowError("Failed to initialize a Scan mission: level contains no alien ruins");
+                DebugConsole.ThrowError("Failed to initialize a Scan mission: level contains no alien ruins",
+                    contentPackage: Prefab.ContentPackage);
                 return;
             }
 
@@ -85,7 +87,8 @@ namespace Barotrauma
             ruinWaypoints.RemoveAll(wp => wp.CurrentHull == null);
             if (ruinWaypoints.Count < targetsToScan)
             {
-                DebugConsole.ThrowError($"Failed to initialize a Scan mission: target ruin has less waypoints than required as scan targets ({ruinWaypoints.Count} < {targetsToScan})");
+                DebugConsole.ThrowError($"Failed to initialize a Scan mission: target ruin has less waypoints than required as scan targets ({ruinWaypoints.Count} < {targetsToScan})",
+                    contentPackage: Prefab.ContentPackage);
                 return;
             }
             var availableWaypoints = new List<WayPoint>();
@@ -107,7 +110,8 @@ namespace Barotrauma
                         if (availableWaypoints.None())
                         {
 #if DEBUG
-                            DebugConsole.ThrowError($"Error initializing a Scan mission: not enough targets available on try #{tries + 1} to reach the required scan target count (current targets: {scanTargets.Count}, required targets: {targetsToScan})");
+                            DebugConsole.ThrowError($"Error initializing a Scan mission: not enough targets available on try #{tries + 1} to reach the required scan target count (current targets: {scanTargets.Count}, required targets: {targetsToScan})",
+                                contentPackage: Prefab.ContentPackage);
 #endif
                             break;
                         }
@@ -131,7 +135,8 @@ namespace Barotrauma
             }
             if (scanTargets.Count < targetsToScan)
             {
-                DebugConsole.ThrowError($"Error initializing a Scan mission: not enough targets (current targets: {scanTargets.Count}, required targets: {targetsToScan})");
+                DebugConsole.ThrowError($"Error initializing a Scan mission: not enough targets (current targets: {scanTargets.Count}, required targets: {targetsToScan})", 
+                    contentPackage: Prefab.ContentPackage);
             }
         }
 

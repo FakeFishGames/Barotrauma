@@ -165,6 +165,11 @@ namespace Barotrauma
         public TabMenu()
         {
             if (!initialized) { Initialize(); }
+            if (Level.Loaded == null)
+            {
+                //make sure we're not trying to view e.g. mission or reputation info if the tab menu is opened in the test mode
+                SelectedTab = InfoFrameTab.Crew;
+            }
             CreateInfoFrame(SelectedTab);
             SelectInfoFrameTab(SelectedTab);
         }
@@ -303,7 +308,7 @@ namespace Barotrauma
             {
                 var missionBtn = createTabButton(InfoFrameTab.Mission, "mission");
                 eventLogNotification = GameSession.CreateNotificationIcon(missionBtn);
-                eventLogNotification.Visible = GameMain.GameSession.EventManager?.EventLog?.UnreadEntries ?? false;
+                eventLogNotification.Visible = GameMain.GameSession?.EventManager?.EventLog?.UnreadEntries ?? false;
                 if (eventLogNotification.Visible)
                 {
                     eventLogNotification.Pulsate(Vector2.One, Vector2.One * 2, 1.0f);
@@ -1508,7 +1513,7 @@ namespace Barotrauma
                 portraitImage.RectTransform.NonScaledSize = new Point(Math.Min((int)(portraitImage.Rect.Size.Y * portraitAspectRatio), portraitImage.Rect.Width), portraitImage.Rect.Size.Y);
             }
 
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), locationInfoContainer.RectTransform), location.Name, font: GUIStyle.LargeFont);
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), locationInfoContainer.RectTransform), location.DisplayName, font: GUIStyle.LargeFont);
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), locationInfoContainer.RectTransform), location.Type.Name, font: GUIStyle.SubHeadingFont);
 
             if (location.Faction?.Prefab != null)

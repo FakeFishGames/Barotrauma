@@ -111,7 +111,7 @@ namespace Barotrauma
             set;
         }
 
-        public bool IsHorizontal { get; private set; }
+        public bool IsHorizontal { get; }
 
         public int SectionCount
         {
@@ -240,6 +240,25 @@ namespace Barotrauma
             }
         }
 
+        protected float rotationRad = 0f;
+        [ConditionallyEditable(ConditionallyEditable.ConditionType.AllowRotating, DecimalCount = 3, ForceShowPlusMinusButtons = true, ValueStep = 0.1f), Serialize(0.0f, IsPropertySaveable.Yes)]
+        public float Rotation
+        {
+            get => MathHelper.ToDegrees(rotationRad);
+            set
+            {
+                rotationRad = MathHelper.WrapAngle(MathHelper.ToRadians(value));
+                if (StairDirection != Direction.None)
+                {
+                    CreateStairBodies();
+                }
+                else if (Prefab.Body)
+                {
+                    CreateSections();
+                    UpdateSections();
+                }
+            }
+        }
 
         protected Vector2 textureScale = Vector2.One;
 
@@ -336,9 +355,18 @@ namespace Barotrauma
         {
             get
             {
-                float rotation = MathHelper.ToRadians(Prefab.BodyRotation);
-                if (FlippedX) rotation = -MathHelper.Pi - rotation;
-                if (FlippedY) rotation = -rotation;
+                float rotation = MathHelper.ToRadians(Prefab.BodyRotation) + this.rotationRad;
+                if (IsHorizontal)
+                {
+                    if (FlippedX) { rotation = -MathHelper.Pi - rotation; }
+                    if (FlippedY) { rotation = -rotation; }
+                }
+                else
+                {
+                    if (FlippedX) { rotation = -rotation; }
+                    if (FlippedY) { rotation = -MathHelper.Pi -rotation; }
+                }
+                rotation = MathHelper.WrapAngle(rotation);
                 return rotation;
             }
         }
@@ -350,6 +378,10 @@ namespace Barotrauma
             get
             {
                 Vector2 bodyOffset = Prefab.BodyOffset;
+                if (rotationRad != 0f)
+                {
+                    bodyOffset = MathUtils.RotatePoint(bodyOffset, -rotationRad);
+                }
                 if (FlippedX) { bodyOffset.X = -bodyOffset.X; }
                 if (FlippedY) { bodyOffset.Y = -bodyOffset.Y; }
                 return bodyOffset;
@@ -567,9 +599,14 @@ namespace Barotrauma
 
             Body newBody = GameMain.World.CreateRectangle(bodyWidth, bodyHeight, 1.5f);
 
+            var rotationWithFlip = FlippedX ^ FlippedY ? -rotationRad : rotationRad;
+            
             newBody.BodyType = BodyType.Static;
-            Vector2 stairPos = new Vector2(Position.X, rect.Y - rect.Height + stairHeight / 2.0f);
-            newBody.Rotation = (StairDirection == Direction.Right) ? stairAngle : -stairAngle;
+            Vector2 stairRectHeightDiff = new Vector2(0f, stairHeight / 2.0f - rect.Height / 2.0f);
+            stairRectHeightDiff = MathUtils.RotatePoint(stairRectHeightDiff, -rotationWithFlip);
+            if (FlippedY) { stairRectHeightDiff = -stairRectHeightDiff; }
+            Vector2 stairPos = new Vector2(Position.X, rect.Y - rect.Height / 2.0f) + stairRectHeightDiff;
+            newBody.Rotation = ((StairDirection == Direction.Right) ? stairAngle : -stairAngle) - rotationWithFlip;
             newBody.CollisionCategories = Physics.CollisionStairs;
             newBody.Friction = 0.8f;
             newBody.UserData = this;
@@ -696,16 +733,11 @@ namespace Barotrauma
             }
         }
 
-        private static Vector2[] CalculateExtremes(Rectangle sectionRect)
-        {
-            Vector2[] corners = new Vector2[4];
-            corners[0] = new Vector2(sectionRect.X, sectionRect.Y - sectionRect.Height);
-            corners[1] = new Vector2(sectionRect.X, sectionRect.Y);
-            corners[2] = new Vector2(sectionRect.Right, sectionRect.Y);
-            corners[3] = new Vector2(sectionRect.Right, sectionRect.Y - sectionRect.Height);
-
-            return corners;
-        }
+        public override Quad2D GetTransformedQuad()
+            => Quad2D.FromSubmarineRectangle(rect).Rotated(
+                FlippedX != FlippedY
+                    ? rotationRad
+                    : -rotationRad);
 
         /// <summary>
         /// Checks if there's a structure items can be attached to at the given position and returns it.
@@ -727,8 +759,6 @@ namespace Barotrauma
 
         public override bool IsMouseOn(Vector2 position)
         {
-            if (!base.IsMouseOn(position)) { return false; }
-
             if (StairDirection == Direction.None)
             {
                 Vector2 rectSize = rect.Size.ToVector2();
@@ -745,14 +775,19 @@ namespace Barotrauma
             }
             else
             {
+                Vector2 transformedMousePos = MathUtils.RotatePointAroundTarget(
+                    position,
+                    WorldRect.Location.ToVector2() + WorldRect.Size.ToVector2().FlipY() * 0.5f,
+                    BodyRotation);
 
+                if (!Submarine.RectContains(WorldRect, position)) { return false; }
                 if (StairDirection == Direction.Left)
                 {
-                    return MathUtils.LineToPointDistanceSquared(new Vector2(WorldRect.X, WorldRect.Y), new Vector2(WorldRect.Right, WorldRect.Y - WorldRect.Height), position) < 1600.0f;
+                    return MathUtils.LineToPointDistanceSquared(new Vector2(WorldRect.X, WorldRect.Y), new Vector2(WorldRect.Right, WorldRect.Y - WorldRect.Height), transformedMousePos) < 1600.0f;
                 }
                 else
                 {
-                    return MathUtils.LineToPointDistanceSquared(new Vector2(WorldRect.X, WorldRect.Y - rect.Height), new Vector2(WorldRect.Right, WorldRect.Y), position) < 1600.0f;
+                    return MathUtils.LineToPointDistanceSquared(new Vector2(WorldRect.X, WorldRect.Y - rect.Height), new Vector2(WorldRect.Right, WorldRect.Y), transformedMousePos) < 1600.0f;
                 }
             }
         }
@@ -883,6 +918,12 @@ namespace Barotrauma
             return Sections[sectionIndex].damage >= MaxHealth * LeakThreshold;
         }
 
+        public bool SectionIsLeakingFromOutside(int sectionIndex)
+        {
+            if (sectionIndex < 0 || sectionIndex >= Sections.Length) { return false; }
+            return SectionIsLeaking(sectionIndex) && !Sections[sectionIndex].gap.IsRoomToRoom;
+        }
+
         public int SectionLength(int sectionIndex)
         {
             if (sectionIndex < 0 || sectionIndex >= Sections.Length) return 0;
@@ -934,11 +975,19 @@ namespace Barotrauma
                 for (int i = 1; i <= particleAmount; i++)
                 {
                     var worldRect = section.WorldRect;
+                    var directionUnitX = MathUtils.RotatedUnitXRadians(BodyRotation);
+                    var directionUnitY = directionUnitX.YX().FlipX();
                     Vector2 particlePos = new Vector2(
-                        Rand.Range(worldRect.X, worldRect.Right + 1),
-                        Rand.Range(worldRect.Y - worldRect.Height, worldRect.Y + 1));
+                        Rand.Range(0, worldRect.Width + 1),
+                        Rand.Range(-worldRect.Height, 1));
+                    particlePos -= worldRect.Size.ToVector2().FlipY() * 0.5f;
 
-                    var particle = GameMain.ParticleManager.CreateParticle(Prefab.DamageParticle, particlePos, Rand.Vector(Rand.Range(1.0f, 50.0f)), collisionIgnoreTimer: 1f);
+                    var particlePosFinal = SectionPosition(sectionIndex, world: true);
+                    particlePosFinal += particlePos.X * directionUnitX + particlePos.Y * directionUnitY;
+
+                    var particle = GameMain.ParticleManager.CreateParticle(Prefab.DamageParticle,
+                        position: particlePosFinal,
+                        velocity: Rand.Vector(Rand.Range(1.0f, 50.0f)), collisionIgnoreTimer: 1f);
                     if (particle == null) break;
                 }
             }
@@ -960,14 +1009,23 @@ namespace Barotrauma
 
             //if the sub has been flipped horizontally, the first section may be smaller than wallSectionSize
             //and we need to adjust the position accordingly
-            if (Sections[0].rect.Width < WallSectionSize)
+            if (IsHorizontal)
             {
-                displayPos.X += WallSectionSize - Sections[0].rect.Width;
+                if (Sections[0].rect.Width < WallSectionSize)
+                {
+                    displayPos += DirectionUnit * (WallSectionSize - Sections[0].rect.Width);
+                }
+            }
+            else
+            {
+                if (Sections[0].rect.Height < WallSectionSize)
+                {
+                    displayPos += DirectionUnit * (WallSectionSize - Sections[0].rect.Height);
+                }
             }
 
-            int index = IsHorizontal ?
-                (int)Math.Floor((displayPos.X - rect.X) / WallSectionSize) :
-                (int)Math.Floor((rect.Y - displayPos.Y) / WallSectionSize);
+            var leftmostPos = Position - DirectionUnit * (IsHorizontal ? Rect.Width : Rect.Height) * 0.5f;
+            int index = (int)Math.Floor(Vector2.Dot(DirectionUnit, displayPos - leftmostPos) / WallSectionSize);
 
             if (clamp)
             {
@@ -987,6 +1045,17 @@ namespace Barotrauma
             return Sections[sectionIndex].damage;
         }
 
+        protected Vector2 DirectionUnit
+        {
+            get
+            {
+                var rotation = IsHorizontal ? -BodyRotation : -MathHelper.PiOver2 - BodyRotation;
+                if (IsHorizontal && FlippedX) { rotation += MathF.PI; }
+                if (!IsHorizontal && FlippedY) { rotation += MathF.PI; }
+                return MathUtils.RotatedUnitXRadians(rotation);
+            }
+        }
+        
         public Vector2 SectionPosition(int sectionIndex, bool world = false)
         {
             if (sectionIndex < 0 || sectionIndex >= Sections.Length)
@@ -994,7 +1063,7 @@ namespace Barotrauma
                 return Vector2.Zero;
             }
 
-            if (Prefab.BodyRotation == 0.0f)
+            if (MathUtils.NearlyEqual(BodyRotation, 0f))
             {
                 Vector2 sectionPos = new Vector2(
                     Sections[sectionIndex].rect.X + Sections[sectionIndex].rect.Width / 2.0f,
@@ -1017,15 +1086,10 @@ namespace Barotrauma
                 else
                 {
                     diffFromCenter = ((sectionRect.Y - sectionRect.Height / 2) - (rect.Y - rect.Height / 2)) / (float)rect.Height * BodyHeight;
-                }
-                if (FlippedX)
-                {
                     diffFromCenter = -diffFromCenter;
                 }
 
-                Vector2 sectionPos = Position + new Vector2(
-                    (float)Math.Cos(IsHorizontal ? -BodyRotation : MathHelper.PiOver2 - BodyRotation),
-                    (float)Math.Sin(IsHorizontal ? -BodyRotation : MathHelper.PiOver2 - BodyRotation)) * diffFromCenter;
+                Vector2 sectionPos = Position + DirectionUnit * diffFromCenter;
 
                 if (world && Submarine != null)
                 {
@@ -1035,13 +1099,22 @@ namespace Barotrauma
             }
         }
 
-        public AttackResult AddDamage(Character attacker, Vector2 worldPosition, Attack attack, float deltaTime, bool playSound = false)
+        public AttackResult AddDamage(Character attacker, Vector2 worldPosition, Attack attack, Vector2 impulseDirection, float deltaTime, bool playSound = false)
         {
             if (Submarine != null && Submarine.GodMode) { return new AttackResult(0.0f, null); }
             if (!Prefab.Body || Prefab.Platform || Indestructible) { return new AttackResult(0.0f, null); }
 
             Vector2 transformedPos = worldPosition;
-            if (Submarine != null) transformedPos -= Submarine.Position;
+            if (Submarine != null) { transformedPos -= Submarine.Position; }
+
+            if (!MathUtils.NearlyEqual(BodyRotation, 0f))
+            {
+                var center = Rect.Location.ToVector2() + Rect.Size.ToVector2().FlipY() * 0.5f;
+                var rotation = BodyRotation;
+                if (IsHorizontal && FlippedX) { rotation += MathF.PI; }
+                if (!IsHorizontal && FlippedY) { rotation += MathF.PI; }
+                transformedPos = MathUtils.RotatePointAroundTarget(transformedPos, center, rotation);
+            }
 
             float damageAmount = 0.0f;
             for (int i = 0; i < SectionCount; i++)
@@ -1143,6 +1216,7 @@ namespace Barotrauma
                             gapRect.Y = (gapRect.Y - gapRect.Height / 2) + (int)(BodyHeight / 2 + BodyOffset.Y * scale);
                             gapRect.Height = (int)BodyHeight;
                         }
+                        if (FlippedX) { diffFromCenter = -diffFromCenter; }
                     }
                     else
                     {
@@ -1153,8 +1227,8 @@ namespace Barotrauma
                             gapRect.Width = (int)BodyWidth;
                         }
                         if (BodyHeight > 0.0f) { gapRect.Height = (int)(BodyHeight * (gapRect.Height / (float)this.rect.Height)); }
+                        if (FlippedY) { diffFromCenter = -diffFromCenter; }
                     }
-                    if (FlippedX) { diffFromCenter = -diffFromCenter; }
 
                     if (Math.Abs(BodyRotation) > 0.01f)
                     {
@@ -1170,14 +1244,26 @@ namespace Barotrauma
                     gapRect.Width += 20;
                     gapRect.Height += 20;
 
-                    bool horizontalGap = !IsHorizontal;
+                    bool rotatedEnoughToChangeOrientation = (MathUtils.WrapAngleTwoPi(rotationRad - MathHelper.PiOver4) % MathHelper.Pi < MathHelper.PiOver2);
+                    if (rotatedEnoughToChangeOrientation)
+                    {
+                        var center = gapRect.Location + gapRect.Size.FlipY() / new Point(2);
+                        var topLeft = gapRect.Location;
+                        var diff = topLeft - center;
+                        diff = diff.FlipY().YX().FlipY();
+                        var newTopLeft = diff + center;
+                        gapRect = new Rectangle(newTopLeft, gapRect.Size.YX());
+                    }
+                    bool horizontalGap = rotatedEnoughToChangeOrientation
+                        ? IsHorizontal
+                        : !IsHorizontal;
                     bool diagonalGap = false;
-                    if (Prefab.BodyRotation != 0.0f)
+                    if (!MathUtils.NearlyEqual(BodyRotation, 0f))
                     {
                         //rotation within a 90 deg sector (e.g. 100 -> 10, 190 -> 10, -10 -> 80)
                         float sectorizedRotation = MathUtils.WrapAngleTwoPi(BodyRotation) % MathHelper.PiOver2;
                         //diagonal if 30 < angle < 60
-                        diagonalGap = sectorizedRotation > MathHelper.Pi / 6 && sectorizedRotation < MathHelper.Pi / 3;
+                        diagonalGap = sectorizedRotation is > MathHelper.Pi / 6 and < MathHelper.Pi / 3;
                         //gaps on the lower half of a diagonal wall are horizontal, ones on the upper half are vertical
                         if (diagonalGap)
                         {
@@ -1230,8 +1316,8 @@ namespace Barotrauma
                 {
                     if (damageDiff < 0.0f)
                     {
-                        attacker.Info?.IncreaseSkillLevel("mechanical".ToIdentifier(),
-                            -damageDiff * SkillSettings.Current.SkillIncreasePerRepairedStructureDamage / Math.Max(attacker.GetSkillLevel("mechanical"), 1.0f));
+                        attacker.Info?.ApplySkillGain(Barotrauma.Tags.MechanicalSkill,
+                            -damageDiff * SkillSettings.Current.SkillIncreasePerRepairedStructureDamage);
                     }
                 }
             }
@@ -1337,7 +1423,7 @@ namespace Barotrauma
                 {
                     hasHoles = true;
 
-                    if (!mergedSections.Any()) continue;
+                    if (!mergedSections.Any()) { continue; }
                     var mergedRect = GenerateMergedRect(mergedSections);
                     mergedSections.Clear();
                     CreateRectBody(mergedRect, createConvexHull: true);
@@ -1373,18 +1459,17 @@ namespace Barotrauma
                 diffFromCenter = (rect.Center.X - this.rect.Center.X) / (float)this.rect.Width * BodyWidth;
                 if (BodyWidth > 0.0f) rect.Width = Math.Max((int)Math.Round(BodyWidth * (rect.Width / (float)this.rect.Width)), 1);
                 if (BodyHeight > 0.0f) rect.Height = (int)BodyHeight;
+                if (FlippedX) { diffFromCenter = -diffFromCenter; }
             }
             else
             {
                 diffFromCenter = ((rect.Y - rect.Height / 2) - (this.rect.Y - this.rect.Height / 2)) / (float)this.rect.Height * BodyHeight;
                 if (BodyWidth > 0.0f) rect.Width = (int)BodyWidth;
                 if (BodyHeight > 0.0f) rect.Height = Math.Max((int)Math.Round(BodyHeight * (rect.Height / (float)this.rect.Height)), 1);
+                if (FlippedY) { diffFromCenter = -diffFromCenter; }
             }
-            if (FlippedX) { diffFromCenter = -diffFromCenter; }
 
-            Vector2 bodyOffset = ConvertUnits.ToSimUnits(Prefab.BodyOffset) * scale;
-            if (FlippedX) { bodyOffset.X = -bodyOffset.X; }
-            if (FlippedY) { bodyOffset.Y = -bodyOffset.Y; }
+            Vector2 bodyOffset = ConvertUnits.ToSimUnits(BodyOffset) * scale;
 
             Body newBody = GameMain.World.CreateRectangle(
                 ConvertUnits.ToSimUnits(rect.Width),
@@ -1398,7 +1483,7 @@ namespace Barotrauma
             newBody.UserData = this;
 
             Vector2 structureCenter = ConvertUnits.ToSimUnits(Position);
-            if (BodyRotation != 0.0f)
+            if (!MathUtils.NearlyEqual(BodyRotation, 0f))
             {
                 Vector2 pos = structureCenter + bodyOffset + new Vector2(
                     (float)Math.Cos(IsHorizontal ? -BodyRotation : MathHelper.PiOver2 - BodyRotation),

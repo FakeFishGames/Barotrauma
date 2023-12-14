@@ -110,12 +110,14 @@ namespace Barotrauma
                 bossPrefab = CharacterPrefab.FindBySpeciesName(speciesName);
                 if (bossPrefab == null)
                 {
-                    DebugConsole.ThrowError($"Error in end mission \"{prefab.Identifier}\". Could not find a character prefab with the name \"{speciesName}\".");
+                    DebugConsole.ThrowError($"Error in end mission \"{prefab.Identifier}\". Could not find a character prefab with the name \"{speciesName}\".",
+                        contentPackage: Prefab.ContentPackage);
                 }
             }
             else
             {
-                DebugConsole.ThrowError($"Error in end mission \"{prefab.Identifier}\". Monster file not set.");
+                DebugConsole.ThrowError($"Error in end mission \"{prefab.Identifier}\". Monster file not set.",
+                    contentPackage: Prefab.ContentPackage);
             }
 
             Identifier minionName = prefab.ConfigElement.GetAttributeIdentifier("minionfile", Identifier.Empty);
@@ -124,7 +126,8 @@ namespace Barotrauma
                 minionPrefab = CharacterPrefab.FindBySpeciesName(minionName);
                 if (minionPrefab == null)
                 {
-                    DebugConsole.ThrowError($"Error in end mission \"{prefab.Identifier}\". Could not find a character prefab with the name \"{speciesName}\".");
+                    DebugConsole.ThrowError($"Error in end mission \"{prefab.Identifier}\". Could not find a character prefab with the name \"{speciesName}\".",
+                        contentPackage: Prefab.ContentPackage);
                 }
             }
 
@@ -137,7 +140,8 @@ namespace Barotrauma
                 projectilePrefab = MapEntityPrefab.FindByIdentifier(projectileId) as ItemPrefab;
                 if (projectilePrefab == null)
                 {
-                    DebugConsole.ThrowError($"Error in end mission \"{prefab.Identifier}\". Could not find an item prefab with the name \"{projectileId}\".");
+                    DebugConsole.ThrowError($"Error in end mission \"{prefab.Identifier}\". Could not find an item prefab with the name \"{projectileId}\".",
+                        contentPackage: Prefab.ContentPackage);
                 }
             }
 
@@ -152,7 +156,8 @@ namespace Barotrauma
             bossSpawnPoint = WayPoint.WayPointList.FirstOrDefault(wp => wp.Tags.Contains(spawnPointTag));
             if (bossSpawnPoint == null)
             {
-                DebugConsole.ThrowError($"Error in end mission \"{Prefab.Identifier}\". Could not find a spawn point \"{spawnPointTag}\".");
+                DebugConsole.ThrowError($"Error in end mission \"{Prefab.Identifier}\". Could not find a spawn point \"{spawnPointTag}\".",
+                    contentPackage: Prefab.ContentPackage);
                 return;
             }
             if (!IsClient)
@@ -171,14 +176,16 @@ namespace Barotrauma
             }
             if (destructibleItemTag.IsEmpty)
             {
-                DebugConsole.ThrowError($"Error in end mission \"{Prefab.Identifier}\". Destructible item tag not set.");
+                DebugConsole.ThrowError($"Error in end mission \"{Prefab.Identifier}\". Destructible item tag not set.",
+                    contentPackage: Prefab.ContentPackage);
                 return;
             }
             destructibleItems.Clear();
             destructibleItems.AddRange(Item.ItemList.FindAll(it => it.HasTag(destructibleItemTag)));
             if (destructibleItems.None())
             {
-                DebugConsole.ThrowError($"Error in end mission \"{Prefab.Identifier}\". Could not find any destructible items with the tag \"{spawnPointTag}\".");
+                DebugConsole.ThrowError($"Error in end mission \"{Prefab.Identifier}\". Could not find any destructible items with the tag \"{spawnPointTag}\".",
+                    contentPackage: Prefab.ContentPackage);
                 return;
             }
         }

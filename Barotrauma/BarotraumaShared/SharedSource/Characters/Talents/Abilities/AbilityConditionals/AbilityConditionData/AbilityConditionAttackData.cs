@@ -34,7 +34,8 @@ namespace Barotrauma.Abilities
             string weaponTypeStr = conditionElement.GetAttributeString("weapontype", "Any");
             if (!Enum.TryParse(weaponTypeStr, ignoreCase: true, out weapontype))
             {
-                DebugConsole.ThrowError($"Error in talent \"{characterTalent.DebugIdentifier}\": \"{weaponTypeStr}\" is not a valid weapon type.");
+                DebugConsole.ThrowError($"Error in talent \"{characterTalent.DebugIdentifier}\": \"{weaponTypeStr}\" is not a valid weapon type.",
+                    contentPackage: conditionElement.ContentPackage);
             }
         }
 

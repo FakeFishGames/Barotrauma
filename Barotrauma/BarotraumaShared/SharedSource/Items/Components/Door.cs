@@ -184,6 +184,8 @@ namespace Barotrauma.Items.Components
 
         public bool IsFullyClosed => IsClosed && OpenState <= 0f;
 
+        public bool HasWindow => Window != Rectangle.Empty;
+
         [Serialize(false, IsPropertySaveable.No, description: "If the door has integrated buttons, it can be opened by interacting with it directly (instead of using buttons wired to it).")]
         public bool HasIntegratedButtons { get; private set; }
 
@@ -341,7 +343,12 @@ namespace Barotrauma.Items.Components
                 OnFailedToOpen();
                 return;
             }
-            toggleCooldownTimer = ToggleCoolDown;
+            if (ToggleWhenClicked)
+            {
+                //do not activate cooldown at this point if the door doesn't get toggled when clicked
+                //(i.e. if it just sends out a signal that might get passed back to the door and try to toggle it)
+                toggleCooldownTimer = ToggleCoolDown;
+            }
             if (IsStuck || IsJammed)
             {
 #if CLIENT
@@ -379,6 +386,31 @@ namespace Barotrauma.Items.Components
             }
 #endif
             return false;
+        }
+
+        /// <summary>
+        /// Is the given position inside the vertical bounds of the window, and roughly on the door horizontally? Or the other way around if the door opens horizontally.
+        /// </summary>
+        /// <param name="position">Position in the same coordinate space as the door.</param>
+        /// <param name="maxPerpendicularDistance">Maximum horizontal distance from the door (or vertical if the door opens horizontally)</param>
+        public bool IsPositionOnWindow(Vector2 position, float maxPerpendicularDistance = 10.0f)
+        {
+            if (IsHorizontal)
+            {
+                return 
+                    position.X >= item.Rect.X + Window.X && 
+                    position.X <= item.Rect.X + Window.X + Window.Width &&
+                    position.Y >= item.Rect.Y - maxPerpendicularDistance &&
+                    position.Y <= item.Rect.Y - item.Rect.Height - maxPerpendicularDistance;
+            }
+            else
+            {
+                return 
+                    position.Y >= item.Rect.Y + Window.Y && 
+                    position.Y <= item.Rect.Y + Window.Y + Window.Height &&
+                    position.X >= item.Rect.X - maxPerpendicularDistance &&
+                    position.X <= item.Rect.Right + maxPerpendicularDistance;
+            }
         }
 
         public override void Update(float deltaTime, Camera cam)

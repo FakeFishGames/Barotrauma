@@ -122,12 +122,12 @@ namespace Barotrauma.Networking
             VoipSound = null;
         }
 
-        public void SetPermissions(ClientPermissions permissions, IEnumerable<string> permittedConsoleCommands)
+        public void SetPermissions(ClientPermissions permissions, IEnumerable<Identifier> permittedConsoleCommands)
         {
             List<DebugConsole.Command> permittedCommands = new List<DebugConsole.Command>();
-            foreach (string commandName in permittedConsoleCommands)
+            foreach (Identifier commandName in permittedConsoleCommands)
             {
-                var consoleCommand = DebugConsole.Commands.Find(c => c.names.Contains(commandName));
+                var consoleCommand = DebugConsole.Commands.Find(c => c.Names.Contains(commandName));
                 if (consoleCommand != null)
                 {
                     permittedCommands.Add(consoleCommand);

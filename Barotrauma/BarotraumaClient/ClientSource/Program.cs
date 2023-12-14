@@ -66,15 +66,22 @@ namespace Barotrauma
 
         private static void CrashHandler(object sender, UnhandledExceptionEventArgs args)
         {
+            Exception unhandledException = args.ExceptionObject as Exception;
             try
             {
                 Game?.Exit();
-                CrashDump(Game, "crashreport.log", (Exception)args.ExceptionObject);
+                CrashDump(Game, "crashreport.log", unhandledException);
                 Game?.Dispose();
             }
-            catch (Exception e)
+            catch (Exception exceptionHandlerError)
             {
-                Debug.WriteLine(e.Message);
+                Debug.WriteLine(exceptionHandlerError.Message);
+                string slimCrashReport = "Exception handler failed: " + exceptionHandlerError.Message + "\n" + exceptionHandlerError.StackTrace;
+                if (unhandledException != null)
+                {
+                    slimCrashReport += "\n\nInitial exception: " + unhandledException.Message + "\n" + unhandledException.StackTrace;
+                }
+                File.WriteAllText("crashreportslim.log", slimCrashReport);
                 //exception handler is broken, we have a serious problem here!!
                 return;
             }

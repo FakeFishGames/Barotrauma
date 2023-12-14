@@ -12,7 +12,9 @@
     StartingBalanceAmount="High"
     StartItemSet="easy"
     MaxMissionCount="3"
-    Difficulty="Easy"/>
+    Difficulty="Easy"
+    MinStolenItemInspectionProbability="0.2"
+    MaxStolenItemInspectionProbability="0.9"/>
   <CampaignSettings
     presetname="Normal"
     TutorialEnabled="true"
@@ -20,7 +22,9 @@
     StartingBalanceAmount="Medium"
     StartItemSet="normal"
     MaxMissionCount="2"
-    Difficulty="Medium"/>
+    Difficulty="Medium"
+    MinStolenItemInspectionProbability="0.3"
+    MaxStolenItemInspectionProbability="0.9"/>
   <CampaignSettings
     presetname="Hard"
     TutorialEnabled="false"
@@ -28,5 +32,7 @@
     StartingBalanceAmount="Low"
     StartItemSet="hard"
     MaxMissionCount="1"
-    Difficulty="Hard"/>
+    Difficulty="Hard"
+    MinStolenItemInspectionProbability="0.4"
+    MaxStolenItemInspectionProbability="1.0"/>
 </CampaignSettingPresets>

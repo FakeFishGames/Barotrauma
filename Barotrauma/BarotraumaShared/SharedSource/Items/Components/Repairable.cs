@@ -495,9 +495,7 @@ namespace Barotrauma.Items.Components
                     {
                         foreach (Skill skill in requiredSkills)
                         {
-                            float characterSkillLevel = CurrentFixer.GetSkillLevel(skill.Identifier);
-                            CurrentFixer.Info?.IncreaseSkillLevel(skill.Identifier,
-                                SkillSettings.Current.SkillIncreasePerRepair / Math.Max(characterSkillLevel, 1.0f));
+                            CurrentFixer.Info?.ApplySkillGain(skill.Identifier, SkillSettings.Current.SkillIncreasePerRepair);
                         }
                         SteamAchievementManager.OnItemRepaired(item, CurrentFixer);
                         CurrentFixer.CheckTalents(AbilityEffectType.OnRepairComplete, new AbilityRepairable(item));
@@ -570,7 +568,7 @@ namespace Barotrauma.Items.Components
 
             if (item.ConditionPercentage > MinDeteriorationCondition)
             {
-                float deteriorationSpeed = item.StatManager.GetAdjustedValue(ItemTalentStats.DetoriationSpeed, DeteriorationSpeed);
+                float deteriorationSpeed = item.StatManager.GetAdjustedValueMultiplicative(ItemTalentStats.DetoriationSpeed, DeteriorationSpeed);
                 if (ForceDeteriorationTimer > 0.0f) { deteriorationSpeed = Math.Max(deteriorationSpeed, 1.0f); }
                 item.Condition -= deteriorationSpeed * deltaTime;
             }            

@@ -46,6 +46,7 @@ namespace Barotrauma
             }
 
             sonarLabel = TextManager.Get("beaconstationsonarlabel");
+            DebugConsole.NewMessage("Initialized beacon mission: " + prefab.Identifier, Color.LightSkyBlue, debugOnly: true);
         }
 
         private void LoadMonsters(XElement monsterElement, MonsterSet set)
@@ -65,7 +66,8 @@ namespace Barotrauma
             }
             else
             {
-                DebugConsole.ThrowError($"Error in beacon mission \"{Prefab.Identifier}\". Could not find a character prefab with the name \"{speciesName}\".");
+                DebugConsole.ThrowError($"Error in beacon mission \"{Prefab.Identifier}\". Could not find a character prefab with the name \"{speciesName}\".",
+                    contentPackage: Prefab.ContentPackage);
             }
         }
 

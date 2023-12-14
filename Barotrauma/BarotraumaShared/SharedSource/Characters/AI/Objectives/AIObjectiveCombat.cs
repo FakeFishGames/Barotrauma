@@ -1070,7 +1070,8 @@ namespace Barotrauma
             {
                 // Try reload ammunition from inventory
                 static bool IsInsideHeadset(Item i) => i.ParentInventory?.Owner is Item ownerItem && ownerItem.HasTag(Tags.MobileRadio);
-                Item ammunition = character.Inventory.FindItem(i => i.HasIdentifierOrTags(ammunitionIdentifiers) && i.Condition > 0 && !IsInsideHeadset(i), recursive: true);
+                Item ammunition = character.Inventory.FindItem(i => 
+                    i.HasIdentifierOrTags(ammunitionIdentifiers) && i.Condition > 0 && !IsInsideHeadset(i) && i.IsInteractable(character), recursive: true);
                 if (ammunition != null)
                 {
                     var container = Weapon.GetComponent<ItemContainer>();
@@ -1089,6 +1090,9 @@ namespace Barotrauma
             }
             else if (!HoldPosition && IsOffensiveOrArrest && seekAmmo && ammunitionIdentifiers != null)
             {
+                // Inventory not drawn = it's not interactable
+                // If the weapon is empty and the inventory is inaccessible, it can't be reloaded
+                if (!Weapon.OwnInventory.Container.DrawInventory) { return false; }
                 SeekAmmunition(ammunitionIdentifiers);
             }
             return false;

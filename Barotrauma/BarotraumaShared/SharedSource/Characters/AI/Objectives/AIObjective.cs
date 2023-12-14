@@ -197,17 +197,6 @@ namespace Barotrauma
             }
         }
 
-        /// <summary>
-        /// This method allows multiple subobjectives of same type. Use with caution.
-        /// </summary>
-        public void AddSubObjectiveInQueue(AIObjective objective)
-        {
-            if (!subObjectives.Contains(objective))
-            {
-                subObjectives.Add(objective);
-            }
-        }
-
         public void RemoveSubObjective<T>(ref T objective) where T : AIObjective
         {
             if (objective != null)

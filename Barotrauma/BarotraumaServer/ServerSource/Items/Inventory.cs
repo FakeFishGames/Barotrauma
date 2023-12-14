@@ -66,7 +66,7 @@ namespace Barotrauma
             {
                 foreach (Item item in slots[i].Items.ToList())
                 {
-                    if (!receivedItemIdsFromClient[i].Contains(item.ID))
+                    if (!receivedItemIdsFromClient[i].Contains(item.ID) && item.IsInteractable(c.Character))
                     {
                         Item droppedItem = item;
                         Entity prevOwner = Owner;
@@ -107,10 +107,10 @@ namespace Barotrauma
                     if (Entity.FindEntityByID(id) is not Item item || slots[i].Contains(item)) { continue; }
 
                     if (item.GetComponent<Pickable>() is not Pickable pickable ||
-                        (pickable.IsAttached && !pickable.PickingDone) ||
-                        item.AllowedSlots.None())
+                        (pickable.IsAttached && !pickable.PickingDone) || item.AllowedSlots.None() || !item.IsInteractable(c.Character))
                     {
-                        DebugConsole.AddWarning($"Client {c.Name} tried to pick up a non-pickable item \"{item}\" (parent inventory: {item.ParentInventory?.Owner.ToString() ?? "null"})");
+                        DebugConsole.AddWarning($"Client {c.Name} tried to pick up a non-pickable item \"{item}\" (parent inventory: {item.ParentInventory?.Owner.ToString() ?? "null"})",
+                            item.Prefab.ContentPackage);
                         continue;
                     }
 

@@ -294,6 +294,11 @@ namespace Barotrauma.Extensions
                 .Where(nullable => nullable.HasValue)
                 .Select(nullable => nullable.Value);
 
+        public static IEnumerable<T> NotNull<T>(this IEnumerable<T> source) where T : class
+            => source
+                .Where(nullable => nullable != null)
+                .Select(nullable => nullable!);
+
         public static IEnumerable<T> NotNone<T>(this IEnumerable<Option<T>> source)
         {
             foreach (var o in source)

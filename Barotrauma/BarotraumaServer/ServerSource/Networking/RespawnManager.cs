@@ -537,7 +537,7 @@ namespace Barotrauma.Networking
                 }
 
                 //add the ID card tags they should've gotten when spawning in the shuttle
-                character.GiveIdCardTags(shuttleSpawnPoints[i], requireSpawnPointTagsNotGiven: false, createNetworkEvent: true);
+                character.GiveIdCardTags(shuttleSpawnPoints[i], createNetworkEvent: true);
             }
         }
 

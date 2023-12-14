@@ -196,7 +196,7 @@ namespace Barotrauma
         /// </summary>
         public readonly bool TargetContainedItem;
 
-        public static IEnumerable<PropertyConditional> FromXElement(XElement element, Predicate<XAttribute>? predicate = null)
+        public static IEnumerable<PropertyConditional> FromXElement(ContentXElement element, Predicate<XAttribute>? predicate = null)
         {
             var targetItemComponent = element.GetAttributeString(nameof(TargetItemComponent), "");
             var targetContainer = element.GetAttributeBool(nameof(TargetContainer), false);
@@ -218,7 +218,7 @@ namespace Barotrauma
                 var (comparisonOperator, attributeValueString) = ExtractComparisonOperatorFromConditionString(attribute.Value);
                 if (string.IsNullOrWhiteSpace(attributeValueString))
                 {
-                    DebugConsole.ThrowError($"Conditional attribute value is empty: {element}");
+                    DebugConsole.ThrowError($"Conditional attribute value is empty: {element}", contentPackage: element.ContentPackage);
                     continue;
                 }
 

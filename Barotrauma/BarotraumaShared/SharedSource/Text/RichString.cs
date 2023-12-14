@@ -9,6 +9,7 @@ namespace Barotrauma
     {
         protected bool loaded = false;
         protected LanguageIdentifier language = LanguageIdentifier.None;
+        private int languageVersion = 0;
 
         protected string cachedSanitizedValue = "";
         public string SanitizedValue
@@ -32,9 +33,9 @@ namespace Barotrauma
 #if CLIENT
         private readonly GUIFont? font;
         private readonly GUIComponentStyle? componentStyle;
-        private readonly bool forceUpperCase = false;
+        private bool forceUpperCase = false;
 
-        private bool fontOrStyleForceUpperCase
+        private bool FontOrStyleForceUpperCase
             => font is { ForceUpperCase: true } || componentStyle is { ForceUpperCase: true };
 #endif
         
@@ -91,8 +92,9 @@ namespace Barotrauma
         {
             return NestedStr.Loaded != loaded
                 || language != GameSettings.CurrentConfig.Language
+                || languageVersion != TextManager.LanguageVersion
 #if CLIENT
-                || (fontOrStyleForceUpperCase != forceUpperCase)
+                || (FontOrStyleForceUpperCase != forceUpperCase)
 #endif
                 ;
         }
@@ -100,9 +102,9 @@ namespace Barotrauma
         public void RetrieveValue()
         {
 #if CLIENT
-            NestedStr = fontOrStyleForceUpperCase ? originalStr.ToUpper() : originalStr;
+            NestedStr = FontOrStyleForceUpperCase ? originalStr.ToUpper() : originalStr;
+            forceUpperCase = FontOrStyleForceUpperCase;
 #endif
-
             if (shouldParseRichTextData)
             {
                 RichTextData = Barotrauma.RichTextData.GetRichTextData(NestedStr.Value, out cachedSanitizedValue);
@@ -113,6 +115,7 @@ namespace Barotrauma
             }
             if (postProcess != null) { cachedSanitizedValue = postProcess(cachedSanitizedValue); }
             language = GameSettings.CurrentConfig.Language;
+            languageVersion = TextManager.LanguageVersion;
             loaded = NestedStr.Loaded;
         }
 

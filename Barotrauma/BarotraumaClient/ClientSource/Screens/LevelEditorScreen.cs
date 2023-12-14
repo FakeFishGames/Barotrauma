@@ -221,7 +221,17 @@ namespace Barotrauma
                     currentLevelData.AllowInvalidOutpost = allowInvalidOutpost.Selected;
                     var dummyLocations = GameSession.CreateDummyLocations(currentLevelData);
                     Level.Generate(currentLevelData, mirror: mirrorLevel.Selected, startLocation: dummyLocations[0], endLocation: dummyLocations[1]);
-                    Submarine.MainSub?.SetPosition(Level.Loaded.StartPosition);
+
+                    if (Submarine.MainSub != null)
+                    {
+                        Vector2 startPos = Level.Loaded.StartPosition;
+                        if (Level.Loaded.StartOutpost != null)
+                        {
+                            startPos.Y -= Level.Loaded.StartOutpost.Borders.Height / 2 + Submarine.MainSub.Borders.Height / 2;
+                        }
+                        Submarine.MainSub?.SetPosition(startPos);
+                    }
+
                     GameMain.LightManager.AddLight(pointerLightSource);
                     if (!wasLevelLoaded || Cam.Position.X < 0 || Cam.Position.Y < 0 || Cam.Position.Y > Level.Loaded.Size.X || Cam.Position.Y > Level.Loaded.Size.Y)
                     {

@@ -95,7 +95,8 @@ namespace Barotrauma
             name = ParseName(mainElement, file);
             if (name == Identifier.Empty)
             {
-                DebugConsole.ThrowError($"No species name defined for: {file.Path}");
+                DebugConsole.ThrowError($"No species name defined for: {file.Path}",
+                    contentPackage: file.ContentPackage);
                 return false;
             }
             return true;

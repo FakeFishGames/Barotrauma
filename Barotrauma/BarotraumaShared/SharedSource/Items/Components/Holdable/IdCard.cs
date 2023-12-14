@@ -80,9 +80,6 @@ namespace Barotrauma.Items.Components
         [Serialize("0,0", IsPropertySaveable.Yes, alwaysUseInstanceValues: true)]
         public Vector2 OwnerSheetIndex { get; set; }
 
-        [Serialize(false, IsPropertySaveable.Yes, alwaysUseInstanceValues: true)]
-        public bool SpawnPointTagsGiven { get; set; }
-
         public IdCard(Item item, ContentXElement element) : base(item, element) { }
 
         public void Initialize(WayPoint spawnPoint, Character character)

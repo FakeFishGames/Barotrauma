@@ -106,12 +106,14 @@ namespace Barotrauma
 
                 if (element.GetAttribute("itemname") != null)
                 {
-                    DebugConsole.ThrowError("Error in SalvageMission - use item identifier instead of the name of the item.");
+                    DebugConsole.ThrowError("Error in SalvageMission - use item identifier instead of the name of the item.",
+                        contentPackage: element.ContentPackage);
                     string itemName = element.GetAttributeString("itemname", "");
                     ItemPrefab = MapEntityPrefab.Find(itemName) as ItemPrefab;
                     if (ItemPrefab == null && ExistingItemTag.IsEmpty)
                     {
-                        DebugConsole.ThrowError($"Error in SalvageMission: couldn't find an item prefab with the name \"{itemName}\"");
+                        DebugConsole.ThrowError($"Error in SalvageMission: couldn't find an item prefab with the name \"{itemName}\"",
+                            contentPackage: element.ContentPackage);
                     }
                 }
                 else
@@ -128,7 +130,8 @@ namespace Barotrauma
                     }
                     if (ItemPrefab == null && ExistingItemTag.IsEmpty)
                     {
-                        DebugConsole.ThrowError($"Error in SalvageMission - couldn't find an item prefab with the identifier \"{itemIdentifier}\"");
+                        DebugConsole.ThrowError($"Error in SalvageMission - couldn't find an item prefab with the identifier \"{itemIdentifier}\"",
+                            contentPackage: element.ContentPackage);
                     }
                 }
 
@@ -286,7 +289,8 @@ namespace Barotrauma
                     {
                         if (target.ItemPrefab == null && target.ContainerTag.IsEmpty)
                         {
-                            DebugConsole.ThrowError($"Failed to find a target item for the mission \"{Prefab.Identifier}\". Item tag: {target.ExistingItemTag}");
+                            DebugConsole.ThrowError($"Failed to find a target item for the mission \"{Prefab.Identifier}\". Item tag: {target.ExistingItemTag}",
+                                contentPackage: Prefab.ContentPackage);
                             continue;
                         }
                         target.Item = new Item(target.ItemPrefab, position, null);
@@ -379,7 +383,8 @@ namespace Barotrauma
                 if (target.Item == null)
                 {
 #if DEBUG
-                    DebugConsole.ThrowError("Error in salvage mission " + Prefab.Identifier + " (item was null)");
+                    DebugConsole.ThrowError("Error in salvage mission " + Prefab.Identifier + " (item was null)",
+                        contentPackage: Prefab.ContentPackage);
 #endif
                     return;
                 }

@@ -84,6 +84,7 @@ namespace Barotrauma
                     Graphics = GraphicsSettings.GetDefault(),
                     Audio = AudioSettings.GetDefault(),
 #if CLIENT
+                    DisableGlobalSpamList = false,
                     KeyMap = KeyMapping.GetDefault(),
                     InventoryKeyMap = InventoryKeyMapping.GetDefault()
 #endif
@@ -156,6 +157,7 @@ namespace Barotrauma
             public string RemoteMainMenuContentUrl;
 #if CLIENT
             public XElement SavedCampaignSettings;
+            public bool DisableGlobalSpamList;
 #endif
 #if DEBUG
             public bool UseSteamMatchmaking;
@@ -548,6 +550,19 @@ namespace Barotrauma
                 currentConfig.Graphics.VSync != newConfig.Graphics.VSync ||
                 currentConfig.Graphics.DisplayMode != newConfig.Graphics.DisplayMode;
 
+#if CLIENT
+            bool keybindsChanged = false;
+            foreach (var kvp in newConfig.KeyMap.Bindings)
+            {
+                if (!currentConfig.KeyMap.Bindings.TryGetValue(kvp.Key, out var existingBinding) ||
+                    existingBinding != kvp.Value)
+                {
+                    keybindsChanged = true;
+                    break;
+                }
+            }
+#endif
+
             currentConfig = newConfig;
 
 #if CLIENT
@@ -575,7 +590,19 @@ namespace Barotrauma
                 HUDLayoutSettings.CreateAreas();
                 GameMain.GameSession?.HUDScaleChanged();
             }
-            
+
+            if (keybindsChanged)
+            {
+                foreach (var item in Item.ItemList)
+                {
+                    foreach (var ic in item.Components)
+                    {
+                        //parse messages because they may contain keybind texts
+                        ic.ParseMsg();
+                    }
+                }
+            }
+
             GameMain.SoundManager?.ApplySettings();
 #endif
             if (languageChanged) { TextManager.ClearCache(); }

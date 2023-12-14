@@ -571,16 +571,37 @@ namespace Barotrauma
             numberInput.MinValueFloat = editableAttribute.MinValueFloat;
             numberInput.MaxValueFloat = editableAttribute.MaxValueFloat;
             numberInput.DecimalsToDisplay = editableAttribute.DecimalCount;
-            numberInput.valueStep = editableAttribute.ValueStep;
+            numberInput.ValueStep = editableAttribute.ValueStep;
+            numberInput.ForceShowPlusMinusButtons = editableAttribute.ForceShowPlusMinusButtons;
             numberInput.FloatValue = value;
 
-            numberInput.OnValueChanged += (numInput) =>
+            numberInput.OnValueChanged += numInput =>
             {
                 if (SetPropertyValue(property, entity, numInput.FloatValue))
                 {
                     TrySendNetworkUpdate(entity, property);
                 }
             };
+
+            // Lots of UI boilerplate to handle all(?) cases where the property's setter may be called
+            // and modify the input value (e.g. rotation value wrapping)
+            void HandleSetterModifyingInput(GUINumberInput numInput)
+            {
+                var inputFloatValue = numInput.FloatValue;
+                var resultingFloatValue = property.GetFloatValue(entity);
+                if (!MathUtils.NearlyEqual(resultingFloatValue, inputFloatValue))
+                {
+                    numInput.FloatValue = resultingFloatValue;
+                }
+            }
+            bool HandleSetterModifyingInputOnButtonPressed() { HandleSetterModifyingInput(numberInput); return true; }
+            bool HandleSetterModifyingInputOnButtonClicked(GUIButton _, object __) { HandleSetterModifyingInput(numberInput); return true; }
+
+            numberInput.OnValueEntered += HandleSetterModifyingInput;
+            numberInput.PlusButton.OnPressed += HandleSetterModifyingInputOnButtonPressed;
+            numberInput.PlusButton.OnClicked += HandleSetterModifyingInputOnButtonClicked;
+            numberInput.MinusButton.OnPressed += HandleSetterModifyingInputOnButtonPressed;
+            numberInput.MinusButton.OnClicked += HandleSetterModifyingInputOnButtonClicked;
             refresh += () =>
             {
                 if (!numberInput.TextBox.Selected) { numberInput.FloatValue = (float)property.GetValue(entity); }
@@ -859,7 +880,7 @@ namespace Barotrauma
                 numberInput.MinValueFloat = editableAttribute.MinValueFloat;
                 numberInput.MaxValueFloat = editableAttribute.MaxValueFloat;
                 numberInput.DecimalsToDisplay = editableAttribute.DecimalCount;
-                numberInput.valueStep = editableAttribute.ValueStep;
+                numberInput.ValueStep = editableAttribute.ValueStep;
 
                 if (i == 0)
                     numberInput.FloatValue = value.X;
@@ -930,7 +951,7 @@ namespace Barotrauma
                 numberInput.MinValueFloat = editableAttribute.MinValueFloat;
                 numberInput.MaxValueFloat = editableAttribute.MaxValueFloat;
                 numberInput.DecimalsToDisplay = editableAttribute.DecimalCount;
-                numberInput.valueStep = editableAttribute.ValueStep;
+                numberInput.ValueStep = editableAttribute.ValueStep;
 
                 if (i == 0)
                     numberInput.FloatValue = value.X;
@@ -1006,7 +1027,7 @@ namespace Barotrauma
                 numberInput.MinValueFloat = editableAttribute.MinValueFloat;
                 numberInput.MaxValueFloat = editableAttribute.MaxValueFloat;
                 numberInput.DecimalsToDisplay = editableAttribute.DecimalCount;
-                numberInput.valueStep = editableAttribute.ValueStep;
+                numberInput.ValueStep = editableAttribute.ValueStep;
 
                 if (i == 0)
                     numberInput.FloatValue = value.X;

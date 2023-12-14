@@ -875,7 +875,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        private float GetMaxOutput() => item.StatManager.GetAdjustedValue(ItemTalentStats.ReactorMaxOutput, MaxPowerOutput);
-        private float GetFuelConsumption() => item.StatManager.GetAdjustedValue(ItemTalentStats.ReactorFuelConsumption, fuelConsumptionRate);
+        private float GetMaxOutput() => item.StatManager.GetAdjustedValueMultiplicative(ItemTalentStats.ReactorMaxOutput, MaxPowerOutput);
+        private float GetFuelConsumption() => item.StatManager.GetAdjustedValueMultiplicative(ItemTalentStats.ReactorFuelConsumption, fuelConsumptionRate);
     }
 }

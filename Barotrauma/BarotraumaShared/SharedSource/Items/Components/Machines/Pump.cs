@@ -138,14 +138,14 @@ namespace Barotrauma.Items.Components
 
             float powerFactor = Math.Min(currPowerConsumption <= 0.0f || MinVoltage <= 0.0f ? 1.0f : Voltage, MaxOverVoltageFactor);
 
-            currFlow = flowPercentage / 100.0f * item.StatManager.GetAdjustedValue(ItemTalentStats.PumpMaxFlow, MaxFlow) * powerFactor;
+            currFlow = flowPercentage / 100.0f * item.StatManager.GetAdjustedValueMultiplicative(ItemTalentStats.PumpMaxFlow, MaxFlow) * powerFactor;
 
             if (item.GetComponent<Repairable>() is { IsTinkering: true } repairable)
             {
                 currFlow *= 1f + repairable.TinkeringStrength * TinkeringSpeedIncrease;
             }
 
-            currFlow = item.StatManager.GetAdjustedValue(ItemTalentStats.PumpSpeed, currFlow);
+            currFlow = item.StatManager.GetAdjustedValueMultiplicative(ItemTalentStats.PumpSpeed, currFlow);
 
             //less effective when in a bad condition
             currFlow *= MathHelper.Lerp(0.5f, 1.0f, item.Condition / item.MaxCondition);

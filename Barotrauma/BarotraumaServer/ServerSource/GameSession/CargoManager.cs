@@ -2,27 +2,12 @@
 using System.Collections.Generic;
 using System.Linq;
 using Barotrauma.Networking;
+using System.Text;
 
 namespace Barotrauma
 {
     partial class CargoManager
     {
-        public void SellBackPurchasedItems(Identifier storeIdentifier, List<PurchasedItem> itemsToSell, Client client)
-        {
-            // Check all the prices before starting the transaction to make sure the modifiers stay the same for the whole transaction
-            var buyValues = GetBuyValuesAtCurrentLocation(storeIdentifier, itemsToSell.Select(i => i.ItemPrefab));
-            var store = Location.GetStore(storeIdentifier);
-            if (store == null) { return; }
-            var storeSpecificItems = GetPurchasedItems(storeIdentifier);
-            foreach (var item in itemsToSell)
-            {
-                var itemValue = item.Quantity * buyValues[item.ItemPrefab];
-                store.Balance -= itemValue;
-                campaign.GetWallet(client).Give(itemValue);
-                storeSpecificItems?.Remove(item);
-            }
-        }
-
         public void BuyBackSoldItems(Identifier storeIdentifier, List<SoldItem> itemsToBuy, Client client)
         {
             var store = Location.GetStore(storeIdentifier);
@@ -78,6 +63,21 @@ namespace Barotrauma
                 GameAnalyticsManager.AddMoneyGainedEvent(itemValue, GameAnalyticsManager.MoneySource.Store, item.ItemPrefab.Identifier.Value);
             }
             OnSoldItemsChanged?.Invoke(this);
+        }
+
+        public void LogNewItemPurchases(Identifier storeIdentifier, List<PurchasedItem> newItems, Client client)
+        {
+            StringBuilder sb = new StringBuilder();
+            int price = 0;
+            Dictionary<ItemPrefab, int> buyValues = GetBuyValuesAtCurrentLocation(storeIdentifier, newItems.Select(i => i.ItemPrefab));
+            foreach (PurchasedItem item in newItems)
+            {
+                int itemValue = item.Quantity * buyValues[item.ItemPrefab];
+                GameAnalyticsManager.AddMoneySpentEvent(itemValue, GameAnalyticsManager.MoneySink.Store, item.ItemPrefab.Identifier.Value);
+                sb.Append($"\n - {item.ItemPrefab.Name} x{item.Quantity}");
+                price += itemValue;
+            }
+            GameServer.Log($"{NetworkMember.ClientLogName(client, client?.Name ?? "Unknown")} purchased {newItems.Count} item(s) for {TextManager.FormatCurrency(price)}{sb.ToString()}", ServerLog.MessageType.Money);
         }
 
         public void ClearSoldItemsProjSpecific()

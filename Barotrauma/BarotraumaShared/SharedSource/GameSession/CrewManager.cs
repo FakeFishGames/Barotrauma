@@ -120,7 +120,7 @@ namespace Barotrauma
             foreach (var characterElement in element.Elements())
             {
                 if (!characterElement.Name.ToString().Equals("character", StringComparison.OrdinalIgnoreCase)) { continue; }
-                CharacterInfo characterInfo = new CharacterInfo(characterElement);
+                CharacterInfo characterInfo = new CharacterInfo(new ContentXElement(contentPackage: null, characterElement));
 #if CLIENT
                 if (characterElement.GetAttributeBool("lastcontrolled", false)) { characterInfo.LastControlled = true; }
                 characterInfo.CrewListIndex = characterElement.GetAttributeInt("crewlistindex", -1);
@@ -262,7 +262,7 @@ namespace Barotrauma
                 while (spawnWaypoints.Any() && spawnWaypoints.Count < characterInfos.Count)
                 {
                     spawnWaypoints.Add(spawnWaypoints[Rand.Int(spawnWaypoints.Count)]);
-                }
+                }                
             }
             if (spawnWaypoints == null || !spawnWaypoints.Any())
             {
@@ -306,15 +306,16 @@ namespace Barotrauma
                     }
 
                     character.LoadTalents();
-                    character.GiveIdCardTags(new List<WayPoint>() { mainSubWaypoints[i], spawnWaypoints[i] });
-                    character.Info.StartItemsGiven = true;
 
+                    character.GiveIdCardTags(mainSubWaypoints[i]);
+                    character.GiveIdCardTags(spawnWaypoints[i]);
+                    character.Info.StartItemsGiven = true;
                     if (character.Info.OrderData != null)
                     {
                         character.Info.ApplyOrderData();
                     }
                 }
-
+                
                 AddCharacter(character, sortCrewList: false);
 #if CLIENT
                 if (IsSinglePlayer && (Character.Controlled == null || character.Info.LastControlled)) { Character.Controlled = character; }

@@ -51,12 +51,14 @@ namespace Barotrauma
             TargetRuin = Level.Loaded?.Ruins?.GetRandom(randSync: Rand.RandSync.ServerAndClient);
             if (TargetRuin == null)
             {
-                DebugConsole.ThrowError($"Failed to initialize an Alien Ruin mission (\"{Prefab.Identifier}\"): level contains no alien ruins");
+                DebugConsole.ThrowError($"Failed to initialize an Alien Ruin mission (\"{Prefab.Identifier}\"): level contains no alien ruins",
+                    contentPackage: Prefab.ContentPackage);
                 return;
             }
             if (targetItemIdentifiers.Length < 1 && targetEnemyIdentifiers.Length < 1)
             {
-                DebugConsole.ThrowError($"Failed to initialize an Alien Ruin mission (\"{Prefab.Identifier}\"): no target identifiers set in the mission definition");
+                DebugConsole.ThrowError($"Failed to initialize an Alien Ruin mission (\"{Prefab.Identifier}\"): no target identifiers set in the mission definition",
+                    contentPackage: Prefab.ContentPackage);
                 return;
             }
             foreach (var item in Item.ItemList)
@@ -88,12 +90,14 @@ namespace Barotrauma
                     }
                     else
                     {
-                        DebugConsole.ThrowError($"Error in an Alien Ruin mission (\"{Prefab.Identifier}\"): could not find a character prefab with the species \"{identifier}\"");
+                        DebugConsole.ThrowError($"Error in an Alien Ruin mission (\"{Prefab.Identifier}\"): could not find a character prefab with the species \"{identifier}\"",
+                            contentPackage: Prefab.ContentPackage);
                     }
                 }
                 if (enemyPrefabs.None())
                 {
-                    DebugConsole.ThrowError($"Error in an Alien Ruin mission (\"{Prefab.Identifier}\"): no enemy species defined that could be used to spawn more ({minEnemyCount - existingEnemyCount}) enemies");
+                    DebugConsole.ThrowError($"Error in an Alien Ruin mission (\"{Prefab.Identifier}\"): no enemy species defined that could be used to spawn more ({minEnemyCount - existingEnemyCount}) enemies",
+                        contentPackage: Prefab.ContentPackage);
                     return;
                 }
                 for (int i = 0; i < (minEnemyCount - existingEnemyCount); i++)
@@ -102,7 +106,8 @@ namespace Barotrauma
                     var spawnPos = TargetRuin.Submarine.GetWaypoints(false).GetRandomUnsynced(w => w.CurrentHull != null)?.WorldPosition;
                     if (!spawnPos.HasValue)
                     {
-                        DebugConsole.ThrowError($"Error in an Alien Ruin mission (\"{Prefab.Identifier}\"): no valid spawn positions could be found for the additional ({minEnemyCount - existingEnemyCount}) enemies to be spawned");
+                        DebugConsole.ThrowError($"Error in an Alien Ruin mission (\"{Prefab.Identifier}\"): no valid spawn positions could be found for the additional ({minEnemyCount - existingEnemyCount}) enemies to be spawned",
+                            contentPackage: Prefab.ContentPackage);
                         return;
                     }
                     var newEnemy = Character.Create(prefab.Identifier, spawnPos.Value, ToolBox.RandomSeed(8), createNetworkEvent: false);
@@ -151,7 +156,8 @@ namespace Barotrauma
 #if DEBUG
                 else
                 {
-                    DebugConsole.ThrowError($"Error in Alien Ruin mission (\"{Prefab.Identifier}\"): unexpected target of type {target?.GetType()?.ToString()}");
+                    DebugConsole.ThrowError($"Error in Alien Ruin mission (\"{Prefab.Identifier}\"): unexpected target of type {target?.GetType()?.ToString()}",
+                        contentPackage: Prefab.ContentPackage);
                 }
 #endif
             }

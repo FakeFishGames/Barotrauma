@@ -383,6 +383,12 @@ namespace Barotrauma.Items.Components
                         wire.RemoveConnection(item);
                     }
                 }
+                c.Grid = null;
+            }
+            foreach (var connection in Connections)
+            {
+                Powered.ChangedConnections.Remove(connection);
+                connection.Recipients.Clear();
             }
             Connections.Clear();
 
