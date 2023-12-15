@@ -114,7 +114,7 @@ namespace Barotrauma
             self = (T)boxedSelf;
         }
 
-        public static void TryDeserialize(this object boxedSelf, FieldInfo field, XElement element)
+        private static void TryDeserialize(this object boxedSelf, FieldInfo field, XElement element)
         {
             string fieldName = field.Name.ToLowerInvariant();
             string valueStr = element.GetAttributeString(fieldName, field.GetValue(boxedSelf)?.ToString() ?? "");

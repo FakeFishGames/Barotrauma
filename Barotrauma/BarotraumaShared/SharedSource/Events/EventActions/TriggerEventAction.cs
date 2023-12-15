@@ -36,7 +36,8 @@
                     var eventPrefab = EventSet.GetEventPrefab(Identifier);
                     if (eventPrefab == null)
                     {
-                        DebugConsole.ThrowError($"Error in TriggerEventAction - could not find an event with the identifier {Identifier}.");
+                        DebugConsole.ThrowError($"Error in TriggerEventAction - could not find an event with the identifier {Identifier}.",
+                            contentPackage: ParentEvent.Prefab.ContentPackage);
                     }
                     else
                     {

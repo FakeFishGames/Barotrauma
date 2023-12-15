@@ -162,6 +162,8 @@ namespace Barotrauma
             CanBeVisible =
                 Sprite != null ||
                 Prefab.DeformableSprite != null ||
+                ParticleEmitters is { Length: > 0 } ||
+                (GameMain.DebugDraw && Triggers is { Count: > 0 }) ||
                 Prefab.OverrideProperties.Any(p => p != null && (p.Sprites.Any() || p.DeformableSprite != null));
         }
 

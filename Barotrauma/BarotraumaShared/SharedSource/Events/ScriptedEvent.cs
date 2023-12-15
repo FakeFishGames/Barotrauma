@@ -7,7 +7,21 @@ namespace Barotrauma
 {
     class ScriptedEvent : Event
     {
-        private readonly Dictionary<Identifier, List<Predicate<Entity>>> targetPredicates = new Dictionary<Identifier, List<Predicate<Entity>>>();
+        public sealed record TargetPredicate(
+            TargetPredicate.EntityType Type,
+            Predicate<Entity> Predicate)
+        {
+            public enum EntityType
+            {
+                Character,
+                Hull,
+                Item,
+                Structure,
+                Submarine
+            }
+        }
+
+        private readonly Dictionary<Identifier, List<TargetPredicate>> targetPredicates = new Dictionary<Identifier, List<TargetPredicate>>();
 
         private readonly Dictionary<Identifier, List<Entity>> cachedTargets = new Dictionary<Identifier, List<Entity>>();
 
@@ -17,7 +31,7 @@ namespace Barotrauma
         /// </summary>
         private readonly Dictionary<Identifier, int> initialAmounts = new Dictionary<Identifier, int>();
 
-        private int prevEntityCount;
+        private bool newEntitySpawned;
         private int prevPlayerCount, prevBotCount;
         private Character prevControlled;
 
@@ -50,7 +64,8 @@ namespace Barotrauma
                 }
                 if (elementId == "statuseffect")
                 {
-                    DebugConsole.ThrowError($"Error in event prefab \"{prefab.Identifier}\". Status effect configured as an action. Please configure status effects as child elements of a StatusEffectAction.");
+                    DebugConsole.ThrowError($"Error in event prefab \"{prefab.Identifier}\". Status effect configured as an action. Please configure status effects as child elements of a StatusEffectAction.", 
+                        contentPackage: prefab.ContentPackage);
                     continue;
                 }
                 var action = EventAction.Instantiate(this, element);
@@ -59,7 +74,8 @@ namespace Barotrauma
 
             if (!Actions.Any())
             {
-                DebugConsole.ThrowError($"Scripted event \"{prefab.Identifier}\" has no actions. The event will do nothing.");
+                DebugConsole.ThrowError($"Scripted event \"{prefab.Identifier}\" has no actions. The event will do nothing.", 
+                    contentPackage: prefab.ContentPackage);
             }
 
             requiredDestinationTypes = prefab.ConfigElement.GetAttributeStringArray("requireddestinationtypes", null);
@@ -69,8 +85,9 @@ namespace Barotrauma
             foreach (var gotoAction in allActions.OfType<GoTo>())
             {
                 if (allActions.None(a => a is Label label && label.Name == gotoAction.Name))
-                {
-                    DebugConsole.ThrowError($"Error in event \"{prefab.Identifier}\". Could not find a label matching the GoTo \"{gotoAction.Name}\".");
+                {                    
+                    DebugConsole.ThrowError($"Error in event \"{prefab.Identifier}\". Could not find a label matching the GoTo \"{gotoAction.Name}\".", 
+                        contentPackage: prefab.ContentPackage);
                 }
             }
 
@@ -108,7 +125,8 @@ namespace Barotrauma
                     if (target is Character character) { return character.Name; }
                     if (target is Hull hull) { return hull.DisplayName.Value; }
                     if (target is Submarine sub) { return sub.Info.DisplayName.Value; }
-                    DebugConsole.AddWarning($"Failed to get the name of the event target {target} as a replacement for the tag {tag} in an event text.");
+                    DebugConsole.AddWarning($"Failed to get the name of the event target {target} as a replacement for the tag {tag} in an event text.",
+                        prefab.ContentPackage);
                     return target.ToString();
                 }
                 else
@@ -187,13 +205,13 @@ namespace Barotrauma
             }
         }
 
-        public void AddTargetPredicate(Identifier tag, Predicate<Entity> predicate)
+        public void AddTargetPredicate(Identifier tag, TargetPredicate.EntityType entityType, Predicate<Entity> predicate)
         {
             if (!targetPredicates.ContainsKey(tag))
             {
-                targetPredicates.Add(tag, new List<Predicate<Entity>>());
+                targetPredicates.Add(tag, new List<TargetPredicate>());
             }
-            targetPredicates[tag].Add(predicate);
+            targetPredicates[tag].Add(new TargetPredicate(entityType, predicate));
             // force re-search for this tag
             if (cachedTargets.ContainsKey(tag))
             {
@@ -225,7 +243,6 @@ namespace Barotrauma
             }
 
             List<Entity> targetsToReturn = new List<Entity>();
-
             if (Targets.ContainsKey(tag)) 
             { 
                 foreach (Entity e in Targets[tag])
@@ -236,11 +253,24 @@ namespace Barotrauma
             }
             if (targetPredicates.ContainsKey(tag))
             {
-                foreach (Entity entity in Entity.GetEntities())
+                foreach (var targetPredicate in targetPredicates[tag])
                 {
-                    if (targetPredicates[tag].Any(p => p(entity)) && !targetsToReturn.Contains(entity))
+                    IEnumerable<Entity> entityList = targetPredicate.Type switch
                     {
-                        targetsToReturn.Add(entity);
+                        TargetPredicate.EntityType.Character => Character.CharacterList,
+                        TargetPredicate.EntityType.Item => Item.ItemList,
+                        TargetPredicate.EntityType.Structure => MapEntity.MapEntityList.Where(m => m is Structure),
+                        TargetPredicate.EntityType.Hull => Hull.HullList,
+                        TargetPredicate.EntityType.Submarine => Submarine.Loaded,
+                        _ => Entity.GetEntities(),
+                    };
+                    foreach (Entity entity in entityList)
+                    {
+                        if (targetsToReturn.Contains(entity)) { continue; }
+                        if (targetPredicate.Predicate(entity))
+                        {
+                            targetsToReturn.Add(entity);
+                        }
                     }
                 }
             }
@@ -289,14 +319,8 @@ namespace Barotrauma
         {
             int botCount = 0;
             int playerCount = 0;
-            bool forceRefreshTargets = false;
             foreach (Character c in Character.CharacterList)
             {
-                if (c.Removed)
-                {
-                    forceRefreshTargets = true;
-                    continue;
-                }
                 if (c.IsPlayer)
                 {
                     playerCount++;
@@ -306,10 +330,11 @@ namespace Barotrauma
                     botCount++;
                 }
             }
-            if (forceRefreshTargets || Entity.EntityCount != prevEntityCount || botCount != prevBotCount || playerCount != prevPlayerCount || prevControlled != Character.Controlled)
+
+            if (botCount != prevBotCount || playerCount != prevPlayerCount || prevControlled != Character.Controlled || NeedsToRefreshCachedTargets())
             {
                 cachedTargets.Clear();
-                prevEntityCount = Entity.EntityCount;
+                newEntitySpawned = false;
                 prevBotCount = botCount;
                 prevPlayerCount = playerCount;
                 prevControlled = Character.Controlled;
@@ -349,7 +374,8 @@ namespace Barotrauma
                     }
                     if (CurrentActionIndex == -1)
                     {
-                        DebugConsole.AddWarning($"Could not find the GoTo label \"{goTo}\" in the event \"{Prefab.Identifier}\". Ending the event.");
+                        DebugConsole.AddWarning($"Could not find the GoTo label \"{goTo}\" in the event \"{Prefab.Identifier}\". Ending the event.",
+                            prefab.ContentPackage);
                     }
                 }
 
@@ -361,6 +387,47 @@ namespace Barotrauma
             else
             {
                 currentAction.Update(deltaTime);
+            }
+        }
+
+        private bool NeedsToRefreshCachedTargets()
+        {
+            if (newEntitySpawned) { return true; }
+            foreach (var cachedTargetList in cachedTargets.Values)
+            {
+                foreach (var target in cachedTargetList)
+                {
+                    //one of the previously cached entities has been removed -> force refresh
+                    if (target.Removed)
+                    {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+        
+        public void EntitySpawned(Entity entity)
+        {
+            if (newEntitySpawned) { return; }
+            if (entity is Character character &&
+                Level.Loaded?.StartOutpost != null &&
+                Level.Loaded.StartOutpost.Info.OutpostNPCs.Values.Any(npcList => npcList.Contains(character)))
+            {
+                newEntitySpawned = true;
+                return;
+            }
+            //new entity matches one of the existing predicates -> force refresh
+            foreach (var targetPredicateList in targetPredicates.Values)
+            {
+                foreach (var targetPredicate in targetPredicateList)
+                {
+                    if (targetPredicate.Predicate(entity))
+                    {
+                        newEntitySpawned = true;
+                        return;
+                    }
+                }
             }
         }
 

@@ -97,7 +97,13 @@ namespace Barotrauma
             void GiveMissionExperience(CharacterInfo info)
             {
                 if (info == null) { return; }
-                var experienceGainMultiplierIndividual = new AbilityMissionExperienceGainMultiplier(this, 1f);
+                var experienceGainMultiplierIndividual = new AbilityMissionExperienceGainMultiplier(this, 1f, info.Character);
+                //check if anyone else in the crew has talents that could give a bonus to this one
+                foreach (var c in crew)
+                {
+                    if (c == info.Character) { continue; }
+                    c.CheckTalents(AbilityEffectType.OnAllyGainMissionExperience, experienceGainMultiplierIndividual);
+                }
                 info.Character?.CheckTalents(AbilityEffectType.OnGainMissionExperience, experienceGainMultiplierIndividual);
 
                 int finalExperienceGain = (int)(experienceGain * experienceGainMultiplierIndividual.Value);

@@ -45,7 +45,14 @@ namespace Barotrauma
                     }
                     else
                     {
-                        data.Add(identifier, Convert.ChangeType(value, type, NumberFormatInfo.InvariantInfo));
+                        try
+                        {
+                            data.Add(identifier, Convert.ChangeType(value, type, NumberFormatInfo.InvariantInfo));
+                        }
+                        catch (Exception e)
+                        {
+                            DebugConsole.ThrowError($"Failed to change the type of the value \"{value}\" to {type}.", e);
+                        }
                     }
                 }
             }

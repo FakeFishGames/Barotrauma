@@ -439,9 +439,10 @@ namespace Barotrauma.Items.Components
                     if (targetItem.Removed) { return; }
                     var attackResult = Attack.DoDamage(user, targetItem, item.WorldPosition, 1.0f);
 #if CLIENT
-                    if (attackResult.Damage > 0.0f && targetItem.Prefab.ShowHealthBar)
+                    if (attackResult.Damage > 0.0f && targetItem.Prefab.ShowHealthBar && Character.Controlled != null &&
+                        (user == Character.Controlled || Character.Controlled.CanSeeTarget(item)))
                     {
-                        Character.Controlled?.UpdateHUDProgressBar(targetItem,
+                        Character.Controlled.UpdateHUDProgressBar(targetItem,
                             targetItem.WorldPosition,
                             targetItem.Condition / targetItem.MaxCondition,
                             emptyColor: GUIStyle.HealthBarColorLow,

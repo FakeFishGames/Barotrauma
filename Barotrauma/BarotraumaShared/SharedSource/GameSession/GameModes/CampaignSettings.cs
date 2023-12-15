@@ -83,6 +83,12 @@ namespace Barotrauma
             }
         }
 
+        [Serialize(0.2f, IsPropertySaveable.Yes, description: "How likely it is for security to inspect player characters for stolen items when your reputation is high?")]
+        public float MinStolenItemInspectionProbability { get; set; }
+
+        [Serialize(0.9f, IsPropertySaveable.Yes, description: "How likely it is for security to inspect player characters for stolen items when your reputation is low?")]
+        public float MaxStolenItemInspectionProbability { get; set; }
+
         public const int DefaultMaxMissionCount = 2;
         public const int MaxMissionCountLimit = 10;
         public const int MinMissionCountLimit = 1;

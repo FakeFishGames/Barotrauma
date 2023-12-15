@@ -72,6 +72,9 @@ namespace Barotrauma
                         case InteractionType.MedicalClinic:
                             CampaignUI.MedicalClinic?.OnDeselected();
                             break;
+                        case InteractionType.Store:
+                            CampaignUI.Store?.OnDeselected();
+                            break;
                     }
                 }
 
@@ -121,6 +124,16 @@ namespace Barotrauma
         {
             return AllowedToManageCampaign(ClientPermissions.ManageMoney);
         }
+
+        public static bool AllowImmediateItemDelivery()
+        {
+            if (GameMain.Client == null) { return true; }
+            return 
+                GameMain.Client.ServerSettings.AllowImmediateItemDelivery ||
+                GameMain.Client.HasPermission(ClientPermissions.ManageCampaign) ||
+                GameMain.Client.IsServerOwner;
+        }
+
         protected GUIButton CreateEndRoundButton()
         {
             int buttonWidth = (int)(450 * GUI.xScale * (GUI.IsUltrawide ? 3.0f : 1.0f));
@@ -182,12 +195,12 @@ namespace Barotrauma
                     if (Level.Loaded.EndOutpost == null || !Level.Loaded.EndOutpost.DockedTo.Contains(leavingSub))
                     {
                         string textTag = availableTransition == TransitionType.ProgressToNextLocation ? "EnterLocation" : "EnterEmptyLocation";
-                        buttonText = TextManager.GetWithVariable(textTag, "[locationname]", Level.Loaded.EndLocation?.Name ?? "[ERROR]");
+                        buttonText = TextManager.GetWithVariable(textTag, "[locationname]", Level.Loaded.EndLocation?.DisplayName ?? "[ERROR]");
                         allowEndingRound = !ForceMapUI && !ShowCampaignUI;
                     }
                     break;
                 case TransitionType.LeaveLocation:
-                    buttonText = TextManager.GetWithVariable("LeaveLocation", "[locationname]", Level.Loaded.StartLocation?.Name ?? "[ERROR]");
+                    buttonText = TextManager.GetWithVariable("LeaveLocation", "[locationname]", Level.Loaded.StartLocation?.DisplayName ?? "[ERROR]");
                     allowEndingRound = !ForceMapUI && !ShowCampaignUI;
                     break;
                 case TransitionType.ReturnToPreviousLocation:
@@ -195,7 +208,7 @@ namespace Barotrauma
                     if (Level.Loaded.StartOutpost == null || !Level.Loaded.StartOutpost.DockedTo.Contains(leavingSub))
                     {
                         string textTag = availableTransition == TransitionType.ReturnToPreviousLocation ? "EnterLocation" : "EnterEmptyLocation";
-                        buttonText = TextManager.GetWithVariable(textTag, "[locationname]", Level.Loaded.StartLocation?.Name ?? "[ERROR]");
+                        buttonText = TextManager.GetWithVariable(textTag, "[locationname]", Level.Loaded.StartLocation?.DisplayName ?? "[ERROR]");
                         allowEndingRound = !ForceMapUI && !ShowCampaignUI;
                     }
                     break;
@@ -211,7 +224,7 @@ namespace Barotrauma
                             endRoundButton.Color = GUIStyle.Red * 0.7f;
                             endRoundButton.HoverColor = GUIStyle.Red;
                         }
-                        buttonText = TextManager.GetWithVariable("LeaveLocation", "[locationname]", Level.Loaded.StartLocation?.Name ?? "[ERROR]");
+                        buttonText = TextManager.GetWithVariable("LeaveLocation", "[locationname]", Level.Loaded.StartLocation?.DisplayName ?? "[ERROR]");
                         allowEndingRound = !ForceMapUI && !ShowCampaignUI;
                     }
                     else

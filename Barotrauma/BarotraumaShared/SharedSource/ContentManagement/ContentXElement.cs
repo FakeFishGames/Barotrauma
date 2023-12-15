@@ -70,7 +70,7 @@ namespace Barotrauma
         public Identifier[] GetAttributeIdentifierArray(string key, Identifier[] def, bool trim = true) => Element.GetAttributeIdentifierArray(key, def, trim);
         [return: NotNullIfNotNull("def")]
         public ImmutableHashSet<Identifier> GetAttributeIdentifierImmutableHashSet(string key, ImmutableHashSet<Identifier>? def, bool trim = true) => Element.GetAttributeIdentifierImmutableHashSet(key, def, trim);
-        
+        [return: NotNullIfNotNull(parameterName: "def")]
         public string? GetAttributeString(string key, string? def) => Element.GetAttributeString(key, def);
         public string GetAttributeStringUnrestricted(string key, string def) => Element.GetAttributeStringUnrestricted(key, def);
         public string[]? GetAttributeStringArray(string key, string[]? def, bool convertToLowerInvariant = false) => Element.GetAttributeStringArray(key, def, convertToLowerInvariant);
@@ -90,6 +90,7 @@ namespace Barotrauma
         public Color? GetAttributeColor(string key) => Element.GetAttributeColor(key);
         public Color[]? GetAttributeColorArray(string key, Color[]? def) => Element.GetAttributeColorArray(key, def);
         public Rectangle GetAttributeRect(string key, in Rectangle def) => Element.GetAttributeRect(key, def);
+        public Version GetAttributeVersion(string key, Version def) => Element.GetAttributeVersion(key, def);
         public T GetAttributeEnum<T>(string key, in T def) where T : struct, Enum => Element.GetAttributeEnum(key, def);
         public (T1, T2) GetAttributeTuple<T1, T2>(string key, in (T1, T2) def) => Element.GetAttributeTuple(key, def);
         public (T1, T2)[] GetAttributeTupleArray<T1, T2>(string key, in (T1, T2)[] def) => Element.GetAttributeTupleArray(key, def);

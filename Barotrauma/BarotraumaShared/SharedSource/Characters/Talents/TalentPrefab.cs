@@ -84,7 +84,8 @@ namespace Barotrauma
                             }
                             catch (Exception e)
                             {
-                                DebugConsole.ThrowError($"Error while loading talent migration for talent \"{Identifier}\".", e);
+                                DebugConsole.ThrowError($"Error while loading talent migration for talent \"{Identifier}\".", e,
+                                    element?.ContentPackage);
                             }
                         }
                         break;

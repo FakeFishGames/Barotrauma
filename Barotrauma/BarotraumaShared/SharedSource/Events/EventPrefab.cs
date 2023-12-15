@@ -10,16 +10,48 @@ namespace Barotrauma
 
         public readonly ContentXElement ConfigElement;
         public readonly Type EventType;
+
+        /// <summary>
+        /// The probability for the event to do something if it gets selected. For example, the probability for a MonsterEvent to spawn the monster(s).
+        /// </summary>
         public readonly float Probability;
+
+        /// <summary>
+        /// When this event occurs, should it trigger the event cooldown during which no new events are triggered?
+        /// </summary>
         public readonly bool TriggerEventCooldown;
+
+        /// <summary>
+        /// The commonness of the event (i.e. how likely it is for this specific event to be chosen from the event set it's configured in). 
+        /// Only valid if the event set is configured to choose a random event (as opposed to just executing all the events in the set).
+        /// </summary>
         public readonly float Commonness;
+
+        /// <summary>
+        /// If set, the event set can only be chosen in this biome.
+        /// </summary>
         public readonly Identifier BiomeIdentifier;
+
+        /// <summary>
+        /// If set, the event set can only be chosen in locations that belong to this faction.
+        /// </summary>
         public readonly Identifier Faction;
 
         public readonly LocalizedString Name;
 
+        /// <summary>
+        /// If set, this event is used as an event that can unlock a path to the next biome.
+        /// </summary>
         public readonly bool UnlockPathEvent;
+
+        /// <summary>
+        /// Only valid if UnlockPathEvent is set to true. The tooltip displayed on the pathway this event is blocking.
+        /// </summary>
         public readonly string UnlockPathTooltip;
+
+        /// <summary>
+        /// Only valid if UnlockPathEvent is set to true. The reputation requirement displayed on the pathway this event is blocking.
+        /// </summary>
         public readonly int UnlockPathReputation;
 
         public static EventPrefab Create(ContentXElement element, RandomEventsFile file, Identifier fallbackIdentifier = default)
@@ -44,12 +76,14 @@ namespace Barotrauma
                 EventType = Type.GetType("Barotrauma." + ConfigElement.Name, true, true);
                 if (EventType == null)
                 {
-                    DebugConsole.ThrowError("Could not find an event class of the type \"" + ConfigElement.Name + "\".");
+                    DebugConsole.ThrowError("Could not find an event class of the type \"" + ConfigElement.Name + "\".",
+                        contentPackage: element.ContentPackage);
                 }
             }
             catch
             {
-                DebugConsole.ThrowError("Could not find an event class of the type \"" + ConfigElement.Name + "\".");
+                DebugConsole.ThrowError("Could not find an event class of the type \"" + ConfigElement.Name + "\".",
+                    contentPackage: element.ContentPackage);
             }
 
             Name = TextManager.Get($"eventname.{Identifier}").Fallback(Identifier.ToString());

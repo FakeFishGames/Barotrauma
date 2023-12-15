@@ -655,7 +655,8 @@ namespace Barotrauma
                 ScrollBarVisible = true,
                 OnSelected = (btn, obj) =>
                 {
-                    if (!(obj is ServerInfo serverInfo)) { return false; }
+                    if (GUI.MouseOn is GUIButton) { return false; }
+                    if (obj is not ServerInfo serverInfo) { return false; }
 
                     joinButton.Enabled = true;
                     selectedServer = Option<ServerInfo>.Some(serverInfo);
@@ -852,6 +853,13 @@ namespace Barotrauma
             });
         }
 
+        public void HideServerPreview()
+        {
+            serverPreviewContainer.Visible = false;
+            panelAnimator.RightEnabled = false;
+            panelAnimator.RightVisible = false;
+        }
+
         private void InsertServer(ServerInfo serverInfo, GUIComponent component)
         {
             var children = serverList.Content.RectTransform.Children.Reverse().ToList();
@@ -973,7 +981,7 @@ namespace Barotrauma
             }
         }
 
-        private void FilterServers()
+        public void FilterServers()
         {
             RemoveMsgFromServerList(MsgUserData.NoMatchingServers);
             foreach (GUIComponent child in serverList.Content.Children)
@@ -1013,6 +1021,7 @@ namespace Barotrauma
                 return false;
             }
 #endif
+            if (SpamServerFilters.IsFiltered(serverInfo)) { return false; }
 
             if (!string.IsNullOrEmpty(searchBox.Text) && !serverInfo.ServerName.Contains(searchBox.Text, StringComparison.OrdinalIgnoreCase)) { return false; }
 
@@ -1553,15 +1562,169 @@ namespace Barotrauma
             var serverFrame = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.06f), serverList.Content.RectTransform) { MinSize = new Point(0, 35) },
                 style: "ListBoxElement")
             {
-                UserData = serverInfo
+                UserData = serverInfo,
             };
+
+            serverFrame.OnSecondaryClicked += (_, data) =>
+            {
+                if (data is not ServerInfo info) { return false; }
+                CreateContextMenu(info);
+                return true;
+            };
+
             new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 1.0f), serverFrame.RectTransform, Anchor.Center), isHorizontal: true, childAnchor: Anchor.CenterLeft)
             {
                 Stretch = false
             };
             UpdateServerInfoUI(serverInfo);
             if (!skipPing) { PingUtils.GetServerPing(serverInfo, UpdateServerInfoUI); }
+        }
 
+        private static readonly Vector2 confirmPopupSize = new Vector2(0.2f, 0.2625f);
+        private static readonly Point confirmPopupMinSize = new Point(300, 300);
+
+        private void CreateContextMenu(ServerInfo info)
+        {
+            var favoriteOption = new ContextMenuOption(IsFavorite(info) ? "removefromfavorites" : "addtofavorites", isEnabled: true, () =>
+            {
+                if (IsFavorite(info))
+                {
+                    RemoveFromFavoriteServers(info);
+                }
+                else
+                {
+                    AddToFavoriteServers(info);
+                }
+                FilterServers();
+            });
+            var reportOption = new ContextMenuOption("reportserver", isEnabled: true, () => { CreateReportPrompt(info); });
+            var filterOption = new ContextMenuOption("filterserver", isEnabled: true, () =>
+            {
+                CreateFilterServerPrompt(info);
+            })
+            {
+                Tooltip = TextManager.Get("filterservertooltip")
+            };
+
+            GUIContextMenu.CreateContextMenu(favoriteOption, filterOption, reportOption);
+        }
+
+        public static void CreateFilterServerPrompt(ServerInfo info)
+        {
+            GUI.AskForConfirmation(
+                header: TextManager.Get("filterserver"),
+                body: TextManager.GetWithVariables("filterserverconfirm", ("[server]", info.ServerName), ("[filepath]", SpamServerFilter.SavePath)),
+                onConfirm: () =>
+                {
+                    SpamServerFilters.AddServerToLocalSpamList(info);
+
+                    if (GameMain.ServerListScreen is not { } serverListScreen) { return; }
+
+                    if (serverListScreen.selectedServer.TryUnwrap(out var selectedServer) && selectedServer.Equals(info))
+                    {
+                        serverListScreen.HideServerPreview();
+                    }
+                    serverListScreen.FilterServers();
+                }, relativeSize: confirmPopupSize, minSize: confirmPopupMinSize);
+        }
+
+        private enum ReportReason
+        {
+            Spam,
+            Advertising,
+            Inappropriate
+        }
+
+        public static void CreateReportPrompt(ServerInfo info)
+        {
+            if (!GameAnalyticsManager.SendUserStatistics)
+            {
+                GUI.NotifyPrompt(TextManager.Get("reportserver"), TextManager.Get("reportserverdisabled"));
+                return;
+            }
+
+            var msgBox = new GUIMessageBox(
+                headerText: TextManager.Get("reportserver"),
+                text: string.Empty,
+                relativeSize: new Vector2(0.2f, 0.4f),
+                minSize: new Point(380, 430),
+                buttons: Array.Empty<LocalizedString>());
+
+            var layout = new GUILayoutGroup(new RectTransform(Vector2.One, msgBox.Content.RectTransform, Anchor.Center));
+
+            new GUITextBlock(new RectTransform(new Vector2(1f, 0.3f), layout.RectTransform), TextManager.GetWithVariable("reportserverexplanation", "[server]", info.ServerName), wrap: true)
+            {
+                ToolTip = TextManager.Get("reportserverprompttooltip")
+            };
+
+            var listBox = new GUIListBox(new RectTransform(new Vector2(1f, 0.3f), layout.RectTransform));
+
+            var enums = Enum.GetValues<ReportReason>();
+            foreach (ReportReason reason in enums)
+            {
+                new GUITickBox(new RectTransform(new Vector2(1f, 1f / enums.Length), listBox.Content.RectTransform), TextManager.Get($"reportreason.{reason}"))
+                {
+                    UserData = reason
+                };
+            }
+
+            // padding
+            new GUIFrame(new RectTransform(new Vector2(1f, 0.05f), layout.RectTransform), style: null);
+
+            var buttonLayout = new GUILayoutGroup(new RectTransform(new Vector2(1f, 0.3f), layout.RectTransform))
+            {
+                Stretch = true
+            };
+
+            var reportAndHideButton = new GUIButton(new RectTransform(new Vector2(1f, 0.333f), buttonLayout.RectTransform), TextManager.Get("reportoption.reportandhide"))
+            {
+                Enabled = false,
+                OnClicked = (_, _) =>
+                {
+                    CreateFilterServerPrompt(info);
+                    msgBox.Close();
+                    return true;
+                }
+            };
+            var reportButton = new GUIButton(new RectTransform(new Vector2(1f, 0.333f), buttonLayout.RectTransform), TextManager.Get("reportoption.report"))
+            {
+                Enabled = false,
+                OnClicked = (_, _) =>
+                {
+                    ReportServer(info, GetUserSelectedReasons());
+                    msgBox.Close();
+                    return true;
+                }
+            };
+
+            new GUIButton(new RectTransform(new Vector2(1f, 0.333f), buttonLayout.RectTransform), TextManager.Get("cancel"))
+            {
+                OnClicked = (_, _) =>
+                {
+                    msgBox.Close();
+                    return true;
+                }
+            };
+
+            foreach (var child in listBox.Content.GetAllChildren<GUITickBox>())
+            {
+                child.OnSelected += _ =>
+                {
+                    reportAndHideButton.Enabled = reportButton.Enabled = GetUserSelectedReasons().Any();
+                    return true;
+                };
+            }
+
+            IEnumerable<ReportReason> GetUserSelectedReasons()
+                => listBox.Content.Children
+                          .Where(static c => c.UserData is ReportReason && c.Selected)
+                          .Select(static c => (ReportReason)c.UserData).ToArray();
+        }
+
+        private static void ReportServer(ServerInfo info, IEnumerable<ReportReason> reasons)
+        {
+            if (!reasons.Any()) { return; }
+            GameAnalyticsManager.AddErrorEvent(GameAnalyticsManager.ErrorSeverity.Info, $"[Spam] Reported server: Name: \"{info.ServerName}\", Message: \"{info.ServerMessage}\", Endpoint: \"{info.Endpoint.StringRepresentation}\". Reason: \"{string.Join(", ", reasons)}\".");
         }
 
         private void UpdateServerInfoUI(ServerInfo serverInfo)
@@ -1571,7 +1734,6 @@ namespace Barotrauma
 
             serverFrame.UserData = serverInfo;
 
-            serverFrame.ToolTip = "";
             var serverContent = serverFrame.Children.First() as GUILayoutGroup;
             serverContent.ClearChildren();
 
@@ -1583,15 +1745,14 @@ namespace Barotrauma
                         new RectTransform(new Vector2(columns[label].RelativeWidth, 1.0f), serverContent.RectTransform),
                         style: null);
             }
-            
-            void errorTooltip(RichString toolTip)
+
+            void disableElementFocus()
             {
                 sections.Values.ForEach(c =>
                 {
                     c.CanBeFocused = false;
                     c.Children.First().CanBeFocused = false;
                 });
-                serverFrame.ToolTip = toolTip;
             }
 
             RectTransform columnRT(ColumnLabel label, float scale = 0.95f)
@@ -1611,7 +1772,7 @@ namespace Barotrauma
                     NetworkMember.IsCompatible(GameMain.Version, serverInfo.GameVersion),
                 UserData = "compatible"
             };
-            
+
             var passwordBox = new GUITickBox(columnRT(ColumnLabel.ServerListHasPassword, scale: 0.6f), label: "", style: "GUIServerListPasswordTickBox")
             {
 				Selected = serverInfo.HasPassword,
@@ -1664,9 +1825,10 @@ namespace Barotrauma
                 serverPingText.TextColor = Color.DarkRed;
             }
 
+            LocalizedString toolTip = "";
             if (!serverInfo.Checked)
             {
-                errorTooltip(TextManager.Get("ServerOffline"));
+                toolTip = TextManager.Get("ServerOffline");
                 serverName.TextColor *= 0.8f;
                 serverPlayers.TextColor *= 0.8f;
             }
@@ -1681,7 +1843,6 @@ namespace Barotrauma
             }
             else if (!compatibleBox.Selected)
             {
-                LocalizedString toolTip = "";
                 if (serverInfo.GameVersion != GameMain.Version)
                 {
                     toolTip = TextManager.GetWithVariable("ServerListIncompatibleVersion", "[version]", serverInfo.GameVersion.ToString());
@@ -1707,14 +1868,12 @@ namespace Barotrauma
                         toolTip += '\n' + TextManager.GetWithVariable("workshopitemdownloadprompttruncated", "[number]", (incompatibleModNames.Count - maxIncompatibleToList).ToString());
                     }
                 }
-                errorTooltip(toolTip);
 
                 serverName.TextColor *= 0.5f;
                 serverPlayers.TextColor *= 0.5f;
             }
             else
             {
-                LocalizedString toolTip = "";
                 foreach (var contentPackage in serverInfo.ContentPackages)
                 {
                     if (ContentPackageManager.EnabledPackages.All.None(cp => cp.Hash.StringRepresentation == contentPackage.Hash))
@@ -1724,8 +1883,11 @@ namespace Barotrauma
                         break;
                     }
                 }
-                errorTooltip(toolTip);
             }
+            disableElementFocus();
+
+            string separator = toolTip.IsNullOrWhiteSpace() ? "" : "\n\n";
+            serverFrame.ToolTip = RichString.Rich(toolTip + separator + $"‖color:gui.blue‖{TextManager.GetWithVariable("serverlisttooltip", "[button]", PlayerInput.SecondaryMouseLabel)}‖end‖");
 
             foreach (var section in sections.Values)
             {

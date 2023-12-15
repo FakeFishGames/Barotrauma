@@ -241,6 +241,7 @@ namespace Barotrauma
         public readonly bool MuteIntensityTracks;
         public readonly float? ForceIntensityTrack;
 
+        public readonly bool StartFromRandomTime;
         public readonly bool ContinueFromPreviousTime;
         public int PreviousTime;
 
@@ -255,6 +256,7 @@ namespace Barotrauma
                 ForceIntensityTrack = element.GetAttributeFloat(nameof(ForceIntensityTrack), 0.0f);
             }
             Volume = element.GetAttributeFloat(nameof(Volume), 1.0f);
+            StartFromRandomTime = element.GetAttributeBool(nameof(StartFromRandomTime), false);
             ContinueFromPreviousTime = element.GetAttributeBool(nameof(ContinueFromPreviousTime), false);
         }
     }

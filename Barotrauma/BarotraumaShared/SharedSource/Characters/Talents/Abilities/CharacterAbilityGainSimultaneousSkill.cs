@@ -14,7 +14,8 @@
             targetAllies = abilityElement.GetAttributeBool("targetallies", false);
             if (skillIdentifier.IsEmpty)
             {
-                DebugConsole.ThrowError($"Error in talent {CharacterTalent.DebugIdentifier}: skill identifier not defined.");
+                DebugConsole.ThrowError($"Error in talent {CharacterTalent.DebugIdentifier}: skill identifier not defined.",
+                    contentPackage: abilityElement.ContentPackage);
             }
         }
 

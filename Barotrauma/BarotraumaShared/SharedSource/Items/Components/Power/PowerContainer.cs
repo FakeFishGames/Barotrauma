@@ -395,6 +395,6 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public float GetCapacity() => item.StatManager.GetAdjustedValue(ItemTalentStats.BatteryCapacity, Capacity);
+        public float GetCapacity() => item.StatManager.GetAdjustedValueMultiplicative(ItemTalentStats.BatteryCapacity, Capacity);
     }
 }

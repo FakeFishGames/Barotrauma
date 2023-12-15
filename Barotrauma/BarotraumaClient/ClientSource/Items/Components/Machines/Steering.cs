@@ -216,7 +216,7 @@ namespace Barotrauma.Items.Components
                 }
             };
             levelStartTickBox = new GUITickBox(new RectTransform(new Vector2(1, 0.333f), paddedAutoPilotControls.RectTransform, Anchor.Center),
-                GameMain.GameSession?.StartLocation == null ? "" : ToolBox.LimitString(GameMain.GameSession.StartLocation.Name, GUIStyle.SmallFont, textLimit),
+                GameMain.GameSession?.StartLocation == null ? "" : ToolBox.LimitString(GameMain.GameSession.StartLocation.DisplayName, GUIStyle.SmallFont, textLimit),
                 font: GUIStyle.SmallFont, style: "GUIRadioButton")
             {
                 Enabled = autoPilot,
@@ -243,7 +243,7 @@ namespace Barotrauma.Items.Components
             };
 
             levelEndTickBox = new GUITickBox(new RectTransform(new Vector2(1, 0.333f), paddedAutoPilotControls.RectTransform, Anchor.BottomCenter),
-                (GameMain.GameSession?.EndLocation == null || Level.IsLoadedOutpost) ? "" : ToolBox.LimitString(GameMain.GameSession.EndLocation.Name, GUIStyle.SmallFont, textLimit),
+                (GameMain.GameSession?.EndLocation == null || Level.IsLoadedOutpost) ? "" : ToolBox.LimitString(GameMain.GameSession.EndLocation.DisplayName, GUIStyle.SmallFont, textLimit),
                 font: GUIStyle.SmallFont, style: "GUIRadioButton")
             {
                 Enabled = autoPilot,
@@ -389,7 +389,7 @@ namespace Barotrauma.Items.Components
                             if (!ObjectiveManager.AllActiveObjectivesCompleted())
                             {
                                 exitOutpostPrompt = new GUIMessageBox("",
-                                    TextManager.GetWithVariable("CampaignExitTutorialOutpostPrompt", "[locationname]", campaign.Map.CurrentLocation.Name),
+                                    TextManager.GetWithVariable("CampaignExitTutorialOutpostPrompt", "[locationname]", campaign.Map.CurrentLocation.DisplayName),
                                     new LocalizedString[] { TextManager.Get("yes"), TextManager.Get("no") });
                                 exitOutpostPrompt.Buttons[0].OnClicked += (_, _) =>
                                 {
@@ -509,9 +509,9 @@ namespace Barotrauma.Items.Components
             noPowerTip = TextManager.Get("SteeringNoPowerTip");
             autoPilotMaintainPosTip = TextManager.Get("SteeringAutoPilotMaintainPosTip");
             autoPilotLevelStartTip = TextManager.GetWithVariable("SteeringAutoPilotLocationTip", "[locationname]",
-                GameMain.GameSession?.StartLocation == null ? "Start" : GameMain.GameSession.StartLocation.Name);
+                GameMain.GameSession?.StartLocation == null ? "Start" : GameMain.GameSession.StartLocation.DisplayName);
             autoPilotLevelEndTip = TextManager.GetWithVariable("SteeringAutoPilotLocationTip", "[locationname]",
-                GameMain.GameSession?.EndLocation == null ? "End" : GameMain.GameSession.EndLocation.Name);
+                GameMain.GameSession?.EndLocation == null ? "End" : GameMain.GameSession.EndLocation.DisplayName);
         }
 
         protected override void OnResolutionChanged()
@@ -589,7 +589,8 @@ namespace Barotrauma.Items.Components
                 Sonar sonar = item.GetComponent<Sonar>();
                 if (sonar != null && controlledSub != null)
                 {
-                    Vector2 displayPosToMaintain = ((posToMaintain.Value - controlledSub.WorldPosition)) / sonar.Range * sonar.DisplayRadius * sonar.Zoom;
+                    Vector2 displayPosToMaintain = ((posToMaintain.Value - controlledSub.WorldPosition)) * sonar.DisplayScale;
+
                     displayPosToMaintain.Y = -displayPosToMaintain.Y;
                     displayPosToMaintain = displayPosToMaintain.ClampLength(velRect.Width / 2);
                     displayPosToMaintain = steerArea.Rect.Center.ToVector2() + displayPosToMaintain;
@@ -670,14 +671,14 @@ namespace Barotrauma.Items.Components
                 pos2.Y = -pos2.Y;
                 pos2 += center;
 
-                GUI.DrawLine(spriteBatch, 
-                    pos1, 
+                GUI.DrawLine(spriteBatch,
+                    pos1,
                     pos2,
                     GUIStyle.Red * 0.6f, width: 3);
 
                 if (obstacle.Intersection.HasValue)
                 {
-                    Vector2 intersectionPos = (obstacle.Intersection.Value - transducerCenter) *displayScale;
+                    Vector2 intersectionPos = (obstacle.Intersection.Value - transducerCenter) * displayScale;
                     intersectionPos.Y = -intersectionPos.Y;
                     intersectionPos += center;
                     GUI.DrawRectangle(spriteBatch, intersectionPos - Vector2.One * 2, Vector2.One * 4, GUIStyle.Red);

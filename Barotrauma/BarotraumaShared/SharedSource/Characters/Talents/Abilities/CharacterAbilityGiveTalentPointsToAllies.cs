@@ -11,7 +11,8 @@ namespace Barotrauma.Abilities
             amount = abilityElement.GetAttributeInt("amount", 0);
             if (amount == 0)
             {
-                DebugConsole.ThrowError($"Error in talent {CharacterTalent.DebugIdentifier}, amount of talent points to give is 0.");
+                DebugConsole.ThrowError($"Error in talent {CharacterTalent.DebugIdentifier}, amount of talent points to give is 0.",
+                    contentPackage: abilityElement.ContentPackage);
             }
         }
 

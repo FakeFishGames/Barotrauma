@@ -89,7 +89,7 @@ namespace Barotrauma
         partial void AddDamageProjSpecific(float damage, Vector2 worldPosition);
 
 
-        public AttackResult AddDamage(Character attacker, Vector2 worldPosition, Attack attack, float deltaTime, bool playSound = true)
+        public AttackResult AddDamage(Character attacker, Vector2 worldPosition, Attack attack, Vector2 impulseDirection, float deltaTime, bool playSound = true)
         {
             AddDamage(attack.StructureDamage, worldPosition);
             return new AttackResult(attack.StructureDamage);

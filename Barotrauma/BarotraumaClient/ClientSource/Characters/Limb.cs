@@ -1216,7 +1216,7 @@ namespace Barotrauma
                     pos: new Vector2(body.DrawPosition.X, -body.DrawPosition.Y),
                     srcRect: w.Sprite.SourceRect,
                     color: Color.White,
-                    rotation: rotation,
+                    rotationRad: rotation,
                     origin: origin,
                     scale: new Vector2(scale, scale),
                     effects: spriteEffect,

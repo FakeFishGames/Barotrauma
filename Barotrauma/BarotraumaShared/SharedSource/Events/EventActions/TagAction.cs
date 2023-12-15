@@ -90,31 +90,46 @@ namespace Barotrauma
 
         private void TagPlayers()
         {
-            AddTargetPredicate(Tag, e => e is Character c && c.IsPlayer && (!c.IsIncapacitated || !IgnoreIncapacitatedCharacters));
+            AddTargetPredicate(
+                Tag, 
+                ScriptedEvent.TargetPredicate.EntityType.Character, 
+                e => e is Character c && c.IsPlayer && (!c.IsIncapacitated || !IgnoreIncapacitatedCharacters));
         }
 
         private void TagTraitors()
         {
-            AddTargetPredicate(Tags.Traitor, e => e is Character c && (c.IsPlayer || c.IsBot) && c.IsTraitor && !c.IsIncapacitated);
+            AddTargetPredicate(
+                Tags.Traitor,
+                ScriptedEvent.TargetPredicate.EntityType.Character, 
+                e => e is Character c && (c.IsPlayer || c.IsBot) && c.IsTraitor && !c.IsIncapacitated);
         }
 
         private void TagNonTraitors()
         {
-            AddTargetPredicate(Tags.NonTraitor, e => e is Character c && (c.IsPlayer || c.IsBot) && !c.IsTraitor && c.IsOnPlayerTeam && !c.IsIncapacitated);
+            AddTargetPredicate(
+                Tags.NonTraitor,
+                ScriptedEvent.TargetPredicate.EntityType.Character,
+                e => e is Character c && (c.IsPlayer || c.IsBot) && !c.IsTraitor && c.IsOnPlayerTeam && !c.IsIncapacitated);
         }
 
         private void TagNonTraitorPlayers()
         {
-            AddTargetPredicate(Tags.NonTraitorPlayer, e => e is Character c && c.IsPlayer && !c.IsTraitor && c.IsOnPlayerTeam && !c.IsIncapacitated);
+            AddTargetPredicate(
+                Tags.NonTraitorPlayer,
+                ScriptedEvent.TargetPredicate.EntityType.Character,
+                e => e is Character c && c.IsPlayer && !c.IsTraitor && c.IsOnPlayerTeam && !c.IsIncapacitated);
         }
 
         private void TagBots(bool playerCrewOnly)
         {
-            AddTargetPredicate(Tag, e => 
-                e is Character c &&
-                c.IsBot && 
-                (!c.IsIncapacitated || !IgnoreIncapacitatedCharacters) && 
-                (!playerCrewOnly || c.TeamID == CharacterTeamType.Team1));
+            AddTargetPredicate(
+                Tag,
+                ScriptedEvent.TargetPredicate.EntityType.Character,
+                e => 
+                    e is Character c &&
+                    c.IsBot && 
+                    (!c.IsIncapacitated || !IgnoreIncapacitatedCharacters) && 
+                    (!playerCrewOnly || c.TeamID == CharacterTeamType.Team1));
         }
 
         private void TagCrew()
@@ -139,42 +154,67 @@ namespace Barotrauma
 
         private void TagStructuresByIdentifier(Identifier identifier)
         {
-            AddTargetPredicate(Tag, e => e is Structure s && SubmarineTypeMatches(s.Submarine) && s.Prefab.Identifier == identifier);
+            AddTargetPredicate(
+                Tag, 
+                ScriptedEvent.TargetPredicate.EntityType.Structure,
+                e => e is Structure s && SubmarineTypeMatches(s.Submarine) && s.Prefab.Identifier == identifier);
         }
 
         private void TagStructuresBySpecialTag(Identifier tag)
         {
-            AddTargetPredicate(Tag, e => e is Structure s && SubmarineTypeMatches(s.Submarine) && s.SpecialTag.ToIdentifier() == tag);
+            AddTargetPredicate(
+                Tag,
+                ScriptedEvent.TargetPredicate.EntityType.Structure,
+                e => e is Structure s && SubmarineTypeMatches(s.Submarine) && s.SpecialTag.ToIdentifier() == tag);
         }
 
         private void TagItemsByIdentifier(Identifier identifier)
         {
-            AddTargetPredicate(Tag, e => e is Item it && IsValidItem(it) && it.Prefab.Identifier == identifier);
+            AddTargetPredicate(
+                Tag, 
+                ScriptedEvent.TargetPredicate.EntityType.Item,
+                e => e is Item it && IsValidItem(it) && it.Prefab.Identifier == identifier);
         }
 
         private void TagItemsByTag(Identifier tag)
         {
-            AddTargetPredicate(Tag, e => e is Item it && IsValidItem(it) && it.HasTag(tag));
+            AddTargetPredicate(
+                Tag,
+                ScriptedEvent.TargetPredicate.EntityType.Item,
+                e => e is Item it && IsValidItem(it) && it.HasTag(tag));
         }
 
         private void TagHulls()
         {
-            AddTargetPredicate(Tag, e => e is Hull h && SubmarineTypeMatches(h.Submarine));
+            AddTargetPredicate(
+                Tag,
+                ScriptedEvent.TargetPredicate.EntityType.Hull,
+                 e => e is Hull h && SubmarineTypeMatches(h.Submarine));
         }
 
         private void TagHullsByName(Identifier name)
         {
-            AddTargetPredicate(Tag, e => e is Hull h && SubmarineTypeMatches(h.Submarine) && h.RoomName.Contains(name.Value, StringComparison.OrdinalIgnoreCase));
+            AddTargetPredicate(
+                Tag,
+                ScriptedEvent.TargetPredicate.EntityType.Hull,
+                e => e is Hull h && SubmarineTypeMatches(h.Submarine) && h.RoomName.Contains(name.Value, StringComparison.OrdinalIgnoreCase));
         }
 
         private void TagSubmarinesByType(Identifier type)
         {
-            AddTargetPredicate(Tag, e => e is Submarine s && SubmarineTypeMatches(s) && (type.IsEmpty || type == s.Info?.Type.ToIdentifier()));
+            AddTargetPredicate(
+                Tag,
+                ScriptedEvent.TargetPredicate.EntityType.Submarine,
+                e => e is Submarine s && SubmarineTypeMatches(s) && (type.IsEmpty || type == s.Info?.Type.ToIdentifier()));
         }
 
         private bool IsValidItem(Item it)
         {
-            return (!it.HiddenInGame || AllowHiddenItems) && SubmarineTypeMatches(it.Submarine);
+            return 
+                (!it.HiddenInGame || AllowHiddenItems) && 
+                //if the item has just spawned, it may be in a hull but not moved into the coordinate space of the hull yet
+                //= it.Submarine still null
+                SubmarineTypeMatches(it.Submarine ?? it.CurrentHull?.Submarine ?? it.ParentInventory?.Owner?.Submarine);
         }
 
         private bool SubmarineTypeMatches(Submarine sub)
@@ -197,7 +237,7 @@ namespace Barotrauma
             }
         }
 
-        private void AddTargetPredicate(Identifier tag, Predicate<Entity> predicate)
+        private void AddTargetPredicate(Identifier tag, ScriptedEvent.TargetPredicate.EntityType entityType, Predicate<Entity> predicate)
         {
             if (ChoosePercentage > 0.0f)
             {
@@ -209,7 +249,7 @@ namespace Barotrauma
             }
             else
             {
-                ParentEvent.AddTargetPredicate(tag, predicate);
+                ParentEvent.AddTargetPredicate(tag, entityType, predicate);
                 mustRecheckTargets = true;
             }
         }
@@ -291,7 +331,8 @@ namespace Barotrauma
                     else
                     {
                         string errorMessage = $"Error in TagAction (event \"{ParentEvent.Prefab.Identifier}\") - unrecognized target criteria \"{key}\".";
-                        DebugConsole.ThrowError(errorMessage);
+                        DebugConsole.ThrowError(errorMessage, 
+                            contentPackage: ParentEvent.Prefab?.ContentPackage);
                         GameAnalyticsManager.AddErrorEventOnce($"TagAction.Update:InvalidCriteria_{ParentEvent.Prefab.Identifier}_{key}", GameAnalyticsManager.ErrorSeverity.Error, errorMessage);
                     }
                 }

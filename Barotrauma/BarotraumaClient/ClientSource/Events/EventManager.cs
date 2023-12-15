@@ -47,7 +47,7 @@ namespace Barotrauma
             }
 
             float theoreticalMaxMonsterStrength = 10000;
-            float relativeMaxMonsterStrength = theoreticalMaxMonsterStrength * (GameMain.GameSession?.LevelData?.Difficulty ?? 0f) / 100;
+            float relativeMaxMonsterStrength = theoreticalMaxMonsterStrength * (GameMain.GameSession?.Level?.Difficulty ?? 0f) / 100;
             float absoluteMonsterStrength = monsterStrength / theoreticalMaxMonsterStrength;
             float relativeMonsterStrength = monsterStrength / relativeMaxMonsterStrength;
 
@@ -581,7 +581,14 @@ namespace Barotrauma
                             StatusEffect effect = StatusEffect.Load(subElement, $"EventManager.ClientRead ({eventIdentifier})");
                             foreach (Entity target in targets)
                             {
-                                effect.Apply(effect.type, 1.0f, target, target as ISerializableEntity);
+                                if (target is Item item)
+                                {
+                                    effect.Apply(effect.type, 1.0f, item, item.AllPropertyObjects);
+                                }
+                                else
+                                {
+                                    effect.Apply(effect.type, 1.0f, target, target as ISerializableEntity);
+                                }
                             }
                         }
                         break;

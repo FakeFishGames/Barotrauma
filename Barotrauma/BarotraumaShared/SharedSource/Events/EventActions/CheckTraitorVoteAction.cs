@@ -16,7 +16,8 @@ namespace Barotrauma
         { 
             if (parentEvent is not TraitorEvent)
             {
-                DebugConsole.ThrowError($"Error in event \"{parentEvent.Prefab.Identifier}\" - {nameof(CheckTraitorVoteAction)} can only be used in traitor events.");
+                DebugConsole.ThrowError($"Error in event \"{parentEvent.Prefab.Identifier}\" - {nameof(CheckTraitorVoteAction)} can only be used in traitor events.",
+                    contentPackage: element.ContentPackage);
             }
         }
 

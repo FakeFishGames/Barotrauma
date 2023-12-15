@@ -709,6 +709,11 @@ namespace Barotrauma
                         {
                             musicChannel[i].StreamSeekPos = targetMusic[i].PreviousTime;
                         }
+                        else if (targetMusic[i].StartFromRandomTime)
+                        {
+                            musicChannel[i].StreamSeekPos =
+                                (int)(musicChannel[i].MaxStreamSeekPos * Rand.Range(0.0f, 1.0f, Rand.RandSync.Unsynced));
+                        }
                         musicChannel[i].Looping = true;
                     }
                 }

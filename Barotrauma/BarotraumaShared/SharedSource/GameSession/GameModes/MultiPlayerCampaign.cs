@@ -319,6 +319,7 @@ namespace Barotrauma
                 foreach (var item in storeItems.Value)
                 {
                     msg.WriteIdentifier(item.ItemPrefabIdentifier);
+                    msg.WriteBoolean(item.DeliverImmediately);
                     msg.WriteRangedInteger(item.Quantity, 0, CargoManager.MaxQuantity);
                 }
             }
@@ -336,8 +337,12 @@ namespace Barotrauma
                 for (int j = 0; j < itemCount; j++)
                 {
                     Identifier itemId = msg.ReadIdentifier();
+                    bool deliverImmediately = msg.ReadBoolean();
+#if SERVER
+                    if (!AllowImmediateItemDelivery(sender)) { deliverImmediately = false; }
+#endif
                     int quantity = msg.ReadRangedInteger(0, CargoManager.MaxQuantity);
-                    items[storeId].Add(new PurchasedItem(itemId, quantity, sender));
+                    items[storeId].Add(new PurchasedItem(itemId, quantity, sender) { DeliverImmediately = deliverImmediately });
                 }
             }
             return items;

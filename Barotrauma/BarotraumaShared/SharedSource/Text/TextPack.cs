@@ -48,7 +48,13 @@ namespace Barotrauma
 
         public readonly LanguageIdentifier Language;
 
-        public readonly ImmutableDictionary<Identifier, ImmutableArray<string>> Texts;
+
+        public readonly record struct Text(
+            string String,
+            bool IsOverride,
+            TextPack TextPack);
+
+        public readonly ImmutableDictionary<Identifier, ImmutableArray<Text>> Texts;
         public readonly string TranslatedName;
         public readonly bool NoWhitespace;
 
@@ -56,24 +62,47 @@ namespace Barotrauma
         {
             ContentFile = file;
 
-            var languageName = mainElement.GetAttributeIdentifier("language", TextManager.DefaultLanguage.Value);
+            var languageName = mainElement.GetAttributeIdentifier("language", Identifier.Empty);
+            if (languageName.IsEmpty)
+            {
+                DebugConsole.AddWarning($"Language not defined in text file \"{file.Path}\". Setting the language as {TextManager.DefaultLanguage}.",
+                    mainElement.ContentPackage);
+                languageName = TextManager.DefaultLanguage.Value;
+            }
             Language = language;
             TranslatedName = mainElement.GetAttributeString("translatedname", languageName.Value);
             NoWhitespace = mainElement.GetAttributeBool("nowhitespace", false);
 
-            Dictionary<Identifier, List<string>> texts = new Dictionary<Identifier, List<string>>();
-            foreach (var element in mainElement.Elements())
+            Dictionary<Identifier, List<Text>> texts = new Dictionary<Identifier, List<Text>>();
+            LoadElements(mainElement, isOverride: mainElement.IsOverride());
+
+            void LoadElements(XElement parentElement, bool isOverride)
             {
-                Identifier elemName = element.NameAsIdentifier();
-                if (!texts.ContainsKey(elemName)) { texts.Add(elemName, new List<string>()); }
-                texts[elemName].Add(element.ElementInnerText()
-                    .Replace(@"\n", "\n")
-                    .Replace("&amp;", "&")
-                    .Replace("&lt;", "<")
-                    .Replace("&gt;", ">")
-                    .Replace("&quot;", "\"")
-                    .Replace("&apos;", "'"));
+                foreach (var element in parentElement.Elements())
+                {
+                    Identifier elemName = element.NameAsIdentifier();
+
+                    if (element.IsOverride())
+                    {
+                        LoadElements(element, isOverride: true);
+                    }
+                    else
+                    {
+                        if (!texts.ContainsKey(elemName)) { texts.Add(elemName, new List<Text>()); }
+
+                        string str = element.ElementInnerText()
+                            .Replace(@"\n", "\n")
+                            .Replace("&amp;", "&")
+                            .Replace("&lt;", "<")
+                            .Replace("&gt;", ">")
+                            .Replace("&quot;", "\"")
+                            .Replace("&apos;", "'");
+
+                        texts[elemName].Add(new Text(str, isOverride, this));
+                    }
+                }
             }
+
             Texts = texts.Select(kvp => (kvp.Key, kvp.Value.ToImmutableArray())).ToImmutableDictionary();
         }
         

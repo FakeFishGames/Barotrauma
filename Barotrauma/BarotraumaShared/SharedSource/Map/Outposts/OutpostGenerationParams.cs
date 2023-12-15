@@ -249,7 +249,7 @@ namespace Barotrauma
                 }
                 else
                 {
-                    DebugConsole.ThrowError($"Error in outpost generation parameters \"{Identifier}\". \"{levelTypeStr}\" is not a valid level type.");
+                    DebugConsole.ThrowError($"Error in outpost generation parameters \"{Identifier}\". \"{levelTypeStr}\" is not a valid level type.", contentPackage: element.ContentPackage);
                 }
             }
 

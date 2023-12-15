@@ -43,7 +43,8 @@ namespace Barotrauma
             Priority = element.GetAttributeFloat("priority", -1f);
             if (Priority < 0)
             {
-                DebugConsole.AddWarning($"The 'priority' attribute is missing from the the item repair priorities definition in {element} of {file.Path}.");
+                DebugConsole.AddWarning($"The 'priority' attribute is missing from the the item repair priorities definition in {element} of {file.Path}.",
+                    ContentPackage);
             }
         }
 

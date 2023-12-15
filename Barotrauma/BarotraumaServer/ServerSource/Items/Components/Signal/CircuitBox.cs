@@ -304,7 +304,8 @@ namespace Barotrauma.Items.Components
 
         private void ThrowError(string message, Client c)
         {
-            DebugConsole.ThrowError(message);
+            DebugConsole.ThrowError(message,
+                contentPackage: item.Prefab.ContentPackage);
             SendToClient(CircuitBoxOpcode.Error, new CircuitBoxErrorEvent(message), c);
         }
 

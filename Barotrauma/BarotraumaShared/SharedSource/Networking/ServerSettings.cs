@@ -644,6 +644,13 @@ namespace Barotrauma.Networking
             set;
         }
 
+        [Serialize(true, IsPropertySaveable.Yes)]
+        public bool AllowImmediateItemDelivery
+        {
+            get;
+            set;
+        }
+
         [Serialize(false, IsPropertySaveable.Yes)]
         public bool LockAllDefaultWires
         {
@@ -836,6 +843,13 @@ namespace Barotrauma.Networking
 
         [Serialize(600.0f, IsPropertySaveable.Yes)]
         public float KickAFKTime
+        {
+            get;
+            private set;
+        }
+
+        [Serialize(10.0f, IsPropertySaveable.Yes)]
+        public float MinimumMidRoundSyncTimeout
         {
             get;
             private set;

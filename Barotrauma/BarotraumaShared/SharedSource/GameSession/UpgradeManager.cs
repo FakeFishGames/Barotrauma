@@ -177,7 +177,7 @@ namespace Barotrauma
                 return;
             }
 
-            int price = prefab.Price.GetBuyPrice(GetUpgradeLevel(prefab, category), Campaign.Map?.CurrentLocation);
+            int price = prefab.Price.GetBuyPrice(prefab, GetUpgradeLevel(prefab, category), Campaign.Map?.CurrentLocation);
             int currentLevel = GetUpgradeLevel(prefab, category);
             int newLevel = currentLevel + 1;
 
@@ -198,20 +198,23 @@ namespace Barotrauma
                 return result;
             }
 
-            switch (GameMain.NetworkMember)
+            if (!force)
             {
-                case null when Character.Controlled is { } controlled: // singleplayer
-                    if (!TryTakeResources(controlled)) { return; }
-                    break;
-                case { IsClient: true }:
-                    if (!prefab.HasResourcesToUpgrade(Character.Controlled, newLevel)) { return; }
-                    break;
-                case { IsServer: true } when client?.Character is { } character:
-                    if (!TryTakeResources(character)) { return; }
-                    break;
-                default:
-                    DebugConsole.ThrowError($"Tried to purchase \"{prefab.Name}\" without a player.");
-                    return;
+                switch (GameMain.NetworkMember)
+                {
+                    case null when Character.Controlled is { } controlled: // singleplayer
+                        if (!TryTakeResources(controlled)) { return; }
+                        break;
+                    case { IsClient: true }:
+                        if (!prefab.HasResourcesToUpgrade(Character.Controlled, newLevel)) { return; }
+                        break;
+                    case { IsServer: true } when client?.Character is { } character:
+                        if (!TryTakeResources(character)) { return; }
+                        break;
+                    default:
+                        DebugConsole.ThrowError($"Tried to purchase \"{prefab.Name}\" without a player.");
+                        return;
+                }
             }
 
             if (price < 0)
@@ -683,7 +686,8 @@ namespace Barotrauma
                 {
                     // automatically fix this if it ever happens?
                     DebugConsole.AddWarning($"The upgrade {newUpgrade.Prefab.Name} in {target.Name} has a different level compared to other items! \n" +
-                                            $"Expected level was ${newLevel} but got {newUpgrade.Level} instead.");
+                                            $"Expected level was ${newLevel} but got {newUpgrade.Level} instead.",
+                        newUpgrade.Prefab.ContentPackage);
                 }
             }
         }

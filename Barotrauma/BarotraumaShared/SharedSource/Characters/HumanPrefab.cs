@@ -117,8 +117,8 @@ namespace Barotrauma
         public XElement Element { get; protected set; }
         
 
-        public readonly List<(XElement element, float commonness)> ItemSets = new List<(XElement element, float commonness)>();
-        public readonly List<(XElement element, float commonness)> CustomCharacterInfos = new List<(XElement element, float commonness)>();
+        public readonly List<(ContentXElement element, float commonness)> ItemSets = new List<(ContentXElement element, float commonness)>();
+        public readonly List<(ContentXElement element, float commonness)> CustomCharacterInfos = new List<(ContentXElement element, float commonness)>();
 
         public readonly Identifier NpcSetIdentifier;
 
@@ -196,7 +196,7 @@ namespace Barotrauma
             var spawnItems = ToolBox.SelectWeightedRandom(ItemSets, it => it.commonness, randSync).element;
             if (spawnItems != null)
             {
-                foreach (XElement itemElement in spawnItems.GetChildElements("item"))
+                foreach (ContentXElement itemElement in spawnItems.GetChildElements("item"))
                 {
                     int amount = itemElement.GetAttributeInt("amount", 1);
                     for (int i = 0; i < amount; i++)
@@ -239,14 +239,15 @@ namespace Barotrauma
             return characterInfo;
         }
 
-        public static void InitializeItem(Character character, XElement itemElement, Submarine submarine, HumanPrefab humanPrefab, WayPoint spawnPoint = null, Item parentItem = null, bool createNetworkEvents = true)
+        public static void InitializeItem(Character character, ContentXElement itemElement, Submarine submarine, HumanPrefab humanPrefab, WayPoint spawnPoint = null, Item parentItem = null, bool createNetworkEvents = true)
         {
             ItemPrefab itemPrefab;
             string itemIdentifier = itemElement.GetAttributeString("identifier", "");
             itemPrefab = MapEntityPrefab.FindByIdentifier(itemIdentifier.ToIdentifier()) as ItemPrefab;
             if (itemPrefab == null)
             {
-                DebugConsole.ThrowError("Tried to spawn \"" + humanPrefab?.Identifier + "\" with the item \"" + itemIdentifier + "\". Matching item prefab not found.");
+                DebugConsole.ThrowError("Tried to spawn \"" + humanPrefab?.Identifier + "\" with the item \"" + itemIdentifier + "\". Matching item prefab not found.",
+                    contentPackage: itemElement?.ContentPackage);
                 return;
             }
             Item item = new Item(itemPrefab, character.Position, null);
@@ -301,7 +302,7 @@ namespace Barotrauma
                 wifiComponent.TeamID = character.TeamID;
             }
             parentItem?.Combine(item, user: null);
-            foreach (XElement childItemElement in itemElement.Elements())
+            foreach (ContentXElement childItemElement in itemElement.Elements())
             {
                 int amount = childItemElement.GetAttributeInt("amount", 1);
                 for (int i = 0; i < amount; i++)

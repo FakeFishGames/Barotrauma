@@ -61,14 +61,16 @@ namespace Barotrauma
                 }
                 if (MinAmount > MaxAmount && MaxAmount > -1)
                 {
-                    DebugConsole.ThrowError($"Error in event \"{ParentEvent.Prefab.Identifier}\". {MinAmount} is larger than {MaxAmount} in {nameof(CountTargetsAction)}.");
+                    DebugConsole.ThrowError($"Error in event \"{ParentEvent.Prefab.Identifier}\". {MinAmount} is larger than {MaxAmount} in {nameof(CountTargetsAction)}.",
+                        contentPackage: element.ContentPackage);
                 }
             }
             else
             {
                 if (MinPercentageRelativeToTarget < 0.0f && MaxPercentageRelativeToTarget < 0.0f)
                 {
-                    DebugConsole.ThrowError($"Error in event \"{ParentEvent.Prefab.Identifier}\". Comparing to another target, but neither {nameof(MinPercentageRelativeToTarget)} or {nameof(MaxPercentageRelativeToTarget)} is set.");
+                    DebugConsole.ThrowError($"Error in event \"{ParentEvent.Prefab.Identifier}\". Comparing to another target, but neither {nameof(MinPercentageRelativeToTarget)} or {nameof(MaxPercentageRelativeToTarget)} is set.",
+                        contentPackage: element.ContentPackage);
                 }
             }
         }

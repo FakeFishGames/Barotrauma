@@ -611,7 +611,7 @@ namespace Barotrauma.Networking
                 {
                     foreach (DebugConsole.Command command in clientPermission.PermittedCommands)
                     {
-                        clientElement.Add(new XElement("command", new XAttribute("name", command.names[0])));
+                        clientElement.Add(new XElement("command", new XAttribute("name", command.Names[0])));
                     }
                 }
                 doc.Root.Add(clientElement);

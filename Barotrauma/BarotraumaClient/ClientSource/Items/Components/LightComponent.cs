@@ -67,7 +67,7 @@ namespace Barotrauma.Items.Components
                 Light.Position = item.Position;
             }
             PhysicsBody body = Light.ParentBody;
-            if (body != null)
+             if (body != null && body.Enabled)
             {
                 Light.Rotation = body.Dir > 0.0f ? body.DrawRotation : body.DrawRotation - MathHelper.Pi;
                 Light.LightSpriteEffect = (body.Dir > 0.0f) ? SpriteEffects.None : SpriteEffects.FlipVertically;

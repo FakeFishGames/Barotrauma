@@ -412,6 +412,7 @@ namespace Barotrauma
             preloadedSprites.ForEach(s => s.Remove());
             preloadedSprites.Clear();
 
+            timeStamps.Clear();
 
             pathFinder = null;
         }
@@ -518,7 +519,8 @@ namespace Barotrauma
             {
                 foreach (Identifier missingId in subEventPrefab.GetMissingIdentifiers())
                 {
-                    DebugConsole.ThrowError($"Error in event set \"{eventSet.Identifier}\" ({eventSet.ContentFile?.ContentPackage?.Name ?? "null"}) - could not find an event prefab with the identifier \"{missingId}\".");
+                    DebugConsole.ThrowError($"Error in event set \"{eventSet.Identifier}\" ({eventSet.ContentFile?.ContentPackage?.Name ?? "null"}) - could not find an event prefab with the identifier \"{missingId}\".",
+                        contentPackage: eventSet.ContentPackage);
                 }
             }
 
@@ -904,7 +906,18 @@ namespace Barotrauma
                 activeEvents.Add(QueuedEvents.Dequeue());
             }
         }
-                
+
+        public void EntitySpawned(Entity entity)
+        {
+            foreach (var ev in activeEvents)
+            {
+                if (ev is ScriptedEvent scriptedEvent)
+                {
+                    scriptedEvent.EntitySpawned(entity);
+                }
+            }
+        }
+
         private void CalculateCurrentIntensity(float deltaTime)
         {
             intensityUpdateTimer -= deltaTime;

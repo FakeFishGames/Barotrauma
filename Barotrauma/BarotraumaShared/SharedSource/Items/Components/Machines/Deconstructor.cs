@@ -104,7 +104,7 @@ namespace Barotrauma.Items.Components
             // doesn't quite work properly, remaining time changes if tinkering stops
             float deconstructionSpeedModifier = userDeconstructorSpeedMultiplier * (1f + tinkeringStrength * TinkeringSpeedIncrease);
 
-            float deconstructionSpeed = item.StatManager.GetAdjustedValue(ItemTalentStats.DeconstructorSpeed, DeconstructionSpeed);
+            float deconstructionSpeed = item.StatManager.GetAdjustedValueMultiplicative(ItemTalentStats.DeconstructorSpeed, DeconstructionSpeed);
 
             if (DeconstructItemsSimultaneously)
             {

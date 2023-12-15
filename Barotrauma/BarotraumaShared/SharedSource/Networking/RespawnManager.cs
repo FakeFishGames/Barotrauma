@@ -252,6 +252,13 @@ namespace Barotrauma.Networking
                     continue;
                 }
 
+#if CLIENT
+                foreach (var itemComponent in item.Components)
+                {
+                    itemComponent.StopLoopingSound();
+                }
+#endif
+
                 //restore other items to full condition and recharge batteries
                 item.Condition = item.MaxCondition;
                 item.GetComponent<Repairable>()?.ResetDeterioration();

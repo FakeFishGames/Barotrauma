@@ -353,6 +353,10 @@ namespace Barotrauma
         {
             CaretIndex = Math.Clamp(CaretIndex, 0, textBlock.Text.Length);
             var caretPositions = textBlock.GetAllCaretPositions();
+            if (CaretIndex >= caretPositions.Length)
+            {
+                throw new Exception($"Caret index was outside the bounds of the calculated caret positions. Index: {CaretIndex}, caret positions: {caretPositions.Length}, text: {textBlock.Text}");
+            }
             caretPos = caretPositions[CaretIndex];
             caretPosDirty = false;
         }

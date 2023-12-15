@@ -784,11 +784,95 @@ namespace Barotrauma
         #region Static methods
         public static Pivot MatchPivotToAnchor(Anchor anchor)
         {
-            if (!Enum.TryParse(anchor.ToString(), out Pivot pivot))
+            return (Pivot)anchor;
+        }
+        public static Anchor MatchAnchorToPivot(Pivot pivot)
+        {
+            return (Anchor)pivot;
+        }
+
+        /// <summary>
+        /// Moves the anchor to the left, keeping the vertical position unchanged (e.g. CenterRight -> CenterLeft)
+        /// </summary>
+        public static Anchor MoveAnchorLeft(Anchor anchor)
+        {
+            switch (anchor)
             {
-                throw new Exception($"[RectTransform] Cannot match pivot to anchor {anchor}");
+                case Anchor.TopCenter:
+                case Anchor.TopRight:
+                    return Anchor.TopLeft;
+                case Anchor.Center:
+                case Anchor.CenterRight:
+                    return Anchor.CenterLeft;
+                case Anchor.BottomCenter:
+                case Anchor.BottomRight:
+                    return Anchor.BottomLeft;
+                default:
+                    return anchor;
             }
-            return pivot;
+        }
+
+        /// <summary>
+        /// Moves the anchor to the right, keeping the vertical position unchanged (e.g. CenterLeft -> CenterRight)
+        /// </summary>
+        public static Anchor MoveAnchorRight(Anchor anchor)
+        {
+            switch (anchor)
+            {
+                case Anchor.TopCenter:
+                case Anchor.TopLeft:
+                    return Anchor.TopRight;
+                case Anchor.Center:
+                case Anchor.CenterLeft:
+                    return Anchor.CenterRight;
+                case Anchor.BottomCenter:
+                case Anchor.BottomLeft:
+                    return Anchor.BottomRight;
+                default:
+                    return anchor;
+            }
+        }
+
+        /// <summary>
+        /// Moves the anchor to the top, keeping the horizontal position unchanged (e.g. BottomCenter -> TopCenter)
+        /// </summary>
+        public static Anchor MoveAnchorTop(Anchor anchor)
+        {
+            switch (anchor)
+            {
+                case Anchor.CenterLeft:
+                case Anchor.BottomLeft:
+                    return Anchor.TopLeft;
+                case Anchor.Center:
+                case Anchor.BottomCenter:
+                    return Anchor.TopCenter;
+                case Anchor.CenterRight:
+                case Anchor.BottomRight:
+                    return Anchor.TopRight;
+                default:
+                    return anchor;
+            }
+        }
+
+        /// <summary>
+        /// Moves the anchor to the bottom, keeping the horizontal position unchanged (e.g. TopCenter -> BottomCenter)
+        /// </summary>
+        public static Anchor MoveAnchorBottom(Anchor anchor)
+        {
+            switch (anchor)
+            {
+                case Anchor.CenterLeft:
+                case Anchor.TopLeft:
+                    return Anchor.BottomLeft;
+                case Anchor.Center:
+                case Anchor.TopCenter:
+                    return Anchor.BottomCenter;
+                case Anchor.CenterRight:
+                case Anchor.TopRight:
+                    return Anchor.BottomRight;
+                default:
+                    return anchor;
+            }
         }
 
         /// <summary>
@@ -811,11 +895,11 @@ namespace Barotrauma
             }
         }
 
-        public static Point CalculatePivotOffset(Pivot pivot, Point size)
+        public static Point CalculatePivotOffset(Pivot anchor, Point size)
         {
             int width = size.X;
             int height = size.Y;
-            switch (pivot)
+            switch (anchor)
             {
                 case Pivot.TopLeft:
                     return Point.Zero;
@@ -836,7 +920,7 @@ namespace Barotrauma
                 case Pivot.BottomRight:
                     return new Point(-width, -height);
                 default:
-                    throw new NotImplementedException(pivot.ToString());
+                    throw new NotImplementedException(anchor.ToString());
             }
         }
 

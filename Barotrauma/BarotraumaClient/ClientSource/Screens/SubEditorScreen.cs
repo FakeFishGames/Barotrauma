@@ -16,9 +16,6 @@ namespace Barotrauma
 {
     class SubEditorScreen : EditorScreen
     {
-        public const string CircuitBoxDeletionWarningHeader = "Selection contains circuit boxes",
-                            CircuitBoxDeletionWarningBody = "Are you sure you want to delete the selection? Any wiring inside circuit boxes will be lost and cannot be recovered.";
-
         public const int MaxStructures = 2000;
         public const int MaxWalls = 500;
         public const int MaxItems = 5000;
@@ -1289,7 +1286,8 @@ namespace Barotrauma
             if (legacy) { textBlock.TextColor *= 0.6f; }
             if (name.IsNullOrEmpty())
             {
-                DebugConsole.AddWarning($"Entity \"{ep.Identifier.Value}\" has no name!");
+                DebugConsole.AddWarning($"Entity \"{ep.Identifier.Value}\" has no name!",
+                    contentPackage: ep.ContentPackage);
                 textBlock.Text = frame.ToolTip = ep.Identifier.Value;
                 textBlock.TextColor = GUIStyle.Red;
             }
@@ -1559,8 +1557,17 @@ namespace Barotrauma
             if (editorSelectedTime.TryUnwrap(out DateTime selectedTime))
             {
                 TimeSpan timeInEditor = DateTime.Now - selectedTime;
-                SteamAchievementManager.IncrementStat("hoursineditor".ToIdentifier(), (float)timeInEditor.TotalHours);
-                editorSelectedTime = Option<DateTime>.None();
+                if (timeInEditor.TotalSeconds > Timing.TotalTime)
+                {
+                    DebugConsole.ThrowErrorAndLogToGA(
+                        "SubEditorScreen.DeselectEditorSpecific:InvalidTimeInEditor",
+                        $"Error in sub editor screen. Calculated time in editor {timeInEditor} was larger than the time the game has run ({Timing.TotalTime} s).");
+                }
+                else
+                {
+                    SteamAchievementManager.IncrementStat("hoursineditor".ToIdentifier(), (float)timeInEditor.TotalHours);
+                    editorSelectedTime = Option<DateTime>.None();
+                }
             }
 #endif
 
@@ -2365,49 +2372,58 @@ namespace Barotrauma
 
             //---------------------------------------
 
-            var beaconSettingsContainer = new GUILayoutGroup(new RectTransform(Vector2.One, subTypeDependentSettingFrame.RectTransform))
+            var extraSettingsContainer = new GUILayoutGroup(new RectTransform(new Vector2(1, 0.5f), subTypeDependentSettingFrame.RectTransform))
             {
                 CanBeFocused = true,
                 Visible = false,
                 Stretch = true
             };
 
-            // -------------------
-
-            var beaconMinDifficultyGroup = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.25f), beaconSettingsContainer.RectTransform), isHorizontal: true)
+            var minDifficultyGroup = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.25f), extraSettingsContainer.RectTransform), isHorizontal: true)
             {
                 Stretch = true
             };
-            new GUITextBlock(new RectTransform(new Vector2(0.6f, 1.0f), beaconMinDifficultyGroup.RectTransform),
+            new GUITextBlock(new RectTransform(new Vector2(0.6f, 1.0f), minDifficultyGroup.RectTransform),
                 TextManager.Get("minleveldifficulty"), textAlignment: Alignment.CenterLeft, wrap: true);
-            var numInput = new GUINumberInput(new RectTransform(new Vector2(0.4f, 1.0f), beaconMinDifficultyGroup.RectTransform), NumberType.Int)
+            var numInput = new GUINumberInput(new RectTransform(new Vector2(0.4f, 1.0f), minDifficultyGroup.RectTransform), NumberType.Int)
             {
-                IntValue = (int)(MainSub?.Info?.BeaconStationInfo?.MinLevelDifficulty ?? 0),
+                IntValue = (int)(MainSub?.Info?.GetExtraSubmarineInfo?.MinLevelDifficulty ?? 0),
                 MinValueInt = 0,
                 MaxValueInt = 100,
                 OnValueChanged = (numberInput) =>
                 {
-                    MainSub.Info.BeaconStationInfo.MinLevelDifficulty = numberInput.IntValue;
+                    MainSub.Info.GetExtraSubmarineInfo.MinLevelDifficulty = numberInput.IntValue;
                 }
             };
-            beaconMinDifficultyGroup.RectTransform.MaxSize = numInput.TextBox.RectTransform.MaxSize;
-            var beaconMaxDifficultyGroup = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.25f), beaconSettingsContainer.RectTransform), isHorizontal: true)
+            minDifficultyGroup.RectTransform.MaxSize = numInput.TextBox.RectTransform.MaxSize;
+            var maxDifficultyGroup = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.25f), extraSettingsContainer.RectTransform), isHorizontal: true)
             {
                 Stretch = true
             };
-            new GUITextBlock(new RectTransform(new Vector2(0.6f, 1.0f), beaconMaxDifficultyGroup.RectTransform),
+            new GUITextBlock(new RectTransform(new Vector2(0.6f, 1.0f), maxDifficultyGroup.RectTransform),
                 TextManager.Get("maxleveldifficulty"), textAlignment: Alignment.CenterLeft, wrap: true);
-            numInput = new GUINumberInput(new RectTransform(new Vector2(0.4f, 1.0f), beaconMaxDifficultyGroup.RectTransform), NumberType.Int)
+            numInput = new GUINumberInput(new RectTransform(new Vector2(0.4f, 1.0f), maxDifficultyGroup.RectTransform), NumberType.Int)
             {
-                IntValue = (int)(MainSub?.Info?.BeaconStationInfo?.MaxLevelDifficulty ?? 100),
+                IntValue = (int)(MainSub?.Info?.GetExtraSubmarineInfo?.MaxLevelDifficulty ?? 100),
                 MinValueInt = 0,
                 MaxValueInt = 100,
                 OnValueChanged = (numberInput) =>
                 {
-                    MainSub.Info.BeaconStationInfo.MaxLevelDifficulty = numberInput.IntValue;
+                    MainSub.Info.GetExtraSubmarineInfo.MaxLevelDifficulty = numberInput.IntValue;
                 }
             };
-            beaconMaxDifficultyGroup.RectTransform.MaxSize = numInput.TextBox.RectTransform.MaxSize;
+            maxDifficultyGroup.RectTransform.MaxSize = numInput.TextBox.RectTransform.MaxSize;
+
+
+            //---------------------------------------
+
+            var beaconSettingsContainer = new GUILayoutGroup(new RectTransform(Vector2.One, extraSettingsContainer.RectTransform))
+            {
+                CanBeFocused = true,
+                Visible = false,
+                Stretch = true
+            };
+
             new GUITickBox(new RectTransform(new Vector2(1.0f, 0.25f), beaconSettingsContainer.RectTransform), TextManager.Get("allowdamagedwalls"))
             {
                 Selected = MainSub?.Info?.BeaconStationInfo?.AllowDamagedWalls ?? true,
@@ -2669,8 +2685,13 @@ namespace Barotrauma
                 {
                     MainSub.Info.BeaconStationInfo ??= new BeaconStationInfo(MainSub.Info);
                 }
+                else if (type == SubmarineType.Wreck)
+                {
+                    MainSub.Info.WreckInfo ??= new WreckInfo(MainSub.Info);
+                }
                 previewImageButtonHolder.Children.ForEach(c => c.Enabled = MainSub.Info.AllowPreviewImage);
                 outpostSettingsContainer.Visible = type == SubmarineType.OutpostModule;
+                extraSettingsContainer.Visible = type == SubmarineType.BeaconStation || type == SubmarineType.Wreck;
                 beaconSettingsContainer.Visible = type == SubmarineType.BeaconStation;
                 subSettingsContainer.Visible = type == SubmarineType.Player;
                 return true;
@@ -3918,28 +3939,15 @@ namespace Barotrauma
                     new ContextMenuOption("editor.cut", isEnabled: hasTargets, onSelected: () => MapEntity.Cut(targets)),
                     new ContextMenuOption("editor.copytoclipboard", isEnabled: hasTargets, onSelected: () => MapEntity.Copy(targets)),
                     new ContextMenuOption("editor.paste", isEnabled: MapEntity.CopiedList.Any(), onSelected: () => MapEntity.Paste(cam.ScreenToWorld(PlayerInput.MousePosition))),
-                    new ContextMenuOption("delete", isEnabled: hasTargets, onSelected: () => RemoveEntitiesWithPossibleWarning(targets)),
-                    new ContextMenuOption(TextManager.Get("editortip.shiftforextraoptions") + '\n' + TextManager.Get("editortip.altforruler"), isEnabled: false, onSelected: null));
-            }
-        }
-
-        public static void RemoveEntitiesWithPossibleWarning(List<MapEntity> targets)
-        {
-            if (targets.Any(static t => t is Item it && it.GetComponent<CircuitBox>() is not null))
-            {
-                GUI.AskForConfirmation(CircuitBoxDeletionWarningHeader, CircuitBoxDeletionWarningBody, onConfirm: Delete);
-                return;
-            }
-
-            Delete();
-
-            void Delete()
-            {
-                StoreCommand(new AddOrDeleteCommand(targets, true));
-                foreach (var me in targets)
-                {
-                    if (!me.Removed) { me.Remove(); }
-                }
+                    new ContextMenuOption("delete", isEnabled: hasTargets, onSelected: () =>
+                    {
+                        StoreCommand(new AddOrDeleteCommand(targets, true));
+                        foreach (var me in targets)
+                        {
+                            if (!me.Removed) { me.Remove(); }
+                        }
+                    }),
+                    new ContextMenuOption(TextManager.GetWithVariable("editortip.shiftforextraoptions", "[button]", PlayerInput.SecondaryMouseLabel) + '\n' + TextManager.Get("editortip.altforruler"), isEnabled: false, onSelected: null));
             }
         }
 
@@ -4439,6 +4447,7 @@ namespace Barotrauma
             MapEntity.SelectEntity(itemContainer);
             dummyCharacter.SelectedItem = itemContainer;
             FilterEntities(entityFilterBox.Text);
+            MapEntity.StopSelection();
         }
 
         /// <summary>
@@ -5469,9 +5478,11 @@ namespace Barotrauma
                 {
                     foreach (LightComponent lightComponent in item.GetComponents<LightComponent>())
                     {
-                        lightComponent.Light.Color = item.Container != null || (item.body != null && !item.body.Enabled) ?
-                            Color.Transparent :
-                            lightComponent.LightColor;
+                        lightComponent.Light.Color = 
+                            item.body == null || item.body.Enabled ||
+                            (item.ParentInventory is ItemInventory itemInventory && !itemInventory.Container.HideItems) ?
+                                lightComponent.LightColor :
+                                Color.Transparent;
                         lightComponent.Light.LightSpriteEffect = lightComponent.Item.SpriteEffects;
                     }
                 }
@@ -5556,11 +5567,32 @@ namespace Barotrauma
                 dummyCharacter.Submarine = MainSub;
             }
 
-            // Deposit item from our "infinite stack" into inventory slots
-            var inv = dummyCharacter?.SelectedItem?.OwnInventory;
-            if (inv?.visualSlots != null && !PlayerInput.IsCtrlDown())
+            if (dummyCharacter?.SelectedItem != null)
             {
-                var dragginMouse = MouseDragStart != Vector2.Zero && Vector2.Distance(PlayerInput.MousePosition, MouseDragStart) >= GUI.Scale * 20;
+                // Deposit item from our "infinite stack" into inventory slots
+                TryDragItemsToItem(dummyCharacter.SelectedItem);                
+                foreach (Item linkedItem in dummyCharacter.SelectedItem.linkedTo.OfType<Item>())
+                {
+                    TryDragItemsToItem(linkedItem);                    
+                }
+            }
+
+            void TryDragItemsToItem(Item item)
+            {
+                foreach (ItemContainer ic in item.GetComponents<ItemContainer>())
+                {
+                    if (ic.Inventory?.visualSlots != null)
+                    {
+                        TryDragItemsToInventory(ic.Inventory);
+                    }                   
+                }
+            }
+
+            void TryDragItemsToInventory(Inventory inv)
+            {
+                if (PlayerInput.IsCtrlDown()) { return; }
+
+                var draggingMouse = MouseDragStart != Vector2.Zero && Vector2.Distance(PlayerInput.MousePosition, MouseDragStart) >= GUI.Scale * 20;
 
                 // So we don't accidentally drag inventory items while doing this
                 if (DraggedItemPrefab != null) { Inventory.DraggingItems.Clear(); }
@@ -5568,134 +5600,134 @@ namespace Barotrauma
                 switch (DraggedItemPrefab)
                 {
                     // regular item prefabs
-                    case ItemPrefab itemPrefab when PlayerInput.PrimaryMouseButtonClicked() || dragginMouse:
-                    {
-                        bool spawnedItem = false;
-                        for (var i = 0; i < inv.Capacity; i++)
+                    case ItemPrefab itemPrefab when PlayerInput.PrimaryMouseButtonClicked() || draggingMouse:
                         {
-                            var slot = inv.visualSlots[i];
-                            var itemContainer = inv.GetItemAt(i)?.GetComponent<ItemContainer>();
-
-                            // check if the slot is empty or if we can place the item into a container, for example an oxygen tank into a diving suit
-                            if (Inventory.IsMouseOnSlot(slot))
+                            bool spawnedItem = false;
+                            for (var i = 0; i < inv.Capacity; i++)
                             {
-                                var newItem = new Item(itemPrefab, Vector2.Zero, MainSub);
+                                var slot = inv.visualSlots[i];
+                                var itemContainer = inv.GetItemAt(i)?.GetComponent<ItemContainer>();
 
-                                if (inv.CanBePutInSlot(itemPrefab, i, condition: null))
+                                // check if the slot is empty or if we can place the item into a container, for example an oxygen tank into a diving suit
+                                if (Inventory.IsMouseOnSlot(slot))
                                 {
-                                    bool placedItem = inv.TryPutItem(newItem, i, false, true, dummyCharacter);
-                                    spawnedItem |= placedItem;
+                                    var newItem = new Item(itemPrefab, Vector2.Zero, MainSub);
 
-                                    if (!placedItem)
+                                    if (inv.CanBePutInSlot(itemPrefab, i, condition: null))
                                     {
-                                        newItem.Remove();
+                                        bool placedItem = inv.TryPutItem(newItem, i, false, true, dummyCharacter);
+                                        spawnedItem |= placedItem;
+
+                                        if (!placedItem)
+                                        {
+                                            newItem.Remove();
+                                        }
                                     }
-                                }
-                                else if (itemContainer != null && itemContainer.Inventory.CanBePut(itemPrefab))
-                                {
-                                    bool placedItem = itemContainer.Inventory.TryPutItem(newItem, dummyCharacter);
-                                    spawnedItem |= placedItem;
-
-                                    // try to place the item into the inventory of the item we are hovering over
-                                    if (!placedItem)
+                                    else if (itemContainer != null && itemContainer.Inventory.CanBePut(itemPrefab))
                                     {
-                                        newItem.Remove();
+                                        bool placedItem = itemContainer.Inventory.TryPutItem(newItem, dummyCharacter);
+                                        spawnedItem |= placedItem;
+
+                                        // try to place the item into the inventory of the item we are hovering over
+                                        if (!placedItem)
+                                        {
+                                            newItem.Remove();
+                                        }
+                                        else
+                                        {
+                                            slot.ShowBorderHighlight(GUIStyle.Green, 0.1f, 0.4f);
+                                        }
                                     }
                                     else
                                     {
-                                        slot.ShowBorderHighlight(GUIStyle.Green, 0.1f, 0.4f);
+                                        newItem.Remove();
+                                        slot.ShowBorderHighlight(GUIStyle.Red, 0.1f, 0.4f);
+                                    }
+
+                                    if (!newItem.Removed)
+                                    {
+                                        BulkItemBufferInUse = ItemAddMutex;
+                                        BulkItemBuffer.Add(new AddOrDeleteCommand(new List<MapEntity> { newItem }, false));
+                                    }
+
+                                    if (!draggingMouse)
+                                    {
+                                        SoundPlayer.PlayUISound(spawnedItem ? GUISoundType.PickItem : GUISoundType.PickItemFail);
                                     }
                                 }
-                                else
-                                {
-                                    newItem.Remove();
-                                    slot.ShowBorderHighlight(GUIStyle.Red, 0.1f, 0.4f);
-                                }
-
-                                if (!newItem.Removed)
-                                {
-                                    BulkItemBufferInUse = ItemAddMutex;
-                                    BulkItemBuffer.Add(new AddOrDeleteCommand(new List<MapEntity> { newItem }, false));
-                                }
-
-                                if (!dragginMouse)
-                                {
-                                    SoundPlayer.PlayUISound(spawnedItem ? GUISoundType.PickItem : GUISoundType.PickItemFail);
-                                }
                             }
+                            break;
                         }
-                        break;
-                    }
                     // item assemblies
                     case ItemAssemblyPrefab assemblyPrefab when PlayerInput.PrimaryMouseButtonClicked():
-                    {
-                        bool spawnedItems = false;
-                        for (var i = 0; i < inv.visualSlots.Length; i++)
                         {
-                            var slot = inv.visualSlots[i];
-                            var item = inv?.GetItemAt(i);
-                            var itemContainer = item?.GetComponent<ItemContainer>();
-                            if (item == null && Inventory.IsMouseOnSlot(slot))
+                            bool spawnedItems = false;
+                            for (var i = 0; i < inv.visualSlots.Length; i++)
                             {
-                                // load the items
-                                var itemInstance = LoadItemAssemblyInventorySafe(assemblyPrefab);
-
-                                // counter for items that failed so we so we known that slot remained empty
-                                var failedCount = 0;
-
-                                for (var j = 0; j < itemInstance.Count(); j++)
+                                var slot = inv.visualSlots[i];
+                                var item = inv?.GetItemAt(i);
+                                var itemContainer = item?.GetComponent<ItemContainer>();
+                                if (item == null && Inventory.IsMouseOnSlot(slot))
                                 {
-                                    var newItem = itemInstance[j];
-                                    var newSpot = i + j - failedCount;
+                                    // load the items
+                                    var itemInstance = LoadItemAssemblyInventorySafe(assemblyPrefab);
 
-                                    // try to find a valid slot to put the items
-                                    while (inv.visualSlots.Length > newSpot)
+                                    // counter for items that failed so we so we known that slot remained empty
+                                    var failedCount = 0;
+
+                                    for (var j = 0; j < itemInstance.Count; j++)
                                     {
-                                        if (inv.GetItemAt(newSpot) == null) { break; }
-                                        newSpot++;
-                                    }
+                                        var newItem = itemInstance[j];
+                                        var newSpot = i + j - failedCount;
 
-                                    // valid slot found
-                                    if (inv.visualSlots.Length > newSpot)
-                                    {
-                                        var placedItem = inv.TryPutItem(newItem, newSpot, false, true, dummyCharacter);
-                                        spawnedItems |= placedItem;
-
-                                        if (!placedItem)
+                                        // try to find a valid slot to put the items
+                                        while (inv.visualSlots.Length > newSpot)
                                         {
-                                            failedCount++;
-                                            // delete the included items too so we don't get a popup asking if we want to keep them
-                                            newItem?.OwnInventory?.DeleteAllItems();
-                                            newItem.Remove();
+                                            if (inv.GetItemAt(newSpot) == null) { break; }
+                                            newSpot++;
+                                        }
+
+                                        // valid slot found
+                                        if (inv.visualSlots.Length > newSpot)
+                                        {
+                                            var placedItem = inv.TryPutItem(newItem, newSpot, false, true, dummyCharacter);
+                                            spawnedItems |= placedItem;
+
+                                            if (!placedItem)
+                                            {
+                                                failedCount++;
+                                                // delete the included items too so we don't get a popup asking if we want to keep them
+                                                newItem?.OwnInventory?.DeleteAllItems();
+                                                newItem.Remove();
+                                            }
+                                        }
+                                        else
+                                        {
+                                            var placedItem = inv.TryPutItem(newItem, dummyCharacter);
+                                            spawnedItems |= placedItem;
+
+                                            // if our while loop didn't find a valid slot then let the inventory decide where to put it as a last resort
+                                            if (!placedItem)
+                                            {
+                                                // delete the included items too so we don't get a popup asking if we want to keep them
+                                                newItem?.OwnInventory?.DeleteAllItems();
+                                                newItem.Remove();
+                                            }
                                         }
                                     }
-                                    else
+
+                                    List<MapEntity> placedEntities = itemInstance.Where(it => !it.Removed).Cast<MapEntity>().ToList();
+                                    if (placedEntities.Any())
                                     {
-                                        var placedItem = inv.TryPutItem(newItem, dummyCharacter);
-                                        spawnedItems |= placedItem;
-
-                                        // if our while loop didn't find a valid slot then let the inventory decide where to put it as a last resort
-                                        if (!placedItem)
-                                        {
-                                            // delete the included items too so we don't get a popup asking if we want to keep them
-                                            newItem?.OwnInventory?.DeleteAllItems();
-                                            newItem.Remove();
-                                        }
+                                        BulkItemBufferInUse = ItemAddMutex;
+                                        BulkItemBuffer.Add(new AddOrDeleteCommand(placedEntities, false));
                                     }
-                                }
-
-                                List<MapEntity> placedEntities = itemInstance.Where(it => !it.Removed).Cast<MapEntity>().ToList();
-                                if (placedEntities.Any())
-                                {
-                                    BulkItemBufferInUse = ItemAddMutex;
-                                    BulkItemBuffer.Add(new AddOrDeleteCommand(placedEntities, false));
                                 }
                             }
-                        }
 
-                        SoundPlayer.PlayUISound(spawnedItems ? GUISoundType.PickItem : GUISoundType.PickItemFail);
-                        break;
-                    }
+                            SoundPlayer.PlayUISound(spawnedItems ? GUISoundType.PickItem : GUISoundType.PickItemFail);
+                            break;
+                        }
                 }
             }
 

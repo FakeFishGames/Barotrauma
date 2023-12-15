@@ -894,7 +894,7 @@ namespace Barotrauma
 
             if (!orderIndicatorCount.ContainsKey(target)) { orderIndicatorCount.Add(target, 0); }
 
-            Vector2 drawPos = target is Entity ? (target as Entity).DrawPosition :
+            Vector2 drawPos = target is Entity entity ? entity.DrawPosition :
                 target.Submarine == null ? target.Position : target.Position + target.Submarine.DrawPosition;
             drawPos += Vector2.UnitX * order.SymbolSprite.size.X * 1.5f * orderIndicatorCount[target];
             GUI.DrawIndicator(spriteBatch, drawPos, cam, 100.0f, order.SymbolSprite, order.Color * iconAlpha,

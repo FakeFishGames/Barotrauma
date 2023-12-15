@@ -16,11 +16,13 @@ namespace Barotrauma.Abilities
 
             if (skillIdentifier.IsEmpty)
             {
-                DebugConsole.ThrowError($"Error in talent \"{characterAbilityGroup.CharacterTalent.DebugIdentifier}\" - skill identifier not defined in CharacterAbilityIncreaseSkill.");
+                DebugConsole.ThrowError($"Error in talent \"{characterAbilityGroup.CharacterTalent.DebugIdentifier}\" - skill identifier not defined in CharacterAbilityIncreaseSkill.",
+                    contentPackage: abilityElement.ContentPackage);
             }
             if (MathUtils.NearlyEqual(skillIncrease, 0))
             {
-                DebugConsole.AddWarning($"Possible error in talent \"{characterAbilityGroup.CharacterTalent.DebugIdentifier}\" - skill increase set to 0.");
+                DebugConsole.AddWarning($"Possible error in talent \"{characterAbilityGroup.CharacterTalent.DebugIdentifier}\" - skill increase set to 0.",
+                    contentPackage: abilityElement.ContentPackage);
             }
         }
 

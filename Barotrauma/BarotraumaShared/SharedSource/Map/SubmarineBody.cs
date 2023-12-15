@@ -169,7 +169,12 @@ namespace Barotrauma
 
                     bool hasCollider = wall.HasBody && !wall.IsPlatform && wall.StairDirection == Direction.None;
                     Rectangle rect = wall.Rect;
-                    SetExtents(new Vector2(rect.X, rect.Y - rect.Height), new Vector2(rect.Right, rect.Y), hasCollider);
+
+                    var transformedQuad = wall.GetTransformedQuad();
+                    AddPointToExtents(transformedQuad.A, hasCollider: hasCollider);
+                    AddPointToExtents(transformedQuad.B, hasCollider: hasCollider);
+                    AddPointToExtents(transformedQuad.C, hasCollider: hasCollider);
+                    AddPointToExtents(transformedQuad.D, hasCollider: hasCollider);
                     if (hasCollider)
                     {
                         farseerBody.CreateRectangle(
@@ -188,7 +193,8 @@ namespace Barotrauma
                     if (hull.Submarine != submarine || hull.IdFreed) { continue; }
 
                     Rectangle rect = hull.Rect;
-                    SetExtents(new Vector2(rect.X, rect.Y - rect.Height), new Vector2(rect.Right, rect.Y), hasCollider: true);
+                    AddPointToExtents(new Vector2(rect.X, rect.Y - rect.Height), hasCollider: true);
+                    AddPointToExtents(new Vector2(rect.Right, rect.Y), hasCollider: true);
 
                     farseerBody.CreateRectangle(
                         ConvertUnits.ToSimUnits(rect.Width),
@@ -221,33 +227,42 @@ namespace Barotrauma
                     float simWidth  = ConvertUnits.ToSimUnits(width);
                     float simHeight = ConvertUnits.ToSimUnits(height);
 
+                    if (radius > 0f || (width > 0f && height > 0f))
+                    {
+                        var transformedQuad = item.GetTransformedQuad();
+                        AddPointToExtents(transformedQuad.A, hasCollider: true);
+                        AddPointToExtents(transformedQuad.B, hasCollider: true);
+                        AddPointToExtents(transformedQuad.C, hasCollider: true);
+                        AddPointToExtents(transformedQuad.D, hasCollider: true);
+                    }
+
                     if (width > 0.0f && height > 0.0f)
                     {
                         item.StaticFixtures.Add(farseerBody.CreateRectangle(simWidth, simHeight, 5.0f, simPos, collisionCategory, collidesWith));
-                        SetExtents(item.Position - new Vector2(width, height) / 2, item.Position + new Vector2(width, height) / 2, hasCollider: true);
+                        AddPointToExtents(item.Position - new Vector2(width, height) / 2, hasCollider: true);
+                        AddPointToExtents(item.Position + new Vector2(width, height) / 2, hasCollider: true);
                     }
                     else if (radius > 0.0f && width > 0.0f)
                     {
                         item.StaticFixtures.Add(farseerBody.CreateRectangle(simWidth, simRadius * 2, 5.0f, simPos, collisionCategory, collidesWith));
                         item.StaticFixtures.Add(farseerBody.CreateCircle(simRadius, 5.0f, simPos - Vector2.UnitX * simWidth / 2, collisionCategory, collidesWith));
                         item.StaticFixtures.Add(farseerBody.CreateCircle(simRadius, 5.0f, simPos + Vector2.UnitX * simWidth / 2, collisionCategory, collidesWith));
-                        SetExtents(item.Position - new Vector2(width / 2 + radius, height / 2), item.Position + new Vector2(width / 2 + radius, height / 2), hasCollider: true);
+                        AddPointToExtents(item.Position - new Vector2(width / 2 + radius, height / 2), hasCollider: true);
+                        AddPointToExtents(item.Position + new Vector2(width / 2 + radius, height / 2), hasCollider: true);
                     }
                     else if (radius > 0.0f && height > 0.0f)
                     {
                         item.StaticFixtures.Add(farseerBody.CreateRectangle(simRadius * 2, height, 5.0f, simPos, collisionCategory, collidesWith));
                         item.StaticFixtures.Add(farseerBody.CreateCircle(simRadius, 5.0f, simPos - Vector2.UnitY * simHeight / 2, collisionCategory, collidesWith));
                         item.StaticFixtures.Add(farseerBody.CreateCircle(simRadius, 5.0f, simPos + Vector2.UnitY * simHeight / 2, collisionCategory, collidesWith));
-                        SetExtents(item.Position - new Vector2(width / 2, height / 2 + radius), item.Position + new Vector2(width / 2, height / 2 + radius), hasCollider: true);
+                        AddPointToExtents(item.Position - new Vector2(width / 2, height / 2 + radius), hasCollider: true);
+                        AddPointToExtents(item.Position + new Vector2(width / 2, height / 2 + radius), hasCollider: true);
                     }
                     else if (radius > 0.0f)
                     {
                         item.StaticFixtures.Add(farseerBody.CreateCircle(simRadius, 5.0f, simPos, collisionCategory, collidesWith));
-                        visibleMinExtents.X = Math.Min(item.Position.X - radius, visibleMinExtents.X);
-                        visibleMinExtents.Y = Math.Min(item.Position.Y - radius, visibleMinExtents.Y);
-                        visibleMaxExtents.X = Math.Max(item.Position.X + radius, visibleMaxExtents.X);
-                        visibleMaxExtents.Y = Math.Max(item.Position.Y + radius, visibleMaxExtents.Y);
-                        SetExtents(item.Position - new Vector2(radius, radius), item.Position + new Vector2(radius, radius), hasCollider: true);
+                        AddPointToExtents(item.Position - new Vector2(radius, radius), hasCollider: true);
+                        AddPointToExtents(item.Position + new Vector2(radius, radius), hasCollider: true);
                     }
                     item.StaticFixtures.ForEach(f => f.UserData = item);
                 }
@@ -268,18 +283,18 @@ namespace Barotrauma
 
             Body = new PhysicsBody(farseerBody);
 
-            void SetExtents(Vector2 min, Vector2 max, bool hasCollider)
+            void AddPointToExtents(Vector2 point, bool hasCollider)
             {
-                visibleMinExtents.X = Math.Min(min.X, visibleMinExtents.X);
-                visibleMinExtents.Y = Math.Min(min.Y, visibleMinExtents.Y);
-                visibleMaxExtents.X = Math.Max(max.X, visibleMaxExtents.X);
-                visibleMaxExtents.Y = Math.Max(max.Y, visibleMaxExtents.Y);
+                visibleMinExtents.X = Math.Min(point.X, visibleMinExtents.X);
+                visibleMinExtents.Y = Math.Min(point.Y, visibleMinExtents.Y);
+                visibleMaxExtents.X = Math.Max(point.X, visibleMaxExtents.X);
+                visibleMaxExtents.Y = Math.Max(point.Y, visibleMaxExtents.Y);
                 if (hasCollider)
                 {
-                    minExtents.X = Math.Min(min.X, minExtents.X);
-                    minExtents.Y = Math.Min(min.Y, minExtents.Y);
-                    maxExtents.X = Math.Max(max.X, maxExtents.X);
-                    maxExtents.Y = Math.Max(max.Y, maxExtents.Y);
+                    minExtents.X = Math.Min(point.X, minExtents.X);
+                    minExtents.Y = Math.Min(point.Y, minExtents.Y);
+                    maxExtents.X = Math.Max(point.X, maxExtents.X);
+                    maxExtents.Y = Math.Max(point.Y, maxExtents.Y);
                 }
             }
         }
@@ -800,7 +815,10 @@ namespace Barotrauma
                     float damageAmount = contactDot * Body.Mass / limb.character.Mass;
                     limb.character.LastDamageSource = submarine;
                     limb.character.DamageLimb(ConvertUnits.ToDisplayUnits(collision.ImpactPos), limb, 
-                        AfflictionPrefab.ImpactDamage.Instantiate(damageAmount).ToEnumerable(), 0.0f, true, 0.0f);
+                        AfflictionPrefab.ImpactDamage.Instantiate(damageAmount).ToEnumerable(), 
+                        stun: 0.0f, 
+                        playSound: true, 
+                        attackImpulse: Vector2.Zero);
 
                     if (limb.character.IsDead)
                     {

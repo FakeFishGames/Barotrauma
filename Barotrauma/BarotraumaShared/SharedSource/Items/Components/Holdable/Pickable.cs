@@ -200,7 +200,7 @@ namespace Barotrauma.Items.Components
                     }
 
 #if CLIENT
-                    if (requiredTime < float.MaxValue)
+                    if (requiredTime < float.MaxValue && picker == Character.Controlled)
                     {
                         Character.Controlled?.UpdateHUDProgressBar(
                             this,

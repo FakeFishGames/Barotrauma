@@ -22,7 +22,8 @@ namespace Barotrauma.Abilities
                 {
                     if (!isAffiliated)
                     {
-                        DebugConsole.ThrowError($"Error in AbilityConditionMission \"{characterTalent.DebugIdentifier}\" - \"{missionTypeString}\" is not a valid mission type.");
+                        DebugConsole.ThrowError($"Error in AbilityConditionMission \"{characterTalent.DebugIdentifier}\" - \"{missionTypeString}\" is not a valid mission type.",
+                            contentPackage: conditionElement.ContentPackage);
                     }
                     continue;
                 }

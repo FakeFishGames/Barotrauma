@@ -258,7 +258,7 @@ namespace Barotrauma
                 else
                 {
                     LocalizedString description = item.Description;
-                    if (item.HasTag(Tags.IdCard) || item.HasTag(Tags.DespawnContainer))
+                    if (item.HasTag(Tags.IdCardTag) || item.HasTag(Tags.DespawnContainer))
                     {
                         string[] readTags = item.Tags.Split(',');
                         string idName = null;
@@ -730,7 +730,7 @@ namespace Barotrauma
                         DraggingInventory = null;
                         subInventory.savedPosition = PlayerInput.MousePosition.ToPoint();
                     }
-                    else
+                    else if (DraggingInventory == subInventory)
                     {
                         subInventory.savedPosition = PlayerInput.MousePosition.ToPoint();
                     }
@@ -901,7 +901,7 @@ namespace Barotrauma
                 if (IsOnInventorySlot(Character.Controlled.SelectedCharacter.Inventory)) { return true; }
             }
 
-            bool IsOnInventorySlot(Inventory inventory)
+            static bool IsOnInventorySlot(Inventory inventory)
             {
                 for (var i = 0; i < inventory.visualSlots.Length; i++)
                 {
@@ -1107,7 +1107,7 @@ namespace Barotrauma
 
             if (container.MovableFrame && !IsInventoryHoverAvailable(Owner as Character, container))
             {
-                if (positionUpdateQueued) // Wait a frame before updating the positioning of the container after a resolution change to have everything working
+                if (container.Inventory.positionUpdateQueued) // Wait a frame before updating the positioning of the container after a resolution change to have everything working
                 {
                     int height = (int)(movableFrameRectHeight * UIScale);
                     CreateSlots();
@@ -1116,7 +1116,7 @@ namespace Barotrauma
                     draggableIndicatorOffset = DraggableIndicator.size * draggableIndicatorScale / 2f;
                     draggableIndicatorOffset += new Vector2(height / 2f - draggableIndicatorOffset.Y);
                     container.Inventory.originalPos = container.Inventory.savedPosition = container.Inventory.movableFrameRect.Center;
-                    positionUpdateQueued = false;
+                    container.Inventory.positionUpdateQueued = false;
                 }
 
                 if (container.Inventory.movableFrameRect.Size == Point.Zero || GUI.HasSizeChanged(prevScreenResolution, prevUIScale, prevHUDScale))
@@ -1127,11 +1127,20 @@ namespace Barotrauma
                     prevScreenResolution = new Point(GameMain.GraphicsWidth, GameMain.GraphicsHeight);
                     prevUIScale = UIScale;
                     prevHUDScale = GUI.Scale;
-                    positionUpdateQueued = true;
+                    container.Inventory.positionUpdateQueued = true;
                 }
                 else
                 {
-                    GUI.DrawRectangle(spriteBatch, container.Inventory.movableFrameRect, movableFrameRectColor, true);
+                    Color color = movableFrameRectColor;
+                    if (DraggingInventory != null && DraggingInventory != container.Inventory)
+                    {
+                        color *= 0.7f;
+                    }
+                    else if (container.Inventory.movableFrameRect.Contains(PlayerInput.MousePosition))
+                    {
+                        color = Color.Lerp(color, PlayerInput.PrimaryMouseButtonHeld() ? Color.Black : Color.White, 0.25f);
+                    }
+                    GUI.DrawRectangle(spriteBatch, container.Inventory.movableFrameRect, color, true);
                     DraggableIndicator.Draw(spriteBatch, container.Inventory.movableFrameRect.Location.ToVector2() + draggableIndicatorOffset, 0, draggableIndicatorScale);
                 }             
             }
@@ -1269,12 +1278,20 @@ namespace Barotrauma
                         if (DraggingItems.Count(it => !it.IsFullCondition && it.Condition > 0.0f) > 1 || 
                             selectedInventory.GetItemsAt(slotIndex).Count(it => !it.IsFullCondition && it.Condition > 0.0f) > 1) 
                         { 
-                            allowCombine = false; 
+                            allowCombine = false;
                         }
                         int itemCount = 0;
                         foreach (Item item in DraggingItems)
                         {
-                            bool success =  selectedInventory.TryPutItem(item, slotIndex, allowSwapping: !anySuccess, allowCombine, Character.Controlled);
+                            if (selectedInventory.GetItemAt(slotIndex)?.OwnInventory?.Container is { } container &&
+                                container.Inventory.CanBePut(item))
+                            {
+                                if (!container.AllowDragAndDrop || !container.DrawInventory)
+                                {
+                                    allowCombine = false;
+                                }
+                            }
+                            bool success = selectedInventory.TryPutItem(item, slotIndex, allowSwapping: !anySuccess, allowCombine, Character.Controlled);
                             if (success)
                             {
                                 anySuccess = true;
@@ -1380,18 +1397,17 @@ namespace Barotrauma
 
         protected static Rectangle GetSubInventoryHoverArea(SlotReference subSlot)
         {
-            Rectangle hoverArea;
-            if ((Screen.Selected != GameMain.SubEditorScreen || GameMain.SubEditorScreen.DrawCharacterInventory) &&
-                (!subSlot.Inventory.Movable() || 
-                (Character.Controlled?.Inventory == subSlot.ParentInventory && !Character.Controlled.HasEquippedItem(subSlot.Item)) ||
-                (subSlot.ParentInventory is CharacterInventory characterInventory && characterInventory.CurrentLayout != CharacterInventory.Layout.Default)))
+            if (Character.Controlled == null)
             {
-                //slot not visible as a separate, movable panel -> just use the area of the slot directly
-                hoverArea = subSlot.Slot.Rect;
-                hoverArea.Location += subSlot.Slot.DrawOffset.ToPoint();
-                hoverArea = Rectangle.Union(hoverArea, subSlot.Slot.EquipButtonRect);
+                return Rectangle.Empty;
             }
-            else
+
+            Rectangle hoverArea;
+            bool isMovable = subSlot.Inventory.Movable() && !subSlot.ParentInventory.IsInventoryHoverAvailable(Character.Controlled, subSlot.Item?.GetComponent<ItemContainer>());
+            bool unEquipped = Character.Controlled.Inventory == subSlot.ParentInventory && !Character.Controlled.HasEquippedItem(subSlot.Item);
+            bool isDefaultLayout = subSlot.ParentInventory is not CharacterInventory characterInventory || characterInventory.CurrentLayout == CharacterInventory.Layout.Default;
+            bool subEditorCharacterInventoryHidden = Screen.Selected == GameMain.SubEditorScreen && !GameMain.SubEditorScreen.DrawCharacterInventory;
+            if (subEditorCharacterInventoryHidden || (isMovable && !unEquipped && isDefaultLayout))
             {
                 hoverArea = subSlot.Inventory.BackgroundFrame;
                 hoverArea.Location += subSlot.Slot.DrawOffset.ToPoint();
@@ -1399,6 +1415,13 @@ namespace Barotrauma
                 {
                     hoverArea = Rectangle.Union(hoverArea, subSlot.Inventory.movableFrameRect);
                 }
+            }
+            else
+            {
+                //slot not visible as a separate, movable panel -> just use the area of the slot directly
+                hoverArea = subSlot.Slot.Rect;
+                hoverArea.Location += subSlot.Slot.DrawOffset.ToPoint();
+                hoverArea = Rectangle.Union(hoverArea, subSlot.Slot.EquipButtonRect);
             }
 
             if (subSlot.Inventory?.visualSlots != null)
@@ -1584,11 +1607,16 @@ namespace Barotrauma
 
                 if (DraggingItems.Any() && inventory != null && slotIndex > -1 && slotIndex < inventory.visualSlots.Length)
                 {
+                    var itemInSlot = inventory.slots[slotIndex].FirstOrDefault();
                     if (inventory.CanBePutInSlot(DraggingItems.First(), slotIndex))
                     {
                         canBePut = true;
                     }
-                    else if (inventory.slots[slotIndex].FirstOrDefault()?.OwnInventory?.CanBePut(DraggingItems.First()) ?? false)
+                    else if
+                        (itemInSlot?.OwnInventory != null &&
+                        itemInSlot.OwnInventory.CanBePut(DraggingItems.First()) &&
+                        itemInSlot.OwnInventory.Container.AllowDragAndDrop &&
+                        itemInSlot.OwnInventory.Container.DrawInventory)
                     {
                         canBePut = true;
                     }
@@ -1922,9 +1950,25 @@ namespace Barotrauma
                 foreach (UInt16 id in receivedItemIDs[i])
                 {
                     if (Entity.FindEntityByID(id) is not Item item || slots[i].Contains(item)) { continue; }
+
+                    if (Owner is Item thisItem && thisItem.Container == item)
+                    {
+                        //if this item is inside the item we're trying to contain inside it, we need to drop it (both items can't be inside each other!)
+                        //can happen when a player swaps the items to be "the other way around", and we receive a message about the contained item
+                        //before the message about the "parent item" being placed in some other inventory (like the player's inventory)
+                        thisItem.Drop(null);
+                    }
+
                     if (!TryPutItem(item, i, false, false, null, false))
                     {
-                        ForceToSlot(item, i);
+                        try
+                        {
+                            ForceToSlot(item, i);
+                        }
+                        catch (InvalidOperationException e)
+                        {
+                            DebugConsole.AddSafeError(e.Message + "\n" + e.StackTrace.CleanupStackTrace());
+                        }
                     }
                     for (int j = 0; j < capacity; j++)
                     {

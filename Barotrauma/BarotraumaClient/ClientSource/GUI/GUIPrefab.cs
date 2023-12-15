@@ -313,13 +313,18 @@ namespace Barotrauma
 
     public class GUIColor : GUISelector<GUIColorPrefab>
     {
-        public GUIColor(string identifier) : base(identifier) { }
+        private readonly Color fallbackColor;
+
+        public GUIColor(string identifier, Color fallbackColor) : base(identifier) 
+        { 
+            this.fallbackColor = fallbackColor;
+        }
 
         public Color Value
         {
             get
             {
-                return Prefabs.ActivePrefab.Color;
+                return Prefabs?.ActivePrefab?.Color ?? fallbackColor;
             }
         }
 

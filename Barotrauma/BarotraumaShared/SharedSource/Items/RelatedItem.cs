@@ -222,7 +222,7 @@ namespace Barotrauma
             if (element.GetAttribute("name") != null)
             {
                 //backwards compatibility + a console warning
-                DebugConsole.ThrowError($"Error in RelatedItem config (" + (string.IsNullOrEmpty(parentDebugName) ? element.ToString() : parentDebugName) + ") - use item tags or identifiers instead of names.");
+                DebugConsole.ThrowError($"Error in RelatedItem config (" + (string.IsNullOrEmpty(parentDebugName) ? element.ToString() : parentDebugName) + ") - use item tags or identifiers instead of names.", contentPackage: element.ContentPackage);
                 Identifier[] itemNames = element.GetAttributeIdentifierArray("name", Array.Empty<Identifier>());
                 //attempt to convert to identifiers and tags
                 List<Identifier> convertedIdentifiers = new List<Identifier>();
@@ -299,7 +299,7 @@ namespace Barotrauma
             }
             if (!Enum.TryParse(typeStr, true, out type))
             {
-                DebugConsole.ThrowError("Error in RelatedItem config (" + parentDebugName + ") - \"" + typeStr + "\" is not a valid relation type.");
+                DebugConsole.ThrowError("Error in RelatedItem config (" + parentDebugName + ") - \"" + typeStr + "\" is not a valid relation type.", contentPackage: element.ContentPackage);
                 type = RelationType.Invalid;
             }
 
