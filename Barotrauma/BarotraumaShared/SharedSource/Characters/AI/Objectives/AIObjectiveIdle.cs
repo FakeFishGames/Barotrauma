@@ -71,7 +71,7 @@ namespace Barotrauma
 
         private Character tooCloseCharacter;
 
-        const float chairCheckInterval = 5.0f;
+        const float chairCheckInterval = 4.0f;
         private float chairCheckTimer;
 
         private float autonomousObjectiveRetryTimer = 10;
@@ -382,12 +382,18 @@ namespace Barotrauma
                     {
                         foreach (Item item in Item.ItemList)
                         {
-                            if (item.CurrentHull != currentHull || !item.HasTag(Tags.ChairItem)) { continue; }
-                            //not possible in vanilla game, but a mod might have holdable/attachable chairs
+                            
+                            if (item.CurrentHull != currentHull) { continue; }
+                            //not possible in vanilla game, but a mod might have holdable/attachable ones
                             if (item.ParentInventory != null || item.body is { Enabled: true }) { continue; } 
                             var controller = item.GetComponent<Controller>();
                             if (controller == null || controller.User != null) { continue; }
-                            item.TryInteract(character, forceSelectKey: true);
+                            //make it more likely to seek a bed when hurt, (68% chance after 10 checks at 80% health, 40% at 90%H 10th try, 5% at 90%H first try, 56% at 20%H first try...)
+                            if(item.HasTag(Tags.BedItem) && Rand.Value() > Math.Sqrt(character.HealthPercentage/100)){
+                                item.TryInteract(character, forceSelectKey: true);
+                            } else if (item.HasTag(Tags.ChairItem) && Rand.Value() > 0.4){
+                                item.TryInteract(character, forceSelectKey: true);
+                            }
                         }
                         chairCheckTimer = chairCheckInterval;
                     }
