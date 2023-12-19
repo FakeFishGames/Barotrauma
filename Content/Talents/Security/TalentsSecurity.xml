@@ -1,27 +1,28 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Talents>
   <Talent identifier="gunrunner">
-    <Icon texture="Content/UI/TalentsIcons3.png" sheetindex="0,4" sheetelementsize="128,128"/>
+    <Icon texture="Content/UI/TalentsIcons3.png" sheetindex="0,4" sheetelementsize="128,128" />
     <Description tag="talentdescription.gunrunner">
-      <Replace tag="[amount]" value="25" color="gui.green"/>
+      <Replace tag="[amount]" value="25" color="gui.green" />
     </Description>
     <Description tag="talentdescription.walkfasterwhileaiming">
-      <Replace tag="[amount]" value="20" color="gui.green"/>
+      <Replace tag="[amount]" value="20" color="gui.green" />
     </Description>
     <AbilityGroupInterval interval="0.9">
       <Conditions>
-        <AbilityConditionIsAiming weapontype="ranged"/>
+        <AbilityConditionIsAiming weapontype="ranged" />
       </Conditions>
       <Abilities>
-        <CharacterAbilityModifyStat stattype="MovementSpeed" value="0.2"/>
+        <CharacterAbilityModifyStat stattype="MovementSpeed" value="0.2" />
       </Abilities>
     </AbilityGroupInterval>
     <AbilityGroupInterval interval="0.9">
       <Conditions>
-        <AbilityConditionHoldingItem tags="ammobox,railgunammo"/>
+        <AbilityConditionHoldingItem tags="ammobox,railgunammo" />
       </Conditions>
       <Abilities>
-        <CharacterAbilityModifyStat stattype="MovementSpeed" value="0.25"/>
+        <CharacterAbilityModifyStat stattype="MovementSpeed" value="0.25" />
+        <CharacterAbilityModifyResistance resistanceid="ammoboxslowdown" multiplier="0"/>
       </Abilities>
     </AbilityGroupInterval>
   </Talent>

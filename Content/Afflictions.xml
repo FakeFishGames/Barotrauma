@@ -2756,4 +2756,24 @@
     <icon texture="Content/UI/CommandUIAtlas.png" sourcerect="768,768,128,128" color="143,111,160,255" origin="0,0"/>
   </Affliction>
 
+  <Affliction
+    name="BoxSlowdown"
+    identifier="ammoboxslowdown"
+    description=""
+    showiconthreshold="1000"
+    showicontoothersthreshold="1000"
+    showinhealthscannerthreshold="1000"
+    type="slowness" 
+    limbspecific="false"
+    indicatorlimb="Torso"
+    maxstrength="2"
+    healableinmedicalclinic="false">
+    <Effect minstrength="0" maxstrength="1" strengthchange="-1">
+      <StatusEffect type="OnActive" target="Character" SpeedMultiplier="0.8" PropulsionSpeedMultiplier="0.8" setvalue="true" duration="0.1" />
+    </Effect>
+    <Effect minstrength="1" maxstrength="2" strengthchange="-2">
+      <StatusEffect type="OnActive" target="Character" SpeedMultiplier="0.6" PropulsionSpeedMultiplier="0.6" setvalue="true" duration="0.1" />
+    </Effect>
+  </Affliction>
+
 </Afflictions>

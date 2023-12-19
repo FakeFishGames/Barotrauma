@@ -173,38 +173,42 @@
   </Item>
   
   <Item name="" identifier="flakcannonammobox" scale="0.5" tags="flakcannonequipment,flakcannonammo,ammobox" category="Weapon" linkable="true" impactsoundtag="impact_metal_heavy" cargocontaineridentifier="">
-    <PreferredContainer primary="flakcannonammoloader" amount="1" mincondition="1"/>
-    <PreferredContainer primary="ammoboxcontainer" mincondition="1"/>
+    <PreferredContainer primary="flakcannonammoloader" amount="1" mincondition="1" />
+    <PreferredContainer primary="ammoboxcontainer" mincondition="1" />
     <PreferredContainer secondary="wreckflakcannonloader" amount="1" />
-    <PreferredContainer secondary="wreckammoboxcontainer" amount="1" spawnprobability="0.1"/>
+    <PreferredContainer secondary="wreckammoboxcontainer" amount="1" spawnprobability="0.1" />
     <Price baseprice="160" displaynonempty="true" minleveldifficulty="15">
       <Price storeidentifier="merchantoutpost" multiplier="1.3" minavailable="3" />
       <Price storeidentifier="merchantcity" multiplier="1.2" minavailable="6" sold="false" />
       <Price storeidentifier="merchantresearch" multiplier="1.3" minavailable="3" />
-      <Price storeidentifier="merchantmilitary" multiplier="0.9" minavailable="15" minleveldifficulty="10"/>
+      <Price storeidentifier="merchantmilitary" multiplier="0.9" minavailable="15" minleveldifficulty="10" />
       <Price storeidentifier="merchantmine" multiplier="1.2" minavailable="3" />
-      <Price storeidentifier="merchantarmory" multiplier="0.9" minavailable="15" minleveldifficulty="10"/>
+      <Price storeidentifier="merchantarmory" multiplier="0.9" minavailable="15" minleveldifficulty="10" />
     </Price>
     <Deconstruct time="10">
-      <Item identifier="aluminium"/>
+      <Item identifier="aluminium" />
     </Deconstruct>
     <Fabricate suitablefabricators="fabricator" requiredtime="20">
-      <RequiredSkill identifier="weapons" level="25"/>
+      <RequiredSkill identifier="weapons" level="25" />
       <RequiredItem tag="munition_propulsion" description="fabricationdescription.munition_propulsion" />
       <RequiredItem tag="munition_core" description="fabricationdescription.munition_core" />
       <RequiredItem tag="advmunition_jacket" amount="2" description="fabricationdescription.advmunition_jacket" />
-      <RequiredItem identifier="aluminium"/>
+      <RequiredItem identifier="aluminium" />
     </Fabricate>
     <Fabricate suitablefabricators="fabricator" displayname="recycleitem" requiredtime="15">
-      <RequiredSkill identifier="weapons" level="20"/>
+      <RequiredSkill identifier="weapons" level="20" />
       <RequiredItem tag="munition_propulsion" description="fabricationdescription.munition_propulsion" />
       <RequiredItem tag="munition_core" description="fabricationdescription.munition_core" />
       <RequiredItem tag="advmunition_jacket" amount="2" description="fabricationdescription.advmunition_jacket" />
       <RequiredItem tag="ammobox" mincondition="0.0" maxcondition="0.1" usecondition="false" description="fabricationdescription.ammoboxrecycle" header="fabricationheader.ammoboxrecycle" defaultitem="flakcannonammobox" />
     </Fabricate>
-    <Sprite texture="Content/Items/Containers/containers.png" depth="0.54" sourcerect="681,878,95,78" origin="0.5,0.5" />
+    <Sprite texture="Content/Items/Weapons/AmmoBoxes.png" depth="0.54" sourcerect="0,240,95,78" origin="0.5,0.5" />
     <Body width="90" height="72" density="30" />
-    <Holdable slots="RightHand+LeftHand" holdpos="0,-80" handle1="-40,30" handle2="40,30" aimable="false" msg="ItemMsgPickUpSelect"/>
+    <Holdable canbecombined="true" removeoncombined="false" slots="RightHand,LeftHand" holdpos="0,-30" handle1="0,-30" aimable="false" msg="ItemMsgPickUpSelect">
+      <StatusEffect type="OnActive" target="Character" multiplyafflictionsbymaxvitality="true" >
+        <Affliction identifier="ammoboxslowdown" amount="1" />
+      </StatusEffect>
+    </Holdable>
     <ItemContainer hideitems="true" capacity="1" drawinventory="false" canbeselected="false" canbecombined="true" ShowConditionInContainedStateIndicator="true" removecontaineditemsondeconstruct="true" containedstateindicatorstyle="bullet">
       <!--  -2.5 per usage = 40 shots per box -->
       <StatusEffect type="OnUse" target="This" disabledeltatime="true">
@@ -281,40 +285,44 @@
   </Item>
 
   <Item name="" identifier="flakcannondirectionalammobox" scale="0.5" tags="flakcannonequipment,flakcannonammo,ammobox" category="Weapon" linkable="true" impactsoundtag="impact_metal_heavy" cargocontaineridentifier="">
-    <PreferredContainer primary="flakcannonammoloader" mincondition="1"/>
-    <PreferredContainer primary="ammoboxcontainer" mincondition="1"/>
+    <PreferredContainer primary="flakcannonammoloader" mincondition="1" />
+    <PreferredContainer primary="ammoboxcontainer" mincondition="1" />
     <PreferredContainer secondary="wreckflakcannonloader" amount="1" />
-    <PreferredContainer secondary="wreckammoboxcontainer" amount="1" spawnprobability="0.05"/>
+    <PreferredContainer secondary="wreckammoboxcontainer" amount="1" spawnprobability="0.05" />
     <Price baseprice="250" displaynonempty="true" minleveldifficulty="15">
       <Price storeidentifier="merchantoutpost" multiplier="1.3" />
       <Price storeidentifier="merchantcity" multiplier="1.2" minavailable="1" sold="false" />
       <Price storeidentifier="merchantresearch" sold="false" multiplier="1.3" />
-      <Price storeidentifier="merchantmilitary" multiplier="0.9" minavailable="8" minleveldifficulty="10"/>
+      <Price storeidentifier="merchantmilitary" multiplier="0.9" minavailable="8" minleveldifficulty="10" />
       <Price storeidentifier="merchantmine" sold="false" multiplier="1.2" />
-      <Price storeidentifier="merchantarmory" multiplier="0.9" minavailable="8" minleveldifficulty="10"/>
+      <Price storeidentifier="merchantarmory" multiplier="0.9" minavailable="8" minleveldifficulty="10" />
     </Price>
     <Deconstruct time="10">
-      <Item identifier="aluminium"/>
+      <Item identifier="aluminium" />
     </Deconstruct>
     <Fabricate suitablefabricators="fabricator" requiredtime="20">
-      <RequiredSkill identifier="weapons" level="25"/>
+      <RequiredSkill identifier="weapons" level="25" />
       <RequiredItem tag="munition_propulsion" description="fabricationdescription.munition_propulsion" />
       <RequiredItem tag="advmunition_tip" description="fabricationdescription.advmunition_tip" />
       <RequiredItem tag="advmunition_core" description="fabricationdescription.advmunition_core" />
       <RequiredItem tag="advmunition_jacket" amount="2" description="fabricationdescription.advmunition_jacket" />
-      <RequiredItem identifier="aluminium"/>
+      <RequiredItem identifier="aluminium" />
     </Fabricate>
     <Fabricate suitablefabricators="fabricator" displayname="recycleitem" requiredtime="15">
-      <RequiredSkill identifier="weapons" level="20"/>
+      <RequiredSkill identifier="weapons" level="20" />
       <RequiredItem tag="munition_propulsion" description="fabricationdescription.munition_propulsion" />
       <RequiredItem tag="advmunition_tip" description="fabricationdescription.advmunition_tip" />
       <RequiredItem tag="advmunition_core" description="fabricationdescription.advmunition_core" />
       <RequiredItem tag="advmunition_jacket" amount="2" description="fabricationdescription.advmunition_jacket" />
       <RequiredItem tag="ammobox" mincondition="0.0" maxcondition="0.1" usecondition="false" description="fabricationdescription.ammoboxrecycle" header="fabricationheader.ammoboxrecycle" defaultitem="flakcannondirectionalammobox" />
     </Fabricate>
-    <Sprite texture="Content/Items/Weapons/TurretsAndDepthCharges.png" depth="0.54" sourcerect="528,6,95,78" origin="0.5,0.5" />
+    <Sprite texture="Content/Items/Weapons/AmmoBoxes.png" depth="0.54" sourcerect="194,240,95,78" origin="0.5,0.5" />
     <Body width="90" height="72" density="30" />
-    <Holdable slots="RightHand+LeftHand" holdpos="0,-80" handle1="-40,30" handle2="40,30" aimable="false" msg="ItemMsgPickUpSelect"/>
+    <Holdable canbecombined="true" removeoncombined="false" slots="RightHand,LeftHand" holdpos="0,-30" handle1="0,-30" aimable="false" msg="ItemMsgPickUpSelect">
+      <StatusEffect type="OnActive" target="Character" multiplyafflictionsbymaxvitality="true" >
+        <Affliction identifier="ammoboxslowdown" amount="1" />
+      </StatusEffect>
+    </Holdable>
     <ItemContainer hideitems="true" capacity="1" drawinventory="false" canbeselected="false" canbecombined="true" ShowConditionInContainedStateIndicator="true" removecontaineditemsondeconstruct="true" containedstateindicatorstyle="bullet">
       <!--  -2.5 per usage = 40 shots per box -->
       <StatusEffect type="OnUse" target="This" disabledeltatime="true">
@@ -390,28 +398,28 @@
   </Item>
   
   <Item name="" identifier="flakcannonammoboxphysicorium" scale="0.5" tags="flakcannonequipment,flakcannonammo,ammobox" category="Weapon" linkable="true" impactsoundtag="impact_metal_heavy" cargocontaineridentifier="">
-    <PreferredContainer primary="flakcannonammoloader" mincondition="1"/>
-    <PreferredContainer primary="ammoboxcontainer" mincondition="1"/>
+    <PreferredContainer primary="flakcannonammoloader" mincondition="1" />
+    <PreferredContainer primary="ammoboxcontainer" mincondition="1" />
     <PreferredContainer secondary="wreckflakcannonloader" mincondition="1" />
-    <PreferredContainer secondary="wreckammoboxcontainer" mincondition="1" spawnprobability="0.01"/>
+    <PreferredContainer secondary="wreckammoboxcontainer" mincondition="1" spawnprobability="0.01" />
     <Price baseprice="395" sold="false" displaynonempty="true">
       <Price storeidentifier="merchantoutpost" multiplier="1.3" />
-      <Price storeidentifier="merchantcity" multiplier="1.2"/>
+      <Price storeidentifier="merchantcity" multiplier="1.2" />
       <Price storeidentifier="merchantresearch" multiplier="1.3" />
       <Price storeidentifier="merchantmilitary" multiplier="0.9" />
-      <Price storeidentifier="merchantmine" multiplier="1.2"/>
+      <Price storeidentifier="merchantmine" multiplier="1.2" />
       <Price storeidentifier="merchantarmory" multiplier="0.9" />
     </Price>
     <Fabricate suitablefabricators="fabricator" requiredtime="20">
-      <RequiredSkill identifier="weapons" level="40"/>
+      <RequiredSkill identifier="weapons" level="40" />
       <RequiredItem identifier="physicorium" />
       <RequiredItem tag="advmunition_core" description="fabricationdescription.advmunition_core" />
       <RequiredItem tag="advmunition_jacket" amount="2" description="fabricationdescription.advmunition_jacket" />
       <RequiredItem tag="munition_propulsion" description="fabricationdescription.munition_propulsion" />
-      <RequiredItem identifier="aluminium"/>
+      <RequiredItem identifier="aluminium" />
     </Fabricate>
     <Fabricate suitablefabricators="fabricator" displayname="recycleitem" requiredtime="15">
-      <RequiredSkill identifier="weapons" level="30"/>
+      <RequiredSkill identifier="weapons" level="30" />
       <RequiredItem identifier="physicorium" />
       <RequiredItem tag="advmunition_core" description="fabricationdescription.advmunition_core" />
       <RequiredItem tag="advmunition_jacket" amount="2" description="fabricationdescription.advmunition_jacket" />
@@ -419,12 +427,16 @@
       <RequiredItem tag="ammobox" mincondition="0.0" maxcondition="0.1" usecondition="false" description="fabricationdescription.ammoboxrecycle" header="fabricationheader.ammoboxrecycle" defaultitem="flakcannonammoboxphysicorium" />
     </Fabricate>
     <Deconstruct time="10">
-      <Item identifier="physicorium" mincondition="0.95"/>
-      <Item identifier="aluminium"/>
+      <Item identifier="physicorium" mincondition="0.95" />
+      <Item identifier="aluminium" />
     </Deconstruct>
-    <Sprite texture="Content/Items/Containers/containers.png" depth="0.54" sourcerect="800,878,95,78" origin="0.5,0.5" />
+    <Sprite texture="Content/Items/Weapons/AmmoBoxes.png" depth="0.54" sourcerect="291,240,95,78" origin="0.5,0.5" />
     <Body width="90" height="72" density="30" />
-    <Holdable slots="RightHand+LeftHand" holdpos="0,-80" handle1="-40,30" handle2="40,30" aimable="false" msg="ItemMsgPickUpSelect"/>
+    <Holdable canbecombined="true" removeoncombined="false" slots="RightHand,LeftHand" holdpos="0,-30" handle1="0,-30" aimable="false" msg="ItemMsgPickUpSelect">
+      <StatusEffect type="OnActive" target="Character" multiplyafflictionsbymaxvitality="true" >
+        <Affliction identifier="ammoboxslowdown" amount="1" />
+      </StatusEffect>
+    </Holdable>
     <ItemContainer hideitems="true" capacity="1" drawinventory="false" canbeselected="false" canbecombined="true" ShowConditionInContainedStateIndicator="true" removecontaineditemsondeconstruct="true" containedstateindicatorstyle="bullet">
       <!--  -2.5 per usage = 40 shots per box -->
       <StatusEffect type="OnUse" target="This" disabledeltatime="true">
@@ -515,17 +527,17 @@
   </Item>
 
   <Item name="" identifier="flakcannonammoboxexplosive" scale="0.5" tags="flakcannonequipment,flakcannonammo,ammobox" category="Weapon" linkable="true" impactsoundtag="impact_metal_heavy" cargocontaineridentifier="">
-    <PreferredContainer primary="flakcannonammoloader" mincondition="1"/>
-    <PreferredContainer primary="ammoboxcontainer" mincondition="1"/>
+    <PreferredContainer primary="flakcannonammoloader" mincondition="1" />
+    <PreferredContainer primary="ammoboxcontainer" mincondition="1" />
     <PreferredContainer secondary="wreckflakcannonloader" />
-    <PreferredContainer secondary="wreckammoboxcontainer" amount="1" spawnprobability="0.01"/>
+    <PreferredContainer secondary="wreckammoboxcontainer" amount="1" spawnprobability="0.01" />
     <Price baseprice="450" displaynonempty="true" minleveldifficulty="30">
       <Price storeidentifier="merchantoutpost" sold="false" multiplier="1.3" />
-      <Price storeidentifier="merchantcity" multiplier="1.2" minavailable="1" sold="false"/>
+      <Price storeidentifier="merchantcity" multiplier="1.2" minavailable="1" sold="false" />
       <Price storeidentifier="merchantresearch" sold="false" multiplier="1.3" />
-      <Price storeidentifier="merchantmilitary" multiplier="0.9" minavailable="8" minleveldifficulty="15"/>
+      <Price storeidentifier="merchantmilitary" multiplier="0.9" minavailable="8" minleveldifficulty="15" />
       <Price storeidentifier="merchantmine" sold="false" multiplier="1.2" />
-      <Price storeidentifier="merchantarmory" multiplier="0.9" minavailable="8" minleveldifficulty="15"/>
+      <Price storeidentifier="merchantarmory" multiplier="0.9" minavailable="8" minleveldifficulty="15" />
     </Price>
     <Deconstruct time="10">
       <Item identifier="c4block" mincondition="0.95" />
@@ -543,9 +555,13 @@
       <RequiredItem tag="advmunition_jacket" amount="2" description="fabricationdescription.advmunition_jacket" />
       <RequiredItem tag="ammobox" mincondition="0.0" maxcondition="0.1" usecondition="false" description="fabricationdescription.ammoboxrecycle" header="fabricationheader.ammoboxrecycle" defaultitem="flakcannonammoboxexplosive" />
     </Fabricate>
-    <Sprite texture="Content/Items/Containers/containers.png" depth="0.54" sourcerect="917,878,95,78" origin="0.5,0.5" />
+    <Sprite texture="Content/Items/Weapons/AmmoBoxes.png" depth="0.54" sourcerect="97,240,95,78" origin="0.5,0.5" />
     <Body width="90" height="72" density="30" />
-    <Holdable slots="RightHand+LeftHand" holdpos="0,-80" handle1="-40,30" handle2="40,30" aimable="false" msg="ItemMsgPickUpSelect"/>
+    <Holdable canbecombined="true" removeoncombined="false" slots="RightHand,LeftHand" holdpos="0,-30" handle1="0,-30" aimable="false" msg="ItemMsgPickUpSelect">
+      <StatusEffect type="OnActive" target="Character" multiplyafflictionsbymaxvitality="true" >
+        <Affliction identifier="ammoboxslowdown" amount="1" />
+      </StatusEffect>
+    </Holdable>
     <ItemContainer hideitems="true" capacity="1" drawinventory="false" canbeselected="false" canbecombined="true" ShowConditionInContainedStateIndicator="true" removecontaineditemsondeconstruct="true" containedstateindicatorstyle="bullet">
       <!--  -2.5 per usage = 40 shots per box -->
       <StatusEffect type="OnUse" target="This" disabledeltatime="true">
