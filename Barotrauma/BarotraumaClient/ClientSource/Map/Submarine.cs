@@ -499,6 +499,13 @@ namespace Barotrauma
                 }
             }
 
+            if (Hull.HullList.Any(h => h.WaterVolume > 0.0f))
+            {
+                errorMsgs.Add(TextManager.Get("WaterInHullsWarning").Value);
+                warnings.Add(SubEditorScreen.WarningType.WaterInHulls);
+                Hull.ShowHulls = true;
+            }
+
             if (Info.Type == SubmarineType.Player)
             {
                 foreach (Item item in Item.ItemList)

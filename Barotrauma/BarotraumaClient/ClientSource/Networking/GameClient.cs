@@ -1597,7 +1597,7 @@ namespace Barotrauma.Networking
                     }
                     catch (Exception e)
                     {
-                        DebugConsole.ThrowError("There was an error initializing the round.", e, true);
+                        DebugConsole.ThrowError("There was an error initializing the round.", e, createMessageBox: true);
                         roundInitStatus = RoundInitStatus.Error;
                         break;
                     }

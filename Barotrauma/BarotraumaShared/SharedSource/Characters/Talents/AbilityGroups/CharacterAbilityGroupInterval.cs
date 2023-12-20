@@ -1,14 +1,13 @@
 ﻿using System.Collections.Generic;
-using System.Linq;
 
 namespace Barotrauma.Abilities
 {
     class CharacterAbilityGroupInterval : CharacterAbilityGroup
     {
-        private float interval { get; set; }
+        private readonly float interval;
         public float TimeSinceLastUpdate { get; private set; }
 
-        private float effectDelay;
+        private readonly float effectDelay;
         private float effectDelayTimer;
 
 

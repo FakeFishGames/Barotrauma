@@ -1,4 +1,23 @@
 -------------------------------------------------------------------------------------------------------------------------------------------------
+v1.2.7.0
+-------------------------------------------------------------------------------------------------------------------------------------------------
+
+- Fixed an issue that sometimes caused the game to crash without generating a crash report (which would lead to a "pipe was broken" error if the issue happened server-side). The issue had to do with a stack overflow when throwing specific kinds of console errors: one common case was when the game failed to connect to our server to check the GameAnalytics consent, which lead to a crash on startup.
+- Fixed piezo crystals sometimes spawning right at the start of the level.
+- Fixed assistants not being able to pick all tier 1 and 2 talents.
+- Fixed location names disappearing when locations change their type in saves started in pre-1.2 versions. 
+- Fixed selection rectangle disappearing from items when zoomed in by more than x2 in the sub editor.
+- Fixed "killcrawlerswarmlarge2" mission not having a description.
+- Fixed bots sometimes choosing to wear broken diving suits.
+- Fixed currently visible particles freezing when lowering the particle limit. 
+- Fixed dragged characters always colliding with stairs, making it impossible to drag them past the stairs.
+- Fixed "drunken sailor" talent not nullifying the negative effects of drunkenness.
+- Fixed stun from the "lightning wizard" talent activating if you cause damage to yourself (e.g. by breaking a wall and taking damage from the shrapnel).
+- Fixed escorted security officers sometimes inspecting the crew for stolen items during escort missions.
+- Fixed basics tutorial sometimes getting stuck in the "weld leak" objective.
+- Fixed ancient weapon not flipping horizontally when aiming it to the left.
+
+-------------------------------------------------------------------------------------------------------------------------------------------------
 v1.2.6.0
 -------------------------------------------------------------------------------------------------------------------------------------------------
 

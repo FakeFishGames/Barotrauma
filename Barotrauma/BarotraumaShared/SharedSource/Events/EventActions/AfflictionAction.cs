@@ -1,7 +1,4 @@
-using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Xml.Linq;
 
 namespace Barotrauma
 {
@@ -36,8 +33,7 @@ namespace Barotrauma
         public override void Update(float deltaTime)
         {
             if (isFinished) { return; }
-            var afflictionPrefab = AfflictionPrefab.List.FirstOrDefault(p => p.Identifier == Affliction);
-            if (afflictionPrefab != null)
+            if (AfflictionPrefab.Prefabs.TryGet(Affliction, out var afflictionPrefab))
             {
                 var targets = ParentEvent.GetTargets(TargetTag);
                 foreach (var target in targets)

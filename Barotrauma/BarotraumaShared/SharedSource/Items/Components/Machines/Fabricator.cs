@@ -170,7 +170,7 @@ namespace Barotrauma.Items.Components
             {
                 if (recipe.RequiredItems.Length > inputContainer.Capacity)
                 {
-                    DebugConsole.ThrowError("Error in item \"" + item.Name + "\": There's not enough room in the input inventory for the ingredients of \"" + recipe.TargetItem.Name + "\"!");
+                    DebugConsole.ThrowErrorLocalized("Error in item \"" + item.Name + "\": There's not enough room in the input inventory for the ingredients of \"" + recipe.TargetItem.Name + "\"!");
                 }
             }
 

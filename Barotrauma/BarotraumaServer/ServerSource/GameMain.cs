@@ -120,7 +120,7 @@ namespace Barotrauma
         {
             if (Version < VanillaContent.GameVersion)
             {
-                DebugConsole.ThrowError(
+                DebugConsole.ThrowErrorLocalized(
                     TextManager.GetWithVariables("versionmismatchwarning",
                         ("[gameversion]", Version.ToString()),
                         ("[contentversion]", VanillaContent.GameVersion.ToString())));

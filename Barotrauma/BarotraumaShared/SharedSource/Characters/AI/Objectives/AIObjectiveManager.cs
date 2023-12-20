@@ -163,6 +163,10 @@ namespace Barotrauma
                         continue;
                     }
                 }
+                if (autonomousObjective.IgnoreAtNonOutpost && !Level.IsLoadedFriendlyOutpost)
+                {
+                    continue;
+                }
                 var objective = CreateObjective(order, autonomousObjective.PriorityModifier);
                 if (objective != null && objective.CanBeCompleted)
                 {

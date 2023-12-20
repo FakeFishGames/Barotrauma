@@ -904,7 +904,7 @@ namespace Barotrauma
                 string indicatorLimbName = element.GetAttributeString("indicatorlimb", "Torso");
                 if (!Enum.TryParse(indicatorLimbName, out IndicatorLimb))
                 {
-                    DebugConsole.ThrowError("Error in affliction prefab " + Name + " - limb type \"" + indicatorLimbName + "\" not found.");
+                    DebugConsole.ThrowErrorLocalized("Error in affliction prefab " + Name + " - limb type \"" + indicatorLimbName + "\" not found.");
                 }
             }
 
