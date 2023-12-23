@@ -7,9 +7,10 @@
       <HideLimb duration="100000" />
       <conditional naturalmeleeweapon="gt 33" />
     </StatusEffect>
-    <damagemodifier armorsector="0,360" afflictiontypes="damage" damagemultiplier="0.4" damagesound="LimbArmor" damageparticle="brownchunks" deflectprojectiles="True" afflictionidentifiers="" probabilitymultiplier="1" />
-    <damagemodifier armorsector="0,360" afflictiontypes="bleeding" damagemultiplier="0.3" damagesound="LimbArmor" deflectprojectiles="True" afflictionidentifiers="" probabilitymultiplier="1" damageparticle="" />
-    <damagemodifier armorsector="0,360" afflictiontypes="burn" damagemultiplier="0.25" damagesound="" deflectprojectiles="True" afflictionidentifiers="" probabilitymultiplier="1" damageparticle="" />
+    <!-- Takes melee/projectile damage instead of the head because the limb has a larger collider (50 vs 45) (unless projectile pierces). Stronger with quality. Takes no damage from bleeding/burns/explosion because those hit in an AOE and will hit the limb AND the head -->
+    <damagemodifier armorsector="0,360" afflictiontypes="damage" damagemultiplier="0.4" damagesound="LimbArmor" deflectprojectiles="True" damageparticle="brownchunks" />
+    <damagemodifier armorsector="0,360" afflictiontypes="bleeding" damagemultiplier="0" deflectprojectiles="True"  />
+    <damagemodifier armorsector="0,360" afflictiontypes="burn" damagemultiplier="0" deflectprojectiles="True"  />
     <attack context="Any" cooldown="2" afterattack="Pursue" range="50" damagerange="50" duration="0.5" structuredamage="0" itemdamage="25" structuresoundtype="StructureSlash" targetforce="0" severlimbsprobability="0.3" torque="100" force="30" applyforceonlimbs="0,1" targettype="Any" hitdetectiontype="Distance" stun="0" onlyhumans="False" applyforcesonlyonce="True" targetimpulse="5" targetimpulseworld="0,0" targetforceworld="0,-5" stickchance="0" priority="1" secondarycooldown="2" cooldownrandomfactor="0.5" reverse="False" targetlimbtype="None" afterattackdelay="0" retreat="False" rootforceworldstart="0,0" rootforceworldmiddle="0,0" rootforceworldend="0,0" roottransitioneasing="Linear">
       <conditional targetself="true" naturalmeleeweapon="lt 33" />
       <Affliction identifier="bitewounds" strength="10" probability="1" />
@@ -29,9 +30,10 @@
       <conditional naturalmeleeweapon="lte 33" />
       <conditional naturalmeleeweapon="gt 66" />
     </StatusEffect>
-    <damagemodifier armorsector="0,360" afflictiontypes="damage" damagemultiplier="0.3" damagesound="LimbArmor" damageparticle="brownchunks" deflectprojectiles="True" afflictionidentifiers="" probabilitymultiplier="1" />
-    <damagemodifier armorsector="0,360" afflictiontypes="bleeding" damagemultiplier="0.2" damagesound="LimbArmor" deflectprojectiles="True" afflictionidentifiers="" probabilitymultiplier="1" damageparticle="" />
-    <damagemodifier armorsector="0,360" afflictiontypes="burn" damagemultiplier="0.25" damagesound="" deflectprojectiles="True" afflictionidentifiers="" probabilitymultiplier="1" damageparticle="" />
+    <!-- Takes melee/projectile damage instead of the head (unless projectile pierces). Stronger with quality. Takes no damage from bleeding/burns/explosion because those hit in an AOE and will hit the limb AND the head -->    
+    <damagemodifier armorsector="0,360" afflictiontypes="damage" damagemultiplier="0.3" damagesound="LimbArmor" deflectprojectiles="True" damageparticle="brownchunks" />
+    <damagemodifier armorsector="0,360" afflictiontypes="bleeding" damagemultiplier="0" deflectprojectiles="True"  />
+    <damagemodifier armorsector="0,360" afflictiontypes="burn" damagemultiplier="0" deflectprojectiles="True"  />
     <attack context="Any" cooldown="2" afterattack="Pursue" range="50" damagerange="50" duration="0.5" structuredamage="0" itemdamage="40" structuresoundtype="StructureSlash" targetforce="0" severlimbsprobability="0.3" torque="100" force="30" applyforceonlimbs="0,1" targettype="Any" hitdetectiontype="Distance" stun="0" onlyhumans="False" applyforcesonlyonce="True" targetimpulse="5" targetimpulseworld="0,0" targetforceworld="0,-5" stickchance="0" priority="3" secondarycooldown="2" cooldownrandomfactor="0.5" reverse="False" targetlimbtype="None" afterattackdelay="0" retreat="False" rootforceworldstart="0,0" rootforceworldmiddle="0,0" rootforceworldend="0,0" roottransitioneasing="Linear">
       <conditional targetself="true" naturalmeleeweapon="gte 33" />
       <conditional targetself="true" naturalmeleeweapon="lt 66" />
@@ -52,9 +54,10 @@
       <conditional naturalmeleeweapon="lte 66" />
       <conditional naturalmeleeweapon="gt 99" />
     </StatusEffect>
-    <damagemodifier armorsector="0,360" afflictiontypes="damage" damagemultiplier="0.2" damagesound="LimbArmor" damageparticle="brownchunks" deflectprojectiles="True" afflictionidentifiers="" probabilitymultiplier="1" />
-    <damagemodifier armorsector="0,360" afflictiontypes="bleeding" damagemultiplier="0.2" damagesound="LimbArmor" deflectprojectiles="True" afflictionidentifiers="" probabilitymultiplier="1" damageparticle="" />
-    <damagemodifier armorsector="0,360" afflictiontypes="burn" damagemultiplier="0.25" damagesound="" deflectprojectiles="True" afflictionidentifiers="" probabilitymultiplier="1" damageparticle="" />
+    <!-- Takes melee/projectile damage instead of the head (unless projectile pierces). Stronger with quality. Takes no damage from bleeding/burns/explosion because those hit in an AOE and will hit the limb AND the head -->    
+    <damagemodifier armorsector="0,360" afflictiontypes="damage" damagemultiplier="0.2" damagesound="LimbArmor" deflectprojectiles="True" damageparticle="brownchunks" />
+    <damagemodifier armorsector="0,360" afflictiontypes="bleeding" damagemultiplier="0" deflectprojectiles="True"  />
+    <damagemodifier armorsector="0,360" afflictiontypes="burn" damagemultiplier="0" deflectprojectiles="True"  />
     <attack context="Any" cooldown="2" afterattack="Pursue" range="50" damagerange="50" duration="0.5" structuredamage="0" itemdamage="55" structuresoundtype="StructureSlash" targetforce="0" severlimbsprobability="0.3" torque="100" force="30" applyforceonlimbs="0,1" targettype="Any" hitdetectiontype="Distance" stun="0" onlyhumans="False" applyforcesonlyonce="True" targetimpulse="5" targetimpulseworld="0,0" targetforceworld="0,-5" stickchance="0" priority="3" secondarycooldown="2" cooldownrandomfactor="0.5" reverse="False" targetlimbtype="None" afterattackdelay="0" retreat="False" rootforceworldstart="0,0" rootforceworldmiddle="0,0" rootforceworldend="0,0" roottransitioneasing="Linear">
       <conditional targetself="true" naturalmeleeweapon="gte 66" />
       <conditional targetself="true" naturalmeleeweapon="lt 100" />
@@ -74,9 +77,10 @@
       <HideLimb duration="100000" />
       <Conditional naturalmeleeweapon="lt 100" />
     </StatusEffect>
-    <damagemodifier armorsector="0,360" afflictiontypes="damage" damagemultiplier="0.1" damagesound="LimbArmor" damageparticle="brownchunks" deflectprojectiles="True" afflictionidentifiers="" probabilitymultiplier="1" />
-    <damagemodifier armorsector="0,360" afflictiontypes="bleeding" damagemultiplier="0" damagesound="LimbArmor" deflectprojectiles="True" afflictionidentifiers="" probabilitymultiplier="1" damageparticle="" />
-    <damagemodifier armorsector="0,360" afflictiontypes="burn" damagemultiplier="0.25" damagesound="" deflectprojectiles="True" afflictionidentifiers="" probabilitymultiplier="1" damageparticle="" />
+    <!-- Takes melee/projectile damage instead of the head (unless projectile pierces). Stronger with quality. Takes no damage from bleeding/burns/explosion because those hit in an AOE and will hit the limb AND the head -->    
+    <damagemodifier armorsector="0,360" afflictiontypes="damage" damagemultiplier="0.1" damagesound="LimbArmor" deflectprojectiles="True" damageparticle="brownchunks" />
+    <damagemodifier armorsector="0,360" afflictiontypes="bleeding" damagemultiplier="0" deflectprojectiles="True"  />
+    <damagemodifier armorsector="0,360" afflictiontypes="burn" damagemultiplier="0" deflectprojectiles="True"  />
     <attack context="Any" cooldown="2" afterattack="Pursue" range="50" damagerange="50" duration="0.5" structuredamage="0" itemdamage="55" structuresoundtype="StructureSlash" targetforce="0" severlimbsprobability="0.3" torque="100" force="30" applyforceonlimbs="0,1" targettype="Any" hitdetectiontype="Distance" stun="0" onlyhumans="False" applyforcesonlyonce="True" targetimpulse="5" targetimpulseworld="0,0" targetforceworld="0,-5" stickchance="0" priority="4" secondarycooldown="2" cooldownrandomfactor="0.5" reverse="False" targetlimbtype="None" afterattackdelay="0" retreat="False" rootforceworldstart="0,0" rootforceworldmiddle="0,0" rootforceworldend="0,0" roottransitioneasing="Linear">
       <conditional targetself="true" naturalmeleeweapon="gte 100" />
       <Affliction identifier="bitewounds" strength="20" probability="1" />
