@@ -1141,14 +1141,17 @@ namespace Barotrauma
                 float distanceMultiplier = 1;
                 if (g.ConnectedDoor != null && !g.ConnectedDoor.IsBroken)
                 {
-                    //gap blocked if the door is not open or the predicted state is not open
-                    if ((g.ConnectedDoor.IsClosed && !g.ConnectedDoor.IsBroken) || (g.ConnectedDoor.PredictedState.HasValue && !g.ConnectedDoor.PredictedState.Value))
+                    bool isClosed = g.ConnectedDoor.IsClosed;
+                    bool isMostlyClosed = g.ConnectedDoor.OpenState < 0.1f;
+                    bool isOpening = g.ConnectedDoor.PredictedState.HasValue && g.ConnectedDoor.PredictedState.Value;
+
+                    // Multipayer: Door is closed  OR  door is closing and is mostly closed.
+                    if (GameMain.IsMultiplayer && (isClosed && !isOpening || !isOpening && isMostlyClosed) ||
+                        // Singleplayer: Door is closed/closing and is mostly closed.
+                        !GameMain.IsMultiplayer && isClosed && isMostlyClosed)
                     {
-                        if (g.ConnectedDoor.OpenState < 0.1f)
-                        {
-                            if (distanceMultiplierFromDoors <= 0) { continue; }
-                            distanceMultiplier *= distanceMultiplierFromDoors;
-                        }
+                        if (distanceMultiplierFromDoors <= 0) { continue; }
+                        distanceMultiplier *= distanceMultiplierFromDoors;
                     }
                 }
                 else if (g.Open <= 0.0f)
