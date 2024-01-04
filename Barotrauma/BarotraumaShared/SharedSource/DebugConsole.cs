@@ -7,6 +7,7 @@ using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.ComponentModel;
 using System.Globalization;
 using Barotrauma.IO;
@@ -40,8 +41,8 @@ namespace Barotrauma
     {
         public partial class Command
         {
-            public readonly string[] names;
-            public readonly string help;
+            public readonly ImmutableArray<Identifier> Names;
+            public readonly string Help;
             
             public Action<string[]> OnExecute;
 
@@ -57,8 +58,8 @@ namespace Barotrauma
             /// </summary>
             public Command(string name, string help, Action<string[]> onExecute, Func<string[][]> getValidArgs = null, bool isCheat = false)
             {
-                names = name.Split('|');
-                this.help = help;
+                Names = name.Split('|').ToIdentifiers().ToImmutableArray();
+                this.Help = help;
 
                 this.OnExecute = onExecute;
                 
@@ -76,7 +77,8 @@ namespace Barotrauma
 #endif
                 if (!allowCheats && !CheatsEnabled && IsCheat)
                 {
-                    NewMessage("You need to enable cheats using the command \"enablecheats\" before you can use the command \"" + names[0] + "\".", Color.Red);
+                    NewMessage(
+                        $"You need to enable cheats using the command \"enablecheats\" before you can use the command \"{Names.First()}\".", Color.Red);
 #if USE_STEAM
                     NewMessage("Enabling cheats will disable Steam achievements during this play session.", Color.Red);
 #endif
@@ -88,7 +90,7 @@ namespace Barotrauma
 
             public override int GetHashCode()
             {
-                return names[0].GetHashCode();
+                return Names.First().GetHashCode();
             }
         }
 
@@ -164,7 +166,7 @@ namespace Barotrauma
 
         private static void AssignOnExecute(string names, Action<string[]> onExecute)
         {
-            var matchingCommand = commands.Find(c => c.names.Intersect(names.Split('|')).Count() > 0);
+            var matchingCommand = commands.Find(c => c.Names.Intersect(names.Split('|').ToIdentifiers()).Any());
             if (matchingCommand == null)
             {
                 throw new Exception("AssignOnExecute failed. Command matching the name(s) \"" + names + "\" not found.");
@@ -187,13 +189,13 @@ namespace Barotrauma
                 {
                     foreach (Command c in commands)
                     {
-                        if (string.IsNullOrEmpty(c.help)) continue;
+                        if (string.IsNullOrEmpty(c.Help)) continue;
                         ShowHelpMessage(c);
                     }
                 }
                 else
                 {
-                    var matchingCommand = commands.Find(c => c.names.Any(name => name == args[0]));
+                    var matchingCommand = commands.Find(c => c.Names.Any(name => name == args[0]));
                     if (matchingCommand == null)
                     {
                         NewMessage("Command " + args[0] + " not found.", Color.Red);
@@ -208,7 +210,7 @@ namespace Barotrauma
             {
                 return new string[][]
                 {
-                    commands.SelectMany(c => c.names).ToArray(),
+                    commands.SelectMany(c => c.Names).Select(n => n.Value).ToArray(),
                     Array.Empty<string>()
                 };
             }));
@@ -403,7 +405,7 @@ namespace Barotrauma
                     return new string[][]
                     {
                         GameMain.NetworkMember.ConnectedClients.Select(c => c.Name).ToArray(),
-                        commands.Select(c => c.names[0]).Union(new string[]{ "All" }).ToArray()
+                        commands.Select(c => c.Names.First().Value).Union(new []{ "All" }).ToArray()
                     };
                 }));
 
@@ -415,7 +417,7 @@ namespace Barotrauma
                     return new string[][]
                     {
                         GameMain.NetworkMember.ConnectedClients.Select(c => c.Name).ToArray(),
-                        commands.Select(c => c.names[0]).Union(new string[]{ "All" }).ToArray()
+                        commands.Select(c => c.Names.First().Value).Union(new []{ "All" }).ToArray()
                     };
                 }));
 
@@ -856,7 +858,13 @@ namespace Barotrauma
 
             commands.Add(new Command("debugevent", "debugevent [identifier]: outputs debug info about a specific event that's currently active. Mainly intended for debugging events in multiplayer: in single player, the same information is available by enabling debugdraw.", (string[] args) =>
             {
-                if (GameMain.GameSession?.EventManager is EventManager eventManager && args.Length > 0)
+                if (args.Length == 0)
+                {
+                    ThrowError($"Please specify the identifier of the event you want to debug.");
+                    return;
+                }
+
+                if (GameMain.GameSession?.EventManager is EventManager eventManager)
                 {
                     var ev = eventManager.ActiveEvents.FirstOrDefault(ev => ev.Prefab?.Identifier == args[0]);
                     if (ev == null)
@@ -875,9 +883,18 @@ namespace Barotrauma
                 }
             }, isCheat: true, getValidArgs: () =>
             {
+                IEnumerable<EventPrefab> eventPrefabs;
+                if (GameMain.GameSession?.EventManager == null || GameMain.GameSession.EventManager.ActiveEvents.None())
+                {
+                    eventPrefabs = EventSet.GetAllEventPrefabs().Where(prefab => prefab.Identifier != Identifier.Empty);
+                }
+                else
+                {
+                    eventPrefabs = GameMain.GameSession.EventManager.ActiveEvents.Select(e => e.Prefab);
+                }
                 return new[]
                 {
-                   GameMain.GameSession?.EventManager?.ActiveEvents.Select(ev => ev.Prefab.Identifier.ToString()).ToArray() ?? Array.Empty<string>()
+                    eventPrefabs.Select(ev => ev.Identifier.ToString()).ToArray() ?? Array.Empty<string>()
                 };
             }));
 
@@ -1133,7 +1150,7 @@ namespace Barotrauma
                 }
             },null));
             
-            commands.Add(new Command("teleportsub", "teleportsub [start/end/cursor]: Teleport the submarine to the position of the cursor, or the start or end of the level. WARNING: does not take outposts into account, so often leads to physics glitches. Only use for debugging.", (string[] args) =>
+            commands.Add(new Command("teleportsub", "teleportsub [start/end/endoutpost/cursor]: Teleport the submarine to the position of the cursor, or the start or end of the level. The 'endoutpost' argument also automatically docks the sub with the outpost at the end of the level. WARNING: does not take outposts into account, so often leads to physics glitches. Only use for debugging.", (string[] args) =>
             {
                 if (Submarine.MainSub == null) { return; }
 
@@ -1159,7 +1176,7 @@ namespace Barotrauma
                     }
                     Submarine.MainSub.SetPosition(pos);
                 }
-                else
+                else if (args[0].Equals("end", StringComparison.OrdinalIgnoreCase))
                 {
                     if (Level.Loaded == null)
                     {
@@ -1172,13 +1189,29 @@ namespace Barotrauma
                         pos -= Vector2.UnitY * (Submarine.MainSub.Borders.Height + Level.Loaded.EndOutpost.Borders.Height) / 2;
                     }
                     Submarine.MainSub.SetPosition(pos);
+                }                
+                else if (args[0].Equals("endoutpost", StringComparison.OrdinalIgnoreCase))
+                {
+                    Submarine.MainSub.SetPosition(Level.Loaded.EndExitPosition - Vector2.UnitY * Submarine.MainSub.Borders.Height);
+
+                    var submarineDockingPort = DockingPort.List.FirstOrDefault(d => d.Item.Submarine == Submarine.MainSub);
+                    if (Level.Loaded?.EndOutpost == null)
+                    {
+                        NewMessage("Can't teleport the sub to the end outpost (no outpost at the end of the level).", Color.Red);
+                        return;
+                    }
+                    var outpostDockingPort = DockingPort.List.FirstOrDefault(d => d.Item.Submarine == Level.Loaded.EndOutpost);
+                    if (submarineDockingPort != null && outpostDockingPort != null)
+                    {
+                        submarineDockingPort.Dock(outpostDockingPort);
+                    }
                 }
             },
             () =>
             {
                 return new string[][]
                 {
-                    new string[] { "start", "end", "cursor" }
+                    new string[] { "start", "end", "endoutpost", "cursor" }
                 };
             }, isCheat: true));
 
@@ -1595,7 +1628,7 @@ namespace Barotrauma
                     int i = 0;
                     foreach (LocationConnection connection in campaign.Map.CurrentLocation.Connections)
                     {
-                        NewMessage("     " + i + ". " + connection.OtherLocation(campaign.Map.CurrentLocation).Name, Color.White);
+                        NewMessage("     " + i + ". " + connection.OtherLocation(campaign.Map.CurrentLocation).DisplayName, Color.White);
                         i++;
                     }
                     ShowQuestionPrompt("Select a destination (0 - " + (campaign.Map.CurrentLocation.Connections.Count - 1) + "):", (string selectedDestination) =>
@@ -1609,7 +1642,7 @@ namespace Barotrauma
                         }
                         Location location = campaign.Map.CurrentLocation.Connections[destinationIndex].OtherLocation(campaign.Map.CurrentLocation);
                         campaign.Map.SelectLocation(location);
-                        NewMessage(location.Name + " selected.", Color.White);
+                        NewMessage(location.DisplayName + " selected.", Color.White);
                     });
                 }
                 else
@@ -1623,7 +1656,7 @@ namespace Barotrauma
                     }
                     Location location = campaign.Map.CurrentLocation.Connections[destinationIndex].OtherLocation(campaign.Map.CurrentLocation);
                     campaign.Map.SelectLocation(location);
-                    NewMessage(location.Name + " selected.", Color.White);
+                    NewMessage(location.DisplayName + " selected.", Color.White);
                 }
             }));
 
@@ -1895,7 +1928,7 @@ namespace Barotrauma
                 {
                     if (location.Stores != null)
                     {
-                        var msg = "--- Location: " + location.Name + " ---";
+                        var msg = "--- Location: " + location.DisplayName + " ---";
                         foreach (var store in location.Stores)
                         {
                             msg += $"\nStore identifier: {store.Value.Identifier}";
@@ -1959,7 +1992,7 @@ namespace Barotrauma
 
             InitProjectSpecific();
 
-            commands.Sort((c1, c2) => c1.names[0].CompareTo(c2.names[0]));
+            commands.Sort((c1, c2) => c1.Names.First().CompareTo(c2.Names.First()));
         }
 
         public static string AutoComplete(string command, int increment = 1)
@@ -1970,14 +2003,14 @@ namespace Barotrauma
             //if an argument is given or the last character is a space, attempt to autocomplete the argument
             if (args.Length > 0 || (splitCommand.Length > 0 && command.Last() == ' '))
             {
-                Command matchingCommand = commands.Find(c => c.names.Contains(splitCommand[0]));
-                if (matchingCommand == null || matchingCommand.GetValidArgs == null) return command;
+                Command matchingCommand = commands.Find(c => c.Names.Contains(splitCommand[0].ToIdentifier()));
+                if (matchingCommand?.GetValidArgs == null) { return command; }
 
                 int autoCompletedArgIndex = args.Length > 0 && command.Last() != ' ' ? args.Length - 1 : args.Length;
 
                 //get all valid arguments for the given command
                 string[][] allArgs = matchingCommand.GetValidArgs();
-                if (allArgs == null || allArgs.GetLength(0) < autoCompletedArgIndex + 1) return command;
+                if (allArgs == null || allArgs.GetLength(0) < autoCompletedArgIndex + 1) { return command; }
 
                 if (string.IsNullOrEmpty(currentAutoCompletedCommand))
                 {
@@ -1989,7 +2022,7 @@ namespace Barotrauma
                     currentAutoCompletedCommand.Trim().Length <= arg.Length &&
                     arg.Substring(0, currentAutoCompletedCommand.Trim().Length).ToLower() == currentAutoCompletedCommand.Trim().ToLower()).ToArray();
 
-                if (validArgs.Length == 0) return command;
+                if (validArgs.Length == 0) { return command; }
 
                 currentAutoCompletedIndex = MathUtils.PositiveModulo(currentAutoCompletedIndex + increment, validArgs.Length);
                 string autoCompletedArg = validArgs[currentAutoCompletedIndex];
@@ -2010,13 +2043,13 @@ namespace Barotrauma
                     currentAutoCompletedCommand = command;
                 }
 
-                List<string> matchingCommands = new List<string>();
+                List<Identifier> matchingCommands = new List<Identifier>();
                 foreach (Command c in commands)
                 {
-                    foreach (string name in c.names)
+                    foreach (var name in c.Names)
                     {
-                        if (currentAutoCompletedCommand.Length > name.Length) continue;
-                        if (currentAutoCompletedCommand == name.Substring(0, currentAutoCompletedCommand.Length))
+                        if (currentAutoCompletedCommand.Length > name.Value.Length) { continue; }
+                        if (name.StartsWith(currentAutoCompletedCommand))
                         {
                             matchingCommands.Add(name);
                         }
@@ -2026,7 +2059,7 @@ namespace Barotrauma
                 if (matchingCommands.Count == 0) return command;
                 
                 currentAutoCompletedIndex = MathUtils.PositiveModulo(currentAutoCompletedIndex + increment, matchingCommands.Count);
-                return matchingCommands[currentAutoCompletedIndex];
+                return matchingCommands[currentAutoCompletedIndex].Value;
             }
         }
 
@@ -2064,9 +2097,9 @@ namespace Barotrauma
                 return;
             }
 
-            string firstCommand = splitCommand[0].ToLowerInvariant();
+            Identifier firstCommand = splitCommand[0].ToIdentifier();
 
-            if (!firstCommand.Equals("admin", StringComparison.OrdinalIgnoreCase))
+            if (firstCommand != "admin")
             {
                 NewCommand(command);
             }
@@ -2074,7 +2107,7 @@ namespace Barotrauma
 #if CLIENT
             if (GameMain.Client != null)
             {
-                Command matchingCommand = commands.Find(c => c.names.Contains(firstCommand));
+                Command matchingCommand = commands.Find(c => c.Names.Contains(firstCommand));
                 if (matchingCommand == null)
                 {
                     //if the command is not defined client-side, we'll relay it anyway because it may be a custom command at the server's side
@@ -2095,12 +2128,12 @@ namespace Barotrauma
                     }
                     return;
                 }
-                if (!IsCommandPermitted(splitCommand[0].ToLowerInvariant(), GameMain.Client))
+                if (!IsCommandPermitted(firstCommand, GameMain.Client))
                 {
 #if DEBUG
-                    AddWarning($"You're not permitted to use the command \"{splitCommand[0].ToLowerInvariant()}\". Executing the command anyway because this is a debug build.");
+                    AddWarning($"You're not permitted to use the command \"{firstCommand}\". Executing the command anyway because this is a debug build.");
 #else
-                    ThrowError($"You're not permitted to use the command \"{splitCommand[0].ToLowerInvariant()}\"!");
+                    ThrowError($"You're not permitted to use the command \"{firstCommand}\"!");
                     return;
 #endif
                 }
@@ -2110,7 +2143,7 @@ namespace Barotrauma
             bool commandFound = false;
             foreach (Command c in commands)
             {
-                if (!c.names.Contains(firstCommand)) { continue; }                
+                if (!c.Names.Contains(firstCommand)) { continue; }                
                 c.Execute(splitCommand.Skip(1).ToArray());
                 commandFound = true;
                 break;                
@@ -2397,8 +2430,9 @@ namespace Barotrauma
 #endif
         }
 
-        public static void LogError(string msg, Color? color = null)
+        public static void LogError(string msg, Color? color = null, ContentPackage contentPackage = null)
         {
+            msg = AddContentPackageInfoToMessage(msg, contentPackage);
             color ??= Color.Red;
             NewMessage(msg, color.Value, isCommand: false, isError: true);
         }
@@ -2515,7 +2549,7 @@ namespace Barotrauma
             return true;
         }
 
-        public static Command FindCommand(string commandName) => commands.Find(c => c.names.Any(n => n.Equals(commandName, StringComparison.OrdinalIgnoreCase)));
+        public static Command FindCommand(string commandName) => commands.Find(c => c.Names.Contains(commandName.ToIdentifier()));
 
         public static void Log(LocalizedString message) => Log(message?.Value);
         
@@ -2527,13 +2561,14 @@ namespace Barotrauma
             }
         }
 
-        public static void ThrowError(LocalizedString error, Exception e = null, bool createMessageBox = false, bool appendStackTrace = false)
+        public static void ThrowErrorLocalized(LocalizedString error, Exception e = null, ContentPackage contentPackage = null, bool createMessageBox = false, bool appendStackTrace = false)
         {
-            ThrowError(error.Value, e, createMessageBox, appendStackTrace);
+            ThrowError(error.Value, e, contentPackage, createMessageBox, appendStackTrace);
         }
 
-        public static void ThrowError(string error, Exception e = null, bool createMessageBox = false, bool appendStackTrace = false)
+        public static void ThrowError(string error, Exception e = null, ContentPackage contentPackage = null, bool createMessageBox = false, bool appendStackTrace = false)
         {
+            error = AddContentPackageInfoToMessage(error, contentPackage);
             if (e != null)
             {
                 error += " {" + e.Message + "}\n";
@@ -2547,7 +2582,7 @@ namespace Barotrauma
                     error += "\n\nInner exception: " + innermost.Message + "\n";
                     if (innermost.StackTrace != null)
                     {
-                        error += innermost.StackTrace.CleanupStackTrace(); ;
+                        error += innermost.StackTrace.CleanupStackTrace();
                     }
                 }
             }
@@ -2580,10 +2615,22 @@ namespace Barotrauma
                 errorMsg);
         }
 
-        public static void AddWarning(string warning)
+        public static void AddWarning(string warning, ContentPackage contentPackage = null)
         {
+            warning = AddContentPackageInfoToMessage($"WARNING: {warning}", contentPackage);
             System.Diagnostics.Debug.WriteLine(warning);
-            NewMessage($"WARNING: {warning}", Color.Yellow);
+            NewMessage(warning, Color.Yellow);
+        }
+
+        private static string AddContentPackageInfoToMessage(string message, ContentPackage contentPackage)
+        {
+            if (contentPackage == null) { return message; }
+#if CLIENT
+            string color = XMLExtensions.ToStringHex(Color.MediumPurple);
+            return $"‖color:{color}‖[{contentPackage.Name}]‖color:end‖ {message}";
+#else
+            return $"[{contentPackage.Name}] {message}";
+#endif
         }
 
 #if CLIENT

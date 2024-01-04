@@ -568,7 +568,7 @@ namespace Barotrauma
                                 itemContainer.KeepOpenWhenEquippedBy(character) && 
                                 !DraggingItems.Contains(item) &&
                                 character.CanAccessInventory(itemContainer.Inventory) &&
-                                !highlightedSubInventorySlots.Any(s => s.Inventory == itemContainer.Inventory))
+                                !highlightedSubInventorySlots.Any(s => s.Inventory == itemContainer.Inventory && s.SlotIndex == i))
                             {
                                 ShowSubInventory(new SlotReference(this, visualSlots[i], i, false, itemContainer.Inventory), deltaTime, cam, hideSubInventories, true);
                             }
@@ -709,11 +709,11 @@ namespace Barotrauma
         private void ShowSubInventory(SlotReference slotRef, float deltaTime, Camera cam, List<SlotReference> hideSubInventories, bool isEquippedSubInventory)
         {
             Rectangle hoverArea = GetSubInventoryHoverArea(slotRef);
-            if (isEquippedSubInventory)
+            if (isEquippedSubInventory && slotRef.Inventory is not ItemInventory { Container.MovableFrame: true, Container.KeepOpenWhenEquipped: true })
             {
                 foreach (SlotReference highlightedSubInventorySlot in highlightedSubInventorySlots)
                 {
-                    if (highlightedSubInventorySlot == slotRef) continue;
+                    if (highlightedSubInventorySlot == slotRef) { continue; }
                     if (hoverArea.Intersects(GetSubInventoryHoverArea(highlightedSubInventorySlot)))
                     {
                         return; // If an equipped one intersects with a currently active hover one, do not open
@@ -818,7 +818,8 @@ namespace Barotrauma
 
                 if (selectedContainer != null && 
                     selectedContainer.Inventory != null && 
-                    !selectedContainer.Inventory.Locked && 
+                    !selectedContainer.Inventory.Locked &&
+                    selectedContainer.DrawInventory &&
                     allowInventorySwap)
                 {
                     //player has selected the inventory of another item -> attempt to move the item there
@@ -841,6 +842,7 @@ namespace Barotrauma
                 }
                 else if (character.HeldItems.FirstOrDefault(i =>
                     i.OwnInventory != null &&
+                    i.OwnInventory.Container.DrawInventory &&
                     (i.OwnInventory.CanBePut(item) || ((i.OwnInventory.Capacity == 1 || i.OwnInventory.Container.HasSubContainers) && i.OwnInventory.AllowSwappingContainedItems && i.OwnInventory.Container.CanBeContained(item)))) is { } equippedContainer)
                 {
                     if (allowEquip)
@@ -1027,7 +1029,7 @@ namespace Barotrauma
                     //order by the condition of the contained item to prefer putting into the item with the emptiest ammo/battery/tank
                     foreach (Item heldItem in character.HeldItems.OrderByDescending(heldItem => GetContainPriority(item, heldItem)))
                     {
-                        if (heldItem.OwnInventory == null) { continue; }
+                        if (heldItem.OwnInventory == null || !heldItem.OwnInventory.Container.DrawInventory) { continue; }
                         //don't allow swapping if we're moving items into an item with 1 slot holding a stack of items
                         //(in that case, the quick action should just fill up the stack)
                         bool disallowSwapping = 

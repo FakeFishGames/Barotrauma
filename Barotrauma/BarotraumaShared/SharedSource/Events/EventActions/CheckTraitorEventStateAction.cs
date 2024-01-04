@@ -17,7 +17,8 @@ namespace Barotrauma
             }
             else
             {
-                DebugConsole.ThrowError($"Cannot use the action {nameof(CheckTraitorEventStateAction)} in the event \"{parentEvent.Prefab.Identifier}\" because it's not a traitor event.");
+                DebugConsole.ThrowError($"Cannot use the action {nameof(CheckTraitorEventStateAction)} in the event \"{parentEvent.Prefab.Identifier}\" because it's not a traitor event.",
+                    contentPackage: element.ContentPackage);
             }
         }
 

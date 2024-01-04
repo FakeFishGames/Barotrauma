@@ -155,6 +155,7 @@ namespace Barotrauma
                     .Distinct(new TypeComparer<ContentFile>())
                     .ForEach(f => f.Sort());
                 MergedHash = Md5Hash.MergeHashes(All.Select(cp => cp.Hash));
+                TextManager.IncrementLanguageVersion();
             }
 
             public static int IndexOf(ContentPackage contentPackage)

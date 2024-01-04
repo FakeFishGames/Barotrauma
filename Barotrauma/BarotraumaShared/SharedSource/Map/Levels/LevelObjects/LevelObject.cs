@@ -160,7 +160,7 @@ namespace Barotrauma
         
         partial void InitProjSpecific();
 
-        public AttackResult AddDamage(Character attacker, Vector2 worldPosition, Attack attack, float deltaTime, bool playSound = true)
+        public AttackResult AddDamage(Character attacker, Vector2 worldPosition, Attack attack, Vector2 impulseDirection, float deltaTime, bool playSound = true)
         {
             if (Health <= 0.0f) { return new AttackResult(0.0f); }
 

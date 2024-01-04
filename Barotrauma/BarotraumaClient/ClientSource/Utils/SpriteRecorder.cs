@@ -35,7 +35,7 @@ namespace Barotrauma
                 Vector2 pos,
                 Rectangle srcRect,
                 Color color,
-                float rotation,
+                float rotationRad,
                 Vector2 origin,
                 Vector2 scale,
                 SpriteEffects effects,
@@ -55,9 +55,8 @@ namespace Barotrauma
                     (srcRectBottom, srcRectTop) = (srcRectTop, srcRectBottom);
                 }
 
-                rotation = MathHelper.ToRadians(rotation);
-                float sin = (float)Math.Sin(rotation);
-                float cos = (float)Math.Cos(rotation);
+                float sin = (float)Math.Sin(rotationRad);
+                float cos = (float)Math.Cos(rotationRad);
 
                 var size = srcRect.Size.ToVector2() * scale;
 
@@ -183,11 +182,11 @@ namespace Barotrauma
             commandList.Add(command);
         }
         
-        public void Draw(Texture2D texture, Vector2 pos, Rectangle? srcRect, Color color, float rotation, Vector2 origin, Vector2 scale, SpriteEffects effects, float depth)
+        public void Draw(Texture2D texture, Vector2 pos, Rectangle? srcRect, Color color, float rotationRad, Vector2 origin, Vector2 scale, SpriteEffects effects, float depth)
         {
             if (isDisposed) { return; }
 
-            var command = Command.FromTransform(texture, pos, srcRect ?? texture.Bounds, color, rotation, origin, scale, effects, depth, commandList.Count);
+            var command = Command.FromTransform(texture, pos, srcRect ?? texture.Bounds, color, rotationRad, origin, scale, effects, depth, commandList.Count);
             AppendCommand(command);
         }
 

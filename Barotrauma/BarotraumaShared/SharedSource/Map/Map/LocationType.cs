@@ -1,4 +1,5 @@
-﻿using Barotrauma.IO;
+﻿using Barotrauma.Extensions;
+using Barotrauma.IO;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -13,7 +14,7 @@ namespace Barotrauma
     {
         public static readonly PrefabCollection<LocationType> Prefabs = new PrefabCollection<LocationType>();
 
-        private readonly ImmutableArray<string> names;
+        private readonly ImmutableArray<string> rawNames;
         private readonly ImmutableArray<Sprite> portraits;
 
         //<name, commonness>
@@ -26,7 +27,7 @@ namespace Barotrauma
         public readonly LocalizedString Name;
         public readonly LocalizedString Description;
 
-        public readonly LocalizedString ForceLocationName;
+        public readonly Identifier ForceLocationName;
 
         public readonly float BeaconStationChance;
 
@@ -54,12 +55,20 @@ namespace Barotrauma
             private set;
         }
 
+        private readonly ImmutableArray<Identifier>? nameIdentifiers = null;
+
+        private LanguageIdentifier nameFormatLanguage;
+
         private ImmutableArray<string>? nameFormats = null;
         public IReadOnlyList<string> NameFormats
         {
             get
             {
-                nameFormats ??= TextManager.GetAll($"LocationNameFormat.{Identifier}").ToImmutableArray();
+                if (nameFormats == null || GameSettings.CurrentConfig.Language != nameFormatLanguage)
+                {
+                    nameFormats = TextManager.GetAll($"LocationNameFormat.{Identifier}").ToImmutableArray();
+                    nameFormatLanguage = GameSettings.CurrentConfig.Language;
+                }
                 return nameFormats;
             }
         }
@@ -143,29 +152,37 @@ namespace Barotrauma
 
             if (element.GetAttribute("name") != null)
             {
-                ForceLocationName = TextManager.Get(element.GetAttributeString("name", string.Empty));
+                ForceLocationName = element.GetAttributeIdentifier("name", string.Empty);
             }
             else
             {
-                string[] rawNamePaths = element.GetAttributeStringArray("namefile", new string[] { "Content/Map/locationNames.txt" });
                 var names = new List<string>();
-                foreach (string rawPath in rawNamePaths)
+                //backwards compatibility for location names defined in a text file
+                string[] rawNamePaths = element.GetAttributeStringArray("namefile", Array.Empty<string>());
+                if (rawNamePaths.Any())
                 {
-                    try
+                    foreach (string rawPath in rawNamePaths)
                     {
-                        var path = ContentPath.FromRaw(element.ContentPackage, rawPath.Trim());
-                        names.AddRange(File.ReadAllLines(path.Value).ToList());
+                        try
+                        {
+                            var path = ContentPath.FromRaw(element.ContentPackage, rawPath.Trim());
+                            names.AddRange(File.ReadAllLines(path.Value).ToList());
+                        }
+                        catch (Exception e)
+                        {
+                            DebugConsole.ThrowError($"Failed to read name file \"rawPath\" for location type \"{Identifier}\"!", e);
+                        }
                     }
-                    catch (Exception e)
+                    if (!names.Any())
                     {
-                        DebugConsole.ThrowError($"Failed to read name file \"rawPath\" for location type \"{Identifier}\"!", e);
+                        names.Add("ERROR: No names found");
                     }
+                    this.rawNames = names.ToImmutableArray();
                 }
-                if (!names.Any())
+                else
                 {
-                    names.Add("ERROR: No names found");
+                    nameIdentifiers = element.GetAttributeIdentifierArray("nameidentifiers", new Identifier[] { Identifier }).ToImmutableArray();
                 }
-                this.names = names.ToImmutableArray();
             }
 
             string[] commonnessPerZoneStrs = element.GetAttributeStringArray("commonnessperzone", Array.Empty<string>());
@@ -259,17 +276,64 @@ namespace Barotrauma
             return portraits[Math.Abs(randomSeed) % portraits.Length];
         }
 
-        public string GetRandomName(Random rand, IEnumerable<Location> existingLocations)
+        public Identifier GetRandomNameId(Random rand, IEnumerable<Location> existingLocations)
         {
+            if (nameIdentifiers == null)
+            {
+                return Identifier.Empty;
+            }
+            List<Identifier> nameIds = new List<Identifier>();
+            foreach (var nameId in nameIdentifiers)
+            {
+                int index = 0;
+                while (true)
+                {
+                    Identifier tag = $"LocationName.{nameId}.{index}".ToIdentifier();
+                    if (TextManager.ContainsTag(tag, TextManager.DefaultLanguage))
+                    {
+                        nameIds.Add(tag);
+                        index++;
+                    }
+                    else
+                    {
+                        if (index == 0)
+                        {
+                            DebugConsole.ThrowError($"Could not find any location names for the location type {Identifier}. Name identifier: {nameId}");
+                        }
+                        break;
+                    }
+                }
+            }
+            if (nameIds.None())
+            {
+                return Identifier.Empty;
+            }
             if (existingLocations != null)
             {
-                var unusedNames = names.Where(name => !existingLocations.Any(l => l.BaseName == name)).ToList();
+                var unusedNameIds = nameIds.FindAll(nameId => existingLocations.None(l => l.NameIdentifier == nameId));
+                if (unusedNameIds.Count > 0)
+                {
+                    return unusedNameIds[rand.Next() % unusedNameIds.Count];
+                }
+            }
+            return nameIds[rand.Next() % nameIds.Count];
+        }
+
+        /// <summary>
+        /// For backwards compatibility. Chooses a random name from the names defined in the .txt name files (<see cref="rawNamePaths"/>).
+        /// </summary>
+        public string GetRandomRawName(Random rand, IEnumerable<Location> existingLocations)
+        {
+            if (rawNames == null || rawNames.None()) { return string.Empty; }
+            if (existingLocations != null)
+            {
+                var unusedNames = rawNames.Where(name => !existingLocations.Any(l => l.DisplayName.Value == name)).ToList();
                 if (unusedNames.Count > 0)
                 {
                     return unusedNames[rand.Next() % unusedNames.Count];
                 }
             }
-            return names[rand.Next() % names.Length];
+            return rawNames[rand.Next() % rawNames.Length];
         }
 
         public static LocationType Random(Random rand, int? zone = null, bool requireOutpost = false, Func<LocationType, bool> predicate = null)

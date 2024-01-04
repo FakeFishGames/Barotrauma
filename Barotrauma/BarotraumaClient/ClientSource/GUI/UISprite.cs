@@ -163,7 +163,7 @@ namespace Barotrauma
             else if (Tile)
             {
                 Vector2 startPos = new Vector2(rect.X, rect.Y);
-                Sprite.DrawTiled(spriteBatch, startPos, new Vector2(rect.Width, rect.Height), color, startOffset: uvOffset);
+                Sprite.DrawTiled(spriteBatch, startPos, new Vector2(rect.Width, rect.Height), color: color, startOffset: uvOffset);
             }
             else
             {

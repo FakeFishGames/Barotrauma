@@ -16,6 +16,8 @@ namespace Barotrauma.Items.Components
 
         private GUIProgressBar powerIndicator;
 
+        private Vector2? debugDrawTargetPos;
+
         public int UIElementHeight
         {
             get 
@@ -422,9 +424,23 @@ namespace Barotrauma.Items.Components
             if (GameMain.DebugDraw)
             {
                 Vector2 firingPos = GetRelativeFiringPosition();
+                Vector2 endPos = firingPos + 3500 * GetBarrelDir();
                 firingPos.Y = -firingPos.Y;
+                endPos.Y = -endPos.Y;
                 GUI.DrawLine(spriteBatch, firingPos - Vector2.UnitX * 5, firingPos + Vector2.UnitX * 5, Color.Red);
                 GUI.DrawLine(spriteBatch, firingPos - Vector2.UnitY * 5, firingPos + Vector2.UnitY * 5, Color.Red);
+
+                if (debugDrawTargetPos.HasValue)
+                {
+                    Vector2 targetPos = debugDrawTargetPos.Value;
+                    targetPos.Y = -targetPos.Y;
+                    GUI.DrawLine(spriteBatch, targetPos - Vector2.UnitX * 5, targetPos + Vector2.UnitX * 5, Color.Magenta, width: 5);
+                    GUI.DrawLine(spriteBatch, targetPos - Vector2.UnitY * 5, targetPos + Vector2.UnitY * 5, Color.Magenta, width: 5);
+
+                    GUI.DrawLine(spriteBatch, firingPos, targetPos, Color.Magenta, width: 2);
+
+                }
+                GUI.DrawLine(spriteBatch, firingPos, endPos, Color.LightGray, width: 2);
             }
 
             if (!editing || GUI.DisableHUD || !item.IsSelected) { return; }

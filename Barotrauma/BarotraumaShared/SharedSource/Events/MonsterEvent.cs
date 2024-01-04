@@ -10,14 +10,45 @@ namespace Barotrauma
 {
     class MonsterEvent : Event
     {
+        /// <summary>
+        /// The name of the species to spawn
+        /// </summary>
         public readonly Identifier SpeciesName;
-        public readonly int MinAmount, MaxAmount;
+
+        /// <summary>
+        /// Minimum amount of monsters to spawn. You can also use "Amount" if you want to spawn a fixed number of monsters.
+        /// </summary>
+        public readonly int MinAmount;
+        /// <summary>
+        /// Maximum amount of monsters to spawn. You can also use "Amount" if you want to spawn a fixed number of monsters.
+        /// </summary>
+        public readonly int MaxAmount;
+
         private readonly List<Character> monsters = new List<Character>();
 
+        /// <summary>
+        /// The monsters are spawned at least this distance away from the players and submarines.
+        /// </summary>
         public readonly float SpawnDistance;
+
+        /// <summary>
+        /// Amount of random variance in the spawn position, in pixels. Can be used to prevent all the monsters from spawning at the exact same position.
+        /// </summary>
         private readonly float scatter;
+
+        /// <summary>
+        /// Used for offsetting the spawns towards the end position of the level, so that they spawn farther afront the sub than normally. In pixels.
+        /// </summary>
         private readonly float offset;
+
+        /// <summary>
+        /// Delay between spawning the monsters. Only relevant if the event spawns more than one monster.
+        /// </summary>
         private readonly float delayBetweenSpawns;
+
+        /// <summary>
+        /// Number seconds before the event resets after all the monsters are dead. Can be used to make the event spawn monsters multiple times.
+        /// </summary>
         private float resetTime;
         private float resetTimer;
 
@@ -25,11 +56,22 @@ namespace Barotrauma
 
         private bool disallowed;
 
+        /// <summary>
+        /// Where should the monster spawn?
+        /// </summary>
         public readonly Level.PositionType SpawnPosType;
+
+        /// <summary>
+        /// If set, the monsters will spawn at a spawnpoint that has this tag. Only relevant for events that spawn monsters in a submarine, beacon station, wreck, outpost or ruin.
+        /// </summary>
         private readonly string spawnPointTag;
 
         private bool spawnPending, spawnReady;
 
+        /// <summary>
+        /// Maximum number of the specific type of monster in the entire level. Can be used to prevent the event from spawning more monsters if there's
+        /// already enough of that type of monster, e.g. spawned by another event or by a mission.
+        /// </summary>
         public readonly int MaxAmountPerLevel = int.MaxValue;
 
         public IReadOnlyList<Character> Monsters => monsters;
@@ -82,13 +124,7 @@ namespace Barotrauma
 
             MaxAmountPerLevel = prefab.ConfigElement.GetAttributeInt("maxamountperlevel", int.MaxValue);
 
-            var spawnPosTypeStr = prefab.ConfigElement.GetAttributeString("spawntype", "");
-            if (string.IsNullOrWhiteSpace(spawnPosTypeStr) ||
-                !Enum.TryParse(spawnPosTypeStr, true, out SpawnPosType))
-            {
-                SpawnPosType = Level.PositionType.MainPath;
-            }
-
+            SpawnPosType = prefab.ConfigElement.GetAttributeEnum("spawntype", Level.PositionType.MainPath);
             //backwards compatibility
             if (prefab.ConfigElement.GetAttributeBool("spawndeep", false))
             {
@@ -127,7 +163,8 @@ namespace Barotrauma
             var file = CharacterPrefab.FindBySpeciesName(SpeciesName)?.ContentFile;
             if (file == null)
             {
-                DebugConsole.ThrowError($"Failed to find config file for species \"{SpeciesName}\"");
+                DebugConsole.ThrowError($"Failed to find config file for species \"{SpeciesName}\".", 
+                    contentPackage: Prefab.ContentPackage);
                 yield break;
             }
             else
@@ -159,7 +196,8 @@ namespace Barotrauma
                 Character createdCharacter = Character.Create(SpeciesName, Vector2.Zero, seed, characterInfo: null, isRemotePlayer: false, hasAi: true, createNetworkEvent: true, throwErrorIfNotFound: false);
                 if (createdCharacter == null)
                 {
-                    DebugConsole.AddWarning($"Error in MonsterEvent: failed to spawn the character \"{SpeciesName}\". Content package: \"{prefab.ConfigElement?.ContentPackage?.Name ?? "unknown"}\".");
+                    DebugConsole.AddWarning($"Error in MonsterEvent: failed to spawn the character \"{SpeciesName}\". Content package: \"{prefab.ConfigElement?.ContentPackage?.Name ?? "unknown"}\".",
+                        Prefab.ContentPackage);
                     disallowed = true;
                     continue;
                 }
@@ -355,29 +393,28 @@ namespace Barotrauma
                 {
                     if (offset > 0)
                     {
-                        Vector2 dir;
-                        var waypoints = WayPoint.WayPointList.FindAll(wp => wp.Submarine == null && wp.Ruin == null);
-                        var nearestWaypoint = waypoints.OrderBy(wp => Vector2.DistanceSquared(wp.WorldPosition, spawnPos.Value)).FirstOrDefault();
-                        if (nearestWaypoint != null)
+                        var tunnelType = chosenPosition.PositionType == Level.PositionType.MainPath ? Level.TunnelType.MainPath : Level.TunnelType.SidePath;
+                        var waypoints = WayPoint.WayPointList.FindAll(wp => 
+                            wp.Submarine == null && 
+                            wp.Ruin == null &&
+                            wp.Tunnel?.Type == tunnelType &&
+                            wp.WorldPosition.X > spawnPos.Value.X);
+
+                        if (waypoints.None())
                         {
-                            int currentIndex = waypoints.IndexOf(nearestWaypoint);
-                            var nextWaypoint = waypoints[Math.Min(currentIndex + 20, waypoints.Count - 1)];
-                            dir = Vector2.Normalize(nextWaypoint.WorldPosition - nearestWaypoint.WorldPosition);
-                            // Ensure that the spawn position is not offset to the left.
-                            if (dir.X < 0)
-                            {
-                                dir.X = 0;
-                            }
+                            DebugConsole.AddWarning($"Failed to find a spawn position offset from {spawnPos.Value}.",
+                                Prefab.ContentPackage);
                         }
                         else
                         {
-                            dir = new Vector2(1, Rand.Range(-1f, 1f));
-                        }
-                        Vector2 targetPos = spawnPos.Value + dir * offset;
-                        var targetWaypoint = waypoints.OrderBy(wp => Vector2.DistanceSquared(wp.WorldPosition, targetPos)).FirstOrDefault();
-                        if (targetWaypoint != null)
-                        {
-                            spawnPos = targetWaypoint.WorldPosition;
+                            float offsetSqr = offset * offset;
+                            //find the waypoint whose distance from the spawnPos is closest to the desired offset
+                            var targetWaypoint = waypoints.OrderBy(wp => 
+                                Math.Abs(Vector2.DistanceSquared(wp.WorldPosition, spawnPos.Value) - offsetSqr)).FirstOrDefault();
+                            if (targetWaypoint != null)
+                            {
+                                spawnPos = targetWaypoint.WorldPosition;
+                            }
                         }
                     }
                     // Ensure that the position is not inside a submarine (in practice wrecks).
@@ -636,7 +673,7 @@ namespace Barotrauma
                         monster.AnimController.SetPosition(FarseerPhysics.ConvertUnits.ToSimUnits(pos));
 
                         var eventManager = GameMain.GameSession.EventManager;
-                        if (eventManager != null)
+                        if (eventManager != null && monster.Params.AI != null)
                         {
                             if (SpawnPosType.HasFlag(Level.PositionType.MainPath) || SpawnPosType.HasFlag(Level.PositionType.SidePath))
                             {
@@ -663,7 +700,7 @@ namespace Barotrauma
                             //this will do nothing if the monsters have no swarm behavior defined, 
                             //otherwise it'll make the spawned characters act as a swarm
                             SwarmBehavior.CreateSwarm(monsters.Cast<AICharacter>());
-                            DebugConsole.NewMessage($"Spawned: {ToString()}. Strength: {StringFormatter.FormatZeroDecimal(monsters.Sum(m => m.Params.AI.CombatStrength))}.", Color.LightBlue, debugOnly: true);
+                            DebugConsole.NewMessage($"Spawned: {ToString()}. Strength: {StringFormatter.FormatZeroDecimal(monsters.Sum(m => m.Params.AI?.CombatStrength ?? 0))}.", Color.LightBlue, debugOnly: true);
                         }
 
                         if (GameMain.GameSession != null)

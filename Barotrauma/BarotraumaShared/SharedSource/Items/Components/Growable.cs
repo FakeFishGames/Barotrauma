@@ -59,7 +59,8 @@ namespace Barotrauma.Items.Components
                         StatusEffect effect = StatusEffect.Load(subElement, Prefab?.Name.Value);
                         if (effect.type != ActionType.OnProduceSpawned)
                         {
-                            DebugConsole.ThrowError("Only OnProduceSpawned type can be used in <ProducedItem>.");
+                            DebugConsole.ThrowError("Only OnProduceSpawned type can be used in <ProducedItem>.", 
+                                contentPackage: element.ContentPackage);
                             continue;
                         }
 

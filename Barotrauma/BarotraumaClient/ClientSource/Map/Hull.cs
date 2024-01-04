@@ -218,6 +218,7 @@ namespace Barotrauma
             {
                 if (primaryMouseButtonHeld)
                 {
+                    ShowHulls = true;
                     hull.WaterVolume += 100000.0f * deltaTime;
                     hull.networkUpdatePending = true;
                     hull.serverUpdateDelay = 0.5f;
@@ -277,12 +278,21 @@ namespace Barotrauma
             Rectangle drawRect =
                 Submarine == null ? rect : new Rectangle((int)(Submarine.DrawPosition.X + rect.X), (int)(Submarine.DrawPosition.Y + rect.Y), rect.Width, rect.Height);
 
-            if ((IsSelected || IsHighlighted) && editing)
+            if (editing)
             {
+                if (IsSelected || IsHighlighted)
+                {
+                    GUI.DrawRectangle(spriteBatch,
+                        new Vector2(drawRect.X, -drawRect.Y),
+                        new Vector2(rect.Width, rect.Height),
+                        (IsHighlighted ? Color.LightBlue * 0.8f : GUIStyle.Red * 0.5f) * alpha, false, 0, (int)Math.Max(5.0f / Screen.Selected.Cam.Zoom, 1.0f));
+                }
+
+                float waterHeight = WaterVolume / rect.Width;
                 GUI.DrawRectangle(spriteBatch,
-                    new Vector2(drawRect.X, -drawRect.Y),
-                    new Vector2(rect.Width, rect.Height),
-                    (IsHighlighted ? Color.LightBlue * 0.8f : GUIStyle.Red * 0.5f) * alpha, false, 0, (int)Math.Max(5.0f / Screen.Selected.Cam.Zoom, 1.0f));
+                    new Vector2(drawRect.X, -drawRect.Y + drawRect.Height - waterHeight),
+                    new Vector2(drawRect.Width, waterHeight),
+                    Color.Blue * 0.25f, isFilled: true);
             }
 
             GUI.DrawRectangle(spriteBatch,
@@ -746,7 +756,7 @@ namespace Barotrauma
 
                 var newFire = i < FireSources.Count ?
                     FireSources[i] :
-                    new FireSource(Submarine == null ? pos : pos + Submarine.Position, null, true);
+                    new FireSource(Submarine == null ? pos : pos + Submarine.Position, sourceCharacter: null, isNetworkMessage: true);
                 newFire.Position = pos;
                 newFire.Size = new Vector2(size, newFire.Size.Y);
 

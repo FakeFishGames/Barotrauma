@@ -106,7 +106,8 @@ namespace Barotrauma
             CharacterPrefab prefab = CharacterPrefab.Find(p => p.Identifier == speciesName && (contentPackage == null || p.ContentFile.ContentPackage == contentPackage));
             if (prefab?.ConfigElement == null)
             {
-                DebugConsole.ThrowError($"Failed to find config file for '{speciesName}' (content package {contentPackage?.Name ?? "null"})");
+                DebugConsole.ThrowError($"Failed to find config file for '{speciesName}'",
+                    contentPackage: contentPackage);
                 return string.Empty;
             }
             return GetFolder(prefab.ConfigElement, prefab.ContentFile.Path.Value);
@@ -183,7 +184,8 @@ namespace Barotrauma
                 }
                 if (error != null)
                 {
-                    DebugConsole.ThrowError(error);
+                    DebugConsole.ThrowError(error,
+                        contentPackage: prefab?.ContentPackage);
                 }
             }
             if (selectedFile == null)
@@ -444,7 +446,8 @@ namespace Barotrauma
         {
             if (source.MainElement == null)
             {
-                DebugConsole.ThrowError("[RagdollParams] The source XML Element of the given RagdollParams is null!");
+                DebugConsole.ThrowError("[RagdollParams] The source XML Element of the given RagdollParams is null!",
+                    contentPackage: source.MainElement?.ContentPackage);
                 return;
             }
             Deserialize(source.MainElement, alsoChildren: false);
@@ -453,7 +456,8 @@ namespace Barotrauma
             // TODO: cannot currently undo joint/limb deletion.
             if (sourceSubParams.Count != subParams.Count)
             {
-                DebugConsole.ThrowError("[RagdollParams] The count of the sub params differs! Failed to revert to the previous snapshot! Please reset the ragdoll to undo the changes.");
+                DebugConsole.ThrowError("[RagdollParams] The count of the sub params differs! Failed to revert to the previous snapshot! Please reset the ragdoll to undo the changes.",
+                    contentPackage: source.MainElement?.ContentPackage);
                 return;
             }
             for (int i = 0; i < subParams.Count; i++)
@@ -461,7 +465,8 @@ namespace Barotrauma
                 var subSubParams = subParams[i].SubParams;
                 if (subSubParams.Count != sourceSubParams[i].SubParams.Count)
                 {
-                    DebugConsole.ThrowError("[RagdollParams] The count of the sub sub params differs! Failed to revert to the previous snapshot! Please reset the ragdoll to undo the changes.");
+                    DebugConsole.ThrowError("[RagdollParams] The count of the sub sub params differs! Failed to revert to the previous snapshot! Please reset the ragdoll to undo the changes.",
+                        contentPackage: source.MainElement?.ContentPackage);
                     return;
                 }
                 subParams[i].Deserialize(sourceSubParams[i].Element, recursive: false);
@@ -890,14 +895,14 @@ namespace Barotrauma
 #if CLIENT
             public DecorativeSprite DecorativeSprite { get; private set; }
 
-            public override bool Deserialize(XElement element = null, bool recursive = true)
+            public override bool Deserialize(ContentXElement element = null, bool recursive = true)
             {
                 base.Deserialize(element, recursive);
                 DecorativeSprite.SerializableProperties = SerializableProperty.DeserializeProperties(DecorativeSprite, element ?? Element);
                 return SerializableProperties != null;
             }
 
-            public override bool Serialize(XElement element = null, bool recursive = true)
+            public override bool Serialize(ContentXElement element = null, bool recursive = true)
             {
                 base.Serialize(element, recursive);
                 SerializableProperty.SerializeProperties(DecorativeSprite, element ?? Element);
@@ -985,7 +990,8 @@ namespace Barotrauma
                             deformation = new PositionalDeformationParams(deformationElement);
                             break;
                         default:
-                            DebugConsole.ThrowError($"SpriteDeformationParams not implemented: '{typeName}'");
+                            DebugConsole.ThrowError($"SpriteDeformationParams not implemented: '{typeName}'", 
+                                contentPackage: element.ContentPackage);
                             break;
                     }
                     if (deformation != null)
@@ -1000,14 +1006,14 @@ namespace Barotrauma
 #if CLIENT
             public Dictionary<SpriteDeformationParams, XElement> Deformations { get; private set; }
 
-            public override bool Deserialize(XElement element = null, bool recursive = true)
+            public override bool Deserialize(ContentXElement element = null, bool recursive = true)
             {
                 base.Deserialize(element, recursive);
                 Deformations.ForEach(d => d.Key.SerializableProperties = SerializableProperty.DeserializeProperties(d.Key, d.Value));
                 return SerializableProperties != null;
             }
 
-            public override bool Serialize(XElement element = null, bool recursive = true)
+            public override bool Serialize(ContentXElement element = null, bool recursive = true)
             {
                 base.Serialize(element, recursive);
                 Deformations.ForEach(d => SerializableProperty.SerializeProperties(d.Key, d.Value));
@@ -1098,14 +1104,14 @@ namespace Barotrauma
             }
 
 #if CLIENT
-            public override bool Deserialize(XElement element = null, bool recursive = true)
+            public override bool Deserialize(ContentXElement element = null, bool recursive = true)
             {
                 base.Deserialize(element, recursive);
                 LightSource.Deserialize(element ?? Element);
                 return SerializableProperties != null;
             }
 
-            public override bool Serialize(XElement element = null, bool recursive = true)
+            public override bool Serialize(ContentXElement element = null, bool recursive = true)
             {
                 base.Serialize(element, recursive);
                 LightSource.Serialize(element ?? Element);
@@ -1130,14 +1136,14 @@ namespace Barotrauma
                 Attack = new Attack(element, ragdoll.SpeciesName.Value);
             }
 
-            public override bool Deserialize(XElement element = null, bool recursive = true)
+            public override bool Deserialize(ContentXElement element = null, bool recursive = true)
             {
                 base.Deserialize(element, recursive);
                 Attack.Deserialize(element ?? Element, parentDebugName: Ragdoll?.SpeciesName.ToString() ?? "null");
                 return SerializableProperties != null;
             }
 
-            public override bool Serialize(XElement element = null, bool recursive = true)
+            public override bool Serialize(ContentXElement element = null, bool recursive = true)
             {
                 base.Serialize(element, recursive);
                 Attack.Serialize(element ?? Element);
@@ -1182,14 +1188,14 @@ namespace Barotrauma
                 DamageModifier = new DamageModifier(element, ragdoll.SpeciesName.Value);
             }
 
-            public override bool Deserialize(XElement element = null, bool recursive = true)
+            public override bool Deserialize(ContentXElement element = null, bool recursive = true)
             {
                 base.Deserialize(element, recursive);
                 DamageModifier.Deserialize(element ?? Element);
                 return SerializableProperties != null;
             }
 
-            public override bool Serialize(XElement element = null, bool recursive = true)
+            public override bool Serialize(ContentXElement element = null, bool recursive = true)
             {
                 base.Serialize(element, recursive);
                 DamageModifier.Serialize(element ?? Element);
@@ -1218,7 +1224,7 @@ namespace Barotrauma
             public virtual string Name { get; set; }
             public Dictionary<Identifier, SerializableProperty> SerializableProperties { get; private set; }
             public ContentXElement Element { get; set; }
-            public XElement OriginalElement { get; protected set; }
+            public ContentXElement OriginalElement { get; protected set; }
             public List<SubParam> SubParams { get; set; } = new List<SubParam>();
             public RagdollParams Ragdoll { get; private set; }
 
@@ -1230,14 +1236,14 @@ namespace Barotrauma
             public SubParam(ContentXElement element, RagdollParams ragdoll)
             {
                 Element = element;
-                OriginalElement = new XElement(element);
+                OriginalElement = new ContentXElement(element.ContentPackage, element);
                 Ragdoll = ragdoll;
                 SerializableProperties = SerializableProperty.DeserializeProperties(this, element);
             }
 
-            public virtual bool Deserialize(XElement element = null, bool recursive = true)
+            public virtual bool Deserialize(ContentXElement element = null, bool recursive = true)
             {
-                element = element ?? Element;
+                element ??= Element;
                 SerializableProperties = SerializableProperty.DeserializeProperties(this, element);
                 if (recursive)
                 {
@@ -1246,9 +1252,9 @@ namespace Barotrauma
                 return SerializableProperties != null;
             }
 
-            public virtual bool Serialize(XElement element = null, bool recursive = true)
+            public virtual bool Serialize(ContentXElement element = null, bool recursive = true)
             {
-                element = element ?? Element;
+                element ??= Element;
                 SerializableProperty.SerializeProperties(this, element, true);
                 if (recursive)
                 {

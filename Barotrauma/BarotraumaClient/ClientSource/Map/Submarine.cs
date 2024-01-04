@@ -25,7 +25,7 @@ namespace Barotrauma
         /// <summary>
         /// Margin applied around the view area when culling entities (i.e. entities that are this far outside the view are still considered visible)
         /// </summary>
-        private const int CullMargin = 500;
+        private const int CullMargin = 50;
         /// <summary>
         /// Update entity culling when any corner of the view has moved more than this
         /// </summary>
@@ -499,6 +499,13 @@ namespace Barotrauma
                 }
             }
 
+            if (Hull.HullList.Any(h => h.WaterVolume > 0.0f))
+            {
+                errorMsgs.Add(TextManager.Get("WaterInHullsWarning").Value);
+                warnings.Add(SubEditorScreen.WarningType.WaterInHulls);
+                Hull.ShowHulls = true;
+            }
+
             if (Info.Type == SubmarineType.Player)
             {
                 foreach (Item item in Item.ItemList)
@@ -713,18 +720,12 @@ namespace Barotrauma
             return GameMain.LightManager.Lights.Count(l => l.CastShadows && !l.IsBackground) - disabledItemLightCount;
         }
 
-        public static Vector2 MouseToWorldGrid(Camera cam, Submarine sub, bool round = false)
+        public static Vector2 MouseToWorldGrid(Camera cam, Submarine sub, Vector2? mousePos = null, bool round = false)
         {
-            Vector2 position = PlayerInput.MousePosition;
+            Vector2 position = mousePos ?? PlayerInput.MousePosition;
             position = cam.ScreenToWorld(position);
 
-            Vector2 worldGridPos = VectorToWorldGrid(position, round);
-
-            if (sub != null)
-            {
-                worldGridPos.X += sub.Position.X % GridSize.X;
-                worldGridPos.Y += sub.Position.Y % GridSize.Y;
-            }
+            Vector2 worldGridPos = VectorToWorldGrid(position, sub, round);
 
             return worldGridPos;
         }

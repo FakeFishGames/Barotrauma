@@ -116,7 +116,8 @@ namespace Barotrauma
             {
                 DebugConsole.ThrowError(
                     $"Error in {nameof(EventObjectiveAction)} in the event \"{parentEvent.Prefab.Identifier}\"" +
-                    $" - unrecognized child element \"Replace\".");
+                    $" - unrecognized child element \"Replace\".",
+                    contentPackage: element.ContentPackage);
             }
         }
 

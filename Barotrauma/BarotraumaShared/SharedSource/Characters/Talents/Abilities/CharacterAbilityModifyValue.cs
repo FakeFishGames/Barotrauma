@@ -11,7 +11,8 @@
             multiplyValue = abilityElement.GetAttributeFloat("multiplyvalue", 1f);
             if (MathUtils.NearlyEqual(addedValue, 0.0f) && MathUtils.NearlyEqual(multiplyValue, 1.0f))
             {
-                DebugConsole.ThrowError($"Error in talent {CharacterTalent.DebugIdentifier}, {nameof(CharacterAbilityModifyValue)} - added value is 0 and multiplier is 1, the ability will do nothing.");
+                DebugConsole.ThrowError($"Error in talent {CharacterTalent.DebugIdentifier}, {nameof(CharacterAbilityModifyValue)} - added value is 0 and multiplier is 1, the ability will do nothing.",
+                    contentPackage: abilityElement.ContentPackage);
             }
         }
 

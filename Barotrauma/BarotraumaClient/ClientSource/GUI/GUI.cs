@@ -512,10 +512,18 @@ namespace Barotrauma
                                     soundStr += " (stopped)";
                                     clr *= 0.5f;
                                 }
-                                else if (playingSoundChannel.Muffled)
+                                else
                                 {
-                                    soundStr += " (muffled)";
-                                    clr = Color.Lerp(clr, Color.LightGray, 0.5f);
+                                    if (playingSoundChannel.Muffled)
+                                    {
+                                        soundStr += " (muffled)";
+                                        clr = Color.Lerp(clr, Color.LightGray, 0.5f);
+                                    }
+                                    if (playingSoundChannel.FadingOutAndDisposing)
+                                    {
+                                        soundStr += ". Fading out...";
+                                        clr = Color.Lerp(clr, Color.Black, 0.15f);
+                                    }
                                 }
                             }
 
@@ -2163,10 +2171,10 @@ namespace Barotrauma
             };
         }
 
-        public static GUIMessageBox AskForConfirmation(LocalizedString header, LocalizedString body, Action onConfirm, Action onDeny = null)
+        public static GUIMessageBox AskForConfirmation(LocalizedString header, LocalizedString body, Action onConfirm, Action onDeny = null, Vector2? relativeSize = null, Point? minSize = null)
         {
             LocalizedString[] buttons = { TextManager.Get("Ok"), TextManager.Get("Cancel") };
-            GUIMessageBox msgBox = new GUIMessageBox(header, body, buttons, new Vector2(0.2f, 0.175f), minSize: new Point(300, 175));
+            GUIMessageBox msgBox = new GUIMessageBox(header, body, buttons, relativeSize: relativeSize ?? new Vector2(0.2f, 0.175f), minSize: minSize ?? new Point(300, 175));
 
             // Cancel button
             msgBox.Buttons[1].OnClicked = delegate

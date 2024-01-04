@@ -178,7 +178,7 @@ namespace Barotrauma
                 if (!objectiveManager.IsOrder(this))
                 {
                     // Battery or pump states cannot currently be reported (not implemented) and therefore we must ignore them -> the bots always know if they require attention.
-                    bool ignore = this is AIObjectiveChargeBatteries || this is AIObjectivePumpWater;
+                    bool ignore = this is AIObjectiveChargeBatteries || this is AIObjectivePumpWater || this is AIObjectiveFindThieves;
                     if (!ignore && !ReportedTargets.Contains(target)) { continue; }
                 }
                 if (!Filter(target)) { continue; }

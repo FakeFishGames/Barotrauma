@@ -12,7 +12,7 @@ namespace Barotrauma
         public Identifier Type { get; set; }
 
         [Serialize("", IsPropertySaveable.Yes)]
-        public string Name { get; set; }
+        public Identifier Name { get; set; }
 
         private bool isFinished;
 
@@ -43,7 +43,8 @@ namespace Barotrauma
                         var faction = campaign.Factions.Find(f => f.Prefab.Identifier == Faction);
                         if (faction == null)
                         {
-                            DebugConsole.ThrowError($"Error in ModifyLocationAction ({ParentEvent.Prefab.Identifier}): could not find a faction with the identifier \"{Faction}\".");
+                            DebugConsole.ThrowError($"Error in ModifyLocationAction ({ParentEvent.Prefab.Identifier}): could not find a faction with the identifier \"{Faction}\".",
+                                contentPackage: ParentEvent?.Prefab?.ContentPackage);
                         }
                         else
                         {
@@ -55,7 +56,8 @@ namespace Barotrauma
                         var secondaryFaction = campaign.Factions.Find(f => f.Prefab.Identifier == SecondaryFaction);
                         if (secondaryFaction == null)
                         {
-                            DebugConsole.ThrowError($"Error in ModifyLocationAction ({ParentEvent.Prefab.Identifier}): could not find a faction with the identifier \"{SecondaryFaction}\".");
+                            DebugConsole.ThrowError($"Error in ModifyLocationAction ({ParentEvent.Prefab.Identifier}): could not find a faction with the identifier \"{SecondaryFaction}\".",
+                                contentPackage: ParentEvent.Prefab.ContentPackage);
                         }
                         else
                         {
@@ -67,16 +69,17 @@ namespace Barotrauma
                         var locationType = LocationType.Prefabs.Find(lt => lt.Identifier == Type);
                         if (locationType == null)
                         {
-                            DebugConsole.ThrowError($"Error in ModifyLocationAction ({ParentEvent.Prefab.Identifier}): could not find a location type with the identifier \"{Type}\".");
+                            DebugConsole.ThrowError($"Error in ModifyLocationAction ({ParentEvent.Prefab.Identifier}): could not find a location type with the identifier \"{Type}\".",
+                                contentPackage: ParentEvent.Prefab.ContentPackage);
                         }
                         else if (!location.LocationTypeChangesBlocked)
                         {                           
                             location.ChangeType(campaign, locationType);
                         }
                     }
-                    if (!string.IsNullOrEmpty(Name))
+                    if (!Name.IsEmpty)
                     {
-                        location.ForceName(TextManager.Get(Name).Fallback(Name).Value);
+                        location.ForceName(Name);
                     }
                 }
             }

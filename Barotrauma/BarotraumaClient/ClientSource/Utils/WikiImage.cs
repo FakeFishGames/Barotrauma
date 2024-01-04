@@ -76,7 +76,7 @@ namespace Barotrauma
             float zoom = (float)texWidth / (float)boundingBox.Width;
             int texHeight = (int)(zoom * boundingBox.Height);
 
-            using Camera cam = new Camera();
+            Camera cam = new Camera();
             cam.SetResolution(new Point(texWidth, texHeight));
             cam.MaxZoom = zoom;
             cam.MinZoom = zoom * 0.5f;

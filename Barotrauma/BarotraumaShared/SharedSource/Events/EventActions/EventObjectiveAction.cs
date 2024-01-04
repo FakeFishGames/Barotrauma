@@ -2,7 +2,7 @@ namespace Barotrauma
 {
     partial class EventObjectiveAction : EventAction
     {
-        public enum SegmentActionType { Trigger, Add, Complete, CompleteAndRemove, Remove, Fail, FailAndRemove };
+        public enum SegmentActionType { Trigger, Add, AddIfNotFound, Complete, CompleteAndRemove, Remove, Fail, FailAndRemove };
 
         [Serialize(SegmentActionType.Trigger, IsPropertySaveable.Yes)]
         public SegmentActionType Type { get; set; }
@@ -49,13 +49,15 @@ namespace Barotrauma
             {
                 DebugConsole.ThrowError(
                     $"Error in {nameof(EventObjectiveAction)} in the event \"{parentEvent.Prefab.Identifier}\""+
-                    $" - {nameof(TextTag)} will do nothing unless the action triggers a message box or a video.");
+                    $" - {nameof(TextTag)} will do nothing unless the action triggers a message box or a video.",
+                    contentPackage: element.ContentPackage);
             }
             if (element.GetChildElement("Replace") != null)
             {
                 DebugConsole.ThrowError(
                     $"Error in {nameof(EventObjectiveAction)} in the event \"{parentEvent.Prefab.Identifier}\"" +
-                    $" - unrecognized child element \"Replace\".");
+                    $" - unrecognized child element \"Replace\".",
+                    contentPackage: element.ContentPackage);
             }
         }
 

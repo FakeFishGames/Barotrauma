@@ -2,6 +2,7 @@
 
 using Barotrauma.Steam;
 using System;
+using System.Diagnostics;
 using Barotrauma.IO;
 using System.Linq;
 using System.Text;
@@ -109,18 +110,25 @@ namespace Barotrauma
                 }
             }
 
+            Exception unhandledException = args.ExceptionObject as Exception;
             string reportFilePath = "";
             try
             {
                 reportFilePath = "servercrashreport.log";
-                CrashDump(ref reportFilePath, (Exception)args.ExceptionObject);
+                CrashDump(ref reportFilePath, unhandledException);
             }
-            catch
+            catch (Exception exceptionHandlerError)
             {
-                //fuck
+                Debug.WriteLine(exceptionHandlerError.Message);
+                string slimCrashReport = "Exception handler failed: " + exceptionHandlerError.Message + "\n" + exceptionHandlerError.StackTrace;
+                if (unhandledException != null)
+                {
+                    slimCrashReport += "\n\nInitial exception: " + unhandledException.Message + "\n" + unhandledException.StackTrace;
+                }
+                File.WriteAllText("servercrashreportslim.log", slimCrashReport);
                 reportFilePath = "";
             }
-            swallowExceptions(() => NotifyCrash(reportFilePath, (Exception)args.ExceptionObject));
+            swallowExceptions(() => NotifyCrash(reportFilePath, unhandledException));
             swallowExceptions(() => Game?.Exit());
         }
 

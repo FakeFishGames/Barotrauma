@@ -30,7 +30,8 @@ namespace Barotrauma
                 Condition = element.GetAttributeString("value", string.Empty)!;
                 if (string.IsNullOrEmpty(Condition))
                 {
-                    DebugConsole.ThrowError($"Error in scripted event \"{parentEvent.Prefab.Identifier}\". CheckDataAction with no condition set ({element}).");
+                    DebugConsole.ThrowError($"Error in scripted event \"{parentEvent.Prefab.Identifier}\". CheckDataAction with no condition set ({element}).",
+                        contentPackage: element?.ContentPackage);
                 }
             }
         }
@@ -42,7 +43,8 @@ namespace Barotrauma
                 Condition = element.GetAttributeString("value", string.Empty)!;
                 if (string.IsNullOrEmpty(Condition))
                 {
-                    DebugConsole.ThrowError($"Error in scripted event \"{parentDebugString}\". CheckDataAction with no condition set ({element}).");
+                    DebugConsole.ThrowError($"Error in scripted event \"{parentDebugString}\". CheckDataAction with no condition set ({element}).",
+                        contentPackage: element?.ContentPackage);
                 }
             }
         }
@@ -59,7 +61,8 @@ namespace Barotrauma
             (Operator, string value) = PropertyConditional.ExtractComparisonOperatorFromConditionString(Condition);
             if (Operator == PropertyConditional.ComparisonOperatorType.None)
             {
-                DebugConsole.ThrowError($"{Condition} is invalid, it should start with an operator followed by a boolean or a floating point value.");
+                DebugConsole.ThrowError($"{Condition} is invalid, it should start with an operator followed by a boolean or a floating point value.", 
+                    contentPackage: ParentEvent?.Prefab?.ContentPackage);
                 return false;
             }
 

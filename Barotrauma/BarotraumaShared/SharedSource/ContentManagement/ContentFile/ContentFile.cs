@@ -76,7 +76,8 @@ namespace Barotrauma
                 {
                     DebugConsole.AddWarning(
                       $"The content type \"TraitorMission\" in content package \"{package.Name}\" is no longer supported." +
-                      $" Traitor missions should be implemented using the scripted event system and the content type TraitorEvents.");
+                      $" Traitor missions should be implemented using the scripted event system and the content type TraitorEvents.",
+                      package);
                 }
                 return true;
             }

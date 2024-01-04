@@ -34,7 +34,7 @@ namespace Barotrauma
                 bool allowCheats = GameMain.NetworkMember == null && (GameMain.GameSession?.GameMode is TestGameMode || Screen.Selected is { IsEditor: true });
                 if (!allowCheats && !CheatsEnabled && IsCheat)
                 {
-                    NewMessage("You need to enable cheats using the command \"enablecheats\" before you can use the command \"" + names[0] + "\".", Color.Red);
+                    NewMessage("You need to enable cheats using the command \"enablecheats\" before you can use the command \"" + Names[0] + "\".", Color.Red);
 #if USE_STEAM
                     NewMessage("Enabling cheats will disable Steam achievements during this play session.", Color.Red);
 #endif
@@ -215,9 +215,9 @@ namespace Barotrauma
             SoundPlayer.PlayUISound(GUISoundType.Select);
         }
 
-        private static bool IsCommandPermitted(string command, GameClient client)
+        private static bool IsCommandPermitted(Identifier command, GameClient client)
         {
-            switch (command)
+            switch (command.Value.ToLowerInvariant())
             {
                 case "kick":
                     return client.HasPermission(ClientPermissions.Kick);
@@ -304,7 +304,7 @@ namespace Barotrauma
                         }
                     };
                     var textBlock = new GUITextBlock(new RectTransform(new Point(listBox.Content.Rect.Width - 5, 0), textContainer.RectTransform, Anchor.TopLeft) { AbsoluteOffset = new Point(2, 2) },
-                        msg.Text, textAlignment: Alignment.TopLeft, font: GUIStyle.SmallFont, wrap: true)
+                        RichString.Rich(msg.Text), textAlignment: Alignment.TopLeft, font: GUIStyle.SmallFont, wrap: true)
                     {
                         CanBeFocused = false,
                         TextColor = msg.Color
@@ -346,7 +346,7 @@ namespace Barotrauma
                 CanBeFocused = false
             };
             var textBlock = new GUITextBlock(new RectTransform(new Point(listBox.Content.Rect.Width - 170, 0), textContainer.RectTransform, Anchor.TopRight) { AbsoluteOffset = new Point(20, 0) },
-                command.help, textAlignment: Alignment.TopLeft, font: GUIStyle.SmallFont, wrap: true)
+                command.Help, textAlignment: Alignment.TopLeft, font: GUIStyle.SmallFont, wrap: true)
             {
                 CanBeFocused = false,
                 TextColor = Color.White
@@ -354,7 +354,7 @@ namespace Barotrauma
             textContainer.RectTransform.NonScaledSize = new Point(textContainer.RectTransform.NonScaledSize.X, textBlock.RectTransform.NonScaledSize.Y + 5);
             textBlock.SetTextPos();
             new GUITextBlock(new RectTransform(new Point(150, textContainer.Rect.Height), textContainer.RectTransform),
-                command.names[0], textAlignment: Alignment.TopLeft);
+                command.Names[0].Value, textAlignment: Alignment.TopLeft);
 
             listBox.UpdateScrollBarSize();
             listBox.BarScroll = 1.0f;
@@ -364,7 +364,7 @@ namespace Barotrauma
 
         private static void AssignOnClientExecute(string names, Action<string[]> onClientExecute)
         {
-            Command command = commands.Find(c => c.names.Intersect(names.Split('|')).Count() > 0);
+            Command command = commands.Find(c => c.Names.Intersect(names.Split('|').ToIdentifiers()).Any());
             if (command == null)
             {
                 throw new Exception("AssignOnClientExecute failed. Command matching the name(s) \"" + names + "\" not found.");
@@ -378,7 +378,7 @@ namespace Barotrauma
 
         private static void AssignRelayToServer(string names, bool relay)
         {
-            Command command = commands.Find(c => c.names.Intersect(names.Split('|')).Count() > 0);
+            Command command = commands.Find(c => c.Names.Intersect(names.Split('|').ToIdentifiers()).Any());
             if (command == null)
             {
                 DebugConsole.Log("Could not assign to relay to server: " + names);
@@ -681,6 +681,7 @@ namespace Barotrauma
             AssignRelayToServer("savebinds", false);
             AssignRelayToServer("spreadsheetexport", false);
 #if DEBUG
+            AssignRelayToServer("listspamfilters", false);
             AssignRelayToServer("crash", false);
             AssignRelayToServer("showballastflorasprite", false);
             AssignRelayToServer("simulatedlatency", false);
@@ -706,6 +707,8 @@ namespace Barotrauma
             AssignRelayToServer("showmoney", true);
             AssignRelayToServer("setskill", true);
             AssignRelayToServer("readycheck", true);
+            commands.Add(new Command("debugjobassignment", "", (string[] args) => { }));
+            AssignRelayToServer("debugjobassignment", true);
 
             AssignRelayToServer("givetalent", true);
             AssignRelayToServer("unlocktalents", true);
@@ -1389,7 +1392,7 @@ namespace Barotrauma
                     {
                         if (!(MapEntityPrefab.Find(null, deconstructItem.ItemIdentifier, showErrorMessages: false) is ItemPrefab targetItem))
                         {
-                            ThrowError("Error in item \"" + itemPrefab.Name + "\" - could not find deconstruct item \"" + deconstructItem.ItemIdentifier + "\"!");
+                            ThrowErrorLocalized("Error in item \"" + itemPrefab.Name + "\" - could not find deconstruct item \"" + deconstructItem.ItemIdentifier + "\"!");
                             continue;
                         }
 
@@ -2232,6 +2235,30 @@ namespace Barotrauma
             }));
 
 #if DEBUG
+            commands.Add(new Command("listspamfilters", "Lists filters that are in the global spam filter.", (string[] args) =>
+            {
+                if (!SpamServerFilters.GlobalSpamFilter.TryUnwrap(out var filter))
+                {
+                    ThrowError("Global spam list is not initialized.");
+                    return;
+                }
+
+                if (!filter.Filters.Any())
+                {
+                    NewMessage("Global spam list is empty.", GUIStyle.Green);
+                    return;
+                }
+
+                StringBuilder sb = new();
+
+                foreach (var f in filter.Filters)
+                {
+                    sb.AppendLine(f.ToString());
+                }
+
+                NewMessage(sb.ToString(), GUIStyle.Green);
+            }));
+
             commands.Add(new Command("setplanthealth", "setplanthealth [value]: Sets the health of the selected plant in sub editor.", (string[] args) =>
             {
                 if (1 > args.Length || Screen.Selected != GameMain.SubEditorScreen) { return; }
@@ -3092,7 +3119,7 @@ namespace Barotrauma
                         int i = 0;
                         foreach (LocationConnection connection in campaign.Map.CurrentLocation.Connections)
                         {
-                            NewMessage("     " + i + ". " + connection.OtherLocation(campaign.Map.CurrentLocation).Name, Color.White);
+                            NewMessage("     " + i + ". " + connection.OtherLocation(campaign.Map.CurrentLocation).DisplayName, Color.White);
                             i++;
                         }
                         ShowQuestionPrompt("Select a destination (0 - " + (campaign.Map.CurrentLocation.Connections.Count - 1) + "):", (string selectedDestination) =>

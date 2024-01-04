@@ -36,7 +36,8 @@ namespace Barotrauma
                 {
                     if (e.Name.ToString().Equals("statuseffect", StringComparison.OrdinalIgnoreCase))
                     {
-                        DebugConsole.ThrowError($"Error in event prefab \"{scriptedEvent.Prefab.Identifier}\". Status effect configured as a sub action (text: \"{Text}\"). Please configure status effects as child elements of a StatusEffectAction.");
+                        DebugConsole.ThrowError($"Error in event prefab \"{scriptedEvent.Prefab.Identifier}\". Status effect configured as a sub action (text: \"{Text}\"). Please configure status effects as child elements of a StatusEffectAction.",
+                            contentPackage: elem.ContentPackage);
                         continue;
                     }
                     var action = Instantiate(scriptedEvent, e);
@@ -140,14 +141,19 @@ namespace Barotrauma
                 Identifier typeName = element.Name.ToString().ToIdentifier();
                 if (typeName == "TutorialSegmentAction")
                 {
-                    typeName = "EventObjectiveAction".ToIdentifier();
+                    typeName = nameof(EventObjectiveAction).ToIdentifier();
+                }
+                else if (typeName == "TutorialHighlightAction")
+                {
+                    typeName = nameof(HighlightAction).ToIdentifier();
                 }
                 actionType = Type.GetType("Barotrauma." + typeName, throwOnError: true, ignoreCase: true);
                 if (actionType == null) { throw new NullReferenceException(); }
             }
             catch
             {
-                DebugConsole.ThrowError($"Could not find an {nameof(EventAction)} class of the type \"{element.Name}\".");
+                DebugConsole.ThrowError($"Could not find an {nameof(EventAction)} class of the type \"{element.Name}\".",
+                    contentPackage: element.ContentPackage);
                 return null;
             }
 
@@ -162,9 +168,34 @@ namespace Barotrauma
             }
             catch (Exception ex)
             {
-                DebugConsole.ThrowError(ex.InnerException != null ? ex.InnerException.ToString() : ex.ToString());
+                DebugConsole.ThrowError(ex.InnerException != null ? ex.InnerException.ToString() : ex.ToString(),
+                    contentPackage: element.ContentPackage);
                 return null;
             }
+        }
+
+        protected void ApplyTagsToHulls(Entity entity, Identifier hullTag, Identifier linkedHullTag)
+        {
+            var currentHull = entity switch
+            {
+                Item item => item.CurrentHull,
+                Character character => character.CurrentHull,
+                _ => null,
+            };
+            if (currentHull == null) { return; }
+
+            if (!hullTag.IsEmpty)
+            {
+                ParentEvent.AddTarget(hullTag, currentHull);
+            }
+            if (!linkedHullTag.IsEmpty)
+            {
+                ParentEvent.AddTarget(linkedHullTag, currentHull);
+                foreach (var linkedHull in currentHull.GetLinkedEntities<Hull>())
+                {
+                    ParentEvent.AddTarget(linkedHullTag, linkedHull);
+                }
+            }            
         }
 
         /// <summary>

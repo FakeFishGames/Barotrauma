@@ -14,6 +14,16 @@ namespace Barotrauma.Networking
         public readonly string Reason;
         public Option<SerializableDateTime> ExpirationTime;
         public readonly UInt32 UniqueIdentifier;
+
+        public bool MatchesClient(Client client)
+        {
+            if (client == null) { return false; }
+            if (AddressOrAccountId.TryGet(out AccountId bannedAccountId) && client.AccountId.TryUnwrap(out AccountId? accountId))
+            {
+                return bannedAccountId.Equals(accountId);
+            }
+            return false;
+        }
     }
 
     partial class BanList

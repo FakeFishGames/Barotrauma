@@ -444,6 +444,18 @@ namespace Barotrauma.Sounds
             }
         }
 
+        public long MaxStreamSeekPos
+        {
+            get
+            {
+                if (!IsStream || Sound is not OggSound oggSound)
+                {
+                    return 0;
+                }
+                return oggSound.MaxStreamSamplePos; 
+            }
+        }
+
         private readonly object mutex;
 
         public bool IsPlaying
@@ -564,7 +576,7 @@ namespace Barotrauma.Sounds
                                 throw new Exception("Generated streamBuffer[" + i.ToString() + "] is invalid! " + debugName);
                             }
                         }
-                        Sound.Owner.InitStreamThread();
+                        Sound.Owner.InitUpdateChannelThread();
                         SetProperties();
                     }
                 }
@@ -609,6 +621,7 @@ namespace Barotrauma.Sounds
         public void FadeOutAndDispose()
         {
             FadingOutAndDisposing = true;
+            Sound.Owner.InitUpdateChannelThread();
         }
 
         public void Dispose()

@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Barotrauma.Extensions;
+using Microsoft.Xna.Framework.Input;
 
 namespace Barotrauma
 {
@@ -81,6 +82,8 @@ namespace Barotrauma
 
         public bool FlashOnAutoCloseCondition { get; set; }
 
+        public Action OnEnterPressed { get; set; }
+
         public Type MessageBoxType => type;
 
         public static GUIComponent VisibleBox => MessageBoxes.LastOrDefault();
@@ -89,6 +92,10 @@ namespace Barotrauma
             : this(headerText, text, new LocalizedString[] { "OK" }, relativeSize, minSize, type: type)
         {
             this.Buttons[0].OnClicked = Close;
+            OnEnterPressed = () =>
+            {
+                Buttons[0].OnClicked(Buttons[0], Buttons[0].UserData);
+            };
         }
 
         public GUIMessageBox(RichString headerText, RichString text, LocalizedString[] buttons,
@@ -516,6 +523,11 @@ namespace Barotrauma
 
         protected override void Update(float deltaTime)
         {
+            if (PlayerInput.KeyHit(Keys.Enter))
+            {
+                OnEnterPressed?.Invoke();
+            }
+
             if (Draggable)
             {
                 GUIComponent parent = GUI.MouseOn?.Parent?.Parent;

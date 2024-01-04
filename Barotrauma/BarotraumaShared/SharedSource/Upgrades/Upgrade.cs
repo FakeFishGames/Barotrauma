@@ -333,7 +333,8 @@ namespace Barotrauma
                     {
                         DebugConsole.AddWarning($"Failed to save upgrade \"{Prefab.Name}\" on {TargetEntity.Name} because property reference \"{propertyRef.Name}\" is missing original values. \n" +
                                                 "Upgrades should always call Upgrade.ApplyUpgrade() or manually set the original value in a property reference after they have been added. \n" +
-                                                "If you are not a developer submit a bug report at https://github.com/Regalis11/Barotrauma/issues/.");
+                                                "If you are not a developer submit a bug report at https://github.com/Regalis11/Barotrauma/issues/.",
+                                                Prefab.ContentPackage);
                     }
                 }
 

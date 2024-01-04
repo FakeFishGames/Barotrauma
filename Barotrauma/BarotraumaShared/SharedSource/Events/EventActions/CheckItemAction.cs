@@ -77,7 +77,8 @@ namespace Barotrauma
                 ItemIdentifiers.None() &&
                 TargetTag.IsEmpty)
             {
-                DebugConsole.ThrowError($"Error in event \"{ParentEvent.Prefab.Identifier}\". {nameof(CheckItemAction)} does't define either tags or identifiers of the item to check.");
+                DebugConsole.ThrowError($"Error in event \"{ParentEvent.Prefab.Identifier}\". {nameof(CheckItemAction)} does't define either tags or identifiers of the item to check.",
+                    contentPackage: element.ContentPackage);
             }
             checkPercentage = element.GetAttribute(nameof(RequiredConditionalMatchPercentage)) is not null;
             if (checkPercentage && conditionals.None())
@@ -86,7 +87,8 @@ namespace Barotrauma
             }
             if (Amount != 1 && checkPercentage)
             {
-                DebugConsole.ThrowError($"Error in event \"{ParentEvent.Prefab.Identifier}\". Cannot define both '{Amount}' and '{RequiredConditionalMatchPercentage}' in {nameof(CheckItemAction)}.");
+                DebugConsole.ThrowError($"Error in event \"{ParentEvent.Prefab.Identifier}\". Cannot define both '{Amount}' and '{RequiredConditionalMatchPercentage}' in {nameof(CheckItemAction)}.", 
+                    contentPackage: element.ContentPackage);
             }
         }
 

@@ -38,7 +38,7 @@ namespace Barotrauma.Items.Components
         {
             if (aimPos == Vector2.Zero)
             {
-                aimPos = new Vector2(0.6f, 0.1f);
+                aimPos = new Vector2(0.45f, 0.1f);
             }
         }
 

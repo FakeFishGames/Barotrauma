@@ -25,7 +25,8 @@ namespace Barotrauma
                 MissionType = element.GetAttributeEnum(nameof(MissionType), MissionType.None);
                 if (MissionIdentifier.IsEmpty && MissionTag.IsEmpty && MissionType == MissionType.None)
                 {
-                    DebugConsole.ThrowError($"Error in traitor event \"{prefab.Identifier}\". Mission requirement with no {nameof(MissionIdentifier)}, {nameof(MissionTag)} or {nameof(MissionType)}.");
+                    DebugConsole.ThrowError($"Error in traitor event \"{prefab.Identifier}\". Mission requirement with no {nameof(MissionIdentifier)}, {nameof(MissionTag)} or {nameof(MissionType)}.",
+                        contentPackage: prefab.ContentPackage);
                 }
             }
 
@@ -72,7 +73,7 @@ namespace Barotrauma
             //feels a little weird to have something this specific here, but couldn't think of a better way to implement this
             public ImmutableArray<PropertyConditional> RequiredItemConditionals;
 
-            public LevelRequirement(XElement element, TraitorEventPrefab prefab)
+            public LevelRequirement(ContentXElement element, TraitorEventPrefab prefab)
             {
                 levelType = element.GetAttributeEnum(nameof(LevelType), LevelType.Any);                
                 LocationTypes = element.GetAttributeIdentifierArray("locationtype", Array.Empty<Identifier>()).ToImmutableArray();

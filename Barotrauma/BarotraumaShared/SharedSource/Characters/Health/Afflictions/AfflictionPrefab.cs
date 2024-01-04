@@ -170,11 +170,13 @@ namespace Barotrauma
 
             if (DormantThreshold > ActiveThreshold)
             {
-                DebugConsole.ThrowError($"Error in \"{Identifier}\": {nameof(DormantThreshold)} is greater than {nameof(ActiveThreshold)} ({DormantThreshold} > {ActiveThreshold})");
+                DebugConsole.ThrowError($"Error in \"{Identifier}\": {nameof(DormantThreshold)} is greater than {nameof(ActiveThreshold)} ({DormantThreshold} > {ActiveThreshold})",
+                            contentPackage: element.ContentPackage);
             }
             if (ActiveThreshold > TransitionThreshold)
             {
-                DebugConsole.ThrowError($"Error in \"{Identifier}\": {nameof(ActiveThreshold)} is greater than {nameof(TransitionThreshold)} ({ActiveThreshold} > {TransitionThreshold})");
+                DebugConsole.ThrowError($"Error in \"{Identifier}\": {nameof(ActiveThreshold)} is greater than {nameof(TransitionThreshold)} ({ActiveThreshold} > {TransitionThreshold})",
+                            contentPackage: element.ContentPackage);
             }
 
             TransformThresholdOnDeath = element.GetAttributeFloat("transformthresholdondeath", ActiveThreshold);
@@ -440,13 +442,15 @@ namespace Barotrauma
                             AbilityFlags flagType = subElement.GetAttributeEnum("flagtype", AbilityFlags.None);
                             if (flagType is AbilityFlags.None)
                             {
-                                DebugConsole.ThrowError($"Error in affliction \"{parentDebugName}\" - invalid ability flag type \"{subElement.GetAttributeString("flagtype", "")}\".");
+                                DebugConsole.ThrowError($"Error in affliction \"{parentDebugName}\" - invalid ability flag type \"{subElement.GetAttributeString("flagtype", "")}\".",
+                                    contentPackage: element.ContentPackage);
                                 continue;
                             }
                             AfflictionAbilityFlags |= flagType;
                             break;
                         case "affliction":
-                            DebugConsole.AddWarning($"Error in affliction \"{parentDebugName}\" - additional afflictions caused by the affliction should be configured inside status effects.");
+                            DebugConsole.AddWarning($"Error in affliction \"{parentDebugName}\" - additional afflictions caused by the affliction should be configured inside status effects.",
+                                contentPackage: element.ContentPackage);
                             break;
                     }
                 }
@@ -537,14 +541,16 @@ namespace Barotrauma
                 }
                 else if (TextTag.IsEmpty)
                 {
-                    DebugConsole.ThrowError($"Error in affliction \"{affliction.Identifier}\" - no text defined for one of the descriptions.");
+                    DebugConsole.ThrowError($"Error in affliction \"{affliction.Identifier}\" - no text defined for one of the descriptions.",
+                            contentPackage: element.ContentPackage);
                 }
 
                 MinStrength = element.GetAttributeFloat(nameof(MinStrength), 0.0f);
                 MaxStrength = element.GetAttributeFloat(nameof(MaxStrength), 100.0f);
                 if (MinStrength >= MaxStrength)
                 {
-                    DebugConsole.ThrowError($"Error in affliction \"{affliction.Identifier}\" - max strength is not larger than min.");
+                    DebugConsole.ThrowError($"Error in affliction \"{affliction.Identifier}\" - max strength is not larger than min.",
+                            contentPackage: element.ContentPackage);
                 }
                 Target = element.GetAttributeEnum(nameof(Target), TargetType.Any);
             }
@@ -898,7 +904,7 @@ namespace Barotrauma
                 string indicatorLimbName = element.GetAttributeString("indicatorlimb", "Torso");
                 if (!Enum.TryParse(indicatorLimbName, out IndicatorLimb))
                 {
-                    DebugConsole.ThrowError("Error in affliction prefab " + Name + " - limb type \"" + indicatorLimbName + "\" not found.");
+                    DebugConsole.ThrowErrorLocalized("Error in affliction prefab " + Name + " - limb type \"" + indicatorLimbName + "\" not found.");
                 }
             }
 
@@ -953,7 +959,8 @@ namespace Barotrauma
                         AfflictionOverlay = new Sprite(subElement);
                         break;
                     case "statvalue":
-                        DebugConsole.ThrowError($"Error in affliction \"{Identifier}\" - stat values should be configured inside the affliction's effects.");
+                        DebugConsole.ThrowError($"Error in affliction \"{Identifier}\" - stat values should be configured inside the affliction's effects.",
+                            contentPackage: element.ContentPackage);
                         break;
                     case "effect":
                     case "periodiceffect":
@@ -962,7 +969,8 @@ namespace Barotrauma
                         descriptions.Add(new Description(subElement, this));
                         break;
                     default:
-                        DebugConsole.AddWarning($"Unrecognized element in affliction \"{Identifier}\" ({subElement.Name})");
+                        DebugConsole.AddWarning($"Unrecognized element in affliction \"{Identifier}\" ({subElement.Name})",
+                            contentPackage: element.ContentPackage);
                         break;
                 }
             }
@@ -1018,6 +1026,10 @@ namespace Barotrauma
             }
         }
 
+        /// <summary>
+        /// Removes all the effects of the prefab (including the sounds and other assets defined in them).
+        /// Note that you need to call LoadAllEffectsAndTreatmentSuitabilities before trying to use the affliction again!
+        /// </summary>
         public static void ClearAllEffects()
         {
             Prefabs.ForEach(p => p.ClearEffects());
@@ -1046,7 +1058,8 @@ namespace Barotrauma
                     var b = effects[j];
                     if (a.MinStrength < b.MaxStrength && b.MinStrength < a.MaxStrength)
                     {
-                        DebugConsole.AddWarning($"Affliction \"{Identifier}\" contains effects with overlapping strength ranges. Only one effect can be active at a time, meaning one of the effects won't work.");
+                        DebugConsole.AddWarning($"Affliction \"{Identifier}\" contains effects with overlapping strength ranges. Only one effect can be active at a time, meaning one of the effects won't work.",
+                            ContentPackage);
                     }
                 }
             }

@@ -526,12 +526,13 @@ namespace Barotrauma
         {
             List<LevelObjectPrefab.SpawnPosType> spawnPosTypes = new List<LevelObjectPrefab.SpawnPosType>(4);
             List<SpawnPosition> availableSpawnPositions = new List<SpawnPosition>();
+            bool requireCaveSpawnPos = spawnPosType == LevelObjectPrefab.SpawnPosType.CaveWall;
             foreach (var cell in cells)
             {
                 foreach (var edge in cell.Edges)
                 {
                     if (!edge.IsSolid || edge.OutsideLevel) { continue; }
-                    if (spawnPosType != LevelObjectPrefab.SpawnPosType.CaveWall && edge.NextToCave) { continue; } 
+                    if (requireCaveSpawnPos != edge.NextToCave) { continue; } 
                     Vector2 normal = edge.GetNormal(cell);
 
                     Alignment edgeAlignment = 0;
@@ -638,6 +639,7 @@ namespace Barotrauma
 
         public override void Remove()
         {
+            objectsInRange.Clear();
             if (objects != null)
             {
                 foreach (LevelObject obj in objects)

@@ -80,7 +80,9 @@ namespace Barotrauma
             {
                 msg.WriteUInt32(Job.Prefab.UintIdentifier);
                 msg.WriteByte((byte)Job.Variant);
-                foreach (SkillPrefab skillPrefab in Job.Prefab.Skills.OrderBy(s => s.Identifier))
+                var skills = Job.Prefab.Skills.OrderBy(s => s.Identifier);
+                msg.WriteByte((byte)skills.Count());
+                foreach (SkillPrefab skillPrefab in skills)
                 {
                     msg.WriteSingle(Job.GetSkill(skillPrefab.Identifier)?.Level ?? 0.0f);
                 }

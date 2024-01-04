@@ -727,7 +727,21 @@ namespace Barotrauma
             Slider(layout, (0.75f, 1.25f), 51, Percentage, unsavedConfig.Graphics.InventoryScale, v => unsavedConfig.Graphics.InventoryScale = v);
             Label(layout, TextManager.Get("TextScale"), GUIStyle.SubHeadingFont);
             Slider(layout, (0.75f, 1.25f), 51, Percentage, unsavedConfig.Graphics.TextScale, v => unsavedConfig.Graphics.TextScale = v);
-            
+            Spacer(layout);
+            var resetSpamListFilter =
+                new GUIButton(new RectTransform(new Vector2(1.0f, 1.0f), layout.RectTransform),
+                    TextManager.Get("clearserverlistfilters"), style: "GUIButtonSmall")
+                {
+                    OnClicked = static (_, _) =>
+                    {
+                        GUI.AskForConfirmation(
+                            header: TextManager.Get("clearserverlistfilters"),
+                            body: TextManager.Get("clearserverlistfiltersconfirmation"),
+                            onConfirm: SpamServerFilters.ClearLocalSpamFilter);
+                        return true;
+                    }
+                };
+            Spacer(layout);
 #if !OSX
             Spacer(layout);
             var statisticsTickBox = new GUITickBox(NewItemRectT(layout), TextManager.Get("statisticsconsenttickbox"))

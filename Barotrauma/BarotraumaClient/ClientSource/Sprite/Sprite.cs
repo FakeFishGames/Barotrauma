@@ -111,7 +111,7 @@ namespace Barotrauma
 
         partial void LoadTexture(ref Vector4 sourceVector, ref bool shouldReturn)
         {
-            texture = LoadTexture(FilePath.Value, Compress);
+            texture = LoadTexture(FilePath.Value, Compress, contentPackage: SourceElement?.ContentPackage);
 
             if (texture == null)
             {
@@ -175,7 +175,7 @@ namespace Barotrauma
                 return;
             }
             texture.Dispose();
-            texture = TextureLoader.FromFile(FilePath.Value, Compress);
+            texture = TextureLoader.FromFile(FilePath.Value, Compress, contentPackage: SourceElement?.ContentPackage);
             Identifier pathKey = FullPath.ToIdentifier();
             if (textureRefCounts.ContainsKey(pathKey))
             {
@@ -195,7 +195,7 @@ namespace Barotrauma
             sourceRect = new Rectangle(0, 0, texture.Width, texture.Height);
         }
 
-        public static Texture2D LoadTexture(string file, bool compress = true)
+        public static Texture2D LoadTexture(string file, bool compress = true, ContentPackage contentPackage = null)
         {
             if (string.IsNullOrWhiteSpace(file))
             {
@@ -221,11 +221,11 @@ namespace Barotrauma
                 if (!ToolBox.IsProperFilenameCase(file))
                 {
 #if DEBUG
-                    DebugConsole.ThrowError("Texture file \"" + file + "\" has incorrect case!");
+                    DebugConsole.ThrowError("Texture file \"" + file + "\" has incorrect case!", contentPackage: contentPackage);
 #endif
                 }
 
-                Texture2D newTexture = TextureLoader.FromFile(file, compress);
+                Texture2D newTexture = TextureLoader.FromFile(file, compress, contentPackage: contentPackage);
                 lock (list)
                 {
                     if (!textureRefCounts.TryAdd(fullPath,
@@ -284,17 +284,44 @@ namespace Barotrauma
             }
         }
 
-        public void DrawTiled(ISpriteBatch spriteBatch, Vector2 position, Vector2 targetSize,
-            Color? color = null, Vector2? startOffset = null, Vector2? textureScale = null, float? depth = null)
+        public void DrawTiled(ISpriteBatch spriteBatch,
+            Vector2 position,
+            Vector2 targetSize,
+            float rotation = 0f,
+            Vector2? origin = null,
+            Color? color = null,
+            Vector2? startOffset = null,
+            Vector2? textureScale = null,
+            float? depth = null,
+            SpriteEffects? spriteEffects = null)
         {
             if (Texture == null) { return; }
+
+            spriteEffects ??= effects;
+            bool flipHorizontal = (spriteEffects.Value & SpriteEffects.FlipHorizontally) != 0;
+            bool flipVertical = (spriteEffects.Value & SpriteEffects.FlipVertically) != 0;
+
+            float addedRotation = rotation + this.rotation;
+            if (flipHorizontal != flipVertical) { addedRotation = -addedRotation; }
+
+            Vector2 advanceX = addedRotation == 0.0f ? Vector2.UnitX : new Vector2((float)Math.Cos(addedRotation), (float)Math.Sin(addedRotation));
+            Vector2 advanceY = new Vector2(-advanceX.Y, advanceX.X);
+
             //Init optional values
             Vector2 drawOffset = startOffset ?? Vector2.Zero;
             Vector2 scale = textureScale ?? Vector2.One;
             Color drawColor = color ?? Color.White;
+            Vector2 transformedOrigin = origin ?? Vector2.Zero;
 
-            bool flipHorizontal = (effects & SpriteEffects.FlipHorizontally) != 0;
-            bool flipVertical = (effects & SpriteEffects.FlipVertically) != 0;
+            transformedOrigin = advanceX * transformedOrigin.X + advanceY * transformedOrigin.Y;
+
+            void drawSection(Vector2 slicePos, Rectangle sliceRect)
+            {
+                Vector2 transformedPos = slicePos - position;
+                transformedPos = advanceX * transformedPos.X + advanceY * transformedPos.Y;
+                transformedPos += position - transformedOrigin;
+                spriteBatch.Draw(texture, transformedPos, sliceRect, drawColor, addedRotation, Vector2.Zero, scale, spriteEffects.Value, depth ?? this.depth);
+            }
 
             //wrap the drawOffset inside the sourceRect
             drawOffset.X = (drawOffset.X / scale.X) % sourceRect.Width;
@@ -368,8 +395,8 @@ namespace Barotrauma
                         {
                             slicePos.Y += flippedDrawOffset.Y;
                         }
-                        
-                        spriteBatch.Draw(texture, slicePos, sliceRect, drawColor, rotation, Vector2.Zero, scale, effects, depth ?? this.depth);                        
+
+                        drawSection(slicePos, sliceRect);
                         currDrawPosition.X = slicePos.X + sliceWidth;
                     }
                 }
@@ -416,7 +443,7 @@ namespace Barotrauma
                             sliceRect.Y = SourceRect.Y;
                             sliceRect.Height = (int)(sliceHeight / scale.Y);
 
-                            spriteBatch.Draw(texture, slicePos, sliceRect, drawColor, rotation, Vector2.Zero, scale, effects, depth ?? this.depth);
+                            drawSection(slicePos, sliceRect);
 
                             currDrawPosition.Y = slicePos.Y + sliceHeight;
                         }
@@ -433,8 +460,7 @@ namespace Barotrauma
                         }
                     }
 
-                    spriteBatch.Draw(texture, currDrawPosition,
-                        texPerspective, drawColor, rotation, Vector2.Zero, scale, effects, depth ?? this.depth);
+                    drawSection(currDrawPosition, texPerspective);
 
                     currDrawPosition.Y += texPerspective.Height * scale.Y;
                 }

@@ -122,6 +122,9 @@ namespace Barotrauma
 
         public OutpostModuleInfo OutpostModuleInfo { get; set; }
         public BeaconStationInfo BeaconStationInfo { get; set; }
+        public WreckInfo WreckInfo { get; set; }
+
+        public ExtraSubmarineInfo GetExtraSubmarineInfo => BeaconStationInfo ?? WreckInfo as ExtraSubmarineInfo;
 
         public bool IsOutpost => Type == SubmarineType.Outpost || Type == SubmarineType.OutpostModule;
 
@@ -320,9 +323,13 @@ namespace Barotrauma
             {
                 OutpostModuleInfo = new OutpostModuleInfo(original.OutpostModuleInfo);
             }
-            if (original.BeaconStationInfo != null)
+            else if (original.BeaconStationInfo != null)
             {
                 BeaconStationInfo = new BeaconStationInfo(original.BeaconStationInfo);
+            }
+            else if (original.WreckInfo != null)
+            {
+                WreckInfo = new WreckInfo(original.WreckInfo);
             }
 #if CLIENT
             PreviewImage = original.PreviewImage != null ? new Sprite(original.PreviewImage) : null;
@@ -409,6 +416,10 @@ namespace Barotrauma
                     else if (Type == SubmarineType.BeaconStation)
                     {
                         BeaconStationInfo = new BeaconStationInfo(this, SubmarineElement);
+                    }
+                    else if (Type == SubmarineType.Wreck)
+                    {
+                        WreckInfo = new WreckInfo(this, SubmarineElement);
                     }
                 }
             }
@@ -588,6 +599,11 @@ namespace Barotrauma
             {
                 BeaconStationInfo.Save(newElement);
                 BeaconStationInfo = new BeaconStationInfo(this, newElement);
+            }
+            else if (Type == SubmarineType.Wreck)
+            {
+                WreckInfo.Save(newElement);
+                WreckInfo = new WreckInfo(this, newElement);
             }
             XDocument doc = new XDocument(newElement);
 

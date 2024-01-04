@@ -48,6 +48,8 @@ namespace Barotrauma
 
         private GUIImage eventLogNotification;
 
+        private Point prevTopLeftButtonsResolution;
+
         private void CreateTopLeftButtons()
         {
             if (topLeftButtonGroup != null)
@@ -60,10 +62,6 @@ namespace Barotrauma
             {
                 AbsoluteSpacing = HUDLayoutSettings.Padding,
                 CanBeFocused = false
-            };
-            topLeftButtonGroup.RectTransform.ParentChanged += (_) =>
-            {
-                GameMain.Instance.ResolutionChanged -= CreateTopLeftButtons;
             };
             int buttonHeight = GUI.IntScale(40);
             Vector2 buttonSpriteSize = GUIStyle.GetComponentStyle("CrewListToggleButton").GetDefaultSprite().size;
@@ -98,8 +96,6 @@ namespace Barotrauma
             talentPointNotification = CreateNotificationIcon(tabMenuButton);
             eventLogNotification = CreateNotificationIcon(tabMenuButton);
 
-            GameMain.Instance.ResolutionChanged += CreateTopLeftButtons;
-
             respawnInfoFrame = new GUIFrame(new RectTransform(new Vector2(0.5f, 1.0f), parent: topLeftButtonGroup.RectTransform)
             { MaxSize = new Point(HUDLayoutSettings.ButtonAreaTop.Width / 3, int.MaxValue) }, style: null)
             {
@@ -121,6 +117,7 @@ namespace Barotrauma
                     return true;
                 }
             };
+            prevTopLeftButtonsResolution = new Point(GameMain.GraphicsWidth, GameMain.GraphicsHeight);
         }
 
         public void AddToGUIUpdateList()
@@ -133,7 +130,8 @@ namespace Barotrauma
             if ((GameMode is not CampaignMode campaign || (!campaign.ForceMapUI && !campaign.ShowCampaignUI)) &&
                 !CoroutineManager.IsCoroutineRunning("LevelTransition") && !CoroutineManager.IsCoroutineRunning("SubmarineTransition"))
             {
-                if (topLeftButtonGroup == null)
+                if (topLeftButtonGroup == null ||
+                    prevTopLeftButtonsResolution.X != GameMain.GraphicsWidth || prevTopLeftButtonsResolution.Y != GameMain.GraphicsHeight)
                 {
                     CreateTopLeftButtons();
                 }

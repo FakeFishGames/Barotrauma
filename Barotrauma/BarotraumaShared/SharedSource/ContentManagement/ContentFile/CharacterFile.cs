@@ -17,12 +17,12 @@ namespace Barotrauma
             XDocument doc = XMLExtensions.TryLoadXml(Path);
             if (doc == null)
             {
-                DebugConsole.ThrowError($"Loading character file failed: {Path}");
+                DebugConsole.ThrowError($"Loading character file failed: {Path}", contentPackage: ContentPackage);
                 return;
             }
             if (CharacterPrefab.Prefabs.AllPrefabs.Any(kvp => kvp.Value.Any(cf => cf?.ContentFile == this)))
             {
-                DebugConsole.ThrowError($"Duplicate path: {Path}");
+                DebugConsole.ThrowError($"Duplicate path: {Path}", contentPackage: ContentPackage);
                 return;
             }
             var mainElement = doc.Root.FromPackage(ContentPackage);
@@ -69,7 +69,8 @@ namespace Barotrauma
             }
             catch (Exception e)
             {
-                DebugConsole.ThrowError($"Failed to preload a ragdoll file for the character \"{characterPrefab.Name}\"", e);
+                DebugConsole.ThrowError($"Failed to preload a ragdoll file for the character \"{characterPrefab.Name}\"", e,
+                    contentPackage: characterPrefab.ContentPackage);
                 return;
             }
 

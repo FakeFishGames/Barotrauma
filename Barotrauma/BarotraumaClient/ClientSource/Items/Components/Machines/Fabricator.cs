@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 
 namespace Barotrauma.Items.Components
@@ -393,6 +394,8 @@ namespace Barotrauma.Items.Components
 
         partial void SelectProjSpecific(Character character)
         {
+            if (character != Character.Controlled) { return; }
+
             var nonItems = itemList.Content.Children.Where(c => c.UserData is not FabricationRecipe).ToList();
             nonItems.ForEach(i => itemList.Content.RemoveChild(i));
 
@@ -784,6 +787,7 @@ namespace Barotrauma.Items.Components
 
         private void HideEmptyItemListCategories()
         {
+            bool visibleElementsChanged = false;
             //go through the elements backwards, and disable the labels ("insufficient skills to fabricate", "recipe required...") if there's no items below them
             bool recipeVisible = false;
             foreach (GUIComponent child in itemList.Content.Children.Reverse())
@@ -792,7 +796,11 @@ namespace Barotrauma.Items.Components
                 {
                     if (child.Enabled)
                     {
-                        child.Visible = recipeVisible;
+                        if (child.Visible != recipeVisible)
+                        {
+                            child.Visible = recipeVisible;
+                            visibleElementsChanged = true;
+                        }
                     }
                     recipeVisible = false;
                 }
@@ -802,8 +810,11 @@ namespace Barotrauma.Items.Components
                 }
             }
 
-            itemList.UpdateScrollBarSize();
-            itemList.BarScroll = 0.0f;
+            if (visibleElementsChanged)
+            {
+                itemList.UpdateScrollBarSize();
+                itemList.BarScroll = 0.0f;
+            }
         }
 
         public bool ClearFilter()
@@ -815,11 +826,22 @@ namespace Barotrauma.Items.Components
             return true;
         }
 
+        private readonly record struct SelectedRecipe(Character User, FabricationRecipe SelectedItem, Option<float> OverrideRequiredTime);
+        private Option<SelectedRecipe> LastSelectedRecipe = Option.None;
+
         private bool SelectItem(Character user, FabricationRecipe selectedItem, float? overrideRequiredTime = null)
         {
             this.selectedItem = selectedItem;
             displayingForCharacter = user;
+            var selectedRecipe = new SelectedRecipe(user, selectedItem, overrideRequiredTime is null ? Option.None : Option.Some(overrideRequiredTime.Value));
+            LastSelectedRecipe = Option.Some(selectedRecipe);
+            CreateSelectedItemUI(selectedRecipe);
+            return true;
+        }
 
+        private void CreateSelectedItemUI(SelectedRecipe recipe)
+        {
+            var (user, selectedItem, overrideRequiredTime) = recipe;
             int max = Math.Max(selectedItem.TargetItem.GetMaxStackSize(outputContainer.Inventory) / selectedItem.Amount, 1);
 
             if (amountInput != null)
@@ -843,8 +865,10 @@ namespace Barotrauma.Items.Components
             LocalizedString itemName = GetRecipeNameAndAmount(selectedItem);
             LocalizedString name = itemName;
 
-            float quality = selectedItem.Quality ?? GetFabricatedItemQuality(selectedItem, user);
-            if (quality > 0)
+            QualityResult result = GetFabricatedItemQuality(selectedItem, user);
+
+            float quality = selectedItem.Quality ?? result.Quality;
+            if (quality > 0 || result.HasRandomQualityRollChance)
             {
                 name = TextManager.GetWithVariable("itemname.quality" + (int)quality, "[itemname]", itemName + '\n')
                     .Fallback(TextManager.GetWithVariable("itemname.quality3", "[itemname]", itemName + '\n'));
@@ -855,6 +879,49 @@ namespace Barotrauma.Items.Components
             {
                 AutoScaleHorizontal = true
             };
+
+            if (result.HasRandomQualityRollChance)
+            {
+                var iconLayout = new GUIFrame(new RectTransform(new Vector2(0.4f, 1f), selectedItemFrame.RectTransform, anchor: Anchor.TopRight), style: null);
+                var icon = GameSession.CreateNotificationIcon(iconLayout, offset: true);
+
+                float percentage1 = result.TotalPlusOnePercentage;
+                float percentage2 = result.TotalPlusTwoPercentage;
+
+                string chance1text = percentage1.ToString("F1", CultureInfo.InvariantCulture);
+                string chance2text = percentage2.ToString("F1", CultureInfo.InvariantCulture);
+
+                int quality1 = Math.Clamp(result.Quality + 1, min: 0, max: 3);
+                int quality2 = Math.Clamp(result.Quality + 2, min: 0, max: 3);
+
+                LocalizedString quality1Text = TextManager.Get($"quality{quality1}");
+                LocalizedString quality2Text = TextManager.Get($"quality{quality2}");
+
+                string localizationTag = percentage2 > 0f && percentage1 > 0 && quality1 != quality2 ? "meetsbonusrequirementtwice" : "meetsbonusrequirement";
+
+                var variables = new (string Key, LocalizedString Value)[]
+                {
+                    ("[chance]", chance1text), ("[quality]", quality1Text),
+                    ("[chance2]", chance2text), ("[quality2]", quality2Text)
+                };
+
+                if (MathUtils.NearlyEqual(percentage1, 0))
+                {
+                    variables = new[] { ("[chance]", chance2text), ("[quality]", quality2Text) };
+                }
+
+                if (quality1 == quality2)
+                {
+                    LocalizedString rawPercentage = result.PlusOnePercentage.ToString("F1", CultureInfo.InvariantCulture);
+                    variables = new[] { ("[chance]", rawPercentage), ("[quality]", quality1Text) };
+                }
+
+                LocalizedString qualityTooltip = TextManager.GetWithVariables(localizationTag, variables);
+
+                icon.ToolTip = RichString.Rich(qualityTooltip);
+                icon.Visible = icon.CanBeFocused = true;
+            }
+
             nameBlock.Padding = new Vector4(0, nameBlock.Padding.Y, GUI.IntScale(5), nameBlock.Padding.W);
             if (nameBlock.TextScale < 0.7f)
             {
@@ -865,15 +932,15 @@ namespace Barotrauma.Items.Components
                 nameBlock.Wrap = true;
                 nameBlock.SetTextPos();
                 nameBlock.RectTransform.MinSize = new Point(0, (int)(nameBlock.TextSize.Y * nameBlock.TextScale));
-            }            
-            
+            }
+
             if (!selectedItem.TargetItem.Description.IsNullOrEmpty())
             {
                 var description = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), paddedFrame.RectTransform),
                     selectedItem.TargetItem.Description,
                     font: GUIStyle.SmallFont, wrap: true);
                 description.Padding = new Vector4(0, description.Padding.Y, description.Padding.Z, description.Padding.W);
-            
+
                 while (description.Rect.Height + nameBlock.Rect.Height > paddedFrame.Rect.Height)
                 {
                     var lines = description.WrappedText.Split('\n');
@@ -884,13 +951,13 @@ namespace Barotrauma.Items.Components
                     description.ToolTip = selectedItem.TargetItem.Description;
                 }
             }
-            
+
             IEnumerable<Skill> inadequateSkills = Enumerable.Empty<Skill>();
             if (user != null)
             {
                 inadequateSkills = selectedItem.RequiredSkills.Where(skill => user.GetSkillLevel(skill.Identifier) < Math.Round(skill.Level * SkillRequirementMultiplier));
             }
-            
+
             if (selectedItem.RequiredSkills.Any())
             {
                 LocalizedString text = "";
@@ -911,9 +978,10 @@ namespace Barotrauma.Items.Components
             float degreeOfSuccess = user == null ? 0.0f : FabricationDegreeOfSuccess(user, selectedItem.RequiredSkills);
             if (degreeOfSuccess > 0.5f) { degreeOfSuccess = 1.0f; }
 
-            float requiredTime = overrideRequiredTime ??
-                (user == null ? selectedItem.RequiredTime : GetRequiredTime(selectedItem, user));
-            
+            float requiredTime = overrideRequiredTime.TryUnwrap(out var time) 
+                ? time
+                : (user == null ? selectedItem.RequiredTime : GetRequiredTime(selectedItem, user));
+
             if ((int)requiredTime > 0)
             {
                 new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), paddedReqFrame.RectTransform), 
@@ -936,7 +1004,6 @@ namespace Barotrauma.Items.Components
                     font: GUIStyle.SmallFont);
 
             }
-            return true;
         }
 
         public void HighlightRecipe(string identifier, Color color)
@@ -1044,6 +1111,15 @@ namespace Barotrauma.Items.Components
                     limitReachedText.Visible = !canBeFabricated && fabricationLimits.TryGetValue(recipe.RecipeHash, out int amount) && amount <= 0;
                 }
             }
+        }
+
+        public override void OnPlayerSkillsChanged()
+            => RefreshSelectedItem();
+
+        public void RefreshSelectedItem()
+        {
+            if (!LastSelectedRecipe.TryUnwrap(out var lastSelected)) { return; }
+            CreateSelectedItemUI(lastSelected);
         }
 
         partial void UpdateRequiredTimeProjSpecific()

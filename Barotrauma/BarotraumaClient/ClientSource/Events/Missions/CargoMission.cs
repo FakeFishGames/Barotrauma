@@ -51,7 +51,8 @@ namespace Barotrauma
             if (requiredDeliveryAmount == 0) { requiredDeliveryAmount = items.Count; }
             if (requiredDeliveryAmount > items.Count)
             {
-                DebugConsole.AddWarning($"Error in mission \"{Prefab.Identifier}\". Required delivery amount is {requiredDeliveryAmount} but there's only {items.Count} items to deliver.");
+                DebugConsole.AddWarning($"Error in mission \"{Prefab.Identifier}\". Required delivery amount is {requiredDeliveryAmount} but there's only {items.Count} items to deliver.",
+                    contentPackage: Prefab.ContentPackage);
                 requiredDeliveryAmount = items.Count;
             }
         }

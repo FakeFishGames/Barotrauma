@@ -32,7 +32,8 @@ namespace Barotrauma
             var targetCharacters = ParentEvent.GetTargets(TargetTag);
             if (targetCharacters.None())
             {
-                DebugConsole.LogError($"CheckConditionalAction error: {GetEventName()} uses a CheckOrderAction but no valid target characters were found for tag \"{TargetTag}\"! This will cause the check to automatically fail.");
+                DebugConsole.LogError($"CheckConditionalAction error: {GetEventName()} uses a CheckOrderAction but no valid target characters were found for tag \"{TargetTag}\"! This will cause the check to automatically fail.",
+                    contentPackage: ParentEvent.Prefab.ContentPackage);
                 return false;
             }
             foreach (var t in targetCharacters)

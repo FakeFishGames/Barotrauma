@@ -6,7 +6,7 @@ using System.Text;
 
 namespace Barotrauma
 {
-    static class Quad
+    static class GraphicsQuad
     {
         private static VertexBuffer vertexBuffer = null;
         private static IndexBuffer indexBuffer = null;

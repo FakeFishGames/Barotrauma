@@ -454,6 +454,7 @@ namespace Barotrauma
                     if (!itemInventory.Container.HasRequiredItems(character, addMessage: false)) { continue; }
                 }
                 float itemPriority = item.Prefab.BotPriority;
+                if (itemPriority <= 0) { continue; }
                 if (GetItemPriority != null)
                 {
                     itemPriority *= GetItemPriority(item);

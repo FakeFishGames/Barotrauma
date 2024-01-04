@@ -238,7 +238,8 @@ namespace Barotrauma
 
             if (itemConfig == null)
             {
-                DebugConsole.ThrowError("Failed to initialize items for cargo mission (itemConfig == null)");
+                DebugConsole.ThrowError("Failed to initialize items for cargo mission (itemConfig == null)",
+                    contentPackage: Prefab.ContentPackage);
                 return;
             }
 
@@ -262,7 +263,7 @@ namespace Barotrauma
                 SpawnedInCurrentOutpost = true,
                 AllowStealing = false
             };
-            item.AddTag("cargomission");
+            item.AddTag(Tags.CargoMissionItem);
             item.AddTag(Prefab.Identifier);
             foreach (var tag in Prefab.Tags)
             {

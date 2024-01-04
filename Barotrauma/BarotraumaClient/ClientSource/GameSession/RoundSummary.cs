@@ -564,7 +564,7 @@ namespace Barotrauma
 
         private LocalizedString GetHeaderText(bool gameOver, CampaignMode.TransitionType transitionType)
         {
-            string locationName = Submarine.MainSub is { AtEndExit: true } ? endLocation?.Name : startLocation?.Name;
+            LocalizedString locationName = Submarine.MainSub is { AtEndExit: true } ? endLocation?.DisplayName : startLocation?.DisplayName;
 
             string textTag;
             if (gameOver)
@@ -576,23 +576,23 @@ namespace Barotrauma
                 switch (transitionType)
                 {
                     case CampaignMode.TransitionType.LeaveLocation:
-                        locationName = startLocation?.Name;
+                        locationName = startLocation?.DisplayName;
                         textTag = "RoundSummaryLeaving";
                         break;
                     case CampaignMode.TransitionType.ProgressToNextLocation:
-                        locationName = endLocation?.Name;
+                        locationName = endLocation?.DisplayName;
                         textTag = "RoundSummaryProgress";
                         break;
                     case CampaignMode.TransitionType.ProgressToNextEmptyLocation:
-                        locationName = endLocation?.Name;
+                        locationName = endLocation?.DisplayName;
                         textTag = "RoundSummaryProgressToEmptyLocation";
                         break;
                     case CampaignMode.TransitionType.ReturnToPreviousLocation:
-                        locationName = startLocation?.Name;
+                        locationName = startLocation?.DisplayName;
                         textTag = "RoundSummaryReturn";
                         break;
                     case CampaignMode.TransitionType.ReturnToPreviousEmptyLocation:
-                        locationName = startLocation?.Name;
+                        locationName = startLocation?.DisplayName;
                         textTag = "RoundSummaryReturnToEmptyLocation";
                         break;
                     default:
@@ -603,14 +603,14 @@ namespace Barotrauma
 
             if (startLocation?.Biome != null && startLocation.Biome.IsEndBiome)
             {
-                locationName ??= startLocation.Name;
+                locationName ??= startLocation.DisplayName;
             }
 
             if (textTag == null) { return ""; }
 
             if (locationName == null)
             {
-                DebugConsole.ThrowError($"Error while creating round summary: could not determine destination location. Start location: {startLocation?.Name ?? "null"}, end location: {endLocation?.Name ?? "null"}");
+                DebugConsole.ThrowError($"Error while creating round summary: could not determine destination location. Start location: {startLocation?.DisplayName ?? "null"}, end location: {endLocation?.DisplayName ?? "null"}");
                 locationName = "[UNKNOWN]";
             }
 

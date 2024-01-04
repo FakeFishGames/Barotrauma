@@ -234,6 +234,15 @@ namespace Barotrauma.Lights
             }
         }
 
+        public void DebugDrawVertices(SpriteBatch spriteBatch)
+        {
+            foreach (LightSource light in lights)
+            {
+                if (!light.Enabled) { continue; }
+                light.DebugDrawVertices(spriteBatch);
+            }
+        }
+
         public void RenderLightMap(GraphicsDevice graphics, SpriteBatch spriteBatch, Camera cam, RenderTarget2D backgroundObstructor = null)
         {
             if (!LightingEnabled) { return; }
@@ -268,6 +277,9 @@ namespace Barotrauma.Lights
                     if (light.ParentSub != null) { pos -= light.ParentSub.DrawPosition; }
                     light.Position = pos;
                 }
+
+                //above the top boundary of the level (in an inactive respawn shuttle?)
+                if (Level.Loaded != null && light.WorldPosition.Y > Level.Loaded.Size.Y) { continue; }
 
                 float range = light.LightSourceParams.TextureRange;
                 if (light.LightSprite != null)
@@ -801,6 +813,8 @@ namespace Barotrauma.Lights
 
         public void ClearLights()
         {
+            activeLights.Clear();
+            activeLightsWithLightVolume.Clear();
             lights.Clear();
         }
     }

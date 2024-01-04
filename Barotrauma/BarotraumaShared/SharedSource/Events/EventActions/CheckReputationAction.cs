@@ -1,7 +1,5 @@
 ﻿#nullable enable
-using System;
 using System.Diagnostics;
-using System.Xml.Linq;
 
 namespace Barotrauma
 {
@@ -31,7 +29,8 @@ namespace Barotrauma
                 }
                 default:
                 {
-                    DebugConsole.ThrowError("CheckReputationAction requires a \"TargetType\" but none were specified.");
+                    DebugConsole.ThrowError("CheckReputationAction requires a \"TargetType\" but none were specified.", 
+                        contentPackage: ParentEvent.Prefab.ContentPackage);
                     break;
                 }
             }
@@ -41,7 +40,8 @@ namespace Barotrauma
 
         protected override bool GetBool(CampaignMode campaignMode)
         {
-            DebugConsole.ThrowError("Boolean comparison cannot be applied to reputations.");
+            DebugConsole.ThrowError("Boolean comparison cannot be applied to reputations.", 
+                contentPackage: ParentEvent.Prefab.ContentPackage);
             return false;
         }
         

@@ -87,13 +87,13 @@ namespace Barotrauma
 #if DEBUG
             void Error(string errorMsg)
             {
-                DebugConsole.ThrowError(errorMsg);
+                DebugConsole.ThrowError(errorMsg, contentPackage: ParentEvent.Prefab.ContentPackage);
             }
 #else
 
             void Error(string errorMsg)
             {
-                DebugConsole.LogError(errorMsg);
+                DebugConsole.LogError(errorMsg, contentPackage: ParentEvent.Prefab.ContentPackage);
             }
 #endif
         }

@@ -1,11 +1,12 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Barotrauma.Items.Components;
+using Microsoft.Xna.Framework;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
-using Barotrauma.Items.Components;
 
 namespace Barotrauma
-{    
+{
     public enum HitDetection
     {
         Distance,
@@ -391,7 +392,8 @@ namespace Barotrauma
                 element.GetAttribute("burndamage") != null ||
                 element.GetAttribute("bleedingdamage") != null)
             {
-                DebugConsole.ThrowError("Error in Attack (" + parentDebugName + ") - Define damage as afflictions instead of using the damage attribute (e.g. <Affliction identifier=\"internaldamage\" strength=\"10\" />).");
+                DebugConsole.ThrowError("Error in Attack (" + parentDebugName + ") - Define damage as afflictions instead of using the damage attribute (e.g. <Affliction identifier=\"internaldamage\" strength=\"10\" />).",
+                    contentPackage: element.ContentPackage);
             }
 
             //if level wall damage is not defined, default to the structure damage
@@ -414,12 +416,14 @@ namespace Barotrauma
                         AfflictionPrefab afflictionPrefab;
                         if (subElement.GetAttribute("name") != null)
                         {
-                            DebugConsole.ThrowError("Error in Attack (" + parentDebugName + ") - define afflictions using identifiers instead of names.");
+                            DebugConsole.ThrowError("Error in Attack (" + parentDebugName + ") - define afflictions using identifiers instead of names.",
+                                    contentPackage: element.ContentPackage);
                             string afflictionName = subElement.GetAttributeString("name", "").ToLowerInvariant();
                             afflictionPrefab = AfflictionPrefab.List.FirstOrDefault(ap => ap.Name.Equals(afflictionName, System.StringComparison.OrdinalIgnoreCase));
                             if (afflictionPrefab == null)
                             {
-                                DebugConsole.ThrowError("Error in Attack (" + parentDebugName + ") - Affliction prefab \"" + afflictionName + "\" not found.");
+                                DebugConsole.ThrowError("Error in Attack (" + parentDebugName + ") - Affliction prefab \"" + afflictionName + "\" not found.",
+                                    contentPackage: element.ContentPackage);
                                 continue;
                             }
                         }
@@ -428,7 +432,8 @@ namespace Barotrauma
                             Identifier afflictionIdentifier = subElement.GetAttributeIdentifier("identifier", "");
                             if (!AfflictionPrefab.Prefabs.TryGet(afflictionIdentifier, out afflictionPrefab))
                             {
-                                DebugConsole.ThrowError("Error in Attack (" + parentDebugName + ") - Affliction prefab \"" + afflictionIdentifier + "\" not found.");
+                                DebugConsole.ThrowError("Error in Attack (" + parentDebugName + ") - Affliction prefab \"" + afflictionIdentifier + "\" not found.",
+                                    contentPackage: element.ContentPackage);
                                 continue;
                             }
                         }
@@ -441,7 +446,7 @@ namespace Barotrauma
         }
         partial void InitProjSpecific(ContentXElement element);
 
-        public void ReloadAfflictions(XElement element, string parentDebugName)
+        public void ReloadAfflictions(ContentXElement element, string parentDebugName)
         {
             Afflictions.Clear();
             foreach (var subElement in element.GetChildElements("affliction"))
@@ -450,13 +455,14 @@ namespace Barotrauma
                 Identifier afflictionIdentifier = subElement.GetAttributeIdentifier("identifier", "");
                 if (!AfflictionPrefab.Prefabs.TryGet(afflictionIdentifier, out AfflictionPrefab afflictionPrefab))
                 {
-                    DebugConsole.ThrowError($"Error in an Attack defined in \"{parentDebugName}\" - could not find an affliction with the identifier \"{afflictionIdentifier}\".");
+                    DebugConsole.ThrowError($"Error in an Attack defined in \"{parentDebugName}\" - could not find an affliction with the identifier \"{afflictionIdentifier}\".",
+                        contentPackage: element.ContentPackage);
                     continue;
                 }
                 affliction = afflictionPrefab.Instantiate(0.0f);
                 affliction.Deserialize(subElement);
                 //backwards compatibility
-                if (subElement.Attribute("amount") != null && subElement.Attribute("strength") == null)
+                if (subElement.GetAttribute("amount") != null && subElement.GetAttribute("strength") == null)
                 {
                     affliction.Strength = subElement.GetAttributeFloat("amount", 0.0f);
                 }
@@ -465,7 +471,7 @@ namespace Barotrauma
             }
         }
 
-        public void Serialize(XElement element)
+        public void Serialize(ContentXElement element)
         {
             SerializableProperty.SerializeProperties(this, element, true);
             foreach (var affliction in Afflictions)
@@ -477,7 +483,7 @@ namespace Barotrauma
             }
         }
 
-        public void Deserialize(XElement element, string parentDebugName)
+        public void Deserialize(ContentXElement element, string parentDebugName)
         {
             SerializableProperties = SerializableProperty.DeserializeProperties(this, element);
             ReloadAfflictions(element, parentDebugName);
@@ -497,8 +503,9 @@ namespace Barotrauma
             SetUser(attacker);
 
             DamageParticles(deltaTime, worldPosition);
-            
-            var attackResult = target?.AddDamage(attacker, worldPosition, this, deltaTime, playSound) ?? new AttackResult();
+
+            Vector2 impulseDirection = GetImpulseDirection(target as ISpatialEntity, worldPosition, SourceItem);
+            var attackResult = target?.AddDamage(attacker, worldPosition, this, impulseDirection, deltaTime, playSound) ?? new AttackResult();
             var conditionalEffectType = attackResult.Damage > 0.0f ? ActionType.OnSuccess : ActionType.OnFailure;
             var additionalEffectType = ActionType.OnUse;
             if (targetCharacter != null && targetCharacter.IsDead)
@@ -606,7 +613,7 @@ namespace Barotrauma
             float penetration = Penetration;
 
             RangedWeapon weapon = 
-                SourceItem?.GetComponent<RangedWeapon>() ?? 
+                SourceItem?.GetComponent<RangedWeapon>() ??
                 SourceItem?.GetComponent<Projectile>()?.Launcher?.GetComponent<RangedWeapon>();
             float? penetrationValue = weapon?.Penetration;
             if (penetrationValue.HasValue)
@@ -614,7 +621,8 @@ namespace Barotrauma
                 penetration += penetrationValue.Value;
             }
 
-            var attackResult = targetLimb.character.ApplyAttack(attacker, worldPosition, this, deltaTime, playSound, targetLimb, penetration);
+            Vector2 impulseDirection = GetImpulseDirection(targetLimb, worldPosition, SourceItem);
+            var attackResult = targetLimb.character.ApplyAttack(attacker, worldPosition, this, deltaTime, impulseDirection, playSound, targetLimb, penetration);
             var conditionalEffectType = attackResult.Damage > 0.0f ? ActionType.OnSuccess : ActionType.OnFailure;
 
             foreach (StatusEffect effect in statusEffects)
@@ -664,6 +672,34 @@ namespace Barotrauma
             }
 
             return attackResult;
+        }
+
+        private Vector2 GetImpulseDirection(ISpatialEntity target, Vector2 sourceWorldPosition, Item sourceItem)
+        {
+            Vector2 impulseDirection = Vector2.Zero;
+            if (target != null)
+            {
+                impulseDirection = target.WorldPosition - sourceWorldPosition;
+            }
+
+            if (sourceItem?.body != null && sourceItem.body.Enabled && sourceItem.body.LinearVelocity.LengthSquared() > 0.0f)
+            {
+                impulseDirection = sourceItem.body.LinearVelocity;
+            }
+            else
+            {
+                var projectileComponent = sourceItem?.GetComponent<Projectile>();
+                if (projectileComponent != null)
+                {
+                    impulseDirection = new Vector2(MathF.Cos(SourceItem.Rotation), MathF.Sin(SourceItem.Rotation));
+                }
+            }
+
+            if (impulseDirection.LengthSquared() > 0.0001f)
+            {
+                impulseDirection = Vector2.Normalize(impulseDirection);
+            }
+            return impulseDirection;
         }
 
         public float AttackTimer { get; private set; }

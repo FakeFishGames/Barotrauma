@@ -18,7 +18,7 @@ namespace Barotrauma.Sounds
 
         public readonly string Filename;
 
-        public readonly XElement XElement;
+        public readonly ContentXElement XElement;
 
         public readonly bool Stream;
 
@@ -60,14 +60,14 @@ namespace Barotrauma.Sounds
         public float BaseNear;
         public float BaseFar;
 
-        public Sound(SoundManager owner, string filename, bool stream, bool streamsReliably, XElement xElement = null, bool getFullPath = true)
+        public Sound(SoundManager owner, string filename, bool stream, bool streamsReliably, ContentXElement xElement = null, bool getFullPath = true)
         {
             Owner = owner;
             Filename = getFullPath ? Path.GetFullPath(filename.CleanUpPath()).CleanUpPath() : filename;
             Stream = stream;
             StreamsReliably = streamsReliably;
             XElement = xElement;
-            sourcePoolIndex = XElement.GetAttributeEnum("sourcepool", SoundManager.SourcePoolIndex.Default);
+            sourcePoolIndex = XElement?.GetAttributeEnum("sourcepool", SoundManager.SourcePoolIndex.Default) ?? SoundManager.SourcePoolIndex.Default;
 
             BaseGain = 1.0f;
             BaseNear = 100.0f;

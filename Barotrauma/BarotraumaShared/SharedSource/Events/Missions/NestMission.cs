@@ -85,7 +85,8 @@ namespace Barotrauma
                 }
                 else
                 {
-                    DebugConsole.ThrowError($"Error in monster mission \"{prefab.Identifier}\". Could not find a character prefab with the name \"{speciesName}\".");
+                    DebugConsole.ThrowError($"Error in monster mission \"{prefab.Identifier}\". Could not find a character prefab with the name \"{speciesName}\".",
+                        contentPackage: Prefab.ContentPackage);
                 }
             }
 
@@ -174,7 +175,8 @@ namespace Barotrauma
                     var itemIdentifier = subElement.GetAttributeIdentifier("identifier", Identifier.Empty);
                     if (MapEntityPrefab.FindByIdentifier(itemIdentifier) is not ItemPrefab itemPrefab)
                     {
-                        DebugConsole.ThrowError("Couldn't spawn item for nest mission: item prefab \"" + itemIdentifier + "\" not found");
+                        DebugConsole.ThrowError("Couldn't spawn item for nest mission: item prefab \"" + itemIdentifier + "\" not found",
+                            contentPackage: Prefab.ContentPackage);
                         continue;
                     }
 
@@ -285,7 +287,8 @@ namespace Barotrauma
                                 }
                                 if (Level.Loaded.IsPositionInsideWall(nestPosition))
                                 {
-                                    DebugConsole.AddWarning($"Error in nest mission \"{Prefab.Identifier}\": nest position was inside a wall ({nestPosition}).");
+                                    DebugConsole.AddWarning($"Error in nest mission \"{Prefab.Identifier}\": nest position was inside a wall ({nestPosition}).",
+                                        Prefab.ContentPackage);
                                 }
                                 monsterPrefabs.Clear();
                                 break;

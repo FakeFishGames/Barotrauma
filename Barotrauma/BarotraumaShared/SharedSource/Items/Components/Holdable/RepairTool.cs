@@ -137,7 +137,8 @@ namespace Barotrauma.Items.Components
 
             if (element.GetAttribute("limbfixamount") != null)
             {
-                DebugConsole.ThrowError("Error in item \"" + item.Name + "\" - RepairTool damage should be configured using a StatusEffect with Afflictions, not the limbfixamount attribute.");
+                DebugConsole.ThrowError("Error in item \"" + item.Name + "\" - RepairTool damage should be configured using a StatusEffect with Afflictions, not the limbfixamount attribute.",
+                    contentPackage: element.ContentPackage);
             }
 
             fixableEntities = new HashSet<Identifier>();
@@ -149,7 +150,8 @@ namespace Barotrauma.Items.Components
                     case "fixable":
                         if (subElement.GetAttribute("name") != null)
                         {
-                            DebugConsole.ThrowError("Error in RepairTool " + item.Name + " - use identifiers instead of names to configure fixable entities.");
+                            DebugConsole.ThrowError("Error in RepairTool " + item.Name + " - use identifiers instead of names to configure fixable entities.",
+                                contentPackage: element.ContentPackage);
                             fixableEntities.Add(subElement.GetAttribute("name").Value.ToIdentifier());
                         }
                         else
@@ -536,7 +538,7 @@ namespace Barotrauma.Items.Components
                 {
                     Vector2 displayPos = ConvertUnits.ToDisplayUnits(rayStart + (rayEnd - rayStart) * lastPickedFraction * 0.9f);
                     if (item.CurrentHull.Submarine != null) { displayPos += item.CurrentHull.Submarine.Position; }
-                    new FireSource(displayPos);
+                    new FireSource(displayPos, sourceCharacter: user);
                 }
             }
         }
@@ -570,7 +572,14 @@ namespace Barotrauma.Items.Components
                     structureFixAmount *= 1 + item.GetQualityModifier(Quality.StatType.RepairToolStructureDamageMultiplier);
                 }
 
+                var didLeak = targetStructure.SectionIsLeakingFromOutside(sectionIndex);
+
                 targetStructure.AddDamage(sectionIndex, -structureFixAmount * degreeOfSuccess, user);
+
+                if (didLeak && !targetStructure.SectionIsLeakingFromOutside(sectionIndex))
+                {
+                    user.CheckTalents(AbilityEffectType.OnRepairedOutsideLeak);
+                }
 
                 //if the next section is small enough, apply the effect to it as well
                 //(to make it easier to fix a small "left-over" section)
@@ -658,9 +667,10 @@ namespace Barotrauma.Items.Components
                     float addedDetachTime = deltaTime * (1f + user.GetStatValue(StatTypes.RepairToolDeattachTimeMultiplier)) * (1f + item.GetQualityModifier(Quality.StatType.RepairToolDeattachTimeMultiplier));
                     levelResource.DeattachTimer += addedDetachTime;
 #if CLIENT
-                    if (targetItem.Prefab.ShowHealthBar)
+                    if (targetItem.Prefab.ShowHealthBar && Character.Controlled != null &&
+                        (user == Character.Controlled || Character.Controlled.CanSeeTarget(item)))
                     {
-                        Character.Controlled?.UpdateHUDProgressBar(
+                        Character.Controlled.UpdateHUDProgressBar(
                             this,
                             targetItem.WorldPosition,
                             levelResource.DeattachTimer / levelResource.DeattachDuration,

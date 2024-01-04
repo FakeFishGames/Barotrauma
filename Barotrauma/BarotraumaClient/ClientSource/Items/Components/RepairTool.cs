@@ -151,7 +151,7 @@ namespace Barotrauma.Items.Components
                 GUI.DrawLine(spriteBatch, 
                     new Vector2(debugRayStartPos.X, -debugRayStartPos.Y),
                     new Vector2(debugRayEndPos.X, -debugRayEndPos.Y),
-                    Color.Yellow);
+                    Color.Yellow, width: 3f);
             }
         }
 #endif

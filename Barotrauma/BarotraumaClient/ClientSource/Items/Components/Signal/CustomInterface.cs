@@ -95,7 +95,7 @@ namespace Barotrauma.Items.Components
                                 MaxValueFloat = numberInputMax,
                                 FloatValue = Math.Clamp(floatSignal, numberInputMin, numberInputMax),
                                 DecimalsToDisplay = ciElement.NumberInputDecimalPlaces,
-                                valueStep = numberInputStep,
+                                ValueStep = numberInputStep,
                                 OnValueChanged = (ni) =>
                                 {
                                     if (GameMain.Client == null)
@@ -121,7 +121,7 @@ namespace Barotrauma.Items.Components
                                 MinValueInt = numberInputMin,
                                 MaxValueInt = numberInputMax,
                                 IntValue = Math.Clamp(intSignal, numberInputMin, numberInputMax),
-                                valueStep = numberInputStep,
+                                ValueStep = numberInputStep,
                                 OnValueChanged = (ni) =>
                                 {
                                     if (GameMain.Client == null)
@@ -137,7 +137,8 @@ namespace Barotrauma.Items.Components
                         }
                         else
                         {
-                            DebugConsole.LogError($"Error creating a CustomInterface component: unexpected NumberType \"{(ciElement.NumberType.HasValue ? ciElement.NumberType.Value.ToString() : "none")}\"");
+                            DebugConsole.LogError($"Error creating a CustomInterface component: unexpected NumberType \"{(ciElement.NumberType.HasValue ? ciElement.NumberType.Value.ToString() : "none")}\"",
+                                contentPackage: item.Prefab.ContentPackage);
                         }
                         if (numberInput != null)
                         {

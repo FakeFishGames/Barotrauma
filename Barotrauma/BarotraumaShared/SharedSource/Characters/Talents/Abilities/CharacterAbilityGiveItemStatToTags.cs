@@ -10,6 +10,7 @@ namespace Barotrauma.Abilities
         private readonly float value;
         private readonly ImmutableHashSet<Identifier> tags;
         private readonly bool stackable;
+        private readonly bool save;
 
         public CharacterAbilityGiveItemStatToTags(CharacterAbilityGroup characterAbilityGroup, ContentXElement abilityElement) : base(characterAbilityGroup, abilityElement)
         {
@@ -17,6 +18,7 @@ namespace Barotrauma.Abilities
             value = abilityElement.GetAttributeFloat("value", 0f);
             tags = abilityElement.GetAttributeIdentifierImmutableHashSet("tags", ImmutableHashSet<Identifier>.Empty);
             stackable = abilityElement.GetAttributeBool("stackable", true);
+            save = abilityElement.GetAttributeBool("save", false);
         }
 
         public override void InitializeAbility(bool addingFirstTime)
@@ -44,7 +46,7 @@ namespace Barotrauma.Abilities
                 if (item.Submarine?.TeamID != Character.TeamID) { continue; }
                 if (item.HasTag(tags) || tags.Contains(item.Prefab.Identifier))
                 {
-                    item.StatManager.ApplyStat(stat, stackable, value, CharacterTalent);
+                    item.StatManager.ApplyStat(stat, stackable, save, value, CharacterTalent);
                 }
             }
         }

@@ -1,8 +1,7 @@
-using System;
 using Barotrauma.Items.Components;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Xml.Linq;
 
 namespace Barotrauma.Abilities
 {
@@ -25,16 +24,21 @@ namespace Barotrauma.Abilities
         private readonly Identifier[] tags;
         private readonly WeaponType weapontype;
         private readonly bool ignoreNonHarmfulAttacks;
+
+        private readonly bool ignoreOwnAttacks;
+
         public AbilityConditionAttackData(CharacterTalent characterTalent, ContentXElement conditionElement) : base(characterTalent, conditionElement)
         {
-            itemIdentifier = conditionElement.GetAttributeString("itemidentifier", string.Empty);
-            tags = conditionElement.GetAttributeIdentifierArray("tags", Array.Empty<Identifier>());
-            ignoreNonHarmfulAttacks = conditionElement.GetAttributeBool("ignorenonharmfulattacks", false);
+            itemIdentifier = conditionElement.GetAttributeString(nameof(itemIdentifier), string.Empty);
+            tags = conditionElement.GetAttributeIdentifierArray(nameof(tags), Array.Empty<Identifier>());
+            ignoreNonHarmfulAttacks = conditionElement.GetAttributeBool(nameof(ignoreNonHarmfulAttacks), false);
+            ignoreOwnAttacks = conditionElement.GetAttributeBool(nameof(ignoreOwnAttacks), false);
 
             string weaponTypeStr = conditionElement.GetAttributeString("weapontype", "Any");
             if (!Enum.TryParse(weaponTypeStr, ignoreCase: true, out weapontype))
             {
-                DebugConsole.ThrowError($"Error in talent \"{characterTalent.DebugIdentifier}\": \"{weaponTypeStr}\" is not a valid weapon type.");
+                DebugConsole.ThrowError($"Error in talent \"{characterTalent.DebugIdentifier}\": \"{weaponTypeStr}\" is not a valid weapon type.",
+                    contentPackage: conditionElement.ContentPackage);
             }
         }
 
@@ -42,6 +46,8 @@ namespace Barotrauma.Abilities
         {
             if (abilityObject is AbilityAttackData attackData)
             {
+                if (ignoreOwnAttacks && attackData.Attacker == character) { return false; }
+
                 if (ignoreNonHarmfulAttacks && attackData.SourceAttack != null)
                 {
                     if (attackData.SourceAttack.Stun <= 0.0f && (attackData.SourceAttack.Afflictions?.All(a => a.Key.Prefab.IsBuff) ?? true)) 

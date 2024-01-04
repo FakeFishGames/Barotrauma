@@ -29,6 +29,9 @@ namespace Barotrauma.Items.Components
         // We don't want the components and wires to transfer between subs as it would cause issues.
         public override bool DontTransferInventoryBetweenSubs => true;
 
+        // We don't want to sell the components and wires inside the circuit box
+        public override bool DisallowSellingItemsFromContainer => true;
+
         public Option<CircuitBoxConnection> FindInputOutputConnection(Identifier connectionName)
         {
             foreach (CircuitBoxInputConnection input in Inputs)
@@ -154,7 +157,7 @@ namespace Barotrauma.Items.Components
             delayedElementToLoad = Option.None;
         }
 
-        private void LoadFromXML(ContentXElement loadElement)
+        public void LoadFromXML(ContentXElement loadElement)
         {
             foreach (var subElement in loadElement.Elements())
             {
@@ -395,8 +398,8 @@ namespace Barotrauma.Items.Components
             {
                 Components.Add(new CircuitBoxComponent(id, spawnedItem, pos, this, usedResource));
                 onItemSpawned?.Invoke(spawnedItem);
+                OnViewUpdateProjSpecific();
             });
-
             OnViewUpdateProjSpecific();
             return true;
         }

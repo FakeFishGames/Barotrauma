@@ -16,7 +16,8 @@
 
             if (afflictionId.IsEmpty)
             {
-                DebugConsole.ThrowError($"Error in talent {CharacterTalent.DebugIdentifier}, CharacterAbilityGiveAffliction - affliction identifier not set.");
+                DebugConsole.ThrowError($"Error in talent {CharacterTalent.DebugIdentifier}, CharacterAbilityGiveAffliction - affliction identifier not set.",
+                    contentPackage: abilityElement.ContentPackage);
             }
         }
 
@@ -27,7 +28,8 @@
                 var afflictionPrefab = AfflictionPrefab.Prefabs.Find(a => a.Identifier == afflictionId);
                 if (afflictionPrefab == null)
                 {
-                    DebugConsole.ThrowError($"Error in CharacterAbilityGiveAffliction - could not find an affliction with the identifier \"{afflictionId}\".");
+                    DebugConsole.ThrowError($"Error in CharacterAbilityGiveAffliction - could not find an affliction with the identifier \"{afflictionId}\".",
+                        contentPackage: CharacterTalent.Prefab.ContentPackage);
                     return;
                 }
                 float strength = this.strength;
