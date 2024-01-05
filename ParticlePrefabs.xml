@@ -1351,7 +1351,7 @@
     drag="0"
     waterdrag="0"
     velocitychangewater="0,0.1"
-    collisionradius="1"
+    collisionradius="25"
     friction="0.5"
     restitution="0.5"
     blendstate="AlphaBlend"
@@ -5682,5 +5682,4 @@
   <grenadelever lifetime="6" startdelaymin="0" startdelaymax="0" angularvelocitymin="50" angularvelocitymax="70" startrotationmin="120" startrotationmax="180" rotatetodirection="false" drag="0" waterdrag="0.5" velocitychange="0,-10" velocitychangewater="0,-6" collisionradius="1" usecollision="true" deleteoncollision="False" friction="0.1" restitution="0.4" startsizemin="1,1" startsizemax="1,1" growtime="0.0" startcolor="255,255,255,255" endcolor="255,255,255,0" drawtarget="Both" drawontop="True" blendstate="AlphaBlend" animduration="1" loopanim="false" lifetimemin="0" sizechangemin="0,0" sizechangemax="0,0" middlecolor="255,255,255,255" usemiddlecolor="False" priority="30">
     <sprite name="grenadelever" texture="Content/Particles/ParticleAtlas.png" sourcerect="229,130,10,38" origin="0.48055297,0.53349656" depth="0.565" />
   </grenadelever>
-
 </prefabs>

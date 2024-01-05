@@ -269,7 +269,7 @@
       </StatusEffect>
     </MeleeWeapon>
   </Item>
-  <Item name="" identifier="fixfoamgrenade" category="Equipment" maxstacksize="32" maxstacksizecharacterinventory="8" cargocontaineridentifier="explosivecrate" allowasextracargo="true" tags="smallitem,weapon,explosive,demolitionsexpert" Scale="0.5" impactsoundtag="impact_metal_light">
+ <Item name="" identifier="fixfoamgrenade" category="Equipment" maxstacksize="32" maxstacksizecharacterinventory="8" cargocontaineridentifier="explosivecrate" allowasextracargo="true" tags="smallitem,weapon,explosive,demolitionsexpert,throwableexplosive" Scale="0.5" impactsoundtag="impact_metal_light">
       <PreferredContainer primary="engcab" secondary="locker" />
       <Price baseprice="95" sold="false">
         <Price storeidentifier="merchantoutpost" multiplier="1.1" />
@@ -413,9 +413,9 @@
       <sprite name="Makeshift Armor Torso" texture="Content/Items/Diving/MakeshiftArmor.png" limb="Torso" hidelimb="false" inherittexturescale="true" hideotherwearables="true" inheritorigin="true" inheritsourcerect="true" />
       <sprite name="Makeshift Armor Right Hand" texture="Content/Items/Diving/MakeshiftArmor.png" limb="RightHand" hidelimb="true" inherittexturescale="true" hideotherwearables="true" inheritorigin="true" inheritsourcerect="true" />
       <sprite name="Makeshift Armor Left Hand" texture="Content/Items/Diving/MakeshiftArmor.png" limb="LeftHand" hidelimb="true" inherittexturescale="true" hideotherwearables="true" inheritorigin="true" inheritsourcerect="true" />
-      <sprite name="Makeshift Armor Right Upper Arm" texture="Content/Items/Diving/MakeshiftArmor.png" limb="RightArm" hidelimb="true" inherittexturescale="true" hideotherwearables="true" inheritorigin="true" inheritsourcerect="true" />
+      <sprite name="Makeshift Armor Right Upper Arm" texture="Content/Items/Diving/MakeshiftArmor.png" limb="RightArm" depthlimb="RightForearm" hidelimb="true" inherittexturescale="true" hideotherwearables="true" inheritorigin="true" inheritsourcerect="true" />
       <sprite name="Makeshift Armor Left Upper Arm" texture="Content/Items/Diving/MakeshiftArmor.png" limb="LeftArm" hidelimb="true" inherittexturescale="true" hideotherwearables="true" inheritorigin="true" inheritsourcerect="true" />
-      <sprite name="Makeshift Armor Right Forearm" texture="Content/Items/Diving/MakeshiftArmor.png" limb="RightForearm" hidelimb="true" inherittexturescale="true" hideotherwearables="true" inheritorigin="true" inheritsourcerect="true" />
+      <sprite name="Makeshift Armor Right Forearm" texture="Content/Items/Diving/MakeshiftArmor.png" limb="RightForearm" depthlimb="RightArm" hidelimb="true" inherittexturescale="true" hideotherwearables="true" inheritorigin="true" inheritsourcerect="true" />
       <sprite name="Makeshift Armor Left Forearm" texture="Content/Items/Diving/MakeshiftArmor.png" limb="LeftForearm" hidelimb="true" inherittexturescale="true" hideotherwearables="true" inheritorigin="true" inheritsourcerect="true" />
       <sprite name="Makeshift Armor Waist" texture="Content/Items/Diving/MakeshiftArmor.png" limb="Waist" hidelimb="true" inherittexturescale="true" hideotherwearables="true" inheritorigin="true" inheritsourcerect="true" />
       <sprite name="Makeshift Armor Right Thigh" texture="Content/Items/Diving/MakeshiftArmor.png" limb="RightThigh" hidelimb="true" inherittexturescale="true" hideotherwearables="true" inheritorigin="true" inheritsourcerect="true" />
@@ -427,7 +427,7 @@
       <StatValue stattype="FlowResistance" value="0.5" />
     </Wearable>
   </Item>
-  <Item name="" identifier="ironhelmet" category="Equipment" tags="smallitem,clothing" cargocontaineridentifier="metalcrate" description="" impactsoundtag="impact_metal_heavy" scale="0.325">
+  <Item name="" identifier="ironhelmet" category="Equipment" tags="smallitem" cargocontaineridentifier="metalcrate" description="" impactsoundtag="impact_metal_heavy" scale="0.325">
     <PreferredContainer primary="secarmcab" amount="0" notcampaign="true"/>
     <PreferredContainer secondary="wreckarmcab,abandonedarmcab,outpostarmcab" amount="1" spawnprobability="0.01" />
     <PreferredContainer secondary="armcab"/>
@@ -458,7 +458,7 @@
   </Item>
 
   <!--TODO: change the priority to 2.5 when the bots can switch the batteries-->
-  <Item name="" identifier="exosuit" category="Diving,Equipment" tags="diving,deepdiving,deepdivinglarge,provocative" scale="0.605" fireproof="true" description="" isshootable="true" allowdroppingonswapwith="diving" impactsoundtag="impact_metal_heavy" botpriority="0.01" cargocontaineridentifier="">
+  <Item name="" identifier="exosuit" category="Diving,Equipment" tags="diving,deepdiving,deepdivinglarge,human" scale="0.605" fireproof="true" description="" isshootable="true" allowdroppingonswapwith="diving" impactsoundtag="impact_metal_heavy" botpriority="0.01" cargocontaineridentifier="">
     <Price baseprice="80" canbespecial="false" sold="false" />
     <Deconstruct time="30">
       <Item identifier="titaniumaluminiumalloy" />

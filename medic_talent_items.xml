@@ -362,7 +362,7 @@
     <Projectile characterusable="false" launchimpulse="18.0" sticktocharacters="true" launchrotation="-90" inheritstatuseffectsfrom="MeleeWeapon"/>
   </Item>
 
-<Item name="" identifier="chemgrenade" category="Weapon" maxstacksize="32" maxstacksizecharacterinventory="8" cargocontaineridentifier="explosivecrate" tags="smallitem,weapon,explosive,demolitionsexpert" Scale="0.5" impactsoundtag="impact_metal_heavy">
+  <Item name="" identifier="chemgrenade" category="Weapon" maxstacksize="32" maxstacksizecharacterinventory="8" cargocontaineridentifier="explosivecrate" tags="smallitem,weapon,explosive,demolitionsexpert,throwableexplosive" Scale="0.5" impactsoundtag="impact_metal_heavy">
       <PreferredContainer primary="secarmcab" minamount="1" maxamount="3" spawnprobability="0.75" notcampaign="true" />
       <PreferredContainer primary="wreckarmcab,abandonedarmcab" minamount="1" maxamount="2" spawnprobability="0.05" />
       <PreferredContainer secondary="armcab" />
