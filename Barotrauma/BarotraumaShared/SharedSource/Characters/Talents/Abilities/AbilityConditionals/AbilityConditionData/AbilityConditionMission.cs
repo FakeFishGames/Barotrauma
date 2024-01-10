@@ -22,7 +22,8 @@ namespace Barotrauma.Abilities
                 {
                     if (!isAffiliated)
                     {
-                        DebugConsole.ThrowError($"Error in AbilityConditionMission \"{characterTalent.DebugIdentifier}\" - \"{missionTypeString}\" is not a valid mission type.");
+                        DebugConsole.ThrowError($"Error in AbilityConditionMission \"{characterTalent.DebugIdentifier}\" - \"{missionTypeString}\" is not a valid mission type.",
+                            contentPackage: conditionElement.ContentPackage);
                     }
                     continue;
                 }
@@ -41,10 +42,10 @@ namespace Barotrauma.Abilities
 
                 if (GameMain.GameSession?.Campaign?.Factions is not { } factions) { return false; }
 
-                foreach (var (factionIdentifier, amount) in mission.ReputationRewards)
+                foreach (var reputationReward in mission.ReputationRewards)
                 {
-                    if (amount <= 0) { continue; }
-                    if (GetMatchingFaction(factionIdentifier) is { } faction &&
+                    if (reputationReward.Amount <= 0) { continue; }
+                    if (GetMatchingFaction(reputationReward.FactionIdentifier) is { } faction &&
                         Faction.GetPlayerAffiliationStatus(faction) is FactionAffiliation.Positive)
                     {
                         return CheckMissionType();

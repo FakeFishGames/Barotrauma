@@ -50,7 +50,8 @@ namespace Barotrauma
                 if (identifier.IsEmpty)
                 {
                     DebugConsole.ThrowError(
-                        $"No identifier defined for the affliction '{elementName}' in file '{Path}'");
+                        $"No identifier defined for the affliction '{elementName}' in file '{Path}'",
+                        contentPackage: element?.ContentPackage);
                     return;
                 }
 
@@ -60,12 +61,13 @@ namespace Barotrauma
                     {
                         DebugConsole.NewMessage(
                             $"Overriding an affliction or a buff with the identifier '{identifier}' using the file '{Path}'",
-                            Color.Yellow);
+                            Color.MediumPurple);
                     }
                     else
                     {
                         DebugConsole.ThrowError(
-                            $"Duplicate affliction: '{identifier}' defined in {elementName} of '{Path}'");
+                            $"Duplicate affliction: '{identifier}' defined in {elementName} of '{Path}'", 
+                            contentPackage: element?.ContentPackage);
                         return;
                     }
                 }

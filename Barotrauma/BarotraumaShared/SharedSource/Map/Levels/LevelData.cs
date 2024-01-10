@@ -241,7 +241,7 @@ namespace Barotrauma
         /// </summary>
         public LevelData(Location location, Map map, float difficulty)
         {
-            Seed = location.BaseName + map.Locations.IndexOf(location);
+            Seed = location.NameIdentifier.Value + map.Locations.IndexOf(location);
             Biome = location.Biome;
             Type = LevelType.Outpost;
             Difficulty = difficulty;
@@ -365,7 +365,7 @@ namespace Barotrauma
                 if (FinishedEvents.Any())
                 {
                     var finishedEventsElement = new XElement(nameof(FinishedEvents));
-                    foreach (var (set, count) in FinishedEvents.DistinctBy(f => f.Key.Identifier))
+                    foreach (var (set, count) in FinishedEvents)
                     {
                         var element = new XElement(nameof(FinishedEvents),
                             new XAttribute("set", set.Identifier),

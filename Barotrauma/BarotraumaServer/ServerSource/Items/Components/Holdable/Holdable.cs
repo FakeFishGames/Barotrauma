@@ -32,6 +32,7 @@ namespace Barotrauma.Items.Components
             Drop(false, null);
             item.SetTransform(simPosition, 0.0f, findNewHull: false);
             AttachToWall();
+            OnUsed.Invoke(new ItemUseInfo(item, c.Character));
 
             item.CreateServerEvent(this);
             c.Character.Inventory?.CreateNetworkEvent();

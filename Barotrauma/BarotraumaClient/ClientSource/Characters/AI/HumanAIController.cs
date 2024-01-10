@@ -82,15 +82,20 @@ namespace Barotrauma
                     {
                         var previousNode = path.Nodes[i - 1];
                         var currentNode = path.Nodes[i];
+                        bool isPathActive = !path.Finished && !path.IsAtEndNode;
+                        Color pathColor = isPathActive ? Color.Blue * 0.5f : Color.Gray;
                         GUI.DrawLine(spriteBatch,
                             new Vector2(currentNode.DrawPosition.X, -currentNode.DrawPosition.Y),
                             new Vector2(previousNode.DrawPosition.X, -previousNode.DrawPosition.Y),
-                            Color.Blue * 0.5f, 0, 3);
+                            pathColor, 0, 3);
 
-                        GUIStyle.SmallFont.DrawString(spriteBatch,
-                            currentNode.ID.ToString(),
-                            new Vector2(currentNode.DrawPosition.X - 10, -currentNode.DrawPosition.Y - 30),
-                            Color.Blue);
+                        if (isPathActive)
+                        {
+                            GUIStyle.SmallFont.DrawString(spriteBatch,
+                                currentNode.ID.ToString(),
+                                new Vector2(currentNode.DrawPosition.X - 10, -currentNode.DrawPosition.Y - 30),
+                                Color.Blue);
+                        }
                     }
                     if (path.CurrentNode != null)
                     {

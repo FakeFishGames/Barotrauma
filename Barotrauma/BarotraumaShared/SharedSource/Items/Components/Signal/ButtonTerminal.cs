@@ -26,7 +26,8 @@ namespace Barotrauma.Items.Components
             RequiredSignalCount = element.GetChildElements("TerminalButton").Count(c => c.GetAttribute("style") != null);
             if (RequiredSignalCount < 1)
             {
-                DebugConsole.ThrowError($"Error in item \"{item.Name}\": no TerminalButton elements defined for the ButtonTerminal component!");
+                DebugConsole.ThrowError($"Error in item \"{item.Name}\": no TerminalButton elements defined for the ButtonTerminal component!",
+                    contentPackage: element.ContentPackage);
             }
             InitProjSpecific(element);
         }

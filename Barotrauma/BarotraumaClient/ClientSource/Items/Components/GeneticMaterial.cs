@@ -54,7 +54,9 @@ namespace Barotrauma.Items.Components
         {
             if (deconstructor.InputContainer.Inventory.AllItems.Count() == 2)
             {
-                if (!deconstructor.InputContainer.Inventory.AllItems.All(it => it.Prefab == item.Prefab))
+                var otherGeneticMaterial =
+                    deconstructor.InputContainer.Inventory.AllItems.FirstOrDefault(it => it != item && it.Prefab == item.Prefab)?.GetComponent<GeneticMaterial>();
+                if (otherGeneticMaterial == null)
                 {
                     buttonText = TextManager.Get("researchstation.combine");
                     infoText = TextManager.Get("researchstation.combine.infotext");
@@ -62,7 +64,7 @@ namespace Barotrauma.Items.Components
                 else
                 {
                     buttonText = TextManager.Get("researchstation.refine");
-                    int taintedProbability = (int)(GetTaintedProbabilityOnRefine(Character.Controlled) * 100);
+                    int taintedProbability = (int)(GetTaintedProbabilityOnRefine(otherGeneticMaterial, Character.Controlled) * 100);
                     infoText = TextManager.GetWithVariable("researchstation.refine.infotext", "[taintedprobability]", taintedProbability.ToString());
                 }
             }

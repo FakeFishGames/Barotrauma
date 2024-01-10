@@ -28,8 +28,16 @@ namespace Barotrauma
             {
                 foreach (var subElement in parentElement.Elements())
                 {
-                    var prefab = new EventPrefab(subElement, this);
-                    EventPrefab.Prefabs.Add(prefab, overriding);
+                    if (subElement.NameAsIdentifier() == "traitorevent")
+                    {
+                        var prefab = new TraitorEventPrefab(subElement, this);
+                        EventPrefab.Prefabs.Add(prefab, overriding);
+                    }
+                    else
+                    {
+                        var prefab = new EventPrefab(subElement, this);
+                        EventPrefab.Prefabs.Add(prefab, overriding);
+                    }
                 }
             }
             else if (elemName == "eventsprites")
@@ -57,7 +65,8 @@ namespace Barotrauma
             }
             else
             {
-                DebugConsole.ThrowError($"RandomEventsFile: Invalid {GetType().Name} element: {parentElement.Name} in {Path}");
+                DebugConsole.ThrowError($"RandomEventsFile: Invalid {GetType().Name} element: {parentElement.Name} in {Path}",
+                    contentPackage: parentElement.ContentPackage);
             }
         }
 

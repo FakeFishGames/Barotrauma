@@ -27,6 +27,9 @@ namespace Barotrauma.RuinGeneration
 
         public override string Name => "RuinGenerationParams";
 
+        [Serialize(true, IsPropertySaveable.Yes, description: "Are these params designed to be used for alien ruins targeted by missions. If false, the params are ignored when there's any missions targeting ruins."), Editable]
+        public bool IsMissionReady { get; set; }
+
         public RuinGenerationParams(ContentXElement element, RuinConfigFile file) : base(element, file) { }
 
         public static void SaveAll()

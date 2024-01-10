@@ -85,6 +85,12 @@ namespace Barotrauma
         public readonly bool TargetAllCharacters;
         public bool IsReport => TargetAllCharacters && !MustSetTarget;
 
+        public bool IsVisibleAsReportButton => 
+            IsReport && !Hidden && SymbolSprite != null &&
+            (!TraitorModeOnly || GameMain.GameSession is { TraitorsEnabled: true });
+
+        public bool TraitorModeOnly;
+
         public bool IsDismissal => Identifier == DismissalIdentifier;
 
         public readonly float FadeOutTime;
@@ -172,6 +178,7 @@ namespace Barotrauma
             ControllerTags = orderElement.GetAttributeIdentifierArray("controllertags", Array.Empty<Identifier>()).ToImmutableArray();
             TargetAllCharacters = orderElement.GetAttributeBool("targetallcharacters", false);
             AppropriateJobs = orderElement.GetAttributeIdentifierArray("appropriatejobs", Array.Empty<Identifier>()).ToImmutableArray();
+            TraitorModeOnly = orderElement.GetAttributeBool("TraitorModeOnly", false);
             PreferredJobs = orderElement.GetAttributeIdentifierArray("preferredjobs", Array.Empty<Identifier>()).ToImmutableArray();
             Options = orderElement.GetAttributeIdentifierArray("options", Array.Empty<Identifier>()).ToImmutableArray();
             HiddenOptions = orderElement.GetAttributeIdentifierArray("hiddenoptions", Array.Empty<Identifier>()).ToImmutableArray();
@@ -434,7 +441,8 @@ namespace Barotrauma
             }
             catch (NotImplementedException e)
             {
-                DebugConsole.LogError($"Error creating a new Order instance: unexpected target type \"{targetType}\".\n{e.StackTrace.CleanupStackTrace()}");
+                DebugConsole.LogError($"Error creating a new Order instance: unexpected target type \"{targetType}\".\n{e.StackTrace.CleanupStackTrace()}",
+                    contentPackage: ContentPackage);
                 return null;
             }
         }
@@ -656,6 +664,13 @@ namespace Barotrauma
             WallSectionIndex = wallSectionIndex ?? other.WallSectionIndex;
 
             UseController = useController ?? other.UseController;
+
+#if DEBUG
+            if (UseController && ConnectedController == null)
+            {
+                DebugConsole.ThrowError($"AI: Created an Order {Identifier} that's set to use a Controller, but a Controller was not specified.\n{Environment.StackTrace.CleanupStackTrace()}");
+            }
+#endif
         }
 
         public Order WithOption(Identifier option)
@@ -705,7 +720,12 @@ namespace Barotrauma
 
         public Order WithItemComponent(Item item, ItemComponent component = null)
         {
-            return new Order(this, targetEntity: item, targetItemComponent: component ?? GetTargetItemComponent(item));
+            Controller controller = null;
+            if (UseController)
+            {
+                controller = item?.FindController(tags: ControllerTags);
+            }
+           return new Order(this, targetEntity: item, targetItemComponent: component ?? GetTargetItemComponent(item), connectedController: controller);
         }
 
         public Order WithWallSection(Structure wall, int? sectionIndex)

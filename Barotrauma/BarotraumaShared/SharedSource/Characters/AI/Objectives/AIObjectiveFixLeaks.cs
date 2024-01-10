@@ -9,7 +9,8 @@ namespace Barotrauma
         public override Identifier Identifier { get; set; } = "fix leaks".ToIdentifier();
         public override bool ForceRun => true;
         public override bool KeepDivingGearOn => true;
-        public override bool AllowInAnySub => true;
+        public override bool AllowInFriendlySubs => true;
+
         private Hull PrioritizedHull { get; set; }
 
         public AIObjectiveFixLeaks(Character character, AIObjectiveManager objectiveManager, float priorityModifier = 1, Hull prioritizedHull = null) : base(character, objectiveManager, priorityModifier)

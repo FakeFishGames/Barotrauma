@@ -27,6 +27,31 @@ namespace Barotrauma
         }
     }
 
+    internal readonly record struct SquareLine(Vector2[] Points, SquareLine.LineType Type)
+    {
+        internal enum LineType
+        {
+            /// <summary>
+            /// Normal 4 point line
+            /// </summary>
+            /// <example>
+            ///          ┏━━━ end
+            ///          ┃
+            /// start ━━━┛
+            /// </example>
+            FourPointForwardsLine,
+            /// <summary>
+            /// A line where the end is behind the start and 2 extra points are used to draw it
+            /// </summary>
+            /// <example>
+            /// start ━┓
+            /// ┏━━━━━━┛
+            /// ┗━ end
+            /// </example>
+            SixPointBackwardsLine
+        }
+    }
+
     static partial class ToolBox
     {
         public static bool IsProperFilenameCase(string filename)
@@ -396,6 +421,10 @@ namespace Barotrauma
 
         public static T SelectWeightedRandom<T>(IEnumerable<T> objects, Func<T, float> weightMethod, Random random)
         {
+            if (typeof(PrefabWithUintIdentifier).IsAssignableFrom(typeof(T)))
+            {
+                objects = objects.OrderBy(p => (p as PrefabWithUintIdentifier)?.UintIdentifier ?? 0);
+            }
             List<T> objectList = objects.ToList();
             List<float> weights = objectList.Select(o => weightMethod(o)).ToList();
             return SelectWeightedRandom(objectList, weights, random);
@@ -408,7 +437,7 @@ namespace Barotrauma
 
         public static T SelectWeightedRandom<T>(IList<T> objects, IList<float> weights, Random random)
         {
-            if (objects.Count == 0) { return default(T); }
+            if (objects.Count == 0) { return default; }
 
             if (objects.Count != weights.Count)
             {
@@ -427,7 +456,7 @@ namespace Barotrauma
                 }
                 randomNum -= weights[i];
             }
-            return default(T);
+            return default;
         }
 
         public static UInt32 IdentifierToUint32Hash(Identifier id, MD5 md5)
@@ -805,6 +834,44 @@ namespace Barotrauma
             if (self.IsIPv4MappedToIPv6) { self = self.MapToIPv4(); }
             if (other.IsIPv4MappedToIPv6) { other = other.MapToIPv4(); }
             return self.Equals(other);
+        }
+
+        public static SquareLine GetSquareLineBetweenPoints(Vector2 start, Vector2 end, float knobLength = 24f)
+        {
+            Vector2[] points = new Vector2[6];
+
+            // set the start and end points
+            points[0] = points[1] = points[2] = start;
+            points[5] = points[4] = points[3] = end;
+
+            points[2].X += (points[3].X - points[2].X) / 2;
+            points[2].X = Math.Max(points[2].X, points[0].X + knobLength);
+            points[3].X = points[2].X;
+
+            bool isBehind = false;
+
+            // if the node is "behind" us do some magic to make the line curve to prevent overlapping
+            if (points[2].X <= points[0].X + knobLength)
+            {
+                isBehind = true;
+                points[1].X += knobLength;
+                points[2].X = points[2].X;
+                points[2].Y += (points[4].Y - points[1].Y) / 2;
+            }
+
+            if (points[3].X >= points[5].X - knobLength)
+            {
+                isBehind = true;
+                points[4].X -= knobLength;
+                points[3].X = points[4].X;
+                points[3].Y -= points[3].Y - points[2].Y;
+            }
+
+            SquareLine.LineType type = isBehind
+                ? SquareLine.LineType.SixPointBackwardsLine
+                : SquareLine.LineType.FourPointForwardsLine;
+
+            return new SquareLine(points, type);
         }
     }
 }

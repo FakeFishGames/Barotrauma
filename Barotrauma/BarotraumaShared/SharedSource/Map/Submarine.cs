@@ -361,11 +361,11 @@ namespace Barotrauma
             List<Pump> pumps = new List<Pump>();
             List<Item> allItems = GetItems(true);
 
-            bool anyHasTag = allItems.Any(i => i.HasTag("ballast"));
+            bool anyHasTag = allItems.Any(i => i.HasTag(Tags.Ballast));
 
             foreach (Item item in allItems)
             {
-                if ((!anyHasTag || item.HasTag("ballast")) && item.GetComponent<Pump>() is { } pump)
+                if ((!anyHasTag || item.HasTag(Tags.Ballast)) && item.GetComponent<Pump>() is { } pump)
                 {
                     pumps.Add(pump);
                 }
@@ -505,51 +505,58 @@ namespace Barotrauma
             minWidth += padding;
             minHeight += padding;
 
-            Vector2 limits = GetHorizontalLimits(spawnPos, minWidth, minHeight, 0);
-            if (verticalMoveDir != 0)
+            int iterations = 0;            
+            const int maxIterations = 5;
+            do
             {
-                verticalMoveDir = Math.Sign(verticalMoveDir);
-                //do a raycast towards the top/bottom of the level depending on direction
-                Vector2 potentialPos = new Vector2(spawnPos.X, verticalMoveDir > 0 ? Level.Loaded.Size.Y : 0);
-
-                //3 raycasts (left, middle and right side of the sub, so we don't accidentally raycast up a passage too narrow for the sub)
-                for (int x = -1; x <= 1; x++)
+                Vector2 potentialPos = spawnPos;
+                if (verticalMoveDir != 0)
                 {
-                    Vector2 xOffset = Vector2.UnitX * minWidth / 2 * x;
-                    if (PickBody(
-                        ConvertUnits.ToSimUnits(spawnPos + xOffset),
-                        ConvertUnits.ToSimUnits(potentialPos + xOffset),
-                        collisionCategory: Physics.CollisionLevel | Physics.CollisionWall) != null)
+                    verticalMoveDir = Math.Sign(verticalMoveDir);
+                    //do a raycast towards the top/bottom of the level depending on direction
+                    Vector2 rayEnd = new Vector2(potentialPos.X, verticalMoveDir > 0 ? Level.Loaded.Size.Y : 0);
+
+                    Vector2 closestPickedPos = rayEnd;
+                    //multiple raycast across the width of the sub (so we don't accidentally raycast up a passage too narrow for the sub)
+                    for (float x = -1; x <= 1; x += 0.2f)
                     {
-                        int offsetFromWall = 10 * -verticalMoveDir;
-                        //if the raycast hit a wall, attempt to place the spawnpos there
-                        if (verticalMoveDir > 0)
+                        Vector2 xOffset = Vector2.UnitX * minWidth / 2 * x;
+                        xOffset.X += subDockingPortOffset;
+                        if (PickBody(
+                            ConvertUnits.ToSimUnits(potentialPos + xOffset),
+                            ConvertUnits.ToSimUnits(rayEnd + xOffset),
+                            collisionCategory: Physics.CollisionLevel | Physics.CollisionWall,
+                            customPredicate: (Fixture f) =>
+                            {
+                                return f.UserData is not VoronoiCell { IsDestructible: true };
+                            }) != null)
                         {
-                            potentialPos.Y = Math.Min(potentialPos.Y, ConvertUnits.ToDisplayUnits(LastPickedPosition.Y) + offsetFromWall);
-                        }
-                        else
-                        {
-                            potentialPos.Y = Math.Max(potentialPos.Y, ConvertUnits.ToDisplayUnits(LastPickedPosition.Y) + offsetFromWall);
+                            //if the raycast hit a wall, attempt to place the spawnpos there
+                            int offsetFromWall = 10 * -verticalMoveDir;
+                            float pickedPos = ConvertUnits.ToDisplayUnits(LastPickedPosition.Y) + offsetFromWall;
+                            closestPickedPos.Y = 
+                                    verticalMoveDir > 0 ? 
+                                    Math.Min(closestPickedPos.Y, pickedPos) : 
+                                    Math.Max(closestPickedPos.Y, pickedPos);
                         }
                     }
+                    potentialPos.Y = closestPickedPos.Y;
                 }
 
-                //step away from the top/bottom of the level, or from whatever wall the raycast hit,
-                //until we found a spot where there's enough room to place the sub
-                float dist = Math.Abs(potentialPos.Y - spawnPos.Y);
-                for (float d = dist; d > 0; d -= 100.0f)
+                Vector2 limits = GetHorizontalLimits(new Vector2(potentialPos.X, potentialPos.Y - (dockedBorders.Height * 0.5f * verticalMoveDir)),
+                    maxHorizontalMoveAmount: minWidth, minHeight, verticalMoveDir, padding);
+                if (limits.Y - limits.X >= minWidth)
                 {
-                    float y = spawnPos.Y + verticalMoveDir * d;
-                    limits = GetHorizontalLimits(new Vector2(spawnPos.X, y), minWidth, minHeight, verticalMoveDir);
-                    if (limits.Y - limits.X > minWidth)
-                    {
-                        spawnPos = new Vector2(spawnPos.X, y - (dockedBorders.Height * 0.5f * verticalMoveDir));
-                        break;
-                    }
-                }
-            }
+                    Vector2 newSpawnPos = new Vector2(spawnPos.X, potentialPos.Y - (dockedBorders.Height * 0.5f * verticalMoveDir));
+                    bool couldMoveInVerticalMoveDir = Math.Sign(newSpawnPos.Y - spawnPos.Y) == Math.Sign(verticalMoveDir);
+                    if (!couldMoveInVerticalMoveDir) { break; }
+                    spawnPos = ClampToHorizontalLimits(newSpawnPos, limits);
+                }                
 
-            static Vector2 GetHorizontalLimits(Vector2 spawnPos, float minWidth, float minHeight, int verticalMoveDir)
+                iterations++;
+            } while (iterations < maxIterations);
+
+            Vector2 GetHorizontalLimits(Vector2 spawnPos, float maxHorizontalMoveAmount, float minHeight, int verticalMoveDir, int padding)
             {
                 Vector2 refPos = spawnPos - Vector2.UnitY * minHeight * 0.5f * Math.Sign(verticalMoveDir);
 
@@ -580,34 +587,44 @@ namespace Barotrauma
                     if (Math.Abs(ruin.Area.Center.Y - refPos.Y) > (minHeight + ruin.Area.Height) * 0.5f) { continue; }
                     if (ruin.Area.Center.X < refPos.X)
                     {
-                        minX = Math.Max(minX, ruin.Area.Right + 100.0f);
+                        minX = Math.Max(minX, ruin.Area.Right + padding);
                     }
                     else
                     {
-                        maxX = Math.Min(maxX, ruin.Area.X - 100.0f);
+                        maxX = Math.Min(maxX, ruin.Area.X - padding);
                     }
                 }
-                return new Vector2(Math.Max(minX, spawnPos.X - minWidth), Math.Min(maxX, spawnPos.X + minWidth));
+
+                minX += subDockingPortOffset;
+                maxX += subDockingPortOffset;
+
+                return new Vector2(
+                    Math.Max(Math.Max(minX, spawnPos.X - maxHorizontalMoveAmount - padding), 0),
+                    Math.Min(Math.Min(maxX, spawnPos.X + maxHorizontalMoveAmount + padding), Level.Loaded.Size.X));
             }
 
-            if (limits.X < 0.0f && limits.Y > Level.Loaded.Size.X)
+            Vector2 ClampToHorizontalLimits(Vector2 spawnPos, Vector2 limits)
             {
-                //no walls found at either side, just use the initial spawnpos and hope for the best
-            }
-            else if (limits.X < 0)
-            {
-                //no wall found at the left side, spawn to the left from the right-side wall
-                spawnPos.X = limits.Y - minWidth * 0.5f - 100.0f + subDockingPortOffset;
-            }
-            else if (limits.Y > Level.Loaded.Size.X)
-            {
-                //no wall found at right side, spawn to the right from the left-side wall
-                spawnPos.X = limits.X + minWidth * 0.5f + 100.0f + subDockingPortOffset;
-            }
-            else
-            {
-                //walls found at both sides, use their midpoint
-                spawnPos.X = (limits.X + limits.Y) / 2 + subDockingPortOffset;
+                if (limits.X < 0.0f && limits.Y > Level.Loaded.Size.X)
+                {
+                    //no walls found at either side, just use the initial spawnpos and hope for the best
+                }
+                else if (limits.X < 0)
+                {
+                    //no wall found at the left side, spawn to the left from the right-side wall
+                    spawnPos.X = limits.Y - minWidth * 0.5f - 100.0f + subDockingPortOffset;
+                }
+                else if (limits.Y > Level.Loaded.Size.X)
+                {
+                    //no wall found at right side, spawn to the right from the left-side wall
+                    spawnPos.X = limits.X + minWidth * 0.5f + 100.0f + subDockingPortOffset;
+                }
+                else
+                {
+                    //walls found at both sides, use their midpoint
+                    spawnPos.X = (limits.X + limits.Y) / 2 + subDockingPortOffset;
+                }
+                return spawnPos;
             }
 
             spawnPos.Y = MathHelper.Clamp(spawnPos.Y, dockedBorders.Height / 2 + 10, Level.Loaded.Size.Y - dockedBorders.Height / 2 - padding * 2);
@@ -624,11 +641,24 @@ namespace Barotrauma
 
         //math/physics stuff ----------------------------------------------------
 
-        public static Vector2 VectorToWorldGrid(Vector2 position)
+        public static Vector2 VectorToWorldGrid(Vector2 position, Submarine sub = null, bool round = false)
         {
-            position.X = (float)Math.Floor(position.X / GridSize.X) * GridSize.X;
-            position.Y = (float)Math.Ceiling(position.Y / GridSize.Y) * GridSize.Y;
+            if (round)
+            {
+                position.X = MathF.Round(position.X / GridSize.X) * GridSize.X;
+                position.Y = MathF.Round(position.Y / GridSize.Y) * GridSize.Y;
+            }
+            else
+            {
+                position.X = MathF.Floor(position.X / GridSize.X) * GridSize.X;
+                position.Y = MathF.Ceiling(position.Y / GridSize.Y) * GridSize.Y;
+            }
 
+            if (sub != null)
+            {
+                position.X += sub.Position.X % GridSize.X;
+                position.Y += sub.Position.Y % GridSize.Y;
+            }
             return position;
         }
 
@@ -636,7 +666,7 @@ namespace Barotrauma
         {
             List<MapEntity> entities = onlyHulls ?
                 Hull.HullList.FindAll(h => h.Submarine == this).Cast<MapEntity>().ToList() :
-                MapEntity.mapEntityList.FindAll(me => me.Submarine == this);
+                MapEntity.MapEntityList.FindAll(me => me.Submarine == this);
 
             //ignore items whose body is disabled (wires, items inside cabinets)
             entities.RemoveAll(e =>
@@ -693,6 +723,22 @@ namespace Barotrauma
             return new Rectangle((int)pos.X, (int)pos.Y, (int)size.X, (int)size.Y);
         }
 
+        public static RectangleF AbsRectF(Vector2 pos, Vector2 size)
+        {
+            if (size.X < 0.0f)
+            {
+                pos.X += size.X;
+                size.X = -size.X;
+            }
+            if (size.Y < 0.0f)
+            {
+                pos.Y += size.Y;
+                size.Y = -size.Y;
+            }
+
+            return new RectangleF(pos.X, pos.Y, size.X, size.Y);
+        }
+
         public static bool RectContains(Rectangle rect, Vector2 pos, bool inclusive = false)
         {
             if (inclusive)
@@ -719,6 +765,18 @@ namespace Barotrauma
                 return !(rect1.X >= rect2.X + rect2.Width || rect1.X + rect1.Width <= rect2.X ||
                     rect1.Y <= rect2.Y - rect2.Height || rect1.Y - rect1.Height >= rect2.Y);
             }
+        }
+
+        public static bool RectsOverlap(RectangleF rect1, RectangleF rect2, bool inclusive = true)
+        {
+            if (inclusive)
+            {
+                return !(rect1.X > rect2.X + rect2.Width || rect1.X + rect1.Width < rect2.X ||
+                         rect1.Y < rect2.Y - rect2.Height || rect1.Y - rect1.Height > rect2.Y);
+            }
+
+            return !(rect1.X >= rect2.X + rect2.Width || rect1.X + rect1.Width <= rect2.X ||
+                     rect1.Y <= rect2.Y - rect2.Height || rect1.Y - rect1.Height >= rect2.Y);
         }
 
         public static Body PickBody(Vector2 rayStart, Vector2 rayEnd, IEnumerable<Body> ignoredBodies = null, Category? collisionCategory = null, bool ignoreSensors = true, Predicate<Fixture> customPredicate = null, bool allowInsideFixture = false)
@@ -888,11 +946,17 @@ namespace Barotrauma
             return true;
         }
 
+
         /// <summary>
-        /// check visibility between two points (in sim units)
+        /// Check visibility between two points (in sim units).
         /// </summary>
-        /// <returns>a physics body that was between the points (or null)</returns>
-        public static Body CheckVisibility(Vector2 rayStart, Vector2 rayEnd, bool ignoreLevel = false, bool ignoreSubs = false, bool ignoreSensors = true, bool ignoreDisabledWalls = true, bool ignoreBranches = true)
+        /// 
+
+        /// <param name="ignoreBranches">Should plants' branches be ignored?</param>
+        /// <param name="blocksVisibilityPredicate">If the predicate returns false, the fixture is ignored even if it would normally block visibility.</param>
+        /// <returns>A physics body that was between the points (or null)</returns>
+        public static Body CheckVisibility(Vector2 rayStart, Vector2 rayEnd, bool ignoreLevel = false, bool ignoreSubs = false, bool ignoreSensors = true, bool ignoreDisabledWalls = true, bool ignoreBranches = true, 
+            Predicate<Fixture> blocksVisibilityPredicate = null)
         {
             Body closestBody = null;
             float closestFraction = 1.0f;
@@ -927,7 +991,10 @@ namespace Barotrauma
                         if (sectionIndex > -1 && structure.SectionBodyDisabled(sectionIndex)) { return -1; }
                     }
                 }
-
+                if (blocksVisibilityPredicate != null && !blocksVisibilityPredicate(fixture))
+                {
+                    return -1;
+                }
                 if (fraction < closestFraction)
                 {
                     closestBody = fixture.Body;
@@ -965,7 +1032,7 @@ namespace Barotrauma
             Item.UpdateHulls();
 
             List<Item> bodyItems = Item.ItemList.FindAll(it => it.Submarine == this && it.body != null);
-            List<MapEntity> subEntities = MapEntity.mapEntityList.FindAll(me => me.Submarine == this);
+            List<MapEntity> subEntities = MapEntity.MapEntityList.FindAll(me => me.Submarine == this);
 
             foreach (MapEntity e in subEntities)
             {
@@ -1047,7 +1114,7 @@ namespace Barotrauma
 
         public void EnableFactionSpecificEntities(Identifier factionIdentifier)
         {
-            foreach (MapEntity me in MapEntity.mapEntityList)
+            foreach (MapEntity me in MapEntity.MapEntityList)
             {
                 if (string.IsNullOrEmpty(me.Layer) || me.Submarine != this) { continue; }
 
@@ -1202,7 +1269,7 @@ namespace Barotrauma
                 if (item.Submarine != this) { continue; }
                 var pump = item.GetComponent<Pump>();
                 if (pump == null || item.CurrentHull == null) { continue; }
-                if (!item.HasTag("ballast") && !item.CurrentHull.RoomName.Contains("ballast", StringComparison.OrdinalIgnoreCase)) { continue; }
+                if (!item.HasTag(Tags.Ballast) && !item.CurrentHull.RoomName.Contains("ballast", StringComparison.OrdinalIgnoreCase)) { continue; }
                 pump.FlowPercentage = 0.0f;
                 ballastHulls.Add(item.CurrentHull);
             }
@@ -1326,7 +1393,7 @@ namespace Barotrauma
             foreach (Item item in Item.ItemList.ToList())
             {
                 if (!connectedSubs.Contains(item.Submarine)) { continue; }
-                if (!item.HasTag("cargocontainer")) { continue; }
+                if (!item.HasTag(Tags.CargoContainer)) { continue; }
                 if (item.NonInteractable || item.HiddenInGame) { continue; }
                 var itemContainer = item.GetComponent<ItemContainer>();
                 if (itemContainer == null) { continue; }
@@ -1358,22 +1425,38 @@ namespace Barotrauma
         }
 
         /// <summary>
-        /// Finds the sub whose borders contain the position
+        /// Finds the sub whose borders contain the position. Note that this method uses the "actual" position of the sub outside the level:
+        /// only use this if the position is in a submarine's local coordinate space!
         /// </summary>
-        public static Submarine FindContaining(Vector2 position)
+        public static Submarine FindContainingInLocalCoordinates(Vector2 position, float inflate = 500.0f)
         {
             foreach (Submarine sub in Loaded)
             {
                 Rectangle subBorders = sub.Borders;
-                subBorders.Location += MathUtils.ToPoint(sub.HiddenSubPosition) - new Microsoft.Xna.Framework.Point(0, sub.Borders.Height);
-
-                subBorders.Inflate(500.0f, 500.0f);
-
-                if (subBorders.Contains(position)) return sub;
+                subBorders.Location += MathUtils.ToPoint(sub.HiddenSubPosition) - new Point(0, sub.Borders.Height);
+                subBorders.Inflate(inflate, inflate);
+                if (subBorders.Contains(position)) { return sub; }
             }
 
             return null;
         }
+
+        /// <summary>
+        /// Finds the sub whose world borders contain the position.
+        /// </summary>
+        public static Submarine FindContaining(Vector2 worldPosition, float inflate = 500.0f)
+        {
+            foreach (Submarine sub in Loaded)
+            {
+                Rectangle worldBorders = sub.Borders;
+                worldBorders.Location += sub.WorldPosition.ToPoint() - new Point(0, sub.Borders.Height);
+                worldBorders.Inflate(inflate, inflate);
+                if (worldBorders.Contains(worldPosition)) { return sub; }
+            }
+            return null;
+        }
+
+
         public static Rectangle GetBorders(XElement submarineElement)
         {
             Vector4 bounds = Vector4.Zero;
@@ -1430,7 +1513,7 @@ namespace Barotrauma
                     HiddenSubPosition =
                         new Vector2(
                             //1st sub on the left side, 2nd on the right, etc
-                            HiddenSubPosition.X * (i % 2 == 0 ? 1 : -1),
+                            -HiddenSubPosition.X,
                             HiddenSubPosition.Y + sub.Borders.Height + 5000.0f);
                 }
 
@@ -1479,7 +1562,7 @@ namespace Barotrauma
                     center.X -= center.X % GridSize.X;
                     center.Y -= center.Y % GridSize.Y;
 
-                    RepositionEntities(-center, MapEntity.mapEntityList.Where(me => me.Submarine == this));
+                    RepositionEntities(-center, MapEntity.MapEntityList.Where(me => me.Submarine == this));
                 }
 
                 subBody = new SubmarineBody(this, showErrorMessages);
@@ -1497,7 +1580,7 @@ namespace Barotrauma
                         !GameMain.NetworkMember.ServerSettings.DestructibleOutposts &&
                         !(info.OutpostGenerationParams?.AlwaysDestructible ?? false);
 
-                    foreach (MapEntity me in MapEntity.mapEntityList)
+                    foreach (MapEntity me in MapEntity.MapEntityList)
                     {
                         if (me.Submarine != this) { continue; }
                         if (me is Item item)
@@ -1554,16 +1637,16 @@ namespace Barotrauma
                 }
                 entityGrid = Hull.GenerateEntityGrid(this);
 
-                for (int i = 0; i < MapEntity.mapEntityList.Count; i++)
+                for (int i = 0; i < MapEntity.MapEntityList.Count; i++)
                 {
-                    if (MapEntity.mapEntityList[i].Submarine != this) { continue; }
-                    MapEntity.mapEntityList[i].Move(HiddenSubPosition, ignoreContacts: true);
+                    if (MapEntity.MapEntityList[i].Submarine != this) { continue; }
+                    MapEntity.MapEntityList[i].Move(HiddenSubPosition, ignoreContacts: true);
                 }
 
                 Loading = false;
 
                 MapEntity.MapLoaded(newEntities, true);
-                foreach (MapEntity me in MapEntity.mapEntityList)
+                foreach (MapEntity me in MapEntity.MapEntityList)
                 {
                     if (me.Submarine != this) { continue; }
                     if (me is LinkedSubmarine linkedSub)
@@ -1653,7 +1736,7 @@ namespace Barotrauma
 
         public bool CheckFuel()
         {
-            float fuel = GetItems(true).Where(i => i.HasTag("reactorfuel")).Sum(i => i.Condition);
+            float fuel = GetItems(true).Where(i => i.HasTag(Tags.Fuel)).Sum(i => i.Condition);
             Info.LowFuel = fuel < 200;
             return !Info.LowFuel;
         }
@@ -1681,7 +1764,7 @@ namespace Barotrauma
             element.Add(new XAttribute("dimensions", XMLExtensions.Vector2ToString(dimensions.Size.ToVector2())));
             var cargoContainers = GetCargoContainers();
             int cargoCapacity = cargoContainers.Sum(c => c.container.Capacity);
-            foreach (MapEntity me in MapEntity.mapEntityList)
+            foreach (MapEntity me in MapEntity.MapEntityList)
             {
                 if (me is LinkedSubmarine linkedSub && linkedSub.Submarine == this)
                 {
@@ -1702,13 +1785,12 @@ namespace Barotrauma
 
             foreach (Item item in Item.ItemList)
             {
-                if (item.PendingItemSwap?.SwappableItem?.ConnectedItemsToSwap == null) { continue; }
-                foreach (var (requiredTag, swapTo) in item.PendingItemSwap.SwappableItem.ConnectedItemsToSwap)
+                if (item.PendingItemSwap?.SwappableItem?.ConnectedItemsToSwap is not { } connectedItemsToSwap) { continue; }
+                foreach (var (requiredTag, swapTo) in connectedItemsToSwap)
                 {
                     List<Item> itemsToSwap = new List<Item>();
                     itemsToSwap.AddRange(item.linkedTo.Where(lt => (lt as Item)?.HasTag(requiredTag) ?? false).Cast<Item>());
-                    var connectionPanel = item.GetComponent<ConnectionPanel>();
-                    if (connectionPanel != null)
+                    if (item.GetComponent<ConnectionPanel>() is ConnectionPanel connectionPanel)
                     {
                         foreach (Connection c in connectionPanel.Connections)
                         {
@@ -1730,13 +1812,13 @@ namespace Barotrauma
                     foreach (Item itemToSwap in itemsToSwap)
                     {
                         itemToSwap.PurchasedNewSwap = item.PurchasedNewSwap;
-                        if (itemPrefab != itemToSwap.Prefab) { itemToSwap.PendingItemSwap = itemPrefab; }                       
+                        if (itemPrefab != itemToSwap.Prefab) { itemToSwap.PendingItemSwap = itemPrefab; }
                     }
                 }
             }
 
             Dictionary<int, MapEntity> savedEntities = new Dictionary<int, MapEntity>();
-            foreach (MapEntity e in MapEntity.mapEntityList.OrderBy(e => e.ID))
+            foreach (MapEntity e in MapEntity.MapEntityList.OrderBy(e => e.ID))
             {
                 if (!e.ShouldBeSaved) { continue; }
 
@@ -1790,6 +1872,7 @@ namespace Barotrauma
                 FilePath = filePath,
                 OutpostModuleInfo = Info.OutpostModuleInfo != null ? new OutpostModuleInfo(Info.OutpostModuleInfo) : null,
                 BeaconStationInfo = Info.BeaconStationInfo != null ? new BeaconStationInfo(Info.BeaconStationInfo) : null,
+                WreckInfo = Info.WreckInfo != null ? new WreckInfo(Info.WreckInfo) : null,
                 Name = Path.GetFileNameWithoutExtension(filePath)
             };
 #if CLIENT
@@ -1828,12 +1911,11 @@ namespace Barotrauma
             Unloading = true;
             try
             {
-
 #if CLIENT
                 RoundSound.RemoveAllRoundSounds();
                 GameMain.LightManager?.ClearLights();
+                depthSortedDamageable.Clear();
 #endif
-
                 var _loaded = new List<Submarine>(loaded);
                 foreach (Submarine sub in _loaded)
                 {
@@ -1868,9 +1950,11 @@ namespace Barotrauma
 
                 Ragdoll.RemoveAll();
                 PhysicsBody.RemoveAll();
+                StatusEffect.StopAll();       
                 GameMain.World = null;
 
                 Powered.Grids.Clear();
+                Powered.ChangedConnections.Clear();
 
                 GC.Collect();
 
@@ -1890,6 +1974,7 @@ namespace Barotrauma
 
             outdoorNodes?.Clear();
             outdoorNodes = null;
+            obstructedNodes.Clear();
 
             GameMain.GameSession?.Campaign?.UpgradeManager?.OnUpgradesChanged?.TryDeregister(upgradeEventIdentifier);
 
@@ -1901,10 +1986,16 @@ namespace Barotrauma
 
             visibleEntities = null;
 
+            bodyDist.Clear();
+            bodies.Clear();
+
             if (MainSub == this) { MainSub = null; }
             if (MainSubs[1] == this) { MainSubs[1] = null; }
 
             ConnectedDockingPorts?.Clear();
+
+            Powered.ChangedConnections.Clear();
+            Powered.Grids.Clear();
 
             loaded.Remove(this);
         }
@@ -1980,24 +2071,32 @@ namespace Barotrauma
                 {
                     var connectedWp = connection.Waypoint;
                     if (connectedWp.IsObstructed || connectedWp.Ladders != null) { continue; }
-                    Vector2 start = ConvertUnits.ToSimUnits(wp.WorldPosition) - otherSub.SimPosition;
-                    Vector2 end = ConvertUnits.ToSimUnits(connectedWp.WorldPosition) - otherSub.SimPosition;
-                    var body = PickBody(start, end, null, Physics.CollisionWall, allowInsideFixture: true);
-                    if (body != null)
+                    bool isObstructed = wp.CurrentHull is Hull h && h.Submarine != this;
+                    if (!isObstructed)
                     {
-                        if (body.UserData is Structure wall && !wall.IsPlatform || body.UserData is Item && body.FixtureList[0].CollisionCategories.HasFlag(Physics.CollisionWall))
+                        Vector2 start = ConvertUnits.ToSimUnits(wp.WorldPosition) - otherSub.SimPosition;
+                        Vector2 end = ConvertUnits.ToSimUnits(connectedWp.WorldPosition) - otherSub.SimPosition;
+                        var body = PickBody(start, end, null, Physics.CollisionWall, allowInsideFixture: true);
+                        if (body != null)
                         {
-                            connectedWp.IsObstructed = true;
-                            wp.IsObstructed = true;
-                            if (!obstructedNodes.TryGetValue(otherSub, out HashSet<PathNode> nodes))
+                            if (body.UserData is Structure wall && !wall.IsPlatform || body.UserData is Item && body.FixtureList[0].CollisionCategories.HasFlag(Physics.CollisionWall))
                             {
-                                nodes = new HashSet<PathNode>();
-                                obstructedNodes.Add(otherSub, nodes);
+                                isObstructed = true;
                             }
-                            nodes.Add(node);
-                            nodes.Add(connection);
-                            break;
                         }
+                    }
+                    if (isObstructed)
+                    {
+                        connectedWp.IsObstructed = true;
+                        wp.IsObstructed = true;
+                        if (!obstructedNodes.TryGetValue(otherSub, out HashSet<PathNode> nodes))
+                        {
+                            nodes = new HashSet<PathNode>();
+                            obstructedNodes.Add(otherSub, nodes);
+                        }
+                        nodes.Add(node);
+                        nodes.Add(connection);
+                        break;
                     }
                 }
             }
@@ -2053,6 +2152,48 @@ namespace Barotrauma
                 
             }
             return selectedContainer;
+        }
+
+        public static Vector2 GetRelativeSimPosition(ISpatialEntity from, ISpatialEntity to, Vector2? targetWorldPos = null)
+        {
+            return targetWorldPos.HasValue ?
+                GetRelativeSimPositionFromWorldPosition(targetWorldPos.Value, from.Submarine, to.Submarine) :
+                GetRelativeSimPosition(to.SimPosition, from.Submarine, to.Submarine);
+        }
+
+        public static Vector2 GetRelativeSimPositionFromWorldPosition(Vector2 targetWorldPos, Submarine fromSub, Submarine toSub)
+        {
+            Vector2 worldPos = targetWorldPos;
+            if (toSub != null)
+            {
+                worldPos -= toSub.Position;
+            }
+            return GetRelativeSimPosition(ConvertUnits.ToSimUnits(worldPos), fromSub, toSub);
+        }
+
+        public static Vector2 GetRelativeSimPosition(Vector2 targetSimPos, Submarine fromSub, Submarine toSub)
+        {
+            Vector2 targetPos = targetSimPos;
+            if (fromSub == null && toSub != null)
+            {
+                // outside and targeting inside
+                targetPos += toSub.SimPosition;
+            }
+            else if (fromSub != null && toSub == null)
+            {
+                // inside and targeting outside
+                targetPos -= fromSub.SimPosition;
+            }
+            else if (fromSub != toSub)
+            {
+                if (fromSub != null && toSub != null)
+                {
+                    // both inside, but in different subs
+                    Vector2 diff = fromSub.SimPosition - toSub.SimPosition;
+                    targetPos -= diff;
+                }
+            }
+            return targetPos;
         }
     }
 }

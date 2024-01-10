@@ -300,7 +300,7 @@ namespace Barotrauma.Items.Components
                 user = null;
             }
 
-            ApplyStatusEffects(ActionType.OnActive, deltaTime, null);
+            ApplyStatusEffects(ActionType.OnActive, deltaTime);
 
             float userSkill = 0.0f;
             if (user != null && controlledSub != null &&
@@ -336,8 +336,7 @@ namespace Barotrauma.Items.Components
             {
                 showIceSpireWarning = false;
                 if (user != null && user.Info != null && 
-                    user.SelectedItem == item && 
-                    controlledSub != null && controlledSub.Velocity.LengthSquared() > 0.01f)
+                    user.SelectedItem == item)
                 {
                     IncreaseSkillLevel(user, deltaTime);
                 }
@@ -402,14 +401,15 @@ namespace Barotrauma.Items.Components
 
         private void IncreaseSkillLevel(Character user, float deltaTime)
         {
+            if (controlledSub == null) { return; }
+            if (controlledSub.Velocity.LengthSquared() < 0.01f) { return; }
             if (user?.Info == null) { return; }
             // Do not increase the helm skill when "steering" the sub while docked into something static (e.g. outpost or wreck)
-            if (GameMain.GameSession?.Campaign != null && controlledSub != null && controlledSub.DockedTo.Any(d => d.PhysicsBody.BodyType == BodyType.Static)) { return; }
+            if (GameMain.GameSession?.Campaign != null&& controlledSub.DockedTo.Any(d => d.PhysicsBody.BodyType == BodyType.Static)) { return; }
 
-            float userSkill = Math.Max(user.GetSkillLevel("helm"), 1.0f) / 100.0f;
-            user.Info.IncreaseSkillLevel(
-                "helm".ToIdentifier(),
-                SkillSettings.Current.SkillIncreasePerSecondWhenSteering / userSkill * deltaTime);
+            float speedMultiplier = MathHelper.Clamp(TargetVelocity.Length() / 100.0f, 0.0f, 1.0f);
+            user.Info.ApplySkillGain(Tags.HelmSkill,
+                SkillSettings.Current.SkillIncreasePerSecondWhenSteering * speedMultiplier * deltaTime);
         }
 
         private void UpdateAutoPilot(float deltaTime)
@@ -508,7 +508,7 @@ namespace Barotrauma.Items.Components
             var closeCells = Level.Loaded.GetCells(controlledSub.WorldPosition, 4);
             foreach (VoronoiCell cell in closeCells)
             {
-                if (cell.DoesDamage)
+                if (cell.DoesDamage || cell.Body is { BodyType: BodyType.Dynamic })
                 {
                     foreach (GraphEdge edge in cell.Edges)
                     {
@@ -525,7 +525,7 @@ namespace Barotrauma.Items.Components
                         newAvoidStrength += avoid;
                         debugDrawObstacles.Add(new ObstacleDebugInfo(edge, edge.Center, 1.0f, avoid, cell.Translation));
 
-                        if (dot > 0.0f)
+                        if (dot > 0.0f && cell.DoesDamage)
                         {
                             showIceSpireWarning = true;
                         }

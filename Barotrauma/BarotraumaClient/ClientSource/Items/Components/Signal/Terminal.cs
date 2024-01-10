@@ -86,15 +86,15 @@ namespace Barotrauma.Items.Components
             }
 
             OutputValue = input;
-            ShowOnDisplay(input, addToHistory: true, TextColor);
+            ShowOnDisplay(input, addToHistory: true, TextColor, isWelcomeMessage: false);
             item.SendSignal(input, "signal_out");
         }
 
-        partial void ShowOnDisplay(string input, bool addToHistory, Color color)
+        partial void ShowOnDisplay(string input, bool addToHistory, Color color, bool isWelcomeMessage)
         {
             if (addToHistory)
             {
-                messageHistory.Add(new TerminalMessage(input, color));
+                messageHistory.Add(new TerminalMessage(input, color, isWelcomeMessage));
                 while (messageHistory.Count > MaxMessages)
                 {
                     messageHistory.RemoveAt(0);

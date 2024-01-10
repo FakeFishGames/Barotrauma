@@ -15,6 +15,8 @@ namespace Barotrauma
 
         public override bool AllowInAnySub => true;
 
+        public override bool AllowWhileHandcuffed => false;
+
         private readonly Hull targetHull;
 
         private AIObjectiveGetItem getExtinguisherObjective;
@@ -30,8 +32,7 @@ namespace Barotrauma
         {
             if (!IsAllowed)
             {
-                Priority = 0;
-                Abandon = true;
+                HandleNonAllowed();
                 return Priority;
             }
             bool isOrder = objectiveManager.HasOrder<AIObjectiveExtinguishFires>();
@@ -176,19 +177,19 @@ namespace Barotrauma
             getExtinguisherObjective = null;
             gotoObjective = null;
             sinTime = 0;
-            SteeringManager.Reset();
+            SteeringManager?.Reset();
         }
 
         protected override void OnCompleted()
         {
             base.OnCompleted();
-            SteeringManager.Reset();
+            SteeringManager?.Reset();
         }
 
         protected override void OnAbandon()
         {
             base.OnAbandon();
-            SteeringManager.Reset();
+            SteeringManager?.Reset();
         }
     }
 }

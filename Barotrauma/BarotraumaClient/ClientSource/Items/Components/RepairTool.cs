@@ -144,14 +144,14 @@ namespace Barotrauma.Items.Components
             }            
         }
 #if DEBUG
-        public void Draw(SpriteBatch spriteBatch, bool editing, float itemDepth = -1)
+        public void Draw(SpriteBatch spriteBatch, bool editing, float itemDepth = -1, Color? overrideColor = null)
         {
             if (GameMain.DebugDraw && IsActive)
             {
                 GUI.DrawLine(spriteBatch, 
                     new Vector2(debugRayStartPos.X, -debugRayStartPos.Y),
                     new Vector2(debugRayEndPos.X, -debugRayEndPos.Y),
-                    Color.Yellow);
+                    Color.Yellow, width: 3f);
             }
         }
 #endif

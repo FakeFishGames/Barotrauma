@@ -6,6 +6,14 @@ namespace Barotrauma
 {
     partial class CharacterCampaignData
     {
+#if DEBUG
+        /// <summary>
+        /// If enabled, client names must match the name of the character. Useful for testing the campaign with multiple clients running locally:
+        /// without this, the clients would all get assigned the same character due to all of them having the same AccountId or Address.
+        /// </summary>
+        public static bool RequireClientNameMatch = false;
+#endif
+
         public bool HasSpawned;
 
         public bool HasItemData
@@ -42,10 +50,13 @@ namespace Barotrauma
             }
         }
 
-        public void Refresh(Character character)
+        public void Refresh(Character character, bool refreshHealthData)
         {
-            healthData = new XElement("health");
-            character.CharacterHealth.Save(healthData);
+            if (refreshHealthData)
+            {
+                healthData = new XElement("health");
+                character.CharacterHealth.Save(healthData);
+            }
             if (character.Inventory != null)
             {
                 itemData = new XElement("inventory");
@@ -73,7 +84,7 @@ namespace Barotrauma
                 {
                     case "character":
                     case "characterinfo":
-                        CharacterInfo = new CharacterInfo(subElement);
+                        CharacterInfo = new CharacterInfo(new ContentXElement(contentPackage: null, subElement));
                         break;
                     case "inventory":
                         itemData = subElement;
@@ -100,6 +111,12 @@ namespace Barotrauma
             }
             else
             {
+#if DEBUG
+                if (RequireClientNameMatch)
+                {
+                    return ClientAddress == client.Connection.Endpoint.Address && client.Name == Name;
+                }
+#endif
                 return ClientAddress == client.Connection.Endpoint.Address;
             }
         }

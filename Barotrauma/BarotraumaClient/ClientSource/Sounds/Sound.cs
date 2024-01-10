@@ -18,7 +18,7 @@ namespace Barotrauma.Sounds
 
         public readonly string Filename;
 
-        public readonly XElement XElement;
+        public readonly ContentXElement XElement;
 
         public readonly bool Stream;
 
@@ -33,7 +33,7 @@ namespace Barotrauma.Sounds
             }
         }
 
-        private SoundBuffers buffers;
+        protected SoundBuffers buffers;
         public SoundBuffers Buffers
         {
             get { return !Stream ? buffers : null; }
@@ -60,20 +60,18 @@ namespace Barotrauma.Sounds
         public float BaseNear;
         public float BaseFar;
 
-        public Sound(SoundManager owner, string filename, bool stream, bool streamsReliably, XElement xElement = null, bool getFullPath = true)
+        public Sound(SoundManager owner, string filename, bool stream, bool streamsReliably, ContentXElement xElement = null, bool getFullPath = true)
         {
             Owner = owner;
             Filename = getFullPath ? Path.GetFullPath(filename.CleanUpPath()).CleanUpPath() : filename;
             Stream = stream;
             StreamsReliably = streamsReliably;
             XElement = xElement;
-            sourcePoolIndex = XElement.GetAttributeEnum("sourcepool", SoundManager.SourcePoolIndex.Default);
+            sourcePoolIndex = XElement?.GetAttributeEnum("sourcepool", SoundManager.SourcePoolIndex.Default) ?? SoundManager.SourcePoolIndex.Default;
 
             BaseGain = 1.0f;
             BaseNear = 100.0f;
             BaseFar = 200.0f;
-
-            InitializeALBuffers();
         }
 
         public override string ToString()
@@ -141,21 +139,11 @@ namespace Barotrauma.Sounds
 
         public abstract float GetAmplitudeAtPlaybackPos(int playbackPos);
 
-        public virtual void InitializeALBuffers()
-        {
-            if (!Stream)
-            {
-                buffers = new SoundBuffers(this);
-            }
-            else
-            {
-                buffers = null;
-            }
-        }
+        public virtual void InitializeAlBuffers() { }
 
-        public virtual void FillBuffers() { }
+        public virtual void FillAlBuffers() { }
 
-        public virtual void DeleteALBuffers()
+        public virtual void DeleteAlBuffers()
         {
             Owner.KillChannels(this);
             buffers?.Dispose();
@@ -165,7 +153,7 @@ namespace Barotrauma.Sounds
         {
             if (disposed) { return; }
 
-            DeleteALBuffers();
+            DeleteAlBuffers();
 
             Owner.RemoveSound(this);
             disposed = true;

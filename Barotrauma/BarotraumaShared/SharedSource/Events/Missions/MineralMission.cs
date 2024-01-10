@@ -119,14 +119,16 @@ namespace Barotrauma
             {
                 if (MapEntityPrefab.FindByIdentifier(identifier) is not ItemPrefab prefab)
                 {
-                    DebugConsole.ThrowError($"Error in MineralMission: couldn't find an item prefab (identifier: \"{identifier}\")");
+                    DebugConsole.ThrowError($"Error in MineralMission: couldn't find an item prefab (identifier: \"{identifier}\")",
+                        contentPackage: Prefab.ContentPackage);
                     continue;
                 }
 
                 var spawnedResources = level.GenerateMissionResources(prefab, amount, positionType, caves);
                 if (spawnedResources.Count < amount)
                 {
-                    DebugConsole.ThrowError($"Error in MineralMission: spawned only {spawnedResources.Count}/{amount} of {prefab.Name}");
+                    DebugConsole.ThrowError($"Error in MineralMission: spawned only {spawnedResources.Count}/{amount} of {prefab.Name}", 
+                        contentPackage: Prefab.ContentPackage);
                 }
 
                 if (spawnedResources.None()) { continue; }
@@ -139,7 +141,7 @@ namespace Barotrauma
                     {
                         if (cave.Area.Contains(spawnedResource.WorldPosition))
                         {
-                            cave.DisplayOnSonar = true;
+                            cave.MissionsToDisplayOnSonar.Add(this);
                             caves.Add(cave);
                             break;
                         }

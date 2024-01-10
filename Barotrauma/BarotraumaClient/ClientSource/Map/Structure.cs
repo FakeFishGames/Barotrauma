@@ -56,15 +56,43 @@ namespace Barotrauma
             if (!CastShadow) { return; }
 
             convexHulls ??= new List<ConvexHull>();
-            var h = new ConvexHull(
-                new Rectangle((position - size / 2).ToPoint(), size.ToPoint()),
-                IsHorizontal, 
-                this);
-            if (Math.Abs(rotation) > 0.001f)
+
+            //if the convex hull is longer than this, we need to split it to multiple parts
+            //very large convex hulls don't play nicely with the lighting or LOS, because the shadow cast
+            //by the convex hull would need to be extruded very far to cover the whole screen
+            const float MaxConvexHullLength = 1024.0f;
+            float length = IsHorizontal ? size.X : size.Y;
+            int convexHullCount = (int)Math.Max(1, Math.Ceiling(length / MaxConvexHullLength));
+
+            Vector2 sectionSize = size;
+            if (convexHullCount > 1)
             {
-                h.Rotate(position, rotation);
+                if (IsHorizontal)
+                {
+                    sectionSize.X = length / convexHullCount;
+                }
+                else
+                {
+                    sectionSize.Y = length / convexHullCount;
+                }
             }
-            convexHulls.Add(h);
+
+            for (int i = 0; i < convexHullCount; i++)
+            {
+                Vector2 offset =
+                    (IsHorizontal ? Vector2.UnitX : Vector2.UnitY) *
+                    (i * length / convexHullCount);
+
+                var h = new ConvexHull(
+                    new Rectangle((position - size / 2 + offset).ToPoint(), sectionSize.ToPoint()),
+                    IsHorizontal,
+                    this);
+                if (Math.Abs(rotation) > 0.001f)
+                {
+                    h.Rotate(position, rotation);
+                }
+                convexHulls.Add(h);
+            }
         }
 
         public override void UpdateEditing(Camera cam, float deltaTime)
@@ -122,7 +150,8 @@ namespace Barotrauma
                 Stretch = true,
                 RelativeSpacing = 0.01f
             };
-            new GUIButton(new RectTransform(new Vector2(0.23f, 1.0f), buttonContainer.RectTransform), TextManager.Get("MirrorEntityX"), style: "GUIButtonSmall")
+
+            var mirrorX = new GUIButton(new RectTransform(new Vector2(0.23f, 1.0f), buttonContainer.RectTransform), TextManager.Get("MirrorEntityX"), style: "GUIButtonSmall")
             {
                 ToolTip = TextManager.Get("MirrorEntityXToolTip"),
                 OnClicked = (button, data) =>
@@ -132,10 +161,12 @@ namespace Barotrauma
                         me.FlipX(relativeToSub: false);
                     }
                     if (!SelectedList.Contains(this)) { FlipX(relativeToSub: false); }
+                    ColorFlipButton(button, FlippedX);
                     return true;
                 }
             };
-            new GUIButton(new RectTransform(new Vector2(0.23f, 1.0f), buttonContainer.RectTransform), TextManager.Get("MirrorEntityY"), style: "GUIButtonSmall")
+            ColorFlipButton(mirrorX, FlippedX);
+            var mirrorY = new GUIButton(new RectTransform(new Vector2(0.23f, 1.0f), buttonContainer.RectTransform), TextManager.Get("MirrorEntityY"), style: "GUIButtonSmall")
             {
                 ToolTip = TextManager.Get("MirrorEntityYToolTip"),
                 OnClicked = (button, data) =>
@@ -145,9 +176,11 @@ namespace Barotrauma
                         me.FlipY(relativeToSub: false);
                     }
                     if (!SelectedList.Contains(this)) { FlipY(relativeToSub: false); }
+                    ColorFlipButton(button, FlippedY);
                     return true;
                 }
             };
+            ColorFlipButton(mirrorY, FlippedY);
             new GUIButton(new RectTransform(new Vector2(0.23f, 1.0f), buttonContainer.RectTransform), TextManager.Get("ReloadSprite"), style: "GUIButtonSmall")
             {
                 OnClicked = (button, data) =>
@@ -203,11 +236,14 @@ namespace Barotrauma
 
         public override bool IsVisible(Rectangle worldView)
         {
-            Rectangle worldRect = WorldRect;
+            RectangleF worldRect = Quad2D.FromSubmarineRectangle(WorldRect).Rotated(
+                FlippedX != FlippedY
+                    ? rotationRad
+                    : -rotationRad).BoundingAxisAlignedRectangle;
             Vector2 worldPos = WorldPosition;
 
-            Vector2 min = new Vector2(worldRect.X, worldRect.Y - worldRect.Height);
-            Vector2 max = new Vector2(worldRect.Right, worldRect.Y);
+            Vector2 min = new Vector2(worldRect.X, worldRect.Y);
+            Vector2 max = new Vector2(worldRect.Right, worldRect.Y + worldRect.Height);
             foreach (DecorativeSprite decorativeSprite in Prefab.DecorativeSprites)
             {
                 float scale = decorativeSprite.GetScale(spriteAnimState[decorativeSprite].RandomScaleFactor) * Scale;
@@ -279,7 +315,12 @@ namespace Barotrauma
 
                 Vector2 bodyPos = WorldPosition + BodyOffset * Scale;
 
-                GUI.DrawRectangle(spriteBatch, new Vector2(bodyPos.X, -bodyPos.Y), rectSize.X, rectSize.Y, BodyRotation, Color.White,
+                GUI.DrawRectangle(sb: spriteBatch,
+                    center: new Vector2(bodyPos.X, -bodyPos.Y),
+                    width: rectSize.X,
+                    height: rectSize.Y,
+                    rotation: BodyRotation,
+                    clr: Color.White,
                     thickness: Math.Max(1, (int)(2 / Screen.Selected.Cam.Zoom)));
             }
 
@@ -329,8 +370,10 @@ namespace Barotrauma
 
                     Prefab.BackgroundSprite.DrawTiled(
                         spriteBatch,
-                        new Vector2(rect.X + drawOffset.X, -(rect.Y + drawOffset.Y)),
+                        new Vector2(rect.X + rect.Width / 2 + drawOffset.X, -(rect.Y - rect.Height / 2 + drawOffset.Y)),
                         new Vector2(rect.Width, rect.Height),
+                        rotation: rotationRad,
+                        origin: rect.Size.ToVector2() * new Vector2(0.5f, 0.5f),
                         color: Prefab.BackgroundSpriteColor,
                         textureScale: TextureScale * Scale,
                         startOffset: backGroundOffset,
@@ -340,8 +383,10 @@ namespace Barotrauma
                     {
                         Prefab.BackgroundSprite.DrawTiled(
                             spriteBatch,
-                            new Vector2(rect.X + drawOffset.X, -(rect.Y + drawOffset.Y)) + dropShadowOffset,
+                            new Vector2(rect.X + rect.Width / 2 + drawOffset.X, -(rect.Y - rect.Height / 2 + drawOffset.Y)) + dropShadowOffset,
                             new Vector2(rect.Width, rect.Height),
+                            rotation: rotationRad,
+                            origin: rect.Size.ToVector2() * new Vector2(0.5f, 0.5f),
                             color: Color.Black * 0.5f,
                             textureScale: TextureScale * Scale,
                             startOffset: backGroundOffset,
@@ -357,6 +402,13 @@ namespace Barotrauma
                 SpriteEffects oldEffects = Prefab.Sprite.effects;
                 Prefab.Sprite.effects ^= SpriteEffects;
 
+                Vector2 advanceX = MathUtils.RotatedUnitXRadians(this.rotationRad).FlipY();
+                Vector2 advanceY = advanceX.YX().FlipX();
+                if (FlippedX != FlippedY)
+                {
+                    advanceX = advanceX.FlipY();
+                    advanceY = advanceY.FlipX();
+                }
                 for (int i = 0; i < Sections.Length; i++)
                 {
                     Rectangle drawSection = Sections[i].rect;
@@ -381,7 +433,7 @@ namespace Barotrauma
                         drawSection = new Rectangle(
                             drawSection.X,
                             drawSection.Y,
-                            Sections[Sections.Length -1 ].rect.Right - drawSection.X,
+                            Sections[Sections.Length - 1].rect.Right - drawSection.X,
                             drawSection.Y - (Sections[Sections.Length - 1].rect.Y - Sections[Sections.Length - 1].rect.Height));
                         i = Sections.Length;
                     }
@@ -396,10 +448,18 @@ namespace Barotrauma
                     sectionOffset.X += MathUtils.PositiveModulo((int)-textureOffset.X, Prefab.Sprite.SourceRect.Width);
                     sectionOffset.Y += MathUtils.PositiveModulo((int)-textureOffset.Y, Prefab.Sprite.SourceRect.Height);
 
+                    Vector2 pos = new Vector2(drawSection.X, drawSection.Y);
+                    pos -= rect.Location.ToVector2();
+                    pos = advanceX * pos.X + advanceY * pos.Y;
+                    pos += rect.Location.ToVector2();
+                    pos = new Vector2(pos.X + rect.Width / 2 + drawOffset.X, -(pos.Y - rect.Height / 2 + drawOffset.Y));
+
                     Prefab.Sprite.DrawTiled(
                         spriteBatch,
-                        new Vector2(drawSection.X + drawOffset.X, -(drawSection.Y + drawOffset.Y)),
+                        pos,
                         new Vector2(drawSection.Width, drawSection.Height),
+                        rotation: rotationRad,
+                        origin: rect.Size.ToVector2() * new Vector2(0.5f, 0.5f),
                         color: color,
                         startOffset: sectionOffset,
                         depth: depth,
@@ -409,7 +469,7 @@ namespace Barotrauma
                 foreach (var decorativeSprite in Prefab.DecorativeSprites)
                 {
                     if (!spriteAnimState[decorativeSprite].IsActive) { continue; }
-                    float rotation = decorativeSprite.GetRotation(ref spriteAnimState[decorativeSprite].RotationState, spriteAnimState[decorativeSprite].RandomRotationFactor);
+                    float rotation = decorativeSprite.GetRotation(ref spriteAnimState[decorativeSprite].RotationState, spriteAnimState[decorativeSprite].RandomRotationFactor) + this.rotationRad;
                     Vector2 offset = decorativeSprite.GetOffset(ref spriteAnimState[decorativeSprite].OffsetState, spriteAnimState[decorativeSprite].RandomOffsetMultiplier) * Scale;
                     decorativeSprite.Sprite.Draw(spriteBatch, new Vector2(DrawPosition.X + offset.X, -(DrawPosition.Y + offset.Y)), color,
                         rotation, decorativeSprite.GetScale(spriteAnimState[decorativeSprite].RandomScaleFactor) * Scale, Prefab.Sprite.effects,
@@ -498,7 +558,7 @@ namespace Barotrauma
 
         private bool ConditionalMatches(PropertyConditional conditional)
         {
-            if (!string.IsNullOrEmpty(conditional.TargetItemComponentName))
+            if (!string.IsNullOrEmpty(conditional.TargetItemComponent))
             {
                 return false;
             }

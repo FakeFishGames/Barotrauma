@@ -67,6 +67,9 @@ namespace Barotrauma
         [Serialize(false, IsPropertySaveable.No, description: "Can items like signal components be attached on this structure? Should be enabled on structures like decorative background walls.")]
         public bool AllowAttachItems { get; private set; }
 
+        [Serialize(true, IsPropertySaveable.No, description: "Can the structure be rotated in the submarine editor?")]
+        public bool AllowRotatingInEditor { get; set; }
+
         [Serialize(0.0f, IsPropertySaveable.No)]
         public float MinHealth { get; private set; }
 
@@ -182,7 +185,7 @@ namespace Barotrauma
                         if (subElement.GetAttribute("sourcerect") == null &&
                             subElement.GetAttribute("sheetindex") == null)
                         {
-                            DebugConsole.ThrowError("Warning - sprite sourcerect not configured for structure \"" + Name + "\"!");
+                            DebugConsole.ThrowErrorLocalized("Warning - sprite sourcerect not configured for structure \"" + Name + "\"!");
                         }
 #if CLIENT
                         if (subElement.GetAttributeBool("fliphorizontal", false))
@@ -297,14 +300,16 @@ namespace Barotrauma
             if (Identifier == Identifier.Empty)
             {
                 DebugConsole.ThrowError(
-                    "Structure prefab \"" + Name + "\" has no identifier. All structure prefabs have a unique identifier string that's used to differentiate between items during saving and loading.");
+                    "Structure prefab \"" + Name.Value + "\" has no identifier. All structure prefabs have a unique identifier string that's used to differentiate between items during saving and loading.",
+                    contentPackage: ContentPackage);
             }
 #if DEBUG
             if (!Category.HasFlag(MapEntityCategory.Legacy) && !HideInMenus)
             {
                 if (!string.IsNullOrEmpty(OriginalName))
                 {
-                    DebugConsole.AddWarning($"Structure \"{(Identifier == Identifier.Empty ? Name : Identifier.Value)}\" has a hard-coded name, and won't be localized to other languages.");
+                    DebugConsole.AddWarning($"Structure \"{(Identifier == Identifier.Empty ? Name : Identifier.Value)}\" has a hard-coded name, and won't be localized to other languages.",
+                        ContentPackage);
                 }
             }
 #endif

@@ -66,15 +66,22 @@ namespace Barotrauma
 
         private static void CrashHandler(object sender, UnhandledExceptionEventArgs args)
         {
+            Exception unhandledException = args.ExceptionObject as Exception;
             try
             {
                 Game?.Exit();
-                CrashDump(Game, "crashreport.log", (Exception)args.ExceptionObject);
+                CrashDump(Game, "crashreport.log", unhandledException);
                 Game?.Dispose();
             }
-            catch (Exception e)
+            catch (Exception exceptionHandlerError)
             {
-                Debug.WriteLine(e.Message);
+                Debug.WriteLine(exceptionHandlerError.Message);
+                string slimCrashReport = "Exception handler failed: " + exceptionHandlerError.Message + "\n" + exceptionHandlerError.StackTrace;
+                if (unhandledException != null)
+                {
+                    slimCrashReport += "\n\nInitial exception: " + unhandledException.Message + "\n" + unhandledException.StackTrace;
+                }
+                File.WriteAllText("crashreportslim.log", slimCrashReport);
                 //exception handler is broken, we have a serious problem here!!
                 return;
             }
@@ -132,7 +139,7 @@ namespace Barotrauma
 
             try
             {
-                if (exception is GameMain.LoadingException)
+                if (exception.StackTrace.Contains("Barotrauma.GameMain.Load"))
                 {
                     //exception occurred in loading screen:
                     //assume content packages are the culprit and reset them
@@ -261,6 +268,9 @@ namespace Barotrauma
                 {
                     crashHeader += " " + exception.TargetSite.ToString();
                 }
+                //log the message separately, so the same error messages get grouped as the same error in GA
+                //(the full crash report tends to always have some differences between clients, so they get displayed separately)
+                GameAnalyticsManager.AddErrorEvent(GameAnalyticsManager.ErrorSeverity.Critical, crashHeader);
                 GameAnalyticsManager.AddErrorEvent(GameAnalyticsManager.ErrorSeverity.Critical, crashHeader + "\n\n" + sb.ToString());
                 GameAnalyticsManager.ShutDown();
             }

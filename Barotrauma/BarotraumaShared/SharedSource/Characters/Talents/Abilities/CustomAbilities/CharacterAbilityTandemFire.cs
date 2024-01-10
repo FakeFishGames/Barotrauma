@@ -5,10 +5,10 @@ namespace Barotrauma.Abilities
     class CharacterAbilityTandemFire : CharacterAbilityApplyStatusEffectsToNearestAlly
     {
         // this should just be its own class, misleading to inherit here
-        private readonly string tag;
+        private readonly Identifier tag;
         public CharacterAbilityTandemFire(CharacterAbilityGroup characterAbilityGroup, ContentXElement abilityElement) : base(characterAbilityGroup, abilityElement)
         {
-            tag = abilityElement.GetAttributeString("tag", "");
+            tag = abilityElement.GetAttributeIdentifier("tag", Identifier.Empty);
         }
 
         protected override void ApplyEffect()
@@ -37,7 +37,7 @@ namespace Barotrauma.Abilities
                 ApplyEffectSpecific(closestCharacter);
             }
 
-            static bool SelectedItemHasTag(Character character, string tag) =>
+            static bool SelectedItemHasTag(Character character, Identifier tag) =>
                 (character.SelectedItem != null && character.SelectedItem.HasTag(tag)) ||
                 (character.SelectedSecondaryItem != null && character.SelectedSecondaryItem.HasTag(tag));
         }

@@ -142,6 +142,7 @@ namespace Barotrauma
                 prevIdleObjective.PreferredOutpostModuleTypes.ForEach(t => newIdleObjective.PreferredOutpostModuleTypes.Add(t));
             }
             AddObjective(newIdleObjective);
+
             int objectiveCount = Objectives.Count;
             foreach (var autonomousObjective in character.Info.Job.Prefab.AutonomousObjectives)
             {
@@ -154,12 +155,17 @@ namespace Barotrauma
                 }
                 var order = new Order(orderPrefab, autonomousObjective.Option, item ?? character.CurrentHull as Entity, orderPrefab.GetTargetItemComponent(item), orderGiver: character);
                 if (order == null) { continue; }
-                if ((order.IgnoreAtOutpost || autonomousObjective.IgnoreAtOutpost) && Level.IsLoadedFriendlyOutpost && character.TeamID != CharacterTeamType.FriendlyNPC)
+                if ((order.IgnoreAtOutpost || autonomousObjective.IgnoreAtOutpost) && 
+                    Level.IsLoadedFriendlyOutpost && character.TeamID != CharacterTeamType.FriendlyNPC && !character.IsFriendlyNPCTurnedHostile)
                 {
                     if (Submarine.MainSub != null && Submarine.MainSub.DockedTo.None(s => s.TeamID != CharacterTeamType.FriendlyNPC && s.TeamID != character.TeamID))
                     {
                         continue;
                     }
+                }
+                if (autonomousObjective.IgnoreAtNonOutpost && !Level.IsLoadedFriendlyOutpost)
+                {
+                    continue;
                 }
                 var objective = CreateObjective(order, autonomousObjective.PriorityModifier);
                 if (objective != null && objective.CanBeCompleted)
@@ -530,7 +536,7 @@ namespace Barotrauma
                 case "cleanupitems":
                     if (order.TargetEntity is Item targetItem)
                     {
-                        if (targetItem.HasTag("allowcleanup") && targetItem.ParentInventory == null && targetItem.OwnInventory != null)
+                        if (targetItem.HasTag(Tags.AllowCleanup) && targetItem.ParentInventory == null && targetItem.OwnInventory != null)
                         {
                             // Target all items inside the container
                             newObjective = new AIObjectiveCleanupItems(character, this, targetItem.OwnInventory.AllItems, priorityModifier);
@@ -547,6 +553,9 @@ namespace Barotrauma
                     break;
                 case "escapehandcuffs":
                     newObjective = new AIObjectiveEscapeHandcuffs(character, this, priorityModifier: priorityModifier);
+                    break;
+                case "findthieves":
+                    newObjective = new AIObjectiveFindThieves(character, this, priorityModifier: priorityModifier);
                     break;
                 case "prepareforexpedition":
                     newObjective = new AIObjectivePrepare(character, this, order.GetTargetItems(order.Option), order.RequireItems)

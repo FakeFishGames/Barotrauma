@@ -1,7 +1,6 @@
 ﻿using Barotrauma.Extensions;
 using Barotrauma.IO;
 using Barotrauma.Items.Components;
-using Barotrauma.Tutorials;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -152,8 +151,8 @@ namespace Barotrauma
             }
 
             // onstartedinteracting.turretperiscope
-            if (item.HasTag("periscope") &&
-                item.GetConnectedComponents<Turret>().FirstOrDefault(t => t.Item.HasTag("turret")) is Turret)
+            if (item.HasTag(Tags.Periscope) &&
+                item.GetConnectedComponents<Turret>().FirstOrDefault(t => t.Item.HasTag(Tags.Turret)) is Turret)
             {
                 if (DisplayHint($"{hintIdentifierBase}.turretperiscope".ToIdentifier(),
                         variables: new[]
@@ -175,6 +174,17 @@ namespace Barotrauma
             }
         }
 
+        public static void OnStartRepairing(Character character, Repairable repairable)
+        {
+            if (repairable.ForceDeteriorationTimer > 0.0f && !character.IsTraitor)
+            {
+                CoroutineManager.Invoke(() => 
+                { 
+                    DisplayHint($"repairingsabotageditem".ToIdentifier()); 
+                }, delay: 5.0f);
+            }
+        }
+
         private static void CheckIsInteracting()
         {
             if (!CanDisplayHints()) { return; }
@@ -182,7 +192,7 @@ namespace Barotrauma
 
             if (Character.Controlled.SelectedItem.GetComponent<Reactor>() is Reactor reactor && reactor.PowerOn &&
                 Character.Controlled.SelectedItem.OwnInventory?.AllItems is IEnumerable<Item> containedItems &&
-                containedItems.Count(i => i.HasTag("reactorfuel")) > 1)
+                containedItems.Count(i => i.HasTag(Tags.Fuel)) > 1)
             {
                 if (DisplayHint("onisinteracting.reactorwithextrarods".ToIdentifier())) { return; }
             }
@@ -210,7 +220,7 @@ namespace Barotrauma
                     {
                         if (item.CurrentHull == null) { continue; }
                         if (item.GetComponent<Pump>() == null) { continue; }
-                        if (!item.HasTag("ballast") && !item.CurrentHull.RoomName.Contains("ballast", StringComparison.OrdinalIgnoreCase)) { continue; }
+                        if (!item.HasTag(Tags.Ballast) && !item.CurrentHull.RoomName.Contains("ballast", StringComparison.OrdinalIgnoreCase)) { continue; }
                         BallastHulls.Add(item.CurrentHull);
                     }
                 }
@@ -246,8 +256,14 @@ namespace Barotrauma
                     });
                 }
 
+                if (GameMain.GameSession is { TraitorsEnabled: true })
+                {
+                    DisplayHint("traitorsonboard".ToIdentifier());
+                    DisplayHint("traitorsonboard2".ToIdentifier());
+                }
                 yield return CoroutineStatus.Success;
             }
+
         }
 
         public static void OnRoundEnded()
@@ -395,8 +411,8 @@ namespace Barotrauma
                 if (DisplayHint($"onobtaineditem.{tag}".ToIdentifier())) { return; }
             }
 
-            if ((item.HasTag("geneticmaterial") && character.Inventory.FindItemByTag("geneticdevice".ToIdentifier(), recursive: true) != null) ||
-                (item.HasTag("geneticdevice") && character.Inventory.FindItemByTag("geneticmaterial".ToIdentifier(), recursive: true) != null))
+            if ((item.HasTag(Tags.GeneticMaterial) && character.Inventory.FindItemByTag(Tags.GeneticMaterial, recursive: true) != null) ||
+                (item.HasTag(Tags.GeneticDevice) && character.Inventory.FindItemByTag(Tags.GeneticDevice, recursive: true) != null))
             {
                 if (DisplayHint($"geneticmaterial.useinstructions".ToIdentifier())) { return; }
             }
@@ -437,6 +453,14 @@ namespace Barotrauma
             });
         }
 
+        public static void OnRadioJammed(Item radioItem)
+        {
+            if (!CanDisplayHints()) { return; }
+            if (radioItem?.ParentInventory is not CharacterInventory characterInventory) { return; }
+            if (characterInventory.Owner != Character.Controlled) { return; }
+            DisplayHint("radiojammed".ToIdentifier());
+        }
+
         public static void OnReactorOutOfFuel(Reactor reactor)
         {
             if (!CanDisplayHints()) { return; }
@@ -448,6 +472,13 @@ namespace Barotrauma
                 if (reactor?.Item != null && !reactor.Item.Removed && reactor.AvailableFuel < 1) { return; }
                 ActiveHintMessageBox.Close();
             });
+        }
+
+        public static void OnAssignedAsTraitor()
+        {
+            if (!CanDisplayHints()) { return; }
+            DisplayHint("assignedastraitor".ToIdentifier());
+            DisplayHint("assignedastraitor2".ToIdentifier());        
         }
 
         public static void OnAvailableTransition(CampaignMode.TransitionType transitionType)
@@ -556,7 +587,7 @@ namespace Barotrauma
         private static void CheckIfDivingGearOutOfOxygen()
         {
             if (!CanDisplayHints()) { return; }
-            var divingGear = Character.Controlled.GetEquippedItem("diving", InvSlotType.OuterClothes);
+            var divingGear = Character.Controlled.GetEquippedItem(Tags.DivingGear, InvSlotType.OuterClothes);
             if (divingGear?.OwnInventory == null) { return; }
             if (divingGear.GetContainedItemConditionPercentage() > 0.0f) { return; }
             DisplayHint("ondivinggearoutofoxygen".ToIdentifier(), onUpdate: () =>
@@ -599,7 +630,7 @@ namespace Barotrauma
                     if (adjacentHull.WaterPercentage > 75 && !BallastHulls.Contains(adjacentHull) && DisplayHint("onadjacenthull.highwaterpercentage".ToIdentifier())) { return; }
                 }
 
-                static bool IsWearingDivingSuit() => Character.Controlled.GetEquippedItem("deepdiving", InvSlotType.OuterClothes) is Item;
+                static bool IsWearingDivingSuit() => Character.Controlled.GetEquippedItem(Tags.HeavyDivingGear, InvSlotType.OuterClothes) is Item;
             }
 
             static bool IsOnFriendlySub() => Character.Controlled.Submarine is Submarine sub && (sub.TeamID == Character.Controlled.TeamID || sub.TeamID == CharacterTeamType.FriendlyNPC);

@@ -48,6 +48,7 @@ namespace Barotrauma
             affectedNpcs = ParentEvent.GetTargets(NPCTag).Where(c => c is Character).Select(c => c as Character).ToList();
             foreach (var npc in affectedNpcs)
             {
+                if (npc.Removed) { continue; }
                 if (npc.AIController is not HumanAIController humanAiController) { continue; }
 
                 if (Operate)

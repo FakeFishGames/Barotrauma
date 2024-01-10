@@ -34,7 +34,8 @@ namespace Barotrauma
         {
             if (prefab.ConfigElement.GetAttribute("itemname") != null)
             {
-                DebugConsole.ThrowError("Error in ArtifactEvent - use item identifier instead of the name of the item.");
+                DebugConsole.ThrowError("Error in ArtifactEvent - use item identifier instead of the name of the item.",
+                    contentPackage: prefab?.ContentPackage);
                 string itemName = prefab.ConfigElement.GetAttributeString("itemname", "");
                 itemPrefab = MapEntityPrefab.Find(itemName) as ItemPrefab;
                 if (itemPrefab == null)
@@ -44,11 +45,12 @@ namespace Barotrauma
             }
             else
             {
-                string itemIdentifier = prefab.ConfigElement.GetAttributeString("itemidentifier", "");
-                itemPrefab = MapEntityPrefab.Find(null, itemIdentifier) as ItemPrefab;
+                Identifier itemIdentifier = prefab.ConfigElement.GetAttributeIdentifier("itemidentifier", Identifier.Empty);
+                itemPrefab = MapEntityPrefab.FindByIdentifier(itemIdentifier) as ItemPrefab;
                 if (itemPrefab == null)
                 {
-                    DebugConsole.ThrowError("Error in ArtifactEvent - couldn't find an item prefab with the identifier " + itemIdentifier);
+                    DebugConsole.ThrowError("Error in ArtifactEvent - couldn't find an item prefab with the identifier " + itemIdentifier,
+                        contentPackage: prefab?.ContentPackage);
                 }
             }
         }
@@ -64,7 +66,16 @@ namespace Barotrauma
 
             spawnPending = true;
         }
-        
+
+        public override string GetDebugInfo()
+        {
+            return 
+                $"Finished: {IsFinished.ColorizeObject()}\n" +
+                $"Item: {Item.ColorizeObject()}\n" +
+                $"Spawn pending: {SpawnPending.ColorizeObject()}\n" +
+                $"Spawn position: {SpawnPos.ColorizeObject()}";
+        }
+
         private void SpawnItem()
         {
             item = new Item(itemPrefab, spawnPos, null);
@@ -73,7 +84,7 @@ namespace Barotrauma
             //try to find an artifact holder and place the artifact inside it
             foreach (Item it in Item.ItemList)
             {
-                if (it.Submarine != null || !it.HasTag("artifactholder")) continue;
+                if (it.Submarine != null || !it.HasTag(Tags.ArtifactHolder)) { continue; }
 
                 var itemContainer = it.GetComponent<Items.Components.ItemContainer>();
                 if (itemContainer == null) continue;

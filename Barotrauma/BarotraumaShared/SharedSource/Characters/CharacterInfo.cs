@@ -440,10 +440,9 @@ namespace Barotrauma
             {
                 if (handleBuff)
                 {
-                    var head = Character.AnimController.GetLimb(LimbType.Head);
-                    if (head != null)
+                    if (AfflictionPrefab.Prefabs.TryGet("disguised", out AfflictionPrefab afflictionPrefab))
                     {
-                        Character.CharacterHealth.ApplyAffliction(head, AfflictionPrefab.List.FirstOrDefault(a => a.Identifier == "disguised").Instantiate(100f));
+                        Character.CharacterHealth.ApplyAffliction(null, afflictionPrefab.Instantiate(100f));
                     }
                 }
 
@@ -464,11 +463,7 @@ namespace Barotrauma
 
             if (handleBuff)
             {
-                var head = Character.AnimController.GetLimb(LimbType.Head);
-                if (head != null)
-                {
-                    Character.CharacterHealth.ReduceAfflictionOnLimb(head, "disguised".ToIdentifier(), 100f);
-                }
+                Character.CharacterHealth.ReduceAfflictionOnAllLimbs("disguised".ToIdentifier(), 100f);
             }
         }
 
@@ -683,11 +678,15 @@ namespace Barotrauma
                 FacialHairColors = CharacterConfigElement.GetAttributeTupleArray("facialhaircolors", new (Color, float)[] { (Color.WhiteSmoke, 100f) }).ToImmutableArray();
                 SkinColors = CharacterConfigElement.GetAttributeTupleArray("skincolors", new (Color, float)[] { (new Color(255, 215, 200, 255), 100f) }).ToImmutableArray();
 
-                var headPreset = Prefab.Heads.GetRandom(randSync);
+                var headPreset = Prefab?.Heads.GetRandom(randSync);
+                if (headPreset == null)
+                {
+                    DebugConsole.ThrowError("Failed to find a head preset!");
+                }
                 Head = new HeadInfo(this, headPreset);
                 SetAttachments(randSync);
                 SetColors(randSync);
-                
+
                 Job = job ?? ((jobPrefab == null) ? Job.Random(Rand.RandSync.Unsynced) : new Job(jobPrefab, randSync, variant));
 
                 if (!string.IsNullOrEmpty(name))
@@ -768,7 +767,7 @@ namespace Barotrauma
         }
 
         // Used for loading the data
-        public CharacterInfo(XElement infoElement, Identifier npcIdentifier = default)
+        public CharacterInfo(ContentXElement infoElement, Identifier npcIdentifier = default)
         {
             ID = idCounter;
             idCounter++;
@@ -1089,6 +1088,7 @@ namespace Barotrauma
         
         private void LoadHeadSprite()
         {
+            if (Ragdoll?.MainElement == null) { return; }
             foreach (var limbElement in Ragdoll.MainElement.Elements())
             {
                 if (!limbElement.GetAttributeString("type", string.Empty).Equals("head", StringComparison.OrdinalIgnoreCase)) { continue; }
@@ -1214,6 +1214,21 @@ namespace Barotrauma
             return (int)(salary * Job.Prefab.PriceMultiplier);
         }
 
+        /// <summary>
+        /// Increases the characters skill at a rate proportional to their current skill. 
+        /// If you want to increase the skill level by a specific amount instead, use <see cref="IncreaseSkillLevel"/>
+        /// </summary>
+        public void ApplySkillGain(Identifier skillIdentifier, float baseGain, bool gainedFromAbility = false, float maxGain = 2f)
+        {
+            float skillLevel = Job.GetSkillLevel(skillIdentifier);
+            // The formula is too generous on low skill levels, hence the minimum divider.
+            float skillDivider = MathF.Pow(Math.Max(skillLevel, 15f), SkillSettings.Current.SkillIncreaseExponent);
+            IncreaseSkillLevel(skillIdentifier, Math.Min(baseGain / skillDivider, maxGain), gainedFromAbility);
+        }
+
+        /// <summary>
+        /// Increase the skill by a specific amount. Talents may affect the actual, final skill increase.
+        /// </summary>
         public void IncreaseSkillLevel(Identifier skillIdentifier, float increase, bool gainedFromAbility = false)
         {
             if (Job == null || (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) || Character == null) { return; }
@@ -1222,9 +1237,7 @@ namespace Barotrauma
             {
                 increase *= SkillSettings.Current.AssistantSkillIncreaseMultiplier;
             }
-
             increase *= 1f + Character.GetStatValue(StatTypes.SkillGainSpeed);
-
             increase = GetSkillSpecificGain(increase, skillIdentifier);
 
             float prevLevel = Job.GetSkillLevel(skillIdentifier);
@@ -1311,12 +1324,12 @@ namespace Barotrauma
             OnExperienceChanged(prevAmount, ExperiencePoints);
         }
 
-        const int BaseExperienceRequired = -50;
+        const int BaseExperienceRequired = 450;
         const int AddedExperienceRequiredPerLevel = 500;
 
         public int GetTotalTalentPoints()
         {
-            return GetCurrentLevel() + AdditionalTalentPoints - 1;
+            return GetCurrentLevel() + AdditionalTalentPoints;
         }
 
         public int GetAvailableTalentPoints()
@@ -1342,16 +1355,19 @@ namespace Barotrauma
             return experienceRequired + ExperienceRequiredPerLevel(level);
         }
 
+        /// <summary>
+        /// How much more experience does the character need to reach the specified level?
+        /// </summary>
         public int GetExperienceRequiredForLevel(int level)
         {
-            int currentLevel = GetCurrentLevel(out int experienceRequired);
+            int currentLevel = GetCurrentLevel();
             if (currentLevel >= level) { return 0; }
-            int required = experienceRequired;
-            for (int i = currentLevel + 1; i <= level; i++)
+            int required = 0;
+            for (int i = 0; i < level; i++)
             {
                 required += ExperienceRequiredPerLevel(i);
             }
-            return required;
+            return required - ExperiencePoints;
         }
 
         public int GetCurrentLevel()
@@ -1361,7 +1377,7 @@ namespace Barotrauma
 
         private int GetCurrentLevel(out int experienceRequired)
         {
-            int level = 1;
+            int level = 0;
             experienceRequired = 0;
             while (experienceRequired + ExperienceRequiredPerLevel(level) <= ExperiencePoints)
             {
@@ -1386,7 +1402,7 @@ namespace Barotrauma
             // Replace the name tag of any existing id cards or duffel bags
             foreach (var item in Item.ItemList)
             {
-                if (!item.HasTag("identitycard") && !item.HasTag("despawncontainer")) { continue; }
+                if (!item.HasTag("identitycard".ToIdentifier()) && !item.HasTag("despawncontainer".ToIdentifier())) { continue; }
                 foreach (var tag in item.Tags.Split(','))
                 {
                     var splitTag = tag.Split(":");
@@ -1446,7 +1462,7 @@ namespace Barotrauma
             if (MinReputationToHire.factionId != default)
             {
                 charElement.Add(
-                    new XAttribute("factionId", Name),
+                    new XAttribute("factionId", MinReputationToHire.factionId),
                     new XAttribute("minreputation", MinReputationToHire.reputation));
             }
 
@@ -1527,7 +1543,10 @@ namespace Barotrauma
                             break;
                         }
                     }
-                    targetAvailableInNextLevel = !isOutside && GameMain.GameSession?.Campaign?.PendingSubmarineSwitch == null && (isOnConnectedLinkedSub || entitySub == Submarine.MainSub);
+                    targetAvailableInNextLevel = 
+                        !isOutside && 
+                        GameMain.GameSession?.Campaign is not { SwitchedSubsThisRound: true } && 
+                        (isOnConnectedLinkedSub || entitySub == Submarine.MainSub);
                     if (!targetAvailableInNextLevel)
                     {
                         if (!order.Prefab.CanBeGeneralized)
@@ -1652,8 +1671,12 @@ namespace Barotrauma
                     continue;
                 }
                 var targetType = (Order.OrderTargetType)orderElement.GetAttributeInt("targettype", 0);
-                int orderGiverInfoId = orderElement.GetAttributeInt("ordergiver", -1);
-                var orderGiver = orderGiverInfoId >= 0 ? Character.CharacterList.FirstOrDefault(c => c.Info?.GetIdentifier() == orderGiverInfoId) : null;
+                Character orderGiver = null;
+                if (orderElement.GetAttribute("ordergiver") is XAttribute orderGiverIdAttribute)
+                {
+                    int orderGiverInfoId = orderGiverIdAttribute.GetAttributeInt(0);
+                    orderGiver = Character.CharacterList.FirstOrDefault(c => c.Info?.GetIdentifier() == orderGiverInfoId);
+                }
                 Entity targetEntity = null;
                 switch (targetType)
                 {
@@ -1717,6 +1740,7 @@ namespace Barotrauma
                     {
                         targetId = GetOffsetId(parentSub, targetId);
                         targetEntity = Entity.FindEntityByID(targetId);
+                        return targetEntity != null;
                     }
                     else
                     {
@@ -1730,8 +1754,8 @@ namespace Barotrauma
                         {
                             DebugConsole.AddWarning($"Trying to load a previously saved order ({orderIdentifier}). Can't find the parent sub of the target entity. The order doesn't require a target so a more generic version of the order will be loaded instead.");
                         }
+                        return true;
                     }
-                    return true;
                 }
             }
             return orders;
@@ -1891,13 +1915,30 @@ namespace Barotrauma
             }
         }
 
+        /// <summary>
+        /// Get the combined stat value of the identifier "all" and the specified identifier.
+        /// </summary>
+        /// <remarks>
+        /// The "all" identifier works like the "any" identifier in outpost modules where it doesn't literally mean everything but
+        /// is an unique identifier that indicates that it should target everything. For example if we wanted to make a talent
+        /// that increases the fabrication quality of every single item we could use something like:
+        /// <CharacterAbilityGivePermanentStat stattype="IncreaseFabricationQuality" statidentifier="all" />
+        /// (Granted IncreaseFabricationQuality doesn't support the "all" identifier so if we need this in vanilla it needs to be implemented in code)
+        /// </remarks>
+        public float GetSavedStatValueWithAll(StatTypes statType, Identifier statIdentifier)
+            => GetSavedStatValue(statType, Tags.StatIdentifierTargetAll) +
+               GetSavedStatValue(statType, statIdentifier);
+
         public float GetSavedStatValueWithBotsInMp(StatTypes statType, Identifier statIdentifier)
+            => GetSavedStatValueWithBotsInMp(statType, statIdentifier, GameSession.GetSessionCrewCharacters(CharacterType.Bot));
+
+        public float GetSavedStatValueWithBotsInMp(StatTypes statType, Identifier statIdentifier, IReadOnlyCollection<Character> bots)
         {
             float statValue = GetSavedStatValue(statType, statIdentifier);
 
             if (GameMain.NetworkMember is null) { return statValue; }
 
-            foreach (Character bot in GameSession.GetSessionCrewCharacters(CharacterType.Bot))
+            foreach (Character bot in bots)
             {
                 int botStatValue = (int)bot.Info.GetSavedStatValue(statType, statIdentifier);
                 statValue = Math.Max(statValue, botStatValue);

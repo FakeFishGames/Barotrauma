@@ -39,7 +39,7 @@ namespace Barotrauma
         
         public Event(EventPrefab prefab)
         {
-            this.prefab = prefab;
+            this.prefab = prefab ?? throw new ArgumentNullException(nameof(prefab));
         }
         
         public virtual IEnumerable<ContentFile> GetFilesToPreload()
@@ -50,6 +50,11 @@ namespace Barotrauma
         public virtual void Init(EventSet parentSet = null)
         {
             ParentSet = parentSet;
+        }
+
+        public virtual string GetDebugInfo()
+        {
+            return $"Finished: {IsFinished.ColorizeObject()}";
         }
 
         public virtual void Update(float deltaTime)

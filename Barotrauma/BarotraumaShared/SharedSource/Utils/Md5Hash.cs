@@ -2,6 +2,7 @@
 
 using Barotrauma.IO;
 using System;
+using System.Collections.Generic;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -96,6 +97,16 @@ namespace Barotrauma
         {
             if (!stringHashRegex.IsMatch(hash)) { throw new ArgumentException($"{hash} is not a valid hash"); }
             return new Md5Hash(hash);
+        }
+
+        public static Md5Hash MergeHashes(IEnumerable<Md5Hash> hashes)
+        {
+            using IncrementalHash incrementalHash = IncrementalHash.CreateHash(HashAlgorithmName.MD5);
+            foreach (var hash in hashes)
+            {
+                incrementalHash.AppendData(hash.ByteRepresentation);
+            }
+            return BytesAsHash(incrementalHash.GetHashAndReset());
         }
 
         public static Md5Hash CalculateForBytes(byte[] bytes)

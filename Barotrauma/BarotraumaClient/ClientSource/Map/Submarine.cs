@@ -1,4 +1,5 @@
-﻿using Barotrauma.Items.Components;
+﻿using Barotrauma.Extensions;
+using Barotrauma.Items.Components;
 using Barotrauma.Networking;
 using FarseerPhysics;
 using Microsoft.Xna.Framework;
@@ -24,7 +25,7 @@ namespace Barotrauma
         /// <summary>
         /// Margin applied around the view area when culling entities (i.e. entities that are this far outside the view are still considered visible)
         /// </summary>
-        private const int CullMargin = 500;
+        private const int CullMargin = 50;
         /// <summary>
         /// Update entity culling when any corner of the view has moved more than this
         /// </summary>
@@ -70,15 +71,16 @@ namespace Barotrauma
 
             if (visibleEntities == null)
             {
-                visibleEntities = new List<MapEntity>(MapEntity.mapEntityList.Count);
+                visibleEntities = new List<MapEntity>(MapEntity.MapEntityList.Count);
             }
             else
             {
                 visibleEntities.Clear();
             }
 
-            foreach (MapEntity entity in MapEntity.mapEntityList)
+            foreach (MapEntity entity in MapEntity.MapEntityList)
             {
+                if (entity == null || entity.Removed) { continue; }
                 if (entity.Submarine != null)
                 {
                     if (!visibleSubs.Contains(entity.Submarine)) { continue; }
@@ -102,7 +104,7 @@ namespace Barotrauma
 
         public static void Draw(SpriteBatch spriteBatch, bool editing = false)
         {
-            var entitiesToRender = !editing && visibleEntities != null ? visibleEntities : MapEntity.mapEntityList;
+            var entitiesToRender = !editing && visibleEntities != null ? visibleEntities : MapEntity.MapEntityList;
 
             foreach (MapEntity e in entitiesToRender)
             {
@@ -112,7 +114,7 @@ namespace Barotrauma
 
         public static void DrawFront(SpriteBatch spriteBatch, bool editing = false, Predicate<MapEntity> predicate = null)
         {
-            var entitiesToRender = !editing && visibleEntities != null ? visibleEntities : MapEntity.mapEntityList;
+            var entitiesToRender = !editing && visibleEntities != null ? visibleEntities : MapEntity.MapEntityList;
 
             foreach (MapEntity e in entitiesToRender)
             {
@@ -161,7 +163,7 @@ namespace Barotrauma
         private static readonly List<Structure> depthSortedDamageable = new List<Structure>();
         public static void DrawDamageable(SpriteBatch spriteBatch, Effect damageEffect, bool editing = false, Predicate<MapEntity> predicate = null)
         {
-            var entitiesToRender = !editing && visibleEntities != null ? visibleEntities : MapEntity.mapEntityList;
+            var entitiesToRender = !editing && visibleEntities != null ? visibleEntities : MapEntity.MapEntityList;
 
             depthSortedDamageable.Clear();
 
@@ -200,7 +202,7 @@ namespace Barotrauma
 
         public static void DrawPaintedColors(SpriteBatch spriteBatch, bool editing = false, Predicate<MapEntity> predicate = null)
         {
-            var entitiesToRender = !editing && visibleEntities != null ? visibleEntities : MapEntity.mapEntityList;
+            var entitiesToRender = !editing && visibleEntities != null ? visibleEntities : MapEntity.MapEntityList;
 
             foreach (MapEntity e in entitiesToRender)
             {
@@ -220,7 +222,7 @@ namespace Barotrauma
 
         public static void DrawBack(SpriteBatch spriteBatch, bool editing = false, Predicate<MapEntity> predicate = null)
         {
-            var entitiesToRender = !editing && visibleEntities != null ? visibleEntities : MapEntity.mapEntityList;
+            var entitiesToRender = !editing && visibleEntities != null ? visibleEntities : MapEntity.MapEntityList;
 
             foreach (MapEntity e in entitiesToRender)
             {
@@ -497,11 +499,18 @@ namespace Barotrauma
                 }
             }
 
+            if (Hull.HullList.Any(h => h.WaterVolume > 0.0f))
+            {
+                errorMsgs.Add(TextManager.Get("WaterInHullsWarning").Value);
+                warnings.Add(SubEditorScreen.WarningType.WaterInHulls);
+                Hull.ShowHulls = true;
+            }
+
             if (Info.Type == SubmarineType.Player)
             {
                 foreach (Item item in Item.ItemList)
                 {
-                    if (item.GetComponent<Items.Components.Vent>() == null) { continue; }
+                    if (item.GetComponent<Vent>() == null) { continue; }
                     if (!item.linkedTo.Any())
                     {
                         if (!IsWarningSuppressed(SubEditorScreen.WarningType.DisconnectedVents))
@@ -529,12 +538,20 @@ namespace Barotrauma
                         warnings.Add(SubEditorScreen.WarningType.NoCargoSpawnpoints);
                     }
                 }
-                if (!Item.ItemList.Any(it => it.GetComponent<Items.Components.Pump>() != null && it.HasTag("ballast")))
+                if (Item.ItemList.None(it => it.GetComponent<Pump>() != null && it.HasTag(Tags.Ballast)))
                 {
                     if (!IsWarningSuppressed(SubEditorScreen.WarningType.NoBallastTag))
                     {
                         errorMsgs.Add(TextManager.Get("NoBallastTagsWarning").Value);
                         warnings.Add(SubEditorScreen.WarningType.NoBallastTag);
+                    }
+                }
+                if (Item.ItemList.None(it => it.HasTag(Tags.HiddenItemContainer)))
+                {
+                    if (!IsWarningSuppressed(SubEditorScreen.WarningType.NoHiddenContainers))
+                    {
+                        errorMsgs.Add(TextManager.Get("NoHiddenContainersWarning").Value);
+                        warnings.Add(SubEditorScreen.WarningType.NoHiddenContainers);
                     }
                 }
             }
@@ -581,7 +598,7 @@ namespace Barotrauma
                 }
             }
 
-            if ((MapEntity.mapEntityList.Count - Item.ItemList.Count - Hull.HullList.Count - WayPoint.WayPointList.Count - Gap.GapList.Count) > SubEditorScreen.MaxStructures * entityCountWarningThreshold)
+            if ((MapEntity.MapEntityList.Count - Item.ItemList.Count - Hull.HullList.Count - WayPoint.WayPointList.Count - Gap.GapList.Count) > SubEditorScreen.MaxStructures * entityCountWarningThreshold)
             {
                 if (!IsWarningSuppressed(SubEditorScreen.WarningType.StructureCount))
                 {
@@ -641,7 +658,7 @@ namespace Barotrauma
                 }
             }
 
-            foreach (MapEntity e in MapEntity.mapEntityList)
+            foreach (MapEntity e in MapEntity.MapEntityList)
             {
                 if (Vector2.Distance(e.Position, HiddenSubPosition) > 20000)
                 {
@@ -653,7 +670,7 @@ namespace Barotrauma
                 }
             }
 
-            foreach (MapEntity e in MapEntity.mapEntityList)
+            foreach (MapEntity e in MapEntity.MapEntityList)
             {
                 if (Vector2.Distance(e.Position, HiddenSubPosition) > 20000)
                 {
@@ -703,18 +720,12 @@ namespace Barotrauma
             return GameMain.LightManager.Lights.Count(l => l.CastShadows && !l.IsBackground) - disabledItemLightCount;
         }
 
-        public static Vector2 MouseToWorldGrid(Camera cam, Submarine sub)
+        public static Vector2 MouseToWorldGrid(Camera cam, Submarine sub, Vector2? mousePos = null, bool round = false)
         {
-            Vector2 position = PlayerInput.MousePosition;
+            Vector2 position = mousePos ?? PlayerInput.MousePosition;
             position = cam.ScreenToWorld(position);
 
-            Vector2 worldGridPos = VectorToWorldGrid(position);
-
-            if (sub != null)
-            {
-                worldGridPos.X += sub.Position.X % GridSize.X;
-                worldGridPos.Y += sub.Position.Y % GridSize.Y;
-            }
+            Vector2 worldGridPos = VectorToWorldGrid(position, sub, round);
 
             return worldGridPos;
         }

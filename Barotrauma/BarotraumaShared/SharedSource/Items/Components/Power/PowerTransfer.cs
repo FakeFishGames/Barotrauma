@@ -197,7 +197,7 @@ namespace Barotrauma.Items.Components
                 isBroken = false;
             }
 
-            ApplyStatusEffects(ActionType.OnActive, deltaTime, null);
+            ApplyStatusEffects(ActionType.OnActive, deltaTime);
 
             float powerReadingOut = 0;
             float loadReadingOut = ExtraLoad;
@@ -407,7 +407,7 @@ namespace Barotrauma.Items.Components
                 }
             }
 
-            if (!(this is RelayComponent))
+            if (this is not RelayComponent)
             {
                 if (PowerConnections.Any(p => !p.IsOutput) && PowerConnections.Any(p => p.IsOutput))
                 {
@@ -454,6 +454,7 @@ namespace Barotrauma.Items.Components
             base.RemoveComponentSpecific();
             connectedRecipients?.Clear();
             connectionDirty?.Clear();
+            recipientsToRefresh.Clear();
         }
     }
 }

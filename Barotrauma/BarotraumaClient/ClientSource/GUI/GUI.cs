@@ -512,10 +512,18 @@ namespace Barotrauma
                                     soundStr += " (stopped)";
                                     clr *= 0.5f;
                                 }
-                                else if (playingSoundChannel.Muffled)
+                                else
                                 {
-                                    soundStr += " (muffled)";
-                                    clr = Color.Lerp(clr, Color.LightGray, 0.5f);
+                                    if (playingSoundChannel.Muffled)
+                                    {
+                                        soundStr += " (muffled)";
+                                        clr = Color.Lerp(clr, Color.LightGray, 0.5f);
+                                    }
+                                    if (playingSoundChannel.FadingOutAndDisposing)
+                                    {
+                                        soundStr += ". Fading out...";
+                                        clr = Color.Lerp(clr, Color.Black, 0.15f);
+                                    }
                                 }
                             }
 
@@ -1010,16 +1018,13 @@ namespace Barotrauma
                         // Sub editor drag and highlight
                         case SubEditorScreen editor:
                         {
-                            foreach (var mapEntity in MapEntity.mapEntityList)
+                            if (MapEntity.StartMovingPos != Vector2.Zero || MapEntity.Resizing)
                             {
-                                if (MapEntity.StartMovingPos != Vector2.Zero)
-                                {
-                                    return CursorState.Dragging;
-                                }
-                                if (mapEntity.IsHighlighted)
-                                {
-                                    return CursorState.Hand;
-                                }
+                                return CursorState.Dragging;
+                            }
+                            if (MapEntity.HighlightedEntities.Any(h => !h.IsSelected))
+                            {
+                                return CursorState.Hand;
                             }
                             break;
                         }
@@ -2166,10 +2171,10 @@ namespace Barotrauma
             };
         }
 
-        public static GUIMessageBox AskForConfirmation(LocalizedString header, LocalizedString body, Action onConfirm, Action onDeny = null)
+        public static GUIMessageBox AskForConfirmation(LocalizedString header, LocalizedString body, Action onConfirm, Action onDeny = null, Vector2? relativeSize = null, Point? minSize = null)
         {
             LocalizedString[] buttons = { TextManager.Get("Ok"), TextManager.Get("Cancel") };
-            GUIMessageBox msgBox = new GUIMessageBox(header, body, buttons, new Vector2(0.2f, 0.175f), minSize: new Point(300, 175));
+            GUIMessageBox msgBox = new GUIMessageBox(header, body, buttons, relativeSize: relativeSize ?? new Vector2(0.2f, 0.175f), minSize: minSize ?? new Point(300, 175));
 
             // Cancel button
             msgBox.Buttons[1].OnClicked = delegate
@@ -2442,8 +2447,7 @@ namespace Barotrauma
 
                 var buttonContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.7f, 0.8f), pauseMenuInner.RectTransform, Anchor.BottomCenter) { RelativeOffset = new Vector2(0.0f, padding) })
                 {
-                    Stretch = true,
-                    RelativeSpacing = 0.05f
+                    AbsoluteSpacing = IntScale(15)
                 };
 
                 new GUIButton(new RectTransform(new Vector2(0.1f, 0.07f), pauseMenuInner.RectTransform, Anchor.TopRight) { RelativeOffset = new Vector2(padding) },
@@ -2526,7 +2530,7 @@ namespace Barotrauma
                 pauseMenuInner.RectTransform.MinSize = new Point(
                     pauseMenuInner.RectTransform.MinSize.X,
                         Math.Max(
-                            (int)(buttonContainer.Children.Sum(c => c.Rect.Height + buttonContainer.Rect.Height * buttonContainer.RelativeSpacing)),
+                            (int)(buttonContainer.Children.Sum(c => c.Rect.Height + buttonContainer.AbsoluteSpacing) / buttonContainer.RectTransform.RelativeSize.Y),
                             pauseMenuInner.RectTransform.MinSize.X));
 
             }

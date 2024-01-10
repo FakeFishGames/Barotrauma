@@ -34,6 +34,8 @@ namespace Barotrauma
         private bool _isCrewMenuOpen = true;
         private Point crewListEntrySize;
 
+        private readonly List<GUITickBox> traitorButtons = new List<GUITickBox>();
+
         /// <summary>
         /// Present only in single player games. In multiplayer. The chatbox is found from GameSession.Client.
         /// </summary>
@@ -194,7 +196,7 @@ namespace Barotrauma
                 };
             }
 
-            var reports = OrderPrefab.Prefabs.Where(o => o.IsReport && o.SymbolSprite != null && !o.Hidden).OrderBy(o => o.Identifier).ToArray();
+            var reports = OrderPrefab.Prefabs.Where(o => o.IsVisibleAsReportButton).OrderBy(o => o.Identifier).ToArray();
             if (reports.None())
             {
                 DebugConsole.ThrowError("No valid orders for report buttons found! Cannot create report buttons. The orders for the report buttons must have 'targetallcharacters' attribute enabled and a valid 'symbolsprite' defined.");
@@ -226,7 +228,8 @@ namespace Barotrauma
             //report buttons
             foreach (OrderPrefab orderPrefab in reports)
             {
-                if (!orderPrefab.IsReport || orderPrefab.SymbolSprite == null || orderPrefab.Hidden) { continue; }
+                if (!orderPrefab.IsVisibleAsReportButton) { continue; }
+
                 var btn = new GUIButton(new RectTransform(Vector2.One, parent.RectTransform, scaleBasis: isHorizontal ? ScaleBasis.BothHeight : ScaleBasis.BothWidth), style: null)
                 {
                     OnClicked = (button, userData) =>
@@ -367,7 +370,7 @@ namespace Barotrauma
                 }
             }
 
-            int iconsVisible = isJobIconVisible ? 5 : 4;
+            int iconsVisible = isJobIconVisible ? 6 : 5;
             var nameRelativeWidth = 1.0f
                 // Start padding
                 - paddingRelativeWidth
@@ -413,7 +416,6 @@ namespace Barotrauma
             {
                 AllowMouseWheelScroll = false,
                 CurrentDragMode = GUIListBox.DragMode.DragWithinBox,
-                HideChildrenOutsideFrame = false,
                 KeepSpaceForScrollBar = false,
                 OnRearranged = OnOrdersRearranged,
                 ScrollBarVisible = false,
@@ -439,13 +441,13 @@ namespace Barotrauma
                 Stretch = false
             };
 
-            var extraIconFrame = new GUIFrame(new RectTransform(new Vector2(0.8f * iconRelativeWidth, 0.8f), layoutGroup.RectTransform), style: null)
+            var extraIconFrame = new GUIFrame(new RectTransform(new Vector2(0.8f * iconRelativeWidth * 2, 0.8f), layoutGroup.RectTransform), style: null)
             {
                 CanBeFocused = false,
                 UserData = "extraicons"
             };
 
-            var soundIconParent = new GUIFrame(new RectTransform(Vector2.One, extraIconFrame.RectTransform), style: null)
+            var soundIconParent = new GUIFrame(new RectTransform(new Vector2(0.8f), extraIconFrame.RectTransform, Anchor.CenterLeft, scaleBasis: ScaleBasis.Smallest), style: null)
             {
                 CanBeFocused = false,
                 UserData = "soundicons",
@@ -470,16 +472,6 @@ namespace Barotrauma
                 Visible = false
             };
 
-            if (character.IsBot)
-            {
-                new GUIFrame(new RectTransform(Vector2.One, extraIconFrame.RectTransform), style: null)
-                {
-                    CanBeFocused = false,
-                    UserData = "objectiveicon",
-                    Visible = false
-                };
-            }
-
             new GUIButton(new RectTransform(new Point((int)commandButtonAbsoluteHeight), background.RectTransform), style: "CrewListCommandButton")
             {
                 ToolTip = TextManager.Get("inputtype.command"),
@@ -490,6 +482,44 @@ namespace Barotrauma
                     return true;
                 }
             };
+            if (character.IsBot)
+            {
+                new GUIFrame(new RectTransform(Vector2.One, extraIconFrame.RectTransform, scaleBasis: ScaleBasis.Smallest), style: null)
+                {
+                    CanBeFocused = false,
+                    UserData = "objectiveicon",
+                    Visible = false
+                };
+            }
+            else if (GameMain.GameSession is { TraitorsEnabled: true } && GameMain.Client != null && character != Character.Controlled)
+            {
+                Client targetClient = GameMain.Client.ConnectedClients.FirstOrDefault(c => c.Character == character);
+                if (targetClient != null)
+                {
+                    if (OrderPrefab.Prefabs.TryGet("reporttraitor", out OrderPrefab order))
+                    {
+                        var voteTraitorBtn = new GUITickBox(new RectTransform(Vector2.One, extraIconFrame.RectTransform, Anchor.CenterRight, scaleBasis: ScaleBasis.Smallest), label: string.Empty, style: "TraitorVoteButton")
+                        {
+                            UserData = character,
+                            ToolTip =
+                                RichString.Rich(
+                                    $"‖color:{XMLExtensions.ToStringHex(GUIStyle.TextColorBright)}‖{TextManager.Get("traitor.blamebutton")}‖color:end‖\n"
+                                    + TextManager.Get("traitor.blamebutton.tooltip")),
+                            OnSelected = (GUITickBox obj) =>
+                            {
+                                foreach (var traitorBtn in traitorButtons)
+                                {
+                                    //deselect other traitor buttons
+                                    if (traitorBtn != obj) { traitorBtn.SetSelected(false, callOnSelected: false); }
+                                }
+                                GameMain.Client?.Vote(VoteType.Traitor, obj.Selected ? targetClient : null);
+                                return true;
+                            }
+                        };
+                        traitorButtons.Add(voteTraitorBtn);
+                    }
+                }
+            }
 
             return background;
         }
@@ -499,6 +529,7 @@ namespace Barotrauma
             if (crewList?.Content.GetChildByUserData(character) is { } component)
             {
                 crewList.RemoveChild(component);
+                traitorButtons.RemoveAll(t => t.IsChildOf(component, recursive: true));
             }
         }
 
@@ -1205,7 +1236,7 @@ namespace Barotrauma
                 }
             }
 
-            crewArea.Visible = !(GameMain.GameSession?.GameMode is CampaignMode campaign) || (!campaign.ForceMapUI && !campaign.ShowCampaignUI);
+            crewArea.Visible = GameMain.GameSession?.GameMode is not CampaignMode campaign || (!campaign.ForceMapUI && !campaign.ShowCampaignUI);
 
             guiFrame.AddToGUIUpdateList();
         }
@@ -1372,7 +1403,8 @@ namespace Barotrauma
 
             if (PlayerInput.KeyDown(InputType.Command) &&
                 (GUI.KeyboardDispatcher.Subscriber == null || (GUI.KeyboardDispatcher.Subscriber is GUIComponent component && (component == crewList || component.IsChildOf(crewList)))) &&
-                commandFrame == null && !clicklessSelectionActive && CanIssueOrders && !(GameMain.GameSession?.Campaign?.ShowCampaignUI ?? false))
+                commandFrame == null && !clicklessSelectionActive && CanIssueOrders && !(GameMain.GameSession?.Campaign?.ShowCampaignUI ?? false) &&
+                Character.Controlled?.SelectedItem?.Prefab is not { DisableCommandMenuWhenSelected: true })
             {
                 if (PlayerInput.IsShiftDown())
                 {
@@ -1557,6 +1589,12 @@ namespace Barotrauma
                 {
                     if (characterComponent.UserData is Character character)
                     {
+                        if (character.Removed)
+                        {
+                            characterComponent.Visible = false;
+                            continue;
+                        }
+
                         characterComponent.Visible = Character.Controlled == null || Character.Controlled.TeamID == character.TeamID;
                         if (character.TeamID == CharacterTeamType.FriendlyNPC && Character.Controlled != null && 
                             (character.CurrentHull == Character.Controlled.CurrentHull || Vector2.DistanceSquared(Character.Controlled.WorldPosition, character.WorldPosition) < 500.0f * 500.0f))
@@ -1632,6 +1670,8 @@ namespace Barotrauma
                         }
                     }
                 }
+
+                traitorButtons.ForEach(btn => btn.Visible = Character.Controlled is { IsDead: false } && btn.UserData as Character != Character.Controlled);
 
                 crewArea.RectTransform.AbsoluteOffset = Vector2.SmoothStep(
                     new Vector2(-crewArea.Rect.Width - HUDLayoutSettings.Padding, 0.0f),
@@ -2396,7 +2436,7 @@ namespace Barotrauma
             if (!(GetTargetSubmarine() is { } sub)) { return; }
             shortcutNodes.Clear();
             var subItems = sub.GetItems(false);
-            if (CanFitMoreNodes() && subItems.Find(i => i.HasTag("reactor") && i.IsPlayerTeamInteractable)?.GetComponent<Reactor>() is Reactor reactor)
+            if (CanFitMoreNodes() && subItems.Find(i => i.HasTag(Tags.Reactor) && i.IsPlayerTeamInteractable)?.GetComponent<Reactor>() is Reactor reactor)
             {
                 float reactorOutput = -reactor.CurrPowerConsumption;
                 // If player is not an engineer AND the reactor is not powered up AND nobody is using the reactor
@@ -2415,7 +2455,7 @@ namespace Barotrauma
             // If player is not a captain AND nobody is using the nav terminal AND the nav terminal is powered up
             // --> Create shortcut node for Steer order
             if (CanFitMoreNodes() && ShouldDelegateOrder("steer") && IsNonDuplicateOrderPrefab(OrderPrefab.Prefabs["steer"]) &&
-                subItems.Find(i => i.HasTag("navterminal") && i.IsPlayerTeamInteractable) is Item nav && characters.None(c => c.SelectedItem == nav) &&
+                subItems.Find(i => i.HasTag(Tags.NavTerminal) && i.IsPlayerTeamInteractable) is Item nav && characters.None(c => c.SelectedItem == nav) &&
                 nav.GetComponent<Steering>() is Steering steering && steering.Voltage > steering.MinVoltage)
             {
                 var order = new Order(OrderPrefab.Prefabs["steer"], steering.Item, steering);

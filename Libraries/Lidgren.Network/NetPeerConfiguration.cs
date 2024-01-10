@@ -35,12 +35,12 @@ namespace Lidgren.Network
 		//  -4 bytes to be on the safe side and align to 8-byte boundary
 		// Total 1408 bytes
 		// Note that lidgren headers (5 bytes) are not included here; since it's part of the "mtu payload"
-		
+
 		/// <summary>
 		/// Default MTU value in bytes
 		/// </summary>
 		public const int kDefaultMTU = 1408;
-		
+
 		private const string c_isLockedMessage = "You may not modify the NetPeerConfiguration after it has been used to initialize a NetPeer";
 
 		private bool m_isLocked;
@@ -48,6 +48,8 @@ namespace Lidgren.Network
 		private string m_networkThreadName;
 		private IPAddress m_localAddress;
 		private IPAddress m_broadcastAddress;
+        private bool m_dualStack;
+
 		internal bool m_acceptIncomingConnections;
 		internal int m_maximumConnections;
 		internal int m_defaultOutgoingMessageCapacity;
@@ -93,8 +95,8 @@ namespace Lidgren.Network
 			//
 			m_disabledTypes = NetIncomingMessageType.ConnectionApproval | NetIncomingMessageType.UnconnectedData | NetIncomingMessageType.VerboseDebugMessage | NetIncomingMessageType.ConnectionLatencyUpdated | NetIncomingMessageType.NatIntroductionSuccess;
 			m_networkThreadName = "Lidgren network thread";
-            m_localAddress = IPAddress.IPv6Any;
-            m_broadcastAddress = IPAddress.Broadcast;
+			m_localAddress = IPAddress.Any;
+			m_broadcastAddress = IPAddress.Broadcast;
 			var ip = NetUtility.GetBroadcastAddress();
 			if (ip != null)
 			{
@@ -141,12 +143,6 @@ namespace Lidgren.Network
 		{
 			get { return m_appIdentifier; }
 		}
-
-		public bool UseDualModeSockets
-		{
-			get;
-			set;
-		} = true;
 
 		/// <summary>
 		/// Enables receiving of the specified type of message
@@ -332,10 +328,11 @@ namespace Lidgren.Network
 				m_suppressUnreliableUnorderedAcks = value;
 			}
 		}
-        /// <summary>
-        /// Gets or sets the local ip address to bind to. Defaults to <see cref="IPAddress.IPv6Any"/>. Cannot be changed once NetPeer is initialized.
-        /// </summary>
-        public IPAddress LocalAddress
+
+		/// <summary>
+		/// Gets or sets the local ip address to bind to. Defaults to IPAddress.Any. Cannot be changed once NetPeer is initialized.
+		/// </summary>
+		public IPAddress LocalAddress
 		{
 			get { return m_localAddress; }
 			set
@@ -346,10 +343,30 @@ namespace Lidgren.Network
 			}
 		}
 
-		/// <summary>
-		/// Gets or sets the local broadcast address to use when broadcasting
-		/// </summary>
-		public IPAddress BroadcastAddress
+        /// <summary>
+        /// Gets or sets a value indicating whether the library should use IPv6 dual stack mode.
+        /// If you enable this you should make sure that the <see cref="LocalAddress"/> is an IPv6 address.
+        /// Cannot be changed once NetPeer is initialized.
+        /// </summary>
+        public bool DualStack
+        {
+            get { return m_dualStack;  }
+            set
+            {
+                if (m_isLocked)
+                    throw new NetException(c_isLockedMessage);
+                m_dualStack = value;
+				if (m_dualStack && m_localAddress.Equals(IPAddress.Any))
+					m_localAddress = IPAddress.IPv6Any;
+				if (!m_dualStack && m_localAddress.Equals(IPAddress.IPv6Any))
+					m_localAddress = IPAddress.Any;
+			}
+        }
+
+        /// <summary>
+        /// Gets or sets the local broadcast address to use when broadcasting
+        /// </summary>
+        public IPAddress BroadcastAddress
 		{
 			get { return m_broadcastAddress; }
 			set

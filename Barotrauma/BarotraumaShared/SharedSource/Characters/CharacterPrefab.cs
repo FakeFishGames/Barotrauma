@@ -46,6 +46,8 @@ namespace Barotrauma
         public static IEnumerable<ContentXElement> ConfigElements => Prefabs.Select(p => p.ConfigElement);
 
         public static readonly Identifier HumanSpeciesName = "human".ToIdentifier();
+        public static readonly Identifier HumanGroup = "human".ToIdentifier();
+
         public static CharacterFile HumanConfigFile => HumanPrefab.ContentFile as CharacterFile;
         public static CharacterPrefab HumanPrefab => FindBySpeciesName(HumanSpeciesName);
 
@@ -93,7 +95,8 @@ namespace Barotrauma
             name = ParseName(mainElement, file);
             if (name == Identifier.Empty)
             {
-                DebugConsole.ThrowError($"No species name defined for: {file.Path}");
+                DebugConsole.ThrowError($"No species name defined for: {file.Path}",
+                    contentPackage: file.ContentPackage);
                 return false;
             }
             return true;

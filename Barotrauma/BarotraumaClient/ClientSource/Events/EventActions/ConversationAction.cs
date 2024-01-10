@@ -42,15 +42,15 @@ namespace Barotrauma
 
         partial void ShowDialog(Character speaker, Character targetCharacter)
         {
-            CreateDialog(Text, speaker, Options.Select(opt => opt.Text), GetEndingOptions(), actionInstance: this, spriteIdentifier: EventSprite, fadeToBlack: FadeToBlack, dialogType: DialogType, continueConversation: ContinueConversation);
+            CreateDialog(GetDisplayText(), speaker, Options.Select(opt => opt.Text), GetEndingOptions(), actionInstance: this, spriteIdentifier: EventSprite, fadeToBlack: FadeToBlack, dialogType: DialogType, continueConversation: ContinueConversation);
         }
 
-        public static void CreateDialog(string text, Character speaker, IEnumerable<string> options, int[] closingOptions, string eventSprite, UInt16 actionId, bool fadeToBlack, DialogTypes dialogType, bool continueConversation = false)
+        public static void CreateDialog(LocalizedString text, Character speaker, IEnumerable<string> options, int[] closingOptions, string eventSprite, UInt16 actionId, bool fadeToBlack, DialogTypes dialogType, bool continueConversation = false)
         {
             CreateDialog(text, speaker, options, closingOptions, actionInstance: null, actionId: actionId, spriteIdentifier: eventSprite, fadeToBlack: fadeToBlack, dialogType: dialogType, continueConversation: continueConversation);
         }
 
-        private static void CreateDialog(string text, Character speaker, IEnumerable<string> options, int[] closingOptions, string spriteIdentifier = null, 
+        private static void CreateDialog(LocalizedString text, Character speaker, IEnumerable<string> options, int[] closingOptions, string spriteIdentifier = null, 
                                          ConversationAction actionInstance = null, UInt16? actionId = null, bool fadeToBlack = false, DialogTypes dialogType = DialogTypes.Regular, bool continueConversation = false)
         {
             Debug.Assert(actionInstance == null || actionId == null);
@@ -126,6 +126,7 @@ namespace Barotrauma
             if (actionInstance != null)
             {
                 lastActiveAction = actionInstance;
+                actionInstance.lastActiveTime = Timing.TotalTime;
                 actionInstance.dialogBox = messageBox;
             }
             else
@@ -313,7 +314,7 @@ namespace Barotrauma
             };
         }
 
-        private static List<GUIButton> CreateConversation(GUIListBox parentBox, string text, Character speaker, IEnumerable<string> options, bool drawChathead = true)
+        private static List<GUIButton> CreateConversation(GUIListBox parentBox, LocalizedString text, Character speaker, IEnumerable<string> options, bool drawChathead = true)
         {
             var content = new GUILayoutGroup(new RectTransform(Vector2.One, parentBox.Content.RectTransform), childAnchor: Anchor.TopLeft, isHorizontal: true)
             {
@@ -322,9 +323,11 @@ namespace Barotrauma
                 AlwaysOverrideCursor = true
             };
 
-            LocalizedString translatedText = speaker?.DisplayName is not null ?
-                TextManager.GetWithVariable(text, "[speakername]", speaker?.DisplayName) :
-                TextManager.Get(text);
+            LocalizedString translatedText = text.Replace("\\n", "\n");
+            if (speaker?.DisplayName is not null)
+            {
+                translatedText = translatedText.Replace("[speakername]", speaker.DisplayName);
+            }
             translatedText = TextManager.ParseInputTypes(translatedText).Fallback(text);
 
             if (speaker?.Info != null && drawChathead)
@@ -341,7 +344,7 @@ namespace Barotrauma
                 AbsoluteSpacing = GUI.IntScale(5)
             };
 
-            var textBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), textContent.RectTransform), translatedText, wrap: true)
+            var textBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), textContent.RectTransform), RichString.Rich(translatedText), wrap: true)
             {
                 AlwaysOverrideCursor = true,
                 UserData = "text"
@@ -371,13 +374,12 @@ namespace Barotrauma
                 btn.RectTransform.MinSize = new Point(0, (int)(btn.TextBlock.Rect.Height * 1.2f));
             }
 
-            textContent.RectTransform.MinSize = new Point(0, textContent.Children.Sum(c => c.Rect.Height) + GUI.IntScale(16));
+            textContent.RectTransform.MinSize = new Point(0, textContent.Children.Sum(c => c.Rect.Height + textContent.AbsoluteSpacing) + GUI.IntScale(16));
             content.RectTransform.MinSize = new Point(0, content.Children.Sum(c => c.Rect.Height));
 
             // Recalculate the text size as it is scaled up and no longer matching the text height due to the textContent's minSize increasing
             textBlock.CalculateHeightFromText();
             textBlock.TextAlignment = Alignment.TopLeft;
-            //content.RectTransform.MinSize = new Point(0, textContent.Rect.Height);
 
             return buttons;
         }

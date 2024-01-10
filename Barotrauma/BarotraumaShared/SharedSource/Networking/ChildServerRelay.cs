@@ -131,6 +131,7 @@ namespace Barotrauma.Networking
                 catch (AggregateException aggregateException)
                 {
                     if (aggregateException.InnerException is OperationCanceledException) { return Option<int>.None(); }
+                    CheckPipeConnected(nameof(readStream), readStream);
                     throw;
                 }
                 catch (OperationCanceledException)
@@ -161,7 +162,18 @@ namespace Barotrauma.Networking
         {
             if (status is StatusEnum.Active && pipe is not { IsConnected: true })
             {
-                throw new Exception($"{name} was disconnected unexpectedly");
+                string exceptionMsg = $"{name} was disconnected unexpectedly.";
+#if CLIENT
+                if (Process is { HasExited: true, ExitCode: var exitCode })
+                {
+                    exceptionMsg += $" Child process exit code was {(uint)exitCode:X8}.";
+                }
+                else if (Process is { HasExited: false })
+                {
+                    exceptionMsg += " Child process has not exited.";
+                }
+#endif
+                throw new Exception(exceptionMsg);
             }
         }
 
@@ -256,7 +268,11 @@ namespace Barotrauma.Networking
                         {
                             case ObjectDisposedException _:
                             case System.IO.IOException _:
-                                if (!HasShutDown) { throw; }
+                                if (!HasShutDown)
+                                {
+                                    CheckPipeConnected(nameof(writeStream), writeStream);
+                                    throw;
+                                }
                                 break;
                             default:
                                 throw;

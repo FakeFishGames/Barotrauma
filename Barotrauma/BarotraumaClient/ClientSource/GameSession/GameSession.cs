@@ -1,5 +1,4 @@
-﻿using Barotrauma.Tutorials;
-using Microsoft.Xna.Framework;
+﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
 namespace Barotrauma
@@ -15,8 +14,6 @@ namespace Barotrauma
         public static bool IsTabMenuOpen => GameMain.GameSession?.tabMenu != null;
         public static TabMenu TabMenuInstance => GameMain.GameSession?.tabMenu;
 
-        private float prevHudScale;
-
         private TabMenu tabMenu;
 
         public bool ToggleTabMenu()
@@ -27,7 +24,7 @@ namespace Barotrauma
                 GameMain.NetLobbyScreen.CharacterAppearanceCustomizationMenu = null;
                 if (GameMain.NetLobbyScreen.JobSelectionFrame != null) { GameMain.NetLobbyScreen.JobSelectionFrame.Visible = false; }
             }
-            if (tabMenu == null && !(GameMode is TutorialMode) && !ConversationAction.IsDialogOpen)
+            if (tabMenu == null && GameMode is not TutorialMode && !ConversationAction.IsDialogOpen)
             {
                 tabMenu = new TabMenu();
                 HintManager.OnShowTabMenu();
@@ -49,6 +46,10 @@ namespace Barotrauma
         private GUITextBlock respawnInfoText;
         private GUITickBox respawnTickBox;
 
+        private GUIImage eventLogNotification;
+
+        private Point prevTopLeftButtonsResolution;
+
         private void CreateTopLeftButtons()
         {
             if (topLeftButtonGroup != null)
@@ -61,10 +62,6 @@ namespace Barotrauma
             {
                 AbsoluteSpacing = HUDLayoutSettings.Padding,
                 CanBeFocused = false
-            };
-            topLeftButtonGroup.RectTransform.ParentChanged += (_) =>
-            {
-                GameMain.Instance.ResolutionChanged -= CreateTopLeftButtons;
             };
             int buttonHeight = GUI.IntScale(40);
             Vector2 buttonSpriteSize = GUIStyle.GetComponentStyle("CrewListToggleButton").GetDefaultSprite().size;
@@ -96,9 +93,8 @@ namespace Barotrauma
                 OnClicked = (button, userData) => ToggleTabMenu()
             };
 
-            talentPointNotification = CreateTalentIconNotification(tabMenuButton);
-
-            GameMain.Instance.ResolutionChanged += CreateTopLeftButtons;
+            talentPointNotification = CreateNotificationIcon(tabMenuButton);
+            eventLogNotification = CreateNotificationIcon(tabMenuButton);
 
             respawnInfoFrame = new GUIFrame(new RectTransform(new Vector2(0.5f, 1.0f), parent: topLeftButtonGroup.RectTransform)
             { MaxSize = new Point(HUDLayoutSettings.ButtonAreaTop.Width / 3, int.MaxValue) }, style: null)
@@ -121,7 +117,7 @@ namespace Barotrauma
                     return true;
                 }
             };
-            prevHudScale = GameSettings.CurrentConfig.Graphics.HUDScale;
+            prevTopLeftButtonsResolution = new Point(GameMain.GraphicsWidth, GameMain.GraphicsHeight);
         }
 
         public void AddToGUIUpdateList()
@@ -134,7 +130,8 @@ namespace Barotrauma
             if ((GameMode is not CampaignMode campaign || (!campaign.ForceMapUI && !campaign.ShowCampaignUI)) &&
                 !CoroutineManager.IsCoroutineRunning("LevelTransition") && !CoroutineManager.IsCoroutineRunning("SubmarineTransition"))
             {
-                if (topLeftButtonGroup == null)
+                if (topLeftButtonGroup == null ||
+                    prevTopLeftButtonsResolution.X != GameMain.GraphicsWidth || prevTopLeftButtonsResolution.Y != GameMain.GraphicsHeight)
                 {
                     CreateTopLeftButtons();
                 }
@@ -152,7 +149,7 @@ namespace Barotrauma
             }
         }
 
-        public static GUIImage CreateTalentIconNotification(GUIComponent parent, bool offset = true)
+        public static GUIImage CreateNotificationIcon(GUIComponent parent, bool offset = true)
         {
             GUIImage indicator = new GUIImage(new RectTransform(new Vector2(0.45f), parent.RectTransform, anchor: Anchor.TopRight, scaleBasis: ScaleBasis.BothWidth), style: "TalentPointNotification")
             {
@@ -167,19 +164,22 @@ namespace Barotrauma
             return indicator;
         }
 
+        public void EnableEventLogNotificationIcon(bool enabled)
+        {
+            if (eventLogNotification == null) { return; }
+            if (!eventLogNotification.Visible && enabled)
+            {
+                eventLogNotification.Pulsate(Vector2.One, Vector2.One * 2, 1.0f);
+            }
+            eventLogNotification.Visible = enabled;
+        }
+
         public static void UpdateTalentNotificationIndicator(GUIImage indicator)
         {
-            if (indicator != null)
-            {
-                if (Character.Controlled?.Info == null)
-                {
-                    indicator.Visible = false;
-                }
-                else
-                {
-                    indicator.Visible = Character.Controlled.Info.GetAvailableTalentPoints() > 0 && !Character.Controlled.HasUnlockedAllTalents();
-                }
-            }
+            if (indicator == null) { return; }
+            indicator.Visible =
+                Character.Controlled?.Info != null &&
+                Character.Controlled.Info.GetAvailableTalentPoints() > 0 && !Character.Controlled.HasUnlockedAllTalents();
         }
 
         public void HUDScaleChanged()

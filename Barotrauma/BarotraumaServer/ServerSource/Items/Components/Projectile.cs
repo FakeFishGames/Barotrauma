@@ -35,6 +35,7 @@ namespace Barotrauma.Items.Components
                 msg.WriteSingle(launchPos.Y);
                 msg.WriteSingle(launchRot);
                 msg.WriteByte(eventData.SpreadCounter);
+                msg.WriteUInt16(LaunchSub?.ID ?? Entity.NullEntityID);
             }
 
             bool stuck = StickTarget != null && !item.Removed && !StickTargetRemoved();
@@ -49,21 +50,35 @@ namespace Barotrauma.Items.Components
                 msg.WriteSingle(jointAxis.Y);
                 if (StickTarget.UserData is Structure structure)
                 {
+                    msg.WriteByte((byte)StickTargetType.Structure);
                     msg.WriteUInt16(structure.ID);
                     int bodyIndex = structure.Bodies.IndexOf(StickTarget);
                     msg.WriteByte((byte)(bodyIndex == -1 ? 0 : bodyIndex));
                 }
-                else if (StickTarget.UserData is Entity entity)
+                else if (StickTarget.UserData is Item item)
                 {
-                    msg.WriteUInt16(entity.ID);
+                    msg.WriteByte((byte)StickTargetType.Item);
+                    msg.WriteUInt16(item.ID);
+                }
+                else if (StickTarget.UserData is Submarine sub)
+                {
+                    msg.WriteByte((byte)StickTargetType.Submarine);
+                    msg.WriteUInt16(sub.ID);
                 }
                 else if (StickTarget.UserData is Limb limb)
                 {
+                    msg.WriteByte((byte)StickTargetType.Limb);
                     msg.WriteUInt16(limb.character.ID);
                     msg.WriteByte((byte)Array.IndexOf(limb.character.AnimController.Limbs, limb));
                 }
+                else if (StickTarget.UserData is Voronoi2.VoronoiCell cell)
+                {
+                    msg.WriteByte((byte)StickTargetType.LevelWall);
+                    msg.WriteInt32(Level.Loaded.GetAllCells().IndexOf(cell));
+                }
                 else
                 {
+                    msg.WriteByte((byte)StickTargetType.Unknown);
                     throw new NotImplementedException(StickTarget.UserData?.ToString() ?? "null" + " is not a valid projectile stick target.");
                 }
             }

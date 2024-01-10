@@ -18,14 +18,6 @@ namespace Steamworks.Data
 	}
 	
 	[StructLayout( LayoutKind.Sequential, Pack = Platform.StructPlatformPackSize )]
-	internal struct FriendSessionStateInfo_t
-	{
-		internal uint IOnlineSessionInstances; // m_uiOnlineSessionInstances uint32
-		internal byte IPublishedToFriendsSessionInstance; // m_uiPublishedToFriendsSessionInstance uint8
-		
-	}
-	
-	[StructLayout( LayoutKind.Sequential, Pack = Platform.StructPlatformPackSize )]
 	internal partial struct servernetadr_t
 	{
 		internal ushort ConnectionPort; // m_usConnectionPort uint16
@@ -114,6 +106,39 @@ namespace Steamworks.Data
 	}
 	
 	[StructLayout( LayoutKind.Sequential, Pack = Platform.StructPlatformPackSize )]
+	internal struct InputMotionDataV2_t
+	{
+		internal float DriftCorrectedQuatX; // driftCorrectedQuatX float
+		internal float DriftCorrectedQuatY; // driftCorrectedQuatY float
+		internal float DriftCorrectedQuatZ; // driftCorrectedQuatZ float
+		internal float DriftCorrectedQuatW; // driftCorrectedQuatW float
+		internal float SensorFusionQuatX; // sensorFusionQuatX float
+		internal float SensorFusionQuatY; // sensorFusionQuatY float
+		internal float SensorFusionQuatZ; // sensorFusionQuatZ float
+		internal float SensorFusionQuatW; // sensorFusionQuatW float
+		internal float DeferredSensorFusionQuatX; // deferredSensorFusionQuatX float
+		internal float DeferredSensorFusionQuatY; // deferredSensorFusionQuatY float
+		internal float DeferredSensorFusionQuatZ; // deferredSensorFusionQuatZ float
+		internal float DeferredSensorFusionQuatW; // deferredSensorFusionQuatW float
+		internal float GravityX; // gravityX float
+		internal float GravityY; // gravityY float
+		internal float GravityZ; // gravityZ float
+		internal float DegreesPerSecondX; // degreesPerSecondX float
+		internal float DegreesPerSecondY; // degreesPerSecondY float
+		internal float DegreesPerSecondZ; // degreesPerSecondZ float
+		
+	}
+	
+	[StructLayout( LayoutKind.Sequential, Pack = Platform.StructPlatformPackSize )]
+	internal struct SteamInputActionEvent_t
+	{
+		internal ulong ControllerHandle; // controllerHandle InputHandle_t
+		internal SteamInputActionEventType EEventType; // eEventType ESteamInputActionEventType
+		// internal SteamInputActionEvent_t.AnalogAction_t AnalogAction; // analogAction SteamInputActionEvent_t::AnalogAction_t
+		
+	}
+	
+	[StructLayout( LayoutKind.Sequential, Pack = Platform.StructPlatformPackSize )]
 	internal struct SteamUGCDetails_t
 	{
 		internal PublishedFileId PublishedFileId; // m_nPublishedFileId PublishedFileId_t
@@ -165,37 +190,6 @@ namespace Steamworks.Data
 		internal InventoryDefId Definition; // m_iDefinition SteamItemDef_t
 		internal ushort Quantity; // m_unQuantity uint16
 		internal ushort Flags; // m_unFlags uint16
-		
-	}
-	
-	[StructLayout( LayoutKind.Sequential, Pack = Platform.StructPlatformPackSize )]
-	internal struct SteamTVRegion_t
-	{
-		internal uint UnMinX; // unMinX uint32
-		internal uint UnMinY; // unMinY uint32
-		internal uint UnMaxX; // unMaxX uint32
-		internal uint UnMaxY; // unMaxY uint32
-		
-	}
-	
-	[StructLayout( LayoutKind.Sequential, Pack = Platform.StructPlatformPackSize )]
-	internal struct SteamNetworkingQuickConnectionStatus
-	{
-		internal ConnectionState State; // m_eState ESteamNetworkingConnectionState
-		internal int Ping; // m_nPing int
-		internal float ConnectionQualityLocal; // m_flConnectionQualityLocal float
-		internal float ConnectionQualityRemote; // m_flConnectionQualityRemote float
-		internal float OutPacketsPerSec; // m_flOutPacketsPerSec float
-		internal float OutBytesPerSec; // m_flOutBytesPerSec float
-		internal float InPacketsPerSec; // m_flInPacketsPerSec float
-		internal float InBytesPerSec; // m_flInBytesPerSec float
-		internal int SendRateBytesPerSecond; // m_nSendRateBytesPerSecond int
-		internal int CbPendingUnreliable; // m_cbPendingUnreliable int
-		internal int CbPendingReliable; // m_cbPendingReliable int
-		internal int CbSentUnackedReliable; // m_cbSentUnackedReliable int
-		internal long EcQueueTime; // m_usecQueueTime SteamNetworkingMicroseconds
-		[MarshalAs(UnmanagedType.ByValArray, SizeConst = 16, ArraySubType = UnmanagedType.U4)]
-		internal uint[] Reserved; // reserved uint32 [16]
 		
 	}
 	

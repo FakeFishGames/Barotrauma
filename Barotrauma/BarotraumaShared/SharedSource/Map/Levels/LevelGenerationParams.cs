@@ -502,8 +502,18 @@ namespace Barotrauma
             }
         }
 
-        [Serialize(1, IsPropertySaveable.Yes, description: "The number of alien ruins in the level."), Editable(MinValueInt = 0, MaxValueInt = 10)]
+        public bool UseRandomRuinCount() => MinRuinCount >= 0 && MaxRuinCount > 0;
+
+        public int GetMaxRuinCount() => UseRandomRuinCount() ? MaxRuinCount : RuinCount;
+
+        [Serialize(1, IsPropertySaveable.Yes, description: "The number of alien ruins in the level. Ignored, if both MinRuinCount and MaxRuinCount are defined."), Editable(MinValueInt = 0, MaxValueInt = 10)]
         public int RuinCount { get; set; }
+
+        [Serialize(0, IsPropertySaveable.Yes, description: "The minimum number of alien ruins in the level."), Editable(MinValueInt = 0, MaxValueInt = 10)]
+        public int MinRuinCount { get; set; }
+
+        [Serialize(0, IsPropertySaveable.Yes, description: "The maximum number of alien ruins in the level."), Editable(MinValueInt = 0, MaxValueInt = 10)]
+        public int MaxRuinCount { get; set; }
 
         // TODO: Move the wreck parameters under a separate class?
 #region Wreck parameters

@@ -69,7 +69,10 @@ namespace Barotrauma.Items.Components
 
         public static int GetWaterPercentage(Hull hull)
         {
-            return hull.WaterVolume > 1.0f ? MathHelper.Clamp((int)Math.Ceiling(hull.WaterPercentage), 0, 100) : 0;
+            //treat less than one pixel of water as "no water"
+            return hull.WaterVolume / hull.Rect.Width > 1.0f ? 
+                MathHelper.Clamp((int)Math.Ceiling(hull.WaterPercentage), 0, 100) : 
+                0;
         }
 
         public override void Update(float deltaTime, Camera cam)
@@ -88,7 +91,7 @@ namespace Barotrauma.Items.Components
                     //item in water -> we definitely want to send the True output
                     isInWater = true;
                 }
-                else if (item.CurrentHull != null && item.CurrentHull.WaterPercentage > 0.0f && item.CurrentHull.WaterVolume > 1.0f)
+                else if (item.CurrentHull != null && GetWaterPercentage(item.CurrentHull) > 0)
                 {
                     //(center of the) item in not water -> check if the water surface is below the bottom of the item's rect
                     if (item.CurrentHull.Surface > item.Rect.Y - item.Rect.Height)

@@ -95,7 +95,7 @@ namespace Barotrauma.Items.Components
                                 MaxValueFloat = numberInputMax,
                                 FloatValue = Math.Clamp(floatSignal, numberInputMin, numberInputMax),
                                 DecimalsToDisplay = ciElement.NumberInputDecimalPlaces,
-                                valueStep = numberInputStep,
+                                ValueStep = numberInputStep,
                                 OnValueChanged = (ni) =>
                                 {
                                     if (GameMain.Client == null)
@@ -121,7 +121,7 @@ namespace Barotrauma.Items.Components
                                 MinValueInt = numberInputMin,
                                 MaxValueInt = numberInputMax,
                                 IntValue = Math.Clamp(intSignal, numberInputMin, numberInputMax),
-                                valueStep = numberInputStep,
+                                ValueStep = numberInputStep,
                                 OnValueChanged = (ni) =>
                                 {
                                     if (GameMain.Client == null)
@@ -137,7 +137,8 @@ namespace Barotrauma.Items.Components
                         }
                         else
                         {
-                            DebugConsole.LogError($"Error creating a CustomInterface component: unexpected NumberType \"{(ciElement.NumberType.HasValue ? ciElement.NumberType.Value.ToString() : "none")}\"");
+                            DebugConsole.LogError($"Error creating a CustomInterface component: unexpected NumberType \"{(ciElement.NumberType.HasValue ? ciElement.NumberType.Value.ToString() : "none")}\"",
+                                contentPackage: item.Prefab.ContentPackage);
                         }
                         if (numberInput != null)
                         {
@@ -244,7 +245,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public override void UpdateHUD(Character character, float deltaTime, Camera cam)
+        public override void UpdateHUDComponentSpecific(Character character, float deltaTime, Camera cam)
         {
             bool elementVisibilityChanged = false;
             int visibleElementCount = 0;
@@ -335,17 +336,18 @@ namespace Barotrauma.Items.Components
             if (signals == null) { return; }
             for (int i = 0; i < signals.Length && i < uiElements.Count; i++)
             {
+                string signal = customInterfaceElementList[i].Signal;
                 if (uiElements[i] is GUITextBox tb)
                 {
                     tb.Text = Screen.Selected is { IsEditor: true } ?
-                        customInterfaceElementList[i].Signal :
-                        TextManager.Get(customInterfaceElementList[i].Signal).Value;
+                        signal :
+                        TextManager.Get(signal).Fallback(signal).Value;
                 }
                 else if (uiElements[i] is GUINumberInput ni)
                 {
                     if (ni.InputType == NumberType.Int)
                     {
-                        int.TryParse(customInterfaceElementList[i].Signal, out int value);
+                        int.TryParse(signal, out int value);
                         ni.IntValue = value;
                     }
                 }

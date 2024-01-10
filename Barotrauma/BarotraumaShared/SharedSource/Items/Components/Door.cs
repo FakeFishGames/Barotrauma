@@ -41,6 +41,8 @@ namespace Barotrauma.Items.Components
         }
 
         private bool isStuck;
+
+        [Serialize(false, IsPropertySaveable.Yes, alwaysUseInstanceValues: true)]
         public bool IsStuck
         {
             get { return isStuck; }
@@ -49,7 +51,10 @@ namespace Barotrauma.Items.Components
                 if (isStuck == value) { return; }
                 isStuck = value;
 #if SERVER
-                item.CreateServerEvent(this);
+                if (item.FullyInitialized)
+                {
+                    item.CreateServerEvent(this);
+                }
 #endif
             }
         }
@@ -105,7 +110,7 @@ namespace Barotrauma.Items.Components
         public bool CanBeWelded = true;
 
         private float stuck;
-        [Serialize(0.0f, IsPropertySaveable.No, description: "How badly stuck the door is (in percentages). If the percentage reaches 100, the door needs to be cut open to make it usable again.")]
+        [Serialize(0.0f, IsPropertySaveable.Yes, description: "How badly stuck the door is (in percentages). If the percentage reaches 100, the door needs to be cut open to make it usable again.")]
         public float Stuck
         {
             get { return stuck; }
@@ -179,9 +184,15 @@ namespace Barotrauma.Items.Components
 
         public bool IsFullyClosed => IsClosed && OpenState <= 0f;
 
+        public bool HasWindow => Window != Rectangle.Empty;
+
         [Serialize(false, IsPropertySaveable.No, description: "If the door has integrated buttons, it can be opened by interacting with it directly (instead of using buttons wired to it).")]
         public bool HasIntegratedButtons { get; private set; }
-                
+
+        [ConditionallyEditable(ConditionallyEditable.ConditionType.HasIntegratedButtons), 
+        Serialize(true, IsPropertySaveable.No, description: "If the door has integrated buttons, should clicking on it perform the default action of opening the door? Can be used in conjunction with the \"activate_out\" output to pass a signal to a circuit without toggling the door when someone tries to open/close the door.")]
+        public bool ToggleWhenClicked { get; private set; }
+
         public float OpenState
         {
             get { return openState; }
@@ -332,7 +343,12 @@ namespace Barotrauma.Items.Components
                 OnFailedToOpen();
                 return;
             }
-            toggleCooldownTimer = ToggleCoolDown;
+            if (ToggleWhenClicked)
+            {
+                //do not activate cooldown at this point if the door doesn't get toggled when clicked
+                //(i.e. if it just sends out a signal that might get passed back to the door and try to toggle it)
+                toggleCooldownTimer = ToggleCoolDown;
+            }
             if (IsStuck || IsJammed)
             {
 #if CLIENT
@@ -342,8 +358,12 @@ namespace Barotrauma.Items.Components
                 OnFailedToOpen();
                 return;
             }
+            item.SendSignal("1", "activate_out");
             lastUser = user;
-            SetState(PredictedState == null ? !isOpen : !PredictedState.Value, false, true, forcedOpen: actionType == ActionType.OnPicked);
+            if (ToggleWhenClicked)
+            {
+                SetState(PredictedState == null ? !isOpen : !PredictedState.Value, false, true, forcedOpen: actionType == ActionType.OnPicked);
+            }
         }
 
         public override bool Select(Character character)
@@ -368,6 +388,31 @@ namespace Barotrauma.Items.Components
             return false;
         }
 
+        /// <summary>
+        /// Is the given position inside the vertical bounds of the window, and roughly on the door horizontally? Or the other way around if the door opens horizontally.
+        /// </summary>
+        /// <param name="position">Position in the same coordinate space as the door.</param>
+        /// <param name="maxPerpendicularDistance">Maximum horizontal distance from the door (or vertical if the door opens horizontally)</param>
+        public bool IsPositionOnWindow(Vector2 position, float maxPerpendicularDistance = 10.0f)
+        {
+            if (IsHorizontal)
+            {
+                return 
+                    position.X >= item.Rect.X + Window.X && 
+                    position.X <= item.Rect.X + Window.X + Window.Width &&
+                    position.Y >= item.Rect.Y - maxPerpendicularDistance &&
+                    position.Y <= item.Rect.Y - item.Rect.Height - maxPerpendicularDistance;
+            }
+            else
+            {
+                return 
+                    position.Y >= item.Rect.Y + Window.Y && 
+                    position.Y <= item.Rect.Y + Window.Y + Window.Height &&
+                    position.X >= item.Rect.X - maxPerpendicularDistance &&
+                    position.X <= item.Rect.Right + maxPerpendicularDistance;
+            }
+        }
+
         public override void Update(float deltaTime, Camera cam)
         {
             UpdateProjSpecific(deltaTime);
@@ -388,8 +433,6 @@ namespace Barotrauma.Items.Components
                 }
                 return;
             }
-
-
 
             bool isClosing = false;
             if ((!IsStuck && !IsJammed) || !isOpen)

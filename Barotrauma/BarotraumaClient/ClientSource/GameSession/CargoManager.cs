@@ -147,7 +147,7 @@ namespace Barotrauma
             }
             catch (NotImplementedException e)
             {
-                DebugConsole.LogError($"Error selling items: uknown store tab type \"{sellingMode}\".\n{e.StackTrace.CleanupStackTrace()}");
+                DebugConsole.LogError($"Error selling items: unknown store tab type \"{sellingMode}\".\n{e.StackTrace.CleanupStackTrace()}");
                 return;
             }
             bool canAddToRemoveQueue = campaign.IsSinglePlayer && Entity.Spawner != null;

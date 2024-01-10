@@ -471,7 +471,7 @@ namespace Barotrauma
         /// <summary>
         /// Another trigger was triggered, check if this one should react to it
         /// </summary>
-        public void OtherTriggered(LevelObject levelObject, LevelTrigger otherTrigger)
+        public void OtherTriggered(LevelTrigger otherTrigger, Entity triggerer)
         {
             if (!triggeredBy.HasFlag(TriggererType.OtherTrigger) || stayTriggeredDelay <= 0.0f) { return; }
 
@@ -487,7 +487,16 @@ namespace Barotrauma
                 triggeredTimer = stayTriggeredDelay;
                 if (!wasAlreadyTriggered)
                 {
-                    OnTriggered?.Invoke(this, null);
+                    if (!IsTriggeredByEntity(triggerer, triggeredBy, mustBeOutside: true)) { return; }
+                    if (!triggerers.Contains(triggerer))
+                    {
+                        if (!IsTriggered)
+                        {
+                            OnTriggered?.Invoke(this, triggerer);
+                        }
+                        TriggererPosition[triggerer] = triggerer.WorldPosition;
+                        triggerers.Add(triggerer);
+                    }
                 }
             }
         }

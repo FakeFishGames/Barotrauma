@@ -975,9 +975,9 @@ namespace Barotrauma.Items.Components
 
             docked = false;
 
+            Item.Submarine.RefreshOutdoorNodes();
             Item.Submarine.EnableObstructedWaypoints(DockingTarget.Item.Submarine);
             obstructedWayPointsDisabled = false;
-            Item.Submarine.RefreshOutdoorNodes();
 
             DockingTarget.Undock();
             DockingTarget = null;
@@ -1111,8 +1111,8 @@ namespace Barotrauma.Items.Components
             }
             if (!obstructedWayPointsDisabled && dockingState >= 0.99f)
             {
-                Item.Submarine.DisableObstructedWayPoints(DockingTarget?.Item.Submarine);
                 Item.Submarine.RefreshOutdoorNodes();
+                Item.Submarine.DisableObstructedWayPoints(DockingTarget?.Item.Submarine);
                 obstructedWayPointsDisabled = true;
             }
         }

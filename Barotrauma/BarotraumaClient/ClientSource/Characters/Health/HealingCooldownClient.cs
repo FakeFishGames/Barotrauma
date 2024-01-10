@@ -12,8 +12,6 @@ namespace Barotrauma
         private static DateTimeOffset OnCooldownUntil = DateTimeOffset.MinValue;
         private const float CooldownDuration = 0.5f;
 
-        public static readonly Identifier MedicalItemTag = new Identifier("medical");
-
         public static void PutOnCooldown()
         {
             OnCooldownUntil = DateTimeOffset.UtcNow.AddSeconds(CooldownDuration);

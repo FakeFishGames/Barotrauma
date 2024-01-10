@@ -100,6 +100,13 @@ namespace Barotrauma
             set;
         }
 
+        [Serialize(1.5f, IsPropertySaveable.Yes)]
+        public float SkillIncreaseExponent
+        {
+            get;
+            set;
+        }
+
         public SkillSettings(XElement element, SkillSettingsFile file) : base(file, "SkillSettings".ToIdentifier())
         {
             SerializableProperties = SerializableProperty.DeserializeProperties(this, element);

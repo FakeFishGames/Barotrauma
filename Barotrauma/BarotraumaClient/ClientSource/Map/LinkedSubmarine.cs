@@ -22,7 +22,7 @@ namespace Barotrauma
 
             foreach (MapEntity e in linkedTo)
             {
-                bool isLinkAllowed = e is Item item && item.HasTag("dock");
+                bool isLinkAllowed = e is Item item && item.HasTag(Tags.DockingPort);
 
                 GUI.DrawLine(spriteBatch,
                              new Vector2(WorldPosition.X, -WorldPosition.Y),

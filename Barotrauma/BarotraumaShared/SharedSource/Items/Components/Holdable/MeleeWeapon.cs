@@ -189,7 +189,7 @@ namespace Barotrauma.Items.Components
                 impactQueue.Clear();
                 return;
             }
-            if (picker == null && !picker.HeldItems.Contains(item))
+            if (picker == null || !picker.HeldItems.Contains(item))
             {
                 impactQueue.Clear();
                 IsActive = false;
@@ -218,7 +218,8 @@ namespace Barotrauma.Items.Components
             AnimController ac = picker.AnimController;
             if (!hitting)
             {
-                bool aim = item.RequireAimToUse && picker.AllowInput && picker.IsKeyDown(InputType.Aim) && reloadTimer <= 0 && picker.CanAim;
+                bool aim = item.RequireAimToUse && picker.AllowInput && picker.IsKeyDown(InputType.Aim) && reloadTimer <= 0 && picker.CanAim &&
+                    !UsageDisabledByRangedWeapon(picker);
                 if (aim)
                 {
                     UpdateSwingPos(deltaTime, out Vector2 swingPos);
@@ -364,7 +365,7 @@ namespace Barotrauma.Items.Components
                     }
                     hitTargets.Add(targetStructure);
                 }
-                else if (f2.Body.UserData is Item targetItem)
+                else if ((f2.Body.UserData as Item ?? f2.UserData as Item) is Item targetItem)
                 {
                     if (AllowHitMultiple)
                     {
@@ -410,7 +411,7 @@ namespace Barotrauma.Items.Components
             Limb targetLimb = target.UserData as Limb;
             Character targetCharacter = targetLimb?.character ?? target.UserData as Character;
             Structure targetStructure = target.UserData as Structure ?? targetFixture.UserData as Structure;
-            Item targetItem = target.UserData as Item;
+            Item targetItem = target.UserData as Item ?? targetFixture.UserData as Item;
             Entity targetEntity = targetCharacter ?? targetStructure ?? targetItem ?? target.UserData as Entity;
             if (Attack != null)
             {
@@ -438,9 +439,10 @@ namespace Barotrauma.Items.Components
                     if (targetItem.Removed) { return; }
                     var attackResult = Attack.DoDamage(user, targetItem, item.WorldPosition, 1.0f);
 #if CLIENT
-                    if (attackResult.Damage > 0.0f && targetItem.Prefab.ShowHealthBar)
+                    if (attackResult.Damage > 0.0f && targetItem.Prefab.ShowHealthBar && Character.Controlled != null &&
+                        (user == Character.Controlled || Character.Controlled.CanSeeTarget(item)))
                     {
-                        Character.Controlled?.UpdateHUDProgressBar(targetItem,
+                        Character.Controlled.UpdateHUDProgressBar(targetItem,
                             targetItem.WorldPosition,
                             targetItem.Condition / targetItem.MaxCondition,
                             emptyColor: GUIStyle.HealthBarColorLow,

@@ -32,17 +32,17 @@ namespace Barotrauma.Items.Components
                 GameServer.Log(GameServer.CharacterLogName(c.Character) + " entered \"" + newOutputValue + "\" on " + item.Name,
                     ServerLog.MessageType.ItemInteraction);
                 OutputValue = newOutputValue;
-                ShowOnDisplay(newOutputValue, addToHistory: true, TextColor);
+                ShowOnDisplay(newOutputValue, addToHistory: true, TextColor, isWelcomeMessage: false);
                 item.SendSignal(newOutputValue, "signal_out");
                 item.CreateServerEvent(this);
             }
         }
 
-        partial void ShowOnDisplay(string input, bool addToHistory, Color color)
+        partial void ShowOnDisplay(string input, bool addToHistory, Color color, bool isWelcomeMessage)
         {
             if (addToHistory)
             {
-                messageHistory.Add(new TerminalMessage(input, color));
+                messageHistory.Add(new TerminalMessage(input, color, isWelcomeMessage));
                 while (messageHistory.Count > MaxMessages)
                 {
                     messageHistory.RemoveAt(0);
@@ -54,9 +54,11 @@ namespace Barotrauma.Items.Components
         {
             //split too long messages to multiple parts
             int msgIndex = 0;
-            foreach (var (str, _) in messageHistory)
+            foreach (var msg in messageHistory)
             {
-                string msgToSend = str;
+                //the clients create the welcome message themselves, no need to sync it
+                if (msg.IsWelcomeMessage) { continue; }
+                string msgToSend = msg.Text;
                 if (string.IsNullOrEmpty(msgToSend))
                 {
                     item.CreateServerEvent(this, new ServerEventData(msgIndex, msgToSend));

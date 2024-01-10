@@ -247,30 +247,33 @@ namespace Barotrauma
             UpdateCrew();
         }
 
+        public void UpdateHireables()
+        {
+            UpdateHireables(campaign?.CurrentLocation);
+        }
+
         private void UpdateHireables(Location location)
         {
-            if (hireableList != null)
+            if (hireableList == null) { return; }            
+            hireableList.Content.Children.ToList().ForEach(c => hireableList.RemoveChild(c));
+            var hireableCharacters = location.GetHireableCharacters();
+            if (hireableCharacters.None())
             {
-                hireableList.Content.Children.ToList().ForEach(c => hireableList.RemoveChild(c));
-                var hireableCharacters = location.GetHireableCharacters();
-                if (hireableCharacters.None())
+                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.2f), hireableList.Content.RectTransform), TextManager.Get("HireUnavailable"), textAlignment: Alignment.Center)
                 {
-                    new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.2f), hireableList.Content.RectTransform), TextManager.Get("HireUnavailable"), textAlignment: Alignment.Center)
-                    {
-                        CanBeFocused = false
-                    };
-                }
-                else
-                {
-                    foreach (CharacterInfo c in hireableCharacters)
-                    {
-                        if (c == null) { continue; }
-                        CreateCharacterFrame(c, hireableList);
-                    }
-                }
-                sortingDropDown.SelectItem(SortingMethod.JobAsc);
-                hireableList.UpdateScrollBarSize();
+                    CanBeFocused = false
+                };
             }
+            else
+            {
+                foreach (CharacterInfo c in hireableCharacters)
+                {
+                    if (c == null) { continue; }
+                    CreateCharacterFrame(c, hireableList);
+                }
+            }
+            sortingDropDown.SelectItem(SortingMethod.JobAsc);
+            hireableList.UpdateScrollBarSize();            
         }
 
         public void SetHireables(Location location, List<CharacterInfo> availableHires)
@@ -434,7 +437,7 @@ namespace Barotrauma
             if (listBox != crewList)
             {
                 new GUITextBlock(new RectTransform(new Vector2(width, 1.0f), mainGroup.RectTransform),
-                    TextManager.FormatCurrency(characterInfo.Salary),
+                    TextManager.FormatCurrency(HireManager.GetSalaryFor(characterInfo)),
                     textAlignment: Alignment.Center)
                 {
                     CanBeFocused = false
@@ -692,11 +695,8 @@ namespace Barotrauma
         private void SetTotalHireCost()
         {
             if (pendingList == null || totalBlock == null || validateHiresButton == null) { return; }
-            int total = 0;
-            pendingList.Content.Children.ForEach(c =>
-            {
-                total += ((InfoSkill)c.UserData).CharacterInfo.Salary;
-            });
+            var infos = pendingList.Content.Children.Select(static c => ((InfoSkill)c.UserData).CharacterInfo).ToArray();
+            int total = HireManager.GetSalaryFor(infos);
             totalBlock.Text = TextManager.FormatCurrency(total);
             bool enoughMoney = campaign == null || campaign.CanAfford(total);
             totalBlock.TextColor = enoughMoney ? Color.White : Color.Red;
@@ -718,14 +718,14 @@ namespace Barotrauma
 
             if (nonDuplicateHires.None()) { return false; }
 
-            int total = nonDuplicateHires.Aggregate(0, (total, info) => total + info.Salary);
+            int total = HireManager.GetSalaryFor(nonDuplicateHires);
 
             if (!campaign.CanAfford(total)) { return false; }
 
             bool atLeastOneHired = false;
             foreach (CharacterInfo ci in nonDuplicateHires)
             {
-                if (campaign.TryHireCharacter(campaign.Map.CurrentLocation, ci))
+                if (campaign.TryHireCharacter(campaign.Map.CurrentLocation, ci, Character.Controlled))
                 {
                     atLeastOneHired = true;
                 }
@@ -741,7 +741,7 @@ namespace Barotrauma
                 SelectCharacter(null, null, null);
                 var dialog = new GUIMessageBox(
                     TextManager.Get("newcrewmembers"),
-                    TextManager.GetWithVariable("crewhiredmessage", "[location]", campaignUI?.Campaign?.Map?.CurrentLocation?.Name),
+                    TextManager.GetWithVariable("crewhiredmessage", "[location]", campaignUI?.Campaign?.Map?.CurrentLocation?.DisplayName),
                     new LocalizedString[] { TextManager.Get("Ok") });
                 dialog.Buttons[0].OnClicked += dialog.Close;
             }
@@ -756,7 +756,7 @@ namespace Barotrauma
 
         private bool CreateRenamingComponent(GUIButton button, object userData)
         {
-            if (!HasPermission || !(userData is CharacterInfo characterInfo)) { return false; }
+            if (!HasPermission || userData is not CharacterInfo characterInfo) { return false; }
             var outerGlowFrame = new GUIFrame(new RectTransform(new Vector2(1.25f, 1.25f), parentComponent.RectTransform, Anchor.Center),
                 style: "OuterGlow", color: Color.Black * 0.7f);
             var frame = new GUIFrame(new RectTransform(new Vector2(0.33f, 0.4f), outerGlowFrame.RectTransform, anchor: Anchor.Center)
@@ -843,7 +843,7 @@ namespace Barotrauma
 
         private bool FireCharacter(GUIButton button, object selection)
         {
-            if (!(selection is CharacterInfo characterInfo)) { return false; }
+            if (selection is not CharacterInfo characterInfo) { return false; }
 
             campaign.CrewManager.FireCharacter(characterInfo);
             SelectCharacter(null, null, null);

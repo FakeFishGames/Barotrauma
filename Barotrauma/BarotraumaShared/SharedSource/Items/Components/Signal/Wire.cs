@@ -110,7 +110,14 @@ namespace Barotrauma.Items.Components
             get;
             set;
         }
-        
+
+        [Serialize(true, IsPropertySaveable.Yes, "If disabled, the wire will not be dropped when connecting. Used in circuit box to store the wires inside the box.")]
+        public bool DropOnConnect
+        {
+            get;
+            set;
+        }
+
         public Wire(Item item, ContentXElement element)
             : base(item, element)
         {
@@ -224,26 +231,31 @@ namespace Barotrauma.Items.Components
             connections[connectionIndex] = newConnection;
             FixNodeEnds();
 
-            if (addNode) 
+            if (addNode)
             {
                 AddNode(newConnection, connectionIndex);
             }
 
             SetConnectedDirty();
 
-            if (connections[0] != null && connections[1] != null)
+            if (DropOnConnect)
             {
-                foreach (ItemComponent ic in item.Components)
+                if (connections[0] != null && connections[1] != null)
                 {
-                    if (ic == this) { continue; }
-                    ic.Drop(null);
+                    foreach (ItemComponent ic in item.Components)
+                    {
+                        if (ic == this) { continue; }
+
+                        ic.Drop(null);
+                    }
+
+                    item.Container?.RemoveContained(item);
+                    if (item.body != null) { item.body.Enabled = false; }
+
+                    IsActive = false;
+
+                    CleanNodes();
                 }
-                item.Container?.RemoveContained(item);
-                if (item.body != null) { item.body.Enabled = false; }
-
-                IsActive = false;
-
-                CleanNodes();
             }
 
             if (item.body != null) { item.Submarine = newConnection.Item.Submarine; }

@@ -101,27 +101,9 @@ namespace Barotrauma.Extensions
             return source.Where(predicate).OrderBy(p => p.UintIdentifier).ToArray().GetRandom(randSync);
         }
 
-
-        public static T RandomElementByWeight<T>(this IList<T> source, Func<T, float> weightSelector, Rand.RandSync randSync = Rand.RandSync.Unsynced)
+        public static T GetRandomByWeight<T>(this IEnumerable<T> source, Func<T, float> weightSelector, Rand.RandSync randSync)
         {
-            float totalWeight = source.Sum(weightSelector);
-
-            float itemWeightIndex = Rand.Range(0f, 1f, randSync) * totalWeight;
-            float currentWeightIndex = 0;
-
-            for (int i = 0; i < source.Count; i++)
-            {
-                T weightedItem = source[i];
-                float weight = weightSelector(weightedItem);
-                currentWeightIndex += weight;
-
-                if (currentWeightIndex >= itemWeightIndex)
-                {
-                    return weightedItem;
-                }
-            }
-
-            return default;
+            return ToolBox.SelectWeightedRandom(source, weightSelector, randSync);
         }
 
         /// <summary>
@@ -311,6 +293,11 @@ namespace Barotrauma.Extensions
             => source
                 .Where(nullable => nullable.HasValue)
                 .Select(nullable => nullable.Value);
+
+        public static IEnumerable<T> NotNull<T>(this IEnumerable<T> source) where T : class
+            => source
+                .Where(nullable => nullable != null)
+                .Select(nullable => nullable!);
 
         public static IEnumerable<T> NotNone<T>(this IEnumerable<Option<T>> source)
         {

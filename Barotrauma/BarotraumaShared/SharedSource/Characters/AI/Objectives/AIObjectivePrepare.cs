@@ -13,6 +13,7 @@ namespace Barotrauma
         public override bool KeepDivingGearOn => true;
         public override bool KeepDivingGearOnAlsoWhenInactive => true;
         public override bool PrioritizeIfSubObjectivesActive => true;
+        public override bool AllowWhileHandcuffed => false;
 
         private AIObjectiveGetItem getSingleItemObjective;
         private AIObjectiveGetItems getAllItemsObjective;
@@ -60,8 +61,7 @@ namespace Barotrauma
         {
             if (!IsAllowed)
             {
-                Priority = 0;
-                Abandon = true;
+                HandleNonAllowed();
                 return Priority;
             }
             Priority = objectiveManager.GetOrderPriority(this);
@@ -75,11 +75,6 @@ namespace Barotrauma
 
         protected override void Act(float deltaTime)
         {
-            if (character.LockHands)
-            {
-                Abandon = true;
-                return;
-            }
             if (!subObjectivesCreated)
             {
                 if (FindAllItems && targetItem == null)

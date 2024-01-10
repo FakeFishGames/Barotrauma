@@ -120,7 +120,7 @@ namespace Barotrauma
             // The intention behind this is to reduce unnecessary path finding calls in cases where the bot can't find a path.
             timerMargin += 0.5f;
             timerMargin = Math.Min(timerMargin, newTargetIntervalMin);
-            newTargetTimer = Math.Min(newTargetTimer, timerMargin);
+            newTargetTimer = Math.Max(newTargetTimer, timerMargin);
         }
 
         private void SetTargetTimerHigh()
@@ -382,7 +382,9 @@ namespace Barotrauma
                     {
                         foreach (Item item in Item.ItemList)
                         {
-                            if (item.CurrentHull != currentHull || !item.HasTag("chair")) { continue; }
+                            if (item.CurrentHull != currentHull || !item.HasTag(Tags.ChairItem)) { continue; }
+                            //not possible in vanilla game, but a mod might have holdable/attachable chairs
+                            if (item.ParentInventory != null || item.body is { Enabled: true }) { continue; } 
                             var controller = item.GetComponent<Controller>();
                             if (controller == null || controller.User != null) { continue; }
                             item.TryInteract(character, forceSelectKey: true);

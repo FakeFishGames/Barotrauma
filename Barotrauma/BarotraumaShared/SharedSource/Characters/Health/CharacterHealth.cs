@@ -49,7 +49,8 @@ namespace Barotrauma
                         case "vitalitymultiplier":
                             if (subElement.GetAttribute("name") != null)
                             {
-                                DebugConsole.ThrowError("Error in character health config (" + characterHealth.Character.Name + ") - define vitality multipliers using affliction identifiers or types instead of names.");
+                                DebugConsole.ThrowError("Error in character health config (" + characterHealth.Character.Name + ") - define vitality multipliers using affliction identifiers or types instead of names.",
+                                    contentPackage: element.ContentPackage);
                                 continue;
                             }
                             var vitalityMultipliers = subElement.GetAttributeIdentifierArray("identifier", null) ?? subElement.GetAttributeIdentifierArray("identifiers", null);
@@ -61,7 +62,8 @@ namespace Barotrauma
                                     VitalityMultipliers.Add(vitalityMultiplier, multiplier);
                                     if (AfflictionPrefab.Prefabs.None(p => p.Identifier == vitalityMultiplier))
                                     {
-                                        DebugConsole.AddWarning($"Potentially incorrectly defined vitality multiplier in \"{characterHealth.Character.Name}\". Could not find any afflictions with the identifier \"{vitalityMultiplier}\". Did you mean to define the afflictions by type instead?");
+                                        DebugConsole.AddWarning($"Potentially incorrectly defined vitality multiplier in \"{characterHealth.Character.Name}\". Could not find any afflictions with the identifier \"{vitalityMultiplier}\". Did you mean to define the afflictions by type instead?",
+                                            contentPackage: element.ContentPackage);
                                     }
                                 }
                             }
@@ -74,13 +76,15 @@ namespace Barotrauma
                                     VitalityTypeMultipliers.Add(vitalityTypeMultiplier, multiplier);
                                     if (AfflictionPrefab.Prefabs.None(p => p.AfflictionType == vitalityTypeMultiplier))
                                     {
-                                        DebugConsole.AddWarning($"Potentially incorrectly defined vitality multiplier in \"{characterHealth.Character.Name}\". Could not find any afflictions of the type \"{vitalityTypeMultiplier}\". Did you mean to define the afflictions by identifier instead?");
+                                        DebugConsole.AddWarning($"Potentially incorrectly defined vitality multiplier in \"{characterHealth.Character.Name}\". Could not find any afflictions of the type \"{vitalityTypeMultiplier}\". Did you mean to define the afflictions by identifier instead?",
+                                            contentPackage: element.ContentPackage);
                                     }
                                 }
                             }
                             if (vitalityMultipliers == null && VitalityTypeMultipliers == null)
                             {
-                                DebugConsole.ThrowError($"Error in character health config {characterHealth.Character.Name}: affliction identifier(s) or type(s) not defined in the \"VitalityMultiplier\" elements!");
+                                DebugConsole.ThrowError($"Error in character health config {characterHealth.Character.Name}: affliction identifier(s) or type(s) not defined in the \"VitalityMultiplier\" elements!",
+                                    contentPackage: element.ContentPackage);
                             }
                             break;
                     }
@@ -148,13 +152,14 @@ namespace Barotrauma
                     return minVitality;
                 }
                 return vitality;
-
-            }
-            private set
-            {
-                vitality = value;
             }
         }
+
+        /// <summary>
+        /// How much vitality the character would have if it was alive? 
+        /// E.g. a character killed by disconnection or with console commands may not have any vitality-reducing afflictions despite being dead
+        /// </summary>
+        public float VitalityDisregardingDeath => vitality;
 
         public float HealthPercentage => MathUtils.Percentage(Vitality, MaxVitality);
 
@@ -229,6 +234,8 @@ namespace Barotrauma
             }
         }
 
+        public bool IsParalyzed { get; private set; }
+
         public float StunTimer { get; private set; }
 
         /// <summary>
@@ -246,7 +253,7 @@ namespace Barotrauma
         public CharacterHealth(Character character)
         {
             this.Character = character;
-            Vitality = 100.0f;
+            vitality = 100.0f;
 
             DoesBleed = true;
             UseHealthWindow = false;
@@ -263,7 +270,7 @@ namespace Barotrauma
             this.Character = character;
             InitIrremovableAfflictions();
 
-            Vitality    = UnmodifiedMaxVitality;
+            vitality    = UnmodifiedMaxVitality;
 
             minVitality = character.IsHuman ? -100.0f : 0.0f;
 
@@ -402,7 +409,17 @@ namespace Barotrauma
             return strength;
         }
 
-        public float GetAfflictionStrength(Identifier afflictionType, bool allowLimbAfflictions = true)
+        public float GetAfflictionStrengthByType(Identifier afflictionType, bool allowLimbAfflictions = true)
+        {
+            return GetAfflictionStrength(afflictionType, afflictionidentifier: Identifier.Empty, allowLimbAfflictions);
+        }
+
+        public float GetAfflictionStrengthByIdentifier(Identifier afflictionIdentifier, bool allowLimbAfflictions = true)
+        {
+            return GetAfflictionStrength(afflictionType: Identifier.Empty, afflictionIdentifier, allowLimbAfflictions);
+        }
+
+        public float GetAfflictionStrength(Identifier afflictionType, Identifier afflictionidentifier, bool allowLimbAfflictions = true)
         {
             float strength = 0.0f;
             foreach (KeyValuePair<Affliction, LimbHealth> kvp in afflictions)
@@ -410,7 +427,8 @@ namespace Barotrauma
                 if (!allowLimbAfflictions && kvp.Value != null) { continue; }
                 var affliction = kvp.Key;
                 if (affliction.Strength < affliction.Prefab.ActivationThreshold) { continue; }
-                if (affliction.Prefab.AfflictionType == afflictionType)
+                if ((affliction.Prefab.AfflictionType == afflictionType || afflictionType.IsEmpty) &&
+                    (affliction.Prefab.Identifier == afflictionidentifier || afflictionidentifier.IsEmpty))
                 {
                     strength += affliction.Strength;
                 }
@@ -714,7 +732,7 @@ namespace Barotrauma
             if (!Character.NeedsOxygen && newAffliction.Prefab == AfflictionPrefab.OxygenLow) { return; }
             if (Character.Params.Health.StunImmunity && newAffliction.Prefab.AfflictionType == AfflictionPrefab.StunType)
             {
-                if (Character.EmpVulnerability <= 0 || GetAfflictionStrength(AfflictionPrefab.EMPType, allowLimbAfflictions: false) <= 0)
+                if (Character.EmpVulnerability <= 0 || GetAfflictionStrengthByType(AfflictionPrefab.EMPType, allowLimbAfflictions: false) <= 0)
                 {
                     return;
                 }
@@ -952,7 +970,8 @@ namespace Barotrauma
 
         public void CalculateVitality()
         {
-            Vitality = MaxVitality;
+            vitality = MaxVitality;
+            IsParalyzed = false;
             if (Unkillable || Character.GodMode) { return; }
 
             foreach (KeyValuePair<Affliction, LimbHealth> kvp in afflictions)
@@ -964,8 +983,14 @@ namespace Barotrauma
                 {
                     vitalityDecrease *= GetVitalityMultiplier(affliction, limbHealth);
                 }
-                Vitality -= vitalityDecrease;
+                vitality -= vitalityDecrease;
                 affliction.CalculateDamagePerSecond(vitalityDecrease);
+
+                if (affliction.Strength >= affliction.Prefab.MaxStrength &&
+                    affliction.Prefab.AfflictionType == AfflictionPrefab.ParalysisType)
+                {
+                    IsParalyzed = true;
+                }
             }
 #if CLIENT
             if (IsUnconscious)
@@ -1288,6 +1313,8 @@ namespace Barotrauma
         public void Remove()
         {
             RemoveProjSpecific();
+            afflictionsToRemove.Clear();
+            afflictionsToUpdate.Clear();
         }
 
         partial void RemoveProjSpecific();

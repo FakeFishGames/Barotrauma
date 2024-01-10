@@ -37,11 +37,13 @@ namespace Barotrauma
         {
             if (MissionIdentifier.IsEmpty && MissionTag.IsEmpty)
             {
-                DebugConsole.ThrowError($"Error in event \"{parentEvent.Prefab.Identifier}\": neither MissionIdentifier or MissionTag has been configured.");
+                DebugConsole.ThrowError($"Error in event \"{parentEvent.Prefab.Identifier}\": neither MissionIdentifier or MissionTag has been configured.",
+                    contentPackage: element.ContentPackage);
             }
             if (!MissionIdentifier.IsEmpty && !MissionTag.IsEmpty)
             {
-                DebugConsole.ThrowError($"Error in event \"{parentEvent.Prefab.Identifier}\": both MissionIdentifier or MissionTag have been configured. The tag will be ignored.");
+                DebugConsole.ThrowError($"Error in event \"{parentEvent.Prefab.Identifier}\": both MissionIdentifier or MissionTag have been configured. The tag will be ignored.",
+                    contentPackage: element.ContentPackage);
             }
             LocationTypes = element.GetAttributeIdentifierArray("locationtype", Array.Empty<Identifier>()).ToImmutableArray();
             random = new MTRandom(parentEvent.RandomSeed);
@@ -103,11 +105,13 @@ namespace Barotrauma
                 {
                     if (!MissionIdentifier.IsEmpty)
                     {
-                        unlockedMission = unlockLocation.UnlockMissionByIdentifier(MissionIdentifier);
+                        unlockedMission = unlockLocation.UnlockMissionByIdentifier(MissionIdentifier, 
+                            invokingContentPackage: ParentEvent.Prefab.ContentPackage);
                     }
                     else if (!MissionTag.IsEmpty)
                     {
-                        unlockedMission = unlockLocation.UnlockMissionByTag(MissionTag, random);
+                        unlockedMission = unlockLocation.UnlockMissionByTag(MissionTag, random, 
+                            invokingContentPackage: ParentEvent.Prefab.ContentPackage);
                     }
                     if (campaign is MultiPlayerCampaign mpCampaign)
                     {
@@ -119,11 +123,11 @@ namespace Barotrauma
                         campaign.Map.Discover(unlockLocation, checkTalents: false);
                         if (unlockedMission.Locations[0] == unlockedMission.Locations[1] || unlockedMission.Locations[1] == null)
                         {
-                            DebugConsole.NewMessage($"Unlocked mission \"{unlockedMission.Name}\" in the location \"{unlockLocation.Name}\".");
+                            DebugConsole.NewMessage($"Unlocked mission \"{unlockedMission.Name}\" in the location \"{unlockLocation.DisplayName}\".");
                         }
                         else
                         {
-                            DebugConsole.NewMessage($"Unlocked mission \"{unlockedMission.Name}\" in the connection from \"{unlockedMission.Locations[0].Name}\" to \"{unlockedMission.Locations[1].Name}\".");
+                            DebugConsole.NewMessage($"Unlocked mission \"{unlockedMission.Name}\" in the connection from \"{unlockedMission.Locations[0].DisplayName}\" to \"{unlockedMission.Locations[1].DisplayName}\".");
                         }
 #if CLIENT
                         new GUIMessageBox(string.Empty, TextManager.GetWithVariable("missionunlocked", "[missionname]", unlockedMission.Name), 
@@ -139,7 +143,8 @@ namespace Barotrauma
                 }
                 else
                 {
-                    DebugConsole.AddWarning($"Failed to find a suitable location to unlock the mission \"{missionDebugId}\" (LocationType: {string.Join(", ", LocationTypes)}, MinLocationDistance: {MinLocationDistance}, UnlockFurtherOnMap: {UnlockFurtherOnMap})");
+                    DebugConsole.AddWarning($"Failed to find a suitable location to unlock the mission \"{missionDebugId}\" (LocationType: {string.Join(", ", LocationTypes)}, MinLocationDistance: {MinLocationDistance}, UnlockFurtherOnMap: {UnlockFurtherOnMap})",
+                        ParentEvent.Prefab.ContentPackage);
                 }
             }
             isFinished = true;

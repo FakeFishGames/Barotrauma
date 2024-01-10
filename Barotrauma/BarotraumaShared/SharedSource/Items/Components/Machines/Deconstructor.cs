@@ -92,7 +92,7 @@ namespace Barotrauma.Items.Components
                 repairable.LastActiveTime = (float)Timing.TotalTime + 10.0f;
             }
 
-            ApplyStatusEffects(ActionType.OnActive, deltaTime, null);
+            ApplyStatusEffects(ActionType.OnActive, deltaTime);
 
             progressTimer += deltaTime * Math.Min(powerConsumption <= 0.0f ? 1 : Voltage, MaxOverVoltageFactor);
 
@@ -104,7 +104,7 @@ namespace Barotrauma.Items.Components
             // doesn't quite work properly, remaining time changes if tinkering stops
             float deconstructionSpeedModifier = userDeconstructorSpeedMultiplier * (1f + tinkeringStrength * TinkeringSpeedIncrease);
 
-            float deconstructionSpeed = item.StatManager.GetAdjustedValue(ItemTalentStats.DeconstructorSpeed, DeconstructionSpeed);
+            float deconstructionSpeed = item.StatManager.GetAdjustedValueMultiplicative(ItemTalentStats.DeconstructorSpeed, DeconstructionSpeed);
 
             if (DeconstructItemsSimultaneously)
             {

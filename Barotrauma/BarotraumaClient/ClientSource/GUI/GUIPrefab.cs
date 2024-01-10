@@ -132,7 +132,7 @@ namespace Barotrauma
                 if (subElement.NameAsIdentifier() != "override") { continue; }
                 if (ScalableFont.ExtractShccFromXElement(subElement).HasFlag(flag))
                 {
-                    return new ScalableFont(subElement, GameMain.Instance.GraphicsDevice);
+                    return new ScalableFont(subElement, font.Size, GameMain.Instance.GraphicsDevice);
                 }
             }
 
@@ -313,13 +313,18 @@ namespace Barotrauma
 
     public class GUIColor : GUISelector<GUIColorPrefab>
     {
-        public GUIColor(string identifier) : base(identifier) { }
+        private readonly Color fallbackColor;
+
+        public GUIColor(string identifier, Color fallbackColor) : base(identifier) 
+        { 
+            this.fallbackColor = fallbackColor;
+        }
 
         public Color Value
         {
             get
             {
-                return Prefabs.ActivePrefab.Color;
+                return Prefabs?.ActivePrefab?.Color ?? fallbackColor;
             }
         }
 

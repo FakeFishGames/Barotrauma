@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System.Globalization;
+using System.Linq;
 using Barotrauma.Networking;
 
 namespace Barotrauma.Steam
@@ -57,27 +58,36 @@ namespace Barotrauma.Steam
             Steamworks.SteamServer.SetKey("message", server.ServerSettings.ServerMessageText);
             Steamworks.SteamServer.SetKey("version", GameMain.Version.ToString());
             Steamworks.SteamServer.SetKey("playercount", server.ConnectedClients.Count.ToString());
+
+            //a2s seems to break if too much data is added (seems to be related to MTU?)
+            //let's restrict the number of packages to 10, clients can use packagecount to tell when the list has been truncated
+            const int MaxPackagesToList = 10;
             int index = 0;
-            foreach (var contentPackage in contentPackages)
+            foreach (var contentPackage in contentPackages.Take(MaxPackagesToList))
             {
                 string ugcIdStr = contentPackage.UgcId.TryUnwrap(out var ugcId) ? ugcId.StringRepresentation : string.Empty;
                 Steamworks.SteamServer.SetKey(
-                    $"contentpackage{index}", 
-                    contentPackage.Name+","+ contentPackage.Hash.StringRepresentation + "," + ugcIdStr);
+                    $"contentpackage{index}",
+                    contentPackage.Name + "," + contentPackage.Hash.StringRepresentation + "," + ugcIdStr);
                 index++;
             }
+            Steamworks.SteamServer.SetKey("packagecount", contentPackages.Count().ToString());
             Steamworks.SteamServer.SetKey("modeselectionmode", server.ServerSettings.ModeSelectionMode.ToString());
             Steamworks.SteamServer.SetKey("subselectionmode", server.ServerSettings.SubSelectionMode.ToString());
             Steamworks.SteamServer.SetKey("voicechatenabled", server.ServerSettings.VoiceChatEnabled.ToString());
             Steamworks.SteamServer.SetKey("allowspectating", server.ServerSettings.AllowSpectating.ToString());
             Steamworks.SteamServer.SetKey("allowrespawn", server.ServerSettings.AllowRespawn.ToString());
-            Steamworks.SteamServer.SetKey("traitors", server.ServerSettings.TraitorsEnabled.ToString());
+            Steamworks.SteamServer.SetKey("traitors", server.ServerSettings.TraitorProbability.ToString(CultureInfo.InvariantCulture));
             Steamworks.SteamServer.SetKey("friendlyfireenabled", server.ServerSettings.AllowFriendlyFire.ToString());
             Steamworks.SteamServer.SetKey("karmaenabled", server.ServerSettings.KarmaEnabled.ToString());
             Steamworks.SteamServer.SetKey("gamestarted", server.GameStarted.ToString());
             Steamworks.SteamServer.SetKey("gamemode", server.ServerSettings.GameModeIdentifier.Value);
             Steamworks.SteamServer.SetKey("playstyle", server.ServerSettings.PlayStyle.ToString());
             Steamworks.SteamServer.SetKey("language", server.ServerSettings.Language.ToString());
+            if (GameMain.NetLobbyScreen?.SelectedSub != null)
+            {
+                Steamworks.SteamServer.SetKey("submarine", GameMain.NetLobbyScreen.SelectedSub.Name);
+            }
 
             Steamworks.SteamServer.DedicatedServer = true;
 

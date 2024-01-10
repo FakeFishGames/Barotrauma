@@ -9,6 +9,7 @@ using System.Linq;
 using System.Reflection;
 using System.Xml.Linq;
 using Barotrauma.Steam;
+using System.Globalization;
 
 namespace Barotrauma.Networking
 {
@@ -65,14 +66,17 @@ namespace Barotrauma.Networking
         [Serialize(false, IsPropertySaveable.Yes)]
         public bool AllowRespawn { get; set; }
         
-        [Serialize(YesNoMaybe.No, IsPropertySaveable.Yes)]
-        public YesNoMaybe TraitorsEnabled { get; set; }
+        [Serialize(0.0f, IsPropertySaveable.Yes)]
+        public float TraitorProbability { get; set; }
         
         [Serialize(PlayStyle.Casual, IsPropertySaveable.Yes)]
         public PlayStyle PlayStyle { get; set; }
         
         [Serialize("", IsPropertySaveable.Yes)]
         public LanguageIdentifier Language { get; set; }
+
+        [Serialize("", IsPropertySaveable.Yes)]
+        public string SelectedSub { get; set; } = string.Empty;
 
         public Version GameVersion { get; set; } = new Version(0, 0, 0, 0);
 
@@ -102,6 +106,8 @@ namespace Barotrauma.Networking
         }
 
         public ImmutableArray<ContentPackageInfo> ContentPackages;
+
+        public int ContentPackageCount;
 
         public bool IsModded => ContentPackages.Any(p => !GameMain.VanillaContent.NameMatches(p.Name));
 
@@ -175,33 +181,6 @@ namespace Barotrauma.Networking
             };
             title.Text = ToolBox.LimitString(title.Text, title.Font, (int)(title.Rect.Width * 0.85f));
 
-            bool isFavorite = serverListScreen.IsFavorite(this);
-
-            static LocalizedString favoriteTickBoxToolTip(bool isFavorite)
-                => TextManager.Get(isFavorite ? "RemoveFromFavorites" : "AddToFavorites");
-            
-            GUITickBox favoriteTickBox = new GUITickBox(new RectTransform(new Vector2(0.15f, 0.8f), title.RectTransform, Anchor.CenterRight), 
-                "", null, "GUIServerListFavoriteTickBox")
-            {
-                UserData = this,
-                Selected = isFavorite,
-                ToolTip = favoriteTickBoxToolTip(isFavorite),
-                OnSelected = tickbox =>
-                {
-                    ServerInfo info = (ServerInfo)tickbox.UserData;
-                    if (tickbox.Selected)
-                    {
-                        GameMain.ServerListScreen.AddToFavoriteServers(info);
-                    }
-                    else
-                    {
-                        GameMain.ServerListScreen.RemoveFromFavoriteServers(info);
-                    }
-                    tickbox.ToolTip = favoriteTickBoxToolTip(tickbox.Selected);
-                    return true;
-                }
-            };
-
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), frame.RectTransform),
                 TextManager.AddPunctuation(':', TextManager.Get("ServerListVersion"),
                     GameVersion == new Version(0, 0, 0, 0) ? TextManager.Get("Unknown") : GameVersion.ToString()))
@@ -257,6 +236,59 @@ namespace Barotrauma.Networking
             {
                 Stretch = true
             };
+
+            var buttonContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.5f, 0.25f), playStyleBanner.RectTransform, Anchor.BottomRight), 
+                isHorizontal: true, childAnchor: Anchor.BottomRight);
+
+            //shadow behind the buttons
+            new GUIFrame(new RectTransform(new Vector2(3.15f, 1.05f), buttonContainer.RectTransform, Anchor.BottomRight, scaleBasis: ScaleBasis.Smallest), style: null)
+            {
+                Color = Color.Black * 0.7f,
+                IgnoreLayoutGroups = true
+            };
+
+            bool isFavorite = serverListScreen.IsFavorite(this);
+            static LocalizedString favoriteTickBoxToolTip(bool isFavorite)
+                => TextManager.Get(isFavorite ? "RemoveFromFavorites" : "AddToFavorites");
+
+            GUITickBox favoriteTickBox = new GUITickBox(new RectTransform(Vector2.One, buttonContainer.RectTransform, scaleBasis: ScaleBasis.Smallest),
+                "", null, "GUIServerListFavoriteTickBox")
+            {
+                UserData = this,
+                Selected = isFavorite,
+                ToolTip = favoriteTickBoxToolTip(isFavorite),
+                OnSelected = tickbox =>
+                {
+                    ServerInfo info = (ServerInfo)tickbox.UserData;
+                    if (tickbox.Selected)
+                    {
+                        GameMain.ServerListScreen.AddToFavoriteServers(info);
+                    }
+                    else
+                    {
+                        GameMain.ServerListScreen.RemoveFromFavoriteServers(info);
+                    }
+                    tickbox.ToolTip = favoriteTickBoxToolTip(tickbox.Selected);
+                    return true;
+                }
+            };
+
+            new GUIButton(new RectTransform(Vector2.One, buttonContainer.RectTransform, scaleBasis: ScaleBasis.Smallest), style: "GUIServerListReportServer")
+            {
+                ToolTip = TextManager.Get("reportserver"),
+                OnClicked = (_, _) => {ServerListScreen.CreateReportPrompt(this); return true; }
+            };
+
+            new GUIButton(new RectTransform(Vector2.One, buttonContainer.RectTransform, scaleBasis: ScaleBasis.Smallest), style: "GUIServerListHideServer")
+            {
+                ToolTip = TextManager.Get("filterserver"),
+                OnClicked = (_, _) =>
+                {
+                    ServerListScreen.CreateFilterServerPrompt(this);
+                    return true;
+                }
+            };
+
             // playstyle tags -----------------------------------------------------------------------------
 
             var playStyleContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.15f), content.RectTransform), isHorizontal: true)
@@ -307,6 +339,14 @@ namespace Barotrauma.Networking
             new GUITextBlock(new RectTransform(Vector2.One, gameMode.RectTransform),
                 TextManager.Get(GameMode.IsEmpty ? "Unknown" : "GameMode." + GameMode).Fallback(GameMode.Value),
                 textAlignment: Alignment.Right);
+
+            if (!string.IsNullOrEmpty(SelectedSub))
+            {
+                var submarineText = new GUITextBlock(new RectTransform(new Vector2(1.0f, elementHeight), content.RectTransform), TextManager.Get("Submarine"));
+                new GUITextBlock(new RectTransform(Vector2.One, submarineText.RectTransform),
+                    SelectedSub,
+                    textAlignment: Alignment.Right);
+            }
 
             GUITextBlock playStyleText = new GUITextBlock(new RectTransform(new Vector2(1.0f, elementHeight), content.RectTransform), TextManager.Get("serverplaystyle"));
             new GUITextBlock(new RectTransform(Vector2.One, playStyleText.RectTransform), TextManager.Get("servertag." + playStyle), textAlignment: Alignment.Right);
@@ -384,6 +424,15 @@ namespace Barotrauma.Networking
                         }
                     }
                 }
+                if (ContentPackageCount > ContentPackages.Length)
+                {
+                    new GUITextBlock(
+                        new RectTransform(new Vector2(1.0f, 0.15f), contentPackageList.Content.RectTransform) { MinSize = new Point(0, 15) },
+                        TextManager.GetWithVariable("workshopitemdownloadprompttruncated", "[number]", (ContentPackageCount - ContentPackages.Length).ToString()))
+                    {
+                        CanBeFocused = false
+                    };
+                }
             }
 
             // -----------------------------------------------------------------------------
@@ -397,10 +446,10 @@ namespace Barotrauma.Networking
         public IEnumerable<Identifier> GetPlayStyleTags()
         {
             yield return $"Karma.{KarmaEnabled}".ToIdentifier();
-            yield return (TraitorsEnabled == YesNoMaybe.Yes ? $"Traitors.True" : $"Traitors.False").ToIdentifier();
+            yield return (TraitorProbability > 0.0f ? $"Traitors.True" : $"Traitors.False").ToIdentifier();
             yield return $"VoIP.{VoipEnabled}".ToIdentifier();
             yield return $"FriendlyFire.{FriendlyFireEnabled}".ToIdentifier();
-            yield return $"Modded.{ContentPackages.Any()}".ToIdentifier();
+            yield return $"Modded.{IsModded}".ToIdentifier();
         }
 
         public void UpdateInfo(Func<string, string?> valueGetter)
@@ -422,14 +471,16 @@ namespace Barotrauma.Networking
             AllowSpectating = getBool("allowspectating");
             AllowRespawn = getBool("allowrespawn");
             VoipEnabled = getBool("voicechatenabled");
-
             GameMode = valueGetter("gamemode")?.ToIdentifier() ?? Identifier.Empty;
-            if (Enum.TryParse(valueGetter("traitors"), out YesNoMaybe traitorsEnabled)) { TraitorsEnabled = traitorsEnabled; }
+            if (float.TryParse(valueGetter("traitors"), NumberStyles.Any, CultureInfo.InvariantCulture, out float traitorProbability)) { TraitorProbability = traitorProbability; }
             if (Enum.TryParse(valueGetter("playstyle"), out PlayStyle playStyle)) { PlayStyle = playStyle; }
             Language = valueGetter("language")?.ToLanguageIdentifier() ?? LanguageIdentifier.None;
+            SelectedSub = valueGetter("submarine") ?? string.Empty;
 
             ContentPackages = ExtractContentPackageInfo(ServerName, valueGetter).ToImmutableArray();
-            
+            ContentPackageCount = ContentPackages.Length;
+            if (int.TryParse(valueGetter("packagecount"), out int packageCount)) { ContentPackageCount = packageCount; }
+
             bool getBool(string key)
             {
                 string? data = valueGetter(key);

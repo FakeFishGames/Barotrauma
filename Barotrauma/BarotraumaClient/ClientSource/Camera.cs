@@ -6,7 +6,7 @@ using System;
 
 namespace Barotrauma
 {
-    class Camera : IDisposable
+    class Camera
     {
         public static bool FollowSub = true;
 
@@ -147,19 +147,8 @@ namespace Barotrauma
             position = Vector2.Zero;
 
             CreateMatrices();
-            // TODO: this has the potential to cause a resource leak
-            // by sneakily creating a reference to cameras that we might
-            // fail to release.
-            GameMain.Instance.ResolutionChanged += CreateMatrices;
 
             UpdateTransform(false);
-        }
-
-        private bool disposed = false;
-        public void Dispose()
-        {
-            if (!disposed) { GameMain.Instance.ResolutionChanged -= CreateMatrices; }
-            disposed = true;
         }
 
         public Vector2 TargetPos { get; set; }
@@ -207,6 +196,12 @@ namespace Barotrauma
 
         public void UpdateTransform(bool interpolate = true, bool updateListener = true)
         {
+            if (GameMain.GraphicsWidth != Resolution.X ||
+                GameMain.GraphicsHeight != Resolution.Y)
+            {
+                CreateMatrices();
+            }
+
             Vector2 interpolatedPosition = interpolate ? Timing.Interpolate(prevPosition, position) : position;
 
             float interpolatedZoom = interpolate ? Timing.Interpolate(prevZoom, zoom) : zoom;
@@ -255,7 +250,7 @@ namespace Barotrauma
         /// </summary>
         public bool Freeze { get; set; }
 
-        public void MoveCamera(float deltaTime, bool allowMove = true, bool allowZoom = true, bool? followSub = null)
+        public void MoveCamera(float deltaTime, bool allowMove = true, bool allowZoom = true, bool allowInput = true, bool? followSub = null)
         {
             prevPosition = position;
             prevZoom = zoom;
@@ -268,7 +263,7 @@ namespace Barotrauma
                 Vector2 moveInput = Vector2.Zero;
                 if (allowMove && !Freeze)
                 {
-                    if (GUI.KeyboardDispatcher.Subscriber == null)
+                    if (GUI.KeyboardDispatcher.Subscriber == null && allowInput)
                     {
                         if (PlayerInput.KeyDown(Keys.LeftShift)) { moveSpeed *= 2.0f; }
                         if (PlayerInput.KeyDown(Keys.LeftControl)) { moveSpeed *= 0.5f; }

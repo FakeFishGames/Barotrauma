@@ -19,7 +19,6 @@ namespace Barotrauma
         public bool LastControlled;
         public int CrewListIndex { get; set; } = -1;
 
-        #warning TODO: Refactor
         private Sprite disguisedPortrait;
         private List<WearableSprite> disguisedAttachmentSprites;
         private Vector2? disguisedSheetIndex;
@@ -218,6 +217,7 @@ namespace Barotrauma
 
             if ((int)newLevel > (int)prevLevel)
             {
+                Character.Controlled?.SelectedItem?.OnPlayerSkillsChanged();
                 int increase = Math.Max((int)newLevel - (int)prevLevel, 1);
 
                 Character?.AddMessage(
@@ -519,7 +519,7 @@ namespace Barotrauma
             attachment.Sprite.Draw(spriteBatch, drawPos, color ?? Color.White, origin, rotate: 0, scale: scale, depth: depth, spriteEffect: spriteEffects);
         }
 
-        public static CharacterInfo ClientRead(Identifier speciesName, IReadMessage inc)
+        public static CharacterInfo ClientRead(Identifier speciesName, IReadMessage inc, bool requireJobPrefabFound = true)
         {
             ushort infoID = inc.ReadUInt16();
             string newName = inc.ReadString();
@@ -555,14 +555,19 @@ namespace Barotrauma
             if (jobIdentifier > 0)
             {
                 jobPrefab = JobPrefab.Prefabs.Find(jp => jp.UintIdentifier == jobIdentifier);
-                if (jobPrefab == null)
+                if (jobPrefab == null && requireJobPrefabFound)
                 {
                     throw new Exception($"Error while reading {nameof(CharacterInfo)} received from the server: could not find a job prefab with the identifier \"{jobIdentifier}\".");
                 }
-                foreach (SkillPrefab skillPrefab in jobPrefab.Skills.OrderBy(s => s.Identifier))
+                byte skillCount = inc.ReadByte();
+                List<SkillPrefab> jobSkills = jobPrefab?.Skills.OrderBy(s => s.Identifier).ToList();
+                for (int i = 0; i < skillCount; i++)
                 {
                     float skillLevel = inc.ReadSingle();
-                    skillLevels.Add(skillPrefab.Identifier, skillLevel);
+                    if (jobSkills != null && i < jobSkills.Count)
+                    {
+                        skillLevels.Add(jobSkills[i].Identifier, skillLevel);
+                    }
                 }
             }
 
@@ -609,7 +614,6 @@ namespace Barotrauma
                 CharacterInfo = info;
                 parentComponent = parent;
                 HasIcon = hasIcon;
-
                 RecreateFrameContents();
             }
 
@@ -848,6 +852,12 @@ namespace Barotrauma
 
                 var info = CharacterInfo;
 
+                if (info.HeadSprite == null)
+                {
+                    DebugConsole.ThrowError($"Head Selection: the head sprite is null! Failed to open the head selection.");
+                    return false;
+                }
+
                 float characterHeightWidthRatio = info.HeadSprite.size.Y / info.HeadSprite.size.X;
                 HeadSelectionList ??= new GUIListBox(
                     new RectTransform(
@@ -885,8 +895,13 @@ namespace Barotrauma
                 GUILayoutGroup row = null;
                 int itemsInRow = 0;
 
-                ContentXElement headElement = info.Ragdoll.MainElement.Elements().FirstOrDefault(e =>
+                ContentXElement headElement = info.Ragdoll.MainElement?.Elements().FirstOrDefault(e =>
                     e.GetAttributeString("type", "").Equals("head", StringComparison.OrdinalIgnoreCase));
+                if (headElement == null)
+                {
+                    DebugConsole.ThrowError($"Head Selection: the head element is null in {info.ragdoll.FileName}! Failed to open the head selection.");
+                    return false;
+                }
                 ContentXElement headSpriteElement = headElement.GetChildElement("sprite");
                 ContentPath spritePathWithTags = headSpriteElement.GetAttributeContentPath("texture");
 
@@ -963,7 +978,7 @@ namespace Barotrauma
             private bool SwitchAttachment(GUIScrollBar scrollBar, WearableType type)
             {
                 var info = CharacterInfo;
-                int index = (int)scrollBar.BarScrollValue;
+                int index = (int)Math.Round(scrollBar.BarScrollValue);
                 switch (type)
                 {
                     case WearableType.Beard:

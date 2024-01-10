@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace Barotrauma
@@ -18,6 +19,23 @@ namespace Barotrauma
         public void RemoveCharacter(CharacterInfo character)
         {
             AvailableCharacters.Remove(character);
+        }
+
+        public static int GetSalaryFor(IReadOnlyCollection<CharacterInfo> hires)
+        {
+            return hires.Sum(hire => GetSalaryFor(hire));
+        }
+
+        public static int GetSalaryFor(CharacterInfo hire)
+        {
+            IEnumerable<Character> crew = GameSession.GetSessionCrewCharacters(CharacterType.Both);
+            float multiplier = 0;
+            foreach (var character in crew)
+            {
+                multiplier += character?.Info?.GetSavedStatValueWithAll(StatTypes.HireCostMultiplier, hire.Job.Prefab.Identifier) ?? 0;
+            }
+            float finalMultiplier = 1f + MathF.Max(multiplier, -1f);
+            return (int)(hire.Salary * finalMultiplier);
         }
 
         public void GenerateCharacters(Location location, int amount)

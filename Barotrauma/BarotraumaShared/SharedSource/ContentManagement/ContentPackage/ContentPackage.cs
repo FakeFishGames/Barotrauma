@@ -23,7 +23,7 @@ namespace Barotrauma
                        : string.Empty);
         }
 
-        public static readonly Version MinimumHashCompatibleVersion = new Version(1, 0, 13, 2);
+        public static readonly Version MinimumHashCompatibleVersion = new Version(1, 1, 0, 0);
         
         public const string LocalModsDir = "LocalMods";
         public static readonly string WorkshopModsDir = Barotrauma.IO.Path.Combine(
@@ -110,6 +110,7 @@ namespace Barotrauma
             InstallTime = rootElement.GetAttributeDateTime("installtime");
 
             var fileResults = rootElement.Elements()
+                .Where(e => !ContentFile.IsLegacyContentType(e, this, logWarning: true))
                 .Select(e => ContentFile.CreateFromXElement(this, e))
                 .ToArray();
 
@@ -282,7 +283,7 @@ namespace Barotrauma
                     catch (Exception e)
                     {
                         var innermost = e.GetInnermost();
-                        DebugConsole.LogError($"Failed to load \"{filesToLoad[i].Path}\": {innermost.Message}\n{innermost.StackTrace}");
+                        DebugConsole.LogError($"Failed to load \"{filesToLoad[i].Path}\": {innermost.Message}\n{innermost.StackTrace}", contentPackage: this);
                         exception = e;
                     }
                     if (exception != null)
@@ -337,6 +338,7 @@ namespace Barotrauma
             XElement rootElement = doc.Root ?? throw new NullReferenceException("XML document is invalid: root element is null.");
             
             var fileResults = rootElement.Elements()
+                .Where(e => !ContentFile.IsLegacyContentType(e, this, logWarning: true))
                 .Select(e => ContentFile.CreateFromXElement(this, e))
                 .ToArray();
 
@@ -389,7 +391,8 @@ namespace Barotrauma
 
             DebugConsole.AddWarning(
                 $"The following errors occurred while loading the content package \"{Name}\". The package might not work correctly.\n" +
-                string.Join('\n', FatalLoadErrors.Select(errorToStr)));
+                string.Join('\n', FatalLoadErrors.Select(errorToStr)),
+                this);
 
             static string errorToStr(LoadError error)
                 => error.ToString();

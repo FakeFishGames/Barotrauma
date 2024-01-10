@@ -23,8 +23,6 @@ namespace Barotrauma
         protected float hudInfoTimer = 1.0f;
         protected bool hudInfoVisible = false;
 
-        private float pressureParticleTimer;
-
         private float findFocusedTimer;
 
         protected float lastRecvPositionUpdateTime;
@@ -138,6 +136,7 @@ namespace Barotrauma
             set
             {
                 if (!MathUtils.IsValid(value)) { return; }
+                if (this != Controlled) { return; }
                 if (Screen.Selected?.Cam != null)
                 {
                     Screen.Selected.Cam.Shake = value;
@@ -231,6 +230,8 @@ namespace Barotrauma
             }
         }
 
+        private float pressureEffectTimer;
+
         private readonly List<ObjectiveEntity> activeObjectiveEntities = new List<ObjectiveEntity>();
         public IEnumerable<ObjectiveEntity> ActiveObjectiveEntities
         {
@@ -299,7 +300,9 @@ namespace Barotrauma
                     keys[i].SetState();
                 }
 
-                if (CharacterInventory.IsMouseOnInventory && CharacterHUD.ShouldDrawInventory(this))
+                if (CharacterInventory.IsMouseOnInventory && 
+                    !keys[(int)InputType.Aim].Held &&
+                    CharacterHUD.ShouldDrawInventory(this))
                 {
                     ResetInputIfPrimaryMouse(InputType.Use);
                     ResetInputIfPrimaryMouse(InputType.Shoot);
@@ -333,21 +336,21 @@ namespace Barotrauma
                 {
                     if (!IsProtectedFromPressure && (AnimController.CurrentHull == null || AnimController.CurrentHull.LethalPressure > 0.0f))
                     {
-                        float pressure = AnimController.CurrentHull == null ? 100.0f : AnimController.CurrentHull.LethalPressure;
-                        if (pressure > 0.0f)
+                        //wait until the character has been in pressure for one second so the zoom doesn't
+                        //"flicker" in and out if the pressure fluctuates around the minimum threshold
+                        pressureEffectTimer += deltaTime;
+                        if (pressureEffectTimer > 1.0f)
                         {
-                            float zoomInEffectStrength = MathHelper.Clamp(pressure / 100.0f, 0.1f, 1.0f);
+                            float pressure = AnimController.CurrentHull == null ? 100.0f : AnimController.CurrentHull.LethalPressure;
+                            float zoomInEffectStrength = MathHelper.Clamp(pressure / 100.0f, 0.0f, 1.0f);
                             cam.Zoom = MathHelper.Lerp(cam.Zoom,
                                 cam.DefaultZoom + (Math.Max(pressure, 10) / 150.0f) * Rand.Range(0.9f, 1.1f),
                                 zoomInEffectStrength);
-
-                            pressureParticleTimer += pressure * deltaTime;
-                            if (pressureParticleTimer > 10.0f)
-                            {
-                                GameMain.ParticleManager.CreateParticle(Params.BleedParticleWater, WorldPosition + Rand.Vector(5.0f), Rand.Vector(10.0f));
-                                pressureParticleTimer = 0.0f;
-                            }
                         }
+                    }
+                    else
+                    {
+                        pressureEffectTimer = 0.0f;
                     }
 
                     if (IsHumanoid)
@@ -525,22 +528,25 @@ namespace Barotrauma
             if (controlled == this)
             {
                 controlled = null;
-                if (!(Screen.Selected?.Cam is null))
+                if (Screen.Selected?.Cam is not null)
                 {
                     Screen.Selected.Cam.TargetPos = Vector2.Zero;
                     Lights.LightManager.ViewTarget = null;
                 }
             }
 
+            sounds.ForEach(s => s.Sound?.Dispose());
+            sounds.Clear();
+
             if (GameMain.GameSession?.CrewManager != null &&
                 GameMain.GameSession.CrewManager.GetCharacters().Contains(this))
             {
                 GameMain.GameSession.CrewManager.RemoveCharacter(this);
             }
-            
-            if (GameMain.Client?.Character == this) GameMain.Client.Character = null;
 
-            if (Lights.LightManager.ViewTarget == this) Lights.LightManager.ViewTarget = null;
+            if (GameMain.Client?.Character == this) { GameMain.Client.Character = null; }
+
+            if (Lights.LightManager.ViewTarget == this) { Lights.LightManager.ViewTarget = null; }
         }
 
 
@@ -722,7 +728,8 @@ namespace Barotrauma
                             break;
                         default:
                             var petBehavior = enemyAI.PetBehavior;
-                            if (petBehavior != null && petBehavior.Happiness < petBehavior.MaxHappiness * 0.25f)
+                            if (petBehavior != null && 
+                                (petBehavior.Happiness < petBehavior.UnhappyThreshold || petBehavior.Hunger > petBehavior.HungryThreshold))
                             {
                                 PlaySound(CharacterSound.SoundType.Unhappy);
                             }
@@ -859,21 +866,11 @@ namespace Barotrauma
 
                 if (Controlled.AnimController.Stairs != null)
                 {
+                    //consider the bottom of the stairs the "floor of the room the controlled character is in"
                     yPos = Controlled.AnimController.Stairs.SimPosition.Y - Controlled.AnimController.Stairs.RectHeight * 0.5f;
                 }
 
-                foreach (var ladder in Ladder.List)
-                {
-                    if (CanInteractWith(ladder.Item) && Controlled.CanInteractWith(ladder.Item))
-                    {
-                        float xPos = ladder.Item.SimPosition.X;
-                        if (Math.Abs(xPos - SimPosition.X) < 3.0)
-                        {
-                            yPos = ladder.Item.SimPosition.Y - ladder.Item.RectHeight * 0.5f;
-                        }
-                        break;
-                    }
-                }
+                //don't show the HUD texts if the character is below the floor of the room the controlled character is in
                 if (AnimController.FloorY < yPos) { return; }
             }
 

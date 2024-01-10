@@ -1,6 +1,6 @@
 namespace Barotrauma.Abilities
 {
-    internal sealed class AbilityConditionCharacterNotLooted : AbilityConditionData
+    internal sealed class AbilityConditionCharacterNotLooted : AbilityConditionCharacter
     {
         private readonly Identifier identifier;
 
@@ -9,11 +9,9 @@ namespace Barotrauma.Abilities
             identifier = conditionElement.GetAttributeIdentifier("identifier", Identifier.Empty);
         }
 
-        protected override bool MatchesConditionSpecific(AbilityObject abilityObject)
+        protected override bool MatchesCharacter(Character character)
         {
-            if (abilityObject is not IAbilityCharacter ability) { return false; }
-
-            return !ability.Character.MarkedAsLooted.Contains(identifier);
+            return character != null &&!character.MarkedAsLooted.Contains(identifier);
         }
     }
 }

@@ -148,6 +148,18 @@ namespace Steamworks
 		CantRemoveItem = 113,
 		AccountDeleted = 114,
 		ExistingUserCancelledLicense = 115,
+		CommunityCooldown = 116,
+		NoLauncherSpecified = 117,
+		MustAgreeToSSA = 118,
+		LauncherMigrated = 119,
+		SteamRealmMismatch = 120,
+		InvalidSignature = 121,
+		ParseFailure = 122,
+		NoVerifiedPhone = 123,
+		InsufficientBattery = 124,
+		ChargerRequired = 125,
+		CachedCredentialInvalid = 126,
+		K_EResultPhoneNumberIsVOIP = 127,
 	}
 	
 	//
@@ -222,6 +234,7 @@ namespace Steamworks
 		AuthTicketInvalidAlreadyUsed = 7,
 		AuthTicketInvalid = 8,
 		PublisherIssuedBan = 9,
+		AuthTicketNetworkIdentityFailure = 10,
 	}
 	
 	//
@@ -251,88 +264,6 @@ namespace Steamworks
 		ConsoleUser = 9,
 		AnonUser = 10,
 		Max = 11,
-	}
-	
-	//
-	// EAppReleaseState
-	//
-	internal enum AppReleaseState : int
-	{
-		Unknown = 0,
-		Unavailable = 1,
-		Prerelease = 2,
-		PreloadOnly = 3,
-		Released = 4,
-	}
-	
-	//
-	// EAppOwnershipFlags
-	//
-	internal enum AppOwnershipFlags : int
-	{
-		None = 0,
-		OwnsLicense = 1,
-		FreeLicense = 2,
-		RegionRestricted = 4,
-		LowViolence = 8,
-		InvalidPlatform = 16,
-		SharedLicense = 32,
-		FreeWeekend = 64,
-		RetailLicense = 128,
-		LicenseLocked = 256,
-		LicensePending = 512,
-		LicenseExpired = 1024,
-		LicensePermanent = 2048,
-		LicenseRecurring = 4096,
-		LicenseCanceled = 8192,
-		AutoGrant = 16384,
-		PendingGift = 32768,
-		RentalNotActivated = 65536,
-		Rental = 131072,
-		SiteLicense = 262144,
-		LegacyFreeSub = 524288,
-		InvalidOSType = 1048576,
-	}
-	
-	//
-	// EAppType
-	//
-	internal enum AppType : int
-	{
-		Invalid = 0,
-		Game = 1,
-		Application = 2,
-		Tool = 4,
-		Demo = 8,
-		Media_DEPRECATED = 16,
-		DLC = 32,
-		Guide = 64,
-		Driver = 128,
-		Config = 256,
-		Hardware = 512,
-		Franchise = 1024,
-		Video = 2048,
-		Plugin = 4096,
-		MusicAlbum = 8192,
-		Series = 16384,
-		Comic_UNUSED = 32768,
-		Beta = 65536,
-		Shortcut = 1073741824,
-		DepotOnly = -2147483648,
-	}
-	
-	//
-	// ESteamUserStatType
-	//
-	internal enum SteamUserStatType : int
-	{
-		INVALID = 0,
-		INT = 1,
-		FLOAT = 2,
-		AVGRATE = 3,
-		ACHIEVEMENTS = 4,
-		GROUPACHIEVEMENTS = 5,
-		MAX = 6,
 	}
 	
 	//
@@ -385,23 +316,11 @@ namespace Steamworks
 	}
 	
 	//
-	// EMarketingMessageFlags
-	//
-	internal enum MarketingMessageFlags : int
-	{
-		None = 0,
-		HighPriority = 1,
-		PlatformWindows = 2,
-		PlatformMac = 4,
-		PlatformLinux = 8,
-		PlatformRestrictions = 14,
-	}
-	
-	//
 	// ENotificationPosition
 	//
 	public enum NotificationPosition : int
 	{
+		Invalid = -1,
 		TopLeft = 0,
 		TopRight = 1,
 		BottomLeft = 2,
@@ -437,70 +356,6 @@ namespace Steamworks
 		Disconnect = 21,
 		VideoInitFailed = 22,
 		AudioInitFailed = 23,
-	}
-	
-	//
-	// ELaunchOptionType
-	//
-	internal enum LaunchOptionType : int
-	{
-		None = 0,
-		Default = 1,
-		SafeMode = 2,
-		Multiplayer = 3,
-		Config = 4,
-		OpenVR = 5,
-		Server = 6,
-		Editor = 7,
-		Manual = 8,
-		Benchmark = 9,
-		Option1 = 10,
-		Option2 = 11,
-		Option3 = 12,
-		OculusVR = 13,
-		OpenVROverlay = 14,
-		OSVR = 15,
-		Dialog = 1000,
-	}
-	
-	//
-	// EVRHMDType
-	//
-	internal enum VRHMDType : int
-	{
-		MDType_None = -1,
-		MDType_Unknown = 0,
-		MDType_HTC_Dev = 1,
-		MDType_HTC_VivePre = 2,
-		MDType_HTC_Vive = 3,
-		MDType_HTC_VivePro = 4,
-		MDType_HTC_ViveCosmos = 5,
-		MDType_HTC_Unknown = 20,
-		MDType_Oculus_DK1 = 21,
-		MDType_Oculus_DK2 = 22,
-		MDType_Oculus_Rift = 23,
-		MDType_Oculus_RiftS = 24,
-		MDType_Oculus_Quest = 25,
-		MDType_Oculus_Unknown = 40,
-		MDType_Acer_Unknown = 50,
-		MDType_Acer_WindowsMR = 51,
-		MDType_Dell_Unknown = 60,
-		MDType_Dell_Visor = 61,
-		MDType_Lenovo_Unknown = 70,
-		MDType_Lenovo_Explorer = 71,
-		MDType_HP_Unknown = 80,
-		MDType_HP_WindowsMR = 81,
-		MDType_HP_Reverb = 82,
-		MDType_Samsung_Unknown = 90,
-		MDType_Samsung_Odyssey = 91,
-		MDType_Unannounced_Unknown = 100,
-		MDType_Unannounced_WindowsMR = 101,
-		MDType_vridge = 110,
-		MDType_Huawei_Unknown = 120,
-		MDType_Huawei_VR2 = 121,
-		MDType_Huawei_EndOfRange = 129,
-		mdType_Valve_Unknown = 130,
-		mdType_Valve_Index = 131,
 	}
 	
 	//
@@ -553,6 +408,17 @@ namespace Steamworks
 		ExitSoon_3h = 5,
 		ExitSoon_5h = 6,
 		ExitSoon_Night = 7,
+	}
+	
+	//
+	// EDurationControlOnlineState
+	//
+	internal enum DurationControlOnlineState : int
+	{
+		Invalid = 0,
+		Offline = 1,
+		Online = 2,
+		OnlineHighPri = 3,
 	}
 	
 	//
@@ -672,7 +538,7 @@ namespace Steamworks
 	//
 	// EOverlayToStoreFlag
 	//
-	internal enum OverlayToStoreFlag : int
+	public enum OverlayToStoreFlag : int
 	{
 		None = 0,
 		AddToCart = 1,
@@ -686,6 +552,37 @@ namespace Steamworks
 	{
 		Default = 0,
 		Modal = 1,
+	}
+	
+	//
+	// ECommunityProfileItemType
+	//
+	internal enum CommunityProfileItemType : int
+	{
+		AnimatedAvatar = 0,
+		AvatarFrame = 1,
+		ProfileModifier = 2,
+		ProfileBackground = 3,
+		MiniProfileBackground = 4,
+	}
+	
+	//
+	// ECommunityProfileItemProperty
+	//
+	internal enum CommunityProfileItemProperty : int
+	{
+		ImageSmall = 0,
+		ImageLarge = 1,
+		InternalName = 2,
+		Title = 3,
+		Description = 4,
+		AppID = 5,
+		TypeID = 6,
+		Class = 7,
+		MovieWebM = 8,
+		MovieMP4 = 9,
+		MovieWebMSmall = 10,
+		MovieMP4Small = 11,
 	}
 	
 	//
@@ -738,6 +635,28 @@ namespace Steamworks
 	{
 		SingleLine = 0,
 		MultipleLines = 1,
+	}
+	
+	//
+	// EFloatingGamepadTextInputMode
+	//
+	public enum TextInputMode : int
+	{
+		SingleLine = 0,
+		MultipleLines = 1,
+		Email = 2,
+		Numeric = 3,
+	}
+	
+	//
+	// ETextFilteringContext
+	//
+	public enum TextFilteringContext : int
+	{
+		Unknown = 0,
+		GameContent = 1,
+		Chat = 2,
+		Name = 3,
 	}
 	
 	//
@@ -938,6 +857,26 @@ namespace Steamworks
 	}
 	
 	//
+	// ERemoteStorageLocalFileChange
+	//
+	internal enum RemoteStorageLocalFileChange : int
+	{
+		Invalid = 0,
+		FileUpdated = 1,
+		FileDeleted = 2,
+	}
+	
+	//
+	// ERemoteStorageFilePathType
+	//
+	internal enum RemoteStorageFilePathType : int
+	{
+		Invalid = 0,
+		Absolute = 1,
+		APIFilename = 2,
+	}
+	
+	//
 	// ELeaderboardDataRequest
 	//
 	internal enum LeaderboardDataRequest : int
@@ -965,27 +904,15 @@ namespace Steamworks
 	}
 	
 	//
-	// ERegisterActivationCodeResult
-	//
-	internal enum RegisterActivationCodeResult : int
-	{
-		ResultOK = 0,
-		ResultFail = 1,
-		ResultAlreadyRegistered = 2,
-		ResultTimeout = 3,
-		AlreadyOwned = 4,
-	}
-	
-	//
 	// EP2PSessionError
 	//
 	public enum P2PSessionError : int
 	{
 		None = 0,
-		NotRunningApp = 1,
 		NoRightsToApp = 2,
-		DestinationNotLoggedIn = 3,
 		Timeout = 4,
+		NotRunningApp_DELETED = 1,
+		DestinationNotLoggedIn_DELETED = 3,
 		Max = 5,
 	}
 	
@@ -1067,6 +994,7 @@ namespace Steamworks
 		Code304NotModified = 304,
 		Code305UseProxy = 305,
 		Code307TemporaryRedirect = 307,
+		Code308PermanentRedirect = 308,
 		Code400BadRequest = 400,
 		Code401Unauthorized = 401,
 		Code402PaymentRequired = 402,
@@ -1087,6 +1015,7 @@ namespace Steamworks
 		Code417ExpectationFailed = 417,
 		Code4xxUnknown = 418,
 		Code429TooManyRequests = 429,
+		Code444ConnectionClosed = 444,
 		Code500InternalServerError = 500,
 		Code501NotImplemented = 501,
 		Code502BadGateway = 502,
@@ -1268,11 +1197,11 @@ namespace Steamworks
 		XBoxOne_DPad_West = 140,
 		XBoxOne_DPad_East = 141,
 		XBoxOne_DPad_Move = 142,
-		XBoxOne_Reserved1 = 143,
-		XBoxOne_Reserved2 = 144,
-		XBoxOne_Reserved3 = 145,
-		XBoxOne_Reserved4 = 146,
-		XBoxOne_Reserved5 = 147,
+		XBoxOne_LeftGrip_Lower = 143,
+		XBoxOne_LeftGrip_Upper = 144,
+		XBoxOne_RightGrip_Lower = 145,
+		XBoxOne_RightGrip_Upper = 146,
+		XBoxOne_Share = 147,
 		XBoxOne_Reserved6 = 148,
 		XBoxOne_Reserved7 = 149,
 		XBoxOne_Reserved8 = 150,
@@ -1373,17 +1302,165 @@ namespace Steamworks
 		Switch_LeftGrip_Upper = 245,
 		Switch_RightGrip_Lower = 246,
 		Switch_RightGrip_Upper = 247,
-		Switch_Reserved11 = 248,
-		Switch_Reserved12 = 249,
-		Switch_Reserved13 = 250,
-		Switch_Reserved14 = 251,
+		Switch_JoyConButton_N = 248,
+		Switch_JoyConButton_E = 249,
+		Switch_JoyConButton_S = 250,
+		Switch_JoyConButton_W = 251,
 		Switch_Reserved15 = 252,
 		Switch_Reserved16 = 253,
 		Switch_Reserved17 = 254,
 		Switch_Reserved18 = 255,
 		Switch_Reserved19 = 256,
 		Switch_Reserved20 = 257,
-		Count = 258,
+		PS5_X = 258,
+		PS5_Circle = 259,
+		PS5_Triangle = 260,
+		PS5_Square = 261,
+		PS5_LeftBumper = 262,
+		PS5_RightBumper = 263,
+		PS5_Option = 264,
+		PS5_Create = 265,
+		PS5_Mute = 266,
+		PS5_LeftPad_Touch = 267,
+		PS5_LeftPad_Swipe = 268,
+		PS5_LeftPad_Click = 269,
+		PS5_LeftPad_DPadNorth = 270,
+		PS5_LeftPad_DPadSouth = 271,
+		PS5_LeftPad_DPadWest = 272,
+		PS5_LeftPad_DPadEast = 273,
+		PS5_RightPad_Touch = 274,
+		PS5_RightPad_Swipe = 275,
+		PS5_RightPad_Click = 276,
+		PS5_RightPad_DPadNorth = 277,
+		PS5_RightPad_DPadSouth = 278,
+		PS5_RightPad_DPadWest = 279,
+		PS5_RightPad_DPadEast = 280,
+		PS5_CenterPad_Touch = 281,
+		PS5_CenterPad_Swipe = 282,
+		PS5_CenterPad_Click = 283,
+		PS5_CenterPad_DPadNorth = 284,
+		PS5_CenterPad_DPadSouth = 285,
+		PS5_CenterPad_DPadWest = 286,
+		PS5_CenterPad_DPadEast = 287,
+		PS5_LeftTrigger_Pull = 288,
+		PS5_LeftTrigger_Click = 289,
+		PS5_RightTrigger_Pull = 290,
+		PS5_RightTrigger_Click = 291,
+		PS5_LeftStick_Move = 292,
+		PS5_LeftStick_Click = 293,
+		PS5_LeftStick_DPadNorth = 294,
+		PS5_LeftStick_DPadSouth = 295,
+		PS5_LeftStick_DPadWest = 296,
+		PS5_LeftStick_DPadEast = 297,
+		PS5_RightStick_Move = 298,
+		PS5_RightStick_Click = 299,
+		PS5_RightStick_DPadNorth = 300,
+		PS5_RightStick_DPadSouth = 301,
+		PS5_RightStick_DPadWest = 302,
+		PS5_RightStick_DPadEast = 303,
+		PS5_DPad_North = 304,
+		PS5_DPad_South = 305,
+		PS5_DPad_West = 306,
+		PS5_DPad_East = 307,
+		PS5_Gyro_Move = 308,
+		PS5_Gyro_Pitch = 309,
+		PS5_Gyro_Yaw = 310,
+		PS5_Gyro_Roll = 311,
+		PS5_DPad_Move = 312,
+		PS5_LeftGrip = 313,
+		PS5_RightGrip = 314,
+		PS5_LeftFn = 315,
+		PS5_RightFn = 316,
+		PS5_Reserved5 = 317,
+		PS5_Reserved6 = 318,
+		PS5_Reserved7 = 319,
+		PS5_Reserved8 = 320,
+		PS5_Reserved9 = 321,
+		PS5_Reserved10 = 322,
+		PS5_Reserved11 = 323,
+		PS5_Reserved12 = 324,
+		PS5_Reserved13 = 325,
+		PS5_Reserved14 = 326,
+		PS5_Reserved15 = 327,
+		PS5_Reserved16 = 328,
+		PS5_Reserved17 = 329,
+		PS5_Reserved18 = 330,
+		PS5_Reserved19 = 331,
+		PS5_Reserved20 = 332,
+		SteamDeck_A = 333,
+		SteamDeck_B = 334,
+		SteamDeck_X = 335,
+		SteamDeck_Y = 336,
+		SteamDeck_L1 = 337,
+		SteamDeck_R1 = 338,
+		SteamDeck_Menu = 339,
+		SteamDeck_View = 340,
+		SteamDeck_LeftPad_Touch = 341,
+		SteamDeck_LeftPad_Swipe = 342,
+		SteamDeck_LeftPad_Click = 343,
+		SteamDeck_LeftPad_DPadNorth = 344,
+		SteamDeck_LeftPad_DPadSouth = 345,
+		SteamDeck_LeftPad_DPadWest = 346,
+		SteamDeck_LeftPad_DPadEast = 347,
+		SteamDeck_RightPad_Touch = 348,
+		SteamDeck_RightPad_Swipe = 349,
+		SteamDeck_RightPad_Click = 350,
+		SteamDeck_RightPad_DPadNorth = 351,
+		SteamDeck_RightPad_DPadSouth = 352,
+		SteamDeck_RightPad_DPadWest = 353,
+		SteamDeck_RightPad_DPadEast = 354,
+		SteamDeck_L2_SoftPull = 355,
+		SteamDeck_L2 = 356,
+		SteamDeck_R2_SoftPull = 357,
+		SteamDeck_R2 = 358,
+		SteamDeck_LeftStick_Move = 359,
+		SteamDeck_L3 = 360,
+		SteamDeck_LeftStick_DPadNorth = 361,
+		SteamDeck_LeftStick_DPadSouth = 362,
+		SteamDeck_LeftStick_DPadWest = 363,
+		SteamDeck_LeftStick_DPadEast = 364,
+		SteamDeck_LeftStick_Touch = 365,
+		SteamDeck_RightStick_Move = 366,
+		SteamDeck_R3 = 367,
+		SteamDeck_RightStick_DPadNorth = 368,
+		SteamDeck_RightStick_DPadSouth = 369,
+		SteamDeck_RightStick_DPadWest = 370,
+		SteamDeck_RightStick_DPadEast = 371,
+		SteamDeck_RightStick_Touch = 372,
+		SteamDeck_L4 = 373,
+		SteamDeck_R4 = 374,
+		SteamDeck_L5 = 375,
+		SteamDeck_R5 = 376,
+		SteamDeck_DPad_Move = 377,
+		SteamDeck_DPad_North = 378,
+		SteamDeck_DPad_South = 379,
+		SteamDeck_DPad_West = 380,
+		SteamDeck_DPad_East = 381,
+		SteamDeck_Gyro_Move = 382,
+		SteamDeck_Gyro_Pitch = 383,
+		SteamDeck_Gyro_Yaw = 384,
+		SteamDeck_Gyro_Roll = 385,
+		SteamDeck_Reserved1 = 386,
+		SteamDeck_Reserved2 = 387,
+		SteamDeck_Reserved3 = 388,
+		SteamDeck_Reserved4 = 389,
+		SteamDeck_Reserved5 = 390,
+		SteamDeck_Reserved6 = 391,
+		SteamDeck_Reserved7 = 392,
+		SteamDeck_Reserved8 = 393,
+		SteamDeck_Reserved9 = 394,
+		SteamDeck_Reserved10 = 395,
+		SteamDeck_Reserved11 = 396,
+		SteamDeck_Reserved12 = 397,
+		SteamDeck_Reserved13 = 398,
+		SteamDeck_Reserved14 = 399,
+		SteamDeck_Reserved15 = 400,
+		SteamDeck_Reserved16 = 401,
+		SteamDeck_Reserved17 = 402,
+		SteamDeck_Reserved18 = 403,
+		SteamDeck_Reserved19 = 404,
+		SteamDeck_Reserved20 = 405,
+		Count = 406,
 		MaximumPossibleValue = 32767,
 	}
 	
@@ -1433,6 +1510,26 @@ namespace Steamworks
 	}
 	
 	//
+	// EControllerHapticLocation
+	//
+	internal enum ControllerHapticLocation : int
+	{
+		Left = 1,
+		Right = 2,
+		Both = 3,
+	}
+	
+	//
+	// EControllerHapticType
+	//
+	internal enum ControllerHapticType : int
+	{
+		Off = 0,
+		Tick = 1,
+		Click = 2,
+	}
+	
+	//
 	// ESteamInputType
 	//
 	public enum InputType : int
@@ -1450,8 +1547,22 @@ namespace Steamworks
 		SwitchProController = 10,
 		MobileTouch = 11,
 		PS3Controller = 12,
-		Count = 13,
+		PS5Controller = 13,
+		SteamDeckController = 14,
+		Count = 15,
 		MaximumPossibleValue = 255,
+	}
+	
+	//
+	// ESteamInputConfigurationEnableType
+	//
+	internal enum SteamInputConfigurationEnableType : int
+	{
+		None = 0,
+		Playstation = 1,
+		Xbox = 2,
+		Generic = 4,
+		Switch = 8,
 	}
 	
 	//
@@ -1461,6 +1572,38 @@ namespace Steamworks
 	{
 		SetColor = 0,
 		RestoreUserDefault = 1,
+	}
+	
+	//
+	// ESteamInputGlyphSize
+	//
+	public enum GlyphSize : int
+	{
+		Small = 0,
+		Medium = 1,
+		Large = 2,
+		Count = 3,
+	}
+	
+	//
+	// ESteamInputGlyphStyle
+	//
+	internal enum SteamInputGlyphStyle : int
+	{
+		Knockout = 0,
+		Light = 1,
+		Dark = 2,
+		NeutralColorABXY = 16,
+		SolidABXY = 32,
+	}
+	
+	//
+	// ESteamInputActionEventType
+	//
+	internal enum SteamInputActionEventType : int
+	{
+		DigitalAction = 0,
+		AnalogAction = 1,
 	}
 	
 	//
@@ -1713,7 +1856,148 @@ namespace Steamworks
 		XBoxOne_DPad_Move = 242,
 		XBox360_DPad_Move = 243,
 		Switch_DPad_Move = 244,
-		Count = 245,
+		PS5_X = 245,
+		PS5_Circle = 246,
+		PS5_Triangle = 247,
+		PS5_Square = 248,
+		PS5_LeftBumper = 249,
+		PS5_RightBumper = 250,
+		PS5_Option = 251,
+		PS5_Create = 252,
+		PS5_Mute = 253,
+		PS5_LeftPad_Touch = 254,
+		PS5_LeftPad_Swipe = 255,
+		PS5_LeftPad_Click = 256,
+		PS5_LeftPad_DPadNorth = 257,
+		PS5_LeftPad_DPadSouth = 258,
+		PS5_LeftPad_DPadWest = 259,
+		PS5_LeftPad_DPadEast = 260,
+		PS5_RightPad_Touch = 261,
+		PS5_RightPad_Swipe = 262,
+		PS5_RightPad_Click = 263,
+		PS5_RightPad_DPadNorth = 264,
+		PS5_RightPad_DPadSouth = 265,
+		PS5_RightPad_DPadWest = 266,
+		PS5_RightPad_DPadEast = 267,
+		PS5_CenterPad_Touch = 268,
+		PS5_CenterPad_Swipe = 269,
+		PS5_CenterPad_Click = 270,
+		PS5_CenterPad_DPadNorth = 271,
+		PS5_CenterPad_DPadSouth = 272,
+		PS5_CenterPad_DPadWest = 273,
+		PS5_CenterPad_DPadEast = 274,
+		PS5_LeftTrigger_Pull = 275,
+		PS5_LeftTrigger_Click = 276,
+		PS5_RightTrigger_Pull = 277,
+		PS5_RightTrigger_Click = 278,
+		PS5_LeftStick_Move = 279,
+		PS5_LeftStick_Click = 280,
+		PS5_LeftStick_DPadNorth = 281,
+		PS5_LeftStick_DPadSouth = 282,
+		PS5_LeftStick_DPadWest = 283,
+		PS5_LeftStick_DPadEast = 284,
+		PS5_RightStick_Move = 285,
+		PS5_RightStick_Click = 286,
+		PS5_RightStick_DPadNorth = 287,
+		PS5_RightStick_DPadSouth = 288,
+		PS5_RightStick_DPadWest = 289,
+		PS5_RightStick_DPadEast = 290,
+		PS5_DPad_Move = 291,
+		PS5_DPad_North = 292,
+		PS5_DPad_South = 293,
+		PS5_DPad_West = 294,
+		PS5_DPad_East = 295,
+		PS5_Gyro_Move = 296,
+		PS5_Gyro_Pitch = 297,
+		PS5_Gyro_Yaw = 298,
+		PS5_Gyro_Roll = 299,
+		XBoxOne_LeftGrip_Lower = 300,
+		XBoxOne_LeftGrip_Upper = 301,
+		XBoxOne_RightGrip_Lower = 302,
+		XBoxOne_RightGrip_Upper = 303,
+		XBoxOne_Share = 304,
+		SteamDeck_A = 305,
+		SteamDeck_B = 306,
+		SteamDeck_X = 307,
+		SteamDeck_Y = 308,
+		SteamDeck_L1 = 309,
+		SteamDeck_R1 = 310,
+		SteamDeck_Menu = 311,
+		SteamDeck_View = 312,
+		SteamDeck_LeftPad_Touch = 313,
+		SteamDeck_LeftPad_Swipe = 314,
+		SteamDeck_LeftPad_Click = 315,
+		SteamDeck_LeftPad_DPadNorth = 316,
+		SteamDeck_LeftPad_DPadSouth = 317,
+		SteamDeck_LeftPad_DPadWest = 318,
+		SteamDeck_LeftPad_DPadEast = 319,
+		SteamDeck_RightPad_Touch = 320,
+		SteamDeck_RightPad_Swipe = 321,
+		SteamDeck_RightPad_Click = 322,
+		SteamDeck_RightPad_DPadNorth = 323,
+		SteamDeck_RightPad_DPadSouth = 324,
+		SteamDeck_RightPad_DPadWest = 325,
+		SteamDeck_RightPad_DPadEast = 326,
+		SteamDeck_L2_SoftPull = 327,
+		SteamDeck_L2 = 328,
+		SteamDeck_R2_SoftPull = 329,
+		SteamDeck_R2 = 330,
+		SteamDeck_LeftStick_Move = 331,
+		SteamDeck_L3 = 332,
+		SteamDeck_LeftStick_DPadNorth = 333,
+		SteamDeck_LeftStick_DPadSouth = 334,
+		SteamDeck_LeftStick_DPadWest = 335,
+		SteamDeck_LeftStick_DPadEast = 336,
+		SteamDeck_LeftStick_Touch = 337,
+		SteamDeck_RightStick_Move = 338,
+		SteamDeck_R3 = 339,
+		SteamDeck_RightStick_DPadNorth = 340,
+		SteamDeck_RightStick_DPadSouth = 341,
+		SteamDeck_RightStick_DPadWest = 342,
+		SteamDeck_RightStick_DPadEast = 343,
+		SteamDeck_RightStick_Touch = 344,
+		SteamDeck_L4 = 345,
+		SteamDeck_R4 = 346,
+		SteamDeck_L5 = 347,
+		SteamDeck_R5 = 348,
+		SteamDeck_DPad_Move = 349,
+		SteamDeck_DPad_North = 350,
+		SteamDeck_DPad_South = 351,
+		SteamDeck_DPad_West = 352,
+		SteamDeck_DPad_East = 353,
+		SteamDeck_Gyro_Move = 354,
+		SteamDeck_Gyro_Pitch = 355,
+		SteamDeck_Gyro_Yaw = 356,
+		SteamDeck_Gyro_Roll = 357,
+		SteamDeck_Reserved1 = 358,
+		SteamDeck_Reserved2 = 359,
+		SteamDeck_Reserved3 = 360,
+		SteamDeck_Reserved4 = 361,
+		SteamDeck_Reserved5 = 362,
+		SteamDeck_Reserved6 = 363,
+		SteamDeck_Reserved7 = 364,
+		SteamDeck_Reserved8 = 365,
+		SteamDeck_Reserved9 = 366,
+		SteamDeck_Reserved10 = 367,
+		SteamDeck_Reserved11 = 368,
+		SteamDeck_Reserved12 = 369,
+		SteamDeck_Reserved13 = 370,
+		SteamDeck_Reserved14 = 371,
+		SteamDeck_Reserved15 = 372,
+		SteamDeck_Reserved16 = 373,
+		SteamDeck_Reserved17 = 374,
+		SteamDeck_Reserved18 = 375,
+		SteamDeck_Reserved19 = 376,
+		SteamDeck_Reserved20 = 377,
+		Switch_JoyConButton_N = 378,
+		Switch_JoyConButton_E = 379,
+		Switch_JoyConButton_S = 380,
+		Switch_JoyConButton_W = 381,
+		PS5_LeftGrip = 382,
+		PS5_RightGrip = 383,
+		PS5_LeftFn = 384,
+		PS5_RightFn = 385,
+		Count = 386,
 		MaximumPossibleValue = 32767,
 	}
 	
@@ -1801,6 +2085,7 @@ namespace Steamworks
 		RankedByLifetimeAveragePlaytime = 16,
 		RankedByPlaytimeSessionsTrend = 17,
 		RankedByLifetimePlaytimeSessions = 18,
+		RankedByLastUpdatedDate = 19,
 	}
 	
 	//
@@ -1853,7 +2138,7 @@ namespace Steamworks
 	//
 	// EItemPreviewType
 	//
-	internal enum ItemPreviewType : int
+	public enum ItemPreviewType : int
 	{
 		Image = 0,
 		YouTubeVideo = 1,
@@ -1864,6 +2149,18 @@ namespace Steamworks
 	}
 	
 	//
+	// EUGCContentDescriptorID
+	//
+	internal enum UGCContentDescriptorID : int
+	{
+		NudityOrSexualContent = 1,
+		FrequentViolenceOrGore = 2,
+		AdultOnlySexualContent = 3,
+		GratuitousSexualContent = 4,
+		AnyMatureContent = 5,
+	}
+	
+	//
 	// ESteamItemFlags
 	//
 	internal enum SteamItemFlags : int
@@ -1871,17 +2168,6 @@ namespace Steamworks
 		NoTrade = 1,
 		Removed = 256,
 		Consumed = 512,
-	}
-	
-	//
-	// ESteamTVRegionBehavior
-	//
-	internal enum SteamTVRegionBehavior : int
-	{
-		Invalid = -1,
-		Hover = 0,
-		ClickPopup = 1,
-		ClickSurroundingRegion = 2,
 	}
 	
 	//
@@ -1903,7 +2189,8 @@ namespace Steamworks
 		Library = 11,
 		Test = 12,
 		SiteLicense = 13,
-		Max = 14,
+		KioskMode = 14,
+		Max = 15,
 	}
 	
 	//
@@ -1943,11 +2230,24 @@ namespace Steamworks
 		Invalid = 0,
 		SteamID = 16,
 		XboxPairwiseID = 17,
+		SonyPSN = 18,
+		GoogleStadia = 19,
 		IPAddress = 1,
 		GenericString = 2,
 		GenericBytes = 3,
 		UnknownType = 4,
 		Force32bit = 2147483647,
+	}
+	
+	//
+	// ESteamNetworkingFakeIPType
+	//
+	internal enum SteamNetworkingFakeIPType : int
+	{
+		Invalid = 0,
+		NotFake = 1,
+		GlobalIPv4 = 2,
+		LocalIPv4 = 3,
 	}
 	
 	//
@@ -1984,22 +2284,24 @@ namespace Steamworks
 		Local_HostedServerPrimaryRelay = 3003,
 		Local_NetworkConfig = 3004,
 		Local_Rights = 3005,
+		Local_P2P_ICE_NoPublicAddresses = 3006,
 		Local_Max = 3999,
 		Remote_Min = 4000,
 		Remote_Timeout = 4001,
 		Remote_BadCrypt = 4002,
 		Remote_BadCert = 4003,
-		Remote_NotLoggedIn = 4004,
-		Remote_NotRunningApp = 4005,
 		Remote_BadProtocolVersion = 4006,
+		Remote_P2P_ICE_NoPublicAddresses = 4007,
 		Remote_Max = 4999,
 		Misc_Min = 5000,
 		Misc_Generic = 5001,
 		Misc_InternalError = 5002,
 		Misc_Timeout = 5003,
-		Misc_RelayConnectivity = 5004,
 		Misc_SteamConnectivity = 5005,
 		Misc_NoRelaySessionsToClient = 5006,
+		Misc_P2P_Rendezvous = 5008,
+		Misc_P2P_NAT_Firewall = 5009,
+		Misc_PeerSentNoConnection = 5010,
 		Misc_Max = 5999,
 	}
 	
@@ -2023,7 +2325,7 @@ namespace Steamworks
 		Int64 = 2,
 		Float = 3,
 		String = 4,
-		FunctionPtr = 5,
+		Ptr = 5,
 	}
 	
 	//
@@ -2032,6 +2334,21 @@ namespace Steamworks
 	internal enum NetConfig : int
 	{
 		Invalid = 0,
+		TimeoutInitial = 24,
+		TimeoutConnected = 25,
+		SendBufferSize = 9,
+		ConnectionUserData = 40,
+		SendRateMin = 10,
+		SendRateMax = 11,
+		NagleTime = 12,
+		IP_AllowWithoutAuth = 23,
+		MTU_PacketSize = 32,
+		MTU_DataSize = 33,
+		Unencrypted = 34,
+		SymmetricConnect = 37,
+		LocalVirtualPort = 38,
+		DualWifi_Enable = 39,
+		EnableDiagnosticsUI = 46,
 		FakePacketLoss_Send = 2,
 		FakePacketLoss_Recv = 3,
 		FakePacketLag_Send = 4,
@@ -2042,17 +2359,26 @@ namespace Steamworks
 		FakePacketDup_Send = 26,
 		FakePacketDup_Recv = 27,
 		FakePacketDup_TimeMax = 28,
-		TimeoutInitial = 24,
-		TimeoutConnected = 25,
-		SendBufferSize = 9,
-		SendRateMin = 10,
-		SendRateMax = 11,
-		NagleTime = 12,
-		IP_AllowWithoutAuth = 23,
-		MTU_PacketSize = 32,
-		MTU_DataSize = 33,
-		Unencrypted = 34,
-		EnumerateDevVars = 35,
+		PacketTraceMaxBytes = 41,
+		FakeRateLimit_Send_Rate = 42,
+		FakeRateLimit_Send_Burst = 43,
+		FakeRateLimit_Recv_Rate = 44,
+		FakeRateLimit_Recv_Burst = 45,
+		Callback_ConnectionStatusChanged = 201,
+		Callback_AuthStatusChanged = 202,
+		Callback_RelayNetworkStatusChanged = 203,
+		Callback_MessagesSessionRequest = 204,
+		Callback_MessagesSessionFailed = 205,
+		Callback_CreateConnectionSignaling = 206,
+		Callback_FakeIPResult = 207,
+		P2P_STUN_ServerList = 103,
+		P2P_Transport_ICE_Enable = 104,
+		P2P_Transport_ICE_Penalty = 105,
+		P2P_Transport_SDR_Penalty = 106,
+		P2P_TURN_ServerList = 107,
+		P2P_TURN_UserList = 108,
+		P2P_TURN_PassList = 109,
+		P2P_Transport_ICE_Implementation = 110,
 		SDRClient_ConsecutitivePingTimeoutsFailInitial = 19,
 		SDRClient_ConsecutitivePingTimeoutsFail = 20,
 		SDRClient_MinPingsBeforePingAccurate = 21,
@@ -2067,6 +2393,7 @@ namespace Steamworks
 		LogLevel_PacketGaps = 16,
 		LogLevel_P2PRendezvous = 17,
 		LogLevel_SDRRelayPings = 18,
+		DELETED_EnumerateDevVars = 35,
 	}
 	
 	//

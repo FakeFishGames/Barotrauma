@@ -99,7 +99,7 @@ namespace Barotrauma
             public override bool Interrupted => Character.Removed || !Character.Enabled;
 
             public override Color Color => 
-                Character.CharacterHealth.GetAfflictionStrength(AfflictionPrefab.PoisonType) > 0 || Character.CharacterHealth.GetAfflictionStrength(AfflictionPrefab.ParalysisType) > 0 ? 
+                Character.CharacterHealth.GetAfflictionStrengthByType(AfflictionPrefab.PoisonType) > 0 || Character.CharacterHealth.GetAfflictionStrengthByType(AfflictionPrefab.ParalysisType) > 0 ? 
                     GUIStyle.HealthBarColorPoisoned : GUIStyle.Red;
 
             public override string NumberToDisplay => string.Empty;
@@ -737,7 +737,8 @@ namespace Barotrauma
             if (!character.DisableHealthWindow &&
                 character.IsFriendly(character.FocusedCharacter) && 
                 character.FocusedCharacter.CharacterHealth.UseHealthWindow &&
-                character.CanInteractWith(character.FocusedCharacter, 160f, false))
+                character.CanInteractWith(character.FocusedCharacter, 160f, false) &&
+                !character.IsClimbing)
             {
                 GUI.DrawString(spriteBatch, textPos, GetCachedHudText("HealHint", InputType.Health),
                     GUIStyle.Green, Color.Black, 2, GUIStyle.SmallFont);
@@ -893,7 +894,7 @@ namespace Barotrauma
 
             if (!orderIndicatorCount.ContainsKey(target)) { orderIndicatorCount.Add(target, 0); }
 
-            Vector2 drawPos = target is Entity ? (target as Entity).DrawPosition :
+            Vector2 drawPos = target is Entity entity ? entity.DrawPosition :
                 target.Submarine == null ? target.Position : target.Position + target.Submarine.DrawPosition;
             drawPos += Vector2.UnitX * order.SymbolSprite.size.X * 1.5f * orderIndicatorCount[target];
             GUI.DrawIndicator(spriteBatch, drawPos, cam, 100.0f, order.SymbolSprite, order.Color * iconAlpha,

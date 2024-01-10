@@ -2,6 +2,7 @@ using System.Xml.Linq;
 
 namespace Barotrauma
 {
+    [NotSyncedInMultiplayer]
     sealed class NPCConversationsFile : ContentFile
     {
         public NPCConversationsFile(ContentPackage contentPackage, ContentPath path) : base(contentPackage, path) { }

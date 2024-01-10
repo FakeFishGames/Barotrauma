@@ -50,6 +50,9 @@ namespace Barotrauma.Items.Components
         [InGameEditable, Serialize(false, IsPropertySaveable.Yes, description: "Should the component output a value of a capture group instead of a constant signal.", alwaysUseInstanceValues: true)]
         public bool UseCaptureGroup { get; set; }
 
+        [InGameEditable, Serialize(false, IsPropertySaveable.Yes, description: "Should the component output the value of a capture group even if it's empty?", alwaysUseInstanceValues: true)]
+        public bool OutputEmptyCaptureGroup { get; set; }
+
         [InGameEditable, Serialize("0", IsPropertySaveable.Yes, description: "The signal this item outputs when the received signal does not match the regular expression.", alwaysUseInstanceValues: true)]
         public string FalseOutput { get; set; }
 
@@ -120,6 +123,7 @@ namespace Barotrauma.Items.Components
             }
 
             string signalOut;
+            bool allowEmptyStringOutput = false;
             if (previousResult)
             {
                 if (UseCaptureGroup)
@@ -127,6 +131,7 @@ namespace Barotrauma.Items.Components
                     if (previousGroups != null && previousGroups.TryGetValue(Output, out Group group))
                     {
                         signalOut = group.Value;
+                        allowEmptyStringOutput = OutputEmptyCaptureGroup;
                     }
                     else
                     {
@@ -143,13 +148,9 @@ namespace Barotrauma.Items.Components
                 signalOut = FalseOutput;
             }
 
-            if (ContinuousOutput)
+            if (!string.IsNullOrEmpty(signalOut) || (allowEmptyStringOutput && signalOut == string.Empty)) { item.SendSignal(signalOut, "signal_out"); }
+            if (!ContinuousOutput)
             {
-                if (!string.IsNullOrEmpty(signalOut)) { item.SendSignal(signalOut, "signal_out"); }
-            }
-            else
-            {
-                if (!string.IsNullOrEmpty(signalOut)) { item.SendSignal(signalOut, "signal_out"); }
                 nonContinuousOutputSent = true;
             }
         }

@@ -50,6 +50,9 @@ namespace Barotrauma
         [Serialize(false, IsPropertySaveable.Yes, description: "Can the creature live without water or does it die on dry land?"), Editable]
         public bool NeedsWater { get; set; }
 
+        [Serialize(false, IsPropertySaveable.Yes, description: "Note: non-humans with a human AI aren't fully supported. Enabling this on a non-human character may lead to issues.")]
+        public bool UseHumanAI { get; set; }
+
         [Serialize(false, IsPropertySaveable.Yes, description: "Is this creature an artificial creature, like robot or machine that shouldn't be affected by afflictions that affect only organic creatures? Overrides DoesBleed."), Editable]
         public bool IsMachine { get; set; }
 
@@ -133,6 +136,12 @@ namespace Barotrauma
         public readonly List<ParticleParams> DamageEmitters = new List<ParticleParams>();
         public readonly List<InventoryParams> Inventories = new List<InventoryParams>();
         public HealthParams Health { get; private set; }
+        /// <summary>
+        /// Parameters for EnemyAIController. Not used by HumanAIController.
+        /// </summary>
+        /// <returns>
+        /// AIParams or null. Use <see cref="EnemyAIController.AIParams"/>, if you don't expect nulls.
+        /// </returns>
         public AIParams AI { get; private set; }
 
         public CharacterParams(CharacterFile file)
@@ -143,7 +152,14 @@ namespace Barotrauma
 
         protected override string GetName() => "Character Config File";
 
-        public override ContentXElement MainElement => base.MainElement.IsOverride() ? base.MainElement.FirstElement() : base.MainElement;
+        public override ContentXElement MainElement
+        {
+            get
+            {
+                if (base.MainElement == null) { return null; }
+                return base.MainElement.IsOverride() ? base.MainElement.FirstElement() : base.MainElement;
+            }
+        }
 
         public static XElement CreateVariantXml(XElement variantXML, XElement baseXML)
         {
@@ -182,6 +198,11 @@ namespace Barotrauma
         {
             UpdatePath(File.Path);
             doc = XMLExtensions.TryLoadXml(Path);
+            if (MainElement == null)
+            {
+                DebugConsole.ThrowError("Main element null! Failed to load character params.");
+                return false;
+            }
             Identifier variantOf = MainElement.VariantOf();
             if (!variantOf.IsEmpty)
             {
@@ -230,6 +251,11 @@ namespace Barotrauma
 
         protected void CreateSubParams()
         {
+            if (MainElement == null)
+            {
+                DebugConsole.ThrowError("Main element null, cannot create sub params!");
+                return;
+            }
             SubParams.Clear();
             var healthElement = MainElement.GetChildElement("health");
             if (healthElement != null)
@@ -539,7 +565,8 @@ namespace Barotrauma
                     DebugConsole.AddWarning($"Character \"{character.SpeciesName}\" has a negative crush depth. "+
                         "Previously the crush depths were defined as display units (e.g. -30000 would correspond to 300 meters below the level), "+
                         "but now they're in meters (e.g. 3000 would correspond to a depth of 3000 meters displayed on the nav terminal). "+
-                        $"Changing the crush depth from {CrushDepth} to {newCrushDepth}.");
+                        $"Changing the crush depth from {CrushDepth} to {newCrushDepth}.",
+                        element.ContentPackage);
                     CrushDepth = newCrushDepth;
                 }
             }
@@ -582,7 +609,8 @@ namespace Barotrauma
 
             public void AddItem(string identifier = null)
             {
-                identifier = identifier ?? "";
+                if (Element == null) { return; }
+                identifier ??= "";
                 var element = CreateElement("item", new XAttribute("identifier", identifier));
                 Element.Add(element);
                 var item = new InventoryItem(element, Character);
@@ -691,7 +719,8 @@ namespace Barotrauma
                 if (HasTag(tag))
                 {
                     target = null;
-                    DebugConsole.AddWarning($"Trying to add multiple targets with the same tag ('{tag}') defined! Only the first will be used!");
+                    DebugConsole.AddWarning($"Trying to add multiple targets with the same tag ('{tag}') defined! Only the first will be used!",
+                        targetElement.ContentPackage);
                     return false;
                 }
                 else
@@ -710,6 +739,11 @@ namespace Barotrauma
                 
             public bool TryAddNewTarget(Identifier tag, AIState state, float priority, out TargetParams targetParams)
             {
+                if (Element == null)
+                {
+                    targetParams = null;
+                    return false;
+                }
                 var element = TargetParams.CreateNewElement(Character, tag, state, priority);
                 if (TryAddTarget(element, out targetParams))
                 {
@@ -745,7 +779,7 @@ namespace Barotrauma
             {
                 if (!TryGetTarget(targetCharacter.SpeciesName, out target))
                 {
-                    target = targets.FirstOrDefault(t => string.Equals(t.Tag, targetCharacter.Params.Group.ToString(), StringComparison.OrdinalIgnoreCase));
+                    target = targets.FirstOrDefault(t => t.Tag == targetCharacter.Params.Group);
                 }
                 return target != null;
             }
@@ -791,7 +825,7 @@ namespace Barotrauma
             public override string Name => "Target";
 
             [Serialize("", IsPropertySaveable.Yes, description: "Can be an item tag, species name or something else. Examples: decoy, provocative, light, dead, human, crawler, wall, nasonov, sonar, door, stronger, weaker, light, human, room..."), Editable()]
-            public string Tag { get; private set; }
+            public Identifier Tag { get; private set; }
 
             [Serialize(AIState.Idle, IsPropertySaveable.Yes), Editable]
             public AIState State { get; set; }

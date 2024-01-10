@@ -37,12 +37,18 @@ namespace Barotrauma
             public EventType EventType { get; }
         }
 
-        public struct InventoryStateEventData : IEventData
+        public readonly struct InventoryStateEventData : IEventData
         {
             public EventType EventType => EventType.InventoryState;
+            public readonly Range SlotRange;
+
+            public InventoryStateEventData(Range slotRange)
+            {
+                SlotRange = slotRange;
+            }
         }
         
-        public struct ControlEventData : IEventData
+        public readonly struct ControlEventData : IEventData
         {
             public EventType EventType => EventType.Control;
             public readonly Client Owner;

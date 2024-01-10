@@ -40,7 +40,7 @@ namespace Barotrauma.Networking
 
             ContentPackageOrderReceived = false;
 
-            steamAuthTicket = SteamManager.GetAuthSessionTicket();
+            steamAuthTicket = SteamManager.GetAuthSessionTicketForMultiplayer(ServerEndpoint);
             //TODO: wait for GetAuthSessionTicketResponse_t
 
             if (steamAuthTicket == null)
@@ -363,8 +363,8 @@ namespace Barotrauma.Networking
             Steamworks.SteamNetworking.ResetActions();
             Steamworks.SteamNetworking.CloseP2PSessionWithUser(hostSteamId.Value);
 
-            steamAuthTicket?.Cancel();
-            steamAuthTicket = null;
+            if (steamAuthTicket.TryUnwrap(out var ticket)) { ticket.Cancel(); }
+            steamAuthTicket = Option.None;
 
             callbacks.OnDisconnect.Invoke(peerDisconnectPacket);
         }

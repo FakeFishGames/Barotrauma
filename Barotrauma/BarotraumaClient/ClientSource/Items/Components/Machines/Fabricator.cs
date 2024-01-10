@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 
 namespace Barotrauma.Items.Components
@@ -37,6 +38,11 @@ namespace Barotrauma.Items.Components
             get { return selectedItem; }
         }
         private FabricationRecipe selectedItem;
+
+        /// <summary>
+        /// Which character's skills the current view is displayed based on
+        /// </summary>
+        private Character displayingForCharacter;
 
         public Identifier SelectedItemIdentifier => SelectedItem?.TargetItem.Identifier ?? Identifier.Empty;
 
@@ -358,9 +364,11 @@ namespace Barotrauma.Items.Components
             if (inputInventoryHolder != null)
             {
                 inputContainer.AllowUIOverlap = true;
+                inputContainer.Inventory.DrawWhenEquipped = true;
                 inputContainer.Inventory.RectTransform = inputInventoryHolder.RectTransform;
             }
             outputContainer.AllowUIOverlap = true;
+            outputContainer.Inventory.DrawWhenEquipped = true;
             outputContainer.Inventory.RectTransform = outputInventoryHolder.RectTransform;
         }
 
@@ -386,6 +394,8 @@ namespace Barotrauma.Items.Components
 
         partial void SelectProjSpecific(Character character)
         {
+            if (character != Character.Controlled) { return; }
+
             var nonItems = itemList.Content.Children.Where(c => c.UserData is not FabricationRecipe).ToList();
             nonItems.ForEach(i => itemList.Content.RemoveChild(i));
 
@@ -453,13 +463,8 @@ namespace Barotrauma.Items.Components
                 requiresRecipeText.RectTransform.RepositionChildInHierarchy(itemList.Content.RectTransform.GetChildIndex(firstRequiresRecipe.RectTransform));
             }
 
+            FilterEntities(selectedItemCategory, itemFilterBox?.Text ?? string.Empty);
             HideEmptyItemListCategories();
-
-            if (selectedItem != null)
-            {
-                //reselect to recreate the info based on the new user's skills
-                SelectItem(character, selectedItem);
-            }
         }
 
         private readonly Dictionary<FabricationRecipe.RequiredItem, int> missingIngredientCounts = new Dictionary<FabricationRecipe.RequiredItem, int>();
@@ -538,6 +543,8 @@ namespace Barotrauma.Items.Components
                 int slotIndex = 0;
                 foreach (var kvp in missingIngredientCounts)
                 {
+                    if (inputContainer.Inventory?.visualSlots == null) { break; }
+
                     var requiredItem = kvp.Key;
                     int missingCount = kvp.Value;
 
@@ -560,11 +567,10 @@ namespace Barotrauma.Items.Components
                     var requiredItemPrefab = requiredItem.FirstMatchingPrefab;
 
                     float iconAlpha = 0.0f;
-                    ItemPrefab requiredItemToDisplay;
-                    int count = requiredItem.ItemPrefabs.Count();
-                    if (count > 1)
+                    ItemPrefab requiredItemToDisplay = requiredItem.DefaultItem.IsEmpty ? null : requiredItem.ItemPrefabs.FirstOrDefault(p => p.Identifier == requiredItem.DefaultItem);
+                    if (requiredItemToDisplay == null && requiredItem.ItemPrefabs.Multiple())
                     {
-                        float iconCycleSpeed = 0.5f / count;
+                        float iconCycleSpeed = 0.75f;
                         float iconCycleT = (float)Timing.TotalTime * iconCycleSpeed;
                         int iconIndex = (int)(iconCycleT % requiredItem.ItemPrefabs.Count());
 
@@ -573,7 +579,7 @@ namespace Barotrauma.Items.Components
                     }
                     else
                     {
-                        requiredItemToDisplay = requiredItem.ItemPrefabs.FirstOrDefault();
+                        requiredItemToDisplay ??= requiredItem.ItemPrefabs.FirstOrDefault();
                         iconAlpha = 1.0f;
                     }
                     if (iconAlpha > 0.0f)
@@ -616,9 +622,12 @@ namespace Barotrauma.Items.Components
 
                     if (slotRect.Contains(PlayerInput.MousePosition))
                     {
-                        var suitableIngredients = requiredItem.ItemPrefabs.Select(ip => ip.Name).Distinct();
-                        LocalizedString toolTipText = string.Join(", ", suitableIngredients.Count() > 3 ? suitableIngredients.SkipLast(suitableIngredients.Count() - 3) : suitableIngredients);
-                        if (suitableIngredients.Count() > 3) { toolTipText += "..."; }
+                        LocalizedString toolTipText = requiredItem.OverrideHeader;
+                        if (requiredItem.OverrideHeader.IsNullOrEmpty())
+                        {
+                            var suitableIngredients = requiredItem.ItemPrefabs.Where(ip => !ip.HideInMenus).OrderBy(ip => ip.DefaultPrice?.Price ?? 0).Select(ip => ip.Name).Distinct();
+                            toolTipText = GetSuitableIngredientText(suitableIngredients);
+                        }
                         if (requiredItem.UseCondition && requiredItem.MinCondition < 1.0f)
                         {
                             toolTipText += " " + (int)Math.Round(requiredItem.MinCondition * 100) + "%";
@@ -656,15 +665,68 @@ namespace Barotrauma.Items.Components
             }
         }
 
+        private LocalizedString GetSuitableIngredientText(IEnumerable<LocalizedString> itemNameList)
+        {
+            int count = itemNameList.Count();
+            if (count == 0)
+            {
+                return string.Empty;
+            }
+            else if (count == 1)
+            {
+                return itemNameList.First();
+            }
+            else if (count == 2)
+            {
+                //[item1] or [item2]
+                return TextManager.GetWithVariables(
+                    "DialogRequiredTreatmentOptionsLast",
+                    ("[treatment1]", itemNameList.ElementAt(0)),
+                    ("[treatment2]", itemNameList.ElementAt(1)));
+            }
+            else
+            {
+                // [item1], [item2], [item3] ... or [lastitem]
+                LocalizedString itemListStr = TextManager.GetWithVariables(
+                    "DialogRequiredTreatmentOptionsFirst",
+                    ("[treatment1]", itemNameList.ElementAt(0)),
+                    ("[treatment2]", itemNameList.ElementAt(1)));
+
+                int i;
+                bool isTruncated = false;
+                for (i = 2; i < count - 1; i++)
+                {
+                    if (itemListStr.Length > 50)
+                    {
+                        isTruncated = true;
+                        break;
+                    }
+                    itemListStr = TextManager.GetWithVariables(
+                      "DialogRequiredTreatmentOptionsFirst",
+                      ("[treatment1]", itemListStr),
+                      ("[treatment2]", itemNameList.ElementAt(i)));
+                }
+                itemListStr = TextManager.GetWithVariables(
+                    "DialogRequiredTreatmentOptionsLast",
+                    ("[treatment1]", itemListStr),
+                    ("[treatment2]", itemNameList.ElementAt(i)));
+
+                if (isTruncated)
+                {
+                    itemListStr += TextManager.Get("ellipsis");
+                }
+                return itemListStr;
+            }
+        }
+
         private void DrawOutputOverLay(SpriteBatch spriteBatch, GUICustomComponent overlayComponent)
         {
             overlayComponent.RectTransform.SetAsLastChild();
 
             FabricationRecipe targetItem = fabricatedItem ?? selectedItem;
-            if (targetItem != null)
+            if (targetItem != null && outputContainer.Inventory?.visualSlots != null)
             {
                 Rectangle slotRect = outputContainer.Inventory.visualSlots[0].Rect;
-
                 if (fabricatedItem != null)
                 {
                     float clampedProgressState = Math.Clamp(progressState, 0f, 1f);
@@ -699,6 +761,16 @@ namespace Barotrauma.Items.Components
             {
                 FabricationRecipe recipe = child.UserData as FabricationRecipe;
                 if (recipe?.DisplayName == null) { continue; }
+
+                if (recipe.HideForNonTraitors)
+                {
+                    if (Character.Controlled is not { IsTraitor: true })
+                    {
+                        child.Visible = false;
+                        continue;
+                    }
+                }
+
                 child.Visible =
                     (string.IsNullOrWhiteSpace(filter) || recipe.DisplayName.Contains(filter, StringComparison.OrdinalIgnoreCase)) &&
                     (!category.HasValue || recipe.TargetItem.Category.HasFlag(category.Value));
@@ -715,6 +787,7 @@ namespace Barotrauma.Items.Components
 
         private void HideEmptyItemListCategories()
         {
+            bool visibleElementsChanged = false;
             //go through the elements backwards, and disable the labels ("insufficient skills to fabricate", "recipe required...") if there's no items below them
             bool recipeVisible = false;
             foreach (GUIComponent child in itemList.Content.Children.Reverse())
@@ -723,7 +796,11 @@ namespace Barotrauma.Items.Components
                 {
                     if (child.Enabled)
                     {
-                        child.Visible = recipeVisible;
+                        if (child.Visible != recipeVisible)
+                        {
+                            child.Visible = recipeVisible;
+                            visibleElementsChanged = true;
+                        }
                     }
                     recipeVisible = false;
                 }
@@ -733,8 +810,11 @@ namespace Barotrauma.Items.Components
                 }
             }
 
-            itemList.UpdateScrollBarSize();
-            itemList.BarScroll = 0.0f;
+            if (visibleElementsChanged)
+            {
+                itemList.UpdateScrollBarSize();
+                itemList.BarScroll = 0.0f;
+            }
         }
 
         public bool ClearFilter()
@@ -746,11 +826,23 @@ namespace Barotrauma.Items.Components
             return true;
         }
 
+        private readonly record struct SelectedRecipe(Character User, FabricationRecipe SelectedItem, Option<float> OverrideRequiredTime);
+        private Option<SelectedRecipe> LastSelectedRecipe = Option.None;
+
         private bool SelectItem(Character user, FabricationRecipe selectedItem, float? overrideRequiredTime = null)
         {
             this.selectedItem = selectedItem;
+            displayingForCharacter = user;
+            var selectedRecipe = new SelectedRecipe(user, selectedItem, overrideRequiredTime is null ? Option.None : Option.Some(overrideRequiredTime.Value));
+            LastSelectedRecipe = Option.Some(selectedRecipe);
+            CreateSelectedItemUI(selectedRecipe);
+            return true;
+        }
 
-            int max = Math.Max(selectedItem.TargetItem.MaxStackSize / selectedItem.Amount, 1);
+        private void CreateSelectedItemUI(SelectedRecipe recipe)
+        {
+            var (user, selectedItem, overrideRequiredTime) = recipe;
+            int max = Math.Max(selectedItem.TargetItem.GetMaxStackSize(outputContainer.Inventory) / selectedItem.Amount, 1);
 
             if (amountInput != null)
             {
@@ -773,8 +865,10 @@ namespace Barotrauma.Items.Components
             LocalizedString itemName = GetRecipeNameAndAmount(selectedItem);
             LocalizedString name = itemName;
 
-            float quality = selectedItem.Quality ?? GetFabricatedItemQuality(selectedItem, user);
-            if (quality > 0)
+            QualityResult result = GetFabricatedItemQuality(selectedItem, user);
+
+            float quality = selectedItem.Quality ?? result.Quality;
+            if (quality > 0 || result.HasRandomQualityRollChance)
             {
                 name = TextManager.GetWithVariable("itemname.quality" + (int)quality, "[itemname]", itemName + '\n')
                     .Fallback(TextManager.GetWithVariable("itemname.quality3", "[itemname]", itemName + '\n'));
@@ -785,6 +879,49 @@ namespace Barotrauma.Items.Components
             {
                 AutoScaleHorizontal = true
             };
+
+            if (result.HasRandomQualityRollChance)
+            {
+                var iconLayout = new GUIFrame(new RectTransform(new Vector2(0.4f, 1f), selectedItemFrame.RectTransform, anchor: Anchor.TopRight), style: null);
+                var icon = GameSession.CreateNotificationIcon(iconLayout, offset: true);
+
+                float percentage1 = result.TotalPlusOnePercentage;
+                float percentage2 = result.TotalPlusTwoPercentage;
+
+                string chance1text = percentage1.ToString("F1", CultureInfo.InvariantCulture);
+                string chance2text = percentage2.ToString("F1", CultureInfo.InvariantCulture);
+
+                int quality1 = Math.Clamp(result.Quality + 1, min: 0, max: 3);
+                int quality2 = Math.Clamp(result.Quality + 2, min: 0, max: 3);
+
+                LocalizedString quality1Text = TextManager.Get($"quality{quality1}");
+                LocalizedString quality2Text = TextManager.Get($"quality{quality2}");
+
+                string localizationTag = percentage2 > 0f && percentage1 > 0 && quality1 != quality2 ? "meetsbonusrequirementtwice" : "meetsbonusrequirement";
+
+                var variables = new (string Key, LocalizedString Value)[]
+                {
+                    ("[chance]", chance1text), ("[quality]", quality1Text),
+                    ("[chance2]", chance2text), ("[quality2]", quality2Text)
+                };
+
+                if (MathUtils.NearlyEqual(percentage1, 0))
+                {
+                    variables = new[] { ("[chance]", chance2text), ("[quality]", quality2Text) };
+                }
+
+                if (quality1 == quality2)
+                {
+                    LocalizedString rawPercentage = result.PlusOnePercentage.ToString("F1", CultureInfo.InvariantCulture);
+                    variables = new[] { ("[chance]", rawPercentage), ("[quality]", quality1Text) };
+                }
+
+                LocalizedString qualityTooltip = TextManager.GetWithVariables(localizationTag, variables);
+
+                icon.ToolTip = RichString.Rich(qualityTooltip);
+                icon.Visible = icon.CanBeFocused = true;
+            }
+
             nameBlock.Padding = new Vector4(0, nameBlock.Padding.Y, GUI.IntScale(5), nameBlock.Padding.W);
             if (nameBlock.TextScale < 0.7f)
             {
@@ -795,15 +932,15 @@ namespace Barotrauma.Items.Components
                 nameBlock.Wrap = true;
                 nameBlock.SetTextPos();
                 nameBlock.RectTransform.MinSize = new Point(0, (int)(nameBlock.TextSize.Y * nameBlock.TextScale));
-            }            
-            
+            }
+
             if (!selectedItem.TargetItem.Description.IsNullOrEmpty())
             {
                 var description = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), paddedFrame.RectTransform),
                     selectedItem.TargetItem.Description,
                     font: GUIStyle.SmallFont, wrap: true);
                 description.Padding = new Vector4(0, description.Padding.Y, description.Padding.Z, description.Padding.W);
-            
+
                 while (description.Rect.Height + nameBlock.Rect.Height > paddedFrame.Rect.Height)
                 {
                     var lines = description.WrappedText.Split('\n');
@@ -814,13 +951,13 @@ namespace Barotrauma.Items.Components
                     description.ToolTip = selectedItem.TargetItem.Description;
                 }
             }
-            
+
             IEnumerable<Skill> inadequateSkills = Enumerable.Empty<Skill>();
             if (user != null)
             {
                 inadequateSkills = selectedItem.RequiredSkills.Where(skill => user.GetSkillLevel(skill.Identifier) < Math.Round(skill.Level * SkillRequirementMultiplier));
             }
-            
+
             if (selectedItem.RequiredSkills.Any())
             {
                 LocalizedString text = "";
@@ -841,9 +978,10 @@ namespace Barotrauma.Items.Components
             float degreeOfSuccess = user == null ? 0.0f : FabricationDegreeOfSuccess(user, selectedItem.RequiredSkills);
             if (degreeOfSuccess > 0.5f) { degreeOfSuccess = 1.0f; }
 
-            float requiredTime = overrideRequiredTime ??
-                (user == null ? selectedItem.RequiredTime : GetRequiredTime(selectedItem, user));
-            
+            float requiredTime = overrideRequiredTime.TryUnwrap(out var time) 
+                ? time
+                : (user == null ? selectedItem.RequiredTime : GetRequiredTime(selectedItem, user));
+
             if ((int)requiredTime > 0)
             {
                 new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), paddedReqFrame.RectTransform), 
@@ -866,7 +1004,6 @@ namespace Barotrauma.Items.Components
                     font: GUIStyle.SmallFont);
 
             }
-            return true;
         }
 
         public void HighlightRecipe(string identifier, Color color)
@@ -924,7 +1061,7 @@ namespace Barotrauma.Items.Components
             return true;
         }
 
-        public override void UpdateHUD(Character character, float deltaTime, Camera cam)
+        public override void UpdateHUDComponentSpecific(Character character, float deltaTime, Camera cam)
         {
             activateButton.Enabled = false;
             inSufficientPowerWarning.Visible = IsActive && !hasPower;
@@ -933,6 +1070,12 @@ namespace Barotrauma.Items.Components
 
             if (!IsActive)
             {
+                if (selectedItem != null && displayingForCharacter != character)
+                {
+                    //reselect to recreate the info based on the new user's skills
+                    SelectItem(character, selectedItem);
+                }
+
                 //only check ingredients if the fabricator isn't active (if it is, this is done in Update)
                 if (refreshIngredientsTimer <= 0.0f)
                 {
@@ -970,6 +1113,15 @@ namespace Barotrauma.Items.Components
             }
         }
 
+        public override void OnPlayerSkillsChanged()
+            => RefreshSelectedItem();
+
+        public void RefreshSelectedItem()
+        {
+            if (!LastSelectedRecipe.TryUnwrap(out var lastSelected)) { return; }
+            CreateSelectedItemUI(lastSelected);
+        }
+
         partial void UpdateRequiredTimeProjSpecific()
         {
             if (requiredTimeBlock == null) { return; }
@@ -998,9 +1150,13 @@ namespace Barotrauma.Items.Components
             {
                 fabricationLimits[msg.ReadUInt32()] = 0;
             }
-
             State = newState;
-            this.amountToFabricate = amountToFabricate;
+            //don't touch the amount unless another character changed it or the fabricator is running
+            //otherwise we may end up reverting the changes the client just did to the amount
+            if ((user != null && user != Character.Controlled) || State != FabricatorState.Stopped)
+            {
+                this.amountToFabricate = amountToFabricate;
+            }
             this.amountRemaining = amountRemaining;
             if (newState == FabricatorState.Stopped || recipeHash == 0)
             {

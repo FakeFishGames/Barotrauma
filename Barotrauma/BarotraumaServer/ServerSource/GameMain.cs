@@ -118,26 +118,13 @@ namespace Barotrauma
 
         private void CheckContentPackage()
         {
-            //TODO: reimplement using only core package?
-            /*foreach (ContentPackage contentPackage in Config.AllEnabledPackages)
+            if (Version < VanillaContent.GameVersion)
             {
-                var exePaths = contentPackage.GetFilesOfType(ContentType.ServerExecutable);
-                if (exePaths.Count() > 0 && AppDomain.CurrentDomain.FriendlyName != exePaths.First())
-                {
-                    DebugConsole.NewMessage(AppDomain.CurrentDomain.FriendlyName);
-                    DebugConsole.ShowQuestionPrompt(TextManager.GetWithVariables("IncorrectExe", new string[2] { "[selectedpackage]", "[exename]" }, new string[2] { contentPackage.Name, exePaths.First() }),
-                        (option) =>
-                        {
-                            if (option.ToLower() == "y" || option.ToLower() == "yes")
-                            {
-                                string fullPath = Path.GetFullPath(exePaths.First());
-                                ToolBox.OpenFileWithShell(fullPath);
-                                ShouldRun = false;
-                            }
-                        });
-                    break;
-                }
-            }*/
+                DebugConsole.ThrowErrorLocalized(
+                    TextManager.GetWithVariables("versionmismatchwarning",
+                        ("[gameversion]", Version.ToString()),
+                        ("[contentversion]", VanillaContent.GameVersion.ToString())));
+            }
         }
 
         public void StartServer()
@@ -327,6 +314,7 @@ namespace Barotrauma
                 while (Timing.Accumulator >= Timing.Step)
                 {
                     Timing.TotalTime += Timing.Step;
+                    Timing.TotalTimeUnpaused += Timing.Step;                    
                     DebugConsole.Update();
                     if (GameSession?.GameMode == null || !GameSession.GameMode.Paused)
                     {

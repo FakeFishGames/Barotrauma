@@ -16,7 +16,7 @@ namespace Barotrauma
         protected readonly HashSet<Character> requireKill = new HashSet<Character>();
         protected readonly HashSet<Character> requireRescue = new HashSet<Character>();
 
-        private readonly string itemTag;
+        private readonly Identifier itemTag;
         private readonly XElement itemConfig;
         private readonly List<Item> items = new List<Item>();
 
@@ -90,7 +90,7 @@ namespace Barotrauma
             hostagesKilledMessage = TextManager.Get(msgTag).Fallback(msgTag);
 
             itemConfig = prefab.ConfigElement.GetChildElement("Items");
-            itemTag = prefab.ConfigElement.GetAttributeString("targetitem", "");
+            itemTag = prefab.ConfigElement.GetAttributeIdentifier("targetitem", Identifier.Empty);
         }
 
         protected override void StartMissionSpecific(Level level)
@@ -118,12 +118,13 @@ namespace Barotrauma
 
         private void InitItems(Submarine submarine)
         {
-            if (!string.IsNullOrEmpty(itemTag))
+            if (!itemTag.IsEmpty)
             {
                 var itemsToDestroy = Item.ItemList.FindAll(it => it.Submarine?.Info.Type != SubmarineType.Player && it.HasTag(itemTag));
                 if (!itemsToDestroy.Any())
                 {
-                    DebugConsole.ThrowError($"Error in mission \"{Prefab.Identifier}\". Could not find an item with the tag \"{itemTag}\".");
+                    DebugConsole.ThrowError($"Error in mission \"{Prefab.Identifier}\". Could not find an item with the tag \"{itemTag}\".",
+                        contentPackage: Prefab.ContentPackage);
                 }
                 else
                 {
@@ -135,10 +136,11 @@ namespace Barotrauma
             {
                 foreach (XElement element in itemConfig.Elements())
                 {
-                    string itemIdentifier = element.GetAttributeString("identifier", "");
-                    if (!(MapEntityPrefab.Find(null, itemIdentifier) is ItemPrefab itemPrefab))
+                    Identifier itemIdentifier = element.GetAttributeIdentifier("identifier", Identifier.Empty);
+                    if (MapEntityPrefab.FindByIdentifier(itemIdentifier) is not ItemPrefab itemPrefab)
                     {
-                        DebugConsole.ThrowError("Couldn't spawn item for outpost destroy mission: item prefab \"" + itemIdentifier + "\" not found");
+                        DebugConsole.ThrowError("Couldn't spawn item for outpost destroy mission: item prefab \"" + itemIdentifier + "\" not found",
+                            contentPackage: Prefab.ContentPackage);
                         continue;
                     }
 
@@ -189,7 +191,8 @@ namespace Barotrauma
                         HumanPrefab humanPrefab = GetHumanPrefabFromElement(element); 
                         if (humanPrefab == null)
                         {
-                            DebugConsole.ThrowError($"Couldn't spawn a human character for abandoned outpost mission: human prefab \"{element.GetAttributeString("identifier", string.Empty)}\" not found");
+                            DebugConsole.ThrowError($"Couldn't spawn a human character for abandoned outpost mission: human prefab \"{element.GetAttributeString("identifier", string.Empty)}\" not found",
+                                contentPackage: Prefab.ContentPackage);
                             continue;
                         }
                         for (int i = 0; i < count; i++)
@@ -203,7 +206,8 @@ namespace Barotrauma
                         var characterPrefab = CharacterPrefab.FindBySpeciesName(speciesName);
                         if (characterPrefab == null)
                         {
-                            DebugConsole.ThrowError($"Couldn't spawn a character for abandoned outpost mission: character prefab \"{speciesName}\" not found");
+                            DebugConsole.ThrowError($"Couldn't spawn a character for abandoned outpost mission: character prefab \"{speciesName}\" not found",
+                                contentPackage: Prefab.ContentPackage);
                             continue;
                         }
                         for (int i = 0; i < count; i++)

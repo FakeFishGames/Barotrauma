@@ -24,7 +24,8 @@ namespace Barotrauma
             State = element.GetAttributeInt("value", State);
             if (MissionIdentifier.IsEmpty)
             {
-                DebugConsole.ThrowError($"Error in event \"{parentEvent.Prefab.Identifier}\": MissionIdentifier has not been configured.");
+                DebugConsole.ThrowError($"Error in event \"{parentEvent.Prefab.Identifier}\": MissionIdentifier has not been configured.",
+                    contentPackage: element.ContentPackage);
             }
         }
 

@@ -227,7 +227,7 @@ namespace Barotrauma.Items.Components
             switch (text)
             {
                 case "[CurrentLocationName]":
-                    SetDisplayText(Level.Loaded?.StartLocation?.Name ?? string.Empty);
+                    SetDisplayText(Level.Loaded?.StartLocation?.DisplayName.Value ?? string.Empty);
                     break;
                 case "[CurrentBiomeName]":
                     SetDisplayText(Level.Loaded?.LevelData?.Biome?.DisplayName.Value ?? string.Empty);
@@ -311,7 +311,7 @@ namespace Barotrauma.Items.Components
             prevRect = item.Rect;
         }
         
-        public void Draw(SpriteBatch spriteBatch, bool editing = false, float itemDepth = -1)
+        public void Draw(SpriteBatch spriteBatch, bool editing = false, float itemDepth = -1, Color? overrideColor = null)
         {
             if (item.ParentInventory != null) { return; }
             if (editing)

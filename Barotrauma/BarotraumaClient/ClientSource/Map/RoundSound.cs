@@ -1,10 +1,9 @@
 ﻿#nullable enable
+using Barotrauma.Sounds;
+using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
-using System.Xml.Linq;
-using Barotrauma.Sounds;
-using Microsoft.Xna.Framework;
 
 namespace Barotrauma
 {
@@ -45,7 +44,8 @@ namespace Barotrauma
             }
             if (FrequencyMultiplierRange.Y > 4.0f)
             {
-                DebugConsole.ThrowError($"Loaded frequency range exceeds max value: {FrequencyMultiplierRange} (original string was \"{freqMultAttr}\")");
+                DebugConsole.ThrowError($"Loaded frequency range exceeds max value: {FrequencyMultiplierRange} (original string was \"{freqMultAttr}\")",
+                    contentPackage: element.ContentPackage);
             }
             IgnoreMuffling = element.GetAttributeBool("dontmuffle", false);
         }
@@ -65,7 +65,8 @@ namespace Barotrauma
             if (filename is null)
             {
                 string errorMsg = "Error when loading round sound (" + element + ") - file path not set";
-                DebugConsole.ThrowError(errorMsg);
+                DebugConsole.ThrowError(errorMsg,
+                    contentPackage: element.ContentPackage);
                 GameAnalyticsManager.AddErrorEventOnce("RoundSound.LoadRoundSound:FilePathEmpty" + element.ToString(), GameAnalyticsManager.ErrorSeverity.Error, errorMsg + "\n" + Environment.StackTrace.CleanupStackTrace());
                 return null;
             }
@@ -86,7 +87,8 @@ namespace Barotrauma
                 catch (System.IO.FileNotFoundException e)
                 {
                     string errorMsg = "Failed to load sound file \"" + filename + "\" (file not found).";
-                    DebugConsole.ThrowError(errorMsg, e);
+                    DebugConsole.ThrowError(errorMsg, e,
+                        contentPackage: element.ContentPackage);
                     if (!ContentPackageManager.ModsEnabled)
                     {
                         GameAnalyticsManager.AddErrorEventOnce("RoundSound.LoadRoundSound:FileNotFound" + filename, GameAnalyticsManager.ErrorSeverity.Error, errorMsg + "\n" + Environment.StackTrace.CleanupStackTrace());
@@ -96,7 +98,8 @@ namespace Barotrauma
                 catch (System.IO.InvalidDataException e)
                 {
                     string errorMsg = "Failed to load sound file \"" + filename + "\" (invalid data).";
-                    DebugConsole.ThrowError(errorMsg, e);
+                    DebugConsole.ThrowError(errorMsg, e,
+                        contentPackage: element.ContentPackage);
                     GameAnalyticsManager.AddErrorEventOnce("RoundSound.LoadRoundSound:InvalidData" + filename, GameAnalyticsManager.ErrorSeverity.Error, errorMsg + "\n" + Environment.StackTrace.CleanupStackTrace());
                     return null;
                 }
@@ -123,7 +126,8 @@ namespace Barotrauma
                 catch (System.IO.FileNotFoundException e)
                 {
                     string errorMsg = "Failed to load sound file \"" + roundSound.Filename + "\".";
-                    DebugConsole.ThrowError(errorMsg, e);
+                    DebugConsole.ThrowError(errorMsg, e,
+                        contentPackage: roundSound.Sound?.XElement?.ContentPackage);
                     GameAnalyticsManager.AddErrorEventOnce("RoundSound.LoadRoundSound:FileNotFound" + roundSound.Filename, GameAnalyticsManager.ErrorSeverity.Error, errorMsg + "\n" + Environment.StackTrace.CleanupStackTrace());
                     return;
                 }

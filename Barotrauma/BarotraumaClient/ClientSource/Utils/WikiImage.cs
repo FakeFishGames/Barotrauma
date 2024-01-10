@@ -76,7 +76,7 @@ namespace Barotrauma
             float zoom = (float)texWidth / (float)boundingBox.Width;
             int texHeight = (int)(zoom * boundingBox.Height);
 
-            using Camera cam = new Camera();
+            Camera cam = new Camera();
             cam.SetResolution(new Point(texWidth, texHeight));
             cam.MaxZoom = zoom;
             cam.MinZoom = zoom * 0.5f;
@@ -142,10 +142,10 @@ namespace Barotrauma
                 GameMain.Instance.GraphicsDevice.SetRenderTarget(rt);
                 GameMain.Instance.GraphicsDevice.Clear(Color.Transparent);
 
-                DrawBatch(() => Submarine.DrawBack(spriteBatch, true, e => e is Structure s && (e.SpriteDepth >= 0.9f || s.Prefab.BackgroundSprite != null)));
-                DrawBatch(() => Submarine.DrawBack(spriteBatch, true, e => (e is not Structure || e.SpriteDepth < 0.9f)));
-                DrawBatch(() => Submarine.DrawDamageable(spriteBatch, null, editing: true));
-                DrawBatch(() => Submarine.DrawFront(spriteBatch, editing: true));
+                DrawBatch(() => Submarine.DrawBack(spriteBatch, editing: false, e => e is Structure s && (e.SpriteDepth >= 0.9f || s.Prefab.BackgroundSprite != null)));
+                DrawBatch(() => Submarine.DrawBack(spriteBatch, editing: false, e => (e is not Structure || e.SpriteDepth < 0.9f)));
+                DrawBatch(() => Submarine.DrawDamageable(spriteBatch, null, editing: false));
+                DrawBatch(() => Submarine.DrawFront(spriteBatch, editing: false));
 
                 void DrawBatch(Action drawAction)
                 {

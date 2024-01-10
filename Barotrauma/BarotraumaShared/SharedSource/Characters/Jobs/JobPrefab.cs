@@ -13,7 +13,14 @@ namespace Barotrauma
         public readonly Identifier Identifier;
         public readonly Identifier Option;
         public readonly float PriorityModifier;
+        /// <summary>
+        /// The order is ignored in outpost levels. Doesn't apply to outpost NPCs.
+        /// </summary>
         public readonly bool IgnoreAtOutpost;
+        /// <summary>
+        /// The order is ignored in "normal" non-outpost levels
+        /// </summary>
+        public readonly bool IgnoreAtNonOutpost;
 
         public AutonomousObjective(XElement element)
         {
@@ -29,6 +36,7 @@ namespace Barotrauma
             PriorityModifier = element.GetAttributeFloat("prioritymodifier", 1);
             PriorityModifier = MathHelper.Max(PriorityModifier, 0);
             IgnoreAtOutpost = element.GetAttributeBool("ignoreatoutpost", false);
+            IgnoreAtNonOutpost = element.GetAttributeBool("ignoreatnonoutpost", false);
         }
     }
 
@@ -43,7 +51,8 @@ namespace Barotrauma
             Priority = element.GetAttributeFloat("priority", -1f);
             if (Priority < 0)
             {
-                DebugConsole.AddWarning($"The 'priority' attribute is missing from the the item repair priorities definition in {element} of {file.Path}.");
+                DebugConsole.AddWarning($"The 'priority' attribute is missing from the the item repair priorities definition in {element} of {file.Path}.",
+                    ContentPackage);
             }
         }
 
@@ -243,14 +252,14 @@ namespace Barotrauma
                 {
                     if (itemElement.Element("name") != null)
                     {
-                        DebugConsole.ThrowError("Error in job config \"" + Name + "\" - use identifiers instead of names to configure the items.");
+                        DebugConsole.ThrowErrorLocalized("Error in job config \"" + Name + "\" - use identifiers instead of names to configure the items.");
                         continue;
                     }
 
                     Identifier itemIdentifier = itemElement.GetAttributeIdentifier("identifier", Identifier.Empty);
                     if (itemIdentifier.IsEmpty)
                     {
-                        DebugConsole.ThrowError("Error in job config \"" + Name + "\" - item with no identifier.");
+                        DebugConsole.ThrowErrorLocalized("Error in job config \"" + Name + "\" - item with no identifier.");
                     }
                     else
                     {

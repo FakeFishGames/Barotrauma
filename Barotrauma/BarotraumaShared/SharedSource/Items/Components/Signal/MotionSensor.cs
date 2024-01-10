@@ -121,7 +121,7 @@ namespace Barotrauma.Items.Components
         }
 
         private string falseOutput;
-        [InGameEditable, Serialize("", IsPropertySaveable.Yes, description: "The signal the item outputs when it has not detected movement.", alwaysUseInstanceValues: true)]
+        [InGameEditable, Serialize("0", IsPropertySaveable.Yes, description: "The signal the item outputs when it has not detected movement.", alwaysUseInstanceValues: true)]
         public string FalseOutput
         {
             get { return falseOutput; }
@@ -136,7 +136,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        [Editable(DecimalCount = 3), Serialize(0.1f, IsPropertySaveable.Yes, description: "How fast the objects within the detector's range have to be moving (in m/s).", alwaysUseInstanceValues: true)]
+        [InGameEditable(DecimalCount = 3), Serialize(0.0f, IsPropertySaveable.Yes, description: "How fast the objects within the detector's range have to be moving (in m/s).", alwaysUseInstanceValues: true)]
         public float MinimumVelocity
         {
             get;
@@ -254,45 +254,52 @@ namespace Barotrauma.Items.Components
                 }
             }
 
-            if (Target.HasFlag(TargetType.Human) || Target.HasFlag(TargetType.Pet) || Target.HasFlag(TargetType.Monster))
+            bool triggerFromHumans = Target.HasFlag(TargetType.Human);
+            bool triggerFromPets = Target.HasFlag(TargetType.Pet);
+            bool triggerFromMonsters = Target.HasFlag(TargetType.Monster);
+            bool hasTriggers = triggerFromHumans || triggerFromPets || triggerFromMonsters;
+            if (!hasTriggers) { return; }
+            foreach (Character c in Character.CharacterList)
             {
-                foreach (Character c in Character.CharacterList)
+                if (IgnoreDead && c.IsDead) { continue; }
+
+                //ignore characters that have spawned a second or less ago
+                //makes it possible to detect when a spawned character moves without triggering the detector immediately as the ragdoll spawns and drops to the ground
+                if (c.SpawnTime > Timing.TotalTime - 1.0) { continue; }
+                if (c.IsHuman)
                 {
-                    if (IgnoreDead && c.IsDead) { continue; }
-
-                    //ignore characters that have spawned a second or less ago
-                    //makes it possible to detect when a spawned character moves without triggering the detector immediately as the ragdoll spawns and drops to the ground
-                    if (c.SpawnTime > Timing.TotalTime - 1.0) { continue; }
-
-                    if (c.IsHuman)
+                    if (!triggerFromHumans) { continue; }
+                }
+                else if (c.IsPet)
+                {
+                    if (!triggerFromPets) { continue; }
+                }
+                else
+                {
+                    // Not a human or a pet -> monster?
+                    if (!triggerFromMonsters) { continue; }
+                    if (CharacterParams.CompareGroup(c.Group, CharacterPrefab.HumanGroup))
                     {
-                        if (!Target.HasFlag(TargetType.Human)) { continue; }
-                    }
-                    else if (c.IsPet)
-                    {
-                        if (!Target.HasFlag(TargetType.Pet)) { continue; }
-                    }
-                    else
-                    {
-                        if (!Target.HasFlag(TargetType.Monster)) { continue; }
-                    }
-
-                    //do a rough check based on the position of the character's collider first
-                    //before the more accurate limb-based check
-                    if (Math.Abs(c.WorldPosition.X - detectPos.X) > broadRangeX || Math.Abs(c.WorldPosition.Y - detectPos.Y) > broadRangeY)
-                    {
+                        //characters in the "human" group aren't considered monsters (even if they were something like a friendly mudraptor)
                         continue;
                     }
+                }
 
-                    foreach (Limb limb in c.AnimController.Limbs)
+                //do a rough check based on the position of the character's collider first
+                //before the more accurate limb-based check
+                if (Math.Abs(c.WorldPosition.X - detectPos.X) > broadRangeX || Math.Abs(c.WorldPosition.Y - detectPos.Y) > broadRangeY)
+                {
+                    continue;
+                }
+
+                foreach (Limb limb in c.AnimController.Limbs)
+                {
+                    if (limb.IsSevered) { continue; }
+                    if (limb.LinearVelocity.LengthSquared() < MinimumVelocity * MinimumVelocity) { continue; }
+                    if (MathUtils.CircleIntersectsRectangle(limb.WorldPosition, ConvertUnits.ToDisplayUnits(limb.body.GetMaxExtent()), detectRect))
                     {
-                        if (limb.IsSevered) { continue; }
-                        if (limb.LinearVelocity.LengthSquared() < MinimumVelocity * MinimumVelocity) { continue; }
-                        if (MathUtils.CircleIntersectsRectangle(limb.WorldPosition, ConvertUnits.ToDisplayUnits(limb.body.GetMaxExtent()), detectRect))
-                        {
-                            MotionDetected = true;
-                            return;
-                        }
+                        MotionDetected = true;
+                        return;
                     }
                 }
             }
