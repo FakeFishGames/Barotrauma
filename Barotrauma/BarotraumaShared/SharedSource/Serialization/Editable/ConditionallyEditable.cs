@@ -45,7 +45,7 @@ sealed class ConditionallyEditable : Editable
                 => (entity is Item { body: null } item && item.Prefab.AllowRotatingInEditor)
                    || (entity is Structure structure && structure.Prefab.AllowRotatingInEditor),
             ConditionType.Attachable
-                => entity is Holdable { Attachable: true },
+                => GetComponent<Holdable>(entity) is Holdable { Attachable: true },
             ConditionType.HasBody
                 => entity is Structure { HasBody: true } or Item { body: not null },
             ConditionType.Pickable
@@ -53,14 +53,28 @@ sealed class ConditionallyEditable : Editable
             ConditionType.OnlyByStatusEffectsAndNetwork
                 => GameMain.NetworkMember is { IsServer: true },
             ConditionType.HasIntegratedButtons
-                => entity is Door { HasIntegratedButtons: true },
+                => GetComponent<Door>(entity) is { HasIntegratedButtons: true },
             ConditionType.IsToggleableController
-                => entity is Controller { IsToggle: true } controller && controller.Item.GetComponent<ConnectionPanel>() != null,
+                => GetComponent<Controller>(entity) is Controller { IsToggle: true } controller && 
+                controller.Item.GetComponent<ConnectionPanel>() != null,
             ConditionType.HasConnectionPanel
-                => (entity is Item item && item.GetComponent<ConnectionPanel>() != null)
-                   || (entity is ItemComponent ic && ic.Item.GetComponent<ConnectionPanel>() != null),
+                => GetComponent<ConnectionPanel>(entity) != null,
             _
                 => false
         };
+
+        static T GetComponent<T>(ISerializableEntity e) where T : ItemComponent
+        {
+            if (e is T t) { return t; }
+            if (e is Item item)
+            {
+                return item.GetComponent<T>();
+            }
+            if (e is ItemComponent ic)
+            {
+                return ic.Item.GetComponent<T>();
+            }
+            return null;
+        }
     }
 }

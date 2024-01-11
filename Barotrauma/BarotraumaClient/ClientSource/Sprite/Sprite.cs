@@ -284,6 +284,11 @@ namespace Barotrauma
             }
         }
 
+        /// <summary>
+        /// Last version of the game that had broken handling of sprites that were scaled, flipped and offset
+        /// </summary>
+        public static readonly Version LastBrokenTiledSpriteGameVersion = new Version(major: 1, minor: 2, build: 7, revision: 0);
+
         public void DrawTiled(ISpriteBatch spriteBatch,
             Vector2 position,
             Vector2 targetSize,
@@ -298,8 +303,9 @@ namespace Barotrauma
             if (Texture == null) { return; }
 
             spriteEffects ??= effects;
-            bool flipHorizontal = (spriteEffects.Value & SpriteEffects.FlipHorizontally) != 0;
-            bool flipVertical = (spriteEffects.Value & SpriteEffects.FlipVertically) != 0;
+
+            bool flipHorizontal = spriteEffects.Value.HasFlag(SpriteEffects.FlipHorizontally);
+            bool flipVertical = spriteEffects.Value.HasFlag(SpriteEffects.FlipVertically);
 
             float addedRotation = rotation + this.rotation;
             if (flipHorizontal != flipVertical) { addedRotation = -addedRotation; }
@@ -317,34 +323,34 @@ namespace Barotrauma
 
             void drawSection(Vector2 slicePos, Rectangle sliceRect)
             {
-                Vector2 transformedPos = slicePos - position;
+                Vector2 transformedPos = slicePos;
+
+                if (flipHorizontal)
+                {
+                    transformedPos.X = targetSize.X - transformedPos.X - sliceRect.Width * scale.X;
+                }
+                if (flipVertical)
+                {
+                    transformedPos.Y = targetSize.Y - transformedPos.Y - sliceRect.Height * scale.Y;
+                }
+
                 transformedPos = advanceX * transformedPos.X + advanceY * transformedPos.Y;
                 transformedPos += position - transformedOrigin;
-                spriteBatch.Draw(texture, transformedPos, sliceRect, drawColor, addedRotation, Vector2.Zero, scale, spriteEffects.Value, depth ?? this.depth);
+                spriteBatch.Draw(
+                    texture: texture,
+                    position: transformedPos,
+                    sourceRectangle: sliceRect,
+                    color: drawColor,
+                    rotation: addedRotation,
+                    origin: Vector2.Zero,
+                    scale: scale,
+                    effects: spriteEffects.Value,
+                    layerDepth: depth ?? this.depth);
             }
 
             //wrap the drawOffset inside the sourceRect
             drawOffset.X = (drawOffset.X / scale.X) % sourceRect.Width;
             drawOffset.Y = (drawOffset.Y / scale.Y) % sourceRect.Height;
-
-            Vector2 flippedDrawOffset = Vector2.Zero;
-            if (flipHorizontal)
-            {
-                float diff = targetSize.X % (sourceRect.Width * scale.X);
-                flippedDrawOffset.X = (sourceRect.Width * scale.X - diff) / scale.X;
-                flippedDrawOffset.X =
-                    MathUtils.NearlyEqual(flippedDrawOffset.X, MathF.Round(flippedDrawOffset.X)) ?
-                    MathF.Round(flippedDrawOffset.X) : flippedDrawOffset.X;
-            }
-            if (flipVertical)
-            {
-                float diff = targetSize.Y % (sourceRect.Height * scale.Y);
-                flippedDrawOffset.Y = (sourceRect.Height * scale.Y - diff) / scale.Y;
-                flippedDrawOffset.Y =
-                    MathUtils.NearlyEqual(flippedDrawOffset.Y, MathF.Round(flippedDrawOffset.Y)) ?
-                    MathF.Round(flippedDrawOffset.Y) : flippedDrawOffset.Y;
-            }
-            drawOffset += flippedDrawOffset;
 
             //how many times the texture needs to be drawn on the x-axis
             int xTiles = (int)Math.Ceiling((targetSize.X + drawOffset.X * scale.X) / (sourceRect.Width * scale.X));
@@ -352,7 +358,7 @@ namespace Barotrauma
             int yTiles = (int)Math.Ceiling((targetSize.Y + drawOffset.Y * scale.Y) / (sourceRect.Height * scale.Y));
 
             //where the current tile is being drawn;
-            Vector2 currDrawPosition = position - drawOffset;
+            Vector2 currDrawPosition = -drawOffset;
             //which part of the texture we are currently drawing
             Rectangle texPerspective = sourceRect;
 
@@ -364,54 +370,22 @@ namespace Barotrauma
                 texPerspective.Height = sourceRect.Height;
 
                 //offset to the left, draw a partial slice
-                if (currDrawPosition.X < position.X)
+                if (currDrawPosition.X < 0)
                 {
-                    float diff = (position.X - currDrawPosition.X);
+                    float diff = -currDrawPosition.X;
                     currDrawPosition.X += diff;
                     texPerspective.Width -= (int)diff;
-                    if (!flipHorizontal)
-                    {
-                        texPerspective.X += (int)diff;
-                    }
-                    if (!flipVertical)
-                    {
-                        texPerspective.Y += (int)diff;
-                    }
-                }
-                //drawing an offset flipped sprite, need to draw an extra slice to the left side
-                if (currDrawPosition.X > position.X && x == 0)
-                {
-                    if (flipHorizontal)
-                    {
-                        int sliceWidth = (int)((currDrawPosition.X - position.X) * scale.X);
 
-                        Vector2 slicePos = currDrawPosition;
-                        slicePos.X = position.X;
-                        Rectangle sliceRect = texPerspective;
-                        sliceRect.X = SourceRect.X;
-                        sliceRect.Width = (int)(sliceWidth / scale.X);
-                        
-                        if (flipVertical)
-                        {
-                            slicePos.Y += flippedDrawOffset.Y;
-                        }
-
-                        drawSection(slicePos, sliceRect);
-                        currDrawPosition.X = slicePos.X + sliceWidth;
-                    }
+                    texPerspective.X += (int)diff;
                 }
                 //make sure the rightmost tiles don't go over the right side
                 if (x == xTiles - 1)
                 {
-                    int diff = (int)(((currDrawPosition.X + texPerspective.Width * scale.X) - (position.X + targetSize.X)) / scale.X);
+                    int diff = (int)(((currDrawPosition.X + texPerspective.Width * scale.X) - targetSize.X) / scale.X);
                     texPerspective.Width -= diff;
-                    if (flipHorizontal)
-                    {
-                        texPerspective.X += diff;
-                    }
                 }
                 
-                currDrawPosition.Y = position.Y - drawOffset.Y;
+                currDrawPosition.Y = -drawOffset.Y;
 
                 for (int y = 0; y < yTiles; y++)
                 {
@@ -419,45 +393,19 @@ namespace Barotrauma
                     texPerspective.Height = sourceRect.Height;
 
                     //offset above the top, draw a partial slice
-                    if (currDrawPosition.Y < position.Y)
+                    if (currDrawPosition.Y < 0f)
                     {
-                        float diff = (position.Y - currDrawPosition.Y);
+                        float diff = -currDrawPosition.Y;
                         currDrawPosition.Y += diff;
                         texPerspective.Height -= (int)diff;
-                        if (!flipVertical)
-                        {
-                            texPerspective.Y += (int)diff;
-                        }
-                    }
-
-                    //drawing an offset flipped sprite, need to draw an extra slice to the top
-                    if (currDrawPosition.Y > position.Y && y == 0)
-                    {
-                        if (flipVertical)
-                        {
-                            int sliceHeight = (int)((currDrawPosition.Y - position.Y) * scale.Y);
-
-                            Vector2 slicePos = currDrawPosition;
-                            slicePos.Y = position.Y;
-                            Rectangle sliceRect = texPerspective;
-                            sliceRect.Y = SourceRect.Y;
-                            sliceRect.Height = (int)(sliceHeight / scale.Y);
-
-                            drawSection(slicePos, sliceRect);
-
-                            currDrawPosition.Y = slicePos.Y + sliceHeight;
-                        }
+                        texPerspective.Y += (int)diff;
                     }
 
                     //make sure the bottommost tiles don't go over the bottom
                     if (y == yTiles - 1)
                     {
-                        int diff = (int)(((currDrawPosition.Y + texPerspective.Height * scale.Y) - (position.Y + targetSize.Y)) / scale.Y);
+                        int diff = (int)(((currDrawPosition.Y + texPerspective.Height * scale.Y) - targetSize.Y) / scale.Y);
                         texPerspective.Height -= diff;
-                        if (flipVertical)
-                        {
-                            texPerspective.Y += diff;
-                        }
                     }
 
                     drawSection(currDrawPosition, texPerspective);

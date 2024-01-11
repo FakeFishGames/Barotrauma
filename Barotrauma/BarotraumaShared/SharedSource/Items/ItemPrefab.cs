@@ -834,7 +834,7 @@ namespace Barotrauma
         [Serialize(true, IsPropertySaveable.No)]
         public bool CanFlipY { get; private set; }
 
-        [Serialize(0.1f, IsPropertySaveable.No)]
+        [Serialize(0.01f, IsPropertySaveable.No)]
         public float MinScale { get; private set; }
 
         [Serialize(10.0f, IsPropertySaveable.No)]
