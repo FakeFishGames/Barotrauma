@@ -73,7 +73,7 @@ body:
       label: Version
       description: Which version of the game did the bug happen in? You can see the current version number in the bottom left corner of your screen in the main menu.
       options:      
-        - v1.2.7.0 (Winter Update hotfix)
+        - v1.2.8.0 (Winter Update hotfix 2)
         - Other
     validations:
       required: true
