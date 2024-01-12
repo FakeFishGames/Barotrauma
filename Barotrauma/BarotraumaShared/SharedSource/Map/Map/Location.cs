@@ -570,9 +570,9 @@ namespace Barotrauma
             if (nameIdentifier.IsEmpty)
             {
                 //backwards compatibility
-                rawName = element.GetAttributeString("basename", "");
-                nameIdentifier = rawName.ToIdentifier();
                 DisplayName = element.GetAttributeString("name", "");
+                rawName = element.GetAttributeString("rawname", element.GetAttributeString("basename", DisplayName.Value));
+                nameIdentifier = rawName.ToIdentifier();
             }
             else
             {
@@ -1088,12 +1088,12 @@ namespace Barotrauma
         {
             if (!Type.HasHireableCharacters)
             {
-                DebugConsole.ThrowError("Cannot hire a character from location \"" + DisplayName + "\" - the location has no hireable characters.\n" + Environment.StackTrace.CleanupStackTrace());
+                DebugConsole.ThrowErrorLocalized("Cannot hire a character from location \"" + DisplayName + "\" - the location has no hireable characters.\n" + Environment.StackTrace.CleanupStackTrace());
                 return;
             }
             if (HireManager == null)
             {
-                DebugConsole.ThrowError("Cannot hire a character from location \"" + DisplayName + "\" - hire manager has not been instantiated.\n" + Environment.StackTrace.CleanupStackTrace());
+                DebugConsole.ThrowErrorLocalized("Cannot hire a character from location \"" + DisplayName + "\" - hire manager has not been instantiated.\n" + Environment.StackTrace.CleanupStackTrace());
                 return;
             }
 

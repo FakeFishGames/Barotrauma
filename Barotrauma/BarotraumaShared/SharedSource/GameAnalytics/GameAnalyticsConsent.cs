@@ -269,7 +269,7 @@ namespace Barotrauma
         {
             if (response.ErrorException != null)
             {
-                DebugConsole.ThrowError(TextManager.GetWithVariable("MasterServerErrorException", "[error]", response.ErrorException.ToString()));
+                DebugConsole.ThrowErrorLocalized(TextManager.GetWithVariable("MasterServerErrorException", "[error]", response.ErrorException.ToString()));
                 return false;
             }
 
@@ -278,13 +278,13 @@ namespace Barotrauma
             switch (response.StatusCode)
             {
                 case HttpStatusCode.NotFound:
-                    DebugConsole.ThrowError(TextManager.GetWithVariable("MasterServerError404", "[masterserverurl]", consentServerUrl));
+                    DebugConsole.ThrowErrorLocalized(TextManager.GetWithVariable("MasterServerError404", "[masterserverurl]", consentServerUrl));
                     break;
                 case HttpStatusCode.ServiceUnavailable:
-                    DebugConsole.ThrowError(TextManager.Get("MasterServerErrorUnavailable"));
+                    DebugConsole.ThrowErrorLocalized(TextManager.Get("MasterServerErrorUnavailable"));
                     break;
                 default:
-                    DebugConsole.ThrowError(TextManager.GetWithVariables("MasterServerErrorDefault", 
+                    DebugConsole.ThrowErrorLocalized(TextManager.GetWithVariables("MasterServerErrorDefault", 
                         ("[statuscode]", response.StatusCode.ToString()),
                         ("[statusdescription]", response.StatusDescription)));
                     break;

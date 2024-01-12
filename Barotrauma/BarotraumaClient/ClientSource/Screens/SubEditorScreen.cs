@@ -80,7 +80,8 @@ namespace Barotrauma
             WallCount,
             ItemCount,
             LightCount,
-            ShadowCastingLightCount
+            ShadowCastingLightCount,
+            WaterInHulls
         }
 
         public static Vector2 MouseDragStart = Vector2.Zero;
@@ -1319,7 +1320,7 @@ namespace Barotrauma
                                 }
                                 catch (Exception e)
                                 {
-                                    DebugConsole.ThrowError(TextManager.GetWithVariable("DeleteFileError", "[file]", assemblyPrefab.Name), e);
+                                    DebugConsole.ThrowErrorLocalized(TextManager.GetWithVariable("DeleteFileError", "[file]", assemblyPrefab.Name), e);
                                 }
                                 return true;
                             };
@@ -1557,7 +1558,9 @@ namespace Barotrauma
             if (editorSelectedTime.TryUnwrap(out DateTime selectedTime))
             {
                 TimeSpan timeInEditor = DateTime.Now - selectedTime;
-                if (timeInEditor.TotalSeconds > Timing.TotalTime)
+                //this is intended for diagnosing why the "x hours in editor" achievement seems to sometimes trigger too soon
+                //require the time in editor to be x1.5 higher to disregard any rounding errors or discrepancies in Datetime.Now and the game's own timekeeping
+                if (timeInEditor.TotalSeconds > Timing.TotalTime * 1.5)
                 {
                     DebugConsole.ThrowErrorAndLogToGA(
                         "SubEditorScreen.DeselectEditorSpecific:InvalidTimeInEditor",
@@ -3711,7 +3714,7 @@ namespace Barotrauma
                 }
                 catch (Exception e)
                 {
-                    DebugConsole.ThrowError(TextManager.GetWithVariable("DeleteFileError", "[file]", sub.FilePath), e);
+                    DebugConsole.ThrowErrorLocalized(TextManager.GetWithVariable("DeleteFileError", "[file]", sub.FilePath), e);
                 }
                 return true;
             };
@@ -5199,9 +5202,7 @@ namespace Barotrauma
             SkipInventorySlotUpdate = false;
             ImageManager.Update((float)deltaTime);
 
-#if DEBUG
             Hull.UpdateCheats((float)deltaTime, cam);
-#endif
 
             if (GameMain.GraphicsWidth != screenResolution.X || GameMain.GraphicsHeight != screenResolution.Y)
             {

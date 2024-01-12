@@ -185,7 +185,7 @@ namespace Barotrauma
                         if (subElement.GetAttribute("sourcerect") == null &&
                             subElement.GetAttribute("sheetindex") == null)
                         {
-                            DebugConsole.ThrowError("Warning - sprite sourcerect not configured for structure \"" + Name + "\"!");
+                            DebugConsole.ThrowErrorLocalized("Warning - sprite sourcerect not configured for structure \"" + Name + "\"!");
                         }
 #if CLIENT
                         if (subElement.GetAttributeBool("fliphorizontal", false))

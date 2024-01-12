@@ -27,10 +27,9 @@ namespace Barotrauma.Particles
             get { return maxParticles; }
             set
             {
-                if (maxParticles == value || value < 4) return;
+                if (maxParticles == value || value < 4) { return; }
 
                 Particle[] newParticles = new Particle[value];
-
                 for (int i = 0; i < Math.Min(maxParticles, value); i++)
                 {
                     newParticles[i] = particles[i];
@@ -39,6 +38,16 @@ namespace Barotrauma.Particles
                 particleCount = Math.Min(particleCount, value);
                 particles = newParticles;
                 maxParticles = value;
+
+                var oldParticlesInCreationOrder = particlesInCreationOrder.ToList();
+                particlesInCreationOrder.Clear();
+                foreach (var particle in oldParticlesInCreationOrder)
+                {
+                    if (particles.Contains(particle))
+                    {
+                        particlesInCreationOrder.AddLast(particle);
+                    }
+                }
             }
         }
         private Particle[] particles;

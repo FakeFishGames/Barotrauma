@@ -583,12 +583,23 @@ namespace Barotrauma
                 }
             };
 
+            HandleSetterValueTampering(numberInput, () => property.GetFloatValue(entity));
+            refresh += () =>
+            {
+                if (!numberInput.TextBox.Selected) { numberInput.FloatValue = (float)property.GetValue(entity); }
+            };
+            if (!Fields.ContainsKey(property.Name)) { Fields.Add(property.Name.ToIdentifier(), new GUIComponent[] { numberInput }); }
+            return frame;
+        }
+
+        private static void HandleSetterValueTampering(GUINumberInput numberInput, Func<float> getter)
+        {
             // Lots of UI boilerplate to handle all(?) cases where the property's setter may be called
             // and modify the input value (e.g. rotation value wrapping)
             void HandleSetterModifyingInput(GUINumberInput numInput)
             {
                 var inputFloatValue = numInput.FloatValue;
-                var resultingFloatValue = property.GetFloatValue(entity);
+                var resultingFloatValue = getter();
                 if (!MathUtils.NearlyEqual(resultingFloatValue, inputFloatValue))
                 {
                     numInput.FloatValue = resultingFloatValue;
@@ -602,12 +613,6 @@ namespace Barotrauma
             numberInput.PlusButton.OnClicked += HandleSetterModifyingInputOnButtonClicked;
             numberInput.MinusButton.OnPressed += HandleSetterModifyingInputOnButtonPressed;
             numberInput.MinusButton.OnClicked += HandleSetterModifyingInputOnButtonClicked;
-            refresh += () =>
-            {
-                if (!numberInput.TextBox.Selected) { numberInput.FloatValue = (float)property.GetValue(entity); }
-            };
-            if (!Fields.ContainsKey(property.Name)) { Fields.Add(property.Name.ToIdentifier(), new GUIComponent[] { numberInput }); }
-            return frame;
         }
 
         public GUIComponent CreateEnumField(ISerializableEntity entity, SerializableProperty property, object value, LocalizedString displayName, LocalizedString toolTip)
@@ -881,26 +886,33 @@ namespace Barotrauma
                 numberInput.MaxValueFloat = editableAttribute.MaxValueFloat;
                 numberInput.DecimalsToDisplay = editableAttribute.DecimalCount;
                 numberInput.ValueStep = editableAttribute.ValueStep;
+                numberInput.ForceShowPlusMinusButtons = editableAttribute.ForceShowPlusMinusButtons;
 
-                if (i == 0)
-                    numberInput.FloatValue = value.X;
-                else
-                    numberInput.FloatValue = value.Y;
+                numberInput.FloatValue = i == 0 ? value.X : value.Y;
 
                 int comp = i;
                 numberInput.OnValueChanged += (numInput) =>
                 {
                     Vector2 newVal = (Vector2)property.GetValue(entity);
                     if (comp == 0)
+                    {
                         newVal.X = numInput.FloatValue;
+                    }
                     else
+                    {
                         newVal.Y = numInput.FloatValue;
+                    }
 
                     if (SetPropertyValue(property, entity, newVal))
                     {
                         TrySendNetworkUpdate(entity, property);
                     }
                 };
+                HandleSetterValueTampering(numberInput, () =>
+                {
+                    Vector2 currVal = (Vector2)property.GetValue(entity);
+                    return comp == 0 ? currVal.X : currVal.Y;
+                });
                 fields[i] = numberInput;
             }
             refresh += () =>

@@ -2561,9 +2561,9 @@ namespace Barotrauma
             }
         }
 
-        public static void ThrowError(LocalizedString error, Exception e = null, bool createMessageBox = false, bool appendStackTrace = false)
+        public static void ThrowErrorLocalized(LocalizedString error, Exception e = null, ContentPackage contentPackage = null, bool createMessageBox = false, bool appendStackTrace = false)
         {
-            ThrowError(error.Value, e, createMessageBox, appendStackTrace);
+            ThrowError(error.Value, e, contentPackage, createMessageBox, appendStackTrace);
         }
 
         public static void ThrowError(string error, Exception e = null, ContentPackage contentPackage = null, bool createMessageBox = false, bool appendStackTrace = false)

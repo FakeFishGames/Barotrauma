@@ -364,12 +364,12 @@ namespace Barotrauma
 
             if (!Enum.TryParse(missionTypeName.Value, true, out Type))
             {
-                DebugConsole.ThrowError("Error in mission prefab \"" + Name + "\" - \"" + missionTypeName + "\" is not a valid mission type.");
+                DebugConsole.ThrowErrorLocalized("Error in mission prefab \"" + Name + "\" - \"" + missionTypeName + "\" is not a valid mission type.");
                 return;
             }
             if (Type == MissionType.None)
             {
-                DebugConsole.ThrowError("Error in mission prefab \"" + Name + "\" - mission type cannot be none.");
+                DebugConsole.ThrowErrorLocalized("Error in mission prefab \"" + Name + "\" - mission type cannot be none.");
                 return;
             }
 
@@ -383,7 +383,7 @@ namespace Barotrauma
             }
             else
             {
-                DebugConsole.ThrowError("Error in mission prefab \"" + Name + "\" - unsupported mission type \"" + Type.ToString() + "\"");
+                DebugConsole.ThrowErrorLocalized("Error in mission prefab \"" + Name + "\" - unsupported mission type \"" + Type.ToString() + "\"");
             }
             if (constructor == null)
             {

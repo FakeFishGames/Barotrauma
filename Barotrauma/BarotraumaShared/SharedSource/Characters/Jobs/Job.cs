@@ -150,11 +150,11 @@ namespace Barotrauma
             if (itemElement.Attribute("name") != null)
             {
                 string itemName = itemElement.Attribute("name").Value;
-                DebugConsole.ThrowError("Error in Job config (" + Name + ") - use item identifiers instead of names to configure the items.");
+                DebugConsole.ThrowErrorLocalized("Error in Job config (" + Name + ") - use item identifiers instead of names to configure the items.");
                 itemPrefab = MapEntityPrefab.FindByName(itemName) as ItemPrefab;
                 if (itemPrefab == null)
                 {
-                    DebugConsole.ThrowError("Tried to spawn \"" + Name + "\" with the item \"" + itemName + "\". Matching item prefab not found.");
+                    DebugConsole.ThrowErrorLocalized("Tried to spawn \"" + Name + "\" with the item \"" + itemName + "\". Matching item prefab not found.");
                     return;
                 }
             }
@@ -164,7 +164,7 @@ namespace Barotrauma
                 itemPrefab = MapEntityPrefab.FindByIdentifier(itemIdentifier.ToIdentifier()) as ItemPrefab;
                 if (itemPrefab == null)
                 {
-                    DebugConsole.ThrowError("Tried to spawn \"" + Name + "\" with the item \"" + itemIdentifier + "\". Matching item prefab not found.");
+                    DebugConsole.ThrowErrorLocalized("Tried to spawn \"" + Name + "\" with the item \"" + itemIdentifier + "\". Matching item prefab not found.");
                     return;
                 }
             }

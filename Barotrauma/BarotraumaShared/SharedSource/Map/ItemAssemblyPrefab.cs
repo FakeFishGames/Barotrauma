@@ -176,7 +176,7 @@ namespace Barotrauma
             }
             catch (Exception e)
             {
-                DebugConsole.ThrowError("Deleting item assembly \"" + Name + "\" failed.", e);
+                DebugConsole.ThrowErrorLocalized("Deleting item assembly \"" + Name + "\" failed.", e);
             }
         }
 

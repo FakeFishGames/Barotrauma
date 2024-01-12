@@ -557,7 +557,7 @@ namespace Barotrauma
 
             if (availableTransition == TransitionType.None)
             {
-                DebugConsole.ThrowError("Failed to load a new campaign level. No available level transitions " +
+                DebugConsole.ThrowErrorLocalized("Failed to load a new campaign level. No available level transitions " +
                     "(current location: " + (map.CurrentLocation?.DisplayName ?? "null") + ", " +
                     "selected location: " + (map.SelectedLocation?.DisplayName ?? "null") + ", " +
                     "leaving sub: " + (leavingSub?.Info?.Name ?? "null") + ", " +
@@ -568,7 +568,7 @@ namespace Barotrauma
             }
             if (nextLevel == null)
             {
-                DebugConsole.ThrowError("Failed to load a new campaign level. No available level transitions " +
+                DebugConsole.ThrowErrorLocalized("Failed to load a new campaign level. No available level transitions " +
                     "(transition type: " + availableTransition + ", " +
                     "current location: " + (map.CurrentLocation?.DisplayName ?? "null") + ", " +
                     "selected location: " + (map.SelectedLocation?.DisplayName ?? "null") + ", " +

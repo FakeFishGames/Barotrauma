@@ -51,6 +51,72 @@ namespace Barotrauma
             UpdateSpriteStates(0.0f);
         }
 
+        public static Vector2 UpgradeTextureOffset(
+            Vector2 targetSize,
+            Vector2 originalTextureOffset,
+            SubmarineInfo submarineInfo,
+            Rectangle sourceRect,
+            Vector2 scale,
+            bool flippedX,
+            bool flippedY)
+        {
+            if (submarineInfo.GameVersion <= Sprite.LastBrokenTiledSpriteGameVersion)
+            {
+                // Tiled sprite rendering was significantly changed after v1.2.3.0:
+                // Rendering flipped, scaled and offset textures was completely broken,
+                // but some existing community submarines depend on that old behavior,
+                // so let's redo some of the broken logic here if the sub is old enough
+
+                Vector2 flipper = (flippedX ? -1f : 1f, flippedY ? -1f : 1f);
+
+                var textureOffset = originalTextureOffset * flipper;
+
+                textureOffset = new Vector2(
+                    MathUtils.PositiveModulo((int)-textureOffset.X, sourceRect.Width),
+                    MathUtils.PositiveModulo((int)-textureOffset.Y, sourceRect.Height));
+
+                textureOffset.X = (textureOffset.X / scale.X) % sourceRect.Width;
+                textureOffset.Y = (textureOffset.Y / scale.Y) % sourceRect.Height;
+
+                Vector2 flippedDrawOffset = Vector2.Zero;
+                if (flippedX)
+                {
+                    float diff = targetSize.X % (sourceRect.Width * scale.X);
+                    flippedDrawOffset.X = (sourceRect.Width * scale.X - diff) / scale.X;
+                    flippedDrawOffset.X =
+                        MathUtils.NearlyEqual(flippedDrawOffset.X, MathF.Round(flippedDrawOffset.X)) ?
+                            MathF.Round(flippedDrawOffset.X) : flippedDrawOffset.X;
+                }
+                if (flippedY)
+                {
+                    float diff = targetSize.Y % (sourceRect.Height * scale.Y);
+                    flippedDrawOffset.Y = (sourceRect.Height * scale.Y - diff) / scale.Y;
+                    flippedDrawOffset.Y =
+                        MathUtils.NearlyEqual(flippedDrawOffset.Y, MathF.Round(flippedDrawOffset.Y)) ?
+                            MathF.Round(flippedDrawOffset.Y) : flippedDrawOffset.Y;
+                }
+
+                var textureOffsetPlusFlipBs = textureOffset + flippedDrawOffset;
+
+                if (textureOffsetPlusFlipBs.X > sourceRect.Width)
+                {
+                    var diff = textureOffsetPlusFlipBs.X - sourceRect.Width;
+                    textureOffset.X = (textureOffset.X + diff * (scale.X - 1f)) % sourceRect.Width;
+                }
+                if (textureOffsetPlusFlipBs.Y > sourceRect.Height)
+                {
+                    var diff = textureOffsetPlusFlipBs.Y - sourceRect.Height;
+                    textureOffset.Y = (textureOffset.Y + diff * (scale.Y - 1f)) % sourceRect.Height;
+                }
+
+                textureOffset *= scale * flipper;
+
+                return -textureOffset;
+            }
+
+            return originalTextureOffset;
+        }
+
         partial void CreateConvexHull(Vector2 position, Vector2 size, float rotation)
         {
             if (!CastShadow) { return; }
@@ -112,8 +178,8 @@ namespace Barotrauma
             foreach (LightSource light in Lights)
             {
                 Vector2 bgOffset = new Vector2(
-                    MathUtils.PositiveModulo((int)-textOffset.X, light.texture.Width),
-                    MathUtils.PositiveModulo((int)-textOffset.Y, light.texture.Height));
+                    MathUtils.PositiveModulo(-textOffset.X, light.texture.Width),
+                    MathUtils.PositiveModulo(-textOffset.Y, light.texture.Height));
 
                 light.LightTextureOffset = bgOffset;
             }
@@ -128,6 +194,16 @@ namespace Barotrauma
                 CanTakeKeyBoardFocus = false
             };
             var editor = new SerializableEntityEditor(listBox.Content.RectTransform, this, inGame, showName: true, titleFont: GUIStyle.LargeFont) { UserData = this };
+          
+            if (editor.Fields.TryGetValue(nameof(Scale).ToIdentifier(), out GUIComponent[] scaleFields) &&
+                scaleFields.FirstOrDefault() is GUINumberInput scaleInput)
+            {
+                //texture offset needs to be adjusted when scaling the entity to keep the look of the entity unchanged
+                scaleInput.OnValueChanged += (GUINumberInput numberInput) =>
+                {
+                    TextureOffset *= (Scale / ScaleWhenTextureOffsetSet);
+                };
+            }
 
             if (Submarine.MainSub?.Info?.Type == SubmarineType.OutpostModule)
             {
@@ -334,8 +410,6 @@ namespace Barotrauma
             float depth = GetDrawDepth();
 
             Vector2 textureOffset = this.textureOffset;
-            if (FlippedX) { textureOffset.X = -textureOffset.X; }
-            if (FlippedY) { textureOffset.Y = -textureOffset.Y; }
 
             if (back && damageEffect == null && !isWiringMode)
             {
@@ -365,8 +439,8 @@ namespace Barotrauma
                     Prefab.BackgroundSprite.effects ^= SpriteEffects;
 
                     Vector2 backGroundOffset = new Vector2(
-                        MathUtils.PositiveModulo((int)-textureOffset.X, Prefab.BackgroundSprite.SourceRect.Width),
-                        MathUtils.PositiveModulo((int)-textureOffset.Y, Prefab.BackgroundSprite.SourceRect.Height));
+                        MathUtils.PositiveModulo(-textureOffset.X, Prefab.BackgroundSprite.SourceRect.Width * TextureScale.X * Scale),
+                        MathUtils.PositiveModulo(-textureOffset.Y, Prefab.BackgroundSprite.SourceRect.Height * TextureScale.Y * Scale));
 
                     Prefab.BackgroundSprite.DrawTiled(
                         spriteBatch,
@@ -442,11 +516,11 @@ namespace Barotrauma
                         Math.Abs(rect.Location.X - drawSection.Location.X),
                         Math.Abs(rect.Location.Y - drawSection.Location.Y));
 
-                    if (FlippedX && IsHorizontal) { sectionOffset.X = drawSection.Right - rect.Right; }
-                    if (FlippedY && !IsHorizontal) { sectionOffset.Y = (rect.Y - rect.Height) - (drawSection.Y - drawSection.Height); }
+                    if (FlippedX && IsHorizontal) { sectionOffset.X = rect.Right - drawSection.Right; }
+                    if (FlippedY && !IsHorizontal) { sectionOffset.Y = (drawSection.Y - drawSection.Height) - (rect.Y - rect.Height); }
 
-                    sectionOffset.X += MathUtils.PositiveModulo((int)-textureOffset.X, Prefab.Sprite.SourceRect.Width);
-                    sectionOffset.Y += MathUtils.PositiveModulo((int)-textureOffset.Y, Prefab.Sprite.SourceRect.Height);
+                    sectionOffset.X += MathUtils.PositiveModulo(-textureOffset.X, Prefab.Sprite.SourceRect.Width * TextureScale.X * Scale);
+                    sectionOffset.Y += MathUtils.PositiveModulo(-textureOffset.Y, Prefab.Sprite.SourceRect.Height * TextureScale.Y * Scale);
 
                     Vector2 pos = new Vector2(drawSection.X, drawSection.Y);
                     pos -= rect.Location.ToVector2();

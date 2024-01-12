@@ -536,7 +536,7 @@ namespace Barotrauma
                     rotation: RotationRad,
                     clr: Color.White,
                     depth: 0,
-                    thickness: 2f / Screen.Selected.Cam.Zoom);
+                    thickness: Math.Max(2f / Screen.Selected.Cam.Zoom, 1));
 
                 foreach (Rectangle t in Prefab.Triggers)
                 {
