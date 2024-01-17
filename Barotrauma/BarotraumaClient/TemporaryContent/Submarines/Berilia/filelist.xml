@@ -1,0 +1,4 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<contentpackage name="Berilia" modversion="1.0.24" corepackage="False" gameversion="1.2.8.0">
+  <Submarine file="%ModDir%/Berilia.sub" />
+</contentpackage>
