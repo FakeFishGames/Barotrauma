@@ -1,0 +1,32 @@
+﻿<Character visiblity="100" SpeciesName="Balloon" SpeciesTranslationOverride="Cthulhu" DisplayName="" Group="human" Humanoid="False" HasInfo="False" CanInteract="False" Husk="False" UseHuskAppendage="False" NeedsAir="False" NeedsWater="False" IsMachine="False" CanSpeak="False" ShowHealthBar="True" UseBossHealthBar="False" Noise="100" Visibility="100" BloodDecal="blood" BleedParticleAir="blooddrop" BleedParticleWater="waterblood" BleedParticleMultiplier="1" CanEat="True" EatingSpeed="5" UsePathFinding="True" PathFinderPriority="1" HideInSonar="False" HideInThermalGoggles="False" SonarDisruption="0" DistantSonarRange="0" DisableDistance="25000" SoundInterval="10" DrawLast="False" AITurretPriority="1" AISlowTurretPriority="1">
+  <ragdolls folder="default" />
+  <animations folder="default" />
+  <damageemitter drawontop="True" Particle="gib" AngleMin="0" AngleMax="360" ScaleMin="0.25" ScaleMax="0.5" VelocityMin="50" VelocityMax="300" EmitInterval="0" ParticlesPerSecond="0" ParticleAmount="10" HighQualityCollisionDetection="False" CopyEntityAngle="False" />
+  <bloodemitter Particle="blood" AngleMin="0" AngleMax="0" ScaleMin="1" ScaleMax="1" VelocityMin="0" VelocityMax="0" EmitInterval="0" ParticlesPerSecond="0" ParticleAmount="10" HighQualityCollisionDetection="False" CopyEntityAngle="False" />
+  <bloodemitter Particle="waterblood" AngleMin="0" AngleMax="0" ScaleMin="1" ScaleMax="1" VelocityMin="0" VelocityMax="0" EmitInterval="0" ParticlesPerSecond="0" ParticleAmount="1" HighQualityCollisionDetection="False" CopyEntityAngle="False" />
+  <gibemitter Particle="gib" AngleMin="0" AngleMax="360" ScaleMin="1" ScaleMax="1" VelocityMin="200" VelocityMax="700" EmitInterval="0" ParticlesPerSecond="0" ParticleAmount="20" HighQualityCollisionDetection="False" CopyEntityAngle="False" />
+  <health Vitality="30" DoesBleed="True" CrushDepth="Infinity" UseHealthWindow="False" BleedingReduction="0.2" BurnReduction="0" ConstantHealthRegeneration="0" HealthRegenerationWhenEating="10" StunImmunity="False" PoisonImmunity="False" PoisonVulnerability="1" EmpVulnerability="0" ApplyAfflictionColors="False">
+    <Limb name="Torso" />
+  </health>
+  <Inventory Slots="Any, Any" AccessibleWhenAlive="True" Commonness="1" />
+  <ai CombatStrength="10" Sight="1" Hearing="1" AggressionHurt="200" AggressionGreed="10" FleeHealthThreshold="0" AttackWhenProvoked="False" AvoidGunfire="True" DamageThreshold="0" AvoidTime="3" MinFleeTime="20" AggressiveBoarding="False" EnforceAggressiveBehaviorForMissions="False" TargetOuterWalls="False" RandomAttack="False" CanOpenDoors="False" UsePathFindingToGetInside="False" KeepDoorsClosed="False" AvoidAbyss="True" StayInAbyss="False" PatrolFlooded="False" PatrolDry="False" StartAggression="0" MaxAggression="100" AggressionCumulation="0" WallTargetingMethod="Target">
+    <target Tag="owner" State="Protect" Priority="100" ReactDistance="200" AttackDistance="0" Timer="0" IgnoreContained="False" IgnoreInside="False" IgnoreOutside="False" IgnoreIfNotInSameSub="False" IgnoreIncapacitated="False" Threshold="3" ThresholdMin="-1" ThresholdMax="-1" Offset="0,0" AttackPattern="Straight" PrioritizeSubCenter="False" SweepDistance="0" SweepStrength="10" SweepSpeed="1" CircleStartDistance="5000" IgnoreTargetSize="False" CircleRotationSpeed="1" DynamicCircleRotationSpeed="False" CircleRandomRotationFactor="0" CircleStrikeDistanceMultiplier="5" CircleMaxRandomOffset="0" />
+    <target Tag="stronger" State="Avoid" Priority="50" ReactDistance="1000" AttackDistance="0" Timer="0" IgnoreContained="False" IgnoreInside="False" IgnoreOutside="False" IgnoreIfNotInSameSub="False" IgnoreIncapacitated="False" Threshold="0" ThresholdMin="-1" ThresholdMax="-1" Offset="0,0" AttackPattern="Straight" PrioritizeSubCenter="False" SweepDistance="0" SweepStrength="10" SweepSpeed="1" CircleStartDistance="5000" IgnoreTargetSize="False" CircleRotationSpeed="1" DynamicCircleRotationSpeed="False" CircleRandomRotationFactor="0" CircleStrikeDistanceMultiplier="5" CircleMaxRandomOffset="0" />
+    <target Tag="weaker" State="Avoid" Priority="50" ReactDistance="1000" AttackDistance="0" Timer="0" IgnoreContained="False" IgnoreInside="False" IgnoreOutside="False" IgnoreIfNotInSameSub="False" IgnoreIncapacitated="False" Threshold="0" ThresholdMin="-1" ThresholdMax="-1" Offset="0,0" AttackPattern="Straight" PrioritizeSubCenter="False" SweepDistance="0" SweepStrength="10" SweepSpeed="1" CircleStartDistance="5000" IgnoreTargetSize="False" CircleRotationSpeed="1" DynamicCircleRotationSpeed="False" CircleRandomRotationFactor="0" CircleStrikeDistanceMultiplier="5" CircleMaxRandomOffset="0" />
+    <target Tag="human" State="Follow" Priority="10" ReactDistance="200" AttackDistance="0" Timer="0" IgnoreContained="False" IgnoreInside="False" IgnoreOutside="False" IgnoreIfNotInSameSub="False" IgnoreIncapacitated="False" Threshold="0" ThresholdMin="-1" ThresholdMax="-1" Offset="0,0" AttackPattern="Straight" PrioritizeSubCenter="False" SweepDistance="0" SweepStrength="10" SweepSpeed="1" CircleStartDistance="5000" IgnoreTargetSize="False" CircleRotationSpeed="1" DynamicCircleRotationSpeed="False" CircleRandomRotationFactor="0" CircleStrikeDistanceMultiplier="5" CircleMaxRandomOffset="0" />
+    <petbehavior maxhappiness="100" unhappythreshold="20" happythreshold="80" happinessdecreaserate="0.035" hungerincreaserate="0.03" playforce="6.0">
+      <eat tag="petfood2" ignorecontained="true" requiredhunger="30-100" hunger="-50" happiness="5" priority="100" />
+      <eat tag="dead" requiredhunger="70-100" hunger="-100" happiness="10" priority="100" />
+      <itemproduction rate="0.0" invhungerrate="0.002" requiredhunger="0-30">
+        <item identifier="poop" commonness="100" />
+      </itemproduction>
+      <itemproduction rate="0.001" requiredhappiness="50-100" requiredhunger="0-30">
+        <item identifier="dementonite" />
+      </itemproduction>
+      <itemproduction rate="0.0015" requiredhappiness="80-100" requiredhunger="0-30">
+        <item identifier="balloonegg" commonness="30" />
+        <item identifier="" commonness="70" />
+      </itemproduction>
+    </petbehavior>
+  </ai>
+</Character>

@@ -1,4 +1,5 @@
-﻿<Character speciesname="Psilotoad" humanoid="False" blooddecal="blood" group="human" husk="False" needsair="False" canspeak="False" noise="100" visiblity="100" eatingspeed="5" displayname="" visibility="100" pathfinderpriority="1" hasinfo="False" usehuskappendage="False" speciestranslationoverride="" needswater="False" bleedparticleair="blooddrop" bleedparticlewater="waterblood" hideinsonar="False" sonardisruption="0" soundinterval="30">
+﻿
+<Character speciesname="Psilotoad" humanoid="False" blooddecal="blood" group="human" husk="False" needsair="False" canspeak="True" noise="100" visiblity="100" eatingspeed="5" displayname="" visibility="100" pathfinderpriority="1" hasinfo="False" usehuskappendage="False" speciestranslationoverride="" needswater="False" bleedparticleair="blooddrop" bleedparticlewater="waterblood" hideinsonar="False" sonardisruption="0" soundinterval="30">
   <ragdolls folder="default" />
   <animations folder="default" />
   <damageemitter particle="gib" drawontop="True" particleamount="10" velocitymin="50" velocitymax="300" anglemin="0" anglemax="360" scalemin="0.25" scalemax="0.5" emitinterval="0" particlespersecond="0" highqualitycollisiondetection="False" copyentityangle="False" />
@@ -8,13 +9,13 @@
   <health vitality="30" doesbleed="True" crushdepth="Infinity" usehealthwindow="False" bleedingreduction="0.2" burnreduction="0" constanthealthregeneration="0" healthregenerationwheneating="10" poisonvulnerability="3">
     <Limb name="Torso" />
   </health>
-  <Inventory slots="Any, Any" accessiblewhenalive="True" commonness="1" />
+  <Inventory slots="Any, Any, Head" accessiblewhenalive="True" commonness="1" />
   <ai combatstrength="50" sight="1" hearing="1" fleehealththreshold="10" aggressiveboarding="True" aggressiongreed="10" aggressionhurt="200" attackwhenprovoked="False" avoidgunfire="True" enforceaggressivebehaviorformissions="True" targetouterwalls="True" randomattack="False" avoidtime="3" minfleetime="20">
     <target tag="owner" state="Protect" threshold="3" priority="100" reactdistance="200" attackdistance="0" timer="0" />
     <target tag="stronger" state="Avoid" priority="50" reactdistance="1000" attackdistance="0" timer="0" />
     <target tag="weaker" state="Avoid" priority="50" reactdistance="1000" attackdistance="0" timer="0" />
     <target tag="human" state="Follow" priority="10" reactdistance="200" attackdistance="0" timer="0" />
-    <petbehavior maxhappiness="100" unhappythreshold="50" happythreshold="80" happinessdecreaserate="0.035" hungerincreaserate="0.03" playforce="6.0">
+    <petbehavior maxhappiness="100" unhappythreshold="50" happythreshold="80" happinessdecreaserate="0.035" hungerincreaserate="0.03" playforce="4.5">
       <eat tag="petfood2" ignorecontained="true" requiredhunger="30-100" hunger="-50" happiness="5" priority="100" />
       <eat tag="dead" requiredhunger="70-100" hunger="-100" happiness="10" priority="100" />
       <itemproduction rate="0.0" invhungerrate="0.002" requiredhunger="0-30">
