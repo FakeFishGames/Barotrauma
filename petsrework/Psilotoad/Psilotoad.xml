@@ -1,4 +1,3 @@
-﻿
 <Character speciesname="Psilotoad" humanoid="False" blooddecal="blood" group="human" husk="False" needsair="False" canspeak="True" noise="100" visiblity="100" eatingspeed="5" displayname="" visibility="100" pathfinderpriority="1" hasinfo="False" usehuskappendage="False" speciestranslationoverride="" needswater="False" bleedparticleair="blooddrop" bleedparticlewater="waterblood" hideinsonar="False" sonardisruption="0" soundinterval="30">
   <ragdolls folder="default" />
   <animations folder="default" />
