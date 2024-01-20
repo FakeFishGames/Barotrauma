@@ -13,7 +13,7 @@
   ColliderStandAngle="0"
   FootAngles="10: 0.8620372,15: 1.5882496,11: 1.5707964"
   TailAngle="1"
-  StepSize="0.45751935,0.55915964"
+  StepSize="0.08,0.56"
   HeadPosition="3.2426245"
   TorsoPosition="2"
   StepLiftHeadMultiplier="0"
