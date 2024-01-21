@@ -1,0 +1,226 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Items>
+  <Item name="" identifier="fiberplant" category="Material" Tags="smallitem,plant" maxstacksize="32" maxstacksizecharacterinventory="8" canbepicked="true" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_soft">
+    <PreferredContainer primary="medfabcab" secondary="medcontainer" />
+    <PreferredContainer secondary="wreckstoragecab" minamount="1" maxamount="2" spawnprobability="0.05" />
+    <Price baseprice="100">
+      <Price storeidentifier="merchantoutpost" sold="false" multiplier="1.3" />
+      <Price storeidentifier="merchantcity" multiplier="1.25" minavailable="3" />
+      <Price storeidentifier="merchantresearch" multiplier="0.9" minavailable="6" />
+      <Price storeidentifier="merchantmilitary" sold="false" />
+      <Price storeidentifier="merchantmine" sold="false" multiplier="0.9" />
+    </Price>
+    <Deconstruct time="5">
+      <Item identifier="organicfiber" />
+      <Item identifier="organicfiber" />
+      <Item identifier="organicfiber" />
+    </Deconstruct>
+    <!--   <InventoryIcon texture="Content/Items/Materials/Minerals.png" sourcerect="0,0,108,166" -->
+    <ContainedSprite texture="Content/Items/Materials/Minerals.png" usewhenattached="true" decorativespritebehavior="HideWhenNotVisible" depth="0.55" sourcerect="257,0,96,128" origin="0.5,0.5" />
+    <LightComponent lightcolor="208,139,211,150" range="100" powerconsumption="0" flicker="0.0" flickerspeed="0.5" pulsefrequency="0.4" pulseamount="0" ison="true" drawbehindsubs="true">
+      <LightTexture texture="Content/Lights/pointlight_rays.png" origin="0.5,0.5" />
+    </LightComponent>
+    <Sprite texture="Content/Items/Materials/Minerals.png" depth="0.2" sourcerect="545,386,54,78" origin="0.5,0.5" />
+    <DecorativeSprite texture="Content/Items/Materials/Minerals.png" depth="0.49" sourcerect="355,1,97,128" offset="20,0" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,30" origin="0.5,0.5" randomgroupid="1" />
+    <DecorativeSprite texture="Content/Items/Materials/Minerals.png" depth="0.49" sourcerect="354,0,96,128" offset="20,0" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,30" origin="0.5,0.5" randomgroupid="1" />
+    <DecorativeSprite texture="Content/Items/Materials/Minerals.png" depth="0.50" sourcerect="258,0,97,128" offset="-20,0" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,30" origin="0.5,0.5" randomgroupid="2" />
+    <DecorativeSprite texture="Content/Items/Materials/Minerals.png" depth="0.50" sourcerect="450,1,96,128" offset="-20,0" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,30" origin="0.5,0.5" randomgroupid="2" />
+    <DecorativeSprite texture="Content/Items/Materials/Minerals.png" depth="0.51" sourcerect="354,1,97,128" offset="0,-30" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,10" origin="0.5,0.5" randomgroupid="3" />
+    <DecorativeSprite texture="Content/Items/Materials/Minerals.png" depth="0.51" sourcerect="448,2,96,128" offset="0,-30" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,10" origin="0.5,0.5" randomgroupid="3" />
+    <DecorativeSprite texture="Content/Items/Materials/Minerals.png" depth="0.4" sourcerect="810,893,173,131" offset="0,-40" randomrotation="-20,20" origin="0.5,0.5" />
+    <Body radius="30" height="50" density="10.1" />
+    <LevelResource deattachduration="1" randomoffsetfromwall="40">
+      <Commonness commonness="0.8" cavecommonness="0.6" abysscommonness="0" leveltype="coldcaverns" />
+      <Commonness commonness="0.8" cavecommonness="0.5" abysscommonness="0" leveltype="europanridge" />
+      <Commonness commonness="0.8" cavecommonness="0.4" abysscommonness="0" />
+    </LevelResource>
+    <Holdable canBeCombined="true" slots="Any,RightHand,LeftHand" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false">
+      <!-- Remove the item when fully used -->
+      <StatusEffect type="OnBroken" target="This">
+        <Remove />
+      </StatusEffect>
+    </Holdable>
+  </Item>
+  <Item name="" identifier="elastinplant" category="Material" Tags="smallitem,plant" maxstacksize="32" maxstacksizecharacterinventory="8" canbepicked="true" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_soft">
+    <PreferredContainer primary="medfabcab" secondary="medcontainer" />
+    <PreferredContainer secondary="wreckstoragecab" minamount="1" maxamount="2" spawnprobability="0.05" />
+    <LightComponent lightcolor="139,211,197,100" range="100" powerconsumption="0" flicker="0.0" flickerspeed="0.5" pulsefrequency="0.4" pulseamount="0" ison="true" drawbehindsubs="true">
+      <LightTexture texture="Content/Lights/pointlight_rays.png" origin="0.5,0.5" />
+    </LightComponent>
+    <Price baseprice="150">
+      <Price storeidentifier="merchantoutpost" sold="false" multiplier="1.3" />
+      <Price storeidentifier="merchantcity" multiplier="1.25" minavailable="3" />
+      <Price storeidentifier="merchantresearch" multiplier="0.9" minavailable="6" />
+      <Price storeidentifier="merchantmilitary" sold="false" />
+      <Price storeidentifier="merchantmine" sold="false" multiplier="0.9" />
+    </Price>
+    <Deconstruct time="5">
+      <Item identifier="elastin" />
+      <Item identifier="elastin" />
+      <Item identifier="elastin" />
+    </Deconstruct>
+    <ContainedSprite texture="Content/Items/Materials/Minerals.png" usewhenattached="true" decorativespritebehavior="HideWhenNotVisible" depth="0.55" sourcerect="645,1,96,128" origin="0.5,0.5" />
+    <Sprite texture="Content/Items/Materials/Minerals.png" depth="0.2" sourcerect="604,260,28,54" origin="0.5,0.5" />
+    <DecorativeSprite texture="Content/Items/Materials/Minerals.png" depth="0.49" sourcerect="677,254,97,128" offset="20,0" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,30" origin="0.5,0.5" randomgroupid="1" />
+    <DecorativeSprite texture="Content/Items/Materials/Minerals.png" depth="0.48" sourcerect="681,267,96,116" offset="20,0" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,30" origin="0.5,0.5" randomgroupid="1" />
+    <DecorativeSprite texture="Content/Items/Materials/Minerals.png" depth="0.51" sourcerect="547,0,97,128" offset="-20,0" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,30" origin="0.5,0.5" randomgroupid="2" />
+    <DecorativeSprite texture="Content/Items/Materials/Minerals.png" depth="0.52" sourcerect="680,262,96,116" offset="-20,0" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,30" origin="0.5,0.5" randomgroupid="2" />
+    <DecorativeSprite texture="Content/Items/Materials/Minerals.png" depth="0.49" sourcerect="643,0,97,128" offset="0,-30" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,10" origin="0.5,0.5" randomgroupid="3" />
+    <DecorativeSprite texture="Content/Items/Materials/Minerals.png" depth="0.53" sourcerect="677,265,96,116" offset="0,-30" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,10" origin="0.5,0.5" randomgroupid="3" />
+    <DecorativeSprite texture="Content/Items/Materials/Minerals.png" depth="0.4" sourcerect="810,893,173,131" offset="0,-40" randomrotation="-20,20" origin="0.5,0.5" />
+    <Body width="120" height="120" density="12" />
+    <LevelResource deattachduration="1" randomoffsetfromwall="40">
+      <Commonness commonness="0.6" cavecommonness="0" abysscommonness="0" leveltype="coldcaverns" />
+      <Commonness commonness="0.6" cavecommonness="0.2" abysscommonness="0" leveltype="europanridge" />
+      <Commonness commonness="0.8" cavecommonness="0.5" abysscommonness="0" />
+    </LevelResource>
+    <Holdable canBeCombined="true" slots="Any,RightHand,LeftHand" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false">
+      <!-- Remove the item when fully used -->
+      <StatusEffect type="OnBroken" target="This">
+        <Remove />
+      </StatusEffect>
+    </Holdable>
+  </Item>
+  <Item name="" identifier="aquaticpoppy" category="Material" Tags="smallitem,plant" maxstacksize="32" maxstacksizecharacterinventory="8" canbepicked="true" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_soft">
+    <PreferredContainer primary="medfabcab" secondary="medcontainer" />
+    <PreferredContainer secondary="wreckstoragecab" minamount="1" maxamount="2" spawnprobability="0.05" />
+    <LightComponent lightcolor="139,211,197,100" range="100" powerconsumption="0" flicker="0.0" flickerspeed="0.5" pulsefrequency="0.4" pulseamount="0" ison="true" drawbehindsubs="true">
+      <LightTexture texture="Content/Lights/pointlight_rays.png" origin="0.5,0.5" />
+    </LightComponent>
+    <Price baseprice="150">
+      <Price storeidentifier="merchantoutpost" sold="false" multiplier="1.3" />
+      <Price storeidentifier="merchantcity" multiplier="1.25" minavailable="3" />
+      <Price storeidentifier="merchantresearch" multiplier="0.9" minavailable="6" />
+      <Price storeidentifier="merchantmilitary" sold="false" />
+      <Price storeidentifier="merchantmine" sold="false" multiplier="0.9" />
+    </Price>
+    <Deconstruct time="5">
+      <Item identifier="opium" />
+      <Item identifier="opium" />
+      <Item identifier="opium" />
+    </Deconstruct>
+    <ContainedSprite texture="Content/Items/Materials/Minerals.png" usewhenattached="true" decorativespritebehavior="HideWhenNotVisible" depth="0.55" sourcerect="255,127,96,128" origin="0.5,0.5" />
+    <Sprite texture="Content/Items/Materials/Minerals.png" depth="0.2" sourcerect="541,332,53,53" origin="0.5,0.5" />
+    <DecorativeSprite texture="Content/Items/Materials/Minerals.png" depth="0.49" sourcerect="354,125,97,128" offset="20,0" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,30" origin="0.5,0.5" randomgroupid="1" />
+    <DecorativeSprite texture="Content/Items/Materials/Minerals.png" depth="0.48" sourcerect="450,126,96,128" offset="20,0" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,30" origin="0.5,0.5" randomgroupid="1" />
+    <DecorativeSprite texture="Content/Items/Materials/Minerals.png" depth="0.51" sourcerect="353,127,97,128" offset="-20,0" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,30" origin="0.5,0.5" randomgroupid="2" />
+    <DecorativeSprite texture="Content/Items/Materials/Minerals.png" depth="0.52" sourcerect="449,126,96,128" offset="-20,0" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,30" origin="0.5,0.5" randomgroupid="2" />
+    <DecorativeSprite texture="Content/Items/Materials/Minerals.png" depth="0.49" sourcerect="354,126,97,128" offset="0,-30" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,10" origin="0.5,0.5" randomgroupid="3" />
+    <DecorativeSprite texture="Content/Items/Materials/Minerals.png" depth="0.53" sourcerect="449,126,96,128" offset="0,-30" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,10" origin="0.5,0.5" randomgroupid="3" />
+    <DecorativeSprite texture="Content/Items/Materials/Minerals.png" depth="0.4" sourcerect="810,893,173,131" offset="0,-40" randomrotation="-20,20" origin="0.5,0.5" />
+    <Body radius="30" width="30" density="12" />
+    <LevelResource deattachduration="1" randomoffsetfromwall="40">
+      <Commonness commonness="1.0" cavecommonness="0.5" abysscommonness="0" />
+    </LevelResource>
+    <Holdable canBeCombined="true" slots="Any,RightHand,LeftHand" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false">
+      <!-- Remove the item when fully used -->
+      <StatusEffect type="OnBroken" target="This">
+        <Remove />
+      </StatusEffect>
+    </Holdable>
+  </Item>
+  <Item name="" identifier="yeastshroom" category="Material" Tags="smallitem,plant" maxstacksize="32" maxstacksizecharacterinventory="8" canbepicked="true" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_soft">
+    <PreferredContainer primary="medfabcab" secondary="medcontainer" />
+    <PreferredContainer secondary="wreckstoragecab" minamount="1" maxamount="2" spawnprobability="0.05" />
+    <LightComponent lightcolor="112,174,199,150" range="100" powerconsumption="0" flicker="0.0" flickerspeed="0.5" pulsefrequency="0.4" pulseamount="0" ison="true" drawbehindsubs="true">
+      <LightTexture texture="Content/Lights/pointlight_rays.png" origin="0.5,0.5" />
+    </LightComponent>
+    <Price baseprice="200">
+      <Price storeidentifier="merchantoutpost" sold="false" multiplier="1.3" />
+      <Price storeidentifier="merchantcity" multiplier="1.25" minavailable="3" />
+      <Price storeidentifier="merchantresearch" multiplier="0.9" minavailable="6" />
+      <Price storeidentifier="merchantmilitary" sold="false" />
+      <Price storeidentifier="merchantmine" sold="false" multiplier="0.9" />
+    </Price>
+    <Deconstruct time="5">
+      <Item identifier="ethanol" />
+      <Item identifier="ethanol" />
+      <Item identifier="ethanol" />
+    </Deconstruct>
+    <ContainedSprite texture="Content/Items/Materials/Minerals.png" usewhenattached="true" decorativespritebehavior="HideWhenNotVisible" depth="0.55" sourcerect="640,127,96,128" origin="0.5,0.5" />
+    <Sprite texture="Content/Items/Materials/Minerals.png" depth="0.2" sourcerect="603,321,42,63" origin="0.5,0.5" />
+    <DecorativeSprite texture="Content/Items/Materials/Minerals.png" depth="0.49" sourcerect="639,128,97,128" offset="20,0" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,30" origin="0.5,0.5" randomgroupid="1" />
+    <DecorativeSprite texture="Content/Items/Materials/Minerals.png" depth="0.48" sourcerect="674,379,96,128" offset="20,0" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,30" origin="0.5,0.5" randomgroupid="1" />
+    <DecorativeSprite texture="Content/Items/Materials/Minerals.png" depth="0.51" sourcerect="547,128,97,128" offset="-20,0" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,30" origin="0.5,0.5" randomgroupid="2" />
+    <DecorativeSprite texture="Content/Items/Materials/Minerals.png" depth="0.52" sourcerect="676,377,96,128" offset="-20,0" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,30" origin="0.5,0.5" randomgroupid="2" />
+    <DecorativeSprite texture="Content/Items/Materials/Minerals.png" depth="0.4" sourcerect="810,893,173,131" offset="0,-40" randomrotation="-20,20" origin="0.5,0.5" />
+    <Body radius="40" width="50" density="12" />
+    <LevelResource deattachduration="1" randomoffsetfromwall="40">
+      <Commonness commonness="1.0" cavecommonness="0.5" abysscommonness="0" />
+      <Commonness commonness="1.0" cavecommonness="0.6" abysscommonness="0" leveltype="theaphoticplateau" />
+    </LevelResource>
+    <Holdable canBeCombined="true" slots="Any,RightHand,LeftHand" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false">
+      <!-- Remove the item when fully used -->
+      <StatusEffect type="OnBroken" target="This">
+        <Remove />
+      </StatusEffect>
+    </Holdable>
+  </Item>
+  <Item name="" identifier="slimebacteria" category="Material" Tags="smallitem,plant" maxstacksize="32" maxstacksizecharacterinventory="8" canbepicked="true" description="" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_soft">
+    <PreferredContainer primary="medfabcab" secondary="medcontainer" />
+    <PreferredContainer secondary="wreckstoragecab" minamount="1" maxamount="2" spawnprobability="0.05" />
+    <LightComponent lightcolor="222,153,79,150" range="100" powerconsumption="0" flicker="0.0" flickerspeed="0.5" pulsefrequency="0.4" pulseamount="0" ison="true" drawbehindsubs="true">
+      <LightTexture texture="Content/Lights/pointlight_rays.png" origin="0.5,0.5" />
+    </LightComponent>
+    <Price baseprice="150">
+      <Price storeidentifier="merchantoutpost" sold="false" multiplier="1.3" />
+      <Price storeidentifier="merchantcity" multiplier="1.25" minavailable="3" />
+      <Price storeidentifier="merchantresearch" multiplier="0.9" minavailable="6" />
+      <Price storeidentifier="merchantmilitary" sold="false" />
+      <Price storeidentifier="merchantmine" sold="false" multiplier="0.9" />
+    </Price>
+    <Deconstruct time="5">
+      <Item identifier="antibiotics" />
+      <Item identifier="antibiotics" />
+      <Item identifier="antibiotics" />
+    </Deconstruct>
+    <ContainedSprite texture="Content/Items/Materials/Minerals.png" usewhenattached="true" decorativespritebehavior="HideWhenNotVisible" depth="0.55" sourcerect="252,264,106,126" origin="0.5,0.5" />
+    <Sprite texture="Content/Items/Materials/Minerals.png" depth="0.2" sourcerect="601,393,61,47" origin="0.5,0.5" />
+    <DecorativeSprite texture="Content/Items/Materials/Minerals.png" depth="0.49" sourcerect="358,266,97,128" offset="20,0" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,30" origin="0.5,0.5" randomgroupid="1" />
+    <DecorativeSprite texture="Content/Items/Materials/Minerals.png" depth="0.48" sourcerect="447,257,96,128" offset="20,0" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,30" origin="0.5,0.5" randomgroupid="1" />
+    <DecorativeSprite texture="Content/Items/Materials/Minerals.png" depth="0.51" sourcerect="355,262,97,128" offset="-20,0" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,30" origin="0.5,0.5" randomgroupid="2" />
+    <DecorativeSprite texture="Content/Items/Materials/Minerals.png" depth="0.52" sourcerect="444,253,96,128" offset="-20,0" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,30" origin="0.5,0.5" randomgroupid="2" />
+    <DecorativeSprite texture="Content/Items/Materials/Minerals.png" depth="0.49" sourcerect="355,261,97,128" offset="0,-30" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,10" origin="0.5,0.5" randomgroupid="3" />
+    <DecorativeSprite texture="Content/Items/Materials/Minerals.png" depth="0.53" sourcerect="450,253,88,118" offset="0,-30" randomrotation="-20,20" randomscale="0.8,1.5" randomoffset="30,10" origin="0.5,0.5" randomgroupid="3" />
+    <DecorativeSprite texture="Content/Items/Materials/Minerals.png" depth="0.4" sourcerect="810,893,173,131" offset="0,-40" randomrotation="-20,20" origin="0.5,0.5" />
+    <Body radius="40" width="40" density="12" />
+    <LevelResource deattachduration="1" randomoffsetfromwall="40">
+      <Commonness commonness="0.2" cavecommonness="0.4" abysscommonness="0" />
+    </LevelResource>
+    <Holdable canBeCombined="true" slots="Any,RightHand,LeftHand" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false">
+      <!-- Remove the item when fully used -->
+      <StatusEffect type="OnBroken" target="This">
+        <Remove />
+      </StatusEffect>
+    </Holdable>
+  </Item>
+  <Item name="" identifier="paralyxis" category="Material" maxstacksize="32" maxstacksizecharacterinventory="8" Tags="smallitem,ore" scale="0.5" cargocontaineridentifier="metalcrate" canbepicked="true">
+    <PreferredContainer primary="medfabcab" secondary="medcontainer" />
+    <PreferredContainer secondary="wreckstoragecab" amount="1" spawnprobability="0.05" />
+    <Price baseprice="190" sold="false" minleveldifficulty="35">
+      <Price storeidentifier="merchantoutpost" multiplier="1.25" />
+      <Price storeidentifier="merchantcity" multiplier="1.15" />
+      <Price storeidentifier="merchantresearch" sold="true" />
+      <Price storeidentifier="merchantmilitary" multiplier="1.1" />
+      <Price storeidentifier="merchantmine" multiplier="0.9" />
+    </Price>
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="960,832,64,64" origin="0.5,0.5" />
+    <Sprite texture="Content/Items/Alien/AlienMaterials.png" sourcerect="266,430,45,76" depth="0.55" />
+    <Body radius="25" density="20" />
+    <Holdable canBeCombined="true" removeOnCombined="true" slots="Any,RightHand,LeftHand" handle1="0,0" msg="ItemMsgPickUpSelect" attachable="true" reattachable="false">
+      <!-- Remove the item when fully used -->
+      <StatusEffect type="OnBroken" target="This">
+        <Remove />
+      </StatusEffect>
+    </Holdable>
+    <ContainedSprite texture="Content/Items/Alien/AlienMaterials.png" usewhenattached="true" decorativespritebehavior="HideWhenNotVisible" depth="0.55" sourcerect="274,270,205,86" origin="0.5,0.5" />
+    <LevelResource deattachduration="4" randomoffsetfromwall="20">
+      <Commonness commonness="0" cavecommonness="0" abysscommonness="0" />
+      <Commonness commonness="0.1" cavecommonness="0" abysscommonness="25" leveltype="europanridge" />
+      <Commonness commonness="0.2" cavecommonness="0.1" abysscommonness="50" leveltype="theaphoticplateau" />
+      <Commonness commonness="0.25" cavecommonness="0.1" abysscommonness="5" leveltype="thegreatsea" />
+      <Commonness commonness="0.2" cavecommonness="0.1" abysscommonness="5" leveltype="hydrothermalwastes" />
+      <RequiredItem items="cuttingequipment" type="Equipped" />
+    </LevelResource>
+  </Item>
+</Items>
