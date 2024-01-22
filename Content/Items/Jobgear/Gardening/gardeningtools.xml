@@ -10,7 +10,7 @@
       <Price storeidentifier="merchantmilitary" sold="false" multiplier="1.2" />
       <Price storeidentifier="merchantmine" sold="false" multiplier="0.75" />
     </Price>
-    <PreferredContainer primary="crewcab"/>
+	<PreferredContainer primary="crewcab" spawnprobability="0.125" notcampaign="true" />
     <PreferredContainer secondary="wreckstoragecab,abandonedstoragecab" amount="1" spawnprobability="0.1" />
     <Holdable selectkey="Select" pickkey="Use" slots="Any,RightHand,LeftHand" msg="ItemMsgDetach" PickingTime="5.0" aimpos="85,-10" handle1="0,0" attachable="true" aimable="true" />
     <Fabricate suitablefabricators="fabricator" requiredtime="45">
@@ -75,7 +75,7 @@
       <Price storeidentifier="merchantmine" sold="false" multiplier="0.75" />
       <Price storeidentifier="merchantclown" minavailable="0" maxavailable="2" />
     </Price>
-    <PreferredContainer primary="crewcab"/>
+	<PreferredContainer primary="crewcab" spawnprobability="0.125" notcampaign="true" />
     <PreferredContainer primary="wreckstoragecab,abandonedstoragecab,wreckcrewcab,abandonedcrewcab,outpostcrewcabinet" amount="1" spawnprobability="0.2" />
     <Fabricate suitablefabricators="fabricator" requiredtime="45">
       <RequiredSkill identifier="electrical" level="20" />
@@ -96,7 +96,7 @@
   </Item>
   
   <Item name="" identifier="seedbag" category="Misc" Tags="smallitem" scale="0.5">
-    <PreferredContainer primary="crewcab"/>
+	<PreferredContainer primary="crewcab" spawnprobability="0.125" notcampaign="true" />
     <PreferredContainer primary="wreckstoragecab,abandonedstoragecab,wreckcrewcab,abandonedcrewcab,outpostcrewcabinet" amount="1" spawnprobability="0.2" />
     <Sprite texture="Content/Items/Gardening/GrowablePlants_Temp.png" sourcerect="841,704,49,65" depth="0.55" origin="0.5,0.5" />
     <Body width="45" height="60" density="12" />

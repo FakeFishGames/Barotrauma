@@ -2,7 +2,7 @@
 <Items>
   <!-- UNIFORMS START-->
   <Item name="" identifier="bluejumpsuit1" aliases="bluejumpsuit" category="Equipment" tags="smallitem,clothing" fireproof="true" cargocontaineridentifier="metalcrate" description="" scale="0.5" impactsoundtag="impact_soft">
-    <PreferredContainer primary="crewcab"/>
+	<PreferredContainer primary="crewcab" amount="1" spawnprobability="0.125" notcampaign="true" />
     <PreferredContainer primary="outpostcrewcabinet" amount="1" spawnprobability="0.1" />
     <Price baseprice="150" minavailable="1">
       <Price storeidentifier="merchantoutpost" minavailable="1" />
@@ -38,7 +38,7 @@
     </Wearable>
   </Item>
   <Item name="" identifier="bluejumpsuit2" category="Equipment" tags="smallitem,clothing" fireproof="true" cargocontaineridentifier="metalcrate" description="" scale="0.5" impactsoundtag="impact_soft">
-    <PreferredContainer primary="crewcab"/>
+	<PreferredContainer primary="crewcab" amount="1" spawnprobability="0.125" notcampaign="true" />
     <PreferredContainer primary="outpostcrewcabinet" amount="1" spawnprobability="0.1" />
     <Price baseprice="150" minavailable="1">
       <Price storeidentifier="merchantoutpost" minavailable="1" />

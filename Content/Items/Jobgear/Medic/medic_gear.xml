@@ -29,7 +29,7 @@
     <StatusHUD drawhudwhenequipped="true" />
   </Item>
   <Item name="" identifier="doctorsuniform1" aliases="doctorsuniform" category="Equipment" cargocontaineridentifier="metalcrate" tags="smallitem,clothing" scale="0.5" impactsoundtag="impact_soft">
-    <PreferredContainer primary="crewcab"/>
+	<PreferredContainer primary="crewcab" amount="1" spawnprobability="0.125" notcampaign="true"/>
     <PreferredContainer primary="outpostcrewcabinet" amount="1" spawnprobability="0.05" />
     <Price baseprice="150" minavailable="1" >
       <Price storeidentifier="merchantoutpost" minavailable="1" />
@@ -66,7 +66,7 @@
     </ItemContainer>
   </Item>
   <Item name="" identifier="doctorsuniform2" category="Equipment" cargocontaineridentifier="metalcrate" tags="smallitem,clothing" scale="0.5" impactsoundtag="impact_soft">
-    <PreferredContainer primary="crewcab"/>
+	<PreferredContainer primary="crewcab" amount="1" spawnprobability="0.125" notcampaign="true"/>
     <PreferredContainer primary="outpostcrewcabinet" amount="1" spawnprobability="0.05" />
     <Price baseprice="150" minavailable="1" >
       <Price storeidentifier="merchantoutpost" minavailable="1" />

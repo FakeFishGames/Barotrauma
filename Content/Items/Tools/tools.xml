@@ -212,10 +212,11 @@
   </Item>
   
   <Item name="" identifier="plasmacutter" category="Equipment" Tags="smallitem,cuttingequipment,tool,mountableweapon" cargocontaineridentifier="metalcrate" description="" Scale="0.5" impactsoundtag="impact_metal_light">
-    <Preferredcontainer secondary="respawncontainer" amount="1" spawnprobability="1" notcampaign="true"/>
+	<PreferredContainer primary="divingcab" minamount="1" maxamount="3" spawnprobability="1" notcampaign="true" />
+	<PreferredContainer secondary="engcab" minamount="1" maxamount="2" spawnprobability="1" notcampaign="true" />
+	<Preferredcontainer secondary="respawncontainer" amount="1" spawnprobability="1" notcampaign="true"/>
     <PreferredContainer secondary="outpostcrewcabinet" amount="1" spawnprobability="0.05"/>
     <PreferredContainer secondary="wreckstoragecab,abandonedstoragecab" amount="1" spawnprobability="0.05"/>
-    <PreferredContainer primary="divingcab" secondary="engcab"/>
     <Price baseprice="150">
       <Price storeidentifier="merchantoutpost" minavailable="3" />
       <Price storeidentifier="merchantcity" minavailable="2" />
@@ -426,7 +427,7 @@
   </Item>
 
   <Item name="" identifier="sprayer" category="Equipment" Tags="smallitem,tool,mountableweapon" cargocontaineridentifier="metalcrate" description="" Scale="0.5" impactsoundtag="impact_metal_light">
-    <PreferredContainer primary="engcab"/>
+	<PreferredContainer primary="engcab" minamount="1" maxamount="4" spawnprobability="1" notcampaign="true" />
     <PreferredContainer secondary="wreckstoragecab,abandonedstoragecab" amount="1" spawnprobability="0.05"/>
     <PreferredContainer primary="wreckengcab,abandonedengcab,outpostengcab" amount="1" spawnprobability="0.1"/>
     <Price baseprice="120">
@@ -484,8 +485,8 @@
   </Item>
   
   <Item name="" identifier="screwdriver" category="Equipment" Tags="smallitem,simpletool,tool,electricalrepairtool,screwdriveritem" cargocontaineridentifier="metalcrate" Scale="0.5" impactsoundtag="impact_metal_light" RequireAimToUse="True">
-    <Preferredcontainer secondary="respawncontainer" amount="1" spawnprobability="1" notcampaign="true"/>
-    <PreferredContainer primary="engcab" secondary="reactorcab"/>
+	<PreferredContainer primary="reactorcab,engcab" minamount="1" maxamount="4" spawnprobability="1" notcampaign="true" />
+	<Preferredcontainer secondary="respawncontainer" amount="1" spawnprobability="1" notcampaign="true"/>
     <PreferredContainer secondary="wreckstoragecab,abandonedstoragecab" amount="1" spawnprobability="0.2"/>  
     <PreferredContainer primary="wreckengcab,abandonedengcab,outpostengcab,beaconengcab" amount="1" spawnprobability="0.5"/>
     <PreferredContainer primary="wreckreactorcab,abandonedreactorcab" amount="1" spawnprobability="0.5"/>   
@@ -533,8 +534,8 @@
   </Item>
   
   <Item name="" identifier="wrench" category="Equipment" Tags="smallitem,tool,simpletool,mechanicalrepairtool,wrenchitem,mountableweapon" cargocontaineridentifier="metalcrate" Scale="0.5" impactsoundtag="impact_metal_light" RequireAimToUse="True">
-    <Preferredcontainer secondary="respawncontainer" amount="1" spawnprobability="1" notcampaign="true"/>
-    <PreferredContainer primary="engcab"/>
+	<PreferredContainer primary="engcab" minamount="1" maxamount="4" spawnprobability="1" notcampaign="true" />
+	<Preferredcontainer secondary="respawncontainer" amount="1" spawnprobability="1" notcampaign="true"/>
     <PreferredContainer secondary="wreckstoragecab,abandonedstoragecab" amount="1" spawnprobability="0.2"/>
     <PreferredContainer primary="wreckengcab,abandonedengcab,outpostengcab,beaconengcab" amount="1" spawnprobability="0.5"/>
     <PreferredContainer secondary="outpostcrewcabinet" amount="1" spawnprobability="0.3"/>
@@ -576,8 +577,8 @@
   </Item>
   
   <Item name="" identifier="crowbar" category="Equipment" Tags="smallitem,tool,simpletool,dooropeningtool,crowbaritem,mountableweapon" cargocontaineridentifier="metalcrate" Scale="0.5" impactsoundtag="impact_metal_light" RequireAimToUse="True">
-    <Preferredcontainer secondary="respawncontainer" amount="1" spawnprobability="1" notcampaign="true"/>
-    <PreferredContainer primary="engcab"/>
+	<PreferredContainer primary="engcab" minamount="0" maxamount="1" spawnprobability="1" notcampaign="true" />
+	<Preferredcontainer secondary="respawncontainer" amount="1" spawnprobability="1" notcampaign="true"/>
     <PreferredContainer secondary="wreckstoragecab,abandonedstoragecab" amount="1" spawnprobability="0.1"/>
     <PreferredContainer primary="wreckengcab,abandonedengcab,outpostengcab,beaconengcab" amount="1" spawnprobability="0.2"/>
     <PreferredContainer secondary="outpostcrewcabinet" amount="1" spawnprobability="0.2"/>
@@ -617,8 +618,8 @@
   </Item>
   
   <Item name="" identifier="handheldsonar" category="Equipment,Diving" Tags="smallitem,sonar,provocative" cargocontaineridentifier="metalcrate" Scale="0.5" impactsoundtag="impact_metal_light">
-    <Preferredcontainer secondary="respawncontainer" amount="1" spawnprobability="1" notcampaign="true"/>
-    <PreferredContainer primary="divingcab" amount="1" spawnprobability="1" notcampaign="true"/>
+	<PreferredContainer primary="divingcab" minamount="1" maxamount="2" spawnprobability="1" notcampaign="true"/>
+	<Preferredcontainer secondary="respawncontainer" amount="1" spawnprobability="1" notcampaign="true"/>
     <PreferredContainer secondary="wreckstoragecab" amount="1" spawnprobability="0.05"/>
     <Price baseprice="150" minavailable="1">
       <Price storeidentifier="merchantoutpost" />
@@ -679,7 +680,7 @@
   </Item>
   
   <Item name="" identifier="sonarbeacon" category="Equipment,Diving" Tags="smallitem,sonar,provocative" cargocontaineridentifier="metalcrate" Scale="0.5" impactsoundtag="impact_metal_light">
-    <PreferredContainer primary="divingcab" amount="1" spawnprobability="1" notcampaign="true"/>
+    <PreferredContainer primary="divingcab" minamount="1" maxamount="2" spawnprobability="1" notcampaign="true"/>
     <PreferredContainer secondary="wreckstoragecab" amount="1" spawnprobability="0.05"/>
     <Price baseprice="150" minavailable="1">
       <Price storeidentifier="merchantoutpost" sold="false" />
@@ -1090,7 +1091,7 @@
   </Item>
 
   <Item name="" identifier="fuelrod" Category="Fuel" Tags="smallitem,reactorfuel" maxstacksize="8" cargocontaineridentifier="metalcrate" scale="0.5">
-    <PreferredContainer primary="reactorcab"/>
+	<PreferredContainer primary="reactorcab" minamount="2" maxamount="5" spawnprobability="1" notcampaign="true" />
     <PreferredContainer secondary="nucleargun" minamount="1" maxamount="1" spawnprobability="1"/>
     <PreferredContainer secondary="wreckreactorcab,abandonedreactorcab" minamount="1" maxamount="2" spawnprobability="0.5"/>
     <PreferredContainer secondary="beaconengcab" amount="1" spawnprobability="0.2"/>
@@ -1184,7 +1185,7 @@
   </Item>
 
   <Item name="" identifier="thoriumfuelrod" Category="Fuel" Tags="smallitem,reactorfuel" maxstacksize="8" cargocontaineridentifier="metalcrate" health="200" scale="0.5">
-    <PreferredContainer primary="reactorcab" />
+	<PreferredContainer primary="reactorcab" minamount="1" maxamount="2" spawnprobability="0.05" notcampaign="true" />
     <PreferredContainer secondary="wreckreactorcab,abandonedreactorcab" amount="1" spawnprobability="0.1"/>
     <PreferredContainer secondary="beaconengcab" amount="1" spawnprobability="0.02"/>
     <PreferredContainer secondary="abandonedengcab,wreckengcab" amount="1" spawnprobability="0.01"/>

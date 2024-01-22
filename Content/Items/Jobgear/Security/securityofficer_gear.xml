@@ -2,7 +2,7 @@
 <Items>
   <!-- UNIFORMS START -->
   <Item name="" identifier="securityuniform1" aliases="securityuniform" category="Equipment" tags="smallitem,clothing" fireproof="false" cargocontaineridentifier="metalcrate" description="" scale="0.5" impactsoundtag="impact_soft">
-    <PreferredContainer primary="crewcab" />
+	<PreferredContainer primary="crewcab" amount="1" spawnprobability="0.125" notcampaign="true"/>
     <PreferredContainer secondary="outpostcrewcabinet" amount="1" spawnprobability="0.05" />
     <Price baseprice="150" minavailable="1">
       <Price storeidentifier="merchantoutpost" minavailable="1" />
@@ -37,7 +37,7 @@
     </Wearable>
   </Item>
   <Item name="" identifier="securityuniform2" category="Equipment" tags="smallitem,clothing" fireproof="false" cargocontaineridentifier="metalcrate" description="" scale="0.5" impactsoundtag="impact_soft">
-    <PreferredContainer primary="crewcab" />
+	<PreferredContainer primary="crewcab" amount="1" spawnprobability="0.125" notcampaign="true"/>
     <PreferredContainer secondary="outpostcrewcabinet" amount="1" spawnprobability="0.05" />
     <Price baseprice="150" minavailable="1">
       <Price storeidentifier="merchantoutpost" minavailable="1" />
@@ -72,7 +72,7 @@
     </Wearable>
   </Item>
   <Item name="" identifier="securityuniform3" category="Equipment" tags="smallitem,clothing" fireproof="false" cargocontaineridentifier="metalcrate" description="" scale="0.5" impactsoundtag="impact_soft">
-    <PreferredContainer primary="crewcab" />
+	<PreferredContainer primary="crewcab" amount="1" spawnprobability="0.125" notcampaign="true"/>
     <PreferredContainer secondary="outpostcrewcabinet" amount="1" spawnprobability="0.05" />
     <Price baseprice="150" minavailable="1">
       <Price storeidentifier="merchantoutpost" minavailable="1" />

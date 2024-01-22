@@ -5,7 +5,7 @@
   <!-- *************************************************************************************************************************************************************************** -->
   <Methamphetamine name="" identifier="meth" category="Medical" maxstacksize="32" maxstacksizecharacterinventory="8" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical,syringe" description="" useinhealthinterface="true" scale="0.5" impactsoundtag="impact_metal_light" RequireAimToUse="True">
     <Upgrade gameversion="0.10.0.0" scale="0.5" />
-    <PreferredContainer primary="medcab"/>
+	<PreferredContainer primary="medcab" spawnprobability="0.1" notcampaign="true" />
     <PreferredContainer secondary="wreckmedcab,abandonedmedcab" amount="1" spawnprobability="0.2" />
     <PreferredContainer secondary="abandonedcrewcab" amount="1" spawnprobability="0.05" />
     <PreferredContainer secondary="crewcab" amount="1" spawnprobability="0.05" notcampaign="true"/>
@@ -78,7 +78,7 @@
   <!-- *************************************************************************************************************************************************************************** -->
   <AnabolicSteroids name="" identifier="steroids" category="Medical" maxstacksize="32" maxstacksizecharacterinventory="8" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical,syringe" description="" useinhealthinterface="true" scale="0.5" impactsoundtag="impact_metal_light" RequireAimToUse="True">
     <Upgrade gameversion="0.10.0.0" scale="0.5" />
-    <PreferredContainer primary="medcab"/>
+	<PreferredContainer primary="medcab" spawnprobability="0.1" notcampaign="true" />
     <PreferredContainer secondary="wreckmedcab,abandonedmedcab" amount="1" spawnprobability="0.1" />
     <PreferredContainer secondary="abandonedcrewcab" amount="1" spawnprobability="0.05" />
     <PreferredContainer secondary="crewcab" amount="1" spawnprobability="0.05" notcampaign="true"/>
@@ -146,7 +146,7 @@
   <!-- *************************************************************************************************************************************************************************** -->
   <Hyperzine name="" identifier="hyperzine" category="Medical" maxstacksize="32" maxstacksizecharacterinventory="8" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical,syringe" description="" useinhealthinterface="true" scale="0.5" impactsoundtag="impact_metal_light" RequireAimToUse="True">
     <Upgrade gameversion="0.10.0.0" scale="0.5" />
-    <PreferredContainer primary="medcab"/>
+	<PreferredContainer primary="medcab" spawnprobability="0.1" notcampaign="true" />
     <PreferredContainer secondary="wreckmedcab,abandonedmedcab" amount="1" spawnprobability="0.1" />
     <PreferredContainer secondary="abandonedcrewcab" amount="1" spawnprobability="0.05" />
     <PreferredContainer secondary="crewcab" amount="1" spawnprobability="0.05" notcampaign="true"/>
@@ -220,10 +220,10 @@
   <Ethanol name="" identifier="ethanol" category="Medical,Material" maxstacksize="32" maxstacksizecharacterinventory="8" cargocontaineridentifier="chemicalcrate" description="" Tags="smallitem,chem,medical,petfood2" useinhealthinterface="true" scale="0.5" impactsoundtag="impact_metal_light">
     <Upgrade gameversion="0.10.0.0" scale="0.5" />
     <PreferredContainer primary="sprayer" amount="1" spawnprobability="1"/>
+	<PreferredContainer primary="medfabcab" secondary="medcab" minamount="2" maxamount="4" spawnprobability="1" notcampaign="true" />
     <PreferredContainer secondary="wreckmedcab,abandonedmedcab" amount="1" spawnprobability="0.2" />
     <PreferredContainer secondary="abandonedcrewcab" minamount="1" maxamount="2" spawnprobability="0.3" />
     <PreferredContainer secondary="crewcab" amount="1" spawnprobability="0.5" notcampaign="true"/>
-    <PreferredContainer primary="medfabcab" secondary="medcab"/>
     <Price baseprice="60" minavailable="6" >
       <Price storeidentifier="merchantoutpost" />
       <Price storeidentifier="merchantcity" multiplier="0.9" minavailable="8" />
@@ -265,9 +265,9 @@
   <!-- *************************************************************************************************************************************************************************** -->
   <EnergyDrink name="" identifier="energydrink" category="Medical,Material" maxstacksize="32" maxstacksizecharacterinventory="8" cargocontaineridentifier="chemicalcrate" description="" Tags="smallitem,chem,medical" useinhealthinterface="true" scale="0.5" impactsoundtag="impact_metal_light">
     <Upgrade gameversion="0.10.0.0" scale="0.5" />
+	<PreferredContainer primary="crewcab" minamount="0" maxamount="2" spawnprobability="0.5" notcampaign="true" />
     <PreferredContainer secondary="wreckmedcab,abandonedmedcab" amount="1" spawnprobability="0.1" />
     <PreferredContainer secondary="abandonedcrewcab" minamount="1" maxamount="2" spawnprobability="0.15" />
-    <PreferredContainer primary="crewcab"/>
     <Fabricate suitablefabricators="vendingmachine" requiredtime="1" requiredmoney="40" fabricationlimitmin="5" fabricationlimitmax="10"/>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas2.png" sourcerect="64,768,64,64" origin="0.5,0.5" />
     <Sprite texture="Content/Items/Medical/Medicines.png" sourcerect="315,452,30,57" depth="0.6" origin="0.5,0.5" />
@@ -296,9 +296,9 @@
   <!-- *************************************************************************************************************************************************************************** -->
   <ProteinBar name="" identifier="proteinbar" category="Medical,Material" maxstacksize="32" maxstacksizecharacterinventory="8" cargocontaineridentifier="chemicalcrate" description="" Tags="smallitem,medical" useinhealthinterface="true" scale="0.5" impactsoundtag="impact_metal_light">
     <Upgrade gameversion="0.10.0.0" scale="0.5" />
+	<PreferredContainer primary="crewcab" minamount="0" maxamount="2" spawnprobability="0.5" notcampaign="true" />
     <PreferredContainer secondary="wreckmedcab,abandonedmedcab" amount="1" spawnprobability="0.1" />
     <PreferredContainer secondary="abandonedcrewcab" minamount="1" maxamount="2" spawnprobability="0.15" />
-    <PreferredContainer primary="crewcab"/>
     <Fabricate suitablefabricators="vendingmachine" requiredtime="1" requiredmoney="40" fabricationlimitmin="5" fabricationlimitmax="10"/>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas2.png" sourcerect="0,768,64,64" origin="0.5,0.5" />
     <Sprite texture="Content/Items/Medical/Medicines.png" sourcerect="285,452,30,57" depth="0.6" origin="0.5,0.5" />

@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Items>
   <Item name="" identifier="titanite" category="Material" Tags="smallitem,ore" maxstacksize="32" maxstacksizecharacterinventory="8" canbepicked="true" description="" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light">
-    <PreferredContainer primary="mineralcab" secondary="storagecab" />
+	<PreferredContainer primary="mineralcab" secondary="storagecab" spawnprobability="0.1" notcampaign="true" />
     <Price baseprice="250" sold="false">
       <Price storeidentifier="merchantoutpost" multiplier="1.1" />
       <Price storeidentifier="merchantcity" multiplier="1.25" />
@@ -40,7 +40,7 @@
     <Holdable slots="Any,RightHand,LeftHand" msg="ItemMsgUsePlasmaCutter" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false" />
   </Item>
   <Item name="" identifier="brockite" category="Material" Tags="smallitem,ore" maxstacksize="32" maxstacksizecharacterinventory="8" canbepicked="true" description="" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light">
-    <PreferredContainer primary="mineralcab" secondary="storagecab" />
+	<PreferredContainer primary="mineralcab" secondary="storagecab" spawnprobability="0.1" notcampaign="true" />
     <Price baseprice="150" sold="false">
       <Price storeidentifier="merchantoutpost" multiplier="1.1" />
       <Price storeidentifier="merchantcity" multiplier="1.25" />
@@ -77,7 +77,7 @@
     <Holdable slots="Any,RightHand,LeftHand" msg="ItemMsgUsePlasmaCutter" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false" />
   </Item>
   <Item name="" identifier="thorianite" category="Material" Tags="smallitem,ore" maxstacksize="32" maxstacksizecharacterinventory="8" canbepicked="true" description="" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light">
-    <PreferredContainer primary="mineralcab" secondary="storagecab" />
+	<PreferredContainer primary="mineralcab" secondary="storagecab" spawnprobability="0.1" notcampaign="true" />
     <Price baseprice="300" sold="false">
       <Price storeidentifier="merchantoutpost" multiplier="1.1" />
       <Price storeidentifier="merchantcity" multiplier="1.25" />
@@ -114,7 +114,7 @@
     <Holdable slots="Any,RightHand,LeftHand" msg="ItemMsgUsePlasmaCutter" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false" />
   </Item>
   <Item name="" identifier="amblygonite" category="Material" Tags="smallitem,ore" maxstacksize="32" maxstacksizecharacterinventory="8" canbepicked="true" description="" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light">
-    <PreferredContainer primary="mineralcab" secondary="storagecab" />
+	<PreferredContainer primary="mineralcab" secondary="storagecab" spawnprobability="0.1" notcampaign="true" />
     <Price baseprice="200" sold="false">
       <Price storeidentifier="merchantoutpost" multiplier="1.1" />
       <Price storeidentifier="merchantcity" multiplier="1.25" />
@@ -152,7 +152,7 @@
     <Holdable slots="Any,RightHand,LeftHand" msg="ItemMsgUsePlasmaCutter" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false" />
   </Item>
   <Item name="" identifier="sphalerite" category="Material" Tags="smallitem,ore" maxstacksize="32" maxstacksizecharacterinventory="8" canbepicked="true" description="" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light">
-    <PreferredContainer primary="mineralcab" secondary="storagecab" />
+	<PreferredContainer primary="mineralcab" secondary="storagecab" spawnprobability="0.1" notcampaign="true" />
     <Price baseprice="100" sold="false">
       <Price storeidentifier="merchantoutpost" multiplier="1.1" />
       <Price storeidentifier="merchantcity" multiplier="1.25" />
@@ -189,7 +189,7 @@
     <Holdable slots="Any,RightHand,LeftHand" msg="ItemMsgUsePlasmaCutter" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false" />
   </Item>
   <Item name="" identifier="pyromorphite" category="Material" Tags="smallitem,ore" maxstacksize="32" maxstacksizecharacterinventory="8" canbepicked="true" description="" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light">
-    <PreferredContainer primary="mineralcab" secondary="storagecab" />
+	<PreferredContainer primary="mineralcab" secondary="storagecab" spawnprobability="0.1" notcampaign="true" />
     <Price baseprice="30" sold="false">
       <Price storeidentifier="merchantoutpost" multiplier="1.1" />
       <Price storeidentifier="merchantcity" multiplier="1.25" />
@@ -225,7 +225,7 @@
     <Holdable slots="Any,RightHand,LeftHand" msg="ItemMsgUsePlasmaCutter" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false" />
   </Item>
   <Item name="" identifier="quartz" category="Material" Tags="smallitem,ore" maxstacksize="32" maxstacksizecharacterinventory="8" canbepicked="true" description="" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light">
-    <PreferredContainer primary="mineralcab" secondary="storagecab" />
+	  <PreferredContainer primary="mineralcab" secondary="storagecab" spawnprobability="0.1" notcampaign="true" />
     <Price baseprice="100" sold="false">
       <Price storeidentifier="merchantoutpost" multiplier="1.1" />
       <Price storeidentifier="merchantcity" multiplier="1.25" />
@@ -261,7 +261,7 @@
     <Holdable slots="Any,RightHand,LeftHand" msg="ItemMsgUsePlasmaCutter" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false" />
   </Item>
   <Item name="" identifier="diamond" category="Material" Tags="smallitem,ore" maxstacksize="32" maxstacksizecharacterinventory="8" canbepicked="true" description="" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light">
-    <PreferredContainer primary="mineralcab" secondary="storagecab" />
+	<PreferredContainer primary="mineralcab" secondary="storagecab" spawnprobability="0.1" notcampaign="true" />
     <Price baseprice="50" sold="false">
       <Price storeidentifier="merchantoutpost" multiplier="1.1" />
       <Price storeidentifier="merchantcity" multiplier="10" />
@@ -298,7 +298,7 @@
     <Holdable slots="Any,RightHand,LeftHand" msg="ItemMsgUsePlasmaCutter" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false" />
   </Item>
   <Item name="" identifier="hydroxyapatite" category="Material" Tags="smallitem,ore" maxstacksize="32" maxstacksizecharacterinventory="8" canbepicked="true" description="" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light">
-    <PreferredContainer primary="mineralcab" secondary="storagecab" />
+	<PreferredContainer primary="mineralcab" secondary="storagecab" spawnprobability="0.1" notcampaign="true" />
     <Price baseprice="100" sold="false">
       <Price storeidentifier="merchantoutpost" multiplier="1.1" />
       <Price storeidentifier="merchantcity" multiplier="1.25" />
@@ -336,7 +336,7 @@
     <Holdable slots="Any,RightHand,LeftHand" msg="ItemMsgUsePlasmaCutter" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false" />
   </Item>
   <Item name="" identifier="uraniumore" category="Material" Tags="smallitem,ore" maxstacksize="32" maxstacksizecharacterinventory="8" canbepicked="true" description="" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light">
-    <PreferredContainer primary="mineralcab" secondary="storagecab" />
+	<PreferredContainer primary="mineralcab" secondary="storagecab" spawnprobability="0.1" notcampaign="true" />
     <Price baseprice="200" sold="false">
       <Price storeidentifier="merchantoutpost" multiplier="1.1" />
       <Price storeidentifier="merchantcity" multiplier="1.25" />
@@ -374,7 +374,7 @@
     <Holdable slots="Any,RightHand,LeftHand" msg="ItemMsgUsePlasmaCutter" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false" />
   </Item>
   <Item name="" identifier="ilmenite" category="Material" Tags="smallitem,ore" maxstacksize="32" maxstacksizecharacterinventory="8" canbepicked="true" description="" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light">
-    <PreferredContainer primary="mineralcab" secondary="storagecab" />
+	<PreferredContainer primary="mineralcab" secondary="storagecab" spawnprobability="0.1" notcampaign="true" />
     <Price baseprice="100" sold="false">
       <Price storeidentifier="merchantoutpost" multiplier="1.1" />
       <Price storeidentifier="merchantcity" multiplier="1.25" />
@@ -410,7 +410,7 @@
     <Holdable slots="Any,RightHand,LeftHand" msg="ItemMsgUsePlasmaCutter" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false" />
   </Item>
   <Item name="" identifier="stannite" category="Material" Tags="smallitem,ore" maxstacksize="32" maxstacksizecharacterinventory="8" canbepicked="true" description="" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light">
-    <PreferredContainer primary="mineralcab" secondary="storagecab" />
+	<PreferredContainer primary="mineralcab" secondary="storagecab" spawnprobability="0.1" notcampaign="true" />
     <Price baseprice="50" sold="false">
       <Price storeidentifier="merchantoutpost" multiplier="1.1" />
       <Price storeidentifier="merchantcity" multiplier="1.25" />
@@ -448,7 +448,7 @@
     <Holdable slots="Any,RightHand,LeftHand" msg="ItemMsgUsePlasmaCutter" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false" />
   </Item>
   <Item name="" identifier="chalcopyrite" category="Material" Tags="smallitem,ore" maxstacksize="32" maxstacksizecharacterinventory="8" canbepicked="true" description="" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light">
-    <PreferredContainer primary="mineralcab" secondary="storagecab" />
+	<PreferredContainer primary="mineralcab" secondary="storagecab" spawnprobability="0.1" notcampaign="true" />
     <Price baseprice="60" sold="false">
       <Price storeidentifier="merchantoutpost" multiplier="1.1" />
       <Price storeidentifier="merchantcity" multiplier="1.25" />
@@ -484,7 +484,7 @@
     <Holdable slots="Any,RightHand,LeftHand" msg="ItemMsgUsePlasmaCutter" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false" />
   </Item>
   <Item name="" identifier="esperite" category="Material" Tags="smallitem,ore" maxstacksize="32" maxstacksizecharacterinventory="8" canbepicked="true" description="" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light">
-    <PreferredContainer primary="mineralcab" secondary="storagecab" />
+	<PreferredContainer primary="mineralcab" secondary="storagecab" spawnprobability="0.1" notcampaign="true" />
     <Price baseprice="100" sold="false">
       <Price storeidentifier="merchantoutpost" multiplier="1.1" />
       <Price storeidentifier="merchantcity" multiplier="1.25" />
@@ -516,7 +516,7 @@
     <Holdable slots="Any,RightHand,LeftHand" msg="ItemMsgUsePlasmaCutter" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false" />
   </Item>
   <Item name="" identifier="galena" category="Material" Tags="smallitem,ore" maxstacksize="32" maxstacksizecharacterinventory="8" canbepicked="true" description="" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light">
-    <PreferredContainer primary="mineralcab" />
+	<PreferredContainer primary="mineralcab" spawnprobability="0.1" notcampaign="true" />
     <Price baseprice="70" sold="false">
       <Price storeidentifier="merchantoutpost" multiplier="1.1" />
       <Price storeidentifier="merchantcity" multiplier="1.25" />
@@ -552,7 +552,7 @@
     <Holdable slots="Any,RightHand,LeftHand" msg="ItemMsgUsePlasmaCutter" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false" />
   </Item>
   <Item name="" identifier="triphylite" category="Material" Tags="smallitem,ore" maxstacksize="32" maxstacksizecharacterinventory="8" canbepicked="true" description="" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light">
-    <PreferredContainer primary="mineralcab" secondary="storagecab" />
+	<PreferredContainer primary="mineralcab" secondary="storagecab" spawnprobability="0.1" notcampaign="true" />
     <Price baseprice="100" sold="false">
       <Price storeidentifier="merchantoutpost" multiplier="1.1" />
       <Price storeidentifier="merchantcity" multiplier="1.25" />
@@ -587,7 +587,7 @@
     <Holdable slots="Any,RightHand,LeftHand" msg="ItemMsgUsePlasmaCutter" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false" />
   </Item>
   <Item name="" identifier="langbeinite" category="Material" Tags="smallitem,ore" maxstacksize="32" maxstacksizecharacterinventory="8" canbepicked="true" description="" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light">
-    <PreferredContainer primary="mineralcab" secondary="storagecab" />
+	<PreferredContainer primary="mineralcab" secondary="storagecab" spawnprobability="0.1" notcampaign="true" />
     <Price baseprice="200" sold="false">
       <Price storeidentifier="merchantoutpost" multiplier="1.1" />
       <Price storeidentifier="merchantcity" multiplier="1.25" />
@@ -625,7 +625,7 @@
     <Holdable slots="Any,RightHand,LeftHand" msg="ItemMsgUsePlasmaCutter" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false" />
   </Item>
   <Item name="" identifier="chamosite" category="Material" Tags="smallitem,ore" maxstacksize="32" maxstacksizecharacterinventory="8" canbepicked="true" description="" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light">
-    <PreferredContainer primary="mineralcab" secondary="storagecab" />
+	<PreferredContainer primary="mineralcab" secondary="storagecab" spawnprobability="0.1" notcampaign="true" />
     <Price baseprice="130" sold="false">
       <Price storeidentifier="merchantoutpost" multiplier="1.1" />
       <Price storeidentifier="merchantcity" multiplier="1.25" />
@@ -664,7 +664,7 @@
     <Holdable slots="Any,RightHand,LeftHand" msg="ItemMsgUsePlasmaCutter" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false" />
   </Item>
   <Item name="" identifier="ironore" category="Material" Tags="smallitem,ore" maxstacksize="32" maxstacksizecharacterinventory="8" canbepicked="true" description="" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light">
-    <PreferredContainer primary="mineralcab" secondary="storagecab" />
+	<PreferredContainer primary="mineralcab" secondary="storagecab" spawnprobability="0.1" notcampaign="true" />
     <Price baseprice="25" sold="false">
       <Price storeidentifier="merchantoutpost" multiplier="1.1" />
       <Price storeidentifier="merchantcity" multiplier="1.25" />
@@ -703,7 +703,7 @@
     <Holdable slots="Any,RightHand,LeftHand" msg="ItemMsgUsePlasmaCutter" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false" />
   </Item>
   <Item name="" identifier="polyhalite" category="Material" Tags="smallitem,ore" maxstacksize="32" maxstacksizecharacterinventory="8" canbepicked="true" description="" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light">
-    <PreferredContainer primary="mineralcab" secondary="storagecab" />
+	<PreferredContainer primary="mineralcab" secondary="storagecab" spawnprobability="0.1" notcampaign="true" />
     <Price baseprice="50" sold="false">
       <Price storeidentifier="merchantoutpost" multiplier="1.1" />
       <Price storeidentifier="merchantcity" multiplier="1.25" />
@@ -740,7 +740,7 @@
     <Holdable slots="Any,RightHand,LeftHand" msg="ItemMsgUsePlasmaCutter" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false" />
   </Item>
   <Item name="" identifier="graphite" category="Material" Tags="smallitem,ore" maxstacksize="32" maxstacksizecharacterinventory="8" canbepicked="true" description="" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light">
-    <PreferredContainer primary="mineralcab" secondary="storagecab" />
+	<PreferredContainer primary="mineralcab" secondary="storagecab" spawnprobability="0.1" notcampaign="true" />
     <Price baseprice="25" sold="false">
       <Price storeidentifier="merchantoutpost" multiplier="1.1" />
       <Price storeidentifier="merchantcity" multiplier="1.25" />
@@ -777,7 +777,7 @@
     <Holdable slots="Any,RightHand,LeftHand" msg="ItemMsgUsePlasmaCutter" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false" />
   </Item>
   <Item name="" identifier="sylvite" category="Material" Tags="smallitem,ore" maxstacksize="32" maxstacksizecharacterinventory="8" canbepicked="true" description="" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light">
-    <PreferredContainer primary="mineralcab" secondary="storagecab" />
+	<PreferredContainer primary="mineralcab" secondary="storagecab" spawnprobability="0.1" notcampaign="true" />
     <Price baseprice="70" sold="false">
       <Price storeidentifier="merchantoutpost" multiplier="1.1" />
       <Price storeidentifier="merchantcity" multiplier="1.25" />
@@ -815,7 +815,7 @@
     <Holdable slots="Any,RightHand,LeftHand" msg="ItemMsgUsePlasmaCutter" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false" />
   </Item>
   <Item name="" identifier="lazulite" category="Material" Tags="smallitem,ore" maxstacksize="32" maxstacksizecharacterinventory="8" canbepicked="true" description="" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light">
-    <PreferredContainer primary="mineralcab" secondary="storagecab" />
+	<PreferredContainer primary="mineralcab" secondary="storagecab" spawnprobability="0.1" notcampaign="true" />
     <Price baseprice="25" sold="false">
       <Price storeidentifier="merchantoutpost" multiplier="1.1" />
       <Price storeidentifier="merchantcity" multiplier="1.25" />
@@ -852,7 +852,7 @@
     <Holdable slots="Any,RightHand,LeftHand" msg="ItemMsgUsePlasmaCutter" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false" />
   </Item>
   <Item name="" identifier="bornite" category="Material" Tags="smallitem,ore" maxstacksize="32" maxstacksizecharacterinventory="8" canbepicked="true" description="" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light">
-    <PreferredContainer primary="mineralcab" secondary="storagecab" />
+	<PreferredContainer primary="mineralcab" secondary="storagecab" spawnprobability="0.1" notcampaign="true" />
     <Price baseprice="60" sold="false">
       <Price storeidentifier="merchantoutpost" multiplier="1.1" />
       <Price storeidentifier="merchantcity" multiplier="1.25" />
@@ -889,7 +889,7 @@
     <Holdable slots="Any,RightHand,LeftHand" msg="ItemMsgUsePlasmaCutter" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false" />
   </Item>
   <Item name="" identifier="cassiterite" category="Material" Tags="smallitem,ore" maxstacksize="32" maxstacksizecharacterinventory="8" canbepicked="true" description="" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light">
-    <PreferredContainer primary="mineralcab" secondary="storagecab" />
+	<PreferredContainer primary="mineralcab" secondary="storagecab" spawnprobability="0.1" notcampaign="true" />
     <Price baseprice="40" sold="false">
       <Price storeidentifier="merchantoutpost" multiplier="1.1" />
       <Price storeidentifier="merchantcity" multiplier="1.25" />
@@ -926,7 +926,7 @@
     <Holdable slots="Any,RightHand,LeftHand" msg="ItemMsgUsePlasmaCutter" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false" />
   </Item>
   <Item name="" identifier="cryolite" category="Material" Tags="smallitem,ore" maxstacksize="32" maxstacksizecharacterinventory="8" canbepicked="true" description="" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light">
-    <PreferredContainer primary="mineralcab" secondary="storagecab" />
+	<PreferredContainer primary="mineralcab" secondary="storagecab" spawnprobability="0.1" notcampaign="true" />
     <Price baseprice="80" sold="false">
       <Price storeidentifier="merchantoutpost" multiplier="1.1" />
       <Price storeidentifier="merchantcity" multiplier="1.25" />
@@ -963,7 +963,7 @@
     <Holdable slots="Any,RightHand,LeftHand" msg="ItemMsgUsePlasmaCutter" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false" />
   </Item>
   <Item name="" identifier="aragonite" category="Material" Tags="smallitem,ore" maxstacksize="32" maxstacksizecharacterinventory="8" canbepicked="true" description="" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light">
-    <PreferredContainer primary="mineralcab" secondary="storagecab" />
+	<PreferredContainer primary="mineralcab" secondary="storagecab" spawnprobability="0.1" notcampaign="true" />
     <Price baseprice="80" sold="false">
       <Price storeidentifier="merchantoutpost" multiplier="1.1" />
       <Price storeidentifier="merchantcity" multiplier="1.25" />
@@ -1000,7 +1000,7 @@
     <Holdable slots="Any,RightHand,LeftHand" msg="ItemMsgUsePlasmaCutter" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false" />
   </Item>
   <Item name="" identifier="chrysoprase" category="Material" Tags="smallitem,ore" maxstacksize="32" maxstacksizecharacterinventory="8" canbepicked="true" description="" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light">
-    <PreferredContainer primary="mineralcab" secondary="storagecab" />
+	<PreferredContainer primary="mineralcab" secondary="storagecab" spawnprobability="0.1" notcampaign="true" />
     <Price baseprice="40" sold="false">
       <Price storeidentifier="merchantoutpost" multiplier="1.1" />
       <Price storeidentifier="merchantcity" multiplier="1.25" />

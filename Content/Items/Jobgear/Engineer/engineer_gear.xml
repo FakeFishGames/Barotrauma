@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Items>
   <Item name="" identifier="orangejumpsuit1" aliases="orangejumpsuit" category="Equipment" tags="smallitem,clothing,radiationproof" fireproof="true" cargocontaineridentifier="metalcrate" description="" scale="0.5" impactsoundtag="impact_soft">
-    <PreferredContainer primary="crewcab"/>
+	<PreferredContainer primary="crewcab" amount="1" spawnprobability="0.125" notcampaign="true" />
     <PreferredContainer primary="outpostcrewcabinet" amount="1" spawnprobability="0.1" />
     <Price baseprice="150">
       <Price storeidentifier="merchantoutpost" minavailable="1" />
@@ -36,7 +36,7 @@
     </Wearable>
   </Item>
   <Item name="" identifier="orangejumpsuit2" category="Equipment" tags="smallitem,clothing" fireproof="true" cargocontaineridentifier="metalcrate" description="" scale="0.5" impactsoundtag="impact_soft">
-    <PreferredContainer primary="crewcab"/>
+	<PreferredContainer primary="crewcab" amount="1" spawnprobability="0.125" notcampaign="true" />
     <PreferredContainer primary="outpostcrewcabinet" amount="1" spawnprobability="0.1" />
     <Price baseprice="150">
       <Price storeidentifier="merchantoutpost" minavailable="1" />
