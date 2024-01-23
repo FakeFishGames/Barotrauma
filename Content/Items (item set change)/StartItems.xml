@@ -1,0 +1,160 @@
+<!--Only the normal ItemSet is selected here since this is the only one relevant for missions mode afaik-->
+
+<ItemSet identifier="normal" order="1">
+	<!--Below are the values that are vanilla and apply to the amount of items a sub gets at the start of a campaign with medium amount of items selected or when starting a round in missions mode-->
+    <Item identifier="safeandsoundsecurity101" amount="1" MultiPlayerOnly="true"/>
+    <Item identifier="weldingtool" amount="2"/>
+    <Item identifier="weldingfueltank" amount="1"/>
+    <Item identifier="wrench"/>
+    <Item identifier="crowbar"/>
+    <Item identifier="screwdriver"/>
+    <Item identifier="fuelrod" amount="6"/>
+    <Item identifier="antibleeding1" amount="8"/>>
+    <Item identifier="antidama1" amount="8"/>
+    <Item identifier="antibloodloss1" amount="8"/>
+    <Item identifier="calyxanide"/>
+    <Item identifier="antipsychosis"/>
+    <Item identifier="antinarc"/>
+    <Item identifier="antirad"/>
+    <Item identifier="antiparalysis"/>
+    <Item identifier="plasmacutter"/>
+    <Item identifier="harpoongun"/>
+    <Item identifier="stunbaton"/>
+    <Item identifier="divingknife"/>
+    <Item identifier="revolver"/>
+    <Item identifier="sulphuricacid"/>
+    <Item identifier="stabilozine" amount="5"/>
+    <Item identifier="ethanol" amount="2"/>
+    <Item identifier="opium" amount="2"/>
+    <Item identifier="antibiotics" amount="2"/>
+    <Item identifier="handheldsonar" />
+    <Item identifier="flashlight" />
+	
+	<!--From here on out are gonna be the edited amount of items on top of the normal set that only gets added to non-campaign modes-->
+	<!--Materials-->
+	<Item identifier="carbon" minamount="0" maxamount="2" notcampaign="true"/>
+	<Item identifier="iron" minamount="0" maxamount="2" notcampaign="true"/>
+	<Item identifier="tin" minamount="0" maxamount="2" notcampaign="true"/>
+	<Item identifier="lead" minamount="0" maxamount="2" notcampaign="true"/>
+	<Item identifier="phosphorus" minamount="0" maxamount="3" notcampaign="true"/>
+	<Item identifier="copper" minamount="0" maxamount="3" notcampaign="true"/>
+	<Item identifier="zinc" minamount="0" maxamount="2" notcampaign="true"/>
+	<Item identifier="sodium" minamount="0" maxamount="5" notcampaign="true"/>
+	<Item identifier="silicon" minamount="0" maxamount="2" notcampaign="true"/>
+	<Item identifier="calcium" minamount="1" maxamount="5" notcampaign="true"/>
+	<Item identifier="aluminium" minamount="0" maxamount="2" notcampaign="true"/>
+	<Item identifier="uranium" minamount="0" maxamount="2" notcampaign="true"/>
+	<Item identifier="potassium" minamount="1" maxamount="5" notcampaign="true"/>
+	<Item identifier="titanium" minamount="0" maxamount="2" notcampaign="true"/>
+	<Item identifier="magnesium" minamount="0" maxamount="2" notcampaign="true"/>
+	<Item identifier="lithium" minamount="0" maxamount="2" notcampaign="true"/>
+	<Item identifier="chlorine" minamount="0" maxamount="2" notcampaign="true"/>
+	<Item identifier="thorium" amount="1" spawnprobability="0.125" notcampaign="true"/>
+	<Item identifier="steel" minamount="1" maxamount="4" notcampaign="true"/>
+	<Item identifier="titaniumaluminiumalloy" minamount="1" maxamount="2" spawnprobability="0.5" notcampaign="true"/>
+	<Item identifier="plastic" minamount="1" maxamount="4" notcampaign="true"/>
+	<Item identifier="ballisticfiber" minamount="1" maxamount="2" spawnprobability="0.5" notcampaign="true"/>
+	<Item identifier="organicfiber" minamount="1" maxamount="3" notcampaign="true"/>
+	<Item identifier="rubber" minamount="1" maxamount="2" notcampaign="true"/>
+	<Item identifier="flashpowder" minamount="1" maxamount="2" spawnprobability="0.5" notcampaign="true"/>
+	<!--Medmaterials-->
+	<Item identifier="fiberplant" minamount="0" maxamount="4" notcampaign="true"/>
+	<Item identifier="elastinplant" minamount="0" maxamount="4" notcampaign="true"/>
+	<Item identifier="aquaticpoppy" minamount="0" maxamount="4" notcampaign="true"/>
+	<Item identifier="yeastshroom" minamount="0" maxamount="4" notcampaign="true"/>
+	<Item identifier="slimebacteria" minamount="0" maxamount="4" notcampaign="true"/>
+	<!--Minerals-->
+	<Item identifier="titanite" amount="1" spawnprobability="0.1" notcampaign="true"/>
+	<Item identifier="brockite" amount="1" spawnprobability="0.1" notcampaign="true"/>
+	<Item identifier="thorianite" amount="1" spawnprobability="0.1" notcampaign="true"/>
+	<Item identifier="amblygonite" amount="1" spawnprobability="0.1" notcampaign="true"/>
+	<Item identifier="sphalerite" amount="1" spawnprobability="0.1" notcampaign="true"/>
+	<Item identifier="pyromorphite" amount="1" spawnprobability="0.1" notcampaign="true"/>
+	<Item identifier="quartz" amount="1" spawnprobability="0.1" notcampaign="true"/>
+	<Item identifier="diamond" amount="1" spawnprobability="0.1" notcampaign="true"/>
+	<Item identifier="hydroxyapatite" amount="1" spawnprobability="0.1" notcampaign="true"/>
+	<Item identifier="uraniumore" amount="1" spawnprobability="0.1" notcampaign="true"/>
+	<Item identifier="ilmenite" amount="1" spawnprobability="0.1" notcampaign="true"/>
+	<Item identifier="stannite" amount="1" spawnprobability="0.1" notcampaign="true"/>
+	<Item identifier="chalcopyrite" amount="1" spawnprobability="0.1" notcampaign="true"/>
+	<Item identifier="esperite" amount="1" spawnprobability="0.1" notcampaign="true"/>
+	<Item identifier="galena" amount="1" spawnprobability="0.1" notcampaign="true"/>
+	<Item identifier="triphylite" amount="1" spawnprobability="0.1" notcampaign="true"/>
+	<Item identifier="langbeinite" amount="1" spawnprobability="0.1" notcampaign="true"/>
+	<Item identifier="chamosite" amount="1" spawnprobability="0.1" notcampaign="true"/>
+	<Item identifier="ironore" amount="1" spawnprobability="0.1" notcampaign="true"/>
+	<Item identifier="polyhalite" amount="1" spawnprobability="0.1" notcampaign="true"/>
+	<Item identifier="graphite" amount="1" spawnprobability="0.1" notcampaign="true"/>
+	<Item identifier="sylvite" amount="1" spawnprobability="0.1" notcampaign="true"/>
+	<Item identifier="lazulite" amount="1" spawnprobability="0.1" notcampaign="true"/>
+	<Item identifier="bornite" amount="1" spawnprobability="0.1" notcampaign="true"/>
+	<Item identifier="cassiterite" amount="1" spawnprobability="0.1" notcampaign="true"/>
+	<Item identifier="cryolite" amount="1" spawnprobability="0.1" notcampaign="true"/>
+	<Item identifier="aragonite" amount="1" spawnprobability="0.1" notcampaign="true"/>
+	<Item identifier="chrysoprase" amount="1" spawnprobability="0.1" notcampaign="true"/>
+	<!--Medical-->
+	<!--Note, some items also used to spawn in supplycabs
+	those were added up thus the seemingly arbitrary numbers sometimes
+	(yes I know it doesn't necessarily make sense, but the numbers can be adjusted no problem)-->
+	<Item identifier="antibleeding1" minamount="7" maxamount="10" notcampaign="true"/>
+	<Item identifier="antibleeding2" minamount="4" maxamount="6" notcampaign="true"/>
+	<Item identifier="antibleeding3" minamount="4" maxamount="6" notcampaign="true"/>
+	<Item identifier="antidama1" minamount="3" maxamount="7" notcampaign="true"/>
+	<Item identifier="antidama2" minamount="1" maxamount="4" spawnprobability="0.5" notcampaign="true"/>
+	<Item identifier="pomegrenadeextract" minamount="2" maxamount="6" spawnprobability="0.5" notcampaign="true"/>
+	<Item identifier="antibloodloss1" minamount="9" maxamount="12" notcampaign="true"/>
+	<Item identifier="antibloodloss2" minamount="3" maxamount="4" notcampaign="true"/>
+	<Item identifier="deusizine" amount="1" spawnprobability="0.05" notcampaign="true"/>
+	<Item identifier="liquidoxygenite" amount="1" spawnprobability="0.1" notcampaign="true"/>
+	<Item identifier="calyxanide" minamount="1" maxamount="4" notcampaign="true"/>
+	<Item identifier="antipsychosis" amount="1" spawnprobability="0.5" notcampaign="true"/>
+	<Item identifier="antinarc" amount="1" spawnprobability="0.8" notcampaign="true"/>
+	<Item identifier="antirad" amount="1" spawnprobability="0.5" notcampaign="true"/>
+	<Item identifier="antiparalysis" minamount="1" maxamount="2" notcampaign="true"/>
+	<Item identifier="elastin" minamount="2" maxamount="6" notcampaign="true"/>
+	<Item identifier="opium" minamount="4" maxamount="8" notcampaign="true"/>
+	<Item identifier="antibiotics" minamount="2" maxamount="6" notcampaign="true"/>
+	<Item identifier="stabilozine" minamount="2" maxamount="8" notcampaign="true"/>
+	<Item identifier="adrenaline" minamount="2" maxamount="6" notcampaign="true"/>
+	<Item identifier="tonicliquid" amount="1" spawnprobability="0.5" notcampaign="true"/>
+	<!--Buffs-->
+	<Item identifier="meth" amount="1" spawnprobability="0.1" notcampaign="true"/>
+	<Item identifier="steroids" amount="1" spawnprobability="0.1" notcampaign="true"/>
+	<Item identifier="hyperzine" amount="1" spawnprobability="0.1" notcampaign="true"/>
+	<Item identifier="ethanol" minamount="2" maxamount="4" notcampaign="true"/>
+	<Item identifier="energydrink" minamount="1" maxamount="2" spawnprobability="0.5" notcampaign="true"/>
+	<Item identifier="proteinbar" minamount="1" maxamount="2" spawnprobability="0.5" notcampaign="true"/>
+	<!--poisons-->
+	<Item identifier="morbusine" amount="1" spawnprobability="0.05" notcampaign="true"/>
+	<Item identifier="chloralhydrate" minamount="0" maxamount="3" notcampaign="true"/>
+	<Item identifier="cyanide" amount="1" spawnprobability="0.05" notcampaign="true"/>
+	<Item identifier="radiotoxin" amount="1" spawnprobability="0.05" notcampaign="true"/>
+	<Item identifier="sufforin" amount="1" spawnprobability="0.05" notcampaign="true"/>
+	<Item identifier="deliriumine" amount="1" spawnprobability="0.05" notcampaign="true"/>
+	<Item identifier="paralyzant" amount="1" spawnprobability="0.05" notcampaign="true"/>
+	<Item identifier="raptorbaneextract" amount="1" spawnprobability="0.05" notcampaign="true"/>
+	<Item identifier="hallucinogenicbufotoxin" amount="1" spawnprobability="0.05" notcampaign="true"/>
+	<Item identifier="sulphuricacid" minamount="3" maxamount="6" notcampaign="true"/>
+	<!--Tools & Jobgear & Gardeningtools-->
+	<Item identifier="plasmacutter" minamount="2" maxamount="5" notcampaign="true"/>
+	<Item identifier="sprayer" minamount="1" maxamount="4" notcampaign="true"/>
+	<Item identifier="screwdriver" minamount="1" maxamount="4" notcampaign="true"/>
+	<Item identifier="wrench" minamount="1" maxamount="4" notcampaign="true"/>
+	<Item identifier="crowbar" minamount="0" maxamount="1" notcampaign="true"/>
+	<Item identifier="handheldsonar" minamount="1" maxamount="2" notcampaign="true"/>
+	<Item identifier="sonarbeacon" minamount="1" maxamount="2" notcampaign="true"/>
+	<Item identifier="flashlight" minamount="2" maxamount="3" notcampaign="true"/>
+	<Item identifier="thoriumfuelrod" minamount="1" maxamount="2" spawnprobability="0.05" notcampaign="true"/>
+	<Item identifier="smallplanter" amount="1" spawnprobability="0.125" notcampaign="true"/>
+	<Item identifier="fertilizer" amount="1" spawnprobability="0.125" notcampaign="true"/>
+	<Item identifier="seedbag" amount="1" spawnprobability="0.125" notcampaign="true"/>
+	<Item identifier="orangejumpsuit1" amount="1" spawnprobability="0.125" notcampaign="true"/>
+	<Item identifier="orangejumpsuit2" amount="1" spawnprobability="0.125" notcampaign="true"/>
+	<Item identifier="bluejumpsuit1" amount="1" spawnprobability="0.125" notcampaign="true"/>
+	<Item identifier="bluejumpsuit2" amount="1" spawnprobability="0.125" notcampaign="true"/>
+	<Item identifier="doctorsuniform1" amount="1" spawnprobability="0.125" notcampaign="true"/>
+	<Item identifier="doctorsuniform2" amount="1" spawnprobability="0.125" notcampaign="true"/>
+	<Item identifier="securityuniform1" amount="1" spawnprobability="0.125" notcampaign="true"/>
+	<Item identifier="securityuniform2" amount="1" spawnprobability="0.125" notcampaign="true"/>
+	<Item identifier="engineeruniform3" amount="1" spawnprobability="0.125" notcampaign="true"/>
+  </ItemSet>
