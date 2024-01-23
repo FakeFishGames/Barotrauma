@@ -64,34 +64,34 @@
 	<Item identifier="yeastshroom" minamount="0" maxamount="4" notcampaign="true"/>
 	<Item identifier="slimebacteria" minamount="0" maxamount="4" notcampaign="true"/>
 	<!--Minerals-->
-	<Item identifier="titanite" amount="1" spawnprobability="0.1" notcampaign="true"/>
-	<Item identifier="brockite" amount="1" spawnprobability="0.1" notcampaign="true"/>
-	<Item identifier="thorianite" amount="1" spawnprobability="0.1" notcampaign="true"/>
-	<Item identifier="amblygonite" amount="1" spawnprobability="0.1" notcampaign="true"/>
-	<Item identifier="sphalerite" amount="1" spawnprobability="0.1" notcampaign="true"/>
-	<Item identifier="pyromorphite" amount="1" spawnprobability="0.1" notcampaign="true"/>
-	<Item identifier="quartz" amount="1" spawnprobability="0.1" notcampaign="true"/>
-	<Item identifier="diamond" amount="1" spawnprobability="0.1" notcampaign="true"/>
-	<Item identifier="hydroxyapatite" amount="1" spawnprobability="0.1" notcampaign="true"/>
-	<Item identifier="uraniumore" amount="1" spawnprobability="0.1" notcampaign="true"/>
-	<Item identifier="ilmenite" amount="1" spawnprobability="0.1" notcampaign="true"/>
-	<Item identifier="stannite" amount="1" spawnprobability="0.1" notcampaign="true"/>
-	<Item identifier="chalcopyrite" amount="1" spawnprobability="0.1" notcampaign="true"/>
-	<Item identifier="esperite" amount="1" spawnprobability="0.1" notcampaign="true"/>
-	<Item identifier="galena" amount="1" spawnprobability="0.1" notcampaign="true"/>
-	<Item identifier="triphylite" amount="1" spawnprobability="0.1" notcampaign="true"/>
-	<Item identifier="langbeinite" amount="1" spawnprobability="0.1" notcampaign="true"/>
-	<Item identifier="chamosite" amount="1" spawnprobability="0.1" notcampaign="true"/>
-	<Item identifier="ironore" amount="1" spawnprobability="0.1" notcampaign="true"/>
-	<Item identifier="polyhalite" amount="1" spawnprobability="0.1" notcampaign="true"/>
-	<Item identifier="graphite" amount="1" spawnprobability="0.1" notcampaign="true"/>
-	<Item identifier="sylvite" amount="1" spawnprobability="0.1" notcampaign="true"/>
-	<Item identifier="lazulite" amount="1" spawnprobability="0.1" notcampaign="true"/>
-	<Item identifier="bornite" amount="1" spawnprobability="0.1" notcampaign="true"/>
-	<Item identifier="cassiterite" amount="1" spawnprobability="0.1" notcampaign="true"/>
-	<Item identifier="cryolite" amount="1" spawnprobability="0.1" notcampaign="true"/>
-	<Item identifier="aragonite" amount="1" spawnprobability="0.1" notcampaign="true"/>
-	<Item identifier="chrysoprase" amount="1" spawnprobability="0.1" notcampaign="true"/>
+	<Item identifier="titanite" minamount="1" maxamount="2" spawnprobability="0.1" notcampaign="true"/>
+	<Item identifier="brockite" minamount="1" maxamount="2" spawnprobability="0.1" notcampaign="true"/>
+	<Item identifier="thorianite" minamount="1" maxamount="2" spawnprobability="0.1" notcampaign="true"/>
+	<Item identifier="amblygonite" minamount="1" maxamount="2" spawnprobability="0.1" notcampaign="true"/>
+	<Item identifier="sphalerite" minamount="1" maxamount="2" spawnprobability="0.1" notcampaign="true"/>
+	<Item identifier="pyromorphite" minamount="1" maxamount="2" spawnprobability="0.1" notcampaign="true"/>
+	<Item identifier="quartz" minamount="1" maxamount="2" spawnprobability="0.1" notcampaign="true"/>
+	<Item identifier="diamond" minamount="1" maxamount="2" spawnprobability="0.1" notcampaign="true"/>
+	<Item identifier="hydroxyapatite" minamount="1" maxamount="2" spawnprobability="0.1" notcampaign="true"/>
+	<Item identifier="uraniumore" minamount="1" maxamount="2" spawnprobability="0.1" notcampaign="true"/>
+	<Item identifier="ilmenite" minamount="1" maxamount="2" spawnprobability="0.1" notcampaign="true"/>
+	<Item identifier="stannite" minamount="1" maxamount="2" spawnprobability="0.1" notcampaign="true"/>
+	<Item identifier="chalcopyrite" minamount="1" maxamount="2" spawnprobability="0.1" notcampaign="true"/>
+	<Item identifier="esperite" minamount="1" maxamount="2" spawnprobability="0.1" notcampaign="true"/>
+	<Item identifier="galena" minamount="1" maxamount="2" spawnprobability="0.1" notcampaign="true"/>
+	<Item identifier="triphylite" minamount="1" maxamount="2" spawnprobability="0.1" notcampaign="true"/>
+	<Item identifier="langbeinite" minamount="1" maxamount="2" spawnprobability="0.1" notcampaign="true"/>
+	<Item identifier="chamosite" minamount="1" maxamount="2" spawnprobability="0.1" notcampaign="true"/>
+	<Item identifier="ironore" minamount="1" maxamount="2" spawnprobability="0.1" notcampaign="true"/>
+	<Item identifier="polyhalite" minamount="1" maxamount="2" spawnprobability="0.1" notcampaign="true"/>
+	<Item identifier="graphite" minamount="1" maxamount="2" spawnprobability="0.1" notcampaign="true"/>
+	<Item identifier="sylvite" minamount="1" maxamount="2" spawnprobability="0.1" notcampaign="true"/>
+	<Item identifier="lazulite" minamount="1" maxamount="2" spawnprobability="0.1" notcampaign="true"/>
+	<Item identifier="bornite" minamount="1" maxamount="2" spawnprobability="0.1" notcampaign="true"/>
+	<Item identifier="cassiterite" minamount="1" maxamount="2" spawnprobability="0.1" notcampaign="true"/>
+	<Item identifier="cryolite" minamount="1" maxamount="2" spawnprobability="0.1" notcampaign="true"/>
+	<Item identifier="aragonite" minamount="1" maxamount="2" spawnprobability="0.1" notcampaign="true"/>
+	<Item identifier="chrysoprase" minamount="1" maxamount="2" spawnprobability="0.1" notcampaign="true"/>
 	<!--Medical-->
 	<!--Note, some items also used to spawn in supplycabs
 	those were added up thus the seemingly arbitrary numbers sometimes
