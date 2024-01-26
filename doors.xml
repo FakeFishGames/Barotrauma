@@ -1,14 +1,14 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Items>
   <Item name="" identifier="door" tags="door,weldable" scale="0.5" health="100" damagedbyrepairtools="true" damagedbymonsters="true" damagedbyexplosions="true" damagedbyprojectiles="true" damagedbymeleeweapons="true" ShowNameInHealthBar="false" explosiondamagemultiplier="0.1" allowrotatingineditor="false" allowedlinks="structure,item" ondamagedthreshold="2" linkable="true">
-    <Sprite texture="door.png" sourcerect="0,0,49,416" depth="0.51" origin="0.5,0.5" />
-    <DecorativeSprite texture="door.png" sourcerect="49,0,49,416" depth="0.89" origin="0.5,0.5"/>
+    <Sprite texture="Content/Items/Door/door.png" sourcerect="0,0,49,416" depth="0.51" origin="0.5,0.5" />
+    <DecorativeSprite texture="Content/Items/Door/door.png" sourcerect="49,0,49,416" depth="0.61" origin="0.5,0.5"/>
     <Door canbeselected="true" canbepicked="true" pickkey="Action" msg="ItemMsgForceOpenCrowbar" PickingTime="7.5" shadowscale="0.7,1">
       <Upgrade gameversion="0.22.0.0" PickingTime="7.5" />
       <RequiredItem items="crowbar" type="Equipped" />
-      <Sprite texture="door.png" sourcerect="158,0,42,416" depth="0.05" origin="0.5,0.0" />
-      <WeldedSprite texture="door.png" sourcerect="203,0,65,377" depth="0.0" origin="0.5,0.5" />
-      <BrokenSprite texture="door.png" sourcerect="271,0,121,416" depth="0.509" origin="0.5,0.0" scale="true" />
+      <Sprite texture="Content/Items/Door/door.png" sourcerect="158,0,42,416" depth="0.05" origin="0.5,0.0" />
+      <WeldedSprite texture="Content/Items/Door/door.png" sourcerect="203,0,65,377" depth="0.0" origin="0.5,0.5" />
+      <BrokenSprite texture="Content/Items/Door/door.png" sourcerect="271,0,121,416" depth="0.509" origin="0.5,0.0" scale="true" />
       <sound file="Content/Items/Door/Door1.ogg" type="OnUse" range="500.0" />
       <sound file="Content/Items/Door/Door2.ogg" type="OnUse" range="500.0" />
       <sound file="Content/Items/Door/Door3.ogg" type="OnUse" range="500.0" />
@@ -40,14 +40,14 @@
     </ConnectionPanel>
   </Item>
   <Item name="" identifier="windoweddoor" tags="door,weldable" scale="0.5" health="100" damagedbyrepairtools="true" damagedbymonsters="true" damagedbyprojectiles="true" damagedbymeleeweapons="true" damagedbyexplosions="true" ShowNameInHealthBar="false" explosiondamagemultiplier="0.1" allowrotatingineditor="false" allowedlinks="structure,item" ondamagedthreshold="2" linkable="true">
-    <Sprite texture="door.png" sourcerect="0,0,49,416" depth="0.51" origin="0.5,0.5" />
-    <DecorativeSprite texture="door.png" sourcerect="49,0,49,416" depth="0.89" origin="0.5,0.5"/>
+    <Sprite texture="Content/Items/Door/door.png" sourcerect="0,0,49,416" depth="0.51" origin="0.5,0.5" />
+    <DecorativeSprite texture="Content/Items/Door/door.png" sourcerect="49,0,49,416" depth="0.61" origin="0.5,0.5"/>
     <Door window="0,-76,50,153" canbepicked="true" canbeselected="true" pickkey="Action" msg="ItemMsgForceOpenCrowbar" PickingTime="7.5" shadowscale="0.7,1">
       <Upgrade gameversion="0.22.0.0" PickingTime="7.5" />
       <RequiredItem items="crowbar" type="Equipped" />
-      <Sprite texture="door.png" sourcerect="106,0,50,416" depth="0.05" origin="0.5,0.0" />
-      <WeldedSprite texture="door.png" sourcerect="203,0,65,377" depth="0.0" origin="0.5,0.5" />
-      <BrokenSprite texture="door.png" sourcerect="392,0,120,416" depth="0.509" origin="0.5,0.0" scale="true" />
+      <Sprite texture="Content/Items/Door/door.png" sourcerect="106,0,50,416" depth="0.05" origin="0.5,0.0" />
+      <WeldedSprite texture="Content/Items/Door/door.png" sourcerect="203,0,65,377" depth="0.0" origin="0.5,0.5" />
+      <BrokenSprite texture="Content/Items/Door/door.png" sourcerect="392,0,120,416" depth="0.509" origin="0.5,0.0" scale="true" />
       <sound file="Content/Items/Door/Door1.ogg" type="OnUse" range="500.0" />
       <sound file="Content/Items/Door/Door2.ogg" type="OnUse" range="500.0" />
       <sound file="Content/Items/Door/Door3.ogg" type="OnUse" range="500.0" />
@@ -80,13 +80,13 @@
   </Item>
   <Item name="" identifier="hatch" allowedlinks="gap,hull,structure,item" linkable="true" tags="door,weldable" scale="0.5" health="100" damagedbyrepairtools="true" damagedbymonsters="true" damagedbyprojectiles="true" damagedbymeleeweapons="true" damagedbyexplosions="true" ShowNameInHealthBar="false" explosiondamagemultiplier="0.1" ondamagedthreshold="2" allowrotatingineditor="false">
     <Upgrade gameversion="0.9.7.0" spritedepth="0.7"/>
-    <Sprite texture="hatch.png" sourcerect="0,0,256,98" depth="0.7" origin="0.5,0.5" />
+    <Sprite texture="Content/Items/Door/hatch.png" sourcerect="0,0,256,98" depth="0.7" origin="0.5,0.5" />
     <Door canbeselected="true" canbepicked="true" horizontal="true" pickkey="Action" msg="ItemMsgForceOpenCrowbar" PickingTime="7.5" shadowscale="1,0.8">
       <Upgrade gameversion="0.22.0.0" PickingTime="7.5" />
       <RequiredItem items="crowbar" type="Equipped" />
-      <Sprite texture="hatch.png" sourcerect="256,0,256,38" depth="0.05" origin="0.0,0.5" />
-      <WeldedSprite texture="hatch.png" sourcerect="0,100,227,75" depth="0.0" origin="0.5,0.5" />
-      <BrokenSprite texture="hatch.png" sourcerect="256,45,256,114" depth="0.509" origin="0.0,0.5" scale="true" />
+      <Sprite texture="Content/Items/Door/hatch.png" sourcerect="256,0,256,38" depth="0.05" origin="0.0,0.5" />
+      <WeldedSprite texture="Content/Items/Door/hatch.png" sourcerect="0,100,227,75" depth="0.0" origin="0.5,0.5" />
+      <BrokenSprite texture="Content/Items/Door/hatch.png" sourcerect="256,45,256,114" depth="0.509" origin="0.0,0.5" scale="true" />
       <sound file="Content/Items/Door/Door1.ogg" type="OnUse" range="500.0" />
       <sound file="Content/Items/Door/Door2.ogg" type="OnUse" range="500.0" />
       <sound file="Content/Items/Door/Door3.ogg" type="OnUse" range="500.0" />
@@ -118,17 +118,17 @@
     </ConnectionPanel>
   </Item>
   <Item name="" identifier="doorwbuttons" tags="door,weldable" scale="0.5" health="100" requirebodyinsidetrigger="false" damagedbyrepairtools="true" damagedbymonsters="true" damagedbyprojectiles="true" damagedbymeleeweapons="true" damagedbyexplosions="true" ShowNameInHealthBar="false" explosiondamagemultiplier="0.1" allowrotatingineditor="false" allowedlinks="structure,item" ondamagedthreshold="2" linkable="true">
-    <Sprite texture="door.png" sourcerect="0,0,49,416" depth="0.51" origin="0.5,0.5" />
-    <DecorativeSprite texture="door.png" sourcerect="49,0,49,416" depth="0.89" origin="0.5,0.5"/>
-    <DecorativeSprite texture="Content/Items/Button/button.png" sourcerect="28,70,34,51" depth="0.75" origin="1.65,0.76" />
-    <DecorativeSprite texture="Content/Items/Button/button.png" sourcerect="28,70,34,51" depth="0.75" origin="-0.65,0.76" />
+    <Sprite texture="Content/Items/Door/door.png" sourcerect="0,0,49,416" depth="0.51" origin="0.5,0.5" />
+    <DecorativeSprite texture="Content/Items/Door/door.png" sourcerect="49,0,49,416" depth="0.61" origin="0.5,0.5"/>
+    <DecorativeSprite texture="Content/Items/Button/button.png" sourcerect="28,70,34,51" depth="0.62" origin="1.65,0.76" />
+    <DecorativeSprite texture="Content/Items/Button/button.png" sourcerect="28,70,34,51" depth="0.62" origin="-0.65,0.76" />
     <Door canbeselected="true" canbepicked="true" pickkey="Action" msg="ItemMsgForceOpenCrowbar" PickingTime="7.5" shadowscale="0.7,1" hasintegratedbuttons="true">
       <Upgrade gameversion="0.22.0.0" PickingTime="7.5" />
       <RequiredItem items="crowbar" type="Equipped" optional="true"/>
       <Requireditem items="idcard" type="Picked" optional="true"/>
-      <Sprite texture="door.png" sourcerect="158,0,42,416" depth="0.05" origin="0.5,0.0" />
-      <WeldedSprite texture="door.png" sourcerect="203,0,65,377" depth="0.0" origin="0.5,0.5" />
-      <BrokenSprite texture="door.png" sourcerect="271,0,121,416" depth="0.509" origin="0.5,0.0" scale="true" />
+      <Sprite texture="Content/Items/Door/door.png" sourcerect="158,0,42,416" depth="0.05" origin="0.5,0.0" />
+      <WeldedSprite texture="Content/Items/Door/door.png" sourcerect="203,0,65,377" depth="0.0" origin="0.5,0.5" />
+      <BrokenSprite texture="Content/Items/Door/door.png" sourcerect="271,0,121,416" depth="0.509" origin="0.5,0.0" scale="true" />
       <sound file="Content/Items/Door/Door1.ogg" type="OnUse" range="500.0" />
       <sound file="Content/Items/Door/Door2.ogg" type="OnUse" range="500.0" />
       <sound file="Content/Items/Door/Door3.ogg" type="OnUse" range="500.0" />
@@ -161,17 +161,17 @@
     </ConnectionPanel>
   </Item>
   <Item name="" identifier="windoweddoorwbuttons" tags="door,weldable" scale="0.5" health="100" requirebodyinsidetrigger="false" damagedbyrepairtools="true" damagedbymonsters="true" damagedbyprojectiles="true" damagedbymeleeweapons="true" damagedbyexplosions="true" ShowNameInHealthBar="false" explosiondamagemultiplier="0.1" allowrotatingineditor="false" allowedlinks="structure,item" ondamagedthreshold="2" linkable="true">
-    <Sprite texture="door.png" sourcerect="0,0,49,416" depth="0.51" origin="0.5,0.5" />
-    <DecorativeSprite texture="door.png" sourcerect="49,0,49,416" depth="0.89" origin="0.5,0.5"/>
-    <DecorativeSprite texture="Content/Items/Button/button.png" sourcerect="28,70,34,51" depth="0.75" origin="1.65,0.76" />
-    <DecorativeSprite texture="Content/Items/Button/button.png" sourcerect="28,70,34,51" depth="0.75" origin="-0.65,0.76" />
+    <Sprite texture="Content/Items/Door/door.png" sourcerect="0,0,49,416" depth="0.51" origin="0.5,0.5" />
+    <DecorativeSprite texture="Content/Items/Door/door.png" sourcerect="49,0,49,416" depth="0.61" origin="0.5,0.5"/>
+    <DecorativeSprite texture="Content/Items/Button/button.png" sourcerect="28,70,34,51" depth="0.62" origin="1.65,0.76" />
+    <DecorativeSprite texture="Content/Items/Button/button.png" sourcerect="28,70,34,51" depth="0.62" origin="-0.65,0.76" />
     <Door window="0,-76,50,153" canbepicked="true" canbeselected="true" pickkey="Action" msg="ItemMsgForceOpenCrowbar" PickingTime="7.5" shadowscale="0.7,1" hasintegratedbuttons="true">
       <Upgrade gameversion="0.22.0.0" PickingTime="7.5" />
       <RequiredItem items="crowbar" type="Equipped" optional="true"/>
       <Requireditem items="idcard" type="Picked" optional="true"/>
-      <Sprite texture="door.png" sourcerect="106,0,50,416" depth="0.05" origin="0.5,0.0" />
-      <WeldedSprite texture="door.png" sourcerect="203,0,65,377" depth="0.0" origin="0.5,0.5" />
-      <BrokenSprite texture="door.png" sourcerect="392,0,120,416" depth="0.509" origin="0.5,0.0" scale="true" />
+      <Sprite texture="Content/Items/Door/door.png" sourcerect="106,0,50,416" depth="0.05" origin="0.5,0.0" />
+      <WeldedSprite texture="Content/Items/Door/door.png" sourcerect="203,0,65,377" depth="0.0" origin="0.5,0.5" />
+      <BrokenSprite texture="Content/Items/Door/door.png" sourcerect="392,0,120,416" depth="0.509" origin="0.5,0.0" scale="true" />
       <sound file="Content/Items/Door/Door1.ogg" type="OnUse" range="500.0" />
       <sound file="Content/Items/Door/Door2.ogg" type="OnUse" range="500.0" />
       <sound file="Content/Items/Door/Door3.ogg" type="OnUse" range="500.0" />
@@ -205,15 +205,15 @@
   </Item>
   <Item name="" identifier="hatchwbuttons" allowedlinks="gap,hull,structure,item" linkable="true" tags="door,weldable" scale="0.5" health="100" requirebodyinsidetrigger="false" damagedbyrepairtools="true" damagedbymonsters="true" damagedbyprojectiles="true" damagedbymeleeweapons="true" damagedbyexplosions="true" ShowNameInHealthBar="false" explosiondamagemultiplier="0.1" ondamagedthreshold="2" allowrotatingineditor="false">
     <Upgrade gameversion="0.9.7.0" spritedepth="0.7"/>
-    <Sprite texture="hatch.png" sourcerect="0,0,256,98" depth="0.7" origin="0.5,0.5" />
-    <DecorativeSprite texture="hatch.png" sourcerect="0,234,256,193" depth="0.89" origin="0.5,0.5"/>
+    <Sprite texture="Content/Items/Door/hatch.png" sourcerect="0,0,256,98" depth="0.7" origin="0.5,0.5" />
+    <DecorativeSprite texture="Content/Items/Door/hatch.png" sourcerect="0,234,256,193" depth="0.89" origin="0.5,0.5"/>
     <Door canbeselected="true" canbepicked="true" horizontal="true" pickkey="Action" msg="ItemMsgOpen" PickingTime="7.5" shadowscale="1,0.8" hasintegratedbuttons="true">
       <Upgrade gameversion="0.22.0.0" PickingTime="7.5" />
       <RequiredItem items="crowbar" type="Equipped" optional="true"/>
       <Requireditem items="idcard" type="Picked" optional="true"/>
-      <Sprite texture="hatch.png" sourcerect="256,0,256,38" depth="0.05" origin="0.0,0.5" />
-      <WeldedSprite texture="hatch.png" sourcerect="0,100,227,75" depth="0.0" origin="0.5,0.5" />
-      <BrokenSprite texture="hatch.png" sourcerect="256,45,256,114" depth="0.509" origin="0.0,0.5" scale="true" />
+      <Sprite texture="Content/Items/Door/hatch.png" sourcerect="256,0,256,38" depth="0.05" origin="0.0,0.5" />
+      <WeldedSprite texture="Content/Items/Door/hatch.png" sourcerect="0,100,227,75" depth="0.0" origin="0.5,0.5" />
+      <BrokenSprite texture="Content/Items/Door/hatch.png" sourcerect="256,45,256,114" depth="0.509" origin="0.0,0.5" scale="true" />
       <sound file="Content/Items/Door/Door1.ogg" type="OnUse" range="500.0" />
       <sound file="Content/Items/Door/Door2.ogg" type="OnUse" range="500.0" />
       <sound file="Content/Items/Door/Door3.ogg" type="OnUse" range="500.0" />
@@ -332,13 +332,13 @@
         <RequiredItem items="wrench" type="equipped" />
       </Repairable>
     </Upgrade>
-    <Sprite texture="door.png" sourcerect="37,430,64,64" depth="0.01" origin="0.5,0.5" />
-    <DecorativeSprite texture="door.png" sourcerect="176,469,31,31" depth="0.06" origin="0.5,0.5"/>
+    <Sprite texture="Content/Items/Door/door.png" sourcerect="37,430,64,64" depth="0.01" origin="0.5,0.5" />
+    <DecorativeSprite texture="Content/Items/Door/door.png" sourcerect="176,469,31,31" depth="0.06" origin="0.5,0.5"/>
     <Door canbeselected="true" horizontal="true" canbepicked="true" pickkey="Action" impassable="true" msg="ItemMsgForceOpenCrowbar" PickingTime="3.0" autoorientgap="true">
       <RequiredItem items="crowbar" type="Equipped" />
-      <Sprite texture="door.png" sourcerect="313,430,64,64" depth="0.05" origin="0.0,0.5" />
-      <WeldedSprite texture="door.png" sourcerect="103,430,65,65" depth="0.0" origin="0.5,0.5" />
-      <BrokenSprite texture="door.png" sourcerect="215,412,93,93" depth="0.0" origin="0.15,0.5" scale="false" />
+      <Sprite texture="Content/Items/Door/door.png" sourcerect="313,430,64,64" depth="0.05" origin="0.0,0.5" />
+      <WeldedSprite texture="Content/Items/Door/door.png" sourcerect="103,430,65,65" depth="0.0" origin="0.5,0.5" />
+      <BrokenSprite texture="Content/Items/Door/door.png" sourcerect="215,412,93,93" depth="0.0" origin="0.15,0.5" scale="false" />
       <sound file="Content/Items/Door/Duct1.ogg" type="OnUse" selectionmode="Random" range="300" />
       <sound file="Content/Items/Door/Duct2.ogg" type="OnUse" range="300" />
       <sound file="Content/Items/Tools/Crowbar.ogg" type="OnPicked" range="500.0" />
