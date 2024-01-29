@@ -1,4 +1,4 @@
-﻿<PeanutTun
+﻿<PeanutRun
   footangle="-36.14369"
   mirrorlerp="False"
   type="Peanut"
@@ -12,11 +12,11 @@
   LegTorque="0"
   ColliderStandAngle="90"
   FootAngles="10: 0.8620372,15: 1.5882496,11: 1.5707964"
-  TailAngle="8"
+  TailAngle="50"
   StepSize="0.45751935,0.55915964"
   HeadPosition="0.64911616"
   TorsoPosition="0.1192417"
-  StepLiftHeadMultiplier="0"
+  StepLiftHeadMultiplier="0.7"
   StepLiftAmount="5"
   MultiplyByDir="True"
   StepLiftOffset="0.4"
@@ -24,7 +24,7 @@
   BackwardsMovementMultiplier="0.75"
   MovementSpeed="1.2713562"
   CycleSpeed="10"
-  HeadAngle="0"
+  HeadAngle="30"
   TorsoAngle="-0"
   HeadTorque="25"
   TorsoTorque="25"
