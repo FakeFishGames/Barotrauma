@@ -3,7 +3,7 @@
   <Item name=""
     description=""
     identifier="flakcannon" Tags="turret" category="Machine,Weapon" interactthroughwalls="true" Scale="0.5" interactdistance="10" spritecolor="1.0,1.0,1.0,1.0" focusonselected="true" offsetonselected="800" linkable="true" allowedlinks="flakcannonequipment">
-    <Sprite texture="Turrets.png" depth="0.01" sourcerect="4,4,504,504" canflipy="false" />
+    <Sprite texture="Content/Items/Weapons/Turrets.png" depth="0.01" sourcerect="4,4,504,504" canflipy="false" />
     <MinimapIcon name="Command_Weapons_FlakCannon" texture="Content/UI/CommandUIBackground.png" sourcerect="512,768,128,128" />
     <SwappableItem price="7500" replacementonuninstall="largeturrethardpoint" origin="256,438" swapidentifier="largeturret">
       <SchematicSprite texture="Content/UI/WeaponUI.png" sourcerect="768,389,256,389" />
@@ -41,7 +41,7 @@
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
       <RequiredItem items="screwdriver" type="Equipped" />
-      <input name="power_in" displayname="connection.powerin" />
+   7   <input name="power_in" displayname="connection.powerin" />
       <input name="position_in" displayname="connection.turretaimingin" />
       <input name="trigger_in" displayname="connection.turrettriggerin" />
       <input name="toggle_light" displayname="connection.togglelight"/>
@@ -52,10 +52,10 @@
 
   <Item name="" identifier="flakcannonloader" tags="flakcannonequipment,flakcannonammosource,turretammosource,flakcannonammoloader" category="Machine,Weapon" linkable="true" allowedlinks="flakcannon" scale="0.5" damagedbyexplosions="true" explosiondamagemultiplier="0.2">
     <SwappableItem canbebought="false" origin="82,352" spawnwithid="flakcannonammobox"/>
-    <Sprite name="Flak Cannon Loader Front" texture="Loaders.png" depth="0.76" sourcerect="338,567,151,347" origin="0.5,0.5" />
+    <Sprite name="Flak Cannon Loader Front" texture="Content/Items/Weapons/Loaders.png" depth="0.76" sourcerect="338,567,151,347" origin="0.5,0.5" />
     <BrokenSprite texture="Content/Items/Weapons/Loaders.png"  sourcerect="163,563,153,351" origin="0.5,0.5" offset="0,3" depth="0.75" fadein="true" maxcondition="99"/>
     <UpgradePreviewSprite texture="Content/UI/WeaponUI.png" sourcerect="208,968,32,46" origin="0.5,0.5" />
-    <DecorativeSprite name="Flak Cannon Loader Frame Back" texture="Loaders.png" depth="0.8" sourcerect="31,569,117,200" origin="0.5,0.5" offset="0,-68" />
+    <DecorativeSprite name="Flak Cannon Loader Frame Back" texture="Content/Items/Weapons/Loaders.png" depth="0.8" sourcerect="31,569,117,200" origin="0.5,0.5" offset="0,-68" />
 
     <Repairable selectkey="Action" header="mechanicalrepairsheader" deteriorationspeed="10" mindeteriorationdelay="60" maxdeteriorationdelay="300" MinDeteriorationCondition="0" RepairThreshold="50" fixDurationHighSkill="5" fixDurationLowSkill="25" msg="ItemMsgRepairWrench" hudpriority="10">
       <StatusEffect type="InWater" target="This" condition="-0.25" />
@@ -112,7 +112,7 @@
   </Item>
 
   <Item name="" identifier="flakbolt" category="Weapon" scale="1" sonarsize="2" hideinmenus="true">
-    <Sprite texture="weapons_new.png" sourcerect="143,414,113,9" depth="0.55" />
+    <Sprite texture="Content/Items/Weapons/weapons_new.png" sourcerect="143,414,113,9" depth="0.55" />
     <Body width="170" height="10" density="20" />
     <Holdable slots="RightHand+LeftHand" holdpos="0,-50" handle1="-10,0" handle2="10,0" aimable="false" />
     <Projectile characterusable="false" launchimpulse="0.0" damagedoors="true">
@@ -146,7 +146,7 @@
   </Item>
 
   <Item name="" identifier="flakshrapnel" category="Weapon" scale="0.3" sonarsize="1" hideinmenus="true">
-    <Sprite texture="weapons_new.png" sourcerect="143,414,113,9" depth="0.55" />
+    <Sprite texture="Content/Items/Weapons/weapons_new.png" sourcerect="143,414,113,9" depth="0.55" />
     <Body width="170" height="10" density="20" />
     <Holdable slots="RightHand+LeftHand" holdpos="0,-50" handle1="-10,0" handle2="10,0" aimable="false" />
     <Projectile characterusable="false" launchimpulse="22.0" impulsespread="0.2" damagedoors="true">
@@ -176,7 +176,7 @@
     <PreferredContainer primary="flakcannonammoloader" amount="1" mincondition="1"/>
     <PreferredContainer primary="ammoboxcontainer" mincondition="1"/>
     <PreferredContainer secondary="wreckflakcannonloader" amount="1" />
-    <PreferredContainer secondary="wreckammoboxcontainer" amount="1" spawnprobability="0.1"/>
+    <PreferredContainer secondary="wreckammoboxcontainer" amount="1" spawnprobability="0.05"/>
     <Price baseprice="160" displaynonempty="true" minleveldifficulty="15">
       <Price storeidentifier="merchantoutpost" multiplier="1.3" minavailable="3" />
       <Price storeidentifier="merchantcity" multiplier="1.2" minavailable="6" sold="false" />
@@ -218,7 +218,7 @@
   </Item>
 
   <Item name="" identifier="flakboltdirectional" category="Weapon" scale="1" sonarsize="2" hideinmenus="true">
-    <Sprite texture="weapons_new.png" sourcerect="143,414,113,9" depth="0.55" />
+    <Sprite texture="Content/Items/Weapons/weapons_new.png" sourcerect="143,414,113,9" depth="0.55" />
     <Body width="170" height="10" density="20" />
     <Holdable slots="RightHand+LeftHand" holdpos="0,-50" handle1="-10,0" handle2="10,0" aimable="false" />
     <Projectile characterusable="false" launchimpulse="0.0" damagedoors="true">
@@ -253,7 +253,7 @@
   </Item>
 
   <Item name="" identifier="flakshrapneldirectional" category="Weapon" scale="0.6" sonarsize="1" hideinmenus="true">
-    <Sprite texture="weapons_new.png" sourcerect="143,414,113,9" depth="0.55" />
+    <Sprite texture="Content/Items/Weapons/weapons_new.png" sourcerect="143,414,113,9" depth="0.55" />
     <Body width="170" height="10" density="20" />
     <Holdable slots="RightHand+LeftHand" holdpos="0,-50" handle1="-10,0" handle2="10,0" aimable="false" />
     <Projectile characterusable="false" launchimpulse="42.0" impulsespread="0.2" damagedoors="true">
@@ -284,7 +284,7 @@
     <PreferredContainer primary="flakcannonammoloader" mincondition="1"/>
     <PreferredContainer primary="ammoboxcontainer" mincondition="1"/>
     <PreferredContainer secondary="wreckflakcannonloader" amount="1" />
-    <PreferredContainer secondary="wreckammoboxcontainer" amount="1" spawnprobability="0.05"/>
+    <PreferredContainer secondary="wreckammoboxcontainer" amount="1" spawnprobability="0.03"/>
     <Price baseprice="250" displaynonempty="true" minleveldifficulty="15">
       <Price storeidentifier="merchantoutpost" multiplier="1.3" />
       <Price storeidentifier="merchantcity" multiplier="1.2" minavailable="1" sold="false" />
@@ -328,7 +328,7 @@
   </Item>
   
   <Item name="" identifier="flakboltphysicorium" category="Weapon" scale="1" sonarsize="2" hideinmenus="true">
-    <Sprite texture="weapons_new.png" sourcerect="143,425,113,9" depth="0.55" />
+    <Sprite texture="Content/Items/Weapons/weapons_new.png" sourcerect="143,425,113,9" depth="0.55" />
     <Body width="170" height="10" density="20" />
     <Holdable slots="RightHand+LeftHand" holdpos="0,-50" handle1="-10,0" handle2="10,0" aimable="false" />
     <Projectile characterusable="false" launchimpulse="0.0" damagedoors="true">
@@ -362,7 +362,7 @@
   </Item>
 
   <Item name="" identifier="flakshrapnelphysicorium" category="Weapon" scale="0.3" sonarsize="1" hideinmenus="true">
-    <Sprite texture="weapons_new.png" sourcerect="143,425,113,9" depth="0.55" />
+    <Sprite texture="Content/Items/Weapons/weapons_new.png" sourcerect="143,425,113,9" depth="0.55" />
     <Body width="170" height="10" density="20" />
     <Holdable slots="RightHand+LeftHand" holdpos="0,-50" handle1="-10,0" handle2="10,0" aimable="false" />
     <Projectile characterusable="false" launchimpulse="22.0" impulsespread="0.2" damagedoors="true">
@@ -438,7 +438,7 @@
   </Item>
 
   <Item name="" identifier="flakboltexplosive" category="Weapon" scale="1" sonarsize="2" hideinmenus="true">
-    <Sprite texture="weapons_new.png" sourcerect="143,414,113,9" depth="0.55" />
+    <Sprite texture="Content/Items/Weapons/weapons_new.png" sourcerect="143,414,113,9" depth="0.55" />
     <Body width="170" height="10" density="20" />
     <Holdable slots="RightHand+LeftHand" holdpos="0,-50" handle1="-10,0" handle2="10,0" aimable="false" />
     <Projectile characterusable="false" launchimpulse="0.0" damagedoors="true">
@@ -473,7 +473,7 @@
   </Item>
 
   <Item name="" identifier="flakshrapnelexplosive" category="Weapon" scale="0.3" sonarsize="1" hideinmenus="true">
-    <Sprite texture="weapons_new.png" sourcerect="143,414,113,9" depth="0.55" />
+    <Sprite texture="Content/Items/Weapons/weapons_new.png" sourcerect="143,414,113,9" depth="0.55" />
     <Body width="170" height="10" density="20" />
     <Holdable slots="RightHand+LeftHand" holdpos="0,-50" handle1="-10,0" handle2="10,0" aimable="false" />
     <Projectile characterusable="false" launchimpulse="12.0" impulsespread="0.5" damagedoors="true">

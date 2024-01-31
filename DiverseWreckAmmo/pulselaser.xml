@@ -1,9 +1,8 @@
 ﻿<Items>
-
   <Item name=""
         description=""
         identifier="pulselaser" Tags="turret" category="Machine,Weapon" interactthroughwalls="true" Scale="0.5" interactdistance="10" spritecolor="1.0,1.0,1.0,1.0" focusonselected="true" offsetonselected="750" linkable="true" allowedlinks="pulselaserequipment">
-    <Sprite texture="Loaders.png" depth="0.01" sourcerect="0,0,256,256" canflipy="false" />
+    <Sprite texture="Content/Items/Weapons/Loaders.png" depth="0.01" sourcerect="0,0,256,256" canflipy="false" />
     <MinimapIcon name="Command_Weapons_Pulselaser" texture="Content/UI/CommandUIAtlas.png" sourcerect="384,768,128,128" />
     <SwappableItem price="6000" replacementonuninstall="turrethardpoint" origin="128,215" swapidentifier="basicturret">
       <SchematicSprite texture="Content/UI/WeaponUI.png" sourcerect="768,0,256,389" />
@@ -125,7 +124,7 @@
   </Item>
 
   <Item name="" identifier="pulselaserbolt" category="Weapon" scale="0.5" sonarsize="2" hideinmenus="true">
-    <Sprite texture="weapons_new.png" sourcerect="143,414,113,9" depth="0.55" />
+    <Sprite texture="Content/Items/Weapons/weapons_new.png" sourcerect="143,414,113,9" depth="0.55" />
     <Body width="170" height="10" density="20" />
     <Holdable slots="RightHand+LeftHand" holdpos="0,-50" handle1="-10,0" handle2="10,0" aimable="false" />
     <Projectile characterusable="false" hitscan="true" removeonhit="true" damagedoors="true" penetration="0.5">
@@ -156,7 +155,7 @@
   </Item>
 
   <Item name="" identifier="pulselaserbolttrilaser" nameidentifier="pulselaserbolt" category="Weapon" scale="0.5" sonarsize="2" hideinmenus="true" >
-    <Sprite texture="weapons_new.png" sourcerect="143,414,113,9" depth="0.55" />
+    <Sprite texture="Content/Items/Weapons/weapons_new.png" sourcerect="143,414,113,9" depth="0.55" />
     <Body width="170" height="10" density="20" />
     <Holdable slots="RightHand+LeftHand" holdpos="0,-50" handle1="-10,0" handle2="10,0" aimable="false" />
     <Projectile characterusable="false" hitscan="true" removeonhit="true" spread="10" staticspread="true" hitscancount="3" damagedoors="true" penetration="0.5">
@@ -188,6 +187,7 @@
   <Item name="" identifier="pulselaserammobox" scale="0.5" tags="pulselaserequipment,pulselaserammo,ammobox" category="Weapon" linkable="true" impactsoundtag="impact_metal_heavy" cargocontaineridentifier="">
     <PreferredContainer primary="pulselaserammosource" amount="1" mincondition="1"/>
     <PreferredContainer primary="ammoboxcontainer" mincondition="1"/>
+    <PreferredContainer secondary="wreckammoboxcontainer" amount="1" spawnprobability="0.1"/>
     <Price baseprice="250" minavailable="1" displaynonempty="true" >
       <Price storeidentifier="merchantoutpost" multiplier="1.6" />
       <Price storeidentifier="merchantcity" multiplier="1.4" sold="false"/>
@@ -229,6 +229,7 @@
 
   <Item name="" identifier="pulselaserammoboxtrilaser" fallbacknameidentifier="pulselaserammobox" scale="0.5" tags="pulselaserequipment,pulselaserammo,ammobox" category="Weapon" linkable="true" impactsoundtag="impact_metal_heavy" cargocontaineridentifier="">
     <PreferredContainer primary="pulselaserammosource,ammoboxcontainer" mincondition="1"/>
+    <PreferredContainer secondary="wreckammoboxcontainer" amount="1" spawnprobability="0.01"/>
     <Price baseprice="435" sold="false" displaynonempty="true"  minleveldifficulty="15">
       <Price storeidentifier="merchantoutpost" multiplier="1.3" />
       <Price storeidentifier="merchantcity" multiplier="1.2" />
@@ -266,5 +267,4 @@
       <Containable items="pulselaserbolttrilaser" />
     </ItemContainer>
   </Item>
-
 </Items>
