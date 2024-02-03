@@ -102,7 +102,7 @@ namespace Barotrauma.Extensions
 
         public static Vector2 RotateAroundPoint(this Vector2 v, Vector2 origin, float radians)
         {
-            if (MathUtils.NearlyEqual(radians, 0)) { return v; }
+            if (MathUtils.NearlyEqual(radians % MathHelper.TwoPi, 0)) { return v; }
 
             float cos = MathF.Cos(radians);
             float sin = MathF.Sin(radians);
