@@ -580,9 +580,6 @@ namespace Barotrauma
                 default:
                     throw new NotImplementedException();
             }
-#if CLIENT
-            bodyShapeTexture = null;
-#endif
         }
         
         public bool IsValidValue(float value, string valueName, float minValue = float.MinValue, float maxValue = float.MaxValue)

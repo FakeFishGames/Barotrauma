@@ -1,7 +1,6 @@
 ﻿using Barotrauma.Extensions;
 using Barotrauma.Networking;
 using FarseerPhysics;
-using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -10,14 +9,6 @@ namespace Barotrauma
 {
     partial class PhysicsBody
     {
-        private float bodyShapeTextureScale;
-        
-        private Texture2D bodyShapeTexture;
-        public Texture2D BodyShapeTexture
-        {
-            get { return bodyShapeTexture; }
-        }
-
         public void Draw(DeformableSprite deformSprite, Camera cam, Vector2 scale, Color color, bool invert = false)
         {
             if (!Enabled) { return; }
@@ -80,7 +71,7 @@ namespace Barotrauma
                     new Vector2(DrawPosition.X, -DrawPosition.Y),
                     Color.Cyan, 0, 5);
             }
-            if (bodyShapeTexture == null && IsValidShape(Radius, Height, Width))
+            if (IsValidShape(Radius, Height, Width))
             {
                 switch (BodyShape)
                 {
@@ -194,15 +185,6 @@ namespace Barotrauma
             return lastProcessedNetworkState > sendingTime ? 
                 null : 
                 new PosInfo(newPosition, newRotation, newVelocity, newAngularVelocity, sendingTime);            
-        }
-
-        partial void DisposeProjSpecific()
-        {
-            if (bodyShapeTexture != null)
-            {
-                bodyShapeTexture.Dispose();
-                bodyShapeTexture = null;
-            }
         }
     }
 }
