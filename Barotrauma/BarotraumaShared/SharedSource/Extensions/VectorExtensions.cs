@@ -99,5 +99,16 @@ namespace Barotrauma.Extensions
             v.Y += padding.Y + padding.W;
             return v;
         }
+
+        public static Vector2 RotateAroundPoint(this Vector2 v, Vector2 origin, float radians)
+        {
+            if (MathUtils.NearlyEqual(radians, 0)) { return v; }
+
+            float cos = MathF.Cos(radians);
+            float sin = MathF.Sin(radians);
+            v -= origin;
+
+            return new Vector2(cos * v.X - sin * v.Y, sin * v.X + cos * v.Y) + origin;
+        }
     }
 }

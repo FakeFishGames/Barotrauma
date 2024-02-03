@@ -1,9 +1,11 @@
-﻿using Barotrauma.Networking;
+﻿using Barotrauma.Extensions;
+using Barotrauma.Networking;
 using FarseerPhysics;
 using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
+using System.ComponentModel;
 
 namespace Barotrauma
 {
@@ -85,71 +87,55 @@ namespace Barotrauma
                 {
                     case Shape.Rectangle:
                         {
-                            float maxSize = Math.Max(ConvertUnits.ToDisplayUnits(Width), ConvertUnits.ToDisplayUnits(Height));
-                            if (maxSize > 128.0f)
-                            {
-                                bodyShapeTextureScale = 128.0f / maxSize;
-                            }
-                            else
-                            {
-                                bodyShapeTextureScale = 1.0f;
-                            }
-
-                            bodyShapeTexture = GUI.CreateRectangle(
-                                (int)ConvertUnits.ToDisplayUnits(Width * bodyShapeTextureScale),
-                                (int)ConvertUnits.ToDisplayUnits(Height * bodyShapeTextureScale));
+                            GUI.DrawRectangle(spriteBatch,
+                                new Vector2(DrawPosition.X, -DrawPosition.Y),
+                                new Vector2(ConvertUnits.ToDisplayUnits(Width), ConvertUnits.ToDisplayUnits(Height)),
+                                new Vector2(ConvertUnits.ToDisplayUnits(Width / 2), ConvertUnits.ToDisplayUnits(Height / 2)),
+                                -DrawRotation,
+                                color);
                             break;
                         }
                     case Shape.Capsule:
                     case Shape.HorizontalCapsule:
                         {
-                            float maxSize = Math.Max(ConvertUnits.ToDisplayUnits(Radius), ConvertUnits.ToDisplayUnits(Math.Max(Height, Width)));
-                            if (maxSize > 128.0f)
+                            float rot = -DrawRotation;
+                            if (BodyShape != Shape.HorizontalCapsule)
                             {
-                                bodyShapeTextureScale = 128.0f / maxSize;
-                            }
-                            else
-                            {
-                                bodyShapeTextureScale = 1.0f;
+                                rot -= MathHelper.PiOver2;
                             }
 
-                            bodyShapeTexture = GUI.CreateCapsule(
-                                (int)ConvertUnits.ToDisplayUnits(Radius * bodyShapeTextureScale),
-                                (int)ConvertUnits.ToDisplayUnits(Math.Max(Height, Width) * bodyShapeTextureScale));
+                            GUI.DrawRectangle(spriteBatch,
+                                new Vector2(DrawPosition.X, -DrawPosition.Y),
+                                new Vector2(ConvertUnits.ToDisplayUnits(Math.Max(Width, Height)), ConvertUnits.ToDisplayUnits(Radius * 2)),
+                                new Vector2(ConvertUnits.ToDisplayUnits(Math.Max(Width, Height) / 2), ConvertUnits.ToDisplayUnits(Radius)),
+                                rot,
+                                color);
+
+                            GUI.DrawDonutSection(spriteBatch,
+                                new Vector2(DrawPosition.X - ConvertUnits.ToDisplayUnits(Math.Max(Width, Height) / 2), -DrawPosition.Y).RotateAroundPoint(new Vector2(DrawPosition.X, -DrawPosition.Y), rot),
+                                new Range<float>(ConvertUnits.ToDisplayUnits(Radius) - 0.5f, ConvertUnits.ToDisplayUnits(Radius) + 0.5f),
+                                MathHelper.Pi,
+                                color,
+                                rotationRad: rot - MathHelper.Pi);
+
+                            GUI.DrawDonutSection(spriteBatch,
+                                new Vector2(DrawPosition.X + ConvertUnits.ToDisplayUnits(Math.Max(Width, Height) / 2), -DrawPosition.Y).RotateAroundPoint(new Vector2(DrawPosition.X, -DrawPosition.Y), rot),
+                                new Range<float>(ConvertUnits.ToDisplayUnits(Radius) - 0.5f, ConvertUnits.ToDisplayUnits(Radius) + 0.5f),
+                                MathHelper.Pi,
+                                color,
+                                rotationRad: rot);
                             break;
                         }
                     case Shape.Circle:
-                        if (ConvertUnits.ToDisplayUnits(Radius) > 128.0f)
-                        {
-                            bodyShapeTextureScale = 128.0f / ConvertUnits.ToDisplayUnits(Radius);
-                        }
-                        else
-                        {
-                            bodyShapeTextureScale = 1.0f;
-                        }
-                        bodyShapeTexture = GUI.CreateCircle((int)ConvertUnits.ToDisplayUnits(Radius * bodyShapeTextureScale));
+                        GUI.DrawDonutSection(spriteBatch,
+                            new Vector2(DrawPosition.X, -DrawPosition.Y),
+                            new Range<float>(ConvertUnits.ToDisplayUnits(Radius) - 0.5f, ConvertUnits.ToDisplayUnits(Radius) + 0.5f),
+                            MathHelper.TwoPi,
+                            color);
                         break;
                     default:
                         throw new NotImplementedException();
                 }
-            }
-
-            float rot = -DrawRotation;
-            if (bodyShape == Shape.HorizontalCapsule)
-            {
-                rot -= MathHelper.PiOver2;
-            }
-            
-            if (bodyShapeTexture != null)
-            {
-                spriteBatch.Draw(
-                    bodyShapeTexture,
-                    new Vector2(DrawPosition.X, -DrawPosition.Y),
-                    null,
-                    color,
-                    rot,
-                    new Vector2(bodyShapeTexture.Width / 2, bodyShapeTexture.Height / 2),
-                    1.0f / bodyShapeTextureScale, SpriteEffects.None, 0.0f);
             }
         }
 

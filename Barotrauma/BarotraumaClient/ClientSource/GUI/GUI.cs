@@ -1535,8 +1535,7 @@ namespace Barotrauma
                 .ToImmutableArray();
         private static readonly VertexPositionColorTexture[] donutVerts = new VertexPositionColorTexture[DonutSegments * 4];
 
-        public static void DrawDonutSection(
-            SpriteBatch sb, Vector2 center, Range<float> radii, float sectionRad, Color clr, float depth = 0.0f)
+        public static void DrawDonutSection(SpriteBatch sb, Vector2 center, Range<float> radii, float sectionRad, Color clr, float rotationRad = 0.0f, float depth = 0.0f)
         {
             float getRadius(int vertexIndex)
                 => (vertexIndex % 4) switch
@@ -1579,7 +1578,7 @@ namespace Barotrauma
             for (int vertexIndex = 0; vertexIndex < maxDirectionIndex * 4; vertexIndex++)
             {
                 donutVerts[vertexIndex].Color = clr;
-                donutVerts[vertexIndex].Position = new Vector3(center + getDirection(vertexIndex) * getRadius(vertexIndex), 0.0f);
+                donutVerts[vertexIndex].Position = new Vector3((center + getDirection(vertexIndex) * getRadius(vertexIndex)).RotateAroundPoint(center, rotationRad), 0.0f);
             }
             sb.Draw(solidWhiteTexture, donutVerts, depth, count: maxDirectionIndex);
         }
