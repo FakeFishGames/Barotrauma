@@ -1,5 +1,4 @@
-﻿using Barotrauma.Extensions;
-using Barotrauma.Networking;
+﻿using Barotrauma.Networking;
 using FarseerPhysics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -73,56 +72,28 @@ namespace Barotrauma
             }
             if (IsValidShape(Radius, Height, Width))
             {
+                float radius = ConvertUnits.ToDisplayUnits(Radius);
+                float height = ConvertUnits.ToDisplayUnits(Height);
+                float width = ConvertUnits.ToDisplayUnits(Width);
+
                 switch (BodyShape)
                 {
                     case Shape.Rectangle:
-                        {
-                            GUI.DrawRectangle(spriteBatch,
-                                new Vector2(DrawPosition.X, -DrawPosition.Y),
-                                new Vector2(ConvertUnits.ToDisplayUnits(Width), ConvertUnits.ToDisplayUnits(Height)),
-                                new Vector2(ConvertUnits.ToDisplayUnits(Width / 2), ConvertUnits.ToDisplayUnits(Height / 2)),
-                                -DrawRotation,
-                                color);
-                            break;
-                        }
-                    case Shape.Capsule:
-                    case Shape.HorizontalCapsule:
-                        {
-                            float rot = -DrawRotation;
-                            if (BodyShape != Shape.HorizontalCapsule)
-                            {
-                                rot -= MathHelper.PiOver2;
-                            }
-
-                            GUI.DrawRectangle(spriteBatch,
-                                new Vector2(DrawPosition.X, -DrawPosition.Y),
-                                new Vector2(ConvertUnits.ToDisplayUnits(Math.Max(Width, Height)), ConvertUnits.ToDisplayUnits(Radius * 2)),
-                                new Vector2(ConvertUnits.ToDisplayUnits(Math.Max(Width, Height) / 2), ConvertUnits.ToDisplayUnits(Radius)),
-                                rot,
-                                color);
-
-                            GUI.DrawDonutSection(spriteBatch,
-                                new Vector2(DrawPosition.X - ConvertUnits.ToDisplayUnits(Math.Max(Width, Height) / 2), -DrawPosition.Y).RotateAroundPoint(new Vector2(DrawPosition.X, -DrawPosition.Y), rot),
-                                new Range<float>(ConvertUnits.ToDisplayUnits(Radius) - 0.5f, ConvertUnits.ToDisplayUnits(Radius) + 0.5f),
-                                MathHelper.Pi,
-                                color,
-                                rotationRad: rot - MathHelper.Pi);
-
-                            GUI.DrawDonutSection(spriteBatch,
-                                new Vector2(DrawPosition.X + ConvertUnits.ToDisplayUnits(Math.Max(Width, Height) / 2), -DrawPosition.Y).RotateAroundPoint(new Vector2(DrawPosition.X, -DrawPosition.Y), rot),
-                                new Range<float>(ConvertUnits.ToDisplayUnits(Radius) - 0.5f, ConvertUnits.ToDisplayUnits(Radius) + 0.5f),
-                                MathHelper.Pi,
-                                color,
-                                rotationRad: rot);
-                            break;
-                        }
-                    case Shape.Circle:
-                        GUI.DrawDonutSection(spriteBatch,
-                            new Vector2(DrawPosition.X, -DrawPosition.Y),
-                            new Range<float>(ConvertUnits.ToDisplayUnits(Radius) - 0.5f, ConvertUnits.ToDisplayUnits(Radius) + 0.5f),
-                            MathHelper.TwoPi,
-                            color);
+                        GUI.DrawRectangle(spriteBatch, DrawPosition.FlipY(), new Vector2(width, height), new Vector2(width, height) / 2, -DrawRotation, color);
                         break;
+
+                    case Shape.Capsule:
+                        GUI.DrawCapsule(spriteBatch, DrawPosition.FlipY(), Math.Max(width, height), radius, -DrawRotation - MathHelper.PiOver2, color);
+                        break;
+
+                    case Shape.HorizontalCapsule:
+                        GUI.DrawCapsule(spriteBatch, DrawPosition.FlipY(), Math.Max(width, height), radius, -DrawRotation, color);
+                        break;
+
+                    case Shape.Circle:
+                        GUI.DrawDonutSection(spriteBatch, DrawPosition.FlipY(), new Range<float>(radius - 0.5f, radius + 0.5f), MathHelper.TwoPi, color, 0, -DrawRotation);
+                        break;
+
                     default:
                         throw new NotImplementedException();
                 }
@@ -143,7 +114,7 @@ namespace Barotrauma
             newPosition = new Vector2(
                 msg.ReadSingle(), 
                 msg.ReadSingle());
-            
+
             awake = msg.ReadBoolean();
             bool fixedRotation = msg.ReadBoolean();
 
