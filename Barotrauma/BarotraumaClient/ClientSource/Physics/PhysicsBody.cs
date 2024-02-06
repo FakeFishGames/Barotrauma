@@ -81,19 +81,15 @@ namespace Barotrauma
                     case Shape.Rectangle:
                         GUI.DrawRectangle(spriteBatch, DrawPosition.FlipY(), new Vector2(width, height), new Vector2(width, height) / 2, -DrawRotation, color);
                         break;
-
                     case Shape.Capsule:
                         GUI.DrawCapsule(spriteBatch, DrawPosition.FlipY(), Math.Max(width, height), radius, -DrawRotation - MathHelper.PiOver2, color);
                         break;
-
                     case Shape.HorizontalCapsule:
                         GUI.DrawCapsule(spriteBatch, DrawPosition.FlipY(), Math.Max(width, height), radius, -DrawRotation, color);
                         break;
-
                     case Shape.Circle:
                         GUI.DrawDonutSection(spriteBatch, DrawPosition.FlipY(), new Range<float>(radius - 0.5f, radius + 0.5f), MathHelper.TwoPi, color, 0, -DrawRotation);
                         break;
-
                     default:
                         throw new NotImplementedException();
                 }
