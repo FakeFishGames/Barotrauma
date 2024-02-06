@@ -114,7 +114,7 @@ namespace Barotrauma
             newPosition = new Vector2(
                 msg.ReadSingle(), 
                 msg.ReadSingle());
-
+            
             awake = msg.ReadBoolean();
             bool fixedRotation = msg.ReadBoolean();
 
