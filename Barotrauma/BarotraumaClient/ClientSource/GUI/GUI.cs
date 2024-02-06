@@ -1854,9 +1854,9 @@ namespace Barotrauma
 
             DrawDonutSection(sb, origin + Vector2.Transform(new Vector2(length / 2, 0), Matrix.CreateRotationZ(rotation)), new Range<float>(radius - thickness / 2, radius + thickness / 2), MathHelper.Pi, clr, depth, rotation);
         }
-        #endregion
+#endregion
 
-        #region Element creation
+#region Element creation
 
         public static Texture2D CreateCircle(int radius, bool filled = false)
         {
