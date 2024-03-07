@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8" ?>
+﻿<?xml version="1.0" encoding="utf-8" ?>
 <Afflictions>
 
   <!-- Basic afflictions. 
@@ -262,10 +262,44 @@
       textidentifier="afflictiondescription.bleeding.high"
       minstrength="60"
       maxstrength="100"/>
-    <Effect minstrength="0" maxstrength="100"
+    <!-- Strength 0-20 -->
+    <Effect minstrength="0" maxstrength="20"
       minvitalitydecrease="0"
+      maxvitalitydecrease="2"
+      strengthchange="-0.1" />
+    <!-- Strength 20-40 -->
+    <Effect minstrength="20" maxstrength="40"
+      minvitalitydecrease="2"
+      maxvitalitydecrease="4"
+      strengthchange="-0.1">
+      <StatusEffect target="Limb" interval="5" disabledeltatime="true" ConditionalComparison="And">
+        <Conditional IsHuman="true"/>
+        <Conditional WorldHostility="gte high" />
+        <Affliction identifier="infection" amount="5" probability="0.025" />
+      </StatusEffect>
+    </Effect>
+    <!-- Strength 40-60 -->
+    <Effect minstrength="40" maxstrength="60"
+      minvitalitydecrease="4"
+      maxvitalitydecrease="6"
+      strengthchange="-0.1">
+      <StatusEffect target="Limb" interval="5" disabledeltatime="true" ConditionalComparison="And">
+        <Conditional IsHuman="true"/>
+        <Conditional WorldHostility="gte high" />
+        <Affliction identifier="infection" amount="5" probability="0.05" />
+      </StatusEffect>
+    </Effect>
+    <!-- Strength 60-100 -->
+    <Effect minstrength="60" maxstrength="100"
+      minvitalitydecrease="6"
       maxvitalitydecrease="10"
-      strengthchange="-0.1"/>
+      strengthchange="-0.1">
+      <StatusEffect target="Limb" interval="5" disabledeltatime="true" ConditionalComparison="And">
+        <Conditional IsHuman="true"/>
+        <Conditional WorldHostility="gte high" />
+        <Affliction identifier="infection" amount="5" probability="0.08" />
+      </StatusEffect>
+    </Effect>
     <icon texture="Content/UI/MainIconsAtlas.png" sourcerect="896,640,128,128" color="139,60,42,255" origin="0,0"/>
   </Bleeding>
 
@@ -312,9 +346,27 @@
       textidentifier="afflictiondescription.burn.high"
       minstrength="60"
       maxstrength="200"/>
-    <Effect minstrength="0" maxstrength="200" multiplybymaxvitality="true"
+    <Effect minstrength="0" maxstrength="30" multiplybymaxvitality="true"
       minvitalitydecrease="0"
-      maxvitalitydecrease="2"/>
+      maxvitalitydecrease="0.3"/>
+    <Effect minstrength="30" maxstrength="60" multiplybymaxvitality="true"
+      minvitalitydecrease="0.3"
+      maxvitalitydecrease="0.6">
+      <StatusEffect target="Limb" interval="5" disabledeltatime="true" ConditionalComparison="And">
+        <Conditional IsHuman="true"/>
+        <Conditional WorldHostility="gte high" />
+        <Affliction identifier="infection" amount="5" probability="0.015" />
+      </StatusEffect>
+    </Effect>
+    <Effect minstrength="60" maxstrength="200" multiplybymaxvitality="true"
+      minvitalitydecrease="0.6"
+      maxvitalitydecrease="2">
+      <StatusEffect target="Limb" interval="5" disabledeltatime="true" ConditionalComparison="And">
+        <Conditional IsHuman="true"/>
+        <Conditional WorldHostility="gte high" />
+        <Affliction identifier="infection" amount="5" probability="0.03" />
+      </StatusEffect>
+    </Effect>
     <icon texture="Content/UI/MainIconsAtlas.png" sourcerect="768,640,128,128" color="195,104,60,255" origin="0,0"/>
   </Burn>
 
@@ -341,9 +393,27 @@
       textidentifier="afflictiondescription.acidburn.high"
       minstrength="60"
       maxstrength="200"/>
-    <Effect minstrength="0" maxstrength="200" multiplybymaxvitality="true"
+    <Effect minstrength="0" maxstrength="30" multiplybymaxvitality="true"
       minvitalitydecrease="0"
-      maxvitalitydecrease="2"/>
+      maxvitalitydecrease="0.3"/>
+    <Effect minstrength="30" maxstrength="60" multiplybymaxvitality="true"
+      minvitalitydecrease="0.3"
+      maxvitalitydecrease="0.6">
+      <StatusEffect target="Limb" interval="5" disabledeltatime="true" ConditionalComparison="And">
+        <Conditional IsHuman="true"/>
+        <Conditional WorldHostility="gte high" />
+        <Affliction identifier="infection" amount="5" probability="0.015" />
+      </StatusEffect>
+    </Effect>
+    <Effect minstrength="60" maxstrength="200" multiplybymaxvitality="true"
+      minvitalitydecrease="0.6"
+      maxvitalitydecrease="2">
+      <StatusEffect target="Limb" interval="5" disabledeltatime="true" ConditionalComparison="And">
+        <Conditional IsHuman="true"/>
+        <Conditional WorldHostility="gte high" />
+        <Affliction identifier="infection" amount="5" probability="0.03" />
+      </StatusEffect>
+    </Effect>
     <icon texture="Content/UI/CommandUIBackground.png" sourcerect="640,768,128,128" color="84,171,90,255" origin="0,0"/>
   </AcidBurn>
 
@@ -370,8 +440,6 @@
       minstrength="50"
       maxstrength="200"/>
     <Effect minstrength="1" maxstrength="50"
-      minvitalitydecrease="0"
-      maxvitalitydecrease="2"
       minfacetint="200,180,255,0"
       maxfacetint="200,180,255,100"/>
     <Effect minstrength="50" maxstrength="200" multiplybymaxvitality="true"
@@ -1006,7 +1074,7 @@
     <Effect minstrength="20" maxstrength="40"
       minvitalitydecrease="0"
       maxvitalitydecrease="20"
-      strengthchange="-0.05"
+      strengthchange="-0.1"
       minchromaticaberration="0.0"
       maxchromaticaberration="1.0"
       dialogflag="OpiateWithdrawalLow"
@@ -1018,8 +1086,7 @@
         <Affliction identifier="nausea" strength="10" probability="0.05" />
       </StatusEffect>
     </Effect>
-    <!-- Decrease vitality more. The strength of the affliction drops faster, meaning that 
-    the character needs a stronger opiate addiction for the withdrawal symptoms to stay at this level -->
+    <!-- Decrease vitality more.  -->
     <Effect minstrength="40" maxstrength="80"
       minvitalitydecrease="20"
       maxvitalitydecrease="50"
@@ -1132,7 +1199,7 @@
 
     <Effect minstrength="20" maxstrength="40" strengthchange="-0.05">
       <StatusEffect target="Character" interval="1" disabledeltatime="true">
-        <Affliction identifier="opiatewithdrawal" strength="0.1"/>
+        <Affliction identifier="opiatewithdrawal" strength="0.15"/>
       </StatusEffect>
     </Effect>
 
@@ -1454,6 +1521,9 @@
       strengthchange="0.5"
       minscreenblur="0.1"
       maxscreenblur="0.2">
+      <StatusEffect target="Character" interval="1" disabledeltatime="true">
+        <ReduceAffliction identifier="huskinfection" amount="0.5" />
+      </StatusEffect>
     </Effect>
     <Effect minstrength="50" maxstrength="75"
       strengthchange="1"
@@ -1466,6 +1536,9 @@
       minspeedmultiplier="1.0"
       maxspeedmultiplier="0.8"
       tag="poisoned">
+      <StatusEffect target="Character" interval="1" disabledeltatime="true">
+        <ReduceAffliction identifier="huskinfection" amount="2" />
+      </StatusEffect>
     </Effect>
     <Effect minstrength="75" maxstrength="99"
       strengthchange="1"
@@ -1486,6 +1559,9 @@
       <StatusEffect target="Character" setvalue="true">
         <Conditional healthpercentage="lt 90"/>
         <Affliction identifier="stun" amount="1" />
+      </StatusEffect>
+      <StatusEffect target="Character" interval="1" disabledeltatime="true">
+        <ReduceAffliction identifier="huskinfection" amount="5" />
       </StatusEffect>
     </Effect>
     <Effect minstrength="99" maxstrength="100"
@@ -1512,6 +1588,9 @@
         <Conditional IsHuman="false"/>
         <Conditional healthpercentage="gt 50"/>
         <Affliction identifier="sufforinpoisoning" amount="-9999" probability="0.1" />
+      </StatusEffect>
+      <StatusEffect target="Character" interval="1" disabledeltatime="true">
+        <ReduceAffliction identifier="huskinfection" amount="100" />
       </StatusEffect>
     </Effect>
     <PeriodicEffect mininterval="1" maxinterval="3" minstrength="60" maxstrength="100">
@@ -1640,6 +1719,9 @@
       <StatusEffect target="Character" multiplyafflictionsbymaxvitality="true">
         <Affliction identifier="oxygenlow" amount="11" />
       </StatusEffect>
+      <StatusEffect target="Character" interval="1" disabledeltatime="true">
+        <ReduceAffliction identifier="huskinfection" amount="4" />
+      </StatusEffect>
     </Effect>
     <Effect minstrength="30" maxstrength="50"
       strengthchange="3"
@@ -1655,6 +1737,9 @@
       maxspeedmultiplier="0.7">
       <StatusEffect target="Character" multiplyafflictionsbymaxvitality="true">
         <Affliction identifier="oxygenlow" amount="10" />
+      </StatusEffect>
+      <StatusEffect target="Character" interval="1" disabledeltatime="true">
+        <ReduceAffliction identifier="huskinfection" amount="8" />
       </StatusEffect>
     </Effect>
     <Effect minstrength="50" maxstrength="75"
@@ -1680,6 +1765,9 @@
       <StatusEffect target="Character">
         <Affliction identifier="organdamage" amount="10" />
       </StatusEffect>
+      <StatusEffect target="Character" interval="1" disabledeltatime="true">
+        <ReduceAffliction identifier="huskinfection" amount="20" />
+      </StatusEffect>
     </Effect>
     <Effect minstrength="75" maxstrength="99"
       strengthchange="5"
@@ -1703,6 +1791,9 @@
       </StatusEffect>
       <StatusEffect target="Character">
         <Affliction identifier="organdamage" amount="30" />
+      </StatusEffect>
+      <StatusEffect target="Character" interval="1" disabledeltatime="true">
+        <ReduceAffliction identifier="huskinfection" amount="50" />
       </StatusEffect>
     </Effect>
     <Effect minstrength="99" maxstrength="100"
@@ -1732,6 +1823,9 @@
         <Conditional IsHuman="false"/>
         <Conditional healthpercentage="gt 50"/>
         <Affliction identifier="cyanidepoisoning" amount="-9999" probability="0.075" />
+      </StatusEffect>
+      <StatusEffect target="Character" interval="1" disabledeltatime="true">
+        <ReduceAffliction identifier="huskinfection" amount="100" />
       </StatusEffect>
     </Effect>
     <icon texture="Content/UI/MainIconsAtlas.png" sourcerect="640,640,128,128" color="106,106,106,255" origin="0,0"/>
@@ -2577,18 +2671,18 @@
   </Affliction>
   
   <Affliction
-    name="Acid Vulnerability"
+    name=""
     identifier="acidreaction"
-    description="Acidic reagent that drastically increases acid burn damage."
+    description="Reagent that drastically increases progression of acid burns and husk infection."
     type="debuff"
     limbspecific="false"
     maxstrength="100"
     affectmachines="false">
     <Effect minstrength="0" maxstrength="100"
-      strengthchange="-1"
-      resistancefor="acidburn"
+      strengthchange="-0.8"
+      resistancefor="acidburn,huskinfection"
       minresistance="0"
-      maxresistance="-2"/>
+      maxresistance="-3"/>
     <icon texture="Content/UI/CommandUIBackground.png" sourcerect="640,768,128,128" color="84,171,90,255" origin="0,0"/>
   </Affliction>
 
@@ -2727,6 +2821,128 @@
     <icon texture="Content/UI/CommandUIAtlas.png" sourcerect="768,768,128,128" color="143,111,160,255" origin="0,0"/>
   </InternalDamage>
 
+  <Infection
+    identifier="infection"
+    type="infection"
+    limbspecific="true"
+    maxstrength="200"
+    burnoverlayalpha="0"
+    causeofdeathdescription="causeofdeathdescription.damage"
+    selfcauseofdeathdescription="self_causeofdeathdescription.damage"
+    healcostmultiplier="2.5">
+    <Description
+     textidentifier="afflictiondescription.infection.low"
+     minstrength="0"
+     maxstrength="30"/>
+    <Description
+      textidentifier="afflictiondescription.infection"
+      minstrength="30"
+      maxstrength="60"/>
+    <Description
+      textidentifier="afflictiondescription.infection.high"
+      minstrength="60"
+      maxstrength="200"/>
+    <Effect minstrength="0" maxstrength="30" multiplybymaxvitality="true" strengthchange="0.1"
+      minvitalitydecrease="0"
+      maxvitalitydecrease="0.3"/>
+    <Effect minstrength="30" maxstrength="60" multiplybymaxvitality="true" strengthchange="0.1"
+      minvitalitydecrease="0.3"
+      maxvitalitydecrease="0.6">
+      <StatusEffect target="Character" interval="1" disabledeltatime="true">
+        <Conditional IsHuman="true"/>
+        <Affliction identifier="organdamage" amount="0.2"/>
+      </StatusEffect>
+    </Effect>
+    <Effect minstrength="60" maxstrength="200" multiplybymaxvitality="true" strengthchange="0.1"
+      minvitalitydecrease="0.6"
+      maxvitalitydecrease="2">
+      <StatusEffect target="Character" interval="1" disabledeltatime="true">
+        <Conditional IsHuman="true"/>
+        <Affliction identifier="organdamage" amount="0.5"/>
+        <Affliction identifier="nausea" amount="15" probability="0.03" /> 
+      </StatusEffect>
+    </Effect>
+    <icon texture="Content/UI/TalentsIcons4.png" sourcerect="0,384,128,128" color="84,171,90,255" origin="0,0"/>
+  </Infection>
+  
+  <Affliction
+    name="Drunk Vulnerability"
+    identifier="drunkweakness"
+    description=""
+    type="debuff"
+    limbspecific="false"
+    maxstrength="100"
+    affectmachines="false">
+     <Description
+      textidentifier="afflictiondescription.drunkweakness"
+      target="OtherCharacter"
+      minstrength="0"
+      maxstrength="100"/>
+    <Description
+      textidentifier="afflictiondescription.drunkweakness.self"
+      target="Self"
+      minstrength="0"
+      maxstrength="100"/>
+    <Effect minstrength="0" maxstrength="100"
+      strengthchange="-1"
+      resistancefor="drunk"
+      minresistance="0"
+      maxresistance="-5"/>
+    <icon texture="Content/UI/TalentsIcons4.png" sourcerect="128,384,128,128" color="84,171,90,255" origin="0,0"/>
+  </Affliction>
+
+  <Affliction
+    name="Stabilozine Effects"
+    identifier="stabilozineeffect"
+    type="resistance"
+    isbuff="true"
+    limbspecific="false"
+    indicatorlimb="Torso"
+    maxstrength="120"
+    affectmachines="false"
+    MedicalSkillGain="0.01">
+    <Description
+      textidentifier="afflictiondescription.stabilozineeffect.self"
+      target="Self" />
+    <Description
+      textidentifier="afflictiondescription.stabilozineeffect"
+      target="OtherCharacter " />
+    <Effect minstrength="0" maxstrength="120"
+      strengthchange="-1">
+      <StatusEffect target="Character" interval="1" disabledeltatime="true">
+        <ReduceAffliction type="poison" amount="1" />
+      </StatusEffect>
+    </Effect>
+    <Icon texture="Content/UI/TalentsIcons4.png" sourcerect="896,256,128,128" color="10,193,114,255" origin="0,0"/>
+  </Affliction>
+  
+  <Affliction
+    identifier="adrenalinerush"
+    type="adrenaline"
+    isbuff="true"
+    limbspecific="false"
+    maxstrength="5"
+    iconcolors="33,75,78;126,211,224;126,211,224;227,247,249">
+    <Description
+      textidentifier="afflictiondescription.adrenalinerush.self"
+      target="Self" />
+    <Description
+      textidentifier="afflictiondescription.adrenalinerush"
+      target="OtherCharacter " />
+    <Effect minstrength="0" maxstrength="5" strengthchange="-1"
+      resistancefor="stun" minresistance="0" maxresistance="0.5"> 
+      <StatusEffect target="Character" interval="5" disabledeltatime="true">
+        <ReduceAffliction type="stun" amount="30" />
+      </StatusEffect>
+      <StatusEffect target="Character" interval="1" disabledeltatime="true">
+        <Affliction identifier="chemaddiction" amount="6"/>
+        <ReduceAffliction identifier="chemwithdrawal" amount="4"/>
+      </StatusEffect>
+      <AbilityFlag flagtype="AlwaysStayConscious" />
+    </Effect>
+    <Icon texture="Content/UI/TalentsIcons4.png" sourcerect="768,256,128,128" color="10,193,114,255" origin="0,0"/>
+  </Affliction>
+
   <Affliction
     name="Husk Roulette Participation"
     identifier="huskroulette"
@@ -2742,63 +2958,6 @@
     showinhealthscannerthreshold="1000" >
     <Effect minstrength="0" maxstrength="120" strengthchange="-0.1"/>
     <icon texture="Content/UI/CommandUIAtlas.png" sourcerect="768,768,128,128" color="143,111,160,255" origin="0,0"/>
-  </Affliction>
- <!-- DoT for incendium -->
-  <Affliction name="Burning" identifier="burning" description="The target is burning." type="burn" causeofdeathdescription="" selfcauseofdeathdescription="" limbspecific="true" activationthreshold="1.0" showiconthreshold="1000" maxstrength="20">
-    <Effect minstrength="1" maxstrength="20" minvitalitydecrease="0" maxvitalitydecrease="0" strengthchange="-1.5">
-      <StatusEffect target="Limb">
-        <Affliction identifier="burn" amount="0.6" />
-        <Conditional InWater="false" />
-      </StatusEffect>
-      <StatusEffect target="Limb">
-        <ParticleEmitter particle="flamethrower" particlespersecond="14" scalemin="0.2" scalemax="0.3" distancemin="0" distancemax="30" />
-        <ParticleEmitter particle="smoke" particlespersecond="6" scalemin="2" scalemax="2.5" />
-        <Conditional InWater="false" />
-      </StatusEffect>
-      <StatusEffect target="Limb" disabledeltatime="true">
-        <ReduceAffliction identifier="burning" amount="5" />
-        <Conditional InWater="true" />
-      </StatusEffect>
-    </Effect>
-    <icon texture="Content/UI/MainIconsAtlas.png" sourcerect="768,640,128,128" color="195,0,0,255" origin="0,0" />
-  </Affliction>
-
-  <!-- This thing makes you "deaf" once a Stun Grenade explodes nearby.-->
-  <Affliction name="Grenade Concussion" identifier="stungrenadeeffect" description="The target is under the effect of a stun grenade." type="damage" causeofdeathdescription="" selfcauseofdeathdescription="" limbspecific="false" showiconthreshold="1000" maxstrength="30">
-    <Effect minstrength="0" maxstrength="10" strengthchange="-0.8">
-      <StatusEffect target="Character" ObstructVision="true" LowPassMultiplier="0.3" setvalue="true" />
-    </Effect>
-    <Effect minstrength="10" maxstrength="20" strengthchange="-0.8">
-      <StatusEffect target="Character" ObstructVision="true" LowPassMultiplier="0.1" setvalue="true" />
-    </Effect>
-    <Effect minstrength="20" maxstrength="30" strengthchange="-0.8"></Effect>
-  </Affliction>
-
-  <!-- This one plays constant tinnitus effect, unique to stun grenade -->
-  <Affliction name="Grenade Concussion" identifier="tinnituseffect" description="Plays tinnitus effect." type="damage" causeofdeathdescription="" selfcauseofdeathdescription="" limbspecific="false" showiconthreshold="1000" maxstrength="30">
-    <Effect minstrength="0" maxstrength="30" strengthchange="-0.8">
-      <StatusEffect target="Character" setvalue="true">
-        <Conditional IsLocalPlayer="True" />
-        <Sound file="Content/Items/Weapons/tinnitusloop.ogg" loop="true" volume="0.8" />
-      </StatusEffect>
-    </Effect>
-  </Affliction>
-
-  <Affliction name="Blinded" identifier="blind_hard" description="" type="none" limbspecific="false" indicatorlimb="Head" maxstrength="10"  showiconthreshold="1000" showicontoothersthreshold="1000" afflictionoverlayalphaislinear="false">
-    <Effect minstrength="0" maxstrength="10" multiplybymaxvitality="true" strengthchange="-2" minvitalitydecrease="0" maxvitalitydecrease="0">
-      <StatusEffect target="Character" interval="1" disabledeltatime="true" setvalue="true">
-        <Affliction identifier="blind" strength="30" />
-      </StatusEffect>
-    </Effect>
-    <icon texture="Content/UI/MainIconsAtlas.png" sourcerect="128,768,128,128" color="195,136,60,255" origin="0,0" />
-    <AfflictionOverlay texture="Content/UI/blindoverlay.png" />
-  </Affliction>
-
-  <Affliction name="Blinded" identifier="blind" description="" type="none" limbspecific="false" indicatorlimb="Head" maxstrength="30" showiconthreshold="1000" showicontoothersthreshold="1000">
-    <Effect minstrength="0" maxstrength="20" multiplybymaxvitality="true" strengthchange="-4" minvitalitydecrease="0" maxvitalitydecrease="0" MinAfflictionOverlayAlphaMultiplier="0.0" MaxAfflictionOverlayAlphaMultiplier="0.8" />
-    <Effect minstrength="20" maxstrength="30" multiplybymaxvitality="true" strengthchange="-0.8" minvitalitydecrease="0" maxvitalitydecrease="0" MinAfflictionOverlayAlphaMultiplier="0.8" MaxAfflictionOverlayAlphaMultiplier="1" />
-    <icon texture="Content/UI/MainIconsAtlas.png" sourcerect="128,768,128,128" color="195,136,60,255" origin="0,0" />
-    <AfflictionOverlay texture="Content/UI/blindoverlay.png" />
   </Affliction>
 
 </Afflictions>

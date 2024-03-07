@@ -1521,7 +1521,6 @@
 <missiontype.clearalienruins>Alien ruins</missiontype.clearalienruins>
 <missiontype.scanalienruins>Scan</missiontype.scanalienruins>
 <missiontype.escort>Escort</missiontype.escort>
-<missiontype.pirate>Pirate</missiontype.pirate>
 
 <!-- Mission descriptions -->
 <missionname.salvageskyholderartifactruins>Salvaging an artifact</missionname.salvageskyholderartifactruins>
@@ -2042,6 +2041,7 @@
 <traitor.probability>Traitor probability</traitor.probability>
 <traitor.probability.tooltip>The probability of some players getting assigned traitor objectives during a round.</traitor.probability.tooltip>
 <traitorobjective.codeword>Identify co-conspirators with the codeword</traitorobjective.codeword>
+
 <eventname.bakingstation>Baking Station</eventname.bakingstation>
 <EventText.bakingstation.c1>You are angry. Enraged, even. The constant stress of being confined to your metal coffin is taking its toll on you, and you know it. You have to take out that anger somewhere on something… The beacon station you're supposed to visit might have a nuclear reactor that could be overloaded, causing a huge explosion and radiation to harm those Jove-forsaken crawlers and mudraptors for a long time to come. Your hand stops shaking for the first time in days. You know now: It is what you have to do.</EventText.bakingstation.c1>
 <EventText.bakingstation.objective1>Cause a nuclear meltdown at the beacon station's nuclear reactor.</EventText.bakingstation.objective1>
@@ -2579,11 +2579,8 @@
 <entityname.underwaterscooter>Underwater Scooter</entityname.underwaterscooter>
 <entitydescription.underwaterscooter>A battery-powered underwater propulsion device.</entitydescription.underwaterscooter>
 <entityname.antibleeding1>Bandage</entityname.antibleeding1>
-<entitydescription.antibleeding1>Basic bandages, useful in the treatment of bleeding wounds and burns.</entitydescription.antibleeding1>
 <entityname.antibleeding2>Plastiseal</entityname.antibleeding2>
-<entitydescription.antibleeding2>A synthetic skin with hemostatic properties, able to quickly seal most wounds.</entitydescription.antibleeding2>
 <entityname.antibleeding3>Antibiotic Glue</entityname.antibleeding3>
-<entitydescription.antibleeding3>An antibiotic glue with hemostatic properties. Seals bleeding wounds almost immediately and treats burns very effectively. Use with care as it may cause mobile clots in the bloodstream.</entitydescription.antibleeding3>
 <entityname.weldingtool>Welding Tool</entityname.weldingtool>
 <entitydescription.weldingtool>One of the most crucial tools on board the submarine. Also works underwater.</entitydescription.weldingtool>
 <entityname.plasmacutter>Plasma Cutter</entityname.plasmacutter>
@@ -2780,15 +2777,12 @@
 <entityname.glowstick>Glowstick</entityname.glowstick>
 <entitydescription.glowstick>Temporary handheld light. Useful for marking a path while exploring outside the sub.</entitydescription.glowstick>
 <entityname.abyssdivingsuit>Abyss Diving Suit</entityname.abyssdivingsuit>
-<entitydescription.abyssdivingsuit>A heavy suit designed for deep sea exploration. Protects against damage and high pressure all the way down to 10,000 meters, reduces oxygen usage, but at a cost of reduced movement speed.</entitydescription.abyssdivingsuit>
 <entityname.combatdivingsuit>Combat Diving Suit</entityname.combatdivingsuit>
-<entitydescription.combatdivingsuit>An agile, lightweight suit designed for combat. Offers some protection against damage and withstands pressure up to the depth of 6,000 meters.</entitydescription.combatdivingsuit>
 <entityname.pressurestabilizer>Pressure Stabilizer</entityname.pressurestabilizer>
 <entitydescription.pressurestabilizer>A special drug that gives the user an immunity to pressure and removes their need for oxygen for a short duration.</entitydescription.pressurestabilizer>
 <entityname.endocrinebooster>Endocrine Booster</entityname.endocrinebooster>
 <entitydescription.endocrinebooster>This medical contraption, when used, bestows the user with permanent performance enhancement.</entitydescription.endocrinebooster>
 <entityname.slipsuit>Slipsuit</entityname.slipsuit>
-<entitydescription.slipsuit>A modified Combat Diving Suit with additional diving fins that aid the user when moving in water. Sadly, the fins also make it difficult to walk on solid ground.</entitydescription.slipsuit>
 <entityname.backpack>Backpack</entityname.backpack>
 <entitydescription.backpack>A bulky backpack that can hold a large amount of tools and supplies, at the cost of slightly impaired movement.</entitydescription.backpack>
 <entityname.bandolier>Bandolier</entityname.bandolier>
@@ -2866,7 +2860,6 @@
 <entityname.clowncrate>Clown Crate</entityname.clowncrate>
 <entitydescription.clowncrate>A crate large enough to fit a prankster inside.</entitydescription.clowncrate>
 <entityname.europabrew>Europabrew</entityname.europabrew>
-<entitydescription.europabrew>A reagent that drastically increases the effect of acid burns.</entitydescription.europabrew>
 <entityname.sulphuricacidsyringe>Sulphuric Acid Syringe</entityname.sulphuricacidsyringe>
 <entitydescription.sulphuricacidsyringe>A strong acid that causes burns when in contact with skin. Contained in a syringe.</entitydescription.sulphuricacidsyringe>
 <entityname.chemgrenade>Acid Grenade</entityname.chemgrenade>
@@ -2874,7 +2867,6 @@
 <entityname.40mmchemgrenade>40mm Acid Grenade</entityname.40mmchemgrenade>
 <entitydescription.40mmchemgrenade>Ammunition for grenade launcher. Filled with acid, causing acid burns when it explodes.</entitydescription.40mmchemgrenade>
 <entityname.rum>Rum</entityname.rum>
-<entitydescription.rum>A fine liquor made from raptor bane juice. Some purists insist real rum is made from sugarcane — good luck finding any of that on Europa.</entitydescription.rum>
 <entityname.handhelditemfinder>Handheld Itemfinder</entityname.handhelditemfinder>
 <entitydescription.handhelditemfinder>A small handheld device with a screen, capable of easily finding items within the submarine.</entitydescription.handhelditemfinder>
 <entityname.makeshiftshelf>Makeshift Shelves</entityname.makeshiftshelf>
@@ -2912,7 +2904,6 @@
 <entityname.safetyharness>Safety Harness</entityname.safetyharness>
 <entitydescription.safetyharness>A special harness made to reduce workplace related injuries incurred on Europan submarines. The harness also dampens the effects of rushing water, stabilizing the user in the event of a hull breach.</entitydescription.safetyharness>
 <entityname.pucs>PUCS</entityname.pucs>
-<entitydescription.pucs>The Protective Universal Crisis Suit, or PUCS for short, bestows its user with immense resistances to environmental hazards such as radiation and fire. The built-in air-filtration system allows the suit to utilize hull oxygen when possible, and the built-in computer injects the user with whatever medicine is placed inside the suit. Withstands pressure up to a depth of 6,000 meters.</entitydescription.pucs>
 <entityname.cigar>Cigar</entityname.cigar>
 <entitydescription.cigar>A submariner's life is mentally taxing, but perhaps this exquisitely crafted cigar can help you soothe your nerves a bit.</entitydescription.cigar>
 <entityname.stungundartfulgurium>Fulgurium Stun Gun Dart</entityname.stungundartfulgurium>
@@ -2939,7 +2930,7 @@
 <entitydescription.geneticmaterialmoloch>Increases resistance to physical damage by [value]%</entitydescription.geneticmaterialmoloch>
 <entitydescription.geneticmaterialthresher>Decreases the subject's oxygen consumption by [value]%.</entitydescription.geneticmaterialthresher>
 <entitydescription.geneticmaterialmantis>Increases movement speed on land by [value]%.</entitydescription.geneticmaterialmantis>
-<entitydescription.geneticmaterialhammerhead>Allows the subject to to do [value]% more damage with melee weapons.</entitydescription.geneticmaterialhammerhead>
+<entitydescription.geneticmaterialhammerhead>Allows the subject to do [value]% more damage with melee weapons.</entitydescription.geneticmaterialhammerhead>
 <entitydescription.geneticmaterialhammerheadmatriarch>Makes the subject's physical injuries heal at a rate of [value]% per minute.</entitydescription.geneticmaterialhammerheadmatriarch>
 <entitydescription.geneticmaterialspineling>Causes the subject to grow spineling-like bony protrusions out of their back.</entitydescription.geneticmaterialspineling>
 <entitydescription.geneticmaterialhusk>Prevents husk infections from advancing to the point where the parasite takes control of the host.</entitydescription.geneticmaterialhusk>
@@ -3242,11 +3233,9 @@
 <entityname.opium>Opium</entityname.opium>
 <entitydescription.opium>A relatively mild opioid obtained from aquatic poppy. Most commonly used to manufacture morphine and fentanyl.</entitydescription.opium>
 <entityname.antibiotics>Broad-spectrum Antibiotics</entityname.antibiotics>
-<entitydescription.antibiotics>A mild antibiotic that acts against a wide range of disease-causing bacteria, though with the side effect of minor organ damage. Used as an ingredient in many medical compounds.</entitydescription.antibiotics>
 <entityname.stabilozine>Stabilozine</entityname.stabilozine>
 <entitydescription.stabilozine>Used as an ingredient in the manufacture of various medicines. On its own, can be used to slow down the effects of most toxins.</entitydescription.stabilozine>
 <entityname.ethanol>Ethanol</entityname.ethanol>
-<entitydescription.ethanol>Medical alcohol used as an ingredient in the manufacture of various medicines. Drinking while on duty is not advised.</entitydescription.ethanol>
 <entityname.sulphuricacid>Sulphuric Acid</entityname.sulphuricacid>
 <entitydescription.sulphuricacid>A strong acid that causes burns when in contact with skin. Used as an ingredient in several poisons.</entitydescription.sulphuricacid>
 <entityname.antidama1>Morphine</entityname.antidama1>
@@ -3254,11 +3243,9 @@
 <entityname.antidama2>Fentanyl</entityname.antidama2>
 <entitydescription.antidama2>A powerful opiate for treating pain associated with internal injuries, but will cause shortness of breath and eventual dependency with overuse.</entitydescription.antidama2>
 <entityname.antibloodloss1>Saline</entityname.antibloodloss1>
-<entitydescription.antibloodloss1>A sodium chloride infusion mildly useful in the treatment of blood loss.</entitydescription.antibloodloss1>
 <entityname.antibloodloss2>Blood Pack</entityname.antibloodloss2>
 <entitydescription.antibloodloss2>A pack of blood substitute for the treatment of blood loss.</entitydescription.antibloodloss2>
 <entityname.deusizine>Deusizine</entityname.deusizine>
-<entitydescription.deusizine>A highly potent stimulant effective in the treatment of internal damage, oxygen deprivation and, to a lesser extent, blood loss. Produces mild burns as a side effect.</entitydescription.deusizine>
 <entityname.calyxanide>Calyxanide</entityname.calyxanide>
 <entitydescription.calyxanide>An antiparasitic drug used in the treatment of husk parasite infections. Might require higher dosage to cure the infection at later stages.</entitydescription.calyxanide>
 <entityname.antipsychosis>Haloperidol</entityname.antipsychosis>
@@ -3278,7 +3265,6 @@
 <entityname.liquidoxygenite>Liquid Oxygenite</entityname.liquidoxygenite>
 <entitydescription.liquidoxygenite>A mildly toxic solution that slowly releases oxygen into the bloodstream when injected. Avoid dropping.</entitydescription.liquidoxygenite>
 <entityname.tonicliquid>Tonic Liquid</entityname.tonicliquid>
-<entitydescription.tonicliquid>A medical solution that's mildly effective as a treatment for internal damage, but most commonly used as an ingredient in more complex medical compounds.</entitydescription.tonicliquid>
 <entityname.meth>Methamphetamine</entityname.meth>
 <entitydescription.meth>A potent nervous system stimulant.</entitydescription.meth>
 <entityname.steroids>Anabolic Steroids</entityname.steroids>
@@ -3290,11 +3276,9 @@
 <entityname.chloralhydrate>Chloral Hydrate</entityname.chloralhydrate>
 <entitydescription.chloralhydrate>A sedative that can be used to knock someone out for a short period of time.</entitydescription.chloralhydrate>
 <entityname.cyanide>Cyanide</entityname.cyanide>
-<entitydescription.cyanide>A highly toxic chemical that causes a rapid death once a sufficiently large dose has been administered.</entitydescription.cyanide>
 <entityname.radiotoxin>Radiotoxin</entityname.radiotoxin>
 <entitydescription.radiotoxin>A highly radioactive substance that causes radiation sickness and eventual liquefaction of inner organs.</entitydescription.radiotoxin>
 <entityname.sufforin>Sufforin</entityname.sufforin>
-<entitydescription.sufforin>A stealthy neurotoxin, undetectable in early stages. Causes a loss of vision and, ultimately, death.</entitydescription.sufforin>
 <entityname.deliriumine>Deliriumine</entityname.deliriumine>
 <entitydescription.deliriumine>A psychosis-inducing toxin.</entitydescription.deliriumine>
 <entityname.nitroglycerin>Nitroglycerin</entityname.nitroglycerin>
@@ -3332,7 +3316,6 @@
 <entityname.elastin>Elastin</entityname.elastin>
 <entitydescription.elastin>A highly elastic, naturally occurring protein. Can be used to stem bleeding or heal burns once processed to medical items.</entitydescription.elastin>
 <entityname.adrenaline>Adrenaline</entityname.adrenaline>
-<entitydescription.adrenaline>A naturally occurring hormone. Used to manufacture medicine or combat stimulants.</entitydescription.adrenaline>
 <entityname.paralyxis>Paralyxis</entityname.paralyxis>
 <entitydescription.paralyxis>A strange substance that numbs when touched. Used to create a powerful paralyzing agent.</entitydescription.paralyxis>
 <entityname.paralyzant>Paralyzant</entityname.paralyzant>
@@ -4903,8 +4886,6 @@
 <afflictiondescription.disguised>As long as you keep covering your face, others might not be able to tell who you are...</afflictiondescription.disguised>
 <afflictiondescription.hallucinating>The things you hear and see appear so real! But are they?</afflictiondescription.hallucinating>
 <afflictiontype.damage>Damage</afflictiontype.damage>
-<afflictionname.acidreaction>Acid Vulnerability</afflictionname.acidreaction>
-<afflictiondescription.acidreaction>Reagent that drastically increases acid burn damage.</afflictiondescription.acidreaction>
 <afflictiondescription.internaldamage.low>No injuries are visible externally, but the sweating and aches suggest something is amiss.</afflictiondescription.internaldamage.low>
 <afflictiondescription.blunttrauma.low>A light bruise shows where something hit, but it doesn’t look like anything is broken.</afflictiondescription.blunttrauma.low>
 <afflictiondescription.lacerations.low>The cuts look worse than they really are.</afflictiondescription.lacerations.low>
@@ -4977,7 +4958,6 @@
 <afflictionname.haste>Hyperactivity</afflictionname.haste>
 <afflictiondescription.haste>Movement speed and reflexes are heightened.</afflictiondescription.haste>
 <afflictionname.huskinfectionresistance>Husk infection resistance</afflictionname.huskinfectionresistance>
-<afflictiondescription.huskinfectionresistance>Patient's immune system is more attuned to alien parasites.</afflictiondescription.huskinfectionresistance>
 <afflictionname.psychosisresistance>Psychosis resistance</afflictionname.psychosisresistance>
 <afflictiondescription.psychosisresistance>Patient exhibits high mental fortitude.</afflictiondescription.psychosisresistance>
 <afflictionname.pressureresistance>Pressure resistance</afflictionname.pressureresistance>
@@ -5858,10 +5838,8 @@
 <tutorial.roles.popup.healthui1>Open the Doctor's health interface with [InputType.Health]</tutorial.roles.popup.healthui1>
 <tutorial.roles.popup.healthui2>Drag the morphine anywhere on the body.</tutorial.roles.popup.healthui2>
 <tutorial.roles.medicalinstructor.medfabricator1>“That takes care of my headache, but the shakes are still there. We don’t have any naloxone left, do we? You’ll just have to make some. First, find morphine and stabilozine.”</tutorial.roles.medicalinstructor.medfabricator1>
-<tutorial.roles.popup.medfabricator1>Find Morphine and Stabilozine.</tutorial.roles.popup.medfabricator1>
 <tutorial.roles.medicalinstructor.medfabricator2>“You can make medicine in the medical fabricator. Like a regular fabricator, it creates new items out of materials you feed it. Try it out.”</tutorial.roles.medicalinstructor.medfabricator2>
 <tutorial.roles.popup.medfabricator2>Find naloxone on the list and click on it.</tutorial.roles.popup.medfabricator2>
-<tutorial.roles.popup.medfabricator3>Insert morphine and stabilozine into the input slots and press "Create."</tutorial.roles.popup.medfabricator3>
 <tutorial.roles.popup.medfabricator4>Take the fabricated naloxone from the output on the right-hand side of the screen.</tutorial.roles.popup.medfabricator4>
 <tutorial.roles.medicalinstructor.healthui>“Okay, bring it here. Just highlight me with your mouse and press [InputType.Health] to enter my Health interface.”</tutorial.roles.medicalinstructor.healthui>
 <tutorial.roles.medicalinstructor.healthui2>Shakes visibly.\n\n“Remember, [InputType.Health] to view my health interface. The sooner, the better.”</tutorial.roles.medicalinstructor.healthui2>
@@ -5871,7 +5849,6 @@
 <tutorial.roles.medicalinstructor.patients3>“When treating a patient, the health interface will suggest treatments on the bottom. Simply clicking on a suggestion will apply it, but you can also manually drag a medicine to the wound. Cabinets should be stocked with whatever you need.”</tutorial.roles.medicalinstructor.patients3>
 <tutorial.roles.popup.treatpatients>Treat all patients.</tutorial.roles.popup.treatpatients>
 <tutorial.roles.medicalinstructor.burns>“Burns are commonly sustained from explosions and electric shocks. Bandages and plastiseal are the typical treatments. Burns are also limb-specific, which means you’ll have to apply the cure to the correct limb.”</tutorial.roles.medicalinstructor.burns>
-<tutorial.roles.popup.burns>Apply bandages to burned limb.</tutorial.roles.popup.burns>
 <tutorial.roles.medicalinstructor.psychosis>“Psychosis is usually inflicted by otherworldly sources. It is treated with haloperidol.”</tutorial.roles.medicalinstructor.psychosis>
 <tutorial.roles.popup.psychosis>Give the patient haloperidol.</tutorial.roles.popup.psychosis>
 <tutorial.roles.medicalinstructor.damage>“Blunt force trauma (and other physical damage afflictions like lacerations and bite wounds) are treated with painkillers such as morphine.”</tutorial.roles.medicalinstructor.damage>
@@ -5887,7 +5864,6 @@
 <tutorial.roles.medic.objective.morphine1>Find morphine</tutorial.roles.medic.objective.morphine1>
 <tutorial.roles.medic.objective.morphine2>Administer morphine to the instructor</tutorial.roles.medic.objective.morphine2>
 <tutorial.roles.medic.objective.medfabricator>Fabricate and administer naloxone</tutorial.roles.medic.objective.medfabricator>
-<tutorial.roles.medic.objective.medfabricator1>Find morphine and stabilozine</tutorial.roles.medic.objective.medfabricator1>
 <tutorial.roles.medic.objective.medfabricator2>Use the medical fabricator to craft naloxone</tutorial.roles.medic.objective.medfabricator2>
 <tutorial.roles.medic.objective.medfabricator3>Treat the instructor with naloxone</tutorial.roles.medic.objective.medfabricator3>
 <tutorial.roles.medic.objective.crewquarters>Treat patients in the crew quarters</tutorial.roles.medic.objective.crewquarters>
@@ -6242,10 +6218,8 @@
 <eventtext.givingdirections.o2.o2>Uh oh.</eventtext.givingdirections.o2.o2>
 <eventtext.givingdirections.o3>Ignore them and keep walking.</eventtext.givingdirections.o3>
 <eventtext.soundinthevent.c1>You hear a strange scraping sound coming from a nearby vent. Curious, you peer through the slats of the vent cover, but it’s far too dark in there to see anything... A moment later you hear the sound again, you’re sure of it!</eventtext.soundinthevent.c1>
-<eventtext.soundinthevent.o1>Unscrew the vent cover to take a better look inside.</eventtext.soundinthevent.o1>
 <eventtext.soundinthevent.o1.c1>You manage to get the vent off easily enough and spot the source of the noise right away: The fan blade is brushing against a small metal box. Carefully retrieving it, you open it and find 1,000 marks!</eventtext.soundinthevent.o1.c1>
 <eventtext.soundinthevent.o1.c2>You fumble the vent cover as you’re removing it and brush against the spinning blade. It slices into your hand before you can pull away, nicking an artery.</eventtext.soundinthevent.o1.c2>
-<eventtext.soundinthevent.o2>Shine your flashlight through the vent slats and see if you can spot anything unusual.</eventtext.soundinthevent.o2>
 <eventtext.soundinthevent.o2.c1>An enraged mudraptor bursts from the vent!</eventtext.soundinthevent.o2.c1>
 <eventtext.soundinthevent.o2.c2>Three enraged mudraptors burst from the vent!</eventtext.soundinthevent.o2.c2>
 <eventtext.soundinthevent.o3>Ignore it.</eventtext.soundinthevent.o3>
@@ -6334,10 +6308,7 @@
 <eventtext.goblincooking1.o2>Ignore the aroma.</eventtext.goblincooking1.o2>
 <eventtext.outbreak.c1>You overhear someone nearby talking to a radio. “Yeah, I gave them the eggs. Uh huh… Yeah. I made sure they swallowed ‘em. ...I don’t know, maybe three minutes ago?” That’s weird, you think to yourself. Hopefully nothing weird comes out of this.</eventtext.outbreak.c1>
 <eventtext.outbreak.o1>OK.</eventtext.outbreak.o1>
-<eventtext.miketheidiot1.c1>Someone has set up shop in their dorm room. A sign on the door says “Mike the Scryer: He’ll divine answers to all your questions!”</eventtext.miketheidiot1.c1>
-<eventtext.miketheidiot1.o1>Step inside.</eventtext.miketheidiot1.o1>
-<eventtext.miketheidiot1.o1.c1>You peek inside. Heavy curtains line the walls that are otherwise full of crudely drawn pictures of monsters, expensive submarines and well-endowed women. In the middle of the room is a round table with a couple of empty bottles of Europan moonshine and a crystal ball. A man wearing thick glasses and a sloppily tied turban is sitting behind the table. He squints and motions you to take a seat. “I’m Mike,” he croaks. “5 marks to ask me anything.”</eventtext.miketheidiot1.o1.c1>
-<eventtext.miketheidiot1.o1.o1>Pay him.</eventtext.miketheidiot1.o1.o1>
+  <eventtext.miketheidiot1.o1.o1>Pay him.</eventtext.miketheidiot1.o1.o1>
 <eventtext.miketheidiot1.o1.o1.c1>You sit down at the table opposite Mike. A pungent smell of alcohol wafts from him. “Come on, then. What d’you wanna know about?”</eventtext.miketheidiot1.o1.o1.c1>
 <eventtext.miketheidiot1.o1.o1.o1>“What’s the meaning of life?”</eventtext.miketheidiot1.o1.o1.o1>
 <eventtext.miketheidiot1.o1.o1.o1.c1>Mike conjures up a bottle of booze. “Real original.” He takes a swig. “There are a few schools of thought, but basically it boils down to this: Either you make life good for yourself or do good by others.” He reaches over the table to offer you a drink and knocks down a few bottles in the process. They shatter on the floor. “Shit.” Mike slumps down dejectedly. “There’s no God,” he mutters as he pushes himself up and starts for the cleaning closet. “Session’s over.”</eventtext.miketheidiot1.o1.o1.o1.c1>
@@ -6786,13 +6757,7 @@
 <eventtext.bombscare.o1.o1.c1>“Just be careful,” the guard cautions. “We received a bomb threat a few hours ago, by some usual suspects. It's been a while and no bomb has been found, but we advise caution.”</eventtext.bombscare.o1.o1.c1>
 <eventtext.bombscare.o1.o1.o1>“Usual suspects?”</eventtext.bombscare.o1.o1.o1>
 <eventtext.bombscare.o1.o1.o1.c1>The guard lowers their voice. “Look, you better stay clear of this separatist business. There have been some serious attacks lately. Just come to me if you see something suspicious.”</eventtext.bombscare.o1.o1.o1.c1>
-<eventtext.bombscare.o1.o1.o1.c1.c1>Out of the corner of your eye, you see a pile of scrap electronics.</eventtext.bombscare.o1.o1.o1.c1.c1>
-<eventtext.bombscare.o1.o1.o1.c1.o1>Salvage.</eventtext.bombscare.o1.o1.o1.c1.o1>
-<eventtext.bombscare.o1.o1.o1.c1.o1.c1>To your surprise, the pile of scrap turns out to be a homemade pipe bomb. As luck would have it some wires have come loose, preventing the bomb from going off. You carefully remove the detonator, pick up the bomb and place it in your bag. The guard from earlier should be interested in seeing this.</eventtext.bombscare.o1.o1.o1.c1.o1.c1>
 <eventtext.bombscare.o1.o1.o1.c1.o1.c1.c1>You thrust the bomb to the arms of the guard, who flinches a bit. You recount your experience and the guard thanks you for finding the bomb and gives you a small reward for dismantling it.</eventtext.bombscare.o1.o1.o1.c1.o1.c1.c1>
-<eventtext.bombscare.o1.o1.o1.c1.o1.c2>To your surprise, the pile of scrap is wired to a timer. You turn it around and see “00:01” displayed on the timer.</eventtext.bombscare.o1.o1.o1.c1.o1.c2>
-<eventtext.bombscare.o1.o1.o1.c1.o1.o1>Take cover.</eventtext.bombscare.o1.o1.o1.c1.o1.o1>
-<eventtext.bombscare.o1.o1.o1.c1.o1.o1.c1>You drop the bomb and dive down onto the floor, covering your head with your hands. Seconds pass by, but nothing happens. Gingerly, you stand up and dust yourself off. Seems like this bomb is a dud. The guard from earlier should be interested in seeing this.</eventtext.bombscare.o1.o1.o1.c1.o1.o1.c1>
 <eventtext.bombscare.o1.o1.o1.c1.o1.o1.c1.c1>You report finding a bomb in the hallway and the guard immediately springs to action. They thank you for finding and reporting the bomb.</eventtext.bombscare.o1.o1.o1.c1.o1.o1.c1.c1>
 <eventtext.bombscare.o1.o2>Leave the guard.</eventtext.bombscare.o1.o2>
 <eventtext.terrorism101.c1>You see a person crouched next to a vending machine, assembling or fixing something.</eventtext.terrorism101.c1>
@@ -6814,8 +6779,6 @@
 <eventtext.terrorism101.o1.o1.o1.o2>“Never mind. I'm getting the guards.”</eventtext.terrorism101.o1.o1.o1.o2>
 <eventtext.terrorism101.o1.o1.o2>“Sorry to hear that. See you later.”</eventtext.terrorism101.o1.o1.o2>
 <eventtext.terrorism101.o1.o2>“What's that you're working on?”</eventtext.terrorism101.o1.o2>
-<eventtext.terrorism101.o1.o2.o1.o2>“Keep it that way. Terrorism is no way of life.”</eventtext.terrorism101.o1.o2.o1.o2>
-<eventtext.terrorism101.o1.o2.o2>“Never mind. I'm getting the guards.”</eventtext.terrorism101.o1.o2.o2>
 <eventtext.stuckinthemiddle.c1>This colony is in a hurry. Lots of workers are loading supplies onto submarines.  You see a pair of them arguing quietly and gesturing toward you.</eventtext.stuckinthemiddle.c1>
 <eventtext.stuckinthemiddle.o1>Walk up to them.</eventtext.stuckinthemiddle.o1>
 <eventtext.stuckinthemiddle.o1.c1>On your approach, the pair instantly quiets down. Up close you can see an anarchist patch on one of their jackets, revealing them to be separatists. “Didn't you help us out earlier?” the other asks.</eventtext.stuckinthemiddle.o1.c1>
@@ -6828,7 +6791,6 @@
 <eventtext.stuckinthemiddle.o1.o1.o1.o1.o1>“Wouldn't dream of it.”</eventtext.stuckinthemiddle.o1.o1.o1.o1.o1>
 <eventtext.stuckinthemiddle.o1.o1.o1.o1.o1.c1>“Oh, and if our guy ask you if you've had Versas liver, the answer is 'It's to die for.'”</eventtext.stuckinthemiddle.o1.o1.o1.o1.o1.c1>
 <eventtext.stuckinthemiddle.o1.o1.o1.o1.o1.o1>“Got it.”</eventtext.stuckinthemiddle.o1.o1.o1.o1.o1.o1>
-<eventtext.stuckinthemiddle.o1.o1.o1.o1.o1.o1.c1>Peeking into a side room, you see somebody sitting on a chair, handcuffed. Judging by their bloody and swollen face, they've been roughed up pretty thoroughly.</eventtext.stuckinthemiddle.o1.o1.o1.o1.o1.o1.c1>
 <eventtext.stuckinthemiddle.o1.o1.o1.o1.o1.o1.o1>Check on them.</eventtext.stuckinthemiddle.o1.o1.o1.o1.o1.o1.o1>
 <eventtext.stuckinthemiddle.o1.o1.o1.o1.o1.o1.o1.c1>The person is semi-delirious, but they manage to mutter a question: “You ever...ever had V-versas liver?”</eventtext.stuckinthemiddle.o1.o1.o1.o1.o1.o1.o1.c1>
 <eventtext.stuckinthemiddle.o1.o1.o1.o1.o1.o1.o1.o1>“No, never.”</eventtext.stuckinthemiddle.o1.o1.o1.o1.o1.o1.o1.o1>
@@ -6899,12 +6861,8 @@
 <EventText.captivesouls.c1.o1.o1.o1.o1.o2.c1>You decide to leave the creature in its tank.</EventText.captivesouls.c1.o1.o1.o1.o1.o2.c1>
 <EventText.captivesouls.c1.o1.o2>Leave.</EventText.captivesouls.c1.o1.o2>
 <EventText.captivesouls.c1.o2>Don't approach.</EventText.captivesouls.c1.o2>
-<EventText.explosivemishap.c1>You hear voices from behind a closed door. “...so I just hold down this button?”</EventText.explosivemishap.c1>
-<EventText.explosivemishap.o1>Listen at the door.</EventText.explosivemishap.o1>
 <EventText.explosivemishap.o1.c1>A low humming voice can be heard in the background, like an old-timey vacuum cleaner. “Basically. Though you should be careful not to overheat it.”</EventText.explosivemishap.o1.c1>
 <EventText.explosivemishap.o1.o1.c1>“Overheat?” The humming noise grows louder and louder, increasing in pitch.</EventText.explosivemishap.o1.o1.c1>
-<EventText.explosivemishap.o1.o1.o1>Keep your ear to the door.</EventText.explosivemishap.o1.o1.o1>
-<EventText.explosivemishap.o1.o1.o1.c1>The door is blown off its hinges, knocking you down.</EventText.explosivemishap.o1.o1.o1.c1>
 <EventText.explosivemishap.o1.o1.o1.o1>Look inside.</EventText.explosivemishap.o1.o1.o1.o1>
 <EventText.explosivemishap.o1.o1.o1.o1.c1>It looks as if a bomb had gone off inside the laboratory. Expensive instruments are strewn broken on the floor and the once-white walls are decorated with streaks of dark red and pieces of brain matter. Two smoking corpses lie on the floor, along with an alien device of some kind. Someone nearby is yelling for a security guard.</EventText.explosivemishap.o1.o1.o1.o1.c1>
 <EventText.explosivemishap.o1.o1.o1.o1.o1>Examine the device before security gets here.</EventText.explosivemishap.o1.o1.o1.o1.o1>
@@ -7368,7 +7326,6 @@
 <hint.traitorsonboard2>You can suspect someone as the traitor by clicking the traitor icon in the crew list. If most of the crew correctly suspects the traitor, the traitor's objective will fail and they will not receive any rewards. But if the suspicions fall on an innocent player, the crew will need to pay a fine.</hint.traitorsonboard2>
 <hint.repairingsabotageditem>Something's off here. The device seems to keep breaking down despite your attempts to repair it. Could someone have tampered with it in some way?</hint.repairingsabotageditem>
 <hint.radiojammed>There's nothing but static coming out of your headset—someone might have activated a radio jammer somewhere.</hint.radiojammed>
-<hint.onobtaineditem.throwableexplosive>You've obtained a grenade. You can prematurely cook it by pressing [usekey]. Once the safety has been disengaged there's no turning back!</hint.onobtaineditem.throwableexplosive>
 
 <!-- Item quality -->
 <itemname.quality-1>[itemname] ‖color:gui.itemqualitycolorpoor‖(Poor quality)‖end‖</itemname.quality-1>
@@ -8245,5 +8202,4 @@
 <clearserverlistfilters>Reset hidden servers</clearserverlistfilters>
 <clearserverlistfiltersconfirmation>Are you sure you want to unhide all servers? This will make all the servers you've previously hidden visible again.</clearserverlistfiltersconfirmation>
 <workshopiteminstallfailed>Install failed</workshopiteminstallfailed>
-
 </infotexts>

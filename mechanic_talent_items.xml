@@ -157,11 +157,11 @@
   <Item name="" identifier="wrenchdementonite" descriptionidentifier="dementonitetool" variantof="wrench" allowasextracargo="true" inventoryiconcolor="136,142,166,255" spritecolor="136,142,166" addedrepairspeedmultiplier="0.4">
     <Preferredcontainer secondary="respawncontainer" amount="1"  spawnprobability="0" notcampaign="true"/>
     <PreferredContainer primary="engcab"  spawnprobability="0"/>
-    <PreferredContainer secondary="wreckstoragecab,abandonedstoragecab"  spawnprobability="0" />
-    <PreferredContainer primary="wreckengcab,abandonedengcab,outpostengcab,beaconengcab"  spawnprobability="0"/>
+    <PreferredContainer secondary="wreckstoragecab,abandonedstoragecab,piratestoragecab"  spawnprobability="0" />
+    <PreferredContainer primary="wreckengcab,abandonedengcab,pirateengcab,outpostengcab,beaconengcab"  spawnprobability="0"/>
     <PreferredContainer secondary="outpostcrewcabinet" spawnprobability="0"/>
     <PreferredContainer secondary="outposttrashcan" spawnprobability="0" />
-    <Price baseprice="450" sold="false">
+    <Price baseprice="450" sold="false" canbespecial="false">
       <Price storeidentifier="merchantoutpost" />
       <Price storeidentifier="merchantcity" multiplier="0.9" />
       <Price storeidentifier="merchantresearch" />
@@ -188,10 +188,10 @@
   <Item name="" identifier="crowbardementonite" descriptionidentifier="dementonitetool" variantof="crowbar" allowasextracargo="true" inventoryiconcolor="136,142,166,255" spritecolor="136,142,166" addedpickingspeedmultiplier="0.6">
     <PreferredContainer secondary="respawncontainer" amount="1" spawnprobability="0" notcampaign="true"/>
     <PreferredContainer primary="engcab" spawnprobability="0"/>
-    <PreferredContainer secondary="wreckstoragecab,abandonedstoragecab" spawnprobability="0" />
-    <PreferredContainer primary="wreckengcab,abandonedengcab,outpostengcab,beaconengcab" spawnprobability="0" />
+    <PreferredContainer secondary="wreckstoragecab,abandonedstoragecab,piratestoragecab" spawnprobability="0" />
+    <PreferredContainer primary="wreckengcab,abandonedengcab,pirateengcab,outpostengcab,beaconengcab" spawnprobability="0" />
     <PreferredContainer secondary="outpostcrewcabinet" spawnprobability="0" />
-    <Price baseprice="450" sold="false" />
+    <Price baseprice="450" sold="false" canbespecial="false" />
     <Deconstruct>
       <Item identifier="iron" />
       <Item identifier="dementonite" />
@@ -216,12 +216,12 @@
   <Item name="" identifier="screwdriverdementonite" descriptionidentifier="dementonitetool" variantof="screwdriver" allowasextracargo="true" inventoryiconcolor="136,142,166,255" spritecolor="136,142,166" addedrepairspeedmultiplier="0.4">
     <PreferredContainer secondary="respawncontainer" spawnprobability="0" notcampaign="true"/>
     <PreferredContainer primary="reactorcab,engcab" spawnprobability="0"/>
-    <PreferredContainer secondary="wreckstoragecab,abandonedstoragecab"  spawnprobability="0"/>
-    <PreferredContainer primary="wreckengcab,abandonedengcab,outpostengcab,beaconengcab" spawnprobability="0"/>
-    <PreferredContainer primary="wreckreactorcab,abandonedreactorcab" spawnprobability="0" />
+    <PreferredContainer secondary="wreckstoragecab,abandonedstoragecab,piratestoragecab"  spawnprobability="0"/>
+    <PreferredContainer primary="wreckengcab,abandonedengcab,pirateengcab,outpostengcab,beaconengcab" spawnprobability="0"/>
+    <PreferredContainer primary="wreckreactorcab,abandonedreactorcab,piratereactorcab" spawnprobability="0" />
     <PreferredContainer secondary="outpostcrewcabinet" spawnprobability="0" />
     <PreferredContainer secondary="outposttrashcan" spawnprobability="0" />
-    <Price baseprice="450" sold="false" />
+    <Price baseprice="450" sold="false" canbespecial="false" />
     <Deconstruct>
       <Item identifier="iron" />
       <Item identifier="dementonite" />
@@ -240,11 +240,11 @@
     </MeleeWeapon>
   </Item>
   <Item name="" identifier="divingknifedementonite" descriptionidentifier="dementonitetool" variantof="divingknife" allowasextracargo="true" inventoryiconcolor="136,142,166,255" spritecolor="136,142,166">
-    <PreferredContainer secondary="wreckarmcab,abandonedarmcab" spawnprobability="0"/>
-    <PreferredContainer secondary="abandonedstoragecab" spawnprobability="0"/>
+    <PreferredContainer secondary="wreckarmcab,abandonedarmcab,piratearmcab" spawnprobability="0"/>
+    <PreferredContainer secondary="abandonedstoragecab,piratestoragecab" spawnprobability="0"/>
     <PreferredContainer secondary="beaconsupplycab" spawnprobability="0"/>
     <PreferredContainer primary="armcab,secarmcab" spawnprobability="0" />
-    <Price baseprice="450" sold="false">
+    <Price baseprice="450" sold="false" canbespecial="false">
       <Price storeidentifier="merchantoutpost" />
       <Price storeidentifier="merchantcity" multiplier="0.9" />
       <Price storeidentifier="merchantresearch" />
@@ -269,78 +269,55 @@
       </StatusEffect>
     </MeleeWeapon>
   </Item>
- <Item name="" identifier="fixfoamgrenade" category="Equipment" maxstacksize="32" maxstacksizecharacterinventory="8" cargocontaineridentifier="explosivecrate" allowasextracargo="true" tags="smallitem,weapon,explosive,demolitionsexpert,throwableexplosive" Scale="0.5" impactsoundtag="impact_metal_light">
-      <PreferredContainer primary="engcab" secondary="locker" />
-      <Price baseprice="95" sold="false">
-        <Price storeidentifier="merchantoutpost" multiplier="1.1" />
-        <Price storeidentifier="merchantcity" multiplier="1.3" />
-        <Price storeidentifier="merchantresearch" multiplier="1.2" />
-        <Price storeidentifier="merchantmilitary" />
-        <Price storeidentifier="merchantmine" multiplier="0.9" />
-      </Price>
-      <Deconstruct time="10">
-        <Item identifier="steel" />
-        <Item identifier="sodium" mincondition="1.0" />
-      </Deconstruct>
-      <Fabricate suitablefabricators="fabricator" requiredtime="20" requiresrecipe="true">
-        <RequiredSkill identifier="mechanical" level="35" />
-        <RequiredItem identifier="steel" />
-        <RequiredItem identifier="sodium" />
-        <RequiredItem identifier="phosphorus" />
-      </Fabricate>
-      <InventoryIcon texture="Content/Items/JobGear/TalentGear.png" sourcerect="64,114,66,62" origin="0.5,0.5" />
-      <Sprite texture="Content/Items/JobGear/TalentGear.png" sourcerect="130,0,29,62" depth="0.55" origin="0.5,0.5" />
-      <Body width="30" height="62" density="30" />
-      <Throwable characterusable="false" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10" msg="ItemMsgPickUpSelect">
-        <StatusEffect type="OnBroken" target="This">
-          <sound file="Content/Items/Weapons/StunGrenade.ogg" range="2000" />
-          <Explosion range="200" force="0.5" smoke="false" flames="false" underwaterbubble="false" sparks="false" />
-        </StatusEffect>
-        <StatusEffect type="OnBroken" target="This">
-          <Explosion range="1000" force="0.0" camerashake="0" smoke="false" flames="false" flash="false" sparks="false" underwaterbubble="false" structuredamage="-200" />
-        </StatusEffect>
-        <StatusEffect type="OnBroken" target="This" duration="3.0" soundselectionmode="All">
-          <sound file="Content/Items/Tools/Sprayer.ogg" range="1000" volume="0.5" />
-          <sound file="Content/Items/Tools/FlareLoop.ogg" range="1000" />
-          <ParticleEmitter particle="fixfoam" anglemax="360" velocitymin="4000" velocitymax="4000" particlespersecond="64" />
-          <ParticleEmitter particle="fixfoamgoosplash" anglemax="360" distancemax="10" particlespersecond="60" />
-          <ParticleEmitter particle="fixfoamgoosplash" anglemax="360" distancemax="10" scalemultiplier="2.0,2.0" particlespersecond="20" />
-        </StatusEffect>
-        <StatusEffect type="OnUse" targettype="This" Condition="0" setvalue="true" comparison="OR">
-          <Conditional HasTag="detonator" targetcontainer="true" />
-          <Conditional HasTag="railgunammo" targetcontainer="true" />
-          <Conditional HasTag="depthchargeammo" targetcontainer="true" />
-        </StatusEffect>
-        <StatusEffect type="OnSecondaryUse" target="This" disabledeltatime="true" checkconditionalalways="true">
-          <Conditional IsOn="false" />
-          <Use />
-        </StatusEffect>
-      </Throwable>
-      <LightComponent LightColor="0.0,0.0,0.0,0.0" range="1" IsOn="false" castshadows="false">
-        <StatusEffect type="OnUse" targettype="This" IsOn="true" comparison="AND">
-          <Conditional HasTag="neq detonator" targetcontainer="true" />
-          <Conditional HasTag="neq railgunammo" targetcontainer="true" />
-          <Conditional HasTag="neq depthchargeammo" targetcontainer="true" />
-          <Conditional IsOn="eq False" targetitemcomponent="LightComponent" />
-          <!-- No lever cause it has no lever on the sprite-->
-          <ParticleEmitter particle="grenadepin" emitinterval="2.1" particleamount="1" particlespersecond="50" anglemin="70" anglemax="100" velocitymin="100" velocitymax="200" copyentityangle="true" scalemin="0.5" scalemax="0.5" />
-          <Sound file="Content/Items/Weapons/pinpull.ogg" type="OnUse" range="720" />
-        </StatusEffect>
-        <!-- shorter fuze time -->
-        <StatusEffect type="OnActive" targettype="This" Condition="-0.5" disabledeltatime="true" stackable="true">
-          <ParticleEmitter particle="flamethrowersmoke" particlespersecond="25" anglemin="0" anglemax="0" velocitymin="75" velocitymax="125" copyentityangle="true" scalemin="0.1" scalemax="0.15" colormultiplier="255,255,255,150" />
-        </StatusEffect>
-      </LightComponent>
-      <!-- also why no quality for fixfoams? -->
-      <Quality>
-        <QualityStat stattype="ExplosionRadius" value="0.2" />
-      </Quality>
-    </Item>
+  <Item name="" identifier="fixfoamgrenade" category="Equipment" maxstacksize="32" maxstacksizecharacterinventory="8" cargocontaineridentifier="explosivecrate" allowasextracargo="true" tags="smallitem,weapon,explosive,demolitionsexpert" Scale="0.5" impactsoundtag="impact_metal_light">
+    <PreferredContainer primary="engcab" secondary="locker"/>
+    <Price baseprice="95" sold="false">
+      <Price storeidentifier="merchantoutpost" multiplier="1.1" />
+      <Price storeidentifier="merchantcity" multiplier="1.3" />
+      <Price storeidentifier="merchantresearch" multiplier="1.2" />
+      <Price storeidentifier="merchantmilitary" />
+      <Price storeidentifier="merchantmine" multiplier="0.9" />
+    </Price>
+    <Deconstruct time="10">
+      <Item identifier="steel" />
+      <Item identifier="sodium" mincondition="1.0" />
+    </Deconstruct>
+    <Fabricate suitablefabricators="fabricator" requiredtime="20" requiresrecipe="true">
+      <RequiredSkill identifier="mechanical" level="35" />
+      <RequiredItem identifier="steel" />
+      <RequiredItem identifier="sodium" />
+      <RequiredItem identifier="phosphorus" />
+    </Fabricate>
+    <InventoryIcon texture="Content/Items/JobGear/TalentGear.png" sourcerect="64,114,66,62" origin="0.5,0.5" />
+    <Sprite texture="Content/Items/JobGear/TalentGear.png" sourcerect="130,0,29,62" depth="0.55" origin="0.5,0.5" />
+    <Body width="30" height="62" density="30" />
+    <ItemComponent characterusable="false">
+      <!-- statuseffect that explodes the grenade when used by something else than a character (e.g. a detonator) -->
+      <StatusEffect type="OnUse" target="This" Condition="-100.0" disabledeltatime="true" />
+      <StatusEffect type="OnBroken" target="This">
+        <sound file="Content/Items/Weapons/StunGrenade.ogg" range="2000"/>
+        <Explosion range="200" force="0.5" smoke="false" flames="false" underwaterbubble="false" sparks="false" />
+      </StatusEffect>
+      <StatusEffect type="OnBroken" target="This" delay="0.5">
+        <Explosion range="1000" force="0.0" camerashake="0" smoke="false" flames="false" flash="false" sparks="false" underwaterbubble="false" structuredamage="-200" />
+      </StatusEffect>
+      <StatusEffect type="OnBroken" target="This" duration="3.0" soundselectionmode="All">
+        <sound file="Content/Items/Tools/Sprayer.ogg" range="1000" volume="0.5" />
+        <sound file="Content/Items/Tools/FlareLoop.ogg" range="1000" />
+        <ParticleEmitter particle="fixfoam" anglemax="360" velocitymin="4000" velocitymax="4000" particlespersecond="64" />
+        <ParticleEmitter particle="fixfoamgoosplash" anglemax="360" distancemax="10" particlespersecond="60" />
+        <ParticleEmitter particle="fixfoamgoosplash" anglemax="360" distancemax="10" scalemultiplier="2.0,2.0" particlespersecond="20" />
+      </StatusEffect>
+    </ItemComponent>
+    <Throwable slots="Any,RightHand,LeftHand" holdpos="0,0" handle1="0,0" throwforce="3.5" msg="ItemMsgPickUpSelect">
+      <StatusEffect type="OnSecondaryUse" target="This" Condition="-100.0" delay="0.5" disabledeltatime="true" checkconditionalalways="true" />
+    </Throwable>
+  </Item>
   <Item name="" identifier="heavywrench" variantof="wrench" addedrepairspeedmultiplier="0.4">
     <Preferredcontainer secondary="respawncontainer" amount="1"  spawnprobability="0" notcampaign="true"/>
     <PreferredContainer primary="engcab"  spawnprobability="0"/>
-    <PreferredContainer secondary="wreckstoragecab,abandonedstoragecab"  spawnprobability="0" />
-    <PreferredContainer primary="wreckengcab,abandonedengcab,outpostengcab,beaconengcab"  spawnprobability="0"/>
+    <PreferredContainer secondary="wreckstoragecab,abandonedstoragecab,piratestoragecab"  spawnprobability="0" />
+    <PreferredContainer primary="wreckengcab,abandonedengcab,pirateengcab,outpostengcab,beaconengcab"  spawnprobability="0"/>
     <PreferredContainer secondary="outpostcrewcabinet" spawnprobability="0"/>
     <PreferredContainer secondary="outposttrashcan" spawnprobability="0" />
     <Price baseprice="190" sold="false" />
@@ -383,7 +360,7 @@
   </Item>
   <Item name="" identifier="makeshiftarmor" category="Equipment" tags="smallitem,clothing" scale="0.5" cargocontaineridentifier="metalcrate" description="" impactsoundtag="impact_metal_heavy">
     <PreferredContainer primary="secarmcab" amount="0" notcampaign="true"/>
-    <PreferredContainer secondary="wreckarmcab,abandonedarmcab,outpostarmcab" amount="1" spawnprobability="0.01" />
+    <PreferredContainer secondary="wreckarmcab,abandonedarmcab,piratearmcab,outpostarmcab" amount="1" spawnprobability="0.01" />
     <Price baseprice="140" sold="false">
       <Price storeidentifier="merchantoutpost" multiplier="1.3" />
       <Price storeidentifier="merchantcity" multiplier="1.2" />
@@ -429,7 +406,7 @@
   </Item>
   <Item name="" identifier="ironhelmet" category="Equipment" tags="smallitem" cargocontaineridentifier="metalcrate" description="" impactsoundtag="impact_metal_heavy" scale="0.325">
     <PreferredContainer primary="secarmcab" amount="0" notcampaign="true"/>
-    <PreferredContainer secondary="wreckarmcab,abandonedarmcab,outpostarmcab" amount="1" spawnprobability="0.01" />
+    <PreferredContainer secondary="wreckarmcab,abandonedarmcab,piratearmcab,outpostarmcab" amount="1" spawnprobability="0.01" />
     <PreferredContainer secondary="armcab"/>
     <Price baseprice="50" sold="false">
       <Price storeidentifier="merchantoutpost" multiplier="1.3" />
@@ -496,16 +473,18 @@
       <sprite name="Exosuit Left Shoe" texture="Content/Items/Jobgear/Mechanic/Exosuit.png" limb="LeftFoot" sound="footstep_armor_heavy" hidelimb="true" inherittexturescale="true" hideotherwearables="true" inheritorigin="false" origin="0.2,0.5" inheritsourcerect="false" sourcerect="371,211,133,37" />
       <sprite name="Exosuit Right Shoe" texture="Content/Items/Jobgear/Mechanic/Exosuit.png" limb="RightFoot" sound="footstep_armor_heavy" hidelimb="true" inherittexturescale="true" hideotherwearables="true" inheritorigin="false" origin="0.2,0.5" inheritsourcerect="false" sourcerect="371,211,133,37" />
       <StatusEffect type="OnWearing" target="Character" OxygenAvailable="-100.0" UseHullOxygen="false" />
-      <StatusEffect type="OnWearing" target="Character" LowPassMultiplier="0.2" HideFace="true" ObstructVision="true" PressureProtection="10000.0" SpeedMultiplier="0.4" PropulsionSpeedMultiplier="0.25" setvalue="true" disabledeltatime="true">
+      <StatusEffect type="OnWearing" target="Character" LowPassMultiplier="0.2" HideFace="true" ObstructVision="true" PressureProtection="7000.0"  PropulsionSpeedMultiplier="0.5" setvalue="true" disabledeltatime="true">
         <Sound file="Content/Items/Diving/DivingSuitLoop1.ogg" range="250" loop="true"/>
         <Sound file="Content/Items/Diving/DivingSuitLoop2.ogg" range="250" loop="true"/>
+        <TriggerAnimation Type="Walk" FileName="HumanWalkExosuit"/>
+        <TriggerAnimation Type="Run" FileName="HumanRunExosuit"/>
       </StatusEffect>
       <!-- no HMG stun -->
       <StatusEffect type="OnWearing" target="Character" interval="0.9" disabledeltatime="true">
         <Affliction identifier="recoilstabilized" amount="1" />
       </StatusEffect>
       <!-- slow movement -->
-      <StatusEffect type="OnWearing" target="This,Character" SpeedMultiplier="0.4" setvalue="true" disabledeltatime="true">
+      <StatusEffect type="OnWearing" target="This,Character" setvalue="true" disabledeltatime="true">
         <Conditional Voltage="gt 0.5" />
       </StatusEffect>      
       <StatusEffect type="OnWearing" target="Contained,Character" Condition="-0.1" interval="1" disabledeltatime="true" targetslot="1" comparison="Or">
@@ -516,34 +495,18 @@
       <StatusEffect type="OnWearing" target="This,Character" SpeedMultiplier="-10.0" setvalue="true" disabledeltatime="true">
         <Conditional Voltage="lte 0.5" />
       </StatusEffect>
-      <StatusEffect type="OnWearing" target="Contained,Character" Oxygen="-10.0" Condition="-0.5" interval="1" disabledeltatime="true" targetslot="0">
-        <Conditional IsDead="false" />
-        <RequiredItem items="weldingfueltank" targetslot="0" type="Contained" />
-      </StatusEffect>
-      <StatusEffect type="OnWearing" target="Contained,Character" targetlimbs="Torso" Oxygen="-10.0" Condition="-0.5" interval="1" disabledeltatime="true" targetslot="0">
-        <Conditional IsDead="false" />
-        <RequiredItem items="incendiumfueltank" targetslot="0" type="Contained" />
-        <Affliction identifier="burn" amount="0.05" />
-      </StatusEffect>
-      <StatusEffect type="OnWearing" target="Contained,Character" OxygenAvailable="1000.0" Condition="-0.3" targetslot="0">
-        <Conditional IsDead="false" />
-        <RequiredItem items="oxygensource" targetslot="0" type="Contained" />
-      </StatusEffect>
-      <damagemodifier armorsector="0.0,360.0" afflictionidentifiers="blunttrauma,gunshotwound,bitewounds,lacerations,bleeding" damagemultiplier="0.3" damagesound="LimbArmor" deflectprojectiles="true" />
+      <damagemodifier armorsector="0.0,360.0" afflictionidentifiers="blunttrauma,gunshotwound,lacerations,explosiondamage" damagemultiplier="0.2" damagesound="LimbArmor" deflectprojectiles="true" />
+      <damagemodifier armorsector="0.0,360.0" afflictionidentifiers="bitewounds, bleeding" damagemultiplier="0.25" probabilitymultiplier="0.5" damagesound="LimbArmor" deflectprojectiles="true" />
+      <damagemodifier armorsector="0.0,360.0" afflictiontypes="stun" damagemultiplier="0.5" probabilitymultiplier="0.25" damagesound="LimbArmor" deflectprojectiles="true" />
       <damagemodifier armorsector="0.0,360.0" afflictiontypes="burn" damagemultiplier="0.5" damagesound="" deflectprojectiles="true" />
       <damagemodifier armorsector="0.0,360.0" afflictionidentifiers="radiationsickness" damagemultiplier="0.75" damagesound="LimbArmor"/>
-      <damagemodifier armorsector="0.0,360.0" afflictionidentifiers="huskinfection" probabilitymultiplier="0.5" damagesound="LimbArmor"/>
+      <damagemodifier armorsector="0.0,360.0" afflictionidentifiers="huskinfection" probabilitymultiplier="0.1" damagesound="LimbArmor"/>
       <sound file="Content/Items/Weapons/WEAPONS_chargeUp.ogg" type="OnWearing" range="500.0" volumeproperty="Speed" volume="0.2" loop="true" frequencymultiplier="0.5" />
       <StatValue stattype="FlowResistance" value="0.9" />
     </Wearable>
     <ItemContainer capacity="0" hideitems="true" containedstateindicatorstyle="tank" containedstateindicatorslot="0">
       <SlotIcon slotindex="0" texture="Content/UI/StatusMonitorUI.png" sourcerect="64,448,64,64" origin="0.5,0.5" />
       <SlotIcon slotindex="1" texture="Content/UI/StatusMonitorUI.png" sourcerect="192,448,64,64" origin="0.5,0.5" />
-      <StatusEffect type="OnWearing" target="Contained" targetslot="0">
-        <RequiredItem items="oxygensource" type="Contained" targetslot="0" />
-        <Conditional condition="lt 5.0" />
-        <Sound file="Content/Items/WarningBeepSlow.ogg" range="500" loop="true"/>
-      </StatusEffect>
       <StatusEffect type="OnWearing" target="Contained" targetslot="0" playsoundonrequireditemfailure="true">
         <RequiredItem items="oxygensource" type="Contained" targetslot="0" matchonempty="true" />
         <Conditional condition="lte 0.0" />
@@ -551,6 +514,50 @@
       </StatusEffect>
       <SubContainer capacity="1" maxstacksize="1">
         <Containable items="oxygensource,weldingtoolfuel" />
+        <Containable items="oxygensource">
+          <StatusEffect type="OnWearing" target="Character" OxygenAvailable="1000.0" />
+          <StatusEffect type="OnWearing" target="Contained" Condition="-0.2" comparison="And">
+            <Conditional TargetContainer="true" TargetGrandparent="true" IsDead="false" />
+            <Conditional TargetContainer="true" TargetGrandparent="true" DecreasedOxygenConsumption="lt 99" />
+            <Conditional TargetContainer="true" TargetGrandparent="true" NeedsAir="true" />
+          </StatusEffect>
+          <StatusEffect type="OnWearing" target="Contained">
+            <Conditional condition="lt 5.0" />
+            <Sound file="Content/Items/WarningBeepSlow.ogg" range="250" loop="true"/>
+          </StatusEffect>
+        </Containable>
+        <Containable items="oxygenitetank">
+          <StatusEffect type="OnWearing" target="Character" SpeedMultiplier="1.2" setvalue="true" targetslot="0" comparison="And">
+            <Conditional IsDead="false" />
+            <Conditional DecreasedOxygenConsumption="lt 99" />
+            <Conditional NeedsAir="true" />
+          </StatusEffect>
+        </Containable>
+        <Containable items="weldingfueltank">
+          <StatusEffect type="OnWearing" target="Contained" Condition="-0.5" comparison="And">
+            <Conditional TargetContainer="true" TargetGrandparent="true" IsDead="false" />
+            <Conditional TargetContainer="true" TargetGrandparent="true" DecreasedOxygenConsumption="lt 99" />
+            <Conditional TargetContainer="true" TargetGrandparent="true" NeedsAir="true" />
+          </StatusEffect>
+          <StatusEffect type="OnWearing" target="Character" OxygenAvailable="-100.0" Oxygen="-5.0" comparison="And">
+            <Conditional IsDead="false" />
+            <Conditional DecreasedOxygenConsumption="lt 99" />
+            <Conditional NeedsAir="true" />
+          </StatusEffect>
+        </Containable>
+        <Containable items="incendiumfueltank">
+          <StatusEffect type="OnWearing" target="Contained" Condition="-0.5" comparison="And">
+            <Conditional TargetContainer="true" TargetGrandparent="true" IsDead="false" />
+            <Conditional TargetContainer="true" TargetGrandparent="true" DecreasedOxygenConsumption="lt 99" />
+            <Conditional TargetContainer="true" TargetGrandparent="true" NeedsAir="true" />
+          </StatusEffect>
+          <StatusEffect type="OnWearing" target="Character" OxygenAvailable="-100.0" comparison="And" targetlimb="Torso">
+            <Affliction identifier="burn" amount="20.0"  />
+            <Conditional IsDead="false" />
+            <Conditional DecreasedOxygenConsumption="lt 99" />
+            <Conditional NeedsAir="true" />
+          </StatusEffect>
+        </Containable> 
       </SubContainer>
       <SubContainer capacity="1" maxstacksize="1">
         <Containable items="reactorfuel">
@@ -591,11 +598,11 @@
       <RequiredItem identifier="lead" amount="2"/>
       <RequiredItem identifier="titaniumaluminiumalloy" amount="3" />
     </Fabricate>
-    <Sprite texture="Content/Items/JobGear/TalentGear.png" sourcerect="354,371,158,47" depth="0.55" origin="0.5,0.5" />
-    <Body width="158" height="47" density="25" />
-    <Holdable slots="RightHand+LeftHand" controlpose="true" holdpos="60,-15" aimpos="70,4" handle1="-50,-10" handle2="10,-3" holdangle="-25" />
+    <Sprite texture="Content/Items/JobGear/TalentGear.png" sourcerect="354,371,158,55" depth="0.55" origin="0.5,0.45" />
+    <Body width="158" height="40" density="25" />
+    <Holdable slots="RightHand+LeftHand" controlpose="true" holdpos="60,-15" aimpos="55,4" handle1="-26,-20" handle2="10,-3" holdangle="-25" />
     <Wearable slots="Bag" msg="ItemMsgEquipSelect" canbeselected="false" canbepicked="true" pickkey="Select">
-      <sprite name="Scrap Cannon Worn" texture="Content/Items/JobGear/TalentGear.png" canbehiddenbyotherwearables="false" rotation="90" inheritlimbdepth="false" depth="0.6" sourcerect="354,371,158,47" limb="Torso" scale="0.5" origin="0.5,1.0" />
+      <sprite name="Scrap Cannon Worn" texture="Content/Items/JobGear/TalentGear.png" canbehiddenbyotherwearables="false" rotation="90" inheritlimbdepth="false" depth="0.6" sourcerect="354,371,158,55" limb="Torso" scale="0.5" origin="0.5,1.0" />
     </Wearable>
     <RangedWeapon reload="3.0" barrelpos="67,5" spread="0" unskilledspread="4" combatPriority="80" drawhudwhenequipped="true" crosshairscale="0.2">
       <Crosshair texture="Content/Items/Weapons/Crosshairs.png" sourcerect="0,256,256,256" />
@@ -606,7 +613,7 @@
       <Sound file="Content/Items/Jobgear/Mechanic/WEAPON_scrapCannonShot1.ogg" range="3000" type="OnUse" selectionmode="Random" volume="2"/>
       <Sound file="Content/Items/Jobgear/Mechanic/WEAPON_scrapCannonShot2.ogg" range="3000" type="OnUse" volume="2" />
       <Sound file="Content/Items/Jobgear/Mechanic/WEAPON_scrapCannonShot3.ogg" range="3000" type="OnUse" volume="2" />
-      <StatusEffect type="OnUse">
+      <StatusEffect type="OnUse" target="This">
         <Explosion range="250.0" force="3" shockwave="false" smoke="true" flash="true" sparks="false" flames="false" underwaterbubble="false" camerashake="6.0" />
       </StatusEffect>
       <StatusEffect type="OnUse" target="Contained" Condition="-12.5" targetslot="1" disabledeltatime="true" />
