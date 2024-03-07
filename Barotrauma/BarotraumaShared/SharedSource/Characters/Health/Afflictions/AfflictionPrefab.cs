@@ -436,7 +436,10 @@ namespace Barotrauma
                             break;
                         case "statvalue":
                             var newStatValue = new AppliedStatValue(subElement);
-                            afflictionStatValues.Add(newStatValue.StatType, newStatValue);
+                            if (newStatValue.StatType == StatTypes.None || !afflictionStatValues.TryAdd(newStatValue.StatType, newStatValue))
+                            {
+                                DebugConsole.ThrowError($"Invalid stat value in the affliction \"{parentDebugName}\".", contentPackage: element.ContentPackage);                                
+                            }
                             break;
                         case "abilityflag":
                             AbilityFlags flagType = subElement.GetAttributeEnum("flagtype", AbilityFlags.None);
