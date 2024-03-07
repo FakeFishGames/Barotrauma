@@ -269,49 +269,72 @@
       </StatusEffect>
     </MeleeWeapon>
   </Item>
-  <Item name="" identifier="fixfoamgrenade" category="Equipment" maxstacksize="32" maxstacksizecharacterinventory="8" cargocontaineridentifier="explosivecrate" allowasextracargo="true" tags="smallitem,weapon,explosive,demolitionsexpert" Scale="0.5" impactsoundtag="impact_metal_light">
-    <PreferredContainer primary="engcab" secondary="locker"/>
-    <Price baseprice="95" sold="false">
-      <Price storeidentifier="merchantoutpost" multiplier="1.1" />
-      <Price storeidentifier="merchantcity" multiplier="1.3" />
-      <Price storeidentifier="merchantresearch" multiplier="1.2" />
-      <Price storeidentifier="merchantmilitary" />
-      <Price storeidentifier="merchantmine" multiplier="0.9" />
-    </Price>
-    <Deconstruct time="10">
-      <Item identifier="steel" />
-      <Item identifier="sodium" mincondition="1.0" />
-    </Deconstruct>
-    <Fabricate suitablefabricators="fabricator" requiredtime="20" requiresrecipe="true">
-      <RequiredSkill identifier="mechanical" level="35" />
-      <RequiredItem identifier="steel" />
-      <RequiredItem identifier="sodium" />
-      <RequiredItem identifier="phosphorus" />
-    </Fabricate>
-    <InventoryIcon texture="Content/Items/JobGear/TalentGear.png" sourcerect="64,114,66,62" origin="0.5,0.5" />
-    <Sprite texture="Content/Items/JobGear/TalentGear.png" sourcerect="130,0,29,62" depth="0.55" origin="0.5,0.5" />
-    <Body width="30" height="62" density="30" />
-    <ItemComponent characterusable="false">
-      <!-- statuseffect that explodes the grenade when used by something else than a character (e.g. a detonator) -->
-      <StatusEffect type="OnUse" target="This" Condition="-100.0" disabledeltatime="true" />
+  <Item name="" identifier="fixfoamgrenade" category="Equipment" maxstacksize="32" maxstacksizecharacterinventory="8" cargocontaineridentifier="explosivecrate" allowasextracargo="true" tags="smallitem,weapon,explosive,demolitionsexpert,throwableexplosive" Scale="0.5" impactsoundtag="impact_metal_light">
+  	<PreferredContainer primary="engcab" secondary="locker"/>
+  	<Price baseprice="95" sold="false">
+      <Price storeidentifier="merchantoutpost" multiplier="1.1"/>
+      <Price storeidentifier="merchantcity" multiplier="1.3"/>
+      <Price storeidentifier="merchantresearch" multiplier="1.2"/>
+      <Price storeidentifier="merchantmilitary"/>
+      <Price storeidentifier="merchantmine" multiplier="0.9"/>
+  	</Price>
+  	<Deconstruct time="10">
+      <Item identifier="steel"/>
+      <Item identifier="sodium" mincondition="1.0"/>
+  	</Deconstruct>
+  	<Fabricate suitablefabricators="fabricator" requiredtime="20" requiresrecipe="true">
+      <RequiredSkill identifier="mechanical" level="35"/>
+      <RequiredItem identifier="steel"/>
+      <RequiredItem identifier="sodium"/>
+      <RequiredItem identifier="phosphorus"/>
+  	</Fabricate>
+  	<InventoryIcon texture="Content/Items/JobGear/TalentGear.png" sourcerect="64,114,66,62" origin="0.5,0.5"/>
+  	<Sprite texture="Content/Items/JobGear/TalentGear.png" sourcerect="130,0,29,62" depth="0.55" origin="0.5,0.5"/>
+  	<Body width="30" height="62" density="30"/>
+  	<Throwable characterusable="false" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10" msg="ItemMsgPickUpSelect">
       <StatusEffect type="OnBroken" target="This">
         <sound file="Content/Items/Weapons/StunGrenade.ogg" range="2000"/>
-        <Explosion range="200" force="0.5" smoke="false" flames="false" underwaterbubble="false" sparks="false" />
+    	<Explosion range="200" force="0.5" smoke="false" flames="false" underwaterbubble="false" sparks="false"/>
       </StatusEffect>
-      <StatusEffect type="OnBroken" target="This" delay="0.5">
-        <Explosion range="1000" force="0.0" camerashake="0" smoke="false" flames="false" flash="false" sparks="false" underwaterbubble="false" structuredamage="-200" />
+      <StatusEffect type="OnBroken" target="This">
+    	<Explosion range="1000" force="0.0" camerashake="0" smoke="false" flames="false" flash="false" sparks="false" underwaterbubble="false" structuredamage="-200"/>
       </StatusEffect>
       <StatusEffect type="OnBroken" target="This" duration="3.0" soundselectionmode="All">
-        <sound file="Content/Items/Tools/Sprayer.ogg" range="1000" volume="0.5" />
-        <sound file="Content/Items/Tools/FlareLoop.ogg" range="1000" />
-        <ParticleEmitter particle="fixfoam" anglemax="360" velocitymin="4000" velocitymax="4000" particlespersecond="64" />
-        <ParticleEmitter particle="fixfoamgoosplash" anglemax="360" distancemax="10" particlespersecond="60" />
-        <ParticleEmitter particle="fixfoamgoosplash" anglemax="360" distancemax="10" scalemultiplier="2.0,2.0" particlespersecond="20" />
+    	<sound file="Content/Items/Tools/Sprayer.ogg" range="1000" volume="0.5"/>
+    	<sound file="Content/Items/Tools/FlareLoop.ogg" range="1000"/>
+    	<ParticleEmitter particle="fixfoam" anglemax="360" velocitymin="4000" velocitymax="4000" particlespersecond="64"/>
+    	<ParticleEmitter particle="fixfoamgoosplash" anglemax="360" distancemax="10" particlespersecond="60"/>
+    	<ParticleEmitter particle="fixfoamgoosplash" anglemax="360" distancemax="10" scalemultiplier="2.0,2.0" particlespersecond="20"/>
       </StatusEffect>
-    </ItemComponent>
-    <Throwable slots="Any,RightHand,LeftHand" holdpos="0,0" handle1="0,0" throwforce="3.5" msg="ItemMsgPickUpSelect">
-      <StatusEffect type="OnSecondaryUse" target="This" Condition="-100.0" delay="0.5" disabledeltatime="true" checkconditionalalways="true" />
-    </Throwable>
+      <StatusEffect type="OnUse" targettype="This" Condition="0" setvalue="true" comparison="OR">
+    	<Conditional HasTag="detonator" targetcontainer="true"/>
+    	<Conditional HasTag="railgunammo" targetcontainer="true"/>
+    	<Conditional HasTag="depthchargeammo" targetcontainer="true"/>
+      </StatusEffect>
+      <StatusEffect type="OnSecondaryUse" target="This" disabledeltatime="true" checkconditionalalways="true">
+    	<Conditional IsOn="false"/>
+    	<Use/>
+      </StatusEffect>
+  	</Throwable>
+  	<LightComponent LightColor="0.0,0.0,0.0,0.0" range="1" IsOn="false" castshadows="false">
+      <StatusEffect type="OnUse" targettype="This" IsOn="true" comparison="AND">
+        <Conditional HasTag="neq detonator" targetcontainer="true"/>
+    	<Conditional HasTag="neq railgunammo" targetcontainer="true"/>
+    	<Conditional HasTag="neq depthchargeammo" targetcontainer="true"/>
+    	<Conditional IsOn="eq False" targetitemcomponent="LightComponent"/>
+    	<!-- No lever cause it has no lever on the sprite-->
+    	<ParticleEmitter particle="grenadepin" emitinterval="2.1" particleamount="1" particlespersecond="50" anglemin="70" anglemax="100" velocitymin="100" velocitymax="200" copyentityangle="true" scalemin="0.5" scalemax="0.5"/>
+    	<Sound file="Content/Items/Weapons/pinpull.ogg" type="OnUse" range="720"/>
+      </StatusEffect>
+      <!-- shorter fuze time -->
+      <StatusEffect type="OnActive" targettype="This" Condition="-0.5" disabledeltatime="true" stackable="true">
+    	<ParticleEmitter particle="flamethrowersmoke" particlespersecond="25" anglemin="0" anglemax="0" velocitymin="75" velocitymax="125" copyentityangle="true" scalemin="0.1" scalemax="0.15" colormultiplier="255,255,255,150"/>
+      </StatusEffect>
+  	</LightComponent>
+  	<!-- also why no quality for fixfoams? -->
+  	<Quality>
+      <QualityStat stattype="ExplosionRadius" value="0.2"/>
+  	</Quality>
   </Item>
   <Item name="" identifier="heavywrench" variantof="wrench" addedrepairspeedmultiplier="0.4">
     <Preferredcontainer secondary="respawncontainer" amount="1"  spawnprobability="0" notcampaign="true"/>

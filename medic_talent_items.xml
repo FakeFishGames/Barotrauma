@@ -365,90 +365,99 @@
     <Projectile characterusable="false" launchimpulse="18.0" sticktocharacters="true" launchrotation="-90" inheritstatuseffectsfrom="MeleeWeapon"/>
   </Item>
 
-  <Item name="" identifier="chemgrenade" category="Weapon" maxstacksize="32" maxstacksizecharacterinventory="8" cargocontaineridentifier="explosivecrate" tags="smallitem,weapon,explosive,demolitionsexpert" Scale="0.5" impactsoundtag="impact_metal_heavy">
-    <PreferredContainer primary="secarmcab" minamount="1" maxamount="3" spawnprobability="0.75" notcampaign="true"/>
-    <PreferredContainer primary="wreckarmcab,abandonedarmcab,piratearmcab" minamount="1" maxamount="2" spawnprobability="0.05"/>
-    <PreferredContainer secondary="armcab"/>
-    <Price baseprice="80" sold="false">
-      <Price storeidentifier="merchantoutpost" multiplier="1.5" />
-      <Price storeidentifier="merchantcity" multiplier="1.25" />
-      <Price storeidentifier="merchantresearch" multiplier="1.25" mindifficulty="60" sold="true" />
-      <Price storeidentifier="merchantmilitary" multiplier="0.9" mindifficulty="60" sold="true" />
-      <Price storeidentifier="merchantmine" multiplier="1.25" />
-      <Price storeidentifier="merchantarmory" multiplier="0.9" />
-    </Price>
-    <Deconstruct time="5"/>
-    <Fabricate suitablefabricators="fabricator" requiredtime="20" amount="2" requiresrecipe="true">
-      <RequiredSkill identifier="weapons" level="40" />
-      <RequiredItem identifier="iron" amount="2" />
-      <RequiredItem identifier="sulphuricacid" />
-    </Fabricate>
-    <Sprite texture="Content/Items/Weapons/weapons_new.png" sourcerect="79,414,26,54" depth="0.55" origin="0.5,0.5" />
-    <Body width="26" height="54" density="30" />
-    <ItemComponent characterusable="false">
-      <!-- statuseffect that explodes the grenade when used by something else than a character (e.g. a detonator) -->
-      <StatusEffect type="OnUse" target="This" Condition="-100.0" setvalue="true">
+  <Item name="" identifier="chemgrenade" category="Weapon" maxstacksize="32" maxstacksizecharacterinventory="8" cargocontaineridentifier="explosivecrate" tags="smallitem,weapon,explosive,demolitionsexpert,throwableexplosive" Scale="0.5" impactsoundtag="impact_metal_heavy">
+  	<PreferredContainer primary="secarmcab" minamount="1" maxamount="3" spawnprobability="0.75" notcampaign="true"/>
+  	<PreferredContainer primary="wreckarmcab,abandonedarmcab" minamount="1" maxamount="2" spawnprobability="0.05"/>
+  	<PreferredContainer secondary="armcab"/>
+  	<Price baseprice="80" sold="false">
+      <Price storeidentifier="merchantoutpost" multiplier="1.5"/>
+      <Price storeidentifier="merchantcity" multiplier="1.25"/>
+      <Price storeidentifier="merchantresearch" multiplier="1.25" mindifficulty="60" sold="true"/>
+      <Price storeidentifier="merchantmilitary" multiplier="0.9" mindifficulty="60" sold="true"/>
+      <Price storeidentifier="merchantmine" multiplier="1.25"/>
+      <Price storeidentifier="merchantarmory" multiplier="0.9"/>
+  	</Price>
+  	<Deconstruct time="5"/>
+  	<Fabricate suitablefabricators="fabricator" requiredtime="20" amount="2" requiresrecipe="true">
+      <RequiredSkill identifier="weapons" level="40"/>
+      <RequiredItem identifier="iron" amount="2"/>
+      <RequiredItem identifier="sulphuricacid"/>
+  	</Fabricate>
+  	<Sprite texture="Content/Items/Weapons/weapons_new.png" sourcerect="79,414,26,54" depth="0.55" origin="0.5,0.5"/>
+  	<BrokenSprite texture="Content/Items/Weapons/weapons_new.png" name="chemgrenade" sourcerect="487,186,24,54" depth="0.55" origin="0.5,0.5185185" maxcondition="99.9"/>
+  	<Body width="26" height="54" density="30"/>
+  	<Throwable characterusable="false" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10" msg="ItemMsgPickUpSelect">
+      <StatusEffect type="OnBroken" target="This">
+        <sound file="Content/Items/Weapons/StunGrenade.ogg"/>
+        <Explosion range="500" ballastfloradamage="0" itemdamage="0" force="0.5" sparks="true" shockwave="false" flames="false" smoke="false" flash="true">
+          <Affliction identifier="acidburn" strength="20"/>
+          <Affliction identifier="acidburn" strength="10" probability="0.2" dividebylimbcount="false"/>
+          <Affliction identifier="stun" strength="2"/>
+    	</Explosion>
+      </StatusEffect>
+      <StatusEffect type="OnBroken">
+        <SpawnItem identifiers="acidmistemitter" spawnposition="This"/>
+      </StatusEffect>
+      <StatusEffect type="OnBroken" delay="0.1">
+        <SpawnItem identifiers="acidmistemitter" spawnposition="This"/>
+      </StatusEffect>
+      <StatusEffect type="OnBroken" delay="0.2">
+        <SpawnItem identifiers="acidmistemitter" spawnposition="This"/>
+      </StatusEffect>
+      <StatusEffect type="OnBroken" delay="0.3">
+        <SpawnItem identifiers="acidmistemitter" spawnposition="This"/>
+      </StatusEffect>
+      <StatusEffect type="OnBroken" delay="0.4">
+        <SpawnItem identifiers="acidmistemitter" spawnposition="This"/>
+      </StatusEffect>
+      <StatusEffect type="OnBroken" delay="0.5">
+        <SpawnItem identifiers="acidmistemitter" spawnposition="This"/>
+      </StatusEffect>
+      <StatusEffect type="OnBroken" delay="0.6">
+        <SpawnItem identifiers="acidmistemitter" spawnposition="This"/>
+      </StatusEffect>
+      <StatusEffect type="OnBroken" delay="0.7">
+        <SpawnItem identifiers="acidmistemitter" spawnposition="This"/>
+      </StatusEffect>
+      <StatusEffect type="OnBroken" delay="0.8">
+        <SpawnItem identifiers="acidmistemitter" spawnposition="This"/>
+      </StatusEffect>
+      <StatusEffect type="OnBroken" delay="0.9">
+        <SpawnItem identifiers="acidmistemitter" spawnposition="This"/>
+      </StatusEffect>
+      <StatusEffect type="OnBroken" target="This" delay="1">
+        <SpawnItem identifiers="acidmistemitter" spawnposition="This"/>
+        <Remove/>
+      </StatusEffect>
+      <StatusEffect type="OnUse" targettype="This" setvalue="true" condition="0" comparison="OR">
+        <Conditional HasTag="detonator" targetcontainer="true"/>
+        <Conditional HasTag="railgunammo" targetcontainer="true"/>
+        <Conditional HasTag="depthchargeammo" targetcontainer="true"/>
         <SpawnItem identifiers="acidmistemitter" spawnposition="This" count="3" spread="25"/>
       </StatusEffect>
-      <StatusEffect type="OnBroken" target="This">
-        <sound file="Content/Items/Weapons/StunGrenade.ogg" range="2000"/>
-        <Explosion range="500" ballastfloradamage="0" itemdamage="0" force="0.5" sparks="true" shockwave="false" flames="false" smoke="false" flash="true">
-          <Affliction identifier="acidburn" strength="20" />
-          <Affliction identifier="acidburn" strength="10" probability="0.2" dividebylimbcount="false"/>
-          <Affliction identifier="stun" strength="0.5" />
-        </Explosion>
-        <Remove />
+      <StatusEffect type="OnSecondaryUse" target="This" disabledeltatime="true" checkconditionalalways="true">
+        <Conditional IsOn="false"/>
+        <Use/>
       </StatusEffect>
-    </ItemComponent>
-    <Throwable slots="Any,RightHand,LeftHand" holdpos="0,0" handle1="0,0" throwforce="3.5" msg="ItemMsgPickUpSelect">
-      <StatusEffect type="OnSecondaryUse" target="This" Condition="-100.0" delay="2.8" setvalue="true" />
-      <StatusEffect type="OnSecondaryUse" target="This" delay="0.5">
-        <SpawnItem identifiers="acidmistemitter" spawnposition="This" />
+  	</Throwable>
+  	<LightComponent LightColor="0.0,0.0,0.0,0.0" range="1" IsOn="false" castshadows="false">
+      <StatusEffect type="OnUse" targettype="This" IsOn="true" comparison="AND">
+        <Conditional HasTag="neq detonator" targetcontainer="true"/>
+        <Conditional HasTag="neq railgunammo" targetcontainer="true"/>
+        <Conditional HasTag="neq depthchargeammo" targetcontainer="true"/>
+        <Conditional IsOn="eq False" targetitemcomponent="LightComponent"/>
+        <ParticleEmitter particle="grenadepin" emitinterval="2.1" particleamount="1" particlespersecond="50" anglemin="70" anglemax="100" velocitymin="100" velocitymax="200" copyentityangle="true" scalemin="0.5" scalemax="0.5"/>
+        <ParticleEmitter particle="grenadelever" emitinterval="2.1" particleamount="1" particlespersecond="50" anglemin="120" anglemax="210" velocitymin="100" velocitymax="200" copyentityangle="true" scalemin="0.5" scalemax="0.5"/>
+        <Sound file="Content/Items/Weapons/pinpull.ogg" type="OnUse" range="720"/>
       </StatusEffect>
-      <StatusEffect type="OnSecondaryUse" target="This" delay="0.6">
-        <SpawnItem identifiers="acidmistemitter" spawnposition="This" />
+      <StatusEffect type="OnActive" targettype="This" Condition="-0.5" disabledeltatime="true" stackable="true">
+        <ParticleEmitter particle="flamethrowersmoke" particlespersecond="25" anglemin="0" anglemax="0" velocitymin="75" velocitymax="125" copyentityangle="true" scalemin="0.1" scalemax="0.15" colormultiplier="255,255,255,150"/>
       </StatusEffect>
-      <StatusEffect type="OnSecondaryUse" target="This" delay="0.7">
-        <SpawnItem identifiers="acidmistemitter" spawnposition="This" />
-      </StatusEffect>
-      <StatusEffect type="OnSecondaryUse" target="This" delay="0.8">
-        <SpawnItem identifiers="acidmistemitter" spawnposition="This" />
-      </StatusEffect>
-      <StatusEffect type="OnSecondaryUse" target="This" delay="0.95">
-        <SpawnItem identifiers="acidmistemitter" spawnposition="This" />
-      </StatusEffect>
-      <StatusEffect type="OnSecondaryUse" target="This" delay="1.1">
-        <SpawnItem identifiers="acidmistemitter" spawnposition="This" />
-      </StatusEffect>
-      <StatusEffect type="OnSecondaryUse" target="This" delay="1.25">
-        <SpawnItem identifiers="acidmistemitter" spawnposition="This" />
-      </StatusEffect>
-      <StatusEffect type="OnSecondaryUse" target="This" delay="1.4">
-        <SpawnItem identifiers="acidmistemitter" spawnposition="This" />
-      </StatusEffect>
-      <StatusEffect type="OnSecondaryUse" target="This" delay="1.55">
-        <SpawnItem identifiers="acidmistemitter" spawnposition="This" />
-      </StatusEffect>
-      <StatusEffect type="OnSecondaryUse" target="This" delay="1.7">
-        <SpawnItem identifiers="acidmistemitter" spawnposition="This" />
-      </StatusEffect>
-      <StatusEffect type="OnSecondaryUse" target="This" delay="1.85">
-        <SpawnItem identifiers="acidmistemitter" spawnposition="This" />
-      </StatusEffect>
-      <StatusEffect type="OnSecondaryUse" target="This" delay="2">
-        <SpawnItem identifiers="acidmistemitter" spawnposition="This" />
-      </StatusEffect>
-      <StatusEffect type="OnSecondaryUse" target="This" delay="2.15">
-        <SpawnItem identifiers="acidmistemitter" spawnposition="This" />
-      </StatusEffect>
-      <StatusEffect type="OnSecondaryUse" target="This" delay="2.3">
-        <SpawnItem identifiers="acidmistemitter" spawnposition="This" />
-      </StatusEffect>
-    </Throwable>
-    <Quality>
+  	</LightComponent>
+  	<Quality>
       <QualityStat stattype="ExplosionRadius" value="0.1"/>
       <QualityStat stattype="ExplosionDamage" value="0.1"/>
-    </Quality>
+  	</Quality>
   </Item>
 
   <Item name="" identifier="40mmchemgrenade" category="Weapon" maxstacksize="32" maxstacksizecharacterinventory="8" interactthroughwalls="true" cargocontaineridentifier="metalcrate" tags="smallitem,grenade" Scale="0.5" impactsoundtag="impact_metal_light">

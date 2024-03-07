@@ -83,4 +83,6 @@
   <onitemmarkedfordeconstruction/>
   <ondeconstructorder/>
 
+  <!-- For grenade usage hint -->
+  <onobtaineditem.throwableexplosive/>
 </hintmanager>
