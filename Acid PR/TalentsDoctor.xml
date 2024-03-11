@@ -1,5 +1,4 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Override>
 <Talents>
   <Talent identifier="macrodosing">
     <Icon texture="Content/UI/TalentsIcons3.png" sheetindex="1,5" sheetelementsize="128,128"/>
@@ -520,4 +519,3 @@
   </Talent>
 
 </Talents>
-</Override>
