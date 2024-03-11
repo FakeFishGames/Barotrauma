@@ -1,4 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
+<Override>
 <Items>
   <Item name="" identifier="autoinjectorheadset" scale="0.5" category="Equipment,Medical" tags="smallitem,mobileradio" allowasextracargo="true" description="" cargocontaineridentifier="metalcrate" impactsoundtag="impact_metal_light">
     <PreferredContainer primary="medcab"/>
@@ -264,6 +265,12 @@
     <InventoryIcon />
     <Sprite texture="Content/Items/JobGear/TalentGear.png" sourcerect="354,429,145,78" depth="0.7" origin="0.5,0.5" />
     <Body width="90" height="74" density="25" />
+    <Holdable slots="RightHand+LeftHand,Any" controlpose="true" aimpos="30,-20" handle1="0,-7" handle2="55, 20" msg="ItemMsgPickUpSelect">
+      <LightComponent LightColor="120,255,120,120" Flicker="0.2" flickerspeed="0.5" pulsefrequency="0.2" pulseamount="0.2" range="150" IsOn="true" powerconsumption="10" castshadows="true">
+        <LightTexture texture="Content/Lights/lightcone.png" origin="0.0, 0.5" size="1.0,1.0" />
+      </LightComponent>
+      <StatusEffect type="OnSecondaryUse" target="This" voltage="1.0" setvalue="true" />
+    </Holdable>
     <RangedWeapon launchimpulse="10.0" barrelpos="71,30" spread="0" unskilledspread="10" drawhudwhenequipped="true" crosshairscale="0.2">
       <Crosshair texture="Content/Items/Weapons/Crosshairs.png" sourcerect="0,256,256,256" />
       <CrosshairPointer texture="Content/Items/Weapons/Crosshairs.png" sourcerect="256,256,256,256" />
@@ -272,17 +279,21 @@
       <RequiredItems items="syringe" type="Contained" msg="ItemMsgSyringeRequired" />
       <RequiredSkill identifier="weapons" level="30" />
       <RequiredSkill identifier="medical" level="50" />
+      <!-- activates the light when holding aim -->
     </RangedWeapon>
-    <ItemContainer capacity="2" maxstacksize="8" itempos="0,25" itemrotation="-90" hideitems="false" containedstateindicatorstyle="syringe" ShowTotalStackCapacityInContainedStateIndicator="true" containedstateindicatorslot="0">
+    <ItemContainer capacity="1" maxstacksize="1" itempos="0,25" itemrotation="-90" hideitems="false" containedstateindicatorstyle="syringe" containedstateindicatorslot="1" >
+      <Containable items="syringe" />
       <SlotIcon slotindex="0" texture="Content/UI/StatusMonitorUI.png" sourcerect="384,448,64,64" origin="0.5,0.5" />
       <SlotIcon slotindex="1" texture="Content/UI/StatusMonitorUI.png" sourcerect="384,448,64,64" origin="0.5,0.5" />
-      <Containable items="syringe" />
+      <SubContainer capacity="1" maxstacksize="8">
+        <Containable items="syringe" hide="true" />
+      </SubContainer>
     </ItemContainer>
     <StatusHUD drawhudwhenequipped="true" />
     <SkillRequirementHint identifier="weapons" level="30" />
     <SkillRequirementHint identifier="medical" level="50" />
   </Item>
-
+    
   <Item name="" identifier="europabrew" category="Medical" maxstacksize="32" maxstacksizecharacterinventory="8" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical,syringe" description="" useinhealthinterface="true" scale="0.5" impactsoundtag="impact_metal_light" RequireAimToUse="True">
     <PreferredContainer primary="toxcab" secondary="toxcontainer"/>
     <PreferredContainer primary="wrecktoxcab,abandonedtoxcab,piratetoxcab" spawnprobability="0.05" />
@@ -310,7 +321,8 @@
       <StatusEffect type="OnSuccess" target="UseTarget">
         <Conditional entitytype="eq Character"/>
         <Sound file="Content/Items/Medical/Syringe.ogg" range="500" />
-        <Affliction identifier="acidreaction" amount="50" />
+        <Affliction identifier="acidreaction" amount="500" />
+        <Affliction identifier="slow" amount="100" />
       </StatusEffect>
       <StatusEffect tags="medical" type="OnSuccess" target="UseTarget" duration="30">
         <ReduceAffliction type="poison" amount="1" />
@@ -348,7 +360,7 @@
     <MeleeWeapon canBeCombined="true" removeOnCombined="true" slots="Any,RightHand,LeftHand" aimpos="40,5" handle1="0,0" holdangle="220" reload="1.0" msg="ItemMsgPickUpSelect" HitOnlyCharacters="true">
       <StatusEffect type="OnSuccess" target="This" Condition="-100.0" setvalue="true"/>
       <StatusEffect type="OnSuccess" target="Limb" duration="5.0">
-        <Affliction identifier="acidburn" amount="6" />
+        <Affliction identifier="acidburn" amount="8" />
       </StatusEffect>
       <StatusEffect type="OnSuccess" target="UseTarget">
         <Conditional entitytype="eq Character"/>
@@ -383,74 +395,44 @@
       <RequiredItem identifier="iron" amount="2" />
       <RequiredItem identifier="sulphuricacid" />
     </Fabricate>
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas2.png" sourcerect="192,960,64,64" origin="0.5,0.5" />
     <Sprite texture="Content/Items/Weapons/weapons_new.png" sourcerect="79,414,26,54" depth="0.55" origin="0.5,0.5" />
-    <Body width="26" height="54" density="30" />
-    <ItemComponent characterusable="false">
+    <Body width="26" height="54" density="10.5" friction="1" waterdragcoefficient="1" />
+    <ItemComponent characterusable="false" IsActive="false">
       <!-- statuseffect that explodes the grenade when used by something else than a character (e.g. a detonator) -->
-      <StatusEffect type="OnUse" target="This" Condition="-100.0" setvalue="true">
-        <SpawnItem identifiers="acidmistemitter" spawnposition="This" count="3" spread="25"/>
-      </StatusEffect>
-      <StatusEffect type="OnBroken" target="This">
+      <StatusEffect type="OnUse" target="This" IsActive="true" />
+      <StatusEffect type="OnActive" target="This" noninteractable="true" setvalue="true" interval="100" >
         <sound file="Content/Items/Weapons/StunGrenade.ogg" range="2000"/>
-        <Explosion range="500" ballastfloradamage="0" itemdamage="0" force="0.5" sparks="true" shockwave="false" flames="false" smoke="false" flash="true">
+        <Explosion range="500" ballastfloradamage="0" itemdamage="0" force="0.5" sparks="true" shockwave="false" flames="false" smoke="false" flash="true" applyFireEffects="false" underwaterbubble="false">
           <Affliction identifier="acidburn" strength="20" />
           <Affliction identifier="acidburn" strength="10" probability="0.2" dividebylimbcount="false"/>
           <Affliction identifier="stun" strength="0.5" />
+          <ParticleEmitter particle="shrapnel" copyentityangle="false" anglemin="0" anglemax="360" particleamount="10" velocitymin="200" velocitymax="300" scalemin="0.25" scalemax="0.4" />
+          <ParticleEmitter particle="bubbles" particleamount="8" scalemin="1" scalemax="1.5" velocitymin="20" velocitymax="50" anglemin="0" anglemax="360" copyentityangle="false" LifeTimeMultiplier="1" />
         </Explosion>
+      </StatusEffect>
+      <!-- 		spawns the acid cloud -->
+      <StatusEffect type="OnActive" target="This" interval="0.2" condition="-2" disabledeltatime="true">
+        <SpawnItem identifiers="acidmistemitter" spawnposition="This" spread="10"/>
+      </StatusEffect>
+      <!-- breaks if active and on fire -->
+      <StatusEffect type="OnFire" target="This" condition="-100" disabledeltatime="true" >
+        <Conditional IsActive="eq true" />
+      </StatusEffect>
+      <!-- removes itself after 9 seconds -->
+      <StatusEffect type="OnBroken" target="This" >
         <Remove />
       </StatusEffect>
-    </ItemComponent>
-    <Throwable slots="Any,RightHand,LeftHand" holdpos="0,0" handle1="0,0" throwforce="3.5" msg="ItemMsgPickUpSelect">
-      <StatusEffect type="OnSecondaryUse" target="This" Condition="-100.0" delay="2.8" setvalue="true" />
-      <StatusEffect type="OnSecondaryUse" target="This" delay="0.5">
-        <SpawnItem identifiers="acidmistemitter" spawnposition="This" />
-      </StatusEffect>
-      <StatusEffect type="OnSecondaryUse" target="This" delay="0.6">
-        <SpawnItem identifiers="acidmistemitter" spawnposition="This" />
-      </StatusEffect>
-      <StatusEffect type="OnSecondaryUse" target="This" delay="0.7">
-        <SpawnItem identifiers="acidmistemitter" spawnposition="This" />
-      </StatusEffect>
-      <StatusEffect type="OnSecondaryUse" target="This" delay="0.8">
-        <SpawnItem identifiers="acidmistemitter" spawnposition="This" />
-      </StatusEffect>
-      <StatusEffect type="OnSecondaryUse" target="This" delay="0.95">
-        <SpawnItem identifiers="acidmistemitter" spawnposition="This" />
-      </StatusEffect>
-      <StatusEffect type="OnSecondaryUse" target="This" delay="1.1">
-        <SpawnItem identifiers="acidmistemitter" spawnposition="This" />
-      </StatusEffect>
-      <StatusEffect type="OnSecondaryUse" target="This" delay="1.25">
-        <SpawnItem identifiers="acidmistemitter" spawnposition="This" />
-      </StatusEffect>
-      <StatusEffect type="OnSecondaryUse" target="This" delay="1.4">
-        <SpawnItem identifiers="acidmistemitter" spawnposition="This" />
-      </StatusEffect>
-      <StatusEffect type="OnSecondaryUse" target="This" delay="1.55">
-        <SpawnItem identifiers="acidmistemitter" spawnposition="This" />
-      </StatusEffect>
-      <StatusEffect type="OnSecondaryUse" target="This" delay="1.7">
-        <SpawnItem identifiers="acidmistemitter" spawnposition="This" />
-      </StatusEffect>
-      <StatusEffect type="OnSecondaryUse" target="This" delay="1.85">
-        <SpawnItem identifiers="acidmistemitter" spawnposition="This" />
-      </StatusEffect>
-      <StatusEffect type="OnSecondaryUse" target="This" delay="2">
-        <SpawnItem identifiers="acidmistemitter" spawnposition="This" />
-      </StatusEffect>
-      <StatusEffect type="OnSecondaryUse" target="This" delay="2.15">
-        <SpawnItem identifiers="acidmistemitter" spawnposition="This" />
-      </StatusEffect>
-      <StatusEffect type="OnSecondaryUse" target="This" delay="2.3">
-        <SpawnItem identifiers="acidmistemitter" spawnposition="This" />
-      </StatusEffect>
+    </ItemComponent>    
+    <Throwable slots="Any,RightHand,LeftHand" holdpos="0,0" handle1="0,0" throwforce="3.0" msg="ItemMsgPickUpSelect">
+      <StatusEffect type="OnSecondaryUse" target="This" IsActive="true" delay="2.0" noninteractable="true" />
     </Throwable>
     <Quality>
       <QualityStat stattype="ExplosionRadius" value="0.1"/>
       <QualityStat stattype="ExplosionDamage" value="0.1"/>
     </Quality>
   </Item>
-
+  
   <Item name="" identifier="40mmchemgrenade" category="Weapon" maxstacksize="32" maxstacksizecharacterinventory="8" interactthroughwalls="true" cargocontaineridentifier="metalcrate" tags="smallitem,grenade" Scale="0.5" impactsoundtag="impact_metal_light">
     <PreferredContainer primary="grenadelauncher" amount="1" spawnprobability="0"/>
     <PreferredContainer secondary="wreckarmcab,abandonedarmcab,piratearmcab" minamount="1" maxamount="2" spawnprobability="0"/>
@@ -473,92 +455,75 @@
       <RequiredItem identifier="sulphuricacid"/>
       <RequiredItem identifier="phosphorus"/>
     </Fabricate>
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas2.png" sourcerect="256,960,64,64" origin="0.5,0.5" />
     <Sprite texture="Content/Items/Weapons/weapons_new.png" sourcerect="185,159,41,17" depth="0.55" origin="0.5,0.5" />
-    <Body width="38" height="15" density="30" />
+    <Body width="38" height="15" density="10.5" friction="1" waterdragcoefficient="1" />
     <Pickable slots="Any" msg="ItemMsgPickUpSelect"/>
-    <Projectile characterusable="false" launchimpulse="20.0" sticktocharacters="false">
-      <StatusEffect type="OnUse" target="This" Condition="-100.0" delay="1.0" setvalue="true" />
-      <StatusEffect type="OnBroken" target="This">
-        <sound file="Content/Items/Weapons/FragGrenade40mmShot1.ogg" range="2000" />
-        <sound file="Content/Items/Weapons/FragGrenade40mmShot2.ogg" range="2000" />
-        <Explosion range="500" ballastfloradamage="0" itemdamage="0" force="0.5" sparks="true" shockwave="false" flames="false" smoke="false" flash="true">
-          <Affliction identifier="acidburn" strength="30" />
-          <Affliction identifier="acidburn" strength="15" probability="0.2" dividebylimbcount="false"/>
-          <Affliction identifier="stun" strength="0.5" />
-        </Explosion>
+    <ItemComponent characterusable="false" IsActive="false">
+      <!-- 		spawns the acid cloud -->
+      <StatusEffect type="OnActive" target="This" delay="0.2" interval="0.2" condition="-2" disabledeltatime="true">
+        <SpawnItem identifiers="acidmistemitter" spawnposition="This" spread="10"/>
+      </StatusEffect>
+      <!-- breaks if active and on fire -->
+      <StatusEffect type="OnFire" target="This" condition="-100" disabledeltatime="true" >
+        <Conditional IsActive="eq true" />
+      </StatusEffect>
+      <!-- removes itself after 9 seconds -->
+      <StatusEffect type="OnBroken" target="This" >
         <Remove />
       </StatusEffect>
-      <StatusEffect type="OnUse" target="This" delay="0.3">
-        <SpawnItem identifiers="acidmistemitter" spawnposition="This" />
-      </StatusEffect>
-      <StatusEffect type="OnUse" target="This" delay="0.35">
-        <SpawnItem identifiers="acidmistemitter" spawnposition="This" />
-      </StatusEffect>
-      <StatusEffect type="OnUse" target="This" delay="0.4">
-        <SpawnItem identifiers="acidmistemitter" spawnposition="This" />
-      </StatusEffect>
-      <StatusEffect type="OnUse" target="This" delay="0.45">
-        <SpawnItem identifiers="acidmistemitter" spawnposition="This" />
-      </StatusEffect>
-      <StatusEffect type="OnUse" target="This" delay="0.5">
-        <SpawnItem identifiers="acidmistemitter" spawnposition="This" />
-      </StatusEffect>
-      <StatusEffect type="OnUse" target="This" delay="0.55">
-        <SpawnItem identifiers="acidmistemitter" spawnposition="This" />
-      </StatusEffect>
-      <StatusEffect type="OnUse" target="This" delay="0.6">
-        <SpawnItem identifiers="acidmistemitter" spawnposition="This" />
-      </StatusEffect>
-      <StatusEffect type="OnUse" target="This" delay="0.65">
-        <SpawnItem identifiers="acidmistemitter" spawnposition="This" />
-      </StatusEffect>
-      <StatusEffect type="OnUse" target="This" delay="0.7">
-        <SpawnItem identifiers="acidmistemitter" spawnposition="This" />
-      </StatusEffect>
-      <StatusEffect type="OnUse" target="This" delay="0.75">
-        <SpawnItem identifiers="acidmistemitter" spawnposition="This" />
-      </StatusEffect>
-      <StatusEffect type="OnUse" target="This" delay="0.8">
-        <SpawnItem identifiers="acidmistemitter" spawnposition="This" />
-      </StatusEffect>
-      <StatusEffect type="OnUse" target="This" delay="0.85">
-        <SpawnItem identifiers="acidmistemitter" spawnposition="This" />
-      </StatusEffect>
-      <StatusEffect type="OnUse" target="This" delay="1">
-        <SpawnItem identifiers="acidmistemitter" spawnposition="This" />
-      </StatusEffect>
-      <StatusEffect type="OnUse" target="This" delay="1.15">
-        <SpawnItem identifiers="acidmistemitter" spawnposition="This" />
-      </StatusEffect>
-      <StatusEffect type="OnUse" target="This" delay="1.3">
-        <SpawnItem identifiers="acidmistemitter" spawnposition="This" />
+    </ItemComponent>        
+    <Projectile characterusable="false" launchimpulse="12.0" sticktocharacters="false">
+      <sound file="Content/Items/Weapons/FragGrenade40mmShot1.ogg" type="OnImpact" range="500" selectionmode="Random" />
+      <sound file="Content/Items/Weapons/FragGrenade40mmShot2.ogg" type="OnImpact" range="500" />
+      <StatusEffect type="OnUse" target="This" launchimpulse="0.0" IsActive="true" noninteractable="true" setvalue="true" />
+      <!--Grenade launcher ammo explodes on impact-->
+      <StatusEffect type="OnImpact" target="This" interval="100" >
+        <sound file="Content/Items/Weapons/StunGrenade.ogg" range="2000"/>
+        <Explosion range="500" ballastfloradamage="0" itemdamage="0" force="0.5" sparks="true" shockwave="false" flames="false" smoke="false" flash="true" applyFireEffects="false" underwaterbubble="false">
+          <Affliction identifier="acidburn" strength="20" />
+          <Affliction identifier="acidburn" strength="10" probability="0.2" dividebylimbcount="false"/>
+          <Affliction identifier="stun" strength="0.5" />
+          <ParticleEmitter particle="shrapnel" copyentityangle="false" anglemin="0" anglemax="360" particleamount="10" velocitymin="200" velocitymax="300" scalemin="0.25" scalemax="0.4" />
+          <ParticleEmitter particle="bubbles" particleamount="8" scalemin="1" scalemax="1.5" velocitymin="20" velocitymax="50" anglemin="0" anglemax="360" copyentityangle="false" LifeTimeMultiplier="1" />
+        </Explosion>
       </StatusEffect>
     </Projectile>
   </Item>
-
-  <Item name="Acid Emitter" identifier="acidmistemitter" Scale="1" tags="gas" sonarsize="0" hideinmenus="true" health="3" depth="0.1" isdangerous="true" noninteractable="true">
+   
+  <Item name="Acid Emitter" identifier="acidmistemitter" Scale="1" tags="gas" sonarsize="0" hideinmenus="true" health="10" depth="0.1" isdangerous="true" noninteractable="true">
     <!-- Use this for debugging: sourcerect="185,159,41,17" -->
     <Sprite texture="Content/Items/Weapons/weapons_new.png" sourcerect="0,0,2,2" depth="0.55" origin="0.5,0.5" />
     <!-- Without a body, the item wouldn't stay inside the sub, and could go through sub walls from the outside -->
-    <Body radius="50" bodytype="kinematic"/>
-    <ItemComponent>
-      <StatusEffect type="OnSpawn" target="This" duration="1">
-        <ParticleEmitter particle="acidmistgrenade" particlespersecond="3" scalemin="0.3" scalemax="0.4" anglemin="0" anglemax="360" velocity="0.1" copyentityangle="false"/>
+    <Body radius="50" />
+    <ItemComponent >
+      <!-- 	particle emitter -->
+      <StatusEffect type="Always" target="This" condition="-20" >
+        <ParticleEmitter particle="acidmistgrenade" particlespersecond="6" scalemin="0.6" scalemax="0.7" velocitymin="50" velocitymax="150" anglemin="0" anglemax="360" copyentityangle="false" LifeTimeMultiplier="0.5" />
+        <ParticleEmitter particle="bubbles" particlespersecond="8" scalemin="1" scalemax="1.5" velocitymin="20" velocitymax="50" anglemin="0" anglemax="360" copyentityangle="false" LifeTimeMultiplier="1" />
+        <sound file="Content/Items/Tools/Sprayer.ogg" range="700.0" loop="true" volume="0.75" frequencymultiplier="2" />
       </StatusEffect>
-      <!-- make the body dynamic outside subs, so subs don't get blocked by it -->
-      <StatusEffect type="InWater" target="This" BodyType="Dynamic">
-        <Conditional CurrentHull="eq null" />
+      <!-- 	the actual damage emitter, 10 second lifetime, generates stun and slows  -->
+      <StatusEffect type="Always" target="This,NearbyCharacters" range="200" disabledeltatime="false">
+        <Affliction identifier="acidburn" strength="0.5" dividebylimbcount="true" />
+        <Affliction identifier="incrementalstun" strength="10" />
+        <Affliction identifier="slow" strength="50" />
       </StatusEffect>
-      <StatusEffect type="Always" target="This" disabledeltatime="false" condition="-1">
-        <Sound file="Content/Items/Tools/Sprayer.ogg" range="300" volume="0.1" loop="true"/>
+      <!-- Explodes when in contact with fire/explosions -->
+      <StatusEffect type="OnFire" target="This" Condition="0.0" delay="0.1" interval="10" IsActive="false" setvalue="true" >
+        <sound file="Content/Items/Weapons/ExplosionSmall1.ogg" range="2000" selectionmode="Random" />
+        <sound file="Content/Items/Weapons/ExplosionSmall2.ogg" range="2000" selectionmode="Random" />
+        <sound file="Content/Items/Weapons/ExplosionSmall3.ogg" range="2000" selectionmode="Random" />
+        <Explosion range="450.0" ballastfloradamage="100" structuredamage="20" levelwalldamage="50" itemdamage="100" force="8" flames="true" debris="true" applyFireEffects="true" decal="explosion" decalsize="0.5">
+          <Affliction identifier="burn" strength="20" />
+          <Affliction identifier="stun" strength="3" />
+        </Explosion>
       </StatusEffect>
-      <StatusEffect type="Always" target="NearbyCharacters" range="150" delay="0.5" stackable="false" disabledeltatime="true">
-        <Affliction identifier="acidburn" strength="0.07"/>
-        <Affliction identifier="slow" strength="50"/>
-      </StatusEffect>
-      <StatusEffect type="OnBroken" target="This">
+      <StatusEffect type="OnBroken" target="This" delay="0.1">
         <Remove />
       </StatusEffect>
     </ItemComponent>
   </Item>
+
 </Items>
+</Override>

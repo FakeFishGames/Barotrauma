@@ -1,4 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
+<Override>
 <Talents>
   <Talent identifier="macrodosing">
     <Icon texture="Content/UI/TalentsIcons3.png" sheetindex="1,5" sheetelementsize="128,128"/>
@@ -379,22 +380,9 @@
 
   <Talent identifier="whatastench">
     <Icon texture="Content/UI/TalentsIcons3.png" sheetindex="0,5" sheetelementsize="128,128"/>
-    <Description tag="talentdescription.poisonsandacidsdealmoredamage">
-      <Replace tag="[amount]" value="40" color="gui.green"/>
-    </Description>
     <Description tag="talentdescription.unlockrecipe">
       <Replace tag="[itemname]" value="entityname.chemgrenade,entityname.40mmchemgrenade" color="gui.orange"/>
     </Description>
-    <AbilityGroupEffect abilityeffecttype="None">
-      <Abilities>
-        <CharacterAbilityGiveStat stattype="PoisonMultiplier" value="0.4"/>
-      </Abilities>
-    </AbilityGroupEffect>
-    <AbilityGroupEffect abilityeffecttype="OnAddDamageAffliction">
-      <Abilities>
-        <CharacterAbilityModifyAffliction afflictionidentifiers="acidburn" addedmultiplier="0.4" />
-      </Abilities>
-    </AbilityGroupEffect>
     <AddedRecipe itemidentifier="chemgrenade"/>
     <AddedRecipe itemidentifier="40mmchemgrenade"/>
   </Talent>
@@ -532,3 +520,4 @@
   </Talent>
 
 </Talents>
+</Override>
