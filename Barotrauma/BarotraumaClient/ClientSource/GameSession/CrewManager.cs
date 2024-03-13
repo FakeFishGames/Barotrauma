@@ -551,8 +551,20 @@ namespace Barotrauma
         /// </summary>
         public bool CharacterClicked(GUIComponent component, object selection)
         {
+            if (!(selection is Character character)) { return false; }
+
+            if (GameMain.IsMultiplayer)
+            {
+                if (Character.Controlled == null)
+                {
+                    Camera cam = Screen.Selected.Cam;
+                    cam.Translate(character.DrawPosition - cam.Position);
+                }
+                return true;
+            }
+
             if (!AllowCharacterSwitch) { return false; }
-            if (!(selection is Character character) || character.IsDead || character.IsUnconscious) { return false; }
+            if (character.IsDead || character.IsUnconscious) { return false; }
             if (!character.IsOnPlayerTeam) { return false; }
 
             SelectCharacter(character);
@@ -621,10 +633,9 @@ namespace Barotrauma
         {
             if (crewList != this.crewList) { return; }
             if (!(draggedElementData is Character)) { return; }
-            if (!IsSinglePlayer) { return; }
             if (crewList.HasDraggedElementIndexChanged)
             {
-                UpdateCrewListIndices();
+                if (GameMain.IsSingleplayer) { UpdateCrewListIndices(); }
             }
             else
             {
