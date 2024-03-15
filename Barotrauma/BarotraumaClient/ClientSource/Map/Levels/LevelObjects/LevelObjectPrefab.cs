@@ -35,11 +35,6 @@ namespace Barotrauma
             get;
             private set;
         }
-        public List<Vector2> EmitterPositions
-        {
-            get;
-            private set;
-        }
 
         public List<SoundConfig> Sounds
         {
@@ -90,13 +85,11 @@ namespace Barotrauma
                         if (ParticleEmitterPrefabs == null)
                         {
                             ParticleEmitterPrefabs = new List<ParticleEmitterPrefab>();
-                            EmitterPositions = new List<Vector2>();
                             ParticleEmitterTriggerIndex = new List<int>();
                         }
 
                         ParticleEmitterPrefabs.Add(new ParticleEmitterPrefab(subElement));
                         ParticleEmitterTriggerIndex.Add(parentTriggerIndex);
-                        EmitterPositions.Add(subElement.GetAttributeVector2("position", Vector2.Zero));
                         break;
                     case "sound":
                         Sounds.Add(new SoundConfig(subElement, parentTriggerIndex));
