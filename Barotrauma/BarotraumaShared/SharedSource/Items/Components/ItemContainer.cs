@@ -1,4 +1,4 @@
-﻿using Barotrauma.Abilities;
+using Barotrauma.Abilities;
 using Barotrauma.Extensions;
 using FarseerPhysics;
 using Microsoft.Xna.Framework;
@@ -7,6 +7,11 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Xml.Linq;
+using System.Globalization;
+using Barotrauma.Extensions;
+using FarseerPhysics;
+using System.Collections.Immutable;
+using Barotrauma.Abilities;
 
 namespace Barotrauma.Items.Components
 {
@@ -277,6 +282,11 @@ namespace Barotrauma.Items.Components
 
         public readonly bool HasSubContainers;
 
+        public bool hasSignalConnections;
+
+        string totalConditionValueString = "", totalConditionPercentageString = "", totalItemsString = "";
+        float prevTotalConditionValue = 0, prevTotalConditionPercentage = 0; int prevTotalItems = 0;
+
         public ItemContainer(Item item, ContentXElement element)
             : base(item, element)
         {
@@ -448,8 +458,8 @@ namespace Barotrauma.Items.Components
                 GameAnalyticsManager.AddDesignEvent("MicroInteraction:" + (GameMain.GameSession?.GameMode?.Preset.Identifier.Value ?? "null") + ":GardeningPlanted:" + containedItem.Prefab.Identifier);
             }
 
-            //no need to Update() if this item has no statuseffects and no physics body
-            IsActive = activeContainedItems.Count > 0 || Inventory.AllItems.Any(it => it.body != null);
+            // No need to Update() if the new item has no statuseffects or a physics body, and if there are no signal connections.
+            IsActive = hasSignalConnections || activeContainedItems.Count > 0 || Inventory.AllItems.Any(it => it.body != null);
 
             if (IsActive && item.GetRootInventoryOwner() is Character owner && 
                 owner.HasEquippedItem(item, predicate: slot => slot.HasFlag(InvSlotType.LeftHand) || slot.HasFlag(InvSlotType.RightHand)))
@@ -480,8 +490,8 @@ namespace Barotrauma.Items.Components
             activeContainedItems.RemoveAll(i => i.Item == containedItem);
             containedItems.RemoveAll(i => i.Item == containedItem);
             item.SetContainedItemPositions();
-            //deactivate if the inventory is empty
-            IsActive = activeContainedItems.Count > 0 || Inventory.AllItems.Any(it => it.body != null);
+            // No need to Update() if the container no longer has any items with statuseffects or physics bodies, and if there are no signal connections.
+            IsActive = hasSignalConnections || activeContainedItems.Count > 0 || Inventory.AllItems.Any(it => it.body != null);
             CharacterHUD.RecreateHudTextsIfFocused(item, containedItem);
             OnContainedItemsChanged.Invoke(this);
         }
@@ -545,6 +555,42 @@ namespace Barotrauma.Items.Components
                 alwaysContainedItemsSpawned = true;
             }
 
+            if (hasSignalConnections)
+            {
+                float totalConditionValue = 0, totalConditionPercentage = 0; int totalItems = 0;
+                foreach (var item in Inventory.AllItems)
+                {
+                    if (!MathUtils.NearlyEqual(item.Condition, 0))
+                    {
+                        totalConditionValue += item.Condition;
+                        totalConditionPercentage += item.ConditionPercentage;
+                        totalItems++;
+                    }
+                }
+
+                if (!MathUtils.NearlyEqual(totalConditionValue, prevTotalConditionValue))
+                {
+                    totalConditionValueString = ((int)totalConditionValue).ToString(CultureInfo.InvariantCulture);
+                    prevTotalConditionValue = totalConditionValue;
+                }
+
+                if (!MathUtils.NearlyEqual(totalConditionPercentage, prevTotalConditionPercentage))
+                {
+                    totalConditionPercentageString = ((int)totalConditionPercentage).ToString(CultureInfo.InvariantCulture);
+                    prevTotalConditionPercentage = totalConditionPercentage;
+                }
+
+                if (totalItems != prevTotalItems)
+                {
+                    totalItemsString = totalItems.ToString(CultureInfo.InvariantCulture);
+                    prevTotalItems = totalItems;
+                }
+
+                item.SendSignal(totalConditionValueString, "contained_conditions");
+                item.SendSignal(totalConditionPercentageString, "contained_conditions_percentage");
+                item.SendSignal(totalItemsString, "contained_items");
+            }
+
             if (item.ParentInventory is CharacterInventory ownerInventory)
             {
                 SetContainedItemPositionsIfNeeded();
@@ -595,10 +641,9 @@ namespace Barotrauma.Items.Components
                     SetContainedItemPositionsIfNeeded();
                 }
             }
-            else if (activeContainedItems.Count == 0)
+            else if (!hasSignalConnections && activeContainedItems.Count == 0)
             {
                 IsActive = false;
-                return;
             }
 
             foreach (var activeContainedItem in activeContainedItems)
@@ -987,6 +1032,7 @@ namespace Barotrauma.Items.Components
         {
             Inventory.AllowSwappingContainedItems = AllowSwappingContainedItems;
             containableItemIdentifiers = slotRestrictions.SelectMany(s => s.ContainableItems?.SelectMany(ri => ri.Identifiers) ?? Enumerable.Empty<Identifier>()).ToImmutableHashSet();
+            hasSignalConnections = item.Connections?.Any(c => c.Name is "contained_conditions" or "contained_conditions_percentage" or "contained_items") ?? false;
             if (item.Submarine == null || !item.Submarine.Loading)
             {
                 SpawnAlwaysContainedItems();
