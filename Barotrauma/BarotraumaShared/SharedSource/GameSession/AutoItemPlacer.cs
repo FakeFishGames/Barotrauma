@@ -110,7 +110,22 @@ namespace Barotrauma
                     continue;
                 }
                 if (startItem.MultiPlayerOnly && GameMain.GameSession?.GameMode is { IsSinglePlayer: true }) { continue; }
-                for (int i = 0; i < startItem.Amount; i++)
+
+                // Calculate the amount based on minamount and maxamount
+                int amountToSpawn = startItem.Amount;
+                if (startItem.MinAmount.HasValue && startItem.MaxAmount.HasValue)
+                {
+                    amountToSpawn = Rand.Int(startItem.MinAmount.Value, startItem.MaxAmount.Value);
+                }
+
+                // Check notcampaign property
+                if (startItem.NotCampaign && (GameMain.GameSession?.GameMode == typeof(campaign) || GameMain.GameSession?.GameMode == typeof(mpCampaign)) { continue; }
+
+                // Check spawnprobability property
+                double randomValue = Rand.Double(0, 1);
+                if (randomValue > startItem.SpawnProbability) { continue; }
+
+                for (int i = 0; i < amountToSpawn; i++)
                 {
                     var item = new Item(itemPrefab, initialSpawnPos.Position, sub, callOnItemLoaded: false);
                     // Is this necessary?
@@ -125,7 +140,7 @@ namespace Barotrauma
             foreach (var item in newItems)
             {
 #if SERVER
-                Entity.Spawner.CreateNetworkEvent(new EntitySpawner.SpawnEntity(item));
+        Entity.Spawner.CreateNetworkEvent(new EntitySpawner.SpawnEntity(item));
 #endif
                 foreach (ItemComponent ic in item.Components)
                 {
