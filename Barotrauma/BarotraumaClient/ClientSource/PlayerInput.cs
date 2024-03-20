@@ -104,6 +104,32 @@ namespace Barotrauma
             return false;
         }
 
+        public bool IsPressed()
+        {
+            switch (MouseButton)
+            {
+                case MouseButton.None:
+                    if (Key == Keys.None) { return false; }
+                    return PlayerInput.KeyHit(Key);
+                case MouseButton.PrimaryMouse:
+                    return PlayerInput.PrimaryMouseButtonDown();
+                case MouseButton.SecondaryMouse:
+                    return PlayerInput.SecondaryMouseButtonDown();
+                case MouseButton.MiddleMouse:
+                    return PlayerInput.MidButtonClicked();
+                case MouseButton.MouseButton4:
+                    return PlayerInput.Mouse4ButtonClicked();
+                case MouseButton.MouseButton5:
+                    return PlayerInput.Mouse5ButtonClicked();
+                case MouseButton.MouseWheelUp:
+                    return PlayerInput.MouseWheelUpClicked();
+                case MouseButton.MouseWheelDown:
+                    return PlayerInput.MouseWheelDownClicked();
+            }
+
+            return false;
+        }
+
         public override bool Equals(object obj)
         {
             if (obj is KeyOrMouse keyOrMouse)
