@@ -1,5 +1,5 @@
-name: Bug Report
-description: Found a bug? Help us squash it by making a bug report!
+title: Bug Report
+labels: Found a bug? Help us squash it by making a bug report!
 body:
   - type: markdown
     attributes:
