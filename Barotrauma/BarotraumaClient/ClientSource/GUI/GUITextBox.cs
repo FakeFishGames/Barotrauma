@@ -414,7 +414,7 @@ namespace Barotrauma
             }
 
             bool isMouseOn = MouseRect.Contains(PlayerInput.MousePosition) && (GUI.MouseOn == null || (!(GUI.MouseOn is GUIButton) && GUI.IsMouseOn(this)));
-            if (isMouseOn || isSelecting)
+            if (isMouseOn || isSelecting || (State == ComponentState.Selected && PlayerInput.IsShiftDown()))
             {
                 State = ComponentState.Hover;
                 if (PlayerInput.PrimaryMouseButtonDown())
@@ -424,7 +424,7 @@ namespace Barotrauma
                 }
                 else
                 {
-                    isSelecting = PlayerInput.PrimaryMouseButtonHeld();
+                    isSelecting = PlayerInput.PrimaryMouseButtonHeld() || PlayerInput.IsShiftDown();
                 }
                 if (PlayerInput.DoubleClicked())
                 {
@@ -622,10 +622,15 @@ namespace Barotrauma
                 case '\b' when !Readonly: //backspace
                 {
                     using var _ = new TextPosPreservation(this);
-                    if (PlayerInput.KeyDown(Keys.LeftControl) || PlayerInput.KeyDown(Keys.RightControl))
+                    if (PlayerInput.IsCtrlDown())
                     {
-                        SetText(string.Empty, false);
-                        CaretIndex = Text.Length;
+                        int removeTo = FindStopSymbolLeft();
+                        var length = CaretIndex - removeTo;
+                        var newText = Text.Remove(removeTo, CaretIndex - removeTo);
+                        SetText(newText, false);
+                        CaretIndex = Math.Max(0, CaretIndex - length);
+                        CalculateCaretPos();
+                        ClearSelection();
                     }
                     else if (selectedCharacters > 0)
                     {
@@ -711,7 +716,16 @@ namespace Barotrauma
                     {
                         InitSelectionStart();
                     }
-                    CaretIndex = Math.Max(CaretIndex - 1, 0);
+
+                    if (PlayerInput.IsCtrlDown())
+                    {
+                        CaretIndex = FindStopSymbolLeft();
+                    }
+                    else
+                    {
+                        CaretIndex = Math.Max(CaretIndex - 1, 0);
+                    }
+
                     caretTimer = 0;
                     HandleSelection();
                     break;
@@ -720,7 +734,16 @@ namespace Barotrauma
                     {
                         InitSelectionStart();
                     }
-                    CaretIndex = Math.Min(CaretIndex + 1, Text.Length);
+
+                    if (PlayerInput.IsCtrlDown())
+                    {
+                        CaretIndex = FindStopSymbolRight();
+                    }
+                    else
+                    {
+                        CaretIndex = Math.Min(CaretIndex + 1, Text.Length);
+                    }
+
                     caretTimer = 0;
                     HandleSelection();
                     break;
@@ -761,7 +784,27 @@ namespace Barotrauma
                     HandleSelection();
                     break;
                 case Keys.Delete when !Readonly:
-                    if (selectedCharacters > 0)
+                    if (PlayerInput.IsCtrlDown())
+                    {
+                        var removeTo = FindStopSymbolRight();
+                        var length = removeTo - CaretIndex;
+                        if (length <= 0)
+                        {
+                            if (selectedCharacters > 0)
+                            {
+                                RemoveSelectedText();
+                            }
+
+                            break;
+                        }
+
+                        var newText = Text.Remove(CaretIndex, length);
+                        SetText(newText, store: true);
+                        OnTextChanged?.Invoke(this, Text);
+                        CalculateCaretPos();
+                        ClearSelection();
+                    }
+                    else if (selectedCharacters > 0)
                     {
                         RemoveSelectedText();
                     }
@@ -818,6 +861,52 @@ namespace Barotrauma
                         return null;
                     }
                     break;
+
+                case Keys.Home:
+                    if (isSelecting)
+                    {
+                        InitSelectionStart();
+                    }
+
+                    if (PlayerInput.IsCtrlDown())
+                    {
+                        CaretIndex = 0;
+                    }
+                    else
+                    {
+                        CaretIndex = Text.LastIndexOf('\n', Math.Max(0, CaretIndex - 1)) + 1;
+                    }
+
+                    caretTimer = 0;
+                    HandleSelection();
+                    break;
+
+                case Keys.End:
+                    if (isSelecting)
+                    {
+                        InitSelectionStart();
+                    }
+
+                    if (PlayerInput.IsCtrlDown())
+                    {
+                        CaretIndex = Text.Length;
+                    }
+                    else
+                    {
+                        var index = Text.IndexOf('\n', CaretIndex);
+                        if (index < 0)
+                        {
+                            CaretIndex = Text.Length;
+                        }
+                        else
+                        {
+                            CaretIndex = index;
+                        }
+                    }
+
+                    caretTimer = 0;
+                    HandleSelection();
+                    break;
             }
             if (caretPosDirty) { CalculateCaretPos(); }
             OnKeyHit?.Invoke(this, key);
@@ -842,6 +931,55 @@ namespace Barotrauma
             selectionStartIndex = 0;
             CaretIndex = Text.Length;
             CalculateSelection();
+        }
+
+        private int FindStopSymbolLeft()
+        {
+            // special case: if cursor at the start of the line, move to the end of previous line
+            if (CaretIndex > 0 && Text[CaretIndex - 1] == '\n')
+            {
+                return CaretIndex - 1;
+            }
+            // convert cursor index to character index
+            CaretIndex = Math.Max(0, CaretIndex - 2);
+            if (CaretIndex == 0) { return CaretIndex; }
+
+            while (CaretIndex > 0)
+            {
+                CaretIndex--;
+                var c = Text[CaretIndex];
+                if (char.IsWhiteSpace(c) || char.IsPunctuation(c) || c == '\n')
+                {
+                    // convert character index back cursor index
+                    return CaretIndex + 1;
+                }
+            }
+            
+            return Math.Clamp(CaretIndex, 0, Text.Length);
+        }
+
+        private int FindStopSymbolRight()
+        {
+            // special case: if cursor is at the end of line, move to the start of next line
+            if (CaretIndex < Text.Length && Text[CaretIndex] == '\n')
+            {
+                return CaretIndex + 1;
+            }
+
+            for (; CaretIndex < Text.Length; CaretIndex++)
+            {
+                var c = Text[CaretIndex];
+                if (c == '\n')
+                {
+                    return CaretIndex;
+                }
+                if (char.IsWhiteSpace(c) || char.IsPunctuation(c))
+                {
+                    // convert character index to cursor index
+                    return Math.Min(CaretIndex + 1, Text.Length);
+                }
+            }
+            return Math.Clamp(CaretIndex, 0, Text.Length);
         }
 
         private void CopySelectedText()
