@@ -29,6 +29,15 @@ namespace Barotrauma
         [Serialize("", IsPropertySaveable.Yes, description: "If defined, different species of the same group are considered like the characters of the same species by the AI."), Editable]
         public Identifier Group { get; private set; }
 
+        [Serialize("monster", IsPropertySaveable.Yes, description: "If changed, this character will try to play a custom music track when encountered."), Editable]
+        public string MusicType { get; private set; }
+
+        [Serialize(1.0f, IsPropertySaveable.Yes, description: "The weight of this character's music when a random track will be chosen."), Editable]
+        public float MusicWeight { get; private set; }
+
+        [Serialize(1.0f, IsPropertySaveable.Yes, description: "The multiplier of the minimum distance required between this character and the player/submarine before the music starts playing."), Editable]
+        public float MusicRangeMultiplier { get; private set; }
+
         [Serialize(false, IsPropertySaveable.Yes), Editable(ReadOnly = true)]
         public bool Humanoid { get; private set; }
 
