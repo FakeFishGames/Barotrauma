@@ -47,7 +47,7 @@ namespace Barotrauma.Items.Components
         private Character user;
 
         private Item focusTarget;
-        private float targetRotation;
+        private float targetRotation, targetDistance;
 
         public Vector2 UserPos
         {
@@ -388,6 +388,7 @@ namespace Barotrauma.Items.Components
                 Vector2 offset = character.CursorWorldPosition - centerPos;
                 offset.Y = -offset.Y;
                 targetRotation = MathUtils.WrapAngleTwoPi(MathUtils.VectorToAngle(offset));
+                targetDistance = offset.Length();
                 return false;
             }
 
@@ -413,6 +414,7 @@ namespace Barotrauma.Items.Components
                 Vector2 offset = character.CursorWorldPosition - centerPos;
                 offset.Y = -offset.Y;
                 targetRotation = MathUtils.WrapAngleTwoPi(MathUtils.VectorToAngle(offset));
+                targetDistance = offset.Length();
             }
             return true;
         }
@@ -423,6 +425,10 @@ namespace Barotrauma.Items.Components
             if (positionOut == null) { return null; }
 
             item.SendSignal(new Signal(MathHelper.ToDegrees(targetRotation).ToString("G", CultureInfo.InvariantCulture), sender: user), positionOut);
+            if (item.Connections?.Find(c => c.Name == "distance_out") is { } distanceOut)
+            {
+                item.SendSignal(new Signal((targetDistance / 100).ToString("G", CultureInfo.InvariantCulture), sender: user), distanceOut);
+            }
 
             for (int i = item.LastSentSignalRecipients.Count - 1; i >= 0; i--)
             {
