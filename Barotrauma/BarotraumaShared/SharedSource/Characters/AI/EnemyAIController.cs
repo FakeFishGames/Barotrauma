@@ -3731,7 +3731,7 @@ namespace Barotrauma
             }
             reachTimer = 0;
             sinTime = 0;
-            if (breakCircling && strikeTimer <= 0)
+            if (CirclePhase != CirclePhase.CloseIn && breakCircling && strikeTimer <= 0)
             {
                 CirclePhase = CirclePhase.Start;
             }
