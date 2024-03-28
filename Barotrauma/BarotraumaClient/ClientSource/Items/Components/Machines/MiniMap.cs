@@ -785,7 +785,7 @@ namespace Barotrauma.Items.Components
 
                         if (item.CurrentHull is { } currentHull && currentHull == hull)
                         {
-                            Sprite pingCircle = GUIStyle.YouAreHereCircle.Value.Sprite;
+                            Sprite? pingCircle = GUIStyle.YouAreHereCircle.Value?.Sprite;
                             if (pingCircle is null) { continue; }
 
                             Vector2 charPos = item.WorldPosition;
@@ -1241,7 +1241,8 @@ namespace Barotrauma.Items.Components
                     foreach (Vector2 blip in MiniMapBlips)
                     {
                         Vector2 parentSize = miniMapFrame.Rect.Size.ToVector2();
-                        Sprite pingCircle = GUIStyle.PingCircle.Value.Sprite;
+                        Sprite? pingCircle = GUIStyle.PingCircle.Value?.Sprite;
+                        if (pingCircle is null) { continue; }
                         Vector2 targetSize = new Vector2(parentSize.X / 4f);
                         Vector2 spriteScale = targetSize / pingCircle.size;
                         float scale = Math.Min(blipState, maxBlipState / 2f);
@@ -1525,7 +1526,7 @@ namespace Barotrauma.Items.Components
                         float maxWidth = Math.Max(sizeX, sizeY);
                         Vector2 drawPos = new Vector2(frame.Rect.Right - sizeX, frame.Rect.Y - sizeY / 2f);
 
-                        UISprite icon = GUIStyle.IconOverflowIndicator;
+                        UISprite? icon = GUIStyle.IconOverflowIndicator;
                         if (icon != null)
                         {
                             const int iconPadding = 4;

@@ -7,19 +7,20 @@ namespace Barotrauma.Steam
 {
     static partial class SteamManager
     {
-        private static Option<Steamworks.AuthTicket> currentMultiplayerTicket = Option.None;
-        public static Option<Steamworks.AuthTicket> GetAuthSessionTicketForMultiplayer(Endpoint remoteHostEndpoint)
+        #region Auth ticket for Steam host
+        private static Option<Steamworks.AuthTicket> currentSteamHostAuthTicket = Option.None;
+        public static Option<Steamworks.AuthTicket> GetAuthSessionTicketForSteamHost(Endpoint remoteHostEndpoint)
         {
             if (!IsInitialized)
             {
                 return Option.None;
             }
 
-            if (currentMultiplayerTicket.TryUnwrap(out var ticketToCancel))
+            if (currentSteamHostAuthTicket.TryUnwrap(out var ticketToCancel))
             {
                 ticketToCancel.Cancel();
             }
-            currentMultiplayerTicket = Option.None;
+            currentSteamHostAuthTicket = Option.None;
 
             var netIdentity = remoteHostEndpoint switch
             {
@@ -32,13 +33,42 @@ namespace Barotrauma.Steam
             };
             var newTicket = Steamworks.SteamUser.GetAuthSessionTicket(netIdentity);
 
-            currentMultiplayerTicket = newTicket != null
+            currentSteamHostAuthTicket = newTicket != null
                 ? Option.Some(newTicket)
                 : Option.None;
 
-            return currentMultiplayerTicket;
+            return currentSteamHostAuthTicket;
         }
+        #endregion Auth ticket for Steam host
 
+        #region Auth ticket for EOS host
+        private const string EosHostAuthIdentity = "BarotraumaRemotePlayerAuth";
+
+        private static Option<Steamworks.AuthTicketForWebApi> currentEosHostAuthTicket = Option.None;
+        public static async Task<Option<Steamworks.AuthTicketForWebApi>> GetAuthTicketForEosHostAuth()
+        {
+            if (!IsInitialized)
+            {
+                return Option.None;
+            }
+
+            if (currentEosHostAuthTicket.TryUnwrap(out var ticketToCancel))
+            {
+                ticketToCancel.Cancel();
+            }
+            currentEosHostAuthTicket = Option.None;
+
+            var newTicket = await Steamworks.SteamUser.GetAuthTicketForWebApi(identity: EosHostAuthIdentity);
+
+            currentEosHostAuthTicket = newTicket != null
+                ? Option.Some(newTicket)
+                : Option.None;
+
+            return currentEosHostAuthTicket;
+        }
+        #endregion Auth ticket for EOS host
+
+        #region Auth ticket for GameAnalytics consent server
         private const string GameAnalyticsConsentIdentity = "BarotraumaGameAnalyticsConsent";
 
         private static Option<Steamworks.AuthTicketForWebApi> currentGameAnalyticsConsentTicket = Option.None;
@@ -63,5 +93,6 @@ namespace Barotrauma.Steam
 
             return currentGameAnalyticsConsentTicket;
         }
+        #endregion Auth ticket for GameAnalytics consent server
     }
 }

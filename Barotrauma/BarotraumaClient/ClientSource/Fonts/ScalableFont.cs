@@ -65,25 +65,11 @@ namespace Barotrauma
         private int texDims;
         private uint baseChar;
 
-        private readonly struct GlyphData
-        {
-            public readonly int TexIndex;
-            public readonly Vector2 DrawOffset;
-            public readonly float Advance;
-            public readonly Rectangle TexCoords;
-
-            public GlyphData(
-                int texIndex = default,
-                Vector2 drawOffset = default,
-                float advance = default,
-                Rectangle texCoords = default)
-            {
-                TexIndex = texIndex;
-                DrawOffset = drawOffset;
-                Advance = advance;
-                TexCoords = texCoords;
-            }
-        }
+        public readonly record struct GlyphData(
+            int TexIndex = default,
+            Vector2 DrawOffset = default,
+            float Advance = default,
+            Rectangle TexCoords = default);
 
         public static TextManager.SpeciallyHandledCharCategory ExtractShccFromXElement(XElement element)
             => TextManager.SpeciallyHandledCharCategories
@@ -94,7 +80,7 @@ namespace Barotrauma
 
                     // For backwards compatibility, we assume that Cyrillic is supported by default
                     TextManager.SpeciallyHandledCharCategory.Cyrillic => true,
-                    
+
                     _ => throw new NotImplementedException($"nameof{category} not implemented.")
                 }))
                 .Aggregate(TextManager.SpeciallyHandledCharCategory.None, (current, category) => current | category);
@@ -209,8 +195,8 @@ namespace Barotrauma
                         if (glyphIndex == 0)
                         {
                             texCoords.Add(j, new GlyphData(
-                                advance: 0,
-                                texIndex: -1));
+                                Advance: 0,
+                                TexIndex: -1));
                             continue;
                         }
                         face.LoadGlyph(glyphIndex, LoadFlags.Default, LoadTarget.Normal);
@@ -218,8 +204,8 @@ namespace Barotrauma
                         {
                             //glyph is empty, but char might still apply advance
                             GlyphData blankData = new GlyphData(
-                                advance: Math.Max((float)face.Glyph.Metrics.HorizontalAdvance, 0f),
-                                texIndex: -1); //indicates no texture because the glyph is empty
+                                Advance: Math.Max((float)face.Glyph.Metrics.HorizontalAdvance, 0f),
+                                TexIndex: -1); //indicates no texture because the glyph is empty
 
                             texCoords.Add(j, blankData);
                             continue;
@@ -262,10 +248,10 @@ namespace Barotrauma
                         }
 
                         GlyphData newData = new GlyphData(
-                            advance: (float)face.Glyph.Metrics.HorizontalAdvance,
-                            texIndex: texIndex,
-                            texCoords: new Rectangle((int)currentCoords.X, (int)currentCoords.Y, glyphWidth, glyphHeight),
-                            drawOffset: new Vector2(face.Glyph.BitmapLeft, baseHeight * 14 / 10 - face.Glyph.BitmapTop)
+                            Advance: (float)face.Glyph.Metrics.HorizontalAdvance,
+                            TexIndex: texIndex,
+                            TexCoords: new Rectangle((int)currentCoords.X, (int)currentCoords.Y, glyphWidth, glyphHeight),
+                            DrawOffset: new Vector2(face.Glyph.BitmapLeft, baseHeight * 14 / 10 - face.Glyph.BitmapTop)
                         );
                         texCoords.Add(j, newData);
 
@@ -354,8 +340,8 @@ namespace Barotrauma
                     if (glyphIndex == 0)
                     {
                         texCoords.Add(character, new GlyphData(
-                            advance: 0,
-                            texIndex: -1));
+                            Advance: 0,
+                            TexIndex: -1));
                         continue;
                     }
 
@@ -365,8 +351,8 @@ namespace Barotrauma
                     {
                         //glyph is empty, but char might still apply advance
                         GlyphData blankData = new GlyphData(
-                            advance: Math.Max((float)face.Glyph.Metrics.HorizontalAdvance, 0f),
-                            texIndex: -1); //indicates no texture because the glyph is empty
+                            Advance: Math.Max((float)face.Glyph.Metrics.HorizontalAdvance, 0f),
+                            TexIndex: -1); //indicates no texture because the glyph is empty
                         texCoords.Add(character, blankData);
                         continue;
                     }
@@ -403,10 +389,10 @@ namespace Barotrauma
                     }
 
                     GlyphData newData = new GlyphData(
-                        advance: (float)horizontalAdvance,
-                        texIndex: textures.Count - 1,
-                        texCoords: new Rectangle((int)currentDynamicAtlasCoords.X, (int)currentDynamicAtlasCoords.Y, glyphWidth, glyphHeight),
-                        drawOffset: drawOffset
+                        Advance: (float)horizontalAdvance,
+                        TexIndex: textures.Count - 1,
+                        TexCoords: new Rectangle((int)currentDynamicAtlasCoords.X, (int)currentDynamicAtlasCoords.Y, glyphWidth, glyphHeight),
+                        DrawOffset: drawOffset
                     );
                     texCoords.Add(character, newData);
 
@@ -490,7 +476,7 @@ namespace Barotrauma
                 return gd;
             }
 
-            return new GlyphData(texIndex: -1);
+            return new GlyphData(TexIndex: -1);
         }
 
         public void DrawString(SpriteBatch sb, string text, Vector2 position, Color color, float rotation, Vector2 origin, Vector2 scale, SpriteEffects se, float layerDepth, Alignment alignment = Alignment.TopLeft, ForceUpperCase forceUpperCase = Barotrauma.ForceUpperCase.Inherit)
@@ -814,14 +800,22 @@ namespace Barotrauma
         {
             Vector2 retVal = Vector2.Zero;
             retVal.Y = LineHeight;
+
+            var (gd, _) = GetGlyphDataAndTextureForChar(c);
+            retVal.X = gd.Advance;
+            return retVal;
+        }
+
+        public (GlyphData GlyphData, Texture2D Texture) GetGlyphDataAndTextureForChar(char c)
+        {
             if (DynamicLoading && !texCoords.ContainsKey(c))
             {
                 DynamicRenderAtlas(graphicsDevice, c);
             }
 
             GlyphData gd = GetGlyphData(c);
-            retVal.X = gd.Advance;
-            return retVal;
+            var tex = gd.TexIndex >= 0 ? textures[gd.TexIndex] : null;
+            return (gd, tex);
         }
 
         public void Dispose()

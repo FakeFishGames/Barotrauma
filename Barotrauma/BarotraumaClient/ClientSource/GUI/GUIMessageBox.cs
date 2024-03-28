@@ -86,6 +86,11 @@ namespace Barotrauma
 
         public Type MessageBoxType => type;
 
+        /// <summary>
+        /// If enabled, the box is always drawn in front of all other elements.
+        /// </summary>
+        public bool DrawOnTop;
+
         public static GUIComponent VisibleBox => MessageBoxes.LastOrDefault();
 
         public GUIMessageBox(LocalizedString headerText, LocalizedString text, Vector2? relativeSize = null, Point? minSize = null, Type type = Type.Default)
@@ -477,13 +482,13 @@ namespace Barotrauma
                 for (int i = 0; i < MessageBoxes.Count; i++)
                 {
                     if (MessageBoxes[i] == null) { continue; }
-                    if (!(MessageBoxes[i] is GUIMessageBox messageBox))
+                    if (MessageBoxes[i] is not GUIMessageBox messageBox)
                     {
                         if (type == Type.Default)
                         {
                             // Message box not of type GUIMessageBox is likely the round summary
                             MessageBoxes[i].AddToGUIUpdateList();
-                            if (!(MessageBoxes[i].UserData is RoundSummary)) { break; }
+                            if (MessageBoxes[i].UserData is not RoundSummary) { break; }
                         }
                         continue;
                     }
@@ -494,8 +499,7 @@ namespace Barotrauma
                     }
 
                     // These are handled separately in GUI.HandlePersistingElements()
-                    if (MessageBoxes[i].UserData as string == "verificationprompt") { continue; }
-                    if (MessageBoxes[i].UserData as string == "bugreporter") { continue; }
+                    if (messageBox.DrawOnTop) { continue; }
 
                     messageBox.AddToGUIUpdateList();
                     break;

@@ -6,6 +6,8 @@ using System.Diagnostics;
 using Barotrauma.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
+using Barotrauma.Debugging;
 using Barotrauma.Networking;
 #if LINUX
 using System.Runtime.InteropServices;
@@ -48,8 +50,9 @@ namespace Barotrauma
         [STAThread]
         static void Main(string[] args)
         {
-#if !DEBUG
             AppDomain currentDomain = AppDomain.CurrentDomain;
+            currentDomain.ProcessExit += OnProcessExit;
+#if !DEBUG
             currentDomain.UnhandledException += new UnhandledExceptionEventHandler(CrashHandler);
 #endif
             TryStartChildServerRelay(args);
@@ -74,11 +77,37 @@ namespace Barotrauma
 
             string executableDir = Path.GetDirectoryName(System.Reflection.Assembly.GetEntryAssembly().Location);
             Directory.SetCurrentDirectory(executableDir);
+            DebugConsoleCore.Init(
+                newMessage: (s, c) => DebugConsole.NewMessage(s, c),
+                log: DebugConsole.Log);
             Game = new GameMain(args);
 
             Game.Run();
+            ShutDown();
+        }
+
+        private static bool hasShutDown = false;
+        private static void ShutDown()
+        {
+            if (hasShutDown) { return; }
+            hasShutDown = true;
+
             if (GameAnalyticsManager.SendUserStatistics) { GameAnalyticsManager.ShutDown(); }
             SteamManager.ShutDown();
+
+            // Gracefully exit EOS by ticking until the session is closed
+            EosInterface.Core.CleanupAndQuit();
+            while (EosInterface.Core.IsInitialized)
+            {
+                EosInterface.Core.Update();
+                TaskPool.Update();
+                Thread.Sleep(16);
+            }
+        }
+        
+        private static void OnProcessExit(object sender, EventArgs e)
+        {
+            ShutDown();
         }
 
         static GameMain Game;

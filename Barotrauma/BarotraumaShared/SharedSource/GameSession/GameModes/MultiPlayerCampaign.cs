@@ -156,17 +156,15 @@ namespace Barotrauma
             if (CheatsEnabled)
             {
                 DebugConsole.CheatsEnabled = true;
-#if USE_STEAM
-                if (!SteamAchievementManager.CheatsEnabled)
+                if (!AchievementManager.CheatsEnabled)
                 {
-                    SteamAchievementManager.CheatsEnabled = true;
+                    AchievementManager.CheatsEnabled = true;
 #if CLIENT
-                    new GUIMessageBox("Cheats enabled", "Cheat commands have been enabled on the server. You will not receive Steam Achievements until you restart the game.");       
+                    new GUIMessageBox("Cheats enabled", "Cheat commands have been enabled on the server. You will not receive achievements until you restart the game.");       
 #else
                     DebugConsole.NewMessage("Cheat commands have been enabled.", Color.Red);
 #endif
                 }
-#endif
             }
 
             foreach (var subElement in element.Elements())

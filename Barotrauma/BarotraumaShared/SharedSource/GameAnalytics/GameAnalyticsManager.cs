@@ -1,5 +1,6 @@
 ﻿#nullable enable
 using Barotrauma.IO;
+using Barotrauma.Steam;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -49,6 +50,13 @@ namespace Barotrauma
             Difficulty70to80,
             Difficulty80to90,
             Difficulty90to100,
+        }
+
+        public enum CustomDimensions03
+        {
+            UnknownPlatform,
+            Steam,
+            EGS
         }
 
         public enum ResourceCurrency
@@ -149,6 +157,14 @@ namespace Barotrauma
             internal void ConfigureAvailableResourceCurrencies(params ResourceCurrency[] customDimensions)
                 => configureAvailableResourceCurrencies(customDimensions.Select(d => d.ToString()).ToArray());
 
+            private readonly Action<string[]> configureAvailableCustomDimensions03;
+            internal void ConfigureAvailableCustomDimensions03(params CustomDimensions03[] customDimensions)
+                => configureAvailableCustomDimensions03(customDimensions.Select(d => d.ToString()).ToArray());
+
+            private readonly Action<string> setCustomDimension03;
+            internal void SetCustomDimension03(string dimension03)
+                => setCustomDimension03(dimension03);
+
             private readonly Action<string[]> configureAvailableResourceItemTypes;
             internal void ConfigureAvailableResourceItemTypes(params string[] resourceItemTypes)
                 => configureAvailableResourceItemTypes(resourceItemTypes);
@@ -238,9 +254,9 @@ namespace Barotrauma
             {
                 if (resolvingDependency) { return null; }
                 resolvingDependency = true;
-                Assembly dep = context.LoadFromAssemblyPath(GetAssemblyPath(dependencyName.Name ?? throw new Exception("Dependency name was null")));
+                Assembly dependency = context.LoadFromAssemblyPath(GetAssemblyPath(dependencyName.Name ?? throw new Exception("Dependency name was null")));
                 resolvingDependency = false;
-                return dep;
+                return dependency;
             }
 
             internal Implementation()
@@ -297,7 +313,10 @@ namespace Barotrauma
                     new Type[] { typeof(string) }));
                 configureAvailableCustomDimensions02 = Call<string[]>(getMethod(nameof(ConfigureAvailableCustomDimensions02),
                     new Type[] { typeof(string[]) }));
-
+                configureAvailableCustomDimensions03 = Call<string[]>(getMethod(nameof(ConfigureAvailableCustomDimensions03),
+                    new Type[] { typeof(string[]) }));
+                setCustomDimension03 = Call<string>(getMethod(nameof(SetCustomDimension03),
+                    new Type[] { typeof(string) }));
                 configureAvailableResourceCurrencies = Call<string[]>(getMethod(nameof(ConfigureAvailableResourceCurrencies),
                     new Type[] { typeof(string[]) }));
                 configureAvailableResourceItemTypes = Call<string[]>(getMethod(nameof(ConfigureAvailableResourceItemTypes),
@@ -424,6 +443,12 @@ namespace Barotrauma
             loadedImplementation?.SetCustomDimension01(dimension.ToString());
         }
 
+        public static void SetCustomDimension03(CustomDimensions03 dimension)
+        {
+            if (!SendUserStatistics) { return; }
+            loadedImplementation?.SetCustomDimension03(dimension.ToString());
+        }
+
         public static void SetCurrentLevel(LevelData levelData)
         {
             if (!SendUserStatistics) { return; }
@@ -509,6 +534,7 @@ namespace Barotrauma
                     + buildConfiguration);
                 loadedImplementation?.ConfigureAvailableCustomDimensions01(Enum.GetValues(typeof(CustomDimensions01)).Cast<CustomDimensions01>().ToArray());
                 loadedImplementation?.ConfigureAvailableCustomDimensions02(Enum.GetValues(typeof(CustomDimensions02)).Cast<CustomDimensions02>().ToArray());
+                loadedImplementation?.ConfigureAvailableCustomDimensions03(Enum.GetValues(typeof(CustomDimensions03)).Cast<CustomDimensions03>().ToArray());
                 loadedImplementation?.ConfigureAvailableResourceCurrencies(Enum.GetValues(typeof(ResourceCurrency)).Cast<ResourceCurrency>().ToArray());
                 loadedImplementation?.ConfigureAvailableResourceItemTypes(
                     Enum.GetValues(typeof(MoneySink)).Cast<MoneySink>().Select(s => s.ToString()).Union(Enum.GetValues(typeof(MoneySource)).Cast<MoneySource>().Select(s => s.ToString())).ToArray());
@@ -521,6 +547,19 @@ namespace Barotrauma
                     + (exeHash?.ShortRepresentation ?? "Unknown") + ":"
                     + AssemblyInfo.GitRevision + ":"
                     + buildConfiguration);
+
+                SetCustomDimension01(ContentPackageManager.ModsEnabled ? CustomDimensions01.Modded : CustomDimensions01.Vanilla);
+
+                CustomDimensions03 platform = CustomDimensions03.UnknownPlatform; 
+                if (SteamManager.IsInitialized)
+                {
+                    platform = CustomDimensions03.Steam;
+                }
+                else if (EosInterface.IdQueries.IsLoggedIntoEosConnect)
+                {
+                    platform = CustomDimensions03.EGS;
+                }
+                SetCustomDimension03(platform);
             }
             catch (Exception e)
             {

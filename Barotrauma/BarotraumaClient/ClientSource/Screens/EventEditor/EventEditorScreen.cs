@@ -974,7 +974,7 @@ namespace Barotrauma
             spriteBatch.Begin(SpriteSortMode.Deferred, samplerState: GUI.SamplerState);
             GUI.Draw(Cam, spriteBatch);
 
-            if (!string.IsNullOrWhiteSpace(DrawnTooltip))
+            if (!string.IsNullOrWhiteSpace(DrawnTooltip) && GUIStyle.SmallFont.Value != null)
             {
                 string tooltip = ToolBox.WrapText(DrawnTooltip, 256.0f, GUIStyle.SmallFont.Value);
                 GUI.DrawString(spriteBatch, PlayerInput.MousePosition + new Vector2(32, 32), tooltip, Color.White, Color.Black * 0.8f, 4, GUIStyle.SmallFont);

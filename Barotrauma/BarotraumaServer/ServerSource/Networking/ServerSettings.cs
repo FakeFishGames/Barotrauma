@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
+using Barotrauma.Steam;
 
 namespace Barotrauma.Networking
 {
@@ -281,9 +282,11 @@ namespace Barotrauma.Networking
 
             doc.Root.SetAttributeValue("name", ServerName);
             doc.Root.SetAttributeValue("port", Port);
-#if USE_STEAM
-            doc.Root.SetAttributeValue("queryport", QueryPort);
-#endif
+
+            if (QueryPort != 0)
+            {
+                doc.Root.SetAttributeValue("queryport", QueryPort);
+            }
             doc.Root.SetAttributeValue("password", password ?? "");
 
             doc.Root.SetAttributeValue("enableupnp", EnableUPnP);

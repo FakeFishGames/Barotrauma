@@ -200,11 +200,11 @@ namespace Steamworks
 		/// to that value. Steam doesn't provide a mechanism for atomically increasing
 		/// stats like this, this functionality is added here as a convenience.
 		/// </summary>
-		public static bool AddStat( string name, int amount = 1 )
+		public static bool AddStatInt( string name, int amount = 1 )
 		{
 			var val = GetStatInt( name );
 			val += amount;
-			return SetStat( name, val );
+			return SetStatInt( name, val );
 		}
 
 		/// <summary>
@@ -212,17 +212,17 @@ namespace Steamworks
 		/// to that value. Steam doesn't provide a mechanism for atomically increasing
 		/// stats like this, this functionality is added here as a convenience.
 		/// </summary>
-		public static bool AddStat( string name, float amount = 1.0f )
+		public static bool AddStatFloat( string name, float amount = 1.0f )
 		{
 			var val = GetStatFloat( name );
 			val += amount;
-			return SetStat( name, val );
+			return SetStatFloat(name, val) || SetStatInt( name, (int)val );
 		}
 
 		/// <summary>
 		/// Set a stat value. This will automatically call <see cref="StoreStats"/> after a successful call.
 		/// </summary>
-		public static bool SetStat( string name, int value )
+		public static bool SetStatInt( string name, int value )
 		{
 			return Internal != null && Internal.SetStat( name, value );
 		}
@@ -230,7 +230,7 @@ namespace Steamworks
 		/// <summary>
 		/// Set a stat value. This will automatically call <see cref="StoreStats"/> after a successful call.
 		/// </summary>
-		public static bool SetStat( string name, float value )
+		public static bool SetStatFloat( string name, float value )
 		{
 			return Internal != null && Internal.SetStat( name, value );
 		}
@@ -250,9 +250,12 @@ namespace Steamworks
 		/// </summary>
 		public static float GetStatFloat( string name )
 		{
-			float data = 0;
-			Internal?.GetStat( name, ref data );
-			return data;
+			float dataFloat = 0;
+			if (Internal?.GetStat(name, ref dataFloat) is true)
+			{
+				return dataFloat;
+			}
+			return GetStatInt(name);
 		}
 
 		/// <summary>

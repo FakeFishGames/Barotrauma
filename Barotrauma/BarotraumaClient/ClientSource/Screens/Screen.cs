@@ -7,25 +7,20 @@ namespace Barotrauma
 {
     abstract partial class Screen
     {
-        private GUIFrame frame;
-        public GUIFrame Frame
-        {
-            get
-            {
-                if (frame == null)
-                {
-                    frame = new GUIFrame(new RectTransform(GUI.Canvas.RelativeSize, GUI.Canvas), style: null)
-                    {
-                        CanBeFocused = false
-                    };
+        public readonly GUIFrame Frame;
 
-                }
-                return frame;
-            }
+        protected Screen()
+        {
+            Frame = new GUIFrame(new RectTransform(Vector2.One, GUI.Canvas), style: null)
+            {
+                CanBeFocused = false
+            };
         }
 
         /// <summary>
-        /// By default, creates a new frame for the screen and adds all elements to the gui update list.
+        /// By default, submits the screen's main GUIFrame and,
+        /// if requested upon construction, the social drawer,
+        /// to the GUI update list.
         /// </summary>
         public virtual void AddToGUIUpdateList()
         {
@@ -68,9 +63,7 @@ namespace Barotrauma
 
         public virtual void Release()
         {
-            if (frame is null) { return; }
-            frame.RectTransform.Parent = null;
-            frame = null;
+            Frame.RectTransform.Parent = null;
         }
     }
 }

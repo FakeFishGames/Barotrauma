@@ -18,15 +18,16 @@ namespace Barotrauma.Networking
         /// Other user IDs that this user might be closely tied to,
         /// such as the owner of the current copy of Barotrauma
         /// </summary>
-        #warning TODO: make ImmutableArray once feature/inetserializablestruct-improvements gets merged to dev
-        public readonly AccountId[] OtherMatchingIds;
+        public readonly ImmutableArray<AccountId> OtherMatchingIds;
+
+        public bool IsNone => AccountId.IsNone() && OtherMatchingIds.Length == 0;
 
         public AccountInfo(AccountId accountId, params AccountId[] otherIds) : this(Option<AccountId>.Some(accountId), otherIds) { }
         
         public AccountInfo(Option<AccountId> accountId, params AccountId[] otherIds)
         {
             AccountId = accountId;
-            OtherMatchingIds = otherIds.Where(id => !accountId.ValueEquals(id)).ToArray();
+            OtherMatchingIds = otherIds.Where(id => !accountId.ValueEquals(id)).ToImmutableArray();
         }
 
         public bool Matches(AccountId accountId)

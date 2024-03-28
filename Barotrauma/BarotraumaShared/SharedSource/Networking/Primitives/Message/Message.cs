@@ -10,7 +10,11 @@ namespace Barotrauma.Networking
 {
     public static class MsgConstants
     {
-        public const int MTU = 1200; //TODO: determine dynamically
+        // MTU currently set to the upper limit of what EOS P2P can do
+        // TODO: determine dynamically so other protocols can use a larger MTU,
+        // as well as handle a client with a lower MTU set outside of our control
+        public const int MTU = 1170;
+
         public const int CompressionThreshold = 1000;
         public const int InitialBufferSize = 256;
         public const int BufferOverAllocateAmount = 4;

@@ -54,7 +54,7 @@ namespace Barotrauma
         public static Color GenerateColor(string name)
         {
             Random random = new Random(ToolBox.StringToInt(name));
-            return ToolBox.HSVToRGB(random.NextSingle() * 360f, 1f, 1f);
+            return ToolBoxCore.HSVToRGB(random.NextSingle() * 360f, 1f, 1f);
         }
 
         private const float UpdateTimeout = 5f;

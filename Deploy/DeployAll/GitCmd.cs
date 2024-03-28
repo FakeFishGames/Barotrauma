@@ -5,13 +5,13 @@ namespace DeployAll;
 
 public static class GitCmd
 {
-    private const string gitCmdName = "git";
+    private const string GitCmdName = "git";
 
     private static ProcessStartInfo MakePsi(params string[] args)
     {
         var psi = new ProcessStartInfo
         {
-            FileName = gitCmdName,
+            FileName = GitCmdName,
             RedirectStandardError = true,
             RedirectStandardOutput = true
         };

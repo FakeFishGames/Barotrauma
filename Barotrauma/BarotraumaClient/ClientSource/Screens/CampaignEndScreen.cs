@@ -49,7 +49,7 @@ namespace Barotrauma
 
             static void UnlockAchievement(string id)
             {
-                SteamAchievementManager.UnlockAchievement(id.ToIdentifier(), unlockClients: true);
+                AchievementManager.UnlockAchievement(id.ToIdentifier(), unlockClients: true);
             }
         }
 

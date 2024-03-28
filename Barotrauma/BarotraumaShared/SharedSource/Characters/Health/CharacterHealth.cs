@@ -570,7 +570,7 @@ namespace Barotrauma
                     matchingAfflictions.RemoveAt(i);
                     if (i == 0) { i = matchingAfflictions.Count; }
                     if (i > 0) { reduceAmount += surplus / i; }
-                    SteamAchievementManager.OnAfflictionRemoved(matchingAffliction, Character);
+                    AchievementManager.OnAfflictionRemoved(matchingAffliction, Character);
                 }
                 else
                 {
@@ -777,7 +777,7 @@ namespace Barotrauma
                 Math.Min(newAffliction.Prefab.MaxStrength, newAffliction.Strength * (100.0f / MaxVitality) * (1f - GetResistance(newAffliction.Prefab))),
                 newAffliction.Source);
             afflictions.Add(copyAffliction, limbHealth);
-            SteamAchievementManager.OnAfflictionReceived(copyAffliction, Character);
+            AchievementManager.OnAfflictionReceived(copyAffliction, Character);
             MedicalClinic.OnAfflictionCountChanged(Character);
 
             Character.HealthUpdateInterval = 0.0f;
@@ -818,7 +818,7 @@ namespace Barotrauma
                     var affliction = kvp.Key;
                     if (affliction.Strength <= 0.0f)
                     {
-                        SteamAchievementManager.OnAfflictionRemoved(affliction, Character);
+                        AchievementManager.OnAfflictionRemoved(affliction, Character);
                         if (!irremovableAfflictions.Contains(affliction)) { afflictionsToRemove.Add(affliction); }
                         continue;
                     }

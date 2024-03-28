@@ -2,36 +2,27 @@
 
 namespace Barotrauma.Networking
 {
-    sealed class SteamP2PEndpoint : Endpoint
+    sealed class SteamP2PEndpoint : P2PEndpoint
     {
-        public readonly SteamId SteamId;
+        public SteamId SteamId => (Address as SteamP2PAddress)!.SteamId;
 
         public override string StringRepresentation => SteamId.StringRepresentation;
 
-        public override LocalizedString ServerTypeString { get; } = TextManager.Get("SteamP2PServer");
+        public override LocalizedString ServerTypeString { get; } = TextManager.Get("PlayerHostedServer");
         
-        public SteamP2PEndpoint(SteamId steamId) : base(new SteamP2PAddress(steamId))
-        {
-            SteamId = steamId;
-        }
-
-        public new static Option<SteamP2PEndpoint> Parse(string endpointStr)
-            => SteamId.Parse(endpointStr).Select(steamId => new SteamP2PEndpoint(steamId));
-        
-        public override bool Equals(object? obj)
-            => obj switch
-            {
-                SteamP2PEndpoint otherEndpoint => this == otherEndpoint,
-                _ => false
-            };
+        public SteamP2PEndpoint(SteamId steamId) : base(new SteamP2PAddress(steamId)) { }
 
         public override int GetHashCode()
             => SteamId.GetHashCode();
 
-        public static bool operator ==(SteamP2PEndpoint a, SteamP2PEndpoint b)
-            => a.SteamId == b.SteamId;
+        public override bool Equals(object? obj)
+            => obj is SteamP2PEndpoint otherEndpoint
+               && this.SteamId == otherEndpoint.SteamId;
 
-        public static bool operator !=(SteamP2PEndpoint a, SteamP2PEndpoint b)
-            => !(a == b);
+        public new static Option<SteamP2PEndpoint> Parse(string endpointStr)
+            => SteamId.Parse(endpointStr).Select(steamId => new SteamP2PEndpoint(steamId));
+
+        public override P2PConnection MakeConnectionFromEndpoint()
+            => new SteamP2PConnection(this);
     }
 }

@@ -26,7 +26,9 @@ namespace Barotrauma.Networking
 
             PrivateStart();
 
-            processInfo.Arguments += " -pipes " + writePipe.GetClientHandleAsString() + " " + readPipe.GetClientHandleAsString();
+            processInfo.ArgumentList.Add("-pipes");
+            processInfo.ArgumentList.Add(writePipe.GetClientHandleAsString());
+            processInfo.ArgumentList.Add(readPipe.GetClientHandleAsString());
             try
             {
                 Process = Process.Start(processInfo);

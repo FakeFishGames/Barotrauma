@@ -32,7 +32,7 @@ namespace Barotrauma
                         continue;
                     }
 
-                    Type? type = Type.GetType(valueType);
+                    Type? type = ReflectionUtils.GetType(valueType);
 
                     if (type == null)
                     {
@@ -62,7 +62,7 @@ namespace Barotrauma
         {
             DebugConsole.Log($"Set the value \"{identifier}\" to {value}");
 
-            SteamAchievementManager.OnCampaignMetadataSet(identifier, value, unlockClients: true);
+            AchievementManager.OnCampaignMetadataSet(identifier, value, unlockClients: true);
 
             if (!data.ContainsKey(identifier))
             {
@@ -135,7 +135,7 @@ namespace Barotrauma
                 element.Add(new XElement("Data",
                     new XAttribute("key", key),
                     new XAttribute("value", valueStr),
-                    new XAttribute("type", value.GetType())));
+                    new XAttribute("type", value.GetType().FullName ?? "")));
             }
 #if DEBUG
             DebugConsole.Log(element.ToString());
