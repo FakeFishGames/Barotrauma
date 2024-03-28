@@ -4,13 +4,4 @@ body:
   - type: markdown
     attributes:
       value: |
-Tl;Dr: Please write your reports in the [Discussions section](https://github.com/FakeFishGames/Barotrauma/discussions/categories/bug-reports) from now on, and please look for and upvote reports about issues similar to yours.
-
-For years, we've directed all bug reports from players to our issue tracker. That was handy because the reports went straight to our programmers. It was also really cumbersome, because we get a lot of reports, and using the issue tracker, we had to investigate them all more closely than we had time for.
-
-So now we've moved all player reports to the [discussions section](https://github.com/FakeFishGames/Barotrauma/discussions/categories/bug-reports), where we previously directed only feature requests. Why?
-
-- Discussions can be upvoted to show that you have the same issue. This is the number 1 new thing that we'd like everyone to do, as this will help us focus our attention on those issues that are bothering a lot of players. You're also encouraged to chime in on an existing discussion to give more information about it.
-- We can turn discussions into tickets with a single click once we pick one to be worked on internally, so this doesn't make our work any more difficult.
-
-Nothing else changes! Please continue reporting, upvoting, and discussing issues.
+Please write your reports in the [Discussions section](https://github.com/FakeFishGames/Barotrauma/discussions/categories/bug-reports) from now on, and please look for and upvote reports about issues similar to yours.
