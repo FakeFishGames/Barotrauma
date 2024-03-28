@@ -14,6 +14,6 @@ body:
         - We can turn discussions into tickets with a single click once we pick one to be worked on internally, so this doesn't make our work any more difficult.
         
         Nothing else changes! Please continue reporting, upvoting, and discussing issues.
-- type: textarea
-  attributes:
-    label: "GitHub doesn't allow creating issue templates that don't allow user input, so here's a textbox you can type in! :)"
+  - type: textarea
+    attributes:
+      label: "GitHub doesn't allow creating issue templates that don't allow user input, so here's a textbox you can type in! :)"
