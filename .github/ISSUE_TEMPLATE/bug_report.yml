@@ -1,5 +1,10 @@
 name: Bug Report
-description: "**Tl;Dr: Please write your reports in the [Discussions section](https://github.com/FakeFishGames/Barotrauma/discussions/categories/bug-reports) from now on, and please look for and upvote reports about issues similar to yours.**
+description: "Please write your reports in the [Discussions section](https://github.com/FakeFishGames/Barotrauma/discussions/categories/bug-reports), and please look for and upvote reports about issues similar to yours."
+body:
+  - type: markdown
+    attributes:
+      value: |
+        "**Tl;Dr: Please write your reports in the [Discussions section](https://github.com/FakeFishGames/Barotrauma/discussions/categories/bug-reports) from now on, and please look for and upvote reports about issues similar to yours.**
 
 For years, we've directed all bug reports from players to our issue tracker. That was handy because the reports went straight to our programmers. It was also really cumbersome, because we get a lot of reports, and using the issue tracker, we had to investigate them all more closely than we had time for.
 
