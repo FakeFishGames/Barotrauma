@@ -14,3 +14,9 @@ body:
         - We can turn discussions into tickets with a single click once we pick one to be worked on internally, so this doesn't make our work any more difficult.
         
         Nothing else changes! Please continue reporting, upvoting, and discussing issues.
+  - type: checkboxes
+    id: checks
+    attributes:
+      options:
+        - label: "I have read the above."
+          required: true
