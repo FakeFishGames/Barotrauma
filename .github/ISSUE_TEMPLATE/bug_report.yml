@@ -1,5 +1,5 @@
 name: Bug Report
-description: "Please write your reports in the [Discussions section](https://github.com/FakeFishGames/Barotrauma/discussions/categories/bug-reports) from now on"
+description: "Please write your reports in the Discussions section from now on."
 body:
   - type: markdown
     attributes:
