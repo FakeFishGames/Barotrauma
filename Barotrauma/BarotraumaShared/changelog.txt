@@ -1,4 +1,18 @@
 -------------------------------------------------------------------------------------------------------------------------------------------------
+v1.3.0.1
+-------------------------------------------------------------------------------------------------------------------------------------------------
+
+- Fixed character face selection not working in the singleplayer campaign setup menu.
+- Made the "connection lost" error messages when connecting to a server fails more descriptive.
+
+-------------------------------------------------------------------------------------------------------------------------------------------------
+v1.3.0.0
+-------------------------------------------------------------------------------------------------------------------------------------------------
+
+- Epic Games Store release.
+- Steam players have the option to enable crossplay between Steam and the Epic Store. When you launch Barotrauma for the first time following our EGS release, you will see a prompt asking whether you want to enable crossplay. If you do not wish to do so, you can decline, and that will be all. You can also update your preferences at any time in the game settings.
+
+-------------------------------------------------------------------------------------------------------------------------------------------------
 v1.2.8.0
 -------------------------------------------------------------------------------------------------------------------------------------------------
 

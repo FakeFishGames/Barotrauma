@@ -2,7 +2,7 @@
 
 namespace Barotrauma.Networking
 {
-    sealed class LidgrenConnection : NetworkConnection
+    sealed class LidgrenConnection : NetworkConnection<LidgrenEndpoint>
     {
         public readonly NetConnection NetConnection;
 

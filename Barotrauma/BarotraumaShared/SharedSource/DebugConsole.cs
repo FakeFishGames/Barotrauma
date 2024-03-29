@@ -1,8 +1,6 @@
 ﻿using Barotrauma.Extensions;
 using Barotrauma.Items.Components;
 using Barotrauma.Networking;
-using Barotrauma.Steam;
-using FarseerPhysics;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Concurrent;
@@ -12,8 +10,9 @@ using System.ComponentModel;
 using System.Globalization;
 using Barotrauma.IO;
 using System.Linq;
-using System.Text;
+using System.Threading.Tasks;
 using Barotrauma.MapCreatures.Behavior;
+using System.Text;
 
 namespace Barotrauma
 {
@@ -79,9 +78,7 @@ namespace Barotrauma
                 {
                     NewMessage(
                         $"You need to enable cheats using the command \"enablecheats\" before you can use the command \"{Names.First()}\".", Color.Red);
-#if USE_STEAM
                     NewMessage("Enabling cheats will disable Steam achievements during this play session.", Color.Red);
-#endif
                     return;
                 }
 
@@ -182,7 +179,6 @@ namespace Barotrauma
 #if DEBUG
             CheatsEnabled = true;
 #endif
-
             commands.Add(new Command("help", "", (string[] args) =>
             {
                 if (args.Length == 0)
@@ -1815,7 +1811,7 @@ namespace Barotrauma
                 NewMessage((GameSettings.CurrentConfig.VerboseLogging ? "Enabled" : "Disabled") + " verbose logging.", Color.White);
             }, isCheat: false));
 
-            commands.Add(new Command("listtasks", "listtasks: Lists all asynchronous tasks currently in the task pool.", (string[] args) => { TaskPool.ListTasks(); }));
+            commands.Add(new Command("listtasks", "listtasks: Lists all asynchronous tasks currently in the task pool.", (string[] args) => { TaskPool.ListTasks(line => DebugConsole.NewMessage(line)); }));
             
             commands.Add(new Command("listcoroutines", "listcoroutines: Lists all coroutines currently running.", (string[] args) => { CoroutineManager.ListCoroutines(); }));
 

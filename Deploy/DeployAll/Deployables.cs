@@ -10,10 +10,10 @@ public static class Deployables
 {
     public const string ResultPath = "Deploy/bin/content";
 
-    private const string clientProjFmt = "Barotrauma/BarotraumaClient/{0}Client.csproj";
-    private const string serverProjFmt = "Barotrauma/BarotraumaServer/{0}Server.csproj";
+    private const string ClientProjFmt = "Barotrauma/BarotraumaClient/{0}Client.csproj";
+    private const string ServerProjFmt = "Barotrauma/BarotraumaServer/{0}Server.csproj";
 
-    private static readonly ImmutableArray<(string Project, string Runtime)> platforms = new[]
+    private static readonly ImmutableArray<(string Project, string Runtime)> Platforms = new[]
     {
         ("Windows", "win-x64"),
         ("Mac", "osx-x64"),
@@ -28,11 +28,11 @@ public static class Deployables
             Path.Combine(ResultPath, "readme.txt"),
             $"This is Barotrauma {configuration} v{version} ({gitBranch}, {gitRevision}) built on {DateTime.Now}");
         
-        foreach (var (project, runtime) in platforms)
+        foreach (var (project, runtime) in Platforms)
         {
             string serverPath = Path.Combine(ResultPath, project, "Server");
 
-            void checkVersion(string projPath)
+            void CheckVersion(string projPath)
             {
                 Version projVersion = Version.Parse(
                     XDocument.Load(projPath).Root?
@@ -45,11 +45,11 @@ public static class Deployables
                 }
             }
 
-            string serverProj = string.Format(serverProjFmt, project);
-            string clientProj = string.Format(clientProjFmt, project);
+            string serverProj = string.Format(ServerProjFmt, project);
+            string clientProj = string.Format(ClientProjFmt, project);
 
-            checkVersion(serverProj);
-            checkVersion(clientProj);
+            CheckVersion(serverProj);
+            CheckVersion(clientProj);
 
             Console.WriteLine(
                 $"*** Building Barotrauma {configuration}{project} v{version} ({gitBranch}, {gitRevision}) to \"{Path.Combine(ResultPath, project)}\" ***");

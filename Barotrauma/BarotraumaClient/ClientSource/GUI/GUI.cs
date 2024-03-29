@@ -199,19 +199,15 @@ namespace Barotrauma
 
         public static bool PauseMenuOpen { get; private set; }
 
-        public static bool InputBlockingMenuOpen
-        {
-            get
-            {
-                return PauseMenuOpen ||
-                    SettingsMenuOpen ||
-                    DebugConsole.IsOpen ||
-                    GameSession.IsTabMenuOpen ||
-                    GameMain.GameSession?.GameMode is { Paused: true } ||
-                    CharacterHUD.IsCampaignInterfaceOpen ||
-                    GameMain.GameSession?.Campaign is { SlideshowPlayer: { Finished: false, Visible: true } };
-            }
-        }
+        public static bool InputBlockingMenuOpen =>
+            PauseMenuOpen
+            || SettingsMenuOpen
+            || SocialOverlay.Instance is { IsOpen: true }
+            || DebugConsole.IsOpen
+            || GameSession.IsTabMenuOpen
+            || GameMain.GameSession?.GameMode is { Paused: true }
+            || CharacterHUD.IsCampaignInterfaceOpen
+            || GameMain.GameSession?.Campaign is { SlideshowPlayer: { Finished: false, Visible: true } };
 
         public static bool PreventPauseMenuToggle = false;
 
@@ -882,25 +878,30 @@ namespace Barotrauma
 
         private static void HandlePersistingElements(float deltaTime)
         {
-            lock (mutex)
+            bool currentMessageBoxIsVerificationPrompt = GUIMessageBox.VisibleBox is GUIMessageBox { DrawOnTop: true };
+
+            if (!currentMessageBoxIsVerificationPrompt)
             {
                 GUIMessageBox.AddActiveToGUIUpdateList();
-                GUIContextMenu.AddActiveToGUIUpdateList();
+            }
 
-                if (PauseMenuOpen)
-                {
-                    PauseMenu.AddToGUIUpdateList();
-                }
-                if (SettingsMenuOpen)
-                {
-                    SettingsMenuContainer.AddToGUIUpdateList();
-                }
+            if (SettingsMenuOpen)
+            {
+                SettingsMenuContainer.AddToGUIUpdateList();
+            }
+            else if (PauseMenuOpen)
+            {
+                PauseMenu.AddToGUIUpdateList();
+            }
 
-                //the "are you sure you want to quit" prompts are drawn on top of everything else
-                if (GUIMessageBox.VisibleBox?.UserData as string == "verificationprompt" || GUIMessageBox.VisibleBox?.UserData as string == "bugreporter")
-                {
-                    GUIMessageBox.VisibleBox.AddToGUIUpdateList();
-                }
+            SocialOverlay.Instance?.AddToGuiUpdateList();
+
+            GUIContextMenu.AddActiveToGUIUpdateList();
+
+            //the "are you sure you want to quit" prompts are drawn on top of everything else
+            if (currentMessageBoxIsVerificationPrompt)
+            {
+                GUIMessageBox.VisibleBox.AddToGUIUpdateList();
             }
         }
 
@@ -2560,7 +2561,8 @@ namespace Barotrauma
                 var msgBox = new GUIMessageBox("", TextManager.Get(textTag),
                     new LocalizedString[] { TextManager.Get("Yes"), TextManager.Get("No") })
                 {
-                    UserData = "verificationprompt"
+                    UserData = "verificationprompt",
+                    DrawOnTop = true
                 };
                 msgBox.Buttons[0].OnClicked = (_, __) =>
                 {

@@ -52,7 +52,7 @@ namespace Barotrauma.Networking
 
         private DateTime refreshMasterTimer;
         private readonly TimeSpan refreshMasterInterval = new TimeSpan(0, 0, 60);
-        private bool registeredToMaster;
+        private bool registeredToSteamMaster;
 
         private DateTime roundStartTime;
 
@@ -121,7 +121,7 @@ namespace Barotrauma.Networking
 
         public NetworkConnection OwnerConnection { get; private set; }
         private readonly Option<int> ownerKey;
-        private readonly Option<SteamId> ownerSteamId;
+        private readonly Option<P2PEndpoint> ownerEndpoint;
 
         public GameServer(
             string name,
@@ -132,7 +132,7 @@ namespace Barotrauma.Networking
             bool attemptUPnP,
             int maxPlayers,
             Option<int> ownerKey,
-            Option<SteamId> ownerSteamId)
+            Option<P2PEndpoint> ownerEndpoint)
         {
             if (name.Length > NetConfig.ServerNameMaxLength)
             {
@@ -150,7 +150,7 @@ namespace Barotrauma.Networking
 
             this.ownerKey = ownerKey;
 
-            this.ownerSteamId = ownerSteamId;
+            this.ownerEndpoint = ownerEndpoint;
 
             entityEventManager = new ServerEntityEventManager(this);
         }
@@ -165,16 +165,18 @@ namespace Barotrauma.Networking
                 OnInitializationComplete,
                 GameMain.Instance.CloseServer,
                 OnOwnerDetermined);
-            
-            if (ownerSteamId.TryUnwrap(out var steamId))
+
+            if (ownerEndpoint.TryUnwrap(out var endpoint))
             {
-                Log("Using SteamP2P networking.", ServerLog.MessageType.ServerMessage);
-                serverPeer = new SteamP2PServerPeer(steamId, ownerKey.Fallback(0), ServerSettings, callbacks);
+                Log("Using P2P networking.", ServerLog.MessageType.ServerMessage);
+                serverPeer = new P2PServerPeer(endpoint, ownerKey.Fallback(0), ServerSettings, callbacks);
             }
             else
             {
-                Log("Using Lidgren networking. Manual port forwarding may be required. If players cannot connect to the server, you may want to use the in-game hosting menu (which uses SteamP2P networking and does not require port forwarding).", ServerLog.MessageType.ServerMessage);
+                Log("Using Lidgren networking. Manual port forwarding may be required. If players cannot connect to the server, you may want to use the in-game hosting menu (which uses Steamworks and EOS networking and does not require port forwarding).", ServerLog.MessageType.ServerMessage);
                 serverPeer = new LidgrenServerPeer(ownerKey, ServerSettings, callbacks);
+                registeredToSteamMaster = SteamManager.CreateServer(this, ServerSettings.IsPublic);
+                Eos.EosSessionManager.UpdateOwnedSession(Option.None, ServerSettings);
             }
 
             FileSender = new FileSender(serverPeer, MsgConstants.MTU);
@@ -186,13 +188,6 @@ namespace Barotrauma.Networking
             serverPeer.Start();
 
             VoipServer = new VoipServer(serverPeer);
-
-            if (serverPeer is LidgrenServerPeer)
-            {
-#if USE_STEAM
-                registeredToMaster = SteamManager.CreateServer(this, ServerSettings.IsPublic);
-#endif
-            }
 
             Log("Server started", ServerLog.MessageType.ServerMessage);
 
@@ -648,20 +643,23 @@ namespace Barotrauma.Networking
                 updateTimer = DateTime.Now + UpdateInterval;
             }
 
-            if (registeredToMaster && (DateTime.Now > refreshMasterTimer || ServerSettings.ServerDetailsChanged))
+            if (DateTime.Now > refreshMasterTimer || ServerSettings.ServerDetailsChanged)
             {
-                if (GameSettings.CurrentConfig.UseSteamMatchmaking)
+                if (registeredToSteamMaster)
                 {
                     bool refreshSuccessful = SteamManager.RefreshServerDetails(this);
                     if (GameSettings.CurrentConfig.VerboseLogging)
                     {
                         Log(refreshSuccessful ?
-                            "Refreshed server info on the server list." :
-                            "Refreshing server info on the server list failed.", ServerLog.MessageType.ServerMessage);
+                            "Refreshed server info on the Steam server list." :
+                            "Refreshing server info on the Steam server list failed.", ServerLog.MessageType.ServerMessage);
                     }
                 }
-                refreshMasterTimer = DateTime.Now + refreshMasterInterval;
+
+                Eos.EosSessionManager.UpdateOwnedSession(Option.None, ServerSettings);
+
                 ServerSettings.ServerDetailsChanged = false;
+                refreshMasterTimer = DateTime.Now + refreshMasterInterval;
             }
         }
 
@@ -3035,8 +3033,6 @@ namespace Barotrauma.Networking
             client.WaitForNextRoundRespawn = null;
             client.InGame = false;
 
-            if (client.AccountId.TryUnwrap<SteamId>(out var steamId)) { SteamManager.StopAuthSession(steamId); }
-
             var previousPlayer = previousPlayers.Find(p => p.MatchesClient(client));
             if (previousPlayer == null)
             {
@@ -3360,7 +3356,7 @@ namespace Barotrauma.Networking
             msg.WriteByte((byte)ServerPacketHeader.FILE_TRANSFER);
             msg.WriteByte((byte)FileTransferMessageType.Cancel);
             msg.WriteByte((byte)transfer.ID);
-            serverPeer.Send(msg, transfer.Connection, DeliveryMethod.ReliableOrdered);
+            serverPeer.Send(msg, transfer.Connection, DeliveryMethod.Reliable);
         }
 
         public void UpdateVoteStatus(bool checkActiveVote = true)
@@ -3546,13 +3542,13 @@ namespace Barotrauma.Networking
             }
         }
 
-        public void IncrementStat(Character character, Identifier achievementIdentifier, int amount)
+        public void IncrementStat(Character character, AchievementStat stat, int amount)
         {
             foreach (Client client in connectedClients)
             {
                 if (client.Character == character)
                 {
-                    IncrementStat(client, achievementIdentifier, amount);
+                    IncrementStat(client, stat, amount);
                     return;
                 }
             }
@@ -3566,19 +3562,17 @@ namespace Barotrauma.Networking
             IWriteMessage msg = new WriteOnlyMessage();
             msg.WriteByte((byte)ServerPacketHeader.ACHIEVEMENT);
             msg.WriteIdentifier(achievementIdentifier);
-            msg.WriteInt32(0);
 
             serverPeer.Send(msg, client.Connection, DeliveryMethod.Reliable);
         }
 
-        public void IncrementStat(Client client, Identifier achievementIdentifier, int amount)
+        public void IncrementStat(Client client, AchievementStat stat, int amount)
         {
-            if (client.GivenAchievements.Contains(achievementIdentifier)) { return; }
-
             IWriteMessage msg = new WriteOnlyMessage();
-            msg.WriteByte((byte)ServerPacketHeader.ACHIEVEMENT);
-            msg.WriteIdentifier(achievementIdentifier);
-            msg.WriteInt32(amount);
+            msg.WriteByte((byte)ServerPacketHeader.ACHIEVEMENT_STAT);
+
+            INetSerializableStruct incrementedStat = new NetIncrementedStat(stat, amount);
+            incrementedStat.Write(msg);
 
             serverPeer.Send(msg, client.Connection, DeliveryMethod.Reliable);
         }
@@ -3586,7 +3580,7 @@ namespace Barotrauma.Networking
         public void SendTraitorMessage(WriteOnlyMessage msg, Client client)
         {
             if (client == null) { return; };
-            serverPeer.Send(msg, client.Connection, DeliveryMethod.ReliableOrdered);
+            serverPeer.Send(msg, client.Connection, DeliveryMethod.Reliable);
         }
 
         public void UpdateCheatsEnabled()

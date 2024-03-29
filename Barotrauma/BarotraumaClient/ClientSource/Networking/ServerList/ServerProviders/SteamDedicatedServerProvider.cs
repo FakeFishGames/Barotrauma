@@ -46,42 +46,43 @@ namespace Barotrauma
                         MetadataSource = Option<ServerInfo.DataSource>.Some(new DataSource((UInt16)entry.QueryPort))
                     });
 
-        private static void HandleResponsiveServer(Steamworks.Data.ServerInfo entry, Action<ServerInfo> onServerDataReceived)
+        private void HandleResponsiveServer(Steamworks.Data.ServerInfo entry, Action<ServerInfo, ServerProvider> onServerDataReceived)
         {
             TaskPool.Add($"QueryServerRules (GetServers, {entry.Name}, {entry.Address})", entry.QueryRulesAsync(),
                 t =>
                 {
                     if (t.Status == TaskStatus.Faulted)
                     {
-                        TaskPool.PrintTaskExceptions(t, $"Failed to retrieve rules for {entry.Name}");
+                        TaskPool.PrintTaskExceptions(t, $"Failed to retrieve rules for {entry.Name}", msg => DebugConsole.ThrowError(msg));
                         return;
                     }
 
-                    if (!t.TryGetResult(out Dictionary<string, string> rules)) { return; }
+                    if (!t.TryGetResult(out Dictionary<string, string>? rules)) { return; }
                     if (rules is null) { return; }
+
                     if (!InfoFromListEntry(entry).TryUnwrap(out var serverInfo)) { return; }
                     serverInfo.UpdateInfo(key =>
                     {
                         if (rules.TryGetValue(key, out var val)) { return val; }
                         return null;
                     });
-                    serverInfo.Checked = true; //rules != null;
+                    serverInfo.Checked = true;
 
-                    onServerDataReceived(serverInfo);
+                    onServerDataReceived(serverInfo, this);
                 });
         }
         
-        private static void HandleUnresponsiveServer(Steamworks.Data.ServerInfo entry, Action<ServerInfo> onServerDataReceived)
+        private void HandleUnresponsiveServer(Steamworks.Data.ServerInfo entry, Action<ServerInfo, ServerProvider> onServerDataReceived)
         {
             //TODO: do we still want to list unresponsive servers?
             if (!InfoFromListEntry(entry).TryUnwrap(out var serverInfo)) { return; }
-            onServerDataReceived(serverInfo);
+            onServerDataReceived(serverInfo, this);
         }
 
         private Steamworks.ServerList.Internet? serverQuery;
         private CoroutineHandle? queryCoroutine;
         
-        protected override void RetrieveServersImpl(Action<ServerInfo> onServerDataReceived, Action onQueryCompleted)
+        protected override void RetrieveServersImpl(Action<ServerInfo, ServerProvider> onServerDataReceived, Action onQueryCompleted)
         {
             if (!SteamManager.IsInitialized)
             {
@@ -139,7 +140,7 @@ namespace Barotrauma
                         CoroutineManager.StopCoroutines(selfQueryCoroutine);
                         dequeue();
 
-                        if (t.Status == TaskStatus.Faulted) { TaskPool.PrintTaskExceptions(t, "Failed to retrieve servers"); }
+                        if (t.Status == TaskStatus.Faulted) { TaskPool.PrintTaskExceptions(t, "Failed to retrieve servers", msg => DebugConsole.ThrowError(msg)); }
                         
                         selfServerQuery.Dispose();
                     }

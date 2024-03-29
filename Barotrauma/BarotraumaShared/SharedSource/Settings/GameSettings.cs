@@ -84,6 +84,7 @@ namespace Barotrauma
                     Graphics = GraphicsSettings.GetDefault(),
                     Audio = AudioSettings.GetDefault(),
 #if CLIENT
+                    CrossplayChoice = Eos.EosSteamPrimaryLogin.CrossplayChoice.Unknown,
                     DisableGlobalSpamList = false,
                     KeyMap = KeyMapping.GetDefault(),
                     InventoryKeyMap = InventoryKeyMapping.GetDefault()
@@ -91,9 +92,7 @@ namespace Barotrauma
 
                 };
 #if DEBUG
-                config.UseSteamMatchmaking = true;
                 config.QuickStartSub = "Humpback".ToIdentifier();
-                config.RequireSteamAuthentication = true;
                 config.AutomaticQuickStartEnabled = false;
                 config.AutomaticCampaignLoadEnabled = false;
                 config.TextManagerDebugModeEnabled = false;
@@ -156,20 +155,16 @@ namespace Barotrauma
             public Identifier QuickStartSub;
             public string RemoteMainMenuContentUrl;
 #if CLIENT
+            public Eos.EosSteamPrimaryLogin.CrossplayChoice CrossplayChoice;
             public XElement SavedCampaignSettings;
             public bool DisableGlobalSpamList;
 #endif
 #if DEBUG
-            public bool UseSteamMatchmaking;
-            public bool RequireSteamAuthentication;
             public bool AutomaticQuickStartEnabled;
             public bool AutomaticCampaignLoadEnabled;
             public bool TestScreenEnabled;
             public bool TextManagerDebugModeEnabled;
             public bool ModBreakerMode;
-#else
-            public bool UseSteamMatchmaking => true;
-            public bool RequireSteamAuthentication => true;
 #endif
 
             public struct GraphicsSettings

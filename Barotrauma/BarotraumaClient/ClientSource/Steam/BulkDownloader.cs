@@ -31,8 +31,8 @@ namespace Barotrauma.Steam
                 t =>
                 {
                     msgBox.Close();
-                    if (!t.TryGetResult(out IReadOnlyList<Steamworks.Ugc.Item> items)) { return; }
-                    
+                    if (!t.TryGetResult(out IReadOnlyList<Steamworks.Ugc.Item>? items)) { return; }
+
                     InitiateDownloads(items);
                 });
         }
@@ -48,7 +48,7 @@ namespace Barotrauma.Steam
                 t =>
                 {
                     msgBox.Close();
-                    if (!t.TryGetResult(out Steamworks.Ugc.Item?[] itemsNullable)) { return; }
+                    if (!t.TryGetResult(out Steamworks.Ugc.Item?[]? itemsNullable)) { return; }
 
                     var items = itemsNullable
                         .Where(it => it.HasValue)
@@ -74,7 +74,7 @@ namespace Barotrauma.Steam
                     .NotNone()
                     .OfType<SteamWorkshopId>()
                     .Select(async id => await SteamManager.Workshop.GetItem(id.Value))))
-                .Where(p => p.HasValue).Select(p => p ?? default).ToArray();
+                .NotNone().ToArray();
         }
 
         public static void InitiateDownloads(IReadOnlyList<Steamworks.Ugc.Item> itemsToDownload, Action? onComplete = null)

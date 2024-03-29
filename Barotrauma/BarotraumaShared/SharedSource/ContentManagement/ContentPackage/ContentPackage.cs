@@ -72,9 +72,9 @@ namespace Barotrauma
             if (ugcId is not SteamWorkshopId steamWorkshopId) { return true; }
             if (!InstallTime.TryUnwrap(out var installTime)) { return true; }
             
-            Steamworks.Ugc.Item? item = await SteamManager.Workshop.GetItem(steamWorkshopId.Value);
-            if (item is null) { return true; }
-            return item.Value.LatestUpdateTime <= installTime.ToUtcValue();
+            Option<Steamworks.Ugc.Item> itemOption = await SteamManager.Workshop.GetItem(steamWorkshopId.Value);
+            if (!itemOption.TryUnwrap(out var item)) { return true; }
+            return item.LatestUpdateTime <= installTime.ToUtcValue();
         }
 
         public int Index => ContentPackageManager.EnabledPackages.IndexOf(this);

@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Barotrauma.Extensions;
+using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
@@ -30,6 +31,7 @@ namespace Barotrauma
 
         public static Random GetRNG(RandSync randSync)
         {
+            CheckRandThreadSafety(randSync);
             return randSync == RandSync.Unsynced ? localRandom : syncedRandom[randSync];
         }
 
@@ -70,16 +72,10 @@ namespace Barotrauma
         }
 
         public static float Range(float minimum, float maximum, RandSync sync=RandSync.Unsynced)
-        {
-            CheckRandThreadSafety(sync);
-            return (float)(sync == RandSync.Unsynced ? localRandom : (syncedRandom[sync])).NextDouble() * (maximum - minimum) + minimum;
-        }
+            => GetRNG(sync).Range(minimum, maximum);
 
         public static double Range(double minimum, double maximum, RandSync sync = RandSync.Unsynced)
-        {
-            CheckRandThreadSafety(sync);
-            return (sync == RandSync.Unsynced ? localRandom : (syncedRandom[sync])).NextDouble() * (maximum - minimum) + minimum;
-        }
+            => GetRNG(sync).Range(minimum, maximum);
 
         /// <summary>
         /// Min inclusive, Max exclusive!

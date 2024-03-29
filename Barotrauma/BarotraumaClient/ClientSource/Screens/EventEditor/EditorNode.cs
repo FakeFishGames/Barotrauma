@@ -550,7 +550,10 @@ namespace Barotrauma
                     width -= 16;
                 }
 
-                valueText = ToolBox.WrapText(valueText, width, GUIStyle.SubHeadingFont.Value);
+                if (GUIStyle.SubHeadingFont.Value != null)
+                {
+                    valueText = ToolBox.WrapText(valueText, width, GUIStyle.SubHeadingFont.Value);
+                }
                 wrappedText = valueText;
             }
         }

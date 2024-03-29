@@ -60,7 +60,7 @@ namespace Barotrauma.Networking
             => NetEndpoint.GetHashCode();
 
         public static bool operator ==(LidgrenEndpoint a, LidgrenEndpoint b)
-            => a.Address.Equals(b.Address) && a.Port == b.Port;
+            => a.NetEndpoint.EquivalentTo(b.NetEndpoint);
 
         public static bool operator !=(LidgrenEndpoint a, LidgrenEndpoint b)
             => !(a == b);

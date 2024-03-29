@@ -16,7 +16,7 @@ public static class DotnetCmd
 {
     private const string DotnetAppName = "dotnet";
 
-    private const string desiredRuntimeVersion = "6.0.8";
+    private const string DesiredRuntimeVersion = "6.0.8";
     
     public static void Publish(string projPath, string configuration, string runtime, string resultPath)
     {
@@ -36,7 +36,7 @@ public static class DotnetCmd
                 "/p:Platform=x64",
                 "/p:ErrorOnDuplicatePublishOutputFiles=false", //TODO: fix our duplicate files
                 "/p:RollForward=Disable",
-                $"/p:RuntimeFrameworkVersion={desiredRuntimeVersion}",
+                $"/p:RuntimeFrameworkVersion={DesiredRuntimeVersion}",
                 "-o",
                 resultPath
             },

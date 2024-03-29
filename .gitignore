@@ -9,8 +9,12 @@ build/
 bld/
 [Bb]in/
 [Oo]bj/
-[Dd]ebug*/
-[Rr]elease*/
+[Dd]ebugWindows/
+[Rr]eleaseWindows/
+[Dd]ebugMac/
+[Rr]eleaseMac/
+[Dd]ebugLinux/
+[Rr]eleaseLinux/
 *.o
 
 # Misc vs crap 

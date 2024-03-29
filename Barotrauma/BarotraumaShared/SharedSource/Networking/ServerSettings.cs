@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Globalization;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
@@ -294,7 +295,7 @@ namespace Barotrauma.Networking
                     if (typeName != null || property.PropertyType.IsEnum)
                     {
                         NetPropertyData netPropertyData = new NetPropertyData(this, property, typeName);
-                        UInt32 key = ToolBox.IdentifierToUint32Hash(netPropertyData.Name, md5);
+                        UInt32 key = ToolBoxCore.IdentifierToUint32Hash(netPropertyData.Name, md5);
                         if (key == 0) { key++; } //0 is reserved to indicate the end of the netproperties section of a message
                         if (netProperties.ContainsKey(key)){ throw new Exception("Hashing collision in ServerSettings.netProperties: " + netProperties[key] + " has same key as " + property.Name + " (" + key.ToString() + ")"); }
                         netProperties.Add(key, netPropertyData);
@@ -311,7 +312,7 @@ namespace Barotrauma.Networking
                     if (typeName != null || property.PropertyType.IsEnum)
                     {
                         NetPropertyData netPropertyData = new NetPropertyData(networkMember.KarmaManager, property, typeName);
-                        UInt32 key = ToolBox.IdentifierToUint32Hash(netPropertyData.Name, md5);
+                        UInt32 key = ToolBoxCore.IdentifierToUint32Hash(netPropertyData.Name, md5);
                         if (netProperties.ContainsKey(key)) { throw new Exception("Hashing collision in ServerSettings.netProperties: " + netProperties[key] + " has same key as " + property.Name + " (" + key.ToString() + ")"); }
                         netProperties.Add(key, netPropertyData);
                     }
@@ -1134,6 +1135,48 @@ namespace Barotrauma.Networking
             foreach (string submarineName in HiddenSubs)
             {
                 msg.WriteUInt16((UInt16)subList.FindIndex(s => s.Name.Equals(submarineName, StringComparison.OrdinalIgnoreCase)));
+            }
+        }
+        
+        public void UpdateServerListInfo(Action<Identifier, object> setter)
+        {
+            void set(string key, object obj) => setter(key.ToIdentifier(), obj);
+
+            set("ServerName", ServerName);
+            set("MaxPlayers", MaxPlayers);
+            set("HasPassword", HasPassword);
+            set("message", ServerMessageText);
+            set("version", GameMain.Version);
+            set("playercount", GameMain.NetworkMember.ConnectedClients.Count);
+            set("contentpackages", ContentPackageManager.EnabledPackages.All.Where(p => p.HasMultiplayerSyncedContent));
+            set("modeselectionmode", ModeSelectionMode);
+            set("subselectionmode", SubSelectionMode);
+            set("voicechatenabled", VoiceChatEnabled);
+            set("allowspectating", AllowSpectating);
+            set("allowrespawn", AllowRespawn);
+            set("traitors", TraitorProbability.ToString(CultureInfo.InvariantCulture));
+            set("friendlyfireenabled", AllowFriendlyFire);
+            set("karmaenabled", KarmaEnabled);
+            set("gamestarted", GameMain.NetworkMember.GameStarted);
+            set("gamemode", GameModeIdentifier);
+            set("playstyle", PlayStyle);
+            set("language", Language.ToString());
+#if SERVER
+            set("eoscrossplay", EosInterface.Core.IsInitialized);
+#else
+            set("eoscrossplay", EosInterface.IdQueries.IsLoggedIntoEosConnect || Eos.EosSessionManager.CurrentOwnedSession.IsSome());
+#endif
+            if (GameMain.NetLobbyScreen?.SelectedSub != null)
+            {
+                set("submarine", GameMain.NetLobbyScreen.SelectedSub.Name);
+            }
+            if (Steamworks.SteamClient.IsLoggedOn)
+            {
+                string pingLocation = Steamworks.SteamNetworkingUtils.LocalPingLocation?.ToString();
+                if (!pingLocation.IsNullOrEmpty())
+                {
+                    set("steampinglocation", pingLocation);
+                }
             }
         }
     }
