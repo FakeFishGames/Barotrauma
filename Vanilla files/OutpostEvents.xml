@@ -344,34 +344,47 @@
       </StatusEffectAction>
       <TriggerAction target1tag="patient" target2tag="player" applytotarget2="triggerer_player" disableiftargetincapacitated="false" radius="150" waitforinteraction="true"/>      
       <ConversationAction targettag="triggerer_player" text="EventText.goodsamaritan.c1" eventsprite="unconscious">
+        <!-- diagnose -->
         <Option text="EventText.goodsamaritan.o1">
-          <SkillCheckAction targettag="triggerer_player" requiredskill="Medical" requiredlevel="30">
+          <SkillCheckAction targettag="triggerer_player" requiredskill="Medical" requiredlevel="50">
             <Success>
-              <ConversationAction targettag="triggerer_player" text="EventText.goodsamaritan.o1.c1">
-                <Option text="EventText.goodsamaritan.o1.o1">
-                  <CheckItemAction targettag="triggerer_player" itemidentifiers="antinarc">
-                    <Success>
-                      <RemoveItemAction targettag="triggerer_player" itemidentifiers="antinarc" />
+              <Label name="naloxonecheck" />
+              <CheckItemAction targettag="triggerer_player" itemidentifiers="antinarc" ApplyTagToItem="usednaloxone">
+                <Success>
+                  <Label name="hasnaloxone" />
+                  <ConversationAction targettag="triggerer_player" text="EventText.goodsamaritan.o1.c1">
+                    <Option text="EventText.goodsamaritan.o1.o1">
+                      <RemoveItemAction targettag="usednaloxone" />
                       <ConversationAction targettag="triggerer_player" text="EventText.goodsamaritan.o1.o1.c1" />
-                      <ReputationAction targettype="Location" increase="2" />
+                      <ReputationAction targettype="Location" increase="4" />
+                      <GiveSkillEXPAction skill="medical" amount="5" targettag="triggerer_player" />
                       <GodModeAction targettag="patient" enabled="false" />
                       <AfflictionAction targettag="patient" affliction="opiateoverdose" strength="-50" />
-                    </Success>
-                    <Failure>
-                      <ConversationAction targettag="triggerer_player" text="EventText.goodsamaritan.o1.o1.c2" />
+                    </Option>
+                    <Option text="EventText.goodsamaritan.o1.o2">
+                      <Label name="calldoctor" />
+                      <ConversationAction targettag="triggerer_player" text="EventText.goodsamaritan.o1.o2.c1">
+                        <Option text="EventText.goodsamaritan.o1.o2.o1" />
+                      </ConversationAction>
                       <ReputationAction targettype="Location" increase="2" />
                       <GodModeAction targettag="patient" enabled="false" />
-                    </Failure>
-                  </CheckItemAction>
-                </Option>
-                <Option text="EventText.goodsamaritan.o1.o2">
-                  <ConversationAction targettag="triggerer_player" text="EventText.goodsamaritan.o1.o2.c1">
-                    <Option text="EventText.goodsamaritan.o1.o2.o1" />
+                    </Option>
                   </ConversationAction>
-                  <GiveSkillEXPAction targettag="triggerer_player" skill="Medical" amount="5" />
-                  <GodModeAction targettag="patient" enabled="false" />
-                </Option>
-              </ConversationAction>
+                </Success>
+                <!-- if you dont have naloxone, either go get it or call doctor -->
+                <Failure>
+                  <ConversationAction targettag="triggerer_player" text="EventText.goodsamaritan.o1.c1">
+                    <Option text="eventtext.goodsamaritan.findnaloxone" endconversation="true">
+                      <WaitAction time="3" />
+                      <TriggerAction target1tag="patient" target2tag="player" applytotarget2="triggerer_player" disableiftargetincapacitated="false" radius="150" waitforinteraction="true"/>
+                      <Goto name="naloxonecheck" />
+                    </Option>
+                    <Option text="EventText.goodsamaritan.o1.o2">
+                      <Goto name="calldoctor" />
+                    </Option>
+                  </ConversationAction>
+                </Failure>
+              </CheckItemAction>
             </Success>
             <Failure>
               <ConversationAction targettag="triggerer_player" text="EventText.goodsamaritan.o1.c2">
@@ -382,13 +395,19 @@
             </Failure>
           </SkillCheckAction>
         </Option>
-        <Option text="EventText.goodsamaritan.o2" endconversation="true">
-          <ConversationAction targettag="triggerer_player" text="EventText.goodsamaritan.o2.c1" />
+        <!-- check pockets -->
+        <Option text="EventText.goodsamaritan.o2" >
+          <ConversationAction targettag="triggerer_player" text="EventText.goodsamaritan.o2.c1" endconversation="true" />
           <ReputationAction targettype="Location" increase="-2" />
-          <MoneyAction amount="14" targettag="player" />
+          <MoneyAction amount="84" targettag="player" />
+          <SpawnAction itemidentifier="antidama2" targettag="stolenopiods" targetinventory="triggerer_player" />
+          <StatusEffectAction targettag="stolenopiods">
+            <StatusEffect target="This" SpawnedInCurrentOutpost="true" AllowStealing="false" setvalue="true" />
+          </StatusEffectAction>    
           <GodModeAction targettag="patient" enabled="false" />
           <AfflictionAction targettag="patient" affliction="opiateoverdose" strength="50" />
         </Option>
+        <!-- ignore -->
         <Option text="EventText.goodsamaritan.o3" endconversation="true">
           <GodModeAction targettag="patient" enabled="false" />
           <AfflictionAction targettag="patient" affliction="opiateoverdose" strength="50" />
@@ -516,7 +535,7 @@
     <!--"Taste test"-->
     <ScriptedEvent identifier="tastetest" commonness="150">
       <TagAction criteria="player" tag="player" />
-      <TagAction criteria="itemidentifier:opdeco_trashcan" tag="potentialtrashcan" submarinetype="outpost" />
+      <TagAction criteria="itemidentifier:opdeco_trashcan" tag="potentialtrashcan" submarinetype="outpost" chooserandom="true" />
       <TriggerAction target1tag="potentialtrashcan" target2tag="player" applytotarget1="selectedtrashcan" applytotarget2="triggerer_player" radius="100" waitforinteraction="true"/>
       <ConversationAction text="EventText.tastetest.c1" targettag="triggerer_player" eventsprite="redbluebottles">
         <Option text="EventText.tastetest.o1">
@@ -527,17 +546,14 @@
                 <Option text="EventText.tastetest.o1.o1">
                   <ConversationAction targettag="triggerer_player" text="EventText.tastetest.o1.o1.c1">
                     <Option text="EventText.tastetest.o1.o1.o1" endconversation="true">
+                      <!-- good outcome -->
+                      <Label name="goodbottle" />
                       <WaitAction time="20" />
-                      <AfflictionAction targettag="triggerer_player" affliction="internaldamage" strength="-50" />
-                      <AfflictionAction targettag="triggerer_player" affliction="lacerations" strength="-50" />
-                      <AfflictionAction targettag="triggerer_player" affliction="blunttrauma" strength="-50" />
-                      <AfflictionAction targettag="triggerer_player" affliction="bitewounds" strength="-50" />
-                      <AfflictionAction targettag="triggerer_player" affliction="gunshotwound" strength="-50" />
-                      <AfflictionAction targettag="triggerer_player" affliction="organdamage" strength="-50" />
-                      <AfflictionAction targettag="triggerer_player" affliction="explosiondamage" strength="-50" />
-                      <ConversationAction targettag="triggerer_player" text="EventText.tastetest.o1.o1.o1.c1">
+                      <AfflictionAction targettag="triggerer_player" affliction="combatstimulant" strength="50" />
+                      <ConversationAction targettag="triggerer_player" text="EventText.tastetest.o1.o1.o1.c1" eventsprite="redbluebottles">
                         <Option text="EventText.tastetest.o1.o1.o1.o1" endconversation="true">
-                          <TriggerAction target1tag="selectedtrashcan" target2tag="triggerer_player" radius="100" />
+                          <!-- go back to trash can -->
+                          <TriggerAction target1tag="selectedtrashcan" target2tag="triggerer_player" radius="100" waitforinteraction="true" />
                           <ConversationAction targettag="triggerer_player" text="EventText.tastetest.o1.o1.o1.o1.c1" eventsprite="redyellowbottles"/>
                           <SpawnAction itemidentifier="hyperzine" targetinventory="triggerer_player" />
                           <SpawnAction itemidentifier="steroids" targetinventory="triggerer_player" />
@@ -552,36 +568,30 @@
             </Success>
             <Failure>
               <ConversationAction targettag="triggerer_player" text="EventText.tastetest.o1.c2">
+                <!-- blue bottle, random outcome -->
                 <Option text="EventText.tastetest.o1.o3">
-                  <ConversationAction targettag="triggerer_player" text="EventText.tastetest.o1.o3.c1">
-                    <Option text="EventText.tastetest.o1.o3.o1" endconversation="true">
-                      <WaitAction time="20" />
-                      <AfflictionAction targettag="triggerer_player" affliction="internaldamage" strength="-50" />
-                      <AfflictionAction targettag="triggerer_player" affliction="lacerations" strength="-50" />
-                      <AfflictionAction targettag="triggerer_player" affliction="blunttrauma" strength="-50" />
-                      <AfflictionAction targettag="triggerer_player" affliction="bitewounds" strength="-50" />
-                      <AfflictionAction targettag="triggerer_player" affliction="gunshotwound" strength="-50" />
-                      <AfflictionAction targettag="triggerer_player" affliction="organdamage" strength="-50" />
-                      <AfflictionAction targettag="triggerer_player" affliction="explosiondamage" strength="-50" />
-                      <ConversationAction targettag="triggerer_player" text="EventText.tastetest.o1.o3.o1.c1" eventsprite="redbluebottles">
-                        <Option text="EventText.tastetest.o1.o3.o1.o1" endconversation="true">
-                          <TriggerAction target1tag="selectedtrashcan" target2tag="triggerer_player" radius="100" />
-                          <ConversationAction targettag="triggerer_player" text="EventText.tastetest.o1.o3.o1.o1.c1" />
-                          <SpawnAction itemidentifier="hyperzine" targetinventory="triggerer_player" />
-                          <SpawnAction itemidentifier="steroids" targetinventory="triggerer_player" />
-                          <SpawnAction itemidentifier="sulphuricacid" targetinventory="triggerer_player" />
-                        </Option>
+                  <Label name="randombottle" />
+                  <RNGAction chance="0.5">
+                    <Success>
+                      <Goto name="goodbottle" />
+                    </Success>
+                    <Failure>
+                      <!-- bad outcome -->
+                      <Label name="badbottle" />
+                      <AfflictionAction targettag="triggerer_player" affliction="organdamage" limbtype="torso" strength="25" />
+                      <AfflictionAction targettag="triggerer_player" affliction="nausea" limbtype="head" strength="25" />
+                      <AfflictionAction targettag="triggerer_player" affliction="stun" strength="6" />
+                      <ConversationAction targettag="triggerer_player" text="EventText.tastetest.o1.o4.c1">
+                        <Option text="EventText.tastetest.o1.o4.o1" />
                       </ConversationAction>
-                    </Option>
-                  </ConversationAction>
+                    </Failure>
+                  </RNGAction>
                 </Option>
+                <!-- green bottle, goto random -->
                 <Option text="EventText.tastetest.o1.o4">
-                  <AfflictionAction targettag="triggerer_player" affliction="organdamage" limbtype="torso" strength="50" />
-                  <AfflictionAction targettag="triggerer_player" affliction="stun" strength="6" />
-                  <ConversationAction targettag="triggerer_player" text="EventText.tastetest.o1.o4.c1">
-                    <Option text="EventText.tastetest.o1.o4.o1" />
-                  </ConversationAction>
+                  <Goto name="randombottle" />
                 </Option>
+                <!-- do nothing -->
                 <Option text="EventText.tastetest.o1.o5" />
               </ConversationAction>
             </Failure>
@@ -744,10 +754,11 @@
     <!--"Sleight of Hand"-->
     <ScriptedEvent identifier="sleightofhand" commonness="100">
       <SpawnAction npcsetidentifier="outpostnpcs1" npcidentifier="commoner" targettag="gambler" spawnlocation="Outpost" targetmoduletags="crewmodule" />
-      <SpawnAction npcsetidentifier="outpostnpcs1" npcidentifier="commoner" targettag="gambler" spawnlocation="Outpost" targetmoduletags="crewmodule" />
+      <SpawnAction npcsetidentifier="outpostnpcs1" npcidentifier="commoner" targettag="gambler2" spawnlocation="Outpost" targetmoduletags="crewmodule" />
+      <SpawnAction npcsetidentifier="outpostnpcs1" npcidentifier="commoner" targettag="gambler3" spawnlocation="Outpost" targetmoduletags="crewmodule" />
       <SpawnAction npcsetidentifier="outpostnpcs1" npcidentifier="securitynpc[faction]" targettag="gamblingsecurity" spawnlocation="Outpost" targetmoduletags="crewmodule" />
-      <!--<NPCFollowAction npctag="gambler" targettag="gamblingsecurity" follow="true" />
-      <NPCFollowAction npctag="gamblingsecurity" targettag="gambler" follow="true" />-->
+      <NPCFollowAction npctag="gambler2" targettag="gambler" follow="true" />
+      <NPCFollowAction npctag="gambler3" targettag="gambler2" follow="true" />
       <TagAction criteria="player" tag="player" />
       <TriggerAction target1tag="gambler" target2tag="player" applytotarget2="triggerer_player" radius="100" waitforinteraction="true"/>
       <ConversationAction targettag="triggerer_player" text="EventText.sleightofhand.c1" eventsprite="gambler">
@@ -767,12 +778,19 @@
           <RNGAction chance="0.25">
             <Success>
               <ConversationAction targettag="triggerer_player" text="EventText.sleightofhand.o2.c1"/>
-              <SpawnAction itemidentifier="alientrinket1" targetinventory="triggerer_player" />
+              <SpawnAction itemidentifier="alientrinket1" targettag="stolentrinket" targetinventory="triggerer_player" />
+              <StatusEffectAction targettag="stolentrinket">
+                <StatusEffect target="This" SpawnedInCurrentOutpost="true" AllowStealing="false" setvalue="true"/>
+              </StatusEffectAction>
             </Success>
             <Failure>
               <ConversationAction targettag="triggerer_player" text="EventText.sleightofhand.o2.c2" />
-              <SpawnAction itemidentifier="alientrinket1" targetinventory="triggerer_player" />
-              <CombatAction combatmode="defensive" npctag="gamblingsecurity" enemytag="triggerer_player" isinstigator="false" guardreaction="arrest" witnessreaction="none" />
+              <SpawnAction itemidentifier="alientrinket1" targettag="stolentrinket" targetinventory="triggerer_player" />
+              <StatusEffectAction targettag="stolentrinket">
+                <StatusEffect target="This" SpawnedInCurrentOutpost="true" AllowStealing="false" setvalue="true"/>
+              </StatusEffectAction>
+              <WaitAction time="1" />
+              <CombatAction combatmode="arrest" npctag="gamblingsecurity" enemytag="triggerer_player" isinstigator="false" guardreaction="none" witnessreaction="none" />
               <ReputationAction targettype="Location" increase="-2" />
             </Failure>
           </RNGAction>
@@ -1111,11 +1129,18 @@
     <ScriptedEvent identifier="bigbrother" commonness="150">
       <TagAction criteria="player" tag="player" />
       <SpawnAction npcsetidentifier="outpostnpcs1" npcidentifier="securitynpc[faction]" targettag="securitychief" spawnlocation="Outpost" targetmoduletags="adminmodule" />
+      <SpawnAction npcsetidentifier="outpostnpcs1" npcidentifier="securitynpc[faction]" targettag="suspicioussecurity" spawnlocation="Outpost" targetmoduletags="seccrewmodule" />
       <NPCWaitAction npctag="securitychief" wait="true" />
+      <NPCWaitAction npctag="suspicioussecurity" wait="true" />
       <WaitAction time="5" />
-      <ConversationAction text="EventText.bigbrother.c1" dialogtype="Small" eventsprite="officeinside"/>
-      <TriggerAction target1tag="player" target2tag="securitychief" radius="150" applytotarget1="triggerer_player"/>
-      <ConversationAction targettag="triggerer_player" text="EventText.bigbrother.c1.c1" speakertag="securitychief" eventsprite="officeinside" waitforinteraction="true">
+      <ConversationAction text="EventText.bigbrother.c1" dialogtype="Small" eventsprite="officeinside" ContinueAutomatically="true"/>
+      <StatusEffectAction targettag="securitychief">
+        <StatusEffect target="this" duration="3" >
+          <Sound file="Content/Sounds/Radiostatic.ogg" range="4000" volume="2" loop="true" />
+        </StatusEffect>
+      </StatusEffectAction>
+      <TriggerAction target1tag="player" target2tag="securitychief" radius="150" applytotarget1="triggerer_player" waitforinteraction="true" />
+      <ConversationAction targettag="triggerer_player" text="EventText.bigbrother.c1.c1" eventsprite="officeinside" >
         <Option text="EventText.bigbrother.c1.o1">
           <ConversationAction targettag="triggerer_player" text="EventText.bigbrother.c1.o1.c1">
             <Option text="EventText.bigbrother.c1.o1.o1">
@@ -1136,78 +1161,94 @@
       </ConversationAction>
       <NPCWaitAction npctag="securitychief" wait="false" />
       <TriggerAction target1tag="triggerer_player" targetmoduletype="seccrewmodule" radius="10" applytotarget1="triggerer_player" />
+      <WaitAction time="2" />
       <ConversationAction targettag="triggerer_player" text="EventText.bigbrother.c1.c1.c1" eventsprite="dorm">
-        <Option text="EventText.bigbrother.c1.c1.o1">
+        <!-- hide mic in bunks -->
+        <Option text="EventText.bigbrother.c1.c1.o1" endconversation="true" >
+          <TagAction criteria="itemtag:bed" tag="bed" RequiredModuleTag="SecCrewModule" />
+          <TriggerAction target1tag="player" target2tag="bed" radius="150" applytotarget1="triggerer_player" waitforinteraction="true" />
           <RNGAction chance="0.2">
             <Success>
               <ConversationAction targettag="triggerer_player" text="EventText.bigbrother.c1.c1.o1.c1" dialogtype="Small" />
+              <!-- all success goto here -->
+              <Label name="getpaid" />
+              <TriggerAction target1tag="player" target2tag="securitychief" radius="150" applytotarget1="triggerer_player" waitforinteraction="true" />
               <ConversationAction text="EventText.bigbrother.c1.c1.o1.c1.c1" speakertag="securitychief" dialogtype="Small"/>
               <MoneyAction amount="2000" />
             </Success>
             <Failure>
-              <SpawnAction npcsetidentifier="outpostnpcs1" npcidentifier="securitynpc[faction]" targettag="guard" spawnlocation="Outpost" spawnpointtag="triggerer_player" />
-              <NPCWaitAction npctag="guard" wait="true" />
+              <NPCFollowAction npctag="suspicioussecurity" targettag="triggerer_player" follow="true" />
+              <TriggerAction target1tag="triggerer_player" target2tag="suspicioussecurity" radius="200" />
               <ConversationAction targettag="triggerer_player" text="EventText.bigbrother.c1.c1.o1.c2" eventsprite="security">
                 <Option text="EventText.bigbrother.c1.c1.o1.o1">
-                  <SkillCheckAction requiredskill="weapons" requiredlevel="40" targettag="triggerer_player">
+                  <SkillCheckAction requiredskill="weapons" requiredlevel="50" targettag="triggerer_player">
                     <Success>
                       <GiveSkillEXPAction skill="weapons" amount="5" targettag="triggerer_player" />
                       <ConversationAction targettag="triggerer_player" text="EventText.bigbrother.c1.c1.o1.o1.c1" dialogtype="Small" />
-                      <ConversationAction text="EventText.bigbrother.c1.c1.o1.o1.c1.c1" speakertag="securitychief" dialogtype="Small" />
-                      <MoneyAction amount="2000" />
+                      <Goto name="getpaid" />
                     </Success>
                     <Failure>
                       <ConversationAction targettag="triggerer_player" text="EventText.bigbrother.c1.c1.o1.o1.c2"/>
+                      <!-- all failed outcomes goto here -->
+                      <Label name="securitylooksformicrophones" />
                       <WaitAction time="20" />
-                      <TriggerAction target1tag="triggerer_player" target2tag="guard" radius="250" />
+                      <TriggerAction target1tag="triggerer_player" target2tag="suspicioussecurity" radius="250" />
                       <ConversationAction targettag="triggerer_player" text="EventText.bigbrother.c1.c1.o1.o1.c2.c2" eventsprite="security" dialogtype="Small"/>
-                      <WaitAction time="10" />
-                      <CombatAction combatmode="Offensive" npctag="guard" enemytag="triggerer_player" isinstigator="false" guardreaction="arrest" witnessreaction="retreat" />
+                      <WaitAction time="2" />
+                      <CombatAction combatmode="Offensive" npctag="suspicioussecurity" enemytag="triggerer_player" isinstigator="false" suspicioussecurityreaction="arrest" witnessreaction="retreat" />
                     </Failure>
                   </SkillCheckAction>
                 </Option>
                 <Option text="EventText.bigbrother.c1.c1.o1.o2">
                   <ConversationAction targettag="triggerer_player" text="EventText.bigbrother.c1.c1.o1.o2.c1" eventsprite="security" />
-                  <WaitAction time="20" />
-                  <TriggerAction target1tag="triggerer_player" target2tag="guard" radius="250" />
-                  <ConversationAction targettag="triggerer_player" text="EventText.bigbrother.c1.c1.o1.o2.c1.c1" eventsprite="security" dialogtype="Small"/>
-                  <WaitAction time="10" />
-                  <CombatAction combatmode="Offensive" npctag="guard" enemytag="triggerer_player" isinstigator="false" guardreaction="arrest" witnessreaction="retreat" />
+                  <Goto name="securitylooksformicrophones" />
                 </Option>
               </ConversationAction>
-              <NPCWaitAction npctag="guard" wait="false" />
+              <NPCWaitAction npctag="suspicioussecurity" wait="false" />
             </Failure>
           </RNGAction>
         </Option>
-        <Option text="EventText.bigbrother.c1.c1.o2">
-          <SkillCheckAction requiredskill="Electrical" requiredlevel="30" targettag="triggerer_player">
+        <!-- hide mic in electronics -->
+        <Option text="EventText.bigbrother.c1.c1.o2" endconversation="true" >
+          <TagAction criteria="itemtag:junctionbox" tag="junctionbox" RequiredModuleTag="SecCrewModule" />
+          <TriggerAction target1tag="player" target2tag="junctionbox" radius="150" applytotarget1="triggerer_player" applytotarget2="chosenJB" waitforinteraction="true" />
+          <RNGAction chance="0.2">
             <Success>
-              <GiveSkillEXPAction skill="electrical" amount="5" targettag="triggerer_player" />
-              <ConversationAction targettag="triggerer_player" text="EventText.bigbrother.c1.c1.o2.c1" dialogtype="Small" />
-              <ConversationAction text="EventText.bigbrother.c1.c1.o2.c1.c1" speakertag="securitychief" dialogtype="Small" />
-              <MoneyAction amount="2000" />
+              <ConversationAction targettag="triggerer_player" text="eventtext.bigbrother.c1.c1.o2.c1" dialogtype="Small" />
+              <Goto name="getpaid" />
             </Success>
             <Failure>
-              <SpawnAction npcsetidentifier="outpostnpcs1" npcidentifier="securitynpc[faction]" targettag="guard" spawnlocation="Outpost" spawnpointtag="triggerer_player" />
-              <NPCWaitAction npctag="guard" wait="true" />
-              <ConversationAction targettag="triggerer_player" text="EventText.bigbrother.c1.c1.o2.c2" eventsprite="security">
-                <Option text="EventText.bigbrother.c1.c1.o2.o1">
-                  <ConversationAction targettag="triggerer_player" text="EventText.bigbrother.c1.c1.o2.o1.c1" dialogtype="Small" />
-                  <ConversationAction text="EventText.bigbrother.c1.c1.o2.o1.c1.c1" speakertag="securitychief" dialogtype="Small" />
-                  <MoneyAction amount="2000" />
+              <StatusEffectAction targettag="chosenJB">
+                <StatusEffect target="this" duration="1" >
+                  <Sound file="Content/Sounds/Rewiringloop.ogg" range="800" volume="2" loop="true" />
+                  <Sound file="Content/Items/Electricity/zap3.ogg" range="800" volume="2" loop="false" />
+                  <ParticleEmitter particle="weldspark" particlespersecond="3" anglemin="200" anglemax="340" velocitymin="200" velocitymax="300" />
+                </StatusEffect>
+              </StatusEffectAction>
+              <NPCFollowAction npctag="suspicioussecurity" targettag="triggerer_player" follow="true" />
+              <TriggerAction target1tag="triggerer_player" target2tag="suspicioussecurity" radius="200" />
+              <ConversationAction targettag="triggerer_player" text="eventtext.bigbrother.c1.c1.o2.c2" eventsprite="security">
+                <Option text="eventtext.bigbrother.c1.c1.o2.o1">
+                  <SkillCheckAction requiredskill="Electrical" requiredlevel="50" targettag="triggerer_player">
+                    <Success>
+                      <GiveSkillEXPAction skill="electrical" amount="5" targettag="triggerer_player" />
+                      <ConversationAction targettag="triggerer_player" text="eventtext.bigbrother.c1.c1.o2.o1.c1" dialogtype="Small" />
+                      <Goto name="getpaid" />
+                    </Success>
+                    <Failure>
+                      <ConversationAction targettag="triggerer_player" text="EventText.bigbrother.c1.c1.o1.o1.c2"/>
+                      <Goto name="securitylooksformicrophones" />
+                    </Failure>
+                  </SkillCheckAction>
                 </Option>
-                <Option text="EventText.bigbrother.c1.c1.o2.o2">
-                  <ConversationAction targettag="triggerer_player" text="EventText.bigbrother.c1.c1.o2.o2.c1" />
-                  <WaitAction time="20" />
-                  <TriggerAction target1tag="triggerer_player" target2tag="guard" radius="250" />
-                  <ConversationAction targettag="triggerer_player" text="EventText.bigbrother.c1.c1.o2.o2.c1.c1" eventsprite="security" dialogtype="Small"/>
-                  <WaitAction time="10" />
-                  <CombatAction combatmode="Offensive" npctag="guard" enemytag="triggerer_player" isinstigator="false" guardreaction="arrest" witnessreaction="retreat" />
+                <Option text="EventText.bigbrother.c1.c1.o1.o2">
+                  <ConversationAction targettag="triggerer_player" text="EventText.bigbrother.c1.c1.o1.o2.c1" eventsprite="security" />
+                  <Goto name="securitylooksformicrophones" />
                 </Option>
               </ConversationAction>
-              <NPCWaitAction npctag="guard" wait="false" />
+              <NPCWaitAction npctag="suspicioussecurity" wait="false" />
             </Failure>
-          </SkillCheckAction>
+          </RNGAction>  
         </Option>
       </ConversationAction>
       <Label name="end"/>

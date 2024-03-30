@@ -1,4 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
+<Override>
 <Items>
   <Item name="" identifier="op_clowncurtain2" width="199" height="381" scale="0.5" noninteractable="true" category="Decorative">
     <sprite texture="Content/Map/Outposts/Art/ClownDistrict.png" sourcerect="2,2,199,381" depth="0.97" premultiplyalpha="false" origin="0.5,0.5" />
@@ -601,7 +602,7 @@
     </LightComponent>
   </Item>
   <!--Dorm-->
-  <Item name="" identifier="opdeco_bunkbeds" width="356" height="264" texturescale="1.0,1.0" scale="0.5" category="Decorative" spritecolor="255,255,255,255">
+  <Item name="" identifier="opdeco_bunkbeds" tags="bed" width="356" height="264" texturescale="1.0,1.0" scale="0.5" category="Decorative" spritecolor="255,255,255,255">
     <Upgrade gameversion="0.12.0.0" noninteractable="false" />
     <sprite texture="Content/Map/Outposts/Art/Storage.png" sourcerect="1600,1760,384,264" depth="0.85" premultiplyalpha="false" origin="0.5,0.5" />
     <Controller UserPos="0,-300" direction="Right" hidehud="false" canbeselected="true" drawuserbehind="true" noninteractablewhenflippedy="true">
@@ -632,7 +633,7 @@
       </Controller>
     </Upgrade>
   </Item>
-  <Item name="" identifier="opdeco_bunks1" nameidentifier="opdeco_bunks1" allowattachitems="false" width="463" height="398" texturescale="1.0,1.0" scale="0.5" category="Decorative">
+  <Item name="" identifier="opdeco_bunks1" tags="bed" nameidentifier="opdeco_bunks1" allowattachitems="false" width="463" height="398" texturescale="1.0,1.0" scale="0.5" category="Decorative">
     <sprite texture="Content/Map/Outposts/Art/Storage.png" sourcerect="1296,1289,463,387" depth="0.85" premultiplyalpha="false" origin="0.5,0.5" />
     <DecorativeSprite texture="Content/Map/Outposts/Art/Storage.png" sourcerect="1390,1126,320,160" depth="0.86" origin="0.5,0.5" offset="40,-95" />
     <DecorativeSprite texture="Content/Map/Outposts/Art/Storage.png" sourcerect="1390,1126,320,160" depth="0.86" origin="0.5,0.5" offset="40,105" />
@@ -664,7 +665,7 @@
       </Controller>
     </Upgrade>
   </Item>
-  <Item name="" identifier="opdeco_hospitalbed" width="416" height="192" texturescale="1.0,1.0" scale="0.5" noninteractable="false" category="Decorative">
+  <Item name="" identifier="opdeco_hospitalbed" tags="bed,medbed" width="416" height="192" texturescale="1.0,1.0" scale="0.5" noninteractable="false" category="Decorative">
     <Upgrade gameversion="0.12.0.0" noninteractable="false" />
     <sprite texture="Content/Map/Outposts/Art/MedBayAssets.png" sourcerect="96,304,416,192" depth="0.97" premultiplyalpha="false" origin="0.5,0.5" />
     <Controller UserPos="0,-300" direction="Right" hidehud="false" issecondaryitem="true" canbeselected="true" noninteractablewhenflippedy="true" drawuserbehind="true">
@@ -695,7 +696,7 @@
       </Controller>
     </Upgrade>
   </Item>
-  <Item name="" identifier="opdeco_prisonbed" allowattachitems="true" width="384" height="96" texturescale="1.0,1.0" scale="0.5" category="Decorative">
+  <Item name="" identifier="opdeco_prisonbed" tags="bed" allowattachitems="true" width="384" height="96" texturescale="1.0,1.0" scale="0.5" category="Decorative">
     <sprite texture="Content/Map/Outposts/Art/Storage.png" sourcerect="864,1888,384,96" depth="0.98" premultiplyalpha="false" origin="0.5,0.5" />
     <Controller UserPos="0,-300" direction="Right" hidehud="false" issecondaryitem="true" canbeselected="true" noninteractablewhenflippedy="true" drawuserbehind="true">
       <!-- don't allow laying in bed when wearing an exosuit -->
@@ -1122,6 +1123,7 @@
     </DecorativeSprite>
     <Controller direction="None" canbepicked="true" istoggle="true" msg="ItemMsgPressSelect" />
   </Item>
-
-
 </Items>
+
+  
+</Override>  

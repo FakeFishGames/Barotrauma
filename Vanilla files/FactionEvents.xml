@@ -831,6 +831,8 @@
                               <MoneyAction amount="250" />
                             </Option>
                             <Option text="EventText.terrorism101.dismantlebomb">
+                              <SpawnAction itemidentifier="greenwire" targetinventory="triggerer_player" />
+                              <SpawnAction itemidentifier="redwire" targetinventory="triggerer_player" amount="2" />
                               <ConversationAction text="EventText.terrorism101.bombdismantled" targettag="triggerer_player" />
                               <ReputationAction targettype="Faction" identifier="coalition" increase="3" />
                               <MoneyAction amount="250" />
@@ -1678,12 +1680,12 @@
       <SpawnAction itemidentifier="bikehorn" targetinventory="clowntoolbelt" />
       <SpawnAction itemidentifier="clownmask" targetinventory="clowntoolbelt" />
       <SpawnAction itemidentifier="clowncostume" targetinventory="clowntoolbelt" />
+      <SpawnAction npcsetidentifier="outpostnpcs1" npcidentifier="clown" targettag="clown1" spawnlocation="Outpost" targetmoduletags="crewmodule" />
+      <SpawnAction npcsetidentifier="outpostnpcs1" npcidentifier="clown" targettag="clown1" spawnlocation="Outpost" targetmoduletags="crewmodule" />
       <TagAction criteria="player" tag="player" />
       <TriggerAction target1tag="clowntoolbelt" target2tag="player" applytotarget2="triggerer_player" radius="150" waitforinteraction="true" />
       <ConversationAction targettag="triggerer_player" text="EventText.clownrelations1.c1">
         <Option text="EventText.clownrelations1.o1">
-          <SpawnAction npcsetidentifier="outpostnpcs1" npcidentifier="clown" targettag="clown1" spawnlocation="Outpost" targetmoduletags="crewmodule" />
-          <SpawnAction npcsetidentifier="outpostnpcs1" npcidentifier="clown" targettag="clown1" spawnlocation="Outpost" targetmoduletags="crewmodule" />
           <NPCFollowAction npctag="clown1" targettag="clowntoolbelt" follow="true" />
           <NPCFollowAction npctag="clown2" targettag="triggerer_player" follow="true" />
           <WaitAction time="2" />
@@ -1864,94 +1866,152 @@
       </CheckDataAction>
     </ScriptedEvent>
     <!--Censorship-->
-    <ScriptedEvent identifier="censorship" commonness="50">
+    <ScriptedEvent identifier="censorship2" commonness="50">
       <TagAction criteria="player" tag="player" />
       <SpawnAction npcsetidentifier="outpostnpcs1" npcidentifier="clown" targettag="clown" targetmoduletags="clownmodule" spawnlocation="Outpost" />
-      <NPCWaitAction npctag="clown" wait="true" />
-      <Label name="beginning" />
-      <ClearTagAction tag="triggerer_player" />
+      <SpawnAction npcsetidentifier="outpostnpcs1" npcidentifier="securitynpc[faction]" targettag="boxsecurity" targetmoduletags="adminmodule" offset="150" />
+      <NPCWaitAction npctag="boxsecurity" wait="true" />
+      <SpawnAction itemidentifier="clowncrate" targetinventory="boxsecurity" targettag="clownbox" />
+      <SpawnAction itemidentifier="bikehorn" targetinventory="clownbox" Amount="4" ignorebyai="true" targettag="clownhorns"/>
+      <SpawnAction itemidentifier="clowncostume" targetinventory="clownbox" Amount="4" ignorebyai="true" targettag="clownhorns"/>
+      <!-- set box and horns as stolen -->
+      <StatusEffectAction targettag="clownbox">
+        <StatusEffect target="this" spawnedincurrentoutpost="true" allowstealing="false" setvalue="true"/>
+      </StatusEffectAction>
       <TriggerAction target1tag="player" target2tag="clown" applytotarget1="triggerer_player" waitforinteraction="true" />
+      <!-- clown convo -->
       <ConversationAction text="EventText.censorship.c1" targettag="triggerer_player" eventsprite="Censorship1">
         <Option text="EventText.censorship.o1">
           <ConversationAction text="EventText.censorship.o1.c1" targettag="triggerer_player">
             <Option text="EventText.generic.continue">
               <ConversationAction text="EventText.censorship.o1.o1.c1" targettag="triggerer_player">
+                <!-- accept to help -->
                 <Option text="EventText.censorship.o1.o1.o1">
                   <ConversationAction text="EventText.censorship.o1.o1.o1.c1" targettag="triggerer_player" endconversation="true" />
-                  <SpawnAction itemidentifier="metalcrate" spawnlocation="outpost" targettag="clownbox" targetmoduletags="adminmodule" ignorebyai="true" />
-                  <SpawnAction itemidentifier="bikehorn" targetinventory="clownbox" ignorebyai="true" />
-                  <SpawnAction itemidentifier="bikehorn" targetinventory="clownbox" ignorebyai="true" />
-                  <SpawnAction itemidentifier="bikehorn" targetinventory="clownbox" ignorebyai="true" />
-                  <SpawnAction itemidentifier="bikehorn" targetinventory="clownbox" ignorebyai="true" />
-                  <SpawnAction itemidentifier="bikehorn" targetinventory="clownbox" ignorebyai="true" />
-                  <SpawnAction itemidentifier="bikehorn" targetinventory="clownbox" ignorebyai="true" />
+                  <StatusEffectAction targettag="clown">
+                    <StatusEffect target="this">
+                      <Sound file="Content/Items/Weapons/honk.ogg" volume="2" range="700" />
+                    </StatusEffect>
+                  </StatusEffectAction>
                 </Option>
+                <!-- refuse -->
                 <Option text="EventText.censorship.o1.o1.o2">
-                  <!--END-->
-                  <GoTo name="beginning" />
+                  <Goto name="Endevent" />
                 </Option>
               </ConversationAction>
             </Option>
           </ConversationAction>
         </Option>
-        <Option text="EventText.generic.ignore" endconversation="true">
-          <!--END-->
-          <GoTo name="beginning" />
+        <!-- refuse -->
+        <Option text="EventText.generic.ignore">
+          <Goto name="Endevent" />
         </Option>
       </ConversationAction>
-      <!--Trigger at box-->
-      <TriggerAction target1tag="triggerer_player" target2tag="clownbox" waitforinteraction="true" />
-      <SpawnAction npcsetidentifier="outpostnpcs1" npcidentifier="securitynpc[faction]" targettag="security" spawnpointtag="triggerer_player" />
-      <NPCFollowAction npctag="security" targettag="triggerer_player" follow="true" />
-      <ConversationAction text="EventText.censorship.o1.o1.o1.c1.c1" targettag="triggerer_player" eventsprite="Bombscare1">
-        <Option text="EventText.censorship.o1.o1.o1.c1.o1">
-          <ConversationAction text="EventText.censorship.o1.o1.o1.c1.o1.c1" targettag="triggerer_player">
-            <Option text="EventText.censorship.o1.o1.o1.c1.o1.o1">
-              <ConversationAction text="EventText.censorship.o1.o1.o1.c1.o1.o1.c1" targettag="triggerer_player" />
-              <RemoveItemAction targettag="clownbox" />
-            </Option>
-            <Option text="EventText.censorship.o1.o1.o1.c1.o1.o2">
-              <ConversationAction text="EventText.censorship.o1.o1.o1.c1.o1.o2.c1" targettag="triggerer_player" />
-              <CombatAction combatmode="arrest" npctag="security" enemytag="triggerer_player" isinstigator="false" guardreaction="arrest" witnessreaction="none" />
-              <ReputationAction targettype="Faction" identifier="clowns" increase="10" />
-              <ReputationAction targettype="Faction" identifier="huskcult" increase="-5" />
-              <RemoveItemAction targettag="clownbox" />
-            </Option>
-          </ConversationAction>
-        </Option>
-        <Option text="EventText.censorship.o1.o1.o1.c1.o2">
-          <ConversationAction text="EventText.censorship.o1.o1.o1.c1.o2.c1" targettag="triggerer_player">
-            <Option text="EventText.censorship.o1.o1.o1.c1.o2.o1">
-              <SkillCheckAction requiredskill="Helm" requiredlevel="30" targettag="triggerer_player">
-                <Success>
-                  <NPCFollowAction npctag="security" targettag="triggerer_player" follow="false" />
-                  <ConversationAction text="EventText.censorship.o1.o1.o1.c1.o2.o1.c1" targettag="triggerer_player" />
-                  <Label name="censorship_returnbox" />
-                  <TriggerAction target1tag="triggerer_player" target2tag="clown" waitforinteraction="true" />
-                  <CheckItemAction targettag="triggerer_player" itemtags="clownbox">
+      <!-- box/security part, skip if you already took box from security somehow -->
+      <Label name="securityhasboxcheck" />
+      <CheckItemAction targettag="boxsecurity" itemtags="clownbox">
+        <Success>
+          <TriggerAction target1tag="triggerer_player" target2tag="boxsecurity" radius="200" />
+          <ConversationAction text="EventText.censorship.confiscated" targettag="triggerer_player" dialogtype="small" />
+          <TriggerAction target1tag="triggerer_player" target2tag="boxsecurity" waitforinteraction="true" />
+          <ConversationAction text="EventText.censorship.interruptguard" targettag="triggerer_player" eventsprite="Bombscare1">
+            <!-- be truthful -->
+            <Option text="EventText.censorship.wantcargoback">
+              <ConversationAction text="EventText.censorship.implementsofterror" targettag="triggerer_player" eventsprite="Bombscare1">
+                <Option text="EventText.censorship.arrangement">
+                  <ConversationAction text="EventText.censorship.guardsighs" targettag="triggerer_player" eventsprite="Bombscare1" />
+                  <Goto name="skipbribetrigger" />
+                  <Label name="bribeoption" />
+                  <CheckItemAction targettag="boxsecurity" itemtags="clownbox">
                     <Success>
-                      <ConversationAction text="EventText.censorship.o1.o1.o1.c1.o2.o1.c1.c1" targettag="triggerer_player" eventsprite="Censorship1" />
-                      <RemoveItemAction targettag="clownbox" />
-                      <ReputationAction targettype="Faction" identifier="clowns" increase="10" />
-                      <ReputationAction targettype="Faction" identifier="huskcult" increase="-5" />
+                      <TriggerAction target1tag="triggerer_player" target2tag="boxsecurity" waitforinteraction="true" />
+                      <Label name="skipbribetrigger" />
+                      <ConversationAction text="EventText.censorship.bribery" targettag="triggerer_player" eventsprite="Bombscare1" >
+                        <!-- bribe, must have money in wallet -->
+                        <Option text="eventtext.censorship.deal">
+                          <CheckMoneyAction amount="500" >
+                            <!-- bribed, security drops box, box turns "neutral" -->
+                            <Success>
+                              <MoneyAction amount="-500" />
+                              <StatusEffectAction targettag="clownbox">
+                                <StatusEffect target="this" spawnedincurrentoutpost="false" allowstealing="true" setvalue="true">
+                                  <DropItem />
+                                </StatusEffect>
+                              </StatusEffectAction>
+                              <ConversationAction text="EventText.censorship.gavemoney" targettag="triggerer_player" endconversation="true" eventsprite="Bombscare1"/>
+                              <NPCWaitAction npctag="boxsecurity" wait="false" />
+                            </Success>
+                            <!-- failed to bribe, must take by force -->
+                            <Failure>
+                              <NPCWaitAction npctag="boxsecurity" wait="true" />
+                              <ConversationAction targettag="triggerer_player" text="eventtext.censorship.notenough" eventsprite="Bombscare1" />
+                            </Failure>
+                          </CheckMoneyAction>
+                        </Option>
+                        <!-- refuse to bribe, can take crate by force -->
+                        <Option text="eventtext.censorship.nodeal" endconversation="true">
+                          <NPCWaitAction npctag="boxsecurity" wait="true" />
+                        </Option>
+                      </ConversationAction>
                     </Success>
                     <Failure>
-                      <ConversationAction text="EventText.censorship.o1.o1.o1.c1.o2.o1.c2.c2" targettag="triggerer_player" eventsprite="Censorship1" />
-                      <GoTo name="censorship_returnbox" />
+                      <!-- if security doesnt have the crate, don't loop back to bribe option -->
                     </Failure>
                   </CheckItemAction>
-                </Success>
-                <Failure>
-                  <ConversationAction text="EventText.censorship.o1.o1.o1.c1.o2.o1.c2" targettag="triggerer_player" />
-                  <RemoveItemAction targettag="clownbox" />
-                  <ConversationAction text="EventText.censorship.o1.o1.o1.c1.o2.o1.c2.c2" speakertag="clown" targettag="triggerer_player" />
-                </Failure>
-              </SkillCheckAction>
+                </Option>
+              </ConversationAction>
+            </Option>
+            <!-- lie -->
+            <Option text="EventText.censorship.o1.o1.o1.c1.o2">
+              <ConversationAction text="EventText.censorship.o1.o1.o1.c1.o2.c1" targettag="triggerer_player">
+                <Option text="EventText.censorship.o1.o1.o1.c1.o2.o1">
+                  <SkillCheckAction requiredskill="Helm" requiredlevel="50" targettag="triggerer_player">
+                    <!-- security drops box -->
+                    <Success>
+                      <ConversationAction text="EventText.censorship.o1.o1.o1.c1.o2.o1.c1" targettag="triggerer_player" />
+                      <StatusEffectAction targettag="clownbox">
+                        <StatusEffect target="this" spawnedincurrentoutpost="false" allowstealing="true" setvalue="true">
+                          <DropItem />
+                        </StatusEffect>
+                      </StatusEffectAction>
+                      <NPCWaitAction npctag="boxsecurity" wait="false" />
+                    </Success>
+                    <!-- failed lie, must take by force -->
+                    <Failure>
+                      <ConversationAction text="EventText.censorship.notconvinced" targettag="triggerer_player" />
+                      <NPCWaitAction npctag="boxsecurity" wait="true" />
+                    </Failure>
+                  </SkillCheckAction>
+                </Option>
+              </ConversationAction>
             </Option>
           </ConversationAction>
-        </Option>
-      </ConversationAction>
-      <NPCFollowAction npctag="security" targettag="triggerer_player" follow="false" />
+        </Success>
+        <Failure>
+          <!-- skip if security doesnt have the box -->
+        </Failure>
+      </CheckItemAction>
+      <!-- return box to clown -->
+      <Label name="censorship_returnbox" />
+      <TriggerAction target1tag="triggerer_player" target2tag="clown" waitforinteraction="true" />
+      <CheckItemAction targettag="triggerer_player" itemtags="clownbox">
+        <Success>
+          <ConversationAction text="EventText.censorship.o1.o1.o1.c1.o2.o1.c1.c1" targettag="triggerer_player" eventsprite="Censorship1" />
+          <!-- <RemoveItemAction targettag="clownbox" /> -->
+          <ReputationAction targettype="Faction" identifier="clowns" increase="10" />
+          <StatusEffectAction targettag="clownbox">
+            <StatusEffect target="this" spawnedincurrentoutpost="false" allowstealing="true" nonplayerteaminteractable="true" setvalue="true">
+              <DropItem />
+            </StatusEffect>
+          </StatusEffectAction>
+          <NPCOperateItemAction npctag="clown" targettag="clownbox" Operate="true" />
+        </Success>
+        <Failure>
+          <ConversationAction text="EventText.censorship.o1.o1.o1.c1.o2.o1.c2.c2" targettag="triggerer_player" eventsprite="Censorship1" />
+          <GoTo name="censorship_returnbox" />
+        </Failure>
+      </CheckItemAction>
+      <Label name="Endevent" />
     </ScriptedEvent>
     <ScriptedEvent identifier="clownspecialhire1">
       <CheckDataAction identifier="pathofthebikehorn" condition="eq 7">

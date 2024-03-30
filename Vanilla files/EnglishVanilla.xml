@@ -6438,6 +6438,7 @@
 <eventtext.goodsamaritan.o1>Diagnose.</eventtext.goodsamaritan.o1>
 <eventtext.goodsamaritan.o1.c1>The patient’s lips are blue, their breaths are short and shallow and their heart is beating very slowly. Telltale signs of Fentanyl overdose. Injection marks on their arm confirm your diagnosis.</eventtext.goodsamaritan.o1.c1>
 <eventtext.goodsamaritan.o1.o1>Treat the overdose with Naloxone.</eventtext.goodsamaritan.o1.o1>
+<eventtext.goodsamaritan.findnaloxone>Maybe I can find some Naloxone?</eventtext.goodsamaritan.findnaloxone>
 <eventtext.goodsamaritan.o1.o1.c1>You treat the overdose with Naloxone. The patient is still unconscious, but their condition is stable.</eventtext.goodsamaritan.o1.o1.c1>
 <eventtext.goodsamaritan.o1.o1.c2>You have no Naloxone. All you can do at this point is make sure the patient's life is not in immediate danger and alert the local officials.</eventtext.goodsamaritan.o1.o1.c2>
 <eventtext.goodsamaritan.o1.o2>Give them basic first aid and alert the outpost doctor.</eventtext.goodsamaritan.o1.o2>
@@ -6647,9 +6648,9 @@
 <eventtext.bigbrother.c1.c1.o1.o2.c1>The guard lets out a brief chuckle. “A funny guy. You shouldn't be here. Go on, git.” The guard then turns their attention to the cameras. Now would be a good time to vanish before they get any wiser. This mission is a failure.</eventtext.bigbrother.c1.c1.o1.o2.c1>
 <eventtext.bigbrother.c1.c1.o1.o2.c1.c1>The guard draws their weapon. “Microphones, huh? You need to come with me.” Now would be a REALLY good time to run.</eventtext.bigbrother.c1.c1.o1.o2.c1.c1>
 <eventtext.bigbrother.c1.c1.o2>Hide microphones inside some electronics.</eventtext.bigbrother.c1.c1.o2>
-<eventtext.bigbrother.c1.c1.o2.c1>You open up a nearby transistor radio and install a microphone inside the speaker, out of sight. Return to the chief to receive your payment.</eventtext.bigbrother.c1.c1.o2.c1>
+<eventtext.bigbrother.JBsuccess>You open up a nearby junction box and install a microphone inside, out of sight. Return to the chief to receive your payment.</eventtext.bigbrother.JBsuccess>
 <eventtext.bigbrother.c1.c1.o2.c1.c1>“Good work. Here's your payment. We never spoke.”</eventtext.bigbrother.c1.c1.o2.c1.c1>
-<eventtext.bigbrother.c1.c1.o2.c2>You spot a transistor radio that could possibly hold a microphone. As you're fiddling with it, a security guard calls out. “You! Come here!” You decide to comply for now. “What were you doing?” the guard demands.</eventtext.bigbrother.c1.c1.o2.c2>
+<eventtext.bigbrother.JBsussy>You spot a electrical panel that could possibly hold a microphone. As you're fiddling with it, a security guard calls out. “You! Come here!” You decide to comply for now. “What were you doing?” the guard demands.</eventtext.bigbrother.JBsussy>
 <eventtext.bigbrother.c1.c1.o2.o1>“Fixing the radio antenna.”</eventtext.bigbrother.c1.c1.o2.o1>
 <eventtext.bigbrother.c1.c1.o2.o1.c1>“Finally. Make sure K-Rawler comes through loud and clear.” Something will come through all right, you think to yourself. Return to the chief to receive your payment.</eventtext.bigbrother.c1.c1.o2.o1.c1>
 <eventtext.bigbrother.c1.c1.o2.o1.c1.c1>“Good work. Here's your payment. We never spoke.”</eventtext.bigbrother.c1.c1.o2.o1.c1.c1>
@@ -6978,19 +6979,23 @@
 <eventtext.censorship.o1.o1.c1>You manage to gather that a shipment of important materials has been falsely impounded from this clown person's vessel and they're asking for help getting it back.</eventtext.censorship.o1.o1.c1>
 <eventtext.censorship.o1.o1.o1>Help them out.</eventtext.censorship.o1.o1.o1>
 <eventtext.censorship.o1.o1.o1.c1>The jester is overjoyed. The box has been taken to the manager's office. They toot a horn as you turn to leave. Weird.</eventtext.censorship.o1.o1.o1.c1>
-<eventtext.censorship.o1.o1.o1.c1.c1>There is a box of supplies here, labeled “Confiscated.” This must be what the clown wanted. You bend down and pick up the box, then turn around to head back when you see a security guard pointing at you with a stun baton. “Where do you think you're going? That's confiscated materials you're carrying.”</eventtext.censorship.o1.o1.o1.c1.c1>
-<eventtext.censorship.o1.o1.o1.c1.o1>Be truthful.</eventtext.censorship.o1.o1.o1.c1.o1>
-<eventtext.censorship.o1.o1.o1.c1.o1.c1>You explain that you're helping someone get their unlawfully confiscated cargo back. “Unlawfully? Do you realize you're carrying highly dangerous implements of terror there?” The guard carefully opens the box, revealing a bunch of red and white costumes and an assortment of bike horns.</eventtext.censorship.o1.o1.o1.c1.o1.c1>
-<eventtext.censorship.o1.o1.o1.c1.o1.o1>“I'm sorry, officer. I didn't know.”</eventtext.censorship.o1.o1.o1.c1.o1.o1>
-<eventtext.censorship.o1.o1.o1.c1.o1.o1.c1>The guard takes the box from you. “Don't let me catch you trying that shit again.”</eventtext.censorship.o1.o1.o1.c1.o1.o1.c1>
-<eventtext.censorship.o1.o1.o1.c1.o1.o2>Run.</eventtext.censorship.o1.o1.o1.c1.o1.o2>
-<eventtext.censorship.o1.o1.o1.c1.o1.o2.c1>Without saying another word, you turn tail and run. The officer is stunned for a moment, then chases after you.</eventtext.censorship.o1.o1.o1.c1.o1.o2.c1>
+<eventtext.censorship.confiscated>A security guard is carrying a colorful box of supplies, labeled “Confiscated.” This must be what the clown wanted.</eventtext.censorship.confiscated>
+<eventtext.censorship.interruptguard>You interrupt the guard. “What do you want?" </eventtext.censorship.interruptguard>
+<eventtext.censorship.wantcargoback>Explain that you're helping someone get their unlawfully confiscated cargo back.</eventtext.censorship.wantcargoback>
+<eventtext.censorship.implementsofterror>“Unlawfully? Do you realize these highly dangerous implements of terror?” The guard carefully opens the box, revealing a bunch of red and white costumes and an assortment of bike horns.</eventtext.censorship.implementsofterror>
+<eventtext.censorship.arrangement>“Can't we figure something out?"</eventtext.censorship.arrangement>
+<eventtext.censorship.guardsighs>The officer sighs heavily. "Look, all suspicious cargo entering the station is to be seized. Orders from above. Personally I can't be bothered to deal with all the paperwork..." The guard then mutters something: </eventtext.censorship.guardsighs>
+<eventtext.censorship.bribery>"It's yours for 500 marks. Take it or leave it."</eventtext.censorship.bribery>
+<eventtext.censorship.deal>"Deal."</eventtext.censorship.deal>
+<eventtext.censorship.nodeal>"Screw that. I'm not paying this much."</eventtext.censorship.nodeal>
+<eventtext.censorship.notenough>"That's nowhere near enough money pal. Deal is off the table."</eventtext.censorship.notenough>
+<eventtext.censorship.gavemoney>"Pleasure doing business. Here's your junk."</eventtext.censorship.gavemoney>
 <eventtext.censorship.o1.o1.o1.c1.o2>Lie.</eventtext.censorship.o1.o1.o1.c1.o2>
 <eventtext.censorship.o1.o1.o1.c1.o2.c1>You explain that you are a new customs officer here and are transporting the box to a more secure facility.</eventtext.censorship.o1.o1.o1.c1.o2.c1>
 <eventtext.censorship.o1.o1.o1.c1.o2.o1>The guard scratches their head.</eventtext.censorship.o1.o1.o1.c1.o2.o1>
 <eventtext.censorship.o1.o1.o1.c1.o2.o1.c1>The guard decides it's not worth their time to fact-check what you said. They wave you to continue on.</eventtext.censorship.o1.o1.o1.c1.o2.o1.c1>
+<eventtext.censorship.notconvinced>"I've never heard of a new hire. If you're looking for a job check with HR. Now buzz off." The guard is not convinced.</eventtext.censorship.notconvinced>
 <eventtext.censorship.o1.o1.o1.c1.o2.o1.c1.c1>The clown is happy to see their items back and teaches you a customary clown greeting that you can use to impress other clowns.</eventtext.censorship.o1.o1.o1.c1.o2.o1.c1.c1>
-<eventtext.censorship.o1.o1.o1.c1.o2.o1.c2>The guard is not convinced and takes the box from you.</eventtext.censorship.o1.o1.o1.c1.o2.o1.c2>
 <eventtext.censorship.o1.o1.o1.c1.o2.o1.c2.c2>Sadly, you return to the clown empty-handed.</eventtext.censorship.o1.o1.o1.c1.o2.o1.c2.c2>
 <eventtext.censorship.o1.o1.o2>Better not.</eventtext.censorship.o1.o1.o2>
 <eventtext.generic.walkaway>Walk away.</eventtext.generic.walkaway>
