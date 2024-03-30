@@ -1,5 +1,4 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Override>
 <Items>
   <Item name="" identifier="op_clowncurtain2" width="199" height="381" scale="0.5" noninteractable="true" category="Decorative">
     <sprite texture="Content/Map/Outposts/Art/ClownDistrict.png" sourcerect="2,2,199,381" depth="0.97" premultiplyalpha="false" origin="0.5,0.5" />
@@ -1124,6 +1123,3 @@
     <Controller direction="None" canbepicked="true" istoggle="true" msg="ItemMsgPressSelect" />
   </Item>
 </Items>
-
-  
-</Override>  
