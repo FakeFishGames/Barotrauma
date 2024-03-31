@@ -1459,7 +1459,7 @@ namespace Barotrauma
 
             charElement.Add(new XAttribute("missionscompletedsincedeath", MissionsCompletedSinceDeath));
 
-            if (MinReputationToHire.factionId != default)
+            if (!MinReputationToHire.factionId.IsEmpty)
             {
                 charElement.Add(
                     new XAttribute("factionId", MinReputationToHire.factionId),

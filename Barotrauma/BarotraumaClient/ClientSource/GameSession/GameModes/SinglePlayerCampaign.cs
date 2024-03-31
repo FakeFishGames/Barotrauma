@@ -175,13 +175,11 @@ namespace Barotrauma
             if (CheatsEnabled)
             {
                 DebugConsole.CheatsEnabled = true;
-#if USE_STEAM
-                if (!SteamAchievementManager.CheatsEnabled)
+                if (!AchievementManager.CheatsEnabled)
                 {
-                    SteamAchievementManager.CheatsEnabled = true;
+                    AchievementManager.CheatsEnabled = true;
                     new GUIMessageBox("Cheats enabled", "Cheat commands have been enabled on the campaign. You will not receive Steam Achievements until you restart the game.");
                 }
-#endif
             }
 
             if (map == null)

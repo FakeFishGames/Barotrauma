@@ -1554,7 +1554,6 @@ namespace Barotrauma
             autoSaveLabel?.Parent?.RemoveChild(autoSaveLabel);
             autoSaveLabel = null;
 
-#if USE_STEAM
             if (editorSelectedTime.TryUnwrap(out DateTime selectedTime))
             {
                 TimeSpan timeInEditor = DateTime.Now - selectedTime;
@@ -1568,11 +1567,10 @@ namespace Barotrauma
                 }
                 else
                 {
-                    SteamAchievementManager.IncrementStat("hoursineditor".ToIdentifier(), (float)timeInEditor.TotalHours);
+                    AchievementManager.IncrementStat(AchievementStat.HoursInEditor, (float)timeInEditor.TotalHours);
                     editorSelectedTime = Option<DateTime>.None();
                 }
             }
-#endif
 
             GUI.ForceMouseOn(null);
 
@@ -4173,7 +4171,7 @@ namespace Barotrauma
                 Rectangle newColorRect = new Rectangle(rect.Location, areaSize);
                 Rectangle oldColorRect = new Rectangle(new Point(newColorRect.Left, newColorRect.Bottom), areaSize);
 
-                GUI.DrawRectangle(batch, newColorRect, ToolBox.HSVToRGB(colorPicker.SelectedHue, colorPicker.SelectedSaturation, colorPicker.SelectedValue), isFilled: true);
+                GUI.DrawRectangle(batch, newColorRect, ToolBoxCore.HSVToRGB(colorPicker.SelectedHue, colorPicker.SelectedSaturation, colorPicker.SelectedValue), isFilled: true);
                 GUI.DrawRectangle(batch, oldColorRect, originalColor, isFilled: true);
                 GUI.DrawRectangle(batch, rect, Color.Black, isFilled: false);
             });
@@ -4293,7 +4291,7 @@ namespace Barotrauma
                     setValues = true;
                 }
 
-                Color color = ToolBox.HSVToRGB(colorPicker.SelectedHue, colorPicker.SelectedSaturation, colorPicker.SelectedValue);
+                Color color = ToolBoxCore.HSVToRGB(colorPicker.SelectedHue, colorPicker.SelectedSaturation, colorPicker.SelectedValue);
                 foreach (var (e, origColor, prop) in entities)
                 {
                     if (e is MapEntity { Removed: true }) { continue; }
@@ -4327,7 +4325,7 @@ namespace Barotrauma
 
                 void SetHex(Vector3 hsv)
                 {
-                    Color hexColor = ToolBox.HSVToRGB(hsv.X, hsv.Y, hsv.Z);
+                    Color hexColor = ToolBoxCore.HSVToRGB(hsv.X, hsv.Y, hsv.Z);
                     hexValueBox!.Text = ColorToHex(hexColor);
                 }
             }

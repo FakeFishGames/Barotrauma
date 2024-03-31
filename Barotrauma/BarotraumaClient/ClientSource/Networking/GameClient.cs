@@ -162,7 +162,7 @@ namespace Barotrauma.Networking
             set;
         }
 
-        private readonly Endpoint serverEndpoint;
+        private readonly ImmutableArray<Endpoint> serverEndpoints;
         private readonly Option<int> ownerKey;
 
         public bool IsServerOwner => ownerKey.IsSome();
@@ -182,6 +182,9 @@ namespace Barotrauma.Networking
         public readonly NamedEvent<PermissionChangedEvent> OnPermissionChanged = new NamedEvent<PermissionChangedEvent>();
 
         public GameClient(string newName, Endpoint endpoint, string serverName, Option<int> ownerKey)
+            : this(newName, endpoint.ToEnumerable().ToImmutableArray(), serverName, ownerKey) { }
+
+        public GameClient(string newName, ImmutableArray<Endpoint> endpoints, string serverName, Option<int> ownerKey)
         {
             //TODO: gui stuff should probably not be here?
             this.ownerKey = ownerKey;
@@ -270,7 +273,7 @@ namespace Barotrauma.Networking
             ServerSettings = new ServerSettings(this, "Server", 0, 0, 0, false, false);
             Voting = new Voting();
 
-            serverEndpoint = endpoint;
+            serverEndpoints = endpoints;
             InitiateServerJoin(serverName);
 
             //ServerLog = new ServerLog("");
@@ -281,7 +284,7 @@ namespace Barotrauma.Networking
 
         public ServerInfo CreateServerInfoFromSettings()
         {
-            var serverInfo = ServerInfo.FromServerConnection(ClientPeer.ServerConnection, ServerSettings);
+            var serverInfo = ServerInfo.FromServerEndpoints(ClientPeer.AllServerEndpoints, ServerSettings);
             GameMain.ServerListScreen.UpdateOrAddServerInfo(serverInfo);
             return serverInfo;
         }
@@ -327,11 +330,14 @@ namespace Barotrauma.Networking
                 ReadDataMessage,
                 OnClientPeerDisconnect,
                 OnConnectionInitializationComplete);
-            return serverEndpoint switch
-                {
-                LidgrenEndpoint lidgrenEndpoint => new LidgrenClientPeer(lidgrenEndpoint, callbacks, ownerKey),
-                SteamP2PEndpoint _ when ownerKey.TryUnwrap(out var key) => new SteamP2POwnerPeer(callbacks, key),
-                SteamP2PEndpoint steamP2PServerEndpoint when ownerKey.IsNone() => new SteamP2PClientPeer(steamP2PServerEndpoint, callbacks),
+            return serverEndpoints.First() switch
+            {
+                LidgrenEndpoint lidgrenEndpoint
+                    => new LidgrenClientPeer(lidgrenEndpoint, callbacks, ownerKey),
+                P2PEndpoint when ownerKey.TryUnwrap(out int key)
+                    => new P2POwnerPeer(callbacks, key, serverEndpoints.Cast<P2PEndpoint>().ToImmutableArray()),
+                P2PEndpoint when ownerKey.IsNone()
+                    => new P2PClientPeer(serverEndpoints.Cast<P2PEndpoint>().ToImmutableArray(), callbacks),
                 _ => throw new ArgumentOutOfRangeException()
             };
         }
@@ -800,6 +806,9 @@ namespace Barotrauma.Networking
                 case ServerPacketHeader.ACHIEVEMENT:
                     ReadAchievement(inc);
                     break;
+                case ServerPacketHeader.ACHIEVEMENT_STAT:
+                    ReadAchievementStat(inc);
+                    break;
                 case ServerPacketHeader.CHEATS_ENABLED:
                     bool cheatsEnabled = inc.ReadBoolean();
                     inc.ReadPadBits();
@@ -810,7 +819,7 @@ namespace Barotrauma.Networking
                     else
                     {
                         DebugConsole.CheatsEnabled = cheatsEnabled;
-                        SteamAchievementManager.CheatsEnabled = cheatsEnabled;
+                        AchievementManager.CheatsEnabled = cheatsEnabled;
                         if (cheatsEnabled)
                         {
                             var cheatMessageBox = new GUIMessageBox(TextManager.Get("CheatsEnabledTitle"), TextManager.Get("CheatsEnabledDescription"));
@@ -858,7 +867,7 @@ namespace Barotrauma.Networking
 
         private void ReadStartGameFinalize(IReadMessage inc)
         {
-            TaskPool.ListTasks();
+            TaskPool.ListTasks(DebugConsole.Log);
             ushort contentToPreloadCount = inc.ReadUInt16();
             List<ContentFile> contentToPreload = new List<ContentFile>();
             for (int i = 0; i < contentToPreloadCount; i++)
@@ -995,8 +1004,9 @@ namespace Barotrauma.Networking
             }
             else
             {
-                if (ClientPeer is SteamP2PClientPeer or SteamP2POwnerPeer)
+                if (ClientPeer is P2PClientPeer or P2POwnerPeer)
                 {
+                    Eos.EosSessionManager.LeaveSession();
                     SteamManager.LeaveLobby();
                 }
 
@@ -1005,10 +1015,7 @@ namespace Barotrauma.Networking
 
                 GameMain.GameSession?.Campaign?.CancelStartRound();
 
-                if (SteamManager.IsInitialized)
-                {
-                    Steamworks.SteamFriends.ClearRichPresence();
-                }
+                UpdatePresence("");
                 foreach (var fileTransfer in FileReceiver.ActiveTransfers.ToArray())
                 {
                     FileReceiver.StopTransfer(fileTransfer, deleteFile: true);
@@ -1097,19 +1104,47 @@ namespace Barotrauma.Networking
                 ClientPeer.ServerContentPackages = prevContentPackages;
             }
         }
-        
-        private void OnConnectionInitializationComplete()
+
+        private void UpdatePresence(string connectCommand)
         {
+            #warning TODO: use store localization functionality
+            var desc = TextManager.GetWithVariable("FriendPlayingOnServer", "[servername]", ServerName);
+            
+            async Task updateEosPresence()
+            {
+                var epicIds = EosInterface.IdQueries.GetLoggedInEpicIds();
+                if (!epicIds.FirstOrNone().TryUnwrap(out var epicAccountId)) { return; }
+
+                var setPresenceResult = await EosInterface.Presence.SetJoinCommand(
+                    epicAccountId: epicAccountId,
+                    desc: desc.Value,
+                    serverName: ServerName,
+                    joinCommand: connectCommand);
+                DebugConsole.NewMessage($"Set connect command: {connectCommand}, result: {setPresenceResult}");
+            }
+
+            TaskPool.Add(
+                "UpdateEosPresence",
+                updateEosPresence(),
+                static _ => { });
+
             if (SteamManager.IsInitialized)
             {
                 Steamworks.SteamFriends.ClearRichPresence();
-                Steamworks.SteamFriends.SetRichPresence("servername", ServerName);
-                #warning TODO: use Steamworks localization functionality
-                Steamworks.SteamFriends.SetRichPresence("status",
-                    TextManager.GetWithVariable("FriendPlayingOnServer", "[servername]", ServerName).Value);
-                Steamworks.SteamFriends.SetRichPresence("connect",
-                    $"-connect \"{ToolBox.EscapeCharacters(ServerName)}\" {serverEndpoint}");
+                if (!connectCommand.IsNullOrWhiteSpace())
+                {
+                    Steamworks.SteamFriends.SetRichPresence("servername", ServerName);
+                    Steamworks.SteamFriends.SetRichPresence("status",
+                        desc.Value);
+                    Steamworks.SteamFriends.SetRichPresence("connect",
+                        connectCommand);
+                }
             }
+        }
+        
+        private void OnConnectionInitializationComplete()
+        {
+            UpdatePresence($"-connect \"{ToolBox.EscapeCharacters(ServerName)}\" {string.Join(",", serverEndpoints.Select(e => e.StringRepresentation))}");
 
             canStart = true;
             connected = true;
@@ -1167,18 +1202,16 @@ namespace Barotrauma.Networking
         }
 
 
-        private void ReadAchievement(IReadMessage inc)
+        private static void ReadAchievement(IReadMessage inc)
         {
             Identifier achievementIdentifier = inc.ReadIdentifier();
-            int amount = inc.ReadInt32();
-            if (amount == 0)
-            {
-                SteamAchievementManager.UnlockAchievement(achievementIdentifier);
-            }
-            else
-            {
-                SteamAchievementManager.IncrementStat(achievementIdentifier, amount);
-            }
+            AchievementManager.UnlockAchievement(achievementIdentifier);
+        }
+
+        private static void ReadAchievementStat(IReadMessage inc)
+        {
+            var netStat = INetSerializableStruct.Read<NetIncrementedStat>(inc);
+            AchievementManager.IncrementStat(netStat.Stat, netStat.Amount);
         }
 
         private static void ReadCircuitBoxMessage(IReadMessage inc)
@@ -1885,8 +1918,9 @@ namespace Barotrauma.Networking
                 }
                 if (updateClientListId) { LastClientListUpdateID = listId; }
 
-                if (ClientPeer is SteamP2POwnerPeer)
+                if (ClientPeer is P2POwnerPeer)
                 {
+                    Eos.EosSessionManager.UpdateOwnedSession(ClientPeer.ServerConnection.Endpoint, ServerSettings);
                     TaskPool.Add("WaitForPingDataAsync (owner)",
                         Steamworks.SteamNetworkingUtils.WaitForPingDataAsync(), (task) =>
                     {
@@ -2029,8 +2063,9 @@ namespace Barotrauma.Networking
                                 ServerSettings.AllowSubVoting = allowSubVoting;
                                 ServerSettings.AllowModeVoting = allowModeVoting;
 
-                                if (ClientPeer is SteamP2POwnerPeer)
+                                if (ClientPeer is P2POwnerPeer)
                                 {
+                                    Eos.EosSessionManager.UpdateOwnedSession(ClientPeer.ServerConnection.Endpoint, ServerSettings);
                                     Steam.SteamManager.UpdateLobby(ServerSettings);
                                 }
 

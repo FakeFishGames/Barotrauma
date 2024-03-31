@@ -44,26 +44,10 @@ namespace Barotrauma
         }
 
         private static string ByteRepresentationToStringRepresentation(byte[] byteHash)
-        {
-            StringBuilder sb = new StringBuilder();
-            for (int i = 0; i < byteHash.Length; i++)
-            {
-                sb.Append(byteHash[i].ToString("X2"));
-            }
-
-            return sb.ToString();
-        }
+            => ToolBoxCore.ByteArrayToHexString(byteHash);
 
         private static byte[] StringRepresentationToByteRepresentation(string strHash)
-        {
-            var byteRepresentation = new byte[strHash.Length / 2];
-            for (int i = 0; i < byteRepresentation.Length; i++)
-            {
-                byteRepresentation[i] = Convert.ToByte(strHash.Substring(i * 2, 2), 16);
-            }
-
-            return byteRepresentation;
-        }
+            => ToolBoxCore.HexStringToByteArray(strHash);
 
         public static string GetShortHash(string fullHash)
         {

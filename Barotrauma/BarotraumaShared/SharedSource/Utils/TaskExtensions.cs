@@ -1,20 +1,10 @@
-﻿using System.Threading.Tasks;
+#nullable enable
+using System.Threading.Tasks;
 
 namespace Barotrauma
 {
-    static class TaskExtensions
+    public static class TaskExtensions
     {
-        public static bool TryGetResult<T>(this Task task, out T result)
-        {
-            if (task is Task<T> { IsCompletedSuccessfully: true } castTask)
-            {
-                result = castTask.Result;
-                return true;
-            }
-            result = default;
-            return false;
-        }
-
         public static async Task<T> WaitForLoadingScreen<T>(this Task<T> task)
         {
             var result = await task;

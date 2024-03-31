@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿#nullable enable
+using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
@@ -450,28 +451,6 @@ namespace Barotrauma
 
         public static string WrapText(string text, float lineLength, ScalableFont font, float textScale = 1.0f)
             => font.WrapText(text, lineLength / textScale);
-
-        public static Option<ConnectCommand> ParseConnectCommand(string[] args)
-        {
-            if (args == null || args.Length < 2) { return Option<ConnectCommand>.None(); }
-
-            if (args[0].Equals("-connect", StringComparison.OrdinalIgnoreCase))
-            {
-                if (args.Length < 3) { return Option<ConnectCommand>.None(); }
-                if (!(Endpoint.Parse(args[2]).TryUnwrap(out var endpoint))) { return Option<ConnectCommand>.None(); }
-                return Option<ConnectCommand>.Some(
-                    new ConnectCommand(
-                        serverName: args[1],
-                        endpoint: endpoint));
-            }
-            else if (args[0].Equals("+connect_lobby", StringComparison.OrdinalIgnoreCase))
-            {
-                return UInt64.TryParse(args[1], out var lobbyId)
-                    ? Option<ConnectCommand>.Some(new ConnectCommand(lobbyId))
-                    : Option<ConnectCommand>.None();
-            }
-            return Option<ConnectCommand>.None();
-        }
 
         public static bool VersionNewerIgnoreRevision(Version a, Version b)
         {

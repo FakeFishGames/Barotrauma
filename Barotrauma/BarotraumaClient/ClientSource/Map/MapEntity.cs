@@ -888,12 +888,12 @@ namespace Barotrauma
             var hsvBase = hsv;
             hsvBase.Y *= 4f;
             hsvBase.Z *= 0.8f;
-            btn.Color = ToolBox.HSVToRGB(hsvBase.X, hsvBase.Y, hsvBase.Z); 
-            btn.SelectedColor = ToolBox.HSVToRGB(hsvBase.X, hsvBase.Y, hsvBase.Z); 
+            btn.Color = ToolBoxCore.HSVToRGB(hsvBase.X, hsvBase.Y, hsvBase.Z); 
+            btn.SelectedColor = ToolBoxCore.HSVToRGB(hsvBase.X, hsvBase.Y, hsvBase.Z); 
 
             var hsvHover = hsv;
             hsvHover.Z *= 1.2f;
-            btn.HoverColor = ToolBox.HSVToRGB(hsvHover.X, hsvHover.Y, hsvHover.Z); 
+            btn.HoverColor = ToolBoxCore.HSVToRGB(hsvHover.X, hsvHover.Y, hsvHover.Z); 
         }
 
         public static List<MapEntity> FilteredSelectedList { get; private set; } = new List<MapEntity>();

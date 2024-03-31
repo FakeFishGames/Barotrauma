@@ -168,7 +168,7 @@ namespace Barotrauma
 
         public override bool PlaySoundOnSelect { get; set; } = true;
 
-        public GUIButton(RectTransform rectT, Alignment textAlignment = Alignment.Center, string style = "", Color? color = null) : this(rectT, new RawLString(""), textAlignment, style, color) { }
+        public GUIButton(RectTransform rectT, Alignment textAlignment = Alignment.Center, string style = "", Color? color = null) : this(rectT, LocalizedString.EmptyString, textAlignment, style, color) { }
 
         public GUIButton(RectTransform rectT, LocalizedString text, Alignment textAlignment = Alignment.Center, string style = "", Color? color = null) : base(style, rectT)
         {

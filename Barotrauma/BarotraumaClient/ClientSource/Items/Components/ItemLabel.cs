@@ -93,13 +93,13 @@ namespace Barotrauma.Items.Components
         [Editable(0.0f, 10.0f), Serialize(1.0f, IsPropertySaveable.Yes, description: "The scale of the text displayed on the label.", alwaysUseInstanceValues: true)]
         public float TextScale
         {
-            get { return textBlock == null ? 1.0f : textBlock.TextScale; }
+            get { return textBlock == null ? 1.0f : textBlock.TextScale / BaseToRealTextScaleFactor; }
             set
             {
                 if (textBlock != null) 
                 {
                     float prevScale = TextBlock.TextScale;
-                    textBlock.TextScale = MathHelper.Clamp(value, 0.1f, 10.0f); 
+                    textBlock.TextScale = MathHelper.Clamp(value * BaseToRealTextScaleFactor, 0.1f, 10.0f); 
                     if (!MathUtils.NearlyEqual(prevScale, TextBlock.TextScale))
                     {
                         SetScrollingText();
@@ -210,6 +210,8 @@ namespace Barotrauma.Items.Components
             SetScrollingText();
         }
 
+        private const float BaseTextSize = 12.0f;
+        private float BaseToRealTextScaleFactor => BaseTextSize / GUIStyle.UnscaledSmallFont.Size;
         private void RecreateTextBlock()
         {
             textBlock = new GUITextBlock(new RectTransform(item.Rect.Size), "",
@@ -217,7 +219,7 @@ namespace Barotrauma.Items.Components
             {
                 TextDepth = item.SpriteDepth - 0.00001f,
                 RoundToNearestPixel = false,
-                TextScale = TextScale,
+                TextScale = TextScale * BaseToRealTextScaleFactor,
                 Padding = padding * item.Scale
             };
         }

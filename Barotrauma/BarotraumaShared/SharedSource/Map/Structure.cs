@@ -11,6 +11,7 @@ using System.Xml.Linq;
 using System.Collections.Immutable;
 using Barotrauma.Abilities;
 #if CLIENT
+using System.Diagnostics;
 using Microsoft.Xna.Framework.Graphics;
 using Barotrauma.Lights;
 #endif
@@ -281,14 +282,21 @@ namespace Barotrauma
             }
         }
 
+        public float ScaleWhenTextureOffsetSet { get; private set; } = 1.0f;
+
         protected Vector2 textureOffset = Vector2.Zero;
-        [Editable(MinValueFloat = -1000f, MaxValueFloat = 1000f, ValueStep = 10f), Serialize("0.0, 0.0", IsPropertySaveable.Yes)]
+        [Editable(ForceShowPlusMinusButtons = true, ValueStep = 1f), Serialize("0.0, 0.0", IsPropertySaveable.Yes)]
         public Vector2 TextureOffset
         {
             get { return textureOffset; }
             set
             {
                 textureOffset = value;
+                textureOffset.X =
+                    MathUtils.PositiveModulo(textureOffset.X, Sprite.SourceRect.Width * TextureScale.X * Scale);
+                textureOffset.Y =
+                    MathUtils.PositiveModulo(textureOffset.Y, Sprite.SourceRect.Height * TextureScale.Y * Scale);
+                ScaleWhenTextureOffsetSet = Scale;
 #if CLIENT
                 SetLightTextureOffset();
 #endif
@@ -1584,6 +1592,9 @@ namespace Barotrauma
                 Submarine = submarine,
             };
 
+            bool flippedX = element.GetAttributeBool(nameof(FlippedX), false);
+            bool flippedY = element.GetAttributeBool(nameof(FlippedY), false);
+
             if (submarine?.Info.GameVersion != null)
             {
                 SerializableProperty.UpgradeGameVersion(s, s.Prefab.ConfigElement, submarine.Info.GameVersion);
@@ -1594,6 +1605,19 @@ namespace Barotrauma
                 {
                     s.CrushDepth = Math.Max(s.CrushDepth, GameMain.GameSession.LevelData.InitialDepth * Physics.DisplayToRealWorldRatio + 500);
                 }
+
+#if CLIENT
+                s.TextureOffset = UpgradeTextureOffset(
+                    targetSize: rect.Size.ToVector2(),
+                    originalTextureOffset:
+                        // Note: cannot use s.TextureOffset because wrapping is very weird in the old logic
+                        element.GetAttributeVector2("TextureOffset", Vector2.Zero),
+                    submarineInfo: submarine.Info,
+                    sourceRect: s.Sprite.SourceRect,
+                    scale: s.Scale * s.TextureScale,
+                    flippedX: flippedX,
+                    flippedY: flippedY);
+#endif
             }
 
             bool hasDamage = false;
@@ -1637,8 +1661,8 @@ namespace Barotrauma
                 }
             }
 
-            if (element.GetAttributeBool(nameof(FlippedX), false)) { s.FlipX(false); }
-            if (element.GetAttributeBool(nameof(FlippedY), false)) { s.FlipY(false); }
+            if (flippedX) { s.FlipX(false); }
+            if (flippedY) { s.FlipY(false); }
 
             //structures with a body drop a shadow by default
             if (element.GetAttribute(nameof(UseDropShadow)) == null)

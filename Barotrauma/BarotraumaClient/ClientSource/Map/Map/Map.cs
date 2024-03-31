@@ -184,7 +184,8 @@ namespace Barotrauma
             connection.CrackSegments.Clear();
             connection.CrackSegments.AddRange(MathUtils.GenerateJaggedLine(
                 connectionStart, connectionEnd,
-                iterations, connectionLength * generationParams.ConnectionIndicatorDisplacementMultiplier));
+                iterations, connectionLength * generationParams.ConnectionIndicatorDisplacementMultiplier,
+                rng: Rand.GetRNG(Rand.RandSync.ServerAndClient)));
         }
 
         private void LocationChanged(Location prevLocation, Location newLocation)

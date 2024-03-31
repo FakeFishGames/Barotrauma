@@ -72,7 +72,7 @@ namespace Barotrauma
             msg.WriteString(ragdollFileName);
             msg.WriteIdentifier(HumanPrefabIds.NpcIdentifier);
             msg.WriteIdentifier(MinReputationToHire.factionId);
-            if (MinReputationToHire.factionId != default)
+            if (!MinReputationToHire.factionId.IsEmpty)
             {
                 msg.WriteSingle(MinReputationToHire.reputation);
             }

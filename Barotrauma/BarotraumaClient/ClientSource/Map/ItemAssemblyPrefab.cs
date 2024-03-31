@@ -86,7 +86,7 @@ namespace Barotrauma
                 MathUtils.RoundTowardsClosest(center.Y, Submarine.GridSize.Y) - center.Y - Submarine.GridSize.Y / 2);
 
             MapEntity.SelectedList.Clear();
-            entities.ForEach(e => MapEntity.AddSelection(e));
+            assemblyEntities.ForEach(e => MapEntity.AddSelection(e));
 
             foreach (MapEntity mapEntity in assemblyEntities)
             {
@@ -98,6 +98,10 @@ namespace Barotrauma
                     entityElement.Add(new XAttribute("hideinassemblypreview", "true"));
                 }
             }
+
+            //restore the previous selection
+            MapEntity.SelectedList.Clear();
+            entities.ForEach(e => MapEntity.AddSelection(e));
 
             return element;
         }

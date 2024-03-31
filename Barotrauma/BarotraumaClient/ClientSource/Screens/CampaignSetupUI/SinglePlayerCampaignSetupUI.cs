@@ -9,7 +9,7 @@ using System.Xml.Linq;
 
 namespace Barotrauma
 {
-    class SinglePlayerCampaignSetupUI : CampaignSetupUI
+    sealed class SinglePlayerCampaignSetupUI : CampaignSetupUI
     {
         private GUIListBox subList;
 

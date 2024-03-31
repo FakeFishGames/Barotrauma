@@ -76,12 +76,12 @@ namespace Barotrauma
 
             if (hasHeader)
             {
-                InflateSize(ref estimatedSize, header, headerFont);
+                InflateSize(ref estimatedSize, header, headerFont!);
             }
 
             foreach (ContextMenuOption option in options)
             {
-                Vector2 optionSize = InflateSize(ref estimatedSize, option.Label, font);
+                Vector2 optionSize = InflateSize(ref estimatedSize, option.Label, font!);
                 optionsAndSizes.Add(option, optionSize);
             }
 
@@ -104,7 +104,7 @@ namespace Barotrauma
             if (hasHeader)
             {
                 Point sz = Point.Zero;
-                InflateSize(ref sz, header, headerFont);
+                InflateSize(ref sz, header, headerFont!);
                 listSize.Y -= sz.Y;
                 HeaderLabel = new GUITextBlock(new RectTransform(sz, background.RectTransform), header, font: headerFont) { Padding = headerPadding };
             }

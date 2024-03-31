@@ -497,7 +497,7 @@ namespace Barotrauma.Items.Components
                         {
                             CurrentFixer.Info?.ApplySkillGain(skill.Identifier, SkillSettings.Current.SkillIncreasePerRepair);
                         }
-                        SteamAchievementManager.OnItemRepaired(item, CurrentFixer);
+                        AchievementManager.OnItemRepaired(item, CurrentFixer);
                         CurrentFixer.CheckTalents(AbilityEffectType.OnRepairComplete, new AbilityRepairable(item));
                     }
                     if (CurrentFixer?.SelectedItem == item) { CurrentFixer.SelectedItem = null; }

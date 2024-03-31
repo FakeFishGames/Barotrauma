@@ -433,14 +433,7 @@ namespace Barotrauma
                 return Font.MeasureString(" ");
             }
 
-            Vector2 size = Vector2.Zero;
-            while (size == Vector2.Zero)
-            {
-                try { size = Font.MeasureString(string.IsNullOrEmpty(text) ? " " : text); }
-                catch { text = text.Length > 0 ? text.Substring(0, text.Length - 1) : ""; }
-            }
-
-            return size;
+            return Font.MeasureString(string.IsNullOrEmpty(text) ? " " : text);
         }
 
         protected override void SetAlpha(float a)

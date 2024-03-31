@@ -465,17 +465,17 @@ namespace Barotrauma
 
         public float GetCommonness(Level level)
         {
-            if (level.GenerationParams?.Identifier != null && 
+            if (level.GenerationParams?.Identifier is { IsEmpty: false } && 
                 OverrideCommonness.TryGetValue(level.GenerationParams.Identifier, out float generationParamsCommonness))
             {
                 return generationParamsCommonness;
             }
-            else if (level.StartOutpost?.Info.OutpostGenerationParams?.Identifier != null && 
+            else if (level.StartOutpost?.Info.OutpostGenerationParams?.Identifier is { IsEmpty: false } && 
                 OverrideCommonness.TryGetValue(level.StartOutpost.Info.OutpostGenerationParams.Identifier, out float startOutpostParamsCommonness))
             {
                 return startOutpostParamsCommonness;
             }
-            else if (level.EndOutpost?.Info.OutpostGenerationParams?.Identifier != null &&
+            else if (level.EndOutpost?.Info.OutpostGenerationParams?.Identifier is { IsEmpty: false } &&
                 OverrideCommonness.TryGetValue(level.EndOutpost.Info.OutpostGenerationParams.Identifier, out float endOutpostParamsCommonness))
             {
                 return endOutpostParamsCommonness;

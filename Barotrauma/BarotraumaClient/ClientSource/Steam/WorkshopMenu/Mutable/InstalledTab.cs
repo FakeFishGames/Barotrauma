@@ -21,14 +21,14 @@ namespace Barotrauma.Steam
         private readonly Action<ItemOrPackage> onInstalledInfoButtonHit;
         private readonly GUITextBox modsListFilter;
         private readonly Dictionary<Filter, GUITickBox> modsListFilterTickboxes;
-        private readonly GUIButton bulkUpdateButton;
+        private readonly Option<GUIButton> bulkUpdateButtonOption;
 
         private GUIComponent? draggedElement = null;
         private GUIListBox? draggedElementOrigin = null;
 
         private void UpdateSubscribedModInstalls()
         {
-            if (!SteamManager.IsInitialized) { return; }
+            if (!EnableWorkshopSupport) { return; }
 
             uint numSubscribedMods = SteamManager.GetNumSubscribedItems();
             if (numSubscribedMods == memSubscribedModCount) { return; }
@@ -171,7 +171,7 @@ namespace Barotrauma.Steam
             out Action<ItemOrPackage> onInstalledInfoButtonHit,
             out GUITextBox modsListFilter,
             out Dictionary<Filter, GUITickBox> modsListFilterTickboxes,
-            out GUIButton bulkUpdateButton)
+            out Option<GUIButton> bulkUpdateButton)
         {
             GUIFrame content = CreateNewContentFrame(Tab.InstalledMods);
             
@@ -233,18 +233,22 @@ namespace Barotrauma.Steam
                     },
                     ToolTip = TextManager.Get("RefreshModLists")
                 };
-            bulkUpdateButton
-                = new GUIButton(
-                    new RectTransform(Vector2.One, topRightButtons.RectTransform, scaleBasis: ScaleBasis.BothHeight),
-                    text: "", style: "GUIUpdateButton")
-                {
-                    OnClicked = (b, o) =>
+
+            bulkUpdateButton = EnableWorkshopSupport
+                ? Option.Some(
+                    new GUIButton(
+                        new RectTransform(Vector2.One, topRightButtons.RectTransform, scaleBasis: ScaleBasis.BothHeight),
+                        text: "", style: "GUIUpdateButton")
                     {
-                        BulkDownloader.PrepareUpdates();
-                        return false;
-                    },
-                    Enabled = false
-                };
+                        OnClicked = (b,
+                                     o) =>
+                        {
+                            BulkDownloader.PrepareUpdates();
+                            return false;
+                        },
+                        Enabled = false
+                    })
+                : Option.None;
             padTopRight(width: 0.1f);
 
             var (left, center, right) = CreateSidebars(mainLayout, centerWidth: 0.05f, leftWidth: 0.475f, rightWidth: 0.475f, height: 0.8f);
@@ -405,10 +409,13 @@ namespace Barotrauma.Steam
                     CanBeFocused = false
                 };
             }
-            
-            addFilterTickbox(Filter.ShowLocal, "WorkshopMenu.EditButton", selected: true);
-            addFilterTickbox(Filter.ShowWorkshop, "WorkshopMenu.DownloadedIcon", selected: true);
-            addFilterTickbox(Filter.ShowPublished, "WorkshopMenu.PublishedIcon", selected: true);
+
+            if (EnableWorkshopSupport)
+            {
+                addFilterTickbox(Filter.ShowLocal, "WorkshopMenu.EditButton", selected: true);
+                addFilterTickbox(Filter.ShowWorkshop, "WorkshopMenu.DownloadedIcon", selected: true);
+                addFilterTickbox(Filter.ShowPublished, "WorkshopMenu.PublishedIcon", selected: true);
+            }
             addFilterTickbox(Filter.ShowOnlySubs, null, selected: false);
             addFilterTickbox(Filter.ShowOnlyItemAssemblies, null, selected: false);
             
@@ -487,14 +494,23 @@ namespace Barotrauma.Steam
             var iconBtn = guiItem.GetChild<GUILayoutGroup>()?.GetAllChildren<GUIButton>().Last();
 
             bool matches = false;
-            matches |= modsListFilterTickboxes[Filter.ShowLocal].Selected
-                       && ContentPackageManager.LocalPackages.Contains(p);
-            matches |= modsListFilterTickboxes[Filter.ShowPublished].Selected
-                       && (ContentPackageManager.WorkshopPackages.Contains(p)
-                            && iconBtn?.Style?.Identifier == "WorkshopMenu.PublishedIcon");
-            matches |= modsListFilterTickboxes[Filter.ShowWorkshop].Selected
-                       && (ContentPackageManager.WorkshopPackages.Contains(p)
-                            && iconBtn?.Style?.Identifier != "WorkshopMenu.PublishedIcon");
+
+            if (EnableWorkshopSupport)
+            {
+                matches |= modsListFilterTickboxes[Filter.ShowLocal].Selected
+                           && ContentPackageManager.LocalPackages.Contains(p);
+
+                matches |= modsListFilterTickboxes[Filter.ShowPublished].Selected
+                           && (ContentPackageManager.WorkshopPackages.Contains(p)
+                               && iconBtn?.Style?.Identifier == "WorkshopMenu.PublishedIcon");
+                matches |= modsListFilterTickboxes[Filter.ShowWorkshop].Selected
+                           && (ContentPackageManager.WorkshopPackages.Contains(p)
+                               && iconBtn?.Style?.Identifier != "WorkshopMenu.PublishedIcon");
+            }
+            else
+            {
+                matches = true;
+            }
 
             if (modsListFilterTickboxes[Filter.ShowOnlySubs].Selected
                 && modsListFilterTickboxes[Filter.ShowOnlyItemAssemblies].Selected
@@ -524,17 +540,20 @@ namespace Barotrauma.Steam
             TaskPool.Add($"PrepareToShow{mod.UgcId}Info", SteamManager.Workshop.GetItem(workshopId.Value),
                 t =>
                 {
-                    if (!t.TryGetResult(out Steamworks.Ugc.Item? item)) { return; }
-                    if (item is null) { return; }
-                    onInstalledInfoButtonHit(item.Value);
+                    if (!t.TryGetResult(out Option<Steamworks.Ugc.Item> itemOption)) { return; }
+                    if (!itemOption.TryUnwrap(out var item)) { return; }
+                    onInstalledInfoButtonHit(item);
                 });
         }
         
         public void PopulateInstalledModLists(bool forceRefreshEnabled = false, bool refreshDisabled = true)
         {
             ViewingItemDetails = false;
-            bulkUpdateButton.Enabled = false;
-            bulkUpdateButton.ToolTip = "";
+            if (bulkUpdateButtonOption.TryUnwrap(out var bulkUpdateButton))
+            {
+                bulkUpdateButton.Enabled = false;
+                bulkUpdateButton.ToolTip = "";
+            }
             ContentPackageManager.UpdateContentPackageList();
 
             var corePackages = ContentPackageManager.CorePackages.ToArray();
@@ -583,7 +602,7 @@ namespace Barotrauma.Steam
                             return false;
                         }
                     };
-                    if (!SteamManager.IsInitialized)
+                    if (!EnableWorkshopSupport)
                     {
                         infoButton.Enabled = false;
                     }
@@ -599,8 +618,11 @@ namespace Barotrauma.Steam
                             infoButton.CanBeSelected = true;
                             infoButton.ApplyStyle(GUIStyle.ComponentStyles["WorkshopMenu.InfoButtonUpdate"]);
                             infoButton.ToolTip = TextManager.Get("ViewModDetailsUpdateAvailable");
-                            bulkUpdateButton.Enabled = true;
-                            bulkUpdateButton.ToolTip = TextManager.Get("ModUpdatesAvailable");
+                            if (bulkUpdateButtonOption.TryUnwrap(out var bulkUpdateButton))
+                            {
+                                bulkUpdateButton.Enabled = true;
+                                bulkUpdateButton.ToolTip = TextManager.Get("ModUpdatesAvailable");
+                            }
                         });
                 }
             }
@@ -705,7 +727,7 @@ namespace Barotrauma.Steam
                                         TaskPool.AddIfNotFound($"UnsubFromSelected", Task.WhenAll(workshopIds.Select(SteamManager.Workshop.GetItem)),
                                             t =>
                                             {
-                                                if (!t.TryGetResult(out Steamworks.Ugc.Item?[] items)) { return; }
+                                                if (!t.TryGetResult(out Steamworks.Ugc.Item?[]? items)) { return; }
                                                 items.ForEach(it =>
                                                 {
                                                     if (!(it is { } item)) { return; }
@@ -761,7 +783,7 @@ namespace Barotrauma.Steam
                 SteamManager.Workshop.GetPublishedItems(),
                 t =>
                 {
-                    if (!t.TryGetResult(out ISet<Steamworks.Ugc.Item> items)) { return; }
+                    if (!t.TryGetResult(out ISet<Steamworks.Ugc.Item>? items)) { return; }
                     var ids = items.Select(it => it.Id).ToHashSet();
 
                     foreach (var child in enabledRegularModsList.Content.Children

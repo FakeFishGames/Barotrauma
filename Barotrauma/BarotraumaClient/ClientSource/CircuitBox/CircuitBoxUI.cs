@@ -24,7 +24,7 @@ namespace Barotrauma
         private GUIFrame? selectedWireFrame;
         private GUIListBox? componentList;
         private GUITextBlock? inventoryIndicatorText;
-        private readonly Sprite cursorSprite = GUIStyle.CursorSprite[CursorState.Default];
+        private readonly Sprite? cursorSprite = GUIStyle.CursorSprite[CursorState.Default];
 
         private Option<RectangleF> selection = Option.None;
         private string searchTerm = string.Empty;

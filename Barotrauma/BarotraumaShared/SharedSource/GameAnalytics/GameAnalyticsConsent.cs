@@ -1,7 +1,8 @@
-#nullable enable
+﻿#nullable enable
 using Barotrauma.Steam;
 using RestSharp;
 using System;
+using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 
@@ -13,7 +14,7 @@ namespace Barotrauma
         /// The protocol used to communicate with the remote consent server may change.
         /// This number tells the server which version the game is using so we can implement backwards-compatibility.
         /// </summary>
-        private const string RemoteRequestVersion = "2";
+        private const string RemoteRequestVersion = "3";
 
         public enum Consent
         {
@@ -47,19 +48,66 @@ namespace Barotrauma
 
         public static bool SendUserStatistics => UserConsented == Consent.Yes && loadedImplementation != null;
 
-        private static bool consentTextAvailable
+        private static bool ConsentTextAvailable
             => TextManager.ContainsTag("statisticsconsentheader")
                 && TextManager.ContainsTag("statisticsconsenttext");
  
         private const string consentServerUrl = "https://barotraumagame.com/baromaster/";
         private const string consentServerFile = "consentserver.php";
 
-        private static async Task<string> GetAuthTicket()
+        enum Platform
         {
-            var ticketOption = await SteamManager.GetAuthTicketForGameAnalyticsConsent();
-            if (!ticketOption.TryUnwrap(out var authTicket) || authTicket.Data is null) { return ""; }
-            //convert byte array to hex
-            return BitConverter.ToString(authTicket.Data).Replace("-", "");
+            Steam,
+            EOS,
+            None
+        }
+
+        private class AuthTicket
+        {
+            public readonly string Token;
+            public readonly Platform Platform;
+
+            public AuthTicket(string token, Platform platform)
+            {
+                Token = token ?? string.Empty;
+                Platform = platform;
+            }
+        }
+
+        private static async Task<AuthTicket> GetAuthTicket()
+        {
+            if (SteamManager.IsInitialized)
+            {
+                return await GetSteamAuthTicket();
+            }
+            else if (EosInterface.IdQueries.IsLoggedIntoEosConnect)
+            {
+                return await GetEOSAuthTicket();
+            }
+            return new AuthTicket(string.Empty, Platform.None);
+        }
+
+        private static async Task<AuthTicket> GetSteamAuthTicket()
+        {
+            var authTicket = await SteamManager.GetAuthTicketForGameAnalyticsConsent();
+            return authTicket.TryUnwrap(out var ticketUnwrapped) && ticketUnwrapped.Data is { Length: > 0 }
+                ? new AuthTicket(ToolBoxCore.ByteArrayToHexString(ticketUnwrapped.Data), Platform.Steam) //convert byte array to hex
+                : throw new Exception("Could not retrieve Steamworks authentication ticket for GameAnalytics");
+        }
+
+        private static async Task<AuthTicket> GetEOSAuthTicket()
+        {
+            var puid = EosInterface.IdQueries.GetLoggedInPuids().First();
+            var tokenResult = EosInterface.EosIdToken.FromProductUserId(puid);
+            if (tokenResult.TryUnwrapFailure(out var error))
+            {
+                throw new Exception($"Could not retrieve EOS authentication ticket for GameAnalytics. {error}");
+            }
+            else if (tokenResult.TryUnwrapSuccess(out var token))
+            {
+                return new AuthTicket(token.JsonWebToken.ToString(), Platform.EOS);
+            }
+            throw new UnreachableCodeException();
         }
 
         /// <summary>
@@ -92,7 +140,9 @@ namespace Barotrauma
 
             if (consent == Consent.Ask)
             {
-                CreateConsentPrompt();
+#if CLIENT
+                GameMain.ExecuteAfterContentFinishedLoading(CreateConsentPrompt);
+#endif
             }
 
             if (consent != Consent.No && consent != Consent.Yes)
@@ -129,20 +179,24 @@ namespace Barotrauma
         /// </summary>
         private static async Task<bool> SendAnswerToRemoteDatabase(Consent consent)
         {
-            string authTicketStr;
+            AuthTicket authTicket;
             try
             {
-                authTicketStr = await GetAuthTicket();
+                authTicket = await GetAuthTicket();
             }
             catch (Exception e)
             {
-                DebugConsole.ThrowError("Error in GameAnalyticsManager.SetConsent. Could not get a Steam authentication ticket.", e);
+                DebugConsole.ThrowError($"Error in {nameof(GameAnalyticsManager)}.{nameof(SendAnswerToRemoteDatabase)}. Could not get an authentication ticket.", e);
                 return false;
             }
-
-            if (string.IsNullOrEmpty(authTicketStr))
+            if (authTicket.Platform == Platform.None)
             {
-                DebugConsole.ThrowError("Error in GameAnalyticsManager.SetContent. Steam authentication ticket was empty.");
+                DebugConsole.AddWarning($"Error in {nameof(GameAnalyticsManager)}.{nameof(SendAnswerToRemoteDatabase)}. Not logged in to any platform.");
+                return false;
+            }
+            if (string.IsNullOrEmpty(authTicket.Token))
+            {
+                DebugConsole.ThrowError($"Error in {nameof(GameAnalyticsManager)}.{nameof(SendAnswerToRemoteDatabase)}. {authTicket.Platform} authentication ticket was empty.");
                 return false;
             }
 
@@ -152,10 +206,18 @@ namespace Barotrauma
                 var client = new RestClient(consentServerUrl);
 
                 var request = new RestRequest(consentServerFile, Method.GET);
-                request.AddParameter("authticket", authTicketStr);
-                request.AddParameter("action", "setconsent");
-                request.AddParameter("consent", consent == Consent.Yes ? 1 : 0);
+                request.AddParameter("authticket", authTicket.Token);
+                if (consent == Consent.Ask)
+                {
+                    request.AddParameter("action", "resetconsent");
+                }
+                else
+                {
+                    request.AddParameter("action", "setconsent");
+                    request.AddParameter("consent", consent == Consent.Yes ? 1 : 0);
+                }
                 request.AddParameter("request_version", RemoteRequestVersion);
+                request.AddParameter("platform", authTicket.Platform);
 
                 response = await client.ExecuteAsync(request, Method.GET);
             }
@@ -175,6 +237,18 @@ namespace Barotrauma
             return true;
         }
 
+        public static void ResetConsent()
+        {
+            TaskPool.Add(
+                "GameAnalyticsConsent.ResetConsentInternal",
+                SendAnswerToRemoteDatabase(Consent.Ask),
+                t =>
+                {
+                    if (!t.TryGetResult(out bool success) || !success) { return; }
+                    DebugConsole.NewMessage("Reset GameAnalytics consent.");
+                });
+        }
+
         static partial void CreateConsentPrompt();
 
         public static void InitIfConsented()
@@ -183,15 +257,15 @@ namespace Barotrauma
             return;
             #endif
             
-            if (!consentTextAvailable)
+            if (!ConsentTextAvailable)
             {
                 SetConsent(Consent.Unknown);
                 return;
             }
 
-            if (!SteamManager.IsInitialized)
+            if (!SteamManager.IsInitialized && EosInterface.IdQueries.GetLoggedInPuids() is not { Length: > 0 })
             {
-                DebugConsole.AddWarning("Error in GameAnalyticsManager.GetConsent: Could not get a Steam authentication ticket (not connected to Steam).");
+                DebugConsole.AddWarning("Error in GameAnalyticsManager.GetConsent: Could not get a Steam or EOS authentication ticket (not connected to Steam or EOS).");
                 SetConsent(Consent.Error);
                 return;
             }
@@ -208,20 +282,25 @@ namespace Barotrauma
 
         private static async Task<Consent> RequestAnswerFromRemoteDatabase()
         {
-            static void error(string reason, Exception exception)
+            static void error(string reason, Exception? exception)
             {
-                DebugConsole.ThrowError($"Error in GameAnalyticsManager.GetConsent: {reason}", exception);
+                DebugConsole.ThrowError($"Error in {nameof(GameAnalyticsManager)}.{nameof(RequestAnswerFromRemoteDatabase)}: {reason}", exception);
                 SetConsent(Consent.Error);
             }
             
-            string authTicketStr;
+            AuthTicket authTicket;
             try
             {
-                authTicketStr = await GetAuthTicket();
+                authTicket = await GetAuthTicket();
             }
             catch (Exception e)
             {
-                error("Could not get a Steam authentication ticket.", e);
+                error("Could not get an authentication ticket.", e);
+                return Consent.Error;
+            }
+            if (authTicket.Platform == Platform.None)
+            {
+                error($"Could not get an authentication ticket. Not logged in to any platform.", exception: null);
                 return Consent.Error;
             }
 
@@ -237,9 +316,10 @@ namespace Barotrauma
             }
 
             var request = new RestRequest(consentServerFile, Method.GET);
-            request.AddParameter("authticket", authTicketStr);
+            request.AddParameter("authticket", authTicket.Token);
             request.AddParameter("action", "getconsent");
             request.AddParameter("request_version", RemoteRequestVersion);
+            request.AddParameter("platform", authTicket.Platform);
 
             IRestResponse response;
             try

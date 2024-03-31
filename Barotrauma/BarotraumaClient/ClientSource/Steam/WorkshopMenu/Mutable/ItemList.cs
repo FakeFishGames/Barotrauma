@@ -176,6 +176,8 @@ namespace Barotrauma.Steam
         
         private void AddUnpublishedMods(ISet<Steamworks.Ugc.Item> workshopItems)
         {
+            if (!selfModsListOption.TryUnwrap(out var selfModsList)) { return; }
+
             //Users that don't have a proper license cannot publish Workshop items
             //(see https://partner.steamgames.com/doc/features/workshop#15)
             void clearWithMessage(LocalizedString message)
@@ -347,7 +349,7 @@ namespace Barotrauma.Steam
                     workshopItem.Subscribe();
                     TaskPool.Add($"DownloadSubscribedItem{workshopItem.Id}",
                         SteamManager.Workshop.ForceRedownload(workshopItem),
-                        t => { });
+                        TaskPool.IgnoredCallback);
                 }
                 else
                 {

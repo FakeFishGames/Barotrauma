@@ -61,7 +61,7 @@ namespace Barotrauma
                 SpamServerFilterType.MessageEquals => CompareEquals(desc, value),
                 SpamServerFilterType.MessageContains => CompareContains(desc, value),
 
-                SpamServerFilterType.Endpoint => info.Endpoint.StringRepresentation.Equals(value, StringComparison.OrdinalIgnoreCase),
+                SpamServerFilterType.Endpoint => info.Endpoints.First().StringRepresentation.Equals(value, StringComparison.OrdinalIgnoreCase),
 
                 SpamServerFilterType.PlayerCountLarger => info.PlayerCount > parsedInt,
                 SpamServerFilterType.PlayerCountExact => info.PlayerCount == parsedInt,
@@ -299,7 +299,7 @@ These will hide all servers that have a discord.gg link in their name or descrip
             {
                 try
                 {
-                    if (!t.TryGetResult(out IRestResponse remoteContentResponse)) { throw new Exception("Task did not return a valid result"); }
+                    if (!t.TryGetResult(out IRestResponse? remoteContentResponse)) { throw new Exception("Task did not return a valid result"); }
                     if (remoteContentResponse.StatusCode != HttpStatusCode.OK)
                     {
                         DebugConsole.AddWarning(

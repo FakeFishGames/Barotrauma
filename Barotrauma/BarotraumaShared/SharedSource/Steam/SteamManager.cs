@@ -1,8 +1,10 @@
-using Steamworks.Data;
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
+using System.Runtime.InteropServices;
 using Barotrauma.Networking;
+using Barotrauma.IO;
 
 namespace Barotrauma.Steam
 {
@@ -38,12 +40,31 @@ namespace Barotrauma.Steam
             }
         }
 
+        public static bool SteamworksLibExists
+            => RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
+                ? File.Exists("steam_api64.dll")
+                : RuntimeInformation.IsOSPlatform(OSPlatform.OSX)
+                    ? File.Exists("libsteam_api64.dylib")
+                    : RuntimeInformation.IsOSPlatform(OSPlatform.Linux)
+                        ? File.Exists("libsteam_api64.so")
+                        : false;
+
         public static void Initialize()
         {
             InitializeProjectSpecific();
         }
 
         public static Option<SteamId> GetSteamId()
+        {
+            if (!IsInitialized || !Steamworks.SteamClient.IsValid)
+            {
+                return Option<SteamId>.None();
+            }
+
+            return Option<SteamId>.Some(new SteamId(Steamworks.SteamClient.SteamId));
+        }
+
+        public static Option<SteamId> GetOwnerSteamId()
         {
             if (!IsInitialized || !Steamworks.SteamClient.IsValid)
             {
@@ -112,42 +133,78 @@ namespace Barotrauma.Steam
             return unlocked;
         }
 
-        public static bool IncrementStat(Identifier statName, int increment)
+        /// <summary>
+        /// Increment multiple stats in bulk.
+        /// Make sure to call StoreStats() after calling this method since it doesn't do it automatically.
+        /// </summary>
+        /// <param name="stats"></param>
+        public static void IncrementStats(params (AchievementStat Identifier, float Increment)[] stats)
+            => Array.ForEach(stats, static s
+                => IncrementStat(s.Identifier, s.Increment, storeStats: false));
+
+        public static bool IncrementStat(AchievementStat statName, int increment, bool storeStats = true)
         {
             if (!IsInitialized || !Steamworks.SteamClient.IsValid) { return false; }
             DebugConsole.Log($"Incremented stat \"{statName}\" by " + increment);
-            bool success = Steamworks.SteamUserStats.AddStat(statName.Value.ToLowerInvariant(), increment);
+            bool success = Steamworks.SteamUserStats.AddStatInt(statName.ToIdentifier().Value.ToLowerInvariant(), increment);
             if (!success)
             {
                 DebugConsole.Log("Failed to increment stat \"" + statName + "\".");
             }
-            else
+            else if (storeStats)
             {
                 StoreStats();
             }
             return success;
         }
 
-        public static bool IncrementStat(Identifier statName, float increment)
+        public static bool IncrementStat(AchievementStat statName, float increment, bool storeStats = true)
         {
             if (!IsInitialized || !Steamworks.SteamClient.IsValid) { return false; }
             DebugConsole.Log($"Incremented stat \"{statName}\" by " + increment);
-            bool success = Steamworks.SteamUserStats.AddStat(statName.Value.ToLowerInvariant(), increment);
+            bool success = Steamworks.SteamUserStats.AddStatFloat(statName.ToIdentifier().Value.ToLowerInvariant(), increment);
             if (!success)
             {
                 DebugConsole.Log("Failed to increment stat \"" + statName + "\".");
             }
-            else
+            else if (storeStats)
             {
                 StoreStats();
             }
             return success;
         }
 
-        public static int GetStatInt(Identifier statName)
+        public static int GetStatInt(AchievementStat stat)
         {
             if (!IsInitialized || !Steamworks.SteamClient.IsValid) { return 0; }
-            return  Steamworks.SteamUserStats.GetStatInt(statName.Value.ToLowerInvariant());
+            return  Steamworks.SteamUserStats.GetStatInt(stat.ToString().ToLowerInvariant());
+        }
+
+        public static float GetStatFloat(AchievementStat stat)
+        {
+            if (!IsInitialized || !Steamworks.SteamClient.IsValid) { return 0f; }
+            return  Steamworks.SteamUserStats.GetStatFloat(stat.ToString().ToLowerInvariant());
+        }
+
+        public static ImmutableDictionary<AchievementStat, float> GetAllStats()
+        {
+            if (!IsInitialized || !Steamworks.SteamClient.IsValid) { return ImmutableDictionary<AchievementStat, float>.Empty; }
+
+            var builder = ImmutableDictionary.CreateBuilder<AchievementStat, float>();
+
+            foreach (AchievementStat stat in AchievementStatExtension.SteamStats)
+            {
+                if (stat.IsFloatStat())
+                {
+                    builder.Add(stat, GetStatFloat(stat));
+                }
+                else
+                {
+                    builder.Add(stat, GetStatInt(stat));
+                }
+            }
+
+            return builder.ToImmutable();
         }
 
         public static bool StoreStats()
@@ -177,7 +234,7 @@ namespace Barotrauma.Steam
         {
             //this should be run even if SteamManager is uninitialized
             //servers need to be able to notify clients of unlocked talents even if the server isn't connected to Steam
-            SteamAchievementManager.Update(deltaTime);
+            AchievementManager.Update(deltaTime);
 
             if (!IsInitialized) { return; }
 
@@ -191,22 +248,6 @@ namespace Barotrauma.Steam
 
             if (Steamworks.SteamClient.IsValid) { Steamworks.SteamClient.Shutdown(); }
             if (Steamworks.SteamServer.IsValid) { Steamworks.SteamServer.Shutdown(); }
-        }
-
-        public static IEnumerable<ulong> ParseWorkshopIds(string workshopIdData)
-        {
-            string[] workshopIds = workshopIdData.Split(',');
-            foreach (string id in workshopIds)
-            {
-                if (ulong.TryParse(id, out ulong idCast))
-                {
-                    yield return idCast;
-                }
-                else
-                {
-                    yield return 0;
-                }
-            }
         }
 
         public static IEnumerable<ulong> WorkshopUrlsToIds(IEnumerable<string> urls)

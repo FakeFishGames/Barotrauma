@@ -140,7 +140,7 @@ namespace Barotrauma.Steam
                     return await queryTask;
                 }
                 
-                public static async Task<Steamworks.Ugc.Item?> MakeRequest(UInt64 id)
+                public static async Task<Option<Steamworks.Ugc.Item>> MakeRequest(UInt64 id)
                 {
                     Task<WorkshopItemSet> ourTask;
                     lock (mutex)
@@ -155,7 +155,7 @@ namespace Barotrauma.Steam
                     }
 
                     var items = await ourTask;
-                    var result = items.FirstOrNull(it => it.Id == id);
+                    var result = items.FirstOrNone(it => it.Id == id);
                     return result;
                 }
             }
@@ -165,7 +165,7 @@ namespace Barotrauma.Steam
             /// The description of the returned item is truncated to save bandwidth.
             /// </summary>
             /// <param name="itemId">Workshop Item ID</param>
-            public static Task<Steamworks.Ugc.Item?> GetItem(UInt64 itemId)
+            public static Task<Option<Steamworks.Ugc.Item>> GetItem(UInt64 itemId)
                 => SingleItemRequestPool.MakeRequest(itemId);
 
             /// <summary>
@@ -176,15 +176,17 @@ namespace Barotrauma.Steam
             /// <param name="withLongDescription">
             /// If true, ask for the item's entire description, otherwise it'll be truncated.
             /// </param>
-            public static async Task<Steamworks.Ugc.Item?> GetItemAsap(UInt64 itemId, bool withLongDescription = false)
+            public static async Task<Option<Steamworks.Ugc.Item>> GetItemAsap(UInt64 itemId, bool withLongDescription = false)
             {
-                if (!IsInitialized) { return null; }
+                if (!IsInitialized) { return Option.None; }
 
                 var items = await GetWorkshopItems(
                     Steamworks.Ugc.Query.All
                         .WithFileId(itemId)
                         .WithLongDescription(withLongDescription));
-                return items.Any() ? items.First() : null;
+                return items.Any()
+                    ? Option.Some(items.First())
+                    : Option.None;
             }
             
             public static async Task ForceRedownload(UInt64 itemId)
@@ -379,7 +381,7 @@ namespace Barotrauma.Steam
                 // made private. Players cannot download updates for these, so
                 // we treat them as if they were deleted.
                 allItems = (await Task.WhenAll(allItems.Select(it => GetItem(it.Id.Value))))
-                    .NotNull()
+                    .NotNone()
                     .Where(it => it.ConsumerApp == AppID)
                     .ToHashSet();
 
@@ -399,7 +401,7 @@ namespace Barotrauma.Steam
                 
                 TaskPool.Add("DeleteUnsubscribedMods", GetPublishedAndSubscribedItems().WaitForLoadingScreen(), t =>
                 {
-                    if (!t.TryGetResult(out ISet<Steamworks.Ugc.Item> items)) { return; }
+                    if (!t.TryGetResult(out ISet<Steamworks.Ugc.Item>? items)) { return; }
                     var ids = items.Select(it => it.Id.Value).ToHashSet();
                     var toUninstall = ContentPackageManager.WorkshopPackages
                         .Where(pkg
@@ -428,8 +430,8 @@ namespace Barotrauma.Steam
             {
                 using var installCounter = await InstallTaskCounter.Create(id);
 
-                var itemNullable = await GetItem(id);
-                if (!(itemNullable is { } item)) { return; }
+                var itemOption = await GetItem(id);
+                if (!itemOption.TryUnwrap(out var item)) { return; }
                 await Task.Yield();
                 
                 string itemTitle = item.Title?.Trim() ?? "";
