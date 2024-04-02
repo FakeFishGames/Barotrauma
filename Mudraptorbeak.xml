@@ -1,14 +1,8 @@
-<?xml version="1.0" encoding="utf-8" ?>
+﻿<?xml version="1.0" encoding="utf-8" ?>
 <huskappendage>
-  <limb id="13" name="Beak0" type="None" inheritlimbdepth="Head" width="0" height="0" notes="" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" radius="50" mass="0" density="0" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05" spriteorientation="90" mirrorvertically="False" mirrorhorizontally="False" hide="False" angulardamping="100" mouthpos="0,0" constanttorque="0" constantangle="0" scale="0.5" attackforcemultiplier="1" minseverancedamage="0.8" severedfadeouttime="0" applytailangle="False" applysinemovement="True">
-    <sprite sourcerect="410,18,97,67" origin="0.29,0.6" depth="0.049" color="180,115,115,255" deadcolor="255,255,255,255" deadcolortime="0" texture="Content/Items/Genetic/Genetic.png" ignoretint="true" />
-    <!-- hides the limb using conditions -->
-    <StatusEffect type="Always" target="This" interval="1" >
-      <HideLimb duration="100000" />
-      <conditional naturalmeleeweapon="gt 33" />
-    </StatusEffect>
-    <!-- Takes melee/projectile damage instead of the head because the limb has a larger collider (50 vs 45) (unless projectile pierces). Stronger with quality. Takes no damage from bleeding/burns/explosion because those hit in an AOE and will hit the limb AND the head -->
-    <damagemodifier armorsector="0,360" afflictiontypes="damage" damagemultiplier="0.4" damagesound="LimbArmor" deflectprojectiles="True" damageparticle="brownchunks" />
+  <limb id="13" name="Beak0" type="None" inheritlimbdepth="Head" width="80" height="0" radius="20" notes="" flip="True" healthindex="1" attackpriority="0" steerforce="0" stepoffset="0,0" mass="0" density="0" pullpos="0,0" refjoint="-1" ignorecollisions="True" friction="0.3" restitution="0.05" spriteorientation="90" mirrorvertically="False" mirrorhorizontally="False" hide="False" angulardamping="100" mouthpos="0,0" constanttorque="0" constantangle="0" scale="0.5" attackforcemultiplier="1" minseverancedamage="0.8" severedfadeouttime="0" applytailangle="False" applysinemovement="True">
+    <sprite sourcerect="410,18,100,67" origin="0.5,0.5" depth="0.049" color="230,200,150,255" deadcolor="230,200,150,255" deadcolortime="0" texture="Content/Items/Genetic/Genetic.png" ignoretint="true" />
+    <damagemodifier armorsector="0,360" afflictiontypes="damage" damagemultiplier="0" damagesound="LimbArmor" deflectprojectiles="True" damageparticle="brownchunks" />
     <damagemodifier armorsector="0,360" afflictiontypes="bleeding" damagemultiplier="0" deflectprojectiles="True"  />
     <damagemodifier armorsector="0,360" afflictiontypes="burn" damagemultiplier="0" deflectprojectiles="True"  />
     <attack context="Any" cooldown="2" afterattack="Pursue" range="50" damagerange="50" duration="0.5" structuredamage="0" itemdamage="25" structuresoundtype="StructureSlash" targetforce="0" severlimbsprobability="0.3" torque="100" force="30" applyforceonlimbs="0,1" targettype="Any" hitdetectiontype="Distance" stun="0" onlyhumans="False" applyforcesonlyonce="True" targetimpulse="5" targetimpulseworld="0,0" targetforceworld="0,-5" stickchance="0" priority="1" secondarycooldown="2" cooldownrandomfactor="0.5" reverse="False" targetlimbtype="None" afterattackdelay="0" retreat="False" rootforceworldstart="0,0" rootforceworldmiddle="0,0" rootforceworldend="0,0" roottransitioneasing="Linear">
@@ -22,18 +16,11 @@
       </StatusEffect>
     </attack>
   </limb>
-  <limb id="14" name="Beak33" type="None" inheritlimbdepth="Head" width="0" height="0" notes="" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" radius="50" mass="0" density="0" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05" spriteorientation="90" mirrorvertically="False" mirrorhorizontally="False" hide="False" angulardamping="100" mouthpos="0,0" constanttorque="0" constantangle="0" scale="0.6" attackforcemultiplier="1" minseverancedamage="0.8" severedfadeouttime="0" applytailangle="False" applysinemovement="True">
-    <sprite sourcerect="410,18,97,67" origin="0.36,0.57" depth="0.049" color="90,110,150,255" deadcolor="255,255,255,255" deadcolortime="0" texture="Content/Items/Genetic/Genetic.png" ignoretint="true" />
-    <!-- hides the limb using conditions -->
-    <StatusEffect type="Always" target="This" interval="1" >
-      <HideLimb duration="100000" />
-      <conditional naturalmeleeweapon="lte 33" />
-      <conditional naturalmeleeweapon="gt 66" />
-    </StatusEffect>
-    <!-- Takes melee/projectile damage instead of the head (unless projectile pierces). Stronger with quality. Takes no damage from bleeding/burns/explosion because those hit in an AOE and will hit the limb AND the head -->    
-    <damagemodifier armorsector="0,360" afflictiontypes="damage" damagemultiplier="0.3" damagesound="LimbArmor" deflectprojectiles="True" damageparticle="brownchunks" />
-    <damagemodifier armorsector="0,360" afflictiontypes="bleeding" damagemultiplier="0" deflectprojectiles="True"  />
-    <damagemodifier armorsector="0,360" afflictiontypes="burn" damagemultiplier="0" deflectprojectiles="True"  />
+  <limb id="14" name="Beak33" type="None" inheritlimbdepth="Head" width="0" height="0" radius="1" notes="" flip="True" healthindex="1" attackpriority="0" steerforce="0" stepoffset="0,0" mass="0" density="0" pullpos="0,0" refjoint="-1" ignorecollisions="True" friction="0.3" restitution="0.05" spriteorientation="90" mirrorvertically="False" mirrorhorizontally="False" hide="False" angulardamping="100" mouthpos="0,0" constanttorque="0" constantangle="0" scale="0.5" attackforcemultiplier="1" minseverancedamage="0.8" severedfadeouttime="0" applytailangle="False" applysinemovement="True">
+    <sprite sourcerect="410,18,1,1" origin="0.36,0.57" depth="0.049" color="90,110,150,255" deadcolor="255,255,255,255" deadcolortime="0" texture="Content/Items/Genetic/Genetic.png" ignoretint="true" />
+    <damagemodifier armorsector="0,360" afflictiontypes="damage" damagemultiplier="0" />
+    <damagemodifier armorsector="0,360" afflictiontypes="bleeding" damagemultiplier="0"  />
+    <damagemodifier armorsector="0,360" afflictiontypes="burn" damagemultiplier="0" />
     <attack context="Any" cooldown="2" afterattack="Pursue" range="50" damagerange="50" duration="0.5" structuredamage="0" itemdamage="40" structuresoundtype="StructureSlash" targetforce="0" severlimbsprobability="0.3" torque="100" force="30" applyforceonlimbs="0,1" targettype="Any" hitdetectiontype="Distance" stun="0" onlyhumans="False" applyforcesonlyonce="True" targetimpulse="5" targetimpulseworld="0,0" targetforceworld="0,-5" stickchance="0" priority="3" secondarycooldown="2" cooldownrandomfactor="0.5" reverse="False" targetlimbtype="None" afterattackdelay="0" retreat="False" rootforceworldstart="0,0" rootforceworldmiddle="0,0" rootforceworldend="0,0" roottransitioneasing="Linear">
       <conditional targetself="true" naturalmeleeweapon="gte 33" />
       <conditional targetself="true" naturalmeleeweapon="lt 66" />
@@ -46,18 +33,11 @@
       </StatusEffect>
     </attack>
   </limb>
-  <limb id="15" name="Beak66" type="None" inheritlimbdepth="Head" width="0" height="0" notes="" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" radius="50" mass="0" density="0" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05" spriteorientation="90" mirrorvertically="False" mirrorhorizontally="False" hide="False" angulardamping="100" mouthpos="0,0" constanttorque="0" constantangle="0" scale="0.7" attackforcemultiplier="1" minseverancedamage="0.8" severedfadeouttime="0" applytailangle="False" applysinemovement="True">
-    <sprite sourcerect="410,18,97,67" origin="0.36,0.5" depth="0.049" color="230,200,150,255" deadcolor="255,255,255,255" deadcolortime="0" texture="Content/Items/Genetic/Genetic.png" ignoretint="true" />
-    <!-- hides the limb using conditions -->
-    <StatusEffect type="Always" target="This" interval="1" >
-      <HideLimb duration="100000" />
-      <conditional naturalmeleeweapon="lte 66" />
-      <conditional naturalmeleeweapon="gt 99" />
-    </StatusEffect>
-    <!-- Takes melee/projectile damage instead of the head (unless projectile pierces). Stronger with quality. Takes no damage from bleeding/burns/explosion because those hit in an AOE and will hit the limb AND the head -->    
-    <damagemodifier armorsector="0,360" afflictiontypes="damage" damagemultiplier="0.2" damagesound="LimbArmor" deflectprojectiles="True" damageparticle="brownchunks" />
-    <damagemodifier armorsector="0,360" afflictiontypes="bleeding" damagemultiplier="0" deflectprojectiles="True"  />
-    <damagemodifier armorsector="0,360" afflictiontypes="burn" damagemultiplier="0" deflectprojectiles="True"  />
+  <limb id="15" name="Beak66" type="None" inheritlimbdepth="Head" width="0" height="0" radius="1" notes="" flip="True" healthindex="1" attackpriority="0" steerforce="0" stepoffset="0,0" mass="0" density="0" pullpos="0,0" refjoint="-1" ignorecollisions="true" friction="0.3" restitution="0.05" spriteorientation="90" mirrorvertically="False" mirrorhorizontally="False" hide="False" angulardamping="100" mouthpos="0,0" constanttorque="0" constantangle="0" scale="0.5" attackforcemultiplier="1" minseverancedamage="0.8" severedfadeouttime="0" applytailangle="False" applysinemovement="True">
+    <sprite sourcerect="410,18,1,1" origin="0.36,0.5" depth="0.049" color="230,200,150,255" deadcolor="255,255,255,255" deadcolortime="0" texture="Content/Items/Genetic/Genetic.png" ignoretint="true" />
+    <damagemodifier armorsector="0,360" afflictiontypes="damage" damagemultiplier="0" />
+    <damagemodifier armorsector="0,360" afflictiontypes="bleeding" damagemultiplier="0"  />
+    <damagemodifier armorsector="0,360" afflictiontypes="burn" damagemultiplier="0" />
     <attack context="Any" cooldown="2" afterattack="Pursue" range="50" damagerange="50" duration="0.5" structuredamage="0" itemdamage="55" structuresoundtype="StructureSlash" targetforce="0" severlimbsprobability="0.3" torque="100" force="30" applyforceonlimbs="0,1" targettype="Any" hitdetectiontype="Distance" stun="0" onlyhumans="False" applyforcesonlyonce="True" targetimpulse="5" targetimpulseworld="0,0" targetforceworld="0,-5" stickchance="0" priority="3" secondarycooldown="2" cooldownrandomfactor="0.5" reverse="False" targetlimbtype="None" afterattackdelay="0" retreat="False" rootforceworldstart="0,0" rootforceworldmiddle="0,0" rootforceworldend="0,0" roottransitioneasing="Linear">
       <conditional targetself="true" naturalmeleeweapon="gte 66" />
       <conditional targetself="true" naturalmeleeweapon="lt 100" />
@@ -70,17 +50,11 @@
       </StatusEffect>
     </attack>
   </limb>
-  <limb id="16" name="Beak100" type="None" inheritlimbdepth="Head" width="0" height="0" notes="" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" radius="50" mass="0" density="0" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05" spriteorientation="90" mirrorvertically="False" mirrorhorizontally="False" hide="False" angulardamping="100" mouthpos="0,0" constanttorque="0" constantangle="0" scale="0.7" attackforcemultiplier="1" minseverancedamage="0.8" severedfadeouttime="0" applytailangle="False" applysinemovement="True">
-    <sprite sourcerect="410,18,97,67" origin="0.36,0.5" depth="0.049" color="255,255,255,255" deadcolor="255,255,255,255" deadcolortime="0" texture="Content/Items/Genetic/Genetic.png" ignoretint="true" />
-    <!-- hides the limb using conditions -->
-    <StatusEffect type="Always" target="This" interval="1" >
-      <HideLimb duration="100000" />
-      <Conditional naturalmeleeweapon="lt 100" />
-    </StatusEffect>
-    <!-- Takes melee/projectile damage instead of the head (unless projectile pierces). Stronger with quality. Takes no damage from bleeding/burns/explosion because those hit in an AOE and will hit the limb AND the head -->    
-    <damagemodifier armorsector="0,360" afflictiontypes="damage" damagemultiplier="0.1" damagesound="LimbArmor" deflectprojectiles="True" damageparticle="brownchunks" />
-    <damagemodifier armorsector="0,360" afflictiontypes="bleeding" damagemultiplier="0" deflectprojectiles="True"  />
-    <damagemodifier armorsector="0,360" afflictiontypes="burn" damagemultiplier="0" deflectprojectiles="True"  />
+  <limb id="16" name="Beak100" type="None" inheritlimbdepth="Head" width="0" height="0" radius="1" notes="" flip="True" healthindex="1" attackpriority="0" steerforce="0" stepoffset="0,0" mass="0" density="0" pullpos="0,0" refjoint="-1" ignorecollisions="True" friction="0.3" restitution="0.05" spriteorientation="90" mirrorvertically="False" mirrorhorizontally="False" hide="False" angulardamping="100" mouthpos="0,0" constanttorque="0" constantangle="0" scale="0.5" attackforcemultiplier="1" minseverancedamage="0.8" severedfadeouttime="0" applytailangle="False" applysinemovement="True">
+    <sprite sourcerect="410,18,1,1" origin="0.36,0.5" depth="0.049" color="230,200,150,255" deadcolor="255,255,255,255" deadcolortime="0" texture="Content/Items/Genetic/Genetic.png" ignoretint="true" />
+    <damagemodifier armorsector="0,360" afflictiontypes="damage" damagemultiplier="0" />
+    <damagemodifier armorsector="0,360" afflictiontypes="bleeding" damagemultiplier="0"  />
+    <damagemodifier armorsector="0,360" afflictiontypes="burn" damagemultiplier="0" />
     <attack context="Any" cooldown="2" afterattack="Pursue" range="50" damagerange="50" duration="0.5" structuredamage="0" itemdamage="55" structuresoundtype="StructureSlash" targetforce="0" severlimbsprobability="0.3" torque="100" force="30" applyforceonlimbs="0,1" targettype="Any" hitdetectiontype="Distance" stun="0" onlyhumans="False" applyforcesonlyonce="True" targetimpulse="5" targetimpulseworld="0,0" targetforceworld="0,-5" stickchance="0" priority="4" secondarycooldown="2" cooldownrandomfactor="0.5" reverse="False" targetlimbtype="None" afterattackdelay="0" retreat="False" rootforceworldstart="0,0" rootforceworldmiddle="0,0" rootforceworldend="0,0" roottransitioneasing="Linear">
       <conditional targetself="true" naturalmeleeweapon="gte 100" />
       <Affliction identifier="bitewounds" strength="20" probability="1" />
@@ -93,7 +67,7 @@
     </attack>
   </limb>  
   <!-- Head to husk appendage -->
-  <joint name="Head to Mudraptor Beak0" limb1="1" limb2="13" limb1anchor="0,0" limb2anchor="0,0" lowerlimit="0" upperlimit="0" weldjoint="True"  canbesevered="False" limitenabled="True" />
+  <joint name="Head to Mudraptor Beak0" limb1="1" limb2="13" limb1anchor="0,0" limb2anchor="-20,-6" lowerlimit="0" upperlimit="0" weldjoint="True"  canbesevered="False" limitenabled="True" />
   <joint name="Head to Mudraptor Beak33" limb1="1" limb2="14" limb1anchor="0,0" limb2anchor="0,0" lowerlimit="0" upperlimit="0" weldjoint="True"  canbesevered="False" limitenabled="True" />
   <joint name="Head to Mudraptor Beak66" limb1="1" limb2="15" limb1anchor="0,0" limb2anchor="0,0" lowerlimit="0" upperlimit="0" weldjoint="True" canbesevered="False" limitenabled="True" />
   <joint name="Head to Mudraptor Beak100" limb1="1" limb2="16" limb1anchor="0,0" limb2anchor="0,0" lowerlimit="0" upperlimit="0" weldjoint="True" canbesevered="False" limitenabled="True" />  
