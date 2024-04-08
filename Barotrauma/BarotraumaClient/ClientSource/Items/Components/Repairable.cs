@@ -398,7 +398,7 @@ namespace Barotrauma.Items.Components
                         paused ? Color.Cyan : GUIStyle.Red, Color.Black * 0.5f);
                 }
                 GUI.DrawString(spriteBatch,
-                    new Vector2(item.DrawPosition.X, -item.DrawPosition.Y + 20), "Condition: " + (int)item.Condition + "/" + (int)item.MaxCondition,
+                    new Vector2(item.DrawPosition.X, -item.DrawPosition.Y + 20), "Condition: " + (int)item.Condition + "/" + (int)item.MaxCondition + (item.Indestructible || item.InvulnerableToDamage ? "\n[INDESTRUCTIBLE]" : ""),
                     GUIStyle.Orange);
             }
         }

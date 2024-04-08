@@ -577,7 +577,9 @@ namespace Barotrauma
                         {
                             var textPos = SectionPosition(i, true);
                             textPos.Y = -textPos.Y;
-                            GUI.DrawString(spriteBatch, textPos, "Damage: " + (int)((GetSection(i).damage / MaxHealth) * 100f) + "%", Color.Yellow);
+                            GUI.DrawString(spriteBatch,
+                                textPos, "Damage: " + (int)((GetSection(i).damage / MaxHealth) * 100f) + "%" + (Indestructible ? "\n[INDESTRUCTIBLE]" : (Submarine is { GodMode: true } ? "\n[GODMODE]" : "")),
+                                Color.Yellow);
                         }
                     }
                 }
