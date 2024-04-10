@@ -11,6 +11,7 @@ namespace Barotrauma
         public static GameModePreset SinglePlayerCampaign;
         public static GameModePreset MultiPlayerCampaign;
         public static GameModePreset Tutorial;
+        public static GameModePreset SinglePlayerMission;
         public static GameModePreset Mission;
         public static GameModePreset PvP;
         public static GameModePreset TestMode;
@@ -48,6 +49,7 @@ namespace Barotrauma
 #if CLIENT
             Tutorial = new GameModePreset("tutorial".ToIdentifier(), typeof(TutorialMode), isSinglePlayer: true);
             DevSandbox = new GameModePreset("devsandbox".ToIdentifier(), typeof(GameMode), isSinglePlayer: true);
+            SinglePlayerMission = new GameModePreset("singleplayermission".ToIdentifier(), typeof(CoOpMode), isSinglePlayer: true);
             SinglePlayerCampaign = new GameModePreset("singleplayercampaign".ToIdentifier(), typeof(SinglePlayerCampaign), isSinglePlayer: true);
             TestMode = new GameModePreset("testmode".ToIdentifier(), typeof(TestGameMode), isSinglePlayer: true);
 #endif

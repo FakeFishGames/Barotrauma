@@ -315,12 +315,17 @@ namespace Barotrauma
                 endTimer += deltaTime;
                 if (endTimer > EndDelay)
                 {
-#if SERVER
-                    if (!(GameMain.GameSession.GameMode is CampaignMode) && GameMain.Server != null)
+                    if (GameMain.GameSession.GameMode is not CampaignMode)
                     {
-                        GameMain.Server.EndGame();                        
-                    }
+#if SERVER
+                        GameMain.Server?.EndGame();
+#else
+                        if (GameMain.GameSession.GameMode is { IsSinglePlayer: true } && GameMain.GameSession.CrewManager is { IsSinglePlayer: true })
+                        {
+                            GameMain.GameSession.GameMode.End();
+                        }
 #endif
+                    }
                 }
             }
 
@@ -335,18 +340,23 @@ namespace Barotrauma
                         State = 1;
                     }                    
                     break;
-#if SERVER
                 case 1:
-                    if (!(GameMain.GameSession.GameMode is CampaignMode) && GameMain.Server != null)
+                    if (GameMain.GameSession.GameMode is not CampaignMode)
                     {
                         if (!Submarine.MainSub.AtStartExit || (wasDocked && !Submarine.MainSub.DockedTo.Contains(Level.Loaded.StartOutpost)))
                         {
-                            GameMain.Server.EndGame();
+#if SERVER
+                            GameMain.Server?.EndGame();
+#else
+                            if (GameMain.GameSession.GameMode is { IsSinglePlayer: true } && GameMain.GameSession.CrewManager is { IsSinglePlayer: true })
+                            {
+                                GameMain.GameSession.GameMode.End();
+                            }
+#endif
                             State = 2;
                         }
                     }
                     break;
-#endif
             }
 
         }
