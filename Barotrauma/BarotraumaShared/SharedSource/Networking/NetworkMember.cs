@@ -155,6 +155,7 @@ namespace Barotrauma.Networking
         NameTaken,
         InvalidVersion,
         SteamP2PError,
+        MalformedData,
         
         //attempt reconnecting with these reasons
         Timeout,

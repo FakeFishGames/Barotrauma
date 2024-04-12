@@ -520,5 +520,32 @@ namespace Barotrauma
 
             static string ColorString(string text, Color color) => $"‖color:{color.ToStringHex()}‖{text}‖end‖";
         }
+
+        /// <summary>
+        /// Converts a string of hex values to a byte array.
+        /// </summary>
+        /// <example>
+        /// 04 03 4b 50 -> { 4, 3, 75, 80 }
+        /// </example>
+        /// <param name="raw"></param>
+        /// <returns></returns>
+        public static byte[] HexStringToBytes(string raw)
+        {
+            string value = string.Join(string.Empty, raw.Split(" "));
+            List<byte> bytes = new List<byte>();
+            for (int i = 0; i < value.Length; i += 2)
+            {
+                string hex = value.Substring(i, 2);
+                byte b = Convert.ToByte(hex, 16);
+                bytes.Add(b);
+
+                static bool IsHexChar(char c) => c is 
+                    >= '0' and <= '9' or
+                    >= 'A' and <= 'F' or
+                    >= 'a' and <= 'f';
+            }
+
+            return bytes.ToArray();
+        }
     }
 }

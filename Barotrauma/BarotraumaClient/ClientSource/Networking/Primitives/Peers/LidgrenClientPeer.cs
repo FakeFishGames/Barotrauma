@@ -287,6 +287,9 @@ namespace Barotrauma.Networking
         {
             netClient?.ServerConnection?.ForceTimeOut();
         }
+
+        public override void DebugSendRawMessage(IWriteMessage msg)
+            => ForwardToLidgren(msg, DeliveryMethod.Reliable);
 #endif
     }
 }

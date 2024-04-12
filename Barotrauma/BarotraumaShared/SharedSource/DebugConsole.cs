@@ -2611,6 +2611,17 @@ namespace Barotrauma
                 errorMsg);
         }
 
+        private static readonly HashSet<string> loggedErrorIdentifiers = new HashSet<string>();
+        /// <summary>
+        /// Log the error message, but only if an error with the same identifier hasn't been thrown yet during this session.
+        /// </summary>
+        public static void ThrowErrorOnce(string identifier, string errorMsg, Exception e)
+        {
+            if (loggedErrorIdentifiers.Contains(identifier)) { return; }
+            ThrowError(errorMsg, e);
+            loggedErrorIdentifiers.Add(identifier);
+        }
+
         public static void AddWarning(string warning, ContentPackage contentPackage = null)
         {
             warning = AddContentPackageInfoToMessage($"WARNING: {warning}", contentPackage);

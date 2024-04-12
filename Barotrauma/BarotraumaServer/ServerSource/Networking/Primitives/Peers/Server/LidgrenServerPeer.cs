@@ -226,7 +226,7 @@ namespace Barotrauma.Networking
             }
             else if (!packetHeader.IsConnectionInitializationStep())
             {
-                if (connectedClients.Find(c => c.Connection.NetConnection == lidgrenMsg.SenderConnection) is not { Connection: LidgrenConnection conn })
+                if (FindConnection(lidgrenMsg.SenderConnection) is not { } conn)
                 {
                     if (pendingClient != null)
                     {
@@ -253,6 +253,15 @@ namespace Barotrauma.Networking
 
                 var packet = INetSerializableStruct.Read<PeerPacketMessage>(inc);
                 callbacks.OnMessageReceived.Invoke(conn, packet.GetReadMessage(packetHeader.IsCompressed(), conn));
+            }
+
+            LidgrenConnection? FindConnection(NetConnection ligdrenConn)
+            {
+                if (connectedClients.Find(c => c.Connection.NetConnection == ligdrenConn) is { Connection: LidgrenConnection conn })
+                {
+                    return conn;
+                }
+                return null;
             }
         }
 
