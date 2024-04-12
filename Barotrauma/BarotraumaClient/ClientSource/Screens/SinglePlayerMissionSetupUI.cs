@@ -134,18 +134,18 @@ namespace Barotrauma
             // Submarines
             new GUITextBlock(new(new Vector2(1, 0.02f), leftColumn.RectTransform, minSize: new(0, 20)), TextManager.Get("SelectedSub"), font: GUIStyle.SubHeadingFont);
 
-            GUIDropDown moddedDropdown = new GUIDropDown(new(new Vector2(1, 0.02f), leftColumn.RectTransform), "", 3);
+            GUIDropDown moddedDropdown = new(new(new Vector2(1, 0.02f), leftColumn.RectTransform), "", 3);
             moddedDropdown.AddItem(TextManager.Get("clientpermission.all"), CategoryFilter.All);
             moddedDropdown.AddItem(TextManager.Get("servertag.modded.false"), CategoryFilter.Vanilla);
             moddedDropdown.AddItem(TextManager.Get("customrank"), CategoryFilter.Custom);
             moddedDropdown.Select(0);
 
-            GUILayoutGroup filterContainer = new GUILayoutGroup(new(new Vector2(1, 0.05f), leftColumn.RectTransform), true)
+            GUILayoutGroup filterContainer = new(new(new Vector2(1, 0.05f), leftColumn.RectTransform), true)
             {
                 Stretch = true
             };
 
-            subList = new GUIListBox(new(new Vector2(1, 0.65f), leftColumn.RectTransform))
+            subList = new (new(new Vector2(1, 0.65f), leftColumn.RectTransform))
             {
                 PlaySoundOnSelect = true,
                 ScrollBarVisible = true,
@@ -225,7 +225,7 @@ namespace Barotrauma
 
                     if (!selectedSub.RequiredContentPackagesInstalled)
                     {
-                        GUIMessageBox msgBox = new GUIMessageBox(TextManager.Get("ContentPackageMismatch"), TextManager.GetWithVariable("ContentPackageMismatchWarning", "[requiredcontentpackages]", string.Join(", ", selectedSub.RequiredContentPackages)), new LocalizedString[] { TextManager.Get("Yes"), TextManager.Get("No") });
+                        GUIMessageBox msgBox = new(TextManager.Get("ContentPackageMismatch"), TextManager.GetWithVariable("ContentPackageMismatchWarning", "[requiredcontentpackages]", string.Join(", ", selectedSub.RequiredContentPackages)), new LocalizedString[] { TextManager.Get("Yes"), TextManager.Get("No") });
 
                         msgBox.Buttons[1].OnClicked = (button, obj) =>
                         {
@@ -236,7 +236,7 @@ namespace Barotrauma
 
                     if (selectedSub.HasTag(SubmarineTag.Shuttle))
                     {
-                        GUIMessageBox msgBox = new GUIMessageBox(TextManager.Get("ShuttleSelected"), TextManager.Get("ShuttleWarning"), new LocalizedString[] { TextManager.Get("Yes"), TextManager.Get("No") });
+                        GUIMessageBox msgBox = new(TextManager.Get("ShuttleSelected"), TextManager.Get("ShuttleWarning"), new LocalizedString[] { TextManager.Get("Yes"), TextManager.Get("No") });
 
                         msgBox.Buttons[1].OnClicked = (button, obj) =>
                         {
