@@ -775,6 +775,7 @@ namespace Barotrauma
             AssignRelayToServer("simulatedduplicateschance", false);
             AssignRelayToServer("simulatedlongloadingtime", false);
             AssignRelayToServer("storeinfo", false);
+            AssignRelayToServer("sendrawpacket", false);
 #endif
 
             commands.Add(new Command("clientlist", "", (string[] args) => { }));
@@ -3262,6 +3263,36 @@ namespace Barotrauma
                 {
                     LocationType.Prefabs.Select(lt => lt.Identifier.Value).ToArray()
                 };
+            }));
+
+            commands.Add(new Command("sendrawpacket", "sendrawpacket [data]: Send a string of hex values as raw binary data to the server", (string[] args) =>
+            {
+                if (GameMain.NetworkMember is null)
+                {
+                    ThrowError("Not connected to a server");
+                    return;
+                }
+                
+                if (args.Length == 0)
+                {
+                    ThrowError("No data provided");
+                    return;
+                }
+
+                string dataString = string.Join(" ", args);
+
+                try
+                {
+                    byte[] bytes = ToolBox.HexStringToBytes(dataString);
+                    IWriteMessage msg = new WriteOnlyMessage();
+                    foreach (byte b in bytes) { msg.WriteByte(b); }
+                    GameMain.Client?.ClientPeer?.DebugSendRawMessage(msg);
+                    NewMessage($"Sent {bytes.Length} byte(s)", Color.Green);
+                }
+                catch (Exception e)
+                {
+                    ThrowError("Failed to parse the data", e);
+                }
             }));
 #endif
 

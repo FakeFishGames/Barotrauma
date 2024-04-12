@@ -231,6 +231,8 @@ namespace Barotrauma.Networking
 
 #if DEBUG
         public abstract void ForceTimeOut();
+
+        public abstract void DebugSendRawMessage(IWriteMessage msg);
 #endif
     }
 }

@@ -97,7 +97,11 @@ namespace Barotrauma.Networking
             switch (initializationStep)
             {
                 case ConnectionInitialization.AuthInfoAndVersion:
-                    var authPacket = INetSerializableStruct.Read<ClientAuthTicketAndVersionPacket>(inc);
+                    if (!INetSerializableStruct.TryRead(inc, pendingClient.AccountInfo, out ClientAuthTicketAndVersionPacket authPacket))
+                    {
+                        RemovePendingClient(pendingClient, PeerDisconnectPacket.WithReason(DisconnectReason.MalformedData));
+                        return;
+                    }
 
                     if (!Client.IsValidName(authPacket.Name, serverSettings))
                     {
@@ -134,7 +138,11 @@ namespace Barotrauma.Networking
 
                     break;
                 case ConnectionInitialization.Password:
-                    var passwordPacket = INetSerializableStruct.Read<ClientPeerPasswordPacket>(inc);
+                    if (!INetSerializableStruct.TryRead(inc, pendingClient.AccountInfo, out ClientPeerPasswordPacket passwordPacket))
+                    {
+                        RemovePendingClient(pendingClient, PeerDisconnectPacket.WithReason(DisconnectReason.MalformedData));
+                        return;
+                    }
 
                     if (pendingClient.PasswordSalt is null)
                     {
@@ -335,5 +343,20 @@ namespace Barotrauma.Networking
 
         public abstract void Send(IWriteMessage msg, NetworkConnection conn, DeliveryMethod deliveryMethod, bool compressPastThreshold = true);
         public abstract void Disconnect(NetworkConnection conn, PeerDisconnectPacket peerDisconnectPacket);
+
+        private void LogMalformedMessage(NetworkConnection conn)
+        {
+            foreach (Client c in GameMain.Server.ConnectedClients)
+            {
+                if (c.Connection == conn)
+                {
+                    DebugConsole.ThrowError($"Received malformed message from {c.Name}.");
+                    return;
+                }
+            }
+            DebugConsole.ThrowError("Received malformed message from remote peer.");
+        }
+        protected static void LogMalformedMessage()
+            => DebugConsole.ThrowError("Received malformed message from remote peer.");
     }
 }

@@ -1,4 +1,4 @@
-#nullable enable
+﻿#nullable enable
 
 using System;
 using System.Collections.Generic;
@@ -7,6 +7,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Text;
 using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
 
@@ -790,6 +791,61 @@ namespace Barotrauma
             {
                 object? value = property.GetValue(this);
                 property.Behavior.WriteAction(value!, property.Attribute, msg, bitField);
+            }
+        }
+
+        public static bool TryRead<T>(IReadMessage inc, AccountInfo sender, [NotNullWhen(true)] out T? data) where T : INetSerializableStruct
+        {
+            try
+            {
+                data = Read<T>(inc);
+                return true;
+            }
+            catch (Exception e)
+            {
+                LogError(e);
+                data = default;
+                return false;
+            }
+
+            void LogError(Exception e)
+            {
+                int prevPos = inc.BitPosition;
+
+                StringBuilder hexData = new();
+                inc.BitPosition = 0;
+                while (inc.BitPosition < inc.LengthBits)
+                {
+                    byte b = inc.ReadByte();
+                    hexData.Append($"{b:X2} ");
+                }
+                // trim the last space if there is one
+                if (hexData.Length > 0) { hexData.Length--; }
+
+                inc.BitPosition = prevPos;
+
+                //only log the error once per sender, so this can't be abused by spamming the server with malformed data to fill up the console with errors
+                //note that the name is "Unknown" if the client hasn't properly joined yet, so errors when first joining are only logged once
+                string accountInfoName = AccountInfoToName(sender);
+                DebugConsole.ThrowErrorOnce(
+                    identifier: $"INetSerializableStruct.TryRead:{accountInfoName}",
+                    errorMsg: $"Failed to read a message by {accountInfoName}. Data: \"{hexData}\"", e);
+
+                static string AccountInfoToName(AccountInfo info)
+                {
+                    var connectedClients = 
+                        GameMain.NetworkMember?.ConnectedClients ?? Array.Empty<Client>();
+
+                    foreach (Client c in connectedClients)
+                    {
+                        if (c.AccountInfo == info)
+                        {
+                            return c.Name;
+                        }
+                    }
+                    
+                    return info.AccountId.TryUnwrap(out var accountId) ? accountId.StringRepresentation : "Unknown";
+                }
             }
         }
     }

@@ -142,8 +142,12 @@ namespace Barotrauma.Networking
             if (remotePeer is null) { return; }
             if (remotePeer.PendingDisconnect.IsSome()) { return; }
 
-            var peerPacketHeaders = INetSerializableStruct.Read<PeerPacketHeaders>(inc);
-            
+            if (!INetSerializableStruct.TryRead(inc, remotePeer.AccountInfo, out PeerPacketHeaders peerPacketHeaders))
+            {
+                CommunicateDisconnectToRemotePeer(remotePeer, PeerDisconnectPacket.WithReason(DisconnectReason.MalformedData));
+                return;
+            }
+
             PacketHeader packetHeader = peerPacketHeaders.PacketHeader;
 
             if (packetHeader.IsConnectionInitializationStep())
@@ -178,13 +182,11 @@ namespace Barotrauma.Networking
         {
             remotePeer.AuthStatus = RemotePeer.AuthenticationStatus.AuthenticationPending;
 
-            var packet = INetSerializableStruct.Read<ClientAuthTicketAndVersionPacket>(inc);
-
-            void failAuth()
+            if (!INetSerializableStruct.TryRead(inc, remotePeer.AccountInfo, out ClientAuthTicketAndVersionPacket packet))
             {
-                CommunicateDisconnectToRemotePeer(remotePeer, PeerDisconnectPacket.WithReason(DisconnectReason.AuthenticationFailed));
+                failAuth();
+                return;
             }
-
             if (!packet.AuthTicket.TryUnwrap(out var authenticationTicket))
             {
                 failAuth();
@@ -221,6 +223,11 @@ namespace Barotrauma.Networking
                     }
                     remotePeer.UnauthedMessages.Clear();
                 });
+
+            void failAuth()
+            {
+                CommunicateDisconnectToRemotePeer(remotePeer, PeerDisconnectPacket.WithReason(DisconnectReason.AuthenticationFailed));
+            }
         }
 
         public override void Update(float deltaTime)
@@ -381,7 +388,7 @@ namespace Barotrauma.Networking
             {
                 OnInitializationComplete();
 
-                PeerPacketMessage packet = INetSerializableStruct.Read<PeerPacketMessage>(inc);
+                var packet = INetSerializableStruct.Read<PeerPacketMessage>(inc);
                 IReadMessage msg = new ReadOnlyMessage(packet.Buffer, packetHeader.IsCompressed(), 0, packet.Length, ServerConnection);
                 callbacks.OnMessageReceived.Invoke(msg);
             }
@@ -552,6 +559,9 @@ namespace Barotrauma.Networking
         {
             //TODO: reimplement?
         }
+
+        public override void DebugSendRawMessage(IWriteMessage msg)
+            => ForwardToServerProcess(msg);
 #endif
     }
 }
