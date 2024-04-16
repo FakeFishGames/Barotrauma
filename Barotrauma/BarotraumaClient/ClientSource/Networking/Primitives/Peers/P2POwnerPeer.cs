@@ -1,4 +1,4 @@
-#nullable enable
+﻿#nullable enable
 using Barotrauma.Extensions;
 using Barotrauma.Steam;
 using System;
@@ -152,7 +152,16 @@ namespace Barotrauma.Networking
 
             if (packetHeader.IsConnectionInitializationStep())
             {
-                ConnectionInitialization initialization = peerPacketHeaders.Initialization ?? throw new Exception("Initialization step missing");
+                if (peerPacketHeaders.Initialization == null)
+                {
+                    //can happen if the packet is crafted in a way to leave the Initialization value as null
+                    DebugConsole.ThrowErrorOnce(
+                        $"P2POwnerPeer.OnP2PData:{remotePeer.Endpoint.StringRepresentation}", 
+                        $"Failed to initialize remote peer {remotePeer.Endpoint.StringRepresentation}: initialization step missing.");
+                    CommunicateDisconnectToRemotePeer(remotePeer, PeerDisconnectPacket.WithReason(DisconnectReason.MalformedData));
+                    return;
+                }
+                ConnectionInitialization initialization = peerPacketHeaders.Initialization.Value;
                 if (initialization == ConnectionInitialization.AuthInfoAndVersion
                     && remotePeer.AuthStatus == RemotePeer.AuthenticationStatus.NotAuthenticated)
                 {
