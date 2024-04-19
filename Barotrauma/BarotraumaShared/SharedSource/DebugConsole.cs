@@ -2615,7 +2615,7 @@ namespace Barotrauma
         /// <summary>
         /// Log the error message, but only if an error with the same identifier hasn't been thrown yet during this session.
         /// </summary>
-        public static void ThrowErrorOnce(string identifier, string errorMsg, Exception e)
+        public static void ThrowErrorOnce(string identifier, string errorMsg, Exception e = null)
         {
             if (loggedErrorIdentifiers.Contains(identifier)) { return; }
             ThrowError(errorMsg, e);
