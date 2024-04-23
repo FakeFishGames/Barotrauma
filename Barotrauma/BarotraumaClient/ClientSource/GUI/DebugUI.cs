@@ -12,7 +12,9 @@ namespace Barotrauma
         {
             { "explorer", () => CreateObjectExplorer() },
             { "inspector", () => inspectorTooltip.Visible = true },
-            // TODO: Debug infos/overlays toggle window, GUI inspectors/editors
+            // TODO: Debug infos/overlays toggles window
+            // TODO: Item spawner window
+            // TODO: GUI inspector/explorer windows
         };
 
         private static readonly GUITextBlock inspectorTooltip = CreateObjectInspector();
