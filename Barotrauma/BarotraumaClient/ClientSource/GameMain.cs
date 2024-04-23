@@ -923,6 +923,8 @@ namespace Barotrauma
 
                     SubmarinePreview.AddToGUIUpdateList();
 
+                    DebugUI.Update();
+
                     FileSelection.AddToGUIUpdateList();
 
                     DebugConsole.AddToGUIUpdateList();

@@ -572,7 +572,7 @@ namespace Barotrauma
             {
                 GameMain.SpriteEditorScreen.Select();
             }));
-            
+
             commands.Add(new Command("editevents|eventeditor", "editevents/eventeditor: Switch to the Event Editor to edit scripted events.", (string[] args) =>
             {
                 GameMain.EventEditorScreen.Select();
@@ -634,7 +634,7 @@ namespace Barotrauma
             {
                 NewMessage("Ready checks can only be commenced in multiplayer.", Color.Red);
             }));
-            
+
             commands.Add(new Command("bindkey", "bindkey [key] [command]: Binds a key to a command.", (string[] args) =>
             {
                 if (args.Length < 2)
@@ -651,13 +651,13 @@ namespace Barotrauma
                     : Enum.TryParse<MouseButton>(keyString, ignoreCase: true, out var outMouseButton)
                         ? outMouseButton
                         : (KeyOrMouse)MouseButton.None;
-                
+
                 if (key.Key == Keys.None && key.MouseButton == MouseButton.None)
                 {
                     ThrowError($"Invalid key {keyString}.");
                     return;
                 }
-                    
+
                 DebugConsoleMapping.Instance.Set(key, command);
                 NewMessage($"\"{command}\" bound to {key}.", GUIStyle.Green);
 
@@ -667,7 +667,7 @@ namespace Barotrauma
                 }
 
             }, isCheat: false, getValidArgs: () => new[] { Enum.GetNames(typeof(Keys)), new[] { "\"\"" } }));
-            
+
             commands.Add(new Command("unbindkey", "unbindkey [key]: Unbinds a command.", (string[] args) =>
             {
                 if (args.Length < 1)
@@ -677,7 +677,7 @@ namespace Barotrauma
                 }
 
                 string keyString = args[0];
-                
+
                 KeyOrMouse key = Enum.TryParse<Keys>(keyString, ignoreCase: true, out var outKey)
                     ? outKey
                     : Enum.TryParse<MouseButton>(keyString, ignoreCase: true, out var outMouseButton)
@@ -691,9 +691,9 @@ namespace Barotrauma
                 }
                 DebugConsoleMapping.Instance.Remove(key);
                 NewMessage("Keybind unbound.", GUIStyle.Green);
-                return;                
+                return;
             }, isCheat: false, getValidArgs: () => new[] { DebugConsoleMapping.Instance.Bindings.Keys.Select(keys => keys.ToString()).Distinct().OrderBy(k => k).ToArray() }));
-            
+
             commands.Add(new Command("savebinds", "savebinds: Writes current keybinds into the config file.", (string[] args) =>
             {
                 ShowQuestionPrompt($"Some keybinds may render the game unusable, are you sure you want to make these keybinds persistent? ({DebugConsoleMapping.Instance.Bindings.Count} keybind(s) assigned) Y/N",
@@ -708,7 +708,7 @@ namespace Barotrauma
                         GameSettings.SaveCurrentConfig();
                     });
             }, isCheat: false));
-            
+
             commands.Add(new Command("togglegrid", "Toggle visual snap grid in sub editor.", (string[] args) =>
             {
                 SubEditorScreen.ShouldDrawGrid = !SubEditorScreen.ShouldDrawGrid;
@@ -1225,6 +1225,30 @@ namespace Barotrauma
 
                 msgBox.Buttons[0].OnClicked = msgBox.Close;
             }));
+
+            AssignOnExecute("debugmenu", (string[] args) =>
+            {
+                if (args.Any())
+                {
+                    if (args[0] is "close" or "closeall")
+                    {
+                        DebugUI.Close();
+                    }
+                    else if (DebugUI.OpenableWindows.ContainsKey(args[0]))
+                    {
+                        DebugUI.Open(args[0]);
+                    }
+                    else
+                    {
+                        NewMessage($"'{args[0]}' is not a valid window", Color.Yellow);
+                    }
+                }
+                else
+                {
+                    DebugUI.Open(DebugUI.OpenableWindows.First().Key);
+                }
+            });
+            AssignRelayToServer("debugmenu", false);
 
             AssignOnExecute("debugdraw", (string[] args) =>
             {
