@@ -2,15 +2,18 @@ using System.Linq;
 
 namespace Barotrauma
 {
+    /// <summary>
+    /// Increases the skill level of a specific character.
+    /// </summary>
     class GiveSkillExpAction : EventAction
     {
-        [Serialize("", IsPropertySaveable.Yes)]
+        [Serialize("", IsPropertySaveable.Yes, description: "Identifier of the skill to increase.")]
         public Identifier Skill { get; set; }
 
-        [Serialize(0.0f, IsPropertySaveable.Yes)]
+        [Serialize(0.0f, IsPropertySaveable.Yes, description: "How much the skill should increase.")]
         public float Amount { get; set; }
 
-        [Serialize("", IsPropertySaveable.Yes)]
+        [Serialize("", IsPropertySaveable.Yes, description: "Tag of the character(s) whose skill to increase.")]
         public Identifier TargetTag { get; set; }
 
         public GiveSkillExpAction(ScriptedEvent parentEvent, ContentXElement element) : base(parentEvent, element)

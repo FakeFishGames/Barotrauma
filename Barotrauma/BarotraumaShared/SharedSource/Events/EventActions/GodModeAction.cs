@@ -1,14 +1,17 @@
 namespace Barotrauma
 {
+    /// <summary>
+    /// Makes a specific character invulnerable to damage and unable to die.
+    /// </summary>
     class GodModeAction : EventAction
     {
-        [Serialize(true, IsPropertySaveable.Yes)]
+        [Serialize(true, IsPropertySaveable.Yes, description: "Should the godmode be enabled or disabled?")]
         public bool Enabled { get; set; }
 
         [Serialize(false, IsPropertySaveable.Yes, description: "Should the character's active afflictions be updated (e.g. applying visual effects of the afflictions)")]
         public bool UpdateAfflictions { get; set; }
 
-        [Serialize("", IsPropertySaveable.Yes)]
+        [Serialize("", IsPropertySaveable.Yes, description: "Tag of the character whose godmode to enable/disable.")]
         public Identifier TargetTag { get; set; }
 
         public GodModeAction(ScriptedEvent parentEvent, ContentXElement element) : base(parentEvent, element) { }

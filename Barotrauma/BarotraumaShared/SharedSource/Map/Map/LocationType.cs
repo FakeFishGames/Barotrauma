@@ -86,6 +86,16 @@ namespace Barotrauma
 
         public Identifier ReplaceInRadiation { get; }
 
+        /// <summary>
+        /// If set, forces the location to be assigned to this faction. Set to "None" if you don't want the location to be assigned to any faction.
+        /// </summary>
+        public Identifier Faction { get; }
+
+        /// <summary>
+        /// If set, forces the location to be assigned to this secondary faction. Set to "None" if you don't want the location to be assigned to any secondary faction.
+        /// </summary>
+        public Identifier SecondaryFaction { get; }
+
         public Sprite Sprite { get; private set; }
         public Sprite RadiationSprite { get; }
 
@@ -133,6 +143,9 @@ namespace Barotrauma
             IsEnterable = element.GetAttributeBool("isenterable", HasOutpost);
             AllowAsBiomeGate = element.GetAttributeBool(nameof(AllowAsBiomeGate), true);
             AllowInRandomLevels = element.GetAttributeBool(nameof(AllowInRandomLevels), true);
+
+            Faction = element.GetAttributeIdentifier(nameof(Faction), Identifier.Empty);
+            SecondaryFaction = element.GetAttributeIdentifier(nameof(SecondaryFaction), Identifier.Empty);
 
             ShowSonarMarker = element.GetAttributeBool("showsonarmarker", true);
 

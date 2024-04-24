@@ -18,6 +18,8 @@ namespace Barotrauma.Networking
         public ImmutableArray<ServerContentPackage> ServerContentPackages { get; set; } =
             ImmutableArray<ServerContentPackage>.Empty;
 
+        public bool AllowModDownloads { get; private set; } = true;
+
         public readonly record struct Callbacks(
             Callbacks.MessageCallback OnMessageReceived,
             Callbacks.DisconnectCallback OnDisconnect,
@@ -151,6 +153,7 @@ namespace Barotrauma.Networking
                     if (!ContentPackageOrderReceived)
                     {
                         ServerContentPackages = orderPacket.ContentPackages;
+                        AllowModDownloads = orderPacket.AllowModDownloads;
                         if (ServerContentPackages.Length == 0)
                         {
                             string errorMsg = "Error in ContentPackageOrder message: list of content packages enabled on the server was empty.";

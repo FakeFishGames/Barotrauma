@@ -3,16 +3,19 @@ using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
-using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace Barotrauma
 {
-    abstract partial class CampaignMode : GameMode
+    internal abstract partial class CampaignMode : GameMode
     {
-        protected bool crewDead;
+        public bool CrewDead
+        {
+            get; 
+            protected set;
+        }
 
         protected Color overlayColor;
         protected Sprite overlaySprite;

@@ -74,7 +74,7 @@ namespace Barotrauma
             }
             if (!RelevantSkill.IsEmpty)
             {
-                if (item.Repairables.None(r => r.requiredSkills.Any(s => s.Identifier == RelevantSkill))) { return false; }
+                if (item.Repairables.None(r => r.RequiredSkills.Any(s => s.Identifier == RelevantSkill))) { return false; }
             }
             return !HumanAIController.IsItemRepairedByAnother(item, out _);
         }

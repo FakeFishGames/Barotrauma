@@ -2,9 +2,12 @@
 
 namespace Barotrauma
 {
+    /// <summary>
+    /// Check the state of the traitor event the action is defined in. Only valid for traitor events.
+    /// </summary>
     class CheckTraitorEventStateAction : BinaryOptionAction
     {
-        [Serialize(TraitorEvent.State.Completed, IsPropertySaveable.Yes)]
+        [Serialize(TraitorEvent.State.Completed, IsPropertySaveable.Yes, description: "What does the state of the event need to be for the check to succeed?")]
         public TraitorEvent.State State { get; set; }
 
         private readonly TraitorEvent? traitorEvent;

@@ -110,6 +110,7 @@ namespace Barotrauma
 
         public readonly int Reward;
 
+        // The titles and bodies of the popup messages during the mission, shown when the state of the mission changes. The order matters.
         public readonly ImmutableArray<LocalizedString> Headers;
         public readonly ImmutableArray<LocalizedString> Messages;
 
@@ -187,23 +188,25 @@ namespace Barotrauma
 
             Tags = element.GetAttributeIdentifierArray("tags", Array.Empty<Identifier>()).ToImmutableHashSet();
 
-            string nameTag = element.GetAttributeString("name", "");
-            Name = TextManager.Get($"MissionName.{TextIdentifier}");
-            if (!string.IsNullOrEmpty(nameTag))
-            {
-                Name = Name
-                    .Fallback(TextManager.Get(nameTag))
-                    .Fallback(nameTag);
-            }
+            Name = GetText(element.GetAttributeString("name", ""), "MissionName");
+            Description = GetText(element.GetAttributeString("description", ""), "MissionDescription");
 
-            string descriptionTag = element.GetAttributeString("description", "");
-            Description =
-                TextManager.Get($"MissionDescription.{TextIdentifier}"); 
-            if (!string.IsNullOrEmpty(descriptionTag))
+            LocalizedString GetText(string textTag, string textTagPrefix)
             {
-                Description = Description
-                    .Fallback(TextManager.Get(descriptionTag))
-                    .Fallback(descriptionTag);
+                if (string.IsNullOrEmpty(textTag))
+                {
+                    return TextManager.Get($"{textTagPrefix}.{TextIdentifier}");
+                }
+                else
+                {
+                    return
+                        //prefer finding a text based on the specific text tag defined in the mission config
+                        TextManager.Get(textTag)
+                        //2nd option: the "default" format (MissionName.SomeMission)
+                        .Fallback(TextManager.Get($"{textTagPrefix}.{TextIdentifier}"))
+                        //last option: use the text in the xml as-is with no localization
+                        .Fallback(textTag);
+                }
             }
 
             Reward      = element.GetAttributeInt("reward", 1);
@@ -372,6 +375,12 @@ namespace Barotrauma
                 DebugConsole.ThrowErrorLocalized("Error in mission prefab \"" + Name + "\" - mission type cannot be none.");
                 return;
             }
+#if DEBUG
+            if (Type == MissionType.Monster && SonarLabel.IsNullOrEmpty())
+            {
+                DebugConsole.AddWarning($"Potential error in mission prefab \"{Identifier}\" - sonar label not set.");
+            }
+#endif
 
             if (CoOpMissionClasses.ContainsKey(Type))
             {

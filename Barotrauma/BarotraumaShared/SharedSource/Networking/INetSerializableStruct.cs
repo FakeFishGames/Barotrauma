@@ -162,7 +162,8 @@ namespace Barotrauma
                 { typeof(AccountId), new ReadWriteBehavior<AccountId>(ReadAccountId, WriteAccountId) },
                 { typeof(Color), new ReadWriteBehavior<Color>(ReadColor, WriteColor) },
                 { typeof(Vector2), new ReadWriteBehavior<Vector2>(ReadVector2, WriteVector2) },
-                { typeof(SerializableDateTime), new ReadWriteBehavior<SerializableDateTime>(ReadSerializableDateTime, WriteSerializableDateTime) }
+                { typeof(SerializableDateTime), new ReadWriteBehavior<SerializableDateTime>(ReadSerializableDateTime, WriteSerializableDateTime) },
+                { typeof(NetLimitedString), new ReadWriteBehavior<NetLimitedString>(ReadNetLString, WriteNetLString) }
             };
 
         private static readonly ImmutableDictionary<Predicate<Type>, Func<Type, IReadWriteBehavior>> BehaviorFactories = new Dictionary<Predicate<Type>, Func<Type, IReadWriteBehavior>>
@@ -458,6 +459,12 @@ namespace Barotrauma
         private static double ReadDouble(IReadMessage inc, NetworkSerialize attribute, ReadOnlyBitField bitField) => inc.ReadDouble();
         private static void WriteDouble(double b, NetworkSerialize attribute, IWriteMessage msg, WriteOnlyBitField bitField) { msg.WriteDouble(b); }
 
+        // We do not validate that the string read is within the max length, but do we need to?
+        // Modified client could send a network message with a really long string when we use NetLimitedString
+        // but they could also just do that for any other network message.
+        private static NetLimitedString ReadNetLString(IReadMessage inc, NetworkSerialize attribute, ReadOnlyBitField bitField) => new NetLimitedString(inc.ReadString());
+        private static void WriteNetLString(NetLimitedString b, NetworkSerialize attribute, IWriteMessage msg, WriteOnlyBitField bitField) { msg.WriteString(b.Value); }
+
         private static string ReadString(IReadMessage inc, NetworkSerialize attribute, ReadOnlyBitField bitField) => inc.ReadString();
         private static void WriteString(string b, NetworkSerialize attribute, IWriteMessage msg, WriteOnlyBitField bitField) { msg.WriteString(b); }
 
@@ -685,6 +692,7 @@ namespace Barotrauma
     /// <see cref="Single">float</see><br/>
     /// <see cref="Double">double</see><br/>
     /// <see cref="String">string</see><br/>
+    /// <see cref="Barotrauma.NetLimitedString"></see><br/>
     /// <see cref="Barotrauma.Networking.AccountId"/><br/>
     /// <see cref="System.Collections.Immutable.ImmutableArray{T}"></see><br/>
     /// <see cref="Microsoft.Xna.Framework.Color"/><br/>

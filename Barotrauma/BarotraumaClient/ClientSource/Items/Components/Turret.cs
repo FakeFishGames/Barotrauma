@@ -118,6 +118,19 @@ namespace Barotrauma.Items.Components
             get;
             private set;
         }
+        
+        [Serialize(defaultValue: "0.5, 1.5", IsPropertySaveable.No, description: "Pitch slides from X to Y over the charge time")]
+        public Vector2 ChargeSoundWindupPitchSlide
+        {
+            get => _chargeSoundWindupPitchSlide;
+            set
+            {
+                _chargeSoundWindupPitchSlide = new Vector2(
+                    Math.Max(value.X, SoundChannel.MinFrequencyMultiplier), 
+                    Math.Min(value.Y, SoundChannel.MaxFrequencyMultiplier));
+            }
+        }
+        private Vector2 _chargeSoundWindupPitchSlide;
 
         partial void InitProjSpecific(ContentXElement element)
         {
@@ -220,9 +233,9 @@ namespace Barotrauma.Items.Components
                 {
                     if (moveSound != null)
                     {
-                        moveSoundChannel.FadeOutAndDispose();
+                        moveSoundChannel?.FadeOutAndDispose();
                         moveSoundChannel = SoundPlayer.PlaySound(moveSound.Sound, item.WorldPosition, moveSound.Volume, moveSound.Range, ignoreMuffling: moveSound.IgnoreMuffling, freqMult: moveSound.GetRandomFrequencyMultiplier());
-                        if (moveSoundChannel != null) moveSoundChannel.Looping = true;
+                        if (moveSoundChannel != null) { moveSoundChannel.Looping = true;}
                     }
                 }
             }
@@ -268,7 +281,7 @@ namespace Barotrauma.Items.Components
                     }
                     else if (chargeSoundChannel != null)
                     {
-                        chargeSoundChannel.FrequencyMultiplier = MathHelper.Lerp(0.5f, 1.5f, chargeRatio);
+                        chargeSoundChannel.FrequencyMultiplier = MathHelper.Lerp(ChargeSoundWindupPitchSlide.X, ChargeSoundWindupPitchSlide.Y, chargeRatio);
                         chargeSoundChannel.Position = new Vector3(item.WorldPosition, 0.0f);
                     }
                     break;
@@ -482,12 +495,12 @@ namespace Barotrauma.Items.Components
                 };
                 widget.MouseDown += () =>
                 {
-                    widget.color = GUIStyle.Green;
+                    widget.Color = GUIStyle.Green;
                     prevAngle = minRotation;
                 };
                 widget.Deselected += () =>
                 {
-                    widget.color = Color.Yellow;
+                    widget.Color = Color.Yellow;
                     item.CreateEditingHUD();
                     RotationLimits = RotationLimits;
                     if (SubEditorScreen.IsSubEditor())
@@ -513,7 +526,7 @@ namespace Barotrauma.Items.Components
                 };
                 widget.PreDraw += (sprtBtch, deltaTime) =>
                 {
-                    widget.tooltip = "Min: " + (int)MathHelper.ToDegrees(minRotation);
+                    widget.Tooltip = "Min: " + (int)MathHelper.ToDegrees(minRotation);
                     widget.DrawPos = GetDrawPos() + new Vector2((float)Math.Cos(minRotation), (float)Math.Sin(minRotation)) * coneRadius / Screen.Selected.Cam.Zoom * GUI.Scale;
                 };
             });
@@ -526,12 +539,12 @@ namespace Barotrauma.Items.Components
                 };
                 widget.MouseDown += () =>
                 {
-                    widget.color = GUIStyle.Green;
+                    widget.Color = GUIStyle.Green;
                     prevAngle = maxRotation;
                 };
                 widget.Deselected += () =>
                 {
-                    widget.color = Color.Yellow;
+                    widget.Color = Color.Yellow;
                     item.CreateEditingHUD();
                     RotationLimits = RotationLimits;
                     if (SubEditorScreen.IsSubEditor())
@@ -557,7 +570,7 @@ namespace Barotrauma.Items.Components
                 };
                 widget.PreDraw += (sprtBtch, deltaTime) =>
                 {
-                    widget.tooltip = "Max: " + (int)MathHelper.ToDegrees(maxRotation);
+                    widget.Tooltip = "Max: " + (int)MathHelper.ToDegrees(maxRotation);
                     widget.DrawPos = GetDrawPos() + new Vector2((float)Math.Cos(maxRotation), (float)Math.Sin(maxRotation)) * coneRadius / Screen.Selected.Cam.Zoom * GUI.Scale;
                     widget.Update(deltaTime);
                 };
@@ -584,20 +597,20 @@ namespace Barotrauma.Items.Components
             Vector2 offset = new Vector2(size / 2 + 5, -10);
             if (!widgets.TryGetValue(id, out Widget widget))
             {
-                widget = new Widget(id, size, Widget.Shape.Rectangle)
+                widget = new Widget(id, size, WidgetShape.Rectangle)
                 {
-                    color = Color.Yellow,
-                    tooltipOffset = offset,
-                    inputAreaMargin = 20,
+                    Color = Color.Yellow,
+                    TooltipOffset = offset,
+                    InputAreaMargin = 20,
                     RequireMouseOn = false
                 };
                 widgets.Add(id, widget);
                 initMethod?.Invoke(widget);
             }
 
-            widget.size = size;
-            widget.tooltipOffset = offset;
-            widget.thickness = thickness;
+            widget.Size = size;
+            widget.TooltipOffset = offset;
+            widget.Thickness = thickness;
             return widget;
         }
 

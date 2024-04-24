@@ -68,7 +68,7 @@ namespace Barotrauma
         public bool DivideByLimbCount { get; set; }
 
         [Serialize(false, IsPropertySaveable.Yes, description: "Is the damage relative to the max vitality (percentage) or absolute (normal)"), Editable]
-        public bool MultiplyByMaxVitality { get; private set; }
+        public bool MultiplyByMaxVitality { get; set; }
 
         public float DamagePerSecond;
         public float DamagePerSecondTimer;
@@ -130,11 +130,16 @@ namespace Barotrauma
         public void Deserialize(XElement element)
         {
             SerializableProperties = SerializableProperty.DeserializeProperties(this, element);
+            //backwards compatibility
+            if (element.GetAttribute("amount") != null && element.GetAttribute("strength") == null)
+            {
+                Strength = element.GetAttributeFloat("amount", 0.0f);
+            }
         }
 
         public Affliction CreateMultiplied(float multiplier, Affliction affliction)
         {
-            var instance = Prefab.Instantiate(NonClampedStrength * multiplier, Source);
+            Affliction instance = Prefab.Instantiate(NonClampedStrength * multiplier, Source);
             instance.CopyProperties(affliction);
             return instance;
         }
@@ -183,7 +188,7 @@ namespace Barotrauma
 
             if (currentEffect.MultiplyByMaxVitality)
             {
-                currVitalityDecrease *= characterHealth == null ? 100.0f : characterHealth.MaxVitality;
+                currVitalityDecrease *= characterHealth?.MaxVitality ?? 100.0f;
             }
 
             return currVitalityDecrease;

@@ -205,7 +205,7 @@ namespace Barotrauma.Items.Components
             int buttonSize = GUIStyle.ItemFrameTopBarHeight;
             Point margin = new Point(buttonSize / 4, buttonSize / 6);
 
-            GUILayoutGroup buttonArea = new GUILayoutGroup(new RectTransform(new Point(GuiFrame.Rect.Width - margin.X * 2, buttonSize - margin.Y * 2), GuiFrame.RectTransform, Anchor.TopCenter) { AbsoluteOffset = new Point(0, margin.Y) }, 
+            GUILayoutGroup buttonArea = new GUILayoutGroup(new RectTransform(new Point(content.Rect.Width, buttonSize - margin.Y * 2), content.RectTransform, Anchor.TopRight) { AbsoluteOffset = new Point(0, margin.Y) }, 
                 isHorizontal: true, childAnchor: Anchor.TopRight)
             {
                 AbsoluteSpacing = margin.X / 2
@@ -334,7 +334,7 @@ namespace Barotrauma.Items.Components
             }
             else
             {
-                return item?.Name;
+                return item?.Prefab.Name;
             }            
         }
 

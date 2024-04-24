@@ -46,7 +46,7 @@ namespace Barotrauma.Networking
             {
                 if (localRemovedBans.Contains(bannedPlayer.UniqueIdentifier)) { continue; }
 
-                var playerFrame = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.2f), ((GUIListBox)BanFrame).Content.RectTransform) { MinSize = new Point(0, 70) })
+                var playerFrame = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.2f), ((GUIListBox)BanFrame).Content.RectTransform) { MinSize = new Point(0, 70) }, style: "InnerFrame")
                 {
                     UserData = BanFrame
                 };
@@ -80,18 +80,22 @@ namespace Barotrauma.Networking
                 { 
                     CanBeFocused = true 
                 };
-                textBlock.RectTransform.MinSize = new Point(
-                    (int)textBlock.Font.MeasureString(textBlock.Text.SanitizedValue).X, 0);
+                textBlock.RectTransform.MinSize = new Point(0, (int)textBlock.Font.MeasureString(textBlock.Text.SanitizedValue).Y);
 
-                var removeButton = new GUIButton(new RectTransform(new Vector2(0.2f, 0.4f), topArea.RectTransform), 
+                var removeButton = new GUIButton(new RectTransform(new Vector2(0.2f, 0.4f), topArea.RectTransform, Anchor.CenterRight), 
                     TextManager.Get("BanListRemove"), style: "GUIButtonSmall")
                 {
+                    IgnoreLayoutGroups = true,
                     UserData = bannedPlayer,
-                    OnClicked = RemoveBan
+                    OnClicked = RemoveBan,
+                    Enabled = false
                 };
-                topArea.RectTransform.MinSize = new Point(0, (int)(removeButton.Rect.Height * 1.25f));
-                
-                topArea.ForceLayoutRecalculation();
+                removeButton.OnAddedToGUIUpdateList += (component) =>
+                {
+                    component.Enabled = GameMain.Client?.HasPermission(ClientPermissions.Unban) ?? false;
+                };
+                topArea.RectTransform.MinSize = new Point(0, Math.Max(textBlock.RectTransform.MinSize.Y, removeButton.RectTransform.MinSize.Y));
+                topArea.RectTransform.IsFixedSize = true;
 
                 new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), paddedPlayerFrame.RectTransform),
                     bannedPlayer.ExpirationTime.TryUnwrap(out var expirationTime)

@@ -1305,7 +1305,7 @@ namespace Barotrauma
             const int maxUpgrades = 4;
 
             Item? item = entity as Item;
-            itemName.Text = item?.Name ?? TextManager.Get("upgradecategory.walls");
+            itemName.Text = item?.Prefab.Name ?? TextManager.Get("upgradecategory.walls");
             if (slotIndex > -1)
             {
                 itemName.Text = TextManager.GetWithVariables("weaponslotwithname", ("[number]", slotIndex.ToString()), ("[weaponname]", itemName.Text));

@@ -42,16 +42,17 @@ namespace Barotrauma.Networking
             thisClient = client;
         }
 
-        public void CreateEvent(IClientSerializable entity, NetEntityEvent.IData extraData = null)
+        public void CreateEvent(IClientSerializable entity, NetEntityEvent.IData extraData = null, bool requireControlledCharacter = true)
         {
-            if (GameMain.Client?.Character == null) { return; }
+            if (GameMain.Client == null) { return; }
+            if (requireControlledCharacter && GameMain.Client.Character == null) { return; }
 
             if (!ValidateEntity(entity)) { return; }
 
             var newEvent = new ClientEntityEvent(
                 entity,
                 eventId: (UInt16)(ID + 1),
-                characterStateId: GameMain.Client.Character.LastNetworkUpdateID);
+                characterStateId: GameMain.Client.Character?.LastNetworkUpdateID ?? Entity.NullEntityID);
             if (extraData != null) { newEvent.SetData(extraData); }
 
             for (int i = events.Count - 1; i >= 0; i--)

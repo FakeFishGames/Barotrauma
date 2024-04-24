@@ -2,13 +2,16 @@ using System.Collections.Generic;
 
 namespace Barotrauma
 {
+    /// <summary>
+    /// Executes all the StatusEffects defined as child elements of the action.
+    /// </summary>
     partial class StatusEffectAction : EventAction
     {
         private readonly List<StatusEffect> effects = new List<StatusEffect>();
 
         private readonly int actionIndex;
 
-        [Serialize("", IsPropertySaveable.Yes)]
+        [Serialize("", IsPropertySaveable.Yes, description: "Tag of the entity or entities the status effect should target.")]
         public Identifier TargetTag { get; set; }
 
         public StatusEffectAction(ScriptedEvent parentEvent, ContentXElement element) : base(parentEvent, element) 

@@ -1041,6 +1041,12 @@ namespace Barotrauma
 
         public static bool IsOverride(this XElement element) => element.NameAsIdentifier() == "override";
 
+        /// <summary>
+        /// Get the root element of the document, or the first child element of the root if it's an override element.
+        /// Or in other words, the "rootmost element that actually contains some content".
+        /// </summary>
+        public static XElement GetRootExcludingOverride(this XDocument doc) => doc.Root.IsOverride() ? doc.Root.FirstElement() : doc.Root;
+
         public static XElement FirstElement(this XElement element) => element.Elements().FirstOrDefault();
 
         public static XAttribute GetAttribute(this XElement element, string name, StringComparison comparisonMethod = StringComparison.OrdinalIgnoreCase) => element.GetAttribute(a => a.Name.ToString().Equals(name, comparisonMethod));

@@ -1,22 +1,25 @@
-#nullable enable
+﻿#nullable enable
 
 using Barotrauma.Items.Components;
 using System.Linq;
 
 namespace Barotrauma
 {
+    /// <summary>
+    /// Waits for some item(s) to be fabricated before continuing the execution of the event.
+    /// </summary>
     class WaitForItemFabricatedAction : EventAction
     {
-        [Serialize("", IsPropertySaveable.Yes)]
+        [Serialize("", IsPropertySaveable.Yes, description: "Tag of the character who must fabricate the item. If empty, it doesn't matter who fabricates it.")]
         public Identifier CharacterTag { get; set; }
 
-        [Serialize("", IsPropertySaveable.Yes)]
+        [Serialize("", IsPropertySaveable.Yes, description: "Identifier of the item that must be fabricated. Optional if ItemTag is set.")]
         public Identifier ItemIdentifier { get; set; }
 
-        [Serialize("", IsPropertySaveable.Yes)]
+        [Serialize("", IsPropertySaveable.Yes, description: "Tag of the item that must be fabricated. Optional if ItemIdentifier is set.")]
         public Identifier ItemTag { get; set; }
 
-        [Serialize(1, IsPropertySaveable.Yes)]
+        [Serialize(1, IsPropertySaveable.Yes, description: "Number of items that need to be fabricated.")]
         public int Amount { get; set; }
 
         [Serialize("", IsPropertySaveable.Yes, description: "Tag to apply to the fabricated item(s).")]
@@ -48,7 +51,8 @@ namespace Barotrauma
             {
                 if (!ParentEvent.GetTargets(CharacterTag).Contains(character)) { return; }
             }
-            if (item.ContainerIdentifier == ItemTag || item.HasTag(ItemTag))
+            if ((!ItemIdentifier.IsEmpty && item.Prefab.Identifier == ItemIdentifier) ||
+                (!ItemTag.IsEmpty && item.HasTag(ItemTag)))
             {
                 if (!ApplyTagToItem.IsEmpty)
                 {

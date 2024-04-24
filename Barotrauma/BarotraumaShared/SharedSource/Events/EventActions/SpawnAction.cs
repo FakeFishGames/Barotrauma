@@ -6,6 +6,9 @@ using System.Linq;
 
 namespace Barotrauma
 {
+    /// <summary>
+    /// Spawns an entity (e.g. item, NPC, monster).
+    /// </summary>
     class SpawnAction : EventAction
     {
         public enum SpawnLocationType
@@ -41,16 +44,16 @@ namespace Barotrauma
         [Serialize("", IsPropertySaveable.Yes, description: "Tag of an entity with an inventory to spawn the item into.")]
         public Identifier TargetInventory { get; set; }
 
-        [Serialize(SpawnLocationType.Any, IsPropertySaveable.Yes)]
+        [Serialize(SpawnLocationType.Any, IsPropertySaveable.Yes, description: "Where should the entity spawn? This can be restricted further with the other spawn point options.")]
         public SpawnLocationType SpawnLocation { get; set; }
 
-        [Serialize(SpawnType.Human, IsPropertySaveable.Yes)] 
+        [Serialize(SpawnType.Human, IsPropertySaveable.Yes, description: "Type of spawnpoint to spawn the entity at. Ignored if SpawnPointTag is set.")] 
         public SpawnType SpawnPointType { get; set; }
 
-        [Serialize("", IsPropertySaveable.Yes)]
+        [Serialize("", IsPropertySaveable.Yes, description: "Tag of a spawnpoint to spawn the entity at.")]
         public Identifier SpawnPointTag { get; set; }
 
-        [Serialize(CharacterTeamType.FriendlyNPC, IsPropertySaveable.Yes)]
+        [Serialize(CharacterTeamType.FriendlyNPC, IsPropertySaveable.Yes, description: "Team of the NPC to spawn. Only valid when spawning a character.")]
         public CharacterTeamType TeamID { get; protected set; }
 
         [Serialize(false, IsPropertySaveable.Yes, description: "Should we spawn the entity even when no spawn points with matching tags were found?")]
@@ -61,10 +64,10 @@ namespace Barotrauma
         [Serialize(true, IsPropertySaveable.Yes, description: "If false, we won't spawn another character if one with the same identifier has already been spawned.")]
         public bool AllowDuplicates { get; set; }
 
-        [Serialize(1, IsPropertySaveable.Yes)]
+        [Serialize(1, IsPropertySaveable.Yes, description: "Number of entities to spawn.")]
         public int Amount { get; set; }
 
-        [Serialize(100.0f, IsPropertySaveable.Yes)]
+        [Serialize(100.0f, IsPropertySaveable.Yes, description: "Random offset to add to the spawn position.")]
         public float Offset { get; set; }
 
         [Serialize("", IsPropertySaveable.Yes, "What outpost module tags does the entity prefer to spawn in.")]

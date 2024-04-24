@@ -673,7 +673,7 @@ namespace Barotrauma.Items.Components
                     return false;
                 }
             }
-            if (AutoInteractWithContained && character.SelectedItem == null)
+            if (AutoInteractWithContained && character.SelectedItem == null && Screen.Selected is not { IsEditor: true })
             {
                 foreach (Item contained in Inventory.AllItems)
                 {
@@ -708,7 +708,7 @@ namespace Barotrauma.Items.Components
                     return false;
                 }
             }
-            if (AutoInteractWithContained)
+            if (AutoInteractWithContained && Screen.Selected is not { IsEditor: true })
             {
                 foreach (Item contained in Inventory.AllItems)
                 {

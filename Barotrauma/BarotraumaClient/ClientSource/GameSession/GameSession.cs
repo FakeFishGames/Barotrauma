@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using System;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
 namespace Barotrauma
@@ -110,7 +111,9 @@ namespace Barotrauma
             };
             respawnTickBox = new GUITickBox(new RectTransform(Vector2.One * 0.9f, respawnButtonContainer.RectTransform, Anchor.Center), TextManager.Get("respawnquestionpromptrespawn"))
             {
-                ToolTip = TextManager.Get("respawnquestionprompt"),
+                ToolTip = TextManager.GetWithVariable(
+                    "respawnquestionprompt", "[percentage]",
+                    (Math.Round(Networking.RespawnManager.SkillLossPercentageOnImmediateRespawn).ToString())),
                 OnSelected = (tickbox) =>
                 {
                     GameMain.Client?.SendRespawnPromptResponse(waitForNextRoundRespawn: !tickbox.Selected);

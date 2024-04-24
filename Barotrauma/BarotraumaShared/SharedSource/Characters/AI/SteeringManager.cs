@@ -75,7 +75,8 @@ namespace Barotrauma
         {
             steering.Y = 0.0f;
         }
-
+        
+        /// <param name="speed">Update speed for the steering. Should normally match the characters current animation speed.</param>
         public virtual void Update(float speed)
         {
             if (steering == Vector2.Zero || !MathUtils.IsValid(steering))
@@ -86,6 +87,7 @@ namespace Barotrauma
             }
             if (steering.LengthSquared() > speed * speed)
             {
+                // Can't steer faster than the max speed.
                 steering = Vector2.Normalize(steering) * Math.Abs(speed);
             }
             if (host is AIController aiController && aiController?.Character.CharacterHealth.GetAfflictionOfType("invertcontrols".ToIdentifier()) != null)

@@ -100,7 +100,7 @@ namespace Barotrauma.Items.Components
             return (msg, deliveryMethod);
         }
 
-        public void CreateServerEvent(INetSerializableStruct data) 
+        public void CreateServerEvent(INetSerializableStruct data)
             => item.CreateServerEvent(this, new CircuitBoxEventData(data));
 
         public void ServerEventWrite(IWriteMessage msg, Client c, NetEntityEvent.IData? extraData = null)
@@ -120,7 +120,7 @@ namespace Barotrauma.Items.Components
                 case CircuitBoxOpcode.AddComponent:
                 {
                     var data = INetSerializableStruct.Read<CircuitBoxAddComponentEvent>(msg);
-                    if (!item.CanClientAccess(c)) { break; }
+                    if (!CanAccessAndUnlocked(c)) { break; }
 
                     var prefab = ItemPrefab.Prefabs.Find(p => p.UintIdentifier == data.PrefabIdentifier);
                     if (prefab is null)
@@ -158,14 +158,14 @@ namespace Barotrauma.Items.Components
                     var data = INetSerializableStruct.Read<CircuitBoxMoveComponentEvent>(msg);
                     if (!item.CanClientAccess(c)) { break; }
 
-                    MoveNodesInternal(data.TargetIDs, data.IOs, data.MoveAmount);
+                    MoveNodesInternal(data.TargetIDs, data.IOs, data.LabelIDs, data.MoveAmount);
                     CreateServerEvent(data);
                     break;
                 }
                 case CircuitBoxOpcode.DeleteComponent:
                 {
                     var data = INetSerializableStruct.Read<CircuitBoxRemoveComponentEvent>(msg);
-                    if (!data.TargetIDs.Any() || !item.CanClientAccess(c)) { break; }
+                    if (!data.TargetIDs.Any() || !CanAccessAndUnlocked(c)) { break; }
 
                     CreateRefundItemsForUsedResources(data.TargetIDs, c.Character);
                     GameServer.Log($"{NetworkMember.ClientLogName(c)} removed {GetLogComponentName(data.TargetIDs)} from circuit box.", ServerLog.MessageType.Wiring);
@@ -180,6 +180,7 @@ namespace Barotrauma.Items.Components
 
                     SelectComponentsInternal(data.TargetIDs, c.CharacterID, data.Overwrite);
                     SelectInputOutputInternal(data.IOs, c.CharacterID, data.Overwrite);
+                    SelectLabelsInternal(data.LabelIDs, c.CharacterID, data.Overwrite);
                     BroadcastSelectionStatus();
                     break;
                 }
@@ -195,7 +196,7 @@ namespace Barotrauma.Items.Components
                 case CircuitBoxOpcode.AddWire:
                 {
                     var data = INetSerializableStruct.Read<CircuitBoxClientAddWireEvent>(msg);
-                    if (!item.CanClientAccess(c)) { break; }
+                    if (!CanAccessAndUnlocked(c)) { break; }
 
                     var prefab = ItemPrefab.Prefabs.Find(p => p.UintIdentifier == data.SelectedWirePrefabIdentifier);
                     if (prefab is null)
@@ -229,11 +230,54 @@ namespace Barotrauma.Items.Components
                 case CircuitBoxOpcode.RemoveWire:
                 {
                     var data = INetSerializableStruct.Read<CircuitBoxRemoveWireEvent>(msg);
-                    if (!data.TargetIDs.Any() || !item.CanClientAccess(c)) { break; }
+                    if (!data.TargetIDs.Any() || !CanAccessAndUnlocked(c)) { break; }
 
                     GameServer.Log($"{NetworkMember.ClientLogName(c)} removed {GetLogWireName(data.TargetIDs)} from circuit box.", ServerLog.MessageType.Wiring);
                     RemoveWireInternal(data.TargetIDs);
                     CreateServerEvent(data);
+                    break;
+                }
+                case CircuitBoxOpcode.RenameLabel:
+                {
+                    var data = INetSerializableStruct.Read<CircuitBoxRenameLabelEvent>(msg);
+                    if (!CanAccessAndUnlocked(c)) { break; }
+
+                    RenameLabelInternal(data.LabelId, data.Color, data.NewHeader, data.NewBody);
+                    CreateServerEvent(data);
+                    break;
+                }
+                case CircuitBoxOpcode.AddLabel:
+                {
+                    var data = INetSerializableStruct.Read<CircuitBoxAddLabelEvent>(msg);
+                    if (!CanAccessAndUnlocked(c)) { break; }
+
+                    ushort id = ICircuitBoxIdentifiable.FindFreeID(Labels);
+                    if (id is ICircuitBoxIdentifiable.NullComponentID)
+                    {
+                        ThrowError("Unable to add label because there are no available IDs left.", c);
+                        return;
+                    }
+
+                    AddLabelInternal(id, data.Color, data.Position, data.Header, data.Body);
+                    CreateServerEvent(new CircuitBoxServerAddLabelEvent(id, data.Position, new Vector2(256), data.Color, data.Header, data.Body));
+                    break;
+                }
+                case CircuitBoxOpcode.RemoveLabel:
+                {
+                    var data = INetSerializableStruct.Read<CircuitBoxRemoveLabelEvent>(msg);
+                    if (!CanAccessAndUnlocked(c)) { break; }
+
+                    RemoveLabelInternal(data.TargetIDs);
+                    CreateServerEvent(data);
+                    break;
+                }
+                case CircuitBoxOpcode.ResizeLabel:
+                {
+                    var data = INetSerializableStruct.Read<CircuitBoxResizeLabelEvent>(msg);
+                    if (!CanAccessAndUnlocked(c)) { break; }
+
+                    ResizeLabelInternal(data.ID, data.Position, data.Size);
+                    CreateServerEvent(data with { Size = Vector2.Max(data.Size, CircuitBoxLabelNode.MinSize) });
                     break;
                 }
                 default:
@@ -253,6 +297,8 @@ namespace Barotrauma.Items.Components
 
                 return wire.BackingWire.TryUnwrap(out var backingWire) ? backingWire.Name : "a wire";
             }
+
+            bool CanAccessAndUnlocked(Client client) => item.CanClientAccess(client) && !Locked;
         }
 
         /// <summary>
@@ -280,6 +326,7 @@ namespace Barotrauma.Items.Components
             CircuitBoxInitializeStateFromServerEvent data = new(
                 Components: Components.Select(EventFromComponent).ToImmutableArray(),
                 Wires: Wires.Select(EventFromWire).ToImmutableArray(),
+                Labels: Labels.Select(EventFromLabel).ToImmutableArray(),
                 InputPos: inputPos,
                 OutputPos: outputPos);
 
@@ -297,6 +344,9 @@ namespace Barotrauma.Items.Components
                 var request = new CircuitBoxClientAddWireEvent(wire.Color, from, to, wire.UsedItemPrefab.UintIdentifier);
                 return new CircuitBoxServerCreateWireEvent(request, wire.ID, backingWire);
             }
+
+            static CircuitBoxServerAddLabelEvent EventFromLabel(CircuitBoxLabelNode label)
+                => new(label.ID, label.Position, label.Size, label.Color, label.HeaderText, label.BodyText);
         }
 
         // we don't care about updating the view on server
@@ -314,8 +364,9 @@ namespace Barotrauma.Items.Components
             var nodes = Components.Select(static c => new CircuitBoxIdSelectionPair(c.ID, c.IsSelected ? Option.Some(c.SelectedBy) : Option.None)).ToImmutableArray();
             var wires = Wires.Select(static w => new CircuitBoxIdSelectionPair(w.ID, w.IsSelected ? Option.Some(w.SelectedBy) : Option.None)).ToImmutableArray();
             var ios = InputOutputNodes.Select(static n => new CircuitBoxTypeSelectionPair(n.NodeType, n.IsSelected ? Option.Some(n.SelectedBy) : Option.None)).ToImmutableArray();
+            var labels = Labels.Select(static n => new CircuitBoxIdSelectionPair(n.ID, n.IsSelected ? Option.Some(n.SelectedBy) : Option.None)).ToImmutableArray();
 
-            CreateServerEvent(new CircuitBoxServerUpdateSelection(nodes, wires, ios));
+            CreateServerEvent(new CircuitBoxServerUpdateSelection(nodes, wires, ios, labels));
         }
     }
 }

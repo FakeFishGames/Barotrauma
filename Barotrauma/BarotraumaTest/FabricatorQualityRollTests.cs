@@ -36,7 +36,7 @@ public sealed class FabricatorQualityRollTests
                     }
                 }
 
-                var result = new Fabricator.QualityResult(startingQuality, plusOneProbability, plusTwoProbability);
+                var result = new Fabricator.QualityResult(startingQuality, HasRandomQuality: true, plusOneProbability, plusTwoProbability);
 
                 // iterate to confirm that the percentage chance is correct
                 const int iterations = 100000;

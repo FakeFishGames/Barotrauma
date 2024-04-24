@@ -349,7 +349,7 @@ namespace Barotrauma.Networking
                 {
                     UInt32 id = incMsg.ReadUInt32();
                     BannedPlayer? bannedPlayer = bannedPlayers.Find(p => p.UniqueIdentifier == id);
-                    if (bannedPlayer != null)
+                    if (bannedPlayer != null && c.HasPermission(ClientPermissions.Unban))
                     {
                         GameServer.Log(GameServer.ClientLogName(c) + " unbanned " + bannedPlayer.Name + " (" + bannedPlayer.AddressOrAccountId + ")", ServerLog.MessageType.ConsoleUsage);
                         RemoveBan(bannedPlayer);

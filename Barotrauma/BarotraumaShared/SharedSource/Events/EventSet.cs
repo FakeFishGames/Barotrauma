@@ -372,19 +372,19 @@ namespace Barotrauma
             MinDistanceTraveled = element.GetAttributeFloat("mindistancetraveled", 0.0f);
             MinMissionTime = element.GetAttributeFloat("minmissiontime", 0.0f);
 
-            AllowAtStart = element.GetAttributeBool("allowatstart", false);
+            AllowAtStart = element.GetAttributeBool("allowatstart", parentSet?.AllowAtStart ?? false);
             PerRuin = element.GetAttributeBool("perruin", false);
             PerCave = element.GetAttributeBool("percave", false);
             PerWreck = element.GetAttributeBool("perwreck", false);
-            DisableInHuntingGrounds = element.GetAttributeBool("disableinhuntinggrounds", false);
+            DisableInHuntingGrounds = element.GetAttributeBool("disableinhuntinggrounds", parentSet?.DisableInHuntingGrounds ?? false);
             IgnoreCoolDown = element.GetAttributeBool("ignorecooldown", parentSet?.IgnoreCoolDown ?? (PerRuin || PerCave || PerWreck));
             IgnoreIntensity = element.GetAttributeBool("ignoreintensity", parentSet?.IgnoreIntensity ?? false);
-            DelayWhenCrewAway = element.GetAttributeBool("delaywhencrewaway", !PerRuin && !PerCave && !PerWreck);
-            OncePerLevel = element.GetAttributeBool("onceperlevel", element.GetAttributeBool("onceperoutpost", false));
-            TriggerEventCooldown = element.GetAttributeBool("triggereventcooldown", true);
+            DelayWhenCrewAway = element.GetAttributeBool("delaywhencrewaway", parentSet?.DelayWhenCrewAway ?? (!PerRuin && !PerCave && !PerWreck));
+            OncePerLevel = element.GetAttributeBool("onceperlevel", element.GetAttributeBool("onceperoutpost", parentSet?.OncePerLevel ?? false));
+            TriggerEventCooldown = element.GetAttributeBool("triggereventcooldown", parentSet?.TriggerEventCooldown ?? true);
             IsCampaignSet = element.GetAttributeBool("campaign", LevelType == LevelData.LevelType.Outpost || (parentSet?.IsCampaignSet ?? false));
             ResetTime = element.GetAttributeFloat(nameof(ResetTime), parentSet?.ResetTime ?? 0);
-            CampaignTutorialOnly = element.GetAttributeBool(nameof(CampaignTutorialOnly), false);
+            CampaignTutorialOnly = element.GetAttributeBool(nameof(CampaignTutorialOnly), parentSet?.CampaignTutorialOnly ?? false);
 
             ForceAtDiscoveredNr = element.GetAttributeInt(nameof(ForceAtDiscoveredNr), -1);
             ForceAtVisitedNr = element.GetAttributeInt(nameof(ForceAtVisitedNr), -1);
@@ -449,6 +449,11 @@ namespace Barotrauma
             EventPrefabs = eventPrefabs.ToImmutableArray();
             ChildSets = childSets.ToImmutableArray();
             OverrideCommonness = overrideCommonness.ToImmutableDictionary();
+
+            if ((PerRuin && PerCave) || (PerWreck && PerCave) || (PerRuin && PerWreck))
+            {
+                DebugConsole.AddWarning($"Error in event set \"{Identifier}\". Only one of the settings {nameof(PerRuin)}, {nameof(PerCave)} or {nameof(PerWreck)} can be enabled at the time.");
+            }
         }
 
         public void CheckLocationTypeErrors()
@@ -560,7 +565,8 @@ namespace Barotrauma
             
             static void AddEvent(EventDebugStats stats, EventPrefab eventPrefab, Func<MonsterEvent, bool> filter = null)
             {
-                if (eventPrefab.EventType == typeof(MonsterEvent) && eventPrefab.TryCreateInstance(out MonsterEvent monsterEvent))
+                if (eventPrefab.EventType == typeof(MonsterEvent) && 
+                    eventPrefab.TryCreateInstance(GameMain.GameSession?.EventManager?.RandomSeed ?? 0, out MonsterEvent monsterEvent))
                 {
                     if (filter != null && !filter(monsterEvent)) { return; }
                     float spawnProbability = monsterEvent.Prefab?.Probability ?? 0.0f;

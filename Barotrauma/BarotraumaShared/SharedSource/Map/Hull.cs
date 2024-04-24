@@ -1141,8 +1141,10 @@ namespace Barotrauma
                 float distanceMultiplier = 1;
                 if (g.ConnectedDoor != null && !g.ConnectedDoor.IsBroken)
                 {
-                    //gap blocked if the door is not open or the predicted state is not open
-                    if ((g.ConnectedDoor.IsClosed && !g.ConnectedDoor.IsBroken) || (g.ConnectedDoor.PredictedState.HasValue && !g.ConnectedDoor.PredictedState.Value))
+                    //gap blocked if the door is closed, and we haven't made any predictions of it opening client-side
+                    if ((g.ConnectedDoor.IsClosed && !g.ConnectedDoor.PredictedState.HasValue) || 
+                        //OR we've predicted that the door is closed client-side
+                        (g.ConnectedDoor.PredictedState.HasValue && !g.ConnectedDoor.PredictedState.Value))
                     {
                         if (g.ConnectedDoor.OpenState < 0.1f)
                         {

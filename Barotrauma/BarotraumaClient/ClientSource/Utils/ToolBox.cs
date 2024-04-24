@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Linq;
+using System.Text;
 using Barotrauma.Networking;
 using Color = Microsoft.Xna.Framework.Color;
 
@@ -417,6 +418,38 @@ namespace Barotrauma
                 {
                     return str.Substring(0, Math.Max(i - 2, 1)) + "...";
                 }
+            }
+
+            return str;
+        }
+
+        /// <summary>
+        /// Removes lines on a multi-line string until it fits within the specified height and adds "..." to the end if the string is too long.
+        /// Doesn't really do anything if the string is only one line, should mostly be used with <see cref="GUITextBlock.WrappedText"/>.
+        /// </summary>
+        public static string LimitStringHeight(string str, ScalableFont font, int maxHeight)
+        {
+            if (maxHeight <= 0 || string.IsNullOrWhiteSpace(str)) { return string.Empty; }
+
+            float currHeight = font.MeasureString("...").Y;
+            var lines = str.Split('\n');
+
+            var sb = new StringBuilder();
+            foreach (string line in lines)
+            {
+                var (lineX, lineY) = font.MeasureString(line);
+                currHeight += lineY;
+                if (currHeight > maxHeight)
+                {
+                    var modifiedLine = line;
+                    while (font.MeasureString($"{modifiedLine}...").X > lineX)
+                    {
+                        modifiedLine = modifiedLine[..^1];
+                    }
+                    sb.AppendLine($"{modifiedLine}...");
+                    return sb.ToString();
+                }
+                sb.AppendLine(line);
             }
 
             return str;

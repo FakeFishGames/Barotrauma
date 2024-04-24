@@ -210,15 +210,7 @@ namespace Barotrauma.Networking
             AddChatMessage(ChatMessage.Create(senderName, message, type, senderCharacter, senderClient, changeType: changeType, textColor: textColor));
         }
 
-        public virtual void AddChatMessage(ChatMessage message)
-        {
-            if (string.IsNullOrEmpty(message.Text)) { return; }
-
-            if (message.Sender != null && !message.Sender.IsDead)
-            {
-                message.Sender.ShowSpeechBubble(2.0f, message.Color);
-            }
-        }
+        public abstract void AddChatMessage(ChatMessage message);
 
         public static string ClientLogName(Client client, string name = null)
         {

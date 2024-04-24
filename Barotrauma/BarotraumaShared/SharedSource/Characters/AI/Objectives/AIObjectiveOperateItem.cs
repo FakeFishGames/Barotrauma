@@ -211,6 +211,10 @@ namespace Barotrauma
                     return;
                 }
             }
+
+            //the character shouldn't be grabbing anyone if it's trying to operate an item
+            character.SelectedCharacter = null;
+
             if (target.CanBeSelected)
             {
                 if (!character.IsClimbing && character.CanInteractWith(target.Item, out _, checkLinked: false))

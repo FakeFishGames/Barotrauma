@@ -55,6 +55,12 @@ namespace Barotrauma
 
             price = location?.GetAdjustedMechanicalCost((int)price) ?? price;
 
+            // Adjust by campaign difficulty settings
+            if (GameMain.GameSession?.Campaign is CampaignMode campaign)
+            {
+                price *= campaign.Settings.ShipyardPriceMultiplier;
+            }
+
             characterList ??= GameSession.GetSessionCrewCharacters(CharacterType.Both);
 
             if (characterList.Any())

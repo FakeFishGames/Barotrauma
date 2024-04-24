@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using Barotrauma.IO;
@@ -641,19 +641,9 @@ namespace Barotrauma
                                 sprite?.Draw(spriteBatch, PlayerInput.MousePosition, scale: Math.Min(64 / sprite.size.X, 64 / sprite.size.Y) * Scale);
                                 break;
                             }
-                        case ItemAssemblyPrefab iPrefab:
+                        case ItemAssemblyPrefab itemAssemblyPrefab:
                             {
-                                var (x, y) = PlayerInput.MousePosition;
-                                foreach (var pair in iPrefab.DisplayEntities)
-                                {
-                                    Rectangle dRect = pair.Item2;
-                                    dRect = new Rectangle(x: (int)(dRect.X * iPrefab.Scale + x),
-                                                          y: (int)(dRect.Y * iPrefab.Scale - y),
-                                                          width: (int)(dRect.Width * iPrefab.Scale),
-                                                          height: (int)(dRect.Height * iPrefab.Scale));
-                                    MapEntityPrefab prefab = MapEntityPrefab.Find("", pair.Item1);
-                                    prefab.DrawPlacing(spriteBatch, dRect, prefab.Scale * iPrefab.Scale);
-                                }
+                                itemAssemblyPrefab.Draw(spriteBatch, PlayerInput.MousePosition.FlipY());
                                 break;
                             }
                     }
@@ -716,7 +706,7 @@ namespace Barotrauma
 
             spriteBatch.Draw(backgroundSprite.Texture,
                 area.Center.ToVector2() + pos,
-                null, color, 0.0f, backgroundSprite.size / 2,
+                backgroundSprite.SourceRect, color, 0.0f, backgroundSprite.size / 2,
                 scale, spriteEffects, 0.0f);
         }
 
@@ -1050,12 +1040,31 @@ namespace Barotrauma
                         {
                             return dragHandle.Dragging ? CursorState.Dragging : CursorState.Hand;
                         }
+                        //do not show the hover cursor when the cursor is on a listbox (on the listbox itself, not any of elements inside it!)
+                        if (c is GUIListBox && (parent == null || parent == c))
+                        {
+                            return CursorState.Default;
+                        }
                         // Some parent elements take priority
                         // but not when the child is a GUIButton or GUITickBox
-                        if (!(parent is GUIButton) && !(parent is GUIListBox) ||
+                        if (parent is not GUIButton && parent is not GUIListBox ||
                                   (c is GUIButton) || (c is GUITickBox))
                         {
-                            if (!c.Rect.Equals(monitorRect)) { return c.HoverCursor; }
+                            if (!c.Rect.Equals(monitorRect))
+                            { 
+                                if (c is GUITickBox)
+                                {
+                                    //tickboxes have some special logic: not all of the component is hoverable (just the box and the text area)
+                                    if (c.State is GUIComponent.ComponentState.Hover or GUIComponent.ComponentState.HoverSelected) 
+                                    { 
+                                        return c.HoverCursor;
+                                    }
+                                }
+                                else
+                                {
+                                    return c.HoverCursor;
+                                }
+                            }
                         }
                     }
 
@@ -2399,30 +2408,31 @@ namespace Barotrauma
                 }
                 iterations++;
             }
-
-            static Vector2 ClampMoveAmount(Rectangle Rect, Rectangle clampTo, Vector2 moveAmount)
-            {
-                if (Rect.Y < clampTo.Y)
-                {
-                    moveAmount.Y = Math.Max(moveAmount.Y, 0.0f);
-                }
-                else if (Rect.Bottom > clampTo.Bottom)
-                {
-                    moveAmount.Y = Math.Min(moveAmount.Y, 0.0f);
-                }
-                if (Rect.X < clampTo.X)
-                {
-                    moveAmount.X = Math.Max(moveAmount.X, 0.0f);
-                }
-                else if (Rect.Right > clampTo.Right)
-                {
-                    moveAmount.X = Math.Min(moveAmount.X, 0.0f);
-                }
-                return moveAmount;
-            }
         }
 
-#endregion
+        private static Vector2 ClampMoveAmount(Rectangle rect, Rectangle clampTo, Vector2 moveAmount)
+        {
+            if (rect.Y < clampTo.Y)
+            {
+                moveAmount.Y = Math.Max(moveAmount.Y, 0.0f);
+            }
+            else if (rect.Bottom > clampTo.Bottom)
+            {
+                moveAmount.Y = Math.Min(moveAmount.Y, 0.0f);
+            }
+            if (rect.X < clampTo.X)
+            {
+                moveAmount.X = Math.Max(moveAmount.X, 0.0f);
+            }
+            else if (rect.Right > clampTo.Right)
+            {
+                moveAmount.X = Math.Min(moveAmount.X, 0.0f);
+            }
+            return moveAmount;
+        }
+
+
+        #endregion
 
 #region Misc
         public static void TogglePauseMenu()
@@ -2477,7 +2487,7 @@ namespace Barotrauma
                             GameMain.GameSession.LoadPreviousSave();
                         });
 
-                        if (IsFriendlyOutpostLevel())
+                        if (IsFriendlyOutpostLevel() && !spMode.CrewDead)
                         {
                             CreateButton("PauseMenuSaveQuit", buttonContainer, verificationTextTag: "PauseMenuSaveAndReturnToMainMenuVerification", action: () =>
                             {

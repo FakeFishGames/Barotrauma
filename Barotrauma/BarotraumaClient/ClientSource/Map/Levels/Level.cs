@@ -95,6 +95,7 @@ namespace Barotrauma
                         }
                     }
                 }
+
                 foreach (var rects in blockedRects.Values)
                 {
                     foreach (var rect in rects)

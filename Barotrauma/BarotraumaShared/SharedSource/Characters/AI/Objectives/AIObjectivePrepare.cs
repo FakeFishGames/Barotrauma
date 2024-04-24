@@ -87,13 +87,29 @@ namespace Barotrauma
                     AIObjectiveGetItems CreateObjectives(IEnumerable<Identifier> itemTags, bool requireAll)
                     {
                         AIObjectiveGetItems objectiveReference = null;
-                        if (!TryAddSubObjective(ref objectiveReference, () => new AIObjectiveGetItems(character, objectiveManager, itemTags)
+                        if (!TryAddSubObjective(ref objectiveReference, () =>
                         {
-                            CheckInventory = CheckInventory,
-                            Equip = Equip,
-                            EvaluateCombatPriority = EvaluateCombatPriority,
-                            RequireNonEmpty = RequireNonEmpty,
-                            RequireAllItems = requireAll
+                            var getItems = new AIObjectiveGetItems(character, objectiveManager, itemTags)
+                            {
+                                CheckInventory = CheckInventory,
+                                Equip = Equip,
+                                EvaluateCombatPriority = EvaluateCombatPriority,
+                                RequireNonEmpty = RequireNonEmpty,
+                                RequireAllItems = requireAll
+                            };
+
+                            if (itemTags.Contains(Tags.HeavyDivingGear))
+                            {
+                                getItems.ItemFilter = (Item it, Identifier tag) =>
+                                {
+                                    if (tag == Tags.HeavyDivingGear)
+                                    {
+                                        return AIObjectiveFindDivingGear.IsSuitablePressureProtection(it, tag, character);
+                                    }
+                                    return true;
+                                };
+                            }
+                            return getItems;
                         },
                         onCompleted: () =>
                         {

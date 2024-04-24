@@ -120,7 +120,7 @@ namespace Barotrauma
                     Abandon = true;
                     return;
                 }
-                if (weldingTool.OwnInventory == null && repairTool.requiredItems.Any(r => r.Key == RelatedItem.RelationType.Contained))
+                if (weldingTool.OwnInventory == null && repairTool.RequiredItems.Any(r => r.Key == RelatedItem.RelationType.Contained))
                 {
 #if DEBUG
                     DebugConsole.ThrowError($"{character.Name}: AIObjectiveFixLeak failed - the item \"{weldingTool}\" has no proper inventory");

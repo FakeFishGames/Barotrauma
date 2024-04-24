@@ -109,7 +109,7 @@ namespace Barotrauma
                     }
 
                     float distSqrd = Vector2.DistanceSquared(newPosition, Collider.SimPosition);
-                    float errorTolerance = character.CanMove && !character.IsRagdolled ? 0.01f : 0.2f;
+                    float errorTolerance = character.CanMove && (!character.IsRagdolled || character.AnimController.IsHangingWithRope) ? 0.01f : 0.2f;
                     if (distSqrd > errorTolerance)
                     {
                         if (distSqrd > 10.0f || !character.CanMove)

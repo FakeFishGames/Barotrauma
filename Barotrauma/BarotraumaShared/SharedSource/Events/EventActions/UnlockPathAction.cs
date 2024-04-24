@@ -1,12 +1,12 @@
 using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Xml.Linq;
 
 namespace Barotrauma
 {
+    /// <summary>
+    /// Unlocks a "locked" pathways between locations, if there are any such paths adjacent to the current location.
+    /// </summary>
     class UnlockPathAction : EventAction
     {
         public UnlockPathAction(ScriptedEvent parentEvent, ContentXElement element) : base(parentEvent, element) { }

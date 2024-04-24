@@ -1009,8 +1009,8 @@ namespace Barotrauma.MapCreatures.Behavior
             Body branchBody = GameMain.World.CreateRectangle(ConvertUnits.ToSimUnits(rect.Width * scale), ConvertUnits.ToSimUnits(rect.Height * scale), 1.5f);
             branchBody.BodyType = BodyType.Static;
             branchBody.UserData = branch;
-            branchBody.SetCollidesWith(Physics.CollisionRepair);
-            branchBody.SetCollisionCategories(Physics.CollisionRepair);
+            branchBody.SetCollidesWith(Physics.CollisionRepairableWall);
+            branchBody.SetCollisionCategories(Physics.CollisionRepairableWall);
             branchBody.Position = ConvertUnits.ToSimUnits(pos);
             branchBody.Enabled = HasBrokenThrough;
 

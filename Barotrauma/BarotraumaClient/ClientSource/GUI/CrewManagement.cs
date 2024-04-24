@@ -187,7 +187,16 @@ namespace Barotrauma
                 Spacing = 1
             };
 
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, height), pendingAndCrewGroup.RectTransform), TextManager.Get("campaignmenucrew"), font: GUIStyle.SubHeadingFont);
+            var crewHeader = new GUITextBlock(new RectTransform(new Vector2(1.0f, height), pendingAndCrewGroup.RectTransform), TextManager.Get("campaignmenucrew"), font: GUIStyle.SubHeadingFont);
+
+            new GUITextBlock(new RectTransform(new Vector2(0.5f, 1.0f), crewHeader.RectTransform, Anchor.CenterRight), string.Empty, textAlignment: Alignment.CenterRight)
+            {
+                TextGetter = () => 
+                {
+                    int crewSize = campaign?.CrewManager?.GetCharacterInfos()?.Count() ?? 0;
+                    return $"{crewSize}/{CrewManager.MaxCrewSize}";
+                }
+            };
             crewList = new GUIListBox(new RectTransform(new Vector2(1.0f, 8 * height), pendingAndCrewGroup.RectTransform))
             {
                 Spacing = 1
@@ -207,7 +216,7 @@ namespace Barotrauma
             {
                 ClickSound = GUISoundType.ConfirmTransaction,
                 ForceUpperCase = ForceUpperCase.Yes,
-                OnClicked = (b, o) => ValidateHires(PendingHires, true)
+                OnClicked = (b, o) => ValidateHires(PendingHires, createNetworkEvent: true)
             };
             clearAllButton = new GUIButton(new RectTransform(new Vector2(0.4f, 1.0f), group.RectTransform), text: TextManager.Get("campaignstore.clearall"))
             {
@@ -647,7 +656,7 @@ namespace Barotrauma
 
         private bool AddPendingHire(CharacterInfo characterInfo, bool createNetworkMessage = true)
         {
-            if (PendingHires.Count + campaign.CrewManager.GetCharacters().Count() >= CrewManager.MaxCrewSize)
+            if (PendingHires.Count + campaign.CrewManager.GetCharacterInfos().Count() >= CrewManager.MaxCrewSize)
             {
                 return false;
             }
@@ -703,7 +712,7 @@ namespace Barotrauma
             validateHiresButton.Enabled = enoughMoney && HasPermission && pendingList.Content.RectTransform.Children.Any();
         }
 
-        public bool ValidateHires(List<CharacterInfo> hires, bool createNetworkEvent = false)
+        public bool ValidateHires(List<CharacterInfo> hires, bool takeMoney = true, bool createNetworkEvent = false)
         {
             if (hires == null || hires.None()) { return false; }
 
@@ -718,14 +727,16 @@ namespace Barotrauma
 
             if (nonDuplicateHires.None()) { return false; }
 
-            int total = HireManager.GetSalaryFor(nonDuplicateHires);
-
-            if (!campaign.CanAfford(total)) { return false; }
+            if (takeMoney)
+            {
+                int total = HireManager.GetSalaryFor(nonDuplicateHires);
+                if (!campaign.CanAfford(total)) { return false; }
+            }
 
             bool atLeastOneHired = false;
             foreach (CharacterInfo ci in nonDuplicateHires)
             {
-                if (campaign.TryHireCharacter(campaign.Map.CurrentLocation, ci, Character.Controlled))
+                if (campaign.TryHireCharacter(campaign.Map.CurrentLocation, ci, takeMoney: takeMoney))
                 {
                     atLeastOneHired = true;
                 }
@@ -951,8 +962,8 @@ namespace Barotrauma
                 CharacterInfo match = location.HireManager.AvailableCharacters.Find(info => info.GetIdentifierUsingOriginalName() == identifier);
                 if (match != null)
                 {
-                    PendingHires.Add(match);
                     AddPendingHire(match, createNetworkMessage: false);
+                    System.Diagnostics.Debug.Assert(PendingHires.Contains(match));
                 }
                 else
                 {

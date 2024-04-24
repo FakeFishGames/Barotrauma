@@ -135,7 +135,8 @@ namespace Barotrauma
                 if (subElement.NameAsIdentifier() != "override") { continue; }
                 if (ScalableFont.ExtractShccFromXElement(subElement).HasFlag(flag))
                 {
-                    return new ScalableFont(subElement, font?.Size ?? 14, GameMain.Instance.GraphicsDevice);
+                    uint overrideFontSize = GetFontSize(subElement, defaultSize: font?.Size ?? 14);
+                    return new ScalableFont(subElement, overrideFontSize, GameMain.Instance.GraphicsDevice);
                 }
             }
 
@@ -379,6 +380,11 @@ namespace Barotrauma
         }
 
         public static implicit operator UISprite?(GUISprite reference) => reference.Value;
+
+        public void Draw(SpriteBatch spriteBatch, RectangleF rect, Color color, SpriteEffects spriteEffects = SpriteEffects.None)
+        {
+            Value?.Draw(spriteBatch, rect, color, spriteEffects);
+        }
 
         public void Draw(SpriteBatch spriteBatch, Rectangle rect, Color color, SpriteEffects spriteEffects = SpriteEffects.None)
         {

@@ -1,5 +1,6 @@
 ﻿using Barotrauma.Items.Components;
 using Barotrauma.Networking;
+using FarseerPhysics;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Immutable;
@@ -532,6 +533,47 @@ namespace Barotrauma
                         bool removeOnDeath = msg.ReadBoolean();
                         info?.ChangeSavedStatValue(statType, statValue, statIdentifier, removeOnDeath, setValue: true);
                     }
+                    break;
+                case EventType.LatchOntoTarget:
+                    bool attached = msg.ReadBoolean();
+                    if (attached)
+                    {
+                        Vector2 characterSimPos = new Vector2(msg.ReadSingle(), msg.ReadSingle());
+                        Vector2 attachSurfaceNormal = new Vector2(msg.ReadSingle(), msg.ReadSingle());
+                        Vector2 attachPos = new Vector2(msg.ReadSingle(), msg.ReadSingle());
+                        int attachWallIndex = msg.ReadInt32();
+                        UInt16 attachTargetId = msg.ReadUInt16();
+
+                        if (AIController is EnemyAIController { LatchOntoAI: { } latchOntoAi })
+                        {
+                            var attachTargetEntity = FindEntityByID(attachTargetId);
+                            switch (attachTargetEntity)
+                            {
+                                case Character attachTargetCharacter:
+                                    latchOntoAi.SetAttachTarget(attachTargetCharacter);
+                                    break;
+                                case Structure attachTargetStructure:
+                                    latchOntoAi.SetAttachTarget(attachTargetStructure, attachPos, attachSurfaceNormal);
+                                    break;
+                                default:                                    
+                                    var allLevelWalls = Level.Loaded.GetAllCells();
+                                    if (attachWallIndex >= 0 && attachWallIndex <= allLevelWalls.Count)
+                                    {
+                                        latchOntoAi.SetAttachTarget(allLevelWalls[attachWallIndex]);
+                                    }
+                                    break;                                    
+                            }
+                            latchOntoAi.AttachToBody(attachPos, attachSurfaceNormal, characterSimPos);
+                        }
+                    }
+                    else
+                    {
+                        if (AIController is EnemyAIController { LatchOntoAI: { } latchOntoAi })
+                        {
+                            latchOntoAi.DeattachFromBody(reset: false);
+                        }
+                    }
+
                     break;
             }
             msg.ReadPadBits();

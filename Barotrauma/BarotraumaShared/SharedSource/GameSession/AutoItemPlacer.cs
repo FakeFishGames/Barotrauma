@@ -35,12 +35,7 @@ namespace Barotrauma
             //spawn items in wrecks, beacon stations and pirate subs
             foreach (var sub in Submarine.Loaded)
             {
-                if (sub.Info.Type == SubmarineType.Player || 
-                    sub.Info.Type == SubmarineType.Outpost || 
-                    sub.Info.Type == SubmarineType.OutpostModule)
-                {
-                    continue;
-                }
+                if (sub.Info.Type is SubmarineType.Player or SubmarineType.Outpost or SubmarineType.OutpostModule) { continue; }
                 if (sub.Info.InitialSuppliesSpawned) { continue; }
                 CreateAndPlace(sub.ToEnumerable());
                 sub.Info.InitialSuppliesSpawned = true;

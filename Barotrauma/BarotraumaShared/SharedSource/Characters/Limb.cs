@@ -419,6 +419,24 @@ namespace Barotrauma
             }
         }
 
+
+        public Vector2 DrawPosition
+        {
+            get
+            {
+                if (Removed)
+                {
+#if DEBUG
+                    DebugConsole.ThrowError("Attempted to access a removed limb.\n" + Environment.StackTrace.CleanupStackTrace());
+#endif
+                    GameAnalyticsManager.AddErrorEventOnce("Limb.LinearVelocity:DrawPosition", GameAnalyticsManager.ErrorSeverity.Error,
+                        "Attempted to access a removed limb.\n" + Environment.StackTrace.CleanupStackTrace());
+                    return Vector2.Zero;
+                }
+                return body.DrawPosition;
+            }
+        }
+
         public float Rotation
         {
             get
@@ -485,6 +503,19 @@ namespace Barotrauma
                 {
                     body.Dir = Dir;
                 }
+            }
+        }
+
+        private float _alpha = 1.0f;
+        /// <summary>
+        /// Can be used by status effects
+        /// </summary>
+        public float Alpha
+        {
+            get => _alpha;
+            set
+            {
+                _alpha = MathHelper.Clamp(value, 0.0f, 1.0f);
             }
         }
 
@@ -680,9 +711,9 @@ namespace Barotrauma
                             }
                             attack.DamageRange = ConvertUnits.ToDisplayUnits(attack.DamageRange);
                         }
-                        if (character is { VariantOf: { IsEmpty: false } })
+                        if (character is { VariantOf.IsEmpty: false })
                         {
-                            var attackElement = character.Params.VariantFile.Root.GetChildElement("attack");
+                            var attackElement = character.Params.VariantFile.GetRootExcludingOverride().GetChildElement("attack");
                             if (attackElement != null)
                             {
                                 attack.DamageMultiplier = attackElement.GetAttributeFloat("damagemultiplier", 1f);
@@ -695,7 +726,7 @@ namespace Barotrauma
                         DamageModifiers.Add(new DamageModifier(subElement, character.Name));
                         break;
                     case "statuseffect":
-                        var statusEffect = StatusEffect.Load(subElement, Name);
+                        var statusEffect = StatusEffect.Load(subElement, character.Name + ", " + Name);
                         if (statusEffect != null)
                         {
                             if (!statusEffects.ContainsKey(statusEffect.type))
@@ -793,10 +824,12 @@ namespace Barotrauma
                 {
                     finalDamageModifier *= character.EmpVulnerability;
                 }
-                if (!character.Params.Health.PoisonImmunity && 
-                    (affliction.Prefab.AfflictionType == AfflictionPrefab.PoisonType || affliction.Prefab.AfflictionType == AfflictionPrefab.ParalysisType))
+                if (!character.Params.Health.PoisonImmunity)
                 {
-                    finalDamageModifier *= character.PoisonVulnerability;
+                    if (affliction.Prefab.AfflictionType == AfflictionPrefab.PoisonType || affliction.Prefab.AfflictionType == AfflictionPrefab.ParalysisType)
+                    {
+                        finalDamageModifier *= character.PoisonVulnerability;
+                    }
                 }
                 foreach (DamageModifier damageModifier in tempModifiers)
                 {
@@ -908,13 +941,13 @@ namespace Barotrauma
             {
                 if (Params.BlinkFrequency > 0)
                 {
-                    if (blinkTimer > -TotalBlinkDurationOut)
+                    if (BlinkTimer > -TotalBlinkDurationOut)
                     {
-                        blinkTimer -= deltaTime;
+                        BlinkTimer -= deltaTime;
                     }
                     else
                     {
-                        blinkTimer = Params.BlinkFrequency;
+                        BlinkTimer = Params.BlinkFrequency;
                     }
                 }
                 if (reEnableTimer > 0)
@@ -932,13 +965,14 @@ namespace Barotrauma
 
         private bool temporarilyDisabled;
         private float reEnableTimer = -1;
+        private bool originalIgnoreCollisions;
         public void HideAndDisable(float duration = 0, bool ignoreCollisions = true)
         {
             if (Hidden || Disabled) { return; }
-            if (ignoreCollisions && IgnoreCollisions) { return; }
             temporarilyDisabled = true;
             Hidden = true;
             Disabled = true;
+            originalIgnoreCollisions = IgnoreCollisions;
             IgnoreCollisions = ignoreCollisions;
             if (duration > 0)
             {
@@ -957,7 +991,7 @@ namespace Barotrauma
             if (!temporarilyDisabled) { return; }
             Hidden = false;
             Disabled = false;
-            IgnoreCollisions = false;
+            IgnoreCollisions = originalIgnoreCollisions;
             reEnableTimer = -1;
         }
 
@@ -1001,11 +1035,14 @@ namespace Barotrauma
                     case HitDetection.Distance:
                         if (dist < attack.DamageRange)
                         {
-                            structureBody = Submarine.PickBody(simPos, attackSimPos, collisionCategory: Physics.CollisionWall | Physics.CollisionLevel, allowInsideFixture: true, customPredicate:                             
-                            (Fixture f) =>
+                            Vector2 rayStart = simPos;
+                            Vector2 rayEnd = attackSimPos;
+                            if (Submarine == null && damageTarget is ISpatialEntity spatialEntity && spatialEntity.Submarine != null)
                             {
-                                return f?.Body?.UserData as string != "ruinroom";
-                            });
+                                rayStart -= spatialEntity.Submarine.SimPosition;
+                                rayEnd -= spatialEntity.Submarine.SimPosition;
+                            }
+                            structureBody = Submarine.CheckVisibility(rayStart, rayEnd);
                             if (damageTarget is Item i && i.GetComponent<Items.Components.Door>() != null)
                             {
                                 // If the attack is aimed to an item and hits an item, it's successful.
@@ -1228,6 +1265,8 @@ namespace Barotrauma
             if (!statusEffects.TryGetValue(actionType, out var statusEffectList)) { return; }
             foreach (StatusEffect statusEffect in statusEffectList)
             {
+                if (statusEffect.ShouldWaitForInterval(character, deltaTime)) { return; }
+
                 statusEffect.sourceBody = body;
                 if (statusEffect.type == ActionType.OnDamaged)
                 {
@@ -1308,20 +1347,21 @@ namespace Barotrauma
             }
         }
 
-        private float blinkTimer;
-        public float BlinkPhase;
+        public float BlinkTimer { get; private set; }
+        public float BlinkPhase { get; set; }
+
         public bool FreezeBlinkState;
 
         private float TotalBlinkDurationOut => Params.BlinkDurationOut + Params.BlinkHoldTime;
 
         public void Blink()
         {
-            blinkTimer = -TotalBlinkDurationOut;
+            BlinkTimer = -TotalBlinkDurationOut;
         }
 
         public void UpdateBlink(float deltaTime, float referenceRotation)
         {
-            if (blinkTimer > -TotalBlinkDurationOut)
+            if (BlinkTimer > -TotalBlinkDurationOut)
             {
                 if (!FreezeBlinkState)
                 {
@@ -1429,6 +1469,18 @@ namespace Barotrauma
         }
         public Character Character { get; set; }
         public Affliction Affliction { get; set; }
+    }
+
+    class AbilityReduceAffliction : AbilityObject, IAbilityCharacter, IAbilityValue
+    {
+        public AbilityReduceAffliction(Character character, float value)
+        {
+            Character = character;
+            Value = value;
+        }
+
+        public Character Character { get; set; }
+        public float Value { get; set; }
     }
 
 }

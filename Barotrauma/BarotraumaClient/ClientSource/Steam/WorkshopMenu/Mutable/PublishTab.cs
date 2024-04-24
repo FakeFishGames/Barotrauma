@@ -386,7 +386,7 @@ namespace Barotrauma.Steam
 
         private IEnumerable<CoroutineStatus> MessageBoxCoroutine(Func<GUITextBlock, GUIMessageBox, IEnumerable<CoroutineStatus>> subcoroutine)
         {
-            var messageBox = new GUIMessageBox("", TextManager.Get("ellipsis"), buttons: new [] { TextManager.Get("Cancel") });
+            var messageBox = new GUIMessageBox("", TextManager.Get("ellipsis").Fallback("..."), buttons: new [] { TextManager.Get("Cancel") });
             messageBox.Buttons[0].OnClicked = (button, o) =>
             {
                 messageBox.Close();
@@ -494,7 +494,8 @@ namespace Barotrauma.Steam
                     stagingReady = true;
                     stagingException = t.Exception?.GetInnermost();
                 });
-            currentStepText.Text = TextManager.Get("PublishPopupStaging");
+            TrySetText("PublishPopupStaging");
+            
             while (!stagingReady) { yield return new WaitForSeconds(0.5f); }
 
             if (stagingException != null)
@@ -519,7 +520,7 @@ namespace Barotrauma.Steam
                     }
                     resultException = t.Exception?.GetInnermost();
                 });
-            currentStepText.Text = TextManager.Get("PublishPopupSubmit");
+            TrySetText("PublishPopupSubmit");
             while (!result.HasValue && resultException is null) { yield return new WaitForSeconds(0.5f); }
 
             if (result is { Success: true })
@@ -567,7 +568,7 @@ namespace Barotrauma.Steam
                     });
                 while (!installed)
                 {
-                    currentStepText.Text = TextManager.Get("PublishPopupInstall");
+                    TrySetText("PublishPopupInstall");
                     yield return new WaitForSeconds(0.5f);
                 }
 
@@ -601,6 +602,14 @@ namespace Barotrauma.Steam
 
             SteamManager.Workshop.DeletePublishStagingCopy();
             messageBox.Close();
+
+            void TrySetText(string textTag)
+            {
+                if (currentStepText?.Text != null)
+                {
+                    currentStepText.Text = TextManager.Get(textTag);
+                }
+            }
         }
     }
 }

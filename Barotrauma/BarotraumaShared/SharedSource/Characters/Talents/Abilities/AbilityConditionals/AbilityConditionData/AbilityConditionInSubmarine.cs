@@ -1,16 +1,15 @@
-﻿using System.Xml.Linq;
-
-namespace Barotrauma.Abilities
+﻿namespace Barotrauma.Abilities
 {
-    class AbilityConditionItemInSubmarine : AbilityConditionData
+    [TypePreviouslyKnownAs("AbilityConditionItemInSubmarine")]
+    class AbilityConditionInSubmarine : AbilityConditionData
     {
         private readonly SubmarineType? submarineType;
 
-        public AbilityConditionItemInSubmarine(CharacterTalent characterTalent, ContentXElement conditionElement) : base(characterTalent, conditionElement) 
+        public AbilityConditionInSubmarine(CharacterTalent characterTalent, ContentXElement conditionElement) : base(characterTalent, conditionElement) 
         { 
             if (conditionElement.GetAttribute("submarinetype") != null)
             {
-                submarineType = conditionElement.GetAttributeEnum<SubmarineType>("submarinetype", SubmarineType.Player);
+                submarineType = conditionElement.GetAttributeEnum("submarinetype", SubmarineType.Player);
             }
         }
 
@@ -30,9 +29,15 @@ namespace Barotrauma.Abilities
             }
             else
             {
-                LogAbilityConditionError(abilityObject, typeof(IAbilityItem));
-                return false;
+                return MatchesCondition();
             }
+        }
+
+        public override bool MatchesCondition()
+        {
+            if (character.Submarine is null) { return false; }
+
+            return character.Submarine?.Info?.Type == submarineType;
         }
     }
 }

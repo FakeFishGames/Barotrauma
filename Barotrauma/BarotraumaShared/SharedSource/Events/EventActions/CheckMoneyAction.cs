@@ -1,16 +1,18 @@
+using Barotrauma.Networking;
 using System.Collections.Generic;
 using System.Linq;
-using System.Xml.Linq;
-using Barotrauma.Networking;
 
 namespace Barotrauma
 {
+    /// <summary>
+    /// Check whether the crew or a specific player has enough money.
+    /// </summary>
     class CheckMoneyAction : BinaryOptionAction
     {
-        [Serialize(0, IsPropertySaveable.Yes)]
+        [Serialize(0, IsPropertySaveable.Yes, description: "Minimum amount of money the crew or the player must have.")]
         public int Amount { get; set; }
 
-        [Serialize("", IsPropertySaveable.Yes)]
+        [Serialize("", IsPropertySaveable.Yes, description: "Tag of the player to check. If omitted, the crew's shared wallet is checked instead.")]
         public Identifier TargetTag { get; set; }
 
         public CheckMoneyAction(ScriptedEvent parentEvent, ContentXElement element) : base(parentEvent, element)

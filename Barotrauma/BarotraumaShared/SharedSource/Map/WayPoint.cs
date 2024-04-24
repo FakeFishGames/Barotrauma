@@ -1060,7 +1060,8 @@ namespace Barotrauma
             Enum.TryParse(element.GetAttributeString("spawn", "Path"), out SpawnType spawnType);
             WayPoint w = new WayPoint(spawnType == SpawnType.Path ? Type.WayPoint : Type.SpawnPoint, rect, submarine, idRemap.GetOffsetId(element))
             {
-                spawnType = spawnType
+                spawnType = spawnType,
+                Layer = element.GetAttributeString(nameof(Layer), null)
             };
 
             string idCardDescString = element.GetAttributeString("idcarddesc", "");
@@ -1115,7 +1116,8 @@ namespace Barotrauma
             element.Add(new XAttribute("ID", ID),
                 new XAttribute("x", (int)(rect.X - Submarine.HiddenSubPosition.X)),
                 new XAttribute("y", (int)(rect.Y - Submarine.HiddenSubPosition.Y)),
-                new XAttribute("spawn", spawnType));
+                new XAttribute("spawn", spawnType),
+                new XAttribute(nameof(Layer), Layer ?? string.Empty));
             if (SpawnType == SpawnType.ExitPoint)
             {
                 element.Add(new XAttribute("exitpointsize", XMLExtensions.PointToString(ExitPointSize)));

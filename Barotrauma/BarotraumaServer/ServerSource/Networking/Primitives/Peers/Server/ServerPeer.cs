@@ -272,7 +272,8 @@ namespace Barotrauma.Networking
                         ServerName = GameMain.Server.ServerName,
                         ContentPackages = contentPackages
                             .Select(contentPackage => new ServerContentPackage(contentPackage, timeNow))
-                            .ToImmutableArray()
+                            .ToImmutableArray(),
+                        AllowModDownloads = serverSettings.AllowModDownloads
                     };
 
                     break;

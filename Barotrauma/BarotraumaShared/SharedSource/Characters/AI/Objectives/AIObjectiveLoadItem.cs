@@ -193,7 +193,10 @@ namespace Barotrauma
                     if (yDist > 100) { dist += yDist * 5; }
                     dist += Math.Abs(character.WorldPosition.X - targetPos.X);
                 }
-                float distanceFactor = dist > 0.0f ? MathHelper.Lerp(0.9f, 0, MathUtils.InverseLerp(0, 5000, dist)) : 0.9f;
+
+                float distanceFactor = 
+                    GetDistanceFactor(targetItem.WorldPosition, verticalDistanceMultiplier: 5, maxDistance: 5000, factorAtMinDistance: 0.9f, factorAtMaxDistance: 0);
+
                 bool hasContainable = character.HasItem(targetItem);
                 float devotion = (CumulatedDevotion + (hasContainable ? 100 - MaxDevotion : 0)) / 100;
                 float max = AIObjectiveManager.LowestOrderPriority - (hasContainable ? 1 : 2);

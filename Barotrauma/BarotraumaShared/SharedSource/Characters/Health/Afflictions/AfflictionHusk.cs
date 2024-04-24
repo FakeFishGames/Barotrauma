@@ -141,6 +141,9 @@ namespace Barotrauma
             if (prevDisplayedMessage.HasValue && prevDisplayedMessage.Value == State) { return; }
             if (highestStrength > Strength) { return; }
 
+            // Show initial husk warning by default, and disable it only if campaign difficulty settings explicitly disable it
+            bool showHuskWarning = GameMain.GameSession?.Campaign?.Settings.ShowHuskWarning ?? true;
+
             switch (State)
             {
                 case InfectionState.Dormant:
@@ -148,15 +151,18 @@ namespace Barotrauma
                     {
                         return;
                     }
-                    if (character == Character.Controlled)
+                    if (showHuskWarning)
                     {
+                        if (character == Character.Controlled)
+                        {
 #if CLIENT
-                        GUI.AddMessage(TextManager.Get("HuskDormant"), GUIStyle.Red);
+                            GUI.AddMessage(TextManager.Get("HuskDormant"), GUIStyle.Red);
 #endif
-                    }
-                    else if (character.IsBot)
-                    {
-                        character.Speak(TextManager.Get("dialoghuskdormant").Value, delay: Rand.Range(0.5f, 5.0f), identifier: "huskdormant".ToIdentifier());
+                        }
+                        else if (character.IsBot)
+                        {
+                            character.Speak(TextManager.Get("dialoghuskdormant").Value, delay: Rand.Range(0.5f, 5.0f), identifier: "huskdormant".ToIdentifier());
+                        }
                     }
                     break;
                 case InfectionState.Transition:

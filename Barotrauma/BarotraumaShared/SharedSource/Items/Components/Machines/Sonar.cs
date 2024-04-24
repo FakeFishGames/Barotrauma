@@ -3,7 +3,6 @@ using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
 {
@@ -215,10 +214,10 @@ namespace Barotrauma.Items.Components
                         activePings[currentPingIndex].Direction = pingDirection;
                         activePings[currentPingIndex].State = 0.0f;
                         activePings[currentPingIndex].PrevPingRadius = 0.0f;
-                        if (item.AiTarget != null)
+                        foreach (AITarget aiTarget in GetAITargets())
                         {
-                            item.AiTarget.SectorDegrees = useDirectionalPing ? DirectionalPingSector : 360.0f;
-                            item.AiTarget.SectorDir = new Vector2(pingDirection.X, -pingDirection.Y);
+                            aiTarget.SectorDegrees = useDirectionalPing ? DirectionalPingSector : 360.0f;
+                            aiTarget.SectorDir = new Vector2(pingDirection.X, -pingDirection.Y);
                         }
                         item.Use(deltaTime);
                     }
@@ -231,10 +230,10 @@ namespace Barotrauma.Items.Components
 
             for (var pingIndex = 0; pingIndex < activePingsCount;)
             {
-                if (item.AiTarget != null)
+                foreach (AITarget aiTarget in GetAITargets())
                 {
-                    float range = MathUtils.InverseLerp(item.AiTarget.MinSoundRange, item.AiTarget.MaxSoundRange, Range * activePings[pingIndex].State / zoom);
-                    item.AiTarget.SoundRange = Math.Max(item.AiTarget.SoundRange, MathHelper.Lerp(item.AiTarget.MinSoundRange, item.AiTarget.MaxSoundRange, range));
+                    float range = MathUtils.InverseLerp(aiTarget.MinSoundRange, aiTarget.MaxSoundRange, Range * activePings[pingIndex].State / zoom);
+                    aiTarget.SoundRange = Math.Max(aiTarget.SoundRange, MathHelper.Lerp(aiTarget.MinSoundRange, aiTarget.MaxSoundRange, range));
                 }
                 if (activePings[pingIndex].State > 1.0f)
                 {
@@ -250,6 +249,24 @@ namespace Barotrauma.Items.Components
                 else
                 {
                     ++pingIndex;
+                }
+            }
+        }
+
+        private IEnumerable<AITarget> GetAITargets()
+        {
+            if (!UseTransducers)
+            {
+                if (item.AiTarget != null) { yield return item.AiTarget; }                
+            }
+            else
+            {
+                foreach (var transducer in connectedTransducers)
+                {
+                    if (transducer.Transducer.Item.AiTarget != null) 
+                    {
+                        yield return transducer.Transducer.Item.AiTarget;                    
+                    }
                 }
             }
         }

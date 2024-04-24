@@ -490,8 +490,6 @@ namespace Barotrauma
 
         public ContentXElement CharacterConfigElement { get; set; }
 
-        public readonly string ragdollFileName = string.Empty;
-
         public bool StartItemsGiven;
 
         public bool IsNewHire;
@@ -553,12 +551,11 @@ namespace Barotrauma
             {
                 if (ragdoll == null)
                 {
-                    // TODO: support for variants
                     Identifier speciesName = SpeciesName;
                     bool isHumanoid = CharacterConfigElement.GetAttributeBool("humanoid", speciesName == CharacterPrefab.HumanSpeciesName);
                     ragdoll = isHumanoid 
-                        ? HumanRagdollParams.GetRagdollParams(speciesName, ragdollFileName)
-                        : RagdollParams.GetRagdollParams<FishRagdollParams>(speciesName, ragdollFileName) as RagdollParams;
+                        ? RagdollParams.GetDefaultRagdollParams<HumanRagdollParams>(SpeciesName, CharacterConfigElement, CharacterConfigElement.ContentPackage)
+                        : RagdollParams.GetDefaultRagdollParams<FishRagdollParams>(SpeciesName, CharacterConfigElement, CharacterConfigElement.ContentPackage);
                 }
                 return ragdoll;
             }
@@ -652,7 +649,6 @@ namespace Barotrauma
             string name = "",
             string originalName = "",
             Either<Job, JobPrefab> jobOrJobPrefab = null,
-            string ragdollFileName = null,
             int variant = 0,
             Rand.RandSync randSync = Rand.RandSync.Unsynced,
             Identifier npcIdentifier = default)
@@ -703,14 +699,10 @@ namespace Barotrauma
                 Salary = CalculateSalary();
             }
             OriginalName = !string.IsNullOrEmpty(originalName) ? originalName : Name;
-            if (ragdollFileName != null)
-            {
-                this.ragdollFileName = ragdollFileName;
-            }
         }
 
         private void SetPersonalityTrait()
-            => PersonalityTrait = NPCPersonalityTrait.GetRandom(Name + string.Concat(Head.Preset.TagSet));
+            => PersonalityTrait = NPCPersonalityTrait.GetRandom(Name + string.Concat(Head.Preset.TagSet.OrderBy(tag => tag)));
 
         public string GetRandomName(Rand.RandSync randSync)
         {
@@ -832,7 +824,6 @@ namespace Barotrauma
 
             StartItemsGiven = infoElement.GetAttributeBool("startitemsgiven", false);
             Identifier personalityName = infoElement.GetAttributeIdentifier("personality", "");
-            ragdollFileName = infoElement.GetAttributeString("ragdoll", string.Empty);
             if (personalityName != Identifier.Empty)
             {
                 if (NPCPersonalityTrait.Traits.TryGet(personalityName, out var trait) ||
@@ -1086,7 +1077,26 @@ namespace Barotrauma
 
         partial void LoadHeadSpriteProjectSpecific(ContentXElement limbElement);
         
+        private bool spriteTagsLoaded;
+        public void VerifySpriteTagsLoaded()
+        {
+            if (!spriteTagsLoaded)
+            {
+                LoadSpriteTags();
+            }
+        }
+
         private void LoadHeadSprite()
+        {
+            LoadHeadElement(loadHeadSprite: true, loadHeadSpriteTags: true);
+        }
+
+        private void LoadSpriteTags()
+        {
+            LoadHeadElement(loadHeadSprite: false, loadHeadSpriteTags: true);            
+        }
+
+        private void LoadHeadElement(bool loadHeadSprite, bool loadHeadSpriteTags)
         {
             if (Ragdoll?.MainElement == null) { return; }
             foreach (var limbElement in Ragdoll.MainElement.Elements())
@@ -1116,20 +1126,30 @@ namespace Barotrauma
                     fileWithoutTags = fileWithoutTags.Split('[', ']').First();
                     if (fileWithoutTags != fileName) { continue; }
 
-                    HeadSprite = new Sprite(spriteElement, "", file);
-                    Portrait = new Sprite(spriteElement, "", file) { RelativeOrigin = Vector2.Zero };
-
-                    //extract the tags out of the filename
-                    SpriteTags = file.Split('[', ']').Skip(1).Select(id => id.ToIdentifier()).ToList();
-                    if (SpriteTags.Any())
+                    if (loadHeadSprite)
                     {
-                        SpriteTags.RemoveAt(SpriteTags.Count - 1);
+                        HeadSprite = new Sprite(spriteElement, "", file);
+                        Portrait = new Sprite(spriteElement, "", file) { RelativeOrigin = Vector2.Zero };
+                    }
+
+                    if (loadHeadSpriteTags)
+                    {
+                        //extract the tags out of the filename
+                        SpriteTags = file.Split('[', ']').Skip(1).Select(id => id.ToIdentifier()).ToList();
+                        if (SpriteTags.Any())
+                        {
+                            SpriteTags.RemoveAt(SpriteTags.Count - 1);
+                        }
+                        spriteTagsLoaded = true;
                     }
 
                     break;
                 }
 
-                LoadHeadSpriteProjectSpecific(limbElement);
+                if (loadHeadSprite)
+                {
+                    LoadHeadSpriteProjectSpecific(limbElement);
+                }
 
                 break;
             }
@@ -1446,9 +1466,7 @@ namespace Barotrauma
                 new XAttribute("haircolor", XMLExtensions.ColorToString(Head.HairColor)),
                 new XAttribute("facialhaircolor", XMLExtensions.ColorToString(Head.FacialHairColor)),
                 new XAttribute("startitemsgiven", StartItemsGiven),
-                new XAttribute("ragdoll", ragdollFileName),
                 new XAttribute("personality", PersonalityTrait?.Identifier ?? Identifier.Empty));
-                // TODO: animations?
 
             if (HumanPrefabIds != default)
             {
@@ -1663,8 +1681,7 @@ namespace Barotrauma
             {
                 Order order = null;
                 string orderIdentifier = orderElement.GetAttributeString("id", "");
-                var orderPrefab = OrderPrefab.Prefabs[orderIdentifier];
-                if (orderPrefab == null)
+                if (!OrderPrefab.Prefabs.TryGet(orderIdentifier, out OrderPrefab orderPrefab))
                 {
                     DebugConsole.ThrowError($"Error loading a previously saved order - can't find an order prefab with the identifier \"{orderIdentifier}\"");
                     priorityIncrease++;
@@ -1968,6 +1985,21 @@ namespace Barotrauma
             }
             if (changed) { OnPermanentStatChanged(statType); }
         }
+
+        /// <summary>
+        /// Used to store the last known resistance against skill loss on death
+        /// when the character dies, so it can be correctly applied before
+        /// reinstantiating the Character object (if respawning).
+        /// NOTE: The resistances are handled as multipliers here, so 1.0 == 0% resistance
+        /// </summary>
+        public float LastResistanceMultiplierSkillLossDeath = 1.0f;
+        /// <summary>
+        /// Used to store the last known resistance against skill loss on respawn
+        /// when the character dies, so it can be correctly applied before
+        /// reinstantiating the Character object (if respawning).
+        /// NOTE: The resistances are handled as multipliers here, so 1.0 == 0% resistance
+        /// </summary>
+        public float LastResistanceMultiplierSkillLossRespawn = 1.0f;
     }
 
     internal sealed class SavedStatValue

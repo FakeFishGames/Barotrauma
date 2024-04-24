@@ -661,6 +661,10 @@ namespace Barotrauma
 #if SERVER
                     Entity.Spawner?.CreateNetworkEvent(new EntitySpawner.SpawnEntity(item));
 #endif
+                    if (item.GetComponent<Holdable>() is { Attached: true })
+                    {
+                        item.Drop(dropper: null);
+                    }
                     if (!character.Inventory.TryPutItem(item, user: null, item.AllowedSlots))
                     {
                         foreach (Item containedItem in character.Inventory.AllItemsMod)

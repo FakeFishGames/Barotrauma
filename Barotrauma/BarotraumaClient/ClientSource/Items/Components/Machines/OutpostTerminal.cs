@@ -7,7 +7,7 @@ namespace Barotrauma.Items.Components
 
         public override bool Select(Character character)
         {
-            if (GameMain.GameSession?.Campaign == null)
+            if (GameMain.GameSession?.Campaign == null || !Level.IsLoadedFriendlyOutpost)
             {
                 return false;
             }

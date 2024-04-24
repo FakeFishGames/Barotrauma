@@ -11,20 +11,20 @@ namespace Barotrauma.Items.Components
             if (!Snapped)
             {
                 msg.WriteUInt16(target?.ID ?? Entity.NullEntityID);
-                if (source is Entity entity && !entity.Removed)
+                switch (source)
                 {
-                    msg.WriteUInt16(entity?.ID ?? Entity.NullEntityID);
-                    msg.WriteByte((byte)0);
-                }
-                else if (source is Limb limb && limb.character != null && !limb.character.Removed)
-                {
-                    msg.WriteUInt16(limb.character?.ID ?? Entity.NullEntityID);
-                    msg.WriteByte((byte)limb.character.AnimController.Limbs.IndexOf(limb));
-                }
-                else
-                {
-                    msg.WriteUInt16(Entity.NullEntityID);
-                    msg.WriteByte((byte)0);
+                    case Entity { Removed: false } entity:
+                        msg.WriteUInt16(entity.ID);
+                        msg.WriteByte((byte)0);
+                        break;
+                    case Limb { character.Removed: false } limb:
+                        msg.WriteUInt16(limb.character.ID);
+                        msg.WriteByte((byte)limb.character.AnimController.Limbs.IndexOf(limb));
+                        break;
+                    default:
+                        msg.WriteUInt16(Entity.NullEntityID);
+                        msg.WriteByte((byte)0);
+                        break;
                 }
             }
         }

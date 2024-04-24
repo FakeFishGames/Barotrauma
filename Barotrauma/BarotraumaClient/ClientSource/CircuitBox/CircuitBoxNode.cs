@@ -7,10 +7,10 @@ namespace Barotrauma
 {
     internal partial class CircuitBoxNode
     {
-        private RectangleF DrawRect,
-                           TopDrawRect;
+        public RectangleF DrawRect;
+        private RectangleF TopDrawRect;
 
-        private void UpdateDrawRects()
+        protected void UpdateDrawRects()
         {
             var drawRect = new RectangleF(Position - Size / 2f, Size);
             drawRect.Y = -drawRect.Y;
@@ -26,6 +26,8 @@ namespace Barotrauma
             UpdatePositions();
         }
 
+        public virtual void OnResized(RectangleF drawRect) { }
+
         public void DrawBackground(SpriteBatch spriteBatch, RectangleF drawRect, RectangleF topDrawRect, Color color)
         {
             CircuitBox.NodeFrameSprite?.Draw(spriteBatch, drawRect, color);
@@ -39,6 +41,7 @@ namespace Barotrauma
 
             DrawBackground(spriteBatch, drawRect, topDrawRect, color);
             DrawHeader(spriteBatch, topDrawRect, color);
+            DrawBody(spriteBatch, drawRect, color);
 
             DrawConnectors(spriteBatch, drawPos);
         }
@@ -52,6 +55,7 @@ namespace Barotrauma
         }
 
         public virtual void DrawHeader(SpriteBatch spriteBatch, RectangleF rect, Color color) { }
+        public virtual void DrawBody(SpriteBatch spriteBatch, RectangleF rect, Color color) { }
 
         public void DrawConnectors(SpriteBatch spriteBatch, Vector2 drawPos)
         {

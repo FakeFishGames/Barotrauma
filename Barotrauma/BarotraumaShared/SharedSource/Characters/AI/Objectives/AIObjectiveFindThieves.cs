@@ -39,8 +39,8 @@ namespace Barotrauma
                     if (campaign.Map?.CurrentLocation?.Reputation is { } reputation)
                     {
                         return MathHelper.Lerp(
-                            campaign.Settings.MaxStolenItemInspectionProbability,
-                            campaign.Settings.MinStolenItemInspectionProbability, 
+                            campaign.Settings.PatdownProbabilityMax,
+                            campaign.Settings.PatdownProbabilityMin, 
                             reputation.NormalizedValue);
                     }
                 }

@@ -1,4 +1,4 @@
-using Microsoft.Xna.Framework;
+﻿using Microsoft.Xna.Framework;
 using System;
 
 namespace Barotrauma
@@ -198,7 +198,9 @@ namespace Barotrauma
 
             base.Update(deltaTime);
 
-            if (GUI.MouseOn == this && Enabled)
+            if (GUI.MouseOn == this && Enabled && 
+                //allow clicking on the text area, but not further to the right (the dimensions of the component itself can extend further than the text)
+                PlayerInput.MousePosition.X < Rect.X + ContentWidth)
             {
                 State = Selected ?
                     ComponentState.HoverSelected :

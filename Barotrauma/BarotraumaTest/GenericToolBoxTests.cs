@@ -1,4 +1,4 @@
-#nullable enable
+﻿#nullable enable
 
 using System;
 using Xunit;
@@ -14,8 +14,8 @@ public sealed class GenericToolBoxTests
     {
         public static Arbitrary<DifferentIdentifierPair> IdentifierPairGenerator()
         {
-            return Arb.From(from Identifier first in Arb.Generate<Identifier>()
-                            from Identifier second in Arb.Generate<Identifier>().Where(second => second != first)
+            return Arb.From(from Identifier first in Arb.Generate<Identifier>().Where(first => !first.Value.Contains('~'))
+                            from Identifier second in Arb.Generate<Identifier>().Where(second => second != first && !second.Value.Contains('~'))
                             select new DifferentIdentifierPair(first, second));
         }
     }
@@ -28,6 +28,9 @@ public sealed class GenericToolBoxTests
         public DifferentIdentifierPair(Identifier first, Identifier second)
         {
             if (first == second) { throw new InvalidOperationException("Identifiers must be different"); }
+            //tildes have a special meaning in stat identifiers, don't use them
+            if (first.Value.Contains('~')) { throw new InvalidOperationException($"{first} is not a valid identifier."); }
+            if (second.Value.Contains('~')) { throw new InvalidOperationException($"{second} is not a valid identifier."); }
 
             First = first;
             Second = second;

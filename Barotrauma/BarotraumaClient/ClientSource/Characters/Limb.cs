@@ -483,9 +483,11 @@ namespace Barotrauma
                     //2. check if the base prefab defines the texture
                     if (texturePath.IsNullOrEmpty() && !character.Prefab.VariantOf.IsEmpty)
                     {
+                        Identifier speciesName = character.GetBaseCharacterSpeciesName();
                         RagdollParams parentRagdollParams = character.IsHumanoid ?
-                                RagdollParams.GetRagdollParams<HumanRagdollParams>(character.Prefab.VariantOf) :
-                                RagdollParams.GetRagdollParams<FishRagdollParams>(character.Prefab.VariantOf);
+                                RagdollParams.GetDefaultRagdollParams<HumanRagdollParams>(speciesName, character.Params, character.Prefab.ContentPackage) :
+                                RagdollParams.GetDefaultRagdollParams<FishRagdollParams>(speciesName, character.Params, character.Prefab.ContentPackage);
+ 
                         texturePath = parentRagdollParams.OriginalElement?.GetAttributeContentPath("texture");
                     }
                     //3. "default case", get the texture from this character's XML
@@ -514,8 +516,8 @@ namespace Barotrauma
             if (characterInfo != null)
             {
                 spritePath = characterInfo.ReplaceVars(spritePath);
-
-                if (characterInfo.HeadSprite != null && characterInfo.SpriteTags.Any())
+                characterInfo.VerifySpriteTagsLoaded();
+                if (characterInfo.SpriteTags.Any())
                 {
                     string tags = "";
                     characterInfo.SpriteTags.ForEach(tag => tags += $"[{tag}]");
@@ -695,7 +697,7 @@ namespace Barotrauma
         public void Draw(SpriteBatch spriteBatch, Camera cam, Color? overrideColor = null, bool disableDeformations = false)
         {
             var spriteParams = Params.GetSprite();
-            if (spriteParams == null) { return; }
+            if (spriteParams == null || Alpha <= 0) { return; }
             float burn = spriteParams.IgnoreTint ? 0 : burnOverLayStrength;
             float brightness = Math.Max(1.0f - burn, 0.2f);
             Color clr = spriteParams.Color;
@@ -724,6 +726,8 @@ namespace Barotrauma
 
             color = overrideColor ?? color;
             blankColor = overrideColor ?? blankColor;
+            color *= Alpha;
+            blankColor *= Alpha;
 
             if (isSevered)
             {
@@ -779,7 +783,7 @@ namespace Barotrauma
                 else
                 {
                     bool useTintMask = TintMask != null && spriteBatch.GetCurrentEffect() is null;
-                    if (useTintMask)
+                    if (useTintMask && Sprite?.Texture != null && TintMask?.Texture != null)
                     {
                         tintEffectParams.Effect ??= GameMain.GameScreen.ThresholdTintEffect;
                         tintEffectParams.Params ??= new Dictionary<string, object>();

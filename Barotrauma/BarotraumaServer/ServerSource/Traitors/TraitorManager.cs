@@ -334,7 +334,7 @@ namespace Barotrauma
 
         private void CreateTraitorEvent(EventManager eventManager, TraitorEventPrefab selectedPrefab, Client traitor) 
         {
-            if (selectedPrefab.TryCreateInstance<TraitorEvent>(out var newEvent))
+            if (selectedPrefab.TryCreateInstance<TraitorEvent>(eventManager.RandomSeed, out var newEvent))
             {
                 var secondaryTraitors = SelectSecondaryTraitors(newEvent, traitor);
 

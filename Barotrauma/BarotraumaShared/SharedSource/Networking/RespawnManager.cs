@@ -14,7 +14,14 @@ namespace Barotrauma.Networking
         /// <summary>
         /// How much skills drop towards the job's default skill levels when dying
         /// </summary>
-        public static float SkillLossPercentageOnDeath => GameMain.NetworkMember?.ServerSettings?.SkillLossPercentageOnDeath ?? 50.0f;
+        public static float SkillLossPercentageOnDeath => GameMain.NetworkMember?.ServerSettings?.SkillLossPercentageOnDeath ?? 20.0f;
+
+        /// <summary>
+        /// How much more the skills drop towards the job's default skill levels
+        /// when dying, in addition to SkillLossPercentageOnDeath, if the player
+        /// chooses to respawn in the middle of the round
+        /// </summary>
+        public static float SkillLossPercentageOnImmediateRespawn => GameMain.NetworkMember?.ServerSettings?.SkillLossPercentageOnImmediateRespawn ?? 10.0f;
 
         public enum State
         {
@@ -76,6 +83,10 @@ namespace Barotrauma.Networking
 
         private float updateReturnTimer;
 
+        public bool CanRespawnAgain =>
+            /*can never respawn again if we're currently transporting and transport time is set to be infinite*/
+            !(CurrentState == State.Transporting && maxTransportTime <= 0.0f);
+
         public Submarine RespawnShuttle { get; private set; }
 
         public RespawnManager(NetworkMember networkMember, SubmarineInfo shuttleInfo)
@@ -88,7 +99,7 @@ namespace Barotrauma.Networking
                 RespawnShuttle = new Submarine(shuttleInfo, true);
                 RespawnShuttle.PhysicsBody.FarseerBody.OnCollision += OnShuttleCollision;
                 //set crush depth slightly deeper than the main sub's
-                RespawnShuttle.RealWorldCrushDepth = Math.Max(RespawnShuttle.RealWorldCrushDepth, Submarine.MainSub.RealWorldCrushDepth * 1.2f);
+                RespawnShuttle.SetCrushDepth(Math.Max(RespawnShuttle.RealWorldCrushDepth, Submarine.MainSub.RealWorldCrushDepth * 1.2f));
 
                 //prevent wifi components from communicating between the respawn shuttle and other subs
                 List<WifiComponent> wifiComponents = new List<WifiComponent>();
@@ -338,25 +349,6 @@ namespace Barotrauma.Networking
         public void RespawnCharacters(Vector2? shuttlePos)
         {
             RespawnCharactersProjSpecific(shuttlePos);
-        }
-
-        public static AfflictionPrefab GetRespawnPenaltyAfflictionPrefab()
-        {
-            return AfflictionPrefab.Prefabs.First(a => a.AfflictionType == "respawnpenalty");
-        }
-
-        public static Affliction GetRespawnPenaltyAffliction()
-        {
-            return GetRespawnPenaltyAfflictionPrefab()?.Instantiate(10.0f);
-        }
-
-        public static void GiveRespawnPenaltyAffliction(Character character)
-        {
-            var respawnPenaltyAffliction = GetRespawnPenaltyAffliction();
-            if (respawnPenaltyAffliction != null)
-            {
-                character.CharacterHealth.ApplyAffliction(targetLimb: null, respawnPenaltyAffliction);
-            }
         }
 
         public Vector2 FindSpawnPos()
