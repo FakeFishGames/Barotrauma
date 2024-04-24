@@ -822,7 +822,7 @@ namespace Barotrauma
             factionTextContent.Recalculate();
             
             new GUICustomComponent(new RectTransform(new Vector2(0.8f, 1.0f), sliderHolder.RectTransform),
-                onDraw: (sb, customComponent) => DrawReputationBar(sb, customComponent.Rect, reputation.NormalizedValue));
+                onDraw: (sb, customComponent) => DrawReputationBar(sb, customComponent.Rect, reputation.NormalizedValue, reputation.MinReputation, reputation.MaxReputation));
                 
             var reputationText = new GUITextBlock(new RectTransform(new Vector2(0.5f, 1.0f), sliderHolder.RectTransform),
                 string.Empty, textAlignment: Alignment.CenterLeft, font: GUIStyle.SubHeadingFont);
@@ -871,7 +871,7 @@ namespace Barotrauma
             return factionFrame;
         }
 
-        public static void DrawReputationBar(SpriteBatch sb, Rectangle rect, float normalizedReputation)
+        public static void DrawReputationBar(SpriteBatch sb, Rectangle rect, float normalizedReputation, float minReputation, float maxReputation)
         {
             int segmentWidth = rect.Width / 5;
             rect.Width = segmentWidth * 5;
@@ -885,9 +885,10 @@ namespace Barotrauma
             GUI.Arrow.Draw(sb, new Vector2(rect.X + rect.Width * normalizedReputation, rect.Y), GUIStyle.ColorInventoryBackground, scale: GUI.Scale, spriteEffect: SpriteEffects.FlipVertically);
             GUI.Arrow.Draw(sb, new Vector2(rect.X + rect.Width * normalizedReputation, rect.Y), GUIStyle.TextColorNormal, scale: GUI.Scale * 0.8f, spriteEffect: SpriteEffects.FlipVertically);
 
-            GUI.DrawString(sb, new Vector2(rect.X, rect.Bottom), "-100", GUIStyle.TextColorNormal, font: GUIStyle.SmallFont);
-            Vector2 textSize = GUIStyle.SmallFont.MeasureString("100");
-            GUI.DrawString(sb, new Vector2(rect.Right - textSize.X, rect.Bottom), "100", GUIStyle.TextColorNormal, font: GUIStyle.SmallFont);
+            GUI.DrawString(sb, new Vector2(rect.X, rect.Bottom), ((int)minReputation).ToString(), GUIStyle.TextColorNormal, font: GUIStyle.SmallFont);
+            string maxRepText = ((int)maxReputation).ToString();
+            Vector2 textSize = GUIStyle.SmallFont.MeasureString(maxRepText);
+            GUI.DrawString(sb, new Vector2(rect.Right - textSize.X, rect.Bottom), maxRepText, GUIStyle.TextColorNormal, font: GUIStyle.SmallFont);
         }
     }
 }

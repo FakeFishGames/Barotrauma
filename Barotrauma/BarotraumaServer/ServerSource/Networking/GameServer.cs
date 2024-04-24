@@ -282,14 +282,18 @@ namespace Barotrauma.Networking
                 SendConsoleMessage("Granted all permissions to " + newClient.Name + ".", newClient);
             }
 
-            SendChatMessage($"ServerMessage.JoinedServer~[client]={ClientLogName(newClient)}", ChatMessageType.Server, null, changeType: PlayerConnectionChangeType.Joined);
+            SendChatMessage($"ServerMessage.JoinedServer~[client]={ClientLogName(newClient)}", ChatMessageType.Server, changeType: PlayerConnectionChangeType.Joined);
             ServerSettings.ServerDetailsChanged = true;
 
             if (previousPlayer != null && previousPlayer.Name != newClient.Name)
             {
                 string prevNameSanitized = previousPlayer.Name.Replace("‖", "");
-                SendChatMessage($"ServerMessage.PreviousClientName~[client]={ClientLogName(newClient)}~[previousname]={prevNameSanitized}", ChatMessageType.Server, null);
+                SendChatMessage($"ServerMessage.PreviousClientName~[client]={ClientLogName(newClient)}~[previousname]={prevNameSanitized}", ChatMessageType.Server);
                 previousPlayer.Name = newClient.Name;
+            }
+            if (!ServerSettings.ServerMessageText.IsNullOrEmpty())
+            {
+                SendDirectChatMessage((TextManager.Get("servermotd") + '\n' + ServerSettings.ServerMessageText).Value, newClient, ChatMessageType.Server);
             }
 
             var savedPermissions = ServerSettings.ClientPermissions.Find(scp =>
@@ -434,12 +438,12 @@ namespace Barotrauma.Networking
                     endRoundDelay = 5.0f;
                     endRoundTimer += deltaTime;
                 }
-                else if (subAtLevelEnd && !(GameMain.GameSession?.GameMode is CampaignMode))
+                else if (subAtLevelEnd && GameMain.GameSession?.GameMode is not CampaignMode)
                 {
                     endRoundDelay = 5.0f;
                     endRoundTimer += deltaTime;
                 }
-                else if (isCrewDead && RespawnManager == null)
+                else if (isCrewDead && (RespawnManager == null || !RespawnManager.CanRespawnAgain))
                 {
 #if !DEBUG
                     if (endRoundTimer <= 0.0f)
@@ -1136,6 +1140,10 @@ namespace Barotrauma.Networking
                     //check if midround syncing is needed due to missed unique events
                     if (!midroundSyncingDone) { entityEventManager.InitClientMidRoundSync(c); }
                     MissionAction.NotifyMissionsUnlockedThisRound(c);
+                    if (GameMain.GameSession.Campaign is MultiPlayerCampaign mpCampaign)
+                    {
+                        mpCampaign.SendCrewState();
+                    }
                     c.InGame = true;
                 }
             }
@@ -2322,7 +2330,7 @@ namespace Barotrauma.Networking
             if (campaign != null)
             {
                 campaign.CargoManager.CreatePurchasedItems();
-                campaign.SendCrewState(null, default, null);
+                campaign.SendCrewState();
             }
 
             Level.Loaded?.SpawnNPCs();
@@ -2792,8 +2800,6 @@ namespace Barotrauma.Networking
                 logMsg = message.TextWithSender;
             }
             Log(logMsg, ServerLog.MessageType.Chat);
-
-            base.AddChatMessage(message);
         }
 
         private bool ReadClientNameChange(Client c, IReadMessage inc)

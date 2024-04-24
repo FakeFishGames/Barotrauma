@@ -99,7 +99,12 @@ namespace Barotrauma
             /// <summary>
             /// Check against the target's limb type. See <see cref="Barotrauma.LimbType"/>.
             /// </summary>
-            LimbType
+            LimbType,
+
+            /// <summary>
+            /// Check against the current World Hostility setting (previously known as "Difficulty").
+            /// </summary>
+            WorldHostility
         }
 
         public enum LogicalOperatorType
@@ -168,6 +173,8 @@ namespace Barotrauma
         public readonly ImmutableArray<Identifier> AttributeValueAsTags;
         public readonly float? FloatValue;
 
+        private readonly WorldHostilityOption cachedHostilityValue;
+
         /// <summary>
         /// If set to the name of one of the target's ItemComponents, the conditionals defined by this element check against the properties of that component.
         /// Only works on items.
@@ -176,7 +183,7 @@ namespace Barotrauma
 
         /// <summary>
         /// If set to true, the conditionals defined by this element check against the attacking character instead of the attacked character.
-        /// Only applies to a character's attacks.
+        /// Only applies to a character's attacks and targeting parameters.
         /// </summary>
         public readonly bool TargetSelf;
 
@@ -287,6 +294,11 @@ namespace Barotrauma
             {
                 FloatValue = value;
             }
+
+            if (Type == ConditionType.WorldHostility && Enum.TryParse(AttributeValue, ignoreCase: true, out WorldHostilityOption hostilityValue))
+            {
+                cachedHostilityValue = hostilityValue;
+            }
         }
 
         public static (ComparisonOperatorType ComparisonOperator, string ConditionStr) ExtractComparisonOperatorFromConditionString(string str)
@@ -394,6 +406,11 @@ namespace Barotrauma
                     {
                         return PropertyMatchesRequirement(target, property);
                     }
+                    else if (targetChar?.SerializableProperties != null
+                        && targetChar.SerializableProperties.TryGetValue(AttributeName, out var characterProperty))
+                    {
+                        return PropertyMatchesRequirement(targetChar, characterProperty);
+                    }
                     return ComparisonOperatorIsNotEquals;
                 case ConditionType.SkillRequirement:
                     if (targetChar != null)
@@ -408,30 +425,47 @@ namespace Barotrauma
                 case ConditionType.HasStatusTag:
                     if (target == null) { return ComparisonOperatorIsNotEquals; }
 
-                    // NOTE: This can be optimized further by returning
-                    // when a match passes with the Equals operator and
-                    // when a match fails with the NotEquals operator.
-                    // The current form has better readability.
-                    int numMatchingEffects = 0;
-                    int numEffectsAffectingTarget = 0;
-
-                    foreach (var durationEffect in StatusEffect.DurationList)
+                    int numTagsFound = 0;
+                    foreach (var tag in AttributeValueAsTags)
                     {
-                        if (!durationEffect.Targets.Contains(target)) { continue; }
-                        numEffectsAffectingTarget++;
-                        if (StatusEffectMatchesTagCondition(durationEffect.Parent)) { numMatchingEffects++; }
+                        bool tagFound = false;
+                        foreach (var durationEffect in StatusEffect.DurationList)
+                        {
+                            if (!durationEffect.Targets.Contains(target)) { continue; }
+                            if (durationEffect.Parent.HasTag(tag))
+                            {
+                                tagFound = true;
+                                break;
+                            }
+                        }
+                        if (!tagFound)
+                        {
+                            foreach (var delayedEffect in DelayedEffect.DelayList)
+                            {
+                                if (!delayedEffect.Targets.Contains(target)) { continue; }
+                                if (delayedEffect.Parent.HasTag(tag))
+                                {
+                                    tagFound = true;
+                                    break;
+                                }
+                            }
+                        }
+                        if (tagFound)
+                        {
+                            numTagsFound++;
+                        }
                     }
-
-                    foreach (var delayedEffect in DelayedEffect.DelayList)
-                    {
-                        if (!delayedEffect.Targets.Contains(target)) { continue; }
-                        numEffectsAffectingTarget++;
-                        if (StatusEffectMatchesTagCondition(delayedEffect.Parent)) { numMatchingEffects++; }
-                    }
-
                     return ComparisonOperatorIsNotEquals
-                        ? numMatchingEffects >= numEffectsAffectingTarget // true when none of the effects have any of the tags
-                        : numMatchingEffects > 0; // true when any effects have all tags
+                        ? numTagsFound < AttributeValueAsTags.Length // true when some tag wasn't found
+                        : numTagsFound >= AttributeValueAsTags.Length; // true when all the tags are found
+                case ConditionType.WorldHostility:
+                {
+                    if (GameMain.GameSession?.Campaign is CampaignMode campaign)
+                    {
+                        return Compare(campaign.Settings.WorldHostility, cachedHostilityValue, ComparisonOperator);
+                    }
+                    return false;
+                }
                 default:
                     bool equals = CheckOnlyEquality(target);
                     return ComparisonOperatorIsNotEquals
@@ -538,16 +572,6 @@ namespace Barotrauma
             return SufficientTagMatches(matches);
         }
 
-        private bool StatusEffectMatchesTagCondition(StatusEffect statusEffect)
-        {
-            int matches = 0;
-            foreach (var tag in AttributeValueAsTags)
-            {
-                if (statusEffect.HasTag(tag)) { matches++; }
-            }
-            return SufficientTagMatches(matches);
-        }
-
         private bool NumberMatchesRequirement(float testedValue)
         {
             if (!FloatValue.HasValue) { return ComparisonOperatorIsNotEquals; }
@@ -624,5 +648,17 @@ namespace Barotrauma
             }
         }
 
+        public static bool Compare<T>(T leftValue, T rightValue, ComparisonOperatorType comparisonOperator) where T : IComparable
+        {
+            return comparisonOperator switch
+            {
+                ComparisonOperatorType.NotEquals => leftValue.CompareTo(rightValue) != 0,
+                ComparisonOperatorType.GreaterThan => leftValue.CompareTo(rightValue) > 0,
+                ComparisonOperatorType.LessThan => leftValue.CompareTo(rightValue) < 0,
+                ComparisonOperatorType.GreaterThanEquals => leftValue.CompareTo(rightValue) >= 0,
+                ComparisonOperatorType.LessThanEquals => leftValue.CompareTo(rightValue) <= 0,
+                _ => leftValue.CompareTo(rightValue) == 0,
+            };
+        }
     }
 }

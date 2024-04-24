@@ -22,7 +22,7 @@ namespace Barotrauma.Abilities
         protected override void ApplyEffect(AbilityObject abilityObject)
         {
             if (abilityObject is not IAbilityCharacter character) { return; }
-            character.Character.CharacterHealth.ReduceAfflictionOnAllLimbs(afflictionId, amount);
+            character.Character.CharacterHealth.ReduceAfflictionOnAllLimbs(afflictionId, amount, attacker: Character);
         }
     }
 }

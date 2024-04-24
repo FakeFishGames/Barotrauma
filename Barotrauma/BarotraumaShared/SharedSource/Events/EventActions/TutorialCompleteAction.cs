@@ -1,5 +1,8 @@
 namespace Barotrauma
 {
+    /// <summary>
+    /// Completes the tutorial. Only valid in tutorial events.
+    /// </summary>
     class TutorialCompleteAction : EventAction
     {
         private bool isFinished;

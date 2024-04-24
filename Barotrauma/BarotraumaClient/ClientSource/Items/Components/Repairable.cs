@@ -63,10 +63,7 @@ namespace Barotrauma.Items.Components
             if (item.HiddenInGame) { return false; }
             if (!HasRequiredItems(character, false) || character.SelectedItem != item) { return false; }
             if (character.IsTraitor && item.ConditionPercentage > MinSabotageCondition) { return true; }
-
-            float defaultMaxCondition = item.MaxCondition / item.MaxRepairConditionMultiplier;
-
-            if (MathUtils.Percentage(item.Condition, defaultMaxCondition) < RepairThreshold) { return true; }
+            if (item.ConditionPercentageRelativeToDefaultMaxCondition < RepairThreshold) { return true; }
 
             if (CurrentFixer == character)
             {
@@ -135,13 +132,13 @@ namespace Barotrauma.Items.Components
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), paddedFrame.RectTransform),
                 TextManager.Get("RequiredRepairSkills"), font: GUIStyle.SubHeadingFont);
             skillTextContainer = paddedFrame;
-            for (int i = 0; i < requiredSkills.Count; i++)
+            for (int i = 0; i < RequiredSkills.Count; i++)
             {
                 var skillText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), skillTextContainer.RectTransform),
-                    "   - " + TextManager.AddPunctuation(':', TextManager.Get("SkillName." + requiredSkills[i].Identifier), ((int) Math.Round(requiredSkills[i].Level * SkillRequirementMultiplier)).ToString()),
+                    "   - " + TextManager.AddPunctuation(':', TextManager.Get("SkillName." + RequiredSkills[i].Identifier), ((int) Math.Round(RequiredSkills[i].Level * SkillRequirementMultiplier)).ToString()),
                     font: GUIStyle.SmallFont)
                 {
-                    UserData = requiredSkills[i]
+                    UserData = RequiredSkills[i]
                 };
             }
 
@@ -262,7 +259,7 @@ namespace Barotrauma.Items.Components
                 }
             }
 
-            float conditionPercentage = item.Condition / (item.MaxCondition / item.MaxRepairConditionMultiplier) * 100f;
+            float conditionPercentage = item.ConditionPercentageRelativeToDefaultMaxCondition;
 
             for (int i = 0; i < particleEmitters.Count; i++)
             {

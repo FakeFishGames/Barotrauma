@@ -20,31 +20,31 @@ namespace Barotrauma
         [Serialize("", IsPropertySaveable.Yes), Editable]
         public Identifier SpeciesName { get; private set; }
 
-        [Serialize("", IsPropertySaveable.Yes, description: "If the creature is a variant that needs to use a pre-existing translation."), Editable]
+        [Serialize("", IsPropertySaveable.Yes, description: "References to another species. Define only if the creature is a variant that needs to use a pre-existing translation."), Editable]
         public Identifier SpeciesTranslationOverride { get; private set; }
 
-        [Serialize("", IsPropertySaveable.Yes, description: "If the display name is not defined, the game first tries to find the translated name. If that is not found, the species name will be used."), Editable]
+        [Serialize("", IsPropertySaveable.Yes, description: "Overrides the name of the character, shown to the player. If the display name is not defined, the game first tries to find the translated name. If that is not found, the species name will be used."), Editable]
         public string DisplayName { get; private set; }
 
-        [Serialize("", IsPropertySaveable.Yes, description: "If defined, different species of the same group are considered like the characters of the same species by the AI."), Editable]
+        [Serialize("", IsPropertySaveable.Yes, description: "If defined, different species of the same group consider each other friendly and do not attack each other."), Editable]
         public Identifier Group { get; private set; }
 
-        [Serialize(false, IsPropertySaveable.Yes), Editable(ReadOnly = true)]
+        [Serialize(false, IsPropertySaveable.Yes, description: "If enabled, the character is a humanoid and has different animation constraints relative to non-humanoid characters."), Editable(ReadOnly = true)]
         public bool Humanoid { get; private set; }
 
-        [Serialize(false, IsPropertySaveable.Yes), Editable(ReadOnly = true)]
+        [Serialize(false, IsPropertySaveable.Yes, description: "If enabled, jobs can be assigned to characters of this species. Should be true for the player characters."), Editable(ReadOnly = true)]
         public bool HasInfo { get; private set; }
 
         [Serialize(false, IsPropertySaveable.Yes, description: "Can the creature interact with items?"), Editable]
         public bool CanInteract { get; private set; }
 
-        [Serialize(false, IsPropertySaveable.Yes), Editable]
+        [Serialize(false, IsPropertySaveable.Yes, description: "Should this character be treated as a husk?"), Editable]
         public bool Husk { get; private set; }
 
-        [Serialize(false, IsPropertySaveable.Yes), Editable]
+        [Serialize(false, IsPropertySaveable.Yes, description:"Should this character use a special husk appendage, attached to the ragdoll, when it turns into a husk?"), Editable]
         public bool UseHuskAppendage { get; private set; }
 
-        [Serialize(false, IsPropertySaveable.Yes), Editable]
+        [Serialize(false, IsPropertySaveable.Yes, description: "Does this character need oxygen to survive? Enabling this also makes the character vulnerable to high pressure when swimming outside of the submarine."), Editable]
         public bool NeedsAir { get; set; }
 
         [Serialize(false, IsPropertySaveable.Yes, description: "Can the creature live without water or does it die on dry land?"), Editable]
@@ -56,13 +56,13 @@ namespace Barotrauma
         [Serialize(false, IsPropertySaveable.Yes, description: "Is this creature an artificial creature, like robot or machine that shouldn't be affected by afflictions that affect only organic creatures? Overrides DoesBleed."), Editable]
         public bool IsMachine { get; set; }
 
-        [Serialize(false, IsPropertySaveable.No), Editable]
+        [Serialize(false, IsPropertySaveable.No, description:"Is the character able to send messages in the chat?"), Editable]
         public bool CanSpeak { get; set; }
 
-        [Serialize(true, IsPropertySaveable.Yes), Editable]
+        [Serialize(true, IsPropertySaveable.Yes, description:"Is there a health bar shown above the character when it takes damage? Defaults to true."), Editable]
         public bool ShowHealthBar { get; private set; }
 
-        [Serialize(false, IsPropertySaveable.Yes), Editable]
+        [Serialize(false, IsPropertySaveable.Yes, description: "Is this character's health shown at the top of the player's screen when they are in an active encounter?"), Editable]
         public bool UseBossHealthBar { get; private set; }
 
         [Serialize(100f, IsPropertySaveable.Yes, description: "How much noise the character makes when moving?"), Editable(minValue: 0f, maxValue: 100000f)]
@@ -80,7 +80,7 @@ namespace Barotrauma
         [Serialize("waterblood", IsPropertySaveable.Yes), Editable]
         public string BleedParticleWater { get; private set; }
 
-        [Serialize(1f, IsPropertySaveable.Yes), Editable]
+        [Serialize(1f, IsPropertySaveable.Yes, description: "A multiplier to increase or decrease the number of bleeding particles to create."), Editable]
         public float BleedParticleMultiplier { get; private set; }
         
         [Serialize(true, IsPropertySaveable.Yes, description: "Can the creature eat bodies? Used by player controlled creatures to allow them to eat. Currently applicable only to non-humanoids. To allow an AI controller to eat, just add an ai target with the state \"eat\""), Editable]
@@ -89,22 +89,22 @@ namespace Barotrauma
         [Serialize(10f, IsPropertySaveable.Yes, description: "How effectively/easily the character eats other characters. Affects the forces, the amount of particles, and the time required before the target is eaten away"), Editable(MinValueFloat = 1, MaxValueFloat = 1000, ValueStep = 1)]
         public float EatingSpeed { get; set; }
 
-        [Serialize(true, IsPropertySaveable.Yes), Editable]
+        [Serialize(true, IsPropertySaveable.Yes, description: "Should the character AI use waypoints defined in the level to find a path to its targets?"), Editable]
         public bool UsePathFinding { get; set; }
 
         [Serialize(1f, IsPropertySaveable.Yes, "Decreases the intensive path finding call frequency. Set to a lower value for insignificant creatures to improve performance."), Editable(minValue: 0f, maxValue: 1f)]
         public float PathFinderPriority { get; set; }
 
-        [Serialize(false, IsPropertySaveable.Yes), Editable]
+        [Serialize(false, IsPropertySaveable.Yes, description: "Should the character be hidden in the sonar?"), Editable]
         public bool HideInSonar { get; set; }
 
-        [Serialize(false, IsPropertySaveable.Yes), Editable]
+        [Serialize(false, IsPropertySaveable.Yes, description: "Should the character be hidden when using thermal goggles?"), Editable]
         public bool HideInThermalGoggles { get; set; }
 
-        [Serialize(0f, IsPropertySaveable.Yes), Editable]
+        [Serialize(0f, IsPropertySaveable.Yes, description: "If set to a value greater than zero, this character creates disrupting noise on the sonar when within range."), Editable]
         public float SonarDisruption { get; set; }
 
-        [Serialize(0f, IsPropertySaveable.Yes), Editable]
+        [Serialize(0f, IsPropertySaveable.Yes, description: "Range at which \"long distance\" blips for this character will appear on the sonar (used on some of the Abyss monsters)."), Editable]
         public float DistantSonarRange { get; set; }
 
         [Serialize(25000f, IsPropertySaveable.Yes, "If the character is farther than this (in pixels) from the sub and the players, it will be disabled. The halved value is used for triggering simple physics where the ragdoll is disabled and only the main collider is updated."), Editable(MinValueFloat = 10000f, MaxValueFloat = 100000f)]
@@ -113,7 +113,7 @@ namespace Barotrauma
         [Serialize(10f, IsPropertySaveable.Yes, "How frequent the recurring idle and attack sounds are?"), Editable(MinValueFloat = 1f, MaxValueFloat = 100f)]
         public float SoundInterval { get; set; }
 
-        [Serialize(false, IsPropertySaveable.Yes), Editable]
+        [Serialize(false, IsPropertySaveable.Yes, description: "Should the character be drawn on top of characters that do not have this set? This currently has no effect if the character has no deformable sprites."), Editable]
         public bool DrawLast { get; set; }
 
         [Serialize(1.0f, IsPropertySaveable.Yes, "Tells the bots how much they should prefer targeting this character with submarine weapons. Defaults to 1. Set 0 to tell the bots not to target this character at all. Distance to the target affects the decision making."), Editable]
@@ -543,7 +543,7 @@ namespace Barotrauma
 
             [Serialize(false, IsPropertySaveable.Yes), Editable]
             public bool PoisonImmunity { get; set; }
-
+            
             [Serialize(1f, IsPropertySaveable.Yes, description: "1 = default, 0 = immune."), Editable(MinValueFloat = 0f, MaxValueFloat = 1000, DecimalCount = 1)]
             public float PoisonVulnerability { get; set; }
 
@@ -552,6 +552,19 @@ namespace Barotrauma
 
             [Serialize(false, IsPropertySaveable.Yes, description: "Can afflictions affect the face/body tint of the character."), Editable]
             public bool ApplyAfflictionColors { get; private set; }
+            
+            [Serialize("", IsPropertySaveable.Yes, description:"A comma-separated list of identifiers of afflictions that the creature is immune to."), Editable]
+            public string Immunities { get; private set; }
+            
+            private ImmutableHashSet<Identifier> _immunityIdentifiers;
+            public IEnumerable<Identifier> ImmunityIdentifiers
+            {
+                get
+                {
+                    _immunityIdentifiers ??= Element.GetAttributeIdentifierArray("immunities", Array.Empty<Identifier>()).ToImmutableHashSet();
+                    return _immunityIdentifiers;
+                }
+            }
 
             // TODO: limbhealths, sprite?
 
@@ -634,6 +647,9 @@ namespace Barotrauma
             [Serialize(1.0f, IsPropertySaveable.Yes, description: "Affects how far the character can hear the targets. Used as a multiplier."), Editable(minValue: 0f, maxValue: 10f)]
             public float Hearing { get; private set; }
 
+            [Serialize(-1.0f, IsPropertySaveable.Yes, description: "Hard limit to how far the character can spot targets from, regardless of the sight/hearing or how visible or how much noise the target is making. Not used if set to negative."), Editable]
+            public float MaxPerceptionDistance { get; set; }
+
             [Serialize(100f, IsPropertySaveable.Yes, description: "How much the targeting priority increases each time the character takes damage. Works like the greed value, described above. The default value is 100."), Editable(minValue: -1000f, maxValue: 1000f)]
             public float AggressionHurt { get; private set; }
 
@@ -673,7 +689,7 @@ namespace Barotrauma
             [Serialize(false, IsPropertySaveable.Yes, description:"Does the creature know how to open doors (still requires a proper ID card). Humans can always open doors (They don't use this AI definition)."), Editable]
             public bool CanOpenDoors { get; private set; }
 
-            [Serialize(false, IsPropertySaveable.Yes), Editable]
+            [Serialize(false, IsPropertySaveable.Yes, description:"Unlike human AI, monsters normally only use pathfinding when they are inside the submarine. When this is enabled, the monsters can also use pathfinding to get inside the sub. In practice, via doors and hatches."), Editable]
             public bool UsePathFindingToGetInside { get; set; }
 
             [Serialize(false, IsPropertySaveable.Yes, description: "Does the creature close the doors behind it. Humans don't use this AI definition."), Editable]
@@ -690,17 +706,18 @@ namespace Barotrauma
 
             [Serialize(false, IsPropertySaveable.Yes, "Does the creature patrol the dry hulls while idling inside a friendly submarine?"), Editable]
             public bool PatrolDry { get; set; }
-
-            [Serialize(0f, IsPropertySaveable.Yes, description: ""), Editable]
+            
+            [Serialize(0f, IsPropertySaveable.Yes, description: "Initial aggression used in the circle attack pattern (0-100). The aggression affects how close and how fast to the target the monster circles."), Editable]
             public float StartAggression { get; private set; }
 
-            [Serialize(100f, IsPropertySaveable.Yes, description: ""), Editable]
+            [Serialize(100f, IsPropertySaveable.Yes, description: "Maximum aggression used in the circle attack pattern (0-100). The aggression affects how close and how fast to the target the monster circles."), Editable]
             public float MaxAggression { get; private set; }
 
-            [Serialize(0f, IsPropertySaveable.Yes, description: ""), Editable]
+            [Serialize(0f, IsPropertySaveable.Yes, description: "How quickly the aggression level increases from StartAggression to MaxAggression when using the circle attack pattern. Artificial amount, applied once per attack cycle."), Editable]
+
             public float AggressionCumulation { get; private set; }
 
-            [Serialize(WallTargetingMethod.Target, IsPropertySaveable.Yes, description: ""), Editable]
+            [Serialize(WallTargetingMethod.Target, IsPropertySaveable.Yes, description: "Defines the method of checking whether there's a blocking (submarine) wall."), Editable]
             public WallTargetingMethod WallTargetingMethod { get; private set; }
 
             public IEnumerable<TargetParams> Targets => targets;
@@ -851,6 +868,12 @@ namespace Barotrauma
             [Serialize(false, IsPropertySaveable.Yes, description: "Should the target be ignored while the creature is outside. Doesn't matter where the target is."), Editable]
             public bool IgnoreOutside { get; set; }
 
+            [Serialize(false, IsPropertySaveable.Yes, description: "Should the target be ignored if it's inside. Doesn't matter where the creature itself is."), Editable]
+            public bool IgnoreTargetInside { get; set; }
+
+            [Serialize(false, IsPropertySaveable.Yes, description: "Should the target be ignored if it's outside. Doesn't matter where the creature itself is."), Editable]
+            public bool IgnoreTargetOutside { get; set; }
+
             [Serialize(false, IsPropertySaveable.Yes, description: "Should the target be ignored if it's inside a different submarine than us? Normally only some targets are ignored when they are not inside the same sub."), Editable]
             public bool IgnoreIfNotInSameSub { get; set; }
 
@@ -866,10 +889,16 @@ namespace Barotrauma
             [Serialize(-1f, IsPropertySaveable.Yes, description: "A generic max threshold. Not used if set to negative."), Editable]
             public float ThresholdMax { get; private set; }
 
-            [Serialize("0.0, 0.0", IsPropertySaveable.Yes), Editable]
+            [Serialize(1.0f, IsPropertySaveable.Yes, description: "Can be used to make the monster perceive the target further than it normally can."), Editable]
+            public float PerceptionDistanceMultiplier { get; private set; }
+
+            [Serialize(-1.0f, IsPropertySaveable.Yes, description: "Maximum distance at which the monster can perceive the target, regardless of the sight/hearing or how visible or how much noise the target is making. Not used if set to negative."), Editable]
+            public float MaxPerceptionDistance { get; private set; }
+
+            [Serialize("0.0, 0.0", IsPropertySaveable.Yes, description: "A generic offset. Used for example for offsetting the react distance (vector length) and for offsetting the target position when a guardian flees to a pod."), Editable]
             public Vector2 Offset { get; private set; }
 
-            [Serialize(AttackPattern.Straight, IsPropertySaveable.Yes), Editable]
+            [Serialize(AttackPattern.Straight, IsPropertySaveable.Yes, description: "Defines the movement pattern of the character when approaching a target."), Editable]
             public AttackPattern AttackPattern { get; set; }
 
             [Serialize(false, IsPropertySaveable.Yes, description: "If enabled, the AI will give more priority to targets close to the horizontal middle of the sub. Only applies to walls, hulls, and items like sonar. Circle and Sweep always does this regardless of this property."), Editable]
@@ -887,31 +916,48 @@ namespace Barotrauma
             #endregion
 
             #region Circle
-            [Serialize(5000f, IsPropertySaveable.Yes), Editable(MinValueFloat = 0f, MaxValueFloat = 20000f)]
+            [Serialize(5000f, IsPropertySaveable.Yes, description:"How close to the target the character should be, before they start using the circle pattern instead of directional approaching."), Editable(MinValueFloat = 0f, MaxValueFloat = 20000f)]
             public float CircleStartDistance { get; private set; }
 
             [Serialize(false, IsPropertySaveable.Yes, description:"Normally the target size is taken into account when calculating the distance to the target. Set this true to skip that.")]
             public bool IgnoreTargetSize { get; private set; }
 
-            [Serialize(1f, IsPropertySaveable.Yes), Editable(MinValueFloat = 0f, MaxValueFloat = 100f)]
+            [Serialize(1f, IsPropertySaveable.Yes, description:"Determines the rate how quickly the target movement position is rotated towards the attack target. The actual rotation is calculated once per each attack cycle, based on the current aggression level."), Editable(MinValueFloat = 0f, MaxValueFloat = 100f)]
             public float CircleRotationSpeed { get; private set; }
 
             [Serialize(false, IsPropertySaveable.Yes, description:"When enabled, the circle rotation speed can change when the target is far. When this setting is disabled (default), the character will head directly towards the target when it's too far."), Editable]
             public bool DynamicCircleRotationSpeed { get; private set; }
 
-            [Serialize(0f, IsPropertySaveable.Yes), Editable(MinValueFloat = 0f, MaxValueFloat = 1f)]
+            [Serialize(0f, IsPropertySaveable.Yes, description:"How much the turn speed can differ between attack cycles (stays constant during the cycle)"), Editable(MinValueFloat = 0f, MaxValueFloat = 1f)]
             public float CircleRandomRotationFactor { get; private set; }
 
-            [Serialize(5f, IsPropertySaveable.Yes), Editable(MinValueFloat = 0f, MaxValueFloat = 10f)]
+            [Serialize(5f, IsPropertySaveable.Yes, description:"Affects how close to the target the character has to be before the strike phase of the circle behavior triggers. In the strike phase, the creature moves directly towards the target."), Editable(MinValueFloat = 0f, MaxValueFloat = 10f)]
             public float CircleStrikeDistanceMultiplier { get; private set; }
 
-            [Serialize(0f, IsPropertySaveable.Yes), Editable(MinValueFloat = 0f, MaxValueFloat = 50f)]
+            [Serialize(0f, IsPropertySaveable.Yes, description:"How much the target position is offset at maximum. Low values make the character hit the target earlier/always, higher values make it miss the target when the aggression intensity is low (early in the encounter)."), Editable(MinValueFloat = 0f, MaxValueFloat = 50f)]
             public float CircleMaxRandomOffset { get; private set; }
             #endregion
 
-            public TargetParams(ContentXElement element, CharacterParams character) : base(element, character) { }
+            /// <summary>
+            /// Conditionals that must be met for the character to be able to use these targeting parameters.
+            /// </summary>
+            public List<PropertyConditional> Conditionals { get; private set; } = new List<PropertyConditional>();
 
-            public TargetParams(string tag, AIState state, float priority, CharacterParams character) : base(CreateNewElement(character, tag, state, priority), character) { }
+            public TargetParams(string tag, AIState state, float priority, CharacterParams character) : 
+                this(CreateNewElement(character, tag, state, priority), character) { }
+
+            public TargetParams(ContentXElement element, CharacterParams character) : base(element, character) 
+            {
+                foreach (var subElement in element.Elements())
+                {
+                    switch (subElement.Name.ToString().ToLowerInvariant())
+                    {
+                        case "conditional":
+                            Conditionals.AddRange(PropertyConditional.FromXElement(subElement));
+                            break;
+                    }
+                }
+            }
 
             public static ContentXElement CreateNewElement(CharacterParams character, Identifier tag, AIState state, float priority) =>
                 CreateNewElement(character, tag.Value, state, priority);

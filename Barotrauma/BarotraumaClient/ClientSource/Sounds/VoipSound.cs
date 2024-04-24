@@ -34,6 +34,8 @@ namespace Barotrauma.Sounds
         public bool UseRadioFilter;
         public bool UseMuffleFilter;
 
+        public bool UsingRadio;
+
         public float Near { get; private set; }
         public float Far { get; private set; }
 
@@ -55,7 +57,7 @@ namespace Barotrauma.Sounds
             {
                 if (soundChannel == null) { return; }
                 gain = value;
-                soundChannel.Gain = value * GameSettings.CurrentConfig.Audio.VoiceChatVolume;
+                soundChannel.Gain = value * GameSettings.CurrentConfig.Audio.VoiceChatVolume * client.VoiceVolume;
             }
         }
 
@@ -64,8 +66,11 @@ namespace Barotrauma.Sounds
             get { return soundChannel?.CurrentAmplitude ?? 0.0f; }
         }
 
-        public VoipSound(string name, SoundManager owner, VoipQueue q) : base(owner, $"VoIP ({name})", true, true, getFullPath: false)
+        private Client client;
+
+        public VoipSound(Client targetClient, SoundManager owner, VoipQueue q) : base(owner, $"VoIP ({targetClient.Name})", true, true, getFullPath: false)
         {
+            client = targetClient;
             decoder = VoipConfig.CreateDecoder();
 
             ALFormat = Al.FormatMono16;
@@ -99,7 +104,7 @@ namespace Barotrauma.Sounds
 
         public void ApplyFilters(short[] buffer, int readSamples)
         {
-            float finalGain = gain * GameSettings.CurrentConfig.Audio.VoiceChatVolume;
+            float finalGain = gain * GameSettings.CurrentConfig.Audio.VoiceChatVolume * client.VoiceVolume;
             for (int i = 0; i < readSamples; i++)
             {
                 float fVal = ShortToFloat(buffer[i]);

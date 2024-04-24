@@ -1185,7 +1185,9 @@ namespace Barotrauma
                 if (GameMain.Server == null) { return; }
                 GameMain.Server.ServerSettings.SetPassword(args.Length > 0 ? args[0] : "");
                 NewMessage(client.Name + " " + (GameMain.Server.ServerSettings.HasPassword ? " changed the server password to \"" + args[0] + "\"." : " removed password protection from the server."));
-                GameMain.Server.SendConsoleMessage(GameMain.Server.ServerSettings.HasPassword ? "Changed the server password." : "Removed password protection from the server.", client);
+                GameMain.Server.SendChatMessage(
+                    TextManager.GetWithVariable(GameMain.Server.ServerSettings.HasPassword ? "PasswordChangedByClient" : "PasswordRemovedByClient", "[clientname]", client.Name).Value,
+                    ChatMessageType.Server);
             });
 
             commands.Add(new Command("setmaxplayers|maxplayers", "setmaxplayers [max players]: Sets the maximum player count of the server that's being hosted.", (string[] args) =>
@@ -1278,12 +1280,11 @@ namespace Barotrauma
             commands.Add(new Command("servername", "servername [name]: Change the name of the server.", (string[] args) =>
             {
                 GameMain.Server.ServerName = string.Join(" ", args);
-                GameMain.NetLobbyScreen.ChangeServerName(string.Join(" ", args));
             }));
 
             commands.Add(new Command("servermsg", "servermsg [message]: Change the message displayed in the server lobby.", (string[] args) =>
             {
-                GameMain.NetLobbyScreen.ChangeServerMessage(string.Join(" ", args));
+                GameMain.Server.ServerSettings.ServerMessageText = string.Join(" ", args);
             }));
 
             commands.Add(new Command("seed|levelseed", "seed/levelseed: Changes the level seed for the next round.", (string[] args) =>

@@ -122,6 +122,11 @@ namespace Barotrauma
 
         public bool HasOptions => Options.Length > 1;
         public readonly bool MustManuallyAssign;
+
+        /// <summary>
+        /// If enabled and this is an Operate order, it will remove Operate orders of the same item from other characters.
+        /// If this is a Movement order, removes other Movement orders from the character who receives the order.
+        /// </summary>
         public readonly bool AutoDismiss;
 
         /// <summary>
@@ -137,7 +142,9 @@ namespace Barotrauma
         }
         public OrderTargetType TargetType { get; }
         public int? WallSectionIndex { get; }
-        public bool IsIgnoreOrder => Identifier == "ignorethis" || Identifier == "unignorethis";
+        public bool IsIgnoreOrder => Identifier == Tags.IgnoreThis || Identifier == Tags.UnignoreThis;
+
+        public bool IsDeconstructOrder => Identifier == Tags.DeconstructThis || Identifier == Tags.DontDeconstructThis;
 
         /// <summary>
         /// Should the order icon be drawn when the order target is inside a container
@@ -273,7 +280,7 @@ namespace Barotrauma
 
         public bool HasPreferredJob(Character character) => HasSpecifiedJob(character, PreferredJobs);
 
-        public string GetChatMessage(string targetCharacterName, string targetRoomName, bool givingOrderToSelf, Identifier orderOption = default, bool isNewOrder = true)
+        public string GetChatMessage(string targetCharacterName, string targetRoomName, Entity targetEntity, bool givingOrderToSelf, Identifier orderOption = default, bool isNewOrder = true)
         {
             if (!TargetAllCharacters && !isNewOrder && Identifier != "dismissed")
             {
@@ -304,8 +311,27 @@ namespace Barotrauma
                     }
                 }
             }
+
+            LocalizedString targetEntityName = string.Empty;
+            switch (targetEntity)
+            {
+                case Item item:
+                    targetEntityName = item.Name;
+                    break;
+                case Hull hull:
+                    targetEntityName = hull.DisplayName;
+                    break;
+                case Structure structure:
+                    targetEntityName = structure.Name;
+                    break;
+                case Character character:
+                    targetEntityName = character.DisplayName;
+                    break;
+            }
+
             return TextManager.GetWithVariables(messageTag,
                 ("[name]", targetCharacterName ?? string.Empty, FormatCapitals.No),
+                ("[target]", targetEntityName, FormatCapitals.No),
                 ("[roomname]", targetRoomName ?? string.Empty, FormatCapitals.Yes)).Fallback("").Value;
         }
 
@@ -413,6 +439,8 @@ namespace Barotrauma
         public bool TargetItemsMatchItem(Item item, Identifier option = default)
         {
             if (item == null) { return false; }
+            if (Identifier == Tags.DeconstructThis && item.AllowDeconstruct && !Item.DeconstructItems.Contains(item)) { return true; }
+            if (Identifier == Tags.DontDeconstructThis && Item.DeconstructItems.Contains(item)) { return true; }
             ImmutableArray<Identifier> targetItems = GetTargetItems(option);
             return TargetItemsMatchItem(targetItems, item);
         }
@@ -528,6 +556,7 @@ namespace Barotrauma
         public OrderCategory? Category => Prefab.Category;
         public bool MustManuallyAssign => Prefab.MustManuallyAssign;
         public bool IsIgnoreOrder => Prefab.IsIgnoreOrder;
+        public bool IsDeconstructOrder => Prefab.IsDeconstructOrder;
         public bool DrawIconWhenContained => Prefab.DrawIconWhenContained;
         public bool Hidden => Prefab.Hidden;
         public bool IgnoreAtOutpost => Prefab.IgnoreAtOutpost;
@@ -537,7 +566,6 @@ namespace Barotrauma
         
         public bool ColoredWhenControllingGiver => Prefab.ColoredWhenControllingGiver;
         public bool DisplayGiverInTooltip => Prefab.DisplayGiverInTooltip;
-
 
         public readonly bool UseController;
 
@@ -762,7 +790,7 @@ namespace Barotrauma
 
         public string GetChatMessage(
             string targetCharacterName, string targetRoomName, bool givingOrderToSelf, Identifier orderOption = default, bool isNewOrder = true)
-            => Prefab.GetChatMessage(targetCharacterName, targetRoomName, givingOrderToSelf, orderOption, isNewOrder);
+            => Prefab.GetChatMessage(targetCharacterName, targetRoomName, TargetEntity, givingOrderToSelf, orderOption, isNewOrder);
 
         /// <summary>
         /// Get the target item component based on the target item type

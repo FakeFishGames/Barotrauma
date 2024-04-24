@@ -18,6 +18,19 @@ namespace Barotrauma
         public string Name => Identifier.Value;
         public Identifier VariantOf { get; }
         public CharacterPrefab ParentPrefab { get; set; }
+        
+        public Identifier GetBaseCharacterSpeciesName(Identifier speciesName)
+        {
+            if (!VariantOf.IsEmpty)
+            {
+                speciesName = VariantOf;
+                if (ParentPrefab is { VariantOf.IsEmpty: false } parentPrefab)
+                {
+                    speciesName = parentPrefab.GetBaseCharacterSpeciesName(speciesName);
+                }   
+            }
+            return speciesName;
+        }
 
         public void InheritFrom(CharacterPrefab parent)
         {

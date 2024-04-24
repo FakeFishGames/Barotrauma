@@ -1,20 +1,21 @@
-﻿using System;
+﻿using Barotrauma.Networking;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Xml.Linq;
-using Barotrauma.Networking;
 
 namespace Barotrauma
 {
+    /// <summary>
+    /// Give or remove money from the crew or a specific character.
+    /// </summary>
     class MoneyAction : EventAction
     {
         public MoneyAction(ScriptedEvent parentEvent, ContentXElement element) : base(parentEvent, element) { }
 
-        [Serialize(0, IsPropertySaveable.Yes)]
+        [Serialize(0, IsPropertySaveable.Yes, description: "Amount of money to give or remove.")]
         public int Amount { get; set; }
 
-        [Serialize("", IsPropertySaveable.Yes)]
+        [Serialize("", IsPropertySaveable.Yes, description: "If set, the money is removed from character(s) with this tag.")]
         public Identifier TargetTag { get; set; }
 
         private bool isFinished;

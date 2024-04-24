@@ -13,7 +13,7 @@ namespace Barotrauma.CharacterEditor
         // Ragdoll data
         private Identifier name;
         private bool isHumanoid;
-        private bool canEnterSubmarine = true;
+        private CanEnterSubmarine canEnterSubmarine = CanEnterSubmarine.True;
         private bool canWalk;
         private string texturePath;
         private string xmlPath;
@@ -153,6 +153,7 @@ namespace Barotrauma.CharacterEditor
                 };
                 var topGroup = new GUILayoutGroup(new RectTransform(new Vector2(0.99f, 1), frame.RectTransform, Anchor.Center)) { AbsoluteSpacing = 2 };
                 var fields = new List<GUIComponent>();
+                GUITextBox nameField = null;
                 GUITextBox texturePathElement = null;
                 GUITextBox xmlPathElement = null;
                 GUIDropDown contentPackageDropDown = null;
@@ -177,7 +178,7 @@ namespace Barotrauma.CharacterEditor
                     {
                         case 0:
                             new GUITextBlock(new RectTransform(new Vector2(0.3f, 1), mainElement.RectTransform, Anchor.CenterLeft), TextManager.Get("Name"));
-                            var nameField = new GUITextBox(new RectTransform(new Vector2(0.7f, 1), mainElement.RectTransform, Anchor.CenterRight), Name.Value ?? GetCharacterEditorTranslation("DefaultName").Value) { CaretColor = Color.White };
+                            nameField = new GUITextBox(new RectTransform(new Vector2(0.7f, 1), mainElement.RectTransform, Anchor.CenterRight), Name.Value ?? GetCharacterEditorTranslation("DefaultName").Value) { CaretColor = Color.White };
                             string ProcessText(string text) => text.RemoveWhitespace().CapitaliseFirstInvariant();
                             Name = ProcessText(nameField.Text).ToIdentifier();
                             nameField.OnTextChanged += (tb, text) =>
@@ -204,9 +205,14 @@ namespace Barotrauma.CharacterEditor
                             var l = new GUITextBlock(new RectTransform(new Vector2(0.3f, 1), mainElement.RectTransform, Anchor.CenterLeft), GetCharacterEditorTranslation("CanEnterSubmarines"));
                             var t = new GUITickBox(new RectTransform(new Vector2(0.7f, 1), mainElement.RectTransform, Anchor.CenterRight), string.Empty)
                             {
-                                Selected = CanEnterSubmarine,
+                                //TODO: allow ternary selection (true, false, partial)
+                                Selected = CanEnterSubmarine == CanEnterSubmarine.True,
                                 Enabled = !IsCopy,
-                                OnSelected = (tB) => CanEnterSubmarine = tB.Selected
+                                OnSelected = (tB) =>
+                                {
+                                    CanEnterSubmarine = tB.Selected ? CanEnterSubmarine.True : CanEnterSubmarine.False;
+                                    return true;
+                                }
                             };
                             if (!t.Enabled)
                             {
@@ -406,6 +412,12 @@ namespace Barotrauma.CharacterEditor
                     if (ContentPackage == null)
                     {
                         contentPackageDropDown.Flash(useRectangleFlash: true);
+                        return false;
+                    }
+
+                    if (Name.Value.IsNullOrWhiteSpace())
+                    {
+                        nameField?.Flash(useRectangleFlash: true);
                         return false;
                     }
 
@@ -905,7 +917,7 @@ namespace Barotrauma.CharacterEditor
                 get => Instance.isHumanoid;
                 set => Instance.isHumanoid = value;
             }
-            public bool CanEnterSubmarine
+            public CanEnterSubmarine CanEnterSubmarine
             {
                 get => Instance.canEnterSubmarine;
                 set => Instance.canEnterSubmarine = value;

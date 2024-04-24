@@ -45,13 +45,18 @@ namespace Barotrauma
             else
             {
                 float characterY = character.CurrentHull?.WorldPosition.Y ?? character.WorldPosition.Y;
-                float yDist = Math.Abs(characterY - targetHull.WorldPosition.Y);
-                yDist = yDist > 100 ? yDist * 3 : 0;
-                float dist = Math.Abs(character.WorldPosition.X - targetHull.WorldPosition.X) + yDist;
-                float distanceFactor = MathHelper.Lerp(1, 0.1f, MathUtils.InverseLerp(0, 5000, dist));
-                if (targetHull == character.CurrentHull || HumanAIController.VisibleHulls.Contains(targetHull))
+
+                float distanceFactor = 1.0f;
+                if (targetHull != character.CurrentHull && 
+                    !HumanAIController.VisibleHulls.Contains(targetHull))
                 {
-                    distanceFactor = 1;
+                    distanceFactor = 
+                        GetDistanceFactor(
+                            new Vector2(character.WorldPosition.Y, characterY),
+                            targetHull.WorldPosition,
+                            verticalDistanceMultiplier: 3,
+                            maxDistance: 5000,
+                            factorAtMaxDistance: 0.1f);
                 }
                 float severity = AIObjectiveExtinguishFires.GetFireSeverity(targetHull);
                 if (severity > 0.75f && !isOrder && 

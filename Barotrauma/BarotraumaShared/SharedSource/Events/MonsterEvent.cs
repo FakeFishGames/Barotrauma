@@ -99,8 +99,8 @@ namespace Barotrauma
             }
         }
 
-        public MonsterEvent(EventPrefab prefab)
-            : base(prefab)
+        public MonsterEvent(EventPrefab prefab, int seed)
+            : base(prefab, seed)
         {
             string speciesFile = prefab.ConfigElement.GetAttributeString("characterfile", "");
             CharacterPrefab characterPrefab = CharacterPrefab.FindByFilePath(speciesFile);
@@ -173,9 +173,8 @@ namespace Barotrauma
             }
         }
 
-        public override void Init(EventSet parentSet)
+        protected override void InitEventSpecific(EventSet parentSet)
         {
-            base.Init(parentSet);
             if (parentSet != null && resetTime == 0)
             {
                 // Use the parent reset time only if there's no reset time defined for the event.
@@ -192,7 +191,7 @@ namespace Barotrauma
             int amount = Rand.Range(MinAmount, MaxAmount + 1);
             for (int i = 0; i < amount; i++)
             {
-                string seed = Level.Loaded.Seed + i.ToString();
+                string seed = i.ToString() + Level.Loaded.Seed;
                 Character createdCharacter = Character.Create(SpeciesName, Vector2.Zero, seed, characterInfo: null, isRemotePlayer: false, hasAi: true, createNetworkEvent: true, throwErrorIfNotFound: false);
                 if (createdCharacter == null)
                 {
@@ -271,14 +270,18 @@ namespace Barotrauma
             spawnPos = Vector2.Zero;
             var availablePositions = GetAvailableSpawnPositions();
             chosenPosition = new Level.InterestingPosition(Point.Zero, Level.PositionType.MainPath, isValid: false);
-            bool isRuinOrWreck = SpawnPosType.HasFlag(Level.PositionType.Ruin) || SpawnPosType.HasFlag(Level.PositionType.Wreck);
-            if (affectSubImmediately && !isRuinOrWreck && !SpawnPosType.HasFlag(Level.PositionType.Abyss))
+            bool isRuinOrWreckOrCave = 
+                SpawnPosType.HasFlag(Level.PositionType.Ruin) || 
+                SpawnPosType.HasFlag(Level.PositionType.Wreck) ||
+                SpawnPosType.HasFlag(Level.PositionType.Cave) || 
+                SpawnPosType.HasFlag(Level.PositionType.AbyssCave);
+            if (affectSubImmediately && !isRuinOrWreckOrCave && !SpawnPosType.HasFlag(Level.PositionType.Abyss))
             {
                 if (availablePositions.None())
                 {
                     //no suitable position found, disable the event
                     spawnPos = null;
-                    Finish();
+                    disallowed = true;
                     return;
                 }
                 Submarine refSub = GetReferenceSub();
@@ -348,7 +351,7 @@ namespace Barotrauma
             }
             else
             {
-                if (!isRuinOrWreck)
+                if (!isRuinOrWreckOrCave)
                 {
                     float minDistance = 20000;
                     for (int i = 0; i < Submarine.MainSubs.Length; i++)
@@ -361,7 +364,7 @@ namespace Barotrauma
                 {
                     //no suitable position found, disable the event
                     spawnPos = null;
-                    Finish();
+                    disallowed = true;
                     return;
                 }
                 chosenPosition = availablePositions.GetRandomUnsynced();
@@ -371,21 +374,17 @@ namespace Barotrauma
                 spawnPos = chosenPosition.Position.ToVector2();
                 if (chosenPosition.Submarine != null || chosenPosition.Ruin != null)
                 {
-                    bool ignoreSubmarine = chosenPosition.Ruin != null;
-                    var spawnPoint = WayPoint.GetRandom(SpawnType.Enemy, sub: chosenPosition.Submarine, useSyncedRand: false, spawnPointTag: spawnPointTag, ignoreSubmarine: ignoreSubmarine);
+                    var spawnPoint = WayPoint.GetRandom(SpawnType.Enemy, sub: chosenPosition.Submarine ?? chosenPosition.Ruin?.Submarine, useSyncedRand: false, spawnPointTag: spawnPointTag);
                     if (spawnPoint != null)
                     {
-                        if (!ignoreSubmarine)
-                        {
-                            System.Diagnostics.Debug.Assert(spawnPoint.Submarine == chosenPosition.Submarine);
-                        }
+                        System.Diagnostics.Debug.Assert(spawnPoint.Submarine == (chosenPosition.Submarine ?? chosenPosition.Ruin?.Submarine));
                         spawnPos = spawnPoint.WorldPosition;
                     }
                     else
                     {
                         //no suitable position found, disable the event
                         spawnPos = null;
-                        Finish();
+                        disallowed = true;
                         return;
                     }
                 }
@@ -422,7 +421,7 @@ namespace Barotrauma
                     {
                         //no suitable position found, disable the event
                         spawnPos = null;
-                        Finish();
+                        disallowed = true;
                         return;
                     }
                 }
@@ -442,11 +441,7 @@ namespace Barotrauma
 
         public override void Update(float deltaTime)
         {
-            if (disallowed)
-            {
-                Finish();
-                return;
-            }
+            if (disallowed) { return; }
 
             if (resetTimer > 0)
             {
@@ -483,8 +478,8 @@ namespace Barotrauma
                 }
 
                 FindSpawnPosition(affectSubImmediately: true);
-                //the event gets marked as finished if a spawn point is not found
-                if (isFinished) { return; }
+                //the event gets marked as disallowed if a spawn point is not found
+                if (isFinished || disallowed) { return; }
                 spawnPending = true;
             }
 
@@ -493,7 +488,7 @@ namespace Barotrauma
                 System.Diagnostics.Debug.Assert(spawnPos.HasValue);
                 if (spawnPos == null)
                 {
-                    Finish();
+                    disallowed = true;
                     return;
                 }
                 //wait until there are no submarines at the spawnpos
@@ -567,7 +562,7 @@ namespace Barotrauma
                                     if (CheckLineOfSight(from, to, chosenPosition.Submarine))
                                     {
                                         // Line of sight to a player character -> don't spawn. Disable the event to prevent monsters "magically" spawning here.
-                                        Finish();
+                                        disallowed = true;
                                         return;
                                     }
                                 }
@@ -636,7 +631,7 @@ namespace Barotrauma
                         scatterAmount = scatter;
                     }
                 }
-                else if (!SpawnPosType.HasFlag(Level.PositionType.MainPath))
+                else if (SpawnPosType.IsIndoorsArea())
                 {
                     scatterAmount = 0;
                 }
@@ -650,22 +645,46 @@ namespace Barotrauma
                         if (GameMain.GameSession == null || Level.Loaded == null) { return; }
 
                         if (monster.Removed) { return; }
-						
+
                         System.Diagnostics.Debug.Assert(GameMain.NetworkMember == null || GameMain.NetworkMember.IsServer, "Clients should not create monster events.");
 
-                        Vector2 pos = spawnPos.Value + Rand.Vector(scatterAmount);
+                        Vector2 pos = spawnPos.Value;
                         if (scatterAmount > 0)
                         {
-                            if (Submarine.Loaded.Any(s => ToolBox.GetWorldBounds(s.Borders.Center, s.Borders.Size).ContainsWorld(pos)))
+                            //try finding an offset position that's not inside a wall
+                            int tries = 10;
+                            do
                             {
-                                // Can't use the offset position, let's use the exact spawn position.
-                                pos = spawnPos.Value;
-                            }
-                            else if (Level.Loaded.Ruins.Any(r => ToolBox.GetWorldBounds(r.Area.Center, r.Area.Size).ContainsWorld(pos)))
-                            {
-                                // Can't use the offset position, let's use the exact spawn position.
-                                pos = spawnPos.Value;
-                            }
+                                tries--;
+                                pos = spawnPos.Value + Rand.Vector(Rand.Range(0.0f, scatterAmount));
+
+                                bool isValidPos = true;
+                                if (Submarine.Loaded.Any(s => ToolBox.GetWorldBounds(s.Borders.Center, s.Borders.Size).ContainsWorld(pos)) ||
+                                    Level.Loaded.Ruins.Any(r => ToolBox.GetWorldBounds(r.Area.Center, r.Area.Size).ContainsWorld(pos)) ||
+                                    Level.Loaded.IsPositionInsideWall(pos))
+                                {
+                                    isValidPos = false;
+                                }
+                                else if (SpawnPosType.HasFlag(Level.PositionType.Cave) || SpawnPosType.HasFlag(Level.PositionType.AbyssCave))
+                                {
+                                    //trying to spawn in a cave, but the position is not inside a cave -> not valid
+                                    if (Level.Loaded.Caves.None(c => c.Area.Contains(pos)))
+                                    {
+                                        isValidPos = false;
+                                    }
+                                }
+
+                                if (isValidPos)
+                                {
+                                    //not inside anything, all good!
+                                    break;
+                                }
+                                // This was the last try and couldn't find an offset position, let's use the exact spawn position.
+                                if (tries == 0)
+                                {
+                                    pos = spawnPos.Value;
+                                }
+                            } while (tries > 0);
                         }
 
                         monster.Enabled = true;

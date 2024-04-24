@@ -294,6 +294,41 @@ namespace Barotrauma
             return Priority;
         }
 
+        /// <summary>
+        /// Get a normalized value representing how close the target position is. 
+        /// The value is a rough estimation, where vertical movement is assumed to be more costly than horizontal.
+        /// </summary>
+        /// <param name="targetWorldPos">Position of the target</param>
+        /// <param name="verticalDistanceMultiplier">How much more costly vertical movement is than horizontal</param>
+        /// <param name="maxDistance">Maximum distance, after which the factor will reach it's minimum value (= anything beyond this point is "as far as it can be").</param>
+        /// <param name="factorAtMaxDistance">The factor at the maximum distance and beyond (= how "viable" very far-away targets should be considered).</param>
+        /// <param name="factorAtMinDistance">The factor at the minimum distance (= how viable a target that's 0 units a way is considered).</param>
+        public static float GetDistanceFactor(Vector2 selfPos, Vector2 targetWorldPos, float factorAtMaxDistance, float verticalDistanceMultiplier = 3, float maxDistance = 10000.0f, float factorAtMinDistance = 1.0f)
+        {
+            float yDist = Math.Abs(selfPos.Y - targetWorldPos.Y);
+            yDist = yDist > 100 ? yDist * verticalDistanceMultiplier : 0;
+            float distance = Math.Abs(selfPos.X - targetWorldPos.X) + yDist;
+            float distanceFactor = MathHelper.Lerp(factorAtMinDistance, factorAtMaxDistance, MathUtils.InverseLerp(0, maxDistance, distance));
+            return
+                factorAtMinDistance > factorAtMaxDistance ?
+                MathHelper.Clamp(distanceFactor, factorAtMaxDistance, factorAtMinDistance) :
+                MathHelper.Clamp(distanceFactor, factorAtMinDistance, factorAtMaxDistance);
+        }
+
+        /// <summary>
+        /// Get a normalized value representing how close the target position is. 
+        /// The value is a rough estimation, where vertical movement is assumed to be more costly than horizontal.
+        /// </summary>
+        /// <param name="targetWorldPos">Position of the target</param>
+        /// <param name="verticalDistanceMultiplier">How much more costly vertical movement is than horizontal</param>
+        /// <param name="maxDistance">Maximum distance, after which the factor will reach it's minimum value (= anything beyond this point is "as far as it can be").</param>
+        /// <param name="factorAtMaxDistance">The factor at the maximum distance and beyond (= how "viable" very far-away targets should be considered).</param>
+        /// <param name="factorAtMinDistance">The factor at the minimum distance (= how viable a target that's 0 units a way is considered).</param>
+        protected float GetDistanceFactor(Vector2 targetWorldPos, float factorAtMaxDistance, float verticalDistanceMultiplier = 3, float maxDistance = 10000.0f, float factorAtMinDistance = 1.0f)
+        {
+            return GetDistanceFactor(character.WorldPosition, targetWorldPos, factorAtMaxDistance, verticalDistanceMultiplier, maxDistance, factorAtMinDistance);
+        }
+
         private void UpdateDevotion(float deltaTime)
         {
             var currentObjective = objectiveManager.CurrentObjective;
@@ -463,7 +498,7 @@ namespace Barotrauma
         {
             hasBeenChecked = true;
             CheckSubObjectives();
-            if (subObjectives.None() || ConcurrentObjectives && subObjectives.All(so => so is AIObjectiveGoTo))
+            if (subObjectives.None() || ConcurrentObjectives)
             {
                 if (Check())
                 {
@@ -509,7 +544,7 @@ namespace Barotrauma
 
         public virtual void SpeakAfterOrderReceived() { }
 
-        protected static bool CanEquip(Character character, Item item, bool allowWearing)
+        protected static bool CanPutInInventory(Character character, Item item, bool allowWearing)
         {
             if (item == null) { return false; }
             bool canEquip = false;
@@ -550,6 +585,6 @@ namespace Barotrauma
             return canEquip && character.Inventory.CanBePut(item);
         }
 
-        protected bool CanEquip(Item item, bool allowWearing) => CanEquip(character, item, allowWearing);
+        protected bool CanEquip(Item item, bool allowWearing) => CanPutInInventory(character, item, allowWearing);
     }
 }

@@ -1,4 +1,5 @@
-﻿using Barotrauma.Items.Components;
+﻿using Barotrauma.Extensions;
+using Barotrauma.Items.Components;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -131,6 +132,16 @@ namespace Barotrauma
                 if (locationType == "any") { continue; }
                 this.allowedLocationTypes.Add(locationType);
             }
+        }
+        public bool IsAllowedInAnyLocationType()
+        {
+            return allowedLocationTypes.None() || allowedLocationTypes.Contains("Any".ToIdentifier());
+        }
+
+        public bool IsAllowedInLocationType(LocationType locationType)
+        {
+            if (locationType == null || IsAllowedInAnyLocationType()) { return true; }
+            return allowedLocationTypes.Contains(locationType.Identifier);
         }
 
         public void DetermineGapPositions(Submarine sub)

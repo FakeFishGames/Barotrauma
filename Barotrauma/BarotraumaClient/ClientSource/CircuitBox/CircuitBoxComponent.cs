@@ -65,7 +65,7 @@ namespace Barotrauma
             bool isEditor = Screen.Selected is { IsEditor: true };
 
             GUILayoutGroup titleHolder = new GUILayoutGroup(new RectTransform(new Vector2(1f, 0.3f), listBox.Content.RectTransform));
-            new GUITextBlock(new RectTransform(Vector2.One, titleHolder.RectTransform), Item.Name, font: GUIStyle.LargeFont)
+            new GUITextBlock(new RectTransform(Vector2.One, titleHolder.RectTransform), Item.Prefab.Name, font: GUIStyle.LargeFont)
             {
                 TextColor = Color.White,
                 Color = Color.Black
@@ -84,7 +84,10 @@ namespace Barotrauma
 
                 new GUIFrame(new RectTransform(new Vector2(1.0f, 0.02f), listBox.Content.RectTransform), style: "HorizontalLine");
 
-                var componentEditor = new SerializableEntityEditor(listBox.Content.RectTransform, ic, inGame: !isEditor, showName: false, titleFont: GUIStyle.SubHeadingFont);
+                var componentEditor = new SerializableEntityEditor(listBox.Content.RectTransform, ic, inGame: !isEditor, showName: false, titleFont: GUIStyle.SubHeadingFont)
+                {
+                    Readonly = CircuitBox.Locked
+                };
                 fieldCount += componentEditor.Fields.Count;
 
                 ic.CreateEditingHUD(componentEditor);

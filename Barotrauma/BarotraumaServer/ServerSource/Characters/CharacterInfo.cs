@@ -16,7 +16,7 @@ namespace Barotrauma
 
         public void ApplyDeathEffects()
         {
-            RespawnManager.ReduceCharacterSkills(this);
+            RespawnManager.ReduceCharacterSkillsOnDeath(this);
             RemoveSavedStatValuesOnDeath();
             CauseOfDeath = null;
         }
@@ -68,8 +68,7 @@ namespace Barotrauma
             msg.WriteColorR8G8B8(Head.SkinColor);
             msg.WriteColorR8G8B8(Head.HairColor);
             msg.WriteColorR8G8B8(Head.FacialHairColor);
-
-            msg.WriteString(ragdollFileName);
+            
             msg.WriteIdentifier(HumanPrefabIds.NpcIdentifier);
             msg.WriteIdentifier(MinReputationToHire.factionId);
             if (!MinReputationToHire.factionId.IsEmpty)
@@ -80,11 +79,13 @@ namespace Barotrauma
             {
                 msg.WriteUInt32(Job.Prefab.UintIdentifier);
                 msg.WriteByte((byte)Job.Variant);
-                var skills = Job.Prefab.Skills.OrderBy(s => s.Identifier);
+
+                var skills = Job.GetSkills().OrderBy(s => s.Identifier);
                 msg.WriteByte((byte)skills.Count());
-                foreach (SkillPrefab skillPrefab in skills)
+                foreach (var skill in skills)
                 {
-                    msg.WriteSingle(Job.GetSkill(skillPrefab.Identifier)?.Level ?? 0.0f);
+                    msg.WriteIdentifier(skill.Identifier);
+                    msg.WriteSingle(skill.Level);
                 }
             }
             else

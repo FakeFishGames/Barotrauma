@@ -461,7 +461,9 @@ namespace Barotrauma
                 new GUICustomComponent(new RectTransform(new Vector2(0.6f, 1.0f), repBarHolder.RectTransform), onDraw: (sb, component) =>
                 {
                     if (location.Reputation == null) { return; }
-                    RoundSummary.DrawReputationBar(sb, component.Rect, location.Reputation.NormalizedValue);
+                    RoundSummary.DrawReputationBar(sb, component.Rect, 
+                        location.Reputation.NormalizedValue, 
+                        location.Reputation.MinReputation, location.Reputation.MaxReputation);
                 });
 
                 new GUITextBlock(new RectTransform(new Vector2(0.4f, 1.0f), repBarHolder.RectTransform),
@@ -1128,8 +1130,11 @@ namespace Barotrauma
 
                 if (connection.LevelData.HasBeaconStation)
                 {
-                    var beaconStationIconStyle = connection.LevelData.IsBeaconActive ? "BeaconStationActive" : "BeaconStationInactive";
-                    DrawIcon(beaconStationIconStyle, (int)(28 * zoom), connection.LevelData.IsBeaconActive ? beaconStationActiveText : beaconStationInactiveText);
+                    bool beaconActive =
+                        connection.LevelData.IsBeaconActive ||
+                        (Level.Loaded?.LevelData == connection.LevelData && Level.Loaded.CheckBeaconActive());
+                    var beaconStationIconStyle = beaconActive ? "BeaconStationActive" : "BeaconStationInactive";
+                    DrawIcon(beaconStationIconStyle, (int)(28 * zoom), beaconActive ? beaconStationActiveText : beaconStationInactiveText);
                 }
 
                 if (connection.Locked)

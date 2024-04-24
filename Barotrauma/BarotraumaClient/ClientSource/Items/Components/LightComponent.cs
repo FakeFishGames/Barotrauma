@@ -40,6 +40,7 @@ namespace Barotrauma.Items.Components
         partial void SetLightSourceState(bool enabled, float brightness)
         {
             if (Light == null) { return; }
+            if (item.HiddenInGame) { enabled = false; }
             Light.Enabled = enabled;
             lightColorMultiplier = brightness;
             if (enabled)

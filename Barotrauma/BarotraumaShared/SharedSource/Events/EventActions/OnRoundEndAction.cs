@@ -2,6 +2,9 @@
 
 namespace Barotrauma
 {
+    /// <summary>
+    /// Executes all the child actions when the round ends.
+    /// </summary>
     class OnRoundEndAction : EventAction
     {
         private readonly SubactionGroup subActions;

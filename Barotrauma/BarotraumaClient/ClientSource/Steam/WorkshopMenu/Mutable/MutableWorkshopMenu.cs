@@ -143,7 +143,10 @@ namespace Barotrauma.Steam
             {
                 OnClicked = (b, _) =>
                 {
-                    SelectTab(tab);
+                    if (tab != CurrentTab)
+                    {
+                        SelectTab(tab);
+                    }
                     return false;
                 }
             };

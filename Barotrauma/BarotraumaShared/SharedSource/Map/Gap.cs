@@ -850,9 +850,9 @@ namespace Barotrauma
             Gap g = new Gap(rect, isHorizontal, submarine, id: idRemap.GetOffsetId(element))
             {
                 linkedToID = new List<ushort>(),
+                Layer = element.GetAttributeString(nameof(Layer), null)
             };
-
-            g.HiddenInGame = element.GetAttributeBool(nameof(HiddenInGame).ToLower(), g.HiddenInGame);
+            g.HiddenInGame = element.GetAttributeBool(nameof(HiddenInGame), g.HiddenInGame);
             return g;
         }
 
@@ -863,7 +863,8 @@ namespace Barotrauma
             element.Add(
                 new XAttribute("ID", ID),
                 new XAttribute("horizontal", IsHorizontal ? "true" : "false"),
-                new XAttribute(nameof(HiddenInGame).ToLower(), HiddenInGame));
+                new XAttribute(nameof(HiddenInGame), HiddenInGame),
+                new XAttribute(nameof(Layer), Layer ?? string.Empty));
 
             element.Add(new XAttribute("rect",
                     (int)(rect.X - Submarine.HiddenSubPosition.X) + "," +

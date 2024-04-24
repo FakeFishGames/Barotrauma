@@ -1,10 +1,12 @@
-using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
 using System.Collections.Generic;
 using System.Linq;
 
 namespace Barotrauma
 {
+    /// <summary>
+    /// Waits for a player to trigger the action before continuing. Triggering can mean entering a specific trigger area, or interacting with a specific entity.
+    /// </summary>
     class TriggerAction : EventAction
     {
         public enum TriggerType

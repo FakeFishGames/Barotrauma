@@ -21,7 +21,12 @@ namespace Barotrauma
                     DebugConsole.Log($"Received entity removal message for \"{entity}\".");
                     if (entity is Item item && item.Container?.GetComponent<Deconstructor>() != null)
                     {
-                        GameAnalyticsManager.AddDesignEvent("ItemDeconstructed:" + (GameMain.GameSession?.GameMode?.Preset.Identifier ?? "none".ToIdentifier()) + ":" + item.Prefab.Identifier);
+                        if (item.Prefab.ContentPackage == ContentPackageManager.VanillaCorePackage &&
+                            /* we don't need info of every deconstructed item, we can get a good sample size just by logging 5% */
+                            Rand.Range(0.0f, 1.0f) < 0.05f)
+                        {
+                            GameAnalyticsManager.AddDesignEvent("ItemDeconstructed:" + (GameMain.GameSession?.GameMode?.Preset.Identifier ?? "none".ToIdentifier()) + ":" + item.Prefab.Identifier);
+                        }
                     }
                     entity.Remove();
                 }
@@ -45,7 +50,12 @@ namespace Barotrauma
                         {
                             if (newItem.Container?.GetComponent<Fabricator>() != null)
                             {
-                                GameAnalyticsManager.AddDesignEvent("ItemFabricated:" + (GameMain.GameSession?.GameMode?.Preset.Identifier ?? "none".ToIdentifier()) + ":" + newItem.Prefab.Identifier);
+                                if (newItem.Prefab.ContentPackage == ContentPackageManager.VanillaCorePackage &&
+                                    /* we don't need info of every fabricated item, we can get a good sample size just by logging 5% */
+                                    Rand.Range(0.0f, 1.0f) < 0.05f)
+                                {
+                                    GameAnalyticsManager.AddDesignEvent("ItemFabricated:" + (GameMain.GameSession?.GameMode?.Preset.Identifier ?? "none".ToIdentifier()) + ":" + newItem.Prefab.Identifier);
+                                }
                             }
                             receivedEvents.Add((newItem, false));
                         }

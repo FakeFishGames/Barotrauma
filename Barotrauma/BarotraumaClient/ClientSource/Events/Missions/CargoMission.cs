@@ -12,7 +12,7 @@ namespace Barotrauma
         {
             LocalizedString rewardText = GetRewardAmountText(sub);
             LocalizedString retVal;
-            if (rewardPerCrate.HasValue)
+            if (rewardPerCrate.HasValue) // If every crate has the same value
             {
                 LocalizedString rewardPerCrateText = TextManager.GetWithVariable("currencyformat", "[credits]", string.Format(CultureInfo.InvariantCulture, "{0:N0}", rewardPerCrate.Value));
                 retVal = TextManager.GetWithVariables("missionrewardcargopercrate",
@@ -21,7 +21,7 @@ namespace Barotrauma
                     ("[maxitemcount]", maxItemCount.ToString()),
                     ("[totalreward]", $"‖color:gui.orange‖{rewardText}‖end‖"));
             }
-            else
+            else // Crates have differing values, so only show the total value
             {
                 retVal = TextManager.GetWithVariables("missionrewardcargo",
                     ("[totalreward]", $"‖color:gui.orange‖{rewardText}‖end‖"),

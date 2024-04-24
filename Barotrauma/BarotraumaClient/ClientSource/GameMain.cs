@@ -1,4 +1,4 @@
-using Barotrauma.IO;
+﻿using Barotrauma.IO;
 using Barotrauma.Media;
 using Barotrauma.Networking;
 using Barotrauma.Particles;
@@ -131,7 +131,7 @@ namespace Barotrauma
         /// </summary>
         public event Action ResolutionChanged;
 
-        private bool exiting;
+        public static bool IsExiting { get; private set; }
 
         public static bool IsFirstLaunch
         {
@@ -175,7 +175,7 @@ namespace Barotrauma
             {
                 try
                 {
-                    return Instance != null && !Instance.exiting && Instance.IsActive;
+                    return Instance != null && !IsExiting && Instance.IsActive;
                 }
                 catch (NullReferenceException)
                 {
@@ -462,7 +462,15 @@ namespace Barotrauma
                 {
                     Thread.Sleep((int)(Timing.Step * 1000));
                 }
+                LanguageIdentifier selectedLanguage = GameSettings.CurrentConfig.Language;
+                //unload text files at this point - we only loaded for the purposes of the language selection screen,
+                //they will be loaded "normally" with the rest of the files later
                 ContentPackageManager.VanillaCorePackage.UnloadFilesOfType<TextFile>();
+                //the selected language got unloaded, need to reselect it
+                var config = GameSettings.CurrentConfig;
+                config.Language = selectedLanguage;
+                GameSettings.SetCurrentConfig(config);
+                GameSettings.SaveCurrentConfig();
             }
 
             SoundManager = new Sounds.SoundManager();
@@ -485,8 +493,10 @@ namespace Barotrauma
                          .Select(p => p.Result).Successes())
             {
                 const float min = 1f, max = 70f;
+                if (IsExiting) { break; }
                 TitleScreen.LoadState = MathHelper.Lerp(min, max, progress);
             }
+            if (IsExiting) { return; }
 
             var corePackage = ContentPackageManager.EnabledPackages.Core;
             if (corePackage.EnableError.TryUnwrap(out var error))
@@ -577,6 +587,8 @@ namespace Barotrauma
 #endif
 
             MainMenuScreen.Select();
+
+            ContainerTagPrefab.CheckForContainerTagErrors();
 
             foreach (Identifier steamError in SteamManager.InitializationErrors)
             {
@@ -1205,7 +1217,7 @@ namespace Barotrauma
 
             new GUIButton(new RectTransform(new Vector2(1.0f, 1.0f), linkHolder.RectTransform), TextManager.Get("bugreportgithubform"), style: "MainMenuGUIButton", textAlignment: Alignment.Left)
             {
-                UserData = "https://github.com/Regalis11/Barotrauma/issues/new/choose",
+                UserData = "https://github.com/FakeFishGames/Barotrauma/discussions/new?category=bug-reports",
                 OnClicked = (btn, userdata) =>
                 {
                     ShowOpenUriPrompt(userdata as string);
@@ -1229,7 +1241,7 @@ namespace Barotrauma
 
         protected override void OnExiting(object sender, EventArgs args)
         {
-            exiting = true;
+            IsExiting = true;
             CreatureMetrics.Save();
             DebugConsole.NewMessage("Exiting...");
             Client?.Quit();

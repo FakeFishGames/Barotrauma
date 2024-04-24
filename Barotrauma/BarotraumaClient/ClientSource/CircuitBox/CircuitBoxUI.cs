@@ -35,6 +35,8 @@ namespace Barotrauma
 
         public List<CircuitBoxWireRenderer> VirtualWires = new();
 
+        public bool Locked => CircuitBox.Locked;
+
         public CircuitBoxUI(CircuitBox box)
         {
             camera = new Camera
@@ -47,7 +49,7 @@ namespace Barotrauma
             MouseSnapshotHandler = new CircuitBoxMouseDragSnapshotHandler(this);
         }
 
-#region UI
+        #region UI
 
         public void CreateGUI(GUIFrame parent)
         {
@@ -63,7 +65,7 @@ namespace Barotrauma
                 spriteBatch.End();
 
                 spriteBatch.Begin(SpriteSortMode.Deferred, samplerState: GUI.SamplerState, rasterizerState: GameMain.ScissorTestEnable);
-                DrawHUD(spriteBatch);
+                DrawHUD(spriteBatch, component.Rect);
                 spriteBatch.End();
 
                 spriteBatch.GraphicsDevice.ScissorRectangle = prevScissorRect;
@@ -82,6 +84,8 @@ namespace Barotrauma
                 OnClicked = (btn, userdata) =>
                 {
                     componentMenuOpen = !componentMenuOpen;
+                    if (Locked) { componentMenuOpen = false; }
+
                     foreach (GUIComponent child in btn.Children)
                     {
                         child.SpriteEffects = componentMenuOpen ? SpriteEffects.None : SpriteEffects.FlipVertically;
@@ -139,65 +143,68 @@ namespace Barotrauma
             };
             int buttonHeight = (int)(GUIStyle.ItemFrameMargin.Y * 0.4f);
             var settingsIcon = new GUIButton(new RectTransform(new Point(buttonHeight), parent.RectTransform, Anchor.TopLeft) { AbsoluteOffset = new Point(buttonHeight / 4), MinSize = new Point(buttonHeight) },
-                    style: "GUIButtonSettings")
+                style: "GUIButtonSettings")
+            {
+                OnClicked = (btn, userdata) =>
                 {
-                    OnClicked = (btn, userdata) =>
-                    {
-                        GUIContextMenu.CreateContextMenu(
-                            new ContextMenuOption("circuitboxsetting.resetview", isEnabled: true, onSelected: ResetCamera)
+                    GUIContextMenu.CreateContextMenu(
+                        new ContextMenuOption("circuitboxsetting.resetview", isEnabled: true, onSelected: ResetCamera)
+                        {
+                            Tooltip = TextManager.Get("circuitboxsettingdescription.resetview")
+                        },
+                        new ContextMenuOption("circuitboxsetting.find", isEnabled: true,
+                            new ContextMenuOption("circuitboxsetting.focusinput", isEnabled: true, onSelected: () => FindInputOutput(CircuitBoxInputOutputNode.Type.Input))
                             {
-                                Tooltip = TextManager.Get("circuitboxsettingdescription.resetview")
+                                Tooltip = TextManager.Get("circuitboxsettingdescription.focusinput")
                             },
-                            new ContextMenuOption("circuitboxsetting.find", isEnabled: true,
-                                new ContextMenuOption("circuitboxsetting.focusinput", isEnabled: true, onSelected: () => FindInputOuput(CircuitBoxInputOutputNode.Type.Input))
-                                {
-                                    Tooltip = TextManager.Get("circuitboxsettingdescription.focusinput")
-                                },
-                                new ContextMenuOption("circuitboxsetting.focusoutput", isEnabled: true, onSelected: () => FindInputOuput(CircuitBoxInputOutputNode.Type.Output))
-                                {
-                                    Tooltip = TextManager.Get("circuitboxsettingdescription.focusoutput")
-                                },
-                                new ContextMenuOption("circuitboxsetting.focuscircuits", isEnabled: CircuitBox.Components.Any(), onSelected: FindCircuit)
-                                {
-                                    Tooltip = TextManager.Get("circuitboxsettingdescription.focuscircuits")
-                                }));
+                            new ContextMenuOption("circuitboxsetting.focusoutput", isEnabled: true, onSelected: () => FindInputOutput(CircuitBoxInputOutputNode.Type.Output))
+                            {
+                                Tooltip = TextManager.Get("circuitboxsettingdescription.focusoutput")
+                            },
+                            new ContextMenuOption("circuitboxsetting.focuscircuits", isEnabled: CircuitBox.Components.Any(), onSelected: FindCircuit)
+                            {
+                                Tooltip = TextManager.Get("circuitboxsettingdescription.focuscircuits")
+                            }));
 
 
-                        void ResetCamera()
-                        {
-                            // Vector2.One because Vector2.Zero means no value
-                            camera.TargetPos = Vector2.One;
-                        }
-
-                        void FindInputOuput(CircuitBoxInputOutputNode.Type type)
-                        {
-                            var input = CircuitBox.InputOutputNodes.FirstOrDefault(n => n.NodeType == type);
-                            if (input is null) { return; }
-
-                            camera.TargetPos = input.Position;
-                        }
-
-                        void FindCircuit()
-                        {
-                            var closestComponent = CircuitBox.Components.MinBy(c => Vector2.DistanceSquared(c.Position, camera.Position));
-                            if (closestComponent is null) { return; }
-
-                            camera.TargetPos = closestComponent.Position;
-                        }
-                        return true;
+                    void ResetCamera()
+                    {
+                        // Vector2.One because Vector2.Zero means no value
+                        camera.TargetPos = Vector2.One;
                     }
-                };
+
+                    void FindInputOutput(CircuitBoxInputOutputNode.Type type)
+                    {
+                        var input = CircuitBox.InputOutputNodes.FirstOrDefault(n => n.NodeType == type);
+                        if (input is null) { return; }
+
+                        camera.TargetPos = input.Position;
+                    }
+
+                    void FindCircuit()
+                    {
+                        var closestComponent = CircuitBox.Components.MinBy(c => Vector2.DistanceSquared(c.Position, camera.Position));
+                        if (closestComponent is null) { return; }
+
+                        camera.TargetPos = closestComponent.Position;
+                    }
+
+                    return true;
+                }
+            };
 
             MouseSnapshotHandler.UpdateConnections();
 
             // update scales of everything
             foreach (var node in CircuitBox.Components) { node.OnUICreated(); }
+
             foreach (var node in CircuitBox.InputOutputNodes) { node.OnUICreated(); }
+
             foreach (var wire in CircuitBox.Wires) { wire.Update(); }
         }
 
-        private string GetInventoryText()
-            => CircuitBox.ComponentContainer is { } container
+        private string GetInventoryText() =>
+            CircuitBox.ComponentContainer is { } container
                 ? $"{container.Inventory.AllItems.Count()}/{container.Capacity}"
                 : "0/0";
 
@@ -209,7 +216,8 @@ namespace Barotrauma
             }
 
             if (componentList is null) { return; }
-            var playerInventory = CircuitBox.GetSortedCircuitBoxSortedItemsFromPlayer(Character.Controlled);
+
+            var playerInventory = CircuitBox.GetSortedCircuitBoxItemsFromPlayer(Character.Controlled);
 
             foreach (GUIComponent child in componentList.Content.Children)
             {
@@ -304,9 +312,9 @@ namespace Barotrauma
             }
         }
 
-#endregion
+        #endregion
 
-        private void DrawHUD(SpriteBatch spriteBatch)
+        private void DrawHUD(SpriteBatch spriteBatch, Rectangle screenRect)
         {
             float scale = GUI.Scale / 1.5f;
             Vector2 offset = new Vector2(20, 40) * scale;
@@ -352,6 +360,16 @@ namespace Barotrauma
             {
                 n.DrawHUD(spriteBatch, camera);
             }
+            
+            if (Locked)
+            {
+                LocalizedString lockedText = TextManager.Get("CircuitBoxLocked")
+                    .Fallback(TextManager.Get("ConnectionLocked"));
+
+                Vector2 size = GUIStyle.LargeFont.MeasureString(lockedText);
+                Vector2 pos = new Vector2(screenRect.Center.X - size.X / 2, screenRect.Top + screenRect.Height * 0.05f);
+                GUI.DrawString(spriteBatch, pos, lockedText, Color.Red, Color.Black, 8, GUIStyle.LargeFont);
+            }
         }
 
         private void DrawSelection(SpriteBatch spriteBatch, Vector2 pos1, Vector2 pos2, Color color)
@@ -368,14 +386,18 @@ namespace Barotrauma
 
         public static void DrawRectangleWithBorder(SpriteBatch spriteBatch, RectangleF rect, Color fillColor, Color borderColor)
         {
+            GUI.DrawFilledRectangle(spriteBatch, rect, fillColor);
+            DrawRectangleOnlyBorder(spriteBatch, rect, borderColor);
+        }
+
+        private static void DrawRectangleOnlyBorder(SpriteBatch spriteBatch, RectangleF rect, Color borderColor)
+        {
             Vector2 topRight = new Vector2(rect.Right, rect.Top),
                     topLeft = new Vector2(rect.Left, rect.Top),
                     bottomRight = new Vector2(rect.Right, rect.Bottom),
                     bottomLeft = new Vector2(rect.Left, rect.Bottom);
 
             Vector2 offset = new Vector2(0f, lineWidth / 2f);
-
-            GUI.DrawFilledRectangle(spriteBatch, rect, fillColor);
 
             spriteBatch.DrawLine(topRight, topLeft, borderColor, thickness: lineWidth);
             spriteBatch.DrawLine(topLeft - offset, bottomLeft + offset, borderColor, thickness: lineWidth);
@@ -392,6 +414,16 @@ namespace Barotrauma
 
             Vector2 mousePos = GetCursorPosition();
             mousePos.Y = -mousePos.Y;
+
+            foreach (var label in CircuitBox.Labels)
+            {
+                if (label.IsSelected)
+                {
+                    label.DrawSelection(spriteBatch, GetSelectionColor(label));
+                }
+
+                label.Draw(spriteBatch, label.Position, label.Color);
+            }
 
             foreach (CircuitBoxWire wire in CircuitBox.Wires)
             {
@@ -428,11 +460,46 @@ namespace Barotrauma
                     Color color = moveable switch
                     {
                         CircuitBoxComponent node => node.Item.Prefab.SignalComponentColor,
+                        CircuitBoxLabelNode label => label.Color,
                         CircuitBoxInputOutputNode ioNode => ioNode.NodeType is CircuitBoxInputOutputNode.Type.Input ? GUIStyle.Green : GUIStyle.Red,
                         _ => Color.White
                     };
                     moveable.Draw(spriteBatch, moveable.Position + dragOffset, color * 0.5f);
                 }
+            }
+
+            if (MouseSnapshotHandler.IsResizing && MouseSnapshotHandler.LastResizeAffectedNode.TryUnwrap(out var resize))
+            {
+                var (dir, node) = resize;
+                Vector2 dragOffset = MouseSnapshotHandler.GetDragAmount(GetCursorPosition());
+
+                var rect = node.Rect;
+                rect.Y = -rect.Y;
+                rect.Y -= rect.Height;
+
+                if (dir.HasFlag(CircuitBoxResizeDirection.Down))
+                {
+                    rect.Height -= dragOffset.Y;
+                    rect.Height = Math.Max(rect.Height, CircuitBoxLabelNode.MinSize.Y + CircuitBoxSizes.NodeHeaderHeight);
+                }
+
+                if (dir.HasFlag(CircuitBoxResizeDirection.Right))
+                {
+                    rect.Width += dragOffset.X;
+                    rect.Width = Math.Max(rect.Width, CircuitBoxLabelNode.MinSize.X);
+                }
+
+                if (dir.HasFlag(CircuitBoxResizeDirection.Left))
+                {
+                    float oldWidth = rect.Width;
+                    rect.Width -= dragOffset.X;
+                    rect.Width = Math.Max(rect.Width, CircuitBoxLabelNode.MinSize.X);
+
+                    float actualResize = rect.Width - oldWidth;
+                    rect.X -= actualResize;
+                }
+
+                DrawRectangleOnlyBorder(spriteBatch, rect, GUIStyle.Yellow);
             }
 
             if (DraggedWire.TryUnwrap(out CircuitBoxWireRenderer? draggedWire))
@@ -441,11 +508,9 @@ namespace Barotrauma
             }
         }
 
-        private Color GetSelectionColor(CircuitBoxNode node)
-            => GetSelectionColor(node.SelectedBy, node.IsSelectedByMe);
+        private Color GetSelectionColor(CircuitBoxNode node) => GetSelectionColor(node.SelectedBy, node.IsSelectedByMe);
 
-        private Color GetSelectionColor(CircuitBoxWire wire)
-            => GetSelectionColor(wire.SelectedBy, wire.IsSelectedByMe);
+        private Color GetSelectionColor(CircuitBoxWire wire) => GetSelectionColor(wire.SelectedBy, wire.IsSelectedByMe);
 
         private Color GetSelectionColor(ushort selectedBy, bool isSelectedByMe)
         {
@@ -489,6 +554,7 @@ namespace Barotrauma
                 {
                     node.UpdateEditing(circuitComponent.RectTransform);
                 }
+
                 break;
             }
 
@@ -503,6 +569,7 @@ namespace Barotrauma
             {
                 Character.DisableControls = true;
             }
+
             camera.MoveCamera(deltaTime, allowMove: true, allowZoom: isMouseOn, allowInput: isMouseOn, followSub: false);
 
             if (camera.TargetPos != Vector2.Zero && MathUtils.NearlyEqual(camera.Position, camera.TargetPos, 0.01f))
@@ -547,7 +614,7 @@ namespace Barotrauma
                     }
                     else
                     {
-                        DraggedWire = Option.Some(new CircuitBoxWireRenderer(Option.None,start, end, GUIStyle.Red, CircuitBox.WireSprite));
+                        DraggedWire = Option.Some(new CircuitBoxWireRenderer(Option.None, start, end, GUIStyle.Red, CircuitBox.WireSprite));
                     }
                 }
                 else
@@ -562,6 +629,12 @@ namespace Barotrauma
 
                 if (PlayerInput.PrimaryMouseButtonClicked())
                 {
+                    if (MouseSnapshotHandler.IsResizing && MouseSnapshotHandler.LastResizeAffectedNode.TryUnwrap(out var r))
+                    {
+                        var (dir, node) = r;
+                        CircuitBox.ResizeNode(node, dir, MouseSnapshotHandler.GetDragAmount(cursorPos));
+                    }
+
                     if (CircuitBox.HeldComponent.TryUnwrap(out ItemPrefab? prefab))
                     {
                         CircuitBox.AddComponent(prefab, cursorPos);
@@ -604,21 +677,31 @@ namespace Barotrauma
                 {
                     CircuitBox.RemoveComponents(CircuitBox.Components.Where(static node => node.IsSelectedByMe).ToArray());
                     CircuitBox.RemoveWires(CircuitBox.Wires.Where(static wire => wire.IsSelectedByMe).ToImmutableArray());
+                    CircuitBox.RemoveLabel(CircuitBox.Labels.Where(static label => label.IsSelectedByMe).ToImmutableArray());
                 }
             }
 
             if (componentMenu is { } menu && toggleMenuButton is { } button)
             {
-                componentMenuOpenState = componentMenuOpen ? Math.Min(componentMenuOpenState + deltaTime * 5.0f, 1.0f) : Math.Max(componentMenuOpenState - deltaTime * 5.0f, 0.0f);
+                button.Enabled = !Locked;
+                componentMenuOpenState = componentMenuOpen && !Locked ? Math.Min(componentMenuOpenState + deltaTime * 5.0f, 1.0f) : Math.Max(componentMenuOpenState - deltaTime * 5.0f, 0.0f);
 
                 menu.RectTransform.ScreenSpaceOffset = Vector2.Lerp(new Vector2(0.0f, menu.Rect.Height - 10), Vector2.Zero, componentMenuOpenState).ToPoint();
                 button.RectTransform.AbsoluteOffset = new Point(menu.Rect.X + ((menu.Rect.Width / 2) - (button.Rect.Width / 2)), menu.Rect.Y - button.Rect.Height);
+            }
+            
+            if (selectedWireFrame is { } wireFrame)
+            {
+                wireFrame.Visible = !Locked;
             }
 
             camera.Position = Vector2.Clamp(camera.Position,
                 new Vector2(-CircuitBoxSizes.PlayableAreaSize / 2f),
                 new Vector2(CircuitBoxSizes.PlayableAreaSize / 2f));
         }
+
+        public void SetMenuVisibility(bool state)
+            => componentMenuOpen = state;
 
         private void UpdateSelection()
         {
@@ -662,35 +745,55 @@ namespace Barotrauma
             var wireSelection = CircuitBox.Wires.Where(static w => w.IsSelectedByMe).ToImmutableArray();
             var nodeOption = GetTopmostNode(MouseSnapshotHandler.FindNodesUnderCursor(cursorPos));
             var nodeSelection = CircuitBox.Components.Where(static n => n.IsSelectedByMe).ToImmutableArray();
+            var labels = CircuitBox.Labels.Where(static l => l.IsSelectedByMe).ToImmutableArray();
 
-            var option = new ContextMenuOption(TextManager.Get("delete"), isEnabled: wireOption.IsSome() || nodeOption is CircuitBoxComponent, () =>
+            var option = new ContextMenuOption(TextManager.Get("delete"), isEnabled: (wireOption.IsSome() || nodeOption is CircuitBoxComponent or CircuitBoxLabelNode) && !Locked, () =>
             {
                 if (wireOption.TryUnwrap(out var wire))
                 {
                     CircuitBox.RemoveWires(wire.IsSelected ? wireSelection : ImmutableArray.Create(wire));
                 }
 
-                if (nodeOption is CircuitBoxComponent node)
+                switch (nodeOption)
                 {
-                    CircuitBox.RemoveComponents(node.IsSelected ? nodeSelection : ImmutableArray.Create(node));
+                    case CircuitBoxComponent node:
+                        CircuitBox.RemoveComponents(node.IsSelected ? nodeSelection : ImmutableArray.Create(node));
+                        break;
+                    case CircuitBoxLabelNode label:
+                        CircuitBox.RemoveLabel(label.IsSelected ? labels : ImmutableArray.Create(label));
+                        break;
                 }
             });
+
+            var editLabel = new ContextMenuOption(TextManager.Get("circuitboxeditlabel"), isEnabled: nodeOption is CircuitBoxLabelNode && !Locked, () =>
+            {
+                if (nodeOption is not CircuitBoxLabelNode label || circuitComponent is null) { return; }
+
+                label.PromptEditText(circuitComponent);
+            });
+
+            var addLabelOption = new ContextMenuOption(TextManager.Get("circuitboxaddlabel"), isEnabled: !Locked, () =>
+            {
+                CircuitBox.AddLabel(cursorPos);
+            });
+
+            ContextMenuOption[] allOptions = { addLabelOption, editLabel, option };
 
             // show component name in the header to better indicate what is about to be deleted
             if (nodeOption is CircuitBoxComponent comp)
             {
-                GUIContextMenu.CreateContextMenu(PlayerInput.MousePosition, comp.Item.Name, comp.Item.Prefab.SignalComponentColor, option);
+                GUIContextMenu.CreateContextMenu(PlayerInput.MousePosition, comp.Item.Name, comp.Item.Prefab.SignalComponentColor, allOptions);
                 return;
             }
 
             // also check if a wire is being deleted
             if (wireOption.TryUnwrap(out var foundWire))
             {
-                GUIContextMenu.CreateContextMenu(PlayerInput.MousePosition, foundWire.UsedItemPrefab.Name, foundWire.Color, option);
+                GUIContextMenu.CreateContextMenu(PlayerInput.MousePosition, foundWire.UsedItemPrefab.Name, foundWire.Color, allOptions);
                 return;
             }
 
-            GUIContextMenu.CreateContextMenu(option);
+            GUIContextMenu.CreateContextMenu(allOptions);
         }
 
         public CircuitBoxNode? GetTopmostNode(ImmutableHashSet<CircuitBoxNode> nodes)

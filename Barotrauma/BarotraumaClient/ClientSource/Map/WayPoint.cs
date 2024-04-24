@@ -168,7 +168,7 @@ namespace Barotrauma
 
         private bool IsHidden()
         {
-            if (!SubEditorScreen.IsLayerVisible(this)) { return false; }
+            if (!SubEditorScreen.IsLayerVisible(this)) { return true; }
             if (spawnType == SpawnType.Path)
             {
                 return (!GameMain.DebugDraw && !ShowWayPoints);
@@ -316,6 +316,11 @@ namespace Barotrauma
             {
                 new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.2f), paddedFrame.RectTransform), TextManager.Get("Spawnpoint"), font: GUIStyle.LargeFont);
                 
+                if (!Layer.IsNullOrEmpty())
+                {
+                    var layerText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), paddedFrame.RectTransform), TextManager.AddPunctuation(':', TextManager.Get("editor.layer"), Layer));
+                }
+
                 var spawnTypeContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.2f), paddedFrame.RectTransform), isHorizontal: true)
                 {
                     Stretch = true,

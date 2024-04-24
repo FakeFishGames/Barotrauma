@@ -82,9 +82,9 @@ namespace Barotrauma.Items.Components
                 var abilityPickingTime = new AbilityItemPickingTime(PickingTime, item.Prefab);
                 picker.CheckTalents(AbilityEffectType.OnItemPicked, abilityPickingTime);
 
-                if (requiredItems.ContainsKey(RelatedItem.RelationType.Equipped))
+                if (RequiredItems.ContainsKey(RelatedItem.RelationType.Equipped))
                 {
-                    foreach (RelatedItem ri in requiredItems[RelatedItem.RelationType.Equipped])
+                    foreach (RelatedItem ri in RequiredItems[RelatedItem.RelationType.Equipped])
                     {
                         foreach (var heldItem in picker.HeldItems)
                         {

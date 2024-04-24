@@ -48,10 +48,10 @@ namespace Barotrauma.Items.Components
 
         public readonly Dictionary<ActionType, List<StatusEffect>> statusEffectLists;
 
-        public Dictionary<RelatedItem.RelationType, List<RelatedItem>> requiredItems;
+        public Dictionary<RelatedItem.RelationType, List<RelatedItem>> RequiredItems;
         public readonly List<RelatedItem> DisabledRequiredItems = new List<RelatedItem>();
 
-        public List<Skill> requiredSkills;
+        public readonly List<Skill> RequiredSkills = new List<Skill>();
 
         private ItemComponent parent;
         public ItemComponent Parent
@@ -286,9 +286,7 @@ namespace Barotrauma.Items.Components
             originalElement = element;
             name = element.Name.ToString();
             SerializableProperties = SerializableProperty.GetProperties(this);
-            requiredItems = new Dictionary<RelatedItem.RelationType, List<RelatedItem>>();
-            requiredSkills = new List<Skill>();
-
+            RequiredItems = new Dictionary<RelatedItem.RelationType, List<RelatedItem>>();
 #if CLIENT
             hasSoundsOfType = new bool[Enum.GetValues(typeof(ActionType)).Length];
             sounds = new Dictionary<ActionType, List<ItemSound>>();
@@ -336,7 +334,7 @@ namespace Barotrauma.Items.Components
                 }
                 else
                 {
-                    requiredSkills = component.requiredSkills;
+                    RequiredSkills = component.RequiredSkills;
                 }
             }
 
@@ -389,7 +387,7 @@ namespace Barotrauma.Items.Components
                         }
 
                         Identifier skillIdentifier = subElement.GetAttributeIdentifier("identifier", "");
-                        requiredSkills.Add(new Skill(skillIdentifier, subElement.GetAttributeInt("level", 0)));
+                        RequiredSkills.Add(new Skill(skillIdentifier, subElement.GetAttributeInt("level", 0)));
                         break;
                     case "statuseffect":
                         statusEffectLists ??= new Dictionary<ActionType, List<StatusEffect>>();
@@ -414,7 +412,7 @@ namespace Barotrauma.Items.Components
 
             void LoadStatusEffect(ContentXElement subElement)
             {
-                var statusEffect = StatusEffect.Load(subElement, item.Name);
+                var statusEffect = StatusEffect.Load(subElement, item.Name + ", " + GetType().Name);
                 if (!statusEffectLists.TryGetValue(statusEffect.type, out List<StatusEffect> effectList))
                 {
                     effectList = new List<StatusEffect>();
@@ -444,11 +442,11 @@ namespace Barotrauma.Items.Components
                 }
                 else
                 {
-                    if (!requiredItems.ContainsKey(ri.Type))
+                    if (!RequiredItems.ContainsKey(ri.Type))
                     {
-                        requiredItems.Add(ri.Type, new List<RelatedItem>());
+                        RequiredItems.Add(ri.Type, new List<RelatedItem>());
                     }
-                    requiredItems[ri.Type].Add(ri);
+                    RequiredItems[ri.Type].Add(ri);
                 }
             }
             else if (!allowEmpty)
@@ -675,7 +673,7 @@ namespace Barotrauma.Items.Components
 
         public bool HasRequiredSkills(Character character, out Skill insufficientSkill)
         {
-            foreach (Skill skill in requiredSkills)
+            foreach (Skill skill in RequiredSkills)
             {
                 float characterLevel = character.GetSkillLevel(skill.Identifier);
                 if (characterLevel < skill.Level * GetSkillMultiplier())
@@ -696,7 +694,7 @@ namespace Barotrauma.Items.Components
         /// <returns>0.5f if all the skills meet the skill requirements exactly, 1.0f if they're way above and 0.0f if way less</returns>
         public float DegreeOfSuccess(Character character)
         {
-            return DegreeOfSuccess(character, requiredSkills);
+            return DegreeOfSuccess(character, RequiredSkills);
         }
 
         /// <summary>
@@ -731,16 +729,18 @@ namespace Barotrauma.Items.Components
         public virtual void FlipY(bool relativeToSub) { }
 
         /// <summary>
-        /// Shorthand for !HasRequiredContainedItems()
+        /// Returns true if the item is lacking required contained items, or if there's nothing with a non-zero condition inside.
         /// </summary>
-        public bool IsEmpty(Character user) => !HasRequiredContainedItems(user, addMessage: false);
+        public bool IsEmpty(Character user) => 
+            !HasRequiredContainedItems(user, addMessage: false) ||
+            (Item.OwnInventory != null && !Item.OwnInventory.AllItems.Any(i => i.Condition > 0));
 
         public bool HasRequiredContainedItems(Character user, bool addMessage, LocalizedString msg = null)
         {
-            if (!requiredItems.ContainsKey(RelatedItem.RelationType.Contained)) { return true; }
+            if (!RequiredItems.ContainsKey(RelatedItem.RelationType.Contained)) { return true; }
             if (item.OwnInventory == null) { return false; }
 
-            foreach (RelatedItem ri in requiredItems[RelatedItem.RelationType.Contained])
+            foreach (RelatedItem ri in RequiredItems[RelatedItem.RelationType.Contained])
             {
                 if (!ri.CheckRequirements(user, item))
                 {
@@ -765,8 +765,8 @@ namespace Barotrauma.Items.Components
         {
             if (character.IsBot && item.IgnoreByAI(character)) { return false; }
             if (!item.IsInteractable(character)) { return false; }
-            if (requiredItems.Count == 0) { return true; }
-            if (character.Inventory != null && requiredItems.TryGetValue(RelatedItem.RelationType.Picked, out List<RelatedItem> relatedItems))
+            if (RequiredItems.Count == 0) { return true; }
+            if (character.Inventory != null && RequiredItems.TryGetValue(RelatedItem.RelationType.Picked, out List<RelatedItem> relatedItems))
             {
                 foreach (RelatedItem relatedItem in relatedItems)
                 {
@@ -811,13 +811,13 @@ namespace Barotrauma.Items.Components
 
         public virtual bool HasRequiredItems(Character character, bool addMessage, LocalizedString msg = null)
         {
-            if (requiredItems.None()) { return true; }
+            if (RequiredItems.None()) { return true; }
             if (character.Inventory == null) { return false; }
             bool hasRequiredItems = false;
             bool canContinue = true;
-            if (requiredItems.ContainsKey(RelatedItem.RelationType.Equipped))
+            if (RequiredItems.ContainsKey(RelatedItem.RelationType.Equipped))
             {
-                foreach (RelatedItem ri in requiredItems[RelatedItem.RelationType.Equipped])
+                foreach (RelatedItem ri in RequiredItems[RelatedItem.RelationType.Equipped])
                 {
                     canContinue = CheckItems(ri, character.HeldItems);
                     if (!canContinue) { break; }
@@ -825,9 +825,9 @@ namespace Barotrauma.Items.Components
             }
             if (canContinue)
             {
-                if (requiredItems.ContainsKey(RelatedItem.RelationType.Picked))
+                if (RequiredItems.ContainsKey(RelatedItem.RelationType.Picked))
                 {
-                    foreach (RelatedItem ri in requiredItems[RelatedItem.RelationType.Picked])
+                    foreach (RelatedItem ri in RequiredItems[RelatedItem.RelationType.Picked])
                     {
                         if (!CheckItems(ri, character.Inventory.AllItems)) { break; }
                     }
@@ -1056,7 +1056,7 @@ namespace Barotrauma.Items.Components
         {
             XElement componentElement = new XElement(name);
 
-            foreach (var kvp in requiredItems)
+            foreach (var kvp in RequiredItems)
             {
                 foreach (RelatedItem ri in kvp.Value)
                 {
@@ -1089,8 +1089,8 @@ namespace Barotrauma.Items.Components
 
         private void OverrideRequiredItems(ContentXElement element)
         {
-            var prevRequiredItems = new Dictionary<RelatedItem.RelationType, List<RelatedItem>>(requiredItems);
-            requiredItems.Clear();
+            var prevRequiredItems = new Dictionary<RelatedItem.RelationType, List<RelatedItem>>(RequiredItems);
+            RequiredItems.Clear();
 
             bool returnEmptyRequirements = false;
 #if CLIENT
@@ -1115,11 +1115,11 @@ namespace Barotrauma.Items.Components
                             newRequiredItem.IgnoreInEditor = prevRequiredItem.IgnoreInEditor;
                         }
 
-                        if (!requiredItems.ContainsKey(newRequiredItem.Type))
+                        if (!RequiredItems.ContainsKey(newRequiredItem.Type))
                         {
-                            requiredItems[newRequiredItem.Type] = new List<RelatedItem>();
+                            RequiredItems[newRequiredItem.Type] = new List<RelatedItem>();
                         }
-                        requiredItems[newRequiredItem.Type].Add(newRequiredItem);
+                        RequiredItems[newRequiredItem.Type].Add(newRequiredItem);
                         break;
                 }
             }

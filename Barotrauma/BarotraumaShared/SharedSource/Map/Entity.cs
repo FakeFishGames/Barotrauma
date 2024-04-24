@@ -54,6 +54,9 @@ namespace Barotrauma
 
         public AITarget AiTarget => aiTarget;
 
+        /// <summary>
+        /// Indetectable characters can't be spotted by AIs and aren't visible on the sonar or health scanner.
+        /// </summary>
         public bool InDetectable
         {
             get

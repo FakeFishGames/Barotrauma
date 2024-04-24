@@ -1,8 +1,11 @@
 namespace Barotrauma
 {
+    /// <summary>
+    /// Waits for a specific amount of time before continuing the execution of the event.
+    /// </summary>
     class WaitAction : EventAction
     {
-        [Serialize(0.0f, IsPropertySaveable.Yes)]
+        [Serialize(0.0f, IsPropertySaveable.Yes, description: "How long to wait (in seconds).")]
         public float Time { get; set; }
 
         private float timeRemaining;

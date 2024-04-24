@@ -1,4 +1,4 @@
-using Microsoft.Xna.Framework;
+﻿using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
@@ -234,6 +234,11 @@ namespace Barotrauma
 
         public readonly Dictionary<Identifier, List<Character>> OutpostNPCs = new Dictionary<Identifier, List<Character>>();
 
+        /// <summary>
+        /// Names of layers that get automatically hidden when loading the sub
+        /// </summary>
+        public HashSet<Identifier> LayersHiddenByDefault { get; private set; } = new HashSet<Identifier>();
+
         //constructors & generation ----------------------------------------------------
         public SubmarineInfo()
         {
@@ -319,6 +324,7 @@ namespace Barotrauma
             IsManuallyOutfitted = original.IsManuallyOutfitted;
             Tags = original.Tags;
             OutpostGenerationParams = original.OutpostGenerationParams;
+            LayersHiddenByDefault = original.LayersHiddenByDefault;
             if (original.OutpostModuleInfo != null)
             {
                 OutpostModuleInfo = new OutpostModuleInfo(original.OutpostModuleInfo);
@@ -385,6 +391,12 @@ namespace Barotrauma
             RecommendedCrewSizeMin = SubmarineElement.GetAttributeInt("recommendedcrewsizemin", 0);
             RecommendedCrewSizeMax = SubmarineElement.GetAttributeInt("recommendedcrewsizemax", 0);
             var recommendedCrewExperience = SubmarineElement.GetAttributeIdentifier("recommendedcrewexperience", CrewExperienceLevel.Unknown.ToIdentifier());
+
+            foreach (Identifier hiddenLayer in SubmarineElement.GetAttributeIdentifierArray("layerhiddenbydefault", Array.Empty<Identifier>()))
+            {
+                LayersHiddenByDefault.Add(hiddenLayer);
+            }
+
             // Backwards compatibility
             if (recommendedCrewExperience == "Beginner")
             {
@@ -793,6 +805,13 @@ namespace Barotrauma
             characterList ??= GameSession.GetSessionCrewCharacters(CharacterType.Both);
 
             float price = Price;
+
+            // Adjust by campaign difficulty settings
+            if (GameMain.GameSession?.Campaign is CampaignMode campaign)
+            {
+                price *= campaign.Settings.ShipyardPriceMultiplier;
+            }
+
             if (characterList.Any())
             {
                 if (location.Faction is { } faction && Faction.GetPlayerAffiliationStatus(faction) is FactionAffiliation.Positive)

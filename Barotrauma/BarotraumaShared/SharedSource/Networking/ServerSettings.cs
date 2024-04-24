@@ -49,8 +49,6 @@ namespace Barotrauma.Networking
         public enum NetFlags : byte
         {
             None = 0x0,
-            Name = 0x1,
-            Message = 0x2,
             Properties = 0x4,
             Misc = 0x8,
             LevelSeed = 0x10,
@@ -320,24 +318,26 @@ namespace Barotrauma.Networking
             }
         }
 
-        private string serverName;
+        private string serverName = string.Empty;
+
+        [Serialize("", IsPropertySaveable.Yes)]
         public string ServerName
         {
             get { return serverName; }
             set
             {
-                string val = value;
-                if (val.Length > NetConfig.ServerNameMaxLength) { val = val.Substring(0, NetConfig.ServerNameMaxLength); }
-                if (serverName == val) { return; }
-                serverName = val;
+                string newName = value;
+                if (newName.Length > NetConfig.ServerNameMaxLength) { newName = newName.Substring(0, NetConfig.ServerNameMaxLength); }
+                if (serverName == newName) { return; }
+                if (newName.IsNullOrWhiteSpace()) { return; }
+                serverName = newName;
                 ServerDetailsChanged = true;
-#if SERVER
-                UpdateFlag(NetFlags.Name);
-#endif
             }
         }
 
         private string serverMessageText;
+
+        [Serialize("", IsPropertySaveable.Yes)]
         public string ServerMessageText
         {
             get { return serverMessageText; }
@@ -346,11 +346,11 @@ namespace Barotrauma.Networking
                 string val = value;
                 if (val.Length > NetConfig.ServerMessageMaxLength) { val = val.Substring(0, NetConfig.ServerMessageMaxLength); }
                 if (serverMessageText == val) { return; }
+#if SERVER
+                GameMain.Server?.SendChatMessage(TextManager.AddPunctuation(':', TextManager.Get("servermotd"), val).Value, ChatMessageType.Server);
+#endif
                 serverMessageText = val;
                 ServerDetailsChanged = true;
-#if SERVER
-                UpdateFlag(NetFlags.Message);
-#endif
             }
         }
 
@@ -433,11 +433,23 @@ namespace Barotrauma.Networking
             private set;
         }
 
-        [Serialize(50f, IsPropertySaveable.Yes)]
+        [Serialize(20f, IsPropertySaveable.Yes)]
         /// <summary>
         /// How much skills drop towards the job's default skill levels when dying
         /// </summary>
         public float SkillLossPercentageOnDeath
+        {
+            get;
+            private set;
+        }
+
+        [Serialize(10f, IsPropertySaveable.Yes)]
+        /// <summary>
+        /// How much more the skills drop towards the job's default skill levels
+        /// when dying, in addition to SkillLossPercentageOnDeath, if the player
+        /// chooses to respawn in the middle of the round
+        /// </summary>
+        public float SkillLossPercentageOnImmediateRespawn
         {
             get;
             private set;
@@ -550,6 +562,7 @@ namespace Barotrauma.Networking
             }
         }
 
+        [Serialize(false, IsPropertySaveable.Yes)]
         public bool AutoRestart
         {
             get { return autoRestart; }
@@ -625,6 +638,7 @@ namespace Barotrauma.Networking
             set;
         }
 
+        [Serialize(0.0f, IsPropertySaveable.Yes)]
         public float SelectedLevelDifficulty
         {
             get { return selectedLevelDifficulty; }
@@ -753,13 +767,18 @@ namespace Barotrauma.Networking
                 if (traitorDangerLevel == clampedValue) { return; }
                 traitorDangerLevel = clampedValue;
                 ServerDetailsChanged = true;
+#if CLIENT
+                GameMain.NetLobbyScreen?.SetTraitorDangerLevel(traitorDangerLevel);
+#endif
             }
         }
+
+        private int traitorsMinPlayerCount;
         [Serialize(defaultValue: 1, isSaveable: IsPropertySaveable.Yes)]
         public int TraitorsMinPlayerCount
         {
-            get;
-            set;
+            get { return traitorsMinPlayerCount; }
+            set { traitorsMinPlayerCount = MathHelper.Clamp(value, 1, NetConfig.MaxPlayers); }
         }
 
         [Serialize(defaultValue: 50.0f, isSaveable: IsPropertySaveable.Yes)]
@@ -865,7 +884,11 @@ namespace Barotrauma.Networking
             {
                 karmaEnabled = value;
 #if CLIENT
-                if (karmaSettingsBlocker != null) { karmaSettingsBlocker.Visible = !karmaEnabled || karmaPresetDD.SelectedData as string != "custom"; }
+                if (karmaSettingsList != null)
+                {
+                    SetElementInteractability(karmaSettingsList.Content, !karmaEnabled || KarmaPreset != "custom");
+                }
+                karmaElements.ForEach(e => e.Visible = karmaEnabled);
 #endif
             }
         }
@@ -1035,8 +1058,9 @@ namespace Barotrauma.Networking
                 .OrderBy(k => CharacterPrefab.Prefabs[k].UintIdentifier)
                 .ToImmutableArray();
         
-        public void ReadMonsterEnabled(IReadMessage inc)
+        public bool ReadMonsterEnabled(IReadMessage inc)
         {
+            bool changed = false;
             InitMonstersEnabled();
             var monsterNames = ExtractAndSortKeys(MonsterEnabled);
             uint receivedMonsterCount = inc.ReadVariableUInt32();
@@ -1049,10 +1073,13 @@ namespace Barotrauma.Networking
             {
                 foreach (Identifier s in monsterNames)
                 {
+                    MonsterEnabled.TryGetValue(s, out bool prevEnabled);
                     MonsterEnabled[s] = inc.ReadBoolean();
+                    changed |= prevEnabled != MonsterEnabled[s];
                 }
             }
             inc.ReadPadBits();
+            return changed;
         }
 
         public void WriteMonsterEnabled(IWriteMessage msg, Dictionary<Identifier, bool> monsterEnabled = null)

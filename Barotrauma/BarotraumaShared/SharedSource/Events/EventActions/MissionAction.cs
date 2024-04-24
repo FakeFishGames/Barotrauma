@@ -7,15 +7,18 @@ using System.Linq;
 
 namespace Barotrauma
 {
+    /// <summary>
+    /// Unlocks a mission in a nearby level or location.
+    /// </summary>
     partial class MissionAction : EventAction
     {
-        [Serialize("", IsPropertySaveable.Yes)]
+        [Serialize("", IsPropertySaveable.Yes, description: "Identifier of the mission to unlock.")]
         public Identifier MissionIdentifier { get; set; }
 
-        [Serialize("", IsPropertySaveable.Yes)]
+        [Serialize("", IsPropertySaveable.Yes, description: "Tag of the mission to unlock. If there are multiple missions with the tag, one is chosen randomly.")]
         public Identifier MissionTag { get; set; }
 
-        [Serialize("", IsPropertySaveable.Yes)]
+        [Serialize("", IsPropertySaveable.Yes, description: "The mission can only be unlocked in a location that's occupied by this faction.")]
         public Identifier RequiredFaction { get; set; }
 
         public ImmutableArray<Identifier> LocationTypes { get; }
@@ -46,7 +49,14 @@ namespace Barotrauma
                     contentPackage: element.ContentPackage);
             }
             LocationTypes = element.GetAttributeIdentifierArray("locationtype", Array.Empty<Identifier>()).ToImmutableArray();
-            random = new MTRandom(parentEvent.RandomSeed);
+            //the action chooses the same mission if
+            // 1. event seed is the same (based on level seed, changes when events are completed)
+            // 2. event is the same (two different events shouldn't choose the same mission)
+            // 3. the MissionAction is the same (two different actions in the same event shouldn't choose the same mission)
+            random = new MTRandom(
+                parentEvent.RandomSeed +
+                ToolBox.StringToInt(ParentEvent.Prefab.Identifier.Value) +
+                ParentEvent.Actions.Count);
         }
 
         public override bool IsFinished(ref string goTo)

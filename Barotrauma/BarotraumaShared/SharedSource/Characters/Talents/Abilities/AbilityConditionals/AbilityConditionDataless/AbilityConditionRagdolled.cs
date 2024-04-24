@@ -12,7 +12,9 @@ namespace Barotrauma.Abilities
 
         protected override bool MatchesConditionSpecific()
         {
-            return character.IsRagdolled || character.Stun > 0f || character.IsIncapacitated;
+            // TODO: Should we only check whether the target is ragdolling here?
+            // Or should we use character.IsKnockedDown instead?
+            return (character.IsRagdolled && !character.AnimController.IsHangingWithRope) || character.Stun > 0f || character.IsIncapacitated;
         }
     }
 }

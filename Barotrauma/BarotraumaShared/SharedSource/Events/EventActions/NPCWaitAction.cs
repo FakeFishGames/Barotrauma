@@ -1,15 +1,17 @@
 using System.Collections.Generic;
 using System.Linq;
-using System.Xml.Linq;
 
 namespace Barotrauma
 {
+    /// <summary>
+    /// Makes an NPC stop and wait.
+    /// </summary>
     class NPCWaitAction : EventAction
     {
-        [Serialize("", IsPropertySaveable.Yes)]
+        [Serialize("", IsPropertySaveable.Yes, description: "Tag of the NPC(s) that should wait.")]
         public Identifier NPCTag { get; set; }
 
-        [Serialize(true, IsPropertySaveable.Yes)]
+        [Serialize(true, IsPropertySaveable.Yes, description: "Should the NPC start or stop waiting?")]
         public bool Wait { get; set; }
 
         private bool isFinished = false;
@@ -35,6 +37,7 @@ namespace Barotrauma
                     var gotoObjective = new AIObjectiveGoTo(
                         AIObjectiveGoTo.GetTargetHull(npc) as ISpatialEntity ?? npc, npc, humanAiController.ObjectiveManager, repeat: true)
                     {
+                        FaceTargetOnCompleted = false,
                         OverridePriority = 100.0f,
                         SourceEventAction = this,
                         IsWaitOrder = true,

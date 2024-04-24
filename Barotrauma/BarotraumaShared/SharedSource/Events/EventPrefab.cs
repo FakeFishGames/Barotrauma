@@ -99,19 +99,19 @@ namespace Barotrauma
             UnlockPathReputation = element.GetAttributeInt("unlockpathreputation", 0);
         }
 
-        public bool TryCreateInstance<T>(out T instance) where T : Event
+        public bool TryCreateInstance<T>(int seed, out T instance) where T : Event
         {
-            instance = CreateInstance() as T;
+            instance = CreateInstance(seed) as T;
             return instance is not null;
         }
 
-        public Event CreateInstance()
+        public Event CreateInstance(int seed)
         {
-            ConstructorInfo constructor = EventType.GetConstructor(new[] { GetType() });
+            ConstructorInfo constructor = EventType.GetConstructor(new[] { GetType(), typeof(int) });
             Event instance = null;
             try
             {
-                instance = constructor.Invoke(new object[] { this }) as Event;
+                instance = constructor.Invoke(new object[] { this, seed }) as Event;
             }
             catch (Exception ex)
             {

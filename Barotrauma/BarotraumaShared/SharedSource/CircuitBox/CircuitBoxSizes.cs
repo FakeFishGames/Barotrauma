@@ -11,6 +11,7 @@ namespace Barotrauma
         public const int WireWidth = 10;
         public const int WireKnobLength = 16;
         public const int NodeHeaderTextPadding = 8;
+        public const int NodeBodyTextPadding = 8;
 
         public const float PlayableAreaSize = 8192f;
     }

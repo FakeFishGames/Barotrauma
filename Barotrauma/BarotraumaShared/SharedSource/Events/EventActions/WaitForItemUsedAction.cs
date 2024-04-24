@@ -7,30 +7,33 @@ using System.Linq;
 
 namespace Barotrauma
 {
+    /// <summary>
+    /// Waits for some item(s) to be used before continuing the execution of the event.
+    /// </summary>
     class WaitForItemUsedAction : EventAction
     {
-        [Serialize("", IsPropertySaveable.Yes)]
+        [Serialize("", IsPropertySaveable.Yes, description: "Tag of the item that must be used. Note that the item needs to have been tagged by the event - this does not refer to the tags that can be set per-item in the sub editor.")]
         public Identifier ItemTag { get; set; }
 
-        [Serialize("", IsPropertySaveable.Yes)]
+        [Serialize("", IsPropertySaveable.Yes, description: "Tag of the character that must use the item. If there's multiple matching characters, it's enough if any of them use the item. If empty, it doesn't matter who uses the item.")]
         public Identifier UserTag { get; set; }
 
-        [Serialize("", IsPropertySaveable.Yes)]
+        [Serialize("", IsPropertySaveable.Yes, description: "Name of the ItemComponent that the character must use. If empty, the character attempts to use all of them.")]
         public Identifier TargetItemComponent { get; set; }
 
-        [Serialize("", IsPropertySaveable.Yes, description: "Tag to apply to the target item when it's used.")]
+        [Serialize("", IsPropertySaveable.Yes, description: "Optional tag to apply to the target item when it's used.")]
         public Identifier ApplyTagToItem { get; set; }
 
-        [Serialize("", IsPropertySaveable.Yes, description: "Tag to apply to the user when the target item is used.")]
+        [Serialize("", IsPropertySaveable.Yes, description: "Optional tag to apply to the user when the target item is used.")]
         public Identifier ApplyTagToUser{ get; set; }
 
-        [Serialize("", IsPropertySaveable.Yes, description: "Tag to apply to the hull the target item is inside when the item is used.")]
+        [Serialize("", IsPropertySaveable.Yes, description: "Optional tag to apply to the hull the target item is inside when the item is used.")]
         public Identifier ApplyTagToHull { get; set; }
 
-        [Serialize("", IsPropertySaveable.Yes, description: "Tag to apply to the hull the target item is inside, and all the hulls it's linked to, when the item is used.")]
+        [Serialize("", IsPropertySaveable.Yes, description: "Optional tag to apply to the hull the target item is inside, and all the hulls it's linked to, when the item is used.")]
         public Identifier ApplyTagToLinkedHulls { get; set; }
 
-        [Serialize(1, IsPropertySaveable.Yes)]
+        [Serialize(1, IsPropertySaveable.Yes, description: "How many times does the item need to be used. Defaults to 1.")]
         public int RequiredUseCount { get; set; }
 
         private bool isFinished;

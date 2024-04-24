@@ -3,17 +3,20 @@ using System.Collections.Generic;
 
 namespace Barotrauma
 {
+    /// <summary>
+    /// Check whether a specific character has selected a specific kind of item.
+    /// </summary>
     class CheckSelectedAction : BinaryOptionAction
     {
         public enum SelectedItemType { Primary, Secondary, Any };
 
-        [Serialize("", IsPropertySaveable.Yes)]
+        [Serialize("", IsPropertySaveable.Yes, description: "Tag of the character to check.")]
         public Identifier CharacterTag { get; set; }
 
-        [Serialize("", IsPropertySaveable.Yes)]
+        [Serialize("", IsPropertySaveable.Yes, description: "If specified, only items that have been given this tag using TagAction are considered valid.")]
         public Identifier TargetTag { get; set; }
 
-        [Serialize(SelectedItemType.Any, IsPropertySaveable.Yes)]
+        [Serialize(SelectedItemType.Any, IsPropertySaveable.Yes, description: "How does the item need to be selected? Primary item (i.e. any device you're interacting with), secondary item (such as ladders or chairs which allow interacting with a primary item at the same time), or either?")]
         public SelectedItemType ItemType { get; set; }
 
         public CheckSelectedAction(ScriptedEvent parentEvent, ContentXElement element) : base(parentEvent, element) { }

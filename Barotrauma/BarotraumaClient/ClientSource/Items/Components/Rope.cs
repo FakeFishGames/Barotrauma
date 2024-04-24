@@ -2,13 +2,16 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
-using System.Xml.Linq;
+using Barotrauma.Sounds;
 
 namespace Barotrauma.Items.Components
 {
     partial class Rope : ItemComponent, IDrawableComponent
     {
         private Sprite sprite, startSprite, endSprite;
+        
+        private RoundSound snapSound, reelSound;
+        private SoundChannel reelSoundChannel;
 
         [Serialize(5, IsPropertySaveable.No)]
         public int SpriteWidth
@@ -54,6 +57,19 @@ namespace Barotrauma.Items.Components
                     Math.Abs(target.DrawPosition.Y - sourcePos.Y)) * 1.5f;
             }
         }
+        
+        [Serialize("1.0, 1.0", IsPropertySaveable.No, description: "When reeling in, the pitch slides from X to Y, depending on the length of the rope.")]
+        public Vector2 ReelSoundPitchSlide
+        {
+            get => _reelSoundPitchSlide;
+            set
+            {
+                _reelSoundPitchSlide = new Vector2(
+                    Math.Max(value.X, SoundChannel.MinFrequencyMultiplier), 
+                    Math.Min(value.Y, SoundChannel.MaxFrequencyMultiplier));
+            }
+        }
+        private Vector2 _reelSoundPitchSlide;
 
         partial void InitProjSpecific(ContentXElement element)
         {
@@ -70,7 +86,26 @@ namespace Barotrauma.Items.Components
                     case "endsprite":
                         endSprite = new Sprite(subElement);
                         break;
+                    case "snapsound":
+                        snapSound = RoundSound.Load(subElement);
+                        break;
+                    case "reelsound":
+                        reelSound = RoundSound.Load(subElement);
+                        break;
                 }
+            }
+        }
+        
+        partial void UpdateProjSpecific()
+        {
+            if (isReelingIn && !Snapped)
+            {
+                PlaySound(reelSound, source.WorldPosition);
+            }
+            else
+            {
+                reelSoundChannel?.FadeOutAndDispose();
+                reelSoundChannel = null;
             }
         }
 
@@ -184,6 +219,32 @@ namespace Barotrauma.Items.Components
                     overrideColor ?? SpriteColor, depth: depth, width: width);
             }
         }
+        
+        private void PlaySound(RoundSound sound, Vector2 position)
+        {
+            if (sound == null) { return; }
+            if (sound == reelSound)
+            {
+                if (reelSoundChannel is not { IsPlaying: true })
+                {
+                    reelSoundChannel = SoundPlayer.PlaySound(sound.Sound, position, sound.Volume, sound.Range, ignoreMuffling: sound.IgnoreMuffling, freqMult: sound.GetRandomFrequencyMultiplier());
+                    if (reelSoundChannel != null)
+                    {
+                        reelSoundChannel.Looping = true;
+                    }
+                }
+                else
+                {
+                    reelSoundChannel.Position = new Vector3(position, 0);
+                    reelSoundChannel.Gain = MathHelper.Lerp(0, 1.0f, MathUtils.InverseLerp(MinPullDistance, MaxLength, MathUtils.Pow(currentRopeLength, 1.5f)));
+                    reelSoundChannel.FrequencyMultiplier = MathHelper.Lerp(ReelSoundPitchSlide.X, ReelSoundPitchSlide.Y, MathUtils.InverseLerp(MinPullDistance, MaxLength, currentRopeLength));
+                }
+            }
+            else
+            { 
+                SoundPlayer.PlaySound(sound.Sound, position, sound.Volume, sound.Range, ignoreMuffling: sound.IgnoreMuffling, freqMult: sound.GetRandomFrequencyMultiplier());
+            }
+        }
 
         public void ClientEventRead(IReadMessage msg, float sendingTime)
         {
@@ -191,30 +252,38 @@ namespace Barotrauma.Items.Components
 
             if (!snapped)
             {
-                UInt16 targetId = msg.ReadUInt16();
-                UInt16 sourceId = msg.ReadUInt16();
+                ushort targetId = msg.ReadUInt16();
+                ushort sourceId = msg.ReadUInt16();
                 byte limbIndex = msg.ReadByte();
 
-                Item target = Entity.FindEntityByID(targetId) as Item;
-                if (target == null) { return; }
+                if (Entity.FindEntityByID(targetId) is not Item target) { return; }
                 var source = Entity.FindEntityByID(sourceId);
-                if (source is Character sourceCharacter && limbIndex >= 0 && limbIndex < sourceCharacter.AnimController.Limbs.Length)
+                switch (source)
                 {
-                    Limb sourceLimb = sourceCharacter.AnimController.Limbs[limbIndex];
-                    Attach(sourceLimb, target);
-                }
-                else if (source is ISpatialEntity spatialEntity)
-                {
-                    Attach(spatialEntity, target);
+                    case Character sourceCharacter when limbIndex >= 0 && limbIndex < sourceCharacter.AnimController.Limbs.Length:
+                    {
+                        Limb sourceLimb = sourceCharacter.AnimController.Limbs[limbIndex];
+                        Attach(sourceLimb, target);
+                        sourceCharacter.AnimController.DragWithRope();
+                        break;
+                    }
+                    case ISpatialEntity spatialEntity:
+                        Attach(spatialEntity, target);
+                        break;
                 }
             }
         }
 
         protected override void RemoveComponentSpecific()
         {
-            sprite?.Remove(); sprite = null;
-            startSprite?.Remove(); startSprite = null;
-            endSprite?.Remove(); endSprite = null;
+            sprite?.Remove();
+            sprite = null;
+            startSprite?.Remove();
+            startSprite = null;
+            endSprite?.Remove();
+            endSprite = null;
+            reelSoundChannel?.FadeOutAndDispose();
+            reelSoundChannel = null;
         }
     }
 }

@@ -41,6 +41,13 @@ namespace Barotrauma
         BossHealthBarsOnly,
         HideAll
     }
+    
+    public enum InteractionLabelDisplayMode
+    {
+        Everything,
+        InteractionAvailable,
+        LooseItems
+    }
 
     public static class GameSettings
     {
@@ -67,6 +74,8 @@ namespace Barotrauma
                     RemoteMainMenuContentUrl = "https://www.barotraumagame.com/gamedata/",
                     AimAssistAmount = DefaultAimAssist,
                     ShowEnemyHealthBars = EnemyHealthBarMode.ShowAll,
+                    ChatSpeechBubbles = true,
+                    InteractionLabelDisplayMode = InteractionLabelDisplayMode.Everything,
                     EnableMouseLook = true,
                     ChatOpen = true,
                     CrewMenuOpen = true,
@@ -143,6 +152,8 @@ namespace Barotrauma
             public float AimAssistAmount;
             public bool EnableMouseLook;
             public EnemyHealthBarMode ShowEnemyHealthBars;
+            public bool ChatSpeechBubbles;
+            public InteractionLabelDisplayMode InteractionLabelDisplayMode;
             public bool ChatOpen;
             public bool CrewMenuOpen;
             public bool ShowOffensiveServerPrompt;
@@ -301,6 +312,7 @@ namespace Barotrauma
                         { InputType.Health, Keys.H },
                         { InputType.Ragdoll, Keys.Space },
                         { InputType.Aim, MouseButton.SecondaryMouse },
+                        { InputType.DropItem, Keys.None },
 
                         { InputType.InfoTab, Keys.Tab },
                         { InputType.Chat, Keys.None },
@@ -314,6 +326,7 @@ namespace Barotrauma
                         { InputType.LocalVoice, Keys.None },
                         { InputType.ToggleChatMode, Keys.R },
                         { InputType.Command, MouseButton.MiddleMouse },
+                        { InputType.ContextualCommand, Keys.LeftShift },
                         { InputType.PreviousFireMode, MouseButton.MouseWheelDown },
                         { InputType.NextFireMode, MouseButton.MouseWheelUp },
 
@@ -332,7 +345,8 @@ namespace Barotrauma
                         { InputType.Use, Keys.E },
                         { InputType.Select, MouseButton.PrimaryMouse },
                         { InputType.Deselect, MouseButton.SecondaryMouse },
-                        { InputType.Shoot, MouseButton.PrimaryMouse }
+                        { InputType.Shoot, MouseButton.PrimaryMouse },
+                        { InputType.ShowInteractionLabels, Keys.LeftAlt }
                 }.ToImmutableDictionary();
 
                 public static KeyMapping GetDefault() => new KeyMapping
@@ -382,6 +396,13 @@ namespace Barotrauma
                         {
                             foreach (var savedBinding in savedBindings)
                             {
+                                if (savedBinding.Key is InputType.Run or InputType.TakeHalfFromInventorySlot &&
+                                    defaultBinding.Key == InputType.ContextualCommand)
+                                {
+                                    //run and contextual commands have always defaulted to Shift, but the latter used to be hard-coded.
+                                    //don't show a warning about those being bound to the same key
+                                    continue;
+                                }
                                 if (savedBinding.Value == defaultBinding.Value)
                                 {
                                     OnGameMainHasLoaded += () =>

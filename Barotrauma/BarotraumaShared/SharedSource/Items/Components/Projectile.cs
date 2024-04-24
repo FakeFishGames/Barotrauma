@@ -636,6 +636,8 @@ namespace Barotrauma.Items.Components
                 }
                 if (fixture.Body.UserData is VineTile) { return true; }
                 if (fixture.CollidesWith == Category.None) { return true; }
+                //only collides with characters = probably an "outsideCollisionBlocker" created by a gap
+                if (fixture.CollidesWith == Physics.CollisionCharacter) { return true; }
 
                 if (fixture.Body.UserData as string == "ruinroom" || fixture.Body.UserData is Hull || fixture.UserData is Hull) { return true; }
 
@@ -689,6 +691,8 @@ namespace Barotrauma.Items.Components
                 }
                 if (fixture.Body.UserData is VineTile) { return -1; }
                 if (fixture.CollidesWith == Category.None) { return -1; }
+                //only collides with characters = probably an "outsideCollisionBlocker" created by a gap
+                if (fixture.CollidesWith == Physics.CollisionCharacter) { return -1; }
                 if (fixture.Body.UserData is Item item)
                 {
                     if (item.Condition <= 0) { return -1; }
@@ -945,9 +949,15 @@ namespace Barotrauma.Items.Components
                     item.body.SimPosition - ConvertUnits.ToSimUnits(sub.Position) - dir,
                     item.body.SimPosition - ConvertUnits.ToSimUnits(sub.Position) + dir,
                     collisionCategory: Physics.CollisionWall);
+
+                Vector2 launchPosInCurrentCoordinateSpace = launchPos;
+                if (item.body.Submarine == null && LaunchSub != null)
+                {
+                    launchPosInCurrentCoordinateSpace += ConvertUnits.ToSimUnits(LaunchSub.Position);
+                }
                 if (wallBody?.FixtureList?.First() != null && (wallBody.UserData is Structure || wallBody.UserData is Item) &&
                     //ignore the hit if it's behind the position the item was launched from, and the projectile is travelling in the opposite direction
-                    Vector2.Dot((item.body.SimPosition + normalizedVel) - launchPos, dir) > 0)
+                    Vector2.Dot((item.body.SimPosition + normalizedVel) - launchPosInCurrentCoordinateSpace, dir) > 0)
                 {
                     target = wallBody.FixtureList.First();
                     if (hits.Contains(target.Body))

@@ -157,6 +157,7 @@ namespace Barotrauma
                                 Character.Controlled.Info.Name,
                                 msg, messageType,
                                 Character.Controlled);
+                            Character.Controlled.ShowSpeechBubble(ChatMessage.MessageColor[(int)messageType], text);
                             if (messageType == ChatMessageType.Radio && headset != null)
                             {
                                 Signal s = new Signal(msg, sender: Character.Controlled, source: headset.Item);
@@ -620,7 +621,7 @@ namespace Barotrauma
         private void OnCrewListRearranged(GUIListBox crewList, object draggedElementData)
         {
             if (crewList != this.crewList) { return; }
-            if (!(draggedElementData is Character)) { return; }
+            if (draggedElementData is not Character) { return; }
             if (!IsSinglePlayer) { return; }
             if (crewList.HasDraggedElementIndexChanged)
             {
@@ -645,7 +646,7 @@ namespace Barotrauma
             for (int i = 0; i < crewList.Content.CountChildren; i++)
             {
                 var characterComponent = crewList.Content.GetChild(i);
-                if (!(characterComponent?.UserData is Character c)) { continue; }
+                if (characterComponent?.UserData is not Character c) { continue; }
                 if (c.Info == null) { continue; }
                 c.Info.CrewListIndex = i;
             }
@@ -681,6 +682,7 @@ namespace Barotrauma
         {
             AddSinglePlayerChatMessage(senderName.Value, text.Value, messageType, sender);
         }
+
         public void AddSinglePlayerChatMessage(string senderName, string text, ChatMessageType messageType, Character sender)
         {
             if (!IsSinglePlayer)
@@ -798,12 +800,27 @@ namespace Barotrauma
                     hull ??= order.OrderGiver.CurrentHull;
                     AddOrder(order.WithTargetEntity(hull), order.FadeOutTime);
                 }
+                if (order.IsDeconstructOrder)
+                {
+                    if (order.TargetEntity is Item item)
+                    {
+                        if (order.Identifier == Tags.DeconstructThis)
+                        {
+                            Item.DeconstructItems.Add(item);
+                            HintManager.OnItemMarkedForDeconstruction(order.OrderGiver);
+                        }
+                        else
+                        {
+                            Item.DeconstructItems.Remove(item);
+                        }
+                    }
+                }
                 else if (order.IsIgnoreOrder)
                 {
                     WallSection ws = null;
                     if (order.TargetType == Order.OrderTargetType.Entity && order.TargetEntity is IIgnorable ignorable)
                     {
-                        ignorable.OrderedToBeIgnored = order.Identifier == "ignorethis";
+                        ignorable.OrderedToBeIgnored = order.Identifier == Tags.IgnoreThis;
                         AddOrder(order.Clone(), null);
                     }
                     else if (order.TargetType == Order.OrderTargetType.WallSection && order.TargetEntity is Structure s)
@@ -812,7 +829,7 @@ namespace Barotrauma
                         ws = s.GetSection(wallSectionIndex);
                         if (ws != null)
                         {
-                            ws.OrderedToBeIgnored = order.Identifier == "ignorethis";
+                            ws.OrderedToBeIgnored = order.Identifier == Tags.IgnoreThis;
                             AddOrder(order.WithWallSection(s, wallSectionIndex), null);
                         }
                     }
@@ -835,7 +852,9 @@ namespace Barotrauma
                 }
                 if (IsSinglePlayer)
                 {
-                    order.OrderGiver?.Speak(order.GetChatMessage("", hull?.DisplayName?.Value, givingOrderToSelf: character == order.OrderGiver, isNewOrder: isNewOrder), ChatMessageType.Order);
+                    order.OrderGiver?.Speak(
+                        order.GetChatMessage("", hull?.DisplayName?.Value, givingOrderToSelf: character == order.OrderGiver, isNewOrder: isNewOrder), 
+                        ChatMessageType.Order);
                 }
                 else
                 {
@@ -1404,9 +1423,10 @@ namespace Barotrauma
             if (PlayerInput.KeyDown(InputType.Command) &&
                 (GUI.KeyboardDispatcher.Subscriber == null || (GUI.KeyboardDispatcher.Subscriber is GUIComponent component && (component == crewList || component.IsChildOf(crewList)))) &&
                 commandFrame == null && !clicklessSelectionActive && CanIssueOrders && !(GameMain.GameSession?.Campaign?.ShowCampaignUI ?? false) &&
-                Character.Controlled?.SelectedItem?.Prefab is not { DisableCommandMenuWhenSelected: true })
+                Character.Controlled?.SelectedItem?.Prefab is not { DisableCommandMenuWhenSelected: true } &&
+                !Inventory.IsMouseOnInventory)
             {
-                if (PlayerInput.IsShiftDown())
+                if (PlayerInput.KeyDown(InputType.ContextualCommand))
                 {
                     CreateCommandUI(FindEntityContext(), true);
                 }
@@ -1535,14 +1555,14 @@ namespace Barotrauma
                 {
                     if (node.Keys != Keys.None && PlayerInput.KeyHit(node.Keys))
                     {
-                        var b = node.Button as GUIButton;
-                        if (PlayerInput.IsShiftDown() && b?.OnSecondaryClicked != null)
+                        var button = node.Button;
+                        if (PlayerInput.IsShiftDown() && button?.OnSecondaryClicked != null)
                         {
-                            b.OnSecondaryClicked.Invoke(node.Button as GUIButton, node.Button.UserData);
+                            button.OnSecondaryClicked.Invoke(button, button.UserData);
                         }
                         else
                         {
-                            b?.OnClicked?.Invoke(node.Button as GUIButton, node.Button.UserData);
+                            button?.OnClicked?.Invoke(button, button.UserData);
                         }
                         ResetNodeSelection();
                         hotkeyHit = true;
@@ -1612,7 +1632,7 @@ namespace Barotrauma
                             {
                                 foreach (var orderIcon in currentOrderIconList.Content.Children)
                                 {
-                                    if (!(orderIcon.UserData is Order order)) { continue; }
+                                    if (orderIcon.UserData is not Order order) { continue; }
                                     if (order.ColoredWhenControllingGiver && order.OrderGiver != Character.Controlled)
                                     {
                                         orderIcon.Color = AIObjective.ObjectiveIconColor;
@@ -1701,7 +1721,7 @@ namespace Barotrauma
                 bool foundMatch = false;
                 foreach (var orderIcon in currentOrderIconList.Content.Children)
                 {
-                    if (!(orderIcon.GetChildByUserData("glow") is GUIComponent glowComponent)) { continue; }
+                    if (orderIcon.GetChildByUserData("glow") is not GUIComponent glowComponent) { continue; }
                     glowComponent.Color = orderIcon.Color;
                     if (foundMatch)
                     {
@@ -1946,6 +1966,13 @@ namespace Barotrauma
             }
         }
 
+        public void OpenCommandUI(Entity entityContext = null, bool forceContextual = false)
+        {
+            CreateCommandUI(entityContext, forceContextual);
+            SoundPlayer.PlayUISound(GUISoundType.PopupMenu);
+            clicklessSelectionActive = isOpeningClick = true;
+        }
+
         private void CreateCommandUI(Entity entityContext = null, bool forceContextual = false)
         {
             if (commandFrame != null) { DisableCommandUI(); }
@@ -2018,7 +2045,7 @@ namespace Barotrauma
                     new RectTransform(Vector2.One, startNode.RectTransform, anchor: Anchor.Center),
                     (spriteBatch, _) =>
                     {
-                        if (!(entityContext is Character character) || character?.Info == null) { return; }
+                        if (entityContext is not Character character || character?.Info == null) { return; }
                         var node = startNode;
                         character.Info.DrawJobIcon(spriteBatch,
                             new Rectangle((int)(node.Rect.X + node.Rect.Width * 0.5f), (int)(node.Rect.Y + node.Rect.Height * 0.1f), (int)(node.Rect.Width * 0.6f), (int)(node.Rect.Height * 0.8f)));
@@ -2082,7 +2109,7 @@ namespace Barotrauma
             returnNodeMargin = returnNodeSize.X * 0.5f;
 
             nodeDistance = (int)(150 * GUI.Scale);
-            shorcutCenterNodeOffset = new Point(0, (int)(1.25f * nodeDistance));
+            shorcutCenterNodeOffset = new Point(0, (int)(1.35f * nodeDistance));
         }
 
         private List<OrderCategory> GetAvailableCategories()
@@ -2115,7 +2142,7 @@ namespace Barotrauma
             if (centerNode == null || optionNodes == null) { return; }
             var startNodePos = centerNode.Rect.Center.ToVector2();
             // Don't draw connectors for assignment nodes
-            if (!(optionNodes.FirstOrDefault()?.Button.UserData is Character))
+            if (optionNodes.FirstOrDefault()?.Button.UserData is not Character)
             {
                 // Regular option nodes
                 if (targetFrame == null || !targetFrame.Visible)
@@ -2194,7 +2221,7 @@ namespace Barotrauma
         private bool NavigateForward(GUIButton node, object userData)
         {
             if (commandFrame == null) { return false; }
-            if (!(optionNodes.Find(n => n.Button == node) is OptionNode optionNode) || !optionNodes.Remove(optionNode))
+            if (optionNodes.Find(n => n.Button == node) is not OptionNode optionNode || !optionNodes.Remove(optionNode))
             {
                 shortcutNodes.Remove(node);
             };
@@ -2352,7 +2379,7 @@ namespace Barotrauma
                     matchingItems = nodeOrder.GetMatchingItems(submarine, true, interactableFor: characterContext ?? Character.Controlled);
                 }
                 //more than one target item -> create a minimap-like selection with a pic of the sub
-                if (itemContext == null && !(nodeOrder.TargetEntity is Item) && matchingItems != null && matchingItems.Count > 1)
+                if (itemContext == null && nodeOrder.TargetEntity is not Item && matchingItems != null && matchingItems.Count > 1)
                 {
                     CreateMinimapNodes(nodeOrder, submarine, matchingItems);
                 }
@@ -2417,7 +2444,7 @@ namespace Barotrauma
 
             node.RectTransform.MoveOverTime(offset, CommandNodeAnimDuration);
             var icon = OrderCategoryIcon.OrderCategoryIcons.FirstOrDefault(ic => ic.Category == category);
-            if (!(icon is null))
+            if (icon is not null)
             {
                 var tooltip = TextManager.Get($"ordercategorytitle.{category}");
                 var categoryDescription = TextManager.Get($"ordercategorydescription.{category}");
@@ -2484,7 +2511,7 @@ namespace Barotrauma
                 // TODO: Doesn't work for player issued reports, because they don't have a target.
                 bool useSpecificRepairOrder = false;
                 if (CanFitMoreNodes() && ShouldDelegateOrder("repairelectrical") &&
-                    ActiveOrders.Any(o => o.Order.Prefab == reportBrokenDevices && o.Order.TargetItemComponent is Repairable r && r.requiredSkills.Any(s => s.Identifier == "electrical")))
+                    ActiveOrders.Any(o => o.Order.Prefab == reportBrokenDevices && o.Order.TargetItemComponent is Repairable r && r.RequiredSkills.Any(s => s.Identifier == "electrical")))
                 {
                     if (IsNonDuplicateOrderPrefab(OrderPrefab.Prefabs["repairelectrical"]))
                     {
@@ -2493,7 +2520,7 @@ namespace Barotrauma
                     useSpecificRepairOrder = true;
                 }
                 if (CanFitMoreNodes() && ShouldDelegateOrder("repairmechanical") &&
-                    ActiveOrders.Any(o => o.Order.Prefab == reportBrokenDevices && o.Order.TargetItemComponent is Repairable r && r.requiredSkills.Any(s => s.Identifier == "mechanical")))
+                    ActiveOrders.Any(o => o.Order.Prefab == reportBrokenDevices && o.Order.TargetItemComponent is Repairable r && r.RequiredSkills.Any(s => s.Identifier == "mechanical")))
                 {
                     if (IsNonDuplicateOrderPrefab(OrderPrefab.Prefabs["repairmechanical"]))
                     {
@@ -2565,7 +2592,7 @@ namespace Barotrauma
             static bool ShouldDelegateOrder(string orderIdentifier) => ShouldDelegateOrderId(orderIdentifier.ToIdentifier());
             static bool ShouldDelegateOrderId(Identifier orderIdentifier)
             {
-                return !(Character.Controlled is Character c) || !(c?.Info?.Job != null && c.Info.Job.Prefab.AppropriateOrders.Contains(orderIdentifier));
+                return Character.Controlled is not Character c || !(c?.Info?.Job != null && c.Info.Job.Prefab.AppropriateOrders.Contains(orderIdentifier));
             }
             bool IsNonDuplicateOrder(Order order) => IsNonDuplicateOrderPrefab(order.Prefab, order.Option);
             bool IsNonDuplicateOrderPrefab(OrderPrefab orderPrefab, Identifier option = default)
@@ -2642,6 +2669,7 @@ namespace Barotrauma
                                 new Order(p, itemContext, targetComponent));
                         }
                     }
+
                     // If targeting a periscope connected to a turret, show the 'operateweapons' order
                     var operateWeaponsPrefab = OrderPrefab.Prefabs["operateweapons"];
                     if (contextualOrders.None(o => o.Identifier == "operateweapons") && itemContext.Components.Any(c => c is Controller))
@@ -2656,11 +2684,11 @@ namespace Barotrauma
                     // If targeting a repairable item with condition below the repair threshold, show the 'repairsystems' order
                     if (contextualOrders.None(order => order.Identifier == "repairsystems") && itemContext.Repairables.Any(r => r.IsBelowRepairThreshold))
                     {
-                        if (itemContext.Repairables.Any(r => r != null && r.requiredSkills.Any(s => s != null && s.Identifier.Equals("electrical"))))
+                        if (itemContext.Repairables.Any(r => r != null && r.RequiredSkills.Any(s => s != null && s.Identifier.Equals("electrical"))))
                         {
                             contextualOrders.Add(new Order(OrderPrefab.Prefabs["repairelectrical"], itemContext, targetItem: null));
                         }
-                        else if (itemContext.Repairables.Any(r => r != null && r.requiredSkills.Any(s => s != null && s.Identifier.Equals("mechanical"))))
+                        else if (itemContext.Repairables.Any(r => r != null && r.RequiredSkills.Any(s => s != null && s.Identifier.Equals("mechanical"))))
                         {
                             contextualOrders.Add(new Order(OrderPrefab.Prefabs["repairmechanical"], itemContext, targetItem: null));
                         }
@@ -2694,14 +2722,14 @@ namespace Barotrauma
                 }
                 void AddIgnoreOrder(IIgnorable target)
                 {
-                    var orderIdentifier = "ignorethis";
+                    var orderIdentifier = Tags.IgnoreThis;
                     if (!target.OrderedToBeIgnored && contextualOrders.None(order => order.Identifier == orderIdentifier))
                     {
                         AddOrder();
                     }
                     else
                     {
-                        orderIdentifier = "unignorethis";
+                        orderIdentifier = Tags.UnignoreThis;
                         if (target.OrderedToBeIgnored && contextualOrders.None(order => order.Identifier == orderIdentifier))
                         {
                             AddOrder();
@@ -2751,20 +2779,6 @@ namespace Barotrauma
                     CreateOrderOptionNode(nodeSize, commandFrame.RectTransform, offsets[i].ToPoint(), order, hotkey);
                 optionNodes.Add(new OptionNode(component, !disableNode ? Keys.D0 + (i + 1) % 10 : Keys.None));
             }
-        }
-
-        // TODO: there's duplicate logic here and above -> would be better to refactor so that the conditions are only defined in one place
-        public static bool DoesItemHaveContextualOrders(Item item)
-        {
-            if (OrderPrefab.Prefabs.Any(o => o.TargetItemsMatchItem(item))) { return true; }
-            if (OrderPrefab.Prefabs.Any(o => o.TryGetTargetItemComponent(item, out _))) { return true; }
-            if (AIObjectiveCleanupItems.IsValidTarget(item, Character.Controlled, checkInventory: false)) { return true; }
-            if (AIObjectiveCleanupItems.IsValidContainer(item, Character.Controlled)) { return true; }
-            if (OrderPrefab.Prefabs.TryGet("loaditems", out OrderPrefab loadItemsPrefab) && AIObjectiveLoadItems.IsValidTarget(item, Character.Controlled, targetContainerTags: loadItemsPrefab.GetTargetItems())) { return true; }
-            if (item.Repairables.Any(r => r.IsBelowRepairThreshold)) { return true; }
-            return OrderPrefab.Prefabs.TryGet("operateweapons", out OrderPrefab operateWeaponsPrefab) && item.Components.Any(c => c is Controller) &&
-                   (item.GetConnectedComponents<Turret>().Any(c => operateWeaponsPrefab.TargetItemsMatchItem(c.Item)) ||
-                    item.GetConnectedComponents<Turret>(recursive: true).Any(c => operateWeaponsPrefab.TargetItemsMatchItem(c.Item)));
         }
 
         /// <param name="hotkey">Use a negative value (e.g. -1) if there should be no hotkey associated with the node</param>
@@ -3719,16 +3733,16 @@ namespace Barotrauma
                     switch (order.TargetType)
                     {
                         case Order.OrderTargetType.Entity:
-                            if (!(order.TargetEntity is IIgnorable ignorableEntity)) { break; }
-                            ignorableEntity.OrderedToBeIgnored = order.Identifier == "ignorethis";
+                            if (order.TargetEntity is not IIgnorable ignorableEntity) { break; }
+                            ignorableEntity.OrderedToBeIgnored = order.Identifier == Tags.IgnoreThis;
                             break;
                         case Order.OrderTargetType.Position:
                             throw new NotImplementedException();
                         case Order.OrderTargetType.WallSection:
                             if (!order.WallSectionIndex.HasValue) { break; }
-                            if (!(order.TargetEntity is Structure s)) { break; }
-                            if (!(s.GetSection(order.WallSectionIndex.Value) is IIgnorable ignorableWall)) { break; }
-                            ignorableWall.OrderedToBeIgnored = order.Identifier == "ignorethis";
+                            if (order.TargetEntity is not Structure s) { break; }
+                            if (s.GetSection(order.WallSectionIndex.Value) is not IIgnorable ignorableWall) { break; }
+                            ignorableWall.OrderedToBeIgnored = order.Identifier == Tags.IgnoreThis;
                             break;
                     }
                 }

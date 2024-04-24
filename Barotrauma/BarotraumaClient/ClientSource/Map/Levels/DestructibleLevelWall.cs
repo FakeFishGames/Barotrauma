@@ -20,6 +20,8 @@ namespace Barotrauma
         {
             if (damage <= 0.0f) { return; }
             Vector2 particlePos = worldPosition;
+            Vector2 particleDir = particlePos - WorldPosition;
+            if (particleDir.LengthSquared() > 0.0001f) { particleDir = Vector2.Normalize(particleDir); }
             if (!Cells.Any(c => c.IsPointInside(particlePos)))
             {
                 bool intersectionFound = false;
@@ -31,6 +33,7 @@ namespace Barotrauma
                         {
                             intersectionFound = true;
                             particlePos = intersection;
+                            particleDir = edge.GetNormal(cell);
                             break;
                         }
                     }
@@ -38,14 +41,15 @@ namespace Barotrauma
                 }
             }
 
-            Vector2 particleDir = particlePos - WorldPosition;
-            if (particleDir.LengthSquared() > 0.0001f) { particleDir = Vector2.Normalize(particleDir); }
             int particleAmount = MathHelper.Clamp((int)damage, 1, 10);
             for (int i = 0; i < particleAmount; i++)
             {
-                var particle = GameMain.ParticleManager.CreateParticle("iceshards",
+                var particle = GameMain.ParticleManager.CreateParticle("iceexplosionsmall",
                     particlePos + Rand.Vector(5.0f),
-                    particleDir * Rand.Range(200.0f, 500.0f) + Rand.Vector(100.0f));
+                    particleDir * Rand.Range(30.0f, 500.0f) + Rand.Vector(20.0f));
+                GameMain.ParticleManager.CreateParticle("iceshards",
+                    particlePos + Rand.Vector(5.0f),
+                    particleDir * Rand.Range(100.0f, 500.0f) + Rand.Vector(100.0f));
             }
         }
 

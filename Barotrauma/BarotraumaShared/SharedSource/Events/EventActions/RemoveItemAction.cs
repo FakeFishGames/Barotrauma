@@ -3,15 +3,18 @@ using System.Collections.Immutable;
 
 namespace Barotrauma
 {
+    /// <summary>
+    /// Removes (deletes) a specific item or items.
+    /// </summary>
     class RemoveItemAction : EventAction
     {
-        [Serialize("", IsPropertySaveable.Yes)]
+        [Serialize("", IsPropertySaveable.Yes, description: "Tag of the item(s) to remove.")]
         public Identifier TargetTag { get; set; }
 
-        [Serialize("", IsPropertySaveable.Yes)]
+        [Serialize("", IsPropertySaveable.Yes, description: "Optional list of identifiers the item(s) must have. You might for example want to go through all tagged items inside a cabinet, but only remove specific types of items.")]
         public string ItemIdentifiers { get; set; }
 
-        [Serialize(1, IsPropertySaveable.Yes)]
+        [Serialize(1, IsPropertySaveable.Yes, description: "Maximum number of items to remove.")]
         public int Amount { get; set; }
 
         private readonly ImmutableHashSet<Identifier> itemIdentifierSplit;

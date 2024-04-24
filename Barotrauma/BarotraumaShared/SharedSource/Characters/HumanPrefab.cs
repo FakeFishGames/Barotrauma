@@ -102,6 +102,9 @@ namespace Barotrauma
 
         [Serialize(float.PositiveInfinity, IsPropertySaveable.No)]
         public float ReportRange { get; protected set; }
+        
+        [Serialize(float.PositiveInfinity, IsPropertySaveable.No)]
+        public float FindWeaponsRange { get; protected set; }
 
         public Identifier[] PreferredOutpostModuleTypes { get; protected set; }
 
@@ -172,6 +175,7 @@ namespace Barotrauma
                     }
                 }
                 humanAI.ReportRange = ReportRange;
+                humanAI.FindWeaponsRange = FindWeaponsRange;
                 humanAI.AimSpeed = AimSpeed;
                 humanAI.AimAccuracy = AimAccuracy;
             }
@@ -182,6 +186,7 @@ namespace Barotrauma
                 {
                     humanAI.ObjectiveManager.SetForcedOrder(new AIObjectiveGoTo(positionToStayIn, npc, humanAI.ObjectiveManager, repeat: true, getDivingGearIfNeeded: false, closeEnough: 200)
                     {
+                        FaceTargetOnCompleted = false,
                         DebugLogWhenFails = false,
                         IsWaitOrder = true,
                         CloseEnough = 100

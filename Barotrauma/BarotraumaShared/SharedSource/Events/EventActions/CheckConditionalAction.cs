@@ -6,20 +6,24 @@ using System.Xml.Linq;
 
 namespace Barotrauma
 {
+
+    /// <summary>
+    /// Checks whether an arbitrary condition is met. The conditionals work the same way as they do in StatusEffects.
+    /// </summary>
     class CheckConditionalAction : BinaryOptionAction
     {
-        [Serialize("", IsPropertySaveable.Yes)]
+        [Serialize("", IsPropertySaveable.Yes, description: "Tag of the target to check.")]
         public Identifier TargetTag { get; set; }
 
-        [Serialize(PropertyConditional.LogicalOperatorType.Or, IsPropertySaveable.Yes)]
+        [Serialize(PropertyConditional.LogicalOperatorType.Or, IsPropertySaveable.Yes, description: "Do all of the conditions need to be met, or is it enough if at least one is? Only valid if there are multiple conditionals.")]
         public PropertyConditional.LogicalOperatorType LogicalOperator { get; set; }
 
         private ImmutableArray<PropertyConditional> Conditionals { get; }
 
-        [Serialize("", IsPropertySaveable.Yes)]
+        [Serialize("", IsPropertySaveable.Yes, description: "A tag to apply to the hull the target is currently in when the check succeeds, as well as all the hulls linked to it.")]
         public Identifier ApplyTagToLinkedHulls { get; set; }
 
-        [Serialize("", IsPropertySaveable.Yes, description: "Tag to apply to the hull the target item is inside when the item is used.")]
+        [Serialize("", IsPropertySaveable.Yes, description: "A tag to apply to the hull the target is currently in when the check succeeds.")]
         public Identifier ApplyTagToHull { get; set; }
 
         public CheckConditionalAction(ScriptedEvent parentEvent, ContentXElement element) : base(parentEvent, element)

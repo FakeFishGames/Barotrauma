@@ -82,16 +82,15 @@ namespace Barotrauma
             TalentSubTree subTree = talentTree!.TalentSubTrees.FirstOrDefault(tst => tst.Identifier == subTreeIdentifier);
             if (subTree is null) { return TalentStages.Invalid; }
 
-            if (!TalentTreeMeetsRequirements(talentTree, subTree, selectedTalents))
-            {
-                return TalentStages.Locked;
-            }
-
             TalentOption targetTalentOption = subTree.TalentOptionStages[index];
-
             if (targetTalentOption.HasEnoughTalents(character.Info))
             {
                 return TalentStages.Unlocked;
+            }
+
+            if (!TalentTreeMeetsRequirements(talentTree, subTree, selectedTalents))
+            {
+                return TalentStages.Locked;
             }
 
             if (targetTalentOption.HasSelectedTalent(selectedTalents))

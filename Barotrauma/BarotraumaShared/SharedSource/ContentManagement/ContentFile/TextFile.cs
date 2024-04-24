@@ -1,4 +1,4 @@
-using System.Collections.Immutable;
+﻿using System.Collections.Immutable;
 using System.Linq;
 using System.Xml.Linq;
 
@@ -37,7 +37,8 @@ namespace Barotrauma
                 if (newList.Count != 0) { TextManager.TextPacks.TryAdd(kvp.Key, newList); }
             }
             TextManager.IncrementLanguageVersion();
-            if (!TextManager.TextPacks.ContainsKey(GameSettings.CurrentConfig.Language))
+            if (!TextManager.TextPacks.ContainsKey(GameSettings.CurrentConfig.Language) && 
+                GameSettings.CurrentConfig.Language != TextManager.DefaultLanguage)
             {
                 DebugConsole.AddWarning($"The language {GameSettings.CurrentConfig.Language} is no longer available. Switching to {TextManager.DefaultLanguage}...");
                 var config = GameSettings.CurrentConfig;

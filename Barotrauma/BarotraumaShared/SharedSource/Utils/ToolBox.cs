@@ -639,6 +639,9 @@ namespace Barotrauma
             if (o is null) { throw new ArgumentNullException(); }
         }
 
+        /// <summary>
+        /// Converts a percentage value in the 0-1 range to a string representation in the format "x %" according to the grammar rules of the selected language
+        /// </summary>
         public static string GetFormattedPercentage(float v)
         {
             return TextManager.GetWithVariable("percentageformat", "[value]", ((int)MathF.Round(v * 100)).ToString()).Value;
