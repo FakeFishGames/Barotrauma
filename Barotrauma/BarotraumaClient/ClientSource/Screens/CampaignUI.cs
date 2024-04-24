@@ -40,7 +40,8 @@ namespace Barotrauma
         public CampaignMode Campaign { get; }
 
         public CrewManagement CrewManagement { get; set; }
-        private Store Store { get; set; }
+
+        public Store Store { get; private set; }
 
         public UpgradeStore UpgradeStore { get; set; }
 

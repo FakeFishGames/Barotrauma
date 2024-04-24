@@ -23,11 +23,11 @@ namespace Barotrauma.Networking
             => !(a == b);
     }
     
-    sealed class PipeConnection : NetworkConnection
+    sealed class PipeConnection : NetworkConnection<PipeEndpoint>
     {
-        public PipeConnection(AccountId accountId) : base(new PipeEndpoint())
+        public PipeConnection(Option<AccountId> accountId) : base(new PipeEndpoint())
         {
-            SetAccountInfo(new AccountInfo(Option<AccountId>.Some(accountId)));
+            SetAccountInfo(new AccountInfo(accountId));
         }
     }
 }

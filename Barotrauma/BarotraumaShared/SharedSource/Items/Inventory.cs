@@ -1026,7 +1026,6 @@ namespace Barotrauma
                     visualSlots[n].ShowBorderHighlight(Color.White, 0.1f, 0.4f);
                     if (selectedSlot?.Inventory == this) { selectedSlot.ForceTooltipRefresh = true; }
                 }
-                syncItemsDelay = 1.0f;
 #endif
                 CharacterHUD.RecreateHudTextsIfFocused(item);
             }

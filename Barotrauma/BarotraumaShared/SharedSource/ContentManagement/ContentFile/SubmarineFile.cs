@@ -9,7 +9,7 @@ namespace Barotrauma
         {
             using var md5 = MD5.Create();
             #warning TODO: this doesn't account for collisions, this should probably be using the PrefabCollection class like everything else
-            UintIdentifier = ToolBox.StringToUInt32Hash(Barotrauma.IO.Path.GetFileNameWithoutExtension(path.Value), md5);
+            UintIdentifier = ToolBoxCore.StringToUInt32Hash(Barotrauma.IO.Path.GetFileNameWithoutExtension(path.Value), md5);
         }
 
         public readonly UInt32 UintIdentifier;

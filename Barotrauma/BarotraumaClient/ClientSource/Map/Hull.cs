@@ -218,6 +218,7 @@ namespace Barotrauma
             {
                 if (primaryMouseButtonHeld)
                 {
+                    ShowHulls = true;
                     hull.WaterVolume += 100000.0f * deltaTime;
                     hull.networkUpdatePending = true;
                     hull.serverUpdateDelay = 0.5f;

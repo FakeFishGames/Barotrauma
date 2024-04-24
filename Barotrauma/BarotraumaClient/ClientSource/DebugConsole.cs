@@ -9,10 +9,12 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 using System.Xml.Linq;
 using static Barotrauma.FabricationRecipe;
 
@@ -35,9 +37,7 @@ namespace Barotrauma
                 if (!allowCheats && !CheatsEnabled && IsCheat)
                 {
                     NewMessage("You need to enable cheats using the command \"enablecheats\" before you can use the command \"" + Names[0] + "\".", Color.Red);
-#if USE_STEAM
-                    NewMessage("Enabling cheats will disable Steam achievements during this play session.", Color.Red);
-#endif
+                    NewMessage("Enabling cheats will disable achievements during this play session.", Color.Red);
                     return;
                 }
 
@@ -66,8 +66,12 @@ namespace Barotrauma
         private static GUIFrame frame;
         private static GUIListBox listBox;
         private static GUITextBox textBox;
+#if DEBUG
+        private const int maxLength = 100000;
+#else
         private const int maxLength = 1000;
-
+#endif
+        
         public static GUITextBox TextBox => textBox;
         
         private static readonly ChatManager chatManager = new ChatManager(true, 64);
@@ -157,7 +161,7 @@ namespace Barotrauma
 
             activeQuestionText?.SetAsLastChild();
 
-            if (PlayerInput.KeyHit(Keys.F3))
+            if (PlayerInput.KeyHit(Keys.F3) && !PlayerInput.KeyDown(Keys.LeftControl) && !PlayerInput.KeyDown(Keys.RightControl))
             {
                 Toggle();
             }
@@ -247,6 +251,9 @@ namespace Barotrauma
                 case "unbindkey":
                 case "wikiimage_character":
                 case "wikiimage_sub":
+                case "eosStat":
+                case "eosUnlink":
+                case "eosLoginEpicViaSteam":
                     return true;
                 default:
                     return client.HasConsoleCommandPermission(command);
@@ -389,6 +396,87 @@ namespace Barotrauma
 
         private static void InitProjectSpecific()
         {
+            commands.Add(new Command("eosStat", "Query and display all logged in EOS users. Normally this is at most two users, but in a developer environment it could be more.", args =>
+            {
+                if (!EosInterface.Core.IsInitialized)
+                {
+                    NewMessage("EOS not initialized");
+                    return;
+                }
+
+                var loggedInUsers = EosInterface.IdQueries.GetLoggedInPuids();
+                if (!loggedInUsers.Any())
+                {
+                    NewMessage("EOS user not logged in");
+                    return;
+                }
+
+                NewMessage("Logged in EOS users:");
+                foreach (var puid in loggedInUsers)
+                {
+                    TaskPool.Add(
+                        $"eosStat -> {puid}",
+                        EosInterface.IdQueries.GetSelfExternalAccountIds(puid),
+                        t =>
+                        {
+                            if (!t.TryGetResult(out Result<ImmutableArray<AccountId>, EosInterface.IdQueries.GetSelfExternalIdError> result)) { return; }
+                            NewMessage($" - {puid}");
+
+                            if (result.TryUnwrapSuccess(out var ids))
+                            {
+                                foreach (var id in ids)
+                                {
+                                    NewMessage($"   - {id}");
+                                    if (id is EpicAccountId eaid)
+                                    {
+                                        async Task gameOwnershipTokenTest()
+                                        {
+                                            var tokenOption = await EosInterface.Ownership.GetGameOwnershipToken(eaid);
+                                            var verified = await tokenOption.Bind(t => t.Verify());
+                                            NewMessage($"Ownership token verify result: {verified}");
+                                        }
+                                        _ = gameOwnershipTokenTest(); // Fire and forget!
+                                        EosInterface.Login.TestEosSessionTimeoutRecovery(puid);
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                NewMessage($"   - Failed to get external IDs linked to {puid}: {result}");
+                            }
+                        });
+                }
+            }));
+            AssignRelayToServer("eosStat", false);
+
+            commands.Add(new Command("eosUnlink", "Unlink the primary logged in external account ID from its corresponding EOS Product User ID and close the game. This is meant to be used to test the EOS consent flow.", args =>
+            {
+                var userId = EosInterface.IdQueries.GetLoggedInPuids().FirstOrDefault();
+                NewMessage($"Unlinking external account from PUID {userId}");
+                GameSettings.SetCurrentConfig(GameSettings.CurrentConfig with { CrossplayChoice = Eos.EosSteamPrimaryLogin.CrossplayChoice.Unknown });
+                GameSettings.SaveCurrentConfig();
+                TaskPool.Add("unlinkTask", EosInterface.Login.UnlinkExternalAccount(userId), _ =>
+                {
+                    GameMain.Instance.Exit();
+                });
+            }));
+            AssignRelayToServer("eosUnlink", false);
+
+            commands.Add(new Command("eosLoginEpicViaSteam", "Log into an Epic account via a link to the currently logged in Steam account",
+                args =>
+                {
+                    TaskPool.Add("eosLoginEpicViaSteam",
+                        Eos.EosEpicSecondaryLogin.LoginToLinkedEpicAccount(),
+                        TaskPool.IgnoredCallback);
+                }));
+            AssignRelayToServer("eosLoginEpicViaSteam", false);
+
+            commands.Add(new Command("resetgameanalyticsconsent", "Reset whether you've given your consent for the game to send statistics to GameAnalytics. After executing the command, the game should ask for your consent again on relaunch.", args =>
+            {
+                GameAnalyticsManager.ResetConsent();
+            }));
+            AssignRelayToServer("resetgameanalyticsconsent", false);
+
             commands.Add(new Command("copyitemnames", "", (string[] args) =>
             {
                 StringBuilder sb = new StringBuilder();
@@ -422,18 +510,16 @@ namespace Barotrauma
                 }
             }));
 
-            commands.Add(new Command("enablecheats", "enablecheats: Enables cheat commands and disables Steam achievements during this play session.", (string[] args) =>
+            commands.Add(new Command("enablecheats", "enablecheats: Enables cheat commands and disables achievements during this play session.", (string[] args) =>
             {
                 CheatsEnabled = true;
-                SteamAchievementManager.CheatsEnabled = true;
+                AchievementManager.CheatsEnabled = true;
                 if (GameMain.GameSession?.Campaign is CampaignMode campaign)
                 {
                     campaign.CheatsEnabled = true;
                 }
                 NewMessage("Enabled cheat commands.", Color.Red);
-#if USE_STEAM
-                NewMessage("Steam achievements have been disabled during this play session.", Color.Red);
-#endif
+                NewMessage("Achievements have been disabled during this play session.", Color.Red);
             }));
             AssignRelayToServer("enablecheats", true);
 
@@ -689,6 +775,7 @@ namespace Barotrauma
             AssignRelayToServer("simulatedduplicateschance", false);
             AssignRelayToServer("simulatedlongloadingtime", false);
             AssignRelayToServer("storeinfo", false);
+            AssignRelayToServer("sendrawpacket", false);
 #endif
 
             commands.Add(new Command("clientlist", "", (string[] args) => { }));
@@ -1392,7 +1479,7 @@ namespace Barotrauma
                     {
                         if (!(MapEntityPrefab.Find(null, deconstructItem.ItemIdentifier, showErrorMessages: false) is ItemPrefab targetItem))
                         {
-                            ThrowError("Error in item \"" + itemPrefab.Name + "\" - could not find deconstruct item \"" + deconstructItem.ItemIdentifier + "\"!");
+                            ThrowErrorLocalized("Error in item \"" + itemPrefab.Name + "\" - could not find deconstruct item \"" + deconstructItem.ItemIdentifier + "\"!");
                             continue;
                         }
 
@@ -3176,6 +3263,36 @@ namespace Barotrauma
                 {
                     LocationType.Prefabs.Select(lt => lt.Identifier.Value).ToArray()
                 };
+            }));
+
+            commands.Add(new Command("sendrawpacket", "sendrawpacket [data]: Send a string of hex values as raw binary data to the server", (string[] args) =>
+            {
+                if (GameMain.NetworkMember is null)
+                {
+                    ThrowError("Not connected to a server");
+                    return;
+                }
+                
+                if (args.Length == 0)
+                {
+                    ThrowError("No data provided");
+                    return;
+                }
+
+                string dataString = string.Join(" ", args);
+
+                try
+                {
+                    byte[] bytes = ToolBox.HexStringToBytes(dataString);
+                    IWriteMessage msg = new WriteOnlyMessage();
+                    foreach (byte b in bytes) { msg.WriteByte(b); }
+                    GameMain.Client?.ClientPeer?.DebugSendRawMessage(msg);
+                    NewMessage($"Sent {bytes.Length} byte(s)", Color.Green);
+                }
+                catch (Exception e)
+                {
+                    ThrowError("Failed to parse the data", e);
+                }
             }));
 #endif
 

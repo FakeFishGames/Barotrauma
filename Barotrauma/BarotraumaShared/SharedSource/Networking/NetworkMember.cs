@@ -65,6 +65,7 @@ namespace Barotrauma.Networking
 
         PERMISSIONS,        //tell the client which special permissions they have (if any)
         ACHIEVEMENT,        //give the client a steam achievement
+        ACHIEVEMENT_STAT,   //increment stat for an achievement
         CHEATS_ENABLED,     //tell the clients whether cheats are on or off
 
         CAMPAIGN_SETUP_INFO,
@@ -147,13 +148,14 @@ namespace Barotrauma.Networking
         ServerCrashed,
         ServerFull,
         AuthenticationRequired,
-        SteamAuthenticationFailed,
+        AuthenticationFailed,
         SessionTaken,
         TooManyFailedLogins,
         InvalidName,
         NameTaken,
         InvalidVersion,
         SteamP2PError,
+        MalformedData,
         
         //attempt reconnecting with these reasons
         Timeout,

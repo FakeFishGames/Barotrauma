@@ -35,7 +35,7 @@ namespace Barotrauma.Items.Components
 
             if (UseHSV)
             {
-                Color hsvColor = ToolBox.HSVToRGB(signalR, signalG, signalB);
+                Color hsvColor = ToolBoxCore.HSVToRGB(signalR, signalG, signalB);
                 signalR = hsvColor.R;
                 signalG = hsvColor.G;
                 signalB = hsvColor.B;

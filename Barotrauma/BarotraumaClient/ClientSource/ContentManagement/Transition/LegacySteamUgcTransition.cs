@@ -198,7 +198,7 @@ namespace Barotrauma.Transition
                             DebugConsole.ThrowError("There was an error transferring mods", t2.Exception.GetInnermost());
                         }
                         ContentPackageManager.LocalPackages.Refresh();
-                        if (t2.TryGetResult(out string[] modsToEnable))
+                        if (t2.TryGetResult(out string[]? modsToEnable))
                         {
                             var newRegular = ContentPackageManager.EnabledPackages.Regular.ToList();
                             newRegular.AddRange(ContentPackageManager.LocalPackages.Regular

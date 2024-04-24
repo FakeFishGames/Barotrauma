@@ -84,8 +84,21 @@ namespace Barotrauma
             Console.WriteLine("Loading game settings");
             GameSettings.Init();
 
-            Console.WriteLine("Initializing SteamManager");
-            SteamManager.Initialize();
+            //no owner key = dedicated server
+            if (!CommandLineArgs.Any(a => a.Trim().Equals("-ownerkey", StringComparison.OrdinalIgnoreCase)))
+            {
+                Console.WriteLine("Initializing SteamManager");
+                SteamManager.Initialize();
+
+                if (!SteamManager.SteamworksLibExists)
+                {
+                    Console.WriteLine("Initializing EosManager");
+                    if (EosInterface.Core.Init(EosInterface.ApplicationCredentials.Server, enableOverlay: false).TryUnwrapFailure(out var initError))
+                    {
+                        Console.WriteLine($"EOS failed to initialize: {initError}");
+                    }
+                }
+            }
 
             //TODO: figure out how consent is supposed to work for servers
             //Console.WriteLine("Initializing GameAnalytics");
@@ -120,7 +133,7 @@ namespace Barotrauma
         {
             if (Version < VanillaContent.GameVersion)
             {
-                DebugConsole.ThrowError(
+                DebugConsole.ThrowErrorLocalized(
                     TextManager.GetWithVariables("versionmismatchwarning",
                         ("[gameversion]", Version.ToString()),
                         ("[contentversion]", VanillaContent.GameVersion.ToString())));
@@ -137,8 +150,8 @@ namespace Barotrauma
             bool enableUpnp = false;
 
             int maxPlayers = 10; 
-            Option<int> ownerKey = Option<int>.None();
-            Option<SteamId> steamId = Option<SteamId>.None();
+            Option<int> ownerKey = Option.None;
+            Option<P2PEndpoint> ownerEndpoint = Option.None;
 
             XDocument doc = XMLExtensions.TryLoadXml(ServerSettings.SettingsFile);
             if (doc?.Root == null)
@@ -207,8 +220,8 @@ namespace Barotrauma
                         }
                         i++;
                         break;
-                    case "-steamid":
-                        steamId = SteamId.Parse(CommandLineArgs[i + 1]);
+                    case "-endpoint":
+                        ownerEndpoint = P2PEndpoint.Parse(CommandLineArgs[i + 1]);
                         i++;
                         break;
                     case "-pipes":
@@ -227,7 +240,7 @@ namespace Barotrauma
                 enableUpnp,
                 maxPlayers,
                 ownerKey,
-                steamId);
+                ownerEndpoint);
             Server.StartServer();
 
             for (int i = 0; i < CommandLineArgs.Length; i++)
@@ -323,6 +336,7 @@ namespace Barotrauma
                     Server.Update((float)Timing.Step);
                     if (Server == null) { break; }
                     SteamManager.Update((float)Timing.Step);
+                    EosInterface.Core.Update();
                     TaskPool.Update();
                     CoroutineManager.Update(paused: false, (float)Timing.Step);
 

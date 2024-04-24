@@ -4,6 +4,8 @@ using System.Linq;
 using System.Xml.Linq;
 using DeployAll;
 
+AppDomain.CurrentDomain.ProcessExit += (_, _) => Console.WriteLine("Bye!");
+
 while (!Directory.GetFiles(".").Any(f => f.EndsWith(".sln")))
 {
     Directory.SetCurrentDirectory("..");
@@ -45,6 +47,13 @@ string configuration = Util.AskQuestion("Type 1 for Release, 2 for Unstable, ent
 if (string.IsNullOrWhiteSpace(configuration)) { return; }
 
 Deployables.Generate(configuration, gameVersion, gitBranch, gitRevision);
+
+if (Util.AskQuestion("Would you like to upload the generated builds to EGS? [y/n]")
+    .AnsweredYes())
+{
+    EgsAssistant.Upload(gameVersion, configuration, gitRevision);
+}
+
 
 if (Util.AskQuestion("Would you like to upload the generated builds to Steam? [y/n]")
     .AnsweredNo()) { return; }

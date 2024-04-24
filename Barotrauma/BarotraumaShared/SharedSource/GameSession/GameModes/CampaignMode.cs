@@ -557,7 +557,7 @@ namespace Barotrauma
 
             if (availableTransition == TransitionType.None)
             {
-                DebugConsole.ThrowError("Failed to load a new campaign level. No available level transitions " +
+                DebugConsole.ThrowErrorLocalized("Failed to load a new campaign level. No available level transitions " +
                     "(current location: " + (map.CurrentLocation?.DisplayName ?? "null") + ", " +
                     "selected location: " + (map.SelectedLocation?.DisplayName ?? "null") + ", " +
                     "leaving sub: " + (leavingSub?.Info?.Name ?? "null") + ", " +
@@ -568,7 +568,7 @@ namespace Barotrauma
             }
             if (nextLevel == null)
             {
-                DebugConsole.ThrowError("Failed to load a new campaign level. No available level transitions " +
+                DebugConsole.ThrowErrorLocalized("Failed to load a new campaign level. No available level transitions " +
                     "(transition type: " + availableTransition + ", " +
                     "current location: " + (map.CurrentLocation?.DisplayName ?? "null") + ", " +
                     "selected location: " + (map.SelectedLocation?.DisplayName ?? "null") + ", " +
@@ -1361,7 +1361,7 @@ namespace Barotrauma
             var itemsToTransfer = new List<(Item item, Item container)>();
             if (PendingSubmarineSwitch != null)
             {
-                var connectedSubs = currentSub.GetConnectedSubs().Where(s => s.Info.Type == SubmarineType.Player);
+                var connectedSubs = currentSub.GetConnectedSubs().Where(s => s.Info.Type == SubmarineType.Player).ToHashSet();
                 // Remove items from the old sub
                 foreach (Item item in Item.ItemList)
                 {
@@ -1422,8 +1422,8 @@ namespace Barotrauma
                     return;
                 }
                 // First move the cargo containers, so that we can reuse them
-                var cargoContainers = itemsToTransfer.Where(it => it.item.HasTag(Tags.Crate));
-                foreach (var (item, oldContainer) in cargoContainers)
+                var cargoContainers = itemsToTransfer.Where(it => it.item.HasTag(Tags.Crate)).ToHashSet();
+                foreach (var (item, _) in cargoContainers)
                 {
                     Vector2 simPos = ConvertUnits.ToSimUnits(CargoManager.GetCargoPos(spawnHull, item.Prefab));
                     item.SetTransform(simPos, 0.0f, findNewHull: false, setPrevTransform: false);
@@ -1431,7 +1431,6 @@ namespace Barotrauma
                     item.Submarine = spawnHull.Submarine;
                 }
                 // Then move the other items
-                var cargoRooms = CargoManager.FindCargoRooms(newSub);
                 List<ItemContainer> availableContainers = CargoManager.FindReusableCargoContainers(connectedSubs).ToList();
                 foreach (var (item, oldContainer) in itemsToTransfer)
                 {
@@ -1461,7 +1460,7 @@ namespace Barotrauma
                             newContainerName = cargoContainer.Item.Prefab.Identifier.ToString();
                         }
                     }
-                    string msg = "Item transfer log error.";
+                    string msg;
                     if (oldContainer != null)
                     {
                         if (newContainer == null && oldContainer == item.Container)
@@ -1483,6 +1482,27 @@ namespace Barotrauma
                     DebugConsole.Log(msg);
 #endif
                 }
+
+                foreach (var (item, _) in itemsToTransfer)
+                {
+                    // This ensures that the new submarine takes ownership of
+                    // the items contained within the items that are being transferred directly,
+                    // i.e. circuit box components and wires
+                    PropagateSubmarineProperty(item);
+                }
+
+                static void PropagateSubmarineProperty(Item item)
+                {
+                    foreach (var ownedContainer in item.GetComponents<ItemContainer>())
+                    {
+                        foreach (var containedItem in ownedContainer.Inventory.AllItems)
+                        {
+                            containedItem.Submarine = item.Submarine;
+                            PropagateSubmarineProperty(containedItem);
+                        }
+                    }
+                }
+
                 newSub.Info.NoItems = false;
                 // Serialize the new sub
                 PendingSubmarineSwitch = new SubmarineInfo(newSub);

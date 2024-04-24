@@ -159,7 +159,7 @@ namespace Barotrauma
                     SelectedValue = Math.Clamp(1f - (y / mainArea.Height), 0, 1);
                 }
 
-                CurrentColor = ToolBox.HSVToRGB(SelectedHue, SelectedSaturation, SelectedValue);
+                CurrentColor = ToolBoxCore.HSVToRGB(SelectedHue, SelectedSaturation, SelectedValue);
 
                 OnColorSelected?.Invoke(this, CurrentColor);
             }
@@ -201,7 +201,7 @@ namespace Barotrauma
             }
         }
 
-        private Color DrawHVArea(float x, float y) => ToolBox.HSVToRGB(SelectedHue, x, 1.0f - y);
-        private Color DrawHueArea(float x, float y) => ToolBox.HSVToRGB(y * 360f, 1f, 1f);
+        private Color DrawHVArea(float x, float y) => ToolBoxCore.HSVToRGB(SelectedHue, x, 1.0f - y);
+        private Color DrawHueArea(float x, float y) => ToolBoxCore.HSVToRGB(y * 360f, 1f, 1f);
     }
 }

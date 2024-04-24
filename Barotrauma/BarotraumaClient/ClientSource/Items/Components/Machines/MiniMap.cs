@@ -785,7 +785,7 @@ namespace Barotrauma.Items.Components
 
                         if (item.CurrentHull is { } currentHull && currentHull == hull)
                         {
-                            Sprite pingCircle = GUIStyle.YouAreHereCircle.Value.Sprite;
+                            Sprite? pingCircle = GUIStyle.YouAreHereCircle.Value?.Sprite;
                             if (pingCircle is null) { continue; }
 
                             Vector2 charPos = item.WorldPosition;
@@ -1241,7 +1241,8 @@ namespace Barotrauma.Items.Components
                     foreach (Vector2 blip in MiniMapBlips)
                     {
                         Vector2 parentSize = miniMapFrame.Rect.Size.ToVector2();
-                        Sprite pingCircle = GUIStyle.PingCircle.Value.Sprite;
+                        Sprite? pingCircle = GUIStyle.PingCircle.Value?.Sprite;
+                        if (pingCircle is null) { continue; }
                         Vector2 targetSize = new Vector2(parentSize.X / 4f);
                         Vector2 spriteScale = targetSize / pingCircle.size;
                         float scale = Math.Min(blipState, maxBlipState / 2f);
@@ -1421,10 +1422,27 @@ namespace Barotrauma.Items.Components
         {
             Sprite sprite = structure.Sprite;
             if (sprite is null) { return; }
+            
+            Vector2 textureOffset = structure.TextureOffset;
+            textureOffset = new Vector2(
+                MathUtils.PositiveModulo(-textureOffset.X, sprite.SourceRect.Width * structure.TextureScale.X * structure.Scale),
+                MathUtils.PositiveModulo(-textureOffset.Y, sprite.SourceRect.Height * structure.TextureScale.Y * structure.Scale));
 
             RectangleF entityRect = ScaleRectToUI(structure, parent, border);
-            Vector2 spriteScale = new Vector2(entityRect.Size.X / sprite.size.X, entityRect.Size.Y / sprite.size.Y);
-            sprite.Draw(spriteBatch, new Vector2(entityRect.Location.X + inflate, entityRect.Location.Y + inflate), structure.SpriteColor, Vector2.Zero, 0f, spriteScale, sprite.effects ^ structure.SpriteEffects);
+            Vector2 spriteScale = new Vector2(entityRect.Size.X / structure.Rect.Width, entityRect.Size.Y / structure.Rect.Height);
+            float rotation = MathHelper.ToRadians(structure.Rotation);
+
+            sprite.DrawTiled(
+                spriteBatch: spriteBatch,
+                position: entityRect.Location + entityRect.Size * 0.5f + (inflate, inflate),
+                targetSize: entityRect.Size,
+                rotation: rotation,
+                origin: entityRect.Size * 0.5f,
+                color: structure.SpriteColor,
+                startOffset: textureOffset * spriteScale,
+                textureScale: structure.TextureScale * structure.Scale * spriteScale,
+                depth: structure.SpriteDepth,
+                spriteEffects: sprite.effects ^ structure.SpriteEffects);
         }
 
         private static RectangleF ScaleRectToUI(MapEntity entity, RectangleF parentRect, RectangleF worldBorders)
@@ -1508,7 +1526,7 @@ namespace Barotrauma.Items.Components
                         float maxWidth = Math.Max(sizeX, sizeY);
                         Vector2 drawPos = new Vector2(frame.Rect.Right - sizeX, frame.Rect.Y - sizeY / 2f);
 
-                        UISprite icon = GUIStyle.IconOverflowIndicator;
+                        UISprite? icon = GUIStyle.IconOverflowIndicator;
                         if (icon != null)
                         {
                             const int iconPadding = 4;

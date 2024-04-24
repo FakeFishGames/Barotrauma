@@ -88,17 +88,21 @@ namespace Barotrauma.Steam
 
         private void DeselectPublishedItem()
         {
-            var deselectCarrier = selfModsList.Parent.FindChild(c => c.UserData is ActionCarrier { Id: var id } && id == "deselect");
-            Action? deselectAction = deselectCarrier.UserData is ActionCarrier { Action: var action }
-                ? action
-                : null;
-            deselectAction?.Invoke();
+            if (selfModsListOption.TryUnwrap(out var selfModsList))
+            {
+                var deselectCarrier = selfModsList.Parent.FindChild(c => c.UserData is ActionCarrier { Id: var id } && id == "deselect");
+                Action? deselectAction = deselectCarrier.UserData is ActionCarrier { Action: var action }
+                    ? action
+                    : null;
+                deselectAction?.Invoke();
+            }
+
             SelectTab(Tab.Publish);
         }
-        
+
         private static bool PackageMatchesItem(ContentPackage p, Steamworks.Ugc.Item workshopItem)
             => p.TryExtractSteamWorkshopId(out var workshopId) && workshopId.Value == workshopItem.Id;
-        
+
         private void PopulatePublishTab(ItemOrPackage itemOrPackage, GUIFrame parentFrame)
         {
             ContentPackageManager.LocalPackages.Refresh();
@@ -226,9 +230,12 @@ namespace Barotrauma.Steam
                         SteamManager.Workshop.GetItemAsap(workshopItem.Id.Value, withLongDescription: true),
                         t =>
                         {
-                            if (!t.TryGetResult(out Steamworks.Ugc.Item? itemWithDescription)) { return; }
+                            if (!t.TryGetResult(out Option<Steamworks.Ugc.Item> itemWithDescriptionOption)) { return; }
 
-                            descriptionTextBox.Text = itemWithDescription?.Description ?? descriptionTextBox.Text;
+                            descriptionTextBox.Text =
+                                itemWithDescriptionOption.TryUnwrap(out var itemWithDescription)
+                                    ? itemWithDescription.Description ?? descriptionTextBox.Text
+                                    : descriptionTextBox.Text;
                             descriptionTextBox.Deselect();
                         });
                 }
@@ -296,7 +303,7 @@ namespace Barotrauma.Steam
 
                 var fileInfoLabel = Label(rightBottom, "", GUIStyle.Font, heightScale: 1.0f);
                 fileInfoLabel.TextAlignment = Alignment.CenterRight;
-                TaskPool.Add($"FileInfoLabel{workshopItem.Id}", GetModDirInfo(localPackage.Dir, fileInfoLabel), t => { });
+                TaskPool.AddWithResult($"FileInfoLabel{workshopItem.Id}", GetModDirInfo(localPackage.Dir, fileInfoLabel), t => { });
 
                 GUILayoutGroup buttonLayout = new GUILayoutGroup(NewItemRectT(rightBottom), isHorizontal: true, childAnchor: Anchor.CenterRight);
 
@@ -351,7 +358,7 @@ namespace Barotrauma.Steam
                                 buttons: new[] { TextManager.Get("Yes"), TextManager.Get("No") });
                             confirmDeletion.Buttons[0].OnClicked = (yesBuffer, o1) =>
                             {
-                                TaskPool.Add($"Delete{workshopItem.Id}", Steamworks.SteamUGC.DeleteFileAsync(workshopItem.Id),
+                                TaskPool.AddWithResult($"Delete{workshopItem.Id}", Steamworks.SteamUGC.DeleteFileAsync(workshopItem.Id),
                                     t =>
                                     {
                                         SteamManager.Workshop.Uninstall(workshopItem);
@@ -452,7 +459,7 @@ namespace Barotrauma.Steam
             }
 
             bool localCopyMade = false;
-            TaskPool.Add($"Create local copy {workshopItem.Title}",
+            TaskPool.AddWithResult($"Create local copy {workshopItem.Title}",
                 SteamManager.Workshop.CreateLocalCopy(workshopCopy),
                 (t) =>
                 {

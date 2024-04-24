@@ -8,8 +8,7 @@ using System.Xml.Linq;
 using Barotrauma.IO;
 using RestSharp;
 using System.Net;
-using System.Collections.Immutable;
-using Barotrauma.Tutorials;
+using Barotrauma.Steam;
 
 namespace Barotrauma
 {
@@ -1174,11 +1173,14 @@ namespace Barotrauma
             {
                 try
                 {
-#if USE_STEAM
-                    Steam.SteamManager.OverlayCustomUrl(url);
-#else
-                    ToolBox.OpenFileWithShell(url);
-#endif
+                    if (SteamManager.IsInitialized)
+                    {
+                        SteamManager.OverlayCustomUrl(url);
+                    }
+                    else
+                    {
+                        ToolBox.OpenFileWithShell(url);
+                    }
                 }
                 catch (Exception e)
                 {

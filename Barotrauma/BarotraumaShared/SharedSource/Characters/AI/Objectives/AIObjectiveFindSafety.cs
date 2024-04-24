@@ -255,7 +255,11 @@ namespace Barotrauma
                 }
                 if (subObjectives.Any(so => so.CanBeCompleted)) { return; }
                 UpdateSimpleEscape(deltaTime);
-                if (cannotFindSafeHull && !character.IsInFriendlySub && objectiveManager.Objectives.None(o => o is AIObjectiveReturn))
+
+                bool inFriendlySub = 
+                    character.IsInFriendlySub || 
+                    (character.IsEscorted && character.IsInPlayerSub);
+                if (cannotFindSafeHull && !inFriendlySub && objectiveManager.Objectives.None(o => o is AIObjectiveReturn))
                 {
                     if (OrderPrefab.Prefabs.TryGet("return".ToIdentifier(), out OrderPrefab orderPrefab))
                     {

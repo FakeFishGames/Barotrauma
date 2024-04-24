@@ -72,6 +72,9 @@ namespace Barotrauma
                         case InteractionType.MedicalClinic:
                             CampaignUI.MedicalClinic?.OnDeselected();
                             break;
+                        case InteractionType.Store:
+                            CampaignUI.Store?.OnDeselected();
+                            break;
                     }
                 }
 

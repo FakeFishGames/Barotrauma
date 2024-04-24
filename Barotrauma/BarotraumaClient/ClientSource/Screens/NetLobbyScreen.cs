@@ -2320,12 +2320,12 @@ namespace Barotrauma
 
             List<ContextMenuOption> options = new List<ContextMenuOption>();
 
-            if (client.AccountId.TryUnwrap(out var accountId) && accountId is SteamId steamId)
+            if (client.AccountId.TryUnwrap(out var accountId))
             {
-                options.Add(new ContextMenuOption("ViewSteamProfile", isEnabled: hasAccountId, onSelected: () =>
-                    {
-                        SteamManager.OverlayProfile(steamId);
-                    }));
+                options.Add(new ContextMenuOption(accountId.ViewProfileLabel(), isEnabled: hasAccountId, onSelected: () =>
+                {
+                    accountId.OpenProfile();
+                }));
             }
             
             options.Add(new ContextMenuOption("ModerationMenu.ManagePlayer", isEnabled: true, onSelected: () =>
@@ -2702,17 +2702,17 @@ namespace Barotrauma
                 }
             }
 
-            if (selectedClient.AccountId.TryUnwrap(out var accountId) && accountId is SteamId steamId && Steam.SteamManager.IsInitialized)
+            if (selectedClient.AccountId.TryUnwrap(out var accountId))
             {
                 var viewSteamProfileButton = new GUIButton(new RectTransform(new Vector2(0.3f, 1.0f), headerContainer.RectTransform, Anchor.TopCenter) { MaxSize = new Point(int.MaxValue, (int)(40 * GUI.Scale)) },
-                        TextManager.Get("ViewSteamProfile"))
+                    accountId.ViewProfileLabel())
                 {
                     UserData = selectedClient
                 };
                 viewSteamProfileButton.TextBlock.AutoScaleHorizontal = true;
                 viewSteamProfileButton.OnClicked = (bt, userdata) =>
                 {
-                    SteamManager.OverlayProfile(steamId);
+                    accountId.OpenProfile();
                     return true;
                 };
             }

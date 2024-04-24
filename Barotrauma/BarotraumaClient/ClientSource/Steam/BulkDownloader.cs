@@ -31,8 +31,8 @@ namespace Barotrauma.Steam
                 t =>
                 {
                     msgBox.Close();
-                    if (!t.TryGetResult(out IReadOnlyList<Steamworks.Ugc.Item> items)) { return; }
-                    
+                    if (!t.TryGetResult(out IReadOnlyList<Steamworks.Ugc.Item>? items)) { return; }
+
                     InitiateDownloads(items);
                 });
         }
@@ -48,15 +48,19 @@ namespace Barotrauma.Steam
                 t =>
                 {
                     msgBox.Close();
-                    if (!t.TryGetResult(out Steamworks.Ugc.Item?[] itemsNullable)) { return; }
+                    if (!t.TryGetResult(out Option<Steamworks.Ugc.Item>[]? itemOptions)) { return; }
 
-                    var items = itemsNullable
-                        .Where(it => it.HasValue)
-                        .Select(it => it ?? default)
-                        .ToArray();
-                    
-                    items.ForEach(it => it.Subscribe());
-                    InitiateDownloads(items, onComplete: () =>
+                    List<Steamworks.Ugc.Item> itemsToDownload = new List<Steamworks.Ugc.Item>();
+                    foreach (Option<Steamworks.Ugc.Item> itemOption in itemOptions)
+                    {
+                        if (itemOption.TryUnwrap(out var item))
+                        {
+                            itemsToDownload.Add(item);
+                        }
+                    }
+
+                    itemsToDownload.ForEach(it => it.Subscribe());
+                    InitiateDownloads(itemsToDownload, onComplete: () =>
                     {
                         ContentPackageManager.UpdateContentPackageList();
                         GameMain.Instance.ConnectCommand = Option<ConnectCommand>.Some(rejoinCommand);
@@ -74,7 +78,7 @@ namespace Barotrauma.Steam
                     .NotNone()
                     .OfType<SteamWorkshopId>()
                     .Select(async id => await SteamManager.Workshop.GetItem(id.Value))))
-                .Where(p => p.HasValue).Select(p => p ?? default).ToArray();
+                .NotNone().ToArray();
         }
 
         public static void InitiateDownloads(IReadOnlyList<Steamworks.Ugc.Item> itemsToDownload, Action? onComplete = null)

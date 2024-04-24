@@ -150,7 +150,7 @@ namespace Barotrauma
             {
                 ItemPrefabIdentifier = itemPrefab;
                 using MD5 md5 = MD5.Create();
-                UintIdentifier = ToolBox.IdentifierToUint32Hash(itemPrefab, md5);
+                UintIdentifier = ToolBoxCore.IdentifierToUint32Hash(itemPrefab, md5);
             }
 
             public override string ToString()
@@ -197,7 +197,7 @@ namespace Barotrauma
             {
                 Tag = tag;
                 using MD5 md5 = MD5.Create();
-                UintIdentifier = ToolBox.IdentifierToUint32Hash(tag, md5);
+                UintIdentifier = ToolBoxCore.IdentifierToUint32Hash(tag, md5);
             }
 
             public override string ToString()
@@ -349,7 +349,7 @@ namespace Barotrauma
         private uint GenerateHash()
         {
             using var md5 = MD5.Create();
-            uint outputId = ToolBox.IdentifierToUint32Hash(TargetItemPrefabIdentifier, md5);
+            uint outputId = ToolBoxCore.IdentifierToUint32Hash(TargetItemPrefabIdentifier, md5);
 
             var requiredItems = string.Join(':', RequiredItems
                 .Select(static i => $"{i.UintIdentifier}:{i.Amount}")
@@ -358,7 +358,7 @@ namespace Barotrauma
 
             var requiredSkills = string.Join(':', RequiredSkills.Select(s => $"{s.Identifier}:{s.Level}"));
 
-            uint retVal = ToolBox.StringToUInt32Hash($"{Amount}|{outputId}|{RequiredTime}|{RequiresRecipe}|{requiredItems}|{requiredSkills}", md5);
+            uint retVal = ToolBoxCore.StringToUInt32Hash($"{Amount}|{outputId}|{RequiredTime}|{RequiresRecipe}|{requiredItems}|{requiredSkills}", md5);
             if (retVal == 0) { retVal = 1; }
             return retVal;
         }
@@ -834,7 +834,7 @@ namespace Barotrauma
         [Serialize(true, IsPropertySaveable.No)]
         public bool CanFlipY { get; private set; }
 
-        [Serialize(0.1f, IsPropertySaveable.No)]
+        [Serialize(0.01f, IsPropertySaveable.No)]
         public float MinScale { get; private set; }
 
         [Serialize(10.0f, IsPropertySaveable.No)]

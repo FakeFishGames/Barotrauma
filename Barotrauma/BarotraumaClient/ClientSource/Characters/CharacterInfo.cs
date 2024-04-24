@@ -543,7 +543,7 @@ namespace Barotrauma
 
             Identifier factionId = inc.ReadIdentifier();
             float minReputationToHire = 0.0f;
-            if (factionId != default)
+            if (!factionId.IsEmpty)
             {
                 minReputationToHire = inc.ReadSingle();
             }

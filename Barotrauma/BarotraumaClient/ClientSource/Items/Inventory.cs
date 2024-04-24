@@ -1283,7 +1283,8 @@ namespace Barotrauma
                         int itemCount = 0;
                         foreach (Item item in DraggingItems)
                         {
-                            if (selectedInventory.GetItemAt(slotIndex)?.OwnInventory?.Container is { } container)
+                            if (selectedInventory.GetItemAt(slotIndex)?.OwnInventory?.Container is { } container &&
+                                container.Inventory.CanBePut(item))
                             {
                                 if (!container.AllowDragAndDrop || !container.DrawInventory)
                                 {
@@ -1960,7 +1961,14 @@ namespace Barotrauma
 
                     if (!TryPutItem(item, i, false, false, null, false))
                     {
-                        ForceToSlot(item, i);
+                        try
+                        {
+                            ForceToSlot(item, i);
+                        }
+                        catch (InvalidOperationException e)
+                        {
+                            DebugConsole.AddSafeError(e.Message + "\n" + e.StackTrace.CleanupStackTrace());
+                        }
                     }
                     for (int j = 0; j < capacity; j++)
                     {

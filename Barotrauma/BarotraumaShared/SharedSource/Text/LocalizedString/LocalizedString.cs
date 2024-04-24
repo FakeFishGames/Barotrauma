@@ -48,10 +48,23 @@ namespace Barotrauma
 
         public abstract void RetrieveValue();
 
-        public static implicit operator LocalizedString(string value) => new RawLString(value);
+        public static readonly RawLString EmptyString = new RawLString("");
+        public static implicit operator LocalizedString(string value)
+            => !value.IsNullOrEmpty()
+                ? new RawLString(value)
+                : EmptyString;
         public static implicit operator LocalizedString(char value) => new RawLString(value.ToString());
 
-        public static LocalizedString operator+(LocalizedString left, LocalizedString right) => new ConcatLString(left, right);
+        public static LocalizedString operator+(LocalizedString left, LocalizedString right)
+        {
+            // If either side of the concatenation is an empty string,
+            // return the other string instead of creating a new object
+            if (left is RawLString { Value.Length: 0 }) { return right; }
+            if (right is RawLString { Value.Length: 0 }) { return left; }
+
+            return new ConcatLString(left, right);
+        }
+
         public static LocalizedString operator+(LocalizedString left, object right) => left + (right.ToString() ?? "");
         public static LocalizedString operator+(object left, LocalizedString right) => (left.ToString() ?? "") + right;
 

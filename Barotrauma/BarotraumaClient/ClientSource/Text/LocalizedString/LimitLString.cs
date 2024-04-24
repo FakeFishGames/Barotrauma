@@ -19,12 +19,14 @@ namespace Barotrauma
         public override bool Loaded => nestedStr.Loaded;
         protected override bool MustRetrieveValue()
         {
-            return base.MustRetrieveValue() || cachedFont != font.Value || cachedFont.Size != font.Size;
+            return base.MustRetrieveValue() || cachedFont != font.Value || cachedFont?.Size != font.Size;
         }
         
         public override void RetrieveValue()
         {
-            cachedValue = ToolBox.LimitString(nestedStr.Value, font.Value, maxWidth);
+            cachedValue = font.Value != null
+                ? ToolBox.LimitString(nestedStr.Value, font.Value, maxWidth)
+                : nestedStr.Value;
             cachedFont = font.Value;
             UpdateLanguage();
         }

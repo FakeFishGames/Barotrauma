@@ -279,6 +279,9 @@ namespace Barotrauma.Lights
                     light.Position = pos;
                 }
 
+                //above the top boundary of the level (in an inactive respawn shuttle?)
+                if (Level.Loaded != null && light.WorldPosition.Y > Level.Loaded.Size.Y) { continue; }
+
                 float range = light.LightSourceParams.TextureRange;
                 if (light.LightSprite != null)
                 {
@@ -379,7 +382,7 @@ namespace Barotrauma.Lights
             spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, transformMatrix: spriteBatchTransform);
             Vector3 glowColorHSV = ToolBox.RGBToHSV(AmbientLight);
             glowColorHSV.Z = Math.Max(glowColorHSV.Z, 0.4f);
-            Color glowColor = ToolBox.HSVToRGB(glowColorHSV.X, glowColorHSV.Y, glowColorHSV.Z);
+            Color glowColor = ToolBoxCore.HSVToRGB(glowColorHSV.X, glowColorHSV.Y, glowColorHSV.Z);
             Vector2 glowSpriteSize = new Vector2(gapGlowTexture.Width, gapGlowTexture.Height);
             foreach (var gap in Gap.GapList)
             {

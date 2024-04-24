@@ -195,7 +195,7 @@ namespace Barotrauma.Steam
                 modProject.Save(stagingFileListPath);
             }
 
-            public static async Task<ContentPackage?> CreateLocalCopy(ContentPackage contentPackage)
+            public static async Task<Option<ContentPackage>> CreateLocalCopy(ContentPackage contentPackage)
             {
                 await Task.Yield();
                 
@@ -234,7 +234,7 @@ namespace Barotrauma.Steam
 
                 RefreshLocalMods();
 
-                return ContentPackageManager.LocalPackages.FirstOrDefault(p => p.UgcId == contentPackage.UgcId);
+                return ContentPackageManager.LocalPackages.FirstOrNone(p => p.UgcId == contentPackage.UgcId);
             }
 
             private struct InstallWaiter

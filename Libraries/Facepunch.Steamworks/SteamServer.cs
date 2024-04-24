@@ -403,7 +403,7 @@ namespace Steamworks
 		/// <summary>
 		/// Forget this guy. They're no longer in the game.
 		/// </summary>
-		public static void EndSession( SteamId steamid )
+		public static void EndAuthSession( SteamId steamid )
 		{
 			Internal?.EndAuthSession( steamid );
 		}

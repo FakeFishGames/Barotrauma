@@ -1,12 +1,18 @@
 ﻿#nullable enable
-using Barotrauma.Steam;
-using System;
 using System.Collections.Immutable;
 using System.Linq;
+using System.Threading.Tasks;
 using Microsoft.Xna.Framework;
 
 namespace Barotrauma.Networking
 {
+    internal abstract class ClientPeer<TEndpoint> : ClientPeer where TEndpoint : Endpoint
+    {
+        public new TEndpoint ServerEndpoint => (base.ServerEndpoint as TEndpoint)!;
+        protected ClientPeer(TEndpoint serverEndpoint, ImmutableArray<Endpoint> allServerEndpoints, Callbacks callbacks, Option<int> ownerKey)
+            : base(serverEndpoint, allServerEndpoints, callbacks, ownerKey) { }
+    }
+    
     internal abstract class ClientPeer
     {
         public ImmutableArray<ServerContentPackage> ServerContentPackages { get; set; } =
@@ -25,21 +31,22 @@ namespace Barotrauma.Networking
         protected readonly Callbacks callbacks;
 
         public readonly Endpoint ServerEndpoint;
+        public readonly ImmutableArray<Endpoint> AllServerEndpoints;
         public NetworkConnection? ServerConnection { get; protected set; }
 
-        protected readonly bool isOwner;
+        protected bool IsOwner => ownerKey.IsSome();
         protected readonly Option<int> ownerKey;
 
         public bool IsActive => isActive;
 
         protected bool isActive;
 
-        public ClientPeer(Endpoint serverEndpoint, Callbacks callbacks, Option<int> ownerKey)
+        protected ClientPeer(Endpoint serverEndpoint, ImmutableArray<Endpoint> allServerEndpoints, Callbacks callbacks, Option<int> ownerKey)
         {
             ServerEndpoint = serverEndpoint;
+            AllServerEndpoints = allServerEndpoints;
             this.callbacks = callbacks;
             this.ownerKey = ownerKey;
-            isOwner = ownerKey.IsSome();
         }
 
         public abstract void Start();
@@ -53,7 +60,7 @@ namespace Barotrauma.Networking
         protected ConnectionInitialization initializationStep;
         public bool ContentPackageOrderReceived { get; set; }
         protected int passwordSalt;
-        protected Option<Steamworks.AuthTicket> steamAuthTicket;
+        protected Option<AuthenticationTicket> authTicket;
         private GUIMessageBox? passwordMsgBox;
 
         public bool WaitingForPassword
@@ -67,43 +74,64 @@ namespace Barotrauma.Networking
             public IReadMessage Message;
         }
 
+        protected abstract Task<Option<AccountId>> GetAccountId();
+
+        protected void OnInitializationComplete()
+        {
+            passwordMsgBox?.Close();
+            if (initializationStep == ConnectionInitialization.Success) { return; }
+
+            callbacks.OnInitializationComplete.Invoke();
+            initializationStep = ConnectionInitialization.Success;
+        }
+        
         protected void ReadConnectionInitializationStep(IncomingInitializationMessage inc)
         {
+            if (inc.InitializationStep != ConnectionInitialization.Password)
+            {
+                passwordMsgBox?.Close();
+            }
+
             switch (inc.InitializationStep)
             {
-                case ConnectionInitialization.SteamTicketAndVersion:
+                case ConnectionInitialization.AuthInfoAndVersion:
                 {
-                    if (initializationStep != ConnectionInitialization.SteamTicketAndVersion) { return; }
+                    if (initializationStep != ConnectionInitialization.AuthInfoAndVersion) { return; }
 
-                    PeerPacketHeaders headers = new PeerPacketHeaders
+                    TaskPool.Add($"{GetType().Name}.{nameof(GetAccountId)}", GetAccountId(), t =>
                     {
-                        DeliveryMethod = DeliveryMethod.Reliable,
-                        PacketHeader = PacketHeader.IsConnectionInitializationStep,
-                        Initialization = ConnectionInitialization.SteamTicketAndVersion
-                    };
+                        if (GameMain.Client?.ClientPeer is null) { return; }
+                        
+                        if (!t.TryGetResult(out Option<AccountId> accountId))
+                        {
+                            Close(PeerDisconnectPacket.WithReason(DisconnectReason.AuthenticationFailed));
+                        }
+                        
+                        var headers = new PeerPacketHeaders
+                        {
+                            DeliveryMethod = DeliveryMethod.Reliable,
+                            PacketHeader = PacketHeader.IsConnectionInitializationStep,
+                            Initialization = ConnectionInitialization.AuthInfoAndVersion
+                        };
 
-                    if (steamAuthTicket.TryUnwrap(out var authTicket) && authTicket is { Canceled: true })
-                    {
-                        throw new InvalidOperationException("ReadConnectionInitializationStep failed: Steam auth ticket has been cancelled.");
-                    }
+                        var body = new ClientAuthTicketAndVersionPacket
+                        {
+                            Name = GameMain.Client.Name,
+                            OwnerKey = ownerKey,
+                            AccountId = accountId,
+                            AuthTicket = authTicket,
+                            GameVersion = GameMain.Version.ToString(),
+                            Language = GameSettings.CurrentConfig.Language.Value
+                        };
 
-                    ClientSteamTicketAndVersionPacket body = new ClientSteamTicketAndVersionPacket
-                    {
-                        Name = GameMain.Client.Name,
-                        OwnerKey = ownerKey,
-                        SteamId = SteamManager.GetSteamId().Select(id => (AccountId)id),
-                        SteamAuthTicket = steamAuthTicket.Bind(t => t.Data != null ? Option.Some(t.Data) : Option.None),
-                        GameVersion = GameMain.Version.ToString(),
-                        Language = GameSettings.CurrentConfig.Language.Value
-                    };
-
-                    SendMsgInternal(headers, body);
+                        SendMsgInternal(headers, body);
+                    });
                     break;
                 }
                 case ConnectionInitialization.ContentPackageOrder:
                 {
                     if (initializationStep
-                        is ConnectionInitialization.SteamTicketAndVersion
+                        is ConnectionInitialization.AuthInfoAndVersion
                         or ConnectionInitialization.Password)
                     {
                         initializationStep = ConnectionInitialization.ContentPackageOrder;
@@ -136,7 +164,7 @@ namespace Barotrauma.Networking
                     break;
                 }
                 case ConnectionInitialization.Password:
-                    if (initializationStep == ConnectionInitialization.SteamTicketAndVersion)
+                    if (initializationStep == ConnectionInitialization.AuthInfoAndVersion)
                     {
                         initializationStep = ConnectionInitialization.Password;
                     }
@@ -152,6 +180,7 @@ namespace Barotrauma.Networking
 
                     LocalizedString pwMsg = TextManager.Get("PasswordRequired");
 
+                    passwordMsgBox?.Close();
                     passwordMsgBox = new GUIMessageBox(pwMsg, "", new LocalizedString[] { TextManager.Get("OK"), TextManager.Get("Cancel") },
                         relativeSize: new Vector2(0.25f, 0.1f), minSize: new Point(400, GUI.IntScale(170)));
                     var passwordHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.5f), passwordMsgBox.Content.RectTransform), childAnchor: Anchor.TopCenter);
@@ -202,6 +231,8 @@ namespace Barotrauma.Networking
 
 #if DEBUG
         public abstract void ForceTimeOut();
+
+        public abstract void DebugSendRawMessage(IWriteMessage msg);
 #endif
     }
 }

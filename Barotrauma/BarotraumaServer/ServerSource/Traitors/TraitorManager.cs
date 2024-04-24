@@ -458,10 +458,10 @@ namespace Barotrauma
 
                 if (activeEvent.TraitorEvent.CurrentState == TraitorEvent.State.Completed)
                 {
-                    SteamAchievementManager.OnTraitorWin(activeEvent.TraitorEvent.Traitor?.Character);
+                    AchievementManager.OnTraitorWin(activeEvent.TraitorEvent.Traitor?.Character);
                     foreach (var secondaryTraitor in activeEvent.TraitorEvent.SecondaryTraitors)
                     {
-                        SteamAchievementManager.OnTraitorWin(secondaryTraitor?.Character);
+                        AchievementManager.OnTraitorWin(secondaryTraitor?.Character);
                     }
                 }
             }

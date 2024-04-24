@@ -118,7 +118,10 @@ namespace Barotrauma
                         {
                             characterStatusEffects[humanPrefab] = new List<StatusEffect> { newEffect };
                         }
-                        characterStatusEffects[humanPrefab].Add(newEffect);                             
+                        else
+                        {
+                            characterStatusEffects[humanPrefab].Add(newEffect);
+                        }                           
                     }
                 }
             }

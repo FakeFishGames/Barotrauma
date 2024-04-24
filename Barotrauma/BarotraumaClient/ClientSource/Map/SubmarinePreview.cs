@@ -477,12 +477,19 @@ namespace Barotrauma
                     Vector2 backGroundOffset = Vector2.Zero;
 
                     Vector2 textureOffset = element.GetAttributeVector2("textureoffset", Vector2.Zero);
-                    if (flippedX) { textureOffset.X = -textureOffset.X; }
-                    if (flippedY) { textureOffset.Y = -textureOffset.Y; }
+
+                    textureOffset = Structure.UpgradeTextureOffset(
+                        targetSize: rect.Size.ToVector2(),
+                        originalTextureOffset: textureOffset,
+                        submarineInfo: submarineInfo,
+                        sourceRect: prefab.Sprite.SourceRect,
+                        scale: textureScale * scale,
+                        flippedX: flippedX,
+                        flippedY: flippedY);
 
                     backGroundOffset = new Vector2(
-                                MathUtils.PositiveModulo((int)-textureOffset.X, prefab.Sprite.SourceRect.Width),
-                                MathUtils.PositiveModulo((int)-textureOffset.Y, prefab.Sprite.SourceRect.Height));
+                                MathUtils.PositiveModulo(-textureOffset.X, prefab.Sprite.SourceRect.Width * textureScale.X * scale),
+                                MathUtils.PositiveModulo(-textureOffset.Y, prefab.Sprite.SourceRect.Height * textureScale.Y * scale));
 
                     prefab.Sprite.DrawTiled(
                         spriteBatch: spriteRecorder,

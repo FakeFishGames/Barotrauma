@@ -436,7 +436,10 @@ namespace Barotrauma
                             break;
                         case "statvalue":
                             var newStatValue = new AppliedStatValue(subElement);
-                            afflictionStatValues.Add(newStatValue.StatType, newStatValue);
+                            if (newStatValue.StatType == StatTypes.None || !afflictionStatValues.TryAdd(newStatValue.StatType, newStatValue))
+                            {
+                                DebugConsole.ThrowError($"Invalid stat value in the affliction \"{parentDebugName}\".", contentPackage: element.ContentPackage);                                
+                            }
                             break;
                         case "abilityflag":
                             AbilityFlags flagType = subElement.GetAttributeEnum("flagtype", AbilityFlags.None);
@@ -904,7 +907,7 @@ namespace Barotrauma
                 string indicatorLimbName = element.GetAttributeString("indicatorlimb", "Torso");
                 if (!Enum.TryParse(indicatorLimbName, out IndicatorLimb))
                 {
-                    DebugConsole.ThrowError("Error in affliction prefab " + Name + " - limb type \"" + indicatorLimbName + "\" not found.");
+                    DebugConsole.ThrowErrorLocalized("Error in affliction prefab " + Name + " - limb type \"" + indicatorLimbName + "\" not found.");
                 }
             }
 

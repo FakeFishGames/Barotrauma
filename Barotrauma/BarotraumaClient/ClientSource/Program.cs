@@ -8,6 +8,7 @@ using Barotrauma.Steam;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Xml.Linq;
+using Barotrauma.Debugging;
 
 #if WINDOWS
 using SharpDX;
@@ -17,7 +18,6 @@ using SharpDX;
 
 namespace Barotrauma
 {
-#if WINDOWS || LINUX || OSX
     /// <summary>
     /// The main class.
     /// </summary>
@@ -52,7 +52,10 @@ namespace Barotrauma
             Game = null;
             executableDir = Path.GetDirectoryName(System.Reflection.Assembly.GetEntryAssembly().Location);
             Directory.SetCurrentDirectory(executableDir);
-            SteamManager.Initialize();
+            DebugConsoleCore.Init(
+                newMessage: (s, c) => DebugConsole.NewMessage(s, c),
+                log: DebugConsole.Log);
+            StoreIntegration.Init(ref args);
             EnableNvOptimus();
             Game = new GameMain(args);
             Game.Run();
@@ -66,15 +69,22 @@ namespace Barotrauma
 
         private static void CrashHandler(object sender, UnhandledExceptionEventArgs args)
         {
+            Exception unhandledException = args.ExceptionObject as Exception;
             try
             {
                 Game?.Exit();
-                CrashDump(Game, "crashreport.log", (Exception)args.ExceptionObject);
+                CrashDump(Game, "crashreport.log", unhandledException);
                 Game?.Dispose();
             }
-            catch (Exception e)
+            catch (Exception exceptionHandlerError)
             {
-                Debug.WriteLine(e.Message);
+                Debug.WriteLine(exceptionHandlerError.Message);
+                string slimCrashReport = "Exception handler failed: " + exceptionHandlerError.Message + "\n" + exceptionHandlerError.StackTrace;
+                if (unhandledException != null)
+                {
+                    slimCrashReport += "\n\nInitial exception: " + unhandledException.Message + "\n" + unhandledException.StackTrace;
+                }
+                File.WriteAllText("crashreportslim.log", slimCrashReport);
                 //exception handler is broken, we have a serious problem here!!
                 return;
             }
@@ -180,6 +190,10 @@ namespace Barotrauma
             if (SteamManager.IsInitialized)
             {
                 sb.AppendLine("SteamManager initialized");
+            }
+            else if (EosInterface.IdQueries.IsLoggedIntoEosConnect)
+            {
+                sb.AppendLine("Logged in to EOS connect");
             }
 
             if (GameMain.Client != null)
@@ -337,6 +351,4 @@ namespace Barotrauma
         }
         
     }
-#endif
-
-        }
+}

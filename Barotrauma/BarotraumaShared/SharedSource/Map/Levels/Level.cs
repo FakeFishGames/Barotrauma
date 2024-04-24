@@ -2046,7 +2046,8 @@ namespace Barotrauma
                 caveStartPos.ToVector2(), caveEndPos.ToVector2(),
                 iterations: 3,
                 offsetAmount: Vector2.Distance(caveStartPos.ToVector2(), caveEndPos.ToVector2()) * 0.75f,
-                bounds: caveArea);
+                bounds: caveArea,
+                rng: Rand.GetRNG(Rand.RandSync.ServerAndClient));
 
             if (!caveSegments.Any()) { return; }
 
@@ -2066,7 +2067,8 @@ namespace Barotrauma
                     branchStartPos, branchEndPos,
                     iterations: 3,
                     offsetAmount: Vector2.Distance(branchStartPos, branchEndPos) * 0.75f,
-                    bounds: caveArea);
+                    bounds: caveArea,
+                    rng: Rand.GetRNG(Rand.RandSync.ServerAndClient));
                 if (!branchSegments.Any()) { continue; }
 
                 var branch = new Tunnel(TunnelType.Cave, SegmentsToNodes(branchSegments), 150, parentBranch);

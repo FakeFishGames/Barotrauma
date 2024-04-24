@@ -740,28 +740,32 @@ namespace Barotrauma
                 {
                     Stairs = character.SelectedBy.AnimController.Stairs;
                 }
+
+                var collisionResponse = getStairCollisionResponse();
+                if (collisionResponse == LimbStairCollisionResponse.ClimbWithLimbCollision)
+                {
+                    Stairs = structure;
+                }
                 else
                 {
-                    var collisionResponse = handleLimbStairCollision();
-                    if (collisionResponse == LimbStairCollisionResponse.ClimbWithLimbCollision)
-                    {
-                        Stairs = structure;
-                    }
-                    else
-                    {
-                        if (collisionResponse == LimbStairCollisionResponse.DontClimbStairs) { Stairs = null; }
+                    if (collisionResponse == LimbStairCollisionResponse.DontClimbStairs) { Stairs = null; }
 
-                        return false;
-                    }
-                }
+                    return false;
+                }                
 
-                LimbStairCollisionResponse handleLimbStairCollision()
+                LimbStairCollisionResponse getStairCollisionResponse()
                 {
                     //don't collide with stairs if
 
                     //1. bottom of the collider is at the bottom of the stairs and the character isn't trying to move upwards
                     float stairBottomPos = ConvertUnits.ToSimUnits(structure.Rect.Y - structure.Rect.Height + 10);
                     if (colliderBottom.Y < stairBottomPos && targetMovement.Y < 0.5f) { return LimbStairCollisionResponse.DontClimbStairs; }
+                    if (character.SelectedBy != null && 
+                        character.SelectedBy.AnimController.GetColliderBottom().Y < stairBottomPos && 
+                        character.SelectedBy.AnimController.targetMovement.Y < 0.5f)
+                    {
+                        return LimbStairCollisionResponse.DontClimbStairs;
+                    }
 
                     //2. bottom of the collider is at the top of the stairs and the character isn't trying to move downwards
                     if (targetMovement.Y >= 0.0f && colliderBottom.Y >= ConvertUnits.ToSimUnits(structure.Rect.Y - Submarine.GridSize.Y * 5)) { return LimbStairCollisionResponse.DontClimbStairs; }

@@ -73,13 +73,16 @@ namespace Barotrauma
 
             if (isMouseOver)
             {
-                var glowSprite = GUIStyle.UIGlowCircular.Value.Sprite;
-                float glowScale = 40f / glowSprite.size.X;
-                if (isScrewed)
+                var glowSprite = GUIStyle.UIGlowCircular.Value?.Sprite;
+                if (glowSprite is not null)
                 {
-                    glowScale *= 1.2f;
+                    float glowScale = 40f / glowSprite.size.X;
+                    if (isScrewed)
+                    {
+                        glowScale *= 1.2f;
+                    }
+                    glowSprite.Draw(spriteBatch, position, GUIStyle.Yellow, glowSprite.size / 2, scale: glowScale);
                 }
-                glowSprite.Draw(spriteBatch, position, GUIStyle.Yellow, glowSprite.size / 2, scale: glowScale);
             }
 
             tooltip = Option.None;

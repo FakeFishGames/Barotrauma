@@ -6,7 +6,7 @@
     <RootNamespace>Barotrauma</RootNamespace>
     <Authors>FakeFish, Undertow Games</Authors>
     <Product>Barotrauma</Product>
-    <Version>1.2.4.0</Version>
+    <Version>1.3.0.4</Version>
     <Copyright>Copyright © FakeFish 2018-2023</Copyright>
     <Platforms>AnyCPU;x64</Platforms>
     <AssemblyName>Barotrauma</AssemblyName>
@@ -18,13 +18,13 @@
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <DefineConstants>DEBUG;TRACE;CLIENT;WINDOWS;USE_STEAM</DefineConstants>
+    <DefineConstants>DEBUG;TRACE;CLIENT;WINDOWS</DefineConstants>
     <PlatformTarget>x64</PlatformTarget>
     <OutputPath>..\bin\$(Configuration)Windows\</OutputPath>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <DefineConstants>TRACE;DEBUG;CLIENT;WINDOWS;X64;USE_STEAM</DefineConstants>
+    <DefineConstants>TRACE;DEBUG;CLIENT;WINDOWS;X64</DefineConstants>
     <PlatformTarget>x64</PlatformTarget>
     <OutputPath>..\bin\$(Configuration)Windows\</OutputPath>
     <DebugType>full</DebugType>
@@ -33,20 +33,20 @@
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-    <DefineConstants>TRACE;CLIENT;WINDOWS;USE_STEAM</DefineConstants>
+    <DefineConstants>TRACE;CLIENT;WINDOWS</DefineConstants>
     <PlatformTarget>x64</PlatformTarget>
     <OutputPath>..\bin\$(Configuration)Windows\</OutputPath>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Unstable|AnyCPU'">
-    <DefineConstants>TRACE;CLIENT;WINDOWS;USE_STEAM</DefineConstants>
+    <DefineConstants>TRACE;CLIENT;WINDOWS</DefineConstants>
     <PlatformTarget>x64</PlatformTarget>
     <OutputPath>..\bin\$(Configuration)Windows\</OutputPath>
     <Optimize>true</Optimize>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <DefineConstants>TRACE;CLIENT;WINDOWS;X64;USE_STEAM</DefineConstants>
+    <DefineConstants>TRACE;CLIENT;WINDOWS;X64</DefineConstants>
     <PlatformTarget>x64</PlatformTarget>
     <OutputPath>..\bin\$(Configuration)Windows\</OutputPath>
     <DebugType>full</DebugType>
@@ -54,7 +54,7 @@
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Unstable|x64'">
-    <DefineConstants>TRACE;CLIENT;WINDOWS;X64;USE_STEAM</DefineConstants>
+    <DefineConstants>TRACE;CLIENT;WINDOWS;X64</DefineConstants>
     <PlatformTarget>x64</PlatformTarget>
     <OutputPath>..\bin\$(Configuration)Windows\</OutputPath>
     <DebugType>full</DebugType>
@@ -70,7 +70,6 @@
   </ItemGroup>
   
   <ItemGroup>
-    <Content Remove="..\BarotraumaShared\**\EnglishVanillaROS.xml" />
     <Content Remove="..\BarotraumaShared\**\*.cs" />
     <Content Remove="..\BarotraumaShared\**\*.props" />
     <Compile Include="..\BarotraumaShared\**\*.cs" />
@@ -168,6 +167,11 @@
     </Content>
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\..\Libraries\BarotraumaLibs\BarotraumaCore\BarotraumaCore.csproj" />
+    <ProjectReference Include="..\..\Libraries\BarotraumaLibs\EosInterface\EosInterface.csproj" />
+  </ItemGroup>
+
   <!-- Sourced from https://stackoverflow.com/a/45248069 -->
   <Target Name="GetGitRevision" BeforeTargets="WriteGitRevision" Condition="'$(BuildHash)' == ''">
     <PropertyGroup>
@@ -233,8 +237,10 @@
   </Target>
 
   <PropertyGroup>
-    <GARuntime>win-x64</GARuntime>
+    <ManualDeployRuntime>win-x64</ManualDeployRuntime>
+    <ProjectFileNamePlatformSuffix>Win64</ProjectFileNamePlatformSuffix>
   </PropertyGroup>
+  <Import Project="../BarotraumaShared/DeployEosPrivate.props" />
   <Import Project="../BarotraumaShared/DeployGameAnalytics.props" />
 
 </Project>

@@ -99,6 +99,10 @@ namespace Barotrauma
                 }
             }
 
+            //restore the previous selection
+            MapEntity.SelectedList.Clear();
+            entities.ForEach(e => MapEntity.AddSelection(e));
+
             return element;
         }
     }

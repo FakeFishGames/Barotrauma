@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Collections.Concurrent;
-using System.Linq;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Barotrauma.Extensions;
 
 #if SERVER
 using PipeType = System.IO.Pipes.AnonymousPipeClientStream;
@@ -121,6 +121,7 @@ namespace Barotrauma.Networking
                     readCancellationToken?.Cancel();
                     return Option<int>.None();
                 }
+
                 try
                 {
                     if (readTask.IsCompleted || readTask.Wait(timeOutMilliseconds, readCancellationToken.Token))
@@ -131,6 +132,7 @@ namespace Barotrauma.Networking
                 catch (AggregateException aggregateException)
                 {
                     if (aggregateException.InnerException is OperationCanceledException) { return Option<int>.None(); }
+                    CheckPipeConnected(nameof(readStream), readStream);
                     throw;
                 }
                 catch (OperationCanceledException)
@@ -161,7 +163,18 @@ namespace Barotrauma.Networking
         {
             if (status is StatusEnum.Active && pipe is not { IsConnected: true })
             {
-                throw new Exception($"{name} was disconnected unexpectedly");
+                string exceptionMsg = $"{name} was disconnected unexpectedly.";
+#if CLIENT
+                if (Process is { HasExited: true, ExitCode: var exitCode })
+                {
+                    exceptionMsg += $" Child process exit code was {(uint)exitCode:X8}.";
+                }
+                else if (Process is { HasExited: false })
+                {
+                    exceptionMsg += " Child process has not exited.";
+                }
+#endif
+                throw new Exception(exceptionMsg);
             }
         }
 
@@ -256,7 +269,11 @@ namespace Barotrauma.Networking
                         {
                             case ObjectDisposedException _:
                             case System.IO.IOException _:
-                                if (!HasShutDown) { throw; }
+                                if (!HasShutDown)
+                                {
+                                    CheckPipeConnected(nameof(writeStream), writeStream);
+                                    throw;
+                                }
                                 break;
                             default:
                                 throw;
@@ -311,7 +328,36 @@ namespace Barotrauma.Networking
             writeManualResetEvent.Set();
         }
 
-        public static bool Read(out byte[] msg)
+        private static readonly Stopwatch stopwatch = new Stopwatch();
+        private const int MaxMilliseconds = 8;
+
+        public static IEnumerable<byte[]> Read()
+        {
+            stopwatch.Restart();
+
+            // To avoid the stopwatch somehow experiencing magical overhead that makes it not even
+            // start the loop within 8ms, use this bool to force at least one iteration.
+            bool hasIteratedAtLeastOnce = false;
+
+            // If it's taken more than 8 milliseconds to read dequeued messages, take
+            // a break from reading and allow all of the other logic to run for a tick.
+            // Otherwise the server may overwhelm the host client with redundant messages
+            // that are being read too slowly.
+            while (!hasIteratedAtLeastOnce || stopwatch.ElapsedMilliseconds < MaxMilliseconds)
+            {
+                hasIteratedAtLeastOnce = true;
+                if (!ReadSingleMessage(out var msg))
+                {
+                    // No more messages available to dequeue, we don't need
+                    // to reach 8 milliseconds to know we're done here
+                    break;
+                }
+                yield return msg;
+            }
+            stopwatch.Stop();
+        }
+
+        private static bool ReadSingleMessage(out byte[] msg)
         {
             if (HasShutDown) { msg = null; return false; }
 

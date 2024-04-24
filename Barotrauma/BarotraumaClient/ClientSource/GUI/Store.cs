@@ -40,6 +40,8 @@ namespace Barotrauma
         private readonly List<PurchasedItem> itemsToSell = new List<PurchasedItem>();
         private readonly List<PurchasedItem> itemsToSellFromSub = new List<PurchasedItem>();
 
+        private GUIMessageBox deliveryPrompt;
+
         private StoreTab activeTab = StoreTab.Buy;
         private MapEntityCategory? selectedItemCategory;
         private bool suppressBuySell;
@@ -2092,7 +2094,7 @@ namespace Barotrauma
 
             if (CampaignMode.AllowImmediateItemDelivery())
             {
-                var deliveryPrompt = new GUIMessageBox(
+                deliveryPrompt = new GUIMessageBox(
                     TextManager.Get("newsupplies"),
                     TextManager.Get("suppliespurchased.deliverymethod"),
                     new LocalizedString[] 
@@ -2134,6 +2136,12 @@ namespace Barotrauma
             return false;
         }
 
+        public void OnDeselected()
+        {
+            deliveryPrompt?.Close();
+            deliveryPrompt = null;
+        }
+
         private bool SellItems()
         {
             if (!HasActiveTabPermissions()) { return false; }
@@ -2149,7 +2157,7 @@ namespace Barotrauma
             }
             catch (NotImplementedException e)
             {
-                DebugConsole.LogError($"Error confirming the store transaction: Uknown store tab type. {e.StackTrace.CleanupStackTrace()}");
+                DebugConsole.LogError($"Error confirming the store transaction: Unknown store tab type. {e.StackTrace.CleanupStackTrace()}");
                 return false;
             }
             var itemsToRemove = new List<PurchasedItem>();

@@ -230,6 +230,8 @@ namespace Barotrauma
             }
         }
 
+        private float pressureEffectTimer;
+
         private readonly List<ObjectiveEntity> activeObjectiveEntities = new List<ObjectiveEntity>();
         public IEnumerable<ObjectiveEntity> ActiveObjectiveEntities
         {
@@ -334,17 +336,21 @@ namespace Barotrauma
                 {
                     if (!IsProtectedFromPressure && (AnimController.CurrentHull == null || AnimController.CurrentHull.LethalPressure > 0.0f))
                     {
-                        float pressure = AnimController.CurrentHull == null ? 100.0f : AnimController.CurrentHull.LethalPressure;
-                        if (pressure > 0.0f)
+                        //wait until the character has been in pressure for one second so the zoom doesn't
+                        //"flicker" in and out if the pressure fluctuates around the minimum threshold
+                        pressureEffectTimer += deltaTime;
+                        if (pressureEffectTimer > 1.0f)
                         {
-                            //lerp in during the 1st second of the pressure timer so the zoom doesn't
-                            //"flicker" in and out if the pressure fluctuates around the minimum threshold
-                            float timerMultiplier = (PressureTimer / 100.0f);
-                            float zoomInEffectStrength = MathHelper.Clamp(pressure / 100.0f * timerMultiplier, 0.0f, 1.0f);
+                            float pressure = AnimController.CurrentHull == null ? 100.0f : AnimController.CurrentHull.LethalPressure;
+                            float zoomInEffectStrength = MathHelper.Clamp(pressure / 100.0f, 0.0f, 1.0f);
                             cam.Zoom = MathHelper.Lerp(cam.Zoom,
                                 cam.DefaultZoom + (Math.Max(pressure, 10) / 150.0f) * Rand.Range(0.9f, 1.1f),
                                 zoomInEffectStrength);
                         }
+                    }
+                    else
+                    {
+                        pressureEffectTimer = 0.0f;
                     }
 
                     if (IsHumanoid)

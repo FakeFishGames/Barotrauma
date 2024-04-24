@@ -5,10 +5,12 @@ using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Xml;
 using System.Xml.Linq;
+using Barotrauma.Extensions;
 using File = Barotrauma.IO.File;
 using FileStream = Barotrauma.IO.FileStream;
 using Path = Barotrauma.IO.Path;
@@ -841,6 +843,13 @@ namespace Barotrauma
             return vector;
         }
 
+        private static readonly ImmutableDictionary<Identifier, Color> monoGameColors =
+            typeof(Color)
+                .GetProperties(BindingFlags.Static | BindingFlags.Public)
+                .Where(p => p.PropertyType == typeof(Color))
+                .Select(p => (p.Name.ToIdentifier(), p.GetValueFromStaticProperty<Color>()))
+                .ToImmutableDictionary();
+
         public static Color ParseColor(string stringColor, bool errorMessages = true)
         {
             if (stringColor.StartsWith("gui.", StringComparison.OrdinalIgnoreCase))
@@ -862,6 +871,11 @@ namespace Barotrauma
                     return faction.IconColor;
                 }
                 return Color.White;
+            }
+
+            if (monoGameColors.TryGetValue(stringColor.ToIdentifier(), out var monoGameColor))
+            {
+                return monoGameColor;
             }
 
             string[] strComponents = stringColor.Split(',');
