@@ -4,7 +4,6 @@ using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using static Barotrauma.EventLog;
 
 namespace Barotrauma
 {
@@ -27,8 +26,8 @@ namespace Barotrauma
         private static Vector2 CursorPosWorld => Screen.Selected.Cam.ScreenToWorld(PlayerInput.LatestMousePosition);
         private static List<ISerializableEntity> EntitiesUnderCursor => Entities.Where(e => e switch
         {
-            MapEntity m => (m is not Item i || !i.IsContained) && m.WorldRect.ContainsWorld(CursorPosWorld),
-            Character c => c.AnimController.Limbs.Any(l => new RectangleF(l.WorldPosition - ConvertUnits.ToDisplayUnits(l.body.GetSize()) / 2, ConvertUnits.ToDisplayUnits(l.body.GetSize())).Contains(CursorPosWorld)),
+            MapEntity m => m is not Item { IsContained: true } && m.WorldRect.ContainsWorld(CursorPosWorld),
+            Character c => c.AnimController.Limbs.Any(l => GameMain.World.TestPointAll(ConvertUnits.ToSimUnits(CursorPosWorld)).Select(f => f.Body).Contains(l.body.FarseerBody)),
             _ => false
         }).ToList();
 
