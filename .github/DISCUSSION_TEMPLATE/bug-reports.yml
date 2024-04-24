@@ -73,8 +73,7 @@ body:
       label: Version
       description: Which version of the game did the bug happen in? You can see the current version number in the bottom left corner of your screen in the main menu.
       options:      
-        - v1.3.0.4
-        - v1.4.3.0 (unstable)
+        - v1.4.4.1 (Blood in the Water Update)
         - Other
     validations:
       required: true
