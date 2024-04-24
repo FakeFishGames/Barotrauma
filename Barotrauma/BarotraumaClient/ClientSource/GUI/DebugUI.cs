@@ -1,8 +1,10 @@
 ﻿using Barotrauma.Extensions;
+using FarseerPhysics;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using static Barotrauma.EventLog;
 
 namespace Barotrauma
 {
@@ -23,12 +25,12 @@ namespace Barotrauma
 
         private static IEnumerable<ISerializableEntity> Entities => Entity.GetEntities().Where(e => e is ISerializableEntity s).Select(e => e as ISerializableEntity);
         private static Vector2 CursorPosWorld => Screen.Selected.Cam.ScreenToWorld(PlayerInput.LatestMousePosition);
-        private static IEnumerable<ISerializableEntity> EntitiesUnderCursor => Entities.Where(e => e switch
+        private static List<ISerializableEntity> EntitiesUnderCursor => Entities.Where(e => e switch
         {
-            MapEntity m => m.WorldRect.ContainsWorld(CursorPosWorld),
-            Character c => new Rectangle(c.AnimController.Collider.SimPosition.ToPoint(), c.AnimController.Collider.GetSize().ToPoint()).ContainsWorld(CursorPosWorld),
+            MapEntity m => (m is not Item i || !i.IsContained) && m.WorldRect.ContainsWorld(CursorPosWorld),
+            Character c => c.AnimController.Limbs.Any(l => new RectangleF(l.WorldPosition - ConvertUnits.ToDisplayUnits(l.body.GetSize()) / 2, ConvertUnits.ToDisplayUnits(l.body.GetSize())).Contains(CursorPosWorld)),
             _ => false
-        });
+        }).ToList();
 
         public static void Open(string window) => OpenableWindows[window].Invoke();
         public static void Close()
@@ -95,7 +97,6 @@ namespace Barotrauma
                 OnClicked = (component, obj) =>
                 {
                     explorerWindows.Remove((window, entityList));
-                    window.RectTransform.Parent = null;
                     return true;
                 }
             };
@@ -145,7 +146,6 @@ namespace Barotrauma
                 OnClicked = (component, obj) =>
                 {
                     editorWindows.Remove(entity);
-                    window.RectTransform.Parent = null;
                     return true;
                 }
             };
@@ -251,14 +251,15 @@ namespace Barotrauma
                 }
                 else if (PlayerInput.PrimaryMouseButtonClicked())
                 {
-                    CreateObjectExplorer(EntitiesUnderCursor);
+                    CreateObjectExplorer(EntitiesUnderCursor.Concat(EntitiesUnderCursor.Where(e => e is Item).SelectManyRecursive(e => (e as Item).ContainedItems)).Concat(EntitiesUnderCursor.Where(e => e is Character).Select(e => (e as Character).Inventory).SelectMany(inv => inv.AllItems.Concat(inv.AllItems.SelectManyRecursive(i => i.ContainedItems)))));
                     inspectorTooltip.Visible = false;
                 }
                 else
                 {
                     inspectorTooltip.RectTransform.AbsoluteOffset = PlayerInput.LatestMousePosition.ToPoint() + new Point(20, 0);
                     inspectorTooltip.Text = $"Inspector mode (RMB to cancel)\nCursor pos: {CursorPosWorld}\nEntities below cursor: {EntitiesUnderCursor.Count()}";
-                    EntitiesUnderCursor.ForEach(e => inspectorTooltip.Text += $"\n- {e.Name}");
+                    EntitiesUnderCursor.ForEach(e => inspectorTooltip.Text += $"\n- {e.Name} (‖color:gui.green‖{e.GetType().Name}‖end‖)");
+                    inspectorTooltip.Text = RichString.Rich(inspectorTooltip.Text);
                     inspectorTooltip.AddToGUIUpdateList();
                 }
             }
