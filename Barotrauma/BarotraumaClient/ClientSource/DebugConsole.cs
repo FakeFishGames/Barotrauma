@@ -2345,6 +2345,29 @@ namespace Barotrauma
                 }
             }));
 
+            commands.Add(new Command("converttowreck", "", (string[] args) =>
+            {
+                if (Screen.Selected is not SubEditorScreen)
+                {
+                    ThrowError("The command can only be used in the submarine editor.");
+                    return;
+                }
+                if (Submarine.MainSub == null)
+                {
+                    ThrowError("Load a submarine first to convert it to a wreck.");
+                    return;
+                }
+                if (Submarine.MainSub.Info.SubmarineElement == null)
+                {
+                    ThrowError("The submarine must be saved before you can convert it to a wreck.");
+                    return;
+                }
+                var wreckedSubmarineInfo = new SubmarineInfo(filePath: string.Empty, element: WreckConverter.ConvertToWreck(Submarine.MainSub.Info.SubmarineElement));
+                wreckedSubmarineInfo.Name += "_Wrecked";
+                wreckedSubmarineInfo.Type = SubmarineType.Wreck;
+                GameMain.SubEditorScreen.LoadSub(wreckedSubmarineInfo);
+            }));
+
 #if DEBUG
             commands.Add(new Command("listspamfilters", "Lists filters that are in the global spam filter.", (string[] args) =>
             {
@@ -2456,29 +2479,6 @@ namespace Barotrauma
                 {
                     Entity.Spawner?.AddItemToSpawnQueue(itemPrefab, cursorPos);
                 }                
-            }));
-
-            commands.Add(new Command("converttowreck", "", (string[] args) =>
-            {
-                if (Screen.Selected is not SubEditorScreen)
-                {
-                    ThrowError("The command can only be used in the submarine editor.");
-                    return;
-                }
-                if (Submarine.MainSub == null)
-                {
-                    ThrowError("Load a submarine first to convert it to a wreck.");
-                    return;
-                }
-                if (Submarine.MainSub.Info.SubmarineElement == null)
-                {
-                    ThrowError("The submarine must be saved before you can convert it to a wreck.");
-                    return;
-                }
-                var wreckedSubmarineInfo = new SubmarineInfo(filePath: string.Empty, element: WreckConverter.ConvertToWreck(Submarine.MainSub.Info.SubmarineElement));
-                wreckedSubmarineInfo.Name += "_Wrecked";
-                wreckedSubmarineInfo.Type = SubmarineType.Wreck;
-                GameMain.SubEditorScreen.LoadSub(wreckedSubmarineInfo);
             }));
 
             commands.Add(new Command("camerasettings", "camerasettings [defaultzoom] [zoomsmoothness] [movesmoothness] [minzoom] [maxzoom]: debug command for testing camera settings. The values default to 1.1, 8.0, 8.0, 0.1 and 2.0.", (string[] args) =>

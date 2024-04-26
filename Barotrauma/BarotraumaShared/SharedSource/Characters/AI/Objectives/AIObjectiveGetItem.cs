@@ -368,7 +368,7 @@ namespace Barotrauma
                         return new AIObjectiveGoTo(moveToTarget, character, objectiveManager, repeat: false, getDivingGearIfNeeded: AllowToFindDivingGear, closeEnough: DefaultReach)
                         {
                             // If the root container changes, the item is no longer where it was (taken by someone -> need to find another item)
-                            AbortCondition = obj => targetItem == null || targetItem.GetRootInventoryOwner() != moveToTarget,
+                            AbortCondition = obj => targetItem == null || (targetItem.GetRootInventoryOwner() is Entity owner && owner != moveToTarget && owner != character),
                             SpeakIfFails = false,
                             endNodeFilter = CreateEndNodeFilter(moveToTarget)
                         };

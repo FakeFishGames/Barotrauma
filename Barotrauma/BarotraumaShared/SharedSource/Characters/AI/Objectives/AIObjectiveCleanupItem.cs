@@ -123,7 +123,7 @@ namespace Barotrauma
             {
                 Abandon = true;
             }
-            else if (item.ParentInventory != null)
+            else if (item.ParentInventory != null && item.GetRootInventoryOwner() != character)
             {
                 if (!objectiveManager.HasOrder<AIObjectiveCleanupItems>())
                 {
