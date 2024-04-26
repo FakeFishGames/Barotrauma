@@ -1,4 +1,18 @@
 ﻿-------------------------------------------------------------------------------------------------------------------------------------------------
+v1.4.5.0
+-------------------------------------------------------------------------------------------------------------------------------------------------
+
+- Fixed crew remaining dead, mission remaining completed/failed, etc when you return to the lobby an restart the round. The issue was that the server did not properly load the previous save when opting to continue the ongoing campaign.
+- Added a button to the server lobby which opens the server description in a popup to make it easier for players to find. We are still thinking of the best way to handle the description/MOTD, this is more of a quick band-aid solution for the description being too easy to miss / difficult to find at the moment.
+- Fixed descriptions being outdated on some of the modified XP talents. Currently only fixed in English, the descriptions in other languages are still outdated.
+- Fixed "command not found" error when trying to use the new "converttowreck" console command.
+- Fixed items in a container in the submarine not being counted in the "owned items" count in the store interface.
+- Fixed bots being unable to properly clean up some items, just taking them into their inventory and leaving them there.
+- Fixed drinkable items (such as ethanol) giving the full effect with just a tiny sip.
+- Fixed effect from the "revenge squad" talent only lasting 60 seconds.
+- Fixed combat diving suit being slower than intended when using an underwater scooter.
+
+-------------------------------------------------------------------------------------------------------------------------------------------------
 v1.4.4.1
 -------------------------------------------------------------------------------------------------------------------------------------------------
 

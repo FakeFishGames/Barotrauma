@@ -1122,16 +1122,16 @@ namespace Barotrauma
                         {
                             if (!file.TryGet(out ContentPath _) || (file.TryGet(out ContentPath contentPath) && contentPath.IsNullOrWhiteSpace()))
                             {
-                                DebugConsole.ThrowError($"Error in a <TriggerAnimation> element of {subElement.ParseContentPathFromUri()}: neither path nor filename defined!");
+                                DebugConsole.ThrowError($"Error in a <TriggerAnimation> element of {subElement.ParseContentPathFromUri()}: neither path nor filename defined!",
+                                    contentPackage: subElement.ContentPackage);
+                                break;
                             }
                         }
-                        else
-                        {
-                            float priority = subElement.GetAttributeFloat("priority", def: 0f);
-                            Identifier[] expectedSpeciesNames = subElement.GetAttributeIdentifierArray("expectedspecies", Array.Empty<Identifier>());
-                            animationsToTrigger ??= new List<AnimLoadInfo>();
-                            animationsToTrigger.Add(new AnimLoadInfo(animType, file, priority, expectedSpeciesNames.ToImmutableArray()));
-                        }
+                        float priority = subElement.GetAttributeFloat("priority", def: 0f);
+                        Identifier[] expectedSpeciesNames = subElement.GetAttributeIdentifierArray("expectedspecies", Array.Empty<Identifier>());
+                        animationsToTrigger ??= new List<AnimLoadInfo>();
+                        animationsToTrigger.Add(new AnimLoadInfo(animType, file, priority, expectedSpeciesNames.ToImmutableArray()));
+                        
                         break;
                 }
             }

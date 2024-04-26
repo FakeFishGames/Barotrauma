@@ -1735,7 +1735,7 @@ namespace Barotrauma
                     if (!ItemAndAllContainersInteractable(subItem)) { continue; }
                     //don't list items in a character inventory (the ones in a crew member's inventory are counted below)
                     var rootInventoryOwner = subItem.GetRootInventoryOwner();
-                    if (rootInventoryOwner != null) { continue; }
+                    if (rootInventoryOwner is Character) { continue; }
                     AddOwnedItem(subItem);
                 }
             }
