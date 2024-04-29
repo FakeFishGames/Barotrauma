@@ -164,6 +164,7 @@ namespace TestProject
         [Fact]
         public void TestSingle()
         {
+            throw new Exception();
             Prop.ForAll<Single>(SerializeDeserialize).QuickCheckThrowOnFailure();
         }
 
