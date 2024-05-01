@@ -26,7 +26,7 @@ namespace Barotrauma
         public static InspectorMode inspectorMode;
 
         private static readonly List<GUIFrame> entityExplorerWindows = new List<GUIFrame>();
-        private static readonly Dictionary<ISerializableEntity, GUIFrame> entityEditorWindows = new Dictionary<ISerializableEntity, GUIFrame>();
+        private static readonly Dictionary<Entity, GUIFrame> entityEditorWindows = new Dictionary<Entity, GUIFrame>();
         private static readonly Dictionary<GUIComponent, GUIFrame> guiExplorerWindows = new Dictionary<GUIComponent, GUIFrame>();
         private static readonly List<GUITextBlock> guiExplorerEntries = new List<GUITextBlock>();
 
@@ -62,7 +62,7 @@ namespace Barotrauma
                 if (obj is Submarine sub) DebugConsole.NewMessage(sub.VisibleBorders.ToString());
                 if (Entity.GetEntities().Contains(obj) && !(obj as Entity).Removed)
                 {
-                    return obj is ISerializableEntity entity && TryCreateEditorWindow(entity);
+                    return TryCreateEditorWindow(obj as Entity);
                 }
                 else
                 {
@@ -102,7 +102,7 @@ namespace Barotrauma
             foreach (Entity entity in entities)
             {
                 GUITextBlock entry = CreateListEntry(list, entity, out GUILayoutGroup right);
-                entry.Text = RichString.Rich($"{entity.GetName()} (‖color:{entity.GetColor()}‖{entity.GetType().Name}‖end‖) {entity.WorldPosition.ToPoint()}");
+                entry.Text = RichString.Rich($"{entity.GetName()} (‖color:GUI.Green‖{entity.GetType().Name}‖end‖) {entity.WorldPosition.ToPoint()}");
 
                 new GUIButton(new(new Point(right.Rect.Height), right.RectTransform), style: "GUIMinusButton", color: GUIStyle.Red)
                 {
@@ -124,7 +124,7 @@ namespace Barotrauma
         #endregion
 
         #region Entity Editors
-        private static bool TryCreateEditorWindow(ISerializableEntity entity)
+        private static bool TryCreateEditorWindow(Entity entity)
         {
             if (entityEditorWindows.ContainsKey(entity))
             {
@@ -153,24 +153,45 @@ namespace Barotrauma
             return entityEditorWindows.TryAdd(entity, window);
         }
 
-        private static void RefreshEditor(GUIListBox list, ISerializableEntity entity)
+        private static void RefreshEditor(GUIListBox list, Entity entity)
         {
             list.ClearChildren();
-            new SerializableEntityEditor(list.Content.RectTransform, entity, false, true);
-            if (entity is Item item)
-            {
-                item.Components.ForEach(component => new SerializableEntityEditor(list.Content.RectTransform, component, false, true));
-            }
 
-            if (entity is Character character)
+            switch (entity)
             {
-                new SerializableEntityEditor(list.Content.RectTransform, character.Params, false, true);
-                new SerializableEntityEditor(list.Content.RectTransform, character.AnimController.RagdollParams, false, true);
-                character.AnimController.Limbs.ForEach(limb =>
-                {
-                    new SerializableEntityEditor(list.Content.RectTransform, limb, false, true);
-                    limb.DamageModifiers.ForEach(mod => new SerializableEntityEditor(list.Content.RectTransform, mod, false, true));
-                });
+                case ISerializableEntity sEntity:
+                    new SerializableEntityEditor(list.Content.RectTransform, sEntity, false, true);
+                    switch (sEntity)
+                    {
+                        case Item item:
+                            item.Components.ForEach(component => new SerializableEntityEditor(list.Content.RectTransform, component, false, true));
+                            break;
+                        case Character character:
+                            new SerializableEntityEditor(list.Content.RectTransform, character.Params, false, true);
+                            new SerializableEntityEditor(list.Content.RectTransform, character.AnimController.RagdollParams, false, true);
+                            character.AnimController.Limbs.ForEach(limb =>
+                            {
+                                new SerializableEntityEditor(list.Content.RectTransform, limb, false, true);
+                                limb.DamageModifiers.ForEach(mod => new SerializableEntityEditor(list.Content.RectTransform, mod, false, true));
+                            });
+                            break;
+                    }
+                    break;
+                case Submarine sub:
+                    SubmarineInfo info = sub.Info;
+                    if (info.OutpostGenerationParams is not null)
+                    {
+                        new SerializableEntityEditor(list.Content.RectTransform, info.OutpostGenerationParams, false, true);
+                    }
+                    if (info.OutpostModuleInfo is not null)
+                    {
+                        new SerializableEntityEditor(list.Content.RectTransform, info.OutpostModuleInfo, false, true);
+                    }
+                    if (info.GetExtraSubmarineInfo is not null)
+                    {
+                        new SerializableEntityEditor(list.Content.RectTransform, info.GetExtraSubmarineInfo, false, true);
+                    }
+                    break;
             }
         }
         #endregion
@@ -341,18 +362,12 @@ namespace Barotrauma
             _ => "Unknown",
         };
 
-        private static string GetColor(this Entity entity) => entity switch
-        {
-            ISerializableEntity => "GUI.ItemQualityColorGood",
-            _ => "GUI.Green"
-        };
-
         #region Update & Draw
         public static void Update()
         {
             foreach (GUIFrame window in entityExplorerWindows)
             {
-                window.AddToGUIUpdateList(order: 100);
+                window.AddToGUIUpdateList();
             }
 
             foreach ((GUIComponent component, GUIFrame window) in guiExplorerWindows)
@@ -363,18 +378,18 @@ namespace Barotrauma
                     continue;
                 }
 
-                window.AddToGUIUpdateList(order: 100);
+                window.AddToGUIUpdateList();
             }
 
-            foreach ((ISerializableEntity entity, GUIFrame window) in entityEditorWindows)
+            foreach ((Entity entity, GUIFrame window) in entityEditorWindows)
             {
-                if (!Entities.Contains(entity as Entity))
+                if (!Entities.Contains(entity))
                 {
                     entityEditorWindows.Remove(entity);
                     continue;
                 }
 
-                window.AddToGUIUpdateList(order: 100);
+                window.AddToGUIUpdateList();
             }
 
             if (inspectorMode is not InspectorMode.Disabled)
@@ -412,10 +427,10 @@ namespace Barotrauma
                     case InspectorMode.Entities:
                         IEnumerable<Entity> entities = EntitiesUnderCursor;
                         tooltip += $"\nEntities below cursor: {entities.Count()}";
-                        entities.ForEach(e => tooltip += $"\n- {e.GetName()} (‖color:{e.GetColor()}‖{e.GetType().Name}‖end‖)");
+                        entities.ForEach(e => tooltip += $"\n- {e.GetName()} (‖color:GUI.Green‖{e.GetType().Name}‖end‖)");
                         break;
                     case InspectorMode.GUI when GUI.MouseOn is not null:
-                        tooltip += $"\nSelected GUIComponent: ‖color:gui.green‖{GUI.MouseOn.GetType().Name}‖end‖ ({GUI.MouseOn.Style?.Name ?? "no style"})";
+                        tooltip += $"\nSelected GUIComponent: ‖color:GUI.Green‖{GUI.MouseOn.GetType().Name}‖end‖ ({GUI.MouseOn.Style?.Name ?? "no style"})";
                         GUI.MouseOn.DrawGUIDebugOverlay(sb);
                         break;
                     case InspectorMode.GUI when GUI.MouseOn is null:

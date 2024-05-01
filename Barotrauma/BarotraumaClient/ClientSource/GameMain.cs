@@ -964,9 +964,9 @@ namespace Barotrauma
 
                     Client?.Update((float)Timing.Step);
 
-                    GUI.Update((float)Timing.Step);
-
                     DebugMenus.Update();
+
+                    GUI.Update((float)Timing.Step);
                 }
 
                 CoroutineManager.Update(Paused, (float)Timing.Step);
