@@ -21,7 +21,7 @@ namespace Barotrauma
     {
         // TODO: Debug infos/overlays toggles window
         // TODO: Item spawner window
-        // TODO: GUIComponent editors
+        // TODO: GUIComponent/RectTransform editors
 
         public static InspectorMode inspectorMode;
 
@@ -410,8 +410,9 @@ namespace Barotrauma
                 switch (inspectorMode)
                 {
                     case InspectorMode.Entities:
-                        tooltip += $"\nEntities below cursor: {EntitiesUnderCursor.Count()}";
-                        EntitiesUnderCursor.ForEach(e => tooltip += $"\n- {e.GetName()} (‖color:{e.GetColor()}‖{e.GetType().Name}‖end‖)");
+                        IEnumerable<Entity> entities = EntitiesUnderCursor;
+                        tooltip += $"\nEntities below cursor: {entities.Count()}";
+                        entities.ForEach(e => tooltip += $"\n- {e.GetName()} (‖color:{e.GetColor()}‖{e.GetType().Name}‖end‖)");
                         break;
                     case InspectorMode.GUI when GUI.MouseOn is not null:
                         tooltip += $"\nSelected GUIComponent: ‖color:gui.green‖{GUI.MouseOn.GetType().Name}‖end‖ ({GUI.MouseOn.Style?.Name ?? "no style"})";
@@ -424,6 +425,10 @@ namespace Barotrauma
 
                 ImmutableArray<RichTextData>? data = RichTextData.GetRichTextData(tooltip, out tooltip);
                 GUI.DrawStringWithColors(sb, PlayerInput.MousePosition + new Vector2(25, 0), tooltip, GUIStyle.TextColorNormal, data, new(0, 0, 0, 0.5f));
+            }
+            else if (GameMain.DebugDraw)
+            {
+                GUI.MouseOn?.DrawGUIDebugOverlay(sb);
             }
             guiExplorerEntries.Where(i => i.State is GUIComponent.ComponentState.Hover or GUIComponent.ComponentState.HoverSelected).ForEach(i => (i.UserData as GUIComponent).DrawGUIDebugOverlay(sb));
             sb.End();
@@ -457,8 +462,8 @@ namespace Barotrauma
             }
             else
             {
-                GUI.DrawRectangle(sb, component.MouseRect, Color.Lime);
-                GUI.DrawRectangle(sb, component.Rect, Color.Cyan);
+                GUI.DrawRectangle(sb, component.MouseRect, Color.Lime * (PlayerInput.IsAltDown() ? 0.5f : 1), PlayerInput.IsAltDown());
+                GUI.DrawRectangle(sb, component.Rect, Color.Cyan * (PlayerInput.IsAltDown() ? 0.5f : 1), PlayerInput.IsAltDown());
             }
         }
         #endregion
