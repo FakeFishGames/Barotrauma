@@ -1228,24 +1228,49 @@ namespace Barotrauma
 
             AssignOnExecute("debugmenu", (string[] args) =>
             {
-                if (args.Any())
+                if (args.Length > 0)
                 {
-                    if (args[0] is "close" or "closeall")
+                    switch (args[0])
                     {
-                        DebugUI.Close();
-                    }
-                    else if (DebugUI.OpenableWindows.ContainsKey(args[0]))
-                    {
-                        DebugUI.Open(args[0]);
-                    }
-                    else
-                    {
-                        NewMessage($"'{args[0]}' is not a valid window", Color.Yellow);
+                        case "close" or "closeall":
+                            DebugMenus.CloseAll();
+                            break;
+                        case "entities" or "entityexplorer":
+                            DebugMenus.CreateEntityExplorer();
+                            break;
+                        case "gui" or "guiexplorer" or "guiheirarchy":
+                            DebugMenus.TryCreateGUIExplorer(Screen.Selected.Frame);
+                            break;
+                        case "inspect":
+                            if (args.Length > 1)
+                            {
+                                switch (args[1])
+                                {
+                                    case "entities":
+                                        DebugMenus.inspectorMode = InspectorMode.Entities;
+                                        break;
+                                    case "gui":
+                                        DebugMenus.inspectorMode = InspectorMode.GUI;
+                                        break;
+                                    default:
+                                        NewMessage($"'{args[1]}' is not a valid inspector mode", Color.Yellow);
+                                        DebugMenus.inspectorMode = InspectorMode.Disabled;
+                                        break;
+                                }
+                            }
+                            else
+                            {
+                                DebugMenus.inspectorMode = InspectorMode.Entities;
+                            }
+                            break;
+                        default:
+                            NewMessage($"'{args[0]}' is not a valid window", Color.Yellow);
+                            break;
                     }
                 }
                 else
                 {
-                    DebugUI.Open(DebugUI.OpenableWindows.First().Key);
+                    DebugMenus.CreateEntityExplorer();
                 }
             });
             AssignRelayToServer("debugmenu", false);

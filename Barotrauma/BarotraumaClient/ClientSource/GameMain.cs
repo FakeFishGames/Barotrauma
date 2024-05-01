@@ -935,8 +935,6 @@ namespace Barotrauma
 
                     SubmarinePreview.AddToGUIUpdateList();
 
-                    DebugUI.Update();
-
                     FileSelection.AddToGUIUpdateList();
 
                     DebugConsole.AddToGUIUpdateList();
@@ -968,26 +966,7 @@ namespace Barotrauma
 
                     GUI.Update((float)Timing.Step);
 
-#if DEBUG
-                    if (DebugDraw && GUI.MouseOn != null && PlayerInput.IsCtrlDown() && PlayerInput.KeyHit(Keys.G))
-                    {
-                        List<GUIComponent> hierarchy = new List<GUIComponent>();
-                        var currComponent = GUI.MouseOn;
-                        while (currComponent != null)
-                        {
-                            hierarchy.Add(currComponent);
-                            currComponent = currComponent.Parent;
-                        }
-                        DebugConsole.NewMessage("*********************");
-                        foreach (var component in hierarchy)
-                        {
-                            if (component is { MouseRect: var mouseRect, Rect: var rect })
-                            {
-                                DebugConsole.NewMessage($"{component.GetType().Name} {component.Style?.Name ?? "[null]"} {rect.Bottom} {mouseRect.Bottom}", mouseRect!=rect ? Color.Lime : Color.Red);
-                            }
-                        }
-                    }
-#endif
+                    DebugMenus.Update();
                 }
 
                 CoroutineManager.Update(Paused, (float)Timing.Step);
@@ -1075,38 +1054,7 @@ namespace Barotrauma
                 Screen.Selected.Draw(deltaTime, base.GraphicsDevice, spriteBatch);
             }
 
-            if (DebugDraw && GUI.MouseOn != null)
-            {
-                spriteBatch.Begin();
-                if (PlayerInput.IsCtrlDown() && PlayerInput.KeyDown(Keys.G))
-                {
-                    List<GUIComponent> hierarchy = new List<GUIComponent>();
-                    var currComponent = GUI.MouseOn;
-                    while (currComponent != null)
-                    {
-                        hierarchy.Add(currComponent);
-                        currComponent = currComponent.Parent;
-                    }
-
-                    Color[] colors = { Color.Lime, Color.Yellow, Color.Aqua, Color.Red };
-                    for (int index = 0; index < hierarchy.Count; index++)
-                    {
-                        var component = hierarchy[index];
-                        if (component is { MouseRect: var mouseRect, Rect: var rect })
-                        {
-                            if (mouseRect.IsEmpty) { mouseRect = rect; }
-                            mouseRect.Location += (index%2,(index%4)/2);
-                            GUI.DrawRectangle(spriteBatch, mouseRect, colors[index%4]);
-                        }
-                    }
-                }
-                else
-                {
-                    GUI.DrawRectangle(spriteBatch, GUI.MouseOn.MouseRect, Color.Lime);
-                    GUI.DrawRectangle(spriteBatch, GUI.MouseOn.Rect, Color.Cyan);
-                }
-                spriteBatch.End();
-            }
+            DebugMenus.Draw(spriteBatch);
 
             sw.Stop();
             PerformanceCounter.AddElapsedTicks("Draw", sw.ElapsedTicks);
