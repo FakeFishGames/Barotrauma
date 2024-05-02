@@ -720,9 +720,16 @@ namespace Barotrauma
 
             if (errorMsgs.Any())
             {
-                GUIMessageBox msgBox = new GUIMessageBox(TextManager.Get("Warning"), string.Join("\n\n", errorMsgs), new Vector2(0.25f, 0.0f), new Point(400, 200));
+                GUIMessageBox msgBox = new GUIMessageBox(TextManager.Get("Warning"), string.Empty, new Vector2(0.25f, 0.0f), minSize: new Point(GUI.IntScale(650), GUI.IntScale(650)));
                 if (warnings.Any())
                 {
+                    var textListBox = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.75f), msgBox.Content.RectTransform));
+                    var text = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), textListBox.Content.RectTransform), string.Join("\n\n", errorMsgs), wrap: true)
+                    {
+                        CanBeFocused = false
+                    };
+                    text.RectTransform.MinSize = new Point(0, (int)text.TextSize.Y);
+
                     Point size = msgBox.RectTransform.NonScaledSize;
                     GUITickBox suppress = new GUITickBox(new RectTransform(new Vector2(1f, 0.33f), msgBox.Content.RectTransform), TextManager.Get("editor.suppresswarnings"));
                     msgBox.RectTransform.NonScaledSize = new Point(size.X, size.Y + suppress.RectTransform.NonScaledSize.Y);
@@ -736,7 +743,6 @@ namespace Barotrauma
                                 SubEditorScreen.SuppressedWarnings.Add(warning);
                             }
                         }
-
                         return true;
                     };
                 }

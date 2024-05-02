@@ -1,4 +1,20 @@
 ﻿-------------------------------------------------------------------------------------------------------------------------------------------------
+v1.4.6.0
+-------------------------------------------------------------------------------------------------------------------------------------------------
+- Fixed monsters sometimes spawning immediately after the round starts (Often happened between levels, when there was no outpost between them).
+- The 'Art of Submarine Warfare' book granted by the 'War Stories' talent is now a separate item and the original book has been reverted to its original state.
+- Fixed Thalamus' fleshgun ropes not being able to stick to a submarine anymore.
+- Fixed Thalamus' flesh spike crashing the game in the multiplayer game mode.
+- Added a scrollbar to the submarine warning list. Fixes the list not fitting on the screen, when there were multiple, long errors.
+- Fixed sever list filters not saving properly.
+- Fixed marking a stack of items to be ignored or deconstructed only taking into account the first item of the stack, instead applying to all items of the stack.
+- Removed duplicate localization lines that caused old versions of text to show up in some places.
+- Fixes to the Chinese localization.
+- Fixed the inability to edit tags that contained the same word as one of the predefined tags.
+- Fixed a crash on opening the contextual order menu for an item of another character's inventory while the health interface is open.
+- Fixed a crash when editing and resizing the circuit box label texts.
+
+-------------------------------------------------------------------------------------------------------------------------------------------------
 v1.4.5.0
 -------------------------------------------------------------------------------------------------------------------------------------------------
 

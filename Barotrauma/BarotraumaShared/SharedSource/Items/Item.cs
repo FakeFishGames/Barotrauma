@@ -3452,6 +3452,30 @@ namespace Barotrauma
             }
         }
 
+
+        /// <summary>
+        /// Returns this item and all the other items in the stack (either in the same inventory slot, or the same dropped stack).
+        /// </summary>
+        /// <returns></returns>
+        public IEnumerable<Item> GetStackedItems()
+        {
+            yield return this;
+            foreach (var stackedItem in DroppedStack)
+            {
+                if (stackedItem == this) { continue; }
+                yield return stackedItem;
+            }
+            if (ParentInventory != null)
+            {
+                int slotIndex = ParentInventory.FindIndex(this);
+                foreach (var stackedItem in ParentInventory.GetItemsAt(slotIndex))
+                {
+                    if (stackedItem == this) { continue; }
+                    yield return stackedItem;
+                }
+            }
+        }
+
         public void Equip(Character character)
         {
             if (Removed)
