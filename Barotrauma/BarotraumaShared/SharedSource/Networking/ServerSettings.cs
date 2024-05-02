@@ -348,6 +348,12 @@ namespace Barotrauma.Networking
                 if (serverMessageText == val) { return; }
 #if SERVER
                 GameMain.Server?.SendChatMessage(TextManager.AddPunctuation(':', TextManager.Get("servermotd"), val).Value, ChatMessageType.Server);
+#elif CLIENT
+                if (GameMain.NetLobbyScreen.ServerMessageButton is { } serverMessageButton)
+                {
+                    serverMessageButton.Flash(GUIStyle.Green);
+                    serverMessageButton.Pulsate(Vector2.One, Vector2.One * 1.2f, 1.0f);
+                }
 #endif
                 serverMessageText = val;
                 ServerDetailsChanged = true;

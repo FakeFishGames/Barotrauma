@@ -57,6 +57,7 @@ namespace Barotrauma
         private GUILayoutGroup roundControlsHolder;
 
         public GUIButton SettingsButton { get; private set; }
+        public GUIButton ServerMessageButton { get; private set; }
         public static GUIButton JobInfoFrame { get; set; }
 
         private GUITickBox spectateBox;
@@ -427,6 +428,20 @@ namespace Barotrauma
                 TextGetter = serverNameShadow.TextGetter = () => GameMain.Client?.ServerName
             };
 
+            ServerMessageButton = new GUIButton(new RectTransform(new Vector2(0.2f, 0.15f), serverInfoContent.RectTransform, Anchor.BottomLeft),
+                TextManager.Get("workshopitemdescription"), style: "GUIButtonSmall")
+            {
+                IgnoreLayoutGroups = true,
+                OnClicked = (bt, userdata) => 
+                {
+                    if (GameMain.Client?.ServerSettings is { } serverSettings)
+                    {
+                        CreateServerMessagePopup(serverSettings.ServerName, serverSettings.ServerMessageText);
+                    }
+                    return true; 
+                }
+            };
+
             playStyleIconContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.5f, 0.4f), serverInfoContent.RectTransform, Anchor.BottomRight), isHorizontal: true, childAnchor: Anchor.BottomRight) 
             { 
                 AbsoluteSpacing = GUI.IntScale(5)
@@ -455,8 +470,23 @@ namespace Barotrauma
                 }
             };
 
-            SettingsButton = new GUIButton(new RectTransform(new Vector2(0.25f, 1.0f), serverInfoContent.RectTransform, Anchor.TopRight),
-                TextManager.Get("ServerSettingsButton"), style: "GUIButtonSmall");
+            SettingsButton = new GUIButton(new RectTransform(new Vector2(0.25f, 0.4f), serverInfoContent.RectTransform, Anchor.TopRight),
+                TextManager.Get("ServerSettingsButton"), style: "GUIButtonFreeScale");
+        }
+
+        private void CreateServerMessagePopup(string serverName, string message)
+        {
+            if (string.IsNullOrEmpty(message)) { return; }
+            var popup = new GUIMessageBox(serverName, string.Empty, minSize: new Point(GUI.IntScale(650), GUI.IntScale(650)));
+            //popup.Content.Stretch = true;
+            popup.Header.Font = GUIStyle.LargeFont;
+            popup.Header.RectTransform.MinSize = new Point(0, (int)popup.Header.TextSize.Y);
+            var textListBox = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.7f), popup.Content.RectTransform));
+            var text = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), textListBox.Content.RectTransform), message, wrap: true)
+            {
+                CanBeFocused = false
+            };
+            text.RectTransform.MinSize = new Point(0, (int)text.TextSize.Y);
         }
 
         public void RefreshPlaystyleIcons()
@@ -1474,7 +1504,8 @@ namespace Barotrauma
                     }
                     else
                     {
-                        GameMain.Client.RequestStartRound();
+                        //if a campaign is active, and we're not setting one up atm, start button continues the existing campaign
+                        GameMain.Client.RequestStartRound(continueCampaign: GameMain.GameSession?.GameMode is CampaignMode && CampaignSetupFrame is not { Visible: true });
                         CoroutineManager.StartCoroutine(WaitForStartRound(StartButton), "WaitForStartRound");
                     }
                     return true;
@@ -1570,10 +1601,7 @@ namespace Barotrauma
             chatInput.OnTextChanged += GameMain.Client.TypingChatMessage;
             chatInput.OnDeselected += (sender, key) =>
             {
-                if (GameMain.Client != null)
-                {
-                    GameMain.Client.ChatBox.ChatManager.Clear();
-                }
+                GameMain.Client?.ChatBox.ChatManager.Clear();
             };
 
             //disable/hide elements the clients are not supposed to use/see

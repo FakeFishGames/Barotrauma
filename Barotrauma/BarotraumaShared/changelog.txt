@@ -1,4 +1,34 @@
 ﻿-------------------------------------------------------------------------------------------------------------------------------------------------
+v1.4.6.0
+-------------------------------------------------------------------------------------------------------------------------------------------------
+- Fixed monsters sometimes spawning immediately after the round starts (Often happened between levels, when there was no outpost between them).
+- The 'Art of Submarine Warfare' book granted by the 'War Stories' talent is now a separate item and the original book has been reverted to its original state.
+- Fixed Thalamus' fleshgun ropes not being able to stick to a submarine anymore.
+- Fixed Thalamus' flesh spike crashing the game in the multiplayer game mode.
+- Added a scrollbar to the submarine warning list. Fixes the list not fitting on the screen, when there were multiple, long errors.
+- Fixed sever list filters not saving properly.
+- Fixed marking a stack of items to be ignored or deconstructed only taking into account the first item of the stack, instead applying to all items of the stack.
+- Removed duplicate localization lines that caused old versions of text to show up in some places.
+- Fixes to the Chinese localization.
+- Fixed the inability to edit tags that contained the same word as one of the predefined tags.
+- Fixed a crash on opening the contextual order menu for an item of another character's inventory while the health interface is open.
+- Fixed a crash when editing and resizing the circuit box label texts.
+
+-------------------------------------------------------------------------------------------------------------------------------------------------
+v1.4.5.0
+-------------------------------------------------------------------------------------------------------------------------------------------------
+
+- Fixed crew remaining dead, mission remaining completed/failed, etc when you return to the lobby an restart the round. The issue was that the server did not properly load the previous save when opting to continue the ongoing campaign.
+- Added a button to the server lobby which opens the server description in a popup to make it easier for players to find. We are still thinking of the best way to handle the description/MOTD, this is more of a quick band-aid solution for the description being too easy to miss / difficult to find at the moment.
+- Fixed descriptions being outdated on some of the modified XP talents. Currently only fixed in English, the descriptions in other languages are still outdated.
+- Fixed "command not found" error when trying to use the new "converttowreck" console command.
+- Fixed items in a container in the submarine not being counted in the "owned items" count in the store interface.
+- Fixed bots being unable to properly clean up some items, just taking them into their inventory and leaving them there.
+- Fixed drinkable items (such as ethanol) giving the full effect with just a tiny sip.
+- Fixed effect from the "revenge squad" talent only lasting 60 seconds.
+- Fixed combat diving suit being slower than intended when using an underwater scooter.
+
+-------------------------------------------------------------------------------------------------------------------------------------------------
 v1.4.4.1
 -------------------------------------------------------------------------------------------------------------------------------------------------
 

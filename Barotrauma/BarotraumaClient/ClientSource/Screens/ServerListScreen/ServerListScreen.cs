@@ -1815,6 +1815,7 @@ namespace Barotrauma
 
         public void StoreServerFilters()
         {
+            if (loadingServerFilters) { return; }
             foreach (KeyValuePair<Identifier, GUITickBox> filterBox in filterTickBoxes)
             {
                 ServerListFilters.Instance.SetAttribute(filterBox.Key, filterBox.Value.Selected.ToString());
@@ -1826,8 +1827,10 @@ namespace Barotrauma
             GameSettings.SaveCurrentConfig();
         }
 
+        private bool loadingServerFilters;
         public void LoadServerFilters()
         {
+            loadingServerFilters = true;
             XDocument currentConfigDoc = XMLExtensions.TryLoadXml(GameSettings.PlayerConfigPath);
             ServerListFilters.Init(currentConfigDoc.Root.GetChildElement("serverfilters"));
             foreach (KeyValuePair<Identifier, GUITickBox> filterBox in filterTickBoxes)
@@ -1845,6 +1848,7 @@ namespace Barotrauma
                 var child = ternaryFilter.Value.ListBox.Content.GetChildByUserData(ternaryOption);
                 ternaryFilter.Value.Select(ternaryFilter.Value.ListBox.Content.GetChildIndex(child));
             }
+            loadingServerFilters = false;
         }
         
     }
