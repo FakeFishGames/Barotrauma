@@ -72,8 +72,8 @@ body:
     attributes:
       label: Version
       description: Which version of the game did the bug happen in? You can see the current version number in the bottom left corner of your screen in the main menu.
-      options:      
-        - v1.4.5.0 (Blood in the Water Update, hotfix 1)
+      options:
+        - v1.4.6.0 (Blood in the Water Update, hotfix 2)
         - Other
     validations:
       required: true
