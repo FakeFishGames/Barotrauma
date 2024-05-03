@@ -868,12 +868,8 @@ namespace Barotrauma
                 string prefabTags = GetPrefabTags(it);
                 if (string.IsNullOrEmpty(text) || string.IsNullOrEmpty(prefabTags)) { return text; }
 
-                text = text.Remove(prefabTags);
-                if (text.StartsWith(","))
-                {
-                    text = text.Remove(0, 1);
-                }
-                return text;
+                string[] splitTags = text.Split(',');
+                return string.Join(',', splitTags.Where(t => !it.Prefab.Tags.Contains(t)));
             }
 
             static string GetPrefabTags(Item it) => string.Join(',', it.Prefab.Tags);

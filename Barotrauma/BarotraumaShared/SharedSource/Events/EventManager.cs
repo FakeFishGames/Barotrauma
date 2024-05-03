@@ -272,6 +272,7 @@ namespace Barotrauma
             CumulativeMonsterStrengthRuins = 0;
             CumulativeMonsterStrengthWrecks = 0;
             CumulativeMonsterStrengthCaves = 0;
+            distanceTraveled = 0;
         }
 
         public void ActivateEvent(Event newEvent)
@@ -726,14 +727,12 @@ namespace Barotrauma
 
         private bool CanStartEventSet(EventSet eventSet)
         {
-            ISpatialEntity refEntity = GetRefEntity();
-            float distFromStart = (float)Math.Sqrt(MathUtils.LineSegmentToPointDistanceSquared(level.StartExitPosition.ToPoint(), level.StartPosition.ToPoint(), refEntity.WorldPosition.ToPoint()));
-            float distFromEnd = (float)Math.Sqrt(MathUtils.LineSegmentToPointDistanceSquared(level.EndExitPosition.ToPoint(), level.EndPosition.ToPoint(), refEntity.WorldPosition.ToPoint()));
-
             if (!eventSet.AllowAtStart)
             {
-                if (distFromStart * Physics.DisplayToRealWorldRatio < 50.0f ||
-                    distFromEnd * Physics.DisplayToRealWorldRatio < 50.0f)
+                ISpatialEntity refEntity = GetRefEntity();
+                float distFromStart = (float)Math.Sqrt(MathUtils.LineSegmentToPointDistanceSquared(level.StartExitPosition.ToPoint(), level.StartPosition.ToPoint(), refEntity.WorldPosition.ToPoint()));
+                float distFromEnd = (float)Math.Sqrt(MathUtils.LineSegmentToPointDistanceSquared(level.EndExitPosition.ToPoint(), level.EndPosition.ToPoint(), refEntity.WorldPosition.ToPoint()));
+                if (distFromStart * Physics.DisplayToRealWorldRatio < 50.0f || distFromEnd * Physics.DisplayToRealWorldRatio < 50.0f)
                 {
                     return false;
                 }

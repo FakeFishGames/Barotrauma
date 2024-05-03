@@ -806,12 +806,18 @@ namespace Barotrauma
                     {
                         if (order.Identifier == Tags.DeconstructThis)
                         {
-                            Item.DeconstructItems.Add(item);
+                            foreach (var stackedItem in item.GetStackedItems())
+                            {
+                                Item.DeconstructItems.Add(stackedItem);
+                            }
                             HintManager.OnItemMarkedForDeconstruction(order.OrderGiver);
                         }
                         else
                         {
-                            Item.DeconstructItems.Remove(item);
+                            foreach (var stackedItem in item.GetStackedItems())
+                            {
+                                Item.DeconstructItems.Remove(stackedItem);
+                            }
                         }
                     }
                 }
@@ -820,8 +826,19 @@ namespace Barotrauma
                     WallSection ws = null;
                     if (order.TargetType == Order.OrderTargetType.Entity && order.TargetEntity is IIgnorable ignorable)
                     {
-                        ignorable.OrderedToBeIgnored = order.Identifier == Tags.IgnoreThis;
-                        AddOrder(order.Clone(), null);
+                        if (ignorable is Item item)
+                        {
+                            foreach (var stackedItem in item.GetStackedItems())
+                            {
+                                stackedItem.OrderedToBeIgnored = order.Identifier == Tags.IgnoreThis;
+                                AddOrder(order.Clone().WithTargetEntity(stackedItem), fadeOutTime: null);
+                            }
+                        }
+                        else
+                        {
+                            ignorable.OrderedToBeIgnored = order.Identifier == Tags.IgnoreThis;
+                            AddOrder(order.Clone(), fadeOutTime: null);
+                        }
                     }
                     else if (order.TargetType == Order.OrderTargetType.WallSection && order.TargetEntity is Structure s)
                     {
@@ -830,7 +847,7 @@ namespace Barotrauma
                         if (ws != null)
                         {
                             ws.OrderedToBeIgnored = order.Identifier == Tags.IgnoreThis;
-                            AddOrder(order.WithWallSection(s, wallSectionIndex), null);
+                            AddOrder(order.WithWallSection(s, wallSectionIndex), fadeOutTime: null);
                         }
                     }
                     else
@@ -841,9 +858,9 @@ namespace Barotrauma
                     {
                         hull = Hull.FindHull(ws.WorldPosition);
                     }
-                    else if (order.TargetEntity is Item i)
+                    else if (order.TargetEntity is Item item)
                     {
-                        hull = i.CurrentHull;
+                        hull = item.CurrentHull;
                     }
                     else if (order.TargetEntity is ISpatialEntity se)
                     {
@@ -1238,7 +1255,7 @@ namespace Barotrauma
             if (GUI.DisableHUD) { return; }
             if (CoroutineManager.IsCoroutineRunning("LevelTransition") || CoroutineManager.IsCoroutineRunning("SubmarineTransition")) { return; }
 
-            commandFrame?.AddToGUIUpdateList();
+            commandFrame?.AddToGUIUpdateList(order: 1);
 
             if (GUI.DisableUpperHUD) { return; }
 
@@ -1976,8 +1993,6 @@ namespace Barotrauma
         private void CreateCommandUI(Entity entityContext = null, bool forceContextual = false)
         {
             if (commandFrame != null) { DisableCommandUI(); }
-
-            CharacterHealth.OpenHealthWindow = null;
 
             // Character context works differently to others as we still use the "basic" command interface,
             // but the order will be automatically assigned to this character
