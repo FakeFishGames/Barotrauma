@@ -444,6 +444,7 @@ namespace Barotrauma
                     var modifiedLine = line;
                     while (font.MeasureString($"{modifiedLine}...").X > lineX)
                     {
+                        if (modifiedLine.Length == 0) { break; }
                         modifiedLine = modifiedLine[..^1];
                     }
                     sb.AppendLine($"{modifiedLine}...");
