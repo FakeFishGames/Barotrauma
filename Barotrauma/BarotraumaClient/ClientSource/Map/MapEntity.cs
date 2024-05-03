@@ -1229,24 +1229,24 @@ namespace Barotrauma
 
                 if (resizeDirX > 0)
                 {
-                    mousePos.X = Math.Max(mousePos.X, prevRect.Value.X + Submarine.GridSize.X);
+                    mousePos.X = Math.Max(mousePos.X, prevRect.Value.X + 2);
                     placeSize.X = mousePos.X - placePosition.X;
                 }
                 else if (resizeDirX < 0)
                 {
-                    mousePos.X = Math.Min(mousePos.X, prevRect.Value.Right - Submarine.GridSize.X);
+                    mousePos.X = Math.Min(mousePos.X, prevRect.Value.Right - 2);
 
                     placeSize.X = MathF.Round((placePosition.X + placeSize.X) - mousePos.X);
                     placePosition.X = MathF.Round(mousePos.X);
                 }
                 if (resizeDirY < 0)
                 {
-                    mousePos.Y = Math.Min(mousePos.Y, prevRect.Value.Y - Submarine.GridSize.Y);
+                    mousePos.Y = Math.Min(mousePos.Y, prevRect.Value.Y - 2);
                     placeSize.Y = placePosition.Y - mousePos.Y;
                 }
                 else if (resizeDirY > 0)
                 {
-                    mousePos.Y = Math.Max(mousePos.Y, prevRect.Value.Y - prevRect.Value.Height + Submarine.GridSize.Y);
+                    mousePos.Y = Math.Max(mousePos.Y, prevRect.Value.Y - prevRect.Value.Height + 2);
 
                     placeSize.Y = mousePos.Y - (prevRect.Value.Y - prevRect.Value.Height);
                     placePosition.Y = mousePos.Y;
