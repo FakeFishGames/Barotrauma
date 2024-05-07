@@ -332,6 +332,53 @@ namespace Barotrauma.IO
         {
             return System.IO.Directory.GetLastWriteTime(path);
         }
+
+        public static void Copy(string src, string dest, bool overwrite = false)
+        {
+            if (!Validation.CanWrite(dest, true))
+            {
+                DebugConsole.ThrowError($"Cannot copy \"{src}\" to \"{dest}\": modifying the contents of the destination folder is not allowed.");
+                return;
+            }
+
+            CreateDirectory(dest);
+
+            foreach (string path in GetFiles(src))
+            {
+                File.Copy(path, Path.Combine(dest, Path.GetRelativePath(src, path)), overwrite);
+            }
+
+            foreach (string path in GetDirectories(src))
+            {
+                Copy(path, Path.Combine(dest, Path.GetRelativePath(src, path)), overwrite);
+            }
+        }
+
+        public static void Move(string src, string dest, bool overwrite = false)
+        {
+            if (!overwrite && Exists(dest))
+            {
+                DebugConsole.ThrowError($"Cannot move \"{src}\" to \"{dest}\": destination folder already exists.");
+                return;
+            }
+
+            if (!Validation.CanWrite(src, true))
+            {
+                DebugConsole.ThrowError($"Cannot move \"{src}\" to \"{dest}\": modifying the contents of the source folder is not allowed.");
+                return;
+            }
+
+            if (!Validation.CanWrite(dest, true))
+            {
+                DebugConsole.ThrowError($"Cannot move \"{src}\" to \"{dest}\": modifying the contents of the destination folder is not allowed.");
+                return;
+            }
+
+            if (!overwrite || !Exists(dest) || TryDelete(dest))
+            {
+                System.IO.Directory.Move(src, dest);
+            }
+        }
     }
 
     public static class File
@@ -362,8 +409,8 @@ namespace Barotrauma.IO
                 DebugConsole.ThrowError($"Cannot move \"{src}\" to \"{dest}\": modifying the contents of the destination folder is not allowed");
                 return;
             }
-            System.IO.File.Move(src, dest);
-        }
+                System.IO.File.Move(src, dest);
+            }
 
         public static void Delete(ContentPath path) => Delete(path.Value);
         
@@ -468,6 +515,17 @@ namespace Barotrauma.IO
         public static string[] ReadAllLines(string path, System.Text.Encoding? encoding = null)
         {
             return System.IO.File.ReadAllLines(path, encoding ?? System.Text.Encoding.UTF8);
+        }
+
+        public static string SanitizeName(string str)
+        {
+            string sanitized = "";
+            foreach (char c in str)
+            {
+                char newChar = Path.GetInvalidFileNameCharsCrossPlatform().Contains(c) ? '-' : c;
+                sanitized += newChar;
+            }
+            return sanitized;
         }
     }
 
