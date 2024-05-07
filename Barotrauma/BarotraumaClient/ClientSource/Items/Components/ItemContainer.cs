@@ -267,6 +267,14 @@ namespace Barotrauma.Items.Components
             for (int i = 0; i < Inventory.Capacity; i++)
             {
                 var items = Inventory.GetItemsAt(i).ToList();
+
+                // Ignore any containers
+                bool isContainer = items.Any(item => item.IsContainer());
+                if (isContainer)
+                {
+                    break;
+                }
+
                 if (items.Any()) 
                 { 
                     itemsPerSlot.Add(items);
@@ -274,7 +282,16 @@ namespace Barotrauma.Items.Components
                 }
             }
 
-            itemsPerSlot.Sort((i1, i2) => i1.First().Name.CompareTo(i2.First().Name));
+            itemsPerSlot.Sort((i1, i2) =>
+            {
+                int primary = i1.First().Name.CompareTo(i2.First().Name);
+                if (primary == 0)
+                {
+                    // If names are the same, sort by stack size in decending order
+                    return i2.Count.CompareTo(i1.Count);
+                }
+                return primary;
+            });
             foreach (var items in itemsPerSlot)
             {
                 int firstFreeSlot = -1;

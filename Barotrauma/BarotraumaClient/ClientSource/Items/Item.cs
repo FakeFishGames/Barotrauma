@@ -2462,5 +2462,9 @@ namespace Barotrauma
                 ic.OnPlayerSkillsChanged();
             }
         }
+        public bool IsContainer()
+        {
+            return components.Any(component => component is ItemContainer);
+        }
     }
 }
