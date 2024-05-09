@@ -582,6 +582,8 @@ namespace Barotrauma
             CharacterEditorScreen   = new CharacterEditor.CharacterEditorScreen();
             CampaignEndScreen       = new CampaignEndScreen();
 
+            DebugMenus.Init();
+
 #if DEBUG
             LevelGenerationParams.CheckValidity();
 #endif

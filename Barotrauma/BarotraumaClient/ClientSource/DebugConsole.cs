@@ -1263,6 +1263,9 @@ namespace Barotrauma
                                 DebugMenus.inspectorMode = InspectorMode.Entities;
                             }
                             break;
+                        case "spawnitems" or "spawnitem" or "itemspawner":
+                            DebugMenus.itemSpawnerWindow.Visible = true;
+                            break;
                         default:
                             NewMessage($"'{args[0]}' is not a valid window", Color.Yellow);
                             break;
