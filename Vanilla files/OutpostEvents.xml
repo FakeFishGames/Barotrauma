@@ -3677,7 +3677,7 @@
   <!--TRANSIT EVENTS-->
   <EventSet identifier="transitevents" allowatstart="true" minleveldifficulty="0" maxleveldifficulty="80" chooserandom="true" campaign="true" additive="true">
     <ScriptedEvent identifier="stowaway1" commonness="100" probability="0.1" triggercooldown="false" />
-    <!--<ScriptedEvent identifier="stowaway2" commonness="100" probability="0.2" triggercooldown="false" />-->
+    <ScriptedEvent identifier="stowaway2" commonness="100" probability="0.1" triggercooldown="false" />
   </EventSet>
 
   <EventSet identifier="outpostevent.endoutpostentrance" leveltype="LocationConnection" biome="endzone" chooserandom="false" allowatstart="true" campaign="true" ignoreintensity="true">
