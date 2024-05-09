@@ -45,6 +45,7 @@ namespace Barotrauma
             entityEditorWindows.Clear();
             guiExplorerWindows.Clear();
             itemSpawnerWindow.Visible = false;
+            selectedItemPrefabs.Clear();
         }
 
         #region Entity Explorers
