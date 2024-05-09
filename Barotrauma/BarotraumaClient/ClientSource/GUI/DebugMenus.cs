@@ -7,7 +7,6 @@ using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Globalization;
 using System.Linq;
 
 namespace Barotrauma
@@ -22,7 +21,6 @@ namespace Barotrauma
     public static class DebugMenus
     {
         // TODO: Debug infos/overlays toggles window
-        // TODO: Item spawner window
         // TODO: GUIComponent/RectTransform editors
 
         public static InspectorMode inspectorMode;
@@ -666,49 +664,29 @@ namespace Barotrauma
             return true;
         }
 
-        private static void SpawnItem(ItemPrefab prefab, Either<Vector2, Inventory> spawnLocation, int quality, int amount)
+        private static void SpawnItem(ItemPrefab prefab, Either<Vector2, Inventory> spawnLocation, Submarine sub, int quality, int amount)
         {
             for (int i = 0; i < amount; i++)
             {
                 if (spawnLocation.TryGet(out Vector2 pos))
                 {
-                    if (Entity.Spawner is null || Entity.Spawner.Removed)
+                    Item item = new(prefab, pos, sub)
                     {
-                        Item item = new(prefab, pos, null)
-                        {
-                            Quality = quality
-                        };
-                    }
-                    else
-                    {
-                        Entity.Spawner?.AddItemToSpawnQueue(prefab, pos, quality: quality);
-                    }
+                        Quality = quality
+                    };
                 }
                 else if (spawnLocation.TryGet(out Inventory inv))
                 {
-                    if (Entity.Spawner is null || Entity.Spawner.Removed)
+                    Item item = new(prefab, inv.Owner.Position, sub)
                     {
-                        Item item = new Item(prefab, Vector2.Zero, null)
-                        {
-                            Quality = quality
-                        };
-                        inv.TryPutItem(item, null, item.AllowedSlots);
-                        OnItemSpawned(item);
-                    }
-                    else
-                    {
-                        Entity.Spawner?.AddItemToSpawnQueue(prefab, inv, quality: quality, onSpawned: OnItemSpawned);
-                    }
-                }
+                        Quality = quality
+                    };
 
-                static void OnItemSpawned(Item item)
-                {
+                    inv.TryPutItem(item, null, item.AllowedSlots);
+
                     if (item.ParentInventory?.Owner is Character character)
                     {
-                        foreach (WifiComponent wifiComponent in item.GetComponents<WifiComponent>())
-                        {
-                            wifiComponent.TeamID = character.TeamID;
-                        }
+                        item.GetComponents<WifiComponent>().ForEach(wc => wc.TeamID = character.TeamID);
                     }
                 }
             }
@@ -848,10 +826,11 @@ namespace Barotrauma
                     }
                     else if (PlayerInput.PrimaryMouseButtonClicked())
                     {
-                        Either<Vector2, Inventory> spawnLocation = Character.Controlled?.Inventory?.visualSlots.Any(vs => vs.MouseOn()) ?? false ? Character.Controlled.Inventory : CursorPosWorld;
+                        Submarine sub = EntitiesUnderCursor.OfType<Submarine>().FirstOrDefault();
+                        Either<Vector2, Inventory> spawnLocation = Character.Controlled?.Inventory?.visualSlots.Any(vs => vs.MouseOn()) ?? false ? Character.Controlled.Inventory : CursorPosWorld - (sub is not null ? sub.Position : Vector2.Zero);
                         foreach (((ItemPrefab item, int quality), int amount) in selectedItemPrefabs)
                         {
-                            SpawnItem(item, spawnLocation, quality, amount);
+                            SpawnItem(item, spawnLocation, sub, quality, amount);
                         }
 
                         if (!PlayerInput.IsShiftDown())
