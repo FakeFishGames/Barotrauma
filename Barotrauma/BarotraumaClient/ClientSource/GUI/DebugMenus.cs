@@ -820,11 +820,6 @@ namespace Barotrauma
 
             if (inspectorMode is not InspectorMode.Disabled)
             {
-                if (selectedItemPrefabs.Any())
-                {
-                    selectedItemPrefabs.Clear();
-                }
-
                 if (PlayerInput.SecondaryMouseButtonClicked() || PlayerInput.KeyHit(Keys.Escape))
                 {
                     inspectorMode = InspectorMode.Disabled;
