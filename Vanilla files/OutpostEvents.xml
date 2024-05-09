@@ -1308,103 +1308,119 @@
         <RemoveItemAction targettag="stowawaytoolbox" />
       </OnRoundEndAction>
     </ScriptedEvent>
-    <!--Stowaway 2-->
-    <ScriptedEvent identifier="stowaway2" commonness="50">
-      <CheckDataAction identifier="stowaway2_complete" condition="eq true">
+    
+   <!--Stowaway 2-->
+    <ScriptedEvent identifier="stowaway2" commonness="50" >
+      <!-- requires a cargo mission. note: not all cargo missions are tagged "cargo" -->
+      <CheckMissionAction missiontag="cargo" Type="Current">
         <Success>
-          <!--Don't repeat event-->
+          <WaitAction time="5" />
+          <CheckDataAction identifier="stowaway2_complete" condition="eq true">
+            <Success>
+              <!--Don't repeat event-->
+            </Success>
+            <Failure>
+              <TagAction criteria="player" tag="player"/>
+              <TagAction criteria="itemidentifier:steelcabinet" tag="potentialcabinet" submarinetype="player" />
+              <TagAction criteria="itemidentifier:mediumwindowedsteelcabinet" tag="potentialcabinet" submarinetype="player"/>
+              <TagAction criteria="itemidentifier:mediumsteelcabinet" tag="potentialcabinet" submarinetype="player" />
+              <!-- use a trigger to tag a single cabinet -->
+              <TriggerAction target1tag="potentialcabinet" target2tag="player" applytotarget1="triggered_cabinet" radius="150" waitforinteraction="false"/>
+              <StatusEffectAction targettag="triggered_cabinet">
+                <StatusEffect target="this" >
+                  <Sound file="Content/Items/Door/Duct2.ogg" range="800" volume="3" frequencymultiplier="0.25"  />
+                  <ParticleEmitter particle="shockwavesmall" particleamount="3" />
+                </StatusEffect>
+              </StatusEffectAction>
+              <Label name="stowawayreturn"/>
+              <TriggerAction target1tag="triggered_cabinet" target2tag="player" applytotarget2="triggerer_player" radius="150" waitforinteraction="true"/>
+              <ConversationAction text="EventText.stowaway2.c1" dialogtype="Regular" targettag="triggerer_player" eventsprite="Stowaway2">
+                <Option text="EventText.stowaway2.o1">
+                  <CheckReputationAction targettype="faction" identifier="clowns" condition="gte 20">
+                    <Success>
+                      <SpawnAction npcsetidentifier="customnpcs1" npcidentifier="clownmessenger" targettag="messenger" spawnpointtag="triggerer_player"/>
+                      <SetDataAction identifier="stowaway2_complete" value="true"/>
+                      <StatusEffectAction targettag="triggered_cabinet">
+                        <StatusEffect target="this" >
+                          <Sound file="Content/Items/Jobgear/Clown/ITEM_bananaSlip1.ogg" range="800" volume="2" frequencymultiplier="1"  />
+                          <ParticleEmitter particle="impactfirearm" particleamount="30" velocitymin="50" velocitymax="100" anglemin="45" anglemax="135" scalemin="0.5" scalemax="1" Spread="75" distancemin="-75" distancemax="75" colormultiplier="255,255,255,255" lifetimemultiplier="5" />
+                        </StatusEffect>
+                      </StatusEffectAction>
+                      <ConversationAction text="EventText.stowaway2.o1.c1" dialogtype="Regular" targettag="triggerer_player">
+                        <Option text="EventText.stowaway2.o1.o1">
+                          <ConversationAction text="EventText.stowaway2.o1.o1.c1" dialogtype="Regular" targettag="triggerer_player"/>
+                          <TriggerEventAction identifier="stowaway2clownmission" nextround="true" />
+                        </Option>
+                      </ConversationAction>
+                    </Success>
+                      <!-- regular stowaway -->
+                      <Failure>
+                        <ConversationAction text="EventText.stowaway2.o1.c2" dialogtype="Regular" targettag="triggerer_player">
+                          <Option text="EventText.stowaway2.o1.o2">
+                            <ConversationAction text="EventText.stowaway2.o1.o2.c1" dialogtype="Regular" targettag="triggerer_player">
+                              <Option text="EventText.stowaway2.o1.o2.o1">
+                                <Label name="whatamIgoingtodo" />
+                                <ConversationAction text="EventText.stowaway2.o1.o2.o1.c1" dialogtype="Regular" targettag="triggerer_player">
+                                  <Option text="EventText.stowaway2.o1.o2.o1.o1">
+                                    <ConversationAction text="EventText.stowaway2.o1.o2.o1.o1.c1" dialogtype="Regular" targettag="triggerer_player">
+                                      <Option text="EventText.stowaway2.o1.o2.o1.o1.o2">
+                                        <SpawnAction npcsetidentifier="customnpcs1" npcidentifier="stowaway" spawnpointtag="triggerer_player" targettag="stowaway"/>
+                                        <SetDataAction identifier="stowaway2_complete" value="true"/>
+                                        <ConversationAction text="EventText.stowaway2.o1.o2.o1.o1.o1.c1" dialogtype="Regular" targettag="triggerer_player"/>
+                                        <!-- currently triggers immediately, bug?  -->
+                                        <OnRoundEndAction>
+                                          <CheckConditionalAction targettag="Stowaway" IsDead="False">
+                                            <Success>
+                                              <ReputationAction targettype="Location" increase="3" />
+                                            </Success>
+                                            <Failure>
+                                            </Failure>
+                                          </CheckConditionalAction>
+                                        </OnRoundEndAction>
+                                      </Option>
+                                      <Option text="EventText.stowaway2.o1.o2.o1.o1.o3">
+                                        <SpawnAction npcsetidentifier="customnpcs1" npcidentifier="stowaway" spawnpointtag="triggerer_player" targettag="stowaway"/>
+                                        <SetDataAction identifier="stowaway2_complete" value="true"/>
+                                        <ConversationAction text="EventText.stowaway2.o1.o2.o1.o1.o3.c1" dialogtype="Regular" targettag="triggerer_player"/>
+                                        <NPCChangeTeamAction npctag="stowaway" teamid="Team1" addtocrew="true" />
+                                      </Option>
+                                    </ConversationAction>
+                                  </Option>
+                                </ConversationAction>
+                              </Option>
+                              <Option text="EventText.stowaway2.o1.o2.o2" endconversation="true">
+                                <GoTo name="stowawayreturn" />
+                              </Option>
+                            </ConversationAction>
+                          </Option>
+                          <Option text="EventText.stowaway2.o1.o2.o1">
+                            <Goto name="whatamIgoingtodo" />
+                          </Option>
+                          <Option text="EventText.stowaway2.o1.o2.o2" endconversation="true">
+                            <GoTo name="stowawayreturn" />
+                          </Option>
+                        </ConversationAction>
+                      </Failure>
+                  </CheckReputationAction>
+                </Option>
+                <Option text="EventText.generic.walkaway" endconversation="true">
+                  <GoTo name="stowawayreturn" />
+                </Option>
+              </ConversationAction>
+            </Failure>
+          </CheckDataAction>
         </Success>
         <Failure>
-          <TagAction criteria="player" tag="player"/>
-          <TagAction criteria="itemidentifier:steelcabinet" tag="potentialcabinet" submarinetype="player" />
-          <TagAction criteria="itemidentifier:mediumwindowedsteelcabinet" tag="potentialcabinet" submarinetype="player"/>
-          <TagAction criteria="itemidentifier:mediumsteelcabinet" tag="potentialcabinet" submarinetype="player" />
-          <!--disabled return label for now-->
-          <Label name="stowawayreturn"/>
-          <TriggerAction target1tag="potentialcabinet" target2tag="player" applytotarget2="triggerer_player" radius="150" waitforinteraction="true"/>
-          <ConversationAction text="EventText.stowaway2.c1" dialogtype="Regular" targettag="triggerer_player" eventsprite="Stowaway2">
-            <Option text="EventText.stowaway2.o1">
-              <!--disabled clown part for now-->
-              <CheckReputationAction targettype="faction" identifier="clowns" condition="gte 200">
-                <Success>
-                  <SpawnAction npcsetidentifier="customnpcs1" npcidentifier="clownmessenger" targettag="messenger" spawnpointtag="triggerer_player"/>
-                  <ConversationAction text="EventText.stowaway2.o1.c1" dialogtype="Regular" targettag="triggerer_player">
-                    <Option text="EventText.stowaway2.o1.o1">
-                      <ConversationAction text="EventText.stowaway2.o1.o1.c1" dialogtype="Regular" targettag="triggerer_player"/>
-                      <MissionAction missiontag="salvageclownwreck" minlocationdistance="2" unlockfurtheronmap="true"/>
-                    </Option>
-                  </ConversationAction>
-                </Success>
-                <Failure>
-                  <ConversationAction text="EventText.stowaway2.o1.c2" dialogtype="Regular" targettag="triggerer_player">
-                    <Option text="EventText.stowaway2.o1.o2">
-                      <ConversationAction text="EventText.stowaway2.o1.o2.c1" dialogtype="Regular" targettag="triggerer_player">
-                        <Option text="EventText.stowaway2.o1.o2.o1">
-                          <ConversationAction text="EventText.stowaway2.o1.o2.o1.c1" dialogtype="Regular" targettag="triggerer_player">
-                            <Option text="EventText.stowaway2.o1.o2.o1.o1">
-                              <ConversationAction text="EventText.stowaway2.o1.o2.o1.o1.c1" dialogtype="Regular" targettag="triggerer_player">
-                                <Option text="EventText.stowaway2.o1.o2.o1.o1.o1">
-                                  <SpawnAction npcsetidentifier="customnpcs1" npcidentifier="stowaway" spawnpointtag="triggerer_player" targettag="stowaway"/>
-                                  <ConversationAction text="EventText.stowaway2.o1.o2.o1.o1.o1.c1" dialogtype="Regular" targettag="triggerer_player"/>
-                                  <MissionAction missiontag="escortstowaway" />
-                                </Option>
-                                <Option text="EventText.stowaway2.o1.o2.o1.o1.o2">
-                                  <SpawnAction npcsetidentifier="customnpcs1" npcidentifier="stowaway" spawnpointtag="triggerer_player" targettag="stowaway"/>
-                                  <ConversationAction text="EventText.stowaway2.o1.o2.o1.o1.o1.c1" dialogtype="Regular" targettag="triggerer_player"/>
-                                  <MissionAction missiontag="escortstowaway" />
-                                </Option>
-                                <Option text="EventText.stowaway2.o1.o2.o1.o1.o3">
-                                  <SpawnAction npcsetidentifier="customnpcs1" npcidentifier="stowaway" spawnpointtag="triggerer_player" targettag="stowaway"/>
-                                  <ConversationAction text="EventText.stowaway2.o1.o2.o1.o1.o3.c1" dialogtype="Regular" targettag="triggerer_player"/>
-                                  <NPCChangeTeamAction npctag="stowaway" teamid="Team1" addtocrew="true" />
-                                </Option>
-                              </ConversationAction>
-                            </Option>
-                          </ConversationAction>
-                        </Option>
-                        <Option text="EventText.stowaway2.o1.o2.o2" endconversation="true">
-                          <GoTo name="stowawayreturn" />
-                        </Option>
-                      </ConversationAction>
-                    </Option>
-                    <Option text="EventText.stowaway2.o1.o2.o1">
-                      <ConversationAction text="EventText.stowaway2.o1.o2.o1.c1" dialogtype="Regular" targettag="triggerer_player">
-                        <Option text="EventText.stowaway2.o1.o2.o1.o1">
-                          <ConversationAction text="EventText.stowaway2.o1.o2.o1.o1.c1" dialogtype="Regular" targettag="triggerer_player">
-                            <Option text="EventText.stowaway2.o1.o2.o1.o1.o1">
-                              <SpawnAction npcsetidentifier="customnpcs1" npcidentifier="stowaway" spawnpointtag="triggerer_player" targettag="stowaway"/>
-                              <ConversationAction text="EventText.stowaway2.o1.o2.o1.o1.o1.c1" dialogtype="Regular" targettag="triggerer_player"/>
-                              <MissionAction missiontag="escortstowaway" />
-                            </Option>
-                            <Option text="EventText.stowaway2.o1.o2.o1.o1.o2">
-                              <SpawnAction npcsetidentifier="customnpcs1" npcidentifier="stowaway" spawnpointtag="triggerer_player" targettag="stowaway"/>
-                              <ConversationAction text="EventText.stowaway2.o1.o2.o1.o1.o1.c1" dialogtype="Regular" targettag="triggerer_player"/>
-                              <MissionAction missiontag="escortstowaway" />
-                            </Option>
-                            <Option text="EventText.stowaway2.o1.o2.o1.o1.o3">
-                              <SpawnAction npcsetidentifier="customnpcs1" npcidentifier="stowaway" spawnpointtag="triggerer_player" targettag="stowaway"/>
-                              <ConversationAction text="EventText.stowaway2.o1.o2.o1.o1.o3.c1" dialogtype="Regular" targettag="triggerer_player"/>
-                              <NPCChangeTeamAction npctag="stowaway" teamid="Team1" addtocrew="true" />
-                            </Option>
-                          </ConversationAction>
-                        </Option>
-                      </ConversationAction>
-                    </Option>
-                    <Option text="EventText.stowaway2.o1.o2.o2" endconversation="true">
-                      <GoTo name="stowawayreturn" />
-                    </Option>
-                  </ConversationAction>
-                </Failure>
-              </CheckReputationAction>
-            </Option>
-            <Option text="EventText.generic.walkaway" endconversation="true">
-              <GoTo name="stowawayreturn" />
-            </Option>
-          </ConversationAction>
-          <SetDataAction identifier="stowaway2_complete" value="true"/>
+          <!-- End -->
         </Failure>
-      </CheckDataAction>
+      </CheckMissionAction>
     </ScriptedEvent>
+    
+    <!-- only exists to trigger the clown cargo mission next round -->
+    <ScriptedEvent identifier="stowaway2clownmission" commonness="100" >
+      <MissionAction MissionIdentifier="lostcargoclown" />      
+    </ScriptedEvent>
+    
     <!--Shock jock-->
     <ScriptedEvent identifier="shockjock" commonness="50">
       <CheckDataAction identifier="shockjock_complete" condition="eq true">
