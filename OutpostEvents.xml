@@ -2896,7 +2896,7 @@
       <ConversationAction text="EventText.missionevent_killmonster.c1" speakertag="missionnpc" endeventifinterrupted="false" dialogtype="Small"/>
       <MissionAction missiontag="killmonster_set1" />
     </ScriptedEvent>
-    <ScriptedEvent identifier="missionevent_cargo" commonness="100">
+    <ScriptedEvent identifier="missionevent_cargo" commonness="100" requiredDestinationTypes="outpost,city,research,military,mine">
       <SpawnAction npcsetidentifier="outpostnpcs1" npcidentifier="commoner" targettag="missionnpc" spawnlocation="Outpost" spawnpointtype="Path" />
       <ConversationAction text="EventText.missionevent_cargo.c1" speakertag="missionnpc" endeventifinterrupted="false" dialogtype="Small"/>
       <MissionAction missiontag="cargo" />
@@ -2906,7 +2906,7 @@
       <ConversationAction text="EventText.missionevent_salvage.c1" speakertag="missionnpc" endeventifinterrupted="false" dialogtype="Small" />
       <MissionAction missiontag="salvage" />
     </ScriptedEvent>
-    <ScriptedEvent identifier="missionevent_clownoutbreak" commonness="40">
+    <ScriptedEvent identifier="missionevent_clownoutbreak" commonness="40" requiredDestinationTypes="outpost,city,research,military,mine">
       <TagAction criteria="player" tag="player" />
       <TagAction criteria="itemidentifier:opdeco_hrflyers" tag="potentialflyers" submarinetype="outpost" />
       <TriggerAction target1tag="potentialflyers" target2tag="player" applytotarget2="triggerer_player" radius="150" waitforinteraction="true"/>
@@ -2923,49 +2923,49 @@
       </ConversationAction>
     </ScriptedEvent>
     <!--MANAGER MISSIONS-->
-    <ScriptedEvent identifier="missionevent_cargo1" commonness="125">
+    <ScriptedEvent identifier="missionevent_cargo1" commonness="125" requiredDestinationTypes="outpost,city,research,military,mine">
       <NPCWaitAction npctag="outpostmanager" wait="true" />
       <ConversationAction text="EventText.missionevent_cargo1.c1" speakertag="outpostmanager" endeventifinterrupted="false" dialogtype="Small" />
       <MissionAction missiontag="cargomaterials" />
       <NPCWaitAction npctag="outpostmanager" wait="false" />
     </ScriptedEvent>
-    <ScriptedEvent identifier="missionevent_cargo2" commonness="50">
+    <ScriptedEvent identifier="missionevent_cargo2" commonness="50" requiredDestinationTypes="outpost,city,research,military,mine">
       <NPCWaitAction npctag="outpostmanager" wait="true" />
       <ConversationAction text="EventText.missionevent_cargo2.c1" speakertag="outpostmanager" endeventifinterrupted="false" dialogtype="Small" />
       <MissionAction missiontag="cargoexplosive" />
       <NPCWaitAction npctag="outpostmanager" wait="false" />
     </ScriptedEvent>
-    <ScriptedEvent identifier="missionevent_cargo3" commonness="100">
+    <ScriptedEvent identifier="missionevent_cargo3" commonness="100" requiredDestinationTypes="outpost,city,research,military,mine">
       <NPCWaitAction npctag="outpostmanager" wait="true" />
       <ConversationAction text="EventText.missionevent_cargo3.c1" speakertag="outpostmanager" endeventifinterrupted="false" dialogtype="Small" />
       <MissionAction missiontag="cargoresearch" />
       <NPCWaitAction npctag="outpostmanager" wait="false" />
     </ScriptedEvent>
-    <ScriptedEvent identifier="missionevent_cargoany" commonness="100">
+    <ScriptedEvent identifier="missionevent_cargoany" commonness="100" requiredDestinationTypes="outpost,city,research,military,mine">
       <NPCWaitAction npctag="outpostmanager" wait="true" />
       <ConversationAction text="EventText.missionevent_cargo1.c1" speakertag="outpostmanager" endeventifinterrupted="false" dialogtype="Small" />
       <MissionAction missiontag="cargo" />
       <NPCWaitAction npctag="outpostmanager" wait="false" />
     </ScriptedEvent>
-    <ScriptedEvent identifier="missionevent_cargo_difficult" commonness="75">
+    <ScriptedEvent identifier="missionevent_cargo_difficult" commonness="75" requiredDestinationTypes="outpost,city,research,military,mine">
       <NPCWaitAction npctag="outpostmanager" wait="true" />
       <ConversationAction text="EventText.missionevent_cargo_difficult.c1" speakertag="outpostmanager" endeventifinterrupted="false" dialogtype="Small" />
       <MissionAction missiontag="cargodifficult" />
       <NPCWaitAction npctag="outpostmanager" wait="false" />
     </ScriptedEvent>
-    <ScriptedEvent identifier="missionevent_cargoweaponscoalition" commonness="100">
+    <ScriptedEvent identifier="missionevent_cargoweaponscoalition" commonness="100" requiredDestinationTypes="outpost,city,research,military,mine">
       <NPCWaitAction npctag="outpostmanager" wait="true" />
       <ConversationAction text="EventText.missionevent_cargoweaponscoalition.c1" speakertag="outpostmanager" endeventifinterrupted="false" dialogtype="Small" />
       <MissionAction missiontag="cargoweaponscoalition" />
       <NPCWaitAction npctag="outpostmanager" wait="false" />
     </ScriptedEvent>
-    <ScriptedEvent identifier="missionevent_cargoexplosiveseparatists" commonness="100">
+    <ScriptedEvent identifier="missionevent_cargoexplosiveseparatists" commonness="100" requiredDestinationTypes="outpost,city,research,military,mine">
       <NPCWaitAction npctag="outpostmanager" wait="true" />
       <ConversationAction text="EventText.missionevent_cargocompoundn.c1" speakertag="outpostmanager" endeventifinterrupted="false" dialogtype="Small" />
       <MissionAction missiontag="cargoexplosiveseparatists" />
       <NPCWaitAction npctag="outpostmanager" wait="false" />
     </ScriptedEvent>
-    <ScriptedEvent identifier="missionevent_cargoexplosiveseparatistsvolatile" commonness="100">
+    <ScriptedEvent identifier="missionevent_cargoexplosiveseparatistsvolatile" commonness="100" requiredDestinationTypes="outpost,city,research,military,mine">
       <NPCWaitAction npctag="outpostmanager" wait="true" />
       <ConversationAction text="EventText.missionevent_cargocompoundn.c1" speakertag="outpostmanager" endeventifinterrupted="false" dialogtype="Small" />
       <MissionAction missiontag="cargoexplosiveseparatistsvolatile" />
@@ -3127,49 +3127,49 @@
       <MissionAction missiontag="collectminerals_set4" />
       <NPCWaitAction npctag="outpostmanager" wait="false" />
     </ScriptedEvent>
-    <ScriptedEvent identifier="missionevent_escort1coalition" commonness="100">
+    <ScriptedEvent identifier="missionevent_escort1coalition" commonness="100" requiredDestinationTypes="outpost,city,research,military,mine">
       <NPCWaitAction npctag="outpostmanager" wait="true" />
       <ConversationAction text="EventText.missionevent_escort1.c1" speakertag="outpostmanager" endeventifinterrupted="false" dialogtype="Small" />
       <MissionAction missiontag="escortcommonerscoalition" />
       <NPCWaitAction npctag="outpostmanager" wait="false" />
     </ScriptedEvent>
-    <ScriptedEvent identifier="missionevent_escort2coalition" commonness="80">
+    <ScriptedEvent identifier="missionevent_escort2coalition" commonness="80" requiredDestinationTypes="outpost,city,research,military,mine">
       <NPCWaitAction npctag="outpostmanager" wait="true" />
       <ConversationAction text="EventText.missionevent_escort2.c1" speakertag="outpostmanager" endeventifinterrupted="false" dialogtype="Small" />
       <MissionAction missiontag="escortVIPcoalition" />
       <NPCWaitAction npctag="outpostmanager" wait="false" />
     </ScriptedEvent>
-    <ScriptedEvent identifier="missionevent_escort3coalition" commonness="60">
+    <ScriptedEvent identifier="missionevent_escort3coalition" commonness="60" requiredDestinationTypes="outpost,city,research,military,mine">
       <NPCWaitAction npctag="outpostmanager" wait="true" />
       <ConversationAction text="EventText.missionevent_escort3.c1" speakertag="outpostmanager" endeventifinterrupted="false" dialogtype="Small" />
       <MissionAction missiontag="escortprisonerscoalition" />
       <NPCWaitAction npctag="outpostmanager" wait="false" />
     </ScriptedEvent>
-    <ScriptedEvent identifier="missionevent_escort4coalition" commonness="60">
+    <ScriptedEvent identifier="missionevent_escort4coalition" commonness="60" requiredDestinationTypes="outpost,city,research,military,mine">
       <NPCWaitAction npctag="outpostmanager" wait="true" />
       <ConversationAction text="EventText.missionevent_escort4.c1" speakertag="outpostmanager" endeventifinterrupted="false" dialogtype="Small" />
       <MissionAction missiontag="escortterroristscoalition" />
     </ScriptedEvent>
 
-    <ScriptedEvent identifier="missionevent_escort1separatists" commonness="100">
+    <ScriptedEvent identifier="missionevent_escort1separatists" commonness="100" requiredDestinationTypes="outpost,city,research,military,mine">
       <NPCWaitAction npctag="outpostmanager" wait="true" />
       <ConversationAction text="EventText.missionevent_escort1separatists.c1" speakertag="outpostmanager" endeventifinterrupted="false" dialogtype="Small" />
       <MissionAction missiontag="escortcommonersseparatists" />
       <NPCWaitAction npctag="outpostmanager" wait="false" />
     </ScriptedEvent>
-    <ScriptedEvent identifier="missionevent_escort2separatists" commonness="80">
+    <ScriptedEvent identifier="missionevent_escort2separatists" commonness="80" requiredDestinationTypes="outpost,city,research,military,mine">
       <NPCWaitAction npctag="outpostmanager" wait="true" />
       <ConversationAction text="EventText.missionevent_escort2separatists.c1" speakertag="outpostmanager" endeventifinterrupted="false" dialogtype="Small" />
       <MissionAction missiontag="escortVIPseparatists" />
       <NPCWaitAction npctag="outpostmanager" wait="false" />
     </ScriptedEvent>
-    <ScriptedEvent identifier="missionevent_escort3separatists" commonness="60">
+    <ScriptedEvent identifier="missionevent_escort3separatists" commonness="60" requiredDestinationTypes="outpost,city,research,military,mine">
       <NPCWaitAction npctag="outpostmanager" wait="true" />
       <ConversationAction text="EventText.missionevent_escort3separatists.c1" speakertag="outpostmanager" endeventifinterrupted="false" dialogtype="Small" />
       <MissionAction missiontag="escortprisonersseparatists" />
       <NPCWaitAction npctag="outpostmanager" wait="false" />
     </ScriptedEvent>
-    <ScriptedEvent identifier="missionevent_escort4separatists" commonness="60">
+    <ScriptedEvent identifier="missionevent_escort4separatists" commonness="60" requiredDestinationTypes="outpost,city,research,military,mine">
       <CheckReputationAction targettype="faction" identifier="separatists" condition="gte 30">
         <Success>
           <NPCWaitAction npctag="outpostmanager" wait="true" />

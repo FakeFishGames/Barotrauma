@@ -868,11 +868,11 @@
     <!-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
     <!--                          Church of the Husk                               -->
     <!-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
-    <ScriptedEvent identifier="missionevent_escort1huskcult" commonness="100">
+    <ScriptedEvent identifier="missionevent_escort1huskcult" commonness="100" requiredDestinationTypes="outpost,city,research,military,mine">
       <ConversationAction text="EventText.missionevent_escort1huskcult.c1" speakertag="huskcultist" endeventifinterrupted="false" dialogtype="Small" />
       <MissionAction missiontag="escortcommonershuskcult" />
     </ScriptedEvent>
-    <ScriptedEvent identifier="missionevent_cargohuskcult" commonness="100">
+    <ScriptedEvent identifier="missionevent_cargohuskcult" commonness="100" requiredDestinationTypes="outpost,city,research,military,mine">
       <ConversationAction text="eventtext.missionevent_cargohuskcult" speakertag="huskcultist" endeventifinterrupted="false" dialogtype="Small" />
       <MissionAction missiontag="cargohuskcult" />
     </ScriptedEvent>
@@ -1665,7 +1665,7 @@
     <!-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
     <!--                                  Clowns                                   -->
     <!-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
-    <ScriptedEvent identifier="missionevent_escort1clowns" commonness="100">
+    <ScriptedEvent identifier="missionevent_escort1clowns" commonness="100" requiredDestinationTypes="outpost,city,research,military,mine">
       <ConversationAction text="EventText.missionevent_escort1clowns.c1" speakertag="clown" endeventifinterrupted="false" dialogtype="Small" />
       <MissionAction missiontag="escortcommonersclowns" />
     </ScriptedEvent>
@@ -1753,7 +1753,7 @@
       <CombatAction combatmode="offensive" npctag="clownnpc2" enemytag="clownvictimnpc" isinstigator="true" guardreaction="arrest" witnessreaction="retreat" />
     </ScriptedEvent>
     <!--Infiltration-->
-    <ScriptedEvent identifier="infiltration" commonness="50">
+    <ScriptedEvent identifier="infiltration" commonness="50" requiredDestinationTypes="outpost,city,research,military,mine">
       <CheckDataAction identifier="infiltration_complete" condition="eq true">
         <Success>
           <!--Don't repeat-->
