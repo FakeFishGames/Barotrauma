@@ -1195,7 +1195,7 @@
                       <TriggerAction target1tag="triggerer_player" target2tag="suspicioussecurity" radius="250" />
                       <ConversationAction targettag="triggerer_player" text="EventText.bigbrother.c1.c1.o1.o1.c2.c2" eventsprite="security" dialogtype="Small"/>
                       <WaitAction time="2" />
-                      <CombatAction combatmode="Offensive" npctag="suspicioussecurity" enemytag="triggerer_player" isinstigator="false" suspicioussecurityreaction="arrest" witnessreaction="retreat" />
+                      <CombatAction combatmode="Offensive" npctag="suspicioussecurity" enemytag="triggerer_player" isinstigator="false" guardreaction="arrest" witnessreaction="retreat" />
                     </Failure>
                   </SkillCheckAction>
                 </Option>
