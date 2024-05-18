@@ -11,7 +11,7 @@ namespace Barotrauma
     /// </summary>
     class TagAction : EventAction
     {
-        public enum SubType { Any = 0, Player = 1, Outpost = 2, Wreck = 4, BeaconStation = 8 }
+        public enum SubType { Any = 0, Player = 1, Outpost = 2, Wreck = 4, BeaconStation = 8, Enemy = 16, Ruin = 32 }
 
         [Serialize("", IsPropertySaveable.Yes, description: "What criteria to use to select the entities to target. Valid values are players, player, traitor, nontraitor, nontraitorplayer, bot, crew, humanprefabidentifier:[id], jobidentifier:[id], structureidentifier:[id], structurespecialtag:[tag], itemidentifier:[id], itemtag:[tag], hull, hullname:[name], submarine:[type], eventtag:[tag], speciesname:[id].")]
         public string Criteria { get; set; }
@@ -287,6 +287,10 @@ namespace Barotrauma
                     return submarineType.HasFlag(SubType.Wreck);
                 case Barotrauma.SubmarineType.BeaconStation:
                     return submarineType.HasFlag(SubType.BeaconStation);
+                case Barotrauma.SubmarineType.EnemySubmarine:
+                    return submarineType.HasFlag(SubType.Enemy);
+                case Barotrauma.SubmarineType.Ruin:
+                    return submarineType.HasFlag(SubType.Ruin);
                 default:
                     return false;
             }
