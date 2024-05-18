@@ -12,6 +12,7 @@ namespace Barotrauma
     class TagAction : EventAction
     {
         public enum SubType { Any = 0, Player = 1, Outpost = 2, Wreck = 4, BeaconStation = 8, Enemy = 16, Ruin = 32 }
+        public enum CharacterTeam {  Any = 0, None = 1, Team1 = 2, Team2 = 4, FriendlyNPC = 8 }
 
         [Serialize("", IsPropertySaveable.Yes, description: "What criteria to use to select the entities to target. Valid values are players, player, traitor, nontraitor, nontraitorplayer, bot, crew, humanprefabidentifier:[id], jobidentifier:[id], structureidentifier:[id], structurespecialtag:[tag], itemidentifier:[id], itemtag:[tag], hull, hullname:[name], submarine:[type], eventtag:[tag], speciesname:[id].")]
         public string Criteria { get; set; }
@@ -21,6 +22,9 @@ namespace Barotrauma
 
         [Serialize(SubType.Any, IsPropertySaveable.Yes, description: "The type of submarine the target needs to be in.")]
         public SubType SubmarineType { get; set; }
+
+        [Serialize(CharacterTeam.Any, IsPropertySaveable.Yes, description: "The team the target needs to be on.")]
+        public CharacterTeam Team { get; set; }
 
         [Serialize("", IsPropertySaveable.Yes, "If set, the target must be in an outpost module that has this tag.")]
         public Identifier RequiredModuleTag { get; set; }
@@ -92,7 +96,7 @@ namespace Barotrauma
 
         private void TagBySpeciesName(Identifier speciesName)
         {
-            AddTarget(Tag, Character.CharacterList.Where(c => c.SpeciesName == speciesName));
+            AddTarget(Tag, Character.CharacterList.Where(c => c.SpeciesName == speciesName && CharacterTeamMatches(c)));
         }
 
         private void TagByEventTag(Identifier eventTag)
@@ -105,7 +109,7 @@ namespace Barotrauma
             AddTargetPredicate(
                 Tag, 
                 ScriptedEvent.TargetPredicate.EntityType.Character, 
-                e => e is Character c && c.IsPlayer && (!c.IsIncapacitated || !IgnoreIncapacitatedCharacters));
+                e => e is Character c && c.IsPlayer && (!c.IsIncapacitated || !IgnoreIncapacitatedCharacters) && CharacterTeamMatches(c));
         }
 
         private void TagTraitors()
@@ -156,12 +160,12 @@ namespace Barotrauma
 
         private void TagHumansByIdentifier(Identifier identifier)
         {
-            AddTarget(Tag, Character.CharacterList.Where(c => c.HumanPrefab?.Identifier == identifier));
+            AddTarget(Tag, Character.CharacterList.Where(c => c.HumanPrefab?.Identifier == identifier && CharacterTeamMatches(c)));
         }
 
         private void TagHumansByJobIdentifier(Identifier jobIdentifier)
         {
-            AddTarget(Tag, Character.CharacterList.Where(c => c.HasJob(jobIdentifier)));
+            AddTarget(Tag, Character.CharacterList.Where(c => c.HasJob(jobIdentifier) && CharacterTeamMatches(c)));
         }
 
         private void TagStructuresByIdentifier(Identifier identifier)
@@ -266,6 +270,23 @@ namespace Barotrauma
             return hull != null && hull.OutpostModuleTags.Contains(RequiredModuleTag);
         }
 
+        private bool CharacterTeamMatches(Character character)
+        {
+            if (Team == CharacterTeam.Any) { return true;  }
+            switch (Team)
+            {
+                case CharacterTeam.None:
+                    return character.TeamID == CharacterTeamType.None;
+                case CharacterTeam.Team1:
+                    return character.TeamID == CharacterTeamType.Team1;
+                case CharacterTeam.Team2:
+                    return character.TeamID == CharacterTeamType.Team2;
+                case CharacterTeam.FriendlyNPC:
+                    return character.TeamID == CharacterTeamType.FriendlyNPC;
+                default:
+                    return false;
+            }
+        } 
 
         private bool SubmarineTypeMatches(Submarine sub)
         {
