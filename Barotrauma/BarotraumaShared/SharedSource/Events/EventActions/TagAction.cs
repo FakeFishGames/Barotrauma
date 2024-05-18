@@ -77,6 +77,7 @@ namespace Barotrauma
                 ("hullname", TagHullsByName),
                 ("submarine", TagSubmarinesByType),
                 ("eventtag", TagByEventTag),
+                ("speciesname", TagBySpeciesName)
             }.Select(t => (t.k.ToIdentifier(), t.v)).ToImmutableDictionary();
         }
 
@@ -87,6 +88,11 @@ namespace Barotrauma
         public override void Reset()
         {
             isFinished = false;
+        }
+
+        private void TagBySpeciesName(Identifier speciesName)
+        {
+            AddTarget(Tag, Character.CharacterList.Where(c => c.SpeciesName == speciesName));
         }
 
         private void TagByEventTag(Identifier eventTag)
