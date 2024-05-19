@@ -1540,7 +1540,7 @@ namespace Barotrauma
                 new XAttribute("originaltype", (Type ?? OriginalType).Identifier),
                 /*not used currently (we load the nameIdentifier instead), 
                  * but could make sense to include still for backwards compatibility reasons*/
-                            new XAttribute("name", DisplayName),
+                new XAttribute("name", DisplayName),
                 new XAttribute("biome", Biome?.Identifier.Value ?? string.Empty),
                 new XAttribute("position", XMLExtensions.Vector2ToString(MapPosition)),
                 new XAttribute("pricemultiplier", PriceMultiplier),
