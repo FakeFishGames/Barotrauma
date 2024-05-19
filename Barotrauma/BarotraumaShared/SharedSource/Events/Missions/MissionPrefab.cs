@@ -478,7 +478,7 @@ namespace Barotrauma
 #if SERVER
             foreach (ExtraMission extraMission in ExtraMissions)
             {
-                if ((Prefabs.Find(pre => pre.Identifier == extraMission.Identifier) ?? Prefabs.GetRandom(pre => pre.Tags.Intersect(extraMission.Tags).Any(), Rand.RandSync.ServerAndClient)) is not MissionPrefab prefab) continue;
+                if ((Prefabs.Find(pre => pre.Identifier == extraMission.Identifier) ?? Prefabs.GetRandom(pre => pre.Tags.Overlaps(extraMission.Tags), Rand.RandSync.ServerAndClient)) is not MissionPrefab prefab) continue;
                 if (Rand.Value(Rand.RandSync.ServerAndClient) > extraMission.Probability) continue;
                 if (Level.Loaded.Difficulty < extraMission.MinLevelDifficulty || Level.Loaded.Difficulty > extraMission.MaxLevelDifficulty) continue;
 
