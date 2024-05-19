@@ -21,7 +21,7 @@ namespace Barotrauma
             Location[] locations = { GameMain.GameSession.StartLocation, GameMain.GameSession.EndLocation };
             foreach (MissionPrefab missionPrefab in missionPrefabs)
             {
-                missions.Add(missionPrefab.Instantiate(locations, Submarine.MainSub));
+                missions.AddRange(missionPrefab.Instantiate(locations, Submarine.MainSub));
             }
         }
 
@@ -29,11 +29,7 @@ namespace Barotrauma
             : base(preset)
         {
             Location[] locations = { GameMain.GameSession.StartLocation, GameMain.GameSession.EndLocation };
-            var mission = Mission.LoadRandom(locations, seed, false, missionType);
-            if (mission != null)
-            {
-                missions.Add(mission);
-            }
+            missions.AddRange(Mission.LoadRandom(locations, seed, false, missionType));
         }
 
         protected static IEnumerable<MissionPrefab> ValidateMissionPrefabs(IEnumerable<MissionPrefab> missionPrefabs, Dictionary<MissionType, Type> missionClasses)

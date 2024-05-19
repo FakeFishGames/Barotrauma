@@ -840,14 +840,14 @@ namespace Barotrauma
         {
             if (AvailableMissions.Any(m => m.Prefab == missionPrefab)) { return; }
             if (AvailableMissions.Any(m => !m.Prefab.AllowOtherMissionsInLevel)) { return; }
-            AddMission(InstantiateMission(missionPrefab, connection));
+            InstantiateMission(missionPrefab, connection).ForEach(m => AddMission(m));
         }
 
         public void UnlockMission(MissionPrefab missionPrefab)
         {
             if (AvailableMissions.Any(m => m.Prefab == missionPrefab)) { return; }
             if (AvailableMissions.Any(m => !m.Prefab.AllowOtherMissionsInLevel)) { return; }
-            AddMission(InstantiateMission(missionPrefab));
+            InstantiateMission(missionPrefab).ForEach(m => AddMission(m));
         }
 
         public Mission UnlockMissionByIdentifier(Identifier identifier, ContentPackage invokingContentPackage = null)
@@ -863,15 +863,15 @@ namespace Barotrauma
             }
             else
             {
-                var mission = InstantiateMission(missionPrefab, out LocationConnection connection);
+                List<Mission> missions = InstantiateMission(missionPrefab, out LocationConnection connection);
                 //don't allow duplicate missions in the same connection
-                if (AvailableMissions.Any(m => m.Prefab == missionPrefab && m.Locations.Contains(mission.Locations[0]) && m.Locations.Contains(mission.Locations[1])))
+                if (AvailableMissions.Any(m => m.Prefab == missionPrefab && m.Locations.Intersect(missions.Select(m => m.Locations[0])).Any() && m.Locations.Intersect(missions.Select(m => m.Locations[1])).Any()))
                 {
                     return null;
                 }
-                AddMission(mission);
+                missions.ForEach(m => AddMission(m));
                 DebugConsole.NewMessage($"Unlocked a mission by \"{identifier}\".", debugOnly: true);
-                return mission;
+                return missions.First();
             }
             return null;
         }
@@ -909,15 +909,15 @@ namespace Barotrauma
                         ToolBox.SelectWeightedRandom(suitableMissions.OrderBy(m => m.Identifier), m => m.Commonness, random) :
                         ToolBox.SelectWeightedRandom(suitableMissions.OrderBy(m => m.Identifier), m => m.Commonness, Rand.RandSync.Unsynced);
 
-                    var mission = InstantiateMission(missionPrefab, out LocationConnection connection);
+                    List<Mission> missions = InstantiateMission(missionPrefab, out LocationConnection connection);
                     //don't allow duplicate missions in the same connection
-                    if (AvailableMissions.Any(m => m.Prefab == missionPrefab && m.Locations.Contains(mission.Locations[0]) && m.Locations.Contains(mission.Locations[1])))
+                    if (AvailableMissions.Any(m => m.Prefab == missionPrefab && m.Locations.Intersect(missions.Select(m => m.Locations[0])).Any() && m.Locations.Intersect(missions.Select(m => m.Locations[1])).Any()))
                     {
                         return null;
                     }
-                    AddMission(mission);
-                    DebugConsole.NewMessage($"Unlocked a random mission by \"{tag}\": {mission.Prefab.Identifier} (difficulty level: {LevelData.Difficulty})", debugOnly: true);
-                    return mission;
+                    missions.ForEach(m => AddMission(m));
+                    DebugConsole.NewMessage($"Unlocked a random mission by \"{tag}\": {missionPrefab.Identifier} (difficulty level: {LevelData.Difficulty})", debugOnly: true);
+                    return missions.First();
                 }
                 else
                 {
@@ -943,7 +943,7 @@ namespace Barotrauma
 #endif
         }
 
-        private Mission InstantiateMission(MissionPrefab prefab, out LocationConnection connection)
+        private List<Mission> InstantiateMission(MissionPrefab prefab, out LocationConnection connection)
         {
             if (prefab.IsAllowed(this, this))
             {
@@ -1004,19 +1004,19 @@ namespace Barotrauma
             return InstantiateMission(prefab, connection);
         }
 
-        private Mission InstantiateMission(MissionPrefab prefab, LocationConnection connection)
+        private List<Mission> InstantiateMission(MissionPrefab prefab, LocationConnection connection)
         {
             Location destination = connection.OtherLocation(this);
-            var mission = prefab.Instantiate(new Location[] { this, destination }, Submarine.MainSub);
-            mission.AdjustLevelData(connection.LevelData);
-            return mission;
+            List<Mission> missions = prefab.Instantiate(new Location[] { this, destination }, Submarine.MainSub);
+            missions.ForEach(m => m.AdjustLevelData(connection.LevelData));
+            return missions;
         }
 
-        private Mission InstantiateMission(MissionPrefab prefab)
+        private List<Mission> InstantiateMission(MissionPrefab prefab)
         {
-            var mission = prefab.Instantiate(new Location[] { this, this }, Submarine.MainSub);
-            mission.AdjustLevelData(LevelData);
-            return mission;
+            List<Mission> missions = prefab.Instantiate(new Location[] { this, this }, Submarine.MainSub);
+            missions.ForEach(m => m.AdjustLevelData(LevelData));
+            return missions;
         }
 
         public void InstantiateLoadedMissions(Map map)
@@ -1036,14 +1036,14 @@ namespace Barotrauma
                     {
                         destination = Connections.First().OtherLocation(this);
                     }
-                    var mission = loadedMission.MissionPrefab.Instantiate(new Location[] { this, destination }, Submarine.MainSub);
+                    List<Mission> missions = loadedMission.MissionPrefab.Instantiate(new Location[] { this, destination }, Submarine.MainSub);
                     if (loadedMission.OriginLocationIndex >= 0 && loadedMission.OriginLocationIndex < map.Locations.Count)
                     {
-                        mission.OriginLocation = map.Locations[loadedMission.OriginLocationIndex];
+                        missions.ForEach(m => m.OriginLocation = map.Locations[loadedMission.OriginLocationIndex]);
                     }
-                    mission.TimesAttempted = loadedMission.TimesAttempted;
-                    availableMissions.Add(mission);
-                    if (loadedMission.SelectedMission) { selectedMissions.Add(mission); }
+                    missions.ForEach(m => m.TimesAttempted = loadedMission.TimesAttempted);
+                    availableMissions.AddRange(missions);
+                    if (loadedMission.SelectedMission) { selectedMissions.AddRange(missions); }
                 }
                 loadedMissions = null;
             }
@@ -1540,7 +1540,7 @@ namespace Barotrauma
                 new XAttribute("originaltype", (Type ?? OriginalType).Identifier),
                 /*not used currently (we load the nameIdentifier instead), 
                  * but could make sense to include still for backwards compatibility reasons*/
-                new XAttribute("name", DisplayName),
+                            new XAttribute("name", DisplayName),
                 new XAttribute("biome", Biome?.Identifier.Value ?? string.Empty),
                 new XAttribute("position", XMLExtensions.Vector2ToString(MapPosition)),
                 new XAttribute("pricemultiplier", PriceMultiplier),

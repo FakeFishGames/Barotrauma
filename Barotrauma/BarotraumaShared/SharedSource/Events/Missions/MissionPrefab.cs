@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Barotrauma.Extensions;
+using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
@@ -180,6 +181,25 @@ namespace Barotrauma
 
         public readonly ContentXElement ConfigElement;
 
+        public struct ExtraMission
+        {
+            public readonly Identifier Identifier;
+            public readonly ImmutableHashSet<Identifier> Tags;
+            public readonly float Probability;
+            public readonly float MinLevelDifficulty, MaxLevelDifficulty;
+
+            public ExtraMission(XElement element)
+            {
+                Identifier = element.GetAttributeIdentifier("identifier", "");
+                Tags = element.GetAttributeIdentifierArray("tags", Array.Empty<Identifier>()).ToImmutableHashSet();
+                Probability = Math.Clamp(element.GetAttributeFloat("probability", 1), 0, 1);
+                MinLevelDifficulty = Math.Clamp(element.GetAttributeFloat("mindifficulty", 0), 0, 100);
+                MaxLevelDifficulty = Math.Clamp(element.GetAttributeFloat("maxdifficulty", 100), 0, 100);
+            }
+        }
+
+        public readonly List<ExtraMission> ExtraMissions = new List<ExtraMission>();
+
         public MissionPrefab(ContentXElement element, MissionsFile file) : base(file, element.GetAttributeIdentifier("identifier", ""))
         {
             ConfigElement = element;
@@ -352,6 +372,9 @@ namespace Barotrauma
                     case "triggerevent":
                         TriggerEvents.Add(new TriggerEvent(subElement));
                         break;
+                    case "extramission":
+                        ExtraMissions.Add(new ExtraMission(subElement));
+                        break;
                 }
             }
             Headers = headers.ToImmutableArray();
@@ -448,9 +471,22 @@ namespace Barotrauma
             return false;
         }
 
-        public Mission Instantiate(Location[] locations, Submarine sub)
+        public List<Mission> Instantiate(Location[] locations, Submarine sub)
         {
-            return constructor?.Invoke(new object[] { this, locations, sub }) as Mission;
+            List<Mission> missions = new List<Mission> { constructor?.Invoke(new object[] { this, locations, sub }) as Mission };
+
+#if SERVER
+            foreach (ExtraMission extraMission in ExtraMissions)
+            {
+                if ((Prefabs.Find(pre => pre.Identifier == extraMission.Identifier) ?? Prefabs.GetRandom(pre => pre.Tags.Intersect(extraMission.Tags).Any(), Rand.RandSync.ServerAndClient)) is not MissionPrefab prefab) continue;
+                if (Rand.Value(Rand.RandSync.ServerAndClient) > extraMission.Probability) continue;
+                if (Level.Loaded.Difficulty < extraMission.MinLevelDifficulty || Level.Loaded.Difficulty > extraMission.MaxLevelDifficulty) continue;
+
+                missions.AddRange(prefab.Instantiate(locations, sub));
+            }
+#endif
+
+            return missions;
         }
 
         partial void DisposeProjectSpecific();
