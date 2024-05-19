@@ -409,8 +409,8 @@ namespace Barotrauma.IO
                 DebugConsole.ThrowError($"Cannot move \"{src}\" to \"{dest}\": modifying the contents of the destination folder is not allowed");
                 return;
             }
-                System.IO.File.Move(src, dest);
-            }
+            System.IO.File.Move(src, dest);
+        }
 
         public static void Delete(ContentPath path) => Delete(path.Value);
         
