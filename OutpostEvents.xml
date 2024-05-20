@@ -1785,7 +1785,7 @@
     </ScriptedEvent>
     <!--A man and his raptor-->
     <!--PART 1-->
-    <ScriptedEvent identifier="manandhisraptor1" commonness="50">
+    <ScriptedEvent identifier="manandhisraptor1" commonness="50" requiredDestinationTypes="outpost,city,research,military,mine">
       <CheckDataAction identifier="manandhisraptor_missionreceived" condition="eq true">
         <Success>
           <!--Don't repeat-->
@@ -1909,7 +1909,7 @@
     </ScriptedEvent>
 
     <!-- radiation escapee -->
-    <ScriptedEvent identifier="radiationescapee" commonness="50">
+    <ScriptedEvent identifier="radiationescapee" commonness="50" requiredDestinationTypes="outpost,city,research,military,mine">
       <CheckDataAction identifier="radiationescapee_missionreceived" condition="eq true">
         <Success>
           <!--Don't repeat-->
@@ -1954,7 +1954,7 @@
       </CheckDataAction>
     </ScriptedEvent>
     <!-- researcher escort -->
-    <ScriptedEvent identifier="researcherescort" commonness="50">
+    <ScriptedEvent identifier="researcherescort" commonness="50" requiredDestinationTypes="outpost,city,research,military,mine">
       <CheckDataAction identifier="researcherescort_missionreceived" condition="eq true">
         <Success>
           <!--Don't repeat-->
