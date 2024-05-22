@@ -625,7 +625,11 @@ namespace Barotrauma
 
             }, getValidArgs: () => new[] { 
                 SubmarineInfo.SavedSubmarines.Select(s => s.Name).Distinct().OrderBy(s => s).ToArray(),
-                LevelGenerationParams.LevelParams.Select(p => p.Name).Distinct().OrderBy(p => p).ToArray()
+                Biome.Prefabs.Select(b => b.MinDifficulty)
+                  .Concat(Biome.Prefabs.Select(b => b.ActualMaxDifficulty))
+                  .Concat(Biome.Prefabs.Select(b => (b.MinDifficulty + b.ActualMaxDifficulty) / 2.0f))
+                  .Distinct().OrderBy(d => d).Select(d => d.ToString()).ToArray(),
+                LevelGenerationParams.LevelParams.Select(p => p.Name).OrderBy(p => p).ToArray()
             }));
 
             commands.Add(new Command("steamnetdebug", "steamnetdebug: Toggles Steamworks networking debug logging.", (string[] args) =>
