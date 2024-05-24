@@ -1114,8 +1114,16 @@ namespace Barotrauma
                 string tooltip = null;
 
                 float subCrushDepth = SubmarineInfo.GetSubCrushDepth(SubmarineSelection.CurrentOrPendingSubmarine(), ref pendingSubInfo);
+
+
+                float levelInitialDepth = connection.LevelData.InitialDepth * Physics.DisplayToRealWorldRatio;
+                float levelHeight = connection.LevelData.Size.Y * Physics.DisplayToRealWorldRatio;
+
+                float startPositionY = levelInitialDepth + levelHeight * connection.LevelData.GenerationParams.StartPosition.Y;
+                float endPositionY = levelInitialDepth + levelHeight * connection.LevelData.GenerationParams.EndPosition.Y;
+                
                 string crushDepthWarningIconStyle = null;
-                if (connection.LevelData.InitialDepth * Physics.DisplayToRealWorldRatio > subCrushDepth)
+                if (subCrushDepth < startPositionY || subCrushDepth < endPositionY)
                 {
                     iconCount++;
                     crushDepthWarningIconStyle = "CrushDepthWarningHighIcon";
