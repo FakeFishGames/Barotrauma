@@ -1,7 +1,5 @@
-<Override>
 <Charactervariant inherit="Hammerhead" speciesname="Hammerhead_mNamed" usebosshealthbar="true">
   <health vitality="600"/>
   <ragdoll file="%ModDir%/Moping Jack/Ragdolls/Hammerhead_mNamed.xml"/> <!--scalemultiplier="1.3"-->
   <attack damagemultiplier="1.3" rangemultiplier="1.35" impactmultiplier="1.35"/>
 </Charactervariant>
-</Override>
