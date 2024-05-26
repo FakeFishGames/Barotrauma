@@ -41,7 +41,7 @@ namespace Barotrauma.Items.Components
         }
 
         private Alignment alignment;
-        [Editable, Serialize(Alignment.TopLeft, IsPropertySaveable.Yes, description: "The alignment of the label's text.")]
+        [Editable, Serialize(Alignment.Center, IsPropertySaveable.Yes, description: "The alignment of the label's text.")]
         public Alignment TextAlignment
         {
             get => alignment;
