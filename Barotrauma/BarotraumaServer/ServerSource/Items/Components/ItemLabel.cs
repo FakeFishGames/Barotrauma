@@ -39,8 +39,15 @@ namespace Barotrauma.Items.Components
             set;
         }
 
-        [Serialize("0,0,0,0", IsPropertySaveable.Yes, description: "The amount of padding around the text in pixels (left,top,right,bottom).")]
+        [Editable(DecimalCount = 0, VectorComponentLabels = new string[] { "inputtype.left", "inputtype.up", "inputtype.right", "inputtype.down" }), Serialize("0,0,0,0", IsPropertySaveable.Yes, description: "The amount of padding around the text in pixels.")]
         public Vector4 Padding
+        {
+            get;
+            set;
+        }
+
+        [Editable, Serialize(Alignment.TopLeft, IsPropertySaveable.Yes, description: "The alignment of the label's text.")]
+        public Alignment TextAlignment
         {
             get;
             set;
