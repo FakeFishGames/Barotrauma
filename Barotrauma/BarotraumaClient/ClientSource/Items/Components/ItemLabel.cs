@@ -181,12 +181,14 @@ namespace Barotrauma.Items.Components
                 needsScrolling = true;
                 float spaceWidth = textBlock.Font.MeasureChar(' ').X * TextBlock.TextScale;
                 scrollingText = new string(' ', (int)Math.Ceiling(textAreaWidth / spaceWidth)) + DisplayText.Value;
+                TextBlock.TextAlignment = Alignment.CenterLeft;
             }
             else
             {
                 //whole text can fit in the textblock, no need to scroll
                 needsScrolling = false;
                 TextBlock.Text = scrollingText = DisplayText.Value;
+                TextBlock.TextAlignment = alignment;
                 scrollPadding = 0;
                 scrollAmount = 0.0f;
                 scrollIndex = 0;
@@ -232,7 +234,7 @@ namespace Barotrauma.Items.Components
         private void RecreateTextBlock()
         {
             textBlock = new GUITextBlock(new RectTransform(item.Rect.Size), "",
-                textColor: textColor, font: /*font*/ GUIStyle.UnscaledSmallFont, textAlignment: needsScrolling ? Alignment.Center : alignment, wrap: !scrollable, style: null)
+                textColor: textColor, font: /*font*/ GUIStyle.UnscaledSmallFont, textAlignment: needsScrolling ? Alignment.CenterLeft : alignment, wrap: !scrollable, style: null)
             {
                 TextDepth = item.SpriteDepth - 0.00001f,
                 RoundToNearestPixel = false,
