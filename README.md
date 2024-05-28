@@ -25,3 +25,4 @@ If you're interested in working on the code, either to develop mods or to contri
 - [.NET 6 SDK](https://docs.microsoft.com/en-us/dotnet/core/install/linux)
 ### macOS
 - [Visual Studio 2022 for Mac](https://visualstudio.microsoft.com/vs/mac/)
+
