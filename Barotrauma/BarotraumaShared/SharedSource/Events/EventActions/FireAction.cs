@@ -1,17 +1,16 @@
 using Microsoft.Xna.Framework;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Xml.Linq;
 
 namespace Barotrauma
 {
+    /// <summary>
+    /// Starts a fire at the position of a specific target.
+    /// </summary>
     class FireAction : EventAction
     {
-        [Serialize(10.0f, IsPropertySaveable.Yes)]
+        [Serialize(10.0f, IsPropertySaveable.Yes, description: "Size of the fire (width in pixels).")]
         public float Size { get; set; }
 
-        [Serialize("", IsPropertySaveable.Yes)]
+        [Serialize("", IsPropertySaveable.Yes, description: "Tag of the entity to start the fire at.")]
         public Identifier TargetTag { get; set; }
 
         public FireAction(ScriptedEvent parentEvent, ContentXElement element) : base(parentEvent, element) { }

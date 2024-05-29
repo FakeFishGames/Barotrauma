@@ -270,6 +270,7 @@ namespace Barotrauma
 
             Tickbox(left, TextManager.Get("EnableVSync"), TextManager.Get("EnableVSyncTooltip"), unsavedConfig.Graphics.VSync, v => unsavedConfig.Graphics.VSync = v);
             Tickbox(left, TextManager.Get("EnableTextureCompression"), TextManager.Get("EnableTextureCompressionTooltip"), unsavedConfig.Graphics.CompressTextures, v => unsavedConfig.Graphics.CompressTextures = v);
+            Spacer(right);  
             
             Label(right, TextManager.Get("LOSEffect"), GUIStyle.SubHeadingFont);
             DropdownEnum(right, (m) => TextManager.Get($"LosMode{m}"), null, unsavedConfig.Graphics.LosMode, v => unsavedConfig.Graphics.LosMode = v);
@@ -683,22 +684,22 @@ namespace Barotrauma
         private void CreateGameplayTab()
         {
             GUIFrame content = CreateNewContentFrame(Tab.Gameplay);
-
-            var (left, right) = CreateSidebars(content);
+            
+            var (leftColumn, rightColumn) = CreateSidebars(content, split: true);
 
             var languages = TextManager.AvailableLanguages
                 .OrderBy(l => TextManager.GetTranslatedLanguageName(l).ToIdentifier())
                 .ToArray();
-            Label(left, TextManager.Get("Language"), GUIStyle.SubHeadingFont);
-            Dropdown(left, v => TextManager.GetTranslatedLanguageName(v), null, languages, unsavedConfig.Language, v => unsavedConfig.Language = v);
-            Spacer(left);
-
-            Tickbox(left, TextManager.Get("PauseOnFocusLost"), TextManager.Get("PauseOnFocusLostTooltip"), unsavedConfig.PauseOnFocusLost, v => unsavedConfig.PauseOnFocusLost = v);
-            Spacer(left);
-
-            Tickbox(left, TextManager.Get("DisableInGameHints"), TextManager.Get("DisableInGameHintsTooltip"), unsavedConfig.DisableInGameHints, v => unsavedConfig.DisableInGameHints = v);
+            Label(leftColumn, TextManager.Get("Language"), GUIStyle.SubHeadingFont);
+            Dropdown(leftColumn, v => TextManager.GetTranslatedLanguageName(v), null, languages, unsavedConfig.Language, v => unsavedConfig.Language = v);
+            Spacer(leftColumn);
+            
+            Tickbox(leftColumn, TextManager.Get("PauseOnFocusLost"), TextManager.Get("PauseOnFocusLostTooltip"), unsavedConfig.PauseOnFocusLost, v => unsavedConfig.PauseOnFocusLost = v);
+            Spacer(leftColumn);
+            
+            Tickbox(leftColumn, TextManager.Get("DisableInGameHints"), TextManager.Get("DisableInGameHintsTooltip"), unsavedConfig.DisableInGameHints, v => unsavedConfig.DisableInGameHints = v);
             var resetInGameHintsButton =
-                new GUIButton(new RectTransform(new Vector2(1.0f, 1.0f), left.RectTransform),
+                new GUIButton(new RectTransform(new Vector2(1.0f, 1.0f), leftColumn.RectTransform),
                     TextManager.Get("ResetInGameHints"), style: "GUIButtonSmall")
                 {
                     OnClicked = (button, o) =>
@@ -716,22 +717,41 @@ namespace Barotrauma
                         return false;
                     }
                 };
-            Spacer(left);
 
-            Label(left, TextManager.Get("ShowEnemyHealthBars"), GUIStyle.SubHeadingFont);
-            DropdownEnum(left, v => TextManager.Get($"ShowEnemyHealthBars.{v}"), null, unsavedConfig.ShowEnemyHealthBars, v => unsavedConfig.ShowEnemyHealthBars = v);
-            Spacer(left);
+            Spacer(leftColumn);
 
-            Label(left, TextManager.Get("HUDScale"), GUIStyle.SubHeadingFont);
-            Slider(left, (0.75f, 1.25f), 51, Percentage, unsavedConfig.Graphics.HUDScale, v => unsavedConfig.Graphics.HUDScale = v);
-            Label(left, TextManager.Get("InventoryScale"), GUIStyle.SubHeadingFont);
-            Slider(left, (0.75f, 1.25f), 51, Percentage, unsavedConfig.Graphics.InventoryScale, v => unsavedConfig.Graphics.InventoryScale = v);
-            Label(left, TextManager.Get("TextScale"), GUIStyle.SubHeadingFont);
-            Slider(left, (0.75f, 1.25f), 51, Percentage, unsavedConfig.Graphics.TextScale, v => unsavedConfig.Graphics.TextScale = v);
+            Tickbox(leftColumn, TextManager.Get("ChatSpeechBubbles"), TextManager.Get("ChatSpeechBubbles.Tooltip"), unsavedConfig.ChatSpeechBubbles, v => unsavedConfig.ChatSpeechBubbles = v);
 
+            Label(leftColumn, TextManager.Get("ShowEnemyHealthBars"), GUIStyle.SubHeadingFont);
+            DropdownEnum(leftColumn, v => TextManager.Get($"ShowEnemyHealthBars.{v}"), null, unsavedConfig.ShowEnemyHealthBars, v => unsavedConfig.ShowEnemyHealthBars = v);
+            Spacer(leftColumn);
+            Label(leftColumn, TextManager.Get("InteractionLabels"), GUIStyle.SubHeadingFont);
+            DropdownEnum(leftColumn, v => TextManager.Get($"InteractionLabels.{v}"), null, unsavedConfig.InteractionLabelDisplayMode, v => unsavedConfig.InteractionLabelDisplayMode = v);
+
+            Label(rightColumn, TextManager.Get("HUDScale"), GUIStyle.SubHeadingFont);
+            Slider(rightColumn, (0.75f, 1.25f), 51, Percentage, unsavedConfig.Graphics.HUDScale, v => unsavedConfig.Graphics.HUDScale = v);
+            Label(rightColumn, TextManager.Get("InventoryScale"), GUIStyle.SubHeadingFont);
+            Slider(rightColumn, (0.75f, 1.25f), 51, Percentage, unsavedConfig.Graphics.InventoryScale, v => unsavedConfig.Graphics.InventoryScale = v);
+            Label(rightColumn, TextManager.Get("TextScale"), GUIStyle.SubHeadingFont);
+            Slider(rightColumn, (0.75f, 1.25f), 51, Percentage, unsavedConfig.Graphics.TextScale, v => unsavedConfig.Graphics.TextScale = v);
+            Spacer(rightColumn);
+            var resetSpamListFilter =
+                new GUIButton(new RectTransform(new Vector2(1.0f, 1.0f), rightColumn.RectTransform),
+                    TextManager.Get("clearserverlistfilters"), style: "GUIButtonSmall")
+                {
+                    OnClicked = static (_, _) =>
+                    {
+                        GUI.AskForConfirmation(
+                            header: TextManager.Get("clearserverlistfilters"),
+                            body: TextManager.Get("clearserverlistfiltersconfirmation"),
+                            onConfirm: SpamServerFilters.ClearLocalSpamFilter);
+                        return true;
+                    }
+                };
+            Spacer(rightColumn);
 #if !OSX
-            Spacer(right);
-            var statisticsTickBox = new GUITickBox(NewItemRectT(right), TextManager.Get("statisticsconsenttickbox"))
+            Spacer(rightColumn);
+            var statisticsTickBox = new GUITickBox(NewItemRectT(rightColumn), TextManager.Get("statisticsconsenttickbox"))
             {
                 OnSelected = tickBox =>
                 {
@@ -780,7 +800,7 @@ namespace Barotrauma
             if (SteamManager.IsInitialized)
             {
                 bool shouldCrossplayBeEnabled = unsavedConfig.CrossplayChoice is Eos.EosSteamPrimaryLogin.CrossplayChoice.Enabled;
-                var crossplayTickBox = Tickbox(right, TextManager.Get("EosAllowCrossplay"), TextManager.Get("EosAllowCrossplayTooltip"), shouldCrossplayBeEnabled, v =>
+                var crossplayTickBox = Tickbox(rightColumn, TextManager.Get("EosAllowCrossplay"), TextManager.Get("EosAllowCrossplayTooltip"), shouldCrossplayBeEnabled, v =>
                 {
                     unsavedConfig.CrossplayChoice = v
                         ? Eos.EosSteamPrimaryLogin.CrossplayChoice.Enabled
@@ -792,21 +812,6 @@ namespace Barotrauma
                     crossplayTickBox.ToolTip = TextManager.Get("CantAccessEOSSettingsInMP");
                 }
             }
-
-            Spacer(right);
-            var resetSpamListFilter =
-                new GUIButton(new RectTransform(new Vector2(1.0f, 1.0f), right.RectTransform),
-                    TextManager.Get("clearserverlistfilters"), style: "GUIButtonSmall")
-                {
-                    OnClicked = static (_, _) =>
-                    {
-                        GUI.AskForConfirmation(
-                            header: TextManager.Get("clearserverlistfilters"),
-                            body: TextManager.Get("clearserverlistfiltersconfirmation"),
-                            onConfirm: SpamServerFilters.ClearLocalSpamFilter);
-                        return true;
-                    }
-                };
         }
 
         private void CreateModsTab(out WorkshopMenu workshopMenu)

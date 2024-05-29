@@ -25,8 +25,8 @@ namespace Barotrauma
             return "MalfunctionEvent (" + string.Join(", ", targetItemIdentifiers) + ")";
         }
         
-        public MalfunctionEvent(EventPrefab prefab)
-            : base(prefab)
+        public MalfunctionEvent(EventPrefab prefab, int seed)
+            : base(prefab, seed)
         {
             targetItems = new List<Item>();
 
@@ -39,9 +39,8 @@ namespace Barotrauma
             targetItemIdentifiers = prefab.ConfigElement.GetAttributeIdentifierArray("itemidentifiers", Array.Empty<Identifier>());
         }
 
-        public override void Init(EventSet parentSet)
+        protected override void InitEventSpecific(EventSet parentSet)
         {
-            base.Init(parentSet);
             var matchingItems = Item.ItemList.FindAll(i => i.Condition > 0.0f && targetItemIdentifiers.Contains(i.Prefab.Identifier));
             int itemAmount = Rand.Range(minItemAmount, maxItemAmount, Rand.RandSync.ServerAndClient);
             for (int i = 0; i < itemAmount; i++)

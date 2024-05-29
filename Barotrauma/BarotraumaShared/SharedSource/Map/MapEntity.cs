@@ -634,9 +634,22 @@ namespace Barotrauma
 #endif
             Powered.UpdatePower(deltaTime);
             Item.UpdatePendingConditionUpdates(deltaTime);
-            foreach (Item item in Item.ItemList)
+            Item lastUpdatedItem = null;
+            try
             {
-                item.Update(deltaTime, cam);
+                foreach (Item item in Item.ItemList)
+                {
+                    lastUpdatedItem = item;
+                    item.Update(deltaTime, cam);
+                }
+            }
+            catch (InvalidOperationException e)
+            {
+                GameAnalyticsManager.AddErrorEventOnce(
+                    "MapEntity.UpdateAll:ItemUpdateInvalidOperation", 
+                    GameAnalyticsManager.ErrorSeverity.Critical, 
+                    $"Error while updating item {lastUpdatedItem?.Name ?? "null"}: {e.Message}");
+                throw new InvalidOperationException($"Error while updating item {lastUpdatedItem?.Name ?? "null"}", innerException: e);
             }
 
             UpdateAllProjSpecific(deltaTime);

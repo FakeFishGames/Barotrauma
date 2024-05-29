@@ -771,7 +771,7 @@ namespace Barotrauma
             {
                 if (Screen.Selected == GameMain.GameScreen)
                 {
-                    if (item.NonInteractable || item.NonPlayerTeamInteractable)
+                    if (!item.IsInteractable(Character.Controlled))
                     {
                         return QuickUseAction.None;
                     }

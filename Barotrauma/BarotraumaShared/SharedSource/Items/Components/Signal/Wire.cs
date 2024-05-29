@@ -292,9 +292,8 @@ namespace Barotrauma.Items.Components
                 refSub = attachTarget?.Submarine;
             }
 
-            Vector2 nodePos = refSub == null ?
-                newConnection.Item.Position :
-                newConnection.Item.Position - refSub.HiddenSubPosition;
+            Vector2 nodePos = RoundNode(newConnection.Item.Position);
+            if (refSub != null) { nodePos -= refSub.HiddenSubPosition; }
 
             if (nodes.Count > 0 && nodes[0] == nodePos) { return; }
             if (nodes.Count > 1 && nodes[nodes.Count - 1] == nodePos) { return; }
@@ -469,9 +468,7 @@ namespace Barotrauma.Items.Components
             Vector2 mouseDiff = user.CursorWorldPosition - user.WorldPosition;
             mouseDiff = mouseDiff.ClampLength(MaxAttachDistance);
 
-            return new Vector2(
-                MathUtils.RoundTowardsClosest(user.Position.X + mouseDiff.X, Submarine.GridSize.X),
-                MathUtils.RoundTowardsClosest(user.Position.Y + mouseDiff.Y, Submarine.GridSize.Y));
+            return RoundNode(user.Position + mouseDiff);
         }
 
         public override bool Use(float deltaTime, Character character = null)
@@ -662,11 +659,14 @@ namespace Barotrauma.Items.Components
             Drawable = sections.Count > 0;
         }
 
-        private Vector2 RoundNode(Vector2 position)
+        private static Vector2 RoundNode(Vector2 position)
         {
-            position.X = MathUtils.Round(position.X, Submarine.GridSize.X / 2.0f);
-            position.Y = MathUtils.Round(position.Y, Submarine.GridSize.Y / 2.0f);
-            return position;
+            Vector2 halfGrid = Submarine.GridSize / 2;
+
+            position += halfGrid;
+            position.X = MathUtils.RoundTowardsClosest(position.X, Submarine.GridSize.X / 2.0f);
+            position.Y = MathUtils.RoundTowardsClosest(position.Y, Submarine.GridSize.Y / 2.0f);
+            return position - halfGrid;
         }
 
         public void SetConnectedDirty()

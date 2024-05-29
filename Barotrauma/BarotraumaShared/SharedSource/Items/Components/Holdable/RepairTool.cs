@@ -90,12 +90,11 @@ namespace Barotrauma.Items.Components
         [Serialize(false, IsPropertySaveable.No, description: "Can the item repair things through holes in walls.")]
         public bool RepairThroughHoles { get; set; }
 
-
         [Serialize(100.0f, IsPropertySaveable.No, description: "How far two walls need to not be considered overlapping and to stop the ray.")]
-        public float MaxOverlappingWallDist
-        {
-            get; set;
-        }
+        public float MaxOverlappingWallDist { get; set; }
+
+        [Serialize(1.0f, IsPropertySaveable.No, description: "How fast the tool detaches level resources (e.g. minerals). Acts as a multiplier on the speed: with a value of 2, detaching an item whose DeattachDuration is set to 30 seconds would take 15 seconds.")]
+        public float DeattachSpeed { get; set; }
 
         [Serialize(true, IsPropertySaveable.No, description: "Can the item hit doors.")]
         public bool HitItems { get; set; }
@@ -171,7 +170,7 @@ namespace Barotrauma.Items.Components
                 }
             }
             item.IsShootable = true;
-            item.RequireAimToUse = element.Parent.GetAttributeBool("requireaimtouse", true);
+            item.RequireAimToUse = element.Parent.GetAttributeBool(nameof(item.RequireAimToUse), true);
             InitProjSpecific(element);
         }
 
@@ -321,7 +320,7 @@ namespace Barotrauma.Items.Components
         private readonly List<FireSource> fireSourcesInRange = new List<FireSource>();
         private void Repair(Vector2 rayStart, Vector2 rayEnd, float deltaTime, Character user, float degreeOfSuccess, List<Body> ignoredBodies)
         {
-            var collisionCategories = Physics.CollisionWall | Physics.CollisionItem | Physics.CollisionLevel | Physics.CollisionRepair;
+            var collisionCategories = Physics.CollisionWall | Physics.CollisionItem | Physics.CollisionLevel | Physics.CollisionRepairableWall;
             if (!IgnoreCharacters)
             {
                 collisionCategories |= Physics.CollisionCharacter;
@@ -414,7 +413,7 @@ namespace Barotrauma.Items.Components
                         break;
                     }
                     pickedPosition = rayStart + (rayEnd - rayStart) * thisBodyFraction;
-                    if (FixBody(user, deltaTime, degreeOfSuccess, body))
+                    if (FixBody(user, pickedPosition, deltaTime, degreeOfSuccess, body))
                     {
                         lastPickedFraction = thisBodyFraction;
                         if (bodyType != null) { lastHitType = bodyType; }
@@ -452,7 +451,7 @@ namespace Barotrauma.Items.Components
                     },
                     allowInsideFixture: true);
                 pickedPosition = Submarine.LastPickedPosition;
-                FixBody(user, deltaTime, degreeOfSuccess, pickedBody);                    
+                FixBody(user, pickedPosition, deltaTime, degreeOfSuccess, pickedBody);                    
                 lastPickedFraction = Submarine.LastPickedFraction;
             }
             
@@ -543,7 +542,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        private bool FixBody(Character user, float deltaTime, float degreeOfSuccess, Body targetBody)
+        private bool FixBody(Character user, Vector2 hitPosition, float deltaTime, float degreeOfSuccess, Body targetBody)
         {
             if (targetBody?.UserData == null) { return false; }
 
@@ -600,7 +599,7 @@ namespace Barotrauma.Items.Components
             {
                 if (Level.Loaded?.ExtraWalls.Find(w => w.Body == cell.Body) is DestructibleLevelWall levelWall)
                 {
-                    levelWall.AddDamage(-LevelWallFixAmount * deltaTime, item.WorldPosition);
+                    levelWall.AddDamage(-LevelWallFixAmount * deltaTime, ConvertUnits.ToDisplayUnits(hitPosition));
                 }
                 return true;
             }
@@ -661,10 +660,13 @@ namespace Barotrauma.Items.Components
 
                 var levelResource = targetItem.GetComponent<LevelResource>();
                 if (levelResource != null && levelResource.Attached &&
-                    levelResource.requiredItems.Any() &&
+                    levelResource.RequiredItems.Any() &&
                     levelResource.HasRequiredItems(user, addMessage: false))
                 {
-                    float addedDetachTime = deltaTime * (1f + user.GetStatValue(StatTypes.RepairToolDeattachTimeMultiplier)) * (1f + item.GetQualityModifier(Quality.StatType.RepairToolDeattachTimeMultiplier));
+                    float addedDetachTime = deltaTime *
+                        DeattachSpeed *
+                        (1f + user.GetStatValue(StatTypes.RepairToolDeattachTimeMultiplier)) * 
+                        (1f + item.GetQualityModifier(Quality.StatType.RepairToolDeattachTimeMultiplier));
                     levelResource.DeattachTimer += addedDetachTime;
 #if CLIENT
                     if (targetItem.Prefab.ShowHealthBar && Character.Controlled != null &&

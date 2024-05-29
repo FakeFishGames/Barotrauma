@@ -277,7 +277,7 @@ namespace Barotrauma
                     velocity = Vector2.Lerp(velocity, moveInput, deltaTime * 10.0f);
                     moveCam = velocity * moveSpeed * deltaTime * FreeCamMoveSpeed * 60.0f;
 
-                    if (Screen.Selected == GameMain.GameScreen && (followSub ?? FollowSub))
+                    if (Screen.Selected == GameMain.GameScreen && (followSub ?? FollowSub) && GameMain.Instance is not { Paused: true })
                     {
                         var closestSub = Submarine.FindClosest(WorldViewCenter);
                         if (closestSub != null)

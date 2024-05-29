@@ -72,6 +72,11 @@ namespace Barotrauma
         /// How far other characters can hear reports done by this character (e.g. reports for fires, intruders). Defaults to infinity.
         /// </summary>
         public float ReportRange { get; set; } = float.PositiveInfinity;
+        
+        /// <summary>
+        /// How far the character can seek new weapons from.
+        /// </summary>
+        public float FindWeaponsRange { get; set; } = float.PositiveInfinity;
 
         private float _aimSpeed = 1;
         public float AimSpeed
@@ -150,9 +155,13 @@ namespace Barotrauma
         }
 
         public override bool IsMentallyUnstable => 
-            MentalStateManager == null ? false :
-            MentalStateManager.CurrentMentalType != MentalStateManager.MentalType.Normal && 
-            MentalStateManager.CurrentMentalType != MentalStateManager.MentalType.Confused;
+            MentalStateManager is
+            {
+                CurrentMentalType: 
+                    MentalStateManager.MentalType.Afraid or 
+                    MentalStateManager.MentalType.Desperate or
+                    MentalStateManager.MentalType.Berserk
+            };
 
         public ShipCommandManager ShipCommandManager { get; private set; }
 
@@ -817,7 +826,7 @@ namespace Barotrauma
 
         private readonly HashSet<Item> itemsToRelocate = new HashSet<Item>();
 
-        private void HandleRelocation(Item item)
+        public void HandleRelocation(Item item)
         {
             if (item.SpawnedInCurrentOutpost) { return; }
             if (item.Submarine == null) { return; }
@@ -837,7 +846,10 @@ namespace Barotrauma
                 // In the campaign mode, undocking happens after leaving the outpost, so we can't use that.
                 campaign.BeforeLevelLoading += Relocate;
             }
-
+            campaign.ItemsRelocatedToMainSub = true;
+#if CLIENT
+            HintManager.OnItemMarkedForRelocation();
+#endif
             void Relocate()
             {
                 if (item == null || item.Removed) { return; }
@@ -1566,7 +1578,7 @@ namespace Barotrauma
                 {
                     HoldPosition = Character.Info?.Job?.Prefab.Identifier == "watchman",
                     AbortCondition = abortCondition,
-                    allowHoldFire = allowHoldFire,
+                    AllowHoldFire = allowHoldFire,
                 };
                 if (onAbort != null)
                 {
@@ -1583,12 +1595,16 @@ namespace Barotrauma
         public void SetOrder(Order order, bool speak = true)
         {
             objectiveManager.SetOrder(order, speak);
+#if CLIENT
+            HintManager.OnSetOrder(Character, order);
+#endif
         }
 
-        public void SetForcedOrder(Order order)
+        public AIObjective SetForcedOrder(Order order)
         {
             var objective = ObjectiveManager.CreateObjective(order);
             ObjectiveManager.SetForcedOrder(objective);
+            return objective;
         }
 
         public void ClearForcedOrder()
@@ -1677,14 +1693,17 @@ namespace Barotrauma
             return false;
         }
 
-        public static bool HasDivingGear(Character character, float conditionPercentage = 0, bool requireOxygenTank = true) => HasDivingSuit(character, conditionPercentage, requireOxygenTank) || HasDivingMask(character, conditionPercentage, requireOxygenTank);
+        public static bool HasDivingGear(Character character, float conditionPercentage = 0, bool requireOxygenTank = true) => 
+            HasDivingSuit(character, conditionPercentage, requireOxygenTank) || HasDivingMask(character, conditionPercentage, requireOxygenTank);
 
         /// <summary>
-        /// Check whether the character has a diving suit in usable condition plus some oxygen.
+        /// Check whether the character has a diving suit in usable condition, suitable pressure protection for the depth, plus some oxygen.
         /// </summary>
-        public static bool HasDivingSuit(Character character, float conditionPercentage = 0, bool requireOxygenTank = true) 
+        public static bool HasDivingSuit(Character character, float conditionPercentage = 0, bool requireOxygenTank = true, bool requireSuitablePressureProtection = true) 
             => HasItem(character, Tags.HeavyDivingGear, out _, requireOxygenTank ? Tags.OxygenSource : Identifier.Empty, conditionPercentage, requireEquipped: true,
-                predicate: (Item item) => character.HasEquippedItem(item, InvSlotType.OuterClothes | InvSlotType.InnerClothes));
+                predicate: (Item item) => 
+                    character.HasEquippedItem(item, InvSlotType.OuterClothes | InvSlotType.InnerClothes) &&
+                    (!requireSuitablePressureProtection || AIObjectiveFindDivingGear.IsSuitablePressureProtection(item, Tags.HeavyDivingGear, character)));
 
         /// <summary>
         /// Check whether the character has a diving mask in usable condition plus some oxygen.
@@ -1838,7 +1857,7 @@ namespace Barotrauma
                 foreach (Character otherCharacter in Character.CharacterList)
                 {
                     if (otherCharacter == thief || otherCharacter.TeamID == thief.TeamID || otherCharacter.IsIncapacitated || otherCharacter.Stun > 0.0f ||
-                        otherCharacter.Info?.Job == null || otherCharacter.AIController is not HumanAIController otherHumanAI ||
+                        otherCharacter.Info?.Job == null || otherCharacter.AIController is not HumanAIController otherHumanAI || otherCharacter.IsEscorted ||
                         Vector2.DistanceSquared(otherCharacter.WorldPosition, thief.WorldPosition) > 1000.0f * 1000.0f)
                     {
                         continue;
@@ -2064,7 +2083,7 @@ namespace Barotrauma
                 visibleHulls = VisibleHulls;
             }
             bool ignoreFire = objectiveManager.CurrentOrder is AIObjectiveExtinguishFires extinguishOrder && extinguishOrder.Priority > 0 || objectiveManager.HasActiveObjective<AIObjectiveExtinguishFire>();
-            bool ignoreOxygen =  HasDivingGear(character);
+            bool ignoreOxygen = HasDivingGear(character);
             bool ignoreEnemies = ObjectiveManager.IsCurrentOrder<AIObjectiveFightIntruders>() || ObjectiveManager.IsCurrentObjective<AIObjectiveFightIntruders>();
             float safety = CalculateHullSafety(hull, visibleHulls, character, ignoreWater: false, ignoreOxygen, ignoreFire, ignoreEnemies);
             if (isCurrentHull)
@@ -2197,11 +2216,29 @@ namespace Barotrauma
 
         public static bool IsFriendly(Character me, Character other, bool onlySameTeam = false)
         {
+            if (other.IsHusk)
+            {
+                // Disguised as husk
+                return me.IsDisguisedAsHusk;
+            }
+            else
+            {
+                if (other.IsPrisoner && me.IsPrisoner)
+                {
+                    // Both prisoners
+                    return true;
+                }
+                if (other.IsHostileEscortee && me.IsHostileEscortee)
+                {
+                    // Both hostile escortees
+                    return true;
+                }
+            }  
             bool sameTeam = me.TeamID == other.TeamID;
             bool teamGood = sameTeam || !onlySameTeam && me.IsOnFriendlyTeam(other);
             if (!teamGood)
             {
-                return other.IsHusk && me.IsDisguisedAsHusk;
+                return false;  
             }
             if (other.IsPet)
             {

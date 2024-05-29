@@ -61,7 +61,7 @@ namespace Barotrauma
             if (descriptionWithoutReward != null) { description = descriptionWithoutReward.Replace("[reward]", rewardText); }
         }
 
-        public override int GetReward(Submarine sub)
+        public override int GetBaseReward(Submarine sub)
         {
             if (sub != missionSub)
             {
@@ -160,14 +160,13 @@ namespace Barotrauma
 
             if (terroristChance > 0f)
             {
-                int terroristCount = (int)Math.Ceiling(terroristChance * Rand.Range(0.8f, 1.2f) * characters.Count);
+                int terroristCount = (int)Math.Ceiling(terroristChance * Rand.Range(0.8f, 1.2f) * characters.Count); 
                 terroristCount = Math.Clamp(terroristCount, 1, characters.Count);
 
                 terroristCharacters.Clear();
                 characters.GetRange(0, terroristCount).ForEach(c => terroristCharacters.Add(c));
-
+                terroristCharacters.ForEach(c => c.IsHostileEscortee = true);
                 terroristDistanceSquared = Vector2.DistanceSquared(Level.Loaded.StartPosition, Level.Loaded.EndPosition) * Rand.Range(0.35f, 0.65f);
-
 #if DEBUG
                 DebugConsole.AddWarning("Terrorists will trigger at range  " + Math.Sqrt(terroristDistanceSquared));
                 foreach (Character character in terroristCharacters)
@@ -251,6 +250,7 @@ namespace Barotrauma
                 // decoupled from range check to prevent from weirdness if players handcuff a terrorist and move backwards
                 foreach (Character character in terroristCharacters)
                 {
+                    character.IsHostileEscortee = true;
                     if (character.HasTeamChange(TerroristTeamChangeIdentifier))
                     {
                         // already triggered

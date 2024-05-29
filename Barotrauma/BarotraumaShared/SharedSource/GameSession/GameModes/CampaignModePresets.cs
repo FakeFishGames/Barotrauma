@@ -8,7 +8,7 @@ namespace Barotrauma
     internal static class CampaignModePresets
     {
         public static readonly ImmutableArray<CampaignSettings> List;
-        public static readonly ImmutableDictionary<Identifier, CampaignSettingDefinitions> Definitions;
+        private static readonly ImmutableDictionary<Identifier, CampaignSettingDefinitions> definitions;
 
         private static readonly string fileListPath = Path.Combine("Data", "campaignsettings.xml");
 
@@ -20,73 +20,58 @@ namespace Barotrauma
                 return;
             }
 
-            List<CampaignSettings> list = new List<CampaignSettings>();
-            Dictionary<Identifier, CampaignSettingDefinitions> definitions = new Dictionary<Identifier, CampaignSettingDefinitions>();
+            List<CampaignSettings> presetList = new List<CampaignSettings>();
+            Dictionary<Identifier, CampaignSettingDefinitions> tempDefinitions = new Dictionary<Identifier, CampaignSettingDefinitions>();
 
             foreach (XElement element in docRoot.Elements())
             {
                 Identifier name = element.NameAsIdentifier();
 
+                // The campaign setting presets
                 if (name == CampaignSettings.LowerCaseSaveElementName)
                 {
-                    list.Add(new CampaignSettings(element));
+                    presetList.Add(new CampaignSettings(element));
                 }
+                // All the definitions for the setting value options
                 else if (name == nameof(CampaignSettingDefinitions))
                 {
+                    // The single definitions that the settings may refer to (eg. PatdownProbabilityMin)
                     foreach (XElement subElement in element.Elements())
                     {
-                        definitions.Add(subElement.NameAsIdentifier(), new CampaignSettingDefinitions(subElement));
+                        tempDefinitions.Add(subElement.NameAsIdentifier(), new CampaignSettingDefinitions(subElement));
                     }
                 }
             }
 
-            List = list.ToImmutableArray();
-            Definitions = definitions.ToImmutableDictionary();
+            List = presetList.ToImmutableArray();
+            definitions = tempDefinitions.ToImmutableDictionary();
+        }
+
+        public static bool TryGetAttribute(Identifier propertyName, Identifier attributeName, out XAttribute attribute)
+        {
+            attribute = null;
+            if (definitions.TryGetValue(propertyName, out CampaignSettingDefinitions definition))
+            {
+                if (definition.Attributes.TryGetValue(attributeName, out XAttribute att))
+                {
+                    attribute = att;
+                    return true;
+                }
+            }
+            return false;
         }
     }
 
     internal readonly struct CampaignSettingDefinitions
     {
-        // Definitely not the best way to do this
-        private readonly ImmutableDictionary<Identifier, Either<int, float>> values;
+        public readonly ImmutableDictionary<Identifier, XAttribute> Attributes;
 
         public CampaignSettingDefinitions(XElement element)
         {
-            var definitions = new Dictionary<Identifier, Either<int, float>>();
-            foreach (XAttribute attribute in element.Attributes())
-            {
-                Identifier name = attribute.NameAsIdentifier();
-                if (attribute.Value.Contains('.'))
-                {
-                    definitions.Add(name, element.GetAttributeFloat(name.Value, 0));
-                }
-                else
-                {
-                    definitions.Add(name, element.GetAttributeInt(name.Value, 0));
-                }
-            }
-
-            values = definitions.ToImmutableDictionary();
-        }
-
-        public float GetFloat(Identifier identifier)
-        {
-            float range = 0;
-            if (!values.TryGetValue(identifier, out Either<int, float> value) || !value.TryGet(out range))
-            {
-                DebugConsole.ThrowError($"CampaignSettings: Can't find value for {identifier}");
-            }
-            return range;
-        }
-
-        public int GetInt(Identifier identifier)
-        {
-            int integer = 0;
-            if (!values.TryGetValue(identifier, out Either<int, float> value) || !value.TryGet(out integer))
-            {
-                DebugConsole.ThrowError($"CampaignSettings: Can't find value for {identifier}");
-            }
-            return integer;
+            Attributes = element.Attributes().ToImmutableDictionary(
+                a => a.NameAsIdentifier(),
+                a => a
+            );
         }
     }
 }

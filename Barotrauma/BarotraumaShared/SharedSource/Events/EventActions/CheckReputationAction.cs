@@ -3,9 +3,12 @@ using System.Diagnostics;
 
 namespace Barotrauma
 {
+    /// <summary>
+    /// Check whether the reputation of the crew for a specific faction meets some criteria (e.g. equal to, larger than or less than some value).
+    /// </summary>
     class CheckReputationAction : CheckDataAction
     {
-        [Serialize(ReputationAction.ReputationType.None, IsPropertySaveable.Yes)]
+        [Serialize(ReputationAction.ReputationType.None, IsPropertySaveable.Yes, description: "Should the action check the reputation for a given faction, or whichever faction owns the current location.")]
         public ReputationAction.ReputationType TargetType { get; set; }
 
         public CheckReputationAction(ScriptedEvent parentEvent, ContentXElement element) : base(parentEvent, element) { }

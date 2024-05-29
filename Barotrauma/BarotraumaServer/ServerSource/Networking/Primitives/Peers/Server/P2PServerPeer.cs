@@ -105,11 +105,7 @@ namespace Barotrauma.Networking
             if (!started) { return; }
 
             var senderInfo = INetSerializableStruct.Read<P2POwnerToServerHeader>(inc);
-            if (!senderInfo.Endpoint.TryUnwrap(out var senderEndpoint))
-            {
-                return;
-            }
-
+            if (!senderInfo.Endpoint.TryUnwrap(out var senderEndpoint)) { return; }
             var (_, packetHeader, initialization) = INetSerializableStruct.Read<PeerPacketHeaders>(inc);
 
             if (packetHeader.IsServerMessage())
@@ -179,7 +175,8 @@ namespace Barotrauma.Networking
                 {
                     if (packetHeader.IsDataFragment())
                     {
-                        var completeMessageOption = connectedClient.Defragmenter.ProcessIncomingFragment(INetSerializableStruct.Read<MessageFragment>(inc));
+                        var fragment = INetSerializableStruct.Read<MessageFragment>(inc);
+                        var completeMessageOption = connectedClient.Defragmenter.ProcessIncomingFragment(fragment);
                         if (!completeMessageOption.TryUnwrap(out var completeMessage)) { return; }
 
                         IReadMessage msg = new ReadOnlyMessage(completeMessage.ToArray(), false, 0, completeMessage.Length, connectedClient.Connection);

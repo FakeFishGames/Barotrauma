@@ -75,7 +75,7 @@ namespace Barotrauma
                 NetConfig.HighPrioCharacterPositionUpdateInterval,
                 priority);
 
-            if (IsDead)
+            if (IsDead && !AnimController.IsDraggedWithRope)
             {
                 interval = Math.Max(interval * 2, 0.1f);
             }
@@ -587,6 +587,31 @@ namespace Barotrauma
                             msg.WriteIdentifier(savedStatValue.StatIdentifier);
                             msg.WriteSingle(savedStatValue.StatValue);
                             msg.WriteBoolean(savedStatValue.RemoveOnDeath);
+                        }
+                    }
+                    break;
+                case LatchedOntoTargetEventData latchedOntoTargetEventData:
+                    msg.WriteBoolean(latchedOntoTargetEventData.IsLatched);
+                    if (latchedOntoTargetEventData.IsLatched)
+                    {
+                        msg.WriteSingle(SimPosition.X);
+                        msg.WriteSingle(SimPosition.Y);
+                        msg.WriteSingle(latchedOntoTargetEventData.AttachSurfaceNormal.X);
+                        msg.WriteSingle(latchedOntoTargetEventData.AttachSurfaceNormal.Y);
+                        msg.WriteSingle(latchedOntoTargetEventData.AttachPos.X);
+                        msg.WriteSingle(latchedOntoTargetEventData.AttachPos.Y);
+                        msg.WriteInt32(latchedOntoTargetEventData.TargetLevelWallIndex);
+                        if (latchedOntoTargetEventData.TargetStructureID != NullEntityID)
+                        {
+                            msg.WriteUInt16(latchedOntoTargetEventData.TargetStructureID);
+                        }
+                        else if (latchedOntoTargetEventData.TargetCharacterID != NullEntityID)
+                        {
+                            msg.WriteUInt16(latchedOntoTargetEventData.TargetCharacterID);
+                        }
+                        else
+                        {
+                            msg.WriteUInt16(NullEntityID);
                         }
                     }
                     break;

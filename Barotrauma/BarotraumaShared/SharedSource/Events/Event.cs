@@ -9,13 +9,15 @@ namespace Barotrauma
         public event Action Finished;
         protected bool isFinished;
 
-        public int RandomSeed;
+        public readonly int RandomSeed;
 
         protected readonly EventPrefab prefab;
         
         public EventPrefab Prefab => prefab;
 
         public EventSet ParentSet { get; private set; }
+
+        public bool Initialized { get; private set; }
 
         public Func<Level.InterestingPosition, bool> SpawnPosFilter;
 
@@ -37,8 +39,9 @@ namespace Barotrauma
             }
         }
         
-        public Event(EventPrefab prefab)
+        public Event(EventPrefab prefab, int seed)
         {
+            RandomSeed = seed;
             this.prefab = prefab ?? throw new ArgumentNullException(nameof(prefab));
         }
         
@@ -47,9 +50,15 @@ namespace Barotrauma
             yield break;
         }
 
-        public virtual void Init(EventSet parentSet = null)
+        public void Init(EventSet parentSet = null)
         {
+            Initialized = true;
             ParentSet = parentSet;
+            InitEventSpecific(parentSet);
+        }
+
+        protected virtual void InitEventSpecific(EventSet parentSet = null)
+        {
         }
 
         public virtual string GetDebugInfo()

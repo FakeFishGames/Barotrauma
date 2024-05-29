@@ -739,6 +739,35 @@ namespace Barotrauma
                 };
             }, isCheat: true));
 
+
+            commands.Add(new Command("listsuitabletreatments", "listsuitabletreatments [character name]: List which items are the most suitable for treating the specified character. Useful for debugging medic AI.", (string[] args) =>
+            {
+                Character character = (args.Length == 0) ? Character.Controlled : FindMatchingCharacter(args);
+                if (character != null)
+                {
+                    Dictionary<Identifier, float> treatments = new Dictionary<Identifier, float>();
+                    character.CharacterHealth.GetSuitableTreatments(treatments, user: null);
+                    foreach (var treatment in treatments.OrderByDescending(t => t.Value))
+                    {
+                        Color color = Color.White;
+#if CLIENT
+                        color = ToolBox.GradientLerp(
+                            MathUtils.InverseLerp(-1000, 1000, treatment.Value),
+                            Color.Red, Color.Yellow, Color.White, Color.LightGreen);
+#endif
+                        NewMessage((int)treatment.Value + ": " + treatment.Key, color);
+
+                    }
+                }
+            },
+            () =>
+            {
+                return new string[][]
+                {
+                    Character.CharacterList.Select(c => c.Name).Distinct().OrderBy(n => n).ToArray()
+                };
+            }, isCheat: true));
+
             commands.Add(new Command("revive", "revive [character name]: Bring the specified character back from the dead. If the name parameter is omitted, the controlled character will be revived.", (string[] args) =>
             {
                 Character revivedCharacter = (args.Length == 0) ? Character.Controlled : FindMatchingCharacter(args);
@@ -827,7 +856,7 @@ namespace Barotrauma
                     }
                     else if (eventPrefab != null)
                     {
-                        var newEvent = eventPrefab.CreateInstance();
+                        var newEvent = eventPrefab.CreateInstance(GameMain.GameSession.EventManager.RandomSeed);
                         if (newEvent == null)
                         {
                             NewMessage($"Could not initialize event {args[0]} because level did not meet requirements");
@@ -2296,6 +2325,7 @@ namespace Barotrauma
 #endif
                 }
                 spawnedCharacter.GiveJobItems(spawnPoint);
+                spawnedCharacter.GiveIdCardTags(spawnPoint);
                 spawnedCharacter.Info.StartItemsGiven = true;
             }
             else
@@ -2609,6 +2639,17 @@ namespace Barotrauma
                 gaIdentifier,
                 GameAnalyticsManager.ErrorSeverity.Error,
                 errorMsg);
+        }
+
+        private static readonly HashSet<string> loggedErrorIdentifiers = new HashSet<string>();
+        /// <summary>
+        /// Log the error message, but only if an error with the same identifier hasn't been thrown yet during this session.
+        /// </summary>
+        public static void ThrowErrorOnce(string identifier, string errorMsg, Exception e = null)
+        {
+            if (loggedErrorIdentifiers.Contains(identifier)) { return; }
+            ThrowError(errorMsg, e);
+            loggedErrorIdentifiers.Add(identifier);
         }
 
         public static void AddWarning(string warning, ContentPackage contentPackage = null)

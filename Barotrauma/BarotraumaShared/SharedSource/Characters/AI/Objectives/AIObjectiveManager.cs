@@ -67,6 +67,10 @@ namespace Barotrauma
         }
         private AIObjective currentOrder;
         public AIObjective ForcedOrder { get; private set; }
+        
+        /// <summary>
+        /// Includes orders.
+        /// </summary>
         public AIObjective CurrentObjective { get; private set; }
 
         public AIObjectiveManager(Character character)
@@ -103,6 +107,8 @@ namespace Barotrauma
 
         public Dictionary<AIObjective, CoroutineHandle> DelayedObjectives { get; private set; } = new Dictionary<AIObjective, CoroutineHandle>();
         public bool FailedAutonomousObjectives { get; private set; }
+
+        public bool FailedToFindDivingGearForDepth;
 
         private void ClearIgnored()
         {
@@ -220,8 +226,11 @@ namespace Barotrauma
             if (previousObjective == CurrentObjective) { return CurrentObjective; }
 
             previousObjective?.OnDeselected();
-            CurrentObjective?.OnSelected();
-            GetObjective<AIObjectiveIdle>().CalculatePriority(Math.Max(CurrentObjective.Priority - 10, 0));
+            if (CurrentObjective != null)
+            {
+                CurrentObjective.OnSelected();
+                GetObjective<AIObjectiveIdle>().CalculatePriority(Math.Max(CurrentObjective.Priority - 10, 0));   
+            }
             if (GameMain.NetworkMember is { IsServer: true })
             {
                 GameMain.NetworkMember.CreateEntityEvent(character,
@@ -230,9 +239,14 @@ namespace Barotrauma
             return CurrentObjective;
         }
 
+        /// <summary>
+        /// Returns the highest priority of the current objective and its subobjectives.
+        /// </summary>
         public float GetCurrentPriority()
         {
-            return CurrentObjective == null ? 0.0f : CurrentObjective.Priority;
+            if (CurrentObjective == null) { return 0; }
+            float subObjectivePriority = CurrentObjective.SubObjectives.Any() ? CurrentObjective.SubObjectives.Max(so => so.Priority) : 0;
+            return Math.Max(CurrentObjective.Priority, subObjectivePriority);
         }
 
         public void UpdateObjectives(float deltaTime)
@@ -241,7 +255,7 @@ namespace Barotrauma
 
             if (CurrentOrders.Any())
             {
-                foreach(var order in CurrentOrders)
+                foreach (var order in CurrentOrders)
                 {
                     var orderObjective = order.Objective;
                     UpdateOrderObjective(orderObjective);
@@ -395,6 +409,9 @@ namespace Barotrauma
                     CurrentOrders.RemoveAt(i);
                 }
             }
+
+            //reset this here so the bots can retry finding a better suit if it's needed for the new order
+            FailedToFindDivingGearForDepth = false;
 
             var newCurrentObjective = CreateObjective(order);
             if (newCurrentObjective != null)
@@ -592,6 +609,9 @@ namespace Barotrauma
                 case "loaditems":
                     newObjective = new AIObjectiveLoadItems(character, this, order.Option, order.GetTargetItems(order.Option), order.TargetEntity as Item, priorityModifier);
                     break;
+                case "deconstructitems":
+                    newObjective = new AIObjectiveDeconstructItems(character, this, priorityModifier);
+                    break;
                 default:
                     if (order.TargetItemComponent == null) { return null; }
                     if (!order.TargetItemComponent.Item.IsInteractable(character)) { return null; }
@@ -613,6 +633,11 @@ namespace Barotrauma
             return newObjective;
         }
 
+        /// <summary>
+        /// Sets the order as dismissed, and enables the option to reissue the order on the crew list. 
+        /// Note that this is not the same thing as just removing the order entirely!
+        /// </summary>
+        /// <param name="order"></param>
         private void DismissSelf(Order order)
         {
             var currentOrder = CurrentOrders.FirstOrDefault(oi => oi.MatchesOrder(order.Identifier, order.Option));
@@ -651,12 +676,26 @@ namespace Barotrauma
             return true;
         }
 
+        /// <summary>
+        /// Only checks the current order. Deprecated, use pattern matching instead.
+        /// </summary>
         public bool IsCurrentOrder<T>() where T : AIObjective => CurrentOrder is T;
+        /// <summary>
+        /// Checks the current objective (which can be an order too). Deprecated, use pattern matching instead.
+        /// </summary>
         public bool IsCurrentObjective<T>() where T : AIObjective => CurrentObjective is T;
-        public bool IsActiveObjective<T>() where T : AIObjective => GetActiveObjective() is T;
 
         public AIObjective GetActiveObjective() => CurrentObjective?.GetActiveObjective();
+
+        /// <summary>
+        /// Return the first order whose objective is of the given type. Can return null.
+        /// </summary>
         public T GetOrder<T>() where T : AIObjective => CurrentOrders.FirstOrDefault(o => o.Objective is T)?.Objective as T;
+
+        /// <summary>
+        /// Return the first order with the specified objective. Can return null.
+        /// </summary>
+        public Order GetOrder(AIObjective objective) => CurrentOrders.FirstOrDefault(o => o.Objective == objective);
 
         public T GetLastActiveObjective<T>() where T : AIObjective
             => CurrentObjective?.GetSubObjectivesRecursive(includingSelf: true).LastOrDefault(so => so is T) as T;
@@ -665,12 +704,12 @@ namespace Barotrauma
             => CurrentObjective?.GetSubObjectivesRecursive(includingSelf: true).FirstOrDefault(so => so is T) as T;
 
         /// <summary>
-        /// Returns all active objectives of the specific type. Creates a new collection -> don't use too frequently.
+        /// Returns all active objectives of the specific type.
         /// </summary>
         public IEnumerable<T> GetActiveObjectives<T>() where T : AIObjective
         {
             if (CurrentObjective == null) { return Enumerable.Empty<T>(); }
-            return CurrentObjective.GetSubObjectivesRecursive(includingSelf: true).Where(so => so is T).Select(so => so as T);
+            return CurrentObjective.GetSubObjectivesRecursive(includingSelf: true).OfType<T>();
         }
 
         public bool HasActiveObjective<T>() where T : AIObjective => CurrentObjective is T || CurrentObjective != null && CurrentObjective.GetSubObjectivesRecursive().Any(so => so is T);

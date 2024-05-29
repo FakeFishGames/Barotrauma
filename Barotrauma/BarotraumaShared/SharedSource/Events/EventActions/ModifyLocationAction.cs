@@ -1,17 +1,20 @@
 namespace Barotrauma
 {
+    /// <summary>
+    /// Modifies the current location in some way (e.g. adjusting the faction, type of name).
+    /// </summary>
     class ModifyLocationAction : EventAction
     {
-        [Serialize("", IsPropertySaveable.Yes)]
+        [Serialize("", IsPropertySaveable.Yes, description: "Identifier of the faction to set as the location's primary faction (optional).")]
         public Identifier Faction { get; set; }
 
-        [Serialize("", IsPropertySaveable.Yes)]
+        [Serialize("", IsPropertySaveable.Yes, description: "Identifier of the faction to set as the location's secondary faction (optional).")]
         public Identifier SecondaryFaction { get; set; }
 
-        [Serialize("", IsPropertySaveable.Yes)]
+        [Serialize("", IsPropertySaveable.Yes, description: "Identifier of the location type to set as the location's new type (optional)")]
         public Identifier Type { get; set; }
 
-        [Serialize("", IsPropertySaveable.Yes)]
+        [Serialize("", IsPropertySaveable.Yes, description: "New name to give to the location (optional). Can either be the name as-is, or a tag referring to a line in a text file.")]
         public Identifier Name { get; set; }
 
         private bool isFinished;

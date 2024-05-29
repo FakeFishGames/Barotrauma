@@ -1,10 +1,12 @@
-using System.Xml.Linq;
-
 namespace Barotrauma
 {
+
+    /// <summary>
+    /// Clears the specific tag from the event (i.e. untagging all the entities that have been previously given the tag).
+    /// </summary>
     class ClearTagAction : EventAction
     {
-        [Serialize("", IsPropertySaveable.Yes)]
+        [Serialize("", IsPropertySaveable.Yes, description: "The tag to clear.")]
         public Identifier Tag { get; set; }
 
         private bool isFinished;

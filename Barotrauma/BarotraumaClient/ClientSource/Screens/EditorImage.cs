@@ -440,13 +440,13 @@ namespace Barotrauma
             {
                 widget.MouseDown += () =>
                 {
-                    widget.color = GUIStyle.Green;
+                    widget.Color = GUIStyle.Green;
                     prevAngle = Rotation;
                     disableMove = true;
                 };
                 widget.Deselected += () =>
                 {
-                    widget.color = Color.Yellow;
+                    widget.Color = Color.Yellow;
                     disableMove = false;
                 };
                 widget.MouseHeld += (deltaTime) =>
@@ -484,7 +484,7 @@ namespace Barotrauma
                 };
                 widget.PreDraw += (sprtBtch, deltaTime) =>
                 {
-                    widget.tooltip = $"Scale: {Math.Round(Scale, 2)}\n" +
+                    widget.Tooltip = $"Scale: {Math.Round(Scale, 2)}\n" +
                                      $"Rotation: {(int) MathHelper.ToDegrees(Rotation)}";
                     float rotation = Rotation - (float) Math.PI / 2f;
                     widget.DrawPos = Position + new Vector2((float) Math.Cos(rotation), (float) Math.Sin(rotation)) * (Scale * widgetSize);
@@ -519,17 +519,17 @@ namespace Barotrauma
         {
             if (!widgets.TryGetValue(id, out Widget? widget))
             {
-                widget = new Widget(id, size, Widget.Shape.Rectangle)
+                widget = new Widget(id, size, WidgetShape.Rectangle)
                 {
-                    color = Color.Yellow,
+                    Color = Color.Yellow,
                     RequireMouseOn = false
                 };
                 widgets.Add(id, widget);
                 initMethod?.Invoke(widget);
             }
 
-            widget.size = size;
-            widget.thickness = thickness;
+            widget.Size = size;
+            widget.Thickness = thickness;
             return widget;
         }
 

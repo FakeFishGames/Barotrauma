@@ -695,12 +695,24 @@ namespace Barotrauma.Lights
                 if (diff.LengthSquared() > 20.0f * 20.0f) { losOffset = diff; }
                 float rotation = MathUtils.VectorToAngle(losOffset);
 
+                //the visible area stretches to the maximum when the cursor is this far from the character
+                const float MaxOffset = 256.0f;
+                const float MinHorizontalScale = 2.2f;
+                const float MaxHorizontalScale = 2.8f;
+                const float VerticalScale = 2.5f;
+
+                //Starting point and scale-based modifier that moves the point of origin closer to the edge of the texture if the player moves their mouse further away, or vice versa.
+                float relativeOriginStartPosition = 0.22f; //Increasing this value moves the origin further behind the character
+                float originStartPosition = visionCircle.Width * relativeOriginStartPosition;
+                float relativeOriginLookAtPosModifier = -0.055f; //Increase this value increases how much the vision changes by moving the mouse
+                float originLookAtPosModifier = visionCircle.Width * relativeOriginLookAtPosModifier;
+
                 Vector2 scale = new Vector2(
-                    MathHelper.Clamp(losOffset.Length() / 256.0f, 4.0f, 5.0f), 3.0f);
+                    MathHelper.Clamp(losOffset.Length() / MaxOffset, MinHorizontalScale, MaxHorizontalScale), VerticalScale);
 
                 spriteBatch.Begin(SpriteSortMode.Deferred, transformMatrix: cam.Transform * Matrix.CreateScale(new Vector3(GameSettings.CurrentConfig.Graphics.LightMapScale, GameSettings.CurrentConfig.Graphics.LightMapScale, 1.0f)));
                 spriteBatch.Draw(visionCircle, new Vector2(ViewTarget.WorldPosition.X, -ViewTarget.WorldPosition.Y), null, Color.White, rotation,
-                    new Vector2(visionCircle.Width * 0.2f, visionCircle.Height / 2), scale, SpriteEffects.None, 0.0f);
+                    new Vector2(originStartPosition + (scale.X * originLookAtPosModifier), visionCircle.Height / 2), scale, SpriteEffects.None, 0.0f);
                 spriteBatch.End();
             }
             else

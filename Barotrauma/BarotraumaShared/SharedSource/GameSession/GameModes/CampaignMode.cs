@@ -147,6 +147,8 @@ namespace Barotrauma
 
         public bool DivingSuitWarningShown;
 
+        public bool ItemsRelocatedToMainSub;
+
         private static bool AnyOneAllowedToManageCampaign(ClientPermissions permissions)
         {
             if (GameMain.NetworkMember == null) { return true; }
@@ -878,7 +880,7 @@ namespace Barotrauma
                 }
             }
 
-            foreach (CharacterInfo ci in CrewManager.CharacterInfos.ToList())
+            foreach (CharacterInfo ci in CrewManager.GetCharacterInfos().ToList())
             {
                 if (ci.CauseOfDeath != null)
                 {
@@ -979,7 +981,7 @@ namespace Barotrauma
                 Preset?.Identifier.Value ?? "none");
             string eventId = "FinishCampaign:";
             GameAnalyticsManager.AddDesignEvent(eventId + "Submarine:" + (Submarine.MainSub?.Info?.Name ?? "none"));
-            GameAnalyticsManager.AddDesignEvent(eventId + "CrewSize:" + (CrewManager?.CharacterInfos?.Count() ?? 0));
+            GameAnalyticsManager.AddDesignEvent(eventId + "CrewSize:" + (CrewManager?.GetCharacterInfos()?.Count() ?? 0));
             GameAnalyticsManager.AddDesignEvent(eventId + "Money", Bank.Balance);
             GameAnalyticsManager.AddDesignEvent(eventId + "Playtime", TotalPlayTime);
             GameAnalyticsManager.AddDesignEvent(eventId + "PassedLevels", TotalPassedLevels);
@@ -1024,7 +1026,7 @@ namespace Barotrauma
             return ToolBox.SelectWeightedRandom(factionsList, weights, random);
         }
 
-        public bool TryHireCharacter(Location location, CharacterInfo characterInfo, Character hirer, Client client = null)
+        public bool TryHireCharacter(Location location, CharacterInfo characterInfo, bool takeMoney = true, Client client = null)
         {
             if (characterInfo == null) { return false; }
             if (characterInfo.MinReputationToHire.factionId != Identifier.Empty)
@@ -1034,8 +1036,8 @@ namespace Barotrauma
                     return false;
                 }
             }
+            if (takeMoney && !TryPurchase(client, HireManager.GetSalaryFor(characterInfo))) { return false; }
 
-            if (!TryPurchase(client, HireManager.GetSalaryFor(characterInfo))) { return false; }
             characterInfo.IsNewHire = true;
             characterInfo.Title = null;
             location.RemoveHireableCharacter(characterInfo);
@@ -1047,7 +1049,6 @@ namespace Barotrauma
         private void NPCInteract(Character npc, Character interactor)
         {
             if (!npc.AllowCustomInteract) { return; }
-            GameAnalyticsManager.AddDesignEvent("CampaignInteraction:" + Preset.Identifier + ":" + npc.CampaignInteractionType);
             NPCInteractProjSpecific(npc, interactor);
             string coroutineName = "DoCharacterWait." + (npc?.ID ?? Entity.NullEntityID);
             if (!CoroutineManager.IsCoroutineRunning(coroutineName))

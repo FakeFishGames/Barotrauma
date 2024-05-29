@@ -51,7 +51,7 @@ namespace Barotrauma
             return $"{nameof(ScriptedEvent)} ({prefab.Identifier})";
         }
         
-        public ScriptedEvent(EventPrefab prefab) : base(prefab)
+        public ScriptedEvent(EventPrefab prefab, int seed) : base(prefab, seed)
         {
             foreach (var element in prefab.ConfigElement.Elements())
             {

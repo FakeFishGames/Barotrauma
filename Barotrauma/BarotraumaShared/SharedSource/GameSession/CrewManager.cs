@@ -35,8 +35,6 @@ namespace Barotrauma
 
         private Character welcomeMessageNPC;
 
-        public List<CharacterInfo> CharacterInfos => characterInfos;
-
         public bool HasBots { get; set; }
 
         public class ActiveOrder
@@ -74,8 +72,8 @@ namespace Barotrauma
             }
 
             // Ignore orders work a bit differently since the "unignore" order counters the "ignore" order
-            var isUnignoreOrder = order.Identifier == "unignorethis";
-            var orderPrefab = !isUnignoreOrder ? order.Prefab : OrderPrefab.Prefabs["ignorethis"];
+            var isUnignoreOrder = order.Identifier == Tags.UnignoreThis;
+            var orderPrefab = !isUnignoreOrder ? order.Prefab : OrderPrefab.Prefabs[Tags.IgnoreThis];
             ActiveOrder existingOrder = ActiveOrders.Find(o =>
                     o.Order.Prefab == orderPrefab && MatchesTarget(o.Order.TargetEntity, order.TargetEntity) &&
                     (o.Order.TargetType != Order.OrderTargetType.WallSection || o.Order.WallSectionIndex == order.WallSectionIndex));
@@ -95,6 +93,23 @@ namespace Barotrauma
             }
             else if (!isUnignoreOrder)
             {
+                if (order.IsDeconstructOrder)
+                {
+                    if (order.TargetEntity is Item item)
+                    {
+                        if (order.Identifier == Tags.DeconstructThis)
+                        {
+                            Item.DeconstructItems.Add(item);
+#if CLIENT
+                            HintManager.OnItemMarkedForDeconstruction(order.OrderGiver);
+#endif
+                        }
+                        else
+                        {
+                            Item.DeconstructItems.Remove(item);
+                        }
+                    }
+                }
                 ActiveOrders.Add(new ActiveOrder(order, fadeOutTime));
 #if CLIENT
                 HintManager.OnActiveOrderAdded(order);
@@ -198,6 +213,11 @@ namespace Barotrauma
             }            
         }
 
+        public bool IsFired(Character character)
+        {
+            return !GetCharacterInfos().Contains(character.Info);
+        }
+
         /// <summary>
         /// Remove the character from the crew (and crew menus).
         /// </summary>
@@ -235,6 +255,11 @@ namespace Barotrauma
             }
 
             characterInfos.Add(characterInfo);
+        }
+
+        public void ClearCharacterInfos()
+        {
+            characterInfos.Clear();
         }
 
         public void InitRound()

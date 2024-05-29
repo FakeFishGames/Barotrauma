@@ -209,7 +209,7 @@ namespace Barotrauma
                         PropertyInfo.SetValue(parentObject, XMLExtensions.ParseStringArray(value));
                         break;
                     case "identifierarray":
-                        PropertyInfo.SetValue(parentObject, XMLExtensions.ParseStringArray(value).ToIdentifiers().ToArray());
+                        PropertyInfo.SetValue(parentObject, XMLExtensions.ParseIdentifierArray(value));
                         break;
                 }
             }
@@ -218,8 +218,6 @@ namespace Barotrauma
                 DebugConsole.ThrowError($"Failed to set the value of the property \"{Name}\" of \"{parentObject}\" to {value}", e);
                 return false;
             }
-
-
             return true;
         }
 
@@ -295,7 +293,7 @@ namespace Barotrauma
                                 PropertyInfo.SetValue(parentObject, XMLExtensions.ParseStringArray((string)value));
                                 return true;
                             case "identifierarray":
-                                PropertyInfo.SetValue(parentObject, XMLExtensions.ParseStringArray((string)value).ToIdentifiers().ToArray());
+                                PropertyInfo.SetValue(parentObject, XMLExtensions.ParseIdentifierArray((string)value));
                                 return true;
                             default:
                                 DebugConsole.ThrowError($"Failed to set the value of the property \"{Name}\" of \"{parentObject}\" to {value}");
@@ -1089,7 +1087,7 @@ namespace Barotrauma
                         {
                             case "requireditem":
                             case "requireditems":
-                                itemComponent.requiredItems.Clear();
+                                itemComponent.RequiredItems.Clear();
                                 itemComponent.DisabledRequiredItems.Clear();
 
                                 itemComponent.SetRequiredItems(element, allowEmpty: true);

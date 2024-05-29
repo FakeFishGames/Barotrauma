@@ -1,31 +1,33 @@
 using Microsoft.Xna.Framework;
 using System.Collections.Generic;
 using System.Linq;
-using System.Xml.Linq;
 
 namespace Barotrauma
 {
+    /// <summary>
+    /// Makes an NPC switch to a combat state (with options for different kinds of behaviors, such as offensive, arresting or retreating).
+    /// </summary>
     class CombatAction : EventAction
     {
-        [Serialize(AIObjectiveCombat.CombatMode.Offensive, IsPropertySaveable.Yes)]
+        [Serialize(AIObjectiveCombat.CombatMode.Offensive, IsPropertySaveable.Yes, description: $"What kind of combat mode should the NPC switch to (Defensive, Offensive, Arrest, Retreat, None)?")]
         public AIObjectiveCombat.CombatMode CombatMode { get; set; }
 
-        [Serialize(false, IsPropertySaveable.Yes, description: "Did this NPC start the fight (as an aggressor)?")]
+        [Serialize(false, IsPropertySaveable.Yes, description: "Did this NPC start the fight (as an aggressor)? Attacking instigators doesn't reduce reputation or trigger outpost security.")]
         public bool IsInstigator { get; set; }
 
-        [Serialize(AIObjectiveCombat.CombatMode.None, IsPropertySaveable.Yes)]
+        [Serialize(AIObjectiveCombat.CombatMode.None, IsPropertySaveable.Yes, description: "How do guards react to this character attacking others?")]
         public AIObjectiveCombat.CombatMode GuardReaction { get; set; }
 
-        [Serialize(AIObjectiveCombat.CombatMode.None, IsPropertySaveable.Yes)]
+        [Serialize(AIObjectiveCombat.CombatMode.None, IsPropertySaveable.Yes, description: "How do other NPCs react to this character attacking others?")]
         public AIObjectiveCombat.CombatMode WitnessReaction { get; set; }
 
-        [Serialize("", IsPropertySaveable.Yes)]
+        [Serialize("", IsPropertySaveable.Yes, description: "The tag of the NPC to switch to combat mode.")]
         public Identifier NPCTag { get; set; }
 
-        [Serialize("", IsPropertySaveable.Yes)]
+        [Serialize("", IsPropertySaveable.Yes, description: "Tag of the character the NPC should attack.")]
         public Identifier EnemyTag { get; set; }
 
-        [Serialize(120.0f, IsPropertySaveable.Yes)]
+        [Serialize(120.0f, IsPropertySaveable.Yes, description: "How long it takes for the NPC to \"cool down\" (stop attacking).")]
         public float CoolDown { get; set; }
 
         private bool isFinished = false;

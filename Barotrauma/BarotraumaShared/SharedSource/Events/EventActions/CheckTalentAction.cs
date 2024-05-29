@@ -2,12 +2,15 @@
 
 namespace Barotrauma
 {
+    /// <summary>
+    /// Check whether a specific character has a specific talent.
+    /// </summary>
     internal sealed class CheckTalentAction : BinaryOptionAction
     {
-        [Serialize("", IsPropertySaveable.Yes)]
+        [Serialize("", IsPropertySaveable.Yes, description: "Identifier of the talent to check for.")]
         public Identifier TalentIdentifier { get; set; }
 
-        [Serialize("", IsPropertySaveable.Yes)]
+        [Serialize("", IsPropertySaveable.Yes, description: "Tag of the character to check.")]
         public Identifier TargetTag { get; set; }
 
         public CheckTalentAction(ScriptedEvent parentEvent, ContentXElement element) : base(parentEvent, element) { }

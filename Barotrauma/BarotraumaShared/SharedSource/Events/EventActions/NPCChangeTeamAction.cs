@@ -4,20 +4,21 @@ using System.Linq;
 
 namespace Barotrauma
 {
+    /// <summary>
+    /// Changes the team of an NPC. Most common use cases are adding a character to the crew, or turning an NPC hostile to the crew by changing their team to a hostile one.
+    /// </summary>
     class NPCChangeTeamAction : EventAction
     {
-        [Serialize("", IsPropertySaveable.Yes)]
+        [Serialize("", IsPropertySaveable.Yes, description: "Tag of the NPC(s) whose team to change.")]
         public Identifier NPCTag { get; set; }
 
-        [Serialize(CharacterTeamType.None, IsPropertySaveable.Yes)]
+        [Serialize(CharacterTeamType.None, IsPropertySaveable.Yes, description: "The team to move the NPC to. None = unspecified, Team1 = player crew, Team2 = the team opposing Team1 (= hostile to player crew), FriendlyNPC = friendly to all other teams.")]
         public CharacterTeamType TeamID { get; set; }
 
-        [Serialize(false, IsPropertySaveable.Yes)]
+        [Serialize(false, IsPropertySaveable.Yes, description: "Should the NPC be added to the player crew?")]
         public bool AddToCrew { get; set; }
 
-
-
-        [Serialize(false, IsPropertySaveable.Yes)]
+        [Serialize(false, IsPropertySaveable.Yes, description: "Should the NPC be removed from the player crew?")]
         public bool RemoveFromCrew { get; set; }
 
         private bool isFinished = false;

@@ -307,6 +307,12 @@ namespace Barotrauma
                 // Adjust by current reputation
                 price *= GetReputationModifier(true);
 
+                // Adjust by campaign difficulty settings
+                if (GameMain.GameSession?.Campaign is CampaignMode campaign)
+                {
+                    price *= campaign.Settings.ShopPriceMultiplier;
+                }
+
                 var characters = GameSession.GetSessionCrewCharacters(CharacterType.Both);
                 if (characters.Any())
                 {
@@ -768,27 +774,22 @@ namespace Barotrauma
             else
             {
                 DebugConsole.Log($"Location {DisplayName.Value} changed it's type from {Type} to {newType}");
-                DisplayName = 
-                    Type.NameFormats == null || !Type.NameFormats.Any() ? 
-                    TextManager.Get(nameIdentifier) : 
+                DisplayName =
+                    Type.NameFormats == null || !Type.NameFormats.Any() ?
+                    TextManager.Get(nameIdentifier) :
                     Type.NameFormats[nameFormatIndex % Type.NameFormats.Count].Replace("[name]", TextManager.Get(nameIdentifier).Value);
             }
 
+            TryAssignFactionBasedOnLocationType(campaign);
             if (Type.HasOutpost && Type.OutpostTeam == CharacterTeamType.FriendlyNPC)
             {
-                if (Faction == null)
-                {
-                    Faction = campaign.GetRandomFaction(Rand.RandSync.Unsynced);
-                }
-                if (SecondaryFaction == null)
-                {
-                    SecondaryFaction = campaign.GetRandomSecondaryFaction(Rand.RandSync.Unsynced);
-                }
+                if (Type.Faction == Identifier.Empty) { Faction ??= campaign.GetRandomFaction(Rand.RandSync.Unsynced); }
+                if (Type.SecondaryFaction == Identifier.Empty) { SecondaryFaction ??= campaign.GetRandomSecondaryFaction(Rand.RandSync.Unsynced); }
             }
             else
             {
-                Faction = null;
-                SecondaryFaction = null;
+                if (Type.Faction == Identifier.Empty) { Faction = null; }
+                if (Type.SecondaryFaction == Identifier.Empty) { SecondaryFaction = null; }
             }
 
             UnlockInitialMissions(Rand.RandSync.Unsynced);
@@ -796,6 +797,30 @@ namespace Barotrauma
             if (createStores)
             {
                 CreateStores(force: true);
+            }
+        }
+
+        public void TryAssignFactionBasedOnLocationType(CampaignMode campaign)
+        {
+            if (campaign == null) { return; }
+            if (Type.Faction != Identifier.Empty)
+            {
+                Faction = Type.Faction == "None" ? null : TryFindFaction(Type.Faction);
+            }
+            if (Type.SecondaryFaction != Identifier.Empty)
+            {
+                SecondaryFaction = Type.SecondaryFaction == "None" ? null : TryFindFaction(Type.SecondaryFaction);
+            }
+
+            Faction TryFindFaction(Identifier identifier)
+            {
+                var faction = campaign.GetFaction(identifier);
+                if (faction == null)
+                {
+                    DebugConsole.ThrowError($"Error in location type \"{Type.Identifier}\": failed to find a faction with the identifier \"{identifier}\".",
+                        contentPackage: Type.ContentPackage);
+                }
+                return faction;
             }
         }
 
@@ -1127,6 +1152,7 @@ namespace Barotrauma
             nameIdentifier = type.GetRandomNameId(rand, existingLocations);
             if (nameIdentifier.IsEmpty)
             {
+                //backwards compatibility
                 rawName = type.GetRandomRawName(rand, existingLocations);
                 if (rawName.IsNullOrEmpty())
                 {
@@ -1134,7 +1160,15 @@ namespace Barotrauma
                     rawName = "none";
                 }
                 nameIdentifier = rawName.ToIdentifier();
-                DisplayName = rawName;
+                if (type.NameFormats == null || !type.NameFormats.Any())
+                {
+                    DisplayName = rawName;
+                }
+                else
+                {
+                    nameFormatIndex = rand.Next() % type.NameFormats.Count;
+                    DisplayName = type.NameFormats[nameFormatIndex].Replace("[name]", rawName);
+                }
             }
             else
             {

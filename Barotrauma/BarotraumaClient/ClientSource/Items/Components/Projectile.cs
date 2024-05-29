@@ -148,10 +148,28 @@ namespace Barotrauma.Items.Components
             Vector2 particlePos = item.WorldPosition;
             float rotation = -item.body.Rotation;
             if (item.body.Dir < 0.0f) { rotation += MathHelper.Pi; }
+
+            //if the position is in a sub's local coordinates, convert to world coordinates
+            particlePos = ConvertToWorldCoordinates(particlePos);
+            //if the start location is in a sub's local coordinates, convert to world coordinates
+            startLocation = ConvertToWorldCoordinates(startLocation);
+            //same for end location
+            endLocation = ConvertToWorldCoordinates(endLocation);
+
             Tuple<Vector2, Vector2> tracerPoints = new Tuple<Vector2, Vector2>(startLocation, endLocation);
             foreach (ParticleEmitter emitter in particleEmitters)
             {
                 emitter.Emit(1.0f, particlePos, hullGuess: null, angle: rotation, particleRotation: rotation, colorMultiplier: emitter.Prefab.Properties.ColorMultiplier, tracerPoints: tracerPoints);
+            }
+
+            static Vector2 ConvertToWorldCoordinates(Vector2 position)
+            {
+                Submarine containing = Submarine.FindContainingInLocalCoordinates(position);
+                if (containing != null)
+                {
+                    position += containing.Position;
+                }
+                return position;
             }
         }
 

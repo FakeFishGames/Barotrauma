@@ -279,6 +279,20 @@ namespace Barotrauma
         }
 
         /// <summary>
+        /// Used for purchasing upgrades from outside the upgrade store.
+        /// Doesn't deduct the credit, adds the upgrade to the pending list and performs a level sanity check.
+        /// </summary>
+        public void AddUpgradeExternally(UpgradePrefab prefab, UpgradeCategory category, int level)
+        {
+            int maxLevel = prefab.GetMaxLevelForCurrentSub();
+            int currentLevel = GetUpgradeLevel(prefab, category);
+            if (currentLevel + 1 > maxLevel) { return; }
+
+            PendingUpgrades.Add(new PurchasedUpgrade(prefab, category, level));
+            OnUpgradesChanged?.Invoke(this);
+        }
+
+        /// <summary>
         /// Purchases an item swap and handles logic for deducting the credit.
         /// </summary>
         public void PurchaseItemSwap(Item itemToRemove, ItemPrefab itemToInstall, bool force = false, Client? client = null)

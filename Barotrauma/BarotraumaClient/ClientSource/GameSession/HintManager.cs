@@ -185,6 +185,19 @@ namespace Barotrauma
             }
         }
 
+        public static void OnItemMarkedForRelocation()
+        {
+            DisplayHint($"onitemmarkedforrelocation".ToIdentifier());            
+        }
+
+        public static void OnItemMarkedForDeconstruction(Character character)
+        {
+            if (character == Character.Controlled)
+            {
+                DisplayHint($"onitemmarkedfordeconstruction".ToIdentifier());
+            }
+        }
+
         private static void CheckIsInteracting()
         {
             if (!CanDisplayHints()) { return; }
@@ -582,6 +595,24 @@ namespace Barotrauma
             {
                 DisplayHint("onballastflorainfected".ToIdentifier());
             }
+            if (order.Identifier == "deconstructitems" &&
+                Item.DeconstructItems.None())
+            {
+                DisplayHint("ondeconstructorder".ToIdentifier());
+            }
+        }
+
+        public static void OnSetOrder(Character character, Order order)
+        {
+            if (!CanDisplayHints()) { return; }
+            if (character == null || order == null) { return; }
+
+            if (order.OrderGiver == Character.Controlled &&
+                order.Identifier == "deconstructitems" &&
+                Item.DeconstructItems.None())
+            {
+                DisplayHint("ondeconstructorder".ToIdentifier());
+            }
         }
 
         private static void CheckIfDivingGearOutOfOxygen()
@@ -719,7 +750,7 @@ namespace Barotrauma
 
             HintsIgnoredThisRound.Add(hintIdentifier);
 
-            ActiveHintMessageBox = new GUIMessageBox(hintIdentifier, text, icon);
+            ActiveHintMessageBox = new GUIMessageBox(hintIdentifier, TextManager.ParseInputTypes(text), icon);
             if (iconColor.HasValue) { ActiveHintMessageBox.IconColor = iconColor.Value; }
             OnUpdate = onUpdate;
 

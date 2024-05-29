@@ -15,6 +15,9 @@ namespace Barotrauma
         private readonly Dictionary<Item, int> inventorySlotIndices = new Dictionary<Item, int>();
         private readonly Dictionary<Item, byte> parentItemContainerIndices = new Dictionary<Item, byte>();
 
+        /// <summary>
+        /// Percentage of items (0.0 - 1.0) needed to be delivered to complete the mission.
+        /// </summary>
         private float requiredDeliveryAmount;
 
         private readonly List<(ContentXElement element, ItemContainer container)> itemsToSpawn = new List<(ContentXElement element, ItemContainer container)>();
@@ -86,7 +89,7 @@ namespace Barotrauma
                     bool isPriorMission = true;
                     foreach (Mission mission in GameMain.GameSession.StartLocation.SelectedMissions)
                     {
-                        if (!(mission is CargoMission otherMission)) { continue; }
+                        if (mission is not CargoMission otherMission) { continue; }
                         if (mission == this) { isPriorMission = false; }
                         previouslySelectedMissions.Add(otherMission);
                         if (!isPriorMission) { continue; }
@@ -99,7 +102,8 @@ namespace Barotrauma
                     {
                         int maxCount = subElement.GetAttributeInt("maxcount", 10);
                         if (itemsToSpawn.Count(it => it.element == subElement) >= maxCount) { continue; }
-                        ItemPrefab itemPrefab = FindItemPrefab(subElement);
+                        // For logging purposes
+                        FindItemPrefab(subElement);
                         while (itemsToSpawn.Count < maxItemCount)
                         {
                             itemsToSpawn.Add((subElement, null));
@@ -121,7 +125,7 @@ namespace Barotrauma
                     bool isPriorMission = true;
                     foreach (Mission mission in GameMain.GameSession.StartLocation.SelectedMissions)
                     {
-                        if (!(mission is CargoMission otherMission)) { continue; }
+                        if (mission is not CargoMission otherMission) { continue; }
                         if (mission == this) { isPriorMission = false; }
                         previouslySelectedMissions.Add(otherMission);                    
                         if (!isPriorMission) { continue; }
@@ -161,27 +165,53 @@ namespace Barotrauma
                 itemsToSpawn.Add((itemConfig.Elements().First(), null));
             }
 
+            // Calculate the current total reward, since it might differ from the
+            // prefab total reward depending on the current actual crate count.
             calculatedReward = 0;
+            bool crateValuesUniform = true;
+            int? prevCrateReward = null;
             foreach (var (element, container) in itemsToSpawn)
             {
-                int price = element.GetAttributeInt("reward", Prefab.Reward / itemsToSpawn.Count);
-                if (rewardPerCrate.HasValue)
+                int currentCrateReward = element.GetAttributeInt("reward", 0);
+                calculatedReward += currentCrateReward;
+
+                // Apparently crates can have varying values, so we need to check
+                // here if that is the case, stopping checks on the first discrepancy
+                if (crateValuesUniform)
                 {
-                    if (price != rewardPerCrate.Value) { rewardPerCrate = -1; }
+                    if (prevCrateReward.HasValue)
+                    {
+                        if (prevCrateReward.Value != currentCrateReward)
+                        {
+                            crateValuesUniform = false;
+                        }
+                    }
+                    prevCrateReward = currentCrateReward;
                 }
-                else
-                {
-                    rewardPerCrate = price;
-                }
-                calculatedReward += price;
             }
-            if (rewardPerCrate.HasValue && rewardPerCrate < 0) { rewardPerCrate = null; }
+
+            if (crateValuesUniform)
+            {
+                // If rewardPerCrate is set, it will be displayed in the client UI as eg. "123 mk x 5"
+                rewardPerCrate = calculatedReward / itemsToSpawn.Count;
+            }
+            else
+            {
+                // If rewardPerCrate is null, the client UI will display just the total reward
+                rewardPerCrate = null;
+            }
+
+            // Apply the mission reward campaign setting multiplier to the per-crate price, too
+            if (GameMain.GameSession?.Campaign is CampaignMode campaign && rewardPerCrate is int confirmedRewardPerCrate)
+            {
+                rewardPerCrate = (int)Math.Round(confirmedRewardPerCrate * campaign.Settings.MissionRewardMultiplier);
+            }
 
             string rewardText = $"‖color:gui.orange‖{string.Format(System.Globalization.CultureInfo.InvariantCulture, "{0:N0}", GetReward(currentSub))}‖end‖";
             if (descriptionWithoutReward != null) { description = descriptionWithoutReward.Replace("[reward]", rewardText); }
         }
 
-        public override int GetReward(Submarine sub)
+        public override int GetBaseReward(Submarine sub)
         {
             // If we are not at the location of the mission, skip the calculation of the reward
             if (GameMain.GameSession?.StartLocation != Locations[0])
@@ -272,7 +302,7 @@ namespace Barotrauma
             item.FindHull();
             items.Add(item);
 
-            if (parent != null && parent.GetComponent<ItemContainer>() != null) 
+            if (parent?.GetComponent<ItemContainer>() != null) 
             {
                 parentInventoryIDs.Add(item, parent.ID);
                 parentItemContainerIndices.Add(item, (byte)parent.GetComponentIndex(parent.GetComponent<ItemContainer>()));

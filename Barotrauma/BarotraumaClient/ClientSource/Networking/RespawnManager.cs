@@ -51,20 +51,38 @@ namespace Barotrauma.Networking
             {
                 if (Character.Controlled != null || (GameMain.GameSession is not { IsRunning: true })) { return; }
 
-                LocalizedString text = TextManager.Get("respawnquestionprompt");
+                LocalizedString text;
+                GUIMessageBox respawnPrompt;
+                if (SkillLossPercentageOnImmediateRespawn > 0)
+                {
+                    // Respawn asap with extra skill loss?
+                    text = TextManager.GetWithVariable("respawnquestionprompt", "[percentage]", ((int)Math.Round(SkillLossPercentageOnImmediateRespawn)).ToString());
+                    respawnPrompt = new GUIMessageBox(
+                        TextManager.Get("tutorial.tryagainheader"), text,
+                        new LocalizedString[] { TextManager.Get("respawnquestionpromptrespawn"), TextManager.Get("respawnquestionpromptwait") })
+                    {
+                        UserData = "respawnquestionprompt"
+                    };
+                }
+                else
+                {
+                    // Respawn asap?
+                    text = TextManager.Get("respawnquestionpromptnoloss");
+                    respawnPrompt = new GUIMessageBox(
+                        TextManager.Get("tutorial.tryagainheader"), text,
+                        new LocalizedString[] { TextManager.Get("respawnquestionpromptrespawnnoloss"), TextManager.Get("respawnquestionpromptwait") })
+                    {
+                        UserData = "respawnquestionprompt"
+                    };
+                }
                 if (SkillLossPercentageOnDeath > 0)
                 {
+                    // You have died... etc added BEFORE the above text
                     text =
                         TextManager.GetWithVariable("respawnskillpenalty", "[percentage]", ((int)SkillLossPercentageOnDeath).ToString()) + 
                         "\n\n" + text;
                 };
 
-                var respawnPrompt = new GUIMessageBox(
-                    TextManager.Get("tutorial.tryagainheader"), text,
-                    new LocalizedString[] { TextManager.Get("respawnquestionpromptrespawn"), TextManager.Get("respawnquestionpromptwait") })
-                {
-                    UserData = "respawnquestionprompt"
-                };
                 respawnPrompt.Buttons[0].OnClicked += (btn, userdata) =>
                 {
                     GameMain.Client?.SendRespawnPromptResponse(waitForNextRoundRespawn: false);

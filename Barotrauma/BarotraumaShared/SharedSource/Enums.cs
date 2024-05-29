@@ -152,6 +152,7 @@ namespace Barotrauma
         OnAllyGainMissionExperience,
         OnGainMissionExperience,
         OnGainMissionMoney,
+        OnCrewGainMissionReputation,
         OnLocationDiscovered,
         OnItemDeconstructed,
         OnItemDeconstructedByAlly,
@@ -329,6 +330,11 @@ namespace Barotrauma
         /// Increases the repair speed of the character when repairing mechanical items by a percentage.
         /// </summary>
         MechanicalRepairSpeed,
+        
+        /// <summary>
+        /// Increases the repair speed of the character when repairing electrical items by a percentage.
+        /// </summary>
+        ElectricalRepairSpeed,
 
         /// <summary>
         /// Increase deconstruction speed of deconstructor operated by the character by a percentage.
@@ -572,7 +578,12 @@ namespace Barotrauma
         /// <summary>
         /// Modifies how far the character can be seen from (can be used to make the character easier or more difficult for monsters to see)
         /// </summary>
-        SightRangeMultiplier
+        SightRangeMultiplier,
+        
+        /// <summary>
+        /// Reduces the dual wielding penalty by a percentage.
+        /// </summary>
+        DualWieldingPenaltyReduction
     }
 
     internal enum ItemTalentStats
@@ -672,18 +683,26 @@ namespace Barotrauma
         Both = Bot | Player
     }
 
-    public enum StartingBalanceAmount
+    public enum StartingBalanceAmountOption
     {
         Low,
         Medium,
         High,
     }
 
-    public enum GameDifficulty
+    public enum PatdownProbabilityOption
     {
-        Easy,
+        Off,
+        Low,
         Medium,
-        Hard,
+        High,
+    }
+
+    public enum WorldHostilityOption
+    {
+        Low,
+        Medium,
+        High,
         Hellish
     }
 

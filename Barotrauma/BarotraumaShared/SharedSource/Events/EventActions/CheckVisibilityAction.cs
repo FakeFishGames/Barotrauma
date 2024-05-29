@@ -4,6 +4,9 @@ using System.Linq;
 
 namespace Barotrauma
 {
+    /// <summary>
+    /// Check whether a specific entity is visible from the perspective of another entity.
+    /// </summary>
     class CheckVisibilityAction : BinaryOptionAction
     {
         [Serialize("", IsPropertySaveable.Yes, description: "Tag of the entity to do the visibility check from.")]

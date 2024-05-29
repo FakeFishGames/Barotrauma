@@ -67,10 +67,11 @@ namespace Barotrauma
 
             var buttonContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.07f), layout.RectTransform) { RelativeOffset = new Vector2(0.0f, 0.1f) }, isHorizontal: true)
             {
+                Stretch = true,
                 RelativeSpacing = 0.02f
             };
 
-            var campaignContainer = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.9f), layout.RectTransform, Anchor.BottomLeft), style: "InnerFrame")
+            var campaignContainer = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.9f), layout.RectTransform, Anchor.BottomLeft), style: "GUIFrameListBox")
             {
                 CanBeFocused = false
             };
@@ -95,6 +96,7 @@ namespace Barotrauma
                 loadCampaignButton.Selected = false;
                 newCampaignContainer.Visible = true;
                 loadCampaignContainer.Visible = false;
+                GameMain.NetLobbyScreen?.RefreshStartButtonVisibility();
                 return true;
             };
             loadCampaignButton.OnClicked = (btn, obj) =>
@@ -103,6 +105,7 @@ namespace Barotrauma
                 loadCampaignButton.Selected = true;
                 newCampaignContainer.Visible = false;
                 loadCampaignContainer.Visible = true;
+                GameMain.NetLobbyScreen?.RefreshStartButtonVisibility();
                 return true;
             };
             loadCampaignContainer.Visible = false;
@@ -297,7 +300,7 @@ namespace Barotrauma
             Level prevLevel = Level.Loaded;
 
             bool success = CrewManager.GetCharacters().Any(c => !c.IsDead);
-            crewDead = false;
+            CrewDead = false;
 
             var continueButton = GameMain.GameSession.RoundSummary?.ContinueButton;
             if (continueButton != null)
@@ -480,7 +483,6 @@ namespace Barotrauma
             GameMain.CampaignEndScreen.OnFinished = () =>
             {
                 GameMain.NetLobbyScreen.Select();
-                if (GameMain.NetLobbyScreen.ContinueCampaignButton != null) { GameMain.NetLobbyScreen.ContinueCampaignButton.Enabled = false; }
                 if (GameMain.NetLobbyScreen.QuitCampaignButton != null) { GameMain.NetLobbyScreen.QuitCampaignButton.Enabled = false; }
             };
         }
@@ -934,7 +936,7 @@ namespace Barotrauma
             {
                 int renamedIdentifier = msg.ReadInt32();
                 string newName = msg.ReadString();
-                CharacterInfo renamedCharacter = CrewManager.CharacterInfos.FirstOrDefault(info => info.GetIdentifierUsingOriginalName() == renamedIdentifier);
+                CharacterInfo renamedCharacter = CrewManager.GetCharacterInfos().FirstOrDefault(info => info.GetIdentifierUsingOriginalName() == renamedIdentifier);
                 if (renamedCharacter != null) { CrewManager.RenameCharacter(renamedCharacter, newName); }
             }
 
@@ -942,7 +944,7 @@ namespace Barotrauma
             if (fireCharacter)
             {
                 int firedIdentifier = msg.ReadInt32();
-                CharacterInfo firedCharacter = CrewManager.CharacterInfos.FirstOrDefault(info => info.GetIdentifier() == firedIdentifier);
+                CharacterInfo firedCharacter = CrewManager.GetCharacterInfos().FirstOrDefault(info => info.GetIdentifier() == firedIdentifier);
                 // this one might and is allowed to be null since the character is already fired on the original sender's game
                 if (firedCharacter != null) { CrewManager.FireCharacter(firedCharacter); }
             }
@@ -952,7 +954,7 @@ namespace Barotrauma
                 !NetIdUtils.IdMoreRecent(pendingSaveID, LastSaveID))
             {
                 CampaignUI.CrewManagement.SetHireables(map.CurrentLocation, availableHires);
-                if (hiredCharacters.Any()) { CampaignUI.CrewManagement.ValidateHires(hiredCharacters); }
+                if (hiredCharacters.Any()) { CampaignUI.CrewManagement.ValidateHires(hiredCharacters, takeMoney: false); }
                 CampaignUI.CrewManagement.SetPendingHires(pendingHires, map.CurrentLocation);
                 if (renameCrewMember || fireCharacter) { CampaignUI.CrewManagement.UpdateCrew(); }
             }

@@ -165,6 +165,8 @@ namespace Barotrauma.Items.Components
 
         public bool IsHorizontal { get; private set; }
 
+        public bool IsConvexHullHorizontal => autoOrientGap && linkedGap != null ? !linkedGap.IsHorizontal : IsHorizontal;
+
         [Serialize("0.0,0.0,0.0,0.0", IsPropertySaveable.No, description: "Position and size of the window on the door. The upper left corner is 0,0. Set the width and height to 0 if you don't want the door to have a window.")]
         public Rectangle Window { get; set; }
 
@@ -321,7 +323,7 @@ namespace Barotrauma.Items.Components
         public override bool Pick(Character picker)
         {
             if (item.Condition < RepairThreshold && item.GetComponent<Repairable>().HasRequiredItems(picker, addMessage: false)) { return true; }
-            if (requiredItems.None()) { return false; }
+            if (RequiredItems.None()) { return false; }
             if (HasAccess(picker) && HasRequiredItems(picker, false)) { return false; }
             return base.Pick(picker);
         }
@@ -559,6 +561,7 @@ namespace Barotrauma.Items.Components
 
         public void RefreshLinkedGap()
         {
+            LinkedGap.Layer = item.Layer;
             LinkedGap.ConnectedDoor = this;
             if (autoOrientGap)
             {
@@ -572,10 +575,10 @@ namespace Barotrauma.Items.Components
         {
             RefreshLinkedGap();
 #if CLIENT
-            convexHull = new ConvexHull(doorRect, IsHorizontal, item);
+            convexHull = new ConvexHull(doorRect, IsConvexHullHorizontal, item);
             if (Window != Rectangle.Empty)
             {
-                convexHull2 = new ConvexHull(doorRect, IsHorizontal, item);
+                convexHull2 = new ConvexHull(doorRect, IsConvexHullHorizontal, item);
             }
             UpdateConvexHulls();
 #endif

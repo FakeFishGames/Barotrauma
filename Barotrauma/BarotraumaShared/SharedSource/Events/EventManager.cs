@@ -144,7 +144,7 @@ namespace Barotrauma
         public bool Enabled = true;
 
         private MTRandom random;
-        private int randomSeed;
+        public int RandomSeed { get; private set; }
 
         public void StartRound(Level level)
         {
@@ -171,13 +171,13 @@ namespace Barotrauma
            
             if (level != null)
             {
-                randomSeed = ToolBox.StringToInt(level.Seed);
+                RandomSeed = ToolBox.StringToInt(level.Seed);
                 foreach (var previousEvent in level.LevelData.EventHistory)
                 {
-                    randomSeed ^= ToolBox.IdentifierToInt(previousEvent);
+                    RandomSeed ^= ToolBox.IdentifierToInt(previousEvent);
                 }
             }
-            random = new MTRandom(randomSeed);
+            random = new MTRandom(RandomSeed);
 
             bool playingCampaign = GameMain.GameSession?.GameMode is CampaignMode;
             EventSet initialEventSet = SelectRandomEvents(
@@ -214,7 +214,7 @@ namespace Barotrauma
                         var unlockPathEventPrefab = EventPrefab.GetUnlockPathEvent(level.LevelData.Biome.Identifier, level.StartLocation.Faction);
                         if (unlockPathEventPrefab != null)
                         {
-                            var newEvent = unlockPathEventPrefab.CreateInstance();
+                            var newEvent = unlockPathEventPrefab.CreateInstance(RandomSeed);
                             activeEvents.Add(newEvent);
                         }
                         else
@@ -250,7 +250,7 @@ namespace Barotrauma
                     DebugConsole.ThrowError($"Error in EventManager.StartRound - could not find an event with the identifier {id}.");
                     continue;
                 }
-                var ev = eventPrefab.CreateInstance();
+                var ev = eventPrefab.CreateInstance(RandomSeed);
                 if (ev != null)
                 {
                     QueuedEvents.Enqueue(ev);
@@ -272,6 +272,7 @@ namespace Barotrauma
             CumulativeMonsterStrengthRuins = 0;
             CumulativeMonsterStrengthWrecks = 0;
             CumulativeMonsterStrengthCaves = 0;
+            distanceTraveled = 0;
         }
 
         public void ActivateEvent(Event newEvent)
@@ -543,9 +544,8 @@ namespace Barotrauma
                             if (eventPrefabs != null && random.NextDouble() <= probability)
                             {
                                 var eventPrefab = ToolBox.SelectWeightedRandom(eventPrefabs.Where(e => IsSuitable(e, level)), e => e.Commonness, random);
-                                var newEvent = eventPrefab.CreateInstance();
+                                var newEvent = eventPrefab.CreateInstance(RandomSeed);
                                 if (newEvent == null) { continue; }
-                                newEvent.RandomSeed = randomSeed;
                                 if (i < spawnPosFilter.Count) { newEvent.SpawnPosFilter = spawnPosFilter[i]; }
                                 DebugConsole.NewMessage($"Initialized event {newEvent}", debugOnly: true);
                                 if (!selectedEvents.ContainsKey(eventSet))
@@ -588,8 +588,9 @@ namespace Barotrauma
                         if (random.NextDouble() > probability) { continue; }
 
                         var eventPrefab = ToolBox.SelectWeightedRandom(eventPrefabs.Where(e => IsSuitable(e, level)), e => e.Commonness, random);
-                        var newEvent = eventPrefab.CreateInstance();
+                        var newEvent = eventPrefab.CreateInstance(RandomSeed);
                         if (newEvent == null) { continue; }
+                        if (i < spawnPosFilter.Count) { newEvent.SpawnPosFilter = spawnPosFilter[i]; }
                         if (!selectedEvents.ContainsKey(eventSet))
                         {
                             selectedEvents.Add(eventSet, new List<Event>());
@@ -726,16 +727,12 @@ namespace Barotrauma
 
         private bool CanStartEventSet(EventSet eventSet)
         {
-            ISpatialEntity refEntity = GetRefEntity();
-            float distFromStart = (float)Math.Sqrt(MathUtils.LineSegmentToPointDistanceSquared(level.StartExitPosition.ToPoint(), level.StartPosition.ToPoint(), refEntity.WorldPosition.ToPoint()));
-            float distFromEnd = (float)Math.Sqrt(MathUtils.LineSegmentToPointDistanceSquared(level.EndExitPosition.ToPoint(), level.EndPosition.ToPoint(), refEntity.WorldPosition.ToPoint()));
-
-            //don't create new events if within 50 meters of the start/end of the level
             if (!eventSet.AllowAtStart)
             {
-                if (distanceTraveled <= 0.0f ||
-                    distFromStart * Physics.DisplayToRealWorldRatio < 50.0f ||
-                    distFromEnd * Physics.DisplayToRealWorldRatio < 50.0f)
+                ISpatialEntity refEntity = GetRefEntity();
+                float distFromStart = (float)Math.Sqrt(MathUtils.LineSegmentToPointDistanceSquared(level.StartExitPosition.ToPoint(), level.StartPosition.ToPoint(), refEntity.WorldPosition.ToPoint()));
+                float distFromEnd = (float)Math.Sqrt(MathUtils.LineSegmentToPointDistanceSquared(level.EndExitPosition.ToPoint(), level.EndPosition.ToPoint(), refEntity.WorldPosition.ToPoint()));
+                if (distFromStart * Physics.DisplayToRealWorldRatio < 50.0f || distFromEnd * Physics.DisplayToRealWorldRatio < 50.0f)
                 {
                     return false;
                 }
@@ -767,7 +764,7 @@ namespace Barotrauma
         
         public void Update(float deltaTime)
         {
-            if (!Enabled || level == null) { return; }
+            if (!Enabled) { return; }
             if (GameMain.GameSession.Campaign?.DisableEvents ?? false) { return; }
 
             if (!eventsInitialized)
@@ -871,6 +868,10 @@ namespace Barotrauma
                                 {
                                     pendingEventSets.Add(eventSet);
                                     CreateEvents(eventSet);
+                                    foreach (Event newEvent in selectedEvents[eventSet])
+                                    {
+                                        if (!newEvent.Initialized) { newEvent.Init(eventSet); }
+                                    }
                                 };
                             }
                         }

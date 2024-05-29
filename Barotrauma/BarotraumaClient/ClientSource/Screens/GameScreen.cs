@@ -518,6 +518,8 @@ namespace Barotrauma
             }
             GraphicsQuad.Render();
 
+            Character.DrawSpeechBubbles(spriteBatch, cam);
+
             if (fadeToBlackState > 0.0f)
             {
                 spriteBatch.Begin(SpriteSortMode.Deferred);

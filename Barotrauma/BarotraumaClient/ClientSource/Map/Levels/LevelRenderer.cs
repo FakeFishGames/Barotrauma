@@ -362,6 +362,13 @@ namespace Barotrauma
                         GUI.DrawLine(spriteBatch, new Vector2(edge.Point1.X + cell.Translation.X, -(edge.Point1.Y + cell.Translation.Y)),
                             new Vector2(edge.Point2.X + cell.Translation.X, -(edge.Point2.Y + cell.Translation.Y)), edge.NextToCave ? Color.Red : (cell.Body == null ? Color.Cyan * 0.5f : (edge.IsSolid ? Color.White : Color.Gray)),
                             width: edge.NextToCave ? 8 : 1);
+
+                        Vector2 normal = edge.GetNormal(cell);
+                        GUI.DrawLine(spriteBatch, 
+                            (edge.Center + cell.Translation).FlipY(),
+                            (edge.Center + cell.Translation + normal * 32).FlipY(), 
+                            Color.Red * 0.5f,
+                            width: 3);
                     }
 
                     foreach (Vector2 point in cell.BodyVertices)

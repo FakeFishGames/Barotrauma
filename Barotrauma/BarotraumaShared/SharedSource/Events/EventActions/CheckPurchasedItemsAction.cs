@@ -3,6 +3,9 @@ using System.Linq;
 
 namespace Barotrauma;
 
+/// <summary>
+/// Check whether specific kinds of items have been purchased or sold during the round.
+/// </summary>
 class CheckPurchasedItemsAction : BinaryOptionAction
 {
     public enum TransactionType
@@ -11,16 +14,16 @@ class CheckPurchasedItemsAction : BinaryOptionAction
         Sold
     }
 
-    [Serialize(TransactionType.Purchased, IsPropertySaveable.Yes)]
+    [Serialize(TransactionType.Purchased, IsPropertySaveable.Yes, description: "Do the items need to have been purchased or sold?")]
     public TransactionType Type { get; set; }
 
-    [Serialize("", IsPropertySaveable.Yes)]
+    [Serialize("", IsPropertySaveable.Yes, description: "Identifier of the item that must have been purchased or sold.")]
     public Identifier ItemIdentifier { get; set; }
 
-    [Serialize("", IsPropertySaveable.Yes)]
+    [Serialize("", IsPropertySaveable.Yes, description: "Tag of the item that must have been purchased or sold.")]
     public Identifier ItemTag { get; set; }
 
-    [Serialize(1, IsPropertySaveable.Yes)]
+    [Serialize(1, IsPropertySaveable.Yes, description: "Minimum number of matching items that must have been purchased or sold.")]
     public int MinCount { get; set; }
 
     public CheckPurchasedItemsAction(ScriptedEvent parentEvent, ContentXElement element) : base(parentEvent, element)

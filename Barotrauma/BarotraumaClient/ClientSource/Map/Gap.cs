@@ -331,7 +331,6 @@ namespace Barotrauma
         }
         private GUIComponent CreateEditingHUD(bool inGame = false)
         {
-
             editingHUD = new GUIFrame(new RectTransform(new Vector2(0.3f, 0.15f), GUI.Canvas, Anchor.CenterRight) { MinSize = new Point(400, 0) })
             {
                 UserData = this

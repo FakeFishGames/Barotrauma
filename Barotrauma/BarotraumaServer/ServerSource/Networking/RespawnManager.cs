@@ -323,8 +323,8 @@ namespace Barotrauma.Networking
             var clients = GetClientsToRespawn().ToList();
             foreach (Client c in clients)
             {
-                //get rid of the existing character
-                c.Character?.DespawnNow();
+                // Get rid of the existing character
+                if (c.Character is Character character) { character.DespawnNow(); }
 
                 c.WaitForNextRoundRespawn = null;
 
@@ -369,12 +369,9 @@ namespace Barotrauma.Networking
             {
                 divingSuitPrefab = ItemPrefab.Prefabs.FirstOrDefault(it => it.Tags.Any(t => t == "respawnsuitdeep"));
             }
-            if (divingSuitPrefab == null)
-            {
-                divingSuitPrefab = 
+            divingSuitPrefab ??= 
                     ItemPrefab.Prefabs.FirstOrDefault(it => it.Tags.Any(t => t == "respawnsuit")) ??
                     ItemPrefab.Find(null, "divingsuit".ToIdentifier());
-            }
             ItemPrefab oxyPrefab = ItemPrefab.Find(null, "oxygentank".ToIdentifier());
             ItemPrefab scooterPrefab = ItemPrefab.Find(null, "underwaterscooter".ToIdentifier());
             ItemPrefab batteryPrefab = ItemPrefab.Find(null, "batterycell".ToIdentifier());
@@ -387,6 +384,7 @@ namespace Barotrauma.Networking
 
                 characterInfos[i].ClearCurrentOrders();
 
+                CharacterCampaignData characterCampaignData = null;
                 bool forceSpawnInMainSub = false;
                 if (!bot)
                 {
@@ -398,16 +396,16 @@ namespace Barotrauma.Networking
                         clients[i].PendingName = null;
                     }
 
-                    var matchingData = campaign?.GetClientCharacterData(clients[i]);
-                    if (matchingData != null)
+                    characterCampaignData = campaign?.GetClientCharacterData(clients[i]);
+                    if (characterCampaignData != null)
                     {
-                        if (!matchingData.HasSpawned)
+                        if (!characterCampaignData.HasSpawned)
                         {
                             forceSpawnInMainSub = true;
                         }
                         else
                         {
-                            ReduceCharacterSkills(characterInfos[i]);
+                            ReduceCharacterSkillsOnDeath(characterInfos[i]);
                             characterInfos[i].RemoveSavedStatValuesOnDeath();
                             characterInfos[i].CauseOfDeath = null;
                         }
@@ -415,6 +413,7 @@ namespace Barotrauma.Networking
                 }
 
                 var character = Character.Create(characterInfos[i], (forceSpawnInMainSub ? mainSubSpawnPoints[i] : shuttleSpawnPoints[i]).WorldPosition, characterInfos[i].Name, isRemotePlayer: !bot, hasAi: bot);
+                characterCampaignData?.ApplyWalletData(character);
                 character.TeamID = CharacterTeamType.Team1;
                 character.LoadTalents();
 
@@ -505,11 +504,10 @@ namespace Barotrauma.Networking
                 }
 
                 var characterData = campaign?.GetClientCharacterData(clients[i]);
+                // NOTE: This was where Reaper's tax got applied
                 if (characterData != null && Level.Loaded?.Type != LevelData.LevelType.Outpost && characterData.HasSpawned)
                 {
-                    //we need to reapply the previous respawn penalty affliction or successive deaths won't make it stack
-                    characterData.ApplyHealthData(character, (AfflictionPrefab ap) => ap == GetRespawnPenaltyAfflictionPrefab());
-                    GiveRespawnPenaltyAffliction(character);
+                    ReduceCharacterSkillsOnDeath(characterInfos[i], applyExtraSkillLoss: true);
                 }
                 if (characterData == null || characterData.HasSpawned)
                 {
@@ -541,14 +539,37 @@ namespace Barotrauma.Networking
             }
         }
 
-        public static void ReduceCharacterSkills(CharacterInfo characterInfo)
+        /// <summary>
+        /// Reduce any skill gains the character may have made over the job's default
+        /// skill levels by percentages defined in server settings. There are two
+        /// reductions, a base one that always applies, and an extra loss that only
+        /// applies when the player chooses to respawn ASAP rather than wait.
+        /// </summary>
+        public static void ReduceCharacterSkillsOnDeath(CharacterInfo characterInfo, bool applyExtraSkillLoss = false)
         {
             if (characterInfo?.Job == null) { return; }
+
+            float resistanceMultiplier;
+            float skillLossPercentage;
+            if (applyExtraSkillLoss)
+            {
+                DebugConsole.Log($"Calculating extra skill loss on respawn for {characterInfo.Name}:");
+                resistanceMultiplier = characterInfo.LastResistanceMultiplierSkillLossRespawn;
+                skillLossPercentage = SkillLossPercentageOnImmediateRespawn;
+            }
+            else
+            {
+                DebugConsole.Log($"Calculating base skill loss on death for {characterInfo.Name}:");
+                resistanceMultiplier = characterInfo.LastResistanceMultiplierSkillLossDeath;
+                skillLossPercentage = SkillLossPercentageOnDeath;
+            }
+            skillLossPercentage *= resistanceMultiplier;
+
             foreach (Skill skill in characterInfo.Job.GetSkills())
             {
                 var skillPrefab = characterInfo.Job.Prefab.Skills.Find(s => skill.Identifier == s.Identifier);
                 if (skillPrefab == null || skill.Level < skillPrefab.LevelRange.End) { continue; }
-                skill.Level = MathHelper.Lerp(skill.Level, skillPrefab.LevelRange.End, SkillLossPercentageOnDeath / 100.0f);
+                skill.Level = MathHelper.Lerp(skill.Level, skillPrefab.LevelRange.End, skillLossPercentage / 100.0f);
             }
         }
 

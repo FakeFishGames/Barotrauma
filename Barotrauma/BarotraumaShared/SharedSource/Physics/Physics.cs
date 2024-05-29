@@ -1,5 +1,4 @@
 ﻿using FarseerPhysics.Dynamics;
-using Microsoft.Xna.Framework;
 
 namespace Barotrauma
 {
@@ -15,7 +14,7 @@ namespace Barotrauma
         public const Category CollisionItemBlocking = Category.Cat6;
         public const Category CollisionProjectile   = Category.Cat7;
         public const Category CollisionLevel        = Category.Cat8;
-        public const Category CollisionRepair       = Category.Cat9;
+        public const Category CollisionRepairableWall       = Category.Cat9;
 
         public static float DisplayToRealWorldRatio = 1.0f / 100.0f;
 
@@ -61,7 +60,7 @@ namespace Barotrauma
                     category = CollisionLevel;
                     return true;
                 case "repair":
-                    category = CollisionRepair;
+                    category = CollisionRepairableWall;
                     return true;
                 default:
                     return false;

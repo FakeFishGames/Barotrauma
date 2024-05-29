@@ -39,6 +39,9 @@ namespace Barotrauma
         /// </summary>
         public bool DropIfFails { get; set; } = true;
 
+        /// <summary>
+        /// Should existing item(s) be removed from the targetContainer if the targetItem won't fit otherwise?
+        /// </summary>
         public bool RemoveExistingWhenNecessary { get; set; }
         public Func<Item, bool> RemoveExistingPredicate { get; set; }
         public int? RemoveExistingMax { get; set; }

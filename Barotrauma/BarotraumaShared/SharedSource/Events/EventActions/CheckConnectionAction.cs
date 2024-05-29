@@ -4,21 +4,24 @@ using System.Linq;
 
 namespace Barotrauma;
 
+/// <summary>
+/// Check whether a specific connection of an item is wired to a specific kind of connection.
+/// </summary>
 class CheckConnectionAction : BinaryOptionAction
 {
-    [Serialize("", IsPropertySaveable.Yes)]
+    [Serialize("", IsPropertySaveable.Yes, description: "Tag of the item to check.")]
     public Identifier ItemTag { get; set; }
 
-    [Serialize("", IsPropertySaveable.Yes)]
+    [Serialize("", IsPropertySaveable.Yes, description: "The name of the connection to check on the target item.")]
     public Identifier ConnectionName { get; set; }
 
-    [Serialize("", IsPropertySaveable.Yes)]
+    [Serialize("", IsPropertySaveable.Yes, description: "Tag of the item the connection must be wired to. If omitted, it doesn't matter what the connection is wired to.")]
     public Identifier ConnectedItemTag { get; set; }
 
-    [Serialize("", IsPropertySaveable.Yes)]
+    [Serialize("", IsPropertySaveable.Yes, description: "The name of the other connection the connection must be wired to. If omitted, it doesn't matter what the connection is wired to.")]
     public Identifier OtherConnectionName { get; set; }
 
-    [Serialize(1, IsPropertySaveable.Yes)]
+    [Serialize(1, IsPropertySaveable.Yes, description: "Minimum number of matching connections for the check to succeed.")]
     public int MinAmount { get; set; }
 
     public CheckConnectionAction(ScriptedEvent parentEvent, ContentXElement element) : base(parentEvent, element) { }
@@ -37,7 +40,7 @@ class CheckConnectionAction : BinaryOptionAction
                 if (!IsCorrectConnection(connection, ConnectionName)) { continue; }
                 if (ConnectedItemTag.IsEmpty && OtherConnectionName.IsEmpty)
                 {
-                    amount += connection.Wires.Count();
+                    amount += connection.Wires.Count;
                     if (amount >= MinAmount) { return true; }
                     continue;
                 }

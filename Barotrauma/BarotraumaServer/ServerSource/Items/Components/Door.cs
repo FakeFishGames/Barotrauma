@@ -27,6 +27,9 @@ namespace Barotrauma.Items.Components
             //opening a partially stuck door makes it less stuck
             if (isOpen) { stuck = MathHelper.Clamp(stuck - StuckReductionOnOpen, 0.0f, 100.0f); }
 
+            ActionType actionType = open ? ActionType.OnOpen : ActionType.OnClose;
+            item.ApplyStatusEffects(actionType, deltaTime: 1.0f);
+
             if (sendNetworkMessage)
             {
                 item.CreateServerEvent(this, new EventData(forcedOpen));

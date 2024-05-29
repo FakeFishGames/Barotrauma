@@ -22,7 +22,7 @@ namespace Barotrauma
 
         private string? cachedValue;
         private string? cachedFullPath;
-
+        
         public string Value
         {
             get
@@ -107,11 +107,6 @@ namespace Barotrauma
             prevCreatedRaw = newRaw;
             return newRaw;
         }
-
-        public static ContentPath FromEvaluated(ContentPackage? contentPackage, string? evaluatedValue)
-        {
-            throw new NotImplementedException();
-        }
         
         private static bool StringEquality(string? a, string? b)
         {
@@ -119,8 +114,8 @@ namespace Barotrauma
             {
                 return a.IsNullOrEmpty() == b.IsNullOrEmpty();
             }
-            return string.Equals(Path.GetFullPath(a.CleanUpPathCrossPlatform(false) ?? ""),
-                    Path.GetFullPath(b.CleanUpPathCrossPlatform(false) ?? ""), StringComparison.OrdinalIgnoreCase);
+            return string.Equals(Path.GetFullPath(a.CleanUpPathCrossPlatform(correctFilenameCase: false) ?? ""),
+                    Path.GetFullPath(b.CleanUpPathCrossPlatform(correctFilenameCase: false) ?? ""), StringComparison.OrdinalIgnoreCase);
         }
 
         public static bool operator==(ContentPath a, ContentPath b)
@@ -145,9 +140,9 @@ namespace Barotrauma
 
         public override bool Equals(object? obj)
         {
-            if (ReferenceEquals(null, obj)) return false;
-            if (ReferenceEquals(this, obj)) return true;
-            if (obj.GetType() != this.GetType()) return false;
+            if (ReferenceEquals(null, obj)) { return false; }
+            if (ReferenceEquals(this, obj)) { return true; }
+            if (obj.GetType() != this.GetType()) { return false; }
             return Equals((ContentPath)obj);
         }
 

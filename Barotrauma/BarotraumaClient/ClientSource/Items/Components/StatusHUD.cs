@@ -137,6 +137,7 @@ namespace Barotrauma.Items.Components
             {
                 if (c == equipper || !c.Enabled || c.Removed) { continue; }
                 if (!ShowDeadCharacters && c.IsDead) { continue; }
+                if (c.InDetectable) { continue; }
 
                 float dist = Vector2.DistanceSquared(refEntity.WorldPosition, c.WorldPosition);
                 if (dist < Range * Range)

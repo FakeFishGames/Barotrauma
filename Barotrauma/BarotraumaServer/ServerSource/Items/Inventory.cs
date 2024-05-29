@@ -13,8 +13,6 @@ namespace Barotrauma
 
         public void ServerEventRead(IReadMessage msg, Client c)
         {
-            List<Item> prevItems = new List<Item>(AllItems.Distinct());
-
             if (!receivedItemIds.TryGetValue(c, out List<ushort>[] receivedItemIdsFromClient))
             {
                 receivedItemIdsFromClient = new List<ushort>[capacity];
@@ -60,8 +58,21 @@ namespace Barotrauma
                 return;
             }
 
-            List<Inventory> prevItemInventories = new List<Inventory>() { this };
+            //we need to check which of the items the client can access at this point, before we start shuffling things around
+            //otherwise if you're e.g. holding an item to access a cabinet, and picking up an item from the cabinet unequips the item you're holding,
+            //you would fail to pick up the item because it gets unequipped before checking whether you can access the cabinet.
+            Dictionary<Item, bool> canAccessItem = new Dictionary<Item, bool>();
+            for (int i = 0; i < capacity; i++)
+            {
+                foreach (ushort id in receivedItemIdsFromClient[i])
+                {
+                    if (Entity.FindEntityByID(id) is not Item item) { continue; }
+                    canAccessItem[item] = item.CanClientAccess(c);
+                }
+            }
 
+            List<Item> prevItems = new List<Item>(AllItems.Distinct());
+            List<Inventory> prevItemInventories = new List<Inventory>() { this };
             for (int i = 0; i < capacity; i++)
             {
                 foreach (Item item in slots[i].Items.ToList())
@@ -119,7 +130,7 @@ namespace Barotrauma
                         var holdable = item.GetComponent<Holdable>();
                         if (holdable != null && !holdable.CanBeDeattached()) { continue; }
 
-                        if (!prevItems.Contains(item) && !item.CanClientAccess(c) && 
+                        if (!prevItems.Contains(item) && !canAccessItem[item] && 
                             (c.Character == null || item.PreviousParentInventory == null || !c.Character.CanAccessInventory(item.PreviousParentInventory)))
                         {
     #if DEBUG || UNSTABLE

@@ -775,6 +775,7 @@ namespace Barotrauma
             AssignRelayToServer("simulatedduplicateschance", false);
             AssignRelayToServer("simulatedlongloadingtime", false);
             AssignRelayToServer("storeinfo", false);
+            AssignRelayToServer("sendrawpacket", false);
 #endif
 
             commands.Add(new Command("clientlist", "", (string[] args) => { }));
@@ -2320,6 +2321,29 @@ namespace Barotrauma
                 }
             }));
 
+            commands.Add(new Command("converttowreck", "", (string[] args) =>
+            {
+                if (Screen.Selected is not SubEditorScreen)
+                {
+                    ThrowError("The command can only be used in the submarine editor.");
+                    return;
+                }
+                if (Submarine.MainSub == null)
+                {
+                    ThrowError("Load a submarine first to convert it to a wreck.");
+                    return;
+                }
+                if (Submarine.MainSub.Info.SubmarineElement == null)
+                {
+                    ThrowError("The submarine must be saved before you can convert it to a wreck.");
+                    return;
+                }
+                var wreckedSubmarineInfo = new SubmarineInfo(filePath: string.Empty, element: WreckConverter.ConvertToWreck(Submarine.MainSub.Info.SubmarineElement));
+                wreckedSubmarineInfo.Name += "_Wrecked";
+                wreckedSubmarineInfo.Type = SubmarineType.Wreck;
+                GameMain.SubEditorScreen.LoadSub(wreckedSubmarineInfo);
+            }));
+
 #if DEBUG
             commands.Add(new Command("listspamfilters", "Lists filters that are in the global spam filter.", (string[] args) =>
             {
@@ -2483,6 +2507,49 @@ namespace Barotrauma
                     NewMessage("Can't use the command while round is running.");
                 }
             }));
+            
+            commands.Add(new Command("listcontainertags", "Lists all container tags on the submarine.", (string[] args) =>
+            {
+                if (Screen.Selected != GameMain.SubEditorScreen)
+                {
+                    ThrowError("This command can only be used in the sub editor.");
+                    return;
+                }
+
+                HashSet<Identifier> allContainerTagsInTheGame = new();
+
+                foreach (var itemPrefab in ItemPrefab.Prefabs)
+                {
+                    foreach (var pc in itemPrefab.PreferredContainers)
+                    {
+                        foreach (Identifier identifier in Enumerable.Union(pc.Primary, pc.Secondary))
+                        {
+                            allContainerTagsInTheGame.Add(identifier);
+                        }
+                    }
+                }
+
+                Dictionary<Identifier, float> prefab = new();
+                
+                foreach (Item it in Item.ItemList)
+                {
+                    foreach (var tag in allContainerTagsInTheGame)
+                    {
+                        if (it.GetTags().All(t => tag != t)) { continue; }
+
+                        prefab.TryAdd(tag, 0.0f);
+                        prefab[tag]++;
+                    }
+                }
+
+                StringBuilder sb = new();
+                foreach (var (tag, amount) in prefab.OrderByDescending(kvp => kvp.Value))
+                {
+                    sb.AppendLine($"{tag}: {amount}");
+                }
+
+                NewMessage(sb.ToString());
+            }, isCheat: false));
             
             commands.Add(new Command("refreshrect", "Updates the dimensions of the selected items to match the ones defined in the prefab. Applied only in the subeditor.", (string[] args) =>
             {
@@ -3014,6 +3081,46 @@ namespace Barotrauma
                 ContentPackageManager.EnabledPackages.ReloadCore();
             }));
 
+            commands.Add(new Command("reloadpackage", "reloapackage [name]: reloads a content package.", (string[] args) =>
+            {
+                if (args.Length < 1)
+                {
+                    ThrowError("Please specify the name of the package to reload.");
+                    return;                    
+                }
+
+                if (args.Length < 2)
+                {
+                    if (Screen.Selected == GameMain.GameScreen)
+                    {
+                        ThrowError("Reloading the package while in GameScreen may break things; to do it anyway, type 'reloadcorepackage [name] force'");
+                        return;
+                    }
+                    if (Screen.Selected == GameMain.SubEditorScreen)
+                    {
+                        ThrowError("Reloading the core package while in sub editor may break thingg; to do it anyway, type 'reloadcorepackage [name] force'");
+                        return;
+                    }
+                }
+
+                if (GameMain.NetworkMember != null)
+                {
+                    ThrowError("Cannot change content packages while playing online");
+                    return;
+                }
+
+                var package = ContentPackageManager.RegularPackages.FirstOrDefault(p => p.Name == args[0]);
+                if (package == null)
+                {
+                    ThrowError($"Could not find the package {args[0]}!");
+                    return;
+                }
+                ContentPackageManager.EnabledPackages.ReloadPackage(package);
+            }, getValidArgs: () => new[] 
+            {
+                 ContentPackageManager.RegularPackages.Select(p => p.Name).ToArray() 
+            }));
+
 #if WINDOWS
             commands.Add(new Command("startdedicatedserver", "", (string[] args) =>
             {
@@ -3263,6 +3370,36 @@ namespace Barotrauma
                     LocationType.Prefabs.Select(lt => lt.Identifier.Value).ToArray()
                 };
             }));
+
+            commands.Add(new Command("sendrawpacket", "sendrawpacket [data]: Send a string of hex values as raw binary data to the server", (string[] args) =>
+            {
+                if (GameMain.NetworkMember is null)
+                {
+                    ThrowError("Not connected to a server");
+                    return;
+                }
+                
+                if (args.Length == 0)
+                {
+                    ThrowError("No data provided");
+                    return;
+                }
+
+                string dataString = string.Join(" ", args);
+
+                try
+                {
+                    byte[] bytes = ToolBox.HexStringToBytes(dataString);
+                    IWriteMessage msg = new WriteOnlyMessage();
+                    foreach (byte b in bytes) { msg.WriteByte(b); }
+                    GameMain.Client?.ClientPeer?.DebugSendRawMessage(msg);
+                    NewMessage($"Sent {bytes.Length} byte(s)", Color.Green);
+                }
+                catch (Exception e)
+                {
+                    ThrowError("Failed to parse the data", e);
+                }
+            }));
 #endif
 
             commands.Add(new Command("limbscale", "Define the limbscale for the controlled character. Provide id or name if you want to target another character. Note: the changes are not saved!", (string[] args) =>
@@ -3363,6 +3500,29 @@ namespace Barotrauma
                     return;
                 }
                 character.AnimController.ResetRagdoll(forceReload: true);
+            }, isCheat: true));
+            
+            commands.Add(new Command("loadanimation", "Loads an animation variation by name for the controlled character. The animation file has to be in the correct animations folder. Note: the changes are not saved!", (string[] args) =>
+            {
+                var character = Character.Controlled;
+                if (character == null)
+                {
+                    ThrowError("Not controlling any character!");
+                    return;
+                }
+                if (args.Length < 2)
+                {
+                    ThrowError("Insufficient parameters: Have to pass the type of animation (Walk, Run, SwimSlow, SwimFast, or Crouch) and the filename!");
+                    return;
+                }
+                string type = args[0];
+                if (!Enum.TryParse(type, ignoreCase: true, out AnimationType animationType))
+                {
+                    ThrowError($"Failed to parse animation type from {type}. Supported types are Walk, Run, SwimSlow, SwimFast, and Crouch!");
+                    return;
+                }
+                string fileName = args[1];
+                character.AnimController.TryLoadAnimation(animationType, Path.GetFileNameWithoutExtension(fileName), out _, throwErrors: true);
             }, isCheat: true));
 
             commands.Add(new Command("reloadwearables", "Reloads the sprites of all limbs and wearable sprites (clothing) of the controlled character. Provide id or name if you want to target another character.", args =>
@@ -3514,7 +3674,10 @@ namespace Barotrauma
                 }
                 try
                 {
-                    var subInfo = SubmarineInfo.SavedSubmarines.FirstOrDefault(s => s.DisplayName.Equals(args[0], StringComparison.OrdinalIgnoreCase));
+                    var subInfo = SubmarineInfo.SavedSubmarines.FirstOrDefault(s => 
+                        //accept both the localized and the non-localized name of the sub
+                        s.DisplayName.Equals(args[0], StringComparison.OrdinalIgnoreCase) ||
+                        s.Name.Equals(args[0], StringComparison.OrdinalIgnoreCase));
                     if (subInfo == null)
                     {
                         ThrowError($"Could not find a submarine with the name \"{args[0]}\".");

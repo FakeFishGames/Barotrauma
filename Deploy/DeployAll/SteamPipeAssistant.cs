@@ -194,8 +194,8 @@ public static class SteamPipeAssistant
             new SingleItem("contentroot", Path.GetFullPath(Deployables.ResultPath)),
             new SingleItem("setlive", appId switch
             {
-                ClientAppId => "refactor_our_souls",
-                ServerAppId => "refactor_our_souls",
+                ClientAppId => "experimental",
+                ServerAppId => "development",
                 _ => throw new InvalidOperationException()
             }),
             new SingleItem("preview", "0"),

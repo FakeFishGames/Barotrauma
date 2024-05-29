@@ -56,8 +56,15 @@ namespace Barotrauma
             // The validity changes when a character picks the item up.
             if (!IsValidTarget(target, character, checkInventory: true)) { return Objectives.ContainsKey(target) && IsItemInsideValidSubmarine(target, character); }
             if (target.CurrentHull.FireSources.Count > 0) { return false; }
-            // Don't clean up items in rooms that have enemies inside.
-            if (Character.CharacterList.Any(c => c.CurrentHull == target.CurrentHull && !HumanAIController.IsFriendly(c) && HumanAIController.IsActive(c))) { return false; }
+            foreach (Character c in Character.CharacterList)
+            {
+                if (c == character || !HumanAIController.IsActive(c)) { continue; }
+                if (c.CurrentHull == target.CurrentHull && !HumanAIController.IsFriendly(c))
+                {
+                    // Don't clean up items in rooms that have enemies inside.
+                    return false;
+                }
+            }
             return true;
         }
 
@@ -89,9 +96,10 @@ namespace Barotrauma
             IsItemInsideValidSubmarine(container, character) &&
             !container.IsClaimedByBallastFlora;
 
-        public static bool IsValidTarget(Item item, Character character, bool checkInventory, bool allowUnloading = true)
+        public static bool IsValidTarget(Item item, Character character, bool checkInventory, bool allowUnloading = true, bool requireValidContainer = true, bool ignoreItemsMarkedForDeconstruction = true)
         {
             if (item == null) { return false; }
+            if (item.DontCleanUp) { return false; }
             if ((item.SpawnedInCurrentOutpost && !item.AllowStealing) == character.IsOnPlayerTeam) { return false; }
             if (item.ParentInventory != null)
             {
@@ -101,8 +109,9 @@ namespace Barotrauma
                     return false;
                 }
                 if (!allowUnloading) { return false; }
-                if (!IsValidContainer(item.Container, character)) { return false; }
+                if (requireValidContainer && !IsValidContainer(item.Container, character)) { return false; }
             }
+            if (ignoreItemsMarkedForDeconstruction && Item.DeconstructItems.Contains(item)) { return false; }
             if (!item.HasAccess(character)) { return false; }
             if (character != null && !IsItemInsideValidSubmarine(item, character)) { return false; }
             if (item.HasBallastFloraInHull) { return false; }
@@ -121,11 +130,16 @@ namespace Barotrauma
                     return false;
                 }
             }
+            if (item.GetComponent<Rope>() is { IsActive: true, Snapped: false })
+            {
+                // Don't clean up spears with an active rope component.
+                return false;
+            }
             if (!checkInventory)
             {
                 return true;
             }
-            return CanEquip(character, item, allowWearing: false);
+            return CanPutInInventory(character, item, allowWearing: false);
         }
 
         public override void OnDeselected()

@@ -423,6 +423,9 @@ namespace Barotrauma.Networking
         {
             timeout = 0.0f;
         }
+        
+        public override void DebugSendRawMessage(IWriteMessage msg)
+            => ForwardToRemotePeer(msg, DeliveryMethod.Reliable);
 #endif
     }
 }

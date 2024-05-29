@@ -85,6 +85,8 @@ namespace Barotrauma
         public bool IgnoreIfTargetDead { get; set; }
         public bool AllowGoingOutside { get; set; }
 
+        public bool FaceTargetOnCompleted { get; set; } = true;
+
         public bool AlwaysUseEuclideanDistance { get; set; } = true;
 
         /// <summary>
@@ -324,7 +326,7 @@ namespace Barotrauma
                 float minOxygen = AIObjectiveFindDivingGear.GetMinOxygen(character);
                 if (tryToGetDivingSuit)
                 {
-                    needsEquipment = !HumanAIController.HasDivingSuit(character, minOxygen);
+                    needsEquipment = !HumanAIController.HasDivingSuit(character, minOxygen, requireSuitablePressureProtection: !objectiveManager.FailedToFindDivingGearForDepth);
                 }
                 else if (tryToGetDivingGear)
                 {
@@ -346,26 +348,26 @@ namespace Barotrauma
                     TryAddSubObjective(ref findDivingGear, () => new AIObjectiveFindDivingGear(character, needsDivingSuit: tryToGetDivingSuit, objectiveManager),
                         onAbandon: () =>
                         {
-                        cantFindDivingGear = true;
-                        if (needsDivingSuit)
-                        {
-                            // Shouldn't try to reach the target without a suit, because it's lethal.
-                            Abandon = true;
-                        }
-                        else
-                        {
-                            // Try again without requiring the diving suit
-                            RemoveSubObjective(ref findDivingGear);
-                            TryAddSubObjective(ref findDivingGear, () => new AIObjectiveFindDivingGear(character, needsDivingSuit: false, objectiveManager),
-                                onAbandon: () =>
-                                {
-                                    Abandon = character.CurrentHull != null && (objectiveManager.CurrentOrder != this || Target.Submarine == null);
-                                    RemoveSubObjective(ref findDivingGear);
-                                },
-                                onCompleted: () =>
-                                {
-                                    RemoveSubObjective(ref findDivingGear);
-                                });
+                            cantFindDivingGear = true;
+                            if (needsDivingSuit)
+                            {
+                                // Shouldn't try to reach the target without a suit, because it's lethal.
+                                Abandon = true;
+                            }
+                            else
+                            {
+                                // Try again without requiring the diving suit
+                                RemoveSubObjective(ref findDivingGear);
+                                TryAddSubObjective(ref findDivingGear, () => new AIObjectiveFindDivingGear(character, needsDivingSuit: false, objectiveManager),
+                                    onAbandon: () =>
+                                    {
+                                        Abandon = character.CurrentHull != null && (objectiveManager.CurrentOrder != this || Target.Submarine == null);
+                                        RemoveSubObjective(ref findDivingGear);
+                                    },
+                                    onCompleted: () =>
+                                    {
+                                        RemoveSubObjective(ref findDivingGear);
+                                    });
                             }
                         },
                         onCompleted: () => RemoveSubObjective(ref findDivingGear));
@@ -450,10 +452,8 @@ namespace Barotrauma
                 {
                     useScooter = false;
                     checkScooterTimer = checkScooterTime * Rand.Range(0.75f, 1.25f);
-                    Identifier scooterTag = "scooter".ToIdentifier();
-                    Identifier batteryTag = "mobilebattery".ToIdentifier();
                     Item scooter = null;
-                    bool shouldUseScooter = Mimic && targetCharacter != null && targetCharacter.HasEquippedItem(scooterTag, allowBroken: false);
+                    bool shouldUseScooter = Mimic && targetCharacter != null && targetCharacter.HasEquippedItem(Tags.Scooter, allowBroken: false);
                     if (!shouldUseScooter)
                     {
                         float threshold = 500;
@@ -467,7 +467,7 @@ namespace Barotrauma
                             shouldUseScooter = Vector2.DistanceSquared(character.WorldPosition, Target.WorldPosition) > threshold * threshold;
                         }
                     }
-                    if (HumanAIController.HasItem(character, scooterTag, out IEnumerable<Item> equippedScooters, recursive: false, requireEquipped: true))
+                    if (HumanAIController.HasItem(character, Tags.Scooter, out IEnumerable<Item> equippedScooters, recursive: false, requireEquipped: true))
                     {
                         // Currently equipped scooter
                         scooter = equippedScooters.FirstOrDefault();
@@ -477,23 +477,23 @@ namespace Barotrauma
                         var leftHandItem = character.GetEquippedItem(slotType: InvSlotType.LeftHand);
                         var rightHandItem = character.GetEquippedItem(slotType: InvSlotType.RightHand);
                         bool handsFull = 
-                            (leftHandItem != null && !character.Inventory.IsAnySlotAvailable(leftHandItem)) ||
-                            (rightHandItem != null && !character.Inventory.IsAnySlotAvailable(rightHandItem));
+                            (leftHandItem != null && !character.Inventory.IsAnySlotAvailable(leftHandItem) && !character.Inventory.TryPutItem(leftHandItem, character, InvSlotType.Bag.ToEnumerable())) ||
+                            (rightHandItem != null && !character.Inventory.IsAnySlotAvailable(rightHandItem) && !character.Inventory.TryPutItem(rightHandItem, character, InvSlotType.Bag.ToEnumerable()));
                         if (!handsFull)
                         {
                             bool hasBattery = false;
-                            if (HumanAIController.HasItem(character, scooterTag, out IEnumerable<Item> nonEquippedScooters, containedTag: batteryTag, conditionPercentage: 1, requireEquipped: false))
+                            if (HumanAIController.HasItem(character, Tags.Scooter, out IEnumerable<Item> nonEquippedScooters, containedTag: Tags.MobileBattery, conditionPercentage: 1, requireEquipped: false))
                             {
                                 // Non-equipped scooter with a battery
                                 scooter = nonEquippedScooters.FirstOrDefault();
                                 hasBattery = true;
                             }
-                            else if (HumanAIController.HasItem(character, scooterTag, out IEnumerable<Item> _nonEquippedScooters, requireEquipped: false))
+                            else if (HumanAIController.HasItem(character, Tags.Scooter, out IEnumerable<Item> _nonEquippedScooters, requireEquipped: false))
                             {
                                 // Non-equipped scooter without a battery
                                 scooter = _nonEquippedScooters.FirstOrDefault();
                                 // Non-recursive so that the bots won't take batteries from other items. Also means that they can't find batteries inside containers. Not sure how to solve this.
-                                hasBattery = HumanAIController.HasItem(character, batteryTag, out _, requireEquipped: false, conditionPercentage: 1, recursive: false);
+                                hasBattery = HumanAIController.HasItem(character, Tags.MobileBattery, out _, requireEquipped: false, conditionPercentage: 1, recursive: false);
                             }
                             if (scooter != null && hasBattery)
                             {
@@ -511,7 +511,7 @@ namespace Barotrauma
                             if (scooter.ContainedItems.None(i => i.Condition > 0))
                             {
                                 // Try to switch batteries
-                                if (HumanAIController.HasItem(character, batteryTag, out IEnumerable<Item> batteries, conditionPercentage: 1, recursive: false))
+                                if (HumanAIController.HasItem(character, Tags.MobileBattery, out IEnumerable<Item> batteries, conditionPercentage: 1, recursive: false))
                                 {
                                     scooter.ContainedItems.ForEachMod(emptyBattery => character.Inventory.TryPutItem(emptyBattery, character, CharacterInventory.AnySlot));
                                     if (!scooter.Combine(batteries.OrderByDescending(b => b.Condition).First(), character))
@@ -811,16 +811,15 @@ namespace Barotrauma
         private void StopMovement()
         {
             SteeringManager?.Reset();
-            if (Target != null)
+            if (FaceTargetOnCompleted && Target is Entity { Removed: false })
             {
-                character.AnimController.TargetDir = Target.WorldPosition.X > character.WorldPosition.X ? Direction.Right : Direction.Left;
+                HumanAIController.FaceTarget(Target);
             }
         }
 
         protected override void OnCompleted()
         {
             StopMovement();
-            HumanAIController.FaceTarget(Target);
             if (Target is WayPoint { Ladders: null })
             {
                 // Release ladders when ordered to wait at a spawnpoint.

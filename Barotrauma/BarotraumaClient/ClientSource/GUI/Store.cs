@@ -1733,6 +1733,9 @@ namespace Barotrauma
                     if (!subItem.Components.All(c => c is not Holdable h || !h.Attachable || !h.Attached)) { continue; }
                     if (!subItem.Components.All(c => c is not Wire w || w.Connections.All(c => c == null))) { continue; }
                     if (!ItemAndAllContainersInteractable(subItem)) { continue; }
+                    //don't list items in a character inventory (the ones in a crew member's inventory are counted below)
+                    var rootInventoryOwner = subItem.GetRootInventoryOwner();
+                    if (rootInventoryOwner is Character) { continue; }
                     AddOwnedItem(subItem);
                 }
             }

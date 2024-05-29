@@ -1,4 +1,4 @@
-using Barotrauma.Items.Components;
+﻿using Barotrauma.Items.Components;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -137,18 +137,21 @@ namespace Barotrauma
                     }
                 }
 
-                var monsterSet = ToolBox.SelectWeightedRandom(monsterSets, m => m.Commonness, Rand.RandSync.Unsynced);
-                foreach ((CharacterPrefab monsterSpecies, Point monsterCountRange) in monsterSet.MonsterPrefabs)
+                if (monsterSets.Any())
                 {
-                    int amount = Rand.Range(monsterCountRange.X, monsterCountRange.Y + 1);
-                    for (int i = 0; i < amount; i++)
+                    var monsterSet = ToolBox.SelectWeightedRandom(monsterSets, m => m.Commonness, Rand.RandSync.Unsynced);
+                    foreach ((CharacterPrefab monsterSpecies, Point monsterCountRange) in monsterSet.MonsterPrefabs)
                     {
-                        CoroutineManager.Invoke(() =>
+                        int amount = Rand.Range(monsterCountRange.X, monsterCountRange.Y + 1);
+                        for (int i = 0; i < amount; i++)
                         {
-                            //round ended before the coroutine finished
-                            if (GameMain.GameSession == null || Level.Loaded == null) { return; }
-                            Entity.Spawner.AddCharacterToSpawnQueue(monsterSpecies.Identifier, spawnPos);
-                        }, Rand.Range(0f, amount));
+                            CoroutineManager.Invoke(() =>
+                            {
+                                //round ended before the coroutine finished
+                                if (GameMain.GameSession == null || Level.Loaded == null) { return; }
+                                Entity.Spawner.AddCharacterToSpawnQueue(monsterSpecies.Identifier, spawnPos);
+                            }, Rand.Range(0f, amount));
+                        }
                     }
                 }
 

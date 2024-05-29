@@ -5,15 +5,19 @@ using System.Xml.Linq;
 
 namespace Barotrauma
 {
+
+    /// <summary>
+    /// Adds an entry to the "event log" displayed in the mission tab of the tab menu.
+    /// </summary>
     partial class EventLogAction : EventAction
     {
-        [Serialize("", IsPropertySaveable.Yes)]
+        [Serialize("", IsPropertySaveable.Yes, description: "Identifier of the entry. If there's already an entry with the same id, it gets overwritten.")]
         public Identifier Id { get; set; }
 
-        [Serialize("", IsPropertySaveable.Yes)]
+        [Serialize("", IsPropertySaveable.Yes, description: "Text to add to the event log. Can be the text as-is, or a tag referring to a line in a text file.")]
         public string Text { get; set; }
 
-        [Serialize("", IsPropertySaveable.Yes)]
+        [Serialize("", IsPropertySaveable.Yes, description: "Tag of the character(s) who should see the entry. If empty, the entry is shown to everyone.")]
         public Identifier TargetTag { get; set; }
 
         public bool ShowInServerLog { get; set; }

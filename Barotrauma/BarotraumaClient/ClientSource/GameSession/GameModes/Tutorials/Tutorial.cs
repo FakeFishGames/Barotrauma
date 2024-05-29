@@ -188,9 +188,9 @@ namespace Barotrauma.Tutorials
                 var door = item.GetComponent<Door>();
                 if (door != null)
                 {
-                    if (door.requiredItems.Values.None(ris => ris.None(ri => ri.Identifiers.None(i => i == "locked"))))
+                    if (door.RequiredItems.Values.None(ris => ris.None(ri => ri.Identifiers.None(i => i == "locked"))))
                     {
-                        door.requiredItems.Clear();
+                        door.RequiredItems.Clear();
                     }
                 }
             }
@@ -262,7 +262,7 @@ namespace Barotrauma.Tutorials
                 yield return CoroutineStatus.Failure;
             }
 
-            if (eventPrefab.CreateInstance() is Event eventInstance)
+            if (eventPrefab.CreateInstance(GameMain.GameSession.EventManager.RandomSeed) is Event eventInstance)
             {
                 GameMain.GameSession.EventManager.QueuedEvents.Enqueue(eventInstance);
                 while (!eventInstance.IsFinished)

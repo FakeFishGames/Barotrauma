@@ -454,14 +454,16 @@ namespace Barotrauma
                 {
                     targetHulls.Add(hull);
                     float weight = hull.RectWidth;
-                    // Prefer rooms that are closer. Avoid rooms that are not in the same level.
-                    // If the behavior is active, prefer rooms that are not close.
-                    float yDist = Math.Abs(character.WorldPosition.Y - hull.WorldPosition.Y);
-                    yDist = yDist > 100 ? yDist * 5 : 0;
-                    float dist = Math.Abs(character.WorldPosition.X - hull.WorldPosition.X) + yDist;
-                    float distanceFactor = behavior == BehaviorType.Patrol ? MathHelper.Lerp(1, 0, MathUtils.InverseLerp(2500, 0, dist)) : MathHelper.Lerp(1, 0, MathUtils.InverseLerp(0, 2500, dist));
+                    float distanceFactor = GetDistanceFactor(hull.WorldPosition, verticalDistanceMultiplier: 5, maxDistance: 2500, 
+                        factorAtMinDistance: 1, factorAtMaxDistance: 0);
+                    if (behavior == BehaviorType.Patrol)
+                    {
+                        //invert when patrolling (= prefer travelling to far-away hulls)
+                        distanceFactor = 1.0f - distanceFactor;
+                    }
                     float waterFactor = MathHelper.Lerp(1, 0, MathUtils.InverseLerp(0, 100, hull.WaterPercentage * 2));
                     weight *= distanceFactor * waterFactor;
+                    System.Diagnostics.Debug.Assert(weight >= 0);
                     hullWeights.Add(weight);
                 }
             }

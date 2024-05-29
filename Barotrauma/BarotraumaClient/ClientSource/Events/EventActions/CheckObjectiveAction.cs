@@ -1,8 +1,10 @@
-using Barotrauma.Tutorials;
 using Segment = Barotrauma.ObjectiveManager.Segment;
 
 namespace Barotrauma;
 
+/// <summary>
+/// Checks the state of an Objective created using <see cref="EventObjectiveAction"/>.
+/// </summary>
 partial class CheckObjectiveAction : BinaryOptionAction
 {
     public enum CheckType
@@ -12,10 +14,10 @@ partial class CheckObjectiveAction : BinaryOptionAction
         Incomplete
     }
 
-    [Serialize(CheckType.Completed, IsPropertySaveable.Yes)]
+    [Serialize(CheckType.Completed, IsPropertySaveable.Yes, description: "The objective must be in this state for the check to succeed.")]
     public CheckType Type { get; set; }
 
-    [Serialize("", IsPropertySaveable.Yes)]
+    [Serialize("", IsPropertySaveable.Yes, description: "The identifier of the objective to check.")]
     public Identifier Identifier { get; set; }
 
     partial void DetermineSuccessProjSpecific(ref bool success)

@@ -10,12 +10,14 @@ namespace Barotrauma
         Run, Crouch,
         InfoTab, Chat, RadioChat, CrewOrders,
         Ragdoll, Health, Grab,
+        DropItem,
         SelectNextCharacter,
         SelectPreviousCharacter,
         Voice, RadioVoice, LocalVoice,
         Deselect,
         Shoot,
         Command,
+        ContextualCommand,
         ToggleInventory,
         TakeOneFromInventorySlot,
         TakeHalfFromInventorySlot,
@@ -23,6 +25,7 @@ namespace Barotrauma
         PreviousFireMode,
         ActiveChat,
         ToggleChatMode,
-        ChatBox
+        ChatBox,
+        ShowInteractionLabels
     }
 }

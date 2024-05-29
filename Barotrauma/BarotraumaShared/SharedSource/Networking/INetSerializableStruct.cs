@@ -1,4 +1,4 @@
-#nullable enable
+﻿#nullable enable
 
 using System;
 using System.Collections.Generic;
@@ -7,6 +7,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Text;
 using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
 
@@ -161,7 +162,8 @@ namespace Barotrauma
                 { typeof(AccountId), new ReadWriteBehavior<AccountId>(ReadAccountId, WriteAccountId) },
                 { typeof(Color), new ReadWriteBehavior<Color>(ReadColor, WriteColor) },
                 { typeof(Vector2), new ReadWriteBehavior<Vector2>(ReadVector2, WriteVector2) },
-                { typeof(SerializableDateTime), new ReadWriteBehavior<SerializableDateTime>(ReadSerializableDateTime, WriteSerializableDateTime) }
+                { typeof(SerializableDateTime), new ReadWriteBehavior<SerializableDateTime>(ReadSerializableDateTime, WriteSerializableDateTime) },
+                { typeof(NetLimitedString), new ReadWriteBehavior<NetLimitedString>(ReadNetLString, WriteNetLString) }
             };
 
         private static readonly ImmutableDictionary<Predicate<Type>, Func<Type, IReadWriteBehavior>> BehaviorFactories = new Dictionary<Predicate<Type>, Func<Type, IReadWriteBehavior>>
@@ -457,6 +459,12 @@ namespace Barotrauma
         private static double ReadDouble(IReadMessage inc, NetworkSerialize attribute, ReadOnlyBitField bitField) => inc.ReadDouble();
         private static void WriteDouble(double b, NetworkSerialize attribute, IWriteMessage msg, WriteOnlyBitField bitField) { msg.WriteDouble(b); }
 
+        // We do not validate that the string read is within the max length, but do we need to?
+        // Modified client could send a network message with a really long string when we use NetLimitedString
+        // but they could also just do that for any other network message.
+        private static NetLimitedString ReadNetLString(IReadMessage inc, NetworkSerialize attribute, ReadOnlyBitField bitField) => new NetLimitedString(inc.ReadString());
+        private static void WriteNetLString(NetLimitedString b, NetworkSerialize attribute, IWriteMessage msg, WriteOnlyBitField bitField) { msg.WriteString(b.Value); }
+
         private static string ReadString(IReadMessage inc, NetworkSerialize attribute, ReadOnlyBitField bitField) => inc.ReadString();
         private static void WriteString(string b, NetworkSerialize attribute, IWriteMessage msg, WriteOnlyBitField bitField) { msg.WriteString(b); }
 
@@ -684,6 +692,7 @@ namespace Barotrauma
     /// <see cref="Single">float</see><br/>
     /// <see cref="Double">double</see><br/>
     /// <see cref="String">string</see><br/>
+    /// <see cref="Barotrauma.NetLimitedString"></see><br/>
     /// <see cref="Barotrauma.Networking.AccountId"/><br/>
     /// <see cref="System.Collections.Immutable.ImmutableArray{T}"></see><br/>
     /// <see cref="Microsoft.Xna.Framework.Color"/><br/>
@@ -790,6 +799,61 @@ namespace Barotrauma
             {
                 object? value = property.GetValue(this);
                 property.Behavior.WriteAction(value!, property.Attribute, msg, bitField);
+            }
+        }
+
+        public static bool TryRead<T>(IReadMessage inc, AccountInfo sender, [NotNullWhen(true)] out T? data) where T : INetSerializableStruct
+        {
+            try
+            {
+                data = Read<T>(inc);
+                return true;
+            }
+            catch (Exception e)
+            {
+                LogError(e);
+                data = default;
+                return false;
+            }
+
+            void LogError(Exception e)
+            {
+                int prevPos = inc.BitPosition;
+
+                StringBuilder hexData = new();
+                inc.BitPosition = 0;
+                while (inc.BitPosition < inc.LengthBits)
+                {
+                    byte b = inc.ReadByte();
+                    hexData.Append($"{b:X2} ");
+                }
+                // trim the last space if there is one
+                if (hexData.Length > 0) { hexData.Length--; }
+
+                inc.BitPosition = prevPos;
+
+                //only log the error once per sender, so this can't be abused by spamming the server with malformed data to fill up the console with errors
+                //note that the name is "Unknown" if the client hasn't properly joined yet, so errors when first joining are only logged once
+                string accountInfoName = AccountInfoToName(sender);
+                DebugConsole.ThrowErrorOnce(
+                    identifier: $"INetSerializableStruct.TryRead:{accountInfoName}",
+                    errorMsg: $"Failed to read a message by {accountInfoName}. Data: \"{hexData}\"", e);
+
+                static string AccountInfoToName(AccountInfo info)
+                {
+                    var connectedClients = 
+                        GameMain.NetworkMember?.ConnectedClients ?? Array.Empty<Client>();
+
+                    foreach (Client c in connectedClients)
+                    {
+                        if (c.AccountInfo == info)
+                        {
+                            return c.Name;
+                        }
+                    }
+                    
+                    return info.AccountId.TryUnwrap(out var accountId) ? accountId.StringRepresentation : "Unknown";
+                }
             }
         }
     }

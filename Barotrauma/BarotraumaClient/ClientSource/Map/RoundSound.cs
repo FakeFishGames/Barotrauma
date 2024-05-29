@@ -25,8 +25,10 @@ namespace Barotrauma
             Stream = sound.Stream;
             Range = element.GetAttributeFloat("range", 1000.0f);
             Volume = element.GetAttributeFloat("volume", 1.0f);
+            IgnoreMuffling = element.GetAttributeBool("dontmuffle", false);
+            
             FrequencyMultiplierRange = new Vector2(1.0f);
-            string freqMultAttr = element.GetAttributeString("frequencymultiplier", element.GetAttributeString("frequency", "1.0"))!;
+            string freqMultAttr = element.GetAttributeString("frequencymultiplier", element.GetAttributeString("frequency", "1.0"));
             if (!freqMultAttr.Contains(','))
             {
                 if (float.TryParse(freqMultAttr, NumberStyles.Any, CultureInfo.InvariantCulture, out float freqMult))
@@ -47,7 +49,6 @@ namespace Barotrauma
                 DebugConsole.ThrowError($"Loaded frequency range exceeds max value: {FrequencyMultiplierRange} (original string was \"{freqMultAttr}\")",
                     contentPackage: element.ContentPackage);
             }
-            IgnoreMuffling = element.GetAttributeBool("dontmuffle", false);
         }
 
         public float GetRandomFrequencyMultiplier()

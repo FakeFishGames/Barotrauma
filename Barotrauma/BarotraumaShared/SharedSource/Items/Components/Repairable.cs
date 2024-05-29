@@ -144,8 +144,10 @@ namespace Barotrauma.Items.Components
         private bool tinkeringPowersDevices;
         public bool TinkeringPowersDevices => tinkeringPowersDevices;
 
-        public bool IsBelowRepairThreshold => item.ConditionPercentage <= RepairThreshold;
-        public bool IsBelowRepairIconThreshold => item.ConditionPercentage <= RepairThreshold / 2;
+        public bool IsBelowRepairThreshold => item.ConditionPercentageRelativeToDefaultMaxCondition < RepairThreshold;
+
+        public bool IsBelowRepairIconThreshold => item.ConditionPercentageRelativeToDefaultMaxCondition < RepairThreshold / 2;
+          
 
         public enum FixActions : int
         {
@@ -186,6 +188,21 @@ namespace Barotrauma.Items.Components
                 }
             }
 
+            // Modify damage (not stun) caused by repair failure based on campaign settings
+            if (GameMain.GameSession?.Campaign is CampaignMode campaign
+                && statusEffectLists != null
+                && statusEffectLists.TryGetValue(ActionType.OnFailure, out var onFailureEffects))
+            {
+                foreach (var effect in onFailureEffects)
+                {
+                    foreach (Affliction affliction in effect.Afflictions)
+                    {
+                        if (affliction.Prefab.AfflictionType == Tags.Stun) { continue; }
+                        affliction.Strength *= campaign.Settings.RepairFailMultiplier;
+                    }
+                }
+            }
+
             InitProjSpecific(element);
         }
 
@@ -203,12 +220,12 @@ namespace Barotrauma.Items.Components
         {
             if (character == null) { return false; }
 
-            if (statusEffectLists == null || statusEffectLists.None(s => s.Key == ActionType.OnFailure)) { return true; }
+            if (statusEffectLists == null) { return true; }
 
             if (bestRepairItem != null && bestRepairItem.Prefab.CannotRepairFail) { return true; }
 
             // unpowered (electrical) items can be repaired without a risk of electrical shock
-            if (requiredSkills.Any(s => s != null && s.Identifier == "electrical"))
+            if (RequiredSkills.Any(s => s != null && s.Identifier == "electrical"))
             {
                 if (item.GetComponent<Reactor>() is Reactor reactor)
                 {
@@ -216,18 +233,29 @@ namespace Barotrauma.Items.Components
                 }
                 else if (item.GetComponent<Powered>() is Powered powered && powered.Voltage < 0.1f) 
                 {
-                    return true; 
+                    return true;
                 }
             }
 
-            if (Rand.Range(0.0f, 0.5f) < RepairDegreeOfSuccess(character, requiredSkills)) { return true; }
+            bool success = Rand.Range(0.0f, 0.5f) < RepairDegreeOfSuccess(character, RequiredSkills);
+            ActionType actionType = success ? ActionType.OnSuccess : ActionType.OnFailure;
 
-            ApplyStatusEffects(ActionType.OnFailure, 1.0f, character);
-            if (bestRepairItem != null && bestRepairItem.GetComponent<Holdable>() is Holdable h)
+            ApplyStatusEffectsAndCreateEntityEvent(this, actionType, character);
+            ApplyStatusEffectsAndCreateEntityEvent(this, ActionType.OnUse, character);
+            if (bestRepairItem != null && bestRepairItem.GetComponent<Holdable>() is Holdable holdable)
             {
-                h.ApplyStatusEffects(ActionType.OnFailure, 1.0f, character);
+                ApplyStatusEffectsAndCreateEntityEvent(holdable, actionType, character);
+                ApplyStatusEffectsAndCreateEntityEvent(holdable, ActionType.OnUse, character);
             }
-            return false;
+            static void ApplyStatusEffectsAndCreateEntityEvent(ItemComponent ic, ActionType actionType, Character character)
+            {
+                ic.ApplyStatusEffects(actionType, 1.0f, character);
+                if (GameMain.NetworkMember is { IsServer: true } && ic.statusEffectLists != null && ic.statusEffectLists.ContainsKey(actionType))
+                {
+                    GameMain.NetworkMember.CreateEntityEvent(ic.Item, new Item.ApplyStatusEffectEventData(actionType, ic, character));
+                }
+            }
+            return success;
         }
 
         public override float GetSkillMultiplier()
@@ -251,9 +279,9 @@ namespace Barotrauma.Items.Components
             if (CurrentFixer == null) { return; }
             if (qteSuccess)
             {
-                item.Condition += RepairDegreeOfSuccess(CurrentFixer, requiredSkills) * 3 * (currentFixerAction == FixActions.Repair ? 1.0f : -1.0f);
+                item.Condition += RepairDegreeOfSuccess(CurrentFixer, RequiredSkills) * 3 * (currentFixerAction == FixActions.Repair ? 1.0f : -1.0f);
             }
-            else if (Rand.Range(0.0f, 2.0f) > RepairDegreeOfSuccess(CurrentFixer, requiredSkills))
+            else if (Rand.Range(0.0f, 2.0f) > RepairDegreeOfSuccess(CurrentFixer, RequiredSkills))
             {
                 ApplyStatusEffects(ActionType.OnFailure, 1.0f, CurrentFixer);
 #if SERVER
@@ -283,12 +311,6 @@ namespace Barotrauma.Items.Components
                     if (!CheckCharacterSuccess(character, bestRepairItem))
                     {
                         GameServer.Log($"{GameServer.CharacterLogName(character)} failed to {(action == FixActions.Sabotage ? "sabotage" : "repair")} {item.Name}", ServerLog.MessageType.ItemInteraction);
-                        GameMain.Server?.CreateEntityEvent(item, new Item.ApplyStatusEffectEventData(ActionType.OnFailure, this, character));
-                        if (bestRepairItem != null && bestRepairItem.GetComponent<Holdable>() is Holdable h)
-                        {
-                            GameMain.Server?.CreateEntityEvent(bestRepairItem, new Item.ApplyStatusEffectEventData(ActionType.OnFailure, h, character));
-                        }
-
                         return false;
                     }
 
@@ -449,7 +471,7 @@ namespace Barotrauma.Items.Components
                 return;
             }
 
-            float successFactor = requiredSkills.Count == 0 ? 1.0f : RepairDegreeOfSuccess(CurrentFixer, requiredSkills);
+            float successFactor = RequiredSkills.Count == 0 ? 1.0f : RepairDegreeOfSuccess(CurrentFixer, RequiredSkills);
 
             //item must have been below the repair threshold for the player to get an achievement or XP for repairing it
             if (IsBelowRepairThreshold)
@@ -462,9 +484,16 @@ namespace Barotrauma.Items.Components
             }
 
             float talentMultiplier = CurrentFixer.GetStatValue(StatTypes.RepairSpeed);
-            if (requiredSkills.Any(static skill => skill.Identifier == "mechanical"))
+            foreach (Skill skill in RequiredSkills)
             {
-                talentMultiplier += CurrentFixer.GetStatValue(StatTypes.MechanicalRepairSpeed);
+                if (skill.Identifier == "mechanical")
+                {
+                    talentMultiplier += CurrentFixer.GetStatValue(StatTypes.MechanicalRepairSpeed);
+                }
+                else if (skill.Identifier == "electrical")
+                {
+                    talentMultiplier += CurrentFixer.GetStatValue(StatTypes.ElectricalRepairSpeed);
+                }
             }
 
             float fixDuration = MathHelper.Lerp(FixDurationLowSkill, FixDurationHighSkill, successFactor);
@@ -493,7 +522,7 @@ namespace Barotrauma.Items.Components
                 {
                     if (wasBroken)
                     {
-                        foreach (Skill skill in requiredSkills)
+                        foreach (Skill skill in RequiredSkills)
                         {
                             CurrentFixer.Info?.ApplySkillGain(skill.Identifier, SkillSettings.Current.SkillIncreasePerRepair);
                         }
@@ -527,7 +556,7 @@ namespace Barotrauma.Items.Components
                 {
                     if (wasGoodCondition)
                     {
-                        foreach (Skill skill in requiredSkills)
+                        foreach (Skill skill in RequiredSkills)
                         {
                             float characterSkillLevel = CurrentFixer.GetSkillLevel(skill.Identifier);
                             CurrentFixer.Info?.IncreaseSkillLevel(skill.Identifier,
@@ -578,11 +607,11 @@ namespace Barotrauma.Items.Components
         {
             if (character == null) { return 1.0f; }
             // kind of rough to keep this in update, but seems most robust
-            if (requiredSkills.Any(s => s != null && s.Identifier == "mechanical"))
+            if (RequiredSkills.Any(s => s != null && s.Identifier == "mechanical"))
             {
                 return 1 + character.GetStatValue(StatTypes.MaxRepairConditionMultiplierMechanical);
             }
-            if (requiredSkills.Any(s => s != null && s.Identifier == "electrical"))
+            if (RequiredSkills.Any(s => s != null && s.Identifier == "electrical"))
             {
                 return 1 + character.GetStatValue(StatTypes.MaxRepairConditionMultiplierElectrical);
             }

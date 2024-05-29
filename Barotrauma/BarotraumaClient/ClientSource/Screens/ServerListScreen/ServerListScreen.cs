@@ -306,22 +306,6 @@ namespace Barotrauma
                 OverflowClip = true
             };
 
-            if (string.IsNullOrEmpty(ClientNameBox.Text))
-            {
-                TaskPool.Add("GetDefaultUserName",
-                    GetDefaultUserName(),
-                    t =>
-                    {
-                        if (!t.TryGetResult(out string name)) { return; }
-                        if (ClientNameBox.Text.IsNullOrEmpty()) { ClientNameBox.Text = name; }
-                    });
-            }
-            ClientNameBox.OnTextChanged += (textbox, text) =>
-            {
-                MultiplayerPreferences.Instance.PlayerName = text;
-                return true;
-            };
-
             var tabButtonHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f - sidebarWidth - infoHolder.RelativeSpacing, 0.5f), infoHolder.RectTransform), isHorizontal: true);
 
             tabs[TabEnum.All] = new Tab(TabEnum.All, this, tabButtonHolder, "");
@@ -874,11 +858,44 @@ namespace Barotrauma
                     return 0;
             }
         }
-        
+
         public override void Select()
         {
             base.Select();
+          
+            if (string.IsNullOrEmpty(ClientNameBox.Text))
+            {
+                TaskPool.Add("GetDefaultUserName",
+                    GetDefaultUserName(),
+                    t =>
+                    {
+                        if (!t.TryGetResult(out string name)) { return; }
+                        if (ClientNameBox.Text.IsNullOrEmpty())
+                        {
+                            ClientNameBox.Text = name;
+                            string nameWithoutInvisibleSymbols = string.Empty;
+                            foreach (char c in ClientNameBox.Text)
+                            {
+                                Vector2 size = ClientNameBox.Font.MeasureChar(c);
+                                if (size.X > 0 && size.Y > 0)
+                                {
+                                    nameWithoutInvisibleSymbols += c;
+                                }
+                            }
+                            if (nameWithoutInvisibleSymbols != ClientNameBox.Text)
+                            {
+                                MultiplayerPreferences.Instance.PlayerName = ClientNameBox.Text = nameWithoutInvisibleSymbols;
+                                new GUIMessageBox(TextManager.Get("Warning"), TextManager.GetWithVariable("NameContainsInvisibleSymbols", "[name]", nameWithoutInvisibleSymbols));
+                            }
+                        }
+                    });
+            }
 
+            ClientNameBox.OnTextChanged += (textbox, text) =>
+            {
+                MultiplayerPreferences.Instance.PlayerName = text;
+                return true;
+            };
             if (EosInterface.IdQueries.IsLoggedIntoEosConnect)
             {
                 if (SteamManager.IsInitialized)
@@ -1798,6 +1815,7 @@ namespace Barotrauma
 
         public void StoreServerFilters()
         {
+            if (loadingServerFilters) { return; }
             foreach (KeyValuePair<Identifier, GUITickBox> filterBox in filterTickBoxes)
             {
                 ServerListFilters.Instance.SetAttribute(filterBox.Key, filterBox.Value.Selected.ToString());
@@ -1809,8 +1827,10 @@ namespace Barotrauma
             GameSettings.SaveCurrentConfig();
         }
 
+        private bool loadingServerFilters;
         public void LoadServerFilters()
         {
+            loadingServerFilters = true;
             XDocument currentConfigDoc = XMLExtensions.TryLoadXml(GameSettings.PlayerConfigPath);
             ServerListFilters.Init(currentConfigDoc.Root.GetChildElement("serverfilters"));
             foreach (KeyValuePair<Identifier, GUITickBox> filterBox in filterTickBoxes)
@@ -1828,6 +1848,7 @@ namespace Barotrauma
                 var child = ternaryFilter.Value.ListBox.Content.GetChildByUserData(ternaryOption);
                 ternaryFilter.Value.Select(ternaryFilter.Value.ListBox.Content.GetChildIndex(child));
             }
+            loadingServerFilters = false;
         }
         
     }

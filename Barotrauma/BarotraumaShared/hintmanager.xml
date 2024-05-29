@@ -79,4 +79,8 @@
 
   <radiojammed/>
 
+  <onitemmarkedforrelocation/>
+  <onitemmarkedfordeconstruction/>
+  <ondeconstructorder/>
+
 </hintmanager>

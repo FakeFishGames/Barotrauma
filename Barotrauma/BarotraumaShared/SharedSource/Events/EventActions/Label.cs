@@ -1,7 +1,8 @@
-using System.Xml.Linq;
-
 namespace Barotrauma
 {
+    /// <summary>
+    /// Defines a point in the event that <see cref="GoTo"/> actions can jump to.
+    /// </summary>
     class Label : EventAction
     {
         [Serialize("", IsPropertySaveable.Yes)]

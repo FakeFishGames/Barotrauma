@@ -170,16 +170,18 @@ namespace Barotrauma
                     {
                         if (!pendingSectionUpdates.Any() && !pendingDecalUpdates.Any())
                         {
-                            GameMain.NetworkMember?.CreateEntityEvent(this, new StatusEventData());
+                            //these are used to modify the amount water/fire in the hull with console commands
+                            //they should be usable even when not controlling a character
+                            GameMain.Client?.CreateEntityEvent(this, new StatusEventData(), requireControlledCharacter: false);
                         }
                         foreach (Decal decal in pendingDecalUpdates)
                         {
-                            GameMain.NetworkMember?.CreateEntityEvent(this, new DecalEventData(decal));
+                            GameMain.Client?.CreateEntityEvent(this, new DecalEventData(decal));
                         }
                         pendingDecalUpdates.Clear();
                         foreach (int pendingSectionUpdate in pendingSectionUpdates)
                         {
-                            GameMain.NetworkMember?.CreateEntityEvent(this, new BackgroundSectionsEventData(pendingSectionUpdate));
+                            GameMain.Client?.CreateEntityEvent(this, new BackgroundSectionsEventData(pendingSectionUpdate));
                         }
                         pendingSectionUpdates.Clear();
                         networkUpdatePending = false;

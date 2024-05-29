@@ -1090,7 +1090,12 @@ namespace Barotrauma.Items.Components
                     float totalVolume = 0.0f;
                     foreach (Hull linkedHull in hullData.LinkedHulls)
                     {
-                        waterVolume += linkedHull.WaterVolume;
+                        //water detector ignores very small amounts of water,
+                        //do it here too so the nav terminal doesn't display the water
+                        if (WaterDetector.GetWaterPercentage(linkedHull) > 0.0f)
+                        {
+                            waterVolume += linkedHull.WaterVolume;
+                        }
                         totalVolume += linkedHull.Volume;
                     }
                     hullData.HullWaterAmount =

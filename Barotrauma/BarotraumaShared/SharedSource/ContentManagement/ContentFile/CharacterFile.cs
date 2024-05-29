@@ -14,6 +14,7 @@ namespace Barotrauma
 
         public override void LoadFile()
         {
+            ClearCaches();
             XDocument doc = XMLExtensions.TryLoadXml(Path);
             if (doc == null)
             {
@@ -36,6 +37,15 @@ namespace Barotrauma
         public override void UnloadFile()
         {
             CharacterPrefab.Prefabs.RemoveByFile(this);
+            ClearCaches();
+        }
+        
+        private static void ClearCaches()
+        {
+            // Clear the caches to get rid of any overrides.
+            // Variants should have their own params instances, but let's keep it simple and play safe.
+            RagdollParams.ClearCache();
+            AnimationParams.ClearCache();
         }
 
         public override void Sort()
@@ -60,11 +70,11 @@ namespace Barotrauma
             {
                 if (humanoid)
                 {
-                    ragdollParams = RagdollParams.GetRagdollParams<HumanRagdollParams>(speciesName);
+                    ragdollParams = RagdollParams.GetDefaultRagdollParams<HumanRagdollParams>(speciesName, mainElement, ContentPackage);
                 }
                 else
                 {
-                    ragdollParams = RagdollParams.GetRagdollParams<FishRagdollParams>(speciesName);
+                    ragdollParams = RagdollParams.GetDefaultRagdollParams<FishRagdollParams>(speciesName, mainElement, ContentPackage);
                 }
             }
             catch (Exception e)

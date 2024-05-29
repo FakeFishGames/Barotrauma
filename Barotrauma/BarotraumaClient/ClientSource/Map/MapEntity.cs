@@ -808,8 +808,16 @@ namespace Barotrauma
                                 {
                                     if (structure.FlippedX && structure.Prefab.CanSpriteFlipX) { spriteEffects ^= SpriteEffects.FlipHorizontally; }
                                     if (structure.FlippedY && structure.Prefab.CanSpriteFlipY) { spriteEffects ^= SpriteEffects.FlipVertically; }
-                                    spriteRotation = MathHelper.ToRadians(structure.Rotation);
-                                    rectangleRotation = spriteRotation;
+                                    rectangleRotation = MathHelper.ToRadians(structure.Rotation);
+
+                                    spriteRotation = rectangleRotation;
+                                    bool spriteIsFlippedHorizontally = structure.Sprite.effects.HasFlag(SpriteEffects.FlipHorizontally);
+                                    bool spriteIsFlippedVertically = structure.Sprite.effects.HasFlag(SpriteEffects.FlipVertically);
+                                    if (spriteIsFlippedHorizontally != spriteIsFlippedVertically)
+                                    {
+                                        spriteRotation = -spriteRotation;
+                                    }
+
                                     if (structure.FlippedX != structure.FlippedY) { rectangleRotation = -rectangleRotation; }
                                     break;
                                 }
@@ -976,6 +984,11 @@ namespace Barotrauma
                     }
                 }
             }
+        }
+
+        public static void ResetEditingHUD()
+        {
+            editingHUD = null;
         }
 
         public static void DrawEditor(SpriteBatch spriteBatch, Camera cam)

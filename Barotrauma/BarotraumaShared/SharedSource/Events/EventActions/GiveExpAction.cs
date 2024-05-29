@@ -2,12 +2,15 @@ using System.Linq;
 
 namespace Barotrauma
 {
+    /// <summary>
+    /// Gives experience to a specific character.
+    /// </summary>
     class GiveExpAction : EventAction
     {
-        [Serialize(0, IsPropertySaveable.Yes)]
+        [Serialize(0, IsPropertySaveable.Yes, description: "The amount of experience to give. Cannot be negative.")]
         public int Amount { get; set; }
 
-        [Serialize("", IsPropertySaveable.Yes)]
+        [Serialize("", IsPropertySaveable.Yes, description: "Tag of the character(s) to give the experience to.")]
         public Identifier TargetTag { get; set; }
 
         public GiveExpAction(ScriptedEvent parentEvent, ContentXElement element) : base(parentEvent, element)

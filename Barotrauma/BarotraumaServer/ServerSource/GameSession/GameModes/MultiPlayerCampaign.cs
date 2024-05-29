@@ -470,6 +470,11 @@ namespace Barotrauma
             return characterData.Find(cd => cd.MatchesClient(client));
         }
 
+        public CharacterCampaignData GetCharacterData(CharacterInfo characterInfo)
+        {
+            return characterData.Find(cd => cd.CharacterInfo == characterInfo);
+        }
+
         public CharacterCampaignData SetClientCharacterData(Client client)
         {
             characterData.RemoveAll(cd => cd.MatchesClient(client));
@@ -970,7 +975,7 @@ namespace Barotrauma
                 {
                     int desiredQuantity = purchasedItem.Quantity;
                     if (prevPurchasedItems.TryGetValue(storeId, out var alreadyPurchasedList) &&
-                        alreadyPurchasedList.FirstOrDefault(p => p.ItemPrefab == purchasedItem.ItemPrefab) is { } alreadyPurchased)
+                        alreadyPurchasedList.FirstOrDefault(p => p.ItemPrefab == purchasedItem.ItemPrefab && p.DeliverImmediately == purchasedItem.DeliverImmediately) is { } alreadyPurchased)
                     {
                         desiredQuantity -= alreadyPurchased.Quantity;
                     }
@@ -1198,14 +1203,13 @@ namespace Barotrauma
             if (fireCharacter) { firedIdentifier = msg.ReadInt32(); }
 
             Location location = map?.CurrentLocation;
-            List<CharacterInfo> hiredCharacters = new List<CharacterInfo>();
             CharacterInfo firedCharacter = null;
 
             if (location != null && AllowedToManageCampaign(sender, ClientPermissions.ManageHires))
             {
                 if (fireCharacter)
                 {
-                    firedCharacter = CrewManager.CharacterInfos.FirstOrDefault(info => info.GetIdentifier() == firedIdentifier);
+                    firedCharacter = CrewManager.GetCharacterInfos().FirstOrDefault(info => info.GetIdentifier() == firedIdentifier);
                     if (firedCharacter != null && (firedCharacter.Character?.IsBot ?? true))
                     {
                         CrewManager.FireCharacter(firedCharacter);
@@ -1221,7 +1225,7 @@ namespace Barotrauma
                     CharacterInfo characterInfo = null;
                     if (existingCrewMember && CrewManager != null)
                     {
-                        characterInfo = CrewManager.CharacterInfos.FirstOrDefault(info => info.GetIdentifierUsingOriginalName() == renamedIdentifier);
+                        characterInfo = CrewManager.GetCharacterInfos().FirstOrDefault(info => info.GetIdentifierUsingOriginalName() == renamedIdentifier);
                     }
                     else if(!existingCrewMember && location.HireManager != null)
                     {
@@ -1251,10 +1255,7 @@ namespace Barotrauma
                     {
                         foreach (CharacterInfo hireInfo in location.HireManager.PendingHires)
                         {
-                            if (TryHireCharacter(location, hireInfo, sender.Character, sender))
-                            {
-                                hiredCharacters.Add(hireInfo);
-                            }
+                            TryHireCharacter(location, hireInfo, client: sender);
                         }
                     }
 
@@ -1271,7 +1272,7 @@ namespace Barotrauma
                             }
 
                             pendingHireInfos.Add(match);
-                            if (pendingHireInfos.Count + CrewManager.CharacterInfos.Count() >= CrewManager.MaxCrewSize)
+                            if (pendingHireInfos.Count + CrewManager.GetCharacterInfos().Count() >= CrewManager.MaxCrewSize)
                             {
                                 break;
                             }
@@ -1281,7 +1282,7 @@ namespace Barotrauma
 
                     location.HireManager.AvailableCharacters.ForEachMod(info =>
                     {
-                        if(!location.HireManager.PendingHires.Contains(info))
+                        if (!location.HireManager.PendingHires.Contains(info))
                         {
                             location.HireManager.RenameCharacter(info, info.OriginalName);
                         }
@@ -1292,11 +1293,11 @@ namespace Barotrauma
             // bounce back
             if (renameCharacter && existingCrewMember)
             {
-                SendCrewState(hiredCharacters, (renamedIdentifier, newName), firedCharacter);
+                SendCrewState((renamedIdentifier, newName), firedCharacter);
             }
             else
             {
-                SendCrewState(hiredCharacters, default, firedCharacter);
+                SendCrewState(firedCharacter: firedCharacter);
             }
         }
 
@@ -1310,7 +1311,7 @@ namespace Barotrauma
         /// the client and the server when there's only one person on the server but when a second person joins both of
         /// their available hires are different from the server.
         /// </remarks>
-        public void SendCrewState(List<CharacterInfo> hiredCharacters, (int id, string newName) renamedCrewMember, CharacterInfo firedCharacter)
+        public void SendCrewState((int id, string newName) renamedCrewMember = default, CharacterInfo firedCharacter = null)
         {
             List<CharacterInfo> availableHires = new List<CharacterInfo>();
             List<CharacterInfo> pendingHires = new List<CharacterInfo>();
@@ -1332,21 +1333,19 @@ namespace Barotrauma
                     hire.ServerWrite(msg);
                     msg.WriteInt32(hire.Salary);
                 }
-            
+
                 msg.WriteUInt16((ushort)pendingHires.Count);
                 foreach (CharacterInfo pendingHire in pendingHires)
                 {
                     msg.WriteInt32(pendingHire.GetIdentifierUsingOriginalName());
                 }
 
-                msg.WriteUInt16((ushort)(hiredCharacters?.Count ?? 0));
-                if(hiredCharacters != null)
+                var hiredCharacters = CrewManager.GetCharacterInfos().Where(ci => ci.IsNewHire);
+                msg.WriteUInt16((ushort)hiredCharacters.Count());
+                foreach (CharacterInfo info in hiredCharacters)
                 {
-                    foreach (CharacterInfo info in hiredCharacters)
-                    {
-                        info.ServerWrite(msg);
-                        msg.WriteInt32(info.Salary);
-                    }
+                    info.ServerWrite(msg);
+                    msg.WriteInt32(info.Salary);
                 }
 
                 bool validRenaming = renamedCrewMember.id > -1 && !string.IsNullOrEmpty(renamedCrewMember.newName);

@@ -43,6 +43,10 @@ namespace Barotrauma
 
         public OutpostGenerationParams ForceOutpostGenerationParams;
 
+        public SubmarineInfo ForceBeaconStation;
+
+        public SubmarineInfo ForceWreck;
+
         public bool AllowInvalidOutpost;
 
         public readonly Point Size;

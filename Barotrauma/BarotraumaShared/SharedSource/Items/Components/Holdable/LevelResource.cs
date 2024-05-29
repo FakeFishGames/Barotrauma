@@ -126,7 +126,7 @@ namespace Barotrauma.Items.Components
                 return;
             }
             holdable.Reattachable = false;
-            if (requiredItems.Any())
+            if (RequiredItems.Any())
             {
                 holdable.PickingTime = float.MaxValue;
             }

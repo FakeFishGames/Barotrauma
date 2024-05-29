@@ -9,7 +9,7 @@ namespace Barotrauma
     /// </summary>
     class CheckTraitorVoteAction : BinaryOptionAction
     {
-        [Serialize("", IsPropertySaveable.Yes)]
+        [Serialize("", IsPropertySaveable.Yes, description: "Tag of the character to check.")]
         public Identifier Target { get; set; }
 
         public CheckTraitorVoteAction(ScriptedEvent parentEvent, ContentXElement element) : base(parentEvent, element) 

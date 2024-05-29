@@ -2,17 +2,20 @@ using System.Linq;
 
 namespace Barotrauma;
 
+/// <summary>
+/// Displays a tutorial icon next to a specific target.
+/// </summary>
 class TutorialIconAction : EventAction
 {
     public enum ActionType { Add, Remove, RemoveTarget, RemoveIcon, Clear };
 
-    [Serialize(ActionType.Add, IsPropertySaveable.Yes)]
+    [Serialize(ActionType.Add, IsPropertySaveable.Yes, description: "What to do with the icon. Add = add an icon, Remove = remove the icon that has the specific target and style, RemoveTarget = remove all icons assigned to the specific target, RemoveIcon = remove all icons with the specific style, Remove = remove all icons.")]
     public ActionType Type { get; set; }
 
-    [Serialize("", IsPropertySaveable.Yes)]
+    [Serialize("", IsPropertySaveable.Yes, description: "Tag of the target to assign the icon to.")]
     public Identifier TargetTag { get; set; }
 
-    [Serialize("", IsPropertySaveable.Yes)]
+    [Serialize("", IsPropertySaveable.Yes, description: "Style of the icon.")]
     public Identifier IconStyle { get; set; }
 
     private bool isFinished;

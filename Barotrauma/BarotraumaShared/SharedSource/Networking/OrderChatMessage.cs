@@ -31,7 +31,9 @@ namespace Barotrauma.Networking
         /// </summary>
         public OrderChatMessage(Order order, Character targetCharacter, Character sender, bool isNewOrder = true)
             : this(order,
-                   order?.GetChatMessage(targetCharacter?.Name, (order.TargetEntity as Hull ?? sender?.CurrentHull)?.DisplayName?.Value, givingOrderToSelf: targetCharacter == sender, orderOption: order.Option, isNewOrder: isNewOrder),
+                   order?.GetChatMessage(targetCharacter?.Name, 
+                       (order.TargetEntity as Hull ?? sender?.CurrentHull)?.DisplayName?.Value, 
+                       givingOrderToSelf: targetCharacter == sender, orderOption: order.Option, isNewOrder: isNewOrder),
                    targetCharacter, sender, isNewOrder)
         {
             

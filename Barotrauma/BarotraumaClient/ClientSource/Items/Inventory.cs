@@ -168,11 +168,14 @@ namespace Barotrauma
                     //TODO: define this in xml
                     slotSpriteSmall = new Sprite("Content/UI/InventoryUIAtlas.png", new Rectangle(10, 6, 119, 120), null, 0);
                     // Adjustment to match the old size of 75,71
-                    SlotSpriteSmall.size = new Vector2(SlotSpriteSmall.SourceRect.Width * 0.575f, SlotSpriteSmall.SourceRect.Height * 0.575f);
+                    SlotSpriteSmall.size = new Vector2(SlotSpriteSmall.SourceRect.Width * SlotSpriteSmallScale, SlotSpriteSmall.SourceRect.Height * SlotSpriteSmallScale);
                 }
                 return slotSpriteSmall;
             }
         }
+
+        public const float SlotSpriteSmallScale = 0.575f;
+        
         public static Sprite DraggableIndicator;
         public static Sprite UnequippedIndicator, UnequippedHoverIndicator, UnequippedClickedIndicator, EquippedIndicator, EquippedHoverIndicator, EquippedClickedIndicator;
 
@@ -211,6 +214,7 @@ namespace Barotrauma
             public RichString Tooltip { get; private set; }
 
             public int tooltipDisplayedCondition;
+            public bool tooltipShowedContextualOptions;
 
             public bool ForceTooltipRefresh;
 
@@ -230,6 +234,7 @@ namespace Barotrauma
             {
                 if (ForceTooltipRefresh) { return true; }
                 if (Item == null) { return false; }
+                if (PlayerInput.KeyDown(InputType.ContextualCommand) != tooltipShowedContextualOptions) { return true; }
                 return (int)Item.ConditionPercentage != tooltipDisplayedCondition;
             }
 
@@ -244,6 +249,7 @@ namespace Barotrauma
                 }
                 Tooltip = GetTooltip(Item, itemsInSlot, Character.Controlled);
                 tooltipDisplayedCondition = (int)Item.ConditionPercentage;
+                tooltipShowedContextualOptions = PlayerInput.KeyDown(InputType.ContextualCommand);
             }
 
             private static RichString GetTooltip(Item item, IEnumerable<Item> itemsInSlot, Character character)
@@ -323,19 +329,19 @@ namespace Barotrauma
                             .TrimStart();
                     }
 
-                    if (itemsInSlot.All(it => it.NonInteractable || it.NonPlayerTeamInteractable))
+                    if (itemsInSlot.All(it => !it.IsInteractable(Character.Controlled)))
                     {
                         toolTip += " " + TextManager.Get("connectionlocked");
                     }
                     if (!item.IsFullCondition && !item.Prefab.HideConditionInTooltip)
                     {
-                        string conditionColorStr = XMLExtensions.ColorToString(ToolBox.GradientLerp(item.Condition / item.MaxCondition, GUIStyle.ColorInventoryEmpty, GUIStyle.ColorInventoryHalf, GUIStyle.ColorInventoryFull));
+                        string conditionColorStr = XMLExtensions.ToStringHex(ToolBox.GradientLerp(item.Condition / item.MaxCondition, GUIStyle.ColorInventoryEmpty, GUIStyle.ColorInventoryHalf, GUIStyle.ColorInventoryFull));
                         toolTip += $"‖color:{conditionColorStr}‖ ({(int)item.ConditionPercentage} %)‖color:end‖";
                     }
                     if (!description.IsNullOrEmpty()) { toolTip += '\n' + description; }
                     if (item.Prefab.ContentPackage != GameMain.VanillaContent && item.Prefab.ContentPackage != null)
                     {
-                        colorStr = XMLExtensions.ColorToString(Color.MediumPurple);
+                        colorStr = XMLExtensions.ToStringHex(Color.MediumPurple);
                         toolTip += $"\n‖color:{colorStr}‖{item.Prefab.ContentPackage.Name}‖color:end‖";
                     }
                 }
@@ -350,7 +356,17 @@ namespace Barotrauma
                 }
 #if DEBUG
                 toolTip += $" ({item.Prefab.Identifier})";
-#endif
+#endif           
+                if (PlayerInput.KeyDown(InputType.ContextualCommand))
+                {
+                    toolTip += $"\n‖color:gui.blue‖{TextManager.ParseInputTypes(TextManager.Get("itemmsgcontextualorders"))}‖color:end‖";
+                }
+                else
+                {
+                    var colorStr = XMLExtensions.ToStringHex(Color.LightGray * 0.7f);
+                    toolTip += $"\n‖color:{colorStr}‖{TextManager.Get("itemmsg.morreoptionsavailable")}‖color:end‖";
+                }                
+
                 return RichString.Rich(toolTip);
             }
         }
@@ -613,10 +629,7 @@ namespace Barotrauma
             slot.State = GUIComponent.ComponentState.None;
 
             if (mouseOn && (DraggingItems.Any() || selectedSlot == null || selectedSlot.Slot == slot) && DraggingInventory == null)
-            // &&
-            //(highlightedSubInventories.Count == 0 || highlightedSubInventories.Contains(this) || highlightedSubInventorySlot?.Slot == slot || highlightedSubInventory.Owner == item))
-            {
-                
+            {                
                 slot.State = GUIComponent.ComponentState.Hover;
 
                 if (selectedSlot == null || (!selectedSlot.IsSubSlot && isSubSlot))
@@ -631,27 +644,47 @@ namespace Barotrauma
 
                 if (!DraggingItems.Any())
                 {
-                    var interactableItems = Screen.Selected == GameMain.GameScreen ? slots[slotIndex].Items.Where(it => !it.NonInteractable && !it.NonPlayerTeamInteractable) : slots[slotIndex].Items;
-                    if (PlayerInput.PrimaryMouseButtonDown() && interactableItems.Any())
-                    {
-                        if (PlayerInput.KeyDown(InputType.TakeHalfFromInventorySlot))
+                    var interactableItems = Screen.Selected == GameMain.GameScreen ? slots[slotIndex].Items.Where(it => it.IsInteractable(Character.Controlled)) : slots[slotIndex].Items;
+                    if (interactableItems.Any())
+                    {                        
+                        if (availableContextualOrder.target != null)
                         {
-                            DraggingItems.AddRange(interactableItems.Skip(interactableItems.Count() / 2));
+                            if (PlayerInput.PrimaryMouseButtonClicked())
+                            {
+                                GameMain.GameSession.CrewManager.SetCharacterOrder(character: null, 
+                                    new Order(OrderPrefab.Prefabs[availableContextualOrder.orderIdentifier], availableContextualOrder.target, targetItem: null, orderGiver: Character.Controlled));
+                            }
+                            availableContextualOrder = default;
                         }
-                        else if (PlayerInput.KeyDown(InputType.TakeOneFromInventorySlot))
+                        else if (PlayerInput.KeyDown(InputType.Command) &&
+                            PlayerInput.KeyDown(InputType.ContextualCommand) &&
+                            GameMain.GameSession?.CrewManager != null)
                         {
-                            DraggingItems.Add(interactableItems.First());
+                            GameMain.GameSession.CrewManager.OpenCommandUI(interactableItems.FirstOrDefault(), forceContextual: true);
                         }
-                        else
+                        else if (PlayerInput.PrimaryMouseButtonDown())
                         {
-                            DraggingItems.AddRange(interactableItems);
+                            if (PlayerInput.KeyDown(InputType.TakeHalfFromInventorySlot))
+                            {
+                                DraggingItems.AddRange(interactableItems.Skip(interactableItems.Count() / 2));
+                            }
+                            else if (PlayerInput.KeyDown(InputType.TakeOneFromInventorySlot))
+                            {
+                                DraggingItems.Add(interactableItems.First());
+                            }
+                            else
+                            {
+                                DraggingItems.AddRange(interactableItems);
+                            }
+                            DraggingSlot = slot;
                         }
-                        DraggingSlot = slot;
                     }
                 }
                 else if (PlayerInput.PrimaryMouseButtonReleased())
                 {
-                    var interactableItems = Screen.Selected == GameMain.GameScreen ? slots[slotIndex].Items.Where(it => !it.NonInteractable && !it.NonPlayerTeamInteractable) : slots[slotIndex].Items;
+                    var interactableItems = Screen.Selected == GameMain.GameScreen ? 
+                        slots[slotIndex].Items.Where(it => it.IsInteractable(Character.Controlled)) : 
+                        slots[slotIndex].Items;
                     if (PlayerInput.DoubleClicked() && interactableItems.Any())
                     {
                         doubleClickedItems.Clear();
@@ -1286,7 +1319,7 @@ namespace Barotrauma
                             if (selectedInventory.GetItemAt(slotIndex)?.OwnInventory?.Container is { } container &&
                                 container.Inventory.CanBePut(item))
                             {
-                                if (!container.AllowDragAndDrop || !container.DrawInventory)
+                                if (!container.AllowDragAndDrop || !container.AllowAccess)
                                 {
                                     allowCombine = false;
                                 }
@@ -1562,9 +1595,21 @@ namespace Barotrauma
                 {
                     selectedSlot.RefreshTooltip();
                 }
-                DrawToolTip(spriteBatch, selectedSlot.Tooltip, slotRect);
+
+                if (!slotIconTooltip.IsNullOrEmpty())
+                {
+                    DrawToolTip(spriteBatch, slotIconTooltip, slotRect);
+                }
+                else
+                {
+                    DrawToolTip(spriteBatch, selectedSlot.Tooltip, slotRect);
+                }
+                slotIconTooltip = string.Empty;
             }
         }
+
+        private static (Item target, Identifier orderIdentifier) availableContextualOrder;
+        private static LocalizedString slotIconTooltip;
 
         public static void DrawSlot(SpriteBatch spriteBatch, Inventory inventory, VisualSlot slot, Item item, int slotIndex, bool drawItem = true, InvSlotType type = InvSlotType.Any)
         {
@@ -1730,7 +1775,7 @@ namespace Barotrauma
                 }
 
                 Color spriteColor = sprite == item.Sprite ? item.GetSpriteColor() : item.GetInventoryIconColor();
-                if (inventory != null && (inventory.Locked || inventory.slots[slotIndex].Items.All(it => it.NonInteractable || it.NonPlayerTeamInteractable))) { spriteColor *= 0.5f; }
+                if (inventory != null && (inventory.Locked || inventory.slots[slotIndex].Items.All(it => !it.IsInteractable(Character.Controlled)))) { spriteColor *= 0.5f; }
                 if (CharacterHealth.OpenHealthWindow != null && !item.UseInHealthInterface && !item.AllowedSlots.Contains(InvSlotType.HealthInterface) && item.GetComponent<GeneticMaterial>() == null)
                 {
                     spriteColor = Color.Lerp(spriteColor, Color.TransparentBlack, 0.5f);
@@ -1741,15 +1786,24 @@ namespace Barotrauma
                 }
                 sprite.Draw(spriteBatch, itemPos, spriteColor, rotation, scale);
 
-                if (((item.SpawnedInCurrentOutpost && !item.AllowStealing) || (inventory != null && inventory.slots[slotIndex].Items.Any(it => it.SpawnedInCurrentOutpost && !it.AllowStealing))) && CharacterInventory.LimbSlotIcons.ContainsKey(InvSlotType.LeftHand))
+                if (item.OrderedToBeIgnored)
                 {
-                    var stealIcon = CharacterInventory.LimbSlotIcons[InvSlotType.LeftHand];
-                    Vector2 iconSize = new Vector2(25 * GUI.Scale);
-                    stealIcon.Draw(
-                        spriteBatch,
-                        new Vector2(rect.X + iconSize.X * 0.2f, rect.Bottom - iconSize.Y * 1.2f),
-                        color: GUIStyle.Red,
-                        scale: iconSize.X / stealIcon.size.X);
+                    if (OrderPrefab.Prefabs.TryGet(Tags.IgnoreThis, out OrderPrefab ignoreOrder))
+                    {
+                        DrawSideIcon(ignoreOrder.SymbolSprite, Direction.Right, TextManager.Get("tooltip.ignored"), ignoreOrder.Color, out bool mouseOn);
+                        if (mouseOn) { availableContextualOrder = (item, Tags.UnignoreThis); }
+                       
+                    }
+                }
+                else if (Item.DeconstructItems.Contains(item) &&
+                    OrderPrefab.Prefabs.TryGet(Tags.DeconstructThis, out OrderPrefab deconstructOrder))
+                {
+                    DrawSideIcon(deconstructOrder.SymbolSprite, Direction.Right, TextManager.Get("tooltip.markedfordeconstruction"), GUIStyle.Red, out bool mouseOn);
+                    if (mouseOn) { availableContextualOrder = (item, Tags.DontDeconstructThis); }
+                }
+                else if (((item.SpawnedInCurrentOutpost && !item.AllowStealing) || (inventory != null && inventory.slots[slotIndex].Items.Any(it => it.SpawnedInCurrentOutpost && !it.AllowStealing))) && CharacterInventory.LimbSlotIcons.ContainsKey(InvSlotType.LeftHand))
+                {
+                    DrawSideIcon(CharacterInventory.LimbSlotIcons[InvSlotType.LeftHand], Direction.Left, TextManager.Get("tooltip.stolenitem"), GUIStyle.Red, out _);
                 }
                 int maxStackSize = item.Prefab.GetMaxStackSize(inventory);
                 if (inventory is ItemInventory itemInventory)
@@ -1797,6 +1851,22 @@ namespace Barotrauma
                     scale: Vector2.One * GUI.AspectRatioAdjustment,
                     SpriteEffects.None,
                     layerDepth: 0.0f);
+            }
+
+            void DrawSideIcon(Sprite icon, Direction side, LocalizedString tooltip, Color color, out bool mouseOn)
+            {
+                Vector2 iconSize = new Vector2(25 * GUI.Scale);
+                float margin = 0.2f;
+                Vector2 pos = new Vector2(
+                    side == Direction.Left ? rect.X + iconSize.X * margin : rect.Right - iconSize.X * margin, 
+                    rect.Bottom - iconSize.Y * 1.2f);
+                mouseOn = Vector2.Distance(PlayerInput.MousePosition, pos) < iconSize.X / 2;
+                if (mouseOn)  
+                {
+                    slotIconTooltip = tooltip;
+                    color = Color.Lerp(color, Color.White, 0.5f);
+                }
+                icon.Draw(spriteBatch, pos, color: color, scale: iconSize.X / icon.size.X);
             }
         }
 

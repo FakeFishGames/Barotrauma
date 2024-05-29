@@ -68,7 +68,7 @@ namespace Barotrauma
             }
         }
 
-        public override int GetReward(Submarine sub)
+        public override int GetBaseReward(Submarine sub)
         {
             return alternateReward;
         }
@@ -262,13 +262,13 @@ namespace Barotrauma
             enemySub.EnableMaintainPosition();
             enemySub.TeamID = CharacterTeamType.None;
             //make the enemy sub withstand atleast the same depth as the player sub
-            enemySub.RealWorldCrushDepth = Math.Max(enemySub.RealWorldCrushDepth, Submarine.MainSub.RealWorldCrushDepth);
+            enemySub.SetCrushDepth(Math.Max(enemySub.RealWorldCrushDepth, Submarine.MainSub.RealWorldCrushDepth));
             if (Level.Loaded != null)
             {
                 //...and the depth of the patrol positions + 1000 m
                 foreach (var patrolPos in patrolPositions)
                 {
-                    enemySub.RealWorldCrushDepth = Math.Max(enemySub.RealWorldCrushDepth, Level.Loaded.GetRealWorldDepth(patrolPos.Y) + 1000);
+                    enemySub.SetCrushDepth(Math.Max(enemySub.RealWorldCrushDepth, Level.Loaded.GetRealWorldDepth(patrolPos.Y) + 1000));
                 }
             }
             enemySub.ImmuneToBallastFlora = true;
@@ -394,11 +394,11 @@ namespace Barotrauma
                 DebugConsole.NewMessage("Patrol pos: " + patrolPos);
             }
 #endif
+            enemySub.SetPosition(spawnPos);
             if (!IsClient)
             {
                 InitPirateShip();
             }
-            enemySub.SetPosition(spawnPos);
 
             // flipping the sub on the frame it is moved into place must be done after it's been moved, or it breaks item connections in the submarine
             // creating the pirates has to be done after the sub has been flipped, or it seems to break the AI pathing

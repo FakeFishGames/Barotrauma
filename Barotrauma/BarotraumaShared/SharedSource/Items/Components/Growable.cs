@@ -77,6 +77,9 @@ namespace Barotrauma.Items.Components
     {
         Stem = 0b0000,
         CrossJunction = 0b1111,
+        HorizontalLine = 0b1010,
+        VerticalLine = 0b0101,
+        /*backwards compatibility, the vertical and horizontal "lane" used to be backwards*/
         VerticalLane = 0b1010,
         HorizontalLane = 0b0101,
         TurnTopRight = 0b1001,

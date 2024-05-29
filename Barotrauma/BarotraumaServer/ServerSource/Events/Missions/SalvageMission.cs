@@ -48,6 +48,7 @@ namespace Barotrauma
                         spawnInfo[target].OriginalInventoryID, 
                         spawnInfo[target].OriginalItemContainerIndex,
                         spawnInfo[target].OriginalSlotIndex);
+                    msg.WriteUInt16(target.ParentTarget?.Item?.ID ?? Entity.NullEntityID);
                 }
 
                 msg.WriteByte((byte)spawnInfo[target].ExecutedEffectIndices.Count);

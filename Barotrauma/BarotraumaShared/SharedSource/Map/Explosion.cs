@@ -35,7 +35,7 @@ namespace Barotrauma
         ///     10% of the range if showEffects is true, 0 otherwise.
         /// </override>
         /// </doc>
-        private readonly float cameraShake;
+        public float CameraShake { get; set; }
 
         /// <summary>
         /// How far away does the camera shake effect reach.
@@ -45,7 +45,7 @@ namespace Barotrauma
         ///     Same as attack range if showEffects is true, 0 otherwise.
         /// </override>
         /// </doc>
-        private readonly float cameraShakeRange;
+        public float CameraShakeRange { get; set; }
 
         /// <summary>
         /// Color tint to apply to the player's screen when in range of the explosion.
@@ -174,6 +174,11 @@ namespace Barotrauma
         public bool OnlyOutside;
 
         /// <summary>
+        /// Should the normal damage sounds be played when the explosion damages something. Usually disabled.
+        /// </summary>
+        public bool PlayDamageSounds;
+
+        /// <summary>
         /// How much the explosion repairs items.
         /// </summary>
         private readonly float itemRepairStrength;
@@ -239,6 +244,8 @@ namespace Barotrauma
             if (element.GetAttribute("flashrange") != null) { flashRange = element.GetAttributeFloat("flashrange", 100.0f); }
             flashColor = element.GetAttributeColor("flashcolor", Color.LightYellow);
 
+            PlayDamageSounds = element.GetAttributeBool(nameof(PlayDamageSounds), false);
+
             EmpStrength = element.GetAttributeFloat("empstrength", 0.0f);
             BallastFloraDamage = element.GetAttributeFloat("ballastfloradamage", 0.0f);
 
@@ -247,8 +254,8 @@ namespace Barotrauma
             decal = element.GetAttributeString("decal", "");
             decalSize   = element.GetAttributeFloat(1.0f, "decalSize", "decalsize");
 
-            cameraShake = element.GetAttributeFloat("camerashake", showEffects ? Attack.Range * 0.1f : 0f);
-            cameraShakeRange = element.GetAttributeFloat("camerashakerange", showEffects ? Attack.Range : 0f);
+            CameraShake = element.GetAttributeFloat("camerashake", showEffects ? Attack.Range * 0.1f : 0f);
+            CameraShakeRange = element.GetAttributeFloat("camerashakerange", showEffects ? Attack.Range : 0f);
 
             screenColorRange = element.GetAttributeFloat("screencolorrange", showEffects ? Attack.Range * 0.1f : 0f);
             screenColor = element.GetAttributeColor("screencolor", Color.Transparent);
@@ -301,7 +308,7 @@ namespace Barotrauma
 
             Vector2 cameraPos = GameMain.GameScreen.Cam.Position;
             float cameraDist = Vector2.Distance(cameraPos, worldPosition) / 2.0f;
-            GameMain.GameScreen.Cam.Shake = cameraShake * Math.Max((cameraShakeRange - cameraDist) / cameraShakeRange, 0.0f);
+            GameMain.GameScreen.Cam.Shake = CameraShake * Math.Max((CameraShakeRange - cameraDist) / CameraShakeRange, 0.0f);
 #if CLIENT
             if (screenColor != Color.Transparent)
             {
@@ -318,9 +325,12 @@ namespace Barotrauma
 
             if (!MathUtils.NearlyEqual(Attack.GetStructureDamage(1.0f), 0.0f) || !MathUtils.NearlyEqual(Attack.GetLevelWallDamage(1.0f), 0.0f))
             {
-                RangedStructureDamage(worldPosition, displayRange, Attack.GetStructureDamage(1.0f), Attack.GetLevelWallDamage(1.0f), attacker, 
-                    IgnoredSubmarines, 
+                RangedStructureDamage(worldPosition, displayRange, 
+                    Attack.GetStructureDamage(1.0f),
+                    Attack.GetLevelWallDamage(1.0f), 
+                    attacker, IgnoredSubmarines, 
                     Attack.EmitStructureDamageParticles,
+                    Attack.CreateWallDamageProjectiles,
                     DistanceFalloff);
             }
 
@@ -455,6 +465,7 @@ namespace Barotrauma
 
             foreach (Character c in Character.CharacterList)
             {
+                if (attack.OnlyHumans && !c.IsHuman) { continue; }
                 if (IgnoredCharacters.Contains(c)) { continue; }
 
                 if (!c.Enabled || 
@@ -485,6 +496,8 @@ namespace Barotrauma
                 Dictionary<Limb, float> damages = new Dictionary<Limb, float>();
                 List<Affliction> modifiedAfflictions = new List<Affliction>();
 
+                Limb closestLimb = null;
+                float closestDistFactor = 0;
                 foreach (Limb limb in c.AnimController.Limbs)
                 {
                     if (limb.IsSevered || limb.IgnoreCollisions || !limb.body.Enabled) { continue; }
@@ -511,6 +524,11 @@ namespace Barotrauma
                     if (distFactor > 0)
                     {
                         distFactors.Add(limb, distFactor);
+                        if (distFactor > closestDistFactor)
+                        {
+                            closestLimb = limb;
+                            closestDistFactor = distFactor;
+                        }
                     }
                 }
 
@@ -558,7 +576,11 @@ namespace Barotrauma
                             //ensures that the attack hits the correct limb and that the direction of the hit can be determined correctly in the AddDamage methods
                             Vector2 dir = worldPosition - limb.WorldPosition;
                             Vector2 hitPos = limb.WorldPosition + (dir.LengthSquared() <= 0.001f ? Rand.Vector(1.0f) : Vector2.Normalize(dir)) * 0.01f;
-                            AttackResult attackResult = c.AddDamage(hitPos, modifiedAfflictions, attack.Stun * distFactor, false, attacker: attacker, damageMultiplier: attack.DamageMultiplier * attackData.DamageMultiplier);
+
+                            //only play the damage sound on the closest limb (playing it on all just sounds like a mess)
+                            bool playSound = PlayDamageSounds && limb == closestLimb;
+
+                            AttackResult attackResult = c.AddDamage(hitPos, modifiedAfflictions, attack.Stun * distFactor, playSound: playSound, attacker: attacker, damageMultiplier: attack.DamageMultiplier * attackData.DamageMultiplier);
                             damages.Add(limb, attackResult.Damage);
                         }
                     }
@@ -622,7 +644,9 @@ namespace Barotrauma
         /// Returns a dictionary where the keys are the structures that took damage and the values are the amount of damage taken
         /// </summary>
         public static Dictionary<Structure, float> RangedStructureDamage(Vector2 worldPosition, float worldRange, float damage, float levelWallDamage, Character attacker = null, IEnumerable<Submarine> ignoredSubmarines = null, 
-            bool emitWallDamageParticles = true, bool distanceFalloff = true)
+            bool emitWallDamageParticles = true,
+            bool createWallDamageProjectiles = false, 
+            bool distanceFalloff = true)
         {
             float dist = 600.0f;
             damagedStructures.Clear();
@@ -642,7 +666,7 @@ namespace Barotrauma
                             1.0f;
                         if (distFactor <= 0.0f) { continue; }
 
-                        structure.AddDamage(i, damage * distFactor, attacker, emitParticles: emitWallDamageParticles);
+                        structure.AddDamage(i, damage * distFactor, attacker, emitParticles: emitWallDamageParticles, createWallDamageProjectiles);
 
                         if (damagedStructures.ContainsKey(structure))
                         {
