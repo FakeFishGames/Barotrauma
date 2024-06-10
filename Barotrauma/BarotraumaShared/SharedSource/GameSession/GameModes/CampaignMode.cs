@@ -400,7 +400,7 @@ namespace Barotrauma
                         }
                         Random rand = new MTRandom(ToolBox.StringToInt(levelData.Seed));
                         var beaconMissionPrefab = ToolBox.SelectWeightedRandom(beaconMissionPrefabs, p => p.Commonness, rand);
-                        extraMissions.Add(beaconMissionPrefab.Instantiate(Map.SelectedConnection.Locations, Submarine.MainSub));
+                        extraMissions.AddRange(beaconMissionPrefab.Instantiate(Map.SelectedConnection.Locations, Submarine.MainSub));
                     }
                 }
                 if (levelData.HasHuntingGrounds)
@@ -433,7 +433,7 @@ namespace Barotrauma
                         var huntingGroundsMissionPrefab = ToolBox.SelectWeightedRandom(prefabs, weights, rand);
                         if (!Missions.Any(m => m.Prefab.Tags.Contains("huntinggrounds")))
                         {
-                            extraMissions.Add(huntingGroundsMissionPrefab.Instantiate(Map.SelectedConnection.Locations, Submarine.MainSub));
+                            extraMissions.AddRange(huntingGroundsMissionPrefab.Instantiate(Map.SelectedConnection.Locations, Submarine.MainSub));
                         }
                     }
                 }
@@ -479,11 +479,11 @@ namespace Barotrauma
                                 }
                                 if (automaticMission.LevelType == LevelData.LevelType.Outpost)
                                 {
-                                    extraMissions.Add(missionPrefab.Instantiate(new Location[] { currentLocation, currentLocation }, Submarine.MainSub));
+                                    extraMissions.AddRange(missionPrefab.Instantiate(new Location[] { currentLocation, currentLocation }, Submarine.MainSub));
                                 }
                                 else
                                 {
-                                    extraMissions.Add(missionPrefab.Instantiate(Map.SelectedConnection.Locations, Submarine.MainSub));
+                                    extraMissions.AddRange(missionPrefab.Instantiate(Map.SelectedConnection.Locations, Submarine.MainSub));
                                 }                               
                             }
                         }                        
@@ -520,11 +520,11 @@ namespace Barotrauma
                         {
                             if (levelData.Type == LevelData.LevelType.LocationConnection)
                             {
-                                extraMissions.Add(endLevelMissionPrefab.Instantiate(map.SelectedConnection.Locations, Submarine.MainSub));
+                                extraMissions.AddRange(endLevelMissionPrefab.Instantiate(map.SelectedConnection.Locations, Submarine.MainSub));
                             }
                             else
                             {
-                                extraMissions.Add(endLevelMissionPrefab.Instantiate(new Location[] { map.CurrentLocation, map.CurrentLocation }, Submarine.MainSub));
+                                extraMissions.AddRange(endLevelMissionPrefab.Instantiate(new Location[] { map.CurrentLocation, map.CurrentLocation }, Submarine.MainSub));
                             }
                         }
                     }

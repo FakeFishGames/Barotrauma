@@ -211,12 +211,12 @@ namespace Barotrauma
 
         public virtual void SetLevel(LevelData level) { }
 
-        public static Mission LoadRandom(Location[] locations, string seed, bool requireCorrectLocationType, MissionType missionType, bool isSinglePlayer = false)
+        public static List<Mission> LoadRandom(Location[] locations, string seed, bool requireCorrectLocationType, MissionType missionType, bool isSinglePlayer = false)
         {
             return LoadRandom(locations, new MTRandom(ToolBox.StringToInt(seed)), requireCorrectLocationType, missionType, isSinglePlayer);
         }
 
-        public static Mission LoadRandom(Location[] locations, MTRandom rand, bool requireCorrectLocationType, MissionType missionType, bool isSinglePlayer = false)
+        public static List<Mission> LoadRandom(Location[] locations, MTRandom rand, bool requireCorrectLocationType, MissionType missionType, bool isSinglePlayer = false)
         {
             List<MissionPrefab> allowedMissions = new List<MissionPrefab>();
             if (missionType == MissionType.None)
