@@ -1314,7 +1314,7 @@
       <!-- requires a cargo mission. note: not all cargo missions are tagged "cargo" -->
       <CheckMissionAction missiontag="cargo" Type="Current">
         <Success>
-          <WaitAction time="5" />
+          <WaitAction time="50" />
           <CheckDataAction identifier="stowaway2_complete" condition="eq true">
             <Success>
               <!--Don't repeat event-->
