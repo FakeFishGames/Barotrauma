@@ -1,12 +1,192 @@
 ﻿-------------------------------------------------------------------------------------------------------------------------------------------------
+v1.5.7.0
+-------------------------------------------------------------------------------------------------------------------------------------------------
+
+- Fixed certain modules failing to spawn in colonies.
+
+-------------------------------------------------------------------------------------------------------------------------------------------------
+v1.5.6.0
+-------------------------------------------------------------------------------------------------------------------------------------------------
+
+- Fixed "Junction Junkie"" talent giving an incorrect number of XP.
+- Fixed "Machine Maniac" and "Quickfixer" talents not affecting fabricator and duct block repairs.
+- Fixed "Better Than New" talent not affecting reactor repairs.
+- Reverted the changes to colony module tags introduced in the previous build.
+
+-------------------------------------------------------------------------------------------------------------------------------------------------
+v1.5.5.0
+-------------------------------------------------------------------------------------------------------------------------------------------------
+
+Changes and additions:
+- Added a new, optional, permadeath mode in the multiplayer campaign. When your character dies, they stay dead, along with all their XP and talents. You will have to acquire a new character to respawn and continue playing. This can happen in two ways: you can wait to hire a new character for yourself from the next non-hostile outpost, or take control of a bot to resume playing right away.
+- Added a new, optional, iron man mode in the multiplayer campaign for those looking for an insane extra challenge. Players who have died in Ironman mode can only spectate, and hope that the rest of the crew will make it.
+- Added a new wreck mission: clear Thalamus.
+- Added more beacon stations with bandits.
+- Added giving items to others by dragging and dropping. It's always enabled when targeting pets and bots (on the same team), but can also be enabled in the server settings for targeting players.
+- Added a slider at the bottom of the tab menu that allows you to set the salary of all crew members whose salary has not been manually set, and also determines new characters salary for late joiners.
+- Added support for new outputs in item containers:
+    - "contained_conditions" (sum of the conditions of contained items)
+    - "contained_conditions_percentage" (sum of the condition percentages of contained items)
+    - "contained_items" (total number of contained items)
+- Turret auto operate settings now transfer to the other turrets that are swapped in place of the original.
+- Turret auto operate functionality can now be enabled or disabled with signals.
+- Reduced the minimum length of the outpost hallways. Should get rid of the horizontal hallways and reduce the length of some vertical hallways.
+- Monsters can now hear when the players are using the text chat and in-game voice chat.
+- Changes to carrying turret ammunition:
+    - Can now be carried with one hand, instead of requiring two.
+    - Each shell/box now slows the character by 20%.
+    - Adjusted the hold positions.
+- Made small and medium mudraptor eggs glow the same way as the large version. The small version can now spawn in mudraptor nest missions, and they're extremely difficult to find without the glow.
+- Improved the hireable husks and clowns. Added titles, made the gear more appropriate, and added high-level versions of the NPCs.
+- Optimization: Fixed medical clinic UI refreshing and the server sending updates to clients whenever the number of afflictions on a character changes (which can in extreme cases be several times per frame).
+- Pumps and engines now deteriorate faster when being operated at full power for a while.
+- Changes to the highlighting to make it easier to interact with items near pets.
+- Made combat diving suits and slipsuits reduce visibility less than the other suits.
+- Added support for hosting servers in a local network without a connection to Steam or EOS. You need to set requireauthentication="false" in the server config to allow clients to join without Steam/EOS authentication.
+- Updated Crawler and Crawler Husk textures to a higher resolution.
+- Changed the logic of assigning jobs for the bots in the multiplayer game mode. Previously the jobs were assigned based on the number of spawnpoints for that job in the sub, now the game instead tries to distribute jobs evenly to the bots.
+- Changed the logic of generating hireable characters in the outposts:
+    - All outposts now offer at least one hireable for a given job, if that job is missing from the crew.
+    - Added medics, security and captains as hireables in mines.
+
+Balance:
+- HMG has less severance chance and always applies a slow to characters, rather than just when carried in hands.
+- Assault Rifle magazine size is now 30, up from 20.
+- Flamer and Prototype Steam Cannons are better as weapons when used with Incendium Fuel Tank.
+- Lead and Uranium can now be launched with the Scrap Cannon too, increased the Scrap Cannon damage with some materials.
+- Auto-Shotgun is now less accurate than the Riot Shotgun.
+- Grenade Launcher can now hold 6 grenades, and fires faster.
+- Bandolier is now held in the bag slot, replacing the Toolbelt/Backpack but only accepting munition-type items (includes grenades).
+- Reduced bonuses given by money-related talents of the Captain's "Politician" tree. Stacking all bonuses was too effective.
+- Adjusted Captain's "Politician" talent tree. 
+- Fixed the talent "Your reputation..." not giving double money for cities.
+- Minor speed buffs to Combat Diving Suit, PUCS, Slipsuit (only when swimming).
+- Added a bit more level generation variation to later biomes.
+- Changed the Great Sea a tiny bit in appearance (tweaking the chunks available).
+- Fixed some XML oversights, some plants had 0 commonness in all biomes and thus never appeared (for seemingly no reason).
+    
+AI:
+- Outpost NPCs now blame the character who equipped a diving mask with welding fuel inside it for the deaths caused by it.
+- Security bots don't inspect characters for stolen items in the first 30 seconds of a round. Prevents "unfair" inspections you have no chance to react to if you happen to spawn right next to a security NPC with stolen items on you.
+- Outpost guards will now hold fire for a while, give two warnings, and after that attack the target, unless it complies (e.g. by ragdolling). They still prefer stun weapons while trying to arrest, but can also use lethal weapons, unless the target is on the same team.
+- Targets that have escaped, resisted being arrested, or acted aggressively, will now be considered as criminals. Criminals will be immediately arrested with no warnings, if they do something illegal. The criminal status persists only for one round.
+- The outpost guards should now also always confiscate all weapons and stolen items when they arrest a target. Previously this happened inconsistently.
+- Fixed outpost security guards only attacking thieves when they can stun the target.
+- Fixed outpost guards not letting go of the target they’re inspecting for stolen items when their objective changes (e.g. when someone is attacked).
+- Fixed inconsistent guard reactions on interacting with handcuffs. They are now always considered illegal items, unless equipped (handcuffed).
+- Fixed/changed: guards can now follow the player to the player sub. They will now wait for a while, after which they'll return back to the outpost, if able to.
+- Fixed bots sometimes yelling incorrectly that they can't find a path when following/holding a position.
+- Human enemies and outpost guards can now react to noises (ai targets that have the tag "ProvocativeToHumanAI").
+- Fixed automatically created hulls in the docking ports not being marked as wet rooms, allowing the bots to drop the suits there.
+- Bots no longer automatically take diving suits off in shuttles.
+- Bots no longer take off diving suits while climbing. They should now drop the suits in the next platform instead.
+- Bots no longer cancel (looping) orders outside of the submarine. Some orders are still cancelled.
+- Added a separate job for outpost managers. Fixes outpost managers trying to operate the navigation panels in the outposts.
+- Fixed bots getting stuck in some outpost stairs.
+- Fixed bots sometimes stopping in the stairs while idling around.
+- Bots don't take items from magnetic suspension crates or the crates recovered from a wreck in the "lost cargo" missions.
+- Fixed bots "cleaning up" items from magnetic suspension crates and crates salvaged from a wreck.
+
+Submarine layers (previously "groups"):
+- Added CheckDifficultyAction. Can be used to check the difficulty of the current level.
+- Option to require a specific layer to be present for an event or event set to be triggered.
+- Stop updating items that are in a hidden layer (previously e.g. reactors and other devices would work fine despite being hidden)
+- Hide wires that are connected to a hidden item. These are still visible in the connection panel though (just locked).
+- Added DamageBeaconStationAction. Can be used to disconnect wires and break devices and walls in beacon stations.
+- Fixed the "layers visible by default" sometimes showing the layers incorrectly.
+- Fixed entities getting hidden when loading a sub with some hidden-by-default layers in the sub editor.
+- Disabling a layer with spawnpoints in it now also disables the spawnpoints.
+
+Circuit box UX:
+- Fixed selecting wires causing you to also select components if they overlapped.
+- Added character count indicator to circuit box labels and turn the text red if it goes over.
+- Show a prefab icon on the cursor of the wire that is being dragged when you start dragging a wire.
+- Input and output connections can be renamed by right clicking.
+- Labels can be renamed by double-clicking.
+
+Tools:
+- Fixed editing water or fires using the console commands not working while on the freecam mode.
+- Water edit mode: you can now double click with the primary mouse button to set a room flooding with water instantly. Double click with the secondary mouse button to completely drain the room.
+- Fire edit mode: you can now use the secondary mouse button to gradually extinguish the flames in a room. Double click with the secondary mouse button to put off the flames instantly.
+- Copy-pasting multiple commands into the console executes all of them in order.
+- Added a parameter for specifying a location in the "teleportcharacter" console command.
+- The auto-completions in the console can now be browsed backward by holding left shift.
+- Added some subcategories shown in the value inspector views. Not yet used extensively.
+- Fixed turret rotation limits seemingly inverting when the angle wraps around at 360 or -360 degrees.
+
+Modding:
+- Fixed "holdpos" attribute no longer working on throwable item components.
+- Added "PropulsionSpeed" StatValue and use it instead of "PropulsionSpeedMultiplier" in status effects. The latter doesn't stack, meaning if you wear multiple items that affect the propulsion speed, the last one would take priority.
+- Added a new attribute "ShouldBeOpen" to doors. Can be used by status effects to tell the door to open/close.
+- The game now prefers English texts when a localized text isn't found. This means that if your mod is only translated to English, e.g. mission and item names use the English text if someone is playing the game in another language, as opposed to displaying the text configured in the xml directly (e.g. missionname.mycustommission).
+- Fixed "TransferAfflictions" setting of StatusEffect (which can be used to transfer afflictions from the character executing the effect to a new one spawned by the effect) not working correctly if the characters have a different amount of vitality.
+- Instead of having to define the pirate sub files in the mission, you can also just leave it out and let the mission choose a random enemy sub. The reward, preferred difficulty, and tags that restrict which mission a sub can be used in, can be configured in the sub editor.
+- Changed how outpost modules are configured for abandoned outposts: Special outpost module types are now used: "AbandonedAirlock", "AbandonedAdminModule", etc. Previously these special modules used the same module types as normal outposts, but were restricted to only spawn in outposts of the appropriate type. That meant a mod could not add a new module that's used in all types of “normal” outposts by setting the location type to "Any", because it would also be used in abandoned outposts.
+- Made vision obstruction effect adjustable: instead of being just on/off, there's a ObstructVisionAmount value that can be set to a value between 0 and 1. A value of 0.5 roughly corresponds to the old obstruction effect, and setting the obstruction using the old ObstructVision boolean sets it to that value. 
+- Better support for including non-human characters in the crew: CharacterInfo (which defines a characters job, skills and such, and is required for characters in the crew) can be enabled on any type of character by adding HasCharacterInfo="true" to the character config.
+- Fixed crashing when you try to spawn a character defined to use human AI but doesn't have CharacterInfo or a job.
+- Added an option to supply "addtocrew" argument to the "spawncharacter" console command. Makes it easier to test the above changes, and allows spawning "nonhuman crewmates" using console commands.
+- Added a new parameter for upscaling character textures: SourceRectScale. It's intentionally not exposed in the character editor, but can be used together with the existing TextureScale to adjust the scaling of the textures. E.g. TextureScale 0.5 and SourceRectScale 2.0 doubles the resolution without having to adjust the other values of the ragdoll.
+- Fixed DamagedByRepairTools not working if the item doesn't also take damage from projectiles or melee weapons.
+- Fixed artifact events causing a crash if the item the event is supposed to spawn can't be found.
+
+Fixes:
+- Fixed the game sometimes crashing on welding a leak.
+- Fixed store stocks of most items increasing constantly, all the way up to 100.
+- Fixed ID cards not getting assigned the appropriate tags when you choose to get them delivered immediately.
+- Fixed antibiotics not applying "drunkweakness" as intended.
+- Fixed characters holding throwables, like grenades, weirdly in an unintentional pose.
+- Fixed "exhibitionism" event failing if clothes or a diving suit are held in the hand slots.
+- Fixed outposts giving an endless supply of missions if you keep taking up the missions, and then saving the game and reloading it again.
+- Fixed flipping of the item not being taken into account when launching a projectile (making left-facing projectiles launch backwards).
+- Fixed inability to hire/fire/rename/heal "twin bots" (bots with the same name, appearance and job).
+- Fixed characters moving faster on underwater scooters while wearing a backpack and an exosuit than when wearing other equipment or none at all. Also affected the movement speed of the characters while wearing/holding other items.
+- Fixed some CJK characters, for example ㅎ and Ａ not drawing in the game properly.
+- Fixed item container sorting behaving inconsistently when there's instances/stacks of the same item in multiple slots (randomly shuffling the items around).
+- Fixed label tags sent via Wi-Fi components not using the localized text in the chat interface.
+- Fixed "minleveldifficulty" and "maxleveldifficulty" attributes being ignored in the single mission mode.
+- Fixed vertical gaps not emitting particles if the top of the gap is not above the top of the hull the water is flowing to.
+- Fixed some draw order issues on alien hatches and doors.
+- Fixed decorative items on held items glowing for no reason.
+- Fixed a potential softlock if you accidentally start a round in a level that's too deep for the sub. The crush depth warnings on the campaign map now take the start/end position of the level into account, and the sub doesn't take depth damage in the first minute of the round, giving you a chance to return if you end up in a level that's too deep.
+- Fixed BeaconStation and Wreck info (e.g. place on the ceiling and the difficulty settings) resetting when you enter the sub editor's test mode.
+- Fixed skin tint (both the normal skin color and tints applied by afflictions) affecting the color of the damage overlay (i.e. darker-skinned characters seemed to have darker blood).
+- Fixed melee weapons losing collision with platforms and level walls after being swung.
+- Moved the alien terminals a bit farther from the guardian pods, so that the player operating the terminal won't get damaged by the exploding pod.
+- Fixed inability to open some item interfaces in the sub editor (more specifically, items without an item container).
+- Fixed attempting to flip items that cannot be flipped on the X axis, for example crate shelves, not doing anything and looking broken when the submarine is flipped on the X axis (for example in PvP).
+- Fixed sprite bleeding on some structures and items.
+- Fixed clients sometimes displaying missions as having failed even though they succeeded server-side.
+- Fixed fabricating getting interrupted if you start fabricating an item whose recipe is unlocked by a talent on some bot, and then switch to that bot.
+- Fixed items that are marked for "relocation" (automatically moved to the main sub) after a bot drops them in the outpost disappearing if you save and quit. Now we also handle the relocation when saving and quitting mid-round, not just when starting a new round.
+- AutoInteractWithContained fixes:
+    - Ignore AutoInteractWithContained in editors (e.g. don't force picking up an item from an artifact container when trying to rewire it in the editor).
+    - Enabled AutoInteractWithContained on fire extinguisher brackets and weapon holders (interacting with one automatically picks up the item).
+- Fixed all walls taking double damage.
+- Fixed portable pump UI flickering on and off when picked up in MP.
+- Adjusted Camel airlock layout: removed the inner horizontal wall and moved the wires and components.
+- Fixed the oxygen generator not being wired on KopraKoht beacon station.
+- Fixed respawn shuttle spawning when a respawn triggers, even if all the characters spawned directly in the main sub (e.g. because they had an existing character who was previously on the sub).
+- Fixed docking ports and hatches being very difficult to interact with when they overlap with a door or a hatch.
+- Fixed flak cannon shrapnel not damaging the character who fired the cannon.
+- Fixed campaign map sometimes auto-opening at the beginning of the round (more specifically, when traversing backwards to certain kinds of levels).
+- Fixed crashing when the game doesn't have access to certain folders or files (e.g. if the folder the saves are stored in is set to be read-only). Should now throw a console error instead.
+- Fixed selected container staying open if you lose access to it by e.g. putting the ID card that's required for access into another item in your inventory.
+- Fixed characters teleporting outside when they pass from hull to another, and there's a tiny sliver of "outside space" between the hulls.
+- Fixed hanging end disappearing from a wire when you connect the other end.
+- Fixed marking a stack for deconstruction only marking the first item for deconstruction server-side, even though the deconstruct icon is displayed on all client-side.
+- Fixed an issue that caused duplicate characters in the HR manager menu. Happened when you moved a hire to the pending list, closed the menu and then reopened it.
+
+-------------------------------------------------------------------------------------------------------------------------------------------------
 v1.4.6.0
 -------------------------------------------------------------------------------------------------------------------------------------------------
-- Fixed monsters sometimes spawning immediately after the round starts (Often happened between levels, when there was no outpost between them).
+
+- Fixed monsters sometimes spawning immediately after the round starts (often happened between levels, when there was no outpost between them).
 - The 'Art of Submarine Warfare' book granted by the 'War Stories' talent is now a separate item and the original book has been reverted to its original state.
 - Fixed Thalamus' fleshgun ropes not being able to stick to a submarine anymore.
 - Fixed Thalamus' flesh spike crashing the game in the multiplayer game mode.
 - Added a scrollbar to the submarine warning list. Fixes the list not fitting on the screen, when there were multiple, long errors.
-- Fixed sever list filters not saving properly.
+- Fixed server list filters not saving properly.
 - Fixed marking a stack of items to be ignored or deconstructed only taking into account the first item of the stack, instead applying to all items of the stack.
 - Removed duplicate localization lines that caused old versions of text to show up in some places.
 - Fixes to the Chinese localization.
@@ -115,7 +295,6 @@ Medical system:
 - Added "adrenaline rush" as an effect for adrenaline. "Adrenaline rush" keeps the patient conscious for its duration, removes all active stun when inflicted and applies short-term stun resistance.
 - Husk infections can be treated with sufforin and cyanide (but you must be careful to have a cure at hand!).
 - Antibiotic glue can be used multiple times.
-- Made Pomegrenade Extract a bit more useful: gives the "slow metabolism" buff.
 - Ethanol and rum can be poured on limbs to treat infections and burns.
 - Removed skill requirements from tonic liquid.
 - Alien blood causes organ damage, making it less viable as a risk-free cheap alternative for blood packs.

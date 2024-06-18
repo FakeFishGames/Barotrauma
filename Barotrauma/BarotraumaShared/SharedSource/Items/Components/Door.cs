@@ -180,6 +180,22 @@ namespace Barotrauma.Items.Components
                 OpenState = isOpen ? 1.0f : 0.0f;
             }
         }
+
+        /// <summary>
+        /// Can be used by status effects to tell the door to open (setting IsOpen directly would make it immediately fully open)
+        /// </summary>
+        public bool ShouldBeOpen
+        {
+            get { return isOpen; }
+            set
+            {
+                if (isOpen != value)
+                {
+                    ToggleState(ActionType.OnUse, user: null);
+                }
+            }
+        }
+
         public bool IsClosed => !IsOpen;
 
         public bool IsFullyOpen => IsOpen && OpenState >= 1.0f;

@@ -29,6 +29,12 @@ namespace Barotrauma
             Length = Rect.Width + Padding + Label.Size.X;
         }
 
+        public void SetLabel(LocalizedString label, CircuitBoxNode node)
+        {
+            Label = new CircuitBoxLabel(label, GUIStyle.SubHeadingFont);
+            Length = Rect.Width + Padding + Label.Size.X;
+        }
+
         public void Draw(SpriteBatch spriteBatch, Vector2 drawPos, Vector2 parentPos, Color color)
         {
             if (CircuitBox.UI is not { } circuitBoxUi) { return; }

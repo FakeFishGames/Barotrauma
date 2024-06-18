@@ -939,14 +939,16 @@ namespace Barotrauma.Items.Components
 #endif
         }
 
-        public virtual void Load(ContentXElement componentElement, bool usePrefabValues, IdRemap idRemap)
+        public virtual void Load(ContentXElement componentElement, bool usePrefabValues, IdRemap idRemap, bool isItemSwap)
         {
             if (componentElement != null) 
             { 
                 foreach (XAttribute attribute in componentElement.Attributes())
                 {
                     if (!SerializableProperties.TryGetValue(attribute.NameAsIdentifier(), out SerializableProperty property)) { continue; }
-                    if (property.OverridePrefabValues || !usePrefabValues)
+                    if (property.OverridePrefabValues || 
+                        !usePrefabValues || 
+                        (isItemSwap && property.GetAttribute<Editable>() is { TransferToSwappedItem: true }))
                     {
                         property.TrySetValue(this, attribute.Value);
                     }

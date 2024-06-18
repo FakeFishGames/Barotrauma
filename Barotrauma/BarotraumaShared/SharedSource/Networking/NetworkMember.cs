@@ -33,11 +33,13 @@ namespace Barotrauma.Networking
         ERROR,           //tell the server that an error occurred
         CREW,            //hiring UI
         MEDICAL,         //medical clinic
-        TRANSFER_MONEY,      // wallet transfers
-        REWARD_DISTRIBUTION, // wallet reward distribution
+        TRANSFER_MONEY,              // wallet transfers
+        REWARD_DISTRIBUTION,         // wallet reward distribution
+        RESET_REWARD_DISTRIBUTION,
         CIRCUITBOX,
         READY_CHECK,
-        READY_TO_SPAWN
+        READY_TO_SPAWN,
+        TAKEOVERBOT
     }
 
     enum ClientNetSegment
@@ -73,6 +75,7 @@ namespace Barotrauma.Networking
         FILE_TRANSFER,
 
         VOICE,
+        VOICE_AMPLITUDE_DEBUG,
 
         PING_REQUEST,       //ping the client
         CLIENT_PINGS,       //tell the client the pings of all other clients
@@ -205,9 +208,9 @@ namespace Barotrauma.Networking
         
         public TimeSpan UpdateInterval => new TimeSpan(0, 0, 0, 0, MathHelper.Clamp(1000 / ServerSettings.TickRate, 1, 500));
 
-        public void AddChatMessage(string message, ChatMessageType type, string senderName = "", Client senderClient = null, Character senderCharacter = null, PlayerConnectionChangeType changeType = PlayerConnectionChangeType.None, Color? textColor = null)
+        public void AddChatMessage(string message, ChatMessageType type, string senderName = "", Client senderClient = null, Entity senderEntity = null, PlayerConnectionChangeType changeType = PlayerConnectionChangeType.None, Color? textColor = null)
         {
-            AddChatMessage(ChatMessage.Create(senderName, message, type, senderCharacter, senderClient, changeType: changeType, textColor: textColor));
+            AddChatMessage(ChatMessage.Create(senderName, message, type, senderEntity, senderClient, changeType: changeType, textColor: textColor));
         }
 
         public abstract void AddChatMessage(ChatMessage message);

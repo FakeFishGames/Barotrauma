@@ -115,7 +115,6 @@ namespace Barotrauma
             if (IsMouseOver || (!RequireMouseOn && SelectedWidgets.Contains(this) && PlayerInput.PrimaryMouseButtonHeld()))
             {
                 Hovered?.Invoke();
-                System.Diagnostics.Debug.WriteLine("hovered");
                 if (RequireMouseOn || PlayerInput.PrimaryMouseButtonDown())
                 {
                     if ((multiselect && !SelectedWidgets.Contains(this)) || SelectedWidgets.None())

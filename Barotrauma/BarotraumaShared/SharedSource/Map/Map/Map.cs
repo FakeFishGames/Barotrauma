@@ -261,8 +261,7 @@ namespace Barotrauma
 
             foreach (var endLocation in EndLocations)
             {
-                if (endLocation.Type?.ForceLocationName != null &&
-                    !endLocation.Type.ForceLocationName.IsEmpty)
+                if (endLocation.Type?.ForceLocationName is { IsEmpty: false })
                 {
                     endLocation.ForceName(endLocation.Type.ForceLocationName);
                 }

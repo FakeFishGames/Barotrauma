@@ -92,7 +92,7 @@ namespace Barotrauma.MapCreatures.Behavior
             if (availableBranches.Count == 0) { return availableBranches; }
 
             //prefer growing from the branches furthest from the root (ones with the largest branch depth)
-            var branch = ToolBox.SelectWeightedRandom(availableBranches, b => (float)b.BranchDepth, Rand.RandSync.Unsynced);
+            var branch = ToolBox.SelectWeightedRandom(availableBranches, b => b.BranchDepth, Rand.RandSync.Unsynced);
 
             TileSide side = branch.GetRandomFreeSide();
             if (side == TileSide.None) { return availableBranches; }

@@ -211,12 +211,12 @@ namespace Barotrauma
 
         public virtual void SetLevel(LevelData level) { }
 
-        public static Mission LoadRandom(Location[] locations, string seed, bool requireCorrectLocationType, MissionType missionType, bool isSinglePlayer = false)
+        public static Mission LoadRandom(Location[] locations, string seed, bool requireCorrectLocationType, MissionType missionType, bool isSinglePlayer = false, float? difficultyLevel = null)
         {
-            return LoadRandom(locations, new MTRandom(ToolBox.StringToInt(seed)), requireCorrectLocationType, missionType, isSinglePlayer);
+            return LoadRandom(locations, new MTRandom(ToolBox.StringToInt(seed)), requireCorrectLocationType, missionType, isSinglePlayer, difficultyLevel);
         }
 
-        public static Mission LoadRandom(Location[] locations, MTRandom rand, bool requireCorrectLocationType, MissionType missionType, bool isSinglePlayer = false)
+        public static Mission LoadRandom(Location[] locations, MTRandom rand, bool requireCorrectLocationType, MissionType missionType, bool isSinglePlayer = false, float? difficultyLevel = null)
         {
             List<MissionPrefab> allowedMissions = new List<MissionPrefab>();
             if (missionType == MissionType.None)
@@ -225,32 +225,20 @@ namespace Barotrauma
             }
             else
             {
-                allowedMissions.AddRange(MissionPrefab.Prefabs.Where(m => ((int)(missionType & m.Type)) != 0));
+                allowedMissions.AddRange(MissionPrefab.Prefabs.Where(m => m.Type.HasAnyFlag(missionType)));
             }
-
-            allowedMissions.RemoveAll(m => isSinglePlayer ? m.MultiplayerOnly : m.SingleplayerOnly);            
+            allowedMissions.RemoveAll(m => isSinglePlayer ? m.MultiplayerOnly : m.SingleplayerOnly);
             if (requireCorrectLocationType)
             {
                 allowedMissions.RemoveAll(m => !m.IsAllowed(locations[0], locations[1]));
             }
-
-            if (allowedMissions.Count == 0)
+            if (difficultyLevel.HasValue)
             {
-                return null;
+                allowedMissions.RemoveAll(m => !m.IsAllowedDifficulty(difficultyLevel.Value));
             }
-
-            int probabilitySum = allowedMissions.Sum(m => m.Commonness);
-            int randomNumber = rand.NextInt32() % probabilitySum;
-            foreach (MissionPrefab missionPrefab in allowedMissions)
-            {
-                if (randomNumber <= missionPrefab.Commonness)
-                {
-                    return missionPrefab.Instantiate(locations, Submarine.MainSub);
-                }
-                randomNumber -= missionPrefab.Commonness;
-            }
-
-            return null;
+            if (allowedMissions.Count == 0) { return null; }
+            MissionPrefab missionPrefab = ToolBox.SelectWeightedRandom(allowedMissions, m => m.Commonness, rand);
+            return missionPrefab.Instantiate(locations, Submarine.MainSub);
         }
 
         /// <summary>
@@ -288,7 +276,7 @@ namespace Barotrauma
             {
                 foreach (MapEntity entityToShow in MapEntity.MapEntityList.Where(me => me.Prefab?.HasSubCategory(categoryToShow) ?? false))
                 {
-                    entityToShow.HiddenInGame = false;
+                    entityToShow.IsLayerHidden = false;
                 }
             }
             this.level = level;
@@ -381,9 +369,12 @@ namespace Barotrauma
         /// </summary>
         public void End()
         {
-            completed = 
-                DetermineCompleted() && 
-                (completeCheckDataAction == null ||completeCheckDataAction.GetSuccess());
+            if (GameMain.NetworkMember is not { IsClient: true })
+            {
+                completed =                 
+                    DetermineCompleted() && 
+                    (completeCheckDataAction == null ||completeCheckDataAction.GetSuccess());
+            }
             if (completed)
             {
                 if (Prefab.LocationTypeChangeOnCompleted != null)

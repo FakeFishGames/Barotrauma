@@ -96,6 +96,7 @@ namespace Barotrauma
 
             msg.WriteInt32(ExperiencePoints);
             msg.WriteRangedInteger(AdditionalTalentPoints, 0, MaxAdditionalTalentPoints);
+            msg.WriteBoolean(PermanentlyDead);
         }
     }
 }

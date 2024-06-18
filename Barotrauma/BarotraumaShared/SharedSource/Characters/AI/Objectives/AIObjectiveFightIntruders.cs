@@ -1,6 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using Barotrauma.Extensions;
+using System.Collections.Generic;
 using System.Linq;
-using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
@@ -9,19 +9,17 @@ namespace Barotrauma
         public override Identifier Identifier { get; set; } = "fight intruders".ToIdentifier();
         protected override float IgnoreListClearInterval => 30;
         public override bool IgnoreUnsafeHulls => true;
-
         protected override float TargetUpdateTimeMultiplier => 0.2f;
-
         public bool TargetCharactersInOtherSubs { get; init; }
 
-        public AIObjectiveFightIntruders(Character character, AIObjectiveManager objectiveManager, float priorityModifier = 1) 
+        public AIObjectiveFightIntruders(Character character, AIObjectiveManager objectiveManager, float priorityModifier = 1)
             : base(character, objectiveManager, priorityModifier) { }
 
-        protected override bool Filter(Character target) => IsValidTarget(target, character, TargetCharactersInOtherSubs);
+        protected override bool IsValidTarget(Character target) => IsValidTarget(target, character, TargetCharactersInOtherSubs);
 
         protected override IEnumerable<Character> GetList() => Character.CharacterList;
 
-        protected override float TargetEvaluation()
+        protected override float GetTargetPriority()
         {
             if (Targets.None()) { return 0; }
             if (!character.IsOnPlayerTeam && !character.IsOriginallyOnPlayerTeam) { return 100; }
@@ -68,14 +66,14 @@ namespace Barotrauma
             if (HumanAIController.IsFriendly(character, target)) { return false; }
             if (!character.Submarine.IsConnectedTo(target.Submarine)) { return false; }
             if (!targetCharactersInOtherSubs)
-            { 
+            {
                 if (character.Submarine.TeamID != target.Submarine.TeamID && character.OriginalTeamID != target.Submarine.TeamID)
                 {
                     return false;
                 }
             }
             if (target.HasAbilityFlag(AbilityFlags.IgnoredByEnemyAI)) { return false; }
-            if (target.IsArrested) { return false; }
+            if (target.IsHandcuffed && target.IsKnockedDown) { return false; }
             if (EnemyAIController.IsLatchedToSomeoneElse(target, character)) { return false; }
             return true;
         }

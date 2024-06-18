@@ -250,42 +250,92 @@ namespace Barotrauma.IO
     {
         public static string GetCurrentDirectory()
         {
+            // Intentionally crash with all exceptions, if this fails.
             return System.IO.Directory.GetCurrentDirectory();
         }
 
         public static void SetCurrentDirectory(string path)
-        {
+        { 
+            // Intentionally crash with all exceptions, if this fails.
             System.IO.Directory.SetCurrentDirectory(path);
         }
 
         public static string[] GetFiles(string path)
         {
-            return System.IO.Directory.GetFiles(path);
+            try
+            {
+                return System.IO.Directory.GetFiles(path);
+            }
+            catch (UnauthorizedAccessException e)
+            {
+                DebugConsole.ThrowError($"Cannot get files at \"{path}\": unauthorized access. The folder/file(s) might be read-only!", e);
+                return Array.Empty<string>();
+            }
         }
 
         public static string[] GetFiles(string path, string pattern, System.IO.SearchOption option = System.IO.SearchOption.AllDirectories)
         {
-            return System.IO.Directory.GetFiles(path, pattern, option);
+            try
+            {
+                return System.IO.Directory.GetFiles(path, pattern, option);
+            }
+            catch (UnauthorizedAccessException e)
+            {
+                DebugConsole.ThrowError($"Cannot get files at \"{path}\": unauthorized access. The folder/file(s) might be read-only!", e);
+                return Array.Empty<string>();
+            }
         }
 
         public static string[] GetDirectories(string path, string searchPattern = "*", System.IO.SearchOption searchOption = System.IO.SearchOption.TopDirectoryOnly)
         {
-            return System.IO.Directory.GetDirectories(path, searchPattern, searchOption);
+            try
+            {
+                return System.IO.Directory.GetDirectories(path, searchPattern, searchOption);
+            }
+            catch (UnauthorizedAccessException e)
+            {
+                DebugConsole.ThrowError($"Cannot get directories at \"{path}\": unauthorized access. The folder(s) might be read-only!", e);
+                return Array.Empty<string>();
+            }
         }
 
         public static string[] GetFileSystemEntries(string path)
         {
-            return System.IO.Directory.GetFileSystemEntries(path);
+            try
+            {
+                return System.IO.Directory.GetFileSystemEntries(path);
+            }
+            catch (UnauthorizedAccessException e)
+            {
+                DebugConsole.ThrowError($"Cannot get file system entries at \"{path}\": unauthorized access. The file/folder might be read-only!", e);
+                return Array.Empty<string>();
+            }
         }
 
         public static IEnumerable<string> EnumerateDirectories(string path, string pattern)
         {
-            return System.IO.Directory.EnumerateDirectories(path, pattern);
+            try
+            {
+                return System.IO.Directory.EnumerateDirectories(path, pattern);
+            }
+            catch (UnauthorizedAccessException e)
+            {
+                DebugConsole.ThrowError($"Cannot enumerate directories at \"{path}\": unauthorized access. The folder(s) might be read-only!", e);
+                return Array.Empty<string>();
+            }
         }
 
         public static IEnumerable<string> EnumerateFiles(string path, string pattern)
         {
-            return System.IO.Directory.EnumerateFiles(path, pattern);
+            try
+            {
+                return System.IO.Directory.EnumerateFiles(path, pattern);
+            }
+            catch (UnauthorizedAccessException e)
+            {
+                DebugConsole.ThrowError($"Cannot enumerate files at \"{path}\": unauthorized access. The file(s)/folder(s) might be read-only!", e);
+                return Array.Empty<string>();
+            }
         }
 
         public static bool Exists(string path)
@@ -301,7 +351,15 @@ namespace Barotrauma.IO
                 Validation.CanWrite(path, true);
                 return null;
             }
-            return System.IO.Directory.CreateDirectory(path);
+            try
+            {
+                return System.IO.Directory.CreateDirectory(path);
+            }
+            catch (UnauthorizedAccessException e)
+            {
+                DebugConsole.ThrowError($"Cannot create directory at \"{path}\": unauthorized access. The file/folder might be read-only!", e);
+                return null;
+            }
         }
 
         public static void Delete(string path, bool recursive=true)
@@ -312,14 +370,21 @@ namespace Barotrauma.IO
                 return;
             }
             //TODO: validate recursion?
-            System.IO.Directory.Delete(path, recursive);
+            try
+            {
+                System.IO.Directory.Delete(path, recursive);
+            }
+            catch (UnauthorizedAccessException e)
+            {
+                DebugConsole.ThrowError($"Cannot delete \"{path}\": unauthorized access. The file/folder might be read-only!", e);
+            }
         }
 
         public static bool TryDelete(string path, bool recursive = true)
         {
             try
             {
-                Directory.Delete(path, recursive);
+                Delete(path, recursive);
                 return true;
             }
             catch
@@ -330,7 +395,15 @@ namespace Barotrauma.IO
         
         public static DateTime GetLastWriteTime(string path)
         {
-            return System.IO.Directory.GetLastWriteTime(path);
+            try
+            {
+                return System.IO.Directory.GetLastWriteTime(path);
+            }
+            catch (UnauthorizedAccessException e)
+            {
+                DebugConsole.ThrowError($"Cannot get last write time at \"{path}\": unauthorized access. The file/folder might be read-only!", e);
+                return new DateTime();
+            }
         }
     }
 
@@ -340,14 +413,21 @@ namespace Barotrauma.IO
         
         public static bool Exists(string path) => System.IO.File.Exists(path);
 
-        public static void Copy(string src, string dest, bool overwrite=false)
+        public static void Copy(string src, string dest, bool overwrite = false)
         {
             if (!Validation.CanWrite(dest, false))
             {
                 DebugConsole.ThrowError($"Cannot copy \"{src}\" to \"{dest}\": modifying the contents of this folder/using this extension is not allowed.");
                 return;
             }
-            System.IO.File.Copy(src, dest, overwrite);
+            try
+            {
+                System.IO.File.Copy(src, dest, overwrite);   
+            }
+            catch (UnauthorizedAccessException e)
+            {
+                DebugConsole.ThrowError($"Cannot copy \"{src}\" to \"{dest}\": unauthorized access. The file/folder might be read-only!", e);
+            }
         }
 
         public static void Move(string src, string dest)
@@ -362,7 +442,14 @@ namespace Barotrauma.IO
                 DebugConsole.ThrowError($"Cannot move \"{src}\" to \"{dest}\": modifying the contents of the destination folder is not allowed");
                 return;
             }
-            System.IO.File.Move(src, dest);
+            try
+            {
+                System.IO.File.Move(src, dest);
+            }
+            catch (UnauthorizedAccessException e)
+            {
+                DebugConsole.ThrowError($"Cannot move \"{src}\" to \"{dest}\": unauthorized access. The file/folder might be read-only!", e);
+            }
         }
 
         public static void Delete(ContentPath path) => Delete(path.Value);
@@ -374,7 +461,14 @@ namespace Barotrauma.IO
                 DebugConsole.ThrowError($"Cannot delete file \"{path}\": modifying the contents of this folder/using this extension is not allowed.");
                 return;
             }
-            System.IO.File.Delete(path);
+            try
+            {
+                System.IO.File.Delete(path);
+            }
+            catch (UnauthorizedAccessException e)
+            {
+                DebugConsole.ThrowError($"Cannot delete {path}: unauthorized access. The file/folder might be read-only!", e);
+            }
         }
 
         public static DateTime GetLastWriteTime(string path)
@@ -407,7 +501,15 @@ namespace Barotrauma.IO
                 System.IO.FileAccess.Read :
                 access;
             var shareVal = share ?? (access == System.IO.FileAccess.Read ? System.IO.FileShare.Read : System.IO.FileShare.None);
-            return new FileStream(path, System.IO.File.Open(path, mode, access, shareVal));
+            try
+            {
+                return new FileStream(path, System.IO.File.Open(path, mode, access, shareVal));
+            }
+            catch (UnauthorizedAccessException e)
+            {
+                DebugConsole.ThrowError($"Cannot open {path} (stream): unauthorized access. The file/folder might be read-only!", e);
+                return null;
+            }
         }
 
         public static FileStream? OpenRead(string path)
@@ -432,7 +534,14 @@ namespace Barotrauma.IO
                 DebugConsole.ThrowError($"Cannot write all bytes to \"{path}\": modifying the files in this folder/with this extension is not allowed.");
                 return;
             }
-            System.IO.File.WriteAllBytes(path, contents);
+            try
+            {
+                System.IO.File.WriteAllBytes(path, contents);
+            }
+            catch (UnauthorizedAccessException e)
+            {
+                DebugConsole.ThrowError($"Cannot write at {path}: unauthorized access. The file/folder might be read-only!", e);
+            }
         }
 
         public static void WriteAllText(string path, string contents, System.Text.Encoding? encoding = null)
@@ -442,7 +551,14 @@ namespace Barotrauma.IO
                 DebugConsole.ThrowError($"Cannot write all text to \"{path}\": modifying the files in this folder/with this extension is not allowed.");
                 return;
             }
-            System.IO.File.WriteAllText(path, contents, encoding ?? System.Text.Encoding.UTF8);
+            try
+            {
+                System.IO.File.WriteAllText(path, contents, encoding ?? System.Text.Encoding.UTF8);
+            }
+            catch (UnauthorizedAccessException e)
+            {
+                DebugConsole.ThrowError($"Cannot write at {path}: unauthorized access. The file/folder might be read-only!", e);
+            }
         }
 
         public static void WriteAllLines(string path, IEnumerable<string> contents, System.Text.Encoding? encoding = null)
@@ -452,22 +568,53 @@ namespace Barotrauma.IO
                 DebugConsole.ThrowError($"Cannot write all lines to \"{path}\": modifying the files in this folder/with this extension is not allowed.");
                 return;
             }
-            System.IO.File.WriteAllLines(path, contents, encoding ?? System.Text.Encoding.UTF8);
+            try
+            {
+                System.IO.File.WriteAllLines(path, contents, encoding ?? System.Text.Encoding.UTF8);
+            }
+            catch (UnauthorizedAccessException e)
+            {
+                DebugConsole.ThrowError($"Cannot write at {path}: unauthorized access. The file/folder might be read-only!", e);
+            }
         }
 
         public static byte[] ReadAllBytes(string path)
         {
-            return System.IO.File.ReadAllBytes(path);
+            try
+            {
+                return System.IO.File.ReadAllBytes(path);
+            }
+            catch (UnauthorizedAccessException e)
+            {
+                DebugConsole.ThrowError($"Cannot read {path}: unauthorized access. The file/folder might be read-only!", e);
+                return Array.Empty<byte>();
+            }
         }
 
         public static string ReadAllText(string path, System.Text.Encoding? encoding = null)
         {
-            return System.IO.File.ReadAllText(path, encoding ?? System.Text.Encoding.UTF8);
+            try
+            {
+                return System.IO.File.ReadAllText(path, encoding ?? System.Text.Encoding.UTF8);
+            }
+            catch (UnauthorizedAccessException e)
+            {
+                DebugConsole.ThrowError($"Cannot read {path}: unauthorized access. The file/folder might be read-only!", e);
+                return string.Empty;
+            }
         }
 
         public static string[] ReadAllLines(string path, System.Text.Encoding? encoding = null)
         {
-            return System.IO.File.ReadAllLines(path, encoding ?? System.Text.Encoding.UTF8);
+            try
+            {
+                return System.IO.File.ReadAllLines(path, encoding ?? System.Text.Encoding.UTF8);
+            }
+            catch (UnauthorizedAccessException e)
+            {
+                DebugConsole.ThrowError($"Cannot read {path}: unauthorized access. The file/folder might be read-only!", e);
+                return Array.Empty<string>();
+            }
         }
     }
 

@@ -16,7 +16,7 @@ namespace Barotrauma
         private readonly bool repeat;
         //how long until the path to the target is declared unreachable
         private float waitUntilPathUnreachable;
-        private bool getDivingGearIfNeeded;
+        private readonly bool getDivingGearIfNeeded;
 
         /// <summary>
         /// Doesn't allow the objective to complete if this condition is false
@@ -33,11 +33,6 @@ namespace Barotrauma
         public bool SpeakIfFails { get; set; } = true;
         public bool DebugLogWhenFails { get; set; } = true;
         public bool UsePathingOutside { get; set; } = true;
-
-        /// <summary>
-        /// Which event action created this objective (if any)
-        /// </summary>
-        public EventAction SourceEventAction;
 
         public float ExtraDistanceWhileSwimming;
         public float ExtraDistanceOutsideSub;
@@ -94,10 +89,10 @@ namespace Barotrauma
         /// </summary>
         public bool UseDistanceRelativeToAimSourcePos { get; set; } = false;
 
-        public override bool AbandonWhenCannotCompleteSubjectives => false;
+        public override bool AbandonWhenCannotCompleteSubObjectives => false;
 
-        public override bool AllowOutsideSubmarine => AllowGoingOutside;
-        public override bool AllowInAnySub => true;
+        protected override bool AllowOutsideSubmarine => AllowGoingOutside;
+        protected override bool AllowInAnySub => true;
 
         public Identifier DialogueIdentifier { get; set; } = "dialogcannotreachtarget".ToIdentifier();
         public LocalizedString TargetName { get; set; }
@@ -287,10 +282,12 @@ namespace Barotrauma
                     if (waitUntilPathUnreachable < 0)
                     {
                         waitUntilPathUnreachable = pathWaitingTime;
-                        if (repeat)
+                        if (repeat && !IsCompleted)
                         {
-                            SpeakCannotReach();
-                            return;
+                            if (!IsDoneFollowing())
+                            {
+                                SpeakCannotReach();
+                            }
                         }
                         else
                         {
@@ -374,16 +371,10 @@ namespace Barotrauma
                     return;
                 }
             }
-            if (repeat && IsCloseEnough)
+            if (IsDoneFollowing())
             {
-                if (requiredCondition == null || requiredCondition())
-                {
-                    if (character.CanSeeTarget(Target) && (!character.IsClimbing || IsFollowOrder))
-                    {
-                        OnCompleted();
-                        return;
-                    }
-                }
+                OnCompleted();
+                return;
             }
             float maxGapDistance = 500;
             Character targetCharacter = Target as Character;
@@ -652,6 +643,21 @@ namespace Barotrauma
                 }
                 character.SetInput(InputType.Aim, false, true);
                 character.SetInput(InputType.Shoot, false, true);
+            }
+            
+            bool IsDoneFollowing()
+            {
+                if (repeat && IsCloseEnough)
+                {
+                    if (requiredCondition == null || requiredCondition())
+                    {
+                        if (character.CanSeeTarget(Target) && (!character.IsClimbing || IsFollowOrder))
+                        {
+                            return true;
+                        }
+                    }
+                }
+                return false;
             }
         }
 

@@ -438,8 +438,11 @@ namespace Barotrauma
 
         protected override void SetAlpha(float a)
         {
-            // base.SetAlpha(a);
-            textColor = new Color(TextColor.R / 255.0f, TextColor.G / 255.0f, TextColor.B / 255.0f, a);
+            textColor = new Color(TextColor, a);
+            if (hoverTextColor.HasValue)
+            {
+                hoverTextColor = new Color(hoverTextColor.Value, a);
+            }
         }
 
         /// <summary>

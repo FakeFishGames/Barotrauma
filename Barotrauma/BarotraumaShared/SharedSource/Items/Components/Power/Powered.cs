@@ -102,6 +102,7 @@ namespace Barotrauma.Items.Components
 
         protected virtual PowerPriority Priority { get { return PowerPriority.Default; } }
 
+        [Header(localizedTextTag: "sp.powered.propertyheader")]
         [Editable, Serialize(0.5f, IsPropertySaveable.Yes, description: "The minimum voltage required for the device to function. " +
             "The voltage is calculated as power / powerconsumption, meaning that a device " +
             "with a power consumption of 1000 kW would need at least 500 kW of power to work if the minimum voltage is set to 0.5.")]

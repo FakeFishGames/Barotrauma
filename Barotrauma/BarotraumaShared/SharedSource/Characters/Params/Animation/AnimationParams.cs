@@ -22,6 +22,7 @@ namespace Barotrauma
 
     abstract class GroundedMovementParams : AnimationParams
     {
+        [Header("Legs")]
         [Serialize("1.0, 1.0", IsPropertySaveable.Yes, description: "How big steps the character takes."), Editable(DecimalCount = 2, ValueStep = 0.01f)]
         public Vector2 StepSize
         {
@@ -29,12 +30,14 @@ namespace Barotrauma
             set;
         }
 
+        [Header("Standing")]
         [Serialize(0f, IsPropertySaveable.Yes, description: "How high above the ground the character's head is positioned."), Editable(DecimalCount = 2, ValueStep = 0.1f)]
         public float HeadPosition { get; set; }
 
         [Serialize(0f, IsPropertySaveable.Yes, description: "How high above the ground the character's torso is positioned."), Editable(DecimalCount = 2, ValueStep = 0.1f)]
         public float TorsoPosition { get; set; }
 
+        [Header("Step lift")]
         [Serialize(1f, IsPropertySaveable.Yes, description: "Separate multiplier for the head lift"), Editable(MinValueFloat = 0, MaxValueFloat = 2, ValueStep = 0.1f)]
         public float StepLiftHeadMultiplier { get; set; }
 
@@ -50,6 +53,7 @@ namespace Barotrauma
         [Serialize(2f, IsPropertySaveable.Yes, description: "How frequently the body raises when taking a step. The default is 2 (after every step)."), Editable(MinValueFloat = 0, MaxValueFloat = 10, ValueStep = 0.1f)]
         public float StepLiftFrequency { get; set; }
 
+        [Header("Movement")]
         [Serialize(0.75f, IsPropertySaveable.Yes, description: "The character's movement speed is multiplied with this value when moving backwards."), Editable(MinValueFloat = 0.1f, MaxValueFloat = 0.99f, DecimalCount = 2)]
         public float BackwardsMovementMultiplier { get; set; }
     }
@@ -69,11 +73,15 @@ namespace Barotrauma
         public bool IsGroundedAnimation => AnimationType is AnimationType.Walk or AnimationType.Run or AnimationType.Crouch;
         public bool IsSwimAnimation => AnimationType is AnimationType.SwimSlow or AnimationType.SwimFast;
 
+        [Header("General")]
+        [Serialize(AnimationType.NotDefined, IsPropertySaveable.Yes), Editable]
+        public virtual AnimationType AnimationType { get; protected set; }
         /// <summary>
         /// The cached animations of all the characters that have been loaded.
         /// </summary>
         private static readonly Dictionary<Identifier, Dictionary<string, AnimationParams>> allAnimations = new Dictionary<Identifier, Dictionary<string, AnimationParams>>();
 
+        [Header("Movement")]
         [Serialize(1.0f, IsPropertySaveable.Yes), Editable(DecimalCount = 2, MinValueFloat = 0, MaxValueFloat = Ragdoll.MAX_SPEED, ValueStep = 0.1f)]
         public float MovementSpeed { get; set; }
         
@@ -84,6 +92,7 @@ namespace Barotrauma
         /// <summary>
         /// In degrees.
         /// </summary>
+        [Header("Standing")]
         [Serialize(float.NaN, IsPropertySaveable.Yes), Editable(-360f, 360f)]
         public float HeadAngle
         {
@@ -122,12 +131,11 @@ namespace Barotrauma
         [Serialize(50.0f, IsPropertySaveable.Yes, description: "How much torque is used to rotate the torso to the correct orientation."), Editable(MinValueFloat = 0, MaxValueFloat = 1000, ValueStep = 1)]
         public float TorsoTorque { get; set; }
 
+        [Header("Legs")]
         [Serialize(25.0f, IsPropertySaveable.Yes, description: "How much torque is used to rotate the feet to the correct orientation."), Editable(MinValueFloat = 0, MaxValueFloat = 1000, ValueStep = 1)]
         public float FootTorque { get; set; }
 
-        [Serialize(AnimationType.NotDefined, IsPropertySaveable.Yes), Editable]
-        public virtual AnimationType AnimationType { get; protected set; }
-
+        [Header("Arms")]
         [Serialize(1f, IsPropertySaveable.Yes, description: "How much force is used to rotate the arms to the IK position."), Editable(MinValueFloat = 0, MaxValueFloat = 10, DecimalCount = 2)]
         public float ArmIKStrength { get; set; }
 

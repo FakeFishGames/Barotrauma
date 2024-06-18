@@ -347,6 +347,10 @@ namespace Barotrauma
         /// </summary>
         public event Action BeforeLevelLoading;
 
+        /// <summary>
+        /// Triggers when saving and quitting mid-round (as in, not just transferring to a new level). Automatically cleared after triggering -> no need to unregister
+        /// </summary>
+        public event Action OnSaveAndQuit;
 
         public override void AddExtraMissions(LevelData levelData)
         {
@@ -472,7 +476,7 @@ namespace Barotrauma
                             var missionPrefabs = MissionPrefab.Prefabs.Where(m => m.Tags.Any(t => t == automaticMission.MissionTag)).OrderBy(m => m.UintIdentifier);
                             if (missionPrefabs.Any())
                             {
-                                var missionPrefab = ToolBox.SelectWeightedRandom(missionPrefabs, p => (float)p.Commonness, rand);     
+                                var missionPrefab = ToolBox.SelectWeightedRandom(missionPrefabs, p => p.Commonness, rand);
                                 if (missionPrefab.Type == MissionType.Pirate && Missions.Any(m => m.Prefab.Type == MissionType.Pirate))
                                 {
                                     continue;                                    
@@ -515,8 +519,8 @@ namespace Barotrauma
                     if (endLevelMissionPrefabs.Any())
                     {
                         Random rand = new MTRandom(ToolBox.StringToInt(levelData.Seed));
-                        var endLevelMissionPrefab = ToolBox.SelectWeightedRandom(endLevelMissionPrefabs, p => (float)p.Commonness, rand);
-                        if (!Missions.Any(m => m.Prefab.Type == endLevelMissionPrefab.Type))
+                        var endLevelMissionPrefab = ToolBox.SelectWeightedRandom(endLevelMissionPrefabs, p => p.Commonness, rand);
+                        if (Missions.All(m => m.Prefab.Type != endLevelMissionPrefab.Type))
                         {
                             if (levelData.Type == LevelData.LevelType.LocationConnection)
                             {
@@ -911,6 +915,20 @@ namespace Barotrauma
                     reactor.AutoTemp = true;
                 }
             }
+        }
+
+        /// <summary>
+        /// Handles updating store stock, registering event history and relocating items (i.e. things that need to be done when saving and quitting mid-round)
+        /// </summary>
+        public void HandleSaveAndQuit()
+        {
+            OnSaveAndQuit?.Invoke();
+            OnSaveAndQuit = null;
+            if (Level.IsLoadedFriendlyOutpost)
+            {
+                UpdateStoreStock();
+            }
+            GameMain.GameSession.EventManager?.RegisterEventHistory(registerFinishedOnly: true);
         }
 
         /// <summary>
@@ -1368,13 +1386,13 @@ namespace Barotrauma
                 {
                     if (item.Removed) { continue; }
                     if (item.NonInteractable || item.NonPlayerTeamInteractable) { continue; }
-                    if (item.HiddenInGame) { continue; }
+                    if (item.IsHidden) { continue; }
                     if (!connectedSubs.Contains(item.Submarine)) { continue; }
                     if (item.Prefab.DontTransferBetweenSubs) { continue; }
                     if (AnyParentInventoryDisableTransfer(item)) { continue; }
                     var rootOwner = item.GetRootInventoryOwner();
                     if (rootOwner is Character) { continue; }
-                    if (rootOwner is Item ownerItem && (ownerItem.NonInteractable || item.NonPlayerTeamInteractable || ownerItem.HiddenInGame)) { continue; }
+                    if (rootOwner is Item ownerItem && (ownerItem.NonInteractable || item.NonPlayerTeamInteractable || ownerItem.IsHidden)) { continue; }
                     if (item.GetComponent<Door>() != null) { continue; }
                     if (item.Components.None(c => c is Pickable)) { continue; }
                     if (item.Components.Any(c => c is Pickable p && p.IsAttached)) { continue; }

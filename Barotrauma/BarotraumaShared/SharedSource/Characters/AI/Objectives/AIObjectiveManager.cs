@@ -20,10 +20,27 @@ namespace Barotrauma
             MaxValue = 2
         }
 
+        /// <summary>
+        /// Highest possible priority for any objective. Used in certain cases where the character needs to react immediately to survive, 
+        /// such as finding a suit when under pressure or getting out of a burning room.
+        /// </summary>
         public const float MaxObjectivePriority = 100;
+        /// <summary>
+        /// Priority of objectives such as finding safety, rescuing someone in a critical state or defending against an attacker 
+        /// (= objectives that are critical for saving the character's or someone else's life)
+        /// </summary>
         public const float EmergencyObjectivePriority = 90;
+        /// <summary>
+        /// Maximum priority of an order given to the character (forced order, or the leftmost order in the crew list)
+        /// </summary>
         public const float HighestOrderPriority = 70;
+        /// <summary>
+        /// Maximum priority of an order given to the character (rightmost order in the crew list)
+        /// </summary>
         public const float LowestOrderPriority = 60;
+        /// <summary>
+        /// Objectives with a priority equal to or higher than this make the character run.
+        /// </summary>
         public const float RunPriority = 50;
         // Constantly increases the priority of the selected objective, unless overridden
         public const float baseDevotion = 5;
@@ -129,6 +146,7 @@ namespace Barotrauma
                 return;
 #endif
             }
+
             foreach (var delayedObjective in DelayedObjectives)
             {
                 CoroutineManager.StopCoroutines(delayedObjective.Value);
@@ -150,36 +168,46 @@ namespace Barotrauma
             AddObjective(newIdleObjective);
 
             int objectiveCount = Objectives.Count;
-            foreach (var autonomousObjective in character.Info.Job.Prefab.AutonomousObjectives)
+            if (character.Info?.Job != null)
             {
-                var orderPrefab = OrderPrefab.Prefabs[autonomousObjective.Identifier];
-                if (orderPrefab == null) { throw new Exception($"Could not find a matching prefab by the identifier: '{autonomousObjective.Identifier}'"); }
-                Item item = null;
-                if (orderPrefab.MustSetTarget)
+                foreach (var autonomousObjective in character.Info.Job.Prefab.AutonomousObjectives)
                 {
-                    item = orderPrefab.GetMatchingItems(character.Submarine, mustBelongToPlayerSub: false, requiredTeam: character.Info.TeamID, interactableFor: character)?.GetRandomUnsynced();
-                }
-                var order = new Order(orderPrefab, autonomousObjective.Option, item ?? character.CurrentHull as Entity, orderPrefab.GetTargetItemComponent(item), orderGiver: character);
-                if (order == null) { continue; }
-                if ((order.IgnoreAtOutpost || autonomousObjective.IgnoreAtOutpost) && 
-                    Level.IsLoadedFriendlyOutpost && character.TeamID != CharacterTeamType.FriendlyNPC && !character.IsFriendlyNPCTurnedHostile)
-                {
-                    if (Submarine.MainSub != null && Submarine.MainSub.DockedTo.None(s => s.TeamID != CharacterTeamType.FriendlyNPC && s.TeamID != character.TeamID))
+                    var orderPrefab = OrderPrefab.Prefabs[autonomousObjective.Identifier] ?? throw new Exception($"Could not find a matching prefab by the identifier: '{autonomousObjective.Identifier}'");
+                    Item item = null;
+                    if (orderPrefab.MustSetTarget)
+                    {
+                        item = orderPrefab.GetMatchingItems(character.Submarine, mustBelongToPlayerSub: false, requiredTeam: character.Info.TeamID, interactableFor: character)?.GetRandomUnsynced();
+                    }
+                    var order = new Order(orderPrefab, autonomousObjective.Option, item ?? character.CurrentHull as Entity, orderPrefab.GetTargetItemComponent(item), orderGiver: character);
+                    if (order == null) { continue; }
+                    if ((order.IgnoreAtOutpost || autonomousObjective.IgnoreAtOutpost) && 
+                        Level.IsLoadedFriendlyOutpost && character.TeamID != CharacterTeamType.FriendlyNPC && !character.IsFriendlyNPCTurnedHostile)
+                    {
+                        if (Submarine.MainSub != null && Submarine.MainSub.DockedTo.None(s => s.TeamID != CharacterTeamType.FriendlyNPC && s.TeamID != character.TeamID))
+                        {
+                            continue;
+                        }
+                    }
+                    if (autonomousObjective.IgnoreAtNonOutpost && !Level.IsLoadedFriendlyOutpost)
                     {
                         continue;
                     }
-                }
-                if (autonomousObjective.IgnoreAtNonOutpost && !Level.IsLoadedFriendlyOutpost)
-                {
-                    continue;
-                }
-                var objective = CreateObjective(order, autonomousObjective.PriorityModifier);
-                if (objective != null && objective.CanBeCompleted)
-                {
-                    AddObjective(objective, delay: Rand.Value() / 2);
-                    objectiveCount++;
-                }
-            }          
+                    var objective = CreateObjective(order, autonomousObjective.PriorityModifier);
+                    if (objective != null && objective.CanBeCompleted)
+                    {
+                        AddObjective(objective, delay: Rand.Value() / 2);
+                        objectiveCount++;
+                    }
+                }       
+            }
+            else
+            {
+                string warningMsg = character.Info == null ?
+                    $"The character {character.DisplayName} has been set to use human ai, but has no {nameof(CharacterInfo)}. This may cause issues with the AI. Consider adding {nameof(CharacterPrefab.HasCharacterInfo)}=\"True\" to the character config." :
+                    $"The character {character.DisplayName} has been set to use human ai, but has no job. This may cause issues with the AI. Consider configuring some jobs for the character type.";
+                DebugConsole.AddWarning(warningMsg, character.Prefab.ContentPackage);
+            }
+   
             _waitTimer = Math.Max(_waitTimer, Rand.Range(0.5f, 1f) * objectiveCount);
         }
 
@@ -492,7 +520,6 @@ namespace Barotrauma
                         if (!order.TargetItemComponent.Item.IsInteractable(character)) { return null; }
                         newObjective = new AIObjectiveOperateItem(targetPump, character, this, order.Option, false, priorityModifier: priorityModifier)
                         {
-                            IsLoop = false,
                             Override = order.OrderGiver is { IsCommanding: true }
                         };
                         newObjective.Completed += () => DismissSelf(order);
@@ -522,7 +549,7 @@ namespace Barotrauma
                     newObjective = new AIObjectiveOperateItem(order.TargetItemComponent, character, this, order.Option,
                         requireEquip: false, useController: order.UseController, controller: order.ConnectedController, priorityModifier: priorityModifier)
                     {
-                        IsLoop = true,
+                        Repeat = true,
                         // Don't override unless it's an order by a player
                         Override = order.OrderGiver != null && order.OrderGiver.IsCommanding 
                     };
@@ -530,7 +557,6 @@ namespace Barotrauma
                 case "setchargepct":
                     newObjective = new AIObjectiveOperateItem(order.TargetItemComponent, character, this, order.Option, false, priorityModifier: priorityModifier)
                     {
-                        IsLoop = false,
                         Override = !character.IsDismissed,
                         completionCondition = () =>
                         {
@@ -594,7 +620,6 @@ namespace Barotrauma
                     {
                         prepareObjective = new AIObjectivePrepare(character, this, order.GetTargetItems(order.Option), order.RequireItems)
                         {
-                            KeepActiveWhenReady = false,
                             CheckInventory = false,
                             EvaluateCombatPriority = true,
                             FindAllItems = false,
@@ -612,13 +637,16 @@ namespace Barotrauma
                 case "deconstructitems":
                     newObjective = new AIObjectiveDeconstructItems(character, this, priorityModifier);
                     break;
+                case "inspectnoises":
+                    newObjective = new AIObjectiveInspectNoises(character, this, priorityModifier);
+                    break;
                 default:
                     if (order.TargetItemComponent == null) { return null; }
                     if (!order.TargetItemComponent.Item.IsInteractable(character)) { return null; }
                     newObjective = new AIObjectiveOperateItem(order.TargetItemComponent, character, this, order.Option,
                         requireEquip: false, useController: order.UseController, controller: order.ConnectedController, priorityModifier: priorityModifier)
                     {
-                        IsLoop = true,
+                        Repeat = true,
                         // Don't override unless it's an order by a player
                         Override = order.OrderGiver != null && order.OrderGiver.IsCommanding
                     };
@@ -680,10 +708,16 @@ namespace Barotrauma
         /// Only checks the current order. Deprecated, use pattern matching instead.
         /// </summary>
         public bool IsCurrentOrder<T>() where T : AIObjective => CurrentOrder is T;
+        
         /// <summary>
         /// Checks the current objective (which can be an order too). Deprecated, use pattern matching instead.
         /// </summary>
         public bool IsCurrentObjective<T>() where T : AIObjective => CurrentObjective is T;
+        
+        /// <summary>
+        /// Checks if any objectives or orders are of the specified type. Regardless of whether the objective is active or inactive.
+        /// </summary>
+        public bool HasObjectiveOrOrder<T>() where T : AIObjective =>  Objectives.Any(o => o is T) || HasOrder<T>();
 
         public AIObjective GetActiveObjective() => CurrentObjective?.GetActiveObjective();
 
@@ -696,10 +730,23 @@ namespace Barotrauma
         /// Return the first order with the specified objective. Can return null.
         /// </summary>
         public Order GetOrder(AIObjective objective) => CurrentOrders.FirstOrDefault(o => o.Objective == objective);
-
+        
+        /// <summary>
+        /// Returns the last active objective of the specified objective type.
+        /// Should generally be used to get the active objective (or subobjective) of objectives that don't sort their subobjectives by priority (see <see cref="AIObjective.AllowSubObjectiveSorting"/>.
+        /// </summary>
+        /// <returns>The last active objective of the specified type if found.
+        /// </returns>
         public T GetLastActiveObjective<T>() where T : AIObjective
             => CurrentObjective?.GetSubObjectivesRecursive(includingSelf: true).LastOrDefault(so => so is T) as T;
-
+        
+        /// <summary>
+        /// Returns the first active objective of the specified objective type.
+        /// Should generally be used to get the active objective (or subobjective) of objectives that sort their subobjectives by priority, such as those that inherit <see cref="AIObjectiveLoop"/>.
+        /// </summary>
+        /// <returns>
+        /// The first active objective of the specified type if found.
+        /// </returns>
         public T GetFirstActiveObjective<T>() where T : AIObjective
             => CurrentObjective?.GetSubObjectivesRecursive(includingSelf: true).FirstOrDefault(so => so is T) as T;
 

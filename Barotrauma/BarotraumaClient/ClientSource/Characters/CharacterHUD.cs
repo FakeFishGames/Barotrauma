@@ -289,7 +289,7 @@ namespace Barotrauma
 
                 if (character.Params.CanInteract && character.SelectedCharacter != null && character.SelectedCharacter.Inventory != null)
                 {
-                    if (character.SelectedCharacter.CanInventoryBeAccessed)
+                    if (character.SelectedCharacter.IsInventoryAccessibleTo(character))
                     {
                         character.SelectedCharacter.Inventory.Update(deltaTime, cam);
                     }
@@ -677,7 +677,7 @@ namespace Barotrauma
             {
                 if (character.Params.CanInteract && character.SelectedCharacter != null && character.SelectedCharacter.Inventory != null)
                 {
-                    if (character.SelectedCharacter.CanInventoryBeAccessed)
+                    if (character.SelectedCharacter.IsInventoryAccessibleTo(character))
                     {
                         character.SelectedCharacter.Inventory.Locked = false;
                         character.SelectedCharacter.Inventory.CurrentLayout = CharacterInventory.Layout.Left;
@@ -759,7 +759,7 @@ namespace Barotrauma
                 textPos.Y += largeTextSize.Y;
             }
 
-            if (character.FocusedCharacter.CanBeDragged)
+            if (character.FocusedCharacter.CanBeDraggedBy(character))
             {
                 string text = character.CanEat ? "EatHint" : "GrabHint";
                 GUI.DrawString(spriteBatch, textPos, GetCachedHudText(text, InputType.Grab),
@@ -767,11 +767,7 @@ namespace Barotrauma
                 textPos.Y += largeTextSize.Y;
             }
 
-            if (!character.DisableHealthWindow &&
-                character.IsFriendly(character.FocusedCharacter) && 
-                character.FocusedCharacter.CharacterHealth.UseHealthWindow &&
-                character.CanInteractWith(character.FocusedCharacter, 160f, false) &&
-                !character.IsClimbing)
+            if (character.FocusedCharacter.CanBeHealedBy(character))
             {
                 GUI.DrawString(spriteBatch, textPos, GetCachedHudText("HealHint", InputType.Health),
                     GUIStyle.Green, Color.Black, 2, GUIStyle.SmallFont);

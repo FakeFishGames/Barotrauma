@@ -29,7 +29,7 @@ namespace Barotrauma
             : base(preset)
         {
             Location[] locations = { GameMain.GameSession.StartLocation, GameMain.GameSession.EndLocation };
-            var mission = Mission.LoadRandom(locations, seed, false, missionType);
+            var mission = Mission.LoadRandom(locations, seed, requireCorrectLocationType: false, missionType, difficultyLevel: GameMain.NetworkMember.ServerSettings.SelectedLevelDifficulty);
             if (mission != null)
             {
                 missions.Add(mission);

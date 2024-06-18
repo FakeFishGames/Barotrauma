@@ -42,16 +42,25 @@ namespace Barotrauma
         {
             AvailableCharacters.ForEach(c => c.Remove());
             AvailableCharacters.Clear();
+
+            foreach (var missingJob in location.Type.GetHireablesMissingFromCrew())
+            {
+                AddCharacter(missingJob);
+                amount--;
+            }
             for (int i = 0; i < amount; i++)
             {
-                JobPrefab job = location.Type.GetRandomHireable();
-                if (job == null) { return; }
-
-                var variant = Rand.Range(0, job.Variants, Rand.RandSync.ServerAndClient);
-                AvailableCharacters.Add(new CharacterInfo(CharacterPrefab.HumanSpeciesName, jobOrJobPrefab: job, variant: variant));
+                AddCharacter(location.Type.GetRandomHireable());
             }
             if (location.Faction != null) { GenerateFactionCharacters(location.Faction.Prefab); }
             if (location.SecondaryFaction != null) { GenerateFactionCharacters(location.SecondaryFaction.Prefab); }
+
+            void AddCharacter(JobPrefab job)
+            {
+                if (job == null) { return; }
+                int variant = Rand.Range(0, job.Variants, Rand.RandSync.ServerAndClient);
+                AvailableCharacters.Add(new CharacterInfo(CharacterPrefab.HumanSpeciesName, jobOrJobPrefab: job, variant: variant));
+            }
         }
 
         private void GenerateFactionCharacters(FactionPrefab faction)

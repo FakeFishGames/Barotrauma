@@ -582,9 +582,9 @@ namespace Barotrauma.Items.Components
         }
 
         private int loadedVariant = -1;
-        public override void Load(ContentXElement componentElement, bool usePrefabValues, IdRemap idRemap)
+        public override void Load(ContentXElement componentElement, bool usePrefabValues, IdRemap idRemap, bool isItemSwap)
         {
-            base.Load(componentElement, usePrefabValues, idRemap);
+            base.Load(componentElement, usePrefabValues, idRemap, isItemSwap);
             loadedVariant = componentElement.GetAttributeInt("variant", -1);
         }
         public override void OnItemLoaded()

@@ -3,6 +3,7 @@ using Barotrauma.Extensions;
 using Barotrauma.Items.Components;
 using Barotrauma.Networking;
 using FarseerPhysics;
+using FarseerPhysics.Dynamics;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -2062,14 +2063,18 @@ namespace Barotrauma
                                         {
                                             foreach (Affliction affliction in character.CharacterHealth.GetAllAfflictions())
                                             {
-                                                if (!characterSpawnInfo.TransferAfflictions && characterSpawnInfo.TransferBuffs && affliction.Prefab.IsBuff)
+                                                if (affliction.Prefab.IsBuff)
                                                 {
-                                                    newCharacter.CharacterHealth.ApplyAffliction(newCharacter.AnimController.MainLimb, affliction.Prefab.Instantiate(affliction.Strength));
+                                                    if (!characterSpawnInfo.TransferBuffs) { continue; }
                                                 }
-                                                if (characterSpawnInfo.TransferAfflictions)
+                                                else
                                                 {
-                                                    newCharacter.CharacterHealth.ApplyAffliction(newCharacter.AnimController.MainLimb, affliction.Prefab.Instantiate(affliction.Strength));
+                                                    if (!characterSpawnInfo.TransferAfflictions) { continue; }
                                                 }
+                                                //ApplyAffliction modified the strength based on max vitality, let's undo that before transferring the affliction
+                                                //(otherwise e.g. a character with 1000 vitality would only get a tenth of the strength)
+                                                float afflictionStrength = affliction.Strength * (newCharacter.MaxVitality / 100.0f);
+                                                newCharacter.CharacterHealth.ApplyAffliction(newCharacter.AnimController.MainLimb, affliction.Prefab.Instantiate(afflictionStrength));
                                             }
                                         }
                                         if (i == characterSpawnInfo.Count) // Only perform the below actions if this is the last character being spawned.
@@ -2293,8 +2298,13 @@ namespace Barotrauma
                             {
                                 var sourceEntity = (sourceBody?.UserData as ISpatialEntity) ?? entity;
                                 Vector2 spawnPos = sourceEntity.SimPosition;
+                                List<Body> ignoredBodies = null;
+                                if (!projectile.DamageUser)
+                                {
+                                    ignoredBodies = user?.AnimController.Limbs.Where(l => !l.IsSevered).Select(l => l.body.FarseerBody).ToList();
+                                }
                                 projectile.Shoot(user, spawnPos, spawnPos, rotation,
-                                    ignoredBodies: user?.AnimController.Limbs.Where(l => !l.IsSevered).Select(l => l.body.FarseerBody).ToList(), createNetworkEvent: true);
+                                    ignoredBodies: ignoredBodies, createNetworkEvent: true);
                                 projectile.Item.Submarine = projectile.LaunchSub = sourceEntity?.Submarine;
                             }
                             else if (newItem.body != null)

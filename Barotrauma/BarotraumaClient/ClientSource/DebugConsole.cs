@@ -114,7 +114,7 @@ namespace Barotrauma
             textBox.MaxTextLength = maxLength;
             textBox.OnKeyHit += (sender, key) =>
             {
-                if (key != Keys.Tab)
+                if (key != Keys.Tab && key != Keys.LeftShift)
                 {
                     ResetAutoComplete();
                 }
@@ -181,7 +181,8 @@ namespace Barotrauma
 
                 if (PlayerInput.KeyHit(Keys.Tab) && !textBox.IsIMEActive)
                 {
-                    textBox.Text = AutoComplete(textBox.Text, increment: string.IsNullOrEmpty(currentAutoCompletedCommand) ? 0 : 1 );
+                    int increment = PlayerInput.KeyDown(Keys.LeftShift) ? -1 : 1;
+                    textBox.Text = AutoComplete(textBox.Text, increment: string.IsNullOrEmpty(currentAutoCompletedCommand) ? 0 : increment );
                 }
 
                 if (PlayerInput.KeyDown(Keys.LeftControl) || PlayerInput.KeyDown(Keys.RightControl))
@@ -634,6 +635,20 @@ namespace Barotrauma
             {
                 NewMessage("Ready checks can only be commenced in multiplayer.", Color.Red);
             }));
+
+            commands.Add(new Command("setsalary", "setsalary [0-100] [character/default]: Sets the salary of a certain character or the default salary to a percentage.", (string[] args) =>
+            {
+                ThrowError("This command can only be used in multiplayer campaign.");
+            }, isCheat: true, getValidArgs: () =>
+            {
+                return new[]
+                {
+                    new[]{ "0", "100" },
+                    Enumerable.Union(
+                        new string[] { "default" },
+                        Character.CharacterList.Select(c => c.Name).Distinct().OrderBy(n => n)).ToArray(),
+                };
+            }));
             
             commands.Add(new Command("bindkey", "bindkey [key] [command]: Binds a key to a command.", (string[] args) =>
             {
@@ -793,6 +808,7 @@ namespace Barotrauma
             AssignRelayToServer("money", true);
             AssignRelayToServer("showmoney", true);
             AssignRelayToServer("setskill", true);
+            AssignRelayToServer("setsalary", true);
             AssignRelayToServer("readycheck", true);
             commands.Add(new Command("debugjobassignment", "", (string[] args) => { }));
             AssignRelayToServer("debugjobassignment", true);
@@ -838,11 +854,8 @@ namespace Barotrauma
 
             AssignOnExecute("teleportcharacter|teleport", (string[] args) =>
             {
-                Character tpCharacter = (args.Length == 0) ? Character.Controlled : FindMatchingCharacter(args, false);
-                if (tpCharacter != null)
-                {
-                    tpCharacter.TeleportTo(GameMain.GameScreen.Cam.ScreenToWorld(PlayerInput.MousePosition));
-                }
+                Vector2 cursorWorldPos = GameMain.GameScreen.Cam.ScreenToWorld(PlayerInput.MousePosition);
+                TeleportCharacter(cursorWorldPos, Character.Controlled, args);
             });
 
             AssignOnExecute("spawn|spawncharacter", (string[] args) =>
@@ -1425,6 +1438,9 @@ namespace Barotrauma
 
             AssignRelayToServer("water|editwater", false);
             AssignRelayToServer("fire|editfire", false);
+#if DEBUG
+            AssignRelayToServer("debugvoip", true);
+#endif
 
             commands.Add(new Command("mute", "mute [name]: Prevent the client from speaking to anyone through the voice chat. Using this command requires a permission from the server host.",
             null,
@@ -2345,6 +2361,11 @@ namespace Barotrauma
             }));
 
 #if DEBUG
+            commands.Add(new Command("deathprompt", "Shows the death prompt for testing purposes.", (string[] args) =>
+            {
+                DeathPrompt.Create(delay: 1.0f);
+            }));
+
             commands.Add(new Command("listspamfilters", "Lists filters that are in the global spam filter.", (string[] args) =>
             {
                 if (!SpamServerFilters.GlobalSpamFilter.TryUnwrap(out var filter))
@@ -3093,12 +3114,12 @@ namespace Barotrauma
                 {
                     if (Screen.Selected == GameMain.GameScreen)
                     {
-                        ThrowError("Reloading the package while in GameScreen may break things; to do it anyway, type 'reloadcorepackage [name] force'");
+                        ThrowError("Reloading the package while in GameScreen may break things; to do it anyway, type 'reloadpackage [name] force'");
                         return;
                     }
                     if (Screen.Selected == GameMain.SubEditorScreen)
                     {
-                        ThrowError("Reloading the core package while in sub editor may break thingg; to do it anyway, type 'reloadcorepackage [name] force'");
+                        ThrowError("Reloading the core package while in sub editor may break things; to do it anyway, type 'reloadpackage [name] force'");
                         return;
                     }
                 }

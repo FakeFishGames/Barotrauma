@@ -678,12 +678,12 @@ namespace Barotrauma
         /// <summary>
         /// Adds the message to the single player chatbox.
         /// </summary>
-        public void AddSinglePlayerChatMessage(LocalizedString senderName, LocalizedString text, ChatMessageType messageType, Character sender)
+        public void AddSinglePlayerChatMessage(LocalizedString senderName, LocalizedString text, ChatMessageType messageType, Entity sender)
         {
             AddSinglePlayerChatMessage(senderName.Value, text.Value, messageType, sender);
         }
 
-        public void AddSinglePlayerChatMessage(string senderName, string text, ChatMessageType messageType, Character sender)
+        public void AddSinglePlayerChatMessage(string senderName, string text, ChatMessageType messageType, Entity sender)
         {
             if (!IsSinglePlayer)
             {
@@ -692,9 +692,13 @@ namespace Barotrauma
             }
             if (string.IsNullOrEmpty(text)) { return; }
 
-            if (sender != null)
+            if (sender is Character character)
             {
-                GameMain.GameSession.CrewManager.SetCharacterSpeaking(sender);
+                GameMain.GameSession.CrewManager?.SetCharacterSpeaking(character);
+                if (!character.IsBot)
+                {
+                    character.TextChatVolume = 1f;
+                }
             }
             ChatBox.AddMessage(ChatMessage.Create(senderName, text, messageType, sender));
         }
@@ -708,9 +712,9 @@ namespace Barotrauma
             }
             if (string.IsNullOrEmpty(message.Text)) { return; }
 
-            if (message.Sender != null)
+            if (message.SenderCharacter != null)
             {
-                GameMain.GameSession.CrewManager.SetCharacterSpeaking(message.Sender);
+                GameMain.GameSession.CrewManager?.SetCharacterSpeaking(message.SenderCharacter);
             }
             ChatBox.AddMessage(message);
         }
@@ -3688,6 +3692,9 @@ namespace Barotrauma
             crewList.ClearChildren();
         }
 
+        /// <summary>
+        /// Saves the current crew. Note that this is client-only code (only used in the single player campaign) - saving in multiplayer is handled in the server-side code of <see cref="MultiPlayerCampaign"/>.
+        /// </summary>
         public XElement Save(XElement parentElement)
         {
             var element = new XElement("crew");

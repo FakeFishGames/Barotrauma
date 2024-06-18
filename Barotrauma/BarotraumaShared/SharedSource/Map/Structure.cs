@@ -928,7 +928,7 @@ namespace Barotrauma
         public bool SectionIsLeakingFromOutside(int sectionIndex)
         {
             if (sectionIndex < 0 || sectionIndex >= Sections.Length) { return false; }
-            return SectionIsLeaking(sectionIndex) && !Sections[sectionIndex].gap.IsRoomToRoom;
+            return SectionIsLeaking(sectionIndex) && Sections[sectionIndex].gap is { IsRoomToRoom: false };
         }
 
         public int SectionLength(int sectionIndex)
@@ -971,7 +971,7 @@ namespace Barotrauma
             float prevDamage = section.damage;
             if (GameMain.NetworkMember == null || GameMain.NetworkMember.IsServer)
             {
-                SetDamage(sectionIndex, section.damage + damage, attacker);
+                SetDamage(sectionIndex, section.damage + damage, attacker, createWallDamageProjectiles: createWallDamageProjectiles);
             }
 #if CLIENT
             if (damage > 0 && emitParticles)
@@ -1003,10 +1003,6 @@ namespace Barotrauma
                 }
             }
 #endif
-            if (GameMain.NetworkMember == null || GameMain.NetworkMember.IsServer)
-            {
-                SetDamage(sectionIndex, section.damage + damage, attacker, createWallDamageProjectiles: createWallDamageProjectiles);
-            }
         }
 
         public int FindSectionIndex(Vector2 displayPos, bool world = false, bool clamp = false)

@@ -133,43 +133,47 @@ namespace Barotrauma
             GUIFrame containerFrame = new GUIFrame(new RectTransform(new Vector2(1f, 0.9f), characterLayout.RectTransform), style: null);
             GUILayoutGroup playerFrame = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.9f), containerFrame.RectTransform, Anchor.TopCenter));
             GameMain.NetLobbyScreen.CreatePlayerFrame(playerFrame, alwaysAllowEditing: true, createPendingText: false);
-
-            GUIButton newCharacterBox = new GUIButton(new RectTransform(new Vector2(0.5f, 0.2f), skillLayout.RectTransform, Anchor.BottomRight),
-                text: GameMain.NetLobbyScreen.CampaignCharacterDiscarded ? TextManager.Get("settings") : TextManager.Get("createnew"), style: "GUIButtonSmall")
+            
+            // TODO: What is CampaignCharacterDiscarded and can it be relevant in permadeath mode?
+            if (!GameMain.NetLobbyScreen.PermadeathMode)
             {
-                IgnoreLayoutGroups = false,
-                TextBlock =
+                GUIButton newCharacterBox = new GUIButton(new RectTransform(new Vector2(0.5f, 0.2f), skillLayout.RectTransform, Anchor.BottomRight),
+                    text: GameMain.NetLobbyScreen.CampaignCharacterDiscarded ? TextManager.Get("settings") : TextManager.Get("createnew"), style: "GUIButtonSmall")
                 {
-                    AutoScaleHorizontal = true
-                }
-            };
-
-            newCharacterBox.OnClicked = (button, o) =>
-            {
-                if (!GameMain.NetLobbyScreen.CampaignCharacterDiscarded)
-                {
-                    GameMain.NetLobbyScreen.TryDiscardCampaignCharacter(() =>
+                    IgnoreLayoutGroups = false,
+                    TextBlock =
                     {
-                        newCharacterBox.Text = TextManager.Get("settings");
-                        if (TabMenu.PendingChangesFrame != null)
-                        {
-                            NetLobbyScreen.CreateChangesPendingFrame(TabMenu.PendingChangesFrame);
-                        }
+                        AutoScaleHorizontal = true
+                    }
+                };
 
-                        OpenMenu();
-                    });
-                    return true;
-                }
-
-                OpenMenu();
-                return true;
-
-                void OpenMenu()
+                newCharacterBox.OnClicked = (button, o) =>
                 {
-                    characterSettingsFrame!.Visible = true;
-                    content.Visible = false;
-                }
-            };
+                    if (!GameMain.NetLobbyScreen.CampaignCharacterDiscarded)
+                    {
+                        GameMain.NetLobbyScreen.TryDiscardCampaignCharacter(() =>
+                        {
+                            newCharacterBox.Text = TextManager.Get("settings");
+                            if (TabMenu.PendingChangesFrame != null)
+                            {
+                                NetLobbyScreen.CreateChangesPendingFrame(TabMenu.PendingChangesFrame);
+                            }
+
+                            OpenMenu();
+                        });
+                        return true;
+                    }
+
+                    OpenMenu();
+                    return true;
+
+                    void OpenMenu()
+                    {
+                        characterSettingsFrame!.Visible = true;
+                        content.Visible = false;
+                    }
+                };
+            }
 
             GUILayoutGroup characterCloseButtonLayout = new GUILayoutGroup(new RectTransform(new Vector2(1f, 0.1f), characterLayout.RectTransform), childAnchor: Anchor.BottomCenter);
             new GUIButton(new RectTransform(new Vector2(0.4f, 1f), characterCloseButtonLayout.RectTransform), TextManager.Get("ApplySettingsButton")) //TODO: Is this text appropriate for this circumstance for all languages?
@@ -177,6 +181,7 @@ namespace Barotrauma
                 OnClicked = (button, o) =>
                 {
                     GameMain.Client?.SendCharacterInfo(GameMain.Client.PendingName);
+                    GameMain.NetLobbyScreen.CampaignCharacterDiscarded = false;
                     characterSettingsFrame.Visible = false;
                     content.Visible = true;
                     return true;

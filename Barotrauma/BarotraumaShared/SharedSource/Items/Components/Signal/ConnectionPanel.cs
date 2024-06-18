@@ -282,9 +282,9 @@ namespace Barotrauma.Items.Components
             return false;
         }
 
-        public override void Load(ContentXElement element, bool usePrefabValues, IdRemap idRemap)
+        public override void Load(ContentXElement element, bool usePrefabValues, IdRemap idRemap, bool isItemSwap)
         {
-            base.Load(element, usePrefabValues, idRemap);
+            base.Load(element, usePrefabValues, idRemap, isItemSwap);
 
             List<Connection> loadedConnections = new List<Connection>();
 

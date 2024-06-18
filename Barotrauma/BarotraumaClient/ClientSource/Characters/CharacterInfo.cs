@@ -141,7 +141,7 @@ namespace Barotrauma
                 {
                     Color textColor = Color.White * (0.5f + skill.Level / 200.0f);
 
-                    var skillName = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), skillsArea.RectTransform), TextManager.Get("SkillName." + skill.Identifier), textColor: textColor, font: font) { Padding = Vector4.Zero };
+                    var skillName = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), skillsArea.RectTransform), skill.DisplayName, textColor: textColor, font: font) { Padding = Vector4.Zero };
 
                     float modifiedSkillLevel = skill.Level;
                     if (Character != null)
@@ -582,6 +582,7 @@ namespace Barotrauma
 
             ch.ExperiencePoints = inc.ReadInt32();
             ch.AdditionalTalentPoints = inc.ReadRangedInteger(0, MaxAdditionalTalentPoints);
+            ch.PermanentlyDead = inc.ReadBoolean();
             return ch;
         }
 

@@ -33,6 +33,11 @@ namespace Barotrauma
         public readonly Identifier BiomeIdentifier;
 
         /// <summary>
+        /// If set, this layer must be present somewhere in the level.
+        /// </summary>
+        public readonly Identifier RequiredLayer;
+
+        /// <summary>
         /// If set, the event set can only be chosen in locations that belong to this faction.
         /// </summary>
         public readonly Identifier Faction;
@@ -93,6 +98,8 @@ namespace Barotrauma
             Commonness = element.GetAttributeFloat("commonness", 1.0f);
             Probability = Math.Clamp(element.GetAttributeFloat(1.0f, "probability", "spawnprobability"), 0, 1);
             TriggerEventCooldown = element.GetAttributeBool("triggereventcooldown", EventType != typeof(ScriptedEvent));
+
+            RequiredLayer = element.GetAttributeIdentifier(nameof(RequiredLayer), Identifier.Empty);
 
             UnlockPathEvent = element.GetAttributeBool("unlockpathevent", false);
             UnlockPathTooltip = element.GetAttributeString("unlockpathtooltip", "lockedpathtooltip");

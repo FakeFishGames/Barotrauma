@@ -600,6 +600,9 @@ namespace Barotrauma
             const float MaxWallDamage = 500.0f;
             const float MinCameraShake = 5f;
             const float MaxCameraShake = 50.0f;
+            //delay at the start of the round during which you take no depth damage
+            //(gives you a bit of time to react and return if you start the round in a level that's too deep)
+            const float MinRoundDuration = 60.0f;
 
             if (Submarine.RealWorldDepth < Level.Loaded.RealWorldCrushDepth + CosmeticEffectThreshold || Submarine.RealWorldDepth < Submarine.RealWorldCrushDepth + CosmeticEffectThreshold)
             {
@@ -616,7 +619,7 @@ namespace Barotrauma
             }
 
             depthDamageTimer -= deltaTime;
-            if (depthDamageTimer <= 0.0f)
+            if (depthDamageTimer <= 0.0f && (GameMain.GameSession == null || GameMain.GameSession.RoundDuration > MinRoundDuration))
             {
                 foreach (Structure wall in Structure.WallList)
                 {

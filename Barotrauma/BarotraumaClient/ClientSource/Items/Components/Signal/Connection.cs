@@ -292,8 +292,17 @@ namespace Barotrauma.Items.Components
                 if (wire.HiddenInGame && Screen.Selected == GameMain.GameScreen) { continue; }
 
                 Connection recipient = wire.OtherConnection(this);
-                LocalizedString label = recipient == null ? "" : recipient.item.Name + $" ({recipient.DisplayName})";
-                if (wire.Locked) { label += "\n" + TextManager.Get("ConnectionLocked"); }
+                LocalizedString label;
+                if (wire.Item.IsLayerHidden)
+                {
+                    label = TextManager.Get("ConnectionLocked");
+                }
+                else
+                {
+                    label = recipient == null ? "" : recipient.item.Name + $" ({recipient.DisplayName})";
+                    if (wire.Locked) { label += "\n" + TextManager.Get("ConnectionLocked"); }
+                }
+
                 DrawWire(spriteBatch, wire, position, wirePosition, equippedWire, panel, label);
 
                 wirePosition.Y += wireInterval;
@@ -494,7 +503,7 @@ namespace Barotrauma.Items.Components
                     ConnectionPanel.HighlightedWire = wire;
 
                     bool allowRewiring = GameMain.NetworkMember?.ServerSettings == null || GameMain.NetworkMember.ServerSettings.AllowRewiring || panel.AlwaysAllowRewiring;
-                    if (allowRewiring && (!wire.Locked && !panel.Locked && !panel.TemporarilyLocked || Screen.Selected == GameMain.SubEditorScreen))
+                    if (allowRewiring && (!wire.Locked && !wire.Item.IsLayerHidden && !panel.Locked && !panel.TemporarilyLocked || Screen.Selected == GameMain.SubEditorScreen))
                     {
                         //start dragging the wire
                         if (PlayerInput.PrimaryMouseButtonHeld()) { DraggingConnected = wire; }

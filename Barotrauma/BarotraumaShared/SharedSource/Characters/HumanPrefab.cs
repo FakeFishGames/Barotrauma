@@ -100,6 +100,12 @@ namespace Barotrauma
         [Serialize(AIObjectiveIdle.BehaviorType.Passive, IsPropertySaveable.No)]
         public AIObjectiveIdle.BehaviorType Behavior { get; protected set; }
 
+        [Serialize(1.0f, IsPropertySaveable.No, description: 
+            "Affects how far the character can hear sounds created by AI targets with the tag ProvocativeToHumanAI. "+
+            "Used as a multiplier on the sound range of the target, e.g. a value of 0.5 would mean a target with a sound range of 1000 would need to be within 500 units for this character to hear it. "+
+            "Only affects the \"fight intruders\" objective, which makes the character go and inspect noises.")]
+        public float Hearing { get; set; } = 1.0f;
+
         [Serialize(float.PositiveInfinity, IsPropertySaveable.No)]
         public float ReportRange { get; protected set; }
         
@@ -174,6 +180,7 @@ namespace Barotrauma
                         idleObjective.PreferredOutpostModuleTypes.Add(moduleType);
                     }
                 }
+                humanAI.ReportRange = Hearing;
                 humanAI.ReportRange = ReportRange;
                 humanAI.FindWeaponsRange = FindWeaponsRange;
                 humanAI.AimSpeed = AimSpeed;

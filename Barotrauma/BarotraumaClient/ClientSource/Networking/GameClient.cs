@@ -21,6 +21,10 @@ namespace Barotrauma.Networking
 
         public override bool IsClient => true;
         public override bool IsServer => false;
+        
+#if DEBUG
+        public float DebugServerVoipAmplitude;
+#endif
 
         public override Voting Voting { get; }
 
@@ -112,6 +116,8 @@ namespace Barotrauma.Networking
         //has the client been given a character to control this round
         public bool HasSpawned;
 
+        public float EndRoundTimeRemaining { get; private set; }
+
         public LocalizedString TraitorFirstObjective;
         public TraitorEventPrefab TraitorMission = null;
 
@@ -198,20 +204,6 @@ namespace Barotrauma.Networking
                 CanBeFocused = false
             };
 
-            cameraFollowsSub = new GUITickBox(new RectTransform(new Vector2(0.05f, 0.05f), inGameHUD.RectTransform, anchor: Anchor.TopCenter, pivot: Pivot.CenterLeft)
-            {
-                AbsoluteOffset = new Point(0, HUDLayoutSettings.ButtonAreaTop.Y + HUDLayoutSettings.ButtonAreaTop.Height / 2),
-                MaxSize = new Point(GUI.IntScale(25))
-            }, TextManager.Get("CamFollowSubmarine"))
-            {
-                Selected = Camera.FollowSub,
-                OnSelected = (tbox) =>
-                {
-                    Camera.FollowSub = tbox.Selected;
-                    return true;
-                }
-            };
-
             chatBox = new ChatBox(inGameHUD, isSinglePlayer: false);
             chatBox.OnEnterMessage += EnterChatMessage;
             chatBox.InputBox.OnTextChanged += TypingChatMessage;
@@ -250,6 +242,19 @@ namespace Barotrauma.Networking
                 }
             };
             ShowLogButton.TextBlock.AutoScaleHorizontal = true;
+            
+            cameraFollowsSub = new GUITickBox(new RectTransform(new Vector2(0.1f, 0.4f), buttonContainer.RectTransform)
+            {
+                MinSize = new Point(150, 0)
+            }, TextManager.Get("CamFollowSubmarine"))
+            {
+                Selected = Camera.FollowSub,
+                OnSelected = (tbox) =>
+                {
+                    Camera.FollowSub = tbox.Selected;
+                    return true;
+                }
+            };
 
             GameMain.DebugDraw = false;
             Hull.EditFire = false;
@@ -674,6 +679,11 @@ namespace Barotrauma.Networking
 
                     VoipClient.Read(inc);
                     break;
+#if DEBUG
+                case ServerPacketHeader.VOICE_AMPLITUDE_DEBUG:
+                    GameMain.Client.DebugServerVoipAmplitude = inc.ReadRangedSingle(min: 0, max: 1, bitCount: 8);
+                    break;
+#endif
                 case ServerPacketHeader.QUERY_STARTGAME:
                     DebugConsole.Log("Received QUERY_STARTGAME packet.");
                     string subName = inc.ReadString();
@@ -1382,6 +1392,7 @@ namespace Barotrauma.Networking
             ServerSettings.AllowRewiring = inc.ReadBoolean();
             ServerSettings.AllowImmediateItemDelivery = inc.ReadBoolean();
             ServerSettings.AllowFriendlyFire = inc.ReadBoolean();
+            ServerSettings.AllowDragAndDropGive = inc.ReadBoolean();
             ServerSettings.LockAllDefaultWires = inc.ReadBoolean();
             ServerSettings.AllowLinkingWifiToChat = inc.ReadBoolean();
             ServerSettings.MaximumMoneyTransferRequest = inc.ReadInt32();
@@ -1812,6 +1823,8 @@ namespace Barotrauma.Networking
 
             GameStarted = inc.ReadBoolean();
             bool allowSpectating = inc.ReadBoolean();
+            bool permadeathMode = inc.ReadBoolean();
+            bool ironmanMode = inc.ReadBoolean();
 
             ReadPermissions(inc);
             
@@ -1819,8 +1832,17 @@ namespace Barotrauma.Networking
             {
                 if (Screen.Selected != GameMain.GameScreen)
                 {
-                    new GUIMessageBox(TextManager.Get("PleaseWait"), TextManager.Get(allowSpectating ? "RoundRunningSpectateEnabled" : "RoundRunningSpectateDisabled"));
-                    if (Screen.Selected is not ModDownloadScreen) { GameMain.NetLobbyScreen.Select(); }
+                    LocalizedString message;
+                    if (permadeathMode)
+                    {
+                        message = TextManager.Get(ironmanMode ? "RoundRunningIronman" : "RoundRunningPermadeath");
+                    }
+                    else
+                    {
+                        message = TextManager.Get(allowSpectating ? "RoundRunningSpectateEnabled" : "RoundRunningSpectateDisabled");
+                    }
+                    new GUIMessageBox(TextManager.Get("PleaseWait"), message);
+                    if (!(Screen.Selected is ModDownloadScreen)) { GameMain.NetLobbyScreen.Select(); }
                 }
             }
         }
@@ -2103,6 +2125,8 @@ namespace Barotrauma.Networking
             
             float sendingTime = inc.ReadSingle() - 0.0f;//TODO: reimplement inc.SenderConnection.RemoteTimeOffset;
 
+            EndRoundTimeRemaining = inc.ReadSingle();
+
             SegmentTableReader<ServerNetSegment>.Read(inc,
             segmentDataReader: (segment, inc) =>
             {
@@ -2373,7 +2397,16 @@ namespace Barotrauma.Networking
             WaitForNextRoundRespawn = waitForNextRoundRespawn;
             IWriteMessage msg = new WriteOnlyMessage();
             msg.WriteByte((byte)ClientPacketHeader.READY_TO_SPAWN);
-            msg.WriteBoolean((bool)waitForNextRoundRespawn);
+            msg.WriteBoolean(GameMain.NetLobbyScreen.Spectating);
+            msg.WriteBoolean(waitForNextRoundRespawn);
+            ClientPeer?.Send(msg, DeliveryMethod.Reliable);
+        }
+
+        public void SendTakeOverBotRequest(CharacterInfo bot)
+        {
+            IWriteMessage msg = new WriteOnlyMessage();
+            msg.WriteByte((byte)ClientPacketHeader.TAKEOVERBOT);
+            msg.WriteUInt16(bot.ID);
             ClientPeer?.Send(msg, DeliveryMethod.Reliable);
         }
 
@@ -2704,16 +2737,19 @@ namespace Barotrauma.Networking
         public override void AddChatMessage(ChatMessage message)
         {
             if (string.IsNullOrEmpty(message.Text)) { return; }
-            if (message.Sender != null && !message.Sender.IsDead)
+            if (message.SenderCharacter is { IsDead: false } sender)
             {
                 if (message.Text.IsNullOrEmpty())
                 {
-                    message.Sender.ShowTextlessSpeechBubble(2.0f, message.Color);
-
+                    sender.ShowTextlessSpeechBubble(2.0f, message.Color);
                 }
                 else
                 {
-                    message.Sender.ShowSpeechBubble(message.Color, message.Text);
+                    sender.ShowSpeechBubble(message.Color, message.Text);
+                    if (!sender.IsBot)
+                    {
+                        sender.TextChatVolume = 1f;
+                    }
                 }
             }
             GameMain.NetLobbyScreen.NewChatMessage(message);
@@ -3197,19 +3233,19 @@ namespace Barotrauma.Networking
             {
                 LocalizedString respawnText = string.Empty;
                 Color textColor = Color.White;
-                bool canChooseRespawn =
-                    GameMain.GameSession.GameMode is CampaignMode &&
-                    Character.Controlled == null &&
-                    Level.Loaded?.Type != LevelData.LevelType.Outpost &&
-                    (characterInfo == null || HasSpawned);
+                bool hideRespawnButtons = false; 
+
+                if (EndRoundTimeRemaining > 0)
+                {
+                    respawnText = TextManager.GetWithVariable("endinground", "[time]", ToolBox.SecondsToReadableTime(EndRoundTimeRemaining))
+                        .Fallback(ToolBox.SecondsToReadableTime(EndRoundTimeRemaining), useDefaultLanguageIfFound: false);
+                }
                 if (RespawnManager.CurrentState == RespawnManager.State.Waiting)
                 {
                     if (RespawnManager.RespawnCountdownStarted)
                     {
                         float timeLeft = (float)(RespawnManager.RespawnTime - DateTime.Now).TotalSeconds;
-                        respawnText = TextManager.GetWithVariable(
-                            RespawnManager.UsingShuttle && !RespawnManager.ForceSpawnInMainSub ? 
-                            "RespawnShuttleDispatching" : "RespawningIn", "[time]", ToolBox.SecondsToReadableTime(timeLeft));
+                        respawnText = TextManager.GetWithVariable("RespawningIn", "[time]", ToolBox.SecondsToReadableTime(timeLeft));
                     }
                     else if (RespawnManager.PendingRespawnCount > 0)
                     {
@@ -3232,12 +3268,12 @@ namespace Barotrauma.Networking
                         //textScale = 1.0f + phase * 0.5f;
                         textColor = Color.Lerp(GUIStyle.Red, Color.White, 1.0f - phase);
                     }
-                    canChooseRespawn = false;
+                    hideRespawnButtons = true;
                 }
 
-                GameMain.GameSession?.SetRespawnInfo(
-                    visible: !respawnText.IsNullOrEmpty() || canChooseRespawn, text: respawnText.Value, textColor: textColor, 
-                    buttonsVisible: canChooseRespawn, waitForNextRoundRespawn: (WaitForNextRoundRespawn ?? true));                
+                GameMain.GameSession.SetRespawnInfo(
+                    text: respawnText.Value, textColor: textColor, 
+                    waitForNextRoundRespawn: (WaitForNextRoundRespawn ?? true), hideButtons: hideRespawnButtons);                
             }
 
             if (!ShowNetStats) { return; }

@@ -296,7 +296,7 @@ namespace Barotrauma.Items.Components
             impactQueue.Clear();
             item.body.FarseerBody.OnCollision -= OnCollision;
             item.body.CollisionCategories = Physics.CollisionItem;
-            item.body.CollidesWith = Physics.CollisionWall;
+            item.body.CollidesWith = Physics.DefaultItemCollidesWith;
             item.body.FarseerBody.IsBullet = false;
             item.body.PhysEnabled = false;
         }

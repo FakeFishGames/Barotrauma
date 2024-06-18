@@ -458,15 +458,35 @@ namespace Barotrauma.Networking
                 RemovePendingClient(pendingClient, PeerDisconnectPacket.WithReason(DisconnectReason.AuthenticationFailed));
             }
 
+            if (authenticators is null && 
+                GameMain.Server.ServerSettings.RequireAuthentication)
+            {
+                DebugConsole.NewMessage(
+                    "The server is configured to require authentication from clients, but there are no authenticators available. " +
+                    $"If you're for example trying to host a server in a local network without being connected to Steam or Epic Online Services, please set {nameof(GameMain.Server.ServerSettings.RequireAuthentication)} to false in the server settings.", 
+                    Microsoft.Xna.Framework.Color.Yellow);
+            }
+
             if (authenticators is null
                 || !packet.AuthTicket.TryUnwrap(out var authTicket)
                 || !authenticators.TryGetValue(authTicket.Kind, out var authenticator))
-            {
+            {                
 #if DEBUG
-                DebugConsole.NewMessage($"Debug server accepts unauthenticated connections", Microsoft.Xna.Framework.Color.Yellow);
-                acceptClient(new AccountInfo(packet.AccountId));
+                DebugConsole.NewMessage("Debug server accepts unauthenticated connections", Microsoft.Xna.Framework.Color.Yellow);
+                acceptClient(new AccountInfo(new UnauthenticatedAccountId(packet.Name)));
 #else
-                rejectClient();
+                if (GameMain.Server.ServerSettings.RequireAuthentication)
+                {
+                    DebugConsole.NewMessage(
+                        "A client attempted to join without an authentication ticket, but the server is configured to require authentication. " +
+                        $"If you're for example trying to host a server in a local network without being connected to Steam or Epic Online Services, please set {nameof(GameMain.Server.ServerSettings.RequireAuthentication)} to false in the server settings.",
+                        Microsoft.Xna.Framework.Color.Yellow);
+                    rejectClient();
+                }
+                else
+                {
+                    acceptClient(new AccountInfo(new UnauthenticatedAccountId(packet.Name)));
+                }
 #endif
                 return;
             }

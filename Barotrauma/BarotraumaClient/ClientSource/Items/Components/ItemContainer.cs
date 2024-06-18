@@ -79,7 +79,8 @@ namespace Barotrauma.Items.Components
             set;
         }
 
-        [Serialize(false, IsPropertySaveable.No, description: "If true, the contained state indicator calculates how full the item is based on the total amount of items that can be stacked inside it, as opposed to how many of the inventory slots are occupied.")]
+        [Serialize(false, IsPropertySaveable.No, description: "If true, the contained state indicator calculates how full the item is based on the total amount of items that can be stacked inside it, as opposed to how many of the inventory slots are occupied." +
+                                                              " Note that only items in the main container or in the subcontainer are counted, depending on which container the first containable item match is found in. The item determining this can be defined with ContainedStateIndicatorSlot")]
         public bool ShowTotalStackCapacityInContainedStateIndicator { get; set; }
 
         [Serialize(false, IsPropertySaveable.No, description: "Should the inventory of this item be kept open when the item is equipped by a character.")]
@@ -274,8 +275,14 @@ namespace Barotrauma.Items.Components
                 }
             }
 
-            itemsPerSlot.Sort((i1, i2) => i1.First().Name.CompareTo(i2.First().Name));
-            foreach (var items in itemsPerSlot)
+            var sortedItems = itemsPerSlot
+                .OrderBy(i => i.First().Name)
+                //if there's multiple items with the same name, sort largest stacks first
+                .ThenByDescending(i => i.Count)
+                //same name and stack size, sort items with most items inside first
+                .ThenByDescending(i => i.First().ContainedItems.Count());
+
+            foreach (var items in sortedItems)
             {
                 int firstFreeSlot = -1;
                 for (int i = 0; i < Inventory.Capacity; i++)
@@ -591,7 +598,8 @@ namespace Barotrauma.Items.Components
                     contained.Item.Scale,
                     spriteEffects,
                     depth: containedSpriteDepth);
-                contained.Item.DrawDecorativeSprites(spriteBatch, itemPos, flipX,flipY, (contained.Item.body == null ? 0.0f : contained.Item.body.DrawRotation), containedSpriteDepth);
+                contained.Item.DrawDecorativeSprites(spriteBatch, itemPos, flipX,flipY, (contained.Item.body == null ? 0.0f : contained.Item.body.DrawRotation), 
+                    containedSpriteDepth, overrideColor);
 
                 foreach (ItemContainer ic in contained.Item.GetComponents<ItemContainer>())
                 {

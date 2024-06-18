@@ -558,14 +558,17 @@ namespace Barotrauma
 
                 if (GameMain.Client != null) { chatMessage += " " + TextManager.Get("DeathChatNotification"); }
 
-                GameMain.NetworkMember.RespawnManager?.ShowRespawnPromptIfNeeded();
+                RespawnManager.ShowDeathPromptIfNeeded();
 
                 GameMain.NetworkMember.AddChatMessage(chatMessage.Value, ChatMessageType.Dead);
                 GameMain.LightManager.LosEnabled = false;
                 controlled = null;
-                if (!(Screen.Selected?.Cam is null))
+                if (Screen.Selected?.Cam is Camera cam)
                 {
-                    Screen.Selected.Cam.TargetPos = Vector2.Zero;
+                    cam.TargetPos = Vector2.Zero;
+                    //briefly lock moving the camera with arrow keys
+                    //(it's annoying to have the camera fly off when you die while trying to move to safety)
+                    cam.MovementLockTimer = 2.0f;                    
                     Lights.LightManager.ViewTarget = null;
                 }
             }

@@ -284,7 +284,7 @@ namespace Barotrauma.Items.Components
         public override void OnMapLoaded()
         {
 #if CLIENT
-            if (item.HiddenInGame)
+            if (item.IsHidden)
             {
                 Light.Enabled = false;
             }

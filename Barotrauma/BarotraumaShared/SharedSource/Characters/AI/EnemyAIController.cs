@@ -216,7 +216,7 @@ namespace Barotrauma
 
         private bool IsAttackingOwner(Character other) =>
             PetBehavior != null && PetBehavior.Owner != null &&
-            !other.IsUnconscious && !other.IsArrested &&
+            !other.IsUnconscious && !other.IsHandcuffed &&
             other.AIController is HumanAIController humanAI &&
             humanAI.ObjectiveManager.CurrentObjective is AIObjectiveCombat combat &&
             combat.Enemy != null && combat.Enemy == PetBehavior.Owner;
@@ -2694,13 +2694,8 @@ namespace Barotrauma
             float maxModifier = 5;
             foreach (AITarget aiTarget in AITarget.List)
             {
-                if (aiTarget.InDetectable) { continue; }
-                if (aiTarget.Entity == null) { continue; }
+                if (aiTarget.ShouldBeIgnored()) { continue; }
                 if (ignoredTargets.Contains(aiTarget)) { continue; }
-                if (Level.Loaded != null && aiTarget.WorldPosition.Y > Level.Loaded.Size.Y)
-                {
-                    continue;
-                }
                 if (aiTarget.Type == AITarget.TargetType.HumanOnly) { continue; }
                 if (!TargetOutposts)
                 {

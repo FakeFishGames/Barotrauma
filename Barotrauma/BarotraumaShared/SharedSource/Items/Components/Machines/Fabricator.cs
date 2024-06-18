@@ -707,9 +707,15 @@ namespace Barotrauma.Items.Components
 
         private static bool AnyOneHasRecipeForItem(Character user, ItemPrefab item)
         {
+            CharacterType mustHaveRecipe = GameMain.GameSession?.GameMode is { IsSinglePlayer: true } ?
+                //in single player it doesn't matter if it's a bot or a player who has the recipe 
+                //(the bots can turn into a "player" when switching characters, and that could interrupt the fabrication)
+                CharacterType.Both : 
+                //in MP the recipes other players have don't cound
+                CharacterType.Bot;
             return
                 (user != null && user.HasRecipeForItem(item.Identifier)) ||
-                GameSession.GetSessionCrewCharacters(CharacterType.Bot).Any(c => c.HasRecipeForItem(item.Identifier));
+                GameSession.GetSessionCrewCharacters(mustHaveRecipe).Any(c => c.HasRecipeForItem(item.Identifier));
         }
 
         private readonly HashSet<Item> usedIngredients = new HashSet<Item>();
@@ -986,9 +992,9 @@ namespace Barotrauma.Items.Components
             return componentElement;
         }
 
-        public override void Load(ContentXElement componentElement, bool usePrefabValues, IdRemap idRemap)
+        public override void Load(ContentXElement componentElement, bool usePrefabValues, IdRemap idRemap, bool isItemSwap)
         {
-            base.Load(componentElement, usePrefabValues, idRemap);
+            base.Load(componentElement, usePrefabValues, idRemap, isItemSwap);
             savedFabricatedItem = componentElement.GetAttributeString("fabricateditemidentifier", "");
             savedTimeUntilReady = componentElement.GetAttributeFloat("savedtimeuntilready", 0.0f);
             savedRequiredTime = componentElement.GetAttributeFloat("savedrequiredtime", 0.0f);

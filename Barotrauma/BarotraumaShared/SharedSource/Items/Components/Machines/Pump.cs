@@ -7,7 +7,7 @@ using System.Linq;
 
 namespace Barotrauma.Items.Components
 {
-    partial class Pump : Powered, IServerSerializable, IClientSerializable
+    partial class Pump : Powered, IServerSerializable, IClientSerializable, IDeteriorateUnderStress
     {
         private float flowPercentage;
         private float maxFlow;
@@ -84,6 +84,8 @@ namespace Barotrauma.Items.Components
         private const float TinkeringSpeedIncrease = 4.0f;
 
         public override bool UpdateWhenInactive => true;
+
+        public float CurrentStress => Math.Abs(flowPercentage / 100.0f);
 
         public Pump(Item item, ContentXElement element)
             : base(item, element)

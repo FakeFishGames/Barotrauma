@@ -326,7 +326,7 @@ namespace Barotrauma
 
         public void Draw(SpriteBatch spriteBatch, bool editing, bool back = true, Color? overrideColor = null)
         {
-            if (!Visible || (!editing && HiddenInGame) || !SubEditorScreen.IsLayerVisible(this)) { return; }
+            if (!Visible || (!editing && IsHidden) || !SubEditorScreen.IsLayerVisible(this)) { return; }
 
             if (editing)
             {
@@ -424,7 +424,7 @@ namespace Barotrauma
                                     textureScale: Vector2.One * Scale,
                                     depth: d);
                             }
-                            DrawDecorativeSprites(spriteBatch, DrawPosition, flippedX && Prefab.CanSpriteFlipX, flippedY && Prefab.CanSpriteFlipY, rotation: 0, depth);
+                            DrawDecorativeSprites(spriteBatch, DrawPosition, flippedX && Prefab.CanSpriteFlipX, flippedY && Prefab.CanSpriteFlipY, rotation: 0, depth, overrideColor);
                         }
                     }
                     else
@@ -445,7 +445,7 @@ namespace Barotrauma
                             Prefab.DamagedInfectedSprite?.Draw(spriteBatch, new Vector2(DrawPosition.X, -DrawPosition.Y) + drawOffset, Infector.HealthColor, Prefab.DamagedInfectedSprite.Origin, RotationRad, Scale, activeSprite.effects, depth - 0.002f);
                         }
 
-                        DrawDecorativeSprites(spriteBatch, DrawPosition, flippedX && Prefab.CanSpriteFlipX, flippedY && Prefab.CanSpriteFlipY, -RotationRad, depth);
+                        DrawDecorativeSprites(spriteBatch, DrawPosition, flippedX && Prefab.CanSpriteFlipX, flippedY && Prefab.CanSpriteFlipY, -RotationRad, depth, overrideColor);
                     }
                 }
                 else if (body.Enabled)
@@ -456,30 +456,49 @@ namespace Barotrauma
                         //don't draw the item on hands if it's also being worn
                         if (GetComponent<Wearable>() is { IsActive: true }) { return; }
                         if (!back) { return; }
-                        float depthStep = 0.000001f;
                         if (holdable.Picker.Inventory?.GetItemInLimbSlot(InvSlotType.RightHand) == this)
                         {
-                            Limb holdLimb = holdable.Picker.AnimController.GetLimb(LimbType.RightArm);
-                            if (holdLimb?.ActiveSprite != null)
-                            {
-                                depth = holdLimb.ActiveSprite.Depth + holdable.Picker.AnimController.GetDepthOffset() + depthStep * 2;
-                                foreach (WearableSprite wearableSprite in holdLimb.WearingItems)
-                                {
-                                    if (!wearableSprite.InheritLimbDepth && wearableSprite.Sprite != null) { depth = Math.Max(wearableSprite.Sprite.Depth + depthStep, depth); }
-                                }
-                            }
+                            depth = GetHeldItemDepth(LimbType.RightHand, depth);
                         }
                         else if (holdable.Picker.Inventory?.GetItemInLimbSlot(InvSlotType.LeftHand) == this)
                         {
-                            Limb holdLimb = holdable.Picker.AnimController.GetLimb(LimbType.LeftArm);
+                            depth = GetHeldItemDepth(LimbType.LeftHand, depth);
+                        }
+
+                        float GetHeldItemDepth(LimbType limb, float depth)
+                        {
+                            //offset used to make sure the item draws just slightly behind the right hand, or slightly in front of the left hand
+                            float limbDepthOffset = 0.000001f;
+                            float depthOffset = holdable.Picker.AnimController.GetDepthOffset();
+                            //use the upper arm as a reference, to ensure the item gets drawn behind / in front of the whole arm (not just the forearm)
+                            Limb holdLimb = holdable.Picker.AnimController.GetLimb(limb == LimbType.RightHand ? LimbType.RightArm : LimbType.LeftArm);
                             if (holdLimb?.ActiveSprite != null)
                             {
-                                depth = holdLimb.ActiveSprite.Depth + holdable.Picker.AnimController.GetDepthOffset() - depthStep * 2;
+                                depth = 
+                                    holdLimb.ActiveSprite.Depth 
+                                    + depthOffset 
+                                    + limbDepthOffset * 2 * (limb == LimbType.RightHand ? 1 : -1);
                                 foreach (WearableSprite wearableSprite in holdLimb.WearingItems)
                                 {
-                                    if (!wearableSprite.InheritLimbDepth && wearableSprite.Sprite != null) { depth = Math.Min(wearableSprite.Sprite.Depth - depthStep, depth); }
+                                    if (!wearableSprite.InheritLimbDepth && wearableSprite.Sprite != null) 
+                                    { 
+                                        depth =
+                                            limb == LimbType.RightHand ?
+                                                Math.Max(wearableSprite.Sprite.Depth + limbDepthOffset, depth) : 
+                                                Math.Min(wearableSprite.Sprite.Depth - limbDepthOffset, depth);
+                                    }
+                                }
+                                var head = holdable.Picker.AnimController.GetLimb(LimbType.Head);
+                                if (head != null)
+                                {
+                                    //ensure the holdable item is always drawn in front of the head no matter what the wearables or whatnot do with the sprite depths
+                                    depth =
+                                        limb == LimbType.RightHand ?
+                                            Math.Min(head.Sprite.Depth + depthOffset - limbDepthOffset, depth) :
+                                            Math.Max(head.Sprite.Depth + depthOffset + limbDepthOffset, depth);
                                 }
                             }
+                            return depth;
                         }
                     }
                     Vector2 origin = GetSpriteOrigin(activeSprite);
@@ -489,7 +508,7 @@ namespace Barotrauma
                         float d = Math.Min(depth + (fadeInBrokenSprite.Sprite.Depth - activeSprite.Depth - 0.000001f), 0.999f);
                         body.Draw(spriteBatch, fadeInBrokenSprite.Sprite, color * fadeInBrokenSpriteAlpha, d, Scale);
                     }
-                    DrawDecorativeSprites(spriteBatch, body.DrawPosition, flipX: body.Dir < 0, flipY: false, rotation: body.Rotation, depth: depth);
+                    DrawDecorativeSprites(spriteBatch, body.DrawPosition, flipX: body.Dir < 0, flipY: false, rotation: body.Rotation, depth, overrideColor);
                 }
 
                 foreach (var upgrade in Upgrades)
@@ -617,11 +636,11 @@ namespace Barotrauma
             }
         }
 
-        public void DrawDecorativeSprites(SpriteBatch spriteBatch, Vector2 drawPos, bool flipX, bool flipY, float rotation, float depth)
+        public void DrawDecorativeSprites(SpriteBatch spriteBatch, Vector2 drawPos, bool flipX, bool flipY, float rotation, float depth, Color? overrideColor = null)
         {
             foreach (var decorativeSprite in Prefab.DecorativeSprites)
             {
-                Color decorativeSpriteColor = GetSpriteColor(decorativeSprite.Color).Multiply(GetSpriteColor(spriteColor));
+                Color decorativeSpriteColor = overrideColor ?? GetSpriteColor(decorativeSprite.Color).Multiply(GetSpriteColor(spriteColor));
                 if (!spriteAnimState[decorativeSprite].IsActive) { continue; }
 
                 Vector2 offset = decorativeSprite.GetOffset(ref spriteAnimState[decorativeSprite].OffsetState, spriteAnimState[decorativeSprite].RandomOffsetMultiplier,

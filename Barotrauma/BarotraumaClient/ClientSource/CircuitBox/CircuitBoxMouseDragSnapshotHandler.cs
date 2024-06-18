@@ -87,6 +87,16 @@ namespace Barotrauma
             SnapshotMoveAffectedNodes();
             startClick = cursorPos;
         }
+        
+        public void ClearSnapshot()
+        {
+            lastNodesUnderCursor = ImmutableHashSet<CircuitBoxNode>.Empty;
+            lastSelectedComponents = ImmutableHashSet<CircuitBoxNode>.Empty;
+            moveAffectedComponents = ImmutableHashSet<CircuitBoxNode>.Empty;
+            LastConnectorUnderCursor = Option.None;
+            LastWireUnderCursor = Option.None;
+            LastResizeAffectedNode = Option.None;
+        }
 
         /// <summary>
         /// Finds all connections and gathers them into a single list for easier iteration.
@@ -168,38 +178,36 @@ namespace Barotrauma
             LastResizeAffectedNode = FindResizeBorderUnderCursor(lastNodesUnderCursor, cursorPos);
         }
 
-        private static Option<(CircuitBoxResizeDirection, CircuitBoxNode)> FindResizeBorderUnderCursor(ImmutableHashSet<CircuitBoxNode> nodes, Vector2 cursorPos)
+        private Option<(CircuitBoxResizeDirection, CircuitBoxNode)> FindResizeBorderUnderCursor(ImmutableHashSet<CircuitBoxNode> nodes, Vector2 cursorPos)
         {
-            foreach (var node in nodes)
+            if (!nodes.Any()) { return Option.None; }
+
+            var node = circuitBoxUi.GetTopmostNode(nodes);
+            if (node is null || !node.IsResizable) { return Option.None; }
+
+            const float borderSize = 32f;
+
+            var rect = node.Rect;
+            RectangleF bottomBorder = new(rect.X, rect.Top, rect.Width, borderSize);
+            RectangleF rightBorder = new(rect.Right - borderSize, rect.Y, borderSize, rect.Height);
+            RectangleF leftBorder = new(rect.X, rect.Y, borderSize, rect.Height);
+
+            bool hoverBottom = bottomBorder.Contains(cursorPos),
+                 hoverRight = rightBorder.Contains(cursorPos),
+                 hoverLeft = leftBorder.Contains(cursorPos);
+
+            var dir = CircuitBoxResizeDirection.None;
+
+            if (hoverBottom) { dir |= CircuitBoxResizeDirection.Down; }
+            if (hoverRight) { dir |= CircuitBoxResizeDirection.Right; }
+            if (hoverLeft) { dir |= CircuitBoxResizeDirection.Left; }
+
+            if (dir is CircuitBoxResizeDirection.None)
             {
-                if (!node.IsResizable) { continue; }
-
-                const float borderSize = 32f;
-
-                var rect = node.Rect;
-                RectangleF bottomBorder = new(rect.X, rect.Top, rect.Width, borderSize);
-                RectangleF rightBorder = new(rect.Right - borderSize, rect.Y, borderSize, rect.Height);
-                RectangleF leftBorder = new(rect.X, rect.Y, borderSize, rect.Height);
-
-                bool hoverBottom = bottomBorder.Contains(cursorPos),
-                     hoverRight = rightBorder.Contains(cursorPos),
-                     hoverLeft = leftBorder.Contains(cursorPos);
-
-                var dir = CircuitBoxResizeDirection.None;
-
-                if (hoverBottom) { dir |= CircuitBoxResizeDirection.Down; }
-                if (hoverRight) { dir |= CircuitBoxResizeDirection.Right; }
-                if (hoverLeft) { dir |= CircuitBoxResizeDirection.Left; }
-
-                if (dir is CircuitBoxResizeDirection.None)
-                {
-                    continue;
-                }
-
-                return Option.Some((dir, node));
+                return Option.None;
             }
 
-            return Option.None;
+            return Option.Some((dir, node));
         }
 
         /// <summary>
@@ -281,13 +289,13 @@ namespace Barotrauma
             if (circuitBoxUi.Locked) { return; }
             bool isDragThresholdExceeded = Vector2.DistanceSquared(startClick, cursorPos) > dragTreshold * dragTreshold;
 
-            if (LastResizeAffectedNode.IsSome())
-            {
-                IsResizing |= isDragThresholdExceeded;
-            }
-            else if (LastConnectorUnderCursor.IsSome())
+            if (LastConnectorUnderCursor.IsSome())
             {
                 IsWiring |= isDragThresholdExceeded;
+            }
+            else if (LastResizeAffectedNode.IsSome())
+            {
+                IsResizing |= isDragThresholdExceeded;
             }
             else
             {

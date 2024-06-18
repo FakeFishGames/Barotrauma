@@ -589,9 +589,9 @@ namespace Barotrauma.Items.Components
             return SaveLimbPositions(base.Save(parentElement));
         }
 
-        public override void Load(ContentXElement componentElement, bool usePrefabValues, IdRemap idRemap)
+        public override void Load(ContentXElement componentElement, bool usePrefabValues, IdRemap idRemap, bool isItemSwap)
         {
-            base.Load(componentElement, usePrefabValues, idRemap);
+            base.Load(componentElement, usePrefabValues, idRemap, isItemSwap);
             if (GameMain.GameSession?.GameMode?.Preset == GameModePreset.TestMode)
             {
                 LoadLimbPositions(componentElement);

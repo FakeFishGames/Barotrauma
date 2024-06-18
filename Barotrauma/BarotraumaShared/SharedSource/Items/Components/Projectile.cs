@@ -288,6 +288,13 @@ namespace Barotrauma.Items.Components
             set;
         }
 
+        [Serialize(false, IsPropertySaveable.No, description: "Can the projectile hit the user? Should generally be disabled, unless the projectile is for example something like shrapnel launched by a projectile impact.")]
+        public bool DamageUser
+        {
+            get;
+            set;
+        }
+
         public bool IsStuckToTarget => StickTarget != null;
 
         private Category originalCollisionCategories;
@@ -413,6 +420,12 @@ namespace Barotrauma.Items.Components
             if (StickTarget != null || IsActive) { return false; }
 
             float initialRotation = item.body.Rotation;
+            //if the item is being launched from an inventory, assume it's being fired by a gun that handles setting the rotation correctly
+            //but if the item is e.g. being thrown by a character, we need to take the direction into account
+            if (item.body.Dir < 0 && item.ParentInventory is not ItemInventory)
+            {
+                initialRotation -= MathHelper.Pi;
+            }
             for (int i = 0; i < HitScanCount; i++)
             {
                 float launchAngle;

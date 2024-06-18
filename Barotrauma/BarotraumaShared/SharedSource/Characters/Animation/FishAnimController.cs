@@ -154,7 +154,10 @@ namespace Barotrauma
                     Collider.SetTransformIgnoreContacts(mainLimb.SimPosition, mainLimb.Rotation);
                     //reset pull joints to prevent the character from "hanging" mid-air if pull joints had been active when the character was still moving
                     //(except when dragging, then we need the pull joints)
-                    if (!character.CanBeDragged || character.SelectedBy == null) { ResetPullJoints(); }
+                    if (!Draggable || character.SelectedBy == null)
+                    {
+                        ResetPullJoints();
+                    }
                 }
                 if (character.IsDead && deathAnimTimer < deathAnimDuration)
                 {

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Linq;
 
 namespace Barotrauma.Networking
 {
@@ -23,6 +22,14 @@ namespace Barotrauma.Networking
             get; private set;
         }
 
+        public static void ShowDeathPromptIfNeeded(float delay = 1.0f)
+        {
+            if (UseDeathPrompt)
+            {
+                DeathPrompt.Create(delay);
+            }
+        }
+
         partial void UpdateTransportingProjSpecific(float deltaTime)
         {
             if (GameMain.Client?.Character == null || GameMain.Client.Character.Submarine != RespawnShuttle) { return; }
@@ -37,72 +44,10 @@ namespace Barotrauma.Networking
             }
         }
 
-        private CoroutineHandle respawnPromptCoroutine;
-
-        public void ShowRespawnPromptIfNeeded(float delay = 5.0f)
-        {
-            if (!UseRespawnPrompt) { return; }
-            if (CoroutineManager.IsCoroutineRunning(respawnPromptCoroutine) || GUIMessageBox.MessageBoxes.Any(mb => mb.UserData as string == "respawnquestionprompt")) 
-            { 
-                return;
-            }
-
-            respawnPromptCoroutine = CoroutineManager.Invoke(() =>
-            {
-                if (Character.Controlled != null || (GameMain.GameSession is not { IsRunning: true })) { return; }
-
-                LocalizedString text;
-                GUIMessageBox respawnPrompt;
-                if (SkillLossPercentageOnImmediateRespawn > 0)
-                {
-                    // Respawn asap with extra skill loss?
-                    text = TextManager.GetWithVariable("respawnquestionprompt", "[percentage]", ((int)Math.Round(SkillLossPercentageOnImmediateRespawn)).ToString());
-                    respawnPrompt = new GUIMessageBox(
-                        TextManager.Get("tutorial.tryagainheader"), text,
-                        new LocalizedString[] { TextManager.Get("respawnquestionpromptrespawn"), TextManager.Get("respawnquestionpromptwait") })
-                    {
-                        UserData = "respawnquestionprompt"
-                    };
-                }
-                else
-                {
-                    // Respawn asap?
-                    text = TextManager.Get("respawnquestionpromptnoloss");
-                    respawnPrompt = new GUIMessageBox(
-                        TextManager.Get("tutorial.tryagainheader"), text,
-                        new LocalizedString[] { TextManager.Get("respawnquestionpromptrespawnnoloss"), TextManager.Get("respawnquestionpromptwait") })
-                    {
-                        UserData = "respawnquestionprompt"
-                    };
-                }
-                if (SkillLossPercentageOnDeath > 0)
-                {
-                    // You have died... etc added BEFORE the above text
-                    text =
-                        TextManager.GetWithVariable("respawnskillpenalty", "[percentage]", ((int)SkillLossPercentageOnDeath).ToString()) + 
-                        "\n\n" + text;
-                };
-
-                respawnPrompt.Buttons[0].OnClicked += (btn, userdata) =>
-                {
-                    GameMain.Client?.SendRespawnPromptResponse(waitForNextRoundRespawn: false);
-                    respawnPrompt.Close();
-                    return true;
-                };
-                respawnPrompt.Buttons[1].OnClicked += (btn, userdata) =>
-                {
-                    GameMain.Client?.SendRespawnPromptResponse(waitForNextRoundRespawn: true);
-                    respawnPrompt.Close();
-                    return true;
-                };
-            }, delay: delay);            
-        }
-
         public void ClientEventRead(IReadMessage msg, float sendingTime)
         {
             bool respawnPromptPending = false;
             var newState = (State)msg.ReadRangedInteger(0, Enum.GetNames(typeof(State)).Length);
-            ForceSpawnInMainSub = false;
             switch (newState)
             {
                 case State.Transporting:
@@ -122,7 +67,6 @@ namespace Barotrauma.Networking
                     RequiredRespawnCount = msg.ReadUInt16();
                     respawnPromptPending = msg.ReadBoolean();
                     RespawnCountdownStarted = msg.ReadBoolean();
-                    ForceSpawnInMainSub = msg.ReadBoolean();
                     ResetShuttle();
                     float newRespawnTime = msg.ReadSingle();
                     RespawnTime = DateTime.Now + new TimeSpan(0, 0, 0, 0, milliseconds: (int)(newRespawnTime * 1000.0f));
@@ -136,7 +80,7 @@ namespace Barotrauma.Networking
             if (respawnPromptPending)
             {
                 GameMain.Client.HasSpawned = true;
-                ShowRespawnPromptIfNeeded(delay: 1.0f);
+                DeathPrompt.Create(delay: 1.0f);
             }
 
             msg.ReadPadBits();
