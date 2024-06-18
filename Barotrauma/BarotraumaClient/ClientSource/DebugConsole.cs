@@ -627,7 +627,6 @@ namespace Barotrauma
                 SubmarineInfo.SavedSubmarines.Select(s => s.Name).Distinct().OrderBy(s => s).ToArray(),
                 Biome.Prefabs.Select(b => b.MinDifficulty)
                   .Concat(Biome.Prefabs.Select(b => b.ActualMaxDifficulty))
-                  .Concat(Biome.Prefabs.Select(b => (b.MinDifficulty + b.ActualMaxDifficulty) / 2.0f))
                   .Distinct().OrderBy(d => d).Select(d => d.ToString()).ToArray(),
                 LevelGenerationParams.LevelParams.Select(p => p.Name).OrderBy(p => p).ToArray()
             }));
