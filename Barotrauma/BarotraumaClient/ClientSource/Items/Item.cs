@@ -458,15 +458,16 @@ namespace Barotrauma
                         if (!back) { return; }
                         if (holdable.Picker.Inventory?.GetItemInLimbSlot(InvSlotType.RightHand) == this)
                         {
-                            depth = GetHeldItemDepth(LimbType.RightHand, depth);
+                            depth = GetHeldItemDepth(LimbType.RightHand, holdable, depth);
                         }
                         else if (holdable.Picker.Inventory?.GetItemInLimbSlot(InvSlotType.LeftHand) == this)
                         {
-                            depth = GetHeldItemDepth(LimbType.LeftHand, depth);
+                            depth = GetHeldItemDepth(LimbType.LeftHand, holdable, depth);
                         }
 
-                        float GetHeldItemDepth(LimbType limb, float depth)
+                        static float GetHeldItemDepth(LimbType limb, Holdable holdable, float depth)
                         {
+                            if (holdable?.Picker?.AnimController == null) { return depth; }
                             //offset used to make sure the item draws just slightly behind the right hand, or slightly in front of the left hand
                             float limbDepthOffset = 0.000001f;
                             float depthOffset = holdable.Picker.AnimController.GetDepthOffset();

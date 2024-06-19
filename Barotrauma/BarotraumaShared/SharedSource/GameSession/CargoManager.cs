@@ -298,7 +298,7 @@ namespace Barotrauma
 
         public void PurchaseItems(Identifier storeIdentifier, List<PurchasedItem> itemsToPurchase, bool removeFromCrate, Client client = null)
         {
-            var store = Location.GetStore(storeIdentifier);
+            var store = Location?.GetStore(storeIdentifier);
             if (store == null) { return; }
             var itemsPurchasedFromStore = GetPurchasedItems(storeIdentifier, create: true);
             // Check all the prices before starting the transaction to make sure the modifiers stay the same for the whole transaction

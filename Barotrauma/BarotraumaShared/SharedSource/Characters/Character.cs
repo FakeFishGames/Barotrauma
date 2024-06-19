@@ -4831,8 +4831,6 @@ namespace Barotrauma
             }
 #endif
 
-            ApplyStatusEffects(ActionType.OnDeath, 1.0f);
-
             AnimController.Frozen = false;
 
             Character killer = causeOfDeathAffliction?.Source;
@@ -4866,7 +4864,10 @@ namespace Barotrauma
                 info.LastResistanceMultiplierSkillLossRespawn = GetAbilityResistance(Tags.SkillLossRespawnResistance);
             }
 
+            //it's important that we set isDead before executing the status effects,
+            //otherwise a statuseffect might kill the character "again" and trigger a loop that crashes the game
             isDead = true;
+            ApplyStatusEffects(ActionType.OnDeath, 1.0f);
 
 #if CLIENT
             // Keep permadeath status in sync (to show it correctly in the UI, the server takes care of the actual logic)

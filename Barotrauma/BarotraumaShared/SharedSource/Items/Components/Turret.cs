@@ -269,9 +269,13 @@ namespace Barotrauma.Items.Components
         public Color HudTint { get; set; }
         
         [Header(localizedTextTag: "sp.turret.AutoOperate.propertyheader")]
-        [Serialize(false, IsPropertySaveable.Yes, description:"Should the turret operate automatically using AI targeting? Comes with some optional random movement that can be adjusted below."),
+        [Serialize(false, IsPropertySaveable.Yes, description: "Should the turret operate automatically using AI targeting? Comes with some optional random movement that can be adjusted below."),
          Editable(TransferToSwappedItem = true)]
         public bool AutoOperate { get; set; }
+
+        [Serialize(false, IsPropertySaveable.Yes, description: "Can the Auto Operate functionality be enabled using signals to the turret?"),
+            Editable(TransferToSwappedItem = true)]
+        public bool AllowAutoOperateWithWiring { get; set; }
 
         [Serialize(0f, IsPropertySaveable.Yes, description: "[Auto Operate] How much the turret should adjust the aim off the target randomly instead of tracking the target perfectly? In Degrees."),
          Editable(TransferToSwappedItem = true)]
@@ -319,8 +323,8 @@ namespace Barotrauma.Items.Components
         
         #endregion
         
-        private const string SetAutoOperatePin = "set_auto_operate";
-        private const string ToggleAutoOperatePin = "toggle_auto_operate";
+        private const string SetAutoOperateConnection = "set_auto_operate";
+        private const string ToggleAutoOperateConnection = "toggle_auto_operate";
 
         public Turret(Item item, ContentXElement element)
             : base(item, element)
@@ -374,12 +378,14 @@ namespace Barotrauma.Items.Components
             if (loadedBaseRotation.HasValue) { BaseRotation = loadedBaseRotation.Value; }
             targetRotation = Rotation;
             UpdateTransformedBarrelPos();
-            if (!AutoOperate)
+            if (!AllowAutoOperateWithWiring && 
+                Screen.Selected is { IsEditor: false })
             {
-                // If the turret is not set to auto operate, don't allow changing the state with wirings.
+                // If the turret is not set to auto operate and the auto operate connections haven't been wired to anything,
+                // don't allow changing the state with wirings.
                 foreach (ConnectionPanel connectionPanel in Item.GetComponents<ConnectionPanel>())
                 {
-                    connectionPanel.Connections.RemoveAll(c => c.Name is ToggleAutoOperatePin or SetAutoOperatePin);
+                    connectionPanel.Connections.RemoveAll(c => c.Name is ToggleAutoOperateConnection or SetAutoOperateConnection && c.Wires.None());
                 }
             }
         }
@@ -1952,10 +1958,12 @@ namespace Barotrauma.Items.Components
                         UpdateLightComponents();
                     }
                     break;
-                case SetAutoOperatePin:
+                case SetAutoOperateConnection:
+                    if (!AllowAutoOperateWithWiring) { return; }
                     AutoOperate = signal.value != "0";
                     break;
-                case ToggleAutoOperatePin:
+                case ToggleAutoOperateConnection:
+                    if (!AllowAutoOperateWithWiring) { return; }
                     if (signal.value != "0")
                     {
                         AutoOperate = !AutoOperate;

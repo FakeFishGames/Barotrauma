@@ -1,4 +1,12 @@
 ﻿-------------------------------------------------------------------------------------------------------------------------------------------------
+v1.5.8.0
+-------------------------------------------------------------------------------------------------------------------------------------------------
+
+- Fixed crashing when killing a defense bot or a leucocyte.
+- Fixed directional flak ammo box still being carried with 2 hands.
+- Fixed set_auto_operate and toggle_auto_operate disappearing at the start of the round if AutoOperate is not enabled. Now there's a setting called "Allow Auto Operate With Wiring" which can be enabled in the sub editor to enable the connections. 
+
+-------------------------------------------------------------------------------------------------------------------------------------------------
 v1.5.7.0
 -------------------------------------------------------------------------------------------------------------------------------------------------
 
