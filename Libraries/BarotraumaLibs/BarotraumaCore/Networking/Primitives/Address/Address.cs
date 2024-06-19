@@ -18,7 +18,17 @@ namespace Barotrauma.Networking
         public override string ToString() => StringRepresentation;
 
         public static bool operator ==(Address a, Address b)
-            => a.Equals(b);
+        {
+            if (a is null || b is null)
+            {
+                return a is null == b is null;
+            }
+            else
+            {
+                return a.Equals(b);
+            }
+        }
+
 
         public static bool operator !=(Address a, Address b)
             => !(a == b);

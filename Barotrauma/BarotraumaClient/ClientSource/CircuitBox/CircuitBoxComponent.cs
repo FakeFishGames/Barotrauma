@@ -1,4 +1,4 @@
-#nullable enable
+﻿#nullable enable
 
 using System;
 using System.Linq;
@@ -75,7 +75,7 @@ namespace Barotrauma
             foreach (ItemComponent ic in Item.Components)
             {
                 if (ic is Holdable) { continue; }
-                if (!ic.AllowInGameEditing) { continue; }
+                if (!ic.AllowInGameEditing && Screen.Selected is not { IsEditor: true }) { continue; }
                 if (SerializableProperty.GetProperties<InGameEditable>(ic).Count == 0 &&
                     !SerializableProperty.GetProperties<ConditionallyEditable>(ic).Any(p => p.GetAttribute<ConditionallyEditable>().IsEditable(ic)))
                 {

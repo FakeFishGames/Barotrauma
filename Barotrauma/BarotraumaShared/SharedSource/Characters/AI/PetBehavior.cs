@@ -178,7 +178,6 @@ namespace Barotrauma
         public PetBehavior(XElement element, EnemyAIController aiController)
         {
             AIController = aiController;
-            AIController.Character.CanBeDragged = true;
 
             MaxHappiness = element.GetAttributeFloat(nameof(MaxHappiness), 100.0f);
             UnhappyThreshold = element.GetAttributeFloat(nameof(UnhappyThreshold), MaxHappiness * 0.25f);

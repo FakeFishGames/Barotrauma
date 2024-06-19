@@ -1,4 +1,4 @@
-using Microsoft.Xna.Framework;
+﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System.Collections.Generic;
 using System.Linq;
@@ -70,7 +70,7 @@ namespace Barotrauma.Lights
 
         public bool LightingEnabled = true;
 
-        public bool ObstructVision;
+        public float ObstructVisionAmount;
 
         private readonly Texture2D visionCircle;
 
@@ -498,7 +498,7 @@ namespace Barotrauma.Lights
             {
                 foreach (MapEntity e in (Submarine.VisibleEntities ?? MapEntity.MapEntityList))
                 {
-                    if (e is Item item && !item.HiddenInGame && item.GetComponent<Wire>() is Wire wire)
+                    if (e is Item item && !item.IsHidden && item.GetComponent<Wire>() is Wire wire)
                     {
                         wire.DebugDraw(spriteBatch, alpha: 0.4f);
                     }
@@ -664,7 +664,7 @@ namespace Barotrauma.Lights
             visibleHulls.Clear();
             foreach (Hull hull in Hull.HullList)
             {
-                if (hull.HiddenInGame) { continue; }
+                if (hull.IsHidden) { continue; }
                 var drawRect =
                     hull.Submarine == null ?
                     hull.Rect :
@@ -682,12 +682,12 @@ namespace Barotrauma.Lights
 
         public void UpdateObstructVision(GraphicsDevice graphics, SpriteBatch spriteBatch, Camera cam, Vector2 lookAtPosition)
         {
-            if ((!LosEnabled || LosMode == LosMode.None) && !ObstructVision) { return; }
+            if ((!LosEnabled || LosMode == LosMode.None) && ObstructVisionAmount <= 0.0f) { return; }
             if (ViewTarget == null) return;
 
             graphics.SetRenderTarget(LosTexture);
 
-            if (ObstructVision)
+            if (ObstructVisionAmount > 0.0f)
             {
                 graphics.Clear(Color.Black);
                 Vector2 diff = lookAtPosition - ViewTarget.WorldPosition;
@@ -697,13 +697,14 @@ namespace Barotrauma.Lights
 
                 //the visible area stretches to the maximum when the cursor is this far from the character
                 const float MaxOffset = 256.0f;
-                const float MinHorizontalScale = 2.2f;
-                const float MaxHorizontalScale = 2.8f;
-                const float VerticalScale = 2.5f;
+                //the magic numbers here are just based on experimentation
+                float MinHorizontalScale = MathHelper.Lerp(3.5f, 1.5f, ObstructVisionAmount);
+                float MaxHorizontalScale = MinHorizontalScale * 1.25f;
+                float VerticalScale = MathHelper.Lerp(4.0f, 1.25f, ObstructVisionAmount);
 
                 //Starting point and scale-based modifier that moves the point of origin closer to the edge of the texture if the player moves their mouse further away, or vice versa.
-                float relativeOriginStartPosition = 0.22f; //Increasing this value moves the origin further behind the character
-                float originStartPosition = visionCircle.Width * relativeOriginStartPosition;
+                float relativeOriginStartPosition = 0.1f; //Increasing this value moves the origin further behind the character
+                float originStartPosition = visionCircle.Width * relativeOriginStartPosition * MinHorizontalScale;
                 float relativeOriginLookAtPosModifier = -0.055f; //Increase this value increases how much the vision changes by moving the mouse
                 float originLookAtPosModifier = visionCircle.Width * relativeOriginLookAtPosModifier;
 

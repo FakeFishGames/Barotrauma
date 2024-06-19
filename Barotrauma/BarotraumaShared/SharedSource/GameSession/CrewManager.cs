@@ -99,14 +99,20 @@ namespace Barotrauma
                     {
                         if (order.Identifier == Tags.DeconstructThis)
                         {
-                            Item.DeconstructItems.Add(item);
+                            foreach (var stackedItem in item.GetStackedItems())
+                            {
+                                Item.DeconstructItems.Add(stackedItem);
+                            }
 #if CLIENT
                             HintManager.OnItemMarkedForDeconstruction(order.OrderGiver);
 #endif
                         }
                         else
                         {
-                            Item.DeconstructItems.Remove(item);
+                            foreach (var stackedItem in item.GetStackedItems())
+                            {
+                                Item.DeconstructItems.Remove(stackedItem);
+                            }
                         }
                     }
                 }
@@ -179,6 +185,17 @@ namespace Barotrauma
             {
                 DebugConsole.ThrowError("Tried to add a dead character to CrewManager!\n" + Environment.StackTrace.CleanupStackTrace());
                 return;
+            }
+            if (character.Info == null)
+            {
+                if (character.Prefab.ContentPackage == GameMain.VanillaContent)
+                {
+                    DebugConsole.ThrowError($"Added a character with no {nameof(CharacterInfo)} to the crew." + Environment.StackTrace.CleanupStackTrace());
+                }
+                else
+                {
+                    DebugConsole.ThrowError($"Added add a character with no {nameof(CharacterInfo)} to the crew. This may lead to issues: consider adding {nameof(CharacterPrefab.HasCharacterInfo)}=\"True\" to the character config.");
+                }
             }
 
             if (!characters.Contains(character))
@@ -275,11 +292,7 @@ namespace Barotrauma
 
             if (Level.Loaded != null && Level.Loaded.ShouldSpawnCrewInsideOutpost())
             {
-                spawnWaypoints = WayPoint.WayPointList.FindAll(wp =>
-                    wp.SpawnType == SpawnType.Human &&
-                    wp.Submarine == Level.Loaded.StartOutpost &&
-                    wp.CurrentHull != null &&
-                    wp.CurrentHull.OutpostModuleTags.Contains("airlock".ToIdentifier()));
+                spawnWaypoints = GetOutpostSpawnpoints();
                 while (spawnWaypoints.Count > characterInfos.Count)
                 {
                     spawnWaypoints.RemoveAt(Rand.Int(spawnWaypoints.Count));
@@ -301,46 +314,8 @@ namespace Barotrauma
                 var info = characterInfos[i];
                 info.TeamID = CharacterTeamType.Team1;
                 Character character = Character.Create(info, spawnWaypoints[i].WorldPosition, info.Name);
-                if (character.Info != null)
-                {
-                    if (!character.Info.StartItemsGiven && character.Info.InventoryData != null)
-                    {
-                        DebugConsole.AddWarning($"Error when initializing a round: character \"{character.Name}\" has not been given their initial items but has saved inventory data. Using the saved inventory data instead of giving the character new items.");
-                    }
-                    if (character.Info.InventoryData != null)
-                    {
-                        character.SpawnInventoryItems(character.Inventory, character.Info.InventoryData.FromPackage(null));
-                    }
-                    else if (!character.Info.StartItemsGiven)
-                    {
-                        character.GiveJobItems(mainSubWaypoints[i]);
-                        foreach (Item item in character.Inventory.AllItems)
-                        {
-                            //if the character is loaded from a human prefab with preconfigured items, its ID card gets assigned to the sub it spawns in
-                            //we don't want that in this case, the crew's cards shouldn't be submarine-specific
-                            var idCard = item.GetComponent<Items.Components.IdCard>();
-                            if (idCard != null)
-                            {
-                                idCard.SubmarineSpecificID = 0;
-                            }
-                        }
-                    }
-                    if (character.Info.HealthData != null)
-                    {
-                        CharacterInfo.ApplyHealthData(character, character.Info.HealthData);
-                    }
+                InitializeCharacter(character, mainSubWaypoints[i], spawnWaypoints[i]);
 
-                    character.LoadTalents();
-
-                    character.GiveIdCardTags(mainSubWaypoints[i]);
-                    character.GiveIdCardTags(spawnWaypoints[i]);
-                    character.Info.StartItemsGiven = true;
-                    if (character.Info.OrderData != null)
-                    {
-                        character.Info.ApplyOrderData();
-                    }
-                }
-                
                 AddCharacter(character, sortCrewList: false);
 #if CLIENT
                 if (IsSinglePlayer && (Character.Controlled == null || character.Info.LastControlled)) { Character.Controlled = character; }
@@ -353,6 +328,61 @@ namespace Barotrauma
 
             //longer delay in multiplayer to prevent the server from triggering NPC conversations while the players are still loading the round
             conversationTimer = IsSinglePlayer ? Rand.Range(5.0f, 10.0f) : Rand.Range(45.0f, 60.0f);
+        }
+
+        /// <summary>
+        /// Returns the potential crew spawnpositions for the crew in the loaded outpost
+        /// </summary>
+        public List<WayPoint> GetOutpostSpawnpoints()
+        {
+            return WayPoint.WayPointList.FindAll(wp =>
+                    wp.SpawnType == SpawnType.Human &&
+                    wp.Submarine == Level.Loaded.StartOutpost &&
+                    wp.CurrentHull != null &&
+                    wp.CurrentHull.OutpostModuleTags.Contains("airlock".ToIdentifier()));
+        }
+
+        public void InitializeCharacter(Character character, WayPoint mainSubWaypoint, WayPoint spawnWaypoint)
+        {
+            if (character.Info != null)
+            {
+                if (!character.Info.StartItemsGiven && character.Info.InventoryData != null)
+                {
+                    DebugConsole.AddWarning($"Error when initializing a round: character \"{character.Name}\" has not been given their initial items but has saved inventory data. Using the saved inventory data instead of giving the character new items.");
+                }
+                if (character.Info.InventoryData != null)
+                {
+                    character.SpawnInventoryItems(character.Inventory, character.Info.InventoryData.FromPackage(null));
+                }
+                else if (!character.Info.StartItemsGiven)
+                {
+                    character.GiveJobItems(mainSubWaypoint);
+                    foreach (Item item in character.Inventory.AllItems)
+                    {
+                        //if the character is loaded from a human prefab with preconfigured items, its ID card gets assigned to the sub it spawns in
+                        //we don't want that in this case, the crew's cards shouldn't be submarine-specific
+                        var idCard = item.GetComponent<Items.Components.IdCard>();
+                        if (idCard != null)
+                        {
+                            idCard.SubmarineSpecificID = 0;
+                        }
+                    }
+                }
+                if (character.Info.HealthData != null)
+                {
+                    CharacterInfo.ApplyHealthData(character, character.Info.HealthData);
+                }
+
+                character.LoadTalents();
+
+                character.GiveIdCardTags(mainSubWaypoint);
+                character.GiveIdCardTags(spawnWaypoint);
+                character.Info.StartItemsGiven = true;
+                if (character.Info.OrderData != null)
+                {
+                    character.Info.ApplyOrderData();
+                }
+            }
         }
 
         public void RenameCharacter(CharacterInfo characterInfo, string newName)

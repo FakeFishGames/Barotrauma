@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Xml.Linq;
 
 namespace Barotrauma
@@ -53,6 +55,9 @@ namespace Barotrauma
         public bool AllowDamagedWalls { get; set; }
 
         [Serialize(true, IsPropertySaveable.Yes), Editable]
+        public bool AllowDamagedDevices { get; set; }
+
+        [Serialize(true, IsPropertySaveable.Yes), Editable]
         public bool AllowDisconnectedWires { get; set; }
 
         [Serialize(Level.PlacementType.Bottom, IsPropertySaveable.Yes), Editable]
@@ -73,16 +78,52 @@ namespace Barotrauma
 
     class WreckInfo : ExtraSubmarineInfo
     {
+        // Unknown -> older submarines before this property was added
+        public enum HasThalamus { Unknown, Yes, No }
+
+        [Serialize(HasThalamus.Unknown, IsPropertySaveable.Yes)]
+        public HasThalamus WreckContainsThalamus { get; private set; }
+
         public WreckInfo(SubmarineInfo submarineInfo, XElement element) : base(submarineInfo, element)
         {
             Name = $"{nameof(WreckInfo)} ({submarineInfo.Name})";
+            TryDetermineThalamusIfUnknown(element);
         }
 
         public WreckInfo(SubmarineInfo submarineInfo) : base(submarineInfo)
         {
             Name = $"{nameof(WreckInfo)} ({submarineInfo.Name})";
+            TryDetermineThalamusIfUnknown(submarineInfo.SubmarineElement);
         }
 
         public WreckInfo(WreckInfo original) : base(original) { }
+
+        // Attempts to determine if the wreck contains a thalamus item
+        private void TryDetermineThalamusIfUnknown(XElement element)
+        {
+            if (WreckContainsThalamus != HasThalamus.Unknown) { return; }
+
+            if (element == null)
+            {
+                // nothing we can do, oh well
+                WreckContainsThalamus = HasThalamus.Unknown;
+                return;
+            }
+
+            foreach (var subElement in element.Elements())
+            {
+                if (!string.Equals(subElement.Name.ToString(), nameof(Item), StringComparison.InvariantCultureIgnoreCase)) { continue; }
+
+                var tags = subElement.GetAttributeIdentifierImmutableHashSet(nameof(ItemPrefab.Tags), ImmutableHashSet<Identifier>.Empty);
+
+                if (tags.Contains(Tags.Thalamus))
+                {
+                    WreckContainsThalamus = HasThalamus.Yes;
+                    return;
+                }
+            }
+
+            WreckContainsThalamus = HasThalamus.No;
+        }
     }
 }

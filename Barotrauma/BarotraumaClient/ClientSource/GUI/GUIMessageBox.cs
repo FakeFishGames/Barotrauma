@@ -9,7 +9,6 @@ namespace Barotrauma
 {
     public class GUIMessageBox : GUIFrame
     {
-        #warning TODO: change this to List<GUIMessageBox> and fix incorrect uses of this list
         public readonly static List<GUIComponent> MessageBoxes = new List<GUIComponent>();
         private static int DefaultWidth
         {

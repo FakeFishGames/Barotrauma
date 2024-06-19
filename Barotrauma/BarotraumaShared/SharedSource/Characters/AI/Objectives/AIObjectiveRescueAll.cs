@@ -9,9 +9,9 @@ namespace Barotrauma
     {
         public override Identifier Identifier { get; set; } = "rescue all".ToIdentifier();
         public override bool ForceRun => true;
-        public override bool InverseTargetEvaluation => true;
-        public override bool AllowOutsideSubmarine => true;
-        public override bool AllowInAnySub => true;
+        public override bool InverseTargetPriority => true;
+        protected override bool AllowOutsideSubmarine => true;
+        protected override bool AllowInAnySub => true;
 
         private readonly HashSet<Character> charactersWithMinorInjuries = new HashSet<Character>();
 
@@ -32,7 +32,7 @@ namespace Barotrauma
         public AIObjectiveRescueAll(Character character, AIObjectiveManager objectiveManager, float priorityModifier = 1)
             : base(character, objectiveManager, priorityModifier) { }
 
-        protected override bool Filter(Character target)
+        protected override bool IsValidTarget(Character target)
         {
             if (!IsValidTarget(target, character, out bool ignoredasMinorWounds))
             {
@@ -61,7 +61,7 @@ namespace Barotrauma
 
         protected override IEnumerable<Character> GetList() => Character.CharacterList;
 
-        protected override float TargetEvaluation()
+        protected override float GetTargetPriority()
         {
             if (Targets.None()) { return 100; }
             if (!objectiveManager.IsOrder(this))

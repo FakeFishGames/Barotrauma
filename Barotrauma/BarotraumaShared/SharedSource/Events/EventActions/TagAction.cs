@@ -68,6 +68,7 @@ namespace Barotrauma
                 ("bot", v => TagBots(playerCrewOnly: false)),
                 ("crew", v => TagCrew()),
                 ("humanprefabidentifier", TagHumansByIdentifier),
+                ("humanprefabtag", TagHumansByTag),
                 ("jobidentifier", TagHumansByJobIdentifier),
                 ("structureidentifier", TagStructuresByIdentifier),
                 ("structurespecialtag", TagStructuresBySpecialTag),
@@ -153,6 +154,11 @@ namespace Barotrauma
             AddTarget(Tag, Character.CharacterList.Where(c => c.HumanPrefab?.Identifier == identifier));
         }
 
+        private void TagHumansByTag(Identifier tag)
+        {
+            AddTarget(Tag, Character.CharacterList.Where(c => c.HumanPrefab != null && c.HumanPrefab.GetTags().Contains(tag)));
+        }
+
         private void TagHumansByJobIdentifier(Identifier jobIdentifier)
         {
             AddTarget(Tag, Character.CharacterList.Where(c => c.HasJob(jobIdentifier)));
@@ -217,6 +223,7 @@ namespace Barotrauma
         private bool IsValidItem(Item it)
         {
             return 
+                !it.IsLayerHidden && /*items in hidden layers are treated as if they didn't exist, regardless if hidden items should be allowed*/
                 (!it.HiddenInGame || AllowHiddenItems) && 
                 ModuleTagMatches(it) && 
                 //if the item has just spawned, it may be in a hull but not moved into the coordinate space of the hull yet

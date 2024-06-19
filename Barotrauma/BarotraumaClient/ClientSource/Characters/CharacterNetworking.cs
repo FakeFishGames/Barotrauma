@@ -723,11 +723,19 @@ namespace Barotrauma
                     character.ReadStatus(inc);
                 }
 
-                if (character.IsHuman && character.TeamID != CharacterTeamType.FriendlyNPC && character.TeamID != CharacterTeamType.None && !character.IsDead)
+                if (character.IsHuman && character.TeamID != CharacterTeamType.FriendlyNPC && character.TeamID != CharacterTeamType.None)
                 {
                     CharacterInfo duplicateCharacterInfo = GameMain.GameSession.CrewManager.GetCharacterInfos().FirstOrDefault(c => c.ID == info.ID);
                     GameMain.GameSession.CrewManager.RemoveCharacterInfo(duplicateCharacterInfo);
-                    GameMain.GameSession.CrewManager.AddCharacter(character);
+                    if (character.isDead)
+                    {
+                        //just add the info if dead (displayed in the round summary, and crew list if the character is revived)
+                        GameMain.GameSession.CrewManager.AddCharacterInfo(character.info);
+                    }
+                    else
+                    {
+                        GameMain.GameSession.CrewManager.AddCharacter(character);
+                    }
                 }
 
                 if (GameMain.Client.SessionId == ownerId)

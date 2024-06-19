@@ -129,7 +129,8 @@ namespace Barotrauma
             {
                 if (!allContainerTagsInTheGame.Contains(prefab.Identifier))
                 {
-                    DebugConsole.ThrowError($"Container tag \"{prefab.Identifier}\" defined in ContainerTagPrefab is not used in any item prefabs, did you misspell it?", contentPackage: prefab.ContentPackage);
+                    DebugConsole.AddWarning($"Container tag \"{prefab.Identifier}\" defined in ContainerTagPrefab is not used in any item prefabs, did you misspell it? It's also possible mods override container tags in a way that causes some of the pre-defined tags to become unused.", 
+                        contentPackage: prefab.ContentPackage);
                 }
             }
 
@@ -139,7 +140,7 @@ namespace Barotrauma
             {
                 if (Prefabs.All(p => p.Identifier != vanillaTag))
                 {
-                    DebugConsole.ThrowError($"Container tag \"{vanillaTag}\" is used in vanilla item prefabs but not defined in a ContainerTagPrefab.");
+                    DebugConsole.AddWarning($"Container tag \"{vanillaTag}\" is used in vanilla item prefabs but not defined in a ContainerTagPrefab.");
                 }
             }
         }

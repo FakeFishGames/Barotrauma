@@ -1115,13 +1115,23 @@ namespace Barotrauma
 
                 float subCrushDepth = SubmarineInfo.GetSubCrushDepth(SubmarineSelection.CurrentOrPendingSubmarine(), ref pendingSubInfo);
                 string crushDepthWarningIconStyle = null;
-                if (connection.LevelData.InitialDepth * Physics.DisplayToRealWorldRatio > subCrushDepth)
+
+                var levelData = connection.LevelData;
+                float spawnDepth =
+                    levelData.InitialDepth +
+                    //base the warning on the start or end position of the level, whichever is deeper
+                    levelData.Size.Y * Math.Max(levelData.GenerationParams.StartPosition.Y, levelData.GenerationParams.EndPosition.Y);
+
+                //"high warning" if the sub spawns at/below crush depth
+                if (spawnDepth * Physics.DisplayToRealWorldRatio > subCrushDepth)
                 {
                     iconCount++;
                     crushDepthWarningIconStyle = "CrushDepthWarningHighIcon";
                     tooltip = "crushdepthwarninghigh";
                 }
-                else if ((connection.LevelData.InitialDepth + connection.LevelData.Size.Y) * Physics.DisplayToRealWorldRatio > subCrushDepth)
+                //"low warning" if the spawn position is less than the level's height away from crush depth
+                //(i.e. the crush depth is pretty close to the spawn pos, possibly inside the level or at least close enough that many parts of the abyss are unreachable)
+                else if ((spawnDepth + connection.LevelData.Size.Y) * Physics.DisplayToRealWorldRatio > subCrushDepth)
                 {
                     iconCount++;
                     crushDepthWarningIconStyle = "CrushDepthWarningLowIcon";

@@ -781,7 +781,7 @@ namespace Barotrauma.CharacterEditor
             // Lightmaps
             if (GameMain.LightManager.LightingEnabled && Character.Controlled != null)
             {
-                GameMain.LightManager.ObstructVision = Character.Controlled.ObstructVision;
+                GameMain.LightManager.ObstructVisionAmount = Character.Controlled.ObstructVisionAmount;
                 GameMain.LightManager.RenderLightMap(graphics, spriteBatch, cam);
                 GameMain.LightManager.UpdateObstructVision(graphics, spriteBatch, cam, Character.Controlled.CursorWorldPosition);
             }

@@ -7,6 +7,7 @@ using FarseerPhysics.Dynamics;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Linq;
 using System.Xml.Linq;
@@ -675,7 +676,7 @@ namespace Barotrauma
                     if (item.GetComponent<Turret>() != null) { return false; }
                     if (item.body != null && !item.body.Enabled) { return true; }
                 }
-                if (e.HiddenInGame) { return true; }
+                if (e.IsHidden) { return true; }
                 return false;
             });
 
@@ -1101,6 +1102,11 @@ namespace Barotrauma
                         continue;
                     }
                     item.FlipX(true);
+
+                    if (!item.Prefab.CanFlipX && item.Prefab.AllowRotatingInEditor)
+                    {
+                        item.Rotation = -item.Rotation;
+                    }
                 }
             }
 
@@ -1119,6 +1125,15 @@ namespace Barotrauma
             }
         }
 
+        public static bool LayerExistsInAnySub(Identifier layer)
+        {
+            foreach (MapEntity me in MapEntity.MapEntityList)
+            {
+                if (me.Layer == layer) { return true; }
+            }
+            return false;
+        }
+
         public bool LayerExists(Identifier layer)
         {
             foreach (MapEntity me in MapEntity.MapEntityList)
@@ -1130,20 +1145,45 @@ namespace Barotrauma
 
         public void SetLayerEnabled(Identifier layer, bool enabled, bool sendNetworkEvent = false)
         {
-            foreach (MapEntity me in MapEntity.MapEntityList)
+            foreach (MapEntity entity in MapEntity.MapEntityList)
             {
-                if (string.IsNullOrEmpty(me.Layer) || me.Submarine != this || me.Layer != layer) { continue; }
-                me.HiddenInGame = !enabled;
-#if CLIENT
-                //normally this is handled in LightComponent.OnMapLoaded, but this method is called after that
-                if (me.HiddenInGame && me is Item item)
+                if (string.IsNullOrEmpty(entity.Layer) || entity.Submarine != this || entity.Layer != layer) { continue; }
+                entity.IsLayerHidden = !enabled;
+
+                if (entity is WayPoint wp)
                 {
-                    foreach (var lightComponent in item.GetComponents<LightComponent>())
+                    if (enabled)
                     {
-                        lightComponent.Light.Enabled = false;
+                        wp.SpawnType = wp.SpawnType.RemoveFlag(SpawnType.Disabled);
+                    }
+                    else
+                    {
+                        wp.SpawnType = wp.SpawnType.AddFlag(SpawnType.Disabled);
                     }
                 }
+                else if (entity is Item item)
+                {
+                    foreach (var connectionPanel in item.GetComponents<ConnectionPanel>())
+                    {
+                        foreach (var connection in connectionPanel.Connections)
+                        {
+                            foreach (var wire in connection.Wires)
+                            {
+                                wire.Item.IsLayerHidden = entity.IsLayerHidden;
+                            }
+                        }
+                    }
+#if CLIENT
+                    if (entity.IsLayerHidden)
+                    {
+                        //normally this is handled in LightComponent.OnMapLoaded, but this method is called after that
+                        foreach (var lightComponent in item.GetComponents<LightComponent>())
+                        {
+                            lightComponent.Light.Enabled = false;
+                        }
+                    }
 #endif
+                }
             }
 #if SERVER
             if (sendNetworkEvent)
@@ -1413,7 +1453,8 @@ namespace Barotrauma
             {
                 if (!connectedSubs.Contains(item.Submarine)) { continue; }
                 if (!item.HasTag(Tags.CargoContainer)) { continue; }
-                if (item.NonInteractable || item.HiddenInGame) { continue; }
+                if (item.HasTag(Tags.DisallowCargo)) { continue; }
+                if (item.NonInteractable || item.IsHidden) { continue; }
                 var itemContainer = item.GetComponent<ItemContainer>();
                 if (itemContainer == null) { continue; }
                 int emptySlots = 0;
@@ -1703,9 +1744,12 @@ namespace Barotrauma
                     }
                 }
 
-                foreach (Identifier layer in Info.LayersHiddenByDefault)
+                if (Screen.Selected is { IsEditor : false })
                 {
-                    SetLayerEnabled(layer, enabled: false);
+                    foreach (Identifier layer in Info.LayersHiddenByDefault)
+                    {
+                        SetLayerEnabled(layer, enabled: false);
+                    }
                 }
 
                 GameMain.GameSession?.Campaign?.UpgradeManager?.OnUpgradesChanged.Register(upgradeEventIdentifier, _ => ResetCrushDepth());
@@ -1839,9 +1883,36 @@ namespace Barotrauma
                 element.Add(new XAttribute("layerhiddenbydefault", string.Join(", ", Info.LayersHiddenByDefault)));
             }
 
+            if (Info.WreckInfo != null)
+            {
+                bool hasThalamus = false;
+
+                var wreckAiEntities = WreckAIConfig.Prefabs.Select(p => p.Entity).ToImmutableHashSet();
+                var prefabsOnSub = GetItems(true).Select(i => i.Prefab).Distinct().ToImmutableHashSet();
+
+                foreach (ItemPrefab prefab in prefabsOnSub)
+                {
+                    foreach (Identifier entity in wreckAiEntities)
+                    {
+                        if (WreckAI.IsThalamus(prefab, entity))
+                        {
+                            hasThalamus = true;
+                            break;
+                        }
+                    }
+                    if (hasThalamus) { break; }
+                }
+
+                element.Add(new XAttribute(nameof(WreckInfo.WreckContainsThalamus), hasThalamus ? WreckInfo.HasThalamus.Yes : WreckInfo.HasThalamus.No));
+            }
+
             if (Info.Type == SubmarineType.OutpostModule)
             {
                 Info.OutpostModuleInfo?.Save(element);
+            }
+            if (Info.GetExtraSubmarineInfo is { } extraSubInfo)
+            {
+                extraSubInfo.Save(element);
             }
 
             foreach (Item item in Item.ItemList)
@@ -2186,7 +2257,7 @@ namespace Barotrauma
             {
                 if (potentialContainer.Removed) { continue; }
                 if (potentialContainer.NonInteractable) { continue; }
-                if (potentialContainer.HiddenInGame) { continue; }
+                if (potentialContainer.IsHidden) { continue; }
                 if (allowConnectedSubs)
                 {
                     if (!connectedSubs.Contains(potentialContainer.Submarine)) { continue; }

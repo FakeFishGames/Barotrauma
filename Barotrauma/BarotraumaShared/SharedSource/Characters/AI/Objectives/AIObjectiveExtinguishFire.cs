@@ -10,12 +10,10 @@ namespace Barotrauma
     {
         public override Identifier Identifier { get; set; } = "extinguish fire".ToIdentifier();
         public override bool ForceRun => true;
-        public override bool ConcurrentObjectives => true;
+        protected override bool ConcurrentObjectives => true;
         public override bool KeepDivingGearOn => true;
-
-        public override bool AllowInAnySub => true;
-
-        public override bool AllowWhileHandcuffed => false;
+        protected override bool AllowInAnySub => true;
+        protected override bool AllowWhileHandcuffed => false;
 
         private readonly Hull targetHull;
 
@@ -32,7 +30,7 @@ namespace Barotrauma
         {
             if (!IsAllowed)
             {
-                HandleNonAllowed();
+                HandleDisallowed();
                 return Priority;
             }
             bool isOrder = objectiveManager.HasOrder<AIObjectiveExtinguishFires>();

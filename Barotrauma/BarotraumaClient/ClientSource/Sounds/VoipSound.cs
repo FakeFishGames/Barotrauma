@@ -107,7 +107,7 @@ namespace Barotrauma.Sounds
             float finalGain = gain * GameSettings.CurrentConfig.Audio.VoiceChatVolume * client.VoiceVolume;
             for (int i = 0; i < readSamples; i++)
             {
-                float fVal = ShortToFloat(buffer[i]);
+                float fVal = ToolBox.ShortAudioSampleToFloat(buffer[i]);
 
                 if (finalGain > 1.0f) //TODO: take distance into account?
                 {
@@ -128,7 +128,7 @@ namespace Barotrauma.Sounds
                         fVal = Math.Clamp(filter.Process(fVal) * PostRadioFilterBoost, -1f, 1f);
                     }
                 }
-                buffer[i] = FloatToShort(fVal);
+                buffer[i] = ToolBox.FloatToShortAudioSample(fVal);
             }
         }
 

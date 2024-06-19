@@ -13,10 +13,9 @@ namespace Barotrauma
         public override Identifier Identifier { get; set; } = "rescue".ToIdentifier();
         public override bool ForceRun => true;
         public override bool KeepDivingGearOn => true;
-
-        public override bool AllowOutsideSubmarine => true;
-        public override bool AllowInAnySub => true;
-        public override bool AllowWhileHandcuffed => false;
+        protected override bool AllowOutsideSubmarine => true;
+        protected override bool AllowInAnySub => true;
+        protected override bool AllowWhileHandcuffed => false;
 
         const float TreatmentDelay = 0.5f;
 
@@ -484,7 +483,7 @@ namespace Barotrauma
         protected override float GetPriority()
         {
             if (Target == null) { Abandon = true; }
-            if (!IsAllowed) { HandleNonAllowed(); }
+            if (!IsAllowed) { HandleDisallowed(); }
             if (Abandon)
             {
                 return Priority;
@@ -531,8 +530,8 @@ namespace Barotrauma
 
         public override void OnDeselected()
         {
-            character.SelectedCharacter = null;
             base.OnDeselected();
+            character.DeselectCharacter();
         }
     }
 }

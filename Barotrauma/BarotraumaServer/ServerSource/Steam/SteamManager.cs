@@ -68,13 +68,13 @@ namespace Barotrauma.Steam
                     foreach (var contentPackage in contentPackages)
                     {
                         Steamworks.SteamServer.SetKey(
-                            $"contentpackage{index}", 
+                            $"contentpackage{index}",
                             new ServerListContentPackageInfo(contentPackage).ToString());
                         index++;
                     }
                     return;
             }
-            
+
             Steamworks.SteamServer.SetKey(key.Value.ToLowerInvariant(), value.ToString());
         }
 

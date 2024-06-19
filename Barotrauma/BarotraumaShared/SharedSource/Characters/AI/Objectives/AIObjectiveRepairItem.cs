@@ -10,9 +10,9 @@ namespace Barotrauma
     {
         public override Identifier Identifier { get; set; } = "repair item".ToIdentifier();
 
-        public override bool AllowInFriendlySubs => true;
+        protected override bool AllowInFriendlySubs => true;
         public override bool KeepDivingGearOn => Item?.CurrentHull == null;
-        public override bool AllowWhileHandcuffed => false;
+        protected override bool AllowWhileHandcuffed => false;
 
         public Item Item { get; private set; }
 
@@ -37,7 +37,7 @@ namespace Barotrauma
 
         protected override float GetPriority()
         {
-            if (!IsAllowed) { HandleNonAllowed(); }
+            if (!IsAllowed) { HandleDisallowed(); }
             if (Item.IgnoreByAI(character))
             {
                 Abandon = true;

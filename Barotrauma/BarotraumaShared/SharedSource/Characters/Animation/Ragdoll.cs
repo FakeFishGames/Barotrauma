@@ -1096,8 +1096,8 @@ namespace Barotrauma
                 if (newHull?.Submarine == null && currentHull?.Submarine != null)
                 {
                     //don't teleport out yet if the character is going through a gap
-                    if (Gap.FindAdjacent(Gap.GapList.Where(g => g.Submarine == currentHull.Submarine), findPos, 150.0f) != null) { return; }
-                    if (Limbs.Any(l => Gap.FindAdjacent(currentHull.ConnectedGaps, l.WorldPosition, ConvertUnits.ToDisplayUnits(l.body.GetSize().Combine())) != null)) { return; }
+                    if (Gap.FindAdjacent(Gap.GapList.Where(g => g.Submarine == currentHull.Submarine), findPos, 150.0f, allowRoomToRoom: true) != null) { return; }
+                    if (Limbs.Any(l => Gap.FindAdjacent(currentHull.ConnectedGaps, l.WorldPosition, ConvertUnits.ToDisplayUnits(l.body.GetSize().Combine()), allowRoomToRoom: true) != null)) { return; }
                     character.MemLocalState?.Clear();
                     Teleport(ConvertUnits.ToSimUnits(currentHull.Submarine.Position), currentHull.Submarine.Velocity);
                 }

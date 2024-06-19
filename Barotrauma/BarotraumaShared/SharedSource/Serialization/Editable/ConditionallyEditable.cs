@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using Barotrauma.Items.Components;
 
 namespace Barotrauma;
@@ -28,7 +29,8 @@ sealed class ConditionallyEditable : Editable
         OnlyByStatusEffectsAndNetwork,
         HasIntegratedButtons,
         IsToggleableController,
-        HasConnectionPanel
+        HasConnectionPanel,
+        DeteriorateUnderStress
     }
 
     public bool IsEditable(ISerializableEntity entity)
@@ -55,10 +57,12 @@ sealed class ConditionallyEditable : Editable
             ConditionType.HasIntegratedButtons
                 => GetComponent<Door>(entity) is { HasIntegratedButtons: true },
             ConditionType.IsToggleableController
-                => GetComponent<Controller>(entity) is Controller { IsToggle: true } controller && 
+                => GetComponent<Controller>(entity) is Controller { IsToggle: true } controller &&
                 controller.Item.GetComponent<ConnectionPanel>() != null,
             ConditionType.HasConnectionPanel
                 => GetComponent<ConnectionPanel>(entity) != null,
+            ConditionType.DeteriorateUnderStress
+                => entity is Item repairableItem && repairableItem.Components.Any(c => c is IDeteriorateUnderStress),
             _
                 => false
         };

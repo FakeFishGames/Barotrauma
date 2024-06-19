@@ -23,6 +23,16 @@ namespace Barotrauma.Networking
         /// </summary>
         public static float SkillLossPercentageOnImmediateRespawn => GameMain.NetworkMember?.ServerSettings?.SkillLossPercentageOnImmediateRespawn ?? 10.0f;
 
+        public static RespawnMode RespawnMode => GameMain.NetworkMember?.ServerSettings?.RespawnMode ?? RespawnMode.MidRound;
+
+        public static bool UseDeathPrompt
+        {
+            get
+            {
+                return GameMain.GameSession?.GameMode is CampaignMode && Level.Loaded != null;
+            }
+        }
+
         public enum State
         {
             Waiting,
@@ -71,14 +81,6 @@ namespace Barotrauma.Networking
 
         public State CurrentState { get; private set; }
 
-        public static bool UseRespawnPrompt
-        {
-            get
-            {
-                return GameMain.GameSession?.GameMode is CampaignMode && Level.Loaded != null && Level.Loaded?.Type != LevelData.LevelType.Outpost;
-            }
-        }
-
         private float maxTransportTime;
 
         private float updateReturnTimer;
@@ -94,7 +96,7 @@ namespace Barotrauma.Networking
         {
             this.networkMember = networkMember;
 
-            if (shuttleInfo != null)
+            if (shuttleInfo != null && networkMember.ServerSettings is not { RespawnMode: RespawnMode.Permadeath })
             {
                 RespawnShuttle = new Submarine(shuttleInfo, true);
                 RespawnShuttle.PhysicsBody.FarseerBody.OnCollision += OnShuttleCollision;
@@ -345,10 +347,37 @@ namespace Barotrauma.Networking
             }
         }
 
+        public static float GetReducedSkill(CharacterInfo characterInfo, Skill skill, float skillLossPercentage, float? currentSkillLevel = null)
+        {
+            var skillPrefab = characterInfo.Job.Prefab.Skills.Find(s => skill.Identifier == s.Identifier);
+            float currentLevel = currentSkillLevel ?? skill.Level;
+            if (skillPrefab == null || currentLevel < skillPrefab.LevelRange.End) { return currentLevel; }
+            return MathHelper.Lerp(currentLevel, skillPrefab.LevelRange.End, skillLossPercentage / 100.0f);
+        }
+
         partial void RespawnCharactersProjSpecific(Vector2? shuttlePos);
         public void RespawnCharacters(Vector2? shuttlePos)
         {
             RespawnCharactersProjSpecific(shuttlePos);
+        }
+
+        public static AfflictionPrefab GetRespawnPenaltyAfflictionPrefab()
+        {
+            return AfflictionPrefab.Prefabs.First(a => a.AfflictionType == "respawnpenalty");
+        }
+
+        public static Affliction GetRespawnPenaltyAffliction()
+        {
+            return GetRespawnPenaltyAfflictionPrefab()?.Instantiate(10.0f);
+        }
+
+        public static void GiveRespawnPenaltyAffliction(Character character)
+        {
+            var respawnPenaltyAffliction = GetRespawnPenaltyAffliction();
+            if (respawnPenaltyAffliction != null)
+            {
+                character.CharacterHealth.ApplyAffliction(targetLimb: null, respawnPenaltyAffliction);
+            }
         }
 
         public Vector2 FindSpawnPos()

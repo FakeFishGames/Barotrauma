@@ -12,7 +12,7 @@ namespace Barotrauma
     {
         public override Identifier Identifier { get; set; } = "idle".ToIdentifier();
         public override bool AllowAutomaticItemUnequipping => true;
-        public override bool AllowInAnySub => true;
+        protected override bool AllowInAnySub => true;
 
         private BehaviorType behavior;
         public BehaviorType Behavior
@@ -90,8 +90,6 @@ namespace Barotrauma
 
         protected override bool CheckObjectiveSpecific() => false;
         public override bool CanBeCompleted => true;
-
-        public override bool IsLoop { get => true; set => throw new Exception("Trying to set the value for IsLoop from: " + Environment.StackTrace.CleanupStackTrace()); }
 
         public readonly HashSet<Identifier> PreferredOutpostModuleTypes = new HashSet<Identifier>();
 
@@ -266,7 +264,7 @@ namespace Barotrauma
                             if (node.Waypoint.CurrentHull != character.CurrentHull && HumanAIController.UnsafeHulls.Contains(node.Waypoint.CurrentHull)) { return false; }
                             return true;
                             //don't stop at ladders when idling
-                        }, endNodeFilter: node => node.Waypoint.Ladders == null && (!isCurrentHullAllowed || !IsForbidden(node.Waypoint.CurrentHull)));
+                        }, endNodeFilter: node => node.Waypoint.Stairs == null && node.Waypoint.Ladders == null && (!isCurrentHullAllowed || !IsForbidden(node.Waypoint.CurrentHull)));
                         if (path.Unreachable)
                         {
                             //can't go to this room, remove it from the list and try another room
@@ -299,7 +297,7 @@ namespace Barotrauma
                 {
                     PathSteering.SteeringSeek(character.GetRelativeSimPosition(currentTarget), weight: 1, 
                         nodeFilter: node => node.Waypoint.CurrentHull != null, 
-                        endNodeFilter: node => node.Waypoint.Ladders == null);
+                        endNodeFilter: node => node.Waypoint.Ladders == null && node.Waypoint.Stairs == null);
                 }
                 else
                 {

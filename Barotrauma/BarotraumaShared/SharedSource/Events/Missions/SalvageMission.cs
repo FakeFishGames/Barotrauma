@@ -518,7 +518,9 @@ namespace Barotrauma
                             contentPackage: Prefab.ContentPackage);
                         continue;
                     }
-                
+
+                    target.Item.DontCleanUp = true;
+
                     if (target.ParentTarget.Item.GetComponent<ItemContainer>() is ItemContainer container)
                     {
                         if (!container.Inventory.TryPutItem(target.Item, user: null))

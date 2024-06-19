@@ -16,6 +16,8 @@ namespace Barotrauma
         public const Category CollisionLevel        = Category.Cat8;
         public const Category CollisionRepairableWall       = Category.Cat9;
 
+        public const Category DefaultItemCollidesWith = CollisionWall | CollisionLevel | CollisionPlatform | CollisionRepairableWall;
+
         public static float DisplayToRealWorldRatio = 1.0f / 100.0f;
 
         public const float DisplayToSimRation = 100.0f;

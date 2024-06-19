@@ -87,9 +87,20 @@ namespace Barotrauma
             set { jointScale = MathHelper.Clamp(value, MIN_SCALE, MAX_SCALE); }
         }
 
-        // Don't show in the editor, because shouldn't be edited in runtime.  Requires that the limb scale and the collider sizes are adjusted. TODO: automatize?
+        /// <summary>
+        /// Can be used for scaling the textures without having to readjust the entire ragdoll.
+        /// Note that we'll still have to readjust the source rects and the colliders sizes, unless we also adjust <see cref="SourceRectScale"/>.
+        /// E.g. for upscaling the textures 2x, set <see cref="TextureScale"/> to 0.5 and  <see cref="SourceRectScale"/> to 2.
+        /// </summary>
         [Serialize(1f, IsPropertySaveable.No)]
         public float TextureScale { get; set; }
+        
+        /// <summary>
+        /// Multiplies both the position and the size of the source rects.
+        /// Used for scaling the textures when we cannot/don't want to touch the source rect definitions (e.g. on variants).
+        /// </summary>
+        [Serialize(1f, IsPropertySaveable.No)]
+        public float SourceRectScale { get; set; }
 
         [Serialize(45f, IsPropertySaveable.Yes, description: "How high from the ground the main collider levitates when the character is standing? Doesn't affect swimming."), Editable(0f, 1000f)]
         public float ColliderHeightFromFloor { get; set; }
@@ -491,6 +502,18 @@ namespace Barotrauma
                     float scaleMultiplier = ragdollElement.GetAttributeFloat("scalemultiplier", 1f);
                     JointScale *= scaleMultiplier;
                     LimbScale *= scaleMultiplier;
+                    float textureScale = ragdollElement.GetAttributeFloat(nameof(TextureScale), 0f);
+                    if (textureScale > 0)
+                    {
+                        // Override, if defined.
+                        TextureScale = textureScale;
+                    }
+                    float sourceRectScale = ragdollElement.GetAttributeFloat(nameof(SourceRectScale), 0f);
+                    if (sourceRectScale > 0)
+                    {
+                        // Override, if defined.
+                        SourceRectScale = sourceRectScale;
+                    }
                 }
             }
             isVariantScaleApplied = true;

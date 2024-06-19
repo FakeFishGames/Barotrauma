@@ -63,6 +63,9 @@ namespace Barotrauma
         private GUITickBox spectateBox;
         public bool Spectating => spectateBox is { Selected: true, Visible: true };
 
+        public bool PermadeathMode => GameMain.Client?.ServerSettings?.RespawnMode == RespawnMode.Permadeath;
+        public bool PermanentlyDead => campaignCharacterInfo?.PermanentlyDead ?? false;
+
         private GUILayoutGroup playerInfoContent;
         private GUIComponent changesPendingText;
         private bool createPendingChangesText = true;
@@ -87,7 +90,14 @@ namespace Barotrauma
         private GUIFrame characterInfoFrame;
         private GUIFrame appearanceFrame;
 
-        private readonly List<GUIComponent> respawnSettingsElements = new List<GUIComponent>();
+        private GUISelectionCarousel<RespawnMode> respawnModeSelection;
+        private GUITextBlock respawnModeLabel;
+        private GUIComponent respawnIntervalElement;
+        
+        private readonly List<GUIComponent> midRoundRespawnSettings = new List<GUIComponent>();
+        private readonly List<GUIComponent> permadeathEnabledRespawnSettings = new List<GUIComponent>();
+        private readonly List<GUIComponent> permadeathDisabledRespawnSettings = new List<GUIComponent>();
+        private readonly List<GUIComponent> ironmanDisabledRespawnSettings = new List<GUIComponent>();
         private readonly List<GUIComponent> campaignDisabledElements = new List<GUIComponent>();
 
         public CharacterInfo.AppearanceCustomizationMenu CharacterAppearanceCustomizationMenu { get; set; }
@@ -191,7 +201,7 @@ namespace Barotrauma
 
         public bool UsingShuttle
         {
-            get { return shuttleTickBox.Selected; }
+            get { return shuttleTickBox.Selected && !PermadeathMode; }
             set { shuttleTickBox.Selected = value; }
         }
 
@@ -955,19 +965,17 @@ namespace Barotrauma
 
             // ------------------------------------------------------------------
 
-            var respawnBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.05f), settingsContent.RectTransform) { AbsoluteOffset = new Point((int)respawnSettingsHeader.Padding.X, 0) },
-                           TextManager.Get("ServerSettingsAllowRespawning"))
+            var respawnModeHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.1f), settingsContent.RectTransform), isHorizontal: true, childAnchor: Anchor.CenterLeft) { Stretch = true };
+            respawnModeLabel = new GUITextBlock(new RectTransform(new Vector2(0.4f, 0.0f), respawnModeHolder.RectTransform), TextManager.Get("RespawnMode"), wrap: true);
+            respawnModeSelection = new GUISelectionCarousel<RespawnMode>(new RectTransform(new Vector2(0.6f, 1.0f), respawnModeHolder.RectTransform));
+            foreach (var respawnMode in Enum.GetValues(typeof(RespawnMode)).Cast<RespawnMode>())
             {
-                ToolTip = TextManager.Get("RespawnExplanation"),
-                OnSelected = (tickbox) =>
-                {
-                    GameMain.Client?.ServerSettings.ClientAdminWrite(ServerSettings.NetFlags.Properties);
-                    RefreshEnabledElements();
-                    return true;
-                }
-            };
-            AssignComponentToServerSetting(respawnBox, nameof(ServerSettings.AllowRespawn));
-            clientDisabledElements.Add(respawnBox);
+                respawnModeSelection.AddElement(respawnMode, TextManager.Get($"respawnmode.{respawnMode}"), TextManager.Get($"respawnmode.{respawnMode}.tooltip"));
+            }
+            
+            respawnModeSelection.ElementSelectionCondition += (value) => value != RespawnMode.Permadeath || SelectedMode == GameModePreset.MultiPlayerCampaign;
+            respawnModeSelection.OnValueChanged += (_) => GameMain.Client?.ServerSettings.ClientAdminWrite(ServerSettings.NetFlags.Properties);
+            AssignComponentToServerSetting(respawnModeSelection, nameof(ServerSettings.RespawnMode));
 
             GUILayoutGroup shuttleHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.05f), settingsContent.RectTransform), isHorizontal: true)
             {
@@ -977,7 +985,7 @@ namespace Barotrauma
             shuttleTickBox = new GUITickBox(new RectTransform(Vector2.One, shuttleHolder.RectTransform), TextManager.Get("RespawnShuttle"))
             {
                 ToolTip = TextManager.Get("RespawnShuttleExplanation"),
-                Selected = true,
+                Selected = !PermadeathMode,
                 OnSelected = (GUITickBox box) =>
                 {
                     GameMain.Client?.ServerSettings.ClientAdminWrite(ServerSettings.NetFlags.Properties);
@@ -985,7 +993,7 @@ namespace Barotrauma
                 }
             };
             AssignComponentToServerSetting(shuttleTickBox, nameof(ServerSettings.UseRespawnShuttle));
-            respawnSettingsElements.Add(shuttleTickBox);
+            midRoundRespawnSettings.Add(shuttleTickBox);
 
             shuttleTickBox.TextBlock.RectTransform.SizeChanged += () =>
             {
@@ -1008,9 +1016,9 @@ namespace Barotrauma
             };
             ShuttleList.ListBox.RectTransform.MinSize = new Point(250, 0);
             shuttleHolder.RectTransform.MinSize = new Point(0, ShuttleList.RectTransform.Children.Max(c => c.MinSize.Y));
-            respawnSettingsElements.Add(ShuttleList);
+            midRoundRespawnSettings.Add(ShuttleList);
 
-            var respawnIntervalElement = CreateLabeledSlider(settingsContent, "ServerSettingsRespawnInterval", "", "", out var respawnIntervalSlider, out var respawnIntervalSliderLabel,
+            respawnIntervalElement = CreateLabeledSlider(settingsContent, "ServerSettingsRespawnInterval", "", "", out var respawnIntervalSlider, out var respawnIntervalSliderLabel,
                 range: new Vector2(10.0f, 600.0f));
             LocalizedString intervalLabel = respawnIntervalSliderLabel.Text;
             respawnIntervalSlider.StepValue = 10.0f;
@@ -1026,7 +1034,6 @@ namespace Barotrauma
                 return true;
             };
             respawnIntervalSlider.OnMoved(respawnIntervalSlider, respawnIntervalSlider.BarScroll);
-            respawnSettingsElements.AddRange(respawnIntervalElement.GetAllChildren());
             AssignComponentToServerSetting(respawnIntervalSlider, nameof(ServerSettings.RespawnInterval));
 
             var minRespawnElement = CreateLabeledSlider(settingsContent, "ServerSettingsMinRespawn", "", "ServerSettingsMinRespawnToolTip", out var minRespawnSlider, out var minRespawnSliderLabel,
@@ -1043,7 +1050,7 @@ namespace Barotrauma
                 return true;
             };
             minRespawnSlider.OnMoved(minRespawnSlider, minRespawnSlider.BarScroll);
-            respawnSettingsElements.AddRange(minRespawnElement.GetAllChildren());
+            midRoundRespawnSettings.AddRange(minRespawnElement.GetAllChildren());
             AssignComponentToServerSetting(minRespawnSlider, nameof(ServerSettings.MinRespawnRatio));
 
             var respawnDurationElement = CreateLabeledSlider(settingsContent, "ServerSettingsRespawnDuration", "", "ServerSettingsRespawnDurationTooltip", out var respawnDurationSlider, out var respawnDurationSliderLabel,
@@ -1068,7 +1075,7 @@ namespace Barotrauma
                 return value <= 0.0f ? 1.0f : (value - scrollBar.Range.X) / (scrollBar.Range.Y - scrollBar.Range.X);
             };
             respawnDurationSlider.OnMoved(respawnDurationSlider, respawnDurationSlider.BarScroll);
-            respawnSettingsElements.AddRange(respawnDurationElement.GetAllChildren());
+            midRoundRespawnSettings.AddRange(respawnDurationElement.GetAllChildren());
             AssignComponentToServerSetting(respawnDurationSlider, nameof(ServerSettings.MaxTransportTime));
 
             var skillLossElement = CreateLabeledSlider(settingsContent, "ServerSettingsSkillLossPercentageOnDeath", "", "ServerSettingsSkillLossPercentageOnDeathToolTip", 
@@ -1085,7 +1092,8 @@ namespace Barotrauma
                 GameMain.Client?.ServerSettings.ClientAdminWrite(ServerSettings.NetFlags.Properties);
                 return true;
             };
-            respawnSettingsElements.AddRange(skillLossElement.GetAllChildren());
+            permadeathDisabledRespawnSettings.AddRange(skillLossElement.GetAllChildren());
+            clientDisabledElements.AddRange(skillLossElement.GetAllChildren());
             AssignComponentToServerSetting(skillLossSlider, nameof(ServerSettings.SkillLossPercentageOnDeath));
             skillLossSlider.OnMoved(skillLossSlider, skillLossSlider.BarScroll);
 
@@ -1103,11 +1111,41 @@ namespace Barotrauma
                 GameMain.Client?.ServerSettings.ClientAdminWrite(ServerSettings.NetFlags.Properties);
                 return true;
             };
-            respawnSettingsElements.AddRange(skillLossImmediateRespawnElement.GetAllChildren());
+            midRoundRespawnSettings.AddRange(skillLossImmediateRespawnElement.GetAllChildren());
+            permadeathDisabledRespawnSettings.AddRange(skillLossImmediateRespawnElement.GetAllChildren());
             AssignComponentToServerSetting(skillLossImmediateRespawnSlider, nameof(ServerSettings.SkillLossPercentageOnImmediateRespawn));
             skillLossImmediateRespawnSlider.OnMoved(skillLossImmediateRespawnSlider, skillLossImmediateRespawnSlider.BarScroll);
 
-            foreach (var respawnElement in respawnSettingsElements)
+            var allowBotTakeoverTickbox = new GUITickBox(new RectTransform(Vector2.One, settingsContent.RectTransform), TextManager.Get("AllowBotTakeover"))
+            {
+                ToolTip = TextManager.Get("AllowBotTakeover.Tooltip"),
+                Selected = GameMain.Client != null && GameMain.Client.ServerSettings.AllowBotTakeoverOnPermadeath,
+                OnSelected = (GUITickBox box) =>
+                {
+                    GameMain.Client?.ServerSettings.ClientAdminWrite(ServerSettings.NetFlags.Properties);
+                    return true;
+                }
+            };
+            AssignComponentToServerSetting(allowBotTakeoverTickbox, nameof(ServerSettings.AllowBotTakeoverOnPermadeath));
+            permadeathEnabledRespawnSettings.Add(allowBotTakeoverTickbox);
+            ironmanDisabledRespawnSettings.Add(allowBotTakeoverTickbox);
+            clientDisabledElements.Add(allowBotTakeoverTickbox);
+            
+            var ironmanTickbox = new GUITickBox(new RectTransform(Vector2.One, settingsContent.RectTransform), TextManager.Get("IronmanMode").ToUpper())
+            {
+                ToolTip = TextManager.Get("IronmanMode.Tooltip"),
+                Selected = GameMain.Client != null && GameMain.Client.ServerSettings.IronmanMode,
+                OnSelected = (GUITickBox box) =>
+                {
+                    GameMain.Client?.ServerSettings.ClientAdminWrite(ServerSettings.NetFlags.Properties);
+                    return true;
+                }
+            };
+            AssignComponentToServerSetting(ironmanTickbox, nameof(ServerSettings.IronmanMode));
+            permadeathEnabledRespawnSettings.Add(ironmanTickbox);
+            clientDisabledElements.Add(ironmanTickbox);
+            
+            foreach (var respawnElement in midRoundRespawnSettings)
             {
                 if (!clientDisabledElements.Contains(respawnElement))
                 {
@@ -1650,19 +1688,31 @@ namespace Barotrauma
             bool campaignStarted = CampaignFrame.Visible;
             bool gameStarted = client != null && client.GameStarted;
 
-            //disable elements the client doesn't have access to
+            // First, enable or disable elements based on client permissions
             foreach (var element in clientDisabledElements)
             {
                 element.Enabled = manageSettings;
             }
+            
+            // Then disable elements depending on other conditions
             traitorElements.ForEach(e => e.Enabled &= settings.TraitorProbability > 0);
             SetTraitorDangerIndicators(settings.TraitorDangerLevel);
-            respawnSettingsElements.ForEach(e => e.Enabled &= settings.AllowRespawn);
+            respawnModeSelection.Enabled = respawnModeLabel.Enabled = manageSettings && !gameStarted;
+            midRoundRespawnSettings.ForEach(e => e.Enabled &= settings.RespawnMode == RespawnMode.MidRound);
+            permadeathDisabledRespawnSettings.ForEach(e => e.Enabled &= settings.RespawnMode != RespawnMode.Permadeath);
+            permadeathEnabledRespawnSettings.ForEach(e => e.Enabled &= settings.RespawnMode == RespawnMode.Permadeath && !gameStarted);
+            ironmanDisabledRespawnSettings.ForEach(e => e.Enabled &= !settings.IronmanMode);
+
+            // The respawn interval is used even if the shuttle is not
+            respawnIntervalElement.GetAllChildren().ForEach(e => e.Enabled = settings.RespawnMode != RespawnMode.BetweenRounds && manageSettings);
 
             //go through the individual elements that are only enabled in a specific context
+            shuttleTickBox.Enabled &= !gameStarted;
             if (ShuttleList != null)
             {
-                ShuttleList.Enabled = ShuttleList.ButtonEnabled = HasPermission(ClientPermissions.SelectSub) && !gameStarted && settings.AllowRespawn;
+                // Shuttle list depends on shuttle tickbox
+                ShuttleList.Enabled &= shuttleTickBox.Enabled && HasPermission(ClientPermissions.SelectSub);
+                ShuttleList.ButtonEnabled = ShuttleList.Enabled;
             }
             if (SubList != null)
             {
@@ -1672,7 +1722,6 @@ namespace Barotrauma
             {
                 ModeList.Enabled = !gameStarted && (settings.AllowModeVoting || HasPermission(ClientPermissions.SelectMode));
             }
-            shuttleTickBox.Enabled &= !gameStarted;
 
             RefreshStartButtonVisibility();
 
@@ -1750,6 +1799,10 @@ namespace Barotrauma
         private void UpdatePlayerFrame(CharacterInfo characterInfo, bool allowEditing, GUIComponent parent, bool createPendingText = true)
         {
             if (GameMain.Client == null) { return; }
+            
+            // When permanently dead and still characterless, spectating is the only option
+            spectateBox.Enabled = !PermanentlyDead;
+            
             createPendingChangesText = createPendingText;
             if (characterInfo == null || CampaignCharacterDiscarded)
             {
@@ -1780,41 +1833,57 @@ namespace Barotrauma
                 MaxTextLength = Client.MaxNameLength,
                 OverflowClip = true
             };
-
-            CharacterNameBox.OnEnterPressed += (tb, text) => { CharacterNameBox.Deselect(); return true; };
-            CharacterNameBox.OnDeselected += (tb, key) =>
+            
+            if (PermanentlyDead)
             {
-                if (GameMain.Client == null) { return; }
-                string newName = Client.SanitizeName(tb.Text);
-                if (newName == GameMain.Client.Name) return;
-                if (string.IsNullOrWhiteSpace(newName))
+                CharacterNameBox.Readonly = true;
+                CharacterNameBox.Enabled = false;
+            }
+            else
+            {
+                CharacterNameBox.OnEnterPressed += (tb, text) =>
                 {
-                    tb.Text = GameMain.Client.Name;
-                }
-                else
+                    CharacterNameBox.Deselect();
+                    return true;
+                };
+                CharacterNameBox.OnDeselected += (tb, key) =>
                 {
-                    if (isGameRunning)
+                    if (GameMain.Client == null)
                     {
-                        GameMain.Client.PendingName = tb.Text;
-                        TabMenu.PendingChanges = true;
-                        if (createPendingText)
-                        {
-                            CreateChangesPendingText();
-                        }
+                        return;
+                    }
+                    
+                    string newName = Client.SanitizeName(tb.Text);
+                    if (newName == GameMain.Client.Name) { return; }
+                    if (string.IsNullOrWhiteSpace(newName))
+                    {
+                        tb.Text = GameMain.Client.Name;
                     }
                     else
                     {
-                        ReadyToStartBox.Selected = false;
+                        if (isGameRunning)
+                        {
+                            GameMain.Client.PendingName = tb.Text;
+                            TabMenu.PendingChanges = true;
+                            if (createPendingText)
+                            {
+                                CreateChangesPendingText();
+                            }
+                        }
+                        else
+                        {
+                            ReadyToStartBox.Selected = false;
+                        }
+                        
+                        GameMain.Client.SetName(tb.Text);
                     }
-
-                    GameMain.Client.SetName(tb.Text);
-                }
-            };
-
+                };
+            }
+            
             //spacing
             new GUIFrame(new RectTransform(new Vector2(1.0f, 0.006f), parent.RectTransform), style: null);
             
-            if (allowEditing)
+            if (allowEditing && (!PermadeathMode || !isGameRunning))
             {
                 GUILayoutGroup characterInfoTabs = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.07f), parent.RectTransform), isHorizontal: true)
                 {
@@ -1892,37 +1961,70 @@ namespace Barotrauma
             {
                 characterInfo.CreateIcon(new RectTransform(new Vector2(1.0f, 0.16f), parent.RectTransform, Anchor.TopCenter));
 
-                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), parent.RectTransform), characterInfo.Job.Name, textAlignment: Alignment.Center, font: GUIStyle.SubHeadingFont, wrap: true)
+                if (PermanentlyDead)
                 {
-                    HoverColor = Color.Transparent,
-                    SelectedColor = Color.Transparent
-                };
-
-                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), parent.RectTransform), TextManager.Get("Skills"), font: GUIStyle.SubHeadingFont);
-                foreach (Skill skill in characterInfo.Job.GetSkills())
+                    new GUITextBlock(
+                        new RectTransform(new Vector2(1.0f, 0.0f), parent.RectTransform),
+                        TextManager.Get("deceased"),
+                        textAlignment: Alignment.Center, font: GUIStyle.LargeFont);
+                    
+                    if (GameMain.Client?.ServerSettings is { IronmanMode: true })
+                    {
+                        new GUITextBlock(
+                            new RectTransform(new Vector2(1.0f, 0.0f), parent.RectTransform),
+                            TextManager.Get("lobby.ironmaninfo"),
+                            textAlignment: Alignment.Center, wrap: true);
+                    }
+                    else
+                    {
+                        new GUITextBlock(
+                            new RectTransform(new Vector2(1.0f, 0.0f), parent.RectTransform),
+                            TextManager.Get("lobby.permadeathinfo"),
+                            textAlignment: Alignment.Center, wrap: true);
+                        new GUITextBlock(
+                            new RectTransform(new Vector2(1.0f, 0.0f), parent.RectTransform),
+                            TextManager.Get("lobby.permadeathoptionsexplanation"),
+                            textAlignment: Alignment.Center, wrap: true);
+                    }
+                }
+                else
                 {
-                    Color textColor = Color.White * (0.5f + skill.Level / 200.0f);
-                    var skillText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), parent.RectTransform),
-                        "  - " + TextManager.AddPunctuation(':', TextManager.Get("SkillName." + skill.Identifier), ((int)skill.Level).ToString()),
-                        textColor,
-                        font: GUIStyle.SmallFont);
+                    new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), parent.RectTransform), characterInfo.Job.Name, textAlignment: Alignment.Center, font: GUIStyle.SubHeadingFont, wrap: true)
+                    {
+                        HoverColor = Color.Transparent,
+                        SelectedColor = Color.Transparent
+                    };
+                    
+                    new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), parent.RectTransform), TextManager.Get("Skills"), font: GUIStyle.SubHeadingFont);
+                    foreach (Skill skill in characterInfo.Job.GetSkills())
+                    {
+                        Color textColor = Color.White * (0.5f + skill.Level / 200.0f);
+                        var skillText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), parent.RectTransform),
+                            "  - " + TextManager.AddPunctuation(':', TextManager.Get("SkillName." + skill.Identifier), ((int)skill.Level).ToString()),
+                            textColor,
+                            font: GUIStyle.SmallFont);
+                    }
                 }
 
                 // Spacing
                 new GUIFrame(new RectTransform(new Vector2(1.0f, 0.15f), parent.RectTransform), style: null);
 
-                new GUIButton(new RectTransform(new Vector2(0.8f, 0.1f), parent.RectTransform, Anchor.BottomCenter), TextManager.Get("CreateNew"))
+                if (GameMain.Client?.ServerSettings?.RespawnMode != RespawnMode.Permadeath)
                 {
-                    IgnoreLayoutGroups = true,
-                    OnClicked = (btn, userdata) =>
+                    // Button to create new character
+                    new GUIButton(new RectTransform(new Vector2(0.8f, 0.1f), parent.RectTransform, Anchor.BottomCenter), TextManager.Get("CreateNew"))
                     {
-                        TryDiscardCampaignCharacter(() =>
+                        IgnoreLayoutGroups = true,
+                        OnClicked = (btn, userdata) =>
                         {
-                            UpdatePlayerFrame(null, true, parent);
-                        });
-                        return true;
-                    }
-                };
+                            TryDiscardCampaignCharacter(() =>
+                            {
+                                UpdatePlayerFrame(null, true, parent);
+                            });
+                            return true;
+                        }
+                    };
+                }
             }
 
             TeamPreferenceListBox = null;
@@ -2095,14 +2197,20 @@ namespace Barotrauma
         {
             if (GameMain.Client == null) { return; }
             spectateBox.Selected = spectate;
+            
             if (spectate)
             {
-                playerInfoContent.ClearChildren();
-
                 GameMain.Client.CharacterInfo?.Remove();
                 GameMain.Client.CharacterInfo = null;
-                GameMain.Client.Character?.Remove();
-                GameMain.Client.Character = null;
+                // TODO: The following lines are ancient, unexplained, and they cause a client spectating because of permadeath
+                //       to get kicked from the server at round transition because the server expects to be in control of
+                //       removing Characters and the client to still have one. Commenting these lines out for now, but
+                //       if no side-effects occur, they can just be deleted.
+                //GameMain.Client.Character?.Remove();
+                //GameMain.Client.Character = null;
+
+                playerInfoContent.ClearChildren();
+
                 new GUITextBlock(new RectTransform(Vector2.One, playerInfoContent.RectTransform, Anchor.Center),
                     TextManager.Get("PlayingAsSpectator"),
                     textAlignment: Alignment.Center);
@@ -2117,6 +2225,10 @@ namespace Barotrauma
         {
             // Server owner is allowed to spectate regardless of the server settings
             if (GameMain.Client != null && GameMain.Client.IsServerOwner) { return; }
+
+            // A client whose character has faced permadeath and hasn't chosen a new
+            // character yet has no choice but to spectate
+            if (campaignCharacterInfo != null && campaignCharacterInfo.PermanentlyDead) { return; }
 
             // Show the player config menu if spectating is not allowed
             if (spectateBox.Selected && !allowSpectating) { spectateBox.Selected = false; }
@@ -3609,6 +3721,7 @@ namespace Barotrauma
                 GameMain.GameSession = null;
             }
 
+            respawnModeSelection.Refresh(); // not all respawn modes are compatible with all game modes
             RefreshGameModeContent();
             RefreshEnabledElements();
         }

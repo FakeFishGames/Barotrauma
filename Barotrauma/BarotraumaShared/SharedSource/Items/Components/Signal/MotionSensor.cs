@@ -165,9 +165,9 @@ namespace Barotrauma.Items.Components
             updateTimer = Rand.Range(0.0f, UpdateInterval);
         }
 
-        public override void Load(ContentXElement componentElement, bool usePrefabValues, IdRemap idRemap)
+        public override void Load(ContentXElement componentElement, bool usePrefabValues, IdRemap idRemap, bool isItemSwap)
         {
-            base.Load(componentElement, usePrefabValues, idRemap);
+            base.Load(componentElement, usePrefabValues, idRemap, isItemSwap);
             //backwards compatibility
             if (componentElement.GetAttributeBool("onlyhumans", false))
             {

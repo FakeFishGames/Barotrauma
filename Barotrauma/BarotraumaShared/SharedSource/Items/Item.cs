@@ -231,6 +231,12 @@ namespace Barotrauma
 
         public bool EditableWhenEquipped { get; set; } = false;
 
+        /// <summary>
+        /// Which character equipped this item? 
+        /// May not be the same character as the one who it's equipped on (you can e.g. equip diving masks on another character).
+        /// </summary>
+        public Character Equipper;
+
         //the inventory in which the item is contained in
         public Inventory ParentInventory
         {
@@ -387,7 +393,7 @@ namespace Barotrauma
                 return true;
             }
 #endif
-            if (HiddenInGame) { return false; }
+            if (IsHidden) { return false; }
             if (character != null && character.IsOnPlayerTeam)
             {
                 return IsPlayerTeamInteractable;
@@ -759,7 +765,16 @@ namespace Barotrauma
         [Editable, Serialize(false, isSaveable: IsPropertySaveable.Yes, "When enabled will prevent the item from taking damage from all sources")]
         public bool InvulnerableToDamage { get; set; }
 
+        /// <summary>
+        /// Was the item stolen during the current round. Note that it's possible for the items to be found in the player's inventory even though they weren't actually stolen.
+        /// For example, a guard can place handcuffs there. So use <see cref="Illegitimate"/> for checking if the item is illegitimately held.
+        /// </summary>
         public bool StolenDuringRound;
+        
+        /// <summary>
+        /// Item shouldn't be in the player's inventory. If the guards find it, they will consider it as a theft.
+        /// </summary>
+        public bool Illegitimate => !AllowStealing && SpawnedInCurrentOutpost;
 
         private bool spawnedInCurrentOutpost;
         public bool SpawnedInCurrentOutpost
@@ -1116,8 +1131,8 @@ namespace Barotrauma
                         string collisionCategoryStr = subElement.GetAttributeString("collisioncategory", null);
 
                         Category collisionCategory = Physics.CollisionItem;
-                        Category collidesWith = Physics.CollisionWall | Physics.CollisionLevel | Physics.CollisionPlatform | Physics.CollisionRepairableWall;
-                        if ((Prefab.DamagedByProjectiles || Prefab.DamagedByMeleeWeapons) && Condition > 0)
+                        Category collidesWith = Physics.DefaultItemCollidesWith;
+                        if ((Prefab.DamagedByProjectiles || Prefab.DamagedByMeleeWeapons || Prefab.DamagedByRepairTools) && Condition > 0)
                         {
                             //force collision category to Character to allow projectiles and weapons to hit
                             //(we could also do this by making the projectiles and weapons hit CollisionItem
@@ -2241,7 +2256,7 @@ namespace Barotrauma
 
         public override void Update(float deltaTime, Camera cam)
         {
-            if (!isActive) { return; }
+            if (!isActive || IsLayerHidden) { return; }
 
             if (impactQueue != null)
             {
@@ -3067,6 +3082,13 @@ namespace Barotrauma
 #endif
                     if (ic.CanBeSelected && ic is not Door) { selected = true; }
                 }
+            }
+            if (ParentInventory?.Owner == user && 
+                GetComponent<ItemContainer>() != null)
+            {
+                //can't select ItemContainers in the character's inventory
+                //(the inventory is drawn by hovering the cursor over the inventory slot, not as a hovering interface on the screen)
+                selected = false;
             }
 
             if (!picked) { return false; }
@@ -3927,7 +3949,8 @@ namespace Barotrauma
 
             //if we're overriding a non-overridden item in a sub/assembly xml or vice versa, 
             //use the values from the prefab instead of loading them from the sub/assembly xml
-            bool usePrefabValues = thisIsOverride != ItemPrefab.Prefabs.IsOverride(prefab) || appliedSwap != null;
+            bool isItemSwap = appliedSwap != null;
+            bool usePrefabValues = thisIsOverride != ItemPrefab.Prefabs.IsOverride(prefab) || isItemSwap;
             List<ItemComponent> unloadedComponents = new List<ItemComponent>(item.components);
             foreach (var subElement in element.Elements())
             {
@@ -3940,7 +3963,7 @@ namespace Barotrauma
                             int level = subElement.GetAttributeInt("level", 1);
                             if (upgradePrefab != null)
                             {
-                                item.AddUpgrade(new Upgrade(item, upgradePrefab, level, appliedSwap != null ? null : subElement));
+                                item.AddUpgrade(new Upgrade(item, upgradePrefab, level, isItemSwap ? null : subElement));
                             }
                             else
                             {
@@ -3958,13 +3981,13 @@ namespace Barotrauma
                         {
                             ItemComponent component = unloadedComponents.Find(x => x.Name == subElement.Name.ToString());
                             if (component == null) { continue; }
-                            component.Load(subElement, usePrefabValues, idRemap);
+                            component.Load(subElement, usePrefabValues, idRemap, isItemSwap);
                             unloadedComponents.Remove(component);
                             break;
                         }
                 }
             }
-            if (usePrefabValues && appliedSwap == null)
+            if (usePrefabValues && !isItemSwap)
             {
                 //use prefab scale when overriding a non-overridden item or vice versa
                 item.Scale = prefab.ConfigElement.GetAttributeFloat(item.scale, "scale", "Scale");

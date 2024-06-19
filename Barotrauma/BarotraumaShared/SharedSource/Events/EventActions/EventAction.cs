@@ -198,6 +198,12 @@ namespace Barotrauma
             }            
         }
 
+        protected string GetEventDebugName()
+        {
+            return ParentEvent?.Prefab?.Identifier is { IsEmpty: false } identifier ? $"the event \"{identifier}\"" : "an unknown event";
+        }
+
+
         /// <summary>
         /// Rich test to display in debugdraw
         /// </summary>

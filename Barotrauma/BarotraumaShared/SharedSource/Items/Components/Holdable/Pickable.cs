@@ -251,6 +251,7 @@ namespace Barotrauma.Items.Components
             
             foreach (ConnectionPanel connectionPanel in item.GetComponents<ConnectionPanel>())
             {
+                connectionPanel.DisconnectedWires.Clear();
                 foreach (Connection c in connectionPanel.Connections)
                 {
                     foreach (Wire w in c.Wires.ToArray())
@@ -260,7 +261,7 @@ namespace Barotrauma.Items.Components
                         w.Item.SetTransform(pos, 0.0f);
                     }
                 }
-            }                       
+            }
         }
         
         public override void Drop(Character dropper, bool setTransform = true)

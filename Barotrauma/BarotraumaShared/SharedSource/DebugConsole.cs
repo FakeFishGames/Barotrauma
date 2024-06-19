@@ -14,6 +14,7 @@ using System.Threading.Tasks;
 using Barotrauma.MapCreatures.Behavior;
 using System.Text;
 
+
 namespace Barotrauma
 {
     readonly struct ColoredText
@@ -248,7 +249,7 @@ namespace Barotrauma
                 GameMain.NetworkMember.ShowNetStats = !GameMain.NetworkMember.ShowNetStats;
             }));
 
-            commands.Add(new Command("spawn|spawncharacter", "spawn [creaturename/jobname] [near/inside/outside/cursor] [team (0-3)]: Spawn a creature at a random spawnpoint (use the second parameter to only select spawnpoints near/inside/outside the submarine). You can also enter the name of a job (e.g. \"Mechanic\") to spawn a character with a specific job and the appropriate equipment.", null,
+            commands.Add(new Command("spawn|spawncharacter", "spawn [creaturename/jobname] [near/inside/outside/cursor] [team (0-3)] [add to crew (true/false)]: Spawn a creature at a random spawnpoint (use the second parameter to only select spawnpoints near/inside/outside the submarine). You can also enter the name of a job (e.g. \"Mechanic\") to spawn a character with a specific job and the appropriate equipment.", null,
             () =>
             {
                 string[] creatureAndJobNames =
@@ -260,7 +261,10 @@ namespace Barotrauma
                 return new string[][]
                 {
                     creatureAndJobNames.ToArray(),
-                    new string[] { "near", "inside", "outside", "cursor" }
+                    new string[] { "near", "inside", "outside", "cursor" },
+                    new string[] { "0", "1", "2", "3" },
+                    new string[] { "true", "false" },
+
                 };
             }, isCheat: true));
 
@@ -566,11 +570,30 @@ namespace Barotrauma
             
             commands.Add(new Command("banaddress|banip", "banaddress [endpoint]: Ban the IP address/SteamID from the server.", null));
             
-            commands.Add(new Command("teleportcharacter|teleport", "teleport [character name]: Teleport the specified character to the position of the cursor. If the name parameter is omitted, the controlled character will be teleported.", null,
-            () =>
+            commands.Add(new Command("teleportcharacter|teleport", "teleport [character name] [location]: Teleport the specified character to a location , or the position of the cursor if location is omitted. If the name parameter is omitted, the controlled character will be teleported.", 
+            onExecute: null,
+            getValidArgs:() =>
             {
-                return new string[][] { ListCharacterNames() };
+                var characterList = Character.Controlled != null ? new[] { "Me" } : Array.Empty<string>();
+                var subList = Submarine.MainSub != null ? new[] { "mainsub" } : Array.Empty<string>();
+                return new string[][]
+                {
+                    characterList.Concat(ListCharacterNames()).ToArray(),
+                    subList.Concat(ListAvailableLocations()).ToArray()
+                };
             }, isCheat: true));
+            
+            commands.Add(new Command("listlocations|locations", "listlocations: List all the locations in the level: subs, outposts, ruins, caves.", 
+            onExecute:(string[] args) =>
+            {
+                var availableLocations = ListAvailableLocations();
+                NewMessage("***************", Color.Cyan);
+                foreach (var location in availableLocations)
+                {
+                    NewMessage(location, Color.Cyan);
+                }
+                NewMessage("***************", Color.Cyan);
+            }));
 
             commands.Add(new Command("godmode", "godmode [character name]: Toggle character godmode. Makes the targeted character invulnerable to damage. If the name parameter is omitted, the controlled character will receive godmode.",
             (string[] args) =>
@@ -780,6 +803,17 @@ namespace Barotrauma
                     foreach (Client c in GameMain.Server.ConnectedClients)
                     {
                         if (c.Character != revivedCharacter) { continue; }
+
+                        // If killed in ironman mode, the character has been wiped from the save mid-round, so its
+                        // original data needs to be restored to the save file (without making a backup of the dead character)
+                        if (GameMain.Server.ServerSettings.IronmanMode && GameMain.GameSession?.Campaign is MultiPlayerCampaign mpCampaign)
+                        {
+                            if (mpCampaign.RestoreSingleCharacterFromBackup(c) is CharacterCampaignData characterToRestore)
+                            {
+                                characterToRestore.CharacterInfo.PermanentlyDead = false;
+                                mpCampaign.SaveSingleCharacter(characterToRestore, skipBackup: true);
+                            }
+                        }
 
                         //clients stop controlling the character when it dies, force control back
                         GameMain.Server.SetClientCharacter(c, revivedCharacter);
@@ -1175,7 +1209,8 @@ namespace Barotrauma
                 }
             },null));
             
-            commands.Add(new Command("teleportsub", "teleportsub [start/end/endoutpost/cursor]: Teleport the submarine to the position of the cursor, or the start or end of the level. The 'endoutpost' argument also automatically docks the sub with the outpost at the end of the level. WARNING: does not take outposts into account, so often leads to physics glitches. Only use for debugging.", (string[] args) =>
+            commands.Add(new Command("teleportsub", "teleportsub [start/end/endoutpost/cursor]: Teleport the submarine to the position of the cursor, or the start or end of the level. The 'endoutpost' argument also automatically docks the sub with the outpost at the end of the level. WARNING: does not take outposts into account, so often leads to physics glitches. Only use for debugging.", 
+            onExecute:(string[] args) =>
             {
                 if (Submarine.MainSub == null) { return; }
 
@@ -1232,7 +1267,7 @@ namespace Barotrauma
                     }
                 }
             },
-            () =>
+            getValidArgs:() =>
             {
                 return new string[][]
                 {
@@ -1923,6 +1958,7 @@ namespace Barotrauma
             }));
 
 #if DEBUG
+            commands.Add(new Command("debugvoip", "Toggle the server writing VOIP into audio files.", null, isCheat: false));
 
             commands.Add(new Command("simulatedlongloadingtime", "simulatedlongloadingtime [minimum loading time]: forces loading a round to take at least the specified amount of seconds.", (string[] args) =>
             {
@@ -2047,6 +2083,11 @@ namespace Barotrauma
                 string[] validArgs = allArgs[autoCompletedArgIndex].Where(arg =>
                     currentAutoCompletedCommand.Trim().Length <= arg.Length &&
                     arg.Substring(0, currentAutoCompletedCommand.Trim().Length).ToLower() == currentAutoCompletedCommand.Trim().ToLower()).ToArray();
+                
+                // add all completions that contain the current argument, to the end of the list
+                validArgs = validArgs.Concat(allArgs[autoCompletedArgIndex].Where(arg => 
+                    arg.ToLower().Contains(currentAutoCompletedCommand.Trim().ToLower()) && 
+                    !validArgs.Contains(arg))).ToArray();
 
                 if (validArgs.Length == 0) { return command; }
 
@@ -2095,95 +2136,219 @@ namespace Barotrauma
             currentAutoCompletedIndex = 0;
         }
 
-        public static void ExecuteCommand(string command)
+        /// <summary>
+        /// Executes the specific command or commands
+        /// </summary>
+        /// <param name="inputtedCommands">Command, or multiple commands separated by newlines.</param>  
+        public static void ExecuteCommand(string inputtedCommands)
         {
-            if (activeQuestionCallback != null)
+            if (string.IsNullOrWhiteSpace(inputtedCommands) || inputtedCommands == "\\" || inputtedCommands == "\n") { return; }
+
+            string[] commandsToExecute = inputtedCommands.Split("\n");
+            foreach (string command in commandsToExecute)
             {
-#if CLIENT
-                activeQuestionText = null;
-#endif
-                NewCommand(command);
-                //reset the variable before invoking the delegate because the method may need to activate another question
-                var temp = activeQuestionCallback;
-                activeQuestionCallback = null;
-                temp(command);
-                return;
-            }
-
-            if (string.IsNullOrWhiteSpace(command) || command == "\\" || command == "\n") { return; }
-
-            string[] splitCommand = ToolBox.SplitCommand(command);
-            if (splitCommand.Length == 0)
-            {
-                ThrowError("Failed to execute command \"" + command + "\"!");
-                GameAnalyticsManager.AddErrorEventOnce(
-                    "DebugConsole.ExecuteCommand:LengthZero",
-                    GameAnalyticsManager.ErrorSeverity.Error,
-                    "Failed to execute command \"" + command + "\"!");
-                return;
-            }
-
-            Identifier firstCommand = splitCommand[0].ToIdentifier();
-
-            if (firstCommand != "admin")
-            {
-                NewCommand(command);
-            }
-
-#if CLIENT
-            if (GameMain.Client != null)
-            {
-                Command matchingCommand = commands.Find(c => c.Names.Contains(firstCommand));
-                if (matchingCommand == null)
+                if (activeQuestionCallback != null)
                 {
-                    //if the command is not defined client-side, we'll relay it anyway because it may be a custom command at the server's side
-                    GameMain.Client.SendConsoleCommand(command);
-                    NewMessage("Server command: " + command, Color.Cyan);
+#if CLIENT
+                    activeQuestionText = null;
+#endif
+                    NewCommand(command);
+                    //reset the variable before invoking the delegate because the method may need to activate another question
+                    var temp = activeQuestionCallback;
+                    activeQuestionCallback = null;
+                    temp(command);
                     return;
                 }
-                else if (GameMain.Client.HasConsoleCommandPermission(firstCommand))
+
+                if (string.IsNullOrWhiteSpace(command) || command == "\\") { return; }
+
+                string[] splitCommand = ToolBox.SplitCommand(command);
+                if (splitCommand.Length == 0)
                 {
-                    if (matchingCommand.RelayToServer)
+                    ThrowError("Failed to execute command \"" + command + "\"!");
+                    GameAnalyticsManager.AddErrorEventOnce(
+                        "DebugConsole.ExecuteCommand:LengthZero",
+                        GameAnalyticsManager.ErrorSeverity.Error,
+                        "Failed to execute command \"" + command + "\"!");
+                    return;
+                }
+
+                Identifier firstCommand = splitCommand[0].ToIdentifier();
+
+                if (firstCommand != "admin")
+                {
+                    NewCommand(command);
+                }
+
+#if CLIENT
+                if (GameMain.Client != null)
+                {
+                    Command matchingCommand = commands.Find(c => c.Names.Contains(firstCommand));
+                    if (matchingCommand == null)
                     {
+                        //if the command is not defined client-side, we'll relay it anyway because it may be a custom command at the server's side
                         GameMain.Client.SendConsoleCommand(command);
                         NewMessage("Server command: " + command, Color.Cyan);
+                        return;
                     }
-                    else
+                    else if (GameMain.Client.HasConsoleCommandPermission(firstCommand))
                     {
-                        matchingCommand.ClientExecute(splitCommand.Skip(1).ToArray());
+                        if (matchingCommand.RelayToServer)
+                        {
+                            GameMain.Client.SendConsoleCommand(command);
+                            NewMessage("Server command: " + command, Color.Cyan);
+                        }
+                        else
+                        {
+                            matchingCommand.ClientExecute(splitCommand.Skip(1).ToArray());
+                        }
+                        return;
                     }
-                    return;
-                }
-                if (!IsCommandPermitted(firstCommand, GameMain.Client))
-                {
+                    if (!IsCommandPermitted(firstCommand, GameMain.Client))
+                    {
 #if DEBUG
-                    AddWarning($"You're not permitted to use the command \"{firstCommand}\". Executing the command anyway because this is a debug build.");
+                        AddWarning($"You're not permitted to use the command \"{firstCommand}\". Executing the command anyway because this is a debug build.");
 #else
                     ThrowError($"You're not permitted to use the command \"{firstCommand}\"!");
                     return;
 #endif
+                    }
                 }
-            }
 #endif
 
-            bool commandFound = false;
-            foreach (Command c in commands)
-            {
-                if (!c.Names.Contains(firstCommand)) { continue; }                
-                c.Execute(splitCommand.Skip(1).ToArray());
-                commandFound = true;
-                break;                
-            }
+                bool commandFound = false;
+                foreach (Command c in commands)
+                {
+                    if (!c.Names.Contains(firstCommand)) { continue; }
+                    c.Execute(splitCommand.Skip(1).ToArray());
+                    commandFound = true;
+                    break;
+                }
 
-            if (!commandFound)
-            {
-                ThrowError("Command \"" + splitCommand[0] + "\" not found.");
+                if (!commandFound)
+                {
+                    ThrowError("Command \"" + splitCommand[0] + "\" not found.");
+                }
             }
         }
 
         private static string[] ListCharacterNames() => Character.CharacterList.OrderBy(c => c.IsDead).ThenByDescending(c => c.IsHuman).ThenBy(c => c.Name).Select(c => c.Name).Distinct().ToArray();
+        
+        private static string[] ListAvailableLocations()
+        {
+            List<string> locationNames = new();
+            foreach(var submarine in Submarine.Loaded)
+            {
+                locationNames.Add(submarine.Info.Name);
+            }
 
-        private static Character FindMatchingCharacter(string[] args, bool ignoreRemotePlayers = false, Client allowedRemotePlayer = null)
+            if (Level.Loaded != null)
+            {
+                foreach (var cave in Level.Loaded.Caves)
+                {
+                    string caveName = cave.CaveGenerationParams.Name;
+                    // add index in case there are duplicate names
+                    int index = 1;
+                    while (locationNames.Contains($"{caveName}_{index}"))
+                    {
+                        index++;
+                    }
+                    locationNames.Add($"{caveName}_{index}");
+                }
+            }
+            
+            return locationNames.ToArray();
+        }
+        
+        private static bool TryFindTeleportPosition(string locationName, out Vector2 teleportPosition)
+        {
+            if (Submarine.MainSub is Submarine mainSub && string.Equals(locationName, "mainsub", StringComparison.InvariantCultureIgnoreCase))
+            {
+                var randomWaypoint = GetRandomWaypoint(mainSub.GetWaypoints(alsoFromConnectedSubs:false));
+                if (randomWaypoint != null)
+                {
+                    teleportPosition = randomWaypoint.WorldPosition;
+                    return true;
+                }
+                LogError("No waypoints found in the main sub!");
+            }
+            
+            foreach (var submarine in Submarine.Loaded)
+            {
+                if (string.Equals(submarine.Info.Name, locationName, StringComparison.InvariantCultureIgnoreCase))
+                {
+                    var randomWaypoint = GetRandomWaypoint(submarine.GetWaypoints(alsoFromConnectedSubs:false));
+                    if (randomWaypoint != null)
+                    {
+                        teleportPosition = randomWaypoint.WorldPosition;
+                        return true;
+                    }
+                    LogError($"No waypoints found in sub {submarine.Info.Name}!");
+                }
+            }
+
+            if (Level.Loaded is Level loadedLevel)
+            {
+                (string locationNameNoIndex, int locationIndex) = SplitIndex(locationName);
+                int caveIndex = 1;
+                foreach (var cave in loadedLevel.Caves)
+                {
+                    if (string.Equals(cave.CaveGenerationParams.Name, locationNameNoIndex, StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        if (caveIndex != locationIndex)
+                        {
+                            caveIndex++;
+                            continue;
+                        }
+                        
+                        var randomWaypoint = GetRandomWaypoint(cave.Tunnels.GetRandom(Rand.RandSync.Unsynced).WayPoints);
+                        if (randomWaypoint != null)
+                        {
+                            teleportPosition = randomWaypoint.WorldPosition;
+                            return true;
+                        }
+                        LogError($"No waypoints found in cave {cave.CaveGenerationParams.Name}!");
+                    }
+                }
+            }
+            teleportPosition = Vector2.Zero;
+            return false;
+            
+            WayPoint GetRandomWaypoint(IReadOnlyList<WayPoint> waypoints)
+            {
+                if (waypoints.None())
+                {
+                    return null;
+                }
+                
+                if (waypoints.Any(point => point.SpawnType == SpawnType.Human))
+                {
+                    return waypoints.GetRandom(point => point.SpawnType == SpawnType.Human, Rand.RandSync.Unsynced);
+                }
+                
+                if (waypoints.Any(point => point.SpawnType == SpawnType.Path))
+                {
+                    return waypoints.GetRandom(point => point.SpawnType == SpawnType.Path, Rand.RandSync.Unsynced);
+                }
+                
+                return waypoints.GetRandom(Rand.RandSync.Unsynced);
+            }
+            
+            (string, int) SplitIndex(string caveName)
+            { 
+                string[] splitName = caveName.Split('_');
+                if (splitName.Length == 1)
+                {
+                    return (splitName[0], -1);
+                }
+                else
+                {
+                    return (splitName[0], int.Parse(splitName[1]));
+                }
+            }
+        }
+        
+        private static Character FindMatchingCharacter(string[] args, bool ignoreRemotePlayers = false, Client allowedRemotePlayer = null, bool botsOnly = false)
         {
             if (args.Length == 0) return null;
 
@@ -2201,6 +2366,11 @@ namespace Barotrauma
             var matchingCharacters = Character.CharacterList.FindAll(c => 
                 c.Name.Equals(characterName, StringComparison.OrdinalIgnoreCase) &&
                 (!c.IsRemotePlayer || !ignoreRemotePlayers || allowedRemotePlayer?.Character == c));
+
+            if (botsOnly)
+            {
+                matchingCharacters = matchingCharacters.FindAll(c => c is AICharacter);
+            }
 
             if (!matchingCharacters.Any())
             {
@@ -2232,6 +2402,68 @@ namespace Barotrauma
 
             return null;
         }
+        
+        private static void TeleportCharacter(Vector2 cursorWorldPos, Character controlledCharacter, string[] args)
+        {
+            if (Screen.Selected != GameMain.GameScreen)
+            {
+                NewMessage("Cannot teleport a character in the menu or the editor screens.", color: Color.Yellow);
+                return;
+            }
+            
+            Character targetCharacter = controlledCharacter;
+            Vector2 worldPosition = cursorWorldPos;
+            string locationNameArgument = "";
+            
+            var availableLocations = ListAvailableLocations();            
+            if (args.Length > 0)
+            {
+                if (args.Length > 1)
+                {
+                    // remove location name from args
+                    if (availableLocations.Contains(args.Last())
+                        || string.Equals(args.Last(), "mainsub", StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        locationNameArgument = args.Last();
+                        args = args.Take(args.Length - 1).ToArray();
+                    }
+                    else
+                    {
+                        NewMessage("Invalid arguments", color: Color.Yellow);
+                        return;
+                    }
+                }
+                
+                // the remaining args should be the character name and a possible index
+                if (args[0].ToLowerInvariant() != "me")
+                {
+                    Character match = FindMatchingCharacter(args, ignoreRemotePlayers:false); 
+                    targetCharacter = match;
+                }
+            }
+            
+            if (!string.IsNullOrWhiteSpace(locationNameArgument))
+            {
+                if (TryFindTeleportPosition(locationNameArgument, out Vector2 teleportPosition))
+                {
+                    worldPosition = teleportPosition;
+                }
+                else
+                {
+                    ThrowError($"No teleport position for location \"{locationNameArgument}\" was found.");
+                    return;
+                }
+            }
+            
+            if (targetCharacter != null)
+            {
+                targetCharacter.TeleportTo(worldPosition);
+            }
+            else
+            {
+                NewMessage("Invalid arguments", color: Color.Yellow);
+            }
+        }
 
         private static void SpawnCharacter(string[] args, Vector2 cursorWorldPos, out string errorMsg)
         {
@@ -2253,8 +2485,8 @@ namespace Barotrauma
             {
                 job = JobPrefab.Prefabs[characterLowerCase];
             }
-            bool human = job != null || characterLowerCase == CharacterPrefab.HumanSpeciesName;
-            
+            bool isHuman = job != null || characterLowerCase == CharacterPrefab.HumanSpeciesName;
+            bool addToCrew = false;
             if (args.Length > 1)
             {
                 switch (args[1].ToLowerInvariant())
@@ -2288,13 +2520,17 @@ namespace Barotrauma
                         spawnPosition = cursorWorldPos;
                         break;
                     default:
-                        spawnPoint = WayPoint.GetRandom(human ? SpawnType.Human : SpawnType.Enemy);
+                        spawnPoint = WayPoint.GetRandom(isHuman ? SpawnType.Human : SpawnType.Enemy);
                         break;
                 }
+                addToCrew = 
+                    args.Length > 3 ?
+                    args[3].Equals("true", StringComparison.OrdinalIgnoreCase) :
+                    isHuman;
             }
             else
             {
-                spawnPoint = WayPoint.GetRandom(human ? SpawnType.Human : SpawnType.Enemy);
+                spawnPoint = WayPoint.GetRandom(isHuman ? SpawnType.Human : SpawnType.Enemy);
             }
 
             if (string.IsNullOrWhiteSpace(args[0])) { return; }
@@ -2313,28 +2549,35 @@ namespace Barotrauma
 
             if (spawnPoint != null) { spawnPosition = spawnPoint.WorldPosition; }
 
-            if (human)
+            if (isHuman)
             {
                 var variant = job != null ? Rand.Range(0, job.Variants, Rand.RandSync.ServerAndClient) : 0;
                 CharacterInfo characterInfo = new CharacterInfo(CharacterPrefab.HumanSpeciesName, jobOrJobPrefab: job, variant: variant);
                 spawnedCharacter = Character.Create(characterInfo, spawnPosition, ToolBox.RandomSeed(8));
-                if (GameMain.GameSession != null)
-                {
-                    spawnedCharacter.TeamID = teamType;
-#if CLIENT
-                    GameMain.GameSession.CrewManager.AddCharacter(spawnedCharacter);          
-#endif
-                }
+
                 spawnedCharacter.GiveJobItems(spawnPoint);
                 spawnedCharacter.GiveIdCardTags(spawnPoint);
                 spawnedCharacter.Info.StartItemsGiven = true;
             }
             else
             {
-                if (CharacterPrefab.FindBySpeciesName(args[0].ToIdentifier()) != null)
+                CharacterPrefab prefab = CharacterPrefab.FindBySpeciesName(args[0].ToIdentifier());
+                if (prefab != null)
                 {
-                    Character.Create(args[0], spawnPosition, ToolBox.RandomSeed(8));
+                    CharacterInfo characterInfo = null;
+                    if (prefab.HasCharacterInfo)
+                    {
+                        characterInfo = new CharacterInfo(prefab.Identifier);
+                    }
+                    spawnedCharacter = Character.Create(args[0], spawnPosition, ToolBox.RandomSeed(8), characterInfo);
                 }
+            }
+            if (addToCrew && GameMain.GameSession != null)
+            {
+                spawnedCharacter.TeamID = teamType;
+#if CLIENT
+                GameMain.GameSession.CrewManager.AddCharacter(spawnedCharacter);
+#endif
             }
         }
 

@@ -424,7 +424,7 @@ namespace Barotrauma
         public void RegisterEventHistory(bool registerFinishedOnly = false)
         {
             if (level?.LevelData == null) { return; }
-
+            
             level.LevelData.EventsExhausted = !registerFinishedOnly;
 
             if (level.LevelData.Type == LevelData.LevelType.Outpost)
@@ -433,15 +433,15 @@ namespace Barotrauma
                 {
                     foreach (var finishedEvent in finishedEvents)
                     {
-                        var key = finishedEvent.ParentSet;
-                        if (key == null) { continue; }
-                        if (level.LevelData.FinishedEvents.ContainsKey(key))
+                        EventSet parentSet = finishedEvent.ParentSet;
+                        if (parentSet == null) { continue; }
+                        if (parentSet.Exhaustible)
                         {
-                            level.LevelData.FinishedEvents[key] += 1;
+                            level.LevelData.EventsExhausted = true;
                         }
-                        else
+                        if (!level.LevelData.FinishedEvents.TryAdd(parentSet, 1))
                         {
-                            level.LevelData.FinishedEvents.Add(key, 1);
+                            level.LevelData.FinishedEvents[parentSet] += 1;
                         }
                     }
                 }
@@ -691,6 +691,7 @@ namespace Barotrauma
         {
             return
                 (e.BiomeIdentifier.IsEmpty || e.BiomeIdentifier == level.LevelData?.Biome?.Identifier) &&
+                (e.RequiredLayer.IsEmpty || Submarine.LayerExistsInAnySub(e.RequiredLayer)) &&
                 !level.LevelData.NonRepeatableEvents.Contains(e.Identifier);
         }
 
@@ -702,8 +703,9 @@ namespace Barotrauma
         private static bool IsValidForLevel(EventSet eventSet, Level level)
         {
             return
-                level.Difficulty >= eventSet.MinLevelDifficulty && level.Difficulty <= eventSet.MaxLevelDifficulty &&
+                level.IsAllowedDifficulty(eventSet.MinLevelDifficulty, eventSet.MaxLevelDifficulty) &&
                 level.LevelData.Type == eventSet.LevelType &&
+                (eventSet.RequiredLayer.IsEmpty || Submarine.LayerExistsInAnySub(eventSet.RequiredLayer)) &&
                 (eventSet.BiomeIdentifier.IsEmpty || eventSet.BiomeIdentifier == level.LevelData.Biome.Identifier);
         }
 
@@ -953,7 +955,7 @@ namespace Barotrauma
             monsterStrength = 0;
             foreach (Character character in Character.CharacterList)
             {
-                if (character.IsIncapacitated || character.IsArrested || !character.Enabled || character.IsPet) { continue; }
+                if (character.IsIncapacitated || character.IsHandcuffed || !character.Enabled || character.IsPet) { continue; }
 
                 if (character.AIController is EnemyAIController enemyAI)
                 {

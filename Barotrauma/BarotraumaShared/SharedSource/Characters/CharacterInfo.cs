@@ -1,4 +1,4 @@
-using Barotrauma.Extensions;
+﻿using Barotrauma.Extensions;
 using Barotrauma.Items.Components;
 using Microsoft.Xna.Framework;
 using System;
@@ -44,8 +44,13 @@ namespace Barotrauma
         public readonly Identifier MenuCategoryVar;
         public readonly Identifier Pronouns;
 
-        public CharacterInfoPrefab(ContentXElement headsElement, XElement varsElement, XElement menuCategoryElement, XElement pronounsElement)
+        public CharacterInfoPrefab(CharacterPrefab characterPrefab, ContentXElement headsElement, XElement varsElement, XElement menuCategoryElement, XElement pronounsElement)
         {
+            if (headsElement == null)
+            {
+                throw new Exception($"No heads configured for the character \"{characterPrefab.Identifier}\". Characters with CharacterInfo must have head sprites. Please add a <Heads> element to the character's config.");
+            }
+
             Heads = headsElement.Elements().Select(e => new CharacterInfo.HeadPreset(this, e)).ToImmutableArray();
             if (varsElement != null)
             {
@@ -82,6 +87,10 @@ namespace Barotrauma
         }
     }
 
+    /// <summary>
+    /// Stores information about the Character that is needed between rounds in the
+    /// menu etc., whereas Character itself is the object actually spawned in-game.
+    /// </summary>
     partial class CharacterInfo
     {
         public class HeadInfo
@@ -289,7 +298,9 @@ namespace Barotrauma
         public XElement HealthData;
         public XElement OrderData;
 
-        private static ushort idCounter;
+        public bool PermanentlyDead;
+
+        private static ushort idCounter = 1;
         private const string disguiseName = "???";
 
         public bool HasNickname => Name != OriginalName;
@@ -492,6 +503,9 @@ namespace Barotrauma
 
         public bool StartItemsGiven;
 
+        /// <summary>
+        /// Newly hired bot that hasn't spawned yet
+        /// </summary>
         public bool IsNewHire;
 
         public CauseOfDeath CauseOfDeath;
@@ -642,6 +656,15 @@ namespace Barotrauma
             => element.GetAttributeBool("specifiertags",
                 element.GetAttributeBool("genders",
                     element.GetAttributeBool("races", false)));
+
+        /// <summary>
+        /// Keeps track of the last reward distribution that was set on the character's wallet.
+        /// Is used to keep salary when the character respawns since CharacterInfo is preserved between deaths.
+        /// </summary>
+        /// <remarks>
+        /// None means the salary has not been set yet, which is not always 0 if default salary is set.
+        /// </remarks>
+        public Option<int> LastRewardDistribution = Option.None;
         
         // Used for creating the data
         public CharacterInfo(
@@ -662,6 +685,7 @@ namespace Barotrauma
             }
             ID = idCounter;
             idCounter++;
+            if (idCounter == 0) { idCounter++; }
             SpeciesName = speciesName;
             SpriteTags = new List<Identifier>();
             CharacterConfigElement = CharacterPrefab.FindBySpeciesName(SpeciesName)?.ConfigElement;
@@ -699,6 +723,12 @@ namespace Barotrauma
                 Salary = CalculateSalary();
             }
             OriginalName = !string.IsNullOrEmpty(originalName) ? originalName : Name;
+
+            int loadedLastRewardDistribution = CharacterConfigElement.GetAttributeInt("lastrewarddistribution", -1);
+            if (loadedLastRewardDistribution >= 0)
+            {
+                LastRewardDistribution = Option.Some(loadedLastRewardDistribution);
+            }
         }
 
         private void SetPersonalityTrait()
@@ -771,6 +801,7 @@ namespace Barotrauma
             HashSet<Identifier> tags = infoElement.GetAttributeIdentifierArray("tags", Array.Empty<Identifier>()).ToHashSet();
             LoadTagsBackwardsCompatibility(infoElement, tags);
             SpeciesName = infoElement.GetAttributeIdentifier("speciesname", "");
+            PermanentlyDead = infoElement.GetAttributeBool("permanentlydead", false);
             ContentXElement element;
             if (!SpeciesName.IsEmpty)
             {
@@ -951,7 +982,7 @@ namespace Barotrauma
         }
 
         /// <summary>
-        /// Returns a presumably (not guaranteed) unique hash using the (current) Name, appearence, and job.
+        /// Returns a presumably (not guaranteed) unique and persistent hash using the (current) Name, appearence, and job.
         /// So unless there's another character with the exactly same name, job, and appearance, the hash should be unique.
         /// </summary>
         public int GetIdentifier()
@@ -960,7 +991,7 @@ namespace Barotrauma
         }
 
         /// <summary>
-        /// Returns a presumably (not guaranteed) unique hash using the OriginalName, appearence, and job.
+        /// Returns a presumably (not guaranteed) unique hash and persistent using the OriginalName, appearence, and job.
         /// So unless there's another character with the exactly same name, job, and appearance, the hash should be unique.
         /// </summary>
         public int GetIdentifierUsingOriginalName()
@@ -1466,7 +1497,10 @@ namespace Barotrauma
                 new XAttribute("haircolor", XMLExtensions.ColorToString(Head.HairColor)),
                 new XAttribute("facialhaircolor", XMLExtensions.ColorToString(Head.FacialHairColor)),
                 new XAttribute("startitemsgiven", StartItemsGiven),
-                new XAttribute("personality", PersonalityTrait?.Identifier ?? Identifier.Empty));
+                new XAttribute("personality", PersonalityTrait?.Identifier ?? Identifier.Empty),
+                new XAttribute("lastrewarddistribution", LastRewardDistribution.Match(some: value => value, none: () => -1).ToString()),
+                new XAttribute("permanentlydead", PermanentlyDead)
+            );
 
             if (HumanPrefabIds != default)
             {

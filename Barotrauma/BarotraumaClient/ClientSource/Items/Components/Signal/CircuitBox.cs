@@ -303,6 +303,17 @@ namespace Barotrauma.Items.Components
             CreateClientEvent(new CircuitBoxRenameLabelEvent(label.ID, color, header, body));
         }
 
+        public void SetConnectionLabelOverrides(CircuitBoxInputOutputNode node, Dictionary<string, string> newOverrides)
+        {
+            if (GameMain.NetworkMember is null)
+            {
+                node.ReplaceAllConnectionLabelOverrides(newOverrides);
+                return;
+            }
+
+            CreateClientEvent(new CircuitBoxRenameConnectionLabelsEvent(node.NodeType, newOverrides.ToNetDictionary()));
+        }
+
         public void ResizeNode(CircuitBoxNode node, CircuitBoxResizeDirection dir, Vector2 amount)
         {
             if (Locked) { return; }
@@ -528,6 +539,12 @@ namespace Barotrauma.Items.Components
                             _ => node.Position
                         };
                     }
+
+                    foreach (var labelOverride in data.LabelOverrides)
+                    {
+                        RenameConnectionLabelsInternal(labelOverride.Type, labelOverride.Override.ToDictionary());
+                    }
+
                     wasInitializedByServer = true;
                     break;
                 }
@@ -554,6 +571,12 @@ namespace Barotrauma.Items.Components
                 {
                     var data = INetSerializableStruct.Read<CircuitBoxResizeLabelEvent>(msg);
                     ResizeLabelInternal(data.ID, data.Position, data.Size);
+                    break;
+                }
+                case CircuitBoxOpcode.RenameConnections:
+                {
+                    var data = INetSerializableStruct.Read<CircuitBoxRenameConnectionLabelsEvent>(msg);
+                    RenameConnectionLabelsInternal(data.Type, data.Override.ToDictionary());
                     break;
                 }
                 default:

@@ -340,8 +340,12 @@ namespace Barotrauma
                 }
             }
 
-            this.RequiredSkills = requiredSkills.ToImmutableArray();
-            this.RequiredItems = requiredItems.ToImmutableArray();
+            RequiredSkills = requiredSkills.ToImmutableArray();
+            RequiredItems = requiredItems
+                /*Put the items required by identifier first - since we must use specific items for those, we should check them before the ones that accept multiple items. 
+                 Otherwise we might end up choosing the "specific item" as the multi-option ingredient, and not have enough left for the "specific item" requirement */
+                .OrderBy(requiredItem => requiredItem is RequiredItemByIdentifier ? 0 : 1)
+                .ToImmutableArray();
 
             RecipeHash = GenerateHash();
         }
@@ -438,8 +442,12 @@ namespace Barotrauma
 
         public int GetPrice(Location location = null)
         {
-            int price = BasePrice;
-            return location?.GetAdjustedMechanicalCost(price) ?? price;
+            int price = location?.GetAdjustedMechanicalCost(BasePrice) ?? BasePrice;
+            if (GameMain.GameSession?.Campaign is CampaignMode campaign)
+            {
+                price = (int)(price * campaign.Settings.ShipyardPriceMultiplier);
+            }
+            return price;
         }
 
         public SwappableItem(ContentXElement element)

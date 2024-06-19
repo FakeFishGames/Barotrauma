@@ -254,7 +254,7 @@ namespace Barotrauma
                     buttonText = TextManager.Get("map"); 
                 }
                 else if (prevCampaignUIAutoOpenType != availableTransition && 
-                        (availableTransition == TransitionType.ProgressToNextEmptyLocation || availableTransition == TransitionType.ReturnToPreviousEmptyLocation))
+                        availableTransition == TransitionType.ProgressToNextEmptyLocation)
                 {
                     HintManager.OnAvailableTransition(availableTransition);
                     //opening the campaign map pauses the game and prevents HintManager from running -> update it manually to get the hint to show up immediately

@@ -128,7 +128,7 @@ namespace Barotrauma
             }
             set
             {
-                if (MathUtils.NearlyEqual(value, floatValue)) { return; }
+                if (Math.Abs(value - floatValue) < 0.0001f && MathUtils.NearlyEqual(value, floatValue)) { return; }
                 floatValue = value;
                 ClampFloatValue();
                 float newValue = floatValue;

@@ -103,7 +103,7 @@ namespace Barotrauma
 
             foreach (Structure structure in Structure.WallList)
             {
-                if (!structure.HasBody || structure.HiddenInGame) { continue; }
+                if (!structure.HasBody || structure.IsHidden) { continue; }
 
                 LevelObjectPrefab.SpawnPosType spawnPosType = LevelObjectPrefab.SpawnPosType.None;
                 if (level.Ruins.Any(r => r.Submarine == structure.Submarine))

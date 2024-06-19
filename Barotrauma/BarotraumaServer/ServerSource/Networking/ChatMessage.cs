@@ -90,7 +90,7 @@ namespace Barotrauma.Networking
                 if (c.Character == null || c.Character.SpeechImpediment >= 100.0f || c.Character.IsDead) { return; }
                 if (orderMsg.Order.IsReport)
                 {
-                    HumanAIController.ReportProblem(orderMsg.Sender, orderMsg.Order);
+                    HumanAIController.ReportProblem(orderMsg.Sender as Character, orderMsg.Order);
                 }
                 if (order != null)
                 {

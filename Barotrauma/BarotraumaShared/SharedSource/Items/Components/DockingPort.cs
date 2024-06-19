@@ -658,7 +658,8 @@ namespace Barotrauma.Items.Components
                     hulls[i] = new Hull(hullRects[i], subs[i])
                     {
                         RoomName = IsHorizontal ? "entityname.dockingport" : "entityname.dockinghatch",
-                        AvoidStaying = true
+                        AvoidStaying = true,
+                        IsWetRoom = true
                     };
                     hulls[i].AddToGrid(subs[i]);
                     hulls[i].FreeID();
