@@ -86,7 +86,7 @@ namespace Barotrauma
                 {
                     foreach (var objective in humanAiController.ObjectiveManager.Objectives)
                     {
-                        if (objective is AIObjectiveOperateItem operateItemObjective && operateItemObjective.OperateTarget == target)
+                        if (objective is AIObjectiveOperateItem operateItemObjective && operateItemObjective.Component.Item == target)
                         {
                             objective.Abandon = true;
                         }
